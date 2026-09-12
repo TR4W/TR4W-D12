@@ -326,6 +326,49 @@ type
          read FMulticastGroup write FMulticastGroup;
    end;
 
+   (*
+     THE MAIN WINDOW'S APPEARANCE -- four flags an operator sets once and
+     forgets, which the settings store has always grouped under
+     "appearance.".
+
+     ALL FOUR CARRY AN ALIAS, and for the usual reason: TR4W's command
+     vocabulary is flat, so the names are NO BORDER and SHOW GRIDLINES rather
+     than MAIN WINDOW NO BORDER. A property path necessarily puts the group
+     first.
+
+     TWO OF THEM ARE ABOUT THE LOG GRID and are here rather than in
+     TLogSettings on purpose: TLogSettings is about what LOGGING does -- when
+     a QSO is written, what is backed up, which report is recorded -- and
+     these two are about what the window looks like. The store made the same
+     split before this migration existed.
+   *)
+   TMainWindowSettings = class(TSettingsGroup)
+   private
+      FNoBorder: boolean;
+      FNoCaption: boolean;
+      FNoColumnHeader: boolean;
+      FShowGridlines: boolean;
+   published
+      (* Was Config.NoBorder -- drops the sunken edge from every main-window
+        element and from the entry fields. *)
+      property NoBorder: boolean read FNoBorder write FNoBorder;
+      (* Was Config.NoCaption -- the form's title bar. Defaults False and has
+        never been bench-tested either way; see docs/BENCH_QUEUE.md. *)
+      property NoCaption: boolean read FNoCaption write FNoCaption;
+      (* Was Config.NoColumnHeader.
+
+        NO LIVE READER IN THIS BUILD, and it is carried rather than dropped,
+        following the ruling that produced MY IOTA and SHOW ALL SERIAL PORTS:
+        an operator can see it in Preferences, so deleting it is NY4I's call
+        and not a migration's side effect. *)
+      property NoColumnHeader: boolean
+         read FNoColumnHeader write FNoColumnHeader;
+      (* Was Config.ShowGridlines. This one had crP: 3 -- the grid redraw --
+        and is an arm in uSettingsEffects now, so it takes effect when it is
+        changed rather than at the next start. *)
+      property ShowGridlines: boolean read FShowGridlines write FShowGridlines;
+   end;
+
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
 
      It went first because it is the smallest COMPLETE case in the tree: three
@@ -2172,6 +2215,7 @@ type
       FMy: TMySettings;
       FDvk: TDvkSettings;
       FWsjtx: TWsjtxSettings;
+      FMainWindow: TMainWindowSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -2300,6 +2344,7 @@ type
       property My: TMySettings read FMy;
       property Dvk: TDvkSettings read FDvk;
       property Wsjtx: TWsjtxSettings read FWsjtx;
+      property MainWindow: TMainWindowSettings read FMainWindow;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -3107,6 +3152,7 @@ begin
    FMy             := TMySettings.Create;
    FDvk            := TDvkSettings.Create;
    FWsjtx          := TWsjtxSettings.Create;
+   FMainWindow     := TMainWindowSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -3467,6 +3513,12 @@ begin
    Alias('WSJT-X SEND HIGHLIGHTS',       'Wsjtx.SendHighlights');
    Alias('WSJT-X BROADCAST PORT',        'Wsjtx.BroadcastPort');
    Alias('WSJT-X MULTICAST GROUP',       'Wsjtx.MulticastGroup');
+
+   (* The four main-window appearance flags. Flat names, every one. *)
+   Alias('NO BORDER',        'MainWindow.NoBorder');
+   Alias('NO CAPTION',       'MainWindow.NoCaption');
+   Alias('NO COLUMN HEADER', 'MainWindow.NoColumnHeader');
+   Alias('SHOW GRIDLINES',   'MainWindow.ShowGridlines');
 
    Alias('HF BAND ENABLE',   'Bands.HfEnabled');
    Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');

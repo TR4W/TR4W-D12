@@ -90,7 +90,8 @@ uses
    SysUtils,
    uSettingsModel,
    FContest,       // RecalculateMyCountryContinentAndZoneNew
-   LogWind,        // Settings.My.Call -- the callsign the derivation starts from
+   LogWind,        (* Settings.My.Call -- the callsign the derivation starts
+                     from; DispalayLogGridLines; DisplayInsertMode *)
                    // and DisplayInsertMode, the INS/OVR panel
    uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
@@ -177,6 +178,12 @@ const
    WSJTX_ENABLED         = 'Wsjtx.Enabled';
    WSJTX_SEND_HIGHLIGHTS = 'Wsjtx.SendHighlights';
    WSJTX_MULTICAST_GROUP = 'Wsjtx.MulticastGroup';
+
+   (* THE LOG GRID'S LINES, crP: 3. An exact path: the other three
+     main-window appearance flags are read when a window is BUILT, so
+     matching the group would call a redraw for three settings that have
+     no run-time effect at all. *)
+   SHOW_GRIDLINES = 'MainWindow.ShowGridlines';
 
 
 function InGroup(const aPath, aPrefix: string): boolean;
@@ -272,6 +279,15 @@ begin
          begin
          wsjtx.JoinMulticastGroup(Settings.Wsjtx.MulticastGroup);
          end;
+      end;
+
+   if UnicodeSameText(aPath, SHOW_GRIDLINES) then
+      begin
+      (* DispalayLogGridLines reads the property itself and then checks
+        the window height, which is why the call takes no argument. It is
+        safe before any window exists: the grid accessor it reaches is a
+        no-op while the form is nil. *)
+      DispalayLogGridLines;
       end;
 
    if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)

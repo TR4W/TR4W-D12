@@ -4242,7 +4242,7 @@ begin
        forced into existence at startup to fill an array nobody consults. *)
      CreateMainElement(
        e,
-       TWindows[e].mweiStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN)),
+       TWindows[e].mweiStyle and (not (Cardinal(Settings.MainWindow.NoBorder) * SS_SUNKEN)),
        TWindows[e].mweiX * ws,
        TWindows[e].mweiY * ws + TWindows[e].mweB * EditableLogHeight,
        round(TWindows[e].mweiWidth * ws),
@@ -6606,7 +6606,7 @@ begin
      one.  NO CAPTION defaults to False and nobody has bench-tested it either
      way -- see docs/BENCH_QUEUE.md. *)
 
-  if Config.NoCaption and (lclForm <> nil) then
+  if Settings.MainWindow.NoCaption and (lclForm <> nil) then
      begin
      lclForm.BorderStyle := bsNone;
      end;
@@ -7636,14 +7636,14 @@ begin
      begin
      CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
                           MainWindowEditHeight, ID,
-                          not Config.NoBorder, aField,
+                          not Settings.MainWindow.NoBorder, aField,
                           'Lucida Console SZ', ws + 3, True);
      end
   else
      begin
      CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
                           MainWindowEditHeight, ID,
-                          not Config.NoBorder, aField,
+                          not Settings.MainWindow.NoBorder, aField,
                           'Lucida Console', ws + 3, True);
      end;
   // THE SHAPE, NOT AN HFONT.  tWM_SETFONT(Result, MainWindowEditFont) sent a

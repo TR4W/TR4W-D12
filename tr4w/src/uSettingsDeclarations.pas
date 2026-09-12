@@ -205,13 +205,13 @@ begin
                          RS_CW_INCLUDEFKEYNUMBER);
 
    { The old Appearance menu's contents, 2026-08-15. }
-   RegisterStoredSetting('appearance.noBorder',               'NO BORDER',
+   RegisterModelSetting( 'appearance.noBorder',               'NO BORDER',
                          RS_APPEARANCE_NOBORDER);
-   RegisterStoredSetting('appearance.noCaption',              'NO CAPTION',
+   RegisterModelSetting( 'appearance.noCaption',              'NO CAPTION',
                          RS_APPEARANCE_NOCAPTION);
-   RegisterStoredSetting('appearance.noColumnHeader',         'NO COLUMN HEADER',
+   RegisterModelSetting( 'appearance.noColumnHeader',         'NO COLUMN HEADER',
                          RS_APPEARANCE_NOCOLUMNHEADER);
-   RegisterStoredSetting('appearance.showGridlines',          'SHOW GRIDLINES',
+   RegisterModelSetting( 'appearance.showGridlines',          'SHOW GRIDLINES',
                          RS_APPEARANCE_SHOWGRIDLINES);
 
    { Audio: MP3 recording and the digital voice keyer, 2026-08-15. }

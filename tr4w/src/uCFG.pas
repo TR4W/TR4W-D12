@@ -385,7 +385,7 @@ const
       (
       @DisplayBandMap,
       @EditableLog.ShowRemainingMultipliers,
-      @DispalayLogGridLines,
+      nil {@DispalayLogGridLines -- the setter raises it},
       @UpadateAutoSend,
       @DisplayNextQSONumber,
       @SetComputerName,
@@ -648,6 +648,7 @@ const
    (* Three of these five were AdditionalProcsArray hooks, so the hook
      table falls with the rows. *)
    - 5 {WSJT-X -- moved to uSettingsModel}
+   - 4 {the main window's appearance -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -838,9 +839,6 @@ const
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'NAME FLAG ENABLE';              crAddress: @Config.NameFlagEnable;                 crMin:0;  crMax: 0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NET STATUS UPDATE INTERVAL';    crAddress: @tNetStatusUpdateInterval;       crMin:1000;crMax:10000;   crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'NO BORDER';                     crAddress: @Config.NoBorder;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'NO CAPTION';                    crAddress: @Config.NoCaption;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'NO COLUMN HEADER';              crAddress: @Config.NoColumnHeader;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
  (* ORION PORT RETIRED 2026-09-10 (NY4I): "Drop Orion port. It covered by the
      general port as a type Orion in settings".
 
@@ -947,7 +945,6 @@ const
  (crCommand: 'SERVER PORT';                   crAddress: @ServerPort;                     crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'SHIFT KEY ENABLE';              crAddress: @ShiftKeyEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),     // 4.105.6
  (crCommand: 'SHOW FREQUENCY IN LOG';         crAddress: @tShowFrequencyinLog;            crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'SHOW GRIDLINES';                crAddress: @Config.ShowGridlines;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:3; crJ: 0; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW TYPED CALLSIGN';           crAddress: @tShowTypedCallsign;             crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'SLASH MARK CHAR';               crAddress: @SlashMarkChar;                  crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),

@@ -182,10 +182,6 @@ type
         target is an ArrayRecordArray entry rather than crAddress, which is a
         different move. REMINDER is not a scalar setting at all. The menu item
         cannot go until all three are dealt with. }
-      NoBorder: boolean;
-      NoCaption: boolean;
-      NoColumnHeader: boolean;
-      ShowGridlines: boolean;
 
       { AUDIO -- MP3 recording and the digital voice keyer, migrated 2026-08-15.
 
@@ -246,10 +242,6 @@ var
       AutoQSONumberDecrement: False;
       NameFlagEnable: True;
       IncludeFKeyNumber: False;
-      NoBorder: False;
-      NoCaption: False;
-      NoColumnHeader: False;
-      ShowGridlines: False;
       MP3RecorderEnable: False;
       MP3Path: '';
       MP3Player: '';

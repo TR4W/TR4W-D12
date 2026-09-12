@@ -245,10 +245,15 @@ begin
    // nothing to notice if one of these were flipped while shuffling the record.
    BeginTest('the appearance and F-key defaults survived the move');
 
-   CheckFalse(Config.NoBorder,          'NoBorder was False');
-   CheckFalse(Config.NoCaption,         'NoCaption was False');
-   CheckFalse(Config.NoColumnHeader,    'NoColumnHeader was False');
-   CheckFalse(Config.ShowGridlines,     'ShowGridlines was False');
+   (* The four main-window flags left the Config record for
+     Settings.MainWindow on 2026-09-12. The assertion follows them rather
+     than being deleted: the reason it was written -- False is the RIGHT
+     value, so nothing else would notice a flip -- is unchanged by where the
+     value is stored. *)
+   CheckFalse(Settings.MainWindow.NoBorder,       'NoBorder was False');
+   CheckFalse(Settings.MainWindow.NoCaption,      'NoCaption was False');
+   CheckFalse(Settings.MainWindow.NoColumnHeader, 'NoColumnHeader was False');
+   CheckFalse(Settings.MainWindow.ShowGridlines,  'ShowGridlines was False');
    CheckFalse(Config.IncludeFKeyNumber, 'IncludeFKeyNumber was False');
 end;
 

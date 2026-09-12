@@ -3473,7 +3473,7 @@ end;
 
 procedure DispalayLogGridLines;
 begin
-  TR4WEditableLogSetGridLines(Config.ShowGridlines);
+  TR4WEditableLogSetGridLines(Settings.MainWindow.ShowGridlines);
 
   CheckEditableWindowHeight;
 end;
