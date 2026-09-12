@@ -3132,7 +3132,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // into uCabrilloExchange.FormatCabrilloExchange (dependency-light + unit-
                 // tested).  Build the My-station record and pass the per-QSO derived
                 // strings; it fills CABRILLO_MYEX / CABRILLO_HISEX (and carries pnr).
-                myStationEx.MyState      := string( MyState );
+                myStationEx.MyState      := Settings.My.State;
                 myStationEx.MyGrid       := Settings.My.Grid;
                 myStationEx.MyName       := Settings.My.Name;
                 myStationEx.MyZone       := ZoneSentForThisContest;
@@ -3758,7 +3758,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         and is pinned arm-by-arm there.  What is left here is the part that
         needs PostUnit's globals: filling the record.  Same split, same reason,
         as tGenerateLogPortionOfCabrilloFile and uCabrilloExchange. }
-      my.MyState      := string(MyState);
+      my.MyState      := Settings.My.State;
       my.MyGrid       := Settings.My.Grid;
       my.MyName       := Settings.My.Name;
       my.MyZone       := ZoneSentForThisContest;

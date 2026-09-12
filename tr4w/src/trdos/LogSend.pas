@@ -361,7 +361,7 @@ begin
   
         '~': SendSalutation(CallWindowString);
         '\': AddStringToBuffer(MyCall, Config.CWTone);
-        '&': AddStringToBuffer(MyState, Config.CWTone);
+        '&': AddStringToBuffer(UTF8Encode(Settings.My.State), Config.CWTone);
 
         '|':
           begin

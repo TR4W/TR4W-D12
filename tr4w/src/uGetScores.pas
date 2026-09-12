@@ -398,7 +398,7 @@ begin
      sSection := ReadCabrilloSummaryField('_LOCATION');
      end;
 
-  sState := Trim(string(MyState));
+  sState := Trim(Settings.My.State);
   if sState = '' then
      begin
      sState := ReadCabrilloSummaryField('_ADDRESS-STATE-PROVINCE');

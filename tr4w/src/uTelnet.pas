@@ -363,7 +363,7 @@ begin
       end
    else if Token = 'MY_STATE' then
       begin
-      Value := string(MyState)
+      Value := Settings.My.State
       end
    else if Token = 'MY_SECTION' then
       begin

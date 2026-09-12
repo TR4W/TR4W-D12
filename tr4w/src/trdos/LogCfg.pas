@@ -1060,28 +1060,28 @@ begin
         tCQExchange := ' ' + Grid + ' ' + Grid;
       end;
 
-    RADIOMEMORY, WISCONSINQSOPARTY: tCQExchange := ' ' + MyState;
+    RADIOMEMORY, WISCONSINQSOPARTY: tCQExchange := UTF8Encode(' ' + Settings.My.State);
 
-    LQP, NCCCSPRINT: tCQExchange := UTF8Encode(' # ' + Settings.My.Name + ' ' + MyState);
+    LQP, NCCCSPRINT: tCQExchange := UTF8Encode(' # ' + Settings.My.Name + ' ' + Settings.My.State);
 
 //    JTDX, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW, UCG: tCQExchange := ' 5NN #';
 
-    R9W_UW9WK_MEMORIAL, CUPURAL, UKRAINECHAMPIONSHIP, RFASCHAMPIONSHIPCW, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB: tCQExchange := ' ' + MyState + '#';
+    R9W_UW9WK_MEMORIAL, CUPURAL, UKRAINECHAMPIONSHIP, RFASCHAMPIONSHIPCW, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB: tCQExchange := UTF8Encode(' ' + Settings.My.State + '#');
 
-    ALRS_UA1DZ_CUP, OLDNEWYEAR, TENNESSEEQSOPARTY, SALMONRUN, ALLASIANCW, ALLASIANSSB, SEVENQP, ARRL160, ARRLDXCW: tCQExchange := ' 5NN ' + MyState;
+    ALRS_UA1DZ_CUP, OLDNEWYEAR, TENNESSEEQSOPARTY, SALMONRUN, ALLASIANCW, ALLASIANSSB, SEVENQP, ARRL160, ARRLDXCW: tCQExchange := UTF8Encode(' 5NN ' + Settings.My.State);
 
-    OHIOQSOPARTY, CALQSOPARTY, UA4WCHAMPIONSHIP, RAEM, CUPRFCW, CUPRFSSB: tCQExchange := ' # ' + MyState;
+    OHIOQSOPARTY, CALQSOPARTY, UA4WCHAMPIONSHIP, RAEM, CUPRFCW, CUPRFSSB: tCQExchange := UTF8Encode(' # ' + Settings.My.State);
 {
     ARI, SPDX, ARKTIKA_SPRING, PACC, WAG, CUPUA1DZ, RUSSIANDX, RDA, OKDX, UKRAINIAN, OLDNEWYEAR, ARRL10, HADX, YODX, RSGB18, DARCXMAS:
       begin
-        if MyState <> '' then tCQExchange := ' 5NN ' + MyState else tCQExchange := ' 5NN #';
+        if Settings.My.State <> '' then tCQExchange := ' 5NN ' + Settings.My.State else tCQExchange := ' 5NN #';
       end;
 }
     JIDXCW, JIDXSSB, CQ160SSB, CQ160CW, LZDX, IARU, OZCR_O, OZCR_Z:
       begin
-        if MyState <> '' then
+        if Settings.My.State <> '' then
            begin
-           tCQExchange := ' 5NN ' + MyState
+           tCQExchange := UTF8Encode(' 5NN ' + Settings.My.State)
            end
         else
            begin
@@ -1091,9 +1091,9 @@ begin
 
     CQIR:
       begin
-        if MyState <> '' then
+        if Settings.My.State <> '' then
            begin
-           tCQExchange := ' ' + MyState + ' #'
+           tCQExchange := UTF8Encode(' ' + Settings.My.State + ' #')
            end
         else
            begin
@@ -1107,9 +1107,9 @@ begin
 //    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + Settings.My.Zone;
     {CZECH_ACTIVITY_VHF,}OZHCRVHF, RADIOVHFFD: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Grid);
 
-    NRAUBALTICCW, NRAUBALTICSSB, RU3AXMEMORIAL, {WWPMC,} UBACW, UBASSB: tCQExchange := ' 5NN # ' + MyState;
+    NRAUBALTICCW, NRAUBALTICSSB, RU3AXMEMORIAL, {WWPMC,} UBACW, UBASSB: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.State);
 
-   PCC, IOTA, HELVETIA: if MyState <> '' then tCQExchange := ' 5NN # ' + MyState else tCQExchange := ' 5NN #';
+   PCC, IOTA, HELVETIA: if Settings.My.State <> '' then tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.State) else tCQExchange := ' 5NN #';
 
     EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW:
       begin

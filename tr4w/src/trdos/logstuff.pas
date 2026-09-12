@@ -6800,7 +6800,7 @@ begin
            end
         else
            begin
-           Grid1 := MyState;
+           Grid1 := UTF8Encode(Settings.My.State);
            end;
 
         if (russianRegion2 in [rtUA1A, rtUA1C]) then
@@ -7773,7 +7773,7 @@ begin
            begin
            RXData.QSOPoints := 1;
            end;
-        if (MyState = 'TRC') and (RXData.DomesticQTH = 'TRC') then
+        if (Settings.My.State = 'TRC') and (RXData.DomesticQTH = 'TRC') then
           // throw away above & use one point -if- fellow TRC
            begin
            RXData.QSOPoints := 1;
@@ -8037,7 +8037,7 @@ begin
 
     IOTAQSOPointMethod: // 4.102.6
       begin
-        if MyState = '' then // 4.61.3 change points
+        if Settings.My.State = '' then // 4.61.3 change points
            begin
            if RXData.domesticQTH <> '' then
               begin
@@ -8050,8 +8050,8 @@ begin
            exit;
            end;
         IOTASTATE := RXDATA.DomesticQTH;
-        if pos('-', MyState) > 0 then
-          if (MyState = IOTAState) or (RXData.DomesticQTH = '') then
+        if pos('-', Settings.My.State) > 0 then
+          if (Settings.My.State = IOTAState) or (RXData.DomesticQTH = '') then
              begin
              RXData.QSOPoints := 5
              end
@@ -8060,7 +8060,7 @@ begin
              RXData.QSOPoints := 15;
              end;
 
-        if (RXData.DomesticQTH <> '') and (MyState <> RXData.DomesticQTH) then
+        if (RXData.DomesticQTH <> '') and (Settings.My.State <> RXData.DomesticQTH) then
            begin
            RXData.QSOPoints := 15
            end
@@ -8195,7 +8195,7 @@ begin
            RXData.QSOPoints := 10;
            end;
 
-        if RXData.Zone = StrToIntDef(Settings.My.Zone, 0) then
+        if RXData.Zone = StrToIntDef(UTF8Encode(Settings.My.Zone), 0) then
            begin
            RXData.ZoneMult := False;
            end;
@@ -8290,7 +8290,7 @@ begin
     RAEMQSOPointMethod:
       begin
 
-        if LooksLikeAGeoCoordinates(MyState, la1, lo1) then
+        if LooksLikeAGeoCoordinates(UTF8Encode(Settings.My.State), la1, lo1) then
           if LooksLikeAGeoCoordinates(RXData.QTHString, la2, lo2) then
              begin
              Distance := Abs(lo1 - lo2);
@@ -9012,14 +9012,14 @@ begin
 
         if GetOblast(MyCall) = '4W' then
            begin
-           if RXData.DomesticQTH <> MyState then
+           if RXData.DomesticQTH <> Settings.My.State then
               begin
               RXData.QSOPoints := 4;
               end;
            Exit;
            end;
 
-        if RXData.DomesticQTH <> MyState then
+        if RXData.DomesticQTH <> Settings.My.State then
            begin
            if RXData.Band = Band80 then
               begin
@@ -9062,11 +9062,11 @@ begin
         if RussianID(RXCty) then
            begin
            RXData.DomMultQTH := GetRussiaOblastID(RXData.Callsign);
-           if MyState = '' then
+           if Settings.My.State = '' then
               begin
               Exit;
               end;
-           if not (MyState[1] in ['1'..'7']) then
+           if not (Settings.My.State[1] in ['1'..'7']) then
               begin
               Exit;
               end;
@@ -9074,7 +9074,7 @@ begin
               begin
               Exit;
               end;
-           RXData.QSOPoints := ChampionshipRFPointsArray[Ord(MyState[1]) - 48 +
+           RXData.QSOPoints := ChampionshipRFPointsArray[Ord(Settings.My.State[1]) - 48 +
              (RXData.Zone - 1) * 7];
            end;
       end;
@@ -9092,7 +9092,7 @@ begin
     WWPMCQSOPointMethod:
       begin
         RXData.QSOPoints := 5;
-        if MyState = '' then
+        if Settings.My.State = '' then
            begin
            if RXData.QTHString <> '' then
               begin
@@ -9102,7 +9102,7 @@ begin
         else
            begin
            if RXData.QTHString <> '' then
-             if MyState <> RXData.QTHString then
+             if Settings.My.State <> RXData.QTHString then
                 begin
                 RXData.QSOPoints := 10;
                 end;
@@ -9184,7 +9184,7 @@ begin
           end;
          end;
      end;
-//     if MyState = '' then
+//     if Settings.My.State = '' then
 
      
 
@@ -9242,14 +9242,14 @@ begin
          RXData.QSOPoints:= 3;  }
 
     ChampionshipRFASMethod:
-      if (MyState <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
-        if StringIsAllNumbers(MyState) then
+      if (Settings.My.State <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
+        if StringIsAllNumbers(Settings.My.State) then
            begin
            la1 := StrToIntDef(RXData.QTHString[1], 0);
            lo1 := StrToIntDef(Copy(RXData.QTHString, 2, 2), 0);
 
-           la2 := StrToIntDef(MyState[1], 0);
-           lo2 := StrToIntDef(Copy(MyState, 2, 2), 0);
+           la2 := StrToIntDef(UTF8Encode(Settings.My.State[1]), 0);
+           lo2 := StrToIntDef(UTF8Encode(Copy(Settings.My.State, 2, 2)), 0);
            RXData.QSOPoints := Abs(la1 - la2) + Abs(lo1 - lo2) + 5;
            if RXData.Mode = CW then
               begin
@@ -9387,13 +9387,13 @@ begin
            RXData.QSOPoints := 1;
            end;
 
-        if (RXData.QTHString[result] = 'M') and (StringIsAllNumbers(MyState))
+        if (RXData.QTHString[result] = 'M') and (StringIsAllNumbers(Settings.My.State))
           then
            begin
            inc(RXData.QSOPoints, 6)
            end
         else if (RXData.QTHString[result] = 'M') and (not
-          StringIsAllNumbers(MyState)) then
+          StringIsAllNumbers(Settings.My.State)) then
            begin
            inc(RXData.QSOPoints, 2);
            end;
@@ -9514,11 +9514,11 @@ begin
            if RXData.DomMultQTH[1] in ['A'..'Z'] then
               begin
               if RXData.DomMultQTH[2] in ['0'..'9'] then
-                if length(MyState) >= 2 then
+                if length(Settings.My.State) >= 2 then
                    begin
-                   la1 := Abs(Ord(UpCase(RXData.DomMultQTH[1])) - Ord(MyState[1]))
+                   la1 := Abs(Ord(UpCase(RXData.DomMultQTH[1])) - Ord(Settings.My.State[1]))
                      + 1;
-                   la2 := Abs(Ord(UpCase(RXData.DomMultQTH[2])) - Ord(MyState[2]))
+                   la2 := Abs(Ord(UpCase(RXData.DomMultQTH[2])) - Ord(Settings.My.State[2]))
                      + 1;
                    if la1 >= la2 then
                       begin
@@ -9612,19 +9612,19 @@ begin
            Str1 := Copy(RXData.DomesticQTH, 1, 2);
            str2 := Copy(RXData.DomesticQTH, 3, 2);
            end;
-        if length(MyState) < 3 then
+        if length(Settings.My.State) < 3 then
            begin
            exit;
            end;
-        if length(MyState) = 3 then
+        if length(Settings.My.State) = 3 then
            begin
-           Str3 := '0' + Copy(MyState, 1, 1);
-           Str4 := Copy(MyState, 2, 2);
+           Str3 := UTF8Encode('0' + Copy(Settings.My.State, 1, 1));
+           Str4 := UTF8Encode(Copy(Settings.My.State, 2, 2));
            end
         else
            begin
-           Str3 := Copy(MyState, 1, 2);
-           Str4 := Copy(MyState, 3, 2);
+           Str3 := UTF8Encode(Copy(Settings.My.State, 1, 2));
+           Str4 := UTF8Encode(Copy(Settings.My.State, 3, 2));
            end;
         if Str1 = Str3 then
            begin
@@ -9725,7 +9725,7 @@ begin
  QSO with another continent � 5 points.
      }
       begin
-        if length(MyState) = 4 then // i am in EU region
+        if length(Settings.My.State) = 4 then // i am in EU region
            begin
            if (RXData.DomMultQTH[4] <> '') then // he is in EU
               begin

@@ -983,6 +983,7 @@ type
       FGrid: string;
       FZone: string;
       FZoneWasSet: boolean;
+      FState: string;
       FItuZone: TMyItuZone;
       procedure SetZone(const aValue: string);
    public
@@ -1047,6 +1048,17 @@ type
         and the header of uContestIARU; both are about the VALUE, not about
         where it is stored. *)
       property Zone: string read FZone write SetZone;
+      (* Was the global MyState in LOGWIND. It is NOT a state: it is the
+        contest-dependent catch-all the exchange sends where a US station
+        sends its state -- a province, an oblast, a county, a serial number
+        in a few contests, and a grid square in the VHF ones, where FCONTEST
+        assigns the operator's grid straight into it.
+
+        WHICH IS WHY IT ANSWERS TO TWO NAMES. 'MY QTH' and 'MY STATE' were
+        two rows in the config array pointing at this one global, and both
+        still resolve -- see AlsoKnownAs. Preferences shows ONE box, because
+        two would let editing either silently change the other. *)
+      property State: string read FState write FState;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
         CTY.DAT default", which is why the row allowed 0 in a range whose
         real zones start at 1. Issue #930 added it so a station in a
@@ -1538,6 +1550,7 @@ begin
    FGrid       := '';
    FZone       := '';
    FZoneWasSet := False;
+   FState      := '';
    FItuZone    := 0;
 end;
 
@@ -1875,6 +1888,19 @@ procedure TR4WSettings.BuildCommandMap;
      the grouped model.  It is not evidence the derivation rule is wrong; it
      is the legacy compatibility layer, and it goes when the legacy formats
      stop being read. *)
+   (* A SECOND NAME FOR A PATH THAT KEEPS THE FIRST.
+
+     Alias REPLACES: it deletes every existing name for the path before
+     installing the new one, which is right when the derived name is wrong.
+     This is for the other case -- two names TR4W has always accepted for
+     one setting, both of which must keep working. MY QTH and MY STATE were
+     two rows in the config array whose crAddress was the same global; a
+     config file, and a multi-op peer, may use either. *)
+   procedure AlsoKnownAs(const aCommand, aPath: string);
+   begin
+      FCommands.Values[AnsiString(aCommand)] := AnsiString(aPath);
+   end;
+
    procedure Alias(const aCommand, aPath: string);
    var
       i: integer;
@@ -1956,6 +1982,10 @@ begin
      store already groups these as operating.bands.hf / .warc / .vhf, so
      splitting them into three objects would disagree with the one grouping
      this program has already committed to. *)
+   (* MY STATE derives exactly. MY QTH is the older spelling of the same
+     setting and is ADDED, not substituted. *)
+   AlsoKnownAs('MY QTH', 'My.State');
+
    Alias('HF BAND ENABLE',   'Bands.HfEnabled');
    Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');
    Alias('WARC BAND ENABLE', 'Bands.WarcEnabled');
