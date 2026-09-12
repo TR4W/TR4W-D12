@@ -135,12 +135,10 @@ begin
     CallsignUpdateEnable := False; // 4.63.1
   //  CallWindowPosition := NormalCallWindowPosition;
   //  CfgDvpPath := '';
-  //  Config.CheckLogFileSize := False;
   //  CodeSpeed := 35;
   //  ColumnDupeSheetEnable := False;
   //  ComputerID := CHR(0);
   //  ContactsPerPage := 50;
-  //  Config.ConfirmEditChanges := True;
   //  ContestTitle := '';
   //  ContinentString := '';
 //   CorrectedCallMessage := '} OK %';
@@ -252,7 +250,6 @@ begin
   //  LogRSTSent := '599';
   //  LogRSSent := '59';
   //  LogSubTitle := '';
-  //  Config.LogWithSingleEnter := False;
   //  LookForRSTSent := False;
 
   //  MessageEnable := True;
@@ -461,7 +458,12 @@ begin
 
   //  Config.UnknownCountryFileEnable := False;
   //  UnknownCountryFileName := 'UNKNOWN.CTY';
-  Config.UpdateRestartFileEnable := True;
+  (* Config.UpdateRestartFileEnable := True DELETED 2026-09-11. It was the
+    ONE live assignment left in this routine's UPDATE RESTART FILE block,
+    and it is redundant now that TLogSettings' constructor carries the
+    default -- SetConfigurationDefaultValues runs at startup BEFORE the
+    stored settings are loaded, so it could only ever restate a default
+    that the object already has. *)
      //   UseBIOSKeyCalls := False;
   //  UserInfoShown := NoUserInfo;
 

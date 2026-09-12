@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(63, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(67, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -1012,6 +1012,8 @@ const
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
       + '"CALL WINDOW SHOW ALL SPOTS",'
+      + '"CHECK LOG FILE SIZE",'
+      + '"CONFIRM EDIT CHANGES",'
       + '"CW SPEED FROM DATABASE",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXTERNAL LOGGER ADDRESS",'
@@ -1021,6 +1023,7 @@ const
       + '"IN BAND LOCKOUT",'
       + '"KEYPAD CW MEMORIES",'
       + '"LEAVE CURSOR IN CALL WINDOW",'
+      + '"LOG WITH SINGLE ENTER",'
       + '"MMTTY ENGINE",'
       + '"NO POLL DURING PTT",'
       + '"PADDLE MONITOR TONE",'
@@ -1046,6 +1049,7 @@ const
       + '"SWAP RADIO RELAY SENSE",'
       + '"TUNE WITH DITS",'
       + '"TWO RADIO MODE",'
+      + '"UPDATE RESTART FILE ENABLE",'
       + '"VHF BAND ENABLE",'
       + '"WAIT FOR STRENGTH",'
       + '"WARC BAND ENABLE",'

@@ -151,8 +151,6 @@ type
         Five of these ten were typed constants = True. A record field defaults to
         zero, so carrying the value across by hand is the whole safeguard, and
         uTestConfigDefaults pins every one in the same commit. }
-      LogWithSingleEnter: boolean;
-      ConfirmEditChanges: boolean;
       AutoQSONumberDecrement: boolean;
 
       { SUPER CHECK PARTIAL, BAND MAP AND LOG FILES, migrated 2026-08-15.
@@ -165,9 +163,7 @@ type
         contest change would silently reset the setting instead. The record
         default matches it, and the assignment now writes the same field. }
       NameFlagEnable: boolean;
-      CheckLogFileSize: boolean;
       UnknownCountryFileEnable: boolean;
-      UpdateRestartFileEnable: boolean;
 
       { The function-key button captions, migrated 2026-08-15.
 
@@ -254,13 +250,9 @@ var
         behaves exactly as it did before. }
       MultiMultsOnly: False;
       IntercomFileEnable: False;
-      LogWithSingleEnter: False;
-      ConfirmEditChanges: True;
       AutoQSONumberDecrement: False;
       NameFlagEnable: True;
-      CheckLogFileSize: False;
       UnknownCountryFileEnable: False;
-      UpdateRestartFileEnable: True;
       IncludeFKeyNumber: False;
       NoBorder: False;
       NoCaption: False;

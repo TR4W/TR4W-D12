@@ -1747,13 +1747,13 @@ begin
          begin
          BackupLogNow;
          end;
-  if Config.UpdateRestartFileEnable then
+  if Settings.Log.UpdateRestartFile then
      begin
      Sheet.SaveRestartFile;
      end;
   BeSilent := False;
   NameCallsignPutUp := '';
-  if Config.CheckLogFileSize then
+  if Settings.Log.CheckFileSize then
     if not LogFileLooksOkay then
        begin
        DoABeep(Warning);
@@ -2287,7 +2287,7 @@ begin
      begin
      DualingCQState := DualSendingExchange;
      end;
-  //{WLI}    IF Config.LogWithSingleEnter THEN
+  //{WLI}    IF Settings.Log.WithSingleEnter THEN
   begin
     if ParametersOkay(CallWindowString,
       ExchangeWindowString,

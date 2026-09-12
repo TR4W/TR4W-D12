@@ -1807,7 +1807,7 @@ begin
         CheckAndSetInitialExchangeCursorPos;
         end;
 
-     if not Config.LogWithSingleEnter then
+     if not Settings.Log.WithSingleEnter then
         begin
         Exit;
         end;

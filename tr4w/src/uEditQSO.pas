@@ -445,7 +445,7 @@ begin
   //     OnShow); with that fixed, moving the prompt out is behaviour-preserving
   //     for the button and correct for the new path.
   //
-  // Config.ConfirmEditChanges still governs it -- see uEditQSOForm.
+  // Settings.Log.ConfirmEditChanges still governs it -- see uEditQSOForm.
 
   //EditableQSORXData.QTH
 

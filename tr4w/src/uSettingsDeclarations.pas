@@ -245,11 +245,11 @@ begin
                          RS_OPERATING_ESCAPEEXITSSAP);
    RegisterModelSetting( 'operating.leaveCursorInCall',       'LEAVE CURSOR IN CALL WINDOW',
                          RS_OPERATING_LEAVECURSORINCALL);
-   RegisterStoredSetting('operating.logWithSingleEnter',      'LOG WITH SINGLE ENTER',
+   RegisterModelSetting( 'operating.logWithSingleEnter',      'LOG WITH SINGLE ENTER',
                          RS_OPERATING_LOGWITHSINGLEENTER);
    RegisterModelSetting( 'operating.spaceBarDupeCheck',       'SPACE BAR DUPE CHECK ENABLE',
                          RS_OPERATING_SPACEBARDUPECHECK);
-   RegisterStoredSetting('operating.confirmEditChanges',      'CONFIRM EDIT CHANGES',
+   RegisterModelSetting( 'operating.confirmEditChanges',      'CONFIRM EDIT CHANGES',
                          RS_OPERATING_CONFIRMEDITCHANGES);
    RegisterStoredSetting('operating.autoQSONumberDecrement',  'AUTO QSO NUMBER DECREMENT',
                          RS_OPERATING_AUTOQSONUMBERDECREMENT);
@@ -321,11 +321,11 @@ begin
                          RS_BANDMAP_CALLWINDOWSHOWALLSPOTS);
    RegisterModelSetting( 'bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
                          RS_BANDMAP_SWAPPACKETSPOTRADIOS);
-   RegisterStoredSetting('logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
+   RegisterModelSetting( 'logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
                          RS_LOGGING_CHECKLOGFILESIZE);
    RegisterStoredSetting('logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',
                          RS_LOGGING_UNKNOWNCOUNTRYFILE);
-   RegisterStoredSetting('logging.updateRestartFile',         'UPDATE RESTART FILE ENABLE',
+   RegisterModelSetting( 'logging.updateRestartFile',         'UPDATE RESTART FILE ENABLE',
                          RS_LOGGING_UPDATERESTARTFILE);
    RegisterModelSetting( 'operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
                          RS_OPERATING_TWORADIO_ALTDBUFFER);

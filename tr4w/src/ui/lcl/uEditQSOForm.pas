@@ -252,7 +252,7 @@ uses
   uEditQSO,           // the load and save halves, which stayed put
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- every caller is still Win32
   MainUnit,           // logger
-  uConfigValues,      // Config.ConfirmEditChanges
+  uSettingsModel,     // Settings.Log.ConfirmEditChanges
   uDialogs,           // YesOrNo
   VC,                 // TC_SAVECHANGES
   Log4D;
@@ -564,7 +564,7 @@ end;
 // asking.
 function TfrmEditQSO.ConfirmSave: boolean;
 begin
-   Result := (not Config.ConfirmEditChanges) or
+   Result := (not Settings.Log.ConfirmEditChanges) or
              (YesOrNo(TC_SAVECHANGES) = IDyes);
 end;
 
@@ -615,7 +615,7 @@ begin
       Exit;
       end;
 
-   if not Config.ConfirmEditChanges then
+   if not Settings.Log.ConfirmEditChanges then
       begin
       Exit;
       end;

@@ -757,7 +757,6 @@ The Role column is what this table is for.
 | `tree.pas` | Utility library |
 | `logwind.pas` | Window management and display |
 | `postunit.pas` | Post-contest processing, Cabrillo export |
-| `help.pas` | Help text |
 | `logscp.pas` | Super Check Partial |
 | `logradio.pas` | **Legacy** radio control — see the radio section below |
 | `logsubs2.pas` | Core logging subroutines |

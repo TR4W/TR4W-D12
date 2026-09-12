@@ -190,11 +190,11 @@ begin
    CheckTrue(Settings.Cq.AutoReturnToMode,        'AutoReturnToCQMode was True');
    CheckTrue(Settings.Cq.EscapeExitsSearchAndPounce,'EscapeExitsSearchAndPounce was True');
    CheckTrue(Settings.CallWindow.SpaceBarDupeCheck, 'SpaceBarDupeCheck was True');
-   CheckTrue(Config.ConfirmEditChanges,        'ConfirmEditChanges was True');
+   CheckTrue(Settings.Log.ConfirmEditChanges,  'ConfirmEditChanges was True');
 
    CheckFalse(Settings.Cq.AutoCallTerminate,      'AutoCallTerminate was False');
    CheckFalse(Settings.CallWindow.LeaveCursor, 'LeaveCursor was False');
-   CheckFalse(Config.LogWithSingleEnter,     'LogWithSingleEnter was False');
+   CheckFalse(Settings.Log.WithSingleEnter,  'WithSingleEnter was False');
    CheckFalse(Config.AutoQSONumberDecrement, 'AutoQSONumberDecrement was False');
 end;
 
@@ -220,14 +220,19 @@ begin
    CheckTrue(Settings.CallWindow.PartialCallEnable, 'PartialCallEnable was True');
    CheckTrue(Settings.CallWindow.WildcardPartials,  'WildcardPartials was True');
    CheckTrue(Config.NameFlagEnable,          'NameFlagEnable was True');
-   CheckTrue(Config.UpdateRestartFileEnable, 'set True by CFGDEF, not by its declaration');
+   (* THE MESSAGE CHANGED WITH THE VALUE'S HOME. It used to read "set True
+     by CFGDEF, not by its declaration" -- and that assignment in
+     SetConfigurationDefaultValues is deleted, because a constructor is
+     where a default belongs and the routine ran before the stored settings
+     loaded anyway. *)
+   CheckTrue(Settings.Log.UpdateRestartFile, 'UpdateRestartFile default is True');
 
    CheckFalse(Settings.CallWindow.ShowAllSpots, 'ShowAllSpots was False');
    (* Alt-D came across in the same commit and was never asserted here. *)
    CheckFalse(Settings.AltD.BufferEnable, 'AltD.BufferEnable was False');
    CheckFalse(Settings.AltD.CqEnable,     'AltD.CqEnable was False');
    CheckFalse(Settings.So2r.SwapPacketSpotRadios, 'SwapPacketSpotRadios was False');
-   CheckFalse(Config.CheckLogFileSize,        'CheckLogFileSize was False');
+   CheckFalse(Settings.Log.CheckFileSize,     'CheckFileSize was False');
    CheckFalse(Config.UnknownCountryFileEnable,'UnknownCountryFileEnable was False');
 end;
 

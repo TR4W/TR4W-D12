@@ -872,6 +872,44 @@ type
       property AutoDelay: TAutoCqDelay read FAutoDelay write FAutoDelay;
    end;
 
+   (*
+     THE LOG -- entering a contact and changing one afterwards.
+
+     ONE NAME DERIVES EXACTLY, LOG WITH SINGLE ENTER, because it happens to
+     lead with the group's own word. The other three do not and carry
+     aliases.
+
+     THIS GROUP IS NOT THE LOG STORE. It is how the operator INTERACTS with
+     the log; where the rows actually live is uLogStore and the SQLite
+     database, which no setting here touches. Worth saying because 'Log' is
+     a broad word and the next person adding to this file will have to
+     decide whether their setting belongs here.
+
+     No hooks on any of the four.
+   *)
+   TLogSettings = class(TSettingsGroup)
+   private
+      FWithSingleEnter: boolean;
+      FConfirmEditChanges: boolean;
+      FCheckFileSize: boolean;
+      FUpdateRestartFile: boolean;
+   public
+      constructor Create;
+   published
+      (* Was Config.LogWithSingleEnter -- LOG WITH SINGLE ENTER, the one
+        name in this group that needs no alias. *)
+      property WithSingleEnter: boolean
+         read FWithSingleEnter write FWithSingleEnter;
+      // Was Config.ConfirmEditChanges. CONFIRM EDIT CHANGES.
+      property ConfirmEditChanges: boolean
+         read FConfirmEditChanges write FConfirmEditChanges;
+      // Was Config.CheckLogFileSize. CHECK LOG FILE SIZE.
+      property CheckFileSize: boolean read FCheckFileSize write FCheckFileSize;
+      // Was Config.UpdateRestartFileEnable. UPDATE RESTART FILE ENABLE.
+      property UpdateRestartFile: boolean
+         read FUpdateRestartFile write FUpdateRestartFile;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -893,6 +931,7 @@ type
       FAltD: TAltDSettings;
       FCallWindow: TCallWindowSettings;
       FCq: TCqSettings;
+      FLog: TLogSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -996,6 +1035,7 @@ type
       property AltD: TAltDSettings read FAltD;
       property CallWindow: TCallWindowSettings read FCallWindow;
       property Cq: TCqSettings read FCq;
+      property Log: TLogSettings read FLog;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1242,6 +1282,16 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TLogSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues' initialiser carried.
+   FWithSingleEnter    := False;
+   FConfirmEditChanges := True;
+   FCheckFileSize      := False;
+   FUpdateRestartFile  := True;
+end;
+
 constructor TCqSettings.Create;
 begin
    inherited Create;
@@ -1333,6 +1383,7 @@ begin
    FAltD           := TAltDSettings.Create;
    FCallWindow     := TCallWindowSettings.Create;
    FCq             := TCqSettings.Create;
+   FLog            := TLogSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1344,6 +1395,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FLog.Free;
    FCq.Free;
    FCallWindow.Free;
    FAltD.Free;
@@ -1660,6 +1712,11 @@ begin
 
    (* THE WHOLE SO2R GROUP -- see TSo2rSettings for why every one of them
      needs a line here and why that is not evidence the rule is wrong. *)
+   (* LOG WITH SINGLE ENTER is NOT here -- it derives. *)
+   Alias('CONFIRM EDIT CHANGES',        'Log.ConfirmEditChanges');
+   Alias('CHECK LOG FILE SIZE',         'Log.CheckFileSize');
+   Alias('UPDATE RESTART FILE ENABLE',  'Log.UpdateRestartFile');
+
    Alias('ALWAYS CALL BLIND CQ',           'Cq.AlwaysCallBlind');
    Alias('AUTO CALL TERMINATE',            'Cq.AutoCallTerminate');
    Alias('AUTO RETURN TO CQ MODE',         'Cq.AutoReturnToMode');
