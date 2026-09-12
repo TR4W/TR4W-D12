@@ -371,7 +371,7 @@ begin
       end
    else if Token = 'MY_NAME' then
       begin
-      Value := string(MyName)
+      Value := Settings.My.Name
       end
    else if Token = 'MY_GRID' then
       begin

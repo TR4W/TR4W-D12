@@ -264,7 +264,7 @@ end;
 
 procedure SetUpNameAndStateExchange;
 begin
-  CQExchange := ' ' + MyName + ' ' + MyState;
+  CQExchange := UTF8Encode(' ' + Settings.My.Name + ' ' + MyState);
   RepeatSearchAndPounceExchange := CQExchange;
   SearchAndPounceExchange := CQExchange;
 end;
@@ -1010,8 +1010,8 @@ begin
         ContestName := 'Slow Speed Test';
         ActiveDomesticMult := DomesticFile;
         Add_KVE;
-        CQExchange := ' ' + MyName + ' ' + MyState;
-        SearchAndPounceExchange := MyName + ' ' + MyState;
+        CQExchange := UTF8Encode(' ' + Settings.My.Name + ' ' + MyState);
+        SearchAndPounceExchange := UTF8Encode(Settings.My.Name + ' ' + MyState);
       end;
 
     NAQSOCW, NAQSOSSB, NAQSORTTY:
@@ -1019,11 +1019,11 @@ begin
         //        ActiveInitialExchange := NameInitialExchange;
         //        ContestName := 'North American QSO Party';
 
-        CQExchange := ' ' + MyName + ' ' + MyState;
+        CQExchange := UTF8Encode(' ' + Settings.My.Name + ' ' + MyState);
         QSLMessage := '73 \ NA>';
         QuickQSLMessage1 := 'TU';
         QSOBeforeMessage := ' QSO B4 \ NA';
-        SearchAndPounceExchange := MyName + ' ' + MyState;
+        SearchAndPounceExchange := UTF8Encode(Settings.My.Name + ' ' + MyState);
         CorrectedCallMessage := '} R';
 
         SetCQMemoryString(CW, F1, 'CQ^NA \ \ NA>');
@@ -1037,9 +1037,9 @@ begin
         SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
         SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
 
-        SetEXMemoryString(CW, F3, MyName);
+        SetEXMemoryString(CW, F3, UTF8Encode(Settings.My.Name));
         SetEXMemoryString(CW, F4, MyState);
-        SetEXMemoryString(CW, F5, '@ DE \ ' + MyName + ' ' + MyState);
+        SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Settings.My.Name + ' ' + MyState));
         SetEXMemoryString(CW, AltF3, 'NAME?');
         SetEXMemoryString(CW, AltF4, 'QTH?');
 
@@ -1269,12 +1269,12 @@ begin
         //        ContestName := 'North American Sprint';
         SetCQMemoryString(CW, AltF1, 'NA \ NA');
 
-        CQExchange := '^  \   # ' + MyName + ' ' + MyState;
+        CQExchange := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + MyState);
         QSLMessage := 'TU';
         QuickQSLMessage1 := 'EE';
         QSOBeforeMessage := 'B4 \ NA';
-        SearchAndPounceExchange := '@ # ' + MyName + ' ' + MyState + '  \ ';
-        RepeatSearchAndPounceExchange := '# ' + MyName + ' ' + MyState;
+        SearchAndPounceExchange := UTF8Encode('@ # ' + Settings.My.Name + ' ' + MyState + '  \ ');
+        RepeatSearchAndPounceExchange := UTF8Encode('# ' + Settings.My.Name + ' ' + MyState);
         CorrectedCallMessage := '} R';
 
         SetCQMemoryString(CW, F1, 'NA \');
@@ -1286,9 +1286,9 @@ begin
         SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
 
         SetEXMemoryString(CW, F3, 'NR #');
-        SetEXMemoryString(CW, F4, MyName);
+        SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Name));
         SetEXMemoryString(CW, F5, MyState);
-        SetEXMemoryString(CW, F6, '@ \ NR^# ' + MyName + ' ' + MyState);
+        SetEXMemoryString(CW, F6, UTF8Encode('@ \ NR^# ' + Settings.My.Name + ' ' + MyState));
         SetEXMemoryString(CW, F7, '   CQ^NA \ \ NA ');
         SetEXMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
         SetEXMemoryString(CW, AltF3, 'NR?');
@@ -1309,12 +1309,12 @@ begin
         //        ContestName := 'North American Sprint';
         SetCQMemoryString(CW, AltF1, 'NA \ NA');
 
-        CQExchange := '^  \   # ' + MyName + ' ' + MyState;
+        CQExchange := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + MyState);
         QSLMessage := 'TU';
         QuickQSLMessage1 := 'EE';
         QSOBeforeMessage := 'B4 \ NA';
-        SearchAndPounceExchange := '@ # ' + MyName + ' ' + MyState + '  \ ';
-        RepeatSearchAndPounceExchange := '# ' + MyName + ' ' + MyState;
+        SearchAndPounceExchange := UTF8Encode('@ # ' + Settings.My.Name + ' ' + MyState + '  \ ');
+        RepeatSearchAndPounceExchange := UTF8Encode('# ' + Settings.My.Name + ' ' + MyState);
         CorrectedCallMessage := '} R';
 
         SetCQMemoryString(CW, F1, 'NA \');
@@ -1326,9 +1326,9 @@ begin
         SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
 
         SetEXMemoryString(CW, F3, 'NR #');
-        SetEXMemoryString(CW, F4, MyName);
+        SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Name));
         SetEXMemoryString(CW, F5, MyState);
-        SetEXMemoryString(CW, F6, '@ \ NR^# ' + MyName + ' ' + MyState);
+        SetEXMemoryString(CW, F6, UTF8Encode('@ \ NR^# ' + Settings.My.Name + ' ' + MyState));
         SetEXMemoryString(CW, F7, '   CQ^NA \ \ NA ');
         SetEXMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
         SetEXMemoryString(CW, AltF3, 'NR?');

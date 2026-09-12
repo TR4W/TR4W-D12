@@ -103,6 +103,7 @@ implementation
 
 uses
    uPortAddress,   // TPortKind -- see the radio port kind accessors
+   uSettingsModel, // Settings.My -- the station's own facts
   uAppPaths,     // ResolveDataFileInPlace -- shipped data, whatever case
   uAnsiStr,      // StrComp/StrPLCopy over PAnsiChar (SysUtils variants are PWideChar)
   uCFG,
@@ -1061,7 +1062,7 @@ begin
 
     RADIOMEMORY, WISCONSINQSOPARTY: tCQExchange := ' ' + MyState;
 
-    LQP, NCCCSPRINT: tCQExchange := ' # ' + MyName + ' ' + MyState;
+    LQP, NCCCSPRINT: tCQExchange := UTF8Encode(' # ' + Settings.My.Name + ' ' + MyState);
 
 //    JTDX, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW, UCG: tCQExchange := ' 5NN #';
 
@@ -1112,13 +1113,13 @@ begin
 
     EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW:
       begin
-        tCQExchange := ' DE \ # ' + MyName;
+        tCQExchange := UTF8Encode(' DE \ # ' + Settings.My.Name);
         tSPExchange := '@' + tCQExchange;
       end;
 
     CWOPEN:
       begin
-        tCQExchange := ' # ' + MyName;
+        tCQExchange := UTF8Encode(' # ' + Settings.My.Name);
       end;
 
   end;

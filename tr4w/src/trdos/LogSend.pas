@@ -451,9 +451,9 @@ begin
         '(':
           if TotalContacts = 0 then
              begin
-             if MyName <> '' then
+             if Settings.My.Name <> '' then
                 begin
-                AddStringToBuffer(MyName, Config.CWTone)
+                AddStringToBuffer(UTF8Encode(Settings.My.Name), Config.CWTone)
                 end
              else
                 begin

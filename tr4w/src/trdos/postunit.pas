@@ -3134,7 +3134,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // strings; it fills CABRILLO_MYEX / CABRILLO_HISEX (and carries pnr).
                 myStationEx.MyState      := string( MyState );
                 myStationEx.MyGrid       := string( MyGrid );
-                myStationEx.MyName       := string( MyName );
+                myStationEx.MyName       := Settings.My.Name;
                 myStationEx.MyZone       := ZoneSentForThisContest;
                 myStationEx.MyFDClass    := Settings.My.FdClass;
                 myStationEx.MySection    := Settings.My.Section;
@@ -3760,7 +3760,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         as tGenerateLogPortionOfCabrilloFile and uCabrilloExchange. }
       my.MyState      := string(MyState);
       my.MyGrid       := string(MyGrid);
-      my.MyName       := string(MyName);
+      my.MyName       := Settings.My.Name;
       my.MyZone       := ZoneSentForThisContest;
       my.MyFDClass    := Settings.My.FdClass;
       my.MySection    := Settings.My.Section;

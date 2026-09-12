@@ -978,6 +978,7 @@ type
       FPrec: string;
       FFdClass: string;
       FSection: string;
+      FName: string;
       FPostalCode: string;
       FItuZone: TMyItuZone;
    public
@@ -1007,6 +1008,9 @@ type
       (* Was MySection in logwind.pas -- the ARRL or RAC section, sent in
         Field Day, Sweepstakes and the section-based contests. *)
       property Section: string read FSection write FSection;
+      (* Was MyName in logwind.pas -- the operator's name, sent in the QSO
+        party and sprint exchanges and greeted by SAY HI. *)
+      property Name: string read FName write FName;
       // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
       property PostalCode: string read FPostalCode write FPostalCode;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
@@ -1405,6 +1409,7 @@ begin
    FPrec       := '';
    FFdClass    := '';
    FSection    := '';
+   FName       := '';
    FPostalCode := '';
    FItuZone    := 0;
 end;
