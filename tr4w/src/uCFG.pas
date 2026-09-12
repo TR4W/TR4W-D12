@@ -612,6 +612,7 @@ const
    - 3 {MY CHECK, MY PREC, MY FD CLASS -- moved to uSettingsModel}
    - 1 {MY SECTION -- moved to uSettingsModel}
    - 1 {MY NAME -- moved to uSettingsModel}
+   - 2 {the DVK, two of its five -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -712,7 +713,6 @@ const
  (crCommand: 'DUPE SHEET AUTO RESET';         crAddress: @Sheet.tAutoReset;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'DVK ENABLE';                    crAddress: @Config.DVKEnable;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'DVK LOCALIZED MESSAGES ENABLE'; crAddress: @Config.DVKLocalizedMessagesEnable;     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'DVK PATH';                      crAddress: @Config.DVKPath;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
  (crCommand: 'DVK RECORDER';                  crAddress: @Config.DVKRecorder;     crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
  (crCommand: 'DX MULTIPLIER';                 crAddress: pointer(11);                     crMin:0;  crMax:0;       crS: csJSON; crA:20; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
@@ -1076,7 +1076,6 @@ const
  (crCommand: 'UNKNOWN COUNTRY FILE ENABLE';   crAddress: @Config.UnknownCountryFileEnable;       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'UNKNOWN COUNTRY FILE NAME';     crAddress: @UnknownCountryFileName;         crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'USE CONTROL PORT';              crAddress: @tUseControlPort;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'USE RECORDED SIGNS';            crAddress: @Config.UseRecordedSigns;              crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'WAKE UP TIME OUT';              crAddress: @WakeUpTimeOut;                  crMin:0;  crMax:MAXBYTE; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),

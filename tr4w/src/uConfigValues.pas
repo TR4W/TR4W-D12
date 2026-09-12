@@ -202,10 +202,8 @@ type
       MP3Path: FileNameType;
       MP3Player: FileNameType;
       DVKEnable: boolean;
-      DVKLocalizedMessagesEnable: boolean;
       DVKPath: FileNameType;
       DVKRecorder: FileNameType;
-      UseRecordedSigns: boolean;
    end;
 
 var
@@ -258,10 +256,8 @@ var
       MP3Path: '';
       MP3Player: '';
       DVKEnable: False;
-      DVKLocalizedMessagesEnable: False;
       DVKPath: '';
-      DVKRecorder: '';
-      UseRecordedSigns: False
+      DVKRecorder: ''
    );
 
 implementation

@@ -89,7 +89,7 @@ begin
           FileName := CallWindowString;
           end;
 
-     if (StringHas(FileName, '.WAV')) or Config.UseRecordedSigns then
+     if (StringHas(FileName, '.WAV')) or Settings.Dvk.UseRecordedSigns then
         begin
         DVPMessagesArray[DVPMessagesArrayIndex] := FileName;
         inc(DVPMessagesArrayIndex);

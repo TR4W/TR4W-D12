@@ -133,6 +133,7 @@ function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
 implementation
 uses
    uConfigValues,
+   uSettingsModel,   // Settings.Dvk
   MainUnit,
   LogStuff;
 
@@ -502,7 +503,7 @@ begin
          goto NextMessage;
      end;
 
-  if Config.UseRecordedSigns then
+  if Settings.Dvk.UseRecordedSigns then
      begin
      //QSO Number
    if StringIsAllNumbers(DVPMessagesArray[Index]) then
@@ -705,7 +706,7 @@ begin
 
   WAVFile := nil;
 
-  if Config.DVKLocalizedMessagesEnable then
+  if Settings.Dvk.LocalizedMessagesEnable then
     if CallWindowString <> '' then
        begin
        FillChar(countrtyId, SizeOf(countrtyId), 0);

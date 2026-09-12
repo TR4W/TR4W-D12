@@ -1020,6 +1020,40 @@ type
       property ItuZone: TMyItuZone read FItuZone write FItuZone;
    end;
 
+   (*
+     THE DVK -- the voice keyer that plays recorded messages.
+
+     TWO OF ITS FIVE COMMANDS, and the other three are named here so the gap
+     is deliberate rather than looking like an oversight:
+
+       DVK ENABLE carries crP:7, the code-speed redraw, and honouring that
+       from a setter means calling into LOGWIND. uSettingsEffects' own header
+       forbids assuming a window exists -- config load happens before any
+       window is created -- so that one wants a seam of the kind uBandMapView
+       provides, not a direct call.
+
+       DVK PATH and DVK RECORDER are ctDirectory and ctFileName, which
+       CheckCommand treats specially. Moving them means deciding what a path
+       setting validates, which is a question and not a migration.
+   *)
+   TDvkSettings = class(TSettingsGroup)
+   private
+      FLocalizedMessagesEnable: boolean;
+      FUseRecordedSigns: boolean;
+   public
+      constructor Create;
+   published
+      (* Was Config.DVKLocalizedMessagesEnable. DVK LOCALIZED MESSAGES ENABLE,
+        which derives exactly. *)
+      property LocalizedMessagesEnable: boolean
+         read FLocalizedMessagesEnable write FLocalizedMessagesEnable;
+      (* Was Config.UseRecordedSigns -- whether a recorded callsign is played
+        rather than spoken. The command is USE RECORDED SIGNS with no DVK in
+        it, so it carries an alias. *)
+      property UseRecordedSigns: boolean
+         read FUseRecordedSigns write FUseRecordedSigns;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -1044,6 +1078,7 @@ type
       FLog: TLogSettings;
       FSayHi: TSayHiSettings;
       FMy: TMySettings;
+      FDvk: TDvkSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1150,6 +1185,7 @@ type
       property Log: TLogSettings read FLog;
       property SayHi: TSayHiSettings read FSayHi;
       property My: TMySettings read FMy;
+      property Dvk: TDvkSettings read FDvk;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1396,6 +1432,14 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TDvkSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues' initialiser carried.
+   FLocalizedMessagesEnable := False;
+   FUseRecordedSigns        := False;
+end;
+
 constructor TMySettings.Create;
 begin
    inherited Create;
@@ -1526,6 +1570,7 @@ begin
    FLog            := TLogSettings.Create;
    FSayHi          := TSayHiSettings.Create;
    FMy             := TMySettings.Create;
+   FDvk            := TDvkSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1537,6 +1582,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FDvk.Free;
    FMy.Free;
    FSayHi.Free;
    FLog.Free;
@@ -1852,6 +1898,9 @@ begin
    (* THE PLURAL NOUN, where every sibling names the thing and then the
      attribute. POSSIBLE CALL ENABLE would be the derived spelling and is
      not what any config file says. *)
+   (* No DVK in the command at all. *)
+   Alias('USE RECORDED SIGNS', 'Dvk.UseRecordedSigns');
+
    Alias('POSSIBLE CALLS', 'PossibleCall.Enable');
 
    (* THE WHOLE SO2R GROUP -- see TSo2rSettings for why every one of them
