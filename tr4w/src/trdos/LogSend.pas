@@ -247,7 +247,7 @@ begin
                begin
                TempString := Config.LeadingZeroCharacter + TempString;
                end;
-              if ShortIntegers then
+              if Settings.Cw.ShortIntegers then
                  begin
                  for CharPointer := 1 to length(TempString) do
                     begin

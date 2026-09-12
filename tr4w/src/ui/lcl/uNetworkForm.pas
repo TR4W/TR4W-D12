@@ -61,7 +61,7 @@ implementation
 uses
    MainUnit,     { CloseTR4WWindow, FrmSetFocus }
    uNet,         { NetIsConnected, TryConnectToNetwork, NetDisconnect, the columns }
-   LogStuff,     { ComputerID -- whose row is highlighted yellow }
+   uSettingsModel, { Settings.Computer.Id -- whose row is highlighted yellow }
    uLCLFormHelpers;
 
 procedure TfrmNetwork.HandleCreate(Sender: TObject);
@@ -163,7 +163,7 @@ begin
       Exit;
       end;
 
-   if StatusArray[row].ssComputerID = ComputerID then
+   if StatusArray[row].ssComputerID = Settings.Computer.Id then
       begin
       Sender.Canvas.Brush.Color := clYellow;
       end

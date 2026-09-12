@@ -46,7 +46,7 @@ unit uComputerID;
   on ONE protocol:
 
     NET_COMPUTERID_ID     an ORDINAL, 1..26.  The client sends
-                          AnsiChar(Ord(ComputerID) - Ord('A') + 1).
+                          AnsiChar(Ord(Settings.Computer.Id) - Ord('A') + 1).
     NET_STATIONSTATUS_ID  the LETTER, 'A'..'Z', converted back on receipt.
 
   TClientEntry.clID is declared AnsiChar and every comment near it -- including

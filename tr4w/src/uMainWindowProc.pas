@@ -161,6 +161,7 @@ uses
   LOGK1EA,            // ShiftKeyEnable
   LOGRADIO,           // RITBumpUp/Down, VFOBumpUp/Down
   LogCW,              // RepeatLastCWMessage
+  uSettingsModel,     // Settings.Message.QuickQslKey*, Settings.Cw.StartSendingNowKey
   uMenu;              // menu_cwspeedup / menu_cwspeeddown via ProcessMenu
                       // (NOT cty.pas -- that one is the DLL import and takes
                       // a PWideChar, which is not what this call site passes)
@@ -262,7 +263,7 @@ begin
    // THE NARROWING, stated rather than hidden: it no longer fires while a TOOL
    // WINDOW has focus.  Typing a call, clicking into the band map and then
    // pressing '\' used to QSL; now it does not.  Bench queue section 30.
-   if (Key = QuickQSLKey1) or (Key = QuickQSLKey2) then
+   if (Key = Settings.Message.QuickQslKey1) or (Key = Settings.Message.QuickQslKey2) then
       begin
       QuickQSLProcedure(Key);
       end;
@@ -491,7 +492,7 @@ begin
 
    if Key = 222 {apostrophe} then
       begin
-      if StartSendingNowKey = '''' then
+      if Settings.Cw.StartSendingNowKey = '''' then
          begin
          StartSendingNow(True);
          end;

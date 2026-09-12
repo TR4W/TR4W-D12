@@ -517,7 +517,7 @@ begin
   FillChar(EditableQSORXData.Frequency, SizeOf(EditableQSORXData.Frequency), 0);
   EditableQSORXData.Frequency := lpNumberOfBytesWritten;
 
-  {ComputerID}
+  {Settings.Computer.Id}
   TempString := EditQSOGetText(FLD_COMPUTERID);
   if TempString = '' then
      begin

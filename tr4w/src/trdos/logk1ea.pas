@@ -1554,7 +1554,7 @@ begin
 
   if (Character > ' ') and
     (Character <> ' ') and
-    (Character <> StartSendingNowKey) and
+    (Character <> Settings.Cw.StartSendingNowKey) and
     (Character <> '^') then
      begin
      CWBuffer^[CWBufferEnd].length := 20;
@@ -2307,7 +2307,7 @@ begin
      Exit;
      end;
   TempChar := AutoCQMemory;
-  if (AutoCQMemory = F1) and RandomCQMode then
+  if (AutoCQMemory = F1) and Settings.Cq.RandomMode then
      begin
      TempChar := Char(Random(4) + 112);
      end;
@@ -2629,7 +2629,7 @@ begin
     StartSending:
       if ActiveMode = CW then
          begin
-         QueueStartSendingKey(AnsiChar(StartSendingNowKey));
+         QueueStartSendingKey(AnsiChar(Settings.Cw.StartSendingNowKey));
          end;
 
     SwapRadio:

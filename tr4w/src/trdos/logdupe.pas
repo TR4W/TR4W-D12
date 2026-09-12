@@ -163,7 +163,6 @@ type
 
   DupeAndMultSheet = object
     DupeSheetEnable: boolean;
-    tAutoReset: boolean;
     //    DupeSheet: DupeList;
 //    MultSheet: MultList;
 

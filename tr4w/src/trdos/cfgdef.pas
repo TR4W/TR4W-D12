@@ -48,12 +48,14 @@ procedure SetConfigurationDefaultValues;
 procedure UpdateSAndPF1Caption;        // Issue #1012
 
 implementation
-uses MainUnit;
+uses
+   MainUnit,
+   uSettingsModel;   // Settings.Message.DeEnable
 { Here are the default values that are used if nothing else in the
   configuration file addresses these variables.                     }
 
 // Issue #1012 (and #69): the S&P F1 ("send call") caption is derived from the
-// DE ENABLE setting.  DEEnable's final value is only known after the config
+// DE ENABLE setting.  Its final value is only known after the config
 // files are read, so this decision is factored out here and re-applied
 // post-config (see tr4w.lpr) rather than computed only once with the
 // compiled-in default of True.  RUS uses a language-fixed F1 caption that does
@@ -63,7 +65,7 @@ begin
 {$IF LANG = 'RUS'}
    // RUS S&P F1 caption is language-fixed; nothing to recompute.
 {$ELSE}
-   if DEEnable then
+   if Settings.Message.DeEnable then
       begin
       SetEXCaptionMemoryString(CW, F1, 'DE+Call');
       end
@@ -128,7 +130,6 @@ begin
   //  BandMapDecayMultiplier := 1; {KK1L: 6.65}
   //  BandMapDupeDisplay := True;
   //  BeepEnable := True;
-  //  BeepEvery10QSOs := False;
   //  �� ����� BigRemainingList := False;
   //  BandMapSplitMode := ByCutoffFrequency; {KK1L: 6.64}
 
@@ -137,7 +138,6 @@ begin
   //  CfgDvpPath := '';
   //  CodeSpeed := 35;
   //  ColumnDupeSheetEnable := False;
-  //  ComputerID := CHR(0);
   //  ContactsPerPage := 50;
   //  ContestTitle := '';
   //  ContinentString := '';
@@ -145,7 +145,6 @@ begin
 
 //   CorrectedCallPhoneMessage := 'CORCALL.WAV';
   //  CountDomesticCountries := False;
-  //  CountryInformationFile := '';
   //  CountryString := '';
   //  CQExchange := '';
   //  CQExchangeNameKnown := '';
@@ -164,7 +163,6 @@ begin
   //  DDXCall1 := '';
   //  DDXCall2 := '';
   //  DDXState := Off; //ini
-  //  DEEnable := True;
   //  DigitalModeEnable := False;
   //  DistanceMode := NoDistanceDisplay;
 
@@ -202,7 +200,6 @@ begin
 //  Config.FarnsworthSpeed := 25;
 
   //FloppyFileSaveName := 'logback.dat';
-  //  BackupLogFrequency := 0;
 
   //  FootSwitchMode := FootSwitchDisabled;
 
@@ -228,15 +225,12 @@ begin
   //  FreqMemory[Band5760, CW] := 5760100000;
 
 
-    //  GridMapCenter := '';
 
     //  HFBandEnable := True;
     //  HourDisplay := ThisHour;
 
     //  IncrementTimeEnable := False;
     //  InitialExchangeCursorPos := AtEnd;
-    //  InitialExchangeOverwrite := False; {KK1L: 6.70}
-    //  InsertMode := True;
     //  Config.IntercomFileEnable := False;
 
     //  K1EANetworkEnable := False;
@@ -247,12 +241,8 @@ begin
   //  LiteralDomesticQTH := False;
 
   //  LogFrequencyEnable := False;
-  //  LogRSTSent := '599';
-  //  LogRSSent := '59';
   //  LogSubTitle := '';
-  //  LookForRSTSent := False;
 
-  //  MessageEnable := True;
      //   ModemPortBaudRate := 4800;
   //  MultiInfoMessage := '';
   //  Config.MultiMultsOnly := False;
@@ -266,7 +256,6 @@ begin
     MyContinent := UnknownContinent;
   }
   //  Config.NameFlagEnable := True;
-  //  NoLog := False;
   //  Config.NoPollDuringPTT := False;
 
   //  PacketAddLF := False;
@@ -399,7 +388,6 @@ begin
   //  Short1 := 'A';
   //  Short2 := '2';
   //  Short9 := 'N';
-  //  ShortIntegers := False;
   //  ShowSearchAndPounce := False;
   //  SingleBand := All;
   //  SingleRadioMode := False;
@@ -418,7 +406,6 @@ begin
     StartingFrequencies[Band6] := 50000000;
     StartingFrequencies[Band2] := 144000000;
   }
-  //  StartSendingNowKey := '''';
 
   {
     StoppingFrequencies[Band160] := 2000000;

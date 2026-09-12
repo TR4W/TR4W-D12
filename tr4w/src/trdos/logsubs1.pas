@@ -505,7 +505,7 @@ begin
      //    CallsignICameBackTo := ReceivedData.Callsign;
      end;
 
-  if SeventyThreeMessageSent or not MessageEnable then
+  if SeventyThreeMessageSent or not Settings.Message.Enable then
      begin
      Exit;
      end;
@@ -569,7 +569,7 @@ procedure SendCorrectCallIfNeeded;
 begin
   if (ReceivedData.Callsign <> CallsignICameBackTo) and not BeSilent then
      begin
-     if MessageEnable then
+     if Settings.Message.Enable then
         begin
         SendCrypticMessage(CorrectedCallMessage);
         end;
@@ -670,7 +670,7 @@ begin
      YCCCSetActiveRadio(Integer(ActiveRadio)); { RadioOne=1, RadioTwo=2 }
      end;
 
-  if QSONumberByBand then
+  if Settings.Contest.QsoNumberByBand then
      begin
      DisplayNextQSONumber;
      end;
@@ -779,7 +779,7 @@ begin
 
             if ActiveMode = CW then
                begin
-               if DEEnable then
+               if Settings.Message.DeEnable then
                   begin
                   SendStringAndStop(DEPlusMyCall)
                   end
@@ -855,7 +855,7 @@ begin
             if ActiveMode = CW then
                begin
 
-               if (ActiveMode = CW) and DEEnable then
+               if (ActiveMode = CW) and Settings.Message.DeEnable then
                   begin
                   SendStringAndStop(DEPlusMyCall)
                   end

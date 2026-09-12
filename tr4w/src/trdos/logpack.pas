@@ -242,7 +242,7 @@ begin
 
   LookForQSXFrequency := 0;
 
-  if not QSXEnable then Exit;
+  if not Settings.Qsx.Enable then Exit;
 
   if Notes = '' then Exit;
 
