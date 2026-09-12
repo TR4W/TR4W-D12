@@ -217,6 +217,9 @@ type
 
 implementation
 
+uses
+   uSettingsModel;   (* Settings.Log.ColumnAutoSize -- was the global ColumnAutoSize *)
+
 const
    (* A DIRECT-MAPPED CACHE, sized to comfortably exceed a screenful so that
      scrolling never evicts a row it is about to ask for again. Direct-mapped
@@ -614,7 +617,7 @@ begin
          begin
          w := ColumnsArray[c].Width * ws;
 
-         if (c >= logColNumberReceive) and ColumnAutoSize then
+         if (c >= logColNumberReceive) and Settings.Log.ColumnAutoSize then
             begin
             header := Canvas.TextWidth(ColumnsArray[c].Text) + CELL_PAD * 2;
             if header > w then

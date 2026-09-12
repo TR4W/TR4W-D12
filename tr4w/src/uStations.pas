@@ -61,8 +61,8 @@ uses
   Forms,           { Application.QueueAsyncCall -- the marshalling below }
   SyncObjs,
   uCrashLog,       { OnMainThread }
-  uStationsForm,   { the view -- see the model note below }
-  uSettingsModel;  { Settings.Qso.ByMode }
+  uSettingsModel,  { Settings.Qso.ByMode, Settings.Stations.CallsignsMask }
+  uStationsForm;   { the view -- see the model note below }
 
 { ---------------------------------------------------------------------------
   THE ROWS ARE A MODEL NOW, NOT THE CONTROL.
@@ -191,12 +191,22 @@ end;
 function AddCallsignToStationColumn(Call: CallString): integer;
 var
   s: string;
+  mask: string;
 begin
   Result := -1;
   if StationsListFileInUse then Exit;
 
-  if StationsCallsignsMask <> '' then
-    if pos(StationsCallsignsMask, Call) = 0 then Exit;
+  (* READ ONCE, into a native string: the mask is a property now, and
+    UpperCase(string(Call)) below is the same shape.  Pos on two native
+    strings, so nothing narrows. *)
+  mask := Settings.Stations.CallsignsMask;
+  if mask <> '' then
+     begin
+     if pos(mask, string(Call)) = 0 then
+        begin
+        Exit;
+        end;
+     end;
 
   s := UpperCase(string(Call));
   Result := Rows.Add(s);         // sorted -- this IS the row position

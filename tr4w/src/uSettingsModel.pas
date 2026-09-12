@@ -185,6 +185,11 @@ type
      variables sat at -1, a value their own declared range rejected.  A
      subrange is signed, so the type simply says what the program means. *)
    TQsoPoints           = -1..65535;  // was crMin:0, crMax:MAXWORD -- see above
+   (* THE MAIN WINDOW'S FONT SIZE, and it is a STEP not a point size --
+     0, 1 or 2, which MainUnit turns into pixels as `13 + FontSize - 1`
+     and into a cell width as `ws + 2 * FontSize - 3`. The old row carried
+     crMin:0, crMax:2 and said nothing about what the numbers meant. *)
+   TMainFontSize        = 0..2;       // was crMin:0, crMax:2
 
    (*
      THE BASE OF EVERY SETTINGS GROUP.
@@ -832,6 +837,7 @@ type
       FSpaceBarDupeCheck: boolean;
       FPartialCallEnable: boolean;
       FWildcardPartials: boolean;
+      FCompleteCallsignMask: string;
    public
       constructor Create;
    published
@@ -849,6 +855,17 @@ type
       // Was Config.WildCardPartials. WILDCARD PARTIALS -- plural, as ever.
       property WildcardPartials: boolean
          read FWildcardPartials write FWildcardPartials;
+      (* Was the global CompleteCallsignMask in VC.pas. COMPLETE CALLSIGN
+        MASK, so it carries an alias.
+
+        IT LIVES HERE BECAUSE IT COMPLETES WHAT IS TYPED IN THE CALL
+        WINDOW: MainUnit.CompleteCallsign walks the mask and substitutes
+        CallWindowString for the first '*', so a mask of '*/P' turns a
+        typed K1ABC into K1ABC/P. An empty mask, or one with no '*', does
+        nothing -- which is the ordinary state, and why that routine leads
+        with two early exits. *)
+      property CompleteCallsignMask: string
+         read FCompleteCallsignMask write FCompleteCallsignMask;
    end;
 
    (*
@@ -903,7 +920,7 @@ type
      a broad word and the next person adding to this file will have to
      decide whether their setting belongs here.
 
-     No hooks on any of the four.
+     No hooks on any of them.
    *)
    TLogSettings = class(TSettingsGroup)
    private
@@ -911,6 +928,8 @@ type
       FConfirmEditChanges: boolean;
       FCheckFileSize: boolean;
       FUpdateRestartFile: boolean;
+      FFrequencyEnable: boolean;
+      FColumnAutoSize: boolean;
    public
       constructor Create;
    published
@@ -926,6 +945,23 @@ type
       // Was Config.UpdateRestartFileEnable. UPDATE RESTART FILE ENABLE.
       property UpdateRestartFile: boolean
          read FUpdateRestartFile write FUpdateRestartFile;
+      (* Was the global LogFrequencyEnable in VC.pas. LOG FREQUENCY ENABLE
+        -- a second name that derives exactly, like WithSingleEnter above.
+
+        NO LIVE READER IN THIS BUILD. The three that existed are in
+        JCtrl1/JCTRL2, the deprecated Ctrl-J units, so the setting is
+        carried faithfully rather than deleted: what reads it is a question
+        for whoever restores frequency logging, not for a migration. *)
+      property FrequencyEnable: boolean
+         read FFrequencyEnable write FFrequencyEnable;
+      (* Was the global ColumnAutoSize in VC.pas. COLUMN AUTOSIZE, one
+        word and no LOG in it, so it carries an alias.
+
+        THE LOG GRID'S COLUMN WIDTHS, from the received serial number
+        rightwards: uLogGrid fits each of those columns to its content
+        when this is on. *)
+      property ColumnAutoSize: boolean
+         read FColumnAutoSize write FColumnAutoSize;
    end;
 
    (*
@@ -1002,6 +1038,7 @@ type
       FCountry: string;
       FCountryWasSet: boolean;
       FCall: string;
+      FMainCallsign: string;
       FState: string;
       FItuZone: TMyItuZone;
       procedure SetCall(const aValue: string);
@@ -1099,6 +1136,16 @@ type
         zone are computed from this callsign only where the operator has
         not stated one -- see CountryWasSet and ZoneWasSet. *)
       property Call: string read FCall write SetCall;
+      (* Was the global MainCallsign in VC.pas. MAIN CALLSIGN, so it
+        carries an alias.
+
+        IT IS NOT Call, AND THE TWO ARE DELIBERATELY SEPARATE. Call is the
+        callsign being OPERATED and a contest .cfg overrides it -- the club
+        call case. This is the station's own, remembered across contests:
+        the New Contest dialog pre-fills its callsign box from here, and
+        writes it back the first time it is empty. Nothing else reads it,
+        which is why a contest overriding Call leaves it alone. *)
+      property MainCallsign: string read FMainCallsign write FMainCallsign;
       (* Was the global MyState in LOGWIND. It is NOT a state: it is the
         contest-dependent catch-all the exchange sends where a US station
         sends its state -- a province, an oblast, a county, a serial number
@@ -1406,6 +1453,165 @@ type
       (* Was SprintQSYRule in logwind.pas -- the sprint rule that a station
         calling CQ must move after a QSO.  SPRINT QSY RULE. *)
       property SprintQsyRule: boolean read FSprintQsyRule write FSprintQsyRule;
+   (*
+     THE MAIN WINDOW'S FONT -- face, size and weight.
+
+     ONE NAME DERIVES EXACTLY, FONT SIZE. The other two are TR4W's flat
+     spellings, BOLD FONT and MAIN FONT, and carry aliases.
+
+     ALL THREE NEED A RESTART and are registered saying so. That is not the
+     usual answer for this model -- a setter normally applies its own side
+     effect -- but the font is handed to every main-window element once, at
+     CreateMainWindow, and nothing re-reads these afterwards. Claiming
+     otherwise would be a lie the Preferences page repeats to the operator.
+
+     THE COLOURS ARE NOT HERE and must not move here. Element colours have
+     their own structured store -- the `colors` section of
+     settings\tr4w.json, written by uRadioConfigStore -- and folding
+     a font into it, or it into this, is a merge of two models rather
+     than a migration of one.
+   *)
+   TFontSettings = class(TSettingsGroup)
+   private
+      FSize: TMainFontSize;
+      FBold: boolean;
+      FFace: string;
+   public
+      constructor Create;
+   published
+      (* Was the global FontSize in VC.pas. A STEP, NOT A POINT SIZE -- see
+        TMainFontSize. FONT SIZE derives with no alias. *)
+      property Size: TMainFontSize read FSize write FSize;
+      // Was the global BoldFont in VC.pas. BOLD FONT.
+      property Bold: boolean read FBold write FBold;
+      // Was the global MainFontName in VC.pas, a Str31. MAIN FONT.
+      property Face: string read FFace write FFace;
+   end;
+
+   (*
+     THE STATIONS WINDOW -- the multi-op list of who is working whom.
+
+     One setting, and the path derives its command exactly:
+     Stations.CallsignsMask gives STATIONS CALLSIGNS MASK.
+   *)
+   TStationsSettings = class(TSettingsGroup)
+   private
+      FCallsignsMask: string;
+      procedure SetCallsignsMask(const aValue: string);
+   public
+      constructor Create;
+   published
+      (* Was the global StationsCallsignsMask in VC.pas.
+
+        A SUBSTRING FILTER, not a wildcard: uStations rejects a callsign
+        the mask does not appear in, so an empty mask admits everything.
+
+        THE SETTER IS THE OLD crP:12. That row pointed at
+        SetStationsCallsignMask, which re-filters the list that is already
+        on screen -- and it ran only when the config array applied the row,
+        so the same edit made anywhere else left a stale window. The effect
+        is raised in uSettingsEffects now, however the value arrives. *)
+      property CallsignsMask: string
+         read FCallsignsMask write SetCallsignsMask;
+   end;
+
+   (*
+     THE REMAINING-MULTIPLIER WINDOWS.
+
+     One setting, and it widens a column rather than adding text: with the
+     domestic multiplier NAME shown, MainUnit gives the columns the prefix
+     width instead of the base width.
+   *)
+   TRemainingMultsSettings = class(TSettingsGroup)
+   private
+      FShowDomesticName: boolean;
+      procedure SetShowDomesticName(aValue: boolean);
+   public
+      constructor Create;
+   published
+      (* Was the global tShowDomesticMultiplierName in VC.pas. SHOW
+        DOMESTIC MULTIPLIER NAME, so it carries an alias.
+
+        THE SETTER IS THE OLD crP:9 -- UpdateRemainingMultsWindows, which
+        rebuilds those windows at the new column width. Same story as the
+        stations mask: the hook fired only for a config file, so a change
+        made any other way left the columns as they were. *)
+      property ShowDomesticName: boolean
+         read FShowDomesticName write SetShowDomesticName;
+   end;
+
+   (*
+     THE INITIAL EXCHANGE -- what TR4W offers before the other station
+     sends anything.
+
+     One setting today. The FILE it is read from, INITIAL EXCHANGE
+     FILENAME, is still a CFGCA row: that row is ctFileName, and what a
+     path setting has to validate is an open question rather than a
+     mechanical move.
+   *)
+   TInitialExchangeSettings = class(TSettingsGroup)
+   private
+      FReverse: boolean;
+   public
+      constructor Create;
+   published
+      (* Was the global ReverseInitialEx in VC.pas. REVERSE INITIAL EX --
+        the flat name puts the verb first, so it carries an alias.
+
+        WHAT IT REVERSES is the ORDER OF TWO SOURCES, not the text: LOGEDIT
+        normally computes an exchange and falls back to the callsigns list,
+        and with this on it takes the callsigns list's answer instead. *)
+      property Reverse: boolean read FReverse write FReverse;
+   end;
+
+   (*
+     QZB -- the small random offset applied when tuning to a CW spot, so
+     that everyone clicking the same spot does not land on the same
+     frequency to the hertz.
+   *)
+   TQzbSettings = class(TSettingsGroup)
+   private
+      FRandomOffsetEnable: boolean;
+   public
+      constructor Create;
+   published
+      (* Was the global QZBRandomOffsetEnable in VC.pas. QZB RANDOM OFFSET
+        ENABLE derives exactly, which is why the group is named for TR4W's
+        own term rather than for the band map. *)
+      property RandomOffsetEnable: boolean
+         read FRandomOffsetEnable write FRandomOffsetEnable;
+   end;
+
+   (*
+     SERIAL PORT ENUMERATION.
+
+     NOTHING IN THIS BUILD READS THE ONE SETTING IN HERE, and that is
+     recorded rather than fixed: it has no reader in the D7 tree either
+     (checked 2026-09-12), so it is not a port regression. It is carried
+     across faithfully because deleting a setting an operator can see in
+     Preferences is a decision for NY4I, not a side effect of a migration.
+   *)
+   TSerialPortsSettings = class(TSettingsGroup)
+   private
+      FShowAll: boolean;
+   public
+      constructor Create;
+   published
+      (* Was the global tShowAllSerialPorts in VC.pas. SHOW ALL SERIAL
+        PORTS.
+
+        WHAT IT WAS MEANT TO DO, in the words of the comment that stood
+        beside the global: the radio dialog's port list normally shows
+        only the ports Windows is reporting, plus the one already
+        configured even if absent; True was to list SERIAL 1..
+        MAX_SERIAL_PORT instead, for ports that exist but do not
+        enumerate -- com0com pairs, Bluetooth SPP that appears only when
+        the device connects, or configuring a station before the hardware
+        is plugged in. Default False: the filtered list is what an
+        operator wants day to day.
+
+        NOTHING IMPLEMENTS THAT. See the class comment above. *)
+      property ShowAll: boolean read FShowAll write FShowAll;
    end;
 
    TR4WSettings = class(TPersistent)
@@ -1439,6 +1645,12 @@ type
       FQtc: TQtcSettings;
       FAutoDupe: TAutoDupeSettings;
       FContest: TContestSettings;
+      FFont: TFontSettings;
+      FStations: TStationsSettings;
+      FRemainingMults: TRemainingMultsSettings;
+      FInitialExchange: TInitialExchangeSettings;
+      FQzb: TQzbSettings;
+      FSerialPorts: TSerialPortsSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1553,6 +1765,12 @@ type
       property Qtc: TQtcSettings read FQtc;
       property AutoDupe: TAutoDupeSettings read FAutoDupe;
       property Contest: TContestSettings read FContest;
+      property Font: TFontSettings read FFont;
+      property Stations: TStationsSettings read FStations;
+      property RemainingMults: TRemainingMultsSettings read FRemainingMults;
+      property InitialExchange: TInitialExchangeSettings read FInitialExchange;
+      property Qzb: TQzbSettings read FQzb;
+      property SerialPorts: TSerialPortsSettings read FSerialPorts;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1896,6 +2114,61 @@ begin
    FName   := 'UNKNOWN.CTY';   // see the note on the class
 end;
 
+constructor TFontSettings.Create;
+begin
+   inherited Create;
+   (* What the globals in VC.pas were declared with: FontSize = 2,
+     BoldFont = True, MainFontName = 'Arial'. *)
+   FSize := 2;
+   FBold := True;
+   FFace := 'Arial';
+end;
+
+constructor TStationsSettings.Create;
+begin
+   inherited Create;
+   // No initialiser on the global, so empty -- which admits every callsign.
+   FCallsignsMask := '';
+end;
+
+procedure TStationsSettings.SetCallsignsMask(const aValue: string);
+begin
+   SetStr(FCallsignsMask, aValue, 'CallsignsMask');
+end;
+
+constructor TRemainingMultsSettings.Create;
+begin
+   inherited Create;
+   // No initialiser on the global, so False.
+   FShowDomesticName := False;
+end;
+
+procedure TRemainingMultsSettings.SetShowDomesticName(aValue: boolean);
+begin
+   SetBool(FShowDomesticName, aValue, 'ShowDomesticName');
+end;
+
+constructor TInitialExchangeSettings.Create;
+begin
+   inherited Create;
+   // ReverseInitialex was declared = False in VC.pas.
+   FReverse := False;
+end;
+
+constructor TQzbSettings.Create;
+begin
+   inherited Create;
+   // No initialiser on the global, so False.
+   FRandomOffsetEnable := False;
+end;
+
+constructor TSerialPortsSettings.Create;
+begin
+   inherited Create;
+   // tShowAllSerialPorts was declared = False in VC.pas.
+   FShowAll := False;
+end;
+
 constructor TDvkSettings.Create;
 begin
    inherited Create;
@@ -1923,6 +2196,7 @@ begin
    FZone          := '';
    FZoneWasSet    := False;
    FCall          := '';
+   FMainCallsign  := '';
    FCountry       := '';
    FCountryWasSet := False;
    FState         := '';
@@ -1968,6 +2242,10 @@ begin
    FConfirmEditChanges := True;
    FCheckFileSize      := False;
    FUpdateRestartFile  := True;
+   (* The values the globals in VC.pas carried: LogFrequencyEnable has no
+     initialiser and so was False, ColumnAutoSize was declared = True. *)
+   FFrequencyEnable    := False;
+   FColumnAutoSize     := True;
 end;
 
 constructor TCqSettings.Create;
@@ -1998,6 +2276,8 @@ begin
    FSpaceBarDupeCheck := True;
    FPartialCallEnable := True;
    FWildcardPartials  := True;
+   // CompleteCallsignMask had no initialiser in VC.pas, so it was empty.
+   FCompleteCallsignMask := '';
 end;
 
 constructor TSo2rSettings.Create;
@@ -2156,6 +2436,12 @@ begin
    FQtc            := TQtcSettings.Create;
    FAutoDupe       := TAutoDupeSettings.Create;
    FContest        := TContestSettings.Create;
+   FFont            := TFontSettings.Create;
+   FStations        := TStationsSettings.Create;
+   FRemainingMults  := TRemainingMultsSettings.Create;
+   FInitialExchange := TInitialExchangeSettings.Create;
+   FQzb             := TQzbSettings.Create;
+   FSerialPorts     := TSerialPortsSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -2172,6 +2458,12 @@ begin
    FQtc.Free;
    FMult.Free;
    FQso.Free;
+   FSerialPorts.Free;
+   FQzb.Free;
+   FInitialExchange.Free;
+   FRemainingMults.Free;
+   FStations.Free;
+   FFont.Free;
    FUnknownCountryFile.Free;
    FDvk.Free;
    FMy.Free;
@@ -2513,10 +2805,25 @@ begin
 
    (* THE WHOLE SO2R GROUP -- see TSo2rSettings for why every one of them
      needs a line here and why that is not evidence the rule is wrong. *)
-   (* LOG WITH SINGLE ENTER is NOT here -- it derives. *)
+   (* LOG WITH SINGLE ENTER and LOG FREQUENCY ENABLE are NOT here -- both
+     derive, because both happen to lead with the group's own word. *)
    Alias('CONFIRM EDIT CHANGES',        'Log.ConfirmEditChanges');
    Alias('CHECK LOG FILE SIZE',         'Log.CheckFileSize');
    Alias('UPDATE RESTART FILE ENABLE',  'Log.UpdateRestartFile');
+   Alias('COLUMN AUTOSIZE',             'Log.ColumnAutoSize');
+
+   (* THE MAIN WINDOW FONT. FONT SIZE derives; the other two are flat
+     names with the noun last. *)
+   Alias('BOLD FONT', 'Font.Bold');
+   Alias('MAIN FONT', 'Font.Face');
+
+   (* STATIONS CALLSIGNS MASK and QZB RANDOM OFFSET ENABLE are NOT here --
+     both derive exactly from their group and property names. *)
+   Alias('COMPLETE CALLSIGN MASK',        'CallWindow.CompleteCallsignMask');
+   Alias('MAIN CALLSIGN',                 'My.MainCallsign');
+   Alias('SHOW DOMESTIC MULTIPLIER NAME', 'RemainingMults.ShowDomesticName');
+   Alias('REVERSE INITIAL EX',            'InitialExchange.Reverse');
+   Alias('SHOW ALL SERIAL PORTS',         'SerialPorts.ShowAll');
 
    Alias('ALWAYS CALL BLIND CQ',           'Cq.AlwaysCallBlind');
    Alias('AUTO CALL TERMINATE',            'Cq.AutoCallTerminate');

@@ -585,13 +585,13 @@ begin
                           RS_CONTEST_RANDOMCQMODE);
    RegisterStoredSetting('contest.remainingMultDisplayMode','REMAINING MULT DISPLAY MODE',
                           RS_CONTEST_REMAININGMULTDISPLAYMODE);
-   RegisterStoredSetting('contest.reverseInitialEx',    'REVERSE INITIAL EX',
+   RegisterModelSetting( 'contest.reverseInitialEx',    'REVERSE INITIAL EX',
                           RS_CONTEST_REVERSEINITIALEX);
    RegisterStoredSetting('contest.rfoblMode',           'RFOBL MODE',
                           RS_CONTEST_RFOBLMODE);
-   RegisterStoredSetting('contest.showAllSerialPorts',  'SHOW ALL SERIAL PORTS',
+   RegisterModelSetting( 'contest.showAllSerialPorts',  'SHOW ALL SERIAL PORTS',
                           RS_CONTEST_SHOWALLSERIALPORTS);
-   RegisterStoredSetting('contest.showDomesticMultiplierName','SHOW DOMESTIC MULTIPLIER NAME',
+   RegisterModelSetting( 'contest.showDomesticMultiplierName','SHOW DOMESTIC MULTIPLIER NAME',
                           RS_CONTEST_SHOWDOMESTICMULTIPLIERNAME);
    RegisterLegacySetting('contest.singleBandScore',     'SINGLE BAND SCORE',
                           'Single Band Score');
@@ -643,11 +643,11 @@ begin
                           RS_OPERATING_CTRLJ_IESWITCH);
    RegisterStoredSetting('operating.ctrlj.incrementTimeEnable','INCREMENT TIME ENABLE',
                           RS_OPERATING_CTRLJ_INCREMENTTIMEENABLE);
-   RegisterStoredSetting('operating.ctrlj.logFrequencyEnable','LOG FREQUENCY ENABLE',
+   RegisterModelSetting( 'operating.ctrlj.logFrequencyEnable','LOG FREQUENCY ENABLE',
                           RS_OPERATING_CTRLJ_LOGFREQUENCYENABLE);
    RegisterStoredSetting('operating.ctrlj.logSubTitle',       'LOG SUB TITLE',
                           RS_OPERATING_CTRLJ_LOGSUBTITLE);
-   RegisterStoredSetting('operating.ctrlj.mainCallsign',      'MAIN CALLSIGN',
+   RegisterModelSetting( 'operating.ctrlj.mainCallsign',      'MAIN CALLSIGN',
                           RS_OPERATING_CTRLJ_MAINCALLSIGN);
    RegisterStoredSetting('operating.ctrlj.mode',              'MODE',
                           RS_OPERATING_CTRLJ_MODE);
@@ -661,13 +661,13 @@ begin
                           RS_OPERATING_CTRLJ_POSSIBLECALLRIGHTKEY);
    RegisterStoredSetting('operating.ctrlj.qsxEnable',         'QSX ENABLE',
                           RS_OPERATING_CTRLJ_QSXENABLE);
-   RegisterStoredSetting('operating.ctrlj.qzbRandomOffsetEnable','QZB RANDOM OFFSET ENABLE',
+   RegisterModelSetting( 'operating.ctrlj.qzbRandomOffsetEnable','QZB RANDOM OFFSET ENABLE',
                           RS_OPERATING_CTRLJ_QZBRANDOMOFFSETENABLE);
    RegisterStoredSetting('operating.ctrlj.radiusOfEarth',     'RADIUS OF EARTH',
                           RS_OPERATING_CTRLJ_RADIUSOFEARTH);
    RegisterStoredSetting('operating.ctrlj.shiftKeyEnable',    'SHIFT KEY ENABLE',
                           RS_OPERATING_CTRLJ_SHIFTKEYENABLE);
-   RegisterStoredSetting('operating.ctrlj.stationsCallsignsMask','STATIONS CALLSIGNS MASK',
+   RegisterModelSetting( 'operating.ctrlj.stationsCallsignsMask','STATIONS CALLSIGNS MASK',
                           RS_OPERATING_CTRLJ_STATIONSCALLSIGNSMASK);
    RegisterStoredSetting('operating.ctrlj.wakeUpTimeOut',     'WAKE UP TIME OUT',
                           RS_OPERATING_CTRLJ_WAKEUPTIMEOUT);
@@ -703,9 +703,9 @@ begin
    // retired rows are not registered (cf. AUTO ALT-D ENABLE, BACKCOPY ENABLE).
    RegisterStoredSetting('appearance.ctrlj.beepEnable',       'BEEP ENABLE',
                           RS_APPEARANCE_CTRLJ_BEEPENABLE);
-   RegisterStoredSetting('appearance.ctrlj.columnAutosize',   'COLUMN AUTOSIZE',
+   RegisterModelSetting( 'appearance.ctrlj.columnAutosize',   'COLUMN AUTOSIZE',
                           RS_APPEARANCE_CTRLJ_COLUMNAUTOSIZE);
-   RegisterStoredSetting('appearance.ctrlj.completeCallsignMask','COMPLETE CALLSIGN MASK',
+   RegisterModelSetting( 'appearance.ctrlj.completeCallsignMask','COMPLETE CALLSIGN MASK',
                           RS_APPEARANCE_CTRLJ_COMPLETECALLSIGNMASK);
    RegisterStoredSetting('appearance.ctrlj.contactsPerPage',  'CONTACTS PER PAGE',
                           RS_APPEARANCE_CTRLJ_CONTACTSPERPAGE);

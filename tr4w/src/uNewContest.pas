@@ -80,6 +80,8 @@ uses
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
   uCFG,
+  uSettingsModel,      // Settings.My.MainCallsign -- was the global MainCallsign
+  uTR4WConfigFile,     // SaveSettings -- the settings model's own file
   (* The log file name and its rule -- one artifact, one directory. *)
   uLogNaming;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
 
@@ -511,17 +513,20 @@ begin
       changed is where the text comes from -- the form, not a control id. }
     StrLCopy(TempBuffer1, PAnsiChar(AnsiString(frmNewContest.MyCall)),
              High(TempBuffer1));
-    if MainCallsign = '' then
+    if Settings.My.MainCallsign = '' then
        begin
-       // THROUGH THE REGISTRY, NOT STRAIGHT AT THE INI.  'MAIN CALLSIGN' is a
-       // CFGCA row (uCFG.pas:635) with a crMax of 13, and this assigned the
-       // global by hand and then wrote the file, so the length bound and the
-       // row's crA hook never ran at all.
-       //
-       // SetCFGCommandValue assigns MainCallsign itself via CheckCommand, so
-       // the two lines that did it here are gone rather than duplicated.
-       SetCFGCommandValue(string(MAIN_CALLSIGN),
-                          string(PAnsiChar(@TempBuffer1[0])));
+       (* THE PROPERTY, NOT SetCFGCommandValue, and this had to change with
+         the row.
+
+         MAIN CALLSIGN has left CFGCA.  SetCFGCommandValue calls CheckCommand
+         WITHOUT aApplyJSONOwned, and for a name the settings object owns that
+         path is accepted-and-inert by design -- so the call would have
+         returned True, persisted nothing this program reads, and left the
+         callsign unset.  Assigning the property applies it; SaveSettings is
+         what makes it survive the restart, which is the half
+         SetCFGCommandValue used to provide. *)
+       Settings.My.MainCallsign := string(PAnsiChar(@TempBuffer1[0]));
+       SaveSettings(TR4WConfigFileName, Settings);
        end;
     DeleteSlashes(TempBuffer1);
 
@@ -669,16 +674,16 @@ begin
    frmNewContest.PopulateFiles(string(TR4W_PATH_NAME));
 
    // THE LIVE VALUE, NOT THE INI.  This used to read MAIN CALLSIGN out of
-   // tr4w.ini straight into the MainCallsign global -- but that row is
-   // csJSON, so settings\tr4w.json owns it and ApplyStoredCommands has
-   // already put the right value in that global at startup.  Reading the
-   // ini here did not merely show a stale callsign in the box: it
-   // OVERWROTE the live global with it, so opening New Contest on a
-   // station whose ini disagreed silently changed the operator's callsign.
-   // On a station with no ini at all it blanked it.
-   if MainCallsign <> '' then
+   // tr4w.ini straight into the MainCallsign global -- but the settings
+   // model owns that setting now, and it is loaded from
+   // settings\tr4w.json before any config file is read.  Reading the ini
+   // here did not merely show a stale callsign in the box: it OVERWROTE
+   // the live value with it, so opening New Contest on a station whose
+   // ini disagreed silently changed the operator's callsign.  On a
+   // station with no ini at all it blanked it.
+   if Settings.My.MainCallsign <> '' then
       begin
-      frmNewContest.SetMyCall(string(MainCallsign));
+      frmNewContest.SetMyCall(Settings.My.MainCallsign);
       end;
 
    // FROM settings\tr4w.json, not tr4w.ini (NY4I, 2026-08-16). An empty
