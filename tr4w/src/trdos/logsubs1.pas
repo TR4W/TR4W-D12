@@ -423,24 +423,24 @@ begin
 
   if ActiveMode in [Phone, FM] then
      begin
-     if (CQPhoneExchangeNameKnown <> '') and Settings.SayHi.Enable then
+     if (Settings.Messages.CqExchangeSsbNameKnown <> '') and Settings.SayHi.Enable then
         begin
         Name := UpperCase(CD.GetName(RootCall(CallsignICameBackTo)));
 
         if (Name = '') or (Name = 'CLUB') then
-          //        SendCrypticMessage(CQPhoneExchangeNameKnown)
+          //        SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown))
            begin
-           SendCrypticMessage(CQPhoneExchange)
+           SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeSsb))
            end
         else
-          //        SendCrypticMessage(CQPhoneExchange);
+          //        SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeSsb));
            begin
-           SendCrypticMessage(CQPhoneExchangeNameKnown);
+           SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown));
            end;
         end
      else
         begin
-        SendCrypticMessage(CQPhoneExchange);
+        SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeSsb));
         end;
      end
   else
@@ -457,24 +457,24 @@ begin
            end;
         end;
 
-     if (CQExchangeNameKnown <> '') and Settings.SayHi.Enable then
+     if (Settings.Messages.CqExchangeCwNameKnown <> '') and Settings.SayHi.Enable then
         begin
         Name := UpperCase(CD.GetName(RootCall(CallsignICameBackTo)));
         if (Name = '') or (Name = 'CLUB') then
            begin
-           SendCrypticMessage(CQExchange)
+           SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeCw))
            end
-            //Additional_CW_Message.ADD_Message:=CQExchange
+            //Additional_CW_Message.ADD_Message:=Settings.Messages.CqExchangeCw
         else
            begin
-           SendCrypticMessage(CQExchangeNameKnown);
+           SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeCwNameKnown));
            end;
-        //Additional_CW_Message.ADD_Message:=CQExchangeNameKnown;
+        //Additional_CW_Message.ADD_Message:=Settings.Messages.CqExchangeCwNameKnown;
         end
      else
         begin
-        SendCrypticMessage(CQExchange);
-        //Additional_CW_Message.ADD_Message:=CQExchange;
+        SendCrypticMessage(UTF8Encode(Settings.Messages.CqExchangeCw));
+        //Additional_CW_Message.ADD_Message:=Settings.Messages.CqExchangeCw;
         end;
 
      //   ClearPTTForceOn;
@@ -496,11 +496,11 @@ begin
 
      if ActiveMode in [Phone, FM] then
         begin
-        s := CorrectedCallPhoneMessage + ' '
+        s := UTF8Encode(Settings.Messages.CallOkNowSsb + ' ')
         end
      else
         begin
-        s := CorrectedCallMessage;
+        s := UTF8Encode(Settings.Messages.CallOkNowCw);
         end;
      //    CallsignICameBackTo := ReceivedData.Callsign;
      end;
@@ -521,11 +521,11 @@ begin
         begin
         if ActiveMode in [Phone, FM] then
            begin
-           Result := SendCrypticMessage(s + QSLPhoneMessage)
+           Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QslSsb))
            end
         else
            begin
-           Result := SendCrypticMessage(s + QSLMessage);
+           Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QslCw));
            end;
         AutoQSLCount := AutoQSLInterval;
         end
@@ -533,11 +533,11 @@ begin
         begin
         if ActiveMode in [Phone, FM] then
            begin
-           Result := SendCrypticMessage(s + QuickQSLPhoneMessage)
+           Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QuickQslSsb))
            end
         else
            begin
-           Result := SendCrypticMessage(s + QuickQSLMessage1);
+           Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QuickQslCw1));
            end;
 
         end
@@ -547,16 +547,16 @@ begin
      begin
      if ActiveMode in [Phone, FM] then
         begin
-        Result := SendCrypticMessage(s + QSLPhoneMessage)
+        Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QslSsb))
         end
      else
        if OnDeckCall <> '' then
           begin
-          Result := SendCrypticMessage(s + QuickQSLMessage1)
+          Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QuickQslCw1))
           end
          else
             begin
-            Result := SendCrypticMessage(s + QSLMessage);
+            Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QslCw));
             end;
      end;
 
@@ -571,7 +571,7 @@ begin
      begin
      if Settings.Message.Enable then
         begin
-        SendCrypticMessage(CorrectedCallMessage);
+        SendCrypticMessage(UTF8Encode(Settings.Messages.CallOkNowCw));
         end;
 
      CallsignICameBackTo := ReceivedData.Callsign;
@@ -925,23 +925,23 @@ begin
         F2Pressed:
           begin
             if ActiveMode = CW then
-              if ExchangeHasBeenSent and (RepeatSearchAndPounceExchange <> '')
+              if ExchangeHasBeenSent and (Settings.Messages.RepeatSpExchangeCw <> '')
                 then
                  begin
-                 SendCrypticMessage(RepeatSearchAndPounceExchange)
+                 SendCrypticMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeCw))
                  end
               else
                  begin
-                 SendCrypticMessage(SearchAndPounceExchange)
+                 SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeCw))
                  end
-            else if ExchangeHasBeenSent and (RepeatSearchAndPouncePhoneExchange
+            else if ExchangeHasBeenSent and (Settings.Messages.RepeatSpExchangeSsb
               <> '') then
                begin
-               SendCrypticMessage(RepeatSearchAndPouncePhoneExchange)
+               SendCrypticMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeSsb))
                end
             else
                begin
-               SendCrypticMessage(SearchAndPouncePhoneExchange);
+               SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeSsb));
                end;
 
             ExchangeHasBeenSent := True;
@@ -956,11 +956,11 @@ begin
 
                if ActiveMode = CW then
                   begin
-                  SendCrypticMessage(SearchAndPounceExchange)
+                  SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeCw))
                   end
                else
                   begin
-                  SendCrypticMessage(SearchAndPouncePhoneExchange);
+                  SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeSsb));
                   end;
                end;
 

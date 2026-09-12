@@ -600,19 +600,33 @@ begin
                           RS_CONTEST_QTCMINUTES);
    RegisterStoredSetting('contest.qtcQrs',              'QTC QRS',
                           RS_CONTEST_QTCQRS);
-   RegisterStoredSetting('contest.quickQslCwMessage',   'QUICK QSL CW MESSAGE',
+   { THE QUICK-QSL MESSAGES MOVED TO Settings.Messages, so these are
+     RegisterModelSetting -- the legacy registrar reads four of its own
+     attributes out of the CFGCA row and raises at startup when the row is
+     gone.
+
+     THE FIRST THREE ARE ONE SETTING. QUICK QSL CW MESSAGE, QUICK QSL CW
+     MESSAGE1 and QUICK QSL MESSAGE 1 were three rows over a single global,
+     and all three keys are kept rather than a spelling chosen, because a
+     panel or a saved preference may name any of them. They now agree with
+     each other, which as separate stored values they did not.
+
+     THEY ARE CONTEST-SCOPED, so Preferences edits the running value and the
+     settings FILE does not hold it -- see TMessageSettings. That is the same
+     arrangement the three band enables already have. }
+   RegisterModelSetting( 'contest.quickQslCwMessage',   'QUICK QSL CW MESSAGE',
                           RS_CONTEST_QUICKQSLCWMESSAGE);
-   RegisterStoredSetting('contest.quickQslCwMessage1',  'QUICK QSL CW MESSAGE1',
+   RegisterModelSetting( 'contest.quickQslCwMessage1',  'QUICK QSL CW MESSAGE1',
                           RS_CONTEST_QUICKQSLCWMESSAGE1);
    RegisterModelSetting('contest.quickQslKey1',        'QUICK QSL KEY 1',
                           RS_CONTEST_QUICKQSLKEY1);
    RegisterModelSetting('contest.quickQslKey2',        'QUICK QSL KEY 2',
                           RS_CONTEST_QUICKQSLKEY2);
-   RegisterStoredSetting('contest.quickQslMessage1',    'QUICK QSL MESSAGE 1',
+   RegisterModelSetting( 'contest.quickQslMessage1',    'QUICK QSL MESSAGE 1',
                           RS_CONTEST_QUICKQSLMESSAGE1);
-   RegisterStoredSetting('contest.quickQslMessage2',    'QUICK QSL MESSAGE 2',
+   RegisterModelSetting( 'contest.quickQslMessage2',    'QUICK QSL MESSAGE 2',
                           RS_CONTEST_QUICKQSLMESSAGE2);
-   RegisterStoredSetting('contest.quickQslSsbMessage',  'QUICK QSL SSB MESSAGE',
+   RegisterModelSetting( 'contest.quickQslSsbMessage',  'QUICK QSL SSB MESSAGE',
                           RS_CONTEST_QUICKQSLSSBMESSAGE);
    RegisterStoredSetting('contest.r150sMode',           'R150S MODE',
                           RS_CONTEST_R150SMODE);
@@ -716,13 +730,16 @@ begin
                           RS_CW_CTRLJ_PADDLEPORT);
    RegisterStoredSetting('cw.ctrlj.questionMarkChar',         'QUESTION MARK CHAR',
                           RS_CW_CTRLJ_QUESTIONMARKCHAR);
-   RegisterStoredSetting('cw.ctrlj.short0',                   'SHORT 0',
+   { THE CUT NUMBERS moved to Settings.Cw, so RegisterModelSetting. The keys
+     are unchanged, which is the point of keys being ours: these four still
+     live at cw.ctrlj.* in the settings file and no panel changes. }
+   RegisterModelSetting( 'cw.ctrlj.short0',                   'SHORT 0',
                           RS_CW_CTRLJ_SHORT0);
-   RegisterStoredSetting('cw.ctrlj.short1',                   'SHORT 1',
+   RegisterModelSetting( 'cw.ctrlj.short1',                   'SHORT 1',
                           RS_CW_CTRLJ_SHORT1);
-   RegisterStoredSetting('cw.ctrlj.short2',                   'SHORT 2',
+   RegisterModelSetting( 'cw.ctrlj.short2',                   'SHORT 2',
                           RS_CW_CTRLJ_SHORT2);
-   RegisterStoredSetting('cw.ctrlj.short9',                   'SHORT 9',
+   RegisterModelSetting( 'cw.ctrlj.short9',                   'SHORT 9',
                           RS_CW_CTRLJ_SHORT9);
    RegisterModelSetting('cw.ctrlj.shortIntegers',            'SHORT INTEGERS',
                           RS_CW_CTRLJ_SHORTINTEGERS);

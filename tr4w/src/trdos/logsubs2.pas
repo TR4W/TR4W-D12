@@ -1453,36 +1453,36 @@ begin
                    begin
                    FlushCWBuffer;
                    end;
-              if ExchangeHasBeenSent and (RepeatSearchAndPounceExchange <> '') then
+              if ExchangeHasBeenSent and (Settings.Messages.RepeatSpExchangeCw <> '') then
                  begin
-                 SendCrypticMessage(RepeatSearchAndPounceExchange)
+                 SendCrypticMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeCw))
                  end
               else
                  begin
                  if (ActiveWindow = CallWindow) and
                    (CallWindowString = '') and (ExchangeWindowString = '') then
                     begin
-                    if RepeatSearchAndPounceExchange <> '' then
+                    if Settings.Messages.RepeatSpExchangeCw <> '' then
                        begin
-                       SendCrypticMessage(RepeatSearchAndPounceExchange)
+                       SendCrypticMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeCw))
                        end
                     else
                        begin
-                       SendCrypticMessage(SearchAndPounceExchange);
+                       SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeCw));
                        end;
                     KeyStamp(ExtendedKey);
                     Exit;
                     end
                  else
                     begin
-                    SendCrypticMessage(SearchAndPounceExchange);
+                    SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeCw));
                     end;
                  end;
               end
            else
  //            SendFunctionKeyMessage(F2, SearchAndPounceOpMode);
               begin
-              SendCrypticMessage(SearchAndPouncePhoneExchange);
+              SendCrypticMessage(UTF8Encode(Settings.Messages.SpExchangeSsb));
               end;
            ExchangeHasBeenSent := True;
            end;
@@ -2399,15 +2399,15 @@ var
                   end
                else
                  if Settings.Message.Enable and not BeSilent then
-                           //wli                                SendCrypticMessage (QSOBeforeMessage);
+                           //wli                                SendCrypticMessage (Settings.Messages.QsoBeforeCw);
                end
             else
               if Settings.Message.Enable and not BeSilent then
-                      //wli                            SendCrypticMessage (QSOBeforeMessage);
+                      //wli                            SendCrypticMessage (Settings.Messages.QsoBeforeCw);
             end
          else
            if Settings.Message.Enable and not BeSilent then
-                 //wli                        SendCrypticMessage (QSOBeforeMessage);
+                 //wli                        SendCrypticMessage (Settings.Messages.QsoBeforeCw);
              if DualingCQState <> NoDualingCQs then
                 begin
                 DualingCQState := SendingDupeMessage;
@@ -2415,11 +2415,11 @@ var
          end;
       if ActiveMode = Digital then
          begin
-         FinishRTTYTransmission(QSOBeforeMessage);
+         FinishRTTYTransmission(UTF8Encode(Settings.Messages.QsoBeforeCw));
          end;
       if ActiveMode = Phone then
          begin
-         //wli                SendCrypticMessage (QSOBeforePhoneMessage);
+         //wli                SendCrypticMessage (Settings.Messages.QsoBeforeSsb);
      Write(' DUPE!!');
      EscapeDeletedCallEntry := CallWindowString;
      CallWindowString := '';
@@ -2524,9 +2524,9 @@ var
                      if QuickQSL <> NoQuickQSLKey then
                         begin
                         if QuickQSL = QuickKey1 then
-                                      //wli                                        SendCrypticMessage (QuickQSLMessage1)
+                                      //wli                                        SendCrypticMessage (Settings.Messages.QuickQslCw1)
                         else
-                                      //wli                                        SendCrypticMessage (QuickQSLMessage2);
+                                      //wli                                        SendCrypticMessage (Settings.Messages.QuickQslCw2);
                         end
                      else
                        if ExchangeInformation.Age then
@@ -2549,7 +2549,7 @@ var
                if Settings.Message.Enable and not BeSilent then
                   begin
                   if QuickQSL <> NoQuickQSLKey then
-                            //wli                                SendCrypticMessage (QuickQSLPhoneMessage)
+                            //wli                                SendCrypticMessage (Settings.Messages.QuickQslSsb)
                   else
                             //                                Send73Message;
                   end;
@@ -3034,7 +3034,7 @@ begin
             #9 + '<IsClaimedQso>' + Format('%d',[IfThen(RxData.ceQSO_Deleted or RxData.ceXQSO,0,1)]) + '</IsClaimedQso>' + sLineBreak +
             #9 + '<oldtimestamp>' + sTimestamp + '</oldtimestamp>' + sLineBreak +
             #9 + '<oldcall>' + RXData.Callsign + '</oldcall>' + sLineBreak +
-            // SentExchange built from CQExchange template, not the
+            // SentExchange built from the CQ exchange template, not the
             // received string. Pre-fix this echoed RxData.ExchString,
             // which is wrong for any contest. See uExchangeBuilder.
             #9 + '<SentExchange>' + BuildSentExchangeText(RxData) + '</SentExchange>' + sLineBreak +

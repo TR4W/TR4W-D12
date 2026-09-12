@@ -35,11 +35,12 @@ implementation
 
 uses
   SysUtils, StrUtils,
-  LogCW,     // CQExchange template global
-  uSettingsModel;   // Settings.My.Grid -- the operator's home grid, sent in RTC
+  (* LogCW went with the CQ exchange template, 2026-09-12: that global was
+    the only symbol this unit took from it. *)
+  uSettingsModel;   // the CQ exchange template, and Settings.My.Grid
 
 // Collapse runs of whitespace (space + tab) to a single space and trim
-// both ends.  Used after substituting into the CQExchange template so
+// both ends.  Used after substituting into the CQ exchange template so
 // the template's leading space and any double spaces from optional
 // fields don't survive.
 function CollapseWhitespace(const s: string): string;
@@ -104,7 +105,7 @@ begin
    // skipped in SentExchange, matching what RxExchange already does.)
    //
    // RTC rules permit RST on air, and some operators customize their
-   // CQExchange template to include 5NN/599. We deliberately ignore the
+   // CQ exchange template to include 5NN/599. We deliberately ignore the
    // on-air template here so any such customization does NOT leak RST
    // into the upload string. On-air keying is unaffected -- this only
    // controls what TR4W reports to HamScore.
@@ -116,7 +117,7 @@ begin
       Exit;
       end;
 
-   tpl := string(CQExchange);
+   tpl := string(Settings.Messages.CqExchangeCw);
    if tpl = '' then
       begin
       // No template configured -- fall back to whatever the operator

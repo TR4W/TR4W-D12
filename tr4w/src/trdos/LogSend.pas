@@ -253,19 +253,19 @@ begin
                     begin
                     if TempString[CharPointer] = '0' then
                        begin
-                       TempString[CharPointer] := Short0;
+                       TempString[CharPointer] := Settings.Cw.Short0;
                        end;
                     if TempString[CharPointer] = '1' then
                        begin
-                       TempString[CharPointer] := Short1;
+                       TempString[CharPointer] := Settings.Cw.Short1;
                        end;
                     if TempString[CharPointer] = '2' then
                        begin
-                       TempString[CharPointer] := Short2;
+                       TempString[CharPointer] := Settings.Cw.Short2;
                        end;
                     if TempString[CharPointer] = '9' then
                        begin
-                       TempString[CharPointer] := Short9;
+                       TempString[CharPointer] := Settings.Cw.Short9;
                        end;
                     end;
                  end;

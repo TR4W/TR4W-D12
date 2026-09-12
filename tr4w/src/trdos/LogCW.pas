@@ -79,24 +79,19 @@ type
     CWCommandQSY);
 
 var
-  CorrectedCallMessage                  : Str40; // = '} OK %';
-  CQExchange                            : Str40;
-  CQExchangeNameKnown                   : Str40;
-  QSLMessage                            : Str40 { = 'TU \ TEST'};
-  QSOBeforeMessage                      : Str40 { = ' SRI QSO B4 TU \ TEST'};
-  QuickQSLMessage1                      : Str40 { = 'TU'};
-  RepeatSearchAndPounceExchange         : Str40;
-  SearchAndPounceExchange               : Str40;
+  (* SEVENTEEN MESSAGE TEMPLATES LEFT HERE for Settings.Messages, 2026-09-12:
+    the CQ, S&P and repeat-S&P exchanges, the QSL, QSO-before, quick-QSL and
+    call-corrected messages, in both modes. They were Str40 and ShortString
+    globals written through the config array; they are published properties
+    on a contest-scoped group now. See TMessageSettings.
+
+    TAIL END SURVIVES AS A GLOBAL and is the odd pair out. Its three config
+    rows -- TAIL END CW MESSAGE, TAIL END MESSAGE, TAIL END SSB MESSAGE --
+    have been COMMENTED OUT in CFGCA for years, so there was nothing to move
+    out of the array and nothing to give a property name to. Nothing writes
+    either variable; uAltP reads them to show two permanently empty rows. *)
   TailEndMessage                        : Str40 { = 'R'};
   PrevNr                                : Str10;   // 4.53.2
-  CorrectedCallPhoneMessage             : ShortString {= 'CORCALL.WAV'};
-  CQPhoneExchange                       : ShortString {= 'CQEXCHNG.WAV'};
-  CQPhoneExchangeNameKnown              : ShortString {= 'CQEXNAME.WAV'};
-  QSLPhoneMessage                       : ShortString {= 'QSL.WAV'};
-  QSOBeforePhoneMessage                 : ShortString {= 'QSOB4.WAV'};
-  QuickQSLPhoneMessage                  : ShortString {= 'QUICKQSL.WAV'};
-  RepeatSearchAndPouncePhoneExchange    : ShortString {= 'RPTSPEX.WAV'};
-  SearchAndPouncePhoneExchange          : ShortString {= 'SAPEXCHG.WAV'};
   TailEndPhoneMessage                   : ShortString {= 'TAILEND.WAV'};
 
   AutoCQMemory                          : Char = CHR(112);
@@ -115,7 +110,6 @@ var
 
   NeedToSetCQMode                       : boolean; {KK1L: 6.69 This variable is used to leap around some AutoS&PMode code.}
 
-  QuickQSLMessage2                      : Str40 { = 'TU'}; // 4.88.1
 
 //  RadioOneKeyerOutputPort          : PortType = NoPort;
 //  RadioTwoKeyerOutputPort          : PortType = NoPort;
@@ -127,10 +121,9 @@ var
   SendingOnRadioOne                     : boolean; {KK1L: 6.72 Moved from local (IMPLIMENTATION section) for use in LOGSUBS}
   SendingOnRadioTwo                     : boolean; {KK1L: 6.72 Moved from local (IMPLIMENTATION section) for use in LOGSUBS}
 
-  Short0                                : AnsiChar = 'T';
-  Short1                                : AnsiChar = 'A';
-  Short2                                : AnsiChar = '2';
-  Short9                                : AnsiChar = 'N';
+  (* THE CUT NUMBERS LEFT FOR Settings.Cw, 2026-09-12. The declared T, A, 2
+    and N here were dead text: cfgdef.pas overwrote three of them with the
+    digits at every startup. *)
 
 procedure AddStringToBuffer(Msg: Str160; Tone: integer);
 procedure BeginCWCapture;   // '=' repeat-last-CW-message
@@ -1053,50 +1046,50 @@ begin
 //    Windows.SetWindowTextA(MemProgHWND, TC_OTHERCWMESSAGEMEMORYSTATUS);
 
       //         ClrEol;
-//         TempString                                       := ' 1. Call Okay Now - ' + CorrectedCallMessage;
+//         TempString                                       := ' 1. Call Okay Now - ' + Settings.Messages.CallOkNowCw;
 //         if length(TempString) > 79 then TempString       := Copy(TempString, 1, 78) + '+';
 //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(WinAnsi('Call Okay Now - ' + CorrectedCallMessage)));
+//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(WinAnsi('Call Okay Now - ' + Settings.Messages.CallOkNowCw)));
       //         ClrEol;
-      //         TempString                                 := ' 2. CQ Exchange   - ' + CQExchange;
+      //         TempString                                 := ' 2. CQ Exchange   - ' + Settings.Messages.CqExchangeCw;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[113], PAnsiChar(WinAnsi('CQ Exchange   - ' + CQExchange)));
+//    Windows.SetWindowTextA(MessagesValues[113], PAnsiChar(WinAnsi('CQ Exchange   - ' + Settings.Messages.CqExchangeCw)));
 
       //         ClrEol;
-      //         TempString                                 := ' 3. CQ Ex Name    - ' + CQExchangeNameKnown;
+      //         TempString                                 := ' 3. CQ Ex Name    - ' + Settings.Messages.CqExchangeCwNameKnown;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[114], PAnsiChar(WinAnsi('CQ Ex Name    - ' + CQExchangeNameKnown)));
+//    Windows.SetWindowTextA(MessagesValues[114], PAnsiChar(WinAnsi('CQ Ex Name    - ' + Settings.Messages.CqExchangeCwNameKnown)));
 
       //         ClrEol;
-      //         TempString                                 := ' 4. QSL Message   - ' + QSLMessage;
+      //         TempString                                 := ' 4. QSL Message   - ' + Settings.Messages.QslCw;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[115], PAnsiChar(WinAnsi('QSL Message   - ' + QSLMessage)));
+//    Windows.SetWindowTextA(MessagesValues[115], PAnsiChar(WinAnsi('QSL Message   - ' + Settings.Messages.QslCw)));
       //         ClrEol;
-      //         TempString                                 := ' 5. QSO Before    - ' + QSOBeforeMessage;
+      //         TempString                                 := ' 5. QSO Before    - ' + Settings.Messages.QsoBeforeCw;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[116], PAnsiChar(WinAnsi('QSO Before    - ' + QSOBeforeMessage)));
+//    Windows.SetWindowTextA(MessagesValues[116], PAnsiChar(WinAnsi('QSO Before    - ' + Settings.Messages.QsoBeforeCw)));
 
       //         ClrEol;
-      //         TempString                                 := ' 6. Quick QSL     - ' + QuickQSLMessage1;
+      //         TempString                                 := ' 6. Quick QSL     - ' + Settings.Messages.QuickQslCw1;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[117], PAnsiChar(WinAnsi('Quick QSL     - ' + QuickQSLMessage1)));
+//    Windows.SetWindowTextA(MessagesValues[117], PAnsiChar(WinAnsi('Quick QSL     - ' + Settings.Messages.QuickQslCw1)));
 
       //         ClrEol;
-      //         TempString                                 := ' 7. Repeat S&P Ex - ' + RepeatSearchAndPounceExchange;
+      //         TempString                                 := ' 7. Repeat S&P Ex - ' + Settings.Messages.RepeatSpExchangeCw;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[118], PAnsiChar(WinAnsi('Repeat S&P Ex - ' + RepeatSearchAndPounceExchange)));
+//    Windows.SetWindowTextA(MessagesValues[118], PAnsiChar(WinAnsi('Repeat S&P Ex - ' + Settings.Messages.RepeatSpExchangeCw)));
 
       //         ClrEol;
-      //         TempString                                 := ' 8. S&P Exchange  - ' + SearchAndPounceExchange;
+      //         TempString                                 := ' 8. S&P Exchange  - ' + Settings.Messages.SpExchangeCw;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[119], PAnsiChar(WinAnsi('S&P Exchange  - ' + SearchAndPounceExchange)));
+//    Windows.SetWindowTextA(MessagesValues[119], PAnsiChar(WinAnsi('S&P Exchange  - ' + Settings.Messages.SpExchangeCw)));
 
       //         ClrEol;
       //         TempString                                 := ' 9. Tail end msg  - ' + TailEndMessage;
@@ -1104,15 +1097,15 @@ begin
       //         WriteLn(TempString);
 //    Windows.SetWindowTextA(MessagesValues[120], PAnsiChar(WinAnsi('Tail end msg  - ' + TailEndMessage)));
 
-//    Windows.SetWindowTextA(MessagesValues[121], PAnsiChar(WinAnsi('Short 0       - ' + Short0)));
-//    Windows.SetWindowTextA(MessagesValues[122], PAnsiChar(WinAnsi('Short 1       - ' + Short1)));
-//    Windows.SetWindowTextA(MessagesValues[123], PAnsiChar(WinAnsi('Short 9       - ' + Short9)));
+//    Windows.SetWindowTextA(MessagesValues[121], PAnsiChar(WinAnsi('Short 0       - ' + Settings.Cw.Short0)));
+//    Windows.SetWindowTextA(MessagesValues[122], PAnsiChar(WinAnsi('Short 1       - ' + Settings.Cw.Short1)));
+//    Windows.SetWindowTextA(MessagesValues[123], PAnsiChar(WinAnsi('Short 9       - ' + Settings.Cw.Short9)));
 
       //         ClrEol;
-      //         Write('A. Short 0 = ', Short0, '   ',
-      //            'B. Short 1 = ', Short1, '   ',
-      //            'C. Short 2 = ', Short2, '   ',
-      //            'D. Short 9 = ', Short9);
+      //         Write('A. Short 0 = ', Settings.Cw.Short0, '   ',
+      //            'B. Short 1 = ', Settings.Cw.Short1, '   ',
+      //            'C. Short 2 = ', Settings.Cw.Short2, '   ',
+      //            'D. Short 9 = ', Settings.Cw.Short9);
   end
   else
      begin
@@ -1120,10 +1113,10 @@ begin
       //         WriteLnCenter('OTHER SSB MESSAGE MEMORY STATUS');
 //    Windows.SetWindowTextA(MemProgHWND, TC_OTHERSSBMESSAGEMEMORYSTATUS);
       //         ClrEol;
-      //         TempString                                 := ' 1. Call Okay Now - ' + DVPPath + CorrectedCallPhoneMessage;
+      //         TempString                                 := ' 1. Call Okay Now - ' + DVPPath + Settings.Messages.CallOkNowSsb;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(WinAnsi('Call Okay Now - ' + CorrectedCallPhoneMessage)));
+//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(WinAnsi('Call Okay Now - ' + Settings.Messages.CallOkNowSsb)));
 
   end;
 end;
@@ -1517,13 +1510,13 @@ begin
               if ActiveMode <> Phone then
                  begin
                  TempString                                  := LineInput('Msg = ',
-                   CorrectedCallMessage,
+                   UTF8Encode(Settings.Messages.CallOkNowCw),
                    True,
                    False);
 
                  if TempString <> EscapeKey then
                     begin
-                    CorrectedCallMessage                      := TempString;
+                    Settings.Messages.CallOkNowCw                      := TempString;
                     AppendConfigFile('CALL OK NOW MESSAGE = ' + TempString);
                     end;
                  end
@@ -1531,7 +1524,7 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     CorrectedCallPhoneMessage,
+                     UTF8Encode(Settings.Messages.CallOkNowSsb),
                      True,
                      True);
 
@@ -1539,23 +1532,23 @@ begin
                      if Config.DVKEnable then
                         begin
                         {                      case TempString[2] of
-                                                  AltW: DVPRecordMessage(CorrectedCallPhoneMessage, False);
-                                                  AltR: DVPListenMessage(CorrectedCallPhoneMessage, true);
+                                                  AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.CallOkNowSsb), False);
+                                                  AltR: DVPListenMessage(UTF8Encode(Settings.Messages.CallOkNowSsb), true);
                                                 end;
                                               }
                         end
                      else
                          //                    if ActiveDVKPort <> NoPort then
                        //                        case TempString[2] of
-                       //                          AltW: DVKRecordMessage(CorrectedCallPhoneMessage);
-                       //                          AltR: DVKListenMessage(CorrectedCallPhoneMessage);
+                       //                          AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.CallOkNowSsb));
+                       //                          AltR: DVKListenMessage(Settings.Messages.CallOkNowSsb);
                        //                        end;
 
                  until (TempString[1] <> NullKey);
 
                  if TempString <> EscapeKey then
                     begin
-                    CorrectedCallPhoneMessage                 := TempString;
+                    Settings.Messages.CallOkNowSsb                 := TempString;
                     AppendConfigFile('CALL OK NOW SSB MESSAGE = ' + TempString);
                     end;
                  end;
@@ -1565,10 +1558,10 @@ begin
             begin
               if ActiveMode <> Phone then
                  begin
-                 TempString                                  := LineInput('Msg = ', CQExchange, True, False);
+                 TempString                                  := LineInput('Msg = ', UTF8Encode(Settings.Messages.CqExchangeCw), True, False);
                  if TempString <> EscapeKey then
                     begin
-                    CQExchange                                := TempString;
+                    Settings.Messages.CqExchangeCw                                := TempString;
                     AppendConfigFile('CQ EXCHANGE = ' + TempString);
                     end;
                  end
@@ -1576,7 +1569,7 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     CQPhoneExchange,
+                     UTF8Encode(Settings.Messages.CqExchangeSsb),
                      True,
                      True);
 
@@ -1584,16 +1577,16 @@ begin
                      if Config.DVKEnable then
                         begin
                         case TempString[2] of
-                          AltW: DVPRecordMessage(CQPhoneExchange, False);
-                          AltR: DVPListenMessage(CQPhoneExchange, True);
+                          AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.CqExchangeSsb), False);
+                          AltR: DVPListenMessage(UTF8Encode(Settings.Messages.CqExchangeSsb), True);
                         end;
                         end
                      else
                        if ActiveDVKPort <> NoPort then
                           begin
                           case TempString[2] of
-                            AltW: DVKRecordMessage(CQPhoneExchange);
-                            AltR: DVKLIstenMessage(CQPhoneExchange);
+                            AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.CqExchangeSsb));
+                            AltR: DVKLIstenMessage(UTF8Encode(Settings.Messages.CqExchangeSsb));
                           end;
                           end;
 
@@ -1601,7 +1594,7 @@ begin
 
                  if TempString <> EscapeKey then
                     begin
-                    CQPhoneExchange                           := TempString;
+                    Settings.Messages.CqExchangeSsb                           := TempString;
                     AppendConfigFile('CQ SSB EXCHANGE = ' + TempString);
                     end;
                  end;
@@ -1611,10 +1604,10 @@ begin
             begin
               if ActiveMode <> Phone then
                  begin
-                 TempString                                  := LineInput('Msg = ', CQExchangeNameKnown, True, False);
+                 TempString                                  := LineInput('Msg = ', UTF8Encode(Settings.Messages.CqExchangeCwNameKnown), True, False);
                  if TempString <> EscapeKey then
                     begin
-                    CQExchangeNameKnown                       := TempString;
+                    Settings.Messages.CqExchangeCwNameKnown                       := TempString;
                     AppendConfigFile('CQ EXCHANGE NAME KNOWN = ' + TempString);
                     end;
                  end
@@ -1622,7 +1615,7 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     CQPhoneExchangeNameKnown,
+                     UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown),
                      True,
                      True);
 
@@ -1630,23 +1623,23 @@ begin
                      if Config.DVKEnable then
                         begin
                         case TempString[2] of
-                          AltW: DVPRecordMessage(CQPhoneExchangeNameKnown, False);
-                          AltR: DVPListenMessage(CQPhoneExchangeNameKnown, True);
+                          AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown), False);
+                          AltR: DVPListenMessage(UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown), True);
                         end;
                         end
                      else
                        if ActiveDVKPort <> NoPort then
                           begin
                           case TempString[2] of
-                            AltW: DVKRecordMessage(CQPhoneExchangeNameKnown);
-                            AltR: DVKLIstenMessage(CQPhoneExchangeNameKnown);
+                            AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown));
+                            AltR: DVKLIstenMessage(UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown));
                           end;
                           end;
                  until (TempString[1] <> NullKey);
 
                  if TempString <> EscapeKey then
                     begin
-                    CQPhoneExchangeNameKnown                  := TempString;
+                    Settings.Messages.CqExchangeSsbNameKnown                  := TempString;
                     AppendConfigFile('CQ SSB EXCHANGE NAME KNOWN = ' + TempString);
                     end;
                  end;
@@ -1656,10 +1649,10 @@ begin
             begin
               if ActiveMode <> Phone then
                  begin
-                 TempString                                  := LineInput('Msg = ', QSLMessage, True, False);
+                 TempString                                  := LineInput('Msg = ', UTF8Encode(Settings.Messages.QslCw), True, False);
                  if TempString <> EscapeKey then
                     begin
-                    QSLMessage                                := TempString;
+                    Settings.Messages.QslCw                                := TempString;
                     AppendConfigFile('QSL MESSAGE = ' + TempString);
                     end;
                  end
@@ -1667,30 +1660,30 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     QSLPhoneMessage,
+                     UTF8Encode(Settings.Messages.QslSsb),
                      True, True);
 
                    if TempString[1] = NullKey then
                      if Config.DVKEnable then
                         begin
                         case TempString[2] of
-                          AltW: DVPRecordMessage(QSLPhoneMessage, False);
-                          AltR: DVPListenMessage(QSLPhoneMessage, True);
+                          AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.QslSsb), False);
+                          AltR: DVPListenMessage(UTF8Encode(Settings.Messages.QslSsb), True);
                         end;
                         end
                      else
                        if ActiveDVKPort <> NoPort then
                           begin
                           case TempString[2] of
-                            AltW: DVKRecordMessage(QSLPhoneMessage);
-                            AltR: DVKLIstenMessage(QSLPhoneMessage);
+                            AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.QslSsb));
+                            AltR: DVKLIstenMessage(UTF8Encode(Settings.Messages.QslSsb));
                           end;
                           end;
                  until (TempString[1] <> NullKey);
 
                  if TempString <> EscapeKey then
                     begin
-                    QSLPhoneMessage                           := TempString;
+                    Settings.Messages.QslSsb                           := TempString;
                     AppendConfigFile('QSL SSB MESSAGE = ' + TempString);
                     end;
                  end;
@@ -1700,10 +1693,10 @@ begin
             begin
               if ActiveMode <> Phone then
                  begin
-                 TempString                                  := LineInput('Msg = ', QSOBeforeMessage, True, False);
+                 TempString                                  := LineInput('Msg = ', UTF8Encode(Settings.Messages.QsoBeforeCw), True, False);
                  if TempString <> EscapeKey then
                     begin
-                    QSOBeforeMessage                          := TempString;
+                    Settings.Messages.QsoBeforeCw                          := TempString;
                     AppendConfigFile('QSO BEFORE MESSAGE = ' + TempString);
                     end;
                  end
@@ -1711,30 +1704,30 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     QSOBeforePhoneMessage,
+                     UTF8Encode(Settings.Messages.QsoBeforeSsb),
                      True, True);
 
                    if TempString[1] = NullKey then
                      if Config.DVKEnable then
                         begin
                         case TempString[2] of
-                          AltW: DVPRecordMessage(QSOBeforePhoneMessage, False);
-                          AltR: DVPListenMessage(QSOBeforePhoneMessage, True);
+                          AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.QsoBeforeSsb), False);
+                          AltR: DVPListenMessage(UTF8Encode(Settings.Messages.QsoBeforeSsb), True);
                         end;
                         end
                      else
                        if ActiveDVKPort <> NoPort then
                           begin
                           case TempString[2] of
-                            AltW: DVKRecordMessage(QSOBeforePhoneMessage);
-                            AltR: DVKLIstenMessage(QSOBeforePhoneMessage);
+                            AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.QsoBeforeSsb));
+                            AltR: DVKLIstenMessage(UTF8Encode(Settings.Messages.QsoBeforeSsb));
                           end;
                           end;
                  until (TempString[1] <> NullKey);
 
                  if TempString <> EscapeKey then
                     begin
-                    QSOBeforePhoneMessage                     := TempString;
+                    Settings.Messages.QsoBeforeSsb                     := TempString;
                     AppendConfigFile('QSO BEFORE SSB MESSAGE = ' + TempString);
                     end;
                  end;
@@ -1744,10 +1737,10 @@ begin
             begin
               if ActiveMode <> Phone then
                  begin
-                 TempString                                  := LineInput('Msg = ', QuickQSLMessage1, True, False);
+                 TempString                                  := LineInput('Msg = ', UTF8Encode(Settings.Messages.QuickQslCw1), True, False);
                  if TempString <> EscapeKey then
                     begin
-                    QuickQSLMessage1                          := TempString;
+                    Settings.Messages.QuickQslCw1                          := TempString;
                     AppendConfigFile('QUICK QSL MESSAGE= ' + TempString);
                     end;
                  end
@@ -1755,30 +1748,30 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     QuickQSLPhoneMessage,
+                     UTF8Encode(Settings.Messages.QuickQslSsb),
                      True, True);
 
                    if TempString[1] = NullKey then
                      if Config.DVKEnable then
                         begin
                         case TempString[2] of
-                          AltW: DVPRecordMessage(QuickQSLPhoneMessage, False);
-                          AltR: DVPListenMessage(QuickQSLPhoneMessage, True);
+                          AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.QuickQslSsb), False);
+                          AltR: DVPListenMessage(UTF8Encode(Settings.Messages.QuickQslSsb), True);
                         end;
                         end
                      else
                        if ActiveDVKPort <> NoPort then
                           begin
                           case TempString[2] of
-                            AltW: DVKRecordMessage(QuickQSLPhoneMessage);
-                            AltR: DVKLIstenMessage(QuickQSLPhoneMessage);
+                            AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.QuickQslSsb));
+                            AltR: DVKLIstenMessage(UTF8Encode(Settings.Messages.QuickQslSsb));
                           end;
                           end;
                  until (TempString[1] <> NullKey);
 
                  if TempString <> EscapeKey then
                     begin
-                    QuickQSLPhoneMessage                      := TempString;
+                    Settings.Messages.QuickQslSsb                      := TempString;
                     AppendConfigFile('QUICK QSL SSB MESSAGE = ' + TempString);
                     end;
                  end;
@@ -1788,10 +1781,10 @@ begin
             begin
               if ActiveMode <> Phone then
                  begin
-                 TempString                                  := LineInput('Msg = ', RepeatSearchAndPounceExchange, True, False);
+                 TempString                                  := LineInput('Msg = ', UTF8Encode(Settings.Messages.RepeatSpExchangeCw), True, False);
                  if TempString <> EscapeKey then
                     begin
-                    RepeatSearchAndPounceExchange             := TempString;
+                    Settings.Messages.RepeatSpExchangeCw             := TempString;
                     AppendConfigFile('REPEAT S&P EXCHANGE = ' + TempString);
                     end;
                  end
@@ -1799,30 +1792,30 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     RepeatSearchAndPouncePhoneExchange,
+                     UTF8Encode(Settings.Messages.RepeatSpExchangeSsb),
                      True, True);
 
                    if TempString[1] = NullKey then
                      if Config.DVKEnable then
                         begin
                         case TempString[2] of
-                          AltW: DVPRecordMessage(RepeatSearchAndPouncePhoneExchange, False);
-                          AltR: DVPListenMessage(RepeatSearchAndPouncePhoneExchange, True);
+                          AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeSsb), False);
+                          AltR: DVPListenMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeSsb), True);
                         end;
                         end
                      else
                        if ActiveDVKPort <> NoPort then
                           begin
                           case TempString[2] of
-                            AltW: DVKRecordMessage(RepeatSearchAndPouncePhoneExchange);
-                            AltR: DVKLIstenMessage(RepeatSearchAndPouncePhoneExchange);
+                            AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeSsb));
+                            AltR: DVKLIstenMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeSsb));
                           end;
                           end;
                  until (TempString[1] <> NullKey);
 
                  if TempString <> EscapeKey then
                     begin
-                    RepeatSearchAndPouncePhoneExchange        := TempString;
+                    Settings.Messages.RepeatSpExchangeSsb        := TempString;
                     AppendConfigFile('REPEAT S&P SSB EXCHANGE = ' + TempString);
                     end;
                  end;
@@ -1832,10 +1825,10 @@ begin
             begin
               if ActiveMode <> Phone then
                  begin
-                 TempString                                  := LineInput('Msg = ', SearchAndPounceExchange, True, False);
+                 TempString                                  := LineInput('Msg = ', UTF8Encode(Settings.Messages.SpExchangeCw), True, False);
                  if TempString <> EscapeKey then
                     begin
-                    SearchAndPounceExchange                   := TempString;
+                    Settings.Messages.SpExchangeCw                   := TempString;
                     AppendConfigFile('S&P EXCHANGE = ' + TempString);
                     end;
                  end
@@ -1843,30 +1836,30 @@ begin
                  begin
                  repeat
                    TempString                                := LineInput('Msg = ',
-                     SearchAndPouncePhoneExchange,
+                     UTF8Encode(Settings.Messages.SpExchangeSsb),
                      True, True);
 
                    if TempString[1] = NullKey then
                      if Config.DVKEnable then
                         begin
                         case TempString[2] of
-                          AltW: DVPRecordMessage(SearchAndPouncePhoneExchange, False);
-                          AltR: DVPListenMessage(SearchAndPouncePhoneExchange, True);
+                          AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.SpExchangeSsb), False);
+                          AltR: DVPListenMessage(UTF8Encode(Settings.Messages.SpExchangeSsb), True);
                         end;
                         end
                      else
                        if ActiveDVKPort <> NoPort then
                           begin
                           case TempString[2] of
-                            AltW: DVKRecordMessage(SearchAndPouncePhoneExchange);
-                            AltR: DVKLIstenMessage(SearchAndPouncePhoneExchange);
+                            AltW: DVKRecordMessage(UTF8Encode(Settings.Messages.SpExchangeSsb));
+                            AltR: DVKLIstenMessage(UTF8Encode(Settings.Messages.SpExchangeSsb));
                           end;
                           end;
                  until (TempString[1] <> NullKey);
 
                  if TempString <> EscapeKey then
                     begin
-                    SearchAndPouncePhoneExchange              := TempString;
+                    Settings.Messages.SpExchangeSsb              := TempString;
                     AppendConfigFile('S&P SSB EXCHANGE = ' + TempString);
                     end;
                  end;
@@ -1922,8 +1915,8 @@ begin
                TempString                                    := LineInput('Enter character for short zeros : ', '', True, False);
                if (TempString <> EscapeKey) and (TempString <> '') then
                   begin
-                  Short0                                      := TempString[1];
-                  AppendConfigFile('SHORT 0 = ' + Short0);
+                  Settings.Cw.Short0                                      := TempString[1];
+                  AppendConfigFile('SHORT 0 = ' + Settings.Cw.Short0);
                   end;
                end;
 
@@ -1933,8 +1926,8 @@ begin
                TempString                                    := LineInput('Enter character for short ones : ', '', True, False);
                if (TempString <> EscapeKey) and (TempString <> '') then
                   begin
-                  Short1                                      := TempString[1];
-                  AppendConfigFile('SHORT 1 = ' + Short1);
+                  Settings.Cw.Short1                                      := TempString[1];
+                  AppendConfigFile('SHORT 1 = ' + Settings.Cw.Short1);
                   end;
                end;
 
@@ -1944,8 +1937,8 @@ begin
                TempString                                    := LineInput('Enter character for short twos : ', '', True, False);
                if (TempString <> EscapeKey) and (TempString <> '') then
                   begin
-                  Short2                                      := TempString[1];
-                  AppendConfigFile('SHORT 2 = ' + Short2);
+                  Settings.Cw.Short2                                      := TempString[1];
+                  AppendConfigFile('SHORT 2 = ' + Settings.Cw.Short2);
                   end;
                end;
 
@@ -1955,8 +1948,8 @@ begin
                TempString                                    := LineInput('Enter character for short nines : ', '', True, False);
                if (TempString <> EscapeKey) and (TempString <> '') then
                   begin
-                  Short9                                      := TempString[1];
-                  AppendConfigFile('SHORT 9 = ' + Short9);
+                  Settings.Cw.Short9                                      := TempString[1];
+                  AppendConfigFile('SHORT 9 = ' + Settings.Cw.Short9);
                   end;
                end;
 

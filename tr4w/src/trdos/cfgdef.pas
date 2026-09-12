@@ -343,9 +343,9 @@ begin
   SetEXCaptionMemoryString(CW, F11, 'GRAB');
 
   Config.LeadingZeroCharacter := '0';
-  Short0 := '0';
-  Short1 := '1';
-  Short9 := '9';
+  (* The three cut numbers that stood here are TCwSettings' constructor
+    defaults now, and Short2 -- which was never in this block -- with them.
+    DigitalModeEnable left the same way, for TContestSettings. *)
 
   for c := F1 to F12 do
      begin
