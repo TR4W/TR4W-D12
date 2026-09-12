@@ -28,6 +28,7 @@ interface
 
 uses
   SysUtils,
+  Classes,   // TStringList -- the cache in SaveRestartFile
 utils_text,
   uCallSignRoutines,
   uMults,
@@ -312,6 +313,12 @@ var
   MaxSerialSent                         : array[BandType] of integer;
 
   RemainingMultDisplay                  : RemainingMultiplierType = rmNoRemMultDisplay;
+  (* What SaveRestartFile last wrote, so it can write only what changed.
+    Session-lifetime and deliberately NOT persisted -- it describes the
+    database's contents, and on the next run the database speaks for
+    itself. *)
+  GLastWritten: TStringList = nil;
+  GSessionDirty: boolean = False;
 
 //  RemMultMatrix                         : array[Band160..All, CW..Both, RemainingMultiplierType] of RemainingMultListPointer;
 
@@ -1497,7 +1504,26 @@ end;
 
   ENUMS GO IN BY NAME, NOT BY ORDINAL. An ordinal is what the binary file
   stored, and it silently means something else the day a band is inserted into
-  the middle of BandType. A name either resolves or it does not. *)
+  the middle of BandType. A name either resolves or it does not.
+
+  ONLY WHAT CHANGED IS WRITTEN, and there is no commit when nothing did.
+
+  NY4I, 2026-09-12: "The other items seem to be settings that can just be
+  persisted to the database when they change." Right, and the obvious way to do
+  that is wrong: these twelve are assigned from SEVENTEEN sites across seven
+  units, so a save call beside each assignment would be complete on the day it
+  was written and incomplete the first time somebody adds an eighteenth.
+
+  A cached copy of what was last written gives the same behaviour from ONE call
+  site and cannot be forgotten. The routine still runs per QSO -- which is when
+  a band, mode or speed memory has usually just moved -- but a QSO that changed
+  nothing writes no rows and opens no transaction, so it costs a comparison
+  rather than an fsync.
+
+  THE SEPARATION FROM THE QSO'S OWN COMMIT IS DELIBERATE, not an oversight. If
+  this never happens the log is still complete and correct: what is lost is
+  where the cursor was, not a contact. Holding a contact's durability hostage
+  to a band memory would be the real defect. *)
 procedure DupeAndMultSheet.SaveRestartFile;
 
    (* KEYS ARE BUILT AS UnicodeString AND ENCODED ONCE, at the call. An
@@ -1507,21 +1533,52 @@ procedure DupeAndMultSheet.SaveRestartFile;
      construction so the bytes are identical either way. The encode is
      LAST because concatenating anything onto a UTF8String promotes the
      result straight back to UnicodeString. *)
+   (* True when the row was actually written, so the caller knows whether a
+     commit is owed. GLastWritten is the cache; a key absent from it has never
+     been written this session and so always differs. *)
+   function Put(const aKey, aValue: string): boolean;
+   var
+      i: integer;
+      k, v: UTF8String;
+   begin
+      (* ENCODED ONCE, INTO LOCALS. Classes is compiled without the Unicode
+        modeswitch, so every TStringList member takes an AnsiString -- passing a
+        UTF-16 key straight in narrows at each of the three calls below. The
+        cache therefore holds exactly the bytes that go to the database. *)
+      k := UTF8Encode(aKey);
+      v := UTF8Encode(aValue);
+
+      i := GLastWritten.IndexOfName(k);
+      if (i >= 0) and (GLastWritten.ValueFromIndex[i] = v) then
+         begin
+         Result := False;
+         Exit;
+         end;
+      LogStoreRepository.SaveSessionValue(k, v);
+      GLastWritten.Values[k] := v;
+      Result := True;
+   end;
+
    procedure PutEnum(const aKey: string; aTypeInfo: PTypeInfo; aValue: integer);
    begin
-      LogStoreRepository.SaveSessionValue(
-         UTF8Encode(aKey), UTF8Encode(GetEnumName(aTypeInfo, aValue)));
+      if Put(aKey, GetEnumName(aTypeInfo, aValue)) then
+         begin
+         GSessionDirty := True;
+         end;
    end;
 
    procedure PutInt(const aKey: string; aValue: LONGINT);
    begin
-      LogStoreRepository.SaveSessionValue(UTF8Encode(aKey),
-                                          UTF8Encode(IntToStr(aValue)));
+      if Put(aKey, IntToStr(aValue)) then
+         begin
+         GSessionDirty := True;
+         end;
    end;
 
 var
    b: BandType;
    m: ModeType;
+   op: string;
 begin
    (* Nil when nothing has opened the log, or when a failure disabled it. The
      session position is worth exactly nothing without the log it describes, so
@@ -1530,6 +1587,13 @@ begin
       begin
       Exit;
       end;
+
+   if GLastWritten = nil then
+      begin
+      GLastWritten := TStringList.Create;
+      GLastWritten.CaseSensitive := False;
+      end;
+   GSessionDirty := False;
 
    PutEnum('radio1.band', TypeInfo(BandType), Ord(Radio1.BandMemory));
    PutEnum('radio2.band', TypeInfo(BandType), Ord(Radio2.BandMemory));
@@ -1554,9 +1618,19 @@ begin
          end;
       end;
 
-   LogStoreRepository.SaveSessionValue('currentOperator',
-                                       CharArrayToAnsi(CurrentOperator));
-   LogStoreRepository.Commit;
+   op := string(CharArrayToAnsi(CurrentOperator));
+   if Put('currentOperator', op) then
+      begin
+      GSessionDirty := True;
+      end;
+
+   (* NO COMMIT WHEN NOTHING MOVED. This is what makes a per-QSO call cheap:
+     the common case writes no rows, so there is no transaction to end and no
+     fsync to pay for. *)
+   if GSessionDirty then
+      begin
+      LogStoreRepository.Commit;
+      end;
 end;
 
 (* PUT BACK WHERE THE OPERATOR LEFT OFF.
