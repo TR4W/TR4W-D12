@@ -933,6 +933,35 @@ begin
 end;
 
 
+(* THE NAME OF THE SINGLE-INSTANCE MUTEX.
+
+  '<class>_<crc of the install directory>'. A kernel mutex name may not contain
+  a backslash -- that character separates the namespace -- and is bounded in
+  length, so the path is HASHED rather than embedded. CRC32 is not a security
+  property here and does not need to be: the question is only whether two paths
+  are the same path, and a collision between two directories on one machine that
+  both hold a TR4W install is not a real risk.
+
+  UPPERCASED FIRST, because Windows paths are case-insensitive: the same install
+  reached as C:\TR4W and c:\tr4w must produce one name, or the guard would let
+  a second copy of the SAME install through, which is the case it exists for. *)
+function SingleInstanceMutexName: AnsiString;
+var
+   dir: string;
+begin
+   dir := UpperCase(ExtractFilePath(ParamStr(0)));
+   (* The hash is over the UTF-16 bytes of the path; the NAME it produces is
+     the class name plus eight hex digits, so it is ASCII whatever the path
+     contained. *)
+   (* Built natively and encoded ONCE at the assignment. Casting each piece
+     and concatenating does not work: the '_' literal promotes the whole
+     expression back to UTF-16 and the assignment narrows it again. *)
+   Result := UTF8Encode(tr4w_ClassName + '_'
+                        + IntToHex(GetCRC32(PWideChar(dir)^,
+                                            Length(dir) * SizeOf(WideChar)), 8));
+end;
+
+
 procedure RunTR4W;
 // NoTransMess and TransMess were declared here and never used -- FPC says so
 // ("Label not defined"), and it has presumably said so for years into a .dpr
@@ -942,6 +971,9 @@ label
 var
   TempColor                             : tr4wColors;
   c                                     : Cardinal;
+  (* Held while CreateMutexA reads it. PAnsiChar of a temporary is a
+    dangling pointer. *)
+  tMutexName                            : AnsiString;
   TempString                            : ShortString;
   // The radio library's complaint, if it has one -- see the call site.
   tRadioLibraryError                    : string;
@@ -1063,10 +1095,32 @@ begin
      silently allowing two instances. Two copies of TR4W sharing one contest
      .dat file is data loss, so this must not stay a silent gap; it is written
      down here and in the sweep document rather than left for someone to
-     discover during a contest. *)
+     discover during a contest.
+
+     THE MUTEX IS NAMED AFTER THE INSTALL DIRECTORY, not after the program.
+     Read the sentence above again: what must not be shared is THE CONTEST
+     LOG, and the log lives beside the executable. Two TR4W processes running
+     from DIFFERENT directories have different logs and cannot corrupt each
+     other, so refusing the second one protected nothing and cost something
+     real -- a developer with two working trees, or an operator keeping a
+     4.x install beside a 5.x one, could not run both.
+
+     A bare 'TR4W' is a lock on the NAME of the program. Naming it for the
+     directory makes it a lock on the thing there is exactly one of, which is
+     what the check is for. The same-directory case -- an operator starting a
+     second copy of one install -- still gets the same mutex and the same
+     refusal, unchanged.
+
+     NO OVERRIDE SWITCH, deliberately. A flag would be a way to turn the
+     guard off, and the case that needed one was never a case for running two
+     copies on one log -- it was this naming being wrong. *)
    EarlyTrace('startup: checking the single-instance mutex');
 {$IFDEF WINDOWS}
-   tMutex := CreateMutex(nil, False, tr4w_ClassName);
+   tMutexName := SingleInstanceMutexName;
+   (* CreateMutexA, named explicitly. The generic name binds to the WIDE
+     entry point, which would read this ANSI buffer as UTF-16 -- the same
+     class of defect as the GetPrivateProfileString one in CLAUDE.md. *)
+   tMutex := CreateMutexA(nil, False, PAnsiChar(tMutexName));
    if tMutex = 0 then
       begin
       EarlyTrace('startup: CreateMutex FAILED -- exiting');
