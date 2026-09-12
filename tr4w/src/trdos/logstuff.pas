@@ -569,23 +569,20 @@ var
   TotalIntermediateContacts: integer;
 
 
-  UDPBroadcastAppInfo: boolean; // ny4i 4.44.8
-  UDPBroadcastContact: boolean; // ny4i 4.44.8
-  UDPBroadcastScore: boolean; // ny4i Issue 304
-  UDPBroadcastRadio: boolean; // ny4i 4.44.8
-  UDPBroadcastRotor: boolean; // ny4i 4.44.8
-  UDPBroadcastLookup: boolean; // ny4i Issue 612
-  UDPBroadcastPort: integer = 12060;
-  // ny4i 4.44.9   // Kept for backward compatibilty - no longer used
-  UDPBroadcastPortApp: integer = 12060; // ny4i Issue 590
-  UDPBroadcastPortContact: integer = 12060; // ny4i Issue 590
-  UDPBroadcastPortRadio: integer = 12060; // ny4i Issue 590
-  UDPBroadcastPortScore: integer = 12060; // ny4i Issue 590
-  UDPBroadcastPortLookup: integer = 12060; // ny4i Issue 612
+  (* THE FIFTEEN UDP BROADCAST GLOBALS ARE GONE (2026-09-12). Six per-stream
+    enables, six ports, an address, an all-QSOs flag, and a UDPBroadcastPort
+    that had said "no longer used" beside it for years.
 
-  UDPBroadcastAddress: string[255] = '127.0.0.1'; // ny4i 4.44.9
-  UDPBroadcastRotorPort: integer = 12040; // ny4i 4.44.9
-  UDPBroadcastAllQSOs: boolean; // ny4i Issue 82
+    They were the config array's copy of settings that moved into
+    settings\tr4w.json and TUDPBroadcaster in 87ad2fc3, and the two copies
+    had drifted exactly as copies do: the contact, score and lookup streams
+    asked the broadcaster, while the RadioInfo and rotor broadcasts still
+    read these -- so moving a listener in Preferences moved four streams and
+    left two aimed wherever a config file last pointed them.
+
+    Ask UDPBroadcaster.Enabled(stream) and UDPBroadcaster.Send(stream, ...).
+    There is no address to look up: a stream fans out to every destination
+    subscribed to it, which is what makes two listeners expressible. *)
 
   // Issue #732 -- PSTRotator native UDP interface (separate from the N1MM
   // broadcast above).  Active when ActiveRotatorType = PSTRotator.  PstRotator
@@ -759,6 +756,8 @@ function BandIsEnabledForContest(const aBand: BandType): boolean;
 implementation
 
 uses uNet,
+   uUDPBroadcastConfig, (* TUDPStream / usRotor *)
+   uUDPBroadcaster,     (* the one place that knows where a stream goes *)
    uSettingsModel,     // Settings.Bands -- HF / VHF / WARC enables
    (* The B4 list is an LCL grid on the main form -- TR4WPreviousDupesSet. *)
    uMainForm,
@@ -9810,11 +9809,13 @@ begin
   // rest of TR4W calls -- the strangler shape the radio and CW keyer factories
   // used -- so no caller had to move.
   //
-  // UDPBroadcastRotor STAYS HERE.  It is not a rotator: it is a broadcast of
-  // the heading for whatever else is listening, and it fires whether or not any
-  // rotator is configured (ny4i 4.44.9).  Moving it into the factory would tie
-  // a broadcast to owning hardware.
-  if UDPBroadcastRotor then
+  // THE ROTOR BROADCAST STAYS HERE.  It is not a rotator: it is a broadcast
+  // of the heading for whatever else is listening, and it fires whether or not
+  // any rotator is configured (ny4i 4.44.9).  Moving it into the factory would
+  // tie a broadcast to owning hardware.
+  (* ASKED OF THE BROADCASTER, NOT OF A GLOBAL -- see SendUDPRotorCommand
+    itself for why the endpoint moved with it. *)
+  if UDPBroadcaster.Enabled(usRotor) then
      begin
      SendUDPRotorCommand(Heading);
      end;
@@ -10821,13 +10822,15 @@ begin
     '<bidirectional>0</bidirectional>' +
     '<freqband>' + sFreqBand + '<freqband>' +
     '</N1MMRotor>';
-  //SetLength(msg,Length(sBuf));
-  //msg := RawToBytes(sBuf[1], Length(sBuf));
-  //udp.Broadcast(msg, UDPBroadcastRotorPort);     // ny4i 4.44.9
-  udp.BroadcastEnabled := true;
-  logger.Trace('[SendUDPRotorCommand] N1MM -> %s:%d %s',   // Issue #989
-    [UDPBroadcastAddress, UDPBroadcastRotorPort, sBuf]);
-  udp.Send(UDPBroadcastAddress, UDPBroadcastRotorPort, sBuf);
+  (* EVERY DESTINATION SUBSCRIBED TO THE ROTOR STREAM. The two globals this
+    replaces were the last readers of the legacy UDP settings, and they had
+    already drifted from the rest of the program: the contact, score and
+    lookup streams have gone through the broadcaster since 87ad2fc3, so an
+    operator who moved their listener in Preferences moved four streams and
+    not the other two. *)
+  logger.Trace('[SendUDPRotorCommand] N1MM rotor -> %s',   // Issue #989
+    [sBuf]);
+  UDPBroadcaster.Send(usRotor, sBuf);
 
 end; // SendUDPRotatorCommand
 

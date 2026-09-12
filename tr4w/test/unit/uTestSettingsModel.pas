@@ -50,6 +50,7 @@ type
       procedure Test_AssigningTheSameValueRaisesNothing;
       procedure Test_AWithdrawnCommandIsStillAccepted;
       procedure Test_NoRetiredNameIsAlsoLiveOrOwned;
+      procedure Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
       procedure Test_ARangeIsPartOfTheType;
       procedure Test_AStoredValueOutOfRangeIsClamped;
       procedure Test_TheReadPathAndTheWritePathAgree;
@@ -695,6 +696,47 @@ begin
       s.Free;
    end;
 end;
+
+procedure TSettingsModelTests.Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
+begin
+   (* THE THIRD ANSWER A COMMAND NAME CAN GET, and it needed to exist.
+
+     A name is live (the array or the settings model applies it), withdrawn
+     (accepted and ignored because the feature is gone), or -- since the UDP
+     rows left -- OWNED BY A STORE: the setting still works, and something
+     other than the config array reads it. Calling that third case "withdrawn"
+     would tell the next reader that UDP broadcasting had been removed. *)
+   BeginTest('a setting a store owns is accepted, and is not withdrawn');
+
+   CheckTrue(CommandIsOwnedByAStore('UDP BROADCAST SCORE'), 'a stream flag');
+   CheckTrue(CommandIsOwnedByAStore('UDP BROADCAST ADDRESS'), 'the address');
+   CheckTrue(CommandIsOwnedByAStore('UDP BROADCAST ROTOR PORT'), 'a port');
+
+   (* Case-folded for the same reason as the withdrawn list: a config file is
+     read upper-cased and a hand edit is not. *)
+   CheckTrue(CommandIsOwnedByAStore('udp broadcast score'), 'lower case');
+
+   (* And it must not accept everything, or the modal that protects a genuine
+     typo would never fire. *)
+   CheckFalse(CommandIsOwnedByAStore('UDP BROADCAST SCORF'), 'a typo');
+   CheckFalse(CommandIsOwnedByAStore(''), 'an empty command');
+
+   (* THE TWO LISTS MUST NOT OVERLAP. UDP BROADCAST PORT is the instructive
+     case: it is genuinely withdrawn -- the code beside it said "no longer
+     used" for years -- while the thirteen names around it are not. *)
+   CheckTrue(CommandIsRetired('UDP BROADCAST PORT'),
+             'UDP BROADCAST PORT really is withdrawn');
+   CheckFalse(CommandIsOwnedByAStore('UDP BROADCAST PORT'),
+              'and so it is not on the store list as well');
+   CheckFalse(CommandIsRetired('UDP BROADCAST SCORE'),
+              'a setting that still works is not withdrawn');
+
+   (* A ratchet, as the withdrawn list has. A fall means names were dropped
+     without being listed, and the failure is a modal dialog on somebody
+     else's machine. *)
+   CheckTrue(StoreOwnedCommandCount >= 14, 'the store list has not shrunk');
+end;
+
 
 (* ---------------------------------------------------------------------
   BOUNDED INTEGERS, 2026-09-11.
@@ -1480,6 +1522,7 @@ begin
    Test_AssigningTheSameValueRaisesNothing;
    Test_AWithdrawnCommandIsStillAccepted;
    Test_NoRetiredNameIsAlsoLiveOrOwned;
+   Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
    Test_ARangeIsPartOfTheType;
    Test_AStoredValueOutOfRangeIsClamped;
    Test_TheReadPathAndTheWritePathAgree;

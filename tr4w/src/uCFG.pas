@@ -642,6 +642,13 @@ const
    - 25 {the logstuff station settings -- moved to uSettingsModel}
    - 30 {the CW and phone message templates, and the cut numbers
          -- moved to uSettingsModel}
+   (* NOT to uSettingsModel -- to a STORE, which is the other destination
+     a row can have. udpBroadcast in settings\tr4w.json has held these
+     since 87ad2fc3, and TUDPBroadcastConfig.SeedFromLegacyIni reads the
+     old ini itself, so the rows were writing globals that the program had
+     stopped consulting -- except in two places, which is the point. See
+     UDP_OWNED_ELSEWHERE. *)
+   - 14 {UDP broadcast -- owned by the udpBroadcast store}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -994,20 +1001,6 @@ const
  (crCommand: 'TELNET SERVER';                 crAddress: @TelnetServer;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TEN MINUTE RULE';               crAddress: pointer(18);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'TUNE ALT-D ENABLE';             crAddress: @TuneDupeCheckEnable;            crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'UDP BROADCAST APP INFO';        crAddress: @UDPBroadcastAppInfo;            crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
- (crCommand: 'UDP BROADCAST CONTACT INFO';    crAddress: @UDPBroadcastContact;            crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
- (crCommand: 'UDP BROADCAST RADIO INFO';      crAddress: @UDPBroadcastRadio;              crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
- (crCommand: 'UDP BROADCAST ROTOR';           crAddress: @UDPBroadcastRotor;              crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
- (crCommand: 'UDP BROADCAST SCORE';           crAddress: @UDPBroadcastScore;              crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i Issue 304
- (crCommand: 'UDP BROADCAST LOOKUP INFO';     crAddress: @UDPBroadcastLookup;             crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i Issue 612
- (crCommand: 'UDP BROADCAST PORT APP INFO';   crAddress: @UDPBroadcastPortApp;            crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 590
- (crCommand: 'UDP BROADCAST PORT CONTACT';    crAddress: @UDPBroadcastPortContact;        crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 590
- (crCommand: 'UDP BROADCAST PORT RADIO';      crAddress: @UDPBroadcastPortRadio;          crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 590
- (crCommand: 'UDP BROADCAST PORT SCORE';      crAddress: @UDPBroadcastPortScore;          crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 590
- (crCommand: 'UDP BROADCAST ROTOR PORT';      crAddress: @UDPBroadcastRotorPort;          crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i 4.44.9
- (crCommand: 'UDP BROADCAST PORT LOOKUP';     crAddress: @UDPBroadcastPortLookup;        crMin:1;  crMax:65535;   crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i Issue 612
- (crCommand: 'UDP BROADCAST ADDRESS';         crAddress: @UDPBroadcastAddress;            crMin:0;  crMax:255;     crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),  // ny4i 4.44.9
- (crCommand: 'UDP BROADCAST ALL QSOS';        crAddress: @UDPBroadcastAllQSOs;            crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i Issue 82
  (crCommand: 'USE CONTROL PORT';              crAddress: @tUseControlPort;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'WAKE UP TIME OUT';              crAddress: @WakeUpTimeOut;                  crMin:0;  crMax:MAXBYTE; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -1061,6 +1054,14 @@ function CommandIsRetired(const aCommand: string): boolean;
 (* How many withdrawn names are on that list.  For the test's ratchet; there
   is no other reason to ask. *)
 function RetiredCommandCount: integer;
+
+(* IS THIS A COMMAND A STORE OWNS -- accepted here, applied by whatever
+  reads that store.  NOT the same question as CommandIsRetired: these
+  settings still work.  See UDP_OWNED_ELSEWHERE. *)
+function CommandIsOwnedByAStore(const aCommand: string): boolean;
+
+(* How many such names there are.  For the test's ratchet. *)
+function StoreOwnedCommandCount: integer;
 
 function ProcessMessage(ID, CMD: ShortString): boolean;
 procedure ProcessReminder(ID, CMD: ShortString);
@@ -1807,6 +1808,66 @@ begin
    Result := Length(RETIRED_COMMANDS);
 end;
 
+(*
+  COMMANDS THAT STILL DO SOMETHING, WHOSE VALUE THIS ARRAY NO LONGER
+  CARRIES.
+
+  DELIBERATELY NOT RETIRED_COMMANDS, whose own header says adding to it is
+  the last step of REMOVING a feature. UDP broadcasting is not removed: it
+  is configured in settings\tr4w.json and applied by TUDPBroadcaster. The
+  two lists answer different questions and a reader who conflates them will
+  reach for the wrong fix.
+
+  WHY THE NAMES HAVE TO STAY KNOWN. LogCfg.pas shows a MODAL "invalid
+  statement in config file" for a line CheckCommand refuses, so an
+  operator's existing tr4w.ini -- which is exactly the file the seeder
+  reads -- would be declared invalid fourteen times over on the one startup
+  where it still matters.
+
+  AND WHY THE VALUE IS NOT APPLIED HERE. The store's own importer reads the
+  ini directly, and it has to: a per-stream flag plus a port plus one shared
+  address does not map onto a destination list one key at a time. Two
+  importers for one file is how the globals and the store came to disagree
+  in the first place.
+*)
+const
+   UDP_OWNED_ELSEWHERE: array[0..13] of string = (
+      'UDP BROADCAST ADDRESS',
+      'UDP BROADCAST ALL QSOS',
+      'UDP BROADCAST APP INFO',
+      'UDP BROADCAST CONTACT INFO',
+      'UDP BROADCAST LOOKUP INFO',
+      'UDP BROADCAST PORT APP INFO',
+      'UDP BROADCAST PORT CONTACT',
+      'UDP BROADCAST PORT LOOKUP',
+      'UDP BROADCAST PORT RADIO',
+      'UDP BROADCAST PORT SCORE',
+      'UDP BROADCAST RADIO INFO',
+      'UDP BROADCAST ROTOR',
+      'UDP BROADCAST ROTOR PORT',
+      'UDP BROADCAST SCORE'
+      );
+
+function CommandIsOwnedByAStore(const aCommand: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(UDP_OWNED_ELSEWHERE) to High(UDP_OWNED_ELSEWHERE) do
+      begin
+      if UnicodeSameText(UDP_OWNED_ELSEWHERE[i], aCommand) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function StoreOwnedCommandCount: integer;
+begin
+   Result := Length(UDP_OWNED_ELSEWHERE);
+end;
+
 (* Linear over ~90 short strings, run once per config line at startup and
   never afterwards -- a dictionary here would be more code than the problem. *)
 function CommandIsRetired(const aCommand: string): boolean;
@@ -2332,6 +2393,23 @@ begin
       if logger <> nil then
          begin
          logger.Info('[Config] %s is a withdrawn command -- accepted and ignored',
+                     [pshortstring(Command)^]);
+         end;
+      Result := True;
+      end;
+
+   (* A SETTING A STORE OWNS. Same position and the same reason as the
+     withdrawn names above -- last, after every live handler has declined --
+     but a DIFFERENT fact, so it says a different thing in the log. An
+     operator reading "withdrawn" against a UDP line would conclude the
+     feature was gone. *)
+   if (not Result) and
+      CommandIsOwnedByAStore(string(pshortstring(Command)^)) then
+      begin
+      if logger <> nil then
+         begin
+         logger.Info('[Config] %s is read from the settings store, not from '
+                     + 'this file -- accepted here and applied there',
                      [pshortstring(Command)^]);
          end;
       Result := True;

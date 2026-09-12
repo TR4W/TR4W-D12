@@ -25,6 +25,8 @@ interface
 
 uses
   uConfigValues,
+   uUDPBroadcastConfig, (* TUDPStream / usRadio *)
+   uUDPBroadcaster,     (* the one place that knows where a stream goes *)
    //FmtBcd,
    LogDupe,
    VC,
@@ -843,7 +845,8 @@ begin
 
    //if StatusChanged = True then
    if (StatusChanged) or
-      ((UDPBroadcastRadio) and (SecondsBetween(Now, dtLastUDPRadio) > 10) ) then
+      ((UDPBroadcaster.Enabled(usRadio)) and
+       (SecondsBetween(Now, dtLastUDPRadio) > 10) ) then
       begin
       if Assigned(RadioStatusTrace) then
          begin
@@ -1083,7 +1086,13 @@ begin
       begin
       SendStationStatus(sstBandModeFreq);
       end;
-   if UDPBroadcastRadio then
+   (* ASKED OF THE BROADCASTER, NOT OF A GLOBAL. Enabled() is emergent --
+     it is true when a destination subscribes to the radio stream and the
+     master switch is on -- so the operator's Preferences edit reaches
+     this the moment it is saved. The global it replaces was written only
+     by a config-array row, which is why this path went on broadcasting
+     to 127.0.0.1 no matter what the UDP panel said. *)
+   if UDPBroadcaster.Enabled(usRadio) then
       begin
       SendRadioInfoToUDP(rig); // ny4i 4.44.9 // Broadcast Radio Info if set
       end;
@@ -1507,8 +1516,12 @@ begin
    //SetLength(msg,Length(sBuf));
    //msg := RawToBytes(sBuf[1], Length(sBuf));
    try
-      udp.BroadcastEnabled := true;
-      udp.Send(UDPBroadcastAddress, UDPBroadcastPortRadio, sBuf); // ny4i 4.44.9
+      (* EVERY DESTINATION SUBSCRIBED TO THE RADIO STREAM, not one address
+        and port read out of two globals. A station that sends RadioInfo to
+        N1MM on 12060 and to a second listener elsewhere could not be
+        expressed at all before, and the address the globals held was the
+        one a config file last set rather than the one Preferences shows. *)
+      UDPBroadcaster.Send(usRadio, sBuf);
       logger.trace('[SendRadioInfoToUDP] %s', [sBuf]);
       dtLastUDPRadio := Now;
    except
