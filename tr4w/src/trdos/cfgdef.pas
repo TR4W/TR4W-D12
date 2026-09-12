@@ -314,10 +314,6 @@ begin
   //  Config.PartialCallEnable := True;
   //  PartialCallLoadLogEnable := False;
   //  PartialCallMultsEnable := True;
-//  PossibleCallAcceptKey := ';';
-//  Config.PossibleCallEnable := True;
-//  PossibleCallLeftKey := ',';
-//  PossibleCallRightKey := '.';
 
 //  PrefixInfoFileName := '';
   //W_L_I  PrinterEnabled := False;

@@ -6049,11 +6049,11 @@ begin
 
   itempos := SelectedPossibleCall;
   logger.trace('[CallWindowKeyDownProc] itemrpos');
-  if Key = PossibleCallLeftKey then
+  if Key = Settings.PossibleCall.LeftKey then
      begin
      dec(itempos);
      end;
-  if Key = PossibleCallRightKey then
+  if Key = Settings.PossibleCall.RightKey then
      begin
      inc(itempos);
      logger.trace('[CallWindowKeyDownProc] itemright set ' + Key);
@@ -6069,7 +6069,7 @@ begin
   // that does not exist and the selection simply stays put.
   itempos := SelectedPossibleCall;
 
-  if Key = PossibleCallAcceptKey then
+  if Key = Settings.PossibleCall.AcceptKey then
 
     if PossibleCallCount > 0 then
        begin
@@ -6106,11 +6106,11 @@ begin
   // global; swept every unit 2026-08-24.
   Key := Char(wParam);
   itempos := SelectedPossibleCall;
-  if Key = PossibleCallLeftKey then
+  if Key = Settings.PossibleCall.LeftKey then
      begin
      dec(itempos);
      end;
-  if Key = PossibleCallRightKey then
+  if Key = Settings.PossibleCall.RightKey then
      begin
      inc(itempos);
      end;
@@ -6125,7 +6125,7 @@ begin
   // that does not exist and the selection simply stays put.
   itempos := SelectedPossibleCall;
 
-  if Key = PossibleCallAcceptKey then
+  if Key = Settings.PossibleCall.AcceptKey then
 
     if PossibleCallCount > 0 then
        begin

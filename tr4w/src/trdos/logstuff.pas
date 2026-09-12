@@ -521,9 +521,6 @@ var
   ParameterOkayMode: ParameterOkayModeType = Standard;
   PartialCallFileEnable: boolean;
   //  PartialCallMultsEnable                : boolean = True;
-  PossibleCallAcceptKey: Char = ';';
-  PossibleCallLeftKey: Char = ',';
-  PossibleCallRightKey: Char = '.';
   PreviousQSOReceivedData: ContestExchange;
   //W_L_I  PrinterEnabled: boolean;
   ProcessedMultiMessages: ProcessedMultiMessageBufferType;

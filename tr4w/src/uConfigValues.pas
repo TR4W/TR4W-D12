@@ -178,7 +178,6 @@ type
         checked rather than assumed, because a defaults routine that ran on
         contest change would silently reset the setting instead. The record
         default matches it, and the assignment now writes the same field. }
-      PossibleCallEnable: boolean;
       PartialCallEnable: boolean;
       WildCardPartials: boolean;
       NameFlagEnable: boolean;
@@ -290,7 +289,6 @@ var
       SpaceBarDupeCheckEnable: True;
       ConfirmEditChanges: True;
       AutoQSONumberDecrement: False;
-      PossibleCallEnable: True;
       PartialCallEnable: True;
       WildCardPartials: True;
       NameFlagEnable: True;

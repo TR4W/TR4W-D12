@@ -309,7 +309,7 @@ begin
                          RS_NETWORK_INTERCOMFILE);
 
    { Super Check Partial, band map and log files, 2026-08-15. }
-   RegisterStoredSetting('scp.possibleCalls',                 'POSSIBLE CALLS',
+   RegisterModelSetting( 'scp.possibleCalls',                 'POSSIBLE CALLS',
                          RS_SCP_POSSIBLECALLS);
    RegisterStoredSetting('scp.partialCall',                   'PARTIAL CALL ENABLE',
                          RS_SCP_PARTIALCALL);
@@ -642,13 +642,13 @@ begin
                           RS_OPERATING_CTRLJ_MAINCALLSIGN);
    RegisterStoredSetting('operating.ctrlj.mode',              'MODE',
                           RS_OPERATING_CTRLJ_MODE);
-   RegisterStoredSetting('operating.ctrlj.possibleCallAcceptKey','POSSIBLE CALL ACCEPT KEY',
+   RegisterModelSetting( 'operating.ctrlj.possibleCallAcceptKey','POSSIBLE CALL ACCEPT KEY',
                           RS_OPERATING_CTRLJ_POSSIBLECALLACCEPTKEY);
-   RegisterStoredSetting('operating.ctrlj.possibleCallLeftKey','POSSIBLE CALL LEFT KEY',
+   RegisterModelSetting( 'operating.ctrlj.possibleCallLeftKey','POSSIBLE CALL LEFT KEY',
                           RS_OPERATING_CTRLJ_POSSIBLECALLLEFTKEY);
    RegisterStoredSetting('operating.ctrlj.possibleCallMode',  'POSSIBLE CALL MODE',
                           RS_OPERATING_CTRLJ_POSSIBLECALLMODE);
-   RegisterStoredSetting('operating.ctrlj.possibleCallRightKey','POSSIBLE CALL RIGHT KEY',
+   RegisterModelSetting( 'operating.ctrlj.possibleCallRightKey','POSSIBLE CALL RIGHT KEY',
                           RS_OPERATING_CTRLJ_POSSIBLECALLRIGHTKEY);
    RegisterStoredSetting('operating.ctrlj.qsxEnable',         'QSX ENABLE',
                           RS_OPERATING_CTRLJ_QSXENABLE);

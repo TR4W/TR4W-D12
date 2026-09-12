@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(40, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(44, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -1016,6 +1016,10 @@ const
       + '"PADDLE MONITOR TONE",'
       + '"PADDLE PTT HOLD COUNT",'
       + '"PADDLE SPEED",'
+      + '"POSSIBLE CALL ACCEPT KEY",'
+      + '"POSSIBLE CALL LEFT KEY",'
+      + '"POSSIBLE CALL RIGHT KEY",'
+      + '"POSSIBLE CALLS",'
       + '"PTT ENABLE",'
       + '"PTT LOCKOUT",'
       + '"PTT TURN ON DELAY",'

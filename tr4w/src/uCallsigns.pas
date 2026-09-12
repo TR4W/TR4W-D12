@@ -121,6 +121,7 @@ uses
   uDupeSheetForm,  { the dupe sheet is a form -- see DisplayDupeSheet }
   SysUtils,            // Issue #997 - SysUtils.Format / StrPCopy
   uConfigValues,
+  uSettingsModel,   // Settings.PossibleCall.Enable
   LogStuff,
   LogDupe,
   LogWind;
@@ -502,7 +503,7 @@ begin
     A function that exits before assigning one hands back whatever was in
     the register, and both callers read it as a count. }
   Result := 0;
-  if not Config.PossibleCallEnable then Exit;
+  if not Settings.PossibleCall.Enable then Exit;
   ClearPossibleCalls;
   if length(Call) < 2 then Exit;
   for Index := 0 to FCount - 1 do

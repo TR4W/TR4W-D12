@@ -197,6 +197,8 @@ uses
   uMainGrids,  { the QSO-need and mult-need band strips }
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
+   uSettingsModel,   // Settings.PossibleCall.Enable
+
   //OZCHR,
   uNet,
   uMaster,
@@ -1305,7 +1307,7 @@ begin
     correct place for it -- first. *)
   ClearPossibleCalls;
 
-  if not Config.PossibleCallEnable then
+  if not Settings.PossibleCall.Enable then
      begin
      Exit;
      end;

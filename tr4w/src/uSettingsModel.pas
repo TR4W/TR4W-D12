@@ -667,6 +667,46 @@ type
       property Sensitivity: TAutoSapSensitivity read FSensitivity write FSensitivity;
    end;
 
+   (*
+     THE PARTIAL-CALL STRIP -- the candidates offered while a call is typed,
+     and the three keys that walk and accept them.
+
+     THREE OF THE FOUR NAMES DERIVE EXACTLY. Only the enable needs an
+     alias, because the command is the PLURAL noun -- POSSIBLE CALLS --
+     where every other member names the thing and then the attribute.
+
+     AND MOVING THEM FIXES A LATENT WIDTH BUG. The globals are declared
+     `Char`, and tr4w.inc sets {$MODESWITCH UnicodeStrings}, so a Char is
+     TWO BYTES. CFGCA applied a ctChar row with
+
+         PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1];
+
+     -- ONE byte, written into a two-byte variable. It worked only because
+     the high byte starts at zero and nothing ever set it, which is luck
+     rather than design and is exactly the Win32 artifact class this tree
+     is removing. A typed property is assigned, not poked.
+
+     No hooks -- crP, crA, crJ and crC are all zero.
+   *)
+   TPossibleCallSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FAcceptKey: Char;
+      FLeftKey: Char;
+      FRightKey: Char;
+   public
+      constructor Create;
+   published
+      // Was Config.PossibleCallEnable. Answers to POSSIBLE CALLS.
+      property Enable: boolean read FEnable write FEnable;
+      // Was the global PossibleCallAcceptKey in logstuff.pas.
+      property AcceptKey: Char read FAcceptKey write FAcceptKey;
+      // Was PossibleCallLeftKey -- moves the selection left.
+      property LeftKey: Char read FLeftKey write FLeftKey;
+      // Was PossibleCallRightKey.
+      property RightKey: Char read FRightKey write FRightKey;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -683,6 +723,7 @@ type
       FPaddle: TPaddleSettings;
       FCw: TCwSettings;
       FAutoSap: TAutoSapSettings;
+      FPossibleCall: TPossibleCallSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -781,6 +822,7 @@ type
       property Paddle: TPaddleSettings read FPaddle;
       property Cw: TCwSettings read FCw;
       property AutoSap: TAutoSapSettings read FAutoSap;
+      property PossibleCall: TPossibleCallSettings read FPossibleCall;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1027,6 +1069,19 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TPossibleCallSettings.Create;
+begin
+   inherited Create;
+   (* The values the globals carried -- logstuff.pas for the three keys,
+     uConfigValues for the enable. cfgdef's commented-out lines agree with
+     all four, which is not something to assume: they have disagreed with
+     the live declaration three times today. *)
+   FEnable    := True;
+   FAcceptKey := ';';
+   FLeftKey   := ',';
+   FRightKey  := '.';
+end;
+
 constructor TAutoSapSettings.Create;
 begin
    inherited Create;
@@ -1052,6 +1107,7 @@ begin
    FPaddle         := TPaddleSettings.Create;
    FCw             := TCwSettings.Create;
    FAutoSap        := TAutoSapSettings.Create;
+   FPossibleCall   := TPossibleCallSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1063,6 +1119,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FPossibleCall.Free;
    FAutoSap.Free;
    FCw.Free;
    FPaddle.Free;
@@ -1367,6 +1424,11 @@ begin
    Alias('TUNE WITH DITS',                 'Cw.TuneWithDits');
 
    (* AN ALPHABET LIMIT, not a naming accident: no identifier yields '&'. *)
+   (* THE PLURAL NOUN, where every sibling names the thing and then the
+     attribute. POSSIBLE CALL ENABLE would be the derived spelling and is
+     not what any config file says. *)
+   Alias('POSSIBLE CALLS', 'PossibleCall.Enable');
+
    Alias('AUTO S&P ENABLE',             'AutoSap.Enable');
    Alias('AUTO S&P ENABLE SENSITIVITY', 'AutoSap.Sensitivity');
 end;
@@ -1497,6 +1559,25 @@ begin
          Result := True;
          end;
 
+      tkChar, tkWChar, tkUChar:
+         begin
+         (* EXACTLY WHAT CheckCommand TOOK: its ctChar arm is a single
+           statement, `PAnsiChar(crAddress)^ := CustomCMD[1]` -- the first
+           character, with no validation of any kind. So an empty value is
+           the only thing refused here, and it is refused rather than
+           read past the end of the string as the old arm would.
+
+           NOT TRIMMED, unlike every other arm. A key is one character and
+           a space is a legal one; trimming would turn a configured space
+           bar into a refusal. *)
+         if aValue = '' then
+            begin
+            Exit;
+            end;
+         SetOrdProp(owner, info, Ord(aValue[1]));
+         Result := True;
+         end;
+
       tkEnumeration:
          begin
          n := GetEnumValue(info^.PropType, AnsiString(text));
@@ -1555,6 +1636,12 @@ begin
             end;
          Result := True;
          end;
+      tkChar, tkWChar, tkUChar:
+         begin
+         aValue := Char(GetOrdProp(owner, info));
+         Result := True;
+         end;
+
       tkEnumeration:
          begin
          aValue := string(GetEnumName(info^.PropType, GetOrdProp(owner, info)));

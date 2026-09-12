@@ -204,7 +204,14 @@ begin
    // value would have stopped the restart file being maintained, silently.
    BeginTest('the SCP, band map and log-file defaults survived the move');
 
-   CheckTrue(Config.PossibleCallEnable,      'PossibleCallEnable was True');
+   (* MOVED to TPossibleCallSettings, and the three KEYS came with it --
+     they were never asserted here because they were bare globals rather
+     than Config fields, which is exactly the kind of gap a migration is
+     a good moment to close. *)
+   CheckTrue(Settings.PossibleCall.Enable,   'PossibleCall.Enable was True');
+   CheckEquals(';', Settings.PossibleCall.AcceptKey, 'accept key');
+   CheckEquals(',', Settings.PossibleCall.LeftKey,   'left key');
+   CheckEquals('.', Settings.PossibleCall.RightKey,  'right key');
    CheckTrue(Config.PartialCallEnable,       'PartialCallEnable was True');
    CheckTrue(Config.WildCardPartials,        'WildCardPartials was True');
    CheckTrue(Config.NameFlagEnable,          'NameFlagEnable was True');
