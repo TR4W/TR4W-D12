@@ -293,6 +293,8 @@ uses
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
    uTestPortAddress in 'uTestPortAddress.pas',
    uTestSettingsModel in 'uTestSettingsModel.pas',
+   uTestSettingsConvert in 'uTestSettingsConvert.pas',
+   uSettingsConvert in '..\..\src\uSettingsConvert.pas',
    uTestTLSRefusal in 'uTestTLSRefusal.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
@@ -421,6 +423,7 @@ begin
    RegisterSuite(TComPortEnumeratorTests.Create('ComPortEnumerator'));
    RegisterSuite(TPortAddressTests.Create('PortAddress'));
    RegisterSuite(TSettingsModelTests.Create('SettingsModel'));
+   RegisterSuite(TSettingsConvertTests.Create('SettingsConvert'));
    RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
