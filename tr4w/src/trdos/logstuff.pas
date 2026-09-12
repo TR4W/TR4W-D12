@@ -591,8 +591,9 @@ var
 
   WindowDupeCheckCall: CallString;
 
-  WSJTXUDPPort: integer = 2237;
-  WSJTXMulticastGroup: Str20 = '';   // e.g. '224.0.0.1' to join WSJT-X multicast group
+  (* WSJTXUDPPort and WSJTXMulticastGroup are gone (2026-09-12) --
+    Settings.Wsjtx.BroadcastPort and .MulticastGroup. The second was a
+    Str20 and is an ordinary string now. *)
   psw: integer = 0;
   tPreviousDupeQSOsShowed: boolean;
   //const  tr4w_StartSendingNowKey                    : ;

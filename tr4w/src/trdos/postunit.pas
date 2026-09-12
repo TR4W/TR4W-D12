@@ -2956,7 +2956,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
              if TempRXData.RSTSent < 25 then
                 begin
-                if WSJTXEnabled then
+                if Settings.Wsjtx.Enabled then
                    begin
                    RSTSent := sysutils.Format( '%d',
                       [ wsjtx.ConvertSNRToRST( TempRXData.RSTSent ) ] );
@@ -2965,7 +2965,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    begin
                    RSTSent := '599';
                    logger.Info
-                      ( 'RSTSent was less than 25 but WSJTXEnabled is FALSE' );
+                      ( 'RSTSent was less than 25 but WSJT-X is not enabled' );
                    end;
                 end
              else
@@ -2976,7 +2976,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
              if ( TempRXData.ExtMode in [ eFT8, eMFSK, eJT65 ] ) and
                 ( TempRXData.RSTReceived < 25 ) then
                 begin
-                if WSJTXEnabled then
+                if Settings.Wsjtx.Enabled then
                    begin
                    RSTReceived := sysutils.Format( '%d',
                       [ wsjtx.ConvertSNRToRST( TempRXData.RSTReceived ) ] );

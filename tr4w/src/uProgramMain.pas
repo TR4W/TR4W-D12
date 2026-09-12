@@ -1858,7 +1858,7 @@ begin
   // DE ENABLE = FALSE shows "Call" instead of the default "DE+Call".
   UpdateSAndPF1Caption;
 
-  if WSJTXEnabled then
+  if Settings.Wsjtx.Enabled then
      begin
      wsjtx := TWSJTXServer.Create;
      end;
@@ -2409,7 +2409,7 @@ begin
 //  Format(wsprintfBuffer, 'cty.dat: "%s" version', CTY.ctyTable[cty.ctyVersion].Name);
 
 
-   if WSJTXEnabled then
+   if Settings.Wsjtx.Enabled then
       begin
    // Send colors for Dupes (QSOB4)
 
@@ -2420,8 +2420,10 @@ begin
    wsjtx.SetMultBackgroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweBackG]));
    wsjtx.SetMultForegroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweColor]));
 
-   wsjtx.SendColorization := WSJTXSendColorization;
-   if WSJTXEnabled then     // This boolean is in uCFG (default to true). This is so we start if the parameter is not set.
+   wsjtx.SendColorization := Settings.Wsjtx.SendHighlights;
+   (* Settings.Wsjtx.Enabled defaults TRUE, so a config file that never
+     mentions WSJT-X still starts the listener. *)
+   if Settings.Wsjtx.Enabled then
       begin
       wsjtx.Start;
       end;

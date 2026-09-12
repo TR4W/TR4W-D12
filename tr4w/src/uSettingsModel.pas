@@ -176,6 +176,9 @@ type
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleSpeed         = 0..99;      // was crMin:0, crMax:99
+   (* A UDP PORT. 1..65535, which is the port range and not a TR4W rule --
+     the old row said crMin:1, crMax:65535 and meant the same thing. *)
+   TWsjtxPort           = 1..65535;   // was crMin:1, crMax:65535
    (* QSO POINTS, AND -1 IS THE VALUE THAT MATTERS.
 
      Minus one means "this contest declares no fixed point value", and the
@@ -269,6 +272,58 @@ type
         A CLASS FUNCTION so the question can be asked of the type, and so
         no instance has to exist to answer it. *)
       class function IsContestScoped: boolean; virtual;
+   end;
+
+   (*
+     WSJT-X -- the digital-mode program TR4W exchanges decodes and QSOs with
+     over UDP.
+
+     EVERY ONE OF THE FIVE NAMES CARRIES AN ALIAS, and it is one reason five
+     times rather than five irregularities: the command spelling is WSJT-X,
+     with a hyphen, and no Pascal identifier can contain one. The alternative
+     -- naming the group W and the property SJTXEnabled, or some other
+     contortion that happens to derive a hyphen -- would make the property
+     path lie about what it is to satisfy the importer.
+
+     THREE OF THEM WERE HOOKS IN AdditionalProcsArray, slots 23, 24 and 25,
+     and all three are property setters now (uSettingsEffects). Slot 23 is the
+     one worth remembering: EXTERNAL LOGGER ENABLED carried crA: 23 for a
+     while and therefore started and stopped the WSJT-X server, because a hook
+     index is an integer typed by hand into a table and a wrong one compiles.
+   *)
+   TWsjtxSettings = class(TSettingsGroup)
+   private
+      FEnabled: boolean;
+      FRadioControlEnabled: boolean;
+      FSendHighlights: boolean;
+      FBroadcastPort: TWsjtxPort;
+      FMulticastGroup: string;
+   public
+      constructor Create;
+   published
+      (* Was WSJTXEnabled in uCFG, and it defaults TRUE so that a config file
+        which never mentions WSJT-X still starts the listener -- the comment
+        in uProgramMain beside the old global says exactly that. *)
+      property Enabled: boolean read FEnabled write FEnabled;
+      (* Was WSJTXRadioControlEnabled -- whether a frequency change in WSJT-X
+        is allowed to move the radio. *)
+      property RadioControlEnabled: boolean
+         read FRadioControlEnabled write FRadioControlEnabled;
+      (* Was WSJTXSendColorization. The COMMAND is WSJT-X SEND HIGHLIGHTS and
+        the property is named after the command rather than after the old
+        global: what travels is a colour hint for a decode line, and
+        "highlights" is what the operator sees it called. *)
+      property SendHighlights: boolean
+         read FSendHighlights write FSendHighlights;
+      (* Was WSJTXUDPPort in logstuff.pas, 2237 -- WSJT-X's own default. The
+        bound is a SUBRANGE, so the range that used to be crMin/crMax is part
+        of the type and the compiler emits it as RTTI. *)
+      property BroadcastPort: TWsjtxPort
+         read FBroadcastPort write FBroadcastPort;
+      (* Was WSJTXMulticastGroup, a Str20 -- e.g. '224.0.0.1'. Empty means
+        ordinary unicast, which is the usual case. *)
+      property MulticastGroup: string
+         read FMulticastGroup write FMulticastGroup;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -2116,6 +2171,7 @@ type
       FSayHi: TSayHiSettings;
       FMy: TMySettings;
       FDvk: TDvkSettings;
+      FWsjtx: TWsjtxSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -2243,6 +2299,7 @@ type
       property SayHi: TSayHiSettings read FSayHi;
       property My: TMySettings read FMy;
       property Dvk: TDvkSettings read FDvk;
+      property Wsjtx: TWsjtxSettings read FWsjtx;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -2674,6 +2731,17 @@ begin
    FShowAll := False;
 end;
 
+constructor TWsjtxSettings.Create;
+begin
+   inherited Create;
+   (* The values the typed constants in uCFG and logstuff carried. *)
+   FEnabled             := True;
+   FRadioControlEnabled := False;
+   FSendHighlights      := True;
+   FBroadcastPort       := 2237;
+   FMulticastGroup      := '';
+end;
+
 constructor TDvkSettings.Create;
 begin
    inherited Create;
@@ -3038,6 +3106,7 @@ begin
    FSayHi          := TSayHiSettings.Create;
    FMy             := TMySettings.Create;
    FDvk            := TDvkSettings.Create;
+   FWsjtx          := TWsjtxSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -3386,6 +3455,18 @@ begin
    (* MY STATE derives exactly. MY QTH is the older spelling of the same
      setting and is ADDED, not substituted. *)
    AlsoKnownAs('MY QTH', 'My.State');
+
+   (* ALL FIVE WSJT-X NAMES, for the one reason given on TWsjtxSettings:
+     the command spelling has a hyphen in it and a Pascal identifier
+     cannot. The derivation produces WSJTX ...; the program has always
+     accepted WSJT-X ..., so the derived spelling is REPLACED rather than
+     kept alongside -- a name TR4W never had would be offered in
+     Preferences and claimed in a multi-op peer message. *)
+   Alias('WSJT-X ENABLED',               'Wsjtx.Enabled');
+   Alias('WSJT-X RADIO CONTROL ENABLED', 'Wsjtx.RadioControlEnabled');
+   Alias('WSJT-X SEND HIGHLIGHTS',       'Wsjtx.SendHighlights');
+   Alias('WSJT-X BROADCAST PORT',        'Wsjtx.BroadcastPort');
+   Alias('WSJT-X MULTICAST GROUP',       'Wsjtx.MulticastGroup');
 
    Alias('HF BAND ENABLE',   'Bands.HfEnabled');
    Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');

@@ -95,7 +95,9 @@ uses
    uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
    uNet,           // SetComputerName -- announce the name to the other position
-   uBandMapView;   // BandMapRefresh -- the band map's own view seam
+   uBandMapView,   // BandMapRefresh -- the band map's own view seam
+   MainUnit,       // wsjtx -- the server object these three act on
+   uStateBridge;   // RefreshWSJTXIndicator -- the main window's box
 
 const
    (* The property path prefix that names a group.  Spelled once, here, and
@@ -159,6 +161,23 @@ const
      station with no network link, which is every single-operator one. *)
    COMPUTER_NAME = 'Computer.Name';
 
+   (* THE THREE WSJT-X HOOKS, AdditionalProcsArray slots 23, 24 and 25.
+
+     EXACT PATHS AND NOT THE GROUP, because the group's five settings do
+     three different things and two of them do nothing at all: the
+     broadcast port is read when the server starts, and matching the
+     prefix would restart the listener every time one was assigned --
+     which a settings LOAD does, five times in a row.
+
+     SLOT 23 IS THE WORKED EXAMPLE OF WHY THESE ARE SETTERS NOW. EXTERNAL
+     LOGGER ENABLED carried crA: 23 for a period, so enabling the external
+     logger started the WSJT-X server. A hook index is an integer typed by
+     hand into a table and a wrong one compiles; a path is derived from
+     the property itself. *)
+   WSJTX_ENABLED         = 'Wsjtx.Enabled';
+   WSJTX_SEND_HIGHLIGHTS = 'Wsjtx.SendHighlights';
+   WSJTX_MULTICAST_GROUP = 'Wsjtx.MulticastGroup';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -210,6 +229,49 @@ begin
    if UnicodeSameText(aPath, COMPUTER_NAME) then
       begin
       SetComputerName;
+      end;
+
+   if UnicodeSameText(aPath, WSJTX_ENABLED) then
+      begin
+      (* NOT AN ERROR WHEN THE SERVER IS NOT THERE. uProgramMain creates
+        wsjtx only when this setting is already on, so at startup the
+        object genuinely does not exist yet and the old hook logged an
+        error every time -- a message that fires during correct operation
+        is one people learn to ignore. *)
+      if Assigned(wsjtx) then
+         begin
+         if Settings.Wsjtx.Enabled then
+            begin
+            wsjtx.Start;
+            end
+         else
+            begin
+            wsjtx.Stop;
+            end;
+         end;
+
+      (* The main window's box tracks the SETTING, not just the link --
+        enabled shows it, red until a heartbeat arrives; disabled hides
+        it. Repaint here so it answers immediately, because for a setting
+        just turned OFF the next state change never comes. *)
+      RefreshWSJTXIndicator;
+      end;
+
+   if UnicodeSameText(aPath, WSJTX_SEND_HIGHLIGHTS) and Assigned(wsjtx) then
+      begin
+      wsjtx.SendColorization := Settings.Wsjtx.SendHighlights;
+      end;
+
+   if UnicodeSameText(aPath, WSJTX_MULTICAST_GROUP) and Assigned(wsjtx) then
+      begin
+      (* ONLY WHEN THERE IS A SOCKET TO JOIN WITH. Every Preferences save
+        re-applies every setting, so with WSJT-X disabled this warned
+        'UDP server not active' on each Save -- twice in one bench session.
+        Nothing is lost by skipping: Start joins the group itself. *)
+      if wsjtx.Running and (Settings.Wsjtx.MulticastGroup <> '') then
+         begin
+         wsjtx.JoinMulticastGroup(Settings.Wsjtx.MulticastGroup);
+         end;
       end;
 
    if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)

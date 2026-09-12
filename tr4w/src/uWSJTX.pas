@@ -151,7 +151,6 @@ uses
   , utils_text
   , LogK1EA // for Settings.Ptt.ViaCommands
   , LogDOM // for ActiveDomesticMult
-  , uCFG // for WSJTXRadioControlEnabled
   , PostUnit
   , uCabrilloFormat // for tCabrilloFreqString (moved here from PostUnit,
                     // see uCabrilloFormat.pas)
@@ -362,7 +361,7 @@ begin
   colorsMultFore.B := $00;
 
 
-  if WSJTXRadioControlEnabled then
+  if Settings.Wsjtx.RadioControlEnabled then
      begin
      logger.Debug('[WSJT-X]Creating tcpServ on port %d',[FTCPPort]);
      tcpServ := TIdTCPServer.Create(nil);
@@ -441,9 +440,9 @@ begin
          // Join multicast group if configured (e.g. '224.0.0.1' to match WSJT-X
          // default).  This allows JT-Alert and TR4W to both receive from WSJT-X
          // simultaneously.  Leave empty for legacy unicast/loopback operation.
-         if WSJTXMulticastGroup <> '' then
+         if Settings.Wsjtx.MulticastGroup <> '' then
             begin
-            JoinMulticastGroup(WSJTXMulticastGroup);
+            JoinMulticastGroup(Settings.Wsjtx.MulticastGroup);
             end;
       except
          on E: Exception do

@@ -255,9 +255,6 @@ function F_MY_CONTINENT: boolean;
 function F_ZONE_MULTIPLIER: boolean;
 function F_AUTO_SEND_CHARACTER_COUNT: boolean;
 procedure UpdateDebugLogLevel;
-function F_UpdateWSJTXSendColorizations : boolean;
-function F_UpdateWSJTXEnabled: boolean;
-function F_UpdateWSJTXMulticastGroup: boolean;
 //function F_SETPARALLELPORT: boolean;
 
 const
@@ -373,14 +370,14 @@ const
       @F_DX_MULTIPLIER,
       nil {@F_MY_ZONE -- the setter raises ZoneWasSet},
       @F_MY_CONTINENT,
-      @F_UpdateWSJTXEnabled,
+      nil {@F_UpdateWSJTXEnabled -- the setter starts and stops the server},
       (* //@F_UpdateExternalLoggerEnabled WAS HERE and is deleted with the
         function, 2026-09-10.  Commenting it out is what left EXTERNAL LOGGER
         ENABLED's crA:23 pointing at F_UpdateWSJTXEnabled above -- see the note
         on those rows.  Its body had itself been commented out to a bare
         `Result := true`, so it had done nothing for a long time either. *)
-      @F_UpdateWSJTXSendColorizations,
-      @F_UpdateWSJTXMulticastGroup   // Issue 443 index 25
+      nil {@F_UpdateWSJTXSendColorizations -- the setter pushes it},
+      nil {@F_UpdateWSJTXMulticastGroup -- the setter joins the group}
       //@F_SETPARALLELPORT
       );
 
@@ -520,9 +517,8 @@ const
 
 var
    CMD: ShortString;
-   WSJTXSendColorization: boolean = true;
-   WSJTXEnabled: boolean = true;
-   WSJTXRadioControlEnabled: boolean = false;
+   (* THE THREE WSJT-X BOOLEANS ARE GONE (2026-09-12) -- Settings.Wsjtx in
+     uSettingsModel, with the two in logstuff.pas that went with them. *)
    (* SpotCollectorEnabled MOVED, 2026-09-10 -- Settings.SpotCollector.Enabled
      in uSettingsModel.  Its default moved into that class's constructor. *)
    CTYUpdateCheckOnStartup: boolean = true;
@@ -649,6 +645,9 @@ const
      stopped consulting -- except in two places, which is the point. See
      UDP_OWNED_ELSEWHERE. *)
    - 14 {UDP broadcast -- owned by the udpBroadcast store}
+   (* Three of these five were AdditionalProcsArray hooks, so the hook
+     table falls with the rows. *)
+   - 5 {WSJT-X -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -1023,11 +1022,6 @@ const
  (crCommand: 'WK TAIL TIME';                  crAddress: @WinKeySettings.wksValueList.vlTailTime;         crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
  (crCommand: 'WK WEIGHT';                     crAddress: @WinKeySettings.wksValueList.vlWeight;           crMin:10; crMax:90;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
  (crCommand: 'WINDOW SIZE';                   crAddress: pointer(5);                                      crMin:1;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAppearance; crType: ctInteger; crNetwork: 1),
- (crCommand: 'WSJT-X BROADCAST PORT';         crAddress: @WSJTXUDPPort;                                   crMin:1;  crMax:65535;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i
- (crCommand: 'WSJT-X MULTICAST GROUP';        crAddress: @WSJTXMulticastGroup;                            crMin:0;  crMax:16;        crS: csJSON; crA: 25; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctString;  crNetwork: 0),   // Issue 443
- (crCommand: 'WSJT-X ENABLED';                crAddress: @WSJTXEnabled;                                   crMin:0;  crMax:0;         crS: csOwned; crA: 23; crC:0; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),     // ny4i Issue 438
- (crCommand: 'WSJT-X RADIO CONTROL ENABLED';  crAddress: @WSJTXRadioControlEnabled;                       crMin:0;  crMax:0;         crS: csOwned; crA: 23; crC:0; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),     // ny4i Issue 673
- (crCommand: 'WSJT-X SEND HIGHLIGHTS';        crAddress: @WSJTXSendColorization;                          crMin:0;  crMax:0;         crS: csOwned; crA: 24; crC:0;  crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),     // ny4i Issue 438
   (* WITHDRAWN 2026-09-10: Settings.Yccc.So2rEnable. *)
  (crCommand: 'ZONE MULTIPLIER';               crAddress: pointer(23);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 2; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier)
     {*)}
@@ -2878,79 +2872,8 @@ begin
 
 end;
 
-function F_UpdateWSJTXEnabled: boolean;
-begin
-   Result := true;
-   if assigned(wsjtx) then
-      begin
-      if WSJTXEnabled then
-         begin
-         wsjtx.Start;
-         end
-      else
-         begin
-         wsjtx.Stop;
-         end;
-      end
-   else
-      begin
-      if Assigned(logger) then
-         begin
-         logger.Error('In F_UpdateWSJTXEnabled, wsjtx variable was not assigned');
-         end;
-      end;
 
-   { The main-window box tracks this SETTING, not just the link -- enabled
-     shows it (red until a heartbeat arrives), disabled hides it.  Repaint
-     it here so it answers the operator immediately rather than at the next
-     state change, which for a setting just turned OFF would never come. }
-   RefreshWSJTXIndicator;
-end;
 
-function F_UpdateWSJTXSendColorizations: boolean; // We do this because we cannot see the wsjtx object in the commandArray declaration
-begin
-   Result := true;
-   if assigned(wsjtx) then
-      begin
-      wsjtx.SendColorization := WSJTXSendColorization;
-      end
-   else
-      begin
-      if Assigned(logger) then
-         begin
-         logger.Error('In F_UpdateWSJTXSendColorizations, wsjtx variable was not assigned');
-         end;
-      end;
-end;
-
-function F_UpdateWSJTXMulticastGroup: boolean;  // Issue 443
-begin
-   Result := true;
-   if not assigned(wsjtx) then
-      begin
-      // wsjtx not created yet — JoinMulticastGroup will be called in Start
-      exit;
-      end;
-   { ONLY WHEN THERE IS A SERVER TO JOIN WITH.
-
-     Every Preferences save re-applies every command, so with WSJT-X disabled
-     this logged "[WSJT-X] JoinMulticastGroup called but UDP server not active"
-     on each Save -- twice in NY4I's bench session (22:21:06 and 22:25:10).  A
-     warning that fires during correct operation is a warning people learn to
-     ignore, which is how the real one gets missed.
-
-     Nothing is lost by skipping: Start joins the group itself once the socket
-     is up. }
-   if not wsjtx.Running then
-      begin
-      Exit;
-      end;
-
-   if WSJTXMulticastGroup <> '' then
-      begin
-      wsjtx.JoinMulticastGroup(WSJTXMulticastGroup);
-      end;
-end;
 
 procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
 begin

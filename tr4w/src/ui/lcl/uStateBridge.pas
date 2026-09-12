@@ -90,7 +90,8 @@ uses
    TF,             // SetMainWindowText
    uCrashLog,      // OnMainThread, LogCaughtException
    MainUnit,       // WSJTXIndicatorBack -- the one colour rule
-   uCFG,           // WSJTXEnabled -- the box tracks the SETTING, not the link
+   uSettingsModel, (* Settings.Wsjtx.Enabled -- the box tracks the SETTING,
+                     not the link *)
    uMainForm,      // ShowElement, SetElementColors
    uWSJTXState,
    uRadioState,    // PTT as state, set from the radio polling thread
@@ -165,15 +166,15 @@ begin
    if logger.IsTraceEnabled then
       begin
       logger.Trace('[WSJTX view] enabled=%s connected=%s panel=%s handle=%s -> %s',
-                   [BoolToStr(WSJTXEnabled, True),
+                   [BoolToStr(Settings.Wsjtx.Enabled, True),
                     BoolToStr((WSJTXState <> nil) and WSJTXState.Connected, True),
                     BoolToStr(MainElement(mweWSJTX) <> nil, True),
                     BoolToStr((MainElement(mweWSJTX) <> nil) and
                               MainElement(mweWSJTX).HandleAllocated, True),
-                    IfThen(WSJTXEnabled, 'show', 'hide')]);
+                    IfThen(Settings.Wsjtx.Enabled, 'show', 'hide')]);
       end;
 
-   if not WSJTXEnabled then
+   if not Settings.Wsjtx.Enabled then
       begin
       TR4WMainForm.pnlWSJTX.Caption := '';
       ShowElement(mweWSJTX, False);
