@@ -90,6 +90,9 @@ type
       procedure Test_IsValidGUID_RejectsNonHex;
       procedure Test_IsValidGUID_RejectsEmpty;
       procedure Test_IsValidGUID_RejectsMisplacedHyphens;
+      procedure Test_ExchangeFromSRX_StripsTheReceivedRST;
+      procedure Test_ExchangeFromSRX_LeavesAnExchangeWithNoRST;
+      procedure Test_ExchangeFromSRX_LeavesAnRSTThatIsNotTheReceivedOne;
    end;
 
 implementation
@@ -954,6 +957,41 @@ begin
               'hyphen at wrong position');
 end;
 
+(* THE INVERSE OF ResolveSRXString, which prepends the received RST so the
+  field is symmetric with STX_STRING. Nothing took it off again until an
+  imported log was re-exported and NY4I's IARU QSOs came back carrying a QTH
+  of '59 8' -- the RST and the zone, stored as though they were a location. *)
+procedure TADIFHelperTests.Test_ExchangeFromSRX_StripsTheReceivedRST;
+begin
+   BeginTest('the received RST comes off an SRX_STRING');
+   CheckEquals('8', ExchangeFromSRXString('59 8', 59), 'a zone');
+   CheckEquals('PIN', ExchangeFromSRXString('599 PIN', 599), 'a county');
+   CheckEquals('ARRL', ExchangeFromSRXString('59 ARRL', 59), 'an IARU society');
+   (* Extra spacing is the operator's, not the format's. *)
+   CheckEquals('MD', ExchangeFromSRXString('599   MD  ', 599), 'padded');
+end;
+
+(* Field Day sends '1A EPA' and no RST at all. Stripping "the first token if it
+  looks numeric" would eat the class; matching the RST cannot. *)
+procedure TADIFHelperTests.Test_ExchangeFromSRX_LeavesAnExchangeWithNoRST;
+begin
+   BeginTest('an exchange that carries no RST is left alone');
+   CheckEquals('1A EPA', ExchangeFromSRXString('1A EPA', 59), 'Field Day');
+   CheckEquals('3I WCF', ExchangeFromSRXString('3I WCF', 599), 'Winter Field Day');
+   CheckEquals('', ExchangeFromSRXString('', 59), 'nothing at all');
+end;
+
+(* A leading number that is NOT the received RST is part of the exchange -- a
+  serial number, a zone sent without one. Only the RST comes off. *)
+procedure TADIFHelperTests.Test_ExchangeFromSRX_LeavesAnRSTThatIsNotTheReceivedOne;
+begin
+   BeginTest('only the RST this QSO received is removed');
+   CheckEquals('599 PIN', ExchangeFromSRXString('599 PIN', 59),
+               'the RST received was 59, so 599 is exchange text');
+   CheckEquals('001 NY', ExchangeFromSRXString('001 NY', 599), 'a serial number');
+end;
+
+
 procedure TADIFHelperTests.RunAllTests;
 begin
    Test_GetADIFBand_KnownBands;
@@ -982,6 +1020,9 @@ begin
    Test_IsValidGUID_RejectsNonHex;
    Test_IsValidGUID_RejectsEmpty;
    Test_IsValidGUID_RejectsMisplacedHyphens;
+   Test_ExchangeFromSRX_StripsTheReceivedRST;
+   Test_ExchangeFromSRX_LeavesAnExchangeWithNoRST;
+   Test_ExchangeFromSRX_LeavesAnRSTThatIsNotTheReceivedOne;
 end;
 
 end.

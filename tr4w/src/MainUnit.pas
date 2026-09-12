@@ -9849,6 +9849,9 @@ procedure ApplyContestSpecificADIFTail(const temps: TADIFRecordTemps;
                                        var exch: ContestExchange);
 var
   j : Integer;
+  (* SRX_STRING with the received RST taken off -- see
+    uADIF.ExchangeFromSRXString. *)
+  srxExchange : string;
 begin
   // fix up operator
   if exch.ceOperator = '' then
@@ -9906,17 +9909,38 @@ begin
 
     CQWWCW, CQWWSSB:
       begin
-        // For CQWW the QTHString is the zone (as a string); the SRX_STRING
-        // carries the zone numerically.
-        exch.QTHString := temps.SRX_String;
-        exch.zone      := StrToIntDef(temps.SRX_String, 0);
+        (* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST
+          and the zone -- because the exporter prepends the RST to make the
+          field symmetric with STX_STRING. The old code stored the whole thing
+          as the QTH and then asked StrToIntDef for a zone, which answered 0
+          because '59 8' is not a number.
+
+          AND A ZONE IS NOT A LOCATION. D7 emits no QTH for these QSOs at all;
+          filling QTHString put a <QTH>59 8 into every re-exported record. The
+          zone has its own field and CQZ already populates it. *)
+        exch.zone := StrToIntDef(ExchangeFromSRXString(temps.SRX_String,
+                                                       exch.RSTReceived), 0);
       end;
 
     FOCMARATHON:
       exch.Power := temps.FOC_Num;
 
     IARU:
-      exch.QTHString := temps.SRX_String;
+      begin
+        (* IARU SENDS RST PLUS EITHER A ZONE OR A SOCIETY, and only the society
+          is a QTH. The zone already arrived through ITUZ, and QTHString is what
+          the export tail turns into APP_TR4W_HQ -- so storing a zone here put
+          both a <QTH> and an <APP_TR4W_HQ> of '59 8' into every re-exported
+          record, neither of which D7 wrote.
+
+          The alphabetic test is the one this file already uses to tell a
+          domestic QTH from a number -- see UKRAINIAN, OKDX and LZDX below. *)
+        srxExchange := ExchangeFromSRXString(temps.SRX_String, exch.RSTReceived);
+        if IsAlpha(srxExchange) then
+           begin
+           exch.QTHString := ShortString(srxExchange);
+           end;
+      end;
 
     NAQSOCW, NAQSOSSB, NAQSORTTY, NCCCSPRINT:
       begin

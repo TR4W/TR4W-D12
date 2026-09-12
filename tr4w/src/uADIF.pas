@@ -276,6 +276,22 @@ function GetStateForContest(c: ContestType): string;
 // etc.) should emit SRX_STRING = ExchString directly, NOT call this.
 function ResolveSRXString(const rec: ContestExchange): string;
 
+(* THE EXCHANGE INSIDE AN SRX_STRING -- the exact inverse of the above.
+
+  ResolveSRXString PREPENDS the received RST so the field is symmetric with
+  STX_STRING, so an importer that wants the exchange has to take it off
+  again. Nothing did, and the result was visible the first time a log was
+  imported and re-exported: NY4I's IARU set came back with a QTH of
+  '59 8' -- the RST and the zone, stored as though they were a location.
+
+  IT STRIPS ONLY A LEADING TOKEN THAT IS THE RECEIVED RST, which is what
+  makes it safe on an exchange that has no RST at all. Field Day sends
+  '1A EPA'; '1A' is not the RST, so nothing is removed. Guessing by shape
+  -- 'the first token if it looks numeric' -- would eat the class in a
+  contest that sends one. *)
+function ExchangeFromSRXString(const aSRX: string;
+                               aRSTReceived: integer): string;
+
 implementation
 
 var
@@ -1387,6 +1403,19 @@ end;
 
 // Build the SRX_STRING value with RST normalization -- mirrors the
 // commit f048dc7 logic in postunit.pas.
+function ExchangeFromSRXString(const aSRX: string;
+                               aRSTReceived: integer): string;
+var
+   prefix: string;
+begin
+   Result := Trim(aSRX);
+   prefix := IntToStr(aRSTReceived) + ' ';
+   if Copy(Result, 1, Length(prefix)) = prefix then
+      begin
+      Result := Trim(Copy(Result, Length(prefix) + 1, Length(Result)));
+      end;
+end;
+
 function ResolveSRXString(const rec: ContestExchange): string;
 var
    rstStr   : string;
