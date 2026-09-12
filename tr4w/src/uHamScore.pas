@@ -154,7 +154,7 @@ type
 // Lifecycle (called from tr4w.lpr / shutdown path)
 // ---------------------------------------------------------------------------
 
-procedure HamScoreInit;       // No-op if Config.HamScoreEnable is False or password missing
+procedure HamScoreInit;       // No-op if Settings.Hamscore.Enable is False or password missing
 procedure HamScoreShutdown;   // Safe to call even if Init didn't start the worker
 
 // ---------------------------------------------------------------------------
@@ -897,7 +897,7 @@ end;
 procedure HamScoreInit;
 begin
   if Uploader <> nil then Exit;   // already running
-  if not Config.HamScoreEnable then Exit;
+  if not Settings.Hamscore.Enable then Exit;
 
   if Config.HamScorePassword = '' then
      begin
@@ -905,13 +905,13 @@ begin
      Exit;
      end;
 
-  if Config.HamScoreURL = '' then
+  if Settings.Hamscore.Url = '' then
      begin
-     Config.HamScoreURL := 'http://scoredistributor.net/';   // RTC 3.0 default (issue #920)
+     Settings.Hamscore.Url := 'http://scoredistributor.net/';   // RTC 3.0 default (issue #920)
      end;
 
   Uploader := THamScoreUploader.Create(
-    string(Config.HamScoreURL),
+    Settings.Hamscore.Url,
     string(Config.HamScoreUsername),
     string(Config.HamScorePassword));
   Uploader.Resume;   // Delphi 7 TThread; later Delphis renamed to Start.
@@ -933,7 +933,7 @@ end;
 // <dynamicresults> score posts remain unaffected (handled elsewhere).
 function ContactInfoUploadAllowed(const RXData: ContestExchange): Boolean;
    begin
-   if not Config.HamScoreSendContactInfo then
+   if not Settings.Hamscore.SendContactInfo then
       begin
       Result := False;
       Exit;

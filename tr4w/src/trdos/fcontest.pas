@@ -496,7 +496,7 @@ begin
         Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
         Settings.Messages.QslCw := '73 \ FD';
         AddARRLSectionDomesticCountries;
-        LiteralDomesticQTH := True;
+        Settings.Contest.LiteralDomesticQth := True;
       end;
 
     CROATIAN:
@@ -659,7 +659,7 @@ begin
         Settings.Contest.DigitalModeEnable := true;
         Settings.Qso.ByMode := False;
         Settings.Qso.ByBand := True;
-        //     LiteralDomesticQTH := true;    // 4.91.5
+        //     Settings.Contest.LiteralDomesticQth := true;    // 4.91.5
       end;
 
     RTC: // Issue #902 -- Real-Time Contest (COS)
@@ -1047,7 +1047,7 @@ begin
         SetEXMemoryString(CW, F7, '   CQ^NA \ \ NA ');
         SetEXMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
         Add_KVEKH6KL;
-        LiteralDomesticQTH := True;
+        Settings.Contest.LiteralDomesticQth := True;
       end;
 
     NEWENGLANDQSO:
@@ -1127,7 +1127,7 @@ begin
            ActiveExchange := RSTAndQSONumberOrDomesticQTHExchange;
            AddDomesticCountry('PA');
            TempDomesticQTHDataFileName := 'PACCPA';
-           LiteralDomesticQTH := True;
+           Settings.Contest.LiteralDomesticQth := True;
            end
         else
            begin
@@ -1434,7 +1434,7 @@ begin
 
     UBACW, UBASSB:
       begin
-        LiteralDomesticQTH := True;
+        Settings.Contest.LiteralDomesticQth := True;
         if Settings.My.Country = 'ON' then // 4.96.2
            begin
            ActiveDXMult := CQDXCC;
@@ -1482,7 +1482,7 @@ begin
            ActiveDomesticMult := DOKCodes;
            end;
 
-        LiteralDomesticQTH := True;
+        Settings.Contest.LiteralDomesticQth := True;
         AddDomesticCountry('DL');
       end;
 
@@ -1490,7 +1490,7 @@ begin
       begin
         //        CountryTable.ZoneMode := CQZoneMode;
         //        ActivePrefixMult := Prefix;
-        LiteralDomesticQTH := True;
+        Settings.Contest.LiteralDomesticQth := True;
         AddDomesticCountry('DL');
         Settings.Contest.SprintQsyRule := True;
       end;
@@ -1509,7 +1509,7 @@ begin
            ActiveDomesticMult := DOKCodes;
            end;
 
-        LiteralDomesticQTH := True;
+        Settings.Contest.LiteralDomesticQth := True;
         AddDomesticCountry('DL');
       end;
 
@@ -1527,7 +1527,7 @@ begin
            end;
 
         ActiveBand := Band80;
-        ContactsPerPage := 40;
+        Settings.Contest.ContactsPerPage := 40;
         Settings.Qtc.Enable := True;
       end;
     {
@@ -1558,17 +1558,17 @@ begin
            ActiveMode := Phone;
            end;
         Settings.My.State := UTF8Encode(Settings.My.Grid);
-        LiteralDomesticQTH := True;
+        Settings.Contest.LiteralDomesticQth := True;
       end;
 
     UA4WCHAMPIONSHIP:
       begin
-        TourDuration := 15;
+        Settings.Contest.MinitourDuration := 15;
       end;
 
     R9W_UW9WK_MEMORIAL:
       begin
-        TourDuration := 20;
+        Settings.Contest.MinitourDuration := 20;
       end;
 
     RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB:
@@ -1589,7 +1589,7 @@ begin
         ActiveBand := Band80;
         Settings.Contest.MultipleBands := False;
         Settings.Contest.MultipleModes := False;
-        TourDuration := 10;
+        Settings.Contest.MinitourDuration := 10;
       end;
 
     MINI40:
@@ -1597,7 +1597,7 @@ begin
         ActiveBand := Band40;
         Settings.Contest.MultipleBands := False;
         Settings.Contest.MultipleModes := False;
-        TourDuration := 10;
+        Settings.Contest.MinitourDuration := 10;
       end;
 
     LZDX:
@@ -1608,7 +1608,7 @@ begin
 
     ALRS_UA1DZ_CUP:
       begin
-        LiteralDomesticQTH := true;
+        Settings.Contest.LiteralDomesticQth := true;
         if RussianID(Settings.My.Country) then
            begin
            TempOblast := GetOblast(UTF8Encode(Settings.My.Call));
@@ -1636,7 +1636,7 @@ begin
     YOUTHCHAMPIONSHIPRF:
       begin
 
-        TourDuration := 60;
+        Settings.Contest.MinitourDuration := 60;
         CTY.CtyRFOblMode := True; // n4af 4.42.7
         ActiveMode := Phone;
         ContestName := '?????????? ?????????? ??';
@@ -1689,7 +1689,7 @@ begin
         tAllowDupeQSOs := False;
       end;
 
-    //    UA4N: TourDuration := 15;
+    //    UA4N: Settings.Contest.MinitourDuration := 15;
 
     JTDX: // 4.67.9
       begin
@@ -1755,7 +1755,7 @@ begin
         Settings.Contest.DigitalModeEnable := true;
         Settings.Qso.ByMode := False;
         Settings.Qso.ByBand := True;
-        //     LiteralDomesticQTH := true;    // 4.91.5
+        //     Settings.Contest.LiteralDomesticQth := true;    // 4.91.5
       end;
 
   end;

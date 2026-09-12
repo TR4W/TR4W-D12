@@ -90,7 +90,8 @@ uses
   uCFG,        // SetCFGCommandValue -- the one route to a [COMMANDS] value
   uIO,         // LPTBaseAA
   LogCfg,      // TryRunPaddleAndFootSwitchThread, InitializeOtherLPTPorts
-  LogK1EA,     // the port globals, tUseControlPort, the paddle/footswitch thread
+  LogK1EA,     // the port globals, the paddle/footswitch thread
+  uSettingsModel,   // Settings.Hardware.UseControlPort
   TF,          // ClearThread -- "no thread" is zero, and portably so
   LogRadio,    // Radio1 / Radio2 band output ports
   LogWind,
@@ -170,7 +171,7 @@ begin
 
       // The foot switch and paddle are driven by the radio's control port when
       // that is in use, so their LPT assignment is not the operator's to make.
-      if tUseControlPort and (i < 3) then
+      if Settings.Hardware.UseControlPort and (i < 3) then
          begin
          FPortCombos[i].Enabled := False;
          end

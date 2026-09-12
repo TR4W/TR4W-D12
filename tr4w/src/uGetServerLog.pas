@@ -145,7 +145,8 @@ const
 implementation
 uses SysUtils,   { Format, StrPCopy -- replaced TF.Format/wsprintfA }
    uMainThread,  { RunOnMainThread -- the finished handoff, see HeadlessSyncFinished }
-  MainUnit;
+  MainUnit,
+  uSettingsModel;   (* Settings.Server *)
 
 { GetServerLogDlgProc STOOD HERE and went with dialog template 73 on
   2026-08-29 -- the last Win32 dialog in the program. Its window is
@@ -344,8 +345,8 @@ begin
         here, so Host is an AnsiString; a cast to the generic string type
         widens and then narrows again -- a silent round trip the ratchet
         counts -- the same note logstuff carries about LazUtils' CopyFile. *)
-      Client.Host           := AnsiString(ServerAddress);
-      Client.Port           := ServerPort + 1;
+      Client.Host           := AnsiString(Settings.Server.Address);
+      Client.Port           := Settings.Server.Port + 1;
       Client.ConnectTimeout := CONNECT_TIMEOUT_MS;
       Client.ReadTimeout    := IDLE_TIMEOUT_MS;
 

@@ -564,7 +564,8 @@ var
   CallWindowPosition                    : CallWindowPositionType {= NormalCallWindowPosition};
 
   CommandUseInactiveRadio               : boolean; {KK1L: 6.73}
-  ContactsPerPage                       : integer = 50;
+  (* ContactsPerPage is gone (2026-09-12) --
+    Settings.Contest.ContactsPerPage. *)
   ContinentString                       : Str20;
   //  tr4w_contest                          : string;
 
@@ -573,7 +574,8 @@ var
   ContinentQSOCount                     : array[BandType, ContinentType] of Word;
   ControlBMemory                        : CallString;
   //   CQMenu                          : Str80;
-  CustomInitialExchangeString           : Str40; {KK1L: 6.67 was Str80;}
+  (* CustomInitialExchangeString is gone (2026-09-12) --
+    Settings.Contest.CustomInitialExchangeString. {KK1L: 6.67} *)
   (* CustomUserString is gone (2026-09-12) --
     Settings.Operating.CustomUserString. {KK1L: 6.68} *)
   CWEnabled                             : boolean  = True;
@@ -826,7 +828,8 @@ var
 
   DisplayedFreq                         : Str10; {wli}
 
-  TourDuration                          : integer;
+  (* TourDuration is gone (2026-09-12) --
+    Settings.Contest.MinitourDuration. *)
   //   tUpdateWindow                   : boolean;
 
 (* "DE <callsign>", DERIVED RATHER THAN CACHED.
@@ -3918,11 +3921,11 @@ procedure ShowTourDuration;
 var
   IntegerTime                           : integer;
 begin
-  if TourDuration = 0 then Exit;
-  IntegerTime := UTC.wMinute mod TourDuration;
+  if Settings.Contest.MinitourDuration = 0 then Exit;
+  IntegerTime := UTC.wMinute mod Settings.Contest.MinitourDuration;
   SetProgressPosition(mpbTourDuration, IntegerTime);
 
-  TF.Format(TempBuffer2, PAnsiChar(LclText(TC_NEWTOUR)), IntegerTime, TourDuration);
+  TF.Format(TempBuffer2, PAnsiChar(LclText(TC_NEWTOUR)), IntegerTime, Settings.Contest.MinitourDuration);
 
 //  Windows.SetDlgItemTextA(ReminderDlgHandle, 102, TempBuffer2);
   SetTourDurationText(TempBuffer2);

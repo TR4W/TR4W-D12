@@ -277,7 +277,8 @@ var
   tRelayControlPortBaseAddress          : TLPTBaseAddress = LPT_NO_PORT;
   tActiveStereoPortBaseAddress          : TLPTBaseAddress = LPT_NO_PORT;
 
-  tUseControlPort                       : boolean;
+  (* tUseControlPort is gone (2026-09-12) --
+    Settings.Hardware.UseControlPort. *)
 
   TR4W_BeepThread                       : TThreadID;
   (* NO INITIALISER, AND THE OLD ONE WAS WRONG. It was feInvalidHandle -- -1,
@@ -2425,7 +2426,7 @@ begin
   if tDoingFootSwitchEnable then
     if FootSwitchMode <> FootSwitchDisabled then
        begin
-       if not tUseControlPort then
+       if not Settings.Hardware.UseControlPort then
           begin
              {LPT}
          TempByte := GetPortByte(tFootSwitchPortBaseAddress, otState);
@@ -2472,7 +2473,7 @@ begin
 
        DitContact := False;
        DahContact := False;
-       if not tUseControlPort then
+       if not Settings.Hardware.UseControlPort then
           begin
           if tPaddlePortBaseAddress <> LPT_NO_PORT then
              begin

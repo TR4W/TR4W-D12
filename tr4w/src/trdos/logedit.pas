@@ -2443,7 +2443,8 @@ begin
          begin
            Exchange := '';
 
-           CustomString := CustomInitialExchangeString;
+           CustomString :=
+              ShortString(Settings.Contest.CustomInitialExchangeString);
 
            while CustomString <> '' do
               begin

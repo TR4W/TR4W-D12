@@ -279,7 +279,7 @@ begin
    CheckFalse(Config.DVKEnable,                  'DVKEnable was False');
    CheckFalse(Settings.Dvk.LocalizedMessagesEnable, 'LocalizedMessagesEnable was False');
    CheckFalse(Settings.Dvk.UseRecordedSigns,           'UseRecordedSigns was False');
-   CheckFalse(Config.MP3RecorderEnable,          'MP3RecorderEnable was False');
+   CheckFalse(Settings.Mp3.RecorderEnable,          'MP3RecorderEnable was False');
 
    CheckEquals(SizeOf(FileNameType), SizeOf(Config.MP3Path),     'MP3Path is a FileNameType buffer');
    CheckEquals(SizeOf(FileNameType), SizeOf(Config.MP3Player),   'MP3Player is a FileNameType buffer');

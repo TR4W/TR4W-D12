@@ -82,11 +82,8 @@ type
         compiler, which sees only a pointer, and not a test, because the damage
         lands in the NEXT field.  These four are ShortString and Boolean because
         that is what they were. }
-      HamScoreEnable: boolean;
-      HamScoreURL: ShortString;
       HamScoreUsername: ShortString;
       HamScorePassword: ShortString;
-      HamScoreSendContactInfo: boolean;
 
       { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
         Types copied verbatim from the declarations they replace -- CheckCommand
@@ -184,7 +181,6 @@ type
         would report it: not the compiler, which sees a pointer, and not a test,
         because the damage lands in the NEXT field. The type is copied verbatim
         from the declarations being replaced. }
-      MP3RecorderEnable: boolean;
       MP3Path: FileNameType;
       MP3Player: FileNameType;
       DVKEnable: boolean;
@@ -200,15 +196,12 @@ var
    Config: TR4WConfig = (
       CodeSpeedIncrement: 3;
 
-      HamScoreEnable: False;
       // Issue #920: the RTC 3.0 endpoint per the spec.  An operator may point
       // HAMSCORE URL at hamscore.com/postxml/index.php (which also serves 3.0)
       // or any future mirror.  Plain HTTP is the spec default; an https:// URL
       // takes the existing TIdHTTP + TLS path transparently.
-      HamScoreURL: 'http://scoredistributor.net/';
       HamScoreUsername: '';   // empty falls back to MY CALL
       HamScorePassword: '';
-      HamScoreSendContactInfo: True;
 
       tDitDahRatio: 3;
 
@@ -224,7 +217,6 @@ var
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
         behaves exactly as it did before. }
-      MP3RecorderEnable: False;
       MP3Path: '';
       MP3Player: '';
       DVKEnable: False;

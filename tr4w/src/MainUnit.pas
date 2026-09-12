@@ -4353,7 +4353,7 @@ begin
   // them any more.
   RefreshEntryFieldColors;
 
-  if TourDuration <> 0 then
+  if Settings.Contest.MinitourDuration <> 0 then
      begin
      // Windows.GetWindowRect(wh[mweQuickCommand], temprect);
      SetElementBounds(mweQuickCommand, 0, EditableLogHeight + ws * 12,
@@ -4365,7 +4365,7 @@ begin
 
      SetProgressBounds(mpbTourDuration, 33 * ws {col8},
        EditableLogHeight + ws * 12 {Line7}, 5 * ws, ws);
-     SetProgressMax(mpbTourDuration, TourDuration);
+     SetProgressMax(mpbTourDuration, Settings.Contest.MinitourDuration);
      ShowProgressBar(mpbTourDuration, True);
 
      ShowTourDuration;
@@ -5377,7 +5377,7 @@ begin
       begin
         // Windows ping: -w and -n are its spelling of timeout and count.
         RunWindowsUtility(SysUtils.Format('ping %s -w 2000 -n 10',
-                                          [string(ServerAddress)]));
+                                          [string(Settings.Server.Address)]));
       end;
 
     menu_runserver:
@@ -8234,7 +8234,7 @@ begin
      elviCol := ColumnsArray[logColQTH].pos; //Ord(logColQTH);
      if DoingDomesticMults then
         begin
-        if LiteralDomesticQTH then
+        if Settings.Contest.LiteralDomesticQth then
            begin
            elviText := RXData.QTHString
            end

@@ -179,6 +179,13 @@ type
    (* The Network window's refresh timer, in milliseconds. *)
    TNetStatusInterval   = 1000..10000; // was crMin:1000, crMax:10000
    TFreqPollRate        = 10..1000;   // was crMin:10, crMax:1000 -- ms
+   TServerPort          = 0..65535;   // was crMin:0, crMax:MAXWORD
+   TContactsPerPage     = 10..100;    // was crMin:10, crMax:100
+   (* MINITOUR DURATION, in minutes. THE ROW SAID 5..60 AND THE GLOBAL
+     SAT AT 0, which MainUnit tests for -- `if TourDuration <> 0` is how
+     it knows there is no tour. So the type has to admit the off value
+     the program actually uses, exactly as TQsoPoints admits -1. *)
+   TTourDuration        = 0..60;      // was crMin:5, crMax:60 -- see above
    TAutoTimeIncrement   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TWakeUpTimeOut       = 0..255;     // was crMin:0, crMax:MAXBYTE
    (* A UDP PORT. 1..65535, which is the port range and not a TR4W rule --
@@ -624,6 +631,109 @@ type
       (* Was TelnetServer in uTelnet, a Str50. uTelnet seeds its host list
         from it and preselects it. *)
       property Server: string read FServer write FServer;
+   end;
+
+   (*
+     TR4WSERVER, as this position reaches it -- the multi-op server that
+     holds the shared log.
+
+     THREE OF FOUR, AND THE FOURTH IS NAMED SO THE GAP READS AS A DECISION.
+     SERVER PASSWORD is ctPassword, and a password cannot leave the array
+     yet: LogCfg re-reads every ctPassword and ctCaseSensitive value from the
+     ini a second time to put the operator's original case back, and it finds
+     them by walking CFGCA BY ADDRESS. A migrated row is not in that walk, so
+     the password would silently arrive upper-cased. That wants one mechanism
+     built deliberately, not three times.
+
+     ALL THREE NAMES HERE DERIVE EXACTLY, including the long one.
+   *)
+   TServerSettings = class(TSettingsGroup)
+   private
+      FAddress: string;
+      FPort: TServerPort;
+      FAutoSynchronizeLogOnConnect: boolean;
+   public
+      constructor Create;
+   published
+      (* Was ServerAddress in uNet, a str31 holding 'LOCALHOST'. Its old
+        ShortString form is why uNet formatted it as @ServerAddress[1] -- a
+        pointer into the string's bytes -- which goes with it. *)
+      property Address: string read FAddress write FAddress;
+      (* Was ServerPort, 1061. The log-synchronise client uses this plus one,
+        which is why the bound stops one short of the top of the range. *)
+      property Port: TServerPort read FPort write FPort;
+      (* Was ServerAutoSynchronizeLogOnConnect (issue #912) -- pull the
+        server's log as soon as this position connects. *)
+      property AutoSynchronizeLogOnConnect: boolean
+         read FAutoSynchronizeLogOnConnect write FAutoSynchronizeLogOnConnect;
+   end;
+
+   (*
+     HAMSCORE -- live score posting to scoredistributor.net.
+
+     THREE OF FIVE. HAMSCORE USERNAME is ctCaseSensitive and HAMSCORE
+     PASSWORD is ctPassword, and both wait on the same case-restoring
+     mechanism described on TServerSettings.
+
+     THE GROUP IS SPELLED Hamscore, ONE CAPITAL, ON PURPOSE. The derivation
+     splits before a capital that follows a lower-case letter, so HamScore
+     would produce 'HAM SCORE ENABLE' and every name would need an alias.
+     Spelling the group the way the command spells it costs nothing and
+     leaves three exact derivations.
+   *)
+   THamscoreSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FUrl: string;
+      FSendContactInfo: boolean;
+   public
+      constructor Create;
+   published
+      // Was Config.HamScoreEnable.
+      property Enable: boolean read FEnable write FEnable;
+      (* Was Config.HamScoreURL. uHamScore fills in the RTC 3.0 default when
+        it is empty, and that assignment still works -- it is a property with
+        a setter rather than a field, which is the only thing that changed. *)
+      property Url: string read FUrl write FUrl;
+      // Was Config.HamScoreSendContactInfo -- send each QSO, not just totals.
+      property SendContactInfo: boolean
+         read FSendContactInfo write FSendContactInfo;
+   end;
+
+   (*
+     THE MP3 RECORDER. One setting of three: MP3 PATH and MP3 PLAYER are
+     ctDirectory and ctFileName, which wait on the open ruling about what a
+     path setting validates.
+
+     NOTHING READS IT IN THIS BUILD -- uMP3Recorder was deleted in September
+     with its lame_enc.dll binding. It is carried rather than withdrawn for
+     the reason NO COLUMN HEADER was: an operator can see it in Preferences,
+     so removing a setting is a decision.
+   *)
+   TMp3Settings = class(TSettingsGroup)
+   private
+      FRecorderEnable: boolean;
+   published
+      // Was Config.MP3RecorderEnable. MP3 RECORDER ENABLE derives exactly.
+      property RecorderEnable: boolean
+         read FRecorderEnable write FRecorderEnable;
+   end;
+
+   (*
+     THE PARALLEL-PORT HARDWARE, as far as one flag goes. The three LPT base
+     addresses and the three port assignments beside it are ctPortLPT and
+     belong to the port identity work, which is deciding what a port IS
+     before deciding where its setting lives.
+   *)
+   THardwareSettings = class(TSettingsGroup)
+   private
+      FUseControlPort: boolean;
+   published
+      (* Was tUseControlPort in logk1ea -- whether the LPT control lines are
+        driven at all. Nothing writes it at run time; it is read where the
+        paddle and footswitch are serviced. *)
+      property UseControlPort: boolean
+         read FUseControlPort write FUseControlPort;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -2056,10 +2166,21 @@ type
    *)
    TGridMapSettings = class(TSettingsGroup)
    private
+      FRadiusOfEarth: double;
       FCenter: string;
    published
       // Was the global GridMapCenter in logstuff.pas, a GridString.
       property Center: string read FCenter write FCenter;
+      (* Was RadiusOfEarth in loggrid.pas -- the radius the distance
+        calculation uses, in kilometres, and zero means do not compute a
+        distance at all.
+
+        ITS BOUND IS A REGISTERED CHECK, NOT A SUBRANGE. A subrange is an
+        ordinal type and this is a double, so the range that was crMin and
+        crMax -- divided by ten, which is what the old ctReal arm did --
+        is registered against the path by uCFG instead. *)
+      property RadiusOfEarth: double
+         read FRadiusOfEarth write FRadiusOfEarth;
    end;
 
    (*
@@ -2149,6 +2270,10 @@ type
       FSprintQsyRule: boolean;
       FQsoNumberByBand: boolean;
       FInitialExchangeOverwrite: boolean;
+      FContactsPerPage: TContactsPerPage;
+      FMinitourDuration: TTourDuration;
+      FLiteralDomesticQth: boolean;
+      FCustomInitialExchangeString: string;
    public
       constructor Create;
       class function IsContestScoped: boolean; override;
@@ -2191,6 +2316,30 @@ type
       // Was InitialExchangeOverwrite {KK1L: 6.70}.
       property InitialExchangeOverwrite: boolean
          read FInitialExchangeOverwrite write FInitialExchangeOverwrite;
+      (* THE FOUR BELOW ARE HERE BECAUSE FCONTEST ASSIGNS THEM PER
+        CONTEST and nothing ever sets them back -- the same reason
+        QSO NUMBER BY BAND and INITIAL EXCHANGE OVERWRITE are. A group
+        that is contest-scoped is kept out of settings\tr4w.json and
+        captured into the contest database instead, which is exactly
+        what a value the contest chooses needs. *)
+      (* Was ContactsPerPage in logwind -- how many QSOs a printed page
+        holds. FCONTEST sets 40 for one contest. *)
+      property ContactsPerPage: TContactsPerPage
+         read FContactsPerPage write FContactsPerPage;
+      (* Was TourDuration -- the minutes a minitour lasts, shown as a
+        progress bar. FCONTEST sets 15 and 20 for two contests. *)
+      property MinitourDuration: TTourDuration
+         read FMinitourDuration write FMinitourDuration;
+      (* Was LiteralDomesticQTH -- take the received domestic QTH as
+        typed rather than resolving it against the .DOM file. FCONTEST
+        sets it for the contests whose exchange is free text. *)
+      property LiteralDomesticQth: boolean
+         read FLiteralDomesticQth write FLiteralDomesticQth;
+      (* Was CustomInitialExchangeString, a Str40 -- the exchange the
+        editor offers when there is no history for a station. *)
+      property CustomInitialExchangeString: string
+         read FCustomInitialExchangeString
+         write FCustomInitialExchangeString;
    end;
 
    (*
@@ -2529,6 +2678,10 @@ type
       FCluster: TClusterSettings;
       FScore: TScoreSettings;
       FTelnet: TTelnetSettings;
+      FServer: TServerSettings;
+      FHamscore: THamscoreSettings;
+      FMp3: TMp3Settings;
+      FHardware: THardwareSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -2664,6 +2817,10 @@ type
       property Cluster: TClusterSettings read FCluster;
       property Score: TScoreSettings read FScore;
       property Telnet: TTelnetSettings read FTelnet;
+      property Server: TServerSettings read FServer;
+      property Hamscore: THamscoreSettings read FHamscore;
+      property Mp3: TMp3Settings read FMp3;
+      property Hardware: THardwareSettings read FHardware;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -3102,6 +3259,26 @@ begin
    FShowAll := False;
 end;
 
+constructor TServerSettings.Create;
+begin
+   inherited Create;
+   // The values uNet's typed constants carried.
+   FAddress                     := 'LOCALHOST';
+   FPort                        := 1061;
+   FAutoSynchronizeLogOnConnect := False;
+end;
+
+constructor THamscoreSettings.Create;
+begin
+   inherited Create;
+   (* The values uConfigValues' initialiser carried, and two of the three
+     are not the zero value: the URL is the service's own address and
+     contact info is ON. *)
+   FEnable          := False;
+   FUrl             := 'http://scoredistributor.net/';
+   FSendContactInfo := True;
+end;
+
 constructor TScoreSettings.Create;
 begin
    inherited Create;
@@ -3486,6 +3663,12 @@ begin
    // Both globals are declared with no initialiser, so both were False.
    FQsoNumberByBand          := False;
    FInitialExchangeOverwrite := False;
+   (* ContactsPerPage was declared = 50; the other three had no
+     initialiser. *)
+   FContactsPerPage             := 50;
+   FMinitourDuration            := 0;
+   FLiteralDomesticQth          := False;
+   FCustomInitialExchangeString := '';
 end;
 
 class function TContestSettings.IsContestScoped: boolean;
@@ -3555,6 +3738,10 @@ begin
    FCluster        := TClusterSettings.Create;
    FScore          := TScoreSettings.Create;
    FTelnet         := TTelnetSettings.Create;
+   FServer         := TServerSettings.Create;
+   FHamscore       := THamscoreSettings.Create;
+   FMp3            := TMp3Settings.Create;
+   FHardware       := THardwareSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -3965,6 +4152,16 @@ begin
    Alias('CONNECTION AT STARTUP',      'Cluster.ConnectionAtStartup');
    Alias('BROADCAST ALL PACKET DATA',  'Cluster.BroadcastAllPacketData');
    Alias('FREQUENCY POLL RATE',        'Operating.FrequencyPollRate');
+   Alias('RADIUS OF EARTH',            'GridMap.RadiusOfEarth');
+   Alias('USE CONTROL PORT',           'Hardware.UseControlPort');
+
+   (* The contest's four. Every one puts the subject first and the
+     contest nowhere, which is what a flat vocabulary does. *)
+   Alias('CONTACTS PER PAGE',   'Contest.ContactsPerPage');
+   Alias('MINITOUR DURATION',   'Contest.MinitourDuration');
+   Alias('LITERAL DOMESTIC QTH', 'Contest.LiteralDomesticQth');
+   Alias('CUSTOM INITIAL EXCHANGE STRING',
+         'Contest.CustomInitialExchangeString');
    (* The command runs the two words together; the property cannot. *)
    Alias('MISSINGCALLSIGNS FILE ENABLE',
          'Dvk.MissingCallsignsFileEnable');
@@ -4216,6 +4413,7 @@ var
    n: integer;
    code: integer;
    text: string;
+   realValue: double;
 begin
    Result := False;
    path := PathForCommand(aCommand);
@@ -4315,6 +4513,21 @@ begin
             end;
          SetOrdProp(owner, info, Ord(aValue[1]));
          Result := True;
+         end;
+
+      (* A REAL. The old ctReal arm did exactly this -- Val, and refuse
+        the line if it does not parse -- and its RANGE check is a
+        registered value check now, because a double has no subrange to
+        carry one. See RegisterSettingValueCheck. *)
+      tkFloat:
+         begin
+            Val(text, realValue, code);
+            if code <> 0 then
+               begin
+               Exit;
+               end;
+            SetFloatProp(owner, info, realValue);
+            Result := True;
          end;
 
       tkEnumeration:

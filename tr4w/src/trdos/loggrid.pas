@@ -66,10 +66,13 @@ const
 
 var
   DistanceMode                          : DistanceDisplayType = DistanceKM;
-  RadiusOfEarth                         : REAL {= 0.0};
+  (* RadiusOfEarth is gone (2026-09-12) --
+    Settings.GridMap.RadiusOfEarth. *)
 
 implementation
 
+uses
+   uSettingsModel;   (* Settings.GridMap.RadiusOfEarth *)
 
 procedure ConvertGridToLatLon(Grid: string; var Lat, Lon: REAL);
 
@@ -214,9 +217,9 @@ var
     al, A1M2, A2M1                      : REAL;
 
 begin
-  if RadiusOfEarth > 0 then
+  if Settings.GridMap.RadiusOfEarth > 0 then
      begin
-     al := RadiusOfEarth * 1000
+     al := Settings.GridMap.RadiusOfEarth * 1000
      end
   else
      begin

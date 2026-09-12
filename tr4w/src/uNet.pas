@@ -238,10 +238,9 @@ var
   NetThreadID                           : TThreadID;
   StatusArray                           : array[1..26] of TStationState;
   PosInClientsList                      : array[1..26] of integer;
-  ServerAddress                         : str31 = 'LOCALHOST';
   ServerPassword                        : Str20 = 'TR4WSERVER';
-  ServerPort                            : integer = 1061;
-  ServerAutoSynchronizeLogOnConnect     : boolean = False;  // Issue #912
+  (* ServerAddress, ServerPort and ServerAutoSynchronizeLogOnConnect are
+    gone (2026-09-12) -- Settings.Server owns all three. Issue #912. *)
   { THE LINK, over Indy.  Was `NetSocket: Cardinal` -- a raw Winsock handle
     that three other units tested for zero; ask NetIsConnected instead. }
   NetClient                             : TNetClient = nil;
@@ -849,7 +848,7 @@ begin
       DisplayClientStatus(i);
       end;
    ShowConnectionStatus(TC_DISCONNECTEDFROM);
-   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_CONNECTIONTOTR4WSERVERLOST)), [@ServerAddress[1], ServerPort]));
+   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_CONNECTIONTOTR4WSERVERLOST)), [Settings.Server.Address, Settings.Server.Port]));
 end;
 
 { ON THE READER THREAD. }
@@ -1119,7 +1118,7 @@ begin
   announce := FConnectLogState in [nclsInitial, nclsConnected];
   if announce then
      begin
-     logger.Debug('TryConnectToNetwork -> %s:%d  (will retry every 5s while server is unreachable; further attempts logged only on state change)', [ServerAddress, ServerPort]);
+     logger.Debug('TryConnectToNetwork -> %s:%d  (will retry every 5s while server is unreachable; further attempts logged only on state change)', [Settings.Server.Address, Settings.Server.Port]);
      FConnectLogState := nclsTrying;
      end;
   if not ThreadStarted(NetThreadID) then
@@ -1145,7 +1144,7 @@ begin
       NetClient.OnDisconnected := @NetLinkDropped;
       end;
 
-   Result := NetClient.Connect(string(ServerAddress), ServerPort,
+   Result := NetClient.Connect(Settings.Server.Address, Settings.Server.Port,
                                AnsiString(ServerPassword), err, wrongPassword);
    if Result then
       begin
@@ -1159,7 +1158,7 @@ begin
    else
       begin
       logger.Debug('[Net] connect to %s:%d failed: %s',
-                   [string(ServerAddress), ServerPort, err]);
+                   [Settings.Server.Address, Settings.Server.Port, err]);
       end;
 end;
 
@@ -1175,8 +1174,8 @@ begin
   if ConnectToTR4WServer then
 {
   TempSocket := GetSocket; // socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  tr4w_saddr.sin_addr.S_addr := inet_addr(tgethostbyname(@ServerAddress[1]));
-  tr4w_saddr.sin_port := htons(ServerPort);
+  tr4w_saddr.sin_addr.S_addr := inet_addr(tgethostbyname(PAnsiChar(AnsiString(Settings.Server.Address))));
+  tr4w_saddr.sin_port := htons(Settings.Server.Port);
 
   if TempSocket = INVALID_SOCKET then goto 2;
   i := tConnect(TempSocket, @tr4w_saddr);
@@ -1208,7 +1207,7 @@ begin
      ShowConnectionStatus(TC_CONNECTEDTO);
      if FConnectLogState <> nclsConnected then
         begin
-        logger.Info('Connected to TR4WServer at %s:%d', [ServerAddress, ServerPort]);
+        logger.Info('Connected to TR4WServer at %s:%d', [Settings.Server.Address, Settings.Server.Port]);
         FConnectLogState := nclsConnected;
         end;
      end
@@ -1219,7 +1218,7 @@ begin
      NetDisconnect;
      if FConnectLogState <> nclsFailed then
         begin
-        logger.Warn('Failed to connect to TR4WServer at %s:%d (will keep retrying silently)', [ServerAddress, ServerPort]);
+        logger.Warn('Failed to connect to TR4WServer at %s:%d (will keep retrying silently)', [Settings.Server.Address, Settings.Server.Port]);
         FConnectLogState := nclsFailed;
         end;
      end;
@@ -1463,7 +1462,7 @@ begin
        // Safety: only auto-sync when contests match (or server has no contest
        // yet); otherwise fall through to the existing dialog so the operator
        // sees the wrong-server warning.
-       if ServerAutoSynchronizeLogOnConnect and
+       if Settings.Server.AutoSynchronizeLogOnConnect and
           ((s^.liContest = Contest) or (s^.liContest = DUMMYCONTEST)) then
           begin
           logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
@@ -1524,15 +1523,16 @@ end;
   And TF.Format is a wsprintf shim: it took the resourcestring as a PAnsiChar,
   every argument as a PAnsiChar, and wrote into a fixed buffer. SysUtils.Format
   takes the string and an array of const, so TC_NETWORK ('Network : %s %s:%d')
-  is passed as itself, ServerAddress converts from its ShortString on the way
-  in, and ServerPort goes as an integer rather than being pushed as bytes. No
+  is passed as itself, the server address converts from its ShortString on
+  the way in, and the port goes as an integer rather than being pushed as
+  bytes. No
   buffer, no WinAnsi round trip, no pointer into a ShortString's first byte. *)
 procedure ShowConnectionStatus(Operation: string);
 begin
   if TR4WNetworkForm <> nil then
      begin
      TR4WNetworkForm.Caption := TCaption(Format(TC_NETWORK,
-                                  [Operation, string(ServerAddress), ServerPort]));
+                                  [Operation, Settings.Server.Address, Settings.Server.Port]));
      end;
 end;
 

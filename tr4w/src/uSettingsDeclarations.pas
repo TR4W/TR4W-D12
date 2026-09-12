@@ -86,23 +86,18 @@ uses
    uSettingsModelBinding,   // RegisterModelSetting -- no CFGCA row
    uSettingsCaptions;  // RS_* -- the translatable setting labels
 
-type
-   (* A HOST FOR ONE GETTER/SETTER PAIR, because a typed closure is a method
-     pointer and a method needs an object. It holds no state; TourDuration
-     lives where it always has, in LogWind.
+(* THE GETTER/SETTER HOST CLASS IS GONE, 2026-09-12, AND SO IS THE `type`
+  BLOCK THAT HELD IT.
 
-     IT HELD FIVE PAIRS UNTIL 2026-09-12. The four QSO-point values were the
-     first settings in the tree to graduate off CFGCA and took step two of
-     the three this unit's header describes -- a typed closure over the
-     global. They have now taken step three: they are properties on
-     uSettingsModel, there is no global and no row, and their registration
-     below names them rather than reaching for them. TourDuration has not
-     moved, so this class has not gone with them. *)
-   TQSOPointsAccess = class(TObject)
-   public
-      function  GetTourDuration: integer;
-      procedure SetTourDuration(aValue: integer);
-   end;
+  It existed because a typed closure is a method pointer and a method needs
+  an object to hang on. It held five pairs: the four QSO-point values, which
+  were the first settings in this tree to leave CFGCA and took step two of
+  the three this unit's header describes -- a closure over a global -- and
+  TourDuration.
+
+  All five have since taken step three. They are properties on
+  uSettingsModel, there is no global for a closure to reach, and their
+  registrations name them instead. *)
 
 var
    GDeclared: boolean = False;
@@ -112,10 +107,6 @@ var
    (* What went wrong, kept so EVERY later call fails the same way instead
      of returning quietly on a half-built registry. *)
    GFailure: string = '';
-   GQSOPoints: TQSOPointsAccess = nil;
-
-function  TQSOPointsAccess.GetTourDuration: integer;    begin Result := TourDuration;           end;
-procedure TQSOPointsAccess.SetTourDuration(aValue: integer); begin TourDuration := aValue;      end;
 
 function SettingsDeclarationsComplete: boolean;
 begin
@@ -215,7 +206,7 @@ begin
                          RS_APPEARANCE_SHOWGRIDLINES);
 
    { Audio: MP3 recording and the digital voice keyer, 2026-08-15. }
-   RegisterStoredSetting('audio.mp3.recorderEnable',          'MP3 RECORDER ENABLE',
+   RegisterModelSetting( 'audio.mp3.recorderEnable',          'MP3 RECORDER ENABLE',
                          RS_AUDIO_MP3_RECORDERENABLE);
    RegisterStoredSetting('audio.mp3.path',                    'MP3 PATH',
                          RS_AUDIO_MP3_PATH);
@@ -361,15 +352,15 @@ begin
                          RS_OPERATING_TWORADIO_SKIPACTIVEBAND);
 
    // --- Operating: online scoring ------------------------------------------
-   RegisterStoredSetting('scoring.hamscore.enable',      'HAMSCORE ENABLE',
+   RegisterModelSetting( 'scoring.hamscore.enable',      'HAMSCORE ENABLE',
                          RS_SCORING_HAMSCORE_ENABLE);
-   RegisterStoredSetting('scoring.hamscore.url',         'HAMSCORE URL',
+   RegisterModelSetting( 'scoring.hamscore.url',         'HAMSCORE URL',
                          RS_SCORING_HAMSCORE_URL);
    RegisterStoredSetting('scoring.hamscore.username',    'HAMSCORE USERNAME',
                          RS_SCORING_HAMSCORE_USERNAME);
    RegisterStoredSetting('scoring.hamscore.password',    'HAMSCORE PASSWORD',
                          RS_SCORING_HAMSCORE_PASSWORD);
-   RegisterStoredSetting('scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
+   RegisterModelSetting( 'scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
                          RS_SCORING_HAMSCORE_CONTACTINFO);
    RegisterModelSetting( 'scoring.board.postingUrl',     'SCORE POSTING URL',
                          RS_SCORING_BOARD_POSTINGURL);
@@ -440,7 +431,7 @@ begin
                           RS_CONTEST_CONTESTTITLE);
    RegisterModelSetting( 'contest.countDomesticCountries','COUNT DOMESTIC COUNTRIES',
                           RS_CONTEST_COUNTDOMESTICCOUNTRIES);
-   RegisterStoredSetting('contest.customInitialExchangeString','CUSTOM INITIAL EXCHANGE STRING',
+   RegisterModelSetting( 'contest.customInitialExchangeString','CUSTOM INITIAL EXCHANGE STRING',
                           RS_CONTEST_CUSTOMINITIALEXCHANGESTRING);
    RegisterStoredSetting('contest.domesticMultiplier',  'DOMESTIC MULTIPLIER',
                           RS_CONTEST_DOMESTICMULTIPLIER);
@@ -458,7 +449,7 @@ begin
                           RS_CONTEST_INITIALEXCHANGECURSORPOS);
    RegisterModelSetting('contest.initialExchangeOverwrite','INITIAL EXCHANGE OVERWRITE',
                           RS_CONTEST_INITIALEXCHANGEOVERWRITE);
-   RegisterStoredSetting('contest.literalDomesticQth',  'LITERAL DOMESTIC QTH',
+   RegisterModelSetting( 'contest.literalDomesticQth',  'LITERAL DOMESTIC QTH',
                           RS_CONTEST_LITERALDOMESTICQTH);
    RegisterModelSetting('contest.logRsSent',           'LOG RS SENT',
                           RS_CONTEST_LOGRSSENT);
@@ -537,15 +528,12 @@ begin
      the same row. One variable, two writers, which is what a closure over a
      global means. The row goes when the .cfg loader stops needing it, not
      before. *)
-   if GQSOPoints = nil then
-      begin
-      GQSOPoints := TQSOPointsAccess.Create;
-      end;
-
-   RegisterSetting(TIntSetting.Create('contest.minitourDuration',
-      RS_CONTEST_MINITOURDURATION,
-      GQSOPoints.GetTourDuration, GQSOPoints.SetTourDuration,
-      5, 60).Sentinel(0)).ReadOnly := True;
+   (* THE SENTINEL IS IN THE TYPE NOW. This was a closure over TourDuration
+     with an explicit range of 5..60 and 0 declared as the off value; the
+     property's subrange is 0..60 and says the same thing, for the same
+     reason -- MainUnit tests `<> 0` to know there is no tour. *)
+   RegisterModelSetting( 'contest.minitourDuration',    'MINITOUR DURATION',
+                          RS_CONTEST_MINITOURDURATION).ReadOnly := True;
 
    RegisterModelSetting( 'contest.multByBand',          'MULT BY BAND',
                           RS_CONTEST_MULTBYBAND).ReadOnly := True;
@@ -712,7 +700,7 @@ begin
                           RS_OPERATING_CTRLJ_QSXENABLE);
    RegisterModelSetting( 'operating.ctrlj.qzbRandomOffsetEnable','QZB RANDOM OFFSET ENABLE',
                           RS_OPERATING_CTRLJ_QZBRANDOMOFFSETENABLE);
-   RegisterStoredSetting('operating.ctrlj.radiusOfEarth',     'RADIUS OF EARTH',
+   RegisterModelSetting( 'operating.ctrlj.radiusOfEarth',     'RADIUS OF EARTH',
                           RS_OPERATING_CTRLJ_RADIUSOFEARTH);
    RegisterModelSetting( 'operating.ctrlj.shiftKeyEnable',    'SHIFT KEY ENABLE',
                           RS_OPERATING_CTRLJ_SHIFTKEYENABLE);
@@ -759,7 +747,7 @@ begin
                           RS_APPEARANCE_CTRLJ_COLUMNAUTOSIZE);
    RegisterModelSetting( 'appearance.ctrlj.completeCallsignMask','COMPLETE CALLSIGN MASK',
                           RS_APPEARANCE_CTRLJ_COMPLETECALLSIGNMASK);
-   RegisterStoredSetting('appearance.ctrlj.contactsPerPage',  'CONTACTS PER PAGE',
+   RegisterModelSetting( 'appearance.ctrlj.contactsPerPage',  'CONTACTS PER PAGE',
                           RS_APPEARANCE_CTRLJ_CONTACTSPERPAGE);
    RegisterStoredSetting('appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
                           RS_APPEARANCE_CTRLJ_HOURDISPLAY);
@@ -789,7 +777,7 @@ begin
                           RS_HARDWARE_CTRLJ_LPT3BASEADDRESS);
    RegisterStoredSetting('hardware.ctrlj.stereoPinHigh',      'STEREO PIN HIGH',
                           RS_HARDWARE_CTRLJ_STEREOPINHIGH);
-   RegisterStoredSetting('hardware.ctrlj.useControlPort',     'USE CONTROL PORT',
+   RegisterModelSetting( 'hardware.ctrlj.useControlPort',     'USE CONTROL PORT',
                           RS_HARDWARE_CTRLJ_USECONTROLPORT);
 
    // --- Files/Updates (7) ----------------------------
