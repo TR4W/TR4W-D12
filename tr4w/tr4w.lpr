@@ -205,6 +205,11 @@ uContestFileKind in 'src\domain\uContestFileKind.pas',
   uLPTPortEnumerator in 'src\uLPTPortEnumerator.pas',
   uPrefsSearch in 'src\uPrefsSearch.pas',
   uConfigValues in 'src\uConfigValues.pas',
+  uSecretStore in 'src\uSecretStore.pas',
+  (* THE WINDOWS CREDENTIAL MANAGER, and it is in THIS list and no other.
+    Being listed is what installs it -- see the unit. A Linux or macOS
+    program simply does not name it and gets the portable scheme. *)
+  uSecretStoreWin in 'src\uSecretStoreWin.pas',
   uCrashLog in 'src\uCrashLog.pas',
   uCrashLogLCL in 'src\ui\lcl\uCrashLogLCL.pas',
   uCFG in 'src\uCFG.pas',

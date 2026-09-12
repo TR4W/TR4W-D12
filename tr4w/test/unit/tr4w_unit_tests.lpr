@@ -305,10 +305,12 @@ uses
    uTestNetFraming in 'uTestNetFraming.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
+   uSecretStore         in '..\..\src\uSecretStore.pas',
    uWindowSnap          in '..\..\src\uWindowSnap.pas',
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uTestSecretStore     in 'uTestSecretStore.pas',
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
@@ -441,6 +443,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TSecretStoreTests.Create('SecretStore'));
    RegisterSuite(TTestWindowSnap.Create('WindowSnap'));
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));

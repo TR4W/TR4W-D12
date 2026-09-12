@@ -77,6 +77,11 @@ $lints = @(
    # about something else, and nothing would point at it.
    @{ Name = 'Lint-DomainPurity';    Arg = (Join-Path $Tr4wDir 'src\domain'); NeedsFpc = $false }
    @{ Name = 'Lint-LineEndings';     Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # NOTHING SECRET IS TRACKED. It takes no argument: it asks git what is
+   # tracked rather than being pointed at a directory, because the question
+   # is about the REPOSITORY and not about a tree on disk.
+   @{ Name = 'Lint-NoSecrets';       Arg = $null;    NeedsFpc = $false }
    # AND THE TOOLING, which was unguarded until 2026-08-29 and paid for it:
    # tools/i18n/po_lint.py accumulated 361 DOUBLED carriage returns from a
    # script that CRLF-ified content that was already CRLF. Python treats a

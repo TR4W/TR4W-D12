@@ -64,6 +64,19 @@ tr4w/target/settings/tr4w.json
 tr4w/target/tr4w.map
 tr4w/target/tr4w-debug.log
 tr4w/target/tr4w.log
+# ---------------------------------------------------------------------------
+# THE SECRET STORE'S KEY. NEVER COMMIT ONE.
+#
+# The portable scheme writes settings/tr4w.key on first use and it opens
+# every value protected with it -- so a committed key is worse than no
+# protection at all. This rule is the convenience; tr4w/build/Lint-NoSecrets.ps1
+# is the control, because .gitignore does not stop  and says
+# nothing about a file that was already tracked.
+#
+# Windows does not write one at all: the Credential Manager holds the
+# secrets there. This matters for the other platforms.
+# ---------------------------------------------------------------------------
+*.key
 # Ignore everything in target/ but allow specific tracked subdirectories/files.
 # Must use tr4w/target/* (not tr4w/target/) so git descends into the directory
 # and honours the negation rules below. A trailing-slash ignore pattern causes
