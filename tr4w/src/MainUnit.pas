@@ -6982,8 +6982,8 @@ begin
      Exit;
      end;
   { if length(ExchangeString) > 5 then // 4.96.3
-  Settings.Contest.CallsignUpdateEnable := False;}
-  if Settings.Contest.CallsignUpdateEnable then
+  Settings.CallWindow.CallsignUpdateEnable := False;}
+  if Settings.CallWindow.CallsignUpdateEnable then
      begin // This looks like the secxond line should be under IF but it was not.
      RData.Callsign := GetCorrectedCallFromExchangeString(ExchangeString);
      RData.Callsign[Ord(RData.Callsign[0]) + 1] := #0;

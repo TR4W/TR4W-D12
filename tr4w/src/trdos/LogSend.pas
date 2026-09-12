@@ -303,7 +303,7 @@ begin
                end
             else
                begin
-               if Settings.Contest.CallsignUpdateEnable then
+               if Settings.CallWindow.CallsignUpdateEnable then
                   begin
                   TempString := GetCorrectedCallFromExchangeString(ExchangeWindowString);
 
@@ -323,7 +323,7 @@ begin
 
         '@':
           begin
-            if Settings.Contest.CallsignUpdateEnable then
+            if Settings.CallWindow.CallsignUpdateEnable then
                begin
                TempString := ExchangeWindowString;
                TempString := GetCorrectedCallFromExchangeString(TempString);

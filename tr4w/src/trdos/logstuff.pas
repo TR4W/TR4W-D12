@@ -5826,7 +5826,7 @@ begin
 
   TempString := ExchangeString;
 
-  if Settings.Contest.CallsignUpdateEnable {and StringHas(TempString, ' ')} then
+  if Settings.CallWindow.CallsignUpdateEnable {and StringHas(TempString, ' ')} then
      begin
      while TempString <> '' do
         begin

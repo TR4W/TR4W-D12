@@ -1037,6 +1037,36 @@ begin
       CheckTrue(s.CommandIsContestScoped('SPRINT QSY RULE'),
                 'and the rest of the contest rules');
 
+      (*
+        THE TWO NY4I CORRECTED BY HAND, 2026-09-12, reviewing the settings
+        inventory. Both were filed on the wrong side and nothing would have
+        noticed if they drifted back, because a scope is a class function on
+        a group and moving a property between groups changes it silently.
+
+        HAMSCORE ENABLE is the CONTEST'S: whether live scores are posted is
+        a decision per contest. Where they are posted and as whom are not,
+        and those stay with the station -- which is why the group had to be
+        split rather than re-scoped whole.
+      *)
+      CheckTrue(s.CommandIsContestScoped('HAMSCORE ENABLE'),
+                'posting scores is a per-contest decision');
+      CheckFalse(s.CommandIsContestScoped('HAMSCORE URL'),
+                 'but the server address is the station''s');
+      CheckFalse(s.CommandIsContestScoped('HAMSCORE SEND CONTACT INFO'),
+                 'and so is what is sent');
+
+      (*
+        CALLSIGN UPDATE ENABLE went the other way, from the contest to the
+        station. It was contest-scoped because the contest definitions set
+        it for Sweepstakes alone -- and an operator who wants the behaviour
+        wants it everywhere, so it is a station preference that now defaults
+        TRUE and that no contest is allowed to write.
+      *)
+      CheckFalse(s.CommandIsContestScoped('CALLSIGN UPDATE ENABLE'),
+                 'taking a corrected call from the exchange is the operator''s');
+      CheckTrue(s.CallWindow.CallsignUpdateEnable,
+                'and it defaults on, which it did not before');
+
       (* AND THEY ARE ABSENT FROM THE FILE, the half that matters: streaming
         one would make the last contest loaded the station's default. The
         quotes are the needle again -- a bare Mult matches MultsOnly in the

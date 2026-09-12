@@ -1346,7 +1346,11 @@ begin
     ARRLSSCW, ARRLSSSSB:
       begin
         //        ActiveInitialExchange := CheckSectionInitialExchange;
-        Settings.Contest.CallsignUpdateEnable := True;
+        (* THE SWEEPSTAKES ASSIGNMENT IS GONE, 2026-09-12. The setting is
+          the station's now and defaults TRUE, so a contest turning it on
+          would only be writing the operator's own preference over with
+          the value it already has -- and would make it impossible to
+          turn off. One setting, one writer (NY4I). *)
         //        ContestName := 'ARRL Sweepstakes';
 
         AddARRLSectionDomesticCountries;
@@ -1730,7 +1734,7 @@ begin
       Settings.Contest.QsoNumberByBand := True;
 
     //    RADIOMEMORY:
-    //      Settings.Contest.CallsignUpdateEnable := False;
+    //      CallsignUpdateEnable := False;   -- see the note above
 
     PCC:
       begin

@@ -683,14 +683,11 @@ type
    *)
    THamscoreSettings = class(TSettingsGroup)
    private
-      FEnable: boolean;
       FUrl: string;
       FSendContactInfo: boolean;
    public
       constructor Create;
    published
-      // Was Config.HamScoreEnable.
-      property Enable: boolean read FEnable write FEnable;
       (* Was Config.HamScoreURL. uHamScore fills in the RTC 3.0 default when
         it is empty, and that assignment still works -- it is a property with
         a setter rather than a field, which is the only thing that changed. *)
@@ -1386,6 +1383,7 @@ type
       FPartialCallEnable: boolean;
       FWildcardPartials: boolean;
       FCompleteCallsignMask: string;
+      FCallsignUpdateEnable: boolean;
       FInsertMode: boolean;
       procedure SetInsertMode(aValue: boolean);
    public
@@ -1414,6 +1412,32 @@ type
         typed K1ABC into K1ABC/P. An empty mask, or one with no '*', does
         nothing -- which is the ordinary state, and why that routine leads
         with two early exits. *)
+      (*
+        TAKE A CORRECTED CALLSIGN FROM THE EXCHANGE FIELD -- if the operator
+        types the right call into the exchange, adopt it as the callsign.
+
+        A STATION PREFERENCE, MOVED OUT OF THE CONTEST GROUP 2026-09-12 on
+        NY4I's ruling, and the contest definitions no longer assign it.
+
+        IT WAS CONTEST-SCOPED FOR A DEFENSIBLE REASON and the reason was not
+        enough: FCONTEST set it for ARRL Sweepstakes alone, because the
+        Sweepstakes exchange contains the callsign. But an operator who wants
+        that behaviour wants it everywhere, and a contest-scoped setting made
+        them ask for it once per contest.
+
+        THE ASSIGNMENT HAD TO GO WITH THE MOVE, not merely be left alone. A
+        station setting persists; a contest that raised it would have written
+        the operator's own preference over, permanently, after one
+        Sweepstakes. One setting, one writer.
+
+        AND IT DEFAULTS TRUE NOW, which it never did before. NY4I, 2026-09-12:
+        "I use that feature in many places. In fact, it was not the default but
+        I would like it now to default to true." That is what makes dropping
+        the Sweepstakes assignment cost nothing -- the contest was turning on
+        something that is now on to begin with.
+      *)
+      property CallsignUpdateEnable: boolean
+         read FCallsignUpdateEnable write FCallsignUpdateEnable;
       property CompleteCallsignMask: string
          read FCompleteCallsignMask write FCompleteCallsignMask;
       (* Was the global InsertMode in logstuff.pas -- whether typing in the
@@ -2260,7 +2284,6 @@ type
    *)
    TContestSettings = class(TSettingsGroup)
    private
-      FCallsignUpdateEnable: boolean;
       FCountDomesticCountries: boolean;
       FDigitalModeEnable: boolean;
       FDomesticFilename: string;
@@ -2274,14 +2297,11 @@ type
       FMinitourDuration: TTourDuration;
       FLiteralDomesticQth: boolean;
       FCustomInitialExchangeString: string;
+      FHamscoreEnable: boolean;
    public
       constructor Create;
       class function IsContestScoped: boolean; override;
    published
-      (* Was CallsignUpdateEnable in logdupe.pas -- update a logged callsign
-        from what was actually sent.  CALLSIGN UPDATE ENABLE. *)
-      property CallsignUpdateEnable: boolean
-         read FCallsignUpdateEnable write FCallsignUpdateEnable;
       (* Was CountDomesticCountries in logdupe.pas -- whether domestic
         countries count as country multipliers.  COUNT DOMESTIC COUNTRIES. *)
       property CountDomesticCountries: boolean
@@ -2340,6 +2360,20 @@ type
       property CustomInitialExchangeString: string
          read FCustomInitialExchangeString
          write FCustomInitialExchangeString;
+      (*
+        POST LIVE SCORES FOR THIS CONTEST.
+
+        THE CONTEST'S, NOT THE STATION'S (NY4I, 2026-09-12). Whether scores
+        are posted is a decision per contest -- a club event yes, a casual
+        weekend no -- while WHERE they are posted and AS WHOM do not change
+        from one contest to the next. Those stay in Settings.Hamscore.
+
+        THE SPLIT IS FORCED BY THE MECHANISM AS WELL AS BY THE MEANING: scope
+        is a property of the whole GROUP, so a group cannot be half
+        contest-scoped. Moving the one member is the only way to say this.
+      *)
+      property HamscoreEnable: boolean
+         read FHamscoreEnable write FHamscoreEnable;
    end;
 
    (*
@@ -3271,10 +3305,9 @@ end;
 constructor THamscoreSettings.Create;
 begin
    inherited Create;
-   (* The values uConfigValues' initialiser carried, and two of the three
-     are not the zero value: the URL is the service's own address and
-     contact info is ON. *)
-   FEnable          := False;
+   (* The values uConfigValues' initialiser carried, and neither is the
+     zero value: the URL is the service's own address and contact info is
+     ON. *)
    FUrl             := 'http://scoredistributor.net/';
    FSendContactInfo := True;
 end;
@@ -3475,6 +3508,10 @@ begin
    FWildcardPartials  := True;
    // CompleteCallsignMask had no initialiser in VC.pas, so it was empty.
    FCompleteCallsignMask := '';
+   (* TRUE, and it was False before the move. NY4I asked for it: the
+     feature is used in many places and being off by default made every
+     operator turn it on. *)
+   FCallsignUpdateEnable := True;
    FInsertMode        := True;   // logstuff's declaration
 end;
 
@@ -3652,7 +3689,6 @@ begin
      declarations; both were assigned in cfgdef.SetConfigurationDefaultValues,
      which runs once at startup before any config is read -- so the value
      there IS the default and comes here. *)
-   FCallsignUpdateEnable   := False;   // cfgdef, "4.63.1"
    FCountDomesticCountries := False;
    FDigitalModeEnable      := True;    // cfgdef
    FDomesticFilename       := '';
@@ -3669,6 +3705,7 @@ begin
    FMinitourDuration            := 0;
    FLiteralDomesticQth          := False;
    FCustomInitialExchangeString := '';
+   FHamscoreEnable              := False;
 end;
 
 class function TContestSettings.IsContestScoped: boolean;
@@ -4153,6 +4190,12 @@ begin
    Alias('BROADCAST ALL PACKET DATA',  'Cluster.BroadcastAllPacketData');
    Alias('FREQUENCY POLL RATE',        'Operating.FrequencyPollRate');
    Alias('RADIUS OF EARTH',            'GridMap.RadiusOfEarth');
+   (* Moved out of the contest group 2026-09-12; the command never named
+     the call window and still does not. *)
+   Alias('CALLSIGN UPDATE ENABLE',     'CallWindow.CallsignUpdateEnable');
+   (* Moved into the contest group 2026-09-12; the command has never
+     named the contest. *)
+   Alias('HAMSCORE ENABLE',            'Contest.HamscoreEnable');
    Alias('USE CONTROL PORT',           'Hardware.UseControlPort');
 
    (* The contest's four. Every one puts the subject first and the
@@ -4262,7 +4305,6 @@ begin
      property path is grouped.  See the header above TQsoSettings. *)
    Alias('AUTO DUPE ENABLE S AND P', 'AutoDupe.EnableSAndP');
 
-   Alias('CALLSIGN UPDATE ENABLE',   'Contest.CallsignUpdateEnable');
    Alias('COUNT DOMESTIC COUNTRIES', 'Contest.CountDomesticCountries');
    Alias('DIGITAL MODE ENABLE',      'Contest.DigitalModeEnable');
    Alias('DOMESTIC FILENAME',        'Contest.DomesticFilename');

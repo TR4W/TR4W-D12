@@ -154,7 +154,7 @@ type
 // Lifecycle (called from tr4w.lpr / shutdown path)
 // ---------------------------------------------------------------------------
 
-procedure HamScoreInit;       // No-op if Settings.Hamscore.Enable is False or password missing
+procedure HamScoreInit;       // No-op if Settings.Contest.HamscoreEnable is False or password missing
 procedure HamScoreShutdown;   // Safe to call even if Init didn't start the worker
 
 // ---------------------------------------------------------------------------
@@ -897,7 +897,7 @@ end;
 procedure HamScoreInit;
 begin
   if Uploader <> nil then Exit;   // already running
-  if not Settings.Hamscore.Enable then Exit;
+  if not Settings.Contest.HamscoreEnable then Exit;
 
   if Config.HamScorePassword = '' then
      begin
