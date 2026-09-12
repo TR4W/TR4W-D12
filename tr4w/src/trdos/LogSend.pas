@@ -457,7 +457,14 @@ begin
                 end
              else
                 begin
-                AddStringToBuffer(MyPostalCode, Config.CWTone);
+                (* UTF8Encode, not a bare pass. AddStringToBuffer takes a
+                  Str160 and the CW buffer is a byte transport; a UTF-16
+                  string handed straight to it is a NARROWING conversion the
+                  build counts, while an AnsiString-family value assigned to
+                  a ShortString is not one. A postal code is ASCII, so the
+                  bytes are the same either way. *)
+                AddStringToBuffer(UTF8Encode(Settings.My.PostalCode),
+                                  Config.CWTone);
                 end;
              end
           else

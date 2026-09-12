@@ -151,6 +151,7 @@ uses
   Forms,             // Application.QueueAsyncCall -- the event transport
   ExtCtrls,          // TTimer -- the retry and login timers, off the dialog's WM_TIMER
   uTelnetForm,       // the window itself, a designed form since 2026-08-25
+  uSettingsModel,      // Settings.My.PostalCode
   uRadioConfigStore,   // the cluster library -- what the drop-down now lists
   uKeyerConfigStore,   // LoadConfig fills both libraries from the one file
   uUDPBroadcastConfig, // TUDPBroadcastConfig -- LoadConfig fills it too
@@ -398,7 +399,7 @@ begin
       end
    else if Token = 'MY_POSTALCODE' then
       begin
-      Value := string(MyPostalCode)
+      Value := Settings.My.PostalCode
       end
    else if Token = 'CALL' then
       begin

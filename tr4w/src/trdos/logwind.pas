@@ -709,10 +709,8 @@ var
 
   //MyCounty                              : Str20 = '';
   MyFDClass                             : Str10;
-  MyFOCNumber                           : Str10;
   MyName                                : Str20;
   MyPark                                : Str10;
-  MyPostalCode                          : Str20;
   MyPrec                                : Str10; {KK1L: 6.67 Was Str20}
   MySection                             : Str10; {KK1L: 6.67 Was Str20}
   MyState                               : Str20; {KK1L: 6.67 Was Str20}

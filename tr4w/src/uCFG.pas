@@ -606,6 +606,7 @@ const
    - 5 {calling CQ -- moved to uSettingsModel}
    - 4 {the log, as the operator interacts with it -- moved to uSettingsModel}
    - 2 {say hi -- moved to uSettingsModel}
+   - 3 {the first of the MY commands -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -842,13 +843,10 @@ const
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'MY COUNTRY';                    crAddress: @MyCountry;                      crMin:0;  crMax:20;      crS: csOwned; crA: 8; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY FD CLASS';                   crAddress: @MyFDClass;                      crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY FOC NUMBER';                 crAddress: @MyFOCNumber;                    crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),      //n4af 04.32.5
  (crCommand: 'MY GRID';                       crAddress: @MyGrid;                         crMin:0;  crMax:7;        crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY IOTA';                       crAddress: @MyIOTA;                         crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY ITU ZONE';                   crAddress: @MyITUZone;                      crMin:0;  crMax:90;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),  // Issue #930 -- 0 = use CTY.DAT default
  (crCommand: 'MY NAME';                       crAddress: @MyName;                         crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY PARK';                       crAddress: @MyPark;                         crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY POSTAL CODE';                crAddress: @MyPostalCode;                   crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY PREC';                       crAddress: @MyPrec;                         crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY QTH';                        crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY SECTION';                    crAddress: @MySection;                      crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),

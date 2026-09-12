@@ -89,7 +89,8 @@ uses
   MainUnit,
   uAnsiStr,
   uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
-  uCabrilloHeader;   // the Cabrillo header, from settings\tr4w.json
+  uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
+  uSettingsModel;    // Settings.My.ItuZone
 
 procedure RunPOSTGetScoresThread;
 begin
@@ -427,9 +428,9 @@ begin
      begin
      qth := qth + '<cqzone>' + XmlEscape(sZone) + '</cqzone>';
      end;
-  if MyITUZone > 0 then
+  if Settings.My.ItuZone > 0 then
      begin
-     qth := qth + '<iaruzone>' + IntToStr(MyITUZone) + '</iaruzone>'
+     qth := qth + '<iaruzone>' + IntToStr(Settings.My.ItuZone) + '</iaruzone>'
      end
   else if MyCall <> '' then
      begin

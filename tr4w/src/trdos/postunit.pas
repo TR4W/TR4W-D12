@@ -416,6 +416,7 @@ implementation
 
 uses
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
+  uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
   uAnsiStr,
   // uAnsiStr.StrPCopy for ANSI (PAnsiChar) buffers under D12
@@ -464,9 +465,9 @@ function ZoneSentForThisContest: string;
    begin
    if ContestsArray[ Contest ].ZnM = ITUZones then
       begin
-      if MyITUZone > 0 then
+      if Settings.My.ItuZone > 0 then
          begin
-         Result := IntToStr( MyITUZone );
+         Result := IntToStr( Settings.My.ItuZone );
          Exit;
          end;
       ituFromCty := ctyGetITUZone( string( MyCall ) );
@@ -3139,8 +3140,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 myStationEx.MySection    := string( MySection );
                 myStationEx.MyCheck      := string( MyCheck );
                 myStationEx.MyPrec       := string( MyPrec );
-                myStationEx.MyFOCNumber  := string( MyFOCNumber );
-                myStationEx.MyPostalCode := string( MyPostalCode );
+                myStationEx.MyFOCNumber  := Settings.My.FocNumber;
+                myStationEx.MyPostalCode := Settings.My.PostalCode;
                 FormatCabrilloExchange( ActiveExchange, Contest, ContestTitle,
                    ContestName, TempRXData, myStationEx, RSTSent,
                    RSTReceived, string( csQTHString ),
@@ -3765,8 +3766,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       my.MySection    := string(MySection);
       my.MyCheck      := string(MyCheck);
       my.MyPrec       := string(MyPrec);
-      my.MyFOCNumber  := string(MyFOCNumber);
-      my.MyPostalCode := string(MyPostalCode);
+      my.MyFOCNumber  := Settings.My.FocNumber;
+      my.MyPostalCode := Settings.My.PostalCode;
       my.MyPark       := string(MyPark);
 
       Result := FormatADIFMyExchange(ActiveExchange, Contest, TempRXData, my,

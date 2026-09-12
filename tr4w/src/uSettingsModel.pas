@@ -171,6 +171,7 @@ type
    TAutoSapSensitivity  = 10..10000;  // was crMin:10, crMax:10000
    TAutoCqDelay         = 500..10000; // was crMin:500, crMax:10000 -- ms
    TSayHiRateCutoff     = 0..65535;   // was crMin:0, crMax:MAXWORD
+   TMyItuZone           = 0..90;      // was crMin:0, crMax:90; 0 = use CTY.DAT
    TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
@@ -938,6 +939,47 @@ type
       property RateCutoff: TSayHiRateCutoff read FRateCutoff write FRateCutoff;
    end;
 
+   (*
+     THE STATION'S OWN FACTS -- the seventeen MY ... commands.
+
+     THE GROUP IS CALLED My, AND THAT IS NOT A STYLE CHOICE. Sixteen of the
+     seventeen legacy names derive EXACTLY from it -- MY CALL, MY GRID,
+     MY ITU ZONE, MY POSTAL CODE -- where any other grouping (Station,
+     Operator) would have needed an alias for every single one. The
+     derivation puts the group first and these commands already do.
+     Settings.My.Call reads oddly for a moment and then stops.
+
+     STRINGS, NOT ShortStrings. The globals are Str10/Str20/CallString, and
+     the instinct is that a string property costs a narrowing conversion at
+     every reader. Measured on MY POSTAL CODE before committing to it: of
+     its four readers, THREE already wrote string(MyPostalCode) to get a
+     real string out. A string property deletes those casts rather than
+     adding any.
+
+     MIGRATED IN BATCHES, and this is the first. The seventeen have 778
+     references between them -- MY CALL alone has 154 -- so they arrive a
+     few at a time with the build measured after each, rather than as one
+     sweep whose failure mode is a day of unpicking.
+   *)
+   TMySettings = class(TSettingsGroup)
+   private
+      FFocNumber: string;
+      FPostalCode: string;
+      FItuZone: TMyItuZone;
+   public
+      constructor Create;
+   published
+      // Was the global MyFOCNumber in logwind.pas. MY FOC NUMBER.
+      property FocNumber: string read FFocNumber write FFocNumber;
+      // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
+      property PostalCode: string read FPostalCode write FPostalCode;
+      (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
+        CTY.DAT default", which is why the row allowed 0 in a range whose
+        real zones start at 1. Issue #930 added it so a station in a
+        multi-zone country could override that default. *)
+      property ItuZone: TMyItuZone read FItuZone write FItuZone;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -961,6 +1003,7 @@ type
       FCq: TCqSettings;
       FLog: TLogSettings;
       FSayHi: TSayHiSettings;
+      FMy: TMySettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1066,6 +1109,7 @@ type
       property Cq: TCqSettings read FCq;
       property Log: TLogSettings read FLog;
       property SayHi: TSayHiSettings read FSayHi;
+      property My: TMySettings read FMy;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1312,6 +1356,17 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TMySettings.Create;
+begin
+   inherited Create;
+   (* Empty, and zero for the ITU zone, which is what the globals carried --
+     cfgdef sets the two strings to '' explicitly and VC leaves the Byte at
+     its zero. Zero is the "use CTY.DAT" sentinel, not an unset value. *)
+   FFocNumber  := '';
+   FPostalCode := '';
+   FItuZone    := 0;
+end;
+
 constructor TSayHiSettings.Create;
 begin
    inherited Create;
@@ -1423,6 +1478,7 @@ begin
    FCq             := TCqSettings.Create;
    FLog            := TLogSettings.Create;
    FSayHi          := TSayHiSettings.Create;
+   FMy             := TMySettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1434,6 +1490,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FMy.Free;
    FSayHi.Free;
    FLog.Free;
    FCq.Free;

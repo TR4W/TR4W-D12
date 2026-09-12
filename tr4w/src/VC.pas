@@ -908,7 +908,6 @@ var
   // Needed as an explicit CFG because large countries (US, Russia, Canada)
   // span multiple ITU zones, so the CTY.DAT default-by-prefix can be wrong.
   // Falls back to ctyGetITUZone(MyCall) when 0.
-  MyITUZone                             : Byte;
 
 //  ti                                    : TOOLINFO;
 

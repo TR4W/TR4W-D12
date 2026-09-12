@@ -270,7 +270,6 @@ begin
     MyFDClass := '';
     MyGrid := '';
     MyIOTA := '';
-    MyPostalCode := '';
     MyPrec := '';
     MySection := '';
     MyState := '';
