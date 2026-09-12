@@ -643,6 +643,29 @@ end;
 
   Anything starting with - or / is a switch. TR4W's own /EXPORT uses the slash
   form and takes no value. }
+(* THE FILE /IMPORT NAMES.
+
+  FOUND WHEREVER THE SWITCH APPEARS, not at a fixed position. uProgramMain
+  already records what testing ParamStr(2) SPECIFICALLY cost -- `tr4w.exe
+  /EXPORT` with no contest file in front of it answered no and started an
+  interactive session -- and an import line carries --settings as well, so the
+  argument after the switch is the only stable way to say "the next one". *)
+function ImportFileFromCommandLine: string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 1 to ParamCount - 1 do
+      begin
+      if SameText(AnsiString(ParamStr(i)), AnsiString('/IMPORT')) then
+         begin
+         Result := ParamStr(i + 1);
+         Exit;
+         end;
+      end;
+end;
+
+
 (* IS THIS A HEADLESS RUN? Asked of the WHOLE command line.
 
   A headless mode has no operator, so nothing may open a dialog and nothing may
@@ -662,7 +685,8 @@ begin
      Saying so explicitly is the difference between a conversion that was
      thought about and one that just happened. *)
    Result := SameText(AnsiString(aArg), AnsiString('/EXPORT')) or
-             SameText(AnsiString(aArg), AnsiString('/RESCORE'));
+             SameText(AnsiString(aArg), AnsiString('/RESCORE')) or
+             SameText(AnsiString(aArg), AnsiString('/IMPORT'));
 end;
 
 function HasHeadlessSwitch: boolean;
@@ -834,6 +858,7 @@ begin
       '  --settings <path>  read and write settings at this path' + sLineBreak +
       '  --settings=<path>  the same' + sLineBreak +
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
+      '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
       '  /EXPORT /EXPORTDB  the same, forcing the SQLite log as the source' + sLineBreak +
       '  /EXPORT /EXPORTTRW the same, forcing the binary .TRW as the source' + sLineBreak +
@@ -2032,6 +2057,31 @@ begin
      EarlyTrace('[Rescore] recomputing scoring for every QSO');
      tUpdateLog(actRescore);
      EarlyTrace('[Rescore] done');
+     Halt(0);
+     end;
+
+  (* /IMPORT <file.adi> -- THE CONVERSION PATH FOR AN EXISTING LOG.
+
+     NY4I, 2026-09-12: *"it would be much easier to have the D7 version of TR4W
+     just export the contest then have the new program user import the adif
+     file. That would handle the conversion case ... plus it allows us to
+     validate our import works properly."*
+
+     A D7 ADIF carries what was SENT, as STX_STRING. A binary .TRW does not,
+     which is why the exporter has to reconstruct the sent exchange from the
+     current settings and why an export is not reproducible from the log alone.
+     So this is not merely an easier conversion route -- it is the one that
+     brings the missing field in as DATA.
+
+     HEADLESS, so the corpus can import its own frozen references and prove the
+     import path against them. That is the check nothing has today: every ADIF
+     test in the suite parses a string, and none of them puts a record in a
+     log. *)
+  if ImportFileFromCommandLine <> '' then
+     begin
+     EarlyTrace('[Import] importing ' + ImportFileFromCommandLine);
+     ImportFromADIF(ImportFileFromCommandLine);
+     EarlyTrace('[Import] done');
      Halt(0);
      end;
 

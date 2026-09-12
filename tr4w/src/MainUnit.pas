@@ -302,7 +302,19 @@ procedure OpenStationInformationWindow(const aOnAccept: TCabrilloSummaryAction);
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;
 procedure scWK_RESET; // n4af 4.43.10
 procedure SetCommand(c: PAnsiChar);
-procedure ImportFromADIF;
+(* IMPORT AN ADIF FILE INTO THE CONTEST LOG.
+
+  aFileName EMPTY means ASK -- the file dialog, which is what the menu item
+  has always done. A name supplied means import THAT, which is what the
+  headless /IMPORT switch needs and what lets the corpus prove the import
+  path without a human.
+
+  WHY A PARAMETER RATHER THAN A SECOND ROUTINE: an import that runs from a
+  script and an import that runs from the menu must be the SAME import, or
+  the one nobody watches is the one that drifts. Only the two questions --
+  which file, and append to a log that already has QSOs -- differ, and both
+  are asked here rather than duplicated. *)
+procedure ImportFromADIF(const aFileName: string = '');
 procedure CheckQuestionMark;
 (* TelnetWantsClipboardKey IS GONE (2026-09-07) -- it had no caller.
 
@@ -10014,7 +10026,7 @@ begin
 end; // of ParseADIFRecord
 (*----------------------------------------------------------------------------*)
 
-procedure ImportFromADIF;
+procedure ImportFromADIF(const aFileName: string = '');
 var
   adif: TextFile;
   adifFileName: string;
@@ -10040,6 +10052,9 @@ var
   cbmKey              : string;
   cbmKeyIdx           : Integer;
   priorQTHForKey      : string;
+  (* Whether THIS routine opened the binary log, so it closes only what it
+    opened -- CloseLogFile closes LogHandle unconditionally. *)
+  binaryLogOpen       : boolean;
 
   procedure DisplayLoadedQSOs;
   begin
@@ -10055,6 +10070,13 @@ var
       begin
       logger.Error('[Import] %d of %d records did NOT commit to the contest log',
                    [QSOFailed, QSOCounter + QSOFailed]);
+      (* THE LOG LINE ABOVE IS THE HEADLESS REPORT. The dialog below is for
+        an operator, and a headless run has none -- see the note on the
+        append question. *)
+      if tSilentExport then
+         begin
+         Exit;
+         end;
       ShowWarning(AnsiString(SysUtils.Format(
          AnsiString('%d record(s) in this file did NOT reach the contest log. '
                     + '%d were imported. See tr4w.log.'),
@@ -10073,14 +10095,29 @@ begin
   // GetOpenFileName wants: description#0patterns#0#0.  (The commented original
   // ended with a single #0; that is the one thing not copied verbatim.)
   FillChar(TR4W_ADIF_FILENAME, SizeOf(TR4W_ADIF_FILENAME), 0);
-  if not OpenFileDlg('', 'ADIF (*.adi, *.adif)|*.adi;*.adif',
-                     TR4W_ADIF_FILENAME, True) then
+  if aFileName <> '' then
      begin
-     Exit;   // operator cancelled
+     (* NAMED BY THE CALLER -- no dialog. TR4W_ADIF_FILENAME is still
+       filled because the import body below reads it back. *)
+     adifFileName := aFileName;
+     uAnsiStr.StrPLCopy(TR4W_ADIF_FILENAME, UTF8Encode(aFileName),
+                        High(TR4W_ADIF_FILENAME));
+     end
+  else
+     begin
+     if not OpenFileDlg('', 'ADIF (*.adi, *.adif)|*.adi;*.adif',
+                        TR4W_ADIF_FILENAME, True) then
+        begin
+        Exit;   // operator cancelled
+        end;
+     adifFileName := string(AnsiString(PAnsiChar(@TR4W_ADIF_FILENAME[0])));
      end;
-  adifFileName := string(AnsiString(PAnsiChar(@TR4W_ADIF_FILENAME[0])));
 
-  if QSOTotals[AllBands, Both] > 0 then
+  (* NEVER ASKED IN A HEADLESS RUN. A modal with nobody to dismiss it does
+    not fail -- it HANGS, holding the executable locked, which is exactly
+    the invisible TR4W a corpus run used to leave behind thirteen of. A
+    script that asked for an import has already answered this question. *)
+  if (QSOTotals[AllBands, Both] > 0) and (not tSilentExport) then
      begin
      // YesOrNo is MessageBoxA, so it answers with Win32 IDYES/IDNO.
      if YesOrNo(TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDNO then
@@ -10096,13 +10133,32 @@ begin
      exit;
      end;
 
-  if not OpenLogFile then
-     begin
-     ShowMessage({TC_CANNOTOPENLOG} TC_CANNOTOPENLOGFILE);
+  (* THE BINARY LOG IS OPTIONAL HERE, AND THAT IS THE WHOLE POINT OF THIS
+    ROUTINE NOW.
 
-     exit;
+    Nothing between here and CloseLogFile writes a byte to it -- the records go
+    to the contest database through LogStoreAppendQSO below, which is the only
+    append path left. The open and the seek are what remain of the days when an
+    import appended to the .TRW.
+
+    REFUSING WITHOUT ONE BROKE THE CASE THIS EXISTS FOR. A contest converted
+    from a D7 ADIF has no .TRW at all -- that is what makes it a conversion --
+    so demanding one turned "import my old log" into "Cannot open log file"
+    with nothing imported (NY4I, 2026-09-12: export from D7, import here).
+
+    So it is opened if it is there, because an operator who still has one
+    should keep whatever that buys, and its absence is a log line rather than
+    a refusal. *)
+  binaryLogOpen := OpenLogFile;
+  if binaryLogOpen then
+     begin
+     tSetFilePointer(0, fsFromEnd);
+     end
+  else
+     begin
+     logger.Info('[Import] no binary log to open -- importing into the '
+                 + 'contest database only, which is where the QSOs go anyway');
      end;
-  tSetFilePointer(0, fsFromEnd);
   // Now open te file and process
 
   if not FileExists(adifFileName) then
@@ -10194,7 +10250,10 @@ begin
 
   CloseFile(adif);
 
-  CloseLogFile;
+  if binaryLogOpen then
+     begin
+     CloseLogFile;
+     end;
 
   tUpdateLog(actRescore);
   LoadinLog;
