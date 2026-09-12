@@ -605,6 +605,7 @@ const
    - 5 {the call window -- moved to uSettingsModel}
    - 5 {calling CQ -- moved to uSettingsModel}
    - 4 {the log, as the operator interacts with it -- moved to uSettingsModel}
+   - 2 {say hi -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -989,8 +990,6 @@ const
  (crCommand: 'S&P CW EXCHANGE';               crAddress: @SearchAndPounceExchange;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'S&P EXCHANGE';                  crAddress: @SearchAndPounceExchange;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'S&P SSB EXCHANGE';              crAddress: @SearchAndPouncePhoneExchange;   crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
- (crCommand: 'SAY HI ENABLE';                 crAddress: @Config.SayHiEnable;                    crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'SAY HI RATE CUTOFF';            crAddress: @Config.SayHiRateCutOff;                crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'SCORE POSTING URL';             crAddress: @Config.GetScoresSeverPostingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
  (crCommand: 'SCORE READING URL';             crAddress: @Config.GetScoresSeverReadingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),

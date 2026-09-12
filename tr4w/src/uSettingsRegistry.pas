@@ -40,8 +40,8 @@ unit uSettingsRegistry;
   getter and setter over whatever storage actually holds it:
 
       RegisterSetting(TBoolSetting.Create('operating.cw.sayHi', 'Send a greeting',
-         function: boolean begin Result := Config.SayHiEnable end,
-         procedure (const v: boolean) begin Config.SayHiEnable := v end));
+         function: boolean begin Result := Settings.SayHi.Enable end,
+         procedure (const v: boolean) begin Settings.SayHi.Enable := v end));
 
   What that buys, point by point against the old table:
 
@@ -83,9 +83,10 @@ unit uSettingsRegistry;
   It is still true that the registry is what makes that possible, and true that
   the setter is the one place that knows WHERE a setting lives today.  When
   storage moves, only the closure changes -- exactly what happened to this
-  unit's own example: SayHiEnable is no longer a global at all, it is
-  Config.SayHiEnable in uConfigValues, and nothing outside the closure above had
-  to know.  The change is that this is now the DESTINATION for all of them
+  unit's own example: SayHiEnable was a global, then a field on the Config
+  record in uConfigValues, and since 2026-09-12 it is a published property,
+  Settings.SayHi.Enable in uSettingsModel. It moved TWICE and nothing
+  outside the closure above had to know either time.  The change is that this is now the DESTINATION for all of them
   rather than a convenience for some.
 
   SIZED, so nobody has to guess at "thousands": 270 CFGCA rows still point at a

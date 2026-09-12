@@ -2317,7 +2317,7 @@ var
   RememberTime                          : QWord {TimeRecord};   // GetTickCount64
   begin
 //  ReadInConfigFile('');
-  if Config.SayHiEnable then
+  if Settings.SayHi.Enable then
      begin
      DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
      end;

@@ -121,9 +121,9 @@ begin
    GDeclared := True;
 
    // --- Operating: CW ------------------------------------------------------
-   RegisterStoredSetting('operating.cw.sayHi',            'SAY HI ENABLE',
+   RegisterModelSetting( 'operating.cw.sayHi',            'SAY HI ENABLE',
                          RS_OPERATING_CW_SAYHI);
-   RegisterStoredSetting('operating.cw.sayHiRateCutoff',  'SAY HI RATE CUTOFF',
+   RegisterModelSetting( 'operating.cw.sayHiRateCutoff',  'SAY HI RATE CUTOFF',
                          RS_OPERATING_CW_SAYHIRATECUTOFF);
    RegisterModelSetting( 'operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
                          RS_OPERATING_CW_KEYPADMEMORIES);

@@ -170,6 +170,7 @@ type
    TBandMapGuardBand    = 0..65535;   // was crMin:100 -- see above
    TAutoSapSensitivity  = 10..10000;  // was crMin:10, crMax:10000
    TAutoCqDelay         = 500..10000; // was crMin:500, crMax:10000 -- ms
+   TSayHiRateCutoff     = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPttTurnOnDelay      = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
@@ -910,6 +911,33 @@ type
          read FUpdateRestartFile write FUpdateRestartFile;
    end;
 
+   (*
+     SAY HI -- greeting an operator by name when the rate is low enough to
+     afford the extra characters.
+
+     BOTH NAMES DERIVE EXACTLY AND NEITHER NEEDS AN ALIAS, which is the
+     first group in this file where that is true of every member. It is not
+     luck: both commands lead with their subject, which is what the
+     derivation rule assumes and what most of TR4W's older names do not do.
+
+     No hooks on either.
+   *)
+   TSayHiSettings = class(TSettingsGroup)
+   private
+      FEnable: boolean;
+      FRateCutoff: TSayHiRateCutoff;
+   public
+      constructor Create;
+   published
+      // Was Config.SayHiEnable. SAY HI ENABLE.
+      property Enable: boolean read FEnable write FEnable;
+      (* Was Config.SayHiRateCutOff -- the note is the CASE: the record
+        spelled it CutOff and the command has always been CUTOFF, so the
+        property takes the command's spelling. Contacts per hour, below
+        which the greeting is sent. *)
+      property RateCutoff: TSayHiRateCutoff read FRateCutoff write FRateCutoff;
+   end;
+
    TR4WSettings = class(TPersistent)
    private
       // command name -> property path, built once by walking the RTTI.
@@ -932,6 +960,7 @@ type
       FCallWindow: TCallWindowSettings;
       FCq: TCqSettings;
       FLog: TLogSettings;
+      FSayHi: TSayHiSettings;
       procedure BuildCommandMap;
       function PathForCommand(const aCommand: string): string;
       (* The streamer hook that keeps contest-scoped groups out of the
@@ -1036,6 +1065,7 @@ type
       property CallWindow: TCallWindowSettings read FCallWindow;
       property Cq: TCqSettings read FCq;
       property Log: TLogSettings read FLog;
+      property SayHi: TSayHiSettings read FSayHi;
    end;
 
 (* THE ONE INSTANCE.  Created on first use so no unit's initialisation order
@@ -1282,6 +1312,14 @@ begin
    FTuneWithDits              := False;
 end;
 
+constructor TSayHiSettings.Create;
+begin
+   inherited Create;
+   // The values uConfigValues' initialiser carried.
+   FEnable     := False;
+   FRateCutoff := 200;   // contacts per hour
+end;
+
 constructor TLogSettings.Create;
 begin
    inherited Create;
@@ -1384,6 +1422,7 @@ begin
    FCallWindow     := TCallWindowSettings.Create;
    FCq             := TCqSettings.Create;
    FLog            := TLogSettings.Create;
+   FSayHi          := TSayHiSettings.Create;
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -1395,6 +1434,7 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   FSayHi.Free;
    FLog.Free;
    FCq.Free;
    FCallWindow.Free;

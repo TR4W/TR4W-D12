@@ -1502,7 +1502,7 @@ procedure DisplayNamePercentage({TotalNamesSent: integer; QSONumber: integer});
   //TNS                                   : integer;
 begin
 {
-  if (TotalContacts > 0) and Config.SayHiEnable then
+  if (TotalContacts > 0) and Settings.SayHi.Enable then
   begin
     TNS := TotalNamesSent ;
     Percentage := TNS / TotalContacts;

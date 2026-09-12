@@ -319,8 +319,6 @@ begin
 //  RTTYReceiveString := ControlR;
 //  RTTYSendString := ControlT;
 
-//  Config.SayHiEnable := False;
-//  Config.SayHiRateCutOff := 200;
 
 //  SCPDupeBackground := trWhite;
 //  SCPDupeColor := trRed;

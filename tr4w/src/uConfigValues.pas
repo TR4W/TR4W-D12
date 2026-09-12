@@ -91,8 +91,6 @@ type
       { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
         Types copied verbatim from the declarations they replace -- CheckCommand
         writes through @Config.<field> and cannot see a mismatch. }
-      SayHiEnable: boolean;
-      SayHiRateCutOff: integer;
       LeadingZeroCharacter: AnsiChar;
       tDitDahRatio: integer;
       GetScoresSeverPostingAddress: ShortString;
@@ -228,8 +226,6 @@ var
       HamScorePassword: '';
       HamScoreSendContactInfo: True;
 
-      SayHiEnable: False;
-      SayHiRateCutOff: 200;
       LeadingZeroCharacter: 'T';
       tDitDahRatio: 3;
       GetScoresSeverPostingAddress: '';

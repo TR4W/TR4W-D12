@@ -2026,7 +2026,7 @@ begin
   // no longer read.
   OfferToRetireLegacyIni(TR4WConfigFileName);
 
-  if Config.SayHiEnable then
+  if Settings.SayHi.Enable then
      DisplayNamePercentage;
   SetStereoPin(StereoControlPin, StereoPinState);
   DisplayRadio(ActiveRadio);

@@ -344,7 +344,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(67, names.Count, 'one name per migrated setting, no more');
+         CheckEquals(69, names.Count, 'one name per migrated setting, no more');
       finally
          names.Free;
       end;
@@ -1039,6 +1039,8 @@ const
       + '"PTT TURN ON DELAY",'
       + '"PTT VIA COMMANDS",'
       + '"QSY INACTIVE RADIO",'
+      + '"SAY HI ENABLE",'
+      + '"SAY HI RATE CUTOFF",'
       + '"RADIO TCP SERVER PORT",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
       + '"SKIP ACTIVE BAND",'

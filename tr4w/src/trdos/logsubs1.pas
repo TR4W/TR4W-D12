@@ -423,7 +423,7 @@ begin
 
   if ActiveMode in [Phone, FM] then
      begin
-     if (CQPhoneExchangeNameKnown <> '') and Config.SayHiEnable then
+     if (CQPhoneExchangeNameKnown <> '') and Settings.SayHi.Enable then
         begin
         Name := UpperCase(CD.GetName(RootCall(CallsignICameBackTo)));
 
@@ -457,7 +457,7 @@ begin
            end;
         end;
 
-     if (CQExchangeNameKnown <> '') and Config.SayHiEnable then
+     if (CQExchangeNameKnown <> '') and Settings.SayHi.Enable then
         begin
         Name := UpperCase(CD.GetName(RootCall(CallsignICameBackTo)));
         if (Name = '') or (Name = 'CLUB') then

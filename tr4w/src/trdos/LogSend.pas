@@ -342,12 +342,12 @@ begin
           end;
 
         '$':
-          if Config.SayHiEnable and (Rate < Config.SayHiRateCutOff) then
+          if Settings.SayHi.Enable and (Rate < Settings.SayHi.RateCutoff) then
              begin
              SayHello(CallWindowString);
              end;
         '%':
-          if Config.SayHiEnable and (Rate < Config.SayHiRateCutOff) then
+          if Settings.SayHi.Enable and (Rate < Settings.SayHi.RateCutoff) then
              begin
              SayName(CallWindowString);
              end;
