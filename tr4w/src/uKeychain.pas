@@ -18,7 +18,7 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
-unit uSecretStore;
+unit uKeychain;
 {$I tr4w.inc}
 
 (*
@@ -55,14 +55,14 @@ unit uSecretStore;
   ------------------------------------------------------------------------
 
   plain     The value, as it always was. READ, and written only when nothing
-            better is installed -- see TSecretProtector below.
+            better is installed -- see TKeychainBackend below.
 
   tr4w1     Blowfish from the FPC RTL, a per-installation key, Base64 for
             JSON. The portable scheme: identical code on all three targets,
             no new library binding, and no key compiled into the program.
 
   wincred1  The Windows Credential Manager holds the secret and the settings
-            file holds only a reference to it. Installed by uSecretStoreWin
+            file holds only a reference to it. Installed by uKeychainWindows
             on Windows, where it is preferred because there is then NO KEY
             FILE AT ALL. See that unit.
 
@@ -112,42 +112,80 @@ const
    (* The tags. Written out rather than derived, so renaming anything in code
      cannot silently orphan every value already stored under the old name --
      the same rule the UDP stream names follow. *)
-   SECRET_SCHEME_PLAIN = 'plain';
-   SECRET_SCHEME_BLOWFISH = 'tr4w1';
+   KEYCHAIN_SCHEME_PLAIN = 'plain';
+   KEYCHAIN_SCHEME_LOCALFILE = 'tr4w1';
 
 type
    (*
-     ONE SCHEME. A descendant knows how to write its own form and read it
-     back, and nothing else about it is public.
+     WHAT HAPPENED, RATHER THAN WHETHER IT WORKED.
 
-     Protect MAY REFUSE by returning False -- a credential manager can be
-     unavailable, a key file unwritable -- and the caller then falls back to
-     the next scheme rather than losing the operator's password. Losing a
-     typed password because a store was busy is worse than storing it
-     plainly, and the operator is told which happened.
+     A boolean cannot tell the four apart, and they want four different
+     responses: a credential that is simply not there means ask the operator
+     for it; a keyring that is locked or absent means do NOT overwrite
+     anything and say so; a refusal means the account cannot reach the store.
+     The first version of this unit returned a boolean and would have
+     silently downgraded a locked keyring to a weaker scheme.
    *)
-   TSecretProtector = class(TObject)
+   TKeychainStatus = (
+      ksOk,             (* stored, or fetched, as asked *)
+      ksNotFound,       (* no such secret -- an ordinary first run *)
+      ksUnavailable,    (* no store on this platform, or it is locked *)
+      ksAccessDenied,   (* the store is there and said no *)
+      ksError           (* anything else, and it is reported *)
+   );
+
+   (*
+     ONE BACKEND. It knows how to write its own form and read it back, and
+     nothing else about it is public.
+
+     IT MAY REFUSE, and the refusal is a STATUS so the caller can tell a
+     locked keyring from an empty one. Nothing downgrades silently: see
+     ProtectSecret.
+   *)
+   TKeychainBackend = class(TObject)
    public
-      (* The tag this protector writes. *)
+      (* The tag this backend writes. *)
       function Scheme: string; virtual; abstract;
       (* aName identifies the SETTING, not the value -- a stable key such as
-        the property path. A store that keeps secrets outside the file needs
-        something to file them under; one that encrypts in place ignores it. *)
+        the property path.
+
+        THE PATH AND NOT AN OPAQUE ID, deliberately. A random reference
+        survives a rename, but it is what an operator sees in Credential
+        Manager when they go to revoke a password, and 'secret:2f0c9a...'
+        tells them nothing. A rename is handled instead by keeping the name
+        in the stored payload, so the old entry is still found. *)
       function Protect(const aName, aPlain: string;
-                       out aStored: string): boolean; virtual; abstract;
+                       out aStored: string): TKeychainStatus; virtual; abstract;
       function Unprotect(const aName, aPayload: string;
-                         out aPlain: string): boolean; virtual; abstract;
+                         out aPlain: string): TKeychainStatus; virtual; abstract;
    end;
 
-(* Install the protector this build writes with. The LAST one installed wins,
-  which is what lets uSecretStoreWin take over on Windows simply by being in
+   (*
+     TOLD, NOT GUESSED AT. Assigned by the application to its logger.
+
+     THE UNIT CANNOT LOG FOR ITSELF and should not: it is a leaf that the
+     test binary links, and reaching for the logger would drag the logging
+     framework into it. More to the point, a store this low in the tree must
+     never decide what an operator is told.
+
+     NEVER PASS THE VALUE TO IT. The reason string names the SETTING and what
+     went wrong, and nothing here ever puts a secret in a message, an
+     exception or a command line.
+   *)
+   TKeychainNotice = procedure(const aName, aMessage: string);
+
+(* Where this unit reports a downgrade or a failure. See TKeychainNotice. *)
+procedure SetKeychainNotice(const aNotice: TKeychainNotice);
+
+(* Install the backend this build writes with. The LAST one installed wins,
+  which is what lets uKeychainWindows take over on Windows simply by being in
   the program's unit list. Reading is unaffected: every scheme ever
   registered is still tried on the way in. *)
-procedure RegisterSecretProtector(const aProtector: TSecretProtector);
+procedure RegisterKeychainBackend(const aProtector: TKeychainBackend);
 
 (* The scheme that will be WRITTEN, for the log line at startup and for the
   test that pins which one a platform gets. *)
-function ActiveSecretScheme: string;
+function ActiveKeychainScheme: string;
 
 (*
   TURN A PASSWORD INTO WHAT GOES IN THE FILE.
@@ -178,10 +216,10 @@ function SecretSchemeOf(const aStored: string): string;
 (* FOR TESTS ONLY. Installs the portable scheme with a KNOWN key, so a suite
   can pin the round trip, the tamper check and the wrong-key refusal without
   a key file existing anywhere on the machine running it. *)
-procedure InstallFixedKeyProtectorForTesting(const aKey: string);
+procedure InstallTestKeychain(const aKey: string);
 
 type
-   TSecretPathFunc = function: string;
+   TKeychainPathFunc = function: string;
 
 (*
   WHERE THE PORTABLE SCHEME'S KEY FILE LIVES.
@@ -197,11 +235,11 @@ type
   uTR4WConfigFile installs one in its own initialization, so a station using
   --settings keeps its key beside the file it names.
 *)
-procedure SetSecretKeyPathProvider(const aProvider: TSecretPathFunc);
+procedure SetKeychainKeyPathProvider(const aProvider: TKeychainPathFunc);
 
 (* The file the portable scheme keys itself from. NEVER COMMIT ONE -- and
   Lint-NoSecrets fails the build rather than trusting that sentence. *)
-function SecretKeyFileName: string;
+function KeychainKeyFileName: string;
 
 implementation
 
@@ -209,13 +247,13 @@ uses
    Classes,
    StrUtils,   (* PosEx -- splitting our own payload *)
    uFileText,  (* whole-file read/write -- see the note in CurrentKey *)
-   uAppPaths,  (* SettingsFilePath -- see SecretKeyFileName *)
+   uAppPaths,  (* SettingsFilePath -- see KeychainKeyFileName *)
    BlowFish,   (* fcl-base -- the RTL's own cipher, no binding to anything *)
    Base64,     (* fcl-base -- JSON holds text, the cipher makes bytes *)
    HMAC;       (* the hash package -- tells a wrong key from a right one *)
 
 type
-   TProtectorList = array of TSecretProtector;
+   TProtectorList = array of TKeychainBackend;
 
 (*
   BYTES TO A STRING AND BACK, BYTE FOR BYTE.
@@ -283,9 +321,23 @@ end;
 
 var
    GProtectors: TProtectorList;
-   GActive: TSecretProtector = nil;
+   GActive: TKeychainBackend = nil;
+   GNotice: TKeychainNotice = nil;
 
-procedure RegisterSecretProtector(const aProtector: TSecretProtector);
+procedure SetKeychainNotice(const aNotice: TKeychainNotice);
+begin
+   GNotice := aNotice;
+end;
+
+procedure Report(const aName, aMessage: string);
+begin
+   if Assigned(GNotice) then
+      begin
+      GNotice(aName, aMessage);
+      end;
+end;
+
+procedure RegisterKeychainBackend(const aProtector: TKeychainBackend);
 var
    i: integer;
 begin
@@ -312,11 +364,11 @@ begin
    GActive := aProtector;
 end;
 
-function ActiveSecretScheme: string;
+function ActiveKeychainScheme: string;
 begin
    if GActive = nil then
       begin
-      Result := SECRET_SCHEME_PLAIN;
+      Result := KEYCHAIN_SCHEME_PLAIN;
       end
    else
       begin
@@ -337,7 +389,7 @@ begin
       end;
 
    Result := Copy(aStored, 1, colon - 1);
-   if UnicodeSameText(Result, SECRET_SCHEME_PLAIN) then
+   if UnicodeSameText(Result, KEYCHAIN_SCHEME_PLAIN) then
       begin
       Exit;
       end;
@@ -360,10 +412,25 @@ var
    scheme: string;
 begin
    scheme := SecretSchemeOf(aStored);
-   Result := (scheme <> '') and (not UnicodeSameText(scheme, SECRET_SCHEME_PLAIN));
+   Result := (scheme <> '') and (not UnicodeSameText(scheme, KEYCHAIN_SCHEME_PLAIN));
+end;
+
+(* For the notice text. Not translated: it goes to the log, not the screen. *)
+function StatusText(const aStatus: TKeychainStatus): string;
+begin
+   case aStatus of
+      ksOk:           Result := 'succeeded';
+      ksNotFound:     Result := 'holds no such secret';
+      ksUnavailable:  Result := 'is unavailable or locked';
+      ksAccessDenied: Result := 'refused access';
+   else
+      Result := 'failed';
+   end;
 end;
 
 function ProtectSecret(const aName, aPlain: string): string;
+var
+   status: TKeychainStatus;
 begin
    if aPlain = '' then
       begin
@@ -371,16 +438,40 @@ begin
       Exit;
       end;
 
-   if (GActive <> nil) and GActive.Protect(aName, aPlain, Result) then
+   if GActive <> nil then
       begin
-      Result := GActive.Scheme + ':' + Result;
-      Exit;
+      status := GActive.Protect(aName, aPlain, Result);
+      if status = ksOk then
+         begin
+         Result := GActive.Scheme + ':' + Result;
+         Exit;
+         end;
+      end
+   else
+      begin
+      status := ksUnavailable;
       end;
 
-   (* NO PROTECTOR, OR ONE THAT REFUSED. The password is kept, tagged for
-     what it is, so the next save with a working store converts it and the
-     lint can see that an unprotected secret exists. *)
-   Result := SECRET_SCHEME_PLAIN + ':' + aPlain;
+   (*
+     A DOWNGRADE IS REPORTED, NEVER SILENT.
+
+     The first version of this simply wrote the weaker form and said nothing,
+     which is the failure mode CLAUDE.md names outright: prefer a reported
+     error to a silent fallback. An operator whose keyring was locked would
+     have had their password written in a weaker form, on disk, with nothing
+     anywhere saying so.
+
+     THE VALUE IS STILL KEPT. Refusing to store it would lose a password the
+     operator has just typed, which is worse than storing it less well -- so
+     it is kept, tagged for exactly what it is, and said out loud. The tag is
+     also what lets the next save with a working store convert it, and what
+     Lint-NoSecrets looks for.
+   *)
+   Report(aName, 'the secret store ' + StatusText(status)
+                 + ' -- this value is being written in a WEAKER form '
+                 + '(scheme "' + KEYCHAIN_SCHEME_PLAIN + '"). It will be '
+                 + 'upgraded on the next save once the store is reachable.');
+   Result := KEYCHAIN_SCHEME_PLAIN + ':' + aPlain;
 end;
 
 function UnprotectSecret(const aName, aStored: string;
@@ -388,6 +479,7 @@ function UnprotectSecret(const aName, aStored: string;
 var
    scheme: string;
    payload: string;
+   status: TKeychainStatus;
    i: integer;
 begin
    aPlain := '';
@@ -409,7 +501,7 @@ begin
 
    payload := Copy(aStored, Length(scheme) + 2, Length(aStored));
 
-   if UnicodeSameText(scheme, SECRET_SCHEME_PLAIN) then
+   if UnicodeSameText(scheme, KEYCHAIN_SCHEME_PLAIN) then
       begin
       aPlain := payload;
       Result := True;
@@ -423,15 +515,28 @@ begin
       begin
       if UnicodeSameText(GProtectors[i].Scheme, scheme) then
          begin
-         Result := GProtectors[i].Unprotect(aName, payload, aPlain);
+         status := GProtectors[i].Unprotect(aName, payload, aPlain);
+         Result := status = ksOk;
          if not Result then
             begin
+            (* NOTHING PLAUSIBLE IS HANDED BACK. A wrong key decrypts to
+              bytes and a revoked credential reads as absent; either way the
+              caller gets nothing and the operator is asked again, rather
+              than TR4W logging in somewhere with rubbish. *)
             aPlain := '';
+            Report(aName, 'could not be read back: the store '
+                          + StatusText(status)
+                          + '. The setting reads empty and the value will '
+                          + 'have to be entered again.');
             end;
          Exit;
          end;
       end;
 
+   (* A SCHEME THIS BUILD DOES NOT KNOW. A settings file from a newer build,
+     or from a platform whose store is not linked here. *)
+   Report(aName, 'was stored by a scheme this build does not have ("'
+                 + scheme + '"), so it cannot be read here.');
    Result := False;
 end;
 
@@ -448,7 +553,7 @@ type
      nothing else knows it. Lint-NoSecrets fails the build if a key file or a
      protected blob is ever tracked by git.
    *)
-   TBlowfishProtector = class(TSecretProtector)
+   TLocalFileBackend = class(TKeychainBackend)
    private
       FKey: string;
       FKeyIsFixed: boolean;
@@ -461,20 +566,20 @@ type
       constructor Create(const aFixedKey: string); overload;
       function Scheme: string; override;
       function Protect(const aName, aPlain: string;
-                       out aStored: string): boolean; override;
+                       out aStored: string): TKeychainStatus; override;
       function Unprotect(const aName, aPayload: string;
-                         out aPlain: string): boolean; override;
+                         out aPlain: string): TKeychainStatus; override;
    end;
 
 var
-   GKeyPathProvider: TSecretPathFunc = nil;
+   GKeyPathProvider: TKeychainPathFunc = nil;
 
-procedure SetSecretKeyPathProvider(const aProvider: TSecretPathFunc);
+procedure SetKeychainKeyPathProvider(const aProvider: TKeychainPathFunc);
 begin
    GKeyPathProvider := aProvider;
 end;
 
-function SecretKeyFileName: string;
+function KeychainKeyFileName: string;
 begin
    if Assigned(GKeyPathProvider) then
       begin
@@ -515,26 +620,26 @@ begin
    Result := StringReplace(Result, '-', '', [rfReplaceAll]);
 end;
 
-constructor TBlowfishProtector.Create;
+constructor TLocalFileBackend.Create;
 begin
    inherited Create;
    FKey := '';
    FKeyIsFixed := False;
 end;
 
-constructor TBlowfishProtector.Create(const aFixedKey: string);
+constructor TLocalFileBackend.Create(const aFixedKey: string);
 begin
    inherited Create;
    FKey := aFixedKey;
    FKeyIsFixed := True;
 end;
 
-function TBlowfishProtector.Scheme: string;
+function TLocalFileBackend.Scheme: string;
 begin
-   Result := SECRET_SCHEME_BLOWFISH;
+   Result := KEYCHAIN_SCHEME_LOCALFILE;
 end;
 
-function TBlowfishProtector.CurrentKey: string;
+function TLocalFileBackend.CurrentKey: string;
 begin
    if FKey <> '' then
       begin
@@ -547,16 +652,16 @@ begin
      four separate points -- four conversions the build counts, on a value
      where a lost character means an undecryptable password. uFileText reads
      and writes a whole file as a native string, which is what this is. *)
-   if FileTextExists(SecretKeyFileName) then
+   if FileTextExists(KeychainKeyFileName) then
       begin
-      FKey := Trim(ReadAllTextUTF8(SecretKeyFileName));
+      FKey := Trim(ReadAllTextUTF8(KeychainKeyFileName));
       end;
 
    if FKey = '' then
       begin
       FKey := NewKeyMaterial;
-      ForceDirectories(ExtractFilePath(SecretKeyFileName));
-      WriteAllTextUTF8(SecretKeyFileName, FKey);
+      ForceDirectories(ExtractFilePath(KeychainKeyFileName));
+      WriteAllTextUTF8(KeychainKeyFileName, FKey);
       end;
 
    Result := FKey;
@@ -578,20 +683,24 @@ begin
    Result := string(Copy(digest, 1, 16));
 end;
 
-function TBlowfishProtector.Protect(const aName, aPlain: string;
-                                    out aStored: string): boolean;
+function TLocalFileBackend.Protect(const aName, aPlain: string;
+                                  out aStored: string): TKeychainStatus;
 var
    ms: TBytesStream;
    enc: TBlowFishEncryptStream;
    bytes: TBytes;
    key: string;
 begin
-   Result := False;
+   Result := ksError;
    aStored := '';
    try
       key := CurrentKey;
       if key = '' then
          begin
+         (* THE KEY FILE COULD NOT BE READ OR MADE -- a read-only install
+           directory, most likely. Unavailable, not an error: nothing is
+           broken, there is just nowhere to keep a key. *)
+         Result := ksUnavailable;
          Exit;
          end;
 
@@ -622,20 +731,21 @@ begin
       aStored := IntToStr(Length(TEncoding.UTF8.GetBytes(aPlain))) + ':'
                  + MacOf(key, aPlain) + ':'
                  + string(EncodeStringBase64(BytesToRaw(bytes)));
-      Result := True;
+      Result := ksOk;
    except
-      (* A KEY FILE THAT CANNOT BE WRITTEN IS NOT FATAL. ProtectSecret falls
-        back to storing the password plainly and tagged, which the operator
-        can see and the lint can find. *)
+      (* A KEY FILE THAT CANNOT BE WRITTEN IS NOT FATAL, and it is not
+        silent either: ProtectSecret reports the downgrade. The exception is
+        deliberately not carried into the message -- its text can name a
+        path but must never be allowed to grow to carry a value. *)
       on E: Exception do
          begin
-         Result := False;
+         Result := ksError;
          end;
    end;
 end;
 
-function TBlowfishProtector.Unprotect(const aName, aPayload: string;
-                                      out aPlain: string): boolean;
+function TLocalFileBackend.Unprotect(const aName, aPayload: string;
+                                    out aPlain: string): TKeychainStatus;
 var
    ms: TBytesStream;
    dec: TBlowFishDecryptStream;
@@ -649,7 +759,7 @@ var
    got: integer;
    key: string;
 begin
-   Result := False;
+   Result := ksError;
    aPlain := '';
 
    if not SplitPayload(aPayload, lenText, mac, data) then
@@ -674,6 +784,7 @@ begin
       key := CurrentKey;
       if key = '' then
          begin
+         Result := ksUnavailable;
          Exit;
          end;
 
@@ -707,29 +818,33 @@ begin
         logging in somewhere with rubbish. *)
       if MacOf(key, aPlain) <> mac then
          begin
+         (* THE KEY IS NOT THE ONE THIS WAS WRITTEN WITH -- a settings file
+           copied from another installation, which is the case this scheme
+           is designed to fail on rather than decode. *)
          aPlain := '';
+         Result := ksAccessDenied;
          Exit;
          end;
 
-      Result := True;
+      Result := ksOk;
    except
       on E: Exception do
          begin
          aPlain := '';
-         Result := False;
+         Result := ksError;
          end;
    end;
 end;
 
-procedure InstallFixedKeyProtectorForTesting(const aKey: string);
+procedure InstallTestKeychain(const aKey: string);
 begin
-   RegisterSecretProtector(TBlowfishProtector.Create(aKey));
+   RegisterKeychainBackend(TLocalFileBackend.Create(aKey));
 end;
 
 initialization
    (* THE PORTABLE SCHEME IS ALWAYS AVAILABLE, and is the one that writes
-     unless a platform unit registers something better. uSecretStoreWin does
+     unless a platform unit registers something better. uKeychainWindows does
      exactly that on Windows. *)
-   RegisterSecretProtector(TBlowfishProtector.Create);
+   RegisterKeychainBackend(TLocalFileBackend.Create);
 
 end.

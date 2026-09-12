@@ -1,4 +1,4 @@
-unit uTestSecretStore;
+unit uTestKeychain;
 {$I tr4w.inc}
 
 (*
@@ -31,7 +31,7 @@ uses
    uTR4WTestFramework;
 
 type
-   TSecretStoreTests = class(TTestCase)
+   TKeychainTests = class(TTestCase)
    protected
       procedure TestRoundTrip;
       procedure TestMixedCaseSurvives;
@@ -45,6 +45,8 @@ type
       procedure TestTamperedPayloadIsRefused;
       procedure TestMalformedPayloadIsRefused;
       procedure TestIsProtectedTellsTheTwoApart;
+      procedure TestARefusedStoreIsReportedNotSilent;
+      procedure TestTheValueIsNeverInTheNotice;
    public
       procedure RunAllTests; override;
    end;
@@ -53,7 +55,7 @@ implementation
 
 uses
    SysUtils,
-   uSecretStore;
+   uKeychain;
 
 const
    (* Two keys that are nothing alike, so a test that passes by accident on
@@ -65,7 +67,7 @@ const
 
 procedure UseKey(const aKey: string);
 begin
-   InstallFixedKeyProtectorForTesting(aKey);
+   InstallTestKeychain(aKey);
 end;
 
 (* The base64 field of a stored value -- everything after the last colon.
@@ -87,7 +89,7 @@ begin
       end;
 end;
 
-procedure TSecretStoreTests.TestRoundTrip;
+procedure TKeychainTests.TestRoundTrip;
 var
    stored: string;
    back: string;
@@ -99,7 +101,7 @@ begin
    CheckEquals('Hunter2', back, 'and it is what went in');
 end;
 
-procedure TSecretStoreTests.TestMixedCaseSurvives;
+procedure TKeychainTests.TestMixedCaseSurvives;
 var
    stored: string;
    back: string;
@@ -114,7 +116,7 @@ begin
    CheckEquals('MiXeD-CaSe-Pw', back, 'exactly as typed');
 end;
 
-procedure TSecretStoreTests.TestNonAsciiSurvives;
+procedure TKeychainTests.TestNonAsciiSurvives;
 var
    stored: string;
    back: string;
@@ -131,7 +133,7 @@ begin
    CheckEquals('pa' + Chr($DF) + 'wort-' + Chr($E9), back, 'unchanged');
 end;
 
-procedure TSecretStoreTests.TestColonInThePasswordSurvives;
+procedure TKeychainTests.TestColonInThePasswordSurvives;
 var
    stored: string;
    back: string;
@@ -146,7 +148,7 @@ begin
    CheckEquals('a:b:c:1234', back, 'colons and all');
 end;
 
-procedure TSecretStoreTests.TestEmptyStoresAsNothing;
+procedure TKeychainTests.TestEmptyStoresAsNothing;
 var
    back: string;
 begin
@@ -157,7 +159,7 @@ begin
    CheckEquals('', back, 'as empty');
 end;
 
-procedure TSecretStoreTests.TestStoredFormIsTagged;
+procedure TKeychainTests.TestStoredFormIsTagged;
 var
    stored: string;
 begin
@@ -167,13 +169,13 @@ begin
    BeginTest('what goes in the file names its own scheme');
    UseKey(KEY_A);
    stored := ProtectSecret(NAME, 'Hunter2');
-   CheckEquals(SECRET_SCHEME_BLOWFISH, SecretSchemeOf(stored),
+   CheckEquals(KEYCHAIN_SCHEME_LOCALFILE, SecretSchemeOf(stored),
                'the portable scheme names itself');
    CheckTrue(Pos('Hunter2', stored) = 0,
              'and the password is not sitting in it in the clear');
 end;
 
-procedure TSecretStoreTests.TestUntaggedValueIsReadAsItself;
+procedure TKeychainTests.TestUntaggedValueIsReadAsItself;
 var
    back: string;
 begin
@@ -191,18 +193,18 @@ begin
    CheckEquals('http://example.test/x', back, 'a colon is not a scheme');
 end;
 
-procedure TSecretStoreTests.TestPlainTaggedValueIsRead;
+procedure TKeychainTests.TestPlainTaggedValueIsRead;
 var
    back: string;
 begin
    BeginTest('a deliberately plain value is read');
    UseKey(KEY_A);
-   CheckTrue(UnprotectSecret(NAME, SECRET_SCHEME_PLAIN + ':Hunter2', back),
+   CheckTrue(UnprotectSecret(NAME, KEYCHAIN_SCHEME_PLAIN + ':Hunter2', back),
              'it reads');
    CheckEquals('Hunter2', back, 'as itself');
 end;
 
-procedure TSecretStoreTests.TestWrongKeyIsRefusedNotReturned;
+procedure TKeychainTests.TestWrongKeyIsRefusedNotReturned;
 var
    stored: string;
    back: string;
@@ -219,7 +221,7 @@ begin
    CheckEquals('', back, 'and hands back nothing at all');
 end;
 
-procedure TSecretStoreTests.TestTamperedPayloadIsRefused;
+procedure TKeychainTests.TestTamperedPayloadIsRefused;
 var
    stored: string;
    back: string;
@@ -253,21 +255,21 @@ begin
    CheckEquals('', back, 'and nothing handed back');
 end;
 
-procedure TSecretStoreTests.TestMalformedPayloadIsRefused;
+procedure TKeychainTests.TestMalformedPayloadIsRefused;
 var
    back: string;
 begin
    BeginTest('a payload that is not the right shape is refused');
    UseKey(KEY_A);
-   CheckFalse(UnprotectSecret(NAME, SECRET_SCHEME_BLOWFISH + ':', back),
+   CheckFalse(UnprotectSecret(NAME, KEYCHAIN_SCHEME_LOCALFILE + ':', back),
               'no fields');
-   CheckFalse(UnprotectSecret(NAME, SECRET_SCHEME_BLOWFISH + ':7:abc', back),
+   CheckFalse(UnprotectSecret(NAME, KEYCHAIN_SCHEME_LOCALFILE + ':7:abc', back),
               'two fields, not three');
-   CheckFalse(UnprotectSecret(NAME, SECRET_SCHEME_BLOWFISH + ':x:y:z', back),
+   CheckFalse(UnprotectSecret(NAME, KEYCHAIN_SCHEME_LOCALFILE + ':x:y:z', back),
               'a length that is not a number');
 end;
 
-procedure TSecretStoreTests.TestIsProtectedTellsTheTwoApart;
+procedure TKeychainTests.TestIsProtectedTellsTheTwoApart;
 var
    stored: string;
 begin
@@ -279,11 +281,115 @@ begin
    CheckTrue(IsProtectedSecret(stored), 'the protected one');
    CheckFalse(IsProtectedSecret('Hunter2'), 'a bare password');
    CheckFalse(IsProtectedSecret(''), 'nothing at all');
-   CheckFalse(IsProtectedSecret(SECRET_SCHEME_PLAIN + ':Hunter2'),
+   CheckFalse(IsProtectedSecret(KEYCHAIN_SCHEME_PLAIN + ':Hunter2'),
               'plain is tagged but is not protected');
 end;
 
-procedure TSecretStoreTests.RunAllTests;
+(*
+  A STORE THAT WILL NOT TAKE THE VALUE -- a locked keyring, a read-only
+  install directory, a policy that forbids credential storage.
+*)
+type
+   TRefusingBackend = class(TKeychainBackend)
+   public
+      function Scheme: string; override;
+      function Protect(const aName, aPlain: string;
+                       out aStored: string): TKeychainStatus; override;
+      function Unprotect(const aName, aPayload: string;
+                         out aPlain: string): TKeychainStatus; override;
+   end;
+
+function TRefusingBackend.Scheme: string;
+begin
+   Result := 'refusing1';
+end;
+
+function TRefusingBackend.Protect(const aName, aPlain: string;
+                                  out aStored: string): TKeychainStatus;
+begin
+   aStored := '';
+   Result := ksUnavailable;
+end;
+
+function TRefusingBackend.Unprotect(const aName, aPayload: string;
+                                    out aPlain: string): TKeychainStatus;
+begin
+   aPlain := '';
+   Result := ksUnavailable;
+end;
+
+var
+   GNoticeCount: integer = 0;
+   GLastNoticeName: string = '';
+   GLastNoticeText: string = '';
+
+procedure RecordNotice(const aName, aMessage: string);
+begin
+   Inc(GNoticeCount);
+   GLastNoticeName := aName;
+   GLastNoticeText := aMessage;
+end;
+
+procedure TKeychainTests.TestARefusedStoreIsReportedNotSilent;
+var
+   stored: string;
+begin
+   (* THE FIRST VERSION OF THIS UNIT DOWNGRADED IN SILENCE, which is the
+     failure CLAUDE.md names outright -- prefer a reported error to a silent
+     fallback. An operator whose keyring was locked would have had a password
+     written in a weaker form with nothing anywhere saying so.
+
+     THE VALUE IS STILL KEPT, deliberately. Refusing would lose a password
+     the operator has just typed, which is worse than storing it less well. *)
+   BeginTest('a store that refuses is reported, and the value is not lost');
+
+   GNoticeCount := 0;
+   GLastNoticeName := '';
+   GLastNoticeText := '';
+   SetKeychainNotice(@RecordNotice);
+   RegisterKeychainBackend(TRefusingBackend.Create);
+   try
+      stored := ProtectSecret('Server.Password', 'Hunter2');
+
+      CheckEquals(1, GNoticeCount, 'the downgrade was announced exactly once');
+      CheckEquals('Server.Password', GLastNoticeName, 'and it named the setting');
+      CheckEquals(KEYCHAIN_SCHEME_PLAIN, SecretSchemeOf(stored),
+                  'the weaker form is tagged for what it is');
+      CheckFalse(IsProtectedSecret(stored),
+                 'and it does not claim to be protected');
+   finally
+      SetKeychainNotice(nil);
+      (* Put a working backend back, or every later test in the run inherits
+        a store that refuses. *)
+      UseKey(KEY_A);
+   end;
+end;
+
+procedure TKeychainTests.TestTheValueIsNeverInTheNotice;
+var
+   stored: string;
+begin
+   (* THE ONE RULE THAT IS ABSOLUTE. A notice goes to the log, and a log is
+     copied into bug reports and pasted into chat. Whatever else a message
+     says, it must not say the password. *)
+   BeginTest('a notice never carries the secret');
+
+   GNoticeCount := 0;
+   GLastNoticeText := '';
+   SetKeychainNotice(@RecordNotice);
+   RegisterKeychainBackend(TRefusingBackend.Create);
+   try
+      stored := ProtectSecret('Server.Password', 'Hunter2');
+      CheckTrue(GNoticeCount > 0, 'something was reported');
+      CheckTrue(Pos('Hunter2', GLastNoticeText) = 0,
+                'and the value is not in it');
+   finally
+      SetKeychainNotice(nil);
+      UseKey(KEY_A);
+   end;
+end;
+
+procedure TKeychainTests.RunAllTests;
 begin
    TestRoundTrip;
    TestMixedCaseSurvives;
@@ -297,6 +403,8 @@ begin
    TestTamperedPayloadIsRefused;
    TestMalformedPayloadIsRefused;
    TestIsProtectedTellsTheTwoApart;
+   TestARefusedStoreIsReportedNotSilent;
+   TestTheValueIsNeverInTheNotice;
 end;
 
 end.

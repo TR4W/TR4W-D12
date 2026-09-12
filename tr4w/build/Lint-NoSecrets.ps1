@@ -131,8 +131,8 @@ try
          # it. Those are declarations of the format, not secrets, and the
          # check skips the files whose job is to name it.
          if ($text.Contains($tag) -and
-             ($path -notlike '*uSecretStore*') -and
-             ($path -notlike '*uTestSecretStore*') -and
+             ($path -notlike '*uKeychain*') -and
+             ($path -notlike '*uTestKeychain*') -and
              ($path -notlike '*Lint-NoSecrets*'))
          {
             $failures.Add("PROTECTED VALUE in a tracked file: $path (tag '$tag')")

@@ -18,7 +18,7 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
-unit uSecretStoreWin;
+unit uKeychainWindows;
 {$I tr4w.inc}
 
 (*
@@ -31,7 +31,7 @@ unit uSecretStoreWin;
   The same reason uCrashLogLCL is separate from uCrashLog: the question is
   not which COMPILER is building, it is which PLATFORM the program is for,
   and a unit graph answers that where a conditional inside one unit only
-  pretends to. uSecretStore stays RTL-only and links anywhere -- the unit
+  pretends to. uKeychain stays RTL-only and links anywhere -- the unit
   tests, tr4wserver, a Linux build -- and this one is in the Windows
   program's unit list and nowhere else.
 
@@ -97,7 +97,7 @@ uses
    SysUtils,
    Windows,
    JwaWinCred,
-   uSecretStore;
+   uKeychain;
 
 const
    (* The tag written into settings\tr4w.json. Versioned, so a later change
@@ -109,14 +109,20 @@ const
      can find and revoke TR4W's credentials as a group. *)
    TARGET_PREFIX = 'TR4W/';
 
+   (* ERROR_NOT_FOUND IS NOT IN THE RTL's Windows UNIT, so it is declared
+     here with its documented value rather than left to a unit that does not
+     have it. 1168 is winerror.h's ERROR_NOT_FOUND, which CredReadW returns
+     when the target does not exist. *)
+   ERROR_NOT_FOUND = 1168;
+
 type
-   TWinCredProtector = class(TSecretProtector)
+   TWindowsKeychain = class(TKeychainBackend)
    public
       function Scheme: string; override;
       function Protect(const aName, aPlain: string;
-                       out aStored: string): boolean; override;
+                       out aStored: string): TKeychainStatus; override;
       function Unprotect(const aName, aPayload: string;
-                         out aPlain: string): boolean; override;
+                         out aPlain: string): TKeychainStatus; override;
    end;
 
 (* UPPER-CASED DELIBERATELY -- see the note on case at the top. *)
@@ -125,13 +131,13 @@ begin
    Result := UnicodeString(UpperCase(TARGET_PREFIX + aName));
 end;
 
-function TWinCredProtector.Scheme: string;
+function TWindowsKeychain.Scheme: string;
 begin
    Result := SCHEME_WINCRED;
 end;
 
-function TWinCredProtector.Protect(const aName, aPlain: string;
-                                   out aStored: string): boolean;
+function TWindowsKeychain.Protect(const aName, aPlain: string;
+                                 out aStored: string): TKeychainStatus;
 var
    cred: CREDENTIALW;
    target: UnicodeString;
@@ -139,7 +145,7 @@ var
    blob: UnicodeString;
 begin
    aStored := '';
-   Result := False;
+   Result := ksError;
 
    target := TargetFor(aName);
    blob := UnicodeString(aPlain);
@@ -167,19 +173,38 @@ begin
       begin
       (* THE FILE GETS A NAME, NOT A SECRET. *)
       aStored := aName;
-      Result := True;
+      Result := ksOk;
+      Exit;
       end;
+
+   (* WHICH FAILURE IT WAS, because they mean different things to the caller:
+     a denial is a policy or a permission problem an operator can act on,
+     while anything else is reported as-is. GetLastError is read
+     IMMEDIATELY -- any call in between, including a logging call, would
+     overwrite it. *)
+   case GetLastError of
+      ERROR_ACCESS_DENIED, ERROR_PRIVILEGE_NOT_HELD:
+         begin
+         Result := ksAccessDenied;
+         end;
+      ERROR_NO_SUCH_LOGON_SESSION:
+         begin
+         Result := ksUnavailable;
+         end;
+   else
+      Result := ksError;
+   end;
 end;
 
-function TWinCredProtector.Unprotect(const aName, aPayload: string;
-                                     out aPlain: string): boolean;
+function TWindowsKeychain.Unprotect(const aName, aPayload: string;
+                                   out aPlain: string): TKeychainStatus;
 var
    p: PCREDENTIALW;
    target: UnicodeString;
    chars: integer;
 begin
    aPlain := '';
-   Result := False;
+   Result := ksError;
 
    (* THE PAYLOAD IS THE NAME THE VALUE WAS FILED UNDER, and it is used in
      preference to aName so that a setting renamed in code can still find a
@@ -198,7 +223,24 @@ begin
       (* AN ABSENT CREDENTIAL IS NOT A CRASH AND NOT A GUESS. The operator
         may have revoked it in Control Panel, or the settings file may have
         come from another machine. Either way the setting reads empty and is
-        asked for again. *)
+        asked for again -- and NOT FOUND says exactly that, where a bare
+        failure would have looked like something was broken. *)
+      case GetLastError of
+         ERROR_NOT_FOUND:
+            begin
+            Result := ksNotFound;
+            end;
+         ERROR_ACCESS_DENIED:
+            begin
+            Result := ksAccessDenied;
+            end;
+         ERROR_NO_SUCH_LOGON_SESSION:
+            begin
+            Result := ksUnavailable;
+            end;
+      else
+         Result := ksError;
+      end;
       Exit;
       end;
 
@@ -209,16 +251,16 @@ begin
          begin
          Move(p^.CredentialBlob^, aPlain[1], chars * SizeOf(WideChar));
          end;
-      Result := True;
+      Result := ksOk;
    finally
       CredFree(p);
    end;
 end;
 
 initialization
-   (* LAST ONE INSTALLED WINS THE WRITING, and uSecretStore's own portable
+   (* LAST ONE INSTALLED WINS THE WRITING, and uKeychain's own portable
      scheme is still registered -- so a settings file written before this
      existed, or on another platform, still reads. *)
-   RegisterSecretProtector(TWinCredProtector.Create);
+   RegisterKeychainBackend(TWindowsKeychain.Create);
 
 end.
