@@ -97,7 +97,8 @@ var
   DVPMessagesArray                      : array[1..DVPArraySize] of Str40;
   DVPMessagesArrayIndex                 : integer = 1;
   DVPThreadID                           : TThreadID;
-  tMissCallsFileEnable                  : boolean;
+  (* tMissCallsFileEnable is gone (2026-09-12) --
+    Settings.Dvk.MissingCallsignsFileEnable. *)
 //  MissedCallsignsListInitialized        : boolean;
 //  MissedWAVCallsigns                    : integer = -1;
 //  MissedWAVCallsignsListbox             : HWND;
@@ -609,7 +610,7 @@ var
   lpNumberOfBytesRead                   : Integer;
   p                                     : PAnsiChar;
 begin
-  if not tMissCallsFileEnable then Exit;
+  if not Settings.Dvk.MissingCallsignsFileEnable then Exit;
   if not LooksLikeACallSign(Callsign) then Exit;
   p := GetRealPath(Config.DVKPath, 'FULLCALLSIGNS\MISSINGCALLSIGNS.TXT', nil);
   (* FileOpen/FileCreate, not CreateFileA. OPEN_ALWAYS means "open it, and

@@ -54,7 +54,7 @@ uses
    SyncObjs,
    MainUnit,          { CloseTR4WWindow, FrmSetFocus }
    VC,                { RC_POSTNOW, RC_GOTOGS }
-   uConfigValues,     { Config.GetScoresSeverReadingAddress }
+   uSettingsModel,    { Settings.Score.ReadingUrl }
    TF,                { OpenUrl }
    uGetScores,        { RunPOSTGetScoresThread }
    uLCLFormHelpers;   { OwnFormByMainWindow }
@@ -164,7 +164,7 @@ end;
 
 procedure TfrmPostScores.ShowScoresClick(Sender: TObject);
 begin
-   OpenUrl(string(Config.GetScoresSeverReadingAddress));
+   OpenUrl(Settings.Score.ReadingUrl);
    FrmSetFocus;
 end;
 

@@ -347,7 +347,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(215, names.Count,
+         CheckEquals(220, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1134,6 +1134,7 @@ const
       + '"EXTERNAL LOGGER PORT",'
       + '"FONT SIZE",'
       + '"FREQUENCY MEMORY ENABLE",'
+      + '"FREQUENCY POLL RATE",'
       + '"GRID MAP CENTER",'
       + '"HAND LOG MODE",'
       + '"HF BAND ENABLE",'
@@ -1156,6 +1157,7 @@ const
       + '"MAIN CALLSIGN",'
       + '"MAIN FONT",'
       + '"MESSAGE ENABLE",'
+      + '"MISSINGCALLSIGNS FILE ENABLE",'
       + '"MMTTY ENGINE",'
       + '"MULT BY BAND",'
       + '"MULT BY MODE",'
@@ -1239,6 +1241,8 @@ const
       + '"S&P SSB EXCHANGE",'
       + '"SAY HI ENABLE",'
       + '"SAY HI RATE CUTOFF",'
+      + '"SCORE POSTING URL",'
+      + '"SCORE READING URL",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
       + '"SHIFT KEY ENABLE",'
       + '"SHORT 0",'
@@ -1261,6 +1265,7 @@ const
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'
+      + '"TELNET SERVER",'
       + '"TUNE ALT-D ENABLE",'
       + '"TUNE WITH DITS",'
       + '"TWO RADIO MODE",'

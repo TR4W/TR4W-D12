@@ -111,7 +111,7 @@ var
 
   //  tClusterType                          : ClusterType = ctDXSpider;
 
-  TelnetServer: Str50; //n4af 04-11-2013
+  (* TelnetServer is gone (2026-09-12) -- Settings.Telnet.Server. *)
   TempSpot: TSpotRecord;
 
 const
@@ -560,9 +560,9 @@ begin
      has no definition yet would be a regression dressed as tidiness. It does
      NOT count towards `defined` -- it is not a library entry, and if it is the
      only thing here the prompt still belongs on screen. }
-   if Trim(string(TelnetServer)) <> '' then
+   if Trim(Settings.Telnet.Server) <> '' then
       begin
-      TelnetAddHostItem(Trim(string(TelnetServer)));
+      TelnetAddHostItem(Trim(Settings.Telnet.Server));
       end;
 
    TelnetSetNoClustersHint(defined = 0);
@@ -635,7 +635,7 @@ begin
   AddDefinedClustersToHostList;
   TelnetEndHostList;
 
-  TelnetSelectHostItem(string(TelnetServer));
+  TelnetSelectHostItem(Settings.Telnet.Server);
 
   TelnetMenuClear;
   AppendTelnetPopupMenu('HELP');

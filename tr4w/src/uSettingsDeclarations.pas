@@ -371,9 +371,9 @@ begin
                          RS_SCORING_HAMSCORE_PASSWORD);
    RegisterStoredSetting('scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
                          RS_SCORING_HAMSCORE_CONTACTINFO);
-   RegisterStoredSetting('scoring.board.postingUrl',     'SCORE POSTING URL',
+   RegisterModelSetting( 'scoring.board.postingUrl',     'SCORE POSTING URL',
                          RS_SCORING_BOARD_POSTINGURL);
-   RegisterStoredSetting('scoring.board.readingUrl',     'SCORE READING URL',
+   RegisterModelSetting( 'scoring.board.readingUrl',     'SCORE READING URL',
                          RS_SCORING_BOARD_READINGURL);
 
    // --- DX cluster ---------------------------------------------------------
@@ -686,7 +686,7 @@ begin
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORY);
    RegisterModelSetting( 'operating.ctrlj.frequencyMemoryEnable','FREQUENCY MEMORY ENABLE',
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORYENABLE);
-   RegisterStoredSetting('operating.ctrlj.frequencyPollRate', 'FREQUENCY POLL RATE',
+   RegisterModelSetting( 'operating.ctrlj.frequencyPollRate', 'FREQUENCY POLL RATE',
                           RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE);
    RegisterModelSetting( 'operating.ctrlj.ieSwitch',          'IE SWITCH',
                           RS_OPERATING_CTRLJ_IESWITCH);
@@ -803,7 +803,7 @@ begin
                           RS_FILES_CTRLJ_CTYUPDATECHECKONSTARTUP);
    RegisterModelSetting( 'files.ctrlj.domesticFilename',      'DOMESTIC FILENAME',
                           RS_FILES_CTRLJ_DOMESTICFILENAME).ReadOnly := True;
-   RegisterStoredSetting('files.ctrlj.missingcallsignsFileEnable','MISSINGCALLSIGNS FILE ENABLE',
+   RegisterModelSetting( 'files.ctrlj.missingcallsignsFileEnable','MISSINGCALLSIGNS FILE ENABLE',
                           RS_FILES_CTRLJ_MISSINGCALLSIGNSFILEENABLE);
    RegisterModelSetting( 'files.ctrlj.unknownCountryFileName','UNKNOWN COUNTRY FILE NAME',
                           RS_FILES_CTRLJ_UNKNOWNCOUNTRYFILENAME);

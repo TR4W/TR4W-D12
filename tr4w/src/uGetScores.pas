@@ -113,7 +113,7 @@ begin
    ShowGetScoresStatus(TC_CONNECT);
    MakePOSTRequestNew; // fills GetScoresBuffer with the URL-encoded POST body
 
-   sURL := string(Config.GetScoresSeverPostingAddress);
+   sURL := Settings.Score.PostingUrl;
 
    (* THE TRANSPORT IS uHTTPDownload'S (2026-09-09). This built its own
      TIdHTTP and TLS handler, as four other units did; Indy cannot speak to

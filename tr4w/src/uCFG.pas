@@ -660,6 +660,8 @@ const
    - 1 {INTERCOM FILE ENABLE -- moved to uSettingsModel}
    - 1 {NAME FLAG ENABLE -- moved to uSettingsModel}
    - 2 {the DX cluster's own two -- moved to uSettingsModel}
+   - 5 {the score server, the telnet host, the poll rate and the
+        DVK's missing-callsigns file -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -757,7 +759,6 @@ const
  (crCommand: 'FARNSWORTH ENABLE';             crAddress: @Config.FarnsworthEnable;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'FARNSWORTH SPEED';              crAddress: @Config.FarnsworthSpeed;                crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'FREQUENCY MEMORY';              crAddress: @tFrequencyMemory;               crMin:0;  crMax:0;       crS: csJSON; crA: 18;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
- (crCommand: 'FREQUENCY POLL RATE';           crAddress: @FreqPollRate;                   crMin:10; crMax:1000;    crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
     uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
@@ -821,7 +822,6 @@ const
  (crCommand: 'LPT2 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel2];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'LPT3 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel3];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'MINITOUR DURATION';             crAddress: @TourDuration;                   crMin:5;  crMax:60;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'MISSINGCALLSIGNS FILE ENABLE';  crAddress: @tMissCallsFileEnable;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: Settings.Mmtty.Engine. *)
  (crCommand: 'MODE';                          crAddress: pointer(5);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'MP3 PATH';                      crAddress: @Config.MP3Path;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
@@ -923,8 +923,6 @@ const
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROTATOR TYPE';                  crAddress: pointer(17);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROW COUNT';                     crAddress: pointer(4);                      crMin:5;  crMax:15;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAppearance; crType: ctInteger; crNetwork: 1),
- (crCommand: 'SCORE POSTING URL';             crAddress: @Config.GetScoresSeverPostingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
- (crCommand: 'SCORE READING URL';             crAddress: @Config.GetScoresSeverReadingAddress;   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctURL; crNetwork: 1),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'SCP MINIMUM LETTERS';           crAddress: pointer(1);                      crMin:0;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'SERVER ADDRESS';                crAddress: @ServerAddress;                  crMin:0;  crMax:255;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
@@ -978,7 +976,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'TELNET SERVER';                 crAddress: @TelnetServer;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TEN MINUTE RULE';               crAddress: pointer(18);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'USE CONTROL PORT';              crAddress: @tUseControlPort;                crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -2869,50 +2866,23 @@ begin
 end;
 
 procedure InitializeStrings;
+(* THE SEED TABLE IS GONE, 2026-09-12, AND SO ARE THE TYPE AND THE LOOP.
 
-type
-   IniStringRecord = record
-      isString: PShortString;
-      isPcharString: PAnsiChar;
-   end;
-const
-   (* TWO SINCE 2026-09-12, DOWN FROM FIFTEEN: the thirteen message templates
-     left for Settings.Messages, and their defaults went INTO
-     TMessageSettings.Create rather than being dropped.
+  It was a hand-typed list of ADDRESSES beside the values they seed -- the
+  same shape as the pointer tables being retired -- and it shrank from
+  fifteen entries to two when the message templates left for
+  Settings.Messages. Those last two were the score server URLs, and they are
+  TScoreSettings' constructor now, which is where a default belongs.
 
-     THAT IS THE HALF OF THE MOVE THAT WAS EASY TO MISS. Every one of those
-     globals was declared in LogCW.pas with its initialiser COMMENTED OUT, so
-     the declarations say "empty" and this table is where the real values
-     were -- '} OK %', 'TU \ TEST', and a WAV file name for each phone
-     message. A migration that trusted the declarations would have shipped
-     thirteen blank messages, and nothing in a build or a test run would have
-     said so.
+  WHAT THAT TABLE TAUGHT IS WORTH KEEPING. Every global it seeded was
+  declared with its initialiser COMMENTED OUT, so the declarations said
+  "empty" and this routine held the real values. A migration that trusted a
+  declaration would have shipped thirteen blank messages, and neither a build
+  nor a test run would have said so. Check for a startup assignment before
+  believing any default.
 
-     This table is the same shape as the pointer tables being retired -- a
-     hand-typed list of ADDRESSES beside the values they seed -- and it goes
-     the same way as its remaining entries migrate. *)
-   SAS = 2;
-   SA: array[1..SAS] of IniStringRecord =
-      (
-      (isString: @Config.GetScoresSeverPostingAddress; isPcharString:
-         'https://post.contestonlinescore.com/post/'),
-      (isString: @Config.GetScoresSeverReadingAddress; isPcharString:
-         'https://contestonlinescore.com/scoreboard/')
-      );
-var
-   i: integer;
+  The four buffer appends below are a different job and stay. *)
 begin
-   for i := 1 to SAS do
-      begin
-      (* AN ASSIGNMENT, WRITTEN AS AN APPEND.  This was lstrcatA into
-        PAnsiChar(integer(isString) + 1) -- an INTEGER cast of a pointer,
-        stepping over the length byte -- followed by writing the length by
-        hand.  It only ever behaved as an assignment because these targets
-        are empty when defaults are applied: append to a non-empty one and
-        the hand-written length would have TRUNCATED the old text rather
-        than extending it.  Plain assignment converts and bounds itself. *)
-      SA[i].isString^ := AnsiString(SA[i].isPcharString);
-      end;
    (* FOUR APPENDS ONTO MAX_PATH BUFFERS.  lstrcatA took the destination as
      a bare pointer with no length, so nothing here could have stopped an
      overrun -- and nothing checked.  AppendToBuffer takes the array and

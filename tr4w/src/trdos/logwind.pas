@@ -637,7 +637,8 @@ var
 
   (* FrequencyMemoryEnable is gone (2026-09-12) --
     Settings.Operating.FrequencyMemoryEnable. *)
-  FreqPollRate                          : integer = 10; {KK1L: 6.71a Frequency Poll Rate in milliseconds}
+  (* FreqPollRate is gone (2026-09-12) --
+    Settings.Operating.FrequencyPollRate. {KK1L: 6.71a} *)
   GridSquareListShown                   : boolean;
 
   HourDisplay                           : HourDisplayType {= ThisHour};

@@ -178,6 +178,7 @@ type
    TPaddleSpeed         = 0..99;      // was crMin:0, crMax:99
    (* The Network window's refresh timer, in milliseconds. *)
    TNetStatusInterval   = 1000..10000; // was crMin:1000, crMax:10000
+   TFreqPollRate        = 10..1000;   // was crMin:10, crMax:1000 -- ms
    TAutoTimeIncrement   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TWakeUpTimeOut       = 0..255;     // was crMin:0, crMax:MAXBYTE
    (* A UDP PORT. 1..65535, which is the port range and not a TR4W rule --
@@ -456,6 +457,7 @@ type
       FCustomUserString: string;
       FFrequencyMemoryEnable: boolean;
       FLogSubTitle: string;
+      FFrequencyPollRate: TFreqPollRate;
    public
       constructor Create;
    published
@@ -518,6 +520,16 @@ type
         title. No live reader in this build; carried, not withdrawn. *)
       property LogSubTitle: string
          read FLogSubTitle write FLogSubTitle;
+      (* Was FreqPollRate in logwind -- how often the polling thread asks
+        the radio for its frequency, in milliseconds.
+
+        STATION-WIDE, NOT PER RADIO, which is why it is here and not in
+        the radio library: a driver that cannot stand a fast rate says so
+        itself with honorsFreqPollRate, so the two answer different
+        questions. The bound is a subrange, from crMin:10 and
+        crMax:1000. *)
+      property FrequencyPollRate: TFreqPollRate
+         read FFrequencyPollRate write FFrequencyPollRate;
    end;
 
    (*
@@ -571,6 +583,47 @@ type
         in this build. Carried, not withdrawn, for the reason above. *)
       property BroadcastAllPacketData: boolean
          read FBroadcastAllPacketData write FBroadcastAllPacketData;
+   end;
+
+   (*
+     THE SCORE SERVER -- where live scores are posted during a contest and
+     where the standings are read back.
+
+     BOTH NAMES DERIVE EXACTLY from Score.PostingUrl and Score.ReadingUrl,
+     which is why the group is called Score and not Scores or ScoreServer.
+   *)
+   TScoreSettings = class(TSettingsGroup)
+   private
+      FPostingUrl: string;
+      FReadingUrl: string;
+   public
+      constructor Create;
+   published
+      (* Was Config.GetScoresSeverPostingAddress, a ShortString. The old row
+        was ctURL, which CheckCommand treated exactly as a string -- there was
+        no validation behind the type. *)
+      property PostingUrl: string read FPostingUrl write FPostingUrl;
+      (* Was Config.GetScoresSeverReadingAddress. The PostScores window opens
+        this in a browser. *)
+      property ReadingUrl: string read FReadingUrl write FReadingUrl;
+   end;
+
+   (*
+     THE TELNET CLUSTER HOST. One setting, and TELNET SERVER derives exactly
+     from Telnet.Server.
+
+     NOT TClusterSettings, which holds the two policy flags. This is the
+     host itself, and it is the one piece of cluster configuration the
+     cluster library will eventually claim -- keeping it in its own group
+     makes that a move of one property rather than an unpicking.
+   *)
+   TTelnetSettings = class(TSettingsGroup)
+   private
+      FServer: string;
+   published
+      (* Was TelnetServer in uTelnet, a Str50. uTelnet seeds its host list
+        from it and preselects it. *)
+      property Server: string read FServer write FServer;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -1623,6 +1676,7 @@ type
    private
       FLocalizedMessagesEnable: boolean;
       FUseRecordedSigns: boolean;
+      FMissingCallsignsFileEnable: boolean;
    public
       constructor Create;
    published
@@ -1635,6 +1689,16 @@ type
         it, so it carries an alias. *)
       property UseRecordedSigns: boolean
          read FUseRecordedSigns write FUseRecordedSigns;
+      (* Was tMissCallsFileEnable in logdvp.
+
+        IT IS A DVK SETTING, WHICH THE COMMAND NAME HIDES. The file it
+        controls is FULLCALLSIGNS\\MISSINGCALLSIGNS.TXT under the DVK
+        path, and it records the callsigns for which no recording exists
+        -- so an operator can go and record them. Nothing about it is
+        general file handling, which is where the settings store filed
+        it. *)
+      property MissingCallsignsFileEnable: boolean
+         read FMissingCallsignsFileEnable write FMissingCallsignsFileEnable;
    end;
 
    (*
@@ -2463,6 +2527,8 @@ type
       FOperating: TOperatingSettings;
       FScp: TScpSettings;
       FCluster: TClusterSettings;
+      FScore: TScoreSettings;
+      FTelnet: TTelnetSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -2596,6 +2662,8 @@ type
       property Operating: TOperatingSettings read FOperating;
       property Scp: TScpSettings read FScp;
       property Cluster: TClusterSettings read FCluster;
+      property Score: TScoreSettings read FScore;
+      property Telnet: TTelnetSettings read FTelnet;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -3034,6 +3102,16 @@ begin
    FShowAll := False;
 end;
 
+constructor TScoreSettings.Create;
+begin
+   inherited Create;
+   (* THE VALUES InitializeStrings SEEDED AT EVERY STARTUP, not the
+     record initialisers empty string -- the table that held them is
+     deleted with this move, and a default belongs in a constructor. *)
+   FPostingUrl := 'https://post.contestonlinescore.com/post/';
+   FReadingUrl := 'https://contestonlinescore.com/scoreboard/';
+end;
+
 constructor TScpSettings.Create;
 begin
    inherited Create;
@@ -3071,6 +3149,8 @@ begin
    FCustomUserString       := '';
    FFrequencyMemoryEnable  := True;
    FLogSubTitle            := '';
+   // logwind declared FreqPollRate = 10.
+   FFrequencyPollRate      := 10;
 end;
 
 constructor TNetworkSettings.Create;
@@ -3101,6 +3181,7 @@ begin
    // The values uConfigValues' initialiser carried.
    FLocalizedMessagesEnable := False;
    FUseRecordedSigns        := False;
+   FMissingCallsignsFileEnable := False;
 end;
 
 constructor TMySettings.Create;
@@ -3472,6 +3553,8 @@ begin
    FOperating      := TOperatingSettings.Create;
    FScp            := TScpSettings.Create;
    FCluster        := TClusterSettings.Create;
+   FScore          := TScoreSettings.Create;
+   FTelnet         := TTelnetSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -3881,6 +3964,10 @@ begin
    Alias('NAME FLAG ENABLE',           'Scp.NameFlagEnable');
    Alias('CONNECTION AT STARTUP',      'Cluster.ConnectionAtStartup');
    Alias('BROADCAST ALL PACKET DATA',  'Cluster.BroadcastAllPacketData');
+   Alias('FREQUENCY POLL RATE',        'Operating.FrequencyPollRate');
+   (* The command runs the two words together; the property cannot. *)
+   Alias('MISSINGCALLSIGNS FILE ENABLE',
+         'Dvk.MissingCallsignsFileEnable');
 
    Alias('HF BAND ENABLE',   'Bands.HfEnabled');
    Alias('VHF BAND ENABLE',  'Bands.VhfEnabled');

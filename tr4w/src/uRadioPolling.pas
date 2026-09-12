@@ -323,7 +323,7 @@ begin
                // the Icom's own 1s pollingInterval.
                if ro.requiresPolling and (ro.serialPort <> NoPort) and ro.honorsFreqPollRate then
                   begin
-                  ro.pollingInterval := FreqPollRate;
+                  ro.pollingInterval := Settings.Operating.FrequencyPollRate;
                   logger.Debug('[pFactoryRadio] Serial polling interval set to %dms (FREQUENCY POLL RATE)',
                                [ro.pollingInterval]);
                   end;
@@ -394,7 +394,7 @@ begin
                end
             else
                begin
-               Sleep(FreqPollRate);
+               Sleep(Settings.Operating.FrequencyPollRate);
                end;
 
             // Auth failure may happen asynchronously during handshake.

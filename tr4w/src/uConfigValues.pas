@@ -92,8 +92,6 @@ type
         Types copied verbatim from the declarations they replace -- CheckCommand
         writes through @Config.<field> and cannot see a mismatch. }
       tDitDahRatio: integer;
-      GetScoresSeverPostingAddress: ShortString;
-      GetScoresSeverReadingAddress: ShortString;
 
       { CW KEYING, migrated 2026-08-14. These five differ from everything above:
         THE SESSION MUTATES THEM. Weight, FarnsworthEnable and FarnsworthSpeed are
@@ -213,8 +211,6 @@ var
       HamScoreSendContactInfo: True;
 
       tDitDahRatio: 3;
-      GetScoresSeverPostingAddress: '';
-      GetScoresSeverReadingAddress: '';
 
       CWEnable: True;
       CWTone: 700;
