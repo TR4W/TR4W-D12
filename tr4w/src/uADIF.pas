@@ -1413,6 +1413,16 @@ begin
    if Copy(Result, 1, Length(prefix)) = prefix then
       begin
       Result := Trim(Copy(Result, Length(prefix) + 1, Length(Result)));
+      end
+   (* AN SRX_STRING THAT IS NOTHING BUT THE RST CARRIES NO EXCHANGE, and
+     that is ResolveSRXString's own output for an empty ExchString -- see
+     its rstStr-only arm. Leaving the '59' in place made the round trip
+     grow a token every time: the fourteen GENERAL QSO contacts that
+     exchanged no name came back with an exchange of '59' and re-exported
+     as '59 59'. *)
+   else if Result = IntToStr(aRSTReceived) then
+      begin
+      Result := '';
       end;
 end;
 

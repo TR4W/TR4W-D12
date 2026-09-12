@@ -9859,9 +9859,15 @@ begin
      exch.ceOperator := currentOperator;
      end;
 
+  (* THE RECEIVED RST COMES OFF HERE, ONCE, FOR EVERY CONTEST. The export
+    side prepends it unconditionally (uADIF.ResolveSRXString) to make the
+    field symmetric with STX_STRING, so this is the exact inverse and
+    belongs at the same level -- not in the contest arms, which is where
+    the first two instances of this fault were fixed one at a time. *)
   if Length(temps.SRX_String) > 0 then
      begin
-     exch.ExchString := temps.SRX_String;
+     exch.ExchString := ExchangeFromSRXString(temps.SRX_String,
+                                              exch.RSTReceived);
      end;
 
   case exch.ceContest of
@@ -9900,8 +9906,25 @@ begin
 
     ARRLSSCW, ARRLSSSSB, WINTERFIELDDAY, ARRLFIELDDAY:
       begin
-        exch.DomesticQTH := temps.ARRL_Sect;
-        exch.QTHString   := temps.ARRL_Sect;
+        (* ARRL_SECT IS NOT ALWAYS THERE, AND AN ABSENT TAG IS NOT AN
+          EMPTY SECTION. D7 writes ARRL_SECT for Sweepstakes and does not
+          write it for Winter Field Day -- that log carries the section in
+          <QTH> alone. Assigning it unconditionally therefore ERASED a
+          section the parser had already read correctly, on 1310 of the
+          1316 QSOs in the corpus's winter_fd set.
+
+          So ARRL_SECT wins when it is present, because it is the
+          unambiguous field; otherwise whatever <QTH> supplied stands, and
+          the domestic multiplier is taken from it. *)
+        if temps.ARRL_Sect <> '' then
+           begin
+           exch.DomesticQTH := temps.ARRL_Sect;
+           exch.QTHString   := temps.ARRL_Sect;
+           end
+        else if exch.QTHString <> '' then
+           begin
+           exch.DomesticQTH := exch.QTHString;
+           end;
       end;
 
     CWOPS:

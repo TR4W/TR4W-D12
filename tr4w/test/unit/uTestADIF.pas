@@ -93,6 +93,7 @@ type
       procedure Test_ExchangeFromSRX_StripsTheReceivedRST;
       procedure Test_ExchangeFromSRX_LeavesAnExchangeWithNoRST;
       procedure Test_ExchangeFromSRX_LeavesAnRSTThatIsNotTheReceivedOne;
+      procedure Test_ExchangeFromSRX_AnRSTOnItsOwnIsNoExchange;
    end;
 
 implementation
@@ -991,6 +992,21 @@ begin
    CheckEquals('001 NY', ExchangeFromSRXString('001 NY', 599), 'a serial number');
 end;
 
+(* THE ROUND TRIP HAS TO CLOSE. ResolveSRXString writes the bare RST when a QSO
+  carried no exchange at all, so reading that back as an exchange of '59' made
+  the field grow a token on every export -- '59' became '59 59'. Fourteen
+  GENERAL QSO contacts in the corpus did exactly that. *)
+procedure TADIFHelperTests.Test_ExchangeFromSRX_AnRSTOnItsOwnIsNoExchange;
+begin
+   BeginTest('an SRX_STRING that is only the RST carries no exchange');
+   CheckEquals('', ExchangeFromSRXString('59', 59), 'a bare 59');
+   CheckEquals('', ExchangeFromSRXString('599', 599), 'a bare 599');
+   CheckEquals('', ExchangeFromSRXString('  59  ', 59), 'padded');
+   (* A number that is NOT this QSO's RST is exchange text, as ever. *)
+   CheckEquals('599', ExchangeFromSRXString('599', 59), 'not the received RST');
+end;
+
+
 
 procedure TADIFHelperTests.RunAllTests;
 begin
@@ -1023,6 +1039,7 @@ begin
    Test_ExchangeFromSRX_StripsTheReceivedRST;
    Test_ExchangeFromSRX_LeavesAnExchangeWithNoRST;
    Test_ExchangeFromSRX_LeavesAnRSTThatIsNotTheReceivedOne;
+   Test_ExchangeFromSRX_AnRSTOnItsOwnIsNoExchange;
 end;
 
 end.
