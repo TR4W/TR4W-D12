@@ -973,6 +973,7 @@ type
    private
       FFocNumber: string;
       FIota: string;
+      FPark: string;
       FPostalCode: string;
       FItuZone: TMyItuZone;
    public
@@ -987,6 +988,10 @@ type
         command keeps working, an operator's .cfg keeps being understood,
         and the value is waiting when an IOTA contest wants it. *)
       property Iota: string read FIota write FIota;
+      (* Was MyPark in logwind.pas -- the POTA reference being activated.
+        NormalizePOTAPark already took a string, so two of its readers lose
+        a widening cast rather than gaining anything. *)
+      property Park: string read FPark write FPark;
       // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
       property PostalCode: string read FPostalCode write FPostalCode;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
@@ -1380,6 +1385,7 @@ begin
      its zero. Zero is the "use CTY.DAT" sentinel, not an unset value. *)
    FFocNumber  := '';
    FIota       := '';
+   FPark       := '';
    FPostalCode := '';
    FItuZone    := 0;
 end;

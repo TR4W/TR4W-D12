@@ -2327,8 +2327,8 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   if rec.ceContest = POTA then
      begin
      Result := Result + EmitADIFField( 'MY_SIG', 'POTA' );
-     Result := Result + EmitADIFField( 'MY_SIG_INFO', string( MyPark ) );
-     Result := Result + EmitADIFField( 'MY_POTA_REF', string( MyPark ) );
+     Result := Result + EmitADIFField( 'MY_SIG_INFO', Settings.My.Park );
+     Result := Result + EmitADIFField( 'MY_POTA_REF', Settings.My.Park );
      if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
         begin
         Result := Result + EmitADIFField( 'SRX_STRING', string( rec.QTHString ) )
@@ -3768,7 +3768,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       my.MyPrec       := string(MyPrec);
       my.MyFOCNumber  := Settings.My.FocNumber;
       my.MyPostalCode := Settings.My.PostalCode;
-      my.MyPark       := string(MyPark);
+      my.MyPark       := Settings.My.Park;
 
       Result := FormatADIFMyExchange(ActiveExchange, Contest, TempRXData, my,
                                      GoodLookingQSO,

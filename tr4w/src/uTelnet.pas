@@ -395,7 +395,7 @@ begin
       end
    else if Token = 'MY_PARK' then
       begin
-      Value := string(MyPark)
+      Value := Settings.My.Park
       end
    else if Token = 'MY_POSTALCODE' then
       begin

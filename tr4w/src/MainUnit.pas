@@ -3971,7 +3971,7 @@ begin
      while TempString <> '' do
         begin
         TestString := RemoveFirstString(TempString);
-        TestString := NormalizePOTAPark(TestString, MyPark);
+        TestString := NormalizePOTAPark(TestString, Settings.My.Park);
         if TestString <> '' then
            begin
            if GetPOTAParkName(TestString) <> '' then

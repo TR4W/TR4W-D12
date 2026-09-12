@@ -5437,7 +5437,7 @@ begin
      // Try to interpret the token as a park reference.
      // NormalizePOTAPark returns the original token unchanged when it is not
      // a park reference (e.g. an RST value like "57" or "599").
-     Normalized := NormalizePOTAPark(Token, MyPark);
+     Normalized := NormalizePOTAPark(Token, Settings.My.Park);
 
      if IsValidPOTAPark(Normalized) then
         begin

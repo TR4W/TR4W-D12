@@ -327,7 +327,10 @@ begin
    FillChar(Result, SizeOf(Result), 0);
 
    Result.MyCall := AnsiString(MyCall);
-   Result.MyPark := AnsiString(MyPark);
+   (* UTF8Encode, not an AnsiString cast: the declaration field is an
+     AnsiString and the setting is UTF-16, so a cast would be a narrowing
+     conversion the build counts. A POTA reference is ASCII. *)
+   Result.MyPark := UTF8Encode(Settings.My.Park);
 
    Result.CategoryOperator    := AnsiString(CabrilloTagText(ctCategoryOperator));
    Result.CategoryAssisted    := AnsiString(CabrilloTagText(ctCategoryAssisted));
