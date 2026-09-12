@@ -44,7 +44,6 @@ uses
   SysUtils,
   uHTTPDownload,
   uCTYDAT,              // Issue #930 -- ctyGetCountryID / ctyGetCQZone / ctyGetITUZone (native Pascal, no cty.dll)
-  LogGrid,              // Issue #930 -- MyGrid
   Tree
   ,
   uTR4WStrings;
@@ -384,7 +383,7 @@ begin
   //                  [REPORT]/_LOCATION (where users typically enter it).
   //   <stprvoth>:    MY STATE CFG, falling back to Cabrillo summary
   //                  [REPORT]/_ADDRESS-STATE-PROVINCE.
-  //   <grid4>/<grid6>: <grid6> when MyGrid is 6+ chars (use first 6 with
+  //   <grid4>/<grid6>: <grid6> when the operator's grid is 6+ chars (use
   //                    subsquare lowercased per Maidenhead convention);
   //                    <grid4> when 4 chars; nothing when empty.
   sDXCC    := '';
@@ -411,13 +410,13 @@ begin
      sZone := IntToStr(ctyGetCQZone(MyCall));
      end;
 
-  // Grid: emit <grid6> when MyGrid has the subsquare (6+ chars), <grid4>
-  // when only the 4-char square is known.  The New Contest dialog
-  // truncates MyGrid to 4 chars for RTC and many other contests
+  // Grid: emit <grid6> when the operator's grid has the subsquare (6+
+  // chars), <grid4> when only the 4-char square is known.  The New Contest
+  // dialog truncates it to 4 chars for RTC and many other contests
   // (uNewContest.pas:419), so 4 chars is the common case; a 6-char value
   // appears when the user manually set MY GRID in tr4w.ini or used a
   // contest dialog that prompts for the full grid.
-  sGrid4 := Trim(string(MyGrid));
+  sGrid4 := Trim(Settings.My.Grid);
 
   qth := '';
   if sDXCC <> '' then

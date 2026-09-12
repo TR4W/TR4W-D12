@@ -2101,11 +2101,12 @@ begin
   // that no longer existed in the code.
   //
   // SetCommand routes it to Preferences with the Station page open and the grid
-  // field focused, because MY GRID is a csOwned row and Ctrl-J does not list
-  // it -- see SetCommand for the full story.
+  // field focused, because Ctrl-J never listed MY GRID -- see SetCommand for
+  // the full story.  The row itself has since left CFGCA for
+  // Settings.My.Grid, which is what this now reads.
   //
-  // Placed here deliberately: config is loaded (so MyGrid is the operator's
-  // real value, not the CFGDEF default) and the main window exists, but the
+  // Placed here deliberately: config is loaded (so the grid is the operator's
+  // real value, not the default) and the main window exists, but the
   // message loop has not started -- which is fine, as the prompt is a modal
   // MessageBox with its own loop and Preferences is opened non-modally.
   //
@@ -2118,7 +2119,7 @@ begin
   // they open TR4W, and one who does can set it in Preferences > Station --
   // where it is now also findable by search.  The flag is recorded whatever the
   // answer, because being asked and saying no IS an answer.
-  if (not tSilentExport) and (Trim(string(MyGrid)) = '') then
+  if (not tSilentExport) and (Trim(Settings.My.Grid) = '') then
      begin
      if GridPromptAlreadyShown then
         begin

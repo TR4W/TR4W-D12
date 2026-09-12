@@ -994,7 +994,7 @@ procedure WriteTitleBlockToSummarySheet;
      ContestFriendlyParens + #13#10 + '            START DATE: ' +
      string( tGetDateFormat( ContestDates[ 0 ] ) ) + #13#10 +
      '         CALLSIGN USED: ' + string( MyCall ) + #13#10 +
-     '               LOCATOR: ' + string( MyGrid ) + #13#10#13#10 );
+     '               LOCATOR: ' + Settings.My.Grid + #13#10#13#10 );
 
   // for i := 147 to 167 - 2 + 2 do
   for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
@@ -2190,13 +2190,13 @@ procedure ExportToEDIByBand( Band: BandType );
      end;
 
   // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-  // ContestName, MyCall, MyGrid, BandString, Name, Address, Section, QSOcount.
+  // ContestName, MyCall, grid, BandString, Name, Address, Section, QSOcount.
   sWriteFileFromString( tReportFileWrite,
      sysutils.Format( '[REG1TEST;1]'#13#10 + 'TName=%s'#13#10 + 'PCall=%s'#13#10
      + 'PWWLo=%s'#13#10 + 'PBand=%s'#13#10 + 'RName=%s'#13#10 + 'PAdr1=%s'#13#10
      + 'PSect=%s'#13#10 + '[QSORecords;%u]'#13#10,
      [ string(ContestName),
-     string(MyCall), string(MyGrid),
+     string(MyCall), Settings.My.Grid,
      string( EDIFBANDSTRINGSARRAY[ Band ] ),
      CabrilloTagText( ctName ),
      AddressLine,
@@ -2789,10 +2789,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             [ string( TempPchar ), string( PAnsiChar( @TempBuffer2 ) ) ] ) );
          end;
 
-      if MyGrid <> '' then
+      if Settings.My.Grid <> '' then
          begin
-         sWriteFileFromString( tReportFileWrite, 'GRID-LOCATOR: ' + MyGrid
-            + #13#10 );
+         sWriteFileFromString( tReportFileWrite,
+            UTF8Encode( 'GRID-LOCATOR: ' + Settings.My.Grid + #13#10 ) );
          end;
 
       (*
@@ -3133,7 +3133,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // tested).  Build the My-station record and pass the per-QSO derived
                 // strings; it fills CABRILLO_MYEX / CABRILLO_HISEX (and carries pnr).
                 myStationEx.MyState      := string( MyState );
-                myStationEx.MyGrid       := string( MyGrid );
+                myStationEx.MyGrid       := Settings.My.Grid;
                 myStationEx.MyName       := Settings.My.Name;
                 myStationEx.MyZone       := ZoneSentForThisContest;
                 myStationEx.MyFDClass    := Settings.My.FdClass;
@@ -3759,7 +3759,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         needs PostUnit's globals: filling the record.  Same split, same reason,
         as tGenerateLogPortionOfCabrilloFile and uCabrilloExchange. }
       my.MyState      := string(MyState);
-      my.MyGrid       := string(MyGrid);
+      my.MyGrid       := Settings.My.Grid;
       my.MyName       := Settings.My.Name;
       my.MyZone       := ZoneSentForThisContest;
       my.MyFDClass    := Settings.My.FdClass;

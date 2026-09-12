@@ -40,11 +40,23 @@ type
   DistanceDisplayType = (NoDistanceDisplay, DistanceMiles, DistanceKM);
 
 function ConvertLatLonToGrid(Lat, Lon: REAL): GridString;
-function GetBeamHeading(MyGrid, HisGrid: GridString): integer;
-function GetDistanceBetweenGrids(Grid1, Grid2: GridString): integer;
-function GetEuropeanDistanceBetweenGrids(Grid1, Grid2: GridString): integer;
-function RTCGridDistance(Grid1, Grid2: GridString): Double; // Issue #902 -- RTC contest Haversine
-procedure GetLatLon(Grid: GridString; var Lat, Lon: REAL);
+(* GRID ARGUMENTS ARE string, NOT GridString, SINCE 2026-09-12.
+
+  The operator's own grid left this unit for Settings.My.Grid, which is a
+  native string, and a string handed to a GridString parameter is a
+  NARROWING conversion at every one of the thirty-odd call sites. Widening
+  the parameter instead costs nothing: every other caller passes a
+  ShortString, and a ShortString handed to a string parameter widens
+  silently and correctly.
+
+  ConvertLatLonToGrid still RETURNS GridString, deliberately -- its result
+  is assigned to GridString fields in CTY.DAT records, and widening a
+  return type moves the narrowing rather than removing it. *)
+function GetBeamHeading(MyGrid, HisGrid: string): integer;
+function GetDistanceBetweenGrids(Grid1, Grid2: string): integer;
+function GetEuropeanDistanceBetweenGrids(Grid1, Grid2: string): integer;
+function RTCGridDistance(Grid1, Grid2: string): Double; // Issue #902 -- RTC contest Haversine
+procedure GetLatLon(Grid: string; var Lat, Lon: REAL);
 function GetSunriseSunsetString(Lat: REAL; Lon: REAL): string;
 function LooksLikeAGeoCoordinates(Coordinates: Str40; var LatValue, LongValue: integer): boolean;
 //function LooksLikeRadio160Square(Square: Str20): boolean;
@@ -54,13 +66,12 @@ const
 
 var
   DistanceMode                          : DistanceDisplayType = DistanceKM;
-  MyGrid                                : GridString;
   RadiusOfEarth                         : REAL {= 0.0};
 
 implementation
 
 
-procedure ConvertGridToLatLon(Grid: GridString; var Lat, Lon: REAL);
+procedure ConvertGridToLatLon(Grid: string; var Lat, Lon: REAL);
 
 { Converts a grid to Lat/Lon to the center of the grid }
 
@@ -74,10 +85,15 @@ begin
     mov dword ptr GR, eax
   end;
 }
+  (* PAD A FOUR-CHARACTER GRID TO SIX, BY APPENDING.
+
+    This wrote Grid[5] and Grid[6] directly, which on a ShortString leaves
+    the LENGTH BYTE saying four while the two characters sit past the end.
+    It read back correctly only because indexing a ShortString is not
+    bounds-checked. Concatenation says the same thing and means it. *)
   if length(Grid) = 4 then
      begin
-     Grid[5] := 'L';
-     Grid[6] := 'L';
+     Grid := Grid + 'LL';
      end;
 
   LonMin := (5 * (Ord(Grid[5]) - Ord('A'))) + 2.5; { center }
@@ -322,10 +338,10 @@ begin
 
 end; {Calc_GeoDist}
 
-function GetDistanceBetweenGrids(Grid1, Grid2: GridString): integer;
+function GetDistanceBetweenGrids(Grid1, Grid2: string): integer;
 
-{ This function returns the distance between the two grids specified in
-  kilometers. }
+(* This function returns the distance between the two grids specified in
+  kilometers. *)
 
 var
   Lat1, Lat2, Lon1, Lon2                : REAL;
@@ -336,13 +352,13 @@ begin
       begin
       Grid1 := Grid1 + 'LL';
       end;
-  strU(Grid1);
+  Grid1 := UpperCase(Grid1);
 
   if length(Grid2) <> 6 then
      begin
      Grid2 := Grid2 + 'LL';
      end;
-  strU(Grid2);
+  Grid2 := UpperCase(Grid2);
 
   if Grid1 = Grid2 then
      begin
@@ -357,16 +373,16 @@ begin
   GetDistanceBetweenGrids := round(Distance);
 end;
 
-function RTCGridDistance(Grid1, Grid2: GridString): Double;
-{ Issue #902 -- Haversine distance in km between the CENTERS of two 4-character
+function RTCGridDistance(Grid1, Grid2: string): Double;
+(* Issue #902 -- Haversine distance in km between the CENTERS of two 4-character
   Maidenhead grid squares (RTC scoring).  The math now lives in uGridDistance so
   it can be unit-tested without linking this unit; this is a thin delegate.
-  Reference fixture from the rules: FN36 to DM18 = 3664.72 km. }
+  Reference fixture from the rules: FN36 to DM18 = 3664.72 km. *)
 begin
    Result := uGridDistance.GridHaversineKm(Grid1, Grid2);
 end;
 
-function GetEuropeanDistanceBetweenGrids(Grid1, Grid2: GridString): integer;
+function GetEuropeanDistanceBetweenGrids(Grid1, Grid2: string): integer;
 
 const
   r                                     = PI / 180; {to Radian}
@@ -380,8 +396,8 @@ begin
   if Grid1 = '' then Exit;
   if Grid2 = '' then Exit;
 
-  strU(Grid1);
-  strU(Grid2);
+  Grid1 := UpperCase(Grid1);
+  Grid2 := UpperCase(Grid2);
 
   c1 := Ord(Grid1[1]) - 74;
   c2 := Ord(Grid1[2]) - 74;
@@ -405,7 +421,7 @@ begin
 
 end;
 
-function GetBeamHeading(MyGrid, HisGrid: GridString): integer;
+function GetBeamHeading(MyGrid, HisGrid: string): integer;
 
 var
   Lat1, Lat2, Lon1, Lon2                : REAL;
@@ -423,13 +439,13 @@ begin
      begin
      MyGrid := MyGrid + 'LL';
      end;
-  strU(MyGrid);
+  MyGrid := UpperCase(MyGrid);
 
   if length(HisGrid) <> 6 then
      begin
      HisGrid := HisGrid + 'LL';
      end;
-  strU(HisGrid);
+  HisGrid := UpperCase(HisGrid);
 
   if HisGrid = MyGrid then
      begin
@@ -444,7 +460,7 @@ begin
   GetBeamHeading := round(ShortHeading);
 end;
 
-procedure GetLatLon(Grid: GridString; var Lat, Lon: REAL);
+procedure GetLatLon(Grid: string; var Lat, Lon: REAL);
 
 
 begin

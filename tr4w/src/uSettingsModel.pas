@@ -980,6 +980,7 @@ type
       FSection: string;
       FName: string;
       FPostalCode: string;
+      FGrid: string;
       FItuZone: TMyItuZone;
    public
       constructor Create;
@@ -1013,6 +1014,16 @@ type
       property Name: string read FName write FName;
       // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
       property PostalCode: string read FPostalCode write FPostalCode;
+      (* Was the global MyGrid in LOGGRID -- the operator's own Maidenhead
+        locator, used for beam headings, for grid-square distance scoring,
+        and as the sent exchange in the VHF and Makrothen contests.
+
+        IT CARRIED THE WHOLE UNIT'S GRID VOCABULARY WITH IT. Every grid
+        routine in LOGGRID took a GridString, so this value could not have
+        been passed to any of them without narrowing; their parameters are
+        native strings now, which cost nothing because every other caller
+        passes a ShortString and widening is silent. *)
+      property Grid: string read FGrid write FGrid;
       (* Was MyITUZone in VC.pas, and ZERO IS MEANINGFUL: it means "use the
         CTY.DAT default", which is why the row allowed 0 in a range whose
         real zones start at 1. Issue #930 added it so a station in a
@@ -1501,6 +1512,7 @@ begin
    FSection    := '';
    FName       := '';
    FPostalCode := '';
+   FGrid       := '';
    FItuZone    := 0;
 end;
 

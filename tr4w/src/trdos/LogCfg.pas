@@ -1052,7 +1052,7 @@ begin
 
   tSPExchange := '';
   tCQExchange := '';
-  Grid := Copy(MyGrid, 1, 4);
+  Grid := UTF8Encode(Copy(Settings.My.Grid, 1, 4));
   case Contest of
 
     MAKROTHEN:
@@ -1105,7 +1105,7 @@ begin
       tCQExchange := ' 5NN # ' + MyZone;
 
 //    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + MyZone;
-    {CZECH_ACTIVITY_VHF,}OZHCRVHF, RADIOVHFFD: tCQExchange := ' 5NN # ' + MyGrid;
+    {CZECH_ACTIVITY_VHF,}OZHCRVHF, RADIOVHFFD: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Grid);
 
     NRAUBALTICCW, NRAUBALTICSSB, RU3AXMEMORIAL, {WWPMC,} UBACW, UBASSB: tCQExchange := ' 5NN # ' + MyState;
 

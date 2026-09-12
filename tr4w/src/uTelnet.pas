@@ -375,7 +375,7 @@ begin
       end
    else if Token = 'MY_GRID' then
       begin
-      Value := string(MyGrid)
+      Value := Settings.My.Grid
       end
    else if Token = 'MY_ZONE' then
       begin

@@ -266,7 +266,6 @@ begin
     MyCall := '';
     MyContinent := UnknownContinent;
     MyCountry := '';
-    MyGrid := '';
     MyState := '';
     MyZone := '';
   }

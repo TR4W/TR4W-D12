@@ -6540,13 +6540,13 @@ begin
            begin
            RXData.QSOPoints := 2;
            end;
-        if RXData.QTHString = MyGrid then
+        if RXData.QTHString = Settings.My.Grid then
            begin
            points := 0
            end
         else
            begin
-           Distance := GetDistanceBetweenGrids(MyGrid, RXData.QTHString);
+           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString);
            Points := Floor(Distance / 1000);
            if Points = 0 then
               begin
@@ -6689,15 +6689,15 @@ begin
         end;} // Removed this restriction at it continues for 2022 and perhaps beyond. // Issue 575
       end;
     ARRLDIGIQSOPointMethod: // Issue 577
-      if (MyGrid <> '') and (RXData.DomesticQTH <> '') then
+      if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
          begin
-         if AnsiCompareStr(MyGrid, RXData.QTHString) = 0 then
+         if Settings.My.Grid = string(RXData.QTHString) then
             begin
             RXData.QSOPoints := 2;
             end
          else
             begin
-            Distance := GetDistanceBetweenGrids(MyGrid, RXData.QTHString);
+            Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString);
             RXData.QSOPoints := Ceil((Distance / 500)) + 1;
             end;
          end;
@@ -7463,10 +7463,10 @@ begin
 
     RadioVHFFDQSOPointMethod {, ChampionshipRFVHFQSOPointMethod}:
       begin
-        if MyGrid <> '' then
+        if Settings.My.Grid <> '' then
            begin
            Points := GetDistanceBetweenGrids
-             {GetEuropeanDistanceBetweenGrids}(MyGrid,
+             {GetEuropeanDistanceBetweenGrids}(Settings.My.Grid,
              RXData.DomesticQTH);
            if RXData.Band = Band2 then
               begin
@@ -7495,15 +7495,15 @@ begin
 
     MakrothenQSOPointMethod:
       begin
-        if MyGrid <> '' then
+        if Settings.My.Grid <> '' then
            begin
-           if Copy(MyGrid, 1, 4) = Copy(RXData.DomesticQTH, 1, 4) then
+           if Copy(Settings.My.Grid, 1, 4) = Copy(RXData.DomesticQTH, 1, 4) then
               begin
               RXData.QSOPoints := 100
               end
            else
               begin
-              RXData.QSOPoints := GetDistanceBetweenGrids(MyGrid,
+              RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.Grid,
                 RXData.DomesticQTH);
               if RXData.Band = Band40 then
                  begin
@@ -7597,9 +7597,9 @@ begin
 
     RCCVHFQP:
       begin
-        if MyGrid <> '' then
+        if Settings.My.Grid <> '' then
            begin
-           Points := GetDistanceBetweenGrids(MyGrid, RXData.DomesticQTH);
+           Points := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
            if RXData.Band = Band2 then
               begin
               RXData.QSOPoints := Points
@@ -7620,9 +7620,9 @@ begin
       end;
 
     OZHCRVHFQSOPointMethod:
-      if MyGrid <> '' then
+      if Settings.My.Grid <> '' then
          begin
-         Points := GetDistanceBetweenGrids(MyGrid, RXData.DomesticQTH);
+         Points := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
          if RXData.Band = Band2 then
             begin
             RXData.QSOPoints := Points;
@@ -7642,18 +7642,18 @@ begin
          end;
 
     EuropeanVHFQSOPointMethod:
-      //      if MyGrid <> '' then
+      //      if Settings.My.Grid <> '' then
       //        if RXData.DomesticQTH <> '' then
       begin
-        //    RXData.QSOPoints := GetEuropeanDistanceBetweenGrids(MyGrid, RXData.DomesticQTH);
+        //    RXData.QSOPoints := GetEuropeanDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
         if ContestName = 'EURASIA' then // 4.96.3
            begin
-           RXData.QSOPoints := GetDistanceBetweenGrids(MyGrid, RXData.QTHString)
+           RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString)
            end
             // domestic truncated to 2 bytes. need this 6bytes
         else
            begin
-           RXData.QSOPoints := GetDistanceBetweenGrids(MyGrid,
+           RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.Grid,
              RXData.DomesticQTH);
            end;
         //n4af 4.36.11
@@ -7683,10 +7683,10 @@ begin
       end;
 
     TeslaQSOPointMethod: // 4.79.1
-      //      if MyGrid <> '' then
+      //      if Settings.My.Grid <> '' then
       //        if RXData.DomesticQTH <> '' then
       begin
-        Distance := GetDistanceBetweenGrids(MyGrid, RXData.DomesticQTH);
+        Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
         case distance of
           0..600: RXData.QSOPoints := 10;
           601..1200: RXData.QSOPoints := 13;
@@ -7725,7 +7725,7 @@ begin
        above 8401 km = 45 points
 
           //n4af 4.36.11
-         if RXData.DomesticQTH = MyGrid then
+         if RXData.DomesticQTH = Settings.My.Grid then
            RXData.QSOPoints := 90; }
         DisplayTotalScore;
       end;
@@ -8619,9 +8619,9 @@ begin
 
     StewPerryQSOPointMethod:
       begin
-        if (MyGrid <> '') and (RXData.DomesticQTH <> '') then
+        if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
            begin
-           Distance := GetDistanceBetweenGrids(MyGrid, RXData.DomesticQTH);
+           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
            RXData.QSOPoints := (Distance div 500) + 1;
            if CategoryPower = cpQRP then
               begin
@@ -8639,9 +8639,9 @@ begin
       end;
 
     WWDigiQP: // 4.90.8
-      if (MyGrid <> '') and (RXData.DomesticQTH <> '') then
+      if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
          begin
-         Distance := GetDistanceBetweenGrids(MyGrid, RXData.QTHString);
+         Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString);
          RXData.QSOPoints := (Distance div 3000) + 1;
          end;
 
@@ -8660,9 +8660,9 @@ begin
          RXData.QSOPoints := 0;
          RXData.InhibitMults := True;
          end
-      else if (MyGrid <> '') and (RXData.QTHString <> '') then
+      else if (Settings.My.Grid <> '') and (RXData.QTHString <> '') then
          begin
-         RTCDistKm := RTCGridDistance(MyGrid, RXData.QTHString);
+         RTCDistKm := RTCGridDistance(Settings.My.Grid, RXData.QTHString);
          if RTCDistKm < 2000.0 then
             begin
             RXData.QSOPoints := 1;
@@ -8851,9 +8851,9 @@ begin
 
     WWLQSOPointMethod:
       begin
-        if (MyGrid <> '') and (RXData.DomesticQTH <> '') then
+        if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
            begin
-           Distance := GetDistanceBetweenGrids(MyGrid, RXData.DomesticQTH);
+           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
            RXData.QSOPoints := (Distance div 500) + 1;
 
            if (RXData.Band = Band80) or (RXData.Band = Band160) then
@@ -8965,9 +8965,9 @@ begin
     CupRFMethod:
       begin
 
-        if (MyGrid <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
+        if (Settings.My.Grid <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
            begin
-           Distance := GetDistanceBetweenGrids(MyGrid, RXData.QTHString
+           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString
              {DomesticQTH});
 
            if Distance > 7000 then

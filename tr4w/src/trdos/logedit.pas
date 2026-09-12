@@ -2520,10 +2520,10 @@ begin
                    begin
                    Exchange := Exchange + data.Grid + ' ';
 
-                   if (MyGrid <> '') and LooksLikeAGrid(data.Grid) then
+                   if (Settings.My.Grid <> '') and LooksLikeAGrid(data.Grid) then
                       begin
                       //                  SaveSetAndClearActiveWindow(BeamHeadingWindow);
-                      Heading := round(GetBeamHeading(MyGrid, data.Grid));
+                      Heading := round(GetBeamHeading(Settings.My.Grid, data.Grid));
                       //                  Write(data.Grid, ' at ', Heading, '?');
                                                 //                  RestorePreviousWindow;
                       end;
@@ -2753,10 +2753,10 @@ begin
             begin
             TempString := data.Grid;
 
-            if (MyGrid <> '') and LooksLikeAGrid(data.Grid) then
+            if (Settings.My.Grid <> '') and LooksLikeAGrid(data.Grid) then
                begin
                //            SaveSetAndClearActiveWindow(BeamHeadingWindow);
-               Heading := round(GetBeamHeading(MyGrid, data.Grid));
+               Heading := round(GetBeamHeading(Settings.My.Grid, data.Grid));
                //            Write(data.Grid, ' at ', Heading, '?');
                                  //            RestorePreviousWindow;
                end;
@@ -2911,15 +2911,15 @@ begin
 
     TestString := RemoveLastString(TempString);
 
-    if (MyGrid <> '') and LooksLikeAGrid(TestString) then
+    if (Settings.My.Grid <> '') and LooksLikeAGrid(TestString) then
        begin
        //      SaveSetAndClearActiveWindow(BeamHeadingWindow);
-       Heading := round(GetBeamHeading(MyGrid, TestString));
+       Heading := round(GetBeamHeading(Settings.My.Grid, TestString));
        //               Write(TestString, ' ', Heading, '?');
        TestString := TestString + ' ' + IntToStr(Heading) + '*';
        {               if DistanceMode <> NoDistanceDisplay then
                         begin
-                           Distance := GetDistanceBetweenGrids(MyGrid, TestString);
+                           Distance := GetDistanceBetweenGrids(Settings.My.Grid, TestString);
 
                            if DistanceMode = DistanceMiles then
                               begin

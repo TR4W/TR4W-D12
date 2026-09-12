@@ -36,7 +36,7 @@ implementation
 uses
   SysUtils, StrUtils,
   LogCW,     // CQExchange template global
-  LOGGRID;   // MyGrid global (operator's home grid, used for RTC sent exchange)
+  uSettingsModel;   // Settings.My.Grid -- the operator's home grid, sent in RTC
 
 // Collapse runs of whitespace (space + tab) to a single space and trim
 // both ends.  Used after substituting into the CQExchange template so
@@ -112,7 +112,7 @@ begin
       begin
       Result := CollapseWhitespace(
                    IntToStr(RXData.NumberSent) + ' ' +
-                   Trim(string(MyGrid)));
+                   Trim(Settings.My.Grid));
       Exit;
       end;
 

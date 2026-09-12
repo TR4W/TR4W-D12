@@ -614,6 +614,7 @@ const
    - 1 {MY NAME -- moved to uSettingsModel}
    - 2 {the DVK, two of its five -- moved to uSettingsModel}
    - 2 {the unknown country file -- moved to uSettingsModel}
+   - 1 {MY GRID -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -847,7 +848,6 @@ const
  (crCommand: 'MY CALL';                       crAddress: @MyCall;                         crMin:0;  crMax:13;      crS: csOwned; crA: 14;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'MY COUNTRY';                    crAddress: @MyCountry;                      crMin:0;  crMax:20;      crS: csOwned; crA: 8; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY GRID';                       crAddress: @MyGrid;                         crMin:0;  crMax:7;        crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY QTH';                        crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY STATE';                      crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'MY ZONE';                       crAddress: @MyZone;                         crMin:0;  crMax: 6;       crS: csOwned; crA: 21;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),

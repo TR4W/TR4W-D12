@@ -541,8 +541,8 @@ begin
     STEWPERRY:
       begin
         ContestName := 'STEW-PERRY'; // 4.76.6
-        CQExchange := ' ' + MyGrid;
-        SearchAndPounceExchange := MyGrid;
+        CQExchange := UTF8Encode(' ' + Settings.My.Grid);
+        SearchAndPounceExchange := UTF8Encode(Settings.My.Grid);
         ActiveBand := Band160;
       end;
 
@@ -671,17 +671,17 @@ begin
         Settings.Bands.WarcEnabled := False;
 
         // CW function-key defaults and SAP exchange strings.
-        // Exchange shape: <serial#> <MyGrid> -- e.g. "001 FN20".
+        // Exchange shape: <serial#> <grid> -- e.g. "001 FN20".
         // RST is optional per the rules and is not transmitted by default.
-        // MyGrid is substituted at FCONTEST init time (same idiom as MyZone
+        // The grid is substituted at FCONTEST init time (same idiom as MyZone
         // in SetUpRSTMyZoneExchange); the operator must restart the contest
-        // setup if MyGrid changes.
-        CQExchange := ' # ' + MyGrid;
-        RepeatSearchAndPounceExchange := ' # ' + MyGrid;
-        SearchAndPounceExchange := ' # ' + MyGrid;
-        SetCQMemoryString(CW, F3, '# ' + MyGrid);
-        SetEXMemoryString(CW, F4, 'NR # ' + MyGrid);
-        SetEXMemoryString(CW, F5, '@ DE \ # ' + MyGrid);
+        // setup if it changes.
+        CQExchange := UTF8Encode(' # ' + Settings.My.Grid);
+        RepeatSearchAndPounceExchange := UTF8Encode(' # ' + Settings.My.Grid);
+        SearchAndPounceExchange := UTF8Encode(' # ' + Settings.My.Grid);
+        SetCQMemoryString(CW, F3, UTF8Encode('# ' + Settings.My.Grid));
+        SetEXMemoryString(CW, F4, UTF8Encode('NR # ' + Settings.My.Grid));
+        SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ # ' + Settings.My.Grid));
         SetEXMemoryString(CW, AltF4, 'NR?');
         SetEXCaptionMemoryString(CW, F4, 'NR');
         SetEXCaptionMemoryString(CW, F5, 'Cl+Ex');
@@ -693,7 +693,7 @@ begin
         ContestName := 'VHF QSO JUNE';
         Settings.Bands.HfEnabled := False;
         //        VHFBandsEnabled := True;
-         //         MyState := MyGrid; //Copy(MyGrid, 1, 4);
+         //         MyState := Settings.My.Grid; //Copy(Settings.My.Grid, 1, 4);
       end;
 
     APSPRINT:
@@ -1554,7 +1554,7 @@ begin
            begin
            ActiveMode := Phone;
            end;
-        MyState := MyGrid;
+        MyState := UTF8Encode(Settings.My.Grid);
         LiteralDomesticQTH := True;
       end;
 
