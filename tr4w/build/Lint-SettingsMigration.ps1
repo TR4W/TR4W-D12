@@ -99,7 +99,13 @@ $migrated = @([regex]::Matches($mm.Groups[1].Value, "'([^']+)'") |
 
 # A FLOOR. Zero of anything means the parse broke, and a check that passes
 # because it looked at nothing is worse than no check.
-if ($rows.Count -lt 100 -or $stored.Count -lt 1 -or $migrated.Count -lt 1) {
+#
+# THE ROW COUNT IS NO LONGER PART OF IT. It was 100, set when CFGCA had
+# hundreds; the array is being emptied on purpose and its count legitimately
+# reaches ZERO, at which point a floor on it would fail on the finished state.
+# The two lists this lint actually compares still carry floors, and they are
+# what a broken parse would empty.
+if ($stored.Count -lt 1 -or $migrated.Count -lt 1) {
    Write-Output ("Lint-SettingsMigration: parse looks wrong (rows={0} stored={1} seeded={2}) -- refusing to report a pass." -f $rows.Count, $stored.Count, $migrated.Count)
    exit 1
 }

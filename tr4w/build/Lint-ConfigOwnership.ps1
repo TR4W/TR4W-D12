@@ -1,8 +1,12 @@
 <#
 .SYNOPSIS
    Checks that every config key the radio library RENDERS still reaches the
-   program -- either via CheckCommand (csOwned) or via the direct JSON applier
-   (csJSON), and never via neither.
+   program -- via CheckCommand (csOwned), via the direct JSON applier (csJSON,
+   or no row at all), and never via neither.
+
+   NO ROW IS THE DESTINATION. As of 2026-09-13 the radio keys have none: the
+   applier is the only route, and this lint is what makes forgetting an arm a
+   build failure rather than a radio that silently will not open.
 
 .DESCRIPTION
    Two editors now write the same settings. Preferences owns the radio library
@@ -128,8 +132,23 @@ function Test-Ownership {
 
    foreach ($k in $keys) {
       $u = $k.Key.ToUpper()
+
+      # NO ROW AT ALL IS THE DESTINATION, NOT A FAULT.
+      #
+      # This used to be a violation, because the only two legal states were
+      # csOwned and csJSON-with-an-applier. The radio rows are gone now and
+      # ApplyJSONOwnedRadioKey is the whole route.
+      #
+      # THE CHECK IS STRONGER HERE THAN FOR csJSON, and deliberately: a csJSON
+      # row at least still ACCEPTS the key, so a missing applier is a value
+      # that goes nowhere. With no row, CheckCommand REFUSES the key outright
+      # -- LogCfg shows a modal "invalid statement in config file" for a line
+      # it refuses -- so a missing applier is both a dead setting and a dialog
+      # in the operator's face at startup.
       if (-not $statuses.ContainsKey($u)) {
-         $violations += "$($k.Key) is rendered by the radio library but has no CFGCA row"
+         if ($applied -notcontains $k.Suffix) {
+            $violations += "$($k.Key) has no CFGCA row and ApplyJSONOwnedRadioKey has no case for '$($k.Suffix)' - nothing applies it, and CheckCommand will refuse the key"
+         }
          continue
       }
       $st = $statuses[$u]
@@ -280,5 +299,5 @@ if ($violations.Count -gt 0) {
    exit 1
 }
 
-Write-Output 'Lint-ConfigOwnership: every rendered radio key is applied - csOwned via CheckCommand, or csJSON with a direct applier.'
+Write-Output 'Lint-ConfigOwnership: every rendered radio key is applied - by the direct applier, or csOwned via CheckCommand.'
 exit 0

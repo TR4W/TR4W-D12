@@ -260,6 +260,11 @@ uses
    Classes,   (* TStringList -- ReadSectionValues fills one; see the band plan seed *)
    LCLType,   (* MAXWORD -- the only other thing Windows was here for *)
    StrUtils,   // StartsText -- KeySuffix
+   TF,         (* GetValueFromArray / UNKNOWNTYPE -- the same token lookup
+                 CheckCommand used, so the spelling tables stay single *)
+   Tree,       (* PortTypeSA -- the port spellings, where they have always
+                 lived; the applier reads the same table the row did.
+                 tr4w_RTSDTRTypeSA comes from LOGRADIO, already listed below *)
    VC,
    uCFG,
    uCAT,
@@ -1635,6 +1640,7 @@ function ApplyJSONOwnedRadioKey(const aSlot: integer;
 var
    rig: RadioPtr;
    n: integer;
+   b: Byte;
 
    // Assign a string, refusing one too long for its ShortString target rather
    // than letting Delphi truncate it in silence.
@@ -1664,6 +1670,63 @@ var
          end;
    end;
 
+   (* AN ORDINAL FROM A SPELLING TABLE.
+
+     THE SAME TABLE CheckCommand MATCHED AGAINST, through the same function --
+     TF.GetValueFromArray. That is the whole point: these keys used to reach
+     the radio through a ckList row, and the vocabulary must not become a
+     second list here. An unknown spelling is REFUSED and logged, which is
+     what the row did.  *)
+   function OrdinalFrom(const aSpellings: PCfgSpellings; const aHigh: Byte;
+                        out aOut: Byte): boolean;
+   begin
+      aOut := GetValueFromArray(aSpellings, aHigh, AnsiString(aValue));
+      Result := aOut <> UNKNOWNTYPE;
+      if not Result then
+         begin
+         logger.Warn('[ApplyJSONOwnedRadioKey] %s: "%s" is not one of its values -- NOT applied',
+                     [aSuffix, aValue]);
+         end;
+   end;
+
+   (* A VALUE FROM A ckArray ALLOW-LIST -- a member of the list, not a range.
+     BAUD RATE is the one that bit: a cleared slot rendered 0, CFGCA refused
+     it, and the value was written to the ini anyway. Refusing here keeps that
+     refusal. *)
+   function MemberOf(const aAllowed: array of integer; out aOut: integer): boolean;
+   var
+      i, code: integer;
+   begin
+      Result := False;
+      Val(aValue, aOut, code);
+      if code <> 0 then
+         begin
+         aOut := 0;
+         end
+      else
+         begin
+         for i := Low(aAllowed) to High(aAllowed) do
+            begin
+            if aAllowed[i] = aOut then
+               begin
+               Result := True;
+               Break;
+               end;
+            end;
+         end;
+      if not Result then
+         begin
+         logger.Warn('[ApplyJSONOwnedRadioKey] %s: "%s" is not one of its allowed values -- NOT applied',
+                     [aSuffix, aValue]);
+         end;
+   end;
+
+   (* TRUE/FALSE, the spelling CheckCommand's ctBoolean arm accepted. *)
+   function BoolValue: boolean;
+   begin
+      Result := SameText(Trim(aValue), 'TRUE');
+   end;
+
 begin
    Result := True;
 
@@ -1682,68 +1745,155 @@ begin
    // gets the same treatment for free.
    if aDelete then
       begin
-      if SameText(aSuffix, 'FACTORY ID') then
+      if UnicodeSameText(aSuffix, 'FACTORY ID') then
          begin
          rig^.FactoryId := '';
          end;
       Exit;
       end;
 
-   if SameText(aSuffix, 'NAME') then
+   if UnicodeSameText(aSuffix, 'NAME') then
       begin
       if FitsIn(20) then rig^.RadioName := Str20(aValue) else Result := False;
       end
-   else if SameText(aSuffix, 'FACTORY ID') then
+   else if UnicodeSameText(aSuffix, 'FACTORY ID') then
       begin
       // 48, not 50: the CommandsArray row says 48 and this must not be laxer
       // than the rule it replaces.
       if FitsIn(48) then rig^.FactoryId := Str50(aValue) else Result := False;
       end
-   else if SameText(aSuffix, 'IP ADDRESS') then
+   else if UnicodeSameText(aSuffix, 'IP ADDRESS') then
       begin
       if FitsIn(50) then rig^.IPAddress := Str50(aValue) else Result := False;
       end
-   else if SameText(aSuffix, 'NETWORK USERNAME') then
+   else if UnicodeSameText(aSuffix, 'NETWORK USERNAME') then
       begin
       if FitsIn(50) then rig^.NetworkUsername := Str50(aValue) else Result := False;
       end
-   else if SameText(aSuffix, 'NETWORK PASSWORD') then
+   else if UnicodeSameText(aSuffix, 'NETWORK PASSWORD') then
       begin
       if FitsIn(50) then rig^.NetworkPassword := Str50(aValue) else Result := False;
       end
-   else if SameText(aSuffix, 'SERIAL FORMAT') then
+   else if UnicodeSameText(aSuffix, 'SERIAL FORMAT') then
       begin
       // 3 is a LENGTH, not a value: '8N2'.  Blank is legal and means "use the
       // driver's default", which is how a network radio renders.
       if FitsIn(3) then rig^.SerialFormat := Str50(aValue) else Result := False;
       end
-   else if SameText(aSuffix, 'STARTUP COMMAND') then
+   else if UnicodeSameText(aSuffix, 'STARTUP COMMAND') then
       begin
       if FitsIn(50) then rig^.StartupCommand := Str50(aValue) else Result := False;
       end
-   else if SameText(aSuffix, 'TCP PORT') then
+   else if UnicodeSameText(aSuffix, 'TCP PORT') then
       begin
       if IntInRange(0, 65535, n) then rig^.RadioTCPPort := n else Result := False;
       end
-   else if SameText(aSuffix, 'RECEIVER ADDRESS') then
+   else if UnicodeSameText(aSuffix, 'RECEIVER ADDRESS') then
       begin
       if IntInRange(0, MAXWORD, n) then rig^.ReceiverAddress := n else Result := False;
       end
-   else if SameText(aSuffix, 'HAMLIB ID') then
+   else if UnicodeSameText(aSuffix, 'HAMLIB ID') then
       begin
       if IntInRange(0, MAXWORD, n) then rig^.HamLibID := n else Result := False;
       end
-   else if SameText(aSuffix, 'FREQUENCY ADDER') then
+   else if UnicodeSameText(aSuffix, 'FREQUENCY ADDER') then
       begin
       if IntInRange(0, MAXWORD, n) then rig^.FrequencyAdder := n else Result := False;
       end
-   else if SameText(aSuffix, 'ICOM DATA MODE ID') then
+   else if UnicodeSameText(aSuffix, 'ICOM DATA MODE ID') then
       begin
       if IntInRange(1, 3, n) then rig^.IcomDataModeID := Byte(n) else Result := False;
       end
-   else if SameText(aSuffix, 'KEYER STOP BITS') then
+   else if UnicodeSameText(aSuffix, 'KEYER STOP BITS') then
       begin
       if IntInRange(0, 2, n) then rig^.RadioKeyerStopBits := n else Result := False;
+      end
+
+   (* THE ONE KEY THAT IS NOT SLOT-PREFIXED. KeySuffix returns
+     'POLL RADIO ONE' whole, exactly as its header says it will -- the slot is
+     at the END of this name, not the front, and aSlot already carries it. *)
+   else if UnicodeSameText(aSuffix, 'POLL RADIO ONE')
+        or UnicodeSameText(aSuffix, 'POLL RADIO TWO') then
+      begin
+      rig^.PollingEnable := BoolValue;
+      end
+
+   (* --- the five booleans -------------------------------------------------
+     No bound to carry: ctBoolean took TRUE or anything else, and so does
+     this. *)
+   else if UnicodeSameText(aSuffix, 'CW BY CAT') then
+      begin
+      rig^.CWByCAT := BoolValue;
+      end
+   else if UnicodeSameText(aSuffix, 'CW SPEED SYNC') then
+      begin
+      rig^.CWSpeedSync := BoolValue;
+      end
+   else if UnicodeSameText(aSuffix, 'USE HAMLIB') then
+      begin
+      rig^.UseHamLib := BoolValue;
+      end
+   else if UnicodeSameText(aSuffix, 'WIDE CW FILTER') then
+      begin
+      rig^.WideCWFilter := BoolValue;
+      end
+   else if UnicodeSameText(aSuffix, 'FT1000MP CW REVERSE') then
+      begin
+      rig^.FT1000MPCWReverse := BoolValue;
+      end
+
+   (* --- the two allow-lists ----------------------------------------------- *)
+   else if UnicodeSameText(aSuffix, 'BAUD RATE') then
+      begin
+      if MemberOf(CAT_BAUDRATE_ARRAY, n) then rig^.RadioBaudRate := n
+      else Result := False;
+      end
+   else if UnicodeSameText(aSuffix, 'ICOM FILTER BYTE') then
+      begin
+      if MemberOf(ICOM_FILTER_WIDTH, n) then rig^.tIcomFilterWidth := n
+      else Result := False;
+      end
+
+   (* --- the six spelling tables -------------------------------------------
+     Each names the array the ckList row named, so there is still one
+     statement of what each of these settings may say. *)
+   else if UnicodeSameText(aSuffix, 'CONTROL PORT') then
+      begin
+      if OrdinalFrom(@PortTypeSA, Byte(High(PortType)), b) then
+         rig^.tCATPortType := PortType(b)
+      else Result := False;
+      end
+   else if UnicodeSameText(aSuffix, 'CAT RTS') then
+      begin
+      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+         rig^.tr4w_cat_rts_state := tr4w_RTSDTRType(b)
+      else Result := False;
+      end
+   else if UnicodeSameText(aSuffix, 'CAT DTR') then
+      begin
+      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+         rig^.tr4w_cat_dtr_state := tr4w_RTSDTRType(b)
+      else Result := False;
+      end
+   else if UnicodeSameText(aSuffix, 'KEYER RTS') then
+      begin
+      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+         rig^.tr4w_keyer_rts_state := tr4w_RTSDTRType(b)
+      else Result := False;
+      end
+   else if UnicodeSameText(aSuffix, 'KEYER DTR') then
+      begin
+      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+         rig^.tr4w_keyer_DTR_state := tr4w_RTSDTRType(b)
+      else Result := False;
+      end
+   else if UnicodeSameText(aSuffix, 'TYPE') then
+      begin
+      (* RadioTypeTokensA is FILLED FROM THE ENUM by uRadioRegistry, not
+        hand-typed -- which is why adding a radio needs no edit here. *)
+      if OrdinalFrom(@RadioTypeTokensA, Byte(High(InterfacedRadioType)), b) then
+         rig^.RadioModel := InterfacedRadioType(b)
+      else Result := False;
       end
    else
       begin
