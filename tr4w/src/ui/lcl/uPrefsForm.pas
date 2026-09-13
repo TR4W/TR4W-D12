@@ -6588,7 +6588,7 @@ end;
 
 procedure TPrefsForm.LoadExternalSoftwarePanels;
 var
-   t: ExternalLoggerType;
+   loggerToken: string;
 begin
    { DXLab SpotCollector. LOADED AND SAVED HERE because the control lives on the
      DXLab page -- it was read by LoadClusterPanels while sitting on the DX
@@ -6611,9 +6611,9 @@ begin
    cbxLoggerType.Items.BeginUpdate;
    try
       cbxLoggerType.Clear;
-      for t := Low(ExternalLoggerType) to High(ExternalLoggerType) do
+      for loggerToken in Settings.AllowedValuesForCommand('EXTERNAL LOGGER') do
          begin
-         cbxLoggerType.Items.Add(string(AnsiString(ExternalLoggerTypeSA[t])));
+         cbxLoggerType.Items.Add(loggerToken);
          end;
    finally
       cbxLoggerType.Items.EndUpdate;

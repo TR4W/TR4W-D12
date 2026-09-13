@@ -1872,12 +1872,10 @@ begin
                [BooleanToStr(Settings.SpotCollector.Enabled)]);
   if Settings.SpotCollector.Enabled then
      StartDXLabPathfinder;
-  if elLogType <> lt_NoExternalLogger then
-     begin
-     externalLogger := TExternalLogger.Create(elLogType);
-     externalLogger.loggerPort := Settings.ExternalLogger.Port;
-     externalLogger.loggerAddress := Settings.ExternalLogger.Address;
-     end;
+  (* THE CALLER SAYS NOTHING ABOUT LOGGER TYPES (NY4I, 2026-09-13). The
+    factory reads the setting and returns quietly when no logger is chosen,
+    which is the same shape as the radio: the subsystem owns its taxonomy. *)
+  StartExternalLoggerFromSettings;
   // Issue #783 -- start the HamScore RTC uploader if HAMSCORE ENABLE = TRUE.
   // No-op if disabled or password is empty.
   HamScoreInit;

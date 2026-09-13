@@ -28,13 +28,41 @@ type
                                    msgCallback: TProcessMsgRef): TExternalLoggerBase;
       class function GetSupportedLoggers: string;
       class function IsLoggerSupported(loggerType: ExternalLoggerType): boolean;
+      (* THE CONFIG-FILE TOKEN FOR A TYPE, AND BACK.
+
+        The settings model holds a STRING and knows nothing about what logger
+        programs exist -- see ExternalLogger.LoggerType. This is where the two
+        meet, and it is the only place: ExternalLoggerTypeSA is the same array
+        the config parser used to match against.
+
+        An unknown token answers lt_NoExternalLogger rather than raising: a
+        settings file from a later build naming a logger this one does not
+        have should leave the feature off, not stop the program. *)
+      class function TokenToLoggerType(const aToken: string): ExternalLoggerType;
+      class function LoggerTypeToToken(loggerType: ExternalLoggerType): string;
    end;
 
+(*
+  START THE EXTERNAL LOGGER, IF THE OPERATOR ASKED FOR ONE.
+
+  THE CALLER SAYS NOTHING ABOUT LOGGER TYPES. NY4I, 2026-09-13: the main code
+  should "just call the external logger and if the factory is not set, it would
+  simply return" -- so this reads the setting, and a token of NONE, an unknown
+  token or a disabled logger all mean the same thing here: return, quietly.
+
+  It is a plain procedure rather than another class function because there is
+  nothing to choose: the answer is in the settings.
+*)
    EExternalLoggerFactoryException = class(Exception);
+
+procedure StartExternalLoggerFromSettings;
 
 implementation
 
-uses Log4D;
+uses
+   Log4D,
+   MainUnit,          (* externalLogger -- the process-wide instance *)
+   uSettingsModel;    (* Settings.ExternalLogger, and the vocabulary *)
 
 var
    logger: TLogLogger;
@@ -108,6 +136,30 @@ begin
    end;
 end;
 
+class function TExternalLoggerFactory.TokenToLoggerType(
+   const aToken: string): ExternalLoggerType;
+var
+   t: ExternalLoggerType;
+   wanted: string;
+begin
+   Result := lt_NoExternalLogger;
+   wanted := UpperCase(Trim(aToken));
+   for t := Low(ExternalLoggerType) to High(ExternalLoggerType) do
+      begin
+      if wanted = UpperCase(ExternalLoggerTypeSA[t]) then
+         begin
+         Result := t;
+         Exit;
+         end;
+      end;
+end;
+
+class function TExternalLoggerFactory.LoggerTypeToToken(
+   loggerType: ExternalLoggerType): string;
+begin
+   Result := ExternalLoggerTypeSA[loggerType];
+end;
+
 class function TExternalLoggerFactory.GetSupportedLoggers: string;
 begin
    Result := 'Supported external loggers:'#13#10 +
@@ -122,9 +174,39 @@ begin
    Result := (loggerType = lt_DXKeeper);
 end;
 
+procedure StartExternalLoggerFromSettings;
+var
+   chosen: ExternalLoggerType;
+begin
+   chosen := TExternalLoggerFactory.TokenToLoggerType(
+                Settings.ExternalLogger.LoggerType);
+   if chosen = lt_NoExternalLogger then
+      begin
+      Exit;
+      end;
+
+   externalLogger := TExternalLogger.Create(chosen);
+   externalLogger.loggerPort    := Settings.ExternalLogger.Port;
+   externalLogger.loggerAddress := Settings.ExternalLogger.Address;
+end;
+
+(* The vocabulary the settings model offers and refuses by -- the subsystem's
+  own array, passed BY NAME.
+
+  By name rather than built here, because Lint-SpellingTables finds a table
+  through the identifier at the registration. A list assembled in a loop is a
+  list that lint cannot check, and building one cost four spellings their
+  guard before this was written the other way. *)
+procedure PublishLoggerVocabulary;
+begin
+   RegisterSettingAllowedValues('ExternalLogger.LoggerType',
+                                ExternalLoggerTypeSA);
+end;
+
 initialization
    logger := TLogLogger.GetLogger('uExternalLoggerFactory');
    logger.Info('External Logger Factory initialized');
+   PublishLoggerVocabulary;
 
 finalization
    logger.Info('External Logger Factory finalized');

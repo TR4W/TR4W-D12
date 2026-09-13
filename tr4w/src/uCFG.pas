@@ -538,7 +538,11 @@ const
     (lpArray: @tCertificateSA;                    lpLength: Byte(High(tCertificate));           lpVar: @Certificate;),
     (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @ExternalLoggerTypeSA;              lplength: Byte(High(ExternalLoggerType));     lpVar: @elLogType;)
+    (* SLOT FREED 2026-09-13 -- the external logger is a SUBSYSTEM and owns
+      its own taxonomy; the setting holds a token. Its crP was 2, the
+      remaining-multiplier rebuild, which had nothing to do with it: a
+      hand-typed index compiles. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil)
     {*)}
       );
 
@@ -642,6 +646,7 @@ const
    - 1 {REMINDER -- withdrawn, not migrated: it never had a variable}
    - 1 {DEBUG LOG LEVEL -- tLogLevels left VC with it}
    - 1 {POSSIBLE CALL MODE -- off the SCP database record}
+   - 1 {EXTERNAL LOGGER -- a token; the enum stays with the factory}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -784,7 +789,6 @@ const
  (crCommand: 'DX MULTIPLIER';                 crAddress: pointer(11);                     crMin:0;  crMax:0;       crS: csJSON; crA:20; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'EXCHANGE RECEIVED';             crAddress: pointer(10);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 
- (crCommand: 'EXTERNAL LOGGER';               crAddress: pointer(53);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:2; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
 
 
  (* THE EXTERNAL LOGGER'S THREE ROWS ARE WITHDRAWN, 2026-09-10.

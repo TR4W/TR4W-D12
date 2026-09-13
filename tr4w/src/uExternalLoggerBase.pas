@@ -55,7 +55,17 @@ function BoolToString(b: boolean): string;
 
 Type ExternalLoggerType = (lt_NoExternalLogger, lt_DXKeeper, lt_ACLog, lt_HRD);
 
-const ExternalLoggerTypeSA                     : array[ExternalLoggerType] of PAnsiChar = ('NONE', 'DXKEEPER', 'ACLOG', 'HRD');
+(* THE CONFIG-FILE TOKEN FOR EACH LOGGER, IN ORDINAL ORDER.
+
+  string, NOT PAnsiChar, since 2026-09-13: nothing indexes it through a
+  pointer any more. uCFG used to, through ListParamArray; the setting holds
+  the token itself now and this array is what the factory maps with and what
+  the settings model is told to accept.
+
+  IT IS REGISTERED BY NAME so Lint-SpellingTables can still check it -- a
+  duplicate or blank here would make a logger unreachable by name, which is
+  exactly what that lint is for. *)
+const ExternalLoggerTypeSA                     : array[ExternalLoggerType] of string = ('NONE', 'DXKEEPER', 'ACLOG', 'HRD');
 
    // Reconnection configuration
    RECONNECT_INITIAL_DELAY = 1000;    // 1 second initial delay
@@ -156,7 +166,8 @@ Type
 
 end;
 
-var elLogType: ExternalLoggerType;
+(* elLogType MOVED to Settings.ExternalLogger.LoggerType, 2026-09-13 -- as a
+  TOKEN. The enum stays here because it is what CreateLogger takes. *)
 implementation
 
 Uses MainUnit;

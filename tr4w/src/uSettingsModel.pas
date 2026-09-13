@@ -973,9 +973,25 @@ type
       FAddress: string;
       FPort: integer;
       FEnabled: boolean;
+      FLoggerType: string;
    public
       constructor Create;
    published
+      (*
+        WHICH LOGGER PROGRAM, AS A TOKEN -- 'NONE', 'DXKEEPER', 'ACLOG',
+        'HRD'. Was the global elLogType, an ExternalLoggerType.
+
+        A STRING, AND THE ENUM STAYS WITH THE SUBSYSTEM. NY4I, 2026-09-13:
+        the external logger is a subsystem, so its type parameters "are
+        strictly supporting the factory objects (just like the radio
+        works)" -- and a radio definition holds an opaque RegistryId string
+        for exactly this reason. The settings model has no business knowing
+        what logger programs exist; the factory does, and it publishes its
+        vocabulary here through RegisterSettingAllowedValues.
+
+        EXTERNAL LOGGER, aliased -- the derived name would say it twice.
+      *)
+      property LoggerType: string read FLoggerType write FLoggerType;
       // Was ExternalLoggerAddress in logstuff.pas, a string[255].
       property Address: string read FAddress write FAddress;
       // Was ExternalLoggerPort.  DXKeeper listens on 52000 plus one.
@@ -3677,6 +3693,11 @@ begin
    FAddress := '127.0.0.1';
    FPort    := 52001;
    FEnabled := False;
+   (* The token for lt_NoExternalLogger, which is what the global carried:
+     the enum's zero value. The factory owns the spelling; this is the only
+     place the settings model repeats it, and the vocabulary the factory
+     registers is what refuses anything else. *)
+   FLoggerType := 'NONE';
 end;
 
 { TR4WSettings }
@@ -4847,6 +4868,7 @@ begin
    Alias('DUPE CHECK SOUND', 'Operating.DupeCheckSound');
    Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
    Alias('POSSIBLE CALL MODE', 'Scp.PossibleCallMode');
+   Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
      anywhere writes it per contest -- so it is station-scoped and joins
      Operating rather than the contest-scoped Contest group. *)
