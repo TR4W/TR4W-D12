@@ -2997,7 +2997,7 @@ uses
      TJSONData and PPropInfo in its signature. Naming them again here is a
      duplicate identifier, not a harmless repetition. *)
    fpjsonrtti,   // the streamer; the property walk is TypInfo, see OwnsCommand
-   uKeychain;    // ProtectSecret / UnprotectSecret -- see TSecretText
+   uKeychain;    // StoreSecret / FetchSecret -- see TSecretText
 
 var
    GSettings: TR4WSettings = nil;
@@ -4878,12 +4878,22 @@ begin
 end;
 
 (*
-  REPLACE EVERY SECRET IN THE FINISHED DOCUMENT WITH ITS PROTECTED FORM.
+  PUT EVERY SECRET IN THE VAULT AND LEAVE A REFERENCE BEHIND.
 
-  The JSON mirrors the property tree, so the walk carries a path and looks up
-  the matching member as it goes. A secret whose member is missing is simply
-  not there to protect -- a contest-scoped group is dropped before this runs,
-  and nothing else can remove a member.
+  THE VALUE MEMBER IS REMOVED AND `<Name>Ref` IS ADDED, so the file carries
+  the SETTING'S NAME and never the password:
+
+      "Password"    gone
+      "PasswordRef" "Hamscore.Password"
+
+  A SEPARATE MEMBER RATHER THAN A TAG INSIDE THE VALUE. An earlier version
+  wrote scheme:reference, and NY4I rejected the shape: it reads like web
+  basic authentication, and it cannot be told apart from a password that
+  happens to contain a colon. A member name has no such ambiguity.
+
+  IF THE VAULT REFUSES, NEITHER MEMBER IS WRITTEN. The password is not put
+  anywhere weaker and not left in the file in the clear -- it is kept for the
+  session and asked for again, and the keychain reports why.
 *)
 procedure TR4WSettings.ProtectSecretsInDocument(const aDoc: TJSONObject);
 
@@ -4896,7 +4906,8 @@ procedure TR4WSettings.ProtectSecretsInDocument(const aDoc: TJSONObject);
       child: TObject;
       childNode: TJSONData;
       name: string;
-      stored: string;
+      secretName: string;
+      plainValue: string;
    begin
       if aNode = nil then
          begin
@@ -4912,11 +4923,10 @@ procedure TR4WSettings.ProtectSecretsInDocument(const aDoc: TJSONObject);
             begin
             info := props^[i];
             name := string(info^.Name);
-            (* UTF8Encode, EXPLICITLY. A JSON member name is a UTF8String
-              and the property name is a native string, so the compiler would
-              convert implicitly and count it as a possible loss. A property
-              name is ASCII, but saying so once beats an implicit conversion
-              the ratchet has to forgive. *)
+            (* UTF8Encode, EXPLICITLY. A JSON member name is a UTF8String and
+              a property name is a native string; a property name is ASCII,
+              but saying so once beats an implicit conversion the ratchet has
+              to forgive. *)
             idx := aNode.IndexOfName(UTF8Encode(name));
             if idx < 0 then
                begin
@@ -4934,11 +4944,18 @@ procedure TR4WSettings.ProtectSecretsInDocument(const aDoc: TJSONObject);
                end
             else if IsSecretProperty(info) then
                begin
-               (* A LOCAL, then the assignment. Both halves of this line have
-                 bitten already; keep them apart. *)
-               stored := ProtectSecret(aPrefix + name,
-                                       GetUnicodeStrProp(aObj, info));
-               aNode.Items[idx].AsString := UTF8Encode(stored);
+               secretName := aPrefix + name;
+               plainValue := GetUnicodeStrProp(aObj, info);
+
+               (* THE VALUE LEAVES THE DOCUMENT EITHER WAY. Whether the vault
+                 took it or refused, the password does not go in the file. *)
+               aNode.Delete(idx);
+
+               if StoreSecret(secretName, plainValue) then
+                  begin
+                  aNode.Add(UTF8Encode(name + KEYCHAIN_REF_SUFFIX),
+                            UTF8Encode(secretName));
+                  end;
                end;
             end;
       finally
@@ -4962,7 +4979,11 @@ begin
    destreamer := TJSONDeStreamer.Create(nil);
    try
       (* A property the object does not carry is LEFT ALONE.  That is the
-        whole of the forward-compatibility story -- see the unit header. *)
+        whole of the forward-compatibility story -- see the unit header.
+
+        IT IS ALSO WHAT MAKES A <Name>Ref MEMBER HARMLESS HERE: no property
+        is called that, so the de-streamer skips it and the load pass below
+        reads it. *)
       destreamer.JSONToObject(aObj, Self);
    finally
       destreamer.Free;
@@ -4972,10 +4993,9 @@ begin
      property without passing TrySetByCommand, so it is the one place the
      ranges have to be re-imposed. *)
    ClampToDeclaredRanges;
-   (* AND THE SECRETS COME BACK, for the same reason the ranges are
-     re-imposed here: the de-streamer assigned whatever text the file
-     carried, which for a secret is a reference or a ciphertext and not a
-     password. *)
+   (* AND THE SECRETS COME OUT OF THE VAULT, for the same reason the ranges
+     are re-imposed here: the de-streamer assigned what the file carried, and
+     for a secret the file carries nothing. *)
    UnprotectSecretsAfterLoad;
 end;
 
@@ -5011,12 +5031,31 @@ procedure TR4WSettings.UnprotectSecretsAfterLoad;
                end
             else if IsSecretProperty(info) then
                begin
+               (*
+                 WHAT THE DE-STREAMER LEFT IN THE PROPERTY DECIDES WHICH
+                 CASE THIS IS.
+
+                 It assigned whatever member matched the property name. For a
+                 file this build wrote there is no such member -- only
+                 <Name>Ref, which the de-streamer ignored -- so the property
+                 is EMPTY and the value comes from the vault.
+
+                 A NON-EMPTY PROPERTY IS A PLAINTEXT PASSWORD from before any
+                 of this, and it is left exactly as it is. The next save puts
+                 it in the vault and removes it from the file. That is the
+                 whole of the upgrade path, and it needs no flag day.
+               *)
+               if GetUnicodeStrProp(aObj, info) <> '' then
+                  begin
+                  Continue;
+                  end;
+
                (* A REFUSAL LEAVES THE SETTING EMPTY, deliberately. The store
                  says what went wrong -- a revoked credential, a file from
                  another machine -- and an empty password asks the operator
                  for it again, where a half-read one would be sent to a
                  server. *)
-               if UnprotectSecret(path, GetUnicodeStrProp(aObj, info), plain) then
+               if FetchSecret(path, plain) then
                   begin
                   SetUnicodeStrProp(aObj, info, plain);
                   end

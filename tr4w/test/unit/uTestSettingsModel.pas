@@ -30,6 +30,7 @@ interface
 
 uses
    SysUtils, Classes, uTR4WTestFramework, uJSON, uSettingsModel,
+   uKeychain,   // InstallTestKeychain -- never the real vault
    uCFG;   // CommandIsRetired -- the 91 names that replaced the csRem rows
 
 type
@@ -55,6 +56,8 @@ type
       procedure Test_AStoredValueOutOfRangeIsClamped;
       procedure Test_TheReadPathAndTheWritePathAgree;
       procedure Test_AContestParameterNeverReachesTheJson;
+      procedure Test_ASecretNeverReachesTheJson;
+      procedure Test_ALegacyPlaintextPasswordIsKeptAndMigrated;
       procedure Test_EveryCommandNameIsTheOneAConfigFileUses;
       procedure Test_AStaleIniCannotOverrideTheStore;
       procedure Test_AContestFileStillOverridesForItsContest;
@@ -983,6 +986,102 @@ end;
   why this asserts BOTH halves.
   --------------------------------------------------------------------- *)
 
+procedure TSettingsModelTests.Test_ASecretNeverReachesTheJson;
+var
+   s: TR4WSettings;
+   doc: TJSONObject;
+   text: string;
+begin
+   (*
+     THE FILE FORMAT NY4I SPECIFIED, 2026-09-13: the value member is gone and
+     a `<Name>Ref` member names the setting.
+
+         "Password"    absent
+         "PasswordRef" "Hamscore.Password"
+
+     AN EARLIER VERSION TAGGED THE VALUE -- scheme:reference -- and he
+     rejected the shape: it reads like web basic authentication and cannot be
+     told from a password that contains a colon. A member name cannot be
+     mistaken for a value.
+   *)
+   BeginTest('a password never reaches the settings file');
+
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      s.Hamscore.Password := 'Hunter2';
+      s.Hamscore.Username := 'NY4I';
+
+      doc := s.ToJSON;
+      try
+         text := doc.AsJSON;
+
+         CheckTrue(Pos('Hunter2', text) = 0,
+                   'the password is nowhere in the document');
+         CheckTrue(Pos('PasswordRef', text) > 0,
+                   'and a reference member is there instead');
+         CheckTrue(Pos('"Password"', text) = 0,
+                   'with no value member beside it');
+
+         (* THE USERNAME IS NOT A SECRET and is written plainly -- it is
+           case-sensitive, not confidential, and an operator needs to see it
+           in Preferences. *)
+         CheckTrue(Pos('NY4I', text) > 0, 'the username is written as itself');
+      finally
+         doc.Free;
+      end;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsModelTests.Test_ALegacyPlaintextPasswordIsKeptAndMigrated;
+var
+   s: TR4WSettings;
+   doc: TJSONObject;
+   text: string;
+begin
+   (*
+     THE UPGRADE PATH, AND IT NEEDS NO FLAG DAY.
+
+     Every existing tr4w.json has its passwords in the clear. Such a file
+     still has a `Password` member, which the de-streamer assigns to the
+     property as always -- so the value is KEPT rather than lost, and the
+     next save puts it in the vault and removes it from the file.
+
+     This test walks that sequence: load a file in the old shape, then save,
+     and check the password has moved.
+   *)
+   BeginTest('a plaintext password from an old file is kept, then migrated');
+
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      doc := TJSONObject(TJSONObject.ParseJSONValue(
+         '{"Hamscore":{"Password":"OldPlainPw","Url":"http://x/"}}'));
+      try
+         s.FromJSON(doc);
+      finally
+         doc.Free;
+      end;
+
+      CheckEquals('OldPlainPw', s.Hamscore.Password,
+                  'the old value is read, not discarded');
+
+      doc := s.ToJSON;
+      try
+         text := doc.AsJSON;
+         CheckTrue(Pos('OldPlainPw', text) = 0,
+                   'and the next save takes it out of the file');
+         CheckTrue(Pos('PasswordRef', text) > 0, 'leaving a reference');
+      finally
+         doc.Free;
+      end;
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TSettingsModelTests.Test_AContestParameterNeverReachesTheJson;
 var
    s: TR4WSettings;
@@ -1616,6 +1715,8 @@ begin
    Test_AStoredValueOutOfRangeIsClamped;
    Test_TheReadPathAndTheWritePathAgree;
    Test_AContestParameterNeverReachesTheJson;
+   Test_ASecretNeverReachesTheJson;
+   Test_ALegacyPlaintextPasswordIsKeptAndMigrated;
    Test_EveryCommandNameIsTheOneAConfigFileUses;
    Test_AStaleIniCannotOverrideTheStore;
    Test_AContestFileStillOverridesForItsContest;

@@ -103,7 +103,7 @@ const
    (* The tag written into settings\tr4w.json. Versioned, so a later change
      to what the payload means is a new tag rather than a silent
      reinterpretation of values already on operators' machines. *)
-   SCHEME_WINCRED = 'wincred1';
+   BACKEND_NAME = 'wincred1';
 
    (* The prefix every entry carries in Credential Manager, so an operator
      can find and revoke TR4W's credentials as a group. *)
@@ -118,7 +118,7 @@ const
 type
    TWindowsKeychain = class(TKeychainBackend)
    public
-      function Scheme: string; override;
+      function Name: string; override;
       function Available: boolean; override;
       function WriteSecret(const aName, aValue: string): TKeychainStatus;
          override;
@@ -168,9 +168,9 @@ begin
    end;
 end;
 
-function TWindowsKeychain.Scheme: string;
+function TWindowsKeychain.Name: string;
 begin
-   Result := SCHEME_WINCRED;
+   Result := BACKEND_NAME;
 end;
 
 function TWindowsKeychain.Available: boolean;

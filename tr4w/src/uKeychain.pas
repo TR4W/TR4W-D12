@@ -38,6 +38,26 @@ unit uKeychain;
   with it. That is the correct outcome and not a shortcoming.
 
   ------------------------------------------------------------------------
+  THE REFERENCE IS ITS OWN MEMBER, AND THAT REMOVES AN AMBIGUITY
+  ------------------------------------------------------------------------
+
+  A password that has been stored writes `<Setting>Ref`, and the value member
+  is not written at all:
+
+      "Password"    absent
+      "PasswordRef" "Hamscore.Password"
+
+  AN EARLIER VERSION PUT A TAG INSIDE THE VALUE -- scheme:reference -- and
+  NY4I rejected the shape: it reads like web basic authentication, and it
+  cannot be told apart from a password that simply contains a colon. There
+  was a whole test explaining which way that coin was flipped.
+
+  A SEPARATE MEMBER NAME HAS NO SUCH PROBLEM. A value under `Password` is a
+  plaintext password from before this existed, and is moved into the vault on
+  the next save. A value under `PasswordRef` is a reference. Nothing has to
+  be guessed from the text.
+
+  ------------------------------------------------------------------------
   AND NO WEAKER FALLBACK. THIS UNIT USED TO HAVE ONE.
   ------------------------------------------------------------------------
 
@@ -90,13 +110,9 @@ uses
    SysUtils;
 
 const
-   (* The stored form names its own scheme, so a value written by one build
-     is still READ by a build that prefers a different one -- changing the
-     mechanism later costs a re-save, not a migration of everyone's file.
-
-     Written out rather than derived, so renaming anything in code cannot
-     orphan values already stored under the old name. *)
-   KEYCHAIN_SCHEME_PLAIN = 'plain';
+   (* The suffix that marks a settings member as a REFERENCE to a stored
+     secret rather than a value. Spelled once, here. *)
+   KEYCHAIN_REF_SUFFIX = 'Ref';
 
 type
    (*
@@ -123,7 +139,7 @@ type
    TKeychainBackend = class(TObject)
    public
       (* The tag this backend writes into the settings file. *)
-      function Scheme: string; virtual; abstract;
+      function Name: string; virtual; abstract;
       (* Is the vault reachable right now? A locked keyring answers False. *)
       function Available: boolean; virtual; abstract;
       function WriteSecret(const aName, aValue: string): TKeychainStatus;
@@ -159,34 +175,30 @@ function KeychainAvailable: boolean;
 
 (* The scheme that will be written, for the startup log line and for the
   test that pins which one a platform gets. *)
-function ActiveKeychainScheme: string;
+function ActiveKeychainName: string;
 
 (*
-  TURN A PASSWORD INTO WHAT GOES IN THE SETTINGS FILE.
+  PUT A PASSWORD IN THE VAULT.
 
-  An EMPTY secret REMOVES it: there is nothing to keep, the file gets an
-  empty string, and the vault entry goes with it rather than lingering.
+  True means it is there and the caller may write the reference. False means
+  it is not, and the caller must write NOTHING -- the password is kept for
+  this session and asked for again. The reason is reported.
 
-  IF THERE IS NO VAULT the value is NOT persisted and the caller is told.
-  The result is empty, which reads back as "ask the operator".
+  AN EMPTY SECRET REMOVES IT. There is nothing to keep, and leaving the old
+  value behind would let an operator who deleted a password still find it.
 *)
-function ProtectSecret(const aName, aPlain: string): string;
+function StoreSecret(const aName, aPlain: string): boolean;
 
 (*
-  AND BACK AGAIN. False means the value could not be read -- an absent or
-  revoked credential, a settings file from another machine, no vault here --
-  and aPlain is empty. It must never quietly substitute anything.
+  AND BACK OUT OF IT. False means it could not be read -- absent, revoked, a
+  settings file from another machine, no vault here -- and aPlain is empty.
+  It must never quietly substitute anything.
 *)
-function UnprotectSecret(const aName, aStored: string;
-                         out aPlain: string): boolean;
+function FetchSecret(const aName: string; out aPlain: string): boolean;
 
-(* Does this look like a reference to a stored secret rather than a bare
-  password? Used by the lint that keeps secrets out of the repository, and by
-  the import that tells a legacy plaintext value from a converted one. *)
-function IsProtectedSecret(const aStored: string): boolean;
-
-(* The scheme tag on a stored value, or '' when it carries none. *)
-function SecretSchemeOf(const aStored: string): string;
+(* Remove one, without storing anything. For a setting being cleared by
+  something other than a save. *)
+function ForgetSecret(const aName: string): boolean;
 
 (* FOR TESTS ONLY. Installs an in-memory vault, so a suite can pin the round
   trip, the removal and the not-found case without touching the machine's
@@ -245,7 +257,7 @@ begin
      cannot leave two objects claiming one tag. *)
    for i := 0 to High(GBackends) do
       begin
-      if GBackends[i].Scheme = aBackend.Scheme then
+      if GBackends[i].Name = aBackend.Name then
          begin
          GBackends[i].Free;
          GBackends[i] := aBackend;
@@ -264,69 +276,28 @@ begin
    Result := (GActive <> nil) and GActive.Available;
 end;
 
-function ActiveKeychainScheme: string;
+function ActiveKeychainName: string;
 begin
    if GActive = nil then
       begin
-      Result := KEYCHAIN_SCHEME_PLAIN;
+      Result := chr(39) + chr(39);
       end
    else
       begin
-      Result := GActive.Scheme;
+      Result := GActive.Name;
       end;
 end;
 
-function SecretSchemeOf(const aStored: string): string;
-var
-   colon: integer;
-   i: integer;
-begin
-   Result := '';
-   colon := Pos(':', aStored);
-   if colon < 2 then
-      begin
-      Exit;
-      end;
-
-   Result := Copy(aStored, 1, colon - 1);
-   if UnicodeSameText(Result, KEYCHAIN_SCHEME_PLAIN) then
-      begin
-      Exit;
-      end;
-   for i := 0 to High(GBackends) do
-      begin
-      if UnicodeSameText(GBackends[i].Scheme, Result) then
-         begin
-         Exit;
-         end;
-      end;
-
-   (* A COLON IS NOT A TAG. A password may contain one, and a legacy value
-     that looks like 'http://x' must not be taken for a scheme nobody has
-     ever written. *)
-   Result := '';
-end;
-
-function IsProtectedSecret(const aStored: string): boolean;
-var
-   scheme: string;
-begin
-   scheme := SecretSchemeOf(aStored);
-   Result := (scheme <> '') and
-             (not UnicodeSameText(scheme, KEYCHAIN_SCHEME_PLAIN));
-end;
-
-function ProtectSecret(const aName, aPlain: string): string;
+function StoreSecret(const aName, aPlain: string): boolean;
 var
    status: TKeychainStatus;
 begin
-   Result := '';
+   Result := False;
 
    if aPlain = '' then
       begin
-      (* CLEARED MEANS REMOVED. Leaving the old value in the vault would let
-        an operator who deleted a password still find it there. A vault that
-        does not have it is not an error. *)
+      (* CLEARED MEANS REMOVED, and a vault that does not have it is not an
+        error -- clearing something already absent is a no-op, not a fault. *)
       if GActive <> nil then
          begin
          status := GActive.DeleteSecret(aName);
@@ -341,8 +312,8 @@ begin
 
    if GActive = nil then
       begin
-      (* NO VAULT ON THIS PLATFORM YET -- macOS and Linux, today. NOT written
-        anywhere weaker: see the unit header. *)
+      (* NO VAULT ON THIS PLATFORM YET -- macOS and Linux, today. The value
+        is NOT written anywhere weaker: see the unit header. *)
       Report(aName, 'cannot be saved: this build has no secret store for '
                     + 'this platform, so the value is kept for this session '
                     + 'only and will be asked for again.');
@@ -352,8 +323,7 @@ begin
    status := GActive.WriteSecret(aName, aPlain);
    if status = ksOk then
       begin
-      (* THE FILE GETS A REFERENCE, NOT A SECRET. *)
-      Result := GActive.Scheme + ':' + aName;
+      Result := True;
       Exit;
       end;
 
@@ -362,68 +332,46 @@ begin
                  + 'asked for again.');
 end;
 
-function UnprotectSecret(const aName, aStored: string;
-                         out aPlain: string): boolean;
+function FetchSecret(const aName: string; out aPlain: string): boolean;
 var
-   scheme: string;
-   reference: string;
    status: TKeychainStatus;
-   i: integer;
 begin
    aPlain := '';
-   if aStored = '' then
+
+   if GActive = nil then
       begin
-      Result := True;
+      Report(aName, 'cannot be read: this build has no secret store for this '
+                    + 'platform. The setting reads empty.');
+      Result := False;
       Exit;
       end;
 
-   scheme := SecretSchemeOf(aStored);
-   if scheme = '' then
+   status := GActive.ReadSecret(aName, aPlain);
+   Result := status = ksOk;
+   if not Result then
       begin
-      (* AN UNTAGGED VALUE IS A PASSWORD FROM BEFORE ANY OF THIS, and reading
-        it as itself is what keeps an existing settings file working. It is
-        moved into the vault by the next save. *)
-      aPlain := aStored;
-      Result := True;
+      (* NOTHING PLAUSIBLE IS HANDED BACK. A revoked credential and a file
+        from another machine both read as absent; either way the operator is
+        asked again rather than TR4W logging in somewhere with rubbish. *)
+      aPlain := '';
+      Report(aName, 'could not be read back: the secret store '
+                    + StatusText(status)
+                    + '. The setting reads empty and the value will have to '
+                    + 'be entered again.');
+      end;
+end;
+
+function ForgetSecret(const aName: string): boolean;
+var
+   status: TKeychainStatus;
+begin
+   if GActive = nil then
+      begin
+      Result := False;
       Exit;
       end;
-
-   reference := Copy(aStored, Length(scheme) + 2, Length(aStored));
-
-   if UnicodeSameText(scheme, KEYCHAIN_SCHEME_PLAIN) then
-      begin
-      aPlain := reference;
-      Result := True;
-      Exit;
-      end;
-
-   (* EVERY REGISTERED SCHEME IS TRIED, not just the active one -- which is
-     what makes changing the writing scheme a re-save and not a migration. *)
-   for i := 0 to High(GBackends) do
-      begin
-      if UnicodeSameText(GBackends[i].Scheme, scheme) then
-         begin
-         (* THE REFERENCE IS THE NAME IT WAS FILED UNDER, used in preference
-           to aName so a setting renamed in code still finds its secret. *)
-         status := GBackends[i].ReadSecret(reference, aPlain);
-         Result := status = ksOk;
-         if not Result then
-            begin
-            aPlain := '';
-            Report(aName, 'could not be read back: the secret store '
-                          + StatusText(status)
-                          + '. The setting reads empty and the value will '
-                          + 'have to be entered again.');
-            end;
-         Exit;
-         end;
-      end;
-
-   (* A SCHEME THIS BUILD DOES NOT HAVE -- a settings file from a newer
-     build, or from a platform whose vault is not linked here. *)
-   Report(aName, 'was stored by a scheme this build does not have ("'
-                 + scheme + '"), so it cannot be read here.');
-   Result := False;
+   status := GActive.DeleteSecret(aName);
+   Result := status in [ksOk, ksNotFound];
 end;
 
 (* ===================================================================== *)
@@ -444,7 +392,7 @@ type
    public
       constructor Create;
       destructor Destroy; override;
-      function Scheme: string; override;
+      function Name: string; override;
       function Available: boolean; override;
       function WriteSecret(const aName, aValue: string): TKeychainStatus;
          override;
@@ -468,7 +416,7 @@ begin
    inherited Destroy;
 end;
 
-function TMemoryKeychain.Scheme: string;
+function TMemoryKeychain.Name: string;
 begin
    Result := 'memory1';
 end;
