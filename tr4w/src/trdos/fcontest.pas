@@ -771,7 +771,7 @@ begin
     CQM:
       begin
         //        ContestName := 'CQ M Contest';
-        CTY.ctyR150SMode := True;
+        Settings.Contest.R150SMode := True;
       end;
 
     CQVHF:
@@ -907,7 +907,7 @@ begin
 
     GagarinCup:
       begin
-        CTY.ctyR150SMode := True;
+        Settings.Contest.R150SMode := True;
         ContestName := 'Yuri Gagarin International DX Contest';
         Settings.Qso.ByMode := TRUE;
         Settings.Contest.InitialExchangeOverwrite := TRUE;
@@ -1641,7 +1641,7 @@ begin
       begin
 
         Settings.Contest.MinitourDuration := 60;
-        CTY.CtyRFOblMode := True; // n4af 4.42.7
+        Settings.Contest.RfoblMode := True; // n4af 4.42.7
         ActiveMode := Phone;
         ContestName := '?????????? ?????????? ??';
       end;
@@ -1677,7 +1677,7 @@ begin
     OZCR_O:
       begin
         ContestName := '????-??????? ????????? ?????? - ????? ?????????';
-        CTY.ctyR150SMode := True;
+        Settings.Contest.R150SMode := True;
       end;
 
     LQP, NCCCSPRINT:

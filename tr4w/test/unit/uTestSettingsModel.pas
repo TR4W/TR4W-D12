@@ -352,7 +352,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(246, names.Count,
+         CheckEquals(248, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1377,6 +1377,7 @@ const
       + '"QUICK QSL MESSAGE 2",'
       + '"QUICK QSL SSB MESSAGE",'
       + '"QZB RANDOM OFFSET ENABLE",'
+      + '"R150S MODE",'
       + '"RADIO TCP SERVER PORT",'
       + '"RADIUS OF EARTH",'
       + '"RANDOM CQ MODE",'
@@ -1384,6 +1385,7 @@ const
       + '"REPEAT S&P EXCHANGE",'
       + '"REPEAT S&P SSB EXCHANGE",'
       + '"REVERSE INITIAL EX",'
+      + '"RFOBL MODE",'
       + '"ROW COUNT",'
       + '"S&P CW EXCHANGE",'
       + '"S&P EXCHANGE",'

@@ -1930,12 +1930,12 @@ begin
 {$ELSE}
   logger.info('OS = %s %s', [{$I %FPCTARGETOS%}, {$I %FPCTARGETCPU%}]);
 {$ENDIF}
-  if CTY.CtyRFOblMode then       // n4af 4.42.6
+  if Settings.Contest.RfoblMode then       // n4af 4.42.6
      ctyLoadInRFOblList;
 
 
 
-  if CTY.ctyR150SMode then
+  if Settings.Contest.R150SMode then
   begin
     ctyLoadInR150SList;
     TempString := 'MY CALL';

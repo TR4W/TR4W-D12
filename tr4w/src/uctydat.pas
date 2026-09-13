@@ -249,8 +249,6 @@ type
     ctyLastLocatedCall: CallString;
     ctyLastLocatedRecord: QTHRecord;
     ctyLastIndex: integer;
-    ctyrfOblMode: boolean;    // n4af 4.42.6
-    ctyR150SMode: boolean;
 //    ctyUA3Country: Word;
 //    ctyUA9Country: Word;
   end;
@@ -1571,9 +1569,10 @@ procedure ctyLoadInR150SList;
   //TempIndex                             : integer;
  // TempRec                               : PrefixRecPtr;
 begin
-
-  cty.ctyR150SMode := True;
-
+  (* The flag it used to set here is the SETTING that got us called -- this
+    routine has one caller and it is gated on that setting. Writing it back
+    was redundant, and now it would mean a country-file loader writing a
+    contest parameter. *)
   StrPCopy(TR4W_R150S_FILENAME, StrPas(TR4W_PATH_NAME) + 'r150s.dat');   // Issue #1033: was TF.Format(=wsprintfA)
   ctyLoadInCountryFile(TR4W_R150S_FILENAME, True, False);
 
@@ -1584,9 +1583,7 @@ procedure ctyLoadInRFOblList;
   //TempIndex                             : integer;
   //TempRec                               : PrefixRecPtr;
 begin
-
-  cty.ctyRFOblMode := True;
-
+  // See ctyLoadInR150SList: the same redundant write, for the same reason.
   StrPCopy(TR4W_rfobl_FILENAME, StrPas(TR4W_PATH_NAME) + 'rfobl.dat');   // Issue #1033: was TF.Format(=wsprintfA)
   ctyLoadInCountryFile(TR4W_rfobl_FILENAME, True, False);
 

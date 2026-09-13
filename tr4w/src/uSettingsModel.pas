@@ -2497,6 +2497,8 @@ type
       FLiteralDomesticQth: boolean;
       FCustomInitialExchangeString: string;
       FHamscoreEnable: boolean;
+      FR150SMode: boolean;
+      FRfoblMode: boolean;
    public
       constructor Create;
       class function IsContestScoped: boolean; override;
@@ -2573,6 +2575,22 @@ type
       *)
       property HamscoreEnable: boolean
          read FHamscoreEnable write FHamscoreEnable;
+      (*
+        Was CTY.ctyR150SMode -- a field of the country-database record.
+
+        IT OVERLAYS AN EXTRA COUNTRY FILE. With it on, startup reads
+        r150s.dat over CTY.DAT so the Russian oblast prefixes resolve the way
+        the R150S award counts them; RfoblMode does the same with rfobl.dat.
+
+        CONTEST-SCOPED, AND THAT IS A FIX RATHER THAN A FILING DECISION.
+        FCONTEST turns them on for particular contests and NOTHING EVER TURNS
+        THEM OFF, which is the exact signature that placed QSO NUMBER BY BAND
+        in this group. As a station setting, one Russian contest left every
+        later contest at that station resolving prefixes by an award's rules.
+      *)
+      property R150SMode: boolean read FR150SMode write FR150SMode;
+      // Was CTY.ctyRFOblMode. See R150SMode.
+      property RfoblMode: boolean read FRfoblMode write FRfoblMode;
    end;
 
    (*
@@ -4065,6 +4083,10 @@ end;
 constructor TContestSettings.Create;
 begin
    inherited Create;
+   (* Both off. The two country-list overlays are loaded only for the
+     contests that ask for them. *)
+   FR150SMode := False;
+   FRfoblMode := False;
    (* CallsignUpdateEnable and DigitalModeEnable had no initialiser on their
      declarations; both were assigned in cfgdef.SetConfigurationDefaultValues,
      which runs once at startup before any config is read -- so the value
@@ -4630,6 +4652,11 @@ begin
      counted and WINDOW SIZE would derive as MAIN WINDOW WINDOW SIZE. *)
    (* The QSL message's own interval; the derived name would put MESSAGE in
      front of a command an operator has typed for years. *)
+   (* THE TWO COUNTRY-LIST OVERLAYS. No property path produces either: the
+     derivation splits at a capital and these names run a digit and a letter
+     together. *)
+   Alias('R150S MODE', 'Contest.R150SMode');
+   Alias('RFOBL MODE', 'Contest.RfoblMode');
    Alias('AUTO QSL INTERVAL', 'Message.AutoQslInterval');
    Alias('STEREO CONTROL PIN', 'Hardware.StereoControlPin');
    Alias('ROW COUNT',   'MainWindow.RowCount');

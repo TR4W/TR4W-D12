@@ -616,7 +616,7 @@ begin
                           RS_CONTEST_QUICKQSLMESSAGE2);
    RegisterModelSetting( 'contest.quickQslSsbMessage',  'QUICK QSL SSB MESSAGE',
                           RS_CONTEST_QUICKQSLSSBMESSAGE);
-   RegisterStoredSetting('contest.r150sMode',           'R150S MODE',
+   RegisterModelSetting( 'contest.r150sMode',           'R150S MODE',
                           RS_CONTEST_R150SMODE);
    RegisterModelSetting('contest.randomCqMode',        'RANDOM CQ MODE',
                           RS_CONTEST_RANDOMCQMODE);
@@ -624,7 +624,7 @@ begin
                           RS_CONTEST_REMAININGMULTDISPLAYMODE);
    RegisterModelSetting( 'contest.reverseInitialEx',    'REVERSE INITIAL EX',
                           RS_CONTEST_REVERSEINITIALEX);
-   RegisterStoredSetting('contest.rfoblMode',           'RFOBL MODE',
+   RegisterModelSetting( 'contest.rfoblMode',           'RFOBL MODE',
                           RS_CONTEST_RFOBLMODE);
    RegisterModelSetting( 'contest.showAllSerialPorts',  'SHOW ALL SERIAL PORTS',
                           RS_CONTEST_SHOWALLSERIALPORTS);
