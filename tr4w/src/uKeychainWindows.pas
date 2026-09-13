@@ -107,7 +107,7 @@ const
 
    (* The prefix every entry carries in Credential Manager, so an operator
      can find and revoke TR4W's credentials as a group. *)
-   TARGET_PREFIX = 'TR4W/';
+   TARGET_PREFIX = 'TR4W/v1/';
 
    (* ERROR_NOT_FOUND IS NOT IN THE RTL's Windows UNIT, so it is declared
      here with its documented value rather than left to a unit that does not
@@ -119,70 +119,42 @@ type
    TWindowsKeychain = class(TKeychainBackend)
    public
       function Scheme: string; override;
-      function Protect(const aName, aPlain: string;
-                       out aStored: string): TKeychainStatus; override;
-      function Unprotect(const aName, aPayload: string;
-                         out aPlain: string): TKeychainStatus; override;
+      function Available: boolean; override;
+      function WriteSecret(const aName, aValue: string): TKeychainStatus;
+         override;
+      function ReadSecret(const aName: string;
+                          out aValue: string): TKeychainStatus; override;
+      function DeleteSecret(const aName: string): TKeychainStatus; override;
    end;
 
-(* UPPER-CASED DELIBERATELY -- see the note on case at the top. *)
+(*
+  THE TARGET NAME.
+
+  IT CARRIES A VERSION -- TR4W/v1/<setting>. That costs nothing now and buys
+  a clean namespace if what is stored ever changes meaning, so a later format
+  cannot collide with entries an older build left behind.
+
+  UPPER-CASED DELIBERATELY. Target names are CASE-INSENSITIVE, measured
+  before this unit was written: a probe wrote one credential and read it back
+  under a lower-cased name, successfully. Property paths cannot collide that
+  way -- Pascal does not distinguish their case either -- but relying on that
+  quietly is how the bug gets in later.
+*)
 function TargetFor(const aName: string): UnicodeString;
 begin
    Result := UnicodeString(UpperCase(TARGET_PREFIX + aName));
 end;
 
-function TWindowsKeychain.Scheme: string;
+(* WHICH FAILURE IT WAS, because they mean different things to the caller.
+  GetLastError is read IMMEDIATELY after the failing call -- anything in
+  between, a logging call included, overwrites it. *)
+function StatusFromLastError: TKeychainStatus;
 begin
-   Result := SCHEME_WINCRED;
-end;
-
-function TWindowsKeychain.Protect(const aName, aPlain: string;
-                                 out aStored: string): TKeychainStatus;
-var
-   cred: CREDENTIALW;
-   target: UnicodeString;
-   user: UnicodeString;
-   blob: UnicodeString;
-begin
-   aStored := '';
-   Result := ksError;
-
-   target := TargetFor(aName);
-   blob := UnicodeString(aPlain);
-   (* The user name is not a secret and is not what we are storing; it is
-     what Credential Manager shows beside the entry. Naming the setting
-     there is what makes the list readable to an operator. *)
-   user := UnicodeString(aName);
-
-   FillChar(cred, SizeOf(cred), 0);
-   cred.Type_ := CRED_TYPE_GENERIC;
-   cred.TargetName := PWideChar(target);
-   cred.UserName := PWideChar(user);
-   cred.CredentialBlobSize := Length(blob) * SizeOf(WideChar);
-   if Length(blob) > 0 then
-      begin
-      cred.CredentialBlob := PByte(PWideChar(blob));
-      end;
-   (* LOCAL_MACHINE, NOT ENTERPRISE. Enterprise persistence roams the
-     credential with the profile, which would put the password back on every
-     machine the operator logs in to -- the opposite of what storing it
-     locally is for. *)
-   cred.Persist := CRED_PERSIST_LOCAL_MACHINE;
-
-   if CredWriteW(@cred, 0) then
-      begin
-      (* THE FILE GETS A NAME, NOT A SECRET. *)
-      aStored := aName;
-      Result := ksOk;
-      Exit;
-      end;
-
-   (* WHICH FAILURE IT WAS, because they mean different things to the caller:
-     a denial is a policy or a permission problem an operator can act on,
-     while anything else is reported as-is. GetLastError is read
-     IMMEDIATELY -- any call in between, including a logging call, would
-     overwrite it. *)
    case GetLastError of
+      ERROR_NOT_FOUND:
+         begin
+         Result := ksNotFound;
+         end;
       ERROR_ACCESS_DENIED, ERROR_PRIVILEGE_NOT_HELD:
          begin
          Result := ksAccessDenied;
@@ -196,65 +168,100 @@ begin
    end;
 end;
 
-function TWindowsKeychain.Unprotect(const aName, aPayload: string;
-                                   out aPlain: string): TKeychainStatus;
+function TWindowsKeychain.Scheme: string;
+begin
+   Result := SCHEME_WINCRED;
+end;
+
+function TWindowsKeychain.Available: boolean;
+begin
+   (* THE VAULT IS PART OF THE LOGON SESSION and exists whenever there is
+     one. There is no locked state to test as a Linux keyring has, so the
+     honest answer on Windows is yes. *)
+   Result := True;
+end;
+
+function TWindowsKeychain.WriteSecret(const aName,
+                                      aValue: string): TKeychainStatus;
+var
+   cred: CREDENTIALW;
+   target: UnicodeString;
+   user: UnicodeString;
+   blob: UnicodeString;
+begin
+   target := TargetFor(aName);
+   blob := UnicodeString(aValue);
+   (* The user name is not the secret; it is what Credential Manager shows
+     beside the entry. Naming the setting there is what makes the list
+     readable to an operator looking for what to revoke. *)
+   user := UnicodeString(aName);
+
+   FillChar(cred, SizeOf(cred), 0);
+   cred.Type_ := CRED_TYPE_GENERIC;
+   cred.TargetName := PWideChar(target);
+   cred.UserName := PWideChar(user);
+   cred.CredentialBlobSize := Length(blob) * SizeOf(WideChar);
+   if Length(blob) > 0 then
+      begin
+      cred.CredentialBlob := PByte(PWideChar(blob));
+      end;
+   (* LOCAL_MACHINE, NOT ENTERPRISE. Enterprise persistence roams the
+     credential with the profile, which would put the password back on every
+     machine the operator logs in to -- the opposite of the point. *)
+   cred.Persist := CRED_PERSIST_LOCAL_MACHINE;
+
+   if CredWriteW(@cred, 0) then
+      begin
+      Result := ksOk;
+      Exit;
+      end;
+
+   Result := StatusFromLastError;
+end;
+
+function TWindowsKeychain.ReadSecret(const aName: string;
+                                     out aValue: string): TKeychainStatus;
 var
    p: PCREDENTIALW;
-   target: UnicodeString;
    chars: integer;
 begin
-   aPlain := '';
-   Result := ksError;
+   aValue := '';
 
-   (* THE PAYLOAD IS THE NAME THE VALUE WAS FILED UNDER, and it is used in
-     preference to aName so that a setting renamed in code can still find a
-     credential stored under the old path. *)
-   if aPayload <> '' then
+   if not CredReadW(PWideChar(TargetFor(aName)), CRED_TYPE_GENERIC, 0, p) then
       begin
-      target := TargetFor(aPayload);
-      end
-   else
-      begin
-      target := TargetFor(aName);
-      end;
-
-   if not CredReadW(PWideChar(target), CRED_TYPE_GENERIC, 0, p) then
-      begin
-      (* AN ABSENT CREDENTIAL IS NOT A CRASH AND NOT A GUESS. The operator
-        may have revoked it in Control Panel, or the settings file may have
-        come from another machine. Either way the setting reads empty and is
-        asked for again -- and NOT FOUND says exactly that, where a bare
-        failure would have looked like something was broken. *)
-      case GetLastError of
-         ERROR_NOT_FOUND:
-            begin
-            Result := ksNotFound;
-            end;
-         ERROR_ACCESS_DENIED:
-            begin
-            Result := ksAccessDenied;
-            end;
-         ERROR_NO_SUCH_LOGON_SESSION:
-            begin
-            Result := ksUnavailable;
-            end;
-      else
-         Result := ksError;
-      end;
+      (* AN ABSENT CREDENTIAL IS NOT A FAULT. The operator may have revoked
+        it in Control Panel, or the settings file may have come from another
+        machine. NOT FOUND says exactly that, where a bare failure would read
+        as something being broken. *)
+      Result := StatusFromLastError;
       Exit;
       end;
 
    try
       chars := p^.CredentialBlobSize div SizeOf(WideChar);
-      SetLength(aPlain, chars);
+      SetLength(aValue, chars);
       if chars > 0 then
          begin
-         Move(p^.CredentialBlob^, aPlain[1], chars * SizeOf(WideChar));
+         Move(p^.CredentialBlob^, aValue[1], chars * SizeOf(WideChar));
          end;
       Result := ksOk;
    finally
       CredFree(p);
    end;
+end;
+
+function TWindowsKeychain.DeleteSecret(const aName: string): TKeychainStatus;
+begin
+   (* CLEARING A PASSWORD HAS TO REMOVE IT, not merely stop referring to it.
+     Without this, an operator who deleted a password would still find it in
+     Control Panel afterwards. *)
+   if CredDeleteW(PWideChar(TargetFor(aName)), CRED_TYPE_GENERIC, 0) then
+      begin
+      Result := ksOk;
+      Exit;
+      end;
+
+   Result := StatusFromLastError;
 end;
 
 initialization

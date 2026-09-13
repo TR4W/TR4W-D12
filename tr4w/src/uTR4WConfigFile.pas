@@ -198,9 +198,6 @@ function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcast
 
 implementation
 
-uses
-   uKeychain;   (* SetKeychainKeyPathProvider *)
-
 (* --settings <path>, RESOLVED HERE RATHER THAN AT STARTUP.
 
   WHY IT EXISTS. Everything that runs TR4W without an operator -- the golden
@@ -251,24 +248,6 @@ begin
          Exit;
          end;
       end;
-end;
-
-(*
-  WHERE THE PORTABLE SECRET SCHEME KEEPS ITS KEY.
-
-  BESIDE THE SETTINGS FILE IT PROTECTS, which is why this unit answers it:
-  the honest location depends on --settings, and this is the only unit that
-  knows what that resolved to. uKeychain has a binary-relative default and
-  takes this as an override, so it stays a leaf that the test binary and a
-  settings-less build can both link.
-
-  ON WINDOWS NOTHING CALLS IT. The credential manager holds the secrets and
-  there is no key file at all; this is the fallback the other platforms use
-  until they have a store of their own.
-*)
-function KeychainKeyPathBesideSettings: string;
-begin
-   Result := ChangeFileExt(TR4WConfigFileName, '.key');
 end;
 
 function TR4WConfigFileName: string;
@@ -713,12 +692,5 @@ begin
       end;
 end;
 
-
-initialization
-   (* Installed here rather than by the startup sequence: a hook that
-     someone has to remember to set would be unset on the one call that
-     matters, which is the same reasoning as TR4WConfigFileName's own
-     lazy resolution above. *)
-   SetKeychainKeyPathProvider(@KeychainKeyPathBesideSettings);
 
 end.

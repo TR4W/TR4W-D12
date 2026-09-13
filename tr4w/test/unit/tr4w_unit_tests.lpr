@@ -443,7 +443,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
-   RegisterSuite(TKeychainTests.Create('SecretStore'));
+   RegisterSuite(TKeychainTests.Create('Keychain'));
    RegisterSuite(TTestWindowSnap.Create('WindowSnap'));
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
