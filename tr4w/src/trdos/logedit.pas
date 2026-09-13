@@ -1364,7 +1364,7 @@ end;
   FOUR LABELS AND FOUR GOTOs ARE GONE, and the substitution is exact rather than
   tidy.  Each arm read
 
-      if RemainingMultDisplayMode = HiLight then goto AddX;
+      if Settings.RemainingMults.DisplayMode = HiLight then goto AddX;
       if <still needed> then begin AddX: Add; end;
 
   which says: add it if we are highlighting, otherwise add it only if it is
@@ -1423,7 +1423,7 @@ begin
 
   frm.Mults.BeginRebuild;
 
-  if RemainingMultDisplayMode = NoRemainingMults then
+  if Settings.RemainingMults.DisplayMode = NoRemainingMults then
      begin
      // Emptied and repainted -- the old code did the same with LB_RESETCONTENT
      // followed by an InvalidateRect.
@@ -1431,7 +1431,7 @@ begin
      Exit;
      end;
 
-  HiLighting := RemainingMultDisplayMode = HiLight;
+  HiLighting := Settings.RemainingMults.DisplayMode = HiLight;
 
   case rmt of
 
@@ -2932,11 +2932,11 @@ begin
        Heading := round(GetBeamHeading(Settings.My.Grid, TestString));
        //               Write(TestString, ' ', Heading, '?');
        TestString := TestString + ' ' + IntToStr(Heading) + '*';
-       {               if DistanceMode <> NoDistanceDisplay then
+       {               if Settings.Log.DistanceMode <> NoDistanceDisplay then
                         begin
                            Distance := GetDistanceBetweenGrids(Settings.My.Grid, TestString);
 
-                           if DistanceMode = DistanceMiles then
+                           if Settings.Log.DistanceMode = DistanceMiles then
                               begin
                                  Distance := round(Distance / 1.6);
       //                           Write(' ', Distance, 'm');

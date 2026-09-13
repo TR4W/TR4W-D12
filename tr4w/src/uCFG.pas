@@ -458,19 +458,34 @@ const
     (lpArray: @ModeStringArray;                   lpLength: Byte(High(ModeType));               lpVar: @ActiveMode; ),
     (lpArray: @IECursorPosTypeStringArray;        lpLength: Byte(High(InitialExchangeCursorPosType)); lpVar: @InitialExchangeCursorPos; ),
     (lpArray: @InitialExchangeTypeStringArray;    lpLength: Byte(High(InitialExchangeType));    lpVar: @ActiveInitialExchange; ),
-    (lpArray: @HourDisplayTypeSA;                 lpLength: Byte(High(HourDisplayType));        lpVar: @HourDisplay; ),
+    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
+      its spelling table with it. nil rather than a renumbering: this table
+      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @FootSwitchModeTypeStringArray;     lpLength: Byte(High(FootSwitchModeType));     lpVar: @FootSwitchMode; ),
 {10}(lpArray: @ActiveExchangeArray;               lpLength: Byte(High(ExchangeType));           lpVar: @ActiveExchange; ),
     (lpArray: @DXMultTypenameArray;               lpLength: Byte(High(DXMultType));             lpVar: @ActiveDXMult; ),
     (lpArray: @DupeCheckSoundTypeSA;              lpLength: Byte(High(DupeCheckSoundType));     lpVar: @DupeCheckSound; ),
     (lpArray: @DomesticMultStringArray;           lpLength: Byte(High(DomesticMultType));       lpVar: @ActiveDomesticMult; ),
-    (lpArray: @BandMapSplitModeTypeSA;            lpLength: Byte(High(BandMapSplitModeType));   lpVar: @BandMapSplitMode; ),
+    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
+      its spelling table with it. nil rather than a renumbering: this table
+      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @CallWindowPositionTypeSA;          lpLength: Byte(High(CallWindowPositionType)); lpVar: @CallWindowPosition; ),
-    (lpArray: @RemainingMultDisplayModeTypeSA;    lpLength: Byte(High(RemainingMultDisplayModeType)); lpVar: @RemainingMultDisplayMode; ),
+    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
+      its spelling table with it. nil rather than a renumbering: this table
+      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @RotatorTypeSA;                     lpLength: Byte(High(RotatorType));            lpVar: @ActiveRotatorType; ),
-    (lpArray: @TenMinuteRuleTypeSA;               lpLength: Byte(High(TenMinuteRuleType));      lpVar: @TenMinuteRule; ),
+    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
+      its spelling table with it. nil rather than a renumbering: this table
+      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @UserInfoTypeSA;                    lpLength: Byte(High(UserInfoType));           lpVar: @UserInfoShown; ),
-{20}(lpArray: @DistanceDisplayTypeSA;             lpLength: Byte(High(DistanceDisplayType));    lpVar: @DistanceMode; ),
+    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
+      its spelling table with it. nil rather than a renumbering: this table
+      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
+{20}(lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @ContinentTypeSA;                   lpLength: Byte(High(ContinentType));          lpVar: @MyContinent; ),
     (lpArray: @ContestTypeSA;                     lpLength: Byte(High(ContestType));            lpVar: @Contest; ),
     (lpArray: @ZoneMultTypeSA;                    lpLength: Byte(High(ZoneMultType));           lpVar: @ActiveZoneMult; ),
@@ -609,6 +624,8 @@ const
    - 2 {SCP MINIMUM LETTERS and STEREO CONTROL PIN -- registered vocabularies}
    - 2 {R150S MODE and RFOBL MODE -- contest-scoped, FCONTEST assigns them}
    - 1 {RATE DISPLAY -- the first enum whose TYPE moved to uSettingsModel}
+   - 5 {HOUR DISPLAY, TEN MINUTE RULE, BAND MAP SPLIT MODE, DISTANCE MODE,
+        REMAINING MULT DISPLAY MODE -- their types moved too}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -714,7 +731,6 @@ const
 // and the next save persisted it -- see the comment on BandMapEnable in
 // logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
- (crCommand: 'BAND MAP SPLIT MODE';           crAddress: pointer(14);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:1; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'CATEGORY-ASSISTED';             crAddress: pointer(50);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'CATEGORY-BAND';                 crAddress: pointer(42);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'CATEGORY-MODE';                 crAddress: pointer(43);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -746,7 +762,6 @@ const
  (crCommand: 'CW TONE';                       crAddress: @Config.CWTone;                         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'DEBUG LOG LEVEL';               crAddress: pointer(52);                     crMin:0;   crMax:0;      crS: csJSON; crA: 0; crC:0 ; crP:13; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
- (crCommand: 'DISTANCE MODE';                 crAddress: pointer(20);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'DOMESTIC MULTIPLIER';           crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'DUPE CHECK SOUND';              crAddress: pointer(12);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -818,7 +833,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'HOUR DISPLAY';                  crAddress: pointer(8);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'HOUR OFFSET';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'ICOM COMMAND PAUSE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'INITIAL EXCHANGE';              crAddress: Pointer(7);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -928,7 +942,6 @@ const
  (crCommand: 'RADIO TWO STARTUP COMMAND';     crAddress: @Radio2.StartupCommand;          crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIO TWO SERIAL FORMAT';       crAddress: @Radio2.SerialFormat;            crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctString; crNetwork: 0),
  (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
- (crCommand: 'REMAINING MULT DISPLAY MODE';   crAddress: pointer(16);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:2; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'REMINDER';                      crAddress: pointer(51);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAppearance; crType: ctOther; crNetwork: 1),
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROTATOR TYPE';                  crAddress: pointer(17);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
@@ -979,7 +992,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'TEN MINUTE RULE';               crAddress: pointer(18);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
  (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),

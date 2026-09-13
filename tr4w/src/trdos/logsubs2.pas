@@ -1549,7 +1549,7 @@ begin
   tLastLogEntryIsDeleted := False;
   WindowDupeCheckCall := RXData.Callsign;
   //  LastQSOLogged := RXData;
-  if TenMinuteRule <> NoTenMinuteRule then
+  if Settings.Operating.TenMinuteRule <> NoTenMinuteRule then
      begin
      UpdateTenMinuteDate(rxData.band,rxData.Mode);
      end;
@@ -1722,7 +1722,7 @@ begin
     if RXData.ceRecordKind = rkQSO then
        begin
        inc(NumberBandQSOsThisMinute[RXData.Band]);
-       if HourDisplay = BandChangesThisComputer then if not MyComputer then goto 1;
+       if Settings.MainWindow.HourDisplay = BandChangesThisComputer then if not MyComputer then goto 1;
        if tThisHourPreviousBand <> RXData.Band then
           begin
           if tThisHourPreviousBand <> NoBand then

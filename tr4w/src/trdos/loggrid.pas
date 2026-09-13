@@ -36,8 +36,9 @@ uses
   ,
   uTR4WStrings;
 
-type
-  DistanceDisplayType = (NoDistanceDisplay, DistanceMiles, DistanceKM);
+(* DistanceDisplayType MOVED to uSettingsModel, 2026-09-13 -- it described a
+  SETTING. Nothing else in this unit declares a type, so the section went
+  with it. *)
 
 function ConvertLatLonToGrid(Lat, Lon: REAL): GridString;
 (* GRID ARGUMENTS ARE string, NOT GridString, SINCE 2026-09-12.
@@ -61,13 +62,10 @@ function GetSunriseSunsetString(Lat: REAL; Lon: REAL): string;
 function LooksLikeAGeoCoordinates(Coordinates: Str40; var LatValue, LongValue: integer): boolean;
 //function LooksLikeRadio160Square(Square: Str20): boolean;
 
-const
-  DistanceDisplayTypeSA                 : array[DistanceDisplayType] of PAnsiChar = ('NONE', 'MILES', 'KM');
-
-var
-  DistanceMode                          : DistanceDisplayType = DistanceKM;
-  (* RadiusOfEarth is gone (2026-09-12) --
-    Settings.GridMap.RadiusOfEarth. *)
+(* THIS UNIT NOW EXPORTS NO STATE AT ALL. RadiusOfEarth went on 2026-09-12
+  and DistanceMode on 2026-09-13; both are settings and both are properties
+  on Settings now. What is left is grid arithmetic, which is what the unit
+  was always for. *)
 
 implementation
 

@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(249, names.Count,
+         CheckEquals(254, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1229,6 +1229,7 @@ const
       + '"BAND MAP MULTS ONLY",'
       + '"BAND MAP SIZE",'
       + '"BAND MAP SO2R DISPLAY",'
+      + '"BAND MAP SPLIT MODE",'
       + '"BEEP ENABLE",'
       + '"BEEP EVERY 10 QSOS",'
       + '"BOLD FONT",'
@@ -1261,6 +1262,7 @@ const
       + '"CW SPEED INCREMENT",'
       + '"DE ENABLE",'
       + '"DIGITAL MODE ENABLE",'
+      + '"DISTANCE MODE",'
       + '"DIT DAH RATIO",'
       + '"DOMESTIC FILENAME",'
       + '"DUPE SHEET AUTO RESET",'
@@ -1282,6 +1284,7 @@ const
       + '"HAMSCORE USERNAME",'
       + '"HAND LOG MODE",'
       + '"HF BAND ENABLE",'
+      + '"HOUR DISPLAY",'
       + '"IE SWITCH",'
       + '"IN BAND LOCKOUT",'
       + '"INCLUDE F-KEY NUMBER",'
@@ -1383,6 +1386,7 @@ const
       + '"RADIUS OF EARTH",'
       + '"RANDOM CQ MODE",'
       + '"RATE DISPLAY",'
+      + '"REMAINING MULT DISPLAY MODE",'
       + '"REPEAT S&P CW EXCHANGE",'
       + '"REPEAT S&P EXCHANGE",'
       + '"REPEAT S&P SSB EXCHANGE",'
@@ -1425,6 +1429,7 @@ const
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'
       + '"TELNET SERVER",'
+      + '"TEN MINUTE RULE",'
       + '"TUNE ALT-D ENABLE",'
       + '"TUNE WITH DITS",'
       + '"TWO RADIO MODE",'

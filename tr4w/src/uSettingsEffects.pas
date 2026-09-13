@@ -95,6 +95,8 @@ uses
                    // DisplayInsertMode, the INS/OVR panel;
                    // DisplayCodeSpeed, which is also the DVK's state panel;
                    // and UpadateAutoSend
+   LogEdit,        (* VisibleLog.ShowRemainingMultipliers -- was
+                     CommandsProcArray[2] *)
    LogStuff,       // AutoQSLCount -- the countdown this interval re-seeds
    uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
@@ -150,6 +152,7 @@ const
      form and does nothing when it gets nil. *)
    STATIONS_CALLSIGNS_MASK = 'Stations.CallsignsMask';
    SHOW_DOMESTIC_NAME      = 'RemainingMults.ShowDomesticName';
+   REMAINING_MULT_DISPLAY  = 'RemainingMults.DisplayMode';
    (* INSERT OR OVERWRITE, shown on a panel of the main window. crP: 8,
      DisplayInsertMode.
 
@@ -240,6 +243,19 @@ begin
         This was CommandsProcArray[12], and it rebuilds the column from the
         callsigns the program holds rather than re-reading anything. *)
       SetStationsCallsignMask;
+      end;
+
+   if UnicodeSameText(aPath, REMAINING_MULT_DISPLAY) then
+      begin
+      (* WHETHER A WORKED MULTIPLIER IS ERASED OR HIGHLIGHTED changes what
+        those windows hold, not just how wide they are. This was
+        CommandsProcArray[2].
+
+        THROUGH THE INSTANCE. That table holds
+        `@EditableLog.ShowRemainingMultipliers` -- the address of a method on
+        an old-style object TYPE, with no instance -- and every other caller
+        in the tree says VisibleLog, which is the one instance there is. *)
+      VisibleLog.ShowRemainingMultipliers;
       end;
 
    if UnicodeSameText(aPath, SHOW_DOMESTIC_NAME) then

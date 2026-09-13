@@ -620,7 +620,7 @@ begin
                           RS_CONTEST_R150SMODE);
    RegisterModelSetting('contest.randomCqMode',        'RANDOM CQ MODE',
                           RS_CONTEST_RANDOMCQMODE);
-   RegisterStoredSetting('contest.remainingMultDisplayMode','REMAINING MULT DISPLAY MODE',
+   RegisterModelSetting( 'contest.remainingMultDisplayMode','REMAINING MULT DISPLAY MODE',
                           RS_CONTEST_REMAININGMULTDISPLAYMODE);
    RegisterModelSetting( 'contest.reverseInitialEx',    'REVERSE INITIAL EX',
                           RS_CONTEST_REVERSEINITIALEX);
@@ -634,7 +634,7 @@ begin
                           'Single Band Score');
    RegisterModelSetting( 'contest.sprintQsyRule',       'SPRINT QSY RULE',
                           RS_CONTEST_SPRINTQSYRULE);
-   RegisterStoredSetting('contest.tenMinuteRule',       'TEN MINUTE RULE',
+   RegisterModelSetting( 'contest.tenMinuteRule',       'TEN MINUTE RULE',
                           RS_CONTEST_TENMINUTERULE);
    RegisterStoredSetting('contest.zoneMultiplier',      'ZONE MULTIPLIER',
                           RS_CONTEST_ZONEMULTIPLIER);
@@ -664,7 +664,7 @@ begin
                           RS_OPERATING_CTRLJ_DEENABLE);
    RegisterModelSetting( 'operating.ctrlj.digitalModeEnable', 'DIGITAL MODE ENABLE',
                           RS_OPERATING_CTRLJ_DIGITALMODEENABLE);
-   RegisterStoredSetting('operating.ctrlj.distanceMode',      'DISTANCE MODE',
+   RegisterModelSetting( 'operating.ctrlj.distanceMode',      'DISTANCE MODE',
                           RS_OPERATING_CTRLJ_DISTANCEMODE);
    RegisterStoredSetting('operating.ctrlj.dupeCheckSound',    'DUPE CHECK SOUND',
                           RS_OPERATING_CTRLJ_DUPECHECKSOUND);
@@ -749,7 +749,7 @@ begin
                           RS_APPEARANCE_CTRLJ_COMPLETECALLSIGNMASK);
    RegisterModelSetting( 'appearance.ctrlj.contactsPerPage',  'CONTACTS PER PAGE',
                           RS_APPEARANCE_CTRLJ_CONTACTSPERPAGE);
-   RegisterStoredSetting('appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
+   RegisterModelSetting( 'appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
                           RS_APPEARANCE_CTRLJ_HOURDISPLAY);
    RegisterModelSetting('appearance.ctrlj.insertMode',       'INSERT MODE',
                           RS_APPEARANCE_CTRLJ_INSERTMODE);
@@ -814,7 +814,7 @@ begin
                         RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH, True, True);
    RegisterModelSetting('bandmap.ctrlj.bandMapSize',         'BAND MAP SIZE',
                         RS_BANDMAP_CTRLJ_BANDMAPSIZE, True, True);
-   RegisterStoredSetting('bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
+   RegisterModelSetting( 'bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
                           RS_BANDMAP_CTRLJ_BANDMAPSPLITMODE);
 
    // --- Network (2) ----------------------------------

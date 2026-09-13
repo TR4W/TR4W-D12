@@ -92,6 +92,8 @@ implementation
 uses
    MainUnit,          { CloseTR4WWindow }
    LogEdit,           { CleanSweep }
+   uSettingsModel,    (* Settings.RemainingMults.DisplayMode, and HiLight --
+                        the type moved here with the setting *)
    uGradient,         { GradientRect -- the faded-multiplier fill }
    uLCLFormHelpers;   { OwnFormByMainWindow }
 
@@ -194,7 +196,7 @@ end;
   code that operators have not learned these colours.  It goes to the bench
   queue as a question for NY4I rather than being answered by me.
 
-  RemainingMultDisplayMode <> HiLight LEFT THE TEXT COLOUR UNSET in the
+  Settings.RemainingMults.DisplayMode <> HiLight LEFT THE TEXT COLOUR UNSET in the
   original: neither arm of its `if` ran, so the DC kept whatever it held.  In
   that mode the builder only adds multipliers still NEEDED, so black is what it
   looked like -- black is what it is now, which is the same picture with the
@@ -237,7 +239,7 @@ begin
       Exit;
       end;
 
-   if (RemainingMultDisplayMode = HiLight) and worked then
+   if (Settings.RemainingMults.DisplayMode = HiLight) and worked then
       begin
       // TCanvas.Handle IS the HDC uGradient wants, so this is the same call the
       // WM_DRAWITEM arm made: same two stops, same direction.

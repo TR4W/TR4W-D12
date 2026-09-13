@@ -182,7 +182,7 @@ begin
 
   if Spot.FQSXFrequency <> 0 then
      begin
-     case BandMapSplitMode of
+     case Settings.BandMap.SplitMode of
        ByCutoffFrequency:
          begin
            SetRadioFreq(Radio, Spot.FQSXFrequency + QZBOffset, EntryMode, 'B');

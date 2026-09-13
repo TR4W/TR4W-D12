@@ -171,6 +171,34 @@ foreach ($line in @(Get-Content -LiteralPath $cfgPath))
    [void] $wanted.Add($Matches[1])
    }
 
+# --- and the tables that have LEFT ListParamArray ---------------------------
+#
+# A setting whose enum type moved to uSettingsModel takes its spelling table
+# with it, and is registered there by name:
+#
+#    RegisterSettingAllowedValues('MainWindow.RateDisplay', RATE_DISPLAY_SPELLINGS);
+#
+# THE GUARD HAS TO FOLLOW IT. A duplicate or blank spelling makes an enum value
+# unreachable by name wherever the table lives, and five tables left in one
+# session -- which showed up here only as the FLOOR failing, because a table
+# nothing points at is a table this lint stops checking.
+#
+# Only a bare identifier is taken. The two INTEGER vocabularies are registered
+# through a function call -- IntegerVocabulary(SCP_MINIMUM_LETTERS_ARRAY) -- and
+# are not spelling tables.
+$modelPath = Join-Path $SourceDir 'uSettingsModel.pas'
+if (Test-Path -LiteralPath $modelPath)
+   {
+   # READ WHOLE, because the registration wraps: the path is on one line and
+   # the table name on the next.
+   $modelText = (Get-Content -LiteralPath $modelPath -Raw)
+   foreach ($m in [regex]::Matches($modelText,
+      "RegisterSettingAllowedValues\s*\(\s*'[^']*'\s*,\s*(\w+)\s*\)"))
+      {
+      [void] $wanted.Add($m.Groups[1].Value)
+      }
+   }
+
 if ($wanted.Count -eq 0)
    {
    Write-Host 'Lint-SpellingTables: ListParamArray named NO tables -- the parse failed, which is not a pass.'

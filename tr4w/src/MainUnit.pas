@@ -9748,7 +9748,7 @@ begin
 
      if TempBand <> TempRXData.Band then
         begin
-        if (HourDisplay = BandChangesThisComputer) and
+        if (Settings.MainWindow.HourDisplay = BandChangesThisComputer) and
            (TempRXData.ceComputerID <> Settings.Computer.Id) then
            begin
            Continue;

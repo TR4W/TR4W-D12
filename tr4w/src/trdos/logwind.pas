@@ -161,7 +161,6 @@ type
 
   MultiMessage = ^Str80;
 
-  TenMinuteRuleType = (NoTenMinuteRule, TimeOfFirstQSO);
 
   TenMinuteTimeRecord = record
     Band: BandType;
@@ -222,12 +221,14 @@ type
 
   BandMapEntryPointer = ^BandMapEntry;
 
-  BandMapSplitModeType = (ByCutoffFrequency, AlwaysPhone); {KK1L: 6.64}
 
   (* RateDisplayType MOVED to uSettingsModel, 2026-09-13 -- it describes a
     SETTING, and it was here only because this is where the rate box is
     drawn. See Settings.MainWindow.Settings.MainWindow.RateDisplay. *)
-  HourDisplayType = (ThisHour, LastSixtyMins, BandChanges, BandChangesThisComputer);
+  (* TenMinuteRuleType, BandMapSplitModeType and HourDisplayType MOVED to
+    uSettingsModel, 2026-09-13, with their spelling tables. Each describes
+    what a SETTING may be; they were here because this is where the things
+    they control are drawn. *)
 
   K1EAStationInfoFieldType = (Pass, Run);
 
@@ -444,15 +445,12 @@ const
     'RF CHAMP ZONES'
     );
 
-  TenMinuteRuleTypeSA                   : array[TenMinuteRuleType] of PAnsiChar = ('NONE', 'TIME OF FIRST QSO');
 
   RotatorTypeSA                         : array[RotatorType] of PAnsiChar = ('NONE', 'DCU1', 'ORION', 'YAESU', 'ALFA SPID', 'PSTROTATOR');
 
   CallWindowPositionTypeSA              : array[CallWindowPositionType] of PAnsiChar = ('NORMAL', 'UP');
 
-  BandMapSplitModeTypeSA                : array[BandMapSplitModeType] of PAnsiChar = ('BY CUTOFF FREQ', 'ALWAYS PHONE');
 
-  HourDisplayTypeSA                     : array[HourDisplayType] of PAnsiChar = ('THIS HOUR', 'LAST SIXTY MINUTES', 'BAND CHANGES', 'BAND CHANGES ON THIS COMPUTER');
 
 
   IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of PAnsiChar = ('AT END', 'AT START');
@@ -558,7 +556,6 @@ var
   BandMapFileVersion                    : AnsiChar = '2';
   {KK1L: 6.65 Expanded array to cover all cases to keep BM from going whacko when tuning out of band}
   BandMapFirstEntryList                 : array[Band160..NoBand, CW..FM] of BandMapEntryPointer;
-  BandMapSplitMode                      : BandMapSplitModeType {= ByCutoffFrequency}; {KK1L: 6.64}
   BandMapTotalCalls                     : integer;
   BandMapWindowRY                       : integer;
   BandSave                              : BandType;
@@ -649,7 +646,6 @@ var
     Settings.Operating.FrequencyPollRate. {KK1L: 6.71a} *)
   GridSquareListShown                   : boolean;
 
-  HourDisplay                           : HourDisplayType {= ThisHour};
 
   InactiveSwapRadio                     : boolean;  // n4af 4.41.3
   (* tHandLogMode and IncrementTimeEnable are gone (2026-09-12) --
@@ -804,7 +800,6 @@ var
   //  SuperDupeSheet                        : boolean;
   SuperDupeSheetWindowRY                : integer;
 
-  TenMinuteRule                         : TenMinuteRuleType {= NoTenMinuteRule};
   TenMinuteTime                         : TenMinuteTimeRecord = (Band: NoBand; Mode: NoMode);
   TimeSpentByBand                       : array[BandType] of integer;
 
@@ -1275,11 +1270,11 @@ begin
         FillChar(TempString, SizeOf(TempString), 0);
         TempString := CountryID + '   ' + HeadingString + '';
 
-        if DistanceMode <> NoDistanceDisplay then
+        if Settings.Log.DistanceMode <> NoDistanceDisplay then
            begin
            Distance := GetDistanceBetweenGrids(Settings.My.Grid, HisGrid);
 
-           if DistanceMode = DistanceMiles then
+           if Settings.Log.DistanceMode = DistanceMiles then
               begin
               Distance := round(Distance / 1.609344);
               Str(Distance, DistanceString);
@@ -1650,7 +1645,7 @@ var
   capt                                  : AnsiString;
 begin
   if AlarmSet then Exit;
-  case HourDisplay of
+  case Settings.MainWindow.HourDisplay of
     ThisHour:
       begin
         TempInteger := TotalThisHour;
@@ -2048,7 +2043,7 @@ begin
 
      // D12: ElaspedTimeString + SetMainWindowText are both native string now,
      // so the PAnsiChar TempPchar intermediary is gone; '' is the empty signal.
-     if TenMinuteRule <> NoTenMinuteRule then
+     if Settings.Operating.TenMinuteRule <> NoTenMinuteRule then
         begin
         TR4WMainForm.pnlTenMinuts.Caption :=
            ElaspedTimeString(TenMinuteTime.Time)
@@ -2378,7 +2373,7 @@ begin
           {KK1L: 6.64 Not needed. Only LONGINT seems to work as QSXOffset type}
       QSXOffsetInHertz := QSXOffset;
           {KK1L: 6.64 Trying to add resonable functionality to split stuff}
-      case BandMapSplitMode of
+      case Settings.BandMap.SplitMode of
         ByCutoffFrequency:
           begin
                 {KK1L: 6.71 moved ahead of 'A' because for TS850 need to make B active to change mode}

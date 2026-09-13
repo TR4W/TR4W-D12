@@ -35,7 +35,7 @@ utils_text,
 
 type
 
-  RemainingMultDisplayModeType = (NoRemainingMults, Erase, HiLight);
+  (* RemainingMultDisplayModeType MOVED to uSettingsModel, 2026-09-13. *)
  // ExternalLogType = (NoExternalLogger, DXKeeper, ACLog, HRD);
 
   PrefixRecPtr = ^PrefixRec;
@@ -77,15 +77,15 @@ type
   end;
 
 procedure EnumDOMFILE(FileString: PShortString);
-const
-  RemainingMultDisplayModeTypeSA        : array[RemainingMultDisplayModeType] of PAnsiChar = ('NONE', 'ERASE', 'HILIGHT');
+(* The const section held one live entry, RemainingMultDisplayModeTypeSA,
+  which moved to uSettingsModel with its type on 2026-09-13. The only other
+  line in it was already commented out. *)
 //  ExternalLogTypeSA                     : array[ExternalLogType] of PChar( = ('None', 'DXKeeper', 'ACLog', 'HRD');
 
 var
   ActiveDomesticMult                    : DomesticMultType {= NoDomesticMults};
   DomQTHTable                           : DomQTHTableObject;
   LiteralDomesticQTH                    : boolean; //QTHString (if true) or DomesticQTH {if false}
-  RemainingMultDisplayMode              : RemainingMultDisplayModeType = HiLight;
   MultipliersIsCounties                 : boolean;
 implementation
 

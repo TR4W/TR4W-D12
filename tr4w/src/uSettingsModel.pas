@@ -256,6 +256,14 @@ type
      ordinal a file selects is decided by POSITION in one place.
    *)
    RateDisplayType = (QSOs, Points, BandQSOs);
+   (* The other five that moved on the same ruling, from logwind, loggrid and
+     logdom. Each describes what a SETTING may be, so each belongs here. *)
+   HourDisplayType = (ThisHour, LastSixtyMins, BandChanges,
+                      BandChangesThisComputer);
+   TenMinuteRuleType = (NoTenMinuteRule, TimeOfFirstQSO);
+   BandMapSplitModeType = (ByCutoffFrequency, AlwaysPhone);
+   DistanceDisplayType = (NoDistanceDisplay, DistanceMiles, DistanceKM);
+   RemainingMultDisplayModeType = (NoRemainingMults, Erase, HiLight);
    (*
      FOUR THAT WERE ALLOW-LISTS, NOT RANGES.
 
@@ -464,6 +472,7 @@ type
       FRowCount: TLogRowCount;
       FWindowSize: TMainWindowSize;
       FRateDisplay: RateDisplayType;
+      FHourDisplay: HourDisplayType;
    public
       constructor Create;
    published
@@ -508,6 +517,11 @@ type
         RATE_DISPLAY_SPELLINGS, registered against this property. *)
       property RateDisplay: RateDisplayType
          read FRateDisplay write FRateDisplay;
+      (* Was the global HourDisplay in logwind -- WHAT THE HOUR BOX COUNTS
+        OVER: this clock hour, the last sixty minutes, or band changes (all
+        of them, or only this position's). HOUR DISPLAY, aliased. *)
+      property HourDisplay: HourDisplayType
+         read FHourDisplay write FHourDisplay;
    end;
 
    (*
@@ -582,6 +596,7 @@ type
    private
       FAskForFrequencies: boolean;
       FAutoTimeIncrement: TAutoTimeIncrement;
+      FTenMinuteRule: TenMinuteRuleType;
       FBeepEnable: boolean;
       FHandLogMode: boolean;
       FIeSwitch: boolean;
@@ -601,6 +616,15 @@ type
         asks for a spot's frequency when one arrives without it. *)
       property AskForFrequencies: boolean
          read FAskForFrequencies write FAskForFrequencies;
+      (* Was the global TenMinuteRule in logwind -- the band-change rule some
+        contests impose, and NONE when none does.
+
+        TEN MINUTE RULE, aliased. STATION-SCOPED, unlike the settings around
+        it whose names begin CONTEST: nothing anywhere assigns it per
+        contest, which is the test that put QSO NUMBER BY BAND in the
+        contest-scoped group. *)
+      property TenMinuteRule: TenMinuteRuleType
+         read FTenMinuteRule write FTenMinuteRule;
       (* Was AutoTimeIncrementQSOs -- advance the clock by a minute every N
         QSOs, for practice runs. Zero is off, which is why the subrange
         starts there. *)
@@ -1006,6 +1030,8 @@ type
       FGuardBand: TBandMapGuardBand;
       FItemWidth: TBandMapItemWidth;
       FSize: TBandMapSize;
+      FSplitMode: BandMapSplitModeType;
+      procedure SetSplitMode(aValue: BandMapSplitModeType);
       procedure SetAllBands(aValue: boolean);
       procedure SetAllModes(aValue: boolean);
       procedure SetCallWindowEnable(aValue: boolean);
@@ -1041,6 +1067,13 @@ type
       (* How many spots the map will show.  Was BandMapDisplayLimit, and it
         carried crP: 1 -- so it redraws, and its setter says so. *)
       property DisplayLimit: TBandMapDisplayLimit read FDisplayLimit write SetDisplayLimit;
+      (* Was the global BandMapSplitMode in logwind -- how a split-mode spot
+        is placed: by the cutoff frequency, or always as phone.
+
+        BAND MAP SPLIT MODE, which derives exactly. Its row carried crP: 1,
+        the band-map redraw, so its setter raises like DisplayLimit's. *)
+      property SplitMode: BandMapSplitModeType
+         read FSplitMode write SetSplitMode;
 
       (* THE THREE BELOW CARRIED crP: 0 AND crJ: 1 -- no redraw, restart
         required -- so they are plain field writes with no notification.
@@ -1732,6 +1765,7 @@ type
       FBeepEvery10Qsos: boolean;
       FDisabled: boolean;
       FShowFrequency: boolean;
+      FDistanceMode: DistanceDisplayType;
    public
       constructor Create;
    published
@@ -1793,6 +1827,11 @@ type
         corpus is what proves it: every reference carries a FREQ. *)
       property ShowFrequency: boolean
          read FShowFrequency write FShowFrequency;
+      (* Was the global DistanceMode in loggrid -- the units the log's
+        distance column is shown in, or NONE for no column at all.
+        DISTANCE MODE, aliased. *)
+      property DistanceMode: DistanceDisplayType
+         read FDistanceMode write FDistanceMode;
    end;
 
    (*
@@ -2697,7 +2736,9 @@ type
    TRemainingMultsSettings = class(TSettingsGroup)
    private
       FShowDomesticName: boolean;
+      FDisplayMode: RemainingMultDisplayModeType;
       procedure SetShowDomesticName(aValue: boolean);
+      procedure SetDisplayMode(aValue: RemainingMultDisplayModeType);
    public
       constructor Create;
    published
@@ -2710,6 +2751,15 @@ type
         made any other way left the columns as they were. *)
       property ShowDomesticName: boolean
          read FShowDomesticName write SetShowDomesticName;
+      (* Was the global RemainingMultDisplayMode in logdom -- what happens to
+        a multiplier once it is worked: nothing, erased from the list, or
+        left in place and highlighted.
+
+        REMAINING MULT DISPLAY MODE, aliased -- the command says MULT where
+        the group says MULTS. Its row carried crP: 2, the remaining-mults
+        rebuild, so the setter raises. *)
+      property DisplayMode: RemainingMultDisplayModeType
+         read FDisplayMode write SetDisplayMode;
    end;
 
    (*
@@ -3458,6 +3508,8 @@ begin
    (* ZERO, and it is the value the global actually had -- NOT the 200 that
      sits commented out beside its declaration. See the type. *)
    FGuardBand        := 0;
+   // logwind commented its default as ByCutoffFrequency, and zero is it.
+   FSplitMode        := ByCutoffFrequency;
 end;
 
 (* EIGHT SETTERS THAT DIFFER ONLY IN WHICH FIELD THEY GUARD.
@@ -3597,6 +3649,27 @@ begin
    FTcpServerPort := 52002;
 end;
 
+procedure TBandMapSettings.SetSplitMode(aValue: BandMapSplitModeType);
+begin
+   if FSplitMode = aValue then
+      begin
+      Exit;
+      end;
+   FSplitMode := aValue;
+   Changed('SplitMode');
+end;
+
+procedure TRemainingMultsSettings.SetDisplayMode(
+   aValue: RemainingMultDisplayModeType);
+begin
+   if FDisplayMode = aValue then
+      begin
+      Exit;
+      end;
+   FDisplayMode := aValue;
+   Changed('DisplayMode');
+end;
+
 procedure TCwSettings.SetAutoSendCharacterCount(aValue: TAutoSendCharacterCount);
 begin
    if FAutoSendCharacterCount = aValue then
@@ -3674,6 +3747,8 @@ begin
    inherited Create;
    // No initialiser on the global, so False.
    FShowDomesticName := False;
+   // logdom declared it HiLight, which is NOT the zero value.
+   FDisplayMode := HiLight;
 end;
 
 procedure TRemainingMultsSettings.SetShowDomesticName(aValue: boolean);
@@ -3764,6 +3839,8 @@ begin
      zero value and is what this says out loud. *)
    FAskForFrequencies   := False;
    FAutoTimeIncrement   := 0;
+   // logwind commented its default as NoTenMinuteRule, and zero is it.
+   FTenMinuteRule       := NoTenMinuteRule;
    FBeepEnable          := False;
    FHandLogMode         := False;
    FIeSwitch            := False;
@@ -3817,6 +3894,7 @@ begin
    FWindowSize := 5;
    // logwind's declaration commented its default as QSOs, and zero is it.
    FRateDisplay := QSOs;
+   FHourDisplay := ThisHour;
 end;
 
 procedure TMessageSettings.SetAutoQslInterval(aValue: TAutoQslInterval);
@@ -3909,6 +3987,8 @@ begin
    // The values uConfigValues' initialiser carried.
    FWithSingleEnter    := False;
    FConfirmEditChanges := True;
+   // loggrid declared DistanceMode as DistanceKM, NOT the zero value.
+   FDistanceMode       := DistanceKM;
    FCheckFileSize      := False;
    FUpdateRestartFile  := True;
    (* The values the globals in VC.pas carried: LogFrequencyEnable has no
@@ -4716,6 +4796,13 @@ begin
    Alias('AUTO QSL INTERVAL', 'Message.AutoQslInterval');
    Alias('STEREO CONTROL PIN', 'Hardware.StereoControlPin');
    Alias('RATE DISPLAY', 'MainWindow.RateDisplay');
+   Alias('HOUR DISPLAY', 'MainWindow.HourDisplay');
+   (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
+     anywhere writes it per contest -- so it is station-scoped and joins
+     Operating rather than the contest-scoped Contest group. *)
+   Alias('TEN MINUTE RULE', 'Operating.TenMinuteRule');
+   Alias('DISTANCE MODE', 'Log.DistanceMode');
+   Alias('REMAINING MULT DISPLAY MODE', 'RemainingMults.DisplayMode');
    Alias('ROW COUNT',   'MainWindow.RowCount');
    Alias('WINDOW SIZE', 'MainWindow.WindowSize');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
@@ -5590,6 +5677,18 @@ const
      in the SAME type block. Opening a const block partway through ends it. *)
    RATE_DISPLAY_SPELLINGS: array[RateDisplayType] of string =
       ('QSOS', 'QSO POINTS', 'BAND QSOS');
+   HOUR_DISPLAY_SPELLINGS: array[HourDisplayType] of string =
+      ('THIS HOUR', 'LAST SIXTY MINUTES', 'BAND CHANGES',
+       'BAND CHANGES ON THIS COMPUTER');
+   TEN_MINUTE_RULE_SPELLINGS: array[TenMinuteRuleType] of string =
+      ('NONE', 'TIME OF FIRST QSO');
+   BAND_MAP_SPLIT_MODE_SPELLINGS: array[BandMapSplitModeType] of string =
+      ('BY CUTOFF FREQ', 'ALWAYS PHONE');
+   DISTANCE_MODE_SPELLINGS: array[DistanceDisplayType] of string =
+      ('NONE', 'MILES', 'KM');
+   REMAINING_MULT_DISPLAY_SPELLINGS:
+      array[RemainingMultDisplayModeType] of string =
+      ('NONE', 'ERASE', 'HILIGHT');
 
 initialization
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
@@ -5600,6 +5699,16 @@ initialization
      spellings are in force for the first line of the first file. *)
    RegisterSettingAllowedValues('MainWindow.RateDisplay',
                                 RATE_DISPLAY_SPELLINGS);
+   RegisterSettingAllowedValues('MainWindow.HourDisplay',
+                                HOUR_DISPLAY_SPELLINGS);
+   RegisterSettingAllowedValues('Operating.TenMinuteRule',
+                                TEN_MINUTE_RULE_SPELLINGS);
+   RegisterSettingAllowedValues('BandMap.SplitMode',
+                                BAND_MAP_SPLIT_MODE_SPELLINGS);
+   RegisterSettingAllowedValues('Log.DistanceMode',
+                                DISTANCE_MODE_SPELLINGS);
+   RegisterSettingAllowedValues('RemainingMults.DisplayMode',
+                                REMAINING_MULT_DISPLAY_SPELLINGS);
 
 finalization
    FreeSettings;
