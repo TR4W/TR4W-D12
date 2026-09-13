@@ -65,6 +65,7 @@ type
       procedure Test_EveryMessageCommandReachesItsOwnProperty;
       procedure Test_ABoundedSettingOffersItsValues;
       procedure Test_ARegisteredVocabularyIsAlsoTheRefusal;
+      procedure Test_AnEnumSettingSpeaksTheFilesSpellings;
    public
       procedure RunAllTests; override;
    end;
@@ -352,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(248, names.Count,
+         CheckEquals(249, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1381,6 +1382,7 @@ const
       + '"RADIO TCP SERVER PORT",'
       + '"RADIUS OF EARTH",'
       + '"RANDOM CQ MODE",'
+      + '"RATE DISPLAY",'
       + '"REPEAT S&P CW EXCHANGE",'
       + '"REPEAT S&P EXCHANGE",'
       + '"REPEAT S&P SSB EXCHANGE",'
@@ -1799,6 +1801,52 @@ begin
    end;
 end;
 
+procedure TSettingsModelTests.Test_AnEnumSettingSpeaksTheFilesSpellings;
+var
+   before: RateDisplayType;
+   text: string;
+begin
+   BeginTest('Test_AnEnumSettingSpeaksTheFilesSpellings');
+   (*
+     THE SPELLING IS NOT THE IDENTIFIER, AND THE FILE'S SPELLING IS THE ONE
+     THAT COUNTS.
+
+     RateDisplayType is (QSOs, Points, BandQSOs) and a config file has always
+     said QSO POINTS for the middle one. RTTI alone would answer -1 reading
+     that and write `Points` rendering it -- a word no TR4W has ever accepted
+     back -- so the vocabulary registered against the property decides, BY
+     POSITION, exactly as the ckList spelling table did.
+   *)
+   before := Settings.MainWindow.RateDisplay;
+   try
+      CheckTrue(Settings.TrySetByCommand('RATE DISPLAY', 'QSO POINTS'),
+                'the file spelling is accepted');
+      CheckEquals(Ord(Points), Ord(Settings.MainWindow.RateDisplay),
+                  'and it selected the ordinal that spelling sits at');
+
+      CheckTrue(Settings.TryGetByCommand('RATE DISPLAY', text),
+                'it renders');
+      CheckEquals('QSO POINTS', text,
+                  'as the file spelling, not as the enum member name');
+
+      (* AND THE IDENTIFIER IS NOT A SECOND SPELLING. The ckList table was
+        the only thing the old parser matched against, and admitting `Points`
+        now would quietly widen what a config file may say. *)
+      CheckFalse(Settings.TrySetByCommand('RATE DISPLAY', 'Points'),
+                 'the Pascal member name is not a config spelling');
+      CheckEquals(Ord(Points), Ord(Settings.MainWindow.RateDisplay),
+                  'and the refusal left the value alone');
+
+      (* Case and surrounding space are tolerated, as they always were. *)
+      CheckTrue(Settings.TrySetByCommand('RATE DISPLAY', '  band qsos '),
+                'case and space are tolerated');
+      CheckEquals(Ord(BandQSOs), Ord(Settings.MainWindow.RateDisplay),
+                  'and the right ordinal is selected');
+   finally
+      Settings.MainWindow.RateDisplay := before;
+   end;
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -1830,6 +1878,7 @@ begin
    Test_EveryMessageCommandReachesItsOwnProperty;
    Test_ABoundedSettingOffersItsValues;
    Test_ARegisteredVocabularyIsAlsoTheRefusal;
+   Test_AnEnumSettingSpeaksTheFilesSpellings;
 end;
 
 end.

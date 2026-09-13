@@ -232,6 +232,30 @@ type
      variables sat at -1, a value their own declared range rejected.  A
      subrange is signed, so the type simply says what the program means. *)
    TQsoPoints           = -1..65535;  // was crMin:0, crMax:MAXWORD -- see above
+
+   (*
+     AN ENUMERATED SETTING'S TYPE LIVES HERE NOW.
+
+     NY4I, 2026-09-13: *"If it is related to settings, regardless of where it
+     is defined today, it should now live in uSettings. That goes for VC.pas
+     too."*
+
+     RateDisplayType was declared in trdos/logwind.pas, which is where the
+     thing it controls is drawn -- and that is the wrong reason for a type to
+     live somewhere. It describes a SETTING: what the rate box counts.
+
+     IT INVERTS THE DEPENDENCY, WHICH IS THE POINT. Publishing a property of
+     this type from a group would otherwise mean uSettingsModel using LogWind;
+     with the declaration here, LogWind uses uSettingsModel, which it already
+     did. This unit still depends on nothing but the RTL.
+
+     THE SPELLING IS NOT THE IDENTIFIER, and that is why the vocabulary comes
+     with it. A config file says QSO POINTS; the enum member is Points. The
+     table below is the one logwind carried, as `string` rather than
+     PAnsiChar, and it is registered against the property at startup -- so the
+     ordinal a file selects is decided by POSITION in one place.
+   *)
+   RateDisplayType = (QSOs, Points, BandQSOs);
    (*
      FOUR THAT WERE ALLOW-LISTS, NOT RANGES.
 
@@ -439,6 +463,7 @@ type
       FShowGridlines: boolean;
       FRowCount: TLogRowCount;
       FWindowSize: TMainWindowSize;
+      FRateDisplay: RateDisplayType;
    public
       constructor Create;
    published
@@ -476,6 +501,13 @@ type
 
         WINDOW SIZE, aliased -- the derived name would say it twice. *)
       property WindowSize: TMainWindowSize read FWindowSize write FWindowSize;
+      (* Was the global RateDisplay in logwind -- WHAT THE RATE BOX COUNTS:
+        QSOs, QSO points, or QSOs on the current band.
+
+        RATE DISPLAY, aliased. The spellings a config file uses are
+        RATE_DISPLAY_SPELLINGS, registered against this property. *)
+      property RateDisplay: RateDisplayType
+         read FRateDisplay write FRateDisplay;
    end;
 
    (*
@@ -3253,6 +3285,28 @@ begin
       end;
 end;
 
+(* Where a value sits in the registered vocabulary, or -1.
+
+  POSITION IS THE ORDINAL. That is exactly what the ckList row did: it found
+  the text in a spelling table and wrote the table's INDEX through a pointer.
+  The table is the same one; the pointer is gone. *)
+function IndexOfRegisteredValue(const aPath, aValue: string): integer;
+var
+   allowed: TArray<string>;
+   i: integer;
+begin
+   Result := -1;
+   allowed := RegisteredValuesFor(aPath);
+   for i := 0 to High(allowed) do
+      begin
+      if UnicodeSameText(Trim(allowed[i]), Trim(aValue)) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
 procedure RegisterSettingValueCheck(const aPath: string;
                                     const aCheck: TSettingValueCheck);
 var
@@ -3761,6 +3815,8 @@ begin
      False the field initialiser gives them, which is also what they had. *)
    FRowCount   := 5;
    FWindowSize := 5;
+   // logwind's declaration commented its default as QSOs, and zero is it.
+   FRateDisplay := QSOs;
 end;
 
 procedure TMessageSettings.SetAutoQslInterval(aValue: TAutoQslInterval);
@@ -4659,6 +4715,7 @@ begin
    Alias('RFOBL MODE', 'Contest.RfoblMode');
    Alias('AUTO QSL INTERVAL', 'Message.AutoQslInterval');
    Alias('STEREO CONTROL PIN', 'Hardware.StereoControlPin');
+   Alias('RATE DISPLAY', 'MainWindow.RateDisplay');
    Alias('ROW COUNT',   'MainWindow.RowCount');
    Alias('WINDOW SIZE', 'MainWindow.WindowSize');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
@@ -4997,7 +5054,16 @@ begin
 
       tkEnumeration:
          begin
-         n := GetEnumValue(info^.PropType, AnsiString(text));
+         (* THE REGISTERED VOCABULARY FIRST, BY POSITION. A config file says
+           QSO POINTS where the enum member is Points, so GetEnumValue would
+           answer -1 for a value the program has always accepted. Falling
+           through to it still serves an enum whose members ARE spelled the
+           way the file spells them. *)
+         n := IndexOfRegisteredValue(path, text);
+         if n < 0 then
+            begin
+            n := GetEnumValue(info^.PropType, AnsiString(text));
+            end;
          if n < 0 then
             begin
             Exit;
@@ -5020,6 +5086,8 @@ var
    path: string;
    owner: TObject;
    info: PPropInfo;
+   spellings: TArray<string>;
+   n: integer;
 begin
    Result := False;
    aValue := '';
@@ -5061,7 +5129,19 @@ begin
 
       tkEnumeration:
          begin
-         aValue := string(GetEnumName(info^.PropType, GetOrdProp(owner, info)));
+         (* RENDERED FROM THE VOCABULARY, for the reason the setter reads from
+           it: GetEnumName would write `Points` into a config file, which no
+           TR4W has ever accepted back. *)
+         spellings := RegisteredValuesFor(path);
+         n := GetOrdProp(owner, info);
+         if (spellings <> nil) and (n >= 0) and (n <= High(spellings)) then
+            begin
+            aValue := spellings[n];
+            end
+         else
+            begin
+            aValue := string(GetEnumName(info^.PropType, n));
+            end;
          Result := True;
          end;
       tkString, tkLString, tkAString, tkUString, tkWString:
@@ -5499,6 +5579,28 @@ end;
 (* FREED WITH THE UNIT, not left to a caller.  A settings object outlives every
   consumer by definition, so there is no natural owner to hand it to, and a leak
   report at exit is noise that a real leak then has to be found inside. *)
+const
+   (* THE SPELLINGS A CONFIG FILE USES FOR RateDisplayType, in ORDINAL ORDER
+     -- position is the value. This is the table logwind carried, as `string`
+     rather than PAnsiChar.
+
+     Here rather than beside the type, and that is a language constraint
+     rather than a choice: the interface's type section carries a forward
+     `TR4WSettings = class`, and FPC requires a forward class to be completed
+     in the SAME type block. Opening a const block partway through ends it. *)
+   RATE_DISPLAY_SPELLINGS: array[RateDisplayType] of string =
+      ('QSOS', 'QSO POINTS', 'BAND QSOS');
+
+initialization
+   (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
+
+     Here rather than in uCFG, unlike the two integer allow-lists: those read
+     const arrays that unit still owns, and this table moved with its type. An
+     initialization section runs before any configuration is read, so the
+     spellings are in force for the first line of the first file. *)
+   RegisterSettingAllowedValues('MainWindow.RateDisplay',
+                                RATE_DISPLAY_SPELLINGS);
+
 finalization
    FreeSettings;
 

@@ -224,7 +224,9 @@ type
 
   BandMapSplitModeType = (ByCutoffFrequency, AlwaysPhone); {KK1L: 6.64}
 
-  RateDisplayType = (QSOs, Points, BandQSOs);
+  (* RateDisplayType MOVED to uSettingsModel, 2026-09-13 -- it describes a
+    SETTING, and it was here only because this is where the rate box is
+    drawn. See Settings.MainWindow.Settings.MainWindow.RateDisplay. *)
   HourDisplayType = (ThisHour, LastSixtyMins, BandChanges, BandChangesThisComputer);
 
   K1EAStationInfoFieldType = (Pass, Run);
@@ -452,7 +454,6 @@ const
 
   HourDisplayTypeSA                     : array[HourDisplayType] of PAnsiChar = ('THIS HOUR', 'LAST SIXTY MINUTES', 'BAND CHANGES', 'BAND CHANGES ON THIS COMPUTER');
 
-  RateDisplayTypeStringArray            : array[RateDisplayType] of PAnsiChar = ('QSOS', 'QSO POINTS', 'BAND QSOS');
 
   IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of PAnsiChar = ('AT END', 'AT START');
 
@@ -749,7 +750,6 @@ var
 //  RadioTwoName                : string[10] = 'Rig 2';
 
   Rate                                  : integer;
-  RateDisplay                           : RateDisplayType {= QSOs};
   RateMinuteArray                       : array[1..60] of RateRecord;
   //   ReminderPostedCount             : integer;
   Reminders                             : ReminderArrayPointer;
@@ -2227,7 +2227,7 @@ begin
 
   for RateMinute := 1 to 10 do
      begin
-     case RateDisplay of
+     case Settings.MainWindow.RateDisplay of
        QSOs: Rate := Rate + RateMinuteArray[RateMinute].TotalQSOs;
        Points: Rate := Rate + RateMinuteArray[RateMinute].TotalPoints;
        BandQSOs: if ActiveBand in [Band160..Band10] then Rate := Rate + RateMinuteArray[RateMinute].BandQSOs[ActiveBand] +  RateMinuteArray[RateMinute].BandQSOs[InactiveRadioPtr.BandMemory];  // n4af 4.76.4
@@ -2240,14 +2240,14 @@ begin
 
   for RateMinute := 1 to 60 do
      begin
-     case RateDisplay of
+     case Settings.MainWindow.RateDisplay of
        QSOs: TotalLastSixty := TotalLastSixty + RateMinuteArray[RateMinute].TotalQSOs;
        Points: TotalLastSixty := TotalLastSixty + RateMinuteArray[RateMinute].TotalPoints;
        BandQSOs: if ActiveBand in [Band160..Band10] then TotalLastSixty := TotalLastSixty + RateMinuteArray[RateMinute].BandQSOs[ActiveBand];
      end;
      end;
 
-  case RateDisplay of
+  case Settings.MainWindow.RateDisplay of
     QSOs: TotalThisHour := TotalThisHour + NumberContactsThisMinute;
     Points: TotalThisHour := TotalThisHour + NumberQSOPointsThisMinute;
     BandQSOs: if ActiveBand in [Band160..Band10] then TotalThisHour := TotalThisHour + NumberBandQSOsThisMinute[ActiveBand];

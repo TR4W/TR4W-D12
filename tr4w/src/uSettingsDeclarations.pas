@@ -753,7 +753,7 @@ begin
                           RS_APPEARANCE_CTRLJ_HOURDISPLAY);
    RegisterModelSetting('appearance.ctrlj.insertMode',       'INSERT MODE',
                           RS_APPEARANCE_CTRLJ_INSERTMODE);
-   RegisterStoredSetting('appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
+   RegisterModelSetting( 'appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
                           RS_APPEARANCE_CTRLJ_RATEDISPLAY);
    RegisterStoredSetting('appearance.ctrlj.reminder',         'REMINDER',
                           RS_APPEARANCE_CTRLJ_REMINDER);

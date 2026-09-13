@@ -446,7 +446,11 @@ const
    ListParamArray: array[0..53] of ListParamRecord =
       (
     {(*}
-    (lpArray: @RateDisplayTypeStringArray;        lpLength: Byte(High(RateDisplayType));        lpVar: @RateDisplay; ),
+    (* SLOT 0 IS FREE. RATE DISPLAY moved to Settings.MainWindow.RateDisplay
+      and took its spelling table with it. nil rather than a renumbering:
+      this table is POSITIONAL and a row reaches it as crAddress: pointer(N),
+      so removing an entry would repoint every row above it. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @QSOPointMethodArray;               lpLength: Byte(High(QSOPointMethodType));     lpVar: @ActiveQSOPointMethod),
     (lpArray: @ParameterOkayModeTypeStringArray;  lpLength: Byte(High(ParameterOkayModeType));  lpVar: @ParameterOkayMode; ),
     (lpArray: @PrefixMultStringArray;             lpLength: Byte(High(PrefixMultType));         lpVar: @ActivePrefixMult; ),
@@ -604,6 +608,7 @@ const
    - 1 {AUTO QSL INTERVAL -- the setter re-seeds the countdown}
    - 2 {SCP MINIMUM LETTERS and STEREO CONTROL PIN -- registered vocabularies}
    - 2 {R150S MODE and RFOBL MODE -- contest-scoped, FCONTEST assigns them}
+   - 1 {RATE DISPLAY -- the first enum whose TYPE moved to uSettingsModel}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -922,7 +927,6 @@ const
  (crCommand: 'RADIO TWO WIDE CW FILTER';      crAddress: @Radio2.WideCWFilter;            crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO TWO STARTUP COMMAND';     crAddress: @Radio2.StartupCommand;          crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIO TWO SERIAL FORMAT';       crAddress: @Radio2.SerialFormat;            crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctString; crNetwork: 0),
- (crCommand: 'RATE DISPLAY';                  crAddress: pointer(0);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'REMAINING MULT DISPLAY MODE';   crAddress: pointer(16);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:2; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'REMINDER';                      crAddress: pointer(51);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAppearance; crType: ctOther; crNetwork: 1),
