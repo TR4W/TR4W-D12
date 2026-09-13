@@ -146,6 +146,7 @@ implementation
 uses SysUtils,   { Format, StrPCopy -- replaced TF.Format/wsprintfA }
    uMainThread,  { RunOnMainThread -- the finished handoff, see HeadlessSyncFinished }
   MainUnit,
+  uNetClient,       (* ServerPasswordOnWire -- the one wire form *)
   uSettingsModel;   (* Settings.Server *)
 
 { GetServerLogDlgProc STOOD HERE and went with dialog template 73 on
@@ -329,7 +330,8 @@ function FetchServerLog(out aTotalBytes, aLogSize: integer): boolean;
 const
    CONNECT_TIMEOUT_MS = 5000;
    IDLE_TIMEOUT_MS    = 2000;   // as the old WSAWaitForMultipleEvents wait
-   PASSWORD_BYTES     = 10;     // fixed by the server, not by the string type
+   (* PASSWORD_BYTES moved to uNetClient.ServerPasswordOnWire, which is
+     now the only place that knows the field is ten bytes. *)
 var
    Client:    TIdTCPClient;
    Chunk:     TIdBytes;
@@ -365,7 +367,12 @@ begin
       end;
 
       try
-         Client.IOHandler.Write(RawToBytes(ServerPassword[1], PASSWORD_BYTES));
+         (* ONE COPY OF THE WIRE FORMAT, in uNetClient. This built its own
+           -- ten bytes from a ShortString's first character -- and that
+           stopped being the password's shape the moment it became a
+           native string. *)
+         Client.IOHandler.Write(
+            ServerPasswordOnWire(AnsiString(Settings.Server.Password)));
 
          aLogSize := Client.IOHandler.ReadInt32(False);   // native order
 

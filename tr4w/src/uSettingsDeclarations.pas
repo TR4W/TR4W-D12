@@ -356,9 +356,9 @@ begin
                          RS_SCORING_HAMSCORE_ENABLE);
    RegisterModelSetting( 'scoring.hamscore.url',         'HAMSCORE URL',
                          RS_SCORING_HAMSCORE_URL);
-   RegisterStoredSetting('scoring.hamscore.username',    'HAMSCORE USERNAME',
+   RegisterModelSetting( 'scoring.hamscore.username',    'HAMSCORE USERNAME',
                          RS_SCORING_HAMSCORE_USERNAME);
-   RegisterStoredSetting('scoring.hamscore.password',    'HAMSCORE PASSWORD',
+   RegisterModelSetting( 'scoring.hamscore.password',    'HAMSCORE PASSWORD',
                          RS_SCORING_HAMSCORE_PASSWORD);
    RegisterModelSetting( 'scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
                          RS_SCORING_HAMSCORE_CONTACTINFO);

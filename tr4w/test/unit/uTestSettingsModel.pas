@@ -347,7 +347,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(233, names.Count,
+         CheckEquals(236, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1169,8 +1169,10 @@ const
       + '"FREQUENCY POLL RATE",'
       + '"GRID MAP CENTER",'
       + '"HAMSCORE ENABLE",'
+      + '"HAMSCORE PASSWORD",'
       + '"HAMSCORE SEND CONTACT INFO",'
       + '"HAMSCORE URL",'
+      + '"HAMSCORE USERNAME",'
       + '"HAND LOG MODE",'
       + '"HF BAND ENABLE",'
       + '"IE SWITCH",'
@@ -1285,6 +1287,7 @@ const
       + '"SEND COMPLETE FOUR LETTER CALL",'
       + '"SERVER ADDRESS",'
       + '"SERVER AUTO SYNCHRONIZE LOG ON CONNECT",'
+      + '"SERVER PASSWORD",'
       + '"SERVER PORT",'
       + '"SHIFT KEY ENABLE",'
       + '"SHORT 0",'

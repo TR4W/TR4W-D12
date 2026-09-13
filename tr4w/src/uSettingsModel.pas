@@ -176,6 +176,38 @@ type
    TPaddleMonitorTone   = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddlePttHoldCount  = 0..65535;   // was crMin:0, crMax:MAXWORD
    TPaddleSpeed         = 0..99;      // was crMin:0, crMax:99
+
+   (*
+     TWO STRING TYPES THAT CARRY A FACT ABOUT THEIR VALUE.
+
+     A SUBRANGE ALREADY DOES THIS FOR NUMBERS -- the bound that used to be
+     crMin and crMax is part of the type, and the compiler emits it as RTTI
+     for anything that needs to ask. These do the same for two facts about
+     text that the config array used to carry as crType:
+
+       TSecretText          a password or token. Never written to the
+                            settings file in the clear, never sent to a
+                            multi-op peer, masked in Preferences, and its
+                            case is preserved through the legacy import.
+
+       TCaseSensitiveText   not a secret, but its capitalisation is the
+                            operator's and must survive the import, which
+                            upper-cases every line before splitting it.
+
+     WHY A TYPE AND NOT A LIST. The alternative is a table of "which settings
+     are secret" somewhere, and this tree has spent months deleting exactly
+     that shape -- a hand-maintained list beside the thing it describes,
+     free to disagree with it. FOUR separate pieces of code need this answer
+     (the streamer, the importer, the multi-op sync and the Preferences
+     masking) and a list would be four chances to forget one.
+
+     MEASURED BEFORE IT WAS RELIED ON: FPC's RTTI reports the DECLARED type
+     name for a distinct string type while the kind stays tkUString, so the
+     existing string arm handles assignment unchanged and the name carries
+     the fact.
+   *)
+   TSecretText = type string;
+   TCaseSensitiveText = type string;
    (* The Network window's refresh timer, in milliseconds. *)
    TNetStatusInterval   = 1000..10000; // was crMin:1000, crMax:10000
    TFreqPollRate        = 10..1000;   // was crMin:10, crMax:1000 -- ms
@@ -271,6 +303,13 @@ type
    public
       // Called by the owner's walk. Not for anyone else.
       procedure BindTo(aOwner: TR4WSettings; const aPath: string);
+
+      (* WHERE THIS GROUP SITS, e.g. 'Hamscore'. Assigned by BindTo during
+        the command walk, and read by the streamer so a secret can be filed
+        under a stable name -- the Windows Credential Manager needs one, and
+        it has to be the SAME name on every save or the operator collects a
+        new entry each time. *)
+      property Path: string read FPath;
 
       (* IS THIS GROUP THE CONTEST'S, RATHER THAN THE STATION'S?
 
@@ -652,6 +691,7 @@ type
       FAddress: string;
       FPort: TServerPort;
       FAutoSynchronizeLogOnConnect: boolean;
+      FPassword: TSecretText;
    public
       constructor Create;
    published
@@ -666,6 +706,13 @@ type
         server's log as soon as this position connects. *)
       property AutoSynchronizeLogOnConnect: boolean
          read FAutoSynchronizeLogOnConnect write FAutoSynchronizeLogOnConnect;
+      (* Was ServerPassword in uNet, a Str20 declared 'TR4WSERVER'.
+
+        IT USED TO CROSS THE NETWORK. The row carried crNetwork: 1, so this
+        position's server password was synced to the others in the clear, and
+        one position could overwrite another's. As TSecretText it is refused
+        from a peer and each position holds its own (NY4I, 2026-09-12). *)
+      property Password: TSecretText read FPassword write FPassword;
    end;
 
    (*
@@ -685,6 +732,8 @@ type
    private
       FUrl: string;
       FSendContactInfo: boolean;
+      FUsername: TCaseSensitiveText;
+      FPassword: TSecretText;
    public
       constructor Create;
    published
@@ -695,6 +744,19 @@ type
       // Was Config.HamScoreSendContactInfo -- send each QSO, not just totals.
       property SendContactInfo: boolean
          read FSendContactInfo write FSendContactInfo;
+      (* Was Config.HamScoreUsername, a ShortString. EMPTY FALLS BACK TO MY
+        CALL, which is why an empty value is meaningful and not merely unset.
+
+        TCaseSensitiveText, so the legacy import puts the operator's own
+        capitalisation back -- the ini reader upper-cases a whole line before
+        splitting it, which is what made this setting unmovable until the
+        keychain work. *)
+      property Username: TCaseSensitiveText read FUsername write FUsername;
+      (* Was Config.HamScorePassword. TSecretText, so it goes to the keychain
+        rather than into settings\tr4w.json, is never sent to a multi-op
+        peer, and is masked in Preferences -- four behaviours from one
+        declaration. *)
+      property Password: TSecretText read FPassword write FPassword;
    end;
 
    (*
@@ -2741,6 +2803,11 @@ type
       (* The streamer hook that keeps contest-scoped groups out of the
         file. A method rather than a plain procedure because it has to
         reach IsContestScoped through the property it is asked about. *)
+      function PropertyForCommand(const aCommand: string): PPropInfo;
+      (* Applied to the finished document and to the freshly loaded
+        object, NOT inside the streamer. See ProtectSecretsInDocument. *)
+      procedure ProtectSecretsInDocument(const aDoc: TJSONObject);
+      procedure UnprotectSecretsAfterLoad;
       procedure SkipContestScoped(aSender: TObject; aObject: TObject;
                                   aInfo: PPropInfo; var aResult: TJSONData);
    public
@@ -2809,6 +2876,13 @@ type
         about any command. *)
       function CommandIsContestScoped(const aCommand: string): boolean;
       function TrySetByCommand(const aCommand, aValue: string): boolean;
+      (* IS THIS SETTING A CREDENTIAL? Asked by the multi-op sync before it
+        sends anything, by the importer before it upper-cases a line, and by
+        Preferences before it shows a value. *)
+      function CommandIsSecret(const aCommand: string): boolean;
+      (* IS THIS SETTING'S CAPITALISATION THE OPERATOR'S? True for a secret
+        too -- a password is case-sensitive by definition. *)
+      function CommandIsCaseSensitive(const aCommand: string): boolean;
       function TryGetByCommand(const aCommand: string; out aValue: string): boolean;
 
       // Every command name this object answers to. Caller owns the result.
@@ -2922,7 +2996,8 @@ uses
    (* fpjson and TypInfo moved to the INTERFACE uses -- SkipContestScoped names
      TJSONData and PPropInfo in its signature. Naming them again here is a
      duplicate identifier, not a harmless repetition. *)
-   fpjsonrtti;   // the streamer; the property walk is TypInfo, see OwnsCommand
+   fpjsonrtti,   // the streamer; the property walk is TypInfo, see OwnsCommand
+   uKeychain;    // ProtectSecret / UnprotectSecret -- see TSecretText
 
 var
    GSettings: TR4WSettings = nil;
@@ -3300,6 +3375,10 @@ begin
    FAddress                     := 'LOCALHOST';
    FPort                        := 1061;
    FAutoSynchronizeLogOnConnect := False;
+   (* The value uNet's typed constant carried. It is the stock password the
+     server ships with, so it is a default rather than a secret until the
+     operator changes one or both ends. *)
+   FPassword                    := 'TR4WSERVER';
 end;
 
 constructor THamscoreSettings.Create;
@@ -3310,6 +3389,8 @@ begin
      ON. *)
    FUrl             := 'http://scoredistributor.net/';
    FSendContactInfo := True;
+   FUsername        := '';
+   FPassword        := '';
 end;
 
 constructor TScoreSettings.Create;
@@ -3906,7 +3987,7 @@ end;
   NOTHING HERE CAN LOSE ANYTHING.  A Pascal property identifier is ASCII by the
   language's own rules, and a config command name is ASCII by TR4W's.  The one
   crossing that carries operator text -- a string property's VALUE, in
-  SetStrProp and GetStrProp -- is the reason this is written down rather than
+  SetUnicodeStrProp and GetUnicodeStrProp -- is the reason this is written down rather than
   waved away: if a setting ever holds a call sign or a name outside the ANSI
   code page, this is the line that would drop it, and it should be found by
   reading rather than by a bug report. *)
@@ -4196,6 +4277,10 @@ begin
    (* Moved into the contest group 2026-09-12; the command has never
      named the contest. *)
    Alias('HAMSCORE ENABLE',            'Contest.HamscoreEnable');
+   (* The credentials. HAMSCORE USERNAME and PASSWORD derive exactly from
+     Hamscore.Username and Hamscore.Password; SERVER PASSWORD derives from
+     Server.Password. All three are listed here only because they are the
+     ones a reader will come looking for -- none actually needs an alias. *)
    Alias('USE CONTROL PORT',           'Hardware.UseControlPort');
 
    (* The contest's four. Every one puts the subject first and the
@@ -4672,6 +4757,73 @@ end;
   command names reads published properties, so un-publishing it would
   remove HF BAND ENABLE from the vocabulary as well as from the file. What
   changes is where the VALUE lives, not whether the command exists. *)
+(* THE TYPE NAME IS THE MARK. See TSecretText. *)
+function IsSecretProperty(const aInfo: PPropInfo): boolean;
+begin
+   Result := (aInfo <> nil) and
+             UnicodeSameText(string(aInfo^.PropType^.Name), 'TSecretText');
+end;
+
+function IsCaseSensitiveProperty(const aInfo: PPropInfo): boolean;
+begin
+   Result := (aInfo <> nil) and
+             (IsSecretProperty(aInfo) or
+              UnicodeSameText(string(aInfo^.PropType^.Name),
+                              'TCaseSensitiveText'));
+end;
+
+(* Resolve a command to its property so the two questions below can be asked
+  of a NAME, which is what every caller actually holds. *)
+function TR4WSettings.PropertyForCommand(const aCommand: string): PPropInfo;
+var
+   path: string;
+   owner: TObject;
+begin
+   Result := nil;
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, Result) then
+      begin
+      Result := nil;
+      end;
+end;
+
+function TR4WSettings.CommandIsSecret(const aCommand: string): boolean;
+begin
+   Result := IsSecretProperty(PropertyForCommand(aCommand));
+end;
+
+function TR4WSettings.CommandIsCaseSensitive(const aCommand: string): boolean;
+begin
+   Result := IsCaseSensitiveProperty(PropertyForCommand(aCommand));
+end;
+
+(*
+  THE NAME A SECRET IS FILED UNDER, and it must not move.
+
+  The group knows its own path and the property knows its name, so the two
+  together give 'Hamscore.Password' -- the same string the reader will build,
+  and the same one an operator sees in Credential Manager. A name derived any
+  other way would risk differing between the save and the load, which on
+  Windows means the password is written to one entry and looked for in
+  another.
+*)
+function SecretNameFor(const aObject: TObject;
+                       const aInfo: PPropInfo): string;
+begin
+   if aObject is TSettingsGroup then
+      begin
+      Result := TSettingsGroup(aObject).Path + '.' + string(aInfo^.Name);
+      end
+   else
+      begin
+      Result := string(aInfo^.Name);
+      end;
+end;
+
 procedure TR4WSettings.SkipContestScoped(aSender: TObject; aObject: TObject;
                                          aInfo: PPropInfo; var aResult: TJSONData);
 var
@@ -4707,6 +4859,95 @@ begin
    finally
       streamer.Free;
    end;
+
+   (* AND THE SECRETS ARE PROTECTED IN THE FINISHED DOCUMENT.
+
+     NOT IN THE STREAMER'S HOOK, and the first version tried exactly that.
+     Replacing a string property's value from inside OnStreamProperty
+     produced a document whose own AsJSON recursed until the stack gave out
+     -- both values were computed correctly and the hook ran to completion,
+     so the fault surfaced nowhere near its cause. Adding a WriteLn made it
+     disappear, which is the signature of a lifetime or aliasing problem
+     rather than a logic one.
+
+     It is not worth winning that fight. The document is plain data once it
+     exists, and editing it is something anyone can read and a test can
+     pin -- which is also why the load side has always done its work
+     afterwards rather than during (see ClampToDeclaredRanges). *)
+   ProtectSecretsInDocument(Result);
+end;
+
+(*
+  REPLACE EVERY SECRET IN THE FINISHED DOCUMENT WITH ITS PROTECTED FORM.
+
+  The JSON mirrors the property tree, so the walk carries a path and looks up
+  the matching member as it goes. A secret whose member is missing is simply
+  not there to protect -- a contest-scoped group is dropped before this runs,
+  and nothing else can remove a member.
+*)
+procedure TR4WSettings.ProtectSecretsInDocument(const aDoc: TJSONObject);
+
+   procedure Walk(const aObj: TObject; const aNode: TJSONObject;
+                  const aPrefix: string);
+   var
+      props: PPropList;
+      count, i, idx: integer;
+      info: PPropInfo;
+      child: TObject;
+      childNode: TJSONData;
+      name: string;
+      stored: string;
+   begin
+      if aNode = nil then
+         begin
+         Exit;
+         end;
+      count := GetPropList(aObj.ClassInfo, props);
+      if count = 0 then
+         begin
+         Exit;
+         end;
+      try
+         for i := 0 to count - 1 do
+            begin
+            info := props^[i];
+            name := string(info^.Name);
+            (* UTF8Encode, EXPLICITLY. A JSON member name is a UTF8String
+              and the property name is a native string, so the compiler would
+              convert implicitly and count it as a possible loss. A property
+              name is ASCII, but saying so once beats an implicit conversion
+              the ratchet has to forgive. *)
+            idx := aNode.IndexOfName(UTF8Encode(name));
+            if idx < 0 then
+               begin
+               Continue;
+               end;
+
+            if info^.PropType^.Kind = tkClass then
+               begin
+               child := GetObjectProp(aObj, info);
+               childNode := aNode.Items[idx];
+               if (child <> nil) and (childNode is TJSONObject) then
+                  begin
+                  Walk(child, TJSONObject(childNode), aPrefix + name + '.');
+                  end;
+               end
+            else if IsSecretProperty(info) then
+               begin
+               (* A LOCAL, then the assignment. Both halves of this line have
+                 bitten already; keep them apart. *)
+               stored := ProtectSecret(aPrefix + name,
+                                       GetUnicodeStrProp(aObj, info));
+               aNode.Items[idx].AsString := UTF8Encode(stored);
+               end;
+            end;
+      finally
+         FreeMem(props);
+      end;
+   end;
+
+begin
+   Walk(Self, aDoc, '');
 end;
 
 procedure TR4WSettings.FromJSON(const aObj: TJSONObject);
@@ -4731,6 +4972,67 @@ begin
      property without passing TrySetByCommand, so it is the one place the
      ranges have to be re-imposed. *)
    ClampToDeclaredRanges;
+   (* AND THE SECRETS COME BACK, for the same reason the ranges are
+     re-imposed here: the de-streamer assigned whatever text the file
+     carried, which for a secret is a reference or a ciphertext and not a
+     password. *)
+   UnprotectSecretsAfterLoad;
+end;
+
+procedure TR4WSettings.UnprotectSecretsAfterLoad;
+
+   procedure Walk(const aObj: TObject; const aPrefix: string);
+   var
+      props: PPropList;
+      count, i: integer;
+      info: PPropInfo;
+      child: TObject;
+      path: string;
+      plain: string;
+   begin
+      count := GetPropList(aObj.ClassInfo, props);
+      if count = 0 then
+         begin
+         Exit;
+         end;
+      try
+         for i := 0 to count - 1 do
+            begin
+            info := props^[i];
+            path := aPrefix + string(info^.Name);
+
+            if info^.PropType^.Kind = tkClass then
+               begin
+               child := GetObjectProp(aObj, info);
+               if child <> nil then
+                  begin
+                  Walk(child, path + '.');
+                  end;
+               end
+            else if IsSecretProperty(info) then
+               begin
+               (* A REFUSAL LEAVES THE SETTING EMPTY, deliberately. The store
+                 says what went wrong -- a revoked credential, a file from
+                 another machine -- and an empty password asks the operator
+                 for it again, where a half-read one would be sent to a
+                 server. *)
+               if UnprotectSecret(path, GetUnicodeStrProp(aObj, info), plain) then
+                  begin
+                  SetUnicodeStrProp(aObj, info, plain);
+                  end
+               else
+                  begin
+                  SetUnicodeStrProp(aObj, info, '');
+                  end;
+               end;
+            end;
+      finally
+         FreeMem(props);
+      end;
+   end;
+
+begin
+   Walk(Self, '');
 end;
 
 procedure TR4WSettings.ImportLegacyCommands(const aCommands: TJSONObject);

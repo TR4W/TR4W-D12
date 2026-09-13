@@ -82,8 +82,6 @@ type
         compiler, which sees only a pointer, and not a test, because the damage
         lands in the NEXT field.  These four are ShortString and Boolean because
         that is what they were. }
-      HamScoreUsername: ShortString;
-      HamScorePassword: ShortString;
 
       { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
         Types copied verbatim from the declarations they replace -- CheckCommand
@@ -200,8 +198,6 @@ var
       // HAMSCORE URL at hamscore.com/postxml/index.php (which also serves 3.0)
       // or any future mirror.  Plain HTTP is the spec default; an https:// URL
       // takes the existing TIdHTTP + TLS path transparently.
-      HamScoreUsername: '';   // empty falls back to MY CALL
-      HamScorePassword: '';
 
       tDitDahRatio: 3;
 

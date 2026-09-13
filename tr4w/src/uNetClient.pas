@@ -121,11 +121,44 @@ type
       property OnDisconnected: TNetErrorEvent read FOnDisconnected write FOnDisconnected;
    end;
 
+(*
+  THE SERVER PASSWORD AS THE SERVER READS IT: TEN BYTES, always.
+
+  ONE COPY, BECAUSE THERE WERE ABOUT TO BE TWO. The log-synchronise client
+  built the same field for itself as `ServerPassword[1]` plus ten bytes --
+  ten bytes taken from a ShortString's first character. That worked only
+  because the password WAS a ShortString; the moment it became a native
+  string those ten bytes would have been UTF-16 and the server would have
+  rejected every login, with nothing in either program saying why.
+
+  REPRODUCED BYTE FOR BYTE rather than improved to Length(): the far end is a
+  shipped program that reads exactly ten, and this is a wire format.
+*)
+function ServerPasswordOnWire(const aPassword: AnsiString): TIdBytes;
+
 implementation
 
 uses
    MainUnit,    // logger
    uCrashLog;   // LogCaughtException -- a fault here names itself
+
+function ServerPasswordOnWire(const aPassword: AnsiString): TIdBytes;
+begin
+   SetLength(Result, 10);
+   FillChar(Result[0], 10, 0);
+   if Length(aPassword) > 0 then
+      begin
+      if Length(aPassword) < 10 then
+         begin
+         Move(aPassword[1], Result[0], Length(aPassword));
+         end
+      else
+         begin
+         Move(aPassword[1], Result[0], 10);
+         end;
+      end;
+end;
+
 
 const
    { How long a read waits before looking at Terminated again.  The same reason
@@ -277,25 +310,7 @@ begin
       // every one.
       FTCP.Socket.Binding.SetSockOpt(Id_IPPROTO_TCP, Id_TCP_NODELAY, 1);
 
-      // THE PASSWORD IS TEN BYTES, unconditionally.  uNet sent
-      // SendToNet(ServerPassword[1], 10) -- ten bytes from a ShortString's
-      // first character, whatever its declared length -- and the server reads
-      // exactly ten.  Reproduced byte for byte rather than "improved" to
-      // Length(): the far end is a shipped program.
-      SetLength(pass, 10);
-      FillChar(pass[0], 10, 0);
-      if Length(aPassword) > 0 then
-         begin
-         if Length(aPassword) < 10 then
-            begin
-            Move(aPassword[1], pass[0], Length(aPassword));
-            end
-         else
-            begin
-            Move(aPassword[1], pass[0], 10);
-            end;
-         end;
-      FTCP.IOHandler.Write(pass);
+      FTCP.IOHandler.Write(ServerPasswordOnWire(aPassword));
 
       // The Sleep(200) that used to sit here is gone: it was waiting for an
       // answer that a blocking read waits for properly.

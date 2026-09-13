@@ -899,7 +899,7 @@ begin
   if Uploader <> nil then Exit;   // already running
   if not Settings.Contest.HamscoreEnable then Exit;
 
-  if Config.HamScorePassword = '' then
+  if Settings.Hamscore.Password = '' then
      begin
      GetModuleLogger.Warn('[HamScore] HAMSCORE ENABLE = TRUE but HAMSCORE PASSWORD is empty -- uploader not started');
      Exit;
@@ -912,8 +912,8 @@ begin
 
   Uploader := THamScoreUploader.Create(
     Settings.Hamscore.Url,
-    string(Config.HamScoreUsername),
-    string(Config.HamScorePassword));
+    Settings.Hamscore.Username,
+    Settings.Hamscore.Password);
   Uploader.Resume;   // Delphi 7 TThread; later Delphis renamed to Start.
   GetModuleLogger.Info('[HamScore] Started');
 end;

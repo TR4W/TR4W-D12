@@ -1347,6 +1347,35 @@ var
 begin
    Result := False;
 
+   (*
+     A CREDENTIAL IS NEVER TAKEN FROM A PEER, and this is first because it
+     has to refuse before anything else has a chance to apply it.
+
+     NY4I chose this over keeping today's behaviour, 2026-09-12. The server
+     password was flagged to sync, so it crossed the network in the clear and
+     one position could overwrite another's stored credential. Each position
+     holds its own now, entered once.
+
+     ACCEPTED AND IGNORED, NOT REPORTED AS A FAILURE: a peer running an older
+     build will go on sending it, and turning that into an error on every
+     sync would train an operator to ignore the log. Said once, at info, and
+     dropped.
+
+     THE VALUE IS NOT LOGGED. It arrived in the clear; that is a reason to
+     not write it down again, not a reason to stop caring.
+   *)
+   if Settings.CommandIsSecret(aCommand) then
+      begin
+      if logger <> nil then
+         begin
+         logger.Info('[ApplyPeerCommand] "%s" is a credential and is not '
+                     + 'accepted from another position -- enter it on this '
+                     + 'one.', [aCommand]);
+         end;
+      Result := True;
+      Exit;
+      end;
+
    (* A SETTING THAT HAS LEFT CFGCA, FIRST.
 
      It has to be first, and it has to exist at all, because a peer's change

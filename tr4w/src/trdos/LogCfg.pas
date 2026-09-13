@@ -170,6 +170,37 @@ begin
    strU(ID);
    ID[Length(ID) + 1] := #0;  // null-terminate for PChar comparisons
 
+   (*
+     A SETTING THAT HAS MOVED IS NOT IN THE ARRAY, so the walk below cannot
+     find it -- and THAT is what kept every password and every case-sensitive
+     value in CFGCA long after the rest of their group had left.
+
+     The search below matches by ADDRESS, which a property does not have. The
+     settings object answers by NAME instead, and it knows which of its
+     properties are case-sensitive because the property's TYPE says so -- see
+     TSecretText and TCaseSensitiveText in uSettingsModel.
+
+     IT IS ASKED FIRST, because a name cannot be in both places: a migrated
+     setting has no row.
+   *)
+   if Settings.CommandIsCaseSensitive(string(ID)) then
+      begin
+      if Settings.TrySetByCommand(string(ID), string(CMD)) then
+         begin
+         if Settings.CommandIsSecret(string(ID)) then
+            begin
+            (* NOT THE VALUE. It is a password, and a debug log is copied
+              into bug reports. *)
+            logger.Debug('[case fixup] "%s" restored from the ini', [ID]);
+            end
+         else
+            begin
+            logger.Debug('[case fixup] "%s" restored, value=%s', [ID, CMD]);
+            end;
+         end;
+      Exit;
+      end;
+
    for I := 1 to CommandsArraySize do
       begin
       if CFGCA[I].crType in [ctCaseSensitive, ctPassword] then

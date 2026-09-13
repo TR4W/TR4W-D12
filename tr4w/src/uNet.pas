@@ -238,7 +238,9 @@ var
   NetThreadID                           : TThreadID;
   StatusArray                           : array[1..26] of TStationState;
   PosInClientsList                      : array[1..26] of integer;
-  ServerPassword                        : Str20 = 'TR4WSERVER';
+  (* ServerPassword is gone (2026-09-12) -- Settings.Server.Password, a
+    TSecretText, so it lives in the keychain and is never taken from a
+    peer. *)
   (* ServerAddress, ServerPort and ServerAutoSynchronizeLogOnConnect are
     gone (2026-09-12) -- Settings.Server owns all three. Issue #912. *)
   { THE LINK, over Indy.  Was `NetSocket: Cardinal` -- a raw Winsock handle
@@ -1145,7 +1147,8 @@ begin
       end;
 
    Result := NetClient.Connect(Settings.Server.Address, Settings.Server.Port,
-                               AnsiString(ServerPassword), err, wrongPassword);
+                               AnsiString(Settings.Server.Password),
+                               err, wrongPassword);
    if Result then
       begin
       Exit;
@@ -1179,7 +1182,7 @@ begin
 
   if TempSocket = INVALID_SOCKET then goto 2;
   i := tConnect(TempSocket, @tr4w_saddr);
-  //I := WinSock2.WSAConnect(TempSocket, @tr4w_saddr, SizeOf(sockaddr_in), @ServerPassword, nil, nil, nil);
+  //I := WinSock2.WSAConnect(TempSocket, @tr4w_saddr, SizeOf(sockaddr_in), @<the password>, nil, nil, nil);
   if i = 0 then
 }
      begin

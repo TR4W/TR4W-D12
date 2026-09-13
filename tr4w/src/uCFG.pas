@@ -667,6 +667,11 @@ const
    - 4 {the four FCONTEST assigns per contest -- moved to uSettingsModel, contest-scoped}
    - 3 {RADIUS OF EARTH, USE CONTROL PORT, MP3 RECORDER ENABLE
         -- moved to uSettingsModel}
+   (* The last three the case-restoring second pass was holding.
+    They are TSecretText and TCaseSensitiveText now, and that pass
+    asks the settings object by name instead of the array by
+    address -- see LogCfg.RestoreCFGPasswordCase. *)
+   - 3 {the HamScore and server credentials -- moved to uSettingsModel}
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -798,8 +803,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'HAMSCORE USERNAME';             crAddress: @Config.HamScoreUsername;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctCaseSensitive; crNetwork: 0),  // Issue #783 -- empty falls back to MY CALL
- (crCommand: 'HAMSCORE PASSWORD';             crAddress: @Config.HamScorePassword;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctPassword;      crNetwork: 0),  // Issue #783
  (crCommand: 'HOUR DISPLAY';                  crAddress: pointer(8);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'HOUR OFFSET';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'ICOM COMMAND PAUSE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
@@ -921,7 +924,6 @@ const
  (crCommand: 'ROW COUNT';                     crAddress: pointer(4);                      crMin:5;  crMax:15;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAppearance; crType: ctInteger; crNetwork: 1),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'SCP MINIMUM LETTERS';           crAddress: pointer(1);                      crMin:0;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'SERVER PASSWORD';               crAddress: @ServerPassword;                 crMin:0;  crMax:10;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctPassword; crNetwork: 1),  // Was ctString -- bring under the masking-in-Settings logic (Issue #783)
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of
