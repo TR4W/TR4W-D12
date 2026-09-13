@@ -252,6 +252,10 @@ type
    TCwDitDahRatio          = 3..6;    // was DITDAHRATIO_ARRAY
    TCwLeadingZeros         = 0..3;    // was LEADING_ZEROS_ARRAY
    TAutoSendCharacterCount = 0..6;    // was AUTO_SEND_CHARACTER_COUNT_ARRAY
+   (* THE MAIN WINDOW'S TWO SIZES, both ckArray rows whose allow-lists are
+     ranges: ROW_COUNT_ARRAY is (5..15) and WINDOW_SIZE_ARRAY is (1..15). *)
+   TLogRowCount            = 5..15;   // was ROW_COUNT_ARRAY
+   TMainWindowSize         = 1..15;   // was WINDOW_SIZE_ARRAY
    (* THE MAIN WINDOW'S FONT SIZE, and it is a STEP not a point size --
      0, 1 or 2, which MainUnit turns into pixels as `13 + FontSize - 1`
      and into a cell width as `ws + 2 * FontSize - 3`. The old row carried
@@ -419,6 +423,10 @@ type
       FNoCaption: boolean;
       FNoColumnHeader: boolean;
       FShowGridlines: boolean;
+      FRowCount: TLogRowCount;
+      FWindowSize: TMainWindowSize;
+   public
+      constructor Create;
    published
       (* Was Config.NoBorder -- drops the sunken edge from every main-window
         element and from the entry fields. *)
@@ -438,6 +446,22 @@ type
         and is an arm in uSettingsEffects now, so it takes effect when it is
         changed rather than at the next start. *)
       property ShowGridlines: boolean read FShowGridlines write FShowGridlines;
+      (* Was the global LinesInEditableLog in VC.pas -- how many QSOs the log
+        pane shows. ROW COUNT, aliased: no property path produces a name that
+        says nothing about what is being counted.
+
+        IT IS A HEIGHT AND NOT A ROW LIMIT ANY MORE. The log pane used to be
+        a fixed window of exactly this many records; it is a TLogGrid now and
+        this survives as the height it is sized to. *)
+      property RowCount: TLogRowCount read FRowCount write FRowCount;
+      (* Was the global WindowSize in VC.pas.
+
+        IT IS A SCALE STEP, NOT A PIXEL SIZE. `ws := WindowSize + 12` is the
+        font size every element on the main window is measured in, so this
+        one number sets how large the whole window draws.
+
+        WINDOW SIZE, aliased -- the derived name would say it twice. *)
+      property WindowSize: TMainWindowSize read FWindowSize write FWindowSize;
    end;
 
    (*
@@ -3552,6 +3576,15 @@ begin
    SetBool(FEnable, aValue, 'Enable');
 end;
 
+constructor TMainWindowSettings.Create;
+begin
+   inherited Create;
+   (* The values VC.pas' declarations carried. The four booleans keep the
+     False the field initialiser gives them, which is also what they had. *)
+   FRowCount   := 5;
+   FWindowSize := 5;
+end;
+
 constructor TDvkSettings.Create;
 begin
    inherited Create;
@@ -4413,6 +4446,11 @@ begin
    Alias('DIT DAH RATIO',                  'Cw.DitDahRatio');
    Alias('KEYPAD CW MEMORIES',             'Cw.KeypadMemories');
    Alias('LEADING ZEROS',                  'Cw.LeadingZeros');
+
+   (* The main window's two sizes. ROW COUNT says nothing about what is
+     counted and WINDOW SIZE would derive as MAIN WINDOW WINDOW SIZE. *)
+   Alias('ROW COUNT',   'MainWindow.RowCount');
+   Alias('WINDOW SIZE', 'MainWindow.WindowSize');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
    Alias('TUNE WITH DITS',                 'Cw.TuneWithDits');
 

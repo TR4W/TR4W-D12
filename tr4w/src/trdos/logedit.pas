@@ -1535,20 +1535,20 @@ end;
   at B4 and its old body is still commented out below it.)
 
   WHAT `Entry` MEANS, and it is a ROW, not a record. The editable log shows the
-  last LinesInEditableLog records with the NEWEST at the bottom, so row
-  LinesInEditableLog-1 is the most recent QSO. The single caller is Ctrl-W in
-  LogSend, which passes 4 -- and LinesInEditableLog is 5 (VC.pas:2856), so it
+  last Settings.MainWindow.RowCount records with the NEWEST at the bottom, so row
+  Settings.MainWindow.RowCount-1 is the most recent QSO. The single caller is Ctrl-W in
+  LogSend, which passes 4 -- and Settings.MainWindow.RowCount is 5 (VC.pas:2856), so it
   has always meant "the last name logged". The literal 4 is a row index that
   happens to be the bottom row.
 
   SO THE CONVERSION IS row -> OFFSET-FROM-THE-END, which is what
   LogSourceReadFromEnd already takes: offset 1 is the newest. Row r is
-  (LinesInEditableLog - r) back from the end, so row 4 gives 1. Expressed this
+  (Settings.MainWindow.RowCount - r) back from the end, so row 4 gives 1. Expressed this
   way the routine no longer depends on how many rows the window happens to show
   being the same as how many records exist -- it asks the log a question the log
   can answer.
 
-  ONE BEHAVIOUR CHANGE, AND IT IS A FIX. With FEWER than LinesInEditableLog
+  ONE BEHAVIOUR CHANGE, AND IT IS A FIX. With FEWER than Settings.MainWindow.RowCount
   QSOs in the log the widget filled from row 0 upward, so row 4 was EMPTY and
   Ctrl-W sent nothing at all -- silently, on the first four QSOs of every
   contest. Reading the log gives the newest QSO's name instead. Anyone who
@@ -1571,7 +1571,7 @@ begin
   try
      (* LogSourceReadFromEnd is independent of any sequential read in progress,
        so this cannot disturb a cursor another caller has open. *)
-     if LogSourceReadFromEnd(LinesInEditableLog - Entry, rec) then
+     if LogSourceReadFromEnd(Settings.MainWindow.RowCount - Entry, rec) then
         begin
         Result := rec.Name;
         end;

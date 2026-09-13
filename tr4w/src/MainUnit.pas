@@ -4203,7 +4203,7 @@ begin
     now.
 
     WHAT THE WIN32 CONTROL COST, since the replacement is only justified by it:
-    it was created with LVS_NOSCROLL and held LinesInEditableLog rows, so there
+    it was created with LVS_NOSCROLL and held Settings.MainWindow.RowCount rows, so there
     was no scrollbar and the log showed five QSOs of a contest (NY4I: "I do not
     see my vertical scroll bar and I still see the qso window as a fixed 5").
     It was created at height 0 and sized afterwards, and a loop that sized it by
@@ -4212,7 +4212,7 @@ begin
     LVS_OWNERDATA and left the log blank. None of those are expressible against
     a control the LCL draws. *)
   CreateTR4WEditableLog(0, ws * 7,
-    MainWindowChildsWidth, 30 + LinesInEditableLog * (ws + 2));
+    MainWindowChildsWidth, 30 + Settings.MainWindow.RowCount * (ws + 2));
   DispalayLogGridLines;
 
   EditableLogHeight := TR4WEditableLogBoundsHeight;
@@ -4502,7 +4502,7 @@ begin
 
     The delta is near zero at the default font size, because the .lfm form
     height and the computed height agree to a pixel there. It is not zero at
-    any other WindowSize, which is exactly the kind of defect that ships
+    any other Settings.MainWindow.WindowSize, which is exactly the kind of defect that ships
     looking fine on the machine it was written on. *)
   MakeMainWindowResizeable(ws * 46, 6 + EditableLogHeight + ws * 14);
   AnchorMainWindowControls;
@@ -7335,11 +7335,11 @@ begin
     appearing").
 
     The mapping existed because the Win32 list view showed the LAST
-    LinesInEditableLog records, so a row was an offset into a five-row window
+    Settings.MainWindow.RowCount records, so a row was an offset into a five-row window
     and the record index had to be reconstructed. The grid shows the WHOLE log
     and its SelectedRecord is already a record index -- so running it through
     that mapping converted a correct answer into a wrong one, and for any row
-    at or beyond LinesInEditableLog the mapping answered -1, the guard below
+    at or beyond Settings.MainWindow.RowCount the mapping answered -1, the guard below
     took it as "not a record", and the routine returned in silence.
 
     That is the same class of defect as the two duplicated facts in the grid
@@ -7743,7 +7743,7 @@ begin
 
   (* WHICH RECORD THE EDITABLE LOG STARTS AT IS NO LONGER A QUESTION.
 
-    It was, while the list held the LAST LinesInEditableLog records and the
+    It was, while the list held the LAST Settings.MainWindow.RowCount records and the
     loader had to skip the rest. The grid is virtual and shows the WHOLE log,
     so the loader inserts nothing and skips nothing, and the guard that used
     this is gone with it.
@@ -8469,11 +8469,11 @@ procedure SetWindowSize;
 // ewh : array[1 + 12..15 + 12] of REAL = (12.6, 13.7, 13.7, 15.7, 16.8, 18, 18, 20, 20.6, 20.6, 22.8, 23.8, 23.8, 25.8, 25.75);
 begin
 
-  ws := WindowSize + 12;
+  ws := Settings.MainWindow.WindowSize + 12;
 
   ws2 := ws div 4;
-  // EditableLogWindowHeight := //Trunc((LinesInEditableLog + 1) * ewh[ws]) + 1;
-  // (LinesInEditableLog + 1) * ws + ws2 + 12;
+  // EditableLogWindowHeight := //Trunc((Settings.MainWindow.RowCount + 1) * ewh[ws]) + 1;
+  // (Settings.MainWindow.RowCount + 1) * ws + ws2 + 12;
 
   (* NY4I asked whether this still needs GetSystemMetrics. It does not need
     it at all: MainWindowCaptionAndHeader was ASSIGNED HERE AND READ NOWHERE.
@@ -9563,7 +9563,7 @@ begin
 
     They set the height and then nudged it a pixel at a time -- up to 200 times
     each, under a guard -- until ListView_GetCountPerPage reported exactly
-    LinesInEditableLog rows. That was the fixed-five window made exact: size the
+    Settings.MainWindow.RowCount rows. That was the fixed-five window made exact: size the
     control so five whole rows fit and no sixth is half-shown.
 
     IT CANNOT WORK AGAINST A VIRTUAL LIST, and it fails in the worst direction.
@@ -9579,10 +9579,10 @@ begin
     is what the scrollbar is for. The height is the log area's height and
     nothing measures rows to get it.
 
-    LinesInEditableLog SURVIVES ONLY AS THAT HEIGHT, and it goes when the
+    Settings.MainWindow.RowCount SURVIVES ONLY AS THAT HEIGHT, and it goes when the
     ROW COUNT setting is retired -- at which point this reads as the window
     layout it always was. *)
-  h := 30 + LinesInEditableLog * (ws + 2);
+  h := 30 + Settings.MainWindow.RowCount * (ws + 2);
   TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth, h);
 end;
 

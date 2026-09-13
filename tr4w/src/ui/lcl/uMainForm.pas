@@ -2787,7 +2787,7 @@ begin
      exactly what it was reported as, five times.
 
      THE HEIGHT IT WAS GIVEN CAME FROM WIN32 ARITHMETIC. The caller asks for
-     `30 + LinesInEditableLog * (ws + 2)`, where 30 was an allowance for a
+     `30 + Settings.MainWindow.RowCount * (ws + 2)`, where 30 was an allowance for a
      list view's header and border. This grid's header is a REAL ROW of
      DefaultRowHeight, so the allowance is 19 here and 30 leaves a remainder.
 

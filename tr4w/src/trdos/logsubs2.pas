@@ -2617,7 +2617,7 @@ begin
   (* ONE MORE RECORD, AND SHOW IT.
 
     THE TRIM IS GONE WITH THE FIXED WINDOW. This deleted row 0 and re-added at
-    LinesInEditableLog-1, which is what kept the log at five rows -- and the
+    Settings.MainWindow.RowCount-1, which is what kept the log at five rows -- and the
     equality test in it is what broke when a load left tLogIndex one too high:
     the trim never fired again and the list grew for the rest of the session.
     A virtual list has no rows to trim.

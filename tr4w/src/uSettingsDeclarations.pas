@@ -757,16 +757,18 @@ begin
                           RS_APPEARANCE_CTRLJ_RATEDISPLAY);
    RegisterStoredSetting('appearance.ctrlj.reminder',         'REMINDER',
                           RS_APPEARANCE_CTRLJ_REMINDER);
-   RegisterStoredSetting('appearance.layout.rowCount',         'ROW COUNT',
-                          RS_APPEARANCE_LAYOUT_ROWCOUNT);
+   (* True, True: broadcast to the other position, and needs a restart --
+     which is what the row's crNetwork: 1 and crJ: 1 said. *)
+   RegisterModelSetting( 'appearance.layout.rowCount',         'ROW COUNT',
+                          RS_APPEARANCE_LAYOUT_ROWCOUNT, True, True);
    RegisterModelSetting( 'appearance.ctrlj.showFrequencyInLog','SHOW FREQUENCY IN LOG',
                           RS_APPEARANCE_CTRLJ_SHOWFREQUENCYINLOG);
    RegisterModelSetting( 'appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
                           RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN);
    RegisterStoredSetting('appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
                           RS_APPEARANCE_CTRLJ_USERINFOSHOWN);
-   RegisterStoredSetting('appearance.layout.windowSize',       'WINDOW SIZE',
-                          RS_APPEARANCE_LAYOUT_WINDOWSIZE);
+   RegisterModelSetting( 'appearance.layout.windowSize',       'WINDOW SIZE',
+                          RS_APPEARANCE_LAYOUT_WINDOWSIZE, True, True);
 
    // --- Hardware (5) ---------------------------------
    RegisterStoredSetting('hardware.ctrlj.lpt1BaseAddress',    'LPT1 BASE ADDRESS',

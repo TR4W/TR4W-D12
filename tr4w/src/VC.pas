@@ -2925,11 +2925,7 @@ var
   ws                                    : integer = 5;
   ws2                                   : integer;
 
-  WindowSize                            : integer = 5;
-
   ColumnWidthOverride                   : array[LogColumnsType] of Integer;
-
-  LinesInEditableLog                    : integer = 5;
 
 //  StaticWindowHeight                    : integer;
   //EditableLogWindowHeight               : integer;

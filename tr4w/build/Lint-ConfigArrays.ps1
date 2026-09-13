@@ -103,7 +103,7 @@ $code = Get-PascalCodeOnlyLines -Path $uCFG
 $measures = @(
    @{ Name    = 'CFGCA rows'
       Pattern = 'crCommand:'
-      Ceiling = 145
+      Ceiling = 143
       Note    = 'config commands still in the array' }
 
    @{ Name    = 'CFGCA rows writing a raw global'
@@ -113,7 +113,7 @@ $measures = @(
 
    @{ Name    = 'ArrayRecordArray entries'
       Pattern = 'arVar:\s*@'
-      Ceiling = 11
+      Ceiling = 9
       Note    = 'discrete allow-lists, address of a global' }
 
    @{ Name    = 'ListParamArray entries'

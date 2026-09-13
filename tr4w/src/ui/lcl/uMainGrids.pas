@@ -79,7 +79,7 @@ procedure BindMainGrids;
 (* LAY THE GRIDS OUT AT THE LIVE FONT SCALE.
 
   The .lfm holds the design-time picture, computed at the default ws of 17.
-  `ws` follows the operator's WindowSize setting, so every other element on the
+  `ws` follows the operator's Settings.MainWindow.WindowSize setting, so every other element on the
   main window is positioned in code from TWindows[] * ws -- and these must be
   too, or the grids stay at the default scale while the rest of the window
   moves. Call after the main window's ws is known, once per layout. *)

@@ -437,7 +437,7 @@ begin
    BorderStyle   := bsSingle;
    (* THE SAME HEIGHT THE REST OF THE WINDOW IS LAID OUT WITH.
      CheckEditableWindowHeight sizes this control as
-     30 + LinesInEditableLog * (ws + 2), so a row is ws + 2 and the arithmetic
+     30 + Settings.MainWindow.RowCount * (ws + 2), so a row is ws + 2 and the arithmetic
      on both sides of the layout agrees. *)
    DefaultRowHeight := ws + 2;
 
@@ -509,7 +509,7 @@ end;
 
   ColumnsArray[].Width IS A COUNT IN `ws` UNITS, NOT CHARACTERS AND NOT PIXELS.
   CreateEditableLog set each column to Width * ws -- ws being the main window's
-  scale unit, WindowSize + 12 -- and that is the whole rule. There was no
+  scale unit, Settings.MainWindow.WindowSize + 12 -- and that is the whole rule. There was no
   redistribution of leftover width.
 
   GETTING THIS WRONG IS WHAT MADE THE GRID LOOK NOTHING LIKE THE PROGRAM. The
@@ -577,7 +577,7 @@ end;
 
   ColumnsArray[].Width IS A COUNT IN `ws` UNITS, NOT CHARACTERS AND NOT PIXELS.
   CreateEditableLog set each column to Width * ws -- ws being the main window's
-  scale unit, WindowSize + 12 -- and that is the whole rule. There was no
+  scale unit, Settings.MainWindow.WindowSize + 12 -- and that is the whole rule. There was no
   redistribution of leftover width.
 
   GETTING THIS WRONG IS WHAT MADE THE GRID LOOK NOTHING LIKE THE PROGRAM. The
