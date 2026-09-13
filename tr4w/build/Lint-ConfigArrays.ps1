@@ -129,7 +129,7 @@ $measures = @(
 
    @{ Name    = 'AdditionalProcsArray hooks'
       Pattern = '^\s*@\w+.*(//.*)?$'
-      Ceiling = 16
+      Ceiling = 15
       Note    = 'crA -- replaced by a property setter'
       Section = 'AdditionalProcsArray' }
 )
