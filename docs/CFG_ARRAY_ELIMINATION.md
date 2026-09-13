@@ -1104,38 +1104,43 @@ grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
 | 3 | ADD DOMESTIC COUNTRY, FREQUENCY MEMORY, BAND MAP CUTOFF FREQUENCY | an accumulating LIST -- each config line ADDS, so the row is not a value |
 | 5 | CLEAR DUPE SHEET (an ACTION, not a setting), CONNECTION COMMAND (the cluster library owns it), MY CONTINENT (deliberately stays), SCP COUNTRY STRING (a `Str80` field read by BARE NAME inside its own methods), MULT REPORT MINIMUM BANDS (below) | one reason each |
 
-### The enum rows are the next real batch, and the blocker is a CYCLE
+### The enum rows: CORRECTED. There is no cycle, and the cost is a dependency
 
-There are two obstacles and only the second is structural.
+**An earlier version of this section said the batch was blocked by a circular
+reference. THAT WAS WRONG, and it was asserted rather than tested.** A Pascal
+cycle is illegal only when BOTH units name each other in their INTERFACE
+sections. Every one of these types is declared in a unit that names
+`uSettingsModel` in its IMPLEMENTATION, or not at all:
 
-**The spellings are not identifiers.** The model handles an enum property
-through `GetEnumValue`/`GetEnumName`, so the PASCAL IDENTIFIER would be the
-config spelling -- and the legacy spellings contain spaces: `QSO POINTS`,
-`THIS HOUR`, `BY CUTOFF FREQ`, `TIME OF FIRST QSO`, `ALFA SPID`. Only DISTANCE
-MODE and REMAINING MULT DISPLAY MODE are spelled as identifiers throughout.
-`RegisterSettingAllowedValues` above is most of the answer to this half.
+| type | declared in | names uSettingsModel |
+|---|---|---|
+| `RateDisplayType`, `HourDisplayType`, `TenMinuteRuleType`, `UserInfoType`, `BandMapSplitModeType`, `RotatorType` | `trdos/logwind.pas` | implementation only |
+| `DistanceDisplayType` | `trdos/loggrid.pas` | implementation only |
+| `RemainingMultDisplayModeType` | `trdos/logdom.pas` | not at all |
+| `PossibleCallActionType` | `trdos/logscp.pas` | not at all |
+| `ParameterOkayModeType` | `trdos/logstuff.pas` | not at all (its two interface mentions are COMMENTS) |
 
-**THE REAL BLOCKER IS WHERE THE ENUM TYPES LIVE**, and it is not a preference:
+**Measured, not reasoned:** a probe that put `LogWind` in `uSettingsModel`'s
+interface uses clause and published a real `RateDisplayType` property compiled
+clean, whole program, both ratchets unchanged. The probe was reverted.
 
-| type | declared in |
-|---|---|
-| `RateDisplayType`, `HourDisplayType`, `TenMinuteRuleType`, `UserInfoType`, `BandMapSplitModeType`, `RotatorType` | `trdos/logwind.pas` |
-| `DistanceDisplayType` | `trdos/loggrid.pas` |
-| `RemainingMultDisplayModeType` | `trdos/logdom.pas` |
-| `PossibleCallActionType` | `trdos/logscp.pas` |
-| `ParameterOkayModeType` | `trdos/logstuff.pas` |
+So what is left is a COST and a small mechanism, not a blocker.
 
-A published property needs its type visible, so `uSettingsModel` would have to
-`uses LogWind` -- **and LogWind already uses uSettingsModel.** That is a
-circular reference, not a style objection, and it cannot be worked around with
-an implementation-section uses clause because the type is in the INTERFACE of
-the property.
+**THE COST: `uSettingsModel` currently depends on almost nothing** -- Classes,
+SysUtils, uJSON, TypInfo, fpjson -- and that is deliberate and load-bearing: it
+is what lets the unit-test binary link it without the application. `uses
+LogWind` drags in the widget set and most of the program. The alternative is to
+move the enum declarations to a leaf unit first, which is a change to the shape
+of the TRDOS units. **Which of those two is NY4I's call.**
 
-**So the batch is really "move these enum declarations to a leaf unit first".**
-That is a decision about the shape of the TRDOS units, and it is NY4I's. Note
-`VC.pas` is a candidate and is light enough -- LCLType, Types, Log4D, Version --
-but it would put a widget-set dependency into `uSettingsModel`, which
-deliberately has none.
+**THE MECHANISM: the spelling is not the identifier.** `RateDisplayType` is
+`(QSOs, Points, BandQSOs)` and the file says `QSO POINTS` for the middle one,
+so `GetEnumValue` answers -1 and `GetEnumName` answers `Points`, which no
+config file has ever contained. `RegisterSettingAllowedValues` already carries
+the right list; what is missing is that `TrySetByCommand`'s `tkEnumeration` arm
+should match a registered list BY POSITION before falling back to
+`GetEnumValue`, and `TryGetByCommand` should render from it. That is a small,
+testable extension to code written this session.
 
 ### MULT REPORT MINIMUM BANDS: stored, editable, broadcast, and read by NOTHING
 
