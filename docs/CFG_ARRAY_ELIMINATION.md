@@ -1006,6 +1006,116 @@ when it lands.
 
 ---
 
+## 2n. THE ALLOW-LISTS, AND WHAT IS ACTUALLY LEFT -- 2026-09-13
+
+**150 -> 142 rows in one session**, and the eight that left are worth reading
+as a group rather than as eight: every one was a `ckArray` row, which is a
+different mechanism from the `crMin`/`crMax` range everything else carried.
+
+### A ckArray row is an ALLOW-LIST, and most of them are ranges in disguise
+
+`crAddress: pointer(N)` indexes `ArrayRecordArray`, whose entry names a const
+array of the values the setting accepts; `CheckCommand` refuses anything not
+in it, and `crMin`/`crMax` are advisory there. One was simply wrong -- MULT
+REPORT MINIMUM BANDS says `2..5` against an array of `(2, 3, 4)`.
+
+**Seven of the nine lists turned out to be contiguous**, so a subrange says
+exactly what the array said and no new mechanism was needed:
+
+| setting | the array | the type |
+|---|---|---|
+| CW SPEED INCREMENT | (1..10) | `TCwSpeedIncrement` |
+| DIT DAH RATIO | (3, 4, 5, 6) | `TCwDitDahRatio` |
+| LEADING ZEROS | (0, 1, 2, 3) | `TCwLeadingZeros` |
+| AUTO SEND CHARACTER COUNT | (0..6) | `TAutoSendCharacterCount` |
+| ROW COUNT | (5..15) | `TLogRowCount` |
+| WINDOW SIZE | (1..15) | `TMainWindowSize` |
+| AUTO QSL INTERVAL | (0..6) | `TAutoQslInterval` |
+
+**THE FREED SLOTS STAY BEHIND WITH A NIL `arVar`.** `ArrayRecordArray` is
+positional, so removing an entry shifts every index above it and silently
+repoints other rows at the wrong allow-list -- the same reason
+`AdditionalProcsArray` keeps its freed slots.
+
+### The two that are NOT ranges are blocked on a UI, not on a refusal
+
+SCP MINIMUM LETTERS admits `(0, 3, 4, 5)`; STEREO CONTROL PIN admits `(5, 9)`,
+an LPT pin number where 6, 7 and 8 are other signals. `RegisterSettingValueCheck`
+would refuse a bad value perfectly well -- that mechanism exists and three
+settings already use it.
+
+**What blocks them is that Preferences builds a DROP-DOWN from the allow-list.**
+`FillFromAllowedValues(cbxSCPMinLetters, 'SCP MINIMUM LETTERS')` reads the row,
+and a property has nowhere to put a list that is not a range. **Where such a
+list lives once `uCFG` is gone is a design question and it is NY4I's.**
+
+### THE DROP-DOWN PROBLEM BIT ONCE ALREADY, AND NOTHING SAW IT
+
+Three Preferences combos -- CW SPEED INCREMENT, DIT DAH RATIO and LEADING ZEROS
+-- **came up empty** the moment those settings moved. `TModelSetting` did not
+override `AllowedValues`, so it answered nil, which means *no fixed list* -- the
+right answer for a text box and the wrong one for a combo.
+
+The build was clean, 35 lints passed, the corpus was green. **A combo with no
+items is invisible to every oracle this tree has**, and it stayed that way for
+two commits.
+
+It is fixed at the mechanism: `AllowedValuesForCommand` reads `MinValue` and
+`MaxValue` off the property's subrange, so nothing has to be written down, and
+it refuses to build a list longer than 64 -- a 0..65535 subrange is a text box,
+not a drop-down. `Test_ABoundedSettingOffersItsValues` pins it.
+
+### What is left, by WHY -- and only two of these are work
+
+**Counted from `uCFG.pas`, and they sum to the row count** -- 141 live rows the
+day this was written. Re-measure rather than quoting these:
+
+```bash
+grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
+```
+
+| rows | what | why it is still a row |
+|---:|---|---|
+| 56 | `RADIO ONE ...`, `RADIO TWO ...`, POLL RADIO ONE, POLL RADIO TWO | the radio library track owns them |
+| 21 | BAND, MODE, CONTEST, CONTEST NAME/TITLE, the six CATEGORY-*, the four multiplier rows, QSL MODE, QSO POINT METHOD, EXCHANGE RECEIVED, SINGLE BAND SCORE, INITIAL EXCHANGE and its cursor position | the contest `.cfg` importer; see 2i |
+| 17 | `WK ...` | the keyer library track owns them |
+| 13 | the `ckList` enums -- RATE DISPLAY, DISTANCE MODE, HOUR DISPLAY, DUPE CHECK SOUND, EXTERNAL LOGGER, POSSIBLE CALL MODE, REMINDER, ROTATOR TYPE, TEN MINUTE RULE, USER INFO SHOWN, REMAINING MULT DISPLAY MODE, DEBUG LOG LEVEL, BAND MAP SPLIT MODE | **the spelling ruling below** |
+| 9 | LPT1-3 BASE ADDRESS, PADDLE PORT, RELAY CONTROL PORT, STEREO CONTROL PORT, ROTATOR PORT, KEYER RADIO ONE/TWO OUTPUT PORT | stage B, and it is the one that blocks a platform |
+| 7 | CODE SPEED, CW ENABLE, CW TONE, FARNSWORTH ENABLE, FARNSWORTH SPEED, WEIGHT, STEREO PIN HIGH | **live session state**, changed by control codes mid-message and by keystrokes -- a streamed property would persist a mid-contest adjustment |
+| 6 | DVK PATH, DVK RECORDER, MP3 PATH, MP3 PLAYER, BACKUP LOG FILE NAME, INITIAL EXCHANGE FILENAME | `FileNameType` buffers read through `GetRealPath(PAnsiChar)`; this is the PChar audit, not a settings batch |
+| 3 | ADD DOMESTIC COUNTRY, FREQUENCY MEMORY, BAND MAP CUTOFF FREQUENCY | an accumulating LIST -- each config line ADDS, so the row is not a value |
+| 9 | CLEAR DUPE SHEET (an ACTION), CONNECTION COMMAND (the cluster library), MY CONTINENT (deliberately stays), R150S MODE and RFOBL MODE (fields of the CTY record), SCP COUNTRY STRING (a field of the SCP database object), SCP MINIMUM LETTERS and STEREO CONTROL PIN (the drop-down above), MULT REPORT MINIMUM BANDS (below) | one reason each |
+
+### The enum rows are the next real batch, and they need one ruling first
+
+The model already handles an enum property -- `TrySetByCommand` calls
+`GetEnumValue` and `TryGetByCommand` calls `GetEnumName`. **That means the
+PASCAL IDENTIFIER is the config spelling**, and the legacy spellings in
+`ListParamArray` are not Pascal identifiers: they contain spaces, and some are
+words like `ON` and `OFF` that no enum would be named after.
+
+So moving one means deciding how a spelling maps to an ordinal: rename the enum
+members to match the file, carry a per-enum spelling table into the model, or
+generate the table from the enum and accept new spellings. **Getting it wrong
+silently changes which ordinal a config line selects**, which is the second
+definition problem `Lint-SpellingTables` exists for and cannot catch. It is a
+decision, not a migration.
+
+### MULT REPORT MINIMUM BANDS: stored, editable, broadcast, and read by NOTHING
+
+Its allow-list `(2, 3, 4)` is contiguous and it could have gone with the seven.
+It did not, for two reasons that are both NY4I's call:
+
+* **It has no live reader anywhere in the tree.** A declaration, a commented-out
+  line in `cfgdef`, and the `ArrayRecordArray` entry. That is the same shape as
+  PADDLE MONITOR TONE, which was left exactly as it was on the ruling that
+  *deleting a setting an operator may have set is not a cleanup*.
+* **The group it would join, `Mult`, is contest-scoped**, and its row says
+  `cfAll`. `IsContestScoped` is all-or-nothing per group, so filing it there
+  would move an operator's value from `tr4w.json` into the contest database.
+
+---
+
 ## 3. Stage A -- DONE 2026-09-10
 
 **One rule for turning a configured port into a device name.**
