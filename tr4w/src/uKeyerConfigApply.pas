@@ -79,7 +79,10 @@ implementation
 uses
    SysUtils,
    uWinKey,
-   Tree,       // PortType / PortTypeSA -- the port vocabulary the store's strings use
+   Tree,           // PortType -- the kind enum the live globals still carry
+   uPortAddress,   (* THE PORT-NAMING RULES, in one place: the store holds an
+                     OS name now, so this unit parses one rather than matching
+                     PortTypeSA's 'SERIAL n'. *)
    VC;
 
 // The vocabulary lookups are written out rather than done with an index,
@@ -164,7 +167,11 @@ begin
    //
    // SPELLINGS, through the same arrays the FromString functions read back --
    // the store holds 'SERIAL 1' and 'IAMBIC B', not ordinals.
-   k.Port    := string(PortTypeSA[WinKeySettings.wksWinKey2Port]);
+   (* THE OS NAME, not the PortTypeSA token.  This wrote 'SERIAL 15' into the
+     library, which is the spelling the 2026-09-13 ruling removes -- and it
+     would be read back by a parser that no longer looks for it. *)
+   k.Port    := EffectiveDeviceName(WinKeySettings.wksWinKey2PortName,
+                                    WinKeySettings.wksWinKey2Port);
 
    k.WKAutospace          := WinKeySettings.wksAutospace;
    k.WKCTSpacing          := WinKeySettings.wksCTSpacing;
@@ -223,26 +230,43 @@ begin
       end;
 end;
 
-function PortFromString(const aText: string; out aPort: PortType): boolean;
-var
-   p: PortType;
+(* A STORED PORT -> THE OS NAME, AND THE ORDINAL THAT STILL SHADOWS IT.
+
+  IT NO LONGER WALKS PortTypeSA.  That table's serial half spells 'SERIAL 15',
+  which NY4I ruled out on 2026-09-13 -- "ports should be the OS name... not
+  pretty but what the user would expect versus an artificial abstraction".
+  Matching against it meant a store holding 'COM15' was UNRECOGNISED and a
+  keyer on /dev/ttyUSB0 could not be expressed at all.
+
+  BOTH SPELLINGS ARE READ, because a store written before the ruling holds
+  'SERIAL 15': DeviceNameFromStoredPort translates that one case and passes
+  everything else through untouched.  Nothing is migrated on disk; the value is
+  rewritten the next time the keyer is saved.
+
+  THE ORDINAL IS DERIVED, NOT STORED, and is empty for a device node -- which
+  is correct rather than a gap.  It exists only for the sites that still ask
+  `in SerialPorts`; the NAME is what gets opened. *)
+function PortFromString(const aText: string; out aPort: PortType;
+                        out aName: string): boolean;
 begin
-   Result := False;
-   aPort := NoPort;
-   for p := Low(PortType) to High(PortType) do
-      begin
-      if SameText(Trim(aText), string(PortTypeSA[p])) then
-         begin
-         aPort := p;
-         Result := True;
-         Exit;
-         end;
-      end;
+   aName := DeviceNameFromStoredPort(aText);
+
+   (* DERIVED, NOT DECIDED HERE.  uPortAddress owns both directions of the
+     name/ordinal rule; duplicating the arithmetic is how the five copies of
+     SerialDeviceName came about in the first place. *)
+   aPort := PortValueFromDeviceName(aName);
+
+   (* TRUE EVEN WITH NO ORDINAL, and true for no port at all.  '/dev/ttyUSB0'
+     is a perfectly good port that no ordinal can express, and a keyer
+     definition may legitimately name no port -- the caller reports that case
+     with its own message. *)
+   Result := True;
 end;
 
 function ApplyKeyerToWinKey(const aKeyer: TKeyerDefinition; out aError: string): boolean;
 var
    port: PortType;
+   portName: string;
    mode: TWK2KeyerMode;
    freq: TWKSidetoneFrequency;
 
@@ -274,7 +298,7 @@ begin
       Exit;
       end;
 
-   if not PortFromString(aKeyer.Port, port) then
+   if not PortFromString(aKeyer.Port, port, portName) then
       begin
       aError := Format('Keyer "%s" has an unrecognised port "%s".',
                        [aKeyer.Name, aKeyer.Port]);
@@ -286,7 +310,11 @@ begin
    // profile by the caller -- see ApplyKeyersForProfile.  Enabling it here
    // would mean a profile that stops using the keyer could never turn it off,
    // because nothing would run to say so.
-   WinKeySettings.wksWinKey2Port := port;
+   //
+   // BOTH, AND THE NAME IS THE ONE THAT OPENS.  The ordinal is kept beside it
+   // for the sites that still ask what kind of port this is.
+   WinKeySettings.wksWinKey2Port     := port;
+   WinKeySettings.wksWinKey2PortName := portName;
 
    if Trim(aKeyer.WKKeyerMode) <> '' then
       begin

@@ -29,6 +29,7 @@ type
       procedure Test_ANamedPortIsSerialWhateverTheOrdinalSays;
       procedure Test_AStoredPortReadsWhicheverWayItWasWritten;
       procedure Test_TheLegacyTokenIsOnlyForTheBridge;
+      procedure Test_ADeviceNameGivesBackItsOwnOrdinal;
    public
       procedure RunAllTests; override;
    end;
@@ -247,6 +248,51 @@ begin
                'the open path gets a name even with no ordinal set');
 end;
 
+procedure TPortAddressTests.Test_ADeviceNameGivesBackItsOwnOrdinal;
+var
+   p: PortType;
+begin
+   (* THE INVERSE OF SerialDeviceName, AND THE ROUND TRIP MUST CLOSE BOTH WAYS.
+
+     This rule was written a second time inside uKeyerConfigApply before it was
+     moved here, which is the drift this unit exists to stop -- five copies of
+     the forward direction are what created it. *)
+   BeginTest('a device name gives back the ordinal that names it');
+   for p := Serial1 to Serial64 do
+      begin
+      CheckTrue(PortValueFromDeviceName(SerialDeviceName(p)) = p,
+                'COM name round-trips to its own port');
+      end;
+
+   (* NoPort, NOT SOME OTHER PORT, for anything an ordinal cannot express.
+     Answering a neighbouring port would open the wrong hardware. *)
+   BeginTest('what no ordinal can express comes back as NoPort');
+   CheckTrue(PortValueFromDeviceName('/dev/ttyUSB0') = NoPort,
+             'a Linux device node has no ordinal');
+   CheckTrue(PortValueFromDeviceName('/dev/cu.usbserial-A50285BI') = NoPort,
+             'nor a macOS one');
+   CheckTrue(PortValueFromDeviceName('COM65') = NoPort, 'past the last port');
+   CheckTrue(PortValueFromDeviceName('COM0') = NoPort, 'there is no port 0');
+   CheckTrue(PortValueFromDeviceName('') = NoPort, 'nothing configured');
+   CheckTrue(PortValueFromDeviceName('COM3 (Silicon Labs)') = NoPort,
+             'a caption is not a port name');
+
+   (* THE KEYER PATH, WHICH WAS BROKEN. The editor stores what
+     FillSerialPortCombo tags an item with, and that is the OS name; the apply
+     path matched it against PortTypeSA's 'SERIAL n' and refused it, so a
+     WinKeyer configured through the editor reported "unrecognised port COM7"
+     and was never set up. Both halves meet here now. *)
+   BeginTest('what the keyer editor stores is what the apply path reads');
+   CheckTrue(PortValueFromDeviceName(DeviceNameFromStoredPort('COM7')) = Serial7,
+             'a port chosen in the editor today');
+   CheckTrue(PortValueFromDeviceName(DeviceNameFromStoredPort('SERIAL 7')) = Serial7,
+             'and one stored before the ruling');
+   CheckEquals('/dev/ttyUSB0',
+               EffectiveDeviceName(DeviceNameFromStoredPort('/dev/ttyUSB0'),
+                                   PortValueFromDeviceName('/dev/ttyUSB0')),
+               'a device node survives with no ordinal to carry it');
+end;
+
 procedure TPortAddressTests.RunAllTests;
 begin
    Test_EverySerialPortNamesItself;
@@ -257,6 +303,7 @@ begin
    Test_ANamedPortIsSerialWhateverTheOrdinalSays;
    Test_AStoredPortReadsWhicheverWayItWasWritten;
    Test_TheLegacyTokenIsOnlyForTheBridge;
+   Test_ADeviceNameGivesBackItsOwnOrdinal;
 end;
 
 end.

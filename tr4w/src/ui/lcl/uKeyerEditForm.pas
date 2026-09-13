@@ -124,6 +124,7 @@ uses
    uLCLFormHelpers,
    uLCLTranslate,
    uKeyerConfigApply,   // KeyerModeSpellings / SidetoneSpellings -- one vocabulary
+   uPortAddress,        // DeviceNameFromStoredPort -- reads a pre-ruling SERIAL n
    ComPortEnumerator;
 
 constructor TfrmKeyerEdit.Create(AOwner: TComponent);
@@ -240,7 +241,11 @@ begin
 
    edtName.Text := FKeyer.Name;
    SelectByTag(cbxKind, KeyerKindToStr(FKeyer.Kind));
-   SelectByTag(cbxPort, FKeyer.Port);
+   (* NORMALISED FIRST.  The combo tags are OS names, so a keyer stored before
+     the 2026-09-13 ruling -- holding 'SERIAL 15' -- matched no tag and its
+     port showed as unselected, which reads as "no port configured" for a
+     keyer that has one. *)
+   SelectByTag(cbxPort, DeviceNameFromStoredPort(FKeyer.Port));
 
    SelectByTag(cbxWKKeyerMode, FKeyer.WKKeyerMode);
    SelectByTag(cbxWKSidetone,  FKeyer.WKSidetoneFrequency);

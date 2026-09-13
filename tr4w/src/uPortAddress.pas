@@ -168,6 +168,27 @@ function ComPortNumber(const aPortName: string): Integer;
 function SerialTokenFor(const aDeviceName: string): string;
 
 (*
+  A DEVICE NAME -> THE PortType ORDINAL THAT SHADOWS IT.
+
+  THE INVERSE OF SerialDeviceName, and here for the reason ComPortNumber gives
+  just above: a rule that drifts apart from its own inverse is what this unit
+  exists to prevent.  SerialDeviceName turns Serial7 into 'COM7'; this turns
+  'COM7' back into Serial7.
+
+  NoPort FOR A DEVICE NODE, AND THAT IS THE POINT RATHER THAN A GAP.
+  '/dev/ttyUSB0' has no ordinal and none can be computed, so callers must ask
+  PortKindOf -- which reads the NAME first -- rather than testing the ordinal
+  they get back from here.  An ordinal is a Windows convenience now, not an
+  identity.
+
+  NoPort FOR A COM NUMBER OUT OF RANGE, for the same reason ComPortNumber
+  answers 0: a port the enum cannot express must not come back as some other
+  port.  MAX_SERIAL_PORT is the bound, and it exists because of the config
+  plumbing rather than because of Windows.
+*)
+function PortValueFromDeviceName(const aDeviceName: string): PortType;
+
+(*
   A STORED PORT AS A DEVICE NAME, WHICHEVER WAY IT WAS WRITTEN.
 
   The store holds the OS name now -- 'COM7', '/dev/ttyUSB0'.  A file written
@@ -236,6 +257,18 @@ begin
    if Result < 0 then
       begin
       Result := 0;
+      end;
+end;
+
+function PortValueFromDeviceName(const aDeviceName: string): PortType;
+var
+   n: Integer;
+begin
+   Result := NoPort;
+   n := ComPortNumber(aDeviceName);
+   if (n >= 1) and (n <= MAX_SERIAL_PORT) then
+      begin
+      Result := PortType(Ord(Serial1) + n - 1);
       end;
 end;
 

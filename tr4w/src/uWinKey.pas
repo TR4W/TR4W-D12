@@ -119,6 +119,26 @@ type
     {16}wksValueList      : TwkValueList;
 
     {01}wksWinKey2Port    : PortType;
+
+    (* THE OS NAME OF THE PORT -- 'COM7', '/dev/ttyUSB0'.  NY4I, 2026-09-13:
+      "ports should be the OS name... It is not pretty but what the user would
+      expect versus an artificial abstraction."
+
+      BESIDE THE ORDINAL, NOT INSTEAD OF IT -- the widen half of
+      widen-then-narrow, and the same shape the radio already carries as
+      tCATPortName.  Empty means "no name configured", and the ordinal answers
+      as it always did, so Windows behaviour is unchanged until a name is
+      stored.
+
+      WITHOUT IT A WINKEYER CANNOT BE CONFIGURED OFF WINDOWS AT ALL: no
+      arithmetic on an ordinal produces /dev/ttyUSB0, so the guard below saw
+      NoPort and refused a port that was perfectly real.
+
+      SAFE IN A PACKED RECORD.  Only the INNER TwkValueList is a wire format
+      -- wkWriteRaw sends exactly SizeOf(TwkValueList) -- and nothing copies,
+      FillChars or sizes the outer record, which was checked rather than
+      assumed before a managed type was put in it. *)
+    wksWinKey2PortName: string;
     {01}wksWinKey2Enable  : boolean;
     {01}wksAutospace      : boolean;
     {01}wksCTSpacing      : boolean;
@@ -272,6 +292,7 @@ var
     vlDontcare:          $FF;
     );
     wksWinKey2Port:      NoPort;
+    wksWinKey2PortName:  '';
     wksWinKey2Enable:    False;
 
     wksAutospace:        False;
@@ -1108,16 +1129,33 @@ end;
 function wkOpenPort: boolean;
 var
   msg: string;
+  portName: string;
 begin
   Result := False;
 
   (* A WINKEYER IS A SERIAL DEVICE.  The caller's guard is `= NoPort`, which
     a port configured as NETWORK passes, and the name formatter would then
-    have produced 'COM65'. *)
-  if not (WinKeySettings.wksWinKey2Port in SerialPorts) then
+    have produced 'COM65'.
+
+    ASKED OF THE NAME FIRST, which is what makes a device node work: a
+    configured '/dev/ttyUSB0' has no ordinal, so `in SerialPorts` is False for
+    a port that is real and open-able.  PortKindOf reads the name before the
+    ordinal for exactly that reason. *)
+  portName := EffectiveDeviceName(WinKeySettings.wksWinKey2PortName,
+                                  WinKeySettings.wksWinKey2Port);
+
+  if PortKindOf(WinKeySettings.wksWinKey2PortName,
+                WinKeySettings.wksWinKey2Port) <> pkSerial then
      begin
+     (* THE NAME, NOT THE TOKEN.  This reported through PortTypeSA, so an
+       operator saw 'SERIAL 7' -- a spelling that exists nowhere but inside
+       TR4W.  It says what they chose, or NONE. *)
+     if portName = '' then
+        begin
+        portName := 'NONE';
+        end;
      logger.Error('[WinKey] the keyer needs a serial port and is configured for %s',
-                  [string(PortTypeSA[WinKeySettings.wksWinKey2Port])]);
+                  [portName]);
      Exit;
      end;
 
@@ -1126,8 +1164,7 @@ begin
      (* One rule, one place -- uPortAddress.  This used to build the name with
        TF.Format into wkREADBuffer, which is also the READ buffer, so the
        device name and the first reply shared one array. *)
-     WinKeyPort := TSerialPort.Create(
-        SerialDeviceName(WinKeySettings.wksWinKey2Port));
+     WinKeyPort := TSerialPort.Create(portName);
      end;
 
   try
@@ -1142,8 +1179,10 @@ begin
   except
      on E: Exception do
         begin
-        msg := Format('Winkeyer port COM%d: %s',
-                      [Integer(WinKeySettings.wksWinKey2Port), E.Message]);
+        (* THE NAME WE ACTUALLY TRIED TO OPEN.  'COM%d' off the ordinal was
+          wrong twice over: it printed COM0 for an unconfigured keyer, and it
+          could not name a device node at all. *)
+        msg := Format('Winkeyer port %s: %s', [portName, E.Message]);
         showwarning(msg);
         Exit;
         end;

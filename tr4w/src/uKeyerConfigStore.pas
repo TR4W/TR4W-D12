@@ -51,7 +51,9 @@ unit uKeyerConfigStore;
   uJSON -- all RTL.  No VCL, no FMX, no TR4W unit at all.
 
   VOCABULARY VALUES ARE HELD AS STRINGS, NOT ENUMS OR INDEXES.  Port is the
-  PortTypeSA spelling ('SERIAL 15', 'NONE'), KeyerMode is the KeyerModeSA
+  OS NAME ('COM15', '/dev/ttyUSB0', '' for none -- NY4I 2026-09-13; a store
+  written earlier holds the retired 'SERIAL 15' and is read through
+  uPortAddress.DeviceNameFromStoredPort), KeyerMode is the KeyerModeSA
   spelling, and so on.  An index would silently re-point at something else the
   next time a list changed, and an enum would drag VC.pas in here.  Whether a
   given spelling is currently valid is a question for the apply layer, which
