@@ -269,6 +269,8 @@ type
    (* Was tLogLevels in VC.pas -- the unit NY4I named explicitly. It is the
      vocabulary of a setting, and VC is the source of truth for TYPES. *)
    tLogLevels = (llNone, llFatal, llError, llWarn, llInfo, llDebug, llTrace);
+   (* Was PossibleCallActionType in trdos/logscp.pas. *)
+   PossibleCallActionType = (AnyCall, OnlyCallsWithNames, LogOnly);
    UserInfoType = (NoUserInfo, NameInfo, QTHInfo, CheckSectionInfo,
                    SectionInfo, OldCallInfo, FocInfo, GridInfo, CQZoneInfo,
                    ITUZoneInfo, User1Info, User2Info, User3Info, User4Info,
@@ -723,6 +725,7 @@ type
    private
       FNameFlagEnable: boolean;
       FMinimumLetters: integer;
+      FPossibleCallMode: PossibleCallActionType;
    public
       constructor Create;
    published
@@ -742,6 +745,14 @@ type
         above. The vocabulary is registered from uCFG. *)
       property MinimumLetters: integer
          read FMinimumLetters write FMinimumLetters;
+      (* Was CD.PossibleCallAction -- a FIELD of the Super Check Partial
+        database object, read by BARE NAME inside two of its own methods.
+
+        WHICH PARTIAL MATCHES ARE OFFERED: all of them, only those whose
+        database entry carries a name, or none (log only). POSSIBLE CALL
+        MODE, aliased. *)
+      property PossibleCallMode: PossibleCallActionType
+         read FPossibleCallMode write FPossibleCallMode;
    end;
 
    (*
@@ -3848,6 +3859,8 @@ begin
    (* logstuff declared SCPMinimumLetters with no initialiser, so zero -- the
      value that means Super Check Partial is off. *)
    FMinimumLetters := 0;
+   // The field had no initialiser, so AnyCall -- offer every partial match.
+   FPossibleCallMode := AnyCall;
 end;
 
 constructor TClusterSettings.Create;
@@ -4833,6 +4846,7 @@ begin
    Alias('USER INFO SHOWN', 'MainWindow.UserInfoShown');
    Alias('DUPE CHECK SOUND', 'Operating.DupeCheckSound');
    Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
+   Alias('POSSIBLE CALL MODE', 'Scp.PossibleCallMode');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
      anywhere writes it per contest -- so it is station-scoped and joins
      Operating rather than the contest-scoped Contest group. *)
@@ -5730,6 +5744,8 @@ const
    (* Was tLogLevelsSA in VC. UPPERCASE, as its comment there said. *)
    LOG_LEVEL_SPELLINGS: array[tLogLevels] of string =
       ('NONE', 'FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE');
+   POSSIBLE_CALL_MODE_SPELLINGS: array[PossibleCallActionType] of string =
+      ('ALL', 'NAMES', 'LOG ONLY');
    USER_INFO_SPELLINGS: array[UserInfoType] of string =
       ('NONE', 'NAME', 'QTH', 'CHECK SECTION', 'SECTION', 'OLD CALL',
        'FOC NUMBER', 'GRID', 'CQ ZONE', 'ITU ZONE', 'USER 1', 'USER 2',
@@ -5757,6 +5773,8 @@ initialization
    RegisterSettingAllowedValues('Operating.DupeCheckSound',
                                 DUPE_CHECK_SOUND_SPELLINGS);
    RegisterSettingAllowedValues('Log.DebugLevel', LOG_LEVEL_SPELLINGS);
+   RegisterSettingAllowedValues('Scp.PossibleCallMode',
+                                POSSIBLE_CALL_MODE_SPELLINGS);
    RegisterSettingAllowedValues('MainWindow.UserInfoShown',
                                 USER_INFO_SPELLINGS);
 

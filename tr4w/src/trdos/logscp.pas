@@ -64,7 +64,8 @@ type
   CallsAlreadySavedArray = array[0..MaximumCallsAlreadSaved - 1] of CallString;
   CallsAlreadySavedArrayPtr = ^CallsAlreadySavedArray;
 
-  PossibleCallActionType = (AnyCall, OnlyCallsWithNames, LogOnly); {KK1L: 6.69 added LogOnly}
+  (* PossibleCallActionType MOVED to uSettingsModel, 2026-09-13, with its
+    spelling table -- it describes a SETTING. *)
 
   PossibleCallEntry = record
     Call: CallString;
@@ -181,7 +182,9 @@ type
     User4Overwrite: boolean;
     User5Overwrite: boolean;
 
-    PossibleCallAction: PossibleCallActionType;
+    (* Settings.Scp.PossibleCallMode MOVED to Settings.Scp.PossibleCallMode. It was a
+      FIELD here and read by bare name inside two methods of this object,
+      which is the whole reason it looked harder to move than it was. *)
 
     SCPDisabledByApplication: boolean; { If TRUE - memory deallocated }
 
@@ -253,14 +256,8 @@ type
     procedure BuildOperatorNameSet(Names: TStringList);
   end;
 
-const
-  PossibleCallActionTypeStringArray     : array[PossibleCallActionType] of PAnsiChar =
-    (
-    'ALL',
-    'NAMES',
-    'LOG ONLY'
-    );
-
+(* The const section held one entry, PossibleCallActionTypeStringArray, and
+  it moved to uSettingsModel with its type. *)
 var
   CD                                    : CallDatabase {=
 
@@ -285,6 +282,8 @@ implementation
 uses LogWind,
   uMaster,
   MainUnit,
+  uSettingsModel,   (* Settings.Scp.PossibleCallMode, and the enum members --
+                      the type moved there with the setting *)
   SysUtils;
 
 function DoubleIndexCall(Call: CallString): boolean;
@@ -1883,7 +1882,7 @@ function CallDatabase.LoadInIndexArray: boolean;
 begin
   WorkingDirectory := '';
   LoadInIndexArray := False;
-  if (SCPDisabledByApplication) or (PossibleCallAction = LogOnly) then Exit;
+  if (SCPDisabledByApplication) or (Settings.Scp.PossibleCallMode = LogOnly) then Exit;
 
   {KK1L 6.69 added LogOnly check}
 
@@ -2641,7 +2640,7 @@ begin
      ParseEntryToDataRecord(EntryString, data);
 
      if SimilarCall(Call, data.Call) then
-       if (PossibleCallAction <> OnlyCallsWithNames) or (data.mName <> '') then
+       if (Settings.Scp.PossibleCallMode <> OnlyCallsWithNames) or (data.mName <> '') then
          if PossibleCallList.NumberPossibleCalls < MaximumPossibleCalls then
             begin
             if PossibleCallList.NumberPossibleCalls > 0 then
@@ -3370,7 +3369,7 @@ begin
 //  CD.CountryString := '';
 
 //  CD.CellBuffer.Key := '';
-//  CD.PossibleCallAction := OnlyCallsWithNames;
+//  CD.Settings.Scp.PossibleCallMode := OnlyCallsWithNames;
 //  CD.FirstMergeDataListEntry := nil;
 //  CD.InitialPartialList := nil;
 //  CD.SCPIndexArray := nil;

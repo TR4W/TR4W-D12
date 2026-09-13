@@ -692,7 +692,7 @@ begin
                           RS_OPERATING_CTRLJ_POSSIBLECALLACCEPTKEY);
    RegisterModelSetting( 'operating.ctrlj.possibleCallLeftKey','POSSIBLE CALL LEFT KEY',
                           RS_OPERATING_CTRLJ_POSSIBLECALLLEFTKEY);
-   RegisterStoredSetting('operating.ctrlj.possibleCallMode',  'POSSIBLE CALL MODE',
+   RegisterModelSetting( 'operating.ctrlj.possibleCallMode',  'POSSIBLE CALL MODE',
                           RS_OPERATING_CTRLJ_POSSIBLECALLMODE);
    RegisterModelSetting( 'operating.ctrlj.possibleCallRightKey','POSSIBLE CALL RIGHT KEY',
                           RS_OPERATING_CTRLJ_POSSIBLECALLRIGHTKEY);

@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(257, names.Count,
+         CheckEquals(258, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1347,6 +1347,7 @@ const
       + '"PARTIAL CALL ENABLE",'
       + '"POSSIBLE CALL ACCEPT KEY",'
       + '"POSSIBLE CALL LEFT KEY",'
+      + '"POSSIBLE CALL MODE",'
       + '"POSSIBLE CALL RIGHT KEY",'
       + '"POSSIBLE CALLS",'
       + '"PSTROTATOR IP ADDRESS",'

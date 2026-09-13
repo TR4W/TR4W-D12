@@ -458,7 +458,8 @@ const
     (lpArray: @QSOPointMethodArray;               lpLength: Byte(High(QSOPointMethodType));     lpVar: @ActiveQSOPointMethod),
     (lpArray: @ParameterOkayModeTypeStringArray;  lpLength: Byte(High(ParameterOkayModeType));  lpVar: @ParameterOkayMode; ),
     (lpArray: @PrefixMultStringArray;             lpLength: Byte(High(PrefixMultType));         lpVar: @ActivePrefixMult; ),
-    (lpArray: @PossibleCallActionTypeStringArray; lpLength: Byte(High(PossibleCallActionType)); lpVar: @CD.PossibleCallAction; ),
+    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @ModeStringArray;                   lpLength: Byte(High(ModeType));               lpVar: @ActiveMode; ),
     (lpArray: @IECursorPosTypeStringArray;        lpLength: Byte(High(InitialExchangeCursorPosType)); lpVar: @InitialExchangeCursorPos; ),
     (lpArray: @InitialExchangeTypeStringArray;    lpLength: Byte(High(InitialExchangeType));    lpVar: @ActiveInitialExchange; ),
@@ -640,6 +641,7 @@ const
    - 2 {DUPE CHECK SOUND and USER INFO SHOWN -- the same}
    - 1 {REMINDER -- withdrawn, not migrated: it never had a variable}
    - 1 {DEBUG LOG LEVEL -- tLogLevels left VC with it}
+   - 1 {POSSIBLE CALL MODE -- off the SCP database record}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -891,7 +893,6 @@ const
  (crCommand: 'PADDLE PORT';                   crAddress: @ActivePaddlePort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctPortLPT; crNetwork: 1),
  (crCommand: 'POLL RADIO ONE';                crAddress: @Radio1.PollingEnable;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'POLL RADIO TWO';                crAddress: @Radio2.PollingEnable;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'POSSIBLE CALL MODE';            crAddress: pointer(4);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'PREFIX MULTIPLIER';             crAddress: pointer(3);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'QSL MODE';                      crAddress: pointer(2);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'QSO POINT METHOD';              crAddress: pointer(1);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
