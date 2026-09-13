@@ -68,7 +68,7 @@ procedure MasterCallsUpdated;
 implementation
 
 uses
-  LogStuff,          { SCPMinimumLetters }
+  uSettingsModel,    (* Settings.Scp.MinimumLetters *)
   uMasterForm;
 
 function MasterForm: TfrmMaster;
@@ -125,16 +125,16 @@ end;
 
 { What WM_INITDIALOG did that was not control construction.
 
-  THE SCPMinimumLetters NUDGE IS KEPT AS IT WAS.  Opening this window with the
+  THE Settings.Scp.MinimumLetters NUDGE IS KEPT AS IT WAS.  Opening this window with the
   setting at zero used to set it to 3, because zero means "never super check"
   and an operator who has just opened the SCP window plainly wants one.  It is a
   config write from a window-open, which is not a shape to copy -- but removing
   it would change behaviour in a commit that is not about that. }
 procedure MasterWindowShown;
 begin
-  if SCPMinimumLetters = 0 then
+  if Settings.Scp.MinimumLetters = 0 then
      begin
-     SCPMinimumLetters := 3;
+     Settings.Scp.MinimumLetters := 3;
      end;
 end;
 

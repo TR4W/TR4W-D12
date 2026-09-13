@@ -2139,7 +2139,7 @@ begin
 
   if Settings.SayHi.Enable then
      DisplayNamePercentage;
-  SetStereoPin(StereoControlPin, StereoPinState);
+  SetStereoPin(Settings.Hardware.StereoControlPin, StereoPinState);
   DisplayRadio(ActiveRadio);
   DisplayBandMode(ActiveBand, ActiveMode, False);
   tDisplayCQTotal;

@@ -886,7 +886,7 @@ begin
    // spelled 'ctFilename' and 'ctinteger' in CFGCA. Pascal does not care; the
    // scan did, and reported Ctrl-J empty while they were still in it.
    // STEREO CONTROL PIN joins STEREO PIN HIGH on Hardware.
-   RegisterStoredSetting('hardware.ctrlj.stereoControlPin',   'STEREO CONTROL PIN',
+   RegisterModelSetting( 'hardware.ctrlj.stereoControlPin',   'STEREO CONTROL PIN',
                           RS_HARDWARE_CTRLJ_STEREOCONTROLPIN);
    RegisterStoredSetting('files.ctrlj.initialExchangeFilename','INITIAL EXCHANGE FILENAME',
                           RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME);

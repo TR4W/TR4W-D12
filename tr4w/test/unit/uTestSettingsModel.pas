@@ -64,6 +64,7 @@ type
       procedure Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
       procedure Test_EveryMessageCommandReachesItsOwnProperty;
       procedure Test_ABoundedSettingOffersItsValues;
+      procedure Test_ARegisteredVocabularyIsAlsoTheRefusal;
    public
       procedure RunAllTests; override;
    end;
@@ -351,7 +352,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(244, names.Count,
+         CheckEquals(246, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1391,6 +1392,7 @@ const
       + '"SAY HI RATE CUTOFF",'
       + '"SCORE POSTING URL",'
       + '"SCORE READING URL",'
+      + '"SCP MINIMUM LETTERS",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
       + '"SERVER ADDRESS",'
       + '"SERVER AUTO SYNCHRONIZE LOG ON CONNECT",'
@@ -1414,6 +1416,7 @@ const
       + '"SPRINT QSY RULE",'
       + '"START SENDING NOW KEY",'
       + '"STATIONS CALLSIGNS MASK",'
+      + '"STEREO CONTROL PIN",'
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'
@@ -1740,6 +1743,58 @@ begin
      AllowedValues is asked while a panel is being built. *)
    values := Settings.AllowedValuesForCommand('NO SUCH COMMAND');
    CheckEquals(0, Length(values), 'an unknown command offers nothing');
+
+   (*
+     AND A REGISTERED VOCABULARY IS NOT A RANGE.
+
+     SCP MINIMUM LETTERS admits (0, 3, 4, 5): four values spanning six. The
+     subrange derivation above would offer six and accept 1 and 2, which the
+     config file has never accepted. uCFG registers the list from the very
+     const array CheckCommand used to match against.
+   *)
+   values := Settings.AllowedValuesForCommand('SCP MINIMUM LETTERS');
+   CheckEquals(4, Length(values), 'SCP MINIMUM LETTERS offers four values');
+   if Length(values) = 4 then
+      begin
+      CheckEquals('0', values[0], 'and zero is one of them -- SCP off');
+      CheckEquals('5', values[3], 'up to five');
+      end;
+
+   values := Settings.AllowedValuesForCommand('STEREO CONTROL PIN');
+   CheckEquals(2, Length(values), 'STEREO CONTROL PIN offers two LPT pins');
+end;
+
+procedure TSettingsModelTests.Test_ARegisteredVocabularyIsAlsoTheRefusal;
+var
+   before: integer;
+begin
+   BeginTest('Test_ARegisteredVocabularyIsAlsoTheRefusal');
+   (*
+     ONE REGISTRATION DOES BOTH JOBS, which is the whole complaint against the
+     ckArray row it replaces: there, the allow-list and whatever the UI
+     offered were free to disagree.
+
+     6, 7 and 8 are real LPT pins and are NOT ones a headphone relay is wired
+     to. The old row refused them; so does this.
+   *)
+   before := Settings.Hardware.StereoControlPin;
+   try
+      CheckTrue(Settings.TrySetByCommand('STEREO CONTROL PIN', '5'),
+                'five is in the vocabulary');
+      CheckEquals(5, Settings.Hardware.StereoControlPin, 'and it was taken');
+
+      CheckFalse(Settings.TrySetByCommand('STEREO CONTROL PIN', '7'),
+                 'seven is not');
+      CheckEquals(5, Settings.Hardware.StereoControlPin,
+                  'and a refusal LEAVES THE VALUE ALONE, never corrects it');
+
+      (* SCP MINIMUM LETTERS is the interesting refusal: 1 and 2 sit INSIDE
+        the span and outside the list. *)
+      CheckFalse(Settings.TrySetByCommand('SCP MINIMUM LETTERS', '2'),
+                 'two is inside the span and outside the list');
+   finally
+      Settings.Hardware.StereoControlPin := before;
+   end;
 end;
 
 procedure TSettingsModelTests.RunAllTests;
@@ -1772,6 +1827,7 @@ begin
    Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
    Test_EveryMessageCommandReachesItsOwnProperty;
    Test_ABoundedSettingOffersItsValues;
+   Test_ARegisteredVocabularyIsAlsoTheRefusal;
 end;
 
 end.

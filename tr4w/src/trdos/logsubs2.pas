@@ -377,7 +377,7 @@ end;
 procedure ToggleStereoPin; {KK1L: 6.71}
 begin
   TF.InvertBoolean(StereoPinState);
-  SetStereoPin(StereoControlPin, StereoPinState);
+  SetStereoPin(Settings.Hardware.StereoControlPin, StereoPinState);
   if ycccActive then
      begin
      YCCCSetStereo(StereoPinState);
@@ -1910,7 +1910,7 @@ begin
                   end;
  //              PTTForceOn;
                end;
-            if (SCPMinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
+            if (Settings.Scp.MinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
                begin
                VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr);
                end;
@@ -2027,7 +2027,7 @@ begin
                                   DisplayPossibleCalls(PossibleCallList);
                                   }
                         end;
-                   if (SCPMinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
+                   if (Settings.Scp.MinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
                       begin
                       VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr);
                       end;
@@ -2321,7 +2321,7 @@ var
      begin
      DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
      end;
-  SetStereoPin(StereoControlPin, StereoPinState); {KK1L: 6.71}
+  SetStereoPin(Settings.Hardware.StereoControlPin, StereoPinState); {KK1L: 6.71}
   DisplayRadio(ActiveRadio);
   DisplayTotalScore {(TotalScore)};
   ClearContestExchange(ReceivedData);

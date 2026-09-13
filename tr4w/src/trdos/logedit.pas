@@ -1728,7 +1728,7 @@ begin
 
   if Automatic then
      begin
-     if length(Call) < SCPMinimumLetters then
+     if length(Call) < Settings.Scp.MinimumLetters then
         begin
         LastSCPCall := '';
         Exit;
@@ -1882,7 +1882,7 @@ begin
                   }
                   end;
 
-             if SCPMinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
+             if Settings.Scp.MinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
                 begin
                 VisibleLog.SuperCheckPartial(InputString, True, InActiveRadioPtr);
                 end;
@@ -1939,7 +1939,7 @@ begin
               }
               end;
 
-         if SCPMinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
+         if Settings.Scp.MinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
             begin
             VisibleLog.SuperCheckPartial(InputString, True, InActiveRadioPtr);
             end;

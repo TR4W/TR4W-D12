@@ -258,19 +258,17 @@ type
    TMainWindowSize         = 1..15;   // was WINDOW_SIZE_ARRAY
    TAutoQslInterval        = 0..6;    // was AUTO_QSL_INTERVAL
    (*
-     AND THE TWO ALLOW-LISTS THAT ARE NOT RANGES ARE STILL ROWS.
+     AND THE TWO ALLOW-LISTS THAT ARE NOT RANGES KEEP A PLAIN integer.
 
      SCP MINIMUM LETTERS admits (0, 3, 4, 5) and STEREO CONTROL PIN admits
      (5, 9) -- an LPT pin number, where 6, 7 and 8 are other signals. A
      subrange would quietly widen both, and widening what a config file may
      say is a behaviour change however harmless it looks.
 
-     THE BLOCKER IS NOT THE REFUSAL, WHICH RegisterSettingValueCheck ALREADY
-     DOES. It is that Preferences builds a DROP-DOWN from the allow-list --
-     `FillFromAllowedValues(cbxSCPMinLetters, 'SCP MINIMUM LETTERS')` reads
-     the row -- and a property has nowhere to put a list that is not a range.
-     Deciding where such a list lives once uCFG is gone is a design question,
-     not a migration.
+     THEIR VOCABULARY IS REGISTERED INSTEAD -- see RegisterSettingAllowedValues,
+     and uCFG's registration of it from the very const arrays CheckCommand
+     matched against. One registration is both the refusal and what a
+     drop-down offers, so the two cannot drift apart.
    *)
    (* THE MAIN WINDOW'S FONT SIZE, and it is a STEP not a point size --
      0, 1 or 2, which MainUnit turns into pixels as `13 + FontSize - 1`
@@ -647,6 +645,7 @@ type
    TScpSettings = class(TSettingsGroup)
    private
       FNameFlagEnable: boolean;
+      FMinimumLetters: integer;
    public
       constructor Create;
    published
@@ -658,6 +657,14 @@ type
         Preferences, so withdrawing it is a decision. *)
       property NameFlagEnable: boolean
          read FNameFlagEnable write FNameFlagEnable;
+      (* Was the global SCPMinimumLetters in logstuff -- how many characters
+        must be typed before Super Check Partial offers anything, and 0
+        switches it off. SCP MINIMUM LETTERS, which derives exactly.
+
+        (0, 3, 4, 5), NOT 0..5, and NOT a subrange: see the note on the types
+        above. The vocabulary is registered from uCFG. *)
+      property MinimumLetters: integer
+         read FMinimumLetters write FMinimumLetters;
    end;
 
    (*
@@ -847,12 +854,22 @@ type
    THardwareSettings = class(TSettingsGroup)
    private
       FUseControlPort: boolean;
+      FStereoControlPin: integer;
+   public
+      constructor Create;
    published
       (* Was tUseControlPort in logk1ea -- whether the LPT control lines are
         driven at all. Nothing writes it at run time; it is read where the
         paddle and footswitch are serviced. *)
       property UseControlPort: boolean
          read FUseControlPort write FUseControlPort;
+      (* Was the global StereoControlPin in logk1ea -- WHICH LPT PIN drives
+        the headphone relay. (5, 9), registered from uCFG.
+
+        STEREO CONTROL PIN, aliased: the derived name would put the word
+        HARDWARE in front of a command an operator has typed for years. *)
+      property StereoControlPin: integer
+         read FStereoControlPin write FStereoControlPin;
    end;
 
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
@@ -3121,6 +3138,26 @@ type
 procedure RegisterSettingValueCheck(const aPath: string;
                                     const aCheck: TSettingValueCheck);
 
+(*
+  THE VALUES A SETTING ACCEPTS, WHEN THEY ARE A LIST AND NOT A RANGE.
+
+  A subrange already says both things a UI needs -- what to refuse and what to
+  offer -- and needs nothing registered. This is for the settings whose
+  vocabulary is a LIST: (0, 3, 4, 5) letters for Super Check Partial, or the
+  two LPT pins a headphone relay can be wired to.
+
+  IT DOES BOTH JOBS FROM ONE REGISTRATION. Membership is the refusal, and the
+  same list is what a drop-down offers -- so the two cannot disagree, which is
+  the whole complaint against the table this replaces.
+
+  REGISTERED, NOT DECLARED HERE, for the reason MY COUNTRY's check is: the
+  unit that owns the vocabulary is the one that knows it. uCFG builds these
+  from the very const arrays CheckCommand matched against, so there is still
+  exactly one statement of which values are legal.
+*)
+procedure RegisterSettingAllowedValues(const aPath: string;
+                                       const aValues: array of string);
+
 function Settings: TR4WSettings;
 procedure FreeSettings;
 
@@ -3144,6 +3181,59 @@ type
 
 var
    GValueChecks: array of TRegisteredCheck;
+
+type
+   TRegisteredValues = record
+      Path: string;
+      Values: TArray<string>;
+   end;
+
+var
+   GAllowedValues: array of TRegisteredValues;
+
+procedure RegisterSettingAllowedValues(const aPath: string;
+                                       const aValues: array of string);
+var
+   i, n: integer;
+   copied: TArray<string>;
+begin
+   (* COPIED, because the caller passes an open array built on the spot. *)
+   SetLength(copied, Length(aValues));
+   for i := 0 to High(aValues) do
+      begin
+      copied[i] := aValues[i];
+      end;
+
+   for i := 0 to High(GAllowedValues) do
+      begin
+      if UnicodeSameText(GAllowedValues[i].Path, aPath) then
+         begin
+         GAllowedValues[i].Values := copied;
+         Exit;
+         end;
+      end;
+
+   n := Length(GAllowedValues);
+   SetLength(GAllowedValues, n + 1);
+   GAllowedValues[n].Path := aPath;
+   GAllowedValues[n].Values := copied;
+end;
+
+(* The vocabulary registered for this path, or nil. *)
+function RegisteredValuesFor(const aPath: string): TArray<string>;
+var
+   i: integer;
+begin
+   Result := nil;
+   for i := 0 to High(GAllowedValues) do
+      begin
+      if UnicodeSameText(GAllowedValues[i].Path, aPath) then
+         begin
+         Result := GAllowedValues[i].Values;
+         Exit;
+         end;
+      end;
+end;
 
 procedure RegisterSettingValueCheck(const aPath: string;
                                     const aCheck: TSettingValueCheck);
@@ -3177,8 +3267,31 @@ end;
 function ValueIsAcceptable(const aPath, aValue: string): boolean;
 var
    i: integer;
+   allowed: TArray<string>;
 begin
    Result := True;
+
+   (* A REGISTERED LIST IS THE REFUSAL AS WELL AS THE OFFER. Case and
+     surrounding space are tolerated, the way the config file's matcher always
+     has; what must match is the VALUE. *)
+   allowed := RegisteredValuesFor(aPath);
+   if allowed <> nil then
+      begin
+      Result := False;
+      for i := 0 to High(allowed) do
+         begin
+         if UnicodeSameText(Trim(allowed[i]), Trim(aValue)) then
+            begin
+            Result := True;
+            Break;
+            end;
+         end;
+      if not Result then
+         begin
+         Exit;
+         end;
+      end;
+
    for i := 0 to High(GValueChecks) do
       begin
       if UnicodeSameText(GValueChecks[i].Path, aPath) then
@@ -3557,6 +3670,9 @@ begin
    inherited Create;
    // uConfigValues declared NameFlagEnable True.
    FNameFlagEnable := True;
+   (* logstuff declared SCPMinimumLetters with no initialiser, so zero -- the
+     value that means Super Check Partial is off. *)
+   FMinimumLetters := 0;
 end;
 
 constructor TClusterSettings.Create;
@@ -3637,6 +3753,13 @@ begin
       end;
    FAutoQslInterval := aValue;
    Changed('AutoQslInterval');
+end;
+
+constructor THardwareSettings.Create;
+begin
+   inherited Create;
+   // The value logk1ea's declaration carried.
+   FStereoControlPin := 9;
 end;
 
 constructor TDvkSettings.Create;
@@ -4508,6 +4631,7 @@ begin
    (* The QSL message's own interval; the derived name would put MESSAGE in
      front of a command an operator has typed for years. *)
    Alias('AUTO QSL INTERVAL', 'Message.AutoQslInterval');
+   Alias('STEREO CONTROL PIN', 'Hardware.StereoControlPin');
    Alias('ROW COUNT',   'MainWindow.RowCount');
    Alias('WINDOW SIZE', 'MainWindow.WindowSize');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
@@ -4988,7 +5112,15 @@ var
    info: PPropInfo;
    lo, hi, i: integer;
 begin
-   Result := nil;
+   (* A REGISTERED VOCABULARY WINS. It is the only thing that can describe a
+     list that is not a range, and where one exists the subrange below would
+     be a wider, wronger answer. *)
+   Result := RegisteredValuesFor(PathForCommand(aCommand));
+   if Result <> nil then
+      begin
+      Exit;
+      end;
+
    info := PropertyForCommand(aCommand);
    if (info = nil) or (info^.PropType^.Kind <> tkInteger) then
       begin

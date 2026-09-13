@@ -318,7 +318,7 @@ const
    ArrayRecordArray: array[1..16] of ArrayRecord =
       (
     {(*}
-    (arArrayPtr: @SCP_MINIMUM_LETTERS_ARRAY;       arArrayLength: high(SCP_MINIMUM_LETTERS_ARRAY);       arVar: @SCPMinimumLetters),
+    (arArrayPtr: @SCP_MINIMUM_LETTERS_ARRAY;       arArrayLength: high(SCP_MINIMUM_LETTERS_ARRAY);       arVar: nil{moved to Settings.Scp.MinimumLetters}),
     (arArrayPtr: @AUTO_SEND_CHARACTER_COUNT_ARRAY; arArrayLength: high(AUTO_SEND_CHARACTER_COUNT_ARRAY); arVar: nil{moved to Settings.Cw.AutoSendCharacterCount}),
 
     (arArrayPtr: @AUTO_QSL_INTERVAL;               arArrayLength: high(AUTO_QSL_INTERVAL);               arVar: nil{moved to Settings.Message.AutoQslInterval}),
@@ -327,7 +327,7 @@ const
     (arArrayPtr: @WINDOW_SIZE_ARRAY;               arArrayLength: high(WINDOW_SIZE_ARRAY);               arVar: nil{moved to Settings.MainWindow.WindowSize}),
     (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: nil{moved to Settings.Cw.SpeedIncrement}),
     (arArrayPtr: @MULT_REPORT_MINIMUM_BANDS_ARRAY; arArrayLength: high(MULT_REPORT_MINIMUM_BANDS_ARRAY); arVar: @MultReportMinimumBands),
-    (arArrayPtr: @STEREO_CONTROL_PIN_ARRAY;        arArrayLength: high(STEREO_CONTROL_PIN_ARRAY);        arVar: @StereoControlPin),
+    (arArrayPtr: @STEREO_CONTROL_PIN_ARRAY;        arArrayLength: high(STEREO_CONTROL_PIN_ARRAY);        arVar: nil{moved to Settings.Hardware.StereoControlPin}),
     (arArrayPtr: @RECORDER_BITRATE_ARRAY;          arArrayLength: high(RECORDER_BITRATE_ARRAY);          arVar: @RecorderBitrate),
 
     (arArrayPtr: @RECORDER_SAMPLERATE_ARRAY;       arArrayLength: high(RECORDER_SAMPLERATE_ARRAY);       arVar: nil{@RecorderSampleRate}),
@@ -602,6 +602,7 @@ const
    - 4 {CW SPEED INCREMENT, DIT DAH RATIO, LEADING ZEROS, AUTO SEND CHARACTER COUNT}
    - 2 {ROW COUNT and WINDOW SIZE -- the main window's two sizes}
    - 1 {AUTO QSL INTERVAL -- the setter re-seeds the countdown}
+   - 2 {SCP MINIMUM LETTERS and STEREO CONTROL PIN -- registered vocabularies}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -929,12 +930,10 @@ const
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROTATOR TYPE';                  crAddress: pointer(17);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'SCP MINIMUM LETTERS';           crAddress: pointer(1);                      crMin:0;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of
     stopping the program with "Invalid statement in config file". *)
- (crCommand: 'STEREO CONTROL PIN';            crAddress: pointer(8);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctinteger; crNetwork: 0),
  (crCommand: 'STEREO CONTROL PORT';           crAddress: @ActiveStereoPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'STEREO PIN HIGH';               crAddress: @StereoPinState;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  // (crCommand: 'TAIL END CW MESSAGE';           crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),     //n4af 4.41.5
@@ -1400,12 +1399,17 @@ var
    listIdx: integer;
    base: PCfgSpellings;
 begin
-   Result := nil;
    idx := FindCFGCommand(aCommand);
    if idx < 0 then
       begin
+      (* NO ROW MEANS THE SETTING HAS MOVED, not that it has no vocabulary.
+        Preferences fills its hand-wired drop-downs through here by COMMAND
+        NAME, so without this a migrated setting's combo comes up empty --
+        which is a defect no build, lint or corpus run can see. *)
+      Result := Settings.AllowedValuesForCommand(aCommand);
       Exit;
       end;
+   Result := nil;
 
    // A ckList ROW'S SPELLINGS, returned EXACTLY as the table stores them.
    //
@@ -2904,6 +2908,24 @@ begin
 
 end;
 
+(* AN ALLOW-LIST, RENDERED ONCE AS TEXT.
+
+  The const arrays below are what CheckCommand matched a config line against,
+  and they stay exactly where they are. This turns one into the form the
+  settings model registers, at startup, so there is still ONE statement of
+  which values a setting accepts rather than a second copy typed out by hand.
+*)
+function IntegerVocabulary(const aValues: array of integer): TArray<string>;
+var
+   i: integer;
+begin
+   SetLength(Result, Length(aValues));
+   for i := 0 to High(aValues) do
+      begin
+      Result[i] := IntToStr(aValues[i]);
+      end;
+end;
+
 (* THE VALIDATOR THAT USED TO BE A HOOK INDEX.
 
   Registered HERE because this is the unit that knows about CTY.DAT, and
@@ -2924,5 +2946,11 @@ initialization
    (* AND THE ONE THAT WAS crMin/crMax ON A REAL. See the function. *)
    RegisterSettingValueCheck('GridMap.RadiusOfEarth',
                              @RadiusOfEarthIsInRange);
+   (* AND THE TWO ALLOW-LISTS THAT ARE NOT RANGES. Both were ckArray rows;
+     the arrays are unchanged and this is the same list, rendered. *)
+   RegisterSettingAllowedValues('Scp.MinimumLetters',
+                                IntegerVocabulary(SCP_MINIMUM_LETTERS_ARRAY));
+   RegisterSettingAllowedValues('Hardware.StereoControlPin',
+                                IntegerVocabulary(STEREO_CONTROL_PIN_ARRAY));
 
 end.

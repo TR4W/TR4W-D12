@@ -544,7 +544,6 @@ var
 
   SendQSOImmediately: boolean = True;
   SeventyThreeMessageSent: boolean;
-  SCPMinimumLetters: integer;
 
   SendExchangeKeyWhenCWHasStopped: Char = NullKey;
 

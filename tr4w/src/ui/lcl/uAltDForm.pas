@@ -83,7 +83,7 @@ uses
   uConfigValues,       // Settings.AltD.BufferEnable
   uCallsigns,          // CallsignsList
   uMaster,             // ClearMasterListBox
-  LogStuff,            // DupeInfoCall, SCPMinimumLetters
+  LogStuff,            // DupeInfoCall, Settings.Scp.MinimumLetters
   LogEdit,             // VisibleLog
   LogRadio,            // InActiveRadioPtr
   uDupesheet,          // ClearAltD
@@ -131,7 +131,7 @@ procedure TfrmAltD.RefreshPartials;
 begin
    DupeInfoCall := edtCall.Text;
 
-   if SCPMinimumLetters > 0 then
+   if Settings.Scp.MinimumLetters > 0 then
       begin
       ClearMasterListBox;
       VisibleLog.SuperCheckPartial(DupeInfoCall, True, InActiveRadioPtr);

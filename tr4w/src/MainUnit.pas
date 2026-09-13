@@ -1747,7 +1747,7 @@ begin
         end;
      end;
 
-  if SCPMinimumLetters > 0 then
+  if Settings.Scp.MinimumLetters > 0 then
      begin
      DisplayUserInfo(CallWindowString);
      ShowName(CallWindowString);
@@ -4104,7 +4104,7 @@ begin
     nCmdShow := integer(scpFoundCallsign(@CallWindowString, MasterListBox,
       nil));
 {$ELSE}
-    if (SCPMinimumLetters > 0) then
+    if (Settings.Scp.MinimumLetters > 0) then
        begin
        ClearMasterListBox;
        if VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr)

@@ -394,7 +394,6 @@ var
   SerialInvert                          : boolean;
   (* ShiftKeyEnable is gone (2026-09-12) --
     Settings.Operating.ShiftKeyEnable. *)
-  StereoControlPin                      : integer = 9;
   StereoPinState                        : boolean;
 
   TalkDebugWrite                        : file;
