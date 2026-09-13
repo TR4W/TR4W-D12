@@ -56,11 +56,32 @@ unit uRadioConfigStore;
   legacy [Radio] section is rewritten wholesale by GroupRadioIniKeys, so a
   shared file would mean each system could silently discard the other's work.
 
-  ON PASSWORDS.  NetworkPassword round-trips in plaintext.  That is the status
-  quo -- the legacy RADIO ONE NETWORK PASSWORD key is plaintext in tr4w.ini
-  today, and this unit deliberately does not change the security posture while
-  changing the storage location.  Encrypting it (DPAPI) is a follow-up that
-  should cover both files at once, not a thing to do by halves here.
+  ON PASSWORDS.  BOTH OF THEM -- a radio's NetworkPassword and a cluster's
+  Password -- GO TO THE OPERATING SYSTEM'S VAULT, and settings\tr4w.json
+  carries only a reference, named by appending Ref to the member it replaces.
+  Windows Credential Manager on Windows; see uKeychain for what happens on a
+  platform that has no backend yet, which is that the password is NOT written
+  anywhere weaker.
+
+  A RADIO'S SECRET IS KEYED BY ITS Id, NOT ITS NAME.  Renaming a radio must
+  not lose its password, and two operators' radios called "K3" on one machine
+  must not share one.
+
+  A CLUSTER HAS NO Id AND IS KEYED BY NAME, which is the identity it already
+  has -- the active cluster is remembered by name, and so is the reference
+  from a profile.  So renaming a cluster does lose its password, the same way
+  it loses any other reference to it, and that is a property of the cluster
+  list rather than of this.
+
+  READING ACCEPTS BOTH SHAPES, and that is the whole upgrade path: a
+  'networkPassword' member is a plaintext password from before this and is
+  used as-is, then the next save puts it in the vault and stops writing it.
+  No flag day, and no migration pass to run.
+
+  The ini half is deliberately NOT changed.  settings\tr4wradios.ini is a
+  read-once import format -- LoadFrom is called once by Preferences and
+  SaveTo has no production caller at all -- so the plaintext it may already
+  contain is something to READ, and writing it is a test-only path.
 }
 
 interface
@@ -791,11 +812,20 @@ function StrToTransport(const aValue: string): TRadioTransport;
 implementation
 
 uses
-   uSettingsRegistry;   { AllSettings -- the dotted key that names a command
+   uSettingsRegistry,   { AllSettings -- the dotted key that names a command
                           section is already registered there }
+   uKeychain;           (* the OS vault the network password lives in -- see
+                          the note on passwords in the unit header *)
 
 const
    TRANSPORTNAME: array[TRadioTransport] of string = ('SERIAL', 'NETWORK');
+
+(* DECLARED HERE, DEFINED WITH ITS PAIR. DeleteRadio needs the secret's name
+  and comes well before the persistence section, and splitting the three
+  password routines up to satisfy the compiler's ordering would put the rule
+  in two places. *)
+function RadioSecretName(const aId: string): string; forward;
+function ClusterSecretName(const aName: string): string; forward;
 
 function TransportToStr(const aTransport: TRadioTransport): string;
 begin
@@ -1396,6 +1426,12 @@ begin
       begin
       FActiveClusterName := '';
       end;
+
+   (* THE PASSWORD GOES WITH THE CLUSTER, for the reason DeleteRadio gives:
+     nothing else in TR4W would ever remove it, so an operator who deleted a
+     cluster could still find its password in Credential Manager. *)
+   ForgetSecret(ClusterSecretName(FClusters[aIndex].Name));
+
    FClusters.Delete(aIndex);
 end;
 
@@ -1735,6 +1771,12 @@ begin
          Exit;
          end;
       end;
+
+   (* THE PASSWORD GOES WITH THE RADIO. Leaving it in the vault would mean an
+     operator who deleted a radio could still find its password in Credential
+     Manager, and nothing in TR4W would ever remove it. The Id is gone after
+     the Delete below, so this has to happen first. *)
+   ForgetSecret(RadioSecretName(FRadios[idx].Id));
 
    FRadios.Delete(idx);
    Result := True;
@@ -2255,6 +2297,80 @@ begin
       end;
 end;
 
+(*
+  THE NAME THE VAULT FILES THIS PASSWORD UNDER.
+
+  BY Id, NOT BY NAME. An operator renaming a radio must not lose its
+  password, and two radios both called "K3" must not collide. It is also
+  what an operator sees in Credential Manager when they go to revoke one,
+  which is why it is a readable path rather than an opaque id.
+*)
+function RadioSecretName(const aId: string): string;
+begin
+   Result := 'Radios.' + aId + '.NetworkPassword';
+end;
+
+(* AND THE CLUSTER'S, BY NAME. See the note on passwords in the unit header
+  for why a cluster is keyed differently from a radio. *)
+function ClusterSecretName(const aName: string): string;
+begin
+   Result := 'Clusters.' + aName + '.Password';
+end;
+
+(*
+  WRITE A REFERENCE, OR WRITE NOTHING.
+
+  THE PASSWORD NEVER REACHES THE FILE, whether the vault took it or refused.
+  A refusal means the value is kept for this session and asked for again --
+  uKeychain reports why -- and writing it in the clear "just this once" is
+  exactly the fallback that rule exists to prevent.
+
+  An empty password is a REMOVAL: StoreSecret deletes the entry and answers
+  False, so no reference is written and nothing is left behind for someone
+  to find later.
+*)
+procedure AddProtectedPassword(const aTarget: TJSONObject;
+                               const aMember, aSecretName, aPlain: string);
+begin
+   if StoreSecret(aSecretName, aPlain) then
+      begin
+      aTarget.AddPair(aMember + KEYCHAIN_REF_SUFFIX, aSecretName);
+      end;
+end;
+
+(*
+  AND READ EITHER SHAPE.
+
+  A PLAINTEXT MEMBER WINS, because its presence means the file predates the
+  vault and the password in it is the operator's real one. The next save
+  moves it and stops writing it, which is the whole of the upgrade path.
+
+  A REFUSAL LEAVES IT EMPTY, deliberately: an empty password asks the
+  operator for it again, where a half-read one would be sent to a radio.
+*)
+function ReadProtectedPassword(const aObj: TJSONObject;
+                               const aMember: string): string;
+var
+   reference: string;
+begin
+   Result := JSONStr(aObj, aMember, '');
+   if Result <> '' then
+      begin
+      Exit;
+      end;
+
+   reference := JSONStr(aObj, aMember + KEYCHAIN_REF_SUFFIX, '');
+   if reference = '' then
+      begin
+      Exit;
+      end;
+
+   if not FetchSecret(reference, Result) then
+      begin
+      Result := '';
+      end;
+end;
+
 function RadioToJSON(const aRadio: TRadioDefinition): TJSONObject;
 begin
    Result := TJSONObject.Create;
@@ -2273,7 +2389,8 @@ begin
    Result.AddPair('ipAddress',       aRadio.IPAddress);
    Result.AddPair('tcpPort',         TJSONNumber.Create(aRadio.TCPPort));
    Result.AddPair('networkUsername', aRadio.NetworkUsername);
-   Result.AddPair('networkPassword', aRadio.NetworkPassword);
+   AddProtectedPassword(Result, 'networkPassword',
+                        RadioSecretName(aRadio.Id), aRadio.NetworkPassword);
 
    Result.AddPair('keyerOutputPort', aRadio.KeyerOutputPort);
    Result.AddPair('keyerRTS',        aRadio.KeyerRTS);
@@ -2685,7 +2802,9 @@ begin
       clu.AddPair(JSONKEY_NAME,     FClusters[i].Name);
       clu.AddPair('server',         FClusters[i].Server);
       clu.AddPair('loginCall',      FClusters[i].LoginCall);
-      clu.AddPair('password',       FClusters[i].Password);
+      AddProtectedPassword(clu, 'password',
+                           ClusterSecretName(FClusters[i].Name),
+                           FClusters[i].Password);
       clu.AddPair('connectCommand', FClusters[i].ConnectCommand);
       clusters.AddElement(clu);
       end;
@@ -2877,7 +2996,7 @@ begin
          cluDef.Name           := JSONStr(obj, JSONKEY_NAME,     '');
          cluDef.Server         := JSONStr(obj, 'server',         '');
          cluDef.LoginCall      := JSONStr(obj, 'loginCall',      '');
-         cluDef.Password       := JSONStr(obj, 'password',       '');
+         cluDef.Password       := ReadProtectedPassword(obj, 'password');
          cluDef.ConnectCommand := JSONStr(obj, 'connectCommand', '');
          if not AddCluster(cluDef) then
             begin
@@ -3023,7 +3142,7 @@ begin
          radioDef.IPAddress         := JSONStr(obj,  'ipAddress',       '');
          radioDef.TCPPort           := JSONInt(obj,  'tcpPort',         0);
          radioDef.NetworkUsername   := JSONStr(obj,  'networkUsername', '');
-         radioDef.NetworkPassword   := JSONStr(obj,  'networkPassword', '');
+         radioDef.NetworkPassword   := ReadProtectedPassword(obj, 'networkPassword');
 
          radioDef.KeyerOutputPort   := JSONStr(obj,  'keyerOutputPort', PORT_NONE);
          radioDef.KeyerRTS          := JSONStr(obj,  'keyerRTS',        '');

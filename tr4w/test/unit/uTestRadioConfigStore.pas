@@ -30,6 +30,11 @@ interface
 uses
    SysUtils, Classes, IniFiles, uJSON, uFileText,
    uTR4WTestFramework, uRadioConfigStore,
+   (* The network password goes to a vault now, so this suite installs one of
+     its own -- see SetUp. Until it did, the JSON round trip passed only
+     because ANOTHER suite had installed one first and the backend is a unit
+     global: a pass that depended on the order the suites happen to run in. *)
+   uKeychain,
    // For the render-then-seed round trip.  The store and the renderer are two
    // halves of one conversation and were tested only separately, which is how
    // they came to disagree about how a network radio is spelled.
@@ -65,7 +70,13 @@ type
       procedure Test_ValidateCatchesSerialPortCollision;
       procedure Test_ValidateAllowsNetworkRadiosSharingNothing;
       procedure Test_ValidateCatchesMissingActiveProfile;
-      procedure Test_PasswordRoundTripsAsPlaintext;
+      procedure Test_IniImportStillReadsAPlaintextPassword;
+      procedure Test_NetworkPasswordIsNeverWrittenToTheFile;
+      procedure Test_NetworkPasswordComesBackFromTheVault;
+      procedure Test_LegacyPlaintextPasswordIsReadThenMovedToTheVault;
+      procedure Test_DeletingARadioRemovesItsPassword;
+      procedure Test_NoVaultMeansNoPasswordAnywhere;
+      procedure Test_ClusterPasswordGoesToTheVaultToo;
       procedure Test_TCISectionRoundTrips;
       procedure Test_TCIMigratesFromGeneralTciServer;
       procedure Test_TCINewSectionWinsOverTheOldKey;
@@ -98,10 +109,62 @@ type
       procedure Test_JSONFileRoundTripsThroughDisk;
       procedure Test_JSONFileHasNoBOM;
    public
+      (* A FRESH, EMPTY VAULT FOR EVERY TEST. The framework calls this from
+        BeginTest, so each test starts with nothing stored and no dependence
+        on which suite ran before it. *)
+      procedure SetUp; override;
       procedure RunAllTests; override;
    end;
 
 implementation
+
+type
+   (*
+     A VAULT THAT IS THERE AND SAYS NO.
+
+     Stands in for the case that matters most and cannot be produced any
+     other way on this machine: a platform with no backend yet, or a keyring
+     that is locked. The rule under test is that TR4W then writes the
+     password NOWHERE -- not in the clear "just this once".
+   *)
+   TRefusingKeychain = class(TKeychainBackend)
+   public
+      function Name: string; override;
+      function Available: boolean; override;
+      function WriteSecret(const aName, aValue: string): TKeychainStatus;
+         override;
+      function ReadSecret(const aName: string;
+                          out aValue: string): TKeychainStatus; override;
+      function DeleteSecret(const aName: string): TKeychainStatus; override;
+   end;
+
+function TRefusingKeychain.Name: string;
+begin
+   Result := 'refusing';
+end;
+
+function TRefusingKeychain.Available: boolean;
+begin
+   Result := False;
+end;
+
+function TRefusingKeychain.WriteSecret(const aName,
+                                       aValue: string): TKeychainStatus;
+begin
+   Result := ksUnavailable;
+end;
+
+function TRefusingKeychain.ReadSecret(const aName: string;
+                                      out aValue: string): TKeychainStatus;
+begin
+   aValue := '';
+   Result := ksUnavailable;
+end;
+
+function TRefusingKeychain.DeleteSecret(const aName: string): TKeychainStatus;
+begin
+   Result := ksUnavailable;
+end;
 
 var
    // Every fixture file this suite created, so RunAllTests can remove them.
@@ -524,18 +587,26 @@ begin
    end;
 end;
 
-procedure TRadioConfigStoreTests.Test_PasswordRoundTripsAsPlaintext;
+procedure TRadioConfigStoreTests.Test_IniImportStillReadsAPlaintextPassword;
 var
    store: TRadioConfigStore;
    ini: TMemIniFile;
    radio: TRadioDefinition;
    err: string;
 begin
-   BeginTest('Test_PasswordRoundTripsAsPlaintext');
-   // Status quo, pinned deliberately so that adding encryption later is a
-   // VISIBLE change to this test rather than a silent one.  The legacy
-   // RADIO ONE NETWORK PASSWORD key is plaintext today; this store does not
-   // change the security posture while changing the storage location.
+   BeginTest('Test_IniImportStillReadsAPlaintextPassword');
+   (* THIS IS THE IMPORT FORMAT, AND IT IS STILL PLAINTEXT ON PURPOSE.
+
+     The test it replaces was called Test_PasswordRoundTripsAsPlaintext and
+     said it pinned the status quo "so that adding encryption later is a
+     VISIBLE change to this test rather than a silent one". This is that
+     change.
+
+     settings\tr4wradios.ini is read once by Preferences and converted; its
+     SaveTo half has no production caller. So what has to keep working is
+     READING a password an older TR4W wrote, and that is what this asserts.
+     The vault applies to the JSON store, which is what production writes --
+     see Test_NetworkPasswordIsNeverWrittenToTheFile. *)
    ini := NewTempIni;
    try
       store := TRadioConfigStore.Create;
@@ -563,6 +634,264 @@ begin
       end;
    finally
       ini.Free;
+   end;
+end;
+
+(* The 'networkPasswordRef' member of the first radio in a saved document,
+  or '' if there is none. Read back out of the JSON rather than rebuilt from
+  the radio's Id, so the test does not carry a second copy of the naming rule
+  -- if the store changed how it spells a secret name, these tests would
+  still be asserting the old spelling. *)
+function PasswordRefIn(const aRoot: TJSONObject): string;
+var
+   v: TJSONValue;
+   arr: TJSONArray;
+   obj: TJSONObject;
+begin
+   Result := '';
+   v := aRoot.GetValue('radios');
+   if (v = nil) or not (v is TJSONArray) then
+      begin
+      Exit;
+      end;
+   arr := TJSONArray(v);
+   if arr.Count = 0 then
+      begin
+      Exit;
+      end;
+   obj := TJSONObject(arr.Items[0]);
+   v := obj.GetValue('networkPasswordRef');
+   if (v <> nil) and (v is TJSONString) then
+      begin
+      (* JSONText, NOT .Value -- fpjson's Value is a VARIANT, and letting it
+        convert implicitly is the boundary bug uJSON's header warns about. *)
+      Result := JSONText(v);
+      end;
+end;
+
+procedure TRadioConfigStoreTests.Test_NetworkPasswordIsNeverWrittenToTheFile;
+var
+   store: TRadioConfigStore;
+   radio: TRadioDefinition;
+   root: TJSONObject;
+   err, text: string;
+begin
+   BeginTest('Test_NetworkPasswordIsNeverWrittenToTheFile');
+   (* THE WHOLE POINT, ASSERTED ON THE TEXT. Checking the member is absent
+     would miss a password that reached the file some other way -- inside a
+     command section, say -- so this searches the WHOLE document for the
+     password's characters. *)
+   store := TRadioConfigStore.Create;
+   try
+      radio := TRadioDefinition.Create;
+      radio.Name := 'K4 Remote';
+      radio.NetworkPassword := 'p@ss w0rd!';
+      CheckTrue(store.AddRadio(radio, err), 'added: ' + err);
+
+      root := store.SaveToJSON;
+      try
+         text := root.ToJSON;
+         CheckTrue(Pos('p@ss w0rd!', text) = 0,
+                   'the password does not appear anywhere in the document');
+         CheckTrue(PasswordRefIn(root) <> '',
+                   'and a reference to it was written instead');
+      finally
+         root.Free;
+      end;
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_NetworkPasswordComesBackFromTheVault;
+var
+   store: TRadioConfigStore;
+   radio: TRadioDefinition;
+   root: TJSONObject;
+   err: string;
+begin
+   BeginTest('Test_NetworkPasswordComesBackFromTheVault');
+   store := TRadioConfigStore.Create;
+   try
+      radio := TRadioDefinition.Create;
+      radio.Name := 'K4 Remote';
+      radio.NetworkPassword := 'p@ss w0rd!';
+      CheckTrue(store.AddRadio(radio, err), 'added: ' + err);
+      root := store.SaveToJSON;
+   finally
+      store.Free;
+   end;
+
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals('p@ss w0rd!',
+                     store.FindRadio('K4 Remote').NetworkPassword,
+                     'round-trips through the vault, punctuation and all');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_LegacyPlaintextPasswordIsReadThenMovedToTheVault;
+var
+   store: TRadioConfigStore;
+   root, saved: TJSONObject;
+   arr: TJSONArray;
+   entry: TJSONObject;
+begin
+   BeginTest('Test_LegacyPlaintextPasswordIsReadThenMovedToTheVault');
+   (* THE UPGRADE PATH, AND IT NEEDS NO FLAG DAY. A file written before any
+     of this carries the password in the clear. It is read as-is, and the
+     next save puts it in the vault and stops writing it. *)
+   entry := TJSONObject.Create;
+   entry.AddPair('id', 'radio-legacy-1');
+   entry.AddPair('name', 'K4 Remote');
+   entry.AddPair('networkPassword', 'oldsecret');
+
+   arr := TJSONArray.Create;
+   arr.AddElement(entry);
+
+   root := TJSONObject.Create;
+   root.AddPair('radios', arr);
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals('oldsecret',
+                     store.FindRadio('K4 Remote').NetworkPassword,
+                     'the plaintext password is read, not discarded');
+
+         saved := store.SaveToJSON;
+         try
+            CheckTrue(Pos('oldsecret', saved.ToJSON) = 0,
+                      'and the next save stops writing it in the clear');
+            CheckTrue(PasswordRefIn(saved) <> '',
+                      'having put it in the vault');
+         finally
+            saved.Free;
+         end;
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_DeletingARadioRemovesItsPassword;
+var
+   store: TRadioConfigStore;
+   radio: TRadioDefinition;
+   root: TJSONObject;
+   err, reference, fetched: string;
+begin
+   BeginTest('Test_DeletingARadioRemovesItsPassword');
+   (* AN OPERATOR WHO DELETES A RADIO MUST NOT BE ABLE TO FIND ITS PASSWORD
+     IN CREDENTIAL MANAGER AFTERWARDS, and nothing else in TR4W would ever
+     remove it. *)
+   store := TRadioConfigStore.Create;
+   try
+      radio := TRadioDefinition.Create;
+      radio.Name := 'K4 Remote';
+      radio.NetworkPassword := 'p@ss w0rd!';
+      CheckTrue(store.AddRadio(radio, err), 'added: ' + err);
+
+      root := store.SaveToJSON;
+      try
+         reference := PasswordRefIn(root);
+      finally
+         root.Free;
+      end;
+      CheckTrue(reference <> '', 'the password reached the vault');
+      CheckTrue(FetchSecret(reference, fetched), 'and can be read back');
+
+      CheckTrue(store.DeleteRadio('K4 Remote', err), 'deleted: ' + err);
+      CheckFalse(FetchSecret(reference, fetched),
+                 'the password went with the radio');
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_NoVaultMeansNoPasswordAnywhere;
+var
+   store: TRadioConfigStore;
+   radio: TRadioDefinition;
+   root: TJSONObject;
+   err: string;
+begin
+   BeginTest('Test_NoVaultMeansNoPasswordAnywhere');
+   (* A REFUSAL IS NOT A REASON TO FALL BACK. On a platform with no backend,
+     or against a locked keyring, the password is kept for the session and
+     asked for again -- it is not written to the file in the clear, and no
+     dangling reference is left either. The next test's SetUp puts a working
+     vault back. *)
+   RegisterKeychainBackend(TRefusingKeychain.Create);
+
+   store := TRadioConfigStore.Create;
+   try
+      radio := TRadioDefinition.Create;
+      radio.Name := 'K4 Remote';
+      radio.NetworkPassword := 'p@ss w0rd!';
+      CheckTrue(store.AddRadio(radio, err), 'added: ' + err);
+
+      root := store.SaveToJSON;
+      try
+         CheckTrue(Pos('p@ss w0rd!', root.ToJSON) = 0,
+                   'the password is not written in the clear');
+         CheckEquals('', PasswordRefIn(root),
+                     'and no reference is written to something that is not there');
+      finally
+         root.Free;
+      end;
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_ClusterPasswordGoesToTheVaultToo;
+var
+   store: TRadioConfigStore;
+   cluster: TClusterDefinition;
+   root: TJSONObject;
+begin
+   BeginTest('Test_ClusterPasswordGoesToTheVaultToo');
+   (* THE SAME RULE, THE SECOND PASSWORD IN THIS FILE. A cluster login is a
+     credential on somebody else's server, and it was going into the document
+     in the clear beside the radio's. *)
+   store := TRadioConfigStore.Create;
+   try
+      cluster := TClusterDefinition.Create;
+      cluster.Name     := 'W3LPL';
+      cluster.Server   := 'w3lpl.net:7373';
+      cluster.Password := 'c1uster p@ss';
+      CheckTrue(store.AddCluster(cluster), 'the cluster was added');
+
+      root := store.SaveToJSON;
+   finally
+      store.Free;
+   end;
+
+   try
+      CheckTrue(Pos('c1uster p@ss', root.ToJSON) = 0,
+                'the cluster password is not in the document');
+
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals(1, store.ClusterCount, 'the cluster came back');
+         CheckEquals('c1uster p@ss', store.Cluster(0).Password,
+                     'and its password came back from the vault');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
    end;
 end;
 
@@ -2009,6 +2338,16 @@ begin
    end;
 end;
 
+procedure TRadioConfigStoreTests.SetUp;
+begin
+   inherited SetUp;
+   (* EMPTY, AND OURS. The backend is a unit global in uKeychain, so without
+     this the suite inherits whatever the previously-run suite installed --
+     which is how the JSON round trip came to pass for a reason that had
+     nothing to do with this store. *)
+   InstallTestKeychain;
+end;
+
 procedure TRadioConfigStoreTests.RunAllTests;
 begin
    try
@@ -2017,7 +2356,13 @@ begin
    Test_SaveRemovesDeletedSections;
    Test_LoadOfEmptyFileYieldsEmptyStore;
    Test_UnknownJSONKeysAreCollected;
-   Test_PasswordRoundTripsAsPlaintext;
+   Test_IniImportStillReadsAPlaintextPassword;
+   Test_NetworkPasswordIsNeverWrittenToTheFile;
+   Test_NetworkPasswordComesBackFromTheVault;
+   Test_LegacyPlaintextPasswordIsReadThenMovedToTheVault;
+   Test_DeletingARadioRemovesItsPassword;
+   Test_NoVaultMeansNoPasswordAnywhere;
+   Test_ClusterPasswordGoesToTheVaultToo;
    Test_TCISectionRoundTrips;
    Test_TCIMigratesFromGeneralTciServer;
    Test_TCINewSectionWinsOverTheOldKey;

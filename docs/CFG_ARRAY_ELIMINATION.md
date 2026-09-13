@@ -889,13 +889,40 @@ walk, because the streamer is the only path that bypasses `TrySetByCommand`.
   would hide it inside an unrelated commit. **Adding casts at the call sites
   instead would ADD `PChar`s, which is the wrong direction entirely.**
 
-### Not a blocker, but decide before the end: passwords
+### ~~Not a blocker, but decide before the end: passwords~~ -- CLOSED 2026-09-13
 
-`HAMSCORE PASSWORD` is one of the seventy-one `Config` rows, and the agent
-memory already carries *"Password storage in JSON -- BACKLOG: decide before
-the config work ends"*. The HamScore group is otherwise a clean five-setting
-batch whose names all derive (`Hamscore.Enable` gives `HAMSCORE ENABLE`, one
-word, no alias). It is held back only for that.
+**Every password TR4W stores is in the operating system's vault, and no file
+holds one.** `uKeychain` is the platform-neutral front; `uKeychainWindows`
+binds Credential Manager. A settings file carries a REFERENCE, named by
+appending `Ref` to the member it replaces, and nothing else.
+
+| what | where the reference is written |
+|---|---|
+| `HAMSCORE PASSWORD`, `SERVER PASSWORD` | `TR4WSettings.ProtectSecretsInDocument`, an RTTI post-pass over the streamed document |
+| a radio's `NetworkPassword` | `uRadioConfigStore.AddProtectedPassword` |
+| a cluster's `Password` | the same |
+
+**The rule that does the work is what happens on REFUSAL.** If the vault will
+not take it -- a locked keyring, a platform with no backend yet -- the
+password is written NOWHERE. It is kept for the session and asked for again,
+and the store says why. Falling back to the file in the clear is the failure
+this exists to prevent, and `Test_NoVaultMeansNoPasswordAnywhere` pins it.
+
+**And there is no flag day.** A plaintext member in an existing file is read
+as-is; the next save moves it to the vault and stops writing it. Nothing has
+to be migrated by hand, and an operator who never saves keeps working.
+
+Two things worth knowing before touching this:
+
+* **A radio's secret is keyed by its `Id`, a cluster's by its NAME.** A
+  cluster has no id and its name is already its identity -- the active
+  cluster is remembered by name -- so renaming one loses its password, the
+  same way it loses every other reference to it.
+
+* **`settings\tr4wradios.ini` still reads a plaintext password on purpose.**
+  It is a read-once import format; `LoadFrom` is called once by Preferences
+  and `SaveTo` has no production caller at all. Reading what an older TR4W
+  wrote is the whole job there.
 
 ---
 
