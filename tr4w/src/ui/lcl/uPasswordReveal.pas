@@ -68,6 +68,24 @@ unit uPasswordReveal;
   IT RE-MASKS WHEN THE FIELD LOSES FOCUS. A revealed password left on screen
   while the operator does something else is the thing this feature is
   supposed to help with, not cause.
+
+  IT IS DISABLED WHILE THE FIELD IS EMPTY (NY4I). There is nothing to reveal,
+  and an eye that can be clicked to no effect teaches an operator that the
+  control does not work. Emptying a revealed field also puts it back to
+  masked, so typing the next password starts hidden rather than in the clear.
+
+  ------------------------------------------------------------------------
+  IT CHAINS THE FIELD'S EVENTS RATHER THAN TAKING THEM
+  ------------------------------------------------------------------------
+
+  It needs OnChange to know when the field becomes empty, and OnExit to
+  re-mask. One of the five fields -- the cluster password -- already has a
+  designed OnChange handler, so taking the event would stop that handler
+  firing: a designed event that quietly stops working is a loss this tree has
+  a lint for.
+
+  So the previous handler is kept and called. Nothing a form wired in the
+  designer stops happening.
 *)
 
 interface
@@ -117,8 +135,13 @@ type
       FEdit: TEdit;
       FRevealed: boolean;
       FMaskChar: char;
+      (* The handlers the FORM wired, kept so they still run. *)
+      FPrevChange: TNotifyEvent;
+      FPrevExit: TNotifyEvent;
       procedure SetRevealed(aValue: boolean);
       procedure EditLostFocus(aSender: TObject);
+      procedure EditChanged(aSender: TObject);
+      procedure UpdateEnabled;
       procedure SyncToEdit;
    protected
       procedure Paint; override;
@@ -168,19 +191,20 @@ begin
      beside a plain text box invites a click that would do nothing. *)
    Visible := aEdit.PasswordChar <> #0;
 
-   (* RE-MASK ON LEAVING THE FIELD, but ONLY IF THE FORM IS NOT ALREADY
-     USING THE EVENT. Taking it would silently replace the form own handler,
-     and a designed event that stops firing is the kind of loss this tree has
-     a lint for. A field whose form already handles OnExit simply keeps its
-     reveal until the dialog closes.
+   (* CHAINED, NOT TAKEN. The previous handler is remembered and called, so a
+     designed event keeps firing -- the cluster password already has an
+     OnChange the form wired, and replacing it would stop that working with
+     nothing to say so.
 
      NO @ ON THE METHOD: this tree compiles in Delphi mode, where an event is
      assigned by name. The address-of form is the objfpc spelling and is a
      syntax error here. *)
-   if not Assigned(aEdit.OnExit) then
-      begin
-      aEdit.OnExit := EditLostFocus;
-      end;
+   FPrevExit := aEdit.OnExit;
+   aEdit.OnExit := EditLostFocus;
+   FPrevChange := aEdit.OnChange;
+   aEdit.OnChange := EditChanged;
+
+   UpdateEnabled;
 end;
 
 procedure TPasswordRevealButton.SetRevealed(aValue: boolean);
@@ -207,6 +231,41 @@ end;
 procedure TPasswordRevealButton.EditLostFocus(aSender: TObject);
 begin
    Revealed := False;
+   if Assigned(FPrevExit) then
+      begin
+      FPrevExit(aSender);
+      end;
+end;
+
+procedure TPasswordRevealButton.EditChanged(aSender: TObject);
+begin
+   UpdateEnabled;
+   if Assigned(FPrevChange) then
+      begin
+      FPrevChange(aSender);
+      end;
+end;
+
+(* NOTHING TO REVEAL IN AN EMPTY FIELD. *)
+procedure TPasswordRevealButton.UpdateEnabled;
+var
+   hasText: boolean;
+begin
+   hasText := FEdit.Text <> '';
+
+   (* EMPTYING A REVEALED FIELD PUTS IT BACK TO MASKED, so the next password
+     typed into it starts hidden. Leaving it revealed would mean an operator
+     who cleared a field to retype it did so in the clear. *)
+   if not hasText then
+      begin
+      Revealed := False;
+      end;
+
+   if Enabled <> hasText then
+      begin
+      Enabled := hasText;
+      Invalidate;
+      end;
 end;
 
 procedure TPasswordRevealButton.SyncToEdit;
@@ -225,6 +284,9 @@ begin
       FMaskChar := FEdit.PasswordChar;
       end;
    Visible := FEdit.PasswordChar <> #0;
+   (* The reused dialog puts a new value in the field after masking it, so
+     whether there is anything to reveal has to be asked again here. *)
+   UpdateEnabled;
 end;
 
 procedure TPasswordRevealButton.Click;
@@ -239,6 +301,7 @@ var
    cx, cy: integer;
    eyeW, eyeH: integer;
    pupil: integer;
+   ink: TColor;
 begin
    w := Width;
    h := Height;
@@ -250,7 +313,20 @@ begin
    Canvas.Brush.Color := FEdit.Color;
    Canvas.FillRect(0, 0, w, h);
 
-   Canvas.Pen.Color := clGrayText;
+   (* A DISABLED EYE IS DRAWN FAINTER rather than not drawn at all: the
+     control keeps its place, so the field does not change width as the
+     operator types the first character, and the shape still says what the
+     button is for. *)
+   if Enabled then
+      begin
+      ink := clGrayText;
+      end
+   else
+      begin
+      ink := clSilver;
+      end;
+
+   Canvas.Pen.Color := ink;
    Canvas.Pen.Width := 1;
    Canvas.Brush.Style := bsClear;
 
@@ -275,14 +351,14 @@ begin
       pupil := 1;
       end;
    Canvas.Brush.Style := bsSolid;
-   Canvas.Brush.Color := clGrayText;
+   Canvas.Brush.Color := ink;
    Canvas.Ellipse(cx - pupil, cy - pupil, cx + pupil, cy + pupil);
 
    (* AND THE SLASH WHEN THE PASSWORD IS SHOWING, which is the state that
      needs the stronger signal: it says "this is visible, click to hide". *)
    if FRevealed then
       begin
-      Canvas.Pen.Color := clGrayText;
+      Canvas.Pen.Color := ink;
       Canvas.Pen.Width := 2;
       Canvas.MoveTo(cx - eyeW, cy + eyeH);
       Canvas.LineTo(cx + eyeW, cy - eyeH);
