@@ -1008,9 +1008,9 @@ when it lands.
 
 ## 2n. THE ALLOW-LISTS, AND WHAT IS ACTUALLY LEFT -- 2026-09-13
 
-**150 -> 142 rows in one session**, and the eight that left are worth reading
-as a group rather than as eight: every one was a `ckArray` row, which is a
-different mechanism from the `crMin`/`crMax` range everything else carried.
+**150 -> 138 rows in one session.** Nine of the twelve were `ckArray` rows,
+which is a different mechanism from the `crMin`/`crMax` range everything else
+carried, and they are worth reading as a group.
 
 ### A ckArray row is an ALLOW-LIST, and most of them are ranges in disguise
 
@@ -1037,17 +1037,27 @@ positional, so removing an entry shifts every index above it and silently
 repoints other rows at the wrong allow-list -- the same reason
 `AdditionalProcsArray` keeps its freed slots.
 
-### The two that are NOT ranges are blocked on a UI, not on a refusal
+### The two that are NOT ranges: a setting can be TOLD its vocabulary
 
 SCP MINIMUM LETTERS admits `(0, 3, 4, 5)`; STEREO CONTROL PIN admits `(5, 9)`,
-an LPT pin number where 6, 7 and 8 are other signals. `RegisterSettingValueCheck`
-would refuse a bad value perfectly well -- that mechanism exists and three
-settings already use it.
+an LPT pin number where 6, 7 and 8 are other signals. A subrange would quietly
+widen both.
 
-**What blocks them is that Preferences builds a DROP-DOWN from the allow-list.**
-`FillFromAllowedValues(cbxSCPMinLetters, 'SCP MINIMUM LETTERS')` reads the row,
-and a property has nowhere to put a list that is not a range. **Where such a
-list lives once `uCFG` is gone is a design question and it is NY4I's.**
+`RegisterSettingAllowedValues(path, values)` is the answer, and it lives where
+MY COUNTRY's validator already lives: **registered, by the unit that owns the
+vocabulary.** uCFG renders it from the very const arrays `CheckCommand` matched
+against, so the arrays are untouched and there is still one statement of which
+values are legal.
+
+**ONE REGISTRATION DOES BOTH JOBS** -- membership is the refusal, and the same
+list is what a drop-down offers. That is precisely the complaint against the
+`ckArray` row it replaces, where the allow-list and whatever the UI offered
+were free to disagree.
+
+**And the hand-wired Preferences path falls through.** SCP MINIMUM LETTERS has
+no `RegisterStoredSetting` at all; Preferences fills its combo by command name
+through `CFGCommandAllowedValues`, which read the row. With no row it asks the
+settings model, which fixes this one and every future one.
 
 ### THE DROP-DOWN PROBLEM BIT ONCE ALREADY, AND NOTHING SAW IT
 
@@ -1065,10 +1075,18 @@ It is fixed at the mechanism: `AllowedValuesForCommand` reads `MinValue` and
 it refuses to build a list longer than 64 -- a 0..65535 subrange is a text box,
 not a drop-down. `Test_ABoundedSettingOffersItsValues` pins it.
 
+**AND BOTH FILL PATHS NOW REPORT AN EMPTY LIST.** A text box bound to a setting
+with no fixed list is correct and says nothing; a COMBO bound to one is a
+control the operator cannot use, so it writes an error naming the setting. It
+is silent in normal operation -- there are three combo bindings in Preferences
+and all three offer values -- which is the test a diagnostic has to pass.
+
 ### What is left, by WHY -- and only two of these are work
 
-**Counted from `uCFG.pas`, and they sum to the row count** -- 141 live rows the
-day this was written. Re-measure rather than quoting these:
+**Counted from `uCFG.pas`, and they sum to the row count** -- 137 live rows by
+this count the day it was written, against the lint's 138 (the lint's pattern
+also matches the record's own field declaration). Re-measure rather than
+quoting these:
 
 ```bash
 grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
@@ -1080,26 +1098,44 @@ grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
 | 21 | BAND, MODE, CONTEST, CONTEST NAME/TITLE, the six CATEGORY-*, the four multiplier rows, QSL MODE, QSO POINT METHOD, EXCHANGE RECEIVED, SINGLE BAND SCORE, INITIAL EXCHANGE and its cursor position | the contest `.cfg` importer; see 2i |
 | 17 | `WK ...` | the keyer library track owns them |
 | 13 | the `ckList` enums -- RATE DISPLAY, DISTANCE MODE, HOUR DISPLAY, DUPE CHECK SOUND, EXTERNAL LOGGER, POSSIBLE CALL MODE, REMINDER, ROTATOR TYPE, TEN MINUTE RULE, USER INFO SHOWN, REMAINING MULT DISPLAY MODE, DEBUG LOG LEVEL, BAND MAP SPLIT MODE | **the spelling ruling below** |
-| 9 | LPT1-3 BASE ADDRESS, PADDLE PORT, RELAY CONTROL PORT, STEREO CONTROL PORT, ROTATOR PORT, KEYER RADIO ONE/TWO OUTPUT PORT | stage B, and it is the one that blocks a platform |
+| 9 | LPT1-3 BASE ADDRESS, PADDLE PORT, RELAY CONTROL PORT, STEREO CONTROL PORT, ROTATOR PORT, KEYER RADIO ONE/TWO OUTPUT PORT | stage B, which section 4 says is deliberately not started without review: it touches the profile applier and the radio open path. **LPT1-3 BASE ADDRESS is separable** -- an I/O base address is not a port NAME, so it is not part of the `SERIAL n` question -- but it sits on the parallel-port write path that keys CW, which is not code to move unattended |
 | 7 | CODE SPEED, CW ENABLE, CW TONE, FARNSWORTH ENABLE, FARNSWORTH SPEED, WEIGHT, STEREO PIN HIGH | **live session state**, changed by control codes mid-message and by keystrokes -- a streamed property would persist a mid-contest adjustment |
 | 6 | DVK PATH, DVK RECORDER, MP3 PATH, MP3 PLAYER, BACKUP LOG FILE NAME, INITIAL EXCHANGE FILENAME | `FileNameType` buffers read through `GetRealPath(PAnsiChar)`; this is the PChar audit, not a settings batch |
 | 3 | ADD DOMESTIC COUNTRY, FREQUENCY MEMORY, BAND MAP CUTOFF FREQUENCY | an accumulating LIST -- each config line ADDS, so the row is not a value |
-| 9 | CLEAR DUPE SHEET (an ACTION), CONNECTION COMMAND (the cluster library), MY CONTINENT (deliberately stays), R150S MODE and RFOBL MODE (fields of the CTY record), SCP COUNTRY STRING (a field of the SCP database object), SCP MINIMUM LETTERS and STEREO CONTROL PIN (the drop-down above), MULT REPORT MINIMUM BANDS (below) | one reason each |
+| 5 | CLEAR DUPE SHEET (an ACTION, not a setting), CONNECTION COMMAND (the cluster library owns it), MY CONTINENT (deliberately stays), SCP COUNTRY STRING (a `Str80` field read by BARE NAME inside its own methods), MULT REPORT MINIMUM BANDS (below) | one reason each |
 
-### The enum rows are the next real batch, and they need one ruling first
+### The enum rows are the next real batch, and the blocker is a CYCLE
 
-The model already handles an enum property -- `TrySetByCommand` calls
-`GetEnumValue` and `TryGetByCommand` calls `GetEnumName`. **That means the
-PASCAL IDENTIFIER is the config spelling**, and the legacy spellings in
-`ListParamArray` are not Pascal identifiers: they contain spaces, and some are
-words like `ON` and `OFF` that no enum would be named after.
+There are two obstacles and only the second is structural.
 
-So moving one means deciding how a spelling maps to an ordinal: rename the enum
-members to match the file, carry a per-enum spelling table into the model, or
-generate the table from the enum and accept new spellings. **Getting it wrong
-silently changes which ordinal a config line selects**, which is the second
-definition problem `Lint-SpellingTables` exists for and cannot catch. It is a
-decision, not a migration.
+**The spellings are not identifiers.** The model handles an enum property
+through `GetEnumValue`/`GetEnumName`, so the PASCAL IDENTIFIER would be the
+config spelling -- and the legacy spellings contain spaces: `QSO POINTS`,
+`THIS HOUR`, `BY CUTOFF FREQ`, `TIME OF FIRST QSO`, `ALFA SPID`. Only DISTANCE
+MODE and REMAINING MULT DISPLAY MODE are spelled as identifiers throughout.
+`RegisterSettingAllowedValues` above is most of the answer to this half.
+
+**THE REAL BLOCKER IS WHERE THE ENUM TYPES LIVE**, and it is not a preference:
+
+| type | declared in |
+|---|---|
+| `RateDisplayType`, `HourDisplayType`, `TenMinuteRuleType`, `UserInfoType`, `BandMapSplitModeType`, `RotatorType` | `trdos/logwind.pas` |
+| `DistanceDisplayType` | `trdos/loggrid.pas` |
+| `RemainingMultDisplayModeType` | `trdos/logdom.pas` |
+| `PossibleCallActionType` | `trdos/logscp.pas` |
+| `ParameterOkayModeType` | `trdos/logstuff.pas` |
+
+A published property needs its type visible, so `uSettingsModel` would have to
+`uses LogWind` -- **and LogWind already uses uSettingsModel.** That is a
+circular reference, not a style objection, and it cannot be worked around with
+an implementation-section uses clause because the type is in the INTERFACE of
+the property.
+
+**So the batch is really "move these enum declarations to a leaf unit first".**
+That is a decision about the shape of the TRDOS units, and it is NY4I's. Note
+`VC.pas` is a candidate and is light enough -- LCLType, Types, Log4D, Version --
+but it would put a widget-set dependency into `uSettingsModel`, which
+deliberately has none.
 
 ### MULT REPORT MINIMUM BANDS: stored, editable, broadcast, and read by NOTHING
 

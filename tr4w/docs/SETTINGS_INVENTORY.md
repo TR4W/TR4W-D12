@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (234)
+## Settings that have moved (238)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -216,12 +216,14 @@ comes last, a word run together.
 | `QUICK QSL MESSAGE 2` |  | **CONTEST** | `Settings.Messages.QuickQslCw2` | string |  |
 | `QUICK QSL SSB MESSAGE` |  | **CONTEST** | `Settings.Messages.QuickQslSsb` | string |  |
 | `QZB RANDOM OFFSET ENABLE` |  | global | `Settings.Qzb.RandomOffsetEnable` | boolean |  |
+| `R150S MODE` |  | **CONTEST** | `Settings.Contest.R150SMode` | boolean |  |
 | `RADIO TCP SERVER PORT` |  | global | `Settings.Radio.TcpServerPort` | integer |  |
 | `RADIUS OF EARTH` |  | global | `Settings.GridMap.RadiusOfEarth` | double |  |
 | `RANDOM CQ MODE` |  | global | `Settings.Cq.RandomMode` | boolean |  |
 | `REPEAT S&P CW EXCHANGE` | `REPEAT S&P EXCHANGE` | **CONTEST** | `Settings.Messages.RepeatSpExchangeCw` | string |  |
 | `REPEAT S&P SSB EXCHANGE` |  | **CONTEST** | `Settings.Messages.RepeatSpExchangeSsb` | string |  |
 | `REVERSE INITIAL EX` |  | global | `Settings.InitialExchange.Reverse` | boolean |  |
+| `RFOBL MODE` |  | **CONTEST** | `Settings.Contest.RfoblMode` | boolean |  |
 | `ROW COUNT` |  | global | `Settings.MainWindow.RowCount` | TLogRowCount |  |
 | `S&P CW EXCHANGE` | `S&P EXCHANGE` | **CONTEST** | `Settings.Messages.SpExchangeCw` | string |  |
 | `S&P SSB EXCHANGE` |  | **CONTEST** | `Settings.Messages.SpExchangeSsb` | string |  |
@@ -229,6 +231,7 @@ comes last, a word run together.
 | `SAY HI RATE CUTOFF` |  | global | `Settings.SayHi.RateCutoff` | TSayHiRateCutoff |  |
 | `SCORE POSTING URL` |  | global | `Settings.Score.PostingUrl` | string |  |
 | `SCORE READING URL` |  | global | `Settings.Score.ReadingUrl` | string |  |
+| `SCP MINIMUM LETTERS` |  | global | `Settings.Scp.MinimumLetters` | integer |  |
 | `SEND COMPLETE FOUR LETTER CALL` |  | global | `Settings.Cw.SendCompleteFourLetterCall` | boolean |  |
 | `SERVER ADDRESS` |  | global | `Settings.Server.Address` | string |  |
 | `SERVER AUTO SYNCHRONIZE LOG ON CONNECT` |  | global | `Settings.Server.AutoSynchronizeLogOnConnect` | boolean |  |
@@ -252,6 +255,7 @@ comes last, a word run together.
 | `SPRINT QSY RULE` |  | **CONTEST** | `Settings.Contest.SprintQsyRule` | boolean |  |
 | `START SENDING NOW KEY` |  | global | `Settings.Cw.StartSendingNowKey` | Char |  |
 | `STATIONS CALLSIGNS MASK` |  | global | `Settings.Stations.CallsignsMask` | string |  |
+| `STEREO CONTROL PIN` |  | global | `Settings.Hardware.StereoControlPin` | integer |  |
 | `SWAP PACKET SPOT RADIOS` |  | global | `Settings.So2r.SwapPacketSpotRadios` | boolean |  |
 | `SWAP PADDLES` |  | global | `Settings.Paddle.Swap` | boolean |  |
 | `SWAP RADIO RELAY SENSE` |  | global | `Settings.So2r.SwapRelaySense` | boolean |  |
@@ -277,7 +281,7 @@ comes last, a word run together.
 | `WSJT-X SEND HIGHLIGHTS` |  | global | `Settings.Wsjtx.SendHighlights` | boolean |  |
 | `YCCC SO2R ENABLE` |  | global | `Settings.Yccc.So2rEnable` | boolean |  |
 
-## Settings still in the config array (141)
+## Settings still in the config array (137)
 
 Each of these still writes through a table of addresses. The **Why still
 here** column is the reason it has not moved; an empty one means nothing is
@@ -344,7 +348,6 @@ instinct one of the two is worth looking at.
 | `PREFIX MULTIPLIER` | no | ctMultiplier |  |  |
 | `QSL MODE` | no | ctOther |  |  |
 | `QSO POINT METHOD` | no | ctOther |  |  |
-| `R150S MODE` | no | ctBoolean | a field of the CTY record that a leaf unit reads directly |  |
 | `RADIO ONE BAND OUTPUT PORT` | no | ctPortLPT | radio library -- CheckCommand is the transport for these, so they move with that track |  |
 | `RADIO ONE BAUD RATE` | no | ctInteger | radio library -- CheckCommand is the transport for these, so they move with that track |  |
 | `RADIO ONE CAT DTR` | no | ctOther | radio library -- CheckCommand is the transport for these, so they move with that track |  |
@@ -403,13 +406,10 @@ instinct one of the two is worth looking at.
 | `RELAY CONTROL PORT` | no | ctPortLPT | port identity track |  |
 | `REMAINING MULT DISPLAY MODE` | no | ctOther |  |  |
 | `REMINDER` | no | ctOther |  |  |
-| `RFOBL MODE` | no | ctBoolean | a field of the CTY record that a leaf unit reads directly |  |
 | `ROTATOR PORT` | no | ctOther |  |  |
 | `ROTATOR TYPE` | no | ctOther |  |  |
 | `SCP COUNTRY STRING` | no | ctString | a field of the SCP database object, read by bare name |  |
-| `SCP MINIMUM LETTERS` | no | ctInteger |  |  |
 | `SINGLE BAND SCORE` | yes | ctBand |  |  |
-| `STEREO CONTROL PIN` | no | ctinteger |  |  |
 | `STEREO CONTROL PORT` | no | ctPortLPT | port identity track |  |
 | `STEREO PIN HIGH` | no | ctBoolean | live session state -- a keystroke toggles it |  |
 | `TEN MINUTE RULE` | yes | ctOther |  |  |
