@@ -1686,7 +1686,7 @@ end;
 
 procedure DisplayAutoQSLInterval;
 begin
-  SetTextInQuickCommandWindow(SysUtils.Format(AnsiString('AUTO QSL INTERVAL = %u'), [AutoQSLInterval]));
+  SetTextInQuickCommandWindow(SysUtils.Format(AnsiString('AUTO QSL INTERVAL = %u'), [Settings.Message.AutoQslInterval]));
 end;
 
 procedure DisplayTotalScore {(Score: LONGINT)};

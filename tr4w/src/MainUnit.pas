@@ -5163,18 +5163,21 @@ begin
       end;
 
     menu_ctrl_incAQSLinterval:
-      if AutoQSLInterval < 6 then
+      if Settings.Message.AutoQslInterval < 6 then
          begin
-         inc(AutoQSLInterval);
-         AutoQSLCount := AutoQSLInterval;
+         (* THROUGH THE PROPERTY, so the countdown re-seeds itself. inc()
+           takes a var parameter and a property cannot be passed to one --
+           which is why this used to carry the re-seed on the next line. *)
+         Settings.Message.AutoQslInterval :=
+            Settings.Message.AutoQslInterval + 1;
          DisplayAutoQSLInterval;
          end;
 
     menu_ctrl_decAQSLinterval:
-      if AutoQSLInterval > 0 then
+      if Settings.Message.AutoQslInterval > 0 then
          begin
-         dec(AutoQSLInterval);
-         AutoQSLCount := AutoQSLInterval;
+         Settings.Message.AutoQslInterval :=
+            Settings.Message.AutoQslInterval - 1;
          DisplayAutoQSLInterval;
          end;
 

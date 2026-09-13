@@ -95,6 +95,7 @@ uses
                    // DisplayInsertMode, the INS/OVR panel;
                    // DisplayCodeSpeed, which is also the DVK's state panel;
                    // and UpadateAutoSend
+   LogStuff,       // AutoQSLCount -- the countdown this interval re-seeds
    uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
    uNet,           // SetComputerName -- announce the name to the other position
@@ -201,6 +202,10 @@ const
      keyboard, so the derivation has to run whenever the count changes. *)
    AUTO_SEND_CHARACTER_COUNT = 'Cw.AutoSendCharacterCount';
 
+   (* AutoQSLCount is the live countdown; this is what it reloads from, so
+     changing it re-seeds the counter. *)
+   AUTO_QSL_INTERVAL = 'Message.AutoQslInterval';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -247,6 +252,12 @@ begin
    if UnicodeSameText(aPath, INSERT_MODE) then
       begin
       DisplayInsertMode;
+      end;
+
+   if UnicodeSameText(aPath, AUTO_QSL_INTERVAL) then
+      begin
+      (* This was F_AUTO_QSL_INTERVAL, crA: 6. *)
+      AutoQSLCount := Settings.Message.AutoQslInterval;
       end;
 
    if UnicodeSameText(aPath, AUTO_SEND_CHARACTER_COUNT) then

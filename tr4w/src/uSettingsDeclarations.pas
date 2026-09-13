@@ -403,7 +403,7 @@ begin
    { ===================================================================== }
 
    // --- Contest (68) ----------------------------------
-   RegisterStoredSetting('contest.autoQslInterval',     'AUTO QSL INTERVAL',
+   RegisterModelSetting( 'contest.autoQslInterval',     'AUTO QSL INTERVAL',
                           RS_CONTEST_AUTOQSLINTERVAL);
    RegisterModelSetting( 'contest.autoCQDelayTime',           'AUTO-CQ DELAY TIME',
                           RS_CONTEST_AUTOCQDELAYTIME);

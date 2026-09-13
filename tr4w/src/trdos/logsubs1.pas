@@ -527,7 +527,7 @@ begin
            begin
            Result := SendCrypticMessage(UTF8Encode(s + Settings.Messages.QslCw));
            end;
-        AutoQSLCount := AutoQSLInterval;
+        AutoQSLCount := Settings.Message.AutoQslInterval;
         end
      else
         begin

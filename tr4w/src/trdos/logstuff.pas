@@ -396,7 +396,6 @@ var
   AutoAltDWindowString: Str20;
   AutoAltDEnable: boolean;
   AutoQSLCount: Byte {= 0};
-  AutoQSLInterval: integer;
 
   BandMapInfoCall: CallString {= ''};
   BeSilent: boolean;

@@ -240,7 +240,6 @@ function F_RADIO_ONE_TYPE: boolean;
 function F_RADIO_TWO_TYPE: boolean;
 function F_SCP_COUNTRY_STRING: boolean;
 function F_ADD_DOMESTIC_COUNTRY: boolean;
-function F_AUTO_QSL_INTERVAL: boolean;
 function F_BAND_MAP_CUTOFF_FREQUENCY: boolean;
 function F_BAND_MAP_DECAY_TIME: boolean;
 function F_CLEAR_DUPE_SHEET: boolean;
@@ -322,7 +321,7 @@ const
     (arArrayPtr: @SCP_MINIMUM_LETTERS_ARRAY;       arArrayLength: high(SCP_MINIMUM_LETTERS_ARRAY);       arVar: @SCPMinimumLetters),
     (arArrayPtr: @AUTO_SEND_CHARACTER_COUNT_ARRAY; arArrayLength: high(AUTO_SEND_CHARACTER_COUNT_ARRAY); arVar: nil{moved to Settings.Cw.AutoSendCharacterCount}),
 
-    (arArrayPtr: @AUTO_QSL_INTERVAL;               arArrayLength: high(AUTO_QSL_INTERVAL);               arVar: @AutoQSLInterval),
+    (arArrayPtr: @AUTO_QSL_INTERVAL;               arArrayLength: high(AUTO_QSL_INTERVAL);               arVar: nil{moved to Settings.Message.AutoQslInterval}),
 
     (arArrayPtr: @ROW_COUNT_ARRAY;                 arArrayLength: high(ROW_COUNT_ARRAY);                 arVar: nil{moved to Settings.MainWindow.RowCount}),
     (arArrayPtr: @WINDOW_SIZE_ARRAY;               arArrayLength: high(WINDOW_SIZE_ARRAY);               arVar: nil{moved to Settings.MainWindow.WindowSize}),
@@ -357,7 +356,11 @@ const
       nil,
       @F_CLEAR_DUPE_SHEET,
       @F_BAND_MAP_DECAY_TIME,
-      @F_AUTO_QSL_INTERVAL,
+      (* SLOT 6 IS FREE. F_AUTO_QSL_INTERVAL re-seeded AutoQSLCount, and its
+        only caller -- the AUTO QSL INTERVAL row -- moved to the settings
+        model, where the property's setter does it. nil rather than a
+        renumbering, for the reason slot 3 gives. *)
+      nil,
       @F_CONTEST_NAME,
       nil {@F_MY_COUNTRY -- a VALIDATOR, now a registered value check},
       @F_RADIO_ONE_TYPE,
@@ -598,6 +601,7 @@ const
      properties on Settings.Cw now. *)
    - 4 {CW SPEED INCREMENT, DIT DAH RATIO, LEADING ZEROS, AUTO SEND CHARACTER COUNT}
    - 2 {ROW COUNT and WINDOW SIZE -- the main window's two sizes}
+   - 1 {AUTO QSL INTERVAL -- the setter re-seeds the countdown}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -694,7 +698,6 @@ const
     {(*}
 
  (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOwned; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'AUTO QSL INTERVAL';             crAddress: pointer(3);                      crMin:0;  crMax:6;        crS: csJSON; crA: 6; crC:0 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BACKUP LOG FILE NAME';          crAddress: @TR4W_BACKUP_FILENAME;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFileName; crNetwork: 1),   // 4.56.11
  (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
@@ -2412,12 +2415,6 @@ begin
       begin
       AddDomesticCountry(CMD);
       end;
-   Result := True;
-end;
-
-function F_AUTO_QSL_INTERVAL: boolean;
-begin
-   AutoQSLCount := AutoQSLInterval;
    Result := True;
 end;
 

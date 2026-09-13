@@ -256,6 +256,22 @@ type
      ranges: ROW_COUNT_ARRAY is (5..15) and WINDOW_SIZE_ARRAY is (1..15). *)
    TLogRowCount            = 5..15;   // was ROW_COUNT_ARRAY
    TMainWindowSize         = 1..15;   // was WINDOW_SIZE_ARRAY
+   TAutoQslInterval        = 0..6;    // was AUTO_QSL_INTERVAL
+   (*
+     AND THE TWO ALLOW-LISTS THAT ARE NOT RANGES ARE STILL ROWS.
+
+     SCP MINIMUM LETTERS admits (0, 3, 4, 5) and STEREO CONTROL PIN admits
+     (5, 9) -- an LPT pin number, where 6, 7 and 8 are other signals. A
+     subrange would quietly widen both, and widening what a config file may
+     say is a behaviour change however harmless it looks.
+
+     THE BLOCKER IS NOT THE REFUSAL, WHICH RegisterSettingValueCheck ALREADY
+     DOES. It is that Preferences builds a DROP-DOWN from the allow-list --
+     `FillFromAllowedValues(cbxSCPMinLetters, 'SCP MINIMUM LETTERS')` reads
+     the row -- and a property has nowhere to put a list that is not a range.
+     Deciding where such a list lives once uCFG is gone is a design question,
+     not a migration.
+   *)
    (* THE MAIN WINDOW'S FONT SIZE, and it is a STEP not a point size --
      0, 1 or 2, which MainUnit turns into pixels as `13 + FontSize - 1`
      and into a cell width as `ws + 2 * FontSize - 3`. The old row carried
@@ -2400,6 +2416,8 @@ type
       FDeEnable: boolean;
       FQuickQslKey1: Char;
       FQuickQslKey2: Char;
+      FAutoQslInterval: TAutoQslInterval;
+      procedure SetAutoQslInterval(aValue: TAutoQslInterval);
    public
       constructor Create;
    published
@@ -2411,6 +2429,18 @@ type
       property QuickQslKey1: Char read FQuickQslKey1 write FQuickQslKey1;
       // Was QuickQSLKey2.
       property QuickQslKey2: Char read FQuickQslKey2 write FQuickQslKey2;
+      (* Was the global AutoQSLInterval in logstuff -- send the QSL message
+        automatically every N QSOs, and 0 switches it off.
+
+        AUTO QSL INTERVAL, aliased.
+
+        THE SETTER RE-SEEDS THE COUNTDOWN, which was F_AUTO_QSL_INTERVAL,
+        crA: 6. AutoQSLCount is the live counter the logger decrements; this
+        is the setting it reloads from. Two keystrokes adjust the interval on
+        the fly and BOTH carried the re-seed by hand, which is two spellings
+        of one rule -- there is one now. *)
+      property AutoQslInterval: TAutoQslInterval
+         read FAutoQslInterval write SetAutoQslInterval;
    end;
 
    (*
@@ -3599,6 +3629,16 @@ begin
    FWindowSize := 5;
 end;
 
+procedure TMessageSettings.SetAutoQslInterval(aValue: TAutoQslInterval);
+begin
+   if FAutoQslInterval = aValue then
+      begin
+      Exit;
+      end;
+   FAutoQslInterval := aValue;
+   Changed('AutoQslInterval');
+end;
+
 constructor TDvkSettings.Create;
 begin
    inherited Create;
@@ -3895,6 +3935,8 @@ begin
    FDeEnable     := True;
    FQuickQslKey1 := '\';
    FQuickQslKey2 := '=';
+   // logstuff declared AutoQSLInterval with no initialiser: no automatic QSL.
+   FAutoQslInterval := 0;
 end;
 
 constructor TContestSettings.Create;
@@ -4463,6 +4505,9 @@ begin
 
    (* The main window's two sizes. ROW COUNT says nothing about what is
      counted and WINDOW SIZE would derive as MAIN WINDOW WINDOW SIZE. *)
+   (* The QSL message's own interval; the derived name would put MESSAGE in
+     front of a command an operator has typed for years. *)
+   Alias('AUTO QSL INTERVAL', 'Message.AutoQslInterval');
    Alias('ROW COUNT',   'MainWindow.RowCount');
    Alias('WINDOW SIZE', 'MainWindow.WindowSize');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
