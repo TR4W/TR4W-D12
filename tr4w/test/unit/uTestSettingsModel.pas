@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(260, names.Count,
+         CheckEquals(261, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1405,6 +1405,7 @@ const
       + '"SAY HI RATE CUTOFF",'
       + '"SCORE POSTING URL",'
       + '"SCORE READING URL",'
+      + '"SCP COUNTRY STRING",'
       + '"SCP MINIMUM LETTERS",'
       + '"SEND COMPLETE FOUR LETTER CALL",'
       + '"SERVER ADDRESS",'

@@ -238,7 +238,6 @@ procedure RunCommandRedrawProc(aIndex: integer);
 
 function F_RADIO_ONE_TYPE: boolean;
 function F_RADIO_TWO_TYPE: boolean;
-function F_SCP_COUNTRY_STRING: boolean;
 function F_ADD_DOMESTIC_COUNTRY: boolean;
 function F_BAND_MAP_CUTOFF_FREQUENCY: boolean;
 function F_BAND_MAP_DECAY_TIME: boolean;
@@ -365,7 +364,11 @@ const
       nil {@F_MY_COUNTRY -- a VALIDATOR, now a registered value check},
       @F_RADIO_ONE_TYPE,
       @F_RADIO_TWO_TYPE,
-      @F_SCP_COUNTRY_STRING,
+      (* SLOT 11 IS FREE. F_SCP_COUNTRY_STRING appended the trailing comma
+        the list reader depends on, and that is the property's setter now --
+        so it runs however the value is set, not only when a config line
+        applied the row. nil rather than a renumbering: positional table. *)
+      nil,
       @F_KEYER_RADIO_ONE_OUTPUT_PORT,
       @F_KEYER_RADIO_TWO_OUTPUT_PORT,
       nil {@F_MY_CALL -- DEPlusMyCall is derived, the rest is a setter},
@@ -650,6 +653,7 @@ const
    - 1 {POSSIBLE CALL MODE -- off the SCP database record}
    - 1 {EXTERNAL LOGGER -- a token; the enum stays with the factory}
    - 1 {ROTATOR TYPE -- the same, and the last ckList enum row}
+   - 1 {SCP COUNTRY STRING -- off the SCP database record, hook and all}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -963,7 +967,6 @@ const
  (crCommand: 'RADIO TWO SERIAL FORMAT';       crAddress: @Radio2.SerialFormat;            crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctString; crNetwork: 0),
  (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
- (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of
@@ -2617,16 +2620,6 @@ end;
 function F_RADIO_TWO_TYPE: boolean;
 begin
    Radio2.ReceiverAddress := uRadioRegistry.RegisteredCIVAddress(Radio2.RadioModel);
-   Result := True;
-end;
-
-function F_SCP_COUNTRY_STRING: boolean;
-begin
-   if CD.CountryString <> '' then
-      if Copy(CD.CountryString, length(CD.CountryString), 1) <> ',' then
-         begin
-         CD.CountryString := CD.CountryString + ',';
-         end;
    Result := True;
 end;
 

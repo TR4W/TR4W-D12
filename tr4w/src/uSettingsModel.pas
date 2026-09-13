@@ -726,6 +726,8 @@ type
       FNameFlagEnable: boolean;
       FMinimumLetters: integer;
       FPossibleCallMode: PossibleCallActionType;
+      FCountryString: string;
+      procedure SetCountryString(const aValue: string);
    public
       constructor Create;
    published
@@ -753,6 +755,25 @@ type
         MODE, aliased. *)
       property PossibleCallMode: PossibleCallActionType
          read FPossibleCallMode write FPossibleCallMode;
+      (*
+        Was CD.CountryString, a Str80 field of the SCP database object --
+        which countries Super Check Partial offers calls from, as a
+        comma-separated list, or empty for all of them. A leading '!' or '-'
+        inverts it into an exclude list.
+
+        SCP COUNTRY STRING, which derives exactly.
+
+        THE SETTER IS THE crA HOOK. F_SCP_COUNTRY_STRING appended a trailing
+        comma when one was missing, because GoodCountry walks the list by
+        looking for the next comma and the last entry would otherwise be
+        skipped. That normalisation ran only when CheckCommand applied the
+        row; it runs however the value is set now.
+
+        IT IS A string, NOT A Str80. The row's crMax: 80 truncated on input;
+        the one reader that needs a bounded copy still takes one, so what
+        changes is that a long list is KEPT rather than silently cut.
+      *)
+      property CountryString: string read FCountryString write SetCountryString;
    end;
 
    (*
@@ -3724,6 +3745,21 @@ begin
    FTcpServerPort := 52002;
 end;
 
+procedure TScpSettings.SetCountryString(const aValue: string);
+var
+   normalised: string;
+begin
+   (* THE TRAILING COMMA IS PART OF THE VALUE, not a display nicety: the
+     reader consumes entries up to the next comma, so without one the last
+     country in the list is never tested. *)
+   normalised := aValue;
+   if (normalised <> '') and (Copy(normalised, Length(normalised), 1) <> ',') then
+      begin
+      normalised := normalised + ',';
+      end;
+   SetStr(FCountryString, normalised, 'CountryString');
+end;
+
 procedure TBandMapSettings.SetSplitMode(aValue: BandMapSplitModeType);
 begin
    if FSplitMode = aValue then
@@ -3897,6 +3933,8 @@ begin
    FMinimumLetters := 0;
    // The field had no initialiser, so AnyCall -- offer every partial match.
    FPossibleCallMode := AnyCall;
+   // Empty means every country, which is what the field carried.
+   FCountryString := '';
 end;
 
 constructor TClusterSettings.Create;

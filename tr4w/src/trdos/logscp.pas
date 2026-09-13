@@ -138,7 +138,7 @@ type
     ASCIIFileIsCurrent: boolean; { Handy if successive AddEntries }
 
     CellBuffer: CellBufferObject; { The big and great File Buffer }
-    CountryString: Str80;
+    (* CountryString MOVED to Settings.Scp.CountryString, 2026-09-13. *)
 
     DTAFileSize: LONGINT;
 
@@ -1804,15 +1804,22 @@ var
   QTH                                   : QTHRecord;
 begin
   GoodCountry := True;
-  if CountryString = '' then Exit;
+  if Settings.Scp.CountryString = '' then Exit;
 
-  TempString := CountryString;
+  (* AnsiString FIRST, THEN A PLAIN ASSIGNMENT. The property is a
+    UnicodeString and TempString is a Str80; the explicit step is the
+    Unicode-to-Ansi one, and AnsiString -> ShortString is a real conversion
+    the compiler does correctly, truncating at 80 as the row's crMax did.
+
+    NEVER Str80(...) HERE: a cast to a ShortString type REINTERPRETS THE
+    POINTER rather than converting, which is the trap CLAUDE.md records. *)
+  TempString := AnsiString(Settings.Scp.CountryString);
 
   ctyLocateCall(Call, QTH);
   CountryID := QTH.CountryID;
 
-  if (Copy(CountryString, 1, 1) = '!') or
-    (Copy(CountryString, 1, 1) = '-') then { Exclude countries }
+  if (Copy(Settings.Scp.CountryString, 1, 1) = '!') or
+    (Copy(Settings.Scp.CountryString, 1, 1) = '-') then { Exclude countries }
      begin
      Delete(TempString, 1, 1); { Get rid of ! or - }
 
@@ -1854,7 +1861,7 @@ begin
      ParseEntryToDataRecord(EntryString, data);
 
      if (length(InitialPartialCall) = 2) or (PartialCall(InitialPartialCall, data.Call)) then
-       if CountryString <> '' then
+       if Settings.Scp.CountryString <> '' then
           begin
           if GoodCountry(data.Call) then
              begin
