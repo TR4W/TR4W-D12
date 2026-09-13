@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (248)
+## Settings that have moved (251)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -115,6 +115,7 @@ comes last, a word run together.
 | `DVK LOCALIZED MESSAGES ENABLE` |  | global | `Settings.Dvk.LocalizedMessagesEnable` | boolean |  |
 | `ESCAPE EXITS SEARCH AND POUNCE` |  | global | `Settings.Cq.EscapeExitsSearchAndPounce` | boolean |  |
 | `EXCHANGE MEMORY ENABLE` |  | **CONTEST** | `Settings.Contest.ExchangeMemoryEnable` | boolean |  |
+| `EXTERNAL LOGGER` |  | global | `Settings.ExternalLogger.LoggerType` | string |  |
 | `EXTERNAL LOGGER ADDRESS` |  | global | `Settings.ExternalLogger.Address` | string |  |
 | `EXTERNAL LOGGER ENABLED` |  | global | `Settings.ExternalLogger.Enabled` | boolean |  |
 | `EXTERNAL LOGGER PORT` |  | global | `Settings.ExternalLogger.Port` | integer |  |
@@ -232,6 +233,7 @@ comes last, a word run together.
 | `REPEAT S&P SSB EXCHANGE` |  | **CONTEST** | `Settings.Messages.RepeatSpExchangeSsb` | string |  |
 | `REVERSE INITIAL EX` |  | global | `Settings.InitialExchange.Reverse` | boolean |  |
 | `RFOBL MODE` |  | **CONTEST** | `Settings.Contest.RfoblMode` | boolean |  |
+| `ROTATOR TYPE` |  | global | `Settings.Rotator.RotatorType` | string |  |
 | `ROW COUNT` |  | global | `Settings.MainWindow.RowCount` | TLogRowCount |  |
 | `S&P CW EXCHANGE` | `S&P EXCHANGE` | **CONTEST** | `Settings.Messages.SpExchangeCw` | string |  |
 | `S&P SSB EXCHANGE` |  | **CONTEST** | `Settings.Messages.SpExchangeSsb` | string |  |
@@ -239,6 +241,7 @@ comes last, a word run together.
 | `SAY HI RATE CUTOFF` |  | global | `Settings.SayHi.RateCutoff` | TSayHiRateCutoff |  |
 | `SCORE POSTING URL` |  | global | `Settings.Score.PostingUrl` | string |  |
 | `SCORE READING URL` |  | global | `Settings.Score.ReadingUrl` | string |  |
+| `SCP COUNTRY STRING` |  | global | `Settings.Scp.CountryString` | string |  |
 | `SCP MINIMUM LETTERS` |  | global | `Settings.Scp.MinimumLetters` | integer |  |
 | `SEND COMPLETE FOUR LETTER CALL` |  | global | `Settings.Cw.SendCompleteFourLetterCall` | boolean |  |
 | `SERVER ADDRESS` |  | global | `Settings.Server.Address` | string |  |
@@ -291,7 +294,7 @@ comes last, a word run together.
 | `WSJT-X SEND HIGHLIGHTS` |  | global | `Settings.Wsjtx.SendHighlights` | boolean |  |
 | `YCCC SO2R ENABLE` |  | global | `Settings.Yccc.So2rEnable` | boolean |  |
 
-## Settings still in the config array (126)
+## Settings still in the config array (123)
 
 Each of these still writes through a table of addresses. The **Why still
 here** column is the reason it has not moved; an empty one means nothing is
@@ -329,7 +332,6 @@ instinct one of the two is worth looking at.
 | `DVK RECORDER` | no | ctFileName | path type -- same ruling |  |
 | `DX MULTIPLIER` | no | ctMultiplier |  |  |
 | `EXCHANGE RECEIVED` | no | ctOther |  |  |
-| `EXTERNAL LOGGER` | no | ctOther |  |  |
 | `FARNSWORTH ENABLE` | no | ctBoolean | live session state |  |
 | `FARNSWORTH SPEED` | no | ctInteger | live session state |  |
 | `FREQUENCY MEMORY` | no | ctFreqList | an accumulating LIST, not a value |  |
@@ -408,8 +410,6 @@ instinct one of the two is worth looking at.
 | `RADIO TWO WIDE CW FILTER` | no | ctBoolean | radio library -- CheckCommand is the transport for these, so they move with that track |  |
 | `RELAY CONTROL PORT` | no | ctPortLPT | port identity track |  |
 | `ROTATOR PORT` | no | ctOther |  |  |
-| `ROTATOR TYPE` | no | ctOther |  |  |
-| `SCP COUNTRY STRING` | no | ctString | a field of the SCP database object, read by bare name |  |
 | `SINGLE BAND SCORE` | yes | ctBand |  |  |
 | `STEREO CONTROL PORT` | no | ctPortLPT | port identity track |  |
 | `STEREO PIN HIGH` | no | ctBoolean | live session state -- a keystroke toggles it |  |

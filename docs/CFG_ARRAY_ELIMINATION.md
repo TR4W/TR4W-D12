@@ -1083,9 +1083,10 @@ and all three offer values -- which is the test a diagnostic has to pass.
 
 ### What is left, by WHY -- and only two of these are work
 
-**Counted from `uCFG.pas`, and they sum to the row count** -- 126 live rows by
-this count, against the lint's 127 (the lint's pattern also matches the
-record's own field declaration). Re-measure rather than quoting these:
+**Counted from `uCFG.pas`, and they sum to the row count** -- 123 live rows by
+this count, against the lint's 124 (the lint's pattern also matches the
+record's own field declaration). **THE ckList ENUM FAMILY IS GONE**: every
+row left is in one of the tracks below. Re-measure rather than quoting these:
 
 ```bash
 grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
@@ -1096,12 +1097,12 @@ grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
 | 56 | `RADIO ONE ...`, `RADIO TWO ...`, POLL RADIO ONE, POLL RADIO TWO | the radio library track owns them |
 | 21 | BAND, MODE, CONTEST, CONTEST NAME/TITLE, the six CATEGORY-*, the four multiplier rows, QSL MODE, QSO POINT METHOD, EXCHANGE RECEIVED, SINGLE BAND SCORE, INITIAL EXCHANGE and its cursor position | the contest `.cfg` importer; see 2i |
 | 17 | `WK ...` | the keyer library track owns them |
-| 2 | EXTERNAL LOGGER, ROTATOR TYPE | **the one question above** |
+
 | 9 | LPT1-3 BASE ADDRESS, PADDLE PORT, RELAY CONTROL PORT, STEREO CONTROL PORT, ROTATOR PORT, KEYER RADIO ONE/TWO OUTPUT PORT | stage B, which section 4 says is deliberately not started without review: it touches the profile applier and the radio open path. **LPT1-3 BASE ADDRESS is separable** -- an I/O base address is not a port NAME, so it is not part of the `SERIAL n` question -- but it sits on the parallel-port write path that keys CW, which is not code to move unattended |
 | 7 | CODE SPEED, CW ENABLE, CW TONE, FARNSWORTH ENABLE, FARNSWORTH SPEED, WEIGHT, STEREO PIN HIGH | **live session state**, changed by control codes mid-message and by keystrokes -- a streamed property would persist a mid-contest adjustment |
 | 6 | DVK PATH, DVK RECORDER, MP3 PATH, MP3 PLAYER, BACKUP LOG FILE NAME, INITIAL EXCHANGE FILENAME | `FileNameType` buffers read through `GetRealPath(PAnsiChar)`; this is the PChar audit, not a settings batch |
 | 3 | ADD DOMESTIC COUNTRY, FREQUENCY MEMORY, BAND MAP CUTOFF FREQUENCY | an accumulating LIST -- each config line ADDS, so the row is not a value |
-| 5 | CLEAR DUPE SHEET (an ACTION, not a setting), CONNECTION COMMAND (the cluster library owns it), MY CONTINENT (deliberately stays), SCP COUNTRY STRING (a `Str80` field read by BARE NAME inside its own methods -- POSSIBLE CALL MODE had the same shape and took two lines, so look before believing this one), MULT REPORT MINIMUM BANDS (below) | one reason each |
+| 4 | CLEAR DUPE SHEET (an ACTION, not a setting), CONNECTION COMMAND (the cluster library owns it), MY CONTINENT (deliberately stays), MULT REPORT MINIMUM BANDS (below) | one reason each |
 
 ### THE ENUM ROWS ARE MOSTLY DONE -- NY4I RULED, 2026-09-13
 
@@ -1175,20 +1176,55 @@ statement in config file"* once per stale line.
 handled nowhere, and logwind's per-minute loop over `Reminders^` cannot fire
 because the count is only ever zero. It was never wired up rather than removed.
 
-### The two enum rows still here are ONE question
+### A SUBSYSTEM KEEPS ITS TAXONOMY AND THE SETTING HOLDS A TOKEN
 
-| row | the enum |
+**NY4I, 2026-09-13**, on the external logger and the rotator:
+
+> *"Since the external logger and rotator controller are each a subsystem, then
+> I would expect it to work now where the main code would either just check
+> Settings.ExternalLogger.Enabled true, or it could just call the external
+> logger and if the factory is not set, it would simply return. But the
+> parameters are then strictly supporting the factory objects (just like the
+> radio works)."*
+
+So the enum does NOT move to `uSettingsModel`. The setting is a STRING token,
+exactly as a radio definition holds an opaque `RegistryId`:
+
+| setting | holds | the enum stays in |
+|---|---|---|
+| `ExternalLogger.LoggerType` | 'NONE', 'DXKEEPER', 'ACLOG', 'HRD' | `uExternalLoggerBase` -- it is what `CreateLogger` takes |
+| `Rotator.RotatorType` | 'NONE', 'DCU1', 'ORION', 'YAESU', 'ALFA SPID', 'PSTROTATOR' | `rotatorFactory/uRotatorRegistry`, moved there from logwind |
+
+**THE SUBSYSTEM PUBLISHES ITS OWN VOCABULARY** -- each registers its token
+table against its setting at initialization, so the settings model never learns
+what logger programs or rotators exist, and there is no second list.
+
+**AND THE CALLER STOPS NAMING TYPES.** Startup was
+`if elLogType <> lt_NoExternalLogger then TExternalLogger.Create(elLogType)`
+and is `StartExternalLoggerFromSettings`. An unknown token answers "none"
+rather than raising: a settings file from a later build naming a logger this
+one does not have should leave the feature off, not stop the program.
+
+**THE ROTATOR SEED GOT SIMPLER.** It read
+`id := string(RotatorTypeSA[ActiveRotatorType])` -- an enum turned back into
+the string the registry keys on, because the registry has always keyed on
+strings. There is nothing to translate now.
+
+### THREE "BLOCKED" CALLS WERE WRONG, AND THE RULE THAT CAME OUT OF IT
+
+**NY4I, 2026-09-13:** *"when you come to the conclusion that a row is blocked,
+you should validate it in a second way to ensure that is the case and it is
+really blocked."*
+
+| I wrote | the second check |
 |---|---|
-| EXTERNAL LOGGER | `ExternalLoggerType` is what `TExternalLogger.Create` TAKES, and the factory's `CreateLogger`, `LoggerTypeToString` and `IsLoggerSupported` all have it in their signatures |
-| ROTATOR TYPE | `ActiveRotatorType` has a SECOND WRITER -- `uRotatorOrion` assigns it at run time -- and the rotator factory branches on it |
+| the enum rows are blocked by a CIRCULAR REFERENCE | a cycle needs BOTH units to name each other in their INTERFACE. A probe compile took three minutes and passed |
+| ROTATOR TYPE has a SECOND WRITER in `uRotatorOrion` | that line is inside a BLOCK COMMENT describing the retired ORION PORT hook. So are all three "comparisons" in the rotator drivers. The only live reader was the legacy seed |
+| POSSIBLE CALL MODE / SCP COUNTRY STRING are fields of the SCP record read by bare name inside its own methods | accurate, and irrelevant: two reads and four reads respectively |
 
-**Both are a SUBSYSTEM'S OWN TAXONOMY that a setting selects from**, which is
-the boundary of the ruling rather than a case it obviously covers. Moving them
-would point three external-logger units and the rotator factory at
-`uSettingsModel` for their own parameter types. The radio factory has the same
-shape and solved it differently -- `InterfacedRadioType` stays in VC and
-`uRadioRegistry.RadioTypeToken` DERIVES the config spelling from the enum. That
-is probably the answer here too, and it is NY4I's call.
+**The second check must use a DIFFERENT method than the first.** A grep for an
+identifier, in a tree whose comments quote the code they replaced, answers a
+different question than the one being asked.
 
 ### The earlier correction, kept because the lesson is the point
 
