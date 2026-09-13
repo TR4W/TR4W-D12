@@ -1262,6 +1262,7 @@ uses
                         // in with it; an LCL form calls the LCL form.
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
+   uPasswordReveal,     // AttachPasswordReveal -- the eye beside a password
    VC;          // tLogLevels / tLogLevelsSA / logLevels, TR4W_TCI_DEBUG
 
 var
@@ -1447,6 +1448,13 @@ begin
    // stranded in mid-air on resize (NY4I, 2026-08-05).
    FTiming := TStopwatch.StartNew;
    inherited Create(AOwner);
+
+   (* THE EYE BESIDE EACH PASSWORD. After the .lfm has streamed, because
+     the toggle takes its size and position from the field it attaches
+     to -- see uPasswordReveal. *)
+   AttachPasswordReveal(edtClusterPassword);
+   AttachPasswordReveal(edtNetPassword);
+   AttachPasswordReveal(edtHamScorePass);
    LogPhase(FTiming, 'stream .lfm');
 
    // English lives in the .fmx; TranslateForm overrides only what a language

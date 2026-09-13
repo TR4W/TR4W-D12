@@ -275,7 +275,8 @@ uses
    uCAT,
    ComPortEnumerator,
    VC,
-   MainUnit;
+   MainUnit,
+   uPasswordReveal   (* AttachPasswordReveal *);
 
 { ---------------------------------------------------------------------------
   TDiscoverThread -- network radio discovery, off the UI thread.
@@ -501,6 +502,11 @@ begin
    // Width/Height: in FMX, Height includes the caption bar and borders, which
    // is how the OK and Cancel buttons went missing on NY4I's first look.
    inherited Create(AOwner);
+
+   (* THE EYE BESIDE THE NETWORK PASSWORD. After the .lfm has streamed,
+     because the toggle takes its size and position from the field it
+     attaches to -- see uPasswordReveal. *)
+   AttachPasswordReveal(edtPassword);
 
    // English lives in the .fmx; TranslateForm overrides only what a language
    // table supplies and leaves the designed text alone otherwise.  Today no

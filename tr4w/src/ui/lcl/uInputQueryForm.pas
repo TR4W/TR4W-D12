@@ -90,6 +90,7 @@ uses
   MainUnit,    // tLoadKeyboardLayout, logger
   uInputQuery, // IQresult, IQMaxInputLength -- still the caller's contract
   uLCLFormHelpers,
+  uPasswordReveal,   // AttachPasswordReveal / SyncPasswordReveal
   Log4D;
 
 var
@@ -149,6 +150,13 @@ begin
       begin
       edtValue.PasswordChar := #0;
       end;
+
+   (* THE EYE FOLLOWS THE MASKING, and this dialog is the reason the toggle
+     has a sync at all: the form is created once and reused, masking or not
+     per invocation, so the button has to be told rather than reading the
+     state once at construction. *)
+   AttachPasswordReveal(edtValue);
+   SyncPasswordReveal(edtValue);
 
    edtValue.Text := string(tInputDialogPreviousValue);
 
