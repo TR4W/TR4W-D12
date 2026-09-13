@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (238)
+## Settings that have moved (246)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -75,6 +75,7 @@ comes last, a word run together.
 | `BAND MAP MULTS ONLY` |  | global | `Settings.BandMap.MultsOnly` | boolean |  |
 | `BAND MAP SIZE` |  | global | `Settings.BandMap.Size` | TBandMapSize |  |
 | `BAND MAP SO2R DISPLAY` |  | global | `Settings.BandMap.So2rDisplay` | boolean |  |
+| `BAND MAP SPLIT MODE` |  | global | `Settings.BandMap.SplitMode` | BandMapSplitModeType |  |
 | `BEEP ENABLE` |  | global | `Settings.Operating.BeepEnable` | boolean |  |
 | `BEEP EVERY 10 QSOS` |  | global | `Settings.Log.BeepEvery10Qsos` | boolean |  |
 | `BOLD FONT` |  | global | `Settings.Font.Bold` | boolean |  |
@@ -104,8 +105,10 @@ comes last, a word run together.
 | `CW SPEED INCREMENT` |  | global | `Settings.Cw.SpeedIncrement` | TCwSpeedIncrement |  |
 | `DE ENABLE` |  | global | `Settings.Message.DeEnable` | boolean |  |
 | `DIGITAL MODE ENABLE` |  | **CONTEST** | `Settings.Contest.DigitalModeEnable` | boolean |  |
+| `DISTANCE MODE` |  | global | `Settings.Log.DistanceMode` | DistanceDisplayType |  |
 | `DIT DAH RATIO` |  | global | `Settings.Cw.DitDahRatio` | TCwDitDahRatio |  |
 | `DOMESTIC FILENAME` |  | **CONTEST** | `Settings.Contest.DomesticFilename` | string |  |
+| `DUPE CHECK SOUND` |  | global | `Settings.Operating.DupeCheckSound` | DupeCheckSoundType |  |
 | `DUPE SHEET AUTO RESET` |  | global | `Settings.DupeSheet.AutoReset` | boolean |  |
 | `DVK ENABLE` |  | global | `Settings.Dvk.Enable` | boolean |  |
 | `DVK LOCALIZED MESSAGES ENABLE` |  | global | `Settings.Dvk.LocalizedMessagesEnable` | boolean |  |
@@ -125,6 +128,7 @@ comes last, a word run together.
 | `HAMSCORE USERNAME` |  | global | `Settings.Hamscore.Username` | TCaseSensitiveText |  |
 | `HAND LOG MODE` |  | global | `Settings.Operating.HandLogMode` | boolean |  |
 | `HF BAND ENABLE` |  | **CONTEST** | `Settings.Bands.HfEnabled` | boolean |  |
+| `HOUR DISPLAY` |  | global | `Settings.MainWindow.HourDisplay` | HourDisplayType |  |
 | `IE SWITCH` |  | global | `Settings.Operating.IeSwitch` | boolean |  |
 | `IN BAND LOCKOUT` |  | global | `Settings.So2r.InBandLockout` | boolean |  |
 | `INCLUDE F-KEY NUMBER` |  | global | `Settings.Cw.IncludeFKeyNumber` | boolean |  |
@@ -220,6 +224,8 @@ comes last, a word run together.
 | `RADIO TCP SERVER PORT` |  | global | `Settings.Radio.TcpServerPort` | integer |  |
 | `RADIUS OF EARTH` |  | global | `Settings.GridMap.RadiusOfEarth` | double |  |
 | `RANDOM CQ MODE` |  | global | `Settings.Cq.RandomMode` | boolean |  |
+| `RATE DISPLAY` |  | global | `Settings.MainWindow.RateDisplay` | RateDisplayType |  |
+| `REMAINING MULT DISPLAY MODE` |  | global | `Settings.RemainingMults.DisplayMode` | RemainingMultDisplayModeType |  |
 | `REPEAT S&P CW EXCHANGE` | `REPEAT S&P EXCHANGE` | **CONTEST** | `Settings.Messages.RepeatSpExchangeCw` | string |  |
 | `REPEAT S&P SSB EXCHANGE` |  | **CONTEST** | `Settings.Messages.RepeatSpExchangeSsb` | string |  |
 | `REVERSE INITIAL EX` |  | global | `Settings.InitialExchange.Reverse` | boolean |  |
@@ -260,6 +266,7 @@ comes last, a word run together.
 | `SWAP PADDLES` |  | global | `Settings.Paddle.Swap` | boolean |  |
 | `SWAP RADIO RELAY SENSE` |  | global | `Settings.So2r.SwapRelaySense` | boolean |  |
 | `TELNET SERVER` |  | global | `Settings.Telnet.Server` | string |  |
+| `TEN MINUTE RULE` |  | global | `Settings.Operating.TenMinuteRule` | TenMinuteRuleType |  |
 | `TUNE ALT-D ENABLE` |  | global | `Settings.Operating.TuneAltDEnable` | boolean |  |
 | `TUNE WITH DITS` |  | global | `Settings.Cw.TuneWithDits` | boolean |  |
 | `TWO RADIO MODE` |  | global | `Settings.So2r.TwoRadioMode` | boolean |  |
@@ -268,6 +275,7 @@ comes last, a word run together.
 | `UPDATE RESTART FILE ENABLE` |  | global | `Settings.Log.UpdateRestartFile` | boolean |  |
 | `USE CONTROL PORT` |  | global | `Settings.Hardware.UseControlPort` | boolean |  |
 | `USE RECORDED SIGNS` |  | global | `Settings.Dvk.UseRecordedSigns` | boolean |  |
+| `USER INFO SHOWN` |  | global | `Settings.MainWindow.UserInfoShown` | UserInfoType |  |
 | `VHF BAND ENABLE` |  | **CONTEST** | `Settings.Bands.VhfEnabled` | boolean |  |
 | `WAIT FOR STRENGTH` |  | global | `Settings.So2r.WaitForStrength` | boolean |  |
 | `WAKE UP TIME OUT` |  | global | `Settings.Operating.WakeUpTimeOut` | TWakeUpTimeOut |  |
@@ -281,7 +289,7 @@ comes last, a word run together.
 | `WSJT-X SEND HIGHLIGHTS` |  | global | `Settings.Wsjtx.SendHighlights` | boolean |  |
 | `YCCC SO2R ENABLE` |  | global | `Settings.Yccc.So2rEnable` | boolean |  |
 
-## Settings still in the config array (137)
+## Settings still in the config array (129)
 
 Each of these still writes through a table of addresses. The **Why still
 here** column is the reason it has not moved; an empty one means nothing is
@@ -300,7 +308,6 @@ instinct one of the two is worth looking at.
 | `BACKUP LOG FILE NAME` | no | ctFileName | path type -- same ruling |  |
 | `BAND` | yes | ctBand |  |  |
 | `BAND MAP CUTOFF FREQUENCY` | no | ctFreqList | an accumulating LIST, not a value |  |
-| `BAND MAP SPLIT MODE` | no | ctOther |  |  |
 | `CATEGORY-ASSISTED` | yes | ctOther |  |  |
 | `CATEGORY-BAND` | yes | ctOther |  |  |
 | `CATEGORY-MODE` | yes | ctOther |  |  |
@@ -316,9 +323,7 @@ instinct one of the two is worth looking at.
 | `CW ENABLE` | no | ctBoolean | live session state -- control codes change it mid-message |  |
 | `CW TONE` | no | ctInteger | live session state -- changed by a control code |  |
 | `DEBUG LOG LEVEL` | no | ctOther |  |  |
-| `DISTANCE MODE` | no | ctOther |  |  |
 | `DOMESTIC MULTIPLIER` | no | ctMultiplier |  |  |
-| `DUPE CHECK SOUND` | no | ctOther |  |  |
 | `DVK PATH` | no | ctDirectory | path type -- what a path setting validates is undecided |  |
 | `DVK RECORDER` | no | ctFileName | path type -- same ruling |  |
 | `DX MULTIPLIER` | no | ctMultiplier |  |  |
@@ -327,7 +332,6 @@ instinct one of the two is worth looking at.
 | `FARNSWORTH ENABLE` | no | ctBoolean | live session state |  |
 | `FARNSWORTH SPEED` | no | ctInteger | live session state |  |
 | `FREQUENCY MEMORY` | no | ctFreqList | an accumulating LIST, not a value |  |
-| `HOUR DISPLAY` | no | ctOther |  |  |
 | `INITIAL EXCHANGE` | yes | ctOther |  |  |
 | `INITIAL EXCHANGE CURSOR POS` | yes | ctOther |  |  |
 | `INITIAL EXCHANGE FILENAME` | yes | ctFilename | path type -- same ruling |  |
@@ -402,9 +406,7 @@ instinct one of the two is worth looking at.
 | `RADIO TWO TYPE` | no | ctOther | radio library -- CheckCommand is the transport for these, so they move with that track |  |
 | `RADIO TWO USE HAMLIB` | no | ctBoolean | radio library -- CheckCommand is the transport for these, so they move with that track |  |
 | `RADIO TWO WIDE CW FILTER` | no | ctBoolean | radio library -- CheckCommand is the transport for these, so they move with that track |  |
-| `RATE DISPLAY` | no | ctOther |  |  |
 | `RELAY CONTROL PORT` | no | ctPortLPT | port identity track |  |
-| `REMAINING MULT DISPLAY MODE` | no | ctOther |  |  |
 | `REMINDER` | no | ctOther |  |  |
 | `ROTATOR PORT` | no | ctOther |  |  |
 | `ROTATOR TYPE` | no | ctOther |  |  |
@@ -412,8 +414,6 @@ instinct one of the two is worth looking at.
 | `SINGLE BAND SCORE` | yes | ctBand |  |  |
 | `STEREO CONTROL PORT` | no | ctPortLPT | port identity track |  |
 | `STEREO PIN HIGH` | no | ctBoolean | live session state -- a keystroke toggles it |  |
-| `TEN MINUTE RULE` | yes | ctOther |  |  |
-| `USER INFO SHOWN` | no | ctOther |  |  |
 | `WEIGHT` | no | ctReal | live session state |  |
 | `WK AUTOSPACE` | no | ctBoolean | keyer library -- same shape as the radio rows |  |
 | `WK CT SPACING` | no | ctBoolean | keyer library -- same shape as the radio rows |  |

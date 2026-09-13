@@ -1104,6 +1104,57 @@ grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
 | 3 | ADD DOMESTIC COUNTRY, FREQUENCY MEMORY, BAND MAP CUTOFF FREQUENCY | an accumulating LIST -- each config line ADDS, so the row is not a value |
 | 5 | CLEAR DUPE SHEET (an ACTION, not a setting), CONNECTION COMMAND (the cluster library owns it), MY CONTINENT (deliberately stays), SCP COUNTRY STRING (a `Str80` field read by BARE NAME inside its own methods), MULT REPORT MINIMUM BANDS (below) | one reason each |
 
+### THE ENUM ROWS ARE MOSTLY DONE -- NY4I RULED, 2026-09-13
+
+> *"If it is related to settings, regardless of where it is defined today, it
+> should now live in uSettings. That goes for VC.pas too."*
+
+**That inverts the dependency and removes the whole difficulty.** The type is
+declared in `uSettingsModel`; the TRDOS unit uses `uSettingsModel`, which most
+of them already did. Nothing new is dragged into the settings model -- it still
+depends on the RTL alone.
+
+**Eight went this way**, each taking its enum type AND its spelling table:
+
+| setting | type was in | now |
+|---|---|---|
+| RATE DISPLAY | logwind | `MainWindow.RateDisplay` |
+| HOUR DISPLAY | logwind | `MainWindow.HourDisplay` |
+| USER INFO SHOWN | logwind | `MainWindow.UserInfoShown` |
+| BAND MAP SPLIT MODE | logwind | `BandMap.SplitMode` |
+| TEN MINUTE RULE | logwind | `Operating.TenMinuteRule` |
+| DUPE CHECK SOUND | logstuff | `Operating.DupeCheckSound` |
+| DISTANCE MODE | loggrid | `Log.DistanceMode` |
+| REMAINING MULT DISPLAY MODE | logdom | `RemainingMults.DisplayMode` |
+
+**THE SPELLING TABLE TRAVELS WITH THE TYPE**, as `string` rather than
+`PAnsiChar`, and is registered against the property. The enum arms of
+`TrySetByCommand` and `TryGetByCommand` match it BY POSITION before falling
+back to `GetEnumValue` -- which is exactly what the `ckList` row did: find the
+text in a spelling table, write the table's index. A file says `QSO POINTS`
+where the enum member is `Points`, so RTTI alone answers -1 reading it and
+writes a word no TR4W has ever accepted back.
+
+**`Lint-SpellingTables` FOLLOWS A TABLE THAT MOVES**, and it had to be taught:
+it checks the tables `ListParamArray` points at, so five leaving showed up only
+as its FLOOR failing. It now also reads the tables registered by name in
+`uSettingsModel`. 39 tables, 685 spellings -- exactly what it checked before.
+
+**`loggrid` NOW EXPORTS NO STATE AT ALL.** Emptying a `type`, `const` or `var`
+section is a syntax error reported at the NEXT keyword, which cost three builds.
+
+### The five enum rows still here, and why each one
+
+| row | why |
+|---|---|
+| DEBUG LOG LEVEL | `tLogLevels` is in VC, and the spelling-to-enum translation is a DELIBERATE, documented, single-place mechanism spread over `uRadioConfigApply.ApplyLoggingSettings`, `uRadioConfigStore` (which stores the SPELLING on purpose), `uProgramMain`'s startup parse and a Preferences combo built straight from the array. Moving it means rethinking all five, for one row, in the code that sets up logging at startup |
+| EXTERNAL LOGGER | `ExternalLoggerType` is not only a setting's vocabulary -- it is what `TExternalLogger.Create` takes. Moving it would make the external-logger units depend on the settings model for their own type, which is the wrong direction |
+| ROTATOR TYPE | `ActiveRotatorType` has a SECOND WRITER: `uRotatorOrion` assigns it at run time. That is the rotator factory's own track |
+| POSSIBLE CALL MODE | `@CD.PossibleCallAction` is a field of the SCP database record, like SCP COUNTRY STRING |
+| REMINDER | **it is a vestige, not a setting.** There is no variable called Reminder anywhere, no reader, and its row is `ckNormal` with `crAddress: pointer(51)` -- a ListParamArray INDEX in a field that means an address. It writes nothing only because `ctOther` has no arm in the ckNormal dispatch. It is display-only in Ctrl-J and does nothing else. **Deleting it is NY4I's call** |
+
+### The earlier correction, kept because the lesson is the point
+
 ### The enum rows: CORRECTED. There is no cycle, and the cost is a dependency
 
 **An earlier version of this section said the batch was blocked by a circular
