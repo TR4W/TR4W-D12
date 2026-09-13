@@ -1083,10 +1083,9 @@ and all three offer values -- which is the test a diagnostic has to pass.
 
 ### What is left, by WHY -- and only two of these are work
 
-**Counted from `uCFG.pas`, and they sum to the row count** -- 137 live rows by
-this count the day it was written, against the lint's 138 (the lint's pattern
-also matches the record's own field declaration). Re-measure rather than
-quoting these:
+**Counted from `uCFG.pas`, and they sum to the row count** -- 126 live rows by
+this count, against the lint's 127 (the lint's pattern also matches the
+record's own field declaration). Re-measure rather than quoting these:
 
 ```bash
 grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
@@ -1097,12 +1096,12 @@ grep "^ (crCommand:" tr4w/src/uCFG.pas | sed "s/.*'\([^']*\)'.*/\1/"
 | 56 | `RADIO ONE ...`, `RADIO TWO ...`, POLL RADIO ONE, POLL RADIO TWO | the radio library track owns them |
 | 21 | BAND, MODE, CONTEST, CONTEST NAME/TITLE, the six CATEGORY-*, the four multiplier rows, QSL MODE, QSO POINT METHOD, EXCHANGE RECEIVED, SINGLE BAND SCORE, INITIAL EXCHANGE and its cursor position | the contest `.cfg` importer; see 2i |
 | 17 | `WK ...` | the keyer library track owns them |
-| 13 | the `ckList` enums -- RATE DISPLAY, DISTANCE MODE, HOUR DISPLAY, DUPE CHECK SOUND, EXTERNAL LOGGER, POSSIBLE CALL MODE, REMINDER, ROTATOR TYPE, TEN MINUTE RULE, USER INFO SHOWN, REMAINING MULT DISPLAY MODE, DEBUG LOG LEVEL, BAND MAP SPLIT MODE | **the spelling ruling below** |
+| 2 | EXTERNAL LOGGER, ROTATOR TYPE | **the one question above** |
 | 9 | LPT1-3 BASE ADDRESS, PADDLE PORT, RELAY CONTROL PORT, STEREO CONTROL PORT, ROTATOR PORT, KEYER RADIO ONE/TWO OUTPUT PORT | stage B, which section 4 says is deliberately not started without review: it touches the profile applier and the radio open path. **LPT1-3 BASE ADDRESS is separable** -- an I/O base address is not a port NAME, so it is not part of the `SERIAL n` question -- but it sits on the parallel-port write path that keys CW, which is not code to move unattended |
 | 7 | CODE SPEED, CW ENABLE, CW TONE, FARNSWORTH ENABLE, FARNSWORTH SPEED, WEIGHT, STEREO PIN HIGH | **live session state**, changed by control codes mid-message and by keystrokes -- a streamed property would persist a mid-contest adjustment |
 | 6 | DVK PATH, DVK RECORDER, MP3 PATH, MP3 PLAYER, BACKUP LOG FILE NAME, INITIAL EXCHANGE FILENAME | `FileNameType` buffers read through `GetRealPath(PAnsiChar)`; this is the PChar audit, not a settings batch |
 | 3 | ADD DOMESTIC COUNTRY, FREQUENCY MEMORY, BAND MAP CUTOFF FREQUENCY | an accumulating LIST -- each config line ADDS, so the row is not a value |
-| 5 | CLEAR DUPE SHEET (an ACTION, not a setting), CONNECTION COMMAND (the cluster library owns it), MY CONTINENT (deliberately stays), SCP COUNTRY STRING (a `Str80` field read by BARE NAME inside its own methods), MULT REPORT MINIMUM BANDS (below) | one reason each |
+| 5 | CLEAR DUPE SHEET (an ACTION, not a setting), CONNECTION COMMAND (the cluster library owns it), MY CONTINENT (deliberately stays), SCP COUNTRY STRING (a `Str80` field read by BARE NAME inside its own methods -- POSSIBLE CALL MODE had the same shape and took two lines, so look before believing this one), MULT REPORT MINIMUM BANDS (below) | one reason each |
 
 ### THE ENUM ROWS ARE MOSTLY DONE -- NY4I RULED, 2026-09-13
 
@@ -1114,7 +1113,7 @@ declared in `uSettingsModel`; the TRDOS unit uses `uSettingsModel`, which most
 of them already did. Nothing new is dragged into the settings model -- it still
 depends on the RTL alone.
 
-**Eight went this way**, each taking its enum type AND its spelling table:
+**Nine went this way**, each taking its enum type AND its spelling table:
 
 | setting | type was in | now |
 |---|---|---|
@@ -1126,6 +1125,8 @@ depends on the RTL alone.
 | DUPE CHECK SOUND | logstuff | `Operating.DupeCheckSound` |
 | DISTANCE MODE | loggrid | `Log.DistanceMode` |
 | REMAINING MULT DISPLAY MODE | logdom | `RemainingMults.DisplayMode` |
+| DEBUG LOG LEVEL | **VC.pas** | `Log.DebugLevel` |
+| POSSIBLE CALL MODE | logscp (a FIELD of the SCP record) | `Scp.PossibleCallMode` |
 
 **THE SPELLING TABLE TRAVELS WITH THE TYPE**, as `string` rather than
 `PAnsiChar`, and is registered against the property. The enum arms of
@@ -1143,15 +1144,51 @@ as its FLOOR failing. It now also reads the tables registered by name in
 **`loggrid` NOW EXPORTS NO STATE AT ALL.** Emptying a `type`, `const` or `var`
 section is a syntax error reported at the NEXT keyword, which cost three builds.
 
-### The five enum rows still here, and why each one
+### DEBUG LOG LEVEL is the one that paid for itself
 
-| row | why |
+Its own comment in `uRadioConfigApply` asked for this: *"the ini carries a
+SPELLING; tLogLevels is a Pascal enum; somewhere the two must meet, and the
+whole point is that it happens exactly once."* **It happened in three places**
+-- a hand-written loop in `ApplyLoggingSettings`, another in `uProgramMain`'s
+startup parse, and a third walk of the same array to fill the Preferences
+combo. All three ask the setting now.
+
+It is also the only row so far to move `CommandsProcArray` -- `crP: 13` went
+without an effects arm, because all three sites that assign the level already
+call `UpdateDebugLogLevel` themselves. The hook was a fourth caller, not the
+only one.
+
+### REMINDER was WITHDRAWN, not migrated -- NY4I, 2026-09-13
+
+There is no variable called Reminder anywhere, nothing reads it, and its row
+was `ckNormal` carrying `crAddress: pointer(51)` -- a `ListParamArray` INDEX in
+the field that means an address. **It wrote nothing only because `ctOther` has
+no arm in the ckNormal dispatch**, which is worth knowing before anyone reads
+that row and assumes a bug.
+
+The NAME is in `RETIRED_COMMANDS`, which is what that list is for: a config
+file still saying REMINDER loads inert instead of raising a modal *"invalid
+statement in config file"* once per stale line.
+
+**The FEATURE behind it is orphaned and that is a separate decision.**
+`ProcessReminder` has no caller, `menu_alt_reminder` is declared in VC and
+handled nowhere, and logwind's per-minute loop over `Reminders^` cannot fire
+because the count is only ever zero. It was never wired up rather than removed.
+
+### The two enum rows still here are ONE question
+
+| row | the enum |
 |---|---|
-| DEBUG LOG LEVEL | `tLogLevels` is in VC, and the spelling-to-enum translation is a DELIBERATE, documented, single-place mechanism spread over `uRadioConfigApply.ApplyLoggingSettings`, `uRadioConfigStore` (which stores the SPELLING on purpose), `uProgramMain`'s startup parse and a Preferences combo built straight from the array. Moving it means rethinking all five, for one row, in the code that sets up logging at startup |
-| EXTERNAL LOGGER | `ExternalLoggerType` is not only a setting's vocabulary -- it is what `TExternalLogger.Create` takes. Moving it would make the external-logger units depend on the settings model for their own type, which is the wrong direction |
-| ROTATOR TYPE | `ActiveRotatorType` has a SECOND WRITER: `uRotatorOrion` assigns it at run time. That is the rotator factory's own track |
-| POSSIBLE CALL MODE | `@CD.PossibleCallAction` is a field of the SCP database record, like SCP COUNTRY STRING |
-| REMINDER | **it is a vestige, not a setting.** There is no variable called Reminder anywhere, no reader, and its row is `ckNormal` with `crAddress: pointer(51)` -- a ListParamArray INDEX in a field that means an address. It writes nothing only because `ctOther` has no arm in the ckNormal dispatch. It is display-only in Ctrl-J and does nothing else. **Deleting it is NY4I's call** |
+| EXTERNAL LOGGER | `ExternalLoggerType` is what `TExternalLogger.Create` TAKES, and the factory's `CreateLogger`, `LoggerTypeToString` and `IsLoggerSupported` all have it in their signatures |
+| ROTATOR TYPE | `ActiveRotatorType` has a SECOND WRITER -- `uRotatorOrion` assigns it at run time -- and the rotator factory branches on it |
+
+**Both are a SUBSYSTEM'S OWN TAXONOMY that a setting selects from**, which is
+the boundary of the ruling rather than a case it obviously covers. Moving them
+would point three external-logger units and the rotator factory at
+`uSettingsModel` for their own parameter types. The radio factory has the same
+shape and solved it differently -- `InterfacedRadioType` stays in VC and
+`uRadioRegistry.RadioTypeToken` DERIVES the config spelling from the enum. That
+is probably the answer here too, and it is NY4I's call.
 
 ### The earlier correction, kept because the lesson is the point
 

@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (246)
+## Settings that have moved (248)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -104,6 +104,7 @@ comes last, a word run together.
 | `CW SPEED FROM DATABASE` |  | global | `Settings.Cw.SpeedFromDatabase` | boolean |  |
 | `CW SPEED INCREMENT` |  | global | `Settings.Cw.SpeedIncrement` | TCwSpeedIncrement |  |
 | `DE ENABLE` |  | global | `Settings.Message.DeEnable` | boolean |  |
+| `DEBUG LOG LEVEL` |  | global | `Settings.Log.DebugLevel` | tLogLevels |  |
 | `DIGITAL MODE ENABLE` |  | **CONTEST** | `Settings.Contest.DigitalModeEnable` | boolean |  |
 | `DISTANCE MODE` |  | global | `Settings.Log.DistanceMode` | DistanceDisplayType |  |
 | `DIT DAH RATIO` |  | global | `Settings.Cw.DitDahRatio` | TCwDitDahRatio |  |
@@ -188,6 +189,7 @@ comes last, a word run together.
 | `PARTIAL CALL ENABLE` |  | global | `Settings.CallWindow.PartialCallEnable` | boolean |  |
 | `POSSIBLE CALL ACCEPT KEY` |  | global | `Settings.PossibleCall.AcceptKey` | Char |  |
 | `POSSIBLE CALL LEFT KEY` |  | global | `Settings.PossibleCall.LeftKey` | Char |  |
+| `POSSIBLE CALL MODE` |  | global | `Settings.Scp.PossibleCallMode` | PossibleCallActionType |  |
 | `POSSIBLE CALL RIGHT KEY` |  | global | `Settings.PossibleCall.RightKey` | Char |  |
 | `POSSIBLE CALLS` |  | global | `Settings.PossibleCall.Enable` | boolean |  |
 | `PSTROTATOR IP ADDRESS` |  | global | `Settings.Rotator.IpAddress` | string |  |
@@ -289,7 +291,7 @@ comes last, a word run together.
 | `WSJT-X SEND HIGHLIGHTS` |  | global | `Settings.Wsjtx.SendHighlights` | boolean |  |
 | `YCCC SO2R ENABLE` |  | global | `Settings.Yccc.So2rEnable` | boolean |  |
 
-## Settings still in the config array (129)
+## Settings still in the config array (126)
 
 Each of these still writes through a table of addresses. The **Why still
 here** column is the reason it has not moved; an empty one means nothing is
@@ -322,7 +324,6 @@ instinct one of the two is worth looking at.
 | `CONTEST TITLE` | no | ctString | derived by FCONTEST at run time from the year and name |  |
 | `CW ENABLE` | no | ctBoolean | live session state -- control codes change it mid-message |  |
 | `CW TONE` | no | ctInteger | live session state -- changed by a control code |  |
-| `DEBUG LOG LEVEL` | no | ctOther |  |  |
 | `DOMESTIC MULTIPLIER` | no | ctMultiplier |  |  |
 | `DVK PATH` | no | ctDirectory | path type -- what a path setting validates is undecided |  |
 | `DVK RECORDER` | no | ctFileName | path type -- same ruling |  |
@@ -348,7 +349,6 @@ instinct one of the two is worth looking at.
 | `PADDLE PORT` | no | ctPortLPT | port identity track |  |
 | `POLL RADIO ONE` | no | ctBoolean | radio library -- a field of the radio record |  |
 | `POLL RADIO TWO` | no | ctBoolean | radio library -- a field of the radio record |  |
-| `POSSIBLE CALL MODE` | no | ctOther |  |  |
 | `PREFIX MULTIPLIER` | no | ctMultiplier |  |  |
 | `QSL MODE` | no | ctOther |  |  |
 | `QSO POINT METHOD` | no | ctOther |  |  |
@@ -407,7 +407,6 @@ instinct one of the two is worth looking at.
 | `RADIO TWO USE HAMLIB` | no | ctBoolean | radio library -- CheckCommand is the transport for these, so they move with that track |  |
 | `RADIO TWO WIDE CW FILTER` | no | ctBoolean | radio library -- CheckCommand is the transport for these, so they move with that track |  |
 | `RELAY CONTROL PORT` | no | ctPortLPT | port identity track |  |
-| `REMINDER` | no | ctOther |  |  |
 | `ROTATOR PORT` | no | ctOther |  |  |
 | `ROTATOR TYPE` | no | ctOther |  |  |
 | `SCP COUNTRY STRING` | no | ctString | a field of the SCP database object, read by bare name |  |
