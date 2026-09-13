@@ -212,7 +212,7 @@ begin
                          RS_AUDIO_MP3_PATH);
    RegisterStoredSetting('audio.mp3.player',                  'MP3 PLAYER',
                          RS_AUDIO_MP3_PLAYER);
-   RegisterStoredSetting('audio.dvk.enable',                  'DVK ENABLE',
+   RegisterModelSetting( 'audio.dvk.enable',                  'DVK ENABLE',
                          RS_AUDIO_DVK_ENABLE);
    RegisterModelSetting( 'audio.dvk.localizedMessages',       'DVK LOCALIZED MESSAGES ENABLE',
                          RS_AUDIO_DVK_LOCALIZEDMESSAGES);

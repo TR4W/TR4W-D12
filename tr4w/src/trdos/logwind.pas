@@ -1417,6 +1417,18 @@ procedure DisplayCodeSpeed {(WPM: integer; SendingEnabled: boolean; DVPEnabled: 
 var
   tPChar                                : PAnsiChar;
 begin
+  (* THE MAIN WINDOW MAY NOT EXIST. This is a settings effect now -- Dvk.Enable
+    raises the change and uSettingsEffects calls here -- and a setting can be
+    applied before any window is created. The same guard, for the same reason,
+    as DisplayInsertMode's.
+
+    ActiveRadioPtr IS ASKED SEPARATELY, below, because it is nil at a
+    different time: the radios are built after the window. *)
+  if TR4WMainForm = nil then
+     begin
+     Exit;
+     end;
+
   DisplayedCodeSpeed := CodeSpeed;
   if ActiveMode = CW then
      begin
@@ -1435,12 +1447,15 @@ begin
         tPChar := '%u NO CW';
         end;
      TR4WMainForm.pnlCodeSpeed.Caption := SysUtils.Format(AnsiString(tPChar), [CodeSpeed]);
-     ActiveRadioPtr.SpeedMemory := CodeSpeed;
+     if ActiveRadioPtr <> nil then
+        begin
+        ActiveRadioPtr.SpeedMemory := CodeSpeed;
+        end;
      end;
 
   if ActiveMode in [Phone, FM] then
      begin
-     if Config.DVKEnable then
+     if Settings.Dvk.Enable then
         begin
         if DVPOn then
            begin

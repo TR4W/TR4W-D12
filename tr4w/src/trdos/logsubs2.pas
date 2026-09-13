@@ -823,7 +823,7 @@ begin
      begin
      SendScoreToUDP;
      end;
-  if Config.DVKEnable then
+  if Settings.Dvk.Enable then
      begin
      DVPUnInit;
      end;
@@ -1130,7 +1130,7 @@ begin
             {    Wait (20); {KK1L: 6.71}
              {UNTIL NOT (DVPMessagePlaying OR DVKMessagePlaying); {KK1L: 6.71 should start timer at END of message}
              {KK1L: 6.72 Replaced above with this}
-         if Config.DVKEnable then
+         if Settings.Dvk.Enable then
             begin
             repeat
               while TempString <> '' do
@@ -1141,7 +1141,7 @@ begin
                  end;
               if AutoCQLoopKeyCheck = EscapeKey then
                  begin
-                 if Config.DVKEnable and DVPMessagePlaying then {KK1L: 6.71b Kill DVP}
+                 if Settings.Dvk.Enable and DVPMessagePlaying then {KK1L: 6.71b Kill DVP}
                     begin
                     TimeOut := 0;
                     DVPStopPlayback;

@@ -2100,7 +2100,7 @@ begin
 
   else
      begin
-     if Config.DVKEnable and Settings.Message.Enable and not BeSilent then
+     if Settings.Dvk.Enable and Settings.Message.Enable and not BeSilent then
         begin
         SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
         end;
@@ -3760,17 +3760,17 @@ var
   PreviousBeSilent: boolean;
 begin
   PeviousCWEnable := Config.CWEnable;
-  PeviousDVPEnable := Config.DVKEnable;
+  PeviousDVPEnable := Settings.Dvk.Enable;
   PreviousBeSilent := BeSilent;
 
   Config.CWEnable := False;
-  Config.DVKEnable := False;
+  Settings.Dvk.Enable := False;
   BeSilent := True;
 
   ProcessReturn;
 
   Config.CWEnable := PeviousCWEnable;
-  Config.DVKEnable := PeviousDVPEnable;
+  Settings.Dvk.Enable := PeviousDVPEnable;
   BeSilent := PreviousBeSilent;
 end;
 

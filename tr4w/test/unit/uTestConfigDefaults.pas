@@ -276,7 +276,7 @@ begin
    // literal length that no longer matches MAX_PATH.
    BeginTest('the audio defaults, and the path fields are real MAX_PATH buffers');
 
-   CheckFalse(Config.DVKEnable,                  'DVKEnable was False');
+   CheckFalse(Settings.Dvk.Enable,                  'Dvk.Enable was False');
    CheckFalse(Settings.Dvk.LocalizedMessagesEnable, 'LocalizedMessagesEnable was False');
    CheckFalse(Settings.Dvk.UseRecordedSigns,           'UseRecordedSigns was False');
    CheckFalse(Settings.Mp3.RecorderEnable,          'MP3RecorderEnable was False');

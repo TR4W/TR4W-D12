@@ -64,7 +64,7 @@ var
   FileName                              : ShortString;
   QSONumber                             : integer;
 begin
-  if (not Config.DVKEnable) or (not CWEnabled) then Exit;
+  if (not Settings.Dvk.Enable) or (not CWEnabled) then Exit;
 //  if not DVPEnabled then Exit;
 
   while SendString <> '' do

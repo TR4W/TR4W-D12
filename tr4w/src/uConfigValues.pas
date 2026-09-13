@@ -181,7 +181,6 @@ type
         from the declarations being replaced. }
       MP3Path: FileNameType;
       MP3Player: FileNameType;
-      DVKEnable: boolean;
       DVKPath: FileNameType;
       DVKRecorder: FileNameType;
    end;
@@ -215,7 +214,6 @@ var
         behaves exactly as it did before. }
       MP3Path: '';
       MP3Player: '';
-      DVKEnable: False;
       DVKPath: '';
       DVKRecorder: ''
    );

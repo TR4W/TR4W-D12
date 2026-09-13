@@ -138,7 +138,7 @@ begin // 1
      begin
      Exit;
      end;
-  if (ActiveMode in [Phone, FM]) and (Config.DVKEnable = False) then
+  if (ActiveMode in [Phone, FM]) and (Settings.Dvk.Enable = False) then
      begin
      goto DontCheckPTT;
      end;
@@ -229,7 +229,7 @@ begin // 1
   case ActiveMode of
     FM, Phone:
       begin
-        if Config.DVKEnable then
+        if Settings.Dvk.Enable then
            begin
            SendCrypticDVPString(Message)
            end
@@ -792,7 +792,7 @@ begin
                begin
                SendStringAndStop(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' KK '))
                end
-            else if Config.DVKEnable then
+            else if Settings.Dvk.Enable then
                begin
                SendCrypticMessage('MYCALL.WAV');
                end
@@ -810,7 +810,7 @@ begin
             //                      Radio
 
             //KK1L: 6.71 Added DoingDVK so DVKDelay is used too!
-            if Config.DVKEnable or (ActiveMode = CW) or (ActiveDVKPort <> NoPort) then
+            if Settings.Dvk.Enable or (ActiveMode = CW) or (ActiveDVKPort <> NoPort) then
                begin
 
                //Now launch a CQ on the "inactive" rig (which was
@@ -827,7 +827,7 @@ begin
 
                 //                            IF DVPEnable AND (ActiveMode = Phone) AND DVPActive THEN
                 //                            KK1L: 6.73 Need to check mode of the inactive radio!!
-                if Config.DVKEnable and (InActiveRadioPtr.ModeMemory = Phone) and
+                if Settings.Dvk.Enable and (InActiveRadioPtr.ModeMemory = Phone) and
                   DVPActive then
                    begin
                    //                TimeOut := 0;
@@ -866,7 +866,7 @@ begin
                end
             else
                begin
-               if Config.DVKEnable and DVPMessagePlaying then
+               if Settings.Dvk.Enable and DVPMessagePlaying then
                   begin
                   TimeOut := 0;
 
@@ -878,7 +878,7 @@ begin
                   until (not DVPMessagePlaying) or (TimeOut > 50);
                   end;
 
-               if Config.DVKEnable then
+               if Settings.Dvk.Enable then
                   begin
                   SendCrypticMessage('MYCALL.WAV');
 
@@ -897,7 +897,7 @@ begin
                end;
 
             //KK1L: 6.71 Added DoingDVK so DVKDelay is used too!
-            if (ActiveMode = CW) or Config.DVKEnable or (ActiveDVKPort <> NoPort) then
+            if (ActiveMode = CW) or Settings.Dvk.Enable or (ActiveDVKPort <> NoPort) then
                begin
 
                if (GetCQMemoryString(InActiveRadioPtr.ModeMemory, AltF3) <> '')
@@ -997,7 +997,7 @@ begin
             SendCrypticMessage(GetCQMemoryString(ActiveMode, F1));
             end;
 
-         if Config.DVKEnable and (ActiveMode = Phone) and DVPActive then
+         if Settings.Dvk.Enable and (ActiveMode = Phone) and DVPActive then
             begin
             //          TimeOut := 0;
 

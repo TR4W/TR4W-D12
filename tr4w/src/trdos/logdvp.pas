@@ -59,7 +59,7 @@ utils_file,
      DVPSetUp, and NOTHING CALLS DVPInit.  So DVPCommand, the record/listen
      paths and the gain controls are unreachable in this build.
 
-   * DVK WAV PLAYBACK -- PlayWAVFile, driven by Config.DVKEnable.  THIS is what
+   * DVK WAV PLAYBACK -- PlayWAVFile, driven by Settings.Dvk.Enable.  THIS is what
      an operator hears when a function key sends voice, and it rests on exactly
      two multimedia calls: sndPlaySoundA to start the file, and timeSetEvent to
      signal tDVP_Event when its duration is up so the thread can drop PTT.

@@ -1855,27 +1855,39 @@ type
    (*
      THE DVK -- the voice keyer that plays recorded messages.
 
-     TWO OF ITS FIVE COMMANDS, and the other three are named here so the gap
-     is deliberate rather than looking like an oversight:
+     THREE OF ITS FIVE COMMANDS. DVK PATH and DVK RECORDER are still out,
+     and the gap is deliberate: they are ctDirectory and ctFileName, which
+     CheckCommand treats specially, and their readers take them as PAnsiChar
+     through GetRealPath. Moving them is the PChar audit CLAUDE.md already
+     owes, not a settings batch.
 
-       DVK ENABLE carries crP:7, the code-speed redraw, and honouring that
-       from a setter means calling into LOGWIND. uSettingsEffects' own header
-       forbids assuming a window exists -- config load happens before any
-       window is created -- so that one wants a seam of the kind uBandMapView
-       provides, not a direct call.
-
-       DVK PATH and DVK RECORDER are ctDirectory and ctFileName, which
-       CheckCommand treats specially. Moving them means deciding what a path
-       setting validates, which is a question and not a migration.
+     DVK ENABLE WAS HELD BACK FOR A REASON THAT NO LONGER HOLDS, and the
+     note that stood here said so: its crP:7 is the code-speed redraw, and
+     honouring that from a setter means calling into LOGWIND, which
+     uSettingsEffects may not assume has a window. The precedent arrived
+     with INSERT MODE -- DisplayInsertMode asks `TR4WMainForm = nil` and
+     returns, for exactly this reason. DisplayCodeSpeed does the same now.
    *)
    TDvkSettings = class(TSettingsGroup)
    private
+      FEnable: boolean;
       FLocalizedMessagesEnable: boolean;
       FUseRecordedSigns: boolean;
       FMissingCallsignsFileEnable: boolean;
+      procedure SetEnable(aValue: boolean);
    public
       constructor Create;
    published
+      (*
+        Was Config.DVKEnable. DVK ENABLE, which derives exactly.
+
+        THE SETTER IS WHY THIS MIGRATED AT ALL. The code-speed panel shows
+        'DVK ON', 'DVK OFF' or 'DVK Dis.' in phone mode, and until now only
+        a config line repainted it -- LogCW's Alt-D toggle flipped the
+        global directly and the panel kept whatever it last said. One
+        spelling of the rule, so the two cannot disagree.
+      *)
+      property Enable: boolean read FEnable write SetEnable;
       (* Was Config.DVKLocalizedMessagesEnable. DVK LOCALIZED MESSAGES ENABLE,
         which derives exactly. *)
       property LocalizedMessagesEnable: boolean
@@ -2289,7 +2301,7 @@ type
 
      MESSAGE ENABLE IS THE GATE FOR ALL OF THEM, CW and voice alike, which
      is why this is its own group rather than part of TCwSettings: MainUnit
-     tests `Config.DVKEnable and MessageEnable` in the same breath.
+     tests `Settings.Dvk.Enable and Settings.Message.Enable` in one breath.
 
      THE OTHER THREE ARE ALIASED, and all three for the same historical
      reason -- the names predate any grouping. DE ENABLE decides whether a
@@ -3466,10 +3478,16 @@ begin
    FMulticastGroup      := '';
 end;
 
+procedure TDvkSettings.SetEnable(aValue: boolean);
+begin
+   SetBool(FEnable, aValue, 'Enable');
+end;
+
 constructor TDvkSettings.Create;
 begin
    inherited Create;
    // The values uConfigValues' initialiser carried.
+   FEnable                  := False;
    FLocalizedMessagesEnable := False;
    FUseRecordedSigns        := False;
    FMissingCallsignsFileEnable := False;

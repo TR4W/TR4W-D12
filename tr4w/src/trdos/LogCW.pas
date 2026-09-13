@@ -1324,10 +1324,10 @@ begin
              TempString                                      := LineInput('Msg = ',
                GetCQMemoryString(ActiveMode, FunctionKey), {KK1L: 6.73 Added mode}
                True,
-               (ActiveMode = Phone) and (Config.DVKEnable or (ActiveDVKPort <> NoPort)));
+               (ActiveMode = Phone) and (Settings.Dvk.Enable or (ActiveDVKPort <> NoPort)));
 
              if TempString[1] = NullKey then
-               if Config.DVKEnable then
+               if Settings.Dvk.Enable then
                   begin
                   //                case TempString[2] of
                              {KK1L: 6.73 Added mode}
@@ -1434,10 +1434,10 @@ begin
                  {KK1L: 6.73 Added mode to GetExMemoryString}
                GetEXMemoryString(ActiveMode, FunctionKey),
                True,
-               (ActiveMode = Phone) and (Config.DVKEnable or (ActiveDVKPort <> NoPort)));
+               (ActiveMode = Phone) and (Settings.Dvk.Enable or (ActiveDVKPort <> NoPort)));
 
              if TempString[1] = NullKey then
-               if Config.DVKEnable then
+               if Settings.Dvk.Enable then
                   begin
                   //                case TempString[2] of
                              {KK1L: 6.73 Added mode to GetExMemoryString}
@@ -1529,7 +1529,7 @@ begin
                      True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         {                      case TempString[2] of
                                                   AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.CallOkNowSsb), False);
@@ -1574,7 +1574,7 @@ begin
                      True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.CqExchangeSsb), False);
@@ -1620,7 +1620,7 @@ begin
                      True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.CqExchangeSsbNameKnown), False);
@@ -1664,7 +1664,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.QslSsb), False);
@@ -1708,7 +1708,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.QsoBeforeSsb), False);
@@ -1752,7 +1752,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.QuickQslSsb), False);
@@ -1796,7 +1796,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.RepeatSpExchangeSsb), False);
@@ -1840,7 +1840,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(UTF8Encode(Settings.Messages.SpExchangeSsb), False);
@@ -1884,7 +1884,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if Config.DVKEnable then
+                     if Settings.Dvk.Enable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(TailEndPhoneMessage, False);
@@ -2498,7 +2498,7 @@ begin
       end
    else
       begin
-      if Config.DVKEnable then
+      if Settings.Dvk.Enable then
          begin
          Escape_proc;
          if DisplayPrompt then
@@ -2510,7 +2510,10 @@ begin
          begin
          SetTextInQuickCommandWindow('');
          end;
-      InvertBoolean(Config.DVKEnable);
+      (* THROUGH THE PROPERTY, so the code-speed panel follows. InvertBoolean
+        takes a var parameter and a property cannot be passed to one -- which
+        is the whole reason this toggle used to leave the panel stale. *)
+      Settings.Dvk.Enable := not Settings.Dvk.Enable;
       DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
       SetSpeed(CodeSpeed);
       end;

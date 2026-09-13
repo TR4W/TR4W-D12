@@ -92,7 +92,8 @@ uses
    FContest,       // RecalculateMyCountryContinentAndZoneNew
    LogWind,        (* Settings.My.Call -- the callsign the derivation starts
                      from; DispalayLogGridLines; DisplayInsertMode *)
-                   // and DisplayInsertMode, the INS/OVR panel
+                   // DisplayInsertMode, the INS/OVR panel, and
+                   // DisplayCodeSpeed, which is also the DVK's state panel
    uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
    uNet,           // SetComputerName -- announce the name to the other position
@@ -191,6 +192,10 @@ const
      for the next QSO. *)
    AUTO_QSO_NUMBER_DECREMENT = 'Operating.AutoQsoNumberDecrement';
 
+   (* The code-speed panel doubles as the DVK's state in phone mode --
+     'DVK ON', 'DVK OFF', or 'DVK Dis.' when the keyer is switched off. *)
+   DVK_ENABLE = 'Dvk.Enable';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -237,6 +242,15 @@ begin
    if UnicodeSameText(aPath, INSERT_MODE) then
       begin
       DisplayInsertMode;
+      end;
+
+   if UnicodeSameText(aPath, DVK_ENABLE) then
+      begin
+      (* This was CommandsProcArray[7], and the panel it repaints is the one
+        that shows the code speed on CW and the DVK's state on phone. The
+        routine guards on the main window itself, the way DisplayInsertMode
+        does -- a setting can be applied before any window exists. *)
+      DisplayCodeSpeed;
       end;
 
    if UnicodeSameText(aPath, COMPUTER_NAME) then

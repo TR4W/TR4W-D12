@@ -83,7 +83,8 @@ uses
   (* Windows: named, and used nowhere in this unit (2026-09-08). *)
   VC,             // RC_SENDINGCW, TC_SENDINGSSBWAVFILENAME, ControlAMode
   Tree,           // RemoveFirstString, GetRidOfPrecedingSpaces
-  uConfigValues,  // Config.CWTone, Config.DVKEnable
+  uConfigValues,  // Config.CWTone
+  uSettingsModel, // Settings.Dvk.Enable
   LogCW,          // AddStringToBuffer, tAutoSendMode, CWStillBeingSent
   LogSend,        // SendCrypticDVPString
   LogWind,
@@ -240,7 +241,7 @@ begin
       Exit;
       end;
 
-   if not Config.DVKEnable then
+   if not Settings.Dvk.Enable then
       begin
       Exit;
       end;
