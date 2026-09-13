@@ -47,6 +47,7 @@ type
       procedure TestIsProtectedTellsTheTwoApart;
       procedure TestARefusedStoreIsReportedNotSilent;
       procedure TestTheValueIsNeverInTheNotice;
+      procedure TestAnOverlongKeyIsBounded;
    public
       procedure RunAllTests; override;
    end;
@@ -389,6 +390,50 @@ begin
    end;
 end;
 
+procedure TKeychainTests.TestAnOverlongKeyIsBounded;
+var
+   longKey: string;
+   stored: string;
+   back: string;
+begin
+   (*
+     A DEFECT IN THE RUNTIME LIBRARY, GUARDED HERE.
+
+     FPC 3.2.2's HMACSHA1 pads two working buffers to the SHA-1 block size of
+     64 bytes and then runs its mixing loop Length(Key) times, so a longer key
+     writes past the end of both -- heap corruption, with nothing raised. The
+     first version of this unit generated a 128-character key and hit it.
+
+     WHAT MADE IT EXPENSIVE IS WORTH REMEMBERING. The damage surfaced nowhere
+     near its cause: the call returned, the value was right, and the program
+     died later inside the JSON streamer, which sent a whole investigation to
+     the wrong unit. It was invisible until a probe was built with heap
+     checking on.
+
+     SO THE BOUND IS TESTED, NOT TRUSTED, and it is tested through a key that
+     is too long RATHER than by inspecting the generator -- because the key
+     can also come from a FILE that an older build wrote, which no amount of
+     care in the generator would cover.
+   *)
+   BeginTest('a key longer than the hash block size does not corrupt anything');
+
+   longKey := StringOfChar('K', 200);
+   UseKey(longKey);
+
+   stored := ProtectSecret(NAME, 'Hunter2');
+   CheckTrue(IsProtectedSecret(stored), 'it still protects');
+   CheckTrue(UnprotectSecret(NAME, stored, back), 'and reads back');
+   CheckEquals('Hunter2', back, 'unchanged');
+
+   (* And the round trip still REFUSES a foreign key, so the bound has not
+     quietly turned every long key into the same one. *)
+   UseKey(StringOfChar('Z', 200));
+   CheckFalse(UnprotectSecret(NAME, stored, back),
+              'two different long keys are still different keys');
+
+   UseKey(KEY_A);
+end;
+
 procedure TKeychainTests.RunAllTests;
 begin
    TestRoundTrip;
@@ -405,6 +450,7 @@ begin
    TestIsProtectedTellsTheTwoApart;
    TestARefusedStoreIsReportedNotSilent;
    TestTheValueIsNeverInTheNotice;
+   TestAnOverlongKeyIsBounded;
 end;
 
 end.

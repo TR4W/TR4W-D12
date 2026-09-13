@@ -115,6 +115,29 @@ const
    KEYCHAIN_SCHEME_PLAIN = 'plain';
    KEYCHAIN_SCHEME_LOCALFILE = 'tr4w1';
 
+   (*
+     THE LONGEST KEY THIS MAY HAND TO THE RUNTIME LIBRARY, AND IT IS A BUG
+     BARRIER RATHER THAN A DESIGN CHOICE.
+
+     FPC 3.2.2's HMACSHA1 CORRUPTS THE HEAP FOR A KEY LONGER THAN 64 BYTES.
+     Measured, then read in the source (packages/hash/src/hmac.pp,
+     HMACSHA1Digest): it pads two working buffers to the SHA-1 block size of
+     64 bytes, then runs its mixing loop Length(AKey) times -- so a longer
+     key writes past the end of both. A 128-byte key overran two blocks by 64
+     bytes each.
+
+     IT COST MOST OF A SESSION TO FIND, because the damage surfaces nowhere
+     near its cause: the call returns, the value is correct, and the program
+     dies later in unrelated code -- inside the JSON streamer, as it
+     happened, which sent the whole investigation to the wrong unit. It was
+     invisible until the probe was built with -gh.
+
+     Blowfish takes at most 56 key bytes anyway (TBlowFishKey is
+     array[0..55]), so nothing above that ever contributed to the cipher
+     either. Both limits are respected by staying at 56.
+   *)
+   KEYCHAIN_MAX_KEY_BYTES = 56;
+
 type
    (*
      WHAT HAPPENED, RATHER THAN WHETHER IT WORKED.
@@ -600,17 +623,20 @@ end;
 
 (* A PRINTABLE KEY, MADE FROM GUIDs.
 
-  SysUtils.CreateGUID is the most random thing the RTL offers on every
-  target this program builds for, and four of them is far more material than
-  Blowfish's key schedule consumes. This is not a cryptographic RNG and the
-  scheme's honest description above does not claim it is. *)
+  SysUtils.CreateGUID is the most random thing the RTL offers on every target
+  this program builds for. Two of them give 64 hex characters, of which the
+  first 56 are kept -- see KEYCHAIN_MAX_KEY_BYTES for why the length is a
+  hard limit and not a preference.
+
+  This is not a cryptographic random number generator and the scheme's
+  honest description above does not claim it is. *)
 function NewKeyMaterial: string;
 var
    g: TGUID;
    i: integer;
 begin
    Result := '';
-   for i := 1 to 4 do
+   for i := 1 to 2 do
       begin
       CreateGUID(g);
       Result := Result + GUIDToString(g);
@@ -618,6 +644,7 @@ begin
    Result := StringReplace(Result, '{', '', [rfReplaceAll]);
    Result := StringReplace(Result, '}', '', [rfReplaceAll]);
    Result := StringReplace(Result, '-', '', [rfReplaceAll]);
+   Result := Copy(Result, 1, KEYCHAIN_MAX_KEY_BYTES);
 end;
 
 constructor TLocalFileBackend.Create;
@@ -674,12 +701,23 @@ end;
 function MacOf(const aKey, aPlain: string): string;
 var
    digest: AnsiString;
+   safeKey: AnsiString;
 begin
+   (* THE KEY IS BOUNDED HERE AND NOT ONLY WHERE IT IS GENERATED, because a
+     key FILE written by an earlier build can be longer, and handing that to
+     HMACSHA1 corrupts the heap -- see KEYCHAIN_MAX_KEY_BYTES. A bound that
+     only holds for keys this build made is not a bound. *)
+   safeKey := AnsiString(aKey);
+   if Length(safeKey) > KEYCHAIN_MAX_KEY_BYTES then
+      begin
+      SetLength(safeKey, KEYCHAIN_MAX_KEY_BYTES);
+      end;
+
    (* BOTH ARGUMENTS ARE BYTES TO HMAC, so they are narrowed EXPLICITLY and
      the plaintext goes through UTF-8 first -- a password with a non-ASCII
      character must hash the same on every machine, which an implicit
      conversion through the local codepage would not guarantee. *)
-   digest := HMACSHA1(AnsiString(aKey), UTF8Encode(aPlain));
+   digest := HMACSHA1(safeKey, UTF8Encode(aPlain));
    Result := string(Copy(digest, 1, 16));
 end;
 
@@ -703,6 +741,7 @@ begin
          Result := ksUnavailable;
          Exit;
          end;
+      key := Copy(key, 1, KEYCHAIN_MAX_KEY_BYTES);
 
       ms := TBytesStream.Create(nil);
       try
@@ -787,6 +826,7 @@ begin
          Result := ksUnavailable;
          Exit;
          end;
+      key := Copy(key, 1, KEYCHAIN_MAX_KEY_BYTES);
 
       raw := DecodeStringBase64(AnsiString(data));
       bytes := RawToBytes(raw);
