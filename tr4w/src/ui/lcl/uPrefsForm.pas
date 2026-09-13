@@ -5257,6 +5257,7 @@ procedure TPrefsForm.FillFromAllowedValues(const aCombo: TComboBox;
 var
    v: string;
    current: string;
+   values: TArray<string>;
 begin
    // Filled from CFGCA's own allow-list, never typed into the designer -- a
    // populated combo bakes itself into the .fmx resource, so a hand-entered
@@ -5264,10 +5265,24 @@ begin
    // from the values the program actually accepts.
    current := CommandText(aCommand);
 
+   values := CFGCommandAllowedValues(aCommand);
+
+   (* THE SAME GUARD THE BOUND PATH HAS, for the same reason: a drop-down
+     with nothing in it is always a defect and nothing else can see it. This
+     is the HAND-WIRED path, which asks by command name and so goes on
+     working when a setting leaves CFGCA -- but only because uCFG falls
+     through to the settings model, and that fall-through is exactly the
+     kind of thing that gets removed by someone tidying up. *)
+   if Length(values) = 0 then
+      begin
+      logger.Error('[Preferences] %s fills a drop-down and offers no values '
+                   + '-- the control will be empty', [aCommand]);
+      end;
+
    aCombo.Items.BeginUpdate;
    try
       ClearComboItems(aCombo);
-      for v in CFGCommandAllowedValues(aCommand) do
+      for v in values do
          begin
          aCombo.Items.Add(v);
          end;

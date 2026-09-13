@@ -178,6 +178,26 @@ begin
       // permanent second copy that keeps working while it drifts from what the
       // setting will actually accept.
       allowed := s.AllowedValues;
+
+      (*
+        A COMBO WITH NOTHING IN IT IS ALWAYS A DEFECT, AND IT IS SILENT.
+
+        Nothing else can see it: it is not a compile error, no lint reads a
+        designer binding, and the golden corpus halts before any window
+        exists. It has happened -- three combos emptied the moment their
+        settings left CFGCA, because the migrated form did not yet answer
+        AllowedValues, and the build stayed clean for two commits.
+
+        A TEXT BOX bound to a setting with no fixed list is correct and says
+        nothing. A COMBO bound to one is a control the operator cannot use,
+        so it says so where somebody will read it.
+      *)
+      if Length(allowed) = 0 then
+         begin
+         logger.Error('[SettingBinding] %s is bound to a drop-down and offers '
+                      + 'no values -- the control will be empty', [FKey]);
+         end;
+
       // BeginUpdate/EndUpdate live on the ITEMS in the LCL, not on the combo:
       // FMX's TComboBox is a list control that owns its items, the LCL's wraps
       // a TStrings.  Same guarantee -- one repaint, not one per item.
