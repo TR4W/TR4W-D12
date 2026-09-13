@@ -2419,11 +2419,26 @@ type
    *)
    TRotatorSettings = class(TSettingsGroup)
    private
+      FRotatorType: string;
       FIpAddress: string;
       FUdpPort: TRotatorUdpPort;
    public
       constructor Create;
    published
+      (*
+        WHICH ROTATOR, AS A TOKEN -- 'NONE', 'DCU1', 'ORION', 'YAESU',
+        'ALFA SPID', 'PSTROTATOR'. Was the global ActiveRotatorType.
+
+        A STRING, AND THE ENUM STAYS WITH THE SUBSYSTEM, for the reason
+        ExternalLogger.LoggerType is a string: the rotator is a subsystem and
+        its taxonomy supports the factory, not the settings model. The
+        rotator registry already keyed its drivers by string id, so the
+        legacy seed wanted this spelling anyway and used to derive it from
+        the enum.
+
+        ROTATOR TYPE, aliased.
+      *)
+      property RotatorType: string read FRotatorType write FRotatorType;
       // Was the global PSTRotatorIPAddress in logstuff.pas.
       property IpAddress: string read FIpAddress write FIpAddress;
       // Was PSTRotatorUDPPort.
@@ -4247,6 +4262,8 @@ begin
    // The values logstuff's declarations carried.
    FIpAddress := '127.0.0.1';
    FUdpPort   := 12000;
+   // The token for NoRotator, which is what the global carried.
+   FRotatorType := 'NONE';
 end;
 
 constructor TDupeSheetSettings.Create;
@@ -4869,6 +4886,7 @@ begin
    Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
    Alias('POSSIBLE CALL MODE', 'Scp.PossibleCallMode');
    Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
+   Alias('ROTATOR TYPE', 'Rotator.RotatorType');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
      anywhere writes it per contest -- so it is station-scoped and joins
      Operating rather than the contest-scoped Contest group. *)

@@ -484,7 +484,9 @@ const
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @RotatorTypeSA;                     lpLength: Byte(High(RotatorType));            lpVar: @ActiveRotatorType; ),
+    (* SLOT FREED 2026-09-13 -- the rotator is a SUBSYSTEM and owns its own
+      taxonomy; the setting holds a token. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
@@ -647,6 +649,7 @@ const
    - 1 {DEBUG LOG LEVEL -- tLogLevels left VC with it}
    - 1 {POSSIBLE CALL MODE -- off the SCP database record}
    - 1 {EXTERNAL LOGGER -- a token; the enum stays with the factory}
+   - 1 {ROTATOR TYPE -- the same, and the last ckList enum row}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -960,7 +963,6 @@ const
  (crCommand: 'RADIO TWO SERIAL FORMAT';       crAddress: @Radio2.SerialFormat;            crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctString; crNetwork: 0),
  (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
- (crCommand: 'ROTATOR TYPE';                  crAddress: pointer(17);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem

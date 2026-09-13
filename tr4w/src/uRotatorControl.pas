@@ -83,7 +83,9 @@ uses
    Tree,
    uSerialPort,  // TSerialPort -- the one serial transport, no Win32 here
    LOGSTUFF,     // SendPSTRotorCommand -- the UDP socket, reused not rebuilt
-   LOGWIND,      // RotatorType / RotatorTypeSA, for the legacy seed
+   LOGWIND,      (* ActiveRotatorPort -- ROTATOR PORT is still a CFGCA row.
+                   The rotator TYPE left this unit; the PORT has not, and it
+                   goes with the port slice *)
    uRotatorRegistry,
    uSettingsModel, // Settings.Rotator -- the PstRotator endpoint
    MainUnit;     // logger
@@ -379,12 +381,22 @@ begin
    // working exactly as before.  Seeding one rotator from those means there is
    // ONE code path from the first run -- which is what makes the legacy `case`
    // safe to delete rather than kept alive as a fallback that quietly drifts.
-   if ActiveRotatorType = NoRotator then
+   (* THE SETTING IS ALREADY THE ID. It used to be an enum that this line
+     turned back into the string the registry keys on; the setting holds the
+     token now, so there is nothing to translate. *)
+   (* EXPLICIT AT THE BOUNDARY. This unit compiles with string = AnsiString
+     and the property is a UnicodeString, so a bare assignment is one of the
+     narrowing conversions the build counts -- and the ratchet caught it. The
+     cast is safe because the token comes from a fixed ASCII vocabulary that
+     the rotator registry owns and publishes. *)
+   id := Trim(AnsiString(Settings.Rotator.RotatorType));
+   (* UpperCase RATHER THAN SameText: this unit's `string` is AnsiString and
+     SysUtils.SameText takes the wider one, which is a narrowing conversion
+     the build counts. Both sides are AnsiString this way. *)
+   if (id = '') or (UpperCase(id) = 'NONE') then
       begin
       Exit;
       end;
-
-   id := string(RotatorTypeSA[ActiveRotatorType]);
    // The legacy seed passes no endpoint on purpose: AddLive fills it from the
    // same globals this path already represents, in one place rather than two.
    AddLive('Rotator', id, string(PortTypeSA[ActiveRotatorPort]), '');

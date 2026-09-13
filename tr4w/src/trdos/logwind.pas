@@ -151,7 +151,10 @@ type
     State: K5KAStateType;
   end;
 
-  RotatorType = (NoRotator, DCU1Rotator, OrionRotator, YaesuRotator, AlfaSpidRotator, PSTRotator); {KK1L: 6.71 Added YaesuRotator} {Issue #732: PSTRotator (UDP)}
+  (* RotatorType MOVED to rotatorFactory/uRotatorRegistry, 2026-09-13 (NY4I):
+    the rotator is a SUBSYSTEM and its type parameters support the factory
+    objects, the way the radio's do. It was here only because this is where
+    the DOS-era code kept its globals. *)
 
   RateBandArrayType = array[Band160..Band10] of Byte;
 
@@ -431,7 +434,7 @@ const
     );
 
 
-  RotatorTypeSA                         : array[RotatorType] of PAnsiChar = ('NONE', 'DCU1', 'ORION', 'YAESU', 'ALFA SPID', 'PSTROTATOR');
+  // RotatorTypeSA moved with its type -- see uRotatorRegistry.
 
   CallWindowPositionTypeSA              : array[CallWindowPositionType] of PAnsiChar = ('NORMAL', 'UP');
 
@@ -473,7 +476,10 @@ var
   //  ActiveModemPort: PortType;
   ActiveQSOPointMethod                  : QSOPointMethodType {= NoQSOPointMethod};
   ActiveRotatorPort                     : PortType;
-  ActiveRotatorType                     : RotatorType {= NoRotator};
+  (* ActiveRotatorType MOVED to Settings.Rotator.RotatorType, as a TOKEN.
+    Its only live reader was uRotatorControl's legacy seed, which wanted a
+    string id anyway -- the other four references in this tree are all inside
+    comments describing the code the factory replaced. *)
   //  ActiveRTTYPort                        : PortType;
   ActiveWindow                          : WindowType;
   ActiveZoneMult                        : ZoneMultType {= NoZoneMults};

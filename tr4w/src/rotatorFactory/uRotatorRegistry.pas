@@ -50,10 +50,35 @@ uses
    uRotatorBase;
 
 type
+   (*
+     WHICH ROTATORS EXIST, AS THE SUBSYSTEM'S OWN TAXONOMY.
+
+     Moved here from trdos/logwind.pas, 2026-09-13. NY4I: the rotator is a
+     subsystem, so its type parameters are "strictly supporting the factory
+     objects (just like the radio works)" -- they belong with the factory and
+     not in the settings model, which holds only a TOKEN.
+
+     THE ENUM IS NEARLY VESTIGIAL ALREADY, and that is the point of the note
+     below: ids are STRINGS here. What survives is the legacy seed, which
+     turns an operator's ROTATOR TYPE into an id.
+   *)
+   RotatorType = (NoRotator, DCU1Rotator, OrionRotator, YaesuRotator,
+                  AlfaSpidRotator, PSTRotator);
+
    { A PLAIN procedure pointer. Each driver registers a named unit-level
      function; none of them captured anything, so the anonymous form bought
      nothing and cost a closure-capable compiler. }
    TRotatorFactoryProc = function (const aSend: TRotatorSendProc): TRotatorBase;
+
+const
+   (* THE CONFIG-FILE TOKEN FOR EACH, IN ORDINAL ORDER. string, not PAnsiChar:
+     nothing indexes it through a pointer since the CFGCA row went.
+
+     REGISTERED BY NAME against Settings.Rotator.RotatorType, which is both
+     what a config file is allowed to say and what the Preferences drop-down
+     offers -- and what Lint-SpellingTables checks. *)
+   RotatorTypeSA: array[RotatorType] of string =
+      ('NONE', 'DCU1', 'ORION', 'YAESU', 'ALFA SPID', 'PSTROTATOR');
 
 { Called from a driver unit's initialization. }
 procedure RegisterRotator(const aId, aDisplayName: string;
@@ -72,6 +97,10 @@ function RegisteredRotatorIds: TArray<string>;
 function RegisteredCount: integer;
 
 implementation
+
+uses
+   uSettingsModel;   (* RegisterSettingAllowedValues -- this unit publishes
+                       its own vocabulary; see the initialization section *)
 
 type
    TRotatorEntry = record
@@ -185,6 +214,13 @@ begin
 end;
 
 initialization
+   (* THE VOCABULARY A CONFIG FILE MAY USE FOR ROTATOR TYPE.
+
+     Published BY THE SUBSYSTEM, because the subsystem is what knows which
+     rotators exist -- the settings model holds only the token. Registered by
+     NAME so Lint-SpellingTables still checks it: a duplicate or blank here
+     would make a rotator unreachable by name. *)
+   RegisterSettingAllowedValues('Rotator.RotatorType', RotatorTypeSA);
 
 finalization
    FreeAndNil(GEntries);
