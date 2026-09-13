@@ -1526,8 +1526,6 @@ end;
 
 procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
 var
-   lvl: tLogLevels;
-   wanted: string;
    matched: boolean;
 begin
    if aStore = nil then
@@ -1537,17 +1535,11 @@ begin
 
    SeedLoggingFromIni(aStore);
 
-   wanted  := UpperCase(Trim(aStore.LogLevelName));
-   matched := False;
-   for lvl := Low(tLogLevels) to High(tLogLevels) do
-      begin
-      if wanted = UpperCase(string(AnsiString(tLogLevelsSA[lvl]))) then
-         begin
-         logLevels := lvl;
-         matched   := True;
-         Break;
-         end;
-      end;
+   (* ONE TRANSLATION, AND IT IS THE SETTINGS MODEL'S. The loop this replaces
+     walked tLogLevelsSA by hand; the registered vocabulary is that same table,
+     matched by position, and it refuses a spelling it does not carry. *)
+   matched := Settings.TrySetByCommand('DEBUG LOG LEVEL',
+                                       Trim(aStore.LogLevelName));
 
    if not matched then
       begin

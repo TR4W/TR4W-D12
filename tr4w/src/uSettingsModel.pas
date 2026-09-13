@@ -266,6 +266,9 @@ type
    RemainingMultDisplayModeType = (NoRemainingMults, Erase, HiLight);
    DupeCheckSoundType = (DupeCheckNoSound, DupeCheckBeepIfDupe,
                          DupeCheckGratsIfMult);
+   (* Was tLogLevels in VC.pas -- the unit NY4I named explicitly. It is the
+     vocabulary of a setting, and VC is the source of truth for TYPES. *)
+   tLogLevels = (llNone, llFatal, llError, llWarn, llInfo, llDebug, llTrace);
    UserInfoType = (NoUserInfo, NameInfo, QTHInfo, CheckSectionInfo,
                    SectionInfo, OldCallInfo, FocInfo, GridInfo, CQZoneInfo,
                    ITUZoneInfo, User1Info, User2Info, User3Info, User4Info,
@@ -1784,6 +1787,7 @@ type
       FDisabled: boolean;
       FShowFrequency: boolean;
       FDistanceMode: DistanceDisplayType;
+      FDebugLevel: tLogLevels;
    public
       constructor Create;
    published
@@ -1850,6 +1854,12 @@ type
         DISTANCE MODE, aliased. *)
       property DistanceMode: DistanceDisplayType
          read FDistanceMode write FDistanceMode;
+      (* Was the global logLevels in VC -- how much detail reaches tr4w.log.
+
+        DEBUG LOG LEVEL, aliased. The property holds the LEVEL; pushing it
+        into Log4D is UpdateDebugLogLevel's job and every site that assigns
+        this already calls it, which is why this needs no setter. *)
+      property DebugLevel: tLogLevels read FDebugLevel write FDebugLevel;
    end;
 
    (*
@@ -4010,6 +4020,8 @@ begin
    FConfirmEditChanges := True;
    // loggrid declared DistanceMode as DistanceKM, NOT the zero value.
    FDistanceMode       := DistanceKM;
+   // VC declared logLevels with no initialiser, so llNone.
+   FDebugLevel         := llNone;
    FCheckFileSize      := False;
    FUpdateRestartFile  := True;
    (* The values the globals in VC.pas carried: LogFrequencyEnable has no
@@ -4820,6 +4832,7 @@ begin
    Alias('HOUR DISPLAY', 'MainWindow.HourDisplay');
    Alias('USER INFO SHOWN', 'MainWindow.UserInfoShown');
    Alias('DUPE CHECK SOUND', 'Operating.DupeCheckSound');
+   Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
      anywhere writes it per contest -- so it is station-scoped and joins
      Operating rather than the contest-scoped Contest group. *)
@@ -5714,6 +5727,9 @@ const
       ('NONE', 'ERASE', 'HILIGHT');
    DUPE_CHECK_SOUND_SPELLINGS: array[DupeCheckSoundType] of string =
       ('NONE', 'DUPE BEEP', 'MULT FANFARE');
+   (* Was tLogLevelsSA in VC. UPPERCASE, as its comment there said. *)
+   LOG_LEVEL_SPELLINGS: array[tLogLevels] of string =
+      ('NONE', 'FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE');
    USER_INFO_SPELLINGS: array[UserInfoType] of string =
       ('NONE', 'NAME', 'QTH', 'CHECK SECTION', 'SECTION', 'OLD CALL',
        'FOC NUMBER', 'GRID', 'CQ ZONE', 'ITU ZONE', 'USER 1', 'USER 2',
@@ -5740,6 +5756,7 @@ initialization
                                 REMAINING_MULT_DISPLAY_SPELLINGS);
    RegisterSettingAllowedValues('Operating.DupeCheckSound',
                                 DUPE_CHECK_SOUND_SPELLINGS);
+   RegisterSettingAllowedValues('Log.DebugLevel', LOG_LEVEL_SPELLINGS);
    RegisterSettingAllowedValues('MainWindow.UserInfoShown',
                                 USER_INFO_SPELLINGS);
 

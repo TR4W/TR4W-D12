@@ -1263,7 +1263,8 @@ uses
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
    uPasswordReveal,     // AttachPasswordReveal -- the eye beside a password
-   VC;          // tLogLevels / tLogLevelsSA / logLevels, TR4W_TCI_DEBUG
+   uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
+   VC;          // TR4W_TCI_DEBUG (the log-level names moved to uSettingsModel)
 
 var
    gPrefsForm: TPrefsForm = nil;
@@ -7130,22 +7131,25 @@ end;
 
 procedure TPrefsForm.LoadLoggingPanel;
 var
-   lvl: tLogLevels;
+   level: string;
    idx: integer;
 begin
-   // THE LEVEL LIST IS BUILT FROM tLogLevelsSA, NOT TYPED INTO THE DESIGNER.
-   //
-   // A populated combo BAKES ITSELF INTO THE .fmx resource (learned building
-   // the radio editor), so designer-entered items would be a second copy of the
-   // level vocabulary -- one that keeps working while it drifts from the enum.
-   // Reading the same array CFGCA matched against makes drift impossible: add a
-   // level to tLogLevels and it appears here.
+   (* THE LEVEL LIST COMES FROM THE SETTING, NOT FROM THE DESIGNER.
+
+     A populated combo BAKES ITSELF INTO THE FORM RESOURCE (learned building
+     the radio editor), so designer-entered items would be a second copy of
+     the level vocabulary -- one that keeps working while it drifts.
+
+     IT ASKS THE SETTING NOW rather than walking the array, because the array
+     moved to uSettingsModel with its type and is registered against the
+     property. Same list, one owner: add a level to tLogLevels and its
+     spelling and it appears here. *)
    cbxLogLevel.Items.BeginUpdate;
    try
       cbxLogLevel.Clear;
-      for lvl := Low(tLogLevels) to High(tLogLevels) do
+      for level in Settings.AllowedValuesForCommand('DEBUG LOG LEVEL') do
          begin
-         cbxLogLevel.Items.Add(string(AnsiString(tLogLevelsSA[lvl])));
+         cbxLogLevel.Items.Add(level);
          end;
    finally
       cbxLogLevel.Items.EndUpdate;

@@ -1340,13 +1340,13 @@ begin
       begin
       sDebugLevel := 'TRACE';
       end;
-   for i := Low(tLogLevelsSA) to High(tLogLevelsSA) do
+   (* THE SPELLING MEETS THE ORDINAL IN ONE PLACE NOW. TrySetByCommand
+     matches the registered vocabulary by position and refuses anything else,
+     which is what this loop did by hand. A level the file does not spell
+     leaves the property at its default rather than half-assigned. *)
+   if not Settings.TrySetByCommand('DEBUG LOG LEVEL', sDebugLevel) then
       begin
-      if sDebugLevel = tLogLevelsSA[i] then
-         begin
-         logLevels := tLogLevels(i);
-         break;
-         end;
+      // No logger yet -- this runs before UpdateDebugLogLevel below.
       end;
    UpdateDebugLogLevel;
 

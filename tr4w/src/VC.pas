@@ -989,7 +989,8 @@ type
   LogRecordKind = (rkQSO, rkQTCR, rkQTCS, rkNote);
   SpotModeType = (NormalSpot, SHDXSpot);
   MesWindowType = (CQMsgWin, ExMsgWin, OtherMsgWin);
-  tLogLevels = (llNone, llFatal, llError, llWarn, llInfo, llDebug, llTrace);
+  (* tLogLevels MOVED to uSettingsModel, 2026-09-13 (NY4I): a settings type
+    belongs in uSettings wherever it was defined, and VC was named. *)
   tCategoryAssisted = (caNONASSISTED, caASSISTED);
   tCategoryBand = (cbALL, cb160M, cb80M, cb40M, cb20M, cb15M, cb10M, cb6M, cb2M, cb222, cb432, cb902, cb12G);
   tCategoryMode = (cmCW, cmDIGITAL, cmRTTY, cmSSB, cmMIXED, cmFM); // Issue #976: FM added (appended; existing cmDIGITAL/cmRTTY string swap left as a separate follow-up)
@@ -1000,7 +1001,7 @@ type
 
 const
                                             // Use uppercase
-  tLogLevelsSA                          : array[tLogLevels] of PAnsiChar = ('NONE' ,'FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE');
+  // tLogLevelsSA moved with its type -- see LOG_LEVEL_SPELLINGS.
   tCategoryAssistedSA                   : array[tCategoryAssisted] of PAnsiChar = ('NON-ASSISTED', 'ASSISTED');
   tCategoryBandSA                       : array[tCategoryBand] of PAnsiChar = ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M', '222', '432', '902', '1.2G');
   tCategoryModeSA                       : array[tCategoryMode] of PAnsiChar = ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM');    // 4.90.14; FM added Issue #976
@@ -1017,7 +1018,7 @@ var
   CategoryOperator                      : tCategoryOperator;
   CategoryPower                         : tCategoryPower;
   CategoryTransmitter                   : tCategoryTransmitter;
-  logLevels                             : tLogLevels;
+  // logLevels moved too -- Settings.Log.DebugLevel.
 type
 
   CFGKind = (ckNormal, ckArray, ckList);

@@ -103,7 +103,7 @@ $code = Get-PascalCodeOnlyLines -Path $uCFG
 $measures = @(
    @{ Name    = 'CFGCA rows'
       Pattern = 'crCommand:'
-      Ceiling = 129
+      Ceiling = 128
       Note    = 'config commands still in the array' }
 
    @{ Name    = 'CFGCA rows writing a raw global'
@@ -118,12 +118,12 @@ $measures = @(
 
    @{ Name    = 'ListParamArray entries'
       Pattern = 'lpVar:\s*@'
-      Ceiling = 46
+      Ceiling = 45
       Note    = 'enum spelling lists, address of a global' }
 
    @{ Name    = 'CommandsProcArray handlers'
       Pattern = '^\s*@\w+.*(//.*)?$'
-      Ceiling = 8
+      Ceiling = 7
       Note    = 'crP -- replaced by a property setter'
       Section = 'CommandsProcArray' }
 

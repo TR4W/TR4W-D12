@@ -402,7 +402,11 @@ const
       nil {@SetEditableLogWindowColors},
       @UpadateMainWindow,
       nil {@SetStationsCallsignMask -- the setter raises it},
-      @UpdateDebugLogLevel
+      (* SLOT 13 IS FREE. DEBUG LOG LEVEL moved to Settings.Log.DebugLevel,
+        and every site that assigns the level already calls
+        UpdateDebugLogLevel itself -- there are three, and the hook was the
+        fourth. nil rather than a renumbering: this table is POSITIONAL. *)
+      nil
       );
 
    {List}
@@ -531,7 +535,8 @@ const
     (lpArray: @tCategoryTransmitterSA;            lpLength: Byte(High(tCategoryTransmitter));   lpVar: @CategoryTransmitter;),
 {50}(lpArray: @tCategoryAssistedSA;               lpLength: Byte(High(tCategoryAssisted));      lpVar: @CategoryAssisted;),
     (lpArray: @tCertificateSA;                    lpLength: Byte(High(tCertificate));           lpVar: @Certificate;),
-    (lpArray: @tLogLevelsSA;                      lpLength: Byte(High(tLogLevels));             lpVar: @logLevels;),
+    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @ExternalLoggerTypeSA;              lplength: Byte(High(ExternalLoggerType));     lpVar: @elLogType;)
     {*)}
       );
@@ -634,6 +639,7 @@ const
         REMAINING MULT DISPLAY MODE -- their types moved too}
    - 2 {DUPE CHECK SOUND and USER INFO SHOWN -- the same}
    - 1 {REMINDER -- withdrawn, not migrated: it never had a variable}
+   - 1 {DEBUG LOG LEVEL -- tLogLevels left VC with it}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -768,7 +774,6 @@ const
 // csRem, not deleted, so an existing .cfg that sets it still loads.
  (crCommand: 'CW ENABLE';                     crAddress: @Config.CWEnable;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'CW TONE';                       crAddress: @Config.CWTone;                         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'DEBUG LOG LEVEL';               crAddress: pointer(52);                     crMin:0;   crMax:0;      crS: csJSON; crA: 0; crC:0 ; crP:13; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
  (crCommand: 'DOMESTIC MULTIPLIER';           crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -2868,7 +2873,7 @@ begin
       // UpdateLogLevel called before logger object has been created
       Exit;
       end;
-   case logLevels of
+   case Settings.Log.DebugLevel of
       llNone: logger.Level := Off;
       llFatal: logger.level := Fatal;
       llError: logger.Level := Error;
