@@ -63,6 +63,7 @@ type
       procedure Test_AContestFileStillOverridesForItsContest;
       procedure Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
       procedure Test_EveryMessageCommandReachesItsOwnProperty;
+      procedure Test_ABoundedSettingOffersItsValues;
    public
       procedure RunAllTests; override;
    end;
@@ -1700,6 +1701,46 @@ begin
    end;
 end;
 
+procedure TSettingsModelTests.Test_ABoundedSettingOffersItsValues;
+var
+   values: TArray<string>;
+begin
+   BeginTest('Test_ABoundedSettingOffersItsValues');
+   (*
+     A DROP-DOWN BOUND TO A MIGRATED SETTING MUST STILL HAVE SOMETHING IN IT.
+
+     Three Preferences combos -- CW SPEED INCREMENT, DIT DAH RATIO and
+     LEADING ZEROS -- were filled from their row's ckArray allow-list. The
+     rows are gone and the subrange says the same thing, but only if
+     something asks; when nothing did, the combos came up empty and neither
+     the build nor any test could see it.
+   *)
+   values := Settings.AllowedValuesForCommand('CW SPEED INCREMENT');
+   CheckEquals(10, Length(values), 'CW SPEED INCREMENT offers 1..10');
+   if Length(values) = 10 then
+      begin
+      CheckEquals('1',  values[0], 'the first is the subrange low');
+      CheckEquals('10', values[9], 'the last is the subrange high');
+      end;
+
+   values := Settings.AllowedValuesForCommand('DIT DAH RATIO');
+   CheckEquals(4, Length(values), 'DIT DAH RATIO offers 3..6');
+
+   values := Settings.AllowedValuesForCommand('LEADING ZEROS');
+   CheckEquals(4, Length(values), 'LEADING ZEROS offers 0..3');
+
+   (* AND A WIDE ONE OFFERS NOTHING, which a UI reads as "use a text box".
+     BAND MAP DECAY TIME is 0..65535 and a drop-down of 65,536 entries is
+     not a control. *)
+   values := Settings.AllowedValuesForCommand('BAND MAP DECAY TIME');
+   CheckEquals(0, Length(values), 'a 16-bit range is a text box, not a list');
+
+   (* A NAME THE MODEL DOES NOT OWN ANSWERS NOTHING rather than raising:
+     AllowedValues is asked while a panel is being built. *)
+   values := Settings.AllowedValuesForCommand('NO SUCH COMMAND');
+   CheckEquals(0, Length(values), 'an unknown command offers nothing');
+end;
+
 procedure TSettingsModelTests.RunAllTests;
 begin
    Test_DefaultsAreTheOnesTheGlobalsHad;
@@ -1729,6 +1770,7 @@ begin
    Test_AContestFileStillOverridesForItsContest;
    Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
    Test_EveryMessageCommandReachesItsOwnProperty;
+   Test_ABoundedSettingOffersItsValues;
 end;
 
 end.

@@ -2969,6 +2969,20 @@ type
       (* IS THIS SETTING A CREDENTIAL? Asked by the multi-op sync before it
         sends anything, by the importer before it upper-cases a line, and by
         Preferences before it shows a value. *)
+      (*
+        THE VALUES A BOUNDED SETTING WILL ACCEPT, for a control that offers a
+        choice rather than a text box.
+
+        READ OUT OF THE SUBRANGE, so there is no list anywhere of which
+        settings are enumerable -- the type says it, the way it says the
+        bounds ClampToDeclaredRanges imposes.
+
+        EMPTY MEANS "NO FIXED LIST", which a UI reads as "use a text box" --
+        the same contract TSettingBase.AllowedValues documents. A plain
+        Integer property carries the full 32-bit range and gets nothing, and
+        so does anything wider than a drop-down should ever be.
+      *)
+      function AllowedValuesForCommand(const aCommand: string): TArray<string>;
       function CommandIsSecret(const aCommand: string): boolean;
       (* IS THIS SETTING'S CAPITALISATION THE OPERATOR'S? True for a secret
         too -- a password is case-sensitive by definition. *)
@@ -4916,6 +4930,41 @@ begin
    if not ResolvePath(Self, path, owner, Result) then
       begin
       Result := nil;
+      end;
+end;
+
+function TR4WSettings.AllowedValuesForCommand(const aCommand: string): TArray<string>;
+const
+   (* A DROP-DOWN, NOT AN ESSAY. The allow-lists this replaces were four to
+     fifteen values; a bound of 64 is well clear of them and still refuses to
+     build a list for a range like 0..65535, which is a text box. *)
+   MAX_OFFERED = 64;
+var
+   info: PPropInfo;
+   lo, hi, i: integer;
+begin
+   Result := nil;
+   info := PropertyForCommand(aCommand);
+   if (info = nil) or (info^.PropType^.Kind <> tkInteger) then
+      begin
+      Exit;
+      end;
+
+   with GetTypeData(info^.PropType)^ do
+      begin
+      lo := MinValue;
+      hi := MaxValue;
+      end;
+
+   if (hi <= lo) or (hi - lo + 1 > MAX_OFFERED) then
+      begin
+      Exit;
+      end;
+
+   SetLength(Result, hi - lo + 1);
+   for i := lo to hi do
+      begin
+      Result[i - lo] := IntToStr(i);
       end;
 end;
 

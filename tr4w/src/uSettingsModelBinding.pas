@@ -119,6 +119,7 @@ type
                          const aBroadcast, aNeedsRestart: boolean);
       function AsText: string; override;
       function TrySetText(const aText: string; out aError: string): boolean; override;
+      function AllowedValues: TArray<string>; override;
       property Command: string read FCommand;
    end;
 
@@ -163,6 +164,25 @@ begin
         Preferences page down with it. *)
       Result := '';
       end;
+end;
+
+
+(*
+  WITHOUT THIS, A DROP-DOWN BOUND TO A MIGRATED SETTING COMES UP EMPTY.
+
+  TSettingBase.AllowedValues answers nil, meaning "no fixed list", and the
+  binding reads that as "offer nothing" -- correct for a text box and wrong
+  for a combo. The legacy form got its list from the row's ckArray allow-list;
+  a migrated setting gets it from the property's subrange, which is the same
+  statement made by the compiler instead of by a table.
+
+  MEASURED, NOT ASSUMED: three combos in Preferences -- CW SPEED INCREMENT,
+  DIT DAH RATIO and LEADING ZEROS -- went empty the moment those settings
+  moved, and nothing in the build or the tests could see it.
+*)
+function TModelSetting.AllowedValues: TArray<string>;
+begin
+   Result := Settings.AllowedValuesForCommand(FCommand);
 end;
 
 
