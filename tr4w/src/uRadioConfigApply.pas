@@ -361,7 +361,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..250] of string =
+   MIGRATED_COMMANDS: array[0..249] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
@@ -378,7 +378,6 @@ const
       'QUICK QSL MESSAGE 1',
       'QUICK QSL MESSAGE 2',
       'QUICK QSL SSB MESSAGE',
-      'REMINDER',
       'ZONE MULTIPLIER',
       'BAND MAP SPLIT MODE',
       'CATEGORY-ASSISTED',

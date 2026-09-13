@@ -755,8 +755,6 @@ begin
                           RS_APPEARANCE_CTRLJ_INSERTMODE);
    RegisterModelSetting( 'appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
                           RS_APPEARANCE_CTRLJ_RATEDISPLAY);
-   RegisterStoredSetting('appearance.ctrlj.reminder',         'REMINDER',
-                          RS_APPEARANCE_CTRLJ_REMINDER);
    (* True, True: broadcast to the other position, and needs a restart --
      which is what the row's crNetwork: 1 and crJ: 1 said. *)
    RegisterModelSetting( 'appearance.layout.rowCount',         'ROW COUNT',

@@ -633,6 +633,7 @@ const
    - 5 {HOUR DISPLAY, TEN MINUTE RULE, BAND MAP SPLIT MODE, DISTANCE MODE,
         REMAINING MULT DISPLAY MODE -- their types moved too}
    - 2 {DUPE CHECK SOUND and USER INFO SHOWN -- the same}
+   - 1 {REMINDER -- withdrawn, not migrated: it never had a variable}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -948,7 +949,6 @@ const
  (crCommand: 'RADIO TWO STARTUP COMMAND';     crAddress: @Radio2.StartupCommand;          crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIO TWO SERIAL FORMAT';       crAddress: @Radio2.SerialFormat;            crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctString; crNetwork: 0),
  (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
- (crCommand: 'REMINDER';                      crAddress: pointer(51);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAppearance; crType: ctOther; crNetwork: 1),
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ROTATOR TYPE';                  crAddress: pointer(17);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'SCP COUNTRY STRING';            crAddress: @CD.CountryString;               crMin:0;  crMax:80;      crS: csJSON; crA: 11;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
@@ -1702,7 +1702,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..90] of string = (
+   RETIRED_COMMANDS: array[0..91] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -1758,6 +1758,11 @@ const
       'PRINTER ENABLE',
       'QUICK QSL KEY',
       'QUICK QSL MESSAGE',
+      (* WITHDRAWN 2026-09-13 (NY4I). The row was ckNormal carrying
+        pointer(51) -- a ListParamArray INDEX in the field that means an
+        address -- and wrote nothing only because ctOther has no arm in that
+        dispatch. There is no variable called Reminder anywhere. *)
+      'REMINDER',
       'RADIO ONE COMMAND PAUSE',
       'RADIO ONE ICOM NETWORK PASSWORD',
       'RADIO ONE ICOM NETWORK USERNAME',
