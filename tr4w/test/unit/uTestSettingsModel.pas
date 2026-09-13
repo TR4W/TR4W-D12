@@ -737,10 +737,35 @@ begin
    CheckFalse(CommandIsRetired('UDP BROADCAST SCORE'),
               'a setting that still works is not withdrawn');
 
+   (* THE WINKEYER JOINED THE LIST when its seventeen rows left CFGCA.
+
+     Same shape as the UDP rows and pinned for the same reason: the keyer
+     library applies these through ApplyKeyerToWinKey, so a WK line in an
+     operator's tr4w.ini has to be ACCEPTED here rather than refused. A
+     refusal is a modal "invalid statement in config file", seventeen times
+     over, on a station whose WinKeyer is working perfectly.
+
+     Both spellings of the sidetone pair are checked because they are the two
+     easiest to transpose -- SIDETONE ENABLE is a boolean and SIDETONE
+     FREQUENCY was a spelling list. *)
+   CheckTrue(CommandIsOwnedByAStore('WK ENABLE'), 'the WinKeyer master switch');
+   CheckTrue(CommandIsOwnedByAStore('WK PORT'), 'the WinKeyer port');
+   CheckTrue(CommandIsOwnedByAStore('WK SIDETONE ENABLE'), 'a WK boolean');
+   CheckTrue(CommandIsOwnedByAStore('WK SIDETONE FREQUENCY'), 'a WK spelling list');
+   CheckTrue(CommandIsOwnedByAStore('WK PADDLE SWITCHPOINT'), 'a WK bounded byte');
+   CheckTrue(CommandIsOwnedByAStore('wk weight'), 'and case-folded like the rest');
+
+   (* NOT WITHDRAWN, and this is the assertion that matters most of the two.
+     A WinKeyer still works; only the route to it changed. *)
+   CheckFalse(CommandIsRetired('WK ENABLE'),
+              'a WinKeyer still works -- the route changed, not the feature');
+
+   CheckFalse(CommandIsOwnedByAStore('WK WEIGTH'), 'a transposed WK typo');
+
    (* A ratchet, as the withdrawn list has. A fall means names were dropped
      without being listed, and the failure is a modal dialog on somebody
      else's machine. *)
-   CheckTrue(StoreOwnedCommandCount >= 14, 'the store list has not shrunk');
+   CheckTrue(StoreOwnedCommandCount >= 31, 'the store list has not shrunk');
 end;
 
 

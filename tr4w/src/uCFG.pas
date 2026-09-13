@@ -574,9 +574,15 @@ const
     (lpArray: @tCategoryOperatorSA;               lpLength: Byte(High(tCategoryOperator));      lpVar: @CategoryOperator; ),
     (lpArray: @tCategoryPowerSA;                  lpLength: Byte(High(tCategoryPower));         lpVar: @CategoryPower; ),
 
-    (lpArray: @PortTypeSA;                        lpLength: Byte(High(PortType));               lpVar: @WinKeySettings.wksWinKey2Port; ),
-    (lpArray: @KeyerModeSA;                       lpLength: Byte(High(TWK2KeyerMode));          lpVar: @WinKeySettings.wksKeyerMode; ),
-    (lpArray: @SidetoneFrequencySA;               lpLength: Byte(High(TWKSidetoneFrequency));   lpVar: @WinKeySettings.wksValueList.vlSidetoneFrequency; ),
+    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
+      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
+      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
+      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
 
     (lpArray: @tCategoryTransmitterSA;            lpLength: Byte(High(tCategoryTransmitter));   lpVar: @CategoryTransmitter;),
 {50}(lpArray: @tCategoryAssistedSA;               lpLength: Byte(High(tCategoryAssisted));      lpVar: @CategoryAssisted;),
@@ -699,6 +705,12 @@ const
      field directly, which is the route the code has been documenting as the
      destination since the first radio setting moved. *)
    - 54 {the 26 RADIO ONE/TWO keys, plus POLL RADIO ONE/TWO}
+   (* ALSO to a STORE, not to uSettingsModel: the keyer library holds these,
+     and ApplyKeyerToWinKey has been writing every one of them into
+     WinKeySettings since the library landed. The rows were already csJSON,
+     so the ini loader had stopped reading them -- deleting them removes a
+     restatement, not a route. Three ListParamArray slots fall with them. *)
+   - 17 {the WK keys -- owned by the keyer library}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -754,7 +766,7 @@ const
      since 87ad2fc3, and TUDPBroadcastConfig.SeedFromLegacyIni reads the
      old ini itself, so the rows were writing globals that the program had
      stopped consulting -- except in two places, which is the point. See
-     UDP_OWNED_ELSEWHERE. *)
+     OWNED_BY_A_STORE. *)
    - 14 {UDP broadcast -- owned by the udpBroadcast store}
    (* Three of these five were AdditionalProcsArray hooks, so the hook
      table falls with the rows. *)
@@ -1005,23 +1017,6 @@ const
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
  (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
- (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK CT SPACING';                 crAddress: @WinKeySettings.wksCTSpacing;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK DIT DAH RATIO';              crAddress: @WinKeySettings.wksValueList.vlDitDahRatio;      crMin:33; crMax:66;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK ENABLE';                     crAddress: @WinKeySettings.wksWinKey2Enable;                crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK FIRST EXTENSION';            crAddress: @WinKeySettings.wksValueList.vl1stExtension;     crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK IGNORE SPEED POT';           crAddress: @WinKeySettings.wksIgnoreSpeedSpot;              crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK KEYER COMPENSATION';         crAddress: @WinKeySettings.wksValueList.vlKeyCompensation;  crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK KEYER MODE';                 crAddress: pointer(47);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
- (crCommand: 'WK LEADIN TIME';                crAddress: @WinKeySettings.wksValueList.vlLeadInTime;       crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK PADDLE ONLY SIDETONE';       crAddress: @WinKeySettings.wksPadOnlySideT;                 crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK PADDLE SWAP';                crAddress: @WinKeySettings.wksPaddleSwap;                   crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK PADDLE SWITCHPOINT';         crAddress: @WinKeySettings.wksValueList.vlPaddleSWPoint;    crMin:10; crMax:90;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK PORT';                       crAddress: pointer(46);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
- (crCommand: 'WK SIDETONE FREQUENCY';         crAddress: pointer(48);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
- (crCommand: 'WK SIDETONE ENABLE';            crAddress: @WinKeySettings.wksSideTEnable;                  crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK TAIL TIME';                  crAddress: @WinKeySettings.wksValueList.vlTailTime;         crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK WEIGHT';                     crAddress: @WinKeySettings.wksValueList.vlWeight;           crMin:10; crMax:90;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
   (* WITHDRAWN 2026-09-10: Settings.Yccc.So2rEnable. *)
  (crCommand: 'ZONE MULTIPLIER';               crAddress: pointer(23);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 2; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier)
     {*)}
@@ -1051,7 +1046,7 @@ function RetiredCommandCount: integer;
 
 (* IS THIS A COMMAND A STORE OWNS -- accepted here, applied by whatever
   reads that store.  NOT the same question as CommandIsRetired: these
-  settings still work.  See UDP_OWNED_ELSEWHERE. *)
+  settings still work.  See OWNED_BY_A_STORE. *)
 function CommandIsOwnedByAStore(const aCommand: string): boolean;
 
 (* How many such names there are.  For the test's ratchet. *)
@@ -1835,7 +1830,37 @@ end;
   in the first place.
 *)
 const
-   UDP_OWNED_ELSEWHERE: array[0..13] of string = (
+   OWNED_BY_A_STORE: array[0..30] of string = (
+      (* THE WINKEYER, owned by the keyer library in settings\tr4w.json.
+
+        ApplyKeyerToWinKey writes every one of these fields into
+        WinKeySettings from the keyer definition, which is why the rows could
+        go: the array was carrying a value the store already applies.
+
+        THEY ARE NOT RETIRED AND MUST NOT GO ON THAT LIST. A WinKeyer still
+        works; only the route changed. The log line the two lists produce is
+        the whole point of keeping them apart -- an operator reading
+        "withdrawn" against a WK line would conclude their keyer was
+        unsupported. *)
+      'WK AUTOSPACE',
+      'WK CT SPACING',
+      'WK DIT DAH RATIO',
+      'WK ENABLE',
+      'WK FIRST EXTENSION',
+      'WK IGNORE SPEED POT',
+      'WK KEYER COMPENSATION',
+      'WK KEYER MODE',
+      'WK LEADIN TIME',
+      'WK PADDLE ONLY SIDETONE',
+      'WK PADDLE SWAP',
+      'WK PADDLE SWITCHPOINT',
+      'WK PORT',
+      'WK SIDETONE ENABLE',
+      'WK SIDETONE FREQUENCY',
+      'WK TAIL TIME',
+      'WK WEIGHT',
+
+      (* UDP BROADCASTING, owned by udpBroadcast in the same file. *)
       'UDP BROADCAST ADDRESS',
       'UDP BROADCAST ALL QSOS',
       'UDP BROADCAST APP INFO',
@@ -1857,9 +1882,9 @@ var
    i: integer;
 begin
    Result := False;
-   for i := Low(UDP_OWNED_ELSEWHERE) to High(UDP_OWNED_ELSEWHERE) do
+   for i := Low(OWNED_BY_A_STORE) to High(OWNED_BY_A_STORE) do
       begin
-      if UnicodeSameText(UDP_OWNED_ELSEWHERE[i], aCommand) then
+      if UnicodeSameText(OWNED_BY_A_STORE[i], aCommand) then
          begin
          Result := True;
          Exit;
@@ -1869,7 +1894,7 @@ end;
 
 function StoreOwnedCommandCount: integer;
 begin
-   Result := Length(UDP_OWNED_ELSEWHERE);
+   Result := Length(OWNED_BY_A_STORE);
 end;
 
 (* Linear over ~90 short strings, run once per config line at startup and
