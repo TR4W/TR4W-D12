@@ -350,7 +350,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(237, names.Count,
+         CheckEquals(241, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1207,6 +1207,7 @@ const
       + '"AUTO RETURN TO CQ MODE",'
       + '"AUTO S&P ENABLE",'
       + '"AUTO S&P ENABLE SENSITIVITY",'
+      + '"AUTO SEND CHARACTER COUNT",'
       + '"AUTO TIME INCREMENT",'
       + '"AUTO-CQ DELAY TIME",'
       + '"BACKUP LOG FREQUENCY",'
@@ -1253,8 +1254,10 @@ const
       + '"CUSTOM INITIAL EXCHANGE STRING",'
       + '"CUSTOM USER STRING",'
       + '"CW SPEED FROM DATABASE",'
+      + '"CW SPEED INCREMENT",'
       + '"DE ENABLE",'
       + '"DIGITAL MODE ENABLE",'
+      + '"DIT DAH RATIO",'
       + '"DOMESTIC FILENAME",'
       + '"DUPE SHEET AUTO RESET",'
       + '"DVK ENABLE",'
@@ -1284,6 +1287,7 @@ const
       + '"INTERCOM FILE ENABLE",'
       + '"KEYPAD CW MEMORIES",'
       + '"LEADING ZERO CHARACTER",'
+      + '"LEADING ZEROS",'
       + '"LEAVE CURSOR IN CALL WINDOW",'
       + '"LITERAL DOMESTIC QTH",'
       + '"LOG FREQUENCY ENABLE",'

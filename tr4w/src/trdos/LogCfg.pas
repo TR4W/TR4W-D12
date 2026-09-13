@@ -635,7 +635,7 @@ begin
   Str(Radio1.SpeedMemory, SpeedString); {KK1L: 6.73 Initialize SpeedString for ALT-D use.}
   // SetSpeed(CodeSpeed);  // ny4i Issue 153 Not necessary as SetUpToSendOnActiveRadio is called and sets the speed
 
-  if AutoSendCharacterCount > 0 then
+  if Settings.Cw.AutoSendCharacterCount > 0 then
      begin
      AutoSendEnable := True;
      DisplayAutoSendCharacterCount;

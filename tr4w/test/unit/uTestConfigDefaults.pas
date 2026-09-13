@@ -142,12 +142,12 @@ begin
    // field in the middle, say -- would disturb.
    BeginTest('the defaults migrated before this batch are still intact');
 
-   CheckEquals(3,   Config.CodeSpeedIncrement, 'a 0 step = the speed keys stop working');
+   CheckEquals(3,   Settings.Cw.SpeedIncrement, 'a 0 step = the speed keys stop working');
    CheckEquals(700, Config.CWTone,             'CW sidetone 700 Hz');
    CheckTrue(Config.CWEnable,                  'CW on by default');
    CheckEquals(25,  Config.FarnsworthSpeed,    'Farnsworth character speed 25');
-   CheckEquals(3,   Config.tDitDahRatio,       'a 0 dit/dah ratio is not sendable');
-   CheckEquals(3,   Config.LeadingZeros,       'serial numbers pad to 3');
+   CheckEquals(3,   Settings.Cw.DitDahRatio,    'a 0 dit/dah ratio is not sendable');
+   CheckEquals(3,   Settings.Cw.LeadingZeros,   'serial numbers pad to 3');
    CheckEquals(200, Settings.SayHi.RateCutoff, 'say-hi cutoff 200');
 
    // Weight is REAL and its CFGCA bounds are stored x10 (5..15 = 0.5..1.5), so

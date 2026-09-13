@@ -232,6 +232,26 @@ type
      variables sat at -1, a value their own declared range rejected.  A
      subrange is signed, so the type simply says what the program means. *)
    TQsoPoints           = -1..65535;  // was crMin:0, crMax:MAXWORD -- see above
+   (*
+     FOUR THAT WERE ALLOW-LISTS, NOT RANGES.
+
+     Each was a ckArray row: crAddress indexed ArrayRecordArray, whose entry
+     named a const array of the values the setting may take, and CheckCommand
+     refused anything not in it. crMin and crMax were advisory there, and in
+     one case simply wrong -- MULT REPORT MINIMUM BANDS says 2..5 against an
+     array of (2, 3, 4).
+
+     ALL FOUR OF THESE LISTS ARE CONTIGUOUS, which is why they become plain
+     subranges and need no registered value check: (1..10), (3, 4, 5, 6),
+     (0, 1, 2, 3) and (0..6) are ranges written out one element at a time.
+     The two allow-lists that are genuinely NOT ranges -- SCP MINIMUM LETTERS
+     (0, 3, 4, 5) and STEREO CONTROL PIN (5, 9) -- are still rows, and they
+     want RegisterSettingValueCheck rather than a type.
+   *)
+   TCwSpeedIncrement       = 1..10;   // was CW_SPEED_INCREMENT
+   TCwDitDahRatio          = 3..6;    // was DITDAHRATIO_ARRAY
+   TCwLeadingZeros         = 0..3;    // was LEADING_ZEROS_ARRAY
+   TAutoSendCharacterCount = 0..6;    // was AUTO_SEND_CHARACTER_COUNT_ARRAY
    (* THE MAIN WINDOW'S FONT SIZE, and it is a STEP not a point size --
      0, 1 or 2, which MainUnit turns into pixels as `13 + FontSize - 1`
      and into a cell width as `ws + 2 * FontSize - 3`. The old row carried
@@ -1175,9 +1195,43 @@ type
       FIncludeFKeyNumber: boolean;
       FQuestionMarkChar: Char;
       FSlashMarkChar: Char;
+      FSpeedIncrement: TCwSpeedIncrement;
+      FDitDahRatio: TCwDitDahRatio;
+      FLeadingZeros: TCwLeadingZeros;
+      FAutoSendCharacterCount: TAutoSendCharacterCount;
+      procedure SetAutoSendCharacterCount(aValue: TAutoSendCharacterCount);
    public
       constructor Create;
    published
+      (* Was Config.CodeSpeedIncrement -- how many words a minute the speed
+        keys move. CW SPEED INCREMENT, which derives exactly. *)
+      property SpeedIncrement: TCwSpeedIncrement
+         read FSpeedIncrement write FSpeedIncrement;
+      (* Was Config.tDitDahRatio -- the dit-to-dah length ratio in TENTHS,
+        so 3 is the textbook 1:3. LOGK1EA multiplies by 10 to get the element
+        length, which is where the tenths live. Serial keying only: a
+        WinKeyer, a YCCC box or CW-by-CAT keep their own timing.
+
+        DIT DAH RATIO, aliased -- the command name carries no CW. *)
+      property DitDahRatio: TCwDitDahRatio
+         read FDitDahRatio write FDitDahRatio;
+      (* Was Config.LeadingZeros -- how many digits a sent serial number is
+        padded to. LEADING ZEROS, aliased for the same reason. *)
+      property LeadingZeros: TCwLeadingZeros
+         read FLeadingZeros write FLeadingZeros;
+      (* Was the global AutoSendCharacterCount in logwind.
+
+        HOW MANY CHARACTERS OF A CALLSIGN TRIGGER AUTOMATIC SENDING, and 0
+        means the feature is off. AUTO SEND CHARACTER COUNT, aliased.
+
+        THE SETTER IS WHY THIS ONE NEEDED THINKING ABOUT. It was
+        CommandsProcArray[4], UpadateAutoSend, which DERIVES AutoSendEnable
+        from it -- and that flag is live state the operator also toggles from
+        the keyboard, so it cannot just be replaced by asking the count. The
+        derivation runs whenever the count changes, and nothing else touches
+        the flag. *)
+      property AutoSendCharacterCount: TAutoSendCharacterCount
+         read FAutoSendCharacterCount write SetAutoSendCharacterCount;
       // Was Config.AllCWMessagesChainable. ALL CW MESSAGES CHAINABLE.
       property AllMessagesChainable: boolean
          read FAllMessagesChainable write FAllMessagesChainable;
@@ -3290,6 +3344,16 @@ begin
    FTcpServerPort := 52002;
 end;
 
+procedure TCwSettings.SetAutoSendCharacterCount(aValue: TAutoSendCharacterCount);
+begin
+   if FAutoSendCharacterCount = aValue then
+      begin
+      Exit;
+      end;
+   FAutoSendCharacterCount := aValue;
+   Changed('AutoSendCharacterCount');
+end;
+
 constructor TCwSettings.Create;
 begin
    inherited Create;
@@ -3316,6 +3380,11 @@ begin
    FIncludeFKeyNumber    := False;
    FQuestionMarkChar     := '?';
    FSlashMarkChar        := '/';
+   (* The values uConfigValues' initialiser carried, and logwind's zero. *)
+   FSpeedIncrement         := 3;
+   FDitDahRatio            := 3;
+   FLeadingZeros           := 3;
+   FAutoSendCharacterCount := 0;
 end;
 
 constructor TUnknownCountryFileSettings.Create;
@@ -4340,7 +4409,10 @@ begin
      above. The names are the legacy; the model is not obliged to be shaped
      like them. *)
    Alias('ALL CW MESSAGES CHAINABLE',      'Cw.AllMessagesChainable');
+   Alias('AUTO SEND CHARACTER COUNT',      'Cw.AutoSendCharacterCount');
+   Alias('DIT DAH RATIO',                  'Cw.DitDahRatio');
    Alias('KEYPAD CW MEMORIES',             'Cw.KeypadMemories');
+   Alias('LEADING ZEROS',                  'Cw.LeadingZeros');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
    Alias('TUNE WITH DITS',                 'Cw.TuneWithDits');
 

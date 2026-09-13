@@ -29,7 +29,7 @@ unit LogStuff;
 interface
 
 uses {Dos, Printer,}Tree,
-  uConfigValues,   // Config.CodeSpeedIncrement
+  uConfigValues,   // Settings.Cw.SpeedIncrement
   utils_text,
   uRussiaOblasts,
   uCallSignRoutines,
@@ -6280,9 +6280,9 @@ end;
 
 procedure SpeedUp;
 begin
-  if CodeSpeed < (99 - Config.CodeSpeedIncrement) then {KK1L: 6.72}
+  if CodeSpeed < (99 - Settings.Cw.SpeedIncrement) then {KK1L: 6.72}
      begin
-     SetSpeed(CodeSpeed + Config.CodeSpeedIncrement); {KK1L: 6.72}
+     SetSpeed(CodeSpeed + Settings.Cw.SpeedIncrement); {KK1L: 6.72}
      DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
      end;
 end;
@@ -6347,11 +6347,11 @@ procedure SlowDown;
 
 begin
   {IF CodeSpeed > 4 THEN}
-  if CodeSpeed > (Config.CodeSpeedIncrement + 1) then {KK1L: 6.72}
+  if CodeSpeed > (Settings.Cw.SpeedIncrement + 1) then {KK1L: 6.72}
      begin
      {SetSpeed (CodeSpeed - 3);}
-  //   CW_SPEED1 := CW_SPEED1 - Config.CodeSpeedIncrement;
-     SetSpeed(CodeSpeed - Config.CodeSpeedIncrement); {KK1L: 6.72}
+  //   CW_SPEED1 := CW_SPEED1 - Settings.Cw.SpeedIncrement;
+     SetSpeed(CodeSpeed - Settings.Cw.SpeedIncrement); {KK1L: 6.72}
      DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
      end;
 end;

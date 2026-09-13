@@ -974,7 +974,7 @@ begin
   end;
 }
 
-  CWBuffer^[CWBufferEnd].length := Config.tDitDahRatio * 10;
+  CWBuffer^[CWBufferEnd].length := Settings.Cw.DitDahRatio * 10;
   CWBuffer^[CWBufferEnd].Key := True;
 
   IncrementBufferEnd;

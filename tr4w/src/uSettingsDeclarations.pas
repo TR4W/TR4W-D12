@@ -142,7 +142,7 @@ begin
                          RS_OPERATING_CW_SAYHIRATECUTOFF);
    RegisterModelSetting( 'operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
                          RS_OPERATING_CW_KEYPADMEMORIES);
-   RegisterStoredSetting('operating.cw.leadingZeros',     'LEADING ZEROS',
+   RegisterModelSetting( 'operating.cw.leadingZeros',     'LEADING ZEROS',
                          RS_OPERATING_CW_LEADINGZEROS);
    RegisterModelSetting( 'operating.cw.leadingZeroChar',  'LEADING ZERO CHARACTER',
                          RS_OPERATING_CW_LEADINGZEROCHAR);
@@ -151,7 +151,7 @@ begin
    // toggling DTR/RTS -- a WinKeyer, a YCCC box or CW-by-CAT keep their own
    // timing -- which is why they sit in their own frame rather than beside the
    // settings that apply to every keyer.
-   RegisterStoredSetting('operating.cw.serial.ditDahRatio',    'DIT DAH RATIO',
+   RegisterModelSetting( 'operating.cw.serial.ditDahRatio',    'DIT DAH RATIO',
                          RS_OPERATING_CW_SERIAL_DITDAHRATIO);
    RegisterStoredSetting('operating.cw.serial.weight',         'WEIGHT',
                          RS_OPERATING_CW_SERIAL_WEIGHT);
@@ -169,7 +169,7 @@ begin
    // settings\tr4w.json, the CFGCA row is csJSON, and so it no longer appears
    // in Ctrl-J nor in tr4w.ini.  The two halves must stay in step; see
    // docs/CFG_MIGRATION_PLAN.md.
-   RegisterStoredSetting('cw.speedIncrement',    'CW SPEED INCREMENT',
+   RegisterModelSetting( 'cw.speedIncrement',    'CW SPEED INCREMENT',
                          RS_CW_SPEEDINCREMENT);
    RegisterStoredSetting('cw.tone',              'CW TONE',
                          RS_CW_TONE);
@@ -710,7 +710,7 @@ begin
                           RS_OPERATING_CTRLJ_WAKEUPTIMEOUT);
 
    // --- CW (12) ---------------------------------------
-   RegisterStoredSetting('cw.ctrlj.autoSendCharacterCount',   'AUTO SEND CHARACTER COUNT',
+   RegisterModelSetting( 'cw.ctrlj.autoSendCharacterCount',   'AUTO SEND CHARACTER COUNT',
                           RS_CW_CTRLJ_AUTOSENDCHARACTERCOUNT);
    RegisterStoredSetting('cw.ctrlj.codeSpeed',                'CODE SPEED',
                           RS_CW_CTRLJ_CODESPEED);

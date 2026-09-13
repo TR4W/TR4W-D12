@@ -30,7 +30,7 @@ interface
 uses
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   Graphics,        // TFont -- ApplyMainFontTo, for controls the LCL draws
-  uConfigValues,   // Config.CodeSpeedIncrement
+  uConfigValues,   // Settings.Cw.SpeedIncrement
   Types,               // TRect -- the OnDrawItem signature qualifies it as
                        // Types.TRect because this unit also uses Windows,
                        // whose TRect is a DIFFERENT declaration; a method
@@ -1738,7 +1738,7 @@ begin
      SwitchNext                         then // 4.52.8
      begin
      if tAutoSendMode                and 
-        (AutoSendCharacterCount > 0) then
+        (Settings.Cw.AutoSendCharacterCount > 0) then
         begin
         SwitchNext := False;
         InactiveRigCallingCQ := False;
@@ -4994,7 +4994,7 @@ begin
 
     menu_alt_toogleautosend:
       begin
-        if AutoSendCharacterCount > 0 then
+        if Settings.Cw.AutoSendCharacterCount > 0 then
            begin
            InvertBoolean(AutoSendEnable);
            end;
@@ -5269,15 +5269,15 @@ begin
       ExportToCSV;
 
     menu_inactiveradio_cwspeedup:
-      if InActiveRadioPtr.SpeedMemory < (99 - Config.CodeSpeedIncrement) then
+      if InActiveRadioPtr.SpeedMemory < (99 - Settings.Cw.SpeedIncrement) then
          begin
-         inc(InActiveRadioPtr.SpeedMemory, Config.CodeSpeedIncrement);
+         inc(InActiveRadioPtr.SpeedMemory, Settings.Cw.SpeedIncrement);
          end;
 
     menu_inactiveradio_cwspeeddown:
-      if InActiveRadioPtr.SpeedMemory > (Config.CodeSpeedIncrement + 1) then
+      if InActiveRadioPtr.SpeedMemory > (Settings.Cw.SpeedIncrement + 1) then
          begin
-         dec(InActiveRadioPtr.SpeedMemory, Config.CodeSpeedIncrement);
+         dec(InActiveRadioPtr.SpeedMemory, Settings.Cw.SpeedIncrement);
          end;
 
     menu_cwspeedup:
@@ -5778,7 +5778,7 @@ end;
 procedure ProcessKeyDownTerm; // 4.46.2
 begin
   if activeradioptr^.cwbycat and autosendenable and Settings.Cq.AutoCallTerminate then
-    if length(CallWindowString) = AutoSendCharacterCount then
+    if length(CallWindowString) = Settings.Cw.AutoSendCharacterCount then
        begin
        tExchangeWindowSetFocus;
        tSetExchWindInitExchangeEntry;
@@ -5917,7 +5917,7 @@ begin
               begin
               swapradios;
               end;
-           if (AutoSendEnable) and (AutoSendCharacterCount > 0) then
+           if (AutoSendEnable) and (Settings.Cw.AutoSendCharacterCount > 0) then
               begin // end 4.52.4
               SwapRadios;
               InactiveRigCallingCQ := False;
@@ -6127,7 +6127,7 @@ procedure CallWindowKeyUpProc;
 begin
   if AutoSendEnable then
      begin
-     if AutoSendCharacterCount = length(CallWindowString) then
+     if Settings.Cw.AutoSendCharacterCount = length(CallWindowString) then
         begin
         DebugMsg('[CallWindowKeyUpProc] Calling StartSendingNow with False');
         StartSendingNow(False);
@@ -8921,7 +8921,7 @@ end;
 procedure StartSendingNow(FromKeyBoard: boolean);
 begin
 
-  if AutoSendCharacterCount > EntrySelStart(TR4WCallEdit) then
+  if Settings.Cw.AutoSendCharacterCount > EntrySelStart(TR4WCallEdit) then
      begin
      Exit;
      end;
@@ -9808,7 +9808,7 @@ begin
        scWk_Reset;
        SwapRadios;
        SwitchNext := False; // 4.52.8
-       if (not AutoSendEnable) or (not AutoSendCharacterCount > 0) then
+       if (not AutoSendEnable) or (not Settings.Cw.AutoSendCharacterCount > 0) then
          //n4af 4.42.10 Redrive dupe check
           begin
           ReturninCQopmode;

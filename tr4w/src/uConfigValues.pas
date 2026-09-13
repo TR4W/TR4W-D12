@@ -70,7 +70,6 @@ type
       { CW SPEED INCREMENT -- how far a speed-up/slow-down keystroke moves.
         Was a typed constant in logwind.pas, reached by nine call sites across
         MainUnit and LOGSTUFF.  Range 1..10, enforced by the CFGCA row. }
-      CodeSpeedIncrement: integer;
 
       { HAMSCORE -- live score posting to scoredistributor.net (issues #783,
         #931).  Was five variables in uHamScore.pas.
@@ -86,7 +85,6 @@ type
       { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
         Types copied verbatim from the declarations they replace -- CheckCommand
         writes through @Config.<field> and cannot see a mismatch. }
-      tDitDahRatio: integer;
 
       { CW KEYING, migrated 2026-08-14. These five differ from everything above:
         THE SESSION MUTATES THEM. Weight, FarnsworthEnable and FarnsworthSpeed are
@@ -111,7 +109,6 @@ type
         string the keyer sends. Contest .cfg files DO set it (six of them,
         both CQ-WPX among them) and such a line wins while that contest is
         loaded -- see CommandCameFromContestCFG. }
-      LeadingZeros: integer;
 
       { CW KEYING, PADDLE AND PTT -- migrated 2026-08-14.
 
@@ -191,14 +188,12 @@ var
      neutral starting point -- a speed increment of zero means the speed-up and
      slow-down keys quietly stop working. }
    Config: TR4WConfig = (
-      CodeSpeedIncrement: 3;
 
       // Issue #920: the RTC 3.0 endpoint per the spec.  An operator may point
       // HAMSCORE URL at hamscore.com/postxml/index.php (which also serves 3.0)
       // or any future mirror.  Plain HTTP is the spec default; an https:// URL
       // takes the existing TIdHTTP + TLS path transparently.
 
-      tDitDahRatio: 3;
 
       CWEnable: True;
       CWTone: 700;
@@ -207,7 +202,6 @@ var
       Weight: 1.0;
 
 
-      LeadingZeros: 3;
 
       { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file

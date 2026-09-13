@@ -515,7 +515,12 @@ var
   AlarmSet                              : boolean;
   AlarmMinute                           : integer;
   AlarmHour                             : integer;
-  AutoSendCharacterCount                : integer;
+  (* The character count moved to the settings model.
+
+    AutoSendEnable STAYS A GLOBAL, and that is the point rather than an
+    oversight: it is LIVE STATE, not a setting. The operator toggles it from
+    the keyboard, and it is re-derived from the count whenever the count
+    changes -- see uSettingsEffects. *)
   AutoSendEnable                        : boolean;
   (* AskForFrequencies and AutoTimeIncrementQSOs are gone (2026-09-12) --
     Settings.Operating owns both. *)
@@ -2330,11 +2335,11 @@ var
   nCmdShow                              : integer;
 begin
 
-  if (AutoSendCharacterCount > 0) and AutoSendEnable and (ActiveMode = CW) and not SearchAndPounceMode then
+  if (Settings.Cw.AutoSendCharacterCount > 0) and AutoSendEnable and (ActiveMode = CW) and not SearchAndPounceMode then
      begin
      nCmdShow := SW_SHOW;
      SetElementLeft(mweAutoSendCount,
-                    (AutoSendCharacterCount - 1) * ws2 * 3 + ws * 15 {col4});
+                    (Settings.Cw.AutoSendCharacterCount - 1) * ws2 * 3 + ws * 15 {col4});
      end
   else
      begin
@@ -4022,7 +4027,7 @@ end;
 
 procedure UpadateAutoSend;
 begin
-  AutoSendEnable := AutoSendCharacterCount > 0;
+  AutoSendEnable := Settings.Cw.AutoSendCharacterCount > 0;
   DisplayAutoSendCharacterCount;
 end;
 

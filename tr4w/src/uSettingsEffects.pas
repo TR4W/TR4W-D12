@@ -92,8 +92,9 @@ uses
    FContest,       // RecalculateMyCountryContinentAndZoneNew
    LogWind,        (* Settings.My.Call -- the callsign the derivation starts
                      from; DispalayLogGridLines; DisplayInsertMode *)
-                   // DisplayInsertMode, the INS/OVR panel, and
-                   // DisplayCodeSpeed, which is also the DVK's state panel
+                   // DisplayInsertMode, the INS/OVR panel;
+                   // DisplayCodeSpeed, which is also the DVK's state panel;
+                   // and UpadateAutoSend
    uStations,      // SetStationsCallsignMask -- was CommandsProcArray[12]
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
    uNet,           // SetComputerName -- announce the name to the other position
@@ -196,6 +197,10 @@ const
      'DVK ON', 'DVK OFF', or 'DVK Dis.' when the keyer is switched off. *)
    DVK_ENABLE = 'Dvk.Enable';
 
+   (* AutoSendEnable is DERIVED from the count and is also toggled from the
+     keyboard, so the derivation has to run whenever the count changes. *)
+   AUTO_SEND_CHARACTER_COUNT = 'Cw.AutoSendCharacterCount';
+
 
 function InGroup(const aPath, aPrefix: string): boolean;
 begin
@@ -242,6 +247,12 @@ begin
    if UnicodeSameText(aPath, INSERT_MODE) then
       begin
       DisplayInsertMode;
+      end;
+
+   if UnicodeSameText(aPath, AUTO_SEND_CHARACTER_COUNT) then
+      begin
+      (* This was CommandsProcArray[4]. *)
+      UpadateAutoSend;
       end;
 
    if UnicodeSameText(aPath, DVK_ENABLE) then

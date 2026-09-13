@@ -253,7 +253,6 @@ function F_KEYER_RADIO_ONE_OUTPUT_PORT: boolean;
 function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
 function F_MY_CONTINENT: boolean;
 function F_ZONE_MULTIPLIER: boolean;
-function F_AUTO_SEND_CHARACTER_COUNT: boolean;
 procedure UpdateDebugLogLevel;
 //function F_SETPARALLELPORT: boolean;
 
@@ -312,17 +311,22 @@ var
 
 const
    // Integer commnand pointers
+   (* A NIL arVar MEANS THE SETTING HAS MOVED, and the SLOT STAYS BEHIND.
+     This table is POSITIONAL -- a row reaches it as `crAddress: pointer(N)`
+     -- so removing an entry would shift every index above it and silently
+     repoint other rows at the wrong allow-list. The same reason
+     AdditionalProcsArray keeps its freed slot. *)
    ArrayRecordArray: array[1..16] of ArrayRecord =
       (
     {(*}
     (arArrayPtr: @SCP_MINIMUM_LETTERS_ARRAY;       arArrayLength: high(SCP_MINIMUM_LETTERS_ARRAY);       arVar: @SCPMinimumLetters),
-    (arArrayPtr: @AUTO_SEND_CHARACTER_COUNT_ARRAY; arArrayLength: high(AUTO_SEND_CHARACTER_COUNT_ARRAY); arVar: @AutoSendCharacterCount),
+    (arArrayPtr: @AUTO_SEND_CHARACTER_COUNT_ARRAY; arArrayLength: high(AUTO_SEND_CHARACTER_COUNT_ARRAY); arVar: nil{moved to Settings.Cw.AutoSendCharacterCount}),
 
     (arArrayPtr: @AUTO_QSL_INTERVAL;               arArrayLength: high(AUTO_QSL_INTERVAL);               arVar: @AutoQSLInterval),
 
     (arArrayPtr: @ROW_COUNT_ARRAY;                 arArrayLength: high(ROW_COUNT_ARRAY);                 arVar: @LinesInEditableLog),
     (arArrayPtr: @WINDOW_SIZE_ARRAY;               arArrayLength: high(WINDOW_SIZE_ARRAY);               arVar: @WindowSize),
-    (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: @Config.CodeSpeedIncrement),
+    (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: nil{moved to Settings.Cw.SpeedIncrement}),
     (arArrayPtr: @MULT_REPORT_MINIMUM_BANDS_ARRAY; arArrayLength: high(MULT_REPORT_MINIMUM_BANDS_ARRAY); arVar: @MultReportMinimumBands),
     (arArrayPtr: @STEREO_CONTROL_PIN_ARRAY;        arArrayLength: high(STEREO_CONTROL_PIN_ARRAY);        arVar: @StereoControlPin),
     (arArrayPtr: @RECORDER_BITRATE_ARRAY;          arArrayLength: high(RECORDER_BITRATE_ARRAY);          arVar: @RecorderBitrate),
@@ -331,8 +335,8 @@ const
 
     (arArrayPtr: @CAT_BAUDRATE_ARRAY;              arArrayLength: high(CAT_BAUDRATE_ARRAY);              arVar: @Radio1.RadioBaudRate),
     (arArrayPtr: @CAT_BAUDRATE_ARRAY;              arArrayLength: high(CAT_BAUDRATE_ARRAY);              arVar: @Radio2.RadioBaudRate),
-    (arArrayPtr: @DITDAHRATIO_ARRAY;               arArrayLength: high(DITDAHRATIO_ARRAY);               arVar: @Config.tDitDahRatio),
-    (arArrayPtr: @LEADING_ZEROS_ARRAY;             arArrayLength: high(LEADING_ZEROS_ARRAY);             arVar: @Config.LeadingZeros),
+    (arArrayPtr: @DITDAHRATIO_ARRAY;               arArrayLength: high(DITDAHRATIO_ARRAY);               arVar: nil{moved to Settings.Cw.DitDahRatio}),
+    (arArrayPtr: @LEADING_ZEROS_ARRAY;             arArrayLength: high(LEADING_ZEROS_ARRAY);             arVar: nil{moved to Settings.Cw.LeadingZeros}),
 
     (arArrayPtr: @ICOM_FILTER_WIDTH;               arArrayLength: high(ICOM_FILTER_WIDTH);               arVar: @Radio1.tIcomFilterWidth),
     (arArrayPtr: @ICOM_FILTER_WIDTH;               arArrayLength: high(ICOM_FILTER_WIDTH);               arVar: @Radio2.tIcomFilterWidth)
@@ -589,6 +593,10 @@ const
      They stay here until that config/runtime split is decided. See
      TCwSettings. *)
    - 5 {CW settings that are not session state -- moved to uSettingsModel}
+   (* THE FOUR CW NUMERICS, and every one of them was a ckArray row whose
+     allow-list turned out to be a contiguous range. They are subrange
+     properties on Settings.Cw now. *)
+   - 4 {CW SPEED INCREMENT, DIT DAH RATIO, LEADING ZEROS, AUTO SEND CHARACTER COUNT}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -686,7 +694,6 @@ const
 
  (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOwned; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'AUTO QSL INTERVAL';             crAddress: pointer(3);                      crMin:0;  crMax:6;        crS: csJSON; crA: 6; crC:0 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'AUTO SEND CHARACTER COUNT';     crAddress: pointer(2);                      crMin:0;  crMax:6;        crS: csJSON; crA: 0; crC:0 ; crP:4; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'BACKUP LOG FILE NAME';          crAddress: @TR4W_BACKUP_FILENAME;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFileName; crNetwork: 1),   // 4.56.11
  (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
@@ -725,12 +732,10 @@ const
 // the entry fields, which are LCL TEdits since Phase 3b and carry their own.
 // csRem, not deleted, so an existing .cfg that sets it still loads.
  (crCommand: 'CW ENABLE';                     crAddress: @Config.CWEnable;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'CW SPEED INCREMENT';            crAddress: pointer(6);                      crMin:1;  crMax:10;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'CW TONE';                       crAddress: @Config.CWTone;                         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'DEBUG LOG LEVEL';               crAddress: pointer(52);                     crMin:0;   crMax:0;      crS: csJSON; crA: 0; crC:0 ; crP:13; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
  (crCommand: 'DISTANCE MODE';                 crAddress: pointer(20);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'DIT DAH RATIO';                 crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'DOMESTIC MULTIPLIER';           crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'DUPE CHECK SOUND';              crAddress: pointer(12);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -818,7 +823,6 @@ const
   (* WITHDRAWN 2026-09-11.  The value lives in the store's `general` section as
     LatestConfigFile and always did; this row pointed at a GLOBAL COPY of it.
     A bridge, not storage -- the first of the 279 such rows to go. *)
- (crCommand: 'LEADING ZEROS';                 crAddress: pointer(14);                     crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'LPT1 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel1];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'LPT2 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel2];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'LPT3 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel3];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
@@ -2415,13 +2419,6 @@ end;
 function F_AUTO_QSL_INTERVAL: boolean;
 begin
    AutoQSLCount := AutoQSLInterval;
-   Result := True;
-end;
-
-function F_AUTO_SEND_CHARACTER_COUNT: boolean;
-begin
-   //  AutoQSLCount := AutoQSLInterval;
-   AutoSendEnable := AutoSendCharacterCount > 0;
    Result := True;
 end;
 

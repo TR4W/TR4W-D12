@@ -243,7 +243,7 @@ begin
 
             TempString := QSONumberString(QSONumber);
 
-            while Config.LeadingZeros > length(TempString) do
+            while Settings.Cw.LeadingZeros > length(TempString) do
                begin
                TempString := Settings.Cw.LeadingZeroCharacter + TempString;
                end;
