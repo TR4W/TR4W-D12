@@ -131,7 +131,6 @@ var
   SyncNetBuffer                         : array[0..4096 - 1] of AnsiChar;
   SYSERRORBUFFER                        : array[0..255] of AnsiChar;
 
-  GETREALPATHBUFFER                     : array[0..255] of AnsiChar;
 
   IntToPCharBuffer                      : array[0..15] of AnsiChar;
   FreqToPCharBuffer                     : array[0..15] of AnsiChar;

@@ -204,7 +204,8 @@ begin
 
 {$IF MAKE_DEFAULT_VALUES = false}
 
-  TF.Format(Config.MP3Path, '%sMP3', TR4W_LOG_PATH_NAME);
+  (* THE MP3 DEFAULT IS GONE with the field it filled.  Nothing read it:
+    the recorder that did was deleted along with its lame_enc.dll binding. *)
 
 {$IFEND}
 

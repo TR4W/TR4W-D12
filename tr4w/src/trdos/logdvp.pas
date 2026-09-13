@@ -608,24 +608,24 @@ var
     is > 0 and equal to no size -- so an error would have read as a large
     successful read. Same trap logwind had. *)
   lpNumberOfBytesRead                   : Integer;
-  p                                     : PAnsiChar;
+  p                                     : AnsiString;
 begin
   if not Settings.Dvk.MissingCallsignsFileEnable then Exit;
   if not LooksLikeACallSign(Callsign) then Exit;
-  p := GetRealPath(Config.DVKPath, 'FULLCALLSIGNS\MISSINGCALLSIGNS.TXT', nil);
+  p := AnsiString(GetRealPath('FULLCALLSIGNS\MISSINGCALLSIGNS.TXT'));
   (* FileOpen/FileCreate, not CreateFileA. OPEN_ALWAYS means "open it, and
     create it if it is not there", which the RTL splits into two calls. *)
-  (* p is a PAnsiChar and the FileExists in scope here takes one (TF s), so it
-    is passed straight through; the RTL open/create take a string, and
-    AnsiString is the narrow one -- string() would widen to UnicodeString and
-    then narrow back, which the ratchet counts. *)
-  if FileExists(p) then
+  (* AnsiString, not string: the RTL open/create take a string and AnsiString
+    is the narrow one -- string() would widen to UnicodeString and then narrow
+    back, which the ratchet counts. SysUtils.FileExists is named explicitly
+    because TF's PAnsiChar one is also in scope. *)
+  if SysUtils.FileExists(p) then
      begin
-     h := FileOpen(AnsiString(p), fmOpenReadWrite or fmShareDenyNone);
+     h := FileOpen(p, fmOpenReadWrite or fmShareDenyNone);
      end
   else
      begin
-     h := FileCreate(AnsiString(p));
+     h := FileCreate(p);
      end;
   if h = feInvalidHandle then
      begin
@@ -699,13 +699,21 @@ end;
 function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
 var
   Duration                              : Cardinal;
-  WAVFile                               : PAnsiChar;
+  WAVFile                               : string;
+  (* The bytes handed to the winmm boundary below.  A named local, not a cast
+    in the argument list: PAnsiChar(AnsiString(x)) on a temporary is the
+    dangling-pointer idiom this tree has been bitten by. *)
+  wavPath                               : AnsiString;
   countrtyId                            : DXMultiplierString;
+  folder                                : string;
   //tempBuffer                            : array[0..255 + 64] of Char;
 begin
   Result := prCantPlay;
 
-  WAVFile := nil;
+  (* EMPTY IS THE "NOT FOUND YET" SENTINEL, where this was nil.  Same two
+    steps: try the country-specific folder first, fall back to the plain
+    one. *)
+  WAVFile := '';
 
   if Settings.Dvk.LocalizedMessagesEnable then
     if CallWindowString <> '' then
@@ -714,28 +722,38 @@ begin
        countrtyId := ctyGetCountryID(CallWindowString);
        if (countrtyId <> '') then
           begin
-          if (countrtyId[1] = 'U') and (countrtyId[2] = 'A') then
+          folder := string(countrtyId);
+
+          (* EVERY UA PREFIX SHARES ONE FOLDER.  The old code planted a #0 at
+            the third byte and relied on the PAnsiChar stopping there -- which
+            left the ShortString's own Length saying 3, so this only ever
+            worked because the value was read as a C string.  Copy says it. *)
+          if (Length(folder) >= 2) and (folder[1] = 'U') and (folder[2] = 'A') then
              begin
-             countrtyId[3] := #0;
+             folder := Copy(folder, 1, 2);
              end;
 
-          WAVFile := GetRealPath(Config.DVKPath, f, @countrtyId[1]);
-        //ShowMessage(WAVFile);
-          if not FileExists(WAVFile) then
+          WAVFile := GetRealPath(string(AnsiString(f)), folder);
+          if not SysUtils.FileExists(WAVFile) then
              begin
-             WAVFile := nil;
+             WAVFile := '';
              end;
           end;
        end;
 
-  if WAVFile = nil then
+  if WAVFile = '' then
      begin
-     WAVFile := GetRealPath(Config.DVKPath, f, nil);
+     WAVFile := GetRealPath(string(AnsiString(f)));
      end;
 
-  if tGetWAVDurationFromHeader(WAVFile, Duration, DisplayError) then
+  (* THE TRANSPORT BOUNDARY, and the only place a pointer is wanted:
+    tsndPlaySound reaches sndPlaySoundA and the header reader walks the file
+    bytes. *)
+  wavPath := AnsiString(WAVFile);
+
+  if tGetWAVDurationFromHeader(PAnsiChar(wavPath), Duration, DisplayError) then
      begin
-     if tsndPlaySound(WAVFile) = False then
+     if tsndPlaySound(PAnsiChar(wavPath)) = False then
         begin
         if DisplayError then
            begin

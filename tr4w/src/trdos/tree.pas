@@ -720,7 +720,7 @@ var
 //  Com6PortBaseAddress              : Word;
 
 function CheckPTTLockout: boolean;
-function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
+function GetRealPath(const aFileName: string; const aAddFolder: string = ''): string;
 
 function AddBand(Band: BandType): Char;
 function AddMode(Mode: ModeType): Char;
@@ -4133,32 +4133,48 @@ end;
 
   Assembled with ordinary string concatenation, which is what this always was:
   a path is text, and the pointer arithmetic was the Win32 API showing through.
-  The signature keeps its PAnsiChar in and out because four callers pass and
-  hold one -- changing those is a separate job, and the buffer is still the
-  program-wide one they expect. *)
-function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
-var
-  s                                     : AnsiString;
+
+  AND THE SIGNATURE FOLLOWED, 2026-09-13 -- the "separate job" this comment
+  used to defer. Three faults went with it, all in the interface rather than
+  the logic:
+
+    * THE PATH PARAMETER WAS REDUNDANT AND COULD DISAGREE WITH ITSELF. All
+      four callers passed Config.DVKPath, and the body ALSO read
+      Config.DVKPath directly to decide whether the name was relative -- so
+      a caller passing anything else got a path built from one value and
+      tested against another.
+
+    * IT RETURNED A POINTER INTO ONE SHARED GLOBAL BUFFER. Two calls in a
+      single expression overwrote each other with no diagnostic, and logdvp
+      calls it inside a loop. A string result cannot do that, and
+      GETREALPATHBUFFER is deleted.
+
+    * THE PAnsiChar BOUGHT NOTHING: every caller already held or wanted a
+      string, and two cast on the way in and back again on the way out. *)
+function GetRealPath(const aFileName: string; const aAddFolder: string): string;
 begin
-  if pPos('\', Config.DVKPath) = -1 then
-     begin
-     s := AnsiString(PAnsiChar(@TR4W_PATH_NAME[0])) + AnsiString(Path) + '\';
-     end
-  else
-     begin
-     s := AnsiString(Path) + '\';
-     end;
+   (* Pos, NOT pPos: the utils_text one scans a PAnsiChar and answers -1 for
+     "not found" while the RTL answers 0. The question is unchanged -- does
+     the configured path name a directory of its own, or is it relative to
+     the program directory? *)
+   if Pos('\', Settings.Dvk.Path) = 0 then
+      begin
+      (* A GENUINE FIXED-BUFFER READ, so it keeps the NUL-terminated form:
+        TR4W_PATH_NAME is a FileNameType and a blanket cast would take the
+        padding with it. *)
+      Result := string(AnsiString(PAnsiChar(@TR4W_PATH_NAME[0]))) + Settings.Dvk.Path + '\';
+      end
+   else
+      begin
+      Result := Settings.Dvk.Path + '\';
+      end;
 
-  if AddFolder <> nil then
-     begin
-     s := s + AnsiString(AddFolder) + '\';
-     end;
+   if aAddFolder <> '' then
+      begin
+      Result := Result + aAddFolder + '\';
+      end;
 
-  s := s + AnsiString(FileName);
-
-  FillChar(GETREALPATHBUFFER, SizeOf(GETREALPATHBUFFER), 0);
-  uAnsiStr.StrPLCopy(GETREALPATHBUFFER, s, SizeOf(GETREALPATHBUFFER) - 1);
-  Result := GETREALPATHBUFFER;
+   Result := Result + aFileName;
 end;
 
 function KeyboardCallsignChar(var Key: wParam; ExChWin: boolean): boolean;

@@ -281,14 +281,24 @@ begin
    CheckFalse(Settings.Dvk.UseRecordedSigns,           'UseRecordedSigns was False');
    CheckFalse(Settings.Mp3.RecorderEnable,          'MP3RecorderEnable was False');
 
-   CheckEquals(SizeOf(FileNameType), SizeOf(Config.MP3Path),     'MP3Path is a FileNameType buffer');
-   CheckEquals(SizeOf(FileNameType), SizeOf(Config.MP3Player),   'MP3Player is a FileNameType buffer');
-   CheckEquals(SizeOf(FileNameType), SizeOf(Config.DVKPath),     'DVKPath is a FileNameType buffer');
-   CheckEquals(SizeOf(FileNameType), SizeOf(Config.DVKRecorder), 'DVKRecorder is a FileNameType buffer');
+   (* THE BUFFER PINS ABOVE ARE GONE, and so is what they protected.
 
-   // And they start empty, which is what makes "no folder configured" detectable.
-   CheckEquals(0, Length(StrPas(Config.MP3Path)), 'MP3Path starts empty');
-   CheckEquals(0, Length(StrPas(Config.DVKPath)), 'DVKPath starts empty');
+     They asserted that four audio paths were MAX_PATH character arrays,
+     because CheckCommand wrote through @Config.<field> and a string there
+     would have scribbled past a header. No row addresses any of them now --
+     MP3 PATH and MP3 PLAYER went with the recorder that read them, and the
+     two DVK paths are properties -- so the hazard is gone rather than
+     unchecked, and a property holding a string is the point.
+
+     WHAT REPLACES THEM IS THE DEFAULT, which is the part that had to survive
+     the move: SetConfigurationDefaultValues appended 'DVK' into the buffer at
+     startup, and that now lives in TDvkSettings.Create. Losing it would send
+     every .WAV lookup to the program directory instead of the DVK folder --
+     silently, since a missing file is a message that does not play. *)
+   CheckEquals('DVK', Settings.Dvk.Path,
+               'the DVK folder default survived the move off the buffer');
+   CheckEquals('', Settings.Dvk.Recorder,
+               'and the recorder starts empty, which is how "not configured" is detected');
 end;
 
 procedure TConfigDefaultsTests.RunAllTests;

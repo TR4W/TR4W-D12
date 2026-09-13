@@ -119,7 +119,7 @@ uses
   uCFG,           // CheckCommand
   Tree,           // GetRealPath
   utils_file,     // tOpenFileForWrite, sWriteFile, GetRealPath, waveheader
-  uConfigValues,  // Config.DVKRecorder, Config.DVKPath
+  uSettingsModel, // Settings.Dvk.Recorder, Settings.Dvk.Path
   uMessagesList,  // ShowMessagesList, LastSelectedCommand
   uEditMessage,   // DeleteEscapeChars -- still this unit's own routine
   uAltP,          // DisplaymessagesList -- refresh after an edit
@@ -307,7 +307,7 @@ begin
       Exit;
       end;
 
-   if Config.DVKRecorder[0] = #0 then
+   if Settings.Dvk.Recorder = '' then
       begin
       SetCommand('DVP RECORDER');
       Exit;
@@ -315,7 +315,7 @@ begin
 
    (* tree.GetRealPath joins our own bytes to our own path; nothing here is
      a Win32 boundary, so there is no ANSI code page in the question. *)
-   path := AnsiString(GetRealPath(Config.DVKPath, PAnsiChar(AnsiString(msg)), nil));
+   path := AnsiString(GetRealPath(msg));
 
    // utils_file.FileExists takes a PAnsiChar; SysUtils' string overload is also
    // in scope, so the cast says which is meant rather than leaving it to the
@@ -335,7 +335,7 @@ begin
          end;
       end;
 
-   RunProgram(string(Config.DVKRecorder), [path]);
+   RunProgram(Settings.Dvk.Recorder, [path]);
 end;
 
 procedure TfrmEditMessage.SaveToConfig;

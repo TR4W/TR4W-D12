@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(261, names.Count,
+         CheckEquals(265, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1294,7 +1294,8 @@ const
       + '"DUPE CHECK SOUND",'
       + '"DUPE SHEET AUTO RESET",'
       + '"DVK ENABLE",'
-      + '"DVK LOCALIZED MESSAGES ENABLE",'
+      + '"DVK LOCALIZED MESSAGES ENABLE",' +
+      '"DVK PATH","DVK RECORDER",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXCHANGE MEMORY ENABLE",'
       + '"EXTERNAL LOGGER",'
@@ -1337,7 +1338,7 @@ const
       + '"MINITOUR DURATION",'
       + '"MISSINGCALLSIGNS FILE ENABLE",'
       + '"MMTTY ENGINE",'
-      + '"MP3 RECORDER ENABLE",'
+      + '"MP3 PATH","MP3 PLAYER","MP3 RECORDER ENABLE",'
       + '"MULT BY BAND",'
       + '"MULT BY MODE",'
       + '"MULT SHEET AUTO RESET",'

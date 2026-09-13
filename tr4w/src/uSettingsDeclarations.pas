@@ -208,17 +208,21 @@ begin
    { Audio: MP3 recording and the digital voice keyer, 2026-08-15. }
    RegisterModelSetting( 'audio.mp3.recorderEnable',          'MP3 RECORDER ENABLE',
                          RS_AUDIO_MP3_RECORDERENABLE);
-   RegisterStoredSetting('audio.mp3.path',                    'MP3 PATH',
+   (* MODEL, not stored, since 2026-09-13. Neither has a reader -- see
+     TMp3Settings -- and both are carried rather than withdrawn. *)
+   RegisterModelSetting( 'audio.mp3.path',                    'MP3 PATH',
                          RS_AUDIO_MP3_PATH);
-   RegisterStoredSetting('audio.mp3.player',                  'MP3 PLAYER',
+   RegisterModelSetting( 'audio.mp3.player',                  'MP3 PLAYER',
                          RS_AUDIO_MP3_PLAYER);
    RegisterModelSetting( 'audio.dvk.enable',                  'DVK ENABLE',
                          RS_AUDIO_DVK_ENABLE);
    RegisterModelSetting( 'audio.dvk.localizedMessages',       'DVK LOCALIZED MESSAGES ENABLE',
                          RS_AUDIO_DVK_LOCALIZEDMESSAGES);
-   RegisterStoredSetting('audio.dvk.path',                    'DVK PATH',
+   (* MODEL, not stored, since 2026-09-13: Settings.Dvk.Path and .Recorder
+     own these and both command names derive from the property path. *)
+   RegisterModelSetting( 'audio.dvk.path',                    'DVK PATH',
                          RS_AUDIO_DVK_PATH);
-   RegisterStoredSetting('audio.dvk.recorder',                'DVK RECORDER',
+   RegisterModelSetting( 'audio.dvk.recorder',                'DVK RECORDER',
                          RS_AUDIO_DVK_RECORDER);
    RegisterModelSetting( 'audio.useRecordedSigns',            'USE RECORDED SIGNS',
                          RS_AUDIO_USERECORDEDSIGNS);

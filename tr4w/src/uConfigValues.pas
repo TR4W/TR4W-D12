@@ -166,20 +166,15 @@ type
         different move. REMINDER is not a scalar setting at all. The menu item
         cannot go until all three are dealt with. }
 
-      { AUDIO -- MP3 recording and the digital voice keyer, migrated 2026-08-15.
+      (* AUDIO -- GONE FROM HERE, 2026-09-13.
 
-        THE FOUR PATHS ARE FileNameType, which is array[0..MAX_PATH-1] of
-        AnsiChar (VC.pas:188) -- a CHARACTER ARRAY, not a string. CheckCommand
-        writes through @Config.<field> knowing nothing about what is there, so
-        declaring these as string would have it write a string header over the
-        first bytes of a buffer and scribble past whatever follows. Nothing
-        would report it: not the compiler, which sees a pointer, and not a test,
-        because the damage lands in the NEXT field. The type is copied verbatim
-        from the declarations being replaced. }
-      MP3Path: FileNameType;
-      MP3Player: FileNameType;
-      DVKPath: FileNameType;
-      DVKRecorder: FileNameType;
+        The four paths were FileNameType character arrays for one reason:
+        CheckCommand wrote through @Config.<field> knowing nothing about what
+        was there, so a string would have put a header over the first bytes of
+        a buffer. No row addresses them any more: all four are properties --
+        Settings.Mp3.Path, Settings.Mp3.Player, Settings.Dvk.Path and
+        Settings.Dvk.Recorder -- so they are ordinary strings now, which is
+        what a path always was. *)
    end;
 
 var
@@ -199,17 +194,10 @@ var
       CWTone: 700;
       FarnsworthEnable: False;
       FarnsworthSpeed: 25;
-      Weight: 1.0;
-
-
-
-      { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
+      (* True, 700 and 25 are NOT arbitrary -- they are the values the typed
         constants in LOGK1EA carried, kept so a station with no settings file
-        behaves exactly as it did before. }
-      MP3Path: '';
-      MP3Player: '';
-      DVKPath: '';
-      DVKRecorder: ''
+        behaves exactly as it did before. *)
+      Weight: 1.0
    );
 
 implementation

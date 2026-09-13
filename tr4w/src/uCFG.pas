@@ -711,6 +711,17 @@ const
      so the ini loader had stopped reading them -- deleting them removes a
      restatement, not a route. Three ListParamArray slots fall with them. *)
    - 17 {the WK keys -- owned by the keyer library}
+   (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
+
+     THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
+     binding were deleted with the waveIn capture engine. They are MIGRATED
+     ANYWAY, per NY4I's ruling on MY IOTA -- "migrate my iota too, it is for
+     future use" -- which TUnknownCountryFileSettings already follows. The
+     command keeps parsing, an existing .cfg keeps being understood, and the
+     value is there when the feature is rewritten. MP3 RECORDER ENABLE went
+     that way for the same reason, so retiring these two would have split one
+     dead feature across both answers. *)
+   - 4 {the audio paths -- moved to uSettingsModel}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -848,8 +859,6 @@ const
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
  (crCommand: 'DOMESTIC MULTIPLIER';           crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'DVK PATH';                      crAddress: @Config.DVKPath;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
- (crCommand: 'DVK RECORDER';                  crAddress: @Config.DVKRecorder;     crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
  (crCommand: 'DX MULTIPLIER';                 crAddress: pointer(11);                     crMin:0;  crMax:0;       crS: csJSON; crA:20; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'EXCHANGE RECEIVED';             crAddress: pointer(10);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 
@@ -935,8 +944,6 @@ const
  (crCommand: 'LPT3 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel3];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
   (* WITHDRAWN 2026-09-10: Settings.Mmtty.Engine. *)
  (crCommand: 'MODE';                          crAddress: pointer(5);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'MP3 PATH';                      crAddress: @Config.MP3Path;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
- (crCommand: 'MP3 PLAYER';                    crAddress: @Config.MP3Player;       crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
 // (crCommand: 'MULTIPLIER ITEM WIDTH';         crAddress: @MultiplierItemWidth;            crMin:0;  crMax:255;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctByte; crNetwork: 1),
  (crCommand: 'MULT REPORT MINIMUM BANDS';     crAddress: pointer(7);                      crMin:2;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -2949,8 +2956,9 @@ begin
      operator who needs this file back has to be able to open it. *)
    uAnsiStr.AppendToBuffer(TR4W_BACKUP_FILENAME, 'logback.db'); // 4.56.13
    uAnsiStr.AppendToBuffer(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
-   uAnsiStr.AppendToBuffer(Config.MP3Path, 'MP3');
-   uAnsiStr.AppendToBuffer(Config.DVKPath, 'DVK');
+   (* THE TWO AUDIO DEFAULTS MOVED WITH THEIR SETTINGS. MP3 is withdrawn
+     with the recorder; DVK is TDvkSettings.Create, which carries the same
+     'DVK' this line did -- a default belongs with the value it defaults. *)
 
 end;
 

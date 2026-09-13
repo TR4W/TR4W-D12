@@ -948,10 +948,23 @@ type
    TMp3Settings = class(TSettingsGroup)
    private
       FRecorderEnable: boolean;
+      FPath: string;
+      FPlayer: string;
    published
       // Was Config.MP3RecorderEnable. MP3 RECORDER ENABLE derives exactly.
       property RecorderEnable: boolean
          read FRecorderEnable write FRecorderEnable;
+      (* Was Config.MP3Path, and NOTHING READS IT -- uMP3Recorder went with
+        the waveIn capture engine. MP3 PATH derives exactly.
+
+        CARRIED RATHER THAN WITHDRAWN, per NY4I on MY IOTA: "migrate my iota
+        too, it is for future use". An operator's configured folder survives
+        into the build that rewrites the feature, instead of being silently
+        dropped by the one that did not have it. *)
+      property Path: string read FPath write FPath;
+      (* Was Config.MP3Player. Same story, and one step further: this one had
+        no reader anywhere in the tree even before the recorder was deleted. *)
+      property Player: string read FPlayer write FPlayer;
    end;
 
    (*
@@ -2132,6 +2145,8 @@ type
       FLocalizedMessagesEnable: boolean;
       FUseRecordedSigns: boolean;
       FMissingCallsignsFileEnable: boolean;
+      FPath: string;
+      FRecorder: string;
       procedure SetEnable(aValue: boolean);
    public
       constructor Create;
@@ -2165,6 +2180,19 @@ type
         it. *)
       property MissingCallsignsFileEnable: boolean
          read FMissingCallsignsFileEnable write FMissingCallsignsFileEnable;
+      (* Was Config.DVKPath -- the folder the .WAV messages live in. DVK PATH
+        derives exactly.
+
+        A RELATIVE NAME IS LEGAL AND IS THE COMMON CASE: GetRealPath puts the
+        program directory in front of anything with no backslash in it, which
+        is why the value is not resolved here. *)
+      property Path: string read FPath write FPath;
+      (* Was Config.DVKRecorder -- the external program Alt-R hands a .WAV to
+        for recording. DVK RECORDER derives exactly.
+
+        EMPTY IS MEANINGFUL: uEditMessageForm opens the recorder settings
+        rather than running nothing. *)
+      property Recorder: string read FRecorder write FRecorder;
    end;
 
    (*
@@ -4040,6 +4068,11 @@ begin
    FLocalizedMessagesEnable := False;
    FUseRecordedSigns        := False;
    FMissingCallsignsFileEnable := False;
+   (* 'DVK', NOT EMPTY -- the value SetConfigurationDefaultValues appended
+     into Config.DVKPath. GetRealPath sees no backslash in it and resolves it
+     under the program directory, which is the out-of-the-box layout. *)
+   FPath                    := 'DVK';
+   FRecorder                := '';
 end;
 
 constructor TMySettings.Create;
