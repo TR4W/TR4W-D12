@@ -125,6 +125,7 @@ implementation
 uses
    Classes,
    SysUtils,
+   Types,
    Controls,
    Graphics,
    Forms;
@@ -295,11 +296,39 @@ begin
    inherited Click;
 end;
 
+(*
+  THE LID SHAPE, AS TWO CIRCULAR ARCS.
+
+  The first version drew an ELLIPSE with a filled circle inside it, and NY4I
+  said what the screenshot shows: a dark blob, not an eye. Two things were
+  wrong and the second is the one worth remembering.
+
+  The pupil was sized `eyeH - 1`, a RADIUS taken from a HALF-height, so its
+  diameter was very nearly the whole height of the eye -- outline and fill
+  touching, which reads as a filled disc.
+
+  And an ellipse is the wrong shape. A drawn eye is a LENS: two arcs that
+  meet at points on the left and right, which is what gives it the shape
+  everyone recognises at 16 pixels. An ellipse has no corners, so at this
+  size it is simply a circle.
+
+  An arc through (-a, 0), (0, -b) and (a, 0) belongs to a circle of radius
+  (a*a + b*b) / (2*b), and the lid is that arc mirrored. The points are
+  computed and drawn as a polyline rather than handed to Canvas.Arc, because
+  Arc's start and end angles are expressed as POINTS ON A BOUNDING BOX and
+  the sweep direction is a platform convention -- this way the shape is the
+  same on every widget set, which is the whole reason the icon is drawn.
+*)
 procedure TPasswordRevealButton.Paint;
 var
    w, h: integer;
    cx, cy: integer;
-   eyeW, eyeH: integer;
+   halfW, halfH: integer;
+   radius: double;
+   lid: double;
+   upper, lower: array of TPoint;
+   count: integer;
+   i, x: integer;
    pupil: integer;
    ink: TColor;
 begin
@@ -330,38 +359,57 @@ begin
    Canvas.Pen.Width := 1;
    Canvas.Brush.Style := bsClear;
 
-   (* The outline: an ellipse a little wider than tall, inset so the stroke
-     is not clipped at the edges. *)
-   eyeW := (w - 6) div 2;
-   eyeH := (h - 10) div 2;
-   if eyeW < 3 then
+   (* THE PROPORTIONS ARE THE ICON. Half as tall as it is wide is what makes
+     a lens read as an eye; nearer to round reads as a ball. *)
+   halfW := (w div 2) - 3;
+   if halfW < 4 then
       begin
-      eyeW := 3;
+      halfW := 4;
       end;
-   if eyeH < 2 then
+   halfH := Round(halfW * 0.62);
+   if halfH < 3 then
       begin
-      eyeH := 2;
+      halfH := 3;
       end;
-   Canvas.Ellipse(cx - eyeW, cy - eyeH, cx + eyeW, cy + eyeH);
 
-   (* The pupil, filled in the same colour as the outline. *)
-   pupil := eyeH - 1;
-   if pupil < 1 then
+   radius := (halfW * halfW + halfH * halfH) / (2 * halfH);
+
+   count := 2 * halfW + 1;
+   SetLength(upper, count);
+   SetLength(lower, count);
+   for i := 0 to count - 1 do
       begin
-      pupil := 1;
+      x := i - halfW;
+      (* How far the lid stands off the centre line at this column: zero at
+        the two corners, halfH in the middle. *)
+      lid := Sqrt(radius * radius - x * x) - (radius - halfH);
+      upper[i] := Point(cx + x, cy - Round(lid));
+      lower[i] := Point(cx + x, cy + Round(lid));
+      end;
+   Canvas.Polyline(upper);
+   Canvas.Polyline(lower);
+
+   (* The pupil: a small filled circle, deliberately well inside the lids. *)
+   pupil := Round(halfH * 0.62);
+   if pupil < 2 then
+      begin
+      pupil := 2;
       end;
    Canvas.Brush.Style := bsSolid;
    Canvas.Brush.Color := ink;
    Canvas.Ellipse(cx - pupil, cy - pupil, cx + pupil, cy + pupil);
 
    (* AND THE SLASH WHEN THE PASSWORD IS SHOWING, which is the state that
-     needs the stronger signal: it says "this is visible, click to hide". *)
+     needs the stronger signal: it says "this is visible, click to hide".
+     It is drawn corner to corner rather than across the lids so that it
+     reads as a line through the eye at any size. *)
    if FRevealed then
       begin
+      Canvas.Brush.Style := bsClear;
       Canvas.Pen.Color := ink;
-      Canvas.Pen.Width := 2;
-      Canvas.MoveTo(cx - eyeW, cy + eyeH);
-      Canvas.LineTo(cx + eyeW, cy - eyeH);
+      Canvas.Pen.Width := 1;
+      Canvas.MoveTo(cx - halfW, cy + halfW);
+      Canvas.LineTo(cx + halfW, cy - halfW);
       end;
 end;
 
