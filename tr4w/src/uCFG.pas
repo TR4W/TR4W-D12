@@ -465,7 +465,10 @@ const
     (lpArray: @FootSwitchModeTypeStringArray;     lpLength: Byte(High(FootSwitchModeType));     lpVar: @FootSwitchMode; ),
 {10}(lpArray: @ActiveExchangeArray;               lpLength: Byte(High(ExchangeType));           lpVar: @ActiveExchange; ),
     (lpArray: @DXMultTypenameArray;               lpLength: Byte(High(DXMultType));             lpVar: @ActiveDXMult; ),
-    (lpArray: @DupeCheckSoundTypeSA;              lpLength: Byte(High(DupeCheckSoundType));     lpVar: @DupeCheckSound; ),
+    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
+      its spelling table with it. nil rather than a renumbering: this table
+      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @DomesticMultStringArray;           lpLength: Byte(High(DomesticMultType));       lpVar: @ActiveDomesticMult; ),
     (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
       its spelling table with it. nil rather than a renumbering: this table
@@ -481,7 +484,10 @@ const
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @UserInfoTypeSA;                    lpLength: Byte(High(UserInfoType));           lpVar: @UserInfoShown; ),
+    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
+      its spelling table with it. nil rather than a renumbering: this table
+      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
@@ -626,6 +632,7 @@ const
    - 1 {RATE DISPLAY -- the first enum whose TYPE moved to uSettingsModel}
    - 5 {HOUR DISPLAY, TEN MINUTE RULE, BAND MAP SPLIT MODE, DISTANCE MODE,
         REMAINING MULT DISPLAY MODE -- their types moved too}
+   - 2 {DUPE CHECK SOUND and USER INFO SHOWN -- the same}
    - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
    - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
    - 2 {automatic search and pounce -- moved to uSettingsModel}
@@ -763,7 +770,6 @@ const
  (crCommand: 'DEBUG LOG LEVEL';               crAddress: pointer(52);                     crMin:0;   crMax:0;      crS: csJSON; crA: 0; crC:0 ; crP:13; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
  (crCommand: 'DOMESTIC MULTIPLIER';           crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
- (crCommand: 'DUPE CHECK SOUND';              crAddress: pointer(12);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'DVK PATH';                      crAddress: @Config.DVKPath;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
  (crCommand: 'DVK RECORDER';                  crAddress: @Config.DVKRecorder;     crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
@@ -992,7 +998,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
  (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'WK CT SPACING';                 crAddress: @WinKeySettings.wksCTSpacing;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),

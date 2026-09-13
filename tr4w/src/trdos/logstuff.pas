@@ -315,12 +315,8 @@ type
     SendingDupeMessage,
     WaitingForCallsignInput);
 
-  DupeCheckSoundType =
-    (
-    DupeCheckNoSound,
-    DupeCheckBeepIfDupe,
-    DupeCheckGratsIfMult
-    );
+  (* DupeCheckSoundType MOVED to uSettingsModel, 2026-09-13, with its
+    spelling table -- it describes a SETTING. *)
 
   ProcessedMultiMessageRecord = record
     Source: Byte;
@@ -369,13 +365,6 @@ type
   MultiMessageListPointer = ^MultiMessageListArrayType;
 
 const
-  DupeCheckSoundTypeSA: array[DupeCheckSoundType] of PAnsiChar =
-    (
-    'NONE',
-    'DUPE BEEP',
-    'MULT FANFARE'
-    );
-
   ParameterOkayModeTypeStringArray: array[ParameterOkayModeType] of PAnsiChar = (
     'NONE',
     'STANDARD',
@@ -417,7 +406,6 @@ var
   DisplayRefresh: integer = 1;
   //  DoingRescore                     : boolean; {KK1L: 6.71}
   DualingCQState: DualingCQStates {= NoDualingCQs};
-  DupeCheckSound: DupeCheckSoundType = DupeCheckBeepIfDupe;
   DupeInfoCall: CallString;
   DupeInfoCallPrompt: CallString; {KK1L: 6.73}
   DupeSheetFileEnable: boolean;

@@ -1768,7 +1768,7 @@ begin
      // FlashCallWindow;
      // EscapeDeletedCallEntry := CallWindowString;
      // if tAutoSendMode = True then CallAlreadySent := True;
-     // if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
+     // if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
      // if tAutoSendMode = True then CallAlreadySent := True;
      // tAutoSendMode := False;
      SendB4;

@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(254, names.Count,
+         CheckEquals(256, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1265,6 +1265,7 @@ const
       + '"DISTANCE MODE",'
       + '"DIT DAH RATIO",'
       + '"DOMESTIC FILENAME",'
+      + '"DUPE CHECK SOUND",'
       + '"DUPE SHEET AUTO RESET",'
       + '"DVK ENABLE",'
       + '"DVK LOCALIZED MESSAGES ENABLE",'
@@ -1438,6 +1439,7 @@ const
       + '"UPDATE RESTART FILE ENABLE",'
       + '"USE CONTROL PORT",'
       + '"USE RECORDED SIGNS",'
+      + '"USER INFO SHOWN",'
       + '"VHF BAND ENABLE",'
       + '"WAIT FOR STRENGTH",'
       + '"WAKE UP TIME OUT",'

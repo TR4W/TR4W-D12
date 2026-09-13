@@ -666,7 +666,7 @@ begin
                           RS_OPERATING_CTRLJ_DIGITALMODEENABLE);
    RegisterModelSetting( 'operating.ctrlj.distanceMode',      'DISTANCE MODE',
                           RS_OPERATING_CTRLJ_DISTANCEMODE);
-   RegisterStoredSetting('operating.ctrlj.dupeCheckSound',    'DUPE CHECK SOUND',
+   RegisterModelSetting( 'operating.ctrlj.dupeCheckSound',    'DUPE CHECK SOUND',
                           RS_OPERATING_CTRLJ_DUPECHECKSOUND);
    RegisterModelSetting('operating.ctrlj.dupeSheetAutoReset','DUPE SHEET AUTO RESET',
                           RS_OPERATING_CTRLJ_DUPESHEETAUTORESET);
@@ -765,7 +765,7 @@ begin
                           RS_APPEARANCE_CTRLJ_SHOWFREQUENCYINLOG);
    RegisterModelSetting( 'appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
                           RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN);
-   RegisterStoredSetting('appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
+   RegisterModelSetting( 'appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
                           RS_APPEARANCE_CTRLJ_USERINFOSHOWN);
    RegisterModelSetting( 'appearance.layout.windowSize',       'WINDOW SIZE',
                           RS_APPEARANCE_LAYOUT_WINDOWSIZE, True, True);

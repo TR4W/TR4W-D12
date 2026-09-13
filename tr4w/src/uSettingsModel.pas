@@ -264,6 +264,12 @@ type
    BandMapSplitModeType = (ByCutoffFrequency, AlwaysPhone);
    DistanceDisplayType = (NoDistanceDisplay, DistanceMiles, DistanceKM);
    RemainingMultDisplayModeType = (NoRemainingMults, Erase, HiLight);
+   DupeCheckSoundType = (DupeCheckNoSound, DupeCheckBeepIfDupe,
+                         DupeCheckGratsIfMult);
+   UserInfoType = (NoUserInfo, NameInfo, QTHInfo, CheckSectionInfo,
+                   SectionInfo, OldCallInfo, FocInfo, GridInfo, CQZoneInfo,
+                   ITUZoneInfo, User1Info, User2Info, User3Info, User4Info,
+                   User5Info, CustomInfo);
    (*
      FOUR THAT WERE ALLOW-LISTS, NOT RANGES.
 
@@ -473,6 +479,7 @@ type
       FWindowSize: TMainWindowSize;
       FRateDisplay: RateDisplayType;
       FHourDisplay: HourDisplayType;
+      FUserInfoShown: UserInfoType;
    public
       constructor Create;
    published
@@ -522,6 +529,11 @@ type
         of them, or only this position's). HOUR DISPLAY, aliased. *)
       property HourDisplay: HourDisplayType
          read FHourDisplay write FHourDisplay;
+      (* Was the global UserInfoShown in logwind -- WHICH FIELD the user-info
+        box shows beside a callsign, from the sixteen the database can offer.
+        USER INFO SHOWN, aliased. *)
+      property UserInfoShown: UserInfoType
+         read FUserInfoShown write FUserInfoShown;
    end;
 
    (*
@@ -597,6 +609,7 @@ type
       FAskForFrequencies: boolean;
       FAutoTimeIncrement: TAutoTimeIncrement;
       FTenMinuteRule: TenMinuteRuleType;
+      FDupeCheckSound: DupeCheckSoundType;
       FBeepEnable: boolean;
       FHandLogMode: boolean;
       FIeSwitch: boolean;
@@ -625,6 +638,11 @@ type
         contest-scoped group. *)
       property TenMinuteRule: TenMinuteRuleType
          read FTenMinuteRule write FTenMinuteRule;
+      (* Was the global DupeCheckSound in logstuff -- what the dupe check is
+        allowed to make a noise about: nothing, a beep on a dupe, or a
+        fanfare on a new multiplier. DUPE CHECK SOUND, aliased. *)
+      property DupeCheckSound: DupeCheckSoundType
+         read FDupeCheckSound write FDupeCheckSound;
       (* Was AutoTimeIncrementQSOs -- advance the clock by a minute every N
         QSOs, for practice runs. Zero is off, which is why the subrange
         starts there. *)
@@ -3841,6 +3859,8 @@ begin
    FAutoTimeIncrement   := 0;
    // logwind commented its default as NoTenMinuteRule, and zero is it.
    FTenMinuteRule       := NoTenMinuteRule;
+   // logstuff declared it DupeCheckBeepIfDupe, NOT the zero value.
+   FDupeCheckSound      := DupeCheckBeepIfDupe;
    FBeepEnable          := False;
    FHandLogMode         := False;
    FIeSwitch            := False;
@@ -3895,6 +3915,7 @@ begin
    // logwind's declaration commented its default as QSOs, and zero is it.
    FRateDisplay := QSOs;
    FHourDisplay := ThisHour;
+   FUserInfoShown := NoUserInfo;
 end;
 
 procedure TMessageSettings.SetAutoQslInterval(aValue: TAutoQslInterval);
@@ -4797,6 +4818,8 @@ begin
    Alias('STEREO CONTROL PIN', 'Hardware.StereoControlPin');
    Alias('RATE DISPLAY', 'MainWindow.RateDisplay');
    Alias('HOUR DISPLAY', 'MainWindow.HourDisplay');
+   Alias('USER INFO SHOWN', 'MainWindow.UserInfoShown');
+   Alias('DUPE CHECK SOUND', 'Operating.DupeCheckSound');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
      anywhere writes it per contest -- so it is station-scoped and joins
      Operating rather than the contest-scoped Contest group. *)
@@ -5689,6 +5712,12 @@ const
    REMAINING_MULT_DISPLAY_SPELLINGS:
       array[RemainingMultDisplayModeType] of string =
       ('NONE', 'ERASE', 'HILIGHT');
+   DUPE_CHECK_SOUND_SPELLINGS: array[DupeCheckSoundType] of string =
+      ('NONE', 'DUPE BEEP', 'MULT FANFARE');
+   USER_INFO_SPELLINGS: array[UserInfoType] of string =
+      ('NONE', 'NAME', 'QTH', 'CHECK SECTION', 'SECTION', 'OLD CALL',
+       'FOC NUMBER', 'GRID', 'CQ ZONE', 'ITU ZONE', 'USER 1', 'USER 2',
+       'USER 3', 'USER 4', 'USER 5', 'CUSTOM');
 
 initialization
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
@@ -5709,6 +5738,10 @@ initialization
                                 DISTANCE_MODE_SPELLINGS);
    RegisterSettingAllowedValues('RemainingMults.DisplayMode',
                                 REMAINING_MULT_DISPLAY_SPELLINGS);
+   RegisterSettingAllowedValues('Operating.DupeCheckSound',
+                                DUPE_CHECK_SOUND_SPELLINGS);
+   RegisterSettingAllowedValues('MainWindow.UserInfoShown',
+                                USER_INFO_SPELLINGS);
 
 finalization
    FreeSettings;

@@ -168,23 +168,8 @@ type
     Time: QWord {TimeRecord};   // GetTickCount64
   end;
 
-  UserInfoType = (
-    NoUserInfo,
-    NameInfo,
-    QTHInfo,
-    CheckSectionInfo,
-    SectionInfo,
-    OldCallInfo,
-    FocInfo,
-    GridInfo,
-    CQZoneInfo,
-    ITUZoneInfo,
-    User1Info,
-    User2Info,
-    User3Info,
-    User4Info,
-    User5Info,
-    CustomInfo);
+  (* UserInfoType MOVED to uSettingsModel, 2026-09-13, with its spelling
+    table -- it describes a SETTING. *)
 
   TwoRadioStates = (TwoRadiosDisabled, Idle, CallReady, StationCalled, SendingExchange);
 
@@ -466,25 +451,6 @@ const
     'FOC NUMBER',
     'GRID',
     'ZONE',
-    'USER 1',
-    'USER 2',
-    'USER 3',
-    'USER 4',
-    'USER 5',
-    'CUSTOM'
-    );
-  UserInfoTypeSA                        : array[UserInfoType] of PAnsiChar =
-    (
-    'NONE',
-    'NAME',
-    'QTH',
-    'CHECK SECTION',
-    'SECTION',
-    'OLD CALL',
-    'FOC NUMBER',
-    'GRID',
-    'CQ ZONE',
-    'ITU ZONE',
     'USER 1',
     'USER 2',
     'USER 3',
@@ -814,7 +780,6 @@ var
   (* TuneDupeCheckEnable is gone (2026-09-12) --
     Settings.Operating.TuneAltDEnable. {KK1L: 6.73} *)
 
-  UserInfoShown                         : UserInfoType {= NoUserInfo};
 
   //   VGADisplayEnable                : boolean;
   VisibleDupeSheetChanged               : boolean = True;
@@ -3037,14 +3002,14 @@ var
   //pstr                                 : str80;
 
 begin
-  if UserInfoShown = NoUserInfo then Exit;
+  if Settings.MainWindow.UserInfoShown = NoUserInfo then Exit;
   if Call = '' then Exit;
   FoundCall := CD.GetEntry(Call, data);
 
   FillChar(InfoString, SizeOf(InfoString), 0);
 //  InfoString := '';
 
-  case UserInfoShown of
+  case Settings.MainWindow.UserInfoShown of
     NameInfo:
       if FoundCall then
          begin
@@ -3482,7 +3447,7 @@ begin
     uTelnet: the pointer form read past the end of a ShortString. *)
   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_ISADUPE)),
                                [CallWindowString]));
-  if DupeCheckSound <> DupeCheckNoSound then
+  if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
      begin
      DoABeep(ThreeHarmonics);
      end;

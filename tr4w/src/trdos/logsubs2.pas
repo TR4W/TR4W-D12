@@ -291,7 +291,7 @@ begin
            DispalayDupe;
      //      DispalayB4(SW_HIDE);
      //      Windows.ShowWindow(B4StatusWindowHandle, SW_HIDE);
-     //      if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
+     //      if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
            MarkTime(RememberTime);
            if KeyRecentlyPressed(F1, 200) then FlushCWBufferAndClearPTT; { Withing two seconds }
            ShowStationInformation(CallWindowString);
@@ -319,7 +319,7 @@ begin
      ShowStationInformation(CallWindowString);
      DisplayGridSquareStatus(CallWindowString);
       
-     if DupeCheckSound = DupeCheckGratsIfMult then
+     if Settings.Operating.DupeCheckSound = DupeCheckGratsIfMult then
         begin
         if VisibleLog.DetermineIfNewMult(CallWindowString, ActiveBand, ActiveMode)
         {if TempInteger <> 0 }then DoABeep(BeepCongrats);
@@ -514,7 +514,7 @@ begin
                            [DupeInfoCall,
                             BandStringsArray[InActiveRadioPtr.BandMemory],
                             ModeStringArray[InActiveRadioPtr.ModeMemory]]);
-        if DupeCheckSound <> DupeCheckNoSound then
+        if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
            begin
            DoABeep(ThreeHarmonics);
            end;
@@ -527,7 +527,7 @@ begin
         if VisibleLog.DetermineIfNewMult(DupeInfoCall, InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory)
         {if TempString <> 0 }then
            begin
-           if DupeCheckSound = DupeCheckGratsIfMult then
+           if Settings.Operating.DupeCheckSound = DupeCheckGratsIfMult then
               begin
               DoABeep(BeepCongrats);
               end;
@@ -1584,7 +1584,7 @@ begin
                       //                              if ReminderPostedCount = 0 then
                 begin
                   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_YOUALREADYWORKEDIN)), [@RXData.Callsign[1], @RXData.DomMultQTH[1]]));
-                  if DupeCheckSound <> DupeCheckNoSound then
+                  if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
                      begin
                      DoABeep(ThreeHarmonics);
                      end;
@@ -1599,7 +1599,7 @@ begin
         //                  if ReminderPostedCount = 0 then
     begin
       QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), [@RXData.Callsign[1]]));
-      if DupeCheckSound <> DupeCheckNoSound then
+      if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
          begin
          DoABeep(ThreeHarmonics);
          end;
@@ -2378,7 +2378,7 @@ var
        begin
         //            if ReminderPostedCount = 0 then
 //      QuickDisplay(CallsignICameBackTo + ' is a dupe!!');
-      if DupeCheckSound <> DupeCheckNoSound then
+      if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
          begin
          DoABeep(ThreeHarmonics);
          end;
