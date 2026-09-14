@@ -120,6 +120,24 @@ if [ "$do_bench" = 1 ]; then
    ssh -o BatchMode=yes -o ConnectTimeout=10 "$BENCH_HOST" true 2>/dev/null \
       || die "cannot reach the bench box at $BENCH_HOST"
 
+   # IS IT RUNNING? Say so BEFORE copying anything.
+   #
+   # Linux refuses to overwrite the text segment of a running binary, so `cp`
+   # fails with "Text file busy" -- which is the right outcome and a terrible
+   # explanation. Worse, it fails PART WAY THROUGH: cty.dat and dom/ are
+   # already replaced by then, so the operator is left running an old binary
+   # against new data files with no indication anything happened.
+   #
+   # CLAUDE.md has the same guard for the golden corpus on Windows ("guard
+   # that TR4W is not running -- a running instance collides on target/ and
+   # every set reports a false FAIL"). Same hazard, same answer.
+   if ssh -o BatchMode=yes "$BENCH_HOST" "pgrep -x tr4w >/dev/null 2>&1"; then
+      die "TR4W IS RUNNING on $BENCH_HOST -- close it and run this again.
+             Nothing has been copied. Linux will not overwrite a running
+             binary, and a deploy that pushed on regardless would replace
+             cty.dat and dom/ underneath the instance you are testing."
+   fi
+
    scp -q -o BatchMode=yes "$work/$base" "$BENCH_HOST:/tmp/$base" \
       || die 'scp to bench box'
 
