@@ -335,10 +335,19 @@ find_toolchain() {
    # once uselessly, with the useful one scrolled off the top.
    #
    # Measured on mac-ci: fpcupdeluxe's Lazarus there carries ONLY nogui, so
-   # every macOS GUI build fails this way. That box had been diagnosed as
-   # "two incomplete FPC installs" when the real state is narrower and
-   # fixable: the pair is fine and the FCL is present -- the cocoa widgetset
-   # was never built.
+   # every macOS GUI build fails this way.
+   #
+   # AND IT USED TO WORK, WHICH IS THE POINT. That box built
+   # tr4w-5.0.2-aarch64-darwin.tar.gz on 2026-09-09 and still has the
+   # TR4W.app to prove it. fpcuprevisions.log shows an fpcupdeluxe UPDATE
+   # on 14-9-26 02:06 that rebuilt the SAME git hashes (0d122c49 /
+   # 62c14a4d) and left the LCL with nogui only. Every path under
+   # ~/fpcupdeluxe is stamped 02:08 that morning.
+   #
+   # So a missing widgetset is not "never provisioned" -- it is something a
+   # routine toolchain update can TAKE AWAY overnight, silently, from a
+   # machine that shipped an artifact last week. That is exactly why this
+   # is fatal here instead of a warning 300 lines from the failure.
    if [ ! -d "$LAZ/lcl/units/$ARCH/$LCL_WIDGETSET" ]; then
       avail=$(ls -d "$LAZ/lcl/units/$ARCH"/*/ 2>/dev/null |
               sed 's|.*/\([^/]*\)/$|\1|' | tr '\n' ' ')
