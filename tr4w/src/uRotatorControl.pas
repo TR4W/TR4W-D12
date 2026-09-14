@@ -397,9 +397,17 @@ begin
       begin
       Exit;
       end;
-   // The legacy seed passes no endpoint on purpose: AddLive fills it from the
-   // same globals this path already represents, in one place rather than two.
-   AddLive('Rotator', id, string(PortTypeSA[ActiveRotatorPort]), '');
+   (* THE PORT IS THE OS NAME NOW, straight off the setting -- it used to be
+     rendered from an ordinal through PortTypeSA, which produced 'SERIAL 7'
+     and could not express a device node.
+
+     The legacy seed passes no endpoint on purpose: AddLive fills it from the
+     same globals this path already represents, in one place rather than two. *)
+   (* NORMALISED, because an ini written before 2026-09-13 holds 'SERIAL 7'
+     and the store holds the OS name.  DeviceNameFromStoredPort translates
+     that one case and passes a device node through untouched. *)
+   AddLive('Rotator', id,
+           AnsiString(DeviceNameFromStoredPort(Settings.Rotator.Port)), '');
    logger.Info('[uRotatorControl] seeded one %s rotator from the legacy settings', [id]);
 end;
 

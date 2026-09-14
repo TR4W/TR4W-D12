@@ -570,7 +570,9 @@ const
     (lpArray: @PortTypeSA;                        lpLength: Byte(High(PortType));               lpVar: @Radio1.tKeyerPort; ),
     (lpArray: @PortTypeSA;                        lpLength: Byte(High(PortType));               lpVar: @Radio2.tKeyerPort; ),
 
-{40}(lpArray: @PortTypeSA;                        lpLength: Byte(High(PortType));               lpVar: @ActiveRotatorPort; ),
+    (* SLOT 40 FREED 2026-09-13 -- ROTATOR PORT is Settings.Rotator.Port, an
+      OS device name.  nil rather than a renumbering: POSITIONAL table. *)
+{40}(lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @MP3RecorderDurationSA;             lpLength: Byte(High(TMP3RecorderDuration));   lpVar: @RecorderDuration; ),
 
     (lpArray: @tCategoryBandSA;                   lpLength: Byte(High(tCategoryBand));          lpVar: @CategoryBand; ),
@@ -735,6 +737,11 @@ const
      their two readers took EnumerateLinesInFile and GenerateCallsignsList
      off PAnsiChar with them. *)
    - 2 {BACKUP LOG FILE NAME and INITIAL EXCHANGE FILENAME}
+   (* The LAST port row.  It fed one thing -- the one-time seed of a single
+     rotator into the library, for a station that has never opened the
+     Rotators page -- and it fed it a PortTypeSA ordinal.  Settings.Rotator.Port
+     holds the OS name instead, which is what AddLive wanted all along. *)
+   - 1 {ROTATOR PORT}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -989,7 +996,6 @@ const
  // Serial frame format 'dps' (data bits 7/8, parity N/O/E, stop bits 1/2), e.g.
  // 8N2.  Empty = use the radio's registered defaults (SerialParamsFor).  Parsed
  // at connect time by RadioObject.ResolveSerialFrameSettings.
- (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of

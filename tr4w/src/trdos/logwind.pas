@@ -475,7 +475,9 @@ var
 
   //  ActiveModemPort: PortType;
   ActiveQSOPointMethod                  : QSOPointMethodType {= NoQSOPointMethod};
-  ActiveRotatorPort                     : PortType;
+  (* ActiveRotatorPort DELETED 2026-09-13 -- it was a PortType ordinal whose
+    only reader was the rotator library's legacy seed, and a rotator's port is
+    an OS device name now: Settings.Rotator.Port. *)
   (* ActiveRotatorType MOVED to Settings.Rotator.RotatorType, as a TOKEN.
     Its only live reader was uRotatorControl's legacy seed, which wanted a
     string id anyway -- the other four references in this tree are all inside

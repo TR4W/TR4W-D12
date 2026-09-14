@@ -2461,6 +2461,7 @@ type
    TRotatorSettings = class(TSettingsGroup)
    private
       FRotatorType: string;
+      FPort: string;
       FIpAddress: string;
       FUdpPort: TRotatorUdpPort;
    public
@@ -2480,6 +2481,20 @@ type
         ROTATOR TYPE, aliased.
       *)
       property RotatorType: string read FRotatorType write FRotatorType;
+      (* THE PORT, AS THE OS NAME -- 'COM7', '/dev/ttyUSB0', '' for none.
+        NY4I, 2026-09-13: "ports should be the OS name... not pretty but what
+        the user would expect versus an artificial abstraction."
+
+        Was the global ActiveRotatorPort, a PortType ordinal rendered through
+        PortTypeSA as 'SERIAL 7' -- a spelling that exists nowhere but inside
+        TR4W and cannot name a port off Windows at all.
+
+        IT FEEDS THE LEGACY SEED ONLY. The rotator LIBRARY holds a port per
+        rotator and OpenRotatorPorts opens those; this is what one rotator is
+        seeded from on a station that has never opened the Rotators page.
+
+        ROTATOR PORT, aliased -- the derived name would say ROTATOR twice. *)
+      property Port: string read FPort write FPort;
       // Was the global PSTRotatorIPAddress in logstuff.pas.
       property IpAddress: string read FIpAddress write FIpAddress;
       // Was PSTRotatorUDPPort.
@@ -4954,6 +4969,7 @@ begin
    Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
    Alias('POSSIBLE CALL MODE', 'Scp.PossibleCallMode');
    Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
+   Alias('ROTATOR PORT',               'Rotator.Port');
    Alias('ROTATOR TYPE', 'Rotator.RotatorType');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
      anywhere writes it per contest -- so it is station-scoped and joins
