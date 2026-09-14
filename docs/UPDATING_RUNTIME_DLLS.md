@@ -24,6 +24,7 @@ a bundled DLL with a newer copy.
 | `inpout32.dll` | [InpOut32 by Phil Gibbons](https://www.highrez.co.uk/downloads/inpout32/) | **32-bit** | Direct parallel-port I/O for LPT CW keying (legacy stations) |
 | `sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) precompiled Windows binary (`sqlite-dll-win-x86-*`) | **32-bit** | **The contest log.** Supplied by NY4I 2026-08-29; currently 3.53.4, 2,572,288 bytes. Bound at RUN TIME, not link time — see the note below |
 | `rigctld.exe` | HamLib Windows build | **64-bit (x86_64)** -- measured 2026-09-14, this row said 32-bit and was wrong | **DEPRECATED.** Replaced by direct-DLL mode (`uRadioHamLibDirect.pas`). Tracked but not shipped by the installer; planned for removal. |
+| `redist/x86_64-win64/sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) `sqlite-dll-win-x64-3530400` | **64-bit** | **STAGED, NOT SHIPPED.** SQLite 3.53.4, the same version as the 32-bit copy. Nothing builds x64 yet; see `tr4w/redist/README.md` |
 
 ### `sqlite3.dll` — the one that fails differently
 
@@ -45,6 +46,17 @@ So `src\domain\uLogDatabase.pas` reads the PE machine word out of the file it
 found and says which architecture it is (`DescribePEArchitecture`,
 `DiagnoseSQLiteLoad`). **When the 64-bit move happens this DLL must be swapped**,
 and the diagnostic is what will tell whoever forgets.
+
+**THE x64 COPY IS ALREADY IN THE TREE** (2026-09-14, supplied by NY4I):
+`tr4w/redist/x86_64-win64/sqlite3.dll`, **SQLite 3.53.4 — the same version as
+the 32-bit copy**, verified `0x8664` from its PE header. Matching the version
+across architectures is deliberate: a failure after a combined version-and-
+bitness change has two candidate causes.
+
+**Nothing consumes it yet** — there is no `x86_64-win64` build target — and it
+is deliberately NOT in `tr4w/target/`, which is the i386 program directory. The
+two files have the same name in both bitnesses, so only a directory can keep
+them apart. See `tr4w/redist/README.md`.
 
 The DLL is also copied beside the unit-test binary by `build\Build-Tests.ps1`,
 because the `LogDatabase` suite opens real databases.
