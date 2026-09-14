@@ -22,13 +22,25 @@ still exact.
 
 ## Where it stands, measured
 
-| gate | source doc | measured 2026-09-14 | state |
-|---|---|---|---|
-| PChar-family in live code | 751 raw mentions | **578** in 69 files | open |
-| pointer truncation | 2 named P0s | **4 sites, 2 units** | open, small |
-| live `asm` blocks | "much disabled… confirm each" | **0** | **DONE** |
-| `Move`/`FillChar`/`ZeroMemory` | not in the source doc | **348** | open (new rule) |
-| toolchain | i386 only | `fpc -iTP` = i386, `-iTO` = win32 | open |
+| gate | source doc | first measure | now | state |
+|---|---|---|---|---|
+| PChar-family in live code | 751 raw mentions | 578 in 69 files | **412** | in progress |
+| pointer truncation | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
+| live `asm` blocks | "much disabled… confirm each" | 0 | **0** | **DONE** |
+| `Move`/`FillChar`/`ZeroMemory` | not in the source doc | 348 | **347** | open (new rule) |
+| toolchain | i386 only | i386/win32 | i386/win32 | open |
+
+**Progress log.** Every step green on 35 lints, the unit tests AND the golden
+corpus -- the corpus matters for this work specifically, because `fcontest`,
+`cfgdef` and `logdom` build the CTY.DAT, TRMASTER, DOM and log file names that
+all thirteen sets open.
+
+| commit | what | PChar after |
+|---|---|---:|
+| `b10dc8fa` | the four pointer truncations (P0) | 578 |
+| `733ce377` | `SetCharBuffer` / `CharBufferText`, 14 file-name sites | 578 |
+| `043657a8` | the ShortString-as-buffer idiom, 6 sites | 570 |
+| `c51dcc1d` | **the C-sprintf facade deleted** -- 21 overloads, every caller | **412** |
 
 ---
 
@@ -69,7 +81,7 @@ still exact.
 
 ## OPEN — in the order they should be done
 
-### P0 — four pointer truncations, two units
+### ~~P0 — four pointer truncations~~ — DONE (`b10dc8fa`)
 
 - [x] **`uHamLibDirect`, 3 sites — DELETED, not widened.** `PAnsiChar(Integer(rig) + PATHNAME_OFFSET)`
   and `PInteger(Integer(rig) + TIMEOUT_OFFSET)` — writing into Hamlib's
@@ -93,20 +105,40 @@ still exact.
 `tr4wserver` finds ten hits, and six are `GetSCPCharFromInteger(X) + ...` in
 `logscp` — string concatenation, not casts.
 
-### P0 — the PChar-family removal, 578 live in 69 files
+### P0 — the PChar-family removal, 412 live (was 578)
 
 Do it as behaviour-preserving slices with tests, never a global replace:
 `PChar` is wide under this tree's Unicode mode and `PAnsiChar` is byte text, so
 a mechanical swap changes both encoding and ownership.
 
-**`TF.pas` is 176 of the 578 — 30% in one unit**, and it is the legacy C-string
-façade the source document calls out: `Format` overloads, `inttopchar`, the
-date/year/path helpers, the buffer walkers. Retiring it is the single biggest
-slice and the one with the most callers.
+**THE FAÇADE IS GONE (`c51dcc1d`)** — 21 `Format` overloads and every caller.
+`TF.pas` was 176 of the 578, thirty percent in one unit, and that is what took
+the count to 412.
+
+It removed three latent bugs that were not the target: `PAnsiChar` of a
+TEMPORARY (four sites), a pointer into a ShortString's characters still live in
+the QTC **sender**, and a message formatted into a global buffer and read back
+one line later.
+
+**One rule had to be MEASURED because it goes on the air.** The QTC formats use
+`%.4u` because `wsprintfA` zero-padded and QTC 7 must send as `0007`. FPC reads
+a precision on an integer as a minimum digit count padded with zeros:
+
+    SysUtils.Format('%.4u', [7])  ->  '0007'
+    SysUtils.Format('%04u',  [7])  ->  '   7'
+
+so every format string carried over unchanged. The `%04u` variants beside them
+were inside a comment block; live, converting them would have put the wrong CW
+on the air.
+
+**WHAT IS LEFT IN `TF.pas` IS A DIFFERENT SHAPE.** `inttopchar` and the
+date/path helpers still RETURN a `PAnsiChar` into a shared global buffer, so
+this slice cannot be "replace the body" — the callers have to stop wanting a
+pointer first.
 
 | unit | live | note |
 |---|---:|---|
-| `TF.pas` | 176 | the C-string façade — do this first |
+| `TF.pas` | ~76 | façade GONE; what remains returns a PAnsiChar into a shared global |
 | `postunit.pas` | 36 | Cabrillo/ADIF writers |
 | `VC.pas` | 34 | remaining spelling tables |
 | `MainUnit.pas` | 29 | |
