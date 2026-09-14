@@ -204,18 +204,7 @@ function SetCFGCommandValue(const aCommand, aValue: string): boolean;
   is why a config file used to repaint the band map and a menu toggle did
   not. See uSettingsEffects. *)
 
-function F_RADIO_ONE_TYPE: boolean;
-function F_RADIO_TWO_TYPE: boolean;
-function F_ADD_DOMESTIC_COUNTRY: boolean;
-function F_BAND_MAP_CUTOFF_FREQUENCY: boolean;
-function F_BAND_MAP_DECAY_TIME: boolean;
-function F_CLEAR_DUPE_SHEET: boolean;
-function F_CONTEST: boolean;
-function F_DX_MULTIPLIER: boolean;
-function F_FREQUENCY_MEMORY: boolean;
 //function F_ICOM_RESPONSE_TIMEOUT: boolean;
-function F_MY_CONTINENT: boolean;
-function F_ZONE_MULTIPLIER: boolean;
 procedure UpdateDebugLogLevel;
 //function F_SETPARALLELPORT: boolean;
 
@@ -347,8 +336,6 @@ function CommandIsOwnedByAStore(const aCommand: string): boolean;
 function StoreOwnedCommandCount: integer;
 
 function ProcessMessage(ID, CMD: ShortString): boolean;
-procedure ProcessReminder(ID, CMD: ShortString);
-procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
 procedure InitializeStrings;
 
 (* `Changed` WENT WITH THE ARRAY. It was one boolean per row and nothing ever
@@ -1510,74 +1497,11 @@ begin
       end;
 end;
 
-function F_ADD_DOMESTIC_COUNTRY: boolean;
-begin
-   if CMD = 'CLEAR' then
-      begin
-      ClearDomesticCountryList
-      end
-   else
-      begin
-      AddDomesticCountry(CMD);
-      end;
-   Result := True;
-end;
 
-function F_BAND_MAP_CUTOFF_FREQUENCY: boolean;
-var
-   TempLongInt: integer;
-begin
-   Val(CMD, TempLongInt, Result1);
-   Result := Result1 = 0;
-   if Result then
-      begin
-      AddBandMapModeCutoffFrequency(TempLongInt);
-      end;
-end;
 
-function F_BAND_MAP_DECAY_TIME: boolean;
-begin
-   //  BandMapDecayMultiplier := (BandMapDecayValue div 64) + 1;
-   //  BandMapDecayTime := BandMapDecayValue div BandMapDecayMultiplier;
-   Result := True;
-end;
 
-function F_CLEAR_DUPE_SHEET: boolean;
-begin
-   //  if ClearDupeSheetCommandGiven then
-   ClearDupeSheetCommandGiven := RunningConfigFile;
-   Result := True;
-end;
 
-function F_CONTEST: boolean;
-begin
-   Result := FoundContest(CMD);
-   F_DX_MULTIPLIER;
-end;
 
-function F_FREQUENCY_MEMORY: boolean;
-begin
-   if StringHas(CMD, 'SSB') then
-      begin
-      Delete(CMD, pos('SSB ', CMD), 4);
-      Val(CMD, TempFreq, Result1);
-      if Result1 = 0 then
-         begin
-         CalculateBandMode(TempFreq, TempBand, TempMode);
-         DefaultFreqMemory[TempBand, Phone] := TempFreq;
-         end;
-      end
-   else
-      begin
-      Val(CMD, TempFreq, Result1);
-      if Result1 = 0 then
-         begin
-         CalculateBandMode(TempFreq, TempBand, TempMode);
-         DefaultFreqMemory[TempBand, CW] := TempFreq;
-         end;
-      end;
-   Result := Result1 = 0;
-end;
 {
 function F_ICOM_RESPONSE_TIMEOUT: boolean;
 begin
@@ -1588,11 +1512,6 @@ begin
 end;
 }
 
-function F_MY_CONTINENT: boolean;
-begin
-   MyContinentIsSet := True;
-   Result := True;
-end;
 
 (* IS THIS A COUNTRY CTY.DAT KNOWS?
 
@@ -1635,56 +1554,9 @@ begin
    Result := UnicodeSameText(aValue, string(TempQTH.CountryID));
 end;
 
-function F_ZONE_MULTIPLIER: boolean;
-begin
-   if ActiveZoneMult = CQZones then
-      begin
-      ActiveInitialExchange := ZoneInitialExchange;
-      CTY.ctyZoneMode := CQZoneMode;
-      end;
 
-   if ActiveZoneMult = ITUZones then
-      begin
-      ActiveInitialExchange := ZoneInitialExchange;
-      CTY.ctyZoneMode := ITUZoneMode;
-      end;
-   Result := True;
-end;
 
-function F_RADIO_ONE_TYPE: boolean;
-begin
-   // The REGISTRY owns the default CI-V address now, not RadioParametersArray.
-   // This only seeds the default -- RADIO n RECEIVER ADDRESS still overrides it,
-   // and is applied after this by the normal config load.
-   Radio1.ReceiverAddress := uRadioRegistry.RegisteredCIVAddress(Radio1.RadioModel);
-   Result := True;
-end;
 
-function F_RADIO_TWO_TYPE: boolean;
-begin
-   Radio2.ReceiverAddress := uRadioRegistry.RegisteredCIVAddress(Radio2.RadioModel);
-   Result := True;
-end;
-
-function F_DX_MULTIPLIER: boolean;
-begin
-   if not (ActiveDXMult in
-      [
-      ARRLDXCCWithNoUSAOrCanada,
-         ARRLDXCCWithNoARRLSections,
-         ARRLDXCCWithNoUSACanadaKH6OrKL7,
-         ARRLDXCCWithNoIOrIS0,
-         ARRLDXCCWithNoJT,
-         ARRLDXCC]) then
-      begin
-      CTY.ctyCountryMode := CQCountryMode
-      end
-   else
-      begin
-      CTY.ctyCountryMode := ARRLCountryMode;
-      end;
-   Result := True;
-end;
 
 {
 function F_SETPARALLELPORT: boolean;
@@ -1695,93 +1567,6 @@ nop
 end;
 }
 
-procedure ProcessReminder(ID, CMD: ShortString);
-var
-   TimeString: string;
-   DateString, DayString: Str20;
-
-begin
-
-   if NumberReminderRecords >= MaximumReminderRecords then
-      begin
-      ShowMessage(TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED);
-      Exit;
-      end;
-
-   if NumberReminderRecords = 0 then
-      begin
-      New(Reminders);
-      end;
-
-   Reminders^[NumberReminderRecords].DateString := '';
-   Reminders^[NumberReminderRecords].DayString := '';
-   Reminders^[NumberReminderRecords].Alarm := False;
-
-   TimeString := Copy(CMD, 1, 4);
-
-   if not StringIsAllNumbers(TimeString) then
-      begin
-      // Issue #997 -- replaced wsprintf-push asm with SysUtils.Format
-      ShowMessage(SysUtils.Format('%s '#13 + TC_INVALIDREMINDERTIME, [TimeString]));
-      //      showmessage(TimeString + #13 + 'Invalid reminder time!!');
-      Exit;
-      end;
-
-   Val(TimeString, Reminders^[NumberReminderRecords].Time, Result1);
-
-   DateString := BracketedString(CMD, ' ON ', '');
-
-   if StringHas(DateString, 'ALARM') then
-      begin
-      Reminders^[NumberReminderRecords].Alarm := True;
-      DateString := BracketedString(DateString, '', ' ALARM');
-      end;
-
-   //WLI
-   GetRidOfPostcedingSpaces(DateString);
-
-   if StringHas(DateString, '-') then
-      begin
-      case length(DateString) of
-         8:
-            if (DateString[2] <> '-') or (DateString[6] <> '-') then
-               begin
-               ShowMessage(TC_INVALIDREMINDERDATE);
-               Exit;
-               end
-            else
-               begin
-               DateString := '0' + DateString;
-               end;
-
-         9:
-            if (DateString[3] <> '-') or (DateString[7] <> '-') then
-               begin
-               ShowMessage(TC_INVALIDREMINDERDATE);
-               Exit;
-               end;
-
-         else
-            ShowMessage(TC_INVALIDREMINDERDATE);
-      end;
-      Reminders^[NumberReminderRecords].DateString := DateString;
-      end
-   else
-      begin
-      DayString := Copy(DateString, length(DateString) - 2, 3);
-      if (DayString <> 'DAY') and (DayString <> 'ALL') then
-         begin
-         ShowMessage(TC_INVALIDREMINDERDATE);
-         Exit;
-         end;
-
-      Reminders^[NumberReminderRecords].DayString := DateString;
-      end;
-
-   ReadLn(ConfigFileRead, Reminders^[NumberReminderRecords].RemMessage);
-   inc(NumberReminderRecords);
-
-end;
 
 function ProcessMessage(ID, CMD: ShortString): boolean;
 var
@@ -1934,19 +1719,6 @@ end;
 
 
 
-procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
-begin
-   {
-     if NumberTotalScoreMessages < 10 then
-     begin
-       Val(CMD, TotalScoreMessages[NumberTotalScoreMessages].Score, Result1);
-       ReadLn(ConfigFileRead, TotalScoreMessages[NumberTotalScoreMessages].MessageString);
-       inc(NumberTotalScoreMessages);
-     end
-     else
-       ShowMessage(TC_TOOMANYTOTALSCOREMESSAGES);
-   }
-end;
 
 procedure InitializeStrings;
 (* THE SEED TABLE IS GONE, 2026-09-12, AND SO ARE THE TYPE AND THE LOOP.
