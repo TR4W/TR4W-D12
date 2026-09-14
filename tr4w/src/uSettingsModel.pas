@@ -2694,9 +2694,12 @@ type
       FLiteralDomesticQth: boolean;
       FCustomInitialExchangeString: string;
       FInitialExchangeFilename: string;
+      FName: string;
+      FTitle: string;
       FHamscoreEnable: boolean;
       FR150SMode: boolean;
       FRfoblMode: boolean;
+      procedure SetName(const aValue: string);
    public
       constructor Create;
       class function IsContestScoped: boolean; override;
@@ -2769,6 +2772,30 @@ type
       property InitialExchangeFilename: string
          read FInitialExchangeFilename
          write FInitialExchangeFilename;
+      (* THE CONTEST'S NAME, as it appears in the Cabrillo header and the
+        title bar.  Was the global ContestName, a Str80 -- one of the two
+        ShortStrings CFGCA still addressed.
+
+        FCONTEST ASSIGNS IT PER CONTEST and nothing sets it back, which is
+        why it is here rather than among the station settings: the same
+        reason QsoNumberByBand and InitialExchangeOverwrite are.  A contest
+        .cfg may override it, and six do.
+
+        CONTEST NAME derives exactly from Contest.Name.
+
+        THE SETTER IS WHY THIS IS NOT A PLAIN FIELD.  The row carried
+        crA: F_CONTEST_NAME, which called SetContestTitle -- so the title
+        was rebuilt when a CONFIG LINE set the name and not when anything
+        else did.  Changed() reaches uSettingsEffects, which rebuilds it
+        however the name was set. *)
+      property Name: string read FName write SetName;
+      (* THE FULL TITLE -- '2026 CQ WW DX NY4I' -- built by SetContestTitle
+        from the year, the name and the station callsign.  Was the global
+        ContestTitle, a ShortString.
+
+        DERIVED, BUT STILL A SETTING: a contest .cfg may state one outright,
+        and CONTEST TITLE derives exactly. *)
+      property Title: string read FTitle write FTitle;
       (*
         POST LIVE SCORES FOR THIS CONTEST.
 
@@ -4039,6 +4066,14 @@ begin
    FSendHighlights      := True;
    FBroadcastPort       := 2237;
    FMulticastGroup      := '';
+end;
+
+procedure TContestSettings.SetName(const aValue: string);
+begin
+   (* SetStr raises Changed('Contest.Name'), which uSettingsEffects turns into
+     the SetContestTitle call the row's crA hook used to make -- and now makes
+     however the name was set, not only when a config line set it. *)
+   SetStr(FName, aValue, 'Name');
 end;
 
 procedure TDvkSettings.SetEnable(aValue: boolean);

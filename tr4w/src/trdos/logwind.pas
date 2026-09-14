@@ -546,8 +546,9 @@ var
   ContinentString                       : Str20;
   //  tr4w_contest                          : string;
 
-  ContestName                           : Str80; {KK1L: 6.68 shortened from Str80}
-  ContestTitle                          : ShortString;
+  (* Settings.Contest.Name and Settings.Contest.Title DELETED 2026-09-13 -- a Str80 and a
+    ShortString, two of the last CFGCA addressed.  They are
+    Settings.Contest.Name and .Title now, both plain strings. *)
   ContinentQSOCount                     : array[BandType, ContinentType] of Word;
   ControlBMemory                        : CallString;
   //   CQMenu                          : Str80;
@@ -1362,7 +1363,7 @@ end;
 
   A caption assignment cannot fail that way. The LCL owns the window, so it
   reapplies the caption whenever it rebuilds one, and the string never becomes
-  a pointer to anything. It also drops the @ContestTitle[1] ShortString pointer
+  a pointer to anything. It also drops the @Settings.Contest.Title[1] ShortString pointer
   this was passing as a format argument. *)
 procedure DisplayContestTitle;
 begin
@@ -1382,7 +1383,7 @@ begin
     A real conversion, not a reinterpret -- LCL captions are UTF-8, so
     nothing is lost. Stated once, here, rather than adding another row to a
     narrowing count of 1462 that nobody can audit. *)
-  TR4WMainForm.Caption := TCaption(TR4W_CURRENTVERSION + ' - ' + string(ContestTitle)
+  TR4WMainForm.Caption := TCaption(TR4W_CURRENTVERSION + ' - ' + string(Settings.Contest.Title)
                                    {$IF tDebugMode} + ' - DEBUG MODE'{$IFEND});
 end;
 

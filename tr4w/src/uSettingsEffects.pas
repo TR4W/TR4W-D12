@@ -151,6 +151,7 @@ const
      -- which UpdateRemainingMultsWindows calls -- asks RemMultsForm for the
      form and does nothing when it gets nil. *)
    STATIONS_CALLSIGNS_MASK = 'Stations.CallsignsMask';
+   CONTEST_NAME            = 'Contest.Name';
    SHOW_DOMESTIC_NAME      = 'RemainingMults.ShowDomesticName';
    REMAINING_MULT_DISPLAY  = 'RemainingMults.DisplayMode';
    (* INSERT OR OVERWRITE, shown on a panel of the main window. crP: 8,
@@ -235,6 +236,15 @@ begin
         looked up and an unstated one is derived. Passing the callsign is
         what it needs to derive FROM. *)
       RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
+      end;
+
+   if UnicodeSameText(aPath, CONTEST_NAME) then
+      begin
+      (* THE TITLE IS BUILT FROM THE NAME, so a changed name leaves a stale
+        title.  This was CFGCA's crA hook F_CONTEST_NAME, which fired only
+        when a CONFIG LINE set the name -- so a contest loaded any other way
+        kept whatever title was there.  A setter runs however it was set. *)
+      SetContestTitle;
       end;
 
    if UnicodeSameText(aPath, STATIONS_CALLSIGNS_MASK) then

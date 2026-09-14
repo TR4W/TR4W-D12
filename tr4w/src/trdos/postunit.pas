@@ -993,8 +993,8 @@ procedure WriteTitleBlockToSummarySheet;
   // wsprintf argument pushing.  The contest's friendly name is shown in
   // parentheses after the contest name when one is defined (ContestFriendlyParens).
   sWriteFileFromString( tReportFileWrite,
-     #13#10 + sysutils.Format( '%21s SUMMARY SHEET', [ string( ContestName ) ] )
-     + #13#10#13#10 + '               CONTEST: ' + string( ContestName ) +
+     #13#10 + sysutils.Format( '%21s SUMMARY SHEET', [ string( Settings.Contest.Name ) ] )
+     + #13#10#13#10 + '               CONTEST: ' + string( Settings.Contest.Name ) +
      ContestFriendlyParens + #13#10 + '            START DATE: ' +
      string( tGetDateFormat( ContestDates[ 0 ] ) ) + #13#10 +
      '         CALLSIGN USED: ' + string( Settings.My.Call ) + #13#10 +
@@ -1184,7 +1184,7 @@ function CalculateTotals: boolean;
     Min: integer;
   begin
 
-  if pos( 'CQ-WW', ContestName ) <> 0 then // n4af 4.35.3
+  if pos( 'CQ-WW', Settings.Contest.Name ) <> 0 then // n4af 4.35.3
      begin
      Min := 60
      end
@@ -1489,7 +1489,7 @@ procedure PrintHourTotals;
   // if Header = '' then
   // Header := GetResponse('Enter contest name and callsign : ');
 
-  WriteLnVarCenter( FileWrite, UTF8Encode( ContestName + ContestFriendlyParens
+  WriteLnVarCenter( FileWrite, UTF8Encode( Settings.Contest.Name + ContestFriendlyParens
      + ' ' + Settings.My.Call ) );
   WriteLn( FileWrite );
 
@@ -1920,7 +1920,7 @@ procedure ContinentReport;
   LogSourceClose;
 
   WriteLn( FileWrite );
-  WriteLnVarCenter( FileWrite, ContestTitle );
+  WriteLnVarCenter( FileWrite, Settings.Contest.Title );
   // WriteLn(FileWrite);
   WriteLnVarCenter( FileWrite, 'Continent List' );
   WriteLn( FileWrite );
@@ -2078,7 +2078,7 @@ procedure PrintQSOsByCountry;
   OpenFileForWrite( FileWrite, ReportsFilename );
 
   WriteLn( FileWrite );
-  WriteLnVarCenter( FileWrite, ContestTitle );
+  WriteLnVarCenter( FileWrite, Settings.Contest.Title );
   WriteLnVarCenter( FileWrite, 'QSOs MADE IN EACH COUNTRY' );
   WriteLn( FileWrite );
   WriteLn( FileWrite );
@@ -2197,12 +2197,12 @@ procedure ExportToEDIByBand( Band: BandType );
      end;
 
   // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-  // ContestName, Settings.My.Call, grid, BandString, Name, Address, Section, QSOcount.
+  // Settings.Contest.Name, Settings.My.Call, grid, BandString, Name, Address, Section, QSOcount.
   sWriteFileFromString( tReportFileWrite,
      sysutils.Format( '[REG1TEST;1]'#13#10 + 'TName=%s'#13#10 + 'PCall=%s'#13#10
      + 'PWWLo=%s'#13#10 + 'PBand=%s'#13#10 + 'RName=%s'#13#10 + 'PAdr1=%s'#13#10
      + 'PSect=%s'#13#10 + '[QSORecords;%u]'#13#10,
-     [ string(ContestName),
+     [ string(Settings.Contest.Name),
      string(Settings.My.Call), Settings.My.Grid,
      string( EDIFBANDSTRINGSARRAY[ Band ] ),
      CabrilloTagText( ctName ),
@@ -2618,8 +2618,8 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
      end;
 
 
-  // nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @ContestTitle[1]);
-  // NumberOfBytesToWrite := TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @ContestTitle[1]);
+  // nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @Settings.Contest.Title[1]);
+  // NumberOfBytesToWrite := TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @Settings.Contest.Title[1]);
 
   // sWriteFile(tReportFileWrite, wsprintfBuffer, nNumberOfBytesToWrite);
 
@@ -2738,14 +2738,14 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       // T3 := ContestTypeSA[contest];        // 4.78.2
       if Contest = GENERALQSO then
         // 4.78.3        // ALLOW CUSTOM CONFIG Contest Title or Contest Name
-        if length( ContestTitle ) <> 0 then
+        if length( Settings.Contest.Title ) <> 0 then
            begin
-           T3 := ContestTitle
+           T3 := Settings.Contest.Title
            end
         else
-          if length( ContestName ) <> 0 then // 4.78.3
+          if length( Settings.Contest.Name ) <> 0 then // 4.78.3
              begin
-             T3 := ContestName;
+             T3 := Settings.Contest.Name;
              end;
 
       // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString.
@@ -3059,12 +3059,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    csQTHString := @TempRXData.QTHString[ 1 ]
                    end
                 else
-                  if ContestName = 'WWDIGI' then
+                  if Settings.Contest.Name = 'WWDIGI' then
                      begin
                      csQTHString := @TempRXData.QTHString[ 1 ]
                      end
                   else
-                    if ContestName = 'LABRE' then
+                    if Settings.Contest.Name = 'LABRE' then
                        begin
                        csQTHString := @TempRXData.QTHString[ 1 ]
                        end
@@ -3083,7 +3083,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 csQTHString := @TempRXData.QTHString[ 1 ];
                 end;
 
-             if ContestName = 'EURASIA' then
+             if Settings.Contest.Name = 'EURASIA' then
                 begin
                 csQTHString := @( TempRXData.QTHString[ 1 ] );
                 end;
@@ -3149,8 +3149,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 myStationEx.MyPrec       := Settings.My.Prec;
                 myStationEx.MyFOCNumber  := Settings.My.FocNumber;
                 myStationEx.MyPostalCode := Settings.My.PostalCode;
-                FormatCabrilloExchange( ActiveExchange, Contest, ContestTitle,
-                   ContestName, TempRXData, myStationEx, RSTSent,
+                FormatCabrilloExchange( ActiveExchange, Contest, Settings.Contest.Title,
+                   Settings.Contest.Name, TempRXData, myStationEx, RSTSent,
                    RSTReceived, string( csQTHString ),
                    string(PreviousQTHString), contacts, pnr,
                    CABRILLO_MYEX, CABRILLO_HISEX,
@@ -3303,7 +3303,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                WriteLnVarCenter( FileWrite,
                   'COUNTRIES WORKED - WITH CALL OF FIRST STATION WORKED' );
                WriteLn( FileWrite );
-               WriteLnVarCenter( FileWrite, ContestTitle );
+               WriteLnVarCenter( FileWrite, Settings.Contest.Title );
                WriteLn( FileWrite );
                WriteLn( FileWrite,
                   'Prefix   160         80          40          20          15          10' );
@@ -3414,7 +3414,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       {
         WriteLnVarCenter(FileWrite, 'ZONES WORKED - WITH CALL OF FIRST STATION WORKED');
         WriteLn(FileWrite);
-        WriteLnVarCenter(FileWrite, ContestTitle);
+        WriteLnVarCenter(FileWrite, Settings.Contest.Title);
         WriteLn(FileWrite);
         WriteLn(FileWrite, 'Zone   160        80          40          20          15          10');
         WriteLn(FileWrite, '---- --------   --------    --------    --------    --------    --------');
@@ -3451,7 +3451,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             WriteLnVarCenter( FileWrite,
                'ZONES WORKED - WITH CALL OF FIRST STATION WORKED' );
             WriteLn( FileWrite );
-            WriteLnVarCenter( FileWrite, ContestTitle );
+            WriteLnVarCenter( FileWrite, Settings.Contest.Title );
             WriteLn( FileWrite );
             WriteLn( FileWrite,
                'Zone   160         80          40          20          15          10' );

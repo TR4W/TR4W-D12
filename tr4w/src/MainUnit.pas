@@ -8406,11 +8406,11 @@ begin
      Exit;
      end;
 
-  (* ContestTitle itself -- @ContestTitle[1] was a bare pointer into a
+  (* Settings.Contest.Title itself -- @Settings.Contest.Title[1] was a bare pointer into a
     ShortString, which has no NUL for the formatter to stop at. *)
   sWriteFileFromString(h, SysUtils.Format(
      AnsiString(#13#10' %s'#13#10#13#10' Unique callsigns: %u '#13#10),
-     [ContestTitle, CallsignsList.GetTotalWorkedStations]));
+     [Settings.Contest.Title, CallsignsList.GetTotalWorkedStations]));
 
   for QSOs := 20 downto 1 do
      begin

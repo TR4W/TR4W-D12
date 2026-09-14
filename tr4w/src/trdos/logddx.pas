@@ -247,7 +247,7 @@ begin
            Exit;
            end;
 
-        if ContestName = 'Scandinavian Contest' then
+        if Settings.Contest.Name = 'Scandinavian Contest' then
            begin
            if ScandinavianCountry(Settings.My.Country) then
               begin

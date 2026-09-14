@@ -237,7 +237,12 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # clear them -- this unit s string is not the ini unit s -- so the fix is a
 # file-wide sweep of that idiom, not a cast on the newest line. Raised
 # deliberately and with a reason, which is what the ratchet asks for.
-$NARROW_CEILING = 1353
+# 1353 -> 1355, 2026-09-13: ContestName (Str80) and ContestTitle
+# (ShortString) became string properties. Turning a ShortString global into a
+# string property MOVES its conversions to whatever still holds a ShortString
+# -- so the count rises by two while two ShortStrings disappear, and it falls
+# again as those consumers convert. Raised deliberately and with a reason.
+$NARROW_CEILING = 1355
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

@@ -349,7 +349,7 @@ begin
   NoMultMarineMobile := False;
     {KK1L: 6.68 Added for WRTC 2002 as flag to not count /MM or /AM as mults or countries}
 
-  ContestName := CMD;
+  Settings.Contest.Name := CMD;
 
   //  Contest := GetContestFromString(CMD);
   if Contest <> DUMMYCONTEST then
@@ -390,7 +390,7 @@ begin
            begin
            TempDomesticQTHDataFileName :=
              QSOParties[ContestsArray[Contest].p].InsideStateDOMFile;
-           ContestName := ContestTypeSA[Contest] + ' (in state)';
+           Settings.Contest.Name := ContestTypeSA[Contest] + ' (in state)';
            end
         else
            begin
@@ -399,7 +399,7 @@ begin
              QSOParties[ContestsArray[Contest].p].InsideStateDOMFile);
            TempDomesticQTHDataFileName := @TmpBuf;
              //QSOParties[ContestsArray[Contest].p].OutsideStateDOMFile;
-           ContestName := ContestTypeSA[Contest] + ' (out of state)';
+           Settings.Contest.Name := ContestTypeSA[Contest] + ' (out of state)';
            MultipliersIsCounties := True;
            end;
         Add_KVEKH6KL;
@@ -524,7 +524,7 @@ begin
            TempDomesticQTHDataFileName := 'JIDX';
            end;
 
-        //        ContestName := 'Japan International DX Test';
+        //        Settings.Contest.Name := 'Japan International DX Test';
         //        CountryTable.ZoneMode := CQZoneMode;
       end;
 
@@ -542,7 +542,7 @@ begin
 
     STEWPERRY:
       begin
-        ContestName := 'STEW-PERRY'; // 4.76.6
+        Settings.Contest.Name := 'STEW-PERRY'; // 4.76.6
         Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Grid);
         Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Grid);
         ActiveBand := Band160;
@@ -569,19 +569,19 @@ begin
     JALONGPREFECT:
       begin
         ActiveBand := Band80;
-        //        ContestName := 'JA PREFECTURE';
+        //        Settings.Contest.Name := 'JA PREFECTURE';
         //        VHFBandsEnabled := False;
       end;
 
     ARCI:
       begin
-        //        ContestName := 'ARCI QSO PARTY';
+        //        Settings.Contest.Name := 'ARCI QSO PARTY';
         Add_KVEKH6KL;
       end;
 
     ARI_DX:
       begin
-        //        ContestName := 'ARI International DX Contest';
+        //        Settings.Contest.Name := 'ARI International DX Contest';
         AddDomesticCountry('I');
         AddDomesticCountry('IS');
         AddDomesticCountry('*IT9'); //WLI
@@ -592,7 +592,7 @@ begin
         ActiveBand := Band10;
         //        ActiveExchange := RSTDomesticOrDXQTHExchange;    4.106.6
         ActiveDXMult := ARRLDXCCWithNoARRLSections;
-        //        ContestName := 'ARRL Ten Meter Contest';
+        //        Settings.Contest.Name := 'ARRL Ten Meter Contest';
          //       Settings.Contest.ExchangeMemoryEnable := False;      // 4.106.4
         Settings.Contest.MultipleBands := False;
         Add_KVEKH6KL;
@@ -611,7 +611,7 @@ begin
            ActiveExchange := RSTDomesticQTHExchange; {*}
            end;
 
-        //        ContestName := 'ARRL 160 Contest';
+        //        Settings.Contest.Name := 'ARRL 160 Contest';
         //        DomesticQTHDataFileName := 'ARRLSECT';
         AddARRLSectionDomesticCountries;
       end;
@@ -630,7 +630,7 @@ begin
            ActiveExchange := RSTDomesticQTHExchange; {*}
            end;
 
-        ContestName := 'ARRL DX Test';
+        Settings.Contest.Name := 'ARRL DX Test';
         Add_KVE;
       end;
 
@@ -648,7 +648,7 @@ begin
             ActiveDXMult := ARRLDXCC;
     //        ActiveExchange := RSTDomesticQTHOrQSONumberExchange;
     //        ActiveQSOPointMethod := OnePointPerQSO;
-            ContestName := 'ARRL RTTY ROUNDUP';
+            Settings.Contest.Name := 'ARRL RTTY ROUNDUP';
             Settings.Contest.DigitalModeEnable := True;
             //DomesticQTHDataFileName := 'S48P14DC'; //KK1L: 6.72 Used DC file instead per rules
             //Settings.Qso.ByBand := True;
@@ -692,7 +692,7 @@ begin
     ARRLVHFJUN, ARRLVHFSEP:
       begin
         ActiveBand := Band6;
-        ContestName := 'VHF QSO JUNE';
+        Settings.Contest.Name := 'VHF QSO JUNE';
         Settings.Bands.HfEnabled := False;
         //        VHFBandsEnabled := True;
          //         Settings.My.State := Settings.My.Grid; //Copy(Settings.My.Grid, 1, 4);
@@ -702,7 +702,7 @@ begin
       begin
         ActiveBand := Band20;
         //        ActivePrefixMult := Prefix;
-        //        ContestName := 'ASIA PACIFIC SPRINT';
+        //        Settings.Contest.Name := 'ASIA PACIFIC SPRINT';
       end;
 
     BALTIC:
@@ -734,7 +734,7 @@ begin
            //          DomesticQTHDataFileName := 'CALCTY';
            ActiveExchange := QSONumberDomesticQTHExchange; {*}
            end;
-        //        ContestName := 'California QSO Party';
+        //        Settings.Contest.Name := 'California QSO Party';
         //        Add_KVEKH6KL;
       end;
 
@@ -758,7 +758,7 @@ begin
         // ????????????, ?????????? ? ??????
 
 //        Settings.Contest.CountDomesticCountries := True;
-//        ContestName := 'CIS DX Contest';
+//        Settings.Contest.Name := 'CIS DX Contest';
       end;
 
     CQ160SSB, CQ160CW:
@@ -771,14 +771,14 @@ begin
 
     CQM:
       begin
-        //        ContestName := 'CQ M Contest';
+        //        Settings.Contest.Name := 'CQ M Contest';
         Settings.Contest.R150SMode := True;
       end;
 
     CQVHF:
       begin
         ActiveBand := Band2;
-        //        ContestName := 'CQ WORLD WIDE VHF Contest';
+        //        Settings.Contest.Name := 'CQ WORLD WIDE VHF Contest';
         Settings.Bands.HfEnabled := False;
         //        VHFBandsEnabled := True;
       end;
@@ -795,7 +795,7 @@ begin
             ActiveInitialExchange := ZoneInitialExchange;
     //        ActiveQSOPointMethod := CQWWRTTYQSOPointMethod;
             ActiveZoneMult := CQZones;
-            ContestName := 'CQ WW RTTY CONTEST';
+            Settings.Contest.Name := 'CQ WW RTTY CONTEST';
             Settings.Contest.DigitalModeEnable := True;
             //DomesticQTHDataFileName := 'S48P13';
             //Settings.Mult.ByBand := True;
@@ -816,7 +816,7 @@ begin
         Settings.Bands.HfEnabled := False;
         ActiveBand := Band2;
         Settings.Contest.DigitalModeEnable := False;
-        ContestName := 'RF-VHF-FD';
+        Settings.Contest.Name := 'RF-VHF-FD';
         Settings.Qso.ByMode := False;
         Settings.Qso.ByBand := True;
         Settings.Contest.QsoNumberByBand := True;
@@ -825,7 +825,7 @@ begin
     EUROPEANVHF:
       begin
         ActiveBand := Band6;
-        //        ContestName := 'EUROPEAN VHF CONTEST';
+        //        Settings.Contest.Name := 'EUROPEAN VHF CONTEST';
         Settings.Bands.HfEnabled := False;
         //        VHFBandsEnabled := True;
       end;
@@ -837,7 +837,7 @@ begin
       begin
         Settings.AutoDupe.EnableCq := False;
         Settings.AutoDupe.EnableSAndP := False;
-        ContestName := 'General QSOs';
+        Settings.Contest.Name := 'General QSOs';
         Settings.Bands.WarcEnabled := True;
       end;
 
@@ -903,13 +903,13 @@ begin
 
     OZCR_Z:
       begin
-        ContestName := '????-??????? ????????? ?????? - ??????? ?????????';
+        Settings.Contest.Name := '????-??????? ????????? ?????? - ??????? ?????????';
       end;
 
     GagarinCup:
       begin
         Settings.Contest.R150SMode := True;
-        ContestName := 'Yuri Gagarin International DX Contest';
+        Settings.Contest.Name := 'Yuri Gagarin International DX Contest';
         Settings.Qso.ByMode := TRUE;
         Settings.Contest.InitialExchangeOverwrite := TRUE;
       end;
@@ -919,7 +919,7 @@ begin
         ActiveBand := Band20;
         Settings.AutoDupe.EnableCq := False;
         Settings.AutoDupe.EnableSAndP := False;
-        //        ContestName := 'Internet SprINT';
+        //        Settings.Contest.Name := 'Internet SprINT';
         Settings.Contest.ExchangeMemoryEnable := False;
         Settings.Contest.SprintQsyRule := True;
 
@@ -965,7 +965,7 @@ begin
         ActiveBand := Band80;
         //        ActiveInitialExchange := ZoneInitialExchange;
         //        ActiveZoneMult := BranchZones;
-        //        ContestName := 'KV Prvenstvo ZRS';
+        //        Settings.Contest.Name := 'KV Prvenstvo ZRS';
       end;
     {
         MICHQSOPARTY:
@@ -1009,7 +1009,7 @@ begin
 
     SST:
       begin
-        ContestName := 'Slow Speed Test';
+        Settings.Contest.Name := 'Slow Speed Test';
         ActiveDomesticMult := DomesticFile;
         Add_KVE;
         Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
@@ -1019,7 +1019,7 @@ begin
     NAQSOCW, NAQSOSSB, NAQSORTTY:
       begin
         //        ActiveInitialExchange := NameInitialExchange;
-        //        ContestName := 'North American QSO Party';
+        //        Settings.Contest.Name := 'North American QSO Party';
 
         Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
         Settings.Messages.QslCw := '73 \ NA>';
@@ -1065,14 +1065,14 @@ begin
            TempDomesticQTHDataFileName := 'NEQSOW1';
            ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
            ActiveExchange := RSTDomesticOrDXQTHExchange;
-           //          ContestName := 'New England QSO Party (within NE)';
+           //          Settings.Contest.Name := 'New England QSO Party (within NE)';
            end
         else
            begin
            TempDomesticQTHDataFileName := 'NEQSO';
            //          ActiveDXMult := NoCountDXMults;
            ActiveExchange := RSTDomesticQTHExchange;
-           //          ContestName := 'New England QSO Party (outside NE)';
+           //          Settings.Contest.Name := 'New England QSO Party (outside NE)';
            end;
 
         DXMultLimit := 20;
@@ -1143,7 +1143,7 @@ begin
         tAllowDupeQSOs := TRUE;
         Settings.AutoDupe.EnableCq := False;
         Settings.AutoDupe.EnableSAndP := False;
-        ContestName := 'POTA';
+        Settings.Contest.Name := 'POTA';
         Settings.Bands.WarcEnabled := True;
         SetCQMemoryString(CW, F1, 'CQ^POTA \ \ ');
         SetCQMemoryString(CW, F2, 'CQ^POTA CQ^POTA \ \ FD');
@@ -1159,13 +1159,13 @@ begin
         AddDomesticCountry('K');
         AddDomesticCountry('KH6');
         AddDomesticCountry('KL');
-        //        ContestName := 'QCWA QSO Party';
+        //        Settings.Contest.Name := 'QCWA QSO Party';
       end;
 
     RAEM:
       begin
         ActiveBand := Band80;
-        ContestName := 'RAEM Ernst Krenkel Memorial Contest';
+        Settings.Contest.Name := 'RAEM Ernst Krenkel Memorial Contest';
         InitialExchangeCursorPos := AtStart;
       end;
 
@@ -1184,7 +1184,7 @@ begin
     RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB:
       begin
         ActiveBand := Band80;
-        //        ContestName := 'UK Rotating Postal Code';
+        //        Settings.Contest.Name := 'UK Rotating Postal Code';
         Settings.Contest.MultipleBands := False;
         Settings.Messages.CqExchangeCw := '_~ %5NN ('; // + MyPostalCode;
         Settings.Messages.RepeatSpExchangeCw := '5NN (';
@@ -1217,7 +1217,7 @@ begin
            Settings.My.State := '';
            end;
         //        Settings.Contest.CountDomesticCountries := True;
-        //        ContestName := 'Russian DX Contest';
+        //        Settings.Contest.Name := 'Russian DX Contest';
       end;
 
     SALMONRUN:
@@ -1234,7 +1234,7 @@ begin
            //          DomesticQTHDataFileName := 'SALMON';
            ActiveExchange := RSTDomesticQTHExchange;
            end;
-        //        ContestName := 'Washington State Salmon Run';
+        //        Settings.Contest.Name := 'Washington State Salmon Run';
         //        Add_KVEKH6KL;
 
       end;
@@ -1260,7 +1260,7 @@ begin
 
     SPDX:
       begin
-        //        ContestName := 'SP-DX Contest';
+        //        Settings.Contest.Name := 'SP-DX Contest';
         AddDomesticCountry('SP');
       end;
 
@@ -1268,7 +1268,7 @@ begin
       begin
         ActiveBand := Band20;
         //        ActiveInitialExchange := NameQTHInitialExchange;
-        //        ContestName := 'North American Sprint';
+        //        Settings.Contest.Name := 'North American Sprint';
         SetCQMemoryString(CW, AltF1, 'NA \ NA');
 
         Settings.Messages.CqExchangeCw := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
@@ -1308,7 +1308,7 @@ begin
       begin
         ActiveBand := Band20;
         //        ActiveInitialExchange := NameQTHInitialExchange;
-        //        ContestName := 'North American Sprint';
+        //        Settings.Contest.Name := 'North American Sprint';
         SetCQMemoryString(CW, AltF1, 'NA \ NA');
 
         Settings.Messages.CqExchangeCw := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
@@ -1352,7 +1352,7 @@ begin
           would only be writing the operator's own preference over with
           the value it already has -- and would make it impossible to
           turn off. One setting, one writer (NY4I). *)
-        //        ContestName := 'ARRL Sweepstakes';
+        //        Settings.Contest.Name := 'ARRL Sweepstakes';
 
         AddARRLSectionDomesticCountries;
 
@@ -1416,7 +1416,7 @@ begin
 
     TENTEN:
       begin
-        //        ContestName := 'Ten Ten QSO Party';
+        //        Settings.Contest.Name := 'Ten Ten QSO Party';
         Add_KVEKH6KL;
       end;
 
@@ -1551,7 +1551,7 @@ begin
 
     YODX:
       begin
-        ContestName := 'YO-DX-HF Contest';
+        Settings.Contest.Name := 'YO-DX-HF Contest';
         AddDomesticCountry('YO');
       end;
 
@@ -1644,7 +1644,7 @@ begin
         Settings.Contest.MinitourDuration := 60;
         Settings.Contest.RfoblMode := True; // n4af 4.42.7
         ActiveMode := Phone;
-        ContestName := '?????????? ?????????? ??';
+        Settings.Contest.Name := '?????????? ?????????? ??';
       end;
 
     RFASCHAMPIONSHIPCW {, RFASCHAMPIONSHIPSSB}:
@@ -1659,7 +1659,7 @@ begin
         if FoundMyStateInDomFile then
            begin
            //          DomesticQTHDataFileName := '7QP-W7';
-           //          ContestName := '7th Area QSO Party Inside W7';
+           //          Settings.Contest.Name := '7th Area QSO Party Inside W7';
            ActiveExchange := RSTDomesticOrDXQTHExchange;
            ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
            DXMultLimit := 20;
@@ -1668,7 +1668,7 @@ begin
         else
            begin
            //          DomesticQTHDataFileName := '7QP';
-           //          ContestName := '7th Area QSO Party Outside W7';
+           //          Settings.Contest.Name := '7th Area QSO Party Outside W7';
            ActiveExchange := RSTDomesticQTHExchange;
            end;
         //        VHFBandsEnabled := True;
@@ -1677,7 +1677,7 @@ begin
 
     OZCR_O:
       begin
-        ContestName := '????-??????? ????????? ?????? - ????? ?????????';
+        Settings.Contest.Name := '????-??????? ????????? ?????? - ????? ?????????';
         Settings.Contest.R150SMode := True;
       end;
 
@@ -1914,8 +1914,8 @@ begin
     ShortString's BODY and then patched its length byte by hand -- the idiom
     that cannot survive the callsign becoming a property, because there is no
     body to point at. *)
-  ContestTitle := UTF8Encode(string(GetYearString) + ' '
-                             + string(ContestName) + ' ' + Settings.My.Call);
+  Settings.Contest.Title := UTF8Encode(string(GetYearString) + ' '
+                             + string(Settings.Contest.Name) + ' ' + Settings.My.Call);
 end;
 
 procedure EnumDOM2(FileString: PShortString);

@@ -242,7 +242,6 @@ function F_BAND_MAP_CUTOFF_FREQUENCY: boolean;
 function F_BAND_MAP_DECAY_TIME: boolean;
 function F_CLEAR_DUPE_SHEET: boolean;
 function F_CONTEST: boolean;
-function F_CONTEST_NAME: boolean;
 function F_DX_MULTIPLIER: boolean;
 function F_FREQUENCY_MEMORY: boolean;
 //function F_ICOM_RESPONSE_TIMEOUT: boolean;
@@ -362,7 +361,11 @@ const
         model, where the property's setter does it. nil rather than a
         renumbering, for the reason slot 3 gives. *)
       nil,
-      @F_CONTEST_NAME,
+      (* SLOT 7 IS FREE. F_CONTEST_NAME called SetContestTitle, which is the
+        property setter's job now -- so it runs however the name is set, not
+        only when a config line set it. nil rather than a renumbering:
+        positional table. *)
+      nil,
       nil {@F_MY_COUNTRY -- a VALIDATOR, now a registered value check},
       @F_RADIO_ONE_TYPE,
       @F_RADIO_TWO_TYPE,
@@ -742,6 +745,10 @@ const
      Rotators page -- and it fed it a PortTypeSA ordinal.  Settings.Rotator.Port
      holds the OS name instead, which is what AddLive wanted all along. *)
    - 1 {ROTATOR PORT}
+   (* CONTEST-SCOPED, like QSO NUMBER BY BAND and INITIAL EXCHANGE OVERWRITE
+     before them: FCONTEST assigns both per contest and nothing sets them
+     back. The crA hook that rebuilt the title goes to the setter. *)
+   - 2 {CONTEST NAME and CONTEST TITLE}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -876,8 +883,6 @@ const
  // option since it defaulted to FALSE."  csRem, not deleted, so an old config
  // naming it still loads without an error.
  (crCommand: 'CONNECTION COMMAND';            crAddress: @ConnectionCommand;              crMin:0;  crMax:255;     crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'CONTEST NAME';                  crAddress: @ContestName;                    crMin:0;  crMax:80;      crS: csJSON; crA: 7; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'CONTEST TITLE';                 crAddress: @ContestTitle;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'CONTEST';                       crAddress: pointer(22);                     crMin:0;  crMax:0;       crS: csJSON; crA: 1; crC:0 ; crP:0; crJ: 2; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'COPY FILES';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOperation; crNetwork: 1),
 // (crCommand: 'CQ MENU';                       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
@@ -2527,12 +2532,6 @@ function F_CONTEST: boolean;
 begin
    Result := FoundContest(CMD);
    F_DX_MULTIPLIER;
-end;
-
-function F_CONTEST_NAME: boolean;
-begin
-   SetContestTitle;
-   Result := True;
 end;
 
 function F_FREQUENCY_MEMORY: boolean;

@@ -429,9 +429,10 @@ begin
                           RS_CONTEST_CATEGORYTRANSMITTER);
    RegisterStoredSetting('contest.contest',             'CONTEST',
                           RS_CONTEST_CONTEST);
-   RegisterStoredSetting('contest.contestName',         'CONTEST NAME',
+   (* MODEL, not stored, since 2026-09-13: Settings.Contest owns both. *)
+   RegisterModelSetting( 'contest.contestName',         'CONTEST NAME',
                           RS_CONTEST_CONTESTNAME);
-   RegisterStoredSetting('contest.contestTitle',        'CONTEST TITLE',
+   RegisterModelSetting( 'contest.contestTitle',        'CONTEST TITLE',
                           RS_CONTEST_CONTESTTITLE);
    RegisterModelSetting( 'contest.countDomesticCountries','COUNT DOMESTIC COUNTRIES',
                           RS_CONTEST_COUNTDOMESTICCOUNTRIES);

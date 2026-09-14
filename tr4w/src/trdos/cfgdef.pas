@@ -136,7 +136,7 @@ begin
   //  CodeSpeed := 35;
   //  ColumnDupeSheetEnable := False;
   //  ContactsPerPage := 50;
-  //  ContestTitle := '';
+  //  Settings.Contest.Title := '';
   //  ContinentString := '';
 //   CorrectedCallMessage := '} OK %';
 

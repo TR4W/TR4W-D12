@@ -7117,7 +7117,7 @@ begin
            RXData.QSOPoints := 15;
            end;
 
-        if ContestTitle = 'DL-DX-RTTY' then
+        if Settings.Contest.Title = 'DL-DX-RTTY' then
           if RXCty = 'DL' then
             if rxdata.QTH.Continent <> MyContinent then
                begin
@@ -7612,7 +7612,7 @@ begin
       //        if RXData.DomesticQTH <> '' then
       begin
         //    RXData.QSOPoints := GetEuropeanDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
-        if ContestName = 'EURASIA' then // 4.96.3
+        if Settings.Contest.Name = 'EURASIA' then // 4.96.3
            begin
            RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString)
            end
@@ -8542,7 +8542,7 @@ begin
               RXData.QSOPoints := 0;
               end;
            end;
-        if ContestTitle = 'YBDXDI-FT8' then
+        if Settings.Contest.Title = 'YBDXDI-FT8' then
           if RXCty = 'XYZ' then
              begin
              RXData.QSOPoints := 5;
