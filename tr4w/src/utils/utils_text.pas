@@ -26,6 +26,35 @@ function PrecedingString(LongString: string; Deliminator: string): string;
 function tPos(s: ShortString; c: AnsiChar): integer; //wli  boundary: byte-char search (legacy ShortString callers)
 function pPos(c: AnsiChar; p: PAnsiChar): integer;         // boundary: raw PAnsiChar scan
 
+
+(* A FIXED AnsiChar BUFFER, WRITTEN AND READ THROUGH ITS OWN BOUNDS.
+
+  These three replace StrPCopy / StrPLCopy / StrLCopy / StrPas and the
+  PAnsiChar(@buf[0]) idiom. The point is not tidiness: the shim form takes the
+  destination AND a byte count AND a conversion as three separate arguments
+  that must agree BY HAND, and nothing checks that the count passed belongs to
+  the array named. An open array parameter carries its own High(), so there is
+  no count to get wrong.
+
+  MOVED HERE FROM TF ON 2026-09-14, and the move is the point: TF pulls the
+  LCL and the config model in behind it, so it is not in tr4w_unit_tests.lpr
+  and these helpers could not be tested at all. utils_text is a leaf and is.
+
+  UTF-8 both ways. SetCharBuffer encodes, CharBufferText decodes; a plain cast
+  would reinterpret the bytes by the machine's codepage, and
+  AnsiString(aFixedArray) would take the PADDING too -- the trap CLAUDE.md
+  names directly. *)
+procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
+function CharBufferText(const aBuf: array of AnsiChar): string;
+
+(* ONE SLICE OF A BUFFER, BY POSITION AND LENGTH.
+
+  For fixed-column parsing -- a DX cluster line, where the callsign sits at a
+  known offset. Equivalent to StrLCopy(@dest, @buf[aStart], aLen) without the
+  two pointers: it stops at aLen characters, at a NUL, or at the end of the
+  buffer, whichever comes first, and a start outside the buffer yields ''. *)
+function CharBufferSlice(const aBuf: array of AnsiChar; aStart, aLen: integer): string;
+
 function StrComp(const Str1, Str2: PAnsiChar): integer;    // boundary: PAnsiChar
 procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiChar (ASCII a-z only)
 
@@ -328,6 +357,78 @@ end;
   carry codepage-specific high-bit bytes, and the country lookup binary-searches
   the prefix table this orders.  A signed comparison would reorder it silently.
 }
+
+procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
+var
+   raw: RawByteString;
+   n: integer;
+   i: integer;
+begin
+   raw := RawByteString(UTF8Encode(aText));
+
+   n := Length(raw);
+   if n > High(aBuf) then
+      begin
+      n := High(aBuf);          (* leave room for the terminator *)
+      end;
+
+   for i := 1 to n do
+      begin
+      aBuf[i - 1] := AnsiChar(raw[i]);
+      end;
+   aBuf[n] := #0;
+end;
+
+function CharBufferText(const aBuf: array of AnsiChar): string;
+var
+   n: integer;
+   raw: RawByteString;
+   i: integer;
+begin
+   n := 0;
+   while (n <= High(aBuf)) and (aBuf[n] <> #0) do
+      begin
+      Inc(n);
+      end;
+
+   SetLength(raw, n);
+   for i := 1 to n do
+      begin
+      raw[i] := aBuf[i - 1];
+      end;
+
+   Result := UTF8ToString(raw);
+end;
+
+function CharBufferSlice(const aBuf: array of AnsiChar; aStart, aLen: integer): string;
+var
+   raw: RawByteString;
+   n: integer;
+   i: integer;
+begin
+   Result := '';
+   if (aLen <= 0) or (aStart < 0) or (aStart > High(aBuf)) then
+      begin
+      Exit;
+      end;
+
+   (* STOP AT THE NUL, as StrLCopy did. The buffer is a whole line and the
+     slice is usually shorter than the column width it was cut to. *)
+   n := 0;
+   while (n < aLen) and (aStart + n <= High(aBuf)) and (aBuf[aStart + n] <> #0) do
+      begin
+      Inc(n);
+      end;
+
+   SetLength(raw, n);
+   for i := 1 to n do
+      begin
+      raw[i] := aBuf[aStart + i - 1];
+      end;
+
+   Result := UTF8ToString(raw);
+end;
+
 function StrComp(const Str1, Str2: PAnsiChar): integer;
 var
    p1                                    : PAnsiChar;

@@ -66,6 +66,19 @@ type
       procedure Test_StrComp_HighBitBytesAreUnsigned;
       procedure Test_StrUpper;
       procedure Test_StrUpper_LeavesNonAsciiAlone;
+
+      (* THE FIXED-BUFFER HELPERS, WHICH HAD NO TESTS AT ALL UNTIL THEY MOVED.
+        They lived in TF, and TF pulls the LCL and the config model in behind
+        it, so tr4w_unit_tests could not link them. Being untestable was not a
+        property of the code -- it was a property of where it was parked. *)
+      procedure Test_SetCharBuffer_RoundTrips;
+      procedure Test_SetCharBuffer_TruncatesAndTerminates;
+      procedure Test_SetCharBuffer_EmptyStringGivesEmptyBuffer;
+      procedure Test_CharBufferText_StopsAtNul;
+      procedure Test_CharBufferText_IgnoresBytesPastTheNul;
+      procedure Test_CharBufferSlice_ByPosition;
+      procedure Test_CharBufferSlice_StopsAtNul;
+      procedure Test_CharBufferSlice_OutOfRangeIsEmpty;
    end;
 
 implementation
@@ -469,6 +482,120 @@ end;
 // Suite entry point
 // ---------------------------------------------------------------------------
 
+
+// ---------------------------------------------------------------------------
+// SetCharBuffer / CharBufferText / CharBufferSlice
+//
+// These replace StrPCopy / StrPLCopy / StrLCopy / StrPas and the
+// PAnsiChar(@buf[0]) idiom.  The shim forms took a destination, a byte count
+// and a conversion as three arguments that had to agree BY HAND; an open array
+// carries its own High(), so the count cannot disagree with the destination.
+// ---------------------------------------------------------------------------
+
+procedure TUtilsTextTests.Test_SetCharBuffer_RoundTrips;
+var
+   buf: array[0..31] of AnsiChar;
+begin
+   BeginTest('SetCharBuffer then CharBufferText returns the same text');
+   SetCharBuffer(buf, 'NY4I');
+   CheckEquals('NY4I', CharBufferText(buf), 'plain ASCII');
+
+   SetCharBuffer(buf, 'C:\tr4w\dom\FL.dom');
+   CheckEquals('C:\tr4w\dom\FL.dom', CharBufferText(buf), 'a path with separators');
+end;
+
+procedure TUtilsTextTests.Test_SetCharBuffer_TruncatesAndTerminates;
+var
+   buf: array[0..7] of AnsiChar;
+begin
+   BeginTest('SetCharBuffer bounds by the BUFFER, and always terminates');
+   (* High(buf) is 7, so seven characters plus the NUL.  This is the whole
+     reason the helper exists: the old form was told the size by the CALLER
+     and nothing checked that the number belonged to the array named. *)
+   SetCharBuffer(buf, 'ABCDEFGHIJKL');
+   CheckEquals('ABCDEFG', CharBufferText(buf), 'truncated to High(buf)');
+   CheckEquals(0, Ord(buf[7]), 'the last byte is the terminator');
+end;
+
+procedure TUtilsTextTests.Test_SetCharBuffer_EmptyStringGivesEmptyBuffer;
+var
+   buf: array[0..15] of AnsiChar;
+begin
+   BeginTest('SetCharBuffer with an empty string');
+   SetCharBuffer(buf, 'SOMETHING');
+   SetCharBuffer(buf, '');
+   CheckEquals('', CharBufferText(buf), 'empties what was there');
+   CheckEquals(0, Ord(buf[0]), 'byte 0 is the terminator');
+end;
+
+procedure TUtilsTextTests.Test_CharBufferText_StopsAtNul;
+var
+   buf: array[0..15] of AnsiChar;
+   i: integer;
+begin
+   BeginTest('CharBufferText stops at the NUL, not at the end of the array');
+   for i := Low(buf) to High(buf) do
+      begin
+      buf[i] := 'X';
+      end;
+   buf[3] := #0;
+   CheckEquals('XXX', CharBufferText(buf), 'three characters then the NUL');
+end;
+
+procedure TUtilsTextTests.Test_CharBufferText_IgnoresBytesPastTheNul;
+var
+   buf: array[0..15] of AnsiChar;
+   i: integer;
+begin
+   (* THE TRAP CLAUDE.md NAMES: AnsiString(aFixedCharArray) takes the PADDING
+     too -- every byte to the end of the array, stale bytes included.  A path
+     built that way carries rubbish after it and reads as a missing file. *)
+   BeginTest('CharBufferText ignores stale bytes after the terminator');
+   for i := Low(buf) to High(buf) do
+      begin
+      buf[i] := '#';
+      end;
+   SetCharBuffer(buf, 'AB');
+   buf[5] := 'Z';                  // stale byte beyond the NUL
+   CheckEquals('AB', CharBufferText(buf), 'only up to the NUL');
+end;
+
+procedure TUtilsTextTests.Test_CharBufferSlice_ByPosition;
+var
+   buf: array[0..63] of AnsiChar;
+begin
+   BeginTest('CharBufferSlice takes a slice by offset and length');
+   SetCharBuffer(buf, 'DX de W3LPL:  14025.0  NY4I');
+   CheckEquals('W3LPL', CharBufferSlice(buf, 6, 5), 'the spotter');
+   CheckEquals('NY4I',  CharBufferSlice(buf, 23, 4), 'the spotted call');
+   CheckEquals('D',     CharBufferSlice(buf, 0, 1), 'a single character');
+end;
+
+procedure TUtilsTextTests.Test_CharBufferSlice_StopsAtNul;
+var
+   buf: array[0..63] of AnsiChar;
+begin
+   (* The buffer is a whole cluster LINE and the slice is cut to a COLUMN
+     width, so the requested length routinely runs past the text.  StrLCopy
+     stopped at the NUL and so does this. *)
+   BeginTest('CharBufferSlice stops at the NUL even when asked for more');
+   SetCharBuffer(buf, 'AB');
+   CheckEquals('B', CharBufferSlice(buf, 1, 30), 'asked for 30, text has 1');
+   CheckEquals('AB', CharBufferSlice(buf, 0, 30), 'asked for 30, text has 2');
+end;
+
+procedure TUtilsTextTests.Test_CharBufferSlice_OutOfRangeIsEmpty;
+var
+   buf: array[0..15] of AnsiChar;
+begin
+   BeginTest('CharBufferSlice refuses a start or length outside the buffer');
+   SetCharBuffer(buf, 'ABCDEF');
+   CheckEquals('', CharBufferSlice(buf, 99, 4), 'start past High(buf)');
+   CheckEquals('', CharBufferSlice(buf, -1, 4), 'negative start');
+   CheckEquals('', CharBufferSlice(buf, 2, 0),  'zero length');
+   CheckEquals('', CharBufferSlice(buf, 2, -5), 'negative length');
+end;
+
 procedure TUtilsTextTests.RunAllTests;
 begin
    Test_StringIsAllNumbers;
@@ -489,6 +616,16 @@ begin
    Test_StrComp_HighBitBytesAreUnsigned;
    Test_StrUpper;
    Test_StrUpper_LeavesNonAsciiAlone;
+
+   // The fixed-buffer helpers
+   Test_SetCharBuffer_RoundTrips;
+   Test_SetCharBuffer_TruncatesAndTerminates;
+   Test_SetCharBuffer_EmptyStringGivesEmptyBuffer;
+   Test_CharBufferText_StopsAtNul;
+   Test_CharBufferText_IgnoresBytesPastTheNul;
+   Test_CharBufferSlice_ByPosition;
+   Test_CharBufferSlice_StopsAtNul;
+   Test_CharBufferSlice_OutOfRangeIsEmpty;
 end;
 
 end.

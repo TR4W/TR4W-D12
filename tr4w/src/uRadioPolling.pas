@@ -126,6 +126,10 @@ const
 implementation
 
 uses
+   (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
+     and read through its OWN bounds, replacing StrPCopy and
+     PAnsiChar(@buf[0]). *)
+   utils_text,
   uRadioRegistry,   // RadioTypeToken -- the model name, from the factory
    uPanelUpdate,    // cross-thread panel writes -- the seam and why, in that unit
    uRadioState,     // PTT as STATE. This unit runs on the polling thread and
@@ -403,7 +407,7 @@ begin
             if Assigned(ro) and ro.AuthFailed then
                begin
                logger.Warn('[pFactoryRadio] Auth failed for %s - stopping', [rig^.RadioName]);
-               TF.SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
+               SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
                QuickDisplayError(authErrBuf);
                if rig^.tRadioPanelSlot <> 0 then
                   begin
@@ -692,7 +696,7 @@ begin
          if Assigned(ro) and ro.AuthFailed then
             begin
             logger.Warn('[pFactoryRadio] Authentication failed for %s - not retrying', [rig^.RadioName]);
-            TF.SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
+            SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
             QuickDisplayError(authErrBuf);
             if rig^.tRadioPanelSlot <> 0 then
                begin

@@ -1004,7 +1004,7 @@ begin
                exch.Name := fieldValue;
 
             tAdifOPERATOR:
-               TF.SetCharBuffer(exch.ceOperator, fieldValue);
+               SetCharBuffer(exch.ceOperator, fieldValue);
 
             tAdifPRECEDENCE:
                if Length(fieldValue) > 0 then

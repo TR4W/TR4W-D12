@@ -1576,7 +1576,7 @@ begin
     routine has one caller and it is gated on that setting. Writing it back
     was redundant, and now it would mean a country-file loader writing a
     contest parameter. *)
-  TF.SetCharBuffer(TR4W_R150S_FILENAME, TF.CharBufferText(TR4W_PATH_NAME) + 'r150s.dat');   // Issue #1033: was TF.Format(=wsprintfA)
+  SetCharBuffer(TR4W_R150S_FILENAME, CharBufferText(TR4W_PATH_NAME) + 'r150s.dat');   // Issue #1033: was TF.Format(=wsprintfA)
   ctyLoadInCountryFile(TR4W_R150S_FILENAME, True, False);
 
 end;
@@ -1587,7 +1587,7 @@ procedure ctyLoadInRFOblList;
   //TempRec                               : PrefixRecPtr;
 begin
   // See ctyLoadInR150SList: the same redundant write, for the same reason.
-  TF.SetCharBuffer(TR4W_rfobl_FILENAME, TF.CharBufferText(TR4W_PATH_NAME) + 'rfobl.dat');   // Issue #1033: was TF.Format(=wsprintfA)
+  SetCharBuffer(TR4W_rfobl_FILENAME, CharBufferText(TR4W_PATH_NAME) + 'rfobl.dat');   // Issue #1033: was TF.Format(=wsprintfA)
   ctyLoadInCountryFile(TR4W_rfobl_FILENAME, True, False);
 
 end;

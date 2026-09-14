@@ -173,10 +173,14 @@ function ParseSplitHint(const Comment: AnsiString; BaseFrequencyHz: integer;
 implementation
 
 uses
-   (* Windows was here for lstrcpynA on four spot fields; uAnsiStr.StrLCopy
-     replaces it exactly -- see the note on StrLCopy for the off-by-one
-     between the two counts (2026-09-08). *)
-   uAnsiStr,
+   (* Windows was here for lstrcpynA on four spot fields, then
+     uAnsiStr.StrLCopy, and now CharBufferSlice + SetCharBuffer
+     (2026-09-14). Each step removed an argument that had to agree with
+     another one by hand: lstrcpynA counted the terminator and StrLCopy
+     did not, which is the off-by-one the old note here recorded. The
+     slice bound is now the LINE and the write bound is the FIELD, and
+     neither is a number anyone types. *)
+   utils_text,
    SysUtils,            // LowerCase -- the RTL, not a TF shim
    uBandLookup,         // CalculateBandMode -- tree.pas forwards to this unit
    uCallSignRoutines;   // IsAGoodCall
@@ -949,12 +953,20 @@ begin
          // The length and the copy are one fact and are now written together:
          // lstrcpynA writes at most n-1 characters plus a NUL, so n-1 characters
          // is exactly the length.
-         SetLength(Spot.FSourceCall, i - DX - 6);
-         (* uAnsiStr.StrLCopy, and the count loses one. lstrcpynA's count
-           INCLUDED the terminator; StrLCopy's MaxLen counts characters.
-           i - DX - 5 becomes i - DX - 6, which is exactly the SetLength
-           above -- the length and the copy stay one fact. *)
-         uAnsiStr.StrLCopy(@Spot.FSourceCall[1], @LineBuf[DX + 6], i - DX - 6);
+         (* ONE STATEMENT, so the length CANNOT disagree with the text.
+
+           The note above records a defect where the characters were written
+           through @FSourceCall[1] while the length byte stayed 0 -- the field
+           read as '' as a Pascal string and as the right callsign only through
+           the pointer. SetLength plus a pointer copy is two facts that have to
+           be kept equal by hand; an assignment is one, and the compiler sets
+           the length. *)
+         (* AnsiString EXPLICITLY. CharBufferSlice returns a native string
+           and FSourceCall is a CallString (a ShortString), so the
+           assignment would otherwise be an IMPLICIT narrowing -- the thing
+           the build counts. A cluster line is ASCII, so the conversion is
+           exact; saying so here is what keeps it from being silent. *)
+         Spot.FSourceCall := AnsiString(CharBufferSlice(LineBuf, DX + 6, i - DX - 6));
          Break;
          end;
       end;
@@ -968,9 +980,15 @@ begin
       if ((LineBuf[i] = ' ') or (LineBuf[i] = ':')) and
          (LineBuf[i + 1] <> ' ') then
          begin
-         { StrLCopy, MaxLen in characters -- one less than lstrcpynA's count. }
-         uAnsiStr.StrLCopy(@Spot.FFreqString[0], @LineBuf[i + 1],
-                           DX + 23 - i + Offset);
+         (* BOUNDED BY THE FIELD, not by the column width.
+
+           The old call was told to copy DX + 23 - i + Offset characters
+           into an array[0..11], and nothing in that expression knows how
+           big the array is -- a longer-than-expected frequency column
+           would have written past it. SetCharBuffer takes the
+           destination's own High(). *)
+         SetCharBuffer(Spot.FFreqString,
+                       CharBufferSlice(LineBuf, i + 1, DX + 23 - i + Offset));
 
          TempFrequency := 0;
 
@@ -1024,11 +1042,11 @@ begin
       if (LineBuf[i] <> ' ') and
          (LineBuf[i + 1] = ' ') then
          begin
-         SetLength(Spot.FCall, i - (DX + 25 + Offset));
-         { StrLCopy: one less than lstrcpynA's count, which makes it agree
-           with the SetLength above. }
-         uAnsiStr.StrLCopy(@Spot.FCall[1], @LineBuf[DX + 26 + Offset],
-                           i - (DX + 25 + Offset));
+         (* One statement -- see FSourceCall above for why the length and
+           the characters are no longer two separate facts. *)
+         (* Explicit, for the same reason as FSourceCall above. *)
+         Spot.FCall := AnsiString(CharBufferSlice(LineBuf, DX + 26 + Offset,
+                                                  i - (DX + 25 + Offset)));
          if not IsAGoodCall(Spot.FCall) then
             begin
             Exit;
@@ -1057,10 +1075,9 @@ begin
    // and rewriting the test would change which lines take this path.  ny4i
    if LineBuf[DX + 39 + Offset] <> '                              ' then
       begin
-      { 30 characters plus the terminator, into array[0..31]. The old count
-        of 31 meant the same thing -- lstrcpynA counted the NUL -- which is
-        what NY4I's note beside it was recording. }
-      uAnsiStr.StrLCopy(@Spot.FNotes[0], @LineBuf[DX + 39 + Offset], 30);
+      (* 30 characters of the comment column, into array[0..31]. The bound
+        is now the field's own; the 30 is how much of the LINE to take. *)
+      SetCharBuffer(Spot.FNotes, CharBufferSlice(LineBuf, DX + 39 + Offset, 30));
 
       // The comment is the 30-column field the note was just copied from.  It
       // is read into a string here rather than uppercased in place: the

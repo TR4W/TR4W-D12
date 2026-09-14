@@ -148,7 +148,7 @@ begin
   chosenDir  := ExtractFilePath(chosenPath);
   chosenName := ExtractFileName(chosenPath);
 
-  TF.SetCharBuffer(TR4W_LOG_PATH_NAME, chosenDir);
+  SetCharBuffer(TR4W_LOG_PATH_NAME, chosenDir);
 
   dotPos := Pos('.', chosenName);
   if dotPos > 0 then

@@ -73,6 +73,10 @@ procedure ShowNewContest;
 
 implementation
 uses
+   (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
+     and read through its OWN bounds, replacing StrPCopy and
+     PAnsiChar(@buf[0]). *)
+   utils_text,
   uAppPaths,   // ContestDir -- where an operator's contest files live
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results
@@ -511,7 +515,7 @@ begin
       {callsign}
     { The .cfg is written as bytes, so the two working buffers stay ANSI; what
       changed is where the text comes from -- the form, not a control id. }
-    TF.SetCharBuffer(TempBuffer1, frmNewContest.MyCall);
+    SetCharBuffer(TempBuffer1, frmNewContest.MyCall);
     if Settings.My.MainCallsign = '' then
        begin
        (* THE PROPERTY, NOT SetCFGCommandValue, and this had to change with
@@ -530,7 +534,7 @@ begin
     DeleteSlashes(TempBuffer1);
 
       {Contest Name}
-    TF.SetCharBuffer(TempBuffer2, frmNewContest.ContestName);
+    SetCharBuffer(TempBuffer2, frmNewContest.ContestName);
 
     (* ONE FILE, IN ONE DIRECTORY -- no folder per contest.
 
@@ -734,7 +738,7 @@ procedure OpenSelectedConfig;
 begin
    { A FULL path already -- the grid can be showing any directory, which is why
      SelectedFile answers with the path and not just the name. }
-   TF.SetCharBuffer(TR4W_CFG_FILENAME, frmNewContest.SelectedFile);
+   SetCharBuffer(TR4W_CFG_FILENAME, frmNewContest.SelectedFile);
 end;
 
 procedure ShowNewContest;
@@ -754,7 +758,7 @@ begin
             (* From the store, not from a global copy of it.  StrPLCopy
               terminates what it writes; Move copied a whole fixed array and
               relied on the source already being terminated. *)
-            nccLatest:       TF.SetCharBuffer(TR4W_CFG_FILENAME, GetLatestConfigFile);
+            nccLatest:       SetCharBuffer(TR4W_CFG_FILENAME, GetLatestConfigFile);
             nccCreate:       SaveNewContest;
          end;
          end

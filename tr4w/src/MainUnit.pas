@@ -10134,7 +10134,7 @@ begin
      (* NAMED BY THE CALLER -- no dialog. TR4W_ADIF_FILENAME is still
        filled because the import body below reads it back. *)
      adifFileName := aFileName;
-     TF.SetCharBuffer(TR4W_ADIF_FILENAME, aFileName);
+     SetCharBuffer(TR4W_ADIF_FILENAME, aFileName);
      end
   else
      begin

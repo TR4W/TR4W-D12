@@ -85,6 +85,10 @@ const
 }
 implementation
 uses
+   (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
+     and read through its OWN bounds, replacing StrPCopy and
+     PAnsiChar(@buf[0]). *)
+   utils_text,
   MainUnit,
   uAnsiStr,
   uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
@@ -230,7 +234,7 @@ var
    sBody := AnsiString('xml=<?xml version="1.0"?>') + BuildDynamicResultsXml;
    (* The body is XML built from AnsiString parts and posted as bytes;
      WinAnsi was re-encoding text that is already the bytes to send. *)
-   TF.SetCharBuffer(GetScoresBuffer, string(sBody));
+   SetCharBuffer(GetScoresBuffer, string(sBody));
    logger.Debug('[MakePOSTRequestNew] %s', [GetScoresBuffer]);
    Result := uAnsiStr.StrLen(GetScoresBuffer);
    end;
@@ -259,7 +263,7 @@ var
    // [REPORT] section (2026-08-16).  CABRILLOSECTION, not the ERMAK section:
    // the scores server takes the standard Cabrillo tags, and an ERMAK contest
    // posts the same club and overlay it always did.
-   TF.SetCharBuffer(buf, HeaderValue(CABRILLOSECTION, string(Key)));
+   SetCharBuffer(buf, HeaderValue(CABRILLOSECTION, string(Key)));
    n := uAnsiStr.StrLen(buf);
    if n = 0 then
       begin

@@ -175,16 +175,11 @@ procedure UnableToFindFileMessage(FileName: string);
   TRUNCATION IS SILENT AND DELIBERATE, matching what the sprintf it replaces
   did with a fixed buffer -- MAX_PATH is the bound, and a path longer than that
   cannot be opened anyway. *)
-procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
-
-(* READ A FIXED CHARACTER BUFFER AS A STRING, STOPPING AT THE NUL.
-
-  THE OTHER HALF OF SetCharBuffer, and the one CLAUDE.md names directly:
-  `AnsiString(aFixedCharArray)` is wrong because the cast TAKES THE PADDING
-  TOO -- every byte to the end of the array, NULs and stale bytes included.
-
-  An open array again, so the bound is the buffer's own. *)
-function CharBufferText(const aBuf: array of AnsiChar): string;
+(* SetCharBuffer / CharBufferText / CharBufferSlice MOVED TO utils_text
+  (2026-09-14). They are leaf string helpers and TF is NOT a leaf -- it
+  pulls the LCL and the config model in behind it, which is why the unit
+  TESTS could not link them and they went unverified. utils_text is
+  already in tr4w_unit_tests.lpr. *)
 
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(aAllowed: PCfgAllowedInts; aHighIndex: integer; aVar: PInteger; ValueToSet: integer): boolean;
@@ -943,53 +938,6 @@ begin
      showwarning(SysUtils.Format('%s'#13#13'%s',
                  [SysUtils.SysErrorMessage(SysUtils.GetLastOSError), FileName]));
      end;
-end;
-
-procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
-var
-   raw: RawByteString;
-   n: integer;
-   i: integer;
-begin
-   (* UTF8Encode, not a cast: these buffers hold BYTES and the source is a
-     native string. The conversion is explicit because CLAUDE.md asks for it
-     at the boundary rather than letting an assignment do it silently. *)
-   raw := RawByteString(UTF8Encode(aText));
-
-   n := Length(raw);
-   if n > High(aBuf) then
-      begin
-      n := High(aBuf);          (* leave room for the terminator *)
-      end;
-
-   for i := 1 to n do
-      begin
-      aBuf[i - 1] := AnsiChar(raw[i]);
-      end;
-   aBuf[n] := #0;
-end;
-
-function CharBufferText(const aBuf: array of AnsiChar): string;
-var
-   n: integer;
-   raw: RawByteString;
-   i: integer;
-begin
-   n := 0;
-   while (n <= High(aBuf)) and (aBuf[n] <> #0) do
-      begin
-      Inc(n);
-      end;
-
-   SetLength(raw, n);
-   for i := 1 to n do
-      begin
-      raw[i] := aBuf[i - 1];
-      end;
-
-   (* The bytes were written as UTF-8 by SetCharBuffer, so they come back the
-     same way. A plain cast would reinterpret them by codepage. *)
-   Result := UTF8ToString(raw);
 end;
 
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;

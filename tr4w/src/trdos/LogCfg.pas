@@ -441,13 +441,13 @@ begin
      begin
      if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
         begin
-        TF.SetCharBuffer(domPath, TF.CharBufferText(TR4W_DOM_FILENAME))
+        SetCharBuffer(domPath, CharBufferText(TR4W_DOM_FILENAME))
         end
       else
          begin
-         TF.SetCharBuffer(domPath,
+         SetCharBuffer(domPath,
             SysUtils.Format('%sdom\%s',
-                            [TF.CharBufferText(TR4W_PATH_NAME),
+                            [CharBufferText(TR4W_PATH_NAME),
                              string(Settings.Contest.DomesticFilename)]));
          (* Windows spelling, resolved for this platform -- see fcontest. *)
          ResolveDataFileInPlace(domPath);
@@ -564,7 +564,7 @@ begin
      begin
      (* The operator defaults to the callsign being used. StrPLCopy fills a
        fixed AnsiChar array, so the text is encoded on the way in. *)
-     TF.SetCharBuffer(CurrentOperator, Settings.My.Call);
+     SetCharBuffer(CurrentOperator, Settings.My.Call);
      end;
 
   CheckAndInitializeSerialPorts;
