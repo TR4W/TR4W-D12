@@ -95,6 +95,8 @@ uses
                      token, and this is where one becomes the other *)
    LogDupe,        // DXMultTypenameArray, ActivePrefixMult
    LogDom,         // DomesticMultStringArray, ActiveDomesticMult
+   uCTYDAT,        (* CTY.ctyCountryMode / ctyZoneMode -- which lists CTY.DAT
+                     resolves against, set by the two multiplier hooks *)
    LogWind,        (* Settings.My.Call -- the callsign the derivation starts
                      from; DispalayLogGridLines; DisplayInsertMode *)
                    // DisplayInsertMode, the INS/OVR panel;
@@ -313,6 +315,23 @@ begin
       begin
       ApplyMultiplierToken(Settings.Contest.DxMultiplier, DXMultTypenameArray,
                            @ActiveDXMult);
+      (* WHICH COUNTRY LIST CTY.DAT RESOLVES AGAINST. This was the row's
+        crA: 20 hook, F_DX_MULTIPLIER, and it was dropped with the row --
+        restored here. The ARRL DXCC family means ARRL country mode; anything
+        else means CQ. *)
+      if ActiveDXMult in [ARRLDXCCWithNoUSAOrCanada,
+                          ARRLDXCCWithNoARRLSections,
+                          ARRLDXCCWithNoUSACanadaKH6OrKL7,
+                          ARRLDXCCWithNoIOrIS0,
+                          ARRLDXCCWithNoJT,
+                          ARRLDXCC] then
+         begin
+         CTY.ctyCountryMode := ARRLCountryMode;
+         end
+      else
+         begin
+         CTY.ctyCountryMode := CQCountryMode;
+         end;
       end;
 
    if UnicodeSameText(aPath, PREFIX_MULTIPLIER) then
@@ -325,6 +344,20 @@ begin
       begin
       ApplyMultiplierToken(Settings.Contest.ZoneMultiplier, ZoneMultTypeSA,
                            @ActiveZoneMult);
+      (* THE ZONE MODE AND THE ZONE INITIAL EXCHANGE. This was the row's
+        crA: 2 hook, F_ZONE_MULTIPLIER, dropped with the row and restored
+        here. Neither corpus set exercises it, which is why a green run did
+        not notice. *)
+      if ActiveZoneMult = CQZones then
+         begin
+         ActiveInitialExchange := ZoneInitialExchange;
+         CTY.ctyZoneMode := CQZoneMode;
+         end;
+      if ActiveZoneMult = ITUZones then
+         begin
+         ActiveInitialExchange := ZoneInitialExchange;
+         CTY.ctyZoneMode := ITUZoneMode;
+         end;
       end;
 
    if UnicodeSameText(aPath, CONTEST_NAME) then
