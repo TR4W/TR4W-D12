@@ -3083,7 +3083,7 @@ begin
    Result := -1;
    for c := Low(tr4wColors) to High(tr4wColors) do
       begin
-      if SameText(string(AnsiString(tr4wColorsSA[c])), Trim(aName)) then
+      if SameText(tr4wColorsSA[c], Trim(aName)) then
          begin
          Result := Ord(c);
          Exit;
@@ -3160,8 +3160,8 @@ begin
             if (TWindows[e].mweName <> nil) and
                SameText(string(AnsiString(TWindows[e].mweName)), FColorElements[i]) then
                begin
-               FColorGrid.Cells[1, i + 1] := string(AnsiString(tr4wColorsSA[TWindows[e].mweColor]));
-               FColorGrid.Cells[2, i + 1] := string(AnsiString(tr4wColorsSA[TWindows[e].mweBackG]));
+               FColorGrid.Cells[1, i + 1] := tr4wColorsSA[TWindows[e].mweColor];
+               FColorGrid.Cells[2, i + 1] := tr4wColorsSA[TWindows[e].mweBackG];
                { SOMETHING TO READ, not a swatch. The question the sample has to
                  answer is "can I read this during a contest", so it carries
                  letters and digits at the size the grid draws -- a plain block

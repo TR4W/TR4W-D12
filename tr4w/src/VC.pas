@@ -703,7 +703,10 @@ const
   BASECOLUMNWIDTH                       = 49;     // 4.90.4
   PREFIXCOLUMNWIDTH                     = 104;    // 4.90.4
 
-  tr4wColorsSA                          : array[tr4wColors] of PAnsiChar = (
+  (* string, NOT PAnsiChar -- 2026-09-14. Six of its eight readers were
+    string(AnsiString(tr4wColorsSA[c])), the double cast the string
+    done-criterion is about; they are plain indexing now. *)
+  tr4wColorsSA                          : array[tr4wColors] of string = (
     'LIGHT BLUE',
     'BLACK',
     'BLUE',

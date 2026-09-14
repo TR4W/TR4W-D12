@@ -505,6 +505,7 @@ type
       FRateDisplay: RateDisplayType;
       FHourDisplay: HourDisplayType;
       FUserInfoShown: UserInfoType;
+      FAlertColor: string;
    public
       constructor Create;
    published
@@ -549,6 +550,22 @@ type
         RATE_DISPLAY_SPELLINGS, registered against this property. *)
       property RateDisplay: RateDisplayType
          read FRateDisplay write FRateDisplay;
+      (* THE COLOUR AN ALERT IS DRAWN IN -- ALERT COLOR, aliased.
+
+        THE LAST SETTING TO COME OUT OF uCFG, and it was hiding where the
+        CFGCA sweep could not see it: not in a row but in a PATTERN ARM of
+        CheckCommand, which is why it survived all 415 row deletions. Its
+        target, VC's AlertColor, was written by that arm and by nothing else
+        in the tree, and it appears nowhere in settings/tr4w.json -- so
+        deleting the arm would have made it permanently unsettable rather
+        than removing a duplicate.
+
+        A TOKEN, on the subsystem pattern: the SPELLINGS are tr4wColorsSA and
+        the enum is VC's, so uCFG registers the vocabulary and uSettingsEffects
+        turns the token back into the ordinal. Moving tr4wColors itself here
+        would drag a type a hundred sites use into the settings model for no
+        gain -- the same reasoning as the four multiplier modes. *)
+      property AlertColor: string read FAlertColor write FAlertColor;
       (* Was the global HourDisplay in logwind -- WHAT THE HOUR BOX COUNTS
         OVER: this clock hour, the last sixty minutes, or band changes (all
         of them, or only this position's). HOUR DISPLAY, aliased. *)
@@ -4461,6 +4478,15 @@ begin
    FRateDisplay := QSOs;
    FHourDisplay := ThisHour;
    FUserInfoShown := NoUserInfo;
+   (* VC declared AlertColor = trAlert, and 'ALERT' is that ordinal's spelling
+     in tr4wColorsSA.
+
+     WRITTEN OUT RATHER THAN INDEXED, deliberately: reaching tr4wColorsSA
+     means uses VC, and this unit is kept clear of VC on purpose -- the ruling
+     is that a settings TYPE moves HERE, so the arrow points the other way and
+     adding the edge invites a cycle. The cost is that the literal could drift
+     from the table, so a unit test pins it. *)
+   FAlertColor := 'ALERT';
 end;
 
 procedure TMessageSettings.SetAutoQslInterval(aValue: TAutoQslInterval);
@@ -5440,6 +5466,7 @@ begin
    Alias('WEIGHT',               'Cw.Weight');
    Alias('CODE SPEED',           'Cw.CodeSpeed');
    Alias('STEREO PIN HIGH',      'Cw.StereoPinHigh');
+   Alias('ALERT COLOR',          'MainWindow.AlertColor');
    Alias('MULT REPORT MINIMUM BANDS', 'Contest.MultReportMinimumBands');
    Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
    Alias('DX MULTIPLIER',        'Contest.DxMultiplier');

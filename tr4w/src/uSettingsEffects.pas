@@ -184,6 +184,7 @@ const
    QSL_MODE                = 'Contest.QslMode';
    QSO_POINT_METHOD        = 'Contest.QsoPointMethod';
    SINGLE_BAND_SCORE       = 'Contest.SingleBandScore';
+   ALERT_COLOR             = 'MainWindow.AlertColor';
    DOMESTIC_MULTIPLIER     = 'Contest.DomesticMultiplier';
    DX_MULTIPLIER           = 'Contest.DxMultiplier';
    PREFIX_MULTIPLIER       = 'Contest.PrefixMultiplier';
@@ -314,6 +315,8 @@ begin
 end;
 
 procedure SettingChanged(const aPath: string);
+var
+   i: tr4wColors;   // the ALERT COLOR token search, below
 begin
    (* THE TEN ckList TOKENS, each assigning the ordinal its row assigned.
      ApplyMultiplierToken is named for the four it was written for; what it
@@ -422,6 +425,23 @@ begin
      something else would silently rescore the contest. The registered
      vocabulary means CheckCommand refuses such a value before it ever gets
      here; this is the second guard, not the first. *)
+   (* THE ALERT COLOUR, token -> ordinal. Same shape as the multiplier modes
+     above: the setting holds the operator-facing spelling, VC keeps the enum,
+     and this is the one place that joins them. Sits with the token arms, ABOVE
+     the GEffectsLive gate, because it must apply during a config read -- the
+     colour is wanted before anything is drawn. *)
+   if UnicodeSameText(aPath, ALERT_COLOR) then
+      begin
+      for i := Low(tr4wColorsSA) to High(tr4wColorsSA) do
+         begin
+         if UnicodeSameText(tr4wColorsSA[i], Trim(Settings.MainWindow.AlertColor)) then
+            begin
+            AlertColor := i;
+            Break;
+            end;
+         end;
+      end;
+
    if UnicodeSameText(aPath, DOMESTIC_MULTIPLIER) then
       begin
       ApplyMultiplierToken(Settings.Contest.DomesticMultiplier, DomesticMultStringArray,

@@ -241,6 +241,7 @@ resourcestring
    RS_APPEARANCE_CTRLJ_HOURDISPLAY            = 'Hour Display';
    RS_APPEARANCE_CTRLJ_INSERTMODE             = 'Insert Mode';
    RS_APPEARANCE_CTRLJ_RATEDISPLAY            = 'Rate Display';
+   RS_APPEARANCE_ALERTCOLOR                   = 'Alert Color';
    RS_APPEARANCE_LAYOUT_ROWCOUNT              = 'Row Count';
    RS_APPEARANCE_CTRLJ_SHOWFREQUENCYINLOG     = 'Show Frequency In Log';
    RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN      = 'Show Typed Callsign';

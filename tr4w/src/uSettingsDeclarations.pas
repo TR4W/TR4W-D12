@@ -763,8 +763,14 @@ begin
                           RS_APPEARANCE_CTRLJ_INSERTMODE);
    RegisterModelSetting( 'appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
                           RS_APPEARANCE_CTRLJ_RATEDISPLAY);
-   (* True, True: broadcast to the other position, and needs a restart --
-     which is what the row's crNetwork: 1 and crJ: 1 said. *)
+   (* THE LAST SETTING OUT OF uCFG, 2026-09-14. It was not a row -- it was a
+     PATTERN ARM in CheckCommand, which is why 415 row deletions went past it.
+     Its vocabulary is registered from uCFG against tr4wColorsSA. *)
+   RegisterModelSetting( 'appearance.alertColor',              'ALERT COLOR',
+                          RS_APPEARANCE_ALERTCOLOR);
+   (* True: needs a restart, which is what the row's crJ: 1 said. The
+     aBroadcast parameter that used to sit before it is gone -- nothing ever
+     read it; uCFG.SHARED_WITH_PEERS is the live answer. *)
    RegisterModelSetting( 'appearance.layout.rowCount',         'ROW COUNT',
                           RS_APPEARANCE_LAYOUT_ROWCOUNT, True);
    RegisterModelSetting( 'appearance.ctrlj.showFrequencyInLog','SHOW FREQUENCY IN LOG',

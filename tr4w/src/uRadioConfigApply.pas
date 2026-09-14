@@ -973,7 +973,7 @@ begin
    SetLength(Result, Ord(High(tr4wColors)) - Ord(Low(tr4wColors)) + 1);
    for c := Low(tr4wColors) to High(tr4wColors) do
       begin
-      Result[Ord(c)] := string(AnsiString(tr4wColorsSA[c]));
+      Result[Ord(c)] := tr4wColorsSA[c];
       end;
 end;
 
@@ -984,7 +984,7 @@ begin
    Result := False;
    for c := Low(tr4wColors) to High(tr4wColors) do
       begin
-      if SameText(string(AnsiString(tr4wColorsSA[c])), aSpelling) then
+      if SameText(tr4wColorsSA[c], aSpelling) then
          begin
          aColor := c;
          Result := True;
@@ -1018,8 +1018,8 @@ begin
          Continue;
          end;
       aStore.SetElementColors(string(AnsiString(TWindows[e].mweName)),
-                              string(AnsiString(tr4wColorsSA[TWindows[e].mweColor])),
-                              string(AnsiString(tr4wColorsSA[TWindows[e].mweBackG])));
+                              tr4wColorsSA[TWindows[e].mweColor],
+                              tr4wColorsSA[TWindows[e].mweBackG]);
       end;
 
    logger.Info('[Colors] seeded %d element(s) from the loaded configuration',

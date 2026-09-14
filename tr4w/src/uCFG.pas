@@ -1397,36 +1397,18 @@ begin
          end;
       end;
 
-   (* ALERT COLOR KEEPS ITS ARM, AND IT IS THE ONE THAT COULD NOT JUST GO.
+   (* ALERT COLOR'S ARM IS GONE -- 2026-09-14, and it was the last one.
 
-     Every other pattern family here had somewhere else to live -- the window
-     colours are in the store, the column widths and F-key memories are in the
-     contest database. THIS ONE HAS NOWHERE. `AlertColor` is a plain global in
-     VC.pas, written by this arm and by nothing else in the tree, read by
-     MainUnit:1651 and :1656, and ABSENT FROM settings/tr4w.json entirely --
-     checked against NY4I's own store: no colors key, no commands key.
+     It was the only pattern family with nowhere else to live: AlertColor is a
+     plain global in VC, written by this arm and by nothing else, and absent
+     from settings/tr4w.json entirely. So it could not simply be deleted the
+     way the window colours were -- that would have removed the only way to
+     set it rather than a duplicate.
 
-     So deleting the arm would not remove a duplicate, it would make the
-     setting permanently unsettable at its default. It is an UNMIGRATED
-     SETTING hiding in a pattern test rather than in a row, which is why the
-     CFGCA sweep never saw it.
-
-     IT GOES WHERE THE OTHERS WENT -- a token on the settings object with its
-     vocabulary registered from here, on the subsystem pattern -- and the arm
-     comes out with the same commit. Left here deliberately rather than
-     deleted first and migrated second: one of those orders loses the value. *)
-   if pshortstring(Command)^ = 'ALERT COLOR' then
-      begin
-      TempByte := GetValueFromArray(@tr4wColorsSA,
-         Byte(High(tr4wColors)), CustomCMD);
-      if TempByte <> UNKNOWNTYPE then
-         begin
-         AlertColor := tr4wColors(TempByte);
-         Result := True;
-         Exit;
-         end;
-      end;
-
+     It is Settings.MainWindow.AlertColor now, a token whose vocabulary is
+     registered above from the very table this arm matched against, with
+     uSettingsEffects assigning the ordinal. Migrated and deleted in ONE
+     commit, because either order on its own loses the value. *)
 
    (* THE ROW SCAN IS GONE -- 2026-09-14, and with it the last of CFGCA.
 
@@ -1823,6 +1805,12 @@ initialization
    RegisterSettingAllowedValues('Contest.QslMode',
                                 ParameterOkayModeTypeStringArray);
    RegisterSettingAllowedValues('Contest.QsoPointMethod', QSOPointMethodArray);
+
+   (* THE COLOUR NAMES, so ALERT COLOR refuses a spelling that is not one and
+     a drop-down can offer the list. tr4wColorsSA is the same table the arm
+     that used to live in CheckCommand matched against, so the vocabulary, the
+     refusal and the effect cannot disagree about what 'LIGHT CYAN' means. *)
+   RegisterSettingAllowedValues('MainWindow.AlertColor', tr4wColorsSA);
 
    RegisterSettingAllowedValues('Contest.DomesticMultiplier',
                                 DomesticMultStringArray);

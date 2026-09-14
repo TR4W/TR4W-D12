@@ -31,7 +31,8 @@ interface
 uses
    SysUtils, Classes, uTR4WTestFramework, uJSON, uSettingsModel,
    uKeychain,   // InstallTestKeychain -- never the real vault
-   uCFG;   // CommandIsRetired -- the 91 names that replaced the csRem rows
+   uCFG,   // CommandIsRetired -- the names that replaced the csRem rows
+   VC;     // tr4wColorsSA / trAlert -- the ALERT COLOR default is pinned to it
 
 type
    TSettingsModelTests = class(TTestCase)
@@ -353,7 +354,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(297, names.Count,
+         CheckEquals(298, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1257,6 +1258,7 @@ const
    (* ONE NAME PER LINE, on purpose: a vocabulary change has to be
      readable in a diff, and a single 900-character line is not. *)
    EXPECTED = ''
+      + '"ALERT COLOR",'
       + '"ALL CW MESSAGES CHAINABLE",'
       + '"ALLOW AUTO UPDATE",'
       + '"ALT-D BUFFER ENABLE",'
@@ -1655,6 +1657,20 @@ begin
 
      So the answer is pinned for all three owners, both slots, and the two
      spellings that put the slot somewhere other than the front. *)
+   (* ALERT COLOR'S DEFAULT MUST BE A SPELLING THE VOCABULARY ACCEPTS.
+
+     uSettingsModel writes it as the literal 'ALERT' rather than indexing
+     tr4wColorsSA[trAlert], because reaching that table means `uses VC` and
+     this unit is kept clear of VC on purpose -- the ruling is that a settings
+     TYPE moves INTO uSettingsModel, so the arrow points the other way and the
+     edge would invite a cycle.
+
+     THE COST OF THE LITERAL IS DRIFT, and this is the guard: if anyone
+     renames that colour in VC, the default stops being a legal value and a
+     fresh station would fail its own allow-list. *)
+   CheckEquals(string(tr4wColorsSA[trAlert]), Settings.MainWindow.AlertColor,
+               'the ALERT COLOR default is the spelling VC gives trAlert');
+
    CheckTrue(CommandIsJSONOwned('RADIO ONE PORT'),
              'the radio library owns RADIO ONE PORT');
    CheckTrue(CommandIsJSONOwned('RADIO TWO BAUD RATE'),
