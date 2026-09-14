@@ -257,8 +257,9 @@ begin
        would otherwise read pads with spaces, and a backup called
        'LOGBACKUP_  1.TRW' is not what the next run looks for. }
 
-     StrPCopy(TempBuffer2, AnsiString(SysUtils.Format('%sLOGBACKUP_%.3d.TRW',
-                                      [PAnsiChar(@TR4W_LOG_PATH_NAME), counter])));
+     TF.SetCharBuffer(TempBuffer2,
+                      SysUtils.Format('%sLOGBACKUP_%.3d.TRW',
+                                      [TF.CharBufferText(TR4W_LOG_PATH_NAME), counter]));
      (* THE THIRD ARGUMENT WAS DOING THE WORK, so it is worth saying what
        replaced it.  CopyFileA's bFailIfExists=True is how this loop FINDS a
        free slot: it tries LOGBACKUP_001, _002, ... and stops at the first

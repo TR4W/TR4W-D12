@@ -545,10 +545,8 @@ procedure CreateCabrilloFile;
   begin
 
   SetTransmittersId := False;
-  uAnsiStr.StrPLCopy( tReportsFilename,
-     UTF8Encode( string( PAnsiChar( @TR4W_LOG_PATH_NAME[ 0 ] ) )
-                 + Settings.My.Call + '.LOG' ),
-     High( tReportsFilename ) );
+  TF.SetCharBuffer( tReportsFilename,
+     TF.CharBufferText( TR4W_LOG_PATH_NAME ) + Settings.My.Call + '.LOG' );
   DeleteSlashes( tReportsFilename );
 
   FillChar(Radio1IDs, SizeOf( Radio1IDs ), 0);
@@ -2775,7 +2773,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          TempPchar := @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ];
          if TempTag = ctOperators then
             begin
-            uAnsiStr.StrPCopy( TempBuffer2, GetOperatorsFromLog );
+            TF.SetCharBuffer( TempBuffer2, GetOperatorsFromLog );
             // Issue #998 (was custom Format '%s')
             end;
          // Issue #998: %s=tag(TempPchar), %s=value(TempBuffer2).

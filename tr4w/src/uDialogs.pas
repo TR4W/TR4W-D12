@@ -74,7 +74,8 @@ uses
   LCLType,             { TTranslateString -- the LCL's own string, see below }
   Dialogs,             { TOpenDialog }
   Forms,               { Application -- the dialog parents itself to the form }
-  uAnsiStr;            { StrPLCopy over PAnsiChar; SysUtils' is PWideChar }
+  TF;                  { SetCharBuffer -- writes a fixed AnsiChar buffer
+                           through its own bounds, no pointer and no size argument }
 
 function OpenFileDlg(const aTitle, aFilter: string;
                      var aFileName: FileNameType;
@@ -108,8 +109,7 @@ begin
       { Cleared first: the caller reads this as ASCIIZ, and a shorter path over
         a longer one would otherwise leave the old tail behind the terminator. }
       FillChar(aFileName, SizeOf(aFileName), 0);
-      uAnsiStr.StrPLCopy(@aFileName[0], AnsiString(dlg.FileName),
-                         High(aFileName));
+      TF.SetCharBuffer(aFileName, dlg.FileName);
       Result := True;
    finally
       dlg.Free;

@@ -1483,8 +1483,7 @@ begin
       Win32 ...A call opened this path, and wrong now that FileOpen and
       TFileStream do, because FPC's file layer reads an AnsiString as
       DefaultSystemCodePage and converts to the wide API itself. *)
-    StrLCopy(TR4W_CFG_FILENAME, PAnsiChar(AnsiString(s)),
-             High(TR4W_CFG_FILENAME));
+    TF.SetCharBuffer(TR4W_CFG_FILENAME, s);
     goto CommandLine;
   end;
 
@@ -1552,8 +1551,7 @@ begin
       Win32 ...A call opened this path, and wrong now that FileOpen and
       TFileStream do, because FPC's file layer reads an AnsiString as
       DefaultSystemCodePage and converts to the wide API itself. *)
-    StrLCopy(TR4W_CFG_FILENAME, PAnsiChar(AnsiString(s)),
-             High(TR4W_CFG_FILENAME));
+    TF.SetCharBuffer(TR4W_CFG_FILENAME, s);
         end
      else
         begin

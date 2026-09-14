@@ -511,8 +511,7 @@ begin
       {callsign}
     { The .cfg is written as bytes, so the two working buffers stay ANSI; what
       changed is where the text comes from -- the form, not a control id. }
-    StrLCopy(TempBuffer1, PAnsiChar(AnsiString(frmNewContest.MyCall)),
-             High(TempBuffer1));
+    TF.SetCharBuffer(TempBuffer1, frmNewContest.MyCall);
     if Settings.My.MainCallsign = '' then
        begin
        (* THE PROPERTY, NOT SetCFGCommandValue, and this had to change with
@@ -531,8 +530,7 @@ begin
     DeleteSlashes(TempBuffer1);
 
       {Contest Name}
-    StrLCopy(TempBuffer2, PAnsiChar(AnsiString(frmNewContest.ContestName)),
-             High(TempBuffer2));
+    TF.SetCharBuffer(TempBuffer2, frmNewContest.ContestName);
 
     (* ONE FILE, IN ONE DIRECTORY -- no folder per contest.
 
@@ -736,9 +734,7 @@ procedure OpenSelectedConfig;
 begin
    { A FULL path already -- the grid can be showing any directory, which is why
      SelectedFile answers with the path and not just the name. }
-   StrLCopy(TR4W_CFG_FILENAME,
-            PAnsiChar(AnsiString(frmNewContest.SelectedFile)),
-            High(TR4W_CFG_FILENAME));
+   TF.SetCharBuffer(TR4W_CFG_FILENAME, frmNewContest.SelectedFile);
 end;
 
 procedure ShowNewContest;

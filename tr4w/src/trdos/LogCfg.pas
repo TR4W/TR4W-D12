@@ -441,14 +441,14 @@ begin
      begin
      if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
         begin
-        uAnsiStr.StrLCopy(domPath, TR4W_DOM_FILENAME, SizeOf(domPath) - 1)
+        TF.SetCharBuffer(domPath, TF.CharBufferText(TR4W_DOM_FILENAME))
         end
       else
          begin
-         uAnsiStr.StrPCopy(domPath,
-            SysUtils.Format(AnsiString('%sdom\%s'),
-                            [TR4W_PATH_NAME,
-                             UTF8Encode(Settings.Contest.DomesticFilename)]));
+         TF.SetCharBuffer(domPath,
+            SysUtils.Format('%sdom\%s',
+                            [TF.CharBufferText(TR4W_PATH_NAME),
+                             string(Settings.Contest.DomesticFilename)]));
          (* Windows spelling, resolved for this platform -- see fcontest. *)
          ResolveDataFileInPlace(domPath);
          end;

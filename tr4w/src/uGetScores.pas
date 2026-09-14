@@ -230,7 +230,7 @@ var
    sBody := AnsiString('xml=<?xml version="1.0"?>') + BuildDynamicResultsXml;
    (* The body is XML built from AnsiString parts and posted as bytes;
      WinAnsi was re-encoding text that is already the bytes to send. *)
-   StrLCopy(GetScoresBuffer, PAnsiChar(sBody), High(GetScoresBuffer));
+   TF.SetCharBuffer(GetScoresBuffer, string(sBody));
    logger.Debug('[MakePOSTRequestNew] %s', [GetScoresBuffer]);
    Result := uAnsiStr.StrLen(GetScoresBuffer);
    end;
@@ -259,8 +259,7 @@ var
    // [REPORT] section (2026-08-16).  CABRILLOSECTION, not the ERMAK section:
    // the scores server takes the standard Cabrillo tags, and an ERMAK contest
    // posts the same club and overlay it always did.
-   uAnsiStr.StrPLCopy(buf, AnsiString(HeaderValue(CABRILLOSECTION, string(Key))),
-                      SizeOf(buf) - 1);
+   TF.SetCharBuffer(buf, HeaderValue(CABRILLOSECTION, string(Key)));
    n := uAnsiStr.StrLen(buf);
    if n = 0 then
       begin
