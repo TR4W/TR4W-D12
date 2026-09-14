@@ -840,7 +840,10 @@ begin
      // (QSOPointMethodArray does contain two identical 'ONY' entries, so its
      // second one is unreachable by name -- but that is true today and is not
      // made worse here.)
-     if uAnsiStr.StrIComp(PAnsiChar(CMD), PAnsiChar(p)) = 0 then
+     (* SameText, not StrIComp: the same ASCII case fold without casting
+       either side to a pointer. p is the table's spelling and CMD is what the
+       config file said. *)
+     if SameText(CMD, AnsiString(p)) then
         begin
         Result := b;
         Exit;

@@ -57,7 +57,12 @@ utils_text,
 
 type
   TsCommandsArrayType = packed record
-    caCommand: PAnsiChar;
+    (* A NAME, NOT A POINTER. It was a PAnsiChar, which forced the ONE
+      comparison against it to go through @CommandString[1] -- a pointer into
+      a ShortString's characters -- and forced the hand-written NUL two lines
+      above that comparison to make the ShortString look like a C string.
+      A string field needs neither. *)
+    caCommand: string;
     caAddress: Pointer;
   end;
 
@@ -258,12 +263,11 @@ begin
         CommandString := PrecedingString(CommandString, '=');
         end;
 
-     CommandString[Ord(CommandString[0]) + 1] := #0;
      scFileName[length(scFileName) + 1] := #0;
    
      for i := 0 to sCommands - 1 do
         begin
-        if utils_text.StrComp(sCommandsArray[i].caCommand, @CommandString[1]) = 0 then
+        if sCommandsArray[i].caCommand = string(CommandString) then
            begin
            // Issue #997: asm `call p` (untyped Pointer command handler,
            // parameterless) -> typed call, guarded against a nil entry in the
@@ -275,7 +279,7 @@ begin
               end;
 
            // Issue #997: asm wsprintf-push -> TF.Format.
-           QuickDisplay(SysUtils.Format(AnsiString('"%s" command is executed.'), [PAnsiChar(sCommandsArray[i].caCommand)]));
+           QuickDisplay(SysUtils.Format(AnsiString('"%s" command is executed.'), [sCommandsArray[i].caCommand]));
 
            Break;
 
@@ -707,7 +711,7 @@ end;
 // one that worked.
 //
 // NOTE ON REACHABILITY.  As of this writing nothing can invoke this: dispatch
-// matches caCommand with an exact StrComp, and FoundCommand splits the typed
+// matches caCommand with an exact string compare, and FoundCommand splits the typed
 // command on '=' BEFORE comparing, so the compared string never contains '='.
 // The only table row pointing here is ' < = SK', which does.  A reachable
 // 'BOOLSWAP' row is added alongside this change.  The <03>...<04> trigger
