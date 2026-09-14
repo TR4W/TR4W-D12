@@ -832,6 +832,17 @@ const
      already assigns ConnectionCommand from the active cluster definition, so
      the row was a second writer of one global. *)
    - 1 {CONNECTION COMMAND -- owned by the cluster library}
+   (* THE LIVE CW STATE, and the split that made it possible. Each of these is
+     a CONFIGURED value and a SESSION value wearing one name -- a control code
+     changes the weight mid-message, the speed keys nudge WPM, Alt-K toggles
+     the gate. The row wrote the session value, so there was nowhere to keep
+     the configured one, and a published property alone would have persisted
+     the nudge.
+
+     CW ENABLE had already been split for exactly that reason and LogCfg has
+     mirrored it after every config read since; the other five now do the
+     same. *)
+   - 6 {the live CW state}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -944,7 +955,6 @@ const
 // and the next save persisted it -- see the comment on BandMapEnable in
 // logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
- (crCommand: 'CODE SPEED';                    crAddress: @CodeSpeed;                      crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'COLUMN DUPESHEET COLOR';        crAddress: @ColumnDupeSheetColor;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  // RETIRED 2026-08-24.  A DOS-era layout: the manual describes it as being for
  // "VGA mode below the normal operating screen", and documents an auto-revert
@@ -959,8 +969,6 @@ const
 // CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
 // the entry fields, which are LCL TEdits since Phase 3b and carry their own.
 // csRem, not deleted, so an existing .cfg that sets it still loads.
- (crCommand: 'CW ENABLE';                     crAddress: @Config.CWEnable;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'CW TONE';                       crAddress: @Config.CWTone;                         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 
@@ -987,8 +995,6 @@ const
    -- MY CONTINENT 22, the two WSJT-X ENABLED rows 23, SEND HIGHLIGHTS 24,
    MULTICAST GROUP 25 -- is correct, so this row was the only stale one and
    nothing pointed at it. Retiring the row removes the misfire. *)
- (crCommand: 'FARNSWORTH ENABLE';             crAddress: @Config.FarnsworthEnable;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'FARNSWORTH SPEED';              crAddress: @Config.FarnsworthSpeed;                crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
     uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
@@ -1062,7 +1068,7 @@ const
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of
     stopping the program with "Invalid statement in config file". *)
- (crCommand: 'STEREO PIN HIGH';               crAddress: @StereoPinState;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'STEREO PIN HIGH';               crAddress: @StereoPinState;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0)
  // (crCommand: 'TAIL END CW MESSAGE';           crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),     //n4af 4.41.5
 // (crCommand: 'TAIL END KEY';                  crAddress: @TailEndKey;                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),         // n4af 4.41.5
  //(crCommand: 'TAIL END MESSAGE';              crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
@@ -1103,7 +1109,6 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1)
   (* WITHDRAWN 2026-09-10: Settings.Yccc.So2rEnable. *)
     {*)}
       );

@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(290, names.Count,
+         CheckEquals(296, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1281,6 +1281,7 @@ const
       + 'CATEGORY-POWER,'
       + 'CATEGORY-TRANSMITTER,'
       + '"CHECK LOG FILE SIZE",'
+      + '"CODE SPEED",'
       + '"COLUMN AUTOSIZE",'
       + '"COMPLETE CALLSIGN MASK",'
       + '"COMPUTER ID",'
@@ -1302,8 +1303,10 @@ const
       + '"CTY UPDATE CHECK ON STARTUP",'
       + '"CUSTOM INITIAL EXCHANGE STRING",'
       + '"CUSTOM USER STRING",'
+      + '"CW ENABLE",'
       + '"CW SPEED FROM DATABASE",'
       + '"CW SPEED INCREMENT",'
+      + '"CW TONE",'
       + '"DE ENABLE",'
       + '"DEBUG LOG LEVEL",'
       + '"DIGITAL MODE ENABLE",'
@@ -1325,6 +1328,8 @@ const
       + '"EXTERNAL LOGGER ADDRESS",'
       + '"EXTERNAL LOGGER ENABLED",'
       + '"EXTERNAL LOGGER PORT",'
+      + '"FARNSWORTH ENABLE",'
+      + '"FARNSWORTH SPEED",'
       + '"FONT SIZE",'
       + '"FREQUENCY MEMORY ENABLE",'
       + '"FREQUENCY POLL RATE",'
@@ -1509,6 +1514,7 @@ const
       + '"WAIT FOR STRENGTH",'
       + '"WAKE UP TIME OUT",'
       + '"WARC BAND ENABLE",'
+      + 'WEIGHT,'
       + '"WILDCARD PARTIALS",'
       + '"WINDOW SIZE",'
       + '"WSJT-X BROADCAST PORT",'

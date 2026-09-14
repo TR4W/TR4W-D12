@@ -950,6 +950,26 @@ begin
   // and CWEnabled represent the same thing and SetCWState always sets both.)
   CWEnabled := Config.CWEnable;
 
+  (* AND THE SAME MIRROR FOR THE OTHER FIVE, 2026-09-14.
+
+    Each of these is two things wearing one name: what the operator CONFIGURED
+    and what the session is doing right now. A CW control code changes the
+    weight mid-message, the speed keys nudge WPM, Alt-K toggles the gate --
+    all of which write the GLOBAL and must not write the setting back, or one
+    message's nudge becomes tomorrow's starting speed.
+
+    So the settings are copied into the live globals here, once per config
+    read, exactly as CW ENABLE has been since the desync fix above. Their CFGCA
+    rows wrote the globals directly, which is why there was nowhere to keep the
+    configured value. *)
+  Config.CWEnable        := Settings.Cw.Enable;
+  CWEnabled              := Settings.Cw.Enable;
+  Config.CWTone          := Settings.Cw.Tone;
+  Config.FarnsworthEnable := Settings.Cw.FarnsworthEnable;
+  Config.FarnsworthSpeed := Settings.Cw.FarnsworthSpeed;
+  Config.Weight          := Settings.Cw.Weight;
+  CodeSpeed              := Settings.Cw.CodeSpeed;
+
   (* THE CONFIGURATION IS NOT COMPLETE HERE, SO IT IS NOT CHECKED HERE.
 
     This halted the program if Settings.My.Call was empty after reading the contest .cfg

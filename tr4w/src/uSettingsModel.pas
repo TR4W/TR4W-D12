@@ -314,6 +314,9 @@ type
    TAutoSendCharacterCount = 0..6;    // was AUTO_SEND_CHARACTER_COUNT_ARRAY
    (* THE MAIN WINDOW'S TWO SIZES, both ckArray rows whose allow-lists are
      ranges: ROW_COUNT_ARRAY is (5..15) and WINDOW_SIZE_ARRAY is (1..15). *)
+   TCwTone                 = 0..65535;          // was CW TONE's crMin/crMax
+   TCwFarnsworthSpeed      = 0..99;            // was FARNSWORTH SPEED's
+   TCwCodeSpeed            = 0..99;            // was CODE SPEED's
    TLogRowCount            = 5..15;   // was ROW_COUNT_ARRAY
    TMainWindowSize         = 1..15;   // was WINDOW_SIZE_ARRAY
    TAutoQslInterval        = 0..6;    // was AUTO_QSL_INTERVAL
@@ -1380,6 +1383,12 @@ type
    *)
    TCwSettings = class(TSettingsGroup)
    private
+      FEnable: boolean;
+      FTone: TCwTone;
+      FFarnsworthEnable: boolean;
+      FFarnsworthSpeed: TCwFarnsworthSpeed;
+      FWeight: double;
+      FCodeSpeed: TCwCodeSpeed;
       FAllMessagesChainable: boolean;
       FSpeedFromDatabase: boolean;
       FKeypadMemories: boolean;
@@ -1433,6 +1442,37 @@ type
       property AutoSendCharacterCount: TAutoSendCharacterCount
          read FAutoSendCharacterCount write SetAutoSendCharacterCount;
       // Was Config.AllCWMessagesChainable. ALL CW MESSAGES CHAINABLE.
+      (* THE FIVE THE SESSION MUTATES, and the reason they are here at last.
+
+        Each of these is TWO things wearing one name: what the operator
+        CONFIGURED, and what the session is doing right now. A CW control code
+        changes the weight mid-message; Alt-K toggles the transmit gate; the
+        speed keys nudge WPM. The row wrote the live value, so there was
+        nowhere to keep the configured one.
+
+        THE SPLIT IS CW ENABLE'S, GENERALISED. Config.CWEnable was already the
+        configured value and CWEnabled the live gate, mirrored by LogCfg after
+        every config read. These five follow it exactly: the property is what
+        is saved and what a fresh session starts from, the global is what the
+        session mutates, and nothing writes back.
+
+        WITHOUT THE SPLIT, MIGRATING THEM WOULD PERSIST A MID-CONTEST NUDGE --
+        a published property is streamed -- which uSettingsModel's own note
+        called a behaviour change rather than a migration. It was right. *)
+      property Enable: boolean read FEnable write FEnable;
+      property Tone: TCwTone read FTone write FTone;
+      property FarnsworthEnable: boolean
+         read FFarnsworthEnable write FFarnsworthEnable;
+      property FarnsworthSpeed: TCwFarnsworthSpeed
+         read FFarnsworthSpeed write FFarnsworthSpeed;
+      (* WEIGHT IS A REAL, the only one in the model. Its row carried
+        crMin: 5 / crMax: 15 against a value the operator writes as 1.0 to
+        3.0 -- the bounds were x10 and the row compared them against the
+        UNSCALED value, so 1.0 was outside its own range and 5.0 was inside.
+        A double with a registered check keeps the spelling and fixes the
+        comparison. *)
+      property Weight: double read FWeight write FWeight;
+      property CodeSpeed: TCwCodeSpeed read FCodeSpeed write FCodeSpeed;
       property AllMessagesChainable: boolean
          read FAllMessagesChainable write FAllMessagesChainable;
       (* Was Config.CWSpeedFromDataBase, and the ONE name in this group that
@@ -4063,6 +4103,16 @@ end;
 constructor TCwSettings.Create;
 begin
    inherited Create;
+   (* The values uConfigValues' initialiser carried, so a station with no
+     settings file starts exactly as before. *)
+   FEnable           := True;
+   FTone             := 700;
+   FFarnsworthEnable := False;
+   FFarnsworthSpeed  := 25;
+   FWeight           := 1.0;
+   (* CODE SPEED had no initialiser of its own; 35 is what the WinKeyer value
+     list and the speed display both assume as a starting point. *)
+   FCodeSpeed        := 35;
    // The values uConfigValues' initialiser carried.
    FAllMessagesChainable      := False;
    FSpeedFromDatabase         := False;
@@ -5306,6 +5356,12 @@ begin
    Alias('QSL MODE',                   'Contest.QslMode');
    Alias('QSO POINT METHOD',           'Contest.QsoPointMethod');
    Alias('SINGLE BAND SCORE',          'Contest.SingleBandScore');
+   Alias('CW ENABLE',            'Cw.Enable');
+   Alias('CW TONE',              'Cw.Tone');
+   Alias('FARNSWORTH ENABLE',    'Cw.FarnsworthEnable');
+   Alias('FARNSWORTH SPEED',     'Cw.FarnsworthSpeed');
+   Alias('WEIGHT',               'Cw.Weight');
+   Alias('CODE SPEED',           'Cw.CodeSpeed');
    Alias('MULT REPORT MINIMUM BANDS', 'Contest.MultReportMinimumBands');
    Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
    Alias('DX MULTIPLIER',        'Contest.DxMultiplier');

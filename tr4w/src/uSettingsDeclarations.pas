@@ -153,15 +153,15 @@ begin
    // settings that apply to every keyer.
    RegisterModelSetting( 'operating.cw.serial.ditDahRatio',    'DIT DAH RATIO',
                          RS_OPERATING_CW_SERIAL_DITDAHRATIO);
-   RegisterStoredSetting('operating.cw.serial.weight',         'WEIGHT',
+   RegisterModelSetting( 'operating.cw.serial.weight',         'WEIGHT',
                          RS_OPERATING_CW_SERIAL_WEIGHT);
-   RegisterStoredSetting('operating.cw.serial.farnsworth',     'FARNSWORTH ENABLE',
+   RegisterModelSetting( 'operating.cw.serial.farnsworth',     'FARNSWORTH ENABLE',
                          RS_OPERATING_CW_SERIAL_FARNSWORTH);
-   RegisterStoredSetting('operating.cw.serial.farnsworthSpeed','FARNSWORTH SPEED',
+   RegisterModelSetting( 'operating.cw.serial.farnsworthSpeed','FARNSWORTH SPEED',
                          RS_OPERATING_CW_SERIAL_FARNSWORTHSPEED);
 
    // --- CW Settings (the keyer page) ---------------------------------------
-   RegisterStoredSetting('cw.enable',            'CW ENABLE',
+   RegisterModelSetting( 'cw.enable',            'CW ENABLE',
                          RS_CW_ENABLE);
    RegisterModelSetting( 'cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
                          RS_CW_SPEEDFROMDATABASE);
@@ -171,7 +171,7 @@ begin
    // docs/CFG_MIGRATION_PLAN.md.
    RegisterModelSetting( 'cw.speedIncrement',    'CW SPEED INCREMENT',
                          RS_CW_SPEEDINCREMENT);
-   RegisterStoredSetting('cw.tone',              'CW TONE',
+   RegisterModelSetting( 'cw.tone',              'CW TONE',
                          RS_CW_TONE);
 
    { CW SENDING BEHAVIOUR. These shape what the keyer sends and how, whichever
@@ -719,7 +719,7 @@ begin
    // --- CW (12) ---------------------------------------
    RegisterModelSetting( 'cw.ctrlj.autoSendCharacterCount',   'AUTO SEND CHARACTER COUNT',
                           RS_CW_CTRLJ_AUTOSENDCHARACTERCOUNT);
-   RegisterStoredSetting('cw.ctrlj.codeSpeed',                'CODE SPEED',
+   RegisterModelSetting( 'cw.ctrlj.codeSpeed',                'CODE SPEED',
                           RS_CW_CTRLJ_CODESPEED);
    (* PADDLE PORT named which PARALLEL port the paddle was wired to, and went
      with the LPT removal of 2026-09-13.  A YCCC box reports its own paddle
