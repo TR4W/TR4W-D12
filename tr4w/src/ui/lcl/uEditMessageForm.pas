@@ -116,7 +116,8 @@ uses
     the CloseHandle was on a FILE handle. *)
   VC,             // RC_*, TC_*, MesWindow / OtherMsgWin, TR4W_CFG_FILENAME
   TF,             // Format, YesOrNo
-  uCFG,           // CheckCommand
+  uCFG,           // CheckCommand -- the named message templates
+  LogCW,          // TryApplyMessageCommand -- the function-key memories
   Tree,           // GetRealPath
   utils_file,     // tOpenFileForWrite, sWriteFile, GetRealPath, waveheader
   uSettingsModel, // Settings.Dvk.Recorder, Settings.Dvk.Path
@@ -408,7 +409,26 @@ var
        MESSAGE and its four siblings were csJSON rows, and csJSON has
        carried the same guard for longer -- so editing a quick QSL here
        has been doing nothing at all. *)
-     CheckCommand(@k, aCheckValue, True);
+     (* THE FUNCTION-KEY MEMORIES GO STRAIGHT TO THE PARSER -- 2026-09-14.
+
+       This dialog edits two different things and the key tells them apart: a
+       MEMORY ('CQ CW MEMORY CONTROLF5') and a named message template ('CQ
+       EXCHANGE', which is a property on Settings.Messages).
+
+       The memory used to reach LogCW by being dressed up as a config line and
+       pushed through CheckCommand's pattern arm -- an operator's keystroke
+       taking the shape of a file. LogCW.TryApplyMessageCommand IS that parser,
+       moved to sit beside the setters it calls, so the dialog asks it
+       directly and the arm could be deleted.
+
+       IT ANSWERS FALSE for a name that is not a memory, and the template path
+       below is unchanged: CheckCommand resolves it against the settings
+       object, with aApplyJSONOwned TRUE because this is the operator typing,
+       not a stale file. *)
+     if not TryApplyMessageCommand(k, aCheckValue) then
+        begin
+        CheckCommand(@k, aCheckValue, True);
+        end;
   end;
 
 begin

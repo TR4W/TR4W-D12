@@ -164,6 +164,21 @@ function QSONumberString(QSONumber: integer): string;
 function TimeString: Str10;
 
 procedure SendKeyboardInput;
+(* A FUNCTION-KEY MEMORY COMMAND -- 'CQ CW MEMORY CONTROLF5' and its
+  relatives -- parsed and applied. False when the name is not one of them.
+
+  IT LIVES HERE NOW (2026-09-14) BECAUSE THE FOUR SETTERS IT CALLS ARE HERE:
+  SetCQMemoryString, SetEXMemoryString and the two CAPTION forms. It spent its
+  life in uCFG as a PATTERN ARM inside CheckCommand, matched by character
+  POSITION -- ID[4] for the mode, ID[Offset+7] for the F/Alt/Ctrl prefix -- so
+  a config parser owned a function-key parser, and the memories could only be
+  set by something shaped like a config line.
+
+  THE BODY IS UNCHANGED, including the guard in the middle: an unrecognised
+  prefix leaves TempValue at 0, and the note there records the out-of-bounds
+  New() that caused the Ctrl-P crash of 2026-08-15. *)
+function TryApplyMessageCommand(const aCommand, aValue: ShortString): boolean;
+
 procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
@@ -2528,8 +2543,139 @@ begin
     LoadElements(slElements);
 end;
 
+
+function TryApplyMessageCommand(const aCommand, aValue: ShortString): boolean;
+var
+   ID, CMD: ShortString;
+   CQMessage: boolean;
+   TempValue: integer;
+   TempMode: ModeType;
+   Offset: Cardinal;
+   FuncKey: Cardinal;
+begin
+   ID  := aCommand;
+   CMD := aValue;
+   {
+   CQ DIG MEMORY F1=CQ CQ CQ \ \ TEST
+   CQ DIG MEMORY ALTF1=CQ CQ CQ \ \ TEST
+   CQ CW MEMORY CONTROLF1=CQ CQ CQ \ \ TEST
+   CQ MEMORY F1 =\\ TEST
+   CQ DIG MEMORY F1 CAPTION=
+   CQ CW MEMORY CONTROLF5=<03>SRS=PB1;<04>
+   CQ CW MEMORY CONTROLF5 CAPTION=PLAYCH1MSG
+   }
+
+   //  if ID[1] = 'C' then CQMessage := True else CQMessage := False;
+   Result := False;
+   CQMessage := ID[1] = 'C';
+   TempMode := NoMode;
+
+   Offset := 8; //Pos of  "MEMORY"
+
+   case ID[4] of
+      'S': TempMode := Phone;
+      'D': TempMode := Digital;
+      'C':
+         begin
+            TempMode := CW;
+            Offset := 7;
+         end;
+
+      'M':
+         begin
+            TempMode := CW;
+            Offset := 4;
+         end;
+   end;
+
+   if TempMode = NoMode then
+      begin
+      Exit;
+      end;
+
+   TempValue := 0;
+   case ID[Offset + 7] of
+      'F':
+         begin
+            TempValue := 111;
+            inc(Offset, 8);
+         end;
+      'A':
+         begin
+            TempValue := 135;
+            inc(Offset, 8 + 3);
+         end;
+      'C':
+         begin
+            TempValue := 123;
+            inc(Offset, 8 + 7);
+         end;
+   end;
+
+   { THE CASE ABOVE HAS NO else, AND THAT WAS A CRASH.
+
+     TempValue is the base of the function-key code: 111 for plain F-keys,
+     123 for Ctrl, 135 for Alt. If the character is none of F/A/C it stays
+     ZERO and Offset is never advanced -- so the key became CHR(0 + FuncKey),
+     i.e. 1..12, written into an array declared [F1..AltF12] = 112..147.
+     That is an out-of-bounds New() roughly 111 elements BEFORE the array,
+     silently, because range checking is off in this build. It leaves a
+     valid-looking heap pointer in whatever global sits there.
+
+     ShowFMessages then finds that slot non-nil, dereferences it and takes
+     an access violation -- which is the Ctrl-P crash of 2026-08-15
+     (uFunctionKeys.pas:279, reached from tr4w.lpr:1415 where Ctrl calls
+     ShowFMessages(12)). The corruption and the symptom are in different
+     units, which is why it took a symbolicated backtrace to find.
+
+     An unrecognised prefix means this is not a function-key memory command
+     at all, so refuse it rather than inventing a key for it. }
+   if TempValue = 0 then
+      begin
+      Exit;
+      end;
+   FuncKey := Ord(ID[Offset]) - Ord('0');
+   if length(ID) > Offset then
+      if ID[Offset + 1] in ['0'..'2'] then
+         begin
+         FuncKey := Ord(ID[Offset + 1]) - Ord('0') + 10;
+         end;
+
+   if not (FuncKey in [1..12]) then
+      begin
+      Exit;
+      end;
+
+   Result := True;
+
+   if ID[length(ID)] = 'N' then
+      begin
+      if CQMessage then
+         begin
+         SetCQCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
+         end
+      else
+         begin
+         SetEXCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         end;
+      end
+   else
+      begin
+      if CQMessage then
+         begin
+         SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
+         end
+      else
+         begin
+         SetEXMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         end;
+      end;
+
+end;
+
 begin
   CWInit;
   DebugMsg('foo');
+
 end.
 

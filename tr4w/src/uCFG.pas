@@ -335,7 +335,6 @@ function CommandIsOwnedByAStore(const aCommand: string): boolean;
 (* How many such names there are.  For the test's ratchet. *)
 function StoreOwnedCommandCount: integer;
 
-function ProcessMessage(ID, CMD: ShortString): boolean;
 procedure InitializeStrings;
 
 (* `Changed` WENT WITH THE ARRAY. It was one boolean per row and nothing ever
@@ -1326,33 +1325,26 @@ begin
       end;
    { if pshortstring(Command)^ = 'QSO POINT METHOD' then
      result := false;  }
-   if length(pshortstring(Command)^) > 5 then
+   (* THE FUNCTION-KEY MEMORY ARM IS GONE -- 2026-09-14, the last pattern
+     family to leave CheckCommand.
 
-      if pshortstring(Command)^[1] in ['C', 'E'] then
-         if pshortstring(Command)^[3] in [' '] then
-            if pshortstring(Command)^[4] in ['S', 'C', 'D', 'M'] then
-               //          if pshortstring(Command)^[7] in [' ', 'M', 'O'] then
-               if pshortstring(Command)^[10] in ['M', 'O', ' '] then
-                  begin
-                  Result := ProcessMessage(pshortstring(Command)^,
-                     CustomCMD);
+     It matched by CHARACTER POSITION -- ID[1] in ['C','E'], ID[3] a space,
+     ID[4] in ['S','C','D','M'], ID[10] in ['M','O',' '] -- and called
+     ProcessMessage, which is LogCW.TryApplyMessageCommand now, beside the
+     four setters it calls.
 
-                  Exit;
-                  end;
+     NOTHING LOST FROM THE LIVE PATHS, measured on NY4I's own log first: the
+     contest database keeps the memories in its OWN `message` table
+     (kind/mode/key_id/text, 41 rows) and restores them through LogCW's
+     accessors -- not one config row in 410 reaches this arm. uEditMessageForm
+     calls the parser directly now instead of dressing an operator's edit up
+     as a config line.
 
-   { WAS StrPos(PAnsiChar(@Command[1]), ...), AND THE CAST WAS ITSELF A FIX.
+     WHAT LAPSES is reading them out of a legacy .cfg, and that is
+     tr4wconvert's job by NY4I's ruling of 2026-09-12, not TR4W's. The
+     converter does not cover contest settings yet; the gap is stated in its
+     own header. *)
 
-     The comment that used to be here explained that @Command[1] is an untyped
-     Pointer, so StrPos resolved to the WIDE overload and read the ANSI bytes as
-     UTF-16 -- it never matched, and PAnsiChar forced the right overload.  True,
-     and it fixed the symptom while leaving the shape: the address of a
-     ShortString's first character, read until a NUL that the string does not
-     carry.  NY4I, 2026-08-24: "this type of typecasting has no place in this
-     code base any longer."
-
-     A string has a length, Pos takes one, and there is no overload to pick
-     wrong.  Note StrPos(a, b) = a -- "b starts at the beginning of a" -- is
-     Pos(b, a) = 1. }
    cmdText := string(pshortstring(Command)^);
 
    (* THE WINDOW-COLOUR ARM IS GONE -- 2026-09-14.
@@ -1539,131 +1531,6 @@ end;
 }
 
 
-function ProcessMessage(ID, CMD: ShortString): boolean;
-var
-   CQMessage: boolean;
-   TempValue: integer;
-   TempMode: ModeType;
-   Offset: Cardinal;
-   FuncKey: Cardinal;
-begin
-   {
-   CQ DIG MEMORY F1=CQ CQ CQ \ \ TEST
-   CQ DIG MEMORY ALTF1=CQ CQ CQ \ \ TEST
-   CQ CW MEMORY CONTROLF1=CQ CQ CQ \ \ TEST
-   CQ MEMORY F1 =\\ TEST
-   CQ DIG MEMORY F1 CAPTION=
-   CQ CW MEMORY CONTROLF5=<03>SRS=PB1;<04>
-   CQ CW MEMORY CONTROLF5 CAPTION=PLAYCH1MSG
-   }
-
-   //  if ID[1] = 'C' then CQMessage := True else CQMessage := False;
-   Result := False;
-   CQMessage := ID[1] = 'C';
-   TempMode := NoMode;
-
-   Offset := 8; //Pos of  "MEMORY"
-
-   case ID[4] of
-      'S': TempMode := Phone;
-      'D': TempMode := Digital;
-      'C':
-         begin
-            TempMode := CW;
-            Offset := 7;
-         end;
-
-      'M':
-         begin
-            TempMode := CW;
-            Offset := 4;
-         end;
-   end;
-
-   if TempMode = NoMode then
-      begin
-      Exit;
-      end;
-
-   TempValue := 0;
-   case ID[Offset + 7] of
-      'F':
-         begin
-            TempValue := 111;
-            inc(Offset, 8);
-         end;
-      'A':
-         begin
-            TempValue := 135;
-            inc(Offset, 8 + 3);
-         end;
-      'C':
-         begin
-            TempValue := 123;
-            inc(Offset, 8 + 7);
-         end;
-   end;
-
-   { THE CASE ABOVE HAS NO else, AND THAT WAS A CRASH.
-
-     TempValue is the base of the function-key code: 111 for plain F-keys,
-     123 for Ctrl, 135 for Alt. If the character is none of F/A/C it stays
-     ZERO and Offset is never advanced -- so the key became CHR(0 + FuncKey),
-     i.e. 1..12, written into an array declared [F1..AltF12] = 112..147.
-     That is an out-of-bounds New() roughly 111 elements BEFORE the array,
-     silently, because range checking is off in this build. It leaves a
-     valid-looking heap pointer in whatever global sits there.
-
-     ShowFMessages then finds that slot non-nil, dereferences it and takes
-     an access violation -- which is the Ctrl-P crash of 2026-08-15
-     (uFunctionKeys.pas:279, reached from tr4w.lpr:1415 where Ctrl calls
-     ShowFMessages(12)). The corruption and the symptom are in different
-     units, which is why it took a symbolicated backtrace to find.
-
-     An unrecognised prefix means this is not a function-key memory command
-     at all, so refuse it rather than inventing a key for it. }
-   if TempValue = 0 then
-      begin
-      Exit;
-      end;
-   FuncKey := Ord(ID[Offset]) - Ord('0');
-   if length(ID) > Offset then
-      if ID[Offset + 1] in ['0'..'2'] then
-         begin
-         FuncKey := Ord(ID[Offset + 1]) - Ord('0') + 10;
-         end;
-
-   if not (FuncKey in [1..12]) then
-      begin
-      Exit;
-      end;
-
-   Result := True;
-
-   if ID[length(ID)] = 'N' then
-      begin
-      if CQMessage then
-         begin
-         SetCQCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
-         end
-      else
-         begin
-         SetEXCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
-         end;
-      end
-   else
-      begin
-      if CQMessage then
-         begin
-         SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
-         end
-      else
-         begin
-         SetEXMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
-         end;
-      end;
-
-end;
 
 procedure UpdateDebugLogLevel; // This is called when changed in the Config dialog
 begin
