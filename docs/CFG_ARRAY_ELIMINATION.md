@@ -19,7 +19,7 @@ grep -c "crCommand:" tr4w/src/uCFG.pas          # 0
 ```
 
 ```powershell
-.	r4wuild\Lint-ConfigArrays.ps1              # every ceiling is 0, and 0 is now the PASS
+.\tr4w\build\Lint-ConfigArrays.ps1              # every ceiling is 0, and 0 is now the PASS
 ```
 
 **THE LINT IS INVERTED, NOT RETIRED.** It used to ask "has a number risen", which
