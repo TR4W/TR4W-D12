@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(268, names.Count,
+         CheckEquals(275, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1263,7 +1263,7 @@ const
       + '"CALL OK NOW MESSAGE",'
       + '"CALL OK NOW SSB MESSAGE",'
       + '"CALL WINDOW SHOW ALL SPOTS",'
-      + '"CALLSIGN UPDATE ENABLE",'
+      + '"CALLSIGN UPDATE ENABLE",CATEGORY-ASSISTED,CATEGORY-BAND,CATEGORY-MODE,CATEGORY-OPERATOR,CATEGORY-OVERLAY,CATEGORY-POWER,CATEGORY-TRANSMITTER,'
       + '"CHECK LOG FILE SIZE",'
       + '"COLUMN AUTOSIZE",'
       + '"COMPLETE CALLSIGN MASK",'

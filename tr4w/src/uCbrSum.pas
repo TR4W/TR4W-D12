@@ -44,7 +44,8 @@ unit uCbrSum;
 interface
 
 uses
-  VC,          { tCategoryAssistedSA and the other category enums }
+  VC,             { tCertificate }
+  uSettingsModel, { the Cabrillo category enums and their spelling tables }
   PostUnit;    { StationCategory, TimeCategory, OverlayCategory, ... }
 
 type

@@ -992,33 +992,22 @@ type
   MesWindowType = (CQMsgWin, ExMsgWin, OtherMsgWin);
   (* tLogLevels MOVED to uSettingsModel, 2026-09-13 (NY4I): a settings type
     belongs in uSettings wherever it was defined, and VC was named. *)
-  tCategoryAssisted = (caNONASSISTED, caASSISTED);
-  tCategoryBand = (cbALL, cb160M, cb80M, cb40M, cb20M, cb15M, cb10M, cb6M, cb2M, cb222, cb432, cb902, cb12G);
-  tCategoryMode = (cmCW, cmDIGITAL, cmRTTY, cmSSB, cmMIXED, cmFM); // Issue #976: FM added (appended; existing cmDIGITAL/cmRTTY string swap left as a separate follow-up)
+  (* THE SIX CABRILLO CATEGORY TYPES MOVED to uSettingsModel, 2026-09-13, for
+    the same reason tLogLevels did: a settings type belongs in uSettings
+    wherever it happened to be defined, and VC was named. *)
   tCertificate = (Yes, No);
-  tCategoryOperator = (coSINGLEOP, coMULTIOP, coCHECKLOG);
-  tCategoryPower = (cpHIGH, cpLOW, cpQRP);
-  tCategoryTransmitter = (ctONE, ctTWO, ctLIMITED, ctUNLIMITED, ctSWL);
 
 const
                                             // Use uppercase
   // tLogLevelsSA moved with its type -- see LOG_LEVEL_SPELLINGS.
-  tCategoryAssistedSA                   : array[tCategoryAssisted] of PAnsiChar = ('NON-ASSISTED', 'ASSISTED');
-  tCategoryBandSA                       : array[tCategoryBand] of PAnsiChar = ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M', '222', '432', '902', '1.2G');
-  tCategoryModeSA                       : array[tCategoryMode] of PAnsiChar = ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM');    // 4.90.14; FM added Issue #976
+  (* The six tCategory*SA arrays moved with their types -- see the
+    CATEGORY_*_SPELLINGS tables in uSettingsModel. *)
   tCertificateSA                        : array[tCertificate] of PAnsiChar = ('Yes', 'No');
-  tCategoryOperatorSA                   : array[tCategoryOperator] of PAnsiChar = ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG');
-  tCategoryPowerSA                      : array[tCategoryPower] of PAnsiChar = ('HIGH', 'LOW', 'QRP');
-  tCategoryTransmitterSA                : array[tCategoryTransmitter] of PAnsiChar = ('ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL');
 
 var
-  CategoryAssisted                      : tCategoryAssisted;
-  CategoryBand                          : tCategoryBand;
-  CategoryMode                          : tCategoryMode;
+  (* The six Category* globals moved to Settings.Contest, 2026-09-13. Only
+    Certificate is left here, and it is not a CFGCA setting. *)
   Certificate                           : tCertificate;
-  CategoryOperator                      : tCategoryOperator;
-  CategoryPower                         : tCategoryPower;
-  CategoryTransmitter                   : tCategoryTransmitter;
   // logLevels moved too -- Settings.Log.DebugLevel.
 type
 

@@ -269,6 +269,23 @@ type
    (* Was tLogLevels in VC.pas -- the unit NY4I named explicitly. It is the
      vocabulary of a setting, and VC is the source of truth for TYPES. *)
    tLogLevels = (llNone, llFatal, llError, llWarn, llInfo, llDebug, llTrace);
+
+   (* THE SIX CABRILLO CATEGORY TYPES, moved from VC on 2026-09-13.
+
+     ONE OF THEM CARRIES A KNOWN QUIRK AND IT IS PRESERVED EXACTLY.
+     tCategoryMode's spelling table maps cmDIGITAL to 'RTTY' and cmRTTY to
+     'DIGI' -- a swap VC's own comment called out as a follow-up. The
+     spellings are matched BY POSITION, so moving the table cannot change
+     which word an operator's file means; correcting it would be a separate,
+     deliberate decision with a log-format consequence. *)
+   tCategoryAssisted = (caNONASSISTED, caASSISTED);
+   tCategoryBand = (cbALL, cb160M, cb80M, cb40M, cb20M, cb15M, cb10M, cb6M,
+                    cb2M, cb222, cb432, cb902, cb12G);
+   tCategoryMode = (cmCW, cmDIGITAL, cmRTTY, cmSSB, cmMIXED, cmFM);
+   tCategoryOperator = (coSINGLEOP, coMULTIOP, coCHECKLOG);
+   tCategoryPower = (cpHIGH, cpLOW, cpQRP);
+   tCategoryTransmitter = (ctONE, ctTWO, ctLIMITED, ctUNLIMITED, ctSWL);
+
    (* Was PossibleCallActionType in trdos/logscp.pas. *)
    PossibleCallActionType = (AnyCall, OnlyCallsWithNames, LogOnly);
    UserInfoType = (NoUserInfo, NameInfo, QTHInfo, CheckSectionInfo,
@@ -2696,6 +2713,13 @@ type
       FInitialExchangeFilename: string;
       FName: string;
       FTitle: string;
+      FCategoryAssisted: tCategoryAssisted;
+      FCategoryBand: tCategoryBand;
+      FCategoryMode: tCategoryMode;
+      FCategoryOperator: tCategoryOperator;
+      FCategoryPower: tCategoryPower;
+      FCategoryTransmitter: tCategoryTransmitter;
+      FCategoryOverlay: string;
       FHamscoreEnable: boolean;
       FR150SMode: boolean;
       FRfoblMode: boolean;
@@ -2796,6 +2820,44 @@ type
         DERIVED, BUT STILL A SETTING: a contest .cfg may state one outright,
         and CONTEST TITLE derives exactly. *)
       property Title: string read FTitle write FTitle;
+      (* THE CABRILLO ENTRY CATEGORIES.
+
+        CONTEST-SCOPED, AND THAT IS NY4I'S RULING (2026-09-13): "items such as
+        the number of transmitters, assisted/unassisted, etc go with the
+        contest file", while the station-static header fields -- address,
+        name, email -- default from settings. All of it is copied into the
+        contest file as a point in time; what lives here is the DEFAULT.
+
+        Each carries an alias: the command names are hyphenated
+        (CATEGORY-BAND), which no property path can produce. *)
+      property CategoryAssisted: tCategoryAssisted
+         read FCategoryAssisted write FCategoryAssisted;
+      property CategoryBand: tCategoryBand
+         read FCategoryBand write FCategoryBand;
+      property CategoryMode: tCategoryMode
+         read FCategoryMode write FCategoryMode;
+      property CategoryOperator: tCategoryOperator
+         read FCategoryOperator write FCategoryOperator;
+      property CategoryPower: tCategoryPower
+         read FCategoryPower write FCategoryPower;
+      property CategoryTransmitter: tCategoryTransmitter
+         read FCategoryTransmitter write FCategoryTransmitter;
+      (* THE OVERLAY, AND IT NEVER HAD A HOME -- which is why its row was a
+        defect rather than a migration.
+
+        CATEGORY-OVERLAY's CFGCA row carried crAddress: pointer(49), the SAME
+        ListParamArray slot as CATEGORY-TRANSMITTER, so an overlay line was
+        matched against the TRANSMITTER spellings: a real overlay value
+        ('ROOKIE', 'TB-WIRES', 'CLASSIC') matched none of them and the line
+        was REFUSED, which LogCfg reports as a modal "invalid statement in
+        config file". A value that happened to match ('LIMITED') silently set
+        the transmitter category instead.
+
+        A STRING, not an enum, because the overlay list is a string table in
+        PostUnit that the Cabrillo summary form fills its combo from -- there
+        is no enum to move. *)
+      property CategoryOverlay: string
+         read FCategoryOverlay write FCategoryOverlay;
       (*
         POST LIVE SCORES FOR THIS CONTEST.
 
@@ -3419,6 +3481,40 @@ procedure RegisterSettingValueCheck(const aPath: string;
 *)
 procedure RegisterSettingAllowedValues(const aPath: string;
                                        const aValues: array of string);
+
+(* THE CABRILLO CATEGORY SPELLINGS, MOVED VERBATIM FROM VC WITH THEIR TYPES
+  -- same names, same PAnsiChar element type, same order.
+
+  PUBLIC, unlike every other moved enum's table, because these have an
+  EXTERNAL CONSUMER: uCbrSum's CategoriesArray holds POINTERS to them and the
+  Cabrillo summary dialog indexes them as PAnsiChar arrays. A separate
+  `array[Enum] of string` beside them would be a second statement of one
+  vocabulary, and swapping the element type under a pointer fails at RUN time
+  rather than at compile time. The settings vocabulary is BUILT from these at
+  registration, so the drop-down, the refusal and the dialog cannot disagree.
+
+  DOWN HERE, NOT BESIDE THE TYPES, and that is not cosmetic: a const block
+  between `TR4WSettings = class;` and the class that completes it ENDS the
+  type section, and FPC requires a forward class to be completed in the SAME
+  section. This tree has lost a build to exactly that. *)
+const
+   tCategoryAssistedSA: array[tCategoryAssisted] of PAnsiChar =
+      ('NON-ASSISTED', 'ASSISTED');
+   tCategoryBandSA: array[tCategoryBand] of PAnsiChar =
+      ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M',
+       '222', '432', '902', '1.2G');
+   (* THE KNOWN SWAP IS PRESERVED: cmDIGITAL spells 'RTTY' and cmRTTY spells
+     'DIGI'. VC's own comment called it a follow-up; correcting it changes
+     what an operator's existing file means, so it is a deliberate decision
+     with a log-format consequence rather than a side effect of this move. *)
+   tCategoryModeSA: array[tCategoryMode] of PAnsiChar =
+      ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM');
+   tCategoryOperatorSA: array[tCategoryOperator] of PAnsiChar =
+      ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG');
+   tCategoryPowerSA: array[tCategoryPower] of PAnsiChar =
+      ('HIGH', 'LOW', 'QRP');
+   tCategoryTransmitterSA: array[tCategoryTransmitter] of PAnsiChar =
+      ('ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL');
 
 function Settings: TR4WSettings;
 procedure FreeSettings;
@@ -5004,6 +5100,13 @@ begin
    Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
    Alias('POSSIBLE CALL MODE', 'Scp.PossibleCallMode');
    Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
+   Alias('CATEGORY-ASSISTED',    'Contest.CategoryAssisted');
+   Alias('CATEGORY-BAND',        'Contest.CategoryBand');
+   Alias('CATEGORY-MODE',        'Contest.CategoryMode');
+   Alias('CATEGORY-OPERATOR',    'Contest.CategoryOperator');
+   Alias('CATEGORY-POWER',       'Contest.CategoryPower');
+   Alias('CATEGORY-TRANSMITTER', 'Contest.CategoryTransmitter');
+   Alias('CATEGORY-OVERLAY',     'Contest.CategoryOverlay');
    Alias('ROTATOR PORT',               'Rotator.Port');
    Alias('ROTATOR TYPE', 'Rotator.RotatorType');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing
@@ -5912,6 +6015,20 @@ const
        'FOC NUMBER', 'GRID', 'CQ ZONE', 'ITU ZONE', 'USER 1', 'USER 2',
        'USER 3', 'USER 4', 'USER 5', 'CUSTOM');
 
+(* THE ONE TABLE, RENDERED AS THE VOCABULARY.  The Cabrillo category
+  spellings are PAnsiChar because a pointer table in uCbrSum indexes them;
+  this is the only place that difference shows, and it shows once. *)
+function PAnsiCharVocabulary(const aValues: array of PAnsiChar): TArray<string>;
+var
+   i: integer;
+begin
+   SetLength(Result, Length(aValues));
+   for i := 0 to High(aValues) do
+      begin
+      Result[i] := string(AnsiString(aValues[i]));
+      end;
+end;
+
 initialization
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
 
@@ -5938,6 +6055,18 @@ initialization
                                 POSSIBLE_CALL_MODE_SPELLINGS);
    RegisterSettingAllowedValues('MainWindow.UserInfoShown',
                                 USER_INFO_SPELLINGS);
+   RegisterSettingAllowedValues('Contest.CategoryAssisted',
+                                PAnsiCharVocabulary(tCategoryAssistedSA));
+   RegisterSettingAllowedValues('Contest.CategoryBand',
+                                PAnsiCharVocabulary(tCategoryBandSA));
+   RegisterSettingAllowedValues('Contest.CategoryMode',
+                                PAnsiCharVocabulary(tCategoryModeSA));
+   RegisterSettingAllowedValues('Contest.CategoryOperator',
+                                PAnsiCharVocabulary(tCategoryOperatorSA));
+   RegisterSettingAllowedValues('Contest.CategoryPower',
+                                PAnsiCharVocabulary(tCategoryPowerSA));
+   RegisterSettingAllowedValues('Contest.CategoryTransmitter',
+                                PAnsiCharVocabulary(tCategoryTransmitterSA));
 
 finalization
    FreeSettings;

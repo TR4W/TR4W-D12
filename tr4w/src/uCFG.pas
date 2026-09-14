@@ -578,23 +578,33 @@ const
 {40}(lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @MP3RecorderDurationSA;             lpLength: Byte(High(TMP3RecorderDuration));   lpVar: @RecorderDuration; ),
 
-    (lpArray: @tCategoryBandSA;                   lpLength: Byte(High(tCategoryBand));          lpVar: @CategoryBand; ),
-    (lpArray: @tCategoryModeSA;                   lpLength: Byte(High(tCategoryMode));          lpVar: @CategoryMode; ),
-    (lpArray: @tCategoryOperatorSA;               lpLength: Byte(High(tCategoryOperator));      lpVar: @CategoryOperator; ),
-    (lpArray: @tCategoryPowerSA;                  lpLength: Byte(High(tCategoryPower));         lpVar: @CategoryPower; ),
-
-    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
-      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
+      on Settings.Contest. nil, not removed: POSITIONAL table. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
-      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
+      on Settings.Contest. nil, not removed: POSITIONAL table. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
-      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
+      on Settings.Contest. nil, not removed: POSITIONAL table. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
+      on Settings.Contest. nil, not removed: POSITIONAL table. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
 
-    (lpArray: @tCategoryTransmitterSA;            lpLength: Byte(High(tCategoryTransmitter));   lpVar: @CategoryTransmitter;),
-{50}(lpArray: @tCategoryAssistedSA;               lpLength: Byte(High(tCategoryAssisted));      lpVar: @CategoryAssisted;),
+    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
+      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
+      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
+      ListParamArray is POSITIONAL and crAddress holds an index. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+
+    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
+      on Settings.Contest. nil, not removed: POSITIONAL table. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+{50}(lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @tCertificateSA;                    lpLength: Byte(High(tCertificate));           lpVar: @Certificate;),
     (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
@@ -749,6 +759,17 @@ const
      before them: FCONTEST assigns both per contest and nothing sets them
      back. The crA hook that rebuilt the title goes to the setter. *)
    - 2 {CONTEST NAME and CONTEST TITLE}
+   (* THE CABRILLO ENTRY CATEGORIES, per NY4I's ruling of 2026-09-13: these
+     belong to the CONTEST -- "items such as the number of transmitters,
+     assisted/unassisted, etc go with the contest file" -- and settings holds
+     the default that is copied into it.
+
+     CATEGORY-OVERLAY WAS A DEFECT, not a migration. Its row carried
+     crAddress: pointer(49), the SAME slot as CATEGORY-TRANSMITTER, so every
+     overlay line was matched against the transmitter spellings and refused
+     -- a modal "invalid statement in config file" for a perfectly good
+     CATEGORY-OVERLAY: ROOKIE. It has a property of its own now. *)
+   - 7 {the Cabrillo CATEGORY-* keys}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -864,13 +885,6 @@ const
 // and the next save persisted it -- see the comment on BandMapEnable in
 // logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
- (crCommand: 'CATEGORY-ASSISTED';             crAddress: pointer(50);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'CATEGORY-BAND';                 crAddress: pointer(42);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'CATEGORY-MODE';                 crAddress: pointer(43);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'CATEGORY-OPERATOR';             crAddress: pointer(44);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'CATEGORY-POWER';                crAddress: pointer(45);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'CATEGORY-TRANSMITTER';          crAddress: pointer(49);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
-  (crCommand: 'CATEGORY-OVERLAY';             crAddress: pointer(49);                     crMin:0;  crMax:0;       crS: csJSON; crA:0; crC:1 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'CLEAR DUPE SHEET';              crAddress: @ClearDupeSheetCommandGiven;     crMin:0;  crMax:0;       crS: csOwned; crA: 4; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'CODE SPEED';                    crAddress: @CodeSpeed;                      crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'COLUMN DUPESHEET COLOR';        crAddress: @ColumnDupeSheetColor;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),

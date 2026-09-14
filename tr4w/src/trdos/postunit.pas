@@ -3163,7 +3163,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // on the string (also ASCII a-z; Cabrillo exchanges are ASCII so identical).
                 CABRILLO_HISEX := UpperCase( CABRILLO_HISEX );
 
-                if CategoryOperator = coMULTIOP then
+                if Settings.Contest.CategoryOperator = coMULTIOP then
                   if TempRXData.cecomputerid = Settings.Computer.Id then // 4.73.6
 
                      begin
@@ -3173,7 +3173,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                      begin
                      T4 := '0';
                      end;
-                if CategoryOperator <> coMULTIOP then
+                if Settings.Contest.CategoryOperator <> coMULTIOP then
                    begin
                    T4 := '';
                    end;

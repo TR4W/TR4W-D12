@@ -2699,10 +2699,10 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
              #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
              #9 + '<call>' + Settings.My.Call + '</call>' + sLineBreak +
              #9 + '<club>' + ' ' + '</club>' + sLineBreak +
-             #9 + '<class ops="' + tCategoryOperatorSA[CategoryOperator] + '" mode="' + tCategoryModeSA[CategoryMode] +
-                  '" power="' + tCategoryPowerSA[CategoryPower] + '" bands="' + tCategoryBandSA[CategoryBand] +
-                  '" transmitter="' + tCategoryTransmitterSA[CategoryTransmitter] +
-                  '" assisted="' + tCategoryAssistedSA[CategoryAssisted] + '"></class>' + sLineBreak +
+             #9 + '<class ops="' + tCategoryOperatorSA[Settings.Contest.CategoryOperator] + '" mode="' + tCategoryModeSA[Settings.Contest.CategoryMode] +
+                  '" power="' + tCategoryPowerSA[Settings.Contest.CategoryPower] + '" bands="' + tCategoryBandSA[Settings.Contest.CategoryBand] +
+                  '" transmitter="' + tCategoryTransmitterSA[Settings.Contest.CategoryTransmitter] +
+                  '" assisted="' + tCategoryAssistedSA[Settings.Contest.CategoryAssisted] + '"></class>' + sLineBreak +
              #9 + '<breakdown>' + sLineBreak;
    for TempBand := Band160 to AllBands do
       begin

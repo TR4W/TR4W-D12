@@ -360,12 +360,12 @@ begin
 
   Result := Result + AnsiString(Format(
     '<class ops="%s" mode="%s" power="%s" bands="%s" transmitter="%s" assisted="%s" overlay="%s"></class>',
-    [tCategoryOperatorSA[CategoryOperator],
-     tCategoryModeSA[CategoryMode],
-     tCategoryPowerSA[CategoryPower],
-     tCategoryBandSA[CategoryBand],
-     tCategoryTransmitterSA[CategoryTransmitter],
-     tCategoryAssistedSA[CategoryAssisted],
+    [tCategoryOperatorSA[Settings.Contest.CategoryOperator],
+     tCategoryModeSA[Settings.Contest.CategoryMode],
+     tCategoryPowerSA[Settings.Contest.CategoryPower],
+     tCategoryBandSA[Settings.Contest.CategoryBand],
+     tCategoryTransmitterSA[Settings.Contest.CategoryTransmitter],
+     tCategoryAssistedSA[Settings.Contest.CategoryAssisted],
      XmlEscape(sOverlay)]));
 
   // <qth> block -- emit only sub-elements whose source is set.

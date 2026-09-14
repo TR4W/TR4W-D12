@@ -161,6 +161,7 @@ implementation
 
 uses
   SysUtils, Graphics,
+  uSettingsModel,   // the Cabrillo category settings and their spellings
   MainUnit,   // logger
   Log4D,
   VC;   { ContestTypeSA, tCategory*SA -- the source of truth for types }

@@ -413,19 +413,21 @@ begin
                           RS_CONTEST_AUTOCQDELAYTIME);
    RegisterModelSetting('contest.beepEvery10Qsos',     'BEEP EVERY 10 QSOS',
                           RS_CONTEST_BEEPEVERY10QSOS);
-   RegisterStoredSetting('contest.categoryAssisted',    'CATEGORY-ASSISTED',
+   (* MODEL, not stored, since 2026-09-13: the seven Cabrillo categories
+     are published properties on Settings.Contest. *)
+   RegisterModelSetting( 'contest.categoryAssisted',    'CATEGORY-ASSISTED',
                           RS_CONTEST_CATEGORYASSISTED);
-   RegisterStoredSetting('contest.categoryBand',        'CATEGORY-BAND',
+   RegisterModelSetting( 'contest.categoryBand',        'CATEGORY-BAND',
                           RS_CONTEST_CATEGORYBAND);
-   RegisterStoredSetting('contest.categoryMode',        'CATEGORY-MODE',
+   RegisterModelSetting( 'contest.categoryMode',        'CATEGORY-MODE',
                           RS_CONTEST_CATEGORYMODE);
-   RegisterStoredSetting('contest.categoryOperator',    'CATEGORY-OPERATOR',
+   RegisterModelSetting( 'contest.categoryOperator',    'CATEGORY-OPERATOR',
                           RS_CONTEST_CATEGORYOPERATOR);
-   RegisterStoredSetting('contest.categoryOverlay',     'CATEGORY-OVERLAY',
+   RegisterModelSetting( 'contest.categoryOverlay',     'CATEGORY-OVERLAY',
                           RS_CONTEST_CATEGORYOVERLAY);
-   RegisterStoredSetting('contest.categoryPower',       'CATEGORY-POWER',
+   RegisterModelSetting( 'contest.categoryPower',       'CATEGORY-POWER',
                           RS_CONTEST_CATEGORYPOWER);
-   RegisterStoredSetting('contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',
+   RegisterModelSetting( 'contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',
                           RS_CONTEST_CATEGORYTRANSMITTER);
    RegisterStoredSetting('contest.contest',             'CONTEST',
                           RS_CONTEST_CONTEST);

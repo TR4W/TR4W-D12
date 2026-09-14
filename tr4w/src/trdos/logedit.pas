@@ -3087,11 +3087,11 @@ begin
            end;
         end;
      TotalScore := TotalMults * QPoints;
-     if tCategoryPowerSA[Categorypower] = 'LOW' then
+     if tCategoryPowerSA[Settings.Contest.CategoryPower] = 'LOW' then
         begin
         Result := Result * 2;
         end
-     else if tCategoryPowerSA[Categorypower] = 'QRP' then
+     else if tCategoryPowerSA[Settings.Contest.CategoryPower] = 'QRP' then
         begin
         Result := Result * 5;
         end;

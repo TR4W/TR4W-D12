@@ -62,6 +62,7 @@ uses
    StdCtrls,
    ExtCtrls,
    uCbrSum,          { CabrilloTags, the tag table, the category lists }
+   uSettingsModel,   { Settings.Contest.Category* -- the entry's categories }
    uTR4WStrings;
 
 type
@@ -311,11 +312,11 @@ var
         InitialTagsValuesArray was an array of PByte and said nothing about
         what it pointed at. }
       case aTag of
-         ctCategoryAssisted: Result := Ord(CategoryAssisted);
-         ctCategoryBand:     Result := Ord(CategoryBand);
-         ctCategoryMode:     Result := Ord(CategoryMode);
-         ctCategoryOperator: Result := Ord(CategoryOperator);
-         ctCategoryPower:    Result := Ord(CategoryPower);
+         ctCategoryAssisted: Result := Ord(Settings.Contest.CategoryAssisted);
+         ctCategoryBand:     Result := Ord(Settings.Contest.CategoryBand);
+         ctCategoryMode:     Result := Ord(Settings.Contest.CategoryMode);
+         ctCategoryOperator: Result := Ord(Settings.Contest.CategoryOperator);
+         ctCategoryPower:    Result := Ord(Settings.Contest.CategoryPower);
       else
          Result := -1;
       end;

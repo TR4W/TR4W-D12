@@ -8589,11 +8589,11 @@ begin
            begin
            Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
            RXData.QSOPoints := (Distance div 500) + 1;
-           if CategoryPower = cpQRP then
+           if Settings.Contest.CategoryPower = cpQRP then
               begin
               RXDATA.QSOPoints := RXDATA.QSOPoints * 3;
               end;
-           if CategoryPower = cpLOW then
+           if Settings.Contest.CategoryPower = cpLOW then
               begin
               RXDATA.QSOPoints := Round(RXData.QSOPoints * 1.5);
               end;
