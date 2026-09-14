@@ -1373,7 +1373,7 @@ begin
       ColumnToken := Copy(pshortstring(Command)^, 14, 255);
       for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
          begin
-         if (StrComp(ColumnCanonicalName[TempColumn], PAnsiChar(ColumnToken)) = 0)
+         if (ColumnCanonicalName[TempColumn] = string(ColumnToken))
          or (UpperCase(ColumnsArray[TempColumn].Text) = ColumnToken) then
             begin
             Val(CustomCMD, TempInteger, code);

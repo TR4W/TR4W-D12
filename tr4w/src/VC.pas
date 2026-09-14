@@ -2606,7 +2606,10 @@ var
   // Without this, CFGs are language-locked: a CFG saved by an English build
   // fails to load in a Spanish/Russian/etc. build because ColumnsArray[].Text
   // is translated at compile time.
-  ColumnCanonicalName: array[LogColumnsType] of PAnsiChar = (
+  (* The language-neutral COLUMN WIDTH token per column. A string array:
+    every reader wanted text -- two of them wrapped it in StrPas and one
+    compared it with StrComp through a PAnsiChar cast of an AnsiString. *)
+  ColumnCanonicalName: array[LogColumnsType] of string = (
     'BAND',     'DATE',     'UTC',      'QSS',      'CALLSIGN', 'QTC',
     'QSR',      'DX',       'ZN',       'PX',       'PRE',      'CK',
     'NAME',     'CL.',      'QTH',      'AGE',      'CH.',      'PWR',

@@ -454,6 +454,23 @@ begin
         Index1 := i;
         end;
 
+     (* SUSPECTED DEFECT, LEFT AS IT IS UNTIL NY4I RULES (2026-09-14).
+
+       This compares a country ID against r.Name STARTING AT INDEX 1, and
+       r.Name is array[0..31] of AnsiChar whose text begins at index 0 --
+       line 594 writes it with Move(p[s], r.Name, l) and line 599 reads
+       r.Name[0] as a CHARACTER. So this skips the first letter of the
+       name it is matching on.
+
+       The line above it compares the same ID field with a plain
+       ShortString equality test, which is what this looks like it meant
+       to be.
+
+       It is NOT changed here because removing a pointer must not change
+       what a comparison MEANS: ReplaceCountry decides which country a
+       CTY.DAT override replaces, and making this match one character
+       earlier could start replacing a different country. Ruling needed
+       on what Index2 is supposed to find; the pointers go with the fix. *)
      if utils_text.StrComp(@CTY.CTYTable[i].ID[1], @r.Name[1]) = 0 then
         begin
         Index2 := i;

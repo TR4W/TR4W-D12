@@ -586,7 +586,7 @@ begin
          end;
 
       GRepository.SaveConfigValue(
-         AnsiString('COLUMN WIDTH ' + string(StrPas(ColumnCanonicalName[Column]))),
+         AnsiString('COLUMN WIDTH ' + ColumnCanonicalName[Column]),
          AnsiString(IntToStr(ColumnWidthOverride[Column])),
          'contest');
       end;

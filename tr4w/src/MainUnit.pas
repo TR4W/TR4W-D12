@@ -9481,7 +9481,7 @@ begin
               in the contest's own file. *)
             ColumnWidthOverride[TempColumn] := NewWidth;
             logger.Debug('[ColumnWidth] %s = %d applied',
-                         [StrPas(ColumnCanonicalName[TempColumn]), NewWidth]);
+                         [ColumnCanonicalName[TempColumn], NewWidth]);
             end;
          matched := True;
          Exit;
