@@ -79,6 +79,14 @@ type
       procedure Test_CharBufferSlice_ByPosition;
       procedure Test_CharBufferSlice_StopsAtNul;
       procedure Test_CharBufferSlice_OutOfRangeIsEmpty;
+
+      (* CompareCharBuffer is StrComp WITHOUT THE POINTERS, so it is tested
+        AGAINST StrComp rather than against my idea of what StrComp does.
+        The sign is the CTY prefix table's sort order, not just equality. *)
+      procedure Test_CompareCharBuffer_AgreesWithStrComp;
+      procedure Test_CompareCharBuffer_Ordering;
+      procedure Test_CompareCharBuffer_HighBitBytesAreUnsigned;
+      procedure Test_CompareCharBuffer_PrefixIsLess;
    end;
 
 implementation
@@ -596,6 +604,106 @@ begin
    CheckEquals('', CharBufferSlice(buf, 2, -5), 'negative length');
 end;
 
+
+// ---------------------------------------------------------------------------
+// CompareCharBuffer -- StrComp's answer without StrComp's pointers.
+//
+// These buffers are the CTY.DAT prefix table, which StrUpper's note says may
+// hold CP1251/CP1250.  That is why the comparison stays BYTES: decoding them
+// as UTF-8 would change which prefixes match, and the sign defines the order
+// the binary search in ctyFindCallsign depends on.
+// ---------------------------------------------------------------------------
+
+procedure TUtilsTextTests.Test_CompareCharBuffer_AgreesWithStrComp;
+var
+   a, b: array[0..13] of AnsiChar;
+
+   procedure Both(const s1, s2: string; const label_: string);
+   var
+      old, new_: integer;
+   begin
+      FillChar(a, SizeOf(a), 0);
+      FillChar(b, SizeOf(b), 0);
+      SetCharBuffer(a, s1);
+      SetCharBuffer(b, s2);
+      old  := StrComp(@a[0], @b[0]);
+      new_ := CompareCharBuffer(a, b);
+      // The SIGN is the contract, not the magnitude.
+      Check((old < 0) = (new_ < 0), label_ + ' (less)');
+      Check((old = 0) = (new_ = 0), label_ + ' (equal)');
+      Check((old > 0) = (new_ > 0), label_ + ' (greater)');
+   end;
+
+begin
+   BeginTest('CompareCharBuffer gives StrComp''s sign for real prefixes');
+   Both('K',   'K',   'K vs K');
+   Both('K',   'KH6', 'K vs KH6');
+   Both('KH6', 'K',   'KH6 vs K');
+   Both('VE',  'VK',  'VE vs VK');
+   Both('VK',  'VE',  'VK vs VE');
+   Both('',    'K',   'empty vs K');
+   Both('K',   '',    'K vs empty');
+   Both('',    '',    'empty vs empty');
+   Both('UA9', 'UA',  'UA9 vs UA');
+   Both('3DA0', '3D2', '3DA0 vs 3D2');
+end;
+
+procedure TUtilsTextTests.Test_CompareCharBuffer_Ordering;
+var
+   a, b: array[0..13] of AnsiChar;
+begin
+   BeginTest('CompareCharBuffer orders by byte value');
+   SetCharBuffer(a, 'A');
+   SetCharBuffer(b, 'B');
+   Check(CompareCharBuffer(a, b) < 0, 'A sorts before B');
+   Check(CompareCharBuffer(b, a) > 0, 'B sorts after A');
+   SetCharBuffer(b, 'A');
+   CheckEquals(0, CompareCharBuffer(a, b), 'A equals A');
+end;
+
+procedure TUtilsTextTests.Test_CompareCharBuffer_HighBitBytesAreUnsigned;
+var
+   a, b: array[0..13] of AnsiChar;
+begin
+   (* $80..$FF MUST SORT ABOVE ASCII.  AnsiChar is unsigned and the old
+     StrComp returned Ord() - Ord(), so a CP1251 byte sorted above 'Z'.  If
+     this ever came back SIGNED, the prefix table would sort differently and
+     the binary search would stop finding those prefixes. *)
+   BeginTest('CompareCharBuffer treats high-bit bytes as unsigned');
+   FillChar(a, SizeOf(a), 0);
+   FillChar(b, SizeOf(b), 0);
+   a[0] := #$C0;          // a CP1251 letter
+   b[0] := 'Z';
+   Check(CompareCharBuffer(a, b) > 0, '$C0 sorts ABOVE Z');
+   Check(CompareCharBuffer(b, a) < 0, 'Z sorts below $C0');
+   Check((StrComp(@a[0], @b[0]) > 0) = (CompareCharBuffer(a, b) > 0),
+         'and it agrees with StrComp');
+end;
+
+procedure TUtilsTextTests.Test_CompareCharBuffer_PrefixIsLess;
+var
+   a, b: array[0..13] of AnsiChar;
+   i: integer;
+begin
+   (* A buffer FULL to its last byte has no terminator inside it.  Reading
+     past the end has to behave as the NUL did, or a 14-character prefix
+     would compare against whatever followed it in memory. *)
+   BeginTest('CompareCharBuffer handles a buffer with no room for a NUL');
+   FillChar(a, SizeOf(a), 0);
+   FillChar(b, SizeOf(b), 0);
+   (* Filled BY INDEX, because SetCharBuffer deliberately cannot make a
+     buffer with no terminator -- and that is exactly the case being
+     tested. *)
+   for i := 0 to 13 do
+      begin
+      a[i] := AnsiChar(Ord('A') + i);
+      b[i] := AnsiChar(Ord('A') + i);
+      end;
+   CheckEquals(0, CompareCharBuffer(a, b), 'two full buffers are equal');
+   b[13] := 'Z';
+   Check(CompareCharBuffer(a, b) < 0, 'differing in the last byte');
+end;
+
 procedure TUtilsTextTests.RunAllTests;
 begin
    Test_StringIsAllNumbers;
@@ -626,6 +734,11 @@ begin
    Test_CharBufferSlice_ByPosition;
    Test_CharBufferSlice_StopsAtNul;
    Test_CharBufferSlice_OutOfRangeIsEmpty;
+
+   Test_CompareCharBuffer_AgreesWithStrComp;
+   Test_CompareCharBuffer_Ordering;
+   Test_CompareCharBuffer_HighBitBytesAreUnsigned;
+   Test_CompareCharBuffer_PrefixIsLess;
 end;
 
 end.

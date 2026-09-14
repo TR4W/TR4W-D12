@@ -259,7 +259,7 @@ type
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 //function ctyInit(ctyFilename: PAnsiChar): boolean;
 function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
-function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
+function ctyFindCallsign(const s: PrefixName; var Index: integer): boolean;
 function ctyGetGrid(const Call: string; var ID: DXMultiplierString): string;
 function ctyGetContinent(const Call: string): ContinentType;
 function ctyGetCountry(const Call: string): Word;
@@ -422,7 +422,7 @@ begin
       begin
 
       for TempIndex := 0 to CTY.CTYPrefixesTableRecords - 1 do
-        if StrComp(CTY.ctyPrefixesTable[TempIndex].Prefix, pr.Prefix) = 0 then
+        if CompareCharBuffer(CTY.ctyPrefixesTable[TempIndex].Prefix, pr.Prefix) = 0 then
            begin
            CTY.ctyPrefixesTable[TempIndex] := pr^;
            Exit;
@@ -821,7 +821,7 @@ begin
         iJ := iI;
         while (iJ >= 0) and (
         //aSort[iJ] > aSort[iJ + iK]
-          StrComp(
+          CompareCharBuffer(
           CTY.ctyPrefixesTable[iJ].Prefix,
           CTY.ctyPrefixesTable[iJ + iK].Prefix
           ) > 0
@@ -895,7 +895,7 @@ begin
 
 end;
 
-function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
+function ctyFindCallsign(const s: PrefixName; var Index: integer): boolean;
 var
   l, h, i, c                            : integer;
 
@@ -904,7 +904,9 @@ begin
 
 //  l := 0;
 //  h := CTY.ctyPrefixesTableRecords - 1;
-   if s = '-' then
+   (* s is the BUFFER now, so the sentinel is tested by its bytes rather
+     than by comparing a pointer against a literal. *)
+   if (s[0] = '-') and (s[1] = #0) then
       begin
       logger.Debug('Exiting ctyFindCallsign early because s = -');
       Exit;
@@ -919,7 +921,11 @@ begin
      begin
      i := (l + h) shr 1;
 
-     c := StrComp(CTY.ctyPrefixesTable[i].Prefix, s);
+     (* CompareCharBuffer, not StrComp: the same unsigned byte order
+       without taking the address of either buffer. The SIGN drives this
+       binary search, which is why it is pinned against StrComp in
+       uTestUtilsText rather than assumed. *)
+     c := CompareCharBuffer(CTY.ctyPrefixesTable[i].Prefix, s);
      if c < 0 then l := i + 1 else
                                  begin
                                  h := i - 1;
@@ -931,7 +937,7 @@ begin
                                  end;
      end;
   except
-     logger.error('Exception in ctyFindCallsign s = %s',[s]);
+     logger.error('Exception in ctyFindCallsign s = %s',[CharBufferText(s)]);
   end;
   Index := l;
 end;
@@ -984,7 +990,7 @@ begin
 
 //  MainUnit.showint(PInteger(@QTH.StandardCall)^);
 
-  if ctyFindCallsign(@TempPrefix, TempIndex) then
+  if ctyFindCallsign(TempPrefix, TempIndex) then
      begin
      //    asm nop end;
 
@@ -1037,7 +1043,7 @@ begin
   for TempPointer := TempLength downto 1 do
      begin
      TempPrefix[TempPointer] := #0;
-     if ctyFindCallsign(@TempPrefix, TempIndex) then
+     if ctyFindCallsign(TempPrefix, TempIndex) then
         begin
 
         if CTY.ctyCountryMode = ARRLCountryMode then

@@ -55,6 +55,24 @@ function CharBufferText(const aBuf: array of AnsiChar): string;
   buffer, whichever comes first, and a start outside the buffer yields ''. *)
 function CharBufferSlice(const aBuf: array of AnsiChar; aStart, aLen: integer): string;
 
+(* COMPARE TWO FIXED BUFFERS AS BYTES -- StrComp's answer without StrComp's
+  pointers.
+
+  Identical semantics to utils_text.StrComp: walk while the bytes match and
+  the LEFT one has not hit its terminator, then return the difference of the
+  two bytes at the stopping point. Unsigned, so $80..$FF sort ABOVE ASCII.
+
+  IT MUST STAY BYTES, AND THAT IS NOT A STYLE POSITION. uCTYDAT's prefix
+  table holds CTY.DAT text, which StrUpper's note below records may be
+  CP1251/CP1250 -- so routing it through CharBufferText (UTF-8) would decode
+  bytes that are not UTF-8 and change which prefixes match. The POINTERS are
+  the problem here; the byte comparison is the requirement.
+
+  The SIGN is load-bearing: ctyFindCallsign binary-searches the prefix table
+  and the prefix sort insertion-sorts it, so this defines the sort ORDER and
+  not merely equality. *)
+function CompareCharBuffer(const a, b: array of AnsiChar): integer;
+
 function StrComp(const Str1, Str2: PAnsiChar): integer;    // boundary: PAnsiChar
 procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiChar (ASCII a-z only)
 
@@ -398,6 +416,29 @@ begin
       end;
 
    Result := UTF8ToString(raw);
+end;
+
+function CompareCharBuffer(const a, b: array of AnsiChar): integer;
+var
+   i: integer;
+   ca, cb: byte;
+begin
+   i := 0;
+   while True do
+      begin
+      (* Past the end of a buffer reads as the terminator, which is what a
+        PAnsiChar walk did when it met the NUL. *)
+      if i > High(a) then ca := 0 else ca := Ord(a[i]);
+      if i > High(b) then cb := 0 else cb := Ord(b[i]);
+
+      if (ca = 0) or (ca <> cb) then
+         begin
+         Result := ca - cb;
+         Exit;
+         end;
+
+      Inc(i);
+      end;
 end;
 
 function CharBufferSlice(const aBuf: array of AnsiChar; aStart, aLen: integer): string;
