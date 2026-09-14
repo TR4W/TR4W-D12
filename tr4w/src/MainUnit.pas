@@ -8044,7 +8044,7 @@ begin
   // P1 := BandStringsArray[RXData.Band];
   // P2 := ModeString[RXData.Mode];
   // Issue #997: removed empty asm (commented push p1/p2); Format below does it.
-  elviText := SysUtils.Format(AnsiString(TWO_STRINGS),
+  elviText := SysUtils.Format(TWO_STRINGS,
                               [BandStringsArray[RXData.Band],
                                ModeStringArray[RXData.Mode]]);
   EmitCol(elviCol, elviText, aCollect);

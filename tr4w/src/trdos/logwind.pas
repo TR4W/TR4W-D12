@@ -1321,7 +1321,8 @@ begin
 
   UpdateTotals2;
 
-  TR4WMainForm.pnlBandMode.Caption := SysUtils.Format(AnsiString(TWO_STRINGS), [BandStringsArray[Band], ModeStringArray[Mode]]);
+  TR4WMainForm.pnlBandMode.Caption := SysUtils.Format(TWO_STRINGS,
+                                        [BandStringsArray[Band], ModeStringArray[Mode]]);
 
   if Settings.Mult.ByBand then MultBand := ActiveBand else MultBand := AllBands;
   if Settings.Mult.ByMode then MultMode := ActiveMode else MultMode := Both;

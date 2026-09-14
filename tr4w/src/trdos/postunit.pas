@@ -716,7 +716,6 @@ procedure ExportTo3830Scores;
     bandMults: integer;
     sumCW, sumPh, sumDig, sumBandMults: integer;
     cwMults, phMults, digMults, totalMults: integer;
-    iniBuf: array [ 0 .. 255 ] of AnsiChar;
     operatorsStr, classStr, powerStr: string;
 
     function CalcBandMults( b: BandType ): integer;
@@ -771,33 +770,16 @@ procedure ExportTo3830Scores;
   // summary since, this report showed the PRE-MIGRATION values, or nothing at
   // all on a station with no tr4w.ini.  Silent, because a blank line here is
   // indistinguishable from a field the operator chose to leave empty.
-  if HeaderTagText( CABRILLOSECTION, '_OPERATORS', iniBuf,
-     SizeOf( iniBuf ) ) > 0 then
-     begin
-     operatorsStr := string( iniBuf )
-     end
-  else
-     begin
-     operatorsStr := '';
-     end;
-  if HeaderTagText( CABRILLOSECTION, '_CATEGORY-OPERATOR', iniBuf,
-     SizeOf( iniBuf ) ) > 0 then
-     begin
-     classStr := string( iniBuf )
-     end
-  else
-     begin
-     classStr := '';
-     end;
-  if HeaderTagText( CABRILLOSECTION, '_CATEGORY-POWER', iniBuf,
-     SizeOf( iniBuf ) ) > 0 then
-     begin
-     powerStr := string( iniBuf )
-     end
-  else
-     begin
-     powerStr := '';
-     end;
+  (* HeaderValue RETURNS THE STRING, so the buffer, the length test and the
+    cast back are all gone.  An absent tag reads as '' from the store, which
+    is what the else arm here was reproducing by hand.
+
+    ONE BEHAVIOUR CHANGE, DELIBERATE: the old form truncated to 255 bytes
+    because that was the stack buffer's size.  Nothing in a Cabrillo header
+    is that long, and a silent truncation is not a property worth keeping. *)
+  operatorsStr := HeaderValue( CABRILLOSECTION, '_OPERATORS' );
+  classStr     := HeaderValue( CABRILLOSECTION, '_CATEGORY-OPERATOR' );
+  powerStr     := HeaderValue( CABRILLOSECTION, '_CATEGORY-POWER' );
 
   buf := buf + sysutils.Format( 'Call Used: %s'#13#10, [ string( Settings.My.Call ) ] );
   buf := buf + sysutils.Format( 'Operators: %s'#13#10, [ operatorsStr ] );

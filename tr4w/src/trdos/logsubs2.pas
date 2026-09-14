@@ -849,7 +849,7 @@ begin
        INSTALLATION is per-platform -- on Linux it is fontconfig, on macOS
        CTFontManager -- so the pair moves together or not at all, and
        LuconSZLoadded can only be True where the load happened. *)
-     RemoveFontResourceW(TR4W_LC_FILENAME);
+     RemoveFontResourceW(PWideChar(TR4W_LC_FILENAME));
 {$ENDIF}
      end;
 {$IF SCPDEBUG}

@@ -270,11 +270,11 @@ begin
 
    if ErmakSpecification then
       begin
-      section := string(ERMAKSECTION);
+      section := ERMAKSECTION;
       end
    else
       begin
-      section := string(CABRILLOSECTION);
+      section := CABRILLOSECTION;
       end;
 
    Result := HeaderValue(section, string(CabrilloTagsArray[aTag].ctrTag));

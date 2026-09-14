@@ -46,16 +46,23 @@ function HeaderValue(const aSection, aTag: string): string;
 // exports expects the export to see it.
 procedure SetHeaderValue(const aSection, aTag, aValue: string);
 
-// THE PAnsiChar FORM, for the Win32 dialog and export code that works in fixed
-// buffers.  It lives here, once, because there were three copies of it by the
-// time ERMAK moved -- uCbrSum, PostUnit and uErmak -- each pairing the same
-// buffer conversion with its own if-ERMAK-then-ini fork, and the fork had
-// already drifted (PostUnit's ini arm honoured the buffer size, the json arm
-// did not).  aSize is the buffer size INCLUDING the terminator; the result is
-// the length written, as GetPrivateProfileStringA returned.
-function HeaderTagText(const aSection, aTag: PAnsiChar;
-                       aBuffer: PAnsiChar; aSize: integer): cardinal;
-procedure SetHeaderTagText(const aSection, aTag, aValue: PAnsiChar);
+(* THE PAnsiChar FORM IS GONE (2026-09-14).  It existed to serve "the Win32
+  dialog and export code that works in fixed buffers", and there is no such
+  caller left: the dialogs are designed forms, and PostUnit's three uses each
+  spelled out
+
+      if HeaderTagText(SECTION, '_TAG', buf, SizeOf(buf)) > 0 then
+         s := string(buf)
+      else
+         s := '';
+
+  which is HeaderValue(SECTION, '_TAG') in eleven lines.  The buffer was
+  ceremony -- filled, length-tested, converted straight back to a string --
+  and SetHeaderTagText had no caller at all.
+
+  Use HeaderValue / SetHeaderValue.  If a fixed buffer is ever genuinely
+  needed again, convert AT that call site: the pointer belongs inside the
+  transport, not in this unit's public surface. *)
 
 // Hold the save until EndHeaderBatch, for a caller that sets many tags at once.
 // The ERMAK dialog writes 90 values (10 operators x 9 fields) when it closes,
@@ -301,25 +308,6 @@ begin
       begin
       PersistHeaders;
       end;
-end;
-
-function HeaderTagText(const aSection, aTag: PAnsiChar;
-                       aBuffer: PAnsiChar; aSize: integer): cardinal;
-begin
-   // BOUNDED.  GetPrivateProfileStringA honoured aSize and the callers pass
-   // SizeOf(a stack array); the json arm each of them grew was written with
-   // StrPCopy, which does not, so a header value longer than the buffer would
-   // have run off the end.  Nothing in a header is that long today -- which is
-   // exactly why it would have gone unnoticed.
-   uAnsiStr.StrPLCopy(aBuffer,
-                      AnsiString(HeaderValue(string(aSection), string(aTag))),
-                      aSize - 1);
-   Result := uAnsiStr.StrLen(aBuffer);
-end;
-
-procedure SetHeaderTagText(const aSection, aTag, aValue: PAnsiChar);
-begin
-   SetHeaderValue(string(aSection), string(aTag), string(aValue));
 end;
 
 procedure BeginHeaderBatch;

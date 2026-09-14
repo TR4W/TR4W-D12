@@ -683,7 +683,7 @@ begin
             Continue;
             end;
 
-         value := ini.ReadString(string(_COMMANDS), MIGRATED_COMMANDS[i], '');
+         value := ini.ReadString(_COMMANDS, MIGRATED_COMMANDS[i], '');
          if value = '' then
             begin
             Continue;
@@ -766,15 +766,15 @@ begin
    try
       // Defaults are the store's OWN current values, so a key missing from the
       // ini leaves the default alone rather than forcing it to False.
-      aStore.LogLevelName    := ini.ReadString(string(_COMMANDS), 'DEBUG LOG LEVEL',
+      aStore.LogLevelName    := ini.ReadString(_COMMANDS, 'DEBUG LOG LEVEL',
                                                aStore.LogLevelName);
-      aStore.HamLibDebug     := ini.ReadBool(string(_COMMANDS), 'HAMLIB DEBUG',
+      aStore.HamLibDebug     := ini.ReadBool(_COMMANDS, 'HAMLIB DEBUG',
                                              aStore.HamLibDebug);
-      aStore.HamLibAsyncOnly := ini.ReadBool(string(_COMMANDS), 'HAMLIB ASYNC ONLY',
+      aStore.HamLibAsyncOnly := ini.ReadBool(_COMMANDS, 'HAMLIB ASYNC ONLY',
                                              aStore.HamLibAsyncOnly);
-      aStore.HamLibTrace     := ini.ReadBool(string(_COMMANDS), 'HAMLIB TRACE',
+      aStore.HamLibTrace     := ini.ReadBool(_COMMANDS, 'HAMLIB TRACE',
                                              aStore.HamLibTrace);
-      aStore.TelnetDebug     := ini.ReadBool(string(_COMMANDS), 'TELNET DEBUG',
+      aStore.TelnetDebug     := ini.ReadBool(_COMMANDS, 'TELNET DEBUG',
                                              aStore.TelnetDebug);
       logger.Info('[SeedLoggingFromIni] logging settings migrated from tr4w.ini (level %s)',
                   [aStore.LogLevelName]);

@@ -1444,7 +1444,7 @@ begin
     program's, and the LCL has no AddFontResource equivalent because there is
     nothing to be equivalent to. *)
 {$IFDEF WINDOWS}
-  LuconSZLoadded := AddFontResourceW(TR4W_LC_FILENAME) <> 0;
+  LuconSZLoadded := AddFontResourceW(PWideChar(TR4W_LC_FILENAME)) <> 0;
 {$ENDIF}
   (* The MainFixedFont line that stood here built an HFONT nothing read.
     See the note in VC.pas: five of the six font handles were write-only

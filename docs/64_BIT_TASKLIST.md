@@ -24,7 +24,7 @@ still exact.
 
 | gate | source doc | first measure | now | state |
 |---|---|---|---|---|
-| PChar-family in live code | 751 raw mentions | 578 in 69 files | **412** | in progress |
+| PChar-family in live code | 751 raw mentions | 578 in 69 files | **396** | in progress |
 | pointer truncation | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
 | live `asm` blocks | "much disabled… confirm each" | 0 | **0** | **DONE** |
 | `Move`/`FillChar`/`ZeroMemory` | not in the source doc | 348 | **347** | open (new rule) |
@@ -41,6 +41,8 @@ all thirteen sets open.
 | `733ce377` | `SetCharBuffer` / `CharBufferText`, 14 file-name sites | 578 |
 | `043657a8` | the ShortString-as-buffer idiom, 6 sites | 570 |
 | `c51dcc1d` | **the C-sprintf facade deleted** -- 21 overloads, every caller | **412** |
+| `9d627433` | the three C `long` types become `clong` (not a 64-bit item -- see below) | 412 |
+| _this one_ | VC.pas scalar constants; the `HeaderTagText` facade deleted | **396** |
 
 ---
 
@@ -105,7 +107,7 @@ all thirteen sets open.
 `tr4wserver` finds ten hits, and six are `GetSCPCharFromInteger(X) + ...` in
 `logscp` — string concatenation, not casts.
 
-### P0 — the PChar-family removal, 412 live (was 578)
+### P0 — the PChar-family removal, 396 live (was 578)
 
 Do it as behaviour-preserving slices with tests, never a global replace:
 `PChar` is wide under this tree's Unicode mode and `PAnsiChar` is byte text, so
@@ -136,16 +138,60 @@ date/path helpers still RETURN a `PAnsiChar` into a shared global buffer, so
 this slice cannot be "replace the body" — the callers have to stop wanting a
 pointer first.
 
+**RE-MEASURED 2026-09-14 — the `TF.pas` row below said ~76 and was wrong; it
+is 28.** That figure was carried over from before the façade deletion instead
+of being re-counted. Run the comment-aware scan rather than quoting this table
+after it has sat for a day.
+
 | unit | live | note |
 |---|---:|---|
-| `TF.pas` | ~76 | façade GONE; what remains returns a PAnsiChar into a shared global |
 | `postunit.pas` | 36 | Cabrillo/ADIF writers |
-| `VC.pas` | 34 | remaining spelling tables |
 | `MainUnit.pas` | 29 | |
 | `uAnsiStr.pas` | 28 | **delete the unit** once its callers are gone; it is a second string library |
+| `TF.pas` | 28 | façade GONE; what remains returns a PAnsiChar into a shared global |
 | `uctydat.pas` | 21 | CTY.DAT parsing — real byte work, may keep bounded byte arrays |
-| `uHamLibDirect.pas` | 20 | a real C ABI boundary; shrinks once the three helpers above go |
+| `VC.pas` | 18 | was 34; the scalar constants are done, the spelling TABLES and record fields remain |
+| `uHamLibDirect.pas` | 14 | a real C ABI boundary; was 20 before the three offset helpers went |
 | `logdvp.pas`, `tr4wserverUnit.pas`, `tree.pas` | 15 each | |
+
+#### What the VC.pas slice found, which generalises
+
+**FIVE OF THE TWELVE SCALAR CONSTANTS WERE DEAD** — `_RESTARTBIN`, `_LOGFILE`,
+`_COM`, `LATEST_CONFIG_FILE` and `OPERATORINFO` were declared and read nowhere
+in the tree. Count the callers before converting; deleting beats converting.
+
+**AND THE CONSTANT WAS OFTEN NOT THE PROBLEM.** `CABRILLOSECTION`,
+`ERMAKSECTION` and `_COMMANDS` were already wrapped in `string(...)` at EVERY
+use site — a pointer created so it could be immediately converted back. The
+same held one level up: `uCabrilloHeader.HeaderTagText`'s `aSection`/`aTag`
+were `PAnsiChar` only because these constants were, and its three live callers
+each spelled out
+
+    if HeaderTagText(SECTION, '_TAG', buf, SizeOf(buf)) > 0 then
+       s := string(buf)
+    else
+       s := '';
+
+which is `HeaderValue(SECTION, '_TAG')` in eleven lines. Both it and
+`SetHeaderTagText` (no callers at all) are deleted. **Follow the pointer up to
+the function that takes it — the constant is usually the symptom.**
+
+#### THE NARROWING TRAP THIS SLICE HIT, WHICH WILL RECUR
+
+Converting `TWO_STRINGS: PAnsiChar = '%s%s'` to `string` pushed narrowing to
+1367 against a ceiling of 1365. The cause is worth knowing because every
+format-string constant has it:
+
+> **`SysUtils.Format` has exactly ONE overload** —
+> `Function Format(Const Fmt: String; const Args: Array of const): String`
+> (`rtl/objpas/sysutils/sysstrh.inc:151`) — and SysUtils is compiled WITHOUT
+> `{$MODESWITCH UnicodeStrings}`, so that `String` is an **AnsiString**. FPC
+> 3.2.2 ships no UnicodeString counterpart.
+
+So a `string` format constant narrows **at the argument**, before Format runs.
+`LclText` cannot fix it for the same reason. The answer is to declare a format
+string `AnsiString` — the type its one consumer takes — which converts nothing
+and still removes the pointer. **The ceiling did not have to move.**
 
 ### P0 — no `Move` / `FillChar` / `ZeroMemory`, 348 sites (NY4I, 2026-09-14)
 

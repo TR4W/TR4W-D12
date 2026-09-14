@@ -259,7 +259,7 @@ var
    // [REPORT] section (2026-08-16).  CABRILLOSECTION, not the ERMAK section:
    // the scores server takes the standard Cabrillo tags, and an ERMAK contest
    // posts the same club and overlay it always did.
-   uAnsiStr.StrPLCopy(buf, AnsiString(HeaderValue(string(CABRILLOSECTION), string(Key))),
+   uAnsiStr.StrPLCopy(buf, AnsiString(HeaderValue(CABRILLOSECTION, string(Key))),
                       SizeOf(buf) - 1);
    n := uAnsiStr.StrLen(buf);
    if n = 0 then

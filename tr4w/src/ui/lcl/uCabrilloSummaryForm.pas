@@ -150,11 +150,11 @@ function HeaderSection: string;
 begin
    if ErmakSpecification then
       begin
-      Result := string(ERMAKSECTION);
+      Result := ERMAKSECTION;
       end
    else
       begin
-      Result := string(CABRILLOSECTION);
+      Result := CABRILLOSECTION;
       end;
 end;
 

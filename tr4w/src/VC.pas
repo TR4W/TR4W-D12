@@ -440,9 +440,7 @@ const
   LOGVERSION3                           = '.';
   LOGVERSION4                           = '7';     // ny4i Added QSO GUID (id field) to ContestExchange
   CURRENTVERSIONASINTEGER               = Ord(LOGVERSION1) + Ord(LOGVERSION2) * 256 + Ord(LOGVERSION3) * $10000 + Ord(LOGVERSION4) * $1000000;
-  TR4W_DOWNLOAD_LINK                    : PChar = 'https://tr4w.net/download/?' + TR4W_CURRENTVERSION_NUMBER;
-
-  LATEST_CONFIG_FILE                    : PAnsiChar = 'LATEST CONFIG FILE';
+  TR4W_DOWNLOAD_LINK                    : string = 'https://tr4w.net/download/?' + TR4W_CURRENTVERSION_NUMBER;
 
  // ' TR4W_DOWNLOAD_LINK_WITH_VER           = 'http://tr4w.net/4.42/tr4w_setup_4_42.1.exe';
 
@@ -602,7 +600,21 @@ const
 
 const
 
-  TWO_STRINGS                           : PAnsiChar = '%s%s';
+  (* AnsiString, NOT string, AND THAT IS NOT A COMPROMISE.
+
+    This is a FORMAT STRING, and SysUtils.Format has exactly ONE overload --
+    `Function Format(Const Fmt: String; const Args: Array of const): String`
+    (rtl/objpas/sysutils/sysstrh.inc:151). SysUtils is compiled WITHOUT
+    {$MODESWITCH UnicodeStrings}, so that `String` is an AnsiString, and FPC
+    3.2.2 ships no UnicodeString counterpart.
+
+    So declaring this `string` makes every use narrow AT THE ARGUMENT, before
+    Format runs -- which is what the `AnsiString(TWO_STRINGS)` casts that used
+    to sit at both call sites were working around, in the wrong place. Naming
+    the type its one consumer actually takes converts nothing at all.
+
+    The 64-bit objective is met either way: this is no longer a pointer. *)
+  TWO_STRINGS                           : AnsiString = '%s%s';
   BA                                    : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
   BAl                                   : array[boolean] of PAnsiChar = ('false', 'true');
   BAHTML                                : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
@@ -2362,17 +2374,16 @@ type
 
 const
 
-  _RESTARTBIN                           : PAnsiChar = 'RESTART.BIN';
-  _LOGFILE                              : PAnsiChar = 'LOG file';
+  (* _RESTARTBIN, _LOGFILE, _COM, LATEST_CONFIG_FILE and OPERATORINFO were
+    deleted on 2026-09-14: each was declared here and read NOWHERE in the
+    tree, including the tests.  OPERATORINFO's only surviving mention is a
+    comment in PostUnit explaining that Delphi spells its C format '%.3u',
+    inside a block that is itself commented out. *)
+  _COMMANDS                             : string = 'COMMANDS';
 
-  _COMMANDS                             : PAnsiChar = 'COMMANDS';
-
-
-  OPERATORINFO                          : PAnsiChar = '_OP_INFO_%03u';
-
-  ERMAK_                                : PChar = 'ERMAK';
-  ERMAKSECTION                          : PAnsiChar = 'ERMAKREPORT';
-  CABRILLOSECTION                       : PAnsiChar = 'REPORT';
+  ERMAK_                                : string = 'ERMAK';
+  ERMAKSECTION                          : string = 'ERMAKREPORT';
+  CABRILLOSECTION                       : string = 'REPORT';
 
 //  TRAINER                          = 'TRAINER';
 
@@ -2979,7 +2990,6 @@ var
 
 //  NET_CLEARLOG_MESSAGE                  : DWORD = 3030001000;
   NET_LOGINFO_MESSAGE                   : DWORD = 3030002000;
-  _COM                                  : PAnsiChar = '\\.\COM%u';
 
   ErmakSpecification                    : boolean;
 //  sDISMESSAGE                           : array[0..4] of Char = ('D', 'I', 'S', 'C', #0);
@@ -3087,7 +3097,10 @@ var
   TR4W_TCI_MAX_TX_SECONDS               : integer = 180;
 
 
-  TR4W_LC_FILENAME                      : PChar = 'LUCONSZ.TTF';
+  (* A NAME, NOT A POINTER.  The two Win32 font calls that consume it are
+    already {$IFDEF WINDOWS}-gated and take a PWideChar; they cast AT the
+    call, which is where a transport's pointer belongs. *)
+  TR4W_LC_FILENAME                      : string = 'LUCONSZ.TTF';
 
   CPUstart, CPUstop                     : int64;
   WindowsOSversion                      : Cardinal;
