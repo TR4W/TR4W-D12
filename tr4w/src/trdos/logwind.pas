@@ -422,7 +422,10 @@ type
   CallWindowPositionType = (NormalCallWindowPosition, UpOneCallWindowPosition);
 
 const
-  ZoneMultTypeSA                        : array[ZoneMultType] of PAnsiChar =
+
+(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
+    CFGCA and nothing reads this through a pointer any more. *)
+    ZoneMultTypeSA                        : array[ZoneMultType] of string =
     (
     'NONE',
     'CQ ZONES',

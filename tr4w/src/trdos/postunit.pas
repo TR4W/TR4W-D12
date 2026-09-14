@@ -268,7 +268,7 @@ const
   NumberErmakOverlayCategories = 11;
 
   ErmakOverlayCategory: array [ 0 .. NumberErmakOverlayCategories - 1 ]
-     of PAnsiChar = ( 'YL', 'JR', 'JR-13', 'JR-15', 'JR-18', 'JR-19', 'VETERAN',
+     of string = ( 'YL', 'JR', 'JR-13', 'JR-15', 'JR-18', 'JR-19', 'VETERAN',
      'SPECIAL', 'OVER-50', 'OVER-100', 'POLAR' );
 
   { OperatorCategory                      : array[0..NumberOperatorCategories - 1] of PChar = (
@@ -276,18 +276,18 @@ const
     'MULTI-OP',
     'CHECKLOG');
   }
-  TimeCategory: array [ 0 .. NumberTimeCategories - 1 ] of PAnsiChar =
+  TimeCategory: array [ 0 .. NumberTimeCategories - 1 ] of string =
      ( '6-HOURS', '8-HOURS', '12-HOURS', '24-HOURS' );
 
   TransmitterCategory: array [ 0 .. NumberTransmitterCategories - 1 ]
-     of PAnsiChar = ( 'ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL' );
+     of string = ( 'ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL' );
   {
     AssistedCategory                      : array[0..NumberAssistedCategories - 1] of PChar = (
     'NON-ASSISTED',
     'ASSISTED'
     );
   }
-  StationCategory: array [ 0 .. NumberStationCategories - 1 ] of PAnsiChar =
+  StationCategory: array [ 0 .. NumberStationCategories - 1 ] of string =
      ( 'DISTRIBUTED', 'FIXED', 'MOBILE', 'PORTABLE', 'ROVER', 'ROVER-LIMITED',
      'ROVER-UNLIMITED', 'EXPEDITION', 'HQ', 'SCHOOL', 'EXPLORER' );
   {
@@ -318,11 +318,11 @@ const
     'SSB',
     'MIXED');
   }
-  OverlayCategory: array [ 0 .. NumberOverlayCategories - 1 ] of PAnsiChar =
+  OverlayCategory: array [ 0 .. NumberOverlayCategories - 1 ] of string =
      ( 'CLASSIC', // n4af 4.35.4
      'ROOKIE', 'TB-WIRES', 'YOUTH', 'NOVICE-TECH', 'YL' );
 
-  Certificate: array [ 0 .. NumberCertificateCategories - 1 ] of PAnsiChar = (
+  Certificate: array [ 0 .. NumberCertificateCategories - 1 ] of string = (
      // N4AF 37.0.1
      'YES', 'NO' );
 

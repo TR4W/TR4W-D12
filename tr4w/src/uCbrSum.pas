@@ -82,11 +82,6 @@ type
 //    ctAntennas
     );
 
-  TCategoriesValuesRecord = record
-    cvrStart: PAnsiChar;
-    cvrCount: integer;
-  end;
-
   TCabrilloTagRecord = record
     ctrTag: PAnsiChar;
     ctrCFG: boolean; //do not used
@@ -115,23 +110,24 @@ type
     ctrOpen: boolean;
   end;
 
+(* THE VALUES A CABRILLO CATEGORY TAG OFFERS.
+
+  WAS A TABLE OF POINTERS -- `cvrStart: PAnsiChar` plus a count -- which the
+  summary dialog walked with a ^PAnsiChar and Inc(). NY4I, 2026-09-13: "we
+  don't need pointers."
+
+  A FUNCTION, NOT A CONST TABLE, because the answer now comes from arrays of
+  string that live in two different units, and a const record cannot hold a
+  dynamic array. It is also the honest shape: a tag either offers a list or it
+  does not, and the empty result says which without a bounds test at the call
+  site.
+
+  THE SIX THAT ARE SETTINGS COME FROM THE SETTINGS TABLES, so the dialog, the
+  drop-down and the refusal read one vocabulary. The other three are Cabrillo
+  header vocabularies with no setting behind them and come from PostUnit. *)
+function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
+
 const
-
-    CategoriesArray                       : array[ctCategoryAssisted..ctCategoryOverlay] of TCategoriesValuesRecord =
-   //    CategoriesArray                       : array[0..8] of TCategoriesValuesRecord =
-    (
-{   ctCategoryAssisted    }(cvrStart: @tCategoryAssistedSA; cvrCount: integer(High(tCategoryAssisted))),
-{   ctCategoryBand        }(cvrStart: @tCategoryBandSA; cvrCount: integer(High(tCategoryBand))),
-{   ctCategoryMode        }(cvrStart: @tCategoryModeSA; cvrCount: integer(High(tCategoryMode))),
-//{   ctCertificate         }(cvrStart: @tCertificateSA; cvrCount: integer(High(tCertificate))),
-{   ctCategoryOperator    }(cvrStart: @tCategoryOperatorSA; cvrCount: integer(High(tCategoryOperator))),
-{   ctCategoryPower       }(cvrStart: @tCategoryPowerSA; cvrCount: integer(High(tCategoryPower))),
-{   ctCategoryStation     }(cvrStart: @StationCategory; cvrCount: NumberStationCategories - 1),
-{   ctCategoryTime        }(cvrStart: @TimeCategory; cvrCount: NumberTimeCategories - 1),
-{   ctCategoryTransmitter }(cvrStart: @TransmitterCategory; cvrCount: NumberTransmitterCategories - 1),
-{   ctCategoryOverlay     }(cvrStart: @OverlayCategory; cvrCount: NumberOverlayCategories - 1)
-    );
-
  // 4.72.8 allow most tags to save to tr4w.ini in settings, allowing preload
   CabrilloTagsArray                     : array[CabrilloTags] of TCabrilloTagRecord =
     (
@@ -199,6 +195,44 @@ implementation
 uses
   uCabrilloHeader,          { the header store, settings\tr4w.json }
   uCabrilloSummaryForm;
+
+(* ONE HELPER, because the six settings tables and the three PostUnit ones are
+  the same shape once they are strings: copy the table into the result. *)
+function ValuesOf(const aTable: array of string): TArray<string>;
+var
+   i: integer;
+begin
+   SetLength(Result, Length(aTable));
+   for i := 0 to High(aTable) do
+      begin
+      Result[i] := aTable[i];
+      end;
+end;
+
+function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
+begin
+   (* NOT EVERY LISTED TAG HAS ONE. The old table stopped at ctCategoryOverlay
+     and the caller had to bounds-test before indexing it; an empty result
+     says the same thing without that. *)
+   Result := nil;
+
+   case aTag of
+      ctCategoryAssisted:    Result := ValuesOf(tCategoryAssistedSA);
+      ctCategoryBand:        Result := ValuesOf(tCategoryBandSA);
+      ctCategoryMode:        Result := ValuesOf(tCategoryModeSA);
+      ctCategoryOperator:    Result := ValuesOf(tCategoryOperatorSA);
+      ctCategoryPower:       Result := ValuesOf(tCategoryPowerSA);
+      (* THE TRANSMITTER LIST CAME FROM PostUnit, NOT FROM THE SETTINGS TABLE,
+        and it still does. The two are identical today -- ONE, TWO, LIMITED,
+        UNLIMITED, SWL -- but they are separate statements of the vocabulary
+        and merging them is a decision about the Cabrillo header, not a
+        side effect of removing a pointer. *)
+      ctCategoryTransmitter: Result := ValuesOf(TransmitterCategory);
+      ctCategoryStation:     Result := ValuesOf(StationCategory);
+      ctCategoryTime:        Result := ValuesOf(TimeCategory);
+      ctCategoryOverlay:     Result := ValuesOf(OverlayCategory);
+   end;
+end;
 
 // Both header sections live in settings\tr4w.json: [REPORT] moved 2026-08-16
 // because it was the last thing keeping tr4w.ini load-bearing -- delete the ini

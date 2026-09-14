@@ -90,6 +90,11 @@ uses
    SysUtils,
    uSettingsModel,
    FContest,       // RecalculateMyCountryContinentAndZoneNew
+   VC,             (* the multiplier spelling tables and ActiveDXMult --
+                     the contest engine owns these, the settings hold the
+                     token, and this is where one becomes the other *)
+   LogDupe,        // DXMultTypenameArray, ActivePrefixMult
+   LogDom,         // DomesticMultStringArray, ActiveDomesticMult
    LogWind,        (* Settings.My.Call -- the callsign the derivation starts
                      from; DispalayLogGridLines; DisplayInsertMode *)
                    // DisplayInsertMode, the INS/OVR panel;
@@ -152,6 +157,10 @@ const
      form and does nothing when it gets nil. *)
    STATIONS_CALLSIGNS_MASK = 'Stations.CallsignsMask';
    CONTEST_NAME            = 'Contest.Name';
+   DOMESTIC_MULTIPLIER     = 'Contest.DomesticMultiplier';
+   DX_MULTIPLIER           = 'Contest.DxMultiplier';
+   PREFIX_MULTIPLIER       = 'Contest.PrefixMultiplier';
+   ZONE_MULTIPLIER         = 'Contest.ZoneMultiplier';
    SHOW_DOMESTIC_NAME      = 'RemainingMults.ShowDomesticName';
    REMAINING_MULT_DISPLAY  = 'RemainingMults.DisplayMode';
    (* INSERT OR OVERWRITE, shown on a panel of the main window. crP: 8,
@@ -227,6 +236,50 @@ begin
 end;
 
 
+(* ONE TOKEN, ONE TABLE, ONE INDEX -- the ckList arm of CheckCommand, lifted.
+
+  The four multiplier modes are separate enums with separate spelling tables,
+  so the only thing they share is the RULE: find the token in the table and
+  assign its index. Writing it four times would be four chances to differ.
+
+  STRINGS THROUGHOUT, NOT A Pointer AND A LENGTH. The first version of this
+  took `aTable: Pointer` and called TF.GetValueFromArray, because the tables
+  were still PAnsiChar -- NY4I asked why, and the answer was that I had
+  bridged instead of converting. The tables are string arrays now: an open
+  array carries its own bounds, so the aHigh parameter is gone too, and a
+  wrong length can no longer walk off the end.
+
+  THE TARGET IS STILL A Byte POINTER, and that one is real: the four globals
+  are four DIFFERENT enum types, so there is no single typed reference that
+  can name them all. It is the ordinal that is assigned, exactly as
+  ListParamArray's lpVar did. *)
+procedure ApplyMultiplierToken(const aToken: string;
+                               const aTable: array of string;
+                               const aTarget: PByte);
+var
+   i: integer;
+   token: string;
+begin
+   token := Trim(aToken);
+   if token = '' then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to High(aTable) do
+      begin
+      if UnicodeSameText(aTable[i], token) then
+         begin
+         (* UNKNOWN LEAVES THE VALUE ALONE, which is why this assigns inside
+           the match rather than after the loop: a token the table does not
+           have must not become some other multiplier mode and silently
+           rescore the contest. *)
+         aTarget^ := Byte(i);
+         Exit;
+         end;
+      end;
+end;
+
 procedure SettingChanged(const aPath: string);
 begin
    if UnicodeSameText(aPath, MY_COUNTRY) or UnicodeSameText(aPath, MY_ZONE)
@@ -236,6 +289,42 @@ begin
         looked up and an unstated one is derived. Passing the callsign is
         what it needs to derive FROM. *)
       RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
+      end;
+
+   (* A MULTIPLIER TOKEN BECOMES THE LIVE MODE.
+
+     The setting is a string -- the spelling an operator's config file has
+     always used -- and the contest engine reads an enum. This is the whole of
+     what the four ckList rows did: match the token against the subsystem's
+     own table and assign the ordinal.
+
+     UNKNOWN LEAVES THE VALUE ALONE. GetValueFromArray answers UNKNOWNTYPE for
+     a spelling it does not have, and a refusal that corrected the mode to
+     something else would silently rescore the contest. The registered
+     vocabulary means CheckCommand refuses such a value before it ever gets
+     here; this is the second guard, not the first. *)
+   if UnicodeSameText(aPath, DOMESTIC_MULTIPLIER) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.DomesticMultiplier, DomesticMultStringArray,
+                           @ActiveDomesticMult);
+      end;
+
+   if UnicodeSameText(aPath, DX_MULTIPLIER) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.DxMultiplier, DXMultTypenameArray,
+                           @ActiveDXMult);
+      end;
+
+   if UnicodeSameText(aPath, PREFIX_MULTIPLIER) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.PrefixMultiplier, PrefixMultStringArray,
+                           @ActivePrefixMult);
+      end;
+
+   if UnicodeSameText(aPath, ZONE_MULTIPLIER) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.ZoneMultiplier, ZoneMultTypeSA,
+                           @ActiveZoneMult);
       end;
 
    if UnicodeSameText(aPath, CONTEST_NAME) then

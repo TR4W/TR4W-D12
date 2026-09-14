@@ -212,7 +212,10 @@ type
   end;
 
 const
-  DXMultTypenameArray                   : array[DXMultType] of PAnsiChar =
+
+(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
+    CFGCA and nothing reads this through a pointer any more. *)
+    DXMultTypenameArray                   : array[DXMultType] of string =
     (
 //    'NO COUNT', //    NoCountDXMults,
     'NONE', //    NoDXMults,

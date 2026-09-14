@@ -440,9 +440,9 @@ begin
                           RS_CONTEST_COUNTDOMESTICCOUNTRIES);
    RegisterModelSetting( 'contest.customInitialExchangeString','CUSTOM INITIAL EXCHANGE STRING',
                           RS_CONTEST_CUSTOMINITIALEXCHANGESTRING);
-   RegisterStoredSetting('contest.domesticMultiplier',  'DOMESTIC MULTIPLIER',
+   RegisterModelSetting( 'contest.domesticMultiplier',  'DOMESTIC MULTIPLIER',
                           RS_CONTEST_DOMESTICMULTIPLIER);
-   RegisterStoredSetting('contest.dxMultiplier',        'DX MULTIPLIER',
+   RegisterModelSetting( 'contest.dxMultiplier',        'DX MULTIPLIER',
                           RS_CONTEST_DXMULTIPLIER);
    RegisterModelSetting( 'contest.exchangeMemoryEnable','EXCHANGE MEMORY ENABLE',
                           RS_CONTEST_EXCHANGEMEMORYENABLE);
@@ -492,7 +492,7 @@ begin
      them, so it belongs before its first use. *)
    RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
                           RS_CONTEST_MULTREPORTMINIMUMBANDS);
-   RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
+   RegisterModelSetting( 'contest.prefixMultiplier',    'PREFIX MULTIPLIER',
                           RS_CONTEST_PREFIXMULTIPLIER);
    RegisterStoredSetting('contest.qslMode',             'QSL MODE',
                           RS_CONTEST_QSLMODE);
@@ -643,7 +643,7 @@ begin
                           RS_CONTEST_SPRINTQSYRULE);
    RegisterModelSetting( 'contest.tenMinuteRule',       'TEN MINUTE RULE',
                           RS_CONTEST_TENMINUTERULE);
-   RegisterStoredSetting('contest.zoneMultiplier',      'ZONE MULTIPLIER',
+   RegisterModelSetting( 'contest.zoneMultiplier',      'ZONE MULTIPLIER',
                           RS_CONTEST_ZONEMULTIPLIER);
 
    // --- Operating (34) --------------------------------

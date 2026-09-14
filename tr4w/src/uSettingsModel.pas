@@ -2720,9 +2720,17 @@ type
       FCategoryPower: tCategoryPower;
       FCategoryTransmitter: tCategoryTransmitter;
       FCategoryOverlay: string;
+      FDomesticMultiplier: string;
+      FDxMultiplier: string;
+      FPrefixMultiplier: string;
+      FZoneMultiplier: string;
       FHamscoreEnable: boolean;
       FR150SMode: boolean;
       FRfoblMode: boolean;
+      procedure SetDomesticMultiplier(const aValue: string);
+      procedure SetDxMultiplier(const aValue: string);
+      procedure SetPrefixMultiplier(const aValue: string);
+      procedure SetZoneMultiplier(const aValue: string);
       procedure SetName(const aValue: string);
    public
       constructor Create;
@@ -2858,6 +2866,32 @@ type
         is no enum to move. *)
       property CategoryOverlay: string
          read FCategoryOverlay write FCategoryOverlay;
+      (* THE FOUR MULTIPLIER MODES, AS TOKENS.
+
+        THE ENUM STAYS WITH THE SUBSYSTEM, which is NY4I's rule for the radio,
+        the external logger and the rotator, and it applies with more force
+        here: DXMultType and its three siblings are the CONTEST ENGINE's
+        vocabulary -- sixty-odd values whose order is load-bearing (
+        PrefixMultType's own comment says "ORDER MUST MATCH PREFIXMULTSTRING
+        ARRAY BELOW"), read at 149 sites in logdom, logdupe, logstuff and
+        uMults. Moving them here would buy nothing and cost all of that.
+
+        THE TOKEN IS WHAT A CONFIG FILE ALREADY WRITES -- 'DOMESTIC FILE',
+        'ARRL DXCC', 'CQ ZONES' -- and uCFG registers the vocabulary from the
+        very tables CheckCommand matched against, so there is still exactly
+        one statement of what each may say.
+
+        THE SETTERS ARE THE APPLY. Each raises Changed(), and uSettingsEffects
+        turns the token back into the live global the engine reads. That is
+        what the ckList row did, minus the row. *)
+      property DomesticMultiplier: string
+         read FDomesticMultiplier write SetDomesticMultiplier;
+      property DxMultiplier: string
+         read FDxMultiplier write SetDxMultiplier;
+      property PrefixMultiplier: string
+         read FPrefixMultiplier write SetPrefixMultiplier;
+      property ZoneMultiplier: string
+         read FZoneMultiplier write SetZoneMultiplier;
       (*
         POST LIVE SCORES FOR THIS CONTEST.
 
@@ -3482,38 +3516,41 @@ procedure RegisterSettingValueCheck(const aPath: string;
 procedure RegisterSettingAllowedValues(const aPath: string;
                                        const aValues: array of string);
 
+
 (* THE CABRILLO CATEGORY SPELLINGS, MOVED VERBATIM FROM VC WITH THEIR TYPES
   -- same names, same PAnsiChar element type, same order.
 
-  PUBLIC, unlike every other moved enum's table, because these have an
-  EXTERNAL CONSUMER: uCbrSum's CategoriesArray holds POINTERS to them and the
-  Cabrillo summary dialog indexes them as PAnsiChar arrays. A separate
-  `array[Enum] of string` beside them would be a second statement of one
-  vocabulary, and swapping the element type under a pointer fails at RUN time
-  rather than at compile time. The settings vocabulary is BUILT from these at
-  registration, so the drop-down, the refusal and the dialog cannot disagree.
+  PUBLIC because they have an EXTERNAL CONSUMER: the Cabrillo summary dialog
+  fills its combo boxes from them. They are registered as the settings
+  vocabulary DIRECTLY -- one table, so the drop-down, the refusal and the
+  dialog cannot disagree.
+
+  PLAIN STRINGS. They were array-of-PAnsiChar when they arrived from VC, and
+  uCbrSum reached them through a pointer table the dialog walked with Inc().
+  NY4I, 2026-09-13: "we don't need pointers." The pointer table is a function
+  returning TArray<string> now, so nothing indexes these by address.
 
   DOWN HERE, NOT BESIDE THE TYPES, and that is not cosmetic: a const block
   between `TR4WSettings = class;` and the class that completes it ENDS the
   type section, and FPC requires a forward class to be completed in the SAME
   section. This tree has lost a build to exactly that. *)
 const
-   tCategoryAssistedSA: array[tCategoryAssisted] of PAnsiChar =
+   tCategoryAssistedSA: array[tCategoryAssisted] of string =
       ('NON-ASSISTED', 'ASSISTED');
-   tCategoryBandSA: array[tCategoryBand] of PAnsiChar =
+   tCategoryBandSA: array[tCategoryBand] of string =
       ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M',
        '222', '432', '902', '1.2G');
    (* THE KNOWN SWAP IS PRESERVED: cmDIGITAL spells 'RTTY' and cmRTTY spells
      'DIGI'. VC's own comment called it a follow-up; correcting it changes
      what an operator's existing file means, so it is a deliberate decision
      with a log-format consequence rather than a side effect of this move. *)
-   tCategoryModeSA: array[tCategoryMode] of PAnsiChar =
+   tCategoryModeSA: array[tCategoryMode] of string =
       ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM');
-   tCategoryOperatorSA: array[tCategoryOperator] of PAnsiChar =
+   tCategoryOperatorSA: array[tCategoryOperator] of string =
       ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG');
-   tCategoryPowerSA: array[tCategoryPower] of PAnsiChar =
+   tCategoryPowerSA: array[tCategoryPower] of string =
       ('HIGH', 'LOW', 'QRP');
-   tCategoryTransmitterSA: array[tCategoryTransmitter] of PAnsiChar =
+   tCategoryTransmitterSA: array[tCategoryTransmitter] of string =
       ('ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL');
 
 function Settings: TR4WSettings;
@@ -4164,6 +4201,26 @@ begin
    FMulticastGroup      := '';
 end;
 
+procedure TContestSettings.SetDomesticMultiplier(const aValue: string);
+begin
+   SetStr(FDomesticMultiplier, aValue, 'DomesticMultiplier');
+end;
+
+procedure TContestSettings.SetDxMultiplier(const aValue: string);
+begin
+   SetStr(FDxMultiplier, aValue, 'DxMultiplier');
+end;
+
+procedure TContestSettings.SetPrefixMultiplier(const aValue: string);
+begin
+   SetStr(FPrefixMultiplier, aValue, 'PrefixMultiplier');
+end;
+
+procedure TContestSettings.SetZoneMultiplier(const aValue: string);
+begin
+   SetStr(FZoneMultiplier, aValue, 'ZoneMultiplier');
+end;
+
 procedure TContestSettings.SetName(const aValue: string);
 begin
    (* SetStr raises Changed('Contest.Name'), which uSettingsEffects turns into
@@ -4530,6 +4587,14 @@ begin
      buffer this replaces.  A bare name, resolved under the log and then the
      program directory by EnumerateLinesInFile. *)
    FInitialExchangeFilename := 'INITIAL.EX';
+   (* 'NONE' IS THE FIRST SPELLING IN ALL FOUR TABLES, and it is the value the
+     enums carry at zero -- NoDomesticMults, NoDXMults, NoPrefixMults,
+     NoZoneMults. Empty would not be in the allow-list, which a test says
+     plainly: a setting with a vocabulary has to hold one of its own values. *)
+   FDomesticMultiplier := 'NONE';
+   FDxMultiplier       := 'NONE';
+   FPrefixMultiplier   := 'NONE';
+   FZoneMultiplier     := 'NONE';
    FDomesticFilename       := '';
    FExchangeMemoryEnable   := True;
    FMultipleBands          := True;
@@ -5100,6 +5165,10 @@ begin
    Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
    Alias('POSSIBLE CALL MODE', 'Scp.PossibleCallMode');
    Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
+   Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
+   Alias('DX MULTIPLIER',        'Contest.DxMultiplier');
+   Alias('PREFIX MULTIPLIER',    'Contest.PrefixMultiplier');
+   Alias('ZONE MULTIPLIER',      'Contest.ZoneMultiplier');
    Alias('CATEGORY-ASSISTED',    'Contest.CategoryAssisted');
    Alias('CATEGORY-BAND',        'Contest.CategoryBand');
    Alias('CATEGORY-MODE',        'Contest.CategoryMode');
@@ -6015,20 +6084,6 @@ const
        'FOC NUMBER', 'GRID', 'CQ ZONE', 'ITU ZONE', 'USER 1', 'USER 2',
        'USER 3', 'USER 4', 'USER 5', 'CUSTOM');
 
-(* THE ONE TABLE, RENDERED AS THE VOCABULARY.  The Cabrillo category
-  spellings are PAnsiChar because a pointer table in uCbrSum indexes them;
-  this is the only place that difference shows, and it shows once. *)
-function PAnsiCharVocabulary(const aValues: array of PAnsiChar): TArray<string>;
-var
-   i: integer;
-begin
-   SetLength(Result, Length(aValues));
-   for i := 0 to High(aValues) do
-      begin
-      Result[i] := string(AnsiString(aValues[i]));
-      end;
-end;
-
 initialization
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.
 
@@ -6056,17 +6111,17 @@ initialization
    RegisterSettingAllowedValues('MainWindow.UserInfoShown',
                                 USER_INFO_SPELLINGS);
    RegisterSettingAllowedValues('Contest.CategoryAssisted',
-                                PAnsiCharVocabulary(tCategoryAssistedSA));
+                                tCategoryAssistedSA);
    RegisterSettingAllowedValues('Contest.CategoryBand',
-                                PAnsiCharVocabulary(tCategoryBandSA));
+                                tCategoryBandSA);
    RegisterSettingAllowedValues('Contest.CategoryMode',
-                                PAnsiCharVocabulary(tCategoryModeSA));
+                                tCategoryModeSA);
    RegisterSettingAllowedValues('Contest.CategoryOperator',
-                                PAnsiCharVocabulary(tCategoryOperatorSA));
+                                tCategoryOperatorSA);
    RegisterSettingAllowedValues('Contest.CategoryPower',
-                                PAnsiCharVocabulary(tCategoryPowerSA));
+                                tCategoryPowerSA);
    RegisterSettingAllowedValues('Contest.CategoryTransmitter',
-                                PAnsiCharVocabulary(tCategoryTransmitterSA));
+                                tCategoryTransmitterSA);
 
 finalization
    FreeSettings;

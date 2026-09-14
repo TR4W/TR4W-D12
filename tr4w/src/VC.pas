@@ -3182,7 +3182,10 @@ type
     );
    // 4.67.9 NOTE: ORDER MUST MATCH PREFIXMULTTYPE (ABOVE)
 const
-  PrefixMultStringArray                 : array[PrefixMultType] of PAnsiChar =
+
+(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
+    CFGCA and nothing reads this through a pointer any more. *)
+    PrefixMultStringArray                 : array[PrefixMultType] of string =
     (
     'NONE',
     'ASIAN PREFIXES',
@@ -3354,7 +3357,10 @@ type
 
 const
 
-  DomesticMultStringArray               : array[DomesticMultType] of PAnsiChar =
+
+(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
+    CFGCA and nothing reads this through a pointer any more. *)
+    DomesticMultStringArray               : array[DomesticMultType] of string =
     (
     'NONE',
     'WYSIWYG',

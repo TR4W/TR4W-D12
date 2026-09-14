@@ -471,7 +471,9 @@ const
     (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @QSOPointMethodArray;               lpLength: Byte(High(QSOPointMethodType));     lpVar: @ActiveQSOPointMethod),
     (lpArray: @ParameterOkayModeTypeStringArray;  lpLength: Byte(High(ParameterOkayModeType));  lpVar: @ParameterOkayMode; ),
-    (lpArray: @PrefixMultStringArray;             lpLength: Byte(High(PrefixMultType));         lpVar: @ActivePrefixMult; ),
+    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
+      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @ModeStringArray;                   lpLength: Byte(High(ModeType));               lpVar: @ActiveMode; ),
@@ -483,12 +485,16 @@ const
     (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @FootSwitchModeTypeStringArray;     lpLength: Byte(High(FootSwitchModeType));     lpVar: @FootSwitchMode; ),
 {10}(lpArray: @ActiveExchangeArray;               lpLength: Byte(High(ExchangeType));           lpVar: @ActiveExchange; ),
-    (lpArray: @DXMultTypenameArray;               lpLength: Byte(High(DXMultType));             lpVar: @ActiveDXMult; ),
+    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
+      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @DomesticMultStringArray;           lpLength: Byte(High(DomesticMultType));       lpVar: @ActiveDomesticMult; ),
+    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
+      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
@@ -515,7 +521,9 @@ const
 {20}(lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @ContinentTypeSA;                   lpLength: Byte(High(ContinentType));          lpVar: @MyContinent; ),
     (lpArray: @ContestTypeSA;                     lpLength: Byte(High(ContestType));            lpVar: @Contest; ),
-    (lpArray: @ZoneMultTypeSA;                    lpLength: Byte(High(ZoneMultType));           lpVar: @ActiveZoneMult; ),
+    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
+      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @BandStringsArrayWithOutSpaces;     lpLength: Byte(High(BandType));               lpVar: @ActiveBand; ),
     (lpArray: @BandStringsArrayWithOutSpaces;     lpLength: Byte(High(BandType));               lpVar: @SingleBand; ),
     (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
@@ -770,6 +778,12 @@ const
      -- a modal "invalid statement in config file" for a perfectly good
      CATEGORY-OVERLAY: ROOKIE. It has a property of its own now. *)
    - 7 {the Cabrillo CATEGORY-* keys}
+   (* THE FOUR MULTIPLIER MODES, on the subsystem pattern: the enum stays with
+     the contest engine, the SETTING is the token a config file already
+     writes, and uSettingsEffects turns one into the other. Moving the enums
+     here instead would have dragged sixty order-sensitive values and 149
+     consumers into the settings model for no gain. *)
+   - 4 {DOMESTIC / DX / PREFIX / ZONE MULTIPLIER}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -906,9 +920,7 @@ const
  (crCommand: 'CW ENABLE';                     crAddress: @Config.CWEnable;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'CW TONE';                       crAddress: @Config.CWTone;                         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
- (crCommand: 'DOMESTIC MULTIPLIER';           crAddress: pointer(13);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'DX MULTIPLIER';                 crAddress: pointer(11);                     crMin:0;  crMax:0;       crS: csJSON; crA:20; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'EXCHANGE RECEIVED';             crAddress: pointer(10);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 
 
@@ -1008,7 +1020,6 @@ const
 
      crA is 0 now.  CheckCommand exits on csRem before it reaches the hook,
      so leaving the index would have pointed at code that could not run. *)
- (crCommand: 'PREFIX MULTIPLIER';             crAddress: pointer(3);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'QSL MODE';                      crAddress: pointer(2);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'QSO POINT METHOD';              crAddress: pointer(1);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.Radio.TcpServerPort now. *)
@@ -1060,9 +1071,8 @@ const
     Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
     ApplyStoredCommands walking the store's `commands` section -- is accepted
     silently rather than reported as refused. *)
- (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
+ (crCommand: 'WEIGHT';                        crAddress: @Config.Weight;                                         crMin:5;  crMax:15;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1)
   (* WITHDRAWN 2026-09-10: Settings.Yccc.So2rEnable. *)
- (crCommand: 'ZONE MULTIPLIER';               crAddress: pointer(23);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 2; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier)
     {*)}
       );
 function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
@@ -3022,5 +3032,22 @@ initialization
      2026-09-13 -- it named WHICH LPT PIN drove the headphone relay. *)
    RegisterSettingAllowedValues('Scp.MinimumLetters',
                                 IntegerVocabulary(SCP_MINIMUM_LETTERS_ARRAY));
+
+   (* THE FOUR MULTIPLIER VOCABULARIES, from the very tables CheckCommand
+     matched their ckList rows against -- so the drop-down, the refusal and
+     the engine cannot disagree about what 'ARRL DXCC' means.
+
+     HERE rather than in uSettingsModel for the reason MY COUNTRY's check is:
+     the unit that can SEE the vocabulary is the one that registers it. These
+     four tables live in VC, logdupe and logwind, none of which the settings
+     model imports. *)
+   RegisterSettingAllowedValues('Contest.DomesticMultiplier',
+                                DomesticMultStringArray);
+   RegisterSettingAllowedValues('Contest.DxMultiplier',
+                                DXMultTypenameArray);
+   RegisterSettingAllowedValues('Contest.PrefixMultiplier',
+                                PrefixMultStringArray);
+   RegisterSettingAllowedValues('Contest.ZoneMultiplier',
+                                ZoneMultTypeSA);
 
 end.

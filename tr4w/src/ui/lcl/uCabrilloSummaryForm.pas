@@ -130,12 +130,6 @@ uses
    MainUnit,              { logger }
    Log4D;
 
-type
-   { CategoriesArray points at arrays of PAnsiChar and the Win32 code walked
-     them with cvrStart + n * 4.  Named, so the stride is the compiler's
-     business rather than a literal that is wrong on any other target. }
-   PPAnsiCharItem = ^PAnsiChar;
-
 var
    GForm: TfrmCabrilloSummary = nil;
 
@@ -175,21 +169,17 @@ end;
 procedure TfrmCabrilloSummary.FillCategoryItems(const aTag: CabrilloTags;
                                                 const aCombo: TComboBox);
 var
-   item: PPAnsiCharItem;
-   i   : integer;
+   values: TArray<string>;
+   i     : integer;
 begin
-   { Not every listed tag has a category array -- CategoriesArray stops at
-     ctCategoryOverlay.  Indexing past it would read whatever follows. }
-   if (aTag < Low(CategoriesArray)) or (aTag > High(CategoriesArray)) then
+   (* A LIST OF STRINGS, NOT A POINTER AND A COUNT.  This walked a
+     ^PAnsiChar with Inc() over a const table of addresses, and needed a
+     bounds test first because the table stopped short of the tag range.
+     An empty result says "no list" on its own. *)
+   values := CategoryValuesFor(aTag);
+   for i := 0 to High(values) do
       begin
-      Exit;
-      end;
-
-   item := PPAnsiCharItem(CategoriesArray[aTag].cvrStart);
-   for i := 0 to CategoriesArray[aTag].cvrCount do
-      begin
-      aCombo.Items.Add(AnsiString(item^));
-      Inc(item);
+      aCombo.Items.Add(values[i]);
       end;
 end;
 

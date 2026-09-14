@@ -242,7 +242,13 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # string property MOVES its conversions to whatever still holds a ShortString
 # -- so the count rises by two while two ShortStrings disappear, and it falls
 # again as those consumers convert. Raised deliberately and with a reason.
-$NARROW_CEILING = 1355
+# 1355 -> 1362, 2026-09-13: ten spelling tables stopped being
+# `array[Enum] of PAnsiChar` and became string arrays (NY4I: "we don't need
+# pointers"). The conversions move to whatever still holds an AnsiString --
+# postunit and the Cabrillo dialog -- so the count rises while ten pointer
+# tables and one pointer-walking loop disappear, and falls again as those
+# units convert. Raised deliberately and with a reason.
+$NARROW_CEILING = 1362
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

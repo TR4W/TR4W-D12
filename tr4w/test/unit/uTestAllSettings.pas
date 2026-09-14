@@ -378,9 +378,20 @@ begin
          end;
       end;
 
-   CheckTrue(readOnly > 20,
+   (* THE FLOOR FOLLOWS THE ROWS DOWN, and has to.
+
+     Read-only came from crJ 2 and 3 on a CFGCA row (uSettingsLegacy), so this
+     floor counted rows. The array is being emptied on purpose: a migrated
+     setting carries the attribute through RegisterModelSetting instead, and
+     any that is NOT yet marked is a legacy row that has left. A floor tied to
+     the old row count fails on the finished state, which is the same mistake
+     Lint-SettingsMigration's row floor made.
+
+     STILL A FLOOR, because zero would mean the walk broke -- and the named
+     assertions below are what actually pin WHICH settings are read-only. *)
+   CheckTrue(readOnly > 10,
              'only ' + IntToStr(readOnly) + ' settings are marked read-only; '
-             + 'crJ 2 and 3 cover 88 rows');
+             + 'the walk looks broken');
    CheckTrue(sideEffect > 10,
              'only ' + IntToStr(sideEffect) + ' settings report side effects; '
              + 'about thirty rows carry a crP handler');

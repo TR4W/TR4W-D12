@@ -213,11 +213,10 @@ foreach ($f in $sources)
 # IntegerVocabulary(SCP_MINIMUM_LETTERS_ARRAY) is deliberately NOT followed: an
 # allow-list of numbers has no spellings to check for duplicates or blanks.
 #
-# PAnsiCharVocabulary IS followed, because what it wraps is a spelling table in
-# every sense this lint cares about. The Cabrillo category tables are registered
-# that way -- they stay `array[Enum] of PAnsiChar` because uCbrSum's
-# CategoriesArray holds POINTERS to them, so the vocabulary is rendered from the
-# one table rather than duplicated as strings beside it.
+# PAnsiCharVocabulary was followed here for a few hours on 2026-09-13, while
+# the Cabrillo category tables were still PAnsiChar. They are string arrays now
+# and register as bare identifiers again, so the wrapper is only still matched
+# in case another one appears.
 #
 # IT WAS FOUND BY THE FLOOR, which is what the floor is for. Those six tables
 # used to be reached through `lpArray: @NAME` in ListParamArray; their rows left

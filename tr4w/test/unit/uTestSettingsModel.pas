@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(275, names.Count,
+         CheckEquals(279, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1290,12 +1290,12 @@ const
       + '"DIGITAL MODE ENABLE",'
       + '"DISTANCE MODE",'
       + '"DIT DAH RATIO",'
-      + '"DOMESTIC FILENAME",'
+      + '"DOMESTIC FILENAME","DOMESTIC MULTIPLIER",'
       + '"DUPE CHECK SOUND",'
       + '"DUPE SHEET AUTO RESET",'
       + '"DVK ENABLE",'
       + '"DVK LOCALIZED MESSAGES ENABLE",' +
-      '"DVK PATH","DVK RECORDER",'
+      '"DVK PATH","DVK RECORDER","DX MULTIPLIER",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXCHANGE MEMORY ENABLE",'
       + '"EXTERNAL LOGGER",'
@@ -1377,7 +1377,7 @@ const
       + '"POSSIBLE CALL MODE",'
       + '"POSSIBLE CALL RIGHT KEY",'
       + '"POSSIBLE CALLS",'
-      + '"PSTROTATOR IP ADDRESS",'
+      + '"PREFIX MULTIPLIER","PSTROTATOR IP ADDRESS",'
       + '"PSTROTATOR UDP PORT",'
       + '"PTT ENABLE",'
       + '"PTT LOCKOUT",'
@@ -1482,7 +1482,7 @@ const
       + '"WSJT-X MULTICAST GROUP",'
       + '"WSJT-X RADIO CONTROL ENABLED",'
       + '"WSJT-X SEND HIGHLIGHTS",'
-      + '"YCCC SO2R ENABLE"';
+      + '"YCCC SO2R ENABLE","ZONE MULTIPLIER"';
 var
    s: TR4WSettings;
    names: TStringList;
