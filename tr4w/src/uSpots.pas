@@ -40,13 +40,33 @@ uses
 
 type
 
-  PSpotsList = ^TSpotsList;
-  TSpotsList = array[0..1000] of TSpotRecord;
+  (* A REAL DYNAMIC ARRAY (2026-09-14).
+
+    This was
+
+        PSpotsList = ^TSpotsList;
+        TSpotsList = array[0..1000] of TSpotRecord;
+
+    -- a POINTER to a fixed 1001-element block, ReallocMem'd to whatever size
+    was wanted and indexed as FList[i]. It is a dynamic array written by hand:
+    the declared bound was a fiction (nothing stopped index 1500, and nothing
+    would have said so), the capacity lived in a separate field, and growing
+    and shifting were done with ReallocMem and System.Move.
+
+    NY4I, 2026-09-14: "the band map which uses an array for an unknown reason
+    FList[i] in bandmap code. All that has to go away."
+
+    `array of TSpotRecord` IS the same structure with the compiler doing the
+    bookkeeping: SetLength grows it, Length knows how big it is, the bounds are
+    real, and FList[i] needs no dereference. TSpotRecord holds no managed
+    fields -- ShortStrings, AnsiChar arrays and ordinals -- so nothing about
+    the element copies changes. *)
+  TSpotsList = array of TSpotRecord;
 
   TDXSpotsList = object {class}
 
   private
-    FList: PSpotsList;
+    FList: TSpotsList;
     FCount{, j}: integer;
     FCurrentCursorFreq: integer;
     FCapacity: integer;
@@ -198,27 +218,27 @@ begin
      // 4.102.5 - filter the added spots to match the actual bm display
 
      if not Settings.BandMap.AllBands then
-       if FList^[i].FBand <> BandmapBand then
+       if FList[i].FBand <> BandmapBand then
           begin
           Continue; //Gav  ActiveBand changed to BandmapBand
           end;
      if not Settings.BandMap.AllModes then
-       if FList^[i].FMode <> BandmapMode then
+       if FList[i].FMode <> BandmapMode then
           begin
           Continue; //Gav  ActiveMode changed to BandmapMode
           end;
      if not Settings.BandMap.DupeDisplay then
-       if FList^[i].FDupe then
+       if FList[i].FDupe then
           begin
           Continue;
           end;
      if not Settings.BandMap.DisplayCQ then
-       if FList^[i].FCQ then
+       if FList[i].FCQ then
           begin
           Continue;
           end;
      if not Settings.Bands.WarcEnabled then
-       if FList^[i].FWARCBand then
+       if FList[i].FWARCBand then
           begin
           Continue;
           end;
@@ -229,16 +249,16 @@ begin
         Continue;
         end;
      if Settings.BandMap.MultsOnly then
-       if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
+       if not ((FList[i].FMult) or (FList[i].FCQ)) then
           begin
           Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
           end;
      if not Settings.Bands.VhfEnabled then
-       if (FList^[i].FBand > Band12) then
+       if (FList[i].FBand > Band12) then
           begin
           Continue;
           end;
-     if (FList^[i].FBand = Spot.FBand) and (FList^[i].FCall = Spot.FCall) then
+     if (FList[i].FBand = Spot.FBand) and (FList[i].FCall = Spot.FCall) then
         begin
         continue;
         end;
@@ -267,7 +287,7 @@ begin
      FCriticalSection.Leave;
   end;
   Add:    // How to experienced programmers write GoTo statements? I don't get it! // ny4i
-  FList^[Result] := Spot;
+  FList[Result] := Spot;
   RequestRepaint;
   //  if CallWinKeyDown then
   //   Windows.SetFocus(wh[mweCall]);
@@ -311,60 +331,60 @@ begin
   for i := 0 to FCount - 1 do
      begin
      // Drop a spot whose call matches the NEXT one in the frequency-sorted list.
-     // The last element has no next: `FList^[i + 1]` at i = FCount - 1 read one
+     // The last element has no next: `FList[i + 1]` at i = FCount - 1 read one
      // past the live entries, and past the declared array[0..1000] altogether
      // once the list was full, comparing against whatever happened to be there.
      // Usually that garbage did not match and the spot survived, so the bug was
      // invisible -- but a chance match silently dropped the highest spot.
-     if (i < FCount - 1) and (FList^[i].FCall = FList^[i + 1].FCall) then
+     if (i < FCount - 1) and (FList[i].FCall = FList[i + 1].FCall) then
         begin
         Inc(rejDupeNext);
         continue;
         end;
      if not Settings.BandMap.AllBands then
-       if FList^[i].FBand <> BandmapBand then
+       if FList[i].FBand <> BandmapBand then
           begin
           Inc(rejBand);
           Continue; //Gav  ActiveBand changed to BandmapBand
           end;
      if not Settings.BandMap.AllModes then
-       if FList^[i].FMode <> BandmapMode then
+       if FList[i].FMode <> BandmapMode then
           begin
           Inc(rejMode);
           Continue; //Gav  ActiveMode changed to BandmapMode
           end;
      if not Settings.BandMap.DupeDisplay then
-       if FList^[i].FDupe then
+       if FList[i].FDupe then
           begin
           Inc(rejDupeFlag);
           Continue;
           end;
      if not Settings.BandMap.DisplayCQ then
-       if FList^[i].FCQ then
+       if FList[i].FCQ then
           begin
           Inc(rejCQ);
           Continue;
           end;
      if not Settings.Bands.WarcEnabled then
-       if FList^[i].FWARCBand then
+       if FList[i].FWARCBand then
           begin
           Inc(rejWARC);
           Continue;
           end;
      if Settings.BandMap.MultsOnly then
-       if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
+       if not ((FList[i].FMult) or (FList[i].FCQ)) then
           begin
           Inc(rejMultsOnly);
           Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
           end;
      if not Settings.Bands.VhfEnabled then
-       if (FList^[i].FBand > Band12) then
+       if (FList[i].FBand > Band12) then
           begin
           Inc(rejVHF);
           Continue;
           end;
 
-     if FList^[i].FFrequency = FCurrentCursorFreq then
+     if FList[i].FFrequency = FCurrentCursorFreq then
         begin
         aCursorRow := NumberEntriesDisplayed;
         end;
@@ -385,11 +405,11 @@ begin
      begin
      // Every endpoint test below must go through aIndex.  The window
      // (bottom..top) indexes the FILTERED list, so asking the UNFILTERED FList
-     // about it is asking a different list: with any filter active FList^[0] is
-     // not the first spot on display, and FList^[FilteredSpotCount] is not the
+     // about it is asking a different list: with any filter active FList[0] is
+     // not the first spot on display, and FList[FilteredSpotCount] is not the
      // last -- it is an unrelated spot, and off the end of the array[0..1000]
      // once the list fills up.
-     if FList^[aIndex[0]].FFrequency >= BandMapCursorFrequency then
+     if FList[aIndex[0]].FFrequency >= BandMapCursorFrequency then
         begin
         // Everything on display is at or above the cursor -- show the low end.
         top := Settings.BandMap.DisplayLimit - 1;
@@ -397,7 +417,7 @@ begin
         centrefound := true;
         end;
 
-     if FList^[aIndex[FilteredSpotCount - 1]].FFrequency <= BandMapCursorFrequency then
+     if FList[aIndex[FilteredSpotCount - 1]].FFrequency <= BandMapCursorFrequency then
         begin
         // Everything on display is at or below the cursor -- show the high end.
         top := FilteredSpotCount - 1;
@@ -409,7 +429,7 @@ begin
      // what produced the out-of-range window this routine used to clamp.
      for k := 0 to FilteredSpotCount - 1 do
         begin
-        if FList^[aIndex[k]].FFrequency > BandMapCursorFrequency then
+        if FList[aIndex[k]].FFrequency > BandMapCursorFrequency then
            begin
            centre := k;
            if (centre >= (Settings.BandMap.DisplayLimit div 2)) and (centre <=
@@ -536,14 +556,14 @@ var
   i: integer;
 begin
   Result := -1;
-  if not Assigned(FList) then
+  if (Length(FList) = 0) then
      begin
      Exit;
      end;
   for i := 0 to FCount - 1 do
      begin
-     if (FList^[i].FFrequency = aSpot.FFrequency) and
-        (FList^[i].FCall = aSpot.FCall) then
+     if (FList[i].FFrequency = aSpot.FFrequency) and
+        (FList[i].FCall = aSpot.FCall) then
         begin
         Result := i;
         Exit;
@@ -552,6 +572,8 @@ begin
 end;
 
 procedure TDXSpotsList.Delete(Index: integer);
+var
+   i: integer;
 begin
   if (Index < 0) or (Index >= FCount) then
      begin
@@ -568,7 +590,14 @@ begin
      dec(FCount);
      if Index < FCount then
         begin
-        System.Move(FList^[Index + 1], FList^[Index], (FCount - Index) * SizeOf(TSpotRecord));
+        (* An indexed copy, not System.Move. The compiler copies a
+          TSpotRecord correctly whatever is in it; a byte move is only right
+          for as long as the record stays free of managed fields, and
+          nothing would report the day that changed. *)
+        for i := Index to FCount - 1 do
+           begin
+           FList[i] := FList[i + 1];
+           end;
         end;
   finally
      FCriticalSection.Leave;
@@ -587,8 +616,8 @@ begin
   while l <= h do
      begin
      i := (l + h) shr 1;
-     c := FList^[i].FFrequency - Spot.FFrequency;
-       //CompareStrings(FList^[I].FCall, s);
+     c := FList[i].FFrequency - Spot.FFrequency;
+       //CompareStrings(FList[I].FCall, s);
      if c < 0 then
         begin
         l := i + 1
@@ -613,7 +642,7 @@ begin
      begin
      Exit; //ERROR(@SListIndexError, Index);
      end;
-  Result := FList^[Index];
+  Result := FList[Index];
 end;
 
 function TDXSpotsList.GetCapacity: integer;
@@ -628,13 +657,13 @@ begin
   for i := 0 to FCount - 1 do
      begin
 
-     if PInteger(@FList^[i].FCall[1])^ <> tCQAsInteger then
-       if PInteger(@FList^[i].FCall[1])^ <> tNEWAsInteger then
+     if PInteger(@FList[i].FCall[1])^ <> tCQAsInteger then
+       if PInteger(@FList[i].FCall[1])^ <> tNEWAsInteger then
           begin
-          FList^[i].FMult := VisibleLog.DetermineIfNewMult(FList^[i].FCall,
-            FList^[i].FBand, FList^[i].FMode);
+          FList[i].FMult := VisibleLog.DetermineIfNewMult(FList[i].FCall,
+            FList[i].FBand, FList[i].FMode);
           end;
-     //    FList^[i].FMult := MultString <> 0;
+     //    FList[i].FMult := MultString <> 0;
      end;
   RequestRepaint;
 end;
@@ -665,8 +694,8 @@ begin
   i := 0;
   NextSpot:
 
-  Difference := SpotAgeSeconds(FList^[i]);
-  FList^[i].FAgeSeconds := Difference;
+  Difference := SpotAgeSeconds(FList[i]);
+  FList[i].FAgeSeconds := Difference;
   if Difference >= Settings.BandMap.DecayTime * 60 then
      begin
      Delete(i)
@@ -689,11 +718,11 @@ var
 begin
   for i := 0 to FCount - 1 do
      begin
-     if FList^[i].FBand = RXBand then
-       if FList^[i].FMode = RXMode then
-         if FList^[i].FCall = RXCall then
+     if FList[i].FBand = RXBand then
+       if FList[i].FMode = RXMode then
+         if FList[i].FCall = RXCall then
             begin
-            FList^[i].FDupe := True;
+            FList[i].FDupe := True;
             end;
      end;
   // Was `Display` -- a model routine painting a control.  Its caller
@@ -721,6 +750,8 @@ begin
 end;
 
 procedure TDXSpotsList.InsertSpot(Index: integer; const Spot: TSpotRecord);
+var
+   i: integer;
 begin
   FCriticalSection.Enter;
   try
@@ -730,9 +761,14 @@ begin
         end;
      if Index < FCount then
         begin
-        System.Move(FList^[Index], FList^[Index + 1],(FCount - Index) * SizeOf(TSpotRecord));
+        (* Downwards, so a record is never overwritten before it is read.
+          See the note in Delete about why this is not System.Move. *)
+        for i := FCount downto Index + 1 do
+           begin
+           FList[i] := FList[i - 1];
+           end;
         end;
-     FList^[Index] := Spot;
+     FList[Index] := Spot;
      inc(FCount);
   finally
      FCriticalSection.Leave;
@@ -741,7 +777,9 @@ end;
 
 procedure TDXSpotsList.SetCapacity(NewCapacity: integer);
 begin
-  ReallocMem(FList, NewCapacity * SizeOf(TSpotRecord));
+  (* SetLength, not ReallocMem: it owns the block, it zeroes what it adds,
+    and it cannot be handed a byte count that disagrees with the element. *)
+  SetLength(FList, NewCapacity);
   FCapacity := NewCapacity;
 end;
 
@@ -782,11 +820,11 @@ var
 begin
   FCriticalSection.Enter;
   try
-     if Assigned(FList) then
+     if (Length(FList) > 0) then
         begin
         for Index := 0 to FCount - 1 do
            begin
-           FList^[Index].FAgeSeconds := 0;
+           FList[Index].FAgeSeconds := 0;
            end;
         end;
   finally
@@ -801,11 +839,11 @@ var
 begin
   FCriticalSection.Enter;
   try
-     if Assigned(FList) then
+     if (Length(FList) > 0) then
         begin
         for Index := 0 to FCount - 1 do
            begin
-           FList^[Index].FDupe := False;
+           FList[Index].FDupe := False;
            end;
         end;
   finally
@@ -826,9 +864,9 @@ begin
         begin
         FCurrentCursorFreq := BandMapSelected;
         if (FCurrentCursorFreq >= 0) and (FCurrentCursorFreq < FCount) and
-           Assigned(FList) then
+           (Length(FList) > 0) then
            begin
-           FCurrentCursorFreq := FList^[FCurrentCursorFreq].FFrequency;
+           FCurrentCursorFreq := FList[FCurrentCursorFreq].FFrequency;
            end;
         end;
   finally
@@ -847,7 +885,7 @@ begin
      begin
      Exit;
      end;
-  if not Assigned(FList) then
+  if (Length(FList) = 0) then
      begin
      exit;
      end;
@@ -856,12 +894,12 @@ begin
   //  Index2 := 0; // 4.79.3
   for Index := 0 to FCount - 1 do
      begin
-     a := Abs(FList^[Index].FFrequency - Freq);
+     a := Abs(FList[Index].FFrequency - Freq);
      if a = 0 then
         begin
         exit;
         end;
-     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>
+     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList[Index].FCall[1])^ <>
        tCQAsInteger) then
         begin
         if (a < d) then
@@ -869,11 +907,11 @@ begin
            d := a;
            Index2 := Index;
            end;
-        DupeInfoCall := FList^[Index2].FCall;
+        DupeInfoCall := FList[Index2].FCall;
         break; // stop search on match 4.130.1
         end;
      end;
-  if (d >= Settings.BandMap.GuardBand) or (Pos(UTF8Encode(Settings.My.Call), Flist^[Index2].FCall) > 0) then
+  if (d >= Settings.BandMap.GuardBand) or (Pos(UTF8Encode(Settings.My.Call), FList[Index2].FCall) > 0) then
     // 4.57.8  // 4.72.1
      begin
      ClearAltD;
@@ -890,7 +928,7 @@ begin
        end;   }
      tClearDupeInfoCall; // 4.57.10
      ClearAltD; // 4.65.2
-     DupeInfoCall := FList^[Index2].FCall; // 4.65.2
+     DupeInfoCall := FList[Index2].FCall; // 4.65.2
      DupeCheckOnInactiveRadio(True);
      DupeInfoCallWindowCleared := False;
      tCallWindowSetFocus;
@@ -921,10 +959,10 @@ begin
   //  index2 := 0; // 4.79.3
   for Index := 0 to FCount - 1 do
      begin
-     a := Abs(FList^[Index].FFrequency - Freq);
-     {logger.debug('[TDXSpotsList.DisplayCallsignOnThisFreq] a = %d, Settings.BandMap.GuardBand = %d,  PInteger(@FList^[Index].FCall[1])^ = %d, tCQAsInteger = %d',
-                  [a, Settings.BandMap.GuardBand, PInteger(@FList^[Index].FCall[1])^, tCQAsInteger]);}
-     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>  tCQAsInteger) then
+     a := Abs(FList[Index].FFrequency - Freq);
+     {logger.debug('[TDXSpotsList.DisplayCallsignOnThisFreq] a = %d, Settings.BandMap.GuardBand = %d,  PInteger(@FList[Index].FCall[1])^ = %d, tCQAsInteger = %d',
+                  [a, Settings.BandMap.GuardBand, PInteger(@FList[Index].FCall[1])^, tCQAsInteger]);}
+     if (a < Settings.BandMap.GuardBand) and (PInteger(@FList[Index].FCall[1])^ <>  tCQAsInteger) then
         begin
         if a < d then
            begin
@@ -936,13 +974,13 @@ begin
 
   if d <= Settings.BandMap.GuardBand then
      begin
-     //if (Pos(Settings.My.Call,Flist^[Index2].FCall)>0) then continue;
-     if FList^[Index2].FCall <> Settings.My.Call then
+     //if (Pos(Settings.My.Call,FList[Index2].FCall)>0) then continue;
+     if FList[Index2].FCall <> Settings.My.Call then
        if OpMode = SearchAndPounceOpMode then // n4af 4.45.10
           begin
           tCleareCallWindow;
           tClearDupeInfoCall; // 4.55.6
-          PutCallToCallWindow(FList^[Index2].FCall);
+          PutCallToCallWindow(FList[Index2].FCall);
           SetEntrySel(TR4WCallEdit, 0, -1);
           CallsignIsPastedFromBandMap := True;
          // tSetExchWindInitExchangeEntry ; // 4.139.1
