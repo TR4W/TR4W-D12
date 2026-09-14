@@ -1389,6 +1389,7 @@ type
       FFarnsworthSpeed: TCwFarnsworthSpeed;
       FWeight: double;
       FCodeSpeed: TCwCodeSpeed;
+      FStereoPinHigh: boolean;
       FAllMessagesChainable: boolean;
       FSpeedFromDatabase: boolean;
       FKeypadMemories: boolean;
@@ -1473,6 +1474,19 @@ type
         comparison. *)
       property Weight: double read FWeight write FWeight;
       property CodeSpeed: TCwCodeSpeed read FCodeSpeed write FCodeSpeed;
+      (* WHICH WAY THE HEADPHONE SPLIT STARTS.
+
+        THE SAME LIVE/CONFIGURED SPLIT as the five above: ToggleStereoPin
+        inverts the global on a keystroke and YCCCSetStereo reads it, so the
+        global is session state and this is what a fresh session starts from.
+
+        IT SURVIVED THE PARALLEL PORT, which is worth saying: its companion
+        STEREO CONTROL PIN named an LPT pin and went with the hardware, while
+        this describes what the operator WANTS and the YCCC box delivers it.
+
+        STEREO PIN HIGH, aliased -- the derived name would say CW first. *)
+      property StereoPinHigh: boolean
+         read FStereoPinHigh write FStereoPinHigh;
       property AllMessagesChainable: boolean
          read FAllMessagesChainable write FAllMessagesChainable;
       (* Was Config.CWSpeedFromDataBase, and the ONE name in this group that
@@ -3495,6 +3509,18 @@ type
       *)
       function AllowedValuesForCommand(const aCommand: string): TArray<string>;
       function CommandIsSecret(const aCommand: string): boolean;
+      (* WHAT KIND OF CONTROL DOES THIS SETTING WANT?
+
+        A check box for a boolean, a numbers-only box for an integer. Both
+        were a row's crType until 2026-09-14; they are the PROPERTY'S TYPE
+        now, which is the same statement made by the compiler instead of by a
+        hand-typed field -- and a property cannot be declared boolean and
+        typed ctInteger by mistake.
+
+        False for a name the model does not own, so a caller may ask about
+        any command. *)
+      function CommandIsBoolean(const aCommand: string): boolean;
+      function CommandIsInteger(const aCommand: string): boolean;
       (* IS THIS SETTING'S CAPITALISATION THE OPERATOR'S? True for a secret
         too -- a password is case-sensitive by definition. *)
       function CommandIsCaseSensitive(const aCommand: string): boolean;
@@ -4113,6 +4139,9 @@ begin
    (* CODE SPEED had no initialiser of its own; 35 is what the WinKeyer value
      list and the speed display both assume as a starting point. *)
    FCodeSpeed        := 35;
+   (* logk1ea's declaration left it False, which is what a station with no
+     settings file has always started with. *)
+   FStereoPinHigh    := False;
    // The values uConfigValues' initialiser carried.
    FAllMessagesChainable      := False;
    FSpeedFromDatabase         := False;
@@ -5362,6 +5391,7 @@ begin
    Alias('FARNSWORTH SPEED',     'Cw.FarnsworthSpeed');
    Alias('WEIGHT',               'Cw.Weight');
    Alias('CODE SPEED',           'Cw.CodeSpeed');
+   Alias('STEREO PIN HIGH',      'Cw.StereoPinHigh');
    Alias('MULT REPORT MINIMUM BANDS', 'Contest.MultReportMinimumBands');
    Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
    Alias('DX MULTIPLIER',        'Contest.DxMultiplier');
@@ -5923,6 +5953,26 @@ end;
 function TR4WSettings.CommandIsSecret(const aCommand: string): boolean;
 begin
    Result := IsSecretProperty(PropertyForCommand(aCommand));
+end;
+
+function TR4WSettings.CommandIsBoolean(const aCommand: string): boolean;
+var
+   info: PPropInfo;
+begin
+   info := PropertyForCommand(aCommand);
+   Result := (info <> nil) and (info^.PropType^.Kind = tkBool);
+end;
+
+function TR4WSettings.CommandIsInteger(const aCommand: string): boolean;
+var
+   info: PPropInfo;
+begin
+   info := PropertyForCommand(aCommand);
+   (* tkInteger COVERS THE SUBRANGES TOO -- TBandMapItemHeight is an integer
+     type, and its bounds are a separate question that
+     AllowedValuesForCommand answers. An enumeration is NOT an integer here:
+     it renders as a drop-down, which is the branch before this one. *)
+   Result := (info <> nil) and (info^.PropType^.Kind in [tkInteger, tkInt64, tkQWord]);
 end;
 
 function TR4WSettings.CommandIsCaseSensitive(const aCommand: string): boolean;

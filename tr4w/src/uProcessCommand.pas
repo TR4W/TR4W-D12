@@ -716,52 +716,51 @@ end;
 // implementation rather than this one.
 procedure scBOOLSWAP;
 var
-  i                                     : integer;
   cmdName                               : string;
+  current                               : string;
   newValue                              : boolean;
 begin
   cmdName := string(scFileName);
 
-  for i := 1 to CommandsArraySize do
-    begin
-    if utils_text.StrComp(@scFileName[1], CFGCA[i].crCommand) = 0 then
-       begin
-       if CFGCA[i].crType <> ctBoolean then
-          begin
-          QuickDisplay(SysUtils.Format(AnsiString('%s is not a boolean setting'), [@scFileName[1]]));
-          Exit;
-          end;
+  (* ASKED OF THE SETTING, NOT OF A ROW -- 2026-09-14.
 
-       if CommandIsJSONOwned(cmdName) then
-          begin
-          // CheckCommand would accept and discard this; say so instead.
-          QuickDisplay(SysUtils.Format(AnsiString('%s is owned by the JSON settings store'), [@scFileName[1]]));
-          Exit;
-          end;
+    This used to scan CFGCA for the name, read crType to check it was
+    ctBoolean, and dereference crAddress as a PBoolean for the current value.
+    All three questions belong to the property now: does the model own this
+    name, is its type boolean, and what does it currently read. *)
+  if not Settings.CommandIsBoolean(cmdName) then
+     begin
+     QuickDisplay(SysUtils.Format(AnsiString('%s is not a boolean setting'),
+                  [scFileName]));
+     Exit;
+     end;
 
-       newValue := not PBoolean(CFGCA[i].crAddress)^;
+  if not Settings.TryGetByCommand(cmdName, current) then
+     begin
+     QuickDisplay(SysUtils.Format(AnsiString('No setting called %s'), [scFileName]));
+     Exit;
+     end;
 
-       // Validates, applies through CheckCommand (which runs the crA hook and
-       // the crP change-handler), syncs multi-op, and persists.
-       if SetCFGCommandValue(cmdName, string(BA[newValue])) then
-          begin
-          (* Reported UNCONDITIONALLY -- this used to sit inside `if crP <> 0`,
-            so every boolean without a change-handler toggled in complete
-            silence.  Said in each arm now that the shared buffer is gone;
-            there is nothing left for the two branches to share. *)
-          QuickDisplay(SysUtils.Format(AnsiString('%s=%s'),
-                       [scFileName, BA[PBoolean(CFGCA[i].crAddress)^]]));
-          end
-       else
-          begin
-          QuickDisplay(SysUtils.Format(AnsiString('%s was refused'),
-                       [scFileName]));
-          end;
-       Exit;
-       end;
-    end;
+  (* THE CURRENT VALUE, AS THE RENDERER SPELLS IT. BA[True] is 'TRUE', and it
+    is compared through UnicodeSameText rather than SameText so the two
+    `string`s stay UnicodeStrings: the AnsiString overload would narrow both
+    sides for a comparison of two ASCII words. *)
+  newValue := not UnicodeSameText(Trim(current), 'TRUE');
 
-  QuickDisplay(SysUtils.Format(AnsiString('No setting called %s'), [@scFileName[1]]));
+  (* Validates, applies through CheckCommand -- which resolves the name
+    against the settings object, so the property's setter runs its side
+    effect -- syncs multi-op, and persists. *)
+  if SetCFGCommandValue(cmdName, string(BA[newValue])) then
+     begin
+     (* Reported UNCONDITIONALLY -- this used to sit inside `if crP <> 0`, so
+       every boolean without a change-handler toggled in complete silence. *)
+     QuickDisplay(SysUtils.Format(AnsiString('%s=%s'),
+                  [scFileName, BA[newValue]]));
+     end
+  else
+     begin
+     QuickDisplay(SysUtils.Format(AnsiString('%s was refused'), [scFileName]));
+     end;
 end;
 
 procedure scWK_RESET;

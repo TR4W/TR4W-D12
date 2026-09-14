@@ -997,13 +997,20 @@ type
     wherever it happened to be defined, and VC was named. *)
   tCertificate = (Yes, No);
 
-const
-                                            // Use uppercase
-  // tLogLevelsSA moved with its type -- see LOG_LEVEL_SPELLINGS.
-  (* The six tCategory*SA arrays moved with their types -- see the
-    CATEGORY_*_SPELLINGS tables in uSettingsModel. *)
-  tCertificateSA                        : array[tCertificate] of PAnsiChar = ('Yes', 'No');
+  (* THE CONST SECTION THAT STOOD HERE IS EMPTY AND SO IT IS DELETED, not left
+    with a heading and no members -- `const` followed by `var` is a syntax
+    error at the NEXT keyword, which reads as a fault somewhere else.
 
+    What it held, and where each went:
+      tLogLevelsSA         with its type -- see LOG_LEVEL_SPELLINGS.
+      the six tCategory*SA with their types -- the CATEGORY_*_SPELLINGS
+                           tables in uSettingsModel.
+      tCertificateSA       DELETED 2026-09-14. It spelled 'Yes'/'No' for a
+                           CFGCA row. The Certificate VALUE is still live --
+                           postunit writes it into the Cabrillo summary -- but
+                           nothing read the spellings: the summary dialog edits
+                           the variable directly, and a table with no reader is
+                           a second definition waiting to drift. *)
 var
   (* The six Category* globals moved to Settings.Contest, 2026-09-13. Only
     Certificate is left here, and it is not a CFGCA setting. *)

@@ -62,10 +62,29 @@
 # which are NOT the same set as retired ones and must not be counted as live
 # work. That is the whole reason this reuses PascalSource rather than grepping.
 #
-# A count that comes back ZERO means the parse broke, not that the work is
-# finished -- the agent memory `guards-must-not-fail-open` records a lint that
-# reported "0 found" and PASSED. Every measure here carries a floor as well as
-# a ceiling, and the floor is only allowed to be zero once the ceiling is.
+# ------------------------------------------------------------------------
+# THE RATCHET REACHED ZERO -- 2026-09-14 -- AND THIS BECAME THE GUARD
+# ------------------------------------------------------------------------
+#
+# CFGCA held 415 rows when this lint was written and holds none: the array,
+# CFGRecord, CommandsArraySize and all four positional side tables are deleted.
+# Every ceiling below is 0.
+#
+# SO THE QUESTION IT ASKS HAS INVERTED. It used to be "has a number risen",
+# which needed a floor as well, because a count of zero from a broken parser
+# looks exactly like a count of zero from finished work -- the failure mode
+# recorded in the agent memory `guards-must-not-fail-open`. Now zero IS the
+# answer, and ANY occurrence fails.
+#
+# THE PARSE IS STILL PROVEN, and it has to be, for the same reason: a lint that
+# reports nothing because it read nothing must not report success. It checks
+# that uCFG.pas was read and yielded a plausible amount of code before
+# believing a count of zero.
+#
+# AND IT SCANS THE WHOLE TREE, not just uCFG. The array cannot come back
+# "correctly" in another unit either -- what is being prevented is the SHAPE:
+# a const table holding the address of a global so that something can write
+# through it.
 
 [CmdletBinding()]
 param(
@@ -88,7 +107,20 @@ if (-not (Test-Path $uCFG))
    exit 1
 }
 
-$code = Get-PascalCodeOnlyLines -Path $uCFG
+# uCFG ALONE PROVES THE PARSE; THE TREE IS WHAT IS GUARDED. The shape cannot
+# come back in another unit either, and putting it in one would be the obvious
+# way to get past a lint that only reads uCFG.
+$cfgCode = Get-PascalCodeOnlyLines -Path $uCFG
+
+. (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable
+
+$code = @($cfgCode)
+foreach ($f in @(Get-ChildItem -Path (Join-Path $root 'src') -Recurse -Include *.pas,*.inc |
+                 Where-Object { Test-Tr4wScannable $_.FullName }))
+{
+   if ($f.FullName -eq $uCFG) { continue }
+   $code += @(Get-PascalCodeOnlyLines -Path $f.FullName)
+}
 
 # --------------------------------------------------------------------------
 # THE CEILINGS.
@@ -103,34 +135,34 @@ $code = Get-PascalCodeOnlyLines -Path $uCFG
 $measures = @(
    @{ Name    = 'CFGCA rows'
       Pattern = 'crCommand:'
-      Ceiling = 1
-      Note    = 'config commands still in the array' }
+      Ceiling = 0
+      Note    = 'a const row naming a command -- the array is GONE, keep it gone' }
 
    @{ Name    = 'CFGCA rows writing a raw global'
       Pattern = 'crAddress:\s*@'
-      Ceiling = 1
-      Note    = 'THE REAL REMAINING WORK -- each is a global a table writes through' }
+      Ceiling = 0
+      Note    = 'a table writing through the address of a global' }
 
    @{ Name    = 'ArrayRecordArray entries'
       Pattern = 'arVar:\s*@'
-      Ceiling = 1
-      Note    = 'discrete allow-lists, address of a global' }
+      Ceiling = 0
+      Note    = 'discrete allow-lists -- a subrange type or a registered vocabulary now' }
 
    @{ Name    = 'ListParamArray entries'
       Pattern = 'lpVar:\s*@'
-      Ceiling = 6
-      Note    = 'enum spelling lists, address of a global' }
+      Ceiling = 0
+      Note    = 'enum spelling lists -- the subsystem registers its own vocabulary now' }
 
    @{ Name    = 'CommandsProcArray handlers'
       Pattern = '^\s*@\w+.*(//.*)?$'
-      Ceiling = 7
-      Note    = 'crP -- replaced by a property setter'
+      Ceiling = 0
+      Note    = 'crP -- a property setter, which cannot point at the wrong handler'
       Section = 'CommandsProcArray' }
 
    @{ Name    = 'AdditionalProcsArray hooks'
       Pattern = '^\s*@\w+.*(//.*)?$'
-      Ceiling = 11
-      Note    = 'crA -- replaced by a property setter'
+      Ceiling = 0
+      Note    = 'crA -- an effect in uSettingsEffects, which runs however the value was set'
       Section = 'AdditionalProcsArray' }
 )
 
@@ -154,6 +186,16 @@ function Measure-Section
    return $n
 }
 
+# THE PARSE, PROVEN BEFORE ANY ZERO IS BELIEVED. uCFG is a large unit and
+# always will be -- it is still the config parser -- so a handful of lines back
+# from the stripper means the stripper failed, not that the file emptied.
+if ($cfgCode.Count -lt 200)
+{
+   Write-Host ("Lint-ConfigArrays: uCFG.pas yielded only {0} code line(s) -- the " +
+               "parse failed, which is not a pass." -f $cfgCode.Count) -ForegroundColor Red
+   exit 1
+}
+
 $failed  = $false
 $results = @()
 
@@ -170,22 +212,13 @@ foreach ($m in $measures)
       if ($null -eq $count) { $count = 0 }
    }
 
-   $status = 'ok'
+   $status = 'gone'
 
-   # FAIL CLOSED: zero is only believable once the ceiling is zero too.
-   if ($count -eq 0 -and $m.Ceiling -gt 0)
+   if ($count -gt $m.Ceiling)
    {
-      $status = 'PARSE BROKE'
+      # Every ceiling is 0, so this is "the shape came back".
+      $status = 'CAME BACK'
       $failed = $true
-   }
-   elseif ($count -gt $m.Ceiling)
-   {
-      $status = 'ROSE'
-      $failed = $true
-   }
-   elseif ($count -lt $m.Ceiling)
-   {
-      $status = 'fell -- lower the ceiling'
    }
 
    $results += [pscustomobject]@{
@@ -203,9 +236,8 @@ foreach ($r in $results)
 {
    $colour = switch ($r.Status)
    {
-      'ok'          { 'Gray' }
-      'PARSE BROKE' { 'Red' }
-      'ROSE'        { 'Red' }
+      'gone'        { 'Gray' }
+      'CAME BACK'   { 'Red' }
       default       { 'Yellow' }
    }
    Write-Host ('   {0,-34} {1,4} / {2,4}   {3}' -f $r.Measure, $r.Count, $r.Ceiling, $r.Status) `
@@ -242,13 +274,14 @@ if ($List -ne '')
 Write-Host ''
 if ($failed)
 {
-   Write-Host 'Lint-ConfigArrays FAILED.' -ForegroundColor Red
-   Write-Host '  A count ROSE: a setting was added to the array instead of to' -ForegroundColor Red
-   Write-Host '  uSettingsModel. See docs/CFG_ARRAY_ELIMINATION.md.' -ForegroundColor Red
-   Write-Host '  A count is ZERO with a non-zero ceiling: the parse broke, and a' -ForegroundColor Red
-   Write-Host '  lint that reports nothing must not report success.' -ForegroundColor Red
+   Write-Host 'Lint-ConfigArrays FAILED -- the config array shape is back.' -ForegroundColor Red
+   Write-Host '  A const table holding the ADDRESS of a global, so that something' -ForegroundColor Red
+   Write-Host '  can write through it, is what the settings migration removed. A' -ForegroundColor Red
+   Write-Host '  setting is a published property on uSettingsModel: its name is the' -ForegroundColor Red
+   Write-Host '  property path, its bounds are its type, and its side effect is its' -ForegroundColor Red
+   Write-Host '  setter. See docs/CFG_ARRAY_ELIMINATION.md.' -ForegroundColor Red
    exit 1
 }
 
-Write-Host 'Lint-ConfigArrays passed.' -ForegroundColor Green
+Write-Host 'Lint-ConfigArrays: the config arrays are gone and have not come back.' -ForegroundColor Green
 exit 0

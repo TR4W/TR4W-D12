@@ -231,27 +231,14 @@ type
 
   RealTimeMessagePointer = ^RealTimeMessageType;
 
-const
-  FootSwitchModeTypeStringArray         : array[FootSwitchModeType] of PAnsiChar =
-    (
-    'DISABLED',
-    'CW GRANT',
-    'F1',
-    'LAST CQ FREQ',
-    'NEXT BANDMAP',
-    'NEXT DISP BANDMAP',
-    'NEXT MULT BANDMAP',
-    'NEXT MULT DISP BANDMAP',
-    'UPDATE BAND MAP BLINKING CALL',
-    'DUPE CHECK',
-    'NORMAL',
-    'QSO NORMAL',
-    'QSO QUICK',
-    'CONTROL ENTER',
-    'START SENDING',
-    'SWAP RADIOS'
-    );
+  (* THE CONST SECTION HERE IS DELETED, not left empty: `const` with no
+    members is a syntax error at the NEXT keyword.
 
+    It held FootSwitchModeTypeStringArray and nothing else, and that table is
+    GONE -- 2026-09-14, for the same reason as CallWindowPositionTypeSA in
+    logwind. FOOT SWITCH MODE is withdrawn (uCFG.RETIRED_COMMANDS), so the
+    table spelled its values for a parser that no longer asks. The ENUM stays:
+    FootSwitchModeType is still what the foot switch does. *)
 var
 
 {$IF CWDEBUG}

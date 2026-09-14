@@ -10364,7 +10364,6 @@ end;
 procedure SetCommand(c: PAnsiChar);
 var
   cmd: string;
-  idx: integer;
   ownedElsewhere: boolean;
 begin
   if YesOrNo(SysUtils.Format(AnsiString(LclText(TC_SET_VALUE_OF_SET_NOW)),
@@ -10374,8 +10373,11 @@ begin
      end;
 
   cmd := string(c);
-  idx := FindCFGCommand(cmd);
-  ownedElsewhere := (idx >= 0) and (CFGCA[idx].crS in [csOwned, csJSON]);
+  (* WHO OWNS IT IS NOW ONE QUESTION: does the settings object know the name?
+    It used to be a row's crS, and that status is gone along with the row --
+    every setting an editor can show is a published property today, and a name
+    the model does not resolve is not a setting at all. *)
+  ownedElsewhere := Settings.OwnsCommand(cmd);
 
   if ownedElsewhere then
      begin
@@ -10398,7 +10400,7 @@ begin
   // csRem (withdrawn and not applied).  So the only honest thing is to say so
   // rather than open a window that cannot show it.
   logger.Warn('[SetCommand] "%s" is not a setting any editor shows -- ' +
-              'it is neither owned by Preferences nor a live CFGCA row', [cmd]);
+              'the settings model does not know that name', [cmd]);
   ShowMessage(Format(TC_SCANNOTEDITEDHERE, [cmd]));
 end;
 

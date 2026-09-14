@@ -199,24 +199,10 @@ begin
       Exit;
       end;
 
-   for I := 1 to CommandsArraySize do
-      begin
-      if CFGCA[I].crType in [ctCaseSensitive, ctPassword] then
-         if uAnsiStr.StrComp(CFGCA[I].crCommand, @ID[1]) = 0 then
-            begin
-            PShortString(CFGCA[I].crAddress)^ := CMD;
-            PShortString(CFGCA[I].crAddress)^[Length(CMD) + 1] := #0;
-            if CFGCA[I].crType = ctPassword then
-               begin
-               logger.Debug('[case fixup] "%s" restored, value=*******', [CFGCA[I].crCommand])
-               end
-            else
-               begin
-               logger.Debug('[case fixup] "%s" restored, value=%s', [CFGCA[I].crCommand, CMD]);
-               end;
-            Break;
-            end;
-      end;
+   (* AND THERE IS NO SECOND PLACE TO LOOK ANY MORE. The walk that stood here
+     searched CFGCA by ADDRESS for a ctCaseSensitive or ctPassword row; the
+     array is gone, and every one of those settings is a property whose TYPE
+     says so. The block above is the whole pass. *)
 end;
 
 procedure PushLogFiles(var LastPushedLogName: Str20);
@@ -969,6 +955,7 @@ begin
   Config.FarnsworthSpeed := Settings.Cw.FarnsworthSpeed;
   Config.Weight          := Settings.Cw.Weight;
   CodeSpeed              := Settings.Cw.CodeSpeed;
+  StereoPinState         := Settings.Cw.StereoPinHigh;
 
   (* THE CONFIGURATION IS NOT COMPLETE HERE, SO IT IS NOT CHECKED HERE.
 

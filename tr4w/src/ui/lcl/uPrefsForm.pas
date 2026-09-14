@@ -3446,42 +3446,21 @@ begin
       // ctFreqList, which is genuinely MULTI-VALUED and gets an Edit... button
       // below instead.
       //
-      // ckList USED TO BE HERE and no longer is (2026-08-21).  Those rows have
-      // a fixed spelling list, CFGCommandAllowedValues now enumerates it, and
-      // they render as ordinary drop-downs.  What had kept them out was
-      // diagnosed as space-padded spellings; that was wrong -- not one of the
-      // 40 arrays is padded.  The real fault was case: the config loader
-      // uppercases the line and the matcher compared case-sensitively, so the
-      // six mixed-case spellings could be written and never read back.  Fixed
-      // in TF.GetValueFromArray.
-      ro := (s.LegacyCommand <> '') and
-            (CFGCommandIsReadOnly(s.LegacyCommand) or CFGCommandIsList(s.LegacyCommand));
+      (* THE SETTING ITSELF SAYS SO NOW -- 2026-09-14.
+        This used to ask uCFG two questions about the row behind the setting:
+        was its crJ 2 or 3, and was it a ckList whose spellings could not be
+        enumerated. The first is TSettingBase.ReadOnly, set at registration
+        and already on the object in hand; the second has no subject left,
+        because a token setting registers its own vocabulary and renders as
+        an ordinary drop-down. *)
+      ro := s.ReadOnly;
 
       lbl := TLabel.Create(aParent);
       lbl.Parent  := aParent;
       lbl.Caption := s.Caption;
       lbl.SetBounds(16, aY + 4, LABEL_W, 18);
 
-      // A ctFreqList ROW GETS A WAY IN, not a dead box.  BAND MAP CUTOFF
-      // FREQUENCY and FREQUENCY MEMORY are the only two, they are multi-valued
-      // and so must stay unbound (see `ro` below and uCFG.pas:1247), but unlike
-      // a ckList they HAVE an editor -- uBandPlanForm.  Rendering them as a
-      // disabled edit box left that editor with no live caller in the whole
-      // program once Ctrl-J stopped listing them: finding F3, 2026-08-20.
-      //
-      // The button is deliberately NOT bound.  A row that cannot be edited in
-      // place still must not be saved from here; the band plan editor writes
-      // [BAND PLAN] itself, as a section.
-      if (s.LegacyCommand <> '') and CFGCommandIsFreqList(s.LegacyCommand) then
-         begin
-         btn := TButton.Create(aParent);
-         btn.Parent  := aParent;
-         btn.Caption := 'Edit...';
-         btn.OnClick := GeneratedBandPlanClick;
-         btn.SetBounds(CTRL_X, aY, 90, 24);
-         ctl := btn;
-         end
-      else if ro then
+      if ro then
          begin
          edt := TEdit.Create(aParent);
          edt.Parent   := aParent;
@@ -3520,7 +3499,7 @@ begin
          // TEdit for everything, so an integer setting accepted letters. NY4I
          // typed "ewed" into Auto-CQ Delay Time, 2026-08-18.
          //
-         // The type is already declared on the CFGCA row, so the panel can just
+         // The property's TYPE already says integer, so the panel can just
          // ask rather than the operator being trusted. Same shape as the
          // CFGCommandIsBoolean test above, which is what stops a boolean
          // rendering as a text box that accepts "maybe".
@@ -3576,6 +3555,42 @@ begin
          end;
 
       Inc(n);
+      Inc(aY, ROW_H);
+      end;
+
+   (* THE WAY BACK INTO THE BAND PLAN EDITOR, and it is a BUTTON THIS PAGE
+     OWNS rather than a control synthesised from a row -- 2026-09-14.
+
+     BAND MAP CUTOFF FREQUENCY and FREQUENCY MEMORY are the two accumulating
+     band-plan commands: a config file names each of them once per band, so
+     no single edit box can represent one and neither is a setting at all any
+     more (uCFG.TryApplyCommandAction). While they were rows, Preferences
+     rendered them as ctFreqList and hung an Edit... button off one of them,
+     which is how uBandPlanForm kept a live caller after Ctrl-J stopped
+     listing it.
+
+     THAT ROUTE DIED WITH THE ROWS, and a feature reachable only through a
+     table entry is a feature one deletion away from being unreachable --
+     finding F3 in docs/BENCH_QUEUE.md is exactly that, once already. So the
+     button is placed explicitly, on the page the band plan belongs to, and
+     it depends on nothing but this arm.
+
+     NOT BOUND, for the reason it never was: the editor writes the whole
+     [BAND PLAN] section itself. *)
+   if UnicodeSameText(aKeyPrefix, 'bandmap.ctrlj.') then
+      begin
+      lbl := TLabel.Create(aParent);
+      lbl.Parent  := aParent;
+      lbl.Caption := 'Band plan (cutoff frequencies and memories)';
+      lbl.SetBounds(16, aY + 4, LABEL_W, 18);
+
+      btn := TButton.Create(aParent);
+      btn.Parent  := aParent;
+      btn.Caption := 'Edit...';
+      btn.OnClick := GeneratedBandPlanClick;
+      btn.SetBounds(CTRL_X, aY, 90, 24);
+      lbl.FocusControl := btn;
+
       Inc(aY, ROW_H);
       end;
 

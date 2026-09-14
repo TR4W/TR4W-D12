@@ -438,12 +438,10 @@ const
 
 
   // RotatorTypeSA moved with its type -- see uRotatorRegistry.
-
-  CallWindowPositionTypeSA              : array[CallWindowPositionType] of PAnsiChar = ('NORMAL', 'UP');
-
-
-
-
+  (* CallWindowPositionTypeSA IS GONE -- 2026-09-14. It spelled the values of
+    CALL WINDOW POSITION for the config parser, and that command is WITHDRAWN:
+    it is a name in uCFG.RETIRED_COMMANDS, accepted so an old file does not
+    error and applied to nothing. Nothing else ever read the table. *)
   IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of string = ('AT END', 'AT START');
 
   InitialExchangeTypeStringArray        : array[InitialExchangeType] of string =

@@ -433,162 +433,101 @@ var
    modelValue: string;
 begin
    saved := 0;
-   for i := 1 to CommandsArraySize do
-      begin
-      if CFGCA[i].crS = csRem then
-         begin
-         Continue;
-         end;
-      if CFGCA[i].crCommand = nil then
-         begin
-         Continue;
-         end;
 
-      cmd := string(StrPas(CFGCA[i].crCommand));
-      if cmd = '' then
-         begin
-         Continue;
-         end;
+   (* ONE WALK, OVER THE SETTINGS OBJECT -- 2026-09-14.
 
-      (* CONTEST IS THE CONTEST. It is not a station preference that happens
-        to be stored in a log, and it must be captured as contest-scoped even
-        when nothing read a .cfg -- which is now the ORDINARY case, because a
-        contest created by the New Contest dialog has a .db and no .cfg at all.
+     TWO LOOPS STOOD HERE and they had to, because a setting was in one of two
+     places: a CFGCA row, or the model. The first walked the array by index and
+     the second walked Settings.CommandNames for the contest-scoped settings
+     the array could no longer reach -- a hole that was silent for as long as
+     it existed, because a contest-scoped group is deliberately excluded from
+     settings/tr4w.json and so had nowhere else to persist.
 
-        WITHOUT THIS THE LOG CANNOT BE REOPENED USEFULLY, and the failure is
-        total and silent. Measured on NY4I's own log, 2026-09-03: 410 captured
-        rows, of which exactly ONE was contest-scoped -- MY CALL. On the next
-        open, Contest stayed DUMMYCONTEST, so FCONTEST never ran
-        `ActiveExchange := ContestsArray[Contest].AE` and ActiveExchange
-        remained UnknownExchange. ProcessExchange's case has no else, so it
-        returned False without a word and NO QSO COULD BE LOGGED AT ALL. The
-        operator sees Enter do nothing.
+     THE ARRAY IS GONE, so there is one place and one walk. Every rule the
+     first loop applied is kept below; the skips it made for a nil crCommand
+     and a csRem row have no subject any more.
 
-        CommandCameFromContestCFG ANSWERS FALSE FOR A CONTEST THAT NEVER HAD A
-        .cfg, which is exactly backwards for this row: the newer the contest,
-        the less likely it is to be recorded as belonging to one. MY CALL was
-        already special-cased here for the same reason; CONTEST is the other
-        half of that pair and was missed. *)
-      (* CONTEST IS NOT CAPTURED AT ALL. NY4I, 2026-09-03: "the config row has
-        outlived its usefulness since we can store that in the .db file."
-
-        The contest table holds contest_type, written once when the log is
-        created and never recomputed. This row was a SECOND copy, rewritten on
-        every clean exit from whatever the running program believed at the
-        time -- so one bad session poisoned it permanently. That is not
-        hypothetical: NY4I's log opened without a contest, exited cleanly, and
-        this wrote CONTEST = DUMMY CONTEST into it. Every open afterwards read
-        it back and refused it, and the log could never be used again while
-        the contest table said CQ-WW-SSB the whole time.
-
-        One of the two was a fact about the log; the other was a fact about a
-        session. Only one of them belongs in the file. *)
-      if cmd = 'CONTEST' then
-         begin
-         Continue;
-         end;
-
-      (* A CONTEST-SCOPED SETTING IS ALWAYS THE CONTEST'S, whatever file it
-        arrived in. The band enables are the case: FCONTEST assigns them when a
-        contest loads, so CommandCameFromContestCFG can say no -- the value was
-        not typed in a .cfg, it was computed -- and they would be recorded as
-        the STATION'S. Measured in a real log before changing anything: HF, VHF
-        and WARC BAND ENABLE all carried source 'station' in
-        target/2026 ARRL-10 NY4I, with WARC TRUE in a ten-metre contest.
-
-        NY4I, 2026-09-11: a contest parameter belongs in the contest config in
-        the database and never in tr4w.json. This is the half that puts it
-        there; TR4WSettings.ToJSON is the half that keeps it out of the file. *)
-      if CommandCameFromContestCFG(cmd)
-         or (cmd = 'MY CALL')
-         or Settings.CommandIsContestScoped(cmd) then
-         begin
-         (* MY CALL IS A CONTEST SETTING AND HAS TO BE NAMED AS ONE.
-
-            CommandCameFromContestCFG says no for it, and not because it came
-            from the station config: LogCfg SKIPS the "MY CALL" line while
-            reading a .cfg when a callsign is already set (it has its own
-            first-command rule), so NoteCommandFromContestCFG never fires and
-            the row is recorded as 'station' by default.
-
-            It is the ENTRY'S callsign -- which is why C2 already stores it on
-            the contest row -- and without it here, a log opened with an empty
-            .cfg halts on "No callsign specified" while its own callsign sits
-            in the config table unread. *)
-         src := 'contest';
-         end
-      else
-         begin
-         src := 'station';
-         end;
-
-      (* A COMMAND WHOSE VALUE CANNOT BE WRITTEN DOWN IS NOT CAPTURED.
-
-        THIS HUNG THE PROGRAM, and headlessly it hung it forever. REMINDER is
-        an ACTION, not a setting -- applying it calls QuickEditResponse('Enter
-        time for reminder') and waits for a human (help.pas:642). It was being
-        captured with an empty value and re-applied on every open, so a batch
-        /EXPORT sat at a prompt nobody could see. Measured on the golden corpus:
-        general_qso aborted every run, and the count of failures moved around
-        because it depended on which sets had been opened.
-
-        THE ctFreqList PAIR ARE THE SAME MISTAKE WITH A WORSE ENDING. BAND MAP
-        CUTOFF FREQUENCY and FREQUENCY MEMORY appear ONCE PER ENTRY in the band
-        plan; capturing one blank value and applying it can replace an
-        operator's whole band plan with nothing (see uCFG's note on
-        CFGCommandIsMultiValued).
-
-        THE RENDERER ALREADY KNEW -- it warned '%s: crType %d is not rendered
-        here' and returned ''. What it could not do was say so to a caller,
-        because '' is a legitimate value for a string setting. Now it can. *)
-      value := AnsiString(CFGCommandValueAsString(cmd, renderable));
-      if not renderable then
-         begin
-         Continue;
-         end;
-
-      GRepository.SaveConfigValue(AnsiString(cmd), value, src);
-      Inc(saved);
-      end;
-
-   (* A CONTEST-SCOPED SETTING THAT HAS LEFT CFGCA, which the loop above
-     cannot reach: it walks the array, and these have no row in it.
-
-     THIS WAS A HOLE AND IT WAS SILENT. A contest-scoped group is excluded
-     from settings\tr4w.json by design -- that is what TR4WSettings.ToJSON's
-     SkipContestScoped does -- so with no capture here such a setting had
-     NOWHERE to persist at all. The band enables have been in that state
-     since they moved: the arm above that asks Settings.CommandIsContestScoped
-     was written for them and could never fire, because by then their rows
-     were gone.
-
-     It costs nothing while the values are ones fcontest computes -- it
-     recomputes them on every open. It costs an operator their contest's
-     rules the moment one comes from a file: target\dom\Idaho QSO Party.cfg
-     sets MULT BY BAND, MULT BY MODE, MULTIPLE BANDS, MULTIPLE MODES and
-     DOMESTIC FILENAME, and a contest .cfg is read ONCE and converted. Not
-     capturing them means the second open scores the contest differently
-     from the first, with nothing said.
-
-     'contest' WITHOUT ASKING CommandCameFromContestCFG, for the reason the
-     arm above gives: a contest-scoped setting is the contest's whatever file
-     it arrived in, and the .cfg question answers no for a value the program
-     computed. *)
+     WHY THIS ROUTINE EXISTS AT ALL: the config table in the log is the
+     contest's point-in-time record -- what the settings WERE while this log
+     was written -- so reopening it next year scores it the way it was scored
+     then. *)
    names := Settings.CommandNames;
    try
       for i := 0 to names.Count - 1 do
          begin
          cmd := string(names[i]);
-         if not Settings.CommandIsContestScoped(cmd) then
+         if cmd = '' then
             begin
             Continue;
             end;
-         if not Settings.TryGetByCommand(cmd, modelValue) then
+
+         (* CONTEST IS NOT CAPTURED. NY4I, 2026-09-03: "the config row has
+           outlived its usefulness since we can store that in the .db file."
+
+           The contest table holds contest_type, written once when the log is
+           created and never recomputed. This row was a SECOND copy, rewritten
+           on every clean exit from whatever the running program believed at
+           the time -- so one bad session poisoned it permanently. That is not
+           hypothetical: NY4I's log opened without a contest, exited cleanly,
+           and this wrote CONTEST = DUMMY CONTEST into it. Every open
+           afterwards read it back and refused it, and the log could never be
+           used again while the contest table said CQ-WW-SSB the whole time.
+
+           One of the two was a fact about the log, the other a fact about a
+           session. Only one of them belongs in the file. *)
+         if cmd = 'CONTEST' then
             begin
             Continue;
             end;
-         GRepository.SaveConfigValue(AnsiString(cmd), AnsiString(modelValue),
-                                     'contest');
+
+         (* A CONTEST-SCOPED SETTING IS ALWAYS THE CONTEST'S, whatever file it
+           arrived in. The band enables are the case: FCONTEST assigns them
+           when a contest loads, so CommandCameFromContestCFG can say no --
+           the value was not typed in a .cfg, it was computed -- and they
+           would be recorded as the STATION'S. Measured in a real log before
+           changing anything: HF, VHF and WARC BAND ENABLE all carried source
+           'station' in target/2026 ARRL-10 NY4I, with WARC TRUE in a
+           ten-metre contest.
+
+           MY CALL IS A CONTEST SETTING AND HAS TO BE NAMED AS ONE.
+           CommandCameFromContestCFG says no for it, and not because it came
+           from the station config: LogCfg SKIPS the "MY CALL" line while
+           reading a .cfg when a callsign is already set, so
+           NoteCommandFromContestCFG never fires and the row defaults to
+           'station'. It is the ENTRY'S callsign -- which is why the contest
+           row already stores it -- and without it here, a log opened with an
+           empty .cfg halts on "No callsign specified" while its own callsign
+           sits in the config table unread. *)
+         if CommandCameFromContestCFG(cmd)
+            or (cmd = 'MY CALL')
+            or Settings.CommandIsContestScoped(cmd) then
+            begin
+            src := AnsiString('contest');
+            end
+         else
+            begin
+            src := AnsiString('station');
+            end;
+
+         (* A COMMAND WHOSE VALUE CANNOT BE WRITTEN DOWN IS NOT CAPTURED.
+
+           THIS HUNG THE PROGRAM, and headlessly it hung it forever. REMINDER
+           was an ACTION, not a setting -- applying it called
+           QuickEditResponse('Enter time for reminder') and waited for a human
+           -- so it was captured with an empty value, re-applied on every
+           open, and a batch /EXPORT sat at a prompt nobody could see.
+           Measured on the golden corpus: general_qso aborted every run.
+
+           THE RENDERER SAYS SO through aRenderable, which is the distinction
+           that was missing: '' is a legitimate value for a string setting,
+           so returning '' could not report the difference. *)
+         value := AnsiString(CFGCommandValueAsString(cmd, renderable));
+         if not renderable then
+            begin
+            Continue;
+            end;
+
+         GRepository.SaveConfigValue(AnsiString(cmd), value, src);
          Inc(saved);
          end;
    finally
@@ -1726,13 +1665,20 @@ begin
                The count was the most misleading part -- it reported success
                for the very row it had declined to apply.
 
-               THE COMPARISON STAYS FOR ORDINARY ROWS, which is what it was
-               added for: CONTEST's hook is NOT idempotent, and re-applying it
-               appended to the domestic file name. Both facts are true, and the
-               crA test is what separates them. *)
-            idx := FindCFGCommand(cmd);
+               THE COMPARISON STAYS FOR ORDINARY SETTINGS, which is what it
+               was added for: CONTEST's effect is NOT idempotent, and
+               re-applying it appended to the domestic file name.
+
+               'IS IT CONTEST' RATHER THAN 'IS ITS crA ZERO' -- 2026-09-14.
+               The crA test named the hook table, and what it was really
+               asking is whether re-applying this setting does something
+               beyond assigning it. Of every setting in the program that was
+               true of exactly one, and it is the one the note above is about;
+               a property setter is idempotent by construction. Naming it
+               says what the test is for, where a hook index only said where
+               the answer was stored. *)
             if (CFGCommandValueAsString(cmd) = val) and
-               (idx >= 0) and (CFGCA[idx].crA = 0) then
+               (not UnicodeSameText(cmd, 'CONTEST')) then
                begin
                inc(Result);
                Continue;
@@ -1769,9 +1715,9 @@ begin
                if logger <> nil then
                   begin
                   logger.Warn('[LogStore] the log sets %s = %s and this build ' +
-                              'would not accept it (CFGCA row %d). The command ' +
-                              'is left at its current value.',
-                              [cmd, val, FindCFGCommand(cmd)]);
+                              'would not accept it. The command is left at ' +
+                              'its current value.',
+                              [cmd, val]);
                   end;
                end;
             end;

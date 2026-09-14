@@ -77,7 +77,29 @@ $generated = @('RadioTypeTokensA')
 # The floor. A lint that resolves nothing and reports success is worse than no
 # lint, and this one reaches its subjects through two layers of parsing, so it
 # states how many it MUST find.
-$minimumTables = 36
+# LOWERED 36 -> 31 on 2026-09-14, WITH THE FIVE TABLES ACCOUNTED FOR ONE BY
+# ONE. A floor that is lowered because a number did not come out is not a
+# floor, so each of the five that left the subject set is named:
+#
+#   MP3RecorderDurationSA           deleted -- the recorder went 2026-09-07;
+#                                   this only existed to keep a withdrawn row
+#                                   structurally valid.
+#   CallWindowPositionTypeSA        deleted -- CALL WINDOW POSITION is a
+#   FootSwitchModeTypeStringArray   deleted -- FOOT SWITCH MODE is a
+#                                   withdrawn command (RETIRED_COMMANDS), and
+#                                   nothing but the parser ever read either.
+#   tCertificateSA                  deleted -- the Cabrillo summary dialog
+#                                   edits Certificate directly; the spellings
+#                                   had no reader.
+#   PortTypeSA                      KEPT, but it is not a config vocabulary
+#                                   any more: SERIAL n is abandoned and a port
+#                                   is its OS name. Its one remaining reader
+#                                   formats a log line.
+#
+# All five were reached ONLY through ListParamArray, which went with the last
+# CFGCA row. The 31 that remain are registered vocabularies, and that is the
+# shape this lint was always aiming at.
+$minimumTables = 31
 
 # ---------------------------------------------------------------------------
 # The literals of a Pascal initialiser, AND NOTHING FROM A COMMENT.
@@ -162,20 +184,18 @@ if (-not (Test-Path -LiteralPath $cfgPath))
    exit 1
    }
 
-# --- which tables does ListParamArray actually reach? ----------------------
+# --- ListParamArray IS GONE, 2026-09-14, and so is the pass that read it ---
+#
+# This lint began by walking `lpArray: @NAME` entries in uCFG's ListParamArray,
+# because that table was where a setting's spellings were reached from. The
+# last CFGCA row left on 2026-09-14 and the table went with it.
+#
+# NOTHING IS LOST, and the transition was visible while it happened: a table
+# whose row moved stopped being pointed at by ListParamArray and started being
+# pointed at by a RegisterSettingAllowedValues call, which the pass below
+# already followed. The FLOOR is what kept that honest -- six tables lost their
+# guard in silence on 2026-09-13 and the floor is what reported it.
 $wanted = New-Object 'System.Collections.Generic.HashSet[string]'
-foreach ($line in @(Get-Content -LiteralPath $cfgPath))
-   {
-   if ($line.TrimStart().StartsWith('//')) { continue }
-   if ($line -notmatch 'lpArray:\s*@(\w+)') { continue }
-   [void] $wanted.Add($Matches[1])
-   }
-
-if ($wanted.Count -eq 0)
-   {
-   Write-Host 'Lint-SpellingTables: ListParamArray named NO tables -- the parse failed, which is not a pass.'
-   exit 1
-   }
 
 # --- find each declaration and read its literals ---------------------------
 $findings = @()

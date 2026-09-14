@@ -663,7 +663,6 @@ procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
 var
    ini: TIniFile;
    i: integer;
-   idx: integer;
    value: string;
    carried: integer;
 begin
@@ -698,8 +697,10 @@ begin
          // and produce an authentication failure that looks like a server
          // problem.  There is no way to tell a masked value from a real one, so
          // the row is skipped and the operator is told to type it once.
-         idx := FindCFGCommand(MIGRATED_COMMANDS[i]);
-         if (idx >= 0) and (CFGCA[idx].crType = ctPassword) then
+         (* THE SETTINGS OBJECT ANSWERS THIS NOW, by the property's TYPE
+           (TSecretText) rather than by a row's crType. Same question, and it
+           is the only thing left that can answer it. *)
+         if Settings.CommandIsSecret(MIGRATED_COMMANDS[i]) then
             begin
             logger.Warn('[SeedMigratedCommands] %s not carried over from tr4w.ini ' +
                         '-- passwords there may be a display mask.  Re-enter it in Preferences.',

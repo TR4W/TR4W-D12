@@ -56,28 +56,18 @@ uses
   WRITES GO TO THE INI.  This is the un-migrated state: SetCFGCommandValue puts
   the value in tr4w.ini, the row stays visible in Ctrl-J, and the ini loader
   re-applies it at startup.  See RegisterStoredSetting for the migrated form. }
-function RegisterLegacySetting(const aKey, aCommand, aCaption: string): TSettingBase;
+(* RegisterLegacySetting IS GONE -- 2026-09-14, with the last CFGCA row.
 
-{ The SAME adapter, but writing to settings\tr4w.json instead of tr4w.ini.
+  It registered a setting whose value lived in the array, and its constructor
+  read four of its own attributes out of the row (crJ, crP, crA, crNetwork) --
+  so it could not register a setting whose row had moved. That split was
+  deliberate, and it is why this unit could be unpicked cleanly rather than
+  rewritten: a migrated setting went to RegisterModelSetting and an unmigrated
+  one stayed here, and the two were never the same name.
 
-  This is what a row graduates to.  The only difference is the write path --
-  ApplyAndStoreCommand rather than SetCFGCommandValue -- because the read side
-  was never the problem: CFGCommandValueAsString reads the live global either
-  way.
-
-  USE IT WITH crS = csJSON, IN THE SAME COMMIT, and not otherwise.  The two
-  halves are one change:
-
-    * flip the row without moving the writer, and Preferences keeps writing an
-      ini nothing reads -- the setting appears to save and is gone on restart;
-    * move the writer without flipping the row, and the ini stays a second,
-      staler source of the same value, which the loader will happily apply over
-      the top of the JSON one.
-
-  The store is the one PREFERENCES IS EDITING, supplied by ActiveStoreProvider
-  below, not a fresh one loaded from disk.  That is what keeps Cancel working:
-  the value lands in the working copy and is written out only when the operator
-  saves. }
+  WHAT REMAINS IS NOT LEGACY. TStoredSetting writes settings/tr4w.json through
+  the radio configuration store, which is where the radio, keyer, cluster and
+  profile libraries keep their values. *)
 function RegisterStoredSetting(const aKey, aCommand, aCaption: string): TSettingBase;
 
 type
@@ -99,20 +89,23 @@ uses
    SysUtils,
    MainUnit,               // logger -- see the config-change lines below
    uCFG,
+   uSettingsModel,        // Settings.OwnsCommand -- the registration check
    uRadioConfigStore,     // TRadioConfigStore -- the cast in TStoredSetting
    uRadioConfigApply;     // ApplyAndStoreCommand
 
 type
-   { A CFGCA row wearing the registry's interface.  See the unit header for why
-     this is one class rather than a closure per row. }
-   TLegacySetting = class(TSettingBase)
+   { A SETTING THE CONFIGURATION STORE OWNS, wearing the registry's interface.
+
+     ONE CLASS NOW, NOT TWO. It was TLegacySetting plus a descendant, and they
+     differed only in WHERE a write went -- tr4w.ini, or the store. The ini
+     path went with the array: there is no row for it to apply and no file for
+     it to write. Folding the base in keeps the reading half beside its only
+     user. }
+   TStoredSetting = class(TSettingBase)
    private
       FCommand: string;
    protected
-      { Everything that has to happen AFTER a value is accepted, in both
-        subclasses: repaint what the change made stale, then tell the form.
-        Shared rather than written twice, because the two TrySetText bodies
-        differ only in WHERE the value is stored. }
+      { What happens AFTER a value is accepted: tell the form. }
       procedure AfterApplied;
    public
       constructor Create(const aKey, aCommand, aCaption: string);
@@ -122,107 +115,68 @@ type
       property Command: string read FCommand;
    end;
 
-   { The migrated form: identical except that a write goes to the JSON store.
+{ ----------------------------------------------------------- TStoredSetting - }
 
-     Descends from TLegacySetting rather than duplicating it, because everything
-     other than the write -- the registration-time check, reading through
-     CFGCommandValueAsString, the allow-list, NeedsRestart -- is the same and
-     should stay the same. Only TrySetText differs, which is the whole point. }
-   TStoredSetting = class(TLegacySetting)
-   public
-      function TrySetText(const aText: string; out aError: string): boolean; override;
-   end;
-
-{ ---------------------------------------------------------- TLegacySetting - }
-
-constructor TLegacySetting.Create(const aKey, aCommand, aCaption: string);
-var
-   idx: integer;
+constructor TStoredSetting.Create(const aKey, aCommand, aCaption: string);
 begin
    inherited Create(aKey, aCaption);
    FCommand := aCommand;
    LegacyCommand := aCommand;   // indexed by the Preferences search box
 
-   idx := FindCFGCommand(aCommand);
-   if idx < 0 then
+   (* LOUD AT REGISTRATION. A mistyped command name would otherwise present as
+     a control that reads blank and silently discards what is typed into it,
+     and only when that panel is opened.
+
+     ASKED OF THE SETTINGS OBJECT, not of a row: FindCFGCommand stood here and
+     the array it searched is gone. Same guarantee, same failure mode. *)
+   if not Settings.OwnsCommand(aCommand) then
       begin
-      // Loud at registration.  A mistyped command name would otherwise present
-      // as a control that reads blank and silently discards what is typed into
-      // it -- and it would do so only when that panel is opened.
-      raise Exception.CreateFmt('Setting "%s": no CFGCA command called "%s"',
-                                [aKey, aCommand]);
+      raise Exception.CreateFmt(
+         'Setting "%s": the settings model does not own a command called "%s"',
+         [aKey, aCommand]);
       end;
 
-   // crJ:1 is the table's way of saying "restart required".  Lifting it here
-   // means a UI can say so without every panel hard-coding which of its fields
-   // are which.
-   NeedsRestart := (CFGCA[idx].crJ = 1);
+   (* THE FOUR ATTRIBUTES THAT CAME OUT OF THE ROW ARE NOW THE DEFAULTS, and
+     each has a better home than a byte in a table:
 
-   (* crP is a numbered redraw handler and crA an "additional proc"; either
-     means writing this row runs code. See TSettingBase.HasSideEffects for why
-     that has to be visible from outside. *)
-   HasSideEffects := (CFGCA[idx].crP <> 0) or (CFGCA[idx].crA <> 0);
-
-   (* crJ 2 is read-only and 3 is a read-only message. See
-     TSettingBase.ReadOnly. *)
-   ReadOnly := (CFGCA[idx].crJ = 2) or (CFGCA[idx].crJ = 3);
-
-   (* crNetwork 1 means "send this change to the other positions". See
-     TSettingBase.Broadcast. *)
-   Broadcast := (CFGCA[idx].crNetwork = 1);
+       crJ:1  NeedsRestart   -- a parameter on RegisterModelSetting, because
+                                it is true of almost nothing: a property
+                                setter applies the value on the spot.
+       crP/crA HasSideEffects -- a setter always has them, and it runs however
+                                the value was set rather than only when a
+                                config line applied a row.
+       crJ 2/3 ReadOnly      -- set by the caller at registration.
+       crNetwork Broadcast   -- uCFG.CommandIsSharedWithPeers, which is a
+                                statement about the multi-op protocol rather
+                                than about the setting. *)
+   NeedsRestart   := False;
+   ReadOnly       := False;
+   HasSideEffects := True;
+   Broadcast      := CommandIsSharedWithPeers(aCommand);
 end;
 
-procedure TLegacySetting.AfterApplied;
+procedure TStoredSetting.AfterApplied;
 begin
-   // TAKE EFFECT NOW.  Thirty CFGCA rows carry a crP redraw handler, and until
-   // 2026-08-21 only the old Ctrl-J dialog ran it -- so a setting changed in
-   // Preferences reached its global immediately but did not reach the screen
-   // until the next start.  NY4I hit it on AUTO SEND CHARACTER COUNT ("is there
-   // any reason that cannot be created right away?") and it was general.
-   //
-   // Rows with no handler are the ones nothing draws from; RunCommandRedrawProc
-   // returns for those.
-   RunCommandRedrawProc(FindCFGCommand(FCommand));
-
+   (* THE REDRAW RAN HERE UNTIL 2026-09-14, as RunCommandRedrawProc: thirty
+     rows carried a crP handler and only the old Ctrl-J dialog ever ran it, so
+     a setting changed in Preferences reached its global immediately and the
+     screen at the next start. It is the property's setter now, which means it
+     has already happened by the time we get here. *)
    if Assigned(OnApply) then
       begin
       OnApply();
       end;
 end;
 
-function TLegacySetting.AsText: string;
+function TStoredSetting.AsText: string;
 begin
    Result := CFGCommandValueAsString(FCommand);
 end;
 
-function TLegacySetting.AllowedValues: TArray<string>;
+function TStoredSetting.AllowedValues: TArray<string>;
 begin
-   // Only ckArray rows answer this today.  ckList rows have a spelling list
-   // too, but it lives in a different array reached through a different index,
-   // and those are being converted to TEnumSetting rather than taught here --
-   // adding a second lookup would be extending the design we are leaving.
    Result := CFGCommandAllowedValues(FCommand);
 end;
-
-function TLegacySetting.TrySetText(const aText: string; out aError: string): boolean;
-begin
-   aError := '';
-
-   // Through CheckCommand, not by assignment: it is what enforces crMin/crMax,
-   // runs the row's crA hook, and knows which typed global the value belongs
-   // in.  Bypassing it is what the SCP MINIMUM LETTERS access violation came
-   // from.
-   Result := SetCFGCommandValue(FCommand, aText);
-   if not Result then
-      begin
-      aError := Format('%s does not accept "%s"', [FCommand, aText]);
-      Exit;
-      end;
-
-   AfterApplied;
-end;
-
-{ ----------------------------------------------------------- TStoredSetting - }
 
 function TStoredSetting.TrySetText(const aText: string; out aError: string): boolean;
 var
@@ -301,11 +255,6 @@ begin
       end;
 
    AfterApplied;
-end;
-
-function RegisterLegacySetting(const aKey, aCommand, aCaption: string): TSettingBase;
-begin
-   Result := RegisterSetting(TLegacySetting.Create(aKey, aCommand, aCaption));
 end;
 
 function RegisterStoredSetting(const aKey, aCommand, aCaption: string): TSettingBase;

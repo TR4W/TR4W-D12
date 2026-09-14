@@ -71,45 +71,18 @@ uses
    ,
   uTR4WStrings;
 
-type
-   ArrayRecord = record
-      (* TYPED, so both readers index it instead of computing an offset --
-        see TF.PCfgAllowedInts. *)
-      arArrayPtr: PCfgAllowedInts;
-      arArrayLength: integer;
-      arVar: PInteger;
-   end;
+(* THE THREE RECORDS THAT DESCRIBED A ROW ARE GONE -- 2026-09-14.
 
-type
-   ListParamRecord = record
-    {(*}
-    lpArray  : Pointer;
-    lpLength : Byte;
-    lpVar    : PByte;
-    {*)}
+  CFGRecord was twenty fields, and the migration found a destination for every
+  one: crCommand is the property path, crAddress and crType are the property,
+  crMin/crMax are a subrange type, crP and crA are the setter and
+  uSettingsEffects, crJ is a parameter on RegisterModelSetting, and crS was a
+  migratory status with no meaning left.
 
-   end;
-
-   CFGRecord = record
-    {(*}
-    {04}crCommand : PAnsiChar;
-    {04}crAddress : Pointer;
-
-    {02}crMin     : Word;
-    {02}crMax     : Word;
-
-    {01}crS       : CFGStatus;
-    {01}crA       : Byte;//additional proc
-    {01}crC       : Byte;//1-write to CFG file,
-    {01}crP       : Byte;//Procedure 0-no proc,
-
-    {01}crJ       : Byte;//0-edit, 1 -edit+restart, 2-readonly,3-message(ro)
-    {01}crKind    : CFGKind;
-    {01}cfFunc    : CFGFunc;
-    {01}crType    : CFGType;
-    {01}crNetwork : Byte; // 0 Do not send to network, 1- Send to network
-    {*)}
-   end;
+  ArrayRecord and ListParamRecord were the two POSITIONAL side tables a row
+  reached by index -- an allow-list of integers, and a list of spellings. A
+  bounded setting states its bounds in its type and a token setting registers
+  its own vocabulary, so neither has anything left to hold. *)
 
    //procedure F_MY_GRID;
 // Is this command's system of record settings\tr4w.json rather than the ini?
@@ -145,11 +118,12 @@ procedure NoteCommandFromContestCFG(const aCommand: string);
 procedure ClearContestCFGCommands;
 function CommandCameFromContestCFG(const aCommand: string): boolean;
 
-// Index of a command in CFGCA, or -1.  Exported because a settings screen edits
-// a row BY NAME and otherwise has to re-scan the table itself.
-function FindCFGCommand(const aCommand: string): integer;
+(* FindCFGCommand IS GONE with the array it indexed. A command is a NAME
+  now, and every question that used to be asked of its row -- what type is
+  it, is it read-only, what may it hold -- is asked of the settings object
+  instead. *)
 
-// A command's current value as text, rendered per its crType/crKind.
+// A command's current value as text// A command's current value as text, rendered per its crType/crKind.
 function CFGCommandValueAsString(const aCommand: string): string; overload;
 
 (* THE SAME THING, AND WHETHER IT WORKED.
@@ -166,74 +140,69 @@ function CFGCommandValueAsString(const aCommand: string): string; overload;
 function CFGCommandValueAsString(const aCommand: string;
                                  out aRenderable: boolean): string; overload;
 
-// The values a ckArray command will ACCEPT, as text, in the table's own order.
-// Empty for any other kind.
-//
-// A ckArray is a DISCRETE ALLOW-LIST, not a range: SetParameterInArray searches
-// for an exact match and rejects anything else.  So a settings screen that
-// offers a free-text box for one is offering values the program will refuse --
-// which is why this exists, and why the SCP control is a drop-down.
+(* THE VALUES A BOUNDED SETTING WILL ACCEPT, as text, in the model's order --
+  empty for one that is not bounded, which a UI reads as "use a text box".
+  Delegates to the settings object; it is still exported from here because
+  Preferences asks by COMMAND NAME. *)
 function CFGCommandAllowedValues(const aCommand: string): TArray<string>;
 
-// True when the row's crType is ctBoolean, so a UI renders a CHECK BOX. Not
-// answerable from AllowedValues, which speaks only for ckArray rows.
+(* WHAT KIND OF CONTROL DOES THIS SETTING WANT? A check box for a boolean, a
+  numbers-only box for an integer. Both were the row's crType and are the
+  property's TYPE now.
+
+  THE OTHER THREE PREDICATES WENT WITH THE ARRAY, and each for its own reason
+  rather than by a sweep:
+
+    CFGCommandIsReadOnly -- crJ 2/3. TSettingBase.ReadOnly says it, set at
+      registration, so Preferences reads the flag it already holds.
+    CFGCommandIsList     -- a ckList row could not be put in a drop-down
+      because its spellings lived in a second positional array. A token
+      setting registers its own vocabulary, so those rows are ordinary
+      drop-downs and there is nothing left to exclude.
+    CFGCommandIsFreqList -- the two accumulating band-plan commands. They are
+      not settings at all any more (TryApplyCommandAction), so no generated
+      row can name them; the way into the band-plan editor is an explicit
+      button on the Band Map page instead of one synthesised from a row. *)
 function CFGCommandIsBoolean(const aCommand: string): boolean;
-
-// True when the row is DISPLAY-ONLY (crJ 2 or 3 -- readonly / message).
-// Ctrl-J honoured this for 59 of the rows it showed; a replacement must too.
-function CFGCommandIsReadOnly(const aCommand: string): boolean;
-
-// True for a row a single edit box cannot faithfully represent: a ckList
-// (fixed spellings this unit cannot yet enumerate) or a ctFreqList (genuinely
-// MULTI-VALUED -- one ini line per entry). Both must be shown READ-ONLY rather
-// than as a text box; see the implementation for the two different ways
-// getting this wrong corrupts tr4w.ini.
 function CFGCommandIsInteger(const aCommand: string): boolean;
-function CFGCommandIsList(const aCommand: string): boolean;
 
-// True for a ctFreqList row -- BAND MAP CUTOFF FREQUENCY and FREQUENCY MEMORY,
-// and only those two. A REFINEMENT of CFGCommandIsList, not a replacement: both
-// remain unbound and unsaveable for the reason spelled out there, but these two
-// have a real editor behind them (uBandPlanForm) and so can offer a way in,
-// which a ckList row cannot. Preferences is the only caller and that is the
-// distinction it needs -- see finding F3 in docs/BENCH_QUEUE.md, where these
-// rows lost their last route into that editor.
-function CFGCommandIsFreqList(const aCommand: string): boolean;
-
-// Apply a value to a command and persist it.  Returns False when CFGCA REFUSES
-// the value, in which case nothing is written -- see the implementation.
+// Apply a value to a command and persist it.  Returns False when the value is
+// REFUSED, in which case nothing is written -- see the implementation.
 (* HOW A [COMMANDS] VALUE IS MADE PERMANENT.
 
   A HOOK RATHER THAN A CALL, because the direction of the units forbids the
-  call: the store lives in uRadioConfigApply, which uses uCFG. uSettingsLegacy
-  already inverts the same dependency with ActiveStoreProvider, and this is that
-  pattern for the one route that is not Preferences.
+  call: the store lives in uRadioConfigApply, which uses uCFG.
 
   ASSIGNED AT STARTUP by uRadioConfigApply. Unassigned means "no store", and
   SetCFGCommandValue then applies the value and says out loud that it will not
-  survive -- rather than writing tr4w.ini, which is what it used to do and which
-  nothing reads any more. *)
+  survive. *)
 type
    TPersistCommandValue = function(const aCommand, aValue: string): boolean;
 
 var
    PersistCommandValue: TPersistCommandValue = nil;
 
+(* DOES THIS SETTING HAVE TO MATCH AT THE OTHER POSITIONS?
+
+  Was the row's crNetwork byte, and it is a list of names here -- the question
+  belongs to the MULTI-OP PROTOCOL ("do the desks have to agree about this")
+  rather than to the setting. SetCFGCommandValue announces a change to peers
+  when the answer is yes; Preferences reads it as TSettingBase.Broadcast. *)
+function CommandIsSharedWithPeers(const aCommand: string): boolean;
+
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
 
-// Run the row's redraw handler -- CommandsProcArray[crP] -- so that a changed
-// setting takes effect on screen NOW rather than at the next restart.
-//
-// Thirty rows carry a crP, and the handler is the ONLY thing that repaints for
-// them: CheckCommand moves the value into the global, and nothing looks at that
-// global again until whatever draws it happens to run.  AUTO SEND CHARACTER
-// COUNT is the visible example -- the arrow beside the callsign field appeared
-// only after a restart (NY4I, 2026-08-21).
-//
-// It lives here, once, because the call is guarded twice over -- crP may be 0
-// (no handler) and the array entry itself may be nil -- and there were already
-// two hand-written copies of those guards, in uOption and in MainUnit.
-procedure RunCommandRedrawProc(aIndex: integer);
+(* RunCommandRedrawProc IS GONE, and so is the hazard it embodied.
+
+  It ran CommandsProcArray[crP] -- a hand-typed index into a positional array
+  of untyped Pointers, so a wrong number compiled and called the wrong
+  handler. That happened here: EXTERNAL LOGGER ENABLED carried crA: 23, the
+  WSJT-X hook.
+
+  A PROPERTY SETTER CANNOT POINT AT THE WRONG HANDLER, and it runs however
+  the value was set rather than only when CheckCommand applied a row -- which
+  is why a config file used to repaint the band map and a menu toggle did
+  not. See uSettingsEffects. *)
 
 function F_RADIO_ONE_TYPE: boolean;
 function F_RADIO_TWO_TYPE: boolean;
@@ -274,385 +243,26 @@ const
    DITDAHRATIO_ARRAY: array[0..03] of integer = (3, 4, 5, 6);
    LEADING_ZEROS_ARRAY: array[0..03] of integer = (0, 1, 2, 3);
 
-(* WHAT IS LEFT OF THE MP3 RECORDER, and only because the two tables below are
-  addressed BY INDEX.
+(* THE FOUR POSITIONAL TABLES ARE GONE -- 2026-09-14.
 
-  CommandsArray reaches its list- and array-valued settings with
-  `crAddress: pointer(N)`, where N indexes ArrayRecordArray or ListParamArray.
-  Deleting a row from either shifts every row above it and silently repoints
-  other settings at the wrong variable -- the same hazard as the tw_ window
-  enum, whose ordinal drives menu ids.
+  ArrayRecordArray (16 slots), ListParamArray (54), AdditionalProcsArray (25)
+  and CommandsProcArray (13). Every one was reached by an INDEX WRITTEN BY
+  HAND into a row's crAddress, crA or crP, which is why a freed slot had to be
+  nil'd rather than removed: deleting an entry shifted every index above it
+  and silently repointed other settings at the wrong variable, the wrong
+  allow-list or the wrong handler. That is not a hypothetical -- EXTERNAL
+  LOGGER ENABLED carried crA: 23, the WSJT-X hook, and CATEGORY-OVERLAY
+  carried the transmitter slot's index, so every overlay line was refused.
 
-  So those two rows stay and their COMMANDS are marked csRem (withdrawn), the
-  mechanism this tree already uses for ninety-odd retired settings: not shown in
-  Preferences, not stored. These declarations exist to keep the rows VALID --
-  ListParamArray's lpVar is dereferenced with no nil check (uCFG:1196, :1848),
-  so a blanked row would be a latent access violation rather than a tidy hole.
+  WHAT REPLACED EACH: an allow-list is a subrange type or a registered
+  vocabulary; a spelling list belongs to the subsystem that owns the enum; a
+  redraw hook is the property's setter; an "additional proc" is an effect in
+  uSettingsEffects, which runs however the value was set.
 
-  Nothing reads them. The recorder they configured went on 2026-09-07;
-  recording is QSOCapture's job now. *)
-type
-   TMP3RecorderDuration = (rdEachQSO, rdEachHour, rdNonStop);
-
-const
-   MP3RecorderDurationSA: array[TMP3RecorderDuration] of PAnsiChar =
-      ('EACH QSO', 'EACH HOUR', 'NON-STOP');
-
-var
-   RecorderDuration: TMP3RecorderDuration = rdEachQSO;
-   RecorderBitrate:  integer = 0;
-
-const
-   // Integer commnand pointers
-   (* A NIL arVar MEANS THE SETTING HAS MOVED, and the SLOT STAYS BEHIND.
-     This table is POSITIONAL -- a row reaches it as `crAddress: pointer(N)`
-     -- so removing an entry would shift every index above it and silently
-     repoint other rows at the wrong allow-list. The same reason
-     AdditionalProcsArray keeps its freed slot. *)
-   ArrayRecordArray: array[1..16] of ArrayRecord =
-      (
-    {(*}
-    (arArrayPtr: @SCP_MINIMUM_LETTERS_ARRAY;       arArrayLength: high(SCP_MINIMUM_LETTERS_ARRAY);       arVar: nil{moved to Settings.Scp.MinimumLetters}),
-    (arArrayPtr: @AUTO_SEND_CHARACTER_COUNT_ARRAY; arArrayLength: high(AUTO_SEND_CHARACTER_COUNT_ARRAY); arVar: nil{moved to Settings.Cw.AutoSendCharacterCount}),
-
-    (arArrayPtr: @AUTO_QSL_INTERVAL;               arArrayLength: high(AUTO_QSL_INTERVAL);               arVar: nil{moved to Settings.Message.AutoQslInterval}),
-
-    (arArrayPtr: @ROW_COUNT_ARRAY;                 arArrayLength: high(ROW_COUNT_ARRAY);                 arVar: nil{moved to Settings.MainWindow.RowCount}),
-    (arArrayPtr: @WINDOW_SIZE_ARRAY;               arArrayLength: high(WINDOW_SIZE_ARRAY);               arVar: nil{moved to Settings.MainWindow.WindowSize}),
-    (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: nil{moved to Settings.Cw.SpeedIncrement}),
-    (arArrayPtr: @MULT_REPORT_MINIMUM_BANDS_ARRAY; arArrayLength: high(MULT_REPORT_MINIMUM_BANDS_ARRAY); arVar: nil{moved to Settings.Contest.MultReportMinimumBands}),
-    (* SLOT FREED 2026-09-13 -- STEREO CONTROL PIN named WHICH LPT PIN drove
-      the headphone relay, and went with the parallel port. *)
-    (arArrayPtr: nil; arArrayLength: 0; arVar: nil),
-    (arArrayPtr: @RECORDER_BITRATE_ARRAY;          arArrayLength: high(RECORDER_BITRATE_ARRAY);          arVar: @RecorderBitrate),
-
-    (arArrayPtr: @RECORDER_SAMPLERATE_ARRAY;       arArrayLength: high(RECORDER_SAMPLERATE_ARRAY);       arVar: nil{@RecorderSampleRate}),
-
-    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
-    (arArrayPtr: nil; arArrayLength: 0; arVar: nil),
-    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
-    (arArrayPtr: nil; arArrayLength: 0; arVar: nil),
-    (arArrayPtr: @DITDAHRATIO_ARRAY;               arArrayLength: high(DITDAHRATIO_ARRAY);               arVar: nil{moved to Settings.Cw.DitDahRatio}),
-    (arArrayPtr: @LEADING_ZEROS_ARRAY;             arArrayLength: high(LEADING_ZEROS_ARRAY);             arVar: nil{moved to Settings.Cw.LeadingZeros}),
-
-    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
-    (arArrayPtr: nil; arArrayLength: 0; arVar: nil),
-    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
-    (arArrayPtr: nil; arArrayLength: 0; arVar: nil)
-    {*)}
-      );
-
-   {crA}
-   AdditionalProcsArray: array[1..25] of Pointer =        // These mult be boolean functions
-      (
-      @F_CONTEST,
-      @F_ZONE_MULTIPLIER,
-      (* SLOT 3 IS FREE.  F_ORION_PORT set ActiveRotatorType and its only
-        caller, the ORION PORT row, was retired on 2026-09-10.  nil rather
-        than a renumbering: this table is POSITIONAL, so removing an entry
-        would shift every crA above it and silently repoint twenty-one rows
-        at the wrong hook.  The dispatcher already handles nil -- it tests
-        Assigned and logs the command that asked. *)
-      nil,
-      nil {CLEAR DUPE SHEET -- the command moved to TryApplyCommandAction},
-      @F_BAND_MAP_DECAY_TIME,
-      (* SLOT 6 IS FREE. F_AUTO_QSL_INTERVAL re-seeded AutoQSLCount, and its
-        only caller -- the AUTO QSL INTERVAL row -- moved to the settings
-        model, where the property's setter does it. nil rather than a
-        renumbering, for the reason slot 3 gives. *)
-      nil,
-      (* SLOT 7 IS FREE. F_CONTEST_NAME called SetContestTitle, which is the
-        property setter's job now -- so it runs however the name is set, not
-        only when a config line set it. nil rather than a renumbering:
-        positional table. *)
-      nil,
-      nil {@F_MY_COUNTRY -- a VALIDATOR, now a registered value check},
-      @F_RADIO_ONE_TYPE,
-      @F_RADIO_TWO_TYPE,
-      (* SLOT 11 IS FREE. F_SCP_COUNTRY_STRING appended the trailing comma
-        the list reader depends on, and that is the property's setter now --
-        so it runs however the value is set, not only when a config line
-        applied the row. nil rather than a renumbering: positional table. *)
-      nil,
-      (* SLOTS 12 AND 13 ARE FREE.  Both hooks did one thing --
-        Radio<n>SerialInvert := StringHas(CMD, 'INVERT') -- reading a flag out
-        of the KEYER RADIO n OUTPUT PORT value.  That is a stored field now
-        (TRadioDefinition.KeyerInvert) applied by uRadioConfigApply, so it no
-        longer depends on a word appearing inside a port name.  nil rather
-        than a renumbering: positional table. *)
-      nil,
-      nil,
-      nil {@F_MY_CALL -- DEPlusMyCall is derived, the rest is a setter},
-      nil {@F_MY_GRID},
-      nil {ADD DOMESTIC COUNTRY -- the command moved to TryApplyCommandAction},
-      nil {BAND MAP CUTOFF FREQUENCY -- the command moved to TryApplyCommandAction},
-      nil {FREQUENCY MEMORY -- the command moved to TryApplyCommandAction},
-      nil {@F_START_SENDING_NOW_KEY -- its body was already a bare Result},
-      @F_DX_MULTIPLIER,
-      nil {@F_MY_ZONE -- the setter raises ZoneWasSet},
-      @F_MY_CONTINENT,
-      nil {@F_UpdateWSJTXEnabled -- the setter starts and stops the server},
-      (* //@F_UpdateExternalLoggerEnabled WAS HERE and is deleted with the
-        function, 2026-09-10.  Commenting it out is what left EXTERNAL LOGGER
-        ENABLED's crA:23 pointing at F_UpdateWSJTXEnabled above -- see the note
-        on those rows.  Its body had itself been commented out to a bare
-        `Result := true`, so it had done nothing for a long time either. *)
-      nil {@F_UpdateWSJTXSendColorizations -- the setter pushes it},
-      nil {@F_UpdateWSJTXMulticastGroup -- the setter joins the group}
-      //@F_SETPARALLELPORT
-      );
-
-   CommandsProcArray: array[1..13] of Pointer =
-      (
-      @DisplayBandMap,
-      @EditableLog.ShowRemainingMultipliers,
-      nil {@DispalayLogGridLines -- the setter raises it},
-      @UpadateAutoSend,
-      nil {@DisplayNextQSONumber -- the setter raises it},
-      @SetComputerName,
-      @DisplayCodeSpeed,
-      @DisplayInsertMode,
-      nil {@UpdateRemainingMultsWindows -- the setter raises it},
-      nil {@SetEditableLogWindowColors},
-      @UpadateMainWindow,
-      nil {@SetStationsCallsignMask -- the setter raises it},
-      (* SLOT 13 IS FREE. DEBUG LOG LEVEL moved to Settings.Log.DebugLevel,
-        and every site that assigns the level already calls
-        UpdateDebugLogLevel itself -- there are three, and the hook was the
-        fourth. nil rather than a renumbering: this table is POSITIONAL. *)
-      nil
-      );
-
-   {List}
-(* FIFTY-FOUR ENUMERATED SETTINGS, EACH POINTING AT ITS SPELLINGS AND AT A
-  GLOBAL VARIABLE. NO, WE WOULD NOT BUILD IT THIS WAY FROM SCRATCH.
-
-  NY4I asked exactly that (2026-09-09): "I am confused why we have an array at
-  all. It seems you would have a settings CLASS and the program accesses the
-  properties. No pointers involved at all." He is right, and it is worth
-  writing down WHY the shape is what it is and what actually blocks changing
-  it, because the answer is not inertia.
-
-  WHAT IT WOULD BE. One class per setting kind -- the radio factory's shape --
-  each knowing its own config spelling, its own allowed values, and how to
-  parse and render itself. No untyped Pointer, no parallel lpLength, no
-  ordinal cast into crAddress as an index into this table, and nothing for a
-  drop-down to enumerate by hand.
-
-  FPC'S RTTI GETS YOU PART OF THE WAY AND NOT ALL OF IT: GetEnumName would
-  replace a table whose spellings are the identifiers, but these are not.
-  RateDisplayType is (QSOs, Points, BandQSOs) and its spellings are 'QSOS',
-  'QSO POINTS', 'BAND QSOS'. The config file's vocabulary is a deliberate,
-  operator-facing one, so the mapping is real data and has to live somewhere.
-  In a class it lives in the class.
-
-  WHAT BLOCKS IT IS lpVar, NOT lpArray. Each row's third field is the address
-  of a GLOBAL -- @RateDisplay, @CD.PossibleCallAction, @Radio2.tKeyerPort. The
-  setting does not own its value; it writes into a variable the rest of the
-  program reads directly. A settings object cannot own a property whose
-  storage is a global that forty units assign to, so the class model is
-  downstream of those globals stopping being the source of truth. That is the
-  config-to-JSON work in docs/CFG_MIGRATION_PLAN.md, and it is the real
-  prerequisite -- not this table.
-
-  SO THE POINTERS HERE ARE A SYMPTOM. What was removed (2026-09-09) is the
-  ARITHMETIC on them: three sites reached into lpArray by hand and one stepped
-  by a hardcoded 4, which crashed every 64-bit build. All three now index
-  TF.PCfgSpellings and let the compiler compute the stride. The untyped
-  Pointer in the record stays until the setting owns its own value, and it is
-  cast in exactly one place per site rather than walked. *)
-   ListParamArray: array[0..53] of ListParamRecord =
-      (
-    {(*}
-    (* SLOT 0 IS FREE. RATE DISPLAY moved to Settings.MainWindow.RateDisplay
-      and took its spelling table with it. nil rather than a renumbering:
-      this table is POSITIONAL and a row reaches it as crAddress: pointer(N),
-      so removing an entry would repoint every row above it. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
-      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
-      its spelling table with it. nil rather than a renumbering: this table
-      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @FootSwitchModeTypeStringArray;     lpLength: Byte(High(FootSwitchModeType));     lpVar: @FootSwitchMode; ),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-{10}(lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
-      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
-      its spelling table with it. nil rather than a renumbering: this table
-      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
-      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
-      its spelling table with it. nil rather than a renumbering: this table
-      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @CallWindowPositionTypeSA;          lpLength: Byte(High(CallWindowPositionType)); lpVar: @CallWindowPosition; ),
-    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
-      its spelling table with it. nil rather than a renumbering: this table
-      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the rotator is a SUBSYSTEM and owns its own
-      taxonomy; the setting holds a token. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
-      its spelling table with it. nil rather than a renumbering: this table
-      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
-      its spelling table with it. nil rather than a renumbering: this table
-      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
-      its spelling table with it. nil rather than a renumbering: this table
-      is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
-{20}(lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
-      Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
-      uSettingsEffects assigns the ordinal. nil, NOT removed:
-      this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-{30}(* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
-      applier in uRadioConfigApply sets the field. nil rather than a
-      renumbering: this table is POSITIONAL. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-
-    (lpArray: @PortTypeSA;                        lpLength: Byte(High(PortType));               lpVar: @Radio1.tKeyerPort; ),
-    (lpArray: @PortTypeSA;                        lpLength: Byte(High(PortType));               lpVar: @Radio2.tKeyerPort; ),
-
-    (* SLOT 40 FREED 2026-09-13 -- ROTATOR PORT is Settings.Rotator.Port, an
-      OS device name.  nil rather than a renumbering: POSITIONAL table. *)
-{40}(lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @MP3RecorderDurationSA;             lpLength: Byte(High(TMP3RecorderDuration));   lpVar: @RecorderDuration; ),
-
-    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
-      on Settings.Contest. nil, not removed: POSITIONAL table. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
-      on Settings.Contest. nil, not removed: POSITIONAL table. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
-      on Settings.Contest. nil, not removed: POSITIONAL table. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
-      on Settings.Contest. nil, not removed: POSITIONAL table. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-
-    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
-      ListParamArray is POSITIONAL and crAddress holds an index. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
-      ListParamArray is POSITIONAL and crAddress holds an index. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED -- the keyer library owns this.  nil, not removed:
-      ListParamArray is POSITIONAL and crAddress holds an index. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-
-    (* SLOT FREED 2026-09-13 -- a Cabrillo category, now a published property
-      on Settings.Contest. nil, not removed: POSITIONAL table. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-{50}(lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @tCertificateSA;                    lpLength: Byte(High(tCertificate));           lpVar: @Certificate;),
-    (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil),
-    (* SLOT FREED 2026-09-13 -- the external logger is a SUBSYSTEM and owns
-      its own taxonomy; the setting holds a token. Its crP was 2, the
-      remaining-multiplier rebuild, which had nothing to do with it: a
-      hand-typed index compiles. *)
-    (lpArray: nil; lpLength: 0; lpVar: nil)
-    {*)}
-      );
+  THE MP3 RECORDER'S LAST TWO DECLARATIONS WENT WITH THEM. They existed only
+  to keep two withdrawn rows VALID, because ListParamArray's lpVar was
+  dereferenced with no nil check. Nothing read them; the recorder itself went
+  on 2026-09-07 and recording is QSOCapture's job. *)
 
    //  CFGKindStringArray                    : array[CFGKind] of PChar = ('Supported', 'Supported', 'Supported', 'Supported', 'Supported', 'Added', 'Removed', 'Not supported');
 
@@ -674,270 +284,13 @@ var
    (* CTYUpdateCheckOnStartup MOVED, 2026-09-12 --
      Settings.Country.UpdateCheckOnStartup. *)
 
-const
+(* CommandsArraySize IS GONE, and it is the most eloquent thing in the file's
+  history: a constant that counted the rows by ADDING UP EVERY FEATURE EVER
+  ADDED, then subtracting every group that left. It started at 415 and the
+  subtractions -- each one a group of settings arriving in uSettingsModel --
+  took it to zero on 2026-09-14. An array of size zero is illegal, which is
+  how the compiler said the migration was finished. *)
 
-   CommandsArraySize = 415 {RadioOneCWSpeedSync} + 1 {RadioTwoCWSpeedSync} + 2 {Radio1/Radio2 FactoryId}
-                       + 1 {ShowAllSerialPorts}     // 4.91.3
-   + 1 {RadioOneCWByCAT} + 1 {RadioTwoCWByCAT} //ny4i // 4.44.5
-   + 9 {UDPBroadcast Variables} + 4 {New UDP Broadcasst Ports}
-   + 1 {ServerAutoSynchronizeLogOnConnect - Issue #912}
-      //ny4i 4.44.9  - Issue 82 added one more UDP variable   Issue 304 Added UDPBroadcastScore
-   + 1 {WSJTXUDPPort}
-   + 1 {Radio TCP Server Port}
-   + 1 {DebugLogLevel}
-   + 1 {WSJTXSendColorizations}
-   + 1 {WSJTXEnabled}
-   + 2 {Radio Startup Commands for Radio 1 and Radio 2}
-   + 4 {Radio IP Address and TCP Port for Radio 1 and Radio 2}
-   + 1 {my Park}
-   + 1 {WSJTXRadioControlEnabled}
-   + 2 {UDPLookupInfo} // Issue 612 ny4i
-   + 2 {Radio1 & Radio2 UseHamLib} // Issue 676 ny4i
-   + 2 {Radio1 and Radio2 KEYER STOP BITS} // Issue 678 ny4i
-   + 5 {Radio ONE HAMLIB ID, Radio 2 HAMLIB ID, HAMLIB DEBUG, HAMLIB ASYNC ONLY, HAMLIB TRACE}
-   + 3 {ExternalLoggerAddress & ExernalLoggerPort & ExternalLoggerEnabled}
-   + 1 {ExternalLogger}
-   + 1 {SpotCollectorEnabled}
-   + 8 {Network Username/Password for Radio 1+2 + backward-compat ICOM NETWORK aliases -- Issue #904}
-   + 1 {WSJTXMulticastGroup}  // Issue 443
-   + 2 {Icom Data Mode ID for Radio 1 and Radio 2}
-   + 1 {YCCCSo2rEnable}  // Issue 61
-   + 1 {ColumnAutoSize}  // Issue 866
-   + 1 {CTYUpdateCheckOnStartup}  // Issue 779
-   + 4 {HAMSCORE ENABLE/URL/USERNAME/PASSWORD}  // Issue #783
-   + 1 {HAMSCORE SEND CONTACT INFO}  // Issue #931
-   + 1 {MY ITU ZONE}  // Issue #930 -- explicit override of CTY.DAT default for multi-zone countries
-   + 2 {PSTROTATOR IP ADDRESS + PSTROTATOR UDP PORT}  // Issue #732
-   + 1 {TELNET DEBUG}  // Issue #23
-   + 1 {TCI DEBUG}
-   + 1 {TCI MAX TX SECONDS}
-   + 2 {Radio1 and Radio2 SERIAL FORMAT}  // dialog-exposed data bits / parity / stop bits
-   (* THE FIRST SUBTRACTION THIS EXPRESSION HAS EVER CARRIED, 2026-09-11.
-     Eleven settings left for uSettingsModel: the eight band map display
-     filters and the three band-class enables.  They are properties of
-     Settings.BandMap and Settings.Bands now, and CheckCommand resolves their
-     command names through the settings object, so no stub row is needed to
-     keep an old config file loading. *)
-   - 11 {band map display filters, HF/VHF/WARC -- moved to uSettingsModel}
-   (* Every csRem row, gone.  The 7 the settings model owns needed nothing
-     -- CheckCommand resolves those names for real -- and the other 91 are
-     names in RETIRED_COMMANDS now instead of twenty-field records. *)
-   - 98 {every csRem row -- withdrawn commands are a name list now}
-   (* Bounded integers, and their crMin/crMax went with them -- into
-     SUBRANGE TYPES on the properties, which the compiler emits as RTTI
-     and TrySetByCommand reads.  A range is part of a type. *)
-   - 4 {band map display limit and item geometry -- moved to uSettingsModel}
-   (* The first group off the Config RECORD.  That record existed because
-     a const array had to hold @Config.Field, an address known at link
-     time; a published property needs no address at all. *)
-   - 5 {push to talk -- moved to uSettingsModel}
-   - 4 {the paddle -- moved to uSettingsModel}
-   (* CW, AND ONLY THE HALF THE SESSION DOES NOT MUTATE. The other five CW
-     commands -- CW ENABLE, CW TONE, FARNSWORTH ENABLE, FARNSWORTH SPEED and
-     WEIGHT -- are changed by control codes mid-message and by live keystrokes,
-     so a streamed property would start persisting a mid-contest adjustment.
-     They stay here until that config/runtime split is decided. See
-     TCwSettings. *)
-   - 5 {CW settings that are not session state -- moved to uSettingsModel}
-   (* THE FOUR CW NUMERICS, and every one of them was a ckArray row whose
-     allow-list turned out to be a contiguous range. They are subrange
-     properties on Settings.Cw now. *)
-   - 4 {CW SPEED INCREMENT, DIT DAH RATIO, LEADING ZEROS, AUTO SEND CHARACTER COUNT}
-   - 2 {ROW COUNT and WINDOW SIZE -- the main window's two sizes}
-   - 1 {AUTO QSL INTERVAL -- the setter re-seeds the countdown}
-   - 2 {SCP MINIMUM LETTERS and STEREO CONTROL PIN -- registered vocabularies}
-   - 2 {R150S MODE and RFOBL MODE -- contest-scoped, FCONTEST assigns them}
-   - 1 {RATE DISPLAY -- the first enum whose TYPE moved to uSettingsModel}
-   - 5 {HOUR DISPLAY, TEN MINUTE RULE, BAND MAP SPLIT MODE, DISTANCE MODE,
-        REMAINING MULT DISPLAY MODE -- their types moved too}
-   - 2 {DUPE CHECK SOUND and USER INFO SHOWN -- the same}
-   - 1 {REMINDER -- withdrawn, not migrated: it never had a variable}
-   - 1 {DEBUG LOG LEVEL -- tLogLevels left VC with it}
-   - 1 {POSSIBLE CALL MODE -- off the SCP database record}
-   - 1 {EXTERNAL LOGGER -- a token; the enum stays with the factory}
-   - 1 {ROTATOR TYPE -- the same, and the last ckList enum row}
-   - 1 {SCP COUNTRY STRING -- off the SCP database record, hook and all}
-   (* THE RADIO LIBRARY'S OWN ROWS. Every one of these reached the rig record
-     through CheckCommand; uRadioConfigApply.ApplyJSONOwnedRadioKey sets the
-     field directly, which is the route the code has been documenting as the
-     destination since the first radio setting moved. *)
-   - 54 {the 26 RADIO ONE/TWO keys, plus POLL RADIO ONE/TWO}
-   (* ALSO to a STORE, not to uSettingsModel: the keyer library holds these,
-     and ApplyKeyerToWinKey has been writing every one of them into
-     WinKeySettings since the library landed. The rows were already csJSON,
-     so the ini loader had stopped reading them -- deleting them removes a
-     restatement, not a route. Three ListParamArray slots fall with them. *)
-   - 17 {the WK keys -- owned by the keyer library}
-   (* THE KEYER OUTPUT PORTS. uRadioConfigApply sets both the port and the
-     inverted-interface flag straight onto the radio now. The rows could not
-     have survived the port becoming an OS name in any case: their vocabulary
-     was PortTypeSA, which spells 'SERIAL 3' and knows nothing of COM3. *)
-   - 2 {KEYER RADIO ONE/TWO OUTPUT PORT}
-   (* THE PARALLEL PORT IS GONE FROM THE PROGRAM, 2026-09-13 (NY4I: "I have
-     reconsidered on LPT ports. You can remove all references to them in the
-     code"). Not the CAPABILITIES -- a YCCC box does radio switching and
-     stereo over OTRSP -- only the LPT transport, which could not be named
-     off Windows and needed a kernel driver on it.
-
-     Each of these selected WHICH parallel port, or what its base address
-     was. STEREO PIN HIGH is deliberately NOT here: YCCCSetStereo reads it,
-     so it is a setting the box uses rather than an LPT detail. *)
-   - 8 {the LPT ports and their base addresses}
-   (* The last two FileNameType buffers CFGCA addressed.  Both are ordinary
-     string properties now, which is what a path always was, and converting
-     their two readers took EnumerateLinesInFile and GenerateCallsignsList
-     off PAnsiChar with them. *)
-   - 2 {BACKUP LOG FILE NAME and INITIAL EXCHANGE FILENAME}
-   (* The LAST port row.  It fed one thing -- the one-time seed of a single
-     rotator into the library, for a station that has never opened the
-     Rotators page -- and it fed it a PortTypeSA ordinal.  Settings.Rotator.Port
-     holds the OS name instead, which is what AddLive wanted all along. *)
-   - 1 {ROTATOR PORT}
-   (* CONTEST-SCOPED, like QSO NUMBER BY BAND and INITIAL EXCHANGE OVERWRITE
-     before them: FCONTEST assigns both per contest and nothing sets them
-     back. The crA hook that rebuilt the title goes to the setter. *)
-   - 2 {CONTEST NAME and CONTEST TITLE}
-   (* THE CABRILLO ENTRY CATEGORIES, per NY4I's ruling of 2026-09-13: these
-     belong to the CONTEST -- "items such as the number of transmitters,
-     assisted/unassisted, etc go with the contest file" -- and settings holds
-     the default that is copied into it.
-
-     CATEGORY-OVERLAY WAS A DEFECT, not a migration. Its row carried
-     crAddress: pointer(49), the SAME slot as CATEGORY-TRANSMITTER, so every
-     overlay line was matched against the transmitter spellings and refused
-     -- a modal "invalid statement in config file" for a perfectly good
-     CATEGORY-OVERLAY: ROOKIE. It has a property of its own now. *)
-   - 7 {the Cabrillo CATEGORY-* keys}
-   (* THE FOUR MULTIPLIER MODES, on the subsystem pattern: the enum stays with
-     the contest engine, the SETTING is the token a config file already
-     writes, and uSettingsEffects turns one into the other. Moving the enums
-     here instead would have dragged sixty order-sensitive values and 149
-     consumers into the settings model for no gain. *)
-   - 4 {DOMESTIC / DX / PREFIX / ZONE MULTIPLIER}
-   (* TEN MORE ckList ROWS ON THE SAME PATTERN: the enum stays with the
-     subsystem that owns it, the setting is the token, uSettingsEffects
-     assigns the ordinal. MY CONTINENT is among them -- it was held back
-     because /EXPORT skips the JSON apply and a csJSON flip could have changed
-     an exported log, which a token with an effect cannot do: the same ordinal
-     arrives from the same table at the same point. *)
-   - 10 {the remaining ckList tokens}
-   (* THE FOUR COMMANDS THAT DO SOMETHING RATHER THAN SET SOMETHING. Three
-     append to a list and one is a bare instruction, so each row was a router
-     to its crA hook with a crAddress pointing at scratch. They are a named
-     dispatch now -- TryApplyCommandAction -- with the hook bodies unchanged
-     and running at the same point. *)
-   - 4 {ADD DOMESTIC COUNTRY, CLEAR DUPE SHEET, BAND MAP CUTOFF FREQUENCY, FREQUENCY MEMORY}
-   - 1 {MULT REPORT MINIMUM BANDS -- moved to uSettingsModel}
-   (* CONNECTION COMMAND is owned by the CLUSTER LIBRARY: uRadioConfigApply
-     already assigns ConnectionCommand from the active cluster definition, so
-     the row was a second writer of one global. *)
-   - 1 {CONNECTION COMMAND -- owned by the cluster library}
-   (* THE LIVE CW STATE, and the split that made it possible. Each of these is
-     a CONFIGURED value and a SESSION value wearing one name -- a control code
-     changes the weight mid-message, the speed keys nudge WPM, Alt-K toggles
-     the gate. The row wrote the session value, so there was nowhere to keep
-     the configured one, and a published property alone would have persisted
-     the nudge.
-
-     CW ENABLE had already been split for exactly that reason and LogCfg has
-     mirrored it after every config read since; the other five now do the
-     same. *)
-   - 6 {the live CW state}
-   (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
-
-     THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
-     binding were deleted with the waveIn capture engine. They are MIGRATED
-     ANYWAY, per NY4I's ruling on MY IOTA -- "migrate my iota too, it is for
-     future use" -- which TUnknownCountryFileSettings already follows. The
-     command keeps parsing, an existing .cfg keeps being understood, and the
-     value is there when the feature is rewritten. MP3 RECORDER ENABLE went
-     that way for the same reason, so retiring these two would have split one
-     dead feature across both answers. *)
-   - 4 {the audio paths -- moved to uSettingsModel}
-   - 1 {BAND MAP DECAY TIME -- moved to uSettingsModel}
-   - 1 {BAND MAP GUARD BAND -- moved to uSettingsModel}
-   - 2 {automatic search and pounce -- moved to uSettingsModel}
-   - 4 {the partial-call strip -- moved to uSettingsModel}
-   - 7 {SO2R -- moved to uSettingsModel}
-   - 2 {Alt-D -- moved to uSettingsModel}
-   - 5 {the call window -- moved to uSettingsModel}
-   - 5 {calling CQ -- moved to uSettingsModel}
-   - 4 {the log, as the operator interacts with it -- moved to uSettingsModel}
-   - 2 {say hi -- moved to uSettingsModel}
-   - 3 {the first of the MY commands -- moved to uSettingsModel}
-   - 1 {MY IOTA -- moved to uSettingsModel; kept for future use}
-   - 1 {MY PARK -- moved to uSettingsModel}
-   - 3 {MY CHECK, MY PREC, MY FD CLASS -- moved to uSettingsModel}
-   - 1 {MY SECTION -- moved to uSettingsModel}
-   - 1 {MY NAME -- moved to uSettingsModel}
-   - 3 {the DVK, three of its five -- moved to uSettingsModel}
-   - 2 {the unknown country file -- moved to uSettingsModel}
-   - 1 {MY GRID -- moved to uSettingsModel}
-   - 1 {MY ZONE -- moved to uSettingsModel}
-   - 2 {MY STATE and its older spelling MY QTH -- moved to uSettingsModel}
-   - 1 {MY COUNTRY -- moved to uSettingsModel}
-   - 1 {MY CALL -- moved to uSettingsModel}
-   (* THE CONTEST'S OWN RULES AND SCORING, and the first group to leave as
-     CONTEST-SCOPED settings rather than station ones: they are kept OUT of
-     settings\tr4w.json and captured into the contest database instead. See
-     the header above TQsoSettings in uSettingsModel. *)
-   - 6 {QSO BY BAND/MODE and the four QSO POINTS -- moved to uSettingsModel}
-   - 3 {MULT BY BAND/MODE, MULT SHEET AUTO RESET -- moved to uSettingsModel}
-   - 2 {QTC ENABLE and QTC MINUTES -- moved to uSettingsModel}
-   - 2 {AUTO DUPE ENABLE CQ and S AND P -- moved to uSettingsModel}
-   - 8 {the rest of the contest's rules -- moved to uSettingsModel}
-   - 3 {the main window font -- moved to uSettingsModel}
-   - 2 {LOG FREQUENCY ENABLE and COLUMN AUTOSIZE -- moved to uSettingsModel}
-   - 1 {MAIN CALLSIGN -- moved to uSettingsModel}
-   - 1 {COMPLETE CALLSIGN MASK -- moved to uSettingsModel}
-   - 1 {STATIONS CALLSIGNS MASK -- moved to uSettingsModel}
-   - 1 {SHOW DOMESTIC MULTIPLIER NAME -- moved to uSettingsModel}
-   - 1 {REVERSE INITIAL EX -- moved to uSettingsModel}
-   - 1 {QZB RANDOM OFFSET ENABLE -- moved to uSettingsModel}
-   - 1 {SHOW ALL SERIAL PORTS -- moved to uSettingsModel}
-   (* THE STATION SETTINGS WHOSE GLOBALS LIVED IN logstuff.pas. Twenty-five
-     rows, into eight new groups and four existing ones -- see
-     uSettingsModel for which went where.
-     Two of them, QSO NUMBER BY BAND and INITIAL EXCHANGE OVERWRITE, went
-     into a CONTEST-SCOPED group because FCONTEST assigns them per contest
-     and nothing ever sets them back. *)
-   - 25 {the logstuff station settings -- moved to uSettingsModel}
-   - 30 {the CW and phone message templates, and the cut numbers
-         -- moved to uSettingsModel}
-   (* NOT to uSettingsModel -- to a STORE, which is the other destination
-     a row can have. udpBroadcast in settings\tr4w.json has held these
-     since 87ad2fc3, and TUDPBroadcastConfig.SeedFromLegacyIni reads the
-     old ini itself, so the rows were writing globals that the program had
-     stopped consulting -- except in two places, which is the point. See
-     OWNED_BY_A_STORE. *)
-   - 14 {UDP broadcast -- owned by the udpBroadcast store}
-   (* Three of these five were AdditionalProcsArray hooks, so the hook
-     table falls with the rows. *)
-   - 5 {WSJT-X -- moved to uSettingsModel}
-   - 4 {the main window's appearance -- moved to uSettingsModel}
-   - 4 {the multi-op network's own policy -- moved to uSettingsModel}
-   - 2 {the two WAE QTC sending options -- moved to uSettingsModel}
-   - 1 {CTY UPDATE CHECK ON STARTUP -- moved to uSettingsModel}
-   - 1 {SHOW FREQUENCY IN LOG -- moved to uSettingsModel}
-   - 9 {how the program behaves while operating -- moved to uSettingsModel}
-   - 4 {four more the CW group owns -- moved to uSettingsModel}
-   - 4 {four more operating settings -- moved to uSettingsModel}
-   - 1 {INTERCOM FILE ENABLE -- moved to uSettingsModel}
-   - 1 {NAME FLAG ENABLE -- moved to uSettingsModel}
-   - 2 {the DX cluster's own two -- moved to uSettingsModel}
-   - 5 {the score server, the telnet host, the poll rate and the
-        DVK's missing-callsigns file -- moved to uSettingsModel}
-   - 3 {tr4wserver's address, port and auto-sync -- moved to uSettingsModel}
-   - 3 {HamScore, three of its five -- moved to uSettingsModel}
-   - 4 {the four FCONTEST assigns per contest -- moved to uSettingsModel, contest-scoped}
-   - 3 {RADIUS OF EARTH, USE CONTROL PORT, MP3 RECORDER ENABLE
-        -- moved to uSettingsModel}
-   (* The last three the case-restoring second pass was holding.
-    They are TSecretText and TCaseSensitiveText now, and that pass
-    asks the settings object by name instead of the array by
-    address -- see LogCfg.RestoreCFGPasswordCase. *)
-   - 3 {the HamScore and server credentials -- moved to uSettingsModel}
-   ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
    //   csRem = retired -- still recognized so old configs do not error, but the
@@ -945,173 +298,29 @@ const
    //   the Options dialog. csNew vs csOld is informational only; no code reads
    //   the difference. To re-activate a retired command, change csRem to csOld.
    // Note if crAddress says pointer(NN), then it is calling a function at position NN in the an array
-   CFGCA: array[1..CommandsArraySize] of CFGRecord =
-      (
-    {(*}
+   (* CFGCA IS GONE -- 2026-09-14, and this is what the whole migration was for.
 
-// BAND MAP ENABLE retired 2026-08-22 (NY4I): "if the window is opened, it is
-// enabled".  It stored into the same boolean the band map window wrote from
-// WM_INITDIALOG and WM_DESTROY, so closing the window turned the setting off
-// and the next save persisted it -- see the comment on BandMapEnable in
-// logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
-// tr4w.json that names it still loads and is ignored.
-// (crCommand: 'COLUMN DUPESHEET COLOR';        crAddress: @ColumnDupeSheetColor;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- // RETIRED 2026-08-24.  A DOS-era layout: the manual describes it as being for
- // "VGA mode below the normal operating screen", and documents an auto-revert
- // ("if two columns each contain more than 25 calls...") that NO CODE IN THIS
- // TREE EVER IMPLEMENTED.  Default was FALSE, uHistory (DELETED 2026-09-11, release notes already harvested) recorded it as "not
- // processed" since the TR-LOG-style dupesheet went in, and the column path
- // carried an uninitialised read nobody had ever hit.  NY4I: "we can retire the
- // option since it defaulted to FALSE."  csRem, not deleted, so an old config
- // naming it still loads without an error.
-// (crCommand: 'COPY FILES';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOperation; crNetwork: 1),
-// (crCommand: 'CQ MENU';                       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
-// CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
-// the entry fields, which are LCL TEdits since Phase 3b and carry their own.
-// csRem, not deleted, so an existing .cfg that sets it still loads.
-// (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
-// (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
+     It was a table of up to 415 rows: a command name, a bare pointer to a
+     global, a type byte, two hook indices and a status. Every one of those
+     fields restated something the compiler already knew, and a wrong index
+     compiled silently -- EXTERNAL LOGGER ENABLED once carried crA: 23, which
+     is the WSJT-X hook.
 
+     WHERE EVERYTHING WENT:
 
+       a SETTING          a published property on Settings, its bounds a
+                          subrange type and its side effect in the setter
+       a SUBSYSTEM'S      a token on the setting plus the subsystem's own
+       vocabulary         table -- radios, keyers, rotators, multipliers
+       a COMMAND          TryApplyCommandAction: the three that accumulate,
+                          and the one that is a bare instruction
+       LIVE STATE         a setting for what was configured and a global for
+                          what the session is doing, mirrored per config read
+       a WITHDRAWN name   RETIRED_COMMANDS -- accepted, logged once, ignored
+       a STORE'S value    OWNED_BY_A_STORE -- accepted here, applied there
 
- (* THE EXTERNAL LOGGER'S THREE ROWS ARE WITHDRAWN, 2026-09-10.
-
-   Their settings are published properties of uSettingsModel now, seeded once
-   from the `commands` section and never read from here again.  csRem rather
-   than deleted, so an old .cfg or ini naming them loads inert instead of
-   failing with "Invalid statement in config file" on every start.
-
-   crAddress is nil because the variables they pointed at NO LONGER EXIST.
-
-   AND crA:23 ON THE 'ENABLED' ROW WAS A LIVE DEFECT -- worth recording,
-   because it is the exact hazard the note on slot 3 above describes, already
-   happened.  AdditionalProcsArray is POSITIONAL. Someone commented
-   `//@F_UpdateExternalLoggerEnabled,` out of it, which shifted nothing that
-   was renumbered but left this row's index pointing one entry earlier than it
-   meant to: slot 23 is F_UpdateWSJTXEnabled.
-
-   So applying EXTERNAL LOGGER ENABLED started or stopped the WSJT-X SERVER
-   and repainted the WSJT-X indicator. Every other crA in that neighbourhood
-   -- MY CONTINENT 22, the two WSJT-X ENABLED rows 23, SEND HIGHLIGHTS 24,
-   MULTICAST GROUP 25 -- is correct, so this row was the only stale one and
-   nothing pointed at it. Retiring the row removes the misfire. *)
- (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
-
-    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
-    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
-    Preferences calls the same appliers rather than going through CheckCommand.
-    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
-    left of it is an entry that accepts a command and does nothing with it,
-    which is what csRem says out loud.
-
-    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
-    ApplyStoredCommands walking the store's `commands` section -- is accepted
-    silently rather than reported as refused. *)
- (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
-
-    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
-    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
-    Preferences calls the same appliers rather than going through CheckCommand.
-    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
-    left of it is an entry that accepts a command and does nothing with it,
-    which is what csRem says out loud.
-
-    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
-    ApplyStoredCommands walking the store's `commands` section -- is accepted
-    silently rather than reported as refused. *)
- (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
-
-    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
-    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
-    Preferences calls the same appliers rather than going through CheckCommand.
-    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
-    left of it is an entry that accepts a command and does nothing with it,
-    which is what csRem says out loud.
-
-    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
-    ApplyStoredCommands walking the store's `commands` section -- is accepted
-    silently rather than reported as refused. *)
-// (crCommand: 'HOUR OFFSET';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
-// (crCommand: 'ICOM COMMAND PAUSE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
-// (crCommand: 'INPUT CONFIG FILE';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
-// (crCommand: 'JST RESPONSE TIMEOUT';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
-// (crCommand: 'K1EA NETWORK ENABLE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
-// (crCommand: 'K1EA STATION ID';               crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctChar; crNetwork: 0),
-// (crCommand: 'KENWOOD RESPONSE TIMEOUT';      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
-  (* WITHDRAWN 2026-09-11.  The value lives in the store's `general` section as
-    LatestConfigFile and always did; this row pointed at a GLOBAL COPY of it.
-    A bridge, not storage -- the first of the 279 such rows to go. *)
-  (* WITHDRAWN 2026-09-10: Settings.Mmtty.Engine. *)
-// (crCommand: 'MULTIPLIER ITEM WIDTH';         crAddress: @MultiplierItemWidth;            crMin:0;  crMax:255;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctByte; crNetwork: 1),
- (* ORION PORT RETIRED 2026-09-10 (NY4I): "Drop Orion port. It covered by the
-     general port as a type Orion in settings".
-
-     It shared list index 40 -- and therefore ActiveRotatorPort -- with
-     ROTATOR PORT, and its crA hook did nothing but set ActiveRotatorType to
-     OrionRotator.  So 'ORION PORT = COM5' was shorthand for "the rotator is
-     an Orion, on COM5": a second spelling of two other settings, in the same
-     family as MY QTH being MY STATE.  With a rotator library that shorthand
-     has nowhere to live.
-
-     csRem, NOT DELETED, and the difference matters to an operator upgrading
-     from 4.x.  A withdrawn row is still RECOGNISED, so an existing .cfg
-     naming it loads without "Invalid statement in config file" -- it is
-     simply inert, and hidden from Ctrl-J.  Deleting the row would turn a
-     stale config line into an error on every start.
-
-     crA is 0 now.  CheckCommand exits on csRem before it reaches the hook,
-     so leaving the index would have pointed at code that could not run. *)
-  (* WITHDRAWN 2026-09-10: it is Settings.Radio.TcpServerPort now. *)
- // Serial frame format 'dps' (data bits 7/8, parity N/O/E, stop bits 1/2), e.g.
- // 8N2.  Empty = use the radio's registered defaults (SerialParamsFor).  Parsed
- // at connect time by RadioObject.ResolveSerialFrameSettings.
-  (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
-    rather than deleted, so an old config naming it loads inert instead of
-    stopping the program with "Invalid statement in config file". *)
- (crCommand: 'STEREO PIN HIGH';               crAddress: @StereoPinState;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0)
- // (crCommand: 'TAIL END CW MESSAGE';           crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),     //n4af 4.41.5
-// (crCommand: 'TAIL END KEY';                  crAddress: @TailEndKey;                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),         // n4af 4.41.5
- //(crCommand: 'TAIL END MESSAGE';              crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
-// (crCommand: 'TAIL END SSB MESSAGE';          crAddress: @TailEndPhoneMessage;            crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
- (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
-
-    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
-    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
-    Preferences calls the same appliers rather than going through CheckCommand.
-    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
-    left of it is an entry that accepts a command and does nothing with it,
-    which is what csRem says out loud.
-
-    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
-    ApplyStoredCommands walking the store's `commands` section -- is accepted
-    silently rather than reported as refused. *)
- (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
-
-    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
-    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
-    Preferences calls the same appliers rather than going through CheckCommand.
-    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
-    left of it is an entry that accepts a command and does nothing with it,
-    which is what csRem says out loud.
-
-    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
-    ApplyStoredCommands walking the store's `commands` section -- is accepted
-    silently rather than reported as refused. *)
- (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
-
-    uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
-    ApplyActiveProfileToConfigAtStartup put it into the global at startup, and
-    Preferences calls the same appliers rather than going through CheckCommand.
-    The row was csJSON, so the ini loader was ALREADY inert for it -- what is
-    left of it is an entry that accepts a command and does nothing with it,
-    which is what csRem says out loud.
-
-    Safe because csRem returns TRUE: anything still naming it -- an old .cfg,
-    ApplyStoredCommands walking the store's `commands` section -- is accepted
-    silently rather than reported as refused. *)
-  (* WITHDRAWN 2026-09-10: Settings.Yccc.So2rEnable. *)
-    {*)}
-      );
+     CheckCommand still exists and still means the same thing to a config
+     file. What it no longer has is a table to scan. *)
 function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 // True when Command names a single-valued (overwrite) config command, i.e. one
@@ -1148,8 +357,8 @@ procedure ProcessReminder(ID, CMD: ShortString);
 procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
 procedure InitializeStrings;
 
-var
-   Changed: array[0..CommandsArraySize - 1] of boolean;
+(* `Changed` WENT WITH THE ARRAY. It was one boolean per row and nothing ever
+  indexed it -- checked before deleting: zero references in the tree. *)
 
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
@@ -1230,30 +439,10 @@ begin
       Exit;
       end;
 
+   (* AND THERE IS NO SECOND PLACE TO ASK. The scan that stood here looked
+     for a csJSON row; csJSON was a migratory status and the array is gone.
+     A name the model does not own is not a setting. *)
    Result := False;
-   for i := Low(CFGCA) to High(CFGCA) do
-      begin
-      if SameText(string(CFGCA[i].crCommand), aCommand) then
-         begin
-         Result := (CFGCA[i].crS = csJSON);
-         Exit;
-         end;
-      end;
-end;
-
-function FindCFGCommand(const aCommand: string): integer;
-var
-   i: integer;
-begin
-   Result := -1;
-   for i := Low(CFGCA) to High(CFGCA) do
-      begin
-      if SameText(string(CFGCA[i].crCommand), aCommand) then
-         begin
-         Result := i;
-         Exit;
-         end;
-      end;
 end;
 
 function CFGCommandValueAsString(const aCommand: string): string;
@@ -1317,295 +506,57 @@ begin
       Exit;
       end;
 
-   idx := FindCFGCommand(aCommand);
-   if idx < 0 then
-      begin
-      Exit;
-      end;
+   (* AND NOTHING ELSE ANSWERS. Every branch that stood below this read a
+     row: a ckList index into ListParamArray, a ckArray index into
+     ArrayRecordArray, and a crType case dereferencing crAddress as a
+     ShortString, an integer or a double.
 
-   // crAddress IS NOT ALWAYS AN ADDRESS.  This is the first thing
-   // docs/CFG_COMMAND_TABLE.md warns about and it cost an access violation
-   // here: SCP MINIMUM LETTERS is ckArray with crAddress: pointer(1), an INDEX,
-   // and the crType case below happily dereferenced 1 as a PInteger.
-   //
-   // So crKind is decided FIRST and completely.  Only ckNormal reaches the
-   // dereferencing code; every other kind is either handled by its own branch
-   // or returns '' rather than guessing at bytes.
-   if CFGCA[idx].crKind = ckList then
-      begin
-      // The value is a SPELLING: crAddress is an index into ListParamArray, and
-      // lpVar holds the current enum ordinal.
-      listIdx := integer(CFGCA[idx].crAddress);
-      if (listIdx >= Low(ListParamArray)) and (listIdx <= High(ListParamArray)) then
-         begin
-         Result := string(PCfgSpellings(ListParamArray[listIdx].lpArray)^
-                             [ListParamArray[listIdx].lpVar^]);
-         end;
-      Exit;
-      end;
-
-   if CFGCA[idx].crKind = ckArray then
-      begin
-      // crAddress indexes ArrayRecordArray, whose arVar POINTS AT the live
-      // value.  The array itself is a discrete allow-list of the values the
-      // command will accept, which is CheckCommand's business, not ours -- all
-      // that is wanted here is what the setting currently is.
-      listIdx := integer(CFGCA[idx].crAddress);
-      if (listIdx >= Low(ArrayRecordArray)) and (listIdx <= High(ArrayRecordArray)) then
-         begin
-         if ArrayRecordArray[listIdx].arVar <> nil then
-            begin
-            Result := IntToStr(ArrayRecordArray[listIdx].arVar^);
-            end;
-         end;
-      Exit;
-      end;
-
-   if CFGCA[idx].crKind <> ckNormal then
-      begin
-      // A kind added later, with an unknown meaning for crAddress.  Say
-      // nothing rather than dereference it.
-      Exit;
-      end;
-
-   // NIL IS A REAL VALUE HERE -- several rows are declared crAddress: nil,
-   // notably the csRem ones whose target no longer exists.
-   if CFGCA[idx].crAddress = nil then
-      begin
-      Exit;
-      end;
-
-   case CFGCA[idx].crType of
-      ctString, ctCaseSensitive, ctURL, ctMessage, ctPassword:
-         Result := string(PAnsiChar(CFGCA[idx].crAddress) + 1);
-      ctDirectory, ctFileName:
-         Result := string(PAnsiChar(CFGCA[idx].crAddress));
-      ctInteger:
-         Result := IntToStr(PInteger(CFGCA[idx].crAddress)^);
-      ctWord:
-         Result := IntToStr(PWord(CFGCA[idx].crAddress)^);
-      ctByte:
-         Result := IntToStr(PByte(CFGCA[idx].crAddress)^);
-      ctBoolean:
-         Result := string(BA[PBoolean(CFGCA[idx].crAddress)^]);
-      ctReal:
-         Result := RealToStr2(PDouble(CFGCA[idx].crAddress)^);
-      ctPortLPT:
-         begin
-            (* ctPortLPT HAS NO ROWS LEFT (2026-09-13) -- the parallel port
-              is gone from the program.  The arm is kept because the TYPE is
-              still declared and an unrendered type is the hazard the note
-              below describes: an empty control reads as "unset", the operator
-              sets it, and their real value is overwritten. *)
-            Result := 'NONE';
-         end;
-
-      ctChar, ctAlphaChar:
-         // A single AnsiChar, not a ShortString -- no length byte, so no +1.
-         Result := string(PAnsiChar(CFGCA[idx].crAddress)^);
-      else
-         // LOUD, not ''.  A type this does not render silently produced an
-         // EMPTY control, which reads to the operator as "unset" -- so they set
-         // it, and their real value is overwritten by whatever they typed over
-         // the blank.  COMPUTER ID (ctAlphaChar) shipped that way; it is above
-         // now, and this else is why the next one will be found by reading a
-         // log rather than by a mis-saved setting.
-         aRenderable := False;
-         logger.Warn('[CFGCommandValueAsString] %s: crType %d is not rendered here',
-                     [aCommand, Ord(CFGCA[idx].crType)]);
-   end;
+     THE WHOLE OF IT IS THE PROPERTY'S TYPE NOW, and TryGetByCommand renders
+     from RTTI -- which is why aRenderable can still be False: a property
+     kind the renderer does not handle reports it rather than returning a
+     plausible empty string. That distinction was the expensive one. A
+     setting that reads blank is set to blank by the next OK. *)
+   aRenderable := False;
 end;
 
 
 function CFGCommandIsBoolean(const aCommand: string): boolean;
-var
-   idx: integer;
 begin
-   // Asked by the generated settings panel to choose a CHECK BOX rather than a
-   // text box.  It cannot use AllowedValues for this: that answers only for
-   // ckArray rows, so a boolean reports an empty list and would otherwise
-   // render as a free-text field that happily accepts "maybe".
-   idx := FindCFGCommand(aCommand);
-   Result := (idx >= 0) and (CFGCA[idx].crType = ctBoolean);
+   (* Asked by the generated settings panel to choose a CHECK BOX rather than
+     a text box. AllowedValues cannot answer it -- a boolean has no allow-list
+     -- so without this a boolean renders as a field that accepts "maybe". *)
+   Result := Settings.CommandIsBoolean(aCommand);
 end;
 
 function CFGCommandIsInteger(const aCommand: string): boolean;
-var
-   idx: integer;
 begin
-   // Asked by the generated settings panel so an integer row gets a
-   // NUMBERS-ONLY text box.  Without it the row is an ordinary TEdit that
-   // accepts anything: NY4I typed "ewed" into Auto-CQ Delay Time
-   // (2026-08-18), and the value would have gone to CheckCommand as text.
-   //
-   // Safe for every integer row in this table: nothing here declares a
-   // negative crMin (checked -- zero rows), so refusing '-' cannot reject a
-   // legal value.  If a signed setting is ever added, this predicate is where
-   // it has to be excluded.
-   idx := FindCFGCommand(aCommand);
-   Result := (idx >= 0) and (CFGCA[idx].crType = ctInteger);
-end;
+   (* So an integer row gets a NUMBERS-ONLY box. Without it the row is an
+     ordinary TEdit that accepts anything: NY4I typed "ewed" into Auto-CQ
+     Delay Time (2026-08-18) and the text went to the parser.
 
-function CFGCommandIsFreqList(const aCommand: string): boolean;
-var
-   idx: integer;
-begin
-   idx := FindCFGCommand(aCommand);
-   Result := (idx >= 0) and (CFGCA[idx].crType = ctFreqList);
-end;
-
-function CFGCommandIsList(const aCommand: string): boolean;
-var
-   idx: integer;
-begin
-   // A ckList row has a fixed set of SPELLINGS, but that set lives in a
-   // different array reached by a different index than ckArray's, and
-   // CFGCommandAllowedValues does not read it.  So a generated panel cannot
-   // offer the right drop-down for one yet -- and must not offer a text box
-   // either.
-   //
-   // Learned the expensive way (2026-08-16): SINGLE BAND SCORE is ckList and
-   // rendered as an edit. Its AsText is the band's DISPLAY form, "All", which
-   // CheckCommand then refuses -- so saving Preferences wrote
-   // `SINGLE BAND SCORE=All` into tr4w.ini and every later start reported
-   // "Invalid statement in config file". A settings screen must never write a
-   // value the program will reject.
-   //
-   // ctFreqList is here for a DIFFERENT and worse reason. Those rows are
-   // MULTI-VALUED: BAND MAP CUTOFF FREQUENCY and FREQUENCY MEMORY appear once
-   // per entry in the ini's [BAND PLAN] section (12 and 24 lines on NY4I's
-   // station), and each line is appended by the row's crA hook. A single edit
-   // box cannot represent that, and saving one would call
-   // WritePrivateProfileString -- which writes ONE value, into [COMMANDS]
-   // rather than [BAND PLAN]. Since the loader is section-blind and last-in-file
-   // wins, that could silently replace a whole band plan with one frequency.
-   // They need a real list editor; until then they are display-only.
-   idx := FindCFGCommand(aCommand);
-   Result := (idx >= 0) and (CFGCA[idx].crType = ctFreqList);
-end;
-
-function CFGCommandIsReadOnly(const aCommand: string): boolean;
-var
-   idx: integer;
-begin
-   // crJ in CFGCA's own encoding: 0-edit, 1-edit+restart, 2-readonly,
-   // 3-message(ro).  Ctrl-J honoured this and so must anything replacing it --
-   // 59 of the rows it showed were display-only, most of them values the
-   // CONTEST sets.  Rendering them as editable would invite an operator to
-   // change something the next contest selection silently overwrites.
-   idx := FindCFGCommand(aCommand);
-   Result := (idx >= 0) and (CFGCA[idx].crJ in [2, 3]);
+     THE '-' QUESTION MOVED WITH IT. The old form was safe because no row
+     declared a negative crMin; a subrange type states its own lower bound,
+     so a signed setting would be visible in the type rather than having to
+     be remembered here. *)
+   Result := Settings.CommandIsInteger(aCommand);
 end;
 
 function CFGCommandAllowedValues(const aCommand: string): TArray<string>;
-var
-   idx, arrIdx, i: integer;
-   values: PCfgAllowedInts;
-   listIdx: integer;
-   base: PCfgSpellings;
 begin
-   idx := FindCFGCommand(aCommand);
-   if idx < 0 then
-      begin
-      (* NO ROW MEANS THE SETTING HAS MOVED, not that it has no vocabulary.
-        Preferences fills its hand-wired drop-downs through here by COMMAND
-        NAME, so without this a migrated setting's combo comes up empty --
-        which is a defect no build, lint or corpus run can see. *)
-      Result := Settings.AllowedValuesForCommand(aCommand);
-      Exit;
-      end;
-   Result := nil;
-
-   // A ckList ROW'S SPELLINGS, returned EXACTLY as the table stores them.
-   //
-   // crAddress is an index into ListParamArray, whose lpArray points at an
-   // array of PAnsiChar -- the same array CFGCommandValueAsString reads the
-   // current value from and the same one GetValueFromArray matches against.
-   // Enumerating it here is the whole of what kept these rows out of a
-   // drop-down; without it CFGCommandAllowedValues returned nil, and a row with
-   // no allowed values is rendered read-only.
-   //
-   // NOT trimmed and NOT case-folded on the way out: the value that goes back
-   // in must be one of these, and the matcher is what tolerates case, not this.
-   if CFGCA[idx].crKind = ckList then
-      begin
-      listIdx := integer(CFGCA[idx].crAddress);
-      if (listIdx < Low(ListParamArray)) or (listIdx > High(ListParamArray)) then
-         begin
-         Exit;
-         end;
-
-      base := PCfgSpellings(ListParamArray[listIdx].lpArray);
-      if base = nil then
-         begin
-         Exit;
-         end;
-
-      // lpLength is high(), so the count is one more than it -- the same
-      // convention GetValueFromArray loops on.
-      SetLength(Result, ListParamArray[listIdx].lpLength + 1);
-      for i := 0 to ListParamArray[listIdx].lpLength do
-         begin
-         Result[i] := string(base^[i]);
-         end;
-      Exit;
-      end;
-
-   if CFGCA[idx].crKind <> ckArray then
-      begin
-      Exit;
-      end;
-
-   arrIdx := integer(CFGCA[idx].crAddress);
-   if (arrIdx < Low(ArrayRecordArray)) or (arrIdx > High(ArrayRecordArray)) then
-      begin
-      Exit;
-      end;
-
-   values := ArrayRecordArray[arrIdx].arArrayPtr;
-   if values = nil then
-      begin
-      Exit;
-      end;
-
-   // arArrayLength is high(), so the count is one more than it.
-   SetLength(Result, ArrayRecordArray[arrIdx].arArrayLength + 1);
-   for i := 0 to ArrayRecordArray[arrIdx].arArrayLength do
-      begin
-      Result[i] := IntToStr(values^[i]);
-      end;
+   (* ONE SOURCE. This used to enumerate a ckList's spellings out of
+     ListParamArray or a ckArray's integers out of ArrayRecordArray, and fell
+     back to the model for a migrated name. There is only the model now --
+     a subrange's bounds, an enumeration's values, or a vocabulary the
+     subsystem registered for a token. *)
+   Result := Settings.AllowedValuesForCommand(aCommand);
 end;
 
-procedure RunCommandRedrawProc(aIndex: integer);
-var
-   cmdProc: procedure;   // Issue #997: typed call of a Pointer change-handler
-begin
-   if (aIndex < 1) or (aIndex > CommandsArraySize) then
-      begin
-      Exit;
-      end;
-
-   if CFGCA[aIndex].crP = 0 then
-      begin
-      Exit;
-      end;
-
-   @cmdProc := CommandsProcArray[CFGCA[aIndex].crP];
-   if Assigned(cmdProc) then
-      begin
-      cmdProc;
-      end;
-end;
 
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
 var
    keyShort, valueShort: ShortString;
    idKey, cmdValue: AnsiString;
-   idx: integer;
 begin
-   // The row, for its crNetwork flag. -1 when the command is not one of ours,
-   // which CheckCommand below will refuse anyway.
-   idx := FindCFGCommand(aCommand);
    // VALIDATE FIRST, PERSIST SECOND -- the same order, and for the same reason,
    // as ApplyRadioToSlot: CheckCommand is what moves the value into the live
    // globals AND what runs the row's crA hook and bounds check; the ini write
@@ -1689,13 +640,13 @@ begin
                      'configuration store is available yet.', [aCommand]);
          end;
 
-      (* AND TELL THE OTHER POSITIONS, if the row says this setting is shared.
+      (* AND TELL THE OTHER POSITIONS, if this setting is shared.
 
-        AFTER the apply and the save, deliberately: a value CFGCA refused or
-        the store would not keep must not be announced to a peer as though it
-        had taken.  SendParameterToNetwork is a no-op when the link is down,
-        which is every single-operator station. *)
-      if (idx >= 0) and (CFGCA[idx].crNetwork = 1) then
+        AFTER the apply and the save, deliberately: a value that was refused,
+        or that the store would not keep, must not be announced to a peer as
+        though it had taken.  SendParameterToNetwork is a no-op when the link
+        is down, which is every single-operator station. *)
+      if CommandIsSharedWithPeers(aCommand) then
          begin
          SendParameterToNetwork(aCommand, aValue);
          end;
@@ -1733,29 +684,125 @@ var
 
    Result1: integer;
 
-// See the interface declaration for the contract.  "Single-valued" means the
-// command overwrites a scalar target, so a second line for the same key is a
-// misconfiguration -- the line-based loader applies every occurrence (last wins)
-// while the Win32 profile API used by the config dialog reads/writes the first
-// (first wins), so the two silently disagree.  The gate is conservative: a
-// command qualifies only when it is ckNormal, is not a frequency-list type, and
-// carries no additional accumulate proc (crA = 0).  Every accumulating command
-// (ctFreqList, ckList/ckArray, ADD DOMESTIC COUNTRY, ...) fails at least one of
-// those and is correctly treated as repeatable.  A command not found in CFGCA
-// (pattern-matched or unknown) returns False.
+(* COMMANDS A CONFIG FILE MAY LEGITIMATELY NAME MORE THAN ONCE.
+
+  "Single-valued" means the command overwrites a scalar target, so a second
+  line for the same key is a misconfiguration -- the line-based loader applies
+  every occurrence (last wins) while the profile API the old config dialog
+  used reads the FIRST, so the two silently disagree and LogCfg reports the
+  duplicate.
+
+  THE OLD TEST WAS STRUCTURAL: ckNormal, not ctFreqList, crA = 0. Every
+  accumulating command failed at least one of those. It is a NAME now, and a
+  short list, because accumulating is a property of the four commands that do
+  it rather than something the table happened to encode -- see
+  TryApplyCommandAction, which is where all four went.
+
+  Unknown names answer False, exactly as the row scan did: a pattern-matched
+  command (COLUMN WIDTH <name>, <element> WINDOW COLOR) has no row and never
+  did. *)
+const
+   ACCUMULATING_COMMANDS: array[0..3] of string = (
+      'ADD DOMESTIC COUNTRY',
+      'BAND MAP CUTOFF FREQUENCY',
+      'CLEAR DUPE SHEET',
+      'FREQUENCY MEMORY');
+
 function CommandIsSingleValued(Command: PAnsiChar): boolean;
+var
+   name: string;
+   i: integer;
+begin
+   Command[Ord(Command[0]) + 1] := #0;   // as CheckCommand does
+   name := string(PShortString(Command)^);
+
+   Result := Settings.OwnsCommand(name);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   for i := Low(ACCUMULATING_COMMANDS) to High(ACCUMULATING_COMMANDS) do
+      begin
+      if SameText(ACCUMULATING_COMMANDS[i], name) then
+         begin
+         Result := False;
+         Exit;
+         end;
+      end;
+end;
+
+(* WHICH SETTINGS GO TO THE OTHER POSITIONS when one of them changes.
+
+  Was the row's crNetwork byte. The list is the fifty names that carried
+  crNetwork: 1, minus the ones whose feature has since been withdrawn -- a
+  name nothing resolves never reaches SetCFGCommandValue, so a stale entry is
+  inert rather than wrong, but there is no reason to carry one.
+
+  WHY A LIST AND NOT A FLAG ON THE PROPERTY: the answer belongs to the
+  MULTI-OP PROTOCOL, not to the setting -- it is "do the positions have to
+  agree about this", which is a statement about a contest being logged at
+  several desks. That question is being answered properly by the new
+  multi-station work; until then this is the same answer the rows gave,
+  written once where it can be read. *)
+const
+   SHARED_WITH_PEERS: array[0..44] of string = (
+      'BACKUP LOG FILE NAME',
+      'BAND',
+      'CATEGORY-ASSISTED',
+      'CATEGORY-BAND',
+      'CATEGORY-MODE',
+      'CATEGORY-OPERATOR',
+      'CATEGORY-OVERLAY',
+      'CATEGORY-POWER',
+      'CATEGORY-TRANSMITTER',
+      'CODE SPEED',
+      'CONNECTION COMMAND',
+      'CONTEST',
+      'CONTEST NAME',
+      'CONTEST TITLE',
+      'COPY FILES',
+      'CQ MENU',
+      'CW TONE',
+      'DISPLAY REFRESH',
+      'DOMESTIC MULTIPLIER',
+      'DVK PORT',
+      'DX MULTIPLIER',
+      'EXCHANGE RECEIVED',
+      'FARNSWORTH ENABLE',
+      'FARNSWORTH SPEED',
+      'HOUR OFFSET',
+      'ICOM COMMAND PAUSE',
+      'INITIAL EXCHANGE',
+      'INITIAL EXCHANGE CURSOR POS',
+      'INITIAL EXCHANGE FILENAME',
+      'INPUT CONFIG FILE',
+      'MODE',
+      'MULT REPORT MINIMUM BANDS',
+      'MULTIPLIER ITEM WIDTH',
+      'MY CONTINENT',
+      'PADDLE PORT',
+      'PREFIX MULTIPLIER',
+      'QSL MODE',
+      'QSO POINT METHOD',
+      'SINGLE BAND SCORE',
+      'TAIL END CW MESSAGE',
+      'TAIL END KEY',
+      'TAIL END MESSAGE',
+      'TAIL END SSB MESSAGE',
+      'WEIGHT',
+      'ZONE MULTIPLIER');
+
+function CommandIsSharedWithPeers(const aCommand: string): boolean;
 var
    i: integer;
 begin
    Result := False;
-   Command[Ord(Command[0]) + 1] := #0;   // null-terminate the key for StrComp (as CheckCommand does)
-   for i := 1 to CommandsArraySize do
+   for i := Low(SHARED_WITH_PEERS) to High(SHARED_WITH_PEERS) do
       begin
-      if uAnsiStr.StrComp(@Command[1], CFGCA[i].crCommand) = 0 then
+      if SameText(SHARED_WITH_PEERS[i], aCommand) then
          begin
-         Result := (CFGCA[i].crKind = ckNormal) and
-                   (CFGCA[i].crType <> ctFreqList) and
-                   (CFGCA[i].crA = 0);
+         Result := True;
          Exit;
          end;
       end;
@@ -2363,260 +1410,26 @@ begin
       Exit;
       end;
 
-   //logger.trace('Searching for %s',[Command]);
-   for i := 1 to CommandsArraySize do
-      begin
-      //logger.trace('Comparing %s to command %s',[Command,CFGCA[i].crCommand]);
-      if (StrComp(@Command[1], CFGCA[i].crCommand) = 0) then
-         //logger.debug('Found command %s at index %d', [Command, i]);
-         begin
-         {if (CFGCA[i].crCommand[0] = 'Q') then
-                  Result := False;   }
+   (* THE ROW SCAN IS GONE -- 2026-09-14, and with it the last of CFGCA.
 
-         // csJSON joins csRem: both are ACCEPTED so an old config file does
-         // not error, and both are INERT.  The difference is only why --
-         // csRem was withdrawn, csJSON moved to settings\tr4w.json, which is
-         // now the system of record for it.
-         // csRem is ACCEPTED AND INERT unconditionally: it was withdrawn,
-         // there is nowhere for its value to go, and an old config file
-         // naming it must not error.
-         if CFGCA[i].crS = csRem then
-            begin
-            Result := True;
-            Exit;
-            end;
+     Three hundred lines stood here: a linear StrComp down 415 rows, then a
+     crS check, then a crKind branch into one of two positional arrays, then
+     a crType case that dereferenced crAddress as a ShortString, a Boolean,
+     a Double, a Word, a Byte or an Integer, then bounds from crMin/crMax,
+     then a crA index into a table of untyped Pointers called as a function.
 
-         // csJSON DEPENDS ON WHO IS ASKING, and that distinction is the
-         // whole of it.
-         //
-         // The inertness exists to stop a STALE INI FILE overriding
-         // settings\tr4w.json, which is the system of record.  That is a
-         // statement about the ini LOADER, not about every caller.  A value
-         // arriving from a trusted source -- the settings screens, or a
-         // multi-op peer -- still has to be APPLIED, and applied through
-         // here rather than by assignment, because this is the only code
-         // that knows how to turn text into the right typed global, enforce
-         // crMin/crMax, and run the row's crA hook.
-         //
-         // Default False keeps every existing caller, above all the ini
-         // loader, exactly as it was.  A trusted caller passes True and the
-         // row behaves like any other.
-         if (CFGCA[i].crS = csJSON) and (not aApplyJSONOwned) then
-            begin
-            Result := True;
-            Exit;
-            end;
+     EVERY ONE OF THOSE WAS A RESTATEMENT OF SOMETHING THE COMPILER ALREADY
+     KNEW. The name is derived from the property path, the target IS the
+     property, the bounds are a subrange type, the side effect is the
+     setter, and what used to be a hook index is an effect in
+     uSettingsEffects that runs however the value was set rather than only
+     when a config line applied it.
 
-         if CFGCA[i].crKind = ckArray then
-            begin
-            Val(CustomCMD, TempInteger2, code);
-            if code <> 0 then
-               begin
-               Exit;
-               end;
-            TempInteger := integer(CFGCA[i].crAddress);
-            Result := SetParameterInArray
-               (
-               ArrayRecordArray[TempInteger].arArrayPtr,
-               ArrayRecordArray[TempInteger].arArrayLength,
-               ArrayRecordArray[TempInteger].arVar,
-               TempInteger2
-               );
-            if not Result then
-               begin
-               Exit;
-               end;
-            goto AdditionalProc;
-            end;
-
-         if CFGCA[i].crKind = ckList then
-            begin
-            TempInteger := integer(CFGCA[i].crAddress);
-            TempByte :=
-               GetValueFromArray(ListParamArray[TempInteger].lpArray,
-               ListParamArray[TempInteger].lpLength, CustomCMD);
-            if TempByte <> UNKNOWNTYPE then
-               begin
-               //   if tempinteger = 1 then    // if QSOPOINTMETHOD then decrement tempbyte 4.57.1
-               //   tempbyte := tempbyte -1;
-               ListParamArray[TempInteger].lpVar^ := TempByte;
-               Result := True;
-               goto AdditionalProc;
-               end
-            else
-               begin
-               Exit;
-               end;
-
-            end;
-
-         if CFGCA[i].crAddress <> nil then
-            begin
-            case CFGCA[i].crType of
-
-               ctMessage:
-                  begin
-                     SniffOutControlCharacters(CustomCMD);
-                     PShortString(CFGCA[i].crAddress)^ := CustomCMD;
-                     PShortString(CFGCA[i].crAddress)^[length(CustomCMD) +
-                        1] := #0;
-                  end;
-
-               ctDirectory, ctFileName:
-                  begin
-                     Move(CustomCMD[1], CFGCA[i].crAddress^, length(CustomCMD));
-                     FileNameType(CFGCA[i].crAddress^)[length(CustomCMD)]
-                        := #0;
-                  end;
-
-               ctString, ctURL, ctCaseSensitive, ctPassword:
-                  begin
-                     PShortString(CFGCA[i].crAddress)^ := CustomCMD;
-                     ;
-                     PShortString(CFGCA[i].crAddress)^[length(CustomCMD) +
-                        1] := #0;
-                     if CFGCA[i].crType = ctURL then
-                        begin
-                        (* Was CharLowerA on PAnsiChar(crAddress) + 1 -- a
-                          pointer to the ShortString's BODY, stepping over
-                          its length byte.  LowerCase over the ShortString
-                          itself says the same thing without the arithmetic,
-                          and is ASCII-only, which is what a URL wants:
-                          CharLowerA folds by the machine's ANSI codepage,
-                          so the same config file lowercased differently on
-                          a Russian and a Western station. *)
-                        PShortString(CFGCA[i].crAddress)^ :=
-                           LowerCase(PShortString(CFGCA[i].crAddress)^);
-                        end;
-                  end;
-
-               (* ctPortLPT HAS NO ROWS, 2026-09-13 -- the parallel port is
-                 gone from the program.  The TYPE stays declared so the
-                 renderer and this dispatcher still name it, and a value
-                 arriving under it is simply not applied. *)
-
-               ctChar:
-                  PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1];
-
-               ctAlphaChar:
-                  begin
-                     if CustomCMD[1] in ['A'..'Z'] then
-                        begin
-                        PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1]
-                        end
-                     else
-                        begin
-                        Exit;
-                        end;
-                  end;
-
-               ctBoolean:
-                  begin
-                     if not (CustomCMD[1] in ['T', 'F']) then
-                        begin
-                        Exit;
-                        end;
-                     ;
-                     PBoolean(CFGCA[i].crAddress)^ := CustomCMD[1] = 'T';
-                  end;
-
-               ctReal:
-                  begin
-                     Val(CustomCMD, TempReal, code);
-                     //             TempReal := ValExt(@CustomCMD[1], code);
-                     if code <> 0 then
-                        begin
-                        Exit;
-                        end;
-                     if (TempReal < CFGCA[i].crMin / 10) or (TempReal >
-                        CFGCA[i].crMax / 10) then
-                        begin
-                        Exit;
-                        end;
-                     PDouble(CFGCA[i].crAddress)^ := TempReal;
-                  end;
-
-               ctByte, ctWord, ctInteger:
-                  begin
-                     // Issue #968 -- a blank value (e.g. "RADIO ONE TCP PORT=")
-                     // means the parameter was never set.  Leave the variable at its
-                     // default and surface a clear, non-fatal notice that names the
-                     // parameter, instead of rejecting the line as "invalid statement".
-                     // A non-empty but non-numeric value (e.g. "abc") still fails the
-                     // Val check below, so the defensive catch for typos is preserved.
-                     if CustomCMD = '' then
-                        begin
-                        showwarning(SysUtils.Format(AnsiString(LclText(TC_PARAMETERHASNOVALUE)), [@Command[1]]));
-                        logger.Warn('[CheckCommand] %s has no value -- left at its default', [pshortstring(Command)^]);
-                        Result := True;
-                        Exit;
-                        end;
-                     Val(CustomCMD, TempInteger, code);
-                     //              TempInteger := round(ValExt(@CustomCMD[1], code));
-                     if code <> 0 then
-                        begin
-                        Exit;
-                        end;
-
-                     if (TempInteger >= CFGCA[i].crMin) and ((TempInteger
-                        <= CFGCA[i].crMax) or (CFGCA[i].crMax = MAXWORD - 1
-                        {MAXLONG})) then
-                        begin
-
-                        if CFGCA[i].crType = ctWord then
-                           begin
-                           PWORD(CFGCA[i].crAddress)^ := TempInteger;
-                           end;
-
-                        if CFGCA[i].crType = ctInteger then
-                           begin
-                           PInteger(CFGCA[i].crAddress)^ :=
-                              TempInteger;
-                           end;
-
-                        if CFGCA[i].crType = ctByte then
-                           begin
-                           PByte(CFGCA[i].crAddress)^ := TempInteger;
-                           end;
-
-                        end
-                     else
-                        begin
-                        Exit;
-                        end;
-                  end;
-            end;
-            end;
-
-         AdditionalProc:
-         if CFGCA[i].crA <> 0 then
-            begin
-            CMD := CustomCMD;
-            Proc := AdditionalProcsArray[CFGCA[i].crA];
-            if Assigned(Proc) then
-               begin
-               // Issue #997: was inline asm (`call Proc; mov result,al`).
-               // Proc is an untyped Pointer into AdditionalProcsArray; every
-               // entry is a param-less boolean function (register), so a
-               // typed cast + call is exactly equivalent.
-               Result := TAdditionalProc(Proc)();
-               end
-            else
-               begin
-               logger.debug('AdditionalProc was not assigned in uCFG for command %s - Index = %d',
-                            [CFGCA[i].crCommand, i]);
-               end;
-            if Result = False then
-               begin
-               logger.debug('Additional proc for %s returned false',[CFGCA[i].crCommand]);
-               exit;
-               end;
-            end;
-
-         Result := True;
-         Break;
-         end;
-      end;
+     WHAT STILL HAPPENS HERE, in order, is what the arms above and below do:
+     the pattern families (COLUMN WIDTH, the window colours), the four
+     ACTIONS in TryApplyCommandAction, the settings arm that resolves a name
+     against the model, then the two lists that ACCEPT and ignore -- a
+     withdrawn name, and a name a store owns. *)
 
    (* A WITHDRAWN COMMAND -- accepted, and deliberately does nothing.
 
