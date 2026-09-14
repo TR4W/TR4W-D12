@@ -3302,20 +3302,38 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             Prefix := CTY.ctyTable[ CountryIndex ].ID;
             // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
             // %-6s=Prefix, then the FirstCall for bands 160/80/40/20/15/10.
-            WriteLn( FileWrite,
-               sysutils.Format( '%-6s %-11s %-11s %-11s %-11s %-11s %-11s',
-               [ Prefix, string( PAnsiChar( @CountryMultTotals^[ Band160,
-               CountryIndex ].FirstCall[ 1 ] ) ),
-               string( PAnsiChar( @CountryMultTotals^[ Band80,
-               CountryIndex ].FirstCall[ 1 ] ) ),
-               string( PAnsiChar( @CountryMultTotals^[ Band40,
-               CountryIndex ].FirstCall[ 1 ] ) ),
-               string( PAnsiChar( @CountryMultTotals^[ Band20,
-               CountryIndex ].FirstCall[ 1 ] ) ),
-               string( PAnsiChar( @CountryMultTotals^[ Band15,
-               CountryIndex ].FirstCall[ 1 ] ) ),
-               string( PAnsiChar( @CountryMultTotals^[ Band10,
-               CountryIndex ].FirstCall[ 1 ] ) ) ] ) );
+         (* FirstCall IS A ShortString, SO IT GOES IN AS ITSELF.
+
+           These twelve arguments each used to read
+
+               string( PAnsiChar( @...FirstCall[ 1 ] ) )
+
+           -- a pointer at a ShortString's FIRST CHARACTER, read as though it
+           were NUL-terminated. A ShortString is not: its length lives in byte
+           0 and nothing terminates the characters.
+
+           IT WORKED, and only for three reasons that a reader of this line
+           could not see, all of them far away:
+
+             * the whole array is FillChar'd to zero at line 2016;
+             * a slot's FirstCall is assigned ONCE, guarded on TotalQSOs = 0
+               (line 2033), so a shorter call never sits in a longer one's tail;
+             * CallstringLength is 13, so string[13] occupies 14 bytes and the
+               record pads 2 zero bytes before its integer -- even a full-length
+               callsign is followed by a NUL.
+
+           Change any one of those and this silently prints trailing garbage
+           into the report. Passing the ShortString itself cannot: Format takes
+           it as vtString, which carries the length. *)
+         WriteLn( FileWrite,
+            sysutils.Format( '%-6s %-11s %-11s %-11s %-11s %-11s %-11s',
+            [ Prefix,
+            CountryMultTotals^[ Band160, CountryIndex ].FirstCall,
+            CountryMultTotals^[ Band80,  CountryIndex ].FirstCall,
+            CountryMultTotals^[ Band40,  CountryIndex ].FirstCall,
+            CountryMultTotals^[ Band20,  CountryIndex ].FirstCall,
+            CountryMultTotals^[ Band15,  CountryIndex ].FirstCall,
+            CountryMultTotals^[ Band10,  CountryIndex ].FirstCall ] ) );
             inc( Lines );
             end;
 
@@ -3448,18 +3466,17 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             end;
          // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
          // %-4u=ZoneIndex, then the FirstCall for bands 160/80/40/20/15/10.
+         (* The ShortString itself -- see the note in the COUNTRY report
+           above for what the pointer form depended on. *)
          TempString := sysutils.Format
             ( '%-4u %-11s %-11s %-11s %-11s %-11s %-11s',
-            [ ZoneIndex, string( PAnsiChar( @CountryMultTotals^[ Band160,
-            ZoneIndex ].FirstCall[ 1 ] ) ),
-            string( PAnsiChar( @CountryMultTotals^[ Band80, ZoneIndex ].FirstCall
-            [ 1 ] ) ), string( PAnsiChar( @CountryMultTotals^[ Band40,
-            ZoneIndex ].FirstCall[ 1 ] ) ),
-            string( PAnsiChar( @CountryMultTotals^[ Band20, ZoneIndex ].FirstCall
-            [ 1 ] ) ), string( PAnsiChar( @CountryMultTotals^[ Band15,
-            ZoneIndex ].FirstCall[ 1 ] ) ),
-            string( PAnsiChar( @CountryMultTotals^[ Band10,
-            ZoneIndex ].FirstCall[ 1 ] ) ) ] );
+            [ ZoneIndex,
+            CountryMultTotals^[ Band160, ZoneIndex ].FirstCall,
+            CountryMultTotals^[ Band80,  ZoneIndex ].FirstCall,
+            CountryMultTotals^[ Band40,  ZoneIndex ].FirstCall,
+            CountryMultTotals^[ Band20,  ZoneIndex ].FirstCall,
+            CountryMultTotals^[ Band15,  ZoneIndex ].FirstCall,
+            CountryMultTotals^[ Band10,  ZoneIndex ].FirstCall ] );
          WriteLn( FileWrite, TempString );
          inc( Lines );
          end;
