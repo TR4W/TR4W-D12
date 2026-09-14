@@ -102,17 +102,18 @@ begin
   (* PathDelim: this file is WRITTEN as well as read, so the separator has to
     be right when the name is built. Resolving it afterwards only helps a file
     that already exists -- see the note in uTelnet. *)
-  TF.Format(TR4W_POS_FILENAME, '%ssettings' + PathDelim + 'tr4w.pos',
-    TR4W_PATH_NAME);
+  SetCharBuffer(TR4W_POS_FILENAME,
+                CharBufferText(TR4W_PATH_NAME) + 'settings' + PathDelim + 'tr4w.pos');
   ResolveDataFileInPlace(TR4W_POS_FILENAME);
-  TF.Format(TR4W_BANDMAPBIN_FILENAME, '%sbandmap.bin', TR4W_PATH_NAME);
+  SetCharBuffer(TR4W_BANDMAPBIN_FILENAME,
+                CharBufferText(TR4W_PATH_NAME) + 'bandmap.bin');
 
   //  asm push offset TR4W_PATH_NAME  end;
   //  wsprintf(TR4W_IODRIVER_FILENAME, '%sTR4WIO.SYS');
   //  asm add esp,12  end;
 
-  TF.Format(TR4W_COMM_HELP_FILENAME, '%scommands_help_' + LANG + '.ini',
-    TR4W_PATH_NAME);
+  SetCharBuffer(TR4W_COMM_HELP_FILENAME,
+                CharBufferText(TR4W_PATH_NAME) + 'commands_help_' + LANG + '.ini');
 
   (* SPLIT THE CHOSEN CONTEST FILE INTO ITS DIRECTORY AND ITS STEM.
 
@@ -156,19 +157,22 @@ begin
      (* Only when there IS an extension, as before: a name without one left
        these three untouched and still does. *)
      chosenStem := chosenDir + Copy(chosenName, 1, dotPos - 1);
-     TF.Format(TR4W_LOG_FILENAME, '%s.TRW', PAnsiChar(AnsiString(chosenStem)));
-     TF.Format(TR4W_DOM_FILENAME, '%s.DOM', PAnsiChar(AnsiString(chosenStem)));
+     SetCharBuffer(TR4W_LOG_FILENAME, chosenStem + '.TRW');
+     SetCharBuffer(TR4W_DOM_FILENAME, chosenStem + '.DOM');
      end;
 
-  TF.Format(TR4W_SYN_FILENAME, '%sSERVERLOG.TMP', TR4W_LOG_PATH_NAME);
-  TF.Format(TR4W_REMAININGMULTS_FILENAME, '%sREMAININGMULTS.TXT',
-    TR4W_LOG_PATH_NAME);
+  SetCharBuffer(TR4W_SYN_FILENAME,
+                CharBufferText(TR4W_LOG_PATH_NAME) + 'SERVERLOG.TMP');
+  SetCharBuffer(TR4W_REMAININGMULTS_FILENAME,
+                CharBufferText(TR4W_LOG_PATH_NAME) + 'REMAININGMULTS.TXT');
 
-  TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_LOG_PATH_NAME);
+  SetCharBuffer(TR4W_CTY_FILENAME,
+                CharBufferText(TR4W_LOG_PATH_NAME) + 'CTY.DAT');
 
   if not FileExists(TR4W_CTY_FILENAME) then
      begin
-     TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_PATH_NAME);
+     SetCharBuffer(TR4W_CTY_FILENAME,
+                   CharBufferText(TR4W_PATH_NAME) + 'CTY.DAT');
        // n4af issue  # 219  & 212
      end;
 
@@ -185,14 +189,17 @@ begin
     missing. On Windows it is the FileExists test and nothing more. *)
   ResolveDataFileInPlace(TR4W_CTY_FILENAME);
 
-  TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_LOG_PATH_NAME);
+  SetCharBuffer(CD.ActiveFilename,
+                CharBufferText(TR4W_LOG_PATH_NAME) + 'TRMASTER.DTA');
 
   if not FileExists(CD.ActiveFilename) then
      begin
-     TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_PATH_NAME);
+     SetCharBuffer(CD.ActiveFilename,
+                   CharBufferText(TR4W_PATH_NAME) + 'TRMASTER.DTA');
      if not FileExists(CD.ActiveFilename) then
         begin
-        TF.Format(@CD.ActiveFilename, '%sMASTER.DTA', TR4W_PATH_NAME);
+        SetCharBuffer(CD.ActiveFilename,
+                      CharBufferText(TR4W_PATH_NAME) + 'MASTER.DTA');
         end;
 
      end;
@@ -227,8 +234,10 @@ begin
   //  LogConfigFileName := TempFoldername + FileRoot + '.CFG';
   //  LogRestartFileName := TempFoldername + FileRoot + '.RST';
 
-  TF.Format(TR4W_INTERCOM_FILENAME, '%sINTERCOM.TXT', TR4W_LOG_PATH_NAME);
-  TF.Format(TR4W_DEFMESSAGES_FILENAME, '%sCOMMONMESSAGES.INI', TR4W_PATH_NAME);
+  SetCharBuffer(TR4W_INTERCOM_FILENAME,
+                CharBufferText(TR4W_LOG_PATH_NAME) + 'INTERCOM.TXT');
+  SetCharBuffer(TR4W_DEFMESSAGES_FILENAME,
+                CharBufferText(TR4W_PATH_NAME) + 'COMMONMESSAGES.INI');
 
 end;
 

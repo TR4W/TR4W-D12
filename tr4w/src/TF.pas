@@ -155,6 +155,37 @@ function CreateRichEdit(hwndParent: HWND): HWND;
 function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 procedure UnableToFindFileMessage(FileName: string);
+(* SET A FIXED CHARACTER BUFFER FROM A STRING, BOUNDED BY THE BUFFER ITSELF.
+
+  THE REPLACEMENT FOR TF's C-sprintf FACADE at the call sites that only ever
+  built a file name: `TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_PATH_NAME)`
+  becomes `SetCharBuffer(TR4W_CTY_FILENAME, TR4W_LOG_PATH_NAME + 'CTY.DAT')`.
+
+  AN OPEN ARRAY, WHICH IS THE WHOLE POINT. `High(aBuf)` is the real bound of
+  whatever was passed, so the truncation is correct for any buffer and there is
+  no size parameter for a caller to get wrong -- the failure mode the Win64
+  plan and CLAUDE.md both name:
+
+      instead of  procedure F(var buf; size: integer)
+      write       procedure F(var buf: array of AnsiChar)
+
+  NUL-TERMINATED, because every reader of these buffers is still a C-style
+  walker or a PAnsiChar cast. That is the next slice, not this one.
+
+  TRUNCATION IS SILENT AND DELIBERATE, matching what the sprintf it replaces
+  did with a fixed buffer -- MAX_PATH is the bound, and a path longer than that
+  cannot be opened anyway. *)
+procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
+
+(* READ A FIXED CHARACTER BUFFER AS A STRING, STOPPING AT THE NUL.
+
+  THE OTHER HALF OF SetCharBuffer, and the one CLAUDE.md names directly:
+  `AnsiString(aFixedCharArray)` is wrong because the cast TAKES THE PADDING
+  TOO -- every byte to the end of the array, NULs and stale bytes included.
+
+  An open array again, so the bound is the buffer's own. *)
+function CharBufferText(const aBuf: array of AnsiChar): string;
+
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(aAllowed: PCfgAllowedInts; aHighIndex: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
@@ -901,6 +932,53 @@ begin
      showwarning(SysUtils.Format('%s'#13#13'%s',
                  [SysUtils.SysErrorMessage(SysUtils.GetLastOSError), FileName]));
      end;
+end;
+
+procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
+var
+   raw: RawByteString;
+   n: integer;
+   i: integer;
+begin
+   (* UTF8Encode, not a cast: these buffers hold BYTES and the source is a
+     native string. The conversion is explicit because CLAUDE.md asks for it
+     at the boundary rather than letting an assignment do it silently. *)
+   raw := RawByteString(UTF8Encode(aText));
+
+   n := Length(raw);
+   if n > High(aBuf) then
+      begin
+      n := High(aBuf);          (* leave room for the terminator *)
+      end;
+
+   for i := 1 to n do
+      begin
+      aBuf[i - 1] := AnsiChar(raw[i]);
+      end;
+   aBuf[n] := #0;
+end;
+
+function CharBufferText(const aBuf: array of AnsiChar): string;
+var
+   n: integer;
+   raw: RawByteString;
+   i: integer;
+begin
+   n := 0;
+   while (n <= High(aBuf)) and (aBuf[n] <> #0) do
+      begin
+      Inc(n);
+      end;
+
+   SetLength(raw, n);
+   for i := 1 to n do
+      begin
+      raw[i] := aBuf[i - 1];
+      end;
+
+   (* The bytes were written as UTF-8 by SetCharBuffer, so they come back the
+     same way. A plain cast would reinterpret them by codepage. *)
+   Result := UTF8ToString(raw);
 end;
 
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
