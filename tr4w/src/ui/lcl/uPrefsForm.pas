@@ -154,16 +154,6 @@ type
       layHardware: TPanel;
       lblHardwareHeading: TLabel;
       lblHardwareInfo: TLabel;
-      lblRelayPort: TLabel;
-      cbxRelayPort: TComboBox;
-      lblRelayPortInfo: TLabel;
-      lblBandOutput1: TLabel;
-      cbxBandOutput1: TComboBox;
-      lblBandOutput2: TLabel;
-      cbxBandOutput2: TComboBox;
-      lblStereoPort: TLabel;
-      cbxStereoPort: TComboBox;
-      chkUseControlPort: TCheckBox;
       chkPTTViaCommands: TCheckBox;
       chkPTTLockout: TCheckBox;
       layOperating: TPanel;
@@ -599,7 +589,6 @@ type
       // is the whole test.
       procedure tvNavMouseDown(Sender: TObject; Button: TMouseButton;
                                Shift: TShiftState; X, Y: integer);
-      procedure cbxRelayPortChange(Sender: TObject);
 
       { PUBLISHED because the RESOURCE binds them by name -- TWriter stores an
         event as a string and the loader looks it up in published RTTI. Declared
@@ -1072,9 +1061,6 @@ type
       { ONE parallel-port picker, used by all four. They differ only in which
         command they carry, and four copies of the detection-and-collapse rules
         would drift the first time one of them was corrected. }
-      procedure LoadLPTCombo(const aCombo: TComboBox; const aLabel: TLabel;
-                             const aCommand: string);
-      procedure SaveLPTCombo(const aCombo: TComboBox; const aCommand: string);
       procedure BuildNavTree;
       procedure NoteRadiosNavItem(item: TTreeNode);
       procedure ApplyChevrons;
@@ -1225,7 +1211,6 @@ implementation
 {$R *.lfm}
 
 uses
-   uLPTPortEnumerator,   // which parallel ports this machine actually has
    StrUtils,             // IfThen
    Math,                 // Max -- clamping the scroll position
    uLCLTranslate,
@@ -3883,11 +3868,6 @@ begin
    AddHandWiredToSearchIndex(aN, 'BAND MAP DISPLAY LIMIT',            edtBandMapLimit);
 
    // --- layHardware ---
-   AddHandWiredToSearchIndex(aN, 'RADIO ONE BAND OUTPUT PORT',        cbxBandOutput1);
-   AddHandWiredToSearchIndex(aN, 'RADIO TWO BAND OUTPUT PORT',        cbxBandOutput2);
-   AddHandWiredToSearchIndex(aN, 'RELAY CONTROL PORT',                cbxRelayPort);
-   AddHandWiredToSearchIndex(aN, 'STEREO CONTROL PORT',               cbxStereoPort);
-   AddStoreBackedToSearchIndex(aN, chkUseControlPort);
    AddHandWiredToSearchIndex(aN, 'YCCC SO2R ENABLE',                  chkYCCCSO2R);
 
    // --- layLogging ---
@@ -6638,193 +6618,27 @@ end;
   LPT port to handle switching external hardware"), so it belongs here rather
   than on a radio. Anything targeting a Radio1/Radio2 variable belongs on the
   radio form instead -- that is the rule this panel exists to respect. }
-procedure TPrefsForm.LoadLPTCombo(const aCombo: TComboBox; const aLabel: TLabel;
-                                  const aCommand: string);
-var
-   v, label_: string;
-   idx, i, want: integer;
-begin
-   if aCombo = nil then
-      begin
-      Exit;
-      end;
+(* THE PARALLEL-PORT HALF OF THIS PANEL IS GONE, 2026-09-13.
 
-   // Read the configured value FIRST: whether to collapse the list to
-   // "not available" depends on it, not only on what the machine reports.
-   v := UpperCase(Trim(FStore.CommandValue(aCommand,
-                       CFGCommandValueAsString(aCommand))));
-   if (v = '') or (v = 'NONE') then
-      begin
-      want := 0;
-      end
-   else
-      begin
-      want := StrToIntDef(v, 0);
-      end;
+  Four LPT port combos and the USE CONTROL PORT placeholder stood here. NY4I
+  had already written the open question into that placeholder -- "whether TR4W
+  supports LPT ports at all in 2026" -- and answered it: remove them.
 
-   aCombo.Items.BeginUpdate;
-   try
-      aCombo.Items.Clear;
-      // The VALUE is the spelling CFGCA accepts -- GetLPTPortFromChar
-      // (CfgCmd:192) reads 'NONE' or '1'/'2'/'3'. It is carried in Objects[] so
-      // the label is free to say more than the value does; reading the value
-      // back off the visible text would break the moment the label changed.
-      // NOTHING TO PICK AND NOTHING CONFIGURED -> say so, and stop.
-      //
-      // Listing three ports that do not exist invites a choice that cannot work
-      // (NY4I). But a station whose port TR4W cannot SEE must still show it --
-      // an unusual driver or an oddly enumerated add-in card is exactly the case
-      // where silently rewriting the setting would be worst -- so the list is
-      // only collapsed when the machine has no ports AND none is configured.
-      if (PresentLPTPortsDescription = '') and (want = 0) then
-         begin
-         aCombo.Items.AddObject('Not available (no parallel ports)',
-                                TObject(PtrInt(0)));
-         aCombo.ItemIndex := 0;
-         aCombo.Enabled   := False;
-         if aLabel <> nil then
-            begin
-            aLabel.Enabled := False;
-            end;
-         Exit;
-         end;
-
-      aCombo.Enabled := True;
-      if aLabel <> nil then
-         begin
-         aLabel.Enabled := True;
-         end;
-      aCombo.Items.AddObject('None', TObject(PtrInt(0)));
-      for i := 1 to 3 do
-         begin
-         // ANNOTATED, NOT REMOVED. Dropping undetected ports would silently
-         // change a station whose port TR4W cannot see -- a driver arrangement
-         // this does not recognise, or an add-in card enumerated oddly -- from
-         // its configured port to whatever happened to be first. Saying "not
-         // detected" informs without deciding, and the operator keeps the final
-         // say over their own hardware.
-         label_ := IntToStr(i);
-         if LPTPortPresent(i) then
-            begin
-            label_ := label_ + '   (LPT' + IntToStr(i) + ' detected)';
-            end
-         else
-            begin
-            label_ := label_ + '   (not detected)';
-            end;
-         aCombo.Items.AddObject(label_, TObject(PtrInt(i)));
-         end;
-   finally
-      aCombo.Items.EndUpdate;
-   end;
-
-   // BY STORED VALUE, never by index. The labels carry detection text, so
-   // matching on them would break the first time that wording changed -- and
-   // index arithmetic is what the COM picker was fixed for.
-   aCombo.ItemIndex := 0;
-   for idx := 0 to aCombo.Items.Count - 1 do
-      begin
-      if PtrInt(aCombo.Items.Objects[idx]) = want then
-         begin
-         aCombo.ItemIndex := idx;
-         Break;
-         end;
-      end;
-end;
-
-procedure TPrefsForm.SaveLPTCombo(const aCombo: TComboBox; const aCommand: string);
-var
-   n: integer;
-begin
-   if (aCombo = nil) or (aCombo.ItemIndex < 0) then
-      begin
-      Exit;
-      end;
-   // NOT WHEN THE LIST COLLAPSED. "Not available" carries 0, and writing that
-   // would turn "this machine has no parallel port today" into "the operator
-   // chose None" -- erasing the setting of someone who moved a log to a laptop
-   // and back. Nothing to pick means nothing to save.
-   if not aCombo.Enabled then
-      begin
-      Exit;
-      end;
-
-   // The stored value comes from Objects[], NOT from the visible text -- the
-   // label says '1   (not detected)' and CFGCA accepts '1'.
-   n := PtrInt(aCombo.Items.Objects[aCombo.ItemIndex]);
-   if n = 0 then
-      begin
-      ApplyIfChanged(aCommand, 'NONE');
-      end
-   else
-      begin
-      ApplyIfChanged(aCommand, IntToStr(n));
-      end;
-end;
-
+  The YCCC box is what remains, and it is what provides the capabilities the
+  LPT wiring used to: radio switching and stereo control over OTRSP. *)
 procedure TPrefsForm.LoadHardwarePanel;
 begin
-   if cbxRelayPort = nil then
+   if chkYCCCSO2R = nil then
       begin
       Exit;
       end;
 
-   // ALL FOUR ARE STATION CABLING, not radio settings, which is why they are
-   // here and not on the radio form. NY4I placed the two BAND OUTPUT ports here
-   // deliberately ('breaking my own rule'): the rule sends anything addressing
-   // Radio1/Radio2 to the radio form, but what these name is which LPT pin
-   // header drives the band decoder for an operating position -- that belongs to
-   // the desk, and it stays put when a different radio is activated into the
-   // slot. Holding it on the radio DEFINITION was in fact a live defect: every
-   // activation re-rendered the key, and would have reverted whatever was set
-   // here. See the note in uRadioConfigLegacyMap.
-   LoadLPTCombo(cbxRelayPort,   lblRelayPort,   'RELAY CONTROL PORT');
-   LoadLPTCombo(cbxBandOutput1, lblBandOutput1, 'RADIO ONE BAND OUTPUT PORT');
-   LoadLPTCombo(cbxBandOutput2, lblBandOutput2, 'RADIO TWO BAND OUTPUT PORT');
-   LoadLPTCombo(cbxStereoPort,  lblStereoPort,  'STEREO CONTROL PORT');
-
-   // USE CONTROL PORT -- A PLACEHOLDER, deliberately unchecked and deliberately
-   // not editable (NY4I 2026-08-14).
-   //
-   // It selects the radio's CAT port instead of an LPT port for paddle and foot
-   // switch, and the code around it is old enough that its intent is no longer
-   // clear from reading it: LogCfg's TryRunPaddleAndFootSwitchThread gates on the
-   // CAT port HANDLE, which NY4I reads as 'unless the CAT port is open we will
-   // not use a foot switch or paddle on the LPT port at all'.
-   //
-   // It is here so the decision is visible rather than buried in Ctrl-J: whether
-   // TR4W supports LPT ports at all in 2026. NY4I is leaning towards not.
-   //
-   // SHOWN FALSE, BUT NOT WRITTEN. SaveHardwarePanel does not store this, so a
-   // station that has it set keeps its value and its paddle keeps working. A
-   // disabled control that silently rewrote the setting behind it would be a
-   // data change disguised as a UI decision -- and this one is not decided yet.
-   chkUseControlPort.Checked := False;
-
    chkYCCCSO2R.Checked := CommandBool('YCCC SO2R ENABLE');
-
-   logger.Info('[Prefs] parallel ports detected: %s',
-               [IfThen(PresentLPTPortsDescription = '', 'none',
-                       PresentLPTPortsDescription)]);
 end;
 
 procedure TPrefsForm.SaveHardwarePanel;
 begin
-   SaveLPTCombo(cbxRelayPort,   'RELAY CONTROL PORT');
-   SaveLPTCombo(cbxBandOutput1, 'RADIO ONE BAND OUTPUT PORT');
-   SaveLPTCombo(cbxBandOutput2, 'RADIO TWO BAND OUTPUT PORT');
-   SaveLPTCombo(cbxStereoPort,  'STEREO CONTROL PORT');
-
    SetCommandBool('YCCC SO2R ENABLE', chkYCCCSO2R.Checked);
-end;
-
-procedure TPrefsForm.cbxRelayPortChange(Sender: TObject);
-begin
-   // Was empty, for the same reason and with the same consequence as
-   // cbxLogLevelChange above: an assigned handler suppresses MarkDirty, so
-   // changing the relay port and closing the window lost it without a prompt.
-   // Mark, do not apply -- Cancel still discards.
-   Dirty := True;
 end;
 
 procedure TPrefsForm.SaveExternalSoftwarePanels;

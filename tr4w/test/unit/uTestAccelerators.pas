@@ -243,7 +243,9 @@ begin
      92 until 2026-09-07, when Ctrl+Shift+0 went with the MP3 recorder window.
      Recording moved to QSOCapture, which slices QSOs from TR4W's own
      contactinfo UDP broadcasts. }
-   CheckEquals(91, installed, 'installed bindings (the table read out of the binary)');
+   (* 91 -> 90 on 2026-09-13: Ctrl+Alt+L opened the LPT dialog, which went
+     with the parallel port. *)
+   CheckEquals(90, installed, 'installed bindings (the table read out of the binary)');
    CheckEquals(4, displayOnly, 'display-only rows');
 
    // Named individually: each is here for a DIFFERENT reason and losing any one

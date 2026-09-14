@@ -16,7 +16,6 @@ src\lang\tr4w_consts_rom.pas
 src\lang\tr4w_consts_rus.pas
 src\lang\TR4W_CONSTS_SER.pas
 src\lang\tr4w_consts_ukr.pas
-src\LPT.pas
 src\MainUnit.pas
 src\radioFactory\uFactoryRadioBase.pas
 src\radioFactory\uRadioIcom705.pas
@@ -60,7 +59,6 @@ src\ui\lcl\uSettingsBinding.pas
 src\uInputQuery.pas
 src\uKeyerConfigStore.pas
 src\uLogCompare.pas
-src\uLPTPortEnumerator.pas
 src\uMessages.pas
 src\uMessagesList.pas
 src\uNewContest.pas

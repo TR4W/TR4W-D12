@@ -30,8 +30,7 @@ uses
                    // uses because ListParamArray below takes its address.
   uConfigValues,   // Config -- the live values migrated rows write into
   uAnsiStr,
-   uIO,
-   uCTYDAT,
+    uCTYDAT,
    uWinKey,
    uYCCCSO2R,
    uGetScores,
@@ -265,7 +264,6 @@ const
    CW_SPEED_INCREMENT: array[1..10] of integer = (1, 2, 3, 4, 5, 6, 7, 8, 9,
       10);
    MULT_REPORT_MINIMUM_BANDS_ARRAY: array[0..02] of integer = (2, 3, 4);
-   STEREO_CONTROL_PIN_ARRAY: array[0..01] of integer = (5, 9);
    //FilterBandMap                         : array[0..02] of pchar = ('OFF','CW','Digital');
    RECORDER_BITRATE_ARRAY: array[0..07] of integer = (8, 16, 24, 32, 40, 48, 56,
       64 {, 80, 96, 112, 128});
@@ -324,7 +322,9 @@ const
     (arArrayPtr: @WINDOW_SIZE_ARRAY;               arArrayLength: high(WINDOW_SIZE_ARRAY);               arVar: nil{moved to Settings.MainWindow.WindowSize}),
     (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: nil{moved to Settings.Cw.SpeedIncrement}),
     (arArrayPtr: @MULT_REPORT_MINIMUM_BANDS_ARRAY; arArrayLength: high(MULT_REPORT_MINIMUM_BANDS_ARRAY); arVar: @MultReportMinimumBands),
-    (arArrayPtr: @STEREO_CONTROL_PIN_ARRAY;        arArrayLength: high(STEREO_CONTROL_PIN_ARRAY);        arVar: nil{moved to Settings.Hardware.StereoControlPin}),
+    (* SLOT FREED 2026-09-13 -- STEREO CONTROL PIN named WHICH LPT PIN drove
+      the headphone relay, and went with the parallel port. *)
+    (arArrayPtr: nil; arArrayLength: 0; arVar: nil),
     (arArrayPtr: @RECORDER_BITRATE_ARRAY;          arArrayLength: high(RECORDER_BITRATE_ARRAY);          arVar: @RecorderBitrate),
 
     (arArrayPtr: @RECORDER_SAMPLERATE_ARRAY;       arArrayLength: high(RECORDER_SAMPLERATE_ARRAY);       arVar: nil{@RecorderSampleRate}),
@@ -720,6 +720,16 @@ const
      have survived the port becoming an OS name in any case: their vocabulary
      was PortTypeSA, which spells 'SERIAL 3' and knows nothing of COM3. *)
    - 2 {KEYER RADIO ONE/TWO OUTPUT PORT}
+   (* THE PARALLEL PORT IS GONE FROM THE PROGRAM, 2026-09-13 (NY4I: "I have
+     reconsidered on LPT ports. You can remove all references to them in the
+     code"). Not the CAPABILITIES -- a YCCC box does radio switching and
+     stereo over OTRSP -- only the LPT transport, which could not be named
+     off Windows and needed a kernel driver on it.
+
+     Each of these selected WHICH parallel port, or what its base address
+     was. STEREO PIN HIGH is deliberately NOT here: YCCCSetStereo reads it,
+     so it is a setting the box uses rather than an LPT detail. *)
+   - 8 {the LPT ports and their base addresses}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -946,9 +956,6 @@ const
   (* WITHDRAWN 2026-09-11.  The value lives in the store's `general` section as
     LatestConfigFile and always did; this row pointed at a GLOBAL COPY of it.
     A bridge, not storage -- the first of the 279 such rows to go. *)
- (crCommand: 'LPT1 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel1];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'LPT2 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel2];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'LPT3 BASE ADDRESS';             crAddress: @LPTBaseAA[Parallel3];           crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
   (* WITHDRAWN 2026-09-10: Settings.Mmtty.Engine. *)
  (crCommand: 'MODE';                          crAddress: pointer(5);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'MULTIPLIER ITEM WIDTH';         crAddress: @MultiplierItemWidth;            crMin:0;  crMax:255;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctByte; crNetwork: 1),
@@ -972,23 +979,18 @@ const
 
      crA is 0 now.  CheckCommand exits on csRem before it reaches the hook,
      so leaving the index would have pointed at code that could not run. *)
- (crCommand: 'PADDLE PORT';                   crAddress: @ActivePaddlePort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctPortLPT; crNetwork: 1),
  (crCommand: 'PREFIX MULTIPLIER';             crAddress: pointer(3);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'QSL MODE';                      crAddress: pointer(2);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'QSO POINT METHOD';              crAddress: pointer(1);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.Radio.TcpServerPort now. *)
- (crCommand: 'RADIO ONE BAND OUTPUT PORT';    crAddress: @Radio1.BandOutputPort;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  // Serial frame format 'dps' (data bits 7/8, parity N/O/E, stop bits 1/2), e.g.
  // 8N2.  Empty = use the radio's registered defaults (SerialParamsFor).  Parsed
  // at connect time by RadioObject.ResolveSerialFrameSettings.
- (crCommand: 'RADIO TWO BAND OUTPUT PORT';    crAddress: @Radio2.BandOutputPort;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfRadio2; crType: ctPortLPT; crNetwork: 0),
- (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'ROTATOR PORT';                  crAddress: pointer(40);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of
     stopping the program with "Invalid statement in config file". *)
- (crCommand: 'STEREO CONTROL PORT';           crAddress: @ActiveStereoPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'STEREO PIN HIGH';               crAddress: @StereoPinState;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  // (crCommand: 'TAIL END CW MESSAGE';           crAddress: @TailEndMessage;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),     //n4af 4.41.5
 // (crCommand: 'TAIL END KEY';                  crAddress: @TailEndKey;                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),         // n4af 4.41.5
@@ -1315,19 +1317,12 @@ begin
          Result := RealToStr2(PDouble(CFGCA[idx].crAddress)^);
       ctPortLPT:
          begin
-            // The INVERSE of GetLPTPortFromChar (CfgCmd:192), which is what the
-            // writer uses: 'NONE' or '1'/'2'/'3'. Without this the type fell
-            // through to the else below, and an unrendered type is exactly the
-            // hazard that comment describes -- an empty control reads as "unset",
-            // the operator sets it, and their real value is overwritten by
-            // whatever they typed over the blank.
-            case PPortType(CFGCA[idx].crAddress)^ of
-               Parallel1: Result := '1';
-               Parallel2: Result := '2';
-               Parallel3: Result := '3';
-            else
-               Result := 'NONE';
-            end;
+            (* ctPortLPT HAS NO ROWS LEFT (2026-09-13) -- the parallel port
+              is gone from the program.  The arm is kept because the TYPE is
+              still declared and an unrendered type is the hazard the note
+              below describes: an empty control reads as "unset", the operator
+              sets it, and their real value is overwritten. *)
+            Result := 'NONE';
          end;
 
       ctChar, ctAlphaChar:
@@ -2315,9 +2310,10 @@ begin
                         end;
                   end;
 
-               ctPortLPT:
-                  PPortType(CFGCA[i].crAddress)^ :=
-                     GetLPTPortFromChar(CustomCMD);
+               (* ctPortLPT HAS NO ROWS, 2026-09-13 -- the parallel port is
+                 gone from the program.  The TYPE stays declared so the
+                 renderer and this dispatcher still name it, and a value
+                 arriving under it is simply not applied. *)
 
                ctChar:
                   PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1];
@@ -2995,11 +2991,12 @@ initialization
    (* AND THE ONE THAT WAS crMin/crMax ON A REAL. See the function. *)
    RegisterSettingValueCheck('GridMap.RadiusOfEarth',
                              @RadiusOfEarthIsInRange);
-   (* AND THE TWO ALLOW-LISTS THAT ARE NOT RANGES. Both were ckArray rows;
-     the arrays are unchanged and this is the same list, rendered. *)
+   (* AND THE ALLOW-LIST THAT IS NOT A RANGE. It was a ckArray row; the array
+     is unchanged and this is the same list, rendered.
+
+     STEREO CONTROL PIN was the second one and went with the parallel port on
+     2026-09-13 -- it named WHICH LPT PIN drove the headphone relay. *)
    RegisterSettingAllowedValues('Scp.MinimumLetters',
                                 IntegerVocabulary(SCP_MINIMUM_LETTERS_ARRAY));
-   RegisterSettingAllowedValues('Hardware.StereoControlPin',
-                                IntegerVocabulary(STEREO_CONTROL_PIN_ARRAY));
 
 end.

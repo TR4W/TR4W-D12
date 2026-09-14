@@ -28,7 +28,6 @@ uses
 
   TF,
   VC,
-  uIO,
   utils_text,
   IdUDPClient,
   IdGlobal,
@@ -88,7 +87,6 @@ function ConfigurationOkay: boolean;
 procedure ReadInConfigFile(ConfigFileName: TCFGType);
 procedure TryRunPaddleAndFootSwitchThread;
 procedure tSetupExchangeNumbers;
-procedure InitializeOtherLPTPorts;
 procedure EnmuCFGFile(FileString: PShortString);
 procedure SetUpGlobalsAndInitialize;
 
@@ -284,41 +282,6 @@ begin
   ConfigurationOkay := True;
 end;
 
-procedure InitializeOtherLPTPorts;
-begin
-
-  if ActivePaddlePort <> NoPort then
-    if ActivePaddlePort = RelayControlPort then
-       begin
-       showwarning(TC_RELAYCONTROLPORTPADDLEPORT);
- //      Exit;
-       end;
-
-  tRelayControlPortBaseAddress := LPT_NO_PORT;
-  if tGetPortType(RelayControlPort) = ParallelInterface then
-     begin
-     OpenLPT(tRelayControlPortBaseAddress, RelayControlPort);
-     end;
-
-  tActiveStereoPortBaseAddress := LPT_NO_PORT;
-  if tGetPortType(ActiveStereoPort) = ParallelInterface then
-     begin
-     OpenLPT(tActiveStereoPortBaseAddress, ActiveStereoPort);
-     end;
-
-  Radio1.tBandOutputPortBaseAddress := LPT_NO_PORT;
-  if tGetPortType(Radio1.BandOutputPort) = ParallelInterface then
-     begin
-     OpenLPT(Radio1.tBandOutputPortBaseAddress, Radio1.BandOutputPort);
-     end;
-
-  Radio2.tBandOutputPortBaseAddress := LPT_NO_PORT;
-  if tGetPortType(Radio2.BandOutputPort) = ParallelInterface then
-     begin
-     OpenLPT(Radio2.tBandOutputPortBaseAddress, Radio2.BandOutputPort);
-     end;
-end;
-
 procedure TryRunPaddleAndFootSwitchThread;
 begin
 
@@ -330,19 +293,19 @@ begin
   control port, whatever `USE CONTROL PORT` was set to. The field is deleted;
   see logradio. *)
 
-  if tGetPortType(ActiveFootSwitchPort) = ParallelInterface then
-    if OpenLPT(tFootSwitchPortBaseAddress, ActiveFootSwitchPort) then
-       begin
-       tRuntPaddleAndFootSwitchThread;
-       tDoingFootSwitchEnable := True;
-       end;
+  (* AND THE LPT BRANCH IS GONE TOO (2026-09-13), which leaves this routine
+    with nothing to do.
 
-  if tGetPortType(ActivePaddlePort) = ParallelInterface then
-    if OpenLPT(tPaddlePortBaseAddress, ActivePaddlePort) then
-       begin
-       tRuntPaddleAndFootSwitchThread;
-       DoingPaddle := True;
-       end;
+    Both arms opened a parallel port -- one for the foot switch, one for the
+    paddle -- and started the polling thread that read their contacts off the
+    LPT status lines.  With the parallel port removed there is no port to
+    open and no contacts to read; a YCCC box reports its own paddle over
+    OTRSP, on its own thread.
+
+    THE ROUTINE IS KEPT AND EMPTY rather than deleted, because its CALLER is
+    the startup sequence and the question "does anything still start the
+    paddle thread" should have a visible answer here rather than being
+    inferred from an absence. *)
 
 end;
 
@@ -625,7 +588,6 @@ begin
 //  tActiveKeyerHandle := ActiveRadioPtr.tKeyerPortHandle;
 
   TryRunPaddleAndFootSwitchThread;
-  InitializeOtherLPTPorts;
   MonitorTone := Config.CWTone;
 
 //  ActiveBand := ActiveRadioPtr.BandMemory;

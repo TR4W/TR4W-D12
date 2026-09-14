@@ -61,7 +61,6 @@ uses
   uCallsigns,
   uCTYDAT,
   uBMCF,
-  uIO,
   utils_file,
   { $ IF LANG = 'RUS'}
   { $ IFEND}
@@ -99,7 +98,6 @@ uses
   uIntercom,
   uGetServerLog,
   uMessages,
-  LPT,
   uQTCS,
   uQTCR,
   uCbrSum,
@@ -4870,9 +4868,6 @@ begin
     // also did not survive a restart once a profile was active -- the library
     // won and logged the override.
     menu_radio_preferences: ShowPreferences;
-
-    menu_lpt:
-      ShowLPTDialog;
 
     (* The old per-slot WinKeyer settings dialog was deleted 2026-09-05. It
       had no launcher -- this line, commented out -- and Preferences had
@@ -10935,14 +10930,6 @@ begin
   if not Settings.Ptt.Enable then
      begin
 
-     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-       if DriverIsLoaded() then
-          begin
-          TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-          DriverBitOperation(TempByte, STROBE_SIGNAL, boSet1);
-          SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-          end;
-
      Exit;
      end;
 
@@ -10971,18 +10958,6 @@ begin
           Exit;
           end;
 
-       if not DriverIsLoaded() then
-          begin
-          Exit;
-          end;
-
-       TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-       DriverBitOperation(TempByte, STROBE_SIGNAL, boSet1);
-       DriverBitOperation(TempByte, PTT_SIGNAL, boSet1);
-       // TempByte := TempByte or BIT0; //1pin (Inverted)
-       // TempByte := TempByte or BIT2; //16pin
-       SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-
        DrawPTTLabel:
        logger.debug('Entering Main.PTTOn');
        ActiveRadioPtr.tPTTStatus := PTT_ON;
@@ -11004,14 +10979,6 @@ begin
   DebugMsg('Enter MainUnit.PTTOff');
   if not Settings.Ptt.Enable then
      begin
-     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-       if DriverIsLoaded() then
-          begin
-          TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-          DriverBitOperation(TempByte, STROBE_SIGNAL, boSet0);
-          SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-          end;
-
      Exit;
 
      end;
@@ -11040,16 +11007,6 @@ begin
            end;
         Exit;
         end;
-
-     if not DriverIsLoaded() then
-        begin
-        Exit;
-        end;
-
-     TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-     DriverBitOperation(TempByte, STROBE_SIGNAL, boSet0);
-     DriverBitOperation(TempByte, PTT_SIGNAL, boSet0);
-     SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
 
      DrawPTTLabel:
      ActiveRadioPtr.tPTTStatus := PTT_OFF;

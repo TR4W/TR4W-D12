@@ -342,10 +342,6 @@ begin
       begin
       Result := pkNetwork;
       end
-   else if aPort in [Parallel1, Parallel2, Parallel3] then
-      begin
-      Result := pkParallel;
-      end
    else
       begin
       (* NoPort, and anything the enum grows that this does not know about.

@@ -52,8 +52,6 @@ uses {SlowTree,} Tree,
   LogRadio 
 
   ;
-var
-LPTBaseAddressArray                   : array[Parallel1..Parallel3] of Cardinal = ($378, $278, $3BC);
 
 function ProcessConfigInstruction(var FileString: ShortString; var FirstCommand: boolean): boolean;
 
@@ -67,7 +65,6 @@ function ProcessRadioTypeold(CMD: ShortString; RadioPointer: RadioPtr): boolean;
 //function ProcessRadioControlPort(CMD: ShortString; RadioPointer: RadioPtr): boolean;
 //function ProcessRadioDTR(CMD: ShortString; RadioPointer: RadioPtr): boolean;
 //function GetPortFromChar(port: ShortString): PortType;
-function GetLPTPortFromChar(port: ShortString): PortType;
 
 var
   ConfigFileRead                        : Text;
@@ -185,23 +182,5 @@ function ProcessRadioTypeold(CMD: ShortString; RadioPointer: RadioPtr): boolean;
 
 begin
 end;
-function GetLPTPortFromChar(port: ShortString): PortType;
-begin
-  Result := NoPort;
-  if PInteger(@port[1])^ = $454E4F4E {NONE} then Exit;
-  if port[1] = '1' then
-     begin
-     Result := Parallel1;
-     end;
-  if port[1] = '2' then
-     begin
-     Result := Parallel2;
-     end;
-  if port[1] = '3' then
-     begin
-     Result := Parallel3;
-     end;
-end;
-
 end.
 

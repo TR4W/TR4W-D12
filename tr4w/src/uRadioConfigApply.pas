@@ -366,7 +366,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..249] of string =
+   MIGRATED_COMMANDS: array[0..248] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
@@ -655,7 +655,6 @@ const
       'ROW COUNT',
       'WINDOW SIZE',
       'MP3 RECORDER BITRATE',
-      'STEREO CONTROL PIN',
       // Migrated 2026-08-21.
       'START SENDING NOW KEY'
    );

@@ -201,7 +201,6 @@ uses
   uCbrSum,
   uQTCR,
   uQTCS,
-  LPT,
   uGetServerLog,
   TF,
   uFreqTimeFormat,
@@ -215,7 +214,6 @@ uses
   uStations,
   uAltD,
   uWinKey,
-  uLPTPortEnumerator,
   uPrefsSearch,
   uConfigValues,
   uCrashLog,
@@ -236,7 +234,6 @@ uses
   uProcessCommand,
   uMults,
   uSortedStringList,
-  uIO,
   uBMCF,
   uCTYDAT,
   uCallSignRoutines,
@@ -269,7 +266,6 @@ uses
   uPanelUpdate,
   uMainThreadWork,
   uFlasher,
-  uLPTForm,
   uAboutForm,
   uFunctionKeysForm,
   uBandPlanForm,
@@ -2137,7 +2133,6 @@ begin
 
   if Settings.SayHi.Enable then
      DisplayNamePercentage;
-  SetStereoPin(Settings.Hardware.StereoControlPin, StereoPinState);
   DisplayRadio(ActiveRadio);
   DisplayBandMode(ActiveBand, ActiveMode, False);
   tDisplayCQTotal;

@@ -34,7 +34,6 @@ uses
   TF,
   VC,
   BeepUnit,
-  uIO,
 {$IFDEF WINDOWS}
   MMSystem,     // the CW element clock -- see tCWSleep
   (* WHAT IS LEFT OF Windows, and all of it is gated at the call site:
@@ -272,10 +271,6 @@ var
     I/O port addresses, and the handle typing resolved to two DIFFERENT widths
     depending on whether a unit named LCLType. LPT_NO_PORT keeps the exact bit
     pattern feInvalidHandle had on Win32, so no comparison changes value. *)
-  tPaddlePortBaseAddress                : TLPTBaseAddress = LPT_NO_PORT;
-  tFootSwitchPortBaseAddress            : TLPTBaseAddress = LPT_NO_PORT;
-  tRelayControlPortBaseAddress          : TLPTBaseAddress = LPT_NO_PORT;
-  tActiveStereoPortBaseAddress          : TLPTBaseAddress = LPT_NO_PORT;
 
   (* tUseControlPort is gone (2026-09-12) --
     Settings.Hardware.UseControlPort. *)
@@ -410,10 +405,7 @@ procedure DoABeep(TypeOfBeep: BeepType);
 procedure DVKEnableWrite;
 procedure DVKDisableWrite;
 function DVKMessagePlaying: boolean;
-procedure OutputBandInfo(BaseAddress: TLPTBaseAddress {ParallelPort: PortType}; Band: BandType; Mode: ModeType);
 procedure SetDVKDelay(Delay: integer);
-procedure SetRelayForActiveRadio(Radio: RadioType);
-procedure SetStereoPin(PinNumber: integer; PinSet: boolean); {KK1L: 6.71}
 procedure StartDVK(MemorySwitch: integer);
 
 procedure SendCWBufferStart;
@@ -620,36 +612,6 @@ begin
   DVKTimeOut := 40;
 end;
 
-{KK1L: 6.71 Started coding for the stereo pin stuff}
-
-procedure SetStereoPin(PinNumber: integer; PinSet: boolean);
-
-var
-  //  BaseAddress                      : Word;
-  TempByte                              : Byte;
-  Mask                                  : TBitSet;
-begin
-  if tActiveStereoPortBaseAddress = LPT_NO_PORT then Exit;
-
-  case PinNumber of
-    5: Mask := bsBIT3; { Pin five, bit 3 }
-    9: Mask := bsBIT7; { Pin nine, bit 7 }
-  else Exit;
-  end;
-
-  TempByte := GetPortByte(tActiveStereoPortBaseAddress, otData);
-
-//  if PinSet then
-//    TempByte := TempByte or Mask
-//  else
-//    TempByte := TempByte and (not Mask);
-
-  DriverBitOperation(TempByte, Mask, TBitOperation(PinSet));
-
-  SetPortByte(tActiveStereoPortBaseAddress, otData, TempByte);
-
-end;
-
 (* DRIVE THE LINE THE OPERATOR NOMINATED FOR CW.
 
   aKeyDown is what the KEY is doing; whether that asserts or releases the line
@@ -701,23 +663,13 @@ procedure TurnOffActivePort;
 var
   TempByte                              : Byte;
 begin
+   (* SERIAL ONLY.  The parallel arm went with the LPT ports (NY4I,
+     2026-09-13); a station keying through a box rather than a radio line uses
+     the YCCC or WinKeyer path, neither of which comes through here. *)
    if ActiveRadioPtr.KeyerPortKind = pkSerial then
       begin
       DriveCWLine(ActiveRadioPtr, False);
-      end
-  else
-
-    if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-       begin
-       if ActiveRadioPtr.tKeyerPortHandle = LPT_NO_PORT then Exit;
-       TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-       DriverBitOperation(TempByte, CW_SIGNAL, boSet1);
-         {17PIN}
- //      LPTTempByte := LPTTempByte or BIT3;
-         {1PIN}
- //      LPTTempByte := LPTTempByte xor BIT0;
-       SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-       end;
+      end;
 end;
 
 procedure DVKEnableWrite;
@@ -792,69 +744,21 @@ begin
      end
   else
      begin
-     if ActiveRadioPtr.tKeyerPortHandle = feInvalidHandle then
-        begin
-        logger.debug('[TurnOnActivePort] Exiting early: no LPT keyer port');
-        Exit;
-        end;
-     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-        begin
-        TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-        DriverBitOperation(TempByte, CW_SIGNAL, boSet0);
-            {17PIN}
-  //      LPTTempByte := LPTTempByte and (not BIT3);
-            {1PIN}
-  //      LPTTempByte := LPTTempByte xor BIT0;
-        SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-        end;
+     (* NOTHING TO DO FOR A NON-SERIAL PORT.  This was the LPT arm. *)
      end;
 
 end;
 
-procedure SetRelayForActiveRadio(Radio: RadioType);
-var
-  TempByte                              : Byte;
-  TempRadio                             : RadioType;
-  Operation                             : TBitOperation;
-begin
-  {
-    if (ActiveKeyerPort >= Parallel1) and (ActiveKeyerPort <= Parallel3) then
-      if tPTTStatus = ptt_ON then
-        LPTTempByte := 197
-      else
-        LPTTempByte := 193;
-    if ActiveRadioPtr.tr4w_KeyerPortHandle = feInvalidHandle then Exit;
-    SetPortByte(ActiveRadioPtr.tr4w_KeyerPortHandle + 2, LPTTempByte);
-  }
-  if tRelayControlPortBaseAddress = LPT_NO_PORT then Exit;
+(* THE SO2R RELAY WAS AN LPT CONTROL LINE AND IS GONE, 2026-09-13.
 
-  TempRadio := Radio;
+  It drove one bit of the relay-control parallel port to point the headphones
+  and the keyed line at radio one or two.  A YCCC box does the same job over
+  OTRSP with YCCCSetActiveRadio, which LogCW already calls beside where this
+  used to be -- so the capability stays and only the transport went.
 
-  if Settings.So2r.SwapRelaySense then
-    if Radio = RadioOne then
-       begin
-       TempRadio := RadioTwo
-       end
-    else
-       begin
-       TempRadio := RadioOne;
-       end;
+  SWAP RADIO RELAY SENSE went with it: it inverted which way this bit meant,
+  a question the box answers for itself. *)
 
-  if TempRadio = RadioOne then
-     begin
-     Operation := boSet0;
-     end;
-  if TempRadio = RadioTwo then
-     begin
-     Operation := boSet1;
-     end;
-
-  TempByte := GetPortByte(tRelayControlPortBaseAddress, otControl);
-
-  DriverBitOperation(TempByte, RELAY_SIGNAL, Operation);
-
-  SetPortByte(tRelayControlPortBaseAddress, otControl, TempByte);
-end;
 {
 procedure K1EAKeyer.PTTForceOn;
 
@@ -1861,22 +1765,7 @@ begin
 
   (* THE SAME FORTY LINES STOOD HERE FOR EACH RADIO. See OpenKeyerPortFor. *)
   OpenKeyerPortFor(@Radio1);
-
-  if Radio1.tKeyerPort in [Parallel1..Parallel3] then
-     begin
-     OpenLPT(Radio1.tKeyerPortHandle, Radio1.tKeyerPort);
- //    PTTOff;
-     KeyerInitialized := True;
-     end;
-
   OpenKeyerPortFor(@Radio2);
-
-  if (Radio2.tKeyerPort >= Parallel1) and (Radio2.tKeyerPort <= Parallel3) then
-     begin
-     OpenLPT(Radio2.tKeyerPortHandle, Radio2.tKeyerPort);
- //    PTTOff;
-     KeyerInitialized := True;
-     end;
 
   ElementLength := round(ElementLengthConstant / CodeSpeed);
 
@@ -1903,25 +1792,6 @@ begin
 
 //  DestroyDlPortio;
 
-end;
-
-procedure OutputBandInfo(BaseAddress: TLPTBaseAddress; Band: BandType; Mode: ModeType);
-
-{ Outputs the appropriate bits to the parallel port }
-
-var
-  Image                                 : Byte;
-
-const
-   BandInfoArray                         : array[BandType] of Byte = ($01, $20, $21, $41, $61, $81, $40, $60, $80, $A0, $A1, $C0, $C1, $E0, $E1, $00, $00, $00, $00, $00, $00, $00, $00);
-begin
-  if BaseAddress = LPT_NO_PORT then Exit;
-  Image := BandInfoArray[Band];
-  if Mode = Phone then
-     begin
-     Image := Image or (1 shl 1);
-     end;
-  SetPortByte(BaseAddress, otData, Image);
 end;
 
 procedure SendCWBufferStart;
@@ -2422,89 +2292,34 @@ begin
      tCWSleep(CWElementLength, tCWPaddle_Event);
      end;
 
-  if tDoingFootSwitchEnable then
-    if FootSwitchMode <> FootSwitchDisabled then
-       begin
-       if not Settings.Hardware.UseControlPort then
-          begin
-             {LPT}
-         TempByte := GetPortByte(tFootSwitchPortBaseAddress, otState);
- //        Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
-         if TempByte and 8 = 8 then
-            begin
-            if tFootSwitchPressed = True then
-              if FootSwitchMode = Normal then
-                 begin
-                 PTTOff;
-                 end;
-            tFootSwitchPressed := False;
-            end;
-         if TempByte and 8 = 0 then
-           if tFootSwitchPressed = False then
-              begin
-              tFootSwitchPressed := True;
-              tFootSwitchProcedure;
-              end;
+  (* THE FOOT SWITCH READ AN LPT STATUS LINE AND IS GONE, 2026-09-13.
 
-       end
-       else
-          begin
-          (* THE CONTROL-PORT ARM IS GONE (2026-09-08), AND IT WAS WORSE
-            THAN DEAD.
-
-            It read the modem status lines with
-            GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal). That
-            handle was never opened by anything -- see the note in logradio --
-            so the call failed and left TempCardinal UNINITIALISED, and the
-            tests below it were made against whatever was on the stack. A foot
-            switch or paddle that fired at random is exactly what that
-            produces.
-
-            Reported once per run rather than per poll: this sits inside the
-            keyer's timing loop, so a log line here would flood the file. *)
-          ReportControlPortUnavailable;
-          end;
-       end;
+    FOOT SWITCH PORT and FOOT SWITCH MODE were withdrawn commands already;
+    this was the code behind them, and it had no other transport.  Its
+    control-port alternative had been deleted in 2026-09 as worse than dead --
+    it tested an uninitialised variable, which is how a foot switch that fired
+    at random was produced. *)
 
   if DoingPaddle then
     if ActiveMode = CW then
        begin
 
+       (* THE PADDLE CONTACTS CAME OFF AN LPT STATUS LINE, and that read is
+         gone with the parallel ports (NY4I, 2026-09-13).  A YCCC box reports
+         its own paddle through YCCCReadThreadProc, which does not come
+         through here.
+
+         BOTH CONTACTS STAY FALSE, so the block below simply does not fire --
+         which is what a station with no paddle wired has always seen.
+
+         ITS OTHER ARM WENT IN 2026-09 and was worse than dead: it read the
+         modem status lines with GetCommModemStatus on a handle nothing ever
+         opened, so the call failed, left the variable UNINITIALISED, and the
+         tests were made against whatever was on the stack -- a paddle that
+         fired at random. *)
        DitContact := False;
        DahContact := False;
-       if not Settings.Hardware.UseControlPort then
-          begin
-          if tPaddlePortBaseAddress <> LPT_NO_PORT then
-             begin
-             TempByte := GetPortByte(tPaddlePortBaseAddress, otState);
-   //          Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
-             if TempByte and 32 = 0 then
-                begin
-                DitContact := True;
-                end;
-             if TempByte and 16 = 0 then
-                begin
-                DahContact := True;
-                end;
-             end;
-          end
-       else
-          begin
-          (* THE CONTROL-PORT ARM IS GONE (2026-09-08), AND IT WAS WORSE
-            THAN DEAD.
 
-            It read the modem status lines with
-            GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal). That
-            handle was never opened by anything -- see the note in logradio --
-            so the call failed and left TempCardinal UNINITIALISED, and the
-            tests below it were made against whatever was on the stack. A foot
-            switch or paddle that fired at random is exactly what that
-            produces.
-
-            Reported once per run rather than per poll: this sits inside the
-            keyer's timing loop, so a log line here would flood the file. *)
-          ReportControlPortUnavailable;
-          end;
        if (DitContact or DahContact) then
           begin
           tPTTOnCounter := 0;
@@ -2676,12 +2491,7 @@ begin
   if port in SerialPorts then
      begin
      Result := SerialInterface
-     end
-  else
-    if port in [Parallel1..Parallel3] then
-       begin
-       Result := ParallelInterface;
-       end;
+     end;
 end;
 
 procedure BackToInactiveRadioAfterQSO;

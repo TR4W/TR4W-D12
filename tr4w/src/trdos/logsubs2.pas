@@ -22,7 +22,6 @@ uses
   uConfigValues,   // Config -- migrated settings
   uMMTTY,
   uCallSignRoutines,
-  uIO,
   utils_text,
   utils_file,
   uWinKey,
@@ -376,8 +375,10 @@ begin
 end;
 procedure ToggleStereoPin; {KK1L: 6.71}
 begin
+  (* THE STATE STAYS, THE LPT PIN GOES.  StereoPinState is what the YCCC box
+    is told below; SetStereoPin drove an LPT data pin and went with the
+    parallel ports (NY4I, 2026-09-13). *)
   TF.InvertBoolean(StereoPinState);
-  SetStereoPin(Settings.Hardware.StereoControlPin, StereoPinState);
   if ycccActive then
      begin
      YCCCSetStereo(StereoPinState);
@@ -830,7 +831,6 @@ begin
 
   {if BandMapEnable then }SaveBandMap;
   wkClose;
-  DriverDestroy;
 
   logger.Info('[ExitProgram] Step SaveRestartFile');
   Sheet.SaveRestartFile;
@@ -2321,7 +2321,6 @@ var
      begin
      DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
      end;
-  SetStereoPin(Settings.Hardware.StereoControlPin, StereoPinState); {KK1L: 6.71}
   DisplayRadio(ActiveRadio);
   DisplayTotalScore {(TotalScore)};
   ClearContestExchange(ReceivedData);

@@ -2371,7 +2371,6 @@ begin
             {ActiveMode                                       := ModeMemory [RadioOne]; {KK1L: 6.71 for split mode SO2R}
         SendingOnRadioOne                                     := True;
         SendingOnRadioTwo                                     := False;
-        SetRelayForActiveRadio(ActiveRadio);
         end;
      end
 
@@ -2398,7 +2397,6 @@ begin
          
        SendingOnRadioOne                                     := False;
        SendingOnRadioTwo                                     := True;
-       SetRelayForActiveRadio(ActiveRadio);
        end;
     // If this line really wants a to send F1 upon if CWByCat, it would beed to call IsActiveCWByCAT
     // but as this code is called in other places, I do not believe this is the right thing to do.
@@ -2433,7 +2431,6 @@ begin
             {CodeSpeed                                        := RadioTwoSpeed;}
         CodeSpeed                                             := Radio2.SpeedMemory; {KK1L: 6.73}
         SetSpeed(CodeSpeed);
-        SetRelayForActiveRadio(RadioTwo);
             {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioTwo] for split mode SO2R}
             {ActiveMode                                       := ModeMemory [RadioTwo]; {KK1L: 6.71 for split mode SO2R}
         SendingOnRadioOne                                     := False;
@@ -2451,7 +2448,6 @@ begin
          {CodeSpeed                                          := RadioOneSpeed;}
        CodeSpeed                                             := Radio1.SpeedMemory; {KK1L: 6.73}
        SetSpeed(CodeSpeed);
-       SetRelayForActiveRadio(RadioOne);
          {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioOne] for split mode SO2R}
        SendingOnRadioOne                                     := True;
        SendingOnRadioTwo                                     := False;

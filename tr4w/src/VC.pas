@@ -253,10 +253,11 @@ type
     Serial62,
     Serial63,
     Serial64,
-    Network,
-    Parallel1,
-    Parallel2,
-    Parallel3
+    (* Parallel1..Parallel3 WERE HERE and went on 2026-09-13 with the parallel
+      port itself (NY4I: "you can remove all references to them in the code").
+      Network stays: it is a KIND of port, and a network radio is addressed by
+      an IP address rather than a device name. *)
+    Network
     );
 
   // Arrays indexed by a serial port use this subrange, so widening the port
@@ -2693,7 +2694,6 @@ const
   menu_messages                         = 10101;
   menu_other_messages                   = 10102;
   menu_cat_radio_one                    = 10103;
-  menu_lpt                              = 10104;
   menu_net_set                          = 10105;
   menu_cat_radio_two                    = 10106;
   menu_winkeyer2                        = 10107;

@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(265, names.Count,
+         CheckEquals(263, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -1456,7 +1456,7 @@ const
       + '"SPRINT QSY RULE",'
       + '"START SENDING NOW KEY",'
       + '"STATIONS CALLSIGNS MASK",'
-      + '"STEREO CONTROL PIN",'
+      + ''
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'
@@ -1468,7 +1468,7 @@ const
       + '"UNKNOWN COUNTRY FILE ENABLE",'
       + '"UNKNOWN COUNTRY FILE NAME",'
       + '"UPDATE RESTART FILE ENABLE",'
-      + '"USE CONTROL PORT",'
+      + ''
       + '"USE RECORDED SIGNS",'
       + '"USER INFO SHOWN",'
       + '"VHF BAND ENABLE",'
@@ -1802,8 +1802,8 @@ begin
       CheckEquals('5', values[3], 'up to five');
       end;
 
-   values := Settings.AllowedValuesForCommand('STEREO CONTROL PIN');
-   CheckEquals(2, Length(values), 'STEREO CONTROL PIN offers two LPT pins');
+   (* STEREO CONTROL PIN was the second registered vocabulary and offered its
+     two LPT pins here.  It went with the parallel port on 2026-09-13. *)
 end;
 
 procedure TSettingsModelTests.Test_ARegisteredVocabularyIsAlsoTheRefusal;
@@ -1816,26 +1816,28 @@ begin
      ckArray row it replaces: there, the allow-list and whatever the UI
      offered were free to disagree.
 
-     6, 7 and 8 are real LPT pins and are NOT ones a headphone relay is wired
-     to. The old row refused them; so does this.
+     THIS USED STEREO CONTROL PIN, whose vocabulary was (5, 9) -- a gap wide
+     enough that 6, 7 and 8 are real LPT pins no headphone relay is wired to.
+     That setting went with the parallel port on 2026-09-13, so the case is
+     made with SCP MINIMUM LETTERS, which has the same shape and is the
+     sharper example anyway: its refused values sit INSIDE the subrange.
+
+     A CONTIGUOUS RANGE WOULD NOT TEST THIS. ROW COUNT (5..15) and AUTO QSL
+     INTERVAL (0..6) are ranges, so the subrange alone would refuse for them
+     and the registration would prove nothing.
    *)
-   before := Settings.Hardware.StereoControlPin;
+   before := Settings.Scp.MinimumLetters;
    try
-      CheckTrue(Settings.TrySetByCommand('STEREO CONTROL PIN', '5'),
-                'five is in the vocabulary');
-      CheckEquals(5, Settings.Hardware.StereoControlPin, 'and it was taken');
+      CheckTrue(Settings.TrySetByCommand('SCP MINIMUM LETTERS', '3'),
+                'three is in the vocabulary');
+      CheckEquals(3, Settings.Scp.MinimumLetters, 'and it was taken');
 
-      CheckFalse(Settings.TrySetByCommand('STEREO CONTROL PIN', '7'),
-                 'seven is not');
-      CheckEquals(5, Settings.Hardware.StereoControlPin,
-                  'and a refusal LEAVES THE VALUE ALONE, never corrects it');
-
-      (* SCP MINIMUM LETTERS is the interesting refusal: 1 and 2 sit INSIDE
-        the span and outside the list. *)
       CheckFalse(Settings.TrySetByCommand('SCP MINIMUM LETTERS', '2'),
                  'two is inside the span and outside the list');
+      CheckEquals(3, Settings.Scp.MinimumLetters,
+                  'and a refusal LEAVES THE VALUE ALONE, never corrects it');
    finally
-      Settings.Hardware.StereoControlPin := before;
+      Settings.Scp.MinimumLetters := before;
    end;
 end;
 

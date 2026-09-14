@@ -973,27 +973,6 @@ type
      belong to the port identity work, which is deciding what a port IS
      before deciding where its setting lives.
    *)
-   THardwareSettings = class(TSettingsGroup)
-   private
-      FUseControlPort: boolean;
-      FStereoControlPin: integer;
-   public
-      constructor Create;
-   published
-      (* Was tUseControlPort in logk1ea -- whether the LPT control lines are
-        driven at all. Nothing writes it at run time; it is read where the
-        paddle and footswitch are serviced. *)
-      property UseControlPort: boolean
-         read FUseControlPort write FUseControlPort;
-      (* Was the global StereoControlPin in logk1ea -- WHICH LPT PIN drives
-        the headphone relay. (5, 9), registered from uCFG.
-
-        STEREO CONTROL PIN, aliased: the derived name would put the word
-        HARDWARE in front of a command an operator has typed for years. *)
-      property StereoControlPin: integer
-         read FStereoControlPin write FStereoControlPin;
-   end;
-
    (* THE EXTERNAL LOGGER -- the first area to move off CFGCA.
 
      It went first because it is the smallest COMPLETE case in the tree: three
@@ -3133,7 +3112,6 @@ type
       FServer: TServerSettings;
       FHamscore: THamscoreSettings;
       FMp3: TMp3Settings;
-      FHardware: THardwareSettings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -3298,7 +3276,6 @@ type
       property Server: TServerSettings read FServer;
       property Hamscore: THamscoreSettings read FHamscore;
       property Mp3: TMp3Settings read FMp3;
-      property Hardware: THardwareSettings read FHardware;
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -4053,13 +4030,6 @@ begin
    Changed('AutoQslInterval');
 end;
 
-constructor THardwareSettings.Create;
-begin
-   inherited Create;
-   // The value logk1ea's declaration carried.
-   FStereoControlPin := 9;
-end;
-
 constructor TDvkSettings.Create;
 begin
    inherited Create;
@@ -4471,7 +4441,6 @@ begin
    FServer         := TServerSettings.Create;
    FHamscore       := THamscoreSettings.Create;
    FMp3            := TMp3Settings.Create;
-   FHardware       := THardwareSettings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -4893,7 +4862,6 @@ begin
      Hamscore.Username and Hamscore.Password; SERVER PASSWORD derives from
      Server.Password. All three are listed here only because they are the
      ones a reader will come looking for -- none actually needs an alias. *)
-   Alias('USE CONTROL PORT',           'Hardware.UseControlPort');
 
    (* The contest's four. Every one puts the subject first and the
      contest nowhere, which is what a flat vocabulary does. *)
@@ -4949,7 +4917,6 @@ begin
    Alias('R150S MODE', 'Contest.R150SMode');
    Alias('RFOBL MODE', 'Contest.RfoblMode');
    Alias('AUTO QSL INTERVAL', 'Message.AutoQslInterval');
-   Alias('STEREO CONTROL PIN', 'Hardware.StereoControlPin');
    Alias('RATE DISPLAY', 'MainWindow.RateDisplay');
    Alias('HOUR DISPLAY', 'MainWindow.HourDisplay');
    Alias('USER INFO SHOWN', 'MainWindow.UserInfoShown');

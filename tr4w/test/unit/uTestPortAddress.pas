@@ -63,9 +63,10 @@ begin
    BeginTest('a port that is not serial has no device name');
    CheckEquals('', SerialDeviceName(NoPort),    'nothing configured');
    CheckEquals('', SerialDeviceName(VC.Network),   'a network port is not a COM port');
-   CheckEquals('', SerialDeviceName(Parallel1), 'LPT1');
-   CheckEquals('', SerialDeviceName(Parallel2), 'LPT2');
-   CheckEquals('', SerialDeviceName(Parallel3), 'LPT3');
+   (* THE THREE LPT CASES WENT with Parallel1..Parallel3 on 2026-09-13.
+     Network is still the one that matters here: it is the LAST member, so an
+     ordinal-based name formatter runs straight past the serial range into it,
+     which is exactly the 'COM65' defect this test was written for. *)
 end;
 
 procedure TPortAddressTests.Test_TheNameParsesBackToTheSamePort;
@@ -139,6 +140,9 @@ begin
       case kind of
          pkSerial:   Inc(serial);
          pkNetwork:  Inc(network);
+         (* pkParallel IS STILL A KIND and nothing answers it now -- counted
+           so that stays true.  A port coming back parallel would mean the
+           enum had grown a member this test does not know about. *)
          pkParallel: Inc(parallel);
          pkNone:     Inc(none);
       end;
@@ -146,7 +150,7 @@ begin
 
    CheckEquals(MAX_SERIAL_PORT, serial, 'one serial kind per serial member');
    CheckEquals(1, network,  'exactly one network member');
-   CheckEquals(3, parallel, 'LPT1..LPT3');
+   CheckEquals(0, parallel, 'the parallel port is gone from the program');
    CheckEquals(1, none,     'only NoPort is nothing');
    CheckEquals(Ord(High(PortType)) + 1, serial + network + parallel + none,
                'every member accounted for, none counted twice');
@@ -156,8 +160,6 @@ begin
    CheckTrue(PortKindOf('', Serial1)   = pkSerial,   'the first serial');
    CheckTrue(PortKindOf('', Serial64)  = pkSerial,   'the last serial');
    CheckTrue(PortKindOf('', VC.Network)   = pkNetwork,  'Network');
-   CheckTrue(PortKindOf('', Parallel1) = pkParallel, 'LPT1');
-   CheckTrue(PortKindOf('', Parallel3) = pkParallel, 'LPT3');
 end;
 
 procedure TPortAddressTests.Test_ANamedPortIsSerialWhateverTheOrdinalSays;

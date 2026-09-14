@@ -2268,13 +2268,16 @@ begin
       end;
 end;
 
-procedure RadioObject.UpdateBandOutputInfo(Band: BandType; Mode: ModeType);
+(* THE BAND DECODER OUTPUT WENT WITH THE PARALLEL PORT, 2026-09-13.
 
+  It wrote a band-coded byte to an LPT data port and had no other transport.
+  THIS IS THE ONE CAPABILITY IN THE LPT REMOVAL WITH NO YCCC EQUIVALENT
+  TODAY: the box exposes YCCCSetActiveRadio and YCCCSetStereo but nothing for
+  band data, so an operator driving a band decoder or an amplifier's band
+  input loses it until OTRSP AUX is wired.  Stated here rather than left for
+  someone to discover from a decoder that stopped switching. *)
+procedure RadioObject.UpdateBandOutputInfo(Band: BandType; Mode: ModeType);
 begin
-   if BandOutputPort <> NoPort then
-      begin
-      OutputBandInfo(tBandOutputPortBaseAddress {BandOutputPort}, Band, Mode);
-      end;
 end;
 
 

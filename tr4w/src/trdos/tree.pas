@@ -102,10 +102,6 @@ type
   // callsign compression); tree.pas now gets them from VC (used in interface).
   FourBytesPtr = ^FourBytes;
 
-{
-  ParallelPortType = (ppNoPort, ppParallel1, ppParallel2, ppParallel3);
-  ParallelPortTypeSA                    : array[ParallelPortType] of PChar = ('NONE', '1', '2', '3');
-}
 const
   PortTypeSA                            : array[PortType] of PAnsiChar =
 
@@ -175,18 +171,16 @@ const
     'SERIAL 62',
     'SERIAL 63',
     'SERIAL 64',
-    'TCP/IP',
-    'PARALLEL 1',
-    'PARALLEL 2',
-    'PARALLEL 3'
+    'TCP/IP'
     );
 type
   PPortType = ^PortType;
 
+  (* ParallelInterface WENT WITH THE PARALLEL PORT, 2026-09-13.  What is left
+    is the question tGetPortType actually answers now: serial, or nothing. *)
   PortInterface =
     (NoInterface,
-    SerialInterface,
-    ParallelInterface);
+    SerialInterface);
 
   MultiBandAddressArrayType = array[BandType] of Byte;
 

@@ -237,7 +237,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # clear them -- this unit s string is not the ini unit s -- so the fix is a
 # file-wide sweep of that idiom, not a cast on the newest line. Raised
 # deliberately and with a reason, which is what the ratchet asks for.
-$NARROW_CEILING = 1357
+$NARROW_CEILING = 1353
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

@@ -718,8 +718,9 @@ begin
                           RS_CW_CTRLJ_AUTOSENDCHARACTERCOUNT);
    RegisterStoredSetting('cw.ctrlj.codeSpeed',                'CODE SPEED',
                           RS_CW_CTRLJ_CODESPEED);
-   RegisterStoredSetting('cw.ctrlj.paddlePort',               'PADDLE PORT',
-                          RS_CW_CTRLJ_PADDLEPORT);
+   (* PADDLE PORT named which PARALLEL port the paddle was wired to, and went
+     with the LPT removal of 2026-09-13.  A YCCC box reports its own paddle
+     over OTRSP. *)
    RegisterModelSetting( 'cw.ctrlj.questionMarkChar',         'QUESTION MARK CHAR',
                           RS_CW_CTRLJ_QUESTIONMARKCHAR);
    { THE CUT NUMBERS moved to Settings.Cw, so RegisterModelSetting. The keys
@@ -772,17 +773,19 @@ begin
    RegisterModelSetting( 'appearance.layout.windowSize',       'WINDOW SIZE',
                           RS_APPEARANCE_LAYOUT_WINDOWSIZE, True, True);
 
-   // --- Hardware (5) ---------------------------------
-   RegisterStoredSetting('hardware.ctrlj.lpt1BaseAddress',    'LPT1 BASE ADDRESS',
-                          RS_HARDWARE_CTRLJ_LPT1BASEADDRESS);
-   RegisterStoredSetting('hardware.ctrlj.lpt2BaseAddress',    'LPT2 BASE ADDRESS',
-                          RS_HARDWARE_CTRLJ_LPT2BASEADDRESS);
-   RegisterStoredSetting('hardware.ctrlj.lpt3BaseAddress',    'LPT3 BASE ADDRESS',
-                          RS_HARDWARE_CTRLJ_LPT3BASEADDRESS);
+   (* --- Hardware (1) -------------------------------------------------
+
+     FOUR OF THE FIVE WENT WITH THE PARALLEL PORT, 2026-09-13.  The three LPT
+     base addresses addressed it directly; USE CONTROL PORT chose between the
+     radio's control port and an LPT for the paddle and foot switch, a choice
+     with only one side left and whose other arm had already been deleted as
+     worse than dead.
+
+     STEREO PIN HIGH STAYS, and it is the distinction worth keeping: it is
+     read by YCCCSetStereo, so it describes what the operator wants rather
+     than which LPT pin delivers it. *)
    RegisterStoredSetting('hardware.ctrlj.stereoPinHigh',      'STEREO PIN HIGH',
                           RS_HARDWARE_CTRLJ_STEREOPINHIGH);
-   RegisterModelSetting( 'hardware.ctrlj.useControlPort',     'USE CONTROL PORT',
-                          RS_HARDWARE_CTRLJ_USECONTROLPORT);
 
    // --- Files/Updates (7) ----------------------------
    RegisterModelSetting( 'files.ctrlj.allowAutoUpdate',       'ALLOW AUTO UPDATE',
@@ -887,9 +890,9 @@ begin
    // Two rows a case-SENSITIVE type scan missed on 2026-08-16: their crType is
    // spelled 'ctFilename' and 'ctinteger' in CFGCA. Pascal does not care; the
    // scan did, and reported Ctrl-J empty while they were still in it.
-   // STEREO CONTROL PIN joins STEREO PIN HIGH on Hardware.
-   RegisterModelSetting( 'hardware.ctrlj.stereoControlPin',   'STEREO CONTROL PIN',
-                          RS_HARDWARE_CTRLJ_STEREOCONTROLPIN);
+   (* STEREO CONTROL PIN was WHICH LPT PIN drove the headphone relay -- pin 5
+     or pin 9 -- and went with the parallel port.  STEREO PIN HIGH, the state
+     it applied, stays: see the Hardware group above. *)
    RegisterStoredSetting('files.ctrlj.initialExchangeFilename','INITIAL EXCHANGE FILENAME',
                           RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME);
 

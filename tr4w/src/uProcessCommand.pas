@@ -36,7 +36,6 @@ utils_text,
   uTelnet,
   LogCfg,
   uNet,
-  uIO,
   LOGSUBS1,
   LOGSUBS2,
   (* Windows is gone (2026-09-08). The only thing that looked like a call
@@ -620,11 +619,11 @@ var
   r                                     : integer;
 begin
   if Radio1.tPTTStatus = PTT_ON then Exit;
-  if not DriverIsLoaded() then Exit;
-  if not (Radio1.tKeyerPort in [Parallel1, Parallel2, Parallel3]) then Exit;
+  (* WROTE A RAW BYTE TO AN LPT DATA PORT, which is gone with the parallel
+    port itself (NY4I, 2026-09-13).  The SO2R functions it served are the
+    YCCC box's now. *)
   Val(scFileName, TempByte, r);
   if r <> 0 then Exit;
-  SetPortByte(Radio1.tKeyerPortHandle, otData, TempByte);
 end;
 
 procedure scCABRILLO;

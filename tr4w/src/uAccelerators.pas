@@ -83,11 +83,10 @@ type
   end;
 
 const
-  ACCELERATORS: array[0..94] of TAcceleratorRow = (
+  ACCELERATORS: array[0..93] of TAcceleratorRow = (
     (acId: 10002; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: true),   // menu_exit
     (acId: 10003; acCtrl: true ; acAlt: true ; acShift: false; acKey: $42; acDisplay: 'Ctrl+Alt+B'; acInstall: true),   // menu_cabrillo
     (acId: 10100; acCtrl: true ; acAlt: false; acShift: false; acKey: $4A; acDisplay: 'Ctrl+J'; acInstall: true),   // menu_options
-    (acId: 10104; acCtrl: true ; acAlt: true ; acShift: false; acKey: $4C; acDisplay: 'Ctrl+Alt+L'; acInstall: true),   // menu_lpt
     (acId: 10107; acCtrl: true ; acAlt: false; acShift: false; acKey: $57; acDisplay: 'Ctrl+W'; acInstall: true),   // menu_winkeyer2
     (acId: 10200; acCtrl: true ; acAlt: false; acShift: true ; acKey: $C0; acDisplay: 'Ctrl+Shift+`'; acInstall: true),   // menu_windows_bandmap
     (acId: 10201; acCtrl: true ; acAlt: false; acShift: true ; acKey: $31; acDisplay: 'Ctrl+Shift+1'; acInstall: true),   // menu_windows_dupesheet1

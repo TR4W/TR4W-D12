@@ -212,7 +212,6 @@ uses
    uRadioIcomReadLimited in '..\..\src\radioFactory\uRadioIcomReadLimited.pas',
    uRadioIcomModern in '..\..\src\radioFactory\uRadioIcomModern.pas',
    uRadioHamLibOnly in '..\..\src\radioFactory\uRadioHamLibOnly.pas',
-   uLPTPortEnumerator in '..\..\src\uLPTPortEnumerator.pas',
    ComPortEnumerator in '..\..\src\ComPortEnumerator.pas',
    uPortAddress in '..\..\src\uPortAddress.pas',
    uSettingsModel in '..\..\src\uSettingsModel.pas',
@@ -289,7 +288,6 @@ uses
    uTestKenwoodSerial   in 'uTestKenwoodSerial.pas',
    uTestRadioTCI        in 'uTestRadioTCI.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
-   uTestLPTPortEnumerator in 'uTestLPTPortEnumerator.pas',
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
    uTestPortAddress in 'uTestPortAddress.pas',
    uTestSettingsModel in 'uTestSettingsModel.pas',
@@ -421,7 +419,6 @@ begin
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
    RegisterSuite(TTransverterOffsetTests.Create('TransverterOffset'));
-   RegisterSuite(TLPTPortEnumeratorTests.Create('LPTPortEnumerator'));
    RegisterSuite(TComPortEnumeratorTests.Create('ComPortEnumerator'));
    RegisterSuite(TPortAddressTests.Create('PortAddress'));
    RegisterSuite(TSettingsModelTests.Create('SettingsModel'));

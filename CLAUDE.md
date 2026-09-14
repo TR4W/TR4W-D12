@@ -1103,7 +1103,7 @@ TR4W has four mutually exclusive ways to key CW. Each is now a `TCWKeyer` strate
 | `TCWKeyerCAT` | `src/uCWKeyerCAT.pas` | CW-by-CAT over the radio link |
 | `TCWKeyerWinKey` | `src/uCWKeyerWinKey.pas` | WinKeyer (own thread, `uWinKey.pas`) |
 | `TCWKeyerYCCC` | `src/uCWKeyerYCCC.pas` | YCCC SO2R+ box |
-| `TCWKeyerCPU` | `src/uCWKeyerCPU.pas` | DTR/RTS/LPT keying (`LOGK1EA`) |
+| `TCWKeyerCPU` | `src/uCWKeyerCPU.pas` | DTR/RTS keying (`LOGK1EA`) — ~~LPT~~, removed 2026-09-13 |
 
 Base and selection live in `src/uCWKeyerBase.pas`; `src/trdos/LogCW.pas` is the facade. Per-keyer
 capabilities (`ckTune`, `ckDeleteLastChar`, `ckMessageChaining`) let the UI grey what the chosen
@@ -1207,7 +1207,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **What is still here only for Delphi (survey, nothing changed)** | **`docs/DELPHI_SHIM_INVENTORY.md`** |
 | **Win32 ARTIFACTS -- the shapes that compile everywhere and are still wrong** | **`docs/WIN32_ARTIFACT_SWEEP.md`** -- the successor to the portability sweep, and a different question: not "does it compile off Windows" but "is this how FPC/LCL would have written it". Worked example: a multiplier's identity exists only as bits in a grid row's `Objects` pointer |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
-| **LPT keying: the inpout32/x64 driver** | **`docs/inpOut32-64_Info.md`** -- the driver author's own notes. Read before the 64-bit move: the x64 DLL has a different name, the choice is by build bitness rather than OS, and the first load installs a kernel driver and needs elevation |
+| ~~LPT keying: the inpout32/x64 driver~~ | ~~`docs/inpOut32-64_Info.md`~~ — **HISTORICAL as of 2026-09-13.** The parallel port is gone from the program (NY4I: *"you can remove all references to them in the code"*), and with it `uIO.pas`, the `inpout32` bindings, `Parallel1..Parallel3` and the LPT dialog. The doc is kept for the driver's own notes; nothing in the tree loads it any more |
 | **Icom bandscope -> panadapter (read before touching `$27`)** | **`docs/ICOM_SPECTRUM_DESIGN.md`** |
 | Icom scope findings for upstream (pasteable, cites no third project) | `docs/AETHERSDR_ICOM_SCOPE_REPORT.md` |
 | **Multi-user networking: the protocol, and where its analysis is wrong** | **`docs/TR4W_NETWORKING_ANALYSIS.md`** — TR4QT's analysis, copied whole. **Read the provenance block at the top before believing any V1 claim**: three were checked against this tree and do not hold, and the V2 design in it is TR4QT's, not a plan for this repo |
@@ -1225,9 +1225,9 @@ Read the specific doc before acting in its area — these are current and this f
 **DLLs:** `libhamlib-4.dll` (+ `libgcc_s_dw2-1.dll`, `libusb-1.0.dll`, `libwinpthread-1.dll`),
 `libeay32.dll` / `ssleay32.dll` (OpenSSL), **`sqlite3.dll` (THE CONTEST LOG — the installer ships
 it; FPC binds SQLite dynamically, so a missing DLL is a run-time failure, not a link error)**, and
-`rigctld.exe`. **`inpout32.dll` (LPT keying) is deliberately NOT bundled** — its kernel port-I/O
-driver needs elevation, so an operator who wants LPT keying supplies it themselves next to
-`tr4w.exe`; the reason is written into `tr4w/build/full.nsi`.
+`rigctld.exe`. ~~`inpout32.dll` (LPT keying)~~ — **NOT A DEPENDENCY AT ALL SINCE 2026-09-13**: the
+parallel port was removed from the program, so nothing loads that DLL. It was never bundled (its
+kernel port-I/O driver needs elevation) and is now not looked for either.
 See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
 
 **Created at runtime:** `settings/tr4w.json` (and the legacy `settings/tr4w.ini`, read-once —
@@ -1565,7 +1565,7 @@ declarations bound to a library:
 | `user32` | 15 | Win32 API |
 | `comdlg32` | 10 | Win32 API -- and the LCL has dialogs for all of it |
 | `setupapi` | 10 | Win32 API -- device enumeration |
-| `InpOut32.dll` | 3 | **LPT KEYING STAYS ON WINDOWS, GAINS LINUX, N/A ON MAC** (NY4I, 2026-09-08). This row was once cited as proof that LPT is Windows by nature; it is not. **The guards NEST**: `{$IFDEF WINDOWS}` outside -- inpout is Windows-only either way -- and the DLL name by bitness inside it, `InpOutx64.dll` for 64-bit and `inpout32.dll` for 32-bit. The inner branch is not a legacy fallback: a 32-bit app must use `InpOut32.dll` even on 64-bit Windows. So the hardcoded name is correct until the 64-bit move and wrong the day after; exports are unchanged. **SCHEDULED, NOT OPEN** (NY4I, 2026-09-08): Windows-gated on inpout32 today -- and the hardcoded name is CORRECT for a 32-bit build; the x64 name goes with the 64-bit change; Linux is a later incremental release, still downstream of the HPTimer work because the CW element clock off Windows is a placeholder that will not key a contest. Notes: [`docs/inpOut32-64_Info.md`](docs/inpOut32-64_Info.md) |
+| ~~`InpOut32.dll`~~ | **0** | **GONE 2026-09-13, and so is the question it carried.** NY4I reconsidered: *"I have reconsidered on LPT ports. You can remove all references to them in the code."* The whole subsystem went -- `uIO.pas`, the three `GetProcAddress` bindings, `Parallel1..Parallel3` in `PortType`, the `PARALLEL n` spellings, the LPT dialog and its `Ctrl+Alt+L`. **The CAPABILITIES stayed**: a YCCC SO2R box does radio switching and stereo control over OTRSP, which is why only the transport was removed. The one thing with no YCCC equivalent yet is the BAND DECODER OUTPUT -- the box exposes no band data, so that lapses until OTRSP AUX is wired. This was the last binding that needed elevation and the last that was Windows-only by nature |
 | `hid` | 2 | Win32 API |
 | `kernel32`, `comctl32`, `ws2_32`, `shlwapi`, `msvcrt` | 7 | Win32 API |
 | `Plugins/tr4wSortLog.dll` | 1 | a TR4W plugin |
@@ -1584,8 +1584,10 @@ quote a number.
 **The shape of that work is already visible in the table**: most of it is Win32
 API where the port replaces the FUNCTION (`comdlg32` is LCL dialogs, `winmm` is
 sound and timers), one entry is a single constant wearing a Windows file name,
-and exactly one -- `InpOut32` -- is genuinely Windows-only and should stay
-behind a conditional.
+and exactly one -- `InpOut32` -- was genuinely Windows-only and should have
+stayed behind a conditional. **It is deleted instead (2026-09-13)**, which is
+the better answer where it is available: there is now no binding in this tree
+that needs elevation, and none that is Windows-only by nature.
 
 #### HamLib is the worked example, and it is the EASY one
 
@@ -1619,7 +1621,7 @@ an unverified file name would be the same class of mistake as the hardcoded
 name on the platform, then change the constant.**
 
 **The generalisation, when the sweep happens:** one unit that owns the NAME of
-every shipped library -- HamLib, SQLite, OpenSSL, InpOut32 -- per platform, the
+every shipped library -- HamLib, SQLite, OpenSSL -- per platform, the
 way FPC's own `sqlite3.inc` does. That is the "helper class" above, and its value
 is that the answer is in one file rather than at 274 declarations.
 
