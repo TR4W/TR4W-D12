@@ -215,7 +215,33 @@ compiled into `tr4w.lpr`. Read [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTES
 section 4 before believing a green run: the golden corpus is blind to scoring, and
 `tr4w/test/corpus/test-contest-factory.sh` is the only thing that is not. **Count the units with
 `ls tr4w/src/contestFactory` rather than writing a number here.**
-Still out of scope: 64-bit.
+~~Still out of scope: 64-bit.~~ **64-BIT IS NO LONGER OUT OF SCOPE, AND THE
+APP COMPILES AND LINKS FOR x86_64-win64** (2026-09-14):
+
+```powershell
+.\build\Build-App.ps1 -Cpu x86_64 -Os win64
+```
+
+gives `errors+fatals: 0` and a 10.6 MB `tr4w_fpc.exe` with PE machine `0x8664`
+— at **the same** narrowing (1365) and range-warning (6) ceilings as i386.
+
+**IT DOES NOT RUN, AND NOBODY HAS TRIED.** The build stops at the DLL stage
+needing an x86_64 `libeay32.dll` and `ssleay32.dll`; SQLite and the whole
+HamLib set are staged in `tr4w/redist/x86_64-win64/`. Compiling is not
+running — the same caution `README.md` applies to the Linux and macOS builds
+applies here, and more so.
+
+**The toolchain was never the blocker**, which is worth knowing before anyone
+schedules provisioning work: `ppcx64` and an x86_64-win64 LCL were already
+installed twice on this machine. What was broken was that
+`build/Find-Toolchain.ps1` chose FPC and Lazarus **independently** and could
+pair one install's compiler with another's LCL — the mismatched-RTL failure
+that reports `Can't find unit LCLIntf` for a unit that is plainly there. **That
+is the same failure the macOS box is stuck on.** It now proves the pairing by
+compiling a two-line probe.
+
+Read [`docs/64_BIT_TASKLIST.md`](docs/64_BIT_TASKLIST.md) before picking any of
+this up, and **do not quote a PChar count from it** — measure.
 
 **AND THE BUILD IS NO LONGER WINDOWS-ONLY.** Three platforms build from this tree — Windows i386,
 Linux x86_64 (app + server + tarball) and macOS aarch64 (app + server + `.app` bundle). See

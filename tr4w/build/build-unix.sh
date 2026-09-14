@@ -322,11 +322,37 @@ find_toolchain() {
       return 1
    fi
 
+   # A MISSING WIDGETSET IS FATAL, NOT A WARNING (2026-09-14).
+   #
+   # This used to warn and carry on, and the build then died ~300 lines
+   # later with
+   #
+   #     uLCLCoexist.pas(120,4) Fatal: Can't find unit Interfaces
+   #
+   # which names a unit rather than the reason. interfaces.ppu lives IN the
+   # widgetset directory -- one per widgetset -- so "no cocoa units" and
+   # "can't find Interfaces" are the same fact, stated once usefully and
+   # once uselessly, with the useful one scrolled off the top.
+   #
+   # Measured on mac-ci: fpcupdeluxe's Lazarus there carries ONLY nogui, so
+   # every macOS GUI build fails this way. That box had been diagnosed as
+   # "two incomplete FPC installs" when the real state is narrower and
+   # fixable: the pair is fine and the FCL is present -- the cocoa widgetset
+   # was never built.
    if [ ! -d "$LAZ/lcl/units/$ARCH/$LCL_WIDGETSET" ]; then
-      say "  WARNING: no $LCL_WIDGETSET widgetset units under $LAZ/lcl/units/$ARCH"
-      say "           available: $(ls -d "$LAZ/lcl/units/$ARCH"/*/ 2>/dev/null |
-                                   sed 's|.*/\([^/]*\)/$|\1|' | tr '\n' ' ')"
-      say "           set LCL_WIDGETSET to one of those."
+      avail=$(ls -d "$LAZ/lcl/units/$ARCH"/*/ 2>/dev/null |
+              sed 's|.*/\([^/]*\)/$|\1|' | tr '\n' ' ')
+      say 'TOOLCHAIN INCOMPLETE'
+      say "  No $LCL_WIDGETSET widgetset units under $LAZ/lcl/units/$ARCH"
+      say "  available: ${avail:-(none)}"
+      say ''
+      say "  interfaces.ppu lives in the widgetset directory, so without it"
+      say "  every GUI unit fails with \"Can't find unit Interfaces\" -- which"
+      say "  names the symptom, not this."
+      say "  Build the $LCL_WIDGETSET LCL in that Lazarus, or set LCL_WIDGETSET"
+      say "  to one of the available ones above (nogui builds no GUI)."
+      printf '%s' "$SEARCHED"
+      return 1
    fi
 
    say "  FPC       : $FPC (${FPCVER:-unknown})"
