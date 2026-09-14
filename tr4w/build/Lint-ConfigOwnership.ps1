@@ -116,17 +116,22 @@ function Test-Ownership {
       return @('Lint-ConfigOwnership: could not read KEYSPECS from uRadioConfigLegacyMap.pas - the lint is not checking anything')
    }
 
-   # Key plus the suffix the applier would see. For the two shapes that are not
+   # Key plus the suffix the applier would see. For the one shape that is not
    # RADIO-prefixed the suffix IS the whole key, which is exactly what the
-   # Pascal KeySuffix returns for them -- deliberately, so an unhandled one
+   # Pascal KeySuffix returns for it -- deliberately, so an unhandled one
    # falls into the applier's loud else-branch instead of matching by accident.
+   #
+   # KEYER RADIO n OUTPUT PORT WAS HERE AND IS NOT RENDERED ANY MORE
+   # (2026-09-13). Its CFGCA row is gone and the port reaches the radio as a
+   # NAME, assigned by uRadioConfigApply from KeyerPortForSlot -- so there is
+   # no key for this lint to check. It stayed hardcoded here after the
+   # KEYSPECS entry went, which made the lint demand an applier arm for a key
+   # nothing emits.
    $keys = @()
    foreach ($slot in @('ONE', 'TWO')) {
       foreach ($s in $suffixes) {
          $keys += [pscustomobject]@{ Key = "RADIO $slot $s"; Suffix = $s }
       }
-      $keys += [pscustomobject]@{ Key = "KEYER RADIO $slot OUTPUT PORT"
-                                  Suffix = "KEYER RADIO $slot OUTPUT PORT" }
       $keys += [pscustomobject]@{ Key = "POLL RADIO $slot"; Suffix = "POLL RADIO $slot" }
    }
 

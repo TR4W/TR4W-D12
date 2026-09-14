@@ -231,7 +231,13 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 8-bit strings, tr4w.inc puts our units in UnicodeStrings, and TCaption is an
 # AnsiString. Every other new boundary in the change was typed as TCaption so
 # the conversion happens once, at the control, instead of at each caller.
-$NARROW_CEILING = 1355
+# 1355 -> 1357, 2026-09-13: TWO ini-key literals for the new KeyerInvert
+# field, in the same shape as the twenty lines around them in
+# uRadioConfigStore. An explicit AnsiString() cast was tried and does NOT
+# clear them -- this unit s string is not the ini unit s -- so the fix is a
+# file-wide sweep of that idiom, not a cast on the newest line. Raised
+# deliberately and with a reason, which is what the ratchet asks for.
+$NARROW_CEILING = 1357
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

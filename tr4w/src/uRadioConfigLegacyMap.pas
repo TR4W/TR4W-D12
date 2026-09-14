@@ -114,6 +114,33 @@ function RenderRadioKeys(const aSlot: integer;
                          const aProfile: TStationProfile;
                          const aNamesAKeyerDevice: boolean = False): TConfigKeyValues;
 
+(* WHICH PORT LOGK1EA SHOULD KEY FOR THIS SLOT, AS AN OS DEVICE NAME.
+
+  EXTRACTED 2026-09-13, and the extraction is the point rather than tidiness.
+  This decision existed only as the VALUE OF A RENDERED INI KEY, so when the
+  KEYER RADIO n OUTPUT PORT row left CFGCA it would have gone with it -- and
+  the obvious replacement, assigning the radio's own port straight onto the
+  slot, is WRONG in a way that has already cost a bench session: a keyer
+  DEVICE owns its port and opens it itself, so keying DTR/RTS on that same
+  port made LOGK1EA open COM20 exclusively and the WinKeyer thread then died
+  with "Access is denied" (NY4I, 2026-08-08).
+
+  So the rule has one statement, and the applier and the test both read it.
+
+  '' MEANS KEY NOTHING -- the answer for CW-by-CAT, for no CW output, and for
+  a profile naming a keyer device.
+
+  A DEVICE NAME, NOT A TOKEN.  It used to render 'SERIAL 8' because the ini
+  key's vocabulary was PortTypeSA; the caller now assigns it to a port name.
+
+  aCWByCAT COMES BACK TOO because the same arms settle it, and deriving it
+  separately would be a second copy of this decision free to disagree. *)
+function KeyerPortForSlot(const aSlot: integer;
+                          const aRadio: TRadioDefinition;
+                          const aProfile: TStationProfile;
+                          const aNamesAKeyerDevice: boolean;
+                          out aCWByCAT: boolean): string;
+
 // The same key set, rendered for "there is no radio in this slot".  Used when
 // a profile fills only slot one: without it, slot two keeps whatever the
 // previously active profile left there.
@@ -184,7 +211,7 @@ type
    end;
 
 const
-   KEYSPECS: array[0..25] of TKeySpec = (
+   KEYSPECS: array[0..24] of TKeySpec = (
       // identity
       (Shape: ksRadioPrefixed;   Suffix: 'TYPE'),
       (Shape: ksRadioPrefixed;   Suffix: 'FACTORY ID'),
@@ -201,7 +228,6 @@ const
       (Shape: ksRadioPrefixed;   Suffix: 'NETWORK USERNAME'),
       (Shape: ksRadioPrefixed;   Suffix: 'NETWORK PASSWORD'),
       // keyer lines
-      (Shape: ksKeyerOutputPort; Suffix: ''),
       (Shape: ksRadioPrefixed;   Suffix: 'KEYER RTS'),
       (Shape: ksRadioPrefixed;   Suffix: 'KEYER DTR'),
       (Shape: ksRadioPrefixed;   Suffix: 'KEYER STOP BITS'),
@@ -373,6 +399,90 @@ begin
              (Copy(v, 1, 7) = 'SERIAL ') or (Copy(v, 1, 4) = 'LPT ');
 end;
 
+function KeyerPortForSlot(const aSlot: integer;
+                          const aRadio: TRadioDefinition;
+                          const aProfile: TStationProfile;
+                          const aNamesAKeyerDevice: boolean;
+                          out aCWByCAT: boolean): string;
+var
+   cwOutput: string;
+begin
+   aCWByCAT := False;
+   Result   := '';
+
+   if aRadio = nil then
+      begin
+      Exit;
+      end;
+
+   // With no profile the radio's own fields stand in, which is what seeding
+   // produces.
+   aCWByCAT := aRadio.CWByCAT;
+   Result   := DeviceNameFromStoredPort(aRadio.KeyerOutputPort);
+
+   if aProfile = nil then
+      begin
+      Exit;
+      end;
+
+   if aSlot = 2 then
+      begin
+      cwOutput := Trim(aProfile.CWOutput2);
+      end
+   else
+      begin
+      cwOutput := Trim(aProfile.CWOutput1);
+      end;
+
+   if SameText(cwOutput, CWOUTPUT_CAT) then
+      begin
+      aCWByCAT := True;
+      Result   := '';
+      end
+   else if (cwOutput = '') or SameText(cwOutput, CWOUTPUT_NONE) then
+      begin
+      aCWByCAT := False;
+      Result   := '';
+      end
+   else if SameText(cwOutput, CWOUT_RADIOPORT) then
+      begin
+      // Keying on the radio's OWN control port: the port is the radio's, not
+      // a device's.
+      aCWByCAT := False;
+      Result   := DeviceNameFromStoredPort(aRadio.KeyerOutputPort);
+      end
+   else if aNamesAKeyerDevice then
+      begin
+      (* The profile names a DEVICE -- a WinKeyer or a YCCC box -- and such a
+        device OWNS ITS PORT and opens it itself, so LOGK1EA must key nothing.
+        Keying DTR/RTS on that same port opened COM20 exclusively and the
+        WinKeyer thread then died with "Access is denied" (NY4I, 2026-08-08).
+        Two keying mechanisms cannot share one port. *)
+      aCWByCAT := False;
+      Result   := '';
+      end
+   else
+      begin
+      (* A profile written BEFORE the keyer library holds a raw port value
+        here, so it is passed through -- that is the migration path.
+
+        LooksLikePortValue STILL GUARDS IT, for a different reason than it
+        used to.  The old one was that the ini key took the PortTypeSA
+        vocabulary; now it is that a profile naming a KEYER ('WinKeyer') must
+        not be read as a port name, which DeviceNameFromStoredPort would
+        happily pass through. *)
+      aCWByCAT := False;
+      if LooksLikePortValue(cwOutput) then
+         begin
+         Result := DeviceNameFromStoredPort(cwOutput);
+         end
+      else
+         begin
+         Result := '';
+         end;
+      end;
+end;
+
 function RenderRadioKeys(const aSlot: integer;
                          const aRadio: TRadioDefinition;
                          const aTypeRendering: TRadioTypeRendering;
@@ -477,74 +587,32 @@ begin
    // of the station wiring rather than of the radio: the same K3 keys by CAT
    // at home and off a WinKeyer portable.  With no profile the radio's own
    // fields stand in, which is what seeding produces.
-   cwByCAT   := aRadio.CWByCAT;
-   keyerPort := aRadio.KeyerOutputPort;
-   speedSync := aRadio.CWSpeedSync;
+   (* THE PORT AND cwByCAT ARE ONE DECISION, and it moved to KeyerPortForSlot
+     so uRadioConfigApply can read the same answer -- see that function's
+     header.  Only cwByCAT is still EMITTED; the port reaches the radio as a
+     name now. *)
+   keyerPort := KeyerPortForSlot(aSlot, aRadio, aProfile, aNamesAKeyerDevice,
+                                 cwByCAT);
 
+   speedSync := aRadio.CWSpeedSync;
    if aProfile <> nil then
       begin
       if aSlot = 2 then
          begin
-         cwOutput  := Trim(aProfile.CWOutput2);
          speedSync := aProfile.SpeedSync2;
          end
       else
          begin
-         cwOutput  := Trim(aProfile.CWOutput1);
          speedSync := aProfile.SpeedSync1;
-         end;
-
-      if SameText(cwOutput, CWOUTPUT_CAT) then
-         begin
-         cwByCAT   := True;
-         keyerPort := PORT_NONE;
-         end
-      else if (cwOutput = '') or SameText(cwOutput, CWOUTPUT_NONE) then
-         begin
-         cwByCAT   := False;
-         keyerPort := PORT_NONE;
-         end
-      else if SameText(cwOutput, CWOUT_RADIOPORT) then
-         begin
-         // Keying on the radio's OWN control port: the port is the radio's, not
-         // a device's.
-         cwByCAT   := False;
-         keyerPort := aRadio.KeyerOutputPort;
-         end
-      else if aNamesAKeyerDevice then
-         begin
-         // The profile names a DEVICE -- a WinKeyer or a YCCC box -- and such a
-         // device OWNS ITS PORT and opens it itself.  This key must therefore
-         // stay NONE.  Putting the device's port here instead told LOGK1EA to
-         // ALSO key DTR/RTS on that port; it opened COM20 exclusively first and
-         // the WinKeyer thread then died with "Access is denied" (NY4I,
-         // 2026-08-08).  Two keying mechanisms cannot share one port.
-         cwByCAT   := False;
-         keyerPort := PORT_NONE;
-         end
-      else
-         begin
-         // A profile written BEFORE the keyer library holds a raw port value
-         // here, so it is passed through -- that is the migration path.
-         //
-         // It is also the last resort, and it must not emit a DEVICE NAME: the
-         // legacy key takes the PortTypeSA vocabulary, and CheckCommand rejects
-         // anything else with "Invalid statement in config file" at startup.
-         // That is exactly what a keyer named 'WinKeyer' produced (NY4I,
-         // 2026-08-08) once the profile started holding device names.
-         cwByCAT := False;
-         if LooksLikePortValue(cwOutput) then
-            begin
-            keyerPort := cwOutput;
-            end
-         else
-            begin
-            keyerPort := PORT_NONE;
-            end;
          end;
       end;
 
-   Emit(Result, 'KEYER RADIO ' + slot + ' OUTPUT PORT', keyerPort);
+   (* NO LONGER EMITTED, 2026-09-13.  The row is gone -- CheckCommand would
+     refuse the key -- and uRadioConfigApply assigns Radio<n>.tKeyerPort and
+     Radio<n>SerialInvert straight from the store.
+
+     keyerPort is still COMPUTED above because the arms that produce it also
+     settle cwByCAT, which IS still emitted. *)
    Emit(Result, 'RADIO ' + slot + ' KEYER RTS',       ListValue(aRadio.KeyerRTS, RTSDTR_NONE));
    Emit(Result, 'RADIO ' + slot + ' KEYER DTR',       ListValue(aRadio.KeyerDTR, RTSDTR_NONE));
    Emit(Result, 'RADIO ' + slot + ' KEYER STOP BITS', NumericValue(aRadio.KeyerStopBits, 0));
@@ -610,10 +678,6 @@ begin
          Emit(Result, names[i], '', True);
          end
       else if names[i] = 'RADIO ' + slot + ' CONTROL PORT' then
-         begin
-         Emit(Result, names[i], PORT_NONE);
-         end
-      else if names[i] = 'KEYER RADIO ' + slot + ' OUTPUT PORT' then
          begin
          Emit(Result, names[i], PORT_NONE);
          end

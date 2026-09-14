@@ -1916,6 +1916,9 @@ var
    rendered: TConfigKeyValues;
    i: integer;
    typeRendering: TRadioTypeRendering;
+   (* KeyerPortForSlot settles the port and cwByCAT together; only the port is
+     wanted here, since CW BY CAT is still a rendered key. *)
+   keyerByCAT: boolean;
    idKey, cmdValue: AnsiString;
    keyShort, valueShort: ShortString;
    accepted: boolean;
@@ -1979,11 +1982,15 @@ begin
       begin
       Radio1.tCATPortName   := '';
       Radio1.tKeyerPortName := '';
+      Radio1.tKeyerPort     := NoPort;
+      Radio1SerialInvert    := False;
       end
    else
       begin
       Radio2.tCATPortName   := '';
       Radio2.tKeyerPortName := '';
+      Radio2.tKeyerPort     := NoPort;
+      Radio2SerialInvert    := False;
       end;
 
    if (aRadio <> nil) and (aRadio.Transport = rtSerial) then
@@ -1991,12 +1998,33 @@ begin
       if aSlot = 1 then
          begin
          Radio1.tCATPortName   := DeviceNameFromStoredPort(aRadio.ControlPort);
-         Radio1.tKeyerPortName := DeviceNameFromStoredPort(aRadio.KeyerOutputPort);
+         (* THE KEYER PORT IS A DECISION, NOT A FIELD, and KeyerPortForSlot
+           is where it is made -- the profile can release the port entirely
+           when a WinKeyer or YCCC box owns it.  Assigning aRadio.KeyerOutputPort
+           straight through here would have LOGK1EA key DTR/RTS on a port the
+           keyer had already opened exclusively, which is the "Access is
+           denied" failure of 2026-08-08.
+
+           It used to arrive through the rendered 'KEYER RADIO ONE OUTPUT
+           PORT' key, whose row is gone -- and which could not have carried a
+           device name anyway, its vocabulary being PortTypeSA. *)
+         Radio1.tKeyerPortName := KeyerPortForSlot(aSlot, aRadio, aProfile,
+                                                  aNamesAKeyerDevice, keyerByCAT);
+         (* THE ORDINAL SHADOWS THE NAME, and is empty for /dev/ttyUSB0 --
+           which is why the name above is what LOGK1EA actually opens. *)
+         Radio1.tKeyerPort     := PortValueFromDeviceName(Radio1.tKeyerPortName);
+         (* AND THE INVERTED-INTERFACE FLAG, which was smuggled into that same
+           key as the word INVERT and read by a crA hook.  It is a stored
+           field now, so it survives a value the old parser could not read. *)
+         Radio1SerialInvert    := aRadio.KeyerInvert;
          end
       else
          begin
          Radio2.tCATPortName   := DeviceNameFromStoredPort(aRadio.ControlPort);
-         Radio2.tKeyerPortName := DeviceNameFromStoredPort(aRadio.KeyerOutputPort);
+         Radio2.tKeyerPortName := KeyerPortForSlot(aSlot, aRadio, aProfile,
+                                                  aNamesAKeyerDevice, keyerByCAT);
+         Radio2.tKeyerPort     := PortValueFromDeviceName(Radio2.tKeyerPortName);
+         Radio2SerialInvert    := aRadio.KeyerInvert;
          end;
       end;
 

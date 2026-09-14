@@ -247,8 +247,6 @@ function F_CONTEST_NAME: boolean;
 function F_DX_MULTIPLIER: boolean;
 function F_FREQUENCY_MEMORY: boolean;
 //function F_ICOM_RESPONSE_TIMEOUT: boolean;
-function F_KEYER_RADIO_ONE_OUTPUT_PORT: boolean;
-function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
 function F_MY_CONTINENT: boolean;
 function F_ZONE_MULTIPLIER: boolean;
 procedure UpdateDebugLogLevel;
@@ -373,8 +371,14 @@ const
         so it runs however the value is set, not only when a config line
         applied the row. nil rather than a renumbering: positional table. *)
       nil,
-      @F_KEYER_RADIO_ONE_OUTPUT_PORT,
-      @F_KEYER_RADIO_TWO_OUTPUT_PORT,
+      (* SLOTS 12 AND 13 ARE FREE.  Both hooks did one thing --
+        Radio<n>SerialInvert := StringHas(CMD, 'INVERT') -- reading a flag out
+        of the KEYER RADIO n OUTPUT PORT value.  That is a stored field now
+        (TRadioDefinition.KeyerInvert) applied by uRadioConfigApply, so it no
+        longer depends on a word appearing inside a port name.  nil rather
+        than a renumbering: positional table. *)
+      nil,
+      nil,
       nil {@F_MY_CALL -- DEPlusMyCall is derived, the rest is a setter},
       nil {@F_MY_GRID},
       @F_ADD_DOMESTIC_COUNTRY,
@@ -711,6 +715,11 @@ const
      so the ini loader had stopped reading them -- deleting them removes a
      restatement, not a route. Three ListParamArray slots fall with them. *)
    - 17 {the WK keys -- owned by the keyer library}
+   (* THE KEYER OUTPUT PORTS. uRadioConfigApply sets both the port and the
+     inverted-interface flag straight onto the radio now. The rows could not
+     have survived the port becoming an OS name in any case: their vocabulary
+     was PortTypeSA, which spells 'SERIAL 3' and knows nothing of COM3. *)
+   - 2 {KEYER RADIO ONE/TWO OUTPUT PORT}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -934,8 +943,6 @@ const
 // (crCommand: 'K1EA NETWORK ENABLE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // (crCommand: 'K1EA STATION ID';               crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctChar; crNetwork: 0),
 // (crCommand: 'KENWOOD RESPONSE TIMEOUT';      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'KEYER RADIO ONE OUTPUT PORT';   crAddress: pointer(38);                     crMin:0;  crMax:0;       crS: csOwned; crA: 12; crC:0 ; crP:0; crJ: 2; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
- (crCommand: 'KEYER RADIO TWO OUTPUT PORT';   crAddress: pointer(39);                     crMin:0;  crMax:0;       crS: csOwned; crA: 13; crC:0 ; crP:0; crJ: 2; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 0),
   (* WITHDRAWN 2026-09-11.  The value lives in the store's `general` section as
     LatestConfigFile and always did; this row pointed at a GLOBAL COPY of it.
     A bridge, not storage -- the first of the 279 such rows to go. *)
@@ -2555,18 +2562,6 @@ begin
   if not (cmdIcomResponseTimeout in [10..100]) then cmdIcomResponseTimeout := 10;
 end;
 }
-
-function F_KEYER_RADIO_ONE_OUTPUT_PORT: boolean;
-begin
-   Radio1SerialInvert := StringHas(CMD, 'INVERT');
-   Result := True;
-end;
-
-function F_KEYER_RADIO_TWO_OUTPUT_PORT: boolean;
-begin
-   Radio2SerialInvert := StringHas(CMD, 'INVERT');
-   Result := True;
-end;
 
 function F_MY_CONTINENT: boolean;
 begin

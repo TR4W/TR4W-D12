@@ -82,7 +82,7 @@ const
    // Preferences > Hardware (NY4I, 2026-08-14). Rendering it from a radio
    // definition is what this list now guards AGAINST -- see
    // Test_BandOutputPortIsNotRadioScoped below.
-   GOLDENKEYS: array[0..27] of string = (
+   GOLDENKEYS: array[0..26] of string = (
       'RADIO ONE TYPE',
       'RADIO ONE FACTORY ID',
       'RADIO ONE NAME',
@@ -95,7 +95,6 @@ const
       'RADIO ONE TCP PORT',
       'RADIO ONE NETWORK USERNAME',
       'RADIO ONE NETWORK PASSWORD',
-      'KEYER RADIO ONE OUTPUT PORT',
       'RADIO ONE KEYER RTS',
       'RADIO ONE KEYER DTR',
       'RADIO ONE KEYER STOP BITS',
@@ -329,13 +328,19 @@ begin
       rendered := RenderRadioKeys(2, radio, Default(TRadioTypeRendering), nil);
 
       CheckTrue(HasKey(rendered, 'RADIO TWO TYPE'), 'RADIO TWO TYPE');
-      // The two keys that do not follow the RADIO n <thing> pattern.  Getting
-      // either wrong produces a key CFGCA ignores without complaint.
-      CheckTrue(HasKey(rendered, 'KEYER RADIO TWO OUTPUT PORT'),
-                'KEYER RADIO TWO OUTPUT PORT');
+      // The one key left that does not follow the RADIO n <thing> pattern.
+      // Getting it wrong produces a key CFGCA ignores without complaint.
       CheckTrue(HasKey(rendered, 'POLL RADIO TWO'), 'POLL RADIO TWO');
+
+      (* THE KEYER OUTPUT PORT IS NOT RENDERED AT ALL SINCE 2026-09-13.  Its
+        CFGCA row is gone, so emitting the key would have CheckCommand refuse
+        it; the port reaches the radio as a NAME through
+        uRadioConfigApply.  Asserted in the negative so that re-adding the
+        key has to be a deliberate act. *)
+      CheckFalse(HasKey(rendered, 'KEYER RADIO TWO OUTPUT PORT'),
+                 'the keyer output port is applied directly, not rendered');
       CheckFalse(HasKey(rendered, 'RADIO TWO KEYER OUTPUT PORT'),
-                 'not the plausible-but-wrong spelling');
+                 'nor under the plausible-but-wrong spelling');
       CheckFalse(HasKey(rendered, 'RADIO ONE TYPE'), 'nothing from slot one leaks in');
    finally
       radio.Free;
@@ -584,6 +589,7 @@ end;
 
 procedure TRadioConfigLegacyMapTests.Test_ProfileCWOutputCATOverridesTheRadio;
 var
+   byCAT: boolean;   // KeyerPortForSlot settles the port and this together
    radio: TRadioDefinition;
    prof: TStationProfile;
    rendered: TConfigKeyValues;
@@ -603,7 +609,10 @@ begin
       rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
 
       CheckEquals('TRUE',    ValueOf(rendered, 'RADIO ONE CW BY CAT'), 'CW BY CAT on');
-      CheckEquals(PORT_NONE, ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+      (* THE DECISION, NOT THE RENDERED KEY.  KeyerPortForSlot is what
+        uRadioConfigApply now reads, so that is where this behaviour lives;
+        '' is what PORT_NONE used to say. *)
+      CheckEquals('', KeyerPortForSlot(1, radio, prof, False, byCAT),
                   'and the keyer port is released');
       CheckEquals('TRUE',    ValueOf(rendered, 'RADIO ONE CW SPEED SYNC'),
                   'speed sync comes from the profile too');
@@ -615,6 +624,7 @@ end;
 
 procedure TRadioConfigLegacyMapTests.Test_ProfileCWOutputPortOverridesTheRadio;
 var
+   byCAT: boolean;   // KeyerPortForSlot settles the port and this together
    radio: TRadioDefinition;
    prof: TStationProfile;
    rendered: TConfigKeyValues;
@@ -632,7 +642,9 @@ begin
 
       CheckEquals('FALSE',    ValueOf(rendered, 'RADIO TWO CW BY CAT'),
                   'a keyer port means CW BY CAT is off');
-      CheckEquals('SERIAL 8', ValueOf(rendered, 'KEYER RADIO TWO OUTPUT PORT'), 'the port');
+      (* A DEVICE NAME NOW, not the PortTypeSA token: the profile holds
+        'SERIAL 8' as a legacy raw port value and it is normalised on read. *)
+      CheckEquals('COM8', KeyerPortForSlot(2, radio, prof, False, byCAT), 'the port');
    finally
       prof.Free;
       radio.Free;
@@ -641,6 +653,7 @@ end;
 
 procedure TRadioConfigLegacyMapTests.Test_ProfileCWOutputNoneTurnsBothOff;
 var
+   byCAT: boolean;   // KeyerPortForSlot settles the port and this together
    radio: TRadioDefinition;
    prof: TStationProfile;
    rendered: TConfigKeyValues;
@@ -656,7 +669,7 @@ begin
       rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
 
       CheckEquals('FALSE',   ValueOf(rendered, 'RADIO ONE CW BY CAT'), 'CAT off');
-      CheckEquals(PORT_NONE, ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'), 'port off');
+      CheckEquals('', KeyerPortForSlot(1, radio, prof, False, byCAT), 'port off');
    finally
       prof.Free;
       radio.Free;
@@ -665,6 +678,7 @@ end;
 
 procedure TRadioConfigLegacyMapTests.Test_NoProfileFallsBackToTheRadiosOwnCWFields;
 var
+   byCAT: boolean;   // KeyerPortForSlot settles the port and this together
    radio: TRadioDefinition;
    rendered: TConfigKeyValues;
 begin
@@ -681,7 +695,7 @@ begin
 
       CheckEquals('TRUE',     ValueOf(rendered, 'RADIO ONE CW BY CAT'), 'radio''s own CWByCAT');
       CheckEquals('TRUE',     ValueOf(rendered, 'RADIO ONE CW SPEED SYNC'), 'own speed sync');
-      CheckEquals('SERIAL 6', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'), 'own port');
+      CheckEquals('COM6', KeyerPortForSlot(1, radio, nil, False, byCAT), 'own port');
    finally
       radio.Free;
    end;
@@ -721,6 +735,7 @@ end;
 
 procedure TRadioConfigLegacyMapTests.Test_EmptySlotClearsEverything;
 var
+   byCAT: boolean;   // KeyerPortForSlot settles the port and this together
    rendered: TConfigKeyValues;
    names: TArray<string>;
    i: integer;
@@ -742,7 +757,7 @@ begin
                'TYPE=NONE is how the legacy config says "no radio"');
    CheckTrue(IsDeleted(rendered, 'RADIO TWO FACTORY ID'), 'FACTORY ID removed');
    CheckEquals(PORT_NONE, ValueOf(rendered, 'RADIO TWO CONTROL PORT'), 'port released');
-   CheckEquals(PORT_NONE, ValueOf(rendered, 'KEYER RADIO TWO OUTPUT PORT'), 'keyer released');
+   CheckEquals('', KeyerPortForSlot(2, nil, nil, False, byCAT), 'keyer released');
    // Booleans go to FALSE, not empty: CFGCA reads an empty boolean as
    // unchanged, which would leave the previous radio's setting in force.
    CheckEquals('FALSE', ValueOf(rendered, 'RADIO TWO CW BY CAT'), 'CW BY CAT off');
@@ -782,14 +797,21 @@ procedure TRadioConfigLegacyMapTests.Test_KeyerDeviceNameNeverReachesTheLegacyPo
 var
    radio: TRadioDefinition;
    prof: TStationProfile;
-   rendered: TConfigKeyValues;
+   byCAT: boolean;
 begin
    BeginTest('Test_KeyerDeviceNameNeverReachesTheLegacyPortKey');
-   // 'KEYER RADIO ONE OUTPUT PORT' takes the PortTypeSA vocabulary, and
-   // CheckCommand REJECTS anything else -- TR4W then refuses to start with
-   // "Invalid statement in config file".  That is what happened once the
-   // profile's CW output began holding keyer DEVICE names (NY4I, 2026-08-08:
-   // a keyer named 'WinKeyer' wrote KEYER RADIO ONE OUTPUT PORT=WINKEYER).
+   (* THE KEY IS GONE; THE RULE IT PROTECTED IS NOT.
+
+     These five assertions were about a rendered ini key: it took the
+     PortTypeSA vocabulary and CheckCommand rejected anything else, so a
+     profile whose CW output held a keyer DEVICE name made TR4W refuse to
+     start with "Invalid statement in config file" (NY4I, 2026-08-08: a keyer
+     named 'WinKeyer' wrote KEYER RADIO ONE OUTPUT PORT=WINKEYER).
+
+     The key is no longer rendered, but the DECISION behind it is exactly what
+     uRadioConfigApply now assigns to the radio -- so the same five cases are
+     asserted against KeyerPortForSlot, which is where that decision lives.
+     '' is what PORT_NONE used to say, and the ports come back as OS names. *)
    radio := TRadioDefinition.Create;
    prof := TStationProfile.Create;
    try
@@ -803,38 +825,33 @@ begin
 
       // A DEVICE NAME with no resolved port must fall back to NONE, never leak.
       prof.CWOutput1 := 'WinKeyer';
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
-      CheckEquals('NONE', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
-                  'an unresolved device name must not reach the legacy key');
+      CheckEquals('', KeyerPortForSlot(1, radio, prof, False, byCAT),
+                  'an unresolved device name must not become a port');
 
       // AND a RESOLVED device must not reach it either -- this key is the CPU
       // keyer's DTR/RTS port, while a WinKeyer owns and opens its own port.
       // Writing the device's port here made LOGK1EA open COM20 exclusively for
       // DTR/RTS keying, after which the WinKeyer thread died with "Access is
       // denied" (NY4I, 2026-08-08). Two keying mechanisms, one port.
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof, True);
-      CheckEquals('NONE', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
-                  'a device owns its own port; the CPU-keyer key must stay NONE');
+      CheckEquals('', KeyerPortForSlot(1, radio, prof, True, byCAT),
+                  'a device owns its own port; the CPU keyer must key nothing');
 
       // The flag decides, NOT the spelling: a keyer NAMED like a port would
       // otherwise pass the looks-like-a-port test and reintroduce the conflict.
       prof.CWOutput1 := 'SERIAL 20';
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof, True);
-      CheckEquals('NONE', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+      CheckEquals('', KeyerPortForSlot(1, radio, prof, True, byCAT),
                   'a device named like a port is still a device');
       prof.CWOutput1 := 'WinKeyer';
 
       // The radio-relative token uses the RADIO's own port.
       prof.CWOutput1 := 'RADIOPORT';
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
-      CheckEquals('SERIAL 6', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+      CheckEquals('COM6', KeyerPortForSlot(1, radio, prof, False, byCAT),
                   'RADIOPORT means the radio''s own keyer port');
 
       // A profile written BEFORE the keyer library holds a raw port: unchanged.
       prof.CWOutput1 := 'SERIAL 3';
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
-      CheckEquals('SERIAL 3', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
-                  'a legacy raw port still passes through');
+      CheckEquals('COM3', KeyerPortForSlot(1, radio, prof, False, byCAT),
+                  'a legacy raw port still resolves, as an OS name');
    finally
       prof.Free;
       radio.Free;

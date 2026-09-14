@@ -309,6 +309,17 @@ type
       KeyerDTR: string;
       KeyerStopBits: integer;
 
+      (* AN INVERTED KEYING INTERFACE -- LOGK1EA keys `aKeyDown xor
+        SerialInvert`, for a keying line wired the other way up.
+
+        IT HAD NO HOME UNTIL 2026-09-13, and that is why it is here. The only
+        way to set it was the word INVERT appended to the config value of
+        KEYER RADIO n OUTPUT PORT, read by a crA hook that did
+        StringHas(CMD, 'INVERT'). So it was a FLAG SMUGGLED INSIDE A PORT
+        NAME, which is also why it could not survive the port becoming an OS
+        name: 'COM7 INVERT' is not a port. *)
+      KeyerInvert: boolean;
+
       // --- CW ---------------------------------------------------------------
       CWByCAT: boolean;
       CWSpeedSync: boolean;
@@ -891,6 +902,7 @@ begin
    Transport         := rtSerial;
    ControlPort       := PORT_NONE;
    KeyerOutputPort   := PORT_NONE;
+   KeyerInvert       := False;
    // Polling on is the useful default -- a radio defined but never polled
    // looks broken to the operator.
    PollingEnable     := True;
@@ -927,6 +939,7 @@ begin
    KeyerRTS          := aSource.KeyerRTS;
    KeyerDTR          := aSource.KeyerDTR;
    KeyerStopBits     := aSource.KeyerStopBits;
+   KeyerInvert       := aSource.KeyerInvert;
 
    CWByCAT           := aSource.CWByCAT;
    CWSpeedSync       := aSource.CWSpeedSync;
@@ -963,6 +976,7 @@ begin
       (KeyerRTS          = aOther.KeyerRTS)                         and
       (KeyerDTR          = aOther.KeyerDTR)                         and
       (KeyerStopBits     = aOther.KeyerStopBits)                    and
+      (KeyerInvert       = aOther.KeyerInvert)                      and
       (CWByCAT           = aOther.CWByCAT)                          and
       (CWSpeedSync       = aOther.CWSpeedSync)                      and
       (UseHamLib         = aOther.UseHamLib)                        and
@@ -2071,6 +2085,7 @@ begin
    aIni.WriteString(section,  'KeyerRTS',          aRadio.KeyerRTS);
    aIni.WriteString(section,  'KeyerDTR',          aRadio.KeyerDTR);
    aIni.WriteInteger(section, 'KeyerStopBits',     aRadio.KeyerStopBits);
+   aIni.WriteBool(section,    'KeyerInvert',       aRadio.KeyerInvert);
 
    aIni.WriteBool(section,    'CWByCAT',           aRadio.CWByCAT);
    aIni.WriteBool(section,    'CWSpeedSync',       aRadio.CWSpeedSync);
@@ -2115,6 +2130,7 @@ begin
    radioDef.KeyerRTS          := aIni.ReadString(aSection,  'KeyerRTS',          '');
    radioDef.KeyerDTR          := aIni.ReadString(aSection,  'KeyerDTR',          '');
    radioDef.KeyerStopBits     := aIni.ReadInteger(aSection, 'KeyerStopBits',     0);
+   radioDef.KeyerInvert       := aIni.ReadBool(aSection,  'KeyerInvert',       False);
 
    radioDef.CWByCAT           := aIni.ReadBool(aSection,    'CWByCAT',           False);
    radioDef.CWSpeedSync       := aIni.ReadBool(aSection,    'CWSpeedSync',       False);
@@ -2396,6 +2412,7 @@ begin
    Result.AddPair('keyerRTS',        aRadio.KeyerRTS);
    Result.AddPair('keyerDTR',        aRadio.KeyerDTR);
    Result.AddPair('keyerStopBits',   TJSONNumber.Create(aRadio.KeyerStopBits));
+   Result.AddPair('keyerInvert',     TJSONBool.Create(aRadio.KeyerInvert));
 
    Result.AddPair('cwByCAT',         TJSONBool.Create(aRadio.CWByCAT));
    Result.AddPair('cwSpeedSync',     TJSONBool.Create(aRadio.CWSpeedSync));
@@ -3148,6 +3165,7 @@ begin
          radioDef.KeyerRTS          := JSONStr(obj,  'keyerRTS',        '');
          radioDef.KeyerDTR          := JSONStr(obj,  'keyerDTR',        '');
          radioDef.KeyerStopBits     := JSONInt(obj,  'keyerStopBits',   0);
+         radioDef.KeyerInvert       := JSONBool(obj, 'keyerInvert',     False);
 
          radioDef.CWByCAT           := JSONBool(obj, 'cwByCAT',         False);
          radioDef.CWSpeedSync       := JSONBool(obj, 'cwSpeedSync',     False);
@@ -3438,12 +3456,80 @@ begin
       end;
 end;
 
+(* THE INVERT FLAG, TAKEN BACK OUT OF THE PORT NAME.
+
+  An operator with an inverted keying interface wrote
+
+     KEYER RADIO ONE OUTPUT PORT = SERIAL 3 INVERT
+
+  and a crA hook read the flag with StringHas(CMD, 'INVERT') while the row
+  wrote the port. Two facts in one value, and the port half stopped parsing
+  the moment a port became an OS name.
+
+  SPLIT ON A WHOLE WORD, not a substring. StringHas would have matched a
+  device name that merely CONTAINED the letters -- unlikely for 'SERIAL 3',
+  perfectly possible for a udev alias -- and this now runs against names an
+  operator can invent.
+
+  The pair lives here because this is the only reader of the old spelling:
+  once the store holds KeyerInvert, nothing parses the token again. *)
+(* ONE WALK, BOTH ANSWERS.  Written first as a Contains and a Strip, which is
+  two scans of one value that are free to disagree about where the word is --
+  the duplication rule, and it matters here because the two results have to
+  describe the SAME parse.
+
+  NOT SplitString.  This unit's `string` is AnsiString and the RTL's returns
+  UnicodeString elements, so the tidy version cost four narrowing conversions
+  that the ratchet correctly refused. *)
+procedure SplitInvertToken(const aValue: string;
+                           out aPort: string; out aInvert: boolean);
+var
+   rest, token: string;
+   p: integer;
+begin
+   aPort   := '';
+   aInvert := False;
+
+   rest := Trim(aValue);
+   while rest <> '' do
+      begin
+      p := Pos(' ', rest);
+      if p = 0 then
+         begin
+         token := rest;
+         rest  := '';
+         end
+      else
+         begin
+         token := Copy(rest, 1, p - 1);
+         rest  := Trim(Copy(rest, p + 1, MaxInt));
+         end;
+
+      (* UpperCase, NOT SameText: token is an AnsiString and SameText takes
+        UnicodeString here, so the comparison narrows and the ratchet counts
+        it. The tree spells it this way elsewhere for the same reason. *)
+      if UpperCase(token) = 'INVERT' then
+         begin
+         aInvert := True;
+         end
+      else if token <> '' then
+         begin
+         if aPort <> '' then
+            begin
+            aPort := aPort + ' ';
+            end;
+         aPort := aPort + token;
+         end;
+      end;
+end;
+
 procedure TRadioConfigStore.SeedFromLegacyIni(const aIni: TCustomIniFile);
 var
    slot: integer;
    radioDef: TRadioDefinition;
    prof: TStationProfile;
    radioType, factoryId, controlPort, ipAddress, err: string;
+   legacyKeyer, keyerPortText: string;
 
    function ReadStr(const aSuffix: string): string;
    begin
@@ -3562,10 +3648,24 @@ begin
          radioDef.NetworkPassword := ReadStr('ICOM NETWORK PASSWORD');
          end;
 
-      // The keyer output port key is spelled the other way round: KEYER RADIO
-      // ONE OUTPUT PORT, not RADIO ONE KEYER OUTPUT PORT.
-      radioDef.KeyerOutputPort   := Trim(aIni.ReadString(LEGACYSECTION,
-                                      'KEYER RADIO ' + SLOTWORD[slot] + ' OUTPUT PORT', ''));
+      (* The keyer output port key is spelled the other way round: KEYER RADIO
+        ONE OUTPUT PORT, not RADIO ONE KEYER OUTPUT PORT.
+
+        AND IT CARRIES TWO FACTS, which is what this splits. An operator with
+        an inverted keying interface wrote 'SERIAL 3 INVERT', and the whole
+        string was stored as the port -- so the flag rode inside a port name
+        and the port itself was unparseable. The word comes out here, once, on
+        the one read that sees the old file. *)
+      legacyKeyer := Trim(aIni.ReadString(LEGACYSECTION,
+                          'KEYER RADIO ' + SLOTWORD[slot] + ' OUTPUT PORT', ''));
+
+      (* SEPARATE VARIABLES.  Passing legacyKeyer as both the value and the
+        out parameter cleared it before it was read -- out is assigned on
+        entry -- so every legacy keyer port came back as NONE. *)
+      SplitInvertToken(legacyKeyer, keyerPortText, radioDef.KeyerInvert);
+      legacyKeyer := keyerPortText;
+
+      radioDef.KeyerOutputPort := legacyKeyer;
       if radioDef.KeyerOutputPort = '' then
          begin
          radioDef.KeyerOutputPort := PORT_NONE;
