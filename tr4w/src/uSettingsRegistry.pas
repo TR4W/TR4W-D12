@@ -176,7 +176,6 @@ type
       FNeedsRestart: boolean;
       FHasSideEffects: boolean;
       FReadOnly: boolean;
-      FBroadcast: boolean;
       FOnApply: TSettingApplyProc;
       { A cell this setting created for itself, or nil.  See TBoolCell. }
       FOwnedCell: TObject;
@@ -284,7 +283,6 @@ type
         and it should, because CheckCommand is still the applier. This makes
         the FACT expressible in the registry so the applier can move without
         losing it -- which is the whole point of a prerequisite. }
-      property Broadcast: boolean read FBroadcast write FBroadcast;
    end;
 
    TBoolSetting = class(TSettingBase)

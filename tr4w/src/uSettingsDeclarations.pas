@@ -766,7 +766,7 @@ begin
    (* True, True: broadcast to the other position, and needs a restart --
      which is what the row's crNetwork: 1 and crJ: 1 said. *)
    RegisterModelSetting( 'appearance.layout.rowCount',         'ROW COUNT',
-                          RS_APPEARANCE_LAYOUT_ROWCOUNT, True, True);
+                          RS_APPEARANCE_LAYOUT_ROWCOUNT, True);
    RegisterModelSetting( 'appearance.ctrlj.showFrequencyInLog','SHOW FREQUENCY IN LOG',
                           RS_APPEARANCE_CTRLJ_SHOWFREQUENCYINLOG);
    RegisterModelSetting( 'appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
@@ -774,7 +774,7 @@ begin
    RegisterModelSetting( 'appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
                           RS_APPEARANCE_CTRLJ_USERINFOSHOWN);
    RegisterModelSetting( 'appearance.layout.windowSize',       'WINDOW SIZE',
-                          RS_APPEARANCE_LAYOUT_WINDOWSIZE, True, True);
+                          RS_APPEARANCE_LAYOUT_WINDOWSIZE, True);
 
    (* --- Hardware (1) -------------------------------------------------
 
@@ -817,11 +817,11 @@ begin
      properties, so TrySetByCommand still refuses 51 for an item height
      without being told which setting that is. *)
    RegisterModelSetting('bandmap.ctrlj.bandMapItemHeight',   'BAND MAP ITEM HEIGHT',
-                        RS_BANDMAP_CTRLJ_BANDMAPITEMHEIGHT, True, True);
+                        RS_BANDMAP_CTRLJ_BANDMAPITEMHEIGHT, True);
    RegisterModelSetting('bandmap.ctrlj.bandMapItemWidth',    'BAND MAP ITEM WIDTH',
-                        RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH, True, True);
+                        RS_BANDMAP_CTRLJ_BANDMAPITEMWIDTH, True);
    RegisterModelSetting('bandmap.ctrlj.bandMapSize',         'BAND MAP SIZE',
-                        RS_BANDMAP_CTRLJ_BANDMAPSIZE, True, True);
+                        RS_BANDMAP_CTRLJ_BANDMAPSIZE, True);
    RegisterModelSetting( 'bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
                           RS_BANDMAP_CTRLJ_BANDMAPSPLITMODE);
 
@@ -855,7 +855,7 @@ begin
      this position's name to the other positions would overwrite theirs
      with it, which is the opposite of what the setting is for. *)
    RegisterModelSetting('network.ctrlj.computerName',        'COMPUTER NAME',
-                          RS_NETWORK_CTRLJ_COMPUTERNAME, False);
+                          RS_NETWORK_CTRLJ_COMPUTERNAME);
    RegisterModelSetting( 'network.ctrlj.netStatusUpdateInterval','NET STATUS UPDATE INTERVAL',
                           RS_NETWORK_CTRLJ_NETSTATUSUPDATEINTERVAL);
 

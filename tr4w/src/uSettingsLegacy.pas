@@ -152,7 +152,6 @@ begin
    NeedsRestart   := False;
    ReadOnly       := False;
    HasSideEffects := True;
-   Broadcast      := CommandIsSharedWithPeers(aCommand);
 end;
 
 procedure TStoredSetting.AfterApplied;

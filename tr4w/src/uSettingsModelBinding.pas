@@ -99,8 +99,12 @@ uses
   aKey is the store key ('operating.bands.hf'), aCommand the config command
   name the settings object answers to ('HF BAND ENABLE'), aCaption the text
   Preferences shows. *)
+(* aBroadcast IS GONE -- 2026-09-14. It set TSettingBase.Broadcast, which
+  NOTHING EVER READ: the live answer to "does this go to the other positions"
+  is uCFG.CommandIsSharedWithPeers, and SetCFGCommandValue asks that. A
+  parameter that looks authoritative and is inert is worse than no parameter,
+  and it was one more place to think about when adding a setting. *)
 function RegisterModelSetting(const aKey, aCommand, aCaption: string;
-                              const aBroadcast: boolean = True;
                               const aNeedsRestart: boolean = False): TSettingBase;
 
 implementation
@@ -116,7 +120,7 @@ type
       FCommand: string;
    public
       constructor Create(const aKey, aCommand, aCaption: string;
-                         const aBroadcast, aNeedsRestart: boolean);
+                         const aNeedsRestart: boolean);
       function AsText: string; override;
       function TrySetText(const aText: string; out aError: string): boolean; override;
       function AllowedValues: TArray<string>; override;
@@ -125,7 +129,7 @@ type
 
 
 constructor TModelSetting.Create(const aKey, aCommand, aCaption: string;
-                                 const aBroadcast, aNeedsRestart: boolean);
+                                 const aNeedsRestart: boolean);
 begin
    inherited Create(aKey, aCaption);
    FCommand := aCommand;
@@ -150,7 +154,6 @@ begin
    NeedsRestart   := aNeedsRestart;
    ReadOnly       := False;
    HasSideEffects := True;
-   Broadcast      := aBroadcast;
 end;
 
 
@@ -216,12 +219,16 @@ begin
 end;
 
 
+(* aBroadcast IS GONE -- 2026-09-14. It set TSettingBase.Broadcast, which
+  NOTHING EVER READ: the live answer to "does this go to the other positions"
+  is uCFG.CommandIsSharedWithPeers, and SetCFGCommandValue asks that. A
+  parameter that looks authoritative and is inert is worse than no parameter,
+  and it was one more place to think about when adding a setting. *)
 function RegisterModelSetting(const aKey, aCommand, aCaption: string;
-                              const aBroadcast: boolean = True;
                               const aNeedsRestart: boolean = False): TSettingBase;
 begin
    Result := RegisterSetting(TModelSetting.Create(aKey, aCommand, aCaption,
-                                                  aBroadcast, aNeedsRestart));
+                                                  aNeedsRestart));
 end;
 
 end.
