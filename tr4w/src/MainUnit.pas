@@ -10134,8 +10134,7 @@ begin
      (* NAMED BY THE CALLER -- no dialog. TR4W_ADIF_FILENAME is still
        filled because the import body below reads it back. *)
      adifFileName := aFileName;
-     uAnsiStr.StrPLCopy(TR4W_ADIF_FILENAME, UTF8Encode(aFileName),
-                        High(TR4W_ADIF_FILENAME));
+     TF.SetCharBuffer(TR4W_ADIF_FILENAME, aFileName);
      end
   else
      begin

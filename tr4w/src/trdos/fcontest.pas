@@ -148,8 +148,7 @@ begin
   chosenDir  := ExtractFilePath(chosenPath);
   chosenName := ExtractFileName(chosenPath);
 
-  uAnsiStr.StrPLCopy(TR4W_LOG_PATH_NAME, AnsiString(chosenDir),
-                     SizeOf(TR4W_LOG_PATH_NAME) - 1);
+  TF.SetCharBuffer(TR4W_LOG_PATH_NAME, chosenDir);
 
   dotPos := Pos('.', chosenName);
   if dotPos > 0 then

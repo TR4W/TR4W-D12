@@ -564,8 +564,7 @@ begin
      begin
      (* The operator defaults to the callsign being used. StrPLCopy fills a
        fixed AnsiChar array, so the text is encoded on the way in. *)
-     uAnsiStr.StrPLCopy(CurrentOperator, UTF8Encode(Settings.My.Call),
-                        High(CurrentOperator));
+     TF.SetCharBuffer(CurrentOperator, Settings.My.Call);
      end;
 
   CheckAndInitializeSerialPorts;

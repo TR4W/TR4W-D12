@@ -510,7 +510,7 @@ begin
    if StringIsAllNumbers(DVPMessagesArray[Index]) then
       begin
 
-      StrPCopy(WAVFile, AnsiString(SysUtils.Format('FULLSERIALNUMBERS\%s.WAV', [string(DVPMessagesArray[Index])])));
+      TF.SetCharBuffer(WAVFile, SysUtils.Format('FULLSERIALNUMBERS\%s.WAV', [string(DVPMessagesArray[Index])]));
 
       TempPlayResult := PlayWAVFile(WAVFile, False);
       if TempPlayResult = prExitThread then
@@ -525,7 +525,7 @@ begin
             TempChar := DVPMessagesArray[Index][i];
             // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload);
             // TempChar is an ASCII letter/digit/'_', so %c output == the old %C.
-            StrPCopy(WAVFile, AnsiString(SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)])));
+            TF.SetCharBuffer(WAVFile, SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)]));
             if PlayWAVFile(WAVFile, True) = prExitThread then
                begin
                goto ExitLabel;
@@ -538,7 +538,7 @@ begin
 
      //Callsign
 
-   StrPCopy(WAVFile, AnsiString(SysUtils.Format('FULLCALLSIGNS\%s.WAV', [string(DVPMessagesArray[Index])])));
+   TF.SetCharBuffer(WAVFile, SysUtils.Format('FULLCALLSIGNS\%s.WAV', [string(DVPMessagesArray[Index])]));
 
    TempPlayResult := PlayWAVFile(WAVFile, False);
    if TempPlayResult = prExitThread then
@@ -557,7 +557,7 @@ begin
             TempChar := '_';
             end;
          // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload).
-         StrPCopy(WAVFile, AnsiString(SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)])));
+         TF.SetCharBuffer(WAVFile, SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)]));
          if PlayWAVFile(WAVFile, True) = prExitThread then
             begin
             goto ExitLabel;

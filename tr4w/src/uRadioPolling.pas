@@ -403,7 +403,7 @@ begin
             if Assigned(ro) and ro.AuthFailed then
                begin
                logger.Warn('[pFactoryRadio] Auth failed for %s - stopping', [rig^.RadioName]);
-               StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
+               TF.SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
                QuickDisplayError(authErrBuf);
                if rig^.tRadioPanelSlot <> 0 then
                   begin
@@ -692,7 +692,7 @@ begin
          if Assigned(ro) and ro.AuthFailed then
             begin
             logger.Warn('[pFactoryRadio] Authentication failed for %s - not retrying', [rig^.RadioName]);
-            StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
+            TF.SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
             QuickDisplayError(authErrBuf);
             if rig^.tRadioPanelSlot <> 0 then
                begin

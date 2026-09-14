@@ -294,6 +294,12 @@ function ExchangeFromSRXString(const aSRX: string;
 
 implementation
 
+(* IMPLEMENTATION-ONLY, so uADIF stays a leaf in its interface: TF is
+  wanted for SetCharBuffer, which writes a fixed AnsiChar field through
+  its own bounds instead of StrPLCopy plus a hand-passed High(). *)
+uses
+   TF;
+
 var
    logger : TLogLogger;
 
@@ -998,7 +1004,7 @@ begin
                exch.Name := fieldValue;
 
             tAdifOPERATOR:
-               StrPLCopy(exch.ceOperator, fieldValue, High(exch.ceOperator));
+               TF.SetCharBuffer(exch.ceOperator, fieldValue);
 
             tAdifPRECEDENCE:
                if Length(fieldValue) > 0 then

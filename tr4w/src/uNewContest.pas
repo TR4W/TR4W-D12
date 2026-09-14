@@ -758,9 +758,7 @@ begin
             (* From the store, not from a global copy of it.  StrPLCopy
               terminates what it writes; Move copied a whole fixed array and
               relied on the source already being terminated. *)
-            nccLatest:       uAnsiStr.StrPLCopy(TR4W_CFG_FILENAME,
-                                                AnsiString(GetLatestConfigFile),
-                                                SizeOf(TR4W_CFG_FILENAME) - 1);
+            nccLatest:       TF.SetCharBuffer(TR4W_CFG_FILENAME, GetLatestConfigFile);
             nccCreate:       SaveNewContest;
          end;
          end

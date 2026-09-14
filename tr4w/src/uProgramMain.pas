@@ -604,8 +604,7 @@ begin
   (* LOAD THE FILE JUST WRITTEN, not the one that was looked for and was not
     there.  TR4W_CTY_FILENAME still names the place TR4W searched, so loading
     it would report the same failure the download has just fixed. *)
-  uAnsiStr.StrPLCopy(TR4W_CTY_FILENAME, AnsiString(ctyPath),
-                     SizeOf(TR4W_CTY_FILENAME) - 1);
+  TF.SetCharBuffer(TR4W_CTY_FILENAME, ctyPath);
 
   // VERIFY, DO NOT ASSUME. A download can report success and still leave a
   // file the parser rejects -- a captive-portal HTML page saved as cty.dat is
@@ -1200,9 +1199,7 @@ begin
      SettingsFilePath and LogFilePath -- a write is the case where getting it
      wrong puts an operator's contest file inside an application bundle, so
      each one is worth naming rather than sweeping. *)
-   uAnsiStr.StrPLCopy(TR4W_PATH_NAME,
-                      AnsiString(DataDir),
-                      SizeOf(TR4W_PATH_NAME) - 1);
+   TF.SetCharBuffer(TR4W_PATH_NAME, DataDir);
 
    (* AND THE INI IS THE FIRST OF THOSE WRITES TO MOVE -- to the per-operator
      settings directory, not beside the data.
@@ -1217,9 +1214,7 @@ begin
      see uLegacyIniPrompt. On a machine that never had one, this path names a
      file that will never exist, which is the correct outcome rather than a
      missing one. *)
-   uAnsiStr.StrPLCopy(TR4W_INI_FILENAME,
-                      AnsiString(SettingsFilePath('tr4w.ini')),
-                      SizeOf(TR4W_INI_FILENAME) - 1);
+   TF.SetCharBuffer(TR4W_INI_FILENAME, SettingsFilePath('tr4w.ini'));
    // The `try` that opened here had its `finally HamScoreShutdown` at the very
    // bottom, after the message loop.  Both are gone: TR4W exits through
    // ExitProcess in tr4w_ShutDown, so that finally could never have run in
@@ -1367,9 +1362,7 @@ begin
   (* THE SAME AS THE OTHER STARTUP PATH -- see the long note there. This is a
     SECOND COPY of these two statements, which is how one of them gets fixed
     and the other does not; both are changed together for that reason. *)
-  uAnsiStr.StrPLCopy(TR4W_PATH_NAME,
-                     AnsiString(DataDir),
-                     SizeOf(TR4W_PATH_NAME) - 1);
+  TF.SetCharBuffer(TR4W_PATH_NAME, DataDir);
 
   { LOAD THE UI LANGUAGE, IF THERE IS ONE.
 
@@ -1431,9 +1424,7 @@ begin
   uNet.InitializeNetworkColumnTitles;
   uMenu.InitializeMenuText;
 
-  uAnsiStr.StrPLCopy(TR4W_INI_FILENAME,
-                     AnsiString(SettingsFilePath('tr4w.ini')),
-                     SizeOf(TR4W_INI_FILENAME) - 1);
+  TF.SetCharBuffer(TR4W_INI_FILENAME, SettingsFilePath('tr4w.ini'));
   (* THE PRIVATE FONT IS A WINDOWS FACILITY, and LuconSZLoadded staying False
     off Windows is the RIGHT answer, not a degraded one: the font genuinely is
     not loaded there. Its three readers -- MainUnit twice and logsubs2 once --
