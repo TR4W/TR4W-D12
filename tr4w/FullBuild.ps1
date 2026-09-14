@@ -186,46 +186,20 @@ Write-Host "  tr4w_versioninfo.res ($((Get-Item $resPath).Length) bytes)"
 # ---------------------------------------------------------------------------
 Phase 'Manifest resource'
 
-$manRc  = Join-Path $TR4W_DIR 'Win11.rc'
-$manRes = Join-Path $TR4W_DIR 'Win11.res'
-$manXml = Join-Path $TR4W_DIR 'W11.manifest'
-
-if (-not (Test-Path $manXml)) { Fail "W11.manifest not found at $manXml" }
-
-# WELL-FORMED XML FIRST, before it is compiled into anything.
-#
-# A malformed manifest does not fail the build, does not fail fpcres, and does
-# not warn: it produces an exe that Windows REFUSES TO START, with
-# "the application failed to start because its side-by-side configuration is
-# incorrect" and no clue which file is at fault. That is exactly what shipped
-# from this script the first time -- a double hyphen inside an XML comment,
-# which is illegal and which no editor flags.
-#
-# The grep further down proves the dependency is PRESENT; this proves the file
-# is PARSEABLE. Neither implies the other, and only the pair keeps a build that
-# cannot launch from looking green.
+# ONE IMPLEMENTATION, in build/Build-Manifest.ps1, because Build-App.ps1 needs
+# it too: it produces an exe, and an exe that links a stale Win11.res is the
+# bug this block was written to kill. Keeping a second copy here is how the two
+# would drift -- and the copy that drifts is the one nobody is reading when it
+# matters.
+. (Join-Path $TR4W_DIR 'build\Build-Manifest.ps1')
 try
    {
-   [xml]$null = Get-Content -LiteralPath $manXml -Raw
+   $null = Build-Tr4wManifest -Tr4wDir $TR4W_DIR -FpcRes $FPCRES
    }
 catch
    {
-   Fail "W11.manifest is not well-formed XML: $($_.Exception.Message)"
+   Fail $_.Exception.Message
    }
-
-& $FPCRES -i $manRc -o $manRes -of res 2>&1 | Out-Host
-if ($LASTEXITCODE -ne 0) { Fail 'fpcres could not compile Win11.rc' }
-
-# A FLOOR on the result. fpcres is happy to emit a resource that does not
-# contain the manifest at all if the .rc reference cannot be resolved, and an
-# unthemed build looks like a styling opinion rather than a missing file.
-$manBytes = [IO.File]::ReadAllBytes($manRes)
-$manText  = [Text.Encoding]::ASCII.GetString($manBytes)
-if ($manText -notmatch 'Common-Controls')
-   {
-   Fail 'Win11.res does not contain the Common-Controls v6 dependency -- visual styles would be off'
-   }
-Write-Host "  Win11.res ($($manBytes.Length) bytes, visual styles declared)"
 
 # ---------------------------------------------------------------------------
 # Lints.

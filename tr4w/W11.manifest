@@ -4,8 +4,27 @@
         type="win32"
         name="TR4W"
         version="1.2.3.4"
-        processorArchitecture="x86"
+        processorArchitecture="*"
     />
+    <!-- processorArchitecture IS "*", NOT "x86", AND THAT IS LOAD-BEARING.
+
+         A side-by-side dependency is resolved by ARCHITECTURE. An x86
+         Common-Controls assembly cannot be satisfied inside an x64 process, so
+         a manifest saying "x86" makes a 64-bit build fail with
+
+             The application was unable to start correctly (0xc000007b).
+
+         that is STATUS_INVALID_IMAGE_FORMAT, raised by the LOADER before a
+         line of code runs. It looks exactly like a 32/64-bit DLL mix-up and it is not:
+         measured 2026-09-14, the x64 binary had seven correct x86_64 DLLs
+         beside it and stopped with comctl32.dll as the next module it had not
+         yet loaded.
+
+         "*" means "whatever this process is", so ONE manifest serves both
+         builds. Do not put a bitness back in.
+
+         The neighbouring warning still applies: no double hyphen inside an XML
+         comment. -->
     <description>TR4W Contest Logger</description>
     <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
         <application>
@@ -37,7 +56,7 @@
                 type="win32"
                 name="Microsoft.Windows.Common-Controls"
                 version="6.0.0.0"
-                processorArchitecture="x86"
+                processorArchitecture="*"
                 publicKeyToken="6595b64144ccf1df"
                 language="*"
             />

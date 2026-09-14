@@ -28,6 +28,7 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
+. (Join-Path $PSScriptRoot 'Build-Manifest.ps1')
 
 $TR4W_DIR = Split-Path $PSScriptRoot -Parent
 $REPO     = Split-Path $TR4W_DIR -Parent
@@ -64,6 +65,24 @@ if (-not $Incremental)
    $cleared = Clear-Tr4wUnitOutput -OutDir $out
    if ($cleared -gt 0) { Write-Host "  cleared $cleared stale artifact(s) from $out" }
    }
+# THE MANIFEST IS A BUILD ARTIFACT AND IS REBUILT HERE.
+#
+# tr4w.lpr links {$R 'Win11.res'} unconditionally. Until 2026-09-14 only
+# FullBuild.ps1 compiled it, so Build-App.ps1 linked whatever Win11.res was
+# left over -- possibly from another ARCHITECTURE. That cost two rebuilds
+# chasing 0xC000007B on the first x64 binary while the corrected manifest sat
+# in the tree unread. See build/Build-Manifest.ps1 for the whole story.
+try
+   {
+   $null = Build-Tr4wManifest -Tr4wDir $TR4W_DIR -FpcRes $tc.FpcRes -Quiet
+   }
+catch
+   {
+   Write-Host ''
+   Write-Host "BUILD FAILED: $($_.Exception.Message)"
+   exit 1
+   }
+
 foreach ($d in $Defines) { $fpcArgs += "-d$d" }
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For App)) { $fpcArgs += "-Fu$p" }
 foreach ($p in (Get-Tr4wIncludePaths -Tr4wDir $TR4W_DIR)) { $fpcArgs += "-Fi$p" }
