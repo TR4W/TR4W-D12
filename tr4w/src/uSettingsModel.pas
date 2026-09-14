@@ -1828,6 +1828,7 @@ type
       FShowFrequency: boolean;
       FDistanceMode: DistanceDisplayType;
       FDebugLevel: tLogLevels;
+      FBackupFileName: string;
    public
       constructor Create;
    published
@@ -1840,6 +1841,18 @@ type
          read FConfirmEditChanges write FConfirmEditChanges;
       // Was Config.CheckLogFileSize. CHECK LOG FILE SIZE.
       property CheckFileSize: boolean read FCheckFileSize write FCheckFileSize;
+      (* Was the global TR4W_BACKUP_FILENAME in VC.pas, a FileNameType buffer.
+        BACKUP LOG FILE NAME, aliased: the derived name would put LOG in the
+        middle rather than the front.
+
+        EMPTY MEANS NO BACKUP, which BackupLogNow tests before it does
+        anything -- so this is not an unset value, it is the off switch.
+
+        'logback.db', NOT '.trw': the backup is a SQLite snapshot of the
+        contest log now, so the old extension named a format it no longer
+        is. *)
+      property BackupFileName: string
+         read FBackupFileName write FBackupFileName;
       // Was Config.UpdateRestartFileEnable. UPDATE RESTART FILE ENABLE.
       property UpdateRestartFile: boolean
          read FUpdateRestartFile write FUpdateRestartFile;
@@ -2665,6 +2678,7 @@ type
       FMinitourDuration: TTourDuration;
       FLiteralDomesticQth: boolean;
       FCustomInitialExchangeString: string;
+      FInitialExchangeFilename: string;
       FHamscoreEnable: boolean;
       FR150SMode: boolean;
       FRfoblMode: boolean;
@@ -2730,6 +2744,16 @@ type
       property CustomInitialExchangeString: string
          read FCustomInitialExchangeString
          write FCustomInitialExchangeString;
+      (* Was the global TR4W_INITIALEX_FILENAME in VC.pas, a FileNameType
+        buffer.  The file of pre-loaded callsign/exchange pairs -- INITIAL.EX
+        by default -- which logdupe reads at contest load.
+
+        ON THE CONTEST GROUP, not Files, because it is chosen per contest the
+        way DomesticFilename beside it is. INITIAL EXCHANGE FILENAME, aliased:
+        the derived name would say CONTEST first. *)
+      property InitialExchangeFilename: string
+         read FInitialExchangeFilename
+         write FInitialExchangeFilename;
       (*
         POST LIVE SCORES FOR THIS CONTEST.
 
@@ -4130,6 +4154,8 @@ begin
    FDisabled           := False;
    (* tShowFrequencyinLog was declared TRUE in postunit.pas. *)
    FShowFrequency      := True;
+   (* 'logback.db' -- the name uCFG's defaults routine appended. *)
+   FBackupFileName := 'logback.db';
 end;
 
 constructor TCqSettings.Create;
@@ -4354,6 +4380,10 @@ begin
      there IS the default and comes here. *)
    FCountDomesticCountries := False;
    FDigitalModeEnable      := True;    // cfgdef
+   (* 'INITIAL.EX' -- the name uCFG's defaults routine appended into the
+     buffer this replaces.  A bare name, resolved under the log and then the
+     program directory by EnumerateLinesInFile. *)
+   FInitialExchangeFilename := 'INITIAL.EX';
    FDomesticFilename       := '';
    FExchangeMemoryEnable   := True;
    FMultipleBands          := True;
@@ -5003,6 +5033,8 @@ begin
    Alias('COUNT DOMESTIC COUNTRIES', 'Contest.CountDomesticCountries');
    Alias('DIGITAL MODE ENABLE',      'Contest.DigitalModeEnable');
    Alias('DOMESTIC FILENAME',        'Contest.DomesticFilename');
+   Alias('INITIAL EXCHANGE FILENAME', 'Contest.InitialExchangeFilename');
+   Alias('BACKUP LOG FILE NAME',      'Log.BackupFileName');
    Alias('EXCHANGE MEMORY ENABLE',   'Contest.ExchangeMemoryEnable');
    Alias('MULTIPLE BANDS',           'Contest.MultipleBands');
    Alias('MULTIPLE MODES',           'Contest.MultipleModes');

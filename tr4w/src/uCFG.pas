@@ -730,6 +730,11 @@ const
      was. STEREO PIN HIGH is deliberately NOT here: YCCCSetStereo reads it,
      so it is a setting the box uses rather than an LPT detail. *)
    - 8 {the LPT ports and their base addresses}
+   (* The last two FileNameType buffers CFGCA addressed.  Both are ordinary
+     string properties now, which is what a path always was, and converting
+     their two readers took EnumerateLinesInFile and GenerateCallsignsList
+     off PAnsiChar with them. *)
+   - 2 {BACKUP LOG FILE NAME and INITIAL EXCHANGE FILENAME}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -837,7 +842,6 @@ const
     {(*}
 
  (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOwned; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'BACKUP LOG FILE NAME';          crAddress: @TR4W_BACKUP_FILENAME;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFileName; crNetwork: 1),   // 4.56.11
  (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
 // BAND MAP ENABLE retired 2026-08-22 (NY4I): "if the window is opened, it is
@@ -947,7 +951,6 @@ const
 // (crCommand: 'ICOM COMMAND PAUSE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'INITIAL EXCHANGE';              crAddress: Pointer(7);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'INITIAL EXCHANGE CURSOR POS';   crAddress: pointer(6);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'INITIAL EXCHANGE FILENAME';     crAddress: @TR4W_INITIALEX_FILENAME;        crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctFilename; crNetwork: 1),
 // (crCommand: 'INPUT CONFIG FILE';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
 // (crCommand: 'JST RESPONSE TIMEOUT';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
 // (crCommand: 'K1EA NETWORK ENABLE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -2945,8 +2948,10 @@ begin
    (* .db, NOT .tr4w. The backup is a SQLite snapshot of the contest log
      now, so the old extension named a format it no longer is -- and an
      operator who needs this file back has to be able to open it. *)
-   uAnsiStr.AppendToBuffer(TR4W_BACKUP_FILENAME, 'logback.db'); // 4.56.13
-   uAnsiStr.AppendToBuffer(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
+   (* THE TWO FILE-NAME DEFAULTS MOVED WITH THEIR SETTINGS, 2026-09-13 --
+     TLogSettings.Create and TContestSettings.Create carry the same
+     'logback.db' and 'INITIAL.EX' these lines appended.  A default belongs
+     with the value it defaults. *)
    (* THE TWO AUDIO DEFAULTS MOVED WITH THEIR SETTINGS. MP3 is withdrawn
      with the recorder; DVK is TDvkSettings.Create, which carries the same
      'DVK' this line did -- a default belongs with the value it defaults. *)

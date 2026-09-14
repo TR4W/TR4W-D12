@@ -376,7 +376,7 @@ procedure LoadinLog;
 procedure LogRowTextFor(const RXData: ContestExchange; out aText: TLogRowText);
 
 
-procedure GenerateCallsignsList(FileName: PAnsiChar);
+procedure GenerateCallsignsList(const FileName: string);
 procedure MakeAllCallsignsList;
 
 procedure showint(Num: integer);
@@ -5455,7 +5455,7 @@ begin
     menu_initial_ex_list:
       begin
         MakeReportFileName('CUSTOM_INITIAL.EX');
-        GenerateCallsignsList(@ReportsFilename[1]);
+        GenerateCallsignsList(string(ReportsFilename));
         FilePreview;
       end;
     menu_allcallsigns_list: MakeAllCallsignsList;
@@ -8348,16 +8348,20 @@ begin
      end;
 end;
 
-procedure GenerateCallsignsList(FileName: PAnsiChar);
+procedure GenerateCallsignsList(const FileName: string);
 var
   h: THandle;
   i: integer;
   nNumberOfBytesToWrite: Cardinal;
   InitialExchange: CallString;
   Callsign: CallString;
+  (* THE BYTES HANDED TO utils_file, which takes a PAnsiChar.  A NAMED local,
+    not a cast in the argument list: PAnsiChar(AnsiString(x)) on a temporary
+    is the dangling-pointer idiom this tree has been bitten by. *)
+  nameBytes: AnsiString;
 begin
-  // MakeReportFileName('CUSTOM_INITIAL.EX');
-  if not tOpenFileForWrite(h, FileName {@ReportsFilename[1]}) then
+  nameBytes := AnsiString(FileName);
+  if not tOpenFileForWrite(h, PAnsiChar(nameBytes)) then
      begin
      Exit;
      end;

@@ -152,7 +152,7 @@ var
 function CreateRichEdit(hwndParent: HWND): HWND;
 {$ENDIF}
 
-function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 procedure UnableToFindFileMessage(FileName: string);
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
@@ -1040,7 +1040,7 @@ end;
 // So the safe conversion was a deletion. Checked before removing, not after.
 
 
-function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 label
   LastLine;
 var
@@ -1062,7 +1062,11 @@ var
   StartPos, FilePos                     : Cardinal;
   TempString                            : ShortString;
   LineSize                              : integer;
-  TempBuffer                            : array[0..255] of AnsiChar;
+  (* THE RESOLVED PATH, AS A STRING.  It was a 256-byte AnsiChar buffer built
+    with TF.Format, which is the Win32 habit this tree is removing: a path is
+    text, the three candidates below are ordinary concatenation, and 256 bytes
+    was a silent truncation waiting for a deep directory. *)
+  path                                  : string;
   NewLine                               : boolean;
 begin
   Result := False;
@@ -1089,21 +1093,26 @@ begin
     ExtractFilePath is the platform's own answer: on Windows it accepts either
     separator, so the Windows behaviour is unchanged, and on Unix it
     recognises the one that is actually used there. *)
-  if ExtractFilePath(string(AnsiString(FileName))) <> '' then
+  if ExtractFilePath(FileName) <> '' then
      begin
-     Format(TempBuffer, '%s', FileName);
+     path := FileName;
      end
   else
      begin
-     Format(TempBuffer, '%s%s', TR4W_LOG_PATH_NAME, FileName);
-     if not FileExists(TempBuffer) then
+     (* GENUINE FIXED-BUFFER READS -- both are FileNameType, so the
+       NUL-terminated form is what takes the name and not the padding. *)
+     path := string(AnsiString(PAnsiChar(@TR4W_LOG_PATH_NAME[0]))) + FileName;
+     if not SysUtils.FileExists(path) then
         begin
-        Format(TempBuffer, '%s%s', TR4W_PATH_NAME, FileName);
+        path := string(AnsiString(PAnsiChar(@TR4W_PATH_NAME[0]))) + FileName;
         end;
      end;
 
   try
-     fs := TFileStream.Create(AnsiString(TempBuffer), fmOpenRead or fmShareDenyNone);
+     (* EXPLICIT AT THE BOUNDARY: TFileName is AnsiString in this build and
+       this unit s string is not, so the conversion is stated rather than
+       left to the assignment -- which is what the ratchet counts. *)
+     fs := TFileStream.Create(AnsiString(path), fmOpenRead or fmShareDenyNone);
      try
         SetLength(raw, fs.Size);
         if Length(raw) > 0 then

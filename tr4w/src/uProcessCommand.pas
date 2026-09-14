@@ -633,7 +633,7 @@ end;
 
 procedure scFLUSHINITIALEX;
 begin
-  GenerateCallsignsList(TR4W_INITIALEX_FILENAME);
+  GenerateCallsignsList(Settings.Contest.InitialExchangeFilename);
   QuickDisplay(TC_FLUSHINITIALEXCOMMANDEXECUTED);
 end;
 

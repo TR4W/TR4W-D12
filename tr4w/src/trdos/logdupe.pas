@@ -1309,7 +1309,7 @@ end;
 procedure LoadInitialExchangeFile;
 begin
 
-  if not EnumerateLinesInFile(TR4W_INITIALEX_FILENAME, EnumInitialEx, True) then
+  if not EnumerateLinesInFile(Settings.Contest.InitialExchangeFilename, EnumInitialEx, True) then
      begin
      Exit;
      end;
@@ -1318,7 +1318,7 @@ begin
   //TempInteger := TF.Format(wsprintfBuffer, '%s:'#13#10 + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
   if InitialExCallsigns > 0 then
      begin
-     QuickDisplay(SysUtils.Format(AnsiString(LclText('%s:' + TC_THEREWERECALLS)), [TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes]));
+     QuickDisplay(SysUtils.Format(AnsiString(LclText('%s:' + TC_THEREWERECALLS)), [Settings.Contest.InitialExchangeFilename, InitialExCallsigns, InitialExDupes]));
      end;
  // ShowMessage(wsprintfBuffer);
 end;

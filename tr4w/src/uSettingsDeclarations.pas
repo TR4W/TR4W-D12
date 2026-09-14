@@ -893,7 +893,8 @@ begin
    (* STEREO CONTROL PIN was WHICH LPT PIN drove the headphone relay -- pin 5
      or pin 9 -- and went with the parallel port.  STEREO PIN HIGH, the state
      it applied, stays: see the Hardware group above. *)
-   RegisterStoredSetting('files.ctrlj.initialExchangeFilename','INITIAL EXCHANGE FILENAME',
+   (* MODEL, not stored, since 2026-09-13: Settings.Contest holds it. *)
+   RegisterModelSetting( 'files.ctrlj.initialExchangeFilename','INITIAL EXCHANGE FILENAME',
                           RS_FILES_CTRLJ_INITIALEXCHANGEFILENAME);
 
       GComplete := True;

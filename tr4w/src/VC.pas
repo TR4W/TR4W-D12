@@ -3048,8 +3048,10 @@ var
   TR4W_ADIF_FILENAME                    : FileNameType;
 //  TR4W_IODRIVER_FILENAME                : FileNameType;
 
-  TR4W_BACKUP_FILENAME                  : FileNameType {= 'C:\TR4W\LOGBACK.TRW'};
-  TR4W_INITIALEX_FILENAME               : FileNameType {= 'INITIAL.EX'};
+  (* TR4W_BACKUP_FILENAME and TR4W_INITIALEX_FILENAME DELETED 2026-09-13.
+    Both were FileNameType buffers CFGCA wrote through; they are
+    Settings.Log.BackupFileName and Settings.Contest.InitialExchangeFilename
+    now, and their readers take strings. *)
   (* TR4W_LATESTCFG_FILENAME DELETED, 2026-09-11.  It was a second copy of
     uRadioConfigStore.LatestConfigFile, which the store has owned since
     2026-08-16 -- reachable as GetLatestConfigFile / SetLatestConfigFile.  Its

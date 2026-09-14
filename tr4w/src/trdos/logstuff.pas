@@ -5761,7 +5761,7 @@ procedure BackupLogNow;
 var
   report: string;
 begin
-  if TR4W_BACKUP_FILENAME[0] = #0 then
+  if Settings.Log.BackupFileName = '' then
      begin
      Exit;
      end;
@@ -5776,12 +5776,12 @@ begin
     the round trip through a global bought nothing and capped the result at
     1023 bytes on the way. *)
   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SAVINGTO)),
-                               [TR4W_LOG_FILENAME, TR4W_BACKUP_FILENAME]));
+                               [TR4W_LOG_FILENAME, Settings.Log.BackupFileName]));
 
   (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
     file either way -- a periodic backup runs unattended and the only place an
     operator will ever see it is this line. *)
-  if LogStoreBackup(string(StrPas(TR4W_BACKUP_FILENAME)), report) then
+  if LogStoreBackup(Settings.Log.BackupFileName, report) then
      begin
      QuickDisplay(AnsiString(report));
      end
