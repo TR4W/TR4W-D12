@@ -837,7 +837,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..91] of string = (
+   RETIRED_COMMANDS: array[0..92] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -926,6 +926,7 @@ const
       'TCI MAX TX SECONDS',
       'TELNET DEBUG',
       'TOTAL OFF TIME',
+      'SINGLE RADIO MODE',
       'TOTAL SCORE MESSAGE',
       'UDP BROADCAST PORT',
       'USE BIOS KEY CALLS',
@@ -1314,13 +1315,6 @@ begin
                   Exit;
                   end;
 
-   if pshortstring(Command)^ = 'TOTAL SCORE MESSAGE' then
-      begin
-      //ProcessTotalScoreMessage(pshortstring(Command)^, CustomCMD);
-      Result := True;
-      Exit;
-      end;
-
    { WAS StrPos(PAnsiChar(@Command[1]), ...), AND THE CAST WAS ITSELF A FIX.
 
      The comment that used to be here explained that @Command[1] is an untyped
@@ -1413,31 +1407,6 @@ begin
          end;
       end;
 
-
-   // SINGLE RADIO MODE -- WITHDRAWN, and reported rather than obeyed.
-   //
-   // NY4I 2026-08-14: "in the new system (and not caring to migrate existing
-   // configs) we only use TWO RADIO MODE true or false."
-   //
-   // It was the deprecated inverse of TWO RADIO MODE (issue #965), kept
-   // parseable so old .cfg files still loaded. Measured before removing it: of
-   // 146 real .cfg/.ini files in this tree -- every contest config, the D7 test
-   // logs and the operator's own ini -- NOT ONE contains it. It is dead in
-   // practice as well as in intent.
-   //
-   // Still CONSUMED, so an old file does not report an unknown command, but it
-   // no longer sets anything and it says so at WARN. A withdrawn setting that
-   // silently does nothing is how an operator ends up in the wrong mode without
-   // a single clue; one that says "I ignored this, use TWO RADIO MODE" is a
-   // five-second fix.
-   if pshortstring(Command)^ = 'SINGLE RADIO MODE' then
-      begin
-      logger.Warn('[RadioMode] SINGLE RADIO MODE = %s IGNORED -- withdrawn. ' +
-                  'Use TWO RADIO MODE = TRUE for two-radio/SO2R, FALSE for single radio.',
-                  [CustomCMD]);
-      Result := True;
-      Exit;
-      end;
 
    (* THE ROW SCAN IS GONE -- 2026-09-14, and with it the last of CFGCA.
 

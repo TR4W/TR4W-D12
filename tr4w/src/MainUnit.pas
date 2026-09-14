@@ -9461,24 +9461,6 @@ begin
          begin
          if NewWidth > 0 then
             begin
-            ColumnWidthOverride[TempColumn] := NewWidth;
-            // Use language-neutral canonical name (see VC.pas) so the CFG
-            // file is portable across language builds. ColumnsArray[].Text
-            // is translated at compile time and would lock the CFG to the
-            // language it was written under.
-            KeyName := 'COLUMN WIDTH ' + StrPas(ColumnCanonicalName[TempColumn]);
-            KeyName[Ord(KeyName[0]) + 1] := #0;
-            Str(NewWidth, WidthStr);
-            WidthStr[Ord(WidthStr[0]) + 1] := #0;
-
-            // CHECKED, and it never was.  WritePrivateProfileStringA returns a
-            // BOOL and this discarded it, so a width the operator dragged went
-            // nowhere without a word -- exactly the failure NY4I found on
-            // tr4w.ini (2026-08-21), in a second place.
-            //
-            // The likely causes are worth naming because the operator cannot
-            // guess them: no contest is loaded, so TR4W_CFG_FILENAME is not a
-            // real path; or the .cfg is read-only.
             (* APPLIED HERE, PERSISTED BY THE LOG.
 
               An INI write into TR4W_CFG_FILENAME stood here, and that name is
@@ -9486,15 +9468,18 @@ begin
               SQLite database as an INI and rewrite it. Three of NY4I's freezes
               ended on this routine's own log line.
 
-              CheckCommand accepts 'COLUMN WIDTH <token>' (uCFG.pas:1664, inside
-              CheckCommand), so the value applies to the running program the
-              same way any other command does -- and uLogStore.CaptureConfiguration
-              writes the widths into the log's config table at close, beside the
-              function-key memories, from where the startup apply restores them.
+              THEN IT WENT THROUGH CheckCommand, WHICH WAS REDUNDANT: the line
+              above already assigns ColumnWidthOverride, and the 'COLUMN WIDTH
+              <token>' arm assigns THE SAME VARIABLE. So this formatted the
+              width into a ShortString, null-terminated it by hand, built a
+              command name, and re-parsed the lot to arrive where it already
+              was. The canonical-name plumbing existed only to feed that.
 
-              SO THE WIDTH IS STILL PER CONTEST, which is what the .cfg gave. It
-              is simply in the contest's own file now rather than beside it. *)
-            CheckCommand(@KeyName[1], WidthStr);
+              uLogStore.CaptureConfiguration writes the widths into the log's
+              config table at close, beside the function-key memories, and the
+              startup apply restores them -- so the width is still per contest,
+              in the contest's own file. *)
+            ColumnWidthOverride[TempColumn] := NewWidth;
             logger.Debug('[ColumnWidth] %s = %d applied',
                          [StrPas(ColumnCanonicalName[TempColumn]), NewWidth]);
             end;
