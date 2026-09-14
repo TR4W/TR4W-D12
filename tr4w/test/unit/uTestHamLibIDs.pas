@@ -48,7 +48,7 @@ unit uTestHamLibIDs;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uRadioRegistry, VC;
+   SysUtils, uTR4WTestFramework, uRadioRegistry, VC, uHamLibDirect;
 
 type
    THamLibIDTests = class(TTestCase)
@@ -59,6 +59,7 @@ type
       procedure Test_TheThreeThatHadDrifted;
       procedure Test_UnregisteredIsZero;
       procedure Test_IcomCIVAddresses;
+      procedure Test_ScalarWidthsMatchTheCABI;
    public
       procedure RunAllTests; override;
    end;
@@ -139,12 +140,68 @@ begin
    CheckEquals(0, RegisteredCIVAddress(NoInterfacedRadio), 'the NONE sentinel');
 end;
 
+(* THE SCALAR ABI, WHICH NO COMPILER CHECKS.
+
+  uHamLibDirect binds hamlib through GetProcedureAddress, so every parameter
+  is whatever Pascal says it is and NOTHING verifies that against rig.h. A
+  type declared one word too narrow does not fail to compile, does not fail to
+  load, and misbehaves only on the air -- the same class of defect as a wrong
+  rig_model above, which is why it lives in this unit.
+
+  THE THREE THAT MOVE ARE shortfreq_t, pbwidth_t AND hamlib_token_t. They are
+  a C `long`, whose width is set by the platform DATA MODEL and not by the
+  bitness of the build:
+
+      Windows i386    ILP32   long = 32
+      Windows x86_64  LLP64   long = 32   <-- unchanged by the 64-bit port
+      Linux x86_64    LP64    long = 64
+      macOS aarch64   LP64    long = 64
+
+  So this test asserts 4 on Windows only, and asserts the INVARIANTS that hold
+  everywhere separately. Do not "fix" a failure here by widening the type on
+  Windows -- Microsoft kept long at 32 bits, and clong already knows that. *)
+procedure THamLibIDTests.Test_ScalarWidthsMatchTheCABI;
+begin
+   BeginTest('the hamlib scalar types match rig.h on this platform');
+
+   // FIXED WIDTH EVERYWHERE -- these never move, so a change is a mistake.
+   CheckEquals(8, SizeOf(freq_t),      'freq_t is a C double');
+   CheckEquals(8, SizeOf(rmode_t),     'rmode_t is a C uint64_t');
+   CheckEquals(8, SizeOf(setting_t),   'setting_t is a C uint64_t');
+   CheckEquals(4, SizeOf(vfo_t),       'vfo_t is a C unsigned int');
+   CheckEquals(4, SizeOf(ptt_t),       'ptt_t is a C enum');
+   CheckEquals(4, SizeOf(dcd_t),       'dcd_t is a C enum');
+
+   // THE C TYPEDEF RELATIONSHIP: rig.h:663 is `typedef shortfreq_t pbwidth_t`,
+   // so these two cannot legally disagree on ANY platform. Declaring them
+   // independently is how they would drift.
+   CheckEquals(SizeOf(shortfreq_t), SizeOf(pbwidth_t),
+               'pbwidth_t IS shortfreq_t (rig.h:663)');
+
+   // A POINTER IS A POINTER -- this is the one the 64-bit port does move.
+   CheckEquals(SizeOf(Pointer), SizeOf(PRIG), 'PRIG is an opaque RIG*');
+
+{$IFDEF WINDOWS}
+   // ILP32 and LLP64 agree: a C long is 32 bits on BOTH Windows targets, so
+   // this arm is correct for the Win64 build too and must not be relaxed.
+   CheckEquals(4, SizeOf(shortfreq_t),    'C long is 32-bit on Windows');
+   CheckEquals(4, SizeOf(hamlib_token_t), 'C long is 32-bit on Windows');
+{$ELSE}
+   // LP64: a C long follows the pointer on the unixes TR4W builds for.
+   CheckEquals(SizeOf(Pointer), SizeOf(shortfreq_t),
+               'C long follows the pointer on LP64');
+   CheckEquals(SizeOf(Pointer), SizeOf(hamlib_token_t),
+               'C long follows the pointer on LP64');
+{$ENDIF}
+end;
+
 procedure THamLibIDTests.RunAllTests;
 begin
    Test_EnumRadiosCarryTheirHamLibID;
    Test_TheThreeThatHadDrifted;
    Test_UnregisteredIsZero;
    Test_IcomCIVAddresses;
+   Test_ScalarWidthsMatchTheCABI;
 end;
 
 end.

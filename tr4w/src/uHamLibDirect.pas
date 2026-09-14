@@ -6,8 +6,12 @@ interface
 
 uses
   (* No Windows: the library loads through DynLibs and the header probe uses
-    SysUtils' FileOpen / FileSeek / FileRead. *)
-  SysUtils;
+    SysUtils' FileOpen / FileSeek / FileRead.
+
+    ctypes carries ONE thing this unit needs and cannot write for
+    itself: clong. See the shortfreq_t / hamlib_token_t note in the
+    type block below. *)
+  SysUtils, ctypes;
 
 const
   (* THE LIBRARY TR4W SHIPS, BESIDE THE BINARY -- one name per platform.
@@ -53,8 +57,41 @@ type
   // Frequency type in Hz (can hold SHF frequencies)
   freq_t = Double;
 
-  // Short frequency type for offsets, shifts (31-bit signed)
-  shortfreq_t = Integer;
+  (* THE THREE C `long` TYPES, AND WHY THEY ARE NOT `Integer`.
+
+    hamlib declares these as a C `long` (rig.h:493, :663, :880):
+
+        typedef signed long shortfreq_t;
+        typedef shortfreq_t pbwidth_t;
+        typedef long        hamlib_token_t;
+
+    and the WIDTH OF `long` IS DECIDED BY THE PLATFORM'S DATA MODEL, NOT BY
+    WHETHER THE BUILD IS 64-BIT. The three targets do not agree, and Windows
+    is the odd one out in BOTH of its bitnesses:
+
+        Windows i386      ILP32   long = 32
+        Windows x86_64    LLP64   long = 32   <-- still 32
+        Linux   x86_64    LP64    long = 64
+        macOS   aarch64   LP64    long = 64
+
+    Microsoft kept `long` at 32 bits across the 64-bit move; the Unixes did
+    not. So a hardcoded `Integer` is right on Windows forever and WRONG on
+    the two platforms that already build from this tree -- these are passed
+    BY VALUE to rig_set_conf / rig_get_conf / rig_token_lookup, so a 32-bit
+    token in a 64-bit parameter slot leaves the upper half undefined.
+
+    clong is FPC's own name for exactly this rule, and it is not a guess:
+    rtl/inc/ctypes.pp:64 carves win64/x86_64 out of its 64-bit arm with
+    `not(defined(win64) and defined(cpux86_64))`, and rtl/unix/ctypes.inc:52
+    widens it on any cpu64 unix. Per CLAUDE.md, reach for the RTL rather than
+    hand-rolling the conditional.
+
+    NOT A 64-BIT-CONVERSION ITEM: the Win64 port does not change any of these.
+    They were already wrong on Linux and macOS, and latent only because
+    HAMLIB_LIB fails to load when hamlib is not installed there. *)
+
+  // Short frequency type for offsets, shifts -- C `signed long`
+  shortfreq_t = clong;
 
   // VFO identifier
   vfo_t = Cardinal;
@@ -62,8 +99,8 @@ type
   // Radio mode (64-bit bitmask)
   rmode_t = Int64;
 
-  // Passband width
-  pbwidth_t = Integer;
+  // Passband width -- C `typedef shortfreq_t pbwidth_t`, so it follows it
+  pbwidth_t = shortfreq_t;
 
   // PTT status
   ptt_t = Integer;
@@ -71,8 +108,8 @@ type
   // DCD status
   dcd_t = Integer;
 
-  // Configuration token
-  hamlib_token_t = Integer;
+  // Configuration token -- C `long`
+  hamlib_token_t = clong;
 
 {-----------------------------------------------------------------------------
   Error Codes

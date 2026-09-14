@@ -15,7 +15,7 @@ a bundled DLL with a newer copy.
 
 | File | Source | Bitness | Purpose |
 |---|---|---|---|
-| `libhamlib-4.dll` | [HamLib](https://hamlib.github.io/) Windows build | **32-bit** | Radio control via the HamLib library (used by `uRadioHamLibDirect.pas`) |
+| `libhamlib-4.dll` | [HamLib](https://hamlib.github.io/) Windows build, `hamlib-w32-4.7.0.zip` | **32-bit** | Radio control via the HamLib library (used by `uRadioHamLibDirect.pas`). **The shipped build is 4.7.0** (`2026-02-15T21:14:25Z SHA=554e02b39`), read out of the DLL itself -- it carries NO Windows version resource, so Explorer and `Get-ChildItem .VersionInfo` both show blank. |
 | `libgcc_s_dw2-1.dll` | Ships in the HamLib Windows zip | **32-bit** | MinGW runtime — required by `libhamlib-4.dll` |
 | `libusb-1.0.dll` | Ships in the HamLib Windows zip | **32-bit** | USB transport — required by `libhamlib-4.dll` for USB-attached radios |
 | `libwinpthread-1.dll` | Ships in the HamLib Windows zip | **32-bit** | POSIX-threads runtime — required by `libhamlib-4.dll` |
@@ -23,7 +23,7 @@ a bundled DLL with a newer copy.
 | `ssleay32.dll` | OpenSSL 1.0.2 (legacy series) | **32-bit** | SSL/TLS layer — required by `libeay32.dll` |
 | `inpout32.dll` | [InpOut32 by Phil Gibbons](https://www.highrez.co.uk/downloads/inpout32/) | **32-bit** | Direct parallel-port I/O for LPT CW keying (legacy stations) |
 | `sqlite3.dll` | [sqlite.org](https://sqlite.org/download.html) precompiled Windows binary (`sqlite-dll-win-x86-*`) | **32-bit** | **The contest log.** Supplied by NY4I 2026-08-29; currently 3.53.4, 2,572,288 bytes. Bound at RUN TIME, not link time — see the note below |
-| `rigctld.exe` | HamLib Windows build | **32-bit** | **DEPRECATED.** Replaced by direct-DLL mode (`uRadioHamLibDirect.pas`). Tracked but not shipped by the installer; planned for removal. |
+| `rigctld.exe` | HamLib Windows build | **64-bit (x86_64)** -- measured 2026-09-14, this row said 32-bit and was wrong | **DEPRECATED.** Replaced by direct-DLL mode (`uRadioHamLibDirect.pas`). Tracked but not shipped by the installer; planned for removal. |
 
 ### `sqlite3.dll` — the one that fails differently
 
@@ -182,6 +182,12 @@ with a parallel port — increasingly rare), `git add -f`, commit, PR.
 (replaced by direct-DLL mode in `uRadioHamLibDirect.pas` — see
 `uRadioFactory.pas` line 214: `"Direct DLL mode - no rigctld process
 needed"`).
+
+**AND IT COULD NEVER HAVE RUN FROM THAT DIRECTORY.** Measured 2026-09-14:
+`rigctld.exe` is **x86_64** and imports `libhamlib-4.dll`, which is i386.
+A 64-bit process cannot load a 32-bit DLL, so it dies before `main` --
+`rigctld.exe --version` produces no output and exits 127. Harmless only
+because nothing launches it.
 
 **Don't update it.** The right move is to remove it entirely on a future
 cleanup pass. Tracked separately as a TODO.
