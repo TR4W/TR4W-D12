@@ -416,6 +416,8 @@ begin
       end;
 end;
 
+function CommandIsRadioLibraryKey(const aCommand: string): boolean; forward;
+
 function CommandIsJSONOwned(const aCommand: string): boolean;
 var
    i: integer;
@@ -439,10 +441,34 @@ begin
       Exit;
       end;
 
-   (* AND THERE IS NO SECOND PLACE TO ASK. The scan that stood here looked
-     for a csJSON row; csJSON was a migratory status and the array is gone.
-     A name the model does not own is not a setting. *)
-   Result := False;
+   (* AND A STORE'S NAMES COUNT TOO. THIS WAS A REGRESSION, 2026-09-14, and
+     it broke EVERY RADIO.
+
+     What stood here after the array was deleted was `Result := False`, on
+     the reasoning that "a name the settings model does not own is not a
+     setting". That is wrong in exactly one direction, and it is the
+     direction that matters: the settings model is not the only owner. The
+     RADIO, KEYER and CLUSTER LIBRARIES own names too, and their values live
+     in settings/tr4w.json just as much as a published property's do.
+
+     WHAT IT COST. uRadioConfigApply.ApplyRadioToSlot dispatches on this
+     question -- True means "call the direct applier", False means "push it
+     through CheckCommand". With the answer False for RADIO ONE PORT and its
+     twenty-six siblings, every key fell through to CheckCommand, whose rows
+     had just been deleted, so every one was refused:
+
+         [ApplyRadioToSlot] CFGCA did not accept "POLL RADIO TWO" = "FALSE"
+         [Radio 1 config] radio=NONE (no RADIO n TYPE and no RADIO n FACTORY
+                          ID configured)  connection=COM0 0 baud 8N2
+
+     A fully configured IC-7100 on COM18 came up as NO RADIO AT ALL. NY4I
+     found it on the bench; nothing in the build, the lints, the unit tests
+     or the corpus can see it, because none of them configures a radio.
+
+     THE THREE OWNERS, and the question is the same for all three: is this
+     command's system of record settings/tr4w.json rather than this file? *)
+   Result := CommandIsOwnedByAStore(aCommand)
+             or CommandIsRadioLibraryKey(aCommand);
 end;
 
 function CFGCommandValueAsString(const aCommand: string): string;
@@ -1013,6 +1039,32 @@ const
       'UDP BROADCAST ROTOR PORT',
       'UDP BROADCAST SCORE'
       );
+
+(* THE RADIO LIBRARY'S KEYS, WHICH ARE A SHAPE RATHER THAN A LIST.
+
+  Twenty-seven per slot and both slots share the spellings, so naming them
+  all would be fifty-four entries that have to stay in step with the
+  renderer in uRadioConfigApply. The shape is what is stable:
+
+      RADIO ONE <anything>      RADIO TWO <anything>
+      POLL RADIO ONE            POLL RADIO TWO
+      KEYER RADIO ONE ...       KEYER RADIO TWO ...
+
+  The last two put the slot in the MIDDLE and at the END, which is why this
+  cannot be a single prefix test -- the same reason KeySuffix in
+  uRadioConfigApply is written the way it is. *)
+function CommandIsRadioLibraryKey(const aCommand: string): boolean;
+var
+   name: string;
+begin
+   name := UpperCase(Trim(aCommand));
+   Result := (Pos('RADIO ONE ', name) = 1)
+          or (Pos('RADIO TWO ', name) = 1)
+          or (name = 'POLL RADIO ONE')
+          or (name = 'POLL RADIO TWO')
+          or (Pos('KEYER RADIO ONE ', name) = 1)
+          or (Pos('KEYER RADIO TWO ', name) = 1);
+end;
 
 function CommandIsOwnedByAStore(const aCommand: string): boolean;
 var

@@ -1607,6 +1607,49 @@ begin
      asking this. *)
    CheckTrue(CommandIsJSONOwned('BAND MAP DECAY TIME'),
              'still JSON-owned now that it is a property');
+
+   (* THE RADIO LIBRARY'S KEYS, AND THIS IS THE ONE THAT WAS MISSING.
+
+     A REAL BENCH DEFECT, 2026-09-14: CommandIsJSONOwned was reduced to
+     Settings.OwnsCommand alone when CFGCA was deleted, on the reasoning that
+     a name the settings model does not own is not a setting. The radio,
+     keyer and cluster LIBRARIES own names too.
+
+     uRadioConfigApply.ApplyRadioToSlot dispatches on this: True calls the
+     direct applier, False pushes the key through CheckCommand -- whose rows
+     were gone. So every radio key was refused and a fully configured IC-7100
+     on COM18 started as "radio=NONE ... connection=COM0".
+
+     NOTHING COULD SEE IT. The build, 35 lints, 24733 unit tests and the
+     golden corpus were all green, because not one of them configures a
+     radio. NY4I found it by opening the program.
+
+     So the answer is pinned for all three owners, both slots, and the two
+     spellings that put the slot somewhere other than the front. *)
+   CheckTrue(CommandIsJSONOwned('RADIO ONE PORT'),
+             'the radio library owns RADIO ONE PORT');
+   CheckTrue(CommandIsJSONOwned('RADIO TWO BAUD RATE'),
+             'and the second slot');
+   CheckTrue(CommandIsJSONOwned('RADIO ONE FACTORY ID'),
+             'and the key that names the driver');
+   CheckTrue(CommandIsJSONOwned('POLL RADIO ONE'),
+             'POLL RADIO n puts the slot at the END');
+   CheckTrue(CommandIsJSONOwned('KEYER RADIO TWO OUTPUT PORT'),
+             'KEYER RADIO n puts it in the MIDDLE');
+   CheckTrue(CommandIsJSONOwned('WK SIDETONE FREQUENCY'),
+             'the keyer library owns the WK keys');
+   CheckTrue(CommandIsJSONOwned('CONNECTION COMMAND'),
+             'the cluster library owns the connect string');
+
+   (* AND NOT EVERYTHING, which is what makes the question worth asking: a
+     name no store and no property owns is not JSON-owned, and a contest .cfg
+     line naming one must NOT be applied as though it were. *)
+   CheckFalse(CommandIsJSONOwned('CLEAR DUPE SHEET'),
+              'an ACTION is not a stored setting');
+   CheckFalse(CommandIsJSONOwned('BAND MAP ENABLE'),
+              'a WITHDRAWN command owns nothing');
+   CheckFalse(CommandIsJSONOwned('NOT A TR4W COMMAND AT ALL'),
+              'and neither does a name TR4W never had');
 end;
 
 procedure TSettingsModelTests.Test_MessageDefaultsAreTheOnesInitializeStringsSeeded;
