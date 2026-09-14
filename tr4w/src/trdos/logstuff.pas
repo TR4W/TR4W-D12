@@ -365,7 +365,7 @@ type
   MultiMessageListPointer = ^MultiMessageListArrayType;
 
 const
-  ParameterOkayModeTypeStringArray: array[ParameterOkayModeType] of PAnsiChar = (
+  ParameterOkayModeTypeStringArray: array[ParameterOkayModeType] of string = (
     'NONE',
     'STANDARD',
     'QSL BUT DO NOT LOG',

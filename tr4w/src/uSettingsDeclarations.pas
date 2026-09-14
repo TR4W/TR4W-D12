@@ -429,7 +429,7 @@ begin
                           RS_CONTEST_CATEGORYPOWER);
    RegisterModelSetting( 'contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',
                           RS_CONTEST_CATEGORYTRANSMITTER);
-   RegisterStoredSetting('contest.contest',             'CONTEST',
+   RegisterModelSetting( 'contest.contest',             'CONTEST',
                           RS_CONTEST_CONTEST);
    (* MODEL, not stored, since 2026-09-13: Settings.Contest owns both. *)
    RegisterModelSetting( 'contest.contestName',         'CONTEST NAME',
@@ -446,13 +446,13 @@ begin
                           RS_CONTEST_DXMULTIPLIER);
    RegisterModelSetting( 'contest.exchangeMemoryEnable','EXCHANGE MEMORY ENABLE',
                           RS_CONTEST_EXCHANGEMEMORYENABLE);
-   RegisterStoredSetting('contest.exchangeReceived',    'EXCHANGE RECEIVED',
+   RegisterModelSetting( 'contest.exchangeReceived',    'EXCHANGE RECEIVED',
                           RS_CONTEST_EXCHANGERECEIVED);
    RegisterModelSetting('contest.gridMapCenter',       'GRID MAP CENTER',
                           RS_CONTEST_GRIDMAPCENTER);
-   RegisterStoredSetting('contest.initialExchange',     'INITIAL EXCHANGE',
+   RegisterModelSetting( 'contest.initialExchange',     'INITIAL EXCHANGE',
                           RS_CONTEST_INITIALEXCHANGE);
-   RegisterStoredSetting('contest.initialExchangeCursorPos','INITIAL EXCHANGE CURSOR POS',
+   RegisterModelSetting( 'contest.initialExchangeCursorPos','INITIAL EXCHANGE CURSOR POS',
                           RS_CONTEST_INITIALEXCHANGECURSORPOS);
    RegisterModelSetting('contest.initialExchangeOverwrite','INITIAL EXCHANGE OVERWRITE',
                           RS_CONTEST_INITIALEXCHANGEOVERWRITE);
@@ -494,11 +494,11 @@ begin
                           RS_CONTEST_MULTREPORTMINIMUMBANDS);
    RegisterModelSetting( 'contest.prefixMultiplier',    'PREFIX MULTIPLIER',
                           RS_CONTEST_PREFIXMULTIPLIER);
-   RegisterStoredSetting('contest.qslMode',             'QSL MODE',
+   RegisterModelSetting( 'contest.qslMode',             'QSL MODE',
                           RS_CONTEST_QSLMODE);
    RegisterModelSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
                           RS_CONTEST_QSONUMBERBYBAND);
-   RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
+   RegisterModelSetting( 'contest.qsoPointMethod',      'QSO POINT METHOD',
                           RS_CONTEST_QSOPOINTMETHOD);
    (* GRADUATED OFF CFGCA (2026-09-09) -- AND THE TABLE IS WHY.
 
@@ -637,7 +637,7 @@ begin
                           RS_CONTEST_SHOWALLSERIALPORTS);
    RegisterModelSetting( 'contest.showDomesticMultiplierName','SHOW DOMESTIC MULTIPLIER NAME',
                           RS_CONTEST_SHOWDOMESTICMULTIPLIERNAME);
-   RegisterLegacySetting('contest.singleBandScore',     'SINGLE BAND SCORE',
+   RegisterModelSetting( 'contest.singleBandScore',     'SINGLE BAND SCORE',
                           'Single Band Score');
    RegisterModelSetting( 'contest.sprintQsyRule',       'SPRINT QSY RULE',
                           RS_CONTEST_SPRINTQSYRULE);
@@ -661,7 +661,7 @@ begin
                           RS_OPERATING_CTRLJ_AUTOSPENABLESENSITIVITY);
    RegisterModelSetting( 'operating.ctrlj.autoTimeIncrement', 'AUTO TIME INCREMENT',
                           RS_OPERATING_CTRLJ_AUTOTIMEINCREMENT);
-   RegisterLegacySetting('operating.ctrlj.band',              'BAND',
+   RegisterModelSetting( 'operating.ctrlj.band',              'BAND',
                           'Band');
    RegisterLegacySetting('operating.ctrlj.clearDupeSheet',    'CLEAR DUPE SHEET',
                           'Clear Dupe Sheet');
@@ -693,7 +693,7 @@ begin
                           RS_OPERATING_CTRLJ_LOGSUBTITLE);
    RegisterModelSetting( 'operating.ctrlj.mainCallsign',      'MAIN CALLSIGN',
                           RS_OPERATING_CTRLJ_MAINCALLSIGN);
-   RegisterStoredSetting('operating.ctrlj.mode',              'MODE',
+   RegisterModelSetting( 'operating.ctrlj.mode',              'MODE',
                           RS_OPERATING_CTRLJ_MODE);
    RegisterModelSetting( 'operating.ctrlj.possibleCallAcceptKey','POSSIBLE CALL ACCEPT KEY',
                           RS_OPERATING_CTRLJ_POSSIBLECALLACCEPTKEY);

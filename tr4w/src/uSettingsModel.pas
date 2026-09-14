@@ -2720,6 +2720,16 @@ type
       FCategoryPower: tCategoryPower;
       FCategoryTransmitter: tCategoryTransmitter;
       FCategoryOverlay: string;
+      FBand: string;
+      FContestToken: string;
+      FExchangeReceived: string;
+      FInitialExchange: string;
+      FInitialExchangeCursorPos: string;
+      FMode: string;
+      FMyContinent: string;
+      FQslMode: string;
+      FQsoPointMethod: string;
+      FSingleBandScore: string;
       FDomesticMultiplier: string;
       FDxMultiplier: string;
       FPrefixMultiplier: string;
@@ -2727,6 +2737,16 @@ type
       FHamscoreEnable: boolean;
       FR150SMode: boolean;
       FRfoblMode: boolean;
+      procedure SetBand(const aValue: string);
+      procedure SetContestToken(const aValue: string);
+      procedure SetExchangeReceived(const aValue: string);
+      procedure SetInitialExchange(const aValue: string);
+      procedure SetInitialExchangeCursorPos(const aValue: string);
+      procedure SetMode(const aValue: string);
+      procedure SetMyContinent(const aValue: string);
+      procedure SetQslMode(const aValue: string);
+      procedure SetQsoPointMethod(const aValue: string);
+      procedure SetSingleBandScore(const aValue: string);
       procedure SetDomesticMultiplier(const aValue: string);
       procedure SetDxMultiplier(const aValue: string);
       procedure SetPrefixMultiplier(const aValue: string);
@@ -2866,6 +2886,39 @@ type
         is no enum to move. *)
       property CategoryOverlay: string
          read FCategoryOverlay write FCategoryOverlay;
+      (* TEN MORE TOKENS, on the same pattern as the four multipliers below.
+
+        EACH ENUM STAYS WITH THE SUBSYSTEM THAT OWNS IT -- ContestType with
+        the contest table, BandType with the band plan, ContinentType with
+        CTY.DAT's zone/continent data, ModeType and ExchangeType with the
+        engine. The SETTING is the token a config file has always written, and
+        uSettingsEffects assigns the ordinal.
+
+        THE SETTERS ARE THE APPLY, exactly as the ckList rows were. *)
+      property Band: string read FBand write SetBand;
+      (* CONTEST, whose property cannot be called Contest: the group already
+        is. The command name is aliased. *)
+      property ContestToken: string read FContestToken write SetContestToken;
+      property ExchangeReceived: string
+         read FExchangeReceived write SetExchangeReceived;
+      property InitialExchange: string
+         read FInitialExchange write SetInitialExchange;
+      property InitialExchangeCursorPos: string
+         read FInitialExchangeCursorPos write SetInitialExchangeCursorPos;
+      property Mode: string read FMode write SetMode;
+      (* MY CONTINENT. NY4I kept this out of an earlier batch because it has
+        71 references in LOGSTUFF -- scoring, multipliers, DX/domestic
+        decisions -- and /EXPORT skips the JSON apply, so a csJSON flip could
+        have changed an exported log. As a TOKEN with an effect that assigns
+        the same global the row did, neither of those is true: the ordinal
+        still arrives, from the same table, at the same point. *)
+      property MyContinent: string read FMyContinent write SetMyContinent;
+      property QslMode: string read FQslMode write SetQslMode;
+      property QsoPointMethod: string
+         read FQsoPointMethod write SetQsoPointMethod;
+      property SingleBandScore: string
+         read FSingleBandScore write SetSingleBandScore;
+
       (* THE FOUR MULTIPLIER MODES, AS TOKENS.
 
         THE ENUM STAYS WITH THE SUBSYSTEM, which is NY4I's rule for the radio,
@@ -4201,6 +4254,56 @@ begin
    FMulticastGroup      := '';
 end;
 
+procedure TContestSettings.SetBand(const aValue: string);
+begin
+   SetStr(FBand, aValue, 'Band');
+end;
+
+procedure TContestSettings.SetContestToken(const aValue: string);
+begin
+   SetStr(FContestToken, aValue, 'ContestToken');
+end;
+
+procedure TContestSettings.SetExchangeReceived(const aValue: string);
+begin
+   SetStr(FExchangeReceived, aValue, 'ExchangeReceived');
+end;
+
+procedure TContestSettings.SetInitialExchange(const aValue: string);
+begin
+   SetStr(FInitialExchange, aValue, 'InitialExchange');
+end;
+
+procedure TContestSettings.SetInitialExchangeCursorPos(const aValue: string);
+begin
+   SetStr(FInitialExchangeCursorPos, aValue, 'InitialExchangeCursorPos');
+end;
+
+procedure TContestSettings.SetMode(const aValue: string);
+begin
+   SetStr(FMode, aValue, 'Mode');
+end;
+
+procedure TContestSettings.SetMyContinent(const aValue: string);
+begin
+   SetStr(FMyContinent, aValue, 'MyContinent');
+end;
+
+procedure TContestSettings.SetQslMode(const aValue: string);
+begin
+   SetStr(FQslMode, aValue, 'QslMode');
+end;
+
+procedure TContestSettings.SetQsoPointMethod(const aValue: string);
+begin
+   SetStr(FQsoPointMethod, aValue, 'QsoPointMethod');
+end;
+
+procedure TContestSettings.SetSingleBandScore(const aValue: string);
+begin
+   SetStr(FSingleBandScore, aValue, 'SingleBandScore');
+end;
+
 procedure TContestSettings.SetDomesticMultiplier(const aValue: string);
 begin
    SetStr(FDomesticMultiplier, aValue, 'DomesticMultiplier');
@@ -4591,6 +4694,20 @@ begin
      enums carry at zero -- NoDomesticMults, NoDXMults, NoPrefixMults,
      NoZoneMults. Empty would not be in the allow-list, which a test says
      plainly: a setting with a vocabulary has to hold one of its own values. *)
+   (* EACH DEFAULT IS THE SPELLING OF THE VALUE ITS GLOBAL ALREADY CARRIED,
+     so a station with no settings file behaves exactly as before -- and so
+     that each holds one of its own allowed values, which a test requires and
+     an empty string would fail. *)
+   FBand                     := '160';          // BandType zero
+   FContestToken             := 'DUMMY CONTEST';
+   FExchangeReceived         := 'UNKNOWN';
+   FInitialExchange          := 'NONE';
+   FInitialExchangeCursorPos := 'AT END';
+   FMode                     := 'CW';
+   FMyContinent              := 'NONE';
+   FQslMode                  := 'NONE';
+   FQsoPointMethod           := 'NONE';
+   FSingleBandScore          := '160';
    FDomesticMultiplier := 'NONE';
    FDxMultiplier       := 'NONE';
    FPrefixMultiplier   := 'NONE';
@@ -5165,6 +5282,16 @@ begin
    Alias('DEBUG LOG LEVEL', 'Log.DebugLevel');
    Alias('POSSIBLE CALL MODE', 'Scp.PossibleCallMode');
    Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
+   Alias('BAND',                       'Contest.Band');
+   Alias('CONTEST',                    'Contest.ContestToken');
+   Alias('EXCHANGE RECEIVED',          'Contest.ExchangeReceived');
+   Alias('INITIAL EXCHANGE',           'Contest.InitialExchange');
+   Alias('INITIAL EXCHANGE CURSOR POS','Contest.InitialExchangeCursorPos');
+   Alias('MODE',                       'Contest.Mode');
+   Alias('MY CONTINENT',               'Contest.MyContinent');
+   Alias('QSL MODE',                   'Contest.QslMode');
+   Alias('QSO POINT METHOD',           'Contest.QsoPointMethod');
+   Alias('SINGLE BAND SCORE',          'Contest.SingleBandScore');
    Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
    Alias('DX MULTIPLIER',        'Contest.DxMultiplier');
    Alias('PREFIX MULTIPLIER',    'Contest.PrefixMultiplier');

@@ -1051,8 +1051,10 @@ procedure WriteScoreInformationToSummarySheet;
     Band: BandType;
     Mode: ModeType;
     TempMode: ModeType;
-    BString: PAnsiChar;
-    MString: PAnsiChar;
+    (* STRINGS: both hold a name from a spelling table that is a string array
+      now, and both are only ever written into report text. *)
+    BString: string;
+    MString: string;
     SumInteger: integer;
     m: RemainingMultiplierType;
     TotalLine: boolean;
@@ -1101,7 +1103,10 @@ procedure WriteScoreInformationToSummarySheet;
              TempMode  := Both;
              TotalLine := true;
              BString   := 'Total'; // 4.97.8
-             MString   := nil;
+             (* '' WHERE THIS WAS nil. MString is a string now; the total line
+               has no mode, and an empty string prints as nothing exactly as a
+               nil PChar did through %s. *)
+             MString   := '';
              end;
 
           SumInteger := QSOPointTotals[ Band, TempMode ];

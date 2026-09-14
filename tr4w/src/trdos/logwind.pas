@@ -444,9 +444,9 @@ const
 
 
 
-  IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of PAnsiChar = ('AT END', 'AT START');
+  IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of string = ('AT END', 'AT START');
 
-  InitialExchangeTypeStringArray        : array[InitialExchangeType] of PAnsiChar =
+  InitialExchangeTypeStringArray        : array[InitialExchangeType] of string =
     (
     'NONE',
     'NAME',

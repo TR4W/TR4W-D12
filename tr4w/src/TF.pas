@@ -683,12 +683,18 @@ var
 begin
   ContestString[Ord(ContestString[0]) + 1] := #0;
   for TempContest := Succ(DUMMYCONTEST) to High(ContestType) do
-    (* StrComp, the RTL's, rather than Windows.lstrcmpA. Both compare
-      NUL-terminated bytes and return 0 on equality; lstrcmpA additionally
-      applies the user's LOCALE, which is wrong here -- these are contest
-      identifiers, not display text, and a Turkish locale famously does not
-      fold 'I' the way the rest of this comparison assumes. *)
-    if StrComp(ContestTypeSA[TempContest], @ContestString[1]) = 0 then
+    (* A STRING COMPARISON, not StrComp over two pointers.
+
+      It was StrComp(table[i], @ContestString[1]) -- and before that
+      Windows.lstrcmpA, which additionally applied the user's LOCALE, wrong
+      here because these are contest identifiers rather than display text (a
+      Turkish locale famously does not fold 'I').
+
+      `=` on strings is exact and case-SENSITIVE, which is what StrComp was.
+      The @ContestString[1] goes with it: a ShortString is not NUL-terminated,
+      so that pointer was only ever safe because the tail happened to be
+      zeros. *)
+    if ContestTypeSA[TempContest] = string(ContestString) then
        begin
        Result := TempContest;
        Exit;

@@ -1751,6 +1751,18 @@ begin
 
     INFO, NOT DEBUG. A support log is normally gathered at info, and "was this
     a conversion run?" is the first question asked of one. *)
+  (* SUBSCRIBE BEFORE ANY SETTING IS READ.
+
+    The ckList commands that left CFGCA are tokens now, and the ordinal the
+    contest engine reads is assigned WHEN THE TOKEN IS SET -- which is exactly
+    when the row was applied. That has to be live for the settings file, the
+    ini and the contest .cfg, all of which are read below. CONTEST carries the
+    heaviest of them: its effect calls FoundContest, which chooses the
+    exchange, the multipliers and the scoring for the whole contest.
+
+    The repaint effects stay gated until InstallSettingsEffects far below. *)
+  InstallTokenEffects;
+
   ReportConfigurationSources;
 
   if not LoadSettingsForStartup(TR4WConfigFileName, Settings) then

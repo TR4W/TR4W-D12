@@ -248,7 +248,11 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # postunit and the Cabrillo dialog -- so the count rises while ten pointer
 # tables and one pointer-walking loop disappear, and falls again as those
 # units convert. Raised deliberately and with a reason.
-$NARROW_CEILING = 1362
+# 1362 -> 1365, 2026-09-14: nine more spelling tables became string arrays
+# with the ckList token batch. Same direction as the ten before them -- the
+# conversions move to whatever still holds an AnsiString and fall again as
+# those units convert.
+$NARROW_CEILING = 1365
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

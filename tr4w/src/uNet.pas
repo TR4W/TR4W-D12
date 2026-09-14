@@ -1300,9 +1300,13 @@ begin
         p := BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand];
         asm push p end;
 }
-        TF.Format(@TempBuffer, '%s%s', BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand], ModeStringArray[StatusArray[Index].ssCurrentMode]);
-
-        SetClientCell(i, 2, string(PAnsiChar(@TempBuffer)));
+        (* CONCATENATION, not TF.Format into a buffer and a cast back out.
+          Both tables are string arrays now, and this was two PChar arguments
+          to a wsprintfA shim whose result was read back through
+          PAnsiChar(@TempBuffer). *)
+        SetClientCell(i, 2,
+           BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand]
+           + ModeStringArray[StatusArray[Index].ssCurrentMode]);
 
         // D12: FreqToPChar returns native string; flows straight through tLVSetText
         // (this replaced an earlier PAnsiChar(WinAnsi(...)) LV_ITEMA hack).

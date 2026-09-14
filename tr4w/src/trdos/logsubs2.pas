@@ -2640,7 +2640,9 @@ var
     TempBand                              : BandType;
     TempMode                              : ModeType;
     m                                     : RemainingMultiplierType;
-    BandPchar                             : PAnsiChar;
+    (* A STRING, not a PAnsiChar: it holds a band name from a table that is a
+      string array now, and it is only ever concatenated into XML below. *)
+    BandPchar                             : string;
     nQSOs                                 : integer;
     nTotal                                : integer;
     sContestName                          : string;

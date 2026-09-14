@@ -469,22 +469,40 @@ const
       this table is POSITIONAL and a row reaches it as crAddress: pointer(N),
       so removing an entry would repoint every row above it. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @QSOPointMethodArray;               lpLength: Byte(High(QSOPointMethodType));     lpVar: @ActiveQSOPointMethod),
-    (lpArray: @ParameterOkayModeTypeStringArray;  lpLength: Byte(High(ParameterOkayModeType));  lpVar: @ParameterOkayMode; ),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
       Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- see the note on the other freed slots. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @ModeStringArray;                   lpLength: Byte(High(ModeType));               lpVar: @ActiveMode; ),
-    (lpArray: @IECursorPosTypeStringArray;        lpLength: Byte(High(InitialExchangeCursorPosType)); lpVar: @InitialExchangeCursorPos; ),
-    (lpArray: @InitialExchangeTypeStringArray;    lpLength: Byte(High(InitialExchangeType));    lpVar: @ActiveInitialExchange; ),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- the setting moved to uSettingsModel and took
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
     (lpArray: @FootSwitchModeTypeStringArray;     lpLength: Byte(High(FootSwitchModeType));     lpVar: @FootSwitchMode; ),
-{10}(lpArray: @ActiveExchangeArray;               lpLength: Byte(High(ExchangeType));           lpVar: @ActiveExchange; ),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+{10}(lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
       Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
@@ -519,13 +537,25 @@ const
       its spelling table with it. nil rather than a renumbering: this table
       is POSITIONAL and a row reaches it as crAddress: pointer(N). *)
 {20}(lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @ContinentTypeSA;                   lpLength: Byte(High(ContinentType));          lpVar: @MyContinent; ),
-    (lpArray: @ContestTypeSA;                     lpLength: Byte(High(ContestType));            lpVar: @Contest; ),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- a multiplier mode, now a token on
       Settings.Contest applied by uSettingsEffects. nil: POSITIONAL. *)
     (lpArray: nil; lpLength: 0; lpVar: nil),
-    (lpArray: @BandStringsArrayWithOutSpaces;     lpLength: Byte(High(BandType));               lpVar: @ActiveBand; ),
-    (lpArray: @BandStringsArrayWithOutSpaces;     lpLength: Byte(High(BandType));               lpVar: @SingleBand; ),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
+    (* SLOT FREED 2026-09-14 -- a token on Settings.Contest;
+      uSettingsEffects assigns the ordinal. nil, NOT removed:
+      this table is POSITIONAL. *)
+    (lpArray: nil; lpLength: 0; lpVar: nil),
     (* SLOT FREED 2026-09-13 -- the radio library owns this; the direct
       applier in uRadioConfigApply sets the field. nil rather than a
       renumbering: this table is POSITIONAL. *)
@@ -784,6 +814,13 @@ const
      here instead would have dragged sixty order-sensitive values and 149
      consumers into the settings model for no gain. *)
    - 4 {DOMESTIC / DX / PREFIX / ZONE MULTIPLIER}
+   (* TEN MORE ckList ROWS ON THE SAME PATTERN: the enum stays with the
+     subsystem that owns it, the setting is the token, uSettingsEffects
+     assigns the ordinal. MY CONTINENT is among them -- it was held back
+     because /EXPORT skips the JSON apply and a csJSON flip could have changed
+     an exported log, which a token with an effect cannot do: the same ordinal
+     arrives from the same table at the same point. *)
+   - 10 {the remaining ckList tokens}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -891,7 +928,6 @@ const
     {(*}
 
  (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOwned; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'BAND';                          crAddress: pointer(24);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
  (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
 // BAND MAP ENABLE retired 2026-08-22 (NY4I): "if the window is opened, it is
 // enabled".  It stored into the same boolean the band map window wrote from
@@ -911,7 +947,6 @@ const
  // option since it defaulted to FALSE."  csRem, not deleted, so an old config
  // naming it still loads without an error.
  (crCommand: 'CONNECTION COMMAND';            crAddress: @ConnectionCommand;              crMin:0;  crMax:255;     crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'CONTEST';                       crAddress: pointer(22);                     crMin:0;  crMax:0;       crS: csJSON; crA: 1; crC:0 ; crP:0; crJ: 2; crKind: ckList;  cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'COPY FILES';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOperation; crNetwork: 1),
 // (crCommand: 'CQ MENU';                       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
 // CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
@@ -921,7 +956,6 @@ const
  (crCommand: 'CW TONE';                       crAddress: @Config.CWTone;                         crMin:0;  crMax:MAXWORD; crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'DISPLAY REFRESH';               crAddress: @DisplayRefresh;                 crMin:1; crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1), // 4.94.2
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'EXCHANGE RECEIVED';             crAddress: pointer(10);                     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 
 
 
@@ -987,8 +1021,6 @@ const
     silently rather than reported as refused. *)
 // (crCommand: 'HOUR OFFSET';                   crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'ICOM COMMAND PAUSE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'INITIAL EXCHANGE';              crAddress: Pointer(7);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'INITIAL EXCHANGE CURSOR POS';   crAddress: pointer(6);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'INPUT CONFIG FILE';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
 // (crCommand: 'JST RESPONSE TIMEOUT';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
 // (crCommand: 'K1EA NETWORK ENABLE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -998,10 +1030,8 @@ const
     LatestConfigFile and always did; this row pointed at a GLOBAL COPY of it.
     A bridge, not storage -- the first of the 279 such rows to go. *)
   (* WITHDRAWN 2026-09-10: Settings.Mmtty.Engine. *)
- (crCommand: 'MODE';                          crAddress: pointer(5);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
 // (crCommand: 'MULTIPLIER ITEM WIDTH';         crAddress: @MultiplierItemWidth;            crMin:0;  crMax:255;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctByte; crNetwork: 1),
  (crCommand: 'MULT REPORT MINIMUM BANDS';     crAddress: pointer(7);                      crMin:2;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (* ORION PORT RETIRED 2026-09-10 (NY4I): "Drop Orion port. It covered by the
      general port as a type Orion in settings".
 
@@ -1020,13 +1050,10 @@ const
 
      crA is 0 now.  CheckCommand exits on csRem before it reaches the hook,
      so leaving the index would have pointed at code that could not run. *)
- (crCommand: 'QSL MODE';                      crAddress: pointer(2);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'QSO POINT METHOD';              crAddress: pointer(1);                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.Radio.TcpServerPort now. *)
  // Serial frame format 'dps' (data bits 7/8, parity N/O/E, stop bits 1/2), e.g.
  // 8N2.  Empty = use the radio's registered defaults (SerialParamsFor).  Parsed
  // at connect time by RadioObject.ResolveSerialFrameSettings.
- (crCommand: 'SINGLE BAND SCORE';             crAddress: pointer(25);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:1 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctBand; crNetwork: 1),
   (* WITHDRAWN 2026-09-10: it is Settings.SpotCollector.Enabled now.  csRem
     rather than deleted, so an old config naming it loads inert instead of
     stopping the program with "Invalid statement in config file". *)
@@ -3041,6 +3068,29 @@ initialization
      the unit that can SEE the vocabulary is the one that registers it. These
      four tables live in VC, logdupe and logwind, none of which the settings
      model imports. *)
+   (* THE TEN ckList TOKENS' VOCABULARIES, from the very tables their rows
+     matched against. Without these each setting would have NO allow-list --
+     which is not a quiet gap: Preferences renders a setting with no allowed
+     values as an EMPTY drop-down, and nothing refuses a bad value. That
+     failure is invisible to the build, the lints and the corpus, and it has
+     happened here before. *)
+   RegisterSettingAllowedValues('Contest.Band',
+                                BandStringsArrayWithOutSpaces);
+   RegisterSettingAllowedValues('Contest.SingleBandScore',
+                                BandStringsArrayWithOutSpaces);
+   RegisterSettingAllowedValues('Contest.ContestToken', ContestTypeSA);
+   RegisterSettingAllowedValues('Contest.ExchangeReceived',
+                                ActiveExchangeArray);
+   RegisterSettingAllowedValues('Contest.InitialExchange',
+                                InitialExchangeTypeStringArray);
+   RegisterSettingAllowedValues('Contest.InitialExchangeCursorPos',
+                                IECursorPosTypeStringArray);
+   RegisterSettingAllowedValues('Contest.Mode', ModeStringArray);
+   RegisterSettingAllowedValues('Contest.MyContinent', ContinentTypeSA);
+   RegisterSettingAllowedValues('Contest.QslMode',
+                                ParameterOkayModeTypeStringArray);
+   RegisterSettingAllowedValues('Contest.QsoPointMethod', QSOPointMethodArray);
+
    RegisterSettingAllowedValues('Contest.DomesticMultiplier',
                                 DomesticMultStringArray);
    RegisterSettingAllowedValues('Contest.DxMultiplier',

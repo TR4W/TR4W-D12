@@ -78,6 +78,20 @@ unit uSettingsEffects;
 
 interface
 
+(* SUBSCRIBE TO THE TOKEN SETTINGS, BEFORE ANY CONFIG IS READ.
+
+  The fourteen ckList commands that left CFGCA are stored as tokens, and the
+  ordinal the contest engine reads is assigned when the token is SET -- which
+  is exactly when the row was applied, and no other time.
+
+  IT CANNOT WAIT FOR InstallSettingsEffects, which is called AFTER every config
+  read so that a load does not raise hundreds of repaints. A token read from a
+  contest .cfg would then be stored and never applied: the corpus showed that
+  as "unhandled ActiveExchange 0 (contest \"\")" across all 24 sets.
+
+  The repaint arms stay quiet until InstallSettingsEffects flips the gate. *)
+procedure InstallTokenEffects;
+
 (* Subscribe to the settings model.  Called once, from the startup sequence in
   uProgramMain, AFTER the settings are loaded -- assigning it earlier would
   repaint for every value the load assigns, against windows that do not exist
@@ -97,6 +111,7 @@ uses
    LogDom,         // DomesticMultStringArray, ActiveDomesticMult
    uCTYDAT,        (* CTY.ctyCountryMode / ctyZoneMode -- which lists CTY.DAT
                      resolves against, set by the two multiplier hooks *)
+   PostUnit,       // Contest -- the active ContestType
    LogWind,        (* Settings.My.Call -- the callsign the derivation starts
                      from; DispalayLogGridLines; DisplayInsertMode *)
                    // DisplayInsertMode, the INS/OVR panel;
@@ -159,6 +174,16 @@ const
      form and does nothing when it gets nil. *)
    STATIONS_CALLSIGNS_MASK = 'Stations.CallsignsMask';
    CONTEST_NAME            = 'Contest.Name';
+   BAND                    = 'Contest.Band';
+   CONTEST_TOKEN           = 'Contest.ContestToken';
+   EXCHANGE_RECEIVED       = 'Contest.ExchangeReceived';
+   INITIAL_EXCHANGE        = 'Contest.InitialExchange';
+   INITIAL_EXCHANGE_CURSOR_POS = 'Contest.InitialExchangeCursorPos';
+   MODE                    = 'Contest.Mode';
+   MY_CONTINENT            = 'Contest.MyContinent';
+   QSL_MODE                = 'Contest.QslMode';
+   QSO_POINT_METHOD        = 'Contest.QsoPointMethod';
+   SINGLE_BAND_SCORE       = 'Contest.SingleBandScore';
    DOMESTIC_MULTIPLIER     = 'Contest.DomesticMultiplier';
    DX_MULTIPLIER           = 'Contest.DxMultiplier';
    PREFIX_MULTIPLIER       = 'Contest.PrefixMultiplier';
@@ -238,6 +263,12 @@ begin
 end;
 
 
+
+var
+   (* FALSE until InstallSettingsEffects runs, which is after every config read
+     and before the windows are built. The TOKEN arms do not look at it -- they
+     must run during the load, where the rows used to. *)
+   GEffectsLive: boolean = False;
 (* ONE TOKEN, ONE TABLE, ONE INDEX -- the ckList arm of CheckCommand, lifted.
 
   The four multiplier modes are separate enums with separate spelling tables,
@@ -284,13 +315,99 @@ end;
 
 procedure SettingChanged(const aPath: string);
 begin
-   if UnicodeSameText(aPath, MY_COUNTRY) or UnicodeSameText(aPath, MY_ZONE)
-      or UnicodeSameText(aPath, MY_CALL) then
+   (* THE TEN ckList TOKENS, each assigning the ordinal its row assigned.
+     ApplyMultiplierToken is named for the four it was written for; what it
+     does is the ckList arm -- find the token, assign the index -- and that is
+     the same rule for all fourteen. *)
+   if UnicodeSameText(aPath, BAND) then
       begin
-      (* The routine reads the WasSet flags itself, so a stated value is
-        looked up and an unstated one is derived. Passing the callsign is
-        what it needs to derive FROM. *)
-      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
+      ApplyMultiplierToken(Settings.Contest.Band, BandStringsArrayWithOutSpaces,
+                           @ActiveBand);
+      end;
+
+   if UnicodeSameText(aPath, CONTEST_TOKEN) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.ContestToken, ContestTypeSA,
+                           @Contest);
+      (* AND THE CONTEST IS SET UP. This was the row's crA: 1 hook, F_CONTEST,
+        and it is not a repaint: FoundContest chooses the exchange, the
+        multipliers, the domestic file and the scoring for the whole contest.
+        Dropping it left ActiveExchange at zero and the Cabrillo writer
+        emitting ERROR markers -- the corpus caught it within one run.
+
+        FoundContest TAKES THE SPELLING, not the ordinal, exactly as the hook
+        passed it the config line's own CMD. *)
+      FoundContest(ShortString(AnsiString(Settings.Contest.ContestToken)));
+
+      (* F_CONTEST called F_DX_MULTIPLIER straight after, because choosing a
+        contest chooses a DX multiplier mode and CTY.DAT has to be told which
+        country list that means. Same two lines as the DX arm below. *)
+      if ActiveDXMult in [ARRLDXCCWithNoUSAOrCanada,
+                          ARRLDXCCWithNoARRLSections,
+                          ARRLDXCCWithNoUSACanadaKH6OrKL7,
+                          ARRLDXCCWithNoIOrIS0,
+                          ARRLDXCCWithNoJT,
+                          ARRLDXCC] then
+         begin
+         CTY.ctyCountryMode := ARRLCountryMode;
+         end
+      else
+         begin
+         CTY.ctyCountryMode := CQCountryMode;
+         end;
+      end;
+
+   if UnicodeSameText(aPath, EXCHANGE_RECEIVED) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.ExchangeReceived, ActiveExchangeArray,
+                           @ActiveExchange);
+      end;
+
+   if UnicodeSameText(aPath, INITIAL_EXCHANGE) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.InitialExchange, InitialExchangeTypeStringArray,
+                           @ActiveInitialExchange);
+      end;
+
+   if UnicodeSameText(aPath, INITIAL_EXCHANGE_CURSOR_POS) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.InitialExchangeCursorPos, IECursorPosTypeStringArray,
+                           @InitialExchangeCursorPos);
+      end;
+
+   if UnicodeSameText(aPath, MODE) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.Mode, ModeStringArray,
+                           @ActiveMode);
+      end;
+
+   if UnicodeSameText(aPath, MY_CONTINENT) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.MyContinent, ContinentTypeSA,
+                           @MyContinent);
+      (* THE ROW'S crA: 22 HOOK, F_MY_CONTINENT. It raises the flag that says
+        the operator STATED a continent, which is what stops
+        RecalculateMyCountryContinentAndZone from deriving one from the
+        callsign and overwriting it. *)
+      MyContinentIsSet := True;
+      end;
+
+   if UnicodeSameText(aPath, QSL_MODE) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.QslMode, ParameterOkayModeTypeStringArray,
+                           @ParameterOkayMode);
+      end;
+
+   if UnicodeSameText(aPath, QSO_POINT_METHOD) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.QsoPointMethod, QSOPointMethodArray,
+                           @ActiveQSOPointMethod);
+      end;
+
+   if UnicodeSameText(aPath, SINGLE_BAND_SCORE) then
+      begin
+      ApplyMultiplierToken(Settings.Contest.SingleBandScore, BandStringsArrayWithOutSpaces,
+                           @SingleBand);
       end;
 
    (* A MULTIPLIER TOKEN BECOMES THE LIVE MODE.
@@ -359,6 +476,25 @@ begin
          CTY.ctyZoneMode := ITUZoneMode;
          end;
       end;
+
+   (* EVERYTHING BELOW REPAINTS, RECALCULATES OR TOUCHES A WINDOW, and none of
+     it can run during the config load: the windows do not exist yet and the
+     load assigns hundreds of values. The token arms above are the exception
+     and deliberately sit before this gate. *)
+   if not GEffectsLive then
+      begin
+      Exit;
+      end;
+
+   if UnicodeSameText(aPath, MY_COUNTRY) or UnicodeSameText(aPath, MY_ZONE)
+      or UnicodeSameText(aPath, MY_CALL) then
+      begin
+      (* The routine reads the WasSet flags itself, so a stated value is
+        looked up and an unstated one is derived. Passing the callsign is
+        what it needs to derive FROM. *)
+      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
+      end;
+
 
    if UnicodeSameText(aPath, CONTEST_NAME) then
       begin
@@ -499,9 +635,17 @@ begin
 end;
 
 
+procedure InstallTokenEffects;
+begin
+   (* The same handler; what changes is the gate. *)
+   Settings.OnChanged := @SettingChanged;
+end;
+
 procedure InstallSettingsEffects;
 begin
    Settings.OnChanged := @SettingChanged;
+   (* FROM HERE THE REPAINT ARMS RUN TOO. *)
+   GEffectsLive := True;
 end;
 
 end.

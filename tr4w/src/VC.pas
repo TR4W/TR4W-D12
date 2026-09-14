@@ -982,7 +982,7 @@ var
 const
   CabrilloExtantionSA                   : array[CabrilloExtantionType] of PAnsiChar = ('%s%s.CBR', '%s%s.LOG');
 
-  ContinentTypeSA                       : array[ContinentType] of PAnsiChar =
+  ContinentTypeSA                       : array[ContinentType] of string =
     ('NONE', 'NA', 'SA', 'EU', 'AF', 'AS', 'OC', 'AN');
 
 type
@@ -1497,7 +1497,7 @@ const
   CallstringLength                      = 13;
 
   ADIFModeString                        : array[ModeType] of PAnsiChar = ('CW', 'DIGITAL',  'SSB', 'BTH', 'NON', 'FM');
-  ModeStringArray                       : array[ModeType] of PAnsiChar = ('CW', 'DIGI',  'SSB', 'BTH', 'NON', 'FM');
+  ModeStringArray                       : array[ModeType] of string = ('CW', 'DIGI',  'SSB', 'BTH', 'NON', 'FM');
 
 
   ExtendedModeStringArray               : array[ExtendedModeType] of string =
@@ -1533,7 +1533,7 @@ const
     'NON'
     );
 
-  BandStringsArrayWithOutSpaces         : array[BandType] of PAnsiChar {string} =
+  BandStringsArrayWithOutSpaces         : array[BandType] of string {string} =
     (
     '160',
     '80',
@@ -3373,7 +3373,7 @@ const
     'NUMERIC ID'
     );
 
-  QSOPointMethodArray                   : array[QSOPointMethodType] of PAnsiChar =
+  QSOPointMethodArray                   : array[QSOPointMethodType] of string =
     (
     'NONE', //    NoQSOPointMethod, { Score = 0 }
     'ALL ASIAN', //    AllAsianQSOPointMethod,
@@ -3582,7 +3582,7 @@ type
     ); //WLI
 
 const
-  ActiveExchangeArray                   : array[ExchangeType] of PAnsiChar =
+  ActiveExchangeArray                   : array[ExchangeType] of string =
     (
      'UNKNOWN',
     'NONE',
@@ -3932,7 +3932,7 @@ QSOPartiesCount = 20;
 
 
   // Warning - Do not change names here without careful consideration. If you do, it will break old config files. Better to use the ADIFName or CABName fields if needed. In a perfect world, these would all be the ADIFNAME.
-    ContestTypeSA                       : array[ContestType] of PAnsiChar =
+    ContestTypeSA                       : array[ContestType] of string =
 
     (
       'DUMMY CONTEST',

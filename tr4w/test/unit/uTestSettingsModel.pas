@@ -353,7 +353,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(279, names.Count,
+         CheckEquals(289, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -413,14 +413,21 @@ begin
    BeginTest('a command this object does not own is refused');
    s := TR4WSettings.Create;
    try
-      (* THE EXAMPLE HAS TO BE A COMMAND THAT HAS NOT MIGRATED, so it
-        changes as the migration proceeds -- this was MY CALL until that
-        moved on 2026-09-12. MY CONTINENT is still a CFGCA row and is
-        deliberately staying there for now: it has 71 references in the
-        scoring code and the contest factory has to review it. *)
-      CheckFalse(s.OwnsCommand('MY CONTINENT'), 'a setting that has not migrated');
-      CheckFalse(s.TrySetByCommand('MY CONTINENT', 'NA'), 'setting it is refused');
-      CheckFalse(s.TryGetByCommand('MY CONTINENT', value), 'reading it is refused');
+      (* THE EXAMPLE IS A WITHDRAWN COMMAND, AND IT HAS TO BE.
+
+        It used to be a command that had not migrated yet -- MY CALL, then MY
+        CONTINENT -- so it had to be re-chosen every time the migration moved,
+        and MY CONTINENT went on 2026-09-14 with the rest of the ckList
+        tokens. CFGCA is being emptied on purpose, so "a command that has not
+        migrated" is a shrinking set with none left at the end.
+
+        A WITHDRAWN name is permanent: BACKCOPY ENABLE is in
+        RETIRED_COMMANDS, so CheckCommand accepts and ignores it while the
+        settings object rightly does not own it. That is the behaviour under
+        test -- the refusal -- and it no longer depends on migration state. *)
+      CheckFalse(s.OwnsCommand('BACKCOPY ENABLE'), 'a command the model does not own');
+      CheckFalse(s.TrySetByCommand('BACKCOPY ENABLE', 'TRUE'), 'setting it is refused');
+      CheckFalse(s.TryGetByCommand('BACKCOPY ENABLE', value), 'reading it is refused');
       CheckEquals('', value, 'and yields nothing to send');
 
       CheckFalse(s.OwnsCommand(''), 'an empty command name');
@@ -1239,7 +1246,9 @@ const
       + '"AUTO SEND CHARACTER COUNT",'
       + '"AUTO TIME INCREMENT",'
       + '"AUTO-CQ DELAY TIME",'
-      + '"BACKUP LOG FILE NAME","BACKUP LOG FREQUENCY",'
+      + '"BACKUP LOG FILE NAME",'
+      + '"BACKUP LOG FREQUENCY",'
+      + 'BAND,'
       + '"BAND MAP ALL BANDS",'
       + '"BAND MAP ALL MODES",'
       + '"BAND MAP CALL WINDOW ENABLE",'
@@ -1263,7 +1272,14 @@ const
       + '"CALL OK NOW MESSAGE",'
       + '"CALL OK NOW SSB MESSAGE",'
       + '"CALL WINDOW SHOW ALL SPOTS",'
-      + '"CALLSIGN UPDATE ENABLE",CATEGORY-ASSISTED,CATEGORY-BAND,CATEGORY-MODE,CATEGORY-OPERATOR,CATEGORY-OVERLAY,CATEGORY-POWER,CATEGORY-TRANSMITTER,'
+      + '"CALLSIGN UPDATE ENABLE",'
+      + 'CATEGORY-ASSISTED,'
+      + 'CATEGORY-BAND,'
+      + 'CATEGORY-MODE,'
+      + 'CATEGORY-OPERATOR,'
+      + 'CATEGORY-OVERLAY,'
+      + 'CATEGORY-POWER,'
+      + 'CATEGORY-TRANSMITTER,'
       + '"CHECK LOG FILE SIZE",'
       + '"COLUMN AUTOSIZE",'
       + '"COMPLETE CALLSIGN MASK",'
@@ -1271,7 +1287,10 @@ const
       + '"COMPUTER NAME",'
       + '"CONFIRM EDIT CHANGES",'
       + '"CONNECTION AT STARTUP",'
-      + '"CONTACTS PER PAGE","CONTEST NAME","CONTEST TITLE",'
+      + '"CONTACTS PER PAGE",'
+      + 'CONTEST,'
+      + '"CONTEST NAME",'
+      + '"CONTEST TITLE",'
       + '"COUNT DOMESTIC COUNTRIES",'
       + '"COUNTRY INFORMATION FILE",'
       + '"CQ CW EXCHANGE",'
@@ -1290,14 +1309,18 @@ const
       + '"DIGITAL MODE ENABLE",'
       + '"DISTANCE MODE",'
       + '"DIT DAH RATIO",'
-      + '"DOMESTIC FILENAME","DOMESTIC MULTIPLIER",'
+      + '"DOMESTIC FILENAME",'
+      + '"DOMESTIC MULTIPLIER",'
       + '"DUPE CHECK SOUND",'
       + '"DUPE SHEET AUTO RESET",'
       + '"DVK ENABLE",'
-      + '"DVK LOCALIZED MESSAGES ENABLE",' +
-      '"DVK PATH","DVK RECORDER","DX MULTIPLIER",'
+      + '"DVK LOCALIZED MESSAGES ENABLE",'
+      + '"DVK PATH",'
+      + '"DVK RECORDER",'
+      + '"DX MULTIPLIER",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXCHANGE MEMORY ENABLE",'
+      + '"EXCHANGE RECEIVED",'
       + '"EXTERNAL LOGGER",'
       + '"EXTERNAL LOGGER ADDRESS",'
       + '"EXTERNAL LOGGER ENABLED",'
@@ -1318,7 +1341,10 @@ const
       + '"IN BAND LOCKOUT",'
       + '"INCLUDE F-KEY NUMBER",'
       + '"INCREMENT TIME ENABLE",'
-      + '"INITIAL EXCHANGE FILENAME","INITIAL EXCHANGE OVERWRITE",'
+      + '"INITIAL EXCHANGE",'
+      + '"INITIAL EXCHANGE CURSOR POS",'
+      + '"INITIAL EXCHANGE FILENAME",'
+      + '"INITIAL EXCHANGE OVERWRITE",'
       + '"INSERT MODE",'
       + '"INTERCOM FILE ENABLE",'
       + '"KEYPAD CW MEMORIES",'
@@ -1338,7 +1364,10 @@ const
       + '"MINITOUR DURATION",'
       + '"MISSINGCALLSIGNS FILE ENABLE",'
       + '"MMTTY ENGINE",'
-      + '"MP3 PATH","MP3 PLAYER","MP3 RECORDER ENABLE",'
+      + 'MODE,'
+      + '"MP3 PATH",'
+      + '"MP3 PLAYER",'
+      + '"MP3 RECORDER ENABLE",'
       + '"MULT BY BAND",'
       + '"MULT BY MODE",'
       + '"MULT SHEET AUTO RESET",'
@@ -1347,6 +1376,7 @@ const
       + '"MULTIPLE MODES",'
       + '"MY CALL",'
       + '"MY CHECK",'
+      + '"MY CONTINENT",'
       + '"MY COUNTRY",'
       + '"MY FD CLASS",'
       + '"MY FOC NUMBER",'
@@ -1377,7 +1407,8 @@ const
       + '"POSSIBLE CALL MODE",'
       + '"POSSIBLE CALL RIGHT KEY",'
       + '"POSSIBLE CALLS",'
-      + '"PREFIX MULTIPLIER","PSTROTATOR IP ADDRESS",'
+      + '"PREFIX MULTIPLIER",'
+      + '"PSTROTATOR IP ADDRESS",'
       + '"PSTROTATOR UDP PORT",'
       + '"PTT ENABLE",'
       + '"PTT LOCKOUT",'
@@ -1385,6 +1416,7 @@ const
       + '"PTT VIA COMMANDS",'
       + '"QSL CW MESSAGE",'
       + '"QSL MESSAGE",'
+      + '"QSL MODE",'
       + '"QSL SSB MESSAGE",'
       + '"QSO BEFORE CW MESSAGE",'
       + '"QSO BEFORE MESSAGE",'
@@ -1392,6 +1424,7 @@ const
       + '"QSO BY BAND",'
       + '"QSO BY MODE",'
       + '"QSO NUMBER BY BAND",'
+      + '"QSO POINT METHOD",'
       + '"QSO POINTS DOMESTIC CW",'
       + '"QSO POINTS DOMESTIC PHONE",'
       + '"QSO POINTS DX CW",'
@@ -1422,7 +1455,8 @@ const
       + '"REPEAT S&P SSB EXCHANGE",'
       + '"REVERSE INITIAL EX",'
       + '"RFOBL MODE",'
-      + '"ROTATOR PORT","ROTATOR TYPE",'
+      + '"ROTATOR PORT",'
+      + '"ROTATOR TYPE",'
       + '"ROW COUNT",'
       + '"S&P CW EXCHANGE",'
       + '"S&P EXCHANGE",'
@@ -1449,6 +1483,7 @@ const
       + '"SHOW FREQUENCY IN LOG",'
       + '"SHOW GRIDLINES",'
       + '"SHOW TYPED CALLSIGN",'
+      + '"SINGLE BAND SCORE",'
       + '"SKIP ACTIVE BAND",'
       + '"SLASH MARK CHAR",'
       + '"SPACE BAR DUPE CHECK ENABLE",'
@@ -1456,7 +1491,6 @@ const
       + '"SPRINT QSY RULE",'
       + '"START SENDING NOW KEY",'
       + '"STATIONS CALLSIGNS MASK",'
-      + ''
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'
@@ -1468,7 +1502,6 @@ const
       + '"UNKNOWN COUNTRY FILE ENABLE",'
       + '"UNKNOWN COUNTRY FILE NAME",'
       + '"UPDATE RESTART FILE ENABLE",'
-      + ''
       + '"USE RECORDED SIGNS",'
       + '"USER INFO SHOWN",'
       + '"VHF BAND ENABLE",'
@@ -1482,7 +1515,9 @@ const
       + '"WSJT-X MULTICAST GROUP",'
       + '"WSJT-X RADIO CONTROL ENABLED",'
       + '"WSJT-X SEND HIGHLIGHTS",'
-      + '"YCCC SO2R ENABLE","ZONE MULTIPLIER"';
+      + '"YCCC SO2R ENABLE",'
+      + '"ZONE MULTIPLIER"';
+
 var
    s: TR4WSettings;
    names: TStringList;
