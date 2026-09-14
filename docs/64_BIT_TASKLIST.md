@@ -71,7 +71,7 @@ still exact.
 
 ### P0 — four pointer truncations, two units
 
-- [ ] **`uHamLibDirect`, 3 sites.** `PAnsiChar(Integer(rig) + PATHNAME_OFFSET)`
+- [x] **`uHamLibDirect`, 3 sites — DELETED, not widened.** `PAnsiChar(Integer(rig) + PATHNAME_OFFSET)`
   and `PInteger(Integer(rig) + TIMEOUT_OFFSET)` — writing into Hamlib's
   **private** `RIG` structure at hard-coded i386 offsets. Delete
   `RigSetPathname`, `RigGetPathname` and `RigSetTimeout`; `uRadioHamLibDirect`
@@ -80,7 +80,8 @@ still exact.
   `NativeInt`** — the layout can change with Hamlib's own version, packing or
   compiler, so a correct-width wrong-offset write is worse than a compile
   error.
-- [ ] **`tr4wserverUnit:1346`, 1 site.**
+- [x] **`tr4wserverUnit:1346`, 1 site — an indexed walk now,** with
+  `TestRecordArrayStrideIsOneRecord` pinning the stride on both architectures.
   `Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange)` narrows the
   record pointer to 32 bits on every step of the rescore walk. A typed
   `^ContestExchange` array with an index encodes the stride and the bounds;
