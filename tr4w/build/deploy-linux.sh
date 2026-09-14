@@ -29,13 +29,15 @@
 #     ssh linux-ci-build 'cd ~/projects/TR4W-D12 && \
 #         sh tr4w/build/build-unix.sh --app --server --package'
 #
-# IT DOES NOT TOUCH settings/ OR ANY LOG ON THE BENCH BOX.  The tarball is
-# unpacked into a VERSIONED directory and a `current` symlink is moved, so an
-# operator's tr4w.json, their contest .db files and tr4w.log all survive a
-# deploy and a rollback is one symlink.
+# IT DOES NOT TOUCH settings/ OR ANY LOG ON THE BENCH BOX.  The shipped files
+# are copied OVER ~/Desktop/TR4W rather than the directory being cleared, so
+# an operator's settings/tr4w.json, their contest .db files, tr4w.log and any
+# .cfg all survive a deploy.  Clearing it first would be one line shorter and
+# would throw away the configuration the bench box exists to exercise -- the
+# radio, the ports, the keyer -- once per test cycle.
 #
 # Usage:
-#     sh tr4w/build/deploy-linux.sh                 # bench box + NAS2
+#     sh tr4w/build/deploy-linux.sh                 # ~/Desktop/TR4W + NAS2
 #     sh tr4w/build/deploy-linux.sh --nas-only      # archive only
 #     sh tr4w/build/deploy-linux.sh --bench-only    # no NAS write
 #
@@ -43,7 +45,16 @@ set -u
 
 BUILD_HOST=linux-ci-build
 BENCH_HOST=192.168.1.182
-BENCH_ROOT='~/tr4w'
+
+# ~/Desktop/TR4W, UNCOMPRESSED AND IN ONE PLACE -- NY4I, 2026-09-14:
+# "it makes it easier to test".
+#
+# The first version of this script unpacked into ~/tr4w/releases/<version>/ and
+# moved a `current` symlink, which is the right shape for a SERVER and the
+# wrong one for a bench box: the person testing has to know the scheme, and
+# every path they type has a symlink in the middle of it. On a desktop the
+# thing you double-click should be where you can see it.
+BENCH_DIR='~/Desktop/TR4W'
 NAS_DIR='/w/TR4WInstalls/New/Linux'
 
 do_bench=1
@@ -112,31 +123,39 @@ if [ "$do_bench" = 1 ]; then
    scp -q -o BatchMode=yes "$work/$base" "$BENCH_HOST:/tmp/$base" \
       || die 'scp to bench box'
 
-   # VERSIONED DIRECTORY PLUS A SYMLINK.  Unpacking over the live directory
-   # would leave files from the previous build behind when one is renamed or
-   # removed, and there would be no way back.  This way `current` is the only
-   # thing that moves, rollback is one command, and the old build is still on
-   # disk to compare against.
+   # THE SHIPPED FILES ARE REPLACED; EVERYTHING THE OPERATOR MADE IS KEPT.
+   #
+   # The tarball is unpacked to a temp directory and copied OVER ~/Desktop/TR4W
+   # without deleting first, so a deploy overwrites tr4w, cty.dat, dom/ and the
+   # rest, and leaves settings/tr4w.json, the contest .db files, tr4w.log and
+   # any .cfg exactly where they were.
+   #
+   # `rm -rf ~/Desktop/TR4W` between deploys would be simpler and would throw
+   # away the configuration the bench box exists to exercise -- the radio, the
+   # ports, the keyer -- once per test cycle.
    ssh -o BatchMode=yes "$BENCH_HOST" "
       set -e
-      mkdir -p $BENCH_ROOT/releases
-      rm -rf $BENCH_ROOT/releases/$inner
-      tar xzf /tmp/$base -C $BENCH_ROOT/releases
+      tmp=\$(mktemp -d)
+      tar xzf /tmp/$base -C \"\$tmp\"
       rm -f /tmp/$base
-      chmod +x $BENCH_ROOT/releases/$inner/tr4w
-      [ -f $BENCH_ROOT/releases/$inner/server/tr4wserver ] && \
-         chmod +x $BENCH_ROOT/releases/$inner/server/tr4wserver
-      ln -sfn $BENCH_ROOT/releases/$inner $BENCH_ROOT/current
-      echo \"   unpacked -> \$(readlink -f $BENCH_ROOT/current)\"
+      mkdir -p $BENCH_DIR
+      cp -R \"\$tmp/$inner/.\" $BENCH_DIR/
+      rm -rf \"\$tmp\"
+      chmod +x $BENCH_DIR/tr4w
+      [ -f $BENCH_DIR/server/tr4wserver ] && chmod +x $BENCH_DIR/server/tr4wserver
+      echo \"   unpacked -> \$(cd $BENCH_DIR && pwd)\"
+      kept=\$(ls -d $BENCH_DIR/settings $BENCH_DIR/*.db 2>/dev/null | wc -l)
+      [ \"\$kept\" -gt 0 ] && echo \"   kept \$kept existing settings/log item(s)\"
+      true
    " || die 'unpack on the bench box failed'
 
    # PROVE THE BINARY IS THERE AND IS AN ELF.  A tarball can arrive intact and
    # carry the wrong thing; `file` costs nothing and answers it.
    ssh -o BatchMode=yes "$BENCH_HOST" \
-      "file -b $BENCH_ROOT/current/tr4w | cut -c1-60 | sed 's/^/   /'"
+      "file -b $BENCH_DIR/tr4w | cut -c1-60 | sed 's/^/   /'"
 
-   say "   run it:  ssh $BENCH_HOST  then  ~/tr4w/current/tr4w"
-   say '   (it needs a display -- run it ON the Mint desktop, not over ssh)'
+   say "   run it ON THE MINT DESKTOP:  cd ~/Desktop/TR4W && ./tr4w"
+   say '   (it needs a display -- launching it over ssh gives "cannot open display")'
 fi
 
 # --- 3. NAS2 ---------------------------------------------------------------
