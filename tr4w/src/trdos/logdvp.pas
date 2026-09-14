@@ -638,7 +638,9 @@ begin
   lpNumberOfBytesRead := FileRead(h, TempBuffer, SizeOf(TempBuffer));
   if lpNumberOfBytesRead > 0 then
      begin
-     if strpos(TempBuffer, Callsign) <> nil then
+     (* Pos on the buffer's TEXT. strpos stopped at the first NUL and so
+       does CharBufferText, so this searches exactly the same bytes. *)
+     if Pos(string(Callsign), CharBufferText(TempBuffer)) > 0 then
         begin
         goto CallsignFound;
         end;

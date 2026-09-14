@@ -143,7 +143,7 @@ begin
          // Save the server response for diagnostics
          if tOpenFileForWrite(h, GetScoresAnswerFileName) then
             begin
-            sWriteFile(h, GetScoresBuffer, uAnsiStr.StrLen(GetScoresBuffer));
+            sWriteFile(h, GetScoresBuffer, Length(CharBufferText(GetScoresBuffer)));
             FileClose(h);   { a FILE handle -- tOpenFileForWrite above }
             end;
          ShowGetScoresStatus(TC_UPLOADEDSUCCESSFULLY);
@@ -236,7 +236,7 @@ var
      WinAnsi was re-encoding text that is already the bytes to send. *)
    SetCharBuffer(GetScoresBuffer, string(sBody));
    logger.Debug('[MakePOSTRequestNew] %s', [GetScoresBuffer]);
-   Result := uAnsiStr.StrLen(GetScoresBuffer);
+   Result := Length(CharBufferText(GetScoresBuffer));
    end;
 
 // ---------------------------------------------------------------------------
@@ -264,7 +264,7 @@ var
    // the scores server takes the standard Cabrillo tags, and an ERMAK contest
    // posts the same club and overlay it always did.
    SetCharBuffer(buf, HeaderValue(CABRILLOSECTION, string(Key)));
-   n := uAnsiStr.StrLen(buf);
+   n := Length(CharBufferText(buf));
    if n = 0 then
       begin
       Result := ''

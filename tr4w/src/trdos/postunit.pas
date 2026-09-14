@@ -190,7 +190,11 @@ var
 
   tReportsFilename: FileNameType;
   tReportFileWrite: TFileHandle;   (* utils_file's -- see TFileHandle *)
-  PreviewFileNameAddress: PAnsiChar;
+  (* THE PATH THE PREVIEW WINDOW SHOWS -- a string, not a pointer into
+    tReportsFilename. It was a PAnsiChar aimed at that buffer, so the two were
+    the same bytes and whoever wrote the buffer next silently changed what the
+    preview would open. *)
+  PreviewFileNameAddress: string;
   PreviewFileIsCabrillo: boolean;
 
   CountryMultTotals: CountryMultiplierArrayPointer;
@@ -626,7 +630,7 @@ procedure CreateCabrilloFile;
      Exit;
      end;
   FileClose(tReportFileWrite);
-  PreviewFileNameAddress := tReportsFilename;
+  PreviewFileNameAddress := CharBufferText(tReportsFilename);
   PreviewFileIsCabrillo  := true;
   FilePreview;
   // Ask if user wants to upload the Cabrillo file to SCP
@@ -2150,11 +2154,10 @@ procedure ExportToEDIByBand( Band: BandType );
      Exit;
      end;
 
-  uAnsiStr.StrPLCopy( tReportsFilename,
-     UTF8Encode( string( PAnsiChar( @TR4W_LOG_PATH_NAME[ 0 ] ) )
+  SetCharBuffer( tReportsFilename,
+     ( CharBufferText( TR4W_LOG_PATH_NAME )
                  + Settings.My.Call + '_'
-                 + string( BandStringsArrayWithOutSpaces[ Band ] ) + '.EDI' ),
-     High( tReportsFilename ) );
+                 + string( BandStringsArrayWithOutSpaces[ Band ] ) + '.EDI' ) );
 
   DeleteSlashes( tReportsFilename );
   if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
@@ -2251,7 +2254,7 @@ procedure ExportToEDIByBand( Band: BandType );
   FileClose(tReportFileWrite);
   LogSourceClose;
 
-  PreviewFileNameAddress := tReportsFilename;
+  PreviewFileNameAddress := CharBufferText(tReportsFilename);
   FilePreview;
   end;
 
@@ -2562,7 +2565,7 @@ procedure ExportToADIF;
 
   FileClose(tReportFileWrite);
   LogSourceClose;
-  PreviewFileNameAddress := tReportsFilename;
+  PreviewFileNameAddress := CharBufferText(tReportsFilename);
   FilePreview;
   end;
 
@@ -2635,7 +2638,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
 
   FileClose(tReportFileWrite);
   LogSourceClose;
-  PreviewFileNameAddress := tReportsFilename;
+  PreviewFileNameAddress := CharBufferText(tReportsFilename);
   FilePreview;
   end;
 
@@ -2691,9 +2694,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         // change from removing the HWND.
         function GetCabrilloTagText( Tag: CabrilloTags ): integer;
           begin
-          uAnsiStr.StrPLCopy( @TempBuffer2, AnsiString( CabrilloTagText( Tag ) ),
-             SizeOf( TempBuffer2 ) - 1 );
-          Result := integer( uAnsiStr.StrLen( @TempBuffer2 ) );
+          SetCharBuffer( TempBuffer2, CabrilloTagText( Tag ) );
+          Result := Length( CharBufferText( TempBuffer2 ) );
           end;
 
       begin
@@ -3700,18 +3702,22 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       var
         full: AnsiString;
       begin
-      full := AnsiString(TR4W_LOG_PATH_NAME) + AnsiString(ShortFileName);
+      (* CharBufferText, not AnsiString(...): the cast of a fixed AnsiChar
+        array takes the PADDING too, so the path came back with whatever
+        followed the NUL on the end of it. *)
+      full := CharBufferText(TR4W_LOG_PATH_NAME) + string(ShortFileName);
       if Length(full) > High(ReportsFilename) then
          begin
          SetLength(full, High(ReportsFilename));
          end;
+      (* THE FillChar STAYS, and it is not tidiness: three callers still
+        read @ReportsFilename[1] as a PAnsiChar, so the bytes after the
+        text have to be NUL. A ShortString assignment sets the length byte
+        and the characters and leaves the rest alone -- zeroed first, the
+        byte past the end is the terminator those readers need. *)
       FillChar(ReportsFilename, SizeOf( ReportsFilename ), 0);
-      if Length(full) > 0 then
-         begin
-         Move(full[1], ReportsFilename[1], Length(full));
-         end;
-      ReportsFilename[ 0 ]   := AnsiChar( Length(full) );
-      PreviewFileNameAddress := @ReportsFilename[ 1 ];
+      ReportsFilename        := AnsiString(full);
+      PreviewFileNameAddress := full;
       end;
 
     procedure MakeNotesList;

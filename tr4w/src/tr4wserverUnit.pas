@@ -65,7 +65,7 @@ uses
   Dialogs,       // MessageDlg -- was MessageBoxW
   LCLType,       // MB_YESNO, IDYES, IDNO, IDOK -- was the Windows unit
   Controls,      // mrYes -- the modal results MessageDlg answers with
-  uAnsiStr,      // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
+  utils_text,    // SetCharBuffer -- a fixed AnsiChar field through its own bounds
   uAppPaths,     // LogFilePath -- where a written file goes, per platform
   uLogConfig,    // CreateTR4WLogLayout -- the same timestamps the client writes
   uServerForm;   // the readouts, by name instead of by control number
@@ -543,12 +543,10 @@ begin
          than 31 characters would have run off the end of clName. *)
        FillChar(ClientsSoocketsArray[i].clSocket, SizeOf(TClientEntry) - 4, 0);
        ClientsSoocketsArray[i].clSocket := soc;
-       uAnsiStr.StrPLCopy(@ClientsSoocketsArray[i].clIPAdr[0], AnsiString(IP),
-                          High(ClientsSoocketsArray[i].clIPAdr));
+       SetCharBuffer(ClientsSoocketsArray[i].clIPAdr, string(IP));
        if Name <> nil then
           begin
-          uAnsiStr.StrPLCopy(@ClientsSoocketsArray[i].clName[0], AnsiString(Name),
-                             High(ClientsSoocketsArray[i].clName));
+          SetCharBuffer(ClientsSoocketsArray[i].clName, string(Name));
           end;
        if Name = nil then
           begin

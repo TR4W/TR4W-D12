@@ -325,7 +325,7 @@ procedure CheckQuestionMark;
   Application.Run -- and TranslateAccelerator appears nowhere in live code. An
   LCL edit control receives its own clipboard keys, which is what made the
   function unnecessary rather than merely uncalled. *)
-procedure RunExplorer(Command: PAnsiChar);
+procedure RunExplorer(const Command: string);
 procedure OpenInDefaultTextEditor(const FileName: string);   // Issue #986
 { THE POSSIBLE-CALL LIST'S OWNER-DRAW, declared here because CreateMainWindow
   assigns it long before the drawing code appears further down.
@@ -5469,7 +5469,7 @@ begin
     menu_band_changes: BandChangeReport;
 
     menu_log_file_properties:
-      RunExplorer(@TR4W_LOG_PATH_NAME);
+      RunExplorer(CharBufferText(TR4W_LOG_PATH_NAME));
 
     menu_exit: ExitProgram(True);
 
@@ -10411,21 +10411,21 @@ end;
   src\Htmlhelp.pas went too: a LoadLibrary of hhctrl.ocx, the HH_* command
   constants, and an ANSI/wide entry-point pair. *)
 
-procedure RunExplorer(Command: PAnsiChar);
-var
-  TempPchar: PAnsiChar;
+procedure RunExplorer(const Command: string);
 begin
-
-  if strpos(Command, '.') <> nil then
+  (* A PATH, NOT A POINTER. This took a PAnsiChar and searched it with strpos
+    for the '.' that says "this names a FILE, so select it in the folder"
+    rather than "this names a folder, so open it". Pos on a string says the
+    same thing without a pointer, and the local PAnsiChar that held the two
+    command templates goes with it. *)
+  if Pos('.', Command) > 0 then
      begin
-     TempPchar := 'explorer /select, %s'
+     RunWindowsUtility(SysUtils.Format('explorer /select, %s', [Command]));
      end
   else
      begin
-     TempPchar := 'explorer %s';
+     RunWindowsUtility(SysUtils.Format('explorer %s', [Command]));
      end;
-
-  RunWindowsUtility(SysUtils.Format(string(TempPchar), [string(Command)]));
 end;
 
 const
@@ -10755,7 +10755,11 @@ begin
 
   if CreatedReport <> nil then
      begin
-     PreviewFileNameAddress := CreatedReport; //TR4W_CFG_FILENAME;
+     (* THE PLUGIN IS A REAL C BOUNDARY, so the conversion happens HERE.
+       CreatedReport comes back from Plugins/tr4wSortLog.dll as a PAnsiChar;
+       PreviewFileNameAddress is a string, so the pointer stops at the call
+       that produced it instead of being carried around the program. *)
+     PreviewFileNameAddress := string(CreatedReport);
      FilePreview;
      end;
 
