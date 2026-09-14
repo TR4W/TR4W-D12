@@ -1287,6 +1287,7 @@ var
   MapFin                                : Cardinal;
   MapBase                               : Pointer;
   RescoredRXData                        : ContestExchangePtr;
+  records                               : ContestExchangeArrayPtr;
   LogSize                               : Cardinal;
   QSOCounter                            : Cardinal;
   LogBuf                                : TBytes;
@@ -1318,33 +1319,46 @@ begin
   ServerLog.Position := 0;
   ServerLog.ReadBuffer(LogBuf[0], Length(LogBuf));
 
-  RescoredRXData := Pointer(PByte(@LogBuf[0]) + SizeOfTLogHeader);
+  (* AN INDEXED WALK, NOT POINTER ARITHMETIC -- 2026-09-14.
 
-  1:
+    The step used to be
 
-  if RescoredRXData^.ceRecordKind = rkQSO then
+        RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
+
+    which TRUNCATES THE POINTER TO 32 BITS on every record. On Win64 the first
+    record above this is derived correctly -- PByte(@LogBuf[0]) + header -- and
+    then the second one lands wherever the low 32 bits happen to point. The
+    64-bit plan names it as a P0 and asks for a typed array rather than a
+    NativeUInt cast, because an index encodes the STRIDE and the BOUNDS while a
+    wider cast only stops the truncation.
+
+    THE RECORD RULES BELOW ARE UNCHANGED. What went is the address arithmetic
+    and the `goto 1` that carried it: `records[i]` says what
+    `Pointer(Cardinal(p) + SizeOf)` was trying to say, and the compiler
+    computes the stride. *)
+  records := ContestExchangeArrayPtr(@LogBuf[SizeOfTLogHeader]);
+
+  for QSOCounter := 0 to LogSize - 1 do
      begin
-     if UpdAction = actSetClearDupesheetBit then
-        begin
-        RescoredRXData^.ceClearDupeSheet := True;
-        end;
+     RescoredRXData := @records^[QSOCounter];
 
-     if UpdAction = actClearMults then
+     if RescoredRXData^.ceRecordKind = rkQSO then
         begin
-        RescoredRXData^.ceClearMultSheet := True;
-        RescoredRXData^.DomesticMult := False;
-        RescoredRXData^.DXMult := False;
-        RescoredRXData^.PrefixMult := False;
-        RescoredRXData^.ZoneMult := False;
-        end;
+        if UpdAction = actSetClearDupesheetBit then
+           begin
+           RescoredRXData^.ceClearDupeSheet := True;
+           end;
 
-     end;
-  inc(QSOCounter);
-  if QSOCounter <> LogSize then
-     begin
-     // Issue #997: asm advance-by-one-record -> explicit pointer arithmetic.
-     RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
-     goto 1;
+        if UpdAction = actClearMults then
+           begin
+           RescoredRXData^.ceClearMultSheet := True;
+           RescoredRXData^.DomesticMult := False;
+           RescoredRXData^.DXMult := False;
+           RescoredRXData^.PrefixMult := False;
+           RescoredRXData^.ZoneMult := False;
+           end;
+
+        end;
      end;
 
   Result := True;

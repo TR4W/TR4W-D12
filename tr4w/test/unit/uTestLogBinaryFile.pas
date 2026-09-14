@@ -38,6 +38,7 @@ type
       procedure TestTheRecordIsTheSameSizeEverywhere;
       procedure TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
    public
+      procedure TestRecordArrayStrideIsOneRecord;
       procedure RunAllTests; override;
    end;
 
@@ -457,8 +458,53 @@ end;
   import runs, Windows is where it is tested, and
   TestTheRecordHasTheSameFIELD_OFFSETSEverywhere stays as the thing that says
   why if anyone tries to widen it again. *)
+(* THE STRIDE THE SERVER'S RESCORE WALKS BY, pinned at both ends.
+
+  tr4wserverUnit used to advance one record with
+
+      RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
+
+  which truncates the pointer to 32 bits, so on Win64 every record after the
+  first lands wherever the low half happens to point. It is an INDEXED walk
+  over ContestExchangeArrayPtr now, and this asserts the two things that walk
+  depends on: that indexing advances by exactly one record, and that the
+  address of element 0 is the base itself.
+
+  IT IS PLATFORM-NEUTRAL ON PURPOSE -- the arithmetic it guards is the thing
+  that differs between 32- and 64-bit, so the test must run on both and say
+  the same thing. That is also why it is OUTSIDE the {$IFNDEF WINDOWS} skip
+  below: it reads no file and has nothing to do with the D7 migration path.
+
+  MORE THAN ONE RECORD, which the 64-bit plan asked for specifically: a walk
+  that truncates is correct for element 0 and wrong from element 1, so a
+  single-record check would pass on a broken build. *)
+procedure TLogBinaryFileTests.TestRecordArrayStrideIsOneRecord;
+var
+   buf: TBytes;
+   view: ContestExchangeArrayPtr;
+   base: PByte;
+begin
+   BeginTest('indexing a ContestExchange array advances by exactly one record');
+
+   SetLength(buf, SizeOfContestExchange * 4);
+   view := ContestExchangeArrayPtr(@buf[0]);
+   base := @buf[0];
+
+   CheckTrue(PByte(@view^[0]) = base,
+             'element 0 is the base of the buffer');
+   CheckEquals(Int64(SizeOfContestExchange),
+               Int64(PByte(@view^[1]) - PByte(@view^[0])),
+               'element 1 is one record on from element 0');
+   CheckEquals(Int64(SizeOfContestExchange) * 3,
+               Int64(PByte(@view^[3]) - base),
+               'element 3 is three records on from the base');
+end;
+
 procedure TLogBinaryFileTests.RunAllTests;
 begin
+   (* BEFORE the Windows-only skip: this one is arithmetic, not a file. *)
+   TestRecordArrayStrideIsOneRecord;
+
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is
      indistinguishable from one that passed. *)

@@ -551,13 +551,10 @@ function GetHamLibVersion: string;
 
 // Direct structure access helper for setting pathname
 // This bypasses rig_set_conf which may not work for all backends
-procedure RigSetPathname(rig: PRIG; const pathname: string);
 
 // Read back pathname for verification
-function RigGetPathname(rig: PRIG): string;
 
 // Set timeout for network operations (in milliseconds)
-procedure RigSetTimeout(rig: PRIG; timeoutMs: Integer);
 
 implementation
 
@@ -1132,114 +1129,27 @@ begin
   end;
 end;
 
-procedure RigSetPathname(rig: PRIG; const pathname: string);
-(*
-  Directly sets the pathname in rig->state.rigport.pathname field.
+(* THE THREE PRIVATE-LAYOUT HELPERS ARE GONE -- 2026-09-14.
 
-  This is equivalent to the C code:
-    strncpy(rig->state.rigport.pathname, pathname, HAMLIB_FILPATHLEN - 1);
+  RigSetPathname, RigGetPathname and RigSetTimeout reached into Hamlib's
+  PRIVATE RIG structure at hard-coded i386 byte offsets:
 
-  Structure layout (32-bit):
-    struct rig:
-      struct rig_caps *caps;        // +0, 4 bytes (pointer)
-      struct rig_state state;       // +4
+      pathnamePtr := PAnsiChar(Integer(rig) + PATHNAME_OFFSET);
+      timeoutPtr  := PInteger(Integer(rig) + TIMEOUT_OFFSET);
 
-    struct rig_state:
-      hamlib_port_t rigport;        // +0 (first field)
+  TWO FAULTS IN ONE LINE. `Integer(rig)` truncates a 64-bit pointer, and the
+  OFFSET is a guess about a layout Hamlib does not publish -- it can move with
+  Hamlib's own version, its packing, its compiler or its architecture. Widening
+  the cast to NativeInt would have fixed the truncation and LEFT THE WRONG
+  ADDRESS, turning a compile failure into a memory bug, which is exactly what
+  the 64-bit plan warns against.
 
-    struct hamlib_port_t:
-      int fd;                       // +0, 4 bytes
-      void *handle;                 // +4, 4 bytes
-      int write_delay;              // +8, 4 bytes
-      int post_write_delay;         // +12, 4 bytes
-      struct timeout;               // +16, 8 bytes
-      int retry;                    // +24, 4 bytes
-      char pathname[512];           // +28, 512 bytes  <-- THIS IS WHAT WE SET
+  THERE WAS NEVER ANYTHING TO PORT: all three had ZERO callers.
+  uRadioHamLibDirect already configures pathname, serial speed, timeout AND
+  CI-V address through rig_set_conf / rig_token_lookup -- the public API, the
+  one rigctl uses -- at uRadioHamLibDirect:494-545. This was a dead parallel
+  path that only looked like the supported one. *)
 
-  So pathname is at offset: 4 (caps) + 28 (rigport fields) = 32 bytes from rig
-*)
-const
-  PATHNAME_OFFSET = 32;  // Offset of pathname field from start of RIG structure
-var
-  pathnamePtr: PAnsiChar;
-  sourceBytes: PAnsiChar;
-  pathnameA: AnsiString;   // ANSI copy: pathname is a wide string device path (ASCII)
-  bytesToCopy: Integer;
-  i: Integer;
-begin
-  if rig = nil then
-     begin
-     Exit;
-     end;
 
-  // Calculate pointer to pathname field
-  pathnamePtr := PAnsiChar(Integer(rig) + PATHNAME_OFFSET);
-
-  // Copy pathname string (similar to strncpy)
-  pathnameA := AnsiString(pathname);
-  sourceBytes := PAnsiChar(pathnameA);
-  bytesToCopy := Length(pathnameA);
-  if bytesToCopy > HAMLIB_FILPATHLEN - 1 then
-     begin
-     bytesToCopy := HAMLIB_FILPATHLEN - 1;
-     end;
-
-  // Copy bytes
-  for i := 0 to bytesToCopy - 1 do
-     begin
-     pathnamePtr[i] := sourceBytes[i];
-     end;
-
-  // Null terminate
-  pathnamePtr[bytesToCopy] := #0;
-end;
-
-function RigGetPathname(rig: PRIG): string;
-const
-  PATHNAME_OFFSET = 32;
-var
-  pathnamePtr: PAnsiChar;
-begin
-  Result := '';
-  if rig = nil then
-     begin
-     Exit;
-     end;
-
-  // Calculate pointer to pathname field
-  pathnamePtr := PAnsiChar(Integer(rig) + PATHNAME_OFFSET);
-
-  // Read null-terminated string
-  Result := string(pathnamePtr);
-end;
-
-procedure RigSetTimeout(rig: PRIG; timeoutMs: Integer);
-(*
-  Sets the timeout in rig->state.rigport.timeout field.
-
-  Based on TR4QT HamlibRadio.cpp:77
-    m_rig->state.rigport.timeout = 1000;  // 1000ms = 1 second
-
-  Structure layout shows timeout is before pathname.
-  Since pathname is at offset 32, and timeout is typically an int (4 bytes)
-  positioned before several other fields and pathname, the timeout offset
-  should be at offset 16 (after fd, handle, write_delay, post_write_delay).
-*)
-const
-  TIMEOUT_OFFSET = 16;  // Offset of timeout field from start of RIG structure
-var
-  timeoutPtr: PInteger;
-begin
-  if rig = nil then
-     begin
-     Exit;
-     end;
-
-  // Calculate pointer to timeout field
-  timeoutPtr := PInteger(Integer(rig) + TIMEOUT_OFFSET);
-
-  // Set timeout value (in milliseconds)
-  timeoutPtr^ := timeoutMs;
-end;
 
 end.

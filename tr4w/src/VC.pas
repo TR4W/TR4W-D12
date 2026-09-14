@@ -1946,6 +1946,21 @@ const
 type
   ContestExchangePtr = ^ContestExchange;
 
+  (* A RUN OF RECORDS, INDEXED RATHER THAN STEPPED.
+
+    The server's rescore walked its log buffer with
+    `Pointer(Cardinal(p) + SizeOfContestExchange)`, which TRUNCATES THE POINTER
+    TO 32 BITS on every record -- harmless on Win32, wrong from the second
+    record on in a Win64 build. This is what the 64-bit plan asks for instead:
+    an index encodes the STRIDE and the BOUNDS, and the compiler computes the
+    offset at whatever pointer width it is building for.
+
+    THE HIGH BOUND IS NOMINAL, as it is for every view type of this shape: the
+    caller knows the real count and the array is a WINDOW over a buffer it
+    already owns, not an allocation. *)
+  ContestExchangeArray = array[0..MaxInt div SizeOf(ContestExchange) - 1] of ContestExchange;
+  ContestExchangeArrayPtr = ^ContestExchangeArray;
+
 type
 
   ContestExchangev1_6 = record
