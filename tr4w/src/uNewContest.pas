@@ -564,16 +564,24 @@ begin
     read-only: the contest log could not be created and QSOs were not saved
     (2026-09-10).  On Windows ContestDir IS the binary's directory, so nothing
     changes there. *)
-  TF.Format(TR4W_CFG_FILENAME, '%s%s',
-            PAnsiChar(AnsiString(ContestDir)),
-            PAnsiChar(AnsiString(ContestLogFileName(frmNewContest.ContestName,
-                                                 Now,
-                                                 frmNewContest.MyCall))));
+  (* BOTH ARGUMENTS WERE PAnsiChar OF A TEMPORARY -- PAnsiChar(AnsiString(x))
+    takes the address of a value whose lifetime ends at the semicolon. Two of
+    them on one call. *)
+  SetCharBuffer(TR4W_CFG_FILENAME,
+                ContestDir + ContestLogFileName(frmNewContest.ContestName,
+                                                Now,
+                                                frmNewContest.MyCall));
 
   if FileExists(TR4W_CFG_FILENAME) then
      begin
-     TF.Format(SYSERRORBUFFER, PAnsiChar(LclText(TC_FOLDERALREADYEXISTSOVERWRITE)), TR4W_CFG_FILENAME);
-     if YesOrNo(string(PAnsiChar(@SYSERRORBUFFER[0]))) = IDno then Exit;
+     (* NO BUFFER AT ALL. The message was formatted into SYSERRORBUFFER and
+       read straight back out of it one line later -- a global round trip for
+       a value that never left this if-statement. *)
+     if YesOrNo(SysUtils.Format(TC_FOLDERALREADYEXISTSOVERWRITE,
+                                [CharBufferText(TR4W_CFG_FILENAME)])) = IDno then
+        begin
+        Exit;
+        end;
      end;
 
   { THE SETTINGS ARE APPLIED, NOT WRITTEN TO A FILE.

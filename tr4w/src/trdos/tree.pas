@@ -2259,7 +2259,7 @@ begin
   push eax
   end;
 }
-  TF.Format(GetYearStringBuffer, '%u', UTC.wYear);
+  SetCharBuffer(GetYearStringBuffer, IntToStr(UTC.wYear));
 
 //  wsprintf(GetYearStringBuffer, '%u');
 //  asm add esp,12  end;

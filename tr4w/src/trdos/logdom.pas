@@ -535,7 +535,12 @@ begin
   if Copy(FileString^, 1, length(incfile)) = incfile then
      begin
      TempString := Copy(FileString^, length(incfile) + 2, 200);
-     TF.Format(TempFileName, '%sDOM\%s', TR4W_PATH_NAME, @FileString^[length(incfile) + 2]);
+     (* THE TAIL IS ALREADY IN TempString, on the line above. The sprintf
+       re-read it from the ShortString's CHARACTERS -- @FileString^[n] -- and a
+       ShortString has no terminator, so that read ran on until it met a zero
+       byte belonging to something else. *)
+     SetCharBuffer(TempFileName,
+                   CharBufferText(TR4W_PATH_NAME) + 'DOM' + string(TempString));
      (* Windows spelling, resolved for this platform -- see fcontest. *)
      ResolveDataFileInPlace(TempFileName);
      DomQTHTable.ReadDomQTHFile(TempFileName, True);

@@ -215,19 +215,34 @@ var
   TempString                            : Str160;
   Time                                  : integer;
   Number                                : integer;
-  p                                     : PAnsiChar;
-  Format                                : PAnsiChar;
+  (* WAS PAnsiChar, POINTING INTO A ShortString'S CHARACTERS. See where it is
+    assigned: a ShortString carries its length in byte 0 and has NO
+    TERMINATOR, so anything that walked this pointer read past the callsign
+    until it met a zero byte belonging to something else. That is the defect
+    logedit records with a screenshot -- "Mult needs for N6TNYC", a callsign
+    that has never been on the air. *)
+  p                                     : string;
+  Format                                : string;
   TempQTCMinutes                        : boolean;
 const
-  FormatArray                           : array[boolean, boolean, boolean] of PAnsiChar =
+  FormatArray                           : array[boolean, boolean, boolean] of string =
 //QTCQRS,QTCExtraSpace,QTC MINUTES
 //false,true
   (
     (
-    (* %.4u / %.2u, not %04u / %02u. These feed TF.Format -- formerly
-      wsprintfA, which zero-padded -- and the result is SENT AS CW. The
-      RTL treats a leading 0 as width and pads with spaces, so QTC 7
-      would go out as '   7' instead of '0007'. *)
+    (* %.4u / %.2u, not %04u / %02u. The result is SENT AS CW, and the
+      difference is audible: a leading 0 is read as WIDTH and pads with
+      SPACES, so QTC 7 would go out as '   7' instead of '0007'.
+
+      THAT RULE SURVIVED THE MOVE OFF wsprintfA, and it was measured rather
+      than assumed before this table changed hands (2026-09-14):
+
+          SysUtils.Format('%.4u', [7])  ->  '0007'
+          SysUtils.Format('%04u',  [7])  ->  '   7'
+
+      FPC reads a PRECISION on an integer as a minimum digit count padded with
+      zeros, which is what wsprintfA did, so every string here carries over
+      unchanged. *)
     ('%.4u %s %u', '%.2u %s %u'),
     ('%.4u  %s  %u', '%.2u  %s  %u')
     )
@@ -252,7 +267,7 @@ begin
 }
 
   Time := QTCsToBeSendArray[QTC].qsTime;
-  p := @QTCsToBeSendArray[QTC].qsCall[1];
+  p := string(QTCsToBeSendArray[QTC].qsCall);
   Number := QTCsToBeSendArray[QTC].qsNumber;
 
   TempQTCMinutes := (LastSendedQTCHour = (Time div 100)) and Settings.Qtc.Minutes;
@@ -269,9 +284,14 @@ begin
      end;
 
   SetLength(TempString, 160);
-  // Issue #997: asm wsprintf-push -> TF.Format (QUALIFIED -- the local var
-  // `Format` shadows TF.Format). Runtime format `Format`; cdecl-reverse -> Time, p, Number.
-  TempString[0] := AnsiChar(TF.Format(@TempString[1], Format, Time, p, Number));
+  (* THE FORMAT STRING IS STILL CHOSEN AT RUN TIME from FormatArray; what
+    changed is that it is a `string` now and SysUtils.Format consumes it.
+    The local is still named `Format`, so the call stays qualified. *)
+  (* The last TF.Format caller in the tree. It wrote into the ShortString's
+    BODY through a PAnsiChar and set its LENGTH BYTE from the sprintf's return;
+    plain assignment does both, correctly. The format string is still chosen at
+    run time from FormatArray -- that part is unchanged. *)
+  TempString := SysUtils.Format(Format, [Time, p, Number]);
   SendStringAndStop(TempString);
 end;
 

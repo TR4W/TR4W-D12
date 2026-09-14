@@ -314,30 +314,37 @@ procedure GetDate(var Year, Month, Day, DayOfWeek: Word);
   Prefer SysUtils.Format in new code: it takes a string, takes its arguments
   as an array of const rather than by cdecl varargs, and cannot be handed the
   wrong argument type without the compiler noticing. }
-function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer; overload; cdecl; overload;
+(* THE C-sprintf FACADE IS GONE -- 2026-09-14.
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: PAnsiChar): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer; i2: integer): integer; overload; cdecl; overload;
+  Twenty-one `Format` overloads, each declared twice, every one of the shape
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; i: integer): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar): integer; overload; cdecl; overload;
+      function Format(Output: PAnsiChar; Format: PAnsiChar; ...): integer; cdecl;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; i3: integer): integer; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; p: PAnsiChar): integer; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer): integer; overload; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer): integer; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar): integer; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer): integer; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; i2: integer): integer; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; P2: PAnsiChar): integer; cdecl; overload;
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar; i2: integer): integer; cdecl; overload;
+  a hand-written wsprintfA whose callers wrote into a fixed buffer and read the
+  returned LENGTH back out. It was 176 of the tree's 578 live PChar mentions --
+  thirty percent of the whole Win64 string problem in one facade.
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7: PAnsiChar): integer; cdecl; overload;
+  WHAT REPLACED IT, by call shape:
+
+    building a file name     SetCharBuffer(buf, <string expression>)
+    filling a ShortString    plain assignment; the compiler writes the length
+    a message for a dialog   SysUtils.Format, with no buffer at all
+
+  AND IT TOOK THREE LATENT BUGS WITH IT. PAnsiChar(AnsiString(x)) and
+  PAnsiChar(LclText(x)) take the address of a TEMPORARY -- two of them on one
+  line in uNewContest, two more in logwind. A pointer into a ShortString's
+  characters (@x[1]) has no terminator, so a printf-alike reads past the value
+  until it meets someone else's zero byte; that is the "Mult needs for N6TNYC"
+  screenshot in logedit and it was live in uQTCS's QTC sender too.
+
+  THE ZERO-PADDING RULE SURVIVED, measured rather than assumed: FPC reads a
+  PRECISION on an integer as a minimum digit count padded with ZEROS, which is
+  what wsprintfA did, so '%.4u' still sends 0007 as CW. '%04u' would have sent
+  '   7' -- see the note on FormatArray in uQTCS. *)
+
+
+
+
 //function pos(Substr: string; s: string): integer;
 const
   shell32                               = 'shell32.dll';
@@ -543,7 +550,9 @@ end;
 
 function inttopchar(i: integer): PAnsiChar;
 begin
-  Format(IntToPCharBuffer, '%d', i);
+  (* STILL RETURNS A PAnsiChar into a shared global buffer, which is the next
+    slice -- this one only stops it going through the sprintf facade. *)
+  SetCharBuffer(IntToPCharBuffer, IntToStr(i));
   Result := IntToPCharBuffer;
 end;
 
@@ -880,11 +889,13 @@ function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 begin
 { $ I F LANG <> 'E1212NG'}
 
-  (* %.2d, not %02d: this goes through TF.Format, which used to be
-    wsprintfA and zero-padded. The RTL reads a leading 0 as part of the
-    WIDTH and pads with spaces, so a single-digit day would render as
-    ' 7-' rather than '07-'. *)
-  Format(GetDateFormatBuffer, '%.2d-%.2d-%.2d', dt.qtDay, DT.qtMonth, DT.qtYear);
+  (* %.2d, not %02d, AND NOW IT IS THE RTL DOING IT. The precision is a
+    minimum digit count padded with ZEROS -- measured, not assumed, when the
+    facade went (2026-09-14) -- so a single-digit day still renders '07-'.
+    '%02d' would read the 0 as part of the WIDTH and give ' 7-'. *)
+  SetCharBuffer(GetDateFormatBuffer,
+                SysUtils.Format('%.2d-%.2d-%.2d',
+                                [dt.qtDay, DT.qtMonth, DT.qtYear]));
 {
   St.wYear := 2000 + DT.qtYear;
   St.wMonth := dt.qtMonth;
@@ -1419,105 +1430,25 @@ end;
   difference that mattered (%02d) and why the callers were respelled instead
   of translated at run time. *)
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(c)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(s1), u1, u2, u3, u4, u5, u6, AnsiString(s2), AnsiString(s3)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), AnsiString(p4)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), AnsiString(p4), AnsiString(p5)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), i]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer; i2: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), AnsiString(p3), i, i2]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; i: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2), i]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), AnsiString(P2)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; i3: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [i, i2, i3]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; p: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [i, i2, AnsiString(p)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [i]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [i, i2]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [i, AnsiString(p)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), i]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; i2: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), i, i2]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; P2: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(p), i, AnsiString(P2)]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar; i2: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [i, AnsiString(p), i2]);
-end;
 
-function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7: PAnsiChar): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(Format), [AnsiString(P1), AnsiString(P2), AnsiString(p3), AnsiString(p4), AnsiString(p5), AnsiString(p6), AnsiString(p7)]);
-end;
 
 begin
   logger := TLogLogger.GetLogger('TR4WDebugLog.TF');   // own logger (was MainUnit.logger)

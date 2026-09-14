@@ -1738,7 +1738,11 @@ end;
 function QuickEditResponse(Prompt: string; MaxInputLength: Byte): ShortString;
  // Window                                : Byte;
 begin
-  TF.Format(IQPrompt, PAnsiChar(LclText(TC_ENTER)), PAnsiChar(LclText(Prompt)));
+  (* AND TWO DANGLING-POINTER CASTS GO WITH IT. PAnsiChar(LclText(...)) takes
+    the address of a FUNCTION-RESULT TEMPORARY -- the trap recorded in
+    CLAUDE.md and in the agent memory. It was doing it TWICE on this line, once
+    for the format string and once for the argument. *)
+  SetCharBuffer(IQPrompt, SysUtils.Format(TC_ENTER, [Prompt]));
   IQMaxInputLength := MaxInputLength;
   (* NOTHING READS A HANDLE HERE ANY MORE. `h := tr4whandle` stood here as the
     parent for the DialogBox on the line below it, and that line has been
@@ -3915,7 +3919,9 @@ begin
   IntegerTime := UTC.wMinute mod Settings.Contest.MinitourDuration;
   SetProgressPosition(mpbTourDuration, IntegerTime);
 
-  TF.Format(TempBuffer2, PAnsiChar(LclText(TC_NEWTOUR)), IntegerTime, Settings.Contest.MinitourDuration);
+  SetCharBuffer(TempBuffer2,
+                SysUtils.Format(TC_NEWTOUR,
+                                [IntegerTime, Settings.Contest.MinitourDuration]));
 
 //  Windows.SetDlgItemTextA(ReminderDlgHandle, 102, TempBuffer2);
   SetTourDurationText(TempBuffer2);
