@@ -4,6 +4,60 @@
 `SERIAL n` has to go: *"we need to move away from the OS name such as serial N"*,
 then *"work on the elimination of the cfg array"*.
 
+## IT IS DONE -- 2026-09-14. THE ARRAY IS GONE.
+
+`CFGCA` held **415 rows** when this document was written and holds none. Deleted
+with it: `CFGRecord`, `ArrayRecord`, `ListParamRecord`, `CommandsArraySize`, the
+`Changed` parallel array, and all four positional side tables --
+`ArrayRecordArray` (16), `ListParamArray` (54), `AdditionalProcsArray` (25) and
+`CommandsProcArray` (13).
+
+**Measure it rather than believing this line:**
+
+```bash
+grep -c "crCommand:" tr4w/src/uCFG.pas          # 0
+```
+
+```powershell
+.	r4wuild\Lint-ConfigArrays.ps1              # every ceiling is 0, and 0 is now the PASS
+```
+
+**THE LINT IS INVERTED, NOT RETIRED.** It used to ask "has a number risen", which
+needed a floor as well -- a count of zero from a broken parser looks exactly like
+a count of zero from finished work. Zero is the answer now, so **any** occurrence
+fails, it scans the whole tree rather than `uCFG` alone, and it still proves the
+parse before believing a zero. Verified with a planted row: it reports `CAME
+BACK`.
+
+**WHERE EVERY FIELD WENT**, which is the part worth keeping:
+
+| the row's field | where it went |
+|---|---|
+| `crCommand` | derived from the property path |
+| `crAddress`, `crType` | the property itself |
+| `crMin` / `crMax` | a **subrange type**, read back out of RTTI |
+| `crP` (redraw index) | the property's **setter** |
+| `crA` (additional proc) | an effect in `uSettingsEffects`, which runs however the value was set |
+| `crJ` | a parameter on `RegisterModelSetting`, or `TSettingBase.ReadOnly` |
+| `crNetwork` | `uCFG.CommandIsSharedWithPeers` -- a statement about the multi-op protocol, not about a setting |
+| `crS` | nothing. It was a migratory status |
+| a `ckList` spelling table | the **subsystem** registers its own vocabulary |
+| a `ckArray` allow-list | a subrange, or `RegisterSettingAllowedValues` |
+
+**FOUR COMMANDS WERE NEVER SETTINGS** and are a named dispatch now,
+`uCFG.TryApplyCommandAction`: ADD DOMESTIC COUNTRY, CLEAR DUPE SHEET, BAND MAP
+CUTOFF FREQUENCY and FREQUENCY MEMORY. Three append to a list and one is a bare
+instruction, so each row was a router to its hook with a `crAddress` pointing at
+scratch nobody read back.
+
+**WHAT THE REST OF THIS DOCUMENT IS FOR: the reasoning, not the status.** Read it
+to understand why the array was shaped as it was and what each measurement
+uncovered -- several of the defects it names were found by doing this work and
+are fixed. Do not read any COUNT below this line as current; all of them are
+zero.
+
+---
+
 This document is the **map and the running status**. It replaces nothing: read
 [`CFG_MIGRATION_PLAN.md`](CFG_MIGRATION_PLAN.md) for the per-unit detail of the
 ini-to-JSON move and [`CFG_COMMAND_TABLE.md`](CFG_COMMAND_TABLE.md) for the radio

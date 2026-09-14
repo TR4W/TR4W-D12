@@ -10,7 +10,7 @@ ORDER and the exit criteria.** It does not restate the schema.
 
 ## Where this stands, 2026-09-08
 
-**PHASES A, B, C AND D1 ARE COMPLETE, AND E IS THROUGH E2.** The binary log is
+**PHASES A, B, C AND D1 ARE COMPLETE, AND E IS THROUGH E3.** The binary log is
 **IMPORT-ONLY**. The code says so at the one site that matters -- `tAddQSOToLog`
 (`src/trdos/logsubs2.pas`): *"THE QSO GOES TO THE DATABASE, AND NOWHERE ELSE --
 step B5. The .TRW write that stood here is gone."* `uLogShadow` no longer
@@ -31,9 +31,37 @@ list item. `uLogEdit.pas` is gone.
 **E1 and E2 ARE DONE.** `TLogRepository.LoadContestConfig` is read at log open
 by `uLogStore.LogStoreApplyContestConfig`.
 
-**NEXT: E3** -- the `.cfg` becomes import-only. Its gate already exists as
-`tr4w/test/corpus/test-cfg-not-needed.sh`. **T1 (`sqlTrace`) is designed and
-UNBUILT** -- there is no `sqlite3_trace_v2` anywhere in the tree.
+**E3 IS DONE -- 2026-09-14. THE `.cfg` IS NO LONGER NECESSARY, 13 OF 13.**
+`tr4w/test/corpus/test-cfg-not-needed.sh` exports every corpus log twice, once
+normally and once with the `.cfg` EMPTIED to zero bytes, and requires identical
+output. It stood at 11 of 13; the two that failed were NOT missing settings --
+every command in every `.cfg` was already captured and applied. Both were about
+WHEN and about WHO:
+
+* **The derivation latched its own answer as the operator's.** `My.Zone` and
+  `My.Country` carry `ZoneWasSet` / `CountryWasSet` -- *did the operator state
+  this, or is it ours to derive from the callsign* -- and
+  `RecalculateMyCountryContinentAndZoneNew` wrote its derived value back through
+  the property setter, which cannot tell who is assigning. Run it once before the
+  callsign has arrived (which is exactly what a log without a `.cfg` does, since
+  MY CALL now comes from the LOG) and the wrong answer becomes a stated answer
+  permanently. `TMySettings.DeriveZone` / `DeriveCountry` assign without the
+  claim, and `LogStoreApplyContestConfig` recomputes once the callsign is
+  settled.
+* **A log stamped with the wrong contest, for ever.** `contest_type` is derived
+  at IMPORT from the first record's `ceContest` ORDINAL, and a `.TRW` written
+  under an older `ContestType` layout maps it to a different contest.
+  `uLogStore` now corrects the stamp when a contest `.cfg` disagrees -- which is
+  what read-once-and-convert means.
+
+**ONE DIVERGENCE AWAITS NY4I'S RULING**, recorded in
+`test/corpus/known-divergences.txt` with the measurement: correcting that stamp
+changes `winter_fd`'s ADIF, and the D7 reference contradicts ITSELF -- its own
+`.cbr` says `WFD` and its `.adi` says `ALRS-UA1DZ-CUP`.
+
+**NEXT: E4 is deliberately NOT a step** -- interpretation stays with
+`fcontest.pas`. **T1 (`sqlTrace`) is designed and UNBUILT** -- there is no
+`sqlite3_trace_v2` anywhere in the tree.
 
 **DO NOT QUOTE A COUNT FROM THIS FILE. MEASURE IT.**
 `tr4w/build/Build-Tests.ps1 -Run` for the unit tests,
@@ -596,7 +624,7 @@ out of a log that has a model rather than being a project of their own.
 |---|---|
 | **E1** | **DONE.** Write `config` + `message` from the current `.cfg` at log creation |
 | **E2** | **DONE.** Read them at log open -- `uLogStore.LogStoreApplyContestConfig` |
-| **E3** | **NEXT.** `.cfg` becomes **import only** -- the stated goal: *"when done, the .cfg file should not be necessary"* |
+| **E3** | **DONE** 2026-09-14. `.cfg` becomes **import only** -- the stated goal: *"when done, the .cfg file should not be necessary"* |
 | **E4** | **STOP THERE.** Interpretation stays with `fcontest.pas` |
 
 E4 is the whole point of drawing the line here. Storing the contest definition is

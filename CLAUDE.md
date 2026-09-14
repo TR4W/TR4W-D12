@@ -820,8 +820,12 @@ change rather than a tidy-up.
 
 **MEASURE IT. Neither command takes a minute:**
 
+**AND THE ANSWER IS NOW ALWAYS THE SETTINGS OBJECT. `CFGCA` IS GONE --
+2026-09-14**, along with `CFGRecord`, `CommandsArraySize` and all four
+positional side tables. It held 415 rows when the elimination started.
+
 ```bash
-grep -c "crCommand:" tr4w/src/uCFG.pas          # rows still in the array
+grep -c "crCommand:" tr4w/src/uCFG.pas          # 0, and Lint-ConfigArrays keeps it there
 ```
 
 ```powershell
@@ -869,28 +873,37 @@ the repaint the table would have done. Two spellings of one rule, free to
 disagree. A setter cannot point at the wrong handler, and runs however the
 value was set.
 
-**A ROW CAN NOW BE DELETED RATHER THAN HOLLOWED OUT.** `CheckCommand` resolves
-names the settings object owns. That is **not a fallback** -- a migrated
-setting and an unmigrated one are disjoint sets, and each resolves in exactly
-one place. Its scope is the one-time import.
+**`CheckCommand` RESOLVES NAMES THE SETTINGS OBJECT OWNS, AND THAT IS THE ONLY
+WAY A SETTING IS RESOLVED.** It used to be one of two, and that was the whole
+shape of the migration: a migrated name and an unmigrated one were disjoint
+sets, each resolving in exactly one place. There is one place now. What remains
+beside it in `CheckCommand` is the pattern families (`COLUMN WIDTH <name>`, the
+window colours), `TryApplyCommandAction` for the four commands that DO something
+rather than set something, and two lists that accept-and-ignore -- a withdrawn
+name (`RETIRED_COMMANDS`) and a name a store owns (`OWNED_BY_A_STORE`).
 
-**Preferences follows through `uSettingsModelBinding`**, not `uSettingsLegacy`:
-the legacy classes take four of their own attributes out of the row's
-`crJ`/`crP`/`crA`/`crNetwork`, so they cannot register a setting whose row is
-gone. The split is deliberate -- the day the last row leaves, `uSettingsLegacy`
-is deleted whole rather than unpicked.
+**`RegisterLegacySetting` IS GONE WITH THE LAST ROW**, and the split above is
+why that was a deletion rather than an unpicking: it took four of its own
+attributes out of the row (`crJ`/`crP`/`crA`/`crNetwork`), so it could never
+have registered a migrated setting. Preferences goes through
+`uSettingsModelBinding`. `uSettingsLegacy` still exists and is **not legacy**:
+`TStoredSetting` writes `settings/tr4w.json` through the radio configuration
+store, which is where the radio, keyer, cluster and profile libraries live.
 
-**`Lint-SettingsMigration.ps1`** still gates the build for the settings that
-have NOT moved yet, checking `RegisterStoredSetting` and `MIGRATED_COMMANDS`
-agree.
+**`Lint-ConfigArrays.ps1` IS INVERTED, NOT RETIRED.** Every ceiling is 0 and
+zero is the pass; **any** occurrence fails, anywhere in the tree. The shape it
+forbids is a const table holding the ADDRESS of a global so something can write
+through it.
 
 **The contest `.cfg` is deliberately exempt**: it is going to an SQLite3 contest file, not to JSON
 (NY4I, 2026-08-21). `tr4wserver.ini` belongs to a different program and is out of scope.
 
-`CommandsArray` *is* the ini parser, so every key is an editable "command" — there is no read-only
-attribute, no cross-key invariant, and no value validation. Park config design defects against the
-JSON move rather than patching piecemeal. The full state, the per-unit table and the rule for
-moving a setting are in [`docs/CFG_MIGRATION_PLAN.md`](docs/CFG_MIGRATION_PLAN.md).
+~~`CommandsArray` *is* the ini parser, so every key is an editable "command"~~ — **that
+described the array, and the array is gone.** A setting is a published property: its bounds are its
+type, its side effect is its setter, and whether it is read-only is stated at registration. The
+reasoning behind the move, and where each of the row's twenty fields went, is in
+[`docs/CFG_ARRAY_ELIMINATION.md`](docs/CFG_ARRAY_ELIMINATION.md); the per-unit ini-to-JSON detail is
+in [`docs/CFG_MIGRATION_PLAN.md`](docs/CFG_MIGRATION_PLAN.md).
 
 ### 4. Contest flow
 
