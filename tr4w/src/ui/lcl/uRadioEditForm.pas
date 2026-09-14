@@ -269,6 +269,7 @@ uses
    Generics.Defaults,
    Dialogs,
    uLCLFormHelpers,
+   uPortAddress,        // DeviceNameFromStoredPort -- both port spellings
    uLCLTranslate,
    uRadioConfigApply,
    uRadioRegistry,
@@ -586,6 +587,56 @@ begin
    end;
 end;
 
+(* SELECT THE PORT THIS RADIO IS ACTUALLY CONFIGURED FOR, whatever spelling
+  it is stored in and whether or not the port is plugged in right now.
+
+  TWO WAYS THE PLAIN SelectByTag LOST A PORT, and NY4I hit both on 2026-09-14
+  with a station whose radios predate the port-naming change:
+
+  1. AN OLD SPELLING. The store held 'SERIAL 15'; the combo's tags are OS
+     names ('COM15'), so nothing matched. DeviceNameFromStoredPort is the
+     translation that already exists for exactly this -- uRadioConfigApply
+     uses it to OPEN the port -- so the editor was the one place that did not
+     know both spellings.
+
+  2. A PORT THAT IS NOT PRESENT. A USB adapter unplugged at that moment, or a
+     config carried from another machine. COM18 is configured, COM18 is not
+     enumerated, nothing matches.
+
+  AND THE FALLBACK MADE EITHER ONE DESTRUCTIVE. SelectByTag drops to
+  ItemIndex := 0 when no tag matches, and item 0 of a port combo is NONE --
+  so the dialog came up showing no port, and pressing OK wrote that back.
+  MERELY OPENING THE EDITOR CLEARED THE PORT. The operator's report was "I had
+  to re-select the serial port", which is the polite version: the value was
+  gone whether they noticed or not, and for the unplugged case it would have
+  happened to a perfectly good configuration.
+
+  SO AN UNMATCHED PORT IS ADDED TO THE LIST AND SELECTED, labelled so it is
+  obvious it is not currently there. The operator sees what the radio is set
+  to, can leave it alone, and OK writes back the same value. That is the same
+  principle as the greyed unsupported ports FillSerialPortCombo already adds:
+  show it, mark it, do not silently drop it. *)
+procedure SelectStoredPort(const aCombo: TComboBox; const aStored: string);
+var
+   wanted: string;
+begin
+   (* Both spellings, one answer. '' and 'NONE' come back as '', which is a
+     real selection rather than a failure to match. *)
+   wanted := DeviceNameFromStoredPort(aStored);
+   if wanted = '' then
+      begin
+      SelectByTag(aCombo, PORT_NONE);
+      Exit;
+      end;
+
+   if not HasTag(aCombo, wanted) then
+      begin
+      AddComboItem(aCombo, wanted + '  ' + TC_PREFS_PORT_NOT_PRESENT, wanted);
+      end;
+
+   SelectByTag(aCombo, wanted);
+end;
+
 // Drives the three pickers from an '8N1'-style string.  An unparseable or
 // empty value falls back to 8N1 -- the near-universal default -- rather than
 // leaving nothing selected, because "no data bits chosen" is not a state the
@@ -708,7 +759,7 @@ begin
       tbcTransport.ActivePage := tabSerial;
       end;
 
-   SelectByTag(cbxPort, FRadio.ControlPort);
+   SelectStoredPort(cbxPort, FRadio.ControlPort);
    if FRadio.BaudRate > 0 then
       begin
       edtBaud.Text := IntToStr(FRadio.BaudRate);
@@ -731,7 +782,7 @@ begin
    edtUser.Text     := FRadio.NetworkUsername;
    edtPassword.Text := FRadio.NetworkPassword;
 
-   SelectByTag(cbxKeyerPort, FRadio.KeyerOutputPort);
+   SelectStoredPort(cbxKeyerPort, FRadio.KeyerOutputPort);
    FillRTSDTRCombo(cbxKeyerRTS, FRadio.KeyerRTS);
    FillRTSDTRCombo(cbxKeyerDTR, FRadio.KeyerDTR);
    FillRTSDTRCombo(cbxCatRTS,   FRadio.CatRTS);

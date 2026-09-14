@@ -82,6 +82,11 @@ resourcestring
    // Shown AFTER a port that exists but that the settings file has no spelling
    // for.  See FillSerialPortCombo.
    TC_PREFS_PORT_UNSUPPORTED = '(not selectable yet)';
+   (* A PORT THE RADIO IS CONFIGURED FOR THAT IS NOT THERE RIGHT NOW -- an
+     adapter unplugged, or a configuration carried from another machine. The
+     editor ADDS it rather than dropping to NONE, because dropping to NONE is
+     what silently cleared a good port the moment the dialog was opened. *)
+   TC_PREFS_PORT_NOT_PRESENT = '(not present)';
    TC_PREFS_ACTIVELABEL      = 'Active profile: ';
 
    // Named for what they DO.  'OK' and 'Apply' gave no clue that they save,

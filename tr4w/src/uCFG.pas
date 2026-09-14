@@ -292,12 +292,6 @@ var
   how the compiler said the migration was finished. *)
 
 
-   // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
-   //   csRem = retired -- still recognized so old configs do not error, but the
-   //   parser does NOT apply it (CheckCommand exits early) and it is hidden from
-   //   the Options dialog. csNew vs csOld is informational only; no code reads
-   //   the difference. To re-activate a retired command, change csRem to csOld.
-   // Note if crAddress says pointer(NN), then it is calling a function at position NN in the an array
    (* CFGCA IS GONE -- 2026-09-14, and this is what the whole migration was for.
 
      It was a table of up to 415 rows: a command name, a bare pointer to a
@@ -326,9 +320,9 @@ function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
 // True when Command names a single-valued (overwrite) config command, i.e. one
 // for which a duplicate line is a misconfiguration.  Accumulating commands
 // (frequency lists, band lists, ADD DOMESTIC COUNTRY, indexed arrays) legitimately
-// repeat and return False, as do pattern-matched commands not in CFGCA
-// (COLUMN WIDTH, "* WINDOW *", messages) and unknown commands.  Used by the config
-// loader to flag hand-edited duplicate keys.  See uCFG implementation for details.
+// repeat and return False, as do pattern-matched commands (COLUMN WIDTH,
+// "* WINDOW *", messages) and unknown commands.  Used by the config loader to
+// flag hand-edited duplicate keys.  See the implementation for the list.
 function CommandIsSingleValued(Command: PAnsiChar): boolean;
 
 (* True when aCommand names a feature TR4W has withdrawn.  Such a command is
@@ -480,27 +474,23 @@ end;
 
 function CFGCommandValueAsString(const aCommand: string;
                                  out aRenderable: boolean): string;
-var
-   idx: integer;
-   listIdx: integer;
-   p: PAnsiChar;
 begin
-   // A CONFIG VALUE, RENDERED THE WAY THE TABLE SAYS TO.
-   //
-   // Lives here, beside CFGCA, because the row is the only thing that knows how
-   // to read its own target: crAddress is a bare pointer and crType is what
-   // makes it an integer, a ShortString or an index into a list.
-   //
-   // THE +1 IS NOT AN OFF-BY-ONE.  A ctString target is a ShortString, whose
-   // first byte is the LENGTH, so the text starts one byte in.  Reading from
-   // crAddress directly yields a string with a stray control character at the
-   // front -- which displays as a box and compares unequal to everything.
-   //
-   // Deliberately partial: the types the settings screens actually edit.  An
-   // unsupported type returns '' rather than guessing at bytes.  uOption.pas
-   // has a fuller version inline for Ctrl+J; it is not shared because Ctrl+J is
-   // being retired, and the two are not worth coupling on the way out.
-   (* True unless the case below falls through to its else. *)
+   (* A CONFIG VALUE AS TEXT, AND THE SETTINGS OBJECT IS THE ONLY SOURCE.
+
+     The header that stood here described reading the value out of a ROW --
+     "crAddress is a bare pointer and crType is what makes it an integer, a
+     ShortString or an index into a list", plus a note about a ShortString's
+     length byte and a pointer to uOption's fuller copy for Ctrl-J. Every
+     clause of that is now false: there is no row, no crAddress, and no
+     Ctrl-J. Three local variables went with it (idx, listIdx, p) -- dead the
+     moment the body did.
+
+     WHAT IS LEFT IS THE CONTRACT, which has not changed: TryGetByCommand
+     renders from RTTI, and aRenderable is False for a property kind it does
+     not handle. That distinction is the valuable part -- '' is a legitimate
+     value for a string setting, so a caller cannot tell "empty" from
+     "cannot be written down" without it, and a setting that reads blank is
+     set to blank by the next OK. *)
    aRenderable := True;
    Result := '';
 
