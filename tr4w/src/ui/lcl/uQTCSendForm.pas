@@ -161,24 +161,23 @@ var
 
 { THE OPERATOR'S QRV MESSAGE -- 'QTC 3/10' or whatever he has configured.
 
-  READ FROM INDEX 1, AND THE REASON IS UGLY.  QRVString is declared
-  `array[0..160] of AnsiChar` and is used as a SHORTSTRING BY HAND: LOGWAE
-  writes `QRVString[0] := AnsiChar(TF.Format(@QRVString[1], 'QTC %u/%u', ...))`,
-  so byte 0 holds the LENGTH and the text begins at 1.  Reading from 0 put the
-  length byte on the front -- it rendered as a box glyph in front of the caption
-  (NY4I, screenshot, 2026-09-01).  Every other reader in the tree already says
-  @QRVString[1]; the conversion of this window was the odd one out.
+  QRVString IS A ShortString (Str160) AND IS READ AS ONE.  It used to be
+  `array[0..160] of AnsiChar` used as a ShortString by hand -- length in byte
+  0, text from byte 1, written and NUL-terminated by TF.Format -- so this read
+  from index 1 through a PAnsiChar, with a lint suppression explaining why the
+  pointer was safe.
 
-  Lint-PCharAnsi flags @X[1] because that is normally a ShortString being read
-  past its length with no terminator.  Not here: TF.Format is wsprintfA, which
-  NUL-terminates what it writes, so bytes 1.. are a genuine C string and the
-  length byte at 0 is the redundant half.  Hence the suppression -- and hence
-  ONE reader rather than the two the fix started with.
+  TF.Format was deleted on 2026-09-14 and the writer became a plain
+  char-array assignment, which starts the text at byte 0. That silently made
+  this read drop the leading character ('TC 3/10'), and the justification for
+  the suppression stopped being true at the same moment -- a comment asserting
+  safety outlived the thing that provided it.
 
-  The suppression is inline below, because Lint-PCharAnsi reads the LINE. }
+  Both are gone now: the declaration says what it means, and the length comes
+  from the type. }
 function QRVMessage: AnsiString;
 begin
-   Result := AnsiString(PAnsiChar(@QRVString[1]));   // lint:wide-ok -- wsprintfA NUL-terminates from byte 1; byte 0 is a length
+   Result := AnsiString(QRVString);
 end;
 
 { WHICH COMMAND A BUTTON IS.  Tag, not caption and not position: the second

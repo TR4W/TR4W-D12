@@ -1583,7 +1583,7 @@ begin
                 RXData.QSOPoints := 0;
                       //                              if ReminderPostedCount = 0 then
                 begin
-                  QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_YOUALREADYWORKEDIN)), [@RXData.Callsign[1], @RXData.DomMultQTH[1]]));
+                  QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_YOUALREADYWORKEDIN)), [RXData.Callsign, RXData.DomMultQTH]));
                   if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
                      begin
                      DoABeep(ThreeHarmonics);
@@ -1598,7 +1598,7 @@ begin
         begin
         //                  if ReminderPostedCount = 0 then
     begin
-      QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), [@RXData.Callsign[1]]));
+      QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_ISADUPEANDWILLBELOGGEDWITHZERO)), [RXData.Callsign]));
       if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
          begin
          DoABeep(ThreeHarmonics);

@@ -5180,7 +5180,7 @@ begin
       begin
         if CallWindowString <> '' then
            begin
-           ShowMessage(SysUtils.Format(AnsiString('Callsign %s'), [@CallWindowString[1]]));
+           ShowMessage(SysUtils.Format(AnsiString('Callsign %s'), [CallWindowString]));
            end
         else
            begin
@@ -7065,7 +7065,7 @@ begin
 
   if not IsAGoodCall(RData.Callsign) then
      begin
-     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_HASIMPROPERSYNTAX)), [@RData.Callsign[1]]));
+     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_HASIMPROPERSYNTAX)), [RData.Callsign]));
      DoABeep(Warning);
      Exit;
      end;

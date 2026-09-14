@@ -72,7 +72,27 @@ var
   QTCNumber                             : integer;
   NumberMessagesToBeSentString {, QTCNumberString}: string;
 
-  QRVString                             : array[0..160] of AnsiChar;
+  (* A ShortString, BECAUSE THAT IS WHAT IT ALWAYS WAS.
+
+    It was array[0..160] of AnsiChar used as a ShortString BY HAND: byte 0
+    held the length and the text began at byte 1, written by TF.Format
+    (wsprintfA), which also NUL-terminated it. Two readers therefore took
+    @QRVString[1], and one of them carried a comment explaining why that
+    pointer was safe.
+
+    TF.Format WAS DELETED (2026-09-14) and the write became
+
+        QRVString := SysUtils.Format('QTC %u/%u', [...]);
+
+    which is a plain char-array assignment: the text now starts at byte 0.
+    Both readers were still taking byte 1, so the caption lost its leading
+    character -- 'TC 3/10' -- and logwae's Format got a bare Pointer for a
+    %s, which FPC reports as "Invalid argument index in format".
+
+    Str160 IS string[160] -- exactly the layout the hand-rolled version was
+    imitating -- and it is what SendStringAndStop already takes. Every reader
+    now says QRVString and the compiler keeps the length. *)
+  QRVString                             : Str160;
 
   //  QTCBuffer                        : LogEntryArray;
   {MaxQTCString, }QTCCallsign           : CallString;
@@ -239,17 +259,13 @@ begin
 
      // Issue #997: asm wsprintf-push -> TF.Format. TC_ISQRVFOR = 'Is %s QRV for %s?';
      // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
-     (* QTCCallsign passes AS ITSELF -- it is a CallString, a ShortString, so
-       the old @QTCCallsign[1] was a bare pointer into a value with no NUL.
-
-       QRVString does NOT, and the difference matters. It is
-       array[0..160] of AnsiChar with its LENGTH in [0] -- a ShortString in
-       everything but its declaration -- so handing the whole array to an
-       array of const would not mean what it means for QTCCallsign. The
-       characters start at [1] and TF.Format NUL-terminated them there, so
-       the pointer is correct and stays. *)
+     (* BOTH PASS AS THEMSELVES NOW. The note that used to stand here said
+       @QRVString[1] was "correct and stays" because TF.Format NUL-terminated
+       from byte 1 -- true when it was written, and TF.Format is gone. A
+       ShortString in an array of const is vtString, which carries its own
+       length; a bare @ is vtPointer, which %s refuses. *)
      if YesOrNo2(SysUtils.Format(AnsiString(LclText(TC_ISQRVFOR)),
-                                 [QTCCallsign, @QRVString[1]])) <> IDOK then Exit;
+                                 [QTCCallsign, QRVString])) <> IDOK then Exit;
      ShowQTCSend;
 
      end;

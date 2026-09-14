@@ -3711,7 +3711,7 @@ var
 begin
   FillChar(ID, SizeOf(ID), 0);
   ID := KeyId(AutoCQMemory);
-  SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText(TC_REPEATING)), [@ID[1], Settings.Cq.AutoDelay]));
+  SetTextInQuickCommandWindow(SysUtils.Format(AnsiString(LclText(TC_REPEATING)), [ID, Settings.Cq.AutoDelay]));
 end;
 
 

@@ -61,6 +61,11 @@ $lints = @(
    @{ Name = 'Lint-SpellingTables'; Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PollRadioState';  Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PCharAnsi';       Arg = $src;     NeedsFpc = $false }
+   # A RAW POINTER MAY NOT BE A Format ARGUMENT. @x is vtPointer and %s
+   # refuses it; FPC calls that 'Invalid argument index in format' and puts
+   # it in a modal in front of an operator, only when that one message
+   # fires. Eight such sites were live on 2026-09-14, all operator-facing.
+   @{ Name = 'Lint-FormatArgs';      Arg = $src;     NeedsFpc = $false }
    # WHERE FILES LIVE STAYS IN ONE UNIT. ExtractFilePath(ParamStr(0)) is the
    # BINARY's directory and GetCurrentDir is the WORKING one; the shipped layout
    # hides the difference and build-out does not, which is how the cluster
