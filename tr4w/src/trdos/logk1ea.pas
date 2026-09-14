@@ -274,12 +274,40 @@ var
   PaddlePTTOn                           : boolean;
   TR4W_BeepThreadID                     : TThreadID;
   tPaddleThreadID                       : TThreadID;
-  tFlashQDThreadID                      : Cardinal;
+  (* tFlashQDThreadID was declared here and NEVER READ -- the only surviving
+    mention in the tree is a comment in logwind explaining what its guard
+    USED to do. Deleted 2026-09-14 rather than widened. *)
 
-  tCW_Event                             : Cardinal;
-  tCWPaddle_Event                       : Cardinal;
-  tDVP_Event                            : Cardinal;
-//  tWaitForNextCharEvent                 : Cardinal;
+  (* THESE ARE WIN32 HANDLES AND Cardinal TRUNCATES THEM AT 64 BITS.
+
+    All three are assigned from CreateEvent (uProgramMain.pas:2271-2273),
+    which returns a pointer-sized THandle. Measured with FPC 3.2.2:
+
+                        Win64   Win32
+        System.THandle      8       4
+        TThreadID           8       4
+        Cardinal            4       4
+
+    So on i386 this was correct by coincidence -- Cardinal and THandle are the
+    same width there -- and on x86_64-win64 every event handle loses its top
+    32 bits. It is silent: the handle is simply invalid, so every wait on it
+    fails and CW/paddle/DVP timing stops, with no exception and no message.
+
+    THE 64-BIT TASK LIST HAD "pointer truncation: DONE, 0 sites" WHEN THIS WAS
+    WRITTEN, and it was measured honestly -- that scan looked for casts of the
+    shape Pointer(Integer(x)). A HANDLE STORED IN A 32-BIT VARIABLE has no
+    cast to find. It surfaced only because one of the three is passed where a
+    pointer-sized argument is required (logdvp.pas:769), so the compiler had
+    to object; the other two would have failed at run time on the bench.
+
+    System.THandle rather than Windows.THandle: the Windows unit is
+    {$IFDEF WINDOWS}-gated in this unit's uses clause, and System.THandle is
+    the OS handle type on every platform. Do NOT write a bare THandle here --
+    LCLType redeclares that name, which is the trap recorded in the agent
+    memory `thandle-means-two-types`. *)
+  tCW_Event                             : System.THandle;
+  tCWPaddle_Event                       : System.THandle;
+  tDVP_Event                            : System.THandle;
 
   tDVPTimerEventID                      : Cardinal;
   tExitFromDVPThread                    : boolean;
@@ -399,7 +427,7 @@ procedure SendCWBufferStart;
 procedure CWThreadProc;
 procedure tDoABeep;
 procedure AutoCQTick;
-procedure tCWSleep(millsec, myEvent: Cardinal);
+procedure tCWSleep(millsec: Cardinal; myEvent: System.THandle);   (* myEvent is a HANDLE -- see the note on tCW_Event *)
 procedure tPaddleFootSwitchThreadProc;
 
 procedure tSetPaddleElementLength;
@@ -2178,7 +2206,7 @@ begin
   SendFunctionKeyMessage(TempChar, OpMode);
 end;
 
-procedure tCWSleep(millsec, myEvent: Cardinal);
+procedure tCWSleep(millsec: Cardinal; myEvent: System.THandle);   (* myEvent is a HANDLE -- see the note on tCW_Event *)
 var
   t                                     : Cardinal;
 begin

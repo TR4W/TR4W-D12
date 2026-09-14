@@ -176,12 +176,16 @@ function Find-Tr4wToolchain
          }
       }
 
+   # EVERY working compiler, not the first one. Which compiler is right
+   # depends on which Lazarus it is paired with -- see Test-LclPairing below.
+   $fpcWorking = [System.Collections.Generic.List[object]]::new()
    foreach ($c in $fpcCandidates)
       {
       $searched.Add("  FPC: $c")
       $hit = Test-FpcCandidate $c $Cpu $Os
-      if ($hit) { $fpcFound = $hit; break }
+      if ($hit) { $fpcWorking.Add($hit) }
       }
+   if ($fpcWorking.Count -gt 0) { $fpcFound = $fpcWorking[0] }
 
    # ------------------------------------------------------------ Lazarus ----
    $lazFound = $null
@@ -205,6 +209,7 @@ function Find-Tr4wToolchain
          }
       }
 
+   $lazWorking = [System.Collections.Generic.List[object]]::new()
    foreach ($c in $lazCandidates)
       {
       if ([string]::IsNullOrWhiteSpace($c)) { continue }
@@ -212,11 +217,136 @@ function Find-Tr4wToolchain
       $searched.Add("  LCL: $units")
       if (Test-Path -LiteralPath $units)
          {
-         $lazFound = [pscustomobject]@{
-            Dir      = $c
-            LclUnits = $units
+         $lazWorking.Add([pscustomobject]@{ Dir = $c; LclUnits = $units })
          }
-         break
+      }
+
+   # ------------------------------------------------------- THE PAIRING ----
+   #
+   # AN LCL IS NOT INTERCHANGEABLE BETWEEN FPC INSTALLS, AND CHOOSING THE TWO
+   # INDEPENDENTLY IS HOW THIS WENT WRONG.
+   #
+   # Until 2026-09-14 this function took the first working FPC and, separately,
+   # the first Lazarus carrying LCL units for the target. On a machine with one
+   # of each that is the same thing. NY4I's machine has THREE FPC installs
+   # (C:\FPC, C:\lazarus\fpc, C:\fpcupdeluxe\fpc) and TWO Lazarus installs,
+   # and the first x86_64-win64 build picked fpcupdeluxe's compiler with
+   # C:\Lazarus's LCL:
+   #
+   #     PPU Loading C:\Lazarus\lcl\units\x86_64-win64\lclintf.ppu
+   #     Recompiling LCLIntf, checksum changed for
+   #        C:\fpcupdeluxe\fpc\units\x86_64-win64\rtl\system.ppu
+   #     Fatal: Can't find unit LCLIntf
+   #
+   # An LCL .ppu records the checksum of the RTL it was built against. Against
+   # a different RTL, FPC tries to REBUILD it from source it cannot reach, and
+   # the message it prints is "can't find" for a unit that is plainly there.
+   # THE DIAGNOSTIC NAMES THE WRONG THING, which is what makes this expensive:
+   # the identical failure is what the macOS box has been stuck on (agent
+   # memory `mac-build-machine`), diagnosed there as missing provisioning when
+   # it is a mismatched pair.
+   #
+   # So: ASK THE COMPILER. Affinity ordering first -- a Lazarus that ships its
+   # own FPC, or sits under the same root, is tried before a cross pairing --
+   # then compile a two-line unit that uses LCLIntf and keep the first pair
+   # that succeeds. Measured on this machine: a good pair answers in 0.19s, a
+   # bad one in 0.05s, so the whole check costs less than a quarter second and
+   # replaces a failure that costs an afternoon.
+   function Test-LclPairing([object] $fpc, [object] $laz, [string] $cpuW, [string] $osW)
+      {
+      $dir = Join-Path ([System.IO.Path]::GetTempPath()) ("tr4w-lclpair-" + [guid]::NewGuid().ToString('N'))
+      try
+         {
+         New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop | Out-Null
+         $pas = Join-Path $dir 'lclpairprobe.pas'
+         # The widget set is 'win32' for both Windows bitnesses -- see the same
+         # note in Get-SearchPaths.ps1.
+         Set-Content -LiteralPath $pas -Encoding ASCII -Value @(
+            'unit lclpairprobe;'
+            '{$MODE DELPHI}'
+            'interface'
+            'uses LCLIntf;'
+            'implementation'
+            'end.')
+         # AND THE INNER QUOTES MUST BE DOUBLE. A single-quoted string inside
+         # the $( ) does not interpolate, so '$cpuW-$osW' stayed LITERAL and
+         # every -Fu pointed at a directory named '$cpuW-$osW'. FPC does not
+         # complain about a search path that does not exist; it just fails to
+         # find the unit, which looks exactly like a checksum mismatch.
+         #
+         # INTERPOLATION, NOT CONCATENATION. Inside an array literal the comma
+         # binds TIGHTER than '+', so  "-Fu" + (Join-Path ...)  becomes TWO
+         # elements -- a bare '-Fu' and a bare path -- and FPC then reads the
+         # path as a second SOURCE FILE ("Only one source file supported,
+         # changing source file to compile from ... into ..."). That made this
+         # probe reject pairs that build perfectly well, which is worse than
+         # having no probe at all. Caught 2026-09-14 only because the rejected
+         # pair was one already proven to work by hand.
+         $probeArgs = @('-Mdelphi', "-P$cpuW", "-T$osW", "-FU$dir",
+                   "-Fu$(Join-Path $laz.Dir "lcl\units\$cpuW-$osW")",
+                   "-Fu$(Join-Path $laz.Dir "lcl\units\$cpuW-$osW\win32")",
+                   "-Fu$(Join-Path $laz.Dir "components\lazutils\lib\$cpuW-$osW")",
+                   "-Fu$(Join-Path $laz.Dir "packager\units\$cpuW-$osW")",
+                   $pas)
+         $probeOut = & $fpc.Exe @probeArgs 2>&1
+         if ($LASTEXITCODE -ne 0)
+            {
+            $script:Tr4wLastPairProbe = ($probeOut | Out-String)
+            }
+         return ($LASTEXITCODE -eq 0)
+         }
+      catch
+         {
+         # THE PROBE COULD NOT RUN -- not the same as "the pair is bad".
+         # Report it and let the caller fall back; never fail a build because
+         # a temp directory was unwritable.
+         Write-Host "  (LCL pairing probe could not run: $($_.Exception.Message))" -ForegroundColor DarkYellow
+         return $null
+         }
+      finally
+         {
+         if (Test-Path -LiteralPath $dir) { Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue }
+         }
+      }
+
+   if ($fpcWorking.Count -gt 0 -and $lazWorking.Count -gt 0)
+      {
+      # Affinity: 0 = this Lazarus ships this FPC, or they share a root.
+      $pairs = [System.Collections.Generic.List[object]]::new()
+      foreach ($f in $fpcWorking)
+         {
+         foreach ($l in $lazWorking)
+            {
+            $fRoot = $f.Root.TrimEnd('\')
+            $lDir  = $l.Dir.TrimEnd('\')
+            $score = 2
+            if ($fRoot.StartsWith($lDir, [StringComparison]::OrdinalIgnoreCase)) { $score = 0 }
+            elseif ((Split-Path $fRoot -Parent) -and
+                    (Split-Path (Split-Path $fRoot -Parent) -Parent) -and
+                    ((Split-Path (Split-Path $fRoot -Parent) -Parent) -eq (Split-Path $lDir -Parent))) { $score = 1 }
+            $pairs.Add([pscustomobject]@{ Fpc = $f; Laz = $l; Score = $score })
+            }
+         }
+
+      $probeRan = $false
+      foreach ($p in ($pairs | Sort-Object Score))
+         {
+         $ok = Test-LclPairing $p.Fpc $p.Laz $Cpu $Os
+         if ($null -eq $ok) { break }       # probe unusable -- stop trying
+         $probeRan = $true
+         if ($ok) { $fpcFound = $p.Fpc; $lazFound = $p.Laz; break }
+         $searched.Add("  PAIR REJECTED (RTL/LCL checksum): $($p.Fpc.Exe) + $($p.Laz.Dir)")
+         $fpcFound = $null
+         $lazFound = $null
+         }
+
+      if (-not $probeRan)
+         {
+         # Unproven, and SAID SO. This is the pre-2026-09-14 behaviour: first
+         # of each, independently, which is exactly the bug above.
+         Write-Host '  WARNING: the FPC/LCL pairing is UNVERIFIED (probe did not run).' -ForegroundColor Yellow
+         $fpcFound = $fpcWorking[0]
+         $lazFound = $lazWorking[0]
          }
       }
 

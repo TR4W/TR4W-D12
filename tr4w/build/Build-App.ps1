@@ -339,13 +339,73 @@ $expectMachine = switch ($Cpu)
    default  { 0 }
    }
 
-$dllSource = Join-Path $TR4W_DIR 'target'
+# WHERE THE RUNTIME DLLs COME FROM IS PER ARCHITECTURE (2026-09-14).
+#
+# tr4w\target is the i386 PROGRAM directory as well as its DLL staging area,
+# and the files there are 32-bit. They cannot also be the x64 set: sqlite3.dll
+# and libhamlib-4.dll have the SAME FILE NAME in both bitnesses, so only a
+# directory can keep them apart -- which is what tr4w\redist\<cpu>-<os> is
+# for. See tr4w/redist/README.md.
+#
+# i386-win32 keeps reading tr4w\target so nothing about the shipping build
+# changes; any other target reads its redist directory, and gets NOTHING at
+# all if that directory is absent, which the missing-file check below turns
+# into a named list rather than a silent partial stage.
+$archRedist = Join-Path $TR4W_DIR "redist\$Cpu-$Os"
+if ($Cpu -eq 'i386' -and $Os -eq 'win32')
+   {
+   $dllSource = Join-Path $TR4W_DIR 'target'
+   }
+else
+   {
+   $dllSource = $archRedist
+   }
 $exeDir    = Split-Path $exe -Parent
 $staged    = 0
 $badArch   = @()
 
 $dlls = @()
 if (Test-Path $dllSource) { $dlls = @(Get-ChildItem -Path $dllSource -Filter '*.dll' -File) }
+
+# WHAT THE PROGRAM NEEDS IS DEFINED BY THE SHIPPING i386 SET, MINUS the one
+# name that legitimately differs between bitnesses.
+#
+# libgcc_s_dw2-1.dll is MinGW's DWARF-2 unwinder and exists only for 32-bit;
+# the x64 HamLib zip ships libgcc_s_seh-1.dll instead. That is not a missing
+# file, it is a different file, and CHANGES.md records the last time someone
+# shipped the wrong one of these -- HamLib 4.7.0 needed dw2 while the
+# installer still carried the older sjlj build, and clean Windows installs
+# died with "missing libgcc_s_dw2-1.dll". Same failure mode, one variant
+# further along.
+if ($dllSource -ne (Join-Path $TR4W_DIR 'target'))
+   {
+   $i386Dir = Join-Path $TR4W_DIR 'target'
+   $needed  = @()
+   if (Test-Path $i386Dir)
+      {
+      $needed = @(Get-ChildItem -Path $i386Dir -Filter '*.dll' -File |
+                  ForEach-Object { $_.Name } |
+                  Where-Object { $_ -notmatch '^libgcc_s_' })
+      }
+   $have    = @($dlls | ForEach-Object { $_.Name })
+   $unwind  = @($have | Where-Object { $_ -match '^libgcc_s_' })
+   $missing = @($needed | Where-Object { $have -notcontains $_ })
+   if ($unwind.Count -eq 0) { $missing += 'a libgcc_s_*.dll (MinGW unwinder)' }
+
+   if ($missing.Count -gt 0)
+      {
+      Write-Host ''
+      Write-Host "BUILD FAILED: $Cpu-$Os runtime DLLs are missing from redist."
+      $missing | ForEach-Object { Write-Host "  $_" }
+      Write-Host ''
+      Write-Host "  Looked in: $dllSource"
+      Write-Host '  These are LOAD-TIME imports -- the Windows loader resolves them before'
+      Write-Host '  a line of TR4W runs, so an absent one is a bare failure at launch with'
+      Write-Host '  nothing in tr4w.log. The linked binary is left in place; only staging'
+      Write-Host '  was refused.'
+      exit 1
+      }
+   }
 
 # VALIDATE EVERY DLL BEFORE STAGING ANY OF THEM, and that order is the whole
 # point rather than a tidiness preference. The first cut of this checked and

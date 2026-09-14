@@ -151,8 +151,27 @@ function Get-Tr4wSearchPaths
    # Lazarus ships an x86_64 fpc binary but carries LCL units for BOTH
    # targets, and their PPU format matches FPC 3.2.2, so the i386 compiler
    # consumes them directly -- no cross-compiler and no Lazarus fpc needed.
+   #
+   # THE WIDGET SET IS NOT THE OS, AND THIS LINE USED TO SAY IT WAS.
+   # The interface units live in lcl\units\<cpu>-<os>\<WIDGETSET>, and on
+   # Windows that directory is 'win32' for BOTH bitnesses -- there is no
+   # 'win64' widget set, because the LCL's Windows interface serves win32 and
+   # win64 alike. Writing "$cpu-$os\$os" was therefore correct for
+   # i386-win32 BY COINCIDENCE (the OS name and the widget-set name are the
+   # same string there) and produced a directory that does not exist for
+   # x86_64-win64:
+   #
+   #     lcl\units\i386-win32\win32     EXISTS
+   #     lcl\units\x86_64-win64\win64   DOES NOT
+   #     lcl\units\x86_64-win64\win32   EXISTS  <- what is wanted
+   #
+   # Measured 2026-09-14 on the first real x86_64-win64 build. This file only
+   # ever serves Windows targets -- the Unix builds go through build-unix.sh,
+   # which picks its own widget set -- so the name is a constant here rather
+   # than a parameter.
+   $lclWidgetSet = 'win32'
    $paths.Add((Join-Path $laz "lcl\units\$cpu-$os"))
-   $paths.Add((Join-Path $laz "lcl\units\$cpu-$os\$os"))
+   $paths.Add((Join-Path $laz "lcl\units\$cpu-$os\$lclWidgetSet"))
    $paths.Add((Join-Path $laz "components\lazutils\lib\$cpu-$os"))
    $paths.Add((Join-Path $laz "packager\units\$cpu-$os"))
    # TDateTimePicker for the Edit QSO date/time field. Lazarus ships

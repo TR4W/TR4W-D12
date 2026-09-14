@@ -22,13 +22,73 @@ still exact.
 
 ## Where it stands, measured
 
+## THE APP COMPILES AND LINKS FOR x86_64-win64 (2026-09-14)
+
+**This section used to say the toolchain gate was the blocker and that
+"nothing below can start until this exists". Both halves were wrong.**
+
+```
+.\build\Build-App.ps1 -Cpu x86_64 -Os win64
+
+  errors+fatals : 0
+  range warnings: 6 (ceiling 6)
+  narrowing string conversions: 1365 (ceiling 1365)
+  -> build-out\app-x86_64-win64\tr4w_fpc.exe   10,627,603 bytes, machine 0x8664
+```
+
+Narrowing and range warnings are IDENTICAL to the i386 build, which is the
+number worth noticing: the 64-bit target is not carrying its own backlog of
+string defects.
+
+**IT IS NOT RUNNABLE YET**, and the build says so rather than pretending: it
+stops at the DLL stage needing an x86_64 `libeay32.dll` and `ssleay32.dll`
+(OpenSSL 1.0.2). SQLite and the whole HamLib set are staged in
+`tr4w/redist/x86_64-win64/`. **Compiling is not running, and nobody has
+launched a 64-bit TR4W.**
+
 | gate | source doc | first measure | now | state |
 |---|---|---|---|---|
-| PChar-family in live code | 751 raw mentions | 578 in 69 files | **396** | in progress |
-| pointer truncation | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
+| PChar-family in live code | 751 raw mentions | 578 in 69 files | **384** | in progress |
+| pointer truncation -- casts | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
+| pointer truncation -- **handles in 32-bit storage** | not in the source doc | **not measured** | **0** (4 fixed) | **DONE** |
 | live `asm` blocks | "much disabled… confirm each" | 0 | **0** | **DONE** |
 | `Move`/`FillChar`/`ZeroMemory` | not in the source doc | 348 | **347** | open (new rule) |
-| toolchain | i386 only | i386/win32 | i386/win32 | open |
+| **toolchain** | i386 only | i386/win32 | **x86_64-win64 BUILDS** | **compiler done; OpenSSL x64 owed** |
+
+### The truncation row had a second class, and the first scan could not see it
+
+The original measurement looked for **casts** -- `Pointer(Integer(x))`,
+`Pointer(Cardinal(x))` -- found four, fixed them, and reported DONE. That was
+honest for what it asked. It could not find this:
+
+```pascal
+  tCW_Event        : Cardinal;      (* assigned from CreateEvent *)
+  tCWPaddle_Event  : Cardinal;
+  tDVP_Event       : Cardinal;
+  procedure tCWSleep(millsec, myEvent: Cardinal);   (* myEvent is a HANDLE *)
+```
+
+**A handle STORED in a 32-bit variable has no cast to find.** Measured with
+FPC 3.2.2: `System.THandle` and `TThreadID` are 8 bytes on Win64 and 4 on
+Win32, `Cardinal` is 4 on both -- so these were correct on i386 by coincidence
+and lose the top 32 bits of every event handle on Win64. Silently: the handle
+is simply invalid, every wait on it fails, and CW/paddle/DVP timing stops with
+no exception and nothing in the log.
+
+It surfaced only because ONE of the four is passed where a pointer-sized
+argument is required (`logdvp.pas:769`), so the compiler had to object. The
+other three would have been found on a bench.
+
+**Every other handle site in the tree was already correct** --
+`module: THandle`, `GHamLibModule: TLibHandle`, `FreeThread/ThreadId:
+TThreadID`, `tCreateThread: TThreadID`, uYCCCSO2R's events. 17 assignment
+sites checked; 4 were wrong and all 4 were in `logk1ea`.
+
+**A NAIVE SCAN FOR THIS PRODUCES FALSE POSITIVES AND MUST NOT BE SHIPPED AS A
+LINT.** Matching a variable NAME against its declaration anywhere in the tree
+flagged `H: integer` in `MainUnit` (a rectangle HEIGHT) and `h: integer` in
+`uRadioPolling` (a panel slot, documented as such). A scope-aware version is
+owed; a name-matching one would be ignored within a week.
 
 **Progress log.** Every step green on 35 lints, the unit tests AND the golden
 corpus -- the corpus matters for this work specifically, because `fcontest`,
@@ -41,8 +101,10 @@ all thirteen sets open.
 | `733ce377` | `SetCharBuffer` / `CharBufferText`, 14 file-name sites | 578 |
 | `043657a8` | the ShortString-as-buffer idiom, 6 sites | 570 |
 | `c51dcc1d` | **the C-sprintf facade deleted** -- 21 overloads, every caller | **412** |
-| `9d627433` | the three C `long` types become `clong` (not a 64-bit item -- see below) | 412 |
-| _this one_ | VC.pas scalar constants; the `HeaderTagText` facade deleted | **396** |
+| `9d627433` | the three C `long` types become `clong` (not a 64-bit item) | 412 |
+| `7a5a69d6` | VC.pas scalar constants; the `HeaderTagText` facade deleted | 396 |
+| `9ded98f7` | `FirstCall` passed as the ShortString it is | **384** |
+| _this one_ | **the x64 build**: toolchain pairing, handle widths, per-arch DLLs | 384 |
 
 ---
 
@@ -210,17 +272,39 @@ more than the count:
 
 ### P1 — everything downstream of a toolchain
 
-- [ ] Install an FPC with `ppcx64`/Win64 RTL and a Lazarus LCL for
-  `x86_64-win64`. **Nothing below can start until this exists** — and note the
-  macOS box is currently blocked on exactly this class of problem (two
-  incomplete FPC installs), so verify the LCL matches the RTL before trusting
-  it.
-- [ ] `build/Find-Toolchain.ps1` to describe the requested `$Cpu-$Os` rather
-  than treating x86_64 as categorically invalid.
-- [ ] Architecture-specific output directories — `build-out/app-x86_64-win64`
-  must share no `.ppu`, `.o` or staged DLL with `app-i386-win32`.
-- [ ] x64 `sqlite3.dll` and the Hamlib dependency closure, with the PE machine
-  type asserted in a test rather than only reported to the operator.
+- [x] ~~Install an FPC with `ppcx64`/Win64 RTL and a Lazarus LCL~~ — **IT WAS
+  ALREADY INSTALLED, TWICE.** `C:\lazarus\fpc\3.2.2` and `C:\fpcupdeluxe\fpc`
+  both carry `ppcx64` with a Win64 RTL, and both Lazarus installs carry an
+  x86_64-win64 LCL. Nothing had to be provisioned; the plan was blocked on a
+  belief.
+- [x] **`Find-Toolchain.ps1` — and the real defect was not what this line
+  said.** It never "treated x86_64 as categorically invalid": it found a
+  toolchain and built. It chose FPC and Lazarus **independently**, so on a
+  machine with three FPCs and two Lazaruses it paired fpcupdeluxe's compiler
+  with `C:\Lazarus`'s LCL and produced
+
+      Recompiling LCLIntf, checksum changed for
+         C:\fpcupdeluxe\fpc\units\x86_64-win64\rtl\system.ppu
+      Fatal: Can't find unit LCLIntf
+
+  **which is the macOS failure, verbatim, on Windows** — see the agent memory
+  `mac-build-machine`, where it was diagnosed as missing provisioning. It now
+  picks a PAIR and PROVES it by compiling a two-line unit that uses LCLIntf:
+  0.19s for a good pair, 0.05s for a bad one.
+- [x] **The widget set is not the OS.** `Get-SearchPaths.ps1` built
+  `lcl\units\$cpu-$os\$os`, which is right for `i386-win32\win32` only
+  because the OS name and the widget-set name are the same string there.
+  `x86_64-win64\win64` does not exist; the LCL's Windows interface is `win32`
+  for both bitnesses.
+- [x] Architecture-specific output directories — `build-out/app-x86_64-win64`
+  shares no `.ppu`, `.o` or staged DLL with `app-i386-win32`. DLLs come from
+  `tr4w/redist/<cpu>-<os>`; only `i386-win32` reads `tr4w/target`.
+- [ ] **x64 OpenSSL 1.0.2 — `libeay32.dll` and `ssleay32.dll`. THE ONLY THING
+  STANDING BETWEEN THE BUILD AND A STAGED x64 BINARY.** SQLite 3.53.4 and the
+  full HamLib 4.7.0 set (including `libgcc_s_seh-1.dll`, which REPLACES the
+  32-bit `libgcc_s_dw2-1.dll`) are staged and PE-verified. The build names the
+  two missing files explicitly and refuses to stage a partial set.
+- [ ] Assert the PE machine type in a TEST, not only in the build's report.
 - [ ] Wire and persisted layouts: `ContestExchange`, `TLogHeader`,
   `uNetFraming`. Assert field widths and offsets; decide explicitly whether a
   Win32 and a Win64 peer may talk to each other.
