@@ -837,7 +837,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..92] of string = (
+   RETIRED_COMMANDS: array[0..84] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -853,10 +853,6 @@ const
       'FOOT SWITCH PORT',
       'FREQUENCY ADDER RADIO ONE',
       'FREQUENCY ADDER RADIO TWO',
-      'FT1000MP CW REVERSE',
-      'HAMLIB ASYNC ONLY',
-      'HAMLIB DEBUG',
-      'HAMLIB TRACE',
       'ICOM RESPONSE TIMEOUT',
       'LATEST CONFIG FILE',
       'LOG FILE NAME',
@@ -918,13 +914,9 @@ const
       'SEND QSO IMMEDIATELY',
       'SERIAL 5 PORT ADDRESS',
       'SERIAL 6 PORT ADDRESS',
-      'SERIAL PORT DEBUG',
       'SHOW SEARCH AND POUNCE',
       'SIMULATOR ENABLE',
       'TAB MODE',
-      'TCI DEBUG',
-      'TCI MAX TX SECONDS',
-      'TELNET DEBUG',
       'TOTAL OFF TIME',
       'SINGLE RADIO MODE',
       'TOTAL SCORE MESSAGE',
@@ -965,7 +957,7 @@ end;
   in the first place.
 *)
 const
-   OWNED_BY_A_STORE: array[0..31] of string = (
+   OWNED_BY_A_STORE: array[0..38] of string = (
       (* THE WINKEYER, owned by the keyer library in settings\tr4w.json.
 
         ApplyKeyerToWinKey writes every one of these fields into
@@ -994,6 +986,39 @@ const
       'WK SIDETONE FREQUENCY',
       'WK TAIL TIME',
       'WK WEIGHT',
+
+      (* THE DIAGNOSTIC SWITCHES AND ONE RADIO QUIRK, moved out of
+        RETIRED_COMMANDS on 2026-09-14 -- NY4I: "there are many commands in
+        RETIRED_COMMANDS that are not at all retired."
+
+        HE WAS RIGHT AND THESE SEVEN ARE THE PROVABLE ONES. Four are seeded
+        FROM tr4w.ini INTO THE STORE by SeedLoggingFromIni
+        (uRadioConfigApply:771-778) -- HAMLIB DEBUG, HAMLIB ASYNC ONLY,
+        HAMLIB TRACE and TELNET DEBUG all land in aStore and are edited in
+        Preferences. TCI DEBUG and TCI MAX TX SECONDS are newer than the D7
+        array, so they have no row to be retired BY, and they are live in the
+        store and Preferences. FT1000MP CW REVERSE is a per-radio key
+        ApplyJSONOwnedRadioKey applies by name (uRadioConfigApply:1840).
+
+        WHAT THE MISLABEL COST: both lists accept and ignore, so nothing broke
+        -- but RETIRED is tested FIRST, so a config line for any of these was
+        logged as "is a withdrawn command", telling an operator a feature was
+        gone when it is in Preferences. A log that lies is worse than a log
+        that is silent.
+
+        THE TEST NY4I GAVE FOR THE REST, and it is a good one: look the
+        command up in the ORIGINAL CFGCA array, which still exists in the D7
+        tree at C:\TR4W -- `crAddress: nil` means it was already obsolete
+        there. Of the 93 names, 49 are nil (correctly retired) and 41 had a
+        real target; the remaining 3 have no D7 row at all. The 41 are still
+        being triaged. *)
+      'FT1000MP CW REVERSE',
+      'HAMLIB ASYNC ONLY',
+      'HAMLIB DEBUG',
+      'HAMLIB TRACE',
+      'TCI DEBUG',
+      'TCI MAX TX SECONDS',
+      'TELNET DEBUG',
 
       (* THE CLUSTER'S CONNECT STRING, owned by the cluster library in
         settings\tr4w.json. uRadioConfigApply assigns ConnectionCommand from
@@ -1330,40 +1355,17 @@ begin
      Pos(b, a) = 1. }
    cmdText := string(pshortstring(Command)^);
 
-   if Pos(' WINDOW ', cmdText) > 0 then
-      begin
-      for TempElement := Low(TMainWindowElement) to High(TMainWindowElement)
-         do
-         begin
+   (* THE WINDOW-COLOUR ARM IS GONE -- 2026-09-14.
 
-         if Pos(string(TWindows[TempElement].mweName), cmdText) = 1 then
-            begin
-            TempByte := GetValueFromArray(@tr4wColorsSA,
-               Byte(High(tr4wColors)), CustomCMD);
-            if TempByte <> UNKNOWNTYPE then
-               begin
-               if Pos(' COLOR', cmdText) > 0 then
-                  begin
-                  TWindows[TempElement].mweColor :=
-                     tr4wColors(TempByte)
-                  end
-               else
-                  begin
-                  TWindows[TempElement].mweBackG :=
-                     tr4wColors(TempByte);
-                  end;
-               Result := True;
-               Exit;
-               end
-            else
-               begin
-               Break;
-               end;
+     It matched '<element> WINDOW COLOR' / '... BACKGROUND' and assigned
+     TWindows[e].mweColor or .mweBackG. uRadioConfigApply:1057 and :1070
+     ALREADY DO EXACTLY THAT, from the colours the store holds in
+     settings/tr4w.json -- 50 entries on NY4I's station -- so this was a
+     second writer of the same two fields, reachable only from a legacy
+     config FILE.
 
-            end;
-
-         end;
-      end;
+     Reading an old file is tr4wconvert's job, not TR4W's (NY4I, 2026-09-12:
+     "we do not care about converting the old ini file in the program"). *)
 
    if Pos('COLUMN WIDTH ', cmdText) = 1 then
       begin
@@ -1395,6 +1397,24 @@ begin
          end;
       end;
 
+   (* ALERT COLOR KEEPS ITS ARM, AND IT IS THE ONE THAT COULD NOT JUST GO.
+
+     Every other pattern family here had somewhere else to live -- the window
+     colours are in the store, the column widths and F-key memories are in the
+     contest database. THIS ONE HAS NOWHERE. `AlertColor` is a plain global in
+     VC.pas, written by this arm and by nothing else in the tree, read by
+     MainUnit:1651 and :1656, and ABSENT FROM settings/tr4w.json entirely --
+     checked against NY4I's own store: no colors key, no commands key.
+
+     So deleting the arm would not remove a duplicate, it would make the
+     setting permanently unsettable at its default. It is an UNMIGRATED
+     SETTING hiding in a pattern test rather than in a row, which is why the
+     CFGCA sweep never saw it.
+
+     IT GOES WHERE THE OTHERS WENT -- a token on the settings object with its
+     vocabulary registered from here, on the subsystem pattern -- and the arm
+     comes out with the same commit. Left here deliberately rather than
+     deleted first and migrated second: one of those orders loses the value. *)
    if pshortstring(Command)^ = 'ALERT COLOR' then
       begin
       TempByte := GetValueFromArray(@tr4wColorsSA,

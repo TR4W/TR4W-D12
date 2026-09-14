@@ -665,7 +665,34 @@ begin
    (* A RATCHET. The list only ever grows, as the last step of removing a
      feature. A fall means rows were dropped without being listed, which is
      silent: the failure is a dialog on someone else's machine. *)
-   CheckTrue(RetiredCommandCount >= 91, 'the retired list has not shrunk');
+   (* THE FLOOR MOVED DOWN ON PURPOSE, 2026-09-14, AND IT EARNED ITS KEEP ON
+     THE WAY -- it failed the moment the list shrank, which is exactly what a
+     floor is for.
+
+     91 -> 85, and every one of the eight is accounted for:
+
+       SEVEN WERE NEVER RETIRED. NY4I: "there are many commands in
+       RETIRED_COMMANDS that are not at all retired." HAMLIB DEBUG, HAMLIB
+       ASYNC ONLY, HAMLIB TRACE and TELNET DEBUG are seeded from tr4w.ini
+       INTO THE STORE and edited in Preferences; TCI DEBUG and TCI MAX TX
+       SECONDS are newer than the D7 array and live in the store; FT1000MP CW
+       REVERSE is a per-radio key the direct applier handles by name. They
+       moved to OWNED_BY_A_STORE, which is why StoreOwnedCommandCount rose by
+       the same seven.
+
+       ONE WAS GENUINELY WITHDRAWN. SERIAL PORT DEBUG, removed by NY4I: TRACE
+       covers it now.
+
+     BOTH LISTS ACCEPT AND IGNORE, so nothing broke while they were in the
+     wrong one -- but RETIRED is tested FIRST, so a config line for a live
+     setting was logged as "is a withdrawn command". A log that lies about a
+     feature still being in Preferences is worse than no log line.
+
+     THE TEST FOR "IS THIS REALLY RETIRED", from NY4I: look the command up in
+     the ORIGINAL CFGCA array, which still exists in the D7 tree at C:\TR4W.
+     `crAddress: nil` means it was already obsolete there. Of the 93, 49 were
+     nil, 41 had a real target, and 3 had no row at all. *)
+   CheckTrue(RetiredCommandCount >= 85, 'the retired list has not shrunk');
 end;
 
 procedure TSettingsModelTests.Test_NoRetiredNameIsAlsoLiveOrOwned;
@@ -772,7 +799,9 @@ begin
    (* A ratchet, as the withdrawn list has. A fall means names were dropped
      without being listed, and the failure is a modal dialog on somebody
      else's machine. *)
-   CheckTrue(StoreOwnedCommandCount >= 31, 'the store list has not shrunk');
+   (* 31 -> 39: the seven that were mislabelled as retired moved here, plus
+     CONNECTION COMMAND. See the note on RetiredCommandCount above. *)
+   CheckTrue(StoreOwnedCommandCount >= 39, 'the store list has not shrunk');
 end;
 
 
