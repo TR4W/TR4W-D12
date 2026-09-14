@@ -48,7 +48,7 @@ launched a 64-bit TR4W.**
 
 | gate | source doc | first measure | now | state |
 |---|---|---|---|---|
-| PChar-family in live code | 751 raw mentions | 578 in 69 files | **384** | in progress |
+| PChar-family in live code | 751 raw mentions | 578 in 69 files | **362** | in progress |
 | pointer truncation -- casts | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
 | pointer truncation -- **handles in 32-bit storage** | not in the source doc | **not measured** | **0** (4 fixed) | **DONE** |
 | live `asm` blocks | "much disabled… confirm each" | 0 | **0** | **DONE** |
@@ -104,7 +104,10 @@ all thirteen sets open.
 | `9d627433` | the three C `long` types become `clong` (not a 64-bit item) | 412 |
 | `7a5a69d6` | VC.pas scalar constants; the `HeaderTagText` facade deleted | 396 |
 | `9ded98f7` | `FirstCall` passed as the ShortString it is | **384** |
-| _this one_ | **the x64 build**: toolchain pairing, handle widths, per-arch DLLs | 384 |
+| `0ed6bad6..07b07d45` | **the x64 build**: toolchain pairing, handle widths, per-arch DLLs | 384 |
+| `b2b0ddde` | raw pointers out of every Format argument, plus `Lint-FormatArgs` | 384 |
+| `63c1e046` | the band map spot list becomes a dynamic array | 384 |
+| `d44e4aba..3aa3f580` | **the C-string shim**: 60 call sites -> 4 | **362** |
 
 ---
 
@@ -207,14 +210,44 @@ after it has sat for a day.
 
 | unit | live | note |
 |---|---:|---|
-| `postunit.pas` | 36 | Cabrillo/ADIF writers |
-| `MainUnit.pas` | 29 | |
-| `uAnsiStr.pas` | 28 | **delete the unit** once its callers are gone; it is a second string library |
+| `uAnsiStr.pas` | 28 | **THE SHIM IS DOWN TO 4 CALL SITES.** What is left in the unit is almost all its own declarations plus `LclText`, which is not a C-string routine at all -- see below |
+| `MainUnit.pas` | 26 | |
+| `postunit.pas` | 21 | Cabrillo/ADIF writers |
 | `TF.pas` | 28 | façade GONE; what remains returns a PAnsiChar into a shared global |
 | `uctydat.pas` | 21 | CTY.DAT parsing — real byte work, may keep bounded byte arrays |
 | `VC.pas` | 18 | was 34; the scalar constants are done, the spelling TABLES and record fields remain |
 | `uHamLibDirect.pas` | 14 | a real C ABI boundary; was 20 before the three offset helpers went |
 | `logdvp.pas`, `tr4wserverUnit.pas`, `tree.pas` | 15 each | |
+
+#### The C-string shim: 60 call sites -> 4, and what the last four are
+
+Every `StrPCopy` / `StrPLCopy` / `StrLCopy` writing a fixed buffer, every
+`StrLen` reading one, and both `strpos` searches are gone. The helpers that
+replaced them -- `SetCharBuffer`, `CharBufferText`, `CharBufferSlice`,
+`CompareCharBuffer` -- now live in `utils_text` **and have tests**, which they
+never had in `TF`: that unit pulls the LCL and the config model in behind it,
+so it is not in `tr4w_unit_tests.lpr` and none of this could be exercised.
+
+**The four that remain are each a different question, not more of the same:**
+
+| where | why it is still there |
+|---|---|
+| `uctydat` ReplaceCountry | a **SUSPECTED DEFECT**, documented at the site: it compares a country ID against `r.Name` from index 1, and that buffer's text starts at index 0. Removing the pointer must not change what the comparison MEANS, and this one decides which country a CTY.DAT override replaces. NY4I's ruling |
+| `uctydat` ctyLoadInCountryFile | `Strpos` over a raw file buffer -- byte scanning of CTY.DAT, which stays bytes |
+| `uctydat` custom-country list | `StrComp` against a `PAnsiChar` parameter; the parameter is the thing to convert |
+| `uMessagesList` | a pointer WALK (`p := start + StrLen(start)`, then `p[-1]`), so the routine wants rewriting rather than the call swapping |
+
+**AND ONE RULE CAME OUT OF THIS THAT IS NOT OBVIOUS.** The CTY prefix table
+could NOT be converted to string comparison: `utils_text.StrUpper`'s own note
+records that uCTYDAT runs over buffers holding CP1251/CP1250, so
+`CharBufferText` (UTF-8) would decode bytes that are not UTF-8 and change
+which prefixes match. `CompareCharBuffer` keeps the unsigned byte order and
+drops only the pointers -- and is pinned against `StrComp` in
+`uTestUtilsText`, sign by sign, including a CP1251 `$C0` sorting above `Z`.
+
+**Byte data stays bytes. What goes is the pointer arithmetic.** That is NY4I's
+rule at the top of this document, and this is the first place it decided the
+answer rather than merely describing it.
 
 #### What the VC.pas slice found, which generalises
 
