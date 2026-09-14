@@ -227,7 +227,8 @@ uses
    (* The Cabrillo header's tag table -- CabrilloTagText answers from the live
       window when it is open and from the store otherwise. *)
    uCbrSum,
-   (* CFGCA and the value/provenance accessors -- phase E1. *)
+   (* The value and provenance accessors -- phase E1. CFGCA is gone; uCFG
+      still owns CheckCommand and the renderer. *)
    uCFG,
    (* GetCQMemoryString / GetEXMemoryString -- the program's own accessors. *)
    LogCW,
@@ -241,7 +242,10 @@ uses
    postunit,
    (* Settings.CommandIsContestScoped -- which commands belong to the contest
       rather than to the station. See the capture classifier below. *)
-   uSettingsModel;
+   uSettingsModel,
+   (* RecalculateMyCountryContinentAndZoneNew -- run once the log has supplied
+      the callsign; see the end of LogStoreApplyContestConfig. *)
+   FContest;
 
 var
    GDatabase: TLogDatabase = nil;
@@ -1533,6 +1537,49 @@ begin
                            'callsign as DX on its next open.',
                            [ContestTypeSA[Contest]]);
                end;
+            end
+
+         (* A TABLE THAT IS WRONG, AND A .cfg THAT SAYS SO -- 2026-09-14.
+
+           THIS IS THE LAST THING KEEPING A .cfg NECESSARY, and it is not an
+           ordering problem: contest_type is derived at IMPORT from the first
+           record's ceContest ORDINAL, and a .TRW written under an older
+           ContestType layout maps that ordinal to a different contest. The
+           golden corpus carries one -- winter_fd_2025_w4ta is stamped
+           ALRS-UA1DZ-CUP and its .cfg says WINTER FIELD DAY -- and the
+           mismatch is permanent, because nothing ever revisited the stamp.
+
+           THE ARM ABOVE THIS ONE ALREADY ESTABLISHES WHO IS RIGHT. It applies
+           the table only when nothing else has answered, so reaching here with
+           a non-dummy Contest that DISAGREES with the table means a contest
+           .cfg set it -- which CommandCameFromContestCFG confirms rather than
+           infers, so a contest set any other way this session does not
+           silently rewrite a log.
+
+           AND THIS IS THE WHOLE POINT OF "READ ONCE AND CONVERT". The .cfg is
+           an import format: what it says is converted INTO the log, and the
+           file is not consulted again. Leaving the stamp wrong means the file
+           must be kept for ever, which is the thing E3 exists to end.
+
+           NOTHING IS GUESSED. The value written is the contest the program is
+           already scoring with. *)
+         else if (Contest <> DUMMYCONTEST) and
+                 (GRepository.LogContest <> Contest) and
+                 CommandCameFromContestCFG('CONTEST') then
+            begin
+            if logger <> nil then
+               begin
+               logger.Warn('[LogStore] this log was stamped %s and its .cfg ' +
+                           'says %s -- correcting the log. The stamp came ' +
+                           'from a binary import, whose contest ordinal was ' +
+                           'written under an older layout.',
+                           [ContestTypeSA[GRepository.LogContest],
+                            ContestTypeSA[Contest]]);
+               end;
+            GRepository.SetContest(Contest);
+            (* See the note beside the stamp in EnsureOpen: SetContest does not
+              commit, and an uncommitted write is rolled back at exit. *)
+            GRepository.Commit;
             end;
 
          for i := 0 to rows.Count - 1 do
@@ -1724,6 +1771,34 @@ begin
       finally
          rows.Free;
       end;
+
+      (* AND NOW THE CALLSIGN IS SETTLED, SO DERIVE FROM IT -- 2026-09-14.
+
+        THIS IS WHAT KEPT THE .cfg NECESSARY, and it is an ORDERING problem
+        rather than a missing setting: every command in the file IS captured
+        and applied.
+
+        MY COUNTRY, MY CONTINENT and MY ZONE are DERIVED from MY CALL through
+        CTY.DAT unless the operator stated them. While a .cfg supplied the
+        callsign, that derivation happened during config load, before anything
+        that reads it. Now the callsign arrives HERE, from the log -- and the
+        config table has no ordering, so FCONTEST can run (because CONTEST was
+        applied) while My.Call is still empty, derive from nothing, and leave
+        the zone at its declared default.
+
+        MEASURED, cqww_ssb_2025_ny4i: every sent exchange read `59 15` instead
+        of `59 05`. That .cfg does not name a zone at all -- NY4I's zone 5 was
+        derived from NY4I -- so no amount of capturing would have fixed it.
+
+        ONCE, AT THE END, rather than after each row: the routine reads the
+        WasSet flags itself, so an operator who stated a country or a zone is
+        not overruled, and running it once when every source has contributed
+        is the definition of "settled". *)
+      if Settings.My.Call <> '' then
+         begin
+         RecalculateMyCountryContinentAndZoneNew(
+            CallString(UTF8Encode(Settings.My.Call)));
+         end;
    except
       on E: Exception do
          begin

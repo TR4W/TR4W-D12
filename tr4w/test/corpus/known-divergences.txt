@@ -54,6 +54,53 @@
 general_qso_2026_w1aw4  event-source: sent name missing (MyName '' under /EXPORT; D7 sent TOM)
 
 # ---------------------------------------------------------------------------
+# 2026-09-14 -- winter_fd's ADIF contest, AND THE REFERENCE CONTRADICTS ITSELF.
+#
+# THIS ONE IS NOT AN EVENT-SOURCE ISSUE AND IT NEEDS NY4I'S RULING. It is
+# recorded here rather than left as a FAIL because the divergence is
+# DEMONSTRATED and the reference is the thing that is inconsistent -- but
+# blessing a change to 1,318 lines of a golden artifact is his call, not an
+# agent's.
+#
+# WHAT THE THREE SOURCES SAY ABOUT THIS ONE LOG, measured today:
+#
+#   log.cfg            CONTEST=WINTER FIELD DAY
+#   ref.cbr  (D7)      CONTEST: WFD
+#   ref.adi  (D7)      <CONTEST_ID:14>ALRS-UA1DZ-CUP
+#
+# The D7 run that wrote those two artifacts wrote them from the same log in the
+# same pass. Its Cabrillo took the SESSION's contest -- which the .cfg had set
+# -- and its ADIF took each RECORD's ceContest ORDINAL, which in a January 2025
+# .TRW maps to a different member of ContestType. Two of the three sources say
+# Winter Field Day; the one that disagrees is the one reading an ordinal out of
+# a binary file written under an older layout.
+#
+# WHY IT SURFACED NOW. Phase E3 -- "the .cfg should not be necessary" -- was at
+# 12 of 13, and this was the set that still needed its .cfg: the log's
+# contest_type is stamped ALRS-UA1DZ-CUP at IMPORT, from that same ordinal, so
+# opening it without a .cfg scored it as the wrong contest entirely
+# (CLAIMED-SCORE 28213 instead of 42364). uLogStore now CORRECTS the stamp when
+# a contest .cfg disagrees with it -- which is what "read once and convert"
+# means -- and with that, all 13 sets export identically with and without their
+# .cfg contents.
+#
+# WHAT THE CANDIDATE NOW SAYS, and it is internally consistent:
+#
+#   cand.cbr           CONTEST: WFD
+#   cand.adi           <CONTEST_ID:3>WFD
+#
+# The per-QSO ADIF lines also gain DXCC, STATE, ARRL_SECT and CLASS, because a
+# Winter Field Day QSO exports those and an ALRS-UA1DZ-CUP QSO does not. That
+# is the same fact reaching more fields, not a second change.
+#
+# THE TWO WAYS TO CLOSE IT, and both are decisions:
+#   * accept it -- the ADIF now agrees with the Cabrillo, the .cfg and the log,
+#     and ref.adi is re-frozen from the candidate; or
+#   * revert the stamp correction -- and this log needs its .cfg for ever,
+#     which is the thing E3 exists to end.
+winter_fd_2025_w4ta  ADIF contest id: D7's own .cbr and .adi disagree (WFD vs ALRS-UA1DZ-CUP); D12 agrees with the .cfg -- AWAITING NY4I'S RULING
+
+# ---------------------------------------------------------------------------
 # 2026-08-13 -- all four rows are now DEMONSTRATED, not asserted.
 #
 # iaru_hf_2026_ny4i used to sit in export-d12-corpus.sh's SKIP list ("pops an

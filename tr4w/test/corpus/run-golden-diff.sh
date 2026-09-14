@@ -13,6 +13,15 @@ KNOWN="tr4w/test/corpus/known-divergences.txt"
 # A set listed in known-divergences.txt diffs for a tracked, non-conversion
 # reason (see that file); report it as KNOWN, not FAIL.
 is_known(){ grep -qiE "^$1[[:space:]]" "$KNOWN" 2>/dev/null; }
+
+# THE ROW'S OWN REASON, not a fixed one. known-divergences.txt is documented as
+# `<slug>  <reason>` and every row carries a different reason -- but this script
+# printed "(event-source issue, deferred)" for all of them, which was true of
+# the rows that existed when it was written and became a plain lie the moment
+# one was added for another cause. A reader trusts the line on screen; they do
+# not open the file to check whether it means what it says.
+known_reason(){ grep -iE "^$1[[:space:]]" "$KNOWN" 2>/dev/null | head -1 |
+                sed -E "s/^[^[:space:]]+[[:space:]]+//"; }
 pass=0; fail=0; skip=0; known=0
 for d in tr4w/test/corpus/*/; do
    slug=$(basename "$d")
@@ -36,7 +45,7 @@ for d in tr4w/test/corpus/*/; do
       if out=$(python "$GD" "$ref" "$cand" 2>&1); then
          printf '  PASS  %-26s %s\n' "$slug" "$kind"; pass=$((pass+1))
       elif is_known "$slug"; then
-         printf '  KNOWN %-26s %-3s (event-source issue, deferred)\n' "$slug" "$kind"; known=$((known+1))
+         printf '  KNOWN %-26s %-3s (%s)\n' "$slug" "$kind" "$(known_reason "$slug")"; known=$((known+1))
       else
          printf '  FAIL  %-26s %s\n' "$slug" "$kind"
          echo "$out" | grep -E '^[-+@]' | head -8 | sed 's/^/        /'

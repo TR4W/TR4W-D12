@@ -2084,6 +2084,28 @@ type
         the country file. NY4I, 2026-09-12: "the operator needs to be able
         to override zone and in fact any of the derived settings." *)
       property CountryWasSet: boolean read FCountryWasSet;
+
+      (* WRITE A DERIVED VALUE WITHOUT CLAIMING THE OPERATOR STATED IT.
+
+        THE FLAG ABOVE ANSWERS "DID THE OPERATOR STATE THIS", and the property
+        setter cannot tell who is assigning -- so the derivation's own output
+        latched it, and that is a defect with teeth:
+
+          RecalculateMyCountryContinentAndZoneNew writes the zone it derived
+          back through the setter. Run it once with an EMPTY callsign and the
+          wrong answer becomes a stated answer, permanently: every later run,
+          including the one that finally has the callsign, declines to
+          override it.
+
+        MEASURED ON THE .cfg-NOT-NEEDED GATE, cqww_ssb_2025_ny4i: a log opened
+        without a .cfg derived zone 15 from no callsign, latched it, and then
+        exported `59 15` on all 101 QSOs while the log said NY4I -- zone 5.
+
+        SO THE DERIVATION HAS ITS OWN DOOR. It assigns and raises Changed
+        exactly as the setter does, and leaves the flag alone. A value that
+        came from CTY.DAT is a derivation however many times it is made. *)
+      procedure DeriveCountry(const aValue: string);
+      procedure DeriveZone(const aValue: string);
    published
       // Was the global MyFOCNumber in logwind.pas. MY FOC NUMBER.
       property FocNumber: string read FFocNumber write FFocNumber;
@@ -4512,6 +4534,18 @@ begin
       begin
       FZoneWasSet := True;
       end;
+   SetStr(FZone, aValue, 'Zone');
+end;
+
+procedure TMySettings.DeriveCountry(const aValue: string);
+begin
+   (* The assignment the setter makes, WITHOUT the claim it makes. See the
+     note on DeriveCountry in the class declaration. *)
+   SetStr(FCountry, aValue, 'Country');
+end;
+
+procedure TMySettings.DeriveZone(const aValue: string);
+begin
    SetStr(FZone, aValue, 'Zone');
 end;
 

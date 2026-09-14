@@ -1859,9 +1859,10 @@ begin
   FillChar(CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall), 0);
   //  CTY.ctyLastLocatedCall := '';
   ctyLocateCall(UTF8Encode(Settings.My.Call), TempQTH);
-  Settings.My.Country := TempQTH.CountryID;
+  (* DERIVED, not stated -- same reason as the routine below. *)
+  Settings.My.DeriveCountry(string(TempQTH.CountryID));
   MyContinent := TempQTH.Continent;
-  Settings.My.Zone := IntToStr(TempQTH.Zone);
+  Settings.My.DeriveZone(IntToStr(TempQTH.Zone));
 end;
 
 procedure RecalculateMyCountryContinentAndZoneNew(Call: CallString);
@@ -1884,7 +1885,11 @@ begin
 
   if not Settings.My.CountryWasSet then
      begin
-     Settings.My.Country := string(TempQTH.CountryID);
+     (* DERIVED, AND SAID TO BE. Assigning the property would set
+       CountryWasSet, so this routine's own answer would read as the
+       operator's on the next call -- and the FIRST call can run before the
+       callsign has arrived. See TMySettings.DeriveCountry. *)
+     Settings.My.DeriveCountry(string(TempQTH.CountryID));
      if MRC = '' then
         begin
         MRC := UTF8Encode(Settings.My.Country);
@@ -1893,7 +1898,7 @@ begin
 
   if not Settings.My.ZoneWasSet then
      begin
-     Settings.My.Zone := IntToStr(ctyGetZone(Call));
+     Settings.My.DeriveZone(IntToStr(ctyGetZone(Call)));
      end;
 
   if not MyContinentIsSet then
