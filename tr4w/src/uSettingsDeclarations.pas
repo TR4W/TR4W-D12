@@ -490,7 +490,7 @@ begin
      nil Self is a plain call that never dereferences it. The QSO-point
      registrations have gone to the settings model and taken the guard with
      them, so it belongs before its first use. *)
-   RegisterStoredSetting('contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
+   RegisterModelSetting( 'contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
                           RS_CONTEST_MULTREPORTMINIMUMBANDS);
    RegisterModelSetting( 'contest.prefixMultiplier',    'PREFIX MULTIPLIER',
                           RS_CONTEST_PREFIXMULTIPLIER);
@@ -663,8 +663,8 @@ begin
                           RS_OPERATING_CTRLJ_AUTOTIMEINCREMENT);
    RegisterModelSetting( 'operating.ctrlj.band',              'BAND',
                           'Band');
-   RegisterLegacySetting('operating.ctrlj.clearDupeSheet',    'CLEAR DUPE SHEET',
-                          'Clear Dupe Sheet');
+   (* CLEAR DUPE SHEET is an INSTRUCTION, not a setting -- naming it IS the
+     action. It is TryApplyCommandAction now. *)
    RegisterModelSetting( 'operating.ctrlj.customUserString',  'CUSTOM USER STRING',
                           RS_OPERATING_CTRLJ_CUSTOMUSERSTRING);
    RegisterModelSetting('operating.ctrlj.deEnable',          'DE ENABLE',
@@ -677,8 +677,8 @@ begin
                           RS_OPERATING_CTRLJ_DUPECHECKSOUND);
    RegisterModelSetting('operating.ctrlj.dupeSheetAutoReset','DUPE SHEET AUTO RESET',
                           RS_OPERATING_CTRLJ_DUPESHEETAUTORESET);
-   RegisterStoredSetting('operating.ctrlj.frequencyMemory',   'FREQUENCY MEMORY',
-                          RS_OPERATING_CTRLJ_FREQUENCYMEMORY);
+   (* FREQUENCY MEMORY ACCUMULATES -- a config file names it once per band --
+     so it is a command rather than a value. TryApplyCommandAction. *)
    RegisterModelSetting( 'operating.ctrlj.frequencyMemoryEnable','FREQUENCY MEMORY ENABLE',
                           RS_OPERATING_CTRLJ_FREQUENCYMEMORYENABLE);
    RegisterModelSetting( 'operating.ctrlj.frequencyPollRate', 'FREQUENCY POLL RATE',
@@ -807,8 +807,8 @@ begin
                           RS_FILES_CTRLJ_UNKNOWNCOUNTRYFILENAME);
 
    // --- Band Map (5) ---------------------------------
-   RegisterStoredSetting('bandmap.ctrlj.bandMapCutoffFrequency','BAND MAP CUTOFF FREQUENCY',
-                          RS_BANDMAP_CTRLJ_BANDMAPCUTOFFFREQUENCY);
+   (* BAND MAP CUTOFF FREQUENCY accumulates the same way.
+     TryApplyCommandAction. *)
    (* MOVED TO uSettingsModel 2026-09-11, and they keep crJ:1's meaning --
      NeedsRestart -- explicitly, because for these three it is true: the band
      map grid's geometry is computed once in LayOutGrid.

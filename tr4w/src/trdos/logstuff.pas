@@ -477,7 +477,10 @@ var
   MultiRetryTime: integer = 30;
   MultiSerialNumber: integer;
   MultiUpdateMultDisplay: boolean = True;
-  MultReportMinimumBands: integer = 4;
+  (* MultReportMinimumBands DELETED 2026-09-14 -- it is
+    Settings.Contest.MultReportMinimumBands now. It had NO READER: the
+    declaration and the CFGCA row were the whole of it, so the setting is
+    carried rather than withdrawn, per NY4I's ruling on MY IOTA. *)
 
   NameCallsignPutUp: CallString;
 

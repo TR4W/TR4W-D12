@@ -145,7 +145,11 @@ if ($problems.Count -gt 0) {
 # why: 153 -> 42 was one night's work, and nothing else in the build would notice
 # it drifting back. The number may FALL freely; raising it means editing this
 # line, which is the point at which somebody has to explain themselves.
-$LEGACY_CEILING = 1
+# ZERO. Every setting that was still applied from the ini has moved; what is
+# left in CFGCA is commands and live session state, neither of which this lint
+# counts. A ceiling of 0 means a new legacy registration fails the build, which
+# is the point of having got here.
+$LEGACY_CEILING = 0
 
 if ($legacy.Count -gt $LEGACY_CEILING) {
    Write-Output ("Lint-SettingsMigration: {0} settings still write tr4w.ini; the ceiling is {1}." -f $legacy.Count, $LEGACY_CEILING)

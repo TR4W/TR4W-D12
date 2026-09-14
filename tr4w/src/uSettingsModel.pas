@@ -2730,6 +2730,7 @@ type
       FQslMode: string;
       FQsoPointMethod: string;
       FSingleBandScore: string;
+      FMultReportMinimumBands: integer;
       FDomesticMultiplier: string;
       FDxMultiplier: string;
       FPrefixMultiplier: string;
@@ -2918,6 +2919,17 @@ type
          read FQsoPointMethod write SetQsoPointMethod;
       property SingleBandScore: string
          read FSingleBandScore write SetSingleBandScore;
+
+      (* HOW MANY BANDS A MULTIPLIER MUST BE WORKED ON before the mult report
+        lists it. Was the global MultReportMinimumBands in logstuff.
+
+        AN ALLOW-LIST, NOT A RANGE -- (2, 3, 4) -- registered from uCFG's own
+        const array, so the drop-down and the refusal are one statement.
+
+        MULT REPORT MINIMUM BANDS, aliased: the derived name would put CONTEST
+        in front of a command an operator has typed for years. *)
+      property MultReportMinimumBands: integer
+         read FMultReportMinimumBands write FMultReportMinimumBands;
 
       (* THE FOUR MULTIPLIER MODES, AS TOKENS.
 
@@ -4708,6 +4720,8 @@ begin
    FQslMode                  := 'NONE';
    FQsoPointMethod           := 'NONE';
    FSingleBandScore          := '160';
+   (* 4, the value logstuff's declaration carried. *)
+   FMultReportMinimumBands := 4;
    FDomesticMultiplier := 'NONE';
    FDxMultiplier       := 'NONE';
    FPrefixMultiplier   := 'NONE';
@@ -5292,6 +5306,7 @@ begin
    Alias('QSL MODE',                   'Contest.QslMode');
    Alias('QSO POINT METHOD',           'Contest.QsoPointMethod');
    Alias('SINGLE BAND SCORE',          'Contest.SingleBandScore');
+   Alias('MULT REPORT MINIMUM BANDS', 'Contest.MultReportMinimumBands');
    Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
    Alias('DX MULTIPLIER',        'Contest.DxMultiplier');
    Alias('PREFIX MULTIPLIER',    'Contest.PrefixMultiplier');

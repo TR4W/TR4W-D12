@@ -320,7 +320,7 @@ const
     (arArrayPtr: @ROW_COUNT_ARRAY;                 arArrayLength: high(ROW_COUNT_ARRAY);                 arVar: nil{moved to Settings.MainWindow.RowCount}),
     (arArrayPtr: @WINDOW_SIZE_ARRAY;               arArrayLength: high(WINDOW_SIZE_ARRAY);               arVar: nil{moved to Settings.MainWindow.WindowSize}),
     (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: nil{moved to Settings.Cw.SpeedIncrement}),
-    (arArrayPtr: @MULT_REPORT_MINIMUM_BANDS_ARRAY; arArrayLength: high(MULT_REPORT_MINIMUM_BANDS_ARRAY); arVar: @MultReportMinimumBands),
+    (arArrayPtr: @MULT_REPORT_MINIMUM_BANDS_ARRAY; arArrayLength: high(MULT_REPORT_MINIMUM_BANDS_ARRAY); arVar: nil{moved to Settings.Contest.MultReportMinimumBands}),
     (* SLOT FREED 2026-09-13 -- STEREO CONTROL PIN named WHICH LPT PIN drove
       the headphone relay, and went with the parallel port. *)
     (arArrayPtr: nil; arArrayLength: 0; arVar: nil),
@@ -354,7 +354,7 @@ const
         at the wrong hook.  The dispatcher already handles nil -- it tests
         Assigned and logs the command that asked. *)
       nil,
-      @F_CLEAR_DUPE_SHEET,
+      nil {CLEAR DUPE SHEET -- the command moved to TryApplyCommandAction},
       @F_BAND_MAP_DECAY_TIME,
       (* SLOT 6 IS FREE. F_AUTO_QSL_INTERVAL re-seeded AutoQSLCount, and its
         only caller -- the AUTO QSL INTERVAL row -- moved to the settings
@@ -384,9 +384,9 @@ const
       nil,
       nil {@F_MY_CALL -- DEPlusMyCall is derived, the rest is a setter},
       nil {@F_MY_GRID},
-      @F_ADD_DOMESTIC_COUNTRY,
-      @F_BAND_MAP_CUTOFF_FREQUENCY,
-      @F_FREQUENCY_MEMORY,
+      nil {ADD DOMESTIC COUNTRY -- the command moved to TryApplyCommandAction},
+      nil {BAND MAP CUTOFF FREQUENCY -- the command moved to TryApplyCommandAction},
+      nil {FREQUENCY MEMORY -- the command moved to TryApplyCommandAction},
       nil {@F_START_SENDING_NOW_KEY -- its body was already a bare Result},
       @F_DX_MULTIPLIER,
       nil {@F_MY_ZONE -- the setter raises ZoneWasSet},
@@ -821,6 +821,17 @@ const
      an exported log, which a token with an effect cannot do: the same ordinal
      arrives from the same table at the same point. *)
    - 10 {the remaining ckList tokens}
+   (* THE FOUR COMMANDS THAT DO SOMETHING RATHER THAN SET SOMETHING. Three
+     append to a list and one is a bare instruction, so each row was a router
+     to its crA hook with a crAddress pointing at scratch. They are a named
+     dispatch now -- TryApplyCommandAction -- with the hook bodies unchanged
+     and running at the same point. *)
+   - 4 {ADD DOMESTIC COUNTRY, CLEAR DUPE SHEET, BAND MAP CUTOFF FREQUENCY, FREQUENCY MEMORY}
+   - 1 {MULT REPORT MINIMUM BANDS -- moved to uSettingsModel}
+   (* CONNECTION COMMAND is owned by the CLUSTER LIBRARY: uRadioConfigApply
+     already assigns ConnectionCommand from the active cluster definition, so
+     the row was a second writer of one global. *)
+   - 1 {CONNECTION COMMAND -- owned by the cluster library}
    (* THE AUDIO PATHS. The two DVK ones are live -- the voice keyer works.
 
      THE TWO MP3 ONES HAVE NO READER AT ALL: uMP3Recorder and its lame_enc.dll
@@ -927,15 +938,12 @@ const
       (
     {(*}
 
- (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOwned; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'BAND MAP CUTOFF FREQUENCY';     crAddress: @tBandMapCutoffFrequency;        crMin:0;  crMax:MAXWORD-1; crS: csJSON; crA: 17;crC:0 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
 // BAND MAP ENABLE retired 2026-08-22 (NY4I): "if the window is opened, it is
 // enabled".  It stored into the same boolean the band map window wrote from
 // WM_INITDIALOG and WM_DESTROY, so closing the window turned the setting off
 // and the next save persisted it -- see the comment on BandMapEnable in
 // logwind.pas.  csRem with a nil address, not deleted, so an existing .cfg or
 // tr4w.json that names it still loads and is ignored.
- (crCommand: 'CLEAR DUPE SHEET';              crAddress: @ClearDupeSheetCommandGiven;     crMin:0;  crMax:0;       crS: csOwned; crA: 4; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'CODE SPEED';                    crAddress: @CodeSpeed;                      crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
 // (crCommand: 'COLUMN DUPESHEET COLOR';        crAddress: @ColumnDupeSheetColor;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  // RETIRED 2026-08-24.  A DOS-era layout: the manual describes it as being for
@@ -946,7 +954,6 @@ const
  // carried an uninitialised read nobody had ever hit.  NY4I: "we can retire the
  // option since it defaulted to FALSE."  csRem, not deleted, so an old config
  // naming it still loads without an error.
- (crCommand: 'CONNECTION COMMAND';            crAddress: @ConnectionCommand;              crMin:0;  crMax:255;     crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
 // (crCommand: 'COPY FILES';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOperation; crNetwork: 1),
 // (crCommand: 'CQ MENU';                       crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
 // CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
@@ -982,7 +989,6 @@ const
    nothing pointed at it. Retiring the row removes the misfire. *)
  (crCommand: 'FARNSWORTH ENABLE';             crAddress: @Config.FarnsworthEnable;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'FARNSWORTH SPEED';              crAddress: @Config.FarnsworthSpeed;                crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
- (crCommand: 'FREQUENCY MEMORY';              crAddress: @tFrequencyMemory;               crMin:0;  crMax:0;       crS: csJSON; crA: 18;crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctFreqList; crNetwork: 1),
  (* WITHDRAWN 2026-09-11 -- A BRIDGE WITH NOTHING LEFT TO CARRY.
 
     uRadioConfigStore owns this value; ApplyLoggingSettings and the TCI block in
@@ -1031,7 +1037,6 @@ const
     A bridge, not storage -- the first of the 279 such rows to go. *)
   (* WITHDRAWN 2026-09-10: Settings.Mmtty.Engine. *)
 // (crCommand: 'MULTIPLIER ITEM WIDTH';         crAddress: @MultiplierItemWidth;            crMin:0;  crMax:255;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctByte; crNetwork: 1),
- (crCommand: 'MULT REPORT MINIMUM BANDS';     crAddress: pointer(7);                      crMin:2;  crMax:5;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (* ORION PORT RETIRED 2026-09-10 (NY4I): "Drop Orion port. It covered by the
      general port as a type Orion in settings".
 
@@ -1904,7 +1909,7 @@ end;
   in the first place.
 *)
 const
-   OWNED_BY_A_STORE: array[0..30] of string = (
+   OWNED_BY_A_STORE: array[0..31] of string = (
       (* THE WINKEYER, owned by the keyer library in settings\tr4w.json.
 
         ApplyKeyerToWinKey writes every one of these fields into
@@ -1933,6 +1938,12 @@ const
       'WK SIDETONE FREQUENCY',
       'WK TAIL TIME',
       'WK WEIGHT',
+
+      (* THE CLUSTER'S CONNECT STRING, owned by the cluster library in
+        settings\tr4w.json. uRadioConfigApply assigns ConnectionCommand from
+        the active cluster definition -- the row was a second writer of the
+        same global, and the one that could disagree. *)
+      'CONNECTION COMMAND',
 
       (* UDP BROADCASTING, owned by udpBroadcast in the same file. *)
       'UDP BROADCAST ADDRESS',
@@ -2008,6 +2019,96 @@ begin
       end;
 end;
 
+(* THE COMMANDS THAT DO SOMETHING RATHER THAN SET SOMETHING.
+
+  CFGCA is a table of SETTINGS -- a name, a place to put the value, a type.
+  These four never fitted it: three APPEND to a list and one is a bare
+  instruction, so each carried a crA hook that did the work and a crAddress
+  pointing at scratch nobody read back. The row was a router.
+
+  THE BODIES ARE THE HOOKS', UNCHANGED, and they run at the same point in
+  CheckCommand that the hook did -- so a config file behaves identically.
+
+  ACCUMULATING, WHICH IS WHY THEY ARE NOT SETTINGS AND NOT DUPLICATES: a
+  config file may legitimately name FREQUENCY MEMORY a dozen times, and each
+  line adds. CommandIsSingleValued already says so. *)
+function TryApplyCommandAction(const aCommand: string;
+                               const aValue: ShortString): boolean;
+var
+   n: integer;
+   code: integer;
+   freq: longint;
+   band: BandType;
+   mode: ModeType;
+   text: string;
+begin
+   Result := True;
+
+   if UnicodeSameText(aCommand, 'ADD DOMESTIC COUNTRY') then
+      begin
+      if aValue = 'CLEAR' then
+         begin
+         ClearDomesticCountryList;
+         end
+      else
+         begin
+         AddDomesticCountry(aValue);
+         end;
+      Exit;
+      end;
+
+   if UnicodeSameText(aCommand, 'CLEAR DUPE SHEET') then
+      begin
+      (* THE VALUE IS IGNORED, as it always was: naming the command IS the
+        instruction, and what it records is WHICH file asked. *)
+      ClearDupeSheetCommandGiven := RunningConfigFile;
+      Exit;
+      end;
+
+   if UnicodeSameText(aCommand, 'BAND MAP CUTOFF FREQUENCY') then
+      begin
+      Val(aValue, n, code);
+      Result := code = 0;
+      if Result then
+         begin
+         AddBandMapModeCutoffFrequency(n);
+         end;
+      Exit;
+      end;
+
+   if UnicodeSameText(aCommand, 'FREQUENCY MEMORY') then
+      begin
+      (* THE HOOK'S BODY, with its own locals rather than the unit-wide
+        scratch it used. 'SSB 14250' means the phone memory for that band;
+        a bare frequency means CW. *)
+      text := string(aValue);
+      if Pos('SSB', UpperCase(text)) > 0 then
+         begin
+         Delete(text, Pos('SSB ', UpperCase(text)), 4);
+         Val(text, freq, code);
+         Result := code = 0;
+         if Result then
+            begin
+            CalculateBandMode(freq, band, mode);
+            DefaultFreqMemory[band, Phone] := freq;
+            end;
+         end
+      else
+         begin
+         Val(text, freq, code);
+         Result := code = 0;
+         if Result then
+            begin
+            CalculateBandMode(freq, band, mode);
+            DefaultFreqMemory[band, CW] := freq;
+            end;
+         end;
+      Exit;
+      end;
+
+   Result := False;
+end;
+
 function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 label
@@ -2061,6 +2162,15 @@ begin
      IT IS ALSO WHY A ROW CAN BE DELETED RATHER THAN HOLLOWED OUT.  The csRem
      stubs exist only to return True so that dialog does not appear.  Once the
      name resolves for real, the stub has no job. *)
+   (* A COMMAND THAT DOES SOMETHING, before the settings lookup and before the
+     row scan -- which is where its row sat. Four accumulating or instruction
+     commands live there now; see TryApplyCommandAction. *)
+   if TryApplyCommandAction(string(pshortstring(Command)^), CustomCMD) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
    if Settings.OwnsCommand(string(pshortstring(Command)^)) then
       begin
       (* AND IT DEPENDS ON WHO IS ASKING, exactly as a csJSON row does.
@@ -3059,6 +3169,8 @@ initialization
      2026-09-13 -- it named WHICH LPT PIN drove the headphone relay. *)
    RegisterSettingAllowedValues('Scp.MinimumLetters',
                                 IntegerVocabulary(SCP_MINIMUM_LETTERS_ARRAY));
+   RegisterSettingAllowedValues('Contest.MultReportMinimumBands',
+                                IntegerVocabulary(MULT_REPORT_MINIMUM_BANDS_ARRAY));
 
    (* THE FOUR MULTIPLIER VOCABULARIES, from the very tables CheckCommand
      matched their ckList rows against -- so the drop-down, the refusal and
