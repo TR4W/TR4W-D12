@@ -353,25 +353,23 @@ begin
 
   for c := F1 to F12 do
      begin
-     TempString[0] := AnsiChar(TF.Format(@TempString[1], 'CQF%u.WAV', Ord(c) - 111));
-     SetCQMemoryString(Phone, c, TempString);
- //    SetCQMemoryString(Phone, c, 'CQF' + IntToStr(Ord(c) - 111) + '.WAV');
+     (* THE REPLACEMENT WAS ALREADY WRITTEN, commented out on the next line.
+       What stood here wrote into a ShortString's BODY through a PAnsiChar and
+       then set its LENGTH BYTE by hand from the sprintf's return value --
+       two things the compiler does correctly on a plain assignment. *)
+     SetCQMemoryString(Phone, c, 'CQF' + IntToStr(Ord(c) - 111) + '.WAV');
      end;
 
   SetEXMemoryString(Phone, F1, 'MYCALL.WAV');
 
   for c := F3 to F12 do
      begin
-     TempString[0] := AnsiChar(TF.Format(@TempString[1], 'EXF%u.WAV', Ord(c) - 111));
-     SetEXMemoryString(Phone, c, TempString);
- //    SetEXMemoryString(Phone, c, 'EXF' + IntToStr(Ord(c) - 111) + '.WAV');
+     SetEXMemoryString(Phone, c, 'EXF' + IntToStr(Ord(c) - 111) + '.WAV');
      end;
 
   for c := AltF1 to AltF12 do
      begin
-     TempString[0] := AnsiChar(TF.Format(@TempString[1], 'ALTEXF%u.WAV', Ord(c) - 135));
-     SetEXMemoryString(Phone, c, TempString);
-     //SetEXMemoryString(Phone, c, 'ALTEXF' + IntToStr(Ord(c) - 135) + '.WAV');
+     SetEXMemoryString(Phone, c, 'ALTEXF' + IntToStr(Ord(c) - 135) + '.WAV');
      end;
 
   Sheet.DupeSheetEnable := True;

@@ -403,9 +403,17 @@ begin
            end
         else
            begin
-           FillChar(TmpBuf, SizeOf(TmpBuf), 0);
-           TF.Format(TmpBuf, '%s_cty',
-             QSOParties[ContestsArray[Contest].p].InsideStateDOMFile);
+           (* StrPas, NOT CharBufferText: this source is a PAnsiChar FIELD,
+             not a fixed char array, so the RTL's NUL-aware reader is the right
+             one. Those record fields being pointers is its own slice.
+
+             SetCharBuffer NUL-TERMINATES, so the FillChar that used to
+             clear the whole buffer first is not needed -- and clearing a
+             buffer to make a later write safe is the shape NY4I asked to
+             stop seeing (2026-09-14). *)
+           SetCharBuffer(TmpBuf,
+             string(StrPas(QSOParties[ContestsArray[Contest].p].InsideStateDOMFile))
+             + '_cty');
            TempDomesticQTHDataFileName := @TmpBuf;
              //QSOParties[ContestsArray[Contest].p].OutsideStateDOMFile;
            Settings.Contest.Name := ContestTypeSA[Contest] + ' (out of state)';
@@ -1963,8 +1971,9 @@ begin
      Exit;
      end;
   InState := False;
-  TF.Format(TempFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME,
-    ContestsArray[Contest].DF);
+  SetCharBuffer(TempFileName,
+                CharBufferText(TR4W_PATH_NAME) + 'DOM' +
+                string(StrPas(ContestsArray[Contest].DF)) + '.DOM');
   (* THE PATH IS SPELLED FOR WINDOWS -- separator AND case. Left as written
     because it is correct on Windows and because 153 literals in this tree
     spell a path this way; the resolver handles the whole class in one place

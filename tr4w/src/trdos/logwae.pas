@@ -225,7 +225,12 @@ begin
     push QTCNumber
     end;
 }
-     QRVString[0] := AnsiChar(TF.Format(@QRVString[1], 'QTC %u/%u', QTCNumber, NumberMessagesToBeSent));
+     (* PLAIN ASSIGNMENT. This wrote into the ShortString's BODY through a
+       PAnsiChar and set its LENGTH BYTE from the sprintf's return -- both of
+       which the compiler does correctly, and correctly is the point: the
+       hand-written length is what makes a ShortString buffer lie about its
+       own contents when the format is wrong. *)
+     QRVString := SysUtils.Format('QTC %u/%u', [QTCNumber, NumberMessagesToBeSent]);
  //    asm add esp,16 end;
 
      // Issue #997: asm `lea eax,[QRVString]; call SendStringAndStop` -> direct call.
