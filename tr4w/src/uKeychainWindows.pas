@@ -87,12 +87,39 @@ unit uKeychainWindows;
   rather than using anything stale.
 *)
 
+(*
+  ------------------------------------------------------------------------
+  AND THE GUARD HAS TO BE HERE, BECAUSE THERE IS ONLY ONE PROGRAM FILE
+  ------------------------------------------------------------------------
+
+  The note above says this unit is "in the Windows program's unit list and
+  nowhere else", and that a unit graph answers the platform question where a
+  conditional inside one unit only pretends to. THAT DESCRIBES A TREE WITH A
+  PROGRAM FILE PER PLATFORM, AND THIS TREE HAS ONE `tr4w.lpr` -- Windows,
+  Linux and macOS all build from it. So the unit graph cannot answer it, and
+  the Linux build died on `Can't find unit Windows used by uKeychainWindows`
+  from 2026-09-12, when this unit was added to that list, until 2026-09-14.
+  Nobody built Linux in between.
+
+  SO THE CONDITIONAL IS REAL HERE, not a pretence: on Windows this unit is
+  exactly what it was, and everywhere else it is an empty unit that registers
+  nothing -- which leaves uKeychain's portable scheme as the only backend,
+  which is precisely the behaviour the note above promises.
+
+  THE ALTERNATIVE IS A PROGRAM FILE PER PLATFORM, and that is a bigger
+  decision than a credential store: `tr4w.lpr` is where "which units are
+  compiled" is answered for this tree, and splitting it means three copies of
+  a 400-line list that would drift. If that ever happens, this guard comes
+  out and the note above becomes true as written.
+*)
+
 interface
 
 (* Nothing. The initialization section is the unit. *)
 
 implementation
 
+{$IFDEF WINDOWS}
 uses
    SysUtils,
    Windows,
@@ -264,10 +291,14 @@ begin
    Result := StatusFromLastError;
 end;
 
+{$ENDIF}
+
+{$IFDEF WINDOWS}
 initialization
    (* LAST ONE INSTALLED WINS THE WRITING, and uKeychain's own portable
      scheme is still registered -- so a settings file written before this
      existed, or on another platform, still reads. *)
    RegisterKeychainBackend(TWindowsKeychain.Create);
+{$ENDIF}
 
 end.
