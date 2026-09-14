@@ -9,5 +9,6 @@
     "cfg": "WINTER FIELD DAY.CFG",
     "adi": "WINTER FIELD DAY.ADI",
     "cbr": "W4TA.LOG"
-  }
+  },
+  "ref_adi_provenance": "D12-DERIVED 2026-09-14, not D7. D7 wrote <CONTEST_ID>ALRS-UA1DZ-CUP here while its own ref.cbr and this log.cfg both say Winter Field Day -- the ADIF read a ceContest ordinal out of a .TRW written under an older ContestType layout. Re-frozen from the candidate on NY4I's ruling. ref.cbr is still D7-written; so is every other artifact in the corpus."
 }

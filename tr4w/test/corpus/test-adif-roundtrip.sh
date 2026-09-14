@@ -98,22 +98,32 @@ ignored_tags_for() {
       # corpus too, and it is an EXPORT fault: the import stored what it read.
       general_qso_2026_w1aw4) echo "STX_STRING" ;;
 
-      # D7 stamped this log ALRS-UA1DZ-CUP while its own .CFG says WINTER FIELD
-      # DAY -- a .TRW written under an older ContestType layout, whose ordinal
-      # maps to a different contest now (uLogStore.pas, 2026-09-03).  A fresh
-      # contest built from the .CFG is correctly WFD, so the two files disagree
-      # about the contest for a reason that has nothing to do with the import.
+      # NARROWED 2026-09-14, FROM "CONTEST_ID DXCC STATE ARRL_SECT" TO ONE TAG.
       #
-      # THE OTHER THREE FOLLOW FROM THAT ONE, and are the same fact three more
-      # times: a section contest resolves the received section and writes DXCC,
-      # STATE and ARRL_SECT beside the QTH, and ALRS-UA1DZ-CUP is not one, so
-      # the D7 file has none of them.  That our WFD export writes all three is
-      # CORRECT and is proven by arrl_fd_2026_ny4i, whose D7 reference carries
-      # exactly those fields and which round-trips byte for byte.
+      # The old list existed because D7 stamped this log ALRS-UA1DZ-CUP while
+      # its own .CFG said WINTER FIELD DAY -- a .TRW written under an older
+      # ContestType layout, whose ordinal maps to a different contest now.  A
+      # section contest writes DXCC, STATE and ARRL_SECT beside the QTH and an
+      # ALRS-UA1DZ-CUP QSO does not, so all four tags differed from one cause.
       #
-      # The section itself is NOT ignored -- <QTH> is compared on all 1316
-      # records, which is what caught the import erasing it.
-      winter_fd_2025_w4ta) echo "CONTEST_ID DXCC STATE ARRL_SECT" ;;
+      # NY4I ruled on that (2026-09-14): ref.adi is re-frozen from the WFD
+      # candidate -- see known-divergences.txt, which keeps the reasoning and
+      # the cost.  CONTEST_ID, STATE and ARRL_SECT now MATCH and are compared.
+      #
+      # DXCC STAYS, FOR A DIFFERENT AND UNDIAGNOSED REASON, and emptying the
+      # list is how it surfaced.  Exactly ONE record of 1316 differs:
+      #
+      #   ref   ... <CALL:3>W4I ... <QTH:2>PR ... <DXCC:3>291 <ARRL_SECT:2>PR
+      #   cand  ... <CALL:3>W4I ... <QTH:2>PR ...              <ARRL_SECT:2>PR
+      #
+      # A direct export from the .TRW emits DXCC 291; the same record exported
+      # again AFTER an ADIF import does not.  PostUnit gates that field on
+      # rec.QTH.CountryID = 'K' (postunit.pas:2396), so the country resolved
+      # differently on the way back in -- for this one callsign, while the
+      # other 1315 are unaffected.  W4I is NOT a CTY.DAT exception (checked),
+      # so why it alone changes is NOT established and is deliberately not
+      # guessed at here.  Do not 'fix' this by widening the ignore list.
+      winter_fd_2025_w4ta) echo "DXCC" ;;
 
       *) echo "" ;;
    esac
