@@ -97,7 +97,7 @@ begin
      begin
      logger.Debug('Calling tCreateThread from RunPOSTGetScoresThread');
      GetScoresThreadHandle := tCreateThread(@CreateConnectionAndSendReportToGetScores, GetScoresThreadID);
-     logger.Debug('Created GetScores thread with threadid of %d',[GetScoresThreadID] );
+     logger.Debug('Created GetScores thread with threadid of %u',[PtrUInt(GetScoresThreadID)] );
      end;
 //  CreateConnectionAndSendReportToGetScores;
 end;

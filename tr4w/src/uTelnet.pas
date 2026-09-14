@@ -283,7 +283,16 @@ var
   // window had gone quiet.  Mid-contest that tends to be twenty minutes.
   TelnetRetryArmed: boolean;
   TelnetRetryDelay: integer;   // ms, doubles per failure to RETRY_DELAY_MAX
-  PendingTelnetHost: array[0..255] of AnsiChar;   // set on the main thread before the I/O thread starts
+  (* THE HOST, AS A STRING -- 2026-09-14.
+
+    It was array[0..255] of AnsiChar, and EVERY reader had to cast its way
+    back out: PAnsiChar(@PendingTelnetHost[0]) where that was remembered, and
+    a bare @PendingTelnetHost[0] where it was not -- which is the defect
+    below. A string has no wrong way to read it.
+
+    Still set on the main thread before the I/O thread starts, which is what
+    makes sharing it safe; that has not changed. *)
+  PendingTelnetHost: string;
   PendingTelnetPort: Word;
 
 // Forward-declared: the window procedure below arms and cancels the retry, but
@@ -784,14 +793,15 @@ begin
       begin
         if TR4W_TELNET_DEBUG then
            begin
-           logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+           logger.Info('[Telnet] Connected to %s:%d', [PendingTelnetHost, PendingTelnetPort]);
            end;
         TelnetSessionActive := True;   // there is now something to tear down
         // We are back: forget any pending retry and reset the backoff, so
         // the NEXT outage starts at 5 s again rather than inheriting the
         // 60 s this one may have crept up to.
         CancelTelnetRetry;
-        AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_CONNECTEDTO)), @PendingTelnetHost[0], PendingTelnetPort]), tstTR4W);
+        AddStringToTelnetConsole(Format('%s%s:%u',
+           [TC_CONNECTEDTO, PendingTelnetHost, PendingTelnetPort]), tstTR4W);
         // (The TelnetBuffer clear that stood here is gone with the buffer
         // -- there is no shared receive state to reset between sessions.)
         // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
@@ -829,12 +839,12 @@ begin
            begin
            logger.Error('[Telnet] Could not connect to %s:%d -- no socket error reported ' +
                         '(see the preceding reason)',
-             [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+             [PendingTelnetHost, PendingTelnetPort]);
            end
         else
            begin
            logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
-             [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, aEvent.Code,
+             [PendingTelnetHost, PendingTelnetPort, aEvent.Code,
               SysUtils.SysErrorMessage(aEvent.Code)]);
            end;
 
@@ -846,7 +856,8 @@ begin
         // can no longer cost the teardown.
         Disconnect;
 
-        AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_FAILEDTOCONNECTTO)), @PendingTelnetHost[0], PendingTelnetPort]), tstError);
+        AddStringToTelnetConsole(Format('%s%s:%u',
+           [TC_FAILEDTOCONNECTTO, PendingTelnetHost, PendingTelnetPort]), tstError);
         // Keep trying, with a longer gap each time.  A failed RETRY comes
         // back through here, which is what makes the backoff advance --
         // and a first connect that fails is retried too, so a TR4W
@@ -1025,10 +1036,10 @@ begin
 
   if TR4W_TELNET_DEBUG then
      begin
-     logger.Info('[Telnet] Connecting to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+     logger.Info('[Telnet] Connecting to %s:%d', [PendingTelnetHost, PendingTelnetPort]);
      end;
 
-  if not ClusterClient.Connect(string(AnsiString(PAnsiChar(@PendingTelnetHost[0]))),
+  if not ClusterClient.Connect(PendingTelnetHost,
                                PendingTelnetPort) then
      begin
      // Reason already reported through OnDisconnected; say the ATTEMPT failed
@@ -1106,13 +1117,52 @@ begin
      Exit;
      end;
 
-  StrLCopy(PendingTelnetHost, PAnsiChar(AnsiString(Host)),
-                    SizeOf(PendingTelnetHost));
+  (* Plain assignment. This was StrLCopy into a 256-byte buffer through a
+    PAnsiChar cast of a temporary AnsiString -- three conversions to store a
+    host name the caller already had as a string. *)
+  PendingTelnetHost := Host;
 
   // Issue #23 -- immediate visual feedback so connect is not a black box:
   // show the attempt in the window and switch the toolbar to the connected
   // state (grays Connect, enables Disconnect) the instant the user clicks.
-  AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_CONNECTINGTO)), @PendingTelnetHost[0], PendingTelnetPort]), tstTR4W);
+  (* A RAW POINTER WHERE %s WANTS A STRING, AND FPC BLAMES THE WRONG THING.
+
+    This line read
+
+        Format(AnsiString('%s%s:%u'),
+               [PAnsiChar(LclText(TC_CONNECTINGTO)),
+                @PendingTelnetHost[0],
+                PendingTelnetPort])
+
+    and every click of Connect raised
+
+        EConvertError: Invalid argument index in format "%s%s:%u"
+
+    which says the ARGUMENT COUNT is wrong. It is not -- there are three
+    specifiers and three arguments. `@PendingTelnetHost[0]` under {$T-} is an
+    UNTYPED Pointer, so it reaches the TVarRec as vtPointer, and %s does not
+    accept vtPointer (%p does). FPC's CheckArg reports a type mismatch using
+    the invalid-index message, so the diagnostic names the one thing that is
+    correct.
+
+    NOT A LINUX BUG, although that is where NY4I hit it. Reproduced on
+    Windows with a five-line program: the pointer form raises, the PAnsiChar
+    cast and the plain-string form both print. Every Windows build has had
+    this since the line was written; clicking Connect in the cluster window is
+    all it takes.
+
+    THE FIX IS THE ONE CLAUDE.md ASKS FOR -- pass strings. That removes the
+    pointer, and with it a SECOND latent fault on the same line:
+    PAnsiChar(LclText(...)) takes the address of a function-result temporary,
+    which is the dangling-PChar trap this tree has paid for before.
+
+    LclText IS GONE FROM THESE FIVE LINES and that is not a regression.
+    AddStringToTelnetConsole takes a `string` and hands it to
+    TelnetConsoleAdd, which is LCL code; the UTF-8 conversion belongs at the
+    widget boundary, not four layers above it. The round trip here was a
+    leftover from when this wrote into a Win32 listbox. *)
+  AddStringToTelnetConsole(Format('%s%s:%u',
+     [TC_CONNECTINGTO, PendingTelnetHost, PendingTelnetPort]), tstTR4W);
   EnableTelnetToolbatButtons(True);
 
   // Issue #23 -- start each session live: a Freeze left on from a previous
@@ -1125,7 +1175,7 @@ begin
   TelnetStopRequested := False;
   logger.Debug('Starting DX cluster I/O thread');
   TelThreadHandle := tCreateThread(@TelnetThreadProc, TelThreadID);
-  logger.Debug('Created DX cluster thread with threadid of %d', [TelThreadID]);
+  logger.Debug('Created DX cluster thread with threadid of %u', [PtrUInt(TelThreadID)]);
 end;
 
 procedure Disconnect;
@@ -1157,7 +1207,8 @@ begin
   // suppress the very message the operator most needs to see.
   if TelnetSessionActive then
      begin
-     AddStringToTelnetConsole(SysUtils.Format(AnsiString('%s%s:%u'), [PAnsiChar(LclText(TC_DISCONNECTEDFROM)), @PendingTelnetHost[0], PendingTelnetPort]), tstTR4W);
+     AddStringToTelnetConsole(Format('%s%s:%u',
+        [TC_DISCONNECTEDFROM, PendingTelnetHost, PendingTelnetPort]), tstTR4W);
      end;
 
   // Tell a still-connecting thread to bail (it checks this after connect, since
@@ -1913,7 +1964,10 @@ begin
     above is NOT dead and stays: it asks whether the form still exists. *)
 
   // TF.Format is wsprintf-style: positional arguments, not an open array.
-  AddStringToTelnetConsole(SysUtils.Format(AnsiString('Reconnecting to %s:%u in %u seconds...'), [@PendingTelnetHost[0], PendingTelnetPort, TelnetRetryDelay div 1000]), tstTR4W);
+  (* THE FIFTH, and the one that would have fired most often: auto-reconnect
+    is on by default, so every retry raised the same EConvertError. *)
+  AddStringToTelnetConsole(Format('Reconnecting to %s:%u in %u seconds...',
+     [PendingTelnetHost, PendingTelnetPort, TelnetRetryDelay div 1000]), tstTR4W);
 
   TelnetRetryTimer.Interval := TelnetRetryDelay;
   TelnetRetryTimer.Enabled := True;

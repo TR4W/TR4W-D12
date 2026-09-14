@@ -1026,7 +1026,7 @@ begin
   // does not spam the log -- loud on a genuine attempt, silent on retries.
   if not Quiet then
      begin
-     logger.Debug('[tCreateThread] Created thread %d',[lpThreadId]);
+     logger.Debug('[tCreateThread] Created thread %u',[PtrUInt(lpThreadId)]);
      end;
 end;
 

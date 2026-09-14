@@ -451,7 +451,7 @@ begin
   // driver's receive buffer until the thread starts.
   logger.Info('Calling tCreateThread from WkOpen');
   tCreateThread(@wkReadThreadProc, wkThreadID);
-  logger.Info('Created WK thread with id %d',[wkThreadId]);
+  logger.Info('Created WK thread with id %u',[PtrUInt(wkThreadId)]);
 end;
 
 function wkSend(const Buffer; nNumberOfBytesToWrite: DWORD): Cardinal;

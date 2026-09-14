@@ -1231,11 +1231,11 @@ begin
   // during the silent retry loop so it stays quiet.
   if FConnectThreadAnnounced then
      begin
-     logger.Debug('[ConnectThread] Thread %d destroyed, NetThreadID cleared', [GetCurrentThreadId])
+     logger.Debug('[ConnectThread] Thread %u destroyed, NetThreadID cleared', [PtrUInt(GetCurrentThreadId)])
      end
   else
      begin
-     logger.Trace('[ConnectThread] Thread %d exiting, NetThreadID cleared', [GetCurrentThreadId]);
+     logger.Trace('[ConnectThread] Thread %u exiting, NetThreadID cleared', [PtrUInt(GetCurrentThreadId)]);
      end;
   ClearThread(NetThreadID);
 end;

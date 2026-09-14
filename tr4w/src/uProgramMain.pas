@@ -2323,7 +2323,7 @@ begin
       begin
       logger.Info('Calling tCreateThread from WinKeyer');
       tCreateThread(@wkOpen, wkThreadID);
-      logger.Info('Created WinKeyer thread with threadid of %d',[wkThreadID] );
+      logger.Info('Created WinKeyer thread with threadid of %u',[PtrUInt(wkThreadID)] );
       end;
 
    if Settings.Yccc.So2rEnable then

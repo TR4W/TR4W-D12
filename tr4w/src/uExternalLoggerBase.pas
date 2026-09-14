@@ -411,7 +411,7 @@ begin
   FConn := AConn;
 
   msgHandler := proc;
-  logger.Info('Created ExternalLogger::TReadingTYhreadthread with id %d',[Self.ThreadID]);
+  logger.Info('Created ExternalLogger::TReadingTYhreadthread with id %u',[PtrUInt(Self.ThreadID)]);
 
   inherited Create(False);
 end;

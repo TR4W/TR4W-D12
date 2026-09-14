@@ -2653,7 +2653,7 @@ begin
   FSocketLock := ASocketLock;
   FDisconnecting := ADisconnecting;
 
-  logger.Info('Created NetRadioBase::TReadingThread (network) with id %d',[Self.ThreadID]);
+  logger.Info('Created NetRadioBase::TReadingThread (network) with id %u',[PtrUInt(Self.ThreadID)]);
   inherited Create(False);
 end;
 
@@ -2667,7 +2667,7 @@ begin
   FSocketLock := ASocketLock;
   FDisconnecting := ADisconnecting;
 
-  logger.Info('Created NetRadioBase::TReadingThread (serial) with id %d',[Self.ThreadID]);
+  logger.Info('Created NetRadioBase::TReadingThread (serial) with id %u',[PtrUInt(Self.ThreadID)]);
   inherited Create(False);
 end;
 

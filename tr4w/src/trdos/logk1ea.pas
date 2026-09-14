@@ -1588,7 +1588,7 @@ begin
   ActiveBeep := TypeOfBeep;
   logger.Info('Calling tCreateThread from DoABeep');
   TR4W_BeepThread := tCreateThread(@tDoABeep, TR4W_BeepThreadID);
-  logger.Info('Created Beep thread with threadid of %d',[TR4W_BeepThreadID] );
+  logger.Info('Created Beep thread with threadid of %u',[PtrUInt(TR4W_BeepThreadID)] );
   (* Issue #997: asm SetThreadPriority -> Pascal call. The old `push eax` pushed
     a stale handle (clobbered by the preceding logger.Info), so this never
     applied; now set it on the real handle. BEHAVIOR CHANGE: beep thread now

@@ -4565,8 +4565,22 @@ begin
    FConfirmEditChanges := True;
    // loggrid declared DistanceMode as DistanceKM, NOT the zero value.
    FDistanceMode       := DistanceKM;
-   // VC declared logLevels with no initialiser, so llNone.
-   FDebugLevel         := llNone;
+   (* DEBUG UNLESS THE OPERATOR SAYS OTHERWISE -- NY4I, 2026-09-14.
+
+     VC declared logLevels with no initialiser, so this was llNone: a station
+     that had never set DEBUG LOG LEVEL wrote NO LOG AT ALL. That is the
+     wrong default for a program still being ported -- on 2026-09-14 a fault
+     was reported from the Linux build and there was nothing to read, because
+     the bench box had never been told to log.
+
+     A DEFAULT IS ONLY THE STARTING POINT: an existing tr4w.json or a
+     DEBUG LOG LEVEL line still wins, so nobody who has chosen a level loses
+     it. What changes is the station that has chosen nothing.
+
+     THE COST IS DISK AND A LITTLE TIME, and the appender rolls the file, so
+     it is bounded. The benefit is that the first report of any defect comes
+     with evidence attached instead of a screenshot. *)
+   FDebugLevel         := llDebug;
    FCheckFileSize      := False;
    FUpdateRestartFile  := True;
    (* The values the globals in VC.pas carried: LogFrequencyEnable has no

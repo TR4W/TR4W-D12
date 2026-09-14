@@ -81,7 +81,7 @@ begin
       wkBusy := False;            //  4.90.5 (Q8)
       logger.Info('Calling tCreateThread from TCWKeyerCPU.SendString');
       CWThreadHandle := tCreateThread(@CWThreadProc, CWThreadID);
-      logger.Info('Created CW thread with threadid of %d', [CWThreadID]);
+      logger.Info('Created CW thread with threadid of %u', [PtrUInt(CWThreadID)]);
       // Issue #997: priority set on the REAL handle; the old asm pushed a
       // stale EAX and never applied it.  The CW thread runs TIME_CRITICAL.
       (* ThreadSetPriority(h, 15), not SetThreadPriority(h,

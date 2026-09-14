@@ -765,9 +765,9 @@ begin
   logger.Info('[ExitProgram] Step 2: Stopping polling threads');
   Radio1.PollingStopRequested := True;
   Radio2.PollingStopRequested := True;
-  logger.Info('[ExitProgram] Step 2a: Waiting for Radio1 (handle=%d)', [Radio1.tRadioInterfaceThreadHandle]);
+  logger.Info('[ExitProgram] Step 2a: Waiting for Radio1 (handle=%u)', [PtrUInt(Radio1.tRadioInterfaceThreadHandle)]);
   WaitForPollingThreadWithMessages(Radio1.tRadioInterfaceThreadHandle, 3000);
-  logger.Info('[ExitProgram] Step 2b: Waiting for Radio2 (handle=%d)', [Radio2.tRadioInterfaceThreadHandle]);
+  logger.Info('[ExitProgram] Step 2b: Waiting for Radio2 (handle=%u)', [PtrUInt(Radio2.tRadioInterfaceThreadHandle)]);
   WaitForPollingThreadWithMessages(Radio2.tRadioInterfaceThreadHandle, 3000);
   logger.Info('[ExitProgram] Step 2c: Polling threads done');
 
