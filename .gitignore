@@ -106,6 +106,19 @@ tr4w/tr4w.dof
 # Files never need to be tracked -- always regenerated.
 tr4w/tr4w_versioninfo.rc
 tr4w/tr4w_versioninfo.res
+
+# Win11.res -- the APPLICATION MANIFEST resource, compiled from W11.manifest
+# by build/Build-Manifest.ps1 on every build that produces an exe.
+#
+# It was TRACKED until 2026-09-14, which it had to be while only FullBuild
+# compiled it: Build-App linked {$R 'Win11.res'} and nothing regenerated it,
+# so the checked-in binary was the only copy an iterating developer had. That
+# is precisely how a corrected W11.manifest sat unread through two rebuilds
+# while the exe kept an x86 manifest and would not start at 64-bit.
+#
+# Now that every exe-producing build compiles it, tracking it only means each
+# build dirties the tree with a binary whose SOURCE is right there.
+tr4w/Win11.res
 tr4w/COMPILER.LOG
 tr4w/tr4w.log
 *.RST
