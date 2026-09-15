@@ -15,7 +15,9 @@
 #
 # THREE SOURCES, in order:
 #   1573  every DISTINCT callsign in the 13 golden-corpus logs
-#    111  hand-picked edge cases (edge-cases.txt)
+#    125  hand-picked edge cases (edge-cases.txt), INCLUDING the 14 prefixes
+#         that appear TWICE in cty.dat under different countries -- the ones
+#         an unstable prefix sort can silently flip
 #    366  exhaustive ZONE-RULE coverage (genzone.py) -- every district digit
 #         and every first-suffix-letter branch of ctyGetZone, for BOTH zone
 #         modes. The corpus CANNOT reach these: UA0 alone has nine letter
@@ -1706,6 +1708,20 @@ W1AWWWWWWW|183|K|5|8|NA|W1|W1AWWWWWWW|FN48
 W1AWWWWWWWW|183|K|5|8|NA|W1|W1AWWWWWWWW|FN48
 AB|183|K|5|8|NA|AB0|AB|EM47BO
 A|65535||255|255|??||A|
+4U0IARU|208|OE|15|28|EU|4U0|4U0IARU|JN67PH
+4U0R|23|*4U1V|15|28|EU|4U0|4U0R|JN88DE
+4U1A|208|OE|15|28|EU|4U1|4U1A|JN67PH
+4U1VIC|23|*4U1V|15|28|EU|4U1|4U1VIC|JN88DE
+4U2U|208|OE|15|28|EU|4U2|4U2U|JN67PH
+4UNR|208|OE|15|28|EU||4UNR|JN67PH
+4Y1A|23|*4U1V|15|28|EU|4Y1|4Y1A|JN88DE
+C7A|23|*4U1V|15|28|EU|C7|C7A|JN88DE
+GB1DAA|144|*GM/s|14|27|EU|GB1|GB1DAA|IP90GM
+GB2ELH|144|*GM/s|14|27|EU|GB2|GB2ELH|IP90GM
+GB3LER|143|GM|14|27|EU|GB3|GB3LER|IO76VT
+GB3LER/B|143|GM|14|27|EU|GB3|GB3LER|IO76VT
+GB4LER|143|GM|14|27|EU|GB4|GB4LER|IO76VT
+UA4H|268|UA|16|29|EU|UA4|UA4H|LO53
 K0AA|183|K|4|7|NA|K0|K0AA|EN12
 K1AA|183|K|5|8|NA|K1|K1AA|FN48
 K2AA|183|K|5|8|NA|K2|K2AA|FN22

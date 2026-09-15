@@ -127,3 +127,22 @@ W1AWWWWWWW
 W1AWWWWWWWW
 AB
 A
+# --- AMBIGUOUS PREFIXES: the same prefix appears TWICE in cty.dat, mapping
+#     to two DIFFERENT countries. Which one wins is decided by where the
+#     prefix-table SORT leaves them, and the sort is unstable -- so these are
+#     the callsigns a change of sort algorithm would silently flip.
+#     4U* and C7A: 23 vs 208.   GB*: 143 vs 144.   UA4H: same country twice.
+4U0IARU
+4U0R
+4U1A
+4U1VIC
+4U2U
+4UNR
+4Y1A
+C7A
+GB1DAA
+GB2ELH
+GB3LER
+GB3LER/B
+GB4LER
+UA4H
