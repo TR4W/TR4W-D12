@@ -1235,250 +1235,245 @@ begin
   Result := CTY.ctyTable[Country].UTCOffset;
 end;
 
+(* ===========================================================================
+  THE ZONE RULES, AS DATA.
+
+  These were 247 lines of nested if/case inside ctyGetZone, one arm per
+  country, written twice -- once for ITU zones and once for CQ zones. They are
+  not logic. Every one of them says the same thing:
+
+      for country C, in zone mode M, a station whose DISTRICT DIGIT is d
+      (and/or whose FIRST SUFFIX LETTER is one of L) is in zone Z.
+
+  So that is what the table says, and one 20-line resolver reads it. The rules
+  below are in the SAME ORDER as the code they replace and FIRST MATCH WINS,
+  which is how the original behaved: an inner `else` arm is a row with the
+  district pinned and no letters, and an outer `else` is a row with neither.
+
+  WHY IT IS WORTH MOVING. A rule expressed as code can only be read by
+  executing it in your head, and nothing can enumerate it -- there was no way
+  to ask "which countries have a zone rule" or "is this branch reachable"
+  except by eye over 247 lines. As data it can be counted, listed, and covered:
+  test/tools/ctygen/genzone.py walks this shape to generate a callsign for
+  every branch, which is how all 366 of them ended up in the characterisation
+  fixture.
+
+  AND SOME OF THESE ROWS ARE DEAD. ctyGetZone returns the PREFIX RECORD'S zone
+  when cty.dat supplies one and only falls through to these rules when it does
+  not -- so UA8T, for instance, answers 30 from the file and never reaches the
+  row below that says 32. Which rows are dead depends on the cty.dat in use,
+  so they stay: a row that cannot fire today can fire against a different file.
+  =========================================================================== *)
+type
+  TZoneRule = record
+    Countries : string;   (* one or more country IDs, space separated *)
+    Mode      : ZoneModeType;
+    District  : Char;     (* #0 matches any district digit       *)
+    Letters   : string;   (* '' matches any first suffix letter  *)
+    Zone      : Byte;
+  end;
+
+const
+  ZONE_RULES: array[0..95] of TZoneRule = (
+
+    (* ---- ITU ------------------------------------------------------- *)
+    (Countries: 'K';       Mode: ITUZoneMode; District: '5'; Letters: '';     Zone: 7),
+    (Countries: 'K';       Mode: ITUZoneMode; District: '0'; Letters: '';     Zone: 7),
+    (Countries: 'K';       Mode: ITUZoneMode; District: '6'; Letters: '';     Zone: 6),
+    (Countries: 'K';       Mode: ITUZoneMode; District: '7'; Letters: '';     Zone: 6),
+    (Countries: 'K';       Mode: ITUZoneMode; District: #0;  Letters: '';     Zone: 8),
+
+    (Countries: 'BY';      Mode: ITUZoneMode; District: '8'; Letters: '';     Zone: 43),
+    (Countries: 'BY';      Mode: ITUZoneMode; District: '9'; Letters: '';     Zone: 43),
+    (Countries: 'BY';      Mode: ITUZoneMode; District: '0'; Letters: '';     Zone: 42),
+    (Countries: 'BY';      Mode: ITUZoneMode; District: #0;  Letters: '';     Zone: 44),
+
+    (* CE has no else arm: districts 0 and 9 fall through to the default. *)
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '1'; Letters: '';     Zone: 14),
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '2'; Letters: '';     Zone: 14),
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '3'; Letters: '';     Zone: 14),
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '4'; Letters: '';     Zone: 14),
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '5'; Letters: '';     Zone: 14),
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '6'; Letters: '';     Zone: 16),
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '7'; Letters: '';     Zone: 16),
+    (Countries: 'CE';      Mode: ITUZoneMode; District: '8'; Letters: '';     Zone: 16),
+
+    (Countries: 'CP';      Mode: ITUZoneMode; District: '1'; Letters: '';     Zone: 12),
+    (Countries: 'CP';      Mode: ITUZoneMode; District: '8'; Letters: '';     Zone: 12),
+    (Countries: 'CP';      Mode: ITUZoneMode; District: '9'; Letters: '';     Zone: 12),
+    (Countries: 'CP';      Mode: ITUZoneMode; District: #0;  Letters: '';     Zone: 14),
+
+    (Countries: 'LU';      Mode: ITUZoneMode; District: #0;  Letters: 'VWX';  Zone: 16),
+    (Countries: 'LU';      Mode: ITUZoneMode; District: #0;  Letters: '';     Zone: 14),
+
+    (Countries: 'PY';      Mode: ITUZoneMode; District: '6'; Letters: '';     Zone: 13),
+    (Countries: 'PY';      Mode: ITUZoneMode; District: '7'; Letters: '';     Zone: 13),
+    (Countries: 'PY';      Mode: ITUZoneMode; District: '8'; Letters: '';     Zone: 13),
+    (Countries: 'PY';      Mode: ITUZoneMode; District: #0;  Letters: '';     Zone: 15),
+
+    (Countries: 'UN';      Mode: ITUZoneMode; District: #0;  Letters: 'JDVG'; Zone: 31),
+    (Countries: 'UN';      Mode: ITUZoneMode; District: #0;  Letters: '';     Zone: 30),
+
+    (* UA and UA9 shared ONE arm in the original, hence one row each here. *)
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '1'; Letters: 'NZO';  Zone: 19),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '1'; Letters: '';     Zone: 29),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '3'; Letters: '';     Zone: 29),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '6'; Letters: '';     Zone: 29),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '4'; Letters: 'ACFLNQSUY'; Zone: 29),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '4'; Letters: 'HPW';  Zone: 30),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '8'; Letters: 'T';    Zone: 32),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '8'; Letters: 'V';    Zone: 33),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '9'; Letters: 'ACFGLMQSTW'; Zone: 30),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '9'; Letters: 'HOUYZ'; Zone: 31),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '9'; Letters: 'JK';   Zone: 21),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '9'; Letters: 'X';    Zone: 20),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'BH';   Zone: 22),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'Q';    Zone: 23),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'I';    Zone: 24),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'X';    Zone: 25),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'K';    Zone: 26),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'AORSWY'; Zone: 32),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'DJU';  Zone: 33),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'CFL';  Zone: 34),
+    (Countries: 'UA UA9';  Mode: ITUZoneMode; District: '0'; Letters: 'Z';    Zone: 35),
+
+    (* VE's else arm assigned 0, which means "no answer" -- the same thing
+      omitting it would mean, so it is simply absent here. *)
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '1'; Letters: '';     Zone: 9),
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '9'; Letters: '';     Zone: 9),
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '2'; Letters: '';     Zone: 4),
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '3'; Letters: '';     Zone: 4),
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '4'; Letters: '';     Zone: 3),
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '5'; Letters: '';     Zone: 3),
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '6'; Letters: '';     Zone: 2),
+    (Countries: 'VE';      Mode: ITUZoneMode; District: '7'; Letters: '';     Zone: 2),
+
+    (Countries: 'VK';      Mode: ITUZoneMode; District: '4'; Letters: '';     Zone: 55),
+    (Countries: 'VK';      Mode: ITUZoneMode; District: '8'; Letters: '';     Zone: 55),
+    (Countries: 'VK';      Mode: ITUZoneMode; District: '6'; Letters: '';     Zone: 58),
+    (Countries: 'VK';      Mode: ITUZoneMode; District: #0;  Letters: '';     Zone: 59),
+
+    (Countries: 'K';       Mode: CQZoneMode; District: '1'; Letters: '';      Zone: 5),
+    (Countries: 'K';       Mode: CQZoneMode; District: '2'; Letters: '';      Zone: 5),
+    (Countries: 'K';       Mode: CQZoneMode; District: '3'; Letters: '';      Zone: 5),
+    (Countries: 'K';       Mode: CQZoneMode; District: '4'; Letters: '';      Zone: 5),
+    (Countries: 'K';       Mode: CQZoneMode; District: '5'; Letters: '';      Zone: 4),
+    (Countries: 'K';       Mode: CQZoneMode; District: '8'; Letters: '';      Zone: 4),
+    (Countries: 'K';       Mode: CQZoneMode; District: '9'; Letters: '';      Zone: 4),
+    (Countries: 'K';       Mode: CQZoneMode; District: '0'; Letters: '';      Zone: 4),
+    (Countries: 'K';       Mode: CQZoneMode; District: '6'; Letters: '';      Zone: 3),
+    (Countries: 'K';       Mode: CQZoneMode; District: '7'; Letters: '';      Zone: 3),
+
+    (Countries: 'VE';      Mode: CQZoneMode; District: '1'; Letters: '';      Zone: 5),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '2'; Letters: '';      Zone: 5),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '9'; Letters: '';      Zone: 5),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '0'; Letters: '';      Zone: 5),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '3'; Letters: '';      Zone: 4),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '4'; Letters: '';      Zone: 4),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '5'; Letters: '';      Zone: 4),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '6'; Letters: '';      Zone: 4),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '7'; Letters: '';      Zone: 3),
+    (Countries: 'VE';      Mode: CQZoneMode; District: '8'; Letters: '';      Zone: 2),
+
+    (* CQ mode names UA9 ONLY -- not UA -- unlike the ITU arm above. *)
+    (Countries: 'UA9';     Mode: CQZoneMode; District: '8'; Letters: '';      Zone: 18),
+    (Countries: 'UA9';     Mode: CQZoneMode; District: '9'; Letters: 'ACDFGJKLMNQRSTWX'; Zone: 17),
+    (Countries: 'UA9';     Mode: CQZoneMode; District: '9'; Letters: 'HOUYZ'; Zone: 18),
+    (Countries: 'UA9';     Mode: CQZoneMode; District: '0'; Letters: 'ABHORSUW'; Zone: 18),
+    (Countries: 'UA9';     Mode: CQZoneMode; District: '0'; Letters: 'Y';     Zone: 23),
+    (Countries: 'UA9';     Mode: CQZoneMode; District: '0'; Letters: '';      Zone: 19),
+
+    (Countries: 'BY';      Mode: CQZoneMode; District: '3'; Letters: 'GHIJKL'; Zone: 23),
+    (Countries: 'BY';      Mode: CQZoneMode; District: '9'; Letters: 'MNPQRS'; Zone: 24),
+    (Countries: 'BY';      Mode: CQZoneMode; District: '9'; Letters: '';      Zone: 23),
+    (Countries: 'BY';      Mode: CQZoneMode; District: '0'; Letters: '';      Zone: 23),
+    (Countries: 'BY';      Mode: CQZoneMode; District: #0;  Letters: '';      Zone: 24),
+
+    (Countries: 'VK';      Mode: CQZoneMode; District: '6'; Letters: '';      Zone: 29),
+    (Countries: 'VK';      Mode: CQZoneMode; District: '8'; Letters: '';      Zone: 29),
+    (Countries: 'VK';      Mode: CQZoneMode; District: #0;  Letters: '';      Zone: 30)
+  );
+
+
+
+
+
+
+
+(* Does one rule describe this station? *)
+function ZoneRuleMatches(const aRule: TZoneRule; const aID: string;
+                         aDistrict, aLetter: Char; aMode: ZoneModeType): boolean;
+begin
+   Result := False;
+   if aRule.Mode <> aMode then Exit;
+
+   (* Space-delimited so 'UA' cannot match inside 'UA9'. *)
+   if Pos(' ' + aID + ' ', ' ' + aRule.Countries + ' ') = 0 then Exit;
+
+   if (aRule.District <> #0) and (aRule.District <> aDistrict) then Exit;
+   if (aRule.Letters <> '') and (Pos(aLetter, aRule.Letters) = 0) then Exit;
+
+   Result := True;
+end;
+
 function ctyGetZone(const Call: string): Byte;
 var
-  TempPrefixRec                         : PrefixRecPtr;
+  TempPrefixRec : PrefixRecPtr;
+  id            : string;
+  district      : Char;
+  letter        : Char;
+  i             : integer;
 begin
-  if ctyLocateCall(Call, CTY.ctyTempQTHRecord) then
-     begin
-     TempPrefixRec := @CTY.ctyPrefixesTable[CTY.ctyLastIndex];
-
-     Result := 0;
- //     Result := CTY.ctyTempQTHRecord.Zone;
- //    if Result <> 0 then Exit;
-
-     case CTY.ctyZoneMode of
-       ITUZoneMode:
-         begin
-           if TempPrefixRec^.ITUZone <> 0 then
-              begin
-              Result := TempPrefixRec^.ITUZone;
-              Exit;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'K' then
-              begin
-              case GetNumber(Call) of
-                '5', '0': Result := 7;
-                '6', '7': Result := 6;
-              else Result := 8;
-              end;
-              end;
-
-             { In China }
-
-           if CTY.ctyTempQTHRecord.CountryID = 'BY' then
-              begin
-              case GetNumber(Call) of
-                '8', '9': Result := 43;
-                '0': Result := 42;
-              else Result := 44;
-              end;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'CE' then
-              begin
-              case GetNumber(Call) of
-                '1', '2', '3', '4', '5': Result := 14;
-                '6', '7', '8': Result := 16;
-              end;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'CP' then
-              begin
-              case GetNumber(Call) of
-                '1', '8', '9': Result := 12;
-              else Result := 14;
-              end;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'LU' then
-              begin
-              case GetFirstSuffixLetter(Call) of
-                'V', 'W', 'X': Result := 16;
-              else Result := 14;
-              end;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'PY' then
-              begin
-              case GetNumber(Call) of
-                '6', '7', '8': Result := 13;
-              else Result := 15;
-              end;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'UN' then
-              begin
-              case GetFirstSuffixLetter(Call) of
-                'J', 'D', 'V', 'G': Result := 31;
-              else Result := 30;
-              end;
-              end;
-
-        if (CTY.ctyTempQTHRecord.CountryID = 'UA') or (CTY.ctyTempQTHRecord.CountryID = 'UA9') then
-             case GetNumber(Call) of
-               '1': case GetFirstSuffixLetter(Call) of
-                   'N', 'Z', 'O': Result := 19;
-                 else Result := 29;
-                 end;
-
-               '3', '6': Result := 29;
-
-               '4': case GetFirstSuffixLetter(Call) of
-                   'A', 'C', 'F', 'L', 'N', 'Q', 'S', 'U', 'Y': Result := 29;   // n4af 4.41.4
-                   'H', 'P', 'W': Result := 30;
-                 end;
- {
-            end;
-
-          if CTY.ctyTempQTHRecord.CountryID = 'UA9' then
-            case GetNumber(Call) of
-}
-               '8': case GetFirstSuffixLetter(Call) of
-                   'T': Result := 32;
-                   'V': Result := 33;
-                 end;
-
-               '9':
-                 case GetFirstSuffixLetter(Call) of
-                   'A', 'C', 'F', 'G', 'L',
-                     'M', 'Q', 'S', 'T', 'W': Result := 30;
-                   'H', 'O', 'U', 'Y', 'Z': Result := 31;
-                   'J', 'K': Result := 21;
-                   'X': Result := 20;
-                 end;
-
-               '0': case GetFirstSuffixLetter(Call) of
-                   'B', 'H': Result := 22;
-                   'Q': Result := 23;
-                   'I': Result := 24;
-                   'X': Result := 25;
-                   'K': Result := 26;
-                   'A', 'O', 'R', 'S', 'W', 'Y': Result := 32; // n4af 4.54.3 issue 213
-                   'D', 'J', 'U': Result := 33;
-                   'C', 'F', 'L': Result := 34;
-                   'Z': Result := 35;
-                 end;
-
-             end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'VE' then
-              begin
-              case GetNumber(Call) of
-                '1', '9': Result := 9;
-                '2', '3': Result := 4;
-                '4', '5': Result := 3;
-                '6', '7': Result := 2;
-              else Result := 0;
-              end;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'VK' then
-              begin
-              case GetNumber(Call) of
-                '4', '8': Result := 55;
-                '6': Result := 58;
-              else Result := 59;
-              end;
-              end;
-            if Result = 0 then  Result := CTY.ctyTable[CTY.ctyTempQTHRecord.Country].DefaultITUZone;    // 4.54.4
-         end;
-
-       CQZoneMode:
-         begin
-
-          if TempPrefixRec^.CQZone <> 0 then
-             begin
-             Result := TempPrefixRec^.CQZone;
-             Exit;
-             end;        
-
-           if CTY.ctyTempQTHRecord.CountryID = 'K' then
-              begin
-              case GetNumber(Call) of
-                '1', '2', '3', '4': Result := 5;
-                '5', '8', '9', '0': Result := 4;
-                '6', '7': Result := 3;
-              end;
-              end;
-
-             { We have to check for call areas for UA9 }
-
-           if CTY.ctyTempQTHRecord.CountryID = 'VE' then
-              begin
-              case GetNumber(Call) of
-                '1', '2', '9', '0': Result := 5;
-                '3', '4', '5', '6': Result := 4;
-                '7': Result := 3;
-                '8': Result := 2;
-              end;
-              end;
-
-           if CTY.ctyTempQTHRecord.CountryID = 'UA9' then
-              begin
-              case GetNumber(Call) of
-                '8': Result := 18;
-
-                '9': case GetFirstSuffixLetter(Call) of
-                    'A', 'C', 'D', 'F', 'G', 'J', 'K', 'L', 'M', 'N', 'Q', 'R', 'S', 'T', 'W', 'X': Result := 17;
-                    'H', 'O', 'U', 'Y', 'Z': Result := 18;
-                  end;
-
-                '0': case GetFirstSuffixLetter(Call) of
-                    'A', 'B', 'H', 'O', 'R', 'S', 'U', 'W': Result := 18;  // 4.54.3 issue 213
-                    'C', 'D', 'E', 'F', 'I', 'J', 'K', 'L': Result := 19;
-                    'Q', 'X', 'Z': Result := 19;
-                    'Y': Result := 23;
-                  else Result := 19;
-                  end;
-              end;
-              end;
-
-             { And China }
-
-           if CTY.ctyTempQTHRecord.CountryID = 'BY' then
-              begin
-              case GetNumber(Call) of
-                '1', '2': Result := 24;
-
-                '3': case GetFirstSuffixLetter(Call) of
-                    'G', 'H', 'I', 'J', 'K', 'L': Result := 23;
-                  else Result := 24;
-                  end;
-
-                '4', '5', '6', '7', '8': Result := 24;
-
-                '9': case GetFirstSuffixLetter(Call) of
-                    'M', 'N', 'P', 'Q', 'R', 'S': Result := 24;
-                  else Result := 23;
-                  end;
-
-                '0': Result := 23;
-              end;
-              end;
-
-             { And Austrailia }
-
-           if CTY.ctyTempQTHRecord.CountryID = 'VK' then
-              begin
-              case GetNumber(Call) of
-                '6', '8': Result := 29;
-              else Result := 30;
-              end;
-              end;
-        
-           if Result = 0 then
-              begin
-              Result := CTY.ctyTable[CTY.ctyTempQTHRecord.Country].DefaultCQZone;
-              end;
-         end;
-     end;
-
-     end
-  else
+  if not ctyLocateCall(Call, CTY.ctyTempQTHRecord) then
      begin
      Result := DUMMYZONE;
+     Exit;
+     end;
+
+  TempPrefixRec := @CTY.ctyPrefixesTable[CTY.ctyLastIndex];
+
+  (* THE FILE ANSWERS FIRST, and that has not changed: when cty.dat carries a
+    zone for this prefix it wins outright, and the rules below never run. It is
+    why several of them are unreachable against the shipped file. *)
+  case CTY.ctyZoneMode of
+     ITUZoneMode:
+        if TempPrefixRec^.ITUZone <> 0 then
+           begin
+           Result := TempPrefixRec^.ITUZone;
+           Exit;
+           end;
+     CQZoneMode:
+        if TempPrefixRec^.CQZone <> 0 then
+           begin
+           Result := TempPrefixRec^.CQZone;
+           Exit;
+           end;
+  end;
+
+  Result   := 0;
+  id       := string(CTY.ctyTempQTHRecord.CountryID);
+  district := GetNumber(Call);
+  letter   := GetFirstSuffixLetter(Call);
+
+  (* FIRST MATCH WINS, in table order, which is the order the if/case
+    chain tested in. A row with no letters is an inner `else` arm; a row
+    with neither a district nor letters is an outer one. *)
+  for i := Low(ZONE_RULES) to High(ZONE_RULES) do
+     begin
+     if ZoneRuleMatches(ZONE_RULES[i], id, district, letter, CTY.ctyZoneMode) then
+        begin
+        Result := ZONE_RULES[i].Zone;
+        Break;
+        end;
+     end;
+
+  (* No rule answered: the country's own default. *)
+  if Result = 0 then
+     begin
+     case CTY.ctyZoneMode of
+        ITUZoneMode: Result := CTY.ctyTable[CTY.ctyTempQTHRecord.Country].DefaultITUZone;
+        CQZoneMode:  Result := CTY.ctyTable[CTY.ctyTempQTHRecord.Country].DefaultCQZone;
+     end;
      end;
 end;
 
