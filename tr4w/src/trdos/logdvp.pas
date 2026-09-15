@@ -36,9 +36,8 @@ utils_file,
     raw: CreateFileA, ReadFile, CloseHandle, GetLastError. Those are the RTL
     now -- FileOpen/FileCreate, FileRead, FileClose, GetLastOSError.
 
-    WHAT IS LEFT IS AUDIO, AND IT IS GATED AT THE TWO CALLS:
-      sndPlaySoundA   plays the .WAV -- the ONE piece of audio TR4W still
-                      owes off Windows, now that the CW sidetone is deleted
+    WHAT IS LEFT IS THE TIMER. The .WAV itself is played by uAudio.PlayFile
+    (2026-09-15), which owns every platform question about sound:
       timeSetEvent    signals tDVP_Event when the file duration is up, which
                       is why that event cannot become a SyncObjs.TEvent *)
   Windows,
@@ -60,8 +59,8 @@ utils_file,
      paths and the gain controls are unreachable in this build.
 
    * DVK WAV PLAYBACK -- PlayWAVFile, driven by Settings.Dvk.Enable.  THIS is what
-     an operator hears when a function key sends voice, and it rests on exactly
-     two multimedia calls: sndPlaySoundA to start the file, and timeSetEvent to
+     an operator hears when a function key sends voice, and it rests on two
+     things: uAudio.PlayFile to start the file, and winmm's timeSetEvent to
      signal tDVP_Event when its duration is up so the thread can drop PTT.
 
   THOSE TWO CALLS ARE WHAT IS GATED, together with the MMSystem import -- so
@@ -133,6 +132,9 @@ function PlayWAVFile(const f: string; DisplayError: boolean): PlayResult;
 
 implementation
 uses
+   (* FIRST, so it cannot rebind a name this unit already takes from a later
+     unit; the one call into it is qualified anyway. *)
+   uAudio,           // PlayFile -- the .WAV, on every platform uAudio supports
    uConfigValues,
    uSettingsModel,   // Settings.Dvk
   MainUnit,
@@ -682,32 +684,13 @@ begin
      begin
      PTTOn;
      end;
-{$IFDEF WINDOWS}
-  (* THE winmm BOUNDARY, and the one place a pointer is wanted. aFileName
-    is a const REFERENCE to PlayWAVFile's own wavPath, so this points into
-    that caller's buffer -- the same lifetime it always had. That matters
-    because the call is SND_ASYNC: converting to a local here would free the
-    name when this routine returns, earlier than before. *)
-  Result := sndPlaySoundA(PAnsiChar(aFileName), SND_ASYNC or SND_NODEFAULT);
-{$ELSE}
-  (* THE VOICE KEYER HAS NO PLAYER OFF WINDOWS YET, and this is the ONE piece
-    of audio TR4W still owes there -- the CW sidetone was deleted on
-    2026-09-08, so this is what is left of the question.
+  (* uAudio.PlayFile, NOT A SECOND sndPlaySoundA. This unit called winmm
+    itself, a copy of what uAudio exists to do; PlayFile had no caller. It
+    logs its own failure, and returns False for the caller to report.
 
-    IT IS A MUCH EASIER PROBLEM THAN THE SIDETONE WAS: a .WAV file played
-    whole, with about half a second of tolerance, rather than a tone that has
-    to start and stop with a CW element. Any of the usual answers would do.
-
-    Returning False is what the caller already handles -- it is the same
-    result as a missing or unreadable file -- so the DVP simply reports that
-    it could not play rather than behaving as though it had. *)
-  Result := False;
-  if logger <> nil then
-     begin
-     logger.Info('[DVP] cannot play %s: no audio backend on this platform',
-                 [string(aFileName)]);
-     end;
-{$ENDIF}
+    The inner Windows gate that stood here is gone: this whole implementation
+    is already inside one, so its other arm could never compile. *)
+  Result := uAudio.PlayFile(string(aFileName));
 end;
 
 function PlayWAVFile(const f: string; DisplayError: boolean): PlayResult;
@@ -760,9 +743,8 @@ begin
      WAVFile := GetRealPath(f);
      end;
 
-  (* THE TRANSPORT BOUNDARY, and the only place a pointer is wanted:
-    tsndPlaySound reaches sndPlaySoundA and the header reader walks the file
-    bytes. *)
+  (* The bytes the header reader walks. tsndPlaySound plays the file through
+    uAudio.PlayFile. *)
   wavPath := AnsiString(WAVFile);
 
   if tGetWAVDurationFromHeader(wavPath, Duration, DisplayError) then
@@ -814,8 +796,10 @@ end;
    operator can REACH says why instead.  The internal ones stay silent --
    they are called from the ones that already spoke.
 
-   The port is small and is described at the top of this unit: it is
-   sndPlaySoundA and timeSetEvent, plus a portable rewrite of the file reads.
+   The port is small and is described at the top of this unit. The .WAV is
+   already uAudio.PlayFile, which plays on Linux and macOS too; what is left is
+   a portable replacement for timeSetEvent -- the wait that holds PTT for the
+   file's duration -- and lifting this gate.
    NOTE that it cannot be checked by tools/Compile-Linux.ps1 yet -- LOGDVP's
    uses clause reaches MainUnit and LogWind, which are not portable -- so
    this gate is reviewed by eye, not proven by a compiler.  That is a weaker
