@@ -156,6 +156,7 @@ uses
   uMMTTY,             // the MMTTY window message
   LOGSUBS2,           // ExitProgram, on WM_CLOSE
   uCTYDAT,            // ctyLoadInCountryFile, after a CTY.DAT download
+  utils_text,         // CharBufferText -- the file name is a NUL-terminated buffer
   LOGSTUFF,           // CallWindowKeyDownProc, ProcessTAB, SpaceBarProc2, ...
   tree,               // KeyboardCallsignChar
   LOGK1EA,
@@ -634,7 +635,7 @@ begin
       (* RELOADED ON THE MAIN THREAD. The CTY tables have no locking, so a
         background reload would race with callsign lookups; arriving here is a
         safe quiescent point. *)
-      ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
+      ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True);
       QuickDisplay(PAnsiChar(TC_CTYDATRELOADEDSUCCESSFULLY));
       end
    else

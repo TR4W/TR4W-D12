@@ -1562,7 +1562,7 @@ begin
   DisplayLocalTime(Country);
   if tCountryNamePrevState = Country then Exit;
   tCountryNamePrevState := Country;
-  TR4WMainForm.pnlCountryName.Caption := ctyGetCountryNamePchar(Country);
+  TR4WMainForm.pnlCountryName.Caption := LclText(ctyGetCountryName(Country));
 end;
 
 procedure DisplayQSOsWithThisStation(QSOs: integer);

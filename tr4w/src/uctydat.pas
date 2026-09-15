@@ -258,7 +258,8 @@ type
 
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 //function ctyInit(ctyFilename: PAnsiChar): boolean;
-function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
+function ctyLoadInCountryFile(const ctyFilename: string; CheckDupe: boolean;
+                              LoadRemainingMults: boolean): boolean;
 function ctyFindCallsign(const s: PrefixName; var Index: integer;
                          PreferFullCallsign: boolean = True): boolean;
 function ctyGetGrid(const Call: string; var ID: DXMultiplierString): string;
@@ -275,12 +276,11 @@ function ctyGetDefaultGrid(Country: Word): string;
 function ctyGetCountryIdByIndex(Country: Word): string;
 function ctyGetContinentByIndex(Country: Word): ContinentType;
 function ctyGetTotalCountries: integer;
-function ctyGetVersion: PAnsiChar;
+function ctyGetVersion: string;
 function ctyIsActiveMultiplier(Index: Word): boolean;
 procedure ctySetCountryMode(CountryMode: CountryModeType);
 
-function ctyGetCountryNamePchar(Index: Word): PAnsiChar;
-function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
+function ctyGetCountryName(Index: Word): string;
 function ctyGetCountryID(const Call: string): string;
 
 procedure ctyShellSort;
@@ -492,7 +492,8 @@ begin
 
 end;
 
-function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
+function ctyLoadInCountryFile(const ctyFilename: string; CheckDupe: boolean;
+                              LoadRemainingMults: boolean): boolean;
 
 // (#) Override CQ Zone
 // [#] Override ITU Zone
@@ -1675,27 +1676,24 @@ begin
   CTY.ctyZoneMode := TempZoneModeType;
 end;
 
-function ctyGetCountryNamePchar(Index: Word): PAnsiChar;
-begin
-  if (Index >= 0) and (Index < CTY.ctyNumberCountries) then
-     begin
-     Result := @CTY.ctyTable[Index].Name
-     end
-  else
-     begin
-     Result := nil;
-     end;
-end;
+(* WAS ctyGetCountryNamePchar, handing out the ADDRESS of a table entry.
+  Every one of its four callers immediately made a string of it, and one
+  assigned the pointer straight to an LCL Caption -- so the pointer was
+  never what any of them wanted, and it was live for exactly as long as the
+  table was not reloaded. Name is a NUL-terminated buffer, so CharBufferText
+  reads it through its own bounds.
 
-function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
+  ctyGetCountryIdPchar went with it: it had NO caller anywhere in the tree.
+  ctyGetCountryIdByIndex already returns the same field as a string. *)
+function ctyGetCountryName(Index: Word): string;
 begin
-  if (Index >= 0) and (Index < CTY.ctyNumberCountries) then
+  if Index < CTY.ctyNumberCountries then
      begin
-     Result := @CTY.ctyTable[Index].ID[1]
+     Result := CharBufferText(CTY.ctyTable[Index].Name);
      end
   else
      begin
-     Result := nil;
+     Result := '';
      end;
 end;
 
@@ -1751,9 +1749,11 @@ begin
   Result := CTY.ctyNumberCountries;
 end;
 
-function ctyGetVersion: PAnsiChar;
+(* The version stamp cty.dat carries in its own text -- 16 NUL-terminated
+  bytes, returned as text rather than as a pointer at them. *)
+function ctyGetVersion: string;
 begin
-  Result := cty.ctyVersion;
+  Result := CharBufferText(CTY.ctyVersion);
 end;
 
 function ctyIsActiveMultiplier(Index: Word): boolean;
@@ -1776,7 +1776,7 @@ begin
     was redundant, and now it would mean a country-file loader writing a
     contest parameter. *)
   SetCharBuffer(TR4W_R150S_FILENAME, CharBufferText(TR4W_PATH_NAME) + 'r150s.dat');   // Issue #1033: was TF.Format(=wsprintfA)
-  ctyLoadInCountryFile(TR4W_R150S_FILENAME, True, False);
+  ctyLoadInCountryFile(CharBufferText(TR4W_R150S_FILENAME), True, False);
 
 end;
 
@@ -1787,7 +1787,7 @@ procedure ctyLoadInRFOblList;
 begin
   // See ctyLoadInR150SList: the same redundant write, for the same reason.
   SetCharBuffer(TR4W_rfobl_FILENAME, CharBufferText(TR4W_PATH_NAME) + 'rfobl.dat');   // Issue #1033: was TF.Format(=wsprintfA)
-  ctyLoadInCountryFile(TR4W_rfobl_FILENAME, True, False);
+  ctyLoadInCountryFile(CharBufferText(TR4W_rfobl_FILENAME), True, False);
 
 end;
 

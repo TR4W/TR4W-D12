@@ -527,7 +527,7 @@ var
   prompt                                : string;
   failReason                            : string;
 begin
-  Result := ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
+  Result := ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True);
 
   if Result then
      begin
@@ -610,7 +610,7 @@ begin
   // file the parser rejects -- a captive-portal HTML page saved as cty.dat is
   // the obvious way. Say so here, where the cause is still obvious, rather
   // than continuing into a program with no country data.
-  Result := ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
+  Result := ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True);
 
   if Result then
      begin

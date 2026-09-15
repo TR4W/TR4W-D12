@@ -433,7 +433,7 @@ begin
    else
       begin
       sbSpot.Panels[SB_COUNTRY].Text :=
-         string(ctyGetCountryNamePchar(ctyGetCountry(spot.FCall)));
+         ctyGetCountryName(ctyGetCountry(spot.FCall));
       end;
 end;
 

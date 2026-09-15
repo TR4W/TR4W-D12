@@ -48,13 +48,13 @@ begin
    inPath  := ParamStr(2);
    outPath := ParamStr(3);
 
-   if not ctyLoadInCountryFile(PAnsiChar(AnsiString(ctyPath)), False, False) then
+   if not ctyLoadInCountryFile(ctyPath, False, False) then
       begin
       writeln('FAILED to load ', ctyPath);
       Halt(1);
       end;
    writeln('loaded ', ctyPath, '  countries=', ctyGetTotalCountries,
-           '  version=', string(ctyGetVersion));
+           '  version=', ctyGetVersion);
 
    calls := TStringList.Create;
    try

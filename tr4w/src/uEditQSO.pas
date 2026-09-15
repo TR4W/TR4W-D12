@@ -386,7 +386,7 @@ begin
       end;
 
    EditQSOSetText(FLD_COUNTRYNAME,
-     string(ctyGetCountryNamePchar(ctyGetCountry(TempString))));
+     ctyGetCountryName(ctyGetCountry(TempString)));
 
    if ActiveDXMult <> NoDXMults then
       begin

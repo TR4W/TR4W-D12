@@ -177,7 +177,7 @@ $countsCaveat = if ($Incremental) { 'INCREMENTAL build -- only recompiled units 
                 elseif ($rc -ne 0) { 'build FAILED -- units after the error were never compiled' }
                 else { '' }
 
-$WARN_CEILING = 6
+$WARN_CEILING = 4
 
 $warnLines = $output | Select-String -Pattern 'Comparison might be always (false|true)'
 Write-Host "range warnings: $($warnLines.Count) (ceiling $WARN_CEILING)"

@@ -2057,8 +2057,8 @@ procedure PrintQSOsByCountry;
     Count, CountryIndex: integer;
     FileWrite: Text;
 
-    tCountryName: PAnsiChar;
-    tCountryID: PAnsiChar;
+    tCountryName: string;
+    tCountryID: string;
     TotalCountryQSOs: LONGINT;
     TempBand: BandType;
   begin
@@ -2093,12 +2093,17 @@ procedure PrintQSOsByCountry;
         begin
         inc( Count );
         TotalCountryQSOs := 0;
-        tCountryName     := ctyGetCountryNamePchar( CountryIndex );
-        tCountryID       := @CTY.ctyTable[ CountryIndex ].ID[ 1 ];
+        tCountryName     := ctyGetCountryName( CountryIndex );
+        (* WAS @CTY.ctyTable[i].ID[1] read as a PAnsiChar. ID is a
+          ShortString -- it carries a LENGTH, not a NUL -- so that pointer
+          walked until it happened to meet a zero byte, which is the next
+          field of the next record when the id is a full-width one.
+          ctyGetCountryIdByIndex reads it through its length. *)
+        tCountryID       := ctyGetCountryIdByIndex( CountryIndex );
         // Issue #998: asm-push wsprintf -> SysUtils.Format, written straight to the
         // text file. %4u=Count, %-23s=country name, %-5s=country ID.
         Write( FileWrite, sysutils.Format( '%4u %-23s %-5s',
-           [ Count, string( tCountryName ), string( tCountryID ) ] ) );
+           [ Count, tCountryName, tCountryID ] ) );
 
         for TempBand := Band160 to Band10 do
            begin
