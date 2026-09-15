@@ -76,7 +76,6 @@ uses
    VC                   in '..\..\src\VC.pas',
    uStringCompare       in '..\..\src\utils\uStringCompare.pas',
    uAudio               in '..\..\src\utils\uAudio.pas',
-   uCFormat             in '..\..\src\utils\uCFormat.pas',
    uFileText            in '..\..\src\utils\uFileText.pas',
    uRegex               in '..\..\src\utils\uRegex.pas',
    uTestRegexValidators in 'uTestRegexValidators.pas',

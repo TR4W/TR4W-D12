@@ -353,7 +353,7 @@ const
 
 implementation
 
-uses Log4D, uFreqTimeFormat, uStrSearch, uCFormat,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses Log4D, uFreqTimeFormat, uStrSearch,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
      uCrashLog,   // LogCaughtException, OnMainThread, ReportOffMainThread
      (* THE LCL'S DIALOGS, for showwarning, and uMainThread to get onto the
        main thread first. This does not undo the weight this unit is careful
@@ -1305,46 +1305,6 @@ asm
         NOT     ECX
 end;
 }
-
-(* THE Format FAMILY, NOW PASCAL AND NOT user32.
-
-  Twenty overloads, each formerly `external user32 Name 'wsprintfA'` -- a
-  direct binding to Win32's sprintf, called from 555 sites. They are why TF
-  needed the Windows unit, and TF is reached by 171 units, so this was the
-  single largest thing holding the tree to Windows.
-
-  The forwards in the interface are unchanged, so no call site moved and the
-  parameter keeps its name -- a body must match its forward. That second
-  parameter being called `Format` shadows the function inside these bodies,
-  which is exactly what is wanted: it IS the format string.
-
-  The overloads exist because wsprintfA is variadic and Pascal is not: each
-  pins an arity and a type list. They stay for that reason, and because they
-  are what makes 555 call sites type-checked at all.
-
-  uCFormat.CFormatBuf does the work -- see that unit for the one dialect
-  difference that mattered (%02d) and why the callers were respelled instead
-  of translated at run time. *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 begin
   logger := TLogLogger.GetLogger('TR4WDebugLog.TF');   // own logger (was MainUnit.logger)

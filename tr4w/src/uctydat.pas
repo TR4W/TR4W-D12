@@ -31,7 +31,6 @@ uses
     LCLType declares it for every widget set -- see the note at the top of
     VC.pas. Classes brings TFileStream, which replaces the memory mapping. *)
   LCLType,
-  uCFormat,     // CFormatBuf -- was a private wsprintfA binding
   Classes,
   uCallSignRoutines,
   utils_text,

@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="407">
+    <Units Count="406">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1742,57 +1742,53 @@
         <IsPartOfProject Value="True"/>
       </Unit394>
       <Unit395>
-        <Filename Value="src/utils/uCFormat.pas"/>
+        <Filename Value="src/uMainThread.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit395>
       <Unit396>
-        <Filename Value="src/uMainThread.pas"/>
+        <Filename Value="src/ui/lcl/uElementPanel.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit396>
       <Unit397>
-        <Filename Value="src/ui/lcl/uElementPanel.pas"/>
+        <Filename Value="src/ui/lcl/uLogGrid.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit397>
       <Unit398>
-        <Filename Value="src/ui/lcl/uLogGrid.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit398>
-      <Unit399>
         <Filename Value="src/ui/lcl/uLogSearchForm.pas"/>
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
+      </Unit398>
+      <Unit399>
+        <Filename Value="src/ui/lcl/uSystemWatch.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit399>
       <Unit400>
-        <Filename Value="src/ui/lcl/uSystemWatch.pas"/>
+        <Filename Value="src/ui/lcl/uAppTimers.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit400>
       <Unit401>
-        <Filename Value="src/ui/lcl/uAppTimers.pas"/>
+        <Filename Value="src/ui/lcl/uMainGrids.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit401>
       <Unit402>
-        <Filename Value="src/ui/lcl/uMainGrids.pas"/>
+        <Filename Value="src/uPortAddress.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit402>
       <Unit403>
-        <Filename Value="src/uPortAddress.pas"/>
+        <Filename Value="src/uVerificationChecks.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit403>
       <Unit404>
-        <Filename Value="src/uVerificationChecks.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit404>
-      <Unit405>
         <Filename Value="src/ui/lcl/uVerificationForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmVerification"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit405>
-      <Unit406>
+      </Unit404>
+      <Unit405>
         <Filename Value="src/domain/uLogNote.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit406>
+      </Unit405>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

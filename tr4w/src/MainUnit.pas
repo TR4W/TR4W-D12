@@ -298,7 +298,7 @@ procedure OpenListOfMessages;
 procedure OpenStationInformationWindow(const aOnAccept: TCabrilloSummaryAction);
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;
 procedure scWK_RESET; // n4af 4.43.10
-procedure SetCommand(c: PAnsiChar);
+procedure SetCommand(const c: string);
 (* IMPORT AN ADIF FILE INTO THE CONTEST LOG.
 
   aFileName EMPTY means ASK -- the file dialog, which is what the menu item
@@ -10342,7 +10342,7 @@ end;
 // The ownership test is the SAME crS the Ctrl-J filter reads, so the two
 // cannot disagree about who owns a row. An unknown command falls through to
 // Ctrl-J, which is the old behaviour and no worse than it was.
-procedure SetCommand(c: PAnsiChar);
+procedure SetCommand(const c: string);
 var
   cmd: string;
   ownedElsewhere: boolean;
@@ -10353,7 +10353,7 @@ begin
      Exit;
      end;
 
-  cmd := string(c);
+  cmd := c;
   (* WHO OWNS IT IS NOW ONE QUESTION: does the settings object know the name?
     It used to be a row's crS, and that status is gone along with the row --
     every setting an editor can show is a published property today, and a name
