@@ -988,8 +988,12 @@ begin
   FillChar(QTH, SizeOf(QTHRecord), 0);
   if length(Call) = 0 then Exit;
 
-  Move(Call[1], TempPrefix, length(Call));
-  TempPrefix[length(Call)] := #0;
+  (* SetCharBuffer does the copy AND the terminator AND the bound. The Move
+    it replaces did the first two and not the third: it was safe only
+    because CallstringLength (13) happens to equal High(PrefixName), so a
+    full-length callsign fitted exactly and one character more would have
+    written past the buffer. *)
+  SetCharBuffer(TempPrefix, string(Call));
 
   QTH.StandardCall := StandardCallFormat(Call, True);
 
@@ -1028,8 +1032,7 @@ begin
 
   if length(Call) = 1 then Exit;
 
-  Move(QTH.StandardCall[1], TempPrefix, length(QTH.StandardCall));
-  TempPrefix[length(QTH.StandardCall)] := #0;
+  SetCharBuffer(TempPrefix, string(QTH.StandardCall));
 
   if GuantanamoBayCallsign then
      begin
