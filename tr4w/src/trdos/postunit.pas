@@ -198,14 +198,11 @@ var
   PreviewFileIsCabrillo: boolean;
 
   CountryMultTotals: CountryMultiplierArrayPointer;
-  P: pchar;
-  P1: pchar;
   TotalLogQSOs: Cardinal;
   ReportsFilename: ShortString;
 
   ReportFileWrite: Text;
   LOGDATFileWrite: ShortString;
-  SStr: pchar;
   Precedence, Check, section, Power, NameInFile, QTH: Str40;
   Overlay: Str20;
   NameFileDirectory: Str40;
@@ -1045,7 +1042,7 @@ procedure WriteScoreInformationToSummarySheet;
     totalMults: integer;
   const
     h = #13#10'  BAND   Raw QSOs   Valid QSOs   Points';
-    mn: array [ RemainingMultiplierType ] of PAnsiChar = ( '', 'Mults',
+    mn: array [ RemainingMultiplierType ] of string = ( '', 'Mults',
        'Countries', 'Zones', 'Prefixes' );
     breakline =
        #13#10' __________________________________________________________________';
@@ -2151,8 +2148,8 @@ procedure ExportToEDIByBand( Band: BandType );
     AddressLine: string;
   const
     EDI_ModeCodes: array [ ModeType ] of integer  = ( 2, 7, 1, 0, 0, 6 );
-    EDI_NewArray: array [ boolean ] of PAnsiChar  = ( nil, 'N' );
-    EDI_DupeArray: array [ boolean ] of PAnsiChar = ( nil, 'D' );
+    EDI_NewArray: array [ boolean ] of string  = ( '', 'N' );
+    EDI_DupeArray: array [ boolean ] of string = ( '', 'D' );
   begin
   if QSOTotals[ Band, Both ] = 0 then
      begin
@@ -2668,7 +2665,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
     T2: string;
     T3: String;
     TempTag: CabrilloTags;
-    TempPchar: PAnsiChar;
+    tagName: string;
     Operator: integer;
     ControlID:
       integer;
@@ -2772,20 +2769,24 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             if TempTag = ctLocation then
                begin
                sWriteFileFromString( tReportFileWrite,
-                  'ARRL-SECTION: ' + TempBuffer2 + #13#10 );
+                  UTF8Encode( 'ARRL-SECTION: ' + CharBufferText( TempBuffer2 ) + #13#10 ) );
                sWriteFileFromString( tReportFileWrite,
                   'X-EXCHANGE: ' + Settings.My.FdClass + #13#10 );
                end;
             end;
-         TempPchar := @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ];
+         (* THE TAG WITHOUT ITS LEADING '_'. This was @...ctrTag[ 1 ] -- ctrTag is
+           a PAnsiChar constant, so [ 1 ] is its SECOND character, and the pointer
+           dropped the '_' that marks each entry in CabrilloTagsArray. Copy from
+           position 2 says the same thing without the address. *)
+         tagName := Copy( string( CabrilloTagsArray[ TempTag ].ctrTag ), 2, MaxInt );
          if TempTag = ctOperators then
             begin
             SetCharBuffer( TempBuffer2, GetOperatorsFromLog );
             // Issue #998 (was custom Format '%s')
             end;
-         // Issue #998: %s=tag(TempPchar), %s=value(TempBuffer2).
+         // Issue #998: %s=tag(tagName), %s=value(TempBuffer2).
          sWriteFileFromString( tReportFileWrite, sysutils.Format( '%s: %s'#13#10,
-            [ string( TempPchar ), string( PAnsiChar( @TempBuffer2 ) ) ] ) );
+            [ tagName, CharBufferText( TempBuffer2 ) ] ) );
          end;
 
       if Settings.My.Grid <> '' then
@@ -2875,7 +2876,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       label
         1;
       var
-        HisCallsign: PAnsiChar;
+        HisCallsign: string;
         // STRINGS, not PChar.  Both were `pchar(sysutils.Format(...))`, which
         // takes the address of a TEMPORARY string whose reference count drops
         // to zero at the end of that statement -- a dangling pointer read a few
@@ -2886,13 +2887,13 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         RSTSent: string;
         RSTReceived: string;
         Freq: string;
-        ModeString: PAnsiChar;
-        csQTHString: PAnsiChar;
+        ModeString: string;
+        csQTHString: string;
         nrReceived: integer;
         nrSent: integer;
         // tempcategoryoperator                  : tcategoryoperator;
 
-        T4: PAnsiChar; // 4.73.6
+        T4: string; // 4.73.6
         sFirstPart: string; // Issue #998: replaces CABRILLO_FIRST_PART
         sPrefix: string; // Issue #998: QSO:/X-QSO: line prefix
         sFmt: string; // Issue #998: assembly format string
@@ -2900,8 +2901,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         sCall2: string; // Issue #998: QTC to-call (QTCR/QTCS swap)
         myStationEx: TMyStationExchange;
         // #998 capstone: My-station fields for FormatCabrilloExchange
-        cRandomCharsReceived: PAnsiChar;
-        cKids: PAnsiChar;
+        cRandomCharsReceived: string;
+        cKids: string;
         previousqsonr: integer;
         TransmitterIDPos: integer;
         contacts: integer;
@@ -2945,7 +2946,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
              inc( contacts );
              // slOperators.Add(TempRXData.ceOperator);
 
-             HisCallsign := @TempRXData.Callsign[ 1 ];
+             (* STRINGS, NOT POINTERS INTO THE RECORD. Every one of these was @X[ 1 ]
+               on a ShortString -- Callsign, QTHString, DomesticQTH, Kids,
+               RandomCharsReceived -- and was read back as a C string. A ShortString has
+               a length and no NUL, so each read ran on past the value until it met a
+               zero byte. string( X ) decodes the same bytes and stops at the length. *)
+             HisCallsign := string( TempRXData.Callsign );
 
              if TempRXData.RSTSent < 25 then
                 begin
@@ -3048,42 +3054,42 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 begin
                 if LiteralDomesticQTH then
                    begin
-                   csQTHString := @TempRXData.QTHString[ 1 ]
+                   csQTHString := string( TempRXData.QTHString )
                    end
                 else
                   if Settings.Contest.Name = 'WWDIGI' then
                      begin
-                     csQTHString := @TempRXData.QTHString[ 1 ]
+                     csQTHString := string( TempRXData.QTHString )
                      end
                   else
                     if Settings.Contest.Name = 'LABRE' then
                        begin
-                       csQTHString := @TempRXData.QTHString[ 1 ]
+                       csQTHString := string( TempRXData.QTHString )
                        end
                     else
                        begin
-                       csQTHString := @TempRXData.DomesticQTH[ 1 ] { DomMultQTH };
+                       csQTHString := string( TempRXData.DomesticQTH ) { DomMultQTH };
                        end;
                 end
              else
                 begin
-                csQTHString := @TempRXData.QTHString[ 1 ];
+                csQTHString := string( TempRXData.QTHString );
                 end;
 
              if Contest in [ CUPRFCW, CUPRFSSB ] then
                 begin
-                csQTHString := @TempRXData.QTHString[ 1 ];
+                csQTHString := string( TempRXData.QTHString );
                 end;
 
              if Settings.Contest.Name = 'EURASIA' then
                 begin
-                csQTHString := @( TempRXData.QTHString[ 1 ] );
+                csQTHString := string( TempRXData.QTHString );
                 end;
 
              if Contest in [ CALQSOPARTY ] then
                 begin
 
-                csQTHString := @TempRXData.QTHString[ 1 ];
+                csQTHString := string( TempRXData.QTHString );
                 // else
                 // csQTHString := @TempRXData.DomMultQTH[1];
                 if TempRXData.DomMultQTH = '' then
@@ -3195,8 +3201,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
              if TempRXData.ceRecordKind in [ rkQTCR, rkQTCS ] then
                 begin
 
-                cKids                := @TempRXData.Kids[ 1 ];
-                cRandomCharsReceived := @TempRXData.RandomCharsReceived[ 1 ];
+                cKids                := string( TempRXData.Kids );
+                cRandomCharsReceived := string( TempRXData.RandomCharsReceived );
                 // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString
                 // (last asm block in this unit).  QTC: freq mode date time <call1>
                 // <randomchars> <call2> <sentNr> <kids> <rcvdNr>.  For rkQTCR the
@@ -3575,7 +3581,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         QSONumber, NumberBandChanges, NumberTwoXmtrQSOs,
            LastBandChangeQSO: integer;
         FileWrite: TFileHandle;   (* utils_file's -- see TFileHandle *)
-        sr: PAnsiChar;
+        sr: string;
       begin
       if not LogSourceOpen then
          begin
