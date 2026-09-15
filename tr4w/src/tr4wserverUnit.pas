@@ -172,8 +172,9 @@ type
     );
 
 const
-  DebugMessagesArray                    : array[DebugMessageType] of PAnsiChar =
-    ('SVN', 'RX ', 'TX ', 'RUN', 'DSC', 'MF ', 'RXD', 'QSO', 'LST', 'ACC', 'TF ', 'LI ', 'PAS', 'SS ', 'DXS', 'TS ', 'PAR', 'INT', 'EQ ', 'CLL', 'CLD', 'SLC', 'MES', 'TR ', 'OLQ');
+  (* DebugMessagesArray WAS HERE -- a PAnsiChar spelling for each
+    DebugMessageType. Nothing read it; rg and grep both find only its own
+    declaration. The ENUM stays: the send path still tags every message. *)
 
   // TransmitFile flag from MSWSOCK.  Was supplied by the vendored WinSock2.pas;
   // the RTL's Winapi.WinSock2 does not declare the MSWSOCK extensions, and
@@ -341,7 +342,7 @@ function ServerMessageBox(const Text: string; uType: Cardinal): integer;
 procedure InitServerLogger;
 procedure ScanLogForSerialsNumbers;
 procedure StopServer;
-procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
+procedure AddSocketToArray(soc: Cardinal; const IP, Name: string);
 procedure DeleteSocketFromArray(soc: Cardinal);
 procedure SendMessageToClients(From: Cardinal; Count: integer; ToAll: boolean; mt: DebugMessageType);
 procedure ProcessClientBuffer(aSocket: Cardinal; aBytes: integer);
@@ -359,7 +360,7 @@ procedure AddContestExchangeToBuffer(CE: ContestExchange);
 procedure WriteContestExchangesBufferToServerLog;
 procedure SendLogFileInformation(s: TClientHandle);
 function ClearServerLog: boolean;
-procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; comment: PChar; mt: DebugMessageType);
+procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; const comment: string; mt: DebugMessageType);
 procedure SendDisconnectMessage(Client: AnsiChar);
 procedure SetComputerID(ID: AnsiChar; s: TClientHandle);
 procedure SetStatus(Status: TClientStatus; s: TClientHandle);
@@ -528,7 +529,7 @@ begin
        end;
 end;
 
-procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
+procedure AddSocketToArray(soc: Cardinal; const IP, Name: string);
 var
   i                                     : integer;
 begin
@@ -543,15 +544,15 @@ begin
          than 31 characters would have run off the end of clName. *)
        FillChar(ClientsSoocketsArray[i].clSocket, SizeOf(TClientEntry) - 4, 0);
        ClientsSoocketsArray[i].clSocket := soc;
-       SetCharBuffer(ClientsSoocketsArray[i].clIPAdr, string(IP));
-       if Name <> nil then
-          begin
-          SetCharBuffer(ClientsSoocketsArray[i].clName, string(Name));
-          end;
-       if Name = nil then
-          begin
-          ClientsSoocketsArray[i].clName[0] := '?';
-          end;
+       SetCharBuffer(ClientsSoocketsArray[i].clIPAdr, IP);
+       (* THE NAME IS COPIED UNCONDITIONALLY. An `if Name = nil` arm wrote '?'
+         here, and it could not be reached: the only caller, uServerNet, cast
+         its string with PAnsiChar(AnsiString(...)), and FPC makes even an
+         EMPTY AnsiString a non-nil pointer. The '?' that arm meant is
+         supplied where the peer is first seen -- uServerNet holds FPeerName
+         at '?' until a name resolves -- so the client list shows exactly what
+         it showed before. *)
+       SetCharBuffer(ClientsSoocketsArray[i].clName, Name);
        inc(nclients);
        Break;
        end;
@@ -825,8 +826,8 @@ begin
        if ClientsSoocketsArray[i].clSocket <> 0 then
           begin
           lines.Add(Format('%s: %s',
-                           [String(PAnsiChar(@ClientsSoocketsArray[i].clIPAdr[0])),
-                            String(PAnsiChar(@ClientsSoocketsArray[i].clName[0]))]));
+                           [CharBufferText(ClientsSoocketsArray[i].clIPAdr),
+                            CharBufferText(ClientsSoocketsArray[i].clName)]));
           end;
      SetClientList(lines);
   finally
@@ -939,7 +940,12 @@ begin
   Result := False;
   if ServerLogOpened then Exit;
 
-  name := String(PAnsiChar(@ServerLogFileName[0]));
+  (* CharBufferBytes, NOT CharBufferText. tr4wserver.lpr fills this buffer
+    with SetCharBufferBytes(AnsiString(...)) -- system-codepage bytes, copied
+    unchanged -- so the read is their inverse. CharBufferText would decode
+    them as UTF-8, which is not what was written, and a non-ASCII install
+    path would name a file that does not exist. *)
+  name := string(CharBufferBytes(ServerLogFileName));
   try
      if (aMode = slOpenAlways) and (not FileExists(name)) then
         begin
@@ -1029,7 +1035,7 @@ begin
   Result := True;
 end;
 
-procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; comment: PChar; mt: DebugMessageType);
+procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; const comment: string; mt: DebugMessageType);
 var
   h                                     : THandle;   (* A FILE handle, not a window. *)
   lpNumberOfBytesWritten                : Cardinal;
@@ -1173,7 +1179,7 @@ begin
      cidInUse:
         begin
         RefuseComputerID(s, ID, 'already held by ' +
-           string(PAnsiChar(@ClientsSoocketsArray[holder[Ord(ID)]].clIPAdr[0])));
+           CharBufferText(ClientsSoocketsArray[holder[Ord(ID)]].clIPAdr));
         Exit;
         end;
   end;
@@ -1274,7 +1280,7 @@ begin
   BytesSEND := BytesSEND + DWORD(Result);
   DisplaySENDBytes;
 {$IF SERVERDEBUG}
-  WriteToServerDebugFile(Result, s, nil, mt);
+  WriteToServerDebugFile(Result, s, '', mt);
 {$IFEND}
 
 end;

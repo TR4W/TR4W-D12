@@ -269,8 +269,11 @@ begin
       Exit;
       end;
 
-   AddSocketToArray(Handle, PAnsiChar(AnsiString(FPeerIP)),
-                    PAnsiChar(AnsiString(FPeerName)));
+   (* THE STRINGS THEMSELVES. This was PAnsiChar(AnsiString(FPeerIP)) --
+     the address of a TEMPORARY, the idiom CLAUDE.md records as a dangling
+     pointer. It survived only because the temporary lasts to the end of the
+     statement and AddSocketToArray copied before returning. *)
+   AddSocketToArray(Handle, FPeerIP, FPeerName);
    DisplayClients;
    SendLogFileInformation(Handle);
    SerialNumbersChanged;
