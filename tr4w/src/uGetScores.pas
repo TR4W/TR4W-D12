@@ -53,7 +53,6 @@ procedure RunPOSTGetScoresThread;
 //function MakePOSTRequestForRDXC2010: integer;
 function MakePOSTRequestNew: integer;
 procedure ShowGetScoresStatus(Status: string);
-procedure CheckServerAnswer(AnswerLength: integer);
 
 // Issue #783 -- HamScore RTC support reuses the dynamicresults fragment
 // the existing scoreboard poster already builds.  This returns just the
@@ -67,7 +66,6 @@ var
   GetScoresBuffer                       : array[0..4096 - 1] of AnsiChar;
   GetScoresThreadID                     : TThreadID;
   GetScoresThreadHandle                 : TThreadID;
-  GetScoresAnswerFileName               : array[0..255] of AnsiChar;
 const
 
   GSCR                                  = ''; //#13#10;
@@ -132,18 +130,36 @@ begin
       post.UserAgent     := TR4W_CURRENTVERSION;
       post.ContentType   := 'application/x-www-form-urlencoded';
       post.AllowInsecure := True;
-      post.Body          := string(PAnsiChar(@GetScoresBuffer));
+      post.Body          := CharBufferText(GetScoresBuffer);
 
       logger.Debug('Score post: URL = %s', [sURL]);
       post.Send;
 
       if post.StatusCode = 200 then
          begin
-         // Save the server response for diagnostics
-         if tOpenFileForWrite(h, GetScoresAnswerFileName) then
+         (* THE SERVER'S ANSWER, SAVED FOR DIAGNOSTICS -- AND IT HAD STOPPED
+           BEING SAVED AT ALL.
+
+           D7 named this file in the dialog's WM_INITDIALOG handler:
+           Format(GetScoresAnswerFileName, '%sscoresserveranswer.html', ...).
+           When the window became an LCL form on 2026-08-25 (69e28932) that
+           handler went, and the line naming the file went with it. The global
+           was never set again, so this opened '', FileCreate failed, and the
+           dump was skipped on every post.
+
+           AND D7 NEVER SAVED THE ANSWER EITHER. It wrote GetScoresBuffer,
+           which holds the REQUEST body MakePOSTRequestNew built -- nothing read
+           the reply into it. The file is called scoresserveranswer.html and
+           this comment has always said "server response", so it now writes
+           post.Response, which is what both always meant.
+
+           The path is built here, where it is used, rather than in a global
+           that exists only to be set once. *)
+         if tOpenFileForWrite(h, CharBufferText(TR4W_LOG_PATH_NAME) +
+                                 'scoresserveranswer.html') then
             begin
-            sWriteFile(h, GetScoresBuffer, Length(CharBufferText(GetScoresBuffer)));
-            FileClose(h);   { a FILE handle -- tOpenFileForWrite above }
+            sWriteFileFromString(h, UTF8Encode(post.Response));
+            FileClose(h);   (* a FILE handle -- tOpenFileForWrite above *)
             end;
          ShowGetScoresStatus(TC_UPLOADEDSUCCESSFULLY);
          end
@@ -181,38 +197,6 @@ begin
   PostScoresShowStatus(GetTimeString + ' : ' + Status);
 end;
 
-procedure CheckServerAnswer(AnswerLength: integer);
-label
-  1;
-var
-  i                                     : integer;
-  p                                     : string;   // was PAnsiChar; holds a resourcestring now
-begin
-  p := '';
-  if AnswerLength < 1 then
-     begin
-     p := TC_NOANSWERFROMSERVER;
-     goto 1;
-     end;
-
-  for i := 0 to AnswerLength - 1 - 4 do
-    if GetScoresBuffer[i] in [#13, #10] then
-       begin
-       GetScoresBuffer[i] := #0;
-       p := string(PAnsiChar(@GetScoresBuffer[13]));
-       Break;
-       end;
-
-  for i := 0 to AnswerLength - 1 - 4 do
-     begin
-     //    TempInteger := PInteger(@GetScoresBuffer[i])^;
-     //    if TempInteger = $462D4B4F then {OK-F} p := TC_UPLOADEDSUCCESSFULLY;
-     //    if TempInteger = $6176614A then {Java} p := TC_UPLOADEDSUCCESSFULLY;
-     //    if TempInteger = $4C494146 then {FAIL} p := TC_FAILEDTOLOAD;
-     end;
-  1:
-  ShowGetScoresStatus(p);
-end;
 {
 procedure SendOnLineResultsToRDXC2010Site;
 begin

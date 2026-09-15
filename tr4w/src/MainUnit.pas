@@ -8357,13 +8357,10 @@ var
   nNumberOfBytesToWrite: Cardinal;
   InitialExchange: CallString;
   Callsign: CallString;
-  (* THE BYTES HANDED TO utils_file, which takes a PAnsiChar.  A NAMED local,
-    not a cast in the argument list: PAnsiChar(AnsiString(x)) on a temporary
-    is the dangling-pointer idiom this tree has been bitten by. *)
-  nameBytes: AnsiString;
 begin
-  nameBytes := AnsiString(FileName);
-  if not tOpenFileForWrite(h, PAnsiChar(nameBytes)) then
+  (* THE NAME ITSELF. nameBytes existed only to give utils_file a PAnsiChar
+    that outlived the call; tOpenFileForWrite takes a string now. *)
+  if not tOpenFileForWrite(h, FileName) then
      begin
      Exit;
      end;
@@ -8403,7 +8400,7 @@ var
   TempCall: CallString;
 begin
   MakeReportFileName('ALLCALLSIGNS.TXT');
-  if not tOpenFileForWrite(h, @ReportsFilename[1]) then
+  if not tOpenFileForWrite(h, string(ReportsFilename)) then
      begin
      Exit;
      end;

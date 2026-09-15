@@ -56,7 +56,7 @@ function sReadFile(hFile: TFileHandle; var Buffer; nNumberOfBytesToRead: DWORD):
 { How many bytes the open file holds, WITHOUT moving the read position. }
 function sFileSize(hFile: TFileHandle): Int64;
 
-function tOpenFileForWrite(var h: TFileHandle; FileName: PAnsiChar): boolean;
+function tOpenFileForWrite(var h: TFileHandle; const FileName: string): boolean;
 function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
 
 implementation
@@ -149,7 +149,7 @@ begin
    Result := FileWrite(hFile, sBuffer[1], Length(sBuffer)) >= 0;
 end;
 
-function tOpenFileForWrite(var h: TFileHandle; FileName: PAnsiChar): boolean;
+function tOpenFileForWrite(var h: TFileHandle; const FileName: string): boolean;
 begin
   (* FileCreate IS CREATE_ALWAYS: it makes the file, or truncates one that is
     already there, and opens it read/write -- which is what the flags this

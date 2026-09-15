@@ -165,7 +165,7 @@ function GenerateZoneMultiplierTotals: boolean;
 procedure PrintFirstZoneMultiplierCallsigns;
 procedure ZoneReport;
 procedure BandChangeReport;
-procedure MakeReportFileName( ShortFileName: PAnsiChar );
+procedure MakeReportFileName( const ShortFileName: string );
 procedure MakeNotesList;
 function GoodLookingQSO: boolean;
 function GetStateFromSection( section: string ): string;
@@ -684,7 +684,7 @@ procedure SummarySheet;
      Exit;
      end;
   MakeReportFileName( 'Summary.txt' );
-  if not tOpenFileForWrite( tReportFileWrite, @ReportsFilename[ 1 ] ) then
+  if not tOpenFileForWrite( tReportFileWrite, string( ReportsFilename ) ) then
      begin
      Exit;
      end;
@@ -748,7 +748,7 @@ procedure ExportTo3830Scores;
      Exit;
      end;
   MakeReportFileName( '3830Score.txt' );
-  if not tOpenFileForWrite( tReportFileWrite, @ReportsFilename[ 1 ] ) then
+  if not tOpenFileForWrite( tReportFileWrite, string( ReportsFilename ) ) then
      begin
      Exit;
      end;
@@ -2165,7 +2165,7 @@ procedure ExportToEDIByBand( Band: BandType );
                  + string( BandStringsArrayWithOutSpaces[ Band ] ) + '.EDI' ) );
 
   DeleteSlashes( tReportsFilename );
-  if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
+  if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
      begin
      Exit;
      end;
@@ -2523,7 +2523,7 @@ procedure ExportToADIF;
      begin
      Move(extName[1], tReportsFilename[0], Length(extName));
      end;
-  if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
+  if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
      begin
      Exit;
      end;
@@ -2599,7 +2599,7 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
      begin
      Move(extName[1], tReportsFilename[0], Length(extName));
      end;
-  if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
+  if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
      begin
      Exit;
      end;
@@ -2713,7 +2713,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
            Exit;
            end;
 
-      if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
+      if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
          begin
          Exit;
          end;
@@ -3582,7 +3582,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          Exit;
          end;
       MakeReportFileName( 'BandChange.txt' );
-      if not tOpenFileForWrite( FileWrite, @ReportsFilename[ 1 ] ) then
+      if not tOpenFileForWrite( FileWrite, string( ReportsFilename ) ) then
          begin
          LogSourceClose;
          Exit;
@@ -3703,7 +3703,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       Built as a string and copied in once instead. The FillChar keeps the
       trailing NULs the PAnsiChar reader depends on, and the length is what
       Pascal actually measured rather than what lstrlenA counted. *)
-    procedure MakeReportFileName( ShortFileName: PAnsiChar );
+    procedure MakeReportFileName( const ShortFileName: string );
       var
         full: AnsiString;
       begin
@@ -3715,12 +3715,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          begin
          SetLength(full, High(ReportsFilename));
          end;
-      (* THE FillChar STAYS, and it is not tidiness: three callers still
-        read @ReportsFilename[1] as a PAnsiChar, so the bytes after the
-        text have to be NUL. A ShortString assignment sets the length byte
-        and the characters and leaves the rest alone -- zeroed first, the
-        byte past the end is the terminator those readers need. *)
-      FillChar(ReportsFilename, SizeOf( ReportsFilename ), 0);
+      (* NO FillChar. It existed only so the callers reading
+        @ReportsFilename[1] as a PAnsiChar found a NUL past the text; they
+        pass string(ReportsFilename) now, which carries its own length. *)
       ReportsFilename        := AnsiString(full);
       PreviewFileNameAddress := full;
       end;
@@ -3737,7 +3734,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          Exit;
          end;
 
-      if not tOpenFileForWrite( tReportFileWrite, @ReportsFilename[ 1 ] ) then
+      if not tOpenFileForWrite( tReportFileWrite, string( ReportsFilename ) ) then
          begin
          LogSourceClose;
          Exit;

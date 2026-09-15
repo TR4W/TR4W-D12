@@ -2784,7 +2784,7 @@ var
   Spot                                  : TSpotRecord;
   h                                     : TFileHandle;   (* utils_file's -- see TFileHandle *)
 begin
-  if not tOpenFileForWrite(h, TR4W_BANDMAPBIN_FILENAME) then Exit;
+  if not tOpenFileForWrite(h, CharBufferText(TR4W_BANDMAPBIN_FILENAME)) then Exit;
   if SpotsList.Count > 0 then
      begin
      sWriteFile(h, BandMapFileVersion, SizeOf(BandMapFileVersion));

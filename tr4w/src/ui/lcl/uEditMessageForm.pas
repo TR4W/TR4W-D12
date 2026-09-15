@@ -329,7 +329,7 @@ begin
          end;
       // An empty but VALID wav: the recorder is handed a file with a header
       // rather than a missing one.
-      if tOpenFileForWrite(h, PAnsiChar(path)) then
+      if tOpenFileForWrite(h, string(path)) then
          begin
          sWriteFile(h, waveheader, Length(waveheader));
          FileClose(h);   { a FILE handle -- tOpenFileForWrite above }
