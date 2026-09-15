@@ -91,13 +91,13 @@ uses
 const
 
   CSAS                                  = 9;
-  InitialCommandsSA2                    : array[1..CSAS] of PAnsiChar = (
-    nil,
-    nil,
+  InitialCommandsSA2                    : array[1..CSAS] of string = (
+    '',
+    '',
     // Issue #976: CATEGORY-OVERLAY removed -- it was only a dangling label
     // (no control was ever created for it).  Restore it as a real drop-down
     // when the New Contest dialog is rebuilt in modern Delphi.
-    nil,
+    '',
     'CATEGORY-ASSISTED',
     'CATEGORY-BAND',
     'CATEGORY-MODE',
@@ -105,7 +105,7 @@ const
     'CATEGORY-POWER',
     'CATEGORY-TRANSMITTER');
 
-  InitialCommandsSA                     : array[InitialCommands] of PAnsiChar =
+  InitialCommandsSA                     : array[InitialCommands] of string =
     (
     'MY CHECK',
     'MY FD CLASS',
@@ -669,7 +669,7 @@ procedure DisplayInitialCommand(Command: InitialCommands);
 begin
   inc(NewContestDisplayedCommands);
   frmNewContest.EnableRow(NewContestDisplayedCommands,
-                          string(InitialCommandsSA[Command]));
+                          InitialCommandsSA[Command]);
 end;
 
 
@@ -714,12 +714,12 @@ begin
       end;
 
    { The six CATEGORY-* rows are labelled once and stay labelled. Rows 1..3 are
-     nil in this table because they are named per contest by DisplayInitialCommand. }
+     empty in this table because they are named per contest by DisplayInitialCommand. }
    for i := 1 to CSAS do
       begin
-      if InitialCommandsSA2[i] <> nil then
+      if InitialCommandsSA2[i] <> '' then
          begin
-         frmNewContest.SetRowLabel(i, string(InitialCommandsSA2[i]));
+         frmNewContest.SetRowLabel(i, InitialCommandsSA2[i]);
          end;
       end;
 

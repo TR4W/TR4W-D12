@@ -254,15 +254,6 @@ const
 
    //  CFGKindStringArray                    : array[CFGKind] of PChar = ('Supported', 'Supported', 'Supported', 'Supported', 'Supported', 'Added', 'Removed', 'Not supported');
 
-   // Indexed by CFGStatus -- adding a status without adding a name here is a
-   // compile error, which is how csOwned's missing entry was caught.
-   CFGStatusArray: array[CFGStatus] of PAnsiChar = ('New', 'Old', 'Removed', 'Preferences', 'JSON');
-
-   CFGTypeStringArray: array[CFGType] of PAnsiChar = (nil, 'Directory', 'FileName',
-      'String', 'Multiplier', 'Boolean', 'Real', 'Byte', 'Integer', 'Integer',
-      { 'Integer', } 'String', 'URL', 'CaseSensitive', 'Password', 'Operation', 'Other', 'Char', 'Char',
-      {'Port',} 'Port', 'Band');
-
 var
    CMD: ShortString;
    (* THE THREE WSJT-X BOOLEANS ARE GONE (2026-09-12) -- Settings.Wsjtx in

@@ -57,7 +57,7 @@ const
    //
    // BandType enum order must match the QSOTotals/ContestExchange band order
    // -- this array is also referenced by LOGContactToUDP.
-   tCabrilloFreqString : array[Band160..BandLight] of PAnsiChar =
+   tCabrilloFreqString : array[Band160..BandLight] of string =
       (
          '1800',
          '3500',
@@ -84,15 +84,15 @@ const
 
    // Cabrillo "mode" column default per mode.  Indexed by ModeType.
    // Digital and FM have callers-side overrides (see FormatCabrilloMode);
-   // nil entries correspond to ModeType slots that do not appear in
+   // '' entries correspond to ModeType slots that do not appear in
    // Cabrillo logs.
-   tCabrilloModeString : array[ModeType] of PAnsiChar =
+   tCabrilloModeString : array[ModeType] of string =
       (
          'CW',
          'RY',
          'PH',
-         nil,
-         nil,
+         '',
+         '',
          'FM'
       );
 
@@ -123,7 +123,7 @@ function FormatCabrilloFreq(band: BandType; freqHz: LongInt;
 //   - Digital + anything else        -> 'DG'
 //   - FM with modeOverridesToPhone   -> 'PH'
 //   - Otherwise                      -> tCabrilloModeString[mode]
-//                                      (may be empty for slots set to nil)
+//                                      (empty for the slots with no mode)
 // ---------------------------------------------------------------------------
 function FormatCabrilloMode(mode: ModeType; extMode: ExtendedModeType;
                             modeOverridesToPhone: Boolean): string;
@@ -139,7 +139,7 @@ begin
       begin
       if freqHz = 0 then
          begin
-         Result := string(tCabrilloFreqString[band]);   // boundary: table stays PAnsiChar (shared w/ PostUnit/UDP)
+         Result := tCabrilloFreqString[band];
          end
       else if (freqHz > 0) and (freqHz < 30000000) then
          begin
@@ -148,12 +148,12 @@ begin
       else
          begin
          // freqHz >= 30 MHz -- Cabrillo spec: use band default
-         Result := string(tCabrilloFreqString[band]);   // boundary: table stays PAnsiChar (shared w/ PostUnit/UDP)
+         Result := tCabrilloFreqString[band];
          end;
       end
    else
       begin
-      Result := string(tCabrilloFreqString[band]);   // boundary: table stays PAnsiChar (shared w/ PostUnit/UDP)
+      Result := tCabrilloFreqString[band];
       end;
 end;
 
@@ -177,7 +177,7 @@ begin
       end
    else
       begin
-      Result := string(tCabrilloModeString[mode]);   // boundary: table stays PAnsiChar
+      Result := tCabrilloModeString[mode];
       end;
 end;
 

@@ -112,7 +112,7 @@ uses
   uStickyKeys,
   uHostName;   (* LocalComputerName -- the <NetBiosName> element *)
   var TimeLastScoreBroadcast : TDateTime;
-  const BandTypeToUDPContactBand  : array[Band160..BandLight] of PAnsiChar =
+  const BandTypeToUDPContactBand  : array[Band160..BandLight] of string =
     (
     '1.8',
     '3.5',
@@ -2646,10 +2646,9 @@ var
     nTotal                                : integer;
     sContestName                          : string;
 const
-  GetScoresMults                        : array[RemainingMultiplierType] of PAnsiChar = (nil, 'state', 'country', 'zone', 'prefix');
-  GetScoresMultsIARU                   : array[RemainingMultiplierType] of PAnsiChar = (nil, 'HQ', 'country', 'zone', 'prefix');
-  GetScoresMultsWRTC                   : array[RemainingMultiplierType] of PAnsiChar = (nil, 'HQ', 'country', 'zone', 'prefix');
-  GetScoresModesArray                   : array[ModeType] of PAnsiChar = ('CW', 'DIG', 'PH', 'ALL', nil, nil);
+  GetScoresMults                        : array[RemainingMultiplierType] of string = ('', 'state', 'country', 'zone', 'prefix');
+  GetScoresMultsWRTC                   : array[RemainingMultiplierType] of string = ('', 'HQ', 'country', 'zone', 'prefix');
+  GetScoresModesArray                   : array[ModeType] of string = ('CW', 'DIG', 'PH', 'ALL', '', '');
 begin
 // Score formatted for WRTC Score Computer
 {
@@ -2854,7 +2853,9 @@ begin
       end
    else
       begin // ny4i Issue 82 The Cabrillo reference is just because this array was declared in Cabrillo.
-      freq := StrToIntDef(tCabrilloFreqString[RxData.Band], 0) * 1000; //14000 in array but needs to be 14000000
+      (* AnsiString: SysUtils' StrToIntDef takes 8-bit strings, and the band
+        default is an ASCII token, so the conversion is lossless. *)
+      freq := StrToIntDef(AnsiString(tCabrilloFreqString[RxData.Band]), 0) * 1000; //14000 in array but needs to be 14000000
       txFreq := freq;
       end;
    if RXData.ExtMode <> eNoMode then
@@ -3167,8 +3168,10 @@ function ConvertBandTypeToUDPContactBand(band: BandType): string;
 begin
    if FormatSettings.DecimalSeparator <> '.' then
       begin
-      // Convert the . in BandTypeToUDPContactBand to the DecimalSeperator
-      result := StringReplace(BandTypeToUDPContactBand[band],'.',FormatSettings.DecimalSeparator,[rfReplaceAll]);
+      // Convert the . in BandTypeToUDPContactBand to the DecimalSeperator.
+      (* AnsiString: this StringReplace is SysUtils' 8-bit one, and the band
+        token is ASCII, so the conversion is lossless. *)
+      result := StringReplace(AnsiString(BandTypeToUDPContactBand[band]),'.',FormatSettings.DecimalSeparator,[rfReplaceAll]);
       end
    else
       begin

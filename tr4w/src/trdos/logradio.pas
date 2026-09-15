@@ -459,10 +459,6 @@ var
    // uRadioRegistry.ManufacturerOf (first word of the display name), and the
    // legacy table's own rt field for protocol grouping.
 
-const
-   RTS_DTR_Values_Array: array[1..4] of PAnsiChar =
-      ('OFF', 'ON', 'CW', 'PTT');
-
 type
    RigType = (rtUnknown, rtICOM, rtKenwood, rtYaesu1, rtYaesu2, rtYaesu3, rtYaesu4, rtJST, rtOrion, rtHamlib);
 
