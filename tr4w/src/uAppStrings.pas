@@ -44,6 +44,16 @@ resourcestring
      deliberate.  A caption is user-facing text and belongs here. }
    SAlreadyRunningTitle = 'TR4W';
 
+   { TR4W COULD NOT OPEN tr4w.log, AND KEPT RUNNING.  %s is the reason as the
+     RTL gives it, which names the file.  The last sentence is the cost that
+     matters to an operator: a fault reported from this session may have no
+     log behind it. }
+   SLogFileUnavailable =
+      'TR4W could not open its log file.' + sLineBreak + sLineBreak +
+      '%s' + sLineBreak + sLineBreak +
+      'TR4W will keep running and keep trying to open it. Until it can, ' +
+      'nothing from this session is written to the log.';
+
    SIniRetireTitle = 'Old settings file';
 
    SIniRetirePrompt =

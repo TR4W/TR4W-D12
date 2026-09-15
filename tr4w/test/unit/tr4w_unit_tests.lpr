@@ -85,6 +85,7 @@ uses
    uTestAudio           in 'uTestAudio.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',
    uTestUtilsText       in 'uTestUtilsText.pas',
+   uTestLog4DFileAppender in 'uTestLog4DFileAppender.pas',
    uADIF                in '..\..\src\uADIF.pas',
    uTestADIF            in 'uTestADIF.pas',
    uTestADIFFixtures    in 'uTestADIFFixtures.pas',
@@ -382,6 +383,7 @@ begin
    RegisterSuite(TAudioTests.Create('Audio'));
    RegisterSuite(TRegexValidatorTests.Create('RegexValidators'));
    RegisterSuite(TUtilsTextTests.Create('UtilsText'));
+   RegisterSuite(TLog4DFileAppenderTests.Create('Log4DFileAppender'));
    RegisterSuite(TADIFLexerTests.Create('ADIFLexer'));
    RegisterSuite(TADIFHelperTests.Create('ADIFHelpers'));
    RegisterSuite(TADIFMappingTests.Create('ADIFMapping'));

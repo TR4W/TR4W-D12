@@ -89,6 +89,12 @@ procedure InitLCLApplication;
   single-instance check. }
 procedure ReportAlreadyRunning(const aMessage: string);
 
+(* A WARNING AT STARTUP, WHILE THERE IS NO MAIN WINDOW TO OWN IT.  The title is
+  SAlreadyRunningTitle ('TR4W'), named for its first use; renaming it would
+  orphan its entries in the translation catalogues.  Never call this from a
+  headless run -- there is nobody to dismiss it. *)
+procedure ReportStartupWarning(const aMessage: string);
+
 { Hand the program to the LCL and do not come back.
 
   Phase 3c: TR4W ran its own GetMessage loop until 2026-08-23, which is why the
@@ -140,6 +146,11 @@ begin
      MessageDlg takes STRINGS, is what an LCL program written from scratch
      would call, and drops both the pointer and the code page. It also drops
      LCLType, which was in the uses clause only for MB_OK and MB_ICONWARNING. *)
+   ReportStartupWarning(aMessage);
+end;
+
+procedure ReportStartupWarning(const aMessage: string);
+begin
    MessageDlg(LclText(SAlreadyRunningTitle), LclText(aMessage),
               mtWarning, [mbOK], 0);
 end;

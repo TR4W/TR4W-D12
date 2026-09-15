@@ -928,16 +928,34 @@ type
   private
     FAppend: Boolean;
     FFileName: TFileName;
+    FOpenError: string;
+    FLastOpenFailure: QWord;
+    FReopenInterval: Cardinal;
+    procedure ReopenIfDue;
   protected
     procedure SetOption(const Name, Value: string); override;
     procedure SetLogFile(const Name: string); virtual;
     procedure CloseLogFile; virtual;
+    procedure DoAppend(const Message: string); override;
   public
     constructor Create(const Name, FileName: string;
       const Layout: ILogLayout = nil; const Append: Boolean = True);
       reintroduce; virtual;
     property FileName: TFileName read FFileName;
     property OpenAppend: Boolean read FAppend;
+    (* WHY THE FILE COULD NOT BE OPENED, or '' when it is open.
+
+      A failed open does not raise (TR4W, 2026-09-15). It used to, out of the
+      constructor -- before TR4W had installed anything that could report it,
+      so the program ended with an exit code and no word of why -- and out of
+      whichever log call crossed the rollover size, on whatever thread made it.
+      A logger that can kill the program it is logging for is the wrong way
+      round, so the appender records the reason here, writes nothing, and tries
+      again. The caller decides whether an operator needs to be told. *)
+    property OpenError: string read FOpenError;
+    (* How long, in milliseconds, between attempts to reopen a file that could
+      not be opened. Retrying costs a file open, so it is not done per line. *)
+    property ReopenInterval: Cardinal read FReopenInterval write FReopenInterval;
   end;
 
   { Implement this interface for your own strategies
@@ -3310,6 +3328,7 @@ constructor TLogFileAppender.Create(const Name, FileName: string;
 begin
   inherited Create(Name, nil, Layout);
   FAppend := Append;
+  FReopenInterval := 5000;
   SetOption(FileNameOpt, FileName);
 end;
 
@@ -3320,29 +3339,63 @@ var
 begin
   CloseLogFile;
   FFileName := Name;
-  if FAppend and FileExists(FFileName) then
-     begin
-     // append to existing file
-     // note that we replace fmShareDenyWrite with fmShareDenyNone for concurrent logging possibility
-     FStream := TFileStream.Create(FFileName, fmOpenReadWrite or fmShareDenyNone);
-     FStream.Seek(0, soFromEnd);
-     end
-  else
-     begin
-     // Check if directory exists
-     strPath := ExtractFileDir(FFileName);
-     if (strPath <> '') and not DirectoryExists(strPath) then
-        begin
-        ForceDirectories(strPath);
-        end;
+  (* A FAILED OPEN IS RECORDED, NOT RAISED -- see OpenError. With FStream nil
+    every append writes nothing, and DoAppend tries the open again once
+    ReopenInterval has passed. The header is written only after a successful
+    open: writing it goes back through DoAppend, which would otherwise retry
+    the open from inside the open. *)
+  try
+    if FAppend and FileExists(FFileName) then
+       begin
+       // append to existing file
+       // note that we replace fmShareDenyWrite with fmShareDenyNone for concurrent logging possibility
+       FStream := TFileStream.Create(FFileName, fmOpenReadWrite or fmShareDenyNone);
+       FStream.Seek(0, soFromEnd);
+       end
+    else
+       begin
+       // Check if directory exists
+       strPath := ExtractFileDir(FFileName);
+       if (strPath <> '') and not DirectoryExists(strPath) then
+          begin
+          ForceDirectories(strPath);
+          end;
 
-     //FIX 04.10.2006 MHoenemann:
-     //  SysUtils.FileCreate() ignores any sharing option (like our fmShareDenyWrite),
-     // Creating new file directly via TFileStream with fmCreate, which truncates/creates
-     // the file and gives us the stream with the desired share mode in one step.
-     FStream := TFileStream.Create(FFileName, fmCreate or fmShareDenyNone);
-     end;
+       //FIX 04.10.2006 MHoenemann:
+       //  SysUtils.FileCreate() ignores any sharing option (like our fmShareDenyWrite),
+       // Creating new file directly via TFileStream with fmCreate, which truncates/creates
+       // the file and gives us the stream with the desired share mode in one step.
+       FStream := TFileStream.Create(FFileName, fmCreate or fmShareDenyNone);
+       end;
+  except
+    on E: Exception do
+       begin
+       FreeAndNil(FStream);
+       FOpenError := E.Message;
+       FLastOpenFailure := SysUtils.GetTickCount64;
+       ErrorHandler.Error(E.Message);
+       Exit;
+       end;
+  end;
+  FOpenError := '';
   WriteHeader;
+end;
+
+{ Retry an open that failed, no more often than ReopenInterval. }
+procedure TLogFileAppender.ReopenIfDue;
+begin
+  if (FStream = nil)                                               and
+     (FOpenError <> '')                                            and
+     (SysUtils.GetTickCount64 - FLastOpenFailure >= FReopenInterval) then
+     begin
+     SetLogFile(FFileName);
+     end;
+end;
+
+procedure TLogFileAppender.DoAppend(const Message: string);
+begin
+  ReopenIfDue;
+  inherited DoAppend(Message);
 end;
 
 { close file stream }
@@ -3376,15 +3429,23 @@ end;
 
 procedure TLogRollingFileAppender.DoAppend(const msg: string);
 begin
-  if assigned(FStream) and (FCurrentSize = 0) then
+  (* COUNT ONLY WHAT IS WRITTEN. The size used to grow with every message while
+    the file could not be opened, so the first append after a reopen found the
+    count over the limit and rolled a nearly empty file over -- and with one
+    backup, that overwrote tr4w.log.1, the log from before the failure. With
+    no stream the count stays 0, and the next append reads the real size. *)
+  if FStream <> nil then
      begin
-     FCurrentSize := FStream.Size;
-     end;
-  FCurrentSize := FCurrentSize + Length(msg);   // should be faster than TFileStream.Size
-  if (FStream <> nil) and (FCurrentSize > FMaxFileSize) then
-     begin
-     FCurrentSize := 0;
-     RollOver;
+     if FCurrentSize = 0 then
+        begin
+        FCurrentSize := FStream.Size;
+        end;
+     FCurrentSize := FCurrentSize + Length(msg);   // should be faster than TFileStream.Size
+     if FCurrentSize > FMaxFileSize then
+        begin
+        FCurrentSize := 0;
+        RollOver;
+        end;
      end;
   inherited;
 end;

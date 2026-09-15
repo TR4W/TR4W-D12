@@ -1258,6 +1258,25 @@ begin
    // why that is a second unit and not a define.
    InstallCrashLogLCL;
 
+   (* A LOG FILE TR4W CANNOT OPEN IS NOT A REASON TO STOP.  The appender used to
+     raise here, before the crash handler above existed, so the process ended
+     with an exit code and nothing on screen or on disk said why -- seen once
+     in a corpus run, 2026-09-15, as an export that died 0.6 s after taking the
+     mutex. The appender now records the reason and keeps retrying (Log4D,
+     TLogFileAppender.OpenError). tr4w-early.log gets the reason either way,
+     since tr4w.log by definition cannot; an operator also gets a dialog, and a
+     headless run does not, because nobody is there to dismiss it. *)
+   if appender.OpenError <> '' then
+      begin
+      EarlyTrace('startup: could not open the log file, continuing without it -- '
+                 + appender.OpenError);
+      if not tSilentExport then
+         begin
+         ReportStartupWarning(SysUtils.Format(SLogFileUnavailable,
+                                              [appender.OpenError]));
+         end;
+      end;
+
    { /IMPORTLOG -- AS EARLY AS IT CAN REPORT, AND NO EARLIER.
 
      It was first placed at the very top of RunTR4W, on the reasoning that an
