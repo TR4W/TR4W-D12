@@ -351,10 +351,10 @@ var
      // TWO SPELLINGS OF THE SAME KEY, DELIBERATELY, AND THIS IS WHERE IT BIT.
      //
      // WritePrivateProfileStringA wanted a NULL-TERMINATED PAnsiChar (that write
-     // is gone -- see below).  CheckCommand wants the LENGTH-PREFIXED ShortString
-     // form -- it is called as CheckCommand(@k, ...), so the byte it points at
-     // is the length.  Handing either one the other's layout is silent
-     // corruption, not a type error.
+     // is gone -- see below).  CheckCommand takes the ShortString itself: until
+     // 2026-09-15 it was handed @k, the address of the length byte, typed as
+     // PAnsiChar -- so passing it the other layout was silent corruption. It
+     // is a type error now.
      //
      // NY4I found exactly that: `id := ShortString(caption)` sets the length
      // byte and leaves NO terminator, so @id[1] ran past the text into stale
@@ -415,7 +415,7 @@ var
        not a stale file. *)
      if not TryApplyMessageCommand(k, aCheckValue) then
         begin
-        CheckCommand(@k, aCheckValue, True);
+        CheckCommand(k, aCheckValue, True);
         end;
   end;
 

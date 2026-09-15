@@ -294,7 +294,7 @@ var
 
      CheckCommand still exists and still means the same thing to a config
      file. What it no longer has is a table to scan. *)
-function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
+function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 // True when Command names a single-valued (overwrite) config command, i.e. one
 // for which a duplicate line is a misconfiguration.  Accumulating commands
@@ -302,7 +302,7 @@ function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
 // repeat and return False, as do pattern-matched commands (COLUMN WIDTH,
 // "* WINDOW *", messages) and unknown commands.  Used by the config loader to
 // flag hand-edited duplicate keys.  See the implementation for the list.
-function CommandIsSingleValued(Command: PAnsiChar): boolean;
+function CommandIsSingleValued(const Command: ShortString): boolean;
 
 (* True when aCommand names a feature TR4W has withdrawn.  Such a command is
   ACCEPTED and does nothing, so an old tr4w.ini or contest .cfg that still
@@ -605,7 +605,7 @@ begin
      through here and that row IS csJSON, so every save was refused and logged
      as an error. *)
 
-   Result := CheckCommand(@keyShort, valueShort);
+   Result := CheckCommand(keyShort, valueShort);
    if Result then
       begin
       (* PERSISTED THROUGH THE STORE, NOT INTO tr4w.ini.
@@ -700,13 +700,12 @@ const
       'CLEAR DUPE SHEET',
       'FREQUENCY MEMORY');
 
-function CommandIsSingleValued(Command: PAnsiChar): boolean;
+function CommandIsSingleValued(const Command: ShortString): boolean;
 var
    name: string;
    i: integer;
 begin
-   Command[Ord(Command[0]) + 1] := #0;   // as CheckCommand does
-   name := string(PShortString(Command)^);
+   name := string(Command);
 
    Result := Settings.OwnsCommand(name);
    if not Result then
@@ -1205,7 +1204,7 @@ begin
    Result := False;
 end;
 
-function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
+function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
 label
    AdditionalProc;
@@ -1236,7 +1235,6 @@ begin
    Exit;
 {$IFEND}
 
-   Command[Ord(Command[0]) + 1] := #0;
    Result := False;
 
    (* A SETTING THAT HAS LEFT CFGCA.
@@ -1261,13 +1259,13 @@ begin
    (* A COMMAND THAT DOES SOMETHING, before the settings lookup and before the
      row scan -- which is where its row sat. Four accumulating or instruction
      commands live there now; see TryApplyCommandAction. *)
-   if TryApplyCommandAction(string(pshortstring(Command)^), CustomCMD) then
+   if TryApplyCommandAction(string(Command), CustomCMD) then
       begin
       Result := True;
       Exit;
       end;
 
-   if Settings.OwnsCommand(string(pshortstring(Command)^)) then
+   if Settings.OwnsCommand(string(Command)) then
       begin
       (* AND IT DEPENDS ON WHO IS ASKING, exactly as a csJSON row does.
 
@@ -1302,18 +1300,18 @@ begin
          Exit;
          end;
 
-      Result := Settings.TrySetByCommand(string(pshortstring(Command)^),
+      Result := Settings.TrySetByCommand(string(Command),
                                          string(CustomCMD));
       if (not Result) and (logger <> nil) then
          begin
          (* A value the property's type refuses -- reported, never swallowed.
            The config file said something this setting cannot be. *)
          logger.Warn('[CheckCommand] "%s" = "%s" refused by the settings object',
-                     [pshortstring(Command)^, CustomCMD]);
+                     [Command, CustomCMD]);
          end;
       Exit;
       end;
-   { if pshortstring(Command)^ = 'QSO POINT METHOD' then
+   { if Command = 'QSO POINT METHOD' then
      result := false;  }
    (* THE FUNCTION-KEY MEMORY ARM IS GONE -- 2026-09-14, the last pattern
      family to leave CheckCommand.
@@ -1335,7 +1333,7 @@ begin
      converter does not cover contest settings yet; the gap is stated in its
      own header. *)
 
-   cmdText := string(pshortstring(Command)^);
+   cmdText := string(Command);
 
    (* THE WINDOW-COLOUR ARM IS GONE -- 2026-09-14.
 
@@ -1360,7 +1358,7 @@ begin
       // 'Indicativo' under -DLANG_ESP and never matches 'CALLSIGN'.
       // The token is extracted once to an AnsiString so the PChar cast
       // is legal -- Delphi 7 cannot cast a ShortString directly to PChar.
-      ColumnToken := Copy(pshortstring(Command)^, 14, 255);
+      ColumnToken := Copy(Command, 14, 255);
       for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
          begin
          if (ColumnCanonicalName[TempColumn] = string(ColumnToken))
@@ -1422,12 +1420,12 @@ begin
      it has been reaching the colour handler rather than its own row all
      along.  Asking this question earlier would silently stop that colour
      being applied. *)
-   if (not Result) and CommandIsRetired(string(pshortstring(Command)^)) then
+   if (not Result) and CommandIsRetired(string(Command)) then
       begin
       if logger <> nil then
          begin
          logger.Info('[Config] %s is a withdrawn command -- accepted and ignored',
-                     [pshortstring(Command)^]);
+                     [Command]);
          end;
       Result := True;
       end;
@@ -1438,13 +1436,13 @@ begin
      operator reading "withdrawn" against a UDP line would conclude the
      feature was gone. *)
    if (not Result) and
-      CommandIsOwnedByAStore(string(pshortstring(Command)^)) then
+      CommandIsOwnedByAStore(string(Command)) then
       begin
       if logger <> nil then
          begin
          logger.Info('[Config] %s is read from the settings store, not from '
                      + 'this file -- accepted here and applied there',
-                     [pshortstring(Command)^]);
+                     [Command]);
          end;
       Result := True;
       end;

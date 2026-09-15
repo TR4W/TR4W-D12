@@ -1270,7 +1270,7 @@ var
 
   if (CurrentConfigFile = cfgCFG) and CommandIsJSONOwned(string(ID)) then
      begin
-     if CheckCommand(@ID, CMD, True) then
+     if CheckCommand(ID, CMD, True) then
         begin
         logger.Info('[Config] %s = %s from the contest .cfg -- overrides the stored value for this contest',
                     [ID, CMD]);
@@ -1280,7 +1280,7 @@ var
         logger.Warn('[Config] %s = %s in the contest .cfg was REFUSED by CFGCA', [ID, CMD]);
         end;
      end
-  else if not CheckCommand(@ID, CMD) then
+  else if not CheckCommand(ID, CMD) then
      begin
      // Commands removed in a prior version — log quietly, no dialog
      if (ID = 'HAMLIB RIGCTLD PORT') or
@@ -1341,7 +1341,7 @@ var
      // by the config dialog reads/writes the first (first wins) -- so a duplicate
      // silently reverts on restart.  Only tr4w.ini scalars qualify; accumulating
      // commands (freq/band lists, ADD DOMESTIC COUNTRY) legitimately repeat.
-     if (CurrentConfigFile = cfgINI) and CommandIsSingleValued(@ID) then
+     if (CurrentConfigFile = cfgINI) and CommandIsSingleValued(ID) then
         begin
         firstLine := -1;
         for k := 0 to High(gSeenINICmds) do

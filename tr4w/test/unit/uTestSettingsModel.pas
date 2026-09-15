@@ -1596,14 +1596,14 @@ begin
       val := ShortString(AnsiString('TRUE'));
 
       (* THE INI LOADER'S CALL: aApplyJSONOwned defaults to False. *)
-      CheckTrue(CheckCommand(@cmd, val),
+      CheckTrue(CheckCommand(cmd, val),
                 'the line is ACCEPTED -- no "invalid statement" dialog');
       CheckFalse(Settings.BandMap.MultsOnly,
                  'but NOT APPLIED: the store is the source of record');
 
       (* A TRUSTED CALLER -- Preferences, a multi-op peer, a contest .cfg --
         passes True and the value goes in. *)
-      CheckTrue(CheckCommand(@cmd, val, True), 'a trusted caller is accepted');
+      CheckTrue(CheckCommand(cmd, val, True), 'a trusted caller is accepted');
       CheckTrue(Settings.BandMap.MultsOnly, 'and applied');
    finally
       Settings.BandMap.MultsOnly := was;

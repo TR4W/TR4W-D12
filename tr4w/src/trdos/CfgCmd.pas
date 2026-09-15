@@ -122,7 +122,7 @@ function ProcessConfigInstructions1(ID: Str80; CMD: ShortString): boolean;
 begin
   ProcessConfigInstructions1 := False;
 
-  if CheckCommand(@ID, CMD) then
+  if CheckCommand(ID, CMD) then
      begin
      ProcessConfigInstructions1 := True;
      Exit;
@@ -139,7 +139,7 @@ function ProcessConfigInstructions3(ID: Str80; CMD: ShortString): boolean;
 begin
   ProcessConfigInstructions3 := False; //wli
 
-  if CheckCommand(@ID, CMD) then
+  if CheckCommand(ID, CMD) then
      begin
      ProcessConfigInstructions3 := True;
      Exit;
@@ -170,7 +170,7 @@ begin
 
 
 
-  ProcessConfigInstruction := CheckCommand(@ID, CMD);
+  ProcessConfigInstruction := CheckCommand(ID, CMD);
 
   if ID = '' then
      begin

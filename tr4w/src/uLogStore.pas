@@ -1484,7 +1484,7 @@ begin
                because that is what the hook maintains; the VALUE comes from
                the contest table because that is what is trustworthy. *)
             if (CFGCommandValueAsString('CONTEST') <> string(valName)) and
-               CheckCommand(@cmdName, valName, True) then
+               CheckCommand(cmdName, valName, True) then
                begin
                if logger <> nil then
                   begin
@@ -1749,7 +1749,7 @@ begin
                cost two separate sessions of this migration. Assignment converts
                and truncates correctly; the cast compiles and lies. *)
             valAsShort := ShortString(AnsiString(val));
-            if CheckCommand(@cmdName, valAsShort, True) then
+            if CheckCommand(cmdName, valAsShort, True) then
                begin
                inc(Result);
                end

@@ -1935,7 +1935,7 @@ begin
   begin
     ctyLoadInR150SList;
     TempString := 'MY CALL';
-    CheckCommand(@TempString, UTF8Encode(Settings.My.Call));
+    CheckCommand(TempString, UTF8Encode(Settings.My.Call));
   end;
 
 {$IF SCPDEBUG}

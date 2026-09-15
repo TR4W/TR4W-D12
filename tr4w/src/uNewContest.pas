@@ -499,7 +499,7 @@ begin
    key := ShortString(AnsiString(aCommand));
    val := ShortString(AnsiString(aValue));
 
-   if not CheckCommand(@key, val, True) then
+   if not CheckCommand(key, val, True) then
       begin
       logger.Warn('[NewContest] %s = %s was refused by CFGCA and is not set.',
                   [aCommand, aValue]);

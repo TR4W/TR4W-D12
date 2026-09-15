@@ -835,7 +835,7 @@ begin
       keyShort   := ShortString(AnsiString(name));
       valueShort := ShortString(AnsiString(value));
 
-      if not CheckCommand(@keyShort, valueShort, True) then
+      if not CheckCommand(keyShort, valueShort, True) then
          begin
          // Loud: a stored value CFGCA refuses is a setting the operator
          // believes is in force and is not.
@@ -1143,7 +1143,7 @@ begin
    keyShort   := ShortString(AnsiString(aCommand));
    valueShort := ShortString(AnsiString(aValue));
 
-   Result := CheckCommand(@keyShort, valueShort, True);
+   Result := CheckCommand(keyShort, valueShort, True);
    if Result and (aStore <> nil) then
       begin
       aStore.SetCommand(aCommand, aValue);
@@ -1187,7 +1187,7 @@ begin
       valueShort := ShortString(AnsiString(value));
 
       // True: apply even when the row is csJSON, which is the whole point.
-      Result := CheckCommand(@keyShort, valueShort, True);
+      Result := CheckCommand(keyShort, valueShort, True);
       if Result then
          begin
          logger.Info('[Startup] %s = %s applied from %s',
@@ -2085,7 +2085,7 @@ begin
       // A rejected key now leaves the ini untouched, so at worst the file keeps
       // its previous value for that one key -- a stale line beats an unstartable
       // program, and the warning still says the renderer and CFGCA have drifted.
-      accepted := CheckCommand(@keyShort, valueShort);
+      accepted := CheckCommand(keyShort, valueShort);
       if not accepted then
          begin
          logger.Warn('[ApplyRadioToSlot] CFGCA did not accept "%s" = "%s" -- NOT written to the ini',
