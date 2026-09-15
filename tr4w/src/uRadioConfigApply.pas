@@ -1014,11 +1014,11 @@ begin
 
    for e := Low(TMainWindowElement) to High(TMainWindowElement) do
       begin
-      if TWindows[e].mweName = nil then
+      if TWindows[e].mweName = '' then
          begin
          Continue;
          end;
-      aStore.SetElementColors(string(AnsiString(TWindows[e].mweName)),
+      aStore.SetElementColors(TWindows[e].mweName,
                               tr4wColorsSA[TWindows[e].mweColor],
                               tr4wColorsSA[TWindows[e].mweBackG]);
       end;
@@ -1037,12 +1037,12 @@ begin
 
    for e := Low(TMainWindowElement) to High(TMainWindowElement) do
       begin
-      if TWindows[e].mweName = nil then
+      if TWindows[e].mweName = '' then
          begin
          Continue;
          end;
 
-      entry := aStore.FindElementColors(string(AnsiString(TWindows[e].mweName)));
+      entry := aStore.FindElementColors(TWindows[e].mweName);
       if entry = nil then
          begin
          Continue;

@@ -3034,11 +3034,11 @@ begin
       begin
       // A nameless element has no window of its own; there is nothing to color
       // and nothing for CheckCommand to have matched either.
-      if TWindows[e].mweName = nil then
+      if TWindows[e].mweName = '' then
          begin
          Continue;
          end;
-      name := string(AnsiString(TWindows[e].mweName));
+      name := TWindows[e].mweName;
       FColorElements.Add(name);
       Inc(row);
       end;
@@ -3157,8 +3157,8 @@ begin
          FColorGrid.Cells[0, i + 1] := FColorElements[i];
          for e := Low(TMainWindowElement) to High(TMainWindowElement) do
             begin
-            if (TWindows[e].mweName <> nil) and
-               SameText(string(AnsiString(TWindows[e].mweName)), FColorElements[i]) then
+            if (TWindows[e].mweName <> '') and
+               SameText(TWindows[e].mweName, FColorElements[i]) then
                begin
                FColorGrid.Cells[1, i + 1] := tr4wColorsSA[TWindows[e].mweColor];
                FColorGrid.Cells[2, i + 1] := tr4wColorsSA[TWindows[e].mweBackG];

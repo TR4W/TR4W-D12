@@ -771,7 +771,7 @@ var
 type
   TMainWindowElementInfo = record
 {(*}
-    mweName   : PAnsiChar;
+    mweName   : string;
     mweiStyle : Cardinal;
     mweText   : string;
 
