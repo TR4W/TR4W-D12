@@ -820,14 +820,55 @@ begin
 //  showint(Stop - Start);
 end;
 
-procedure ctyShellSort;
+(* ===========================================================================
+  SORTING THE PREFIX TABLE, AND INDEXING IT -- TWO JOBS, SO TWO ROUTINES.
+
+  This was one 92-line procedure doing both. They share nothing except the
+  moment they run, and the indexes are the more interesting half: they are
+  what makes ctyFindCallsign search one letter's block instead of all 6562
+  records.
+
+  ---------------------------------------------------------------------------
+  THE SORT ALGORITHM IS DELIBERATELY UNCHANGED, AND THAT NEEDS SAYING.
+  ---------------------------------------------------------------------------
+
+  A shell sort is UNSTABLE, and cty.dat contains FOURTEEN prefixes twice --
+  thirteen of them under two DIFFERENT countries:
+
+      4U0IARU 4U0R 4U1A 4U1VIC 4U2U 4UNR 4Y1A C7A     country 23 or 208
+      GB1DAA GB2ELH GB3LER GB3LER/B GB4LER            country 143 or 144
+      UA4H                                            268 twice (harmless)
+
+  So "which entity does 4U1A belong to" is currently answered by wherever an
+  unstable sort happens to leave two equal keys. Nobody decided that.
+
+  REPLACING IT WITH A STABLE INSERTION SORT WAS TRIED, AND IT CHANGES FIVE
+  ANSWERS (measured 2026-09-14, everything else in a 2064-record
+  characterisation identical):
+
+      4U0IARU 4U1A 4UNR     208 (OE, Austria)      -> 23  (*4U1V, Vienna Intl)
+      GB1DAA  GB2ELH        144 (*GM/s, Shetland)  -> 143 (GM, Scotland)
+
+  Those are DXCC entities -- they are multipliers, and they are on submitted
+  logs. Which answer is right is a question about cty.dat and the DXCC rules,
+  not about sorting, so it is NY4I's to rule on and not a refactor's to decide.
+  The fourteen prefixes are pinned in the characterisation fixture so whichever
+  way it is ruled, the change is visible and deliberate.
+
+  THE REAL FIX IS UPSTREAM. The same prefix appearing twice means one of the
+  two records is unreachable whichever way the sort falls.
+  ctyAddNewPrefixRecord already takes a CheckDupe flag and the country-file
+  load passes False.
+  =========================================================================== *)
+
+(* The shell sort, byte for byte as it was. The odd step-back --
+  `if iJ > iK then dec(iJ, iK) else iJ := 0` -- is part of what makes its
+  treatment of equal keys what it is, so it is not tidied either. *)
+procedure ctySortPrefixTable;
 var
-  iI, iJ, iK, iSize                     : integer;
-  wTemp1                                : PrefixRec;
-  wTemp2                                : PrefixRec;
- // h                                     : HWND;
-  TempChar                              : Char;
-  TempPtr                               : PrefixRecPtr;
+  iI, iJ, iK, iSize : integer;
+  wTemp1            : PrefixRec;
+  wTemp2            : PrefixRec;
 begin
   iSize := CTY.ctyPrefixesTableRecords - 1;
   iK := iSize shr 1;
@@ -836,23 +877,14 @@ begin
      for iI := 0 to iSize - iK do
         begin
         iJ := iI;
-        while (iJ >= 0) and (
-        //aSort[iJ] > aSort[iJ + iK]
-          CompareCharBuffer(
-          CTY.ctyPrefixesTable[iJ].Prefix,
-          CTY.ctyPrefixesTable[iJ + iK].Prefix
-          ) > 0
-          ) do
+        while (iJ >= 0) and
+              (CompareCharBuffer(CTY.ctyPrefixesTable[iJ].Prefix,
+                                 CTY.ctyPrefixesTable[iJ + iK].Prefix) > 0) do
            begin
            wTemp1 := CTY.ctyPrefixesTable[iJ];
-           //wTemp := aSort[iJ];
-
            wTemp2 := CTY.ctyPrefixesTable[iJ + iK];
-
            CTY.ctyPrefixesTable[iJ] := wTemp2;
-   //        aSort[iJ] := aSort[iJ + iK];
            CTY.ctyPrefixesTable[iJ + iK] := wTemp1;
-   //        aSort[iJ + iK] := wTemp;
 
            if iJ > iK then
               begin
@@ -866,40 +898,47 @@ begin
         end;
      iK := iK shr 1;
      end;
+end;
 
+(* The two indexes the binary search needs: where each starting character's
+  block begins, and the longest prefix filed under it. *)
+procedure ctyBuildPrefixIndex;
+var
+  i        : integer;
+  TempChar : Char;
+  rec      : PrefixRecPtr;
+begin
   FillChar(CTY.ctyIndexArray, SizeOf(CTY.ctyIndexArray), -1);
   FillChar(CTY.ctyMaxLengthIndexArray, SizeOf(CTY.ctyMaxLengthIndexArray), 0);
 
-{$IF tDebugMode}
-  MessageDlg('debug mode', string(TC_DEBUGMODECREATEDPREFIXESTXT), mtInformation, [mbOK], 0);
-  utils_file.tOpenFileForWrite(h, 'prefixes.txt');
-{$IFEND}
+  (* DESCENDING, AND THAT IS LOAD-BEARING. ctyIndexArray must hold the
+    FIRST record of each block, because ctyFindCallsign uses it as the LOW
+    bound of its binary search. Ascending leaves the LAST index there, so
+    low ends up above high, the search never runs, and EVERY callsign
+    resolves to nothing -- which is what happened when this loop was
+    rewritten the wrong way round. *)
+  for i := Integer(CTY.ctyPrefixesTableRecords) - 1 downto 0 do
+     begin
+     rec := @CTY.ctyPrefixesTable[i];
+     CTY.ctyIndexArray[rec^.Prefix[0]] := i;
 
-  for iI := CTY.ctyPrefixesTableRecords - 1 downto 0 do
-  begin
-    TempPtr := @CTY.ctyPrefixesTable[iI];
-{$IF tDebugMode}
-    (* Prefix ITSELF -- @TempPtr^.Prefix aimed at the ShortString's LENGTH
-      BYTE, so every debug line began with a control character. *)
-    sWriteFileFromString(h, SysUtils.Format(AnsiString('%.4u %-15s %u'#13#10),
-                         [iI, TempPtr^.Prefix, TempPtr.Country]));
-{$IFEND}
-    CTY.ctyIndexArray[TempPtr^.Prefix[0]] := iI;
+     (* A FULL CALLSIGN IS NOT A PREFIX and must not stretch the length the
+       search is willing to try -- otherwise every lookup under that letter
+       would test prefixes no prefix is that long. *)
+     if not rec^.FullCallsigns then
+        if rec^.PrefLength > CTY.ctyMaxLengthIndexArray[rec^.Prefix[0]] then
+           begin
+           CTY.ctyMaxLengthIndexArray[rec^.Prefix[0]] := rec^.PrefLength;
+           end;
+     end;
 
-    if not TempPtr^.FullCallsigns then
-      if TempPtr^.PrefLength > CTY.ctyMaxLengthIndexArray[TempPtr^.Prefix[0]] then
-         begin
-         CTY.ctyMaxLengthIndexArray[TempPtr^.Prefix[0]] := TempPtr^.PrefLength;
-         end;
-  end;
-
-(* A {$IF tDebugMode} CloseHandle(h) stood here and is deleted (2026-09-08).
-  tDebugMode is False in VC, and turning it on would NOT have compiled: `h`
-  in this scope is an integer index into CTY.ctyIndexArray, not a handle.
-  Same shape as the WINKEYDEBUG trace removed from uWinKey. *)
-
+  (* The sentinel past 'Z' is the end of the table, so 'Z' has an upper bound
+    like every other character. *)
   CTY.ctyIndexArray[CHR(Ord('Z') + 1)] := CTY.ctyPrefixesTableRecords - 1;
 
+  (* A character with no records of its own borrows the NEXT one's start, so
+    its block is empty rather than unbounded. Descending, because each answer
+    depends on the one above it. *)
   for TempChar := 'Z' downto '0' do
      begin
      if CTY.ctyIndexArray[TempChar] = -1 then
@@ -907,9 +946,14 @@ begin
         CTY.ctyIndexArray[TempChar] := CTY.ctyIndexArray[CHR(Ord(TempChar) + 1)];
         end;
      end;
+end;
 
-//  CTY.ctyIndexArray[CHR(Ord('9') + 1)] := CTY.ctyIndexArray['A'];
-
+(* The name every caller uses. It was never only a sort, which is why the two
+  halves are now named for what they do. *)
+procedure ctyShellSort;
+begin
+  ctySortPrefixTable;
+  ctyBuildPrefixIndex;
 end;
 
 function ctyFindCallsign(const s: PrefixName; var Index: integer): boolean;
