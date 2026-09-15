@@ -93,6 +93,7 @@ type
       procedure Test_Rule_USTerritoriesAreSeparateEntities;
       procedure Test_Rule_DuplicatePrefixPicksTheSpecificEntity;
       procedure Test_Rule_ExactCallBeatsPrefixOverride;
+      procedure Test_RemainingMultsSection;
    end;
 
 implementation
@@ -540,6 +541,102 @@ begin
                'both are still Russia -- only the zone differed');
 end;
 
+
+(* ===========================================================================
+  THE `REMAINING MULTS` SECTION -- AND A COMMENT THAT SAID IT COULD NOT WORK.
+
+  An operator may append a section to their own cty.dat naming the entities
+  the remaining-multiplier windows should list:
+
+      REMAINING MULTS
+      T2B
+
+  The loader's branch for it carried a note claiming it was "effectively
+  disabled" because StrPos resolved to the WideChar variant and could never
+  find the ANSI marker in a byte-mapped file. Nothing tested it, the shipped
+  cty.dat has no such section, and so nobody could tell -- which is what makes
+  a comment like that expensive: it is a claim about behaviour that reads as
+  established fact and costs nothing to leave wrong.
+
+  This is the check. It writes a two-entity country file with the section,
+  loads it with LoadRemainingMults set, and asserts what the section is
+  supposed to do: ctyCustomRemainingCountryListFound goes True and only the
+  named entity is marked VisibleInRM = 2 -- which is what logedit and uMults
+  read.
+
+  IT RUNS LAST AND PUTS THE SHIPPED FILE BACK, because it replaces the global
+  country table for the duration. *)
+procedure TCTYDATTests.Test_RemainingMultsSection;
+var
+   path : string;
+   f    : TextFile;
+   i    : integer;
+   idxA : integer;
+   idxB : integer;
+begin
+   BeginTest('a REMAINING MULTS section marks the entities it names');
+
+   path := ExtractFilePath(ParamStr(0)) + 'cty_remaining_mults_probe.dat';
+   AssignFile(f, path);
+   Rewrite(f);
+   try
+      WriteLn(f, 'Testland A:               14:  27:  EU:   50.00:   -10.00:     0.0:  T1A:');
+      WriteLn(f, '    T1A;');
+      WriteLn(f, 'Testland B:               14:  27:  EU:   51.00:   -11.00:     0.0:  T2B:');
+      WriteLn(f, '    T2B;');
+      WriteLn(f, 'REMAINING MULTS');
+      WriteLn(f, 'T2B');
+   finally
+      CloseFile(f);
+   end;
+
+   try
+      CheckTrue(ctyLoadInCountryFile(path, False, True),
+                'the probe country file loaded');
+
+      idxA := -1;
+      idxB := -1;
+      for i := 0 to ctyGetTotalCountries - 1 do
+         begin
+         if Trim(ctyGetCountryIdByIndex(i)) = 'T1A' then
+            begin
+            idxA := i;
+            end;
+         if Trim(ctyGetCountryIdByIndex(i)) = 'T2B' then
+            begin
+            idxB := i;
+            end;
+         end;
+
+      Check(idxA >= 0, 'entity T1A is in the table');
+      Check(idxB >= 0, 'entity T2B is in the table');
+      if (idxA < 0) or (idxB < 0) then
+         begin
+         Exit;
+         end;
+
+      CheckTrue(CTY.ctyCustomRemainingCountryListFound,
+                'the REMAINING MULTS section was found -- the assertion the '
+                + 'stale "effectively disabled" note was about');
+      CheckEquals(2, Integer(CTY.ctyTable[idxB].VisibleInRM),
+                  'T2B is named in the section, so it is marked');
+      Check(CTY.ctyTable[idxA].VisibleInRM <> 2,
+            'T1A is not named, so it is not marked');
+   finally
+      (* PUT THE REAL TABLE BACK. Everything else in this suite reads it. *)
+      FLoaded := False;
+      EnsureCtyLoaded;
+      if FileExists(path) then
+         begin
+         DeleteFile(path);
+         end;
+   end;
+
+   (* And prove the restore worked rather than assuming it. *)
+   CheckEquals('K', Trim(ctyGetCountryID('W1AW')),
+               'the shipped cty.dat is back in place');
+end;
+
 procedure TCTYDATTests.Test_Characterisation;
 var
    f: TextFile;
@@ -662,6 +759,11 @@ begin
 
    // Last: it is the slowest and the least specific.
    Test_Characterisation;
+
+   (* AFTER the characterisation, because it loads a DIFFERENT country
+     file over the top of the shipped one and then reloads. Anything that
+     ran between the two would be reading a two-entity table. *)
+   Test_RemainingMultsSection;
 end;
 
 end.

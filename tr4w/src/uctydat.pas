@@ -286,7 +286,7 @@ function ctyGetCountryID(const Call: string): string;
 procedure ctyShellSort;
 procedure ctyAddNewPrefixRecord(pr: PrefixRecPtr; CheckDupe: boolean);
 procedure ctyLoadInRFOblList;   // n4af 4.42.6
-procedure ctyLoadInRemainingMults(p: PAnsiChar);
+procedure ctyLoadInRemainingMults(const aSection: AnsiString);
 procedure ctyLoadInR150SList;
 
 var
@@ -520,6 +520,8 @@ var
     in the log, so the acquisition was worth replacing and the parser was not
     worth touching in the same commit. *)
   raw                                   : TBytes;
+  body                                  : AnsiString;   (* raw as bytes, for the REMAINING MULTS search *)
+  rmAt                                  : integer;
   fs                                    : TFileStream;
   p                                     : PAnsiChar;
   i                                     : Cardinal;
@@ -801,14 +803,25 @@ begin
 
   if LoadRemainingMults then
      begin
-     // D12 NOTE: StrPos here is the WideChar RTL variant, so it will not locate
-     // the ANSI 'REMAINING MULTS' marker in the byte-mapped file -- this branch is
-     // effectively disabled until given a PAnsiChar search. Not exercised by the
-     // test (LoadRemainingMults=False); flagged with the remaining-mults feature.
-     p := PAnsiChar(Strpos(PAnsiChar(@raw[0]), rm));
-     if p <> nil then
+     (* THE NOTE THAT USED TO BE HERE WAS WRONG, and it had been wrong long
+       enough to read as fact: it claimed StrPos resolved to the WideChar
+       variant so this branch could never find the ANSI marker, and was
+       "effectively disabled". Nothing tested it and the shipped cty.dat has
+       no such section, so nobody could tell. It works, and
+       Test_RemainingMultsSection is the proof -- a two-entity country file
+       with the section, asserting what the section is for.
+
+       Bytes, not text: cty.dat is CP1251/CP1250 in places, so the file goes
+       into an AnsiString whose bytes are its own. Pos on an AnsiString is a
+       byte search, which is what the marker needs. *)
+     body := AnsiString('');
+     SetLength(body, Length(raw));
+     Move(raw[0], body[1], Length(raw));
+
+     rmAt := Pos(AnsiString(rm), body);
+     if rmAt > 0 then
         begin
-        ctyLoadInRemainingMults(p);
+        ctyLoadInRemainingMults(Copy(body, rmAt, Length(body) - rmAt + 1));
         end;
      end;
 
@@ -1711,37 +1724,60 @@ begin
 end;
 
 
-procedure ctyLoadInRemainingMults(p: PAnsiChar);
+(* The tail of cty.dat from the REMAINING MULTS marker onward: a list of
+  entity ids, separated by whitespace, commas or semicolons, naming the
+  entities the remaining-multiplier windows should list.
+
+  WAS A POINTER WALK over up to 4096 bytes with a hand-rolled tokeniser,
+  StrUpper on a stack buffer and StrComp against @ID[1]. That last one was the
+  same ShortString-read-as-NUL-terminated mistake postunit had: ID carries a
+  LENGTH, so StrComp ran past the field. Every id in this file is ASCII, so
+  the whole thing is string work. *)
+procedure ctyLoadInRemainingMults(const aSection: AnsiString);
 var
-  i                                     : Cardinal;
-  s                                     : Cardinal;
-  b                                     : PrefixName;
-  e                                     : Cardinal;
+  i        : integer;
+  token    : AnsiString;
+
+   procedure ApplyToken;
+   var
+      c : integer;
+   begin
+      if token = '' then
+         begin
+         Exit;
+         end;
+
+      for c := 0 to MaxCountries - 1 do
+         begin
+         if UpperCase(Trim(AnsiString(CTY.ctyTable[c].ID))) = token then
+            begin
+            CTY.ctyTable[c].VisibleInRM := 2;
+            CTY.ctyCustomRemainingCountryListFound := True;
+            Break;
+            end;
+         end;
+      token := '';
+   end;
+
 begin
-  s := 0;
-  for i := 0 to 4096 - 1 do
+  token := '';
+
+  (* The marker itself is the first token and matches no entity id, so it
+    falls out of ApplyToken without being special-cased. *)
+  for i := 1 to Length(aSection) do
      begin
-     if p[i] in ['*', 'A'..'Z', 'a'..'z', '1'..'9'] then if s = 0 then s := i;
-
-     if p[i] in [' ', #13, #10, ',', ';', #0] then if s <> 0 then
-                                                      begin
-                                                      FillChar(b, SizeOf(b), 0);
-                                                      Move(p[s], b, i - s);
-                                                      StrUpper(PAnsiChar(@b));
-                                                      for e := 0 to MaxCountries - 1 do
-                                                         begin
-
-                                                         if StrComp(@CTY.ctyTable[e].ID[1], b) = 0 then
-                                                            begin
-                                                            CTY.ctyTable[e].VisibleInRM := 2;
-                                                            CTY.ctyCustomRemainingCountryListFound := True;
-                                                            Break;
-                                                            end;
-                                                         end;
-                                                      s := 0;
-                                                      end;
-     if p[i] = #0 then Break;
+     if aSection[i] in ['*', 'A'..'Z', 'a'..'z', '0'..'9', '/'] then
+        begin
+        token := token + UpperCase(aSection[i]);
+        end
+     else
+        begin
+        ApplyToken;
+        end;
      end;
+
+  (* The file may end without a delimiter after the last id. *)
+  ApplyToken;
 end;
 
 function ctyGetTotalCountries(): integer;
