@@ -247,7 +247,7 @@ begin
          end
       else
          begin
-         btn.Caption := AnsiString(QTCTXButtonsPChar[i]);
+         btn.Caption := AnsiString(QTCTXButtonCaptions[i]);
          end;
 
       btn.SetBounds(x, CMD_TOP,
@@ -276,8 +276,8 @@ begin
       logger.Debug('[QTCSend] command strip measured %dpx for %d button(s), ' +
                    'first="%s" (%dpx), qrv="%s" (%dpx)',
                    [FCommandsWidth, Length(CMD_ID),
-                    string(AnsiString(QTCTXButtonsPChar[0])),
-                    CaptionWidth(AnsiString(QTCTXButtonsPChar[0])) + CMD_PAD,
+                    QTCTXButtonCaptions[0],
+                    CaptionWidth(AnsiString(QTCTXButtonCaptions[0])) + CMD_PAD,
                     string(QRVMessage), CaptionWidth(QRVMessage) + CMD_PAD]);
       end;
 end;

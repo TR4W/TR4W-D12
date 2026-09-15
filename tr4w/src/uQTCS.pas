@@ -74,10 +74,10 @@ const
 
   QTCCustomMessages                     = 7;
 var
-  QTCTXButtonsPChar                     : array[0..QTCCustomMessages] of PAnsiChar =
+  QTCTXButtonCaptions                   : array[0..QTCCustomMessages] of string =
     (
     'N&EXT [return]',
-    nil,
+    '',
     'Q&RV?',
     '&TIME',
     '&CALL',

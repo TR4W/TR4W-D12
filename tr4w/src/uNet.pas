@@ -1263,7 +1263,7 @@ var
 //  p                                     : PChar;
   TempBuffer                            : array[0..31] of AnsiChar;
 const
-  da                                    : array[boolean] of PAnsiChar = (nil, 'D');
+  da                                    : array[boolean] of string = ('', 'D');
 begin
   i := PosInClientsList[Index] - 1;
   CurrentDisplayedRow := Index;
@@ -1333,7 +1333,7 @@ begin
     sstCallsign:
       begin
         SetClientCell(i, 8 - 1, string(StatusArray[Index].ssCallsign));
-        SetClientCell(i, 9 - 1, string(da[(StatusArray[Index].ssStatusByte and (1 shl 2)) <> 0]));
+        SetClientCell(i, 9 - 1, da[(StatusArray[Index].ssStatusByte and (1 shl 2)) <> 0]);
       end;
 
     sstOperator:

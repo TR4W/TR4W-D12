@@ -86,8 +86,8 @@ type
   TWKSidetoneFrequency = (stf4000, stf2000, stf1333, stf1000, stf800, stf666, stf571, stf500, stf444, stf400);
 
 const
-  KeyerModeSA                           : array[TWK2KeyerMode] of PAnsiChar = ('IAMBIC B', 'IAMBIC A', 'ULTIMATIC', 'BUG MODE');
-  SidetoneFrequencySA                   : array[TWKSidetoneFrequency] of PAnsiChar = ('4000', '2000', '1333', '1000', '800', '666', '571', '500', '444', '400');
+  KeyerModeSA                           : array[TWK2KeyerMode] of string = ('IAMBIC B', 'IAMBIC A', 'ULTIMATIC', 'BUG MODE');
+  SidetoneFrequencySA                   : array[TWKSidetoneFrequency] of string = ('4000', '2000', '1333', '1000', '800', '666', '571', '500', '444', '400');
 type
   TwkValueList = packed record
     {(*}

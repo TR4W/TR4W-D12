@@ -101,7 +101,7 @@ begin
    SetLength(Result, Ord(High(TWK2KeyerMode)) - Ord(Low(TWK2KeyerMode)) + 1);
    for m := Low(TWK2KeyerMode) to High(TWK2KeyerMode) do
       begin
-      Result[Ord(m)] := string(KeyerModeSA[m]);
+      Result[Ord(m)] := KeyerModeSA[m];
       end;
 end;
 
@@ -112,7 +112,7 @@ begin
    SetLength(Result, Ord(High(TWKSidetoneFrequency)) - Ord(Low(TWKSidetoneFrequency)) + 1);
    for f := Low(TWKSidetoneFrequency) to High(TWKSidetoneFrequency) do
       begin
-      Result[Ord(f)] := string(SidetoneFrequencySA[f]);
+      Result[Ord(f)] := SidetoneFrequencySA[f];
       end;
 end;
 
@@ -180,8 +180,8 @@ begin
    k.WKPaddleOnlySidetone := WinKeySettings.wksPadOnlySideT;
    k.WKPaddleSwap         := WinKeySettings.wksPaddleSwap;
 
-   k.WKKeyerMode          := string(KeyerModeSA[WinKeySettings.wksKeyerMode]);
-   k.WKSidetoneFrequency  := string(SidetoneFrequencySA[WinKeySettings.wksValueList.vlSidetoneFrequency]);
+   k.WKKeyerMode          := KeyerModeSA[WinKeySettings.wksKeyerMode];
+   k.WKSidetoneFrequency  := SidetoneFrequencySA[WinKeySettings.wksValueList.vlSidetoneFrequency];
 
    k.WKWeight             := WinKeySettings.wksValueList.vlWeight;
    k.WKDitDahRatio        := WinKeySettings.wksValueList.vlDitDahRatio;
@@ -204,7 +204,7 @@ begin
    aMode := kmIambicB;
    for m := Low(TWK2KeyerMode) to High(TWK2KeyerMode) do
       begin
-      if SameText(Trim(aText), string(KeyerModeSA[m])) then
+      if SameText(Trim(aText), KeyerModeSA[m]) then
          begin
          aMode := m;
          Result := True;
@@ -221,7 +221,7 @@ begin
    aFreq := stf800;
    for f := Low(TWKSidetoneFrequency) to High(TWKSidetoneFrequency) do
       begin
-      if SameText(Trim(aText), string(SidetoneFrequencySA[f])) then
+      if SameText(Trim(aText), SidetoneFrequencySA[f]) then
          begin
          aFreq := f;
          Result := True;

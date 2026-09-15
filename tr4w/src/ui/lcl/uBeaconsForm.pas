@@ -227,7 +227,7 @@ begin
       begin
       for c := 0 to BEACON_COLUMNS - 1 do
          begin
-         grdBeacons.Cells[c, r] := string(AnsiString(BeaconsNames[r]));
+         grdBeacons.Cells[c, r] := BeaconsNames[r];
          end;
       end;
 

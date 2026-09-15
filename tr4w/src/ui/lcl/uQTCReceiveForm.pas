@@ -259,7 +259,7 @@ begin
         Kept byte for byte rather than "tidied" by stripping the accelerator
         marker: what those characters do in the CW encoder is a question for the
         bench, not for a port. }
-      btn.Caption := AnsiString(QTCRXButtonsPChar[r]);
+      btn.Caption := AnsiString(QTCRXButtonCaptions[r]);
       { NOT a tab stop.  The Win32 buttons were created without WS_TABSTOP, and
         that is load-bearing: Down and Up move by THREE controls because a row
         is three FIELDS, and a tab-stop button would make it four. }

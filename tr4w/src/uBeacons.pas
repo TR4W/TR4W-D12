@@ -51,7 +51,7 @@ const
   // The eighteen NCDXF/IBP beacons, in transmission order.  The order is the
   // schedule: index 0 starts each three-minute cycle on the first frequency and
   // every other beacon follows it up the bands.  DO NOT SORT THIS.
-  BeaconsNames                          : array[0..BEACONS - 1] of PAnsiChar = ('4U1UN', 'VE8AT', 'W6WX', 'KH6WO', 'ZL6B', 'VK6RBP', 'JA2IGY', 'RR9O', 'VR2B', '4S7B', 'ZS6DN', '5Z4B', '4X6TU', 'OH2B', 'CS3B', 'LU4AA', 'OA4B', 'YV5B');
+  BeaconsNames                          : array[0..BEACONS - 1] of string = ('4U1UN', 'VE8AT', 'W6WX', 'KH6WO', 'ZL6B', 'VK6RBP', 'JA2IGY', 'RR9O', 'VR2B', '4S7B', 'ZS6DN', '5Z4B', '4X6TU', 'OH2B', 'CS3B', 'LU4AA', 'OA4B', 'YV5B');
 
   // Indexed by the original dialog's control ids, which the form's buttons
   // still carry as their Tag.  101..105 are the five IBP frequencies, in kHz,

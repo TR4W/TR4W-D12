@@ -1519,7 +1519,7 @@ end;
 
 procedure DisplayNextQSONumber;
 const
-  QSONumberStringArray                  : array[boolean] of PAnsiChar = ('%d', '*%d');
+  QSONumberStringArray                  : array[boolean] of string = ('%d', '*%d');
 var
   (* AnsiString, because SysUtils.Format's ANSI overload returns one and a
     TCaption is one -- a UnicodeString local would narrow on the assignment

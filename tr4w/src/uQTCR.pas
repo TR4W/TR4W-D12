@@ -70,7 +70,7 @@ const
   { The ten ask-him-again buttons, in row order.  Two are blank in the table:
     the seventh is overwritten with '&DE <my callsign>' when the window is
     built, and the tenth has never had a caption. }
-  QTCRXButtonsPChar                     : array[1..10] of PAnsiChar =
+  QTCRXButtonCaptions                   : array[1..10] of string =
     (
     '&AGN',
     'R&PT?',
@@ -78,10 +78,10 @@ const
     '&CALL?',
     '&NR?',
     '&R',
-    nil,
+    '',
     '&QTC?',
     'QR&V',
-    nil
+    ''
     );
 
 var

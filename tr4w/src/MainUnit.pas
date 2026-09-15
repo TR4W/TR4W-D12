@@ -6838,7 +6838,7 @@ end;
 
 procedure CreateDirectoryIfNotExist;
 const
-  DirArray: array[0..5] of PAnsiChar = ('dvk', 'dvk\lettersandnumbers',
+  DirArray: array[0..5] of string = ('dvk', 'dvk\lettersandnumbers',
     'dvk\fullcallsigns', 'dvk\fullserialnumbers', 'settings', 'dxcluster');
 var
   i: integer;
@@ -6850,7 +6850,7 @@ begin
      (* ForceDirectories, not CreateDirectoryA: it is the RTL's, it takes a
        string, and it makes intermediate levels -- which CreateDirectoryA does
        not, so a nested path silently did nothing here before. *)
-     ForceDirectories(AnsiString(DirArray[i]));
+     ForceDirectories(DirArray[i]);
      end;
   // Windows.CreateDirectoryA(GetYearString, nil);
 
