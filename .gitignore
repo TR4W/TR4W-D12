@@ -222,6 +222,15 @@ spike/lclprobe/*.ppu
 # the .ppu/.o/.exe are build output, not source.
 tr4w/build/lintlfm/units/
 
+# ctygen -- the uCTYDAT characterisation generator, built by hand from the
+# recipe in its README and NOT by any build script, so -FU points at its own
+# directory and every .ppu/.o of the dependency graph lands beside the source.
+tr4w/test/tools/ctygen/*.exe
+tr4w/test/tools/ctygen/*.o
+tr4w/test/tools/ctygen/*.or
+tr4w/test/tools/ctygen/*.ppu
+tr4w/test/tools/ctygen/*.rsj
+
 # FPC intermediate output (units, logs). Binaries land in target\ and tr4wserver\.
 build-out/
 
