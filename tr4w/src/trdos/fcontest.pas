@@ -345,8 +345,7 @@ var
 
   TempWord: Word;
 
-  TempDomesticQTHDataFileName: PAnsiChar;
-  TmpBuf: array[0..255] of AnsiChar;
+  TempDomesticQTHDataFileName: string;
   TempOblast: Str2;
   // i,j                                   : integer;
   // k                                     : str10;
@@ -401,18 +400,12 @@ begin
            end
         else
            begin
-           (* StrPas, NOT CharBufferText: this source is a PAnsiChar FIELD,
-             not a fixed char array, so the RTL's NUL-aware reader is the right
-             one. Those record fields being pointers is its own slice.
-
-             SetCharBuffer NUL-TERMINATES, so the FillChar that used to
-             clear the whole buffer first is not needed -- and clearing a
-             buffer to make a later write safe is the shape NY4I asked to
-             stop seeing (2026-09-14). *)
-           SetCharBuffer(TmpBuf,
-             string(StrPas(QSOParties[ContestsArray[Contest].p].InsideStateDOMFile))
-             + '_cty');
-           TempDomesticQTHDataFileName := @TmpBuf;
+           (* THE OUT-OF-STATE FILE: the in-state name with _cty. It was
+             built in a 256-byte buffer -- StrPas of a PAnsiChar field, then a
+             pointer to the buffer. The field and this local are strings now,
+             so it is a concatenation. *)
+           TempDomesticQTHDataFileName :=
+             QSOParties[ContestsArray[Contest].p].InsideStateDOMFile + '_cty';
              //QSOParties[ContestsArray[Contest].p].OutsideStateDOMFile;
            Settings.Contest.Name := ContestTypeSA[Contest] + ' (out of state)';
            MultipliersIsCounties := True;
@@ -1637,7 +1630,7 @@ begin
               begin
               ActiveDXMult := NoDXMults;
               ActiveDomesticMult := RDADistrict;
-              TempDomesticQTHDataFileName := nil;
+              TempDomesticQTHDataFileName := '';
               Settings.Mult.ByBand := false;
               end;
            end;
@@ -1780,7 +1773,7 @@ begin
 
   end;
 
-  if TempDomesticQTHDataFileName <> nil then
+  if TempDomesticQTHDataFileName <> '' then
      begin
      (* PLAIN CONCATENATION, AND THERE IS NO LONGER A BOUND TO GET WRONG.
 
@@ -1795,7 +1788,7 @@ begin
        own default extension to what is there. *)
      Settings.Contest.DomesticFilename :=
         Settings.Contest.DomesticFilename
-        + string(AnsiString(TempDomesticQTHDataFileName))
+        + TempDomesticQTHDataFileName
         + string(DOM_EXTENSION);
      end;
 
@@ -1971,7 +1964,7 @@ begin
   InState := False;
   SetCharBuffer(TempFileName,
                 CharBufferText(TR4W_PATH_NAME) + 'DOM' +
-                string(StrPas(ContestsArray[Contest].DF)) + '.DOM');
+                ContestsArray[Contest].DF + '.DOM');
   (* THE PATH IS SPELLED FOR WINDOWS -- separator AND case. Left as written
     because it is correct on Windows and because 153 literals in this tree
     spell a path this way; the resolver handles the whole class in one place

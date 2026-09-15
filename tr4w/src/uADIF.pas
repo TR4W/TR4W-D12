@@ -1534,7 +1534,7 @@ begin
       else
          begin
          Result := Result + EmitADIFField('CONTEST_ID',
-            string(ContestsArray[rec.ceContest].ADIFName));
+            ContestsArray[rec.ceContest].ADIFName);
          end;
       end;
 

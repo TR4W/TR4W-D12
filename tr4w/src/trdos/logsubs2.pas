@@ -2954,7 +2954,7 @@ begin
       end
    else
       begin
-      sContestName := ContestsArray[Contest].CABName;
+      sContestName := AnsiString(ContestsArray[Contest].CABName);
       end;
 
    nNumberReceived := IfThen(RxData.NumberReceived > 0,RxData.NumberReceived,0);

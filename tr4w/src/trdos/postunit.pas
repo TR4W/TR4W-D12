@@ -954,7 +954,7 @@ function ContestFriendlyParens: string;
   var
     sFriendly: string;
   begin
-  sFriendly := string( ContestsArray[ Contest ].FriendlyName );
+  sFriendly := ContestsArray[ Contest ].FriendlyName;
   if sFriendly <> '' then
      begin
      Result := ' (' + sFriendly + ')';

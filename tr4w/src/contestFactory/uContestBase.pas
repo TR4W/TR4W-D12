@@ -417,13 +417,13 @@ begin
       end
    else
       begin
-      Result := string(ContestsArray[FContest].CABName);
+      Result := ContestsArray[FContest].CABName;
       end;
 end;
 
 function TContestBase.GetADIFContestId: string;
 begin
-   Result := string(ContestsArray[FContest].ADIFName);
+   Result := ContestsArray[FContest].ADIFName;
 end;
 
 function TContestBase.GetWA7BNMId: integer;
@@ -433,12 +433,12 @@ end;
 
 function TContestBase.GetSubmissionEmail: string;
 begin
-   Result := string(ContestsArray[FContest].Email);
+   Result := ContestsArray[FContest].Email;
 end;
 
 function TContestBase.GetDomesticFileName: string;
 begin
-   Result := string(ContestsArray[FContest].DF);
+   Result := ContestsArray[FContest].DF;
 end;
 
 function TContestBase.GetFriendlyName: string;
@@ -451,7 +451,7 @@ begin
       end
    else
       begin
-      Result := string(ContestsArray[FContest].FriendlyName);
+      Result := ContestsArray[FContest].FriendlyName;
       end;
 end;
 
