@@ -239,8 +239,6 @@ var
   PHi :  real;
 //  CWR : integer;
 //  PHR : integer;
-  CWp  : AnsiString;
-  PHp : AnsiString;
   s1 : string;
   S2 : string;
 begin
@@ -269,12 +267,10 @@ begin
         PHi  := ((QTotals[AllBands,Phone]) / (Qtotals[AllBands,CW]+Qtotals[AllBands,Phone]) * 100);
         Str(round(CWi),s1);
          S1 := concat('CW: ',s1,'%');
-          CWp := AnsiString(S1);
          S2 := concat('PH: ',inttostr(round(PHi)),'%');
-          PHp := AnsiString(S2);
 
-        WriteLeftColumnText(PAnsiChar(CWp));
-        WriteLeftColumnText(PAnsiChar(PHp));
+        WriteLeftColumnText(S1);
+        WriteLeftColumnText(S2);
          goto skip;
         end;
      end;

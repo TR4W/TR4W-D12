@@ -343,17 +343,15 @@ procedure TfrmEditMessage.SaveToConfig;
 var
   idShort, cmdShort: ShortString;
   idText, valueText: AnsiString;
-  capValue: PAnsiChar;
 
-  procedure WriteKey(const aKey: AnsiString; const aValue: PAnsiChar;
-                     const aCheckValue: ShortString);
+  procedure WriteKey(const aKey: AnsiString; const aCheckValue: ShortString);
   var
      k: ShortString;
   begin
      // TWO SPELLINGS OF THE SAME KEY, DELIBERATELY, AND THIS IS WHERE IT BIT.
      //
-     // WritePrivateProfileStringA wants a NULL-TERMINATED PAnsiChar, and an
-     // AnsiString is one.  CheckCommand wants the LENGTH-PREFIXED ShortString
+     // WritePrivateProfileStringA wanted a NULL-TERMINATED PAnsiChar (that write
+     // is gone -- see below).  CheckCommand wants the LENGTH-PREFIXED ShortString
      // form -- it is called as CheckCommand(@k, ...), so the byte it points at
      // is the length.  Handing either one the other's layout is silent
      // corruption, not a type error.
@@ -368,16 +366,6 @@ var
      // because GetDlgItemTextA null-terminates what it writes.
      k := ShortString(aKey);
 
-     { CHECKED, AND IT NEVER WAS -- the same omission as the column-width
-       writer in MainUnit, and the reason this defect was invisible.
-       WritePrivateProfileString reports failure through this BOOL and
-       nothing else; CheckCommand below still applies the value to the
-       RUNNING program, so the edit appeared to work and was simply gone
-       on restart.
-
-       The cause is normally a .cfg path that is not fully qualified, now
-       fixed at the source in uProgramMain -- but a read-only or missing
-       .cfg fails here too, and the operator cannot guess either. }
      (* APPLIED HERE, PERSISTED BY THE LOG.
 
        An INI write to TR4W_CFG_FILENAME stood here, and that name is a .db
@@ -438,9 +426,8 @@ begin
 
    cmdShort := ShortString(edtMessage.Text);
    DeleteEscapeChars(cmdShort);
-   valueText := AnsiString(cmdShort);
 
-   WriteKey(idText, PAnsiChar(valueText), cmdShort);
+   WriteKey(idText, cmdShort);
 
    if MesWindow = OtherMsgWin then
       begin
@@ -449,21 +436,12 @@ begin
 
    valueText := AnsiString(edtCaption.Text);
 
-   // A nil VALUE deletes the key. An empty caption therefore REMOVES the entry
-   // rather than writing a blank one, which is what the original did by setting
-   // p to nil -- and it matters, because a blank caption and an absent one are
-   // read differently.
-   if valueText = '' then
-      begin
-      capValue := nil;
-      end
-   else
-      begin
-      capValue := PAnsiChar(valueText);
-      end;
-
+   (* AN EMPTY CAPTION IS PASSED ON AS AN EMPTY VALUE. A nil stood here, and
+     told the INI write to DELETE the key rather than write a blank one. That
+     write is gone, and nothing after it read the nil -- WriteKey hands the
+     parser the ShortString, which was '' either way. *)
    idShort := ShortString(valueText);
-   WriteKey(idText + ' CAPTION', capValue, idShort);
+   WriteKey(idText + ' CAPTION', idShort);
 end;
 
 procedure TfrmEditMessage.btnOKClick(Sender: TObject);

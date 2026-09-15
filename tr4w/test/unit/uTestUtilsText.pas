@@ -6,16 +6,20 @@ unit uTestUtilsText;
 
   Functions NOT tested here (easily replaced by Delphi 12 stdlib):
     UpperCase, StringHas, PostcedingString, PrecedingString,
-    tPos, pPos, safeFloat.
+    tPos, safeFloat.
 
-  StrComp and StrUpper ARE tested here, and the tests came first: both were
-  hand-written x86-32 assembly with no coverage at all, and they are load-bearing
-  -- StrComp drives the CTY.DAT prefix search and every config-command lookup,
-  StrUpper normalizes callsigns and CTY records.  These are CHARACTERIZATION
+  StrComp and StrUpper WERE tested here, and the tests came first: both were
+  hand-written x86-32 assembly with no coverage at all, and they were load-bearing
+  -- StrComp drove the CTY.DAT prefix search and every config-command lookup,
+  StrUpper normalized callsigns and CTY records.  Those were CHARACTERIZATION
   tests: they were written against the assembly, run green against it, and only
-  then was the assembly replaced with Pascal.  They pin the exact return values,
-  not merely the sign, so a "behaviour-preserving" rewrite has something that can
-  actually say no.
+  then was the assembly replaced with Pascal.  They pinned the exact return
+  values, not merely the sign, so a "behaviour-preserving" rewrite had something
+  that could actually say no.
+
+  Both routines were deleted on 2026-09-15 with no production caller left, and
+  their tests went with them.  CompareCharBuffer carries StrComp's job, and its
+  tests below state each expected sign outright.
 
   Functions tested:
     StringIsAllNumbers               -- used in exchange field parsing
@@ -76,9 +80,10 @@ type
       procedure Test_CharBufferSlice_StopsAtNul;
       procedure Test_CharBufferSlice_OutOfRangeIsEmpty;
 
-      (* CompareCharBuffer is StrComp WITHOUT THE POINTERS, so it is tested
-        AGAINST StrComp rather than against my idea of what StrComp does.
-        The sign is the CTY prefix table's sort order, not just equality. *)
+      (* CompareCharBuffer is StrComp WITHOUT THE POINTERS. It was once tested
+        against StrComp; StrComp is deleted, so each case states the sign it
+        must give. The sign is the CTY prefix table's sort order, not just
+        equality. *)
       procedure Test_CompareCharBuffer_SignsForRealPrefixes;
       procedure Test_CompareCharBuffer_Ordering;
       procedure Test_CompareCharBuffer_HighBitBytesAreUnsigned;
@@ -480,8 +485,8 @@ end;
 // ---------------------------------------------------------------------------
 // CompareCharBuffer -- StrComp's answer without StrComp's pointers.
 //
-// These buffers are the CTY.DAT prefix table, which StrUpper's note says may
-// hold CP1251/CP1250.  That is why the comparison stays BYTES: decoding them
+// These buffers are the CTY.DAT prefix table, which may hold
+// CP1251/CP1250.  That is why the comparison stays BYTES: decoding them
 // as UTF-8 would change which prefixes match, and the sign defines the order
 // the binary search in ctyFindCallsign depends on.
 // ---------------------------------------------------------------------------

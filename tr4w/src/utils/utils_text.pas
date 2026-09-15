@@ -24,7 +24,6 @@ function PostcedingString(LongString: string; Deliminator: string): string;
 function PrecedingString(LongString: string; Deliminator: string): string;
 
 function tPos(s: ShortString; c: AnsiChar): integer; //wli  boundary: byte-char search (legacy ShortString callers)
-function pPos(c: AnsiChar; p: PAnsiChar): integer;         // boundary: raw PAnsiChar scan
 
 
 (* A FIXED AnsiChar BUFFER, WRITTEN AND READ THROUGH ITS OWN BOUNDS.
@@ -413,22 +412,6 @@ begin
   else
      begin
      PrecedingString := '';
-     end;
-end;
-
-function pPos(c: AnsiChar; p: PAnsiChar): integer;
-var
-  i                                     : Cardinal;
-begin
-  Result := -1;
-  for i := 0 to 255 do
-     begin
-     if p[i] = #0 then Break;
-     if p[i] = c then
-        begin
-        Result := i;
-        Break;
-        end;
      end;
 end;
 
