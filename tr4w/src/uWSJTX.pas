@@ -299,8 +299,8 @@ begin
    // Trim so a blank or whitespace-only operator (e.g. a stray space
    // left in WSJT-X's Operator field, which arrives as <operator:1> )
    // is treated as "no operator" and never flags a mismatch.
-   adifStr := Trim(string(PAnsiChar(@adifOp[0])));
-   tr4wStr := Trim(string(PAnsiChar(@tr4wOp[0])));
+   adifStr := Trim(CharBufferText(adifOp));
+   tr4wStr := Trim(CharBufferText(tr4wOp));
    logger.Debug('[uWSJTX] op-mismatch check: ADIF=[%s] TR4W=[%s]',
                 [adifStr, tr4wStr]);
    if (adifStr = '') or (tr4wStr = '') then

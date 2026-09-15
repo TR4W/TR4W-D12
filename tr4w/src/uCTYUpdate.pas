@@ -73,7 +73,8 @@ uses
    VC,
    // The atomic HTTPS fetch used to live in this unit as a private helper.  It
    // moved out when TRMASTER.DTA became a second caller -- see uHTTPDownload.
-   uHTTPDownload;
+   uHTTPDownload,
+   utils_text;      // CharBufferText -- the cty.dat name
 
 const
    CTY_RSS_URL      = 'https://www.country-files.com/feed/';
@@ -202,7 +203,7 @@ var
    Digits: string;
 begin
    Result := 0;
-   AssignFile(F, string(PAnsiChar(@TR4W_CTY_FILENAME)));
+   AssignFile(F, CharBufferText(TR4W_CTY_FILENAME));
    {$I-}
    Reset(F);
    {$I+}

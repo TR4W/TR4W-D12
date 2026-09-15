@@ -244,7 +244,8 @@ uses
   LogEdit,
   uFileView,
   uMMTTYForm,         // the window is a form -- set its Caption, not its HWND
-  MainUnit;
+  MainUnit,
+  utils_text;         // CharBufferBytes -- the captured callsign
 
 
 procedure mmttyUpdateCharFormat();
@@ -276,7 +277,7 @@ begin
                 rather than broken. }
               if TR4WMMTTYForm <> nil then
                  begin
-                 TR4WMMTTYForm.Caption := string(AnsiString(PAnsiChar(@MMTTY.mmttyCallProcess.cpBuffer[0])));
+                 TR4WMMTTYForm.Caption := string(CharBufferBytes(MMTTY.mmttyCallProcess.cpBuffer));
                  end;
 
               FillChar(MMTTY.mmttyLastCallsign, SizeOf(MMTTY.mmttyLastCallsign), 0);

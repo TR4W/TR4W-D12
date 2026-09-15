@@ -1543,29 +1543,29 @@ begin
 end;
 
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);
+const
+  PROGRESS_BAR_MAX_CHARS                = 25;
 var
   i                                     : integer;
-  ProgressBarArray                      : array[0..25] of AnsiChar;
   ProgressBarPos                        : integer;
 begin
-  (* FillChar, not Windows.FillMemory -- the RTL does this and does not need a
-    platform. FillMemory IS FillChar with its arguments in a different order, so
-    this is the same fill, minus a Win32 dependency for a byte loop.
+  (* THE CW PROGRESS, AS TEXT: one '|' for every six CW elements sent, capped
+    at 25. This was a 26-byte buffer filled with '|', cut short by writing a
+    NUL at the position, and read back through a PAnsiChar. StringOfChar is
+    that string, with no buffer and no pointer.
 
-    NOTE FOR THE LARGER JOB (ROADMAP §5): ProgressBarArray is not a control. It
-    is 26 characters of '|' written into a station-list CELL, so the "progress
+    NOTE FOR THE LARGER JOB (ROADMAP §5): this is not a control. It is
+    characters of '|' written into a station-list CELL, so the "progress
     bar" an operator sees in the multi-op list is TEXT. That is one of the three
     unrelated things called a progress bar here, and the reason NY4I wants them
     unified on one component. *)
-  FillChar(ProgressBarArray[0], SizeOf(ProgressBarArray), Byte('|'));
   ProgressBarPos := Msg.msCWElements div 6;
-  if ProgressBarPos > SizeOf(ProgressBarArray) - 1 then
+  if ProgressBarPos > PROGRESS_BAR_MAX_CHARS then
      begin
-     ProgressBarPos := SizeOf(ProgressBarArray) - 1;
+     ProgressBarPos := PROGRESS_BAR_MAX_CHARS;
      end;
-  ProgressBarArray[ProgressBarPos] := #0;
   i := PosInClientsList[Index] - 1;
-  SetClientCell(i, 10, string(PAnsiChar(@ProgressBarArray)));
+  SetClientCell(i, 10, StringOfChar('|', ProgressBarPos));
   SetClientCell(i, 11, string(Msg.msCWMessage));
 end;
 

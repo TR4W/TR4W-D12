@@ -62,11 +62,11 @@ implementation
 (* ONE uses CLAUSE FOR BOTH ARMS. I split it and got it wrong: the {$ELSE} arm
   named VC for `logger`, and logger is a MAINUNIT global, not a VC one -- the
   Linux build said "Identifier not found logger" and the Windows build could
-  not have noticed. All four of these compile on every target, so there was
+  not have noticed. All of these compile on every target, so there was
   never a reason to have two clauses; only the DDE imports and bodies below
   need gating. *)
 uses
-  LCLType, SysUtils, VC, MainUnit;
+  LCLType, SysUtils, VC, MainUnit, utils_text;
 
 {$IFNDEF WINDOWS}
 function StartDXLabPathfinder: boolean;
@@ -236,7 +236,10 @@ begin
            end;
         FillChar(buf, SizeOf(buf), 0);
         DdeGetData(hData, @buf, dataSize, 0);
-        cmd      := string(PAnsiChar(@buf));
+        (* BOUNDED BY THE BUFFER. dataSize may be all 512 bytes, and then nothing
+          terminates it -- a PAnsiChar read ran on past the end. The DDE text is
+          DXLab's, so it comes across as bytes. *)
+        cmd      := string(CharBufferBytes(buf));
         logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: command="%s"', [cmd]);
         callsign := ParseCallsign(cmd);
         logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: parsed callsign="%s"', [callsign]);

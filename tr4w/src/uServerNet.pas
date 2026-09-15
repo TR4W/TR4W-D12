@@ -163,6 +163,7 @@ uses
    IdSocketHandle, IdIOHandlerSocket,
    IdStack,       { TIdStack.IncUsage, GStack, TIdStackLocalAddressList }
    tr4wserverUnit,
+   utils_text,    (* CharBufferBytes -- the server log name *)
    Log4D;
 
 type
@@ -518,7 +519,7 @@ begin
       end;
 
    try
-      fs := TFileStream.Create(String(PAnsiChar(@ServerLogFileName[0])),
+      fs := TFileStream.Create(String(CharBufferBytes(ServerLogFileName)),
                                fmOpenRead or fmShareDenyNone);
       try
          { The size FIRST, as a four-byte head -- that is the protocol: the old

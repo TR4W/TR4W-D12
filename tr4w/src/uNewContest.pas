@@ -527,7 +527,7 @@ begin
          callsign unset.  Assigning the property applies it; SaveSettings is
          what makes it survive the restart, which is the half
          SetCFGCommandValue used to provide. *)
-       Settings.My.MainCallsign := string(PAnsiChar(@TempBuffer1[0]));
+       Settings.My.MainCallsign := CharBufferText(TempBuffer1);
        SaveSettings(TR4WConfigFileName, Settings);
        end;
     DeleteSlashes(TempBuffer1);
