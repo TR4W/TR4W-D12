@@ -9504,7 +9504,7 @@ begin
   RunningConfigFile := True;
   ClearDupeSheetCommandGiven := False;
   FirstCommand := False;
-  if utils_file.FileExists(PAnsiChar(f)) then
+  if SysUtils.FileExists(f) then
      begin
      LoadInSeparateConfigFile(f, FirstCommand, UTF8Encode(Settings.My.Call));
      end;

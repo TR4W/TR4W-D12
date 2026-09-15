@@ -12,7 +12,13 @@ interface
 
   So this is a swap, not a redesign: the interface is unchanged except that
   BOOL (a Windows type) becomes boolean, and the semantics of each routine are
-  preserved deliberately, including one that is arguably wrong. See FileExists.
+  preserved deliberately.
+
+  FileExists, the one routine whose preserved semantics were arguably wrong (a
+  directory counted as a file), is DELETED (2026-09-15). It shadowed
+  SysUtils.FileExists by uses order; a census -- the routine marked deprecated
+  for one build -- found four calls bound to it, and they now call
+  SysUtils.FileExists by name.
 
   It is worth doing because this unit is TWO LEVELS DOWN: uCTYDAT could not
   compile off Windows while utils_file could not, and uCallSignRoutines could
@@ -47,8 +53,6 @@ uses SysUtils;
 type
   TFileHandle = System.THandle;
 
-function FileExists(FileName: PAnsiChar): boolean;
-
 function sWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD): boolean;
 function sWriteFileFromString(hFile: TFileHandle; sBuffer: AnsiString): boolean;
 function tWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
@@ -60,25 +64,6 @@ function tOpenFileForWrite(var h: TFileHandle; const FileName: string): boolean;
 function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
 
 implementation
-
-(* FileGetAttr, NOT SysUtils.FileExists, AND THE DIFFERENCE IS DELIBERATE.
-
-  This was FindFirstFileA, which succeeds for a DIRECTORY as well as a file.
-  SysUtils.FileExists does not -- it excludes directories on Windows -- so the
-  obvious substitution would quietly change the answer for 76 call sites, in a
-  function whose name makes that change invisible at every one of them.
-
-  FileGetAttr returns -1 only when the name resolves to nothing, so it matches
-  the old behaviour exactly and is portable. Whether "a directory exists as a
-  file" is the RIGHT answer is a separate question, and not one to settle by
-  accident inside a cross-platform sweep.
-
-  The one thing genuinely lost is wildcards: FindFirstFileA('*.dat') would
-  have succeeded. No caller passes one -- checked, all 76. *)
-function FileExists(FileName: PAnsiChar): boolean;
-begin
-  Result := FileGetAttr(AnsiString(FileName)) <> -1;
-end;
 
 function tWriteFile(hFile: TFileHandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): boolean;
 var

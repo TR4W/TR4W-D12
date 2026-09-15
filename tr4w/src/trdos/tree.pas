@@ -2786,7 +2786,13 @@ begin
   //  if FindFirst(FileName, faArchive, DirInfo) = 0 then
 //  if Windows.FindFirstFileW(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
      //    IF IORESULT{DosError}{WLI} = 0 THEN { FileExists }
-  if FileExists(@FileName[1]) then
+  (* SysUtils.FileExists OF THE STRING. This was FileExists(@FileName[1]) into
+    a PAnsiChar parameter -- right in D7, where string was 8-bit, and wrong
+    since tr4w.inc switched on UnicodeStrings: the address is UTF-16, so the
+    check read one character, found no such file, and REWROTE an existing file
+    instead of appending to it. Its only live caller is the packet log, whose
+    PACKET LOG FILENAME is in RETIRED_COMMANDS, so it could not fire today. *)
+  if SysUtils.FileExists(FileName) then
      begin
 
      Assign(FileHandle, FileName);

@@ -2342,7 +2342,7 @@ begin
          logger.Warn('YCCC SO2R box not found or failed to open');
       end;
 
-  CD.MasterFileExists := FileExists(CD.ActiveFilename);
+  CD.MasterFileExists := SysUtils.FileExists(CharBufferBytes(CD.ActiveFilename));
 
   if not CD.MasterFileExists then
   begin

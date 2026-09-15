@@ -318,10 +318,7 @@ begin
      a Win32 boundary, so there is no ANSI code page in the question. *)
    path := AnsiString(GetRealPath(msg));
 
-   // utils_file.FileExists takes a PAnsiChar; SysUtils' string overload is also
-   // in scope, so the cast says which is meant rather than leaving it to the
-   // uses order.
-   if not utils_file.FileExists(PAnsiChar(path)) then
+   if not SysUtils.FileExists(path) then
       begin
       if YesOrNo(TC_THIS_FILE_DOES_NOT_EXIST) = IDNO then
          begin
