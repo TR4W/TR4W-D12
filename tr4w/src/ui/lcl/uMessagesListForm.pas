@@ -124,7 +124,7 @@ begin
    // sorted, so the visible index does not match the array's declaration order,
    // and indexing the array would paste a different command than the one shown.
    s := AnsiString(lstCommands.Items[lstCommands.ItemIndex]);
-   LastSelectedCommand := GetInsertableCommand(PAnsiChar(s));
+   LastSelectedCommand := GetInsertableCommand(s);
    FPicked := True;
 end;
 

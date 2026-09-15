@@ -25,9 +25,10 @@ interface
 
 uses
   VC,
-  TF,
-  uAnsiStr;   (* StrLen over PAnsiChar -- was Windows.lstrlenA.
-                 Windows and Messages declared nothing else this unit uses. *)
+  (* uAnsiStr was here for StrLen over a PAnsiChar -- itself a
+    replacement for Windows.lstrlenA -- and the parser it served now
+    indexes a string, so neither is needed. *)
+  TF;
 
 {
   THE LIST-OF-COMMANDS SEAM.  The dialog itself is now an LCL form --
@@ -46,7 +47,7 @@ uses
 // Extracts the insertable token from a caCommand display string.  Kept here
 // rather than moved into the form: it is pure parsing, and it is the piece most
 // worth having somewhere testable.
-function GetInsertableCommand(src: PAnsiChar): String;
+function GetInsertableCommand(const src: string): String;
 
 var
   LastSelectedCommand                   : String;
@@ -64,62 +65,73 @@ implementation
 uses
   uMessagesListForm;
 
-function GetInsertableCommand(src: PAnsiChar): String;
+function GetInsertableCommand(const src: string): String;
 var
-  start, p, eqStart: PAnsiChar;
-  len: Integer;
+   startPos, eqPos, endPos, i: integer;
 begin
-  Result := '';
+   (* INDEXES, NOT POINTERS (2026-09-14).
 
-  // Skip leading spaces
-  start := src;
-  while start^ = ' ' do
-     begin
-     Inc(start);
-     end;
-  if start^ = #0 then
-     begin
-     Exit;
-     end;
+     This walked the line with four PAnsiChars -- start, p, eqStart and the
+     p[-1] look-behind -- and its only caller already had a string and was
+     casting it with PAnsiChar(s) to get in here.
 
-  // Look for ' = ' separator beginning one character past start
-  // so that a command that IS '=' (e.g. "  = = BT") is not treated
-  // as a separator itself.
-  eqStart := nil;
-  p := start + 1;
-  while p^ <> #0 do
-     begin
-     if (p[0] = ' ') and (p[1] = '=') and (p[2] = ' ') then
-        begin
-        eqStart := p;
-        Break;
-        end;
-     Inc(p);
-     end;
+     ONE THING THE POINTER VERSION DID THAT THIS CANNOT: the separator scan
+     tested p[0], p[1] and p[2] while only p^ was known to be inside the
+     string, so on a line ending in a space it read ONE BYTE PAST the
+     terminator. Harmless in practice and not expressible now -- the loop
+     stops at Length(src) - 2, which is where a three-character ' = ' can
+     still fit.
 
-  if eqStart <> nil then
-     begin
-     p := eqStart;
-     while (p > start) and (p[-1] = ' ') do
-        begin
-        Dec(p);
-        end;
-     len := p - start;
-     end
-  else
-     begin
-     p := start + uAnsiStr.StrLen(start);
-     while (p > start) and (p[-1] = ' ') do
-        begin
-        Dec(p);
-        end;
-     len := p - start;
-     end;
+     Verified equivalent against the old body on 20 inputs before the swap,
+     including the "  = = BT" case the comment below is about. The unit
+     cannot be linked into tr4w_unit_tests (its implementation uses
+     uMessagesListForm, which drags in the LCL), so that was a standalone
+     probe running both implementations side by side. *)
+   Result := '';
 
-  if len > 0 then
-     begin
-     SetString(Result, start, len);
-     end;
+   // Skip leading spaces
+   startPos := 1;
+   while (startPos <= Length(src)) and (src[startPos] = ' ') do
+      begin
+      Inc(startPos);
+      end;
+   if startPos > Length(src) then
+      begin
+      Exit;
+      end;
+
+   // Look for ' = ' separator beginning one character past startPos
+   // so that a command that IS '=' (e.g. "  = = BT") is not treated
+   // as a separator itself.
+   eqPos := 0;
+   for i := startPos + 1 to Length(src) - 2 do
+      begin
+      if (src[i] = ' ') and (src[i + 1] = '=') and (src[i + 2] = ' ') then
+         begin
+         eqPos := i;
+         Break;
+         end;
+      end;
+
+   if eqPos > 0 then
+      begin
+      endPos := eqPos - 1;
+      end
+   else
+      begin
+      endPos := Length(src);
+      end;
+
+   // Trim the spaces before the separator (or before the end of the line).
+   while (endPos >= startPos) and (src[endPos] = ' ') do
+      begin
+      Dec(endPos);
+      end;
+
+   if endPos >= startPos then
+      begin
+      Result := Copy(src, startPos, endPos - startPos + 1);
+      end;
 end;
 
 // Fetch the text of the currently selected listbox item (ID 90) and store
