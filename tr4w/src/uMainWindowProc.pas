@@ -563,16 +563,16 @@ begin
       begin
       if LoadPOTAParks(POTAParksFilePath) > 0 then
          begin
-         QuickDisplay(PAnsiChar(TC_POTAPARKSLOADED));
+         QuickDisplay(TC_POTAPARKSLOADED);
          end
       else
          begin
-         QuickDisplay(PAnsiChar(TC_POTAPARKSFILECOULDLOADED));
+         QuickDisplay(TC_POTAPARKSFILECOULDLOADED);
          end;
       end
    else
       begin
-      QuickDisplay(PAnsiChar(TC_POTAPARKSDOWNLOADFAILED));
+      QuickDisplay(TC_POTAPARKSDOWNLOADFAILED);
       end;
 end;
 
@@ -602,11 +602,11 @@ procedure TTR4WBackgroundEvents.TRMasterDownloadFinished(Sender: TObject;
 begin
    if aSucceeded then
       begin
-      QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS));
+      QuickDisplay(TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS);
       end
    else
       begin
-      QuickDisplay(PAnsiChar(TC_TRMASTERDTADOWNLOADFAILED));
+      QuickDisplay(TC_TRMASTERDTADOWNLOADFAILED);
       end;
 end;
 
@@ -631,7 +631,7 @@ procedure TTR4WBackgroundEvents.CTYDownloadFinished(Sender: TObject;
 begin
    if aSucceeded then
       begin
-      QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADEDRELOADING));
+      QuickDisplay(TC_CTYDATDOWNLOADEDRELOADING);
       (* RELOADED ON THE MAIN THREAD. The CTY tables have no locking, so a
         background reload would race with callsign lookups; arriving here is a
         safe quiescent point. *)
@@ -639,11 +639,11 @@ begin
         this is the path a CTY.DAT download takes. *)
       ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True,
                            {ReplaceTable} True);
-      QuickDisplay(PAnsiChar(TC_CTYDATRELOADEDSUCCESSFULLY));
+      QuickDisplay(TC_CTYDATRELOADEDSUCCESSFULLY);
       end
    else
       begin
-      QuickDisplay(PAnsiChar(TC_CTYDATDOWNLOADFAILED));
+      QuickDisplay(TC_CTYDATDOWNLOADFAILED);
       end;
 end;
 
