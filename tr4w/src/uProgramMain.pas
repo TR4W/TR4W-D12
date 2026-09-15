@@ -533,7 +533,7 @@ begin
      Exit;
      end;
 
-  ctyPath := string(PAnsiChar(@TR4W_CTY_FILENAME));
+  ctyPath := CharBufferText(TR4W_CTY_FILENAME);
 
   // Headless /EXPORT has no operator to answer a prompt, and a batch export
   // should not make an unannounced network request. Report and fail, exactly
@@ -893,8 +893,8 @@ begin
      than by reading it, which is the only way that class of mistake ever
      shows up. SeedMigratedCommandsFromIni builds the same path the other
      way, from SettingsDirectory + a leaf name; both resolve to one file. *)
-   iniPath  := string(StrPas(TR4W_INI_FILENAME));
-   cfgPath  := string(StrPas(TR4W_CFG_FILENAME));
+   iniPath  := CharBufferText(TR4W_INI_FILENAME);
+   cfgPath  := CharBufferText(TR4W_CFG_FILENAME);
 
    logger.Info('[Convert] --- configuration sources ---');
    logger.Info('[Convert]   settings JSON : %s (%s)',
@@ -931,7 +931,7 @@ var
 begin
    (* THE EXPORTED RULE, not uLogStore.LogStoreFileName -- that one is
      implementation-only, and it is a one-line wrapper around this anyway. *)
-   dbPath := LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME)));
+   dbPath := LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME));
    if dbPath = '' then
       begin
       Exit;
@@ -1539,7 +1539,7 @@ begin
     reader resolves the relative name differently. }
   if TR4W_CFG_FILENAME[0] <> #0 then
      begin
-     s := ExpandFileName(string(PAnsiChar(@TR4W_CFG_FILENAME[0])));
+     s := ExpandFileName(CharBufferText(TR4W_CFG_FILENAME));
 
      // Room for the terminator: FileNameType is MAX_PATH bytes. A path too
      // long to hold is left as it was rather than truncated into a different
@@ -1561,7 +1561,7 @@ begin
 
      // WHICH .cfg AM I ACTUALLY EDITING -- the question this defect turned
      // on, and nothing in the log answered it.
-     logger.Info('Contest configuration file: ' + StrPas(@TR4W_CFG_FILENAME[0]));
+     logger.Info('Contest configuration file: ' + CharBufferText(TR4W_CFG_FILENAME));
 
      (* WHAT KIND OF FILE IS IT? ASKED HERE BECAUSE THIS IS WHERE THE NAME
        ENTERS THE PROGRAM -- the New Contest dialog and ParamStr(1) both land
@@ -1588,13 +1588,13 @@ begin
 
        HALT(1), NOT HALT. This is a failed start, and a script that runs
        /EXPORT over a directory should be able to tell that from a clean one. *)
-     case ClassifyContestFile(StrPas(@TR4W_CFG_FILENAME[0])) of
+     case ClassifyContestFile(CharBufferText(TR4W_CFG_FILENAME)) of
         cfkForeignDatabase:
            begin
            logger.Error('Contest file is a database created by another ' +
-                        'program: %s', [StrPas(@TR4W_CFG_FILENAME[0])]);
+                        'program: %s', [CharBufferText(TR4W_CFG_FILENAME)]);
            ShowMessage(SysUtils.Format(SContestFileForeignDatabase,
-                                       [StrPas(@TR4W_CFG_FILENAME[0])]));
+                                       [CharBufferText(TR4W_CFG_FILENAME)]));
            Halt(1);
            end;
 
@@ -1602,9 +1602,9 @@ begin
            begin
            logger.Error('Contest file is neither a TR4W log database nor a ' +
                         'text configuration file: %s',
-                        [StrPas(@TR4W_CFG_FILENAME[0])]);
+                        [CharBufferText(TR4W_CFG_FILENAME)]);
            ShowMessage(SysUtils.Format(SContestFileNotRecognised,
-                                       [StrPas(@TR4W_CFG_FILENAME[0])]));
+                                       [CharBufferText(TR4W_CFG_FILENAME)]));
            Halt(1);
            end;
 
@@ -1624,13 +1624,13 @@ begin
               begin
               logger.Error('Contest file does not exist or cannot be read, ' +
                            'and this is a headless run: %s',
-                           [StrPas(@TR4W_CFG_FILENAME[0])]);
+                           [CharBufferText(TR4W_CFG_FILENAME)]);
               Halt(EXITCODE_NO_CONTEST_FILE);
               end;
 
            logger.Warn('Contest file does not exist or cannot be read; ' +
                        'continuing with defaults: %s',
-                       [StrPas(@TR4W_CFG_FILENAME[0])]);
+                       [CharBufferText(TR4W_CFG_FILENAME)]);
            end;
      end;
      end;
@@ -2351,7 +2351,7 @@ begin
   (* STRAIGHT TO THE STORE.  The hop through TR4W_LATESTCFG_FILENAME copied
     the name into a global so the next line could copy it back out -- a second
     copy of a value the store owns, kept in step by hand at two sites. *)
-  SetLatestConfigFile(string(PAnsiChar(@TR4W_CFG_FILENAME)));
+  SetLatestConfigFile(CharBufferText(TR4W_CFG_FILENAME));
 {$IFEND}
 
 {$IF NEWER_DEBUG}
