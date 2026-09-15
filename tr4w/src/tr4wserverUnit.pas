@@ -93,10 +93,6 @@ type
       slOpenExisting,   // fail if the log is not there
       slOpenAlways);    // create it if it is not
 
-const
-
-  SERVERDEBUG                           = False;
-
 (* SIX DECLARATIONS FROM THE PRE-INDY SERVER, ALL UNUSED, DELETED 2026-09-08.
 
   _TRANSMIT_FILE_BUFFERS and its three aliases, TAcceptEx, and a commented-out
@@ -174,7 +170,10 @@ type
 const
   (* DebugMessagesArray WAS HERE -- a PAnsiChar spelling for each
     DebugMessageType. Nothing read it; rg and grep both find only its own
-    declaration. The ENUM stays: the send path still tags every message. *)
+    declaration. The ENUM stays, and so does the `mt` every send passes -- but
+    NOTHING READS THE TAG any more: its one reader, WriteToServerDebugFile,
+    never compiled and was deleted (2026-09-15). Dropping the parameter from
+    the call sites is its own change. *)
 
   // TransmitFile flag from MSWSOCK.  Was supplied by the vendored WinSock2.pas;
   // the RTL's Winapi.WinSock2 does not declare the MSWSOCK extensions, and
@@ -227,7 +226,6 @@ var
 
   ServerSyncMode                        : boolean;
   ServerLogOpened                       : boolean = False;
-  ServerDebugMode                       : boolean = False;
 
   NetSynQSOInformation                  : TNetSynQSOInformation = (qsID: NET_TAKESERVERQSO_ID);
 
@@ -242,9 +240,6 @@ var
     (tr4wserver.lpr); declared here because RunServer and RunSyncListener are
     the ones that name it in WSAAsyncSelect. Goes when Indy lands. *)
   ServerLogFileName                     : array[0..255] of AnsiChar;
-{$IF SERVERDEBUG}
-  ServerDebugFileName                   : array[0..255] of Char;
-{$IFEND}
 //  MultsFrequenciesFileName              : array[0..255] of Char;
   DisplayBuffer                         : array[0..063] of AnsiChar;
 
@@ -360,7 +355,6 @@ procedure AddContestExchangeToBuffer(CE: ContestExchange);
 procedure WriteContestExchangesBufferToServerLog;
 procedure SendLogFileInformation(s: TClientHandle);
 function ClearServerLog: boolean;
-procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; const comment: string; mt: DebugMessageType);
 procedure SendDisconnectMessage(Client: AnsiChar);
 procedure SetComputerID(ID: AnsiChar; s: TClientHandle);
 procedure SetStatus(Status: TClientStatus; s: TClientHandle);
@@ -1035,52 +1029,6 @@ begin
   Result := True;
 end;
 
-procedure WriteToServerDebugFile(Count: Cardinal; s: TClientHandle; const comment: string; mt: DebugMessageType);
-var
-  h                                     : THandle;   (* A FILE handle, not a window. *)
-  lpNumberOfBytesWritten                : Cardinal;
-  line                                  : AnsiString;
-begin
-{$IF SERVERDEBUG}
-  if not ServerDebugMode then Exit;
-  (* THE DEBUG FILE, APPENDED THROUGH A STREAM.
-
-    Was CreateFile + SetFilePointer(FILE_END) + WriteFile + CloseHandle. Only
-    compiled under SERVERDEBUG, which is why it outlived the rest. *)
-  if FileExists(String(PAnsiChar(@ServerDebugFileName[0]))) then
-     begin
-     dbg := TFileStream.Create(String(PAnsiChar(@ServerDebugFileName[0])),
-                               fmOpenWrite or fmShareDenyNone);
-     end
-  else
-     begin
-     dbg := TFileStream.Create(String(PAnsiChar(@ServerDebugFileName[0])),
-                               fmCreate or fmShareDenyNone);
-     end;
-  if h = INVALID_HANDLE_VALUE then Exit;
-  dbg.Seek(0, soEnd);
-
-  // Was six manual pushes, a wsprintf, and `add esp,32` to unwind. Three
-  // separate defects came out with the assembly, none of which the compiler
-  // could report because SERVERDEBUG is False and this never compiled:
-  //
-  //   - `Time` was a local PChar that was NEVER ASSIGNED. The leading %s
-  //     formatted whatever happened to be on the stack. It now carries the
-  //     timestamp the column was obviously meant to hold.
-  //   - TempBuffer was array[0..255] of Char, i.e. WideChar under D12, but
-  //     `stored` is a CHARACTER count and WriteFile takes BYTES -- so it wrote
-  //     half the line, as UTF-16, into a text log.
-  //   - wsprintf into a fixed 256-element buffer with a caller-supplied
-  //     `comment` had no bound.
-  line := AnsiString(Format('%s  Client: %-6u   Bytes: %-7u  RX: %-7d  TX: %-7d   %s'#13#10,
-     [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now), s, Count,
-      BytesRCVD, BytesSEND, string(comment)]));
-
-  dbg.WriteBuffer(PAnsiChar(line)^, Length(line));
-  dbg.Free;
-{$IFEND}
-end;
-
 procedure SendDisconnectMessage(Client: AnsiChar);
 var
   i                                     : Cardinal;
@@ -1272,17 +1220,13 @@ end;
 
 (* THE WIRE WRITE, THROUGH INDY. Was WinSock's Send() on a raw handle; the
   handle is still how the engine names a client, and uServerNet turns it back
-  into a connection. Everything else here -- the byte accounting, the readout,
-  the debug file -- is unchanged. *)
+  into a connection. Everything else here -- the byte accounting and the
+  readout -- is unchanged. *)
 function sSend(s: TClientHandle; var buf; Len: integer; mt: DebugMessageType): integer;
 begin
   Result := SendToClient(s, buf, Len);
   BytesSEND := BytesSEND + DWORD(Result);
   DisplaySENDBytes;
-{$IF SERVERDEBUG}
-  WriteToServerDebugFile(Result, s, '', mt);
-{$IFEND}
-
 end;
 function tUpdateServerLog(UpdAction: UpadateAction): boolean;
 label

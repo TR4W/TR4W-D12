@@ -101,7 +101,7 @@ begin
           nowhere sensible elsewhere. DataFilePath, not SettingsFilePath: this
           file has always sat beside the program, not in a settings\ folder,
           and moving it would lose every operator's configuration. *)
-        ini := TIniFile.Create(DataFilePath(String(PAnsiChar(_TR4WSERVERINIFILE))));
+        ini := TIniFile.Create(DataFilePath(_TR4WSERVERINIFILE));
         try
            PortNumber := ini.ReadInteger(_TR4WSERVER, 'PORT', 1061);
            SetServerPort(PortNumber);
@@ -116,9 +116,6 @@ begin
            SetSerialLockout(SerialNumberLockoutEnable);
 
 //        tGetLogTimeout := GetPrivateProfileInt(_TR4WSERVER, 'GET LOG TIMEOUT', 50, _TR4WSERVERINIFILE);
-{$IF SERVERDEBUG}
-           ServerDebugMode := ini.ReadInteger(_TR4WSERVER, 'DEBUG', 0) = 1;
-{$IFEND}
            (* BYTES, NOT TEXT. This password is compared byte for byte
              against what a client sends, so it must not be re-encoded on the
              way into the buffer -- SetCharBufferBytes, not SetCharBuffer. *)
@@ -158,10 +155,6 @@ begin
           Rename the binary and the path was silently wrong. *)
         SetCharBufferBytes(ServerLogFileName,
            AnsiString(LogFilePath('SERVERLOG.TRW')));
-{$IF SERVERDEBUG}
-        SetCharBufferBytes(ServerDebugFileName,
-           AnsiString(LogFilePath('DEBUG.TXT')));
-{$IFEND}
 {
         BytesReceived := Windows.GetModuleFileName(0, @MultsFrequenciesFileName, SizeOf(MultsFrequenciesFileName));
         MultsFrequenciesFileName[BytesReceived - 14] := #0;
