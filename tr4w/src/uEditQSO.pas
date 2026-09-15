@@ -51,7 +51,7 @@ uses
   LogWind,
 (* Messages: named, and used nowhere in this unit (2026-09-08). *)
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 procedure OpenEditQSOWindow;
 

@@ -53,8 +53,7 @@ uses
     KeyboardCallsignChar's signature does not change under any build. *)
   LCLType,
   uBandLookup,  // CalculateBandMode now lives here so it can be unit-tested without tree.pas's dependency cone
-  uTR4WStrings,
-  uAnsiStr;
+  uTR4WStrings;
 
 var
   tempshowcty                           : Cardinal;

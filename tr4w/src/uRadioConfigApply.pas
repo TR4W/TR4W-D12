@@ -73,7 +73,7 @@ uses
    uRadioConfigStore,
    uKeyerConfigStore,
    uRadioConfigLegacyMap,
-  uAnsiStr;
+  utils_text;
 
 // Resolve what the registry says about a definition's identity, so the pure
 // renderer does not have to know the registry exists.

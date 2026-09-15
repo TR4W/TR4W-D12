@@ -82,7 +82,7 @@ uses
    IniFiles,   (* TIniFile -- the one-time ini seed; see ReadIniSection *)
    SysUtils,
    Classes,
-   uAnsiStr,              // StrPLCopy / StrLen for the PAnsiChar form above
+   utils_text,              // StrPLCopy / StrLen for the PAnsiChar form above
    Log4D,
    VC,                    // TR4W_INI_FILENAME, CABRILLOSECTION
    uRadioConfigStore,

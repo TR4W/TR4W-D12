@@ -250,7 +250,6 @@ uses
   IdURI
   ,
   uTR4WStrings,
-  uAnsiStr,
   LCLStrConsts;
 
 var

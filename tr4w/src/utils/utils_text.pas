@@ -47,6 +47,18 @@ function pPos(c: AnsiChar; p: PAnsiChar): integer;         // boundary: raw PAns
 procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
 function CharBufferText(const aBuf: array of AnsiChar): string;
 
+(* THE SAME WRITE, BUT THE BYTES GO IN UNCHANGED.
+
+  SetCharBuffer ENCODES -- it is for text, and UTF-8 is the encoding this
+  program uses for text. Some buffers are not text: the multi-op server
+  password is compared byte for byte against what a client sends, so encoding
+  it differently would change the wire format and break an existing station.
+
+  So this is StrPLCopy's contract without StrPLCopy's pointer: copy at most
+  High(aBuf) bytes and terminate. Use it ONLY where the bytes are already the
+  wire's, and SetCharBuffer everywhere else. *)
+procedure SetCharBufferBytes(var aBuf: array of AnsiChar; const aBytes: AnsiString);
+
 (* ONE SLICE OF A BUFFER, BY POSITION AND LENGTH.
 
   For fixed-column parsing -- a DX cluster line, where the callsign sits at a
@@ -106,7 +118,35 @@ procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiCha
 // packet dumps; the two formats are read by different eyes, so they stay apart.
 function BinToHexStr(const Data; DataLen: integer): string;
 
+(* TEXT FOR AN LCL CONTROL OR DIALOG, which takes an AnsiString and wants
+  UTF-8 in it.
+
+  tr4w.inc makes `string` UTF-16. The LCL is compiled WITHOUT that, so its
+  `string` parameters are AnsiString, and it sets DefaultSystemCodePage to
+  65001 so those hold UTF-8. Passing our UTF-16 straight in therefore does the
+  right thing at run time -- and the compiler still calls it a narrowing
+  conversion "with potential data loss", because in general Unicode -> Ansi
+  is one.
+
+  Here it is not: UTF-16 to UTF-8 loses nothing. Saying so explicitly is what
+  CLAUDE.md asks for -- convert at the boundary rather than letting the
+  assignment do it silently -- and it keeps the narrowing ceiling meaningful,
+  which is the point of the ceiling.
+
+  RawByteString because the bytes carry no code-page tag, so nothing can
+  convert them a second time on the way in.
+
+  IT CAME FROM uAnsiStr, which is deleted. It was the last thing in that unit
+  with a caller, and it never belonged there: it is the one routine in it that
+  had nothing to do with PAnsiChar. *)
+function LclText(const s: string): RawByteString;
+
 implementation
+
+function LclText(const s: string): RawByteString;
+begin
+   Result := RawByteString(UTF8Encode(s));
+end;
 
 function UpperCase(const s: string): string;
 var
@@ -391,6 +431,24 @@ end;
   carry codepage-specific high-bit bytes, and the country lookup binary-searches
   the prefix table this orders.  A signed comparison would reorder it silently.
 }
+
+procedure SetCharBufferBytes(var aBuf: array of AnsiChar; const aBytes: AnsiString);
+var
+   n: integer;
+   i: integer;
+begin
+   n := Length(aBytes);
+   if n > High(aBuf) then
+      begin
+      n := High(aBuf);          (* leave room for the terminator *)
+      end;
+
+   for i := 1 to n do
+      begin
+      aBuf[i - 1] := AnsiChar(aBytes[i]);
+      end;
+   aBuf[n] := #0;
+end;
 
 procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
 var

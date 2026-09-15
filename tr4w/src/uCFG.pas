@@ -29,7 +29,7 @@ uses
   uRadioRegistry,  // RadioTypeTokensA + RegisteredCIVAddress. In the INTERFACE
                    // uses because ListParamArray below takes its address.
   uConfigValues,   // Config -- the live values migrated rows write into
-  uAnsiStr,
+  utils_text,
     uCTYDAT,
    uWinKey,
    uYCCCSO2R,
@@ -44,7 +44,6 @@ uses
    TF,
    FCONTEST,
    ZoneCont,
-   utils_text,
    //Country9,
    CfgCmd,
    LCLType,   // MAXWORD, in the crMax column of the command table

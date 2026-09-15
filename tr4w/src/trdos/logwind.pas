@@ -67,8 +67,7 @@ utils_text,
   BeepUnit,
   uGradient
   ,
-  uTR4WStrings,
-  uAnsiStr;
+  uTR4WStrings;
 
 const
   tBaseFrequencys                       : array[Band160..Band12] of integer =

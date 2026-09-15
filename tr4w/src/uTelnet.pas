@@ -52,8 +52,7 @@ uses
   //  uDXSSpotsFilter,
   Tree,
   LogPack,
-  uTR4WStrings,
-  uAnsiStr;
+  uTR4WStrings;
 
 //type  ClusterType = (ctDXSpider, ctARCluster);
 type

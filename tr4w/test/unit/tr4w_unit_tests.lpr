@@ -74,7 +74,6 @@ uses
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
-   uAnsiStr             in '..\..\src\utils\uAnsiStr.pas',
    uStringCompare       in '..\..\src\utils\uStringCompare.pas',
    uAudio               in '..\..\src\utils\uAudio.pas',
    uCFormat             in '..\..\src\utils\uCFormat.pas',
@@ -83,7 +82,6 @@ uses
    uTestRegexValidators in 'uTestRegexValidators.pas',
    uWin32Compat         in '..\..\src\utils\uWin32Compat.pas',
    uJSON                in '..\..\src\utils\uJSON.pas',
-   uTestAnsiStr         in 'uTestAnsiStr.pas',
    uTestStringCompare   in 'uTestStringCompare.pas',
    uTestAudio           in 'uTestAudio.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',
@@ -379,7 +377,6 @@ begin
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TComboTagTests.Create('ComboTags'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
-   RegisterSuite(TAnsiStrTests.Create('AnsiStr'));
    RegisterSuite(TStringCompareTests.Create('StringCompare'));
    RegisterSuite(TAudioTests.Create('Audio'));
    RegisterSuite(TRegexValidatorTests.Create('RegexValidators'));

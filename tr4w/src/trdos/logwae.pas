@@ -48,7 +48,7 @@ uses
   LogEdit
   ,
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 type
   QTCActionType = (NoQTCAction, AbortThisQTC, SaveThisQTC);

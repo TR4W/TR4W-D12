@@ -55,8 +55,7 @@ uses
       Windows unit, elsewhere from Log4D, which adapts those two names to the
       RTL's InitCriticalSection / DoneCriticalSection. *)
    LCLType,
-   uAnsiStr,    // StrLen over PAnsiChar -- WriteBufferToCATPort
-   utils_text,
+   utils_text,    // StrLen over PAnsiChar -- WriteBufferToCATPort
    (* TSerialPort -- a serial keyer port on the radio record. *)
    uSerialPort,
    ExtCtrls,    (* TTimer -- the CW-by-CAT busy window.

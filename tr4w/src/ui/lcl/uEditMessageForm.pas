@@ -66,7 +66,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, LCLType,
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 type
   TfrmEditMessage = class(TForm)

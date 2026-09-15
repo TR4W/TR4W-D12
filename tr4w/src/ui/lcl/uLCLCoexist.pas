@@ -120,7 +120,7 @@ uses
    Interfaces,
    Forms,
    Dialogs,      (* MessageDlg *)
-   uAnsiStr,     (* LclText -- MessageDlg's parameters are the LCL's
+   utils_text,     (* LclText -- MessageDlg's parameters are the LCL's
                     AnsiString and this unit's `string` is UTF-16 *)
    uAppStrings;  (* SAlreadyRunningTitle *)
 

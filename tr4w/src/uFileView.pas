@@ -34,7 +34,7 @@ uses
   LogWind,
   PostUnit,
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 (* THE MAPI MAIL PATH IS DELETED (2026-09-08) -- the constants, the four
   record types, the three function pointer types, SendMail itself, and the

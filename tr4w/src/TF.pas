@@ -353,7 +353,7 @@ const
 
 implementation
 
-uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr, uCFormat,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses Log4D, uFreqTimeFormat, uStrSearch, uCFormat,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
      uCrashLog,   // LogCaughtException, OnMainThread, ReportOffMainThread
      (* THE LCL'S DIALOGS, for showwarning, and uMainThread to get onto the
        main thread first. This does not undo the weight this unit is careful
@@ -742,7 +742,7 @@ asm
 end;
 }
 
-// StrPos removed (D12): callers use uAnsiStr.StrPos directly -- the
+// StrPos removed (D12): callers use utils_text.StrPos directly -- the
 // TF -> uStrSearch -> RTL forwarding was asm-eradication scaffolding, obsolete now.
 
 function GetValueFromArray(aSpellings: PCfgSpellings; aHighIndex: Byte; const CMD: AnsiString): Byte;
@@ -772,7 +772,7 @@ begin
 
            MAIN CALLSIGN = NY4I
            EAccessViolation
-             STRICOMP            uAnsiStr.pas:206
+             STRICOMP            utils_text.pas:206
              GETVALUEFROMARRAY   TF.pas:743
              CHECKCOMMAND        uCFG.pas:1871
              APPLYNEWCONTESTCOMMAND / SAVENEWCONTEST / SHOWNEWCONTEST

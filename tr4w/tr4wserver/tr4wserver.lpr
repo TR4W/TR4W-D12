@@ -13,7 +13,7 @@ uses
   Classes,        // TFileStream -- the single-instance lock
   IniFiles,       // TIniFile -- the settings, was GetPrivateProfile*
   Dialogs,        // ShowMessage -- was MessageBox
-  uAnsiStr,       // StrPLCopy over PAnsiChar; SysUtils' is PWideChar
+  utils_text,     // SetCharBufferBytes -- StrPLCopy without the pointer
   uAppPaths,      // where written files go, per platform
   uServerForm,    // the window, at last a designed one
   (* LCLType. THE COMMENT THAT STOOD HERE WAS WRONG, AND IT WAS WRITTEN THE
@@ -119,10 +119,12 @@ begin
 {$IF SERVERDEBUG}
            ServerDebugMode := ini.ReadInteger(_TR4WSERVER, 'DEBUG', 0) = 1;
 {$IFEND}
-           uAnsiStr.StrPLCopy(@tr4wServerPassword[0],
+           (* BYTES, NOT TEXT. This password is compared byte for byte
+             against what a client sends, so it must not be re-encoded on the
+             way into the buffer -- SetCharBufferBytes, not SetCharBuffer. *)
+           SetCharBufferBytes(tr4wServerPassword,
               AnsiString(ini.ReadString(_TR4WSERVER, 'SERVER PASSWORD',
-                                        String(PAnsiChar(_TR4WSERVER)))),
-              High(tr4wServerPassword));
+                                        _TR4WSERVER)));
         finally
            ini.Free;
         end;
@@ -154,13 +156,11 @@ begin
           Was GetModuleFileName + lstrcat with a magic 14 -- the length of
           'tr4wserver.exe' -- poked in as a NUL to chop the file name off.
           Rename the binary and the path was silently wrong. *)
-        uAnsiStr.StrPLCopy(@ServerLogFileName[0],
-           AnsiString(LogFilePath('SERVERLOG.TRW')),
-           High(ServerLogFileName));
+        SetCharBufferBytes(ServerLogFileName,
+           AnsiString(LogFilePath('SERVERLOG.TRW')));
 {$IF SERVERDEBUG}
-        uAnsiStr.StrPLCopy(@ServerDebugFileName[0],
-           AnsiString(LogFilePath('DEBUG.TXT')),
-           High(ServerDebugFileName));
+        SetCharBufferBytes(ServerDebugFileName,
+           AnsiString(LogFilePath('DEBUG.TXT')));
 {$IFEND}
 {
         BytesReceived := Windows.GetModuleFileName(0, @MultsFrequenciesFileName, SizeOf(MultsFrequenciesFileName));

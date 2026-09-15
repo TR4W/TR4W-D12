@@ -46,7 +46,7 @@ uses
     x86_64-linux -- not by grepping, which cannot see a bare type
     name and would have missed it either way. *)
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 // One of the eight sending commands, by its QTC_SEND_* id.  Was the dialog
 // proc's WM_COMMAND case; the window calls this and owns no logic of its own.

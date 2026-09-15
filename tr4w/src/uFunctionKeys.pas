@@ -104,7 +104,6 @@ implementation
 uses
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   Menus,          { TPopupMenu / TMenuItem -- the right-click menu }
-  uAnsiStr,       { LclText -- a caption is a TTranslateString }
   Controls,       { Mouse.CursorPos -- where to pop it }
   MainUnit,
   uFunctionKeysForm,   // the panels; this unit supplies what a key press MEANS

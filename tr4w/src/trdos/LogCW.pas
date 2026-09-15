@@ -39,8 +39,7 @@ utils_text,
   LogK1EA,
   classes
   ,
-  uTR4WStrings,
-  uAnsiStr;
+  uTR4WStrings;
 
 type
   KeyStatusType = (NormalKeys, AltKeys, ControlKeys);

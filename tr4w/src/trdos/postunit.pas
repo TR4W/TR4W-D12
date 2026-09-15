@@ -423,8 +423,7 @@ uses
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
-  uAnsiStr,
-  // uAnsiStr.StrPCopy for ANSI (PAnsiChar) buffers under D12
+  // utils_text.StrPCopy for ANSI (PAnsiChar) buffers under D12
   uCbrSum,
   MainUnit,
   (* Which store an export reads from -- step B3. *)
@@ -2804,7 +2803,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                ControlID := integer( TempErmakField ) + ( Operator ) * 100;
                // Issue #998: builds the INI key into TempBuffer2 (not file output).
                // OPERATORINFO is C '_OP_INFO_%03u' (zero-pad); Delphi Format uses '%.3u'.
-               uAnsiStr.StrPCopy( TempBuffer2,
+               utils_text.StrPCopy( TempBuffer2,
                   sysutils.Format( '_OP_INFO_%.3u', [ ControlID ] ) );
                // From settings\tr4w.json, same as every other ERMAKREPORT
                // read since 2026-08-17.  The ini default of '?' is reproduced
@@ -2815,7 +2814,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                   TempBuffer1, SizeOf( TempBuffer1 ) );
                if TempInteger = 0 then
                   begin
-                  uAnsiStr.StrPCopy( TempBuffer1, '?' );
+                  utils_text.StrPCopy( TempBuffer1, '?' );
                   end;
                TempPchar := @TempBuffer1[ 0 ];
                if TempErmakField = efOp then

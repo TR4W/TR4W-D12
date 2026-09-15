@@ -62,7 +62,7 @@ uses
                      names for what WinSock's SOL_SOCKET, SO_RCVBUF and
                      SOCK_DGRAM used to supply here. *)
   uIcomNetworkTypes, uFactoryRadioBase, Log4D,
-  uAnsiStr;
+  utils_text;
 
 (* THE ws2_32.dll IMPORT IS GONE (2026-09-08). See SendRawPacket for what
   replaced it and why the instrumentation around it is shaped as it is.

@@ -156,7 +156,7 @@ uses
   uMainForm,   { the call field, named -- wh[] round 3 }
   uSpotAge,   // UTCNow, AgeSeconds -- the leaf the tests can link
   SysUtils,   // Issue #997: Format/StrPCopy
-  uAnsiStr, // D12: ANSI StrPCopy for wsprintfBuffer
+  utils_text, // D12: ANSI StrPCopy for wsprintfBuffer
   LOGSUBS2,
   MainUnit,
   uNet,

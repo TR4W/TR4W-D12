@@ -109,7 +109,6 @@ uses
   ZoneCont
   ,
   uTR4WStrings,
-  uAnsiStr,
   uStickyKeys,
   uHostName;   (* LocalComputerName -- the <NetBiosName> element *)
   var TimeLastScoreBroadcast : TDateTime;

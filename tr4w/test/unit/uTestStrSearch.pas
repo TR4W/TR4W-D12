@@ -24,18 +24,20 @@ unit uTestStrSearch;
 interface
 
 uses
-   (* uAnsiStr IS THE POINT, AND IT WAS MISSING (2026-09-08).
+   (* NO utils_text HERE ANY MORE, AND THE REASON IS WORTH KEEPING.
 
-     Without it `StrPos` here resolved to SYSUTILS' StrPos -- the RTL's -- and
-     not to TR4W's own in uAnsiStr, which is the one the program actually
-     calls. So this suite has been testing a function TR4W does not use, and
-     passing, which is worse than not testing it.
+     This clause used to name uAnsiStr, and a note explained why: without it
+     `StrPos` resolved to SysUtils' and not to TR4W's own, so nine assertions
+     were testing a function the program did not call -- and passing, which is
+     worse than not testing it. A NATIVE LINUX RUN exposed it, because the
+     RTL's answer for an empty needle differs between platforms while TR4W's
+     was fixed by its own code.
 
-     A NATIVE LINUX RUN IS WHAT EXPOSED IT: Test_StrPos_EmptyPattern expected
-     -1 and got 3, because the RTL's answer for an empty needle differs
-     between the two platforms while TR4W's own is fixed by its own code. On
-     Windows the RTL happened to agree with the assertion, so nothing showed. *)
-   SysUtils, uTR4WTestFramework, uStrSearch, uAnsiStr;
+     THE GENERAL RULE SURVIVES ITS OWN EXAMPLE: a shim that shadows an RTL
+     name is resolved by uses ORDER, so which one a call reaches is decided
+     somewhere other than the call. uAnsiStr.StrPos itself is gone -- it had
+     no caller outside its own tests -- and the nine tests went with it. *)
+   SysUtils, uTR4WTestFramework, uStrSearch;
 
 type
    TStrSearchTests = class(TTestCase)
@@ -43,16 +45,6 @@ type
       // Returns the offset of p within base, or -1 if p is nil.
       function Off(base, p: PAnsiChar): integer;
 
-      // StrPos -- exact substring search
-      procedure Test_StrPos_Start;
-      procedure Test_StrPos_Middle;
-      procedure Test_StrPos_End;
-      procedure Test_StrPos_NotFound;
-      procedure Test_StrPos_WholeString;
-      procedure Test_StrPos_Overlap;
-      procedure Test_StrPos_RepeatedFirstChar;
-      procedure Test_StrPos_EmptyPattern;
-      procedure Test_StrPos_PatternLongerThanText;
 
       // StrComp_JOH_IA32_6 -- strcmp (-1 / 0 / +1)
       procedure Test_StrComp_Equal;
@@ -104,96 +96,12 @@ end;
 // StrPos
 // ---------------------------------------------------------------------------
 
-procedure TStrSearchTests.Test_StrPos_Start;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_Start');
-   s := 'ABCDEF';
-   CheckEquals(0, Off(s, StrPos(s, 'ABC')), 'StrPos start');
-end;
-
-procedure TStrSearchTests.Test_StrPos_Middle;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_Middle');
-   s := 'HELLO WORLD';
-   CheckEquals(6, Off(s, StrPos(s, 'WORLD')), 'StrPos middle');
-end;
-
-procedure TStrSearchTests.Test_StrPos_End;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_End');
-   s := 'ABCDEF';
-   CheckEquals(4, Off(s, StrPos(s, 'EF')), 'StrPos end');
-end;
-
-procedure TStrSearchTests.Test_StrPos_NotFound;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_NotFound');
-   s := 'ABCDEF';
-   CheckEquals(-1, Off(s, StrPos(s, 'XYZ')), 'StrPos not found -> nil');
-end;
-
-procedure TStrSearchTests.Test_StrPos_WholeString;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_WholeString');
-   s := 'ABC';
-   CheckEquals(0, Off(s, StrPos(s, 'ABC')), 'StrPos whole-string match');
-end;
-
-procedure TStrSearchTests.Test_StrPos_Overlap;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_Overlap');
-   s := 'AAB';
-   CheckEquals(1, Off(s, StrPos(s, 'AB')), 'StrPos overlap');
-end;
-
-procedure TStrSearchTests.Test_StrPos_RepeatedFirstChar;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_RepeatedFirstChar');
-   s := 'XXXY';
-   CheckEquals(2, Off(s, StrPos(s, 'XY')), 'StrPos repeated first char');
-end;
-
-procedure TStrSearchTests.Test_StrPos_EmptyPattern;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_EmptyPattern');
-   (* AN EMPTY NEEDLE OCCURS AT OFFSET 0, and that is TR4W's own deliberate
-     behaviour rather than an accident of whichever StrPos is in scope.
-     uAnsiStr.StrPos says so at the site: "An empty needle occurs at the very
-     start. This matches the RTL, and it matters: a caller that searches for a
-     value it did not set would otherwise get nil and take the 'not found'
-     branch."
-
-     THIS ASSERTION USED TO EXPECT -1, describing the hand-written asm that
-     was replaced ("len(str2)=0 -> JE @@2"). It went on passing because it was
-     resolving SysUtils' StrPos, not ours -- see the uses clause. So the test
-     pinned dead behaviour in a function the program does not call. *)
-   s := 'ABC';
-   CheckEquals(0, Off(s, uAnsiStr.StrPos(s, '')),
-               'an empty needle is found at the start');
-end;
-
-procedure TStrSearchTests.Test_StrPos_PatternLongerThanText;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_StrPos_PatternLongerThanText');
-   s := 'AB';
-   CheckEquals(-1, Off(s, StrPos(s, 'ABCDE')), 'StrPos pattern longer -> nil');
-end;
-
 // Test_StrPos_NilArgs was REMOVED here, not ported.
 //
 // uStrSearch stopped exporting StrPos when it became a pure forwarder, so
 // this test had quietly been asserting SysUtils' PWideChar StrPos -- the RTL,
 // not TR4W, and not even the ANSI routine the suite is about.  The behaviour
-// it meant to pin now belongs to uAnsiStr.StrPos and is covered there by
+// it meant to pin now belongs to utils_text.StrPos and is covered there by
 // uTestAnsiStr.Test_StrPos ('nil haystack is nil, not a fault').
 
 // ---------------------------------------------------------------------------
@@ -422,15 +330,6 @@ end;
 
 procedure TStrSearchTests.RunAllTests;
 begin
-   Test_StrPos_Start;
-   Test_StrPos_Middle;
-   Test_StrPos_End;
-   Test_StrPos_NotFound;
-   Test_StrPos_WholeString;
-   Test_StrPos_Overlap;
-   Test_StrPos_RepeatedFirstChar;
-   Test_StrPos_EmptyPattern;
-   Test_StrPos_PatternLongerThanText;
 
    Test_StrComp_Equal;
    Test_StrComp_Less;

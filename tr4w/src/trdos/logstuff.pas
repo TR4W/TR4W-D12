@@ -68,8 +68,7 @@ uses {Dos, Printer,}Tree,
     left in this unit, or anywhere in the program. *)
   LCLType,
   FileUtil,       // CopyFile -- was Windows.CopyFileA (LazUtils, not LazFileUtils)
-  uTR4WStrings,
-  uAnsiStr;
+  uTR4WStrings;
 
 var
   MRC: Str10;

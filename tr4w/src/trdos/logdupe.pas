@@ -48,8 +48,7 @@ utils_text,
   LogRadio,
   LogSCP
   ,
-  uTR4WStrings,
-  uAnsiStr;
+  uTR4WStrings;
 
 const
   MaxGridSquaresInList                  = 40;

@@ -6,7 +6,7 @@ unit uFileText;
 // The stores were written against System.IOUtils (TFile.ReadAllText /
 // TFile.WriteAllBytes over TEncoding.UTF8).  FPC has no System.IOUtils, and
 // the two operations actually used are a dozen lines each -- so this follows
-// the same call uStrSearch and uAnsiStr already made in this tree: own the
+// the same call uStrSearch and utils_text already made in this tree: own the
 // handful of routines rather than shim one RTL onto another and leave the
 // semantics decided by whichever unit happened to be compiled in which mode.
 //

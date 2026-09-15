@@ -90,6 +90,8 @@ type
       procedure Test_LeadingInt_ParsesAndStops;
       procedure Test_LeadingInt_NegativeAndDegenerate;
       procedure Test_LeadingInt_MatchesTheRoutineItReplaced;
+      procedure Test_SetCharBufferBytes_CopiesBytesUnchanged;
+      procedure Test_SetCharBufferBytes_TruncatesAndTerminates;
    end;
 
 implementation
@@ -688,6 +690,62 @@ begin
                'an empty buffer');
 end;
 
+
+(* ===========================================================================
+  SetCharBufferBytes -- StrPLCopy's CONTRACT, carried over from uAnsiStr's
+  tests when that unit was deleted.
+
+  The distinction from SetCharBuffer is the whole reason it exists:
+  SetCharBuffer UTF-8-ENCODES, and the multi-op server password is compared
+  byte for byte against what a client sends, so re-encoding it would change
+  the wire format and break an existing station. *)
+procedure TUtilsTextTests.Test_SetCharBufferBytes_CopiesBytesUnchanged;
+var
+   buf: array[0..31] of AnsiChar;
+begin
+   BeginTest('SetCharBufferBytes copies the bytes it is given and terminates');
+
+   FillChar(buf, SizeOf(buf), $7F);
+   SetCharBufferBytes(buf, 'NY4I');
+   CheckEquals('NY4I', CharBufferText(buf), 'a short source is copied whole');
+   CheckEquals(0, Integer(Byte(buf[4])), 'and terminated');
+
+   (* THE POINT OF THE ROUTINE: a byte above $7F goes in as itself. The same
+     text through SetCharBuffer would arrive as two UTF-8 bytes. *)
+   FillChar(buf, SizeOf(buf), $7F);
+   SetCharBufferBytes(buf, AnsiString('A') + AnsiChar($E9) + AnsiString('B'));
+   CheckEquals($41, Integer(Byte(buf[0])), 'the A');
+   CheckEquals($E9, Integer(Byte(buf[1])), 'the high byte is UNCHANGED, not re-encoded');
+   CheckEquals($42, Integer(Byte(buf[2])), 'the B');
+   CheckEquals(0,   Integer(Byte(buf[3])), 'terminated after three bytes');
+end;
+
+procedure TUtilsTextTests.Test_SetCharBufferBytes_TruncatesAndTerminates;
+var
+   buf: array[0..3] of AnsiChar;
+   one: array[0..0] of AnsiChar;
+begin
+   BeginTest('SetCharBufferBytes truncates to the buffer rather than overrunning');
+
+   (* High(buf) is 3, so three bytes of text and a terminator at [3] -- the
+     same rule StrPLCopy was given at every call site (High(dest)). *)
+   FillChar(buf, SizeOf(buf), $7F);
+   SetCharBufferBytes(buf, 'ABCDEFGH');
+   CheckEquals('ABC', CharBufferText(buf), 'the first High(buf) bytes');
+   CheckEquals(0, Integer(Byte(buf[3])), 'terminator at [High], not past it');
+
+   (* A one-element buffer has room for the terminator and nothing else, and
+     must still be terminated rather than left as it was. *)
+   FillChar(one, SizeOf(one), $7F);
+   SetCharBufferBytes(one, 'ABC');
+   CheckEquals(0, Integer(Byte(one[0])), 'zero room still terminates');
+
+   FillChar(buf, SizeOf(buf), $7F);
+   SetCharBufferBytes(buf, '');
+   CheckEquals('', CharBufferText(buf), 'an empty source gives an empty buffer');
+   CheckEquals(0, Integer(Byte(buf[0])), 'terminated at the start');
+end;
+
 procedure TUtilsTextTests.Test_CompareCharBuffer_AgreesWithStrComp;
 var
    a, b: array[0..13] of AnsiChar;
@@ -816,6 +874,8 @@ begin
    Test_LeadingInt_ParsesAndStops;
    Test_LeadingInt_NegativeAndDegenerate;
    Test_LeadingInt_MatchesTheRoutineItReplaced;
+   Test_SetCharBufferBytes_CopiesBytesUnchanged;
+   Test_SetCharBufferBytes_TruncatesAndTerminates;
 end;
 
 end.

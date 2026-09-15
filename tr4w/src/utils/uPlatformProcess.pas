@@ -118,7 +118,7 @@ uses
    Classes,     (* TStrings/TStringList, for the argument list *)
    SysUtils,
    Process,     (* TProcess, TShowWindowOptions, CommandToList *)
-   uAnsiStr,    (* LclText -- the FCL's TProcessString is AnsiString *)
+   utils_text,    (* LclText -- the FCL's TProcessString is AnsiString *)
    Log4D;
 
 var

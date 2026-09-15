@@ -25,7 +25,7 @@ interface
 
 uses
   VC,
-  (* uAnsiStr was here for StrLen over a PAnsiChar -- itself a
+  (* utils_text was here for StrLen over a PAnsiChar -- itself a
     replacement for Windows.lstrlenA -- and the parser it served now
     indexes a string, so neither is needed. *)
   TF;

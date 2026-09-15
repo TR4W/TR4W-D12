@@ -33,7 +33,7 @@ uses
   IdGlobal,
   LogStuff,
   (* Windows was here for lstrcatA, Sleep and INVALID_HANDLE_VALUE.
-    uAnsiStr.StrLCopy and SysUtils answer the first two; the third is
+    utils_text.StrLCopy and SysUtils answer the first two; the third is
     written as THandle(-1), which is the value it always was and is what
     FileOpen and FileCreate return. Note these particular uses are LPT
     port BASE ADDRESSES rather than handles -- they borrowed the name for
@@ -103,7 +103,6 @@ uses
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uSettingsModel, // Settings.My -- the station's own facts
   uAppPaths,     // ResolveDataFileInPlace -- shipped data, whatever case
-  uAnsiStr,      // StrComp/StrPLCopy over PAnsiChar (SysUtils variants are PWideChar)
   uCFG,
   MainUnit,
   uRadioPolling,

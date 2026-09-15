@@ -108,7 +108,7 @@ esh.inc --
    LCLTranslator,     // TPOTranslator, SetDefaultLang
    MainUnit,          // logger
   uTR4WStrings,
-  uAnsiStr,
+  utils_text,
    uAppPaths;
 
 { The two-letter code the LCL would pick, without loading anything.

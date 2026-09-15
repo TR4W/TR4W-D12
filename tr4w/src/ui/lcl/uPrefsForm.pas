@@ -92,7 +92,7 @@ uses
    uUDPBroadcastConfig,       // the settings this panel edits
    uSettingsBinding,          // TSettingBindings -- a field on the form below
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 
 const

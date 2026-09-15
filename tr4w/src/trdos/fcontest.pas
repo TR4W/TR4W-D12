@@ -49,8 +49,7 @@ uses
   LogCW,
   LogWind,
   LogDupe,
-  ZoneCont,
-  uAnsiStr;   (* StrPLCopy -- was Windows.lstrcatA; see SetUpContest *)
+  ZoneCont;
 
 const
   { TYPED, so appending it to an AnsiString is not a narrowing conversion.

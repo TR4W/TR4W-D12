@@ -119,7 +119,7 @@ procedure SetMultNeedBands(const aMode: ModeType; const aBandMask: Cardinal);
 implementation
 
 uses
-   SysUtils, Graphics, Log4D, uAnsiStr, uElementPanel, uMainForm, MainUnit;
+   SysUtils, Graphics, Log4D, utils_text, uElementPanel, uMainForm, MainUnit;
 
 type
    (* Row one is CW when the contest counts by mode and Both when it does not;

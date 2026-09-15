@@ -174,7 +174,7 @@ implementation
 
 uses
    (* Windows was here for lstrcpynA on four spot fields, then
-     uAnsiStr.StrLCopy, and now CharBufferSlice + SetCharBuffer
+     utils_text.StrLCopy, and now CharBufferSlice + SetCharBuffer
      (2026-09-14). Each step removed an argument that had to agree with
      another one by hand: lstrcpynA counted the terminator and StrLCopy
      did not, which is the off-by-one the old note here recorded. The

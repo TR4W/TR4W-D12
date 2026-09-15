@@ -15,7 +15,7 @@ unit uNewContestForm;
 
   1. It is the dialog NY4I found rendering 'Ultimo archivo de configuracion'
      with every accented letter doubled. That is a Win32 ...A entry point being
-     handed UTF-8; uAnsiStr.WinAnsi patches it, but an LCL control needs no
+     handed UTF-8; utils_text.WinAnsi patches it, but an LCL control needs no
      patch because no conversion happens at all.
   2. docs/NEW_CONTEST_DIALOG_DESIGN_BRIEF.md specifies a Tier 1 redesign --
      database-backed grid, sortable columns, type-ahead, resizable, DPI aware.

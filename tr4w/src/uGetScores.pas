@@ -34,7 +34,7 @@ uses
   LogEdit,
   PostUnit,
   (* Windows was here for lstrlenA and a file CloseHandle, both of which
-    uAnsiStr -- already in this clause -- and the RTL answer; Messages declared
+    utils_text -- already in this clause -- and the RTL answer; Messages declared
     nothing (2026-09-08). *)
   LogStuff,
   LogDupe,
@@ -90,7 +90,6 @@ uses
      PAnsiChar(@buf[0]). *)
    utils_text,
   MainUnit,
-  uAnsiStr,
   uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
   uSettingsModel;    // Settings.My.ItuZone

@@ -56,7 +56,7 @@ uses
   LCLType,
   LMessages,
   uElementPanel,     // TElementPanel -- the 43 status readouts
-  uAnsiStr,          // LclText -- a grid cell holds UTF-8
+  utils_text,          // LclText -- a grid cell holds UTF-8
   uLogGrid,          // TLogGrid -- the editable log is one
   VC,                // TMainWindowElement -- the main window's own elements
   uMainWindowProc;   // TTR4WEntryField, EntryEvents -- the fields' key handlers

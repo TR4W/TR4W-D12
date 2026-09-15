@@ -45,7 +45,7 @@ uses
   LogRadio,
   LogSCP,
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 const
   MAXCALLSIGNSINLIST                    = 100000;           // 4.115.6

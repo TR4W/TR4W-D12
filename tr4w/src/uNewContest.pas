@@ -41,7 +41,7 @@ uses
   Messages
   ,
   uTR4WStrings,
-  uAnsiStr,
+  utils_text,
   LCLStrConsts;
 type
   InitialCommands =
@@ -76,7 +76,6 @@ uses
    (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
      and read through its OWN bounds, replacing StrPCopy and
      PAnsiChar(@buf[0]). *)
-   utils_text,
   uAppPaths,   // ContestDir -- where an operator's contest files live
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
   Controls,            // mrOk -- the modal results

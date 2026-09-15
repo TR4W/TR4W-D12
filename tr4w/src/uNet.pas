@@ -79,7 +79,7 @@ uses
 
   ,
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 type
   TNetWindowColumnsInfo = record

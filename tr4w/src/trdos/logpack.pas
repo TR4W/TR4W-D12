@@ -40,8 +40,7 @@ uCallSignRoutines,
   Tree,
   LogWind,
   LogNet,
-  LogGrid,
-  uAnsiStr;
+  LogGrid;
 
 const
   PacketSpotListLength                  = 10;

@@ -34,7 +34,7 @@ uses
   LogDupe,
   LogWind,
   uTR4WStrings,
-  uAnsiStr;
+  utils_text;
 
 procedure FillStationsColumn;
 function AddCallsignToStationColumn(Call: CallString): integer;

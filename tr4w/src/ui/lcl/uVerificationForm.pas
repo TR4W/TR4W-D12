@@ -75,7 +75,7 @@ uses
   SysUtils,
   uAppStrings,
   uVerificationChecks,
-  uAnsiStr,          (* LclText -- the grid holds UTF-8 bytes *)
+  utils_text,          (* LclText -- the grid holds UTF-8 bytes *)
   uLCLFormHelpers;   (* OwnFormByMainWindow *)
 
 const

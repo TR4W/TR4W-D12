@@ -43,7 +43,7 @@ uses
   uIcomNetworkDiscovery,
   uIcomNetworkTypes,
   uTR4WStrings,
-  uAnsiStr,
+  utils_text,
   LCLStrConsts;
 
 procedure CloseCATAndKeyerForThisRadio;

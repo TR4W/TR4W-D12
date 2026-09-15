@@ -56,8 +56,7 @@ uses
     the compiler, not by grepping: wsprintfBuffer LOOKS Win32 and is TR4W s
     own buffer. *)
   LCLType,
-  uTR4WStrings,
-  uAnsiStr;
+  uTR4WStrings;
 
 const
   MULT_DX = 1;
