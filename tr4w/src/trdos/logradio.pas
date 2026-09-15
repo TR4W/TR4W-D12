@@ -105,7 +105,7 @@ const
    // Live: uCFG.pas CommandsArray uses this as the lpArray for the four
    // RTS/DTR state commands, so it is read by the config parser, not by radio
    // code.  Its type tr4w_RTSDTRType is a RadioObject field type and stays too.
-   tr4w_RTSDTRTypeSA: array[tr4w_RTSDTRType] of PAnsiChar =
+   tr4w_RTSDTRTypeSA: array[tr4w_RTSDTRType] of string =
       (
       'NONE',
       'OFF',

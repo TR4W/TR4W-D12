@@ -1687,7 +1687,7 @@ begin
   OpMode := OperationMode;
   OpMode2 := OperationMode;
   SearchAndPounceMode := OpMode = SearchAndPounceOpMode;
-  TR4WMainForm.pnlOpMode.Caption := OpModeString[OperationMode];
+  TR4WMainForm.pnlOpMode.Caption := LclText(OpModeString[OperationMode]);
   if OperationMode = CQOpMode then
      begin
      EditingCallsignSent := False;

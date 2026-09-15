@@ -1677,10 +1677,10 @@ var
      the radio through a ckList row, and the vocabulary must not become a
      second list here. An unknown spelling is REFUSED and logged, which is
      what the row did.  *)
-   function OrdinalFrom(const aSpellings: PCfgSpellings; const aHigh: Byte;
+   function OrdinalFrom(const aSpellings: array of string;
                         out aOut: Byte): boolean;
    begin
-      aOut := GetValueFromArray(aSpellings, aHigh, AnsiString(aValue));
+      aOut := GetValueFromArray(aSpellings, aValue);
       Result := aOut <> UNKNOWNTYPE;
       if not Result then
          begin
@@ -1859,31 +1859,31 @@ begin
      statement of what each of these settings may say. *)
    else if UnicodeSameText(aSuffix, 'CONTROL PORT') then
       begin
-      if OrdinalFrom(@PortTypeSA, Byte(High(PortType)), b) then
+      if OrdinalFrom(PortTypeSA, b) then
          rig^.tCATPortType := PortType(b)
       else Result := False;
       end
    else if UnicodeSameText(aSuffix, 'CAT RTS') then
       begin
-      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+      if OrdinalFrom(tr4w_RTSDTRTypeSA, b) then
          rig^.tr4w_cat_rts_state := tr4w_RTSDTRType(b)
       else Result := False;
       end
    else if UnicodeSameText(aSuffix, 'CAT DTR') then
       begin
-      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+      if OrdinalFrom(tr4w_RTSDTRTypeSA, b) then
          rig^.tr4w_cat_dtr_state := tr4w_RTSDTRType(b)
       else Result := False;
       end
    else if UnicodeSameText(aSuffix, 'KEYER RTS') then
       begin
-      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+      if OrdinalFrom(tr4w_RTSDTRTypeSA, b) then
          rig^.tr4w_keyer_rts_state := tr4w_RTSDTRType(b)
       else Result := False;
       end
    else if UnicodeSameText(aSuffix, 'KEYER DTR') then
       begin
-      if OrdinalFrom(@tr4w_RTSDTRTypeSA, Byte(High(tr4w_RTSDTRType)), b) then
+      if OrdinalFrom(tr4w_RTSDTRTypeSA, b) then
          rig^.tr4w_keyer_DTR_state := tr4w_RTSDTRType(b)
       else Result := False;
       end
@@ -1891,7 +1891,7 @@ begin
       begin
       (* RadioTypeTokensA is FILLED FROM THE ENUM by uRadioRegistry, not
         hand-typed -- which is why adding a radio needs no edit here. *)
-      if OrdinalFrom(@RadioTypeTokensA, Byte(High(InterfacedRadioType)), b) then
+      if OrdinalFrom(RadioTypeTokensA, b) then
          rig^.RadioModel := InterfacedRadioType(b)
       else Result := False;
       end

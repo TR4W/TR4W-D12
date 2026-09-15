@@ -234,11 +234,11 @@ begin
      thing: the surface had not grown, the same write had been spelt twice. }
    if RadioState.PTTOn then
       begin
-      caption := string(PTTStatusString[PTT_ON]);
+      caption := PTTStatusString[PTT_ON];
       end
    else
       begin
-      caption := string(PTTStatusString[PTT_OFF]);
+      caption := PTTStatusString[PTT_OFF];
       end;
 
    TR4WMainForm.pnlPTTStatus.Caption := caption;

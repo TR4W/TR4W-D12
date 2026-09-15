@@ -78,6 +78,7 @@ function LiveRotatorCount: integer;
 implementation
 
 uses
+   utils_text,     // SameTextAscii -- no narrowing at the comparison
    uPortAddress,   // SerialDeviceName -- the one port-name rule
    VC,
    Tree,
@@ -198,7 +199,7 @@ begin
    Result := NoPort;
    for p := Low(PortType) to High(PortType) do
       begin
-      if SameText(string(PortTypeSA[p]), aName) then
+      if SameTextAscii(PortTypeSA[p], aName) then
          begin
          Result := p;
          Exit;
@@ -289,7 +290,7 @@ begin
          begin
          logger.Warn('[uRotatorControl] %s: write to %s failed (%s) -- closing '
                      + 'the port; it will be reopened on the next command',
-                     [aLive.Name, string(PortTypeSA[aLive.Port]), E.Message]);
+                     [aLive.Name, (PortTypeSA[aLive.Port]), E.Message]);
          aLive.Link.Close;
          // Say it again when it comes back.
          aLive.PortReported := False;
@@ -298,7 +299,7 @@ begin
    end;
 
    logger.Trace('[uRotatorControl] %s (%s) on %s, %d bytes',
-      [aLive.Name, aLive.Driver.DisplayName, string(PortTypeSA[aLive.Port]),
+      [aLive.Name, aLive.Driver.DisplayName, (PortTypeSA[aLive.Port]),
        Length(frame)]);
 end;
 
@@ -507,7 +508,7 @@ begin
    if not (aLive.Port in SerialPorts) then
       begin
       logger.Error('[Rotator] "%s" needs a serial port and is configured for %s',
-                   [aLive.Name, string(PortTypeSA[aLive.Port])]);
+                   [aLive.Name, (PortTypeSA[aLive.Port])]);
       Exit;
       end;
 
@@ -547,7 +548,7 @@ begin
             // ONCE, not once per attempt.
             logger.Warn('[uRotatorControl] %s: %s is not available -- %s. It '
                         + 'will be opened when it appears.',
-                        [aLive.Name, string(PortTypeSA[aLive.Port]), E.Message]);
+                        [aLive.Name, (PortTypeSA[aLive.Port]), E.Message]);
             aLive.PortReported := True;
             end;
          Exit;
@@ -557,7 +558,7 @@ begin
    if Result then
       begin
       logger.Info('[uRotatorControl] %s opened on %s at %d baud',
-                  [aLive.Name, string(PortTypeSA[aLive.Port]), baud]);
+                  [aLive.Name, (PortTypeSA[aLive.Port]), baud]);
       // Say it again if it goes away and comes back.
       aLive.PortReported := False;
       end;

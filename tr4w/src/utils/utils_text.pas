@@ -83,6 +83,20 @@ function CharBufferSlice(const aBuf: array of AnsiChar; aStart, aLen: integer): 
   and the settings model, so it is not in the unit-test program at all. *)
 function LeadingInt(const s: string): integer;
 
+(* CASE-INSENSITIVE EQUALITY THAT DOES NOT NARROW ITS ARGUMENTS.
+
+  SysUtils.SameText takes `string`, and SysUtils is compiled WITHOUT
+  UnicodeStrings -- so its `string` is AnsiString and calling it from this
+  program narrows BOTH arguments at the call. Two of those appeared the
+  moment the spelling tables stopped being PAnsiChar, which is the ratchet
+  doing its job: the conversion had always been there, hidden inside the
+  pointer.
+
+  ASCII fold, matching this unit's UpperCase and for the same reason: the
+  text is config-file vocabulary and callsigns, where a full Unicode
+  casing is both unnecessary and not byte-stable. *)
+function SameTextAscii(const a, b: string): boolean;
+
 (* COMPARE TWO FIXED BUFFERS AS BYTES -- StrComp's answer without StrComp's
   pointers.
 
@@ -513,6 +527,11 @@ begin
 
       Inc(i);
       end;
+end;
+
+function SameTextAscii(const a, b: string): boolean;
+begin
+   Result := UpperCase(a) = UpperCase(b);
 end;
 
 function LeadingInt(const s: string): integer;

@@ -92,6 +92,7 @@ type
       procedure Test_LeadingInt_MatchesTheRoutineItReplaced;
       procedure Test_SetCharBufferBytes_CopiesBytesUnchanged;
       procedure Test_SetCharBufferBytes_TruncatesAndTerminates;
+      procedure Test_SameTextAscii;
    end;
 
 implementation
@@ -746,6 +747,30 @@ begin
    CheckEquals(0, Integer(Byte(buf[0])), 'terminated at the start');
 end;
 
+
+(* SameTextAscii exists because SysUtils.SameText takes AnsiString -- SysUtils
+  is compiled without UnicodeStrings -- so calling it from this program
+  narrows BOTH arguments at the call. It is an ASCII fold, like this unit's
+  UpperCase, because what it compares is config-file vocabulary. *)
+procedure TUtilsTextTests.Test_SameTextAscii;
+begin
+   BeginTest('SameTextAscii folds ASCII case and nothing else');
+
+   CheckTrue (SameTextAscii('SERIAL 1', 'serial 1'), 'the config vocabulary, folded');
+   CheckTrue (SameTextAscii('None', 'NONE'),         'mixed case');
+   CheckTrue (SameTextAscii('', ''),                 'two empty strings');
+   CheckFalse(SameTextAscii('SERIAL 1', 'SERIAL 2'), 'a real difference');
+   CheckFalse(SameTextAscii('NONE', ''),             'empty matches only empty');
+   CheckFalse(SameTextAscii('AB', 'ABC'),            'a prefix is not a match');
+
+   (* ASCII ONLY, stated rather than assumed: a non-ASCII letter is compared
+     by its bytes, so the two cases of it do NOT fold. That is deliberate --
+     the tables this serves are ASCII, and a locale-aware fold is neither
+     needed nor byte-stable. *)
+   CheckFalse(SameTextAscii(WideChar($00C9), WideChar($00E9)),
+              'E-acute does not fold to e-acute -- ASCII only, by design');
+end;
+
 procedure TUtilsTextTests.Test_CompareCharBuffer_AgreesWithStrComp;
 var
    a, b: array[0..13] of AnsiChar;
@@ -876,6 +901,7 @@ begin
    Test_LeadingInt_MatchesTheRoutineItReplaced;
    Test_SetCharBufferBytes_CopiesBytesUnchanged;
    Test_SetCharBufferBytes_TruncatesAndTerminates;
+   Test_SameTextAscii;
 end;
 
 end.

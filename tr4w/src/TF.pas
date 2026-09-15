@@ -64,8 +64,13 @@ uses
   THIS IS NOT THE SHAPE WE WOULD CHOOSE. See the note above ListParamArray in
   uCFG for what a settings model would look like instead and what blocks it. *)
 type
-   TCfgSpellings = array[0..255] of PAnsiChar;
-   PCfgSpellings = ^TCfgSpellings;
+   (* TCfgSpellings / PCfgSpellings ARE GONE. They were
+     `array[0..255] of PAnsiChar` and a pointer to one, so every spelling
+     table in the program had to be an array of POINTERS in order to be
+     passed by address -- and the count had to travel beside it as a separate
+     aHighIndex argument, because a pointer does not know how long its array
+     is. GetValueFromArray takes an open array of string now, which carries
+     its own bounds. *)
 
    (* AND ITS SIBLING: a ckArray setting is a DISCRETE ALLOW-LIST of integers
      rather than a set of spellings -- the legal row counts, the legal CW speed
@@ -185,7 +190,7 @@ function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(aAllowed: PCfgAllowedInts; aHighIndex: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
 
-function GetValueFromArray(aSpellings: PCfgSpellings; aHighIndex: Byte; const CMD: AnsiString): Byte;
+function GetValueFromArray(const aSpellings: array of string; const CMD: string): Byte;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
 procedure tLoadKeyboardLayout;
 function GetContestFromString(ContestString: ShortString): ContestType;
@@ -745,10 +750,9 @@ end;
 // StrPos removed (D12): callers use utils_text.StrPos directly -- the
 // TF -> uStrSearch -> RTL forwarding was asm-eradication scaffolding, obsolete now.
 
-function GetValueFromArray(aSpellings: PCfgSpellings; aHighIndex: Byte; const CMD: AnsiString): Byte;
+function GetValueFromArray(const aSpellings: array of string; const CMD: string): Byte;
 var
   b                                     : Byte;
-  p                                     : Pointer;
 begin
   // CMD IS A STRING, and used to be a PAnsiChar that this function indexed as
   // if it were a ShortString: `CMD[Ord(CMD[0]) + 1] := #0` read a length byte
@@ -756,9 +760,10 @@ begin
   // caller's buffer -- a side effect on an argument nothing declared as var.
   // Every caller held a ShortString and passed its address.  Taking the value
   // instead deletes the length-byte walk, the @CMD[1] offset, and the mutation.
-  for b := 0 to aHighIndex do
+  for b := 0 to High(aSpellings) do
      begin
-     (* INDEXED, NOT WALKED -- AND THE WALK WAS A CRASH, NOT AN UNTIDINESS.
+     (* AN OPEN ARRAY, SO THERE IS NOTHING LEFT TO INDEX WRONG -- AND THE
+       WALK THIS REPLACED WAS A CRASH, NOT AN UNTIDINESS.
 
        This read `p := PCharArrayAddress + (b * 4); p := Pointer(p^)`. The
        tables are arrays of PAnsiChar, so the step between entries is the size
@@ -792,8 +797,7 @@ begin
        for that: it arrives as Byte(High(SomeEnum)) from ListParamArray, so
        `0 to aHighIndex` is the whole array. The `{- 1}` that used to sit here
        invited exactly the wrong correction. *)
-     p := aSpellings^[b];
- //    showmessage(p);
+
      // CASE-INSENSITIVE, and this is a FIX rather than a loosening.
      //
      // The config loader uppercases the whole line before it is split into key
@@ -810,10 +814,11 @@ begin
      // (QSOPointMethodArray does contain two identical 'ONY' entries, so its
      // second one is unreachable by name -- but that is true today and is not
      // made worse here.)
-     (* SameText, not StrIComp: the same ASCII case fold without casting
-       either side to a pointer. p is the table's spelling and CMD is what the
-       config file said. *)
-     if SameText(CMD, AnsiString(p)) then
+     (* SameTextAscii, not SysUtils.SameText: the latter takes AnsiString,
+       so calling it from here narrowed BOTH arguments at the call -- a
+       conversion that had been hiding inside the PAnsiChar until the table
+       became strings. Same ASCII case fold, no conversion. *)
+     if SameTextAscii(CMD, aSpellings[b]) then
         begin
         Result := b;
         Exit;

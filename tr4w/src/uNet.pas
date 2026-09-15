@@ -1320,13 +1320,13 @@ begin
 
     sstPTT:
       begin
-        SetClientCell(i, 6 - 1, string(PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]));
+        SetClientCell(i, 6 - 1, PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]);
         (* A TListView repaints an item when its text changes; this forced
           a repaint on a Win32 handle that is always 0. *)
       end;
 
     sstOpMode:
-      SetClientCell(i, 5 - 1, string(OpModeString[OpModeType((StatusArray[Index].ssStatusByte and (1 shl 1)) <> 0)]));
+      SetClientCell(i, 5 - 1, OpModeString[OpModeType((StatusArray[Index].ssStatusByte and (1 shl 1)) <> 0)]);
 
     sstQSOs:
       SetClientCell(i, 7 - 1, IntToStr(StatusArray[Index].ssQSOTotals));

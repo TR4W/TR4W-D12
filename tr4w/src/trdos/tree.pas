@@ -102,7 +102,7 @@ type
   FourBytesPtr = ^FourBytes;
 
 const
-  PortTypeSA                            : array[PortType] of PAnsiChar =
+  PortTypeSA                            : array[PortType] of string =
 
   (
     'NONE',
@@ -474,9 +474,9 @@ const
 
   HexChars                              : array[0..$F] of Char = '0123456789ABCDEF';
 
-  OpModeString                          : array[OpModeType] of PAnsiChar {string[3]} = ('CQ', 'SP');
+  OpModeString                          : array[OpModeType] of string = ('CQ', 'SP');
 
-  PTTStatusString                       : array[PTTStatusType] of PAnsiChar {string[7]} = ('OFF', 'ON ');
+  PTTStatusString                       : array[PTTStatusType] of string = ('OFF', 'ON ');
 
   BufferLength                          = 2048;
 

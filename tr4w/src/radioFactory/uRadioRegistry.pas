@@ -370,7 +370,7 @@ procedure MarkConfigToken(model: InterfacedRadioType; const token: string);
   Call PopulateRadioTypeTokens once at start-up, after every radio unit's
   initialization has run and before the config is read. }
 var
-   RadioTypeTokensA: array[InterfacedRadioType] of PAnsiChar;
+   RadioTypeTokensA: array[InterfacedRadioType] of string;
 
 procedure PopulateRadioTypeTokens;
 
@@ -703,11 +703,11 @@ begin
       end;
 end;
 
-var
-   { Owns the bytes RadioTypeTokensA points at. A PAnsiChar into a temporary
-     AnsiString would dangle the moment the string went out of scope -- FPC's
-     allocator surfaces that where Delphi's used to hide it. }
-   gTokenStore: array[InterfacedRadioType] of AnsiString;
+(* gTokenStore WAS HERE, and it existed for exactly one reason: to own the
+  bytes RadioTypeTokensA's PAnsiChars pointed at, because a PAnsiChar into a
+  temporary AnsiString dangles the moment the string goes out of scope. The
+  table holds strings now, so the strings own themselves and the shadow array
+  is deleted. *)
 
 function RadioTypeToken(model: InterfacedRadioType): string;
 var
@@ -750,8 +750,7 @@ var
 begin
    for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
       begin
-      gTokenStore[m] := AnsiString(RadioTypeToken(m));
-      RadioTypeTokensA[m] := PAnsiChar(gTokenStore[m]);
+      RadioTypeTokensA[m] := RadioTypeToken(m);
       end;
 end;
 

@@ -1723,7 +1723,7 @@ begin
         on E: Exception do
            begin
            logger.Warn('[Keyer] %s is not available for keying: %s',
-                       [string(PortTypeSA[aRadio^.tKeyerPort]), E.Message]);
+                       [PortTypeSA[aRadio^.tKeyerPort], E.Message]);
            Exit;
            end;
      end;
