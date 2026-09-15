@@ -506,19 +506,18 @@ var
     with the handles: TFileStream frees itself, and a dynamic array frees
     itself. Both labels and both gotos are gone.
 
-    THE PARSE BELOW IS UNCHANGED, DELIBERATELY. `p` still walks bytes by index
-    over the whole file, exactly as it did over the mapped view; only where
-    those bytes come from has changed. This unit decides every country and zone
-    in the log, so the acquisition was worth replacing and the parser was not
-    worth touching in the same commit. *)
+    THE PARSE INDEXES raw ITSELF (2026-09-15). It walked a PAnsiChar laid over
+    raw, and copied each field with a Move of the field's length -- into a
+    32-byte buffer, a 32-byte name, a five-character id and a 14-byte
+    prefix -- with nothing bounding that length. Every field is a bounded
+    slice now: AnsiStringFromBytes. *)
   raw                                   : TBytes;
   body                                  : AnsiString;   (* raw as bytes, for the REMAINING MULTS search *)
   rmAt                                  : integer;
   fs                                    : TFileStream;
-  p                                     : PAnsiChar;
   i                                     : Cardinal;
   s                                     : Cardinal;
-  b                                     : array[0..31] of AnsiChar;
+  prefixText                            : AnsiString;   (* one prefix token, as its bytes *)
   //rmbuffer                              : array[0..4096 - 1] of Char;
   c                                     : ctyColumns;
   //x                                     : Cardinal;
@@ -537,6 +536,27 @@ var
 //  NumberCountriesIndex             : integer;
 const
   rm                                    = 'REMAINING MULTS';
+
+  (* THE ENTITY ID, BOUNDED BY ITS OWN TYPE. DXMultiplierString is string[5];
+    a Move of the token's length and a length byte of AnsiChar(l) wrote as
+    far as the token went. High(aId) is 5 here -- this is a typed var
+    parameter, not an openstring, whose High is 255 in Delphi mode. *)
+  procedure SetIdFromBytes(var aId: DXMultiplierString; aStart, aLength: integer);
+  var
+     text: AnsiString;
+     k: integer;
+  begin
+     text := AnsiStringFromBytes(raw, aStart, aLength);
+     if Length(text) > High(aId) then
+        begin
+        SetLength(text, High(aId));
+        end;
+     aId[0] := AnsiChar(Length(text));
+     for k := 1 to Length(text) do
+        begin
+        aId[k] := text[k];
+        end;
+  end;
 
 begin
 //3.900.000 ticks
@@ -582,7 +602,6 @@ begin
      SetLength(CTY.ctyPrefixesTable, PREFIX_TABLE_GROW);
      end;
 
-  p := PAnsiChar(@raw[0]);
   c := cpCountryName;
   s := 0;
   e := 0;
@@ -624,7 +643,7 @@ begin
 
   for i := 0 to Size - 1 do
      begin
-           case p[i] of
+           case AnsiChar(raw[i]) of
       ':':
         begin
           l := i - s;
@@ -632,8 +651,8 @@ begin
 
             cpCountryName:
               begin
-                FillChar(r, SizeOf(r), 0);
-                Move(p[s], r.Name, l);
+                r := Default(CountryInfoRecord);
+                SetCharBufferBytes(r.Name, AnsiStringFromBytes(raw, s, l));
               end;
 
             cpCQZone:
@@ -641,51 +660,50 @@ begin
                 if r.Name[0] = '!' then
                    begin
                    // Issue #997: removed asm nop (no-op).
-                   Move(p[i - l], r.ID[1], l);
-                   r.ID[0] := AnsiChar(l);
+                   SetIdFromBytes(r.ID, i - l, l);
                    ReplaceCountry(r);
                    c := cpCountryName;
                    Continue;
                    end;
-                r.DefaultCQZone := Ord(p[i - 1]) - Ord('0');
+                r.DefaultCQZone := raw[i - 1] - Ord('0');
                 if l = 2 then
                    begin
-                   r.DefaultCQZone := r.DefaultCQZone + (Ord(p[i - 2]) - Ord('0')) * 10;
+                   r.DefaultCQZone := r.DefaultCQZone + (raw[i - 2] - Ord('0')) * 10;
                    end;
               end;
 
             cpITUZone:
               begin
-                r.DefaultITUZone := Ord(p[i - 1]) - Ord('0');
+                r.DefaultITUZone := raw[i - 1] - Ord('0');
                 if l = 2 then
                    begin
-                   r.DefaultITUZone := r.DefaultITUZone + (Ord(p[i - 2]) - Ord('0')) * 10;
+                   r.DefaultITUZone := r.DefaultITUZone + (raw[i - 2] - Ord('0')) * 10;
                    end;
               end;
 
             cpContinent:
               begin
-                if p[i - 2] = 'E' then
+                if AnsiChar(raw[i - 2]) = 'E' then
                    begin
                    r.DefaultContinent := Europe;
                    end;
-                if p[i - 2] = 'O' then
+                if AnsiChar(raw[i - 2]) = 'O' then
                    begin
                    r.DefaultContinent := Oceania;
                    end;
-                if p[i - 2] = 'N' then
+                if AnsiChar(raw[i - 2]) = 'N' then
                    begin
                    r.DefaultContinent := NorthAmerica;
                    end;
-                if p[i - 2] = 'S' then
+                if AnsiChar(raw[i - 2]) = 'S' then
                    begin
                    r.DefaultContinent := SouthAmerica;
                    end;
-                if p[i - 1] = 'S' then
+                if AnsiChar(raw[i - 1]) = 'S' then
                    begin
                    r.DefaultContinent := Asia;
                    end;
-                if p[i - 1] = 'F' then
+                if AnsiChar(raw[i - 1]) = 'F' then
                    begin
                    r.DefaultContinent := Africa;
                    end;
@@ -693,16 +711,12 @@ begin
 
             cpLatitude:
               begin
-                FillChar(b, SizeOf(b), 0);
-                Move(p[s], b, l);
-                Val(StrPas(b), Lat, code);   // Issue #1033: was TF.ValExt (asm); RTL Val is equivalent for cty.dat's well-formed decimals
+                Val(string(AnsiStringFromBytes(raw, s, l)), Lat, code);   // Issue #1033: was TF.ValExt (asm); RTL Val is equivalent for cty.dat's well-formed decimals
               end;
             cpLongitude:
               begin
 
-                FillChar(b, SizeOf(b), 0);
-                Move(p[s], b, l);
-                Val(StrPas(b), Lon, code);   // Issue #1033: was TF.ValExt (asm)
+                Val(string(AnsiStringFromBytes(raw, s, l)), Lon, code);   // Issue #1033: was TF.ValExt (asm)
                 if code = 0 then
                    begin
                    r.DefaultGrid := ConvertLatLonToGrid(Lat, Lon);
@@ -711,9 +725,7 @@ begin
 
             cpTimeOffset:
               begin
-                FillChar(b, SizeOf(b), 0);
-                Move(p[s], b, l);
-                r.UTCOffset := LeadingInt(CharBufferText(b)) * 60;
+                r.UTCOffset := LeadingInt(string(AnsiStringFromBytes(raw, s, l))) * 60;
 {
                 for Minutes := 1 to 3 do
                   if b[Minutes] = '.' then
@@ -728,8 +740,7 @@ begin
               end;
             cpPrimaryPrefix:
               begin
-                Move(p[s], r.ID[1], l);
-                r.ID[0] := AnsiChar(l);
+                SetIdFromBytes(r.ID, s, l);
 //                if r.ID = 'UA9' then
 //                  asm nop end;
 {
@@ -768,26 +779,26 @@ begin
         end;
       ')':
         begin
-          oCQ := Ord(p[i - 1]) - Ord('0');
+          oCQ := raw[i - 1] - Ord('0');
 
           if i - z = 2 then
              begin
-             oCQ := oCQ + (Ord(p[i - 2]) - Ord('0')) * 10;
+             oCQ := oCQ + (raw[i - 2] - Ord('0')) * 10;
              end;
         end;
       ']':
         begin
-          oITU := Ord(p[i - 1]) - Ord('0');
+          oITU := raw[i - 1] - Ord('0');
           if i - z = 2 then
              begin
-             oITU := oITU + (Ord(p[i - 2]) - Ord('0')) * 10;
+             oITU := oITU + (raw[i - 2] - Ord('0')) * 10;
              end;
         end;
 
       ',', ';':
         begin
-          FillChar(pr, SizeOf(pr), 0);
-          if p[s] = '=' then
+          pr := Default(PrefixRec);
+          if (s < Size) and (raw[s] = Ord('=')) then
              begin
              inc(s);
              pr.FullCallsigns := True;
@@ -798,8 +809,16 @@ begin
              begin
              l := (e - s - 1);
              end;
-          Move(p[s], pr.Prefix, l);
-          pr.PrefLength := l;
+          (* BOUNDED BY THE 14-BYTE PREFIX. l is Cardinal, and e - s - 1 wraps to
+            4294967295 when the two positions meet; AnsiStringFromBytes takes it
+            as an integer, which is below one, and gives ''. *)
+          prefixText := AnsiStringFromBytes(raw, s, l);
+          SetCharBufferBytes(pr.Prefix, prefixText);
+          pr.PrefLength := Length(prefixText);
+          if pr.PrefLength > High(pr.Prefix) then
+             begin
+             pr.PrefLength := High(pr.Prefix);
+             end;
 
           pr.Country := CTY.CTYNumberCountries - 1;
           if oCQ <> 0 then begin pr.CQZone := oCQ;
@@ -815,16 +834,18 @@ begin
                 if pr.Prefix[3] = '2' then
                   if pr.Prefix[4] = '0' then
                      begin
-                     (* StrLCat, not lstrcatA -- the RTL's, and BOUNDED.
-                       ctyVersion is 16 bytes and Prefix is 14, so the
-                       unbounded append this replaces could overrun it by 12.
-                       High() leaves room for the terminator. *)
-                     StrLCat(CTY.CtyVersion, pr.Prefix, High(CTY.CtyVersion));
+                     (* AN APPEND, BOUNDED, AND NO POINTER. This was
+                       lstrcatA -- unbounded, and ctyVersion is 16 bytes
+                       against Prefix's 14 -- then StrLCat. SetCharBufferBytes
+                       keeps StrLCat's bound (High leaves room for the
+                       terminator) over the two buffers' text. *)
+                     SetCharBufferBytes(CTY.CtyVersion,
+                        CharBufferBytes(CTY.CtyVersion) + CharBufferBytes(pr.Prefix));
                      end;
 
           s := i + 1;
           e := 0;
-          if p[i] = ';' then
+          if raw[i] = Ord(';') then
              begin
              c := cpCountryName;
              end;
@@ -846,9 +867,7 @@ begin
        Bytes, not text: cty.dat is CP1251/CP1250 in places, so the file goes
        into an AnsiString whose bytes are its own. Pos on an AnsiString is a
        byte search, which is what the marker needs. *)
-     body := AnsiString('');
-     SetLength(body, Length(raw));
-     Move(raw[0], body[1], Length(raw));
+     body := AnsiStringFromBytes(raw, 0, Length(raw));
 
      rmAt := Pos(AnsiString(rm), body);
      if rmAt > 0 then

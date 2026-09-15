@@ -72,6 +72,16 @@ function CharBufferBytes(const aBuf: array of AnsiChar): AnsiString;
   wire's, and SetCharBuffer everywhere else. *)
 procedure SetCharBufferBytes(var aBuf: array of AnsiChar; const aBytes: AnsiString);
 
+(* A SLICE OF A FILE'S BYTES, AS AN ANSISTRING -- BOUNDED BY THE BYTES.
+
+  aLength bytes of aRaw starting at aStart, or fewer if aRaw ends first. A
+  start outside aRaw, or a length below one, gives ''. The bytes are carried
+  as they are, with no code-page conversion: a parser reading a file of mixed
+  code pages -- cty.dat is CP1251 and CP1250 in places -- needs the bytes,
+  not a decoding of them. This is the ONE place a slice is clamped;
+  SetShortStringFromBytes is built on it. *)
+function AnsiStringFromBytes(const aRaw: TBytes; aStart, aLength: integer): AnsiString;
+
 (* A LINE OF A FILE'S BYTES INTO A SHORTSTRING, BOUNDED.
 
   For readers that still hand a line on as a ShortString --
@@ -480,32 +490,52 @@ begin
    aBuf[n] := #0;
 end;
 
+function AnsiStringFromBytes(const aRaw: TBytes; aStart, aLength: integer): AnsiString;
+var
+   n: integer;
+   i: integer;
+begin
+   Result := '';
+   if (aStart < 0) or (aStart >= Length(aRaw)) or (aLength <= 0) then
+      begin
+      Exit;
+      end;
+
+   n := aLength;
+   if n > Length(aRaw) - aStart then
+      begin
+      n := Length(aRaw) - aStart;
+      end;
+
+   SetLength(Result, n);
+   for i := 1 to n do
+      begin
+      Result[i] := AnsiChar(aRaw[aStart + i - 1]);
+      end;
+end;
+
 procedure SetShortStringFromBytes(var aDest: ShortString; const aRaw: TBytes;
                                   aStart, aLength: integer);
 const
    SHORTSTRING_MAX = 255;
 var
+   text: AnsiString;
    n: integer;
    i: integer;
 begin
-   n := 0;
-   if (aStart >= 0) and (aStart < Length(aRaw)) and (aLength > 0) then
+   (* The slice is clamped by AnsiStringFromBytes; this adds the ShortString's
+     own 255-byte limit and the zero tail. *)
+   text := AnsiStringFromBytes(aRaw, aStart, aLength);
+   n := Length(text);
+   if n > SHORTSTRING_MAX then
       begin
-      n := aLength;
-      if n > Length(aRaw) - aStart then
-         begin
-         n := Length(aRaw) - aStart;
-         end;
-      if n > SHORTSTRING_MAX then
-         begin
-         n := SHORTSTRING_MAX;
-         end;
+      n := SHORTSTRING_MAX;
       end;
 
    aDest[0] := AnsiChar(n);
    for i := 1 to n do
       begin
-      aDest[i] := AnsiChar(aRaw[aStart + i - 1]);
+      aDest[i] := text[i];
       end;
    for i := n + 1 to SHORTSTRING_MAX do
       begin

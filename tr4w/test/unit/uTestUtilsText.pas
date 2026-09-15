@@ -103,6 +103,9 @@ type
       procedure Test_SetShortStringFromBytes_TruncatesAt255;
       procedure Test_SetShortStringFromBytes_ZeroesTheTail;
       procedure Test_SetShortStringFromBytes_OutOfRangeIsEmpty;
+      procedure Test_AnsiStringFromBytes_Slices;
+      procedure Test_AnsiStringFromBytes_OutOfRangeIsEmpty;
+      procedure Test_AnsiStringFromBytes_KeepsHighBytes;
    end;
 
 implementation
@@ -870,6 +873,49 @@ begin
    CheckEquals('EF', string(line), 'a length past the end stops at the end');
 end;
 
+procedure TUtilsTextTests.Test_AnsiStringFromBytes_Slices;
+var
+   raw: TBytes;
+begin
+   BeginTest('AnsiStringFromBytes takes a slice by position and length');
+   raw := TestBytes('CQ TEST NY4I');
+   CheckEquals('CQ', string(AnsiStringFromBytes(raw, 0, 2)), 'the first field');
+   CheckEquals('TEST', string(AnsiStringFromBytes(raw, 3, 4)), 'a middle field');
+   CheckEquals('NY4I', string(AnsiStringFromBytes(raw, 8, 99)), 'a length past the end stops at the end');
+end;
+
+procedure TUtilsTextTests.Test_AnsiStringFromBytes_OutOfRangeIsEmpty;
+var
+   raw: TBytes;
+begin
+   (* The cty.dat parser computes lengths in Cardinal arithmetic, where a
+     negative result wraps. Handed here as an integer, it is below one. *)
+   BeginTest('AnsiStringFromBytes reads nothing outside the bytes');
+   raw := TestBytes('ABCDEF');
+   CheckEquals('', string(AnsiStringFromBytes(raw, 99, 4)), 'start past the end');
+   CheckEquals('', string(AnsiStringFromBytes(raw, -1, 4)), 'negative start');
+   CheckEquals('', string(AnsiStringFromBytes(raw, 2, 0)),  'zero length');
+   CheckEquals('', string(AnsiStringFromBytes(raw, 2, -3)), 'negative length');
+end;
+
+procedure TUtilsTextTests.Test_AnsiStringFromBytes_KeepsHighBytes;
+var
+   raw: TBytes;
+   s: AnsiString;
+begin
+   (* cty.dat holds CP1251/CP1250 country names. The slice must be those bytes,
+     not a decoding of them. *)
+   BeginTest('AnsiStringFromBytes carries high bytes unchanged');
+   SetLength(raw, 3);
+   raw[0] := $C0;
+   raw[1] := $41;
+   raw[2] := $FF;
+   s := AnsiStringFromBytes(raw, 0, 3);
+   CheckEquals(3, Length(s), 'three bytes in, three out');
+   CheckEquals($C0, Ord(s[1]), 'the first high byte');
+   CheckEquals($FF, Ord(s[3]), 'the last high byte');
+end;
+
 procedure TUtilsTextTests.RunAllTests;
 begin
    Test_StringIsAllNumbers;
@@ -912,6 +958,9 @@ begin
    Test_SetShortStringFromBytes_TruncatesAt255;
    Test_SetShortStringFromBytes_ZeroesTheTail;
    Test_SetShortStringFromBytes_OutOfRangeIsEmpty;
+   Test_AnsiStringFromBytes_Slices;
+   Test_AnsiStringFromBytes_OutOfRangeIsEmpty;
+   Test_AnsiStringFromBytes_KeepsHighBytes;
 end;
 
 end.
