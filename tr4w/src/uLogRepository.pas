@@ -672,14 +672,10 @@ end;
 
 function BandToken(aBand: BandType): AnsiString;
 begin
-   if ADIFBANDSTRINGSARRAY[aBand] = nil then
-      begin
-      Result := '';
-      end
-   else
-      begin
-      Result := AnsiString(ADIFBANDSTRINGSARRAY[aBand]);
-      end;
+   (* The nil guard is gone with the pointer. Bands ADIF has no token for
+     are '' in the table itself now, so the branch that turned a null
+     pointer into an empty string by hand has nothing left to do. *)
+   Result := AnsiString(ADIFBANDSTRINGSARRAY[aBand]);
 end;
 
 function ModeToken(aMode: ModeType): AnsiString;

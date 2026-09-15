@@ -5254,7 +5254,7 @@ begin
         Settings.CallWindow.InsertMode := not Settings.CallWindow.InsertMode;
         SaveSettings(TR4WConfigFileName, Settings);
         SendParameterToNetwork('INSERT MODE',
-                               string(StrPas(BA[Settings.CallWindow.InsertMode])));
+                               BA[Settings.CallWindow.InsertMode]);
       end;
 
     menu_ctrl_SplitOff: // n4af 4.47.5

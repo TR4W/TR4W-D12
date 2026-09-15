@@ -119,7 +119,7 @@ procedure SetMultNeedBands(const aMode: ModeType; const aBandMask: Cardinal);
 implementation
 
 uses
-   SysUtils, Graphics, Log4D, uElementPanel, uMainForm, MainUnit;
+   SysUtils, Graphics, Log4D, uAnsiStr, uElementPanel, uMainForm, MainUnit;
 
 type
    (* Row one is CW when the contest counts by mode and Both when it does not;
@@ -342,11 +342,11 @@ begin
 
          GQSONeed[row, band] := BindPanel(Format('pnlQSONeedR%d_%s', [row, suffix]));
          PrepareNeedPanel(GQSONeed[row, band], mweWholeScreen,
-                          BandStringsArray[band]);
+                          LclText(BandStringsArray[band]));
 
          GMultNeed[row, band] := BindPanel(Format('pnlMultNeedR%d_%s', [row, suffix]));
          PrepareNeedPanel(GMultNeed[row, band], mweNewMultStatus,
-                          BandStringsArray[band]);
+                          LclText(BandStringsArray[band]));
          end;
       end;
 

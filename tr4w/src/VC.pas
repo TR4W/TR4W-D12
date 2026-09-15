@@ -339,10 +339,10 @@ type
   // instead of like the protocol seam it actually is.
   TIdText = AnsiString;
 
-const
-
-  ZoneModeTypeSA                        : array[ZoneModeType] of PAnsiChar = ('CQ Zone', 'ITU Zone');
-
+(* ZoneModeTypeSA was here -- array[ZoneModeType] of PAnsiChar, 'CQ Zone' and
+  'ITU Zone'. Read nowhere in the tree, so deleted with its const section
+  rather than converted (2026-09-14). The zone MODE is chosen in Preferences
+  and rendered from the settings model; nothing needed a spelling table. *)
 const
   // The Win32 window-class name.  This is a plain string constant, NOT a
   // char array: every consumer wants a PChar (RegisterClass, CreateWindowEx,
@@ -615,11 +615,7 @@ const
 
     The 64-bit objective is met either way: this is no longer a pointer. *)
   TWO_STRINGS                           : AnsiString = '%s%s';
-  BA                                    : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
-  BAl                                   : array[boolean] of PAnsiChar = ('false', 'true');
-  BAHTML                                : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
-  BAR                                   : array[boolean] of PAnsiChar = ('No', 'Yes');
-  BAMARK                                : array[boolean] of PAnsiChar = (nil, '+');
+  BA                                    : array[boolean] of string = ('FALSE', 'TRUE');
 
   CALLSIGNWINDOWID                      = 73;
   EXCHANGEWINDOWID                      = 88;
@@ -995,7 +991,6 @@ var
     );
 
 const
-  CabrilloExtantionSA                   : array[CabrilloExtantionType] of PAnsiChar = ('%s%s.CBR', '%s%s.LOG');
 
   ContinentTypeSA                       : array[ContinentType] of string =
     ('NONE', 'NA', 'SA', 'EU', 'AF', 'AS', 'OC', 'AN');
@@ -1514,11 +1509,10 @@ const
   ControlRightBracket                   = CHR(29);
   ControlDash                           = CHR(31);
 
-  MonthTags                             : array[1..12] of PAnsiChar = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
 
   CallstringLength                      = 13;
 
-  ADIFModeString                        : array[ModeType] of PAnsiChar = ('CW', 'DIGITAL',  'SSB', 'BTH', 'NON', 'FM');
+  ADIFModeString                        : array[ModeType] of string = ('CW', 'DIGITAL',  'SSB', 'BTH', 'NON', 'FM');
   ModeStringArray                       : array[ModeType] of string = ('CW', 'DIGI',  'SSB', 'BTH', 'NON', 'FM');
 
 
@@ -1527,7 +1521,9 @@ const
                                                'MFSK', 'JS8', 'USB', 'LSB', 'DATA', 'CW-R', 'DATA-R', 'RTTY-R', 'FM-N', 'AM-N',
                                                'DATA-FM', 'C4FM', 'D-STAR', 'PSK-R', 'WFM');
 
-  BandStringsArray                      : array[BandType] of PAnsiChar {string} =
+  (* The band as the operator sees it -- right-aligned in four columns,
+    which is why the shorter ones carry leading spaces. *)
+  BandStringsArray                      : array[BandType] of string  =
     (
     '160',
     ' 80',
@@ -1583,7 +1579,10 @@ const
     'NON'
     );
 
-  ADIFBANDSTRINGSARRAY                  : array[BandType] of PAnsiChar =
+  (* The ADIF band token. EMPTY for bands ADIF has no name for; it was
+    nil, and every reader already turned that into '' -- one of them by
+    testing `= nil` and returning '' by hand. *)
+  ADIFBANDSTRINGSARRAY                  : array[BandType] of string =
     (
     '160m',
     '80m',
@@ -1607,11 +1606,12 @@ const
     '3cm',          // Issue 406 ny4i
     '1.25cm',       // Issue 406 ny4i
     '1mm',          // Issue 406 ny4i Our LGT
-    nil,
-    nil
+    '',
+    ''
     );
 
-  EDIFBANDSTRINGSARRAY                  : array[BandType] of PAnsiChar =
+  (* The EDI band token, empty where EDI has none -- see the ADIF note. *)
+  EDIFBANDSTRINGSARRAY                  : array[BandType] of string =
     (
     '160',
     '80',
@@ -1634,9 +1634,9 @@ const
     '5,7 GHz', {edi}
     '10 GHz', {edi}
     '24 GHz', {edi}
-    nil,
-    nil,
-    nil
+    '',
+    '',
+    ''
     );
 
 type

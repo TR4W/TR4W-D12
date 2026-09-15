@@ -472,7 +472,7 @@ function GetADIFBand(sBand: string): BandType;
 var
    sBandLower : string;
    iBand      : BandType;
-   entry      : PAnsiChar;
+   entry      : string;
 begin
    Result := NoBand;
    // Reject empty input — ADIFBANDSTRINGSARRAY has nil entries for the
@@ -487,7 +487,10 @@ begin
    for iBand := Low(BandType) to High(BandType) do
       begin
       entry := ADIFBANDSTRINGSARRAY[iBand];
-      if (entry <> nil) and (sBandLower = entry) then
+      (* Empty, not nil: bands ADIF has no token for are '' in the table
+        now rather than a null pointer, and an empty token must never match
+        an empty search string either. *)
+      if (entry <> '') and (sBandLower = entry) then
          begin
          Result := iBand;
          Break;
