@@ -234,7 +234,6 @@ var
   ComputerNetID                         : TComputerNetID        = (ciID: NET_COMPUTERID_ID);//4
   ServerMessage                         : TServerMessage        = (smID: NET_SERVERMESSAGE_ID);//8
 {*)}
-  pc                                    : PChar;
   NetThreadID                           : TThreadID;
   StatusArray                           : array[1..26] of TStationState;
   PosInClientsList                      : array[1..26] of integer;

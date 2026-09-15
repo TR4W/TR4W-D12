@@ -120,11 +120,8 @@ function FormatADIFMyExchange(
         cMyFOCNumber: string;
         cMyCheck: string;
         // csCheck                               : integer {PChar};
-        crFOCNr: PAnsiChar;
         cMyGrid: string;
-        csPower: PAnsiChar;
         // hisAge                                : Integer;
-        csQTHString: PAnsiChar;
         // str1                                  : widestring;
         // nrReceived                            : integer;
         nrSent: integer;
@@ -327,10 +324,6 @@ function FormatADIFMyExchange(
                   begin
                   cMyState := 'DX';
                   end;
-               if TempRXData.QTHString = '' then
-                  begin
-                  csQTHString := 'DX';
-                  end;
                Result        := sysutils.Format( '%-4d %-7s %-8s',
                   [ nrSent, cMyName, cMyState ] );
                end;
@@ -356,11 +349,9 @@ function FormatADIFMyExchange(
 
              RSTPowerExchange:
                begin
-               csPower := @TempRXData.Power[ 1 ];
                if Contest = FOCMARATHON then
                   begin
                   cMyFOCNumber := string(MyFOCNumber);
-                  crFOCNr      := @TempRXData.Power[ 1 ];
                   Result       := sysutils.Format( '%-3d %-7s',
                      [ TempRXData.RSTSent, cMyFOCNumber ] );
                   end

@@ -212,9 +212,9 @@ var
   RowMessage                            : AnsiString;
   RowCaption                            : AnsiString;
   TempInt                               : integer;
-  ModeString                            : PAnsiChar;
-  OpModeString                          : PAnsiChar;
-  ButtonString                          : PAnsiChar;
+  ModeString                            : string;
+  OpModeString                          : string;
+  ButtonString                          : string;
   TempMode                              : ModeType;
 begin
   AltPBeginUpdate;
@@ -252,7 +252,7 @@ begin
             SysUtils.Format.  See docs and the TF.Format tranches. }
 
           RowCommand := SysUtils.Format(OtherMessageCommandFormat(TempInt),
-                                               [string(AnsiString(ModeString))]);
+                                               [ModeString]);
 
           { The message memories are ShortStrings.  The Win32 path wrote a #0
             one byte PAST the length into the live memory to make a PAnsiChar
@@ -318,9 +318,9 @@ begin
      { '%s' and '%u' mean the same in wsprintf and SysUtils.Format. }
 
      RowCommand := SysUtils.Format('%s %s MEMORY %sF%u',
-                                   [string(AnsiString(OpModeString)),
-                                    string(AnsiString(ModeString)),
-                                    string(AnsiString(ButtonString)),
+                                   [OpModeString,
+                                    ModeString,
+                                    ButtonString,
                                     TempInt]);
      if mt = CQMsgWin then
         begin

@@ -83,7 +83,7 @@ type
     );
 
   TCabrilloTagRecord = record
-    ctrTag: PAnsiChar;
+    ctrTag: string;
     ctrCFG: boolean; //do not used
     ctrSave: boolean;
 
@@ -277,7 +277,7 @@ begin
       section := CABRILLOSECTION;
       end;
 
-   Result := HeaderValue(section, string(CabrilloTagsArray[aTag].ctrTag));
+   Result := HeaderValue(section, CabrilloTagsArray[aTag].ctrTag);
 end;
 
 function CabrilloTagItemIndex(const aTag: CabrilloTags): integer;

@@ -1390,7 +1390,7 @@ end;
 
 procedure DisplayCodeSpeed {(WPM: integer; SendingEnabled: boolean; DVPEnabled: boolean; Mode: ModeType)};
 var
-  tPChar                                : PAnsiChar;
+  captionText                           : AnsiString;
 begin
   (* THE MAIN WINDOW MAY NOT EXIST. This is a settings effect now -- Dvk.Enable
     raises the change and uSettingsEffects calls here -- and a setting can be
@@ -1415,13 +1415,13 @@ begin
      // means the UI can never claim CW is on when it will not transmit.
      if CWEnabled then
         begin
-        tPChar := '%u WPM';
+        captionText := '%u WPM';
         end
      else
         begin
-        tPChar := '%u NO CW';
+        captionText := '%u NO CW';
         end;
-     TR4WMainForm.pnlCodeSpeed.Caption := SysUtils.Format(AnsiString(tPChar), [CodeSpeed]);
+     TR4WMainForm.pnlCodeSpeed.Caption := SysUtils.Format(captionText, [CodeSpeed]);
      if ActiveRadioPtr <> nil then
         begin
         ActiveRadioPtr.SpeedMemory := CodeSpeed;
@@ -1434,18 +1434,18 @@ begin
         begin
         if DVPOn then
            begin
-           tPChar := 'DVK ON'
+           captionText := 'DVK ON'
            end
         else
            begin
-           tPChar := 'DVK OFF';
+           captionText := 'DVK OFF';
            end;
         end
      else
         begin
-        tPChar := 'DVK Dis.';
+        captionText := 'DVK Dis.';
         end;
-     TR4WMainForm.pnlCodeSpeed.Caption := tPChar;
+     TR4WMainForm.pnlCodeSpeed.Caption := captionText;
      end;
 
 
@@ -2001,7 +2001,6 @@ var
   Hour, Minute{, Second, Hundredths}      : Word;
   AlarmInteger, RecordNumber, IntegerTime {, RateMinute}: integer;
 //  TempBand                              : BandType;
-  TempPchar                             : PAnsiChar;
 begin
 
   if DoRadios then

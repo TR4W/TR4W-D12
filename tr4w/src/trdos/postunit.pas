@@ -1006,7 +1006,7 @@ procedure WriteTitleBlockToSummarySheet;
         second character. *)
      sWriteFileFromString( tReportFileWrite,
         sysutils.Format( '%22s: %s'#13#10,
-           [ Copy( string( CabrilloTagsArray[ TempTag ].ctrTag ), 2, MaxInt ),
+           [ Copy( CabrilloTagsArray[ TempTag ].ctrTag, 2, MaxInt ),
              TagValue ] ) );
      end;
 
@@ -2754,11 +2754,11 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                   'X-EXCHANGE: ' + Settings.My.FdClass + #13#10 );
                end;
             end;
-         (* THE TAG WITHOUT ITS LEADING '_'. This was @...ctrTag[ 1 ] -- ctrTag is
-           a PAnsiChar constant, so [ 1 ] is its SECOND character, and the pointer
+         (* THE TAG WITHOUT ITS LEADING '_'. This was @...ctrTag[ 1 ] -- ctrTag was
+           a PAnsiChar constant, so [ 1 ] was its SECOND character, and the pointer
            dropped the '_' that marks each entry in CabrilloTagsArray. Copy from
            position 2 says the same thing without the address. *)
-         tagName := Copy( string( CabrilloTagsArray[ TempTag ].ctrTag ), 2, MaxInt );
+         tagName := Copy( CabrilloTagsArray[ TempTag ].ctrTag, 2, MaxInt );
          if TempTag = ctOperators then
             begin
             SetCharBuffer( TempBuffer2, GetOperatorsFromLog );

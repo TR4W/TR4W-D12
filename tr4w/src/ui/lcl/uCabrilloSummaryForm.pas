@@ -333,7 +333,7 @@ begin
               outside the index-based range above -- CATEGORY-STATION, TIME,
               OVERLAY.  By TEXT, because that is what was stored. }
             saved := AnsiString(HeaderValue(section,
-                                    string(CabrilloTagsArray[tag].ctrTag)));
+                                    CabrilloTagsArray[tag].ctrTag));
             if saved <> '' then
                begin
                idx := TComboBox(FRow[tag]).Items.IndexOf(saved);
@@ -365,7 +365,7 @@ begin
             begin
             TEdit(FRow[tag]).Text :=
                AnsiString(HeaderValue(section,
-                             string(CabrilloTagsArray[tag].ctrTag)));
+                             CabrilloTagsArray[tag].ctrTag));
             end;
          end;
       end;
@@ -399,7 +399,7 @@ begin
            making it do so is a behaviour change for the bench, not for a port. }
          if value <> '' then
             begin
-            SetHeaderValue(section, string(CabrilloTagsArray[tag].ctrTag),
+            SetHeaderValue(section, CabrilloTagsArray[tag].ctrTag,
                            string(value));
             end;
          end;

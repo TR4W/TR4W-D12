@@ -237,26 +237,18 @@ var
 // Issue #930 -- read a Cabrillo-summary field from tr4w.ini [REPORT].
 // Used for <club> (key=_CLUB) and <overlay> (key=_CATEGORY-OVERLAY) which the
 // user enters in the Cabrillo summary dialog (uCbrSum) rather than in a CFG.
-function ReadCabrilloSummaryField(const Key: PAnsiChar): string;
-var
-   buf: array[0..255] of AnsiChar;
-   n:   Cardinal;
-   begin
+function ReadCabrilloSummaryField(const Key: string): string;
+begin
    // The Cabrillo header lives in settings\tr4w.json now, not tr4w.ini's
    // [REPORT] section (2026-08-16).  CABRILLOSECTION, not the ERMAK section:
    // the scores server takes the standard Cabrillo tags, and an ERMAK contest
    // posts the same club and overlay it always did.
-   SetCharBuffer(buf, HeaderValue(CABRILLOSECTION, string(Key)));
-   n := Length(CharBufferText(buf));
-   if n = 0 then
-      begin
-      Result := ''
-      end
-   else
-      begin
-      Result := Trim(string(buf));
-      end;
-   end;
+   (* STRAIGHT FROM THE STORE. The value used to be copied into a 256-byte
+     buffer and read back out -- once to test it for empty, once through a
+     cast of the whole array -- which only capped it at 255 bytes. Trim of
+     an empty value is already ''. *)
+   Result := Trim(HeaderValue(CABRILLOSECTION, Key));
+end;
 
 // Issue #930 -- escape XML special chars so user-entered strings (club name,
 // city, etc.) can't break the dynamicresults parser at the receiver.

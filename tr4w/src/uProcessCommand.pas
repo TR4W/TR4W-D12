@@ -66,11 +66,6 @@ type
     caAddress: Pointer;
   end;
 
-  type
-  TsCWCharsArrayType = packed record
-    CWChars: PAnsiChar;
-    CWAddress: Pointer;
-  end;
   
 procedure scSRS;
 procedure scSRSI;
