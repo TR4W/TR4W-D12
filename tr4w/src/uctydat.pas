@@ -855,10 +855,31 @@ end;
   The fourteen prefixes are pinned in the characterisation fixture so whichever
   way it is ruled, the change is visible and deliberate.
 
-  THE REAL FIX IS UPSTREAM. The same prefix appearing twice means one of the
-  two records is unreachable whichever way the sort falls.
-  ctyAddNewPrefixRecord already takes a CheckDupe flag and the country-file
-  load passes False.
+  WHERE THE DUPLICATES COME FROM, AND WHY THEY ARE NOT A DATA ERROR
+  (established 2026-09-14 with NY4I, who pointed at the exception list).
+
+  cty.dat lists those callsigns under TWO entities on purpose:
+
+      Vienna Intl Ctr: ... *4U1V: =4U0IARU,=4U0R,=4U1A,=4U1VIC,=4U2U,...
+      Austria:         ...    OE: OE,=4U0IARU,=4U0R,=4U1A,=4U1VIC,...
+
+  The LEADING ASTERISK is the file's marker for an entity that is NOT a DXCC
+  country -- Vienna Intl Ctr, Shetland (*GM/s) beside Scotland (GM). The same
+  callsign genuinely belongs to both: one as its DXCC entity, one as a
+  contest sub-entity. Two records for one prefix is the intended encoding.
+
+  AND THE PROGRAM ALREADY KNOWS. ctyLocateCall filters on that asterisk --
+  but ONLY in ARRLCountryMode (DXCC only), where the '*' record is skipped and
+  Austria wins deterministically. In CQCountryMode (DXCC+WAE, the default)
+  there is no filter, so whichever of the two the binary search lands on wins,
+  and THAT is where the unstable sort leaks into the answer.
+
+  So the open question is not "which sort" but "in CQ mode, should 4U1A count
+  as Austria or as the Vienna International Centre" -- a contest-rules
+  question, for NY4I. When it is answered the fix belongs in ctyLocateCall
+  beside the existing asterisk test, not here; the sort would then be free to
+  become any correct algorithm, because the choice would no longer depend on
+  the order of equal keys.
   =========================================================================== *)
 
 (* The shell sort, byte for byte as it was. The odd step-back --
