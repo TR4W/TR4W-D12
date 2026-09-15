@@ -460,13 +460,14 @@ begin
         because the array's bound had to be arithmetic. Assignment converts
         the AnsiChar buffer up to its NUL.
 
-        LoadInDomQTHFile IS HANDED domPath ITSELF, not a pointer into the
-        setting. It takes a PAnsiChar, and PAnsiChar of a property is the
-        address of a TEMPORARY -- the compiler accepts it and the pointer
-        dangles at the end of the statement. domPath is a local array and
-        holds exactly the same bytes. *)
+        LoadInDomQTHFile IS HANDED domPath'S TEXT. It took a PAnsiChar until
+        2026-09-15, and PAnsiChar of a property is the address of a
+        TEMPORARY -- the compiler accepts it and the pointer dangles at the
+        end of the statement -- which is why it was given the local array
+        and not the setting. It takes a string now; CharBufferText reads
+        exactly the bytes the setting was just assigned from. *)
       Settings.Contest.DomesticFilename := CharBufferText(domPath);
-      if not DomQTHTable.LoadInDomQTHFile(domPath) then
+      if not DomQTHTable.LoadInDomQTHFile(CharBufferText(domPath)) then
          begin
          halt;
          end;

@@ -541,7 +541,7 @@ begin
   // as this code did before.
   if tSilentExport then
      begin
-     UnableToFindFileMessage(TR4W_CTY_FILENAME);
+     UnableToFindFileMessage(CharBufferText(TR4W_CTY_FILENAME));
      logger.Fatal('Unable to load ' + ctyPath);
      Exit;
      end;

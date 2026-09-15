@@ -71,8 +71,8 @@ type
     function GetDomQTH(InputString: Str20; var Multiplier: Str10; var QTH: Str10): boolean;
     function GetStandardDomesticQTH(InputString: Str20): Str20;
 //    procedure EnumDOMFILE(FileString: PShortString);
-    function LoadInDomQTHFile(FileName: PAnsiChar): boolean;
-    function ReadDomQTHFile(FileName: PAnsiChar; IncludedFile: boolean): boolean;
+    function LoadInDomQTHFile(const FileName: string): boolean;
+    function ReadDomQTHFile(const FileName: string; IncludedFile: boolean): boolean;
     function RecordPointerIndex(FirstLetter: AnsiChar): integer;
   end;
 
@@ -127,7 +127,7 @@ begin
 
 end;
 
-function DomQTHTableObject.LoadInDomQTHFile(FileName: PAnsiChar): boolean;
+function DomQTHTableObject.LoadInDomQTHFile(const FileName: string): boolean;
 
 begin
 
@@ -432,7 +432,7 @@ begin
   GetNextPrefix := PrefixString <> '';
 end;
 
-function DomQTHTableObject.ReadDomQTHFile(FileName: PAnsiChar; IncludedFile: boolean): boolean;
+function DomQTHTableObject.ReadDomQTHFile(const FileName: string; IncludedFile: boolean): boolean;
 
 label
   AlreadyInList;
@@ -543,7 +543,7 @@ begin
                    CharBufferText(TR4W_PATH_NAME) + 'DOM' + string(TempString));
      (* Windows spelling, resolved for this platform -- see fcontest. *)
      ResolveDataFileInPlace(TempFileName);
-     DomQTHTable.ReadDomQTHFile(TempFileName, True);
+     DomQTHTable.ReadDomQTHFile(CharBufferText(TempFileName), True);
      end;
 //todo process ;
   if StringHas(FileString^, '=') then
