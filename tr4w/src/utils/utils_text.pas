@@ -47,6 +47,20 @@ function pPos(c: AnsiChar; p: PAnsiChar): integer;         // boundary: raw PAns
 procedure SetCharBuffer(var aBuf: array of AnsiChar; const aText: string);
 function CharBufferText(const aBuf: array of AnsiChar): string;
 
+(* THE SAME READ, BUT THE BYTES COME OUT UNCHANGED.
+
+  CharBufferText DECODES -- it treats the buffer as UTF-8, which is what
+  this program's text is. Some buffers are not this program's text:
+  cty.dat holds CP1251 and CP1250 country names, so decoding one as UTF-8
+  either mangles it or fails, and a comparison against an entity id must
+  not depend on either.
+
+  So this is StrPas's contract without StrPas's pointer: the bytes up to
+  the first NUL or the end of the buffer, as bytes. It is the mirror of
+  SetCharBufferBytes, and the same rule applies -- use it ONLY where the
+  bytes are not this program's text, and CharBufferText everywhere else. *)
+function CharBufferBytes(const aBuf: array of AnsiChar): AnsiString;
+
 (* THE SAME WRITE, BUT THE BYTES GO IN UNCHANGED.
 
   SetCharBuffer ENCODES -- it is for text, and UTF-8 is the encoding this
@@ -483,6 +497,23 @@ begin
       aBuf[i - 1] := AnsiChar(raw[i]);
       end;
    aBuf[n] := #0;
+end;
+
+function CharBufferBytes(const aBuf: array of AnsiChar): AnsiString;
+var
+   n: integer;
+begin
+   n := 0;
+   while (n <= High(aBuf)) and (aBuf[n] <> #0) do
+      begin
+      Inc(n);
+      end;
+
+   SetLength(Result, n);
+   for n := 1 to Length(Result) do
+      begin
+      Result[n] := aBuf[n - 1];
+      end;
 end;
 
 function CharBufferText(const aBuf: array of AnsiChar): string;

@@ -94,6 +94,8 @@ type
       procedure Test_Rule_DuplicatePrefixPicksTheSpecificEntity;
       procedure Test_Rule_ExactCallBeatsPrefixOverride;
       procedure Test_RemainingMultsSection;
+      procedure Test_BangLineMergesEntities;
+      procedure Test_ReloadReplacesRatherThanAppends;
    end;
 
 implementation
@@ -127,7 +129,11 @@ begin
    // (CheckDupe=False, LoadRemainingMults=False) -- the country/continent/
    // zone tables come from the main parse; remaining-mults data is not
    // needed for entity lookups and avoids extra file dependencies.
-   CheckTrue(ctyLoadInCountryFile(path, False, False),
+   (* ReplaceTable, so a reload REPLACES the table rather than appending to
+     it. Without it every reload in this suite added another ~693 entities to
+     an array[0..999] and the third one wrote off the end -- which is how that
+     defect was found. *)
+   CheckTrue(ctyLoadInCountryFile(path, False, False, {ReplaceTable} True),
              'ctyLoadInCountryFile succeeded');
    FLoaded := True;
 end;
@@ -591,7 +597,7 @@ begin
    end;
 
    try
-      CheckTrue(ctyLoadInCountryFile(path, False, True),
+      CheckTrue(ctyLoadInCountryFile(path, False, True, {ReplaceTable} True),
                 'the probe country file loaded');
 
       idxA := -1;
@@ -635,6 +641,164 @@ begin
    (* And prove the restore worked rather than assuming it. *)
    CheckEquals('K', Trim(ctyGetCountryID('W1AW')),
                'the shipped cty.dat is back in place');
+end;
+
+
+(* ===========================================================================
+  A `!` LINE MERGES ONE ENTITY INTO ANOTHER, AND NOTHING HAS EVER TESTED IT.
+
+  cty.dat's country-name field may begin with '!', which asks the loader to
+  retire the entity named in the SECOND field and give its prefixes to the one
+  named in the first (marker excluded):
+
+      !TL1:TL2:  15:  28:  EU:  ...
+
+  means "prefixes filed under TL2 now belong to TL1, and TL2 stops appearing
+  in the remaining-multiplier windows".
+
+  THE SHIPPED cty.dat HAS NO `!` LINES, so this served an operator's own file
+  and no oracle in this tree could see it. That is how a comment claiming the
+  routine skipped the first letter of a name survived: nothing disagreed.
+
+  It also could not have been written without reading the '!' marker, which is
+  the thing the stale comment got wrong -- so the test and the correction are
+  the same piece of work. *)
+procedure TCTYDATTests.Test_BangLineMergesEntities;
+var
+   path : string;
+   f    : TextFile;
+   i    : integer;
+   idx1 : integer;
+   idx2 : integer;
+begin
+   BeginTest('a ! line gives one entity''s prefixes to another');
+
+   path := ExtractFilePath(ParamStr(0)) + 'cty_bang_merge_probe.dat';
+   AssignFile(f, path);
+   Rewrite(f);
+   try
+      WriteLn(f, 'Testland One:             14:  27:  EU:   50.00:   -10.00:     0.0:  TL1:');
+      WriteLn(f, '    TL1;');
+      WriteLn(f, 'Testland Two:             14:  27:  EU:   51.00:   -11.00:     0.0:  TL2:');
+      WriteLn(f, '    TL2;');
+      (* RETIRE TL2 INTO TL1 -- and the COLUMN WHITESPACE IS LOAD-BEARING.
+        The parser advances its field start on a space or a tab, never on
+        the ':' itself, so a line written without the gaps has its name
+        field run on through the next two colons. Two spaces, as the real
+        file has. *)
+      WriteLn(f, '!TL1:  TL2:');
+   finally
+      CloseFile(f);
+   end;
+
+   try
+      CheckTrue(ctyLoadInCountryFile(path, False, False, {ReplaceTable} True),
+                'the probe country file loaded');
+
+      idx1 := -1;
+      idx2 := -1;
+      for i := 0 to ctyGetTotalCountries - 1 do
+         begin
+         if Trim(ctyGetCountryIdByIndex(i)) = 'TL1' then
+            begin
+            idx1 := i;
+            end;
+         if Trim(ctyGetCountryIdByIndex(i)) = 'TL2' then
+            begin
+            idx2 := i;
+            end;
+         end;
+
+      Check(idx1 >= 0, 'TL1 is in the table');
+      Check(idx2 >= 0, 'TL2 is still in the table -- it is HIDDEN, not deleted');
+      if (idx1 < 0) or (idx2 < 0) then
+         begin
+         Exit;
+         end;
+
+      (* A callsign that was TL2's now answers TL1. *)
+      CheckEquals('TL1', Trim(ctyGetCountryID('TL2ABC')),
+                  'TL2''s prefix was re-pointed at TL1');
+
+      (* And the retired entity is taken out of the remaining-mult windows. *)
+      CheckFalse(ctyIsActiveMultiplier(idx2),
+                 'the retired entity is no longer an active multiplier');
+      CheckTrue(ctyIsActiveMultiplier(idx1),
+                'the surviving entity still is');
+   finally
+      FLoaded := False;
+      EnsureCtyLoaded;
+      if FileExists(path) then
+         begin
+         DeleteFile(path);
+         end;
+   end;
+
+   CheckEquals('K', Trim(ctyGetCountryID('W1AW')),
+               'the shipped cty.dat is back in place');
+end;
+
+
+(* ===========================================================================
+  A RELOAD REPLACES THE TABLE. IT USED TO APPEND, AND THAT WAS A MEMORY WRITE
+  PAST THE END OF AN ARRAY.
+
+  ctyLoadInCountryFile never reset the country table -- the FillChar that
+  would have was commented out, and the count was not reset either. The table
+  is array[0..MaxCountries - 1], MaxCountries is 1000, and the shipped cty.dat
+  carries around 693 entities:
+
+      startup             693 of 1000
+      a CTY.DAT download  1386, and the write runs off the end at 1000
+
+  That second load is real: uMainWindowProc calls this routine after a CTY.DAT
+  download. Range checking is off in that unit, so it corrupted the rest of
+  the CTY record in silence.
+
+  IT WAS FOUND BY TESTS, NOT BY READING. Two probe fixtures that each reload
+  the shipped file afterwards pushed the count past 1000 and the suite died
+  with an EAccessViolation after the last assertion of the last test -- which
+  is what an overrun looks like when nothing checks the bound.
+
+  The append itself is NOT the bug: the r150s and rfobl overlays call this
+  same routine to add their entities on top of the main file, and must keep
+  appending. So the reset is a parameter the caller states. *)
+procedure TCTYDATTests.Test_ReloadReplacesRatherThanAppends;
+var
+   first  : integer;
+   second : integer;
+   path   : string;
+begin
+   BeginTest('loading the country file twice does not grow the table');
+   EnsureCtyLoaded;
+
+   first := ctyGetTotalCountries;
+   Check(first > 300, 'the shipped file carries a realistic number of entities');
+
+   path := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+           PathDelim + 'target' + PathDelim + 'cty.dat';
+   CheckTrue(ctyLoadInCountryFile(path, False, False, {ReplaceTable} True),
+             'the same file loads a second time');
+
+   second := ctyGetTotalCountries;
+   CheckEquals(first, second,
+               'the count is the SAME after a reload -- it used to double');
+
+   (* And the table still answers. A stale half-table would still have the
+     right count, so this asks it something. *)
+   CheckEquals('K', Trim(ctyGetCountryID('W1AW')), 'W1AW after the reload');
+   CheckEquals('G', Trim(ctyGetCountryID('G3ABC')), 'G3ABC after the reload');
+
+   (* WITHOUT ReplaceTable it APPENDS, which is what the overlays need. Proven
+     rather than asserted, because the parameter defaulting the wrong way
+     would silently break r150s and rfobl. *)
+   CheckTrue(ctyLoadInCountryFile(path, True, False), 'an appending load');
+   Check(ctyGetTotalCountries > second,
+         'an appending load DID add entities -- the overlays depend on it');
+
+   FLoaded := False;
+   EnsureCtyLoaded;
+   CheckEquals(first, ctyGetTotalCountries, 'and the suite is left as it was');
 end;
 
 procedure TCTYDATTests.Test_Characterisation;
@@ -764,6 +928,8 @@ begin
      file over the top of the shipped one and then reloads. Anything that
      ran between the two would be reading a two-entity table. *)
    Test_RemainingMultsSection;
+   Test_BangLineMergesEntities;
+   Test_ReloadReplacesRatherThanAppends;
 end;
 
 end.

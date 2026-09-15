@@ -259,7 +259,8 @@ type
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 //function ctyInit(ctyFilename: PAnsiChar): boolean;
 function ctyLoadInCountryFile(const ctyFilename: string; CheckDupe: boolean;
-                              LoadRemainingMults: boolean): boolean;
+                              LoadRemainingMults: boolean;
+                              ReplaceTable: boolean = False): boolean;
 function ctyFindCallsign(const s: PrefixName; var Index: integer;
                          PreferFullCallsign: boolean = True): boolean;
 function ctyGetGrid(const Call: string; var ID: DXMultiplierString): string;
@@ -400,14 +401,45 @@ begin
   inc(CTY.CTYPrefixesTableRecords);
 end;
 
+(* A `!` LINE IN cty.dat MERGES ONE ENTITY INTO ANOTHER.
+
+  The caller reaches here when the country-name field begins with '!', and it
+  has packed two things into the record by then:
+
+      r.Name   the FIRST field, marker included -- "!<the entity to keep>"
+      r.ID     the SECOND field -- the entity to retire
+
+  So this finds both, hides the retired one from the remaining-multiplier
+  windows, and re-points every prefix that named it at the one being kept.
+
+  THE SHIPPED cty.dat HAS NO `!` LINES -- this serves an operator's own file.
+
+  A NOTE HERE CLAIMED THIS SKIPPED THE FIRST LETTER OF THE NAME. IT DID NOT,
+  AND THE CLAIM WAS THE WORSE HALF OF THE PROBLEM. `@r.Name[1]` steps past the
+  '!' the caller just tested at r.Name[0], which is exactly right. Reading the
+  call site settles it in a minute; the note had been carried instead.
+
+  WHAT WAS REAL IS THE OTHER SIDE. `@CTY.CTYTable[i].ID[1]` handed a pointer
+  into a ShortString to a routine that stops at a NUL, and
+  DXMultiplierString is string[5] -- so a five-character id (`*GM/s`, `*4U1V`,
+  both in the shipped file) fills the buffer with no terminator at all and the
+  compare runs on into `dummy` and `DefaultContinent`. Comparing through the
+  string reads exactly the id. *)
 procedure ReplaceCountry(r: CountryInfoRecord);
 var
 
   i, Index1, Index2                     : Word;
   c                                     : Cardinal;
+  keepID                                : AnsiString;
 begin
   Index1 := MAXWORD;
   Index2 := MAXWORD;
+
+  (* BYTES, NOT TEXT: a country name in cty.dat may be CP1251 or CP1250, so
+    decoding it as UTF-8 on the way to an ASCII comparison would be deciding
+    something this routine has no business deciding. *)
+  keepID := CharBufferBytes(r.Name);
+  Delete(keepID, 1, 1);          (* the '!' marker the caller matched on *)
   for i := 0 to CTY.CTYNumberCountries do
      begin
      if CTY.CTYTable[i].ID = r.ID then
@@ -432,11 +464,10 @@ begin
        CTY.DAT override replaces, and making this match one character
        earlier could start replacing a different country. Ruling needed
        on what Index2 is supposed to find; the pointers go with the fix. *)
-     if utils_text.StrComp(@CTY.CTYTable[i].ID[1], @r.Name[1]) = 0 then
+     if AnsiString(CTY.CTYTable[i].ID) = keepID then
         begin
         Index2 := i;
         end;
- //    tf.StrComp()
      end;
   if Index1 = MAXWORD then Exit;
   if Index2 = MAXWORD then Exit;
@@ -453,7 +484,8 @@ begin
 end;
 
 function ctyLoadInCountryFile(const ctyFilename: string; CheckDupe: boolean;
-                              LoadRemainingMults: boolean): boolean;
+                              LoadRemainingMults: boolean;
+                              ReplaceTable: boolean = False): boolean;
 
 // (#) Override CQ Zone
 // [#] Override ITU Zone
@@ -557,7 +589,36 @@ begin
   oITU := 0;
   oCQ := 0;
 
-//  FillChar(CTY.CTYTable, SizeOf(CountryInfoArrayType), 0);
+(* A RELOAD MUST REPLACE THE TABLE, AND UNTIL NOW NOTHING DID.
+
+    A FillChar of the country table stood here, COMMENTED OUT, and the count
+    beside it was never reset either -- so every call to this routine APPENDED
+    to whatever was already loaded. The country table is
+    array[0..MaxCountries - 1] with MaxCountries = 1000 and the shipped
+    cty.dat carries ~693 entities, so:
+
+        startup            693 of 1000
+        a CTY.DAT download 1386 -- and the write runs off the end at 1000
+
+    ctyLoadInCountryFile IS the reload path after a download
+    (uMainWindowProc), so ONE re-download in a session was enough to write
+    past the array into the rest of the CTY record. It never announced
+    itself, because Pascal range checking is off here.
+
+    THE APPEND IS NOT A BUG BY ITSELF -- it is what the r150s and rfobl
+    overlays want, and they call this same routine to add their entities on
+    top of the main file. That is why the reset is a PARAMETER and not
+    unconditional: the caller says which it means, rather than this routine
+    guessing from CheckDupe or from LoadRemainingMults, neither of which is
+    about the table. *)
+  if ReplaceTable then
+     begin
+     FillChar(CTY.CTYTable, SizeOf(CTY.CTYTable), 0);
+     CTY.CTYNumberCountries := 0;
+     SetLength(CTY.ctyPrefixesTable, 0);
+     CTY.ctyPrefixesTableRecords := 0;
+     CTY.ctyCustomRemainingCountryListFound := False;
+     end;
 
     Size := Length(raw);
 
@@ -678,6 +739,17 @@ begin
                   if CountryInfoTable^[NumberCountriesIndex].ID = '' then Break;
                 end;
 }
+                (* FAIL CLOSED. Range checking is off in this unit, so an
+                  overrun here is a silent memory write; the guard above
+                  removes the cause and this removes the CONSEQUENCE if a
+                  country file ever genuinely holds more than the table. *)
+                if CTY.CTYNumberCountries >= MaxCountries then
+                   begin
+                   logger.Error('cty: more than %d entities in %s -- the rest are ignored',
+                                [MaxCountries, ctyFilename]);
+                   Break;
+                   end;
+
                 CTY.CTYTable[CTY.CTYNumberCountries] := r;
                 inc(CTY.CTYNumberCountries);
 

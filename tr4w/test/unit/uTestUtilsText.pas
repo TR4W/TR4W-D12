@@ -93,6 +93,7 @@ type
       procedure Test_SetCharBufferBytes_CopiesBytesUnchanged;
       procedure Test_SetCharBufferBytes_TruncatesAndTerminates;
       procedure Test_SameTextAscii;
+      procedure Test_CharBufferBytes_ReadsBytesUnchanged;
    end;
 
 implementation
@@ -771,6 +772,46 @@ begin
               'E-acute does not fold to e-acute -- ASCII only, by design');
 end;
 
+
+(* CharBufferBytes is the mirror of SetCharBufferBytes: the buffer's bytes up
+  to the first NUL, undecoded. It exists because cty.dat's country names are
+  CP1251/CP1250, and CharBufferText would decode them as UTF-8 on the way to
+  an ASCII comparison. *)
+procedure TUtilsTextTests.Test_CharBufferBytes_ReadsBytesUnchanged;
+var
+   buf: array[0..7] of AnsiChar;
+   got: AnsiString;
+begin
+   BeginTest('CharBufferBytes reads to the NUL and does not decode');
+
+   FillChar(buf, SizeOf(buf), $7F);
+   SetCharBufferBytes(buf, 'NY4I');
+   CheckEquals('NY4I', string(CharBufferBytes(buf)), 'a plain ASCII buffer');
+
+   (* THE POINT OF IT: a byte above $7F comes back as itself. Through
+     CharBufferText the same buffer is not valid UTF-8 at all. *)
+   FillChar(buf, SizeOf(buf), $7F);
+   SetCharBufferBytes(buf, AnsiString('A') + AnsiChar($E9) + AnsiString('B'));
+   got := CharBufferBytes(buf);
+   CheckEquals(3, Length(got), 'three bytes back');
+   CheckEquals($41, Integer(Byte(got[1])), 'the A');
+   CheckEquals($E9, Integer(Byte(got[2])), 'the high byte, UNCHANGED');
+   CheckEquals($42, Integer(Byte(got[3])), 'the B');
+
+   (* It stops at the NUL, and an unterminated buffer stops at its end. *)
+   FillChar(buf, SizeOf(buf), $7F);
+   SetCharBufferBytes(buf, 'AB');
+   buf[3] := 'X';
+   CheckEquals('AB', string(CharBufferBytes(buf)), 'nothing past the terminator');
+
+   FillChar(buf, SizeOf(buf), Ord('Z'));
+   CheckEquals(8, Length(CharBufferBytes(buf)),
+               'an unterminated buffer yields the whole buffer, not an overrun');
+
+   FillChar(buf, SizeOf(buf), 0);
+   CheckEquals('', string(CharBufferBytes(buf)), 'an empty buffer');
+end;
+
 procedure TUtilsTextTests.Test_CompareCharBuffer_AgreesWithStrComp;
 var
    a, b: array[0..13] of AnsiChar;
@@ -902,6 +943,7 @@ begin
    Test_SetCharBufferBytes_CopiesBytesUnchanged;
    Test_SetCharBufferBytes_TruncatesAndTerminates;
    Test_SameTextAscii;
+   Test_CharBufferBytes_ReadsBytesUnchanged;
 end;
 
 end.

@@ -635,7 +635,10 @@ begin
       (* RELOADED ON THE MAIN THREAD. The CTY tables have no locking, so a
         background reload would race with callsign lookups; arriving here is a
         safe quiescent point. *)
-      ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True);
+      (* A RELOAD, so the table is REPLACED rather than appended to --
+        this is the path a CTY.DAT download takes. *)
+      ctyLoadInCountryFile(CharBufferText(TR4W_CTY_FILENAME), False, True,
+                           {ReplaceTable} True);
       QuickDisplay(PAnsiChar(TC_CTYDATRELOADEDSUCCESSFULLY));
       end
    else
