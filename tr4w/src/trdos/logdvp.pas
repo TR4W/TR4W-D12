@@ -122,14 +122,14 @@ procedure DVPStopPlayback;
 procedure SetMicGain(Gain: Byte);
 procedure SetOutGain(Gain: Byte);
 
-function tGetWAVDurationFromHeader(FileName: PAnsiChar; var Duration: Cardinal; DisplayError: boolean): boolean;
+function tGetWAVDurationFromHeader(const FileName: AnsiString; var Duration: Cardinal; DisplayError: boolean): boolean;
 procedure tDVPPlayThreadproc;
-procedure tWriteCallsignToMissingCallsignsFile(Callsign: PAnsiChar);
+procedure tWriteCallsignToMissingCallsignsFile(const Callsign: Str40);
 
 procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
 
-function tsndPlaySound(lpszSoundName: PAnsiChar): boolean;
-function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
+function tsndPlaySound(const aFileName: AnsiString): boolean;
+function PlayWAVFile(const f: string; DisplayError: boolean): PlayResult;
 
 implementation
 uses
@@ -399,7 +399,7 @@ begin
   }
 end;
 
-function tGetWAVDurationFromHeader(FileName: PAnsiChar; var Duration: Cardinal; DisplayError: boolean): boolean;
+function tGetWAVDurationFromHeader(const FileName: AnsiString; var Duration: Cardinal; DisplayError: boolean): boolean;
 label
   1;
 var
@@ -454,11 +454,10 @@ label
 var
   Index                                 : integer;
   i                                     : integer;
-  WAVFile                               : array[0..255] of AnsiChar;
+  WAVFile                               : string;
   //Duration                              : Cardinal;
   TempChar                              : AnsiChar;
   Pauselenght                           : Cardinal;
-  p                                     : PAnsiChar;
   TempPlayResult                        : PlayResult;
 const
   DOTWAVASINTEGER                       = 1447122734;
@@ -482,7 +481,11 @@ begin
      goto NextMessage;
      end;
 
-  p := @DVPMessagesArray[Index][1];
+  (* NO POINTER INTO THE MESSAGE. This was p := @DVPMessagesArray[Index][1],
+    and DVPMessagesArray holds Str40s -- a length and no NUL. Both routines
+    it went to read to a NUL, so a slot reused with a shorter value handed
+    them the stale tail of the longer one: a wrong WAV file name, and stale
+    characters written to MISSINGCALLSIGNS.TXT. They take the string now. *)
 
      {Some WAV File}
   if StringHas(DVPMessagesArray[Index], '.WAV') then
@@ -497,7 +500,7 @@ begin
     asm add esp,16
     end;
 }
-         if PlayWAVFile(p, True) = prExitThread then
+         if PlayWAVFile(string(DVPMessagesArray[Index]), True) = prExitThread then
             begin
             goto ExitLabel;
             end;
@@ -510,7 +513,7 @@ begin
    if StringIsAllNumbers(DVPMessagesArray[Index]) then
       begin
 
-      SetCharBuffer(WAVFile, SysUtils.Format('FULLSERIALNUMBERS\%s.WAV', [string(DVPMessagesArray[Index])]));
+      WAVFile := SysUtils.Format('FULLSERIALNUMBERS\%s.WAV', [string(DVPMessagesArray[Index])]);
 
       TempPlayResult := PlayWAVFile(WAVFile, False);
       if TempPlayResult = prExitThread then
@@ -525,7 +528,7 @@ begin
             TempChar := DVPMessagesArray[Index][i];
             // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload);
             // TempChar is an ASCII letter/digit/'_', so %c output == the old %C.
-            SetCharBuffer(WAVFile, SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)]));
+            WAVFile := SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)]);
             if PlayWAVFile(WAVFile, True) = prExitThread then
                begin
                goto ExitLabel;
@@ -538,7 +541,7 @@ begin
 
      //Callsign
 
-   SetCharBuffer(WAVFile, SysUtils.Format('FULLCALLSIGNS\%s.WAV', [string(DVPMessagesArray[Index])]));
+   WAVFile := SysUtils.Format('FULLCALLSIGNS\%s.WAV', [string(DVPMessagesArray[Index])]);
 
    TempPlayResult := PlayWAVFile(WAVFile, False);
    if TempPlayResult = prExitThread then
@@ -548,7 +551,7 @@ begin
 
    if TempPlayResult = prCantPlay then
       begin
-      tWriteCallsignToMissingCallsignsFile(p);
+      tWriteCallsignToMissingCallsignsFile(DVPMessagesArray[Index]);
       for i := 1 to length(DVPMessagesArray[Index]) do
          begin
          TempChar := DVPMessagesArray[Index][i];
@@ -557,7 +560,7 @@ begin
             TempChar := '_';
             end;
          // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload).
-         SetCharBuffer(WAVFile, SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)]));
+         WAVFile := SysUtils.Format('LETTERSANDNUMBERS\%s.WAV', [string(TempChar)]);
          if PlayWAVFile(WAVFile, True) = prExitThread then
             begin
             goto ExitLabel;
@@ -597,7 +600,7 @@ begin
 //  inc(MissedWAVCallsigns);
 end;
 
-procedure tWriteCallsignToMissingCallsignsFile(Callsign: PAnsiChar);
+procedure tWriteCallsignToMissingCallsignsFile(const Callsign: Str40);
 label
   1, CallsignFound, NextRead;
 var
@@ -650,14 +653,18 @@ begin
         end;
      end;
 
-  swriteFile(h, Callsign^, lstrlenA(Callsign));
+  (* EXACTLY Length(Callsign) BYTES. This was Callsign^ and
+    lstrlenA(Callsign) over a pointer into a Str40, which carries a length
+    and no NUL -- so a slot reused with a shorter value appended the stale
+    tail of the longer one to MISSINGCALLSIGNS.TXT. *)
+  swriteFile(h, Callsign[1], Length(Callsign));
   swriteFile(h, #13#10, 2);
 
   CallsignFound:
   FileClose(h);
 end;
 
-function tsndPlaySound(lpszSoundName: PAnsiChar): boolean;
+function tsndPlaySound(const aFileName: AnsiString): boolean;
 begin
   Result := False;
 {
@@ -670,13 +677,18 @@ begin
   asm add esp,16
   end;
 }
-  if not FileExists(lpszSoundName {WAVFileToPlay}) then Exit;
+  if not SysUtils.FileExists(aFileName) then Exit;
   if ActiveRadioPtr.tPTTStatus = PTT_OFF then
      begin
      PTTOn;
      end;
 {$IFDEF WINDOWS}
-  Result := sndPlaySoundA(lpszSoundName {WAVFileToPlay}, SND_ASYNC or SND_NODEFAULT);
+  (* THE winmm BOUNDARY, and the one place a pointer is wanted. aFileName
+    is a const REFERENCE to PlayWAVFile's own wavPath, so this points into
+    that caller's buffer -- the same lifetime it always had. That matters
+    because the call is SND_ASYNC: converting to a local here would free the
+    name when this routine returns, earlier than before. *)
+  Result := sndPlaySoundA(PAnsiChar(aFileName), SND_ASYNC or SND_NODEFAULT);
 {$ELSE}
   (* THE VOICE KEYER HAS NO PLAYER OFF WINDOWS YET, and this is the ONE piece
     of audio TR4W still owes there -- the CW sidetone was deleted on
@@ -693,12 +705,12 @@ begin
   if logger <> nil then
      begin
      logger.Info('[DVP] cannot play %s: no audio backend on this platform',
-                 [string(lpszSoundName)]);
+                 [string(aFileName)]);
      end;
 {$ENDIF}
 end;
 
-function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
+function PlayWAVFile(const f: string; DisplayError: boolean): PlayResult;
 var
   Duration                              : Cardinal;
   WAVFile                               : string;
@@ -735,7 +747,7 @@ begin
              folder := Copy(folder, 1, 2);
              end;
 
-          WAVFile := GetRealPath(string(AnsiString(f)), folder);
+          WAVFile := GetRealPath(f, folder);
           if not SysUtils.FileExists(WAVFile) then
              begin
              WAVFile := '';
@@ -745,7 +757,7 @@ begin
 
   if WAVFile = '' then
      begin
-     WAVFile := GetRealPath(string(AnsiString(f)));
+     WAVFile := GetRealPath(f);
      end;
 
   (* THE TRANSPORT BOUNDARY, and the only place a pointer is wanted:
@@ -753,9 +765,9 @@ begin
     bytes. *)
   wavPath := AnsiString(WAVFile);
 
-  if tGetWAVDurationFromHeader(PAnsiChar(wavPath), Duration, DisplayError) then
+  if tGetWAVDurationFromHeader(wavPath, Duration, DisplayError) then
      begin
-     if tsndPlaySound(PAnsiChar(wavPath)) = False then
+     if tsndPlaySound(wavPath) = False then
         begin
         if DisplayError then
            begin
@@ -882,7 +894,7 @@ procedure SetOutGain(Gain: Byte);
 begin
 end;
 
-function tGetWAVDurationFromHeader(FileName: PAnsiChar; var Duration: Cardinal;
+function tGetWAVDurationFromHeader(const FileName: AnsiString; var Duration: Cardinal;
                                    DisplayError: boolean): boolean;
 begin
    Duration := 0;
@@ -893,7 +905,7 @@ procedure tDVPPlayThreadproc;
 begin
 end;
 
-procedure tWriteCallsignToMissingCallsignsFile(Callsign: PAnsiChar);
+procedure tWriteCallsignToMissingCallsignsFile(const Callsign: Str40);
 begin
 end;
 
@@ -901,13 +913,13 @@ procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
 begin
 end;
 
-function tsndPlaySound(lpszSoundName: PAnsiChar): boolean;
+function tsndPlaySound(const aFileName: AnsiString): boolean;
 begin
    (* Internal -- PlayWAVFile is the caller and it reports for both. *)
    Result := False;
 end;
 
-function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
+function PlayWAVFile(const f: string; DisplayError: boolean): PlayResult;
 begin
    (* THE LIVE PATH.  This is what a function key configured with a .WAV
      reaches, so this is the one that must not fail in silence.  It reports
