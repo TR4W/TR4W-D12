@@ -67,6 +67,7 @@ uses
      the rest of the tree now uses for them. *)
    LCLType, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
    uLogRepository,
+   utils_text,   (* CharBufferBytes -- the mapper's own read of ceOperator *)
    uLogNote;   (* NoteText / SetNoteText -- a note's text *)
 
 function TLogRepositoryTests.TempLogName(const aLeaf: string): string;
@@ -204,8 +205,8 @@ begin
    SameInt('ceRadio', Ord(a.ceRadio), Ord(b.ceRadio));
    (* Compared through the same NUL-aware helper the mapper uses -- a direct
      AnsiString() cast of this array is the bug this line would hide. *)
-   Same('ceOperator', CharArrayToAnsi(a.ceOperator),
-                      CharArrayToAnsi(b.ceOperator));
+   Same('ceOperator', CharBufferBytes(a.ceOperator),
+                      CharBufferBytes(b.ceOperator));
    SameBool('ceQSO_Deleted', a.ceQSO_Deleted, b.ceQSO_Deleted);
    SameBool('ceSendToServer', a.ceSendToServer, b.ceSendToServer);
    SameBool('ceNeedSendToServerAE', a.ceNeedSendToServerAE, b.ceNeedSendToServerAE);

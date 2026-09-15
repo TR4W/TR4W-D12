@@ -476,15 +476,17 @@ function NewRowGuid(const aQso: ContestExchange): AnsiString;
 
 (* ceOperator is array[0..10] of AnsiChar, and a cast between a fixed buffer
   and a managed string is NOT a conversion -- see the implementation.
-  Exported because anything comparing or displaying that field needs the same
-  NUL-aware reading, and a second hand-rolled loop is how the two drift. *)
-function CharArrayToAnsi(const aBuffer: array of AnsiChar): AnsiString;
+  READING the field back is utils_text.CharBufferBytes: the same NUL-aware
+  read. This unit carried its own copy of it, and a second hand-rolled loop
+  is how the two drift. WRITING it is this routine, which may use all eleven
+  bytes and NUL-pads the tail. *)
 procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiString);
 
 implementation
 
 uses
    uADIF, uLogBinaryFile, ZONECONT, TF,
+   utils_text,   (* CharBufferBytes -- a fixed char field read back *)
    uLogNote;   (* NoteText / SetNoteText -- where a note's text lives *)
 
 (* --------------------------------------------------------------------------- *)
@@ -569,27 +571,10 @@ end;
   thing in the language: the compiler passes the bounds, Low and High are real,
   and there is no address arithmetic to get wrong.
 
-  These exist at all because ContestExchange.ceOperator is
+  This exists at all because ContestExchange.ceOperator is
   array[0..10] of AnsiChar -- a fixed buffer in a record designed in the
   nineties. When the contest factory turns that record into a class the field
-  becomes a string and both routines can go. *)
-function CharArrayToAnsi(const aBuffer: array of AnsiChar): AnsiString;
-var
-   i: integer;
-begin
-   Result := '';
-   for i := Low(aBuffer) to High(aBuffer) do
-      begin
-      (* NUL ends it. The rest is padding, and taking all eleven bytes is exactly
-        what an AnsiString() cast of the field would wrongly do. *)
-      if aBuffer[i] = #0 then
-         begin
-         Exit;
-         end;
-      Result := Result + aBuffer[i];
-      end;
-end;
-
+  becomes a string and AnsiToCharArray can go too. *)
 procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiString);
 var
    i: integer;
@@ -1245,7 +1230,7 @@ begin
    BindBool(P('clear_mult_sheet'), rec.ceClearMultSheet);
 
    P('radio_nr').AsInteger := Ord(rec.ceRadio);
-   BindText(P('operator_call'), CharArrayToAnsi(rec.ceOperator));
+   BindText(P('operator_call'), CharBufferBytes(rec.ceOperator));
    BindBool(P('deleted'), rec.ceQSO_Deleted);
    BindBool(P('sent_to_server'), rec.ceSendToServer);
    BindBool(P('server_dirty'), rec.ceNeedSendToServerAE);

@@ -398,7 +398,7 @@ uses
   (* The contest database replaced the .RST restart file -- see
     SaveRestartFile. IMPLEMENTATION-section, so no interface cycle. *)
   uLogStore,
-  uLogRepository,   // CharArrayToAnsi -- NUL-aware, not a cast
+  uLogRepository,   // AnsiToCharArray -- NUL-padded, not a cast
   TypInfo,          // enum names, so an inserted band cannot shift a value
   uNet,
   uGetScores,
@@ -1606,7 +1606,7 @@ begin
          end;
       end;
 
-   op := string(CharArrayToAnsi(CurrentOperator));
+   op := string(CharBufferBytes(CurrentOperator));
    if Put('currentOperator', op) then
       begin
       GSessionDirty := True;
