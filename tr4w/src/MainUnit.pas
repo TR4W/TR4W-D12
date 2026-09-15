@@ -5703,14 +5703,13 @@ begin
       begin
         if OpenFileDlg('', TC_CONFIGURATION_FILE + ' (*.cfg)|*.cfg',
                        TR4W_EXECONFIGFILE_FILENAME, False) then
-          // TR4W_EXECONFIGFILE_FILENAME is a NUL-terminated AnsiChar array, NOT
-          // a ShortString.  The ShortString() variable cast that used to be here
-          // reinterpreted the path's FIRST CHARACTER as the length byte -- 'C'
-          // gave length 67 -- so the pointer happened to land right while the
-          // length was garbage.  Both GetRidOfPrecedingSpaces and
-          // OpenFileForRead_old inside LoadInSeparateConfigFile use that length.
+          // TR4W_EXECONFIGFILE_FILENAME is a NUL-terminated AnsiChar array that
+          // OpenFileDlg fills with SetCharBuffer -- NOT a ShortString. A ShortString()
+          // variable cast once stood here and read the path's first character as its
+          // length ('C' gave 67). It is read back with CharBufferText, the inverse of
+          // that write, and handed on as the UTF-8 bytes ExecuteConfigurationFile takes.
            begin
-           ExecuteConfigurationFile(PAnsiChar(@TR4W_EXECONFIGFILE_FILENAME[0]));
+           ExecuteConfigurationFile(LclText(CharBufferText(TR4W_EXECONFIGFILE_FILENAME)));
            end;
       end;
 
@@ -8197,7 +8196,7 @@ begin
      begin
      MultString[Mults] := #0;
      elviCol := ColumnsArray[logColTotalMults].pos; //Ord(logColTotalMults);
-     elviText := StrPas(MultString);
+     elviText := CharBufferBytes(MultString);
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
@@ -10142,7 +10141,7 @@ begin
         begin
         Exit;   // operator cancelled
         end;
-     adifFileName := string(AnsiString(PAnsiChar(@TR4W_ADIF_FILENAME[0])));
+     adifFileName := CharBufferText(TR4W_ADIF_FILENAME);
      end;
 
   (* NEVER ASKED IN A HEADLESS RUN. A modal with nobody to dismiss it does
@@ -10727,7 +10726,7 @@ begin
   if module = 0 then
      begin
      logger.Error('[Plugin] cannot load %s -- %s',
-                  [StrPas(TempBuffer1), SysErrorMessage(GetLastError)]);
+                  [dllPath, SysErrorMessage(GetLastError)]);
      Exit;
      end;
 
@@ -10737,7 +10736,7 @@ begin
      (* A DLL WITH NO `main` IS NOT A TR4W PLUGIN. Calling what
        GetProcAddress returned is a call to address zero. *)
      logger.Error('[Plugin] %s exports no "main" -- not a TR4W plugin.',
-                  [StrPas(TempBuffer1)]);
+                  [dllPath]);
      FreeLibrary(module);
      Exit;
      end;

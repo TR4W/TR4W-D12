@@ -1686,7 +1686,9 @@ begin
 //          if WindowsOSversion = 2 then
 //            ShowTrayTips(TotalScoreMessages[i].MessageString)
 //          else
-         QuickDisplay(string(PAnsiChar(@TotalScoreMessages[i].MessageString[1])));
+         (* MessageString is a Str40 -- a length and no NUL. The pointer that stood
+           here read on past the text to whatever zero byte followed it. *)
+         QuickDisplay(string(TotalScoreMessages[i].MessageString));
             //          ShowAlarmWakeUpWindow(TotalScoreMessages[message].MessageString);
           DoABeep(Congrats);
 

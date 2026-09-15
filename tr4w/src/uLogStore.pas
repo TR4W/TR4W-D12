@@ -245,7 +245,8 @@ uses
    uSettingsModel,
    (* RecalculateMyCountryContinentAndZoneNew -- run once the log has supplied
       the callsign; see the end of LogStoreApplyContestConfig. *)
-   FContest;
+   FContest,
+   utils_text;   (* CharBufferText and LclText *)
 
 var
    GDatabase: TLogDatabase = nil;
@@ -312,7 +313,7 @@ begin
       (* IN FRONT OF THE OPERATOR, not only in a file nobody reads mid-contest.
          Once -- GDisabled guards it -- because a modal dialog per QSO would be
          its own kind of contest-ending. *)
-      ShowMessage(PAnsiChar(AnsiString(
+      ShowMessage(LclText(
          'THE CONTEST LOG IS NOT BEING SAVED.' + #13#10#13#10 +
          'Writing to the log database failed in ' + aWhere + ':' + #13#10 +
          E.ClassName + ' -- ' + E.Message + #13#10#13#10 +
@@ -323,7 +324,7 @@ begin
            case where the operator most needs to be told to restore a backup.
            The location is still useful; the reassurance was never checked. *)
          'before working anyone else. The log written so far is in ' +
-         LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME))) + '.')));
+         LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME)) + '.'));
       end;
 
    FreeAndNil(GRepository);
@@ -658,7 +659,7 @@ function LogStoreFileName: string;
 begin
    (* The rule itself is uLogDatabase.LogDatabaseFileName -- it outlives this
      unit, which B5 deletes. *)
-   Result := LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME)));
+   Result := LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME));
 end;
 
 (* DOES A BINARY LOG WITH QSOs IN IT EXIST?
@@ -670,7 +671,7 @@ function BinaryLogHasRecords: boolean;
 var
    reader: TLogBinaryReader;
 begin
-   reader := TLogBinaryReader.Create(string(StrPas(TR4W_LOG_FILENAME)));
+   reader := TLogBinaryReader.Create(CharBufferText(TR4W_LOG_FILENAME));
    try
       Result := (reader.Status = lbOK) and (reader.ExpectedRecords > 0);
    finally
@@ -726,7 +727,7 @@ var
          begin
          DeleteFile(dbName);
          end;
-      res := ImportBinaryLog(string(StrPas(TR4W_LOG_FILENAME)), dbName);
+      res := ImportBinaryLog(CharBufferText(TR4W_LOG_FILENAME), dbName);
       Result := res.Ok;
       if (not Result) and (logger <> nil) then
          begin
@@ -745,7 +746,7 @@ begin
    GTriedToOpen := True;
    isNewLog := False;
    try
-      dbName := LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME)));
+      dbName := LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME));
 
       (* THE DATABASE IS THE LOG. IT IS NOT DERIVED FROM ANYTHING.
 

@@ -179,13 +179,14 @@ uses
       MainUnit.ReadLogFile fills. PostUnit uses this unit in ITS
       implementation, so the pair is circular -- normal in this tree and
       legal because both edges are implementation-section. *)
-   PostUnit;
+   PostUnit,
+   utils_text;   (* CharBufferText -- the log name buffer *)
 
 (* The SQLite log beside the current binary log.  One call, so the two
   arms below and the diagnostic cannot name different files. *)
 function DatabasePath: string;
 begin
-   Result := LogDatabaseFileName(string(StrPas(TR4W_LOG_FILENAME)));
+   Result := LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME));
 end;
 
 var
@@ -564,7 +565,7 @@ function LogSourceDescription: string;
 begin
    case LogSourceKind of
       lsDatabase: Result := 'SQLite: ' + DatabasePath;
-      else        Result := 'binary: ' + string(AnsiString(TR4W_LOG_FILENAME));
+      else        Result := 'binary: ' + CharBufferText(TR4W_LOG_FILENAME);
       end;
 end;
 
