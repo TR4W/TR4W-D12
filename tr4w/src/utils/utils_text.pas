@@ -111,26 +111,26 @@ function LeadingInt(const s: string): integer;
   casing is both unnecessary and not byte-stable. *)
 function SameTextAscii(const a, b: string): boolean;
 
-(* COMPARE TWO FIXED BUFFERS AS BYTES -- StrComp's answer without StrComp's
+(* COMPARE TWO FIXED BUFFERS AS BYTES -- C strcmp's answer, without its
   pointers.
 
-  Identical semantics to utils_text.StrComp: walk while the bytes match and
-  the LEFT one has not hit its terminator, then return the difference of the
-  two bytes at the stopping point. Unsigned, so $80..$FF sort ABOVE ASCII.
+  Walk while the bytes match and the LEFT one has not hit its terminator, then
+  return the difference of the two bytes at the stopping point. Unsigned, so
+  $80..$FF sort ABOVE ASCII.
 
   IT MUST STAY BYTES, AND THAT IS NOT A STYLE POSITION. uCTYDAT's prefix
-  table holds CTY.DAT text, which StrUpper's note below records may be
-  CP1251/CP1250 -- so routing it through CharBufferText (UTF-8) would decode
-  bytes that are not UTF-8 and change which prefixes match. The POINTERS are
-  the problem here; the byte comparison is the requirement.
+  table holds CTY.DAT text, which may be CP1251/CP1250 -- so routing it
+  through CharBufferText (UTF-8) would decode bytes that are not UTF-8 and
+  change which prefixes match. The POINTERS were the problem; the byte
+  comparison is the requirement.
 
   The SIGN is load-bearing: ctyFindCallsign binary-searches the prefix table
-  and the prefix sort insertion-sorts it, so this defines the sort ORDER and
-  not merely equality. *)
+  and the prefix sort orders it, so this defines the sort ORDER and not merely
+  equality. uTestUtilsText pins the sign case by case -- it used to check
+  against StrComp, which was deleted on 2026-09-15 with no production
+  caller. *)
 function CompareCharBuffer(const a, b: array of AnsiChar): integer;
 
-function StrComp(const Str1, Str2: PAnsiChar): integer;    // boundary: PAnsiChar
-procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiChar (ASCII a-z only)
 
 // DataLen bytes as uppercase hex digits, unseparated -- 'KY 04' -> '4B592004'.
 //
@@ -446,20 +446,6 @@ begin
        end;
 end;
 
-{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  StrComp
-
-  Compares two NUL-terminated byte strings and returns the difference between
-  the first bytes that differ -- NOT a normalized -1/0/+1.  Callers use only the
-  sign, but the magnitude is what the assembly this replaces returned, and
-  uTestUtilsText pins it exactly.
-
-  Bytes compare UNSIGNED, so anything >= $80 sorts AFTER every ASCII character.
-  That is load-bearing rather than incidental: CTY.DAT and the language files
-  carry codepage-specific high-bit bytes, and the country lookup binary-searches
-  the prefix table this orders.  A signed comparison would reorder it silently.
-}
-
 procedure SetCharBufferBytes(var aBuf: array of AnsiChar; const aBytes: AnsiString);
 var
    n: integer;
@@ -619,51 +605,6 @@ begin
       end;
 
    Result := UTF8ToString(raw);
-end;
-
-function StrComp(const Str1, Str2: PAnsiChar): integer;
-var
-   p1                                    : PAnsiChar;
-   p2                                    : PAnsiChar;
-begin
-   p1 := Str1;
-   p2 := Str2;
-
-   // Stops at the first difference OR at Str1's terminator, so a string that is
-   // a prefix of the other ends up comparing #0 against the other's next byte.
-   while (p1^ <> #0) and (p1^ = p2^) do
-      begin
-      Inc(p1);
-      Inc(p2);
-      end;
-
-   Result := Ord(p1^) - Ord(p2^);
-end;
-
-{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  StrUpper
-
-  Uppercases in place, ASCII 'a'..'z' ONLY.  Every other byte -- including all
-  of $80..$FF -- is left exactly as it was.
-
-  That restriction is deliberate.  uCTYDAT and MainUnit run this over buffers
-  that may hold CP1251/CP1250 text, and a locale-aware uppercase would rewrite
-  those bytes and stop CTY.DAT matching.  Do not "improve" this into UpperCase
-  or CharUpperBuff.
-}
-procedure StrUpper(Str: PAnsiChar);
-var
-   p                                     : PAnsiChar;
-begin
-   p := Str;
-   while p^ <> #0 do
-      begin
-      if p^ in ['a' .. 'z'] then
-         begin
-         p^ := AnsiChar(Ord(p^) - 32);
-         end;
-      Inc(p);
-      end;
 end;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

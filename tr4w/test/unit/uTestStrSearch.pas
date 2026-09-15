@@ -1,25 +1,14 @@
 unit uTestStrSearch;
 {$I ..\..\src\tr4w.inc}
 
-{
-  Golden-master tests for src/uStrSearch.pas (PChar search helpers extracted
-  from TF.pas for the Issue #997 inline-asm removal).
+(* uTestStrSearch -- strU.
 
-  These freeze the EXACT behavior of the original x86 inline-asm bodies so the
-  Pascal/RTL rewrite can be proven equivalent. Run order:
-
-    1. Add this suite while uStrSearch still holds the asm bodies -> all green
-       (this is the frozen baseline).
-    2. Replace the asm with RTL / pure Pascal.
-    3. Re-run -> must stay green.
-
-  Pointer results are checked as integer offsets into the source buffer
-  (-1 == nil), which uniquely pins down each match position.
-
-  StrPosPartial quirk under test: '?' in the pattern matches any single
-  character EXCEPT at the pattern's first character, which the asm always
-  matches literally (it seeds the scan with an exact match on Str2[0]).
-}
+  These began as golden-master tests freezing three x86 inline-asm routines in
+  uStrSearch while their bodies were rewritten in Pascal (Issue #997). Two of
+  those routines, StrComp_JOH_IA32_6 and StrPosPartial, had no production
+  caller and were deleted on 2026-09-15, with their nineteen tests and the Off
+  pointer helper only those tests used. What remains pins strU, which the
+  config loader depends on. *)
 
 interface
 
@@ -42,33 +31,6 @@ uses
 type
    TStrSearchTests = class(TTestCase)
    protected
-      // Returns the offset of p within base, or -1 if p is nil.
-      function Off(base, p: PAnsiChar): integer;
-
-
-      // StrComp_JOH_IA32_6 -- strcmp (-1 / 0 / +1)
-      procedure Test_StrComp_Equal;
-      procedure Test_StrComp_Less;
-      procedure Test_StrComp_Greater;
-      procedure Test_StrComp_PrefixShorter;
-      procedure Test_StrComp_PrefixLonger;
-      procedure Test_StrComp_BothEmpty;
-      procedure Test_StrComp_EmptyVsNonEmpty;
-      procedure Test_StrComp_NonEmptyVsEmpty;
-
-      // StrPosPartial -- '?' wildcard (first char literal)
-      procedure Test_Partial_NoWildcard;
-      procedure Test_Partial_MidWildcard;
-      procedure Test_Partial_MultipleWildcards;
-      procedure Test_Partial_LeadingQuestionIsLiteral_Found;
-      procedure Test_Partial_LeadingQuestionIsLiteral_NotFound;
-      procedure Test_Partial_BacktrackRetry;
-      procedure Test_Partial_NotFound;
-      procedure Test_Partial_PatternLongerThanText;
-      procedure Test_Partial_EmptyPattern;
-      procedure Test_Partial_NilArgs;
-      procedure Test_Partial_SCPStyle;
-
       // StrU -- in-place ASCII upcase of a ShortString
       procedure Test_StrU_AllLower;
       procedure Test_StrU_Mixed;
@@ -83,176 +45,6 @@ type
    end;
 
 implementation
-
-function TStrSearchTests.Off(base, p: PAnsiChar): integer;
-begin
-   if p = nil then
-      Result := -1
-   else
-      Result := p - base;
-end;
-
-// ---------------------------------------------------------------------------
-// StrPos
-// ---------------------------------------------------------------------------
-
-// Test_StrPos_NilArgs was REMOVED here, not ported.
-//
-// uStrSearch stopped exporting StrPos when it became a pure forwarder, so
-// this test had quietly been asserting SysUtils' PWideChar StrPos -- the RTL,
-// not TR4W, and not even the ANSI routine the suite is about.  The behaviour
-// it meant to pin now belongs to utils_text.StrPos and is covered there by
-// uTestAnsiStr.Test_StrPos ('nil haystack is nil, not a fault').
-
-// ---------------------------------------------------------------------------
-// StrComp_JOH_IA32_6
-// ---------------------------------------------------------------------------
-
-procedure TStrSearchTests.Test_StrComp_Equal;
-begin
-   BeginTest('Test_StrComp_Equal');
-   CheckEquals(0, StrComp_JOH_IA32_6('ABC', 'ABC'), 'equal');
-end;
-
-procedure TStrSearchTests.Test_StrComp_Less;
-begin
-   BeginTest('Test_StrComp_Less');
-   CheckEquals(-1, StrComp_JOH_IA32_6('ABC', 'ABD'), 'less -> -1');
-end;
-
-procedure TStrSearchTests.Test_StrComp_Greater;
-begin
-   BeginTest('Test_StrComp_Greater');
-   CheckEquals(1, StrComp_JOH_IA32_6('ABD', 'ABC'), 'greater -> +1');
-end;
-
-procedure TStrSearchTests.Test_StrComp_PrefixShorter;
-begin
-   BeginTest('Test_StrComp_PrefixShorter');
-   CheckEquals(-1, StrComp_JOH_IA32_6('AB', 'ABC'), 'prefix shorter -> -1');
-end;
-
-procedure TStrSearchTests.Test_StrComp_PrefixLonger;
-begin
-   BeginTest('Test_StrComp_PrefixLonger');
-   CheckEquals(1, StrComp_JOH_IA32_6('ABC', 'AB'), 'prefix longer -> +1');
-end;
-
-procedure TStrSearchTests.Test_StrComp_BothEmpty;
-begin
-   BeginTest('Test_StrComp_BothEmpty');
-   CheckEquals(0, StrComp_JOH_IA32_6('', ''), 'both empty -> 0');
-end;
-
-procedure TStrSearchTests.Test_StrComp_EmptyVsNonEmpty;
-begin
-   BeginTest('Test_StrComp_EmptyVsNonEmpty');
-   CheckEquals(-1, StrComp_JOH_IA32_6('', 'A'), 'empty vs non-empty -> -1');
-end;
-
-procedure TStrSearchTests.Test_StrComp_NonEmptyVsEmpty;
-begin
-   BeginTest('Test_StrComp_NonEmptyVsEmpty');
-   CheckEquals(1, StrComp_JOH_IA32_6('A', ''), 'non-empty vs empty -> +1');
-end;
-
-// ---------------------------------------------------------------------------
-// StrPosPartial
-// ---------------------------------------------------------------------------
-
-procedure TStrSearchTests.Test_Partial_NoWildcard;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_NoWildcard');
-   s := 'HELLO';
-   CheckEquals(2, Off(s, StrPosPartial(s, 'LLO')), 'partial no-wildcard');
-end;
-
-procedure TStrSearchTests.Test_Partial_MidWildcard;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_MidWildcard');
-   s := 'HELLO';
-   // 'H?LLO' : '?' matches 'E'
-   CheckEquals(0, Off(s, StrPosPartial(s, 'H?LLO')), 'partial mid wildcard');
-end;
-
-procedure TStrSearchTests.Test_Partial_MultipleWildcards;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_MultipleWildcards');
-   s := 'ABCDE';
-   // 'A???E' : the three '?' match B,C,D
-   CheckEquals(0, Off(s, StrPosPartial(s, 'A???E')), 'partial multi wildcard');
-end;
-
-procedure TStrSearchTests.Test_Partial_LeadingQuestionIsLiteral_Found;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_LeadingQuestionIsLiteral_Found');
-   // Leading '?' is matched literally: it must find an actual '?' char.
-   s := 'X?Y';
-   CheckEquals(1, Off(s, StrPosPartial(s, '?Y')), 'leading ? literal, found');
-end;
-
-procedure TStrSearchTests.Test_Partial_LeadingQuestionIsLiteral_NotFound;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_LeadingQuestionIsLiteral_NotFound');
-   // No literal '?' present -> leading '?' cannot wildcard the first char.
-   s := 'XAY';
-   CheckEquals(-1, Off(s, StrPosPartial(s, '?Y')), 'leading ? literal, not found');
-end;
-
-procedure TStrSearchTests.Test_Partial_BacktrackRetry;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_BacktrackRetry');
-   // First 'X' at 0 fails ('C' vs str1[2]='X'); retry finds 'X' at 2 -> match.
-   s := 'XAXBC';
-   CheckEquals(2, Off(s, StrPosPartial(s, 'X?C')), 'partial backtrack/retry');
-end;
-
-procedure TStrSearchTests.Test_Partial_NotFound;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_NotFound');
-   s := 'ABC';
-   CheckEquals(-1, Off(s, StrPosPartial(s, 'X?Z')), 'partial not found');
-end;
-
-procedure TStrSearchTests.Test_Partial_PatternLongerThanText;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_PatternLongerThanText');
-   s := 'AB';
-   CheckEquals(-1, Off(s, StrPosPartial(s, 'A???')), 'partial pattern longer -> nil');
-end;
-
-procedure TStrSearchTests.Test_Partial_EmptyPattern;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_EmptyPattern');
-   s := 'ABC';
-   CheckEquals(-1, Off(s, StrPosPartial(s, '')), 'partial empty pattern -> nil');
-end;
-
-procedure TStrSearchTests.Test_Partial_NilArgs;
-begin
-   BeginTest('Test_Partial_NilArgs');
-   CheckTrue(StrPosPartial(nil, 'A') = nil, 'partial nil str1');
-   CheckTrue(StrPosPartial('A', nil) = nil, 'partial nil str2');
-end;
-
-procedure TStrSearchTests.Test_Partial_SCPStyle;
-var s: PAnsiChar;
-begin
-   BeginTest('Test_Partial_SCPStyle');
-   // Representative super-check-partial use: a partial callsign with a '?'
-   // standing in for an unknown character, located inside a master record.
-   s := 'N6TR';
-   CheckEquals(0, Off(s, StrPosPartial(s, 'N?TR')), 'partial SCP-style match');
-end;
 
 // ---------------------------------------------------------------------------
 // StrU -- in-place ASCII upcase
@@ -330,27 +122,6 @@ end;
 
 procedure TStrSearchTests.RunAllTests;
 begin
-
-   Test_StrComp_Equal;
-   Test_StrComp_Less;
-   Test_StrComp_Greater;
-   Test_StrComp_PrefixShorter;
-   Test_StrComp_PrefixLonger;
-   Test_StrComp_BothEmpty;
-   Test_StrComp_EmptyVsNonEmpty;
-   Test_StrComp_NonEmptyVsEmpty;
-
-   Test_Partial_NoWildcard;
-   Test_Partial_MidWildcard;
-   Test_Partial_MultipleWildcards;
-   Test_Partial_LeadingQuestionIsLiteral_Found;
-   Test_Partial_LeadingQuestionIsLiteral_NotFound;
-   Test_Partial_BacktrackRetry;
-   Test_Partial_NotFound;
-   Test_Partial_PatternLongerThanText;
-   Test_Partial_EmptyPattern;
-   Test_Partial_NilArgs;
-   Test_Partial_SCPStyle;
 
    Test_StrU_AllLower;
    Test_StrU_Mixed;

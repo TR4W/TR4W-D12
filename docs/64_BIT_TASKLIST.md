@@ -222,7 +222,8 @@ after it has sat for a day.
 
 `uAnsiStr` is gone. Eight of its nine routines had no caller left --
 `StrLen`, `StrIComp`, `StrPCopy`, `StrLCopy` and `AppendToBuffer` outright;
-`StrComp` because `utils_text` has its own and uCTYDAT calls that one; `StrPos`
+`StrComp` because `utils_text` had its own (itself deleted later the same day,
+with no production caller); `StrPos`
 because only its own tests did. The ninth, `StrPLCopy`, had three sites in
 `tr4wserver`, and they are `utils_text.SetCharBufferBytes` now -- a byte-exact
 write, NOT `SetCharBuffer`, because one of the three is the multi-op server
@@ -239,22 +240,23 @@ replaced them -- `SetCharBuffer`, `CharBufferText`, `CharBufferSlice`,
 never had in `TF`: that unit pulls the LCL and the config model in behind it,
 so it is not in `tr4w_unit_tests.lpr` and none of this could be exercised.
 
-**The four that remain are each a different question, not more of the same:**
+**The four that remained are all done (2026-09-15) -- and three were not what this table said:**
 
-| where | why it is still there |
+| where | what it turned out to be |
 |---|---|
-| `uctydat` ReplaceCountry | a **SUSPECTED DEFECT**, documented at the site: it compares a country ID against `r.Name` from index 1, and that buffer's text starts at index 0. Removing the pointer must not change what the comparison MEANS, and this one decides which country a CTY.DAT override replaces. NY4I's ruling |
-| `uctydat` ctyLoadInCountryFile | `Strpos` over a raw file buffer -- byte scanning of CTY.DAT, which stays bytes |
-| `uctydat` custom-country list | `StrComp` against a `PAnsiChar` parameter; the parameter is the thing to convert |
-| `uMessagesList` | a pointer WALK (`p := start + StrLen(start)`, then `p[-1]`), so the routine wants rewriting rather than the call swapping |
+| `uctydat` ReplaceCountry | the "suspected defect" recorded here was WRONG. `@r.Name[1]` steps past the `!` marker the caller has just tested, which is correct. The real defect was the other side: `@ID[1]` on a `string[5]`, which over-reads a five-character id such as `*GM/s`. Fixed in b56e1ef9 -- whose test also found that a CTY.DAT reload wrote past the end of the country table |
+| `uctydat` ctyLoadInCountryFile | the REMAINING MULTS search. A note claimed it could not work because `StrPos` resolved to the WideChar variant; it did work, and a test now proves it. Rewritten over an AnsiString in 63c92678 |
+| `uctydat` custom-country list | the same routine's `StrComp(@ID[1], ...)` -- the same ShortString over-read. Also 63c92678 |
+| `uMessagesList` | the pointer walk is gone; the parser walks a string (see the unit's own note) |
 
 **AND ONE RULE CAME OUT OF THIS THAT IS NOT OBVIOUS.** The CTY prefix table
-could NOT be converted to string comparison: `utils_text.StrUpper`'s own note
-records that uCTYDAT runs over buffers holding CP1251/CP1250, so
+could NOT be converted to string comparison: uCTYDAT runs over buffers
+holding CP1251/CP1250, so
 `CharBufferText` (UTF-8) would decode bytes that are not UTF-8 and change
 which prefixes match. `CompareCharBuffer` keeps the unsigned byte order and
-drops only the pointers -- and is pinned against `StrComp` in
-`uTestUtilsText`, sign by sign, including a CP1251 `$C0` sorting above `Z`.
+drops only the pointers -- and is pinned in `uTestUtilsText` by explicit
+expected signs, including a CP1251 `$C0` sorting above `Z`. (It was pinned
+against `StrComp` until that routine was deleted, with no production caller.)
 
 **Byte data stays bytes. What goes is the pointer arithmetic.** That is NY4I's
 rule at the top of this document, and this is the first place it decided the
