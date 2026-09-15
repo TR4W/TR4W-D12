@@ -91,6 +91,8 @@ type
       procedure Test_Rule_LookupIsCaseSensitive;
       procedure Test_Rule_GarbageAndBoundariesAreUnknown;
       procedure Test_Rule_USTerritoriesAreSeparateEntities;
+      procedure Test_Rule_DuplicatePrefixPicksTheSpecificEntity;
+      procedure Test_Rule_ExactCallBeatsPrefixOverride;
    end;
 
 implementation
@@ -429,6 +431,115 @@ end;
 // THE CHARACTERISATION NET
 // ---------------------------------------------------------------------------
 
+
+(* ===========================================================================
+  THE SAME CALLSIGN UNDER TWO ENTITIES.
+
+  cty.dat files these callsigns twice -- once under a DXCC country, once under
+  a sub-entity whose primary prefix carries a leading asterisk:
+
+      Vienna Intl Ctr  *4U1V  (23)   vs  Austria   OE  (208)
+      Shetland Islands *GM/s  (144)  vs  Scotland  GM  (143)
+
+  NY4I's rule, 2026-09-14: the specific one wins, then the less specific. The
+  sub-entity is the specific one, so it wins wherever it is allowed to count.
+
+  THIS IS THE CHECK THE CHARACTERISATION FIXTURE CANNOT BE. That fixture runs
+  in one country mode and records whatever the program says; it would have
+  been just as green while the answers were split four/two by an unstable sort,
+  which is exactly the state this test was written to make impossible. Here the
+  rule is asserted directly, in both modes, over the whole duplicate set. *)
+procedure TCTYDATTests.Test_Rule_DuplicatePrefixPicksTheSpecificEntity;
+const
+   (* Every callsign cty.dat files under both members of a pair. *)
+   VIENNA : array[0..7] of string =
+      ('4U0IARU', '4U0R', '4U1A', '4U1VIC', '4U2U', '4UNR', '4Y1A', 'C7A');
+   SHETLAND : array[0..4] of string =
+      ('GB1DAA', 'GB2ELH', 'GB3LER', 'GB3LER/B', 'GB4LER');
+var
+   saved : CountryModeType;
+   call  : string;
+   i     : integer;
+begin
+   BeginTest('a callsign filed under two entities resolves to the specific one');
+   EnsureCtyLoaded;
+
+   saved := CTY.ctyCountryMode;
+   try
+      (* CQ mode counts DXCC and WAE, so the sub-entity is a country of its
+        own and is the answer. *)
+      ctySetCountryMode(CQCountryMode);
+      for i := Low(VIENNA) to High(VIENNA) do
+         begin
+         call := VIENNA[i];
+         CheckEquals('*4U1V', ctyGetCountryID(call),
+                     call + ' is the Vienna Intl Ctr in CQ mode');
+         end;
+      for i := Low(SHETLAND) to High(SHETLAND) do
+         begin
+         call := SHETLAND[i];
+         CheckEquals('*GM/s', ctyGetCountryID(call),
+                     call + ' is Shetland in CQ mode');
+         end;
+
+      (* ARRL mode counts DXCC only. The sub-entity is not a DXCC entity, so
+        the country it sits inside is the answer. *)
+      ctySetCountryMode(ARRLCountryMode);
+      for i := Low(VIENNA) to High(VIENNA) do
+         begin
+         call := VIENNA[i];
+         CheckEquals('OE', ctyGetCountryID(call),
+                     call + ' is Austria in ARRL mode');
+         end;
+      for i := Low(SHETLAND) to High(SHETLAND) do
+         begin
+         call := SHETLAND[i];
+         CheckEquals('GM', ctyGetCountryID(call),
+                     call + ' is Scotland in ARRL mode');
+         end;
+   finally
+      ctySetCountryMode(saved);
+   end;
+
+   (* AND NEITHER MODE MAY BE AMBIGUOUS. Every call in a pair must give the
+     same answer as every other call in that pair -- the defect this replaced
+     was not a wrong answer, it was two different answers from one rule. *)
+   for i := Low(VIENNA) to High(VIENNA) do
+      begin
+      CheckEquals(ctyGetCountry(VIENNA[0]), ctyGetCountry(VIENNA[i]),
+                  VIENNA[i] + ' agrees with the rest of its pair');
+      end;
+   for i := Low(SHETLAND) to High(SHETLAND) do
+      begin
+      CheckEquals(ctyGetCountry(SHETLAND[0]), ctyGetCountry(SHETLAND[i]),
+                  SHETLAND[i] + ' agrees with the rest of its pair');
+      end;
+end;
+
+(* The other axis of the same rule, and the one that has nothing to do with
+  entities. UA4H is in cty.dat twice under ONE country:
+
+      UA4H[30]     a prefix override, in the UA block
+      =UA4H[29]    an exact-callsign exception, also UA
+
+  so the two records differ only in ITU zone, and the specific one -- the
+  exception -- is the answer for the callsign UA4H. The shortened-prefix walk
+  wants the opposite record, which is why ctyFindCallsign is told which kind
+  the caller means rather than guessing. UA4HBM exercises that path: it has its
+  own exception, and the prefix behind it is the [30] one. *)
+procedure TCTYDATTests.Test_Rule_ExactCallBeatsPrefixOverride;
+begin
+   BeginTest('an =CALL exception beats a prefix override of the same spelling');
+   EnsureCtyLoaded;
+
+   CheckEquals(29, ctyGetITUZone('UA4H'),
+               'UA4H takes the =UA4H[29] exception, not the UA4H[30] prefix');
+   CheckEquals(29, ctyGetITUZone('UA4HBM'),
+               'UA4HBM has an exception of its own');
+   CheckEquals(ctyGetCountry('UA4H'), ctyGetCountry('UA4HBM'),
+               'both are still Russia -- only the zone differed');
+end;
+
 procedure TCTYDATTests.Test_Characterisation;
 var
    f: TextFile;
@@ -546,6 +657,8 @@ begin
    Test_Rule_LookupIsCaseSensitive;
    Test_Rule_GarbageAndBoundariesAreUnknown;
    Test_Rule_USTerritoriesAreSeparateEntities;
+   Test_Rule_DuplicatePrefixPicksTheSpecificEntity;
+   Test_Rule_ExactCallBeatsPrefixOverride;
 
    // Last: it is the slowest and the least specific.
    Test_Characterisation;

@@ -259,7 +259,8 @@ type
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 //function ctyInit(ctyFilename: PAnsiChar): boolean;
 function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
-function ctyFindCallsign(const s: PrefixName; var Index: integer): boolean;
+function ctyFindCallsign(const s: PrefixName; var Index: integer;
+                         PreferFullCallsign: boolean = True): boolean;
 function ctyGetGrid(const Call: string; var ID: DXMultiplierString): string;
 function ctyGetContinent(const Call: string): ContinentType;
 function ctyGetCountry(const Call: string): Word;
@@ -829,7 +830,7 @@ end;
   records.
 
   ---------------------------------------------------------------------------
-  THE SORT ALGORITHM IS DELIBERATELY UNCHANGED, AND THAT NEEDS SAYING.
+  THE SORT ALGORITHM IS UNCHANGED HERE, BUT IT IS NO LONGER LOAD-BEARING.
   ---------------------------------------------------------------------------
 
   A shell sort is UNSTABLE, and cty.dat contains FOURTEEN prefixes twice --
@@ -839,47 +840,19 @@ end;
       GB1DAA GB2ELH GB3LER GB3LER/B GB4LER            country 143 or 144
       UA4H                                            268 twice (harmless)
 
-  So "which entity does 4U1A belong to" is currently answered by wherever an
-  unstable sort happens to leave two equal keys. Nobody decided that.
+  So "which entity does 4U1A belong to" used to be answered by wherever an
+  unstable sort happened to leave two equal keys -- which is why four of the
+  eight 4U calls resolved to Austria and the other two to the Vienna
+  International Centre, from the identical pair of records.
 
-  REPLACING IT WITH A STABLE INSERTION SORT WAS TRIED, AND IT CHANGES FIVE
-  ANSWERS (measured 2026-09-14, everything else in a 2064-record
-  characterisation identical):
+  THAT IS DECIDED BY A RULE NOW, not by the sort: see
+  ctyChooseAmongDuplicates, beside ctyFindCallsign. Replacing this sort with
+  any correct algorithm is therefore safe -- stable or not, the answer no
+  longer depends on the order of equal keys.
 
-      4U0IARU 4U1A 4UNR     208 (OE, Austria)      -> 23  (*4U1V, Vienna Intl)
-      GB1DAA  GB2ELH        144 (*GM/s, Shetland)  -> 143 (GM, Scotland)
-
-  Those are DXCC entities -- they are multipliers, and they are on submitted
-  logs. Which answer is right is a question about cty.dat and the DXCC rules,
-  not about sorting, so it is NY4I's to rule on and not a refactor's to decide.
-  The fourteen prefixes are pinned in the characterisation fixture so whichever
-  way it is ruled, the change is visible and deliberate.
-
-  WHERE THE DUPLICATES COME FROM, AND WHY THEY ARE NOT A DATA ERROR
-  (established 2026-09-14 with NY4I, who pointed at the exception list).
-
-  cty.dat lists those callsigns under TWO entities on purpose:
-
-      Vienna Intl Ctr: ... *4U1V: =4U0IARU,=4U0R,=4U1A,=4U1VIC,=4U2U,...
-      Austria:         ...    OE: OE,=4U0IARU,=4U0R,=4U1A,=4U1VIC,...
-
-  The LEADING ASTERISK is the file's marker for an entity that is NOT a DXCC
-  country -- Vienna Intl Ctr, Shetland (*GM/s) beside Scotland (GM). The same
-  callsign genuinely belongs to both: one as its DXCC entity, one as a
-  contest sub-entity. Two records for one prefix is the intended encoding.
-
-  AND THE PROGRAM ALREADY KNOWS. ctyLocateCall filters on that asterisk --
-  but ONLY in ARRLCountryMode (DXCC only), where the '*' record is skipped and
-  Austria wins deterministically. In CQCountryMode (DXCC+WAE, the default)
-  there is no filter, so whichever of the two the binary search lands on wins,
-  and THAT is where the unstable sort leaks into the answer.
-
-  So the open question is not "which sort" but "in CQ mode, should 4U1A count
-  as Austria or as the Vienna International Centre" -- a contest-rules
-  question, for NY4I. When it is answered the fix belongs in ctyLocateCall
-  beside the existing asterisk test, not here; the sort would then be free to
-  become any correct algorithm, because the choice would no longer depend on
-  the order of equal keys.
+  WHAT A REPLACEMENT STILL OWES: re-run the 2064-record characterisation
+  fixture. That is what caught the first attempt, when the answer DID depend
+  on the order.
   =========================================================================== *)
 
 (* The shell sort, byte for byte as it was. The odd step-back --
@@ -977,7 +950,137 @@ begin
   ctyBuildPrefixIndex;
 end;
 
-function ctyFindCallsign(const s: PrefixName; var Index: integer): boolean;
+(* ===========================================================================
+  TWO RECORDS FOR ONE PREFIX: WHICH ONE THE PREFIX MEANS.
+
+  cty.dat files the same callsign under two entities on purpose, and the
+  LEADING ASTERISK on a primary prefix is what tells them apart -- it marks an
+  entity that is NOT a DXCC country:
+
+      Vienna Intl Ctr: ... *4U1V: =4U0IARU,=4U0R,=4U1A,=4U1VIC,=4U2U,=4UNR,...
+      Austria:            OE: OE,=4U0IARU,=4U0R,=4U1A,=4U1VIC,=4U2U,=4UNR,...
+
+      Shetland Islands: ... *GM/s: ...,=GB1DAA,=GB2ELH,...
+      Scotland:            GM: ...,=GB1DAA,=GB1OL,...
+
+  NY4I's rule, 2026-09-14: THE SPECIFIC ONE ALWAYS WINS, THEN THE LESS
+  SPECIFIC. The call-then-shortening-prefix ladder in ctyLocateCall is that
+  rule along one axis -- the whole callsign is tried before any prefix, and a
+  longer prefix before a shorter -- and it is unchanged, because it is what the
+  D7 program did (uCTYDAT.PAS, the `for TempPointer := TempLength downto 1`
+  walk) and it gets 4U right: a bare `4U` is filed under Italy, and =4U1ITU
+  under the ITU HQ entity, so the exception beats the prefix.
+
+  THIS ROUTINE IS THE SAME RULE ALONG THE OTHER AXIS, where two records are
+  equally specific as CALLSIGNS and differ only in which entity claims them.
+  The '*' entity is the sub-entity -- Vienna inside Austria, Shetland inside
+  Scotland -- so it is the more specific answer, and it wins wherever it is
+  allowed to count:
+
+      CQCountryMode  (DXCC + WAE) -- prefer the '*' record
+      ARRLCountryMode (DXCC only) -- prefer the record that is NOT '*'
+
+  UNTIL NOW NOTHING DECIDED THIS AND THE SORT DID. A shell sort is unstable, so
+  which of the two equal keys ctyFindCallsign landed on was an artifact, and
+  the results were split down the middle for no reason anyone chose:
+
+      4U0R 4U1VIC              -> 23  (*4U1V, Vienna Intl Ctr)
+      4U0IARU 4U1A 4U2U 4UNR   -> 208 (OE, Austria)
+      GB1DAA GB2ELH            -> 144 (*GM/s, Shetland)
+
+  All eight 4U calls carry the identical pair of records. Four went one way and
+  two the other. These are MULTIPLIERS on submitted logs, so the inconsistency
+  was visible to operators and had no rule behind it.
+
+  AND IT FIXES A SECOND DEFECT IN THE ARRL PATH. ctyLocateCall's exact-call
+  branch tested the found record for '*' and, when it was one, fell through to
+  the prefix walk -- it never looked for the OTHER record of the pair, which is
+  the DXCC one it wanted. Choosing before returning means the branch now gets
+  the record it was asking for.
+
+  THE SORT IS FREE AGAIN AS A RESULT. Nothing about the answer depends on where
+  an unstable sort leaves equal keys any more, so ctySortPrefixTable may be
+  replaced by any correct algorithm -- see the note above it. *)
+
+(* A '*' on the entity's primary prefix: not a DXCC country, so a sub-entity
+  of one. ID is a ShortString-style buffer indexed from 1. *)
+function ctyIsSubEntity(Index: integer): boolean;
+begin
+   Result := CTY.ctyTable[CTY.ctyPrefixesTable[Index].Country].ID[1] = '*';
+end;
+
+procedure ctyChooseAmongDuplicates(var Index: integer;
+                                   PreferFullCallsign: boolean);
+var
+   first, last, i : integer;
+   wantSub        : boolean;
+   score, best    : integer;
+begin
+   (* The binary search stops at whichever equal key it met first, so the run
+     extends in both directions from there. *)
+   first := Index;
+   while (first > 0) and
+         (CompareCharBuffer(CTY.ctyPrefixesTable[first - 1].Prefix,
+                            CTY.ctyPrefixesTable[Index].Prefix) = 0) do
+      begin
+      dec(first);
+      end;
+
+   last := Index;
+   while (last < Integer(CTY.ctyPrefixesTableRecords) - 1) and
+         (CompareCharBuffer(CTY.ctyPrefixesTable[last + 1].Prefix,
+                            CTY.ctyPrefixesTable[Index].Prefix) = 0) do
+      begin
+      inc(last);
+      end;
+
+   if first = last then
+      begin
+      Exit;
+      end;
+
+   wantSub := CTY.ctyCountryMode = CQCountryMode;
+
+   (* TWO KEYS, AND SPECIFICITY IS THE SENIOR ONE -- NY4I's rule in the order
+     he stated it. A record flagged FullCallsigns came from an `=CALL`
+     exception; one without it is a prefix. UA4H is filed BOTH ways under the
+     same entity and with two different ITU zones:
+
+         UA4H[30]     a prefix override, inside the UA block
+         =UA4H[29]    an exact-callsign exception, also UA
+
+     so for the callsign UA4H the exception wins and the answer is zone 29.
+     The prefix walk asks for the opposite -- it is looking for what a
+     SHORTENED prefix means, and must not be handed a whole callsign -- which
+     is why the caller states which it wants rather than this routine assuming.
+
+     The FIRST record of the run is the fallback, so a run whose records are
+     all alike gives the same answer whichever mode is set, and the ARRL '*'
+     filter in ctyLocateCall still rejects it exactly as before. *)
+   Index := first;
+   best := -1;
+   for i := first to last do
+      begin
+      score := 0;
+      if CTY.ctyPrefixesTable[i].FullCallsigns = PreferFullCallsign then
+         begin
+         inc(score, 2);
+         end;
+      if ctyIsSubEntity(i) = wantSub then
+         begin
+         inc(score, 1);
+         end;
+
+      if score > best then
+         begin
+         best := score;
+         Index := i;
+         end;
+      end;
+end;
+
+function ctyFindCallsign(const s: PrefixName; var Index: integer;
+                         PreferFullCallsign: boolean = True): boolean;
 var
   l, h, i, c                            : integer;
 
@@ -1022,6 +1125,13 @@ begin
      logger.error('Exception in ctyFindCallsign s = %s',[CharBufferText(s)]);
   end;
   Index := l;
+
+  (* A prefix can name two records. Which one it MEANS is decided here, by the
+    rule above, and not by where the sort happened to leave them. *)
+  if Result then
+     begin
+     ctyChooseAmongDuplicates(Index, PreferFullCallsign);
+     end;
 end;
 {
 }
@@ -1082,7 +1192,7 @@ begin
 
          if CTY.ctyCountryMode = ARRLCountryMode then
             begin
-            if CTY.ctyTable[CTY.ctyPrefixesTable[TempIndex].Country].ID[1] <> '*' then
+            if not ctyIsSubEntity(TempIndex) then
                begin
                goto FillRecord;
                end;
@@ -1128,12 +1238,15 @@ begin
   for TempPointer := TempLength downto 1 do
      begin
      TempPrefix[TempPointer] := #0;
-     if ctyFindCallsign(TempPrefix, TempIndex) then
+     (* Asking for a prefix: a run holding both an `=CALL` exception and a
+       prefix override must yield the prefix one, or the test below throws
+       the match away and the shorter prefixes never get their chance. *)
+     if ctyFindCallsign(TempPrefix, TempIndex, False) then
         begin
 
         if CTY.ctyCountryMode = ARRLCountryMode then
            begin
-           if CTY.ctyTable[CTY.ctyPrefixesTable[TempIndex].Country].ID[1] = '*' then Continue;
+           if ctyIsSubEntity(TempIndex) then Continue;
            end;
 
         if not CTY.ctyPrefixesTable[TempIndex].FullCallsigns then
