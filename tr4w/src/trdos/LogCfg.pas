@@ -90,9 +90,6 @@ procedure tSetupExchangeNumbers;
 procedure EnmuCFGFile(FileString: PShortString);
 procedure SetUpGlobalsAndInitialize;
 
-const
-  CFGFilesArray                         : array[TCFGType] of PAnsiChar = (@TR4W_CFG_FILENAME, @TR4W_INI_FILENAME, @TR4W_INPUT_CFG_FILENAME, @TR4W_DEFMESSAGES_FILENAME);
-
 var
   LineNumberInConfigFile                : integer;
   CurrentConfigFile                     : TCFGType;
@@ -677,7 +674,7 @@ end;
   sees one candidate line and stops; if it cannot read the file at all it
   answers True, so the real parser runs and reports the failure in its own
   terms. Never guess a file empty on the strength of an error. *)
-function FileHasCommands(const aFileName: PAnsiChar): boolean;
+function FileHasCommands(const aFileName: string): boolean;
 var
    lines: TStringList;
    i:     integer;
@@ -686,10 +683,10 @@ var
 begin
    Result := True;
 
-   (* HELD ONCE AS AnsiString, which is what both RTL calls below take.
-     Converting to `string` first would make it UnicodeString -- tr4w.inc sets
-     {$MODESWITCH UnicodeStrings} -- and then narrow straight back at the call,
-     which is a round trip that only the build ratchet notices. *)
+   (* HELD ONCE AS AnsiString, which is what both RTL calls below take --
+     FileExists and TStringList.LoadFromFile are 8-bit in this RTL. The name
+     arrives as a string, so this is the one explicit conversion at that
+     boundary. *)
    name := AnsiString(aFileName);
 
    if not FileExists(name) then
@@ -733,6 +730,36 @@ begin
          end;
    finally
       lines.Free;
+   end;
+end;
+
+(* WHICH FILE A CONFIG PASS READS, AS TEXT.
+
+  This was CFGFilesArray: a typed constant holding the ADDRESSES of the four
+  file-name buffers, read back as PAnsiChar -- through StrPas, through an
+  implicit conversion into a string parameter, and twice as a raw pointer in
+  an argument list. Each buffer is filled by SetCharBuffer, so CharBufferText
+  is the read. *)
+function CFGFileName(const aType: TCFGType): string;
+begin
+   Result := '';
+   case aType of
+      cfgCFG:
+         begin
+         Result := CharBufferText(TR4W_CFG_FILENAME);
+         end;
+      cfgINI:
+         begin
+         Result := CharBufferText(TR4W_INI_FILENAME);
+         end;
+      cfgINPUT:
+         begin
+         Result := CharBufferText(TR4W_INPUT_CFG_FILENAME);
+         end;
+      cfgCommMes:
+         begin
+         Result := CharBufferText(TR4W_DEFMESSAGES_FILENAME);
+         end;
    end;
 end;
 
@@ -882,19 +909,19 @@ begin
     NOTHING ABOUT THE MIGRATION CHANGES HERE -- only the case where there is
     provably nothing to do. *)
   if (ConfigFileName = cfgINI) and
-     (not FileHasCommands(CFGFilesArray[ConfigFileName])) then
+     (not FileHasCommands(CFGFileName(ConfigFileName))) then
      begin
      logger.Info('[Config] %s holds no commands -- not read. Station settings ' +
-                 'come from the JSON store.', [CFGFilesArray[ConfigFileName]]);
+                 'come from the JSON store.', [CFGFileName(ConfigFileName)]);
      Exit;
      end;
 
   if (ConfigFileName = cfgCFG) and
-     (ClassifyContestFile(string(StrPas(CFGFilesArray[ConfigFileName]))) = cfkTR4WDatabase) then
+     (ClassifyContestFile(CFGFileName(ConfigFileName)) = cfkTR4WDatabase) then
      begin
      logger.Info('[Config] %s is a log database, not a text .cfg -- the ' +
                  'contest configuration comes from the log itself',
-                 [CFGFilesArray[ConfigFileName]]);
+                 [CFGFileName(ConfigFileName)]);
      Exit;
      end;
 
@@ -913,8 +940,8 @@ begin
      ClearContestCFGCommands;
      end;
 
-  logger.Info('[Config] Loading %s', [CFGFilesArray[ConfigFileName]]);
-  EnumerateLinesInFile(CFGFilesArray[ConfigFileName], EnmuCFGFile, True);
+  logger.Info('[Config] Loading %s', [CFGFileName(ConfigFileName)]);
+  EnumerateLinesInFile(CFGFileName(ConfigFileName), EnmuCFGFile, True);
 
   // STOPGAP: Re-read ctPassword fields with original case from the INI file.
   // See the architecture note above for why this is necessary.
@@ -1307,14 +1334,14 @@ var
           MESSAGE, whose CFGCA row is commented out, so that set alone took
           this path and exited 217.
 
-          AND THE FIRST ARGUMENT IS A POINTER TOO: CFGFilesArray is an
+          AND THE FIRST ARGUMENT IS A POINTER TOO: CFGFilesArray was an
           array[TCFGType] of PAnsiChar, so %s could not consume that one
           either. Two pointers on one line, the same habit twice, and the
           first one kept the crash alive after the third was fixed.
 
           An array of const takes the strings themselves. *)
         (* BUILT BY CONCATENATION, NOT BY Format. Two of the three arguments
-          were POINTERS -- CFGFilesArray is an array of PAnsiChar and
+          were POINTERS -- CFGFilesArray was an array of PAnsiChar and
           @FileString^[1] is a PAnsiChar into a ShortString -- which %s
           cannot consume, so this path raised EConvertError and CRASHED the
           program instead of naming the line it could not read. Fixing the
@@ -1328,7 +1355,7 @@ var
           and changed nothing, because that is still a pointer. Two
           variables one name apart, and only the dereference tells them
           apart. *)
-        showwarning(AnsiString(CFGFilesArray[CurrentConfigFile]) + ':' + #13
+        showwarning(AnsiString(CFGFileName(CurrentConfigFile)) + ':' + #13
                     + 'Invalid statement in config file.' + #13 + #13
                     + 'Line ' + AnsiString(IntToStr(LineNumberInConfigFile))
                     + #13 + FileString^);

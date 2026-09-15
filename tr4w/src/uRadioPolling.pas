@@ -62,7 +62,6 @@ type
 procedure SetSerialRadioAlertState(rig: RadioPtr; alertOn: boolean);
 procedure MarkSerialRead(rig: RadioPtr; success: boolean);
 procedure pFactoryRadio(rig: RadioPtr);
-function ArrayToString(const a: array of AnsiChar): string;
 
 procedure UpdateStatus(rig: RadioPtr);
 procedure ClearRadioPanel(rig: RadioPtr);
@@ -1533,18 +1532,6 @@ begin
          // ShowMessage(PChar('Exception in SendRadioInfoToUDP. Message = '));
    end;
 end; // SendRadioInfoToUDP;
-
-function ArrayToString(const a: array of AnsiChar): string;
-begin
-  if Length(a)>0 then
-     begin
-     SetString(Result, PAnsiChar(@a[0]), Length(a))
-     end
-  else
-     begin
-     Result := '';
-     end;
-end;
 
 initialization
    { The two pieces of UI work this unit used to do on a radio thread. }

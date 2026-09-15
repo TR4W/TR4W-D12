@@ -62,6 +62,7 @@ implementation
 
 uses
   StrUtils,
+  utils_text,   // AnsiStringFromBytes -- the reply, from its bytes
   VC;   // TIdText -- Indy's own string type, which is not `string` on both compilers
 
 var
@@ -203,7 +204,11 @@ begin
 
             if RecvLen > 0 then
                begin
-               SetString(Reply, PAnsiChar(@RecvBuf[0]), RecvLen);
+               (* THE REPLY'S BYTES, AS TEXT. SetString of a string from a
+                 PAnsiChar widened the bytes by the ANSI code page; the
+                 AnsiString-to-string conversion here is the same widening,
+                 without the pointer into the receive buffer. *)
+               Reply := string(AnsiStringFromBytes(RecvBuf, 0, RecvLen));
                logger.Debug('[K4Discovery] RX %d bytes from %s:%d = [%s]',
                             [RecvLen, PeerIP, PeerPort, Reply]);
 

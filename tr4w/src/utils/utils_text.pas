@@ -79,8 +79,9 @@ procedure SetCharBufferBytes(var aBuf: array of AnsiChar; const aBytes: AnsiStri
   as they are, with no code-page conversion: a parser reading a file of mixed
   code pages -- cty.dat is CP1251 and CP1250 in places -- needs the bytes,
   not a decoding of them. This is the ONE place a slice is clamped;
-  SetShortStringFromBytes is built on it. *)
-function AnsiStringFromBytes(const aRaw: TBytes; aStart, aLength: integer): AnsiString;
+  SetShortStringFromBytes is built on it. An open array, so it takes TBytes,
+  Indy's TIdBytes -- a distinct dynamic-array type -- or a fixed buffer. *)
+function AnsiStringFromBytes(const aRaw: array of Byte; aStart, aLength: integer): AnsiString;
 
 (* A LINE OF A FILE'S BYTES INTO A SHORTSTRING, BOUNDED.
 
@@ -490,7 +491,7 @@ begin
    aBuf[n] := #0;
 end;
 
-function AnsiStringFromBytes(const aRaw: TBytes; aStart, aLength: integer): AnsiString;
+function AnsiStringFromBytes(const aRaw: array of Byte; aStart, aLength: integer): AnsiString;
 var
    n: integer;
    i: integer;
