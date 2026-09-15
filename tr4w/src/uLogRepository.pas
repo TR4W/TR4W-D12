@@ -484,7 +484,8 @@ procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiStri
 implementation
 
 uses
-   uADIF, uLogBinaryFile, ZONECONT, TF;
+   uADIF, uLogBinaryFile, ZONECONT, TF,
+   uLogNote;   (* NoteText / SetNoteText -- where a note's text lives *)
 
 (* --------------------------------------------------------------------------- *)
 (* sentinels -- crosswalk finding 3                                            *)
@@ -855,7 +856,7 @@ const
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
       'qso_points, is_dupe, is_run, is_xqso, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
-      'radio_nr, operator_call, deleted, sent_to_server, server_dirty';
+      'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes';
 
    (* THE UPDATABLE COLUMNS: the same list WITHOUT guid and WITHOUT
      qso_set_id.
@@ -881,7 +882,7 @@ const
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
       'qso_points, is_dupe, is_run, is_xqso, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
-      'radio_nr, operator_call, deleted, sent_to_server, server_dirty';
+      'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes';
 
    QSO_PARAMS =
       ':guid, :exchange_id, :qso_set_id, :session_id, :session_seq, ' +
@@ -898,7 +899,7 @@ const
       ':mult_domestic, :mult_dx, :mult_prefix, :mult_zone, :inhibit_mults, ' +
       ':qso_points, :is_dupe, :is_run, :is_xqso, :is_skipped, :sent_in_qtc, ' +
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
-      ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty';
+      ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes';
 
 (* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
@@ -1035,6 +1036,11 @@ procedure TLogRepository.BindInto(aQuery: TSQLQuery;
                                   const aQso: ContestExchange;
                                   const aGuid: AnsiString;
                                   aInserting: boolean);
+var
+   (* THE RECORD THAT IS BOUND -- aQso itself, except that a note's region
+     is cleared. See the first statement of the body. *)
+   rec: ContestExchange;
+
 
    (* AnsiString, because that is what ParamByName takes. Declaring it `string`
      narrowed on every one of sixty-odd binds. *)
@@ -1044,11 +1050,23 @@ procedure TLogRepository.BindInto(aQuery: TSQLQuery;
    end;
 
 begin
+   (* A NOTE IS NOT A SET OF FIELDS. Its text runs on from Prefix across
+     Callsign and the fields after it, so binding those fields by their
+     types stored the note as fragments -- its first letter taken as a
+     length, the rest truncated -- and put note bytes into columns such as
+     the age and the multiplier flags. So every column is bound from a copy
+     with that region cleared, and the text goes to `notes`, below. *)
+   rec := aQso;
+   if aQso.ceRecordKind = rkNote then
+      begin
+      SetNoteText(rec, '');
+      end;
+
    if aInserting then
       begin
       P('guid').AsString := aGuid;
       end;
-   BindText(P('exchange_id'), AnsiString(aQso.id));
+   BindText(P('exchange_id'), AnsiString(rec.id));
 
    (* The set this QSO belongs to. FSetIdForNextSave lets a caller put several
      rows in one set -- a county line, a POTA n-fer -- and is cleared after
@@ -1071,16 +1089,16 @@ begin
 
    (* Identity. session_id/session_seq are ceQSOID1/ceQSOID2 -- the pair
      tr4wserver matches on, and how WAE links a QTC to its QSO. *)
-   P('session_id').AsLargeInt := aQso.ceQSOID1;
-   P('session_seq').AsLargeInt := aQso.ceQSOID2;
-   BindText(P('computer_id'), AnsiString(aQso.ceComputerID));
-   P('operator_id').AsInteger := aQso.ceOperatorID;
-   P('record_kind').AsString := RecordKindToken(aQso.ceRecordKind);
+   P('session_id').AsLargeInt := rec.ceQSOID1;
+   P('session_seq').AsLargeInt := rec.ceQSOID2;
+   BindText(P('computer_id'), AnsiString(rec.ceComputerID));
+   P('operator_id').AsInteger := rec.ceOperatorID;
+   P('record_kind').AsString := RecordKindToken(rec.ceRecordKind);
 
-   P('qso_at').AsLargeInt := QSOTimeToUnixUTC(aQso.tSysTime);
-   BindText(P('callsign'), AnsiString(aQso.Callsign));
-   BindText(P('standard_call'), AnsiString(aQso.QTH.StandardCall));
-   P('freq_tx_hz').AsLargeInt := aQso.Frequency;
+   P('qso_at').AsLargeInt := QSOTimeToUnixUTC(rec.tSysTime);
+   BindText(P('callsign'), AnsiString(rec.Callsign));
+   BindText(P('standard_call'), AnsiString(rec.QTH.StandardCall));
+   P('freq_tx_hz').AsLargeInt := rec.Frequency;
 
    (* RX EQUALS TX AND SPLIT IS FALSE, because ContestExchange says nothing
      about either -- it carries ONE Frequency and no split state. That is
@@ -1089,60 +1107,60 @@ begin
      without every caller having to know about split. Live logging can do
      better, because the radio object knows; that arrives in Phase C with
      the other tier-3 facts. *)
-   P('freq_rx_hz').AsLargeInt := aQso.Frequency;
+   P('freq_rx_hz').AsLargeInt := rec.Frequency;
    P('is_split').AsInteger := 0;
-   BindText(P('band'), BandToken(aQso.Band));
-   BindText(P('mode'), ModeToken(aQso.Mode));
-   BindText(P('submode'), ExtModeToken(aQso.ExtMode));
+   BindText(P('band'), BandToken(rec.Band));
+   BindText(P('mode'), ModeToken(rec.Mode));
+   BindText(P('submode'), ExtModeToken(rec.ExtMode));
 
    (* The received exchange as rendered. There is no sent counterpart in the
      record -- crosswalk finding 1. *)
-   BindText(P('exchange_received'), AnsiString(aQso.ExchString));
+   BindText(P('exchange_received'), AnsiString(rec.ExchString));
    BindText(P('exchange_sent'), FSentExchangeForNextSave);
 
-   P('rst_sent').AsInteger := aQso.RSTSent;
-   P('rst_received').AsInteger := aQso.RSTReceived;
-   BindSerial(P('serial_sent'), aQso.NumberSent);
-   BindSerial(P('serial_received'), aQso.NumberReceived);
+   P('rst_sent').AsInteger := rec.RSTSent;
+   P('rst_received').AsInteger := rec.RSTReceived;
+   BindSerial(P('serial_sent'), rec.NumberSent);
+   BindSerial(P('serial_received'), rec.NumberReceived);
 
-   BindByte(P('rcvd_zone'), aQso.Zone, DUMMYZONE);
-   BindText(P('rcvd_name'), AnsiString(aQso.Name));
-   P('rcvd_age').AsInteger := aQso.Age;
-   P('rcvd_check').AsInteger := aQso.Check;
-   BindText(P('rcvd_precedence'), AnsiString(aQso.Precedence));
-   BindText(P('rcvd_class'), AnsiString(aQso.ceClass));
-   BindText(P('rcvd_power'), AnsiString(aQso.Power));
-   BindText(P('rcvd_chapter'), AnsiString(aQso.Chapter));
-   BindByte(P('rcvd_prefecture'), aQso.Prefecture, MAXBYTE);
-   BindWord(P('rcvd_member_no'), aQso.TenTenNum, MAXWORD);
+   BindByte(P('rcvd_zone'), rec.Zone, DUMMYZONE);
+   BindText(P('rcvd_name'), AnsiString(rec.Name));
+   P('rcvd_age').AsInteger := rec.Age;
+   P('rcvd_check').AsInteger := rec.Check;
+   BindText(P('rcvd_precedence'), AnsiString(rec.Precedence));
+   BindText(P('rcvd_class'), AnsiString(rec.ceClass));
+   BindText(P('rcvd_power'), AnsiString(rec.Power));
+   BindText(P('rcvd_chapter'), AnsiString(rec.Chapter));
+   BindByte(P('rcvd_prefecture'), rec.Prefecture, MAXBYTE);
+   BindWord(P('rcvd_member_no'), rec.TenTenNum, MAXWORD);
 
    (* THE POLYMORPHIC ONE. Stored as the literal it is; the contest factory
      decides later whether it was a grid, a section or a park. *)
-   BindText(P('rcvd_qth'), AnsiString(aQso.QTHString));
+   BindText(P('rcvd_qth'), AnsiString(rec.QTHString));
 
-   BindText(P('rcvd_random'), AnsiString(aQso.RandomCharsReceived));
-   BindText(P('random_sent'), AnsiString(aQso.RandomCharsSent));
+   BindText(P('rcvd_random'), AnsiString(rec.RandomCharsReceived));
+   BindText(P('random_sent'), AnsiString(rec.RandomCharsSent));
 
    (* Kids is overloaded by record kind -- crosswalk. For a QTC it is the call
      inside the traffic, which is not the station in `callsign`. *)
-   if aQso.ceRecordKind in [rkQTCR, rkQTCS] then
+   if rec.ceRecordKind in [rkQTCR, rkQTCS] then
       begin
       P('rcvd_kids').Clear;
-      BindText(P('qtc_call'), AnsiString(aQso.Kids));
+      BindText(P('qtc_call'), AnsiString(rec.Kids));
       end
    else
       begin
-      BindText(P('rcvd_kids'), AnsiString(aQso.Kids));
+      BindText(P('rcvd_kids'), AnsiString(rec.Kids));
       P('qtc_call').Clear;
       end;
 
-   BindText(P('domestic_qth'), AnsiString(aQso.DomesticQTH));
+   BindText(P('domestic_qth'), AnsiString(rec.DomesticQTH));
 
    (* CTY.DAT-derived, stored so a later CTY.DAT cannot rewrite history. *)
-   BindText(P('dxcc_prefix'), AnsiString(aQso.QTH.Prefix));
-   BindText(P('dxcc_entity'), AnsiString(aQso.QTH.CountryID));
-   BindWord(P('dxcc_code'), aQso.QTH.Country, UNKNOWN_COUNTRY);
-   BindByte(P('cty_cq_zone'), aQso.QTH.Zone, DUMMYZONE);
+   BindText(P('dxcc_prefix'), AnsiString(rec.QTH.Prefix));
+   BindText(P('dxcc_entity'), AnsiString(rec.QTH.CountryID));
+   BindWord(P('dxcc_code'), rec.QTH.Country, UNKNOWN_COUNTRY);
+   BindByte(P('cty_cq_zone'), rec.QTH.Zone, DUMMYZONE);
    (* THE INDEX IS CHECKED, NOT ASSUMED, AND THIS WAS A REAL CRASH.
 
      ContinentTypeSA is `array[ContinentType] of PAnsiChar` -- a POINTER table
@@ -1165,10 +1183,10 @@ begin
 
      Out of range is stored as NULL -- the same as unknown, which is what it
      is -- and reported once so it cannot be mistaken for a clean import. *)
-   if (aQso.QTH.Continent = UnknownContinent) or
-      (Ord(aQso.QTH.Continent) > Ord(High(ContinentType))) then
+   if (rec.QTH.Continent = UnknownContinent) or
+      (Ord(rec.QTH.Continent) > Ord(High(ContinentType))) then
       begin
-      if aQso.QTH.Continent <> UnknownContinent then
+      if rec.QTH.Continent <> UnknownContinent then
          begin
          (* COUNTED, NOT LOGGED, because this unit has NO LOGGER ON PURPOSE --
            it links into the test binary and must not drag MainUnit's globals
@@ -1194,43 +1212,56 @@ begin
         A STORAGE TOKEN MUST NOT BE A DISPLAY STRING. ContinentTypeSA is the
         stable two-letter code -- 'NA', 'EU' -- which is also exactly what
         GetContinentFromString parses, so the pair round-trips by construction. *)
-      P('cty_continent').AsString := AnsiString(ContinentTypeSA[aQso.QTH.Continent]);
+      P('cty_continent').AsString := AnsiString(ContinentTypeSA[rec.QTH.Continent]);
       end;
 
    (* The multiplier strings as counted, and the outcome flags. *)
-   BindText(P('prefix_mult'), AnsiString(aQso.Prefix));
-   BindText(P('dx_mult'), AnsiString(aQso.DXQTH));
-   BindText(P('domestic_mult'), AnsiString(aQso.DomMultQTH));
-   BindBool(P('mult_domestic'), aQso.DomesticMult);
-   BindBool(P('mult_dx'), aQso.DXMult);
-   BindBool(P('mult_prefix'), aQso.PrefixMult);
-   BindBool(P('mult_zone'), aQso.ZoneMult);
-   BindBool(P('inhibit_mults'), aQso.InhibitMults);
+   BindText(P('prefix_mult'), AnsiString(rec.Prefix));
+   BindText(P('dx_mult'), AnsiString(rec.DXQTH));
+   BindText(P('domestic_mult'), AnsiString(rec.DomMultQTH));
+   BindBool(P('mult_domestic'), rec.DomesticMult);
+   BindBool(P('mult_dx'), rec.DXMult);
+   BindBool(P('mult_prefix'), rec.PrefixMult);
+   BindBool(P('mult_zone'), rec.ZoneMult);
+   BindBool(P('inhibit_mults'), rec.InhibitMults);
 
-   P('qso_points').AsInteger := aQso.QSOPoints;
-   BindBool(P('is_dupe'), aQso.ceDupe);
+   P('qso_points').AsInteger := rec.QSOPoints;
+   BindBool(P('is_dupe'), rec.ceDupe);
 
    (* INVERTED. is_run is the opposite of ceSearchAndPounce, and a straight copy
      would be wrong in a way nothing reports. *)
-   BindBool(P('is_run'), not aQso.ceSearchAndPounce);
+   BindBool(P('is_run'), not rec.ceSearchAndPounce);
 
-   BindBool(P('is_xqso'), aQso.ceXQSO);
+   BindBool(P('is_xqso'), rec.ceXQSO);
    (* is_skipped IS WRITTEN AS FALSE AND NEVER READ BACK INTO ITS OWN FIELD.
      The column stays because dropping it is a schema migration for a fact
      nothing consumes; what it MEANT is now ceQSO_Deleted, and the reader folds
      any historical 1 into that. See ceQSO_Skiped in VC.pas. *)
    BindBool(P('is_skipped'), False);
-   BindBool(P('sent_in_qtc'), aQso.ceWasSendInQTC);
-   BindBool(P('name_sent'), aQso.NameSent);
-   BindBool(P('mp3_recorded'), aQso.MP3Record);
-   BindBool(P('clear_dupe_sheet'), aQso.ceClearDupeSheet);
-   BindBool(P('clear_mult_sheet'), aQso.ceClearMultSheet);
+   BindBool(P('sent_in_qtc'), rec.ceWasSendInQTC);
+   BindBool(P('name_sent'), rec.NameSent);
+   BindBool(P('mp3_recorded'), rec.MP3Record);
+   BindBool(P('clear_dupe_sheet'), rec.ceClearDupeSheet);
+   BindBool(P('clear_mult_sheet'), rec.ceClearMultSheet);
 
-   P('radio_nr').AsInteger := Ord(aQso.ceRadio);
-   BindText(P('operator_call'), CharArrayToAnsi(aQso.ceOperator));
-   BindBool(P('deleted'), aQso.ceQSO_Deleted);
-   BindBool(P('sent_to_server'), aQso.ceSendToServer);
-   BindBool(P('server_dirty'), aQso.ceNeedSendToServerAE);
+   P('radio_nr').AsInteger := Ord(rec.ceRadio);
+   BindText(P('operator_call'), CharArrayToAnsi(rec.ceOperator));
+   BindBool(P('deleted'), rec.ceQSO_Deleted);
+   BindBool(P('sent_to_server'), rec.ceSendToServer);
+   BindBool(P('server_dirty'), rec.ceNeedSendToServerAE);
+
+   if aQso.ceRecordKind = rkNote then
+      begin
+      BindText(P('notes'), NoteText(aQso));
+      (* callsign IS NOT NULL, and BindText stores '' as NULL -- right for
+        every optional column and wrong here. A note has no callsign; say
+        so with an empty one rather than fail the insert. *)
+      P('callsign').AsString := '';
+      end
+   else
+      begin
+      P('notes').Clear;
+      end;
 end;
 
 procedure TLogRepository.BindRecord(const aQso: ContestExchange;
@@ -1393,6 +1424,16 @@ begin
    aQso.ceQSO_Deleted := FieldBool(F('deleted')) or FieldBool(F('is_skipped'));
    aQso.ceSendToServer := FieldBool(F('sent_to_server'));
    aQso.ceNeedSendToServerAE := FieldBool(F('server_dirty'));
+
+   (* A NOTE'S TEXT GOES BACK INTO THE LAYOUT IT WAS WRITTEN IN. Every field
+     above was read by its type, and for a note those fields were bound
+     from a cleared region -- so this restores exactly the record
+     tr4w_add_note_in_log produced, and every reader sees what it always
+     saw. *)
+   if aQso.ceRecordKind = rkNote then
+      begin
+      SetNoteText(aQso, S('notes'));
+      end;
 end;
 
 function TLogRepository.SaveQSO(const aQso: ContestExchange): Int64;

@@ -430,7 +430,8 @@ uses
   uLogSource,
   (* ActiveContest -- the contest formats its own exchange, phase F. *)
   uContestFactory,
-  uCFG;
+  uCFG,
+  uLogNote;   (* NoteText -- MakeNotesList *)
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
 // interface-section 'uses uMults' clause above.
 
@@ -3728,7 +3729,6 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       label
         1;
       var
-        Note: PAnsiChar;
         Minutes, Hour: integer;
       begin
       MakeReportFileName( 'Notes.txt' );
@@ -3751,13 +3751,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             begin
             Minutes := TempRXData.tSysTime.qtMinute;
             Hour    := TempRXData.tSysTime.qtHour;
-            Note    := @TempRXData.Prefix;
             // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
             // %s=date, %02u=Hour, %02u=Minutes, %s=Note (%02u -> %.2u zero-pad).
             sWriteFileFromString( tReportFileWrite,
                sysutils.Format( '%s %.2u:%.2u: %s'#13#10,
                [ tGetDateFormat( TempRXData.tSysTime ), Hour, Minutes,
-               string( Note ) ] ) );
+               string( NoteText( TempRXData ) ) ] ) );
             end;
 
          goto 1;

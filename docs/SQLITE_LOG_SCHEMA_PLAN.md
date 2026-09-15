@@ -447,7 +447,7 @@ CREATE TABLE qso (
     radio_nr          INTEGER DEFAULT 1,
     operator_call     TEXT,
     deleted           INTEGER DEFAULT 0,
-    notes             TEXT,
+    notes             TEXT,               -- rkNote: the note's text (uLogNote)
 
     -- =====================================================================
     -- DISTRIBUTION STATE. Not about the contact -- about what we have told

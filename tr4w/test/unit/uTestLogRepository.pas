@@ -53,6 +53,7 @@ type
       procedure TestUpdateOfAMissingRowSaysSo;
       procedure TestWholeCorpusLogRoundTrips;
       procedure TestIndexAddressesTheSameRecordAsAReadInOrder;
+      procedure TestANoteSurvivesTheLog;
    public
       procedure RunAllTests; override;
    end;
@@ -65,7 +66,8 @@ uses
      never reach the log.  It was Windows; LCLType declares both and is what
      the rest of the tree now uses for them. *)
    LCLType, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
-   uLogRepository;
+   uLogRepository,
+   uLogNote;   (* NoteText / SetNoteText -- a note's text *)
 
 function TLogRepositoryTests.TempLogName(const aLeaf: string): string;
 begin
@@ -1076,6 +1078,89 @@ end;
   import runs, Windows is where it is tested, and
   TestTheRecordHasTheSameFIELD_OFFSETSEverywhere stays as the thing that says
   why if anyone tries to widen it again. *)
+(* ===========================================================================
+  A NOTE, WRITTEN THE WAY THE PROGRAM WRITES ONE, THROUGH THE LOG.
+
+  THIS TEST FOUND A DATA-LOSS DEFECT, and was written to answer a question
+  rather than to pass. A note is not a field: its text runs on from Prefix
+  across Callsign and the fields after it. The mapper stored those as
+  separate typed columns, and this is what came back:
+
+      wrote      'the rig drifted 200 Hz after the band change'
+      read back  Prefix 'he rig', Callsign 'rifted 200 Hz'
+
+  -- the first character of each field consumed as a length, both
+  truncated, and everything past byte 22 gone. The text could not be
+  recovered from what was stored. The schema had a `notes` column for it
+  that nothing bound.
+
+  Now it does, and the record comes back in the layout it was written in.
+  If this fails again, a note is being lost on its way into the log. *)
+procedure TLogRepositoryTests.TestANoteSurvivesTheLog;
+const
+   (* Longer than Prefix and Callsign together, as a real note is. *)
+   NOTE_TEXT = 'the rig drifted 200 Hz after the band change';
+var
+   db:      TLogDatabase;
+   repo:    TLogRepository;
+   reader:  TLogBinaryReader;
+   seed, before, after: ContestExchange;
+   rowId:   Int64;
+   fn:      string;
+   got:     boolean;
+   s:       ShortString;
+   rawText: AnsiString;
+begin
+   BeginTest('a note written the way the program writes one survives the log');
+   fn := TempLogName('note.db');
+   Scrub(fn);
+
+   (* The contest comes from a real log, as every other test here takes it. *)
+   reader := TLogBinaryReader.Create(CorpusLog('cqww_ssb_2025_ny4i'));
+   try
+      CheckTrue(reader.Status = lbOK, 'the fixture opens: ' + reader.Message);
+      got := reader.ReadNext(seed);
+      CheckTrue(got, 'the fixture has a record to take the contest from');
+   finally
+      reader.Free;
+   end;
+
+   (* The way the program writes a note. uTestLogNote proves SetNoteText
+     produces the same bytes the old writer did. *)
+   s := NOTE_TEXT;
+   FillChar(before, SizeOf(ContestExchange), 0);
+   before.ceRecordKind := rkNote;
+   SetNoteText(before, s);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(seed.ceContest);
+         rowId := repo.SaveQSO(before);
+         repo.Commit;
+
+         CheckTrue(repo.LoadQSO(rowId, after), 'the note reads back');
+         CheckTrue(after.ceRecordKind = rkNote, 'it is still a note');
+
+         rawText := NoteText(after);
+
+         CheckEquals(string(NOTE_TEXT), string(rawText),
+            'the note''s text is recoverable after the log round trip. ' +
+            'NoteText gave [' + string(rawText) + ']; ' +
+            'Prefix read as a ShortString gave [' + string(after.Prefix) +
+            ']; Callsign gave [' + string(after.Callsign) + ']');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
 {$IFNDEF WINDOWS}
@@ -1099,6 +1184,7 @@ begin
    TestUpdateOfAMissingRowSaysSo;
    TestWholeCorpusLogRoundTrips;
    TestIndexAddressesTheSameRecordAsAReadInOrder;
+   TestANoteSurvivesTheLog;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

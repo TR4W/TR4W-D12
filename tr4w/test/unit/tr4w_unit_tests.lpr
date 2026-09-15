@@ -317,6 +317,8 @@ uses
 uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
    uLogRepository       in '..\..\src\uLogRepository.pas',
    uTestLogRepository   in 'uTestLogRepository.pas',
+   uLogNote             in '..\..\src\domain\uLogNote.pas',
+   uTestLogNote         in 'uTestLogNote.pas',
    uTestLogNaming       in 'uTestLogNaming.pas',
 uTestContestFileKind       in 'uTestContestFileKind.pas',
    uLogImport           in '..\..\src\uLogImport.pas',
@@ -437,6 +439,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TLogNoteTests.Create('LogNote'));
    RegisterSuite(TKeychainTests.Create('Keychain'));
    RegisterSuite(TTestWindowSnap.Create('WindowSnap'));
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));

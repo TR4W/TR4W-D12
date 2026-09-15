@@ -139,6 +139,7 @@ uses
   MainUnit,
   uEditQSOForm,     // the LCL form, and the id-to-control accessors
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
+  uLogNote,         // NoteText -- the note's text
   uConfigValues;
 
 // Fills the form from the log record under the edit cursor.
@@ -841,11 +842,10 @@ end;
 
 procedure ShowNote(CE: ContestExchange);
 begin
-  (* Prefix ITSELF, not @Prefix. With no [1] that pointer aimed at the
-    ShortString'''s LENGTH BYTE, so the note opened with a stray control
-    character; an array of const takes the string and its length together. *)
+  (* THE NOTE'S TEXT. Prefix read as a ShortString takes a note's first
+    character as a length -- see uLogNote. *)
   ShowMessage(SysUtils.Format(AnsiString(LclText(RC_NOTE + ' :'#13#10#13#10'%s')),
-                              [EditableQSORXData.Prefix]));
+                              [string(NoteText(EditableQSORXData))]));
 end;
 
 procedure OpenEditQSOWindow;

@@ -745,6 +745,7 @@ uses
   uWindowLayoutStore, // the window layout, keyed by name
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
   uWSJTXState,       // the state the WSJT-X indicator paints from
+  uLogNote,          // NoteText / SetNoteText -- a note's text, spelled once
   uPanadapterForm;   // it is not a tw_ window, so it saves its own row
 
 
@@ -3746,9 +3747,7 @@ begin
      end;
   FillChar(TempRXData, SizeOf(ContestExchange), 0);
   TempRXData.ceRecordKind := rkNote;
-  (* Move, and the arguments reverse: MoveMemory(Dest, Src, Len) but
-    Move(const Src, var Dest, Count). *)
-  Move(s[1], TempRXData.Prefix, i);
+  SetNoteText(TempRXData, Copy(s, 1, i));
   AddRecordToLogAndSendToNetwork(TempRXData);
 end;
 
@@ -8013,9 +8012,11 @@ begin
      RowTextAnsi := LclText(RC_NOTE);   elviText := RowTextAnsi;
      EmitCol(elviCol, elviText, aCollect);
      elviCol := ColumnsArray[logColCallsign].pos; //(logColCallsign);
-     (* Prefix ITSELF. With no [1] this pointed at the ShortString's LENGTH
-       BYTE, so the column opened with a stray control character. *)
-     elviText := RXData.Prefix;
+     (* THE NOTE'S TEXT, through the one place that knows where it lives.
+       This read Prefix as a ShortString, on the reasoning that @Prefix pointed
+       at a length byte -- but for a note the byte at Prefix is the FIRST
+       CHARACTER, so the column lost it and read on past the field. *)
+     elviText := NoteText(RXData);
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 
