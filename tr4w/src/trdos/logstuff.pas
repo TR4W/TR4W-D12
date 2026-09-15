@@ -1270,24 +1270,16 @@ procedure ShowName(Call: CallString);
 
 var
   Name: CallString;
-  p: PAnsiChar;
 begin
   Call := RootCall(Call);
 
   NameCallsignPutUp := Call;
-  FillChar(Name, SizeOf(Name), 0);
   Name := CD.GetName(Call);
 
-  if Name <> '' then
-     begin
-     p := @Name[1]
-     end
-  else
-     begin
-     p := nil;
-     end;
-
-  TR4WMainForm.pnlName.Caption := p;
+  (* THE NAME ITSELF. A pointer to Name[1] stood here, read as a C string --
+    which is why the FillChar above it existed: to leave a zero after the
+    text. An empty name was a nil pointer, which the caption read as ''. *)
+  TR4WMainForm.pnlName.Caption := Name;
 end;
 
 procedure SayName(Call: CallString);

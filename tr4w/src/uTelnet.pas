@@ -91,7 +91,7 @@ function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 procedure tCreateAndAddNewSpot(Call: CallString; Dupe: boolean; Radio:
   RadioPtr);
-procedure AppendTelnetPopupMenu(MenuText: PAnsiChar);
+procedure AppendTelnetPopupMenu(const MenuText: string);
 { Rebuild the cluster drop-down after the library has been edited, KEEPING the
   operator's current choice. Called by Preferences when it saves. }
 procedure TelnetRefreshClusterList;
@@ -442,12 +442,6 @@ end;
 function TelnetClusterSegments(const Src: string): TClusterSegments;
 begin
    Result := ExpandClusterSegments(Src, TelnetClusterTokenValue);
-end;
-
-// The finished command text, for callers that do not need the boundaries.
-function ExpandClusterTokens(Src: PAnsiChar): AnsiString;
-begin
-   Result := AnsiString(SegmentsToText(TelnetClusterSegments(string(AnsiString(Src)))));
 end;
 
 { ---------------------------------------------------------------------------
@@ -1995,7 +1989,7 @@ end;
   is a TMenuItem and nil means top level.  Same shape, but the item that owns
   the submenu and the submenu itself are now ONE object rather than two that
   could disagree. }
-procedure AppendTelnetPopupMenu(MenuText: PAnsiChar);
+procedure AppendTelnetPopupMenu(const MenuText: string);
 var
   Text: string;
   Enabled: boolean;
@@ -2005,12 +1999,12 @@ begin
      begin
      Exit;
      end;
-  if MenuText[0] = #0 then
+  if MenuText = '' then
      begin
      Exit;
      end;
 
-  Text := string(AnsiString(MenuText));
+  Text := MenuText;
   Enabled := True;
   Offset := 1;
 
@@ -2083,7 +2077,9 @@ begin
      begin
      Exit;
      end;
-  AppendTelnetPopupMenu(@FileString^[1]);
+  (* THE LINE, BOUNDED BY ITS LENGTH. @FileString^[1] handed on the address
+    of the text, to be read as far as the next NUL. *)
+  AppendTelnetPopupMenu(string(FileString^));
 end;
 
 initialization

@@ -137,8 +137,6 @@ procedure WAEQTC2;
 label
   SaveQTC, StopQTC, KeepGoing;
 
-var
-    p                                     : PAnsiChar;
 begin
 
 
@@ -167,9 +165,8 @@ begin
   if NumberQTCsAlreadySent >= 10 then
      begin
      DoABeep(Warning);
-     p := @QTCCallsign[1];
      // Issue #997: asm wsprintf-push -> TF.Format.
-     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SORRYYOUALREADYHAVE10QTCSWITH)), [p]));
+     QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SORRYYOUALREADYHAVE10QTCSWITH)), [string(QTCCallsign)]));
      Exit;
      end;
 

@@ -2594,27 +2594,20 @@ end;
 
 function LowerCase(const s: string): string;
 var
-  ch                                    : Char;
-  l                                     : integer;
-  Source, Dest                          : PChar;
+  i                                     : integer;
 begin
-  l := length(s);
-  SetLength(Result, l);
-  Source := Pointer(s);
-  Dest := Pointer(Result);
-  while l <> 0 do
+  (* INDEXED, NOT WALKED. The same fold -- 'A'..'Z' only, everything else
+    untouched -- over the string's own positions, where two PChars used to
+    step through its buffer. Compared with 'A' and 'Z' rather than a set, so
+    the test does not depend on how wide a Char is. *)
+  Result := s;
+  for i := 1 to Length(Result) do
      begin
-     ch := Source^;
-     if ch in ['A'..'Z'] then
+     if (Result[i] >= 'A') and (Result[i] <= 'Z') then
         begin
-        inc(ch, 32);
+        Result[i] := Char(Ord(Result[i]) + 32);
         end;
-     Dest^ := ch;
-     inc(Source);
-     inc(Dest);
-     dec(l);
      end;
-
 end;
 
 function Lpt1BaseAddress: Word;

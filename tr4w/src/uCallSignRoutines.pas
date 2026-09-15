@@ -494,7 +494,6 @@ function GetRussiaOblastID(Call: string): string; //
 var
 
   Oblast                                : string;
-  r                                     : PAnsiChar;   // boundary: indexes RussianRegionsTypeIdArray (ANSI)
   reg                                   : RussianRegionType;
 begin
   Result := '';
@@ -503,8 +502,7 @@ begin
   if length(Oblast) < 2 then Exit;
   reg := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
   if reg = rtUnknownRegion then Exit;
-  r := RussianRegionsTypeIdArray[GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]))];
-  Result := Char(r[0]) + Char(r[1]);   // was Result[0]:=#2; Result[1]:=AnsiChar(r[0]); Result[2]:=AnsiChar(r[1]);
+  Result := Char(RussianRegionsTypeIdArray[reg][0]) + Char(RussianRegionsTypeIdArray[reg][1]);   // was Result[0]:=#2; Result[1]:=AnsiChar(r[0]); Result[2]:=AnsiChar(r[1]);
 end;
 function CaliforniaCall(Call: string): boolean;
 begin
