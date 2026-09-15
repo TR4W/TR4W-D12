@@ -285,7 +285,7 @@ if ($countsAreComplete -and ($narrowLines.Count -gt $NARROW_CEILING))
    Write-Host "BUILD FAILED: $($narrowLines.Count) narrowing conversions, ceiling is $NARROW_CEILING."
    Write-Host '  Each one can lose characters: to a bounded ShortString it TRUNCATES, to'
    Write-Host '  AnsiString it mangles anything outside the ANSI codepage. Convert'
-   Write-Host '  explicitly at the boundary -- uAnsiStr.LclText for text going to the LCL,'
+   Write-Host '  explicitly at the boundary -- utils_text.LclText for text going to the LCL,'
    Write-Host '  which is UTF-8 -- rather than letting the assignment do it silently.'
    exit 1
    }

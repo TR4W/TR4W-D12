@@ -71,7 +71,7 @@ rebuild them.
 
 ```powershell
 .\tools\Compile-Linux.ps1 VC.pas
-.\tools\Compile-Linux.ps1 utils\uAnsiStr.pas -All
+.\tools\Compile-Linux.ps1 utils\utils_text.pas -All
 ```
 
 It compiles ONE unit (and everything it uses) for x86_64-linux and prints either

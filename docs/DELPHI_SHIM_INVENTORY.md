@@ -69,7 +69,8 @@ These bridge two RTLs. Only the FPC half has been compiled since August.
 | `uCRC32.pas` | `System.ZLib` ⟷ `crc` | |
 | `utils/uWin32Compat.pas` | declares what FPC's `windows` unit lacks | **genuinely still needed.** Its header argues for keeping the gap in one readable place, and that argument still holds |
 | `uGradient.pas` | `GRADIENT_RECT`, `msimg32` | same — a real gap in FPC's `windows`, not a difference |
-| `utils/uAnsiStr.pas`, `utils/uFileText.pas` | string and file boundaries | their headers say they **own** the behaviour rather than shim around it. Probably keep; read before touching |
+| ~~`utils/uAnsiStr.pas`~~ | ~~string boundaries~~ | **DELETED 2026-09-15.** Eight of its nine routines had no caller; `LclText` moved to `utils_text` |
+| `utils/uFileText.pas` | file boundaries | its header says it **owns** the behaviour rather than shimming around it. Probably keep; read before touching |
 
 ### `ui/lcl/uLCLCoexist.pas` — live, but its premise ended
 

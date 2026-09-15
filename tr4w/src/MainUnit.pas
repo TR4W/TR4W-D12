@@ -2849,7 +2849,9 @@ var
      nothing. *)
    posPath: AnsiString;
 begin
-   posPath := StrPas(TR4W_POS_FILENAME);
+   (* The buffer holds a path; LclText states the UTF-8 boundary that the
+     StrPas here used to cross implicitly. *)
+   posPath := LclText(CharBufferText(TR4W_POS_FILENAME));
 
    // Not an error and not worth a log line: the overwhelming majority of
    // startups are an operator who never had a .pos file, or whose layout has
@@ -3203,8 +3205,8 @@ begin
      tCleareCallWindow; // 4.139.2
      Result := True;
      logger.debug('[TuneOnFreqFromCallWindow] Clearing Mults and QSO Needs Headers');
-     TR4WMainForm.pnlMultNeedsHeader.Caption := PAnsiChar('');
-     TR4WMainForm.pnlQSONeedsHeader.Caption := PAnsiChar('');
+     TR4WMainForm.pnlMultNeedsHeader.Caption := '';
+     TR4WMainForm.pnlQSONeedsHeader.Caption := '';
      end;
 
   {
@@ -4746,7 +4748,7 @@ function TRMasterDownloadTarget: string;
 var
    resolved: string;
 begin
-   resolved := string(PAnsiChar(@CD.ActiveFilename));
+   resolved := CharBufferText(CD.ActiveFilename);
 
    if SysUtils.FileExists(resolved) then
       begin
@@ -5502,7 +5504,7 @@ begin
 
     menu_download_latest_cty_dat:
       begin
-      QuickDisplay(PAnsiChar(TC_DOWNLOADINGCTYDAT));
+      QuickDisplay(TC_DOWNLOADINGCTYDAT);
       (* DOWNLOAD INTO THE CONTEST DIRECTORY, not over whatever
         TR4W_CTY_FILENAME happens to point at.
 
@@ -8807,7 +8809,7 @@ function OpenLogFile: boolean;
 var
   h: THandle;
 begin
-  h := FileOpen(StrPas(TR4W_LOG_FILENAME), fmOpenReadWrite or fmShareDenyNone);
+  h := FileOpen(CharBufferText(TR4W_LOG_FILENAME), fmOpenReadWrite or fmShareDenyNone);
   Result := h <> THandle(feInvalidHandle);
   if Result then
      begin
@@ -8996,7 +8998,7 @@ begin
 
   (* AND THE OLD BINARY LOG, IF ONE IS STILL BESIDE IT -- moved aside, never
     destroyed. *)
-  trw := StrPas(TR4W_LOG_FILENAME);
+  trw := LclText(CharBufferText(TR4W_LOG_FILENAME));
   if FileExists(trw) then
      begin
      (* The literal is cast so the overload is unambiguous: ChangeFileExt
@@ -9446,10 +9448,10 @@ begin
                 [ColIndex, NewWidth]);
 
    (* See the note above this routine. *)
-   if ClassifyContestFile(StrPas(@TR4W_CFG_FILENAME[0])) <> cfkTextConfig then
+   if ClassifyContestFile(CharBufferText(TR4W_CFG_FILENAME)) <> cfkTextConfig then
       begin
       logger.Debug('[ColumnWidth] not saved -- the contest file is not a text ' +
-                   '.cfg (%s)', [StrPas(@TR4W_CFG_FILENAME[0])]);
+                   '.cfg (%s)', [CharBufferText(TR4W_CFG_FILENAME)]);
       Exit;
       end;
 
@@ -10477,7 +10479,7 @@ begin
         // NO QUOTING. RunProgram passes arguments as a LIST, so a path with
         // a space in it needs no quotes -- and hand-quoting was the bug this
         // line was written to avoid.
-        launched := RunProgram(string(PAnsiChar(@editor[0])),
+        launched := RunProgram(CharBufferText(editor),
                                [FileName]);
         end;
      end;
@@ -11273,7 +11275,7 @@ begin
   if (sVersion <> 'v1.5') and (sVersion <> 'v1.6') then
      begin
      ansiMsg := AnsiString('Cannot convert log version ' + sVersion + ' to ' + LOGVERSION + '. Unknown source version.');
-     ShowMessage(PAnsiChar(ansiMsg));
+     ShowMessage(ansiMsg);
      logger.Fatal('AskConvertLog: unknown source version: ' + sVersion);
      Exit;
      end;
@@ -11293,10 +11295,10 @@ begin
      Halt;
      end;
 
-  NewFile := StrPas(TR4W_LOG_FILENAME) + '-' + sVersion + '.bkup';
+  NewFile := CharBufferText(TR4W_LOG_FILENAME) + '-' + sVersion + '.bkup';
   if not FileExists(TR4W_LOG_FILENAME) then
      begin
-     ShowMessage(PAnsiChar(TC_LOGFILENOTFOUND));
+     ShowMessage(LclText(TC_LOGFILENOTFOUND));
      Exit;
      end;
 
@@ -11305,7 +11307,7 @@ begin
      attrs := FileGetAttr(NewFile);
      if attrs and faReadOnly > 0 then
         begin
-        ShowMessage(PAnsiChar(TC_CANNOTCOPYLOGREADONLY));
+        ShowMessage(LclText(TC_CANNOTCOPYLOGREADONLY));
         Exit;
         end;
      end;
@@ -11322,14 +11324,14 @@ begin
     is bFailIfExists, and it was False, so the copy overwrote. The read-only
     check above is what actually guards an existing file. ExceptionOnError
     stays False so a failure still arrives as False, not as an exception. *)
-  if not FileUtil.CopyFile(StrPas(TR4W_LOG_FILENAME), LclText(NewFile),
+  if not FileUtil.CopyFile(LclText(CharBufferText(TR4W_LOG_FILENAME)), LclText(NewFile),
                            [cffOverwriteFile], False) then
      begin
-     ShowMessage(PAnsiChar(TC_CANNOTBACKUPLOG + StrPas(TR4W_LOG_FILENAME)));
+     ShowMessage(LclText(TC_CANNOTBACKUPLOG + CharBufferText(TR4W_LOG_FILENAME)));
      Exit;
      end;
 
-  ShowMessage(PAnsiChar(TC_BACKUPCREATED));
+  ShowMessage(LclText(TC_BACKUPCREATED));
   fileSetCode := FileSetAttr(NewFile, faReadOnly);
   if fileSetCode = 0 then
      begin
@@ -11343,8 +11345,8 @@ begin
 
   // Rename the original log to TR4W_LOG_FILENAME + '.<vN_N>' (e.g. .v1_5, .v1_6, .v1_7)
   sVersionTag := StringReplace(sVersion, '.', '_', [rfReplaceAll]);
-  OldFile := StrPas(TR4W_LOG_FILENAME) + '.' + sVersionTag;
-  fName := StrPas(TR4W_LOG_FILENAME);
+  OldFile := CharBufferText(TR4W_LOG_FILENAME) + '.' + sVersionTag;
+  fName := CharBufferText(TR4W_LOG_FILENAME);
   if not RenameFile(fName, OldFile) then
      begin
      ShowMessage(string(TC_CANNOTRENAME) + ' ' + fName + ' >>> ' + OldFile);

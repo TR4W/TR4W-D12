@@ -210,7 +210,6 @@ after it has sat for a day.
 
 | unit | live | note |
 |---|---:|---|
-| `uAnsiStr.pas` | 28 | **THE SHIM IS DOWN TO 4 CALL SITES.** What is left in the unit is almost all its own declarations plus `LclText`, which is not a C-string routine at all -- see below |
 | `MainUnit.pas` | 26 | |
 | `postunit.pas` | 21 | Cabrillo/ADIF writers |
 | `TF.pas` | 28 | façade GONE; what remains returns a PAnsiChar into a shared global |
@@ -219,7 +218,19 @@ after it has sat for a day.
 | `uHamLibDirect.pas` | 14 | a real C ABI boundary; was 20 before the three offset helpers went |
 | `logdvp.pas`, `tr4wserverUnit.pas`, `tree.pas` | 15 each | |
 
-#### The C-string shim: 60 call sites -> 4, and what the last four are
+#### The C-string shim: 60 call sites -> 0, AND THE UNIT IS DELETED (2026-09-15)
+
+`uAnsiStr` is gone. Eight of its nine routines had no caller left --
+`StrLen`, `StrIComp`, `StrPCopy`, `StrLCopy` and `AppendToBuffer` outright;
+`StrComp` because `utils_text` has its own and uCTYDAT calls that one; `StrPos`
+because only its own tests did. The ninth, `StrPLCopy`, had three sites in
+`tr4wserver`, and they are `utils_text.SetCharBufferBytes` now -- a byte-exact
+write, NOT `SetCharBuffer`, because one of the three is the multi-op server
+password and re-encoding it would change the wire format.
+
+`LclText` -- the one routine in that unit that had nothing to do with C
+strings -- moved to `utils_text`, where the tests can reach it.
+
 
 Every `StrPCopy` / `StrPLCopy` / `StrLCopy` writing a fixed buffer, every
 `StrLen` reading one, and both `strpos` searches are gone. The helpers that
