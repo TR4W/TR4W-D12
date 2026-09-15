@@ -72,6 +72,18 @@ function CharBufferBytes(const aBuf: array of AnsiChar): AnsiString;
   wire's, and SetCharBuffer everywhere else. *)
 procedure SetCharBufferBytes(var aBuf: array of AnsiChar; const aBytes: AnsiString);
 
+(* A LINE OF A FILE'S BYTES INTO A SHORTSTRING, BOUNDED.
+
+  For readers that still hand a line on as a ShortString --
+  TF.EnumerateLinesInFile's callbacks take a PShortString. Copies at most
+  255 bytes of aRaw starting at aStart, reads nothing outside aRaw, and sets
+  EVERY byte after the text to zero, so a callback that reads the text as a
+  C string still finds its terminator even when the previous line was
+  longer. It replaces a Move with no bound, which wrote past the ShortString
+  for any line longer than 255 bytes. *)
+procedure SetShortStringFromBytes(var aDest: ShortString; const aRaw: TBytes;
+                                  aStart, aLength: integer);
+
 (* ONE SLICE OF A BUFFER, BY POSITION AND LENGTH.
 
   For fixed-column parsing -- a DX cluster line, where the callsign sits at a
@@ -466,6 +478,39 @@ begin
       aBuf[i - 1] := AnsiChar(raw[i]);
       end;
    aBuf[n] := #0;
+end;
+
+procedure SetShortStringFromBytes(var aDest: ShortString; const aRaw: TBytes;
+                                  aStart, aLength: integer);
+const
+   SHORTSTRING_MAX = 255;
+var
+   n: integer;
+   i: integer;
+begin
+   n := 0;
+   if (aStart >= 0) and (aStart < Length(aRaw)) and (aLength > 0) then
+      begin
+      n := aLength;
+      if n > Length(aRaw) - aStart then
+         begin
+         n := Length(aRaw) - aStart;
+         end;
+      if n > SHORTSTRING_MAX then
+         begin
+         n := SHORTSTRING_MAX;
+         end;
+      end;
+
+   aDest[0] := AnsiChar(n);
+   for i := 1 to n do
+      begin
+      aDest[i] := AnsiChar(aRaw[aStart + i - 1]);
+      end;
+   for i := n + 1 to SHORTSTRING_MAX do
+      begin
+      aDest[i] := #0;
+      end;
 end;
 
 function CharBufferBytes(const aBuf: array of AnsiChar): AnsiString;

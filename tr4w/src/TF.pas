@@ -1036,8 +1036,6 @@ end;
 
 
 function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
-label
-  LastLine;
 var
   (* THE FILE IS READ, NOT MEMORY-MAPPED (2026-09-07).
 
@@ -1046,23 +1044,41 @@ var
     has no portable mapping. It is a TFileStream read into a TBytes now: one
     allocation, and the unwinding disappears with the handles.
 
-    THE SCAN BELOW IS UNCHANGED. MapBase still walks bytes by index over the
-    whole file exactly as it walked the mapped view; only where the bytes come
-    from has changed. This is the same conversion, for the same reason, as
-    uCTYDAT's. *)
+    THE SCAN INDEXES raw ITSELF (2026-09-15). It walked a PAnsiChar laid over
+    raw, jumped back into the middle of the loop with a goto for the last
+    line, and copied each line with a Move that had no bound -- see
+    DeliverLine. *)
   raw                                   : TBytes;
   fs                                    : TFileStream;
-  FileSize                              : Cardinal;
-  MapBase                               : PAnsiChar;
-  StartPos, FilePos                     : Cardinal;
+  FileSize                              : integer;
+  StartPos, FilePos                     : integer;
   TempString                            : ShortString;
-  LineSize                              : integer;
   (* THE RESOLVED PATH, AS A STRING.  It was a 256-byte AnsiChar buffer built
     with TF.Format, which is the Win32 habit this tree is removing: a path is
     text, the three candidates below are ordinary concatenation, and 256 bytes
     was a silent truncation waiting for a deep directory. *)
   path                                  : string;
   NewLine                               : boolean;
+
+  procedure DeliverLine(aStart, aLength: integer);
+  begin
+     if aLength <= 0 then
+        begin
+        Exit;
+        end;
+     (* AT MOST 255 BYTES, AND EVERY BYTE OF TempString SET. This was
+       FillChar, a length byte of AnsiChar(LineSize), and Move(..., LineSize)
+       with LineSize unbounded -- so a line longer than 255 bytes wrote past
+       the 256-byte ShortString on the stack, and its length wrapped. No file
+       this program ships has such a line; any user .cfg or .dom could. *)
+     SetShortStringFromBytes(TempString, raw, aStart, aLength);
+     if UpperCase then
+        begin
+        strU(TempString);
+        end;
+     Func(@TempString);
+  end;
+
 begin
   Result := False;
   raw := nil;
@@ -1127,40 +1143,21 @@ begin
      end;
 
   FileSize := Length(raw);
-  MapBase := PAnsiChar(@raw[0]);
 
   Result := True;
 
   StartPos := 0;
   NewLine := False;
-  FilePos := 0;
 
-  while FilePos < FileSize do
+  for FilePos := 0 to FileSize - 1 do
      begin
-     if (MapBase[FilePos] in [#13, #10]) then
+     if raw[FilePos] in [13, 10] then
         begin
-
         if not NewLine then
            begin
-           LastLine:
-
-           LineSize := FilePos - StartPos;
-           if LineSize > 0 then
-              begin
-              FillChar(TempString, SizeOf(TempString), 0);
-              TempString[0] := AnsiChar(LineSize);
-              Move(MapBase[StartPos], TempString[1], LineSize);
-              if UpperCase then
-                 begin
-                 strU(TempString);
-                 end;
-              //logger.debug('[TF.EnumerateLinesInFile] Reading config line %s',[TempString]);
-              Func(@TempString);
-              end;
+           DeliverLine(StartPos, FilePos - StartPos);
            end;
-
         NewLine := True;
-
         end
      else
         begin
@@ -1170,14 +1167,13 @@ begin
            StartPos := FilePos;
            end;
         end;
-
-     inc(FilePos);
      end;
 
+  (* THE LAST LINE, when the file does not end with a line break. This was a
+    goto back into the middle of the loop body. *)
   if not NewLine then
      begin
-     // Issue #997: removed a bare `asm nop end;` no-op anchor (no codegen effect).
-     goto LastLine;
+     DeliverLine(StartPos, FileSize - StartPos);
      end;
 
   (* NOTHING TO UNWIND. This was UnmapViewOfFile / CloseHandle(MapFin) /

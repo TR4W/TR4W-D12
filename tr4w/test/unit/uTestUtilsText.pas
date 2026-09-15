@@ -95,11 +95,20 @@ type
       procedure Test_SetCharBufferBytes_TruncatesAndTerminates;
       procedure Test_SameTextAscii;
       procedure Test_CharBufferBytes_ReadsBytesUnchanged;
+
+      (* SetShortStringFromBytes bounds the copy EnumerateLinesInFile used to do
+        with an unbounded Move -- a line over 255 bytes wrote past the
+        ShortString on the stack. *)
+      procedure Test_SetShortStringFromBytes_CopiesALine;
+      procedure Test_SetShortStringFromBytes_TruncatesAt255;
+      procedure Test_SetShortStringFromBytes_ZeroesTheTail;
+      procedure Test_SetShortStringFromBytes_OutOfRangeIsEmpty;
    end;
 
 implementation
 
 uses
+   SysUtils,     (* TBytes -- the line tests; BEFORE utils_text, so its routines win *)
    utils_text;
 
 // ---------------------------------------------------------------------------
@@ -782,6 +791,85 @@ begin
    Check(CompareCharBuffer(a, b) < 0, 'differing in the last byte');
 end;
 
+(* A file's bytes, for the line tests. *)
+function TestBytes(const aText: AnsiString): TBytes;
+var
+   i: integer;
+begin
+   SetLength(Result, Length(aText));
+   for i := 1 to Length(aText) do
+      begin
+      Result[i - 1] := Ord(aText[i]);
+      end;
+end;
+
+procedure TUtilsTextTests.Test_SetShortStringFromBytes_CopiesALine;
+var
+   raw: TBytes;
+   line: ShortString;
+begin
+   BeginTest('SetShortStringFromBytes copies one line out of a file''s bytes');
+   raw := TestBytes('CQ TEST NY4I'#13#10'NEXT');
+   SetShortStringFromBytes(line, raw, 0, 12);
+   CheckEquals('CQ TEST NY4I', string(line), 'the first line');
+   SetShortStringFromBytes(line, raw, 14, 4);
+   CheckEquals('NEXT', string(line), 'the last line, which has no line break');
+end;
+
+procedure TUtilsTextTests.Test_SetShortStringFromBytes_TruncatesAt255;
+var
+   raw: TBytes;
+   line: ShortString;
+   i: integer;
+begin
+   (* THE DEFECT THIS REPLACES. A 300-byte line went to Move(..., 300) into a
+     256-byte ShortString, and its length byte wrapped to 300 mod 256 = 44. *)
+   BeginTest('SetShortStringFromBytes keeps the first 255 bytes of a longer line');
+   SetLength(raw, 300);
+   for i := 0 to 299 do
+      begin
+      raw[i] := Ord('A') + (i mod 26);
+      end;
+   SetShortStringFromBytes(line, raw, 0, 300);
+   CheckEquals(255, Length(line), 'the length is 255, not 300 mod 256');
+   CheckEquals(Ord('A'), Ord(line[1]), 'the first byte');
+   CheckEquals(Ord('A') + (254 mod 26), Ord(line[255]), 'the 255th byte is the line''s 255th');
+end;
+
+procedure TUtilsTextTests.Test_SetShortStringFromBytes_ZeroesTheTail;
+var
+   raw: TBytes;
+   line: ShortString;
+begin
+   (* TempString is reused line after line, so a short line follows a long one,
+     and a callback reading the text as a C string needs a zero after it. *)
+   BeginTest('SetShortStringFromBytes leaves zeros after the text');
+   line := StringOfChar('X', 200);
+   raw := TestBytes('AB');
+   SetShortStringFromBytes(line, raw, 0, 2);
+   CheckEquals('AB', string(line), 'the text');
+   CheckEquals(0, Ord(line[3]), 'the byte after the text');
+   CheckEquals(0, Ord(line[200]), 'where the longer line before it ended');
+   CheckEquals(0, Ord(line[255]), 'the last byte');
+end;
+
+procedure TUtilsTextTests.Test_SetShortStringFromBytes_OutOfRangeIsEmpty;
+var
+   raw: TBytes;
+   line: ShortString;
+begin
+   BeginTest('SetShortStringFromBytes reads nothing outside the bytes');
+   raw := TestBytes('ABCDEF');
+   SetShortStringFromBytes(line, raw, 99, 4);
+   CheckEquals('', string(line), 'start past the end');
+   SetShortStringFromBytes(line, raw, -1, 4);
+   CheckEquals('', string(line), 'negative start');
+   SetShortStringFromBytes(line, raw, 2, 0);
+   CheckEquals('', string(line), 'zero length');
+   SetShortStringFromBytes(line, raw, 4, 10);
+   CheckEquals('EF', string(line), 'a length past the end stops at the end');
+end;
+
 procedure TUtilsTextTests.RunAllTests;
 begin
    Test_StringIsAllNumbers;
@@ -819,6 +907,11 @@ begin
    Test_SetCharBufferBytes_TruncatesAndTerminates;
    Test_SameTextAscii;
    Test_CharBufferBytes_ReadsBytesUnchanged;
+
+   Test_SetShortStringFromBytes_CopiesALine;
+   Test_SetShortStringFromBytes_TruncatesAt255;
+   Test_SetShortStringFromBytes_ZeroesTheTail;
+   Test_SetShortStringFromBytes_OutOfRangeIsEmpty;
 end;
 
 end.
