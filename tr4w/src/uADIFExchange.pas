@@ -310,9 +310,6 @@ function FormatADIFMyExchange(
 
              QSONumberPrecedenceCheckDomesticQTHExchange:
                begin
-               CID_TWO_BYTES[ 0 ] := TempRXData.Precedence;
-               // csName := CID_TWO_BYTES;
-
                cMyName := string(MyPrec);
                // csCheck := {inttopchar}(TempRXData.Check);
                cMyCheck := string(MyCheck);

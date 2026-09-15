@@ -8060,9 +8060,9 @@ begin
                               [RXData.tSysTime.qtHour, RXData.tSysTime.qtMinute]);
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
-  CID_TWO_BYTES[0] := RXData.ceComputerID;
   elviCol := ColumnsArray[logColComputerID].pos; //Ord(logColComputerID);
-  elviText := StrPas(CID_TWO_BYTES);
+  (* One character as a one-element buffer: #0, no computer id, reads as ''. *)
+  elviText := CharBufferBytes([RXData.ceComputerID]);
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
   if RXData.ceRecordKind = rkNote then
@@ -8203,8 +8203,7 @@ begin
   if ColumnsArray[logColPrecedence].Enable then
      begin
      elviCol := ColumnsArray[logColPrecedence].pos; //rd(logColPrecedence);
-     CID_TWO_BYTES[0] := RXData.Precedence;
-     elviText := StrPas(CID_TWO_BYTES);
+     elviText := CharBufferBytes([RXData.Precedence]);
      EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
      end;
 

@@ -1282,9 +1282,8 @@ begin
 
     sstComputerNameAndID:
       begin
-        CID_TWO_BYTES[0] := StatusArray[Index].ssComputerID;
         SetClientCell(i, 0, string(StatusArray[Index].ssName));
-        SetClientCell(i, 1, string(PAnsiChar(@CID_TWO_BYTES)));
+        SetClientCell(i, 1, CharBufferText([StatusArray[Index].ssComputerID]));
       end;
     sstBandModeFreq:
       begin

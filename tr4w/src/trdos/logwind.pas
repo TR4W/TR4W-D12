@@ -3782,8 +3782,7 @@ end;
 
 procedure tDispalyMyComputerID;
 begin
-  CID_TWO_BYTES[0] := Settings.Computer.Id;
-  TR4WMainForm.pnlComputerID.Caption := string(PAnsiChar(@CID_TWO_BYTES));
+  TR4WMainForm.pnlComputerID.Caption := CharBufferText([Settings.Computer.Id]);
 end;
 
 procedure tDispalyPaddleAndFootSwitchStatus;

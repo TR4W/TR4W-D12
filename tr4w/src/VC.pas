@@ -2989,7 +2989,6 @@ var
     compiled, because every Win32 handle is pointer-sized -- so the type said
     "window" for years while the code said "file". *)
   LogHandle                             : THandle;
-  CID_TWO_BYTES                         : array[0..1] of AnsiChar = (#73, #0);
 
 //  NET_CLEARLOG_MESSAGE                  : DWORD = 3030001000;
   NET_LOGINFO_MESSAGE                   : DWORD = 3030002000;
