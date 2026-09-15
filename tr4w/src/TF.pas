@@ -191,7 +191,10 @@ procedure tLoadKeyboardLayout;
 function GetContestFromString(ContestString: ShortString): ContestType;
 function STToInt64(St: SYSTEMTIME): int64;
 function RealToStr2(Num: REAL): string;
-function PCharToInt(p: PAnsiChar): integer;
+(* PCharToInt IS GONE -- it is utils_text.LeadingInt, which takes a string.
+  TF cannot be unit-tested (it links the LCL and the settings model), and a
+  second byte-identical copy of it sat in uCTYDAT. One implementation, in a
+  leaf, with tests. *)
 function BooleanToStr(b: boolean): string;
 //function CenterString(s: string; count: byte): string;
 procedure strU(var Str: OpenString);
@@ -583,40 +586,7 @@ end;
 // preserves the old lenient "invalid -> 0" behavior (TF's version ran Val and
 // discarded the error code). SysUtils.StrToInt is NOT equivalent -- it raises.
 
-function PCharToInt(p: PAnsiChar): integer;
-label
-  1, 2;
-var
-  i                                     : integer;
-  Negative                              : boolean;
-begin
-  Result := 0;
-  i := 0;
-  Negative := False;
 
-  if p[i] = '-' then
-     begin
-     i := 1;
-     Negative := True;
-     end;
-
-  1:
-  if p[i] in ['0'..'9'] then
-     begin
-     Result := Result * 10 + (Ord(p[i]) - 48)
-     end
-  else
-     begin
-     goto 2;
-     end;
-  inc(i);
-  goto 1;
-  2:
-  if Negative then
-     begin
-     Result := Result * -1;
-     end;
-end;
 
 {
 }

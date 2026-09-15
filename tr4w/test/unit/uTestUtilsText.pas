@@ -87,6 +87,9 @@ type
       procedure Test_CompareCharBuffer_Ordering;
       procedure Test_CompareCharBuffer_HighBitBytesAreUnsigned;
       procedure Test_CompareCharBuffer_PrefixIsLess;
+      procedure Test_LeadingInt_ParsesAndStops;
+      procedure Test_LeadingInt_NegativeAndDegenerate;
+      procedure Test_LeadingInt_MatchesTheRoutineItReplaced;
    end;
 
 implementation
@@ -614,6 +617,77 @@ end;
 // the binary search in ctyFindCallsign depends on.
 // ---------------------------------------------------------------------------
 
+
+(* ===========================================================================
+  LeadingInt -- THE PARSE TF.PCharToInt DID, NOW IN A UNIT THAT CAN BE TESTED.
+
+  It is lenient on purpose: the fields it reads are slices of fixed-width
+  records that may be padded or truncated, so a partial number is the answer
+  and there is no failure to report. Everything below pins a property the two
+  deleted copies had, because a caller two units away depends on each of them:
+  cty.dat's UTC-offset column arrives as "-5.0" and must give -5, and
+  logstuff's exchange tokeniser hands it a 32-byte buffer with one number in
+  the front of it. *)
+procedure TUtilsTextTests.Test_LeadingInt_ParsesAndStops;
+begin
+   BeginTest('LeadingInt reads the leading digits and stops at the first that is not');
+
+   CheckEquals(0,     LeadingInt('0'),        'a single zero');
+   CheckEquals(7,     LeadingInt('7'),        'one digit');
+   CheckEquals(1234,  LeadingInt('1234'),     'several');
+   CheckEquals(59,    LeadingInt('59ABC'),    'stops at a letter');
+   CheckEquals(5,     LeadingInt('5.0'),      'stops at a decimal point -- cty.dat''s UTC column');
+   CheckEquals(14,    LeadingInt('14:  27:'), 'stops at a colon -- the same file''s zone columns');
+   CheckEquals(3,     LeadingInt('3 '),       'stops at a blank');
+   CheckEquals(42,    LeadingInt('42' + #0 + '99'), 'stops at a NUL, and ignores what follows');
+   CheckEquals(7,     LeadingInt('007'),      'leading zeros');
+end;
+
+procedure TUtilsTextTests.Test_LeadingInt_NegativeAndDegenerate;
+begin
+   BeginTest('LeadingInt on a minus sign, and on text with no number at all');
+
+   CheckEquals(-5,   LeadingInt('-5.0'),   'a negative UTC offset');
+   CheckEquals(-123, LeadingInt('-123'),   'a negative integer');
+   CheckEquals(0,    LeadingInt('-'),      'a lone minus is 0, not an error');
+   CheckEquals(0,    LeadingInt(''),       'the empty string');
+   CheckEquals(0,    LeadingInt('ABC'),    'no digits at all');
+
+   (* IT DOES NOT SKIP LEADING BLANKS, and that is deliberate rather than an
+     oversight -- the routine it replaces did not either, and a caller handing
+     it a right-aligned column would otherwise silently start working. *)
+   CheckEquals(0, LeadingInt('  42'), 'a leading blank stops it before any digit');
+
+   (* '+' is not accepted, for the same reason. *)
+   CheckEquals(0, LeadingInt('+42'), 'a leading plus is not a sign here');
+
+   (* A minus in the middle is just a terminator. *)
+   CheckEquals(12, LeadingInt('12-34'), 'the second minus ends the number');
+end;
+
+(* The two deleted copies walked a PAnsiChar with two labels and two gotos.
+  This is that algorithm restated over the inputs the live call sites actually
+  produce -- a fixed AnsiChar buffer, read through CharBufferText, which is
+  exactly what both callers now do. *)
+procedure TUtilsTextTests.Test_LeadingInt_MatchesTheRoutineItReplaced;
+var
+   buf: array[0..31] of AnsiChar;
+begin
+   BeginTest('LeadingInt over a fixed buffer, the way both callers reach it');
+
+   SetCharBuffer(buf, '-5.0');
+   CheckEquals(-5 * 60, LeadingInt(CharBufferText(buf)) * 60,
+               'cty.dat UTC offset in minutes, as uCTYDAT computes it');
+
+   SetCharBuffer(buf, '599');
+   CheckEquals(599, LeadingInt(CharBufferText(buf)),
+               'an RST out of logstuff''s exchange tokeniser');
+
+   SetCharBuffer(buf, '');
+   CheckEquals(0, LeadingInt(CharBufferText(buf)),
+               'an empty buffer');
+end;
+
 procedure TUtilsTextTests.Test_CompareCharBuffer_AgreesWithStrComp;
 var
    a, b: array[0..13] of AnsiChar;
@@ -739,6 +813,9 @@ begin
    Test_CompareCharBuffer_Ordering;
    Test_CompareCharBuffer_HighBitBytesAreUnsigned;
    Test_CompareCharBuffer_PrefixIsLess;
+   Test_LeadingInt_ParsesAndStops;
+   Test_LeadingInt_NegativeAndDegenerate;
+   Test_LeadingInt_MatchesTheRoutineItReplaced;
 end;
 
 end.

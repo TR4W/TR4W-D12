@@ -55,6 +55,22 @@ function CharBufferText(const aBuf: array of AnsiChar): string;
   buffer, whichever comes first, and a start outside the buffer yields ''. *)
 function CharBufferSlice(const aBuf: array of AnsiChar; aStart, aLen: integer): string;
 
+(* THE LEADING INTEGER OF A STRING, AND NOTHING AFTER IT.
+
+  A lenient parse for fixed-width text fields: an optional '-', then digits,
+  stopping at the first character that is not one. No digits gives 0, and so
+  does a lone '-'. It does NOT skip leading blanks, does not accept '+', and
+  cannot fail -- which is why it exists rather than StrToIntDef: the fields it
+  reads are slices of a record that may be padded or truncated, and a partial
+  number is the answer there, not an error.
+
+  IT REPLACES TWO IDENTICAL COPIES of TF.PCharToInt -- one in TF, one lifted
+  verbatim into uCTYDAT to break a dependency, byte-for-byte the same and free
+  to drift from each other unnoticed. Both took a PAnsiChar and walked it with
+  two labels and two gotos, and neither could be tested: TF pulls in the LCL
+  and the settings model, so it is not in the unit-test program at all. *)
+function LeadingInt(const s: string): integer;
+
 (* COMPARE TWO FIXED BUFFERS AS BYTES -- StrComp's answer without StrComp's
   pointers.
 
@@ -438,6 +454,33 @@ begin
          end;
 
       Inc(i);
+      end;
+end;
+
+function LeadingInt(const s: string): integer;
+var
+   i        : integer;
+   negative : boolean;
+begin
+   Result := 0;
+   i := 1;
+   negative := False;
+
+   if (i <= Length(s)) and (s[i] = '-') then
+      begin
+      negative := True;
+      Inc(i);
+      end;
+
+   while (i <= Length(s)) and (s[i] >= '0') and (s[i] <= '9') do
+      begin
+      Result := Result * 10 + (Ord(s[i]) - Ord('0'));
+      Inc(i);
+      end;
+
+   if negative then
+      begin
+      Result := -Result;
       end;
 end;
 

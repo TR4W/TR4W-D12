@@ -10005,7 +10005,7 @@ begin
            if (isN) then
               begin
               ParsedRecord.prNumbers[ParsedRecord.prTotalNumbers] :=
-                PCharToInt(@TmpBuf);
+                LeadingInt(CharBufferText(TmpBuf));
               inc(ParsedRecord.prTotalNumbers);
               end
            else

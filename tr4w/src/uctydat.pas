@@ -314,18 +314,10 @@ uses
 var
    logger: TLogLogger;
 
-// Issue #1033: local cdecl binding to wsprintfA. Delphi 7's Windows.wsprintf is
-// not declared varargs, so the former TF.Format (itself just wsprintfA) is bound
-// directly here for the one tDebugMode-only prefix-table dump below.
-(* WAS THE 21st wsprintfA BINDING. Its own private one, missed by a search
-  for TF.Format because it is spelled differently. Debug-only -- the single
-  call is inside {$IF tDebugMode} -- but a user32 binding all the same. *)
-function ctyDbgFmt(Output: PAnsiChar; aFormat: PAnsiChar; i1: integer;
-                   s: PAnsiChar; i2: integer): integer;
-begin
-   Result := CFormatBuf(Output, AnsiString(aFormat),
-                        [i1, AnsiString(s), i2]);
-end;
+(* ctyDbgFmt WAS HERE and is deleted: the tDebugMode prefix-table dump it was
+  written for is gone, so it had NO CALLER. Its own comment still described it
+  as a wsprintfA binding, which it had stopped being when it was repointed at
+  CFormatBuf -- a stale claim guarding a dead routine. *)
 
 // ---------------------------------------------------------------------------
 // Issue #1033: helpers lifted VERBATIM from TF / LogGrid so uCTYDAT no longer
@@ -335,42 +327,10 @@ end;
 // Delphi 12 refactor. See docs/tr4w-migration-strategy.md.
 // ---------------------------------------------------------------------------
 
-// Lifted from TF.PCharToInt: parse a leading (optionally '-') integer from a
-// PChar, stopping at the first non-digit.
-function PCharToInt(p: PAnsiChar): integer;
-label
-  1, 2;
-var
-  i                                     : integer;
-  Negative                              : boolean;
-begin
-  Result := 0;
-  i := 0;
-  Negative := False;
-
-  if p[i] = '-' then
-     begin
-     i := 1;
-     Negative := True;
-     end;
-
-  1:
-  if p[i] in ['0'..'9'] then
-     begin
-     Result := Result * 10 + (Ord(p[i]) - 48)
-     end
-  else
-     begin
-     goto 2;
-     end;
-  inc(i);
-  goto 1;
-  2:
-  if Negative then
-     begin
-     Result := Result * -1;
-     end;
-end;
+(* PCharToInt WAS HERE -- lifted verbatim from TF in Issue #1033 to break a
+  dependency, and byte-for-byte identical to the original ever since, which
+  is a copy free to drift. It is utils_text.LeadingInt now, in a leaf the
+  unit tests can reach, and both copies are gone. *)
 
 // Lifted from LogGrid.ConvertLatLonToGrid: Maidenhead grid from lat/lon.
 function ConvertLatLonToGrid(Lat, Lon: REAL): GridString;
@@ -692,7 +652,7 @@ begin
               begin
                 FillChar(b, SizeOf(b), 0);
                 Move(p[s], b, l);
-                r.UTCOffset := PCharToInt(@b) * 60;
+                r.UTCOffset := LeadingInt(CharBufferText(b)) * 60;
 {
                 for Minutes := 1 to 3 do
                   if b[Minutes] = '.' then
