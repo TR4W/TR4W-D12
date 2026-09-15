@@ -66,7 +66,8 @@ uses
    uKeyerConfigStore,
    uUDPBroadcastConfig,
    uWindowLayoutStore,
-   uSettingsModel;
+   uSettingsModel,
+   utils_text;           // CharBufferText -- the ini name
 
 const
    // The keyer library's section. The radio store's keys stay private to it;
@@ -264,7 +265,7 @@ begin
       Exit;
       end;
 
-   Result := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))))
+   Result := ExtractFilePath(CharBufferText(TR4W_INI_FILENAME))
              + 'tr4w.json';
 end;
 

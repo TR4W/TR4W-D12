@@ -143,7 +143,7 @@ begin
     sensible and would ALSO RENAME THE LOG of any existing contest whose file
     name contains more than one dot -- orphaning it. Matching the old rule
     keeps every log on disk findable; changing it is a migration, not a fix. *)
-  chosenPath := string(AnsiString(PAnsiChar(@TR4W_CFG_FILENAME[0])));
+  chosenPath := CharBufferText(TR4W_CFG_FILENAME);
   chosenDir  := ExtractFilePath(chosenPath);
   chosenName := ExtractFileName(chosenPath);
 

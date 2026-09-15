@@ -57,7 +57,8 @@ uses
    uIniRetireForm,    // the Yes/No + do-not-ask-again dialog
    uTR4WConfigFile,   // SaveConfig -- the ONE writer of tr4w.json
    VC,          // TR4W_INI_FILENAME
-   MainUnit;    // logger
+   MainUnit,    // logger
+   utils_text;  // CharBufferText -- the ini name
 
 procedure OfferToRetireLegacyIni(const aStoreFileName: string);
 var
@@ -67,7 +68,7 @@ var
    dontAskAgain: boolean;
    remove: boolean;
 begin
-   ini := string(TR4W_INI_FILENAME);
+   ini := CharBufferText(TR4W_INI_FILENAME);
    if not FileExists(ini) then
       begin
       Exit;

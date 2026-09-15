@@ -363,7 +363,7 @@ var
 begin
    // The json path from uTR4WConfigFile, which owns that file; the ini path is
    // still derived here because no unit owns tr4w.ini in the same way.
-   settingsDir := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
+   settingsDir := ExtractFilePath(CharBufferText(TR4W_INI_FILENAME));
    cfg := LoadUDPForStartup(TR4WConfigFileName, settingsDir + 'tr4w.ini');
    try
       UDPBroadcaster.Configure(cfg);   // takes a copy
@@ -465,7 +465,7 @@ begin
         address of a TEMPORARY -- the compiler accepts it and the pointer
         dangles at the end of the statement. domPath is a local array and
         holds exactly the same bytes. *)
-      Settings.Contest.DomesticFilename := string(AnsiString(PAnsiChar(domPath)));
+      Settings.Contest.DomesticFilename := CharBufferText(domPath);
       if not DomQTHTable.LoadInDomQTHFile(domPath) then
          begin
          halt;
@@ -921,7 +921,7 @@ begin
   // rather than GetPrivateProfileString, which proved unreliable in this context.
   if ConfigFileName = cfgINI then
      begin
-     EnumerateLinesInFile(TR4W_INI_FILENAME, RestoreCFGPasswordCase, False);
+     EnumerateLinesInFile(CharBufferText(TR4W_INI_FILENAME), RestoreCFGPasswordCase, False);
      end;
 
   // CW-state desync fix: the 'CW ENABLE' config command writes only Config.CWEnable,

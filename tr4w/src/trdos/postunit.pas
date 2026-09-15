@@ -638,9 +638,9 @@ procedure CreateCabrilloFile;
      begin
      scp := TSCPUpload.Create( true, logger );
      try
-       if scp.SendFile( tReportsFilename ) then
+       if scp.SendFile( CharBufferText( tReportsFilename ) ) then
           begin
-          logger.Info( '%s file uploaded to SCP', [ tReportsFilename ] );
+          logger.Info( '%s file uploaded to SCP', [ CharBufferText( tReportsFilename ) ] );
           (* MainUnit.ShowMessage, which is what the commented-out line above
             was reaching for. It carries the headless guard as well, so a
             /EXPORT run cannot stop here waiting for an OK. *)
@@ -648,7 +648,7 @@ procedure CreateCabrilloFile;
           end
        else
           begin
-          logger.Error( 'Error sending %s to SCP', [ tReportsFilename ] );
+          logger.Error( 'Error sending %s to SCP', [ CharBufferText( tReportsFilename ) ] );
           logger.Error( scp.errorResult );
           ShowMessage( 'Error uploading log file to SuperCheckPartial' +
                        sLineBreak + scp.errorResult );
@@ -2503,23 +2503,13 @@ procedure ExportToADIF;
     extName: AnsiString;
   begin
   dtReportTime := Now;
-  (* ChangeFileExt, which is what the three Win32 string calls here were
-    spelling out: copy the log name, chop the last three characters, append
-    'ADI'. Copied in with Move rather than StrPLCopy -- with UnicodeStrings on,
-    StrPLCopy's Ansi and Wide overloads are ambiguous for a char ARRAY
-    destination, and taking a PAnsiChar to disambiguate would put back the
-    pointer this is removing. The FillChar leaves the buffer NUL-terminated,
-    which tOpenFileForWrite relies on. *)
-  extName := ChangeFileExt(AnsiString(TR4W_LOG_FILENAME), AnsiString('.ADI'));
-  if Length(extName) > High(tReportsFilename) then
-     begin
-     SetLength(extName, High(tReportsFilename));
-     end;
-  FillChar(tReportsFilename, SizeOf(tReportsFilename), 0);
-  if Length(extName) > 0 then
-     begin
-     Move(extName[1], tReportsFilename[0], Length(extName));
-     end;
+  (* THE EXPORT'S FILE NAME: the log's name with .ADI for its extension.
+    CharBufferBytes and SetCharBufferBytes carry it as the bytes SetCharBuffer
+    wrote, with no code-page conversion in between, and SetCharBufferBytes
+    bounds and terminates the buffer. The truncate, FillChar and Move that
+    stood here did exactly that by hand. *)
+  extName := ChangeFileExt(CharBufferBytes(TR4W_LOG_FILENAME), AnsiString('.ADI'));
+  SetCharBufferBytes(tReportsFilename, extName);
   if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
      begin
      Exit;
@@ -2579,23 +2569,13 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
 
   begin
 
-  (* ChangeFileExt, which is what the three Win32 string calls here were
-    spelling out: copy the log name, chop the last three characters, append
-    'CSV'. Copied in with Move rather than StrPLCopy -- with UnicodeStrings on,
-    StrPLCopy's Ansi and Wide overloads are ambiguous for a char ARRAY
-    destination, and taking a PAnsiChar to disambiguate would put back the
-    pointer this is removing. The FillChar leaves the buffer NUL-terminated,
-    which tOpenFileForWrite relies on. *)
-  extName := ChangeFileExt(AnsiString(TR4W_LOG_FILENAME), AnsiString('.CSV'));
-  if Length(extName) > High(tReportsFilename) then
-     begin
-     SetLength(extName, High(tReportsFilename));
-     end;
-  FillChar(tReportsFilename, SizeOf(tReportsFilename), 0);
-  if Length(extName) > 0 then
-     begin
-     Move(extName[1], tReportsFilename[0], Length(extName));
-     end;
+  (* THE EXPORT'S FILE NAME: the log's name with .CSV for its extension.
+    CharBufferBytes and SetCharBufferBytes carry it as the bytes SetCharBuffer
+    wrote, with no code-page conversion in between, and SetCharBufferBytes
+    bounds and terminates the buffer. The truncate, FillChar and Move that
+    stood here did exactly that by hand. *)
+  extName := ChangeFileExt(CharBufferBytes(TR4W_LOG_FILENAME), AnsiString('.CSV'));
+  SetCharBufferBytes(tReportsFilename, extName);
   if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
      begin
      Exit;

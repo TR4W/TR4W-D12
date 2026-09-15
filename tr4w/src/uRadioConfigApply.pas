@@ -881,10 +881,11 @@ begin
      a Values lookup. *)
    lines := TStringList.Create;
    try
-      { AnsiString, not string: the FCL's IniFiles is compiled with 8-bit
-        strings, and TR4W_INI_FILENAME is already AnsiChar -- so a `string`
-        cast widens to UTF-16 and narrows straight back, which can only lose. }
-      ini := TIniFile.Create(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0])));
+      (* BYTES, NOT A STRING: the FCL's IniFiles is compiled with 8-bit strings,
+        and TR4W_INI_FILENAME already holds the UTF-8 SetCharBuffer wrote. A
+        `string` would widen to UTF-16 and narrow straight back. CharBufferBytes
+        hands over those bytes as they are, with no pointer and no conversion. *)
+      ini := TIniFile.Create(CharBufferBytes(TR4W_INI_FILENAME));
       try
          ini.ReadSectionValues('BAND PLAN', lines);
       finally
@@ -2398,7 +2399,7 @@ end;
 
 function SettingsDirectory: string;
 begin
-   Result := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
+   Result := ExtractFilePath(CharBufferText(TR4W_INI_FILENAME));
 end;
 
 function RadioStoreFileName: string;

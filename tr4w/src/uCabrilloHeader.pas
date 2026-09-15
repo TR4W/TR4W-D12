@@ -133,7 +133,7 @@ var
    ini: TIniFile;
 begin
    { AnsiString, not string -- see the same note in uRadioConfigApply. }
-   ini := TIniFile.Create(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0])));
+   ini := TIniFile.Create(CharBufferBytes(TR4W_INI_FILENAME));
    try
       ini.ReadSectionValues(aSection, aInto);
    finally

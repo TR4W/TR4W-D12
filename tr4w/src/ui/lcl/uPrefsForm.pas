@@ -1703,7 +1703,7 @@ begin
    //    already has, rather than presenting an empty list to someone with two
    //    working radios.  The legacy file is opened READ-ONLY -- seeding must
    //    not be able to damage a configuration still in use.
-   legacy := TIniFile.Create(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
+   legacy := TIniFile.Create(CharBufferBytes(TR4W_INI_FILENAME));
    try
       if TRadioConfigStore.LegacyIniHasRadios(legacy) then
          begin

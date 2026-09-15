@@ -5778,7 +5778,7 @@ begin
     the round trip through a global bought nothing and capped the result at
     1023 bytes on the way. *)
   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_SAVINGTO)),
-                               [TR4W_LOG_FILENAME, Settings.Log.BackupFileName]));
+                               [CharBufferText(TR4W_LOG_FILENAME), Settings.Log.BackupFileName]));
 
   (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
     file either way -- a periodic backup runs unattended and the only place an

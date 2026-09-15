@@ -11293,7 +11293,7 @@ begin
      end;
 
   NewFile := CharBufferText(TR4W_LOG_FILENAME) + '-' + sVersion + '.bkup';
-  if not FileExists(TR4W_LOG_FILENAME) then
+  if not FileExists(CharBufferText(TR4W_LOG_FILENAME)) then
      begin
      ShowMessage(LclText(TC_LOGFILENOTFOUND));
      Exit;
@@ -11354,7 +11354,7 @@ begin
   // Original is backed up and renamed. Write the new v1.7 header and convert.
   //***
 
-  AssignFile(headerFH, string(TR4W_LOG_FILENAME));
+  AssignFile(headerFH, CharBufferText(TR4W_LOG_FILENAME));
   ReWrite(headerFH);
   Write(headerFH, LogHeader);
   CloseFile(headerFH);
@@ -11367,7 +11367,7 @@ begin
      AssignFile(oldFH_v1_5, OldFile);
      FileMode := fmOpenRead;
      Reset(oldFH_v1_5);
-     AssignFile(newFH, string(TR4W_LOG_FILENAME));
+     AssignFile(newFH, CharBufferText(TR4W_LOG_FILENAME));
      FileMode := fmOpenWrite;
      Reset(newFH);
      Seek(newFH, 1);
@@ -11462,7 +11462,7 @@ begin
      AssignFile(oldFH_v1_6, OldFile);
      FileMode := fmOpenRead;
      Reset(oldFH_v1_6);
-     AssignFile(newFH, string(TR4W_LOG_FILENAME));
+     AssignFile(newFH, CharBufferText(TR4W_LOG_FILENAME));
      FileMode := fmOpenWrite;
      Reset(newFH);
      Seek(newFH, 1);

@@ -277,7 +277,7 @@ begin
        call -- so there is a window between the two.  It does not matter here:
        the single-instance mutex means no second TR4W is choosing the same
        slot, and both copies are into the operator's own log directory. *)
-     if FileUtil.CopyFile(AnsiString(TR4W_LOG_FILENAME),
+     if FileUtil.CopyFile(CharBufferBytes(TR4W_LOG_FILENAME),
                           AnsiString(TempBuffer2), []) then
         begin
         (* THE .RST COPY IS GONE, 2026-09-12. This backed the restart file up
@@ -291,7 +291,7 @@ begin
   if Replace then
      begin
      FileUtil.CopyFile(AnsiString(TR4W_SYN_FILENAME),
-                       AnsiString(TR4W_LOG_FILENAME), [cffOverwriteFile]);
+                       CharBufferBytes(TR4W_LOG_FILENAME), [cffOverwriteFile]);
      LoadinLog;
      end;
   SendStationStatus(sstQSOs);
