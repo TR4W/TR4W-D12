@@ -539,8 +539,13 @@ begin
        re-read it from the ShortString's CHARACTERS -- @FileString^[n] -- and a
        ShortString has no terminator, so that read ran on until it met a zero
        byte belonging to something else. *)
+     (* 'DOM\', WITH THE SEPARATOR. D7 built this with '%sDOM\%s'; the
+       conversion that replaced the sprintf (c51dcc1d) dropped the backslash,
+       so 'INCLUDE FILE S50.DOM' asked for <program dir>DOMS50.DOM -- which
+       does not exist, and every .dom that includes the states, provinces or
+       Mexico loaded without them. *)
      SetCharBuffer(TempFileName,
-                   CharBufferText(TR4W_PATH_NAME) + 'DOM' + string(TempString));
+                   CharBufferText(TR4W_PATH_NAME) + 'DOM\' + string(TempString));
      (* Windows spelling, resolved for this platform -- see fcontest. *)
      ResolveDataFileInPlace(TempFileName);
      DomQTHTable.ReadDomQTHFile(CharBufferText(TempFileName), True);
