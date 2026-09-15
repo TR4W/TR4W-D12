@@ -61,6 +61,36 @@ type
       procedure Test_SouthAfrica_ZS6;
       procedure Test_Zones_W1_England_Japan;
       procedure Test_UnknownCountryIndex;
+
+      (* THE CHARACTERISATION NET.
+
+        One record per callsign in fixtures\ctydat_characterisation.txt --
+        1684 of them -- comparing EVERY public lookup at once. It exists so
+        uCTYDAT can be rewritten without changing what it answers.
+
+        The tests above assert what the right answer IS for nine entities.
+        This one asserts that the answer DOES NOT MOVE, for 1573 real
+        callsigns out of the golden-corpus logs plus 111 hand-picked edge
+        cases. The two are different jobs and both are wanted: a rewrite that
+        is merely self-consistent passes the first kind and fails this. *)
+      procedure Test_Characterisation;
+
+      (* THE RULES, ASSERTED BY NAME.
+
+        The characterisation file pins these too, but as one line among 1684 --
+        a failure there says "W1AW/4 moved" and not "the portable-suffix rule
+        broke". These say which RULE broke, which is what someone reading a red
+        build needs. *)
+      procedure Test_Rule_USCallAreasShareOneCountry;
+      procedure Test_Rule_CanadianDistrictsChangeZone;
+      procedure Test_Rule_RussianDistrictsChangeCountry;
+      procedure Test_Rule_KG4TwoCharacterSuffixIsGuantanamo;
+      procedure Test_Rule_PortableSuffixRetargets;
+      procedure Test_Rule_PortablePrefixWins;
+      procedure Test_Rule_MaritimeMobileHasNoEntity;
+      procedure Test_Rule_LookupIsCaseSensitive;
+      procedure Test_Rule_GarbageAndBoundariesAreUnknown;
+      procedure Test_Rule_USTerritoriesAreSeparateEntities;
    end;
 
 implementation
@@ -214,6 +244,285 @@ end;
 // Suite entry point
 // ---------------------------------------------------------------------------
 
+
+// ---------------------------------------------------------------------------
+// THE RULES
+//
+// Each of these states one behaviour of the country lookup in its own test, so
+// a red build names the rule rather than a callsign.  The numbers come from
+// the shipped cty.dat and are asserted RELATIVELY wherever the absolute value
+// is an artifact of that file -- two calls resolving to the SAME country is a
+// rule; country 183 being the USA is a fact about one file.
+// ---------------------------------------------------------------------------
+
+procedure TCTYDATTests.Test_Rule_USCallAreasShareOneCountry;
+var
+   k1: Word;
+begin
+   BeginTest('every US call area is ONE country, with its own zone');
+   EnsureCtyLoaded;
+   k1 := ctyGetCountry('K1ABC');
+   CheckEquals(k1, ctyGetCountry('K2ABC'), 'K2');
+   CheckEquals(k1, ctyGetCountry('K4ABC'), 'K4');
+   CheckEquals(k1, ctyGetCountry('K6ABC'), 'K6');
+   CheckEquals(k1, ctyGetCountry('K0ABC'), 'K0');
+   CheckEquals(k1, ctyGetCountry('W6ABC'), 'W6');
+   CheckEquals(k1, ctyGetCountry('N0ABC'), 'N0');
+   CheckEquals(k1, ctyGetCountry('AA1ABC'), 'AA1');
+
+   // ...but the ZONE differs across the country, which is the whole reason
+   // the per-call lookup exists rather than a per-country default.
+   Check(ctyGetCQZone('K1ABC') <> ctyGetCQZone('K6ABC'),
+         'CQ zone differs between the east and west coasts');
+end;
+
+procedure TCTYDATTests.Test_Rule_CanadianDistrictsChangeZone;
+var
+   ve: Word;
+begin
+   BeginTest('Canadian districts are one country across many zones');
+   EnsureCtyLoaded;
+   ve := ctyGetCountry('VE1ABC');
+   CheckEquals(ve, ctyGetCountry('VE3ABC'), 'VE3');
+   CheckEquals(ve, ctyGetCountry('VE7ABC'), 'VE7');
+   Check(ctyGetCQZone('VE1ABC') <> ctyGetCQZone('VE7ABC'),
+         'VE1 and VE7 are in different CQ zones');
+end;
+
+procedure TCTYDATTests.Test_Rule_RussianDistrictsChangeCountry;
+begin
+   (* THE OPPOSITE OF THE US RULE, and the one most likely to be broken by a
+     rewrite that treats the digit as decoration: in Russia the district digit
+     selects a different DXCC ENTITY and a different CONTINENT. *)
+   BeginTest('a Russian district digit selects a different entity');
+   EnsureCtyLoaded;
+   Check(ctyGetCountry('UA1ABC') <> ctyGetCountry('UA9ABC'),
+         'UA1 and UA9 are different countries');
+   CheckEquals(Ord(Europe), Ord(ctyGetContinent('UA1ABC')), 'UA1 is Europe');
+   CheckEquals(Ord(Asia),   Ord(ctyGetContinent('UA9ABC')), 'UA9 is Asia');
+end;
+
+procedure TCTYDATTests.Test_Rule_KG4TwoCharacterSuffixIsGuantanamo;
+begin
+   (* A REAL DXCC RULE AND A GENUINE TRAP. KG4 + exactly two characters is
+     Guantanamo Bay; KG4 + anything else is an ordinary US call. A prefix
+     match alone gets this wrong, and the answer changes the multiplier. *)
+   BeginTest('KG4 with a two-character suffix is Guantanamo, otherwise USA');
+   EnsureCtyLoaded;
+   Check(ctyGetCountry('KG4AB') <> ctyGetCountry('KG4ABC'),
+         'KG4AB and KG4ABC are different entities');
+   CheckEquals(ctyGetCountry('K1ABC'), ctyGetCountry('KG4ABC'),
+               'KG4ABC is an ordinary US call');
+   CheckEquals('KG4', ctyGetCountryID('KG4AB'), 'KG4AB is Guantanamo');
+end;
+
+procedure TCTYDATTests.Test_Rule_PortableSuffixRetargets;
+begin
+   (* W1AW/4 is a Connecticut station operating in the fourth call area. The
+     COUNTRY does not change -- it is still the USA -- but the resolved prefix
+     follows the suffix, which is what the band map and the mult tracker show. *)
+   BeginTest('a portable suffix retargets within the same country');
+   EnsureCtyLoaded;
+   CheckEquals(ctyGetCountry('W1AW'), ctyGetCountry('W1AW/4'),
+               'W1AW/4 is still the USA');
+   CheckEquals(ctyGetCountry('K1ABC'), ctyGetCountry('K1ABC/P'),
+               '/P does not move the country');
+   CheckEquals(ctyGetCountry('G3XYZ'), ctyGetCountry('G3XYZ/P'),
+               'a G /P is still England');
+end;
+
+procedure TCTYDATTests.Test_Rule_PortablePrefixWins;
+begin
+   (* VE3/K1ABC is an American operating FROM Canada.  The country is the
+     PREFIX's, not the home call's -- getting this backwards would credit the
+     wrong multiplier on every guest operation. *)
+   BeginTest('a portable prefix decides the country, not the home call');
+   EnsureCtyLoaded;
+   CheckEquals(ctyGetCountry('VE3ABC'), ctyGetCountry('VE3/K1ABC'),
+               'VE3/K1ABC is Canada');
+   Check(ctyGetCountry('VE3/K1ABC') <> ctyGetCountry('K1ABC'),
+         'and NOT the USA');
+   CheckEquals(ctyGetCountry('F5ABC'), ctyGetCountry('F/DL1ABC'),
+               'F/DL1ABC is France');
+end;
+
+procedure TCTYDATTests.Test_Rule_MaritimeMobileHasNoEntity;
+begin
+   (* /MM is at sea: no DXCC entity, no zone, no continent.  It must not
+     fall back to the home call's country, or a maritime contact would be
+     credited as a multiplier it is not. *)
+   BeginTest('/MM resolves to no entity at all');
+   EnsureCtyLoaded;
+   CheckEquals(65535, ctyGetCountry('K1ABC/MM'), 'K1ABC/MM has no country');
+   CheckEquals(65535, ctyGetCountry('G3XYZ/MM'), 'G3XYZ/MM has no country');
+   CheckEquals(255, ctyGetCQZone('K1ABC/MM'), 'and no CQ zone');
+   CheckEquals(Ord(UnknownContinent), Ord(ctyGetContinent('K1ABC/MM')),
+               'and no continent');
+end;
+
+procedure TCTYDATTests.Test_Rule_LookupIsCaseSensitive;
+begin
+   (* THE LOOKUP IS CASE-SENSITIVE AND THE CALLER MUST UPPERCASE FIRST.
+
+     This is characterised, not endorsed. 'w1aw' resolves to NOTHING today,
+     so every caller in the program is uppercasing before it gets here, and a
+     rewrite that quietly started accepting lower case would hide the day one
+     of them stops. If that is ever made case-insensitive it is a deliberate
+     change with its own commit -- and this test is where it gets updated. *)
+   BeginTest('the lookup is case-sensitive (characterised, not endorsed)');
+   EnsureCtyLoaded;
+   Check(ctyGetCountry('W1AW') <> 65535, 'upper case resolves');
+   CheckEquals(65535, ctyGetCountry('w1aw'), 'lower case does NOT');
+   CheckEquals(65535, ctyGetCountry('ja1abc'), 'nor a lower-case JA');
+end;
+
+procedure TCTYDATTests.Test_Rule_GarbageAndBoundariesAreUnknown;
+begin
+   (* A contest logger is typed into at speed. Every one of these is something
+     an operator can produce with a slip, and none of them may resolve to a
+     country or crash the lookup. *)
+   BeginTest('garbage, empty and boundary inputs resolve to nothing');
+   EnsureCtyLoaded;
+   CheckEquals(65535, ctyGetCountry(''), 'empty');
+   CheckEquals(65535, ctyGetCountry('X'), 'one letter');
+   CheckEquals(65535, ctyGetCountry('1'), 'one digit');
+   CheckEquals(65535, ctyGetCountry('123'), 'digits only');
+   (* 'Q' IS THE ONE LETTER NO AMATEUR PREFIX STARTS WITH -- ITU reserves
+     the Q block for Q-codes -- which is what makes QQQQQQ genuinely
+     unallocated rather than merely unlikely. *)
+   CheckEquals(65535, ctyGetCountry('QQQQQQ'), 'an unallocated prefix block');
+   CheckEquals(65535, ctyGetCountry('/'), 'a lone slash');
+   CheckEquals(65535, ctyGetCountry('//'), 'two slashes');
+   CheckEquals(65535, ctyGetCountry('W1AW/'), 'a trailing slash');
+   CheckEquals(65535, ctyGetCountry('/W1AW'), 'a leading slash');
+   CheckEquals(65535, ctyGetCountry('-'), 'the dash sentinel');
+
+   (* AND THE OTHER HALF OF THE RULE, which the first draft of this test got
+     wrong: nonsense that STARTS WITH A REAL BLOCK still resolves, and must.
+     ITU allocates ZV-ZZ to Brazil, so ZZZZZZ is Brazil -- the lookup matches
+     the longest PREFIX, it does not validate the callsign. AB likewise is a
+     real US block. Asserting these resolve is what keeps a rewrite from
+     'fixing' garbage handling by rejecting legitimate prefixes. *)
+   Check(ctyGetCountry('ZZZZZZ') <> 65535, 'ZZZZZZ is in Brazil'+chr(39)+'s block');
+   CheckEquals('PY', ctyGetCountryID('ZZZZZZ'), 'ZV-ZZ is Brazil');
+   CheckEquals(ctyGetCountry('K1ABC'), ctyGetCountry('AB'), 'AB is a US block');
+end;
+
+procedure TCTYDATTests.Test_Rule_USTerritoriesAreSeparateEntities;
+var
+   k: Word;
+begin
+   (* Hawaii, Alaska, Guam and Puerto Rico are the USA politically and are
+     SEPARATE DXCC entities on the air -- each its own multiplier. *)
+   BeginTest('US territories are separate DXCC entities');
+   EnsureCtyLoaded;
+   k := ctyGetCountry('K1ABC');
+   Check(ctyGetCountry('KH6ABC') <> k, 'Hawaii is not the USA');
+   Check(ctyGetCountry('KL7ABC') <> k, 'Alaska is not the USA');
+   Check(ctyGetCountry('KH2ABC') <> k, 'Guam is not the USA');
+   Check(ctyGetCountry('KP4ABC') <> k, 'Puerto Rico is not the USA');
+   Check(ctyGetCountry('KH6ABC') <> ctyGetCountry('KL7ABC'),
+         'and they are not each other');
+end;
+
+// ---------------------------------------------------------------------------
+// THE CHARACTERISATION NET
+// ---------------------------------------------------------------------------
+
+procedure TCTYDATTests.Test_Characterisation;
+var
+   f: TextFile;
+   path, line, want, got: string;
+   call: string;
+   bar: integer;
+   qth: QTHRecord;
+   id: DXMultiplierString;
+   n, shown: integer;
+
+   function ContName(k: ContinentType): string;
+   begin
+      case k of
+         NorthAmerica: Result := 'NA';
+         SouthAmerica: Result := 'SA';
+         Europe:       Result := 'EU';
+         Africa:       Result := 'AF';
+         Asia:         Result := 'AS';
+         Oceania:      Result := 'OC';
+      else
+         Result := '??';
+      end;
+   end;
+
+begin
+   BeginTest('every public lookup still answers what it answered before');
+   EnsureCtyLoaded;
+
+   path := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
+           'ctydat_characterisation.txt';
+   CheckTrue(FileExists(path), 'the characterisation fixture is present');
+   if not FileExists(path) then Exit;
+
+   AssignFile(f, path);
+   Reset(f);
+   n := 0;
+   shown := 0;
+   try
+      while not Eof(f) do
+         begin
+         ReadLn(f, line);
+         if (line = '') or (line[1] = '#') then Continue;
+
+         bar := Pos('|', line);
+         if bar <= 1 then Continue;
+         call := Copy(line, 1, bar - 1);
+
+         FillChar(qth, SizeOf(qth), 0);
+         ctyLocateCall(CallString(call), qth);
+         id := '';
+
+         (* ONE ASSERTION PER CALLSIGN, comparing the whole record.  Eight
+           separate checks per call would be 13472 assertions and would say no
+           more: the message below shows both records, so the differing field
+           is visible without the count. *)
+         got := Format('%s|%d|%s|%d|%d|%s|%s|%s|%s',
+            [call,
+             ctyGetCountry(call),
+             ctyGetCountryID(call),
+             ctyGetCQZone(call),
+             ctyGetITUZone(call),
+             ContName(ctyGetContinent(call)),
+             string(qth.Prefix),
+             string(qth.StandardCall),
+             ctyGetGrid(call, id)]);
+         want := line;
+
+         Inc(n);
+         if got <> want then
+            begin
+            Inc(shown);
+            // Cap the noise: after ten, the pattern is established and the
+            // rest of the log is unreadable.
+            if shown <= 10 then
+               begin
+               CheckEquals(want, got, 'characterisation moved for ' + call);
+               end;
+            end
+         else
+            begin
+            CheckEquals(want, got, call);
+            end;
+         end;
+   finally
+      CloseFile(f);
+   end;
+
+   Check(n > 1500, Format('the fixture carried %d records (expected 1500+)', [n]));
+   if shown > 10 then
+      begin
+      Check(False, Format('%d records differ in total; first 10 shown', [shown]));
+      end;
+end;
+
 procedure TCTYDATTests.RunAllTests;
 begin
    Test_LoadCtyDat;
@@ -226,6 +535,20 @@ begin
    Test_SouthAfrica_ZS6;
    Test_Zones_W1_England_Japan;
    Test_UnknownCountryIndex;
+
+   Test_Rule_USCallAreasShareOneCountry;
+   Test_Rule_CanadianDistrictsChangeZone;
+   Test_Rule_RussianDistrictsChangeCountry;
+   Test_Rule_KG4TwoCharacterSuffixIsGuantanamo;
+   Test_Rule_PortableSuffixRetargets;
+   Test_Rule_PortablePrefixWins;
+   Test_Rule_MaritimeMobileHasNoEntity;
+   Test_Rule_LookupIsCaseSensitive;
+   Test_Rule_GarbageAndBoundariesAreUnknown;
+   Test_Rule_USTerritoriesAreSeparateEntities;
+
+   // Last: it is the slowest and the least specific.
+   Test_Characterisation;
 end;
 
 end.

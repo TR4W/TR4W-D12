@@ -1,0 +1,129 @@
+# EDGE CASES, hand-picked. These are NOT from the corpus -- they exist to pin
+# the rules a rewrite is most likely to get subtly wrong.
+#
+# --- plain, one per continent -------------------------------------------
+W1AW
+G3XYZ
+JA1ABC
+DL1ABC
+LU1ABC
+VK2ABC
+ZS6ABC
+# --- US call areas: the country is one, the zone is not ------------------
+K1ABC
+K2ABC
+K3ABC
+K4ABC
+K5ABC
+K6ABC
+K7ABC
+K8ABC
+K9ABC
+K0ABC
+W6ABC
+N0ABC
+AA1ABC
+KC7H
+# --- Canadian districts, which DO change zone ---------------------------
+VE1ABC
+VE2ABC
+VE3ABC
+VE4ABC
+VE5ABC
+VE6ABC
+VE7ABC
+VE8ABC
+VE9ABC
+VO1ABC
+VO2ABC
+VY1ABC
+VY2ABC
+# --- Russia: the district digit changes the COUNTRY ---------------------
+UA1ABC
+UA3ABC
+UA4ABC
+UA6ABC
+UA9ABC
+UA0ABC
+RA3A
+R9AB
+RA0ABC
+UA2FA
+# --- US territories, separate DXCC entities -----------------------------
+KH6ABC
+KH2ABC
+KH0ABC
+KL7ABC
+KP4ABC
+KP2ABC
+KC6ABC
+# --- KG4: a TWO-character suffix is Guantanamo, others are not ----------
+KG4AB
+KG4ABC
+KG4A
+# --- portable SUFFIX ----------------------------------------------------
+W1AW/4
+W1AW/0
+K1ABC/P
+K1ABC/M
+G3XYZ/P
+JA1ABC/1
+VK2ABC/9
+DL1ABC/QRP
+# --- maritime and aeronautical mobile -----------------------------------
+K1ABC/MM
+G3XYZ/MM
+K1ABC/AM
+# --- portable PREFIX: the prefix wins -----------------------------------
+VE3/K1ABC
+F/DL1ABC
+4U1/K1ABC
+PA/G3XYZ
+ZS/DL1ABC
+# --- both prefix and suffix --------------------------------------------
+VE3/K1ABC/P
+F/DL1ABC/M
+# --- calls that are exceptions or special prefixes ----------------------
+W4I
+TO4A
+3DA0ABC
+1A0KM
+4U1UN
+4U1ITU
+BV9P
+VP2E
+VP2V
+VP8ABC
+FT5ZM
+# --- numeric and unusual prefixes ---------------------------------------
+9A5Y
+5B4ABC
+7X2ABC
+OH0ABC
+OJ0ABC
+SV5ABC
+SV9ABC
+ZB2ABC
+# --- garbage, empty and boundary ---------------------------------------
+X
+Q
+1
+123
+ZZZZZZ
+QQQQQQ
+/
+//
+A/
+/A
+W1AW/
+/W1AW
+-
+# --- case sensitivity ---------------------------------------------------
+w1aw
+ja1abc
+Ve3Abc
+# --- length boundaries (CallString is string[10]) -----------------------
+W1AWWWWWWW
+W1AWWWWWWWW
+AB
+A
