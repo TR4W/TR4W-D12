@@ -114,11 +114,6 @@ var
 //  StrCompCOUNT                     : integer;
   tempDLGTEMPLATE                       : MYDLGTEMPLATE;
   Shell32LibHandle                      : DWORD;
-  ButtonPChar                           : PChar = 'Button';
-  StaticPChar                           : PChar = 'STATIC';
-  COMBOBOX                              : PChar = 'COMBOBOX';
-  EditPChar                             : PChar = 'Edit';
-  LISTBOX                               : PChar = 'LISTBOX';
 
   tempprintfBuffer                      : array[0..4096 - 1] of AnsiChar;   // To use with wsPrintfBuffer Issue 601 ny4i
   MillisecondsBuffer                    : array[0..31] of AnsiChar;
@@ -137,16 +132,12 @@ var
   SYSERRORBUFFER                        : array[0..255] of AnsiChar;
 
 
-  IntToPCharBuffer                      : array[0..15] of AnsiChar;
   FreqToPCharBuffer                     : array[0..15] of AnsiChar;
 
-  GetDateFormatBuffer                   : array[0..31] of AnsiChar;
 
   GetTimeStringBuffer                   : array[0..31] of AnsiChar;
   SystemTimeToStringBuffer              : array[0..31] of AnsiChar;
   GetFullTimeStringBuffer               : array[0..31] of AnsiChar;
-  GetYearStringBuffer                   : array[0..7] of AnsiChar;
-  GetDateStringBuffer                   : array[0..15] of AnsiChar;
   IQPrompt                              : array[0..63] of AnsiChar;
 
 {$IFDEF WINDOWS}
@@ -158,7 +149,7 @@ function CreateRichEdit(hwndParent: HWND): HWND;
 {$ENDIF}
 
 function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
-function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
+function tGetDateFormat(DT: TQSOTime): string;
 procedure UnableToFindFileMessage(FileName: string);
 (* SET A FIXED CHARACTER BUFFER FROM A STRING, BOUNDED BY THE BUFFER ITSELF.
 
@@ -186,12 +177,14 @@ procedure UnableToFindFileMessage(FileName: string);
   TESTS could not link them and they went unverified. utils_text is
   already in tr4w_unit_tests.lpr. *)
 
-function DeleteSlashes(p: PAnsiChar): PAnsiChar;
+procedure DeleteSlashes(var aBuf: array of AnsiChar);
 function SetParameterInArray(aAllowed: PCfgAllowedInts; aHighIndex: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
 
 function GetValueFromArray(const aSpellings: array of string; const CMD: string): Byte;
-function GetNumberFromCharBuffer(p: PAnsiChar): integer;
+(* GetNumberFromCharBuffer IS GONE. Its one caller, tree.ValidRST, reads the
+  RST through utils_text.LeadingInt now -- which stops at the string's length
+  where this pointer walk did not. *)
 procedure tLoadKeyboardLayout;
 function GetContestFromString(ContestString: ShortString): ContestType;
 function STToInt64(St: SYSTEMTIME): int64;
@@ -266,7 +259,7 @@ function SystemTimeToString(SysTime: SYSTEMTIME): string;
 
 
 procedure showwarning(Text: string);
-procedure ShowSysErrorMessage(ID: PAnsiChar);
+procedure ShowSysErrorMessage(const ID: string);
 
 
 //function tr4w_GetTimeString: PChar;
@@ -279,7 +272,9 @@ function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): stri
 
 //function Pos(Substr: string; S: string): Integer;
 procedure InvertBoolean(var b: boolean);
-function inttopchar(i: integer): PAnsiChar;
+(* inttopchar IS GONE. It returned a PAnsiChar into IntToPCharBuffer, one
+  buffer shared by every caller, so its result was valid only until the next
+  call anywhere. Every caller wanted the text -- IntToStr is the RTL's. *)
 (* DragWindow IS GONE (2026-09-07). It posted WM_SYSCOMMAND / SC_MOVE to hand
   a drag to the system's own move loop -- a Win32 idiom carried over from the
   original program, and not how an LCL application moves a window.
@@ -290,7 +285,7 @@ function inttopchar(i: integer): PAnsiChar;
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 //function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst; // 4.75.3
 
-function tOpenFileForRead(var h: THandle; FileName: PAnsiChar): boolean;
+function tOpenFileForRead(var h: THandle; const FileName: string): boolean;
 
 (* Fill a SYSTEMTIME with the CURRENT UTC, from the RTL.
 
@@ -551,15 +546,6 @@ begin
   b := not b;
 end;
 
-function inttopchar(i: integer): PAnsiChar;
-begin
-  (* STILL RETURNS A PAnsiChar into a shared global buffer, which is the next
-    slice -- this one only stops it going through the sprintf facade. *)
-  SetCharBuffer(IntToPCharBuffer, IntToStr(i));
-  Result := IntToPCharBuffer;
-end;
-
-
 {------------------------------------------------------------------}
 {  Function to convert int to string. (No sys utils = smaller EXE)  }
 {------------------------------------------------------------------}
@@ -712,24 +698,6 @@ begin
   Result := DUMMYCONTEST;
 end;
 
-function GetNumberFromCharBuffer(p: PAnsiChar): integer;
-label
-  1;
-var
-  b                                     : Byte;
-  i                                     : integer;
-begin
-  Result := 0;
-  i := 0;
-  1:
-  if p[i] in ['0'..'9'] then
-     begin
-     b := Byte(p[i]) - $30;
-     Result := b + (Result * 10);
-     inc(i);
-     goto 1;
-     end;
-end;
 {
 function StrLen(const Str: PChar): Cardinal; assembler;
 asm
@@ -856,7 +824,7 @@ begin
      end;
 end;
 
-function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
+function tGetDateFormat(DT: TQSOTime): string;
 
  
 begin
@@ -866,9 +834,11 @@ begin
     minimum digit count padded with ZEROS -- measured, not assumed, when the
     facade went (2026-09-14) -- so a single-digit day still renders '07-'.
     '%02d' would read the 0 as part of the WIDTH and give ' 7-'. *)
-  SetCharBuffer(GetDateFormatBuffer,
-                SysUtils.Format('%.2d-%.2d-%.2d',
-                                [dt.qtDay, DT.qtMonth, DT.qtYear]));
+  (* A STRING NOW, not a PAnsiChar into GetDateFormatBuffer. A pointer into
+    one shared buffer meant two dates in the same expression were the SAME
+    date -- the second call overwrote the first before either was read. *)
+  Result := SysUtils.Format('%.2d-%.2d-%.2d',
+                            [dt.qtDay, DT.qtMonth, DT.qtYear]);
 {
   St.wYear := 2000 + DT.qtYear;
   St.wMonth := dt.qtMonth;
@@ -883,7 +853,6 @@ begin
   Windows.GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, @St, 'dd-MMM-yy', @GetDateFormatBuffer, SizeOf(GetDateFormatBuffer));
 }
 { $ I FEND}
-  Result := GetDateFormatBuffer;
 end;
 
 procedure UnableToFindFileMessage(FileName: string);
@@ -918,24 +887,29 @@ begin
      end;
 end;
 
-function DeleteSlashes(p: PAnsiChar): PAnsiChar;
+procedure DeleteSlashes(var aBuf: array of AnsiChar);
+(* AN OPEN ARRAY, SO THE BOUND IS THE BUFFER'S OWN. This walked `0 to 255`
+  whatever it was handed, and stopped only at a NUL -- so a shorter buffer
+  with no terminator was edited past its end. *)
 var
-  TempInteger                           : integer;
+  i                                     : integer;
 begin
-  Result := p;
-  for TempInteger := 0 to 255 do
+  for i := 0 to High(aBuf) do
      begin
-     if p[TempInteger] = '/' then
+     if aBuf[i] = #0 then
         begin
-        p[TempInteger] := '_';
+        Break;
         end;
-     if p[TempInteger] = #0 then Break;
+     if aBuf[i] = '/' then
+        begin
+        aBuf[i] := '_';
+        end;
      end;
 end;
 
-procedure ShowSysErrorMessage(ID: PAnsiChar);
+procedure ShowSysErrorMessage(const ID: string);
 begin
-  showwarning(SysUtils.Format('%s: %s', [string(ID), SysUtils.SysErrorMessage(GetLastOSError)]));
+  showwarning(SysUtils.Format('%s: %s', [ID, SysUtils.SysErrorMessage(GetLastOSError)]));
 end;
 
 { What the trampoline carries across.  Heap-allocated by tCreateThread and
@@ -1122,10 +1096,10 @@ begin
      begin
      (* GENUINE FIXED-BUFFER READS -- both are FileNameType, so the
        NUL-terminated form is what takes the name and not the padding. *)
-     path := string(AnsiString(PAnsiChar(@TR4W_LOG_PATH_NAME[0]))) + FileName;
+     path := CharBufferText(TR4W_LOG_PATH_NAME) + FileName;
      if not SysUtils.FileExists(path) then
         begin
-        path := string(AnsiString(PAnsiChar(@TR4W_PATH_NAME[0]))) + FileName;
+        path := CharBufferText(TR4W_PATH_NAME) + FileName;
         end;
      end;
 
@@ -1315,7 +1289,7 @@ begin
   DayOfWeek := St.wDayOfWeek;
 end;
 
-function tOpenFileForRead(var h: THandle; FileName: PAnsiChar): boolean;
+function tOpenFileForRead(var h: THandle; const FileName: string): boolean;
 begin
   (* FileOpen, not CreateFileA: the RTL's, the same THandle, and the share
     mode spelled as fmShareDenyNone rather than FILE_SHARE_READ. It returns

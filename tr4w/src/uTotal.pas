@@ -93,12 +93,12 @@ end;
 
 procedure iTotalTextOut(Number: integer);
 var
-  TempPchar                        : PAnsiChar;
+  TempText                         : string;
 begin
   inc(Row);
 
-  if Number = 0 then TempPchar := nil else TempPchar := inttopchar(Number);
-  TotalTextOut(TempPchar, Column, Row);
+  if Number = 0 then TempText := '' else TempText := IntToStr(Number);
+  TotalTextOut(TempText, Column, Row);
 end;
 
 procedure DisplayBandTotals(Band: BandType);
@@ -451,11 +451,11 @@ begin
   if Settings.Qtc.Enable then
      begin
      WriteLeftColumnText('QTCs');
-     TotalTextOut(inttopchar(TotalNumberQTCsProcessed), Column, Row);
+     TotalTextOut(IntToStr(TotalNumberQTCsProcessed), Column, Row);
      if MyContinent <> Europe then
         begin
         WriteLeftColumnText(TC_QTCPENDING);
-        TotalTextOut(inttopchar(TotalContacts - TotalNumberQTCsProcessed), Column, Row);
+        TotalTextOut(IntToStr(TotalContacts - TotalNumberQTCsProcessed), Column, Row);
         end
      else
         begin
@@ -467,7 +467,7 @@ begin
 
  {
     WriteLeftColumnText('QTCs');
-    TotalTextOut(inttopchar(TotalNumberQTCsProcessed), 1, col_counter);
+    TotalTextOut(IntToStr(TotalNumberQTCsProcessed), 1, col_counter);
     if MyContinent <> Europe then
     begin
           //          inc(col_counter);

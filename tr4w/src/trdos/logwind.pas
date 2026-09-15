@@ -1566,20 +1566,20 @@ end;
 
 procedure DisplayQSOsWithThisStation(QSOs: integer);
 var
-  p                                     : PAnsiChar;
+  p                                     : string;
 begin
 //  if tQSOsWithThisStationPrevState = QSOs then Exit;
   tQSOsWithThisStationPrevState := QSOs;
 
   if QSOs <> 0 then
      begin
-     p := inttopchar(QSOs)
+     p := IntToStr(QSOs)
      end
   else
      begin
-     p := nil;
+     p := '';
      end;
-  TR4WMainForm.pnlQSOsWithThisStation.Caption := p;
+  TR4WMainForm.pnlQSOsWithThisStation.Caption := LclText(p);
 end;
 
 procedure DisplayRadio(Radio: RadioType);
@@ -2066,7 +2066,7 @@ begin
 
      if UTC.wMinute = 0 then
         begin
-        TR4WMainForm.pnlDate.Caption := GetDateString;
+        TR4WMainForm.pnlDate.Caption := LclText(GetDateString);
         TotalThisHour := 0;
         tThisHourBandChanges := 0;
 
@@ -2819,7 +2819,7 @@ var
     luck, and the read of a whole spot would have added garbage. *)
   lpNumberOfBytesRead                   : Integer;
 begin
-  if not TF.tOpenFileForRead(h, TR4W_BANDMAPBIN_FILENAME) then Exit;
+  if not TF.tOpenFileForRead(h, CharBufferText(TR4W_BANDMAPBIN_FILENAME)) then Exit;
   lpNumberOfBytesRead := FileRead(h, TempChar, SizeOf(TempChar));
   if lpNumberOfBytesRead <> SizeOf(TempChar) then
      begin

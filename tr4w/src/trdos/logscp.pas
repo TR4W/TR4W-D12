@@ -1919,7 +1919,7 @@ begin
                                 was executed.  Doesn't seem to get reset by
                                 the next two statements...  weird. }
 
-    if tOpenFileForRead(TRMasterFileRead, ActiveFilename) then
+    if tOpenFileForRead(TRMasterFileRead, CharBufferText(ActiveFilename)) then
 
 //      Assign(TRMasterFileRead, ActiveFilename);
 //    Reset(TRMasterFileRead, 1);
@@ -3276,7 +3276,7 @@ begin
       begin
       Exit;
       end;
-   if not tOpenFileForRead(FileHandle, ActiveFilename) then
+   if not tOpenFileForRead(FileHandle, CharBufferText(ActiveFilename)) then
       begin
       Exit;
       end;

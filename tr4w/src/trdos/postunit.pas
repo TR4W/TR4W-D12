@@ -979,7 +979,7 @@ procedure WriteTitleBlockToSummarySheet;
      #13#10 + sysutils.Format( '%21s SUMMARY SHEET', [ string( Settings.Contest.Name ) ] )
      + #13#10#13#10 + '               CONTEST: ' + string( Settings.Contest.Name ) +
      ContestFriendlyParens + #13#10 + '            START DATE: ' +
-     string( tGetDateFormat( ContestDates[ 0 ] ) ) + #13#10 +
+     tGetDateFormat( ContestDates[ 0 ] ) + #13#10 +
      '         CALLSIGN USED: ' + string( Settings.My.Call ) + #13#10 +
      '               LOCATOR: ' + Settings.My.Grid + #13#10#13#10 );
 
@@ -2884,7 +2884,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         // MyState -- '599 001' became 'FL  001' -- across six corpus sets.
         RSTSent: string;
         RSTReceived: string;
-        Freq: PAnsiChar;
+        Freq: string;
         ModeString: PAnsiChar;
         csQTHString: PAnsiChar;
         nrReceived: integer;
@@ -2998,7 +2998,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    if ( TempRXData.Frequency > 0 ) and
                       ( TempRXData.Frequency < 30000000 ) then
                       begin
-                      Freq := inttopchar( TempRXData.Frequency div 1000 );
+                      Freq := IntToStr( TempRXData.Frequency div 1000 );
                       end
                    else
                       begin // Per the Cabrillo spec, if above 30 Mhz, do not use actual frequency
@@ -3756,7 +3756,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             // %s=date, %02u=Hour, %02u=Minutes, %s=Note (%02u -> %.2u zero-pad).
             sWriteFileFromString( tReportFileWrite,
                sysutils.Format( '%s %.2u:%.2u: %s'#13#10,
-               [ string( tGetDateFormat( TempRXData.tSysTime ) ), Hour, Minutes,
+               [ tGetDateFormat( TempRXData.tSysTime ), Hour, Minutes,
                string( Note ) ] ) );
             end;
 

@@ -761,7 +761,7 @@ function ExpandTwoBytes(Input: TwoBytes): string;
 function FirstLetter(InputString: Str80): Char;
 
 function GetColorInteger(ColorString: Str80): tr4wColors;
-function GetDateString: PAnsiChar;
+function GetDateString: string;
 function GetDayString: Str80;
 //procedure GetFileNames(Path: Str80; Mask: Str80; var FileNames: FileNameRecord);
 
@@ -790,8 +790,7 @@ function GetLogEntryTimeString(LogEntry: Str160): string;
 function GetKey(Prompt: Str80): Char;
 function GetKeyResponse(Prompt: string): Char;
 
-function GetReal(Prompt: PAnsiChar): REAL;
-function GetResponse(Prompt: PAnsiChar {string}): ShortString;
+function GetResponse(const Prompt: string): ShortString;
 procedure GetRidOfPostcedingSpaces(var s: OpenString);
 procedure GetRidOfPrecedingSpaces(var s: OpenString);
 function GetSCPCharFromInteger(Index: integer): Char;
@@ -801,7 +800,7 @@ function GetSuffix(Call: CallString): CallString;
 function GetTimeString: string;
 function GetTomorrowString: Str80;
 
-function GetYearString: PAnsiChar {Str20};
+function GetYearString: string;
 
 function GoodLookingGrid(Grid: Str20): boolean;
 function GoodLookingGrid2(Grid: Str20): boolean;
@@ -864,7 +863,6 @@ function NewReadKey: Char;
 //{WLI}    FUNCTION  NUMBYTES (Call1: Pointer; Call2: Pointer): INTEGER;
 function NumberPartOfString(InputString: Str160): string;
 
-function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 function OkayToProceed: boolean;
 function OpenDupeFileForRead(var FileHandle: Text; FileName: Str80): boolean;
 function OpenFileForAppend(var FileHandle: Text; FileName: string): boolean;
@@ -1814,7 +1812,7 @@ begin
      end;
 end;
 
-function GetDateString: PAnsiChar;
+function GetDateString: string;
 
 { This function goes off and reads the DOS clock and generates a nice
   looking ASCII string using the format 25-DEC-90.  It takes the Time
@@ -2136,7 +2134,7 @@ begin
   until False;
 end;
 
-function GetResponse(Prompt: PAnsiChar {string}): ShortString;
+function GetResponse(const Prompt: string): ShortString;
 
 //var
 //  InputString                 : string;
@@ -2227,28 +2225,7 @@ begin
 
 end;
 
-function GetReal(Prompt: PAnsiChar): REAL;
-
-var
-  TempValue                             : REAL;
-  Result1                               : integer;
-  TempString                            : Str80;
-
-begin
-  TempString := GetResponse(Prompt);
-  Val(TempString, TempValue, Result1);
-
-  if Result1 = 0 then
-     begin
-     GetReal := TempValue
-     end
-  else
-     begin
-     GetReal := 0;
-     end;
-end;
-
-function GetYearString: PAnsiChar;
+function GetYearString: string;
 begin
   tGetSystemTime;
 {
@@ -2258,11 +2235,7 @@ begin
   push eax
   end;
 }
-  SetCharBuffer(GetYearStringBuffer, IntToStr(UTC.wYear));
-
-//  wsprintf(GetYearStringBuffer, '%u');
-//  asm add esp,12  end;
-  Result := GetYearStringBuffer;
+  Result := IntToStr(UTC.wYear);
 end;
 
 procedure HexToInteger(InputString: Str80; var OutputInteger: integer; var Result: integer);
@@ -2772,24 +2745,6 @@ begin
   NumberPartOfString := TempString;
 end;
 
-function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
-begin
-  (* YES IS THE DEFAULT BUTTON, as it was: MB_YESNO with no MB_DEFBUTTON2
-    focuses the first button, and QuestionDlg's 'IsDefault' marker applies to
-    the button BEFORE it (LCL promptdialog.inc:900) -- so it goes after mrYes,
-    not at the end. That is the opposite of YesOrNo in MainUnit, where No is
-    deliberately the default and the marker sits last; getting it wrong here
-    would put a delete one reflexive Enter away instead of two. *)
-  (* BOTH LclText CALLS ARE KEPT. The inner one translates the format
-    string and the outer one encodes the result, which is what this did
-    before; collapsing them is a translation question, not a string one. *)
-  Result := QuestionDlg('TR4W',
-                        LclText(string(SysUtils.Format(
-                           AnsiString(LclText(TC_ALREADYEXISTSOKAYTODELETE)),
-                           [FileName]))), mtWarning,
-                        [mrYes, 'IsDefault', mrNo], 0) = mrYes;
-end;
-
 function OkayToProceed: boolean;
 
 
@@ -3222,7 +3177,23 @@ begin
      Exit;
      end;
 
-  Number := GetNumberFromCharBuffer(@Ex[1]);
+  (* THROUGH THE STRING'S LENGTH, NOT A POINTER AT ITS FIRST CHARACTER.
+    This was GetNumberFromCharBuffer(@Ex[1]), and Ex is a ShortString -- it
+    has a LENGTH and no NUL, so the digit walk stopped at the first non-digit
+    even when that byte was past Length(Ex). An all-digit RST could pick up
+    digits left in the buffer by a longer earlier value.
+
+    A LEADING '-' STAYS 0. The old routine read only digits, so '-599' gave 0;
+    LeadingInt accepts a sign and would give -599 and take a different branch
+    below. Kept as it was on purpose. *)
+  if (Ex <> '') and (Ex[1] = '-') then
+     begin
+     Number := 0;
+     end
+  else
+     begin
+     Number := LeadingInt(Ex);
+     end;
 
   RemoveFirstString(Ex);
   //GetRidOfPrecedingSpaces(Ex);
@@ -4155,7 +4126,7 @@ begin
       (* A GENUINE FIXED-BUFFER READ, so it keeps the NUL-terminated form:
         TR4W_PATH_NAME is a FileNameType and a blanket cast would take the
         padding with it. *)
-      Result := string(AnsiString(PAnsiChar(@TR4W_PATH_NAME[0]))) + Settings.Dvk.Path + '\';
+      Result := CharBufferText(TR4W_PATH_NAME) + Settings.Dvk.Path + '\';
       end
    else
       begin

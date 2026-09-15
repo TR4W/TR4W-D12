@@ -1591,7 +1591,7 @@ begin
     below -- a round trip through shared memory for a value that was already
     a string, and that FileExists and FileCreate both take as one. *)
   logPath := SysUtils.Format('%sDXCluster' + PathDelim + 'dxcluster %s %s.txt',
-    [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]);
+    [CharBufferText(TR4W_PATH_NAME), GetDateString, string(TimeString)]);
 
   (* CREATE_NEW MEANT "FAIL IF IT ALREADY EXISTS", and FileCreate does not --
     it truncates. So the existence test is explicit here rather than lost in the

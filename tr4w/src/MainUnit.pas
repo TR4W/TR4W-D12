@@ -7887,7 +7887,7 @@ begin
     by hand through a window handle, is deleted. *)
   ReCalculateHourDisplay;
 {$IF tDebugMode}
-  QuickDisplay(inttopchar(GetTickCount64 - T1));
+  QuickDisplay(IntToStr(GetTickCount64 - T1));
   // showint(m);
 {$IFEND}
   if contest = RADIOYOC then // 4.53.2 // 4.72.9
@@ -8052,7 +8052,7 @@ begin
 
   elviCol := ColumnsArray[logColDate].pos;
   // elviText := LogDisplayBuffer;
-  elviText := StrPas(tGetDateFormat(RXData.tSysTime));
+  elviText := tGetDateFormat(RXData.tSysTime);
   EmitCol(elviCol, elviText, aCollect);   // Issue #997: was asm call setitem
 
   elviCol := ColumnsArray[logColTime].pos; //Ord(logColTime);
@@ -9187,7 +9187,7 @@ begin
      end;
   TR4WMainForm.pnlClock.Caption := GetTimeString;
   TR4WMainForm.pnlFullTime.Caption := GetFullTimeString(False);
-  TR4WMainForm.pnlDate.Caption := GetDateString;
+  TR4WMainForm.pnlDate.Caption := LclText(GetDateString);
 end;
 
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;

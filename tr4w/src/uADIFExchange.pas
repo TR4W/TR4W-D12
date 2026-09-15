@@ -87,11 +87,6 @@ var
   The arms call TF.inttopchar and TF.StringIsAllNumbers.  TF drags in Windows
   and the whole RTL-shim layer, which is exactly what uCabrilloExchange refused
   in order to stay testable.  Both are three lines. }
-function inttopchar(i: integer): string;
-begin
-   Result := IntToStr(i);
-end;
-
 function StringIsAllNumbers(const s: ShortString): boolean;
 var
    i: integer;
@@ -458,7 +453,7 @@ function FormatADIFMyExchange(
                      end;
                   if Contest in [ SPDX, PACC ] then
                      begin
-                     MyState := inttopchar( nrSent );
+                     MyState := IntToStr( nrSent );
                      end;
                   Result := sysutils.Format( '%-3d %-7s',
                      [ TempRXData.RSTSent, MyState ] ); // 4.97.5
