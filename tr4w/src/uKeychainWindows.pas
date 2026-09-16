@@ -251,10 +251,14 @@ function TWindowsKeychain.ReadSecret(const aName: string;
 var
    p: PCREDENTIALW;
    chars: integer;
+   (* The name CredReadW reads, owned by this routine: TargetFor returns a
+     temporary and a pointer into one lives only as long as the compiler says. *)
+   target: UnicodeString;
 begin
    aValue := '';
 
-   if not CredReadW(PWideChar(TargetFor(aName)), CRED_TYPE_GENERIC, 0, p) then
+   target := TargetFor(aName);
+   if not CredReadW(PWideChar(target), CRED_TYPE_GENERIC, 0, p) then
       begin
       (* AN ABSENT CREDENTIAL IS NOT A FAULT. The operator may have revoked
         it in Control Panel, or the settings file may have come from another
@@ -278,11 +282,15 @@ begin
 end;
 
 function TWindowsKeychain.DeleteSecret(const aName: string): TKeychainStatus;
+var
+   (* Named for the same reason as in ReadSecret above. *)
+   target: UnicodeString;
 begin
    (* CLEARING A PASSWORD HAS TO REMOVE IT, not merely stop referring to it.
      Without this, an operator who deleted a password would still find it in
      Control Panel afterwards. *)
-   if CredDeleteW(PWideChar(TargetFor(aName)), CRED_TYPE_GENERIC, 0) then
+   target := TargetFor(aName);
+   if CredDeleteW(PWideChar(target), CRED_TYPE_GENERIC, 0) then
       begin
       Result := ksOk;
       Exit;
