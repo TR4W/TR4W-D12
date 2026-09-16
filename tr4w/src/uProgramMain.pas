@@ -2206,8 +2206,6 @@ begin
 
   tCallWindowSetFocus;
 
-  LoadInPlugins;
-
   CheckNTPAtStartup;
 
   // Load POTA parks database off the UI thread (file may be ~3 MB / 50k entries).

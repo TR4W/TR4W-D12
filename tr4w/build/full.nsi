@@ -302,8 +302,6 @@ SectionEnd
 
 Section "Domestic multiplier files" Secdom
 
-;  SetOutPath "$INSTDIR\Plugins"
-;  File Plugins\tr4wSortLog.dll
 
   SetOutPath "$INSTDIR\dom"
    File ..\target\dom\alaska.dom

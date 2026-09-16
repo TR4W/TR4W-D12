@@ -2884,8 +2884,10 @@ const
 
 var
   LogBadQSOString                       : Str80;
-  LoadedPlugins                         : integer;
-  PluginsArray                          : array[1..16] of array[0..31] of AnsiChar;
+  (* LoadedPlugins and PluginsArray went with the plug-in subsystem
+    (2026-09-16). PluginsArray was array[1..16] of array[0..31] of AnsiChar,
+    appended to with lstrcatA and indexed by a counter nothing bounded against
+    it -- so the deletion takes a latent overrun with it. *)
   MultBand                              : BandType;
   MultMode                              : ModeType;
 //  tNTPServer                            : ShortString = 'pool.ntp.org';

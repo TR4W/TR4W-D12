@@ -534,13 +534,9 @@ begin
       ProcessMenu(aId);
       end;
 
-   (* > 10700, not >= : the two ranges overlapped at exactly 10700, so that one
-     id was dispatched BOTH ways. Plugin ids start at 10700 + LoadedPlugins
-     with LoadedPlugins >= 1, so nothing is lost. *)
-   if (aId > 10700) and (aId <= 10750) then
-      begin
-      RunPlugin(aId);
-      end;
+   (* THE 10700..10750 ARM WAS THE PLUG-IN RANGE, deleted 2026-09-16 with the
+     subsystem. Nothing dispatches those ids now, and nothing creates a menu
+     row carrying one. *)
 end;
 
 var
