@@ -47,6 +47,14 @@ unit uPlatformProcess;
   phase that owns menus. Until then the guard is here, in one file, rather than
   scattered through MainUnit as seventeen conditionals.
 
+  AND THIS UNIT NOW IMPORTS Windows AND shlwapi, behind one IFDEF WINDOWS --
+  which is a change of position, stated rather than slipped in. RunWindowsUtility
+  below still says it removed "the last `uses Windows` reason from this ROUTINE",
+  and that remains true of the routine. The UNIT is a different matter: asking
+  which program is registered for .txt has no FPC/LCL class behind it, so the
+  platform call is the answer, and the whole point of this unit is that the gate
+  lives HERE and nowhere else.
+
   calc.exe GOES ENTIRELY when that happens (NY4I, 2026-09-07) -- it is not a
   contest tool and every platform ships one. It is still here today only
   because removing the call means removing the menu item, and that belongs to
@@ -117,8 +125,21 @@ implementation
 uses
    Classes,     (* TStrings/TStringList, for the argument list *)
    SysUtils,
+{$IFDEF WINDOWS}
+   (* THE OS GATE LIVES HERE, WHICH IS THE POINT OF THIS UNIT (NY4I,
+     2026-09-16): "Minimizing OS gates in the main code makes this more
+     modular."
+
+     shlwapi IS FPC'S OWN, not a binding of ours -- winunits-base ships it for
+     i386-win32 and x86_64-win64, declaring AssocQueryStringA, ASSOCF_NONE and
+     ASSOCSTR_EXECUTABLE. MainUnit used to hand-declare the same entry point
+     with `external 'shlwapi.dll'` and two local constants; all three are gone.
+     Windows comes with it for DWORD and S_OK. *)
+   Windows,
+   shlwapi,
+{$ENDIF}
    Process,     (* TProcess, TShowWindowOptions, CommandToList *)
-   utils_text,    (* LclText -- the FCL's TProcessString is AnsiString *)
+   utils_text,    (* LclText, CharBufferText *)
    Log4D;
 
 var
@@ -135,11 +156,40 @@ end;
 
 function OpenTextFileInEditor(const aPath: string): boolean;
 {$IFDEF WINDOWS}
+var
+   editor: array[0..1023] of AnsiChar;
+   len:    DWORD;
 begin
+   (* WHICH PROGRAM IS REGISTERED FOR .txt -- the Windows answer to the same
+     question `open -t` answers on macOS and a list of GUI editors answers on
+     Linux. Was in MainUnit behind its own gate and its own shlwapi import;
+     both are deleted, and the call is FPC's. *)
    Result := False;
-   Log.Warn('[Process] OpenTextFileInEditor is not the Windows route -- the '
-            + 'registered .txt association names the editor there (%s)',
-            [aPath]);
+   len := SizeOf(editor);
+   editor[0] := #0;
+
+   if AssocQueryStringA(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, '.txt', nil,
+                        editor, @len) = S_OK then
+      begin
+      if editor[0] <> #0 then
+         begin
+         (* NO QUOTING. RunProgram passes arguments as a LIST, so a path with a
+           space in it needs no quotes -- hand-quoting was the bug this was
+           written to avoid. *)
+         Result := RunProgram(CharBufferText(editor), [aPath]);
+         end;
+      end;
+
+   if not Result then
+      begin
+      (* NOTEPAD, AND ONLY HERE. Windows-only by name, which is why it is
+        inside this arm rather than at a call site: a caller that had to know
+        about Notepad would be a caller that had to know which platform it is
+        on. *)
+      Log.Warn('[Process] no .txt association could be started for %s -- '
+               + 'falling back to Notepad', [aPath]);
+      Result := RunWindowsUtility(SysUtils.Format('Notepad %s', [aPath]));
+      end;
 end;
 {$ELSE}
 {$IFDEF DARWIN}

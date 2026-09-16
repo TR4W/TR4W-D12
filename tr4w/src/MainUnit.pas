@@ -10425,68 +10425,32 @@ begin
      end;
 end;
 
-const
-  ASSOCF_NONE         = $00000000;   // Issue #986
-  ASSOCSTR_EXECUTABLE = 2;           // the executable registered for the type
+(* THE .txt ASSOCIATION LOOKUP AND ITS shlwapi IMPORT ARE GONE FROM HERE
+  (2026-09-16), and so are ASSOCF_NONE and ASSOCSTR_EXECUTABLE.
 
-// AssocQueryStringA asks Windows which executable is registered for a file
-// extension (here, ".txt").  Declared directly because Delphi 7's ShlwApi
-// import unit does not expose it.
-(* GATED 2026-09-08 -- a LINK-time import, see the note on the monitor pair.
+  It asked which program is registered for ".txt" -- a Windows question with a
+  macOS and a Linux counterpart -- from inside the biggest unit in the program,
+  behind its own {$IFDEF WINDOWS}, through an `external 'shlwapi.dll'` written
+  by hand because Delphi 7's ShlwApi did not expose it.
 
-  Returning a failure HRESULT off Windows is not a degradation: the caller
-  already falls back when no .txt association can be resolved, which is the
-  same situation. What it falls back TO is Notepad, which does not exist on
-  Linux or macOS -- so this is a KNOWN GAP, not a solved problem. The portable
-  answer is xdg-open / open, and it belongs with whatever else needs a
-  "launch the platform's handler" helper rather than being invented here. *)
-{$IFDEF WINDOWS}
-function AssocQueryStringA(flags: DWORD; str: DWORD; pszAssoc, pszExtra,
-  pszOut: PAnsiChar; pcchOut: PDWORD): HRESULT; stdcall;
-  external 'shlwapi.dll' name 'AssocQueryStringA';
-{$ELSE}
-function AssocQueryStringA(flags: DWORD; str: DWORD; pszAssoc, pszExtra,
-  pszOut: PAnsiChar; pcchOut: PDWORD): HRESULT;
-begin
-   Result := -1;   (* any failure; the caller then uses its fallback *)
-end;
-{$ENDIF}
+  BOTH REASONS HAD EXPIRED. FPC ships shlwapi (winunits-base) declaring
+  AssocQueryStringA and both constants, and uPlatformProcess already answered
+  the same question for macOS and Linux. The lookup is its Windows arm now:
+  one unit, three platforms, and no OS gate left in this file for it.
+
+  NY4I, 2026-09-16: "Minimizing OS gates in the main code makes this more
+  modular." *)
 
 // Issue #986 -- open FileName in the user's default text editor (the program
 // registered for the ".txt" extension) instead of hard-coding Notepad.  Shared
 // by every "open in editor" path (the file-preview window, history.txt, ...).
-// Falls back to Notepad if no .txt association can be resolved or the editor
-// fails to launch, so the behavior never regresses on a misconfigured system.
+(* ONE BODY FOR EVERY PLATFORM (2026-09-16). This had two arms and a gate: the
+  Windows one did the association lookup here, the other delegated to
+  uPlatformProcess. Both delegate now -- the lookup moved into that unit's
+  Windows arm with FPC's shlwapi -- so what is left in MainUnit is the part
+  that is genuinely this layer's: telling the operator when nothing could be
+  started. *)
 procedure OpenInDefaultTextEditor(const FileName: string);
-{$IFDEF WINDOWS}
-var
-  editor   : array[0..1023] of AnsiChar;
-  len      : DWORD;
-  launched : boolean;
-begin
-  launched := False;
-  len := SizeOf(editor);
-  editor[0] := #0;
-  if AssocQueryStringA(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, '.txt', nil,
-        editor, @len) = S_OK then
-     begin
-     if editor[0] <> #0 then
-        begin
-        // NO QUOTING. RunProgram passes arguments as a LIST, so a path with
-        // a space in it needs no quotes -- and hand-quoting was the bug this
-        // line was written to avoid.
-        launched := RunProgram(CharBufferText(editor),
-                               [FileName]);
-        end;
-     end;
-
-  if not launched then
-     begin
-     // Fallback: Notepad. Windows-only by name, hence the utility route.
-     RunWindowsUtility(SysUtils.Format('Notepad %s', [FileName]));
-     end;
-end;
-{$ELSE}
 (* THE DESKTOP'S OWN HANDLER, AND A REPORT WHEN THERE IS NONE.
 
   THIS MENU ITEM DID NOTHING AT ALL ON LINUX. NY4I, 2026-09-09: "Open in Text
@@ -10521,7 +10485,6 @@ begin
         'installed.', [string(FileName)]));
      end;
 end;
-{$ENDIF}
 
 // CTRL-J NOW OPENS PREFERENCES (NY4I, 2026-08-16).
 //

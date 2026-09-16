@@ -104,7 +104,6 @@ uses
    VC,                    { Contest, ContestsArray }
    PostUnit,              { PreviewFileNameAddress, PreviewFileIsCabrillo }
    uFileView,             { SendMail -- the MAPI half, which is not a window }
-   uMenu,                 { OpenInDefaultTextEditor, RunExplorer }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
    MainUnit,              { logger }
    Log4D;
