@@ -1048,10 +1048,16 @@ end;
   answers "what does the OS see", nothing more -- see note 2 at the top. No
   radio has been driven over a Mac serial port from this program.
 
-  RUNNING A PROBE THERE NEEDS ONE WORKAROUND, or it fails at the LINK with
-  "ld: library 'c' not found": that box's fpc.cfg sits in bin/aarch64-darwin
-  while FPC searches bin/etc, so no sysroot reaches the linker. Pass
-  -XR"$(xcrun --show-sdk-path)". Nothing is missing -- both SDKs are present. *)
+  RUNNING A PROBE THERE USED TO NEED A WORKAROUND and no longer does. Every
+  link on that box died with "ld: library 'c' not found", which reads as a
+  missing SDK and is not: its fpc.cfg sat in bin/aarch64-darwin while FPC
+  searches bin/etc, so the config -- with the RTL paths, the -Fl library paths
+  and the -XR sysroot in it -- was never read at all. A symlink at ~/.fpc.cfg,
+  the first path FPC looks in, fixed it for every build on the machine.
+
+  The reason that is worth knowing here rather than only in a runbook: the
+  failure names the linker, so it invites an SDK hunt. Both SDKs were present
+  the whole time. *)
 procedure TComPortEnumerator.Refresh;
 const
    DEV_DIR    = '/dev/';
