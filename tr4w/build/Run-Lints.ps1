@@ -138,6 +138,13 @@ $lints = @(
    @{ Name = 'Lint-PathEscapes';     Arg = $repoRoot; NeedsFpc = $false }
    @{ Name = 'Lint-MarkdownTables'; Arg = $repoRoot; NeedsFpc = $false }
    @{ Name = 'Lint-AgentDeprecated'; Arg = $src;      NeedsFpc = $false }
+   # A {$DIRECTIVE} QUOTED INSIDE A { } COMMENT ENDS THAT COMMENT, and the
+   # prose after it becomes code. It broke the build on 2026-09-16, in a
+   # paragraph being written ABOUT platform gates, and the compiler's report
+   # named neither the comment nor the directive. CLAUDE.md has said three
+   # ways that every block comment is (* *); this is the gate, because the
+   # rule is mechanically checkable and prose evidently is not enough.
+   @{ Name = 'Lint-BraceComments'; Arg = $src;      NeedsFpc = $false }
    # THE SAME RATCHET, SECOND GROUP -- phase 8, the Win32 the program speaks
    # OUTSIDE its windows: the ini API, serial, the registry, raw threads and
    # events, audio, LPT. Phase 7 does not touch any of it, and none of it

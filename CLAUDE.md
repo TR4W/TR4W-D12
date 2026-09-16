@@ -1407,6 +1407,20 @@ and ordinary explanatory brace comments inside the very code being commented out
 The comment closes early, the remainder becomes code, and the compiler reports a
 syntax error somewhere that looks unrelated to what you did.
 
+**AND IT IS GATED NOW, because saying it three ways was not enough.**
+`build/Lint-BraceComments.ps1` fails the build when a `{$DIRECTIVE}` sits inside
+a `{ }` comment AND closes on the same line -- the shape that broke the build on
+2026-09-16, in a paragraph being written ABOUT platform gates. The compiler does
+catch it, eventually, with a message that names neither the comment nor the
+directive; the lint names the file, the line and the directive.
+
+**It deliberately allows one shape: vendored Indy's.** Indy comments out
+directive-bearing code by STRIPPING the closing braces --
+`{$IFDEF STRING_IS_ANSI, ADestEncoding{$ENDIF` -- so the enclosing comment
+survives and the unit compiles. Three such sites were the lint's first report
+and all three were working code, which is why the rule is "closes on the same
+line" rather than "appears at all".
+
 **WIDENED 2026-09-01, and the reason it had to be is worth keeping.** This rule
 previously read *"comment a block of CODE out with `(* *)`"* and extended only to
 the explanatory comment above such a block. That scope was too narrow, because
