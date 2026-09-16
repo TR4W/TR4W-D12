@@ -664,6 +664,7 @@ type
       FFrequencyMemoryEnable: boolean;
       FLogSubTitle: string;
       FFrequencyPollRate: TFreqPollRate;
+      FStandardEditKeys: boolean;
    public
       constructor Create;
    published
@@ -750,6 +751,27 @@ type
         crMax:1000. *)
       property FrequencyPollRate: TFreqPollRate
          read FFrequencyPollRate write FFrequencyPollRate;
+      (* THE STANDARD EDITING KEYS BELONG TO THE FOCUSED FIELD, OUTSIDE THE
+        MAIN WINDOW ONLY.
+
+        Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A are accelerators -- clear mult sheet
+        (10424), execute config file (10426), and send keyboard input (10400) --
+        so a dialog with an edit on it cannot copy or paste: the accelerator
+        table answers first. Turning this on leaves those keys to the control
+        when the focused window is NOT the main one.
+
+        FALSE BY DEFAULT, and that is the whole reason it is a setting. NY4I:
+        "I can see there might be a muscle-memory issue for some ops." An
+        operator who has typed Ctrl+C to clear the mult sheet for years keeps
+        that until they choose otherwise, and the main window is never affected
+        either way.
+
+        NO ALIAS, so the command is the derived OPERATING STANDARD EDIT KEYS.
+        The 184 aliases in BuildCommandMap exist so that names TR4W has ALWAYS
+        accepted keep working; this command has no history to be compatible
+        with, and that list is meant to shrink. *)
+      property StandardEditKeys: boolean
+         read FStandardEditKeys write FStandardEditKeys;
    end;
 
    (*
@@ -4360,6 +4382,9 @@ begin
    FLogSubTitle            := '';
    // logwind declared FreqPollRate = 10.
    FFrequencyPollRate      := 10;
+   (* TODAY'S BEHAVIOUR: the accelerator table keeps answering Ctrl+C and
+     Ctrl+V everywhere, exactly as it does now. *)
+   FStandardEditKeys       := False;
 end;
 
 constructor TNetworkSettings.Create;

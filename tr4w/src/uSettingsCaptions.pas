@@ -93,6 +93,7 @@ resourcestring
    RS_OPERATING_SPACEBARDUPECHECK             = 'Space bar performs a dupe check';
    RS_OPERATING_CONFIRMEDITCHANGES            = 'Confirm before saving an edited QSO';
    RS_OPERATING_AUTOQSONUMBERDECREMENT        = 'Give the serial number back when a QSO is abandoned';
+   RS_OPERATING_STANDARDEDITKEYS              = 'Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A edit the field outside the main window';
    RS_OPERATING_BANDS_HF                      = 'HF (160 - 10 m)';
    RS_OPERATING_BANDS_WARC                    = 'WARC (30, 17, 12 m)';
    RS_OPERATING_BANDS_VHF                     = 'VHF and up';

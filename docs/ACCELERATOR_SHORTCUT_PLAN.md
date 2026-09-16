@@ -176,6 +176,15 @@ decision and, ideally, one session on the hardware.
 
 ## Order of work
 
+**THE ORDER CHANGED AFTER THIS DOCUMENT WAS WRITTEN, and step 3 landed first.**
+Reading the LCL source settled it: `Application.OnShortCut` answers at step 4,
+which is still AHEAD of the focused control's `OnKeyDown` at step 6 -- so the
+move on its own would not make one editing key work, while reordering dispatch
+for every key at once puts F10, the keypad CW memories, Enter/logging, the
+Telnet exclusion and the modal ordering in play together. The option needs none
+of that: it is one guard, and it does what was asked. So the option shipped
+first and the move is still open.
+
 1. **This document.** No code.
 2. **The move**: `AddOnKeyDownBeforeHandler` -> `Application.OnShortCut`, with
    `KeyDownBefore` reshaped to the `TLMKey` signature
@@ -197,7 +206,13 @@ decision and, ideally, one session on the hardware.
    guard was written for: on 2026-08-24 ESC did not close the dialog and the
    main window acted on it, and Tab turned the exchange field green. Removing
    those guards would reintroduce it.
-3. **The option**, defaulting to today's behaviour.
+3. **The option**, defaulting to today's behaviour. **DONE** --
+   `OPERATING STANDARD EDIT KEYS`, off by default, guarding Ctrl+C/V/X/A when
+   the focused control is an edit or combo box on a form that is not the main
+   window. It carries NO alias: every Operating setting before it is aliased to
+   a flat legacy spelling, and a command introduced today has no history to be
+   compatible with, so it is the first `OPERATING <thing>` name in the
+   vocabulary. Ctrl+Z is not in it, for the reason given above.
 4. **macOS**, only after a ruling.
 
 ## What no oracle can tell us

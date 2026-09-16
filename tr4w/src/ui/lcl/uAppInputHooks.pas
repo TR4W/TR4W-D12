@@ -46,6 +46,9 @@ uses
   Classes, SysUtils, StrUtils, Forms, Controls, LCLType, LMessages,
   LCLIntf,          { GetKeyState -- the LCL declares it for every widget set,
                       and each one answers for its own keyboard }
+  StdCtrls,         { TCustomEdit, TCustomComboBox -- what "the operator is
+                      typing in a field" means, asked of the control rather
+                      than of the form }
   uMainThread,      { RunOnMainThread -- the accelerator runs deferred }
   uMainWindowProc,  { DispatchCommandId -- the one command dispatch }
   uAccelerators,    { ACCELERATORS -- the one table }
@@ -72,6 +75,8 @@ type
     FFaults: integer;
     FLastFault: Int64;
     function  AcceleratorFor(const aKey: word; const aShift: TShiftState): word;
+    function  EditingKeyBelongsToTheField(const aKey: word;
+                                          const aShift: TShiftState): boolean;
   public
     procedure KeyDownBefore(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure AppException(Sender: TObject; E: Exception);
@@ -122,6 +127,83 @@ begin
      end;
 
   Result := GetParentForm(focused) = tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm;
+end;
+
+(* IS THIS ONE OF THE STANDARD EDITING KEYS, TYPED INTO A FIELD THAT IS NOT ON
+  THE MAIN WINDOW?
+
+  NY4I, 2026-09-15: "on many dialogs, CTRL-C, CTRL-V, CTRL-Z do not work. Those
+  are standard windows commands." They do not work because they are
+  accelerators -- Ctrl+C is clear mult sheet (10424), Ctrl+V is execute config
+  file (10426), Ctrl+A is send keyboard input (10400) -- and this hook answers
+  before any control sees the key.
+
+  THREE CONDITIONS, AND ALL THREE ARE REQUIRED.
+
+    the option        OFF by default. An operator who has cleared the mult
+                      sheet with Ctrl+C for years keeps doing so until they
+                      say otherwise.
+    not the main form THE MAIN WINDOW IS NEVER AFFECTED. Its call and exchange
+                      fields are edits too, so testing only "is a field
+                      focused" would take Ctrl+C away from the one place the
+                      accelerator is certainly wanted.
+    an edit control   asked of Screen.ActiveControl, not of the form. A
+                      TCustomEdit or a TCustomComboBox is where Ctrl+V means
+                      paste; a grid or a button is not, and on those the
+                      accelerator should still fire.
+
+  CTRL+Z IS NOT IN THE LIST BECAUSE IT IS NOT AN ACCELERATOR. Nothing in the
+  table binds it (only Alt+Z is, 10318) and nothing in tr4w/src handles VK_Z, so
+  this hook already leaves it alone: when no row matches, it exits without
+  consuming. Ctrl+Z failing on some dialog is a different defect and wants the
+  dialog named -- see docs/ACCELERATOR_SHORTCUT_PLAN.md. Listing it here would
+  look like a fix and change nothing.
+
+  Ctrl+X is included though nothing binds it today: cut belongs with copy and
+  paste, and leaving it out would mean a future row silently taking it. *)
+function TTR4WInputHooks.EditingKeyBelongsToTheField(const aKey: word;
+                                                     const aShift: TShiftState): boolean;
+var
+   focused: TWinControl;
+begin
+   Result := False;
+
+   if not Settings.Operating.StandardEditKeys then
+      begin
+      Exit;
+      end;
+
+   if (aShift * [ssCtrl, ssAlt, ssShift]) <> [ssCtrl] then
+      begin
+      Exit;
+      end;
+
+   if not ((aKey = Ord('C')) or (aKey = Ord('V')) or
+           (aKey = Ord('X')) or (aKey = Ord('A'))) then
+      begin
+      Exit;
+      end;
+
+   focused := Screen.ActiveControl;
+   if focused = nil then
+      begin
+      Exit;
+      end;
+
+   if GetParentForm(focused) = TCustomForm(TR4WMainForm) then
+      begin
+      Exit;
+      end;
+
+   Result := (focused is TCustomEdit) or (focused is TCustomComboBox);
+
+   if Result and (logger <> nil) and logger.IsTraceEnabled then
+      begin
+      logger.Trace('[InputHooks] Ctrl+%s left to %s on %s -- OPERATING '
+                   + 'STANDARD EDIT KEYS is on',
+                   [Char(aKey), focused.ClassName,
+                    GetParentForm(focused).Name]);
+      end;
 end;
 
 function TTR4WInputHooks.AcceleratorFor(const aKey: word;
@@ -191,6 +273,11 @@ begin
      end;
 
   if TelnetHasFocus then
+     begin
+     Exit;
+     end;
+
+  if EditingKeyBelongsToTheField(Key, Shift) then
      begin
      Exit;
      end;

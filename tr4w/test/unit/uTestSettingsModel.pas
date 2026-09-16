@@ -354,11 +354,14 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(298, names.Count,
+         CheckEquals(299, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
-                     + ' MESSAGE 1, which has three');
+                     + ' MESSAGE 1, which has three; 299 since'
+                     + ' OPERATING STANDARD EDIT KEYS, which carries no'
+                     + ' alias because TR4W never had a flat spelling'
+                     + ' for it');
       finally
          names.Free;
       end;
@@ -1435,6 +1438,7 @@ const
       + '"NO COLUMN HEADER",'
       + '"NO LOG",'
       + '"NO POLL DURING PTT",'
+      + '"OPERATING STANDARD EDIT KEYS",'
       + '"PADDLE MONITOR TONE",'
       + '"PADDLE PTT HOLD COUNT",'
       + '"PADDLE SPEED",'

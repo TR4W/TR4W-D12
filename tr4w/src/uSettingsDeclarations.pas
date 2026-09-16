@@ -272,6 +272,12 @@ begin
                          RS_OPERATING_CONFIRMEDITCHANGES);
    RegisterModelSetting( 'operating.autoQSONumberDecrement',  'AUTO QSO NUMBER DECREMENT',
                          RS_OPERATING_AUTOQSONUMBERDECREMENT);
+   (* THE DERIVED NAME, NOT A FLAT ONE. Every Operating setting above carries an
+     Alias to the flat spelling a config file has always used; this command is
+     new, so there is nothing to be compatible with and it keeps the name the
+     property path produces. *)
+   RegisterModelSetting( 'operating.standardEditKeys',        'OPERATING STANDARD EDIT KEYS',
+                         RS_OPERATING_STANDARDEDITKEYS);
 
    // --- Operating: bands ---------------------------------------------------
    // MIGRATED 2026-08-16, with the CFGCA rows flipped to csJSON in the same
