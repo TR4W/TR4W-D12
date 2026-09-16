@@ -95,7 +95,8 @@ const
      and tell the operator the list is unavailable instead of showing them
      nothing and letting them conclude their adapter is broken. *)
    ComPortEnumerationSupported =
-      {$IF DEFINED(WINDOWS) OR DEFINED(LINUX)} True {$ELSE} False {$IFEND};
+      {$IF DEFINED(WINDOWS) OR DEFINED(LINUX) OR DEFINED(DARWIN)} True
+      {$ELSE} False {$IFEND};
 
    // Highest COM number TR4W can address, taken from the PortType enum itself
    // rather than restated here.  A second copy of this number is precisely the
@@ -1004,17 +1005,109 @@ begin
 end;
 
 {$ELSE}
+{$IFDEF DARWIN}
 
-(* No enumeration on this platform -- macOS is the one that reaches here.  See
-  ComPortEnumerationSupported above: a caller that shows this list without
-  testing that constant shows an empty one, which reads as "no serial ports"
-  rather than "not implemented".  Refresh is still a legal call and still
-  leaves the object in a consistent state. *)
+(* MACOS: THE CALLOUT DEVICES IN /dev, AND ONLY THOSE.
+
+  There is no /sys and no /dev/serial/by-id here, so there is nothing to walk
+  for descriptors -- the kernel puts the adapter's identity IN THE NODE NAME:
+
+      /dev/cu.usbserial-A50285BI      an FTDI, serial A50285BI
+      /dev/cu.SLAB_USBtoUART          a Silicon Labs CP210x
+      /dev/cu.Bluetooth-Incoming-Port a Bluetooth rfcomm channel
+
+  cu, NOT tty, AND THE DIFFERENCE MATTERS. Every one of these has a /dev/tty.*
+  twin, and opening the tty node BLOCKS until carrier is asserted -- the modem
+  semantic macOS still honours. A radio on a USB adapter asserts no carrier, so
+  the tty twin is an open that hangs. nkinar/GetComPortList, which NY4I offered
+  as the reference for this arm, matches (tty|cu) because it only LISTS names;
+  TR4W opens them, so it takes the callout node and leaves the twin out rather
+  than offering a port that cannot work.
+
+  UNVERIFIED BY ANY COMPILER AVAILABLE HERE, and that is stated rather than
+  glossed: the Windows build never reaches this arm and tools/Compile-Linux.ps1
+  targets Linux. It is reviewed by eye, exactly as the other Darwin gates in
+  this tree are, and wants one compile on mac-ci before it is believed. *)
+procedure TComPortEnumerator.Refresh;
+const
+   DEV_DIR    = '/dev/';
+   CALLOUT    = 'cu.';
+var
+   rec: TSearchRec;
+   found: TComPortInfoArray;
+   used: Integer;
+   info: TComPortInfo;
+   entryName: string;
+   suffix: string;
+begin
+   SetLength(FPorts, 0);
+   SetLength(found, 0);
+   used := 0;
+
+   if FindFirst(DEV_DIR + CALLOUT + '*', faAnyFile, rec) <> 0 then
+      begin
+      (* A Mac with no serial adapter has no cu.* at all beyond the Bluetooth
+        node, and on some machines not even that. Not an error. *)
+      Exit;
+      end;
+   try
+      repeat
+         // Converted once, explicitly -- see the note in LoadSerialByIdMap.
+         entryName := string(rec.Name);
+         if (entryName = '.') or (entryName = '..') then
+            begin
+            Continue;
+            end;
+
+         info := Default(TComPortInfo);
+         info.PortName   := DEV_DIR + entryName;
+         info.PortNumber := 0;   // no COM number -- see Addressable below
+
+         (* THE SUFFIX IS THE IDENTITY AND THE DESCRIPTION, because macOS has
+           no by-id directory and no sysfs to ask. 'cu.usbserial-A50285BI'
+           gives 'usbserial-A50285BI', which is stable across replug for any
+           adapter whose serial is in its descriptors. *)
+         suffix := Copy(entryName, Length(CALLOUT) + 1, MaxInt);
+         info.FriendlyName := suffix;
+         info.DeviceDesc   := suffix;
+         info.InstanceID   := suffix;
+
+         (* NOT ADDRESSABLE, for the same reason as Linux and not a property of
+           the port: TR4W's config vocabulary says 'SERIAL n', which resolves to
+           a PortType ordinal and back to 'COMn'. No ordinal names
+           /dev/cu.usbserial-A50285BI. Listed WITH the reason rather than
+           hidden -- note 1 at the top of this unit. *)
+         info.Addressable := False;
+         info.Present     := True;
+
+         if used = Length(found) then
+            begin
+            SetLength(found, used + 16);
+            end;
+         found[used] := info;
+         Inc(used);
+      until FindNext(rec) <> 0;
+   finally
+      FindClose(rec);
+   end;
+
+   SetLength(found, used);
+   SortPorts(found);
+   FPorts := found;
+end;
+
+{$ELSE}
+
+(* No enumeration on this platform.  See ComPortEnumerationSupported above: a
+  caller that shows this list without testing that constant shows an empty one,
+  which reads as "no serial ports" rather than "not implemented".  Refresh is
+  still a legal call and still leaves the object in a consistent state. *)
 procedure TComPortEnumerator.Refresh;
 begin
    SetLength(FPorts, 0);
 end;
 
+{$ENDIF}
 {$ENDIF}
 {$ENDIF}
 
