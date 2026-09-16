@@ -1,7 +1,5 @@
 ﻿program tr4wserver;
 
-{$DEFINE LINUX}
-
 {$IMPORTEDDATA OFF}
 uses
   (* cthreads AND cwstring, BEFORE Interfaces, AND ONLY ON UNIX.
