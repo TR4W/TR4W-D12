@@ -3101,9 +3101,17 @@ var
   TR4W_TCI_MAX_TX_SECONDS               : integer = 180;
 
 
-  (* A NAME, NOT A POINTER.  The two Win32 font calls that consume it are
-    already {$IFDEF WINDOWS}-gated and take a PWideChar; they cast AT the
-    call, which is where a transport's pointer belongs. *)
+  (* A NAME, NOT A POINTER -- and as of 2026-09-16 NOTHING THAT CONSUMES IT
+    IS WIN32 ANY MORE.
+
+    What stood here said the two consumers were IFDEF WINDOWS-gated, took a
+    PWideChar, and cast at the call. That was true and is now false in all
+    three clauses: the calls are uPlatformFonts.InstallPrivateFont and
+    UninstallPrivateFont, they take a UnicodeString, and neither caller casts
+    or gates. The gate and the pointer both live in that unit, which is where
+    a transport belongs -- the old arrangement had the AddFontResource in
+    uProgramMain and its matching RemoveFontResource in logsubs2, two units
+    and two subsystems apart. *)
   TR4W_LC_FILENAME                      : string = 'LUCONSZ.TTF';
 
   CPUstart, CPUstop                     : int64;

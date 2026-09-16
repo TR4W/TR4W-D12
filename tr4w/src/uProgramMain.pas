@@ -40,6 +40,7 @@ uses
   Dialogs, Controls,
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   uSystemWatch, (* RefreshColourDepth -- the one colour-depth probe *)
+  uPlatformFonts, (* InstallPrivateFont -- the AddFontResource gate lives there *)
   (* WINDOWS STAYS, AND EVERY REMAINING USE IS A DECISION RATHER THAN A
     TRANSLATION (measured 2026-09-08 by removing the import and reading the
     compiler). Messages went with this pass -- it declared nothing this unit
@@ -1454,18 +1455,16 @@ begin
   uMenu.InitializeMenuText;
 
   SetCharBuffer(TR4W_INI_FILENAME, SettingsFilePath('tr4w.ini'));
-  (* THE PRIVATE FONT IS A WINDOWS FACILITY, and LuconSZLoadded staying False
-    off Windows is the RIGHT answer, not a degraded one: the font genuinely is
-    not loaded there. Its three readers -- MainUnit twice and logsubs2 once --
-    already branch on it, and logsubs2's own comment says "LuconSZLoadded can
-    only be True where the load happened."
+  (* THE PLATFORM GATE MOVED INTO uPlatformFonts, which already owns every
+    per-platform font question this program asks. LuconSZLoadded staying False
+    off Windows is still the RIGHT answer rather than a degraded one -- the
+    font genuinely is not loaded there -- and its three readers (MainUnit
+    twice, logsubs2 once) already branch on it.
 
-    On Linux and macOS a private font is fontconfig's business, not the
-    program's, and the LCL has no AddFontResource equivalent because there is
-    nothing to be equivalent to. *)
-{$IFDEF WINDOWS}
-  LuconSZLoadded := AddFontResourceW(PWideChar(TR4W_LC_FILENAME)) <> 0;
-{$ENDIF}
+    Why each platform answers as it does is stated beside the implementation,
+    next to the matching UninstallPrivateFont, which logsubs2 used to carry a
+    separate copy of. *)
+  LuconSZLoadded := uPlatformFonts.InstallPrivateFont(TR4W_LC_FILENAME);
   (* The MainFixedFont line that stood here built an HFONT nothing read.
     See the note in VC.pas: five of the six font handles were write-only
     once the main window became an LCL form. *)

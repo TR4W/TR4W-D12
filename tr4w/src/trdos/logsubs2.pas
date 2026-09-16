@@ -91,11 +91,16 @@ uses
                         which the {$IFDEF} inside already says.
       WAIT_OBJECT_0 / WAIT_TIMEOUT
                         the return codes of that wait, so they go with it.
-      RemoveFontResourceW
-                        unloading LUCONSZ.TTF at exit. The LCL has no
-                        equivalent -- font installation is per-platform and
-                        this is the matching half of an AddFontResource that
-                        is equally Windows.
+
+    OFF THE LIST 2026-09-16: RemoveFontResourceW. It unloaded LUCONSZ.TTF at
+    exit and was the matching half of an AddFontResourceW six hundred lines
+    away in uProgramMain -- an acquire and its release in two different units
+    and two different subsystems, each carrying its own copy of the reasoning
+    about why fonts are per-platform. Both halves are uPlatformFonts.
+    InstallPrivateFont / UninstallPrivateFont now. There is still no FPC or
+    LCL class to reach for -- Windows has AddFontResource, Linux hands it to
+    fontconfig, macOS to CTFontManager -- so the gate did not disappear, it
+    moved to the unit that owns fonts.
 
     Converted in this pass and no longer on the list: CloseHandle (a FILE
     handle -- FileClose), SW_HIDE and IDno (LCLType), WinSock2 (went with the
@@ -171,6 +176,7 @@ implementation
 
 uses
    uPortAddress,   // TPortKind -- see the radio port kind accessors
+   uPlatformFonts, // UninstallPrivateFont -- the gate lives there, not here
   uSettingsModel,     // Settings.ExternalLogger -- see the note in logstuff
   uMainForm,          // the editable log is an LCL virtual list
   uLogSearchForm,     // LogSearchRefreshIfOpen -- Search is non-modal
@@ -842,14 +848,12 @@ begin
 //  SpotsList.Destroy;
   if LuconSZLoadded then
      begin
-{$IFDEF WINDOWS}
-     (* The matching half of an AddFontResource that is equally Windows: this
-       unloads LUCONSZ.TTF at exit. The LCL has no equivalent because font
-       INSTALLATION is per-platform -- on Linux it is fontconfig, on macOS
-       CTFontManager -- so the pair moves together or not at all, and
-       LuconSZLoadded can only be True where the load happened. *)
-     RemoveFontResourceW(PWideChar(TR4W_LC_FILENAME));
-{$ENDIF}
+     (* The matching half of the install in uProgramMain, and the pair lives in
+       ONE unit now -- uPlatformFonts owns the per-platform gate, so neither
+       this unit nor the startup unit carries its own copy of the reasoning.
+       LuconSZLoadded can only be True where the load happened, so the call is
+       reached only on a platform that did load it. *)
+     uPlatformFonts.UninstallPrivateFont(TR4W_LC_FILENAME);
      end;
 {$IF SCPDEBUG}
   if scpLoaded then
