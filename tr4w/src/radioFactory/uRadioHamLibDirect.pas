@@ -332,9 +332,13 @@ var
   pSetDebugFile: TSetDebugFile;
   traceFile: Pointer;
   tracePath: string;
+  (* The bytes fopen reads, owned by this routine. A pointer taken of
+    PAnsiChar(AnsiString(tracePath)) points into a temporary. *)
+  traceBytes: AnsiString;
 begin
   tracePath := LogFilePath('hamlib_trace.log');
-  traceFile := msvcrt_fopen(PAnsiChar(AnsiString(tracePath)), 'w');
+  traceBytes := AnsiString(tracePath);
+  traceFile := msvcrt_fopen(PAnsiChar(traceBytes), 'w');
   if traceFile = nil then
      begin
      logger.Warn('[EnableHamLibTrace] Could not open %s for writing', [tracePath]);
@@ -425,6 +429,11 @@ var
   err: Integer;
   portStr: string;
   baudStr: string;
+  (* THE BYTES EVERY rig_set_conf READS, each owned by this routine.
+    rig_set_conf keeps nothing -- HamLib copies the value -- but the pointer
+    must be valid for the duration of the call, and a temporary's lifetime is
+    the compiler's to decide. See uOpenSSLLoader for the rule. *)
+  confBytes: AnsiString;
 begin
   Result := -1;
 
@@ -491,7 +500,8 @@ begin
        portStr := Format('%s:%d', [IPAddress, IPPort]);
        logger.Debug('[THamLibDirect.Connect] Configuring network: %s', [portStr]);
 
-       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(portStr)));
+       confBytes := AnsiString(portStr);
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(confBytes));
        if err <> RIG_OK then
           begin
           logger.Error('[THamLibDirect.Connect] rig_set_conf(rig_pathname) failed: %s (code %d)',
@@ -510,7 +520,8 @@ begin
                    [COMPortName, BaudRate]);
 
        // Use token lookup like rigctl does
-       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(COMPortName)));
+       confBytes := AnsiString(COMPortName);
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(confBytes));
        if err <> RIG_OK then
           begin
           logger.Error('[THamLibDirect.Connect] Error setting serial port: %s',
@@ -522,7 +533,8 @@ begin
           end;
 
        baudStr := IntToStr(BaudRate);
-       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'serial_speed'), PAnsiChar(AnsiString(baudStr)));
+       confBytes := AnsiString(baudStr);
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'serial_speed'), PAnsiChar(confBytes));
        if err <> RIG_OK then
           begin
           logger.Warn('[THamLibDirect.Connect] Error setting baud rate: %s',
@@ -542,7 +554,8 @@ begin
     if Length(FCIVAddress) > 0 then
        begin
        logger.Info('[THamLibDirect.Connect] Setting CI-V address: 0x%s', [FCIVAddress]);
-       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'civaddr'), PAnsiChar(AnsiString(FCIVAddress)));
+       confBytes := AnsiString(FCIVAddress);
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'civaddr'), PAnsiChar(confBytes));
        if err <> RIG_OK then
           begin
           logger.Warn('[THamLibDirect.Connect] Warning setting CI-V address: %s', [RigErrorToString(err)]);

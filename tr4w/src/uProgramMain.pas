@@ -977,8 +977,17 @@ begin
    (* Built natively and encoded ONCE at the assignment. Casting each piece
      and concatenating does not work: the '_' literal promotes the whole
      expression back to UTF-16 and the assignment narrows it again. *)
+   (* dir[1], NOT PWideChar(dir)^ -- THE SAME ADDRESS AND THE SAME BYTES, so
+     the mutex name does not change and an install keeps the identity it had.
+     GetCRC32 takes an untyped `const data`, which is a variable reference:
+     the pointer was never needed to hand it one.
+
+     THE EMPTY CASE IS UNCHANGED TOO. Count is Length(dir) * 2, so an empty
+     path hashes zero bytes either way, and range checks are off (tr4w.inc
+     sets only MODE/MODESWITCH; the build passes no -Cr), so dir[1] reads the
+     terminator exactly as the dereference did. *)
    Result := UTF8Encode(tr4w_ClassName + '_'
-                        + IntToHex(GetCRC32(PWideChar(dir)^,
+                        + IntToHex(GetCRC32(dir[1],
                                             Length(dir) * SizeOf(WideChar)), 8));
 end;
 

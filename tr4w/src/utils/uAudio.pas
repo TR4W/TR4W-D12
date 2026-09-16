@@ -196,8 +196,16 @@ end;
 {$ENDIF}
 
 function PlayFile(const aPath: string): boolean;
-{$IFNDEF WINDOWS}
 var
+{$IFDEF WINDOWS}
+   (* THE BYTES winmm READS, AND THE CALL IS ASYNCHRONOUS. sndPlaySoundA with
+     SND_ASYNC returns as soon as playback has begun; Microsoft documents a
+     lifetime requirement only for SND_MEMORY, so a temporary is very probably
+     fine here. "Very probably" is not a reason to take a pointer of one --
+     logdvp's own comment worried about exactly this, and a named local costs
+     nothing and removes the question. *)
+   pathBytes: AnsiString;
+{$ELSE}
    player: TUnixPlayer;
    exe:    string;
 {$ENDIF}
@@ -211,7 +219,8 @@ begin
       end;
 
 {$IFDEF WINDOWS}
-   Result := sndPlaySoundA(PAnsiChar(AnsiString(aPath)),
+   pathBytes := AnsiString(aPath);
+   Result := sndPlaySoundA(PAnsiChar(pathBytes),
                            SND_ASYNC or SND_NODEFAULT);
    if not Result then
       begin

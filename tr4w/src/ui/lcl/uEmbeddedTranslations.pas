@@ -270,9 +270,13 @@ procedure LoadLCLCatalogue(const aLang: string);
 var
    rs: TResourceStream;
    po: TPOFile;
+   (* The resource name FindResource reads, owned by this routine rather than
+     built as a temporary in the argument list. *)
+   resBytes: AnsiString;
 begin
+   resBytes := AnsiString('LCL_' + UpperCase(aLang));
    if (aLang = '') or (FindResource(HInstance,
-          PAnsiChar(AnsiString('LCL_' + UpperCase(aLang))), RT_RCDATA) = 0) then
+          PAnsiChar(resBytes), RT_RCDATA) = 0) then
       begin
       Exit;
       end;
@@ -341,6 +345,9 @@ var
    lang:   string;
    source: string;
    resName: string;
+   (* resName as bytes, for FindResource. Named for the same reason as every
+     other boundary pointer here. *)
+   resBytes: AnsiString;
    rs:     TResourceStream;
    po:     TPOFile;
    fileCandidate: string;
@@ -403,7 +410,8 @@ begin
 
    resName := 'TR4W_' + UpperCase(lang);
    (* ASCII by construction -- 'TR4W_' and an upper-cased language tag. *)
-   if FindResource(HInstance, PAnsiChar(AnsiString(resName)), RT_RCDATA) = 0 then
+   resBytes := AnsiString(resName);
+   if FindResource(HInstance, PAnsiChar(resBytes), RT_RCDATA) = 0 then
       begin
       logger.Info('UI language: "' + lang + '" selected by ' + source +
                   ', but no catalogue for it is embedded; using the ' +

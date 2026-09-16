@@ -279,6 +279,9 @@ procedure TTrustHooks.VerifyCertificate(Sender: TObject; var Allow: boolean);
 var
    handler: TOpenSSLSocketHandler;
    host:    string;
+   (* The bytes OpenSSL reads. Named, so the pointer below is not taken of a
+     temporary -- see uOpenSSLLoader, which states the rule. *)
+   hostBytes: AnsiString;
    cert:    pointer;
    rc:      integer;
    verdict: integer;
@@ -339,7 +342,8 @@ begin
 
    try
       (* Length 0 means "aName is NUL-terminated", which it is. *)
-      rc := GCheckHost(cert, PAnsiChar(AnsiString(host)), 0, 0, nil);
+      hostBytes := AnsiString(host);
+      rc := GCheckHost(cert, PAnsiChar(hostBytes), 0, 0, nil);
    finally
       (* PeerCertificate hands back a reference the caller owns -- TSSL's own
         PeerSubject frees it the same way. *)
