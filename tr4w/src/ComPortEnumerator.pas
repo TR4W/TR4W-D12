@@ -1024,10 +1024,34 @@ end;
   TR4W opens them, so it takes the callout node and leaves the twin out rather
   than offering a port that cannot work.
 
-  UNVERIFIED BY ANY COMPILER AVAILABLE HERE, and that is stated rather than
-  glossed: the Windows build never reaches this arm and tools/Compile-Linux.ps1
-  targets Linux. It is reviewed by eye, exactly as the other Darwin gates in
-  this tree are, and wants one compile on mac-ci before it is believed. *)
+  VERIFIED ON mac-ci, 2026-09-16 -- COMPILED AND RUN, not just compiled.
+
+  This block used to say the arm was unverified and wanted one compile before
+  it was believed. It got better than that. A probe linking this unit ran on
+  the Mac mini against a real FTDI adapter and printed:
+
+      count = 3
+      /dev/cu.Bluetooth-Incoming-Port   -> Bluetooth-Incoming-Port
+      /dev/cu.debug-console             -> debug-console
+      /dev/cu.usbserial-A9EQDV5R        -> usbserial-A9EQDV5R
+
+  Every claim this comment makes held: FindFirst with faAnyFile DOES match a
+  character device under /dev (a compile could never have shown that -- a
+  broken scan returns zero ports and reads as "no serial ports"); the 'cu.'
+  strip gives an identity that IS the adapter's own serial, stable across
+  replug; Addressable came back False and Present True on all three; the
+  insertion sort ordered them by node name through PortInfoBefore's
+  SplitTrailingNumber fallback, since every PortNumber here is 0; and
+  PortByName resolved a name the scan itself produced.
+
+  WHAT IT STILL DOES NOT PROVE: that TR4W can TALK to that adapter. This unit
+  answers "what does the OS see", nothing more -- see note 2 at the top. No
+  radio has been driven over a Mac serial port from this program.
+
+  RUNNING A PROBE THERE NEEDS ONE WORKAROUND, or it fails at the LINK with
+  "ld: library 'c' not found": that box's fpc.cfg sits in bin/aarch64-darwin
+  while FPC searches bin/etc, so no sysroot reaches the linker. Pass
+  -XR"$(xcrun --show-sdk-path)". Nothing is missing -- both SDKs are present. *)
 procedure TComPortEnumerator.Refresh;
 const
    DEV_DIR    = '/dev/';
