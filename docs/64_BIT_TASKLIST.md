@@ -48,7 +48,7 @@ launched a 64-bit TR4W.**
 
 | gate | source doc | first measure | now | state |
 |---|---|---|---|---|
-| PChar-family in live code | 751 raw mentions | 578 in 69 files | **362** | in progress |
+| PChar-family in live code | 751 raw mentions | 578 in 69 files | **44 in src, 69 tree-wide** | **AT ITS FLOOR** -- audited line by line 2026-09-16; measure with `build/Count-LivePChar.ps1`, never a raw grep |
 | pointer truncation -- casts | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
 | pointer truncation -- **handles in 32-bit storage** | not in the source doc | **not measured** | **0** (4 fixed) | **DONE** |
 | live `asm` blocks | "much disabled… confirm each" | 0 | **0** | **DONE** |
@@ -172,7 +172,7 @@ all thirteen sets open.
 `tr4wserver` finds ten hits, and six are `GetSCPCharFromInteger(X) + ...` in
 `logscp` — string concatenation, not casts.
 
-### P0 — the PChar-family removal, 396 live (was 578)
+### P0 — the PChar-family removal: DONE, at 44 in `src` (was 578)
 
 Do it as behaviour-preserving slices with tests, never a global replace:
 `PChar` is wide under this tree's Unicode mode and `PAnsiChar` is byte text, so
