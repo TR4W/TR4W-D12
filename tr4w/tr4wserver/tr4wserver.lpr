@@ -4,6 +4,26 @@
 
 {$IMPORTEDDATA OFF}
 uses
+  (* cthreads AND cwstring, BEFORE Interfaces, AND ONLY ON UNIX.
+
+    This program had NEITHER until 2026-09-16, and build-unix.sh stage 6 builds
+    it on both Linux and macOS -- a threaded TCP server with no thread manager
+    and no UnicodeString manager. Both are managers the Win32 RTL always has
+    and the Unix RTL only gets by LINKING a unit, so no Windows build can show
+    the gap and a Unix COMPILE passes either way. cthreads reports
+    "This binary has no thread support compiled in"; a missing cwstring raises
+    ENoWideStringSupport on the first UnicodeString/AnsiString conversion.
+
+    They go BEFORE Interfaces despite the note below, and the two rules do not
+    actually conflict: the program file Lazarus generates lists cthreads first,
+    Interfaces second and Forms third. cthreads must come first because unit
+    INITIALIZATION runs in uses order and it installs the manager there; the
+    Interfaces rule is about LINKING the widgetset, which order cannot
+    affect. *)
+{$IFDEF UNIX}
+  cthreads,
+  cwstring,
+{$ENDIF}
   (* Interfaces FIRST, and it must be: it is what links the widget set. Without
     it the program compiles and fails at the LINK with a page of
     "Undefined symbol: WSRegisterMenuItem" -- the LCL's widgetset registration

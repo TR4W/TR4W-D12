@@ -59,6 +59,24 @@ uses
   installed -- so the gate is UNIX, not "not Windows": macOS needs it too. *)
 {$IFDEF UNIX}
   cthreads,
+  (* cwstring INSTALLS THE UNICODESTRING MANAGER, and it is the same shape of
+    omission as cthreads above -- a manager the Win32 RTL always has and the
+    Unix RTL only gets by LINKING a unit.
+
+    Without it the first UnicodeString/AnsiString conversion raises at RUN
+    time, not link time:
+
+        This binary has no string conversion support compiled in.
+        ENoWideStringSupport: Widestring manager not available.
+
+    This tree is MODESWITCH UnicodeStrings throughout, so that conversion
+    happens almost immediately -- and NOTHING WE RUN ON WINDOWS CAN SEE IT.
+    It was found on 2026-09-16 by running a probe against ComPortEnumerator on
+    mac-ci: the probe printed one line, then died exactly this way; adding
+    cwstring made the same binary run clean. A compile-only check on a Unix
+    box passes either way, which is why the macOS tarball built in September
+    and nobody noticed. *)
+  cwstring,
 {$ENDIF}
   SysUtils,
   MainUnit in 'src\MainUnit.pas',

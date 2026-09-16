@@ -47,6 +47,12 @@ uses
   installed -- so the gate is UNIX, not "not Windows": macOS needs it too. *)
 {$IFDEF UNIX}
   cthreads,
+  (* cwstring -- the UnicodeString manager. See the note in tr4w.lpr: without
+    it the first UnicodeString/AnsiString conversion raises
+    ENoWideStringSupport at RUN time, and a compile proves nothing either way.
+    The tests are the one program here that a Unix CI box actually RUNS, so
+    they are also the cheapest place for this to be caught next time. *)
+  cwstring,
 {$ENDIF}
 {$IFDEF FPC}
    // The LCL is split into an interface half and a widgetset half, and linking
