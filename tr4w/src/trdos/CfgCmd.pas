@@ -155,6 +155,7 @@ function ProcessConfigInstruction(var FileString: ShortString; var FirstCommand:
 var
   ID                                    : ShortString;
   CMD                                   : ShortString;
+  Position                              : integer;
 begin
   if FileString = '' then
      begin
@@ -162,7 +163,14 @@ begin
      Exit;
      end;
 
-  if FileString[1] in [';', '[' {, '_'}] then
+  (* THE SAME FOUR MARKERS EnmuCFGFile SKIPS: ; and # are comments, [ is a
+    section header, _ an internal marker.  This tested only ; and [, which cost
+    nothing while the routine ignored every line anyway -- but now that it
+    parses, a # comment would become an unrecognised command and raise the
+    caller's modal.  Closing the gap here is part of making the split safe,
+    not a separate tidy-up.  Column 1, before any spaces are stripped, exactly
+    as the other reader does it. *)
+  if FileString[1] in [';', '#', '[', '_'] then
      begin
      ProcessConfigInstruction := True;
      Exit;
@@ -170,24 +178,76 @@ begin
 
 
 
-  (* EMPTY, BECAUSE NOTHING SPLITS FileString INTO THEM.
+  (* SPLIT THE LINE, WHICH IS THE ONE THING THIS ROUTINE EXISTS TO DO.
 
-    ID and CMD are ShortStrings -- NOT managed, so not zero-initialised -- and
-    the only thing this routine does with them is hand them to CheckCommand.
-    Whatever parsed FileString into an id and a command is gone, so both were
-    reaching CheckCommand as stack garbage, and the `if ID = ''` test below
-    then read a garbage length byte.  FPC reports both.
+    IT DID NOT, FOR AS LONG AS THE HISTORY GOES BACK.  ID and CMD were
+    declared and handed straight to CheckCommand without anything ever being
+    put in them -- ShortStrings, so not zero-initialised either, which is how
+    FPC came to report both.  The operator-facing symptom is that a config
+    file executed with ctrl-V or the EXECUTE command DOES NOTHING:
+    CheckCommand cannot match a name that was never extracted, so every line
+    is ignored.  commands_help_eng.ini describes that feature as working.
 
-    SETTING THEM EMPTY IS STRICTLY SAFER THAN LEAVING THEM: CheckCommand('','')
-    fails to match, ID = '' is then TRUE, and the routine returns True -- the
-    same answer it gives for a blank line.  Garbage could return False instead,
-    and LogCfg.pas:634 turns a False into a MODAL "invalid statement in config
-    file" at the operator.
+    Worse before this: a garbage ID could return False, and
+    LogCfg.LoadInSeparateConfigFile turns a False into a modal "invalid
+    statement" AND an Exit that abandons the rest of the file.
 
-    IT IS STILL NOT PARSING ANYTHING, which is the real defect and is not one
-    to invent a fix for -- see docs/UNINITIALISED_LOCALS_AUDIT.md. *)
-  ID  := '';
-  CMD := '';
+    THE SPLIT IS EnmuCFGFile'S, COPIED RATHER THAN INVENTED.  LogCfg.pas:1223
+    does exactly this to every line of the main config file: trim the line,
+    take the name before '=' and the value after it, then trim both.  Reading
+    an executed file the same way the config reader reads its own is the only
+    definition of "correct" available here.
+
+    NOT COPIED, DELIBERATELY: EnmuCFGFile's cfgCFG-only rules -- the
+    MY CALL-must-be-first check and the SPACE/FM value fixups.  Those are facts
+    about a contest file, not about a file the operator chose to execute. *)
+  GetRidOfPrecedingSpaces(FileString);
+  GetRidOfPostcedingSpaces(FileString);
+
+  (* SPLIT IN SHORTSTRING, NOT THROUGH utils_text.PrecedingString.
+
+    EnmuCFGFile calls those helpers, and calling them here too was the first
+    version of this fix.  IT FAILED THE BUILD: they take and return `string`,
+    which tr4w.inc makes UTF-16, while FileString, ID and CMD are every one a
+    ShortString -- so the round trip added TWO narrowing conversions and took
+    the count to 1353 against a ceiling of 1351.  That ceiling is a ratchet
+    meant to fall, and "raise it by two" is the wrong answer to a conversion
+    that did not need to happen.
+
+    Copy() of a ShortString yields a ShortString, so this stays in one type
+    and converts nothing.
+
+    THE SEMANTICS ARE PrecedingString's AND PostcedingString's, EXACTLY, and
+    the edge cases are the reason they are spelled out rather than assumed:
+    the name is taken only when '=' is at position 2 or later, so a line that
+    STARTS with '=' yields an empty ID; and a line with no '=' at all yields
+    empty for both.  An empty ID then meets the `if ID = ''` test below and
+    the line is accepted and ignored -- which is what keeps a junk line from
+    raising the caller's modal and abandoning the rest of the file. *)
+  Position := Pos('=', FileString);
+
+  if Position >= 2 then
+     begin
+     ID := Copy(FileString, 1, Position - 1);
+     end
+  else
+     begin
+     ID := '';
+     end;
+
+  if Position > 0 then
+     begin
+     CMD := Copy(FileString, Position + 1, Length(FileString) - Position);
+     end
+  else
+     begin
+     CMD := '';
+     end;
+
+  GetRidOfPrecedingSpaces(ID);
+  GetRidOfPrecedingSpaces(CMD);
+  GetRidOfPostcedingSpaces(ID);
+  GetRidOfPostcedingSpaces(CMD);
 
   ProcessConfigInstruction := CheckCommand(ID, CMD);
 
