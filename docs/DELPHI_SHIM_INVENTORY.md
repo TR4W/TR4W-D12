@@ -134,7 +134,7 @@ Delphi-era one.
 ### Two things that are NOT to be "fixed"
 
 - **The accelerator table.** It is the one item with no LCL equivalent, and that
-  is deliberate. `docs/ACCELERATOR_AUDIT.md` records that the Pascal table
+  is deliberate. `docs/migration_interim_artifacts/ACCELERATOR_AUDIT.md` records that the Pascal table
   REPLACED eleven per-language binary accelerator tables that had drifted apart
   from each other and from the menu captions, and `uTestAccelerators` now pins
   the invariants those `.RES` files silently broke. Scattering shortcuts across

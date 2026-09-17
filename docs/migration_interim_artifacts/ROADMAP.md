@@ -13,8 +13,8 @@
 >
 > | this file says | true on 2026-09-08 |
 > |---|---|
-> | §7 "SQLite log storage … not scheduled" | **SQLite IS the log.** `uLogSource`'s default is `lsDatabase` and the binary `.TRW` write path is gone. See [`SQLITE_MIGRATION_TASKS.md`](SQLITE_MIGRATION_TASKS.md) |
-> | §7 "The contest factory … Not started" | **`tr4w/src/contestFactory/` exists** and is compiled into `tr4w.lpr`. See [`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md) |
+> | §7 "SQLite log storage … not scheduled" | **SQLite IS the log.** `uLogSource`'s default is `lsDatabase` and the binary `.TRW` write path is gone. See [`SQLITE_MIGRATION_TASKS.md`](../SQLITE_MIGRATION_TASKS.md) |
+> | §7 "The contest factory … Not started" | **`tr4w/src/contestFactory/` exists** and is compiled into `tr4w.lpr`. See [`ADDING_A_CONTEST.md`](../ADDING_A_CONTEST.md) |
 > | §7 "macOS / Linux / ARM … nothing has been attempted" | **Linux x86_64 and macOS aarch64 both build** the app, the server and a distributable artifact. `tr4w/build/build-unix.sh`, `tools/compile-native.sh` |
 > | §2c "`VC.pas` … is the first thing to do" | **Already done.** `VC.pas` uses `LCLType`, not `Windows` |
 > | §2 "`tw_` tool windows converted 2 of 17", the three remaining Win32 dialogs, `uErmak`, `uMissingMults`, `uCommctrl`, `MMSystem`, `uTrayBalloon`, `uHostedFormWindows`, `src/ui/fmx/`, `FullBuild-D12-deprecated.ps1` | **all converted or deleted.** Measure with `.\build\Lint-Win32Dialogs.ps1 -Group ui` |
@@ -423,7 +423,7 @@ window still docks where it was.
 with a `TStatusBar` and a designed `TPopupMenu`. `uBandmap.pas` went 830 -> 237
 lines and holds `TuneRadioToSpot` and three settings. The design, and the
 reasoning behind every decision in it, is
-[`BANDMAP_LCL_DESIGN.md`](BANDMAP_LCL_DESIGN.md) -- read that before touching
+[`BANDMAP_LCL_DESIGN.md`](../BANDMAP_LCL_DESIGN.md) -- read that before touching
 either file.
 
 **Two things this conversion should be remembered for:**
@@ -1143,7 +1143,7 @@ Kept for the reasoning; see the banner at the top of this file.
   `tr4w/src/contestFactory/` holds `uContestBase`, `uContestRegistry`, `uContestFactory` and one
   unit per contest, and it is compiled into `tr4w.lpr`. It was indeed built to the radio-factory
   model (strangler pattern, prove the seam, then delete the legacy path). Read
-  [`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md) -- and its section 4 before believing a green run:
+  [`ADDING_A_CONTEST.md`](../ADDING_A_CONTEST.md) -- and its section 4 before believing a green run:
   the golden corpus is blind to scoring.
 - ~~**macOS / Linux / ARM.** … nothing has been attempted.~~ **LINUX AND macOS BOTH BUILD**
   (2026-09-08): the app, `tr4wserver` and a distributable artifact -- a tarball on Linux, a
@@ -1158,7 +1158,7 @@ Kept for the reasoning; see the banner at the top of this file.
 
 **Revised 2026-08-24**, after the window conversions.  The ORDER of the three
 big architectural pieces is decided and lives in
-[`DOMAIN_LAYER_SEQUENCE.md`](DOMAIN_LAYER_SEQUENCE.md); it is not restated here,
+[`DOMAIN_LAYER_SEQUENCE.md`](../DOMAIN_LAYER_SEQUENCE.md); it is not restated here,
 so there is one place to change it.
 
 1. **BENCH WHAT IS ALREADY IN.**  Queue sections 27-38 are unrun, and 37 -- the

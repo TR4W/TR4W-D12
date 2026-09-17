@@ -6,7 +6,7 @@
 > still true (the TRDOS core, the globals, the Win32 message loop), but every statement about the
 > **toolchain** is obsolete: TR4W builds with FreePascal + the Lazarus LCL as of 2026-08-13.
 >
-> For what is current, start at `CLAUDE.md` and [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md).
+> For what is current, start at `CLAUDE.md` and [`tr4w/docs/BUILD.md`](../../tr4w/docs/BUILD.md).
 
 
 **Date:** 2026-03-13

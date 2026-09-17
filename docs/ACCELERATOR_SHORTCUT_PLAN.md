@@ -7,7 +7,7 @@ work he had deferred on 2026-09-07 *"close to last of the hwnd references"*.
 mentions are **9 across 4 units** (comment-stripped count over `tr4w/src`), down
 from the 19 that stood on the day he deferred this.
 
-This extends [`ACCELERATOR_AUDIT.md`](ACCELERATOR_AUDIT.md), which is the
+This extends [`ACCELERATOR_AUDIT.md`](migration_interim_artifacts/ACCELERATOR_AUDIT.md), which is the
 authority on WHAT the table binds. This document is about WHERE the table is
 answered, and nothing here changes a single binding.
 

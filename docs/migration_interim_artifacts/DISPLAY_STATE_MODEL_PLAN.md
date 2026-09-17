@@ -23,7 +23,7 @@ this in a multithreaded LCL app starting from scratch?"*
 
 **No.** This document is why, and what the end state is.
 
-Its successor is [`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md) --
+Its successor is [`SQLITE_LOG_SCHEMA_PLAN.md`](../SQLITE_LOG_SCHEMA_PLAN.md) --
 **What is deliberately left**, below, hands it the remaining `LogContact`
 layering debt by name.
 
@@ -106,7 +106,7 @@ The direction is right in everything written recently:
    and update under a lock. No LCL types in them.
 2. Change notification with ONE marshalling point.
 3. The main form subscribes and maps state to appearance -- which is also where
-   the restyle in [`GRID_RESTYLE_PLAN.md`](GRID_RESTYLE_PLAN.md) wants to live,
+   the restyle in [`GRID_RESTYLE_PLAN.md`](../GRID_RESTYLE_PLAN.md) wants to live,
    so the two should be planned together.
 4. `SetMainWindowText` and the element accessors become internal to `src/ui/`.
    The guard stays as a backstop; it should simply stop having anything to
@@ -190,7 +190,7 @@ accessors that DO defer, so what is left is **layering debt, not races**.
 
 Separating them is contest-engine surgery that wants a corpus run and daylight,
 and it is the same work the SQLite contest-state move
-([`SQLITE_LOG_SCHEMA_PLAN.md`](SQLITE_LOG_SCHEMA_PLAN.md)) will do properly.
+([`SQLITE_LOG_SCHEMA_PLAN.md`](../SQLITE_LOG_SCHEMA_PLAN.md)) will do properly.
 Doing it twice is the thing to avoid.
 
 Also open: `tDispalyOnAirTime` (`LOGWIND:3689,3694`) on the radio polling

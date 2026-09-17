@@ -38,7 +38,7 @@ Preferences forms were brought into line the same day (`uRadioEditForm`, `uPrefs
 - **Control fields on a designed form are published and carry no `F`.** Streaming binds a
   control to a field only when the field name matches the component `Name` exactly, and the
   IDE generates unprefixed names for anything dropped later. Non-control state keeps `F` and
-  stays private. See `docs/CFG_COMMAND_TABLE.md`'s sibling discussion in
+  stays private. See `docs/migration_interim_artifacts/CFG_COMMAND_TABLE.md`'s sibling discussion in
   `uRadioEditForm.pas`'s header.
 
 ## Corrections applied 2026-08-07

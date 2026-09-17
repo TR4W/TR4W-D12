@@ -782,7 +782,7 @@ over a 433 s window.
 **Receiving and decoding two spectrum streams is nearly free.** The whole
 budget is DRAWING, and it sits on the one thread that also has to stay
 responsive for typing and keying -- which is the argument for
-`docs/DISPLAY_STATE_MODEL_PLAN.md`, not against a second panadapter.
+`docs/migration_interim_artifacts/DISPLAY_STATE_MODEL_PLAN.md`, not against a second panadapter.
 
 **The 13% is an UPPER BOUND.** The sample was taken with trace logging on: the
 UI thread wrote ~9,500 log lines in those seven minutes (~22/s), and its kernel

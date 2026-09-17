@@ -273,8 +273,10 @@ rather than after bench-exercising the LCL forms, because FPC cannot compile FMX
 were units no build compiled, and they had already drifted. See the plan at
 `~/.claude/plans/this-project-has-windows-binary-hammock.md`, Phase 0.
 
-~~Per-area D12 status lives in `docs/D12_MIGRATION_ROADMAP.md`~~ — that roadmap is **superseded**;
-read it for *why* things are shaped as they are, not for status.
+~~Per-area D12 status lives in `docs/D12_MIGRATION_ROADMAP.md`~~ — that roadmap is **superseded** and
+is now `docs/migration_interim_artifacts/D12_MIGRATION_ROADMAP.md`; read it for *why* things are
+shaped as they are, not for status. **The live task list is
+[`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md).**
 
 The honest gate on radios is **one verified rig per protocol family**, not 100 rigs. Verified:
 Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT, Yaesu binary (FT-1000MP,
@@ -728,8 +730,8 @@ no window handle, a `TPanel` caption not wrapping).
 
 - A **proof-of-concept** for hosting VCL forms alongside the Win32 loop exists on branch
   `Add-VCL-to-Program`; the technique is preserved in
-  [`docs/VCL_WIN32_COEXISTENCE.md`](docs/VCL_WIN32_COEXISTENCE.md). Historical now that the
-  conversion is nearly done.
+  [`docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md`](docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md).
+  Historical: VCL is an abandoned toolchain path, and the conversion is done.
 - Heavy use of **global variables** for state; Pascal **records** for most data structures; manual
   resource management.
 
@@ -928,8 +930,10 @@ through it.
 described the array, and the array is gone.** A setting is a published property: its bounds are its
 type, its side effect is its setter, and whether it is read-only is stated at registration. The
 reasoning behind the move, and where each of the row's twenty fields went, is in
-[`docs/CFG_ARRAY_ELIMINATION.md`](docs/CFG_ARRAY_ELIMINATION.md); the per-unit ini-to-JSON detail is
-in [`docs/CFG_MIGRATION_PLAN.md`](docs/CFG_MIGRATION_PLAN.md).
+[`docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md`](docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md);
+the per-unit ini-to-JSON detail is in
+[`docs/migration_interim_artifacts/CFG_MIGRATION_PLAN.md`](docs/migration_interim_artifacts/CFG_MIGRATION_PLAN.md).
+Both are archived — the array is gone.
 
 ### 4. Contest flow
 
@@ -1215,17 +1219,18 @@ Read the specific doc before acting in its area — these are current and this f
 | **Setting up a build environment** | **`tr4w/docs/BUILD.md`** — one installer; verified from scratch 2026-08-14 |
 | CI runner setup | `docs/CI_RUNNER_SETUP.md` |
 | Adding a radio | `docs/ADDING_A_RADIO.md` |
-| Radio factory design | `docs/RADIO_FACTORY_README.md`, `docs/NETWORK_RADIO_FACTORY_ANALYSIS.md` |
+| ~~Radio factory design~~ | ~~`docs/RADIO_FACTORY_README.md`, `docs/NETWORK_RADIO_FACTORY_ANALYSIS.md`~~ — **both SUPERSEDED and archived**: they describe an enum-keyed simple factory, and the tree shipped a self-registration registry. Read `docs/ADDING_A_RADIO.md` and `uRadioRegistry.pas` |
 | Radio bench status | `docs/RADIO_BENCH_STATUS.md`, `docs/BENCH_TEST_PLAN_2026-08-01.md` |
-| Legacy removal plan | `docs/LEGACY_DEPENDENCY_AUDIT.md`, `docs/PHASE_INVENTORIES.md` |
+| Legacy removal plan | **archived** — `docs/migration_interim_artifacts/LEGACY_DEPENDENCY_AUDIT.md`, `.../PHASE_INVENTORIES.md`. The legacy radio path was deleted 2026-08-02 and live `asm` is zero |
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
 | Adding a contest -- the DATA (a new `ContestType`, `FCONTEST` init, a `.cfg`) | `docs/ADDING_A_NEW_CONTEST.md` |
 | **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring, and `test-contest-factory.sh` is the only thing that is not |
-| **Roadmap (what's next)** | **`docs/ROADMAP.md`** |
+| **THE ROADMAP — the single phased task list for the modernization** | **[`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md)** — replaces eleven tracking documents. Carries the measured baseline WITH the command for each number, the four-week phases, the bench block, and the decisions owed from NY4I |
+| Finished and superseded migration notes | [`docs/migration_interim_artifacts/`](docs/migration_interim_artifacts/) — read for *why*, never for *status* |
 | **The order the three big pieces go in** | **`docs/DOMAIN_LAYER_SEQUENCE.md`** |
 | **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
 | **I18N: resourcestrings, .po and where every string lives** | **`docs/I18N_PLAN.md`** |
-| **Which `.lfm` captions actually reach the screen** | **`docs/CAPTION_REVIEW.md`** — every design-time caption in `src/ui/lcl`, marked `wired` (assigned at run time, so the `.lfm` text is a placeholder) or `SHIPS` (the English in the `.lfm` is what an operator sees). This is the measurement behind "469 captions ship as English" |
+| **Which `.lfm` captions actually reach the screen** | **`docs/migration_interim_artifacts/CAPTION_REVIEW.md`** (archived — the measurement was consumed by the `.lfm` harvest) — every design-time caption in `src/ui/lcl`, marked `wired` (assigned at run time, so the `.lfm` text is a placeholder) or `SHIPS` (the English in the `.lfm` is what an operator sees). This is the measurement behind "469 captions ship as English" |
 | **Adding a language (recipe; step 6 is a known gap)** | **`docs/ADDING_A_LANGUAGE.md`** |
 | **Running the i18n scripts** | **`docs/I18N_TOOLS.md`** |
 | **Sending a language to a translator / taking it back** | **`docs/TRANSLATION_HANDOFF.md`** |
@@ -1234,17 +1239,17 @@ Read the specific doc before acting in its area — these are current and this f
 | **Timing: the wall clock AND high-precision intervals (CW keying)** | **`docs/PLATFORM_CLOCK_ABSTRACTION.md`** -- part 2 measures what `winmm` is actually used for (13 sites, not 189), assesses EpikTimer, and holds the per-platform HPTimer reference including Apple Silicon |
 | **Colour roles / theming (read before restyling ANY window)** | **`docs/COLOR_ROLES_DESIGN.md`** -- the palette names COLOURS, not roles, which is what blocks theming; and the radio panel's cyan IS its active-radio indicator, so removing it deletes a state signal |
 | **Restyling the converted grids (PARKED until conversions finish)** | **`docs/GRID_RESTYLE_PLAN.md`** |
-| **Display state as a model (DONE 2026-08-30; `src/domain/` + `uStateBridge`)** | **`docs/DISPLAY_STATE_MODEL_PLAN.md`** |
+| **Display state as a model (DONE 2026-08-30; `src/domain/` + `uStateBridge`)** | **`docs/migration_interim_artifacts/DISPLAY_STATE_MODEL_PLAN.md`** (archived — the work is complete) |
 | **The contest log in SQLite (STARTED 2026-09-01) -- schema, and why it is flat** | **`docs/SQLITE_LOG_SCHEMA_PLAN.md`** |
 | **A port's identity: the enumerator, the naming, and dropping SERIAL n** | **[`docs/PORT_IDENTITY_PLAN.md`](docs/PORT_IDENTITY_PLAN.md)** -- all three planned together; two are done. Holds the measurement that makes it tractable: of everything still asking PortType, 43 sites ask only WHAT KIND and just 4 ask WHICH PORT |
 | **64-BIT: the task list, checked off against the tree** | **[`docs/64_BIT_TASKLIST.md`](docs/64_BIT_TASKLIST.md)** -- the codex worktree's plan re-measured on `main` with the comment-aware stripper. Live PChar is 578 not 751; live `asm` is ZERO (section 4 is done); the InpOut x64 row is MOOT because the parallel port is gone; pointer truncation is FOUR sites in two units. Carries NY4I's added rule: byte I/O stays byte I/O, but `Move`/`FillChar`/`ZeroMemory` is not how to express it |
 | **ADDING a setting -- and the twelve lists that are NOT where it goes** | **[`docs/ADDING_A_SETTING.md`](docs/ADDING_A_SETTING.md)** -- two places: a published property and one `RegisterModelSetting` line. Written because NY4I tried to add one and could not tell where it went; most of the fifteen lists a command name can appear in exist to REMOVE a command or to IMPORT an old file. Holds NY4I's test for "is it really retired" (look it up in the D7 `CFGCA`: `crAddress: nil` means obsolete) |
 | **EVERY setting, its aliases, and whether it belongs to the STATION or to the CONTEST** | **[`tr4w/docs/SETTINGS_INVENTORY.md`](tr4w/docs/SETTINGS_INVENTORY.md)** -- generated from `uSettingsModel.pas` and `uCFG.pas`, and validated against the frozen command vocabulary, so if the generator and the program ever disagree the GENERATOR is wrong. Regenerate with `tools/settings_inventory.py` then `tools/settings_inventory_doc.py`. **KEEP THE NOTES COLUMN** -- the rest of the table reproduces, NY4I's notes do not |
-| **Eliminating the CFG array -- what it still DOES, measured** | **[`docs/CFG_ARRAY_ELIMINATION.md`](docs/CFG_ARRAY_ELIMINATION.md)** -- read this before believing any `csOld` count: that number is now ZERO and 408 rows still apply. Holds the port slice (`SERIAL n`) and the four open rulings |
+| **Eliminating the CFG array -- DONE 2026-09-14, archived** | **[`docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md`](docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md)** -- `CFGCA` went 415 rows to ZERO and `Lint-ConfigArrays` fails the build on any occurrence. **Only its top banner was ever current**; the body is stale by design. To ADD a setting, read `docs/ADDING_A_SETTING.md` |
 | **The log migration IN ORDER -- read before picking up any of it** | **`docs/SQLITE_MIGRATION_TASKS.md`** -- six phases with exit criteria, and the measurement that settles whether the contest factory has to come first (the storage seam is 13 sites, not 430) |
-| ~~D12 migration roadmap~~ | ~~`docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md`~~ — superseded, read for *why* not *status* |
+| ~~D12 migration roadmap~~ | ~~`docs/migration_interim_artifacts/D12_MIGRATION_ROADMAP.md`, `.../D12_RELEASE_READINESS.md`~~ — superseded and archived, read for *why* not *status* |
 | String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
-| VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |
+| VCL coexistence / FMX | **archived** — `docs/migration_interim_artifacts/VCL_WIN32_COEXISTENCE.md`, `.../FMX Migration Discussion.md`, `.../FMX_WIN32_COEXISTENCE.md`. VCL is an abandoned toolchain path and FMX was deleted 2026-08-17 |
 | **What is still here only for Delphi (survey, nothing changed)** | **`docs/DELPHI_SHIM_INVENTORY.md`** |
 | **Win32 ARTIFACTS -- the shapes that compile everywhere and are still wrong** | **`docs/WIN32_ARTIFACT_SWEEP.md`** -- the successor to the portability sweep, and a different question: not "does it compile off Windows" but "is this how FPC/LCL would have written it". Worked example: a multiplier's identity exists only as bits in a grid row's `Objects` pointer |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |

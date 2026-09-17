@@ -12,7 +12,7 @@
 > Read this one for *why* things are shaped as they are — the radio factory, the CW keyer factory, the
 > string work and the legacy deletions are all still real and still current. Do **not** read the
 > per-area status tables, the 64-bit scope notes or anything about `.dproj`/msbuild as live
-> guidance. Current build: [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md).
+> guidance. Current build: [`tr4w/docs/BUILD.md`](../../tr4w/docs/BUILD.md).
 
 
 **Date:** 2026-08-02 (updated overnight: **Track A complete except the CI runner**; C-1 closed) · **Branch:** `delphi12` · **Purpose:** one place that answers
@@ -20,13 +20,13 @@
 
 This document does not restate designs. It reconciles the existing plans —
 [`tr4w-migration-strategy.md`](tr4w-migration-strategy.md),
-[`D12_RELEASE_READINESS.md`](../tr4w/docs/D12_RELEASE_READINESS.md),
-[`D12_STRING_MODERNIZATION_PLAN.md`](../tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md),
+[`D12_RELEASE_READINESS.md`](D12_RELEASE_READINESS.md),
+[`D12_STRING_MODERNIZATION_PLAN.md`](../../tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md),
 [`PHASE_INVENTORIES.md`](PHASE_INVENTORIES.md),
 [`LEGACY_DEPENDENCY_AUDIT.md`](LEGACY_DEPENDENCY_AUDIT.md),
-[`RADIO_BENCH_STATUS.md`](RADIO_BENCH_STATUS.md),
-[`BENCH_TEST_PLAN_2026-08-01.md`](BENCH_TEST_PLAN_2026-08-01.md),
-[`D12_HARDWARE_TEST_PLAN.md`](../tr4w/docs/D12_HARDWARE_TEST_PLAN.md) — into a single
+[`RADIO_BENCH_STATUS.md`](../RADIO_BENCH_STATUS.md),
+[`BENCH_TEST_PLAN_2026-08-01.md`](../BENCH_TEST_PLAN_2026-08-01.md),
+[`D12_HARDWARE_TEST_PLAN.md`](../../tr4w/docs/D12_HARDWARE_TEST_PLAN.md) — into a single
 ordered picture, and separates *migration* work from *post-migration* work that
 several documents mention in the same breath.
 
@@ -578,7 +578,7 @@ the legacy dialog does. Startup needs nothing from it: the keys were written at 
 apply, so `ReadInConfigFile` loads them exactly as before.
 
 **F-4 FMX coexistence spike — HARD GATE, built and awaiting the bench (`77d82600`).**
-See **[`tr4w/docs/FMX_WIN32_COEXISTENCE.md`](../tr4w/docs/FMX_WIN32_COEXISTENCE.md)** for the checklist. Verified on
+See **[`tr4w/docs/FMX_WIN32_COEXISTENCE.md`](FMX_WIN32_COEXISTENCE.md)** for the checklist. Verified on
 the dev machine: builds, starts, corpus 22/0/4, FMX costs 4.8 MB of code. Everything about
 keyboard isolation, thread marshalling and stability needs NY4I's station. If the gate fails,
 the fallback is a native Win32 dialog on the same F-2/F-3 layers — which is why they were

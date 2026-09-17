@@ -101,7 +101,7 @@ it and they drift.
 
 **That is not a hypothetical risk, it is the exact failure this tree spent
 September unwinding** -- a settings value with two owners, where a fix lands in
-one and not the other. See `docs/CFG_ARRAY_ELIMINATION.md`.
+one and not the other. See `docs/migration_interim_artifacts/CFG_ARRAY_ELIMINATION.md`.
 
 So each page either hosts the existing editor or writes through the existing
 store's own API. No page declares a setting.

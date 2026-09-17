@@ -45,7 +45,7 @@ format choice above, and the reversibility argument is exactly why this costs no
 - **The destination is `.po`, not `.ts`.** FPC emits `.rsj` beside each unit, `.rsj → .po` is the
   supported path, and Lazarus ships a translator unit that loads `.po` at run time. Poedit is a
   *gettext* tool — `.po` is its home format; `.ts` was the courtesy. See
-  [`TOOLCHAIN_SWOT_LAZARUS_VS_DELPHI.md`](TOOLCHAIN_SWOT_LAZARUS_VS_DELPHI.md), where native `.po`
+  [`TOOLCHAIN_SWOT_LAZARUS_VS_DELPHI.md`](migration_interim_artifacts/TOOLCHAIN_SWOT_LAZARUS_VS_DELPHI.md), where native `.po`
   support is one of the stated reasons for the toolchain decision.
 - **The single-EXE blocker dies.** Under Delphi it was Win32 dialog templates baked into
   per-language `.RES` files loaded via `MAKEINTRESOURCE`, unfixable because `res/Tr4w.rc` cannot be

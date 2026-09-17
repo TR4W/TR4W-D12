@@ -143,7 +143,7 @@ The following Pascal units were downloaded and analyzed from the TR4W/TR4W repos
 | `tr4w_mng.rc` | Decompiled Mongolian RC (1095 lines) | workspace |
 | `tr4w_res_comparison.md` | Full comparison matrix of all 9 language RES files | workspace |
 | `tr4w_dialog_catalog.md` | Complete dialog inventory (code-built vs resource-based) | workspace |
-| `docs/dialog_analysis.md` | Dialog inventory committed to repo | [GitHub — master branch](https://github.com/TR4W/TR4W/blob/master/docs/dialog_analysis.md) |
+| `docs/migration_interim_artifacts/dialog_analysis.md` | Dialog inventory committed to repo | [GitHub — master branch](https://github.com/TR4W/TR4W/blob/master/docs/dialog_analysis.md) |
 
 ---
 

@@ -15,8 +15,8 @@ Since v1: the committed build script (`FullBuild.ps1`) is fully migrated from De
 `msbuild` (**C-1 done** for the local build), the record/enum wire layout is pinned in the `.dproj`
 (**C-3 done**), the stale D7 `tr4w.cfg` is removed, and an ADIF date/time parsing regression from the
 string sweep was fixed. A default build is now **Delphi-7-free** and stays golden-master **22/22**.
-Hardware/bench gates are captured in [`D12_HARDWARE_TEST_PLAN.md`](D12_HARDWARE_TEST_PLAN.md).
-Companion to [`D12_STRING_MODERNIZATION_PLAN.md`](D12_STRING_MODERNIZATION_PLAN.md). That plan tracks
+Hardware/bench gates are captured in [`D12_HARDWARE_TEST_PLAN.md`](../../tr4w/docs/D12_HARDWARE_TEST_PLAN.md).
+Companion to [`D12_STRING_MODERNIZATION_PLAN.md`](../../tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md). That plan tracks
 the *string/Unicode conversion*; this document tracks what stands between the current tree and a
 **shippable D12 build that replaces the Delphi 7 release**.
 
@@ -120,7 +120,7 @@ runner. Listed so nothing is forgotten, not because anything is wrong. The `tr4w
   - Verify: build each language under D12 and **visually confirm** the UI renders correctly (all 8
     non-ENG variants already build GREEN; rendering is what's unverified). The UTF-8+BOM transcode is
     lossless and round-trip-verified, but only a human eyeball on each running UI closes P0-1. Bench
-    steps H1–H3 in [`D12_HARDWARE_TEST_PLAN.md`](D12_HARDWARE_TEST_PLAN.md).
+    steps H1–H3 in [`D12_HARDWARE_TEST_PLAN.md`](../../tr4w/docs/D12_HARDWARE_TEST_PLAN.md).
 
 ---
 

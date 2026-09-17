@@ -12,7 +12,7 @@ leave it `-` for untested.  Put what was actually exercised in `Notes` --
 "connects" and "CW, split and RIT verified" are very different claims.
 
 **Why this matters here:** the legacy radio path is kept only until bench
-coverage makes its deletion safe (see `docs/tr4w-migration-strategy.md`).
+coverage makes its deletion safe (see `docs/migration_interim_artifacts/tr4w-migration-strategy.md`).
 This table is the gate on that decision.
 
 | Radio | Enum | Tested | By | Notes |

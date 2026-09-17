@@ -1447,7 +1447,7 @@ be saved" instead of vanishing quietly.
 **Still on the ini, deliberately: 41.** Thirty are `ckList` rows that Preferences
 renders READ-ONLY, so they cannot be edited at all yet; the rest are read-only
 rows, an action trigger (`CLEAR DUPE SHEET`), the band plan, and the LPT port.
-Each reason is written down in `docs/CFG_MIGRATION_PLAN.md`, along with what
+Each reason is written down in `docs/migration_interim_artifacts/CFG_MIGRATION_PLAN.md`, along with what
 unlocking the `ckList` thirty would take and the padding trap that makes it
 delicate.
 

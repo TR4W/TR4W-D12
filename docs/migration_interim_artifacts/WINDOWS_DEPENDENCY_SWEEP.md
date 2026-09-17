@@ -58,7 +58,7 @@ Each handle is passed to winmm's `timeSetEvent` with `TIME_CALLBACK_EVENT_SET`,
 so the multimedia timer signals the HANDLE itself. A `SyncObjs.TEvent` cannot be
 handed to winmm. These move when the CW element clock moves and not before, which
 puts them behind the HPTimer work in
-[`PLATFORM_CLOCK_ABSTRACTION.md`](PLATFORM_CLOCK_ABSTRACTION.md).
+[`PLATFORM_CLOCK_ABSTRACTION.md`](../PLATFORM_CLOCK_ABSTRACTION.md).
 
 `tNet_Event` was the fourth and IS converted -- it never touched `timeSetEvent`,
 which is exactly how you tell the two cases apart.
@@ -114,7 +114,7 @@ API we no longer call -- a multiplier's identity packed into a grid row's
 ignores -- pass that test and fail the next one.
 
 They are scoped separately, in
-[`WIN32_ARTIFACT_SWEEP.md`](WIN32_ARTIFACT_SWEEP.md), and NY4I separated them
+[`WIN32_ARTIFACT_SWEEP.md`](../WIN32_ARTIFACT_SWEEP.md), and NY4I separated them
 deliberately (2026-09-08): a portability pass wants the smallest change that
 clears a compiler error, and that pass wants the right shape. Mixing the two
 produces a diff nobody can review.

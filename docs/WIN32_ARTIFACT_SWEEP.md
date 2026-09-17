@@ -6,7 +6,7 @@ should be done."_**
 
 ## This is a DIFFERENT sweep from the portability one, and the difference matters
 
-[`WINDOWS_DEPENDENCY_SWEEP.md`](WINDOWS_DEPENDENCY_SWEEP.md) asked one question:
+[`WINDOWS_DEPENDENCY_SWEEP.md`](migration_interim_artifacts/WINDOWS_DEPENDENCY_SWEEP.md) asked one question:
 **does this compile off Windows?** It is finished — zero ungated `Windows.` or
 `HWND` references, and the cross compiler is now walking the dependency chain.
 
@@ -160,7 +160,7 @@ reading a multiplier's payload.
 model by row index — so arguably the payload should not be stored per row at
 all. `OnGetCellText` could ask the model, which already knows the kind and the
 index. That is the same direction as
-[`DISPLAY_STATE_MODEL_PLAN.md`](DISPLAY_STATE_MODEL_PLAN.md) and `src/domain/`:
+[`DISPLAY_STATE_MODEL_PLAN.md`](migration_interim_artifacts/DISPLAY_STATE_MODEL_PLAN.md) and `src/domain/`:
 a typed model the view reads, rather than the view being the storage.
 
 ## The one with a deadline attached: `TLVItem` in `BuildLogRow`

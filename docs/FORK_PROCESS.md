@@ -2,8 +2,8 @@
 
 Runbook for splitting the Delphi 12 migration onto its own repository, keeping
 the shipping Delphi 7 line stable throughout. Read alongside
-[`tr4w-migration-strategy.md`](tr4w-migration-strategy.md) (the phased migration
-plan) and [`PHASE_INVENTORIES.md`](PHASE_INVENTORIES.md) (asm / `wsprintf`
+[`tr4w-migration-strategy.md`](migration_interim_artifacts/tr4w-migration-strategy.md) (the phased migration
+plan) and [`PHASE_INVENTORIES.md`](migration_interim_artifacts/PHASE_INVENTORIES.md) (asm / `wsprintf`
 worklists).
 
 Decided 2026-06-12 (NY4I).

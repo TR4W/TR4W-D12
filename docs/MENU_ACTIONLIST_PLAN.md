@@ -59,7 +59,7 @@ Each becomes a `TAction.Enabled` / `.Visible` / `.Caption` assignment.
 `test/ui/Dump-Accelerators.ps1` is the precedent and it earned its keep: it
 found that 25 of 97 bindings were displayed by no menu row. Do the same for
 menus before touching one — **and read the rest of its story first**
-(`docs/ACCELERATOR_AUDIT.md`, the note at the top). It was deleted 2026-08-29,
+(`docs/migration_interim_artifacts/ACCELERATOR_AUDIT.md`, the note at the top). It was deleted 2026-08-29,
 because once `uAccelerators` began building the table at run time the tool went
 on reading a PE resource that was no longer the live table, and nothing said so.
 A dump tool has to be retired, or repointed, by whatever replaces the thing it

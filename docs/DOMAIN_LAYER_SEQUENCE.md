@@ -117,7 +117,7 @@ What it actually cost, against the argument below: **eleven off-thread sites,
 ten of them one thread running one batch** after a WSJT-X QSO. The ~75-caller
 grep this section implies was never the scope. The full outcome, including the
 finding that outlives it, is at the end of
-[`DISPLAY_STATE_MODEL_PLAN.md`](DISPLAY_STATE_MODEL_PLAN.md).
+[`DISPLAY_STATE_MODEL_PLAN.md`](migration_interim_artifacts/DISPLAY_STATE_MODEL_PLAN.md).
 
 Not because it matters most. Because **the other two will write against whatever
 seam exists when they are built.**
@@ -131,7 +131,7 @@ means both are written against state observers from the first line.
 It is also the only one of the three that is **bounded and verifiable today**:
 a handful of units, no schema, no contest semantics, and the window conversions
 just made every consumer explicit. See
-[`DISPLAY_STATE_MODEL_PLAN.md`](DISPLAY_STATE_MODEL_PLAN.md) for the argument
+[`DISPLAY_STATE_MODEL_PLAN.md`](migration_interim_artifacts/DISPLAY_STATE_MODEL_PLAN.md) for the argument
 and the two measured traps (Win32's accidental thread safety;
 `TThread.Queue` purging its own callbacks).
 
