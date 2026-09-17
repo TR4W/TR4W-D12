@@ -251,10 +251,34 @@ begin
    // padding.  [VERIFY on hardware -- if a long message is truncated, give this
    // a real maxLen; the keyer will then split it with no other change.]
    FCapabilities.CWFrame := CWFrameRule(0, False);
-   // pdNone -- pass prosign tokens through as literal text.  TCI is not a KY
-   // radio, and nobody has established what its cw_macros does with a prosign,
-   // so substituting a Kenwood '_' for AR would be inventing a fact.  Passing
-   // the token through at least fails visibly.  [VERIFY]
+   (* PROSIGNS OVER TCI, BENCH-VERIFIED 2026-09-17 against a real K4 by the
+     QK4 session -- every line below is a real cw_macros in and a real KY out.
+
+     What stood here said "pass prosign tokens through as literal text ...
+     nobody has established what its cw_macros does with a prosign", marked
+     [VERIFY], on the theory that passing a token through "at least fails
+     visibly". IT DID NOT FAIL VISIBLY. TR4W's prosign tokens are SINGLE
+     CHARACTERS, so with no grammar declared CWProsign returned handled=False
+     and a bare '+' or '<' went into the payload and keyed as that literal
+     character. Silently, on the air.
+
+         cw_macros:0,|KN| |AR| |BT| |AS| |SK| |VE|;  ->  KY ( + = % * !;
+
+     THE HALF SPACE IS A PLAIN SPACE AND MUST NOT BE '^'. TCI escapes ':' as
+     '^', and the server decodes '^' to ':' UNCONDITIONALLY, before any
+     prosign handling -- there is no escape for the escape. A half space sent
+     as '^' keys a literal colon. uRadioElecraftBase reaches the same answer
+     for the direct radios, with the same reason: a KY string has no half
+     space, so the half space is a whole one.
+
+     SN IS CONSUMED, matching the Elecraft base. |SN| is not in the K4's
+     prosign table, and QK4 keys an unknown prosign as BARE LETTERS -- so
+     emitting it would key S-N audibly, which is worse than silence. An empty
+     spelling is declared-and-consumed, which TFactoryRadioBase.CWProsign
+     treats as a different answer from undeclared.
+
+     |KN| |AS| |VE| are available if TR4W ever grows tokens for them. *)
+   FCapabilities.CWProsigns := CWProsigns(' ', '', '|AR|', '|SK|', '|BT|');
    //
    // Until 2026-08-03 this radio got NO CW at all: the framing and the gate were
    // looked up by InterfacedRadioType, which a string-id radio does not have.
@@ -985,15 +1009,103 @@ begin
    FCWBuffer := FCWBuffer + cwChars;
 end;
 
+(* TCI RESERVES THREE CHARACTERS INSIDE A COMMAND ARGUMENT, and a CW message
+  is ordinary operator text that can contain all three. Escaping is the
+  CLIENT's job; the server decodes before it does anything else.
+
+      ':'  ->  '^'
+      ','  ->  '~'
+      ';'  ->  '*'
+
+  Bench-verified 2026-09-17: cw_macros:0,TNX~ 73;  keys  TNX, 73 -- the
+  escape survives the round trip. Unescaped, a comma ENDS THE ARGUMENT, so a
+  function key holding "TNX, 73" would have been truncated at the comma.
+
+  The three rules are order-independent: each one's output ('^', '~', '*') is
+  never another one's input, so no rule can re-escape another's result.
+
+  A LITERAL '*' IS UNREPRESENTABLE and deliberately left alone. The server
+  decodes a bare '*' to ';' and then strips it, and TCI offers no escape for
+  the escape -- the same dead end as '^' for the half space. Escaping '*'
+  here would not help: it has nothing to escape to. Not worth a workaround
+  for a character that does not occur in CW.
+
+  '<' AND '>' ARE THE SERVER'S SPEED MARKERS, AND THIS ROUTINE DELIBERATELY
+  DOES NOT TOUCH THEM. Bench-verified on a K4, 2026-09-17:
+
+      cw_macros:0,A<B;   ->   KYWA;  KS015;  KYWB;  KS020;
+      cw_macros:0,A>B;   ->   KYWA;  KS025;  KYWB;  KS020;
+
+  A marker splits the message and re-times the remainder, and there is no
+  escape for it -- 'A<<B' is simply -10, and 'A|LT|B' keys L and T.
+
+  DROPPING THEM HERE WAS TRIED AND REVERTED THE SAME HOUR, because neither
+  character can reach this point carrying operator intent:
+
+      '>'  is RITClear. SendCrypticMessage (logsubs1) acts on it and DELETES
+           it from the message before the keyer sees it, and logsubs2's
+           keyboard dispatch maps it the same way. It is consumed upstream.
+      '<'  is TR4W's SK prosign token, and CWProsign now turns it into |SK|
+           before the payload is built.
+
+  So a drop here would be a SECOND COPY of a rule that already lives one
+  layer up -- and copies drift. If a '<' or '>' ever does arrive in a
+  payload, the defect is in whatever path let it through, and silently
+  swallowing it here would hide exactly the evidence needed to find that.
+
+  ONE PASS, AND NOT StringReplace: this unit is UnicodeString via tr4w.inc,
+  and the StringReplace overload FPC selects takes and returns AnsiString --
+  so three calls converted in AND out, six implicit conversions against a
+  ceiling already at its limit. A hand walk crosses nothing. *)
+function TCIEscapeArgument(const aText: string): string;
+var
+   i:  integer;
+   ch: Char;
+begin
+   Result := '';
+
+   for i := 1 to Length(aText) do
+      begin
+      ch := aText[i];
+
+      if ch = ':' then
+         begin
+         Result := Result + '^';
+         end
+      else if ch = ',' then
+         begin
+         Result := Result + '~';
+         end
+      else if ch = ';' then
+         begin
+         Result := Result + '*';
+         end
+      else
+         begin
+         Result := Result + ch;
+         end;
+      end;
+end;
+
 procedure TTCIRadio.SendCW;
 begin
    if FCWBuffer = '' then
       begin
       Exit;
       end;
-   // Grammar varies between servers -- AetherSDR takes the raw text.  Whether
-   // ExpertSDR2/Thetis want a receiver index or an escaped payload is [VERIFY].
-   SendToRadio(Format('cw_macros:%s;', [FCWBuffer]));
+   (* THE RECEIVER INDEX IS REQUIRED, AND OMITTING IT FAILED IN SILENCE.
+
+     This sent 'cw_macros:<text>;' until 2026-09-17, contradicting the grammar
+     this same unit quotes 745 lines above -- cw_macros:<trx>,<text>;. Against
+     a conforming server that produced NO keying, NO error and NO reply: the
+     QK4 session put it on a real K4 and measured zero KY commands, zero log
+     lines, zero responses. Exactly the silent-downgrade shape this project
+     keeps paying for.
+
+     0 because TR4W drives receiver 0 only -- see the note at the head of this
+     unit; a second receiver is a second TR4W radio slot, not a second index
+     here. AetherSDR tolerated the short form, which is why this survived. *)
+   SendToRadio(Format('cw_macros:0,%s;', [TCIEscapeArgument(FCWBuffer)]));
    FCWBuffer := '';
 end;
 

@@ -42,6 +42,12 @@ type
       procedure Test_SetFilterSendsSymmetricEdges;
       procedure Test_MemoryKeyerRefusesAndSendsNothing;
       procedure Test_RelativeTuneSendsNothing;
+      (* CW over TCI. All three pin something that failed SILENTLY on a real
+        K4 until 2026-09-17 -- no keying, no error, no reply -- so each is a
+        regression pin rather than a style check. *)
+      procedure Test_CWSendsTheReceiverIndex;
+      procedure Test_CWProsignsUseTheTCISpellings;
+      procedure Test_CWEscapesReservedCharacters;
    public
       procedure RunAllTests; override;
    end;
@@ -238,6 +244,119 @@ begin
    end;
 end;
 
+{ --------------------------------------------------------------- CW over TCI }
+
+(* ALL THREE OF THESE WERE BROKEN AT ONCE, AND ALL THREE FAILED IN SILENCE.
+  Bench session of 2026-09-17, TR4W driving QK4 driving a real K4: the missing
+  receiver index produced no KY command, no log line and no reply, and nothing
+  anywhere said so. These pin the wire, because the wire is the only place the
+  defect was visible. *)
+
+procedure TRadioTCITests.Test_CWSendsTheReceiverIndex;
+var
+   r: TTCIProbe;
+begin
+   BeginTest('Test_CWSendsTheReceiverIndex');
+   r := TTCIProbe.Create;
+   try
+      r.Clear;
+      r.BufferCW('TEST');
+      r.SendCW;
+      (* The index is part of the grammar -- cw_macros:<trx>,<text>; -- and 0
+        because TR4W drives receiver 0 only. A second receiver is a second
+        TR4W radio slot, not a second index here. *)
+      CheckEquals('cw_macros:0,TEST;', r.sent,
+                  'the receiver index is required; without it a conforming ' +
+                  'server keys nothing and reports nothing');
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TRadioTCITests.Test_CWProsignsUseTheTCISpellings;
+var
+   r:  TTCIProbe;
+   ps: TCWProsign;
+begin
+   BeginTest('Test_CWProsignsUseTheTCISpellings');
+   r := TTCIProbe.Create;
+   try
+      (* handled is asserted as well as text: a declared-but-empty spelling and
+        an undeclared grammar are DIFFERENT answers, and the whole defect this
+        fixes was the undeclared case falling through to literal text. *)
+      ps := r.CWProsign('+');
+      CheckTrue(ps.handled, 'AR is handled over TCI');
+      CheckEquals('|AR|', ps.text, 'AR is |AR|, which the K4 keys as +');
+
+      ps := r.CWProsign('<');
+      CheckTrue(ps.handled, 'SK is handled over TCI');
+      CheckEquals('|SK|', ps.text, 'SK is |SK|; the server maps it to * AFTER '
+                                 + 'unescaping, so a client never sees that');
+
+      ps := r.CWProsign('=');
+      CheckTrue(ps.handled, 'BT is handled over TCI');
+      CheckEquals('|BT|', ps.text, 'BT is |BT|, which the K4 keys as =');
+
+      (* NOT '^'. TCI escapes ':' as '^' and decodes it unconditionally before
+        any prosign handling, so a half space sent as '^' keys a colon. *)
+      ps := r.CWProsign('^');
+      CheckTrue(ps.handled, 'the half space is handled over TCI');
+      CheckEquals(' ', ps.text, 'the half space is a PLAIN SPACE -- ^ would '
+                              + 'be decoded to a literal colon');
+
+      (* Consumed, as on Elecraft: |SN| is not in the K4 table and QK4 keys an
+        unknown prosign as bare letters, so emitting it would key S-N. *)
+      ps := r.CWProsign('!');
+      CheckTrue(ps.handled, 'SN is CONSUMED, not passed through as a literal');
+      CheckEquals('', ps.text, 'SN has no TCI spelling, so it keys nothing');
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TRadioTCITests.Test_CWEscapesReservedCharacters;
+var
+   r: TTCIProbe;
+begin
+   BeginTest('Test_CWEscapesReservedCharacters');
+   r := TTCIProbe.Create;
+   try
+      (* A comma ENDS THE ARGUMENT unescaped, so a function key holding
+        "TNX, 73" was truncated at the comma. Verified on the wire: the
+        escaped form round-trips and the K4 keys "TNX, 73". *)
+      r.Clear;
+      r.BufferCW('TNX, 73');
+      r.SendCW;
+      CheckEquals('cw_macros:0,TNX~ 73;', r.sent,
+                  'a comma is escaped as ~ or it terminates the argument');
+
+      r.Clear;
+      r.BufferCW('A:B');
+      r.SendCW;
+      CheckEquals('cw_macros:0,A^B;', r.sent, 'a colon is escaped as ^');
+
+      r.Clear;
+      r.BufferCW('A;B');
+      r.SendCW;
+      CheckEquals('cw_macros:0,A*B;', r.sent, 'a semicolon is escaped as *');
+
+      (* THE SPEED MARKERS PASS THROUGH UNTOUCHED, and that is deliberate.
+        '<' and '>' are the server's speed markers -- bench-verified on a K4,
+        cw_macros:0,A<B; keys KYWA; KS015; KYWB; KS020; -- but neither can
+        reach this transport carrying operator intent: '>' is RITClear and
+        SendCrypticMessage deletes it upstream, and '<' is the SK token that
+        CWProsign turns into |SK|. Escaping or dropping them here would be a
+        second copy of a rule that already lives a layer up. *)
+      r.Clear;
+      r.BufferCW('A<B');
+      r.SendCW;
+      CheckEquals('cw_macros:0,A<B;', r.sent,
+                  'the transport does not second-guess the layer above it');
+   finally
+      r.Free;
+   end;
+end;
+
 procedure TRadioTCITests.RunAllTests;
 begin
    Test_NoneOfTheNineFault;
@@ -248,6 +367,9 @@ begin
    Test_SetFilterSendsSymmetricEdges;
    Test_MemoryKeyerRefusesAndSendsNothing;
    Test_RelativeTuneSendsNothing;
+   Test_CWSendsTheReceiverIndex;
+   Test_CWProsignsUseTheTCISpellings;
+   Test_CWEscapesReservedCharacters;
 end;
 
 end.

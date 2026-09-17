@@ -49,6 +49,30 @@ type
 implementation
 
 type
+   (* A RADIO THAT DECLARES NOTHING, so the base-class default can be pinned
+     without borrowing a real radio's decision.
+
+     Test_NoneDialectPassesEverythingThrough used TCI as its subject, because
+     TCI happened to declare no prosign grammar. On 2026-09-17 TCI declared
+     one -- |AR| |SK| |BT|, bench-verified against a K4 -- and the test failed
+     for a reason that had nothing to do with what it tests. A test of the
+     BASE CLASS should not be able to break because a SUBCLASS made a choice.
+
+     Declares nothing on purpose: no capabilities, no prosigns, no frame rule.
+     Every default it asserts therefore comes from TFactoryRadioBase itself. *)
+   TUndeclaredGrammarRadio = class(TFactoryRadioBase)
+   public
+      constructor Create; reintroduce;
+   end;
+
+constructor TUndeclaredGrammarRadio.Create;
+begin
+   (* nil is safe: Create stores the handler in baseProcMsg and never calls it
+     during construction. This stub has no message loop to give it. *)
+   inherited Create(nil);
+end;
+
+type
    // One row per radio that can key CW by CAT.  EXHAUSTIVE -- see the unit
    // header; Test_EveryKeyingRadioIsPinned enforces that.
    TCWPin = record
@@ -147,11 +171,14 @@ const
       // all fourteen keying Icoms claiming no limit.
       (id: 'IC7110'; name: 'IC-7110'; maxLen: 28; pad: False; busyPct: 125;
        prosigns: True; skText: '^SK'; snText: '^SN'),
-      // TCI: no length limit and no prosign substitution. Its cw_macros grammar
-      // is not one of the three KY dialects and nobody has established what it
-      // does with a prosign, so declaring one would be inventing a fact.
+      // TCI: no length limit -- chunking and padding are the server's job --
+      // but it DOES substitute prosigns as of 2026-09-17. Its grammar is not
+      // one of the three KY dialects: it is |AR| |SK| |BT|, bench-verified
+      // against a real K4. SN is declared EMPTY, which means consumed, not
+      // undeclared -- |SN| is not in the K4's table and an unknown prosign is
+      // keyed as bare letters, so emitting it would key S-N audibly.
       (id: 'TCI';    name: 'TCI';     maxLen: 0;  pad: False; busyPct: 100;
-       prosigns: False; skText: '';   snText: '')
+       prosigns: True;  skText: '|SK|'; snText: '')
    );
 
 procedure TCWFramingTests.Test_DeclaredRulesArePinned;
@@ -232,9 +259,9 @@ begin
       end;
       end;
 
-   // TCI: no length limit, and no prosign substitution -- its cw_macros grammar
-   // is not one of the three KY dialects and nobody has established what it does
-   // with a prosign, so guessing one would be inventing a fact.
+   // TCI: no length limit -- chunking and padding belong to the server -- and
+   // a prosign grammar of its own since 2026-09-17, bench-verified on a K4.
+   // It is NOT one of the three KY dialects: the spelling is |AR| |SK| |BT|.
    r := uRadioRegistry.CreateInstanceId(TCI_ID);
    CheckTrue(r <> nil, 'TCI constructs (a string-id radio, no enum)');
    if r <> nil then
@@ -242,8 +269,11 @@ begin
       try
          CheckEquals(0, r.Capabilities.CWFrame.maxLen, 'TCI has no stated limit');
          CheckFalse(r.Capabilities.CWFrame.pad, 'TCI does not pad');
-         CheckFalse(r.CWProsign('<').handled,
-                    'TCI substitutes no prosigns');
+         CheckTrue(r.CWProsign('<').handled,
+                   'TCI substitutes prosigns -- it did not until 2026-09-17, '
+                 + 'and a bare < went on the air as a literal character');
+         CheckEquals('|SK|', r.CWProsign('<').text,
+                     'the TCI spelling of SK, which the K4 keys as *');
          CheckTrue(r.Supports(rcCWByCAT),
                    'TCI can key CW by CAT -- the point of the whole exercise');
       finally
@@ -510,13 +540,23 @@ var
    t: string;
    r: TFactoryRadioBase;
 begin
-   // A radio whose CW grammar nobody has established must substitute NOTHING:
-   // every token comes back unhandled so the caller keys it literally.  Sending
-   // an untested radio another vendor's substitute characters would be a guess
-   // presented as a fact.  This is the base-class default, and TCI relies on it.
+   (* A radio whose CW grammar nobody has established must substitute NOTHING:
+     every token comes back unhandled so the caller keys it literally. Sending
+     an untested radio another vendor's substitute characters would be a guess
+     presented as a fact.
+
+     PINNED AGAINST A LOCAL STUB, NOT AGAINST A REAL RADIO, since 2026-09-17.
+     This used TCI as its subject because TCI happened to declare nothing --
+     and then TCI declared a grammar (|AR| |SK| |BT|, bench-verified on a K4)
+     and this test failed for a reason that had nothing to do with what it is
+     for. It tests the BASE-CLASS DEFAULT, so it now constructs the base class
+     directly and cannot be broken again by any radio's decision.
+
+     nil is safe as the message handler: TFactoryRadioBase.Create stores it in
+     baseProcMsg and never calls it during construction. *)
    BeginTest('an undeclared grammar substitutes nothing -- tokens pass through');
-   r := uRadioRegistry.CreateInstanceId(TCI_ID);
-   CheckTrue(r <> nil, 'TCI constructs');
+   r := TUndeclaredGrammarRadio.Create;
+   CheckTrue(r <> nil, 'the stub constructs');
    if r = nil then
       begin
       Exit;
