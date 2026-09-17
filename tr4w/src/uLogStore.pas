@@ -312,8 +312,20 @@ begin
 
       (* IN FRONT OF THE OPERATOR, not only in a file nobody reads mid-contest.
          Once -- GDisabled guards it -- because a modal dialog per QSO would be
-         its own kind of contest-ending. *)
-      ShowMessage(LclText(
+         its own kind of contest-ending.
+
+         UNLESS THERE IS NO OPERATOR.  uProgramMain states the rule for itself:
+         "A headless mode has no operator, so nothing may open a dialog and
+         nothing may wait for an answer."  This one did, and it is reachable --
+         /EXPORT, /RESCORE, /IMPORT and /IMPORTLOG all open the log, and any of
+         them can meet a damaged or unwritable one.  A modal there does not
+         report the failure, it HANGS the run until something kills it, and a
+         batch job that hangs is harder to diagnose than one that fails.
+         The logger.Error above is unconditional, so nothing is lost by being
+         quiet here. *)
+      if not tSilentExport then
+         begin
+         ShowMessage(LclText(
          'THE CONTEST LOG IS NOT BEING SAVED.' + #13#10#13#10 +
          'Writing to the log database failed in ' + aWhere + ':' + #13#10 +
          E.ClassName + ' -- ' + E.Message + #13#10#13#10 +
@@ -323,8 +335,9 @@ begin
            there "intact" is precisely the claim that is false -- in the one
            case where the operator most needs to be told to restore a backup.
            The location is still useful; the reassurance was never checked. *)
-         'before working anyone else. The log written so far is in ' +
-         LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME)) + '.'));
+            'before working anyone else. The log written so far is in ' +
+            LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME)) + '.'));
+         end;
       end;
 
    FreeAndNil(GRepository);
@@ -709,6 +722,7 @@ var
    isNewLog: boolean;
    res: TLogImportResult;
    integrity: TIntegrityResult;
+   writable: TIntegrityResult;
    damaged: Exception;
 
    (* Returns False rather than raising: the caller is a try/except that would
@@ -849,6 +863,42 @@ begin
             + 'tr4w.log.'));
          try
             Disable('checking the log on open', damaged);
+         finally
+            damaged.Free;
+         end;
+
+         Result := False;
+         Exit;
+         end;
+
+      (* AND CAN IT BE WRITTEN TO?  The integrity check above says the file is
+        not damaged; it says nothing about whether the next QSO can land in it.
+
+        NY4I, 2026-09-17: *"ensuring the database is writable isn't a bad
+        idea."*  SQLite opens a read-only file without complaint and fails only
+        on the first write -- which in a contest is the first contact, at the
+        worst possible moment.  Asking now costs one inert header write, and
+        answers it while nothing has been lost.
+
+        FAIL CLOSED, exactly as the integrity check does.  Warning and
+        continuing would be the silent downgrade this tree keeps deleting: the
+        operator would log a contest into a file that cannot accept it, and
+        find out at the end. *)
+      writable := GDatabase.CheckWritable;
+      if not writable.Ok then
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] %s IS NOT WRITABLE: %s',
+                         [dbName, writable.Report]);
+            end;
+         (* Owned here, like the integrity one a few lines up: manufactured to
+           carry a sentence, so it is freed on the way out. *)
+         damaged := Exception.Create(AnsiString(
+            'The contest log cannot be written to. It has NOT been changed. '
+            + writable.Report + ' Details are in tr4w.log.'));
+         try
+            Disable('checking that the log is writable', damaged);
          finally
             damaged.Free;
          end;

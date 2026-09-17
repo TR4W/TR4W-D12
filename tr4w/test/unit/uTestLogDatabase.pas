@@ -52,6 +52,11 @@ type
       procedure TestIntegrityPassesOnAFreshLog;
       procedure TestIntegrityReportsAClosedLog;
 
+      (* writability *)
+      procedure TestWritablePassesOnAFreshLog;
+      procedure TestWritableReportsAClosedLog;
+      procedure TestWritableReportsAReadOnlyFile;
+
       (* backup *)
       procedure TestAnOlderLogGainsTheSessionTable;
       procedure TestSnapshotIncludesCommitsStillInTheWAL;
@@ -810,6 +815,112 @@ begin
    Scrub(fn);
 end;
 
+(* ---------------------------------------------------------------------------
+  writability -- can the next QSO actually land in this file?
+  --------------------------------------------------------------------------- *)
+
+procedure TLogDatabaseTests.TestWritablePassesOnAFreshLog;
+var
+   db: TLogDatabase;
+   fn: string;
+   r: TIntegrityResult;
+begin
+   BeginTest('TestWritablePassesOnAFreshLog');
+   fn := TempLogName('writable.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      r := db.CheckWritable;
+   finally
+      db.Free;
+   end;
+
+   CheckTrue(r.Ok, 'a log we just created accepts writes');
+   CheckEquals('', r.Report, 'and reports nothing');
+   Scrub(fn);
+end;
+
+procedure TLogDatabaseTests.TestWritableReportsAClosedLog;
+var
+   db: TLogDatabase;
+   r: TIntegrityResult;
+begin
+   BeginTest('TestWritableReportsAClosedLog');
+
+   db := TLogDatabase.Create;
+   try
+      r := db.CheckWritable;
+   finally
+      db.Free;
+   end;
+
+   (* Same rule as the integrity check beside it: a check that could not run is
+     not a check that passed. *)
+   CheckFalse(r.Ok, 'a check that could not run is not a pass');
+   CheckTrue(r.Report <> '', 'and it says why');
+end;
+
+procedure TLogDatabaseTests.TestWritableReportsAReadOnlyFile;
+var
+   db: TLogDatabase;
+   fn: string;
+   r: TIntegrityResult;
+   made: boolean;
+begin
+   BeginTest('TestWritableReportsAReadOnlyFile');
+   fn := TempLogName('readonly.db');
+   Scrub(fn);
+
+   (* Build a real log, close it, then take the write permission away and open
+     it again.  A mock cannot test this: the question is what SQLITE does with
+     a file the operating system will not let it write, and only a real file
+     can answer it. *)
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+   finally
+      db.Free;
+   end;
+
+   (* WAL leaves sidecars that are also written.  They must go, or the check
+     could pass by writing to a -wal that is still writable. *)
+   if FileExists(fn + '-wal') then
+      begin
+      DeleteFile(fn + '-wal');
+      end;
+   if FileExists(fn + '-shm') then
+      begin
+      DeleteFile(fn + '-shm');
+      end;
+
+   made := FileSetAttr(fn, faReadOnly) = 0;
+   if not made then
+      begin
+      (* Could not make it read-only -- say so rather than passing an
+        assertion that was never exercised. *)
+      CheckTrue(False, 'the fixture could not be made read-only, so this '
+                       + 'test proved nothing');
+      Scrub(fn);
+      Exit;
+      end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      r := db.CheckWritable;
+   finally
+      db.Free;
+   end;
+
+   FileSetAttr(fn, 0);
+
+   CheckFalse(r.Ok, 'a read-only log must not report itself writable');
+   CheckTrue(r.Report <> '', 'and it says which file and why');
+   Scrub(fn);
+end;
+
 procedure TLogDatabaseTests.TestIntegrityReportsAClosedLog;
 var
    db: TLogDatabase;
@@ -1152,6 +1263,10 @@ begin
 
    TestIntegrityPassesOnAFreshLog;
    TestIntegrityReportsAClosedLog;
+
+   TestWritablePassesOnAFreshLog;
+   TestWritableReportsAClosedLog;
+   TestWritableReportsAReadOnlyFile;
    TestAnOlderLogGainsTheSessionTable;
    TestSnapshotIncludesCommitsStillInTheWAL;
    TestSnapshotRefusesAnExistingDestination;

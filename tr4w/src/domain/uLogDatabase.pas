@@ -187,6 +187,39 @@ type
         should be looked at before it is written to. *)
       function CheckIntegrity: TIntegrityResult;
 
+      (* CAN THIS LOG ACTUALLY BE WRITTEN TO?  Asked ON OPEN, beside the
+        integrity check, because the two answer the same question from
+        different sides: integrity says the file is not damaged, this says the
+        file will accept the next QSO.
+
+        NY4I, 2026-09-17: *"ensuring the database is writable isn't a bad
+        idea."*
+
+        IT IS THE CHEAPEST MOMENT TO FIND OUT.  SQLite opens a read-only file
+        perfectly happily and fails only when something tries to write -- which
+        in a contest is the first QSO, at the worst possible time.  A log that
+        cannot be written to is not a log, and the operator needs to be told
+        while the answer still costs them nothing.
+
+        THREE CHECKS, BECAUSE THERE ARE THREE WAYS TO BE UNWRITABLE.  The
+        DIRECTORY must accept files: this database runs in WAL mode, so SQLite
+        has to create -wal and -shm BESIDE it, and a perfectly writable .db in
+        a read-only directory still cannot journal.  Next the read-only
+        ATTRIBUTE, which is the ordinary case and costs nothing to ask.  Last
+        the file itself.
+
+        THE LAST ONE IS A WRITE, AND IT HAS TO BE.  There is no way to prove a
+        file will accept a write except by writing.  It is the most inert write
+        available -- user_version read and then set back to the value it just
+        had -- so it changes no state, no row and no schema, and it is safe on
+        an operator's live log.  A lock probe was tried first and MEASURED NOT
+        TO WORK: SQLite lets BEGIN IMMEDIATE succeed on a read-only file and
+        raises only on the first page write.  See the body.
+
+        Reports; never repairs.  Same record as CheckIntegrity, for the same
+        reason: which check failed and what it said is the part that helps. *)
+      function CheckWritable: TIntegrityResult;
+
       (* A CONSISTENT COPY OF THE OPEN DATABASE, at aDestination.
 
         NOT A FILE COPY, and the difference is the whole point. This database
@@ -919,6 +952,92 @@ begin
       end;
 
    Result := UTF8Encode('VACUUM INTO ''' + quoted + '''');
+end;
+
+function TLogDatabase.CheckWritable: TIntegrityResult;
+var
+   dir: string;
+   attrs: integer;
+   uv: integer;
+begin
+   Result.Ok := True;
+   Result.Report := '';
+
+   if not IsOpen then
+      begin
+      Result.Ok := False;
+      Result.Report := 'The log is not open, so it cannot be checked.';
+      Exit;
+      end;
+
+   (* THE DIRECTORY FIRST, and it is not the lesser check.  Under WAL the
+     -wal and -shm files live beside the database; if they cannot be created
+     the log is unusable however writable the .db itself is.  DirectoryIsWritable
+     already existed for the failure DIAGNOSIS -- it is doing the prevention
+     now as well. *)
+   dir := ExtractFileDir(FFileName);
+   if (dir <> '') and (not DirectoryIsWritable(dir)) then
+      begin
+      Result.Ok := False;
+      Result.Report := Format(
+         'The folder "%s" cannot be written to, so the log cannot keep its '
+         + 'write-ahead files (-wal and -shm) beside it.', [dir]);
+      Exit;
+      end;
+
+   (* THEN THE READ-ONLY ATTRIBUTE, which is cheap and needs no write at all.
+     It is the ordinary way a log becomes unwritable -- copied off a CD,
+     restored from a backup tool that sets it, or marked by an operator who
+     meant to protect it -- and catching it here means the write below is never
+     even attempted in the common case. *)
+   (* SysUtils.faReadOnly, QUALIFIED, AND IT HAS TO BE.  This unit uses sqldb,
+     which pulls in db, and db declares TFieldAttribute with a member spelled
+     faReadonly -- so the bare name resolves to a DATASET attribute and the
+     compiler reports "Operator is not overloaded: LongInt and
+     TFieldAttribute".  The file-attribute constant is the one wanted here. *)
+   attrs := FileGetAttr(FFileName);
+   if (attrs >= 0) and ((attrs and SysUtils.faReadOnly) <> 0) then
+      begin
+      Result.Ok := False;
+      Result.Report := Format(
+         'The log "%s" is marked read-only.', [FFileName]);
+      Exit;
+      end;
+
+   (* AND THEN THE AUTHORITATIVE CHECK, WHICH HAS TO BE A WRITE.
+
+     BEGIN IMMEDIATE WAS TRIED HERE FIRST AND IT DOES NOT WORK.  Measured
+     2026-09-17, against a real read-only file: `BEGIN IMMEDIATE` returns
+     cleanly and only the first actual page write raises `attempt to write a
+     readonly database`.  SQLite defers the check, so a lock probe reports a
+     read-only log as writable -- which is the one answer this routine must
+     never give.  The test that caught it is
+     TestWritableReportsAReadOnlyFile.
+
+     SO IT WRITES, and there is no honest alternative: the only proof that a
+     file will accept a write is a write.  This is the most inert one
+     available -- user_version is read and then set BACK TO THE VALUE IT JUST
+     HAD, so it touches the header page and changes no state, no row and no
+     schema.  It also catches what an attribute cannot: a denying ACL, a file
+     another process holds, a full volume.
+
+     ExecPragmaRaw, NOT ExecuteDirect, for the reason SnapshotTo states a few
+     routines down -- sqldb opens a transaction on any statement it is given,
+     and a pragma must not run inside one.
+
+     The message is SQLite's own, which is more specific than anything worth
+     substituting for it. *)
+   try
+      uv := PragmaAsInteger('PRAGMA user_version');
+      ExecPragmaRaw(AnsiString(Format('PRAGMA user_version = %d', [uv])));
+   except
+      on E: Exception do
+         begin
+         Result.Ok := False;
+         Result.Report := Format(
+            'The log "%s" will not accept writes: %s', [FFileName, E.Message]);
+         end;
+   end;
 end;
 
 procedure TLogDatabase.SnapshotTo(const aDestination: string);

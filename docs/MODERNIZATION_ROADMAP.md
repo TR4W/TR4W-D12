@@ -104,25 +104,47 @@ callers through `uVerificationChecks`, and the backup path calls
 `LogStoreBackup` with a report instead of copying the obsolete `.TRW`. What
 remains is the proof:
 
-- [ ] **Tests for `LogStoreBackup`'s orchestration** — staging to `.new`,
-      `StagedBackupIsSound` rejecting a corrupt snapshot, `.bak` displacement,
-      publish-by-rename, and cleanup on exception. **Nothing in `test/`
-      references it.**
+- [x] **The log is checked for WRITABILITY on open — done 2026-09-17.**
+      NY4I: *"ensuring the database is writable isn't a bad idea."*
+      `TLogDatabase.CheckWritable` sits beside `CheckIntegrity` and runs from
+      `EnsureOpen`, fail-closed: directory (WAL needs to create `-wal`/`-shm`
+      beside the file), then the read-only attribute, then the file itself.
+      SQLite opens a read-only log without complaint and fails only on the
+      first write, which in a contest is the first contact — this moves that
+      discovery to a moment where nothing has been lost.
 
-      **AND IT IS NOT A QUICK WIN — measured 2026-09-17.** The obvious move is
-      to add `uLogStore` to the unit-test `.lpr`, and it does not work: seven of
-      its implementation dependencies are absent from that program —
-      `uCFG`, `LogCW`, `postunit`, `FContest`, `LOGWIND`, `uCbrSum`,
-      `uExchangeBuilder` and `Tree`. Adding them drags the TRDOS contest engine
-      into the unit-test binary, which CLAUDE.md says is deliberately not
-      unit-covered because `ProcessExchange`, scoring and dupe need the app's
-      globals booted.
+      **A LOCK PROBE WAS TRIED FIRST AND IS MEASURABLY WRONG.** `BEGIN
+      IMMEDIATE` succeeds on a read-only file; only an actual page write
+      raises. The check is a same-value `PRAGMA user_version` write instead —
+      the most inert write available, because there is no way to prove a file
+      accepts writes without writing. **The test caught this, not review:**
+      `TestWritableReportsAReadOnlyFile` failed against the first
+      implementation.
 
-      So the real choice is a design decision and belongs to NY4I: **extract
-      the backup orchestration into a leaf unit** that takes a database handle
-      and a destination, leaving `uLogStore` as the thin caller — which is the
-      testable seam and matches how the rest of this tree was made testable —
-      **or** leave it covered only by bench. Do not force the `.lpr`.
+      It also fixed a real headless defect found on the way: `Disable`'s
+      `ShowMessage` was unguarded, so a damaged or unwritable log in an
+      `/EXPORT`, `/RESCORE`, `/IMPORT` or `/IMPORTLOG` run opened a modal with
+      no operator and **hung** the batch instead of failing it.
+
+- [ ] **Tests for `LogStoreBackup`'s orchestration** — still open, and still
+      not a quick win. Staging to `.new`, `StagedBackupIsSound` rejecting a
+      corrupt snapshot, `.bak` displacement, publish-by-rename, cleanup on
+      exception. **Nothing in `test/` references it.**
+
+      Adding `uLogStore` to the unit-test `.lpr` does not work: seven of its
+      implementation dependencies are absent from that program — `uCFG`,
+      `LogCW`, `postunit`, `FContest`, `LOGWIND`, `uCbrSum`,
+      `uExchangeBuilder`, `Tree` — and adding them drags the TRDOS contest
+      engine into a binary CLAUDE.md says is deliberately not unit-covered.
+
+      **The writability work shows the way out:** it went on `TLogDatabase`,
+      which the test program already links, and was unit-testable immediately.
+      The same move would work here — extract the backup orchestration to a
+      leaf that takes a database and a destination. That remains NY4I's call.
+
+- [ ] **`/RESCORE` cannot fail.** `uProgramMain.pas` ends it with an
+      unconditional `Halt(0)`, so the headless rescore reports success even
+      when the store was disabled mid-run. Found while probing the above.
 - [ ] Fault-injection tests for the QSO acknowledgement contract: disk full,
       read-only DB, locked DB. **A QSO must never be acknowledged unwritten.**
 - [x] ~~Integrity check on database open~~ — **ALREADY DONE.** `EnsureOpen`
