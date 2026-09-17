@@ -1535,7 +1535,6 @@ begin
   VisibleDupeSheetChanged := True;
   //if Packet.PacketSerialPort <> NoPort then Packet.DeletePacketEntry(RXData.Callsign, RXData.Band, RXData.Mode);
 //  OldTotalScore := TotalScore;
-  LastTwoLettersCrunchedOn := '';
   if Settings.Operating.AutoTimeIncrement > 0 then
      begin
      inc(AutoTimeQSOCount);
@@ -2019,17 +2018,6 @@ begin
                    CallWindowString := CallWindowString + TempKey;
                    AddStringToBuffer(TempKey, Config.CWTone);
                    Write(TempKey);
-                   if Settings.CallWindow.PartialCallEnable then
-                     if Sheet.TwoLetterCrunchProcess(CallWindowString) then
-                        begin
-                        {
-                                  VisibleLog.GeneratePartialCallList(CallWindowString,
-                                    ActiveBand,
-                                    ActiveMode,
-                                    PossibleCallList);
-                                  DisplayPossibleCalls(PossibleCallList);
-                                  }
-                        end;
                    if (Settings.Scp.MinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
                       begin
                       VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr);

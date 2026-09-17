@@ -53,7 +53,6 @@ utils_text,
 const
   MaxGridSquaresInList                  = 40;
 
-//  TwoLetterPartialCallListLength        = 500;
 //  DomesticMultArraySize                 = 400 + 300; {RDAC}
 //  DXMultArraySize                       = MaxCountries {UA4WLI};
 //  PrefixMultArraySize                   = 1500;
@@ -183,8 +182,6 @@ type
 
         //    procedure CreateVisibleDupeSheetArrays(var Band: BandType;      Mode: ModeType);
 
-    function TwoLetterCrunchProcess(PartialCall: {Call} string): boolean;
-
     procedure DisposeOfMemoryAndZeroTotals;
 
     function IsADomesticMult(Mult: Str10; Band: BandType; Mode: ModeType): boolean;
@@ -265,10 +262,7 @@ var
 
   //  InitialExchangeList              : InitialExchangeArrayPointer = nil;
 
-  LastPartialCall                       : CallString;
   LastPartialCallBlock                  : integer;
-  LastTwoLetterCrunchedAddress          : integer;
-  LastTwoLettersCrunchedOn              : Str20 {= ''};
   //  LoadingInLogFile                      : boolean;
   //  LongPartialCallList              : LongPartialCallListPointer = nil;
 
@@ -279,7 +273,6 @@ var
   NumberInitialExchanges                : integer;
   NumberLongPartialCalls                : integer;
   NumberPartialCalls                    : integer;
-  NumberTwoLetterPartialCalls           : integer;
   NumberVDCalls                         : integer;
 
   OffTimeStart                          : TimeRecord;
@@ -326,7 +319,6 @@ var
   MOQSOPartyW0MAWorked                  : Boolean;   // W0MA worked at least once (+100 flat bonus)
   MOQSOPartyK0GQWorked                  : Boolean;   // K0GQ worked at least once (+100 flat bonus)
   MOQSOPartyPeakHourCount               : Integer;   // 40/80m QSOs in 1400-2000 UTC window (max 250)
-//  TwoLetterCrunchPartialCallList        : array[0..TwoLetterPartialCallListLength] of integer;
 
   //  tTotalRecordsInLog               : integer;
   tRestartInfo                          : RestartInfo;
@@ -892,151 +884,6 @@ begin
         mo.SetZnMult(RXData.Zone, RXData.Band, RXData.Mode);
         end;
      end;
-end;
-
-function DupeAndMultSheet.TwoLetterCrunchProcess(PartialCall: {Call} string): boolean;
-
-{ This process will work on generating the TwoLetterPartialList based upon
-  the input provided.  It will return TRUE if there is a change to the list
-  which means there might be changes in the partial call list. }
-
-var
-  Address, FirstAddress, LastAddress, NumberCallsToCrunch: integer;
-  {GotPartialCall,} TempString            : Str20;
-  FileWrite                             : Text;
-
-begin
-  TwoLetterCrunchProcess := False; { Assume no changes }
-
-  if length(PartialCall) < 2 then Exit; { We don't do anything yet }
-  if NumberPartialCalls = 0 then Exit; { No partial calls to look at }
-
-  { Look to see if we have different first two letters than the last time
-    this function was called.  If so, set up a brand new process with an
-    empty list of callsigns. }
-
-  if LastTwoLettersCrunchedOn <> Copy(PartialCall, 1, 2) then
-     begin
-     LastTwoLettersCrunchedOn := Copy(PartialCall, 1, 2);
-     LastTwoLetterCrunchedAddress := -1;
-     NumberTwoLetterPartialCalls := 0;
-     TwoLetterCrunchProcess := True;
-     LastPartialCall := PartialCall;
-     end;
-
-  { Look to see if we have process the whole list.  If so, then, there isn't
-    anything for us to do.  However, if the callsign has changed, we will
-    report TRUE so that the partial call list can be recalculated based upon
-    the new callsign.  }
-
-  if LastTwoLetterCrunchedAddress >= NumberPartialCalls - 1 then
-     begin
-     TwoLetterCrunchProcess := PartialCall <> LastPartialCall;
-     LastPartialCall := PartialCall;
-     Exit;
-     end;
-
-  { Now we only care about the first two letters. }
-
-  if length(PartialCall) > 2 then
-     begin
-     PartialCall := Copy(PartialCall, 1, 2);
-     end;
-
-  { Wildcard partials means the two letters can show up anywhere in the
-    callsign. }
-
-  if Settings.CallWindow.WildcardPartials then
-     begin
-     NumberCallsToCrunch := NumberPartialCalls - LastTwoLetterCrunchedAddress - 1;
-
-       { We will only crunch up to 200 callsigns per call to this process.  Note
-        that we might not get to all of them if the operator presses a key. }
-
- //wli ???? ???????????? initial.ex ? ????? ????????    if NumberCallsToCrunch > 200 then NumberCallsToCrunch := 200;
-
-       { Now look through the partial call list, looking for any calls that have
-        the partial string in it. }
-
-     for Address := LastTwoLetterCrunchedAddress + 1 to LastTwoLetterCrunchedAddress + NumberCallsToCrunch do
-        begin
-        {
-            if pos(PartialCall, GetPartialCall(Address)) > 0 then
-              begin
-                if NumberTwoLetterPartialCalls < TwoLetterPartialCallListLength then
-                  begin
-                    TwoLetterCrunchPartialCallList[NumberTwoLetterPartialCalls] := Address;
-                    inc(NumberTwoLetterPartialCalls);
-                    TwoLetterCrunchProcess := True; // We have changed the list
-                  end;
-              end;
-
-            inc(LastTwoLetterCrunchedAddress);
-          }
-          //            IF NewKeyPressed THEN Exit;  { Went to NewKeyPressed in 6.27 }
-        end;
-     end
-
-  else
-     begin
-
-      { Remember that the partial call list is in alphabetical order.  If we
-        find the first and last address that partial calls will be found, our
-        job is done.  First, we compute the first address for this partial call. }
-
-//      FirstAddress := FindProperPartialCallAddress(PartialCall);
-
-      { Since we back up one more, if the address is more than zero, decrement
-        it by one. }
-
-    if FirstAddress > 0 then
-       begin
-       dec(FirstAddress);
-       end;
-
-      { Now we find the last address for any partial calls.  We do this by finding
-        the proper address for a call with the last character incremented by one. }
-      { Generate a string that has the second character incremented }
-
-    TempString := PartialCall;
-
-    if TempString[2] = 'Z' then
-       begin
-       TempString[2] := '0';
-       TempString[1] := AnsiChar(Ord(TempString[1]) + 1);
-           {
-                    if TempString[1] > 'Z' then
-                      LastAddress := NumberPartialCalls
-                    else
-                      LastAddress := FindProperPartialCallAddress(TempString);
-          }
-       end
-    else
-       begin
-       TempString[2] := AnsiChar(Ord(TempString[2]) + 1);
-           //          LastAddress := FindProperPartialCallAddress(TempString);
-       end;
-
-    for Address := FirstAddress to LastAddress do
-       begin
-       {
-            GotPartialCall := GetPartialCall(Address);
-
-            if pos(PartialCall, GotPartialCall) = 1 then
-              begin
-                if NumberTwoLetterPartialCalls < TwoLetterPartialCallListLength then
-                  begin
-                    TwoLetterCrunchPartialCallList[NumberTwoLetterPartialCalls] := Address;
-                    inc(NumberTwoLetterPartialCalls);
-                    TwoLetterCrunchProcess := True;
-                  end;
-              end;
-
-            inc(LastTwoLetterCrunchedAddress);
-            }
-       end;
-    LastTwoLetterCrunchedAddress := NumberPartialCalls - 1;
-  end;
 end;
 
 procedure DupeAndMultSheet.AddCallToVisibleDupeSheet(Callsign: CallString);

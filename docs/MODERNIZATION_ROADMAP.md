@@ -167,11 +167,18 @@ full — entry guard `cmp -0x14(%ebp),%edx / jge`, an increment at `0x250`, and 
 back-edge `jmp 0x250` at `0x25e` — over two stack slots never written. Both
 empty loops in the routine survive compilation.
 
-- [ ] **Decide the fix** (NY4I — this is live TRDOS contest code with three
-      callers on the typing path). Exposure is narrower than it first looks:
-      `WildcardPartials` defaults to **True**, and the garbage-bounds loop is
-      in the `else` branch, so it bites only operators who turn
-      `WILDCARD PARTIALS` off.
+- [x] **FIXED 2026-09-17 — the whole feature is deleted** (NY4I's ruling).
+      Investigating the fix showed there was nothing to fix: the routine exists
+      to fill `TwoLetterCrunchPartialCallList`, **whose declaration is itself
+      commented out**, and `NumberTwoLetterPartialCalls`, which is only ever set
+      to zero because every `inc` sits in a commented-out block. Nothing reads
+      either, and all three callers discard the return value — the entire
+      consequence of the `if ... then begin` is commented out at every site.
+      So TR4W was running per-keystroke bookkeeping nobody consults, plus the
+      empty loop. Gone: the function, its declaration, three call sites, four
+      dead globals, and the four resets of a global that no longer exists.
+- [ ] Remaining Part-A sites from the audit (23 compiler-flagged), and findings
+      2 and 3 (`logsubs1.pas:1198`, `logstuff.pas:5737-5739`).
 - [ ] Separately: **the whole program is compiled unoptimised.** That is worth
       a deliberate decision rather than remaining an accident.
 - [ ] Decide dead-or-fix on `logsubs1.pas:1198` and `logstuff.pas:5737-5739`.
@@ -194,7 +201,9 @@ listed was already done — §3.2, §3.3 and §3.5 were written from docs dated
 2026-08-25 and 2026-08-30 and were stale when this roadmap was committed. What
 remains is genuinely three things:
 
-1. A ruling on the `logdupe` empty loops (§3.4), and the fix.
+1. ~~A ruling on the `logdupe` empty loops (§3.4), and the fix.~~ **DONE
+   2026-09-17** — the dead feature is deleted; every oracle green and narrowing
+   conversions fell 1355 → 1351.
 2. `LogStoreBackup` under test — the one careful, load-bearing routine in the
    durability path with no coverage at all.
 3. The x64 binary **launched**, not merely linked.

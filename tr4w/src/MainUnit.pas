@@ -1082,7 +1082,6 @@ begin
     // It is not clear to me why we would call SHowStationInformation again.
       ShowStationInformation(ReceivedData.Callsign);
       ClearContestExchange(ReceivedData);
-      LastTwoLettersCrunchedOn := '';
       CallAlreadySent := False;
       ExchangeHasBeenSent := False;
       EditingCallsignSent := False;
@@ -4963,7 +4962,6 @@ begin
     menu_alt_deleteqso:
       begin
         DeleteLastContact;
-        LastTwoLettersCrunchedOn := '';
       end;
 
     menu_alt_initialexhange:

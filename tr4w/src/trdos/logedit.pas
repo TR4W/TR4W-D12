@@ -1869,18 +1869,6 @@ begin
              {                    GoToXY (WhereX - 1, WhereY);
                                 ClrEol;
             }
-             if Settings.CallWindow.PartialCallEnable then
-               if Sheet.TwoLetterCrunchProcess(InputString) then
-                  begin
-                  {
-                  VisibleLog.GeneratePartialCallList(InputString,
-                    ActiveBand,
-                    ActiveMode,
-                    PossibleCallList);
-                  DisplayPossibleCalls(PossibleCallList);
-                  }
-                  end;
-
              if Settings.Scp.MinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
                 begin
                 VisibleLog.SuperCheckPartial(InputString, True, InActiveRadioPtr);
@@ -1925,18 +1913,6 @@ begin
             end;
          Write(Key);
          InputString := InputString + Key;
-
-         if Settings.CallWindow.PartialCallEnable then
-           if Sheet.TwoLetterCrunchProcess(InputString) then
-              begin
-              {
-              VisibleLog.GeneratePartialCallList(InputString,
-                ActiveBand,
-                ActiveMode,
-                PossibleCallList);
-              DisplayPossibleCalls(PossibleCallList);
-              }
-              end;
 
          if Settings.Scp.MinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
             begin

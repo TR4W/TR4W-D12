@@ -1002,7 +1002,6 @@ begin
                       QueueWSJTXUI(wjPostQSO);
                       //ShowStationInformation(@TempRXData.Callsign);
                       ClearContestExchange(TempRXData);
-                      LastTwoLettersCrunchedOn := '';
                       CallAlreadySent := False;
                       ExchangeHasBeenSent := False;
                       EditingCallsignSent := False;

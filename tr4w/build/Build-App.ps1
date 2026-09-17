@@ -271,7 +271,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # with the ckList token batch. Same direction as the ten before them -- the
 # conversions move to whatever still holds an AnsiString and fall again as
 # those units convert.
-$NARROW_CEILING = 1355
+$NARROW_CEILING = 1351
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"
