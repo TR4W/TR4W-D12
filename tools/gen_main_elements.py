@@ -31,11 +31,33 @@ WHY THIS IS GENERATED AND NOT HAND-TYPED.
 """
 
 import io
+import os
 import re
 import sys
 
-VC = 'c:/tr4w-d12/tr4w/src/VC.pas'
-LFM = 'c:/tr4w-d12/tr4w/src/ui/lcl/uMainForm.lfm'
+# PATHS DERIVED FROM THIS FILE, NOT HARDCODED -- and the hardcoded ones were a
+# release blocker, not an untidiness.
+#
+# These read 'c:/tr4w-d12/tr4w/src/...' until 2026-09-17. On this developer's
+# machine that is the repository, so --check passed and kept passing. ANYWHERE
+# ELSE it names a directory that does not exist: read_rows() then matches zero
+# rows and reports EVERY element as missing --
+#
+#     TWindows[] has no row for: mweAutoSendCount, mweBandMode, ... (48 of them)
+#
+# which is what failed the v5.0.4 release build on the win-ci runner, whose
+# workspace is C:\actions-runner-v334\_work\... The lint had therefore NEVER
+# been able to pass on any machine but the one it was written on.
+#
+# WORSE, AND THE REASON THIS IS WRITTEN DOWN: it fails as a FALSE NEGATIVE in
+# the other direction too. Checking a clean clone at /tmp/whatever also read
+# c:/tr4w-d12 and reported "the .lfm is current" about a tree it never opened.
+# A check that silently answers about a different repository is worse than no
+# check, because it is believed.
+_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+VC = os.path.join(_REPO, 'tr4w', 'src', 'VC.pas')
+LFM = os.path.join(_REPO, 'tr4w', 'src', 'ui', 'lcl', 'uMainForm.lfm')
 
 CRLF = '\r\n'
 

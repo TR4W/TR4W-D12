@@ -39,7 +39,11 @@ import os
 import re
 import sys
 
-SRC = 'c:/tr4w-d12/tr4w/src'
+# Derived from this file, not hardcoded -- see the note in
+# gen_main_elements.py: a hardcoded repo root makes a tool answer about the
+# machine it was written on rather than the checkout it is run in.
+SRC = os.path.join(
+   os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tr4w', 'src')
 
 # What FullBuild.ps1 passes, plus what FPC defines for this target itself.
 DEFINES = {
