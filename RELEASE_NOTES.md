@@ -22,29 +22,15 @@ Various contributors along the way
 
 ---
 
-## The 5.x line starts here
-
 <!-- D12-CHANGELOG-BASELINE: 98b09de3 -->
 
-**Everything below this point is the Delphi 7 (4.x) history, inherited when this
-repository was branched.** It is kept because it is the accurate record of that
-line, and it is not maintained here.
-
-The 5.x rewrite -- the FreePascal/LCL port -- is **1,112 commits**, and it is
-summarised under `## Unreleased` as ONE operator-facing section rather than
-backfilled commit by commit. Reconstructing 1,112 entries would produce
-something nobody would read and nobody could verify; what an operator needs
-is what changed for them, which is short.
-
-The technical detail is not lost, it is just not here:
-
-- `CLAUDE.md` -- the architecture and what changed, kept current
-- `docs/` -- one document per subsystem, with the reasoning
-- the git history itself, whose commit messages carry the detail
-
-`/update-changes` documents commits **after the baseline marker above**. New
-user-facing entries accumulate under `## Unreleased`; a version number is
-assigned when a release is cut.
+<!--
+The marker above is what /update-changes reads to decide what is already
+documented: only commits AFTER that sha are in scope. It lives HERE, near the
+top, because that is where the tooling looks for it -- the prose explaining the
+D7 boundary now sits immediately above the 4.x history itself, where its claim
+is true.
+-->
 
 ---
 
@@ -54,9 +40,17 @@ assigned when a release is cut.
 In-arrears versioning: new user-facing entries accumulate here as work lands; the
 version number is assigned later, when a release is cut. To cut a release: rename this
 "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it under the appropriate
-"## 4.147.x" month group below, and bump tr4w/src/Version.pas to match. Keep entries
+month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
+
+*Nothing yet.*
+
+---
+
+## 5.0.x — September 2026
+
+### 5.0.6 (2026-09-17) — NY4I
 
 #### Radio Control
 
@@ -116,7 +110,7 @@ user-facing — no file paths or source-level jargon.
   signed or notarized** — macOS reports it as "damaged" until the quarantine flag
   is cleared, which the release page explains.
 
-## TR4W 5.0 — what's new for operators
+### The 5.0 rebuild — what's new for operators
 
 TR4W 5.0 is a rebuild of the program on a modern toolchain. Most of that work is
 invisible by design — the contest engine, scoring and log formats are unchanged,
@@ -186,6 +180,30 @@ and your logs carry across. What follows is what you will actually notice.
 > rig per protocol family has been verified on real hardware. If yours behaves
 > oddly, please report it — the driver is likely correct in shape and wrong in
 > one detail, which is quick to fix with a log.
+
+---
+
+## The Delphi 7 (4.x) history starts here
+
+**Everything below this point is the Delphi 7 (4.x) history, inherited when this
+repository was branched.** It is kept because it is the accurate record of that
+line, and it is not maintained here.
+
+The 5.x rewrite -- the FreePascal/LCL port -- is **1,112 commits**, and it is
+summarised above as ONE operator-facing section rather than backfilled commit by
+commit. Reconstructing 1,112 entries would produce something nobody would read
+and nobody could verify; what an operator needs is what changed for them, which
+is short.
+
+The technical detail is not lost, it is just not here:
+
+- `CLAUDE.md` -- the architecture and what changed, kept current
+- `docs/` -- one document per subsystem, with the reasoning
+- the git history itself, whose commit messages carry the detail
+
+**The 5.x line is ABOVE**, from the baseline marker at the top of this file
+forward -- one entry for operators here, one for developers in `CHANGES.md`,
+both in the same commit.
 
 ---
 

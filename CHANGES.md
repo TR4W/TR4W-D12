@@ -22,31 +22,15 @@ Various contributors along the way
 
 ---
 
-## The 5.x line starts here
-
 <!-- D12-CHANGELOG-BASELINE: 98b09de3 -->
 
-**Everything below this point is the Delphi 7 (4.x) history, inherited when this
-repository was branched.** It is kept because it is the accurate record of that
-line, and it is not maintained here.
-
-The 5.x rewrite -- the FreePascal/LCL port -- is **1,112 commits** and is
-deliberately NOT backfilled into this file. Reconstructing it as changelog
-entries would produce something nobody would read and nobody could verify.
-Where that work IS described:
-
-- `CLAUDE.md` -- the architecture and what changed, kept current
-- `docs/` -- one document per subsystem, with the reasoning
-- the git history itself, whose commit messages carry the detail
-
-**This file resumes once the initial 5.x cut lands in `RELEASE_NOTES.md`.**
-`/update-changes` writes release notes only for that first summary, then goes
-back to what it is really for -- one entry for developers here, one for
-operators there, both in the same commit, from the baseline marker forward.
-Entries accumulate under `## Unreleased`; the version number is assigned when
-a release is cut.
-
----
+<!--
+The marker above is what /update-changes reads to decide what is already
+documented: only commits AFTER that sha are in scope. It lives HERE, near the
+top, because that is where the tooling looks for it -- the prose explaining the
+D7 boundary now sits immediately above the 4.x history itself, where its claim
+is true.
+-->
 
 ## Unreleased
 
@@ -54,8 +38,16 @@ a release is cut.
 In-arrears versioning: new developer-facing entries accumulate here as commits/PRs
 land; the version number is assigned later, when a release is cut. To cut a release:
 rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it under the
-appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to match.
+appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
+
+*Nothing yet.*
+
+---
+
+## 5.0.x — September 2026
+
+### 5.0.6 (2026-09-17) — NY4I
 
 #### CW over TCI — two defects, both silent on the air (`src/radioFactory/uRadioTCI.pas`)
 
@@ -288,6 +280,27 @@ appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to mat
   `uDocumentation.dcu`, which settled what `csNew`/`csOld` mean in `CFGCA`
   (`docs/CFG_COMMAND_TABLE.md`) -- has not been on disk since it was untracked
   long ago, and survives in git history in both repositories.
+
+---
+
+## The Delphi 7 (4.x) history starts here
+
+**Everything below this point is the Delphi 7 (4.x) history, inherited when this
+repository was branched.** It is kept because it is the accurate record of that
+line, and it is not maintained here.
+
+The 5.x rewrite -- the FreePascal/LCL port -- is **1,112 commits** and is
+deliberately NOT backfilled into this file. Reconstructing it as changelog
+entries would produce something nobody would read and nobody could verify.
+Where that work IS described:
+
+- `CLAUDE.md` -- the architecture and what changed, kept current
+- `docs/` -- one document per subsystem, with the reasoning
+- the git history itself, whose commit messages carry the detail
+
+**The 5.x line is ABOVE**, from the baseline marker at the top of this file
+forward -- one entry for developers here, one for operators in
+`RELEASE_NOTES.md`, both in the same commit.
 
 ---
 
