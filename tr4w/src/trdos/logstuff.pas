@@ -6084,6 +6084,23 @@ begin
       CheckSum := CheckSum - ord(message[9]); // Make sure TTL isn't a factor
     end;
   }
+  (* ZERO, BECAUSE THE BLOCK THAT USED TO FILL THESE IS COMMENTED OUT ABOVE.
+
+    Source, Serial and CheckSum are read straight into the dedupe table below
+    and compared against it, and nothing assigns them -- so this table was
+    being filled and searched with whatever was on the stack.  FPC reports all
+    three.
+
+    THIS MAKES IT DETERMINISTIC, NOT CORRECT.  With the N6TR parse commented
+    out every message now looks like (0, 0, 0), so the dedupe matches
+    everything after the first rather than matching at random.  Both are wrong;
+    only one is diagnosable.  The real fix is to restore the parse or delete
+    the feature, and that is a multi-network decision -- see
+    docs/UNINITIALISED_LOCALS_AUDIT.md finding 3. *)
+  Source   := 0;
+  Serial   := 0;
+  CheckSum := 0;
+
      { See if we have a virgin list.  If so, add the entry }
 
   if ProcessedMultiMessagesStart = ProcessedMultiMessagesEnd then

@@ -1503,6 +1503,13 @@ procedure PrintHourTotals;
 
   HourIndex := 0;
 
+  (* The loop below opens with inc(LastHourPrinted), so it counted up from
+    whatever was on the stack.  It is overwritten by `LastHourPrinted :=
+    ThisHour` on the first pass while HourIndex is still 0, so the garbage did
+    not reach the output -- but the `LastHourPrinted > 23` test one line
+    earlier did read it.  FPC reports it. *)
+  LastHourPrinted := 0;
+
   totalMults     := 0;
   TotalContacts  := 0;
   TotalQSOPoints := 0;
@@ -2893,6 +2900,17 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
       TransmitterIDPos := 83;
       pnr              := 0;
+
+      (* BESIDE pnr AND contacts, WHICH THIS ROUTINE ALREADY ZEROES.
+
+        PreviousQTHString is declared with them and is a Str10 -- a
+        ShortString, so not zero-initialised -- but nothing set it before the
+        FormatCabrilloExchange call below reads it.  The assignments further
+        down happen AFTER that read, so the first QSO handed it stack garbage.
+        FPC reports it.
+
+        Its siblings are initialised here; this belongs with them. *)
+      PreviousQTHString := '';
       if ( Contest = NAQSOCW ) or ( Contest = NAQSOSSB ) or
          ( Contest = NAQSORTTY ) then
          begin

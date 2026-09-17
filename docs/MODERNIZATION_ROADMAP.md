@@ -142,9 +142,13 @@ remains is the proof:
       The same move would work here — extract the backup orchestration to a
       leaf that takes a database and a destination. That remains NY4I's call.
 
-- [ ] **`/RESCORE` cannot fail.** `uProgramMain.pas` ends it with an
-      unconditional `Halt(0)`, so the headless rescore reports success even
-      when the store was disabled mid-run. Found while probing the above.
+- [x] **`/RESCORE` cannot fail — FIXED 2026-09-17.** It ended in an
+      unconditional `Halt(0)`, so a headless rescore that met a damaged,
+      read-only or full log disabled the store partway through and still
+      exited zero, telling a batch caller the log had been rescored when some
+      or none of it had. It now checks `LogStoreIsUsable` — which only
+      `Disable` clears — and exits **2**, matching `/IMPORTLOG`'s documented
+      convention (0 converted, 1 misused, 2 failed).
 - [ ] Fault-injection tests for the QSO acknowledgement contract: disk full,
       read-only DB, locked DB. **A QSO must never be acknowledged unwritten.**
 - [x] ~~Integrity check on database open~~ — **ALREADY DONE.** `EnsureOpen`
@@ -212,8 +216,26 @@ empty loops in the routine survive compilation.
       So TR4W was running per-keystroke bookkeeping nobody consults, plus the
       empty loop. Gone: the function, its declaration, three call sites, four
       dead globals, and the four resets of a global that no longer exists.
-- [ ] Remaining Part-A sites from the audit (23 compiler-flagged), and findings
-      2 and 3 (`logsubs1.pas:1198`, `logstuff.pas:5737-5739`).
+- [x] **14 of the 20 class-A sites FIXED 2026-09-17**, and the audit's table
+      regenerated from the compiler. **The population was 20, not 23** — the
+      old figure added three unrelated warning classes together, and the other
+      two (managed-type locals, and managed-type function *results*) are
+      zero-initialised by FPC and are noise.
+
+      The fixes restore what each site plainly meant rather than choosing new
+      behaviour. Two were worth the pass on their own: `logscp` gated a
+      **`halt`** on a stack value at three sites, because `sReadFile` returns a
+      boolean and not a byte count; and `uADIFExchange`'s `contacts`/`pnr`/
+      `PreviousQTHString` were **globals moved to locals** so the 61 exchange
+      arms could move verbatim — a global is zero-initialised and a local is
+      not, so the extraction itself introduced the defect.
+
+- [ ] **Delete the three dead routines** — `SendKeyboardInput`,
+      `TimeAndDateSet` and `PacketMemoryRequest` have no callers anywhere in
+      `src` or `tr4w.lpr`, and hold three of the six remaining warnings. The
+      other three are genuinely guarded. **This is a deletion decision, not an
+      initialisation**, which is why the warnings were left rather than
+      silenced.
 - [ ] Separately: **the whole program is compiled unoptimised.** That is worth
       a deliberate decision rather than remaining an accident.
 - [ ] Decide dead-or-fix on `logsubs1.pas:1198` and `logstuff.pas:5737-5739`.

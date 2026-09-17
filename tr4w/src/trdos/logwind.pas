@@ -2133,21 +2133,22 @@ begin
         end;
            end;
 
-        if (Hour = AlarmHour) and (Minute = AlarmMinute) then
-           begin
-           //{WLI}                WakeUp;
-     AlarmMinute := AlarmMinute + 4;
+        (* A SECOND, IDENTICAL ALARM TEST STOOD HERE AND IS DELETED.
 
-     if AlarmMinute > 59 then
-        begin
-        AlarmMinute := AlarmMinute - 60;
-        AlarmHour := AlarmHour + 1;
-        if AlarmHour > 23 then
-           begin
-           AlarmHour := AlarmHour - 24;
-           end;
-        end;
-           end;
+          It was a duplicate of the AlarmInteger test immediately above -- same
+          body, same commented-out WakeUp, same four-minute advance of
+          AlarmMinute/AlarmHour -- but it asked `(Hour = AlarmHour) and
+          (Minute = AlarmMinute)`, and NOTHING IN THIS ROUTINE EVER ASSIGNS
+          Hour OR Minute.  FPC reports both.
+
+          So its condition was two stack values compared against the alarm, and
+          its only live effect when that happened to match was to advance the
+          alarm by another four minutes -- corrupting the schedule the test
+          above maintains, at random.  The WakeUp that would have made it a
+          feature is commented out in both copies.
+
+          The AlarmInteger test above keeps the behaviour; this one only had
+          the defect. *)
         end;
 
      if (NumberContactsThisMinute = 0) and

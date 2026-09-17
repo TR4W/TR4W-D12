@@ -446,9 +446,6 @@ procedure CellBufferObject.LoadCellIntoBuffer(KeyString: CallString;
   {var }FileRead: THandle {file};
   NumberBytes: LONGINT);
 
-var
-  BytesRead                             : integer {WORD} {WLI};
-
 begin
   Initialize(NumberBytes);
 
@@ -466,9 +463,18 @@ begin
 
   if (Buffer1Bytes > 0) and Buffer1Used then
      begin
-     sReadFile(FileRead, Buffer1^, Buffer1Bytes);
+     (* ASK sReadFile WHETHER IT WORKED, WHICH IS WHAT IT RETURNS.
 
-     if BytesRead < Buffer1Bytes then
+       This read `if BytesRead < Buffer1Bytes`, and NOTHING EVER SET BytesRead:
+       the BlockRead that once did is commented out two routines up, and
+       sReadFile's signature is `(hFile; var Buffer; nNumberOfBytesToRead):
+       boolean` -- it reports success, not a count.  So a stack value decided
+       whether to HALT THE PROGRAM, at three sites in this routine.  FPC
+       reports it.
+
+       The boolean is the check that was wanted, and BytesRead is gone with the
+       last of these three. *)
+     if not sReadFile(FileRead, Buffer1^, Buffer1Bytes) then
         begin
         //{WLI}            ReportError ('File read error!!  Line #721 in logscp.pas.');
     halt;
@@ -477,9 +483,7 @@ begin
 
   if (Buffer2Bytes > 0) and Buffer2Used then
      begin
-     sReadFile(FileRead, Buffer2^, Buffer2Bytes);
-
-     if BytesRead < Buffer2Bytes then
+     if not sReadFile(FileRead, Buffer2^, Buffer2Bytes) then
         begin
         //                 ReportError ('File read error!!  Line #721 in logscp.pas.');
     halt;
@@ -488,9 +492,7 @@ begin
 
   if (Buffer3Bytes > 0) and Buffer3Used then
      begin
-     sReadFile(FileRead, Buffer3^, Buffer3Bytes);
-
-     if BytesRead < Buffer3Bytes then
+     if not sReadFile(FileRead, Buffer3^, Buffer3Bytes) then
         begin
         //{WLI}            ReportError ('File read error!!  Line #721 in logscp.pas.');
     halt;

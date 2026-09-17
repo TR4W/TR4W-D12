@@ -2896,6 +2896,10 @@ begin
       sOperator := CurrentOperator;
       end;
 
+   (* COUNTED FROM ZERO, WHICH IT WAS NOT.  The first touch of nMultCount was
+     the Inc below, so it counted up from whatever was on the stack, and the
+     case that follows selects behaviour on the total.  FPC reports it. *)
+   nMultCount := 0;
 
    if RxData.DXMult then
       begin

@@ -2078,6 +2078,25 @@ begin
         end;
      EarlyTrace('[Rescore] recomputing scoring for every QSO');
      tUpdateLog(actRescore);
+
+     (* DID IT ACTUALLY WORK?  THIS USED TO HALT(0) UNCONDITIONALLY.
+
+       tUpdateLog is a procedure and reports nothing, so a rescore that met a
+       damaged, read-only or full log disabled the store partway through and
+       this still exited zero -- a batch caller was told the log had been
+       rescored when some or none of it had.  That is the same silent-success
+       shape LogStoreAppendQSO was fixed for.
+
+       LogStoreIsUsable is the signal: Disable clears it, and nothing else
+       does.  2 for failure, matching /IMPORTLOG's documented convention --
+       0 converted, 1 misused, 2 the operation failed. *)
+     if not LogStoreIsUsable then
+        begin
+        EarlyTrace('[Rescore] FAILED -- the log was disabled during the '
+                   + 'rescore, so it is NOT fully rescored. See tr4w.log.');
+        Halt(2);
+        end;
+
      EarlyTrace('[Rescore] done');
      Halt(0);
      end;

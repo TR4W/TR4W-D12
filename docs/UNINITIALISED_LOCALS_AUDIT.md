@@ -183,30 +183,38 @@ report **42** of these warnings, and they are not one job:
 
 Vendored Indy reports 54 more. **Not ours** -- never count or fix them.
 
-### Class A, measured 2026-09-17
+### Class A — 20 measured, 14 FIXED 2026-09-17, 6 left deliberately
 
-| file | line | variable |
-|---|---:|---|
-| `CfgCmd.pas` | 173 | `ID` |
-| `CfgCmd.pas` | 173 | `CMD` |
-| `LogCW.pas` | 691 | `Buffer` |
-| `logedit.pas` | 1963 | `TempString` |
-| `logscp.pas` | 471 | `BytesRead` |
-| `logstuff.pas` | 6092 | `Source` |
-| `logstuff.pas` | 6093 | `Serial` |
-| `logstuff.pas` | 6094 | `CheckSum` |
-| `logsubs1.pas` | 1190 | `Key` |
-| `logsubs2.pas` | 2902 | `nMultCount` |
-| `logwind.pas` | 2136 | `Hour` |
-| `logwind.pas` | 2136 | `Minute` |
-| `postunit.pas` | 1236 | `PreviousQSOTime` |
-| `postunit.pas` | 1522 | `LastHourPrinted` |
-| `postunit.pas` | 3133 | `PreviousQTHString` |
-| `tree.pas` | 2988 | `FirstWordCursor` |
-| `tree.pas` | 3038 | `FirstWordCursor` |
-| `uADIFExchange.pas` | 267 | `contacts` |
-| `uADIFExchange.pas` | 275 | `PreviousQTHString` |
-| `uADIFExchange.pas` | 466 | `pnr` |
+**Fixed.** Every one was a read of a stack value, and each fix restores what the
+code plainly meant rather than choosing a new behaviour:
+
+| file | variable | what it was doing | fix |
+|---|---|---|---|
+| `logscp.pas` ×3 | `BytesRead` | **gated a `halt`** on a stack value -- `sReadFile` returns a *boolean*, not a count, and the `BlockRead` that once set this is commented out | ask `sReadFile` whether it worked; `BytesRead` deleted |
+| `uADIFExchange.pas` | `contacts`, `pnr`, `PreviousQTHString` | read by the 61 exchange arms. These were **globals moved to locals** so the body could move verbatim -- but a global is zero-initialised and a local is not, so the extraction introduced this | initialised to the values they held as globals |
+| `postunit.pas` | `PreviousQTHString` | passed to `FormatCabrilloExchange` before the assignments further down run | initialised beside `pnr`/`contacts`, which the routine already zeroes |
+| `CfgCmd.pas` | `ID`, `CMD` | handed to `CheckCommand` as garbage ShortStrings; a garbage `ID` could return False, and `LogCfg.pas:634` turns that into a **modal** "invalid statement in config file" | set empty, which returns the same answer as a blank line |
+| `logstuff.pas` | `Source`, `Serial`, `CheckSum` | written into the multi-message dedupe table and compared against it | zeroed -- **deterministic, not correct**; see finding 3 |
+| `logsubs2.pas` | `nMultCount` | `Inc` from a stack value, then `case nMultCount of` selects behaviour | `:= 0` |
+| `logwind.pas` | `Hour`, `Minute` | a **duplicate** alarm test whose action is commented out; its only live effect was advancing the alarm schedule at random | the duplicate block deleted; the `AlarmInteger` test above keeps the behaviour |
+| `postunit.pas` | `LastHourPrinted` | `inc` from a stack value (overwritten before it reached output, but read by the `> 23` test) | `:= 0` |
+
+**Left, and why.** Three are in routines that **nothing calls** -- confirmed by
+searching `src` and `tr4w.lpr` for every mention. Initialising garbage in code
+that never runs buys nothing, and deleting three dead TRDOS routines is a
+separate decision, not a defect fix:
+
+| file | line | variable | why it stays |
+|---|---:|---|---|
+| `LogCW.pas` | 691 | `Buffer` | `SendKeyboardInput` has no callers -- and the read is guarded by `BufferStart <> BufferEnd`, both zeroed |
+| `logedit.pas` | 1963 | `TempString` | `TimeAndDateSet` has no callers |
+| `logsubs1.pas` | 1190 | `Key` | `PacketMemoryRequest` has no callers. It *is* a real `case` on a stack value in a `repeat` loop -- a potential hang -- but unreachable |
+| `postunit.pas` | 1236 | `PreviousQSOTime` | genuinely guarded: `FirstRecord := true` before the loop, read only under `if not FirstRecord`, assigned before the flag clears |
+| `tree.pas` | 2988 | `FirstWordCursor` | set in the same branch that sets `FirstWordFound`, and every read is under `if FirstWordFound` |
+| `tree.pas` | 3038 | `FirstWordCursor` | as above |
+
+**The three dead routines are the open item here**, and they are a deletion
+decision for NY4I rather than an initialisation.
 
 ### What changed since the original table, and why it matters
 

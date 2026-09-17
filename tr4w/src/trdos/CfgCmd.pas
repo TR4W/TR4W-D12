@@ -170,6 +170,25 @@ begin
 
 
 
+  (* EMPTY, BECAUSE NOTHING SPLITS FileString INTO THEM.
+
+    ID and CMD are ShortStrings -- NOT managed, so not zero-initialised -- and
+    the only thing this routine does with them is hand them to CheckCommand.
+    Whatever parsed FileString into an id and a command is gone, so both were
+    reaching CheckCommand as stack garbage, and the `if ID = ''` test below
+    then read a garbage length byte.  FPC reports both.
+
+    SETTING THEM EMPTY IS STRICTLY SAFER THAN LEAVING THEM: CheckCommand('','')
+    fails to match, ID = '' is then TRUE, and the routine returns True -- the
+    same answer it gives for a blank line.  Garbage could return False instead,
+    and LogCfg.pas:634 turns a False into a MODAL "invalid statement in config
+    file" at the operator.
+
+    IT IS STILL NOT PARSING ANYTHING, which is the real defect and is not one
+    to invent a fix for -- see docs/UNINITIALISED_LOCALS_AUDIT.md. *)
+  ID  := '';
+  CMD := '';
+
   ProcessConfigInstruction := CheckCommand(ID, CMD);
 
   if ID = '' then

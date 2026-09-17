@@ -187,6 +187,24 @@ function FormatADIFMyExchange(
       MyPostalCode := Str20(my.MyPostalCode);
       TempRXData     := rx;
       GoodLookingQSO := aGoodQSO;
+
+      (* THE OLD GLOBALS WERE ZERO.  THESE LOCALS ARE NOT.
+
+        The var block above says these were unit-scope globals moved across as
+        locals so the 61 arms could come with them unchanged -- and that is
+        exactly what makes this worth stating: a global IS zero-initialised and
+        a local is NOT, so the move silently changed what the arms read before
+        anything assigns them.  contacts and pnr are integers and
+        PreviousQTHString is a Str10, none of them managed, so all three came
+        off the stack.  FPC reports all three.
+
+        Zero and empty are what they held as globals, so this restores the
+        behaviour the extraction was meant to preserve rather than choosing
+        new values. *)
+      contacts          := 0;
+      pnr               := 0;
+      PreviousQTHString := '';
+
       Result := 'Error generating my exchange';
       try
         { NO NULL TERMINATOR, BECAUSE NOTHING READS ONE ANY MORE.
