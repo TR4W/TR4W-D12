@@ -205,6 +205,145 @@ jobs:
           if-no-files-found: error
 
   # =================================================================
+  # Linux and macOS, on their own self-hosted runners.
+  #
+  # NEITHER BLOCKS THE WINDOWS RELEASE, and that is a deliberate ruling
+  # (NY4I, 2026-09-17): Windows is the shipping platform, and README.md's
+  # own framing is that the Unix builds are "builds, not releases". So these
+  # are continue-on-error and are NOT in the release job's `needs:` -- their
+  # artifacts are attached when they exist and silently absent when they do
+  # not. A Unix failure must never withhold an installer.
+  #
+  # That is also why `fail_on_unmatched_files` is false on the release step
+  # below: with these jobs non-blocking, a missing tarball is an expected
+  # state rather than an error.
+  #
+  # build-unix.sh does NOT stop at the first failing stage -- it reports each
+  # one so the summary is a ranked worklist -- so a failing unit-test stage
+  # still leaves a usable app, server and tarball behind. Both platforms
+  # currently fail exactly one test (the DX-cluster segment test, a 150 ms
+  # gap against a 250 ms ReadTimeout), which is a margin rather than a
+  # portability defect and reproduces on both.
+  # =================================================================
+  build-linux:
+    name: Linux (x86_64)
+    runs-on: [self-hosted, linux-ci]
+    timeout-minutes: 45
+    continue-on-error: true
+    needs: build
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Build (build-unix.sh)
+        shell: bash
+        run: |
+          # xvfb, because the unit-test binary LINKS THE LCL: gtk2 opens a
+          # display at startup, and on a headless runner it aborts with
+          # "cannot open display" BEFORE printing any tally -- which reads as
+          # a crash rather than as a missing display. Measured 2026-09-17:
+          # without it the stage reports an empty failure, with it 88 suites
+          # and 14777 assertions run.
+          if command -v xvfb-run >/dev/null 2>&1; then
+            xvfb-run -a sh tr4w/build/build-unix.sh || true
+          else
+            echo "::warning::xvfb-run not found -- the unit-test stage cannot run headless"
+            sh tr4w/build/build-unix.sh || true
+          fi
+
+      - name: Locate tarball
+        id: artifact
+        shell: bash
+        run: |
+          set -e
+          # THIS version explicitly. A wildcard would happily pick up a stale
+          # tarball from an earlier version and ship it under the new tag --
+          # the same reasoning as the Windows 'Locate installer' step.
+          f="build-out/dist/tr4w-${{ needs.build.outputs.version }}-x86_64-linux.tar.gz"
+          if [ ! -f "$f" ]; then
+            echo "::warning::no tarball at $f -- the Linux artifact will be absent from this release"
+            ls -la build-out/dist 2>/dev/null || true
+            exit 1
+          fi
+          echo "found $f ($(stat -c%s "$f") bytes)"
+          echo "path=$f" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tr4w-linux-${{ needs.build.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          retention-days: 90
+          if-no-files-found: error
+
+  build-macos:
+    name: macOS (aarch64)
+    runs-on: [self-hosted, mac-ci]
+    timeout-minutes: 45
+    continue-on-error: true
+    needs: build
+
+    env:
+      # PIN BOTH, TO THE SAME INSTALL. Unpinned, build-unix.sh chooses FPC and
+      # Lazarus independently and can pair one install's compiler with
+      # another's LCL -- the mismatched-RTL failure that reports
+      # "Can't find unit LCLIntf" for a unit that is plainly there, and which
+      # had this box misdiagnosed as unprovisioned for a week.
+      FPC_HOME: /Users/toms/fpcupdeluxe/fpc/bin/aarch64-darwin/fpc
+      LAZARUS_DIR: /Users/toms/fpcupdeluxe/lazarus
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Preflight -- the cocoa widgetset must exist
+        shell: bash
+        run: |
+          # FAILS WITH THE REAL REASON. Without this the build dies much later
+          # on "Can't find unit Interfaces", which names the symptom and not
+          # the cause: interfaces.ppu lives INSIDE each widgetset directory.
+          #
+          # And this is not hypothetical -- an fpcupdeluxe UPDATE deleted the
+          # cocoa LCL on 2026-09-14 from a box that had shipped an artifact
+          # the week before, leaving nogui only.
+          ws="$LAZARUS_DIR/lcl/units/aarch64-darwin"
+          if [ ! -f "$ws/cocoa/interfaces.ppu" ]; then
+            echo "::error::cocoa widgetset missing under $ws (found: $(ls "$ws" 2>/dev/null | tr '\n' ' '))"
+            echo "Rebuild it on that machine with:"
+            echo "  cd \$HOME/fpcupdeluxe/lazarus && make lcl LCL_PLATFORM=cocoa \\"
+            echo "       PP=\$HOME/fpcupdeluxe/fpc/bin/aarch64-darwin/fpc CPU_TARGET=aarch64 OS_TARGET=darwin"
+            exit 1
+          fi
+          echo "cocoa widgetset present"
+
+      - name: Build (build-unix.sh)
+        shell: bash
+        run: sh tr4w/build/build-unix.sh || true
+
+      - name: Locate tarball
+        id: artifact
+        shell: bash
+        run: |
+          set -e
+          f="build-out/dist/tr4w-${{ needs.build.outputs.version }}-aarch64-darwin.tar.gz"
+          if [ ! -f "$f" ]; then
+            echo "::warning::no tarball at $f -- the macOS artifact will be absent from this release"
+            ls -la build-out/dist 2>/dev/null || true
+            exit 1
+          fi
+          echo "found $f ($(stat -f%z "$f") bytes)"
+          echo "path=$f" >> "$GITHUB_OUTPUT"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tr4w-macos-${{ needs.build.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          retention-days: 90
+          if-no-files-found: error
+
+  # =================================================================
   # VirusTotal scan. Pulls the installer artifact from the build job, uploads
   # it to VT, polls for completion, builds a Markdown report and uploads it as
   # a separate artifact for the release job to attach.
@@ -306,6 +445,26 @@ jobs:
           name: virustotal-report-${{ needs.build.outputs.version }}
           path: release-files
 
+      # THE UNIX ARTIFACTS ARE OPTIONAL BY DESIGN. Their jobs are
+      # continue-on-error and are deliberately absent from this job's `needs:`
+      # (NY4I, 2026-09-17: a Unix failure must not withhold the Windows
+      # installer), so the artifact may simply not exist. continue-on-error
+      # here is what turns "absent" into "attach the rest" rather than into a
+      # failed release.
+      - name: Download Linux artifact (optional)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: tr4w-linux-${{ needs.build.outputs.version }}
+          path: release-files
+
+      - name: Download macOS artifact (optional)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: tr4w-macos-${{ needs.build.outputs.version }}
+          path: release-files
+
       - name: List release files
         shell: powershell
         run: Get-ChildItem -LiteralPath release-files | Format-Table Name, Length, LastWriteTime
@@ -335,6 +494,42 @@ jobs:
           Write-Host "--- release notes (previous tag: $prev) ---"
           Write-Host $body
 
+      # SAY THAT THE MAC BUNDLE IS UNSIGNED, IN THE RELEASE ITSELF.
+      #
+      # Gatekeeper's message for an unsigned bundle is "damaged", not
+      # "unsigned", so a download with no explanation generates a support
+      # question and looks like a corrupt artifact. NY4I is obtaining the
+      # Developer ID and notarytool credentials; until they are repo secrets
+      # here, the bundle ships unsigned and says so.
+      #
+      # Appended to the generated notes rather than replacing them, and only
+      # when a Darwin tarball actually made it into release-files.
+      - name: Note the unsigned macOS bundle
+        shell: powershell
+        run: |
+          $mac = Get-ChildItem -Path release-files -Filter 'tr4w-*-aarch64-darwin.tar.gz' -File -ErrorAction SilentlyContinue
+          if (-not $mac) {
+            Write-Host 'No macOS artifact in this release -- nothing to note.'
+            exit 0
+          }
+          $note = @(
+            '',
+            '---',
+            '',
+            '**macOS: the `.app` in this tarball is NOT signed or notarized.**',
+            'Gatekeeper reports an unsigned bundle as *damaged* rather than as unsigned.',
+            'To run it, remove the quarantine attribute after extracting:',
+            '',
+            '```sh',
+            'xattr -dr com.apple.quarantine TR4W.app',
+            '```',
+            '',
+            'Signing and notarization are pending an Apple Developer ID.',
+            ''
+          ) -join "`n"
+          Add-Content -Path release-notes.md -Value $note -Encoding utf8
+          Write-Host 'Appended the unsigned-bundle note to release-notes.md'
+
       - name: Create draft GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -347,4 +542,15 @@ jobs:
           files: |
             release-files/tr4w_setup_*.exe
             release-files/virustotal-report.md
-          fail_on_unmatched_files: true
+            release-files/tr4w-*-x86_64-linux.tar.gz
+            release-files/tr4w-*-aarch64-darwin.tar.gz
+          # FALSE, AND IT HAS TO BE. The Linux and macOS jobs are
+          # continue-on-error and are not in this job's `needs:` -- a Unix
+          # failure must not withhold the Windows installer (NY4I,
+          # 2026-09-17). With `true`, a missing Unix tarball would fail the
+          # release step and do exactly that by the back door.
+          #
+          # The Windows installer is still guaranteed: this job `needs:` the
+          # build and virustotal jobs, so it does not run at all unless the
+          # installer exists.
+          fail_on_unmatched_files: false
