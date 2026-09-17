@@ -319,7 +319,21 @@ if ($failed -eq 0)
    }
 else
    {
-   Write-Host "Run-Lints: $failed of $($ran + $failed) lint(s) FAILED." -ForegroundColor Red
+   # THE DENOMINATOR IS THE REGISTERED COUNT, not $ran + $failed.
+   #
+   # That sum DOUBLE-COUNTS every lint that ran and then failed: $ran++ fires
+   # for each job when it is reaped, and $failed++ fires again below it when
+   # the exit code is non-zero. With 37 lints and one failure it printed
+   # "1 of 38" -- a 38th lint that does not exist, and which cost real time to
+   # chase on 2026-09-17 because the number only appears on a FAILING run.
+   # Every green run prints $ran from the branch above and is correct, so the
+   # bug is invisible exactly when the output is being read most carefully.
+   #
+   # $ran alone is not the answer either: a lint whose script is missing takes
+   # the `continue` above WITHOUT incrementing $ran, so it would vanish from
+   # the denominator entirely. The registered count, less anything skipped, is
+   # right in both cases.
+   Write-Host "Run-Lints: $failed of $($lints.Count - $skipped) lint(s) FAILED." -ForegroundColor Red
    }
 
 exit $failed
