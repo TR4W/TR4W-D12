@@ -24,7 +24,7 @@ Various contributors along the way
 
 ## The 5.x line starts here
 
-<!-- D12-CHANGELOG-BASELINE: 4096dedd -->
+<!-- D12-CHANGELOG-BASELINE: 98b09de3 -->
 
 **Everything below this point is the Delphi 7 (4.x) history, inherited when this
 repository was branched.** It is kept because it is the accurate record of that
@@ -57,6 +57,64 @@ version number is assigned later, when a release is cut. To cut a release: renam
 "## 4.147.x" month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
+
+#### Radio Control
+
+- **CW over TCI now works against standards-compliant servers.** TR4W was leaving
+  out the receiver number every TCI server expects, so on some setups pressing a
+  CW memory key sent nothing at all — no keying, no error, no clue why. Verified
+  on the air against a real K4.
+- **Prosigns sent over TCI are correct.** Previously AR, SK, BT and the rest went
+  out as stray characters: SK silently changed your sending speed for the rest of
+  the message, and SN keyed as **VE** — a different prosign, plausible enough to
+  miss. Punctuation in a CW memory (a comma in "TNX, 73") no longer truncates the
+  message either.
+
+#### Contest Files and Setup
+
+- **39 of the 126 domestic multiplier files were loading incompletely.** An
+  `INCLUDE FILE` line lost its path separator, so the included file was silently
+  skipped — affecting section and county lists for many QSO parties. A missing
+  include is now reported rather than ignored.
+- **CTY.DAT loading is more robust**, including on reload: malformed or unusually
+  long entries can no longer corrupt the country table.
+- **Long lines in a configuration file no longer misbehave.** A line over 255
+  characters could previously corrupt memory instead of being reported.
+
+#### POTA
+
+- **Park references are validated correctly.** Malformed references such as
+  `U-1234` or `US-123` were being accepted as valid on some platforms.
+
+#### Logging and Reliability
+
+- **A log file TR4W cannot open no longer stops the program.** It explains the
+  problem and keeps running, instead of exiting during a contest.
+- **Notes attached to a QSO now survive.** A note's text was not being stored in
+  the log.
+- **Voice keyer messages no longer pick up stale text.** Re-recording a shorter
+  message into a slot could leave the tail of the previous, longer one.
+- **Score posting saves the server's reply**, so a rejected upload can be
+  diagnosed.
+- **Several dialogs were showing only a single character** instead of their full
+  text — five configuration dialogs and eight download status messages.
+
+#### Keyboard
+
+- **Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A can be left to the field you are typing in**
+  when you are outside the main window, rather than being taken as program
+  shortcuts. Off by default, under Operating settings, so existing muscle memory
+  is unaffected.
+
+#### Linux and macOS
+
+- **Linux and macOS builds are now produced automatically** for every release,
+  alongside Windows. macOS ships as a disk image (`.dmg`) and a tarball; Linux as
+  a tarball.
+- **These are builds, not supported releases.** Nobody has run the program
+  through a contest on either platform, and the macOS application is **not yet
+  signed or notarized** — macOS reports it as "damaged" until the quarantine flag
+  is cleared, which the release page explains.
 
 ## TR4W 5.0 — what's new for operators
 

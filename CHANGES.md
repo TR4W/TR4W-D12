@@ -24,7 +24,7 @@ Various contributors along the way
 
 ## The 5.x line starts here
 
-<!-- D12-CHANGELOG-BASELINE: 4096dedd -->
+<!-- D12-CHANGELOG-BASELINE: 98b09de3 -->
 
 **Everything below this point is the Delphi 7 (4.x) history, inherited when this
 repository was branched.** It is kept because it is the accurate record of that
@@ -56,6 +56,136 @@ land; the version number is assigned later, when a release is cut. To cut a rele
 rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it under the
 appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to match.
 -->
+
+#### CW over TCI — two defects, both silent on the air (`src/radioFactory/uRadioTCI.pas`)
+
+- **The receiver index was missing from `cw_macros`** (`SendCW`). TR4W sent
+  `cw_macros:<text>;` while the same unit quoted the grammar as
+  `cw_macros:<trx>,<text>;` 745 lines above. Against a conforming server that
+  produced zero KY commands, zero log lines and zero replies -- bench-verified
+  against a real K4. AetherSDR tolerated the short form, which is why it
+  survived. Now `cw_macros:0,<text>;`; 0 because TR4W drives receiver 0 only, a
+  second receiver being a second radio slot rather than a second index.
+- **No prosign grammar was declared**, so `CWProsign` returned `handled=False`
+  and TR4W's single-character tokens reached the payload as literals. Measured:
+  `^` keyed a literal colon (TCI escapes `:` as `^`, decoded first), `!` keyed
+  **VE**, `+` and `=` were correct *by coincidence*, and `<` never reached the
+  keyer at all -- it is the speed-down marker, so it split the message and keyed
+  the remainder 5 WPM slower. Declared
+  `CWProsigns(' ', '', '|AR|', '|SK|', '|BT|')`: the half space is a plain space
+  (`^` is decoded before any prosign handling and has no escape), and SN is
+  *consumed* as on Elecraft, since `|SN|` is absent from the K4 table and an
+  unknown token keys its letters.
+- **Payload escaping** -- `:`->`^`, `,`->`~`, `;`->`*`, or a comma ends the
+  argument and truncates the message. One hand-written pass rather than
+  `StringReplace`: this unit is `UnicodeString` via `tr4w.inc` and the selected
+  `StringReplace` overload is `AnsiString`, so three calls converted in AND out
+  -- six implicit conversions that broke the narrowing ceiling.
+- **`<` and `>` are deliberately NOT stripped here.** Both are handled a layer
+  up: `>` is `RITClear` and `SendCrypticMessage` (`logsubs1.pas:219`) deletes it
+  before the keyer sees it; `<` is the SK token. A strip in the transport would
+  be a second copy of a rule that already exists, and copies drift.
+- Pins added in `uTestRadioTCI`; `uTestCWFraming`'s undeclared-grammar test
+  retargeted onto a local `TFactoryRadioBase` stub, since it pins the
+  BASE-CLASS default and was using TCI only because TCI happened to declare
+  nothing.
+
+#### Validators -- TRegExpr is wrong on aarch64 (`src/trdos/logstuff.pas`)
+
+- **`IsValidGUID` and `IsValidPOTAPark` are hand-written character tests now.**
+  FPC's TRegExpr 0.987 discards the bounds of a counted quantifier on a SIMPLE
+  atom when built for aarch64-darwin: `/^a{2}$/` matched `a`, `aa` AND `aaa`;
+  `/^\d{4,5}$/` matched `123` and `123456`. On a GROUP, `(ab){2}`, the same
+  construct is correct -- which matches the engine's own
+  `EmitSimpleBraces`/`EmitComplexBraces` fork, so it is an upstream defect.
+  Measured on three targets, same engine version: i386-win32 and x86_64-win64
+  pass every case, aarch64-darwin fails six.
+- **It reached operators**: `IsValidPOTAPark` has four live callers and accepted
+  `U-1234`, `USA-1234` and `US-123` on macOS; `IsValidGUID`, on the ADIF import
+  path, rejected well-formed GUIDs. Fidelity was the rule -- the replacements
+  accept exactly what the patterns accepted, INCLUDING the looseness (every
+  hyphen and brace in a GUID is independently optional). Range comparisons
+  rather than `in ['0'..'9']`, since this unit's `string` is `UnicodeString` and
+  a `WideChar` against an `AnsiChar` set is the silent size mismatch this tree
+  has paid for before. `uRegex` is kept for `bench_callsign.lpr`.
+
+#### Unix builds -- two managers that only fail at run time (`tr4w.lpr`, `tr4wserver.lpr`, `tr4w_unit_tests.lpr`)
+
+- **No program file linked `cwstring`, and `tr4wserver.lpr` linked neither
+  `cwstring` nor `cthreads`.** On Unix these managers exist only if linked, and
+  both fail at RUN time -- so every Windows oracle and every Unix COMPILE passes
+  regardless. Found by running a probe on mac-ci: it printed one line and died
+  with `ENoWideStringSupport`. `cthreads` must be first (initialization runs in
+  uses order); both precede `Interfaces`, as Lazarus itself generates.
+
+#### macOS and Linux in CI (`.github/workflows/release.yml`, `tr4w/build/build-unix.sh`)
+
+- **`release.yml` gained `build-linux` and `build-macos`** on two self-hosted
+  runners registered against this repo. Both are `continue-on-error` and
+  deliberately ABSENT from the release job's `needs:` -- a Unix failure must not
+  withhold the Windows installer (NY4I). `fail_on_unmatched_files` became
+  `false` for that to hold: left `true`, a missing Unix tarball would have
+  failed the release step and done it by the back door.
+- **Linux runs its tests under `xvfb`.** The test binary links the LCL, so gtk2
+  opens a display at startup and on a headless runner aborts with `cannot open
+  display` BEFORE printing any tally -- which reads as a crash. Without it the
+  stage reports an empty failure; with it, 88 suites and 14,777 assertions run.
+- **macOS pins `FPC_HOME`/`LAZARUS_DIR`** to one install (unpinned,
+  `build-unix.sh` can pair one install's compiler with another's LCL -- the
+  mismatched-RTL failure that reports `Can't find unit LCLIntf` for a unit that
+  is plainly there) and gets a preflight that fails with the REAL reason when
+  the cocoa widgetset is missing, rather than dying later on `Can't find unit
+  Interfaces`.
+- **A DMG is produced beside the tarball** (`build-unix.sh`, Darwin arm). A
+  notarization ticket staples to a disk image, not to a `.tar.gz`. The tarball
+  stays because `deploy-mac.sh` installs from it; both are made from the same
+  `$stage` so they cannot drift. `hdiutil` failing is reported, not fatal -- the
+  tarball has already shipped by then.
+
+#### Build tooling (`tools/gen_main_elements.py`, `tools/win32_sites.py`, `tr4w/build/Run-Lints.ps1`)
+
+- **`gen_main_elements.py` hardcoded the repository root**, so
+  `Lint-MainElements` read one machine's tree regardless of where it ran. On the
+  CI runner that path does not exist, the regex matched zero rows, and all 48
+  elements reported missing -- which failed the v5.0.4 release build. The lint
+  had therefore never been able to pass on any machine but the one it was
+  written on. It also failed as a FALSE NEGATIVE: checking a clean clone
+  elsewhere reported "the .lfm is current" about a tree it never opened. Both
+  paths derive from `__file__` now; `win32_sites.py` carried the same shape.
+- **`Run-Lints` counted a lint that does not exist.** The failure summary printed
+  `$failed of ($ran + $failed)`, and those counters overlap -- a lint that ran
+  and then failed was counted twice, so 37 registered lints with one failure
+  printed "1 of 38". Invisible on a green run, which is why it survived. Now
+  `$lints.Count - $skipped`.
+- **`Lint-BraceComments`** added: a `{$DIRECTIVE}` inside a `{ }` comment that
+  closes on the same line now fails the build. Vendored Indy's brace-less idiom
+  is deliberately allowed.
+- **`Count-LivePChar.ps1`** added, mirroring `Count-LiveAsm.ps1`. A raw grep
+  over-reports by ~10x (424 mentions against 44 live), because this tree
+  documents its own pointer removal heavily. Deliberately not a lint and with no
+  ceiling: every remaining mention is a foreign-API boundary, so zero is not the
+  target.
+
+#### Pointer and string removal (many units)
+
+- **~40 commits** continuing the `PChar`/`PAnsiChar` elimination: spelling
+  tables, config loaders, the Cabrillo writer, the server client table, the
+  contest and QSO-party tables, `TF` helpers returning pointers into a shared
+  buffer, and the deletion of `uAnsiStr`, `uCFormat`, `CharArrayToAnsi`,
+  `CID_TWO_BYTES` and five unused `PAnsiChar` helpers. Live count is now **44 in
+  `src`, 69 tree-wide**, all of them foreign-API declarations or calls into them.
+- **Defects fixed along the way, not incidental**: a CTY.DAT reload writing past
+  the end of the country table; `CheckCommand` writing a NUL into its caller's
+  variable; a config line over 255 bytes overrunning a stack buffer; two buffer
+  reads running past their end and six more reading through their bounds; five
+  dialogs and eight download messages displaying one character because
+  `PAnsiChar` is a cast rather than a conversion.
+- **The binary plug-in subsystem is deleted** -- the log it sorted is SQLite now,
+  and the DLL was never shipped by the installer.
+- **The private-font gate moved into `uPlatformFonts`** -- `AddFontResourceW` was
+  in `uProgramMain` and its matching `RemoveFontResourceW` in `logsubs2`, an
+  acquire and release six hundred lines and one subsystem apart. A failed font
+  load is now reported rather than discarded.
 
 #### Preferences and the band plan editor — the editor had no way in
 
