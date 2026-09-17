@@ -321,25 +321,45 @@ jobs:
         shell: bash
         run: sh tr4w/build/build-unix.sh || true
 
-      - name: Locate tarball
+      - name: Locate the disk image and the tarball
         id: artifact
         shell: bash
         run: |
           set -e
-          f="build-out/dist/tr4w-${{ needs.build.outputs.version }}-aarch64-darwin.tar.gz"
-          if [ ! -f "$f" ]; then
-            echo "::warning::no tarball at $f -- the macOS artifact will be absent from this release"
+          v="${{ needs.build.outputs.version }}"
+          base="build-out/dist/tr4w-$v-aarch64-darwin"
+
+          # THE DMG IS THE DISTRIBUTABLE, and the reason is notarization:
+          # a ticket staples to a disk image, not to a .tar.gz. The tarball
+          # still ships beside it because deploy-mac.sh installs from it.
+          if [ ! -f "$base.dmg" ]; then
+            echo "::warning::no disk image at $base.dmg -- macOS ships the tarball only"
             ls -la build-out/dist 2>/dev/null || true
+          fi
+          if [ ! -f "$base.tar.gz" ]; then
+            echo "::warning::no tarball at $base.tar.gz"
+            ls -la build-out/dist 2>/dev/null || true
+          fi
+          # At least one has to exist, or there is nothing to attach.
+          if [ ! -f "$base.dmg" ] && [ ! -f "$base.tar.gz" ]; then
+            echo "::error::no macOS artifact of either kind was produced"
             exit 1
           fi
-          echo "found $f ($(stat -f%z "$f") bytes)"
-          echo "path=$f" >> "$GITHUB_OUTPUT"
+          for f in "$base.dmg" "$base.tar.gz"; do
+            [ -f "$f" ] && echo "found $f ($(stat -f%z "$f") bytes)"
+          done
+          echo "base=$base" >> "$GITHUB_OUTPUT"
 
-      - name: Upload macOS artifact
+      - name: Upload macOS artifacts
         uses: actions/upload-artifact@v7
         with:
           name: tr4w-macos-${{ needs.build.outputs.version }}
-          path: ${{ steps.artifact.outputs.path }}
+          # Both, and if-no-files-found stays 'error': the step above has
+          # already proved at least one exists, so an empty upload here would
+          # mean the path glob is wrong rather than the build being empty.
+          path: |
+            ${{ steps.artifact.outputs.base }}.dmg
+            ${{ steps.artifact.outputs.base }}.tar.gz
           retention-days: 90
           if-no-files-found: error
 
@@ -516,12 +536,21 @@ jobs:
             '',
             '---',
             '',
-            '**macOS: the `.app` in this tarball is NOT signed or notarized.**',
-            'Gatekeeper reports an unsigned bundle as *damaged* rather than as unsigned.',
-            'To run it, remove the quarantine attribute after extracting:',
+            '**macOS: TR4W.app is NOT signed or notarized.**',
+            'Gatekeeper reports an unsigned bundle as *damaged* rather than as unsigned,',
+            'so the message you get does not say what is actually wrong.',
+            '',
+            'Two downloads are offered and they carry the same build:',
+            '',
+            '- `.dmg` -- the disk image, and the one notarization will staple to once',
+            '  an Apple Developer ID is in place.',
+            '- `.tar.gz` -- the same payload as a tarball.',
+            '',
+            'Either way, drag `TR4W.app` out and clear the quarantine attribute before',
+            'first launch:',
             '',
             '```sh',
-            'xattr -dr com.apple.quarantine TR4W.app',
+            'xattr -dr com.apple.quarantine /Applications/TR4W.app',
             '```',
             '',
             'Signing and notarization are pending an Apple Developer ID.',
@@ -543,6 +572,7 @@ jobs:
             release-files/tr4w_setup_*.exe
             release-files/virustotal-report.md
             release-files/tr4w-*-x86_64-linux.tar.gz
+            release-files/tr4w-*-aarch64-darwin.dmg
             release-files/tr4w-*-aarch64-darwin.tar.gz
           # FALSE, AND IT HAS TO BE. The Linux and macOS jobs are
           # continue-on-error and are not in this job's `needs:` -- a Unix

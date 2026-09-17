@@ -847,11 +847,45 @@ PLIST
       return 1
    }
    say "  OK -> $tarball ($(($(wc -c < "$tarball") / 1024)) KB)"
+
+   # ON MACOS, ALSO A DMG -- AND BOTH, NOT ONE.
+   #
+   # The DMG is the distributable: notarization staples its ticket to a disk
+   # image or a directly-submitted zip, and a .tar.gz carries no ticket at
+   # all, so a notarized app inside a tarball still meets Gatekeeper with
+   # nothing to verify. That is why this was added (NY4I, 2026-09-17) ahead of
+   # the Apple Developer ID arriving.
+   #
+   # THE TARBALL STAYS because deploy-mac.sh globs
+   # build-out/dist/tr4w-*-darwin.tar.gz, reads its inner directory with
+   # `tar tzf` and extracts it to ~/Applications. Replacing it would break the
+   # local deploy path to buy nothing until the credentials exist.
+   #
+   # Same $stage for both, so the two artifacts cannot drift in content.
    if [ "$OS" = darwin ]; then
-      say '  NOT SIGNED AND NOT NOTARIZED. Gatekeeper will refuse this bundle on'
-      say '  any Mac but the one that built it, and the message a user gets says'
-      say '  the app is damaged rather than unsigned. Distribution needs an Apple'
-      say '  Developer ID; this is a build, not a release.'
+      dmg="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.dmg"
+      if command -v hdiutil >/dev/null 2>&1; then
+         rm -f "$dmg"
+         if hdiutil create -volname TR4W -srcfolder "$stage" -ov -format UDZO "$dmg" >/dev/null 2>&1; then
+            say "  OK -> $dmg ($(($(wc -c < "$dmg") / 1024)) KB)"
+         else
+            # Reported, not silent: the tarball still shipped, so the stage is
+            # not a failure -- but a missing DMG must not look like a choice.
+            say '  WARNING: hdiutil failed -- the .dmg was not produced'
+            dmg=''
+         fi
+      else
+         say '  WARNING: hdiutil not found -- the .dmg was not produced'
+         dmg=''
+      fi
+      say '  NOT SIGNED AND NOT NOTARIZED. Gatekeeper will refuse these on any'
+      say '  Mac but the one that built them, and the message a user gets says'
+      say '  the app is damaged rather than unsigned. Distribution needs an'
+      say '  Apple Developer ID; this is a build, not a release.'
+      if [ -n "$dmg" ]; then
+         record PASS 'package' "$tarball, $dmg"
+         return 0
+      fi
    fi
    record PASS 'package' "$tarball"
    return 0
