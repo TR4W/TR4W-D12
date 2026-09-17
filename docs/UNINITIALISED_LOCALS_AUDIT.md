@@ -160,36 +160,70 @@ literal warnings — unrelated to this audit despite matching the word.
 
 ---
 
-## Part A — what the compiler already reports (23, our code)
+## Part A — what the compiler already reports
 
-Anything here has FPC's own dataflow behind it. Two additional sites in vendored
-Indy (`IdStackBSDBase.pas`) are excluded as not ours to fix.
+**REGENERATED FROM THE COMPILER 2026-09-17, and the previous table was stale in
+both directions.** Take this list from a build log, never from here: these are
+line numbers in a tree that moves daily.
+
+```bash
+grep -iE "does not seem to be initialized" build-out/app-build.log \
+  | sed 's/^ *//' | grep -viE "^Id[A-Z]|^Indy" | sort -u
+```
+
+**AND THE "23" WAS THREE DIFFERENT POPULATIONS ADDED TOGETHER**, which is why
+"23 sites with compiler backing is an afternoon" was wrong. Our own units
+report **42** of these warnings, and they are not one job:
+
+| class | count | what it means |
+|---|---:|---|
+| **A. unmanaged named locals** | **20** | the real population -- read before written, and the compiler is right |
+| B. managed-type locals | 3 | `sXmit`, `TempString`, `sLen`. FPC zero-initialises managed types, so these are noise |
+| C. managed-type function *results* | 19 | a DIFFERENT defect class this audit never covered -- `Result` not assigned on every path, across 18 units |
+
+Vendored Indy reports 54 more. **Not ours** -- never count or fix them.
+
+### Class A, measured 2026-09-17
 
 | file | line | variable |
 |---|---:|---|
-| `CfgCmd.pas` | 177 | `CMD` |
-| `logdupe.pas` | 987 | `FirstAddress` |
-| `logdupe.pas` | 1015 | `LastAddress` |
-| `logedit.pas` | 1953 | `TempString` |
-| `logscp.pas` | 468 | `BytesRead` |
-| `logstuff.pas` | 5737 | `Source` |
-| `logstuff.pas` | 5738 | `Serial` |
-| `logstuff.pas` | 5739 | `CheckSum` |
-| `logsubs1.pas` | 1198 | `Key` |
-| `logsubs2.pas` | 2803 | `nMultCount` |
-| `logwind.pas` | 2108 | `Hour` |
-| `LogCW.pas` | 678 | `Buffer` |
-| `postunit.pas` | 1137 | `PreviousQSOTime` |
-| `postunit.pas` | 1426 | `LastHourPrinted` |
-| `postunit.pas` | 3021 | `PreviousQTHString` |
-| `tree.pas` | 3084 | `FirstWordCursor` |
-| `tree.pas` | 3134 | `FirstWordCursor` |
-| `tree.pas` | 4040 | `TempString` |
-| `uADIFExchange.pas` | 258 | `contacts` |
-| `uADIFExchange.pas` | 266 | `PreviousQTHString` |
+| `CfgCmd.pas` | 173 | `ID` |
+| `CfgCmd.pas` | 173 | `CMD` |
+| `LogCW.pas` | 691 | `Buffer` |
+| `logedit.pas` | 1963 | `TempString` |
+| `logscp.pas` | 471 | `BytesRead` |
+| `logstuff.pas` | 6092 | `Source` |
+| `logstuff.pas` | 6093 | `Serial` |
+| `logstuff.pas` | 6094 | `CheckSum` |
+| `logsubs1.pas` | 1190 | `Key` |
+| `logsubs2.pas` | 2902 | `nMultCount` |
+| `logwind.pas` | 2136 | `Hour` |
+| `logwind.pas` | 2136 | `Minute` |
+| `postunit.pas` | 1236 | `PreviousQSOTime` |
+| `postunit.pas` | 1522 | `LastHourPrinted` |
+| `postunit.pas` | 3133 | `PreviousQTHString` |
+| `tree.pas` | 2988 | `FirstWordCursor` |
+| `tree.pas` | 3038 | `FirstWordCursor` |
+| `uADIFExchange.pas` | 267 | `contacts` |
+| `uADIFExchange.pas` | 275 | `PreviousQTHString` |
 | `uADIFExchange.pas` | 466 | `pnr` |
-| `uDialogs.pas` | 657 | `HelpButton` |
-| `uDialogs.pas` | 790 | `DisplayName` |
+
+### What changed since the original table, and why it matters
+
+**Gone:** `logdupe.pas:987/1015` (`FirstAddress`, `LastAddress`) -- **deleted
+2026-09-17** with the whole dead two-letter crunch feature, which is finding 1
+above. `uDialogs.pas:657/790` and `tree.pas:4040` no longer appear either.
+
+**New since:** `CfgCmd.pas` `ID` beside `CMD`, `logwind.pas` `Minute` beside
+`Hour`, and the three class-B managed locals.
+
+**SO THIS IS NOT AN AFTERNOON, and the reason is where the sites are.** Eleven
+of the twenty are in `logstuff`, `logsubs1`, `logsubs2`, `postunit`, `logwind`
+and `tree` -- the TRDOS contest engine. Choosing the initial value for
+`PreviousQSOTime`, `LastHourPrinted`, `nMultCount` or `FirstWordCursor` is a
+decision about contest behaviour that no compiler warning can make, and the
+golden corpus is the only net under it. Treat them one at a time, with the
+corpus green before and after, not as a sweep.
 
 ## Part B — first use is a read (49 for review)
 
