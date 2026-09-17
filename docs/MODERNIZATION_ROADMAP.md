@@ -107,9 +107,22 @@ remains is the proof:
 - [ ] **Tests for `LogStoreBackup`'s orchestration** — staging to `.new`,
       `StagedBackupIsSound` rejecting a corrupt snapshot, `.bak` displacement,
       publish-by-rename, and cleanup on exception. **Nothing in `test/`
-      references it.** The obstacle is real: `uLogStore` is not in the
-      unit-test `.lpr`, though `MainUnit` already is, so linking it is
-      plausible rather than blocked.
+      references it.**
+
+      **AND IT IS NOT A QUICK WIN — measured 2026-09-17.** The obvious move is
+      to add `uLogStore` to the unit-test `.lpr`, and it does not work: seven of
+      its implementation dependencies are absent from that program —
+      `uCFG`, `LogCW`, `postunit`, `FContest`, `LOGWIND`, `uCbrSum`,
+      `uExchangeBuilder` and `Tree`. Adding them drags the TRDOS contest engine
+      into the unit-test binary, which CLAUDE.md says is deliberately not
+      unit-covered because `ProcessExchange`, scoring and dupe need the app's
+      globals booted.
+
+      So the real choice is a design decision and belongs to NY4I: **extract
+      the backup orchestration into a leaf unit** that takes a database handle
+      and a destination, leaving `uLogStore` as the thin caller — which is the
+      testable seam and matches how the rest of this tree was made testable —
+      **or** leave it covered only by bench. Do not force the `.lpr`.
 - [ ] Fault-injection tests for the QSO acknowledgement contract: disk full,
       read-only DB, locked DB. **A QSO must never be acknowledged unwritten.**
 - [x] ~~Integrity check on database open~~ — **ALREADY DONE.** `EnsureOpen`
@@ -193,8 +206,19 @@ empty loops in the routine survive compilation.
 - [x] The PE-machine assertion exists as a test:
       `TestPEArchitectureOfTheSQLiteDLL`, plus the not-a-PE and missing-file
       cases, in `uTestLogDatabase`.
-- [ ] **What is actually left: run it.** Compiling and linking is not running,
-      and nobody has launched the x64 binary.
+- [x] **IT RUNS — first launch 2026-09-17.** Rebuilt against current source
+      (0 errors, range warnings 4/4, narrowing 1351/1351 — the same ceilings as
+      i386), then run headless via `/IMPORTLOG`, which needs no contest config
+      and exercises startup, the **x64 `sqlite3.dll`**, binary-log import and a
+      clean exit.
+      **Cross-architecture equivalence, not just a pulse:** i386 and x64 were
+      given the same 1,316-QSO Winter Field Day log and returned identical
+      accounting — *1316 record(s): 1316 QSO, 0 QTC, 0 note, 0 deleted,
+      0 skipped* from both, exit 0 from both, and an identical `sqlite_master`
+      hash.
+      **WHAT THIS DOES NOT PROVE, and the distinction matters:** the GUI, radio
+      I/O, CW keying and contest operation are all untouched by this. One
+      headless path works on 64-bit. That is the floor, not the ceiling.
 
 **Week 1 exit, restated 2026-09-17 after measuring.** Most of what this phase
 listed was already done — §3.2, §3.3 and §3.5 were written from docs dated
@@ -206,7 +230,12 @@ remains is genuinely three things:
    conversions fell 1355 → 1351.
 2. `LogStoreBackup` under test — the one careful, load-bearing routine in the
    durability path with no coverage at all.
-3. The x64 binary **launched**, not merely linked.
+3. ~~The x64 binary **launched**, not merely linked.~~ **DONE 2026-09-17** —
+   runs headless, and matches i386 exactly on a 1,316-QSO import. The GUI on
+   64-bit remains unrun.
+
+So week 1 closes on **one** item: `LogStoreBackup` under test. That is not a
+quick win and should not be forced — see the note in §3.1.
 
 **THE LESSON IS THE ONE THIS FILE OPENS WITH.** §0 says re-measure before
 citing, and this phase was assembled without doing that. A roadmap is a
