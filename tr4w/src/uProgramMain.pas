@@ -249,7 +249,6 @@ uses
   uStickyKeys,
   uFileText,
   uPlatformProcess,
-  uRegex,
   // The LCL side of hosting a toolkit in TR4W's own loop.  FPC-only:
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist,

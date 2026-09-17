@@ -57,7 +57,6 @@ uses {Dos, Printer,}Tree,
   IdGlobal, // ny4i 4.44.9
   SysUtils, // ny4i 4.44.9
   StrUtils, // 4.90.11
-  uRegex,
   uMults,
   (* LCLType, for MAXWORD -- the only thing this unit still wanted from the
     Windows unit.
@@ -10933,46 +10932,189 @@ begin
   // Result := (StrToInt(sXmit) in [1..99]) and (length(sCategory) = 1);
 end;
 
-{ ---------------------------------------------------------------------------
-  The five regular expressions TR4W uses, and the only ones.
+(* ---------------------------------------------------------------------------
+  THE TWO VALIDATORS, HAND WRITTEN -- AND WHY THEY ARE NOT REGULAR EXPRESSIONS
+  ANY MORE (2026-09-17).
 
-  Named constants rather than literals inside each function so the wire-visible
-  rules sit together and can be pinned by uTestRegexValidators.
+  These were RX_GUID and RX_POTA_PARK run through FPC's TRegExpr. They are
+  character tests now, because that engine is WRONG on aarch64-darwin and
+  wrong in a way that reaches an operator:
 
-  RX_CALLSIGN's optional prefix group was written `?+` -- PCRE's POSSESSIVE
-  quantifier -- which FPC's TRegExpr rejects at compile time.  The `+` is gone.
-  That was measured, not assumed: both spellings were run through the shipping
-  PCRE engine over 67,681 real callsigns from the corpus and TRMASTER.DTA (610
-  of them containing '/'), and they agreed on every one.  See uRegex's header.
-  --------------------------------------------------------------------------- }
-const
-  // The three 4-digit groups are written out rather than as (...){3}.  Same
-  // pattern, and it has to be: TRegExpr THROWS on the grouped form when a
-  // near-miss forces it to backtrack into the repetition -- 'TRegExpr exec:
-  // loop without loop entry' on a GUID one hex digit short.  PCRE handles
-  // both; the expanded form is the one both engines agree on.
-  RX_GUID        = '^[{]?[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?' +
-                   '[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}[}]?$';
-  RX_POTA_PARK   = '^([A-Za-z]{2})-(\d{4,5})$';
+      a counted quantifier on a SIMPLE atom -- a{2}, \d{4,5}, [A-Za-z]{2} --
+      discards its bounds and behaves as +, so /^a{2}$/ matched 'a', 'aa'
+      AND 'aaa'. On a GROUP, (ab){2}, the same construct is correct.
+
+  Measured, not inferred: probes on i386-win32, x86_64-win64 and
+  aarch64-darwin, all TRegExpr 0.987, same source. The two Windows targets
+  pass every case; the Mac fails six. That split matches the engine's own
+  EmitSimpleBraces / EmitComplexBraces fork, so it is an upstream defect and
+  not something this tree can spell around -- the grouped rewrite was tried
+  and rejects a legitimate five-digit park.
+
+  WHAT IT COST US ON macOS: IsValidPOTAPark ACCEPTED 'U-1234', 'USA-1234' and
+  'US-123', and IsValidGUID REJECTED a well-formed GUID. Four live callers
+  each -- the POTA reference and SIG_Info on entry, logstuff, tree -- and the
+  ADIF import path for the GUID.
+
+  FIDELITY IS THE RULE HERE, NOT TIDINESS. These accept exactly what the
+  patterns accepted, including their looseness: every hyphen in a GUID is
+  INDEPENDENTLY optional, and so is each brace, so '{6B29...' with no closing
+  brace still validates. Tightening any of that would change what TR4W
+  accepts on Windows, which this rewrite must not do. uTestRegexValidators
+  pins both directions.
+
+  RANGE COMPARISONS, NOT `in ['0'..'9']`: this unit's `string` is a
+  UnicodeString, so its elements are WideChar, and a WideChar tested against
+  an AnsiChar set is the silent size-mismatch this tree has paid for before.
+  --------------------------------------------------------------------------- *)
+
+function IsHexDigit(aCh: Char): boolean;
+begin
+   Result := ((aCh >= '0') and (aCh <= '9')) or
+             ((aCh >= 'A') and (aCh <= 'F')) or
+             ((aCh >= 'a') and (aCh <= 'f'));
+end;
+
+function IsAsciiDigit(aCh: Char): boolean;
+begin
+   Result := (aCh >= '0') and (aCh <= '9');
+end;
+
+function IsAsciiLetter(aCh: Char): boolean;
+begin
+   Result := ((aCh >= 'A') and (aCh <= 'Z')) or
+             ((aCh >= 'a') and (aCh <= 'z'));
+end;
 
 function IsValidGUID(const guid: string): boolean;
+var
+   idx:  integer;
+   last: integer;
+
+   (* Consumes exactly aCount hex digits, or reports failure without moving
+     past what it could not take. *)
+   function TakeHex(aCount: integer): boolean;
+   var
+      n: integer;
+   begin
+      Result := False;
+      for n := 1 to aCount do
+         begin
+         if (idx > last) or (not IsHexDigit(guid[idx])) then
+            begin
+            Exit;
+            end;
+         Inc(idx);
+         end;
+      Result := True;
+   end;
+
+   (* Each separator is optional ON ITS OWN, which is what the four `-?` in
+     the old pattern meant: fully hyphenated, bare, or mixed all validate. *)
+   procedure TakeOptionalHyphen;
+   begin
+      if (idx <= last) and (guid[idx] = '-') then
+         begin
+         Inc(idx);
+         end;
+   end;
+
 begin
-  logger.debug('Checking if %s is a valid guid', [guid]);
-  Result := RegexMatches(RX_GUID, guid);
-  if Result then
-     begin
-     logger.debug('%s is a valid GUID', [guid]);
-     end;
+   logger.debug('Checking if %s is a valid guid', [guid]);
+
+   Result := False;
+   idx    := 1;
+   last   := Length(guid);
+
+   if last = 0 then
+      begin
+      Exit;
+      end;
+
+   (* Braces optional and independent of each other -- see the note above. *)
+   if guid[idx] = '{' then
+      begin
+      Inc(idx);
+      end;
+   if (last >= idx) and (guid[last] = '}') then
+      begin
+      Dec(last);
+      end;
+
+   if not TakeHex(8) then
+      begin
+      Exit;
+      end;
+   TakeOptionalHyphen;
+   if not TakeHex(4) then
+      begin
+      Exit;
+      end;
+   TakeOptionalHyphen;
+   if not TakeHex(4) then
+      begin
+      Exit;
+      end;
+   TakeOptionalHyphen;
+   if not TakeHex(4) then
+      begin
+      Exit;
+      end;
+   TakeOptionalHyphen;
+   if not TakeHex(12) then
+      begin
+      Exit;
+      end;
+
+   (* The pattern was anchored at both ends, so anything left over fails. *)
+   Result := idx > last;
+
+   if Result then
+      begin
+      logger.debug('%s is a valid GUID', [guid]);
+      end;
 end;
 
 function IsValidPOTAPark(const park: string): boolean;
+var
+   i: integer;
 begin
-  logger.debug('Checking if %s is a valid park', [park]);
-  Result := RegexMatches(RX_POTA_PARK, park);
-  if Result then
-     begin
-     logger.debug('%s is a valid park', [park]);
-     end;
+   logger.debug('Checking if %s is a valid park', [park]);
+
+   Result := False;
+
+   (* Two letters, a hyphen, then four or five digits and nothing else.
+     Length first, so the character tests below need no bounds checks: 7 is
+     the four-digit form and 8 the five-digit one.
+
+     The tightness is deliberate and the test says why -- a park reference
+     and an RST report arrive in the same exchange field, so '59' and '599'
+     must not look like parks. *)
+   if (Length(park) <> 7) and (Length(park) <> 8) then
+      begin
+      Exit;
+      end;
+
+   if not (IsAsciiLetter(park[1]) and IsAsciiLetter(park[2])) then
+      begin
+      Exit;
+      end;
+
+   if park[3] <> '-' then
+      begin
+      Exit;
+      end;
+
+   for i := 4 to Length(park) do
+      begin
+      if not IsAsciiDigit(park[i]) then
+         begin
+         Exit;
+         end;
+      end;
+
+   Result := True;
+   logger.debug('%s is a valid park', [park]);
 end;
 
 begin
