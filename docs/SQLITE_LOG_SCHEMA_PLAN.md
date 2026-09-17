@@ -160,7 +160,7 @@ What a reference database would buy, in rough order of value:
   separates "what shipped" from "what this operator changed" -- which is exactly
   the distinction the radio/cluster libraries already make against the legacy
   ini.
-- **One path rule.** See [`OWED_BEFORE_CROSS_PLATFORM.md`](OWED_BEFORE_CROSS_PLATFORM.md)
+- **One path rule.** See [`OWED_BEFORE_CROSS_PLATFORM.md`](migration_interim_artifacts/OWED_BEFORE_CROSS_PLATFORM.md)
   item 3: reference data currently resolves by two disagreeing rules and neither
   survives macOS or Linux. One file to locate is easier to get right than four
   plus a directory.

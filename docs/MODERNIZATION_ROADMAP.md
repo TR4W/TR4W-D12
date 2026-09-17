@@ -104,57 +104,105 @@ callers through `uVerificationChecks`, and the backup path calls
 `LogStoreBackup` with a report instead of copying the obsolete `.TRW`. What
 remains is the proof:
 
+- [ ] **Tests for `LogStoreBackup`'s orchestration** — staging to `.new`,
+      `StagedBackupIsSound` rejecting a corrupt snapshot, `.bak` displacement,
+      publish-by-rename, and cleanup on exception. **Nothing in `test/`
+      references it.** The obstacle is real: `uLogStore` is not in the
+      unit-test `.lpr`, though `MainUnit` already is, so linking it is
+      plausible rather than blocked.
 - [ ] Fault-injection tests for the QSO acknowledgement contract: disk full,
       read-only DB, locked DB. **A QSO must never be acknowledged unwritten.**
-- [ ] An end-to-end test for `SaveLogFileToFloppy` against a database-only
-      contest (no `.TRW` on disk at all).
-- [ ] Integrity check on database open, not only on demand.
+- [x] ~~Integrity check on database open~~ — **ALREADY DONE.** `EnsureOpen`
+      calls `GDatabase.CheckIntegrity` and fail-closes through `Disable`; the
+      snapshot primitive is covered by three tests in `uTestLogDatabase`.
+- [x] ~~End-to-end test for `SaveLogFileToFloppy`~~ — **MOOT.** No such routine
+      survives; the periodic backup in `logstuff.pas` calls `LogStoreBackup`
+      and reports success or failure by name.
 
-### 3.2 The corpus is environment-dependent — fix the oracle itself
+### 3.2 ~~The corpus is environment-dependent~~ — DONE, verified 2026-09-17
 
-`CORPUS_FRESH_CLONE_DEFECT.md`, open since 2026-08-25. The 13 golden references
-are frozen against `LOCATION: WCF`, and the corpus passes only because this
-machine's settings happen to match.
+**`CORPUS_FRESH_CLONE_DEFECT.md` is stale and belongs in the archive.** All
+three of its fixes shipped: `tr4w/test/corpus/settings/tr4w.json` is a
+**tracked, corpus-owned** fixture carrying `_LOCATION: WCF`, the harness
+pre-checks it and fails with a named reason, and the app reads it through
+`--settings` so the operator's live configuration is never touched. The
+LOCATION guard itself was correctly left alone.
 
-- [ ] Harness pre-check: verify `tr4w/target/settings/tr4w.json` exists and
-      carries the LOCATION tag; fail fast naming the reason.
-- [ ] Surface the app's own log on export failure (tail `target/tr4w.log`).
-- [ ] **The real fix:** a checked-in corpus-only settings file.
-- [ ] Do **not** weaken the LOCATION guard — it is correct; only the diagnosis
-      is missing.
+### 3.3 ~~Before TR4W leaves Windows~~ — DONE, verified 2026-09-17
 
-### 3.3 Before TR4W leaves Windows — `OWED_BEFORE_CROSS_PLATFORM.md`
+**`OWED_BEFORE_CROSS_PLATFORM.md` is stale and belongs in the archive.** Every
+item in it shipped, and the lints prove it rather than a doc asserting it:
 
-- [ ] Three path accessors — `DataFilePath`, `SettingsFilePath`, `LogFilePath` —
-      one Windows implementation first, behaviour-preserving. Today two rules
-      disagree (working-dir vs `ParamStr(0)`). **This lands before any further
-      non-Windows work.**
-- [ ] A lint against raw `ParamStr(0)` / `GetCurrentDirectory` path building.
-- [ ] Register the ~54 of 243 commands that are in no settings section, and
-      walk the remaining store-backed controls into the search index.
-- [ ] A `Lint-FormEvents`-style lint: every `TCheckBox`/`TEdit`/`TComboBox` on a
-      section panel is in `FBindings` or the search index, or the build fails.
-- [ ] `LoadClusterServerList` — add the `else` branch so a missing file says so
-      instead of silently reporting "0 entries".
+- [x] The three path accessors exist in `src/uAppPaths.pas` — `DataFilePath`,
+      `SettingsFilePath`, `LogFilePath`, their three directory forms, **and a
+      fourth root** for files the operator creates, which the doc never asked
+      for and which was a real defect (contest files were being composed from a
+      read-only root).
+- [x] `Lint-AppPaths.ps1`: *"447 files scanned, 5 path rules in
+      uAppPaths/uProgramMain where they belong; no raw path resolution
+      elsewhere."*
+- [x] `Lint-SearchIndex.ps1`: *"163 designed controls across 25 section panels,
+      every one is bound or indexed."* That is both the registration work and
+      the lint the doc asked for.
+- [x] `LoadClusterServerList` logs a warning naming the path it searched and
+      why the picker is empty.
+- [x] `Lint-OneConfigWriter.ps1` also closes the codex review's
+      concurrent-config-writer finding: *"tr4w.json has one writer."*
+
+**Still genuinely open from that doc:** the ~230 searchable captions that are
+plain Pascal literals rather than `resourcestring`, so they are untranslated
+and unsearchable in any other language. That belongs with the i18n work in
+week 4, not here.
 
 ### 3.4 Triage the uninitialised-locals audit
 
-- [ ] Determine whether `-O` eliminates the garbage-bounds loop at
-      `logdupe.pas:987,1015` — it is on the typing path, so this is either a
-      latent freeze or a no-op, and nobody knows which.
+**FINDING 1 IS ANSWERED, AND THE ANSWER IS THE BAD ONE — measured 2026-09-17.**
+The audit said the single question deciding "latent freeze or no-op" was whether
+`-O` eliminates the empty loop. It does not, because **there is no `-O`**: the
+build passes `-Mdelphi -P<cpu> -T<os> -Sc -WG -gl -gw2 -Xg` and nothing else,
+in `Build-App.ps1`, `FullBuild.ps1`, the Unix scripts and the `.lpi` alike.
+
+Disassembling the shipping build's own `logdupe.o` shows the loop emitted in
+full — entry guard `cmp -0x14(%ebp),%edx / jge`, an increment at `0x250`, and a
+back-edge `jmp 0x250` at `0x25e` — over two stack slots never written. Both
+empty loops in the routine survive compilation.
+
+- [ ] **Decide the fix** (NY4I — this is live TRDOS contest code with three
+      callers on the typing path). Exposure is narrower than it first looks:
+      `WildcardPartials` defaults to **True**, and the garbage-bounds loop is
+      in the `else` branch, so it bites only operators who turn
+      `WILDCARD PARTIALS` off.
+- [ ] Separately: **the whole program is compiled unoptimised.** That is worth
+      a deliberate decision rather than remaining an accident.
 - [ ] Decide dead-or-fix on `logsubs1.pas:1198` and `logstuff.pas:5737-5739`.
 - [ ] Clear the 23 compiler-flagged Part-A sites.
 
-### 3.5 Unblock the x64 binary
+### 3.5 ~~Unblock the x64 binary~~ — DONE, verified 2026-09-17
 
-- [ ] Obtain x86_64 `libeay32.dll` / `ssleay32.dll` (OpenSSL 1.0.2). **This is
-      the only thing between the x64 build and a staged binary** — SQLite and
-      HamLib are already staged and PE-verified.
-- [ ] A test asserting the PE machine type, rather than trusting the build's
-      own report.
+- [x] x86_64 `libeay32.dll` and `ssleay32.dll` are staged in
+      `tr4w/redist/x86_64-win64/` and both read PE machine **`8664`** (against
+      `014c` for the i386 pair in `target/`). `Build-App.ps1` already fails the
+      build when a target's redist DLLs are missing or the wrong architecture.
+- [x] The PE-machine assertion exists as a test:
+      `TestPEArchitectureOfTheSQLiteDLL`, plus the not-a-PE and missing-file
+      cases, in `uTestLogDatabase`.
+- [ ] **What is actually left: run it.** Compiling and linking is not running,
+      and nobody has launched the x64 binary.
 
-**Week 1 exit:** corpus green from a fresh clone on a machine that is not this
-one; the three path accessors in; x64 binary staged and launched at least once.
+**Week 1 exit, restated 2026-09-17 after measuring.** Most of what this phase
+listed was already done — §3.2, §3.3 and §3.5 were written from docs dated
+2026-08-25 and 2026-08-30 and were stale when this roadmap was committed. What
+remains is genuinely three things:
+
+1. A ruling on the `logdupe` empty loops (§3.4), and the fix.
+2. `LogStoreBackup` under test — the one careful, load-bearing routine in the
+   durability path with no coverage at all.
+3. The x64 binary **launched**, not merely linked.
+
+**THE LESSON IS THE ONE THIS FILE OPENS WITH.** §0 says re-measure before
+citing, and this phase was assembled without doing that. A roadmap is a
+document like any other: it goes stale, and it is most dangerous when it is
+new enough to be trusted.
 
 ---
 
@@ -436,7 +484,6 @@ Named so they are decisions rather than drift:
 | Adding a radio / a setting / a language | `ADDING_A_RADIO.md`, `ADDING_A_SETTING.md`, `ADDING_A_LANGUAGE.md` |
 | 64-bit task list | `64_BIT_TASKLIST.md` |
 | Win32 idiom sweep | `WIN32_ARTIFACT_SWEEP.md` |
-| Before leaving Windows | `OWED_BEFORE_CROSS_PLATFORM.md` |
 | Clock and CW timing | `PLATFORM_CLOCK_ABSTRACTION.md` |
 | Port identity | `PORT_IDENTITY_PLAN.md` |
 | SQLite log | `SQLITE_MIGRATION_TASKS.md` |

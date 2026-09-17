@@ -50,6 +50,8 @@ Archived 2026-09-17.
 | `ACCELERATOR_AUDIT.md` | The measurement was consumed — the unified 97-row table was built 2026-08-17 and both open questions were answered. Its `Dump-Accelerators.ps1` no longer exists |
 | `CAPTION_REVIEW.md` | A generated snapshot of every design-time caption. Its purpose — find what ships as literal English — was consumed by the `.lfm` harvest into the catalogues |
 | `dialog_analysis.md` | Its three-step recommendation was measured **false** and corrected in place on 2026-08-17. The inventory tables remain useful as a lookup; the plan does not |
+| `CORPUS_FRESH_CLONE_DEFECT.md` | **All three of its fixes shipped** (verified 2026-09-17): `tr4w/test/corpus/settings/tr4w.json` is a tracked, corpus-owned fixture carrying `_LOCATION: WCF`, the harness pre-checks it and fails with a named reason, and the app reads it through `--settings`. The LOCATION guard it warned against weakening was correctly left alone |
+| `OWED_BEFORE_CROSS_PLATFORM.md` | **Done, and the lints prove it rather than a doc asserting it** (verified 2026-09-17): `uAppPaths.pas` provides the three accessors plus a fourth root the doc never asked for, and `Lint-AppPaths`, `Lint-SearchIndex` and `Lint-OneConfigWriter` all pass. Its one surviving item — ~230 searchable captions that are Pascal literals rather than `resourcestring` — moved to the roadmap's i18n phase |
 
 ### Superseded by the shipped design
 
