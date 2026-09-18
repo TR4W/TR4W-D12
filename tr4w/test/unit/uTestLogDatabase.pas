@@ -75,7 +75,14 @@ type
 implementation
 
 uses
-   SysUtils, Classes, sqldb, uLogDatabase, uLogSchema;
+   SysUtils, Classes, sqldb,
+{$IFDEF UNIX}
+   (* FpChmod -- TestWritableReportsAReadOnlyFile makes its fixture read-only,
+     and FileSetAttr cannot do that here. Gated the way uOpenSSLLoader gates
+     the same unit. *)
+   BaseUnix,
+{$ENDIF}
+   uLogDatabase, uLogSchema;
 
 function TLogDatabaseTests.TempLogName(const aLeaf: string): string;
 begin
@@ -895,7 +902,28 @@ begin
       DeleteFile(fn + '-shm');
       end;
 
+   (* READ-ONLY IS NOT THE SAME CALL ON BOTH PLATFORMS, and assuming it was
+     made this test FAIL ON LINUX the day it was written (2026-09-17).
+
+     FileSetAttr is a DOS/Windows attribute call. FPC compiles it on Unix but
+     it does not chmod anything, so the fixture stayed writable, CheckWritable
+     correctly reported the log as writable, and the guard below fired:
+     "the fixture could not be made read-only, so this test proved nothing."
+
+     THE GUARD DID ITS JOB -- that is the whole reason it is there, and it is
+     why this surfaced as a red test on the build host rather than as a green
+     one that asserted nothing. Measured on linux-ci-build, where the run is
+     14794 passed / 3 failed and this was the only failure of the three that
+     was ours.
+
+     S_IRUSR alone: owner read, no write. Restored to S_IRUSR or S_IWUSR
+     below rather than to 0, because 0 would leave a file nobody can read and
+     Scrub could not delete it. *)
+{$IFDEF UNIX}
+   made := FpChmod(RawByteString(fn), S_IRUSR) = 0;
+{$ELSE}
    made := FileSetAttr(fn, faReadOnly) = 0;
+{$ENDIF}
    if not made then
       begin
       (* Could not make it read-only -- say so rather than passing an
@@ -914,7 +942,12 @@ begin
       db.Free;
    end;
 
+   (* WRITABLE AGAIN, so Scrub can remove it. *)
+{$IFDEF UNIX}
+   FpChmod(RawByteString(fn), S_IRUSR or S_IWUSR);
+{$ELSE}
    FileSetAttr(fn, 0);
+{$ENDIF}
 
    CheckFalse(r.Ok, 'a read-only log must not report itself writable');
    CheckTrue(r.Report <> '', 'and it says which file and why');
