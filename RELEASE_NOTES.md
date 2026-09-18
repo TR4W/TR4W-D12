@@ -50,6 +50,50 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.0.x — September 2026
 
+### 5.0.7 (2026-09-18) — NY4I
+
+#### Configuration
+
+- **A configuration file run with ctrl-V (or the EXECUTE command) now actually
+  does something.** Every line of it was being ignored — silently, so the file
+  appeared to load and changed nothing.
+
+#### Your log
+
+- **TR4W now checks the contest log can be written to when it opens it**, and
+  says so plainly if it cannot, instead of finding out on your first contact.
+  A log that is read-only, or sitting in a folder that cannot be written, is
+  reported before the contest starts rather than in the middle of it.
+- **A headless rescore reports failure instead of claiming success.** If the
+  log could not be written during the rescore, TR4W now says so.
+- **A batch export or import that meets a damaged log no longer hangs** waiting
+  for somebody to dismiss a dialog that nobody can see.
+
+#### Radio Control
+
+- **CW speed sync over TCI is back on.** TR4W now works out for itself whether
+  the server on the other end actually accepts a keyer-speed change: it sends
+  the speed once, checks whether the radio came back with *your* number, and if
+  it did not, stops sending and says so once in the log. Nothing is hard-coded
+  about any particular server.
+
+#### Stability
+
+- **Fourteen places where TR4W acted on whatever happened to be in memory** are
+  fixed. Three of them could shut the program down outright while loading
+  Super Check Partial data; others could mis-count multipliers, corrupt the
+  alarm schedule, or put junk into a multi-operator message.
+- **A piece of dead code that ran on every keystroke you typed into the call
+  window is gone.** It produced nothing, and it contained a loop that could
+  spin for seconds on end.
+
+#### For anyone building TR4W
+
+- A tool that reports what TR4W sees on your serial ports. Verified on Linux
+  against a real FTDI adapter: it finds the adapter among 32 phantom ports and
+  names it properly. Linux ports still cannot be *selected* yet — that needs a
+  change to how TR4W stores a port, which is a separate piece of work.
+
 ### 5.0.6 (2026-09-17) — NY4I
 
 #### Radio Control

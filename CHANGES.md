@@ -47,6 +47,86 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 
 ## 5.0.x — September 2026
 
+### 5.0.7 (2026-09-18) — NY4I
+
+#### Reads of uninitialised locals — 14 of them (`src/trdos/`, `src/uADIFExchange.pas`)
+
+Every one acted on a value off the stack. FPC reports them; nothing had acted
+on the report. The population was **20**, not the 23 the audit claimed — that
+figure added three unrelated warning classes together.
+
+- **`logscp` gated a `halt` on a stack value, at three sites.** `sReadFile`
+  returns a *boolean*, not a byte count, and the `BlockRead` that once set
+  `BytesRead` is commented out two routines above — so whether TR4W shut
+  itself down was decided by whatever occupied that slot. It asks `sReadFile`
+  whether it worked now, and `BytesRead` is deleted.
+- **`uADIFExchange`'s `contacts`, `pnr` and `PreviousQTHString` were globals
+  moved to locals**, so the 61 exchange arms could move verbatim. A global is
+  zero-initialised and a local is not — the extraction itself introduced the
+  defect. `postunit`'s own `PreviousQTHString` had the same shape.
+- `CfgCmd` handed `CheckCommand` two garbage ShortStrings; `logstuff` wrote
+  garbage into the multi-message dedupe table (now deterministic, **not**
+  correct — the N6TR parse is still commented out); `logsubs2` `Inc`'d
+  `nMultCount` from the stack and then switched on the total; `logwind`
+  carried a duplicate alarm test comparing two stack values whose only live
+  effect was advancing the alarm schedule at random.
+
+**Six warnings are left on purpose.** Three are in routines nothing calls —
+`SendKeyboardInput`, `TimeAndDateSet`, `PacketMemoryRequest` — and three are
+genuinely guarded by a flag set in the same branch.
+
+#### An executed `.cfg` was never parsed (`src/trdos/CfgCmd.pas`)
+
+`ProcessConfigInstruction` declared `ID` and `CMD` and handed them straight to
+`CheckCommand` without ever putting anything in them, so **every line of a
+config file run with ctrl-V or EXECUTE was ignored**. The split is
+`EnmuCFGFile`'s, copied rather than invented, in ShortString to avoid two
+narrowing conversions. The comment-marker test now skips the same four
+characters the real reader skips.
+
+#### CW speed sync is decided from the wire (`src/radioFactory/uFactoryRadioBase.pas`)
+
+`rcCWSpeedSync` says a radio *accepts* a keyer-speed push; for a radio reached
+through a server that is not the whole answer. The base now remembers the
+speed it pushed and compares it with the speed the radio reports back — same
+number it took, different number it did not — and stops after one log line.
+`Connect` clears the latch, so a refusal is a fact about a session.
+
+**Nothing knows which server it is talking to**, deliberately (NY4I). The
+value is the only generic evidence: a server that reads a set as a get replies
+under the *same name* carrying its own number.
+
+#### `/RESCORE` could not fail (`src/uProgramMain.pas`)
+
+It ended in an unconditional `Halt(0)`, so a headless rescore that met a
+damaged or unwritable log disabled the store partway and still exited zero. It
+checks `LogStoreIsUsable` and exits **2**, matching `/IMPORTLOG`.
+
+#### The contest log is checked for writability on open (`src/domain/uLogDatabase.pas`)
+
+`CheckWritable` runs from `EnsureOpen` beside the integrity check, fail-closed:
+directory first (WAL needs `-wal`/`-shm` beside the file), then the read-only
+attribute, then the file. A lock probe was tried first and is **measurably
+wrong** — `BEGIN IMMEDIATE` succeeds on a read-only file and only a page write
+raises — so it is a same-value `PRAGMA user_version` write. The test caught
+that, not review.
+
+Also fixed: `Disable`'s `ShowMessage` was unguarded, so a damaged log met in a
+headless run opened a modal with no operator and **hung** the batch.
+
+#### Dead code and tooling
+
+- **The two-letter crunch is deleted** (`logdupe.pas`) — it ran on every
+  keystroke and produced nothing anyone reads: the list it fills has its own
+  declaration commented out, and all three callers discard the result. It also
+  carried an empty loop over two uninitialised bounds, which the build emits
+  because **there is no `-O` anywhere in this build**.
+- `test/tools/portprobe` — prints what `TComPortEnumerator` reports. The
+  enumerator's unit test is environment-independent by design, so it cannot
+  answer "what does TR4W see on this adapter".
+- `.gitignore`: a Unix executable has no extension, so `*.exe` matched none of
+  the native test binaries.
+
 ### 5.0.6 (2026-09-17) — NY4I
 
 #### CW over TCI — two defects, both silent on the air (`src/radioFactory/uRadioTCI.pas`)
