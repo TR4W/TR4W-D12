@@ -244,6 +244,18 @@ tr4w/test/tools/ctygen/*.or
 tr4w/test/tools/ctygen/*.ppu
 tr4w/test/tools/ctygen/*.rsj
 
+# portprobe -- the serial-port enumeration probe, same story: built by hand
+# from the recipe in its README, so its whole dependency graph lands beside
+# the source.  The bare `portprobe` line is the UNIX binary, which carries no
+# extension and is therefore matched by none of the globs above -- the same
+# gap that left a 62 MB tr4w_unit_tests_linux untracked on the build host.
+tr4w/test/tools/portprobe/*.exe
+tr4w/test/tools/portprobe/*.o
+tr4w/test/tools/portprobe/*.or
+tr4w/test/tools/portprobe/*.ppu
+tr4w/test/tools/portprobe/*.rsj
+tr4w/test/tools/portprobe/portprobe
+
 # FPC intermediate output (units, logs). Binaries land in target\ and tr4wserver\.
 build-out/
 
