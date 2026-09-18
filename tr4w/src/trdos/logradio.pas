@@ -2140,6 +2140,22 @@ begin
       exit;
       end;
 
+   (* AND HAS THIS LINK ACTUALLY HONOURED ONE?  The capability says the RADIO
+     accepts a speed push; it cannot say whether the SERVER in front of it
+     does.  A radio reached through a server is the same protocol with two
+     possible answers, and only the wire settles which -- so the base watches
+     the value that comes back and latches a refusal.  See
+     TFactoryRadioBase.NoteCWSpeedFromRadio.
+
+     Asked HERE because this is the one place a speed is pushed, so one test
+     covers both callers -- the operator's PgUp (LogCW.SetSpeed) and every
+     CW-by-CAT message (uCWKeyerCAT), which is the one that made the wasted
+     traffic per-keystroke rather than per-change. *)
+   if (Self.tFactoryObject <> nil) and Self.tFactoryObject.CWSpeedSyncRefused then
+      begin
+      exit;
+      end;
+
    // The per-model `case rt of` that formatted KS/CI-V speed commands here is
    // DELETED (2026-07-31) -- unreachable for any correctly constructed radio,
    // and each driver's SetCWSpeed owns its own encoding (which matters: the
@@ -2147,6 +2163,10 @@ begin
    // 6..48 elsewhere, and that fact belongs with the radio, not here).
    if Self.tFactoryObject <> nil then
       begin
+      (* RECORD IT BEFORE SENDING IT.  The reply is the only evidence that the
+        push took, and it is worthless without knowing what was asked for --
+        so the value goes on the radio first, then the command goes out. *)
+      Self.tFactoryObject.NoteCWSpeedSent(speed);
       Self.tFactoryObject.SetCWSpeed(speed);
       end;
 end;

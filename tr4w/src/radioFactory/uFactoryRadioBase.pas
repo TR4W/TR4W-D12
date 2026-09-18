@@ -389,6 +389,36 @@ Type TFactoryRadioBase = class(TObject)
       socket: TIdTCPClient;
       serialPortObj: TSerialPort;
       localCWSpeed: integer;
+
+      (* CW SPEED SYNC, DISCOVERED FROM BEHAVIOUR RATHER THAN DECLARED.
+
+        rcCWSpeedSync says a radio ACCEPTS a keyer-speed push.  For a radio on
+        the other end of a serial cable that is a fact about the model and the
+        capability is the whole answer.  For a radio reached through a SERVER
+        it is not: the same protocol, spoken to two different servers, gets two
+        different answers, and TR4W cannot know which one it is talking to.
+
+        The evidence is in uRadioTCI's constructor: a correctly formed speed
+        set was echoed back ten times carrying the SERVER'S value, because that
+        server decides set-versus-get by counting arguments and a global
+        one-argument command can never be a set.  TR4W kept sending on every
+        speed change, and the operator watched TR4W's speed move while the
+        radio's stayed put.
+
+        SO THE TEST IS THE VALUE THAT COMES BACK, AND NOTHING ELSE.  Not the
+        server's name, not its protocol string, not a list of ones we know
+        about -- those all fail on the next server anybody writes.  We sent N;
+        if the radio reports N, it honoured it.  If it reports something else,
+        it did not, and TR4W stops asking and says so once.
+
+        NEVER PROBE.  A set to the value already in force changes nothing, so
+        a server that supports it may broadcast nothing at all -- which would
+        read as "unsupported" on a server that works perfectly.  The only
+        honest sample is a genuine operator speed change. *)
+      FCWSpeedSent: integer;        // what we last pushed; 0 = nothing outstanding
+      FCWSpeedSyncRefused: boolean; // the radio answered with a different number
+      FCWSpeedSyncReported: boolean;// the one log line has been written
+
       FRadioModel: string;   // backing field for the radioModel property
 
       // ONE logger for every factory radio, owned by the base and derived from the
@@ -779,6 +809,27 @@ Type TFactoryRadioBase = class(TObject)
       property serialPortName: string read localSerialPortName write localSerialPortName;
       property PTTviaCAT: boolean read GetPTTviaCAT write SetPTTviaCAT;
       property CWSpeed: integer read GetCWSpeed;
+
+      (* THE RADIO HAS REPORTED ITS KEYER SPEED.  Every driver that learns the
+        speed calls this instead of writing localCWSpeed, because this is also
+        where the answer to "did our last push take" lives. *)
+      procedure NoteCWSpeedFromRadio(aSpeed: integer);
+
+      (* WE ARE ABOUT TO PUSH aSpeed.  Called by the one place that pushes --
+        RadioObject.SetRadioCWSpeed -- so the reply has something to be
+        compared against. *)
+      procedure NoteCWSpeedSent(aSpeed: integer);
+
+      (* True once the radio has answered a push with a different number.  The
+        push site consults this and stops; it clears on reconnect, so a server
+        that gets fixed is tried again rather than remembered as broken. *)
+      property CWSpeedSyncRefused: boolean read FCWSpeedSyncRefused;
+
+      (* FORGET WHAT THIS LINK DID LAST TIME.  Called when a link comes up, so
+        the refusal is a fact about a SESSION and not about the radio: a server
+        that is fixed, restarted or swapped gets a fresh hearing rather than
+        being remembered as broken for the life of the program. *)
+      procedure ResetCWSpeedSync;
       { CONNECT MAY RETURN BEFORE THE RADIO IS USABLE, and for every network
         radio it does.  0 means "the attempt was started without error", not
         "connected" -- an Icom is still mid-RS-BA1-handshake when this
@@ -1550,6 +1601,22 @@ var
 begin
    Result := 0;
 
+   (* A NEW LINK GETS A FRESH HEARING ON CW SPEED SYNC.
+
+     Whether a keyer-speed push is honoured is a fact about the SERVER on the
+     other end, not about the radio -- so it must not outlive the connection.
+     Restarted, reconfigured or a different server entirely on the next
+     connect, and TR4W tries again rather than remembering a refusal for the
+     life of the program.
+
+     HERE RATHER THAN IN TReadingThread, which was the first attempt and does
+     not compile: that thread owns its OWN radioWasDisconnected field and holds
+     no reference back to the radio at all -- it reports through msgHandler and
+     a PBoolean, deliberately.  Here Self is the radio, and both transports
+     come through this one function, so serial and network are covered by one
+     line instead of two. *)
+   Self.ResetCWSpeedSync;
+
    (* IN SerialPorts, NOT merely <> NoPort.  The old test let a port
      configured as NETWORK -- ordinal 65 -- through to a name formatter that
      would have produced 'COM65'.  The network arm below is the one that
@@ -2117,6 +2184,60 @@ end;
 function TFactoryRadioBase.GetCWSpeed: integer;
 begin
    Result := Self.localCWSpeed;
+end;
+
+procedure TFactoryRadioBase.NoteCWSpeedSent(aSpeed: integer);
+begin
+   Self.FCWSpeedSent := aSpeed;
+end;
+
+procedure TFactoryRadioBase.ResetCWSpeedSync;
+begin
+   Self.FCWSpeedSent         := 0;
+   Self.FCWSpeedSyncRefused  := False;
+   (* The log line too: a new session that refuses again is worth saying once
+     more, and a reader of tr4w.log needs it against THIS connection. *)
+   Self.FCWSpeedSyncReported := False;
+end;
+
+procedure TFactoryRadioBase.NoteCWSpeedFromRadio(aSpeed: integer);
+begin
+   Self.localCWSpeed := aSpeed;
+
+   (* NOTHING OUTSTANDING: this is the radio volunteering its speed, or
+     answering a query, and it says nothing about whether a push works. *)
+   if Self.FCWSpeedSent = 0 then
+      begin
+      Exit;
+      end;
+
+   if aSpeed = Self.FCWSpeedSent then
+      begin
+      (* IT TOOK.  Clear the outstanding push and leave the capability alone --
+        including after an earlier refusal, because a server that starts
+        honouring sets mid-session should not stay switched off. *)
+      Self.FCWSpeedSent := 0;
+      Self.FCWSpeedSyncRefused := False;
+      Exit;
+      end;
+
+   (* IT DID NOT TAKE.  The radio answered our push with a different number,
+     which is the server reporting its own value back at us. *)
+   Self.FCWSpeedSent := 0;
+   Self.FCWSpeedSyncRefused := True;
+
+   if not Self.FCWSpeedSyncReported then
+      begin
+      Self.FCWSpeedSyncReported := True;
+      if logger <> nil then
+         begin
+         logger.Warn('[%s] This radio link does not accept a keyer-speed push: '
+                     + 'asked for %d wpm and it reports %d. TR4W will stop '
+                     + 'sending the speed for this session -- set it on the '
+                     + 'radio. (Reconnecting tries again.)',
+                     [rigLabel, aSpeed, Self.localCWSpeed]);
+         end;
+      end;
 end;
 
 function TFactoryRadioBase.GetIsRITOn(whichVFO: TVFO): boolean;

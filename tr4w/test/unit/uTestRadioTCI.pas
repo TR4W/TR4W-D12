@@ -48,6 +48,15 @@ type
       procedure Test_CWSendsTheReceiverIndex;
       procedure Test_CWProsignsUseTheTCISpellings;
       procedure Test_CWEscapesReservedCharacters;
+      (* CW SPEED SYNC IS DECIDED FROM THE WIRE, not from who the server is.
+        These pin the detector in TFactoryRadioBase through a TCI radio,
+        because TCI is the reason it exists -- but nothing in it is
+        TCI-specific and any driver that reports a speed gets the same
+        behaviour. *)
+      procedure Test_CWSpeedHonouredLeavesSyncOn;
+      procedure Test_CWSpeedIgnoredLatchesRefusal;
+      procedure Test_CWSpeedUnsolicitedReportNeverLatches;
+      procedure Test_CWSpeedRefusalClearsOnReconnect;
    public
       procedure RunAllTests; override;
    end;
@@ -98,6 +107,106 @@ begin
       // Reaching this line IS the assertion -- every call above was an abstract
       // method, and an abstract call raises rather than returning.
       Check(True, 'all nine formerly-abstract methods are callable');
+   finally
+      r.Free;
+   end;
+end;
+
+(* ---------------------------------------------------------------------------
+  CW speed sync -- the detector, not the command
+
+  The command itself was never in doubt; whether the SERVER in front of the
+  radio acts on it is.  A server that decides set-versus-get by counting
+  arguments reads our one-argument set as a GET and replies with its OWN
+  number, under the SAME NAME -- so the name discriminates nothing and the
+  value is the only evidence.  These drive that path directly: say what we
+  sent, then say what came back.
+  --------------------------------------------------------------------------- *)
+
+procedure TRadioTCITests.Test_CWSpeedHonouredLeavesSyncOn;
+var
+   r: TTCIProbe;
+begin
+   BeginTest('Test_CWSpeedHonouredLeavesSyncOn');
+   r := TTCIProbe.Create;
+   try
+      r.NoteCWSpeedSent(28);
+      r.NoteCWSpeedFromRadio(28);
+
+      CheckFalse(r.CWSpeedSyncRefused,
+                 'a radio that reports back the number we sent has honoured it');
+      CheckEquals(28, r.CWSpeed, 'and the speed it reported is the one we hold');
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TRadioTCITests.Test_CWSpeedIgnoredLatchesRefusal;
+var
+   r: TTCIProbe;
+begin
+   BeginTest('Test_CWSpeedIgnoredLatchesRefusal');
+   r := TTCIProbe.Create;
+   try
+      (* The measured AetherSDR case: ten sets sent, ten replies of the
+        server's own unchanged 30. *)
+      r.NoteCWSpeedSent(25);
+      r.NoteCWSpeedFromRadio(30);
+
+      CheckTrue(r.CWSpeedSyncRefused,
+                'a reply carrying the server''s number, not ours, is a refusal');
+      CheckEquals(30, r.CWSpeed,
+                  'the radio''s own value is still what we believe it is on');
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TRadioTCITests.Test_CWSpeedUnsolicitedReportNeverLatches;
+var
+   r: TTCIProbe;
+begin
+   BeginTest('Test_CWSpeedUnsolicitedReportNeverLatches');
+   r := TTCIProbe.Create;
+   try
+      (* THE CASE THAT WOULD DISABLE A WORKING SERVER.  A radio volunteering
+        its speed, or answering somebody else's query, says nothing about
+        whether a PUSH works -- and treating it as evidence is how a server
+        that honours sets perfectly well gets switched off.  Nothing is
+        outstanding here, so nothing may be concluded. *)
+      r.NoteCWSpeedFromRadio(18);
+
+      CheckFalse(r.CWSpeedSyncRefused,
+                 'a report with no push outstanding proves nothing either way');
+      CheckEquals(18, r.CWSpeed, 'but it is still the speed the radio is on');
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TRadioTCITests.Test_CWSpeedRefusalClearsOnReconnect;
+var
+   r: TTCIProbe;
+begin
+   BeginTest('Test_CWSpeedRefusalClearsOnReconnect');
+   r := TTCIProbe.Create;
+   try
+      r.NoteCWSpeedSent(25);
+      r.NoteCWSpeedFromRadio(30);
+      CheckTrue(r.CWSpeedSyncRefused, 'refused, as above');
+
+      (* A REFUSAL IS A FACT ABOUT A SESSION, NOT ABOUT THE RADIO.  The server
+        may be restarted, fixed or a different one entirely on the next
+        connect, so the link gets a fresh hearing rather than being remembered
+        as broken for the life of the program. *)
+      r.ResetCWSpeedSync;
+
+      CheckFalse(r.CWSpeedSyncRefused, 'reconnecting tries again');
+
+      r.NoteCWSpeedSent(25);
+      r.NoteCWSpeedFromRadio(25);
+      CheckFalse(r.CWSpeedSyncRefused,
+                 'and a server that now honours it stays enabled');
    finally
       r.Free;
    end;
@@ -370,6 +479,11 @@ begin
    Test_CWSendsTheReceiverIndex;
    Test_CWProsignsUseTheTCISpellings;
    Test_CWEscapesReservedCharacters;
+
+   Test_CWSpeedHonouredLeavesSyncOn;
+   Test_CWSpeedIgnoredLatchesRefusal;
+   Test_CWSpeedUnsolicitedReportNeverLatches;
+   Test_CWSpeedRefusalClearsOnReconnect;
 end;
 
 end.

@@ -3551,6 +3551,48 @@ Nothing here is a bench test. They need an answer, not a radio.
   `FindDirectory`'s third branch had its condition commented out but not its
   body, so it returned unconditionally before reaching the four below it.
 
+- [ ] **CW speed sync over TCI: the detector's POSITIVE branch has never fired
+  against a real server.** Restored 2026-09-18 with a behaviour detector in
+  `TFactoryRadioBase` — TR4W remembers the speed it pushed, compares it with
+  the speed the radio reports back, and stops sending after one log line if
+  they differ. The refusing path is the one we have evidence for (AetherSDR,
+  measured: ten pushes, ten replies carrying its own unchanged 30). **The
+  "it worked" path is pinned by unit tests only.**
+
+  **The run:** QK4 as the server, TR4W as the client, a K4 on the other end.
+  Change speed with PgUp/PgDn and watch the wire for three things —
+
+  1. Does QK4 accept a **one-argument** `cw_macros_speed:NN;` as a set, or
+     does it require two? (AetherSDR's `isSet = (args.size() >= 2)` makes a
+     global one-argument command unreachable as a set for *any* client; that
+     is a limitation of that server, not of TCI.)
+  2. Which name comes back — `cw_macros_speed` or `cw_keyer_speed` — and does
+     it carry **our** number or the server's old one? Reading AetherSDR's
+     source showed it replies under the **same name in both directions**, so
+     the value is the discriminator and the name is worthless. Confirm that
+     holds on a conforming server.
+  3. That the radio's own keyer speed actually moves.
+
+  Also settles the `[VERIFY]` at `uRadioTCI.pas` on whether speed
+  notifications are receiver-addressed.
+
+  **Do NOT probe at connect** — a set to the value already in force changes
+  nothing, so a server may broadcast nothing and a working server would read
+  as refused. Only a genuine operator speed change is a valid sample.
+
+- [ ] **`cw_macros_stop;` on AetherSDR — and the hypothesis has changed.** It
+  works on QK4 (confirmed on air 2026-09-17, cuts mid-message on a K4). The
+  suspicion was that AetherSDR's argument-count parse swallowed a
+  zero-argument command. **Reading its source says no:** line 463 dispatches
+  `cmdCwMacrosStop()` with no args and no `isSet` at all, so it never reaches
+  that logic. Its body is `if (!model->hasRadioSideCwKeyer()) return;
+  sendCmdPublic("cwx clear")`.
+
+  So the question to answer at the bench is narrower: on NY4I's AetherSDR,
+  **does the attached radio report a radio-side CW keyer?** Key a long message,
+  press Escape. If it does not cut, that test is why, and it is a capability
+  question rather than a protocol one.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported

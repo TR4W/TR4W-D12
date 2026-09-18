@@ -207,9 +207,13 @@ begin
        rcReadRIT,        // rit_enable + rit_offset are both readable
        rcReadSplit,      // split_enable is broadcast
        rcReadTXStatus,   // trx:<trx>,<bool> is broadcast
-       rcCWByCAT];       // cw_macros
+       rcCWByCAT,        // cw_macros
+       rcCWSpeedSync];   // cw_macros_speed -- see the note below
 
-   // ---- rcCWSpeedSync WITHDRAWN 2026-08-03 ---------------------------------
+   // ---- rcCWSpeedSync: DECLARED, AND PROVEN ON THE WIRE ---------------------
+   // Withdrawn 2026-08-03, restored 2026-09-18 with a detector behind it.  The
+   // history below is why the detector exists and is worth reading before
+   // touching either.
    // Not because TCI lacks the command -- because the server on the other end
    // will not honour it, and a capability is a promise about what actually
    // happens on the wire.  Claiming it made TR4W send a speed on every PgUp
@@ -238,10 +242,30 @@ begin
    // cause for DRIVE/VOLUME; its own analysis prescribed the fix, which was
    // then applied only to `volume`).
    //
-   // TO RESTORE: put rcCWSpeedSync back in the set above.  Nothing else needs
-   // to change -- SetCWSpeed below is correct and stays, and the CWSpeedMin/Max
-   // range is still used to clamp.  Retest by watching for a `cw_macros_speed`
-   // reply that carries OUR number instead of the server's.
+   // HOW IT IS HANDLED NOW (NY4I, 2026-09-18: "the implementation should be
+   // generic tci").  The capability is declared, and TFactoryRadioBase decides
+   // from the WIRE whether this particular link honours a push: it remembers
+   // the number we sent and compares it with the number the radio reports
+   // back.  Same number, it took.  Different number, it did not, and
+   // RadioObject.SetRadioCWSpeed stops sending for the rest of the session
+   // after one log line.
+   //
+   // NOTHING HERE KNOWS WHICH SERVER IT IS TALKING TO, deliberately.  Matching
+   // on `device:` or `protocol:` would work against the servers we happen to
+   // have seen and fail against the next one -- and `protocol:` is worthless
+   // anyway, because QK4 reports ExpertSDR3 for WSJT-X compatibility.  The
+   // value that comes back is the only generic evidence, and it is also the
+   // ONLY usable one here: a server that reads our set as a get replies under
+   // the SAME NAME carrying its own number, so the name discriminates nothing.
+   //
+   // THE COST ON A SERVER THAT REFUSES IS ONE COMMAND PER SESSION, not one per
+   // PgUp -- which is what made the original behaviour worse than not offering
+   // the feature at all.
+   //
+   // DO NOT "PROBE" AT CONNECT.  A set to the speed already in force changes
+   // nothing, so a server may broadcast nothing -- and a working server would
+   // then look refused.  Only a genuine operator speed change is a valid
+   // sample.
    //
    // AetherSDR accepts 5..100 wpm.  ExpertSDR2/Thetis ranges [VERIFY].
    FCapabilities.CWSpeedMin := 5;
@@ -674,7 +698,13 @@ begin
       begin
       // Speed notifications are NOT receiver-addressed on every server, so this
       // arrives with the wpm in args[0]. [VERIFY]
-      Self.localCWSpeed := StrToIntDef(Trim(args[0]), Self.localCWSpeed);
+      //
+      // NoteCWSpeedFromRadio, not localCWSpeed directly: the base compares this
+      // against what we last pushed and decides whether this link honours a
+      // speed set at all.  See its comment -- the test is the VALUE, because
+      // a server that treats our set as a get replies under the SAME NAME
+      // carrying its own number.
+      Self.NoteCWSpeedFromRadio(StrToIntDef(Trim(args[0]), Self.localCWSpeed));
       Exit;
       end;
 
@@ -1117,11 +1147,11 @@ end;
 
 procedure TTCIRadio.SetCWSpeed(speed: integer);
 begin
-   // UNREACHABLE while rcCWSpeedSync is withdrawn (see the constructor):
-   // RadioObject.SetRadioCWSpeed checks the capability before delegating here.
-   // Kept, and kept correct, because the command itself is right -- the server
-   // is what cannot accept it.  Restoring the capability restores this path
-   // with no edit here.
+   // REACHABLE AGAIN since 2026-09-18, and unchanged by the restoration --
+   // this command was always right; what was in doubt was whether the server
+   // in front of the radio would act on it.  RadioObject.SetRadioCWSpeed now
+   // gates on the capability AND on whether this link has been seen to refuse
+   // a push; see the constructor, and TFactoryRadioBase.NoteCWSpeedFromRadio.
    speed := Max(FCapabilities.CWSpeedMin, Min(FCapabilities.CWSpeedMax, speed));
    SendToRadio(Format('cw_macros_speed:%d;', [speed]));
 end;
