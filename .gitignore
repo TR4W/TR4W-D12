@@ -178,6 +178,7 @@ tr4w/build_*.log
 !.claude/hooks/
 !.claude/commands/
 !.claude/skills/
+!.claude/agents/
 
 # commands/ joined the tracked set on 2026-08-30: /update-changes and
 # /monthly-changes were ported from the D7 tree, where they had lived on one
@@ -192,6 +193,13 @@ tr4w/build_*.log
 # machine while the content it names was deleted everywhere -- a dangling
 # reference in the file people trust most, which is worse than the long
 # section it replaced.
+
+# agents/ joined on 2026-09-18, and it is the same reason a third time. The
+# fifteen subsystem specialists carry the traps of their areas that no compiler
+# and no lint catches, and CLAUDE.md now ROUTES work to them by name. An
+# ignored .claude/agents would leave that mandatory section naming fifteen
+# files that exist on one machine -- the pointer-to-nothing failure the skills
+# note above describes, except pointed at by a rule rather than a reference.
 tr4w/.claude/
 
 # Personal, machine-specific, or scratch. Never tracked.

@@ -164,6 +164,51 @@ because each of them required a control that did not hold its own data.
 strings has nothing an assertion can read. That is a consequence of doing it
 natively, not a precondition for bothering.
 
+## MANDATORY: Involve the specialist whose area you are touching
+
+NY4I, 2026-09-18:
+
+> *"I also want to ensure you know that if an issue or feature touches one of the
+> sub agent areas, to involve that agent."*
+
+**This is a routing rule, not a suggestion.** `.claude/agents/` holds fifteen
+subsystem specialists, each scoped to a real seam in this tree. Before working an
+issue or a feature, identify which areas it touches and involve those agents —
+**plural is the normal case**, because almost nothing here lives in one subsystem.
+
+| agent | area |
+|---|---|
+| `radio-factory` | `src/radioFactory/`, the registry, capabilities, polling, SO2R |
+| `cw-keying` | the keyer factory, `LogCW`, framing, prosigns, element timing |
+| `tci-interface` | TCI protocol, `TTCIRadio`, the TCI server, WebSocket transport |
+| `serial-port-io` | port enumeration and identity, the serial transport, `SERIAL n` |
+| `contest-factory` | `src/contestFactory/` — the contest classes and registry |
+| `contest-scoring` | the TRDOS engine: exchange parsing, mults, dupes, points |
+| `file-formats` | ADIF, Cabrillo, CTY.DAT, TRMASTER, binary-log import |
+| `log-database` | the SQLite contest log, schema, repository, integrity |
+| `dx-cluster` | Telnet, spot parsing, the spot store, ageing, the band map |
+| `multi-op-network` | `tr4wserver`, the client link, the packet protocol |
+| `integrations` | WSJT-X, MMTTY, the external logger factory |
+| `settings-config` | `uSettingsModel`, the JSON stores, the command vocabulary |
+| `lcl-ui` | `src/ui/lcl/`, `MainUnit`, display, colours, Win32-artifact removal |
+| `i18n` | resourcestrings, the `.po` catalogues, caption visibility |
+| `build-release` | the build scripts, lints, CI runners, installer, releases |
+
+**Why it pays here specifically.** Each definition carries the traps of its area
+that no compiler and no lint can catch — the ones this file records at length: a
+base class asking which radio model it is, `pas2po` destroying 2,203 translations
+on a clean exit, a corpus reporting `24 passed` while every export crashed, a
+converted window silently losing its captions. Those are the findings that cost a
+day each. Routing the work to the file that holds them is how they stop being
+rediscovered.
+
+**Keep them current the same way you keep this file current.** When you learn
+something durable about an area — or delete the thing an agent describes — fix
+that agent's file **in the same commit**. The rule against stale counts and
+survivor lists applies to them in full: an agent definition that describes a road
+removed last month is worse than none, for exactly the reason a stale CLAUDE.md
+is.
+
 ## MANDATORY: Development Philosophy
 
 This is a port. We want to do this once. Refactoring is not as important a factor as getting the
