@@ -230,15 +230,23 @@ empty loops in the routine survive compilation.
       arms could move verbatim — a global is zero-initialised and a local is
       not, so the extraction itself introduced the defect.
 
-- [ ] **Delete the three dead routines** — `SendKeyboardInput`,
-      `TimeAndDateSet` and `PacketMemoryRequest` have no callers anywhere in
-      `src` or `tr4w.lpr`, and hold three of the six remaining warnings. The
-      other three are genuinely guarded. **This is a deletion decision, not an
-      initialisation**, which is why the warnings were left rather than
-      silenced.
+- [x] **Delete the three dead routines — done 2026-09-18.** `SendKeyboardInput`,
+      `TimeAndDateSet` and `PacketMemoryRequest` had no callers anywhere, and
+      held three of the six remaining warnings. **Four helpers went with them**,
+      because each had no caller except the routines being deleted:
+      `DisplayBuffer` (`LogCW`), and `SetupPacketSpot`, `DisplayPacketSpots`
+      and `SetUpRadioFromPacketSpot` (`logsubs1`). Leaving them would have
+      manufactured four new pieces of dead code. 666 lines, pure deletion.
+      Measured after: the three warnings are gone and the other three —
+      `postunit` `PreviousQSOTime`, `tree` `FirstWordCursor` ×2 — are the
+      guarded ones; narrowing fell 1351 → 1348 and the ceiling follows it.
 - [ ] Separately: **the whole program is compiled unoptimised.** That is worth
       a deliberate decision rather than remaining an accident.
-- [ ] Decide dead-or-fix on `logsubs1.pas:1198` and `logstuff.pas:5737-5739`.
+- [ ] Decide dead-or-fix on ~~`logsubs1.pas:1198`~~ and `logstuff.pas:5737-5739`.
+      **`logsubs1:1198` is decided — it was inside `PacketMemoryRequest`,
+      deleted 2026-09-18.** The `logstuff` reference is **stale**: those lines
+      are now a comment about the backup fix, so re-find the site before
+      deciding anything.
 - [ ] Clear the 23 compiler-flagged Part-A sites.
 
 ### 3.5 ~~Unblock the x64 binary~~ — DONE, verified 2026-09-17

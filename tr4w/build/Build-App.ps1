@@ -271,7 +271,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # with the ckList token batch. Same direction as the ten before them -- the
 # conversions move to whatever still holds an AnsiString and fall again as
 # those units convert.
-$NARROW_CEILING = 1351
+# 1351 -> 1348, 2026-09-18: the three dead DOS-era keyboard loops
+# (SendKeyboardInput, TimeAndDateSet, PacketMemoryRequest) deleted with the
+# four helpers only they called. Deletion, not conversion.
+$NARROW_CEILING = 1348
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"
