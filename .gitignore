@@ -10,7 +10,20 @@
 *.bak
 # Knowledge-graph output (graphify): regenerated on demand, ~5 MB of JSON.
 graphify-out/
-# Delphi compiler-generated binaries (safe to delete)
+# Compiler-generated binaries (safe to delete)
+#
+# A UNIX EXECUTABLE HAS NO EXTENSION, so *.exe below covers the Windows builds
+# and misses every native one.  Found 2026-09-18 on linux-ci-build: a 62 MB
+# tr4w_unit_tests_linux sitting untracked in the working tree, which is exactly
+# the case NY4I's rule predicts -- a dirty runner tree means either something
+# writes an artifact we have not ignored, or something has gone wrong.  This
+# was the first.
+#
+# Named per platform rather than as a bare `tr4w_unit_tests*`, so the tracked
+# tr4w_unit_tests.lpr and .res cannot be swept up by a widened glob.
+tr4w/test/unit/tr4w_unit_tests_linux
+tr4w/test/unit/tr4w_unit_tests_darwin
+tr4w/test/unit/tr4w_unit_tests_fpc
 *.exe
 *.dll
 *.bpl
