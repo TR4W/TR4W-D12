@@ -166,6 +166,45 @@ collect_libs "$STAGE/tr4w" "$APPDIR/usr/lib"
 echo "  bundled $(ls -1 "$APPDIR/usr/lib" | wc -l) library file(s)"
 
 # ---------------------------------------------------------------------------
+# THE UNVERSIONED .so SYMLINKS, WITHOUT WHICH THE BUNDLE DOES NOT LAUNCH.
+#
+# ldd reports SONAMEs -- libgdk-x11-2.0.so.0 -- so collect_libs copies those
+# and only those. But FPC's own gtk2 binding declares the library by its
+# UNVERSIONED name (packages/gtk2/src/gtk+/gdk/gdk2.pas:60,
+# gdklib = 'libgdk-x11-2.0.so') and loads it at run time under that name.
+# There is no such file in the bundle, so the loader falls through
+# LD_LIBRARY_PATH to the HOST's /usr/lib/.../libgdk-x11-2.0.so and the process
+# ends up with TWO copies of GDK: the bundled .so.0 and the host's .so.
+#
+# The symptom names neither library and points at neither cause:
+#
+#     GLib-GObject-CRITICAL: cannot register existing type 'GdkScreen'
+#     Gdk-CRITICAL: IA__gdk_screen_get_primary_monitor: assertion
+#                   'GDK_IS_SCREEN (screen)' failed
+#
+# and the program then HANGS rather than exiting, so there is no exit code to
+# read either. Measured with LD_DEBUG=libs on linux-ci-build, 2026-09-19: the
+# loader tries $APPDIR/usr/lib/libgdk-x11-2.0.so first -- correctly -- finds
+# nothing, and takes the host's.
+#
+# THIS IS WHY IT IS DONE FOR EVERY LIBRARY AND NOT JUST GDK. The same trap is
+# armed for any bundled library some binding names without its version, and the
+# failure is silent in exactly the same way: the host copy is loaded, it works
+# on the build machine, and it is missing or incompatible on a tester's.
+# A symlink costs nothing and removes the whole class.
+# ---------------------------------------------------------------------------
+links=0
+for f in "$APPDIR"/usr/lib/*.so.*; do
+   [ -f "$f" ] || continue
+   unversioned=$(echo "$f" | sed 's/\.so\..*$/.so/')
+   if [ ! -e "$unversioned" ]; then
+      ln -s "$(basename "$f")" "$unversioned"
+      links=$((links + 1))
+   fi
+done
+echo "  unversioned .so symlinks: $links"
+
+# ---------------------------------------------------------------------------
 # GDK-PIXBUF'S LOADERS, WHICH ARE THE CLASSIC GTK BUNDLING TRAP.
 #
 # The loaders are separate .so files found through a CACHE FILE that holds

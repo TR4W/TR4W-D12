@@ -1721,23 +1721,21 @@ knowledge in it at all.** `HamlibRadio.cpp` simply does
 Windows, `libhamlib.dylib` on macOS, and the system `/usr/include/hamlib` on
 Linux. **One place knows; nothing else does.**
 
-**We are already most of the way there and did not notice.** All 36 bindings go
-through a single constant -- `uHamLibDirect.pas:11`:
+**~~It is deliberately NOT changed yet~~ -- DONE, and this passage was stale.**
+All the bindings go through one constant, and it has been a three-arm platform
+constant for some time (`uHamLibDirect.pas`, `HAMLIB_LIB`): `libhamlib-4.dll`
+on Windows, `libhamlib.4.dylib` on Darwin, `libhamlib.so.4` elsewhere. Do not
+cite this file for "only the NAME is Windows" -- read the unit.
 
-```pascal
-  HAMLIB_DLL = 'libhamlib-4.dll';
-```
-
-So this is **one constant, not a port**. HamLib genuinely ships `.so` and
-`.dylib`; only the NAME here is Windows.
-
-**It is deliberately NOT changed yet, and that restraint is the point.** The
-Windows name is known; the others are not guessable from here --
-Linux uses a versioned soname (`libhamlib.so.4`) and macOS its own
-(`libhamlib.4.dylib`), and `SharedSuffix` alone does not produce either. Writing
-an unverified file name would be the same class of mistake as the hardcoded
-`'sqlite3.dll'` this rule came from, just pointing the other way. **Verify each
-name on the platform, then change the constant.**
+**WHAT IS ACTUALLY OPEN IS THE OTHER HALF, AND IT IS NOT A NAME.** HamLib is
+`dlopen`'d, and a `dlopen`'d library's OWN dependencies are resolved by the
+loader's normal search, which does not include the directory it was loaded
+from. So bundling HamLib needs its dependency tree collected too -- measured
+2026-09-19: `build-appimage.sh` collects `ldd` output for the EXECUTABLE only
+and does not recurse into a `dlopen`'d library, and HamLib is absent from the
+AppImage entirely, so **every HamLib-backed radio is non-functional there**.
+The `$ORIGIN` rpath is a consequence of shipping those libraries, not the task;
+it buys nothing for the tarball, which bundles no shared libraries at all.
 
 **The generalisation, when the sweep happens:** one unit that owns the NAME of
 every shipped library -- HamLib, SQLite, OpenSSL -- per platform, the
