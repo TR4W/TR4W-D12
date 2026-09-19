@@ -68,7 +68,14 @@ uses
   uTR4WStrings;
 
 type
-  TCFGType = (cfgCFG, cfgINI, cfgINPUT, cfgCommMes);
+  (* WHICH FILE A CONFIG PASS READS.
+
+    cfgINI IS GONE -- 2026-09-19. NY4I: "calling ReadInConfigFile(cfgINI) that
+    does nothing is pointless and should be removed." The legacy tr4w.ini is
+    the CONVERTER'S input (tr4w\tools\tr4wconvert --ini <path>), not a startup
+    source, and taking the member out is what makes that unrepresentable
+    rather than merely unwired: there is no longer a value to pass in. *)
+  TCFGType = (cfgCFG, cfgINPUT, cfgCommMes);
 
 function LoadInSeparateConfigFile(FileName: ShortString;
   var FirstCommand: boolean;
@@ -107,99 +114,28 @@ uses
    uUDPBroadcastConfig,
    uTR4WConfigFile,
    uRotatorControl,   // OpenRotatorPorts -- the library opens its own ports
-   uContestFileKind,  // a .db chosen as the contest must not be line-parsed
-   Classes;           // TStringList -- FileHasCommands
-
-type
-  // One single-valued tr4w.ini key already applied this load pass, plus the raw
-  // source-line number of its first occurrence (see gRawLineNumber).
-  TSeenINICmd = record
-    Name: string;
-    Line: integer;
-  end;
+   uContestFileKind;  // a .db chosen as the contest must not be line-parsed
 
 var
   logger: TLogLogger;
 
-  // Single-valued tr4w.ini keys already applied in the current load pass, used to
-  // flag hand-edited duplicates (see EnmuCFGFile).  Managed array -> reset with
-  // SetLength(...,0) in ReadInConfigFile; no create/free needed.
-  gSeenINICmds: array of TSeenINICmd;
+(* ~~RestoreCFGPasswordCase~~ -- DELETED 2026-09-19 WITH THE INI READ.
 
-  // Raw source-line counter for the current load pass: incremented once per
-  // NON-EMPTY line the enumerator yields (comments and section headers included;
-  // EnumerateLinesInFile drops blank lines before the callback).  Equals the
-  // physical file line number except where blank lines precede -- close enough to
-  // locate a hand-edited duplicate, and it needs no change to the shared enumerator.
-  gRawLineNumber: integer;
+  It was the second pass over tr4w.ini: the first pass upper-cases a whole
+  line before splitting it, so a password or any TCaseSensitiveText value
+  arrived shouting, and this re-read the same file with UpperCase=False and
+  put the operator's own capitalisation back onto the settings object.
 
-{ Callback for the ctPassword fixup second pass (see ReadInConfigFile).
-  Called by EnumerateLinesInFile with UpperCase=False so CMD retains original
-  case. Uppercases only the key (ID) for CFGCA lookup, then stores CMD for any
-  entry whose crType is ctPassword. }
-procedure RestoreCFGPasswordCase(FileString: PShortString);
-var
-   ID: ShortString;
-   CMD: ShortString;
-   I: Integer;
-begin
-   // Same comment/section markers as EnmuCFGFile (;  #  [  _) -- keep in sync.
-   if FileString^[1] in [';', '#', '[', '_'] then Exit;
+  It ran for cfgINI AND NOTHING ELSE -- passwords were never in a contest
+  .cfg -- so removing ReadInConfigFile(cfgINI) from startup left it with no
+  caller at all. It is also the one thing the ini read still did that reached
+  Settings directly, bypassing CheckCommand's aApplyJSONOwned guard; see the
+  note at the removed call in uProgramMain for the measurement.
 
-   GetRidOfPrecedingSpaces(FileString^);
-   GetRidOfPostcedingSpaces(FileString^);
-
-   ID  := PrecedingString(FileString^, '=');
-   CMD := PostcedingString(FileString^, '=');
-
-   if ID = '' then Exit;
-
-   GetRidOfPrecedingSpaces(ID);
-   GetRidOfPrecedingSpaces(CMD);
-   GetRidOfPostcedingSpaces(ID);
-   GetRidOfPostcedingSpaces(CMD);
-
-   // Uppercase only the key so it matches CFGCA entries (which are uppercase).
-   // CMD is intentionally left as-is — preserving the user's original case.
-   strU(ID);
-   ID[Length(ID) + 1] := #0;  // null-terminate for PChar comparisons
-
-   (*
-     A SETTING THAT HAS MOVED IS NOT IN THE ARRAY, so the walk below cannot
-     find it -- and THAT is what kept every password and every case-sensitive
-     value in CFGCA long after the rest of their group had left.
-
-     The search below matches by ADDRESS, which a property does not have. The
-     settings object answers by NAME instead, and it knows which of its
-     properties are case-sensitive because the property's TYPE says so -- see
-     TSecretText and TCaseSensitiveText in uSettingsModel.
-
-     IT IS ASKED FIRST, because a name cannot be in both places: a migrated
-     setting has no row.
-   *)
-   if Settings.CommandIsCaseSensitive(string(ID)) then
-      begin
-      if Settings.TrySetByCommand(string(ID), string(CMD)) then
-         begin
-         if Settings.CommandIsSecret(string(ID)) then
-            begin
-            (* NOT THE VALUE. It is a password, and a debug log is copied
-              into bug reports. *)
-            logger.Debug('[case fixup] "%s" restored from the ini', [ID]);
-            end
-         else
-            begin
-            logger.Debug('[case fixup] "%s" restored, value=%s', [ID, CMD]);
-            end;
-         end;
-      Exit;
-      end;
-
-   (* AND THERE IS NO SECOND PLACE TO LOOK ANY MORE. The walk that stood here
-     searched CFGCA by ADDRESS for a ctCaseSensitive or ctPassword row; the
-     array is gone, and every one of those settings is a property whose TYPE
-     says so. The block above is the whole pass. *)
-end;
+  THE CASE PROBLEM IT WORKED AROUND DOES NOT EXIST IN THE CONVERTER.
+  tr4wconvert reads the ini through TIniFile, key by key, which never touches
+  the value's case -- so the shape that needed a second pass is gone rather
+  than unhandled. *)
 
 procedure PushLogFiles(var LastPushedLogName: Str20);
 
@@ -660,78 +596,17 @@ begin
  // n4af }
 end;
 
-(* DOES THIS FILE ACTUALLY CONTAIN ANY COMMANDS?
+(* ~~FileHasCommands~~ -- DELETED 2026-09-19 WITH THE INI READ.
 
-  A command line is `KEY = VALUE`, so a file with no '=' on any live line has
-  nothing for the parser to do however many bytes it has. NY4I's tr4w.ini is 67
-  bytes of sentinel prose and is exactly that case.
+  It answered "is this tr4w.ini worth opening" so an inert file was not
+  announced at every start. Nothing opens tr4w.ini at startup any more, so
+  the question has no asker: the converter reads the file because it was
+  asked to, whatever is in it.
 
-  BY CONTENT rather than by size, because "empty" is not the only shape this
-  takes: a file left holding only comments, or only a [SECTION] header, is
-  equally inert and equally not worth announcing.
-
-  DELIBERATELY CHEAP AND DELIBERATELY WRONG-SAFE. It answers True the moment it
-  sees one candidate line and stops; if it cannot read the file at all it
-  answers True, so the real parser runs and reports the failure in its own
-  terms. Never guess a file empty on the strength of an error. *)
-function FileHasCommands(const aFileName: string): boolean;
-var
-   lines: TStringList;
-   i:     integer;
-   s:     string;
-   name:  AnsiString;
-begin
-   Result := True;
-
-   (* HELD ONCE AS AnsiString, which is what both RTL calls below take --
-     FileExists and TStringList.LoadFromFile are 8-bit in this RTL. The name
-     arrives as a string, so this is the one explicit conversion at that
-     boundary. *)
-   name := AnsiString(aFileName);
-
-   if not FileExists(name) then
-      begin
-      (* Nothing to read. The parser would open nothing and find nothing. *)
-      Result := False;
-      Exit;
-      end;
-
-   lines := TStringList.Create;
-   try
-      try
-         lines.LoadFromFile(name);
-      except
-         (* Unreadable -- let the real parser meet it and say why. *)
-         Exit;
-      end;
-
-      Result := False;
-
-      for i := 0 to lines.Count - 1 do
-         begin
-         s := Trim(lines[i]);
-
-         if s = '' then
-            begin
-            Continue;
-            end;
-
-         (* The ini's own comment forms, plus a section header. *)
-         if (s[1] = ';') or (s[1] = '#') or (s[1] = '[') then
-            begin
-            Continue;
-            end;
-
-         if Pos('=', s) > 0 then
-            begin
-            Result := True;
-            Exit;
-            end;
-         end;
-   finally
-      lines.Free;
-   end;
-end;
+  AND NO DETECTOR REPLACES IT. An in-program "you still have an ini" check
+  was written and withdrawn the same day -- NY4I: "it frankly kept getting
+  in the way and causing confusion". Telling the operator to run the
+  conversion once is SETUP's job. *)
 
 (* WHICH FILE A CONFIG PASS READS, AS TEXT.
 
@@ -747,10 +622,6 @@ begin
       cfgCFG:
          begin
          Result := CharBufferText(TR4W_CFG_FILENAME);
-         end;
-      cfgINI:
-         begin
-         Result := CharBufferText(TR4W_INI_FILENAME);
          end;
       cfgINPUT:
          begin
@@ -769,43 +640,13 @@ procedure ReadInConfigFile(ConfigFileName: TCFGType);
   initial values for several global variables.  This makes it easier to
   restart the program in case of a power failure. }
 
-{ --- ARCHITECTURE NOTE: The Case-Sensitivity Problem ---
-
-  EnumerateLinesInFile is called below with UpperCase=True. This causes it to
-  call strU() on every raw line from the file BEFORE the line is parsed into a
-  command key and value. strU() uppercases the ENTIRE line in place using x86 ASM,
-  so a line like:
-
-      RADIO ONE ICOM NETWORK PASSWORD=appleipod
-
-  becomes:
-
-      RADIO ONE ICOM NETWORK PASSWORD=APPLEIPOD
-
-  before EnmuCFGFile ever splits on '='. The value extracted as CMD is therefore
-  already uppercase when CheckCommand stores it, regardless of the ctPassword type.
-
-  The UpperCase=True flag exists for good reason: many command values (booleans
-  stored as 'T'/'F', port names like 'NONE', alpha chars, band names) must be
-  uppercase to pass CheckCommand's validation logic. Changing the flag globally
-  would break all of those.
-
-  STOPGAP FIX (until the config parser is refactored):
-  After the normal load pass, re-read every ctPassword field from the INI file a
-  second time using Windows.GetPrivateProfileString. The Win32 INI API returns
-  values exactly as written in the file — it never modifies case. This overwrites
-  the uppercase value that the first pass stored, restoring the user's original
-  mixed-case password or username.
-
-  This fixup only runs for cfgINI (not .cfg files) because:
-  - Passwords/usernames are only stored in tr4w.ini, not in contest .cfg files.
-  - GetPrivateProfileString requires a section + key from a proper INI file.
-
-  Long-term fix: the parser should split the raw line into key/value BEFORE
-  calling strU, then uppercase only the key, leaving the value untouched.
-  All ctPassword fields in CFGCA (crType = ctPassword) would then be handled
-  correctly without a second-pass workaround. }
-
+(* THE CASE-SENSITIVITY NOTE THAT STOOD HERE WENT WITH THE INI READ,
+  2026-09-19.  It described the second pass over tr4w.ini that put an
+  operator's own capitalisation back after EnumerateLinesInFile had
+  upper-cased the whole line; see the note where RestoreCFGPasswordCase
+  used to be.  The upper-casing itself is unchanged and still applies to
+  the contest .cfg and the common-messages file, neither of which has
+  ever carried a password or a case-sensitive value. *)
 begin
   (* THE RESETS USED TO BE HERE, AND THAT IS WHAT MADE EVERY US CALLSIGN DX.
 
@@ -833,14 +674,7 @@ begin
     before the parse, so "clear and rebuild" is one operation rather than two
     separated by four early exits. *)
   LineNumberInConfigFile := 0;
-  gRawLineNumber := 0;
   CurrentConfigFile := ConfigFileName;
-  // Reset the duplicate-key tracker per load; only tr4w.ini is checked (see EnmuCFGFile).
-  if ConfigFileName = cfgINI then
-     begin
-     SetLength(gSeenINICmds, 0);
-     end;
-
   (* A CONTEST FILE THAT IS A DATABASE IS NOT PARSED AS TEXT.
 
     The operator can now choose a .db in the New Contest dialog -- it is the
@@ -865,56 +699,13 @@ begin
 
     cfgCFG ONLY: tr4w.ini and the common-messages file are text by definition
     and are not chosen by the operator. *)
-  (* AN EMPTY OR ABSENT tr4w.ini IS NOT OPENED, AND NOT ANNOUNCED.
+  (* THE tr4w.ini EARLY EXIT THAT STOOD HERE IS GONE -- 2026-09-19.
 
-    NY4I, 2026-09-02: "We also need to stop trying to open tr4w.ini." On his
-    station the file is 67 bytes of sentinel text and holds no commands -- every
-    station setting is in settings\tr4w.json, either in its `commands` section
-    or in one of the structured stores (radios, keyers, rotators, profiles,
-    colours, band plan) under a different name.
-
-    THE LOG LINE WAS THE WHOLE VISIBLE SYMPTOM. "[Config] Loading ...tr4w.ini"
-    at every start reads as a dependency the program no longer has, and that is
-    the trap uLegacyIniPrompt already describes: a file that looks like
-    configuration but is ignored costs the next person an hour.
-
-    WHY THE TEST IS "HAS NO COMMANDS" AND NOT "HAS BEEN MIGRATED".
-
-    ~~SeedMigratedCommandsFromIni runs only when there is no store at all~~
-    THAT IS STALE (re-checked 2026-09-11). It is called from BOTH startup
-    paths -- the no-store one and the ordinary one -- and it is idempotent,
-    skipping any command the store already holds. The gate it describes was
-    fixed on 2026-08-16; the comment outlived the defect.
-
-    SO THE BOLDER RULE IS NEARLY SAFE, AND NY4I ASKED FOR IT (2026-09-11):
-    "do not convert if there is already a json file and a contest .db file of
-    the same contest."
-
-    WHAT STANDS IN THE WAY IS THREE SETTINGS, and Lint-SettingsMigration
-    counts them on every build -- "219 stored, 3 still on the ini". They are
-    the RegisterLegacySetting rows in uSettingsDeclarations:
-
-        SINGLE BAND SCORE    a real setting, and the only one
-        BAND                 an ACTION -- it sets the current band
-        CLEAR DUPE SHEET     an ACTION -- crA:4, it clears the sheet
-
-    Two of the three are commands an operator TYPES, not values a station
-    persists, so they have no business in a settings file and nothing to
-    carry across. **One real setting is between this test and the rule NY4I
-    wants.**
-
-    Until then: skipping a file with nothing in it cannot lose anything;
-    skipping a file with something in it can.
-
-    NOTHING ABOUT THE MIGRATION CHANGES HERE -- only the case where there is
-    provably nothing to do. *)
-  if (ConfigFileName = cfgINI) and
-     (not FileHasCommands(CFGFileName(ConfigFileName))) then
-     begin
-     logger.Info('[Config] %s holds no commands -- not read. Station settings ' +
-                 'come from the JSON store.', [CFGFileName(ConfigFileName)]);
-     Exit;
-     end;
+    It asked FileHasCommands so an inert ini was not opened and not
+    announced (NY4I, 2026-09-02: "We also need to stop trying to open
+    tr4w.ini").  Startup no longer passes this routine an ini at all --
+    cfgINI is not a member of TCFGType any more -- so there is nothing
+    left to skip.  The file belongs to tr4wconvert. *)
 
   if (ConfigFileName = cfgCFG) and
      (ClassifyContestFile(CFGFileName(ConfigFileName)) = cfkTR4WDatabase) then
@@ -942,15 +733,6 @@ begin
 
   logger.Info('[Config] Loading %s', [CFGFileName(ConfigFileName)]);
   EnumerateLinesInFile(CFGFileName(ConfigFileName), EnmuCFGFile, True);
-
-  // STOPGAP: Re-read ctPassword fields with original case from the INI file.
-  // See the architecture note above for why this is necessary.
-  // Uses EnumerateLinesInFile (UpperCase=False) + RestoreCFGPasswordCase callback
-  // rather than GetPrivateProfileString, which proved unreliable in this context.
-  if ConfigFileName = cfgINI then
-     begin
-     EnumerateLinesInFile(CharBufferText(TR4W_INI_FILENAME), RestoreCFGPasswordCase, False);
-     end;
 
   // CW-state desync fix: the 'CW ENABLE' config command writes only Config.CWEnable,
   // but the actual transmit gate (SendCrypticCWString) and the Alt-K toggle
@@ -1206,13 +988,7 @@ procedure EnmuCFGFile(FileString: PShortString);
 var
   ID                                    : ShortString;
   CMD                                   : ShortString;
-  k                                     : integer;
-  firstLine                             : integer;
  begin
-
-  // Count every non-empty source line the enumerator yields (comments and section
-  // headers included) so a duplicate can be reported at ~its physical file line.
-  inc(gRawLineNumber);
 
   // Lines whose FIRST character (column 1, before any spaces are stripped) is a
   // comment/section marker are ignored:  ;  and  #  are comments,  [  is a
@@ -1390,40 +1166,20 @@ var
                     + #13 + FileString^);
  //    halt;
         end;
-     end
-  else
-     begin
-     // Flag a hand-edited duplicate single-valued key in tr4w.ini.  The line-based
-     // loader applies every occurrence (last wins) while the Win32 profile API used
-     // by the config dialog reads/writes the first (first wins) -- so a duplicate
-     // silently reverts on restart.  Only tr4w.ini scalars qualify; accumulating
-     // commands (freq/band lists, ADD DOMESTIC COUNTRY) legitimately repeat.
-     if (CurrentConfigFile = cfgINI) and CommandIsSingleValued(ID) then
-        begin
-        firstLine := -1;
-        for k := 0 to High(gSeenINICmds) do
-           begin
-           if gSeenINICmds[k].Name = string(ID) then
-              begin
-              firstLine := gSeenINICmds[k].Line;
-              Break;
-              end;
-           end;
-        if firstLine >= 0 then
-           begin
-           logger.Warn('[Config] Duplicate key "%s" in tr4w.ini: first at line %d, ' +
-              'repeated at line %d -- startup uses the last occurrence, the config ' +
-              'dialog uses the first; remove one.',
-              [ID, firstLine, gRawLineNumber]);
-           end
-        else
-           begin
-           SetLength(gSeenINICmds, Length(gSeenINICmds) + 1);
-           gSeenINICmds[High(gSeenINICmds)].Name := string(ID);
-           gSeenINICmds[High(gSeenINICmds)].Line := gRawLineNumber;
-           end;
-        end;
      end;
+
+  (* THE DUPLICATE-KEY DETECTOR THAT STOOD HERE IS GONE -- 2026-09-19.
+
+    It flagged a hand-edited key that appeared twice in tr4w.ini,
+    where the line loader takes the last occurrence and the Win32
+    profile API takes the first, so a duplicate silently reverted on
+    restart.  It was gated on CurrentConfigFile = cfgINI and on
+    nothing else -- a contest .cfg may legitimately repeat a key --
+    and startup no longer reads an ini, so it could never fire.
+
+    The failure it guarded cannot happen through the converter
+    either: tr4wconvert reads the ini through TIniFile, which is the
+    first-wins side of the disagreement and the only reader. *)
 end;
 
 //begin

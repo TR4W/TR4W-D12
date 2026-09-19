@@ -1867,7 +1867,34 @@ begin
         end;
      end;
 
-  ReadInConfigFile(cfgINI);
+  (* ~~ReadInConfigFile(cfgINI)~~ -- REMOVED 2026-09-19.
+
+    NY4I: "calling ReadInConfigFile(cfgINI) that does nothing is pointless and
+    should be removed."
+
+    THE LEGACY tr4w.ini IS THE CONVERTER'S INPUT NOW, and only that. It is
+    read by tr4w\tools\tr4wconvert (--ini <path>) and by the one-time seeders
+    that still exist for the stores; startup does not open it. Station
+    settings come from settings\tr4w.json, which the load above has already
+    asserted as the source of record -- and a file that is read but cannot
+    change anything is the shape this tree keeps paying for.
+
+    WHAT THE READ STILL DID, MEASURED RATHER THAN ASSUMED (2026-09-19, the
+    5.0.11 binary against a scratch install): CheckCommand is called with
+    aApplyJSONOwned = False for anything that is not the contest .cfg, so a
+    settings-owned command in the ini was ALREADY accepted-and-inert. What
+    remained was the pattern families, the four command ACTIONS, and the
+    ctPassword/case second pass -- and that last one wrote straight onto the
+    settings object, so `HAMSCORE USERNAME=MixedCaseUser` in an ini really did
+    reach Settings on every start. That is the one behaviour this removes, and
+    it is the behaviour NY4I is removing on purpose: the ini is converted
+    once, by the converter, not re-applied at every launch.
+
+    NO DETECTOR HERE. An in-program "you still have an ini" check was written
+    and withdrawn the same day -- NY4I: "it frankly kept getting in the way
+    and causing confusion". Telling the operator to run the conversion once
+    belongs to SETUP. ReportConfigurationSources already names the file as
+    present or absent, which is one information line in a log, not a prompt. *)
 
   ReadInConfigFile(cfgCFG);          //n4af 4.31.5
 

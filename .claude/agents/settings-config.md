@@ -60,8 +60,17 @@ that in both directions.
 
 - **The stores are JSON** — radios, keyers, profiles, window layout, UDP — in
   `settings/tr4w.json`.
-- **`tr4w.ini` STORES NOTHING.** On NY4I's station it is 67 bytes of sentinel
-  text. It and the contest `.cfg` are **read-once-and-convert import formats**.
+- **`tr4w.ini` STORES NOTHING, AND STARTUP DOES NOT READ IT** (2026-09-19).
+  On NY4I's station it is 67 bytes of sentinel text. It is the **converter's
+  input** -- `tr4w/tools/tr4wconvert --ini <path>` -- and nothing else:
+  `ReadInConfigFile(cfgINI)` is gone and `cfgINI` is no longer a member of
+  `TCFGType`, so there is no value left to pass in. The contest `.cfg` is
+  still a **read-once-and-convert import format**.
+- **DO NOT ADD AN IN-PROGRAM DETECTOR FOR A LEFTOVER ini.** One was written
+  and withdrawn the same day -- NY4I: *"it frankly kept getting in the way
+  and causing confusion"*. Telling the operator to run the conversion once
+  belongs to **SETUP**. `ReportConfigurationSources` still names the file
+  present or absent; that is one information line in a log, not a prompt.
 - **The contest `.cfg` is deliberately exempt** from JSON: its parameters go to
   the **contest SQLite database**.
 - **Credentials live in the OS vault**, not in settings.
@@ -193,14 +202,32 @@ on first start. What remains:
   ONLY copy and `ApplyStoredCommands` still applies them. Their destination is
   the contest database (`uLogStore.CaptureConfiguration`), and that is a
   separate migration — the collapse deliberately leaves them alone.
-- **`tr4w.ini` is still read at startup** (`ReadInConfigFile(cfgINI)`) rather
-  than converted once by `tr4wconvert`. So the source count is four for a
-  station setting (settings section, ini, contest `.cfg`, log config table),
-  not the two-plus-a-converter target.
+- ~~**`tr4w.ini` is still read at startup**~~ **DONE 2026-09-19.** The call,
+  the `cfgINI` enum member and every ini-only routine in `LogCfg` are gone
+  (`RestoreCFGPasswordCase`, `FileHasCommands`, the duplicate-key report,
+  and `uCFG.CommandIsSingleValued` with it). So a station setting now has
+  **three** sources -- the settings section, the contest `.cfg` and the log
+  config table -- against the two-plus-a-converter target. What the read
+  still did, measured against the 5.0.11 binary: a settings-owned command
+  in an ini was ALREADY inert (`CheckCommand` is called with
+  `aApplyJSONOwned = False` off the contest `.cfg`), and the one route that
+  bypassed that guard was the case/password second pass, which really did
+  put `HAMSCORE USERNAME=MixedCaseUser` onto the settings object at every
+  start. `uTestSettingsPrecedence` pins the reachable half.
 - **`uSettingsConvert` now loads only the section** (`LoadSettingsSection`),
   because going through the startup load would import the bucket first and
-  report every command "unchanged". It is still the only thing that reads the
-  old `tr4w.ini`.
+  report every command "unchanged". It is the only thing that reads the old
+  `tr4w.ini` FOR ITS COMMANDS.
+- **ONE ini READER SURVIVES AT STARTUP AND IT IS A ONE-TIME SEED, NOT A
+  COMMAND READ.** `uTR4WConfigFile.LoadUDPForStartup` (reached from
+  `LogCfg.ConfigureUDPBroadcastFromLibrary`) reads the ini through
+  `TIniFile` ONLY when `settings/tr4w.json` has no `udp` section at all --
+  `TUDPBroadcastConfig.SeedFromLegacyIni`, the same shape as the radio and
+  Cabrillo-header seeds. Once the section exists it is never consulted
+  again. It should end the same way the command read just did, when the
+  seeds move to `tr4wconvert`; it was deliberately NOT removed with the
+  command read, because deleting it without a converter equivalent would
+  lose an upgrading operator's UDP endpoint in silence.
 - **`general_qso` remains a known divergence for the same reason this defect
   had**: `MY NAME` lives only in the bucket and `/EXPORT` does not import it,
   so the sent name is empty where D7 sent `TOM`. Collapsing a station's file

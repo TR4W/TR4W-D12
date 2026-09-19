@@ -998,7 +998,12 @@ end;
   this file was blind to (Codex, 2026-09-11). The model tests call
   TrySetByCommand directly, so they never reproduce the startup ORDER --
   settings\tr4w.json is loaded and asserted as the source of record, and then
-  ReadInConfigFile(cfgINI) runs a dozen lines later.
+  ReadInConfigFile(cfgINI) ran a dozen lines later.
+
+  THAT CALL IS GONE (2026-09-19) and so is cfgINI, so the ini can no longer
+  be the untrusted caller. These two still matter: the flag is False for
+  every source that is not the contest .cfg, and the point of the pair is
+  the distinction, not the ini.
 
   The arm that resolves a migrated name in CheckCommand had no
   aApplyJSONOwned guard, so a stale ini line overwrote the stored value on

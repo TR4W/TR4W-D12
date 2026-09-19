@@ -536,8 +536,11 @@ A recovery UI would be a second opinion about a file this unit already owns.
 
 **"If a conversion source exists, run or offer the conversion path rather than
 the wizard."** Half right, and the half that is wrong matters. Conversion in
-TR4W is not a path that can be offered or declined -- `ReadInConfigFile(cfgINI)`
-and `(cfgCFG)` run unconditionally at `uProgramMain.pas:1687` and `:1689`. So
+TR4W is not a path that can be offered or declined -- `ReadInConfigFile(cfgCFG)`
+runs unconditionally in `uProgramMain`. (~~`(cfgINI)`~~ was beside it until
+2026-09-19; the legacy `tr4w.ini` is `tr4wconvert`'s input now and startup
+does not read it, so a leftover ini is NOT a conversion this program
+performs -- and deliberately not one it prompts about either.) So
 the wizard is not an *alternative* to conversion; it is evaluated *after* it,
 on whether a callsign arrived. That is the table in section 6, and it is why
 the gate asks about `MyCall` and not about which files exist.

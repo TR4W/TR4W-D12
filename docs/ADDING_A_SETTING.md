@@ -76,7 +76,7 @@ properly.
 
 ---
 
-## The twelve places that are NOT for a new setting
+## The places that are NOT for a new setting
 
 This is the actual source of the confusion. Every one of these exists to
 withdraw a command or to read an old file:
@@ -85,7 +85,6 @@ withdraw a command or to read an old file:
 |---|---:|---|
 | `uCFG.RETIRED_COMMANDS` | 88 | **removing** a command: accepted so an old file does not error, then ignored |
 | `uCFG.OWNED_BY_A_STORE` | 39 | a name the RADIO / KEYER / CLUSTER library owns, not the settings model |
-| `uCFG.ACCUMULATING_COMMANDS` | 4 | commands a file may legitimately repeat |
 | `uCFG.TryApplyCommandAction` | 4 | commands that DO something rather than set something |
 | `uRadioConfigApply.MIGRATED_COMMANDS` | 247 | seeding the store from a legacy `tr4w.ini` |
 | `uRadioConfigLegacyMap` | 111 | legacy key → store field |
@@ -127,9 +126,15 @@ A group marked contest-scoped (`IsContestScoped`) is excluded from
 table by `uLogStore.CaptureConfiguration`. That is the whole mechanism: **you
 put the property in the right group and the routing follows.**
 
-`tr4w.ini` and the contest `.cfg` are **import formats, read once and
-converted**, and converting them is `tr4wconvert`'s job, not TR4W's (NY4I,
-2026-09-12). Do not add anything for them.
+`tr4w.ini` is **the converter's input and nothing else**: startup has not read
+it since 2026-09-19 (NY4I -- `ReadInConfigFile(cfgINI)` removed, and `cfgINI`
+removed from `TCFGType` with it, so there is no longer a value to pass in).
+The contest `.cfg` is an **import format, read once and converted**.
+Converting either is `tr4wconvert`'s job, not TR4W's (NY4I, 2026-09-12).
+Do not add anything for them -- and do not add a startup check that an ini
+still exists: one was written and withdrawn the same day, because an
+in-program prompt about conversion gets in the way. **SETUP** tells the
+operator to run the conversion once.
 
 ---
 

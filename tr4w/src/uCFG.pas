@@ -295,13 +295,19 @@ var
      file. What it no longer has is a table to scan. *)
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
-// True when Command names a single-valued (overwrite) config command, i.e. one
-// for which a duplicate line is a misconfiguration.  Accumulating commands
-// (frequency lists, band lists, ADD DOMESTIC COUNTRY, indexed arrays) legitimately
-// repeat and return False, as do pattern-matched commands (COLUMN WIDTH,
-// "* WINDOW *", messages) and unknown commands.  Used by the config loader to
-// flag hand-edited duplicate keys.  See the implementation for the list.
-function CommandIsSingleValued(const Command: ShortString): boolean;
+(* ~~CommandIsSingleValued~~ -- DELETED 2026-09-19 WITH THE INI READ.
+
+  Its one caller was LogCfg's duplicate-key report, which fired for
+  tr4w.ini and for nothing else: the line loader takes the LAST
+  occurrence of a repeated key and the profile API the old config dialog
+  used takes the FIRST, so a hand-edited duplicate silently reverted on
+  restart.  Startup does not read an ini any more, and tr4wconvert reads
+  it through TIniFile -- the first-wins side, and now the only reader --
+  so the two spellings can no longer disagree.
+
+  ACCUMULATING_COMMANDS went with it.  Which four commands accumulate is
+  still a real property of the vocabulary, and it is still stated where
+  it is acted on: TryApplyCommandAction handles exactly those four. *)
 
 (* True when aCommand names a feature TR4W has withdrawn.  Such a command is
   ACCEPTED and does nothing, so an old tr4w.ini or contest .cfg that still
@@ -659,7 +665,10 @@ begin
       begin
       if Result then
          begin
-         logger.Debug('[Config] %s = %s (stored in tr4w.ini)', [aCommand, aValue]);
+         (* NOT tr4w.ini, WHICH THIS LINE SAID UNTIL 2026-09-19 AND HAD NOT
+           MEANT FOR A YEAR.  SetCFGCommandValue writes the property and
+           settings\tr4w.json; nothing here has ever written the ini. *)
+         logger.Debug('[Config] %s = %s (applied and stored)', [aCommand, aValue]);
          end
       else
          begin
@@ -674,53 +683,6 @@ var
    TempFreq: integer;
 
    Result1: integer;
-
-(* COMMANDS A CONFIG FILE MAY LEGITIMATELY NAME MORE THAN ONCE.
-
-  "Single-valued" means the command overwrites a scalar target, so a second
-  line for the same key is a misconfiguration -- the line-based loader applies
-  every occurrence (last wins) while the profile API the old config dialog
-  used reads the FIRST, so the two silently disagree and LogCfg reports the
-  duplicate.
-
-  THE OLD TEST WAS STRUCTURAL: ckNormal, not ctFreqList, crA = 0. Every
-  accumulating command failed at least one of those. It is a NAME now, and a
-  short list, because accumulating is a property of the four commands that do
-  it rather than something the table happened to encode -- see
-  TryApplyCommandAction, which is where all four went.
-
-  Unknown names answer False, exactly as the row scan did: a pattern-matched
-  command (COLUMN WIDTH <name>, <element> WINDOW COLOR) has no row and never
-  did. *)
-const
-   ACCUMULATING_COMMANDS: array[0..3] of string = (
-      'ADD DOMESTIC COUNTRY',
-      'BAND MAP CUTOFF FREQUENCY',
-      'CLEAR DUPE SHEET',
-      'FREQUENCY MEMORY');
-
-function CommandIsSingleValued(const Command: ShortString): boolean;
-var
-   name: string;
-   i: integer;
-begin
-   name := string(Command);
-
-   Result := Settings.OwnsCommand(name);
-   if not Result then
-      begin
-      Exit;
-      end;
-
-   for i := Low(ACCUMULATING_COMMANDS) to High(ACCUMULATING_COMMANDS) do
-      begin
-      if SameText(ACCUMULATING_COMMANDS[i], name) then
-         begin
-         Result := False;
-         Exit;
-         end;
-      end;
-end;
 
 (* WHICH SETTINGS GO TO THE OTHER POSITIONS when one of them changes.
 
@@ -1133,7 +1095,8 @@ end;
 
   ACCUMULATING, WHICH IS WHY THEY ARE NOT SETTINGS AND NOT DUPLICATES: a
   config file may legitimately name FREQUENCY MEMORY a dozen times, and each
-  line adds. CommandIsSingleValued already says so. *)
+  line adds. These four, and only these four, are the accumulating
+  commands -- which is what CommandIsSingleValued used to be asked. *)
 function TryApplyCommandAction(const aCommand: string;
                                const aValue: ShortString): boolean;
 var
@@ -1294,6 +1257,12 @@ begin
         and a value changed in Preferences would not survive a restart. Two
         stores disagreeing with nobody able to say which is in force, which is
         the exact failure uSettingsModel's header exists to prevent.
+
+        AND THE ini READER ITSELF IS GONE NOW (2026-09-19), so the launch
+        described above cannot happen at all. The guard stays because the
+        flag is False for every caller that is not the contest .cfg --
+        the common messages, CfgCmd, a peer's parameter -- and each of
+        those is just as untrusted as the ini was.
 
         Found in review by Codex, 2026-09-11. It was invisible to the settings
         unit tests because they call TrySetByCommand directly and never

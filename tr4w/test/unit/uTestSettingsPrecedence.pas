@@ -78,6 +78,8 @@ type
       procedure Test_ClearingComputerIdSurvivesARestart;
       procedure Test_DisplayLanguageIsStationOnly;
       procedure Test_StartupMainCallsignReadsTheFile;
+      procedure Test_ALegacyIniIsNotAStartupSource;
+      procedure Test_AnInertOrAbsentIniChangesNothing;
    public
       procedure RunAllTests; override;
    end;
@@ -570,6 +572,165 @@ begin
 end;
 
 
+
+(* ---------------------------------------------------------------------
+  THE LEGACY tr4w.ini IS THE CONVERTER'S INPUT, NOT A STARTUP SOURCE.
+
+  NY4I, 2026-09-19: "calling ReadInConfigFile(cfgINI) that does nothing is
+  pointless and should be removed."  The startup read is gone, cfgINI is no
+  longer a member of TCFGType, and tr4w\tools\tr4wconvert --ini <path> is the
+  one thing that reads the file.
+
+  WHAT THESE TWO PIN, AND WHAT THEY CANNOT.  The settings load is reachable
+  from a unit test; ReadInConfigFile is not -- it lives in LogCfg, which needs
+  MainUnit's globals, which is the same reason ApplyStoredCommands is not
+  tested here.  So what is asserted is the invariant an operator would feel:
+  a populated tr4w.ini SITTING BESIDE the settings file contributes nothing,
+  and an inert or absent one is indistinguishable from it.
+
+  THE REMOVAL ITSELF WAS MEASURED AGAINST THE 5.0.11 BINARY rather than
+  asserted here, because the behaviour it removed lived in that unreachable
+  half.  A scratch install with
+
+      [COMMANDS]
+      HAMSCORE USERNAME=MixedCaseUser
+
+  logged, at HEAD:
+
+      [Config] Loading ...\settings\tr4w.ini
+      [case fixup] "HAMSCORE USERNAME" restored, value=MixedCaseUser
+
+  -- the ini's ctPassword/case second pass writing straight onto the settings
+  object.  Both lines are absent afterwards.  Note what was ALREADY inert
+  before the removal: CheckCommand is called with aApplyJSONOwned = False for
+  anything that is not the contest .cfg, so an ordinary settings-owned command
+  in an ini could not reach a property even then.  The case pass was the one
+  route that bypassed that guard.
+  --------------------------------------------------------------------- *)
+procedure TSettingsPrecedenceTests.Test_ALegacyIniIsNotAStartupSource;
+var
+   dir, file_: string;
+   s: TR4WSettings;
+   value: string;
+   ini: TStringList;
+begin
+   BeginTest('Test_ALegacyIniIsNotAStartupSource');
+   dir := TempDirFor('legacyini');
+
+   file_ := WriteFixture(dir,
+      '      "Hamscore" : { "Username" : "FROM SETTINGS" }',
+      '      "other" : { }');
+
+   (* A POPULATED ini BESIDE IT, in the shape a 4.x station really has: the
+     [COMMANDS] section, one KEY=VALUE per line, including the two kinds the
+     old read could still apply -- a case-sensitive value and an action. *)
+   ini := TStringList.Create;
+   try
+      ini.Add('[COMMANDS]');
+      ini.Add('HAMSCORE USERNAME=MixedCaseUser');
+      ini.Add('MY GRID=ZZ99zz');
+      ini.Add('ADD DOMESTIC COUNTRY=ZZ');
+      ini.SaveToFile(IncludeTrailingPathDelimiter(dir) + 'tr4w.ini');
+   finally
+      ini.Free;
+   end;
+
+   s := TR4WSettings.Create;
+   try
+      CheckTrue(LoadSettingsForStartup(file_, s),
+                'the settings file loads with an ini sitting next to it');
+
+      CheckTrue(s.TryGetByCommand('HAMSCORE USERNAME', value),
+                'HAMSCORE USERNAME reads back');
+      CheckEquals('FROM SETTINGS', value,
+                  'the ini does not displace the settings section -- it is the '
+                  + 'converter''s input, not a startup source');
+
+      CheckTrue(s.TryGetByCommand('MY GRID', value), 'MY GRID reads back');
+      CheckEquals('', value,
+                  'and an ini-only value does not appear from nowhere either');
+   finally
+      s.Free;
+   end;
+end;
+
+
+(* ---------------------------------------------------------------------
+  AN INERT OR ABSENT ini IS INDISTINGUISHABLE FROM A POPULATED ONE.
+
+  This is the half that used to need a detector.  NY4I's own tr4w.ini is 67
+  bytes of sentinel prose, and the old code carried FileHasCommands purely so
+  that file was not opened and not announced.  With no reader at all, "does it
+  hold commands" stops being a question the program asks -- so the three cases
+  below have to agree, exactly, and the assertion is that agreement rather
+  than any one value.
+
+  NO WARNING EITHER.  An in-program "you still have an ini" check was written
+  and withdrawn the same day -- NY4I: "it frankly kept getting in the way and
+  causing confusion".  That message belongs to SETUP.
+  --------------------------------------------------------------------- *)
+procedure TSettingsPrecedenceTests.Test_AnInertOrAbsentIniChangesNothing;
+
+   function LoadedUsername(const aDir: string): string;
+   var
+      file_: string;
+      s: TR4WSettings;
+   begin
+      Result := '<not read>';
+      file_ := WriteFixture(aDir,
+         '      "Hamscore" : { "Username" : "FROM SETTINGS" }',
+         '      "other" : { "MY GRID" : "EL88" }');
+      s := TR4WSettings.Create;
+      try
+         LoadSettingsForStartup(file_, s);
+         s.TryGetByCommand('HAMSCORE USERNAME', Result);
+      finally
+         s.Free;
+      end;
+   end;
+
+var
+   noIni, sentinel, populated: string;
+   f: TStringList;
+   dir: string;
+begin
+   BeginTest('Test_AnInertOrAbsentIniChangesNothing');
+
+   (* NO ini AT ALL -- a station installed at 5.x. *)
+   noIni := LoadedUsername(TempDirFor('noini'));
+
+   (* THE SENTINEL, byte for byte the shape NY4I's station has: prose, no '='
+     on any line, so the old FileHasCommands answered False for it. *)
+   dir := TempDirFor('sentinelini');
+   f := TStringList.Create;
+   try
+      f.Add('THIS FILE HAS BEEN MADE READONLY TO STOP THE AGENT FROM WRITING IT.');
+      f.SaveToFile(IncludeTrailingPathDelimiter(dir) + 'tr4w.ini');
+   finally
+      f.Free;
+   end;
+   sentinel := LoadedUsername(dir);
+
+   (* AND A FULL ONE, which the old read WOULD have acted on. *)
+   dir := TempDirFor('fullini');
+   f := TStringList.Create;
+   try
+      f.Add('[COMMANDS]');
+      f.Add('HAMSCORE USERNAME=MixedCaseUser');
+      f.SaveToFile(IncludeTrailingPathDelimiter(dir) + 'tr4w.ini');
+   finally
+      f.Free;
+   end;
+   populated := LoadedUsername(dir);
+
+   CheckEquals('FROM SETTINGS', noIni, 'no ini: the settings section answers');
+   CheckEquals(noIni, sentinel,
+               'a sentinel ini is indistinguishable from no ini');
+   CheckEquals(noIni, populated,
+               'and so is a populated one -- startup has no ini reader left');
+end;
+
+
 procedure TSettingsPrecedenceTests.RunAllTests;
 begin
    Test_TheSettingsSectionBeatsTheLegacyBucket;
@@ -580,6 +741,8 @@ begin
    Test_ClearingComputerIdSurvivesARestart;
    Test_DisplayLanguageIsStationOnly;
    Test_StartupMainCallsignReadsTheFile;
+   Test_ALegacyIniIsNotAStartupSource;
+   Test_AnInertOrAbsentIniChangesNothing;
 end;
 
 end.

@@ -856,7 +856,8 @@ is `StrToIntDef(s, 0)`).
 
 ### 3. Configuration (`src/uCFG.pas`, `src/trdos/CFGCMD.pas`)
 
-Loaded from `settings/tr4w.ini`, contest `.cfg` files, and common messages. The parser handles
+Loaded from the contest `.cfg` and the common messages. ~~`settings/tr4w.ini`~~ is
+**not a startup source since 2026-09-19** -- it is `tr4wconvert`'s input. The parser handles
 `MY CALL = N6TR`-style commands via `CFGRecord` structures (command text → variable address → type →
 range). Supports network synchronisation for multi-station setups.
 
@@ -911,6 +912,16 @@ NOTHING**; the file on NY4I's station is 67 bytes of sentinel text. It and the
 contest `.cfg` are **read-once-and-convert import formats** (NY4I, 2026-09-11):
 read once, converted, never consulted again. The `.cfg`'s contest parameters go
 to the **contest SQLite database**, not to JSON.
+
+**AND STARTUP NO LONGER READS `tr4w.ini` AT ALL (2026-09-19).** NY4I: *"calling
+`ReadInConfigFile(cfgINI)` that does nothing is pointless and should be removed."*
+The call is gone, `cfgINI` is no longer a member of `TCFGType`, and the ini is the
+**converter's input**: `tr4w/tools/tr4wconvert --ini <path>`. One information line in
+the log still names the file present or absent (`ReportConfigurationSources`), and
+that is all -- **there is deliberately no in-program detector telling an operator to
+convert.** One was written and withdrawn the same day (NY4I: *"it frankly kept
+getting in the way and causing confusion"*); that message belongs to **SETUP**, and
+the installer line is separate work.
 
 ### THE DESTINATION IS `uSettingsModel`, AND IT IS NOT A REGISTRY EITHER
 
@@ -1251,7 +1262,8 @@ reference.
 ### 11. Logging framework
 
 Log4D (`tr4w/include/Log4D.pas` — **not** under `src/`), global `logger: TLogLogger`, rolling file appender to `tr4w.log`, level from
-`DEBUG LOG LEVEL` in `tr4w.ini` (`NONE`…`TRACE`). Any standalone EXE that links app units must assign
+`Settings.Log.DebugLevel` in `settings/tr4w.json` (`NONE`…`TRACE`) -- ~~`tr4w.ini`~~, which
+startup has not read since 2026-09-19. Any standalone EXE that links app units must assign
 the `MainUnit` global `logger` or it will AV.
 
 ## Documentation map
@@ -1321,8 +1333,9 @@ parallel port was removed from the program, so nothing loads that DLL. It was ne
 kernel port-I/O driver needs elevation) and is now not looked for either.
 See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
 
-**Created at runtime:** `settings/tr4w.json` (and the legacy `settings/tr4w.ini`, read-once —
-see [Configuration](#3-configuration-srcucfgpas-srctrdoscfgcmdpas)), `settings/tr4w.pos`, contest
+**Created at runtime:** `settings/tr4w.json` (the legacy `settings/tr4w.ini` is neither created
+nor read — it is `tr4wconvert`'s input, see
+[Configuration](#3-configuration-srcucfgpas-srctrdoscfgcmdpas)), `settings/tr4w.pos`, contest
 `.cfg`, and **the SQLite contest log**. Those paths are relative to the running binary, which in
 this tree means `tr4w/target/`. ~~binary `.dat` logs~~ — the binary log is **import-only** now.
 
@@ -1344,7 +1357,8 @@ tracking, scoring, and Cabrillo export — and run the corpus.
 `logwind.pas` → colours in `VC.pas` (`tr4wColors`).
 
 ### Debug
-`DEBUG LOG LEVEL = DEBUG` under `[COMMANDS]` in `settings/tr4w.ini`; output to `tr4w.log`.
+`DEBUG LOG LEVEL = DEBUG` — set it in Preferences, which writes `settings/tr4w.json`; the
+ini is not read. Output to `tr4w.log`.
 Build with `/p:Config=Debug` (the default recipe above).
 
 ## Important Conventions
