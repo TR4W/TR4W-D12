@@ -230,18 +230,14 @@ procedure SetLatestConfigFile(const aFileName: string);
 function  GridPromptAlreadyShown: boolean;
 procedure MarkGridPromptShown;
 
-// Apply ONE stored command from settings\tr4w.json, and return whether it was
-// found and accepted.
-//
-// For the handful of settings a HEADLESS /EXPORT genuinely needs.  That path
-// deliberately skips ApplyStoredCommands, because applying every stored command
-// takes the operator's current settings over the log's own .cfg -- measured
-// wrong, 21/1/4 -> 8/14/4.  Applying ONE NAMED command is a different thing:
-// the caller states which, and why, at the call site.
-//
-// Do not turn this into a loop over the store.  That is ApplyStoredCommands,
-// and it is skipped under /EXPORT on purpose.
-function ApplyStoredCommand(const aCommand: string): boolean;
+(* ~~ApplyStoredCommand~~ -- DELETED 2026-09-19 with its only caller.
+
+  It applied ONE named command out of the legacy `commands` bucket, for the
+  handful of settings a headless /EXPORT needs. Its one caller was COMPUTER ID,
+  and that was the precedence defect in miniature: a name the settings object
+  owns, read from the second home, applied after the settings section had
+  loaded. LoadSettingsForStartup imports the bucket itself now, so there is
+  nothing for a per-command reader to do. *)
 
 // UI-free description of the port collisions a profile WOULD cause, '' when
 // clean.  Advisory: unlike TRadioConfigStore.Validate, this also covers the
@@ -830,6 +826,33 @@ begin
          Continue;
          end;
 
+      (* THE SETTINGS OBJECT OWNS THIS NAME, SO THIS COPY IS NOT THE HOME.
+        2026-09-19.
+
+        THE DEFECT: this loop runs AFTER LoadSettingsForStartup, so a stale
+        entry here overwrote the settings section on every start -- the second
+        home winning simply by being applied last. It is why clearing COMPUTER
+        ID did not survive a restart: Preferences deleted the bucket entry, the
+        settings section still held the old letter, and nothing overrode it.
+
+        THE VALUE IS NOT LOST. LoadSettingsForStartup imports the bucket onto
+        the properties BEFORE the settings section is de-streamed, and
+        CollapseLegacySettingHomes then deletes what it consumed. So on a
+        collapsed station this test never matches; it is here for a file
+        written by an older build, a rollback, or a peer that still sends one.
+
+        A CONTEST-SCOPED NAME IS STILL APPLIED. ToJSON excludes it from the
+        settings section, so the bucket is the only copy there is until those
+        move to the contest database. *)
+      if Settings.OwnsCommand(name) and
+         (not Settings.CommandIsContestScoped(name)) then
+         begin
+         logger.Info('[ApplyStoredCommands] %s is a settings-object command -- ' +
+                     'the settings section is its home and has already been applied',
+                     [name]);
+         Continue;
+         end;
+
       FillChar(keyShort, SizeOf(keyShort), 0);
       FillChar(valueShort, SizeOf(valueShort), 0);
       keyShort   := ShortString(AnsiString(name));
@@ -1132,7 +1155,35 @@ function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
                               const aCommand, aValue: string): boolean;
 var
    keyShort, valueShort: ShortString;
+   before, after: string;
+   settingsOwned: boolean;
 begin
+   (* A COMMAND THE SETTINGS OBJECT OWNS IS PERSISTED TO THE SETTINGS SECTION
+     AND NOWHERE ELSE -- 2026-09-19, and this is the half of the fix that stops
+     the second home from being created again.
+
+     WHAT IT DID BEFORE: CheckCommand routed the value to the property, and
+     then the value was ALSO written into the store's legacy `commands`
+     bucket. Two homes, written by one call. Preferences writes COMPUTER ID
+     through here, so an id landed in `commands` and never in `settings` --
+     and clearing it deleted the bucket entry (TStrings.Values[k] := ''
+     removes the entry) while the settings section kept the old letter.
+
+     ApplyPeerCommand has always done it this way for an owned command. This
+     makes Preferences and a peer change take the SAME path, which is the
+     point: two spellings of one rule are free to disagree.
+
+     A CONTEST-SCOPED COMMAND IS EXCLUDED, and that is not caution. ToJSON
+     leaves it out of the settings section by design, so routing it here would
+     write it nowhere at all. The bucket stays its home until the contest
+     database takes it. *)
+   settingsOwned := Settings.OwnsCommand(aCommand) and
+                    (not Settings.CommandIsContestScoped(aCommand));
+   if settingsOwned and (not Settings.TryGetByCommand(aCommand, before)) then
+      begin
+      before := '';
+      end;
+
    // APPLY FIRST, RECORD SECOND -- the same order as everywhere else here.
    // CheckCommand is what moves the value into the live globals and runs the
    // hook; the store is only what makes it survive a restart.  Recording a
@@ -1144,64 +1195,32 @@ begin
    valueShort := ShortString(AnsiString(aValue));
 
    Result := CheckCommand(keyShort, valueShort, True);
-   if Result and (aStore <> nil) then
-      begin
-      aStore.SetCommand(aCommand, aValue);
-      end;
-end;
-
-function ApplyStoredCommand(const aCommand: string): boolean;
-var
-   store: TRadioConfigStore;
-   keyers: TKeyerConfigStore;
-   udp: TUDPBroadcastConfig;
-   loadErr, value: string;
-   keyShort, valueShort: ShortString;
-begin
-   Result := False;
-   if not FileExists(RadioStoreFileName) then
+   if not Result then
       begin
       Exit;
       end;
 
-   store  := TRadioConfigStore.Create;
-   keyers := TKeyerConfigStore.Create;
-   udp    := TUDPBroadcastConfig.Create;
-   try
-      if not LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+   if settingsOwned then
+      begin
+      (* ONLY WHEN IT ACTUALLY CHANGED. Every caller here is post-load, but
+        several apply a value that is already in force -- ApplyActiveCluster
+        pushes TELNET SERVER at every start -- and an unconditional save would
+        rewrite settings\tr4w.json on a path that changed nothing. *)
+      if not Settings.TryGetByCommand(aCommand, after) then
          begin
-         logger.Warn('[Startup] %s could not be read for %s: %s',
-                     [RadioStoreFileName, aCommand, loadErr]);
-         Exit;
+         after := '';
          end;
-
-      value := store.CommandValue(aCommand, '');
-      if value = '' then
+      if after <> before then
          begin
-         Exit;   // not stored: the ini or the .cfg keeps whatever it set
+         SaveSettings(TR4WConfigFileName, Settings);
          end;
+      Exit;
+      end;
 
-      FillChar(keyShort, SizeOf(keyShort), 0);
-      FillChar(valueShort, SizeOf(valueShort), 0);
-      keyShort   := ShortString(AnsiString(aCommand));
-      valueShort := ShortString(AnsiString(value));
-
-      // True: apply even when the row is csJSON, which is the whole point.
-      Result := CheckCommand(keyShort, valueShort, True);
-      if Result then
-         begin
-         logger.Info('[Startup] %s = %s applied from %s',
-                     [aCommand, value, RadioStoreFileName]);
-         end
-      else
-         begin
-         logger.Warn('[Startup] CFGCA refused stored %s = "%s"', [aCommand, value]);
-         end;
-   finally
-      udp.Free;
-      keyers.Free;
-      store.Free;
-   end;
+   if aStore <> nil then
+      begin
+      aStore.SetCommand(aCommand, aValue);
+      end;
 end;
 
 function GridPromptAlreadyShown: boolean;
@@ -1395,15 +1414,18 @@ begin
 
      PERSISTED IMMEDIATELY, like the migrated branch below: startup reads the
      section, so a peer change left only in memory would be gone on restart --
-     which is the failure this whole routine exists to remove. *)
-   if Settings.OwnsCommand(aCommand) then
+     which is the failure this whole routine exists to remove.
+
+     THE PERSISTING IS ApplyAndStoreCommand'S NOW -- 2026-09-19. It grew the
+     same arm for Preferences, so the two had the same rule written twice and
+     were free to drift; this is the copy that was deleted. It goes through
+     CheckCommand rather than TrySetByCommand, which is the same route for an
+     owned command and keeps the refusal reporting in one place. *)
+   if Settings.OwnsCommand(aCommand) and
+      (not Settings.CommandIsContestScoped(aCommand)) then
       begin
-      Result := Settings.TrySetByCommand(aCommand, aValue);
-      if Result then
-         begin
-         SaveSettings(TR4WConfigFileName, Settings);
-         end
-      else if logger <> nil then
+      Result := ApplyAndStoreCommand(nil, aCommand, aValue);
+      if (not Result) and (logger <> nil) then
          begin
          // A value the property's type refuses. Reported, not swallowed: the
          // two positions now disagree and only a log line can say so.

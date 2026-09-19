@@ -424,6 +424,28 @@ type
         A CLASS FUNCTION so the question can be asked of the type, and so
         no instance has to exist to answer it. *)
       class function IsContestScoped: boolean; virtual;
+
+      (* IS THIS GROUP THE STATION'S ALONE, SO THAT A CONTEST .cfg MUST NOT
+        SET IT?
+
+        False for almost everything, and it is NOT the opposite of
+        IsContestScoped. Most settings are the station's AND may legitimately
+        be overridden by a contest for the duration of that contest -- that is
+        what the contest-overrides-station rule in LogCfg is for.
+
+        True only for a group a contest cannot meaningfully set at all,
+        because the value is consumed before any .cfg is read. DISPLAY
+        LANGUAGE is the case that forced this (NY4I, 2026-09-19): the
+        catalogue is chosen by StartupUILanguage before the first form
+        streams, so a .cfg line could never take effect -- but it WOULD sit on
+        the property, and the next Preferences save would write the contest's
+        language into the station's settings\tr4w.json, permanently.
+
+        ACCEPTED AND IGNORED, never refused: LogCfg.pas:1262 shows a MODAL
+        "invalid statement in config file" for a refused line, and an operator
+        whose working .cfg names one of these must not be told their
+        configuration is invalid. The line is logged and dropped. *)
+      class function IsStationOnly: boolean; virtual;
    end;
 
    (*
@@ -3145,6 +3167,10 @@ type
       FLanguage: string;
    public
       constructor Create;
+      (* STATION-ONLY. A contest .cfg naming DISPLAY LANGUAGE is logged and
+        ignored -- see TSettingsGroup.IsStationOnly for why accepting it would
+        be worse than useless. *)
+      class function IsStationOnly: boolean; override;
    published
       property Language: string read FLanguage write FLanguage;
    end;
@@ -3572,6 +3598,10 @@ type
         False for a name the model does not own at all, so a caller can ask
         about any command. *)
       function CommandIsContestScoped(const aCommand: string): boolean;
+      (* Is this command the station's alone, so that a contest .cfg must not
+        set it? False for a name the model does not own at all, so a caller
+        can ask about any command. See TSettingsGroup.IsStationOnly. *)
+      function CommandIsStationOnly(const aCommand: string): boolean;
       function TrySetByCommand(const aCommand, aValue: string): boolean;
       (* IS THIS SETTING A CREDENTIAL? Asked by the multi-op sync before it
         sends anything, by the importer before it upper-cases a line, and by
@@ -3779,6 +3809,26 @@ const
 
 function Settings: TR4WSettings;
 procedure FreeSettings;
+
+(* THE LEGACY `commands` BUCKET, FLATTENED INTO name=value PAIRS.
+
+  THE REAL FILE NESTS COMMANDS BY CATEGORY -- 'MY GRID' lives at
+  commands/other/MY GRID, 'CW ENABLE' at commands/cw/CW ENABLE, and the cw
+  category has a `ptt` sub-object under it. Anything that asks the bucket for
+  a name directly, as ImportLegacyCommands did with FindPath, therefore finds
+  NOTHING on any file written in the current shape.
+
+  ONE IMPLEMENTATION, because two callers need it and they are in different
+  units: the import below, and uTR4WConfigFile's startup readers, which run
+  before the settings object is loaded and may only read the file.
+
+  A NESTED CATEGORY IS NOT PART OF THE NAME. The categories are a filing
+  convenience the store invented; the command is the leaf key, and the same
+  command never appears under two categories.
+
+  aInto is added to, not cleared, so a caller can layer two sources. *)
+procedure FlattenLegacyCommands(const aCommands: TJSONObject;
+                                const aInto: TStrings);
 
 implementation
 
@@ -5801,6 +5851,29 @@ begin
    Result := (owner is TSettingsGroup) and TSettingsGroup(owner).IsContestScoped;
 end;
 
+function TR4WSettings.CommandIsStationOnly(const aCommand: string): boolean;
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+begin
+   (* The same resolution as CommandIsContestScoped, and deliberately the same
+     shape: the marker is carried by the GROUP, so the question is answered by
+     walking down to the object that publishes the property. *)
+   Result := False;
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+
+   Result := (owner is TSettingsGroup) and TSettingsGroup(owner).IsStationOnly;
+end;
+
 function TR4WSettings.TrySetByCommand(const aCommand, aValue: string): boolean;
 var
    path: string;
@@ -6055,6 +6128,19 @@ end;
 class function TSettingsGroup.IsContestScoped: boolean;
 begin
    Result := False;
+end;
+
+class function TSettingsGroup.IsStationOnly: boolean;
+begin
+   Result := False;
+end;
+
+class function TDisplaySettings.IsStationOnly: boolean;
+begin
+   (* StartupUILanguage has already chosen the catalogue by the time any .cfg
+     is read, so a contest could not change the language even if it were
+     allowed to -- it could only poison the station's stored value. *)
+   Result := True;
 end;
 
 class function TBandSettings.IsContestScoped: boolean;
@@ -6522,12 +6608,51 @@ begin
    Walk(Self, '');
 end;
 
+procedure FlattenLegacyCommands(const aCommands: TJSONObject;
+                                const aInto: TStrings);
+
+   procedure Walk(const aNode: TJSONObject);
+   var
+      i: integer;
+      child: TJSONValue;
+   begin
+      for i := 0 to aNode.Count - 1 do
+         begin
+         child := aNode.Items[i];
+         if child is TJSONObject then
+            begin
+            (* A CATEGORY, or the one sub-category the store writes
+              (commands/cw/ptt). Recursing rather than looking one level down
+              means a category added later needs no edit here. *)
+            Walk(TJSONObject(child));
+            end
+         else if child <> nil then
+            begin
+            (* AnsiString on both sides of the crossing, stated rather than
+              implied: a command name and the text of a config value are ASCII
+              and UTF-8 bytes the store already holds as such. *)
+            aInto.Values[AnsiString(aNode.Names[i])] :=
+               AnsiString(child.AsString);
+            end;
+         end;
+   end;
+
+begin
+   if (aCommands = nil) or (aInto = nil) then
+      begin
+      Exit;
+      end;
+   Walk(aCommands);
+end;
+
 procedure TR4WSettings.ImportLegacyCommands(const aCommands: TJSONObject);
 var
    names: TStringList;
+   legacy: TStringList;
    i: integer;
    key: string;
-   value: TJSONValue;
+   keyA: AnsiString;
+   value: string;
 begin
    if aCommands = nil then
       begin
@@ -6545,21 +6670,55 @@ begin
      A KEY THAT IS ABSENT, OR A VALUE THAT WILL NOT PARSE, LEAVES THE PROPERTY
      AT ITS DEFAULT.  Not an error: a station that never set a value has no key
      for it, and this import gets no second chance to ask about one it cannot
-     read. *)
+     read.
+
+     A CONTEST-SCOPED COMMAND IS NOT IMPORTED. Its value belongs in the
+     contest database and ToJSON excludes it from settings\tr4w.json, so
+     putting it on the property here would move it out of the one place that
+     still carries it. ApplyStoredCommands goes on applying those, unchanged.
+
+     THE BUCKET IS FLATTENED FIRST -- see FlattenLegacyCommands. This used
+     FindPath on the raw object, which answers nil for every command in a file
+     written in the current nested shape, so the import silently did nothing
+     on exactly the stations that needed it. *)
+   legacy := TStringList.Create;
    names := CommandNames;
    try
+      FlattenLegacyCommands(aCommands, legacy);
       for i := 0 to names.Count - 1 do
          begin
          key := names[i];
-         value := aCommands.FindPath(UTF8String(key));
-         if value = nil then
+         (* EXPLICIT AT THE CROSSING. TStringList's names and values are
+           AnsiString here and a command name is ASCII by definition, so
+           nothing can be lost -- saying so beats an implicit narrowing the
+           ratchet has to forgive. *)
+         keyA := AnsiString(key);
+         if legacy.IndexOfName(keyA) < 0 then
             begin
             Continue;
             end;
-         TrySetByCommand(key, string(value.AsString));
+         if CommandIsContestScoped(key) then
+            begin
+            Continue;
+            end;
+         value := string(legacy.Values[keyA]);
+         (* A DISPLAY MASK IS NOT A PASSWORD. Ctrl-J rendered ctPassword rows
+           as a fixed run of asterisks, and an older build could write that
+           back, so an existing bucket can hold the mask itself -- NY4I's did,
+           for HAMSCORE PASSWORD. Importing it would set the operator's
+           password to eight asterisks and produce an authentication failure
+           that looks like a server problem. The vault keeps the real one;
+           leaving the property empty asks for it once. *)
+         if CommandIsSecret(key) and
+            (Trim(value) = StringOfChar('*', 8)) then
+            begin
+            Continue;
+            end;
+         TrySetByCommand(key, value);
          end;
    finally
       names.Free;
+      legacy.Free;
    end;
 end;
 

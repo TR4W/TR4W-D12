@@ -45,10 +45,15 @@ type
       procedure TestAStaleStagedFileIsDiscardedFirst;
 
       (* failures *)
+      (* verifying must not modify what it verifies *)
+      procedure TestTheBackupPublishedIsTheSnapshotByteForByte;
+      procedure TestVerifyingLeavesNoWalOrShmBesideTheStagedFile;
+
       procedure TestCorruptSnapshotIsRejectedAndThePriorBackupSurvives;
       procedure TestSnapshotThatRaisesLeavesNoStagedFile;
       procedure TestVerifierThatRaisesLeavesNoStagedFile;
       procedure TestFailedPublishKeepsTheVerifiedCopyAndNamesIt;
+      procedure TestFailedBakDisplacementStopsThePublishAndKeepsBoth;
 
       (* the verifier itself *)
       procedure TestSoundAcceptsARealSnapshotAndReleasesIt;
@@ -61,7 +66,7 @@ type
 implementation
 
 uses
-   SysUtils, Classes, uLogDatabase, uLogBackup;
+   SysUtils, Classes, md5, uLogDatabase, uLogBackup;
 
 const
    ABSENT = '<absent>';
@@ -91,6 +96,12 @@ type
       StagedExistedAtSnapshot: boolean;
       (* The exact bytes the snapshot produced. *)
       StagedBytes: RawByteString;
+      (* MD5 of .new the moment the snapshot finished, and again the moment
+        verification returned. A hash rather than the bytes because what is
+        being asserted is "the same file", and a digest says that in one line
+        of output when it is not. *)
+      StagedHash: string;
+      VerifiedHash: string;
       (* The bytes .new held once verification returned -- the last moment
         before publish, so what a rename must carry across unchanged. NOT the
         same as StagedBytes: see TestPublishIsARenameAndTheOldBackupBecomesBak. *)
@@ -122,6 +133,19 @@ begin
    end;
 end;
 
+(* MD5 of a file, or ABSENT when there is none. MD5File rather than hashing a
+  string, because a `string` is UTF-16 in this build and hashing one would
+  measure the conversion rather than the file. *)
+function HashOf(const aPath: string): string;
+begin
+   if not FileExists(aPath) then
+      begin
+      Result := ABSENT;
+      Exit;
+      end;
+   Result := MD5Print(MD5File(aPath));
+end;
+
 procedure WriteBytes(const aPath: string; const aBytes: RawByteString);
 var
    fs: TFileStream;
@@ -150,6 +174,8 @@ begin
    StagedExistedAtSnapshot := False;
    StagedBytes := '';
    VerifiedBytes := '';
+   StagedHash := '';
+   VerifiedHash := '';
 end;
 
 destructor TFakeBackup.Destroy;
@@ -191,6 +217,7 @@ begin
    end;
 
    StagedBytes := ReadBytes(aStaged);
+   StagedHash := HashOf(aStaged);
 end;
 
 function TFakeBackup.StagedIsSound(const aStaged: string; out aWhy: string): boolean;
@@ -202,6 +229,7 @@ begin
       end;
    Result := inherited StagedIsSound(aStaged, aWhy);
    VerifiedBytes := ReadBytes(aStaged);
+   VerifiedHash := HashOf(aStaged);
 end;
 
 (* ---------------------------------------------------------------------------
@@ -404,14 +432,15 @@ begin
      holds exactly the bytes .new held when verification returned. A copy
      would leave .new behind.
 
-     THE BYTES COMPARED ARE THE POST-VERIFICATION ONES, and that is a finding
-     rather than a convenience (measured 2026-09-18). Verification opens .new
-     through TLogDatabase.Open, whose PRAGMA journal_mode = WAL is a WRITE:
-     four header bytes change -- offsets 18 and 19 (rollback journal to WAL),
-     27 (the change counter) and 95 (version-valid-for), each 1 to 2 -- and no
-     page content. So what is published is the snapshot converted to WAL
-     mode, not the snapshot byte for byte. Reported to NY4I; not changed
-     here, because this unit is an extraction. *)
+     THE BYTES COMPARED ARE THE POST-VERIFICATION ONES, and as of 2026-09-19
+     they are also the pre-verification ones -- the verifier no longer changes
+     the file. That was not always so, and the history is worth keeping
+     because it is what the next test pins: verification used to open .new
+     through TLogDatabase.Open, whose PRAGMA journal_mode = WAL is a WRITE,
+     and four header bytes changed -- offsets 18 and 19 (rollback journal to
+     WAL), 27 (the change counter) and 95 (version-valid-for), each 1 to 2.
+     No page content ever changed. See
+     TestTheBackupPublishedIsTheSnapshotByteForByte. *)
    BeginTest('publishing renames .new over the destination and keeps the old as .bak');
    src  := TempName('publish-src.db');
    dest := TempName('publish.db');
@@ -545,6 +574,119 @@ begin
    CheckFalse(FileExists(dest + '.new'), 'and nothing is left staged');
 
    Scrub(src);
+   Scrub(dest);
+end;
+
+(* ---------------------------------------------------------------------------
+  verifying must not modify what it verifies
+  --------------------------------------------------------------------------- *)
+
+procedure TLogBackupTests.TestTheBackupPublishedIsTheSnapshotByteForByte;
+var
+   source: TLogDatabase;
+   backup: TFakeBackup;
+   src: string;
+   dest: string;
+   report: string;
+   snapHash: string;
+   verifiedHash: string;
+begin
+   (* THE BACKUP AN OPERATOR KEEPS IS THE FILE SQLITE MADE, unchanged by the
+     act of checking it.
+
+     THIS FAILED UNTIL 2026-09-19 and the failure was invisible: the verifier
+     opened the snapshot through TLogDatabase.Open, which applies PRAGMA
+     journal_mode = WAL, so four header bytes were rewritten between the
+     snapshot and the publish. Nothing reported it, the file was still a
+     perfectly good database, and the published backup was simply not the one
+     that had been verified in the state it was verified in.
+
+     HASHES, NOT LENGTHS. A length comparison passes on exactly this defect --
+     the file is the same size, four bytes along differ -- which is why the
+     assertion is a digest. *)
+   BeginTest('verifying does not modify the snapshot: what is published is what was made');
+   src  := TempName('identical-src.db');
+   dest := TempName('identical.db');
+   Scrub(src);
+   Scrub(dest);
+
+   source := TLogDatabase.Create;
+   backup := TFakeBackup.Create(source, dest);
+   try
+      source.CreateNew(src);
+      CheckTrue(backup.Run(dest, report), 'it backs up: ' + report);
+      snapHash := backup.StagedHash;
+      verifiedHash := backup.VerifiedHash;
+   finally
+      backup.Free;
+      source.Free;
+   end;
+
+   CheckTrue(snapHash <> ABSENT, 'the snapshot produced a file');
+   CheckEquals(snapHash, verifiedHash,
+               'verification left the staged file exactly as it found it');
+   CheckEquals(snapHash, HashOf(dest),
+               'and the published backup is the snapshot byte for byte');
+
+   Scrub(src);
+   Scrub(dest);
+end;
+
+procedure TLogBackupTests.TestVerifyingLeavesNoWalOrShmBesideTheStagedFile;
+var
+   source: TLogDatabase;
+   backup: TFakeBackup;
+   src: string;
+   dest: string;
+   report: string;
+begin
+   (* NO SIDECARS, ON EITHER OUTCOME. A connection that puts the database into
+     WAL mode creates <file>-wal and <file>-shm beside it, and a run
+     interrupted between the check and the publish would leave them orphaned
+     next to a staged file that is then deleted or renamed away from them. A
+     read-only connection to a rollback-journal snapshot -- which is what
+     VACUUM INTO produces -- creates neither.
+
+     MEASURED HERE RATHER THAN ASSUMED: "SQLite probably will not" is exactly
+     the reasoning that made the header rewrite above a surprise. *)
+   BeginTest('verification leaves no -wal or -shm beside the staged file');
+   src  := TempName('sidecar-src.db');
+   dest := TempName('sidecar.db');
+   Scrub(src);
+   Scrub(dest);
+
+   source := TLogDatabase.Create;
+   backup := TFakeBackup.Create(source, dest);
+   try
+      source.CreateNew(src);
+      CheckTrue(backup.Run(dest, report), 'it backs up: ' + report);
+   finally
+      backup.Free;
+      source.Free;
+   end;
+
+   CheckFalse(FileExists(dest + '.new-wal'), 'no -wal beside the staged name');
+   CheckFalse(FileExists(dest + '.new-shm'), 'no -shm beside the staged name');
+   CheckFalse(FileExists(dest + '-wal'), 'and none beside the published backup');
+   CheckFalse(FileExists(dest + '-shm'), 'nor an -shm');
+
+   Scrub(src);
+   Scrub(dest);
+
+   (* AND NOT ON THE FAILING PATH EITHER, where the staged file is deleted:
+     a sidecar left behind would outlive the file it belongs to. *)
+   backup := TFakeBackup.Create(nil, dest);
+   try
+      backup.Kind := skGarbage;
+      CheckFalse(backup.Run(dest, report), 'garbage is rejected: ' + report);
+   finally
+      backup.Free;
+   end;
+
+   CheckFalse(FileExists(dest + '.new'), 'the rejected file is gone');
+   CheckFalse(FileExists(dest + '.new-wal'), 'and it left no -wal behind');
+   CheckFalse(FileExists(dest + '.new-shm'), 'and no -shm');
+
    Scrub(dest);
 end;
 
@@ -711,6 +853,83 @@ begin
    Scrub(dest);
 end;
 
+procedure TLogBackupTests.TestFailedBakDisplacementStopsThePublishAndKeepsBoth;
+var
+   source: TLogDatabase;
+   backup: TFakeBackup;
+   src: string;
+   dest: string;
+   report: string;
+   ok: boolean;
+   before: string;
+   why: string;
+begin
+   (* A DISPLACEMENT THAT FAILS STOPS THE RUN, and until 2026-09-19 its result
+     was discarded entirely.
+
+     WHAT THAT COST WAS PLATFORM-DEPENDENT, which is the worst kind of silent
+     defect. On Windows the publish rename then failed too, because MoveFileW
+     refuses an existing target -- so the operator was told the new backup
+     "could not be renamed" and nothing at all about the generation that had
+     just been deleted. On Unix rename(2) overwrites, so the publish
+     SUCCEEDED and the previous backup vanished with no .bak to show for it.
+
+     THE FAILURE IS MADE PORTABLY, the way the publish test already does it:
+     a DIRECTORY at the .bak name. MoveFileW refuses any existing target and
+     rename(2) refuses a file over a directory, and FileExists is False for a
+     directory on both, so the delete-the-older-.bak step does not fire and
+     the rename is what is being tested.
+
+     WHAT MUST SURVIVE: the existing backup, still where it was and still
+     sound -- nothing moved, because the move is what failed -- and the new
+     one, verified, at .new. Both are named in the report, because an
+     unattended backup's report is all the operator gets. *)
+   BeginTest('a .bak displacement that fails stops the publish and keeps both copies');
+   src  := TempName('bakfail-src.db');
+   dest := TempName('bakfail.db');
+   Scrub(src);
+   Scrub(dest);
+
+   (* The existing backup is a REAL database, so "still sound" can be asked
+     of it rather than merely "still those bytes". *)
+   source := TLogDatabase.Create;
+   try
+      source.CreateNew(src);
+      source.SnapshotTo(dest);
+   finally
+      source.Free;
+   end;
+   before := HashOf(dest);
+   CreateDir(dest + '.bak');
+
+   source := TLogDatabase.Create;
+   backup := TFakeBackup.Create(source, dest);
+   try
+      source.Open(src);
+      ok := backup.Run(dest, report);
+   finally
+      backup.Free;
+      source.Free;
+   end;
+
+   CheckFalse(ok, 'it does not report success');
+   CheckEquals('The backup was written and verified, but the existing backup at '
+               + dest + ' could not be moved aside to ' + dest + '.bak, so it '
+               + 'was left alone. The new backup is at ' + dest + '.new.',
+               report, 'the report names the existing backup, the .bak it '
+               + 'could not become, and where the new one is');
+   CheckEquals(before, HashOf(dest),
+               'the existing backup was not published over');
+   CheckTrue(StagedBackupIsSound(dest, why),
+             'and it is still a sound database: ' + why);
+   CheckTrue(FileExists(dest + '.new'), 'the verified new backup is kept');
+   CheckTrue(DirectoryExists(dest + '.bak'),
+             'and nothing was written over the obstruction');
+
+   Scrub(src);
+   Scrub(dest);
+end;
+
 (* ---------------------------------------------------------------------------
   the verifier itself
   --------------------------------------------------------------------------- *)
@@ -789,10 +1008,14 @@ begin
    TestAnOlderBakIsKeptWhenThereIsNothingToDisplace;
    TestAStaleStagedFileIsDiscardedFirst;
 
+   TestTheBackupPublishedIsTheSnapshotByteForByte;
+   TestVerifyingLeavesNoWalOrShmBesideTheStagedFile;
+
    TestCorruptSnapshotIsRejectedAndThePriorBackupSurvives;
    TestSnapshotThatRaisesLeavesNoStagedFile;
    TestVerifierThatRaisesLeavesNoStagedFile;
    TestFailedPublishKeepsTheVerifiedCopyAndNamesIt;
+   TestFailedBakDisplacementStopsThePublishAndKeepsBoth;
 
    TestSoundAcceptsARealSnapshotAndReleasesIt;
    TestSoundRejectsGarbage;

@@ -143,8 +143,10 @@ remains is the proof:
       skip deleting a rejected snapshot — each fail the suite.
       Unit tests 26,973 → 27,036; narrowing unchanged at 1348; corpus 24/0/2.
 
-      **Two findings, reported and NOT changed** (an extraction must not
-      change behaviour; each is NY4I's call):
+      **Two findings, reported and NOT changed at the time** (an extraction
+      must not change behaviour; each was NY4I's call). **BOTH ARE NOW FIXED —
+      2026-09-19, NY4I approved acting on them**; each is answered under its
+      entry below.
       1. **Verification writes to what it verifies.** `StagedBackupIsSound`
          opens through `TLogDatabase.Open`, whose `journal_mode = WAL` is a
          write: header bytes 18, 19, 27 and 95 go 1→2. No page content
@@ -153,12 +155,47 @@ remains is the proof:
          `.new-wal`, and the next run deletes `.new` (not its `-wal`) and
          re-creates it — which would pair a WAL with a database it does not
          belong to. Worth a test before anyone relies on either answer.
+
+         **FIXED 2026-09-19.** `StagedBackupIsSound` goes through a new
+         `TLogDatabase.OpenReadOnly` — the connector's own `sofReadOnly` path
+         (`OpenFlags`, which is `sqlite3_open_v2` with
+         `SQLITE_OPEN_READONLY`), no `journal_mode`/`synchronous`, no
+         `MigrateSchema`, and `CheckIntegrity` skips its WAL checkpoint on a
+         read-only connection. The check itself is unchanged: still a real
+         `integrity_check` plus `foreign_key_check` on the staged file.
+         `TLogDatabase.Open` is untouched and still fail-closed. A test
+         compares MD5 of the snapshot with MD5 of the published backup — it
+         **failed before the fix** (`2bfb8ba7…` vs `1c14bae8…`) and passes
+         after.
+
+         **AND THE SECOND HALF WAS MEASURED RATHER THAN INHERITED.** The
+         stray-`.new-wal` worry does **not** reproduce on a clean run: the old
+         code created the WAL and SQLite removed both sidecars when the
+         verifying connection closed, so the new `-wal`/`-shm` test passes
+         before the fix as well as after. The window was only ever a crash
+         *during* verification — and it is now closed at the source, because a
+         read-only connection to a rollback-journal snapshot creates no WAL to
+         be stranded.
       2. **A failed `.bak` displacement is ignored.** `RenameFile(dest, .bak)`
          is unchecked, after `.bak` has already been deleted. On Windows the
          publish rename then fails too (`MoveFileW` will not overwrite), so the
          older `.bak` is lost and the report says only that the rename to the
          destination failed. On Unix `rename(2)` replaces, so the publish
          succeeds and the previous backup is gone with no `.bak` at all.
+
+         **FIXED 2026-09-19.** The result is honoured: a displacement that
+         fails stops the run before the publish, so the existing backup stays
+         where it is (the rename is what failed, so nothing moved) and the
+         verified `.new` is kept. The report names all three files. A test
+         makes the displacement fail portably by putting a **directory** at
+         the `.bak` name — the same trick the publish-rename test already
+         uses — and checks the existing backup is still byte-identical and
+         still passes `StagedBackupIsSound`.
+
+      **Together the two fixes take the suite from 15 tests / 63 checks to
+      18 / 82**, and the third new test — no `-wal` or `-shm` left beside the
+      staged file on either outcome — is a regression guard rather than proof
+      of a fixed defect, because it passes before the fix as well.
 
       Adding `uLogStore` to the unit-test `.lpr` does not work: seven of its
       implementation dependencies are absent from that program — `uCFG`,
@@ -271,11 +308,35 @@ empty loops in the routine survive compilation.
       guarded ones; narrowing fell 1351 → 1348 and the ceiling follows it.
 - [ ] Separately: **the whole program is compiled unoptimised.** That is worth
       a deliberate decision rather than remaining an accident.
-- [ ] Decide dead-or-fix on ~~`logsubs1.pas:1198`~~ and `logstuff.pas:5737-5739`.
-      **`logsubs1:1198` is decided — it was inside `PacketMemoryRequest`,
-      deleted 2026-09-18.** The `logstuff` reference is **stale**: those lines
-      are now a comment about the backup fix, so re-find the site before
-      deciding anything.
+- [x] ~~Decide dead-or-fix on `logsubs1.pas:1198` and `logstuff.pas:5737-5739`.~~
+      **BOTH RE-FOUND 2026-09-19, and neither is an uninitialised-local
+      question any more.**
+
+      `logsubs1:1198` was inside `PacketMemoryRequest`, deleted 2026-09-18.
+
+      **The `logstuff` site EXISTS — it moved, it was not removed.** It is
+      `WeHaveProcessedThisMessage`, now at **`logstuff.pas:6056`**, and its
+      three locals `Source`, `Serial` and `CheckSum` were **already fixed on
+      2026-09-17** as part of the 14 class-A fixes: they are explicitly zeroed
+      with a comment saying so. Line 5737 is today a comment inside
+      `BackupLogNow`, which is why the reference read as stale — the line
+      numbers moved out from under it, the code did not.
+
+      **What is left there is a DELETION question, not a correction.** The
+      zeroing made the dedupe deterministic rather than correct: with the N6TR
+      parse commented out every message hashes to (0, 0, 0), so the table
+      matches everything after the first. That is harmless today because the
+      routine is **unreachable** — `GetMultiPortCommand` (`logstuff.pas:6183`)
+      is its only caller, and `GetMultiPortCommand` has no caller anywhere in
+      `src`, `tr4wserver` or `test` (its only other mention is its own forward
+      declaration at `logstuff.pas:609`). Dead code that looks functional.
+
+      **Delete-or-revive is `multi-op-network`'s call and NY4I's**, not this
+      audit's: reviving it means restoring the N6TR parse, and the multi-op
+      log path is itself mid-redesign (`uNet.ProcessServerLogInfo` already
+      refuses to compare logs at all). Carried to that agent's list; struck
+      from here because the audit's own question — "is a local read before it
+      is written" — is answered.
 - [x] ~~Clear the 23 compiler-flagged Part-A sites.~~ **DONE 2026-09-18 — and
       the 23 was never the population.** The item above already records that the
       real count was 20; 14 were fixed 2026-09-17, three were the dead routines
@@ -332,9 +393,9 @@ items.
 |---|---|
 | Fault-injection tests for the QSO acknowledgement contract (§3.1) | `log-database` agent — next, now that `uLogBackup` is the pattern |
 | Whether the build should use `-O` (§3.4) | **NY4I's decision** |
-| The `logstuff` dead-or-fix site — its line reference is stale (§3.4) | re-find first, then NY4I's decision |
-| Whether `StagedBackupIsSound` may convert the snapshot to WAL (§3.1) | **NY4I's decision** |
-| Whether a failed `.bak` displacement should stop the publish (§3.1) | **NY4I's decision** |
+| ~~The `logstuff` dead-or-fix site~~ — **re-found 2026-09-19 at `logstuff.pas:6056`; the uninitialised locals were already fixed, and what remains is whether to delete the unreachable N6TR dedupe** (§3.4) | `multi-op-network` agent + NY4I |
+| ~~Whether `StagedBackupIsSound` may convert the snapshot to WAL~~ — **NO, decided and fixed 2026-09-19**: it goes through `TLogDatabase.OpenReadOnly`, and the published backup is now byte-identical to the snapshot (§3.1) | done |
+| ~~Whether a failed `.bak` displacement should stop the publish~~ — **YES, decided and fixed 2026-09-19**: an unchecked `RenameFile` lost the previous generation silently on Unix (§3.1) | done |
 
 **THE LESSON IS THE ONE THIS FILE OPENS WITH.** §0 says re-measure before
 citing, and this phase was assembled without doing that. A roadmap is a

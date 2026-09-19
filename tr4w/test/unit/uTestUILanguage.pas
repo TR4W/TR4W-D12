@@ -35,6 +35,9 @@ type
       procedure Test_AnUnknownSettingFallsBackAndSaysSo;
       procedure Test_TheSettingIsCaseFolded;
       procedure Test_LanguagePartOfALocale;
+      procedure Test_TheSystemCodeRepairsTheWindowsSpellings;
+      procedure Test_TheSystemCodeKeepsARegionOnlyWhereACatalogueHasOne;
+      procedure Test_EverySystemCodeNamesACatalogueThatShips;
       procedure Test_TheEarlyReadFindsTheSetting;
       procedure Test_TheEarlyReadWithNoSettingIsEmpty;
       procedure Test_ABlankOrBrokenFileFallsThrough;
@@ -195,6 +198,106 @@ begin
    CheckEquals('fr', LanguagePartOf('fr_FR.UTF-8'), 'with a code set');
    CheckEquals('pt', LanguagePartOf('PT'), 'bare, and case-folded');
    CheckEquals('', LanguagePartOf(''), 'nothing');
+end;
+
+(* ---------------------------------------------------------------------
+  THE OS ANSWER -> THE CATALOGUE CODE.
+
+  SystemUILanguage cannot be tested here: it reports whatever THIS machine
+  is set to, and nobody has a Japanese Windows install to hand. So the part
+  that can be got wrong is a pure function -- given the raw string the
+  platform hands back, which catalogue does it name.
+  --------------------------------------------------------------------- *)
+
+procedure TUILanguageTests.Test_TheSystemCodeRepairsTheWindowsSpellings;
+begin
+   BeginTest('the three spellings that silently cost an operator his language');
+
+   (* FPC'S gettext DERIVES THE CODE FROM LOCALE_SABBREVLANGNAME and takes
+     the first two letters (gettext.pp:298-299), so a Japanese, Mongolian or
+     Chinese Windows answered 'jp', 'mo' and 'ch' -- none of which names a
+     catalogue, so all three got English with nothing said. The display
+     language is asked first now, but these spellings still arrive from a
+     stored setting or a hand-typed switch. *)
+   CheckEquals('ja', SystemLanguageCode('jp'), 'JPN truncated is Japanese');
+   CheckEquals('mn', SystemLanguageCode('mo'), 'MON truncated is Mongolian');
+   CheckEquals('zh_cn', SystemLanguageCode('ch'), 'CHS truncated is Chinese');
+
+   (* The ISO 639-2 three-letter spellings of the same three. *)
+   CheckEquals('ja', SystemLanguageCode('jpn'), 'jpn');
+   CheckEquals('mn', SystemLanguageCode('mon'), 'mon');
+   CheckEquals('zh_cn', SystemLanguageCode('chs'), 'chs is Simplified');
+   CheckEquals('zh_tw', SystemLanguageCode('cht'), 'cht is Traditional');
+
+   (* AND THE ORDINARY CASES STILL WORK, which is the other half of the
+     claim: the repair must not disturb a locale that was already right. *)
+   CheckEquals('de', SystemLanguageCode('de-DE'), 'German');
+   CheckEquals('es', SystemLanguageCode('es-ES'), 'Spanish');
+   CheckEquals('en', SystemLanguageCode('en-US'), 'English');
+   CheckEquals('ja', SystemLanguageCode('ja-JP'), 'Japanese, spelled properly');
+   CheckEquals('mn', SystemLanguageCode('mn-MN'), 'Mongolian, spelled properly');
+   CheckEquals('ru', SystemLanguageCode('ru_RU.UTF-8'), 'a POSIX locale');
+   CheckEquals('de', SystemLanguageCode('  DE  '), 'trimmed and case-folded');
+
+   (* Windows says nothing, or says something unrecognisable: '' is what
+     the loader reads as the compiled-in English. It must not be a crash
+     and it must not be a guess. *)
+   CheckEquals('', SystemLanguageCode(''), 'nothing at all');
+   CheckEquals('', SystemLanguageCode('   '), 'blank');
+   CheckEquals('', SystemLanguageCode('_US'), 'a region with no language');
+   CheckEquals('qq', SystemLanguageCode('qq-QQ'),
+               'an unknown language is passed through, not invented away');
+end;
+
+procedure TUILanguageTests.Test_TheSystemCodeKeepsARegionOnlyWhereACatalogueHasOne;
+begin
+   BeginTest('the region is kept only where the catalogue is named for one');
+
+   (* WE SHIP pt AND pt_BR, so Brazil must not collapse onto Portugal. *)
+   CheckEquals('pt_br', SystemLanguageCode('pt-BR'), 'Brazilian Portuguese');
+   CheckEquals('pt', SystemLanguageCode('pt-PT'), 'European Portuguese');
+   CheckEquals('pt', SystemLanguageCode('pt'), 'bare Portuguese');
+
+   (* CHINESE IS A SCRIPT QUESTION. The only Chinese catalogue is
+     Simplified; Traditional resolves to a code we do not carry, so the
+     operator gets English and the log says which code failed -- rather
+     than text in the wrong script. *)
+   CheckEquals('zh_cn', SystemLanguageCode('zh-Hans-CN'), 'Simplified');
+   CheckEquals('zh_cn', SystemLanguageCode('zh-CN'), 'mainland, no script');
+   CheckEquals('zh_cn', SystemLanguageCode('zh'), 'bare Chinese is Simplified');
+   CheckEquals('zh_tw', SystemLanguageCode('zh-Hant-TW'), 'Traditional');
+   CheckEquals('zh_tw', SystemLanguageCode('zh-HK'), 'Hong Kong is Traditional');
+
+   (* EVERY OTHER LANGUAGE DROPS THE REGION, so an Austrian gets German
+     rather than a 'de_at' this tree has never had. *)
+   CheckEquals('de', SystemLanguageCode('de-AT'), 'Austria reads German');
+   CheckEquals('es', SystemLanguageCode('es-MX'), 'Mexico reads Spanish');
+end;
+
+procedure TUILanguageTests.Test_EverySystemCodeNamesACatalogueThatShips;
+const
+   LOCALES: array[0..6] of string = ('ja-JP', 'jp', 'mn-MN', 'mo',
+                                     'zh-Hans-CN', 'pt-BR', 'de-DE');
+var
+   i: integer;
+begin
+   BeginTest('each resolved code names a catalogue this binary carries');
+
+   (* THE MAPPING IS ONLY WORTH ANYTHING IF IT LANDS ON A REAL CATALOGUE.
+     IsUILanguageAvailable reads the RCDATA this test binary links -- the
+     same resource the app links -- so this fails the day a catalogue is
+     renamed or dropped, which is exactly when the mapping stops being
+     true. *)
+   for i := Low(LOCALES) to High(LOCALES) do
+      begin
+      CheckTrue(IsUILanguageAvailable(SystemLanguageCode(LOCALES[i])),
+                LOCALES[i] + ' resolves to "' +
+                SystemLanguageCode(LOCALES[i]) + '", which ships');
+      end;
+
+   (* And the negative, so the check above cannot be passing by accident. *)
+   CheckFalse(IsUILanguageAvailable(SystemLanguageCode('qq-QQ')),
+              'an unknown locale resolves to a code that does not ship');
 end;
 
 (* ---------------------------------------------------------------------
@@ -405,6 +508,9 @@ begin
    Test_AnUnknownSettingFallsBackAndSaysSo;
    Test_TheSettingIsCaseFolded;
    Test_LanguagePartOfALocale;
+   Test_TheSystemCodeRepairsTheWindowsSpellings;
+   Test_TheSystemCodeKeepsARegionOnlyWhereACatalogueHasOne;
+   Test_EverySystemCodeNamesACatalogueThatShips;
    Test_TheEarlyReadFindsTheSetting;
    Test_TheEarlyReadWithNoSettingIsEmpty;
    Test_ABlankOrBrokenFileFallsThrough;

@@ -83,7 +83,11 @@ uses
   MainUnit,
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
   uCFG,
-  uSettingsModel,      // Settings.My.MainCallsign -- was the global MainCallsign
+  uSettingsModel,      // Settings -- the destination, never assigned from here
+  (* StartupMainCallsign + TR4WConfigFileName: this dialog runs BEFORE the
+    settings object is loaded, so the callsign it offers has to come from the
+    file. See PrepareForm. *)
+  uTR4WConfigFile,
   uNewContestCommands, // the dialog's choices, applied at startup after the station load
   (* The log file name and its rule -- one artifact, one directory. *)
   uLogNaming;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
@@ -642,22 +646,35 @@ end;
 procedure PrepareForm;
 var
    latest: string;
+   myCall: string;
    i     : integer;
 begin
    frmNewContest.Caption := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
    frmNewContest.PopulateFiles(string(TR4W_PATH_NAME));
 
-   // THE LIVE VALUE, NOT THE INI.  This used to read MAIN CALLSIGN out of
-   // tr4w.ini straight into the MainCallsign global -- but the settings
-   // model owns that setting now, and it is loaded from
-   // settings\tr4w.json before any config file is read.  Reading the ini
-   // here did not merely show a stale callsign in the box: it OVERWROTE
-   // the live value with it, so opening New Contest on a station whose
-   // ini disagreed silently changed the operator's callsign.  On a
-   // station with no ini at all it blanked it.
-   if Settings.My.MainCallsign <> '' then
+   (* THE FILE, NOT THE SETTINGS OBJECT -- fixed 2026-09-19.
+
+     THIS PRE-FILL HAD NEVER ONCE FIRED. It read Settings.My.MainCallsign, and
+     THIS DIALOG RUNS BEFORE LoadSettingsForStartup: ShowNewContest is called
+     from uProgramMain well above the load, so the settings object still holds
+     its constructor defaults and the callsign is always ''. So the guard
+     skipped the assignment every time, and the box opened empty on a station
+     that has had a callsign for years.
+
+     The predecessor it replaced read MAIN CALLSIGN out of tr4w.ini and
+     assigned the global, which was worse: on a station whose ini disagreed it
+     silently CHANGED the operator's callsign, and on one with no ini it
+     blanked it. That is why the rule for anything running this early is read
+     the file, never assign Settings, never save -- and StartupMainCallsign is
+     the sanctioned way to do it, beside StartupLogLevel and
+     StartupUILanguage.
+
+     A FIRST RUN WITH NO FILE STILL OPENS EMPTY: the reader answers '' for an
+     absent, blank or unreadable file. *)
+   myCall := StartupMainCallsign(TR4WConfigFileName);
+   if myCall <> '' then
       begin
-      frmNewContest.SetMyCall(Settings.My.MainCallsign);
+      frmNewContest.SetMyCall(myCall);
       end;
 
    // FROM settings\tr4w.json, not tr4w.ini (NY4I, 2026-08-16). An empty

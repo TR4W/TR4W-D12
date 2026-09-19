@@ -1009,6 +1009,10 @@ var
   TempString                            : ShortString;
   // The radio library's complaint, if it has one -- see the call site.
   tRadioLibraryError                    : string;
+  // How many settings still had a second home in the legacy commands bucket.
+  convertedHomes                        : integer;
+  // The one command a headless /EXPORT still takes from that bucket.
+  storedComputerId                      : string;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -1786,7 +1790,20 @@ begin
 
   ReportConfigurationSources;
 
-  if not LoadSettingsForStartup(TR4WConfigFileName, Settings) then
+  (* THE LEGACY IMPORT IS A CONVERSION AND /EXPORT DOES NOT CONVERT.
+
+    Passing the station's stored commands onto the settings object here is the
+    same act ApplyStoredCommands performs below, and it is skipped under
+    /EXPORT for the same measured reason: an export must be configured the way
+    the LOG is, not the way the station is today.
+
+    THE CORPUS CAUGHT THIS WITHIN THE HOUR, which is what it is for. The IARU
+    sent exchange is reconstructed from station state at export time, so the
+    fixture's MY STATE = FL displaced its MY ITU ZONE = 8 and both artifacts
+    exported "59 FL" against a frozen D7 reference of "59 8" -- 22/2 instead of
+    24/0. *)
+  if not LoadSettingsForStartup(TR4WConfigFileName, Settings,
+                                not tSilentExport) then
      begin
      SaveSettings(TR4WConfigFileName, Settings);
      logger.Info('[Convert] settings\tr4w.json had no settings section -- ' +
@@ -1795,7 +1812,59 @@ begin
   else
      begin
      logger.Info('[Convert] settings\tr4w.json already holds a settings ' +
-                 'section -- NOT converting, it is the source of record');
+                 'section -- it is the source of record');
+     end;
+
+  (* TWO HOMES BECOME ONE -- 2026-09-19.
+
+    The load above imported the legacy `commands` bucket onto the properties
+    and then let the settings section win where it had a value. This deletes
+    what was consumed, so the bucket stops being a second home that
+    ApplyStoredCommands can re-apply over the top.
+
+    NOT UNDER /EXPORT. A headless export has no business editing an operator's
+    settings file, which is the same rule that keeps ApplyStoredCommands and
+    the radio library out of that path. The import still happened, so the
+    export sees the same values; only the write is skipped. *)
+  if not tSilentExport then
+     begin
+     convertedHomes := CollapseLegacySettingHomes(TR4WConfigFileName, Settings);
+     if convertedHomes > 0 then
+        begin
+        logger.Info('[Convert] %d setting(s) had a second home in the legacy ' +
+                    'commands section -- imported and removed, settings\tr4w.json ' +
+                    'is now the only home', [convertedHomes]);
+        end;
+     end
+  else
+     begin
+     (* COMPUTER ID, AND ONLY COMPUTER ID, UNDER /EXPORT.
+
+       The bucket is not imported above, so on a station that has not been
+       collapsed yet this is the only way the id reaches the settings object.
+       PostUnit compares each QSO's stored cecomputerid against it to decide
+       the Cabrillo TRANSMITTER DIGIT (postunit.pas:3038) -- 2632 lines in the
+       Winter Field Day set alone -- and it is the station's own identity
+       rather than a property of the log being exported, so today's value is
+       the correct one.
+
+       ONE NAMED COMMAND, WITH ITS REASON AT THE CALL SITE. Do not turn this
+       into a loop: that is ApplyStoredCommands, and it is skipped here
+       deliberately. *)
+     storedComputerId := StoredLegacyCommand(TR4WConfigFileName, 'COMPUTER ID');
+     if storedComputerId <> '' then
+        begin
+        if Settings.TrySetByCommand('COMPUTER ID', storedComputerId) then
+           begin
+           logger.Info('[Startup] COMPUTER ID = %s applied from the legacy ' +
+                       'commands section for this export', [storedComputerId]);
+           end
+        else
+           begin
+           logger.Warn('[Startup] the stored COMPUTER ID "%s" was refused',
+                       [storedComputerId]);
+           end;
+        end;
      end;
 
   ReadInConfigFile(cfgINI);
@@ -1881,21 +1950,21 @@ begin
   // Skipped entirely under batch /EXPORT: automated testing must not touch
   // the operator's live settings, and the export halts before the radios are
   // ever used, so the [Radio] keys are irrelevant to its output anyway.
-  // COMPUTER ID COMES FROM settings\tr4w.json, INCLUDING UNDER /EXPORT.
-  //
-  // It is Preferences > Network > "This station", written there through
-  // ApplyAndStoreCommand, so the JSON is already where an operator sets it
-  // (NY4I, 2026-08-16).  PostUnit compares each QSO's stored cecomputerid
-  // against this global to decide the Cabrillo TRANSMITTER DIGIT
-  // (postunit.pas:3038), so a headless export that never applied it wrote the
-  // wrong digit on every line -- 2632 of them in the Winter Field Day set.
-  //
-  // ONE named command, not the store.  ApplyStoredCommands stays skipped under
-  // /EXPORT: applying everything takes today's settings over the log's own
-  // .cfg, which was measured wrong (21/1/4 -> 8/14/4).  This is the station's
-  // own identity rather than a property of the log being exported, so the
-  // current value is the correct one -- and no corpus .cfg sets it.
-  ApplyStoredCommand('COMPUTER ID');
+  (* ~~ApplyStoredCommand('COMPUTER ID')~~ -- DELETED 2026-09-19, and it was
+    the precedence defect in miniature.
+
+    It read the LEGACY `commands` bucket for a name the settings object owns
+    and applied it here, after the settings section had loaded -- so the second
+    home won for the one command an operator can see it on. Clearing the id in
+    Preferences deleted the bucket entry, this line then found nothing, and the
+    settings section still held the old letter.
+
+    NOTHING IS LOST, AND BOTH PATHS ARE NOW ABOVE. An interactive start imports
+    the whole bucket in LoadSettingsForStartup and then collapses it; a
+    headless /EXPORT imports that ONE command by name, for the reason written
+    beside it. Either way COMPUTER ID is in force well before the log is
+    opened, and no corpus .cfg sets the command, so the .cfg read between there
+    and here cannot disturb it. The corpus is the check. *)
 
   if (not tSilentExport) and
      (not ApplyActiveProfileToConfigAtStartup(tRadioLibraryError)) then

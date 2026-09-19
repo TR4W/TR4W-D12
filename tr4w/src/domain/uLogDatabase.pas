@@ -133,11 +133,17 @@ type
       FFileName: string;
       FJournalMode: string;
       FForeignKeysEnforced: boolean;
+      FReadOnly: boolean;
 
+      (* Both open paths refuse a missing file with the same sentence. One
+        copy, because two would drift. *)
+      procedure RefuseAMissingFile(const aFileName: string);
       procedure OpenConnection(const aFileName: string);
       procedure ApplySchema;
       procedure MigrateSchema;
       procedure ApplyPragmas;
+      (* The half of ApplyPragmas that writes to the file. Not run read-only. *)
+      procedure ApplyWritePragmas;
       procedure StampIdentity;
       procedure VerifyIdentity;
 
@@ -171,6 +177,43 @@ type
         reverse: SQLite would helpfully create an empty database, and an empty
         log that opens cleanly is worse than an error. *)
       procedure Open(const aFileName: string);
+
+      (* OPEN AN EXISTING LOG WITHOUT WRITING ONE BYTE OF IT.
+
+        FOR EXAMINING A FILE YOU MUST NOT DISTURB -- a staged backup about to
+        be published, which is the only caller today (uLogBackup). Open above
+        is fail-closed by design and stays exactly as it is; this is a second
+        door, not a relaxation of that one.
+
+        WHY IT HAD TO EXIST (measured 2026-09-18, fixed 2026-09-19). The
+        backup verifier opened the staged snapshot through Open, and Open
+        WRITES: ApplyPragmas sets journal_mode = WAL, and MigrateSchema may
+        add a table. Header bytes 18, 19, 27 and 95 went 1 to 2 on every
+        verification, so the file published as the backup was not the file
+        SQLite had snapshotted. A verifier that modifies the thing it is
+        verifying has checked something other than what it hands on.
+
+        WHAT MAKES IT READ-ONLY, and all three parts are needed:
+
+          - the connector's own read-only path, OpenFlags = [sofReadOnly],
+            which is sqlite3_open_v2 with SQLITE_OPEN_READONLY. SQLite itself
+            refuses every write on such a connection, so this is a guarantee
+            rather than a promise about what the code below happens to do.
+          - NO journal_mode and NO synchronous. Those are the write-side
+            pragmas; journal_mode = WAL is the one that rewrote the header.
+            foreign_keys is still set, because it is per-connection state and
+            writes nothing.
+          - NO MigrateSchema. An old snapshot is examined as it is; bringing
+            it forward is the publisher's job, not the inspector's.
+
+        AND NO -wal OR -shm IS LEFT BESIDE THE FILE. A snapshot comes out of
+        VACUUM INTO in rollback-journal mode, and a read-only connection to a
+        non-WAL database creates neither sidecar. Pinned by a test rather than
+        reasoned about, because "SQLite probably will not" is how the first
+        version of this got it wrong.
+
+        Refuses a missing file for the same reason Open does. *)
+      procedure OpenReadOnly(const aFileName: string);
 
       procedure Close;
       function IsOpen: boolean;
@@ -248,6 +291,10 @@ type
         SQLite refused WAL (a network share). Worth reading before concluding
         anything about locking or speed. *)
       property JournalMode: string read FJournalMode;
+
+      (* True when this connection was opened by OpenReadOnly. Read by
+        CheckIntegrity, which cannot checkpoint a file it may not write. *)
+      property IsReadOnly: boolean read FReadOnly;
 
       (* Whether foreign key enforcement is actually ON, read back rather than
         assumed. See ApplyPragmas for why that distinction is not pedantry. *)
@@ -755,13 +802,51 @@ end;
 (* SET ON EVERY OPEN, not only on create: journal mode is a property of the FILE
   and persists, but foreign_keys and synchronous are per-CONNECTION and reset to
   their defaults every time.  Setting all three here means one place to read
-  rather than a rule about which is which. *)
+  rather than a rule about which is which.
+
+  SPLIT IN TWO ON 2026-09-19 along the line that actually matters -- which of
+  them WRITE TO THE FILE. journal_mode does; foreign_keys does not. A
+  read-only connection takes the first half only. *)
 procedure TLogDatabase.ApplyPragmas;
 begin
-   (* ORDER MATTERS: all three run before any sqldb statement has opened a
-     transaction. See ExecPragmaRaw. *)
+   (* ORDER MATTERS: every pragma here runs before any sqldb statement has
+     opened a transaction. See ExecPragmaRaw. *)
+   (* PER-CONNECTION AND WRITES NOTHING, so it is applied on a read-only
+     connection too. foreign_key_check does not depend on it, but reading the
+     flag back is this routine's own guard against the pragma mechanism having
+     been broken by an edit, and that guard is worth having on both paths. *)
    ExecPragmaRaw('PRAGMA foreign_keys = ON');
 
+   if FReadOnly then
+      begin
+      (* THE TWO BELOW ARE THE WRITE-SIDE PRAGMAS AND THEY STOP HERE.
+        journal_mode = WAL rewrites the file header -- it is the whole reason
+        OpenReadOnly exists -- and synchronous describes how writes are
+        flushed on a connection that will not make any. SQLite would refuse
+        both anyway; not asking is clearer than being refused. *)
+      FJournalMode := PragmaAsString('PRAGMA journal_mode');
+      FForeignKeysEnforced := PragmaAsInteger('PRAGMA foreign_keys') = 1;
+      end
+   else
+      begin
+      ApplyWritePragmas;
+      end;
+
+   if not FForeignKeysEnforced then
+      begin
+      (* Nothing legitimate produces this once the pragma runs outside a
+        transaction, so it means the mechanism above has been broken by an
+        edit -- report it rather than run a log with its referential guarantees
+        quietly switched off. *)
+      raise ELogDatabaseError.CreateFmt(
+         'The contest log "%s" opened, but foreign key enforcement could not ' +
+         'be switched on. This is a defect in TR4W rather than a problem with ' +
+         'your log; please report it.', [FFileName]);
+      end;
+end;
+
+procedure TLogDatabase.ApplyWritePragmas;
+begin
    (* synchronous = FULL is a DELIBERATE divergence from TR4QT, which leaves the
      default. Under WAL the default drops to NORMAL, which can lose the most
      recent transactions on power loss. A contest log writes a few hundred bytes
@@ -780,18 +865,6 @@ begin
      mistake this whole routine is a correction for. *)
    FJournalMode := PragmaAsString('PRAGMA journal_mode');
    FForeignKeysEnforced := PragmaAsInteger('PRAGMA foreign_keys') = 1;
-
-   if not FForeignKeysEnforced then
-      begin
-      (* Nothing legitimate produces this once the pragma runs outside a
-        transaction, so it means the mechanism above has been broken by an
-        edit -- report it rather than run a log with its referential guarantees
-        quietly switched off. *)
-      raise ELogDatabaseError.CreateFmt(
-         'The contest log "%s" opened, but foreign key enforcement could not ' +
-         'be switched on. This is a defect in TR4W rather than a problem with ' +
-         'your log; please report it.', [FFileName]);
-      end;
 end;
 
 procedure TLogDatabase.StampIdentity;
@@ -876,8 +949,19 @@ begin
       Exit;
       end;
 
-   (* Make recent writes visible to the checks below. *)
-   PragmaAsString('PRAGMA wal_checkpoint(PASSIVE)');
+   (* Make recent writes visible to the checks below.
+
+     NOT ON A READ-ONLY CONNECTION, and skipping it costs nothing there. A
+     checkpoint MOVES pages out of the -wal and into the .db, which is a write
+     -- the very thing OpenReadOnly exists to prevent -- and SQLite refuses it
+     on such a connection anyway. Nor is anything lost: a read-only connection
+     reads THROUGH the -wal, so committed content in it is visible to
+     integrity_check regardless, and the file this path is used on (a fresh
+     VACUUM INTO snapshot) has no -wal at all. *)
+   if not FReadOnly then
+      begin
+      PragmaAsString('PRAGMA wal_checkpoint(PASSIVE)');
+      end;
 
    verdict := PragmaAsString('PRAGMA integrity_check');
    if verdict <> 'ok' then
@@ -1094,6 +1178,21 @@ begin
      non-ASCII characters (an operator whose Windows account name has an accent,
      which is the realistic case) therefore works rather than being mangled. *)
    FConnection.DatabaseName := AnsiString(aFileName);
+
+   (* THE CONNECTOR'S OWN READ-ONLY PATH, not a URI and not a flag we invent:
+     TSQLite3Connection.OpenFlags goes straight into sqlite3_open_v2
+     (sqlite3conn.pp:883), so sofReadOnly is SQLITE_OPEN_READONLY and SQLite
+     enforces it. Set on BOTH branches, never left over from a previous open
+     of the same object. *)
+   if FReadOnly then
+      begin
+      FConnection.OpenFlags := [sofReadOnly];
+      end
+   else
+      begin
+      FConnection.OpenFlags := DefaultOpenFlags;
+      end;
+
    try
       FConnection.Open;
    except
@@ -1155,7 +1254,7 @@ begin
    end;
 end;
 
-procedure TLogDatabase.Open(const aFileName: string);
+procedure TLogDatabase.RefuseAMissingFile(const aFileName: string);
 begin
    if not FileExists(aFileName) then
       begin
@@ -1164,7 +1263,13 @@ begin
          'database here rather than fail, so this is refused: an empty log ' +
          'that opens cleanly hides the real mistake.', [aFileName]);
       end;
+end;
 
+procedure TLogDatabase.Open(const aFileName: string);
+begin
+   RefuseAMissingFile(aFileName);
+
+   FReadOnly := False;
    OpenConnection(aFileName);
    VerifyIdentity;
 
@@ -1172,6 +1277,22 @@ begin
      our file at all and whether it is from the future; migrating first
      would mean writing to somebody else's database to find out. *)
    MigrateSchema;
+end;
+
+procedure TLogDatabase.OpenReadOnly(const aFileName: string);
+begin
+   RefuseAMissingFile(aFileName);
+
+   FReadOnly := True;
+   OpenConnection(aFileName);
+
+   (* KEPT: VerifyIdentity only reads pragmas, and it is the check that says
+     "this is a TR4W log and not somebody else's database" -- exactly what a
+     verifier should be asking of a file it is about to publish as a backup.
+
+     NOT MigrateSchema: it creates tables and stamps user_version, which is a
+     write, and a file being inspected is not a file being adopted. *)
+   VerifyIdentity;
 end;
 
 (* BRING AN OLDER LOG UP TO THE CURRENT SCHEMA.
@@ -1239,6 +1360,7 @@ begin
    FFileName := '';
    FJournalMode := '';
    FForeignKeysEnforced := False;
+   FReadOnly := False;
 end;
 
 function TLogDatabase.SchemaVersion: integer;

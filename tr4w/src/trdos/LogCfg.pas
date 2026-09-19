@@ -1291,6 +1291,35 @@ var
     The note is now made for every command in the contest file. It is a record
     of PROVENANCE and nothing else; what is done with the value is unchanged
     below. *)
+  (* A STATION-ONLY SETTING IN A CONTEST .cfg IS LOGGED AND DROPPED.
+    2026-09-19, NY4I.
+
+    DISPLAY LANGUAGE is the case. It could not take effect from here even if
+    it were applied -- StartupUILanguage has already chosen the catalogue
+    before any .cfg is read -- but applying it WOULD put the contest's value on
+    the property, and the next Preferences save would write that into the
+    station's settings\tr4w.json for good.
+
+    BEFORE NoteCommandFromContestCFG, deliberately: the value is not the
+    contest's, so recording the provenance would be a lie that
+    ApplyStoredCommands then acts on.
+
+    ACCEPTED, NOT REFUSED. Falling through to CheckCommand's failure arm shows
+    the MODAL "Invalid statement in config file" below, once per stale line,
+    about a .cfg that is otherwise perfectly good. The same reasoning as
+    uCFG.RETIRED_COMMANDS, and the same answer: say it in the log.
+
+    THE MEMBERSHIP IS A PROPERTY OF THE SETTING, not a list here -- see
+    TSettingsGroup.IsStationOnly. *)
+  if (CurrentConfigFile = cfgCFG) and
+     Settings.CommandIsStationOnly(string(ID)) then
+     begin
+     logger.Warn('[Config] %s is a station setting and cannot be set by a ' +
+                 'contest .cfg -- the line is ignored.  Set it in Preferences.',
+                 [ID]);
+     Exit;
+     end;
+
   if CurrentConfigFile = cfgCFG then
      begin
      NoteCommandFromContestCFG(string(ID));

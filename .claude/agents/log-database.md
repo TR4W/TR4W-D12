@@ -52,11 +52,24 @@ And `faReadOnly` binds to `db.TFieldAttribute` because sqldb pulls `db` after
 `FileSetAttr` is **Windows-only**; tests that mark a file read-only need
 `FpChmod` under `{$IFDEF UNIX}`.
 
-**`TLogDatabase.Open` WRITES.** `ApplyPragmas` sets `journal_mode = WAL` (and
-`MigrateSchema` may run), so anything that "only opens to check" changes the
-file. Measured 2026-09-18 on a backup snapshot: header bytes 18, 19, 27 and 95
-go 1 to 2 (rollback journal to WAL) during `StagedBackupIsSound`; no page
-content changes. A snapshot's bytes are therefore NOT the published bytes.
+**`TLogDatabase.Open` WRITES — USE `OpenReadOnly` TO INSPECT.** `ApplyPragmas`
+sets `journal_mode = WAL` (and `MigrateSchema` may run), so anything that "only
+opens to check" changes the file. Measured 2026-09-18 on a backup snapshot:
+header bytes 18, 19, 27 and 95 go 1 to 2 (rollback journal to WAL); no page
+content changes.
+
+`TLogDatabase.OpenReadOnly` (2026-09-19) is the door for a file you must not
+disturb: `OpenFlags = [sofReadOnly]` — the connector's own path into
+`sqlite3_open_v2` — no write-side pragmas, no `MigrateSchema`, and
+`CheckIntegrity` skips its WAL checkpoint there. `VerifyIdentity` is kept,
+because it only reads. `Open` is unchanged and still fail-closed. The backup
+verifier uses it, so a published backup is now byte-identical to the snapshot
+(pinned by an MD5 comparison in `uTestLogBackup`).
+
+**And the stray-`-wal` worry that went with that finding did NOT reproduce**
+(measured 2026-09-19): on a clean close SQLite removed both sidecars, so the
+old code left nothing behind. The exposure was only a crash mid-check, and a
+read-only connection to a rollback-journal file creates no WAL at all.
 
 **`SysUtils.RenameFile` differs by platform:** `MoveFileW` on Windows refuses an
 existing target; `rename(2)` on Unix replaces it. A directory at the target
@@ -85,10 +98,17 @@ not a link error.
 ## Open
 
 ~~`LogStoreBackup` orchestration tests are owed~~ — **done 2026-09-18** (NY4I
-approved the leaf extraction): `uLogBackup` + 15 tests. Still open, and NY4I's
-decision rather than yours: whether the verifier should stop converting the
-snapshot to WAL, and whether a failed `.bak` displacement should stop the publish.
-`uLogStore` itself is still not linkable by the test program.
+approved the leaf extraction): `uLogBackup` + 18 tests.
+
+~~Whether the verifier should stop converting the snapshot to WAL~~ and
+~~whether a failed `.bak` displacement should stop the publish~~ — **both
+decided YES by NY4I and fixed 2026-09-19.** See `OpenReadOnly` above for the
+first; for the second, `TLogBackup.Run` now honours the displacement rename,
+stops before publishing when it fails, keeps the verified `.new` and names all
+three files. Do not re-report either as open.
+
+Still open: `uLogStore` itself is not linkable by the test program, and the
+fault-injection tests for the QSO acknowledgement contract are owed.
 
 ## Coordinate with
 

@@ -29,7 +29,8 @@ unit uLogBackup;
         exactly as they were
      6. an existing destination is displaced to <destination>.bak, replacing
         any older .bak; with no existing destination an older .bak is left
-        alone
+        alone. A displacement that FAILS stops the run -- the existing backup
+        is left where it is and the verified .new is kept and named
      7. <destination>.new is RENAMED to the destination, not copied
      8. any exception from 3 to 7 deletes <destination>.new and reports
 
@@ -71,11 +72,16 @@ type
   why. The connection is closed before this returns, which the publish step
   relies on -- a file still open cannot be renamed on Windows.
 
-  IT IS NOT READ-ONLY, which the name does not say (measured 2026-09-18).
-  TLogDatabase.Open applies PRAGMA journal_mode = WAL, which rewrites the
-  file header: the snapshot comes out of VACUUM INTO in rollback-journal mode
-  and is published in WAL mode. No page content changes -- four header bytes
-  do. Reported rather than changed; see uTestLogBackup. *)
+  IT IS READ-ONLY, AND THAT TOOK A FIX (measured 2026-09-18, fixed
+  2026-09-19). This went through TLogDatabase.Open, which WRITES: its PRAGMA
+  journal_mode = WAL rewrote header bytes 18, 19, 27 and 95, so the snapshot
+  came out of VACUUM INTO in rollback-journal mode and was published in WAL
+  mode. The bytes verified were not the bytes snapshotted, and a check that
+  alters its subject has not checked what it hands on. It now goes through
+  TLogDatabase.OpenReadOnly -- the connector's own sofReadOnly path, no
+  write-side pragmas, no migration -- and the published backup is byte for
+  byte the file SQLite produced. The check itself is unchanged and is still a
+  real integrity_check plus foreign_key_check. Pinned by uTestLogBackup. *)
 function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;
 
 implementation
@@ -93,7 +99,7 @@ begin
    check  := TLogDatabase.Create;
    try
       try
-         check.Open(aPath);
+         check.OpenReadOnly(aPath);
          verdict := check.CheckIntegrity;
          Result  := verdict.Ok;
          if not Result then
@@ -170,7 +176,29 @@ begin
             begin
             DeleteFile(previous);
             end;
-         RenameFile(aDestination, previous);
+
+         (* THE RESULT IS HONOURED, AND UNTIL 2026-09-19 IT WAS DISCARDED.
+           What that cost differs by platform and was worse on Unix. On
+           Windows the publish rename below then failed as well (MoveFileW
+           will not overwrite an existing target), so the operator was told
+           the file "could not be renamed" and never that a backup generation
+           had gone. On Unix rename(2) DOES overwrite, so the publish
+           succeeded and the previous generation simply vanished, silently,
+           with no .bak left at all.
+
+           So a displacement that fails stops the run. The destination still
+           holds the previous backup -- the rename is what failed, so nothing
+           moved -- and .new still holds the new one, verified. Nothing good
+           is lost and both are named. *)
+         if not RenameFile(aDestination, previous) then
+            begin
+            aReport := Format('The backup was written and verified, but the '
+                              + 'existing backup at %s could not be moved '
+                              + 'aside to %s, so it was left alone. The new '
+                              + 'backup is at %s.',
+                              [aDestination, previous, staged]);
+            Exit;
+            end;
          end;
 
       if not RenameFile(staged, aDestination) then

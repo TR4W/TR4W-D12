@@ -287,8 +287,15 @@ begin
 
         It is also what makes a second run a no-op: the values the first run
         wrote are read back, so the legacy value matches and is reported as
-        unchanged rather than converted again. *)
-      LoadSettingsForStartup(aSettingsFile, aSettings);
+        unchanged rather than converted again.
+
+        THE SECTION ONLY, NOT THE STARTUP LOAD -- changed 2026-09-19 when
+        LoadSettingsForStartup began importing the legacy bucket itself. Going
+        through it would apply the bucket to the object before the comparison
+        below, so every command would come back "unchanged" and a converter
+        that reports nothing is a converter that cannot be checked. The
+        difference between the two homes is the whole of what this reports. *)
+      LoadSettingsSection(aSettingsFile, aSettings);
 
       if not CollectLegacyValues(aSettingsFile, aIniFile, legacy, aError) then
          begin

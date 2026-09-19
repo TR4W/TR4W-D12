@@ -132,11 +132,80 @@ listed, never dropped). If the generator and the program disagree, **the
 generator is wrong** — and it now checks that itself against the frozen
 vocabulary in `uTestSettingsModel` and refuses to write on a mismatch.
 
+## The legacy `commands` bucket is no longer a second home (2026-09-19)
+
+**A command the settings object owns is persisted to the `settings` section and
+NOWHERE ELSE.** `ApplyAndStoreCommand` routes an owned, non-contest-scoped
+command to the property and `SaveSettings`, so Preferences and a peer change
+take one path; `ApplyPeerCommand`'s duplicate arm was deleted rather than kept
+in step. `ApplyStoredCommands` skips an owned name, and `ApplyStoredCommand`
+(one named command out of the bucket) is **gone with its only caller**.
+
+**The bucket is consumed, not chosen between.** `LoadSettingsForStartup`
+imports it onto the properties and THEN de-streams the `settings` section over
+the top — `FromJSON` leaves an absent property alone, so the section wins where
+it has a value and the old value fills the gap. `CollapseLegacySettingHomes`
+then deletes what was consumed and writes both halves in one save. Nothing an
+operator had can be lost, which matters: **231 of the 247 names the importer
+seeds are settings-owned**, and NY4I's file had 229 bucket entries against a
+`settings` section holding one group.
+
+**`ImportLegacyCommands` FLATTENS now.** It used `FindPath`, and the real file
+nests by category (`commands/other/MY GRID`), so it had been importing nothing
+at all on every station in the field. `FlattenLegacyCommands` is the one
+implementation; `StoredLegacyCommand` and `StartupMainCallsign` use it too.
+
+### THE IMPORT IS A CONVERSION, AND `/EXPORT` DOES NOT CONVERT
+
+`LoadSettingsForStartup(..., aImportLegacy)` — **False under `tSilentExport`**.
+The first version of this change imported unconditionally and **the corpus went
+22/2 within the hour**: the IARU sent exchange is reconstructed from station
+state at export time, so the fixture's `MY STATE = FL` displaced its
+`MY ITU ZONE = 8` and every QSO exported `59 FL` against a frozen `59 8`. It is
+the same rule, and the same measured reason, that keeps `ApplyStoredCommands`
+out of `/EXPORT` (21/1/4 → 8/14/4). `/EXPORT` still takes **COMPUTER ID and
+nothing else** from the bucket, by name, because PostUnit reads it for the
+Cabrillo TRANSMITTER DIGIT.
+
+`uTestSettingsPrecedence` pins all of it.
+
+## A contest `.cfg` may not set a STATION-ONLY setting
+
+`TSettingsGroup.IsStationOnly` (a class function, like `IsContestScoped`) and
+`TR4WSettings.CommandIsStationOnly`. `LogCfg` logs and drops such a line —
+**never the modal** *"invalid statement in config file"*.
+
+**It is NOT the opposite of contest-scoped.** Most settings are the station's
+AND may legitimately be overridden by a contest; station-only is the narrow
+case where the value is consumed before any `.cfg` is read. **`TDisplaySettings`
+is the only member** (NY4I, 2026-09-19): `StartupUILanguage` has chosen the
+catalogue already, so a `.cfg` line could not take effect — it could only be
+written into the station's file by the next Preferences save.
+
 ## Open
 
-**The startup precedence defect is OPEN** (memory:
-`settings-startup-precedence-defect`). Six config sources today; the target is two
-plus a converter.
+**The startup precedence defect is NARROWER, NOT CLOSED.** The
+station-settings half is done — one home, one writer, and the bucket collapses
+on first start. What remains:
+
+- **The contest-scoped settings still live only in the legacy bucket.**
+  `ToJSON` excludes them from the `settings` section, so the bucket is their
+  ONLY copy and `ApplyStoredCommands` still applies them. Their destination is
+  the contest database (`uLogStore.CaptureConfiguration`), and that is a
+  separate migration — the collapse deliberately leaves them alone.
+- **`tr4w.ini` is still read at startup** (`ReadInConfigFile(cfgINI)`) rather
+  than converted once by `tr4wconvert`. So the source count is four for a
+  station setting (settings section, ini, contest `.cfg`, log config table),
+  not the two-plus-a-converter target.
+- **`uSettingsConvert` now loads only the section** (`LoadSettingsSection`),
+  because going through the startup load would import the bucket first and
+  report every command "unchanged". It is still the only thing that reads the
+  old `tr4w.ini`.
+- **`general_qso` remains a known divergence for the same reason this defect
+  had**: `MY NAME` lives only in the bucket and `/EXPORT` does not import it,
+  so the sent name is empty where D7 sent `TOM`. Collapsing a station's file
+  once fixes it for that station; the tracked corpus fixture is deliberately
+  left as it is.
 
 ## Coordinate with
 

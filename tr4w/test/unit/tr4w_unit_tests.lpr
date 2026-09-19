@@ -304,6 +304,7 @@ uses
    uTestSettingsModel in 'uTestSettingsModel.pas',
    uTestSettingsConvert in 'uTestSettingsConvert.pas',
    uSettingsConvert in '..\..\src\uSettingsConvert.pas',
+   uTestSettingsPrecedence in 'uTestSettingsPrecedence.pas',
    uTestTLSRefusal in 'uTestTLSRefusal.pas',
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
@@ -443,6 +444,7 @@ begin
    RegisterSuite(TPortAddressTests.Create('PortAddress'));
    RegisterSuite(TSettingsModelTests.Create('SettingsModel'));
    RegisterSuite(TSettingsConvertTests.Create('SettingsConvert'));
+   RegisterSuite(TSettingsPrecedenceTests.Create('SettingsPrecedence'));
    RegisterSuite(TTLSRefusalTests.Create('TLSRefusal'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));

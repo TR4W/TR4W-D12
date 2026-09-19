@@ -136,10 +136,88 @@ procedure SaveSettings(const aFileName: string;
   can say which is in force.  The caller SAVES on a False result, and from then
   on the legacy keys are dead.
 
-  Modelled on LoadUDPForStartup, which is the same one-time migration for the
-  broadcast settings. *)
+  THE LEGACY BUCKET IS NOW IMPORTED BEFORE THE SECTION IS DE-STREAMED, and the
+  section wins wherever it has a value -- see the body for why, and call
+  CollapseLegacySettingHomes afterwards to finish the job.
+
+  aImportLegacy FALSE SKIPS THAT IMPORT, and there is exactly one caller that
+  needs it: the headless /EXPORT.
+
+  WHY, MEASURED. The bucket is the STATION'S settings as they stand today, and
+  an export must be configured the way the LOG is configured, not the way the
+  station is. ApplyStoredCommands is skipped under /EXPORT for precisely this
+  reason and its comment records the number -- applying it took the corpus from
+  21/1/4 to 8/14/4. Importing the bucket here reintroduced a slice of the same
+  thing and the corpus said so within the hour: the IARU sent exchange is
+  RECONSTRUCTED from station state at export time, so the fixture's
+  MY STATE = FL displaced its MY ITU ZONE = 8 and every QSO exported "59 FL"
+  against a frozen D7 reference of "59 8".
+
+  A CONVERSION IS SOMETHING A RUNNING STATION DOES ONCE. It is not something a
+  batch export does to a log it was handed. *)
 function LoadSettingsForStartup(const aFileName: string;
-                                const aSettings: TR4WSettings): boolean;
+                                const aSettings: TR4WSettings;
+                                aImportLegacy: boolean = True): boolean;
+
+(* THE `settings` SECTION AND NOTHING ELSE -- the second half of
+  LoadSettingsForStartup, on its own.
+
+  FOR A CONVERTER, which needs the object to hold what the SECTION says and
+  not what the legacy bucket says, because the difference between the two is
+  exactly what it has to report. Going through the startup load would import
+  the bucket first and every command would come back "unchanged".
+
+  Returns whether the file carried a section at all. *)
+function LoadSettingsSection(const aFileName: string;
+                             const aSettings: TR4WSettings): boolean;
+
+(* TWO HOMES BECOME ONE -- the write half of the import LoadSettingsForStartup
+  has just done.
+
+  For every command the settings object OWNS and that is not the contest's, the
+  entry is deleted from the legacy `commands` bucket and the settings section is
+  rewritten from the object. The value is not lost: the load above already put
+  it on the property, so this only removes the second copy.
+
+  WHY IT IS A SEPARATE CALL AND NOT PART OF THE LOAD. A load that writes is a
+  surprise, and there is one caller that must NOT write -- the headless
+  /EXPORT, which has no business editing an operator's settings file.
+
+  A CONTEST-SCOPED COMMAND IS LEFT ALONE. ToJSON excludes it from the settings
+  section, so removing it from the bucket would delete the only copy. Those
+  belong in the contest database and that is a different migration.
+
+  Returns the number of entries removed -- 0 on a station that has already been
+  collapsed, which is every start after the first. *)
+function CollapseLegacySettingHomes(const aFileName: string;
+                                    const aSettings: TR4WSettings): integer;
+
+(* ONE COMMAND'S VALUE OUT OF THE LEGACY `commands` BUCKET, or '' when the
+  file, the bucket or the name is absent. Flattened, so a nested entry is
+  found.
+
+  FOR THE CALLER THAT MUST NOT IMPORT THE WHOLE BUCKET and still needs one
+  named value out of it -- today that is the headless /EXPORT and COMPUTER ID,
+  which decides the Cabrillo TRANSMITTER DIGIT. Naming the command at the call
+  site, with the reason, is the point: a loop over the bucket is
+  ApplyStoredCommands and is skipped there deliberately.
+
+  Reads the file and nothing else. It assigns nothing and saves nothing. *)
+function StoredLegacyCommand(const aFileName, aCommand: string): string;
+
+(* MY CALL AS STORED, for the New Contest dialog -- which runs BEFORE
+  LoadSettingsForStartup, so Settings.My.MainCallsign is always empty there and
+  the pre-fill it was reading never once fired.
+
+  Reads settings/My/MainCallsign, and falls back to the legacy `commands`
+  bucket so a station that has not been collapsed yet still gets its callsign
+  offered on the very first run after the upgrade.
+
+  '' for an absent, blank or unreadable file, and the dialog then opens with an
+  empty box. Same contract and same rule as StartupLogLevel and
+  StartupUILanguage: it READS THE FILE, never assigns Settings and never
+  saves. *)
+function StartupMainCallsign(const aFileName: string): string;
 
 // The window layout on its own -- what ExitProgram calls.
 //
@@ -298,6 +376,12 @@ begin
              + 'tr4w.json';
 end;
 
+(* Declared here and written near the other startup readers, which is where it
+  belongs to a reader -- StartupMainCallsign sits beside the settings loader
+  and needs it a couple of hundred lines earlier. *)
+function StoredSettingValue(const aRoot: TJSONObject;
+                            const aGroup, aName: string): TJSONValue; forward;
+
 // The document as it stands on disk, or an empty one.
 //
 // An ABSENT file is simply a first run.  A file that is PRESENT but does not
@@ -448,11 +532,63 @@ begin
 end;
 
 function LoadSettingsForStartup(const aFileName: string;
-                                const aSettings: TR4WSettings): boolean;
+                                const aSettings: TR4WSettings;
+                                aImportLegacy: boolean = True): boolean;
+var
+   root: TJSONObject;
+   commands: TJSONValue;
+begin
+   Result := False;
+   if aSettings = nil then
+      begin
+      Exit;
+      end;
+
+   root := ReadRootOrEmpty(aFileName);
+   try
+      (* THE LEGACY BUCKET FIRST, THE SETTINGS SECTION SECOND, AND THAT ORDER
+        IS THE WHOLE FIX (2026-09-19).
+
+        A setting the settings object owns could sit in BOTH homes, and the
+        legacy one won -- not here, but at startup, where ApplyStoredCommands
+        re-applied the whole `commands` bucket AFTER this load. Measured on
+        NY4I's station: 229 entries in the bucket against a settings section
+        holding one group, and 231 of the 247 names the importer seeds are
+        names the settings object owns. The visible symptom was that clearing
+        COMPUTER ID did not survive a restart.
+
+        TWO HOMES COLLAPSE TO ONE BY IMPORTING RATHER THAN BY CHOOSING. The
+        bucket is applied to the properties first, so nothing an operator had
+        is lost; the settings section is then de-streamed over the top, and
+        FromJSON leaves a property the section does not carry alone. So the
+        settings section wins wherever it has an opinion and the old value
+        fills the gap -- which is the precedence this program has always meant
+        to have. CollapseLegacySettingHomes then removes what was consumed.
+
+        An absent `commands` section is not an error -- it is a brand new
+        installation, and the settings object keeps its constructor defaults.
+
+        IT USED TO RUN ONLY WHEN THE SETTINGS SECTION WAS ABSENT, which meant
+        a setting migrated after that section first appeared was never seeded
+        at all. *)
+      commands := root.FindValue('commands');
+      if aImportLegacy and (commands is TJSONObject) then
+         begin
+         aSettings.ImportLegacyCommands(TJSONObject(commands));
+         end;
+   finally
+      root.Free;
+   end;
+
+   (* AND THE SECTION OVER THE TOP, through the one routine that reads it. *)
+   Result := LoadSettingsSection(aFileName, aSettings);
+end;
+
+function LoadSettingsSection(const aFileName: string;
+                             const aSettings: TR4WSettings): boolean;
 var
    root: TJSONObject;
    section: TJSONValue;
-   commands: TJSONValue;
 begin
    Result := False;
    if aSettings = nil then
@@ -467,20 +603,169 @@ begin
          begin
          aSettings.FromJSON(TJSONObject(section));
          Result := True;
+         end;
+   finally
+      root.Free;
+   end;
+end;
+
+function CollapseLegacySettingHomes(const aFileName: string;
+                                    const aSettings: TR4WSettings): integer;
+var
+   root: TJSONObject;
+   commands: TJSONValue;
+   removed: integer;
+
+   (* DEPTH FIRST AND BACKWARDS, because deleting shifts every later index
+     down. An empty category object is left in place: it costs one line in the
+     file, and removing containers while walking them is where this kind of
+     routine goes wrong. *)
+   procedure Prune(const aNode: TJSONObject);
+   var
+      i: integer;
+      child: TJSONValue;
+      name: string;
+   begin
+      for i := aNode.Count - 1 downto 0 do
+         begin
+         child := aNode.Items[i];
+         name := string(aNode.Names[i]);
+         if child is TJSONObject then
+            begin
+            Prune(TJSONObject(child));
+            end
+         else if aSettings.OwnsCommand(name) and
+                 (not aSettings.CommandIsContestScoped(name)) then
+            begin
+            aNode.Delete(i);
+            Inc(removed);
+            end;
+         end;
+   end;
+
+begin
+   Result := 0;
+   removed := 0;
+   if (aSettings = nil) or (not FileExists(aFileName)) then
+      begin
+      Exit;
+      end;
+
+   root := ReadRootOrEmpty(aFileName);
+   try
+      commands := root.FindValue('commands');
+      if not (commands is TJSONObject) then
+         begin
          Exit;
          end;
 
-      (* NO SECTION: this installation has not been migrated yet.  Seed from
-        the legacy keys and tell the caller to save.
-
-        An absent `commands` section is not an error either -- it is a brand
-        new installation, and the settings object keeps the defaults its
-        constructor set. *)
-      commands := root.FindValue('commands');
-      if commands is TJSONObject then
+      Prune(TJSONObject(commands));
+      if removed = 0 then
          begin
-         aSettings.ImportLegacyCommands(TJSONObject(commands));
+         (* NOTHING TO DO IS THE NORMAL CASE, and it must not rewrite the
+           file. A save on every start is a save that can fail on every
+           start. *)
+         Exit;
          end;
+
+      (* BOTH HALVES IN ONE WRITE. The settings section carries the values
+        that were just consumed, and the pruned bucket no longer does; writing
+        one without the other would lose them if the process died in
+        between. *)
+      JSONSetSection(root, JSONKEY_SETTINGS, aSettings.ToJSON);
+      WriteAllTextUTF8(aFileName, root.Format(2));
+      Result := removed;
+   finally
+      root.Free;
+   end;
+end;
+
+function StoredLegacyCommand(const aFileName, aCommand: string): string;
+var
+   root: TJSONObject;
+   commands: TJSONValue;
+   legacy: TStringList;
+begin
+   Result := '';
+
+   root := ReadRootOrEmpty(aFileName);
+   try
+      commands := root.FindValue('commands');
+      if not (commands is TJSONObject) then
+         begin
+         Exit;
+         end;
+
+      legacy := TStringList.Create;
+      try
+         FlattenLegacyCommands(TJSONObject(commands), legacy);
+         Result := Trim(string(legacy.Values[AnsiString(aCommand)]));
+      finally
+         legacy.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+function StartupMainCallsign(const aFileName: string): string;
+var
+   root: TJSONObject;
+   value: TJSONValue;
+   commands: TJSONValue;
+   legacy: TStringList;
+begin
+   Result := '';
+
+   root := ReadRootOrEmpty(aFileName);
+   try
+      value := StoredSettingValue(root, 'My', 'MainCallsign');
+      if value <> nil then
+         begin
+         Result := Trim(value.Value);
+         end;
+
+      if Result = '' then
+         begin
+         (* MY CALL AS THE FALLBACK, and the two are not the same setting.
+           My.MainCallsign is the STATION'S own callsign, remembered across
+           contests and written back by this dialog; My.Call is the callsign
+           being OPERATED, which a contest .cfg overrides for a club call. A
+           station that has never used this dialog has the second and not the
+           first -- NY4I's file is exactly that -- and offering the callsign
+           it plainly has beats offering an empty box. *)
+         value := StoredSettingValue(root, 'My', 'Call');
+         if value <> nil then
+            begin
+            Result := Trim(value.Value);
+            end;
+         end;
+
+      if Result <> '' then
+         begin
+         Exit;
+         end;
+
+      (* THE LEGACY BUCKET, for the one run between an upgrade and the
+        collapse. After that the settings section answers and this is never
+        reached. *)
+      commands := root.FindValue('commands');
+      if not (commands is TJSONObject) then
+         begin
+         Exit;
+         end;
+
+      legacy := TStringList.Create;
+      try
+         FlattenLegacyCommands(TJSONObject(commands), legacy);
+         Result := Trim(legacy.Values['MAIN CALLSIGN']);
+         if Result = '' then
+            begin
+            Result := Trim(legacy.Values['MY CALL']);
+            end;
+      finally
+         legacy.Free;
+      end;
    finally
       root.Free;
    end;
@@ -628,7 +913,7 @@ begin
 end;
 
 (* ONE MEMBER OF ONE GROUP OF THE SETTINGS SECTION -- settings.<group>.<name>
-  -- or nil when any step is missing. The walk both startup readers make; the
+  -- or nil when any step is missing. The walk every startup reader makes; the
   document stays owned by the caller. *)
 function StoredSettingValue(const aRoot: TJSONObject;
                             const aGroup, aName: string): TJSONValue;
