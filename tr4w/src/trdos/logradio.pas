@@ -210,10 +210,6 @@ type
       //    lpOverlapped: TOverlapped;
       //    pOver: POverlapped;
 
-      CommandsBuffer:        array[0..7] of array[0..{19}40] of AnsiChar;
-      CommandsBufferPointer: cardinal;
-      CommandsTempBuffer:    array[0..{19}40] of AnsiChar; // ny4i extended for icom cw  // 4.44.5
-
       //    ICOM_COMMAND_B1: Str80;
       //    ICOM_COMMAND_SET_MODE: string[8];
       //    ICOM_COMMAND_SET_FREQ: string[11];
@@ -376,7 +372,6 @@ type
       nextExtendedMode : ExtendedModeType;
       tmrCWByCAT: TTimer;
       EventHandlers : TEventHandlers;
-      procedure AddCommandToBuffer;
       function  CheckAutoCallTerminate: boolean;
       function DeleteLastCWCharacter: boolean;
       procedure PutRadioIntoSplit;
@@ -908,11 +903,6 @@ begin
 end;
 
 
-function BufToStr(var buf; bufSize: integer): string;
-begin
-   SetLength(Result, bufSize);
-   Move(buf, pointer(Result)^, bufSize);
-end;
 //------------------------------------------------------------------------------
 procedure LinkToActiveRadio(IntRadioType: InterfacedRadioType;
    SerialPort: PortType);
@@ -1462,47 +1452,6 @@ begin
       DebugMsg('[AddTimerToCWByCATTimer] Trying to add ' + IntToStr(ms) + ' ms but timer is disabled');
       end;
 end;
-{------------------------------------------------------------------------------}
-procedure RadioObject.AddCommandToBuffer;
-begin
-   // TLogger.GetInstance.Debug('Entering AddCommandToBuffer');
-   if not PollingEnable then
-      begin
-      { A REAL BYTE BOUNDARY, AND THE ONE SHAPE THE RULE ALLOWS.
-
-        This is NOT the banned idiom even though it matches its spelling.  The
-        pointer is DEREFERENCED (`^`) and handed to an untyped `var` parameter
-        together with an EXPLICIT LENGTH from the ShortString's own length byte,
-        so nothing ever looks for a terminator -- which is the entire hazard the
-        rule exists to remove.
-
-        Serial CAT framing must be byte-exact: a CI-V or Yaesu-binary command
-        corrupted by a string conversion fails silently.  Converting this to a
-        `string` would be the wrong direction. }
-      (* THE WRITE THAT STOOD HERE WENT TO THE LEGACY CAT PORT, which is
-        never open -- see the note by WriteBufferToCATPort. A radio that
-        reaches this line has no factory driver, so there is nothing to send
-        through; say so rather than sleep 250 ms pretending. *)
-      logger.Error('[%s] AddCommandToBuffer: polling is disabled and this radio '
-                   + 'has no factory driver -- %d command byte(s) discarded.',
-                   [RadioName, Ord(CommandsTempBuffer[0]) - 1]);
-      // TLogger.GetInstance.Debug('Returning from sleep(250)');
-      // TLogger.GetInstance.Debug('Leaving AddCommandToBuffer via Exit');
-      Exit;
-      end;
-
-   if CommandsBufferPointer = 8 then
-      begin
-      CommandsBufferPointer := 0;
-      end;
-   // DebugRadioTempBuffer call removed with the NEWER_DEBUG cleanup (2026-08-16).
-   // Its whole body was inside {$IF NEWER_DEBUG}, so with that off it had
-   // already been a no-op -- the routine went, this call site did not.
-   Move(CommandsTempBuffer, CommandsBuffer[CommandsBufferPointer], Ord(CommandsTempBuffer[0]));
-   Inc(CommandsBufferPointer);
-   //TLogger.GetInstance.Debug('Leaving AddCommandToBuffer');
-end;
-
 
 //------------------------------------------------------------------------------
 function RadioObject.DeleteLastCWCharacter: boolean;  // ny4i Procedure added Issue149

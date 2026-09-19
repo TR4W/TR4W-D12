@@ -113,6 +113,7 @@ uses
   uNewContestForm in 'src\ui\lcl\uNewContestForm.pas' {frmNewContest},
   uTextFitAudit in 'src\ui\lcl\uTextFitAudit.pas',
   uNewContest in 'src\uNewContest.pas',
+  uNewContestCommands in 'src\uNewContestCommands.pas',
   uRadioPolling in 'src\uRadioPolling.pas',
   uEditQSO in 'src\uEditQSO.pas',
   uLogSearch in 'src\uLogSearch.pas',

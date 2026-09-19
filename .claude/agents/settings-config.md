@@ -66,6 +66,33 @@ that in both directions.
   the **contest SQLite database**.
 - **Credentials live in the OS vault**, not in settings.
 
+## Nothing touches `Settings` before `LoadSettingsForStartup`
+
+**The New Contest dialog runs BEFORE the settings object is loaded**
+(`ShowNewContest`, then `LoadSettingsForStartup` far below it in `uProgramMain`).
+So anything the dialog assigns is overwritten by the load, and anything it
+SAVES writes the constructor defaults over the whole `settings` section —
+`SaveSettings` replaces the section from the object.
+
+Both happened. `SaveNewContest` applied `MY CALL` / the row commands / `CONTEST`
+at dialog time and saved `MainCallsign` from an unloaded object. The result was
+"No callsign specified!!" on every new contest on every platform, station
+settings reset to defaults, no `FoundContest` for the new contest (token effects
+were not subscribed yet), and the dialog's provenance erased by
+`ReadInConfigFile(cfgCFG)`'s tracker reset.
+
+**The dialog now QUEUES (`uNewContestCommands`), and `uProgramMain` applies the
+queue right after `ReadInConfigFile(cfgCFG)`** — where D7 read the `.cfg` the
+dialog wrote, so the contest's values beat the station's (the club-call case).
+`MainCallsign` is saved there first, before any contest value, so the station
+file never receives the contest's values. `uTestNewContestCommands` pins it with
+a first-run, a fresh and a configured station.
+
+**The rule for any future pre-load code:** read the file if you must, never
+assign `Settings` and never call `SaveSettings`. Known leftover:
+`uNewContest.PrepareForm` pre-fills the callsign from `Settings.My.MainCallsign`,
+which is always empty at that point, so the pre-fill never fires.
+
 ## Lints that gate you
 
 `Lint-ConfigArrays` (**inverted — every ceiling is 0; any occurrence fails

@@ -118,6 +118,7 @@ uses
   uADIFExchange,
   uInputQuery,
   uNewContest,
+  uNewContestCommands,
   uTextFitAudit,
   uRadioPolling,
   uEditQSO,
@@ -1796,6 +1797,27 @@ begin
   ReadInConfigFile(cfgINI);
 
   ReadInConfigFile(cfgCFG);          //n4af 4.31.5
+
+  (* WHAT THE NEW CONTEST DIALOG CHOSE -- APPLIED HERE, WHERE ITS .cfg WAS READ.
+
+    The dialog used to write a .cfg and this line's neighbour read it, so the
+    contest's values landed after the station's and won. With the file gone
+    they were applied at dialog time instead, BEFORE LoadSettingsForStartup
+    above -- which then put the station's values back: an empty MY CALL on a
+    fresh station ("No callsign specified!!"), and the station's own call
+    replacing a club call on a configured one. CONTEST never set the contest
+    up either, because InstallTokenEffects had not run yet.
+
+    HERE, every one of those holds: after the station load, with the effects
+    subscribed, after ReadInConfigFile(cfgCFG) has reset the contest tracker,
+    and before ReportContestDatabaseState and LogStoreApplyContestConfig
+    create the log and capture these values into it.
+
+    A no-op unless the dialog created a contest this run -- opening an
+    existing one, a file on the command line and every headless mode queue
+    nothing. See uNewContestCommands. *)
+  ApplyNewContestChoices(TR4WConfigFileName);
+
   ReadInConfigFile(cfgCommMes);      //common messages gets precedence - n4af
 
   (* WHETHER THE CONTEST DATABASE ALREADY EXISTS, asked HERE and not later.

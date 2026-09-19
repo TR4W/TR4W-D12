@@ -30,6 +30,9 @@ type
       procedure Test_RejectsForeignPacket;
       procedure Test_RejectsTruncatedPacket;
       procedure Test_ValueForMatchesWholeKeyOnly;
+      procedure Test_SecondPacketCarriesNoStaleFields;
+      procedure Test_RejectedPacketClearsPreviousFields;
+      procedure Test_ReparsingDoesNotLeak;
    public
       procedure RunAllTests; override;
    end;
@@ -143,12 +146,102 @@ begin
    CheckEquals('', TFlexDiscovery.ValueFor('model=FLEX-6300', 'absent'), 'missing key -> empty');
 end;
 
+(* The captured VITA-49 header followed by a caller-supplied payload and a NUL.
+   The header is what makes ParsePacket accept it; only the key=value run
+   differs from the real capture. *)
+function PacketWithPayload(const Payload: AnsiString): TBytes;
+var
+   i: Integer;
+begin
+   SetLength(Result, FLEX_PAYLOAD_OFFSET + Length(Payload) + 1);
+   for i := 0 to FLEX_PAYLOAD_OFFSET - 1 do
+      begin
+      Result[i] := CAPTURE[i];
+      end;
+   for i := 1 to Length(Payload) do
+      begin
+      Result[FLEX_PAYLOAD_OFFSET + i - 1] := Byte(Payload[i]);
+      end;
+   Result[High(Result)] := 0;
+end;
+
+procedure TFlexDiscoveryTests.Test_SecondPacketCarriesNoStaleFields;
+var
+   r: TFlexDiscoveredRadio;
+   first, second: TBytes;
+begin
+   (* DiscoverRadios parses every datagram into ONE reused record. A second
+      radio's packet that omits nickname/serial/status/port must not inherit
+      the first radio's values -- that would attach one radio's serial number
+      to another radio's address. The first packet uses a non-default port so
+      the port assertion can tell "stale" from "defaulted". *)
+   BeginTest('a second packet into the same record carries none of the first''s fields');
+   first := PacketWithPayload('model=FLEX-6300 nickname=SHACK serial=1111-2222 ip=192.168.1.1 port=5555 status=In_Use');
+   CheckTrue(TFlexDiscovery.ParsePacket(first, Length(first), r), 'first packet must parse');
+   CheckEquals(5555, r.Port, 'first packet''s own port');
+   second := PacketWithPayload('model=FLEX-8600 ip=10.1.2.3');
+   CheckTrue(TFlexDiscovery.ParsePacket(second, Length(second), r), 'second packet must parse');
+   CheckEquals('10.1.2.3', r.IPAddress, 'ip is the second packet''s');
+   CheckEquals('FLEX-8600', r.Model, 'model is the second packet''s');
+   CheckEquals(FLEX_DISCOVERY_PORT, r.Port, 'absent port= falls back to the default, not the first packet''s 5555');
+   CheckEquals('', r.Nickname, 'nickname absent in the second packet');
+   CheckEquals('', r.Serial, 'serial absent in the second packet');
+   CheckEquals('', r.Status, 'status absent in the second packet');
+end;
+
+procedure TFlexDiscoveryTests.Test_RejectedPacketClearsPreviousFields;
+var
+   r: TFlexDiscoveredRadio;
+begin
+   (* The early-exit path must leave the record empty, not holding the last
+      accepted radio. *)
+   BeginTest('a rejected packet leaves no fields from the previous parse');
+   CheckTrue(TFlexDiscovery.ParsePacket(CAPTURE, Length(CAPTURE), r), 'first packet must parse');
+   CheckFalse(TFlexDiscovery.ParsePacket(CAPTURE, 12, r), 'runt packet must be rejected');
+   CheckEquals('', r.IPAddress, 'ip cleared');
+   CheckEquals('', r.Model, 'model cleared');
+   CheckEquals('', r.Nickname, 'nickname cleared');
+   CheckEquals('', r.Serial, 'serial cleared');
+   CheckEquals('', r.Status, 'status cleared');
+   CheckEquals(0, r.Port, 'port cleared');
+end;
+
+procedure TFlexDiscoveryTests.Test_ReparsingDoesNotLeak;
+const
+   PARSES = 500;
+   (* A leak of five strings per parse is several hundred KB over PARSES; a
+      correct parser returns to the same heap level. The slack only absorbs
+      allocator bookkeeping. *)
+   SLACK_BYTES = 4096;
+var
+   r: TFlexDiscoveredRadio;
+   i: Integer;
+   before, after: PtrUInt;
+begin
+   (* FillChar over a record holding managed strings nils their pointers
+      without releasing them. DiscoverRadios reuses one record for every
+      datagram at 1 Hz per radio, so that leaked five strings per packet. *)
+   BeginTest('parsing into a reused record does not leak its strings');
+   TFlexDiscovery.ParsePacket(CAPTURE, Length(CAPTURE), r);   // warm-up: r now owns strings
+   before := GetFPCHeapStatus.CurrHeapUsed;
+   for i := 1 to PARSES do
+      begin
+      TFlexDiscovery.ParsePacket(CAPTURE, Length(CAPTURE), r);
+      end;
+   after := GetFPCHeapStatus.CurrHeapUsed;
+   CheckTrue(after <= before + SLACK_BYTES,
+             Format('heap grew %d bytes over %d parses', [Int64(after) - Int64(before), PARSES]));
+end;
+
 procedure TFlexDiscoveryTests.RunAllTests;
 begin
    Test_ParsesRealCapture;
    Test_RejectsForeignPacket;
    Test_RejectsTruncatedPacket;
    Test_ValueForMatchesWholeKeyOnly;
+   Test_SecondPacketCarriesNoStaleFields;
+   Test_RejectedPacketClearsPreviousFields;
+   Test_ReparsingDoesNotLeak;
 end;
 
 end.

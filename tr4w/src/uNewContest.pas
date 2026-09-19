@@ -84,7 +84,7 @@ uses
   uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
   uCFG,
   uSettingsModel,      // Settings.My.MainCallsign -- was the global MainCallsign
-  uTR4WConfigFile,     // SaveSettings -- the settings model's own file
+  uNewContestCommands, // the dialog's choices, applied at startup after the station load
   (* The log file name and its rule -- one artifact, one directory. *)
   uLogNaming;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
 
@@ -476,35 +476,8 @@ begin
   frmNewContest.EnableOK(res);
 end;
 
-(* Applies one setting the new-contest dialog collected, AS THE CONTEST'S.
-
-  Two halves and both are load-bearing. NoteCommandFromContestCFG records that
-  THIS CONTEST asked for it, which is what makes uLogStore store it with
-  source = 'contest' and apply it back on the next open. CheckCommand with
-  aApplyJSONOwned = True applies it now -- True because CONTEST and the
-  CATEGORY tags are csJSON rows and the default refuses those outright. *)
-procedure ApplyNewContestCommand(const aCommand, aValue: string);
-var
-   key, val: ShortString;
-begin
-   if Trim(aCommand) = '' then
-      begin
-      Exit;
-      end;
-
-   NoteCommandFromContestCFG(aCommand);
-
-   FillChar(key, SizeOf(key), 0);
-   FillChar(val, SizeOf(val), 0);
-   key := ShortString(AnsiString(aCommand));
-   val := ShortString(AnsiString(aValue));
-
-   if not CheckCommand(key, val, True) then
-      begin
-      logger.Warn('[NewContest] %s = %s was refused by CFGCA and is not set.',
-                  [aCommand, aValue]);
-      end;
-end;
+(* ApplyNewContestCommand MOVED to uNewContestCommands as its ApplyOne, and
+  it runs at startup now rather than here -- see that unit for why. *)
 
 procedure SaveNewContest;
 var
@@ -515,21 +488,13 @@ begin
     { The .cfg is written as bytes, so the two working buffers stay ANSI; what
       changed is where the text comes from -- the form, not a control id. }
     SetCharBuffer(TempBuffer1, frmNewContest.MyCall);
-    if Settings.My.MainCallsign = '' then
-       begin
-       (* THE PROPERTY, NOT SetCFGCommandValue, and this had to change with
-         the row.
-
-         MAIN CALLSIGN has left CFGCA.  SetCFGCommandValue calls CheckCommand
-         WITHOUT aApplyJSONOwned, and for a name the settings object owns that
-         path is accepted-and-inert by design -- so the call would have
-         returned True, persisted nothing this program reads, and left the
-         callsign unset.  Assigning the property applies it; SaveSettings is
-         what makes it survive the restart, which is the half
-         SetCFGCommandValue used to provide. *)
-       Settings.My.MainCallsign := CharBufferText(TempBuffer1);
-       SaveSettings(TR4WConfigFileName, Settings);
-       end;
+    (* QUEUED, NOT ASSIGNED AND SAVED HERE. The settings object has not been
+      loaded from settings\tr4w.json yet -- that happens after this dialog --
+      so MainCallsign always read '' here, and SaveSettings wrote the
+      constructor defaults over the operator's whole settings section. See
+      uNewContestCommands. *)
+    ClearNewContestChoices;
+    SetNewContestMainCallsign(CharBufferText(TempBuffer1));
     DeleteSlashes(TempBuffer1);
 
       {Contest Name}
@@ -585,20 +550,20 @@ begin
         end;
      end;
 
-  { THE SETTINGS ARE APPLIED, NOT WRITTEN TO A FILE.
+  (* THE SETTINGS ARE QUEUED, NOT APPLIED -- AND NOT WRITTEN TO A FILE.
 
-    This built a .cfg line by line and let ReadInConfigFile apply it back. There
-    is no .cfg now, so the values go straight into the config layer and
-    uLogStore captures them into the log when it is created -- the same journey
-    with the file taken out of the middle.
+    This built a .cfg line by line and startup read it back AFTER the station
+    settings, so the contest's values won. 66ac1ebe took the file out and
+    applied the values here instead, which is BEFORE the station settings are
+    loaded -- and the load then put the station's values back over them: an
+    empty MY CALL on a fresh station, and the station's own call replacing a
+    club call on a configured one.
 
-    MARKED AS THE CONTEST'S, which is the half that is easy to miss.
-    NoteCommandFromContestCFG records provenance, and a value recorded as a
-    STATION setting is stored in the log but never applied back FROM it -- so
-    the contest would come up wrong on its next open. This is the same call
-    ReadInConfigFile makes for every line of a contest .cfg. }
-  ClearContestCFGCommands;
-  ApplyNewContestCommand('MY CALL', frmNewContest.MyCall);
+    So they wait in uNewContestCommands, and uProgramMain applies them where
+    the .cfg used to be read -- after the station load, with the effects
+    subscribed, before the log is created and captures them. Each is still
+    marked as the CONTEST'S when it is applied. *)
+  QueueNewContestCommand('MY CALL', frmNewContest.MyCall);
 
   { The row's LABEL is the command name and its field is the value, which is
     why the label is read back rather than held in a parallel array. A row the
@@ -609,15 +574,15 @@ begin
         begin
         Continue;
         end;
-     ApplyNewContestCommand(frmNewContest.RowCaption(i), frmNewContest.RowText(i));
+     QueueNewContestCommand(frmNewContest.RowCaption(i), frmNewContest.RowText(i));
      end;
 
   { CONTEST LAST, AND THAT IS NOT COSMETIC. It was the last line the .cfg
-    carried, so it was applied last, and its crA hook builds the contest's
-    state -- exchange type, multipliers, domestic file -- from the values set
-    above it. Applied first, it would build that state from whatever the
-    previous contest left behind. }
-  ApplyNewContestCommand('CONTEST', frmNewContest.ContestName);
+    carried, so it was applied last, and its effect (FoundContest) builds the
+    contest's state -- exchange type, multipliers, domestic file -- from the
+    values set above it. Applied first, it would build that state from
+    whatever the previous contest left behind. The queue keeps this order. }
+  QueueNewContestCommand('CONTEST', frmNewContest.ContestName);
 
   begin
 

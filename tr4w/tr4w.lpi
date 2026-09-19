@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="407">
+    <Units Count="408">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1793,6 +1793,10 @@
         <Filename Value="src/domain/uLogBackup.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit406>
+      <Unit407>
+        <Filename Value="src/uNewContestCommands.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit407>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

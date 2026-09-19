@@ -14,6 +14,7 @@ You own how TR4W turns text into keyed CW.
 | the four adapters | `uCWKeyerCAT.pas`, `uCWKeyerWinKey.pas`, `uCWKeyerYCCC.pas`, `uCWKeyerCPU.pas` |
 | WinKeyer transport | `tr4w/src/uWinKey.pas` (own thread) |
 | CPU keyer + element timing | `tr4w/src/trdos/logk1ea.pas` |
+| high-resolution monotonic clock (measurement half only) | `tr4w/src/utils/uHPTimer.pas` |
 | the facade — memories, function keys | `tr4w/src/trdos/LogCW.pas` |
 | chunking and padding, nothing else | `tr4w/src/radioFactory/uCWFraming.pas` |
 | voice | `tr4w/src/trdos/logdvp.pas` |
@@ -45,6 +46,22 @@ You own how TR4W turns text into keyed CW.
 contest.** It is stated as a placeholder in the code. Never let a report imply
 CW works on Linux or macOS. The measurement and the per-platform HPTimer
 reference are in `docs/PLATFORM_CLOCK_ABSTRACTION.md` part 2.
+
+**`uHPTimer` is a STOPWATCH, not a delay.** Its measurement half
+(`HPTicks`, `HPTicksPerSecond`, `HPElapsedMicroseconds`) exists and is
+native-verified on all three platforms; the delay half (`HPSleepMicroseconds`,
+what `tCWSleep` becomes) does not exist yet, so the placeholder sentence above
+still stands. Three things to know before extending it:
+
+- **The Darwin timebase is read, never assumed** — Apple Silicon reports a
+  non-1/1 `mach_timebase_info`, and `uTestHPTimer` pins the arithmetic with
+  synthetic ratios so a hardcoded 1/1 fails on any host.
+- **FPC 3.2.2's Linux `clock_gettime` is a raw `do_SysCall`, not libc**, so it
+  skips the vDSO and a read costs a kernel entry. Irrelevant for measuring a
+  dit; worth remembering if the delay half spins on it.
+- **`uWinKey.wkPerfNow` / `wkPerfMs` is a second, Windows-only copy of this
+  clock** (a `GetTickCount64` fallback off Windows). Repoint it to `uHPTimer`
+  and its gated `uses Windows` goes with it.
 
 ## Open, and decided
 

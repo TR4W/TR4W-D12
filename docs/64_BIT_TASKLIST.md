@@ -52,7 +52,7 @@ launched a 64-bit TR4W.**
 | pointer truncation -- casts | 2 named P0s | 4 sites, 2 units | **0** | **DONE** |
 | pointer truncation -- **handles in 32-bit storage** | not in the source doc | **not measured** | **0** (4 fixed) | **DONE** |
 | live `asm` blocks | "much disabled… confirm each" | 0 | **0** | **DONE** |
-| `Move`/`FillChar`/`ZeroMemory` | not in the source doc | 348 | **347** | open (new rule) |
+| `Move`/`FillChar`/`ZeroMemory` | not in the source doc | 348 (no command; not reproducible) | **387 live** (319 `src`, 68 tests) | **TRIAGED 2026-09-18** -- measure with `build/Count-LiveMove.ps1`; routed per owner in the P0 section below, 4 defects found |
 | **toolchain** | i386 only | i386/win32 | **x86_64-win64 BUILDS** | **compiler done; OpenSSL x64 owed** |
 
 ### The truncation row had a second class, and the first scan could not see it
@@ -301,20 +301,360 @@ So a `string` format constant narrows **at the argument**, before Format runs.
 string `AnsiString` — the type its one consumer takes — which converts nothing
 and still removes the pointer. **The ceiling did not have to move.**
 
-### P0 — no `Move` / `FillChar` / `ZeroMemory`, 348 sites (NY4I, 2026-09-14)
+### P0 — no `Move` / `FillChar` / `ZeroMemory`: COUNTED AND TRIAGED (2026-09-18)
 
 Not in the source document; added because byte I/O being legitimate does not
-make `Move` legitimate. Expect three outcomes per site, and the split matters
-more than the count:
+make `Move` legitimate (NY4I, 2026-09-14). Expect three outcomes per site, and
+the split matters more than the count:
 
 1. **A record or buffer clear** → initialise the fields, or use a typed record
-   that starts zeroed. Most of the 348.
+   that starts zeroed.
 2. **A string copy** (`Move(src[1], dst[1], n)`) → plain assignment. The
    compiler converts and truncates correctly; the pointer version has already
    caused two crashes with no exception text.
 3. **Genuine byte framing** (CI-V, Yaesu binary, the network records) → a
    `TBytes` or `array of Byte` with indexing. The bytes stay exact; what goes
    is the address arithmetic.
+
+**THIS TRIAGE ROUTES THE WORK. IT CONVERTS NOTHING.** Each conversion belongs
+to the specialist who owns the file, and the `owner` column below is the
+routing.
+
+#### The count, and its command
+
+```powershell
+.\tr4w\build\Count-LiveMove.ps1            # per file, per routine, raw vs live
+.\tr4w\build\Count-LiveMove.ps1 -Detail    # every line, to triage from
+.\tr4w\build\Count-LiveMove.ps1 -SelfTest  # the fixture alone
+```
+
+| measured 2026-09-18 | calls | files |
+|---|---:|---:|
+| **live** (comments and string literals stripped) | **387** | 92 |
+| of which `src` | 319 | 75 |
+| of which tests and test tools | 68 | 17 |
+| raw word-bounded grep, same files and names | 740 | 175 |
+
+By routine: `FillChar` 279, `Move` 108 (`System.Move` counts as `Move`).
+`ZeroMemory`, `CopyMemory`, `MoveMemory`, `RtlMoveMemory` and friends are
+**zero live** — every one of them is in a comment. They are counted anyway so a
+new one shows up instead of hiding.
+
+**THE 348 / 347 THIS SECTION CARRIED CANNOT BE REPRODUCED**, and neither can
+the roadmap's "~376 raw". Neither had a command beside it, and no Move counter
+existed when they were written. The raw grep reports nearly double
+(740 against 387), for the reason `Count-LivePChar.ps1` records: this tree
+describes its conversions in comments.
+
+The counter uses `PascalSource.psm1` with the new `-BlankStrings` switch, so
+`'Move failed'` in a log message is not a call. It does not count `List.Move`
+(a method), `MoveTo`, `MoveWindow` or `OnMouseMove`. **It refuses to report a
+tree number** unless its built-in fixture (six live calls among comment,
+string, method and look-alike traps) counts exactly six, and unless the scan
+found `src\MainUnit.pas`. A counter that matched nothing would otherwise report
+a clean zero.
+
+`StrPCopy`, `StrPLCopy` and `StrLCopy` are **not** counted here. They copy into
+a character buffer, which makes them the PChar audit's concern: remove the
+buffer and the call goes with it.
+
+#### What the sites turned out to be
+
+| category | calls | what it becomes |
+|---|---:|---|
+| (a) record / buffer clear | **253** | `:= Default(T)` for a record, `:= ''` for a ShortString, nothing where the next line overwrites it |
+| (b) string copy | **11** | assignment, or `SetString` at a real API boundary |
+| (c) genuine byte framing | **57** | `TBytes` with indexing, `Copy`, `Concat`, `Delete` |
+| (d) list / queue shift | 19 | `Delete` / `Insert` on a dynamic array, or a `TList` |
+| (d) Win32 / C API struct | 13 | **keep**, at the boundary, behind `{$IFDEF WINDOWS}` |
+| (d) sentinel fill in a test | 9 | **keep**: a non-zero fill shows what a routine left untouched |
+| (d) same-typed array copy | 8 | plain `:=` |
+| (d) dead code | 6 | delete |
+| (d) type pun | 4 | `Chr(Ord(x))`, or a range-checked enum cast |
+| (d) bulk numeric / pixel copy | 4 | `Copy()`, a ring index, or `TLazIntfImage` |
+| (d) deliberate layout overlay | 3 | a decision for the log owner, not a mechanical change |
+
+**The expected split did not hold.** String copies are 11 calls, not a
+large share: two thirds of the work is (a), and most of that is mechanical.
+
+| owner | calls | (a) | (b) | (c) | (d) |
+|---|---:|---:|---:|---:|---:|
+| radio-factory | 69 | 30 | 0 | 28 | 11 |
+| log-database | 62 | 58 | 1 | 0 | 3 |
+| contest-scoring | 59 | 55 | 0 | 0 | 4 |
+| file-formats | 52 | 36 | 0 | 0 | 16 |
+| multi-op-network | 37 | 18 | 4 | 13 | 2 |
+| lcl-ui | 22 | 15 | 2 | 0 | 5 |
+| utils (no specialist; tests only) | 21 | 12 | 0 | 0 | 9 |
+| settings-config | 15 | 12 | 1 | 0 | 2 |
+| cw-keying | 13 | 4 | 0 | 4 | 5 |
+| integrations | 10 | 6 | 2 | 2 | 0 |
+| serial-port-io | 9 | 3 | 0 | 1 | 5 |
+| tci-interface | 9 | 0 | 0 | 9 | 0 |
+| dx-cluster | 7 | 4 | 1 | 0 | 2 |
+| build-release | 2 | 0 | 0 | 0 | 2 |
+
+#### DEFECTS FOUND BY THE TRIAGE — fix these first, they are not style
+
+These came out of reading each site, not out of a compiler. None of them
+fails a build. **Each one should get its fix and a pin test in the owner's
+own commit.**
+
+**ALL FOUR FIXED 2026-09-18 (5.0.8)**, each by its owning specialist, and the
+descriptions below are kept as the record of what was wrong:
+
+| # | fix | proof |
+|---|---|---|
+| 1 | `Delete(GClusterQueue, 0, 1)` | heaptrc on the exact pattern: 6 unfreed blocks for 6 events → 0 |
+| 2 | the `FillChar` deleted; the per-field clears already covered every path | new leak test failed before (+128,000 bytes / 500 parses), passes after |
+| 3 | not patched — **deleted**: the queue had no reader since `3b9cbf33`, so the Icom arm, the model check, the three buffer fields, `AddCommandToBuffer` and `BufToStr` went | the app builds; a radio with no factory object now gets the existing "not sent" error instead of a silent drop |
+| 4 | `SetCharBuffer(CurrentOperator, ...)`, the prompt limit raised to `High(CurrentOperator)`. The defect was the **missing terminator** (`W1ABCD` over `VP2E/W1ABC` read back as `W1ABCD1ABC`); a 7+ character call was never truncated, it could not be typed | `Test_SetCharBuffer_OperatorLogin` |
+
+1. **`uTelnet.pas:944-950` — EVERY CLUSTER EVENT LEAKS ITS TEXT.** (dx-cluster)
+   `ev := GClusterQueue[0]` takes a counted reference to `Text: AnsiString`;
+   the `Move` then overwrites slot 0's pointer **without releasing it**, so
+   the count never returns to zero. With one event queued, the `FillChar` of
+   slot 0 drops it the same way. The comment beside it guards the double
+   free correctly and misses the leak. One string per queued event, which
+   means every cluster line, for the whole session. Fix: `Delete(GClusterQueue, 0, 1)`, which finalises
+   properly. Confirm with a `-gh` (heaptrc) run of a cluster replay.
+2. **`uFlexDiscovery.pas:158` — `FillChar` OVER FIVE `string` FIELDS.**
+   (radio-factory) `ParsePacket` is called on every received packet with the
+   same `Parsed` record (line 263), so each call zeroes five live string
+   pointers without releasing them. The fix is deletion: the six assignments
+   after it already clear the record.
+3. **`uProcessCommand.pas:433, 460, 488, 516` — AN UNBOUNDED COPY INTO A
+   41-BYTE BUFFER THAT NOTHING READS.** (radio-factory) `scFileName` is a
+   `ShortString` (up to 255), and `CommandsTempBuffer` is
+   `array[0..40] of AnsiChar` inside `RadioObject`. Any SRS argument over 40
+   characters writes past it into the rest of the object. `AddCommandToBuffer`
+   then copies into `CommandsBuffer`, **which no code anywhere reads** — its
+   consumer went with the legacy poller on 2026-08-02. The `Move` at
+   `logradio.pas:1501` also starts at the length byte, so it would have
+   dropped the last character. Reachable only when an Icom has no factory
+   object. Fix: delete the branch and the buffers, and log instead.
+4. **`MainUnit.pas:5583, 5595` — THE OPERATOR IS ALWAYS 6 BYTES.** (lcl-ui;
+   the value goes on the wire through `uNet.pas:983`) `Move(TempCallstring[1],
+   CurrentOperator, 6)` copies into an 11-byte `OperatorType`: a 7+
+   character call such as `DL1ABCD` is silently truncated, and a 6-character
+   call after a longer one gets **no terminator**, so the old seventh
+   character reappears. The same value is logged with every QSO
+   (`logdupe.pas:1576`). **Inherited, not a port regression**: D7 has the
+   identical `Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6)`
+   (`C:\TR4W\tr4w\src\MainUnit.pas:4121`). Fix:
+   `SetCharBuffer(CurrentOperator, TempCallstring)`, the bounded helper
+   `LogCfg.pas:564` already uses on this exact field.
+
+**Latent: harmless today, and wrong in shape.** `FillChar` over a managed
+type. Each is safe only because the target happens to start nil:
+
+- `uLogStore.pas:364` — `TLogEntryDeclaration`, eleven `AnsiString`s, as a
+  function `Result`. FPC may hand the caller's own variable in as `Result`.
+- `uLogImport.pas:111` — `TLogImportResult.Message: string`, same shape.
+- `uLogGrid.pas:1077` — a local `array of string`, already nil'd by the
+  compiler.
+- `uTestRadioStatus.pas:266` — `RadioObject` holds three `string` fields.
+
+Write all four as `:= Default(T)`, or delete them.
+
+**Checked and NOT defects**, so nobody spends time on them again: every Icom
+LAN decode is length-guarded (`uIcomNetworkTransport.pas:954` by its
+dispatcher at 886); the `logname` shifts use the right multiplier for each
+element type; `uKeychainWindows.pas:276` is correct because that unit is
+UnicodeStrings; `uSuperCheckPartialFileUpload.pas:224` is correct because that
+unit is `-Mdelphi` AnsiString. **That last pair is the trap for a `(b)`
+conversion:** the right `SetString` depends on which string type the unit
+compiles with, and neighbouring units differ.
+
+#### THE CONTRACT IS THE ENCODING: the `ENC` and `BYTES` flags
+
+**101 calls are flagged `ENC`.** Their bytes leave the process: a packed
+record sent raw (`TStationState`, `TParameterToNetwork`, `TIntercomMessage`,
+`TSendSpotViaNetwork`, the Icom LAN packets), or a `ContestExchange`, which
+`tr4wserver` still writes raw to its log. **Changing the type is free.
+Changing the bytes is a compatibility decision** for the owner.
+
+The hazard is concrete, and it hides inside an innocent-looking (a):
+
+- `r := Default(T)` for a **whole record** is expected to match today's
+  `FillChar(r, SizeOf(r), 0)` byte for byte: every byte zero, including
+  padding and ShortString tails. Pin that with a test that compares bytes
+  before relying on it.
+- `r.Field := ''` for a **ShortString field** is **not** the same. It writes
+  the length byte and leaves the tail as it was, so on a record sent raw,
+  stale bytes from the previous content go on the wire. That changes the
+  encoding, and it can leak the previous QSO's text to another station.
+
+**5 calls are flagged `BYTES`.** `RadioStatusRecord` is compared by raw byte
+scan (`uRadioPolling.pas`, `CurrentStatus` against `PreviousStatus`), so its
+clear must stay a whole-record zero. A per-field initialisation leaves padding
+unset and turns into phantom status changes.
+
+#### Every live site
+
+Grouped by owner. Every line the counter reports appears exactly once;
+coverage was checked mechanically against `Count-LiveMove -Detail`
+(387 of 387).
+
+| owner | file | lines | cat | flag | reasoning |
+|---|---|---|---|---|---|
+| build-release | `src/GetWinVersionInfo.pas` | 230 | d API struct |  | `OSVERSIONINFO` copied into the `...EX` prefix -- Win32-only version probe |
+| build-release | `test/integration/uSimProcess.pas` | 101 | d API struct |  | `TStartupInfo` for `CreateProcess` -- bench harness, already on the roadmap as an ungated `uses Windows` |
+| contest-scoring | `src/MainUnit.pas` | 923, 978 | a |  | probe `ContestExchange` local -> `:= Default(ContestExchange)` |
+| contest-scoring | `src/MainUnit.pas` | 6956, 6989, 7078 | a | ENC | ShortString fields of `var RData` (`ParametersOkay`) |
+| contest-scoring | `src/MainUnit.pas` | 7393 | a |  | `DupeInfoCall` -> `:= ''` |
+| contest-scoring | `src/MainUnit.pas` | 8623, 8624, 8642, 8643 | a | ENC | QTH fields of the rescored exchange (`tUpdateLog`) |
+| contest-scoring | `src/MainUnit.pas` | 8978 | a |  | `RestartInfo` (all 4-byte counters) -> `Default()` |
+| contest-scoring | `src/trdos/fcontest.pas` | 1867, 1880 | a |  | `CallString` -> `:= ''` |
+| contest-scoring | `src/trdos/logdom.pas` | 211, 212 | a |  | `Str10` -> `:= ''` (the comment beside each already says so) |
+| contest-scoring | `src/trdos/logdupe.pas` | 613 | a |  | `ContestExchange` -> `Default()` |
+| contest-scoring | `src/trdos/logdupe.pas` | 1073, 1074, 1075, 1083, 1098 | a |  | totals arrays and the QTC table |
+| contest-scoring | `src/trdos/logstuff.pas` | 1041 | a |  | QTC table |
+| contest-scoring | `src/trdos/logstuff.pas` | 1430, 1432, 1446, 1447, 1473, 1475 | a | ENC | ShortString fields of `RXData` |
+| contest-scoring | `src/trdos/logstuff.pas` | 1440, 1441, 3246, 6751, 6752, 6757, 6765, 10175, 10181 | a |  | ShortString locals -> `:= ''` |
+| contest-scoring | `src/trdos/logstuff.pas` | 1886, 4188 | a |  | probe `ContestExchange` -> `Default()` |
+| contest-scoring | `src/trdos/logstuff.pas` | 3245, 9969, 10002, 10043 | a |  | parser records and scratch buffer -> `Default()` |
+| contest-scoring | `src/trdos/logstuff.pas` | 10020 | d array copy |  | same-typed `array[0..31] of AnsiChar` -> `prStrings[i] := TmpBuf` |
+| contest-scoring | `src/trdos/logwae.pas` | 143 | a |  | redundant: assigned on the next line; the `13` is a magic `SizeOf(CallString) - 1` |
+| contest-scoring | `src/trdos/logwae.pas` | 281 | a |  | QTC send table |
+| contest-scoring | `src/uCallsigns.pas` | 359 | d list shift |  | list insert; item is ShortString-only so the shift is safe -> a dynamic array or `TList` |
+| contest-scoring | `src/uCallsigns.pas` | 363, 683 | a |  | new list slot / dupe bits |
+| contest-scoring | `src/uMults.pas` | 111, 112, 113 | a |  | mult arrays -> `Default()` |
+| contest-scoring | `src/uQTCR.pas` | 338 | a |  | `ContestExchange` -> `Default()` |
+| contest-scoring | `src/uQTCS.pas` | 307 | a |  | `ContestExchange` -> `Default()` |
+| contest-scoring | `src/uSortedStringList.pas` | 143 | a |  | `TotalMults` is a public integer field (the property is commented out) -> `TotalMults := 0` |
+| contest-scoring | `src/uSortedStringList.pas` | 156, 250 | d list shift |  | list delete/insert; ShortString-only items, safe |
+| contest-scoring | `src/uSortedStringList.pas` | 254, 305 | a |  | new slot / dupe bits |
+| cw-keying | `src/trdos/LogSend.pas` | 371 | a |  | `ContestExchange` -> `Default()` |
+| cw-keying | `src/trdos/logdvp.pas` | 595, 642, 718 | a |  | DVP message table / buffer / `DXMultiplierString` |
+| cw-keying | `src/uWinKey.pas` | 616, 738 | c |  | `TBytes` read -> fixed global buffers; the globals are what goes |
+| cw-keying | `src/uWinKey.pas` | 1117 | c |  | untyped `const Buffer` -> `TBytes`; take `TBytes` at the call |
+| cw-keying | `src/uYCCCSO2R.pas` | 348 | c |  | HID report buffer |
+| cw-keying | `src/uYCCCSO2R.pas` | 466, 476, 496, 548, 549 | d API struct |  | SetupAPI / HID / `OVERLAPPED` structs -- Windows-only transport |
+| dx-cluster | `src/uDXSpotParse.pas` | 223, 918 | a |  | line buffer / `TSpotRecord` |
+| dx-cluster | `src/uDXSpotParse.pas` | 231 | b |  | bounded copy of the line into a char buffer |
+| dx-cluster | `src/uSpots.pas` | 640 | a |  | `TSpotRecord` result |
+| dx-cluster | `src/uTelnet.pas` | 945, 949 | d list shift | **DEFECT** | **queue pop over a record holding an `AnsiString`** -- see defects |
+| dx-cluster | `src/uTelnet.pas` | 1861 | a |  | `TSpotRecord` |
+| file-formats | `src/MainUnit.pas` | 8353, 8358, 8413 | a |  | `CallString` locals in the callsign-list generators |
+| file-formats | `src/MainUnit.pas` | 10113 | a |  | a `MAX_PATH` char buffer the next line fills; the global buffer is the artifact, not the clear |
+| file-formats | `src/trdos/logname.pas` | 463, 467, 545, 549, 625, 629, 640, 644, 664, 668, 679, 683 | d list shift |  | insert/delete shifts in the name-database arrays; byte counts checked -- x2 `TwoBytes`, x1 `BYTE`, x4 `FourBytes` |
+| file-formats | `src/trdos/logscp.pas` | 1446, 3285 | a |  | `DataBaseEntryRecord` / `CellBufferObject` (no VMT) |
+| file-formats | `src/trdos/postunit.pas` | 553, 1184, 1341, 1354, 1839, 1840, 2022, 3196, 3382 | a |  | report totals; the pointer derefs size the POINTEE correctly |
+| file-formats | `src/trdos/tree.pas` | 1220, 1230 | d type pun |  | enum -> `Char` by copying one byte -> `Chr(Ord(Band))` |
+| file-formats | `src/trdos/tree.pas` | 2883, 2896 | d type pun |  | `Byte` -> enum by copying one byte -> a range-checked `BandType(b)` |
+| file-formats | `src/uADIF.pas` | 1181 | a |  | `ContestExchange` -> `Default()` |
+| file-formats | `src/uLogBinaryFile.pas` | 173, 219, 292 | a |  | `TQSOTime` / header / record before a full `ReadBuffer` |
+| file-formats | `src/uctydat.pas` | 634, 970, 1227 | a |  | CTY tables / `QTHRecord` |
+| file-formats | `src/uctydat.pas` | 969 | a |  | fills with **-1** (`$FF` bytes -> `Smallint` -1): a loop, not `Default()` |
+| file-formats | `test/tools/ctygen/ctygen.lpr` | 72 | a |  | `QTHRecord` |
+| file-formats | `test/unit/uTestADIF.pas` | 816, 830, 841, 855, 867, 880, 892 | a |  | `TQSOTime` fixtures |
+| file-formats | `test/unit/uTestADIFExchange.pas` | 65 | a |  | `ContestExchange` fixture |
+| file-formats | `test/unit/uTestADIFRegression.pas` | 69 | a |  | `ContestExchange` fixture |
+| file-formats | `test/unit/uTestCTYDAT.pas` | 851 | a |  | `QTHRecord` fixture |
+| file-formats | `test/unit/uTestCabrilloExchange.pas` | 74 | a |  | `ContestExchange` fixture |
+| file-formats | `test/unit/uTestLogBinaryFile.pas` | 203 | a |  | `TQSOTime` fixture |
+| integrations | `src/uDXLabPathfinder.pas` | 237 | a |  | char buffer |
+| integrations | `src/uMMTTY.pas` | 283, 316 | a |  | callsign / call-process state |
+| integrations | `src/uMMTTY.pas` | 284 | b |  | bounded by the `cpPos in [3..8]` gate at 266 |
+| integrations | `src/uSuperCheckPartialFileUpload.pas` | 224 | b |  | stream -> `AnsiString` (unit is `-Mdelphi`, not UnicodeStrings) -> `SetString` |
+| integrations | `src/uSynTime.pas` | 300 | c |  | NTP request; `SetLength` on a fresh local already zeroes it -- the fill is redundant |
+| integrations | `src/ui/lcl/uMMTTYForm.pas` | 292 | a |  | `MMTTYObject` (no managed fields) |
+| integrations | `src/utils/uSHA256.pas` | 111, 229 | a |  | hash state / padding block |
+| integrations | `src/utils/uSHA256.pas` | 201 | c |  | block assembly: byte-level by definition; index rather than walk `p^` |
+| lcl-ui | `src/MainUnit.pas` | 5572, 5703 | a |  | `CallString` local -> `:= ''` |
+| lcl-ui | `src/MainUnit.pas` | 5583, 5595 | b | **DEFECT** | **hardcoded 6 bytes** into an 11-byte `OperatorType` -- see defects |
+| lcl-ui | `src/trdos/logwind.pas` | 1244, 3025, 3713 | a |  | ShortString locals -> `:= ''` |
+| lcl-ui | `src/uDialogs.pas` | 111 | a |  | `MAX_PATH` buffer for a Win32 file dialog -- goes with the dialog (`TOpenDialog.FileName`) |
+| lcl-ui | `src/uStations.pas` | 427 | d list shift |  | queue pop -> `Delete(GStatusQueue, 0, 1)`; the item is unmanaged, so this one is safe today |
+| lcl-ui | `src/ui/lcl/uInputQueryForm.pas` | 171, 172 | a |  | ShortString globals -> `:= ''` |
+| lcl-ui | `src/ui/lcl/uLogGrid.pas` | 1077 | a | LATENT | `FillChar` over an `array of string`, harmless only because the local starts nil -- delete |
+| lcl-ui | `src/ui/lcl/uLogGrid.pas` | 1232 | a |  | `TTextStyle` -> `style := Canvas.TextStyle`, the LCL way |
+| lcl-ui | `src/ui/lcl/uPanadapterForm.pas` | 654, 1066 | d bulk copy |  | `Single` array copy -> `Copy()` |
+| lcl-ui | `src/ui/lcl/uPanadapterForm.pas` | 937 | d bulk copy |  | overlapping in-place scroll of the dB history; a ring index removes it |
+| lcl-ui | `src/ui/lcl/uPanadapterForm.pas` | 986 | d bulk copy |  | pixel rows via `ScanLine` -> `TLazIntfImage` / `CopyRect` |
+| lcl-ui | `src/ui/lcl/uQTCReceiveForm.pas` | 365, 366, 367 | a |  | arrays of `TEdit` references -> `Default()` |
+| lcl-ui | `src/ui/lcl/uQTCSendForm.pas` | 404, 405 | a |  | arrays of control references -> `Default()` |
+| log-database | `src/MainUnit.pas` | 3734 | a | ENC | note record before `AddRecordToLogAndSendToNetwork` -> `Default()` |
+| log-database | `src/domain/uLogNote.pas` | 64, 93 | d layout overlay | ENC | the note text lives in the bytes FROM `Prefix` onward -- a deliberate layout overlay, pinned by `uTestLogNote` |
+| log-database | `src/domain/uLogNote.pas` | 83 | a | ENC | clears the same overlay region |
+| log-database | `src/trdos/logedit.pas` | 680, 936 | a |  | `ContestExchange` -> `Default()` |
+| log-database | `src/trdos/logedit.pas` | 1589, 1645 | a |  | `CallString` result -> `Result := ''` |
+| log-database | `src/uEditQSO.pas` | 379, 384, 473, 486, 518, 540, 545, 548, 551, 555, 562, 571, 579, 586, 592, 597, 611, 617, 627, 635, 643, 651, 682 | a | ENC | ShortString / char fields of the edited QSO, cleared before re-parse |
+| log-database | `src/uEditQSO.pas` | 690 | b | ENC | bounded copy of the operator into its char field |
+| log-database | `src/uLogImport.pas` | 111 | a | LATENT | **record holds `Message: string`** -- see defects |
+| log-database | `src/uLogRepository.pas` | 1289, 2112, 2138, 2156 | a | ENC | row -> `ContestExchange` mapper -> `Default()` |
+| log-database | `src/uLogSource.pas` | 449, 495 | a | ENC | as above |
+| log-database | `src/uLogStore.pas` | 364 | a | LATENT | **record of eleven AnsiStrings** -- see defects |
+| log-database | `src/uLogStore.pas` | 1785, 1786 | a |  | ShortString locals |
+| log-database | `test/unit/uTestLogNote.pas` | 63, 84, 88, 103, 117, 128, 140 | a |  | test fixtures |
+| log-database | `test/unit/uTestLogNote.pas` | 86 | d layout overlay |  | writes through the overlay on purpose, to test it |
+| log-database | `test/unit/uTestLogRepository.pas` | 351, 407, 441, 496, 539, 618, 684, 735, 784, 841, 1007, 1132 | a |  | test fixtures |
+| multi-op-network | `src/MainUnit.pas` | 5210 | a | ENC | `Str80` inside `TIntercomMessage`, sent raw |
+| multi-op-network | `src/tr4wserverUnit.pas` | 539 | a |  | clears a record from its 2nd field by `SizeOf - 4` to keep `clSerialNumber`; assign the fields |
+| multi-op-network | `src/tr4wserverUnit.pas` | 1087 | a |  | integer array |
+| multi-op-network | `src/uNet.pas` | 636, 846, 1193 | a | ENC | `TStationState` slots -- a record sent raw |
+| multi-op-network | `src/uNet.pas` | 786 | c |  | pending bytes -> the legacy `NetBuffer` global the parser reads; the global is what goes |
+| multi-op-network | `src/uNet.pas` | 828 | d list shift |  | drop consumed bytes from the front of a `TBytes` -> `Delete(GNetPending, 0, used)` |
+| multi-op-network | `src/uNet.pas` | 869 | c |  | append a read to the pending `TBytes` -> `Concat`/`Insert` |
+| multi-op-network | `src/uNet.pas` | 901 | a |  | integer array |
+| multi-op-network | `src/uNet.pas` | 934 | a | ENC | `ssName` of the wire record |
+| multi-op-network | `src/uNet.pas` | 937, 977 | b | ENC | bounded copy of a string into a fixed char field of the wire record |
+| multi-op-network | `src/uNet.pas` | 983 | d array copy | ENC | same-typed `OperatorType` arrays -> `ssOperator := CurrentOperator` |
+| multi-op-network | `src/uNet.pas` | 1023 | b | ENC | CW message into the wire record; bounded by its `string[CWMessageToNetworkLength]` type |
+| multi-op-network | `src/uNet.pas` | 1582, 1583 | a | ENC | ShortStrings inside `TParameterToNetwork`, sent raw |
+| multi-op-network | `src/uNetClient.pas` | 148 | c | ENC | password frame; the clear matters because `Result` is managed -> `Result := nil; SetLength(Result, 10)` |
+| multi-op-network | `src/uNetClient.pas` | 153, 157 | c | ENC | password bytes onto the wire |
+| multi-op-network | `src/uNetClient.pas` | 321 | c |  | decode the ack; length-guarded |
+| multi-op-network | `src/uNetClient.pas` | 419 | c |  | untyped `aBuf` -> `TBytes`; take `TBytes` at the call |
+| multi-op-network | `src/uProcessCommand.pas` | 775 | a | ENC | `Str80` in the intercom wire record |
+| multi-op-network | `src/uServerNet.pas` | 258, 295, 305 | c |  | connection buffer -> the global `ServerBuffer` the legacy parser reads |
+| multi-op-network | `src/uServerNet.pas` | 366, 407, 512 | c |  | `TIdBytes` read -> fixed `FBuf`; each read is bounded by `SizeOf(FBuf)` |
+| multi-op-network | `src/ui/lcl/uSendSpotForm.pas` | 178 | a | ENC | `vnMessage` of the wire record |
+| multi-op-network | `src/ui/lcl/uSendSpotForm.pas` | 186 | b | ENC | bounded copy into the wire record |
+| multi-op-network | `src/ui/lcl/uServerLogForm.pas` | 191 | a |  | totals array |
+| multi-op-network | `test/unit/uTestNetFraming.pas` | 114, 132, 158, 179, 194 | a |  | test buffer |
+| radio-factory | `src/radioFactory/uFlexDiscovery.pas` | 158 | a | **DEFECT** | **five `string` fields** -- see defects |
+| radio-factory | `src/radioFactory/uIcomScope.pas` | 909 | a |  | clear a reused `TBytes` -> `Levels := nil; SetLength(...)` (zeroed) |
+| radio-factory | `src/radioFactory/uIcomScope.pas` | 964 | c |  | sweep bytes into the level array; bounded by `room` |
+| radio-factory | `src/radioFactory/uK4Spectrum.pas` | 303, 318 | c |  | framer ring: compact, then append |
+| radio-factory | `src/radioFactory/uK4SpectrumThread.pas` | 235 | c |  | `TIdBytes` -> `TBytes` chunk |
+| radio-factory | `src/radioFactory/uRadioHamLibDirect.pas` | 1166, 1176, 1212, 1238, 1272, 1284, 1328, 1348, 1369 | a |  | `THLCommand` -> `Default()` |
+| radio-factory | `src/radioFactory/uRadioIcomBase.pas` | 660 | a |  | band-memory integer array |
+| radio-factory | `src/rotatorFactory/uRotatorAlfaSpid.pas` | 92 | c | ENC | rotator frame; `Result` is managed -> `Result := nil; SetLength(Result, 13)`. No rotator specialist; nearest owner |
+| radio-factory | `src/trdos/logradio.pas` | 914 | d dead code | DEAD | `BufToStr` has **no caller** anywhere -- delete it |
+| radio-factory | `src/trdos/logradio.pas` | 1501 | d dead code | DEAD | writes `CommandsBuffer`, which **nothing reads** -- see defects |
+| radio-factory | `src/uIcomNetworkDiscovery.pas` | 79 | a | ENC | wire packet -> `Default()`; reserved bytes must stay zero |
+| radio-factory | `src/uIcomNetworkDiscovery.pas` | 86 | c | ENC | packed record -> bytes |
+| radio-factory | `src/uIcomNetworkDiscovery.pas` | 136 | c | ENC | bytes -> packed record; length-guarded |
+| radio-factory | `src/uIcomNetworkTransport.pas` | 554, 1361, 1407, 1432, 1475, 1507, 1540, 1613, 1636, 1662 | a | ENC | outgoing packet -> `Default()`; reserved bytes must stay zero |
+| radio-factory | `src/uIcomNetworkTransport.pas` | 570, 1463, 1495, 1527, 1601, 1625, 1648, 1670 | c | ENC | packed record -> wire bytes |
+| radio-factory | `src/uIcomNetworkTransport.pas` | 793 | a |  | IP octets |
+| radio-factory | `src/uIcomNetworkTransport.pas` | 854, 869 | c |  | `TIdBytes` -> `array of Byte` |
+| radio-factory | `src/uIcomNetworkTransport.pas` | 888, 954, 1064, 1106, 1145, 1169, 1178, 1234, 1386, 2120 | c | ENC | wire bytes -> packed record; every one is length-guarded (954 by its dispatcher at 886) |
+| radio-factory | `src/uIcomNetworkTransport.pas` | 1193, 1491, 1523, 1558, 1564 | d array copy | ENC | MAC / GUID byte arrays -> array assignment, or a typed MAC field |
+| radio-factory | `src/uProcessCommand.pas` | 433, 460, 488, 516 | d dead code | **DEFECT** | **unbounded copy into a 41-byte buffer that nothing reads** -- see defects |
+| radio-factory | `src/uRadioPolling.pas` | 826, 827 | a | BYTES | status snapshot -> `Default()`; MUST stay a whole-record zero, the pair is compared by raw byte scan |
+| radio-factory | `test/unit/uTestK4Spectrum.pas` | 624 | c |  | fixture bytes |
+| radio-factory | `test/unit/uTestRadioStatus.pas` | 62, 121, 122 | a | BYTES | `RadioStatusRecord` fixtures (byte-compared; keep whole-record zero) |
+| radio-factory | `test/unit/uTestRadioStatus.pas` | 266 | a | LATENT | `RadioObject` holds three `string`s; harmless only because the local starts nil |
+| serial-port-io | `src/ComPortEnumerator.pas` | 310, 648, 658, 679, 703 | d API struct |  | SetupAPI / `DEV_BROADCAST` struct zeroed before `cbSize` is set -- a real Win32 boundary; keep, spell it `:= Default(T)` |
+| serial-port-io | `src/ComPortEnumerator.pas` | 515, 558, 559 | a |  | `WideChar` out-buffers the API overwrites; the clear is redundant, the buffer belongs inside the Windows branch |
+| serial-port-io | `src/uSerialPort.pas` | 344 | c |  | read buffer -> `TBytes` result; read straight into the result instead |
+| settings-config | `src/trdos/LogCfg.pas` | 554 | d array copy |  | same-typed `TFreqMemoryType` arrays -> `FreqMemory := DefaultFreqMemory` |
+| settings-config | `src/uCFG.pas` | 578, 579 | a |  | ShortString key/value -> `:= ''` |
+| settings-config | `src/uKeychainWindows.pas` | 226 | d API struct |  | `CREDENTIALW` -- Win32 credential API |
+| settings-config | `src/uKeychainWindows.pas` | 276 | b |  | UTF-16 blob -> `string` (unit is UnicodeStrings, so the byte count is right) -> `SetString(aValue, PWideChar(...), chars)` |
+| settings-config | `src/uNewContest.pas` | 497, 498 | a |  | as above |
+| settings-config | `src/uRadioConfigApply.pas` | 833, 834, 1141, 1142, 1184, 1185, 2071, 2072 | a |  | as above |
+| tci-interface | `src/uWebSocketClient.pas` | 359, 379 | c |  | byte copies between `TIdBytes` and `TBytes` |
+| tci-interface | `src/uWebSocketFraming.pas` | 410, 443 | c |  | fragment reassembly -> `Concat` / `Copy` |
+| tci-interface | `src/uWebSocketServer.pas` | 306, 363 | c |  | as above |
+| tci-interface | `test/unit/uTestWebSocketFraming.pas` | 144, 148, 183 | c |  | fixture concatenation / fake reader |
+| utils (none) | `test/unit/uTestFormatTranslation.pas` | 100, 107, 120, 130 | a |  | test buffer |
+| utils (none) | `test/unit/uTestFreqTimeFormat.pas` | 45 | a |  | `SYSTEMTIME` fixture |
+| utils (none) | `test/unit/uTestUtilsText.pas` | 592, 599, 616, 623, 627, 669, 675, 684, 689 | d sentinel fill |  | deliberate NON-zero fill (`$7F`, `'Z'`) so a test can see what a routine left untouched -- keep |
+| utils (none) | `test/unit/uTestUtilsText.pas` | 693, 712, 713, 765, 766, 782, 783 | a |  | test buffers |
 
 ### P1 — everything downstream of a toolchain
 

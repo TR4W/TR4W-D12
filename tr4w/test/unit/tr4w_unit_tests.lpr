@@ -307,6 +307,8 @@ uses
    uTestNetFraming in 'uTestNetFraming.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
+   uHPTimer             in '..\..\src\utils\uHPTimer.pas',
+   uTestHPTimer         in 'uTestHPTimer.pas',
    uKeychain         in '..\..\src\uKeychain.pas',
    uWindowSnap          in '..\..\src\uWindowSnap.pas',
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
@@ -333,6 +335,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
+   uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
+   uTestNewContestCommands in 'uTestNewContestCommands.pas',
    uTestClusterTokens   in 'uTestClusterTokens.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
@@ -448,12 +452,14 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(THPTimerTests.Create('HPTimer'));
    RegisterSuite(TLogNoteTests.Create('LogNote'));
    RegisterSuite(TKeychainTests.Create('Keychain'));
    RegisterSuite(TTestWindowSnap.Create('WindowSnap'));
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
+   RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));

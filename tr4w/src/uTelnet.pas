@@ -941,13 +941,15 @@ begin
             begin
             Exit;
             end;
+         // `ev` takes its OWN counted reference to the Text, and Delete
+         // finalises slot 0 and shifts the rest with the compiler's managed-
+         // type handling.  This was a raw Move + FillChar, which overwrote
+         // slot 0's string pointer without releasing it: every dequeued
+         // event leaked its Text, all contest long (heaptrc: one unfreed
+         // block per event).  Never shift an array of records holding a
+         // string with Move.
          ev := GClusterQueue[0];
-         Move(GClusterQueue[1], GClusterQueue[0], (n - 1) * SizeOf(TClusterEvent));
-         // The moved-from slot still holds a counted reference to the string
-         // that is now ALSO in the first slot.  Blank it without finalising,
-         // or SetLength frees a string the caller is about to read.
-         FillChar(GClusterQueue[n - 1], SizeOf(TClusterEvent), 0);
-         SetLength(GClusterQueue, n - 1);
+         Delete(GClusterQueue, 0, 1);
        finally
          GClusterLock.Release;
        end;

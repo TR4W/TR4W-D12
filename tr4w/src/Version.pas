@@ -19,7 +19,7 @@ unit version;
 {$I tr4w.inc}
 interface
 const
-  TR4W_CURRENTVERSION_NUMBER            = '5.0.7';
+  TR4W_CURRENTVERSION_NUMBER            = '5.0.8';
 
   TR4W_CURRENTVERSION                   = 'TR4W v.' + TR4W_CURRENTVERSION_NUMBER;
 

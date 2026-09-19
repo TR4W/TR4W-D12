@@ -62,6 +62,15 @@ nothing else.
 **`Lint-PascalBeginEnd` and `Lint-ChangedPascal` do NOT gate the build.** The
 first runs as a warn-only `PostToolUse` hook; the second is run by hand.
 
+**The `Count-Live*.ps1` scripts are measurements, not gates** — `Count-LiveAsm`,
+`Count-LivePChar`, `Count-LiveMove`. They are not in `Run-Lints` and have no
+ceiling. **Never quote a raw grep in their place**: this tree documents its
+conversions in comments, so a raw count is wrong, and by a lot. All three read
+through `PascalSource.psm1`, never a local regex. A new one takes
+`Get-PascalCodeOnlyText -BlankStrings` when it counts CALLS, since a string
+literal is not a call. It also runs a built-in fixture before it reports a
+tree number, so it cannot fail open.
+
 ## Platforms
 
 Windows i386, Linux x86_64 (app + server + tarball), macOS aarch64 (app + server +

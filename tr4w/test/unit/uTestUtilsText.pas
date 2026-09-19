@@ -74,6 +74,12 @@ type
       procedure Test_SetCharBuffer_RoundTrips;
       procedure Test_SetCharBuffer_TruncatesAndTerminates;
       procedure Test_SetCharBuffer_EmptyStringGivesEmptyBuffer;
+
+      (* The operator login (MainUnit menu_login) wrote CurrentOperator with a
+        fixed 6-byte Move: no terminator, no room for a 7-character call. It
+        cannot be linked here; the field's type and the helper it now uses
+        can, and this pins what the login relies on. *)
+      procedure Test_SetCharBuffer_OperatorLogin;
       procedure Test_CharBufferText_StopsAtNul;
       procedure Test_CharBufferText_IgnoresBytesPastTheNul;
       procedure Test_CharBufferSlice_ByPosition;
@@ -111,6 +117,7 @@ type
 implementation
 
 uses
+   VC,           (* OperatorType only -- FIRST, so nothing it declares shadows the rest *)
    SysUtils,     (* TBytes -- the line tests; BEFORE utils_text, so its routines win *)
    utils_text;
 
@@ -423,6 +430,36 @@ begin
    SetCharBuffer(buf, '');
    CheckEquals('', CharBufferText(buf), 'empties what was there');
    CheckEquals(0, Ord(buf[0]), 'byte 0 is the terminator');
+end;
+
+procedure TUtilsTextTests.Test_SetCharBuffer_OperatorLogin;
+var
+   op: OperatorType;
+begin
+   BeginTest('SetCharBuffer on an OperatorType: whole calls, no stale tail');
+
+   (* The width the login prompt is capped at. If OperatorType is ever
+     widened, this changes with it and the prompt follows automatically. *)
+   CheckEquals(10, High(op), 'OperatorType holds ten characters and a NUL');
+
+   SetCharBuffer(op, 'VP2E/W1ABC');
+   CheckEquals('VP2E/W1ABC', CharBufferText(op), 'a 10-character call survives whole');
+
+   (* THE DEFECT: a 6-byte Move over that left 'W1ABCD' + '1ABC' with no NUL
+     until byte 10, so it read back as 'W1ABCD1ABC'. *)
+   SetCharBuffer(op, 'W1ABCD');
+   CheckEquals('W1ABCD', CharBufferText(op), 'a 6-character call after a longer one');
+
+   SetCharBuffer(op, 'OH2ABCD');
+   CheckEquals('OH2ABCD', CharBufferText(op), 'a 7-character call is not cut to 6');
+
+   SetCharBuffer(op, 'N4AF');
+   CheckEquals('N4AF', CharBufferText(op), 'a 4-character call after a 7-character one');
+   CheckEquals(0, Ord(op[4]), 'terminated right after the call');
+
+   SetCharBuffer(op, 'VP2E/W1ABC/P');
+   CheckEquals('VP2E/W1ABC', CharBufferText(op), 'an over-long call is cut to High(op)');
+   CheckEquals(0, Ord(op[10]), 'and the last byte is still the terminator');
 end;
 
 procedure TUtilsTextTests.Test_CharBufferText_StopsAtNul;
@@ -936,6 +973,7 @@ begin
    Test_SetCharBuffer_RoundTrips;
    Test_SetCharBuffer_TruncatesAndTerminates;
    Test_SetCharBuffer_EmptyStringGivesEmptyBuffer;
+   Test_SetCharBuffer_OperatorLogin;
    Test_CharBufferText_StopsAtNul;
    Test_CharBufferText_IgnoresBytesPastTheNul;
    Test_CharBufferSlice_ByPosition;

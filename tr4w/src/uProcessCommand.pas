@@ -420,117 +420,52 @@ begin
   }
 end;
 
-procedure scSRS;
+(* SRS / SRSI / SRS1 / SRS2 differ only in WHICH radio, so they share this.
+
+   A radio with no factory driver has nothing to send through, and says so.
+   Two dead arms used to stand in front of that report:
+
+   - Rig.WriteToCATPort, the legacy serial write, whose port nothing ever
+     opened (see the note in logradio, 2026-09-08).
+
+   - an Icom arm, `RadioModel in [IC78..IC9700, OMNI6]`, that Move'd the
+     command into RadioObject.CommandsTempBuffer and queued it with
+     AddCommandToBuffer. Nothing had read that queue since the legacy
+     per-model pollers were deleted (3b9cbf33), so it discarded the command
+     in silence -- after an unbounded copy into a 41-byte buffer that
+     overran the object past 40 characters. Deleted 2026-09-19 with the
+     buffer, which also removed a model check from shared code. *)
+procedure SendCommandFileToRadio(Rig: RadioPtr);
 begin
-   if ActiveRadioPtr.tFactoryObject <> nil then
+   if Rig.tFactoryObject <> nil then
       begin
-      ActiveRadioPtr.tFactoryObject.SendToRadio(scFileName);
-      end
-   else if ActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
-      begin
-      //    ActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName;
-      //    ActiveRadioPtr.CommandsTempBuffer
-            Move(scFileName[1], ActiveRadioPtr.CommandsTempBuffer[1], length(scFileName));
-            ActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-            ActiveRadioPtr.AddCommandToBuffer;
+      Rig.tFactoryObject.SendToRadio(scFileName);
       end
    else
-      (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
-
-        What stood here was ActiveRadioPtr.WriteToCATPort, the legacy serial write. Its
-        port was never opened by anything -- see the note in logradio,
-        2026-09-08 -- so this arm has silently discarded the command for as
-        long as the factory has owned the radios. A radio reaching here has
-        no factory driver and is not an Icom, which is a configuration the
-        operator needs told about. *)
       begin
       logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
-                   [ActiveRadioPtr.RadioName, string(scFileName)]);
+                   [Rig.RadioName, string(scFileName)]);
       end;
+end;
+
+procedure scSRS;
+begin
+   SendCommandFileToRadio(ActiveRadioPtr);
 end;
 
 procedure scSRSI;
 begin
-  if InActiveRadioPtr.tFactoryObject <> nil then
-     begin
-     InActiveRadioPtr.tFactoryObject.SendToRadio(scFileName);
-     end
-  else if InActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
-     begin
-     Move(scFileName[1], InActiveRadioPtr.CommandsTempBuffer[1], length(scFileName));
-     InActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-     InActiveRadioPtr.AddCommandToBuffer;
-     end
-//    InActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName
-  else
-     (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
-
-       What stood here was InActiveRadioPtr.WriteToCATPort, the legacy serial write. Its
-       port was never opened by anything -- see the note in logradio,
-       2026-09-08 -- so this arm has silently discarded the command for as
-       long as the factory has owned the radios. A radio reaching here has
-       no factory driver and is not an Icom, which is a configuration the
-       operator needs told about. *)
-     begin
-     logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
-                  [InActiveRadioPtr.RadioName, string(scFileName)]);
-     end;
+   SendCommandFileToRadio(InActiveRadioPtr);
 end;
 
 procedure scSRS1;
 begin
-  if Radio1.tFactoryObject <> nil then
-     begin
-     Radio1.tFactoryObject.SendToRadio(scFileName);
-     end
-  else if Radio1.RadioModel in [IC78..IC9700, OMNI6] then
-     begin
-     Move(scFileName[1], Radio1.CommandsTempBuffer[1], length(scFileName));
-     Radio1.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-     Radio1.AddCommandToBuffer;
-     end
-//    Radio1.ICOM_COMMAND_CUSTOM := scFileName
-  else
-     (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
-
-       What stood here was Radio1.WriteToCATPort, the legacy serial write. Its
-       port was never opened by anything -- see the note in logradio,
-       2026-09-08 -- so this arm has silently discarded the command for as
-       long as the factory has owned the radios. A radio reaching here has
-       no factory driver and is not an Icom, which is a configuration the
-       operator needs told about. *)
-     begin
-     logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
-                  [Radio1.RadioName, string(scFileName)]);
-     end;
+   SendCommandFileToRadio(@Radio1);
 end;
 
 procedure scSRS2;
 begin
-  if Radio2.tFactoryObject <> nil then
-     begin
-     Radio2.tFactoryObject.SendToRadio(scFileName);
-     end
-  else if Radio2.RadioModel in [IC78..IC9700, OMNI6] then
-     begin
-     Move(scFileName[1], Radio2.CommandsTempBuffer[1], length(scFileName));
-     Radio2.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-     Radio2.AddCommandToBuffer;
-     end
-//    Radio2.ICOM_COMMAND_CUSTOM := scFileName
-  else
-     (* NO CAT PORT, SO NOTHING TO SEND THROUGH -- and it says so now.
-
-       What stood here was Radio2.WriteToCATPort, the legacy serial write. Its
-       port was never opened by anything -- see the note in logradio,
-       2026-09-08 -- so this arm has silently discarded the command for as
-       long as the factory has owned the radios. A radio reaching here has
-       no factory driver and is not an Icom, which is a configuration the
-       operator needs told about. *)
-     begin
-     logger.Error('[%s] Send-to-radio: no factory driver, so "%s" was not sent.',
-                  [Radio2.RadioName, string(scFileName)]);
-     end;
+   SendCommandFileToRadio(@Radio2);
 end;
 
 procedure scPlayMessageActive;

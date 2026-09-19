@@ -155,7 +155,11 @@ var
   payload: string;
 begin
   Result := False;
-  FillChar(Radio, SizeOf(Radio), 0);
+  (* Clear field by field, NEVER FillChar. Five of these fields are managed
+     strings: zeroing their bytes nils the pointers without releasing what
+     they held, and DiscoverRadios reuses one record for every datagram, so
+     that leaked five strings per packet (TFlexDiscoveryTests pins it).
+     Assignment releases the old value and runs before every Exit below. *)
   Radio.IPAddress := '';
   Radio.Model     := '';
   Radio.Nickname  := '';

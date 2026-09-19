@@ -146,17 +146,33 @@ $script:PascalTokenRx = [regex]::new(
    '|//[^\r\n]*',                          # 3c. line comment
    [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
+# -BlankStrings ALSO blanks the INSIDE of every string literal, keeping its two
+# quotes so a column still lines up. The default keeps literals whole, which is
+# what a lint about a cast needs (PAnsiChar('x') is code). A counter of CALLS
+# needs the opposite: a log message reading 'Move(...) failed' is not a call,
+# and without this it counts as one. Added 2026-09-18 for Count-LiveMove.ps1 as
+# an opt-in switch rather than a second stripper in that script -- a local copy
+# of this logic is exactly what went wrong in Count-LiveAsm (see the top).
 function Get-PascalCodeOnlyText
 {
-   param([Parameter(Mandatory = $true)][string] $Path)
+   param(
+      [Parameter(Mandatory = $true)][string] $Path,
+      [switch] $BlankStrings
+   )
 
-   $text = [IO.File]::ReadAllText($Path)
+   $text  = [IO.File]::ReadAllText($Path)
+   $blank = [bool] $BlankStrings
    return $script:PascalTokenRx.Replace($text, {
       param($m)
       $v = $m.Value
       # Strings and directives survive untouched; everything else is blanked to
       # spaces with its newlines preserved, so line numbers stay usable.
-      if ($v[0] -eq "'") { return $v }
+      if ($v[0] -eq "'") {
+         if ($blank -and $v.Length -ge 2) {
+            return "'" + (' ' * ($v.Length - 2)) + "'"
+         }
+         return $v
+      }
       if ($v.Length -gt 1 -and $v[1] -eq '$') { return $v }                       # {$...}
       if ($v.Length -gt 2 -and $v[0] -eq '(' -and $v[2] -eq '$') { return $v }    # (*$...*)
       return ($v -replace '[^\r\n]', ' ')

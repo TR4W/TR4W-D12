@@ -49,7 +49,7 @@ phase rather than pooled at the end.
 | Live `asm` blocks | **0** | `build/Count-LiveAsm.ps1` |
 | Win32 **UI** call sites | **14** | `build/Lint-Win32Dialogs.ps1 -Group ui` |
 | Win32 **non-UI platform** call sites | **33** | `build/Lint-Win32Dialogs.ps1 -Group platform` |
-| `Move`/`FillChar`/`ZeroMemory` | **~376** raw (over-reports; comments included) | grep — a comment-aware counter is owed |
+| Live `Move`/`FillChar` (and Win32 relatives, all 0) | **387** in 92 units, 2026-09-18 (raw grep: 740) | `build/Count-LiveMove.ps1` |
 | `wsprintfBuffer` mentions | **62** | grep |
 | Units naming `Windows` | **165** | grep |
 | `{$IFDEF WINDOWS}` gates | **128** | grep |
@@ -357,6 +357,10 @@ diff nobody can review.
       (c) genuine byte framing → `TBytes`. NY4I's rule: byte I/O stays byte
       I/O, but `Move` is not how to express it. **Write the comment-aware
       counter first** — the raw grep over-reports.
+      **Counter and triage DONE 2026-09-18** — `build/Count-LiveMove.ps1`;
+      every site classified and routed to its owner in
+      `docs/64_BIT_TASKLIST.md`, P0. The conversions stay open, per
+      owner. Four live defects were found and are listed there first.
 - [ ] Hold the PChar floor at 69. Every survivor is a real boundary and carries
       a comment saying why; any new one fails review.
 - [ ] Wire and persisted layout widths across 32/64-bit: assert field widths and

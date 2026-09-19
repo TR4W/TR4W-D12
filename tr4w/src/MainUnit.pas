@@ -4752,6 +4752,7 @@ var
   lclForm: TCustomForm;   { the window-menu toggle asks it whether it is visible }
   focus: TWinControl;   { the control to put focus back on -- see below }
   TempCallstring: CallString;
+  loginAccepted: boolean;   // menu_login: the call passed its tier's check
   //http : TidHttp;
  // page : String;
 begin
@@ -5569,8 +5570,15 @@ begin
 
     menu_login:
       begin
-        FillChar(TempCallstring, SizeOf(TempCallstring), 0);
-        TempCallstring := QuickEditResponse(TC_CURRENT_OPERATOR_CALLSIGN, 6);
+        (* THE PROMPT IS BOUNDED BY THE FIELD, AND THE FIELD IS WRITTEN BY ITS
+          OWN HELPER. This used to cap the prompt at 6 and then Move exactly 6
+          bytes into CurrentOperator: a 7+ character call could not be typed,
+          and a shorter call after a longer one kept the old tail -- a 6-letter
+          login over a 10-character MY CALL read as all ten, because the Move
+          wrote no terminator. High(CurrentOperator) is the text the buffer
+          can hold beside its NUL; SetCharBuffer bounds, terminates and encodes
+          exactly as LogCfg does when it seeds this field from MY CALL. *)
+        TempCallstring := QuickEditResponse(TC_CURRENT_OPERATOR_CALLSIGN, High(CurrentOperator));
         if length(TempCallstring) > 0 then
            begin
            // A US-looking call is held to the stricter US form; anything else
@@ -5578,22 +5586,17 @@ begin
            // the regexes replaced by uCallSignRoutines -- see IsAGoodCall.
            if IsAUSPrefix(TempCallString) then
               begin
-              if IsAGoodUSCall(TempCallString) then
-                 begin
-                 Move(TempCallstring[1], CurrentOperator, 6);
-                 TR4WMainForm.pnlCurrentOperator.Caption := CurrentOperator;
-                 Sheet.SaveRestartFile; // Issue 661 ny4i
-                 SendStationStatus(sstOperator);
-                 end
-              else
-                 begin
-                 ShowMessage(TC_LOGINCALLDOESLOOKLIKECALLSIGN);
-                 end;
+              loginAccepted := IsAGoodUSCall(TempCallString);
               end
-           else if IsAGoodCall(TempCallString) then
+           else
               begin
-              Move(TempCallstring[1], CurrentOperator, 6);
-              TR4WMainForm.pnlCurrentOperator.Caption := CurrentOperator;
+              loginAccepted := IsAGoodCall(TempCallString);
+              end;
+
+           if loginAccepted then
+              begin
+              SetCharBuffer(CurrentOperator, TempCallstring);
+              TR4WMainForm.pnlCurrentOperator.Caption := LclText(CharBufferText(CurrentOperator));
               Sheet.SaveRestartFile; // Issue 661 ny4i
               SendStationStatus(sstOperator);
               end

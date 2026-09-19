@@ -32,6 +32,12 @@ You own how spots reach TR4W and how they are shown.
   connected at startup.
 - **Cluster login is prompt-driven** and needs no prompt matching (memory:
   `cluster-login-needs-no-prompt-matching`).
+- **Never shift an array of records holding a string with `Move`/`FillChar`.**
+  The cluster event queue did, and every dequeued event leaked its `Text` all
+  contest long (fixed 2026-09-18; heaptrc: one unfreed block per event, zero
+  after). Use `Delete(arr, i, 1)` or element assignment — the compiler finalises
+  managed fields; a raw byte shift does not. The same trap exists wherever a
+  record carries an `AnsiString`, not only here.
 
 ## Open
 
