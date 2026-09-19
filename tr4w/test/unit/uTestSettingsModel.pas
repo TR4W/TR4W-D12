@@ -354,14 +354,15 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(299, names.Count,
+         CheckEquals(296, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
                      + ' MESSAGE 1, which has three; 299 since'
                      + ' OPERATING STANDARD EDIT KEYS, which carries no'
                      + ' alias because TR4W never had a flat spelling'
-                     + ' for it');
+                     + ' for it; 296 since MP3 PATH, MP3 PLAYER and MP3'
+                     + ' RECORDER ENABLE were retired, 2026-09-19');
       finally
          names.Free;
       end;
@@ -696,7 +697,7 @@ begin
      the ORIGINAL CFGCA array, which still exists in the D7 tree at C:\TR4W.
      `crAddress: nil` means it was already obsolete there. Of the 93, 49 were
      nil, 41 had a real target, and 3 had no row at all. *)
-   CheckTrue(RetiredCommandCount >= 85, 'the retired list has not shrunk');
+   CheckTrue(RetiredCommandCount >= 88, 'the retired list has not shrunk');
 end;
 
 procedure TSettingsModelTests.Test_NoRetiredNameIsAlsoLiveOrOwned;
@@ -1404,9 +1405,6 @@ const
       + '"MISSINGCALLSIGNS FILE ENABLE",'
       + '"MMTTY ENGINE",'
       + 'MODE,'
-      + '"MP3 PATH",'
-      + '"MP3 PLAYER",'
-      + '"MP3 RECORDER ENABLE",'
       + '"MULT BY BAND",'
       + '"MULT BY MODE",'
       + '"MULT REPORT MINIMUM BANDS",'

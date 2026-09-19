@@ -279,7 +279,6 @@ begin
    CheckFalse(Settings.Dvk.Enable,                  'Dvk.Enable was False');
    CheckFalse(Settings.Dvk.LocalizedMessagesEnable, 'LocalizedMessagesEnable was False');
    CheckFalse(Settings.Dvk.UseRecordedSigns,           'UseRecordedSigns was False');
-   CheckFalse(Settings.Mp3.RecorderEnable,          'MP3RecorderEnable was False');
 
    (* THE BUFFER PINS ABOVE ARE GONE, and so is what they protected.
 

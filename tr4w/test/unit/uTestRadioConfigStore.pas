@@ -2305,7 +2305,10 @@ begin
          store.LoadFromJSON(root);
          CheckFalse(store.HasLoggingSection,
                     'no logging section must be REPORTED, so the ini can be read once');
-         CheckEquals('INFO', store.LogLevelName, 'and the level falls back to INFO');
+         (* NO OPINION, not INFO (2026-09-19): the level's home is
+           Settings.Log.DebugLevel, and a store default imposed over it at
+           every start is how a fresh install ran at INFO. *)
+         CheckEquals('', store.LogLevelName, 'and the level is "no opinion"');
       finally
          store.Free;
       end;

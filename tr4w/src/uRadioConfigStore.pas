@@ -492,6 +492,15 @@ type
       // their own settings file would learn nothing from "5".  'DEBUG' is
       // stable under reordering and is the same vocabulary the ini used, so an
       // old value pasted into the new file still means what it says.
+      //
+      // EMPTY MEANS "NO OPINION", AND THAT IS THE DEFAULT (2026-09-19). The
+      // level's home is Settings.Log.DebugLevel, whose constructor carries
+      // NY4I's default (DEBUG, 2026-09-14). This field used to default to
+      // 'INFO' and the apply layer pushed that over the settings object at
+      // every start, so a fresh install ran at INFO and then SAVED INFO --
+      // two homes for one setting, and the wrong one won. A level is written
+      // here only when an operator has chosen one; absent, the settings
+      // object's value stands.
       FLogLevelName: string;
       FHamLibDebug: boolean;
       FHamLibAsyncOnly: boolean;
@@ -786,9 +795,9 @@ const
       (Section: 'REPORT';      JSONKey: 'cabrilloHeader'),
       (Section: 'ERMAKREPORT'; JSONKey: 'ermakHeader'));
 
-   // The level TR4W has always shipped with.  A spelling, not an ordinal --
-   // see TRadioConfigStore.FLogLevelName.
-   LOG_DEFAULT_LEVEL     = 'INFO';
+   // NO LEVEL OF ITS OWN. The store's "absent" is '' -- no opinion -- and the
+   // default level belongs to Settings.Log.DebugLevel. See FLogLevelName.
+   LOG_NO_OPINION        = '';
 
    // Defaults.  MAX TX SECONDS MUST MATCH TR4W_TCI_MAX_TX_SECONDS in VC.pas --
    // two defaults for one setting is how a value silently changes meaning
@@ -1608,7 +1617,7 @@ begin
       end;
 
    FHasLoggingSection    := False;
-   FLogLevelName         := LOG_DEFAULT_LEVEL;
+   FLogLevelName         := LOG_NO_OPINION;
    FHamLibDebug          := False;
    FHamLibAsyncOnly      := False;
    FHamLibTrace          := False;
@@ -2632,7 +2641,13 @@ begin
    // is a VIEW of it.  Writing it in both places would be the same
    // two-homes-for-one-setting mistake the tci migration just removed.
    logging := TJSONObject.Create;
-   logging.AddPair('level',           FLogLevelName);
+   (* ONLY WHEN THERE IS AN OPINION. Writing '' would be harmless -- the
+     reader treats it as absent -- but omitting it keeps a file an operator
+     reads by hand from claiming a level nobody chose. *)
+   if Trim(FLogLevelName) <> LOG_NO_OPINION then
+      begin
+      logging.AddPair('level', FLogLevelName);
+      end;
    logging.AddPair('hamlibDebug',     TJSONBool.Create(FHamLibDebug));
    logging.AddPair('hamlibAsyncOnly', TJSONBool.Create(FHamLibAsyncOnly));
    logging.AddPair('hamlibTrace',     TJSONBool.Create(FHamLibTrace));
@@ -2934,7 +2949,7 @@ begin
    // readable for one release, so an operator who has not opened Preferences
    // yet keeps the behaviour their ini describes.
    FHasLoggingSection := logging <> nil;
-   FLogLevelName    := JSONStr(logging,  'level',           LOG_DEFAULT_LEVEL);
+   FLogLevelName    := Trim(JSONStr(logging, 'level',       LOG_NO_OPINION));
    FHamLibDebug     := JSONBool(logging, 'hamlibDebug',     False);
    FHamLibAsyncOnly := JSONBool(logging, 'hamlibAsyncOnly', False);
    FHamLibTrace     := JSONBool(logging, 'hamlibTrace',     False);

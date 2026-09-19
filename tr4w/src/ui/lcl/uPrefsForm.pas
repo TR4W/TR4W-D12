@@ -515,24 +515,17 @@ type
       edtDVKPath: TEdit;
       lblDVKRecorder: TLabel;
       edtDVKRecorder: TEdit;
-      lblMP3Heading: TLabel;
-      chkMP3RecorderEnable: TCheckBox;
-      lblMP3Path: TLabel;
-      edtMP3Path: TEdit;
-      lblMP3Player: TLabel;
-      edtMP3Player: TEdit;
-      lblAudioNote: TLabel;
+      (* THE MP3 CARD IS GONE, 2026-09-19, with MP3 RECORDER ENABLE, MP3 PATH
+        and MP3 PLAYER -- three settings nothing had read since the recorder
+        was deleted on 2026-09-07. So is the note below it about the bit rate
+        and length, which were withdrawn the same day. *)
       { The cards. Two panels each: a hairline-coloured outer and a white
         inner one pixel inside it, which is how the LCL draws a 1px border
         without owner-drawing. Published because they are streamed. }
       cardDVK: TPanel;
       cardDVKInner: TPanel;
-      cardMP3: TPanel;
-      cardMP3Inner: TPanel;
       btnBrowseDVKPath: TButton;
       btnBrowseDVKRecorder: TButton;
-      btnBrowseMP3Path: TButton;
-      btnBrowseMP3Player: TButton;
       layPaddlePTT: TPanel;
       lblPaddlePTTHeading: TLabel;
       lblPaddlePTTInfo: TLabel;
@@ -631,8 +624,6 @@ type
       procedure btnBrowseMMTTYClick(Sender: TObject);
       procedure btnBrowseDVKPathClick(Sender: TObject);
       procedure btnBrowseDVKRecorderClick(Sender: TObject);
-      procedure btnBrowseMP3PathClick(Sender: TObject);
-      procedure btnBrowseMP3PlayerClick(Sender: TObject);
       { The pickers themselves. ONE handler per button, each
         delegating with explicit arguments -- no branching on
         Sender, which is the house rule and what keeps a rename
@@ -5334,9 +5325,6 @@ begin
    FBindings.Bind(chkUseRecordedSigns,   'audio.useRecordedSigns');
    FBindings.Bind(edtDVKPath,            'audio.dvk.path');
    FBindings.Bind(edtDVKRecorder,        'audio.dvk.recorder');
-   FBindings.Bind(chkMP3RecorderEnable,  'audio.mp3.recorderEnable');
-   FBindings.Bind(edtMP3Path,            'audio.mp3.path');
-   FBindings.Bind(edtMP3Player,          'audio.mp3.player');
 
    // Paddle and PTT -- a CHILD of CW Settings, so the nav gains nothing
    // in height while collapsed. NY4I asked that the left pane never
@@ -6760,17 +6748,6 @@ begin
                     'All files (*.*)|*.*');
 end;
 
-procedure TPrefsForm.btnBrowseMP3PathClick(Sender: TObject);
-begin
-   BrowseForFolder(edtMP3Path, 'Folder for MP3 recordings');
-end;
-
-procedure TPrefsForm.btnBrowseMP3PlayerClick(Sender: TObject);
-begin
-   BrowseForProgram(edtMP3Player, 'MP3 player',
-                    'Programs (*.exe)|*.exe|All files (*.*)|*.*');
-end;
-
 procedure TPrefsForm.LoadStationPanel;
 var
    f: TStationField;
@@ -6984,14 +6961,22 @@ begin
       cbxLogLevel.Items.EndUpdate;
    end;
 
-   idx := cbxLogLevel.Items.IndexOf(UpperCase(Trim(FStore.LogLevelName)));
+   (* THE LEVEL IN FORCE. The store holds a level only when an operator chose
+     one; otherwise the settings object's value is the answer -- which is also
+     what the store's level, when there is one, was applied into at startup. *)
+   level := Trim(FStore.LogLevelName);
+   if level = '' then
+      begin
+      Settings.TryGetByCommand('DEBUG LOG LEVEL', level);
+      end;
+   idx := cbxLogLevel.Items.IndexOf(UpperCase(level));
    if idx < 0 then
       begin
       // An unreadable level in the file selects nothing rather than silently
       // showing NONE, which the operator would then save and thereby turn
       // logging off without ever choosing to.
       logger.Warn('[Preferences] log level "%s" is not one this build knows',
-                  [FStore.LogLevelName]);
+                  [level]);
       end;
    cbxLogLevel.ItemIndex := idx;
 
@@ -7019,10 +7004,25 @@ begin
 end;
 
 procedure TPrefsForm.SaveLoggingPanel;
+var
+   chosen: string;
+   inForce: string;
 begin
+   (* AN OPINION IS RECORDED ONLY WHEN THE OPERATOR EXPRESSES ONE. This runs
+     on every change anywhere in Preferences, so writing the combo into the
+     store unconditionally would turn "no opinion" into an explicit level the
+     first time anything else was edited -- pinning today's default in the
+     file for good. Once the store holds a level it follows the combo. *)
    if cbxLogLevel.ItemIndex >= 0 then
       begin
-      FStore.LogLevelName := cbxLogLevel.Items[cbxLogLevel.ItemIndex];
+      chosen := cbxLogLevel.Items[cbxLogLevel.ItemIndex];
+      inForce := '';
+      Settings.TryGetByCommand('DEBUG LOG LEVEL', inForce);
+      if (Trim(FStore.LogLevelName) <> '') or
+         (not UnicodeSameText(chosen, inForce)) then
+         begin
+         FStore.LogLevelName := chosen;
+         end;
       end;
 
    FStore.TelnetDebug     := chkTelnetDebug.Checked;

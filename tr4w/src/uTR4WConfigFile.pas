@@ -191,13 +191,26 @@ function LoadConfig(const aFileName: string;
 // not there, so solve it another way with reading the json file").
 //
 // Deliberately NOT the full store: this runs before the logger, so it must not
-// depend on anything that logs. ReadRootOrEmpty and two lookups is the whole of
-// it. ApplyLoggingSettings applies the real value moments later.
+// depend on anything that logs. ReadRootOrEmpty and a few lookups is the whole
+// of it. ApplyLoggingSettings applies the real value moments later.
+//
+// THE SAME PRECEDENCE THE PROGRAM APPLIES A MOMENT LATER (2026-09-19), so the
+// earliest log lines run at the level the rest of the run does:
+//
+//   1. logging.level -- present only when an operator chose one; it is
+//      applied over the settings object by ApplyLoggingSettings.
+//   2. settings.Log.DebugLevel -- the level's home, loaded by
+//      LoadSettingsForStartup. Streamed as the enum's name ('llDebug'), and
+//      returned here as its spelling ('DEBUG').
+//   3. '' -- neither: the caller leaves the settings object's own default.
 function StartupLogLevel(const aFileName: string): string;
 
 function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcastConfig;
 
 implementation
+
+uses
+   TypInfo;              // GetEnumValue -- StartupLogLevel reads a streamed enum name
 
 (* --settings <path>, RESOLVED HERE RATHER THAN AT STARTUP.
 
@@ -603,6 +616,9 @@ var
    root: TJSONObject;
    logging: TJSONValue;
    level: TJSONValue;
+   section: TJSONValue;
+   group: TJSONValue;
+   ordinal: integer;
 begin
    Result := '';
 
@@ -613,19 +629,47 @@ begin
       end;
 
    try
+      // 1. An operator's explicit choice, in the store's logging section.
       logging := root.GetValue('logging');
-      if not (logging is TJSONObject) then
+      if logging is TJSONObject then
+         begin
+         level := TJSONObject(logging).GetValue('level');
+         if level <> nil then
+            begin
+            Result := Trim(level.Value);
+            end;
+         end;
+      if Result <> '' then
          begin
          Exit;
          end;
 
-      level := TJSONObject(logging).GetValue('level');
+      // 2. The settings object's stored value.
+      section := root.GetValue(JSONKEY_SETTINGS);
+      if not (section is TJSONObject) then
+         begin
+         Exit;
+         end;
+      group := TJSONObject(section).GetValue('Log');
+      if not (group is TJSONObject) then
+         begin
+         Exit;
+         end;
+      level := TJSONObject(group).GetValue('DebugLevel');
       if level = nil then
          begin
          Exit;
          end;
-
-      Result := Trim(level.Value);
+      (* EXPLICIT: TypInfo takes an AnsiString, and an enum identifier is
+        ASCII by definition, so nothing can be lost -- saying so beats an
+        implicit conversion the ratchet has to forgive. *)
+      ordinal := GetEnumValue(TypeInfo(tLogLevels),
+                              AnsiString(string(Trim(level.Value))));
+      if (ordinal >= Ord(Low(tLogLevels))) and
+         (ordinal <= Ord(High(tLogLevels))) then
+         begin
+         Result := LogLevelSpelling(tLogLevels(ordinal));
+         end;
    finally
       root.Free;
    end;

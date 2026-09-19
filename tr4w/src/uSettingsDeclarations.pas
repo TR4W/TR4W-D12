@@ -205,16 +205,9 @@ begin
    RegisterModelSetting( 'appearance.showGridlines',          'SHOW GRIDLINES',
                          RS_APPEARANCE_SHOWGRIDLINES);
 
-   { Audio: MP3 recording and the digital voice keyer, 2026-08-15. }
-   RegisterModelSetting( 'audio.mp3.recorderEnable',          'MP3 RECORDER ENABLE',
-                         RS_AUDIO_MP3_RECORDERENABLE);
-   (* MODEL, not stored, since 2026-09-13. Neither has a reader -- see
-     TMp3Settings -- and both are carried rather than withdrawn. *)
-   RegisterModelSetting( 'audio.mp3.path',                    'MP3 PATH',
-                         RS_AUDIO_MP3_PATH);
-   RegisterModelSetting( 'audio.mp3.player',                  'MP3 PLAYER',
-                         RS_AUDIO_MP3_PLAYER);
-   RegisterModelSetting( 'audio.dvk.enable',                  'DVK ENABLE',
+   (* Audio: the digital voice keyer, 2026-08-15. The three MP3 rows that
+     stood here were retired 2026-09-19 -- see uCFG.RETIRED_COMMANDS. *)
+   RegisterModelSetting( 'audio.dvk.enable',                 'DVK ENABLE',
                          RS_AUDIO_DVK_ENABLE);
    RegisterModelSetting( 'audio.dvk.localizedMessages',       'DVK LOCALIZED MESSAGES ENABLE',
                          RS_AUDIO_DVK_LOCALIZEDMESSAGES);
@@ -889,9 +882,10 @@ begin
      no nil check, so a blanked row is a latent access violation rather than a
      tidy hole. Retiring the COMMAND is the mechanism this tree already uses.
 
-     MP3 RECORDER ENABLE is deliberately left alone. It is equally dead, but it
-     has a designed checkbox in Preferences (chkMP3RecorderEnable), so removing
-     it is a change to a form and NY4I should see it rather than find it. *)
+     MP3 RECORDER ENABLE was left alone here because it had a designed
+     checkbox in Preferences, and removing it was a change to a form NY4I
+     should see rather than find. He saw it: it was retired 2026-09-19 with
+     MP3 PATH and MP3 PLAYER, and the card went with them. *)
 
    // --- Advanced (2) ---------------------------------
    RegisterModelSetting( 'advanced.handLogMode',        'HAND LOG MODE',

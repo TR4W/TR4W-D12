@@ -1541,16 +1541,26 @@ begin
 
    SeedLoggingFromIni(aStore);
 
-   (* ONE TRANSLATION, AND IT IS THE SETTINGS MODEL'S. The loop this replaces
-     walked tLogLevelsSA by hand; the registered vocabulary is that same table,
-     matched by position, and it refuses a spelling it does not carry. *)
-   matched := Settings.TrySetByCommand('DEBUG LOG LEVEL',
-                                       Trim(aStore.LogLevelName));
-
-   if not matched then
+   (* NO OPINION LEAVES THE SETTING ALONE. The level's home is
+     Settings.Log.DebugLevel; the store speaks only when an operator chose a
+     level (Preferences, a hand edit, or a DEBUG LOG LEVEL line migrated from
+     tr4w.ini). It used to carry a default of its own -- 'INFO' -- and push
+     it over the settings object here at every start, so NY4I's DEBUG default
+     (2026-09-14) never took effect on a single fresh install. *)
+   if Trim(aStore.LogLevelName) <> '' then
       begin
-      logger.Warn('[ApplyLoggingSettings] "%s" is not a log level -- keeping the current one',
-                  [aStore.LogLevelName]);
+      (* ONE TRANSLATION, AND IT IS THE SETTINGS MODEL'S. The loop this
+        replaces walked tLogLevelsSA by hand; the registered vocabulary is
+        that same table, matched by position, and it refuses a spelling it
+        does not carry. *)
+      matched := Settings.TrySetByCommand('DEBUG LOG LEVEL',
+                                          Trim(aStore.LogLevelName));
+
+      if not matched then
+         begin
+         logger.Warn('[ApplyLoggingSettings] "%s" is not a log level -- keeping the current one',
+                     [aStore.LogLevelName]);
+         end;
       end;
 
    TR4W_HAMLIB_DEBUG      := aStore.HamLibDebug;

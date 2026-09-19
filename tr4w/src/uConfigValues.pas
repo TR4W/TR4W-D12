@@ -171,10 +171,11 @@ type
         The four paths were FileNameType character arrays for one reason:
         CheckCommand wrote through @Config.<field> knowing nothing about what
         was there, so a string would have put a header over the first bytes of
-        a buffer. No row addresses them any more: all four are properties --
-        Settings.Mp3.Path, Settings.Mp3.Player, Settings.Dvk.Path and
-        Settings.Dvk.Recorder -- so they are ordinary strings now, which is
-        what a path always was. *)
+        a buffer. No row addresses them any more: the two DVK paths are
+        properties -- Settings.Dvk.Path and Settings.Dvk.Recorder -- so they
+        are ordinary strings now, which is what a path always was. The two
+        MP3 paths were properties too until 2026-09-19, when they were
+        retired with the recorder that read them. *)
    end;
 
 var

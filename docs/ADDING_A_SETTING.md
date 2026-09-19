@@ -83,7 +83,7 @@ withdraw a command or to read an old file:
 
 | list | size | what it is really for |
 |---|---:|---|
-| `uCFG.RETIRED_COMMANDS` | 85 | **removing** a command: accepted so an old file does not error, then ignored |
+| `uCFG.RETIRED_COMMANDS` | 88 | **removing** a command: accepted so an old file does not error, then ignored |
 | `uCFG.OWNED_BY_A_STORE` | 39 | a name the RADIO / KEYER / CLUSTER library owns, not the settings model |
 | `uCFG.ACCUMULATING_COMMANDS` | 4 | commands a file may legitimately repeat |
 | `uCFG.TryApplyCommandAction` | 4 | commands that DO something rather than set something |

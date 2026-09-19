@@ -1,15 +1,68 @@
 import json
 import os
+import re
 import sys
 sys.path.insert(0, r'C:\tr4w-d12\tools')
 import srcfile
 
 SCRATCH = os.path.dirname(os.path.abspath(__file__))
 OUT = r'C:\tr4w-d12\tr4w\docs\SETTINGS_INVENTORY.md'
+FROZEN = r'C:\tr4w-d12\tr4w\test\unit\uTestSettingsModel.pas'
 
 inv = json.load(open(os.path.join(SCRATCH, 'inv.json')))
 moved = sorted(inv['moved'], key=lambda r: r['command'])
 pending = sorted(inv['pending'], key=lambda r: r['command'])
+
+
+# THE NOTES COLUMN IS NY4I'S, AND IT IS CARRIED FORWARD (2026-09-19).
+#
+# Everything else in the table is reproducible from the source; the notes are
+# not. This generator used to write every Notes cell empty, so regenerating
+# the file erased them. Now the existing file is read first, each note is kept
+# against its command, and a note whose row has gone -- a setting retired or
+# renamed -- is not dropped: it is listed under "Notes whose row has gone" and
+# printed, so a person decides what happens to it.
+def existing_notes(path):
+   notes = {}
+   if not os.path.exists(path):
+      return notes
+   for line in srcfile.read(path).replace('\r\n', '\n').split('\n'):
+      if not line.startswith('| `'):
+         continue
+      # An escaped pipe is part of a cell, not a boundary.
+      cells = [c.strip() for c in re.split(r'(?<!\\)\|', line.strip())[1:-1]]
+      if len(cells) < 2:
+         continue
+      command = cells[0].strip('`').replace(r'\|', '|')
+      if cells[-1]:
+         notes[command] = cells[-1]
+   return notes
+
+
+notes = existing_notes(OUT)
+
+
+# THE CHECK THE REGENERATION NOTE PROMISES, made rather than asserted. The
+# frozen vocabulary in uTestSettingsModel is read out of the live settings
+# object by a test, so if this generator and it disagree, THE GENERATOR IS
+# WRONG -- and it stops rather than writing a table that says otherwise.
+def frozen_vocabulary(path):
+   text = srcfile.read(path)
+   return set(m.group(1) or m.group(2) for m in re.finditer(
+      r"^\s*\+ '(?:\"([^\"]+)\"|([A-Z0-9][^,']*))[,']", text, re.M))
+
+
+generated = set(r['command'] for r in moved)
+for r in moved:
+   for a in r['aka'].split(','):
+      if a.strip():
+         generated.add(a.strip())
+frozen = frozen_vocabulary(FROZEN)
+if generated != frozen:
+   print('GENERATOR DISAGREES WITH THE FROZEN VOCABULARY -- the generator is wrong')
+   print('  generated only:', sorted(generated - frozen))
+   print('  frozen only   :', sorted(frozen - generated))
+   sys.exit(1)
 
 # Why each pending row is still where it is. Keyed by command, or by a prefix
 # for the two families. Anything unlisted gets the empty reason, which is
@@ -36,8 +89,6 @@ EXACT = {
    'DVK ENABLE': 'crP: 7 wants a window seam that does not exist yet',
    'DVK PATH': 'path type -- what a path setting validates is undecided',
    'DVK RECORDER': 'path type -- same ruling',
-   'MP3 PATH': 'path type -- same ruling',
-   'MP3 PLAYER': 'path type -- same ruling',
    'BACKUP LOG FILE NAME': 'path type -- same ruling',
    'INITIAL EXCHANGE FILENAME': 'path type -- same ruling',
    'LPT1 BASE ADDRESS': 'port identity track',
@@ -58,7 +109,6 @@ EXACT = {
    'CLEAR DUPE SHEET': 'an ACTION, not a setting',
    'POLL RADIO ONE': 'radio library -- a field of the radio record',
    'POLL RADIO TWO': 'radio library -- a field of the radio record',
-   'MP3 RECORDER ENABLE': 'MOVED already -- appears here only if stale',
 }
 
 
@@ -73,6 +123,11 @@ def reason_for(cmd):
 
 def esc(s):
    return s.replace('|', r'\|')
+
+
+def note_for(cmd):
+   # pop, so what is left afterwards is exactly the notes with no row.
+   return notes.pop(cmd, '')
 
 
 L = []
@@ -124,67 +179,89 @@ A('')
 A('| Command | Also accepted as | Scope | Lives at | Type | Notes |')
 A('|---|---|---|---|---|---|')
 for r in moved:
-   A('| `%s` | %s | %s | `%s` | %s |  |'
+   A('| `%s` | %s | %s | `%s` | %s | %s |'
      % (esc(r['command']),
         ('`%s`' % esc(r['aka'])) if r['aka'] else '',
         '**CONTEST**' if r['scope'] == 'CONTEST' else 'global',
-        esc(r['where']), esc(r['type'])))
+        esc(r['where']), esc(r['type']),
+        note_for(r['command'])))
 A('')
 
-A('## Settings still in the config array (%d)' % len(pending))
+if pending:
+   A('## Settings still in the config array (%d)' % len(pending))
+   A('')
+   A('Each of these still writes through a table of addresses. The **Why still')
+   A('here** column is the reason it has not moved; an empty one means nothing is')
+   A('stopping it and it is simply next in line.')
+   A('')
+   A('The **Written to a contest file** column is the config array\'s own flag for')
+   A('whether a value was ever saved into a contest `.cfg`. Treat it as a HINT and')
+   A('not as the answer: nothing in the program reads that flag any more, so it')
+   A('records what somebody intended years ago rather than what happens now. It is')
+   A('here because it is evidence, and because where it disagrees with your')
+   A('instinct one of the two is worth looking at.')
+   A('')
+   A('| Command | Written to a contest file | Type | Why still here | Notes |')
+   A('|---|---|---|---|---|')
+   for r in pending:
+      A('| `%s` | %s | %s | %s | %s |'
+        % (esc(r['command']),
+           'yes' if r['contest_file'] else 'no',
+           esc(r['type']),
+           esc(reason_for(r['command'])),
+           note_for(r['command'])))
+   A('')
+else:
+   A('## Settings still in the config array: none')
+   A('')
+   A('The config array (`CFGCA`) was deleted on 2026-09-14. Every setting above')
+   A('is a published property; a withdrawn command is a NAME in')
+   A('`uCFG.RETIRED_COMMANDS`, accepted and ignored so an old file does not')
+   A('raise "invalid statement in config file".')
+   A('')
+
+A('## The credentials')
 A('')
-A('Each of these still writes through a table of addresses. The **Why still')
-A('here** column is the reason it has not moved; an empty one means nothing is')
-A('stopping it and it is simply next in line.')
-A('')
-A('The **Written to a contest file** column is the config array\'s own flag for')
-A('whether a value was ever saved into a contest `.cfg`. Treat it as a HINT and')
-A('not as the answer: nothing in the program reads that flag any more, so it')
-A('records what somebody intended years ago rather than what happens now. It is')
-A('here because it is evidence, and because where it disagrees with your')
-A('instinct one of the two is worth looking at.')
-A('')
-A('| Command | Written to a contest file | Type | Why still here | Notes |')
-A('|---|---|---|---|---|')
-for r in pending:
-   A('| `%s` | %s | %s | %s |  |'
-     % (esc(r['command']),
-        'yes' if r['contest_file'] else 'no',
-        esc(r['type']),
-        esc(reason_for(r['command']))))
+A('A credential is a `TSecretText` property. The settings file holds only')
+A('`<Name>Ref`, the setting\'s name; the value lives in the operating system\'s')
+A('vault (`uKeychain`), is masked in Preferences, and is never sent to a')
+A('multi-op peer -- all four from the one declaration.')
 A('')
 
-A('## The credentials, which are a case of their own')
-A('')
-A('`HAMSCORE USERNAME`, `HAMSCORE PASSWORD` and `SERVER PASSWORD` are held')
-A('back by one mechanical problem, not by a design question. The config loader')
-A('re-reads every password and case-sensitive value from the old `.ini` a')
-A('second time to put the operator\'s original capitalisation back, and it')
-A('finds them by walking the config array BY ADDRESS. A setting that has moved')
-A('is not in that walk, so its password would silently arrive upper-cased.')
-A('')
-A('`uKeychain` is the answer and is already built: on Windows the value lives')
-A('in Credential Manager and the settings file holds only a reference. The')
-A('remaining work is to mark secrecy on the property type so the settings')
-A('model, the Preferences masking, the import and the multi-op sync all read it')
-A('from one place.')
-A('')
-A('The radio network credentials are in the same position but belong to the')
-A('radio library track.')
-A('')
+if notes:
+   A('## Notes whose row has gone')
+   A('')
+   A('Kept, not dropped: each of these was written in the Notes column of a row')
+   A('that no longer exists -- a setting retired or renamed since. Move it, act on')
+   A('it, or delete it; the generator will not do either for you.')
+   A('')
+   A('| Command | Notes |')
+   A('|---|---|')
+   for cmd in sorted(notes):
+      A('| `%s` | %s |' % (esc(cmd), notes[cmd]))
+   A('')
 
 A('## Regenerating this')
 A('')
 A('It is generated from `uSettingsModel.pas` and `uCFG.pas`, and validated')
 A('against the frozen command vocabulary in `uTestSettingsModel.pas` -- which')
 A('is read out of the live settings object, so if the generator and the program')
-A('ever disagree, the generator is wrong. At the time of writing they agree')
-A('exactly on all 233 command names.')
+A('ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`')
+A('makes that comparison every time it runs and refuses to write this file')
+A('when the two differ; when this file was written they agreed exactly on all')
+A('%d command names.' % len(frozen))
 A('')
-A('**Keep the Notes column when regenerating.** The rest of the table is')
-A('reproducible; your notes are not.')
+A('Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.')
+A('')
+A('**The Notes column is carried forward when regenerating**: the generator')
+A('reads this file first and puts each note back against its command. A note')
+A('whose row has gone is listed under "Notes whose row has gone" rather than')
+A('dropped.')
 
 open(OUT, 'wb').write((chr(10).join(L) + chr(10)).replace(chr(10), chr(13)+chr(10)).encode('utf-8'))
 print('wrote', OUT)
 print('moved rows  :', len(moved))
 print('pending rows:', len(pending))
+print('orphaned notes:', len(notes))
+for cmd in sorted(notes):
+   print('   %s: %s' % (cmd, notes[cmd]))

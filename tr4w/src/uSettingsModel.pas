@@ -994,37 +994,12 @@ type
       property Password: TSecretText read FPassword write FPassword;
    end;
 
-   (*
-     THE MP3 RECORDER. One setting of three: MP3 PATH and MP3 PLAYER are
-     ctDirectory and ctFileName, which wait on the open ruling about what a
-     path setting validates.
-
-     NOTHING READS IT IN THIS BUILD -- uMP3Recorder was deleted in September
-     with its lame_enc.dll binding. It is carried rather than withdrawn for
-     the reason NO COLUMN HEADER was: an operator can see it in Preferences,
-     so removing a setting is a decision.
-   *)
-   TMp3Settings = class(TSettingsGroup)
-   private
-      FRecorderEnable: boolean;
-      FPath: string;
-      FPlayer: string;
-   published
-      // Was Config.MP3RecorderEnable. MP3 RECORDER ENABLE derives exactly.
-      property RecorderEnable: boolean
-         read FRecorderEnable write FRecorderEnable;
-      (* Was Config.MP3Path, and NOTHING READS IT -- uMP3Recorder went with
-        the waveIn capture engine. MP3 PATH derives exactly.
-
-        CARRIED RATHER THAN WITHDRAWN, per NY4I on MY IOTA: "migrate my iota
-        too, it is for future use". An operator's configured folder survives
-        into the build that rewrites the feature, instead of being silently
-        dropped by the one that did not have it. *)
-      property Path: string read FPath write FPath;
-      (* Was Config.MP3Player. Same story, and one step further: this one had
-        no reader anywhere in the tree even before the recorder was deleted. *)
-      property Player: string read FPlayer write FPlayer;
-   end;
+   (* TMp3Settings WAS HERE -- MP3 RECORDER ENABLE, MP3 PATH, MP3 PLAYER.
+     RETIRED 2026-09-19 (NY4I): nothing had read any of the three since the
+     recorder and its lame_enc.dll binding were deleted on 2026-09-07, yet
+     Preferences bound them and every fresh settings file carried them. The
+     names are in uCFG.RETIRED_COMMANDS, so an old ini or .cfg line is
+     accepted and ignored. Recording is QSOCapture's job. *)
 
    (*
      THE PARALLEL-PORT HARDWARE, as far as one flag goes. The three LPT base
@@ -2710,8 +2685,10 @@ type
       // Was the global GridMapCenter in logstuff.pas, a GridString.
       property Center: string read FCenter write FCenter;
       (* Was RadiusOfEarth in loggrid.pas -- the radius the distance
-        calculation uses, in kilometres, and zero means do not compute a
-        distance at all.
+        calculation uses, in kilometres. ZERO MEANS "THE DEFAULT RADIUS", not
+        "no distance": loggrid multiplies a positive value by 1000 and
+        otherwise uses DefaultRadiusOfEarth, 6378137 metres. Whether a
+        distance is SHOWN is Log.DistanceMode's question.
 
         ITS BOUND IS A REGISTERED CHECK, NOT A SUBRANGE. A subrange is an
         ordinal type and this is a double, so the range that was crMin and
@@ -3453,7 +3430,6 @@ type
       FTelnet: TTelnetSettings;
       FServer: TServerSettings;
       FHamscore: THamscoreSettings;
-      FMp3: TMp3Settings;
       FUnknownCountryFile: TUnknownCountryFileSettings;
       FQso: TQsoSettings;
       FMult: TMultSettings;
@@ -3486,6 +3462,17 @@ type
       procedure UnprotectSecretsAfterLoad;
       procedure SkipContestScoped(aSender: TObject; aObject: TObject;
                                   aInfo: PPropInfo; var aResult: TJSONData);
+      (* THE STREAMER'S ONE HOOK, and it does two jobs: the contest-scoped
+        skip above and the unset-character rule below. *)
+      procedure StreamPropertyHook(aSender: TObject; aObject: TObject;
+                                   aInfo: PPropInfo; var aResult: TJSONData);
+      (* AN UNSET CHARACTER IS "" IN THE FILE, IN BOTH DIRECTIONS. See
+        WriteUnsetCharAsEmpty. *)
+      procedure WriteUnsetCharAsEmpty(aObject: TObject; aInfo: PPropInfo;
+                                      aResult: TJSONData);
+      procedure ReadEmptyCharAsUnset(aSender: TObject; aObject: TObject;
+                                     aInfo: PPropInfo; aValue: TJSONData;
+                                     var aHandled: boolean);
    public
       constructor Create;
       destructor Destroy; override;
@@ -3629,7 +3616,10 @@ type
       property Telnet: TTelnetSettings read FTelnet;
       property Server: TServerSettings read FServer;
       property Hamscore: THamscoreSettings read FHamscore;
-      property Mp3: TMp3Settings read FMp3;
+      (* Mp3 STOOD HERE until 2026-09-19. A tr4w.json that still carries an
+        "Mp3" object loads without complaint: the de-streamer walks the
+        OBJECT'S properties and looks each up in the JSON, so a member no
+        property names is never visited. uTestSettingsModel pins it. *)
       property UnknownCountryFile: TUnknownCountryFileSettings
          read FUnknownCountryFile;
       property Qso: TQsoSettings read FQso;
@@ -3707,6 +3697,13 @@ procedure RegisterSettingValueCheck(const aPath: string;
 *)
 procedure RegisterSettingAllowedValues(const aPath: string;
                                        const aValues: array of string);
+
+(* THE SPELLING OF A LOG LEVEL -- 'DEBUG' for llDebug -- from the table the
+  setting's vocabulary is registered from, so there is still one list. For
+  the startup bootstrap, which has to read the stored level out of the file
+  before the settings object is loaded (see uTR4WConfigFile.StartupLogLevel)
+  and finds it streamed as the enum's name. *)
+function LogLevelSpelling(const aLevel: tLogLevels): string;
 
 
 (* THE CABRILLO CATEGORY SPELLINGS, MOVED VERBATIM FROM VC WITH THEIR TYPES
@@ -3906,6 +3903,24 @@ begin
       if UnicodeSameText(GValueChecks[i].Path, aPath) then
          begin
          Result := GValueChecks[i].Check(aValue);
+         Exit;
+         end;
+      end;
+end;
+
+(* Does a registered check own this setting's vocabulary? TrySetByCommand
+  asks, for the one decision a check has to be able to make and a type
+  cannot: whether EMPTY is a legal value of a character setting. *)
+function HasValueCheck(const aPath: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := 0 to High(GValueChecks) do
+      begin
+      if UnicodeSameText(GValueChecks[i].Path, aPath) then
+         begin
+         Result := True;
          Exit;
          end;
       end;
@@ -4197,8 +4212,8 @@ begin
    FFarnsworthEnable := False;
    FFarnsworthSpeed  := 25;
    FWeight           := 1.0;
-   (* CODE SPEED had no initialiser of its own; 35 is what the WinKeyer value
-     list and the speed display both assume as a starting point. *)
+   (* D7's value: tree.pas declared `CodeSpeed : integer = InitialCodeSpeed`
+     with InitialCodeSpeed = 35. *)
    FCodeSpeed        := 35;
    (* logk1ea's declaration left it False, which is what a station with no
      settings file has always started with. *)
@@ -4990,7 +5005,6 @@ begin
    FTelnet         := TTelnetSettings.Create;
    FServer         := TServerSettings.Create;
    FHamscore       := THamscoreSettings.Create;
-   FMp3            := TMp3Settings.Create;
    FUnknownCountryFile := TUnknownCountryFileSettings.Create;
    FQso            := TQsoSettings.Create;
    FMult           := TMultSettings.Create;
@@ -5010,7 +5024,9 @@ begin
    FGridMap        := TGridMapSettings.Create;
    FQsx            := TQsxSettings.Create;
    FMessage        := TMessageSettings.Create;
-   FContest        := TContestSettings.Create;
+   (* FContest IS CREATED ONCE, ABOVE. A second `FContest := ...Create` stood
+     here until 2026-09-19 and leaked the first object on every construction;
+     the destructor could only ever free the one the field still held. *)
    FMessages       := TMessageTemplateSettings.Create;
 
    FCommands := TStringList.Create;
@@ -5023,6 +5039,22 @@ end;
 destructor TR4WSettings.Destroy;
 begin
    FCommands.Free;
+   (* EVERY GROUP THE CONSTRUCTOR CREATES IS FREED HERE, and eleven were not
+     until 2026-09-19 -- Wsjtx through Hamscore, and Mp3 before it was
+     retired, added to the constructor as their settings moved and never to
+     this list. uTestSettingsModel's heap test builds and frees the object
+     repeatedly and fails if the heap grows, which is the check a list kept
+     in step by hand needs. *)
+   FHamscore.Free;
+   FServer.Free;
+   FTelnet.Free;
+   FScore.Free;
+   FCluster.Free;
+   FScp.Free;
+   FOperating.Free;
+   FNetwork.Free;
+   FMainWindow.Free;
+   FWsjtx.Free;
    FContest.Free;
    FAutoDupe.Free;
    FQtc.Free;
@@ -5826,7 +5858,23 @@ begin
 
            NOT TRIMMED, unlike every other arm. A key is one character and
            a space is a legal one; trimming would turn a configured space
-           bar into a refusal. *)
+           bar into a refusal.
+
+           EXCEPT WHERE A REGISTERED CHECK OWNS THE VOCABULARY. That check
+           has already been asked, with the TRIMMED text, and has accepted
+           it -- so if the text is empty, empty is a value this setting
+           declared legal, and it means #0, "no character". COMPUTER ID is
+           the case: D7's editor could clear it, and #0 is what makes
+           MainUnit ask for one before the network window opens. Every
+           setting without a check keeps refusing empty, exactly as before;
+           and a blank that is NOT empty (' ') cannot slip past a check that
+           accepted '' as the letter ' '. *)
+         if (text = '') and HasValueCheck(path) then
+            begin
+            SetOrdProp(owner, info, 0);
+            Result := True;
+            Exit;
+            end;
          if aValue = '' then
             begin
             Exit;
@@ -5921,6 +5969,16 @@ begin
          end;
       tkChar, tkWChar, tkUChar:
          begin
+         (* #0 IS "NO CHARACTER" AND READS AS '' -- the value that sets it
+           back, and what the settings file carries. A one-character string
+           holding a NUL would reach a config line, the log's captured
+           configuration and the network as a control byte. *)
+         if GetOrdProp(owner, info) = 0 then
+            begin
+            aValue := '';
+            Result := True;
+            Exit;
+            end;
          aValue := Char(GetOrdProp(owner, info));
          Result := True;
          end;
@@ -6120,6 +6178,72 @@ begin
       end;
 end;
 
+procedure TR4WSettings.StreamPropertyHook(aSender: TObject; aObject: TObject;
+                                          aInfo: PPropInfo; var aResult: TJSONData);
+begin
+   SkipContestScoped(aSender, aObject, aInfo, aResult);
+   WriteUnsetCharAsEmpty(aObject, aInfo, aResult);
+end;
+
+(*
+  #0 IS "NO CHARACTER", AND THE FILE SAYS SO WITH "".
+
+  fpjsonrtti streams a char property as a one-character string, so #0 --
+  COMPUTER ID's "not chosen yet", which MainUnit relies on to prompt before
+  the network window opens -- went into a hand-editable file as "\u0000": a
+  NUL control character, meaningless to anyone reading it.
+
+  IT READ BACK ONLY BY ACCIDENT. The de-streamer's char arm assigns nothing
+  for an empty string, and "\u0000" arrives as one, so the property kept
+  whatever it already held. On a fresh object that is the constructor's #0;
+  on an object that had been loaded before it is the OLD LETTER, so a file
+  saying "no id" left a stale one in force. ReadEmptyCharAsUnset makes the
+  empty string mean #0 on purpose.
+
+  MUTATED IN PLACE, NOT REPLACED. The result is a TJSONString the streamer
+  has just built for this property and owns nothing else; setting its text
+  is not the value-replacement ToJSON's secrets note warns against.
+*)
+procedure TR4WSettings.WriteUnsetCharAsEmpty(aObject: TObject; aInfo: PPropInfo;
+                                             aResult: TJSONData);
+begin
+   if (aResult = nil) or (not (aResult is TJSONString)) then
+      begin
+      Exit;
+      end;
+   if not (aInfo^.PropType^.Kind in [tkChar, tkWChar, tkUChar]) then
+      begin
+      Exit;
+      end;
+   if GetOrdProp(aObject, aInfo) = 0 then
+      begin
+      aResult.AsString := '';
+      end;
+end;
+
+(* The reader's half. "" -- and the "\u0000" every earlier build wrote --
+  both mean #0, assigned deliberately rather than left to chance. Any other
+  string is the de-streamer's own business: its first character, as before. *)
+procedure TR4WSettings.ReadEmptyCharAsUnset(aSender: TObject; aObject: TObject;
+                                            aInfo: PPropInfo; aValue: TJSONData;
+                                            var aHandled: boolean);
+begin
+   aHandled := False;
+   if not (aInfo^.PropType^.Kind in [tkChar, tkWChar, tkUChar]) then
+      begin
+      Exit;
+      end;
+   if (aValue = nil) or (aValue.JSONType <> jtString) then
+      begin
+      Exit;
+      end;
+   if (aValue.AsString = '') or (aValue.AsString = #0) then
+      begin
+      SetOrdProp(aObject, aInfo, 0);
+      aHandled := True;
+      end;
+end;
+
 function TR4WSettings.ToJSON: TJSONObject;
 var
    streamer: TJSONStreamer;
@@ -6129,7 +6253,7 @@ begin
       (* NO @ -- this tree compiles in Delphi mode (forced by Indy), where a
         method is assigned to an event by name. The address-of form is the
         objfpc spelling and is a syntax error here. *)
-      streamer.OnStreamProperty := SkipContestScoped;
+      streamer.OnStreamProperty := StreamPropertyHook;
       (* jsoStreamChildren is what makes the nested objects appear at all --
         without it a child object property is skipped in silence, which reads
         as "that area has no settings" rather than as an error. *)
@@ -6263,6 +6387,7 @@ begin
         IT IS ALSO WHAT MAKES A <Name>Ref MEMBER HARMLESS HERE: no property
         is called that, so the de-streamer skips it and the load pass below
         reads it. *)
+      destreamer.OnRestoreProperty := ReadEmptyCharAsUnset;
       destreamer.JSONToObject(aObj, Self);
    finally
       destreamer.Free;
@@ -6431,6 +6556,11 @@ const
       ('NONE', 'NAME', 'QTH', 'CHECK SECTION', 'SECTION', 'OLD CALL',
        'FOC NUMBER', 'GRID', 'CQ ZONE', 'ITU ZONE', 'USER 1', 'USER 2',
        'USER 3', 'USER 4', 'USER 5', 'CUSTOM');
+
+function LogLevelSpelling(const aLevel: tLogLevels): string;
+begin
+   Result := LOG_LEVEL_SPELLINGS[aLevel];
+end;
 
 initialization
    (* THE VOCABULARY OF EVERY ENUMERATED SETTING THIS UNIT OWNS.

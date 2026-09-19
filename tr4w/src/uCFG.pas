@@ -221,10 +221,9 @@ const
       10);
    MULT_REPORT_MINIMUM_BANDS_ARRAY: array[0..02] of integer = (2, 3, 4);
    //FilterBandMap                         : array[0..02] of pchar = ('OFF','CW','Digital');
-   RECORDER_BITRATE_ARRAY: array[0..07] of integer = (8, 16, 24, 32, 40, 48, 56,
-      64 {, 80, 96, 112, 128});
-   RECORDER_SAMPLERATE_ARRAY: array[0..05] of integer = (08000, 11025, 12000,
-      16000, 22050, 44100);
+   (* RECORDER_BITRATE_ARRAY and RECORDER_SAMPLERATE_ARRAY went 2026-09-19:
+     the MP3 recorder's allow-lists, unreferenced since the recorder was
+     deleted and its last settings retired. *)
 
    CAT_BAUDRATE_ARRAY: array[0..07] of integer = (1200, 2400, 4800, 9600, 19200,
       38400, 57600, 115200); // [AGENT] Add 230400, 460800, and 921600 when working here.
@@ -825,7 +824,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..84] of string = (
+   RETIRED_COMMANDS: array[0..87] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -847,8 +846,16 @@ const
       'MODEM PORT',
       'MODEM PORT BAUD RATE',
       'MOUSE ENABLE',
+      (* WITHDRAWN 2026-09-19 (NY4I), the last three of the recorder deleted
+        on 2026-09-07. They were live in D7 -- CFGCA gave each a real
+        crAddress -- so NY4I's crAddress-nil test does not describe them:
+        they are retired because the FEATURE was removed here, and nothing
+        in this build read any of them. *)
+      'MP3 PATH',
+      'MP3 PLAYER',
       'MP3 RECORDER BITRATE',
       'MP3 RECORDER DURATION',
+      'MP3 RECORDER ENABLE',
       'MP3 RECORDER SAMPLERATE',
       'MULTI INFO MESSAGE',
       'MULTI PORT',
@@ -1479,13 +1486,22 @@ end;
   It is registered against the property PATH rather than the command name,
   because the path is what the settings model resolves and what a wrong
   hook index can no longer be. *)
-(* A..Z, EXACTLY AS ctAlphaChar DEMANDED, and nothing else -- see the
-  registration at the bottom of this unit for why this is a check rather
-  than a subrange type. An empty value is refused the way the old arm
-  refused it: CustomCMD[1] on an empty ShortString is #0, which is not a
-  letter. *)
+(* A..Z, EXACTLY AS ctAlphaChar DEMANDED -- OR EMPTY, WHICH CLEARS IT.
+  See the registration at the bottom of this unit for why this is a check
+  rather than a subrange type.
+
+  EMPTY IS ACCEPTED SINCE 2026-09-19, and it means #0, "no id": the value a
+  fresh install carries, and the one that makes MainUnit ask for an id
+  before the network window opens. Refusing it meant Preferences could set
+  an id and never take one away, where D7's Ctrl-J editor could. Anything
+  else -- a digit, a lower-case letter, two letters -- is still refused. *)
 function ComputerIdIsALetter(const aValue: string): boolean;
 begin
+   if aValue = '' then
+      begin
+      Result := True;
+      Exit;
+      end;
    Result := (Length(aValue) = 1) and (aValue[1] >= 'A') and (aValue[1] <= 'Z');
 end;
 

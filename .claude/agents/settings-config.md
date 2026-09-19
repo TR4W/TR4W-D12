@@ -65,6 +65,27 @@ that in both directions.
 - **The contest `.cfg` is deliberately exempt** from JSON: its parameters go to
   the **contest SQLite database**.
 - **Credentials live in the OS vault**, not in settings.
+- **ONE HOME FOR THE LOG LEVEL: `Settings.Log.DebugLevel`** (default DEBUG,
+  NY4I 2026-09-14). The radio store's `logging.level` is written only when an
+  operator CHOSE a level; absent or `''` means **no opinion**, and
+  `ApplyLoggingSettings` then leaves the setting alone. It used to default to
+  INFO and overwrite the setting at every start, so fresh installs ran and
+  saved INFO. `uTR4WConfigFile.StartupLogLevel` resolves the same precedence
+  (store level, then `settings.Log.DebugLevel`, then the constructor) so the
+  earliest log lines agree. A store default for a setting the settings object
+  owns is a second home — do not add one.
+- **An unset character setting is `#0` in the program and `""` everywhere
+  else** — in the JSON (stream hooks in `TR4WSettings.ToJSON`/`FromJSON`; the
+  old `"\u0000"` still reads as `#0`) and from `TryGetByCommand`. Empty is a
+  legal VALUE only for a char setting whose registered value check accepts it
+  (`COMPUTER ID`); a char setting with no check still refuses `''`.
+- **An unknown member in the `settings` section is ignored by the
+  de-streamer** — it walks the object's properties and looks each up in the
+  JSON — so deleting a property (or a whole group, as `Mp3` was) needs no
+  loader change; pin it with a test that loads the old shape anyway.
+- **Every group `TR4WSettings.Create` builds must be freed in `Destroy`.** The
+  two lists are kept in step by hand and drifted (eleven groups leaked, one
+  created twice); `uTestSettingsFreshInstall` measures the heap across builds.
 
 ## Nothing touches `Settings` before `LoadSettingsForStartup`
 
@@ -91,7 +112,10 @@ a first-run, a fresh and a configured station.
 **The rule for any future pre-load code:** read the file if you must, never
 assign `Settings` and never call `SaveSettings`. Known leftover:
 `uNewContest.PrepareForm` pre-fills the callsign from `Settings.My.MainCallsign`,
-which is always empty at that point, so the pre-fill never fires.
+which is always empty at that point, so the pre-fill never fires. The one
+deliberate exception is the early `DEBUG LOG LEVEL` assignment in `uProgramMain`
+(before the logger exists): it takes its value from `StartupLogLevel`, which
+reads the same file the load does, and saves nothing.
 
 ## Lints that gate you
 
@@ -102,8 +126,11 @@ of a global), `Lint-ConfigOwnership`, `Lint-OneConfigWriter`, `Lint-IniUsage`,
 
 Regenerate the inventory with `tools/settings_inventory.py` then
 `tools/settings_inventory_doc.py`. **KEEP THE NOTES COLUMN** — the rest of the
-table reproduces, NY4I's notes do not. If the generator and the program disagree,
-**the generator is wrong**.
+table reproduces, NY4I's notes do not. The doc generator now reads the existing
+file and carries each note forward by command (a note whose row has gone is
+listed, never dropped). If the generator and the program disagree, **the
+generator is wrong** — and it now checks that itself against the frozen
+vocabulary in `uTestSettingsModel` and refuses to write on a mismatch.
 
 ## Open
 

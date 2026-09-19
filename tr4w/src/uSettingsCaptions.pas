@@ -68,9 +68,6 @@ resourcestring
    RS_APPEARANCE_NOCAPTION                    = 'Main window has no title bar';
    RS_APPEARANCE_NOCOLUMNHEADER               = 'Hide the log column headings';
    RS_APPEARANCE_SHOWGRIDLINES                = 'Draw gridlines in the log';
-   RS_AUDIO_MP3_RECORDERENABLE                = 'Record each QSO to MP3';
-   RS_AUDIO_MP3_PATH                          = 'Folder for MP3 recordings';
-   RS_AUDIO_MP3_PLAYER                        = 'MP3 player program';
    RS_AUDIO_DVK_ENABLE                        = 'Use the digital voice keyer';
    RS_AUDIO_DVK_LOCALIZEDMESSAGES             = 'Use localized DVK message files';
    RS_AUDIO_DVK_PATH                          = 'Folder for DVK recordings';
@@ -267,8 +264,6 @@ resourcestring
    RS_BANDMAP_CTRLJ_BANDMAPSPLITMODE          = 'Band Map Split Mode';
    RS_NETWORK_CTRLJ_COMPUTERNAME              = 'Computer Name';
    RS_NETWORK_CTRLJ_NETSTATUSUPDATEINTERVAL   = 'Net Status Update Interval';
-   RS_VOICE_CTRLJ_MP3RECORDERBITRATE          = 'Mp3 Recorder Bitrate';
-   RS_VOICE_CTRLJ_MP3RECORDERDURATION         = 'Mp3 Recorder Duration';
    RS_ADVANCED_HANDLOGMODE                    = 'Hand Log Mode';
    RS_ADVANCED_NOLOG                          = 'No Log';
    RS_CLUSTER_CTRLJ_BROADCASTALLPACKETDATA    = 'Broadcast All Packet Data';

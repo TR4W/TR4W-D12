@@ -1351,21 +1351,24 @@ begin
    // earliest log lines a stale value, or the compiled default on a station with
    // no ini at all.
    //
-   // Default TRACE (was ERROR) when there is no stored level.  Radio-driver
-   // bring-up is diagnosed almost entirely from the TX/RX frame trace, and asking
-   // a volunteer tester to hand-edit a config before their first run is a poor
-   // trade for log volume.  Only affects a MISSING value: anyone who has set a
-   // level keeps it.
+   // NO STORED LEVEL MEANS THE SETTINGS OBJECT'S DEFAULT (2026-09-19). This
+   // used to substitute TRACE, a third default beside the store's INFO and the
+   // settings object's DEBUG -- so the earliest lines of a fresh install ran at
+   // TRACE and the rest of the run at INFO, and neither was the DEBUG NY4I
+   // chose on 2026-09-14. StartupLogLevel now resolves the same precedence the
+   // program applies moments later, and '' leaves TLogSettings.Create's value.
    sDebugLevel := StartupLogLevel(TR4WConfigFileName);
-   if sDebugLevel = '' then
-      begin
-      sDebugLevel := 'TRACE';
-      end;
    (* THE SPELLING MEETS THE ORDINAL IN ONE PLACE NOW. TrySetByCommand
      matches the registered vocabulary by position and refuses anything else,
      which is what this loop did by hand. A level the file does not spell
-     leaves the property at its default rather than half-assigned. *)
-   if not Settings.TrySetByCommand('DEBUG LOG LEVEL', sDebugLevel) then
+     leaves the property at its default rather than half-assigned.
+
+     AN ASSIGNMENT BEFORE LoadSettingsForStartup, and the one exception to
+     that rule this unit carries: the load assigns the same value from the
+     same file a few steps later, so nothing it writes here can survive
+     that disagrees with the file. Nothing is saved. *)
+   if (sDebugLevel <> '') and
+      (not Settings.TrySetByCommand('DEBUG LOG LEVEL', sDebugLevel)) then
       begin
       // No logger yet -- this runs before UpdateDebugLogLevel below.
       end;
