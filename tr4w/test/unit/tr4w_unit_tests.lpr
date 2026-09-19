@@ -331,6 +331,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogImport       in 'uTestLogImport.pas',
    uLogDatabase         in '..\..\src\domain\uLogDatabase.pas',
    uTestLogDatabase     in 'uTestLogDatabase.pas',
+   uLogBackup           in '..\..\src\domain\uLogBackup.pas',
+   uTestLogBackup       in 'uTestLogBackup.pas',
    uTestClusterTokens   in 'uTestClusterTokens.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
@@ -451,6 +453,7 @@ begin
    RegisterSuite(TTestWindowSnap.Create('WindowSnap'));
    RegisterSuite(TLogBinaryFileTests.Create('LogBinaryFile'));
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
+   RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));

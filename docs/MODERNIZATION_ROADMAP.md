@@ -126,10 +126,39 @@ remains is the proof:
       `/EXPORT`, `/RESCORE`, `/IMPORT` or `/IMPORTLOG` run opened a modal with
       no operator and **hung** the batch instead of failing it.
 
-- [ ] **Tests for `LogStoreBackup`'s orchestration** — still open, and still
-      not a quick win. Staging to `.new`, `StagedBackupIsSound` rejecting a
-      corrupt snapshot, `.bak` displacement, publish-by-rename, cleanup on
-      exception. **Nothing in `test/` references it.**
+- [x] **Tests for `LogStoreBackup`'s orchestration — DONE 2026-09-18** (NY4I
+      approved the leaf extraction). The order of the file operations moved
+      verbatim to `src/domain/uLogBackup.pas` (`TLogBackup.Run`, plus
+      `StagedBackupIsSound`); the two things that need the live log —
+      *is it open* and *write a snapshot* — are two virtuals, and
+      `LogStoreBackup` is a ten-line caller through a subclass that answers
+      them from `GDatabase`. `test/unit/uTestLogBackup.pas`: **15 tests, 63
+      checks**, real files in a temp directory and a real SQLite snapshot on
+      the happy path — staging to `.new`, a corrupt snapshot rejected with the
+      prior backup and `.bak` untouched, `.bak` displacement (and an older
+      `.bak` KEPT when there is nothing to displace), publish-by-rename, no
+      stray `.new` after a snapshot or a verifier raises, and the one failure
+      that deliberately KEEPS `.new` (a failed publish rename), with every
+      report sentence pinned exactly. Two mutants — skip the displacement,
+      skip deleting a rejected snapshot — each fail the suite.
+      Unit tests 26,973 → 27,036; narrowing unchanged at 1348; corpus 24/0/2.
+
+      **Two findings, reported and NOT changed** (an extraction must not
+      change behaviour; each is NY4I's call):
+      1. **Verification writes to what it verifies.** `StagedBackupIsSound`
+         opens through `TLogDatabase.Open`, whose `journal_mode = WAL` is a
+         write: header bytes 18, 19, 27 and 95 go 1→2. No page content
+         changes, but what is published is the snapshot converted to WAL mode.
+         **Unmeasured, reasoned only:** a crash mid-verify could leave a
+         `.new-wal`, and the next run deletes `.new` (not its `-wal`) and
+         re-creates it — which would pair a WAL with a database it does not
+         belong to. Worth a test before anyone relies on either answer.
+      2. **A failed `.bak` displacement is ignored.** `RenameFile(dest, .bak)`
+         is unchecked, after `.bak` has already been deleted. On Windows the
+         publish rename then fails too (`MoveFileW` will not overwrite), so the
+         older `.bak` is lost and the report says only that the rename to the
+         destination failed. On Unix `rename(2)` replaces, so the publish
+         succeeds and the previous backup is gone with no `.bak` at all.
 
       Adding `uLogStore` to the unit-test `.lpr` does not work: seven of its
       implementation dependencies are absent from that program — `uCFG`,
@@ -247,7 +276,13 @@ empty loops in the routine survive compilation.
       deleted 2026-09-18.** The `logstuff` reference is **stale**: those lines
       are now a comment about the backup fix, so re-find the site before
       deciding anything.
-- [ ] Clear the 23 compiler-flagged Part-A sites.
+- [x] ~~Clear the 23 compiler-flagged Part-A sites.~~ **DONE 2026-09-18 — and
+      the 23 was never the population.** The item above already records that the
+      real count was 20; 14 were fixed 2026-09-17, three were the dead routines
+      deleted 2026-09-18, and the last three are the guarded ones. Measured from
+      the full build log on 2026-09-18: the only plain-type uninitialised-local
+      warnings left in our own code are exactly those three. This box stayed
+      open only because the line was never updated when its siblings closed.
 
 ### 3.5 ~~Unblock the x64 binary~~ — DONE, verified 2026-09-17
 
@@ -280,14 +315,26 @@ remains is genuinely three things:
 1. ~~A ruling on the `logdupe` empty loops (§3.4), and the fix.~~ **DONE
    2026-09-17** — the dead feature is deleted; every oracle green and narrowing
    conversions fell 1355 → 1351.
-2. `LogStoreBackup` under test — the one careful, load-bearing routine in the
-   durability path with no coverage at all.
+2. ~~`LogStoreBackup` under test — the one careful, load-bearing routine in the
+   durability path with no coverage at all.~~ **DONE 2026-09-18** — extracted
+   to `uLogBackup`, 15 tests, and two reported findings (§3.1).
 3. ~~The x64 binary **launched**, not merely linked.~~ **DONE 2026-09-17** —
    runs headless, and matches i386 exactly on a 1,316-QSO import. The GUI on
    64-bit remains unrun.
 
-So week 1 closes on **one** item: `LogStoreBackup` under test. That is not a
-quick win and should not be forced — see the note in §3.1.
+~~So week 1 closes on **one** item: `LogStoreBackup` under test.~~ **Week 1's
+exit is met (2026-09-18).** The open boxes left in §3.1 and §3.4 are not exit
+items.
+
+**Carried forward from week 1 — open, not forgotten:**
+
+| item | whose move |
+|---|---|
+| Fault-injection tests for the QSO acknowledgement contract (§3.1) | `log-database` agent — next, now that `uLogBackup` is the pattern |
+| Whether the build should use `-O` (§3.4) | **NY4I's decision** |
+| The `logstuff` dead-or-fix site — its line reference is stale (§3.4) | re-find first, then NY4I's decision |
+| Whether `StagedBackupIsSound` may convert the snapshot to WAL (§3.1) | **NY4I's decision** |
+| Whether a failed `.bak` displacement should stop the publish (§3.1) | **NY4I's decision** |
 
 **THE LESSON IS THE ONE THIS FILE OPENS WITH.** §0 says re-measure before
 citing, and this phase was assembled without doing that. A roadmap is a

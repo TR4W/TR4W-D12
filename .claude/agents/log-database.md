@@ -11,6 +11,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | | |
 |---|---|
 | database + pragmas + integrity | `tr4w/src/domain/uLogDatabase.pas` |
+| backup orchestration (stage, verify, `.bak`, publish) | `tr4w/src/domain/uLogBackup.pas` — `LogStoreBackup` is a thin caller; tests in `test/unit/uTestLogBackup.pas` |
 | schema | `tr4w/src/domain/uLogSchema.pas` |
 | repository | `tr4w/src/uLogRepository.pas` |
 | source selection (default `lsDatabase`) | `tr4w/src/uLogSource.pas` |
@@ -51,6 +52,16 @@ And `faReadOnly` binds to `db.TFieldAttribute` because sqldb pulls `db` after
 `FileSetAttr` is **Windows-only**; tests that mark a file read-only need
 `FpChmod` under `{$IFDEF UNIX}`.
 
+**`TLogDatabase.Open` WRITES.** `ApplyPragmas` sets `journal_mode = WAL` (and
+`MigrateSchema` may run), so anything that "only opens to check" changes the
+file. Measured 2026-09-18 on a backup snapshot: header bytes 18, 19, 27 and 95
+go 1 to 2 (rollback journal to WAL) during `StagedBackupIsSound`; no page
+content changes. A snapshot's bytes are therefore NOT the published bytes.
+
+**`SysUtils.RenameFile` differs by platform:** `MoveFileW` on Windows refuses an
+existing target; `rename(2)` on Unix replaces it. A directory at the target
+fails on both, which is the portable way to make a publish rename fail in a test.
+
 ## Oracles
 
 ```powershell
@@ -73,8 +84,11 @@ not a link error.
 
 ## Open
 
-`LogStoreBackup` orchestration tests are owed — extracting a leaf unit for them is
-NY4I's call, not yours to assume.
+~~`LogStoreBackup` orchestration tests are owed~~ — **done 2026-09-18** (NY4I
+approved the leaf extraction): `uLogBackup` + 15 tests. Still open, and NY4I's
+decision rather than yours: whether the verifier should stop converting the
+snapshot to WAL, and whether a failed `.bak` displacement should stop the publish.
+`uLogStore` itself is still not linkable by the test program.
 
 ## Coordinate with
 

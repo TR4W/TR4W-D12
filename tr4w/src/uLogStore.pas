@@ -221,6 +221,9 @@ uses
       return type. *)
    SysUtils, Classes, MainUnit, uLogDatabase, uLogImport,
    uLogBinaryFile,
+   (* TLogBackup -- the ORDER of a backup's file operations, which is a leaf so
+      the unit tests can hold it. LogStoreBackup supplies the live database. *)
+   uLogBackup,
    (* The canonical sent-exchange builder -- the same one the UDP broadcast
       uses, so the database and the broadcast cannot disagree. *)
    uExchangeBuilder,
@@ -1046,40 +1049,6 @@ begin
    end;
 end;
 
-(* Open the staged file on its OWN connection and ask SQLite whether it is
-  sound. A second connection is the point: verifying through the connection
-  that wrote it would prove far less, since that one already has the pages in
-  its own cache. *)
-function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;
-var
-   check: TLogDatabase;
-   verdict: TIntegrityResult;
-begin
-   Result := False;
-   aWhy   := '';
-   check  := TLogDatabase.Create;
-   try
-      try
-         check.Open(aPath);
-         verdict := check.CheckIntegrity;
-         Result  := verdict.Ok;
-         if not Result then
-            begin
-            aWhy := verdict.Report;
-            end;
-      except
-         on E: Exception do
-            begin
-            (* It would not even OPEN, which is the most important failure to
-              report plainly: the snapshot statement said it succeeded. *)
-            aWhy := E.Message;
-            end;
-      end;
-   finally
-      check.Free;
-   end;
-end;
-
 function LogStoreCheckIntegrity(out aReport: string): boolean;
 var
    verdict: TIntegrityResult;
@@ -1129,84 +1098,36 @@ begin
       end;
 end;
 
+(* THE LIVE LOG, AS A BACKUP SOURCE. Everything else about a backup -- the
+  staging, the verification, the .bak displacement, the publish-by-rename and
+  every report sentence -- is TLogBackup's, in uLogBackup, where the unit tests
+  hold it. This class only answers the two questions that need GDatabase. *)
+type
+   TLogStoreBackup = class(TLogBackup)
+   protected
+      function SourceIsReady: boolean; override;
+      procedure SnapshotTo(const aStaged: string); override;
+   end;
+
+function TLogStoreBackup.SourceIsReady: boolean;
+begin
+   Result := LogStoreEnsureOpen;
+end;
+
+procedure TLogStoreBackup.SnapshotTo(const aStaged: string);
+begin
+   GDatabase.SnapshotTo(aStaged);
+end;
+
 function LogStoreBackup(const aDestination: string; out aReport: string): boolean;
 var
-   staged: string;
-   previous: string;
-   why: string;
+   backup: TLogStoreBackup;
 begin
-   Result  := False;
-   aReport := '';
-
-   if Trim(aDestination) = '' then
-      begin
-      aReport := 'No backup file name is set. See BACKUP LOG FILE NAME.';
-      Exit;
-      end;
-
-   if not LogStoreEnsureOpen then
-      begin
-      aReport := 'The contest log could not be opened, so it was not backed up.';
-      Exit;
-      end;
-
-   staged   := aDestination + '.new';
-   previous := aDestination + '.bak';
-
+   backup := TLogStoreBackup.Create;
    try
-      (* A staged file left by an interrupted run would make SnapshotTo refuse,
-        and it is worth nothing -- the whole point of staging is that it is not
-        the backup until it verifies. *)
-      if SysUtils.FileExists(staged) then
-         begin
-         SysUtils.DeleteFile(staged);
-         end;
-
-      GDatabase.SnapshotTo(staged);
-
-      if not StagedBackupIsSound(staged, why) then
-         begin
-         SysUtils.DeleteFile(staged);
-         aReport := SysUtils.Format('The backup of %s failed its integrity check and '
-                           + 'was discarded: %s', [aDestination, why]);
-         Exit;
-         end;
-
-      (* PUBLISH. The previous backup is displaced rather than deleted, so a
-        machine that dies between these two renames still has one good copy
-        under one of the two names. *)
-      if SysUtils.FileExists(aDestination) then
-         begin
-         if SysUtils.FileExists(previous) then
-            begin
-            SysUtils.DeleteFile(previous);
-            end;
-         SysUtils.RenameFile(aDestination, previous);
-         end;
-
-      if not SysUtils.RenameFile(staged, aDestination) then
-         begin
-         aReport := SysUtils.Format('The backup was written and verified but could not '
-                           + 'be renamed to %s. It is at %s.',
-                           [aDestination, staged]);
-         Exit;
-         end;
-
-      aReport := SysUtils.Format('Log backed up to %s.', [aDestination]);
-      Result  := True;
-   except
-      on E: Exception do
-         begin
-         (* NOT Disable. A backup that fails says nothing about whether the log
-           itself is writable, and switching the store off here would turn a
-           full backup volume into a contest that cannot log. *)
-         if SysUtils.FileExists(staged) then
-            begin
-            SysUtils.DeleteFile(staged);
-            end;
-         aReport := SysUtils.Format('The backup to %s failed: %s',
-                           [aDestination, E.Message]);
-         end;
+      Result := backup.Run(aDestination, aReport);
+   finally
+      backup.Free;
    end;
 end;
 

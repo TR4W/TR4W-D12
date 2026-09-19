@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="406">
+    <Units Count="407">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1789,6 +1789,10 @@
         <Filename Value="src/domain/uLogNote.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit405>
+      <Unit406>
+        <Filename Value="src/domain/uLogBackup.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit406>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
