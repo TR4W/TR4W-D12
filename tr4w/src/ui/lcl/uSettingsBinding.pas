@@ -70,6 +70,11 @@ type
       FCheck: TCheckBox;
       FEdit: TEdit;
       FCombo: TComboBox;
+      { WHAT EACH COMBO ITEM MEANS, index for index with its Items. The items
+        are the setting's CaptionForValue text; these are the values, and a
+        value is what Save sends. Identical for every setting that does not
+        caption its values, which is all but the display language. }
+      FValues: TArray<string>;
 
       { WHAT THE CONTROL SHOWED WHEN THE PAGE LOADED, in the same spelling Save
         would send.  Empty FLoadedValid means "never loaded", and then Save
@@ -146,7 +151,7 @@ var
    s: TSettingBase;
    allowed: TArray<string>;
    v: string;
-   i: integer;
+   i, j: integer;
 begin
    s := FindSetting(FKey);
    if s = nil then
@@ -201,18 +206,29 @@ begin
       // BeginUpdate/EndUpdate live on the ITEMS in the LCL, not on the combo:
       // FMX's TComboBox is a list control that owns its items, the LCL's wraps
       // a TStrings.  Same guarantee -- one repaint, not one per item.
+      FValues := allowed;
       FCombo.Items.BeginUpdate;
       try
          FCombo.Items.Clear;
          for v in allowed do
             begin
-            FCombo.Items.Add(v);
+            FCombo.Items.Add(s.CaptionForValue(v));
             end;
       finally
          FCombo.Items.EndUpdate;
       end;
 
-      i := FCombo.Items.IndexOf(Trim(s.AsText));
+      (* BY VALUE, NOT BY ITEM TEXT: the item is a caption. Case-insensitive,
+        as Items.IndexOf was. *)
+      i := -1;
+      for j := 0 to High(FValues) do
+         begin
+         if UnicodeSameText(Trim(FValues[j]), Trim(s.AsText)) then
+            begin
+            i := j;
+            Break;
+            end;
+         end;
       if (i < 0) and (Length(allowed) > 0) then
          begin
          // The stored value is not one this build offers.  Selecting nothing
@@ -248,9 +264,10 @@ begin
       Result := FEdit.Text;
       Exit;
       end;
-   if (FCombo <> nil) and (FCombo.ItemIndex >= 0) then
+   if (FCombo <> nil) and (FCombo.ItemIndex >= 0) and
+      (FCombo.ItemIndex <= High(FValues)) then
       begin
-      Result := FCombo.Items[FCombo.ItemIndex];
+      Result := FValues[FCombo.ItemIndex];
       end;
 end;
 
@@ -323,9 +340,9 @@ begin
       begin
       // Nothing selected is not a value.  Writing '' would refuse or, worse,
       // clear a setting the operator never touched.
-      if FCombo.ItemIndex >= 0 then
+      if (FCombo.ItemIndex >= 0) and (FCombo.ItemIndex <= High(FValues)) then
          begin
-         Result := s.TrySetText(FCombo.Items[FCombo.ItemIndex], aError);
+         Result := s.TrySetText(FValues[FCombo.ItemIndex], aError);
          end;
       end;
 end;

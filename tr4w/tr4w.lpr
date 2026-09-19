@@ -266,6 +266,7 @@ uContestFileKind in 'src\domain\uContestFileKind.pas',
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist in 'src\ui\lcl\uLCLCoexist.pas',
   uLCLTranslate in 'src\ui\lcl\uLCLTranslate.pas',
+  uUILanguage in 'src\uUILanguage.pas',
   uEmbeddedTranslations in 'src\ui\lcl\uEmbeddedTranslations.pas',
   uLCLFormHelpers in 'src\ui\lcl\uLCLFormHelpers.pas',
   uSettingsBinding in 'src\ui\lcl\uSettingsBinding.pas',

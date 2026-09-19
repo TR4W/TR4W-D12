@@ -205,6 +205,22 @@ function LoadConfig(const aFileName: string;
 //   3. '' -- neither: the caller leaves the settings object's own default.
 function StartupLogLevel(const aFileName: string): string;
 
+(* THE DISPLAY LANGUAGE AS STORED -- settings.Display.Language -- or '' when
+  the file, the section or the member is absent, or the file is unreadable.
+  '' is also what "follow the operating system" is stored as, and the caller
+  cannot and need not tell those apart.
+
+  FOR THE STARTUP BOOTSTRAP ONLY, for the same reason as StartupLogLevel: the
+  catalogue has to be in force before the first form streams, and that is
+  before LoadSettingsForStartup. So this READS THE FILE and nothing else -- it
+  never assigns Settings and never saves, which is the rule for any code that
+  runs before the load (settings-config agent: "Nothing touches Settings
+  before LoadSettingsForStartup").
+
+  NOT VALIDATED HERE. Whether this build carries a catalogue for the code is
+  uEmbeddedTranslations' question, and it reports a code it cannot load. *)
+function StartupUILanguage(const aFileName: string): string;
+
 function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcastConfig;
 
 implementation
@@ -611,13 +627,58 @@ begin
    end;
 end;
 
+(* ONE MEMBER OF ONE GROUP OF THE SETTINGS SECTION -- settings.<group>.<name>
+  -- or nil when any step is missing. The walk both startup readers make; the
+  document stays owned by the caller. *)
+function StoredSettingValue(const aRoot: TJSONObject;
+                            const aGroup, aName: string): TJSONValue;
+var
+   section: TJSONValue;
+   group: TJSONValue;
+begin
+   Result := nil;
+   section := aRoot.GetValue(JSONKEY_SETTINGS);
+   if not (section is TJSONObject) then
+      begin
+      Exit;
+      end;
+   group := TJSONObject(section).GetValue(aGroup);
+   if not (group is TJSONObject) then
+      begin
+      Exit;
+      end;
+   Result := TJSONObject(group).GetValue(aName);
+end;
+
+function StartupUILanguage(const aFileName: string): string;
+var
+   root: TJSONObject;
+   value: TJSONValue;
+begin
+   Result := '';
+
+   (* ReadRootOrEmpty answers an empty document for an absent, blank or
+     unparseable file -- so all three fall through to '' here, and the
+     program goes on to ask the operating system. It is the reader
+     StartupLogLevel already ran on this same file moments earlier, so
+     nothing about the file's handling is new. *)
+   root := ReadRootOrEmpty(aFileName);
+   try
+      value := StoredSettingValue(root, 'Display', 'Language');
+      if value <> nil then
+         begin
+         Result := Trim(value.Value);
+         end;
+   finally
+      root.Free;
+   end;
+end;
+
 function StartupLogLevel(const aFileName: string): string;
 var
    root: TJSONObject;
    logging: TJSONValue;
    level: TJSONValue;
-   section: TJSONValue;
-   group: TJSONValue;
    ordinal: integer;
 begin
    Result := '';
@@ -645,17 +706,7 @@ begin
          end;
 
       // 2. The settings object's stored value.
-      section := root.GetValue(JSONKEY_SETTINGS);
-      if not (section is TJSONObject) then
-         begin
-         Exit;
-         end;
-      group := TJSONObject(section).GetValue('Log');
-      if not (group is TJSONObject) then
-         begin
-         Exit;
-         end;
-      level := TJSONObject(group).GetValue('DebugLevel');
+      level := StoredSettingValue(root, 'Log', 'DebugLevel');
       if level = nil then
          begin
          Exit;

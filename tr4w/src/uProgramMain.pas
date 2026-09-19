@@ -850,7 +850,8 @@ begin
       'TR4W ' + TR4W_CURRENTVERSION_NUMBER + sLineBreak + sLineBreak +
       'Usage:  tr4w.exe [<contest>.cfg] [options]' + sLineBreak + sLineBreak +
       '  <contest>.cfg      open this contest configuration' + sLineBreak +
-      '  --lang <code>      run in this language' + sLineBreak +
+      '  --lang <code>      run in this language (overrides the Language' + sLineBreak +
+      '                     setting in Preferences for this run)' + sLineBreak +
       '  --lang=<code>      the same' + sLineBreak +
       '  --settings <path>  read and write settings at this path' + sLineBreak +
       '  --settings=<path>  the same' + sLineBreak +
@@ -1417,11 +1418,11 @@ begin
     ForceUpdate is False: no form exists yet, and the LCL's own note says to
     pass False when calling before the interface is up.
 
-    LANGUAGE SELECTION IS NOT FINISHED. SetDefaultLang with an empty Lang
-    honours a --lang switch and then the OS locale. TR4W should choose from its
-    own setting instead -- an operator running a Spanish Windows does not
-    necessarily want a Spanish contest log -- so this is the seam that setting
-    plugs into, not the final answer.
+    THE LANGUAGE SETTING IS READ HERE, FROM THE FILE (2026-09-19). The
+    precedence is a --lang switch, the Language setting, the OS, English --
+    see uUILanguage. This runs BEFORE LoadSettingsForStartup, so the setting
+    is read by StartupUILanguage straight from tr4w.json: nothing here
+    assigns Settings or saves, which is the rule for pre-load code.
 
     IT IS LOGGED because "it ran" and "it took effect" are different claims and
     only one is visible. An absent .po is not an error, English being the
@@ -1444,7 +1445,7 @@ begin
     It reports what it did in every case, including the absent one: English is
     the compiled-in default, so a missing or misnamed catalogue is otherwise
     indistinguishable from a working English build. }
-  loadedLang := LoadEmbeddedTranslation('');
+  loadedLang := LoadEmbeddedTranslation(StartupUILanguage(TR4WConfigFileName));
   if loadedLang = '' then
      begin
      logger.Info('UI language: none loaded; using the compiled-in English');

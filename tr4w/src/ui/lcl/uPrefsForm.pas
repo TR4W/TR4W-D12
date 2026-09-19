@@ -503,6 +503,12 @@ type
       chkNoCaption: TCheckBox;
       chkNoColumnHeader: TCheckBox;
       chkShowGridlines: TCheckBox;
+      (* THE DISPLAY LANGUAGE. Bound like any other setting; its items are
+        captions ('Deutsch (de)') over catalogue codes -- see
+        TSettingBase.ValueCaption. *)
+      lblLanguage: TLabel;
+      cbxLanguage: TComboBox;
+      lblLanguageHint: TLabel;
       lblAppearMenuNote: TLabel;
       layAudio: TPanel;
       lblAudioHeading: TLabel;
@@ -5318,6 +5324,7 @@ begin
    FBindings.Bind(chkNoCaption,          'appearance.noCaption');
    FBindings.Bind(chkNoColumnHeader,     'appearance.noColumnHeader');
    FBindings.Bind(chkShowGridlines,      'appearance.showGridlines');
+   FBindings.Bind(cbxLanguage,           'appearance.language');
 
    FBindings.Bind(chkDVKEnable,          'audio.dvk.enable');
    FBindings.Bind(chkDVKLocalizedMessages,

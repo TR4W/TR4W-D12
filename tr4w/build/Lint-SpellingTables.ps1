@@ -72,7 +72,12 @@ $known = @{
 # `var` the registry FILLS from the enum -- the shape this whole class of defect
 # is supposed to end up as -- so there is nothing here to check and its absence
 # is the good outcome.
-$generated = @('RadioTypeTokensA')
+#
+# LanguageVocabulary (uEmbeddedTranslations, 2026-09-19) is the same shape: a
+# function that builds the display language's values from the RCDATA names of
+# the catalogues the binary carries. Its leading '' is "System default" on a
+# STRING setting -- a value, not a spelling that selects an enum ordinal.
+$generated = @('RadioTypeTokensA', 'LanguageVocabulary')
 
 # The floor. A lint that resolves nothing and reports success is worse than no
 # lint, and this one reaches its subjects through two layers of parsing, so it

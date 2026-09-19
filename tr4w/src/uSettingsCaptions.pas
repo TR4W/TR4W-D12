@@ -68,6 +68,10 @@ resourcestring
    RS_APPEARANCE_NOCAPTION                    = 'Main window has no title bar';
    RS_APPEARANCE_NOCOLUMNHEADER               = 'Hide the log column headings';
    RS_APPEARANCE_SHOWGRIDLINES                = 'Draw gridlines in the log';
+   RS_APPEARANCE_LANGUAGE                     = 'Language';
+   (* Not a label: the first item of the Language drop-down, meaning "store
+     nothing and follow the operating system". *)
+   RS_APPEARANCE_LANGUAGE_SYSTEM              = 'System default';
    RS_AUDIO_DVK_ENABLE                        = 'Use the digital voice keyer';
    RS_AUDIO_DVK_LOCALIZEDMESSAGES             = 'Use localized DVK message files';
    RS_AUDIO_DVK_PATH                          = 'Folder for DVK recordings';

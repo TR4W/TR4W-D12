@@ -3117,6 +3117,39 @@ type
    end;
 
    (*
+     WHAT THE OPERATOR READS -- the display language.
+
+     NEW 2026-09-19 (roadmap 6.3), NOT MIGRATED: there was no CFGCA row. The
+     UI language was a --lang switch or the OS locale and nothing else, and a
+     Mac has no practical command line -- an app started from Finder or the
+     Dock gets no arguments -- so there was no way to choose.
+
+     DISPLAY LANGUAGE derives with no alias. Station-scoped: it is how this
+     operator reads the screen, which no contest decides, so it lives in
+     settings\tr4w.json. Not shared with multi-op peers either -- each
+     position may read a different language.
+
+     ITS VALUE IS A CATALOGUE CODE ('de', 'pt_br'), and EMPTY MEANS "FOLLOW
+     THE OPERATING SYSTEM". The vocabulary is registered by
+     uEmbeddedTranslations from the catalogues the binary actually carries,
+     so a hand-typed list cannot drift from what is loadable.
+
+     READ BEFORE THIS OBJECT IS LOADED. The language has to be in force
+     before the first form streams, which is before LoadSettingsForStartup;
+     uTR4WConfigFile.StartupUILanguage reads it straight from the file, the
+     way StartupLogLevel reads the log level. So a change takes effect at
+     the NEXT start, and Preferences says so.
+   *)
+   TDisplaySettings = class(TSettingsGroup)
+   private
+      FLanguage: string;
+   public
+      constructor Create;
+   published
+      property Language: string read FLanguage write FLanguage;
+   end;
+
+   (*
      THE STATIONS WINDOW -- the multi-op list of who is working whom.
 
      One setting, and the path derives its command exactly:
@@ -3436,6 +3469,7 @@ type
       FQtc: TQtcSettings;
       FAutoDupe: TAutoDupeSettings;
       FFont: TFontSettings;
+      FDisplay: TDisplaySettings;
       FStations: TStationsSettings;
       FRemainingMults: TRemainingMultsSettings;
       FInitialExchange: TInitialExchangeSettings;
@@ -3627,6 +3661,7 @@ type
       property Qtc: TQtcSettings read FQtc;
       property AutoDupe: TAutoDupeSettings read FAutoDupe;
       property Font: TFontSettings read FFont;
+      property Display: TDisplaySettings read FDisplay;
       property Stations: TStationsSettings read FStations;
       property RemainingMults: TRemainingMultsSettings read FRemainingMults;
       property InitialExchange: TInitialExchangeSettings read FInitialExchange;
@@ -4296,6 +4331,13 @@ begin
    inherited Create;
    // ReverseInitialex was declared = False in VC.pas.
    FReverse := False;
+end;
+
+constructor TDisplaySettings.Create;
+begin
+   inherited Create;
+   // Empty: follow the operating system, which is what TR4W did before.
+   FLanguage := '';
 end;
 
 constructor TQzbSettings.Create;
@@ -5012,6 +5054,7 @@ begin
    FAutoDupe       := TAutoDupeSettings.Create;
    FContest        := TContestSettings.Create;
    FFont            := TFontSettings.Create;
+   FDisplay         := TDisplaySettings.Create;
    FStations        := TStationsSettings.Create;
    FRemainingMults  := TRemainingMultsSettings.Create;
    FInitialExchange := TInitialExchangeSettings.Create;
@@ -5065,6 +5108,7 @@ begin
    FInitialExchange.Free;
    FRemainingMults.Free;
    FStations.Free;
+   FDisplay.Free;
    FFont.Free;
    FMessage.Free;
    FQsx.Free;

@@ -123,6 +123,9 @@ type
      below. }
    TSettingApplyProc = procedure of object;
 
+   (* A stored value's caption for display. See TSettingBase.ValueCaption. *)
+   TSettingValueCaption = function(const aValue: string): string;
+
    TBoolGetter   = function: boolean of object;
    TBoolSetter   = procedure (aValue: boolean) of object;
    TIntGetter    = function: integer of object;
@@ -179,6 +182,7 @@ type
       FOnApply: TSettingApplyProc;
       { A cell this setting created for itself, or nil.  See TBoolCell. }
       FOwnedCell: TObject;
+      FValueCaption: TSettingValueCaption;
    public
       constructor Create(const aKey, aCaption: string);
       destructor Destroy; override;
@@ -283,6 +287,17 @@ type
         and it should, because CheckCommand is still the applier. This makes
         the FACT expressible in the registry so the applier can move without
         losing it -- which is the whole point of a prerequisite. }
+
+      (* WHAT A DROP-DOWN SHOWS FOR ONE OF AllowedValues -- the stored value
+        itself unless ValueCaption says otherwise.
+
+        For a setting whose stored value is a CODE the operator should not
+        have to read: the display language stores 'de' and '' and shows
+        'Deutsch (de)' and 'System default'. The binding keeps the values and
+        shows the captions, so what is SAVED is still one of AllowedValues. *)
+      function CaptionForValue(const aValue: string): string;
+      property ValueCaption: TSettingValueCaption
+         read FValueCaption write FValueCaption;
    end;
 
    TBoolSetting = class(TSettingBase)
@@ -510,6 +525,18 @@ begin
    // Not enumerated.  See the declaration: empty means "no fixed list", which a
    // UI reads as "use a text box", not as "refuses everything".
    Result := nil;
+end;
+
+function TSettingBase.CaptionForValue(const aValue: string): string;
+begin
+   if Assigned(FValueCaption) then
+      begin
+      Result := FValueCaption(aValue);
+      end
+   else
+      begin
+      Result := aValue;
+      end;
 end;
 
 { ------------------------------------------------------ self-storing ------ }

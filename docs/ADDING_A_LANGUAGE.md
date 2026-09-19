@@ -88,9 +88,10 @@ would look for different files.
 tr4w.exe mycontest.cfg --lang es
 ```
 
-`--lang` is honoured by the LCL itself, then the OS locale. **A TR4W setting should
-override both and does not exist yet** — an operator on Spanish Windows does not
-necessarily want a Spanish contest log.
+The precedence is `--lang`, then the **Language** setting (Preferences › Appearance,
+`DISPLAY LANGUAGE`), then the OS, then English. A new language shows up in that
+drop-down on its own: the list is read from the catalogues embedded in the binary, so
+there is nothing to add by hand.
 
 Check the log. It says which it loaded, and says so when it loaded nothing:
 

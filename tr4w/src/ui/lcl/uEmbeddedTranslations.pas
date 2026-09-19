@@ -43,11 +43,29 @@ unit uEmbeddedTranslations;
 
 interface
 
-{ Load the UI language and return what was loaded, or '' for none.
+(* Load the UI language and return what was loaded, or '' for none.
 
-  aLang is a two-letter code ('es'); empty means ask the LCL, which honours a
-  --lang switch and then the OS locale. }
-function LoadEmbeddedTranslation(const aLang: string): string;
+  aSetting is the Language setting as stored in tr4w.json -- read by
+  uTR4WConfigFile.StartupUILanguage, because this runs before the settings
+  object is loaded. '' means "follow the operating system".
+
+  THE PRECEDENCE is uUILanguage.ChooseUILanguage -- in order: a --lang
+  switch, aSetting, the OS, and the compiled-in English. *)
+function LoadEmbeddedTranslation(const aSetting: string): string;
+
+(* Is there a catalogue for this code -- embedded, or a file beside the exe
+  that would override one? 'en' always is: it is the compiled-in language. *)
+function IsUILanguageAvailable(const aCode: string): boolean;
+
+(* WHAT PREFERENCES SHOWS FOR A LANGUAGE CODE: the language in its OWN name,
+  as its catalogue spells it, with the code beside it -- 'Deutsch (de)'. The
+  code alone when the catalogue carries no reviewed name, and a translated
+  "System default" for ''.
+
+  The name is TC_TRANSLATION_LANGUAGE in that language's catalogue, which is
+  what the About box credits. Read once per run and cached: it costs one
+  parse of each catalogue, and Preferences can open many times. *)
+function UILanguageCaption(const aCode: string): string;
 
 { The catalogue actually in force, or '' for none -- which is what an English
   run reports, since English loads no catalogue.
@@ -94,6 +112,7 @@ esh.inc --
      languages/<lang>/tr4w.po beside the binary wins over the embedded copy
      -- so the failure degrades to the file design rather than to English. *)
    SysUtils, Classes,
+   Generics.Collections,   // TDictionary -- the cached language names
 {$IFDEF WINDOWS}
    (* FOR RT_RCDATA ALONE, and only on Windows. The RTL declares the resource
      FUNCTIONS for every target, but it declares the RT_* constants under
@@ -102,7 +121,9 @@ esh.inc --
      the rest of the API is the RTL's on both. *)
    Windows,
 {$ENDIF}
-   gettext,           // GetLanguageIDs -- the locale, the platform's own way
+   uUILanguage,       // the precedence, the switch and the OS language
+   uSettingsModel,    // RegisterSettingAllowedValues -- see initialization
+   uSettingsCaptions, // RS_APPEARANCE_LANGUAGE_SYSTEM
    Translations,      // TPOFile, TranslateResourceStrings
    LResources,        // LRSTranslator -- the hook the LFM reader consults
    LCLTranslator,     // TPOTranslator, SetDefaultLang
@@ -111,105 +132,97 @@ esh.inc --
   utils_text,
    uAppPaths;
 
-{ The two-letter code the LCL would pick, without loading anything.
+(* THE CODE TO LOAD, AND A SENTENCE SAYING WHERE IT CAME FROM.
 
-  SetDefaultLang does this internally and then goes looking for files; there is
-  no exported way to ask it for the code alone, so the switch is read here and
-  the OS locale is the fallback. Kept deliberately small: language SELECTION is
-  still an open question (a TR4W setting should override both -- an operator on
-  Spanish Windows does not necessarily want a Spanish contest log) and this is
-  the seam that setting plugs into. }
-function ResolveLang(const aLang: string; out aSource: string): string;
+  The rule is uUILanguage.ChooseUILanguage; this gathers what each source
+  offers and words the answer for the log.
+
+  WHERE the code came from is reported alongside WHICH it was. "Spanish did
+  not appear" has several different causes -- the switch was not read, the
+  setting named a language this build lacks, or the code was right and the
+  catalogue did nothing -- and without the source in the log they all look
+  identical from the outside. *)
+function ResolveLang(const aSetting: string; out aSource: string): string;
 var
-   i:   integer;
-   arg: string;
-   { GetLanguageIDs yields the full id and a fallback -- 'es_ES' and 'es' for a
-     Spanish (Spain) machine. The catalogues are keyed on the two-letter code,
-     so the fallback is normally the one wanted.
-
-     AnsiString EXPLICITLY, and the compiler is what says so: gettext is RTL
-     code compiled with 8-bit strings and takes these by VAR, while string in
-     this unit is UnicodeString (tr4w.inc). A var parameter has to match
-     exactly -- no conversion is possible through one. }
-   fullId, shortId: AnsiString;
+   switchCode, switchName: string;
+   systemCode, systemName: string;
+   source: TUILanguageSource;
+   refused: boolean;
 begin
-   { WHERE the code came from is reported alongside WHICH it was. "Spanish did
-     not appear" has two completely different causes -- the switch was not read,
-     or it was read and the catalogue did nothing -- and without the source in
-     the log the two look identical from the outside. }
-   if aLang <> '' then
+   switchCode := UILanguageFromCommandLine(switchName);
+   (* The OS is asked only when it can matter, so a run with a switch or a
+     setting does not log a locale it never used. *)
+   systemCode := '';
+   systemName := '';
+   if (switchCode = '') and
+      ((Trim(aSetting) = '') or (not IsUILanguageAvailable(Trim(aSetting)))) then
       begin
-      aSource := 'the caller';
-      Result  := LowerCase(aLang);
-      Exit;
+      systemCode := SystemUILanguage(systemName);
       end;
 
-   for i := 1 to ParamCount do
+   Result := ChooseUILanguage(switchCode, aSetting, systemCode,
+                              @IsUILanguageAvailable, source, refused);
+
+   (* REPORTED, NOT SILENT: a stored language this build cannot load. The
+     run falls back to the OS, which is better than English, but the operator
+     chose something and is not getting it, so the log says why. *)
+   if refused then
       begin
-      arg := ParamStr(i);
-      if (SameText(arg, '--lang') or SameText(arg, '-l')) and (i < ParamCount) then
-         begin
-         aSource := 'the ' + arg + ' command-line switch';
-         Result  := LowerCase(ParamStr(i + 1));
-         Exit;
-         end;
-      if SameText(Copy(arg, 1, 7), '--lang=') then
-         begin
-         aSource := 'the --lang= command-line switch';
-         Result  := LowerCase(Copy(arg, 8, MaxInt));
-         Exit;
-         end;
+      logger.Warn('UI language: the Language setting in tr4w.json says "' +
+                  Trim(aSetting) + '", and this build carries no catalogue ' +
+                  'for it (it has: ' + AvailableLanguages + '); ' +
+                  'following the operating system instead');
       end;
 
-   { FPC'S OWN, rather than a GetLocaleInfoA call and an AnsiChar buffer.
-     gettext.GetLanguageIDs reads the locale the way the platform states it --
-     GetLocaleInfo on Windows, the LC_ALL / LC_MESSAGES / LANG environment on
-     Unix -- so this line does not have to know which platform it is on, and
-     the Windows-only call and its buffer are gone. }
-   fullId  := '';
-   shortId := '';
-   GetLanguageIDs(fullId, shortId);
-
-   if shortId <> '' then
-      begin
-      aSource := 'the operating system locale (' + fullId + ')';
-      Result  := LowerCase(shortId);
-      end
-   else if fullId <> '' then
-      begin
-      // No fallback offered: take the language half of 'xx_YY' ourselves.
-      aSource := 'the operating system locale (' + fullId + ')';
-      Result  := LowerCase(Copy(fullId, 1, 2));
-      end
+   case source of
+      ulsSwitch:
+         begin
+         aSource := switchName;
+         end;
+      ulsSetting:
+         begin
+         aSource := UILanguageSourceName(ulsSetting);
+         end;
+      ulsSystem:
+         begin
+         aSource := systemName;
+         end;
    else
       begin
-      aSource := 'nothing -- no switch given and the locale could not be read';
-      Result  := '';
+      aSource := 'nothing -- no switch, no Language setting, and ' + systemName;
       end;
+   end;
 end;
 
 
 var
-   { THE CATALOGUE HAS TO OUTLIVE THE TRANSLATOR, and this variable is what
-     makes it. TPOTranslator does not copy the TPOFile -- it keeps the pointer
-     and dereferences it for every translatable property the LFM reader streams,
-     for as long as the program runs.
+   (* THE CATALOGUE BELONGS TO THE TRANSLATOR, AND TO NOTHING ELSE.
 
-     Freeing the catalogue once the hook was installed left that pointer
-     dangling, and the first form property to ask a question of it was
-     TR4WMainForm.Caption, which is the first thing CreateTR4WMainForm streams:
+     TPOTranslator does not copy the TPOFile -- it keeps the pointer and
+     dereferences it for every translatable property the LFM reader streams,
+     for as long as the program runs. So the catalogue must outlive the hook.
+     Freeing it once the hook was installed left that pointer dangling, and
+     the first form property to ask was TR4WMainForm.Caption:
 
        unhandled EReadError -- Error reading TR4WMainForm.Caption:
        Access violation
 
-     English never reached it, because LoadEmbeddedTranslation exits before
-     installing anything when the language is English. So the crash appeared
-     only under --lang, and looked like a translation-data problem rather than a
-     lifetime one. LCLTranslator.SetDefaultLang, which this replaced, keeps its
-     own TPOFile in a global for exactly this reason.
+     AND TPOTranslator.Destroy FREES IT (lcltranslator.pas: `FPOFile.Free`).
+     That is the other half, and missing it cost every translated run its
+     exit. A GActiveCatalogue global stood here until 2026-09-19 to keep the
+     catalogue alive, and was freed in finalization right after the
+     translator -- which had just freed the same object. The second Free ran
+     a destructor through a freed VMT, and every run in any language other
+     than English ended in an access violation inside FinalizeUnits, exit
+     217, with the crash address a fragment of whatever string had since
+     been allocated there ('s\de', 'rg>'). /EXPORT reported it as a crash;
+     it was measured on the 5.0.9 binary too, so it predates the Language
+     setting -- which would have made it reachable without a switch.
 
-     Released in finalization, as a PAIR and translator-first. }
-   GActiveCatalogue: TPOFile;
+     So there is ONE owner. ApplyCatalogue hands the catalogue to a new
+     TPOTranslator and keeps no reference; freeing LRSTranslator frees both.
+     English never reached any of this, because LoadEmbeddedTranslation
+     installs nothing for the compiled-in language. *)
    GActiveLang:      string;
 
 
@@ -235,19 +248,157 @@ begin
       end;
 end;
 
-function AvailableLanguages: string;
+(* The embedded codes, sorted -- the one enumeration both the usage text and
+  the Language setting's vocabulary are built from. *)
+function EmbeddedLanguageCodes: TArray<string>;
 var
    list: TStringList;
+   i: integer;
 begin
+   Result := nil;
    list := TStringList.Create;
    try
       list.Sorted := True;
       list.Duplicates := dupIgnore;
       EnumResourceNames(HInstance, RT_RCDATA, @EnumLangProc, PtrInt(list));
-      Result := Trim(StringReplace(list.Text, sLineBreak, ' ', [rfReplaceAll]));
+      SetLength(Result, list.Count);
+      for i := 0 to list.Count - 1 do
+         begin
+         Result[i] := list[i];
+         end;
    finally
       list.Free;
    end;
+end;
+
+function AvailableLanguages: string;
+var
+   code: string;
+begin
+   Result := '';
+   for code in EmbeddedLanguageCodes do
+      begin
+      if Result <> '' then
+         begin
+         Result := Result + ' ';
+         end;
+      Result := Result + code;
+      end;
+end;
+
+(* The file a catalogue dropped beside the exe would be read from. One
+  derivation, shared by the loader and the availability test, so the two
+  cannot disagree about where to look. *)
+function LanguageFilePath(const aCode: string): string;
+begin
+   Result := DataFilePath('languages\' + aCode + '\tr4w.po');
+end;
+
+function IsUILanguageAvailable(const aCode: string): boolean;
+var
+   code: string;
+   (* The resource name as bytes, for FindResource -- ASCII by construction. *)
+   resBytes: AnsiString;
+begin
+   code := LowerCase(Trim(aCode));
+   if code = '' then
+      begin
+      Result := False;
+      Exit;
+      end;
+   if code = 'en' then
+      begin
+      Result := True;
+      Exit;
+      end;
+   resBytes := AnsiString('TR4W_' + UpperCase(code));
+   Result := (FindResource(HInstance, PAnsiChar(resBytes), RT_RCDATA) <> 0) or
+             FileExists(LanguageFilePath(code));
+end;
+
+var
+   (* code -> name, filled on first use by UILanguageCaption and never again
+     -- see the interface comment. A dictionary of string rather than a
+     TStringList: the names are Greek, Cyrillic and CJK, and TStringList
+     holds AnsiString. Freed in finalization. *)
+   GLanguageNames: TDictionary<string, string> = nil;
+
+(* TC_TRANSLATION_LANGUAGE as one catalogue spells it, or ''. The identifier
+  is the resourcestring's unit-qualified name, which is the #: line
+  Make-LanguageRes keeps in the embedded copy. *)
+function CatalogueLanguageName(const aCode: string): string;
+var
+   rs: TResourceStream;
+   po: TPOFile;
+   item: TPOFileItem;
+   resBytes: AnsiString;
+begin
+   Result := '';
+   resBytes := AnsiString('TR4W_' + UpperCase(aCode));
+   if FindResource(HInstance, PAnsiChar(resBytes), RT_RCDATA) = 0 then
+      begin
+      Exit;
+      end;
+   try
+      (* resBytes, not a fresh string: the RTL's resource name is an
+        AnsiString, and the bytes are already built above. *)
+      rs := TResourceStream.Create(HInstance, resBytes, RT_RCDATA);
+      try
+         po := TPOFile.Create(rs, False);
+         try
+            item := po.FindPoItem('utr4wstrings.tc_translation_language');
+            if item <> nil then
+               begin
+               (* UTF-8 bytes in LazUtils' AnsiString; decoded explicitly
+                 rather than left to the code page of the moment. *)
+               Result := UTF8Decode(item.Translation);
+               end;
+         finally
+            po.Free;
+         end;
+      finally
+         rs.Free;
+      end;
+   except
+      on E: Exception do
+         begin
+         (* A caption is never worth a failure: the code alone still
+           identifies the language. *)
+         Result := '';
+         end;
+   end;
+end;
+
+function UILanguageCaption(const aCode: string): string;
+var
+   code: string;
+   name: string;
+begin
+   code := LowerCase(Trim(aCode));
+   if code = '' then
+      begin
+      Result := RS_APPEARANCE_LANGUAGE_SYSTEM;
+      Exit;
+      end;
+
+   if GLanguageNames = nil then
+      begin
+      GLanguageNames := TDictionary<string, string>.Create;
+      end;
+   if not GLanguageNames.TryGetValue(code, name) then
+      begin
+      name := CatalogueLanguageName(code);
+      GLanguageNames.Add(code, name);
+      end;
+
+   if name = '' then
+      begin
+      Result := code;
+      end
+   else
+      begin
+      Result := name + ' (' + code + ')';
+      end;
 end;
 
 procedure LoadLCLCatalogue(const aLang: string);
@@ -311,9 +462,9 @@ begin
 end;
 
 function ApplyCatalogue(po: TPOFile): boolean;
-{ TAKES OWNERSHIP of po, on every path. The caller must not free it: an earlier
-  version left ownership with the caller and that is the whole of the bug
-  described above. }
+{ TAKES OWNERSHIP of po. The caller must not free it, and neither may this
+  unit once it is installed: the TPOTranslator it is handed to frees it. See
+  the note on GActiveLang's var block. }
 begin
    // BOTH HALVES FROM ONE CATALOGUE, and the order does not matter: the first
    // rewrites the resource string table, the second installs the hook the LFM
@@ -325,22 +476,19 @@ begin
    // legitimate catalogue.
    Result := Translations.TranslateResourceStrings(po);
 
-   // Translator first, then the catalogue it was reading. The reverse order
-   // would leave the outgoing translator pointing at freed memory for as long
-   // as it took to reach the next statement.
+   // The outgoing translator frees the catalogue it was reading -- the only
+   // owner, so nothing here frees it a second time.
    if Assigned(LRSTranslator) then
       begin
       LRSTranslator.Free;
       LRSTranslator := nil;
       end;
-   FreeAndNil(GActiveCatalogue);
 
-   GActiveCatalogue := po;
    LRSTranslator := TPOTranslator.Create(po);
 end;
 
 
-function LoadEmbeddedTranslation(const aLang: string): string;
+function LoadEmbeddedTranslation(const aSetting: string): string;
 var
    lang:   string;
    source: string;
@@ -354,7 +502,7 @@ var
 begin
    Result := '';
    GActiveLang := '';
-   lang := ResolveLang(aLang, source);
+   lang := ResolveLang(aSetting, source);
    if (lang = '') or SameText(lang, 'en') then
       begin
       // English is what the binary already holds; loading a catalogue to
@@ -379,7 +527,7 @@ begin
    // A FILE BESIDE THE EXE WINS. Same layout SetDefaultLang searches, so a
    // catalogue dropped there for testing or as a patch behaves the same way it
    // did before this unit existed.
-   fileCandidate := DataFilePath('languages\' + lang + '\tr4w.po');
+   fileCandidate := LanguageFilePath(lang);
    if FileExists(fileCandidate) then
       begin
       try
@@ -448,15 +596,46 @@ begin
    end;
 end;
 
+(* THE LANGUAGE SETTING'S VOCABULARY: '' ("System default") and every
+  catalogue this binary carries.
+
+  REGISTERED HERE because this is the unit that knows what is loadable -- the
+  same reason uCFG registers the vocabularies it owns. From the RCDATA names,
+  never from a typed list, so Preferences cannot offer a language the binary
+  lacks, and a config line naming one is refused. English is in the list
+  because Make-LanguageRes embeds tr4w_en.po like any other. *)
+(* GENERATED, NOT TYPED -- and Lint-SpellingTables knows this name as one,
+  the way it knows uRadioRegistry.RadioTypeTokensA. Its '' is deliberate
+  and is not the blank-spelling defect that lint hunts: this is a STRING
+  setting, where '' is a value ("System default"), not a spelling that
+  selects an enum ordinal. *)
+function LanguageVocabulary: TArray<string>;
+var
+   codes: TArray<string>;
+   i: integer;
+begin
+   codes := EmbeddedLanguageCodes;
+   SetLength(Result, Length(codes) + 1);
+   Result[0] := '';
+   for i := 0 to High(codes) do
+      begin
+      Result[i + 1] := codes[i];
+      end;
+end;
+
+initialization
+   RegisterSettingAllowedValues('Display.Language', LanguageVocabulary);
+
 finalization
-   { Translator first, then the catalogue it reads -- the same order and the
-     same reason as in ApplyCatalogue. Guarded because a program that never
-     loaded a catalogue (English, or any failure path) has neither. }
+   (* The translator, and with it the catalogue it owns -- see the note on
+     GActiveLang's var block for why there is no second Free here. Nil'd
+     because LCLTranslator's own finalization frees LRSTranslator too, and
+     runs after this one. *)
    if Assigned(LRSTranslator) then
       begin
       LRSTranslator.Free;
       LRSTranslator := nil;
       end;
-   FreeAndNil(GActiveCatalogue);
+   FreeAndNil(GLanguageNames);
 
 end.

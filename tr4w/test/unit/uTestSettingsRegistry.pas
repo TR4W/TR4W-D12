@@ -292,10 +292,19 @@ var
    raised: boolean;
 begin
    BeginTest('registering the same key twice raises rather than shadowing');
-   RegisterSetting(NewBool('test.duplicate.key'));
+   (* SELF-STORING, NOT NewBool -- and that is a use-after-free fix, found
+     2026-09-19. The registry is GLOBAL, so this setting outlives the suite;
+     a NewBool one keeps method pointers into `probe`, which RunAllTests
+     frees at the end. uTestAllSettings then walked every registered setting
+     and read AND WROTE through those pointers into freed memory. It passed
+     for as long as the freed block happened to still hold a boolean-shaped
+     byte, and failed ("changed when set to its own value") the day an
+     unrelated allocation moved the heap. A setting that owns its own cell
+     has nothing to dangle. *)
+   RegisterSetting(TBoolSetting.Own('test.duplicate.key', 'test', False));
    raised := False;
    try
-      RegisterSetting(NewBool('test.duplicate.key'));
+      RegisterSetting(TBoolSetting.Own('test.duplicate.key', 'test', False));
    except
       on E: Exception do
          begin

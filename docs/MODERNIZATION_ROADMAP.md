@@ -538,7 +538,11 @@ i18n `resourcestring` cutover.
 - [ ] Cut `VC.pas` over to `uTR4WStrings` (383 `TC_` strings) as **one
       deliberate commit** that removes the legacy `{$INCLUDE}` — both currently
       declare the same constants.
-- [ ] Language selection as a TR4W setting, not just OS locale.
+- [x] Language selection as a TR4W setting, not just OS locale. **Done
+      2026-09-19**: `DISPLAY LANGUAGE`, in Preferences › Appearance. On macOS the
+      OS language is now the user's preferred language (checked on mac-ci). Still
+      owed: a bench look at the drop-down, and the four new strings reaching the
+      catalogues at the next IDE `.pot` regeneration.
 - [ ] A lint preventing new hardcoded English (three incidents this month).
 - [ ] Send the Polish catalogue; ask BA4WI for his original file — 144 Chinese
       strings are unrecoverable without it.

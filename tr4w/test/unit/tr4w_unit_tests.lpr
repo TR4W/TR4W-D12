@@ -19,6 +19,11 @@
 
 {$APPTYPE CONSOLE}
 
+(* THE LANGUAGE CATALOGUES, the same resource the app links -- so the tests of
+  the Language setting's vocabulary and captions read what ships, rather than
+  a list somebody typed. See uTestUILanguage. *)
+{$R ..\..\res\tr4w_languages.res}
+
 uses
 (* cthreads MUST BE FIRST, AND ONLY ON UNIX (2026-09-08).
 
@@ -139,6 +144,8 @@ uses
    uTestRadioConfigLegacyMap in 'uTestRadioConfigLegacyMap.pas',
    uKeyerConfigStore    in '..\..\src\uKeyerConfigStore.pas',
    uTR4WConfigFile      in '..\..\src\uTR4WConfigFile.pas',
+   uUILanguage          in '..\..\src\uUILanguage.pas',
+   uTestUILanguage      in 'uTestUILanguage.pas',
    uUDPBroadcastConfig  in '..\..\src\uUDPBroadcastConfig.pas',
    uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
    uWindowLayoutStore   in '..\..\src\uWindowLayoutStore.pas',
@@ -462,6 +469,7 @@ begin
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));
+   RegisterSuite(TUILanguageTests.Create('UILanguage'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));

@@ -84,6 +84,7 @@ uses
    uSettingsRegistry,
    uSettingsLegacy,   // RegisterLegacySetting -- no FMX
    uSettingsModelBinding,   // RegisterModelSetting -- no CFGCA row
+   uEmbeddedTranslations,   // UILanguageCaption -- the display language's items
    uSettingsCaptions;  // RS_* -- the translatable setting labels
 
 (* THE GETTER/SETTER HOST CLASS IS GONE, 2026-09-12, AND SO IS THE `type`
@@ -204,6 +205,15 @@ begin
                          RS_APPEARANCE_NOCOLUMNHEADER);
    RegisterModelSetting( 'appearance.showGridlines',          'SHOW GRIDLINES',
                          RS_APPEARANCE_SHOWGRIDLINES);
+
+   (* THE DISPLAY LANGUAGE, 2026-09-19. Needs a restart, and genuinely: the
+     catalogue is loaded once, before the first form streams. Its values are
+     catalogue codes and '' -- registered by uEmbeddedTranslations from the
+     catalogues the binary carries -- and the drop-down shows each in its own
+     name through ValueCaption. *)
+   RegisterModelSetting( 'appearance.language',               'DISPLAY LANGUAGE',
+                         RS_APPEARANCE_LANGUAGE, True).ValueCaption :=
+      @UILanguageCaption;
 
    (* Audio: the digital voice keyer, 2026-08-15. The three MP3 rows that
      stood here were retired 2026-09-19 -- see uCFG.RETIRED_COMMANDS. *)

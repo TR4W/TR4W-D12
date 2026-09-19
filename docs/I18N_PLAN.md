@@ -81,9 +81,13 @@ in one tool for both halves.
 
 ### Language selection is a TR4W setting, not the OS locale
 
-`SetDefaultLang('')` honours a `--lang` switch and then the OS locale. That is the seam,
-not the answer: an operator on Spanish Windows does not necessarily want a Spanish contest
-log. **Still open.**
+**Done 2026-09-19.** Preferences › Appearance has a **Language** drop-down: "System
+default" plus each catalogue the binary carries. That is `Settings.Display.Language`, and
+the command is `DISPLAY LANGUAGE`. The precedence is `--lang`, then the setting, then the
+OS, then English (`uUILanguage.ChooseUILanguage`). The setting is read from `tr4w.json`
+before the settings object loads, so a change takes effect at the next start. On macOS
+the OS language is now the user's *preferred* language: a Finder launch has no `LANG`,
+and the LCL's own fallback reads the region locale. See `.claude/agents/i18n.md`.
 
 ### `LCLTranslator`, not `DefaultTranslator`
 

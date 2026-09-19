@@ -354,7 +354,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(296, names.Count,
+         CheckEquals(297, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -362,7 +362,9 @@ begin
                      + ' OPERATING STANDARD EDIT KEYS, which carries no'
                      + ' alias because TR4W never had a flat spelling'
                      + ' for it; 296 since MP3 PATH, MP3 PLAYER and MP3'
-                     + ' RECORDER ENABLE were retired, 2026-09-19');
+                     + ' RECORDER ENABLE were retired, 2026-09-19; 297'
+                     + ' with DISPLAY LANGUAGE, the UI language (new, no'
+                     + ' CFGCA row), 2026-09-19');
       finally
          names.Free;
       end;
@@ -1345,6 +1347,7 @@ const
       + '"DE ENABLE",'
       + '"DEBUG LOG LEVEL",'
       + '"DIGITAL MODE ENABLE",'
+      + '"DISPLAY LANGUAGE",'
       + '"DISTANCE MODE",'
       + '"DIT DAH RATIO",'
       + '"DOMESTIC FILENAME",'

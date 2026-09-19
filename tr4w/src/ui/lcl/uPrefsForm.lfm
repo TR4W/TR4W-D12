@@ -3071,7 +3071,7 @@ object PrefsForm: TPrefsForm
       end
       object lblAppearHint: TLabel
         Left = 12
-        Height = 51
+        Height = 34
         Top = 168
         Width = 620
         AutoSize = False
@@ -3083,10 +3083,40 @@ object PrefsForm: TPrefsForm
       object lblAppearColorsHint: TLabel
         Left = 12
         Height = 51
-        Top = 222
+        Top = 204
         Width = 620
         AutoSize = False
         Caption = 'Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be.'
+        Font.Color = clGrayText
+        ParentFont = False
+        WordWrap = True
+      end
+      object lblLanguage: TLabel
+        Left = 12
+        Height = 17
+        Top = 264
+        Width = 140
+        AutoSize = False
+        Caption = 'Language:'
+        FocusControl = cbxLanguage
+      end
+      object cbxLanguage: TComboBox
+        Left = 160
+        Height = 22
+        Top = 260
+        Width = 240
+        AutoSize = False
+        ItemHeight = 0
+        Style = csDropDownList
+        TabOrder = 8
+      end
+      object lblLanguageHint: TLabel
+        Left = 412
+        Height = 30
+        Top = 258
+        Width = 220
+        AutoSize = False
+        Caption = 'Takes effect when TR4W next starts.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True

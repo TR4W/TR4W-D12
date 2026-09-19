@@ -274,7 +274,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1351 -> 1348, 2026-09-18: the three dead DOS-era keyboard loops
 # (SendKeyboardInput, TimeAndDateSet, PacketMemoryRequest) deleted with the
 # four helpers only they called. Deletion, not conversion.
-$NARROW_CEILING = 1348
+# 1348 -> 1344, 2026-09-19: the display-language setting. The --lang switch
+# parse moved to uUILanguage with UnicodeSameText where it used SameText (two
+# narrowings per comparison), and the gettext ids are widened explicitly.
+$NARROW_CEILING = 1344
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"
