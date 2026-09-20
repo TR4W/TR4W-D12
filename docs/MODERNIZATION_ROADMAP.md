@@ -637,7 +637,11 @@ from a `Chr()` vs `Char()` codepage change that no build could have caught.
 4. **Create a new contest** — flagged highest-risk, zero automated coverage.
 5. **Multi-op PTT and paddle settings sync** — safety-relevant: amp keying and
    hot-switching.
-6. **Linux/macOS GUI has never been run by anyone.** Building is not running.
+6. ~~**Linux/macOS GUI has never been run by anyone.**~~ **Linux is run —
+   2026-09-20**, from the AppImage on Mint 22.3, UI up and an Elecraft K4
+   connected over Ethernet. **macOS GUI is still unrun.** And a connected radio
+   is not a contest: CW will not key off Windows (placeholder `Sleep`), serial
+   ports are not selectable, no QSO logged.
 
 **Owed to named people, not to us:** the WAE QTC windows go to N4AF (both
 windows converted with no harness and no operator who can judge them; three of

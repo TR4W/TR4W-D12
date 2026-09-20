@@ -187,8 +187,13 @@ Honest status, measured rather than hoped:
   there, and stop partway on an access violation in the log repository that has
   no counterpart on Windows or Linux; that is the next thing to chase
 - **ARM is untested.** Nothing obvious blocks it; nothing has tried it
-- **nobody has run the GUI on any of them.** Building is not running, and a
-  contest logger is not proven by a compiler
+- **Linux runs, as of 2026-09-20.** The AppImage was run on Linux Mint 22.3 --
+  not the machine that built it -- reached the UI, and connected to an Elecraft
+  K4 over Ethernet. **macOS has still never had its GUI run.**
+- **What that does NOT mean.** No QSO has been logged on Linux, **CW will not
+  key there** (element timing off Windows is a placeholder `Sleep`), and serial
+  ports are not selectable yet. A radio answering over the network is the first
+  step of a long list, not the end of one
 
 ## Frequently Asked Questions
 

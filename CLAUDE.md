@@ -429,9 +429,15 @@ sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
   warning. ~~Gatekeeper's message for an unsigned bundle says *damaged*~~ — that, and the
   `xattr -dr com.apple.quarantine` workaround, are history; do not tell an operator to strip
   quarantine from a notarized build.
-- **NOBODY HAS RUN THE GUI ON EITHER.** Building is not running, and a contest logger is not proven
-  by a compiler. `README.md`'s *"Where this actually stands"* is the honest status; keep it there
-  rather than duplicating it here.
+- ~~**NOBODY HAS RUN THE GUI ON EITHER.**~~ **LINUX IS RUN, AS OF 2026-09-20.** NY4I ran the
+  **AppImage on Linux Mint 22.3** — a machine that did not build it — reached the UI, and
+  **connected to an Elecraft K4 over Ethernet**. That is the first functional proof off
+  Windows: the gtk2 UI works from the bundle, and a network radio links. **macOS remains
+  unrun.** Building is still not running, and this is not a contest: **CW element timing off
+  Windows is a plain `Sleep` placeholder and will not key** (see
+  `docs/PLATFORM_CLOCK_ABSTRACTION.md` part 2), serial ports are not selectable there yet
+  (`docs/PORT_IDENTITY_PLAN.md` step 5), and no QSO has been logged. `README.md`'s *"Where
+  this actually stands"* is the honest status; keep it there rather than duplicating it here.
 - **`build-unix.sh` does NOT stop at the first failing stage**, unlike `FullBuild.ps1` — every stage
   reports its own first error so the summary is a ranked worklist. Its own header still describes an
   era when nothing linked; read the README, not the header.
