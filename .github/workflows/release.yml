@@ -241,13 +241,20 @@ jobs:
   # NEITHER BLOCKS THE WINDOWS RELEASE, and that is a deliberate ruling
   # (NY4I, 2026-09-17): Windows is the shipping platform, and README.md's
   # own framing is that the Unix builds are "builds, not releases". So these
-  # are continue-on-error and are NOT in the release job's `needs:` -- their
-  # artifacts are attached when they exist and silently absent when they do
-  # not. A Unix failure must never withhold an installer.
+  # are continue-on-error, and the release job's `if:` does not consult their
+  # results -- their artifacts are attached when they exist and are reported
+  # as absent when they do not. A Unix failure must never withhold an
+  # installer.
+  #
+  # THEY ARE IN THE RELEASE JOB'S `needs:` ALL THE SAME, since 2026-09-20.
+  # "Must not block" had been implemented as "is not waited for", and those
+  # are two different things: the release job used to start the moment the
+  # Windows side was done and attach whatever had finished uploading by then.
+  # See the comment on that job for the run that cost.
   #
   # That is also why `fail_on_unmatched_files` is false on the release step
-  # below: with these jobs non-blocking, a missing tarball is an expected
-  # state rather than an error.
+  # below: with these jobs' results not consulted, a missing tarball is an
+  # expected state rather than an error.
   #
   # build-unix.sh does NOT stop at the first failing stage -- it reports each
   # one so the summary is a ranked worklist -- so a failing unit-test stage
@@ -345,8 +352,9 @@ jobs:
       # A SEPARATE ARTIFACT NAME for the same reason: the release job downloads
       # each optionally, so one absent artifact cannot hide the other.
       #
-      # This job stays continue-on-error and outside the release job's needs:
-      # (NY4I, 2026-09-17), so red here withholds nothing from Windows.
+      # This job stays continue-on-error, and the release job tolerates any
+      # result from it (NY4I, 2026-09-17), so red here withholds nothing from
+      # Windows -- it costs this release its AppImage and nothing else.
       # ---------------------------------------------------------------
       - name: Locate AppImage
         id: appimage
@@ -488,9 +496,9 @@ jobs:
           # failure is not "one stage red among several" -- it is the whole
           # reason this job can be trusted. So the run is teed and the
           # signer's own marker is checked for explicitly, which fails this
-          # job LOUDLY (and, because the job is continue-on-error and outside
-          # the release job's needs:, without withholding the Windows
-          # installer).
+          # job LOUDLY (and, because the job is continue-on-error and the
+          # release job's `if:` does not consult its result, without
+          # withholding the Windows installer).
           sh tr4w/build/build-unix.sh 2>&1 | tee "$RUNNER_TEMP/build-unix.log" || true
           if grep -q 'SIGNING FAILED' "$RUNNER_TEMP/build-unix.log"; then
             echo "::error::macOS signing or notarization failed -- no artifact was produced. The notarytool log, if Apple returned one, is in the step output above."
@@ -657,9 +665,43 @@ jobs:
   # =================================================================
   release:
     name: Create draft GitHub Release
-    needs: [build, virustotal-scan]
+
+    # THIS JOB WAITS FOR THE UNIX JOBS AND IS NOT BLOCKED BY THEM. THOSE ARE
+    # TWO DIFFERENT THINGS, AND CONFLATING THEM COST v5.0.14 ITS MAC BUILD.
+    #
+    # NY4I's ruling stands (2026-09-17): a Linux or macOS failure must never
+    # withhold the Windows installer. It had been implemented by leaving the
+    # two jobs out of `needs:` -- which does not merely decline to BLOCK on
+    # them, it declines to WAIT for them. So this job started as soon as build
+    # and virustotal-scan were done and attached whatever had finished
+    # uploading at that instant. Every release so far has been racing. Run
+    # 35531435287 (v5.0.14) lost by twelve seconds: the macOS job built,
+    # signed, notarized and uploaded a 36.6 MB artifact that the release had
+    # already given up looking for, and since the download steps are
+    # continue-on-error the absence was silent and every job reported success.
+    #
+    # So both Unix jobs are in `needs:` -- that is the only thing in Actions
+    # that makes a job WAIT -- and the `if:` below does the not-blocking half
+    # by naming the two results that are genuinely required and saying nothing
+    # at all about the other two. A status-check function is what switches off
+    # the default "skip me when a dependency did not succeed"; without one,
+    # `needs:` alone would reinstate exactly the blocking NY4I ruled out.
+    #
+    # `!cancelled()` AND NOT `always()`: always() would also build a release
+    # out of a run somebody cancelled. (It is written inside a folded block
+    # scalar because a bare `!` starts a YAML tag and will not parse.)
+    #
+    # It deliberately does NOT lean on `continue-on-error: true` reporting a
+    # failed Unix job as a success. That would be a second, invisible reason
+    # the condition holds, and it would quietly stop working the day someone
+    # removed continue-on-error. Those two results are simply never consulted.
+    needs: [build, virustotal-scan, build-linux, build-macos]
     runs-on: [self-hosted, win-ci]
-    if: github.event_name == 'push'
+    if: >-
+      !cancelled()
+      && github.event_name == 'push'
+      && needs.build.result == 'success'
+      && needs['virustotal-scan'].result == 'success'
 
     steps:
       # Checked out with the DEFAULT shallow fetch: actions/checkout then
@@ -700,11 +742,16 @@ jobs:
           path: release-files
 
       # THE UNIX ARTIFACTS ARE OPTIONAL BY DESIGN. Their jobs are
-      # continue-on-error and are deliberately absent from this job's `needs:`
+      # continue-on-error and this job's `if:` does not consult their results
       # (NY4I, 2026-09-17: a Unix failure must not withhold the Windows
       # installer), so the artifact may simply not exist. continue-on-error
       # here is what turns "absent" into "attach the rest" rather than into a
       # failed release.
+      #
+      # WHAT IT NO LONGER COVERS IS "not uploaded YET". Those jobs are in this
+      # job's `needs:` now, so each has finished by the time these steps run
+      # and an absent artifact means one was never produced -- a real state,
+      # not a timing accident. The step after them says which are missing.
       - name: Download Linux artifact (optional)
         continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -729,6 +776,49 @@ jobs:
       - name: List release files
         shell: powershell
         run: Get-ChildItem -LiteralPath release-files | Format-Table Name, Length, LastWriteTime
+
+      # WHAT IS ABSENT, SAID OUT LOUD.
+      #
+      # Every Unix download above is continue-on-error, so a missing artifact
+      # produces no failure and no message -- its only trace is a shorter file
+      # list that nobody reads. v5.0.14 published with no macOS build at all
+      # and the run was green end to end; establishing that took five API
+      # queries against an already-drafted release.
+      #
+      # A WARNING, NOT A FAILURE, and that is the ruling being honoured rather
+      # than worked around: an absent Unix artifact still produces a release
+      # with everything else. What changes is that the release SAYS SO, in the
+      # annotation list at the top of the run, naming the artifact and the job
+      # result that explains it.
+      #
+      # The job result is printed beside each one because the two interesting
+      # cases look identical in a file listing: a Unix job that failed (absence
+      # expected, go read that job) and a Unix job that reported success while
+      # its artifact did not arrive (absence is a defect in THIS workflow).
+      - name: Report which platform artifacts are present
+        shell: powershell
+        run: |
+          $expected = @(
+            @{ Label = 'Windows installer'; Filter = 'tr4w_setup_*.exe';             Job = 'build';           Result = '${{ needs.build.result }}' },
+            @{ Label = 'VirusTotal report'; Filter = 'virustotal-report.md';         Job = 'virustotal-scan'; Result = '${{ needs['virustotal-scan'].result }}' },
+            @{ Label = 'Linux tarball';     Filter = 'tr4w-*-x86_64-linux.tar.gz';   Job = 'build-linux';     Result = '${{ needs['build-linux'].result }}' },
+            @{ Label = 'Linux AppImage';    Filter = 'TR4W-*-x86_64.AppImage';       Job = 'build-linux';     Result = '${{ needs['build-linux'].result }}' },
+            @{ Label = 'macOS disk image';  Filter = 'tr4w-*-aarch64-darwin.dmg';    Job = 'build-macos';     Result = '${{ needs['build-macos'].result }}' },
+            @{ Label = 'macOS tarball';     Filter = 'tr4w-*-aarch64-darwin.tar.gz'; Job = 'build-macos';     Result = '${{ needs['build-macos'].result }}' }
+          )
+          $missing = 0
+          foreach ($e in $expected) {
+            $found = Get-ChildItem -Path release-files -Filter $e.Filter -File -ErrorAction SilentlyContinue |
+                     Select-Object -First 1
+            if ($found) {
+              Write-Host ("  present : {0} -- {1}" -f $e.Label, $found.Name)
+            }
+            else {
+              $missing++
+              Write-Host ("::warning::MISSING from this release: {0} (expected {1}; job '{2}' reported '{3}')" -f $e.Label, $e.Filter, $e.Job, $e.Result)
+            }
+          }
+          Write-Host ("{0} of {1} expected artifacts are present." -f ($expected.Count - $missing), $expected.Count)
 
       # Generate the changelog body against the REAL previous tag. GitHub's
       # built-in generate_release_notes auto-detects the previous tag via semver
@@ -895,10 +985,10 @@ jobs:
             release-files/tr4w-*-aarch64-darwin.dmg
             release-files/tr4w-*-aarch64-darwin.tar.gz
           # FALSE, AND IT HAS TO BE. The Linux and macOS jobs are
-          # continue-on-error and are not in this job's `needs:` -- a Unix
-          # failure must not withhold the Windows installer (NY4I,
-          # 2026-09-17). With `true`, a missing Unix tarball would fail the
-          # release step and do exactly that by the back door.
+          # continue-on-error and this job's `if:` does not require either to
+          # have succeeded -- a Unix failure must not withhold the Windows
+          # installer (NY4I, 2026-09-17). With `true`, a missing Unix tarball
+          # would fail the release step and do exactly that by the back door.
           #
           # The Windows installer is still guaranteed: this job `needs:` the
           # build and virustotal jobs, so it does not run at all unless the
