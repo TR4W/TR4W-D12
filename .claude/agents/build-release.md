@@ -120,6 +120,32 @@ reported at 19m57s ran in ~18s. Check queue time before diagnosing a hang.
 Apple secrets are **per-repository**. Do not copy credentials from another repo's
 runner.
 
+## "MUST NOT BLOCK" IS NOT "MUST NOT WAIT"
+
+`needs:` is the only thing in Actions that makes a job **wait**. Keeping
+`build-linux`/`build-macos` out of the release job's `needs:` — so a Unix
+failure could never withhold the Windows installer — also meant the release
+never waited for them, and the download steps are `continue-on-error`, so a
+late artifact was **silently absent**.
+
+**Measured, v5.0.14 (run 35531435287):** every job reported success and the
+release carried NO macOS artifacts. The `.dmg` was built, signed, notarized and
+uploaded; the release job downloaded at 19:17:33 and the macOS job finished at
+19:17:45. Linux made it by **two seconds**. Every release before that had been
+racing; v5.0.13 happened to win.
+
+The shape that satisfies both rules: the optional jobs **are** in `needs:`, and
+the `if:` never consults their result — `!cancelled()` (not `always()`, which
+also releases a cancelled run) plus the event gate and explicit success
+requirements for the jobs that genuinely are prerequisites. Any status-check
+function switches off the implicit success gate, so those have to be restated.
+**Do not lean on `continue-on-error` masking a result** — that is a second,
+invisible reason the condition holds.
+
+A release also now warns, per expected artifact, when one is absent, with the
+producing job's result beside it. The failure above was invisible in the UI and
+took five API queries to find.
+
 ## Releases
 
 Version lives in `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`,
