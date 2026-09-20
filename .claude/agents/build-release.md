@@ -83,9 +83,23 @@ compiler disagrees — `Lint-LinuxCompile` was retired for exactly that reason: 
 inherited case-insensitive unit lookup from its host, so `uCTYDAT.PAS` passed it
 and still broke on a real Unix box.
 
-The `.app` bundle is **not signed or notarized**, and Gatekeeper's message for an
-unsigned bundle says *damaged*. Operators need
-`xattr -dr com.apple.quarantine` — that note goes in the release body.
+**The macOS artifacts are SIGNED AND NOTARIZED since 5.0.13** (2026-09-20), by
+`tr4w/build/mac-sign.sh` called from `build-unix.sh`'s packaging stage. Facts worth
+keeping:
+
+- **The Developer ID key lives in `mac-ci`'s keychain, not in a secret**, and must
+  stay that way — the worst a bad workflow can then do is ask that machine to sign.
+  The repo secrets are the notary API key only (`APPLE_API_KEY_P8`, `APPLE_API_KEY_ID`,
+  `APPLE_API_ISSUER_ID`).
+- **Signing sits BETWEEN staging and archiving**, so a failure leaves no tarball and
+  no `.dmg`: an unsigned build is an ABSENT build, not one a cleanup step is trusted
+  to delete.
+- **`notarytool --wait` can exit 0 on a rejected submission.** Gate on the parsed
+  `status: Accepted`, then `stapler validate` and `spctl` on the app, the `.dmg` and
+  the tarball's extracted app. Never on the exit code.
+- **A pipeline hides an exit status**: `stapler validate … | tail -3` returns 0 while
+  printing failure. Capture the command's own status.
+- ~~`xattr -dr com.apple.quarantine`~~ is history. Do not put it in a release body.
 
 ## The runners are disposable
 

@@ -118,10 +118,14 @@ decoration: a bare Mach-O launched from Finder gets no Dock icon, no menu bar
 and no application activation, because Cocoa decides an app IS an app by
 finding an `Info.plist` in `Contents/`.
 
-**It is NOT signed or notarized**, so Gatekeeper will refuse it on any Mac but
-the one that built it -- and the message a user gets says the app is *damaged*
-rather than unsigned, which sends people looking for a corrupt download. That
-needs an Apple Developer ID and is a distribution decision, not a build step.
+**It IS signed and notarized, from 5.0.13 onwards** (2026-09-20). Download the
+`.dmg`, open it, drag TR4W across: no Gatekeeper warning, no `xattr` incantation.
+Confirmed on a Mac that did not build it. ~~Gatekeeper refuses it and says the
+app is *damaged*~~ -- that was true of every earlier release and is why older
+download links still carry a quarantine workaround.
+
+**Signing is not a claim that the GUI works.** It means macOS will let it start;
+what it does once running is still the open question below.
 
 ### Two things every Mac needs, and neither is TR4W's fault
 

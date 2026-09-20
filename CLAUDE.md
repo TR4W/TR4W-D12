@@ -423,7 +423,12 @@ sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
 - **Linux produces the app, `tr4wserver` and a tarball. macOS produces the app, the server and an
   `.app` bundle** — the bundle is not decoration: Cocoa decides an app is an app by finding an
   `Info.plist`, and a bare Mach-O launched from Finder gets no Dock icon and no menu bar. It is
-  **not signed or notarized**, and Gatekeeper's message for an unsigned bundle says *damaged*.
+  **signed and notarized since 5.0.13** (2026-09-20) — `tr4wserver`, the app binary and the
+  bundle are signed inside-out with the hardened runtime, the bundle and the `.dmg` are each
+  notarized and stapled, and NY4I confirmed a downloaded `.dmg` opens with no Gatekeeper
+  warning. ~~Gatekeeper's message for an unsigned bundle says *damaged*~~ — that, and the
+  `xattr -dr com.apple.quarantine` workaround, are history; do not tell an operator to strip
+  quarantine from a notarized build.
 - **NOBODY HAS RUN THE GUI ON EITHER.** Building is not running, and a contest logger is not proven
   by a compiler. `README.md`'s *"Where this actually stands"* is the honest status; keep it there
   rather than duplicating it here.
