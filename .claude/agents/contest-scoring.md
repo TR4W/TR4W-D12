@@ -56,6 +56,36 @@ schema and nothing writes it (memory: `iaru-exchange-reads-station-state`). QTH 
 a polymorphic field. Know which `MY` fields belong to the station and which to the
 contest before moving one.
 
+## `FoundContest` READS STATION STATE, so what it reads must already be set
+
+**`MY COUNTRY` IS DERIVED — do not "add" a derivation.** `FoundContest` calls
+`RecalculateMyCountryContinentAndZoneNew(Settings.My.Call)` before its
+`case Contest of`, and `TMySettings.DeriveCountry` writes without latching
+`CountryWasSet`, so a stated value always wins and a derived one is recomputed
+each run. **Never persist a derived value**: it reads back as stated and
+permanently blocks re-derivation — that is the defect `DeriveCountry` exists to
+fix (a latched derivation once exported `59 15` against zone 5).
+
+**THE ORDER THE SETTINGS ARRIVE IN IS PART OF THE CONTEST'S CORRECTNESS.**
+`ARRLDXCW/ARRLDXSSB` branches on `Settings.My.Country = 'K' or 'VE'` to choose
+between a power exchange and a domestic-QTH exchange. Until 2026-09-20
+`LogStoreApplyContestConfig` applied `CONTEST` first (whose effect runs
+`FoundContest`) and the config rows after — unordered — so on a log opened from
+its `.db` the country was derived from an **empty** `MY CALL` and the exchange
+decision was taken from it. The re-derivation at the foot of that routine fixes
+the country and **cannot retract the decision**. `MY CALL` is now hoisted ahead
+of `CONTEST`. Bench symptom: ARRL DX SSB rejected `K` (a kilowatt) from an
+Italian station as an "Improper domestic QTH".
+
+**A CONTEST-SCOPED SETTING HOLDS A NAME, NEVER A RESOLVED PATH** — those rows are
+captured into the contest `.db` and re-applied on every open, so a path pins a
+log to one machine and one install. `DOMESTIC FILENAME` held a full path and
+`FoundContest` APPENDED to it, producing
+`<run N>/dom\<stored path from run N-1>`; under an AppImage, whose mount point is
+new every launch, that broke on the second run. `FoundContest` is idempotent for
+it now and `TContestSettings.SetDomesticFilename` reduces any path to its name,
+which also heals existing logs.
+
 ## Oracles
 
 ```bash

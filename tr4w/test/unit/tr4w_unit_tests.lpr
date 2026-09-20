@@ -169,6 +169,8 @@ uses
    uTestCallCompress    in 'uTestCallCompress.pas',
    uCTYDAT              in '..\..\src\uctydat.pas',
    uTestCTYDAT          in 'uTestCTYDAT.pas',
+   uContestReadiness    in '..\..\src\uContestReadiness.pas',
+   uTestContestReadiness in 'uTestContestReadiness.pas',
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
    uCallSignRoutines    in '..\..\src\uCallSignRoutines.pas',
@@ -427,6 +429,7 @@ begin
    RegisterSuite(TStrSearchTests.Create('StrSearch'));
    RegisterSuite(TCallCompressTests.Create('CallCompress'));
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
+   RegisterSuite(TContestReadinessTests.Create('ContestReadiness'));
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TTestNetFraming.Create('NetFraming'));
    RegisterSuite(TTestADIFExchange.Create('ADIFExchange'));

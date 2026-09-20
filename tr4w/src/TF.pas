@@ -150,7 +150,13 @@ function CreateRichEdit(hwndParent: HWND): HWND;
 
 function EnumerateLinesInFile(const FileName: string; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): string;
-procedure UnableToFindFileMessage(FileName: string);
+(* aSetting NAMES THE SETTING THAT PRODUCED THE PATH, when one did.
+
+  A path and "could not find this file" told NY4I nothing about where the
+  path came from (Linux Mint, 2026-09-20) -- and the path in that case was
+  visibly wrong, which is exactly when knowing which setting built it is the
+  whole diagnosis. Empty for the callers where no setting is responsible. *)
+procedure UnableToFindFileMessage(FileName: string; aSetting: string = '');
 (* SET A FIXED CHARACTER BUFFER FROM A STRING, BOUNDED BY THE BUFFER ITSELF.
 
   THE REPLACEMENT FOR TF's C-sprintf FACADE at the call sites that only ever
@@ -855,7 +861,9 @@ begin
 { $ I FEND}
 end;
 
-procedure UnableToFindFileMessage(FileName: string);
+procedure UnableToFindFileMessage(FileName: string; aSetting: string = '');
+var
+  source                                : string;
 begin
   (* SAY WHICH IT IS, RATHER THAN REPORTING WHATEVER errno HAPPENED TO BE SET.
 
@@ -875,15 +883,22 @@ begin
     own SysErrorMessage shadows it here and returns PAnsiChar untrimmed.
     GetLastOSError, not Windows' GetLastError: SysUtils declares it for every
     platform. *)
+  source := '';
+  if aSetting <> '' then
+     begin
+     source := #13#13 + SysUtils.Format(SFileNameCameFromSetting, [aSetting]);
+     end;
+
   if not FileExists(FileName) then
      begin
-     showwarning(SysUtils.Format('%s'#13#13'%s',
-                 [SFileNotFoundThere, FileName]));
+     showwarning(SysUtils.Format('%s'#13#13'%s%s',
+                 [SFileNotFoundThere, FileName, source]));
      end
   else
      begin
-     showwarning(SysUtils.Format('%s'#13#13'%s',
-                 [SysUtils.SysErrorMessage(SysUtils.GetLastOSError), FileName]));
+     showwarning(SysUtils.Format('%s'#13#13'%s%s',
+                 [SysUtils.SysErrorMessage(SysUtils.GetLastOSError), FileName,
+                  source]));
      end;
 end;
 

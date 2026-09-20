@@ -2853,6 +2853,7 @@ type
       FR150SMode: boolean;
       FRfoblMode: boolean;
       procedure SetBand(const aValue: string);
+      procedure SetDomesticFilename(const aValue: string);
       procedure SetContestToken(const aValue: string);
       procedure SetExchangeReceived(const aValue: string);
       procedure SetInitialExchange(const aValue: string);
@@ -2882,11 +2883,28 @@ type
       (* Was DomQTHDataFileName in logdupe.pas -- the .DOM file naming this
         contest's domestic multipliers.  DOMESTIC FILENAME.
 
-        It holds a BARE NAME while a contest file is being read and a FULL
-        PATH once LogCfg has resolved it, which is how it has always
-        behaved; the resolution is still in LogCfg and is unchanged. *)
+        IT HOLDS A NAME. NEVER A PATH -- 2026-09-20.
+
+        It used to hold a bare name while a contest file was being read and
+        the FULL RESOLVED PATH afterwards, because LogCfg wrote its answer
+        back here. That value is contest-scoped, so it was captured into the
+        contest .db -- and an absolute path is not a fact about a contest.
+        NY4I's ARRL DX log on Linux Mint came back the next launch as
+
+          /tmp/.mount_TR4W-5EnhBOm/usr/bin/dom\/tmp/.mount_TR4W-5olHkON/usr/bin/dom/s48p14dc.dom
+
+        one run's mount point wrapped around the previous run's, and a modal
+        saying the file could not be found. An AppImage mounts somewhere new
+        every time; so does a memory stick, an install that moves, and a log
+        carried to another machine.
+
+        THE SETTER ENFORCES IT rather than every reader remembering to, and
+        that is what HEALS an existing log: a poisoned row is reduced to
+        s48p14dc.dom the moment it is applied, whichever source applied it --
+        the .db, a contest .cfg, a peer, or FCONTEST itself. The resolution
+        to a real file is LogCfg's, into a local, and is not written back. *)
       property DomesticFilename: string
-         read FDomesticFilename write FDomesticFilename;
+         read FDomesticFilename write SetDomesticFilename;
       (* Was ExchangeMemoryEnable in logdupe.pas -- offer the exchange this
         station sent last time.  EXCHANGE MEMORY ENABLE. *)
       property ExchangeMemoryEnable: boolean
@@ -3837,6 +3855,7 @@ uses
      TJSONData and PPropInfo in its signature. Naming them again here is a
      duplicate identifier, not a harmless repetition. *)
    fpjsonrtti,   // the streamer; the property walk is TypInfo, see OwnsCommand
+   uAppPaths,    // DataFileNameOnly -- see TContestSettings.DomesticFilename
    uKeychain;    // StoreSecret / FetchSecret -- see TSecretText
 
 var
@@ -4519,6 +4538,14 @@ end;
 procedure TContestSettings.SetBand(const aValue: string);
 begin
    SetStr(FBand, aValue, 'Band');
+end;
+
+procedure TContestSettings.SetDomesticFilename(const aValue: string);
+begin
+   (* A NAME, whatever was handed in. See the property's own note: this is
+     the one place that can heal a stored absolute path, because every
+     source of this setting comes through here. *)
+   SetStr(FDomesticFilename, DataFileNameOnly(aValue), 'DomesticFilename');
 end;
 
 procedure TContestSettings.SetContestToken(const aValue: string);

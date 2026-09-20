@@ -633,11 +633,23 @@ begin
      GetLanguageIDs above answers nothing for every Mac operator who did not
      start TR4W from a terminal -- which is every Mac log to date: "no code
      could be determined from nothing". *)
+
+   (* SystemLanguageCode, NOT LanguagePartOf, AND THE BUNDLE IS WHY.
+     TR4W.app declares CFBundleLocalizations (build/build-unix.sh), which is
+     what puts TR4W in the macOS per-app language picker at all. The tags it
+     declares are Apple's spellings of our catalogue names -- pt-BR and
+     zh-Hans -- and when the operator picks one, THAT is the string this
+     routine reads back. Taking only the language half would turn pt-BR into
+     European Portuguese and zh-Hans into 'zh', for which there is no
+     catalogue, so the picker would appear to work and the run would be in
+     the wrong language or in English. SystemLanguageCode is the inverse of
+     the bundle's table and answers pt_br and zh_cn. It is identical to
+     LanguagePartOf for every unqualified tag. *)
    preferred := DarwinPreferredLanguage;
    if preferred <> '' then
       begin
       aDescription := 'the macOS preferred language (' + preferred + ')';
-      Result       := LanguagePartOf(preferred);
+      Result       := SystemLanguageCode(preferred);
       Exit;
       end;
 

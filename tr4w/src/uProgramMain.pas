@@ -82,6 +82,7 @@ uses
   Windows,
 {$ENDIF}
   SysUtils,
+  Classes,   // TStringList -- the readiness gaps, see ReportContestReadiness
   { /IMPORTLOG. The unit pulls in the log database and the mapper, which is
     why the switch runs before any of them are otherwise needed. }
   uLogImport,
@@ -119,6 +120,7 @@ uses
   uInputQuery,
   uNewContest,
   uNewContestCommands,
+  uContestReadiness,   // the startup "is this contest ready" check
   uTextFitAudit,
   uRadioPolling,
   uEditQSO,
@@ -1014,6 +1016,10 @@ var
   convertedHomes                        : integer;
   // The one command a headless /EXPORT still takes from that bucket.
   storedComputerId                      : string;
+  (* What this contest needs and has not got -- see the readiness check far
+    below. `i` in this routine is a tLogLevels, so the walk needs its own. *)
+  readinessGaps                         : TStringList;
+  gapIndex                              : integer;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -2441,6 +2447,57 @@ begin
         SetCommand('MY GRID');
         end;
      end;
+
+  (* IS THIS CONTEST READY -- asked once, here, for the reason the MY GRID
+    block above is here.
+
+    The contest is fully set up by now: the .cfg has been read, the log has
+    applied its own configuration, and FoundContest has chosen the exchange
+    and the multipliers. So this can ask what the contest ACTUALLY needs
+    rather than what some table says a contest of this name might need.
+
+    AFTER THE MY GRID PROMPT ON PURPOSE. That prompt can fill in a grid, and
+    a grid the operator has just supplied is not a gap. Asking first would
+    report something the next three seconds fixed.
+
+    NOT IN HEADLESS, TWICE OVER, AND THE STRUCTURAL HALF IS THE REAL ONE.
+
+    MEASURED 2026-09-20: all four headless modes Halt ABOVE this line --
+    /RESCORE, /IMPORT, /IMPORTLOG and /EXPORT, the last at the
+    `ExportToADIF; CreateCabrilloFile; Halt(0)` a few hundred lines up. So a
+    batch run cannot reach this block at all, and the 13 corpus exports
+    confirm it: every one exits 0 and none logs a [Readiness] line.
+
+    THE tSilentExport TEST BELOW IS KEPT ANYWAY and is not redundant
+    decoration. It costs one comparison, it is the same guard ShowNewContest,
+    the CTY download offer and the MY GRID prompt above all use, and it is
+    what holds if a future headless mode is added that does NOT halt here. A
+    modal in a batch run is a hang, and this tree has already paid for one. *)
+  readinessGaps := TStringList.Create;
+  try
+     CollectContestSettingsGaps(Contest <> DUMMYCONTEST,
+                                ActiveExchange,
+                                ActiveDomesticMult,
+                                Settings.My.Call,
+                                Settings.My.Country,
+                                Settings.My.State,
+                                Settings.My.Zone,
+                                Settings.My.Grid,
+                                Settings.Contest.DomesticFilename,
+                                readinessGaps);
+
+     for gapIndex := 0 to readinessGaps.Count - 1 do
+        begin
+        logger.Warn('[Readiness] %s', [readinessGaps[gapIndex]]);
+        end;
+
+     if (readinessGaps.Count > 0) and (not tSilentExport) then
+        begin
+        showwarning(FormatReadinessMessage(readinessGaps));
+        end;
+  finally
+     readinessGaps.Free;
+  end;
 
   // The four synchronization events: CW element, CW paddle, DVP playback and
   // network.  All auto-reset, all starting unsignalled -- which is what the

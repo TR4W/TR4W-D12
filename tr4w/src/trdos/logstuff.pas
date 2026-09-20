@@ -760,6 +760,9 @@ uses uNet,
   uRotatorControl,   // RotorControl delegates here -- see its body
   uPOTAParks,
   uPendingCounties,
+  (* ExchangeModeAttribution -- which SETTING put this contest in
+    domestic-QTH mode. See the rejections below. *)
+  uContestReadiness,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
 
 (* THE BAND TABLE, AT UNIT LEVEL.
@@ -3966,8 +3969,29 @@ begin
         end;
      if Result = False then
         begin
-        logger.Error('[ProcessRSTAndDomesticQTHExchange] Improper DOmestic QTH');
-        ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH;
+        (* NAME THE SETTING THAT PUT THE CONTEST IN THIS MODE -- 2026-09-20.
+
+          "Improper domestic QTH" is a complete description of what was
+          refused and says nothing about WHY the contest wanted one. In ARRL
+          DX the answer is MY COUNTRY, which the operator never typed --
+          FCONTEST derives it from the callsign -- so there is nothing on
+          screen connecting the refusal to a setting. NY4I typed K for a
+          kilowatt into a correctly-configured ARRL DX SSB contest and got
+          this line (2026-09-20).
+
+          The attribution is empty for the exchanges no setting chose, and
+          then the message is exactly what it was. *)
+        logger.Error('[ProcessRSTAndDomesticQTHExchange] Improper domestic ' +
+                     'QTH - Exchange = (%s). %s',
+                     [Exchange,
+                      ExchangeModeAttribution(ActiveExchange,
+                                              Settings.My.Country, False)]);
+        (* THE BRIEF FORM ON SCREEN. QuickDisplayError writes into a
+          main-window element, not a dialog, so what goes there has to be a
+          few words -- '(MY COUNTRY is empty)' rather than the sentence the
+          log gets. *)
+        ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH +
+           ExchangeModeAttribution(ActiveExchange, Settings.My.Country, True);
         end;
       { The code below to handle IARU-HF was commented out but it is not quite right anyway.
       The issue is that when the exchange is a member society like IARU, the RXData.Zone is

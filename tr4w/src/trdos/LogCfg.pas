@@ -106,7 +106,7 @@ implementation
 uses
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uSettingsModel, // Settings.My -- the station's own facts
-  uAppPaths,     // ResolveDataFileInPlace -- shipped data, whatever case
+  uAppPaths,     // DataFilePath / ResolveDataFileInPlace -- shipped data
   uCFG,
   MainUnit,
   uRadioPolling,
@@ -377,29 +377,32 @@ begin
         end
       else
          begin
-         SetCharBuffer(domPath,
-            SysUtils.Format('%sdom\%s',
-                            [CharBufferText(TR4W_PATH_NAME),
-                             string(Settings.Contest.DomesticFilename)]));
-         (* Windows spelling, resolved for this platform -- see fcontest. *)
+         (* DataFilePath AND PathDelim, NOT '%sdom\%s' -- 2026-09-20.
+
+           The literal spelled the separator for Windows, leaving the
+           resolver to undo it everywhere else -- and it can only manage
+           that when every component of the result exists. Given a path
+           already correct for this platform, the resolver is left with the
+           one job it is for: matching the CASE of a shipped file. *)
+        SetCharBuffer(domPath,
+            DataFilePath('dom' + PathDelim +
+                         string(Settings.Contest.DomesticFilename)));
          ResolveDataFileInPlace(domPath);
          end;
-      (* THE SETTING NOW HOLDS THE RESOLVED PATH, assigned rather than
-        zeroed-then-appended-to.
+      (* THE RESOLVED PATH IS NOT WRITTEN BACK -- 2026-09-20.
 
-        The zero-and-append was a copy with extra steps: FillChar made the
-        length zero, so the StrLen terms around the StrLCopy were all zero
-        and what it wrote was domPath at offset zero. It read that way only
-        because the array's bound had to be arithmetic. Assignment converts
-        the AnsiChar buffer up to its NUL.
+        It used to be, and that is how an absolute path reached a contest
+        .db: this setting is contest-scoped, so CaptureConfiguration stored
+        whatever it held, and the next launch composed the line above around
+        the previous launch's answer. See the property's own note in
+        uSettingsModel; the setting holds the NAME and this local holds the
+        only path, for as long as it takes to open the file.
 
         LoadInDomQTHFile IS HANDED domPath'S TEXT. It took a PAnsiChar until
         2026-09-15, and PAnsiChar of a property is the address of a
         TEMPORARY -- the compiler accepts it and the pointer dangles at the
-        end of the statement -- which is why it was given the local array
-        and not the setting. It takes a string now; CharBufferText reads
-        exactly the bytes the setting was just assigned from. *)
-      Settings.Contest.DomesticFilename := CharBufferText(domPath);
+        end of the statement -- which is why it is given the local array and
+        not the setting. It takes a string now. *)
       if not DomQTHTable.LoadInDomQTHFile(CharBufferText(domPath)) then
          begin
          halt;

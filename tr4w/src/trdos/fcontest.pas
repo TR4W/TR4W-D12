@@ -1775,21 +1775,28 @@ begin
 
   if TempDomesticQTHDataFileName <> '' then
      begin
-     (* PLAIN CONCATENATION, AND THERE IS NO LONGER A BOUND TO GET WRONG.
+     (* ASSIGNED, NOT APPENDED -- 2026-09-20.
 
        This was two Windows.lstrcatA calls that walked to the NUL and kept
-       writing -- the name plus '.dom' could run past a MAX_PATH array of
-       AnsiChar and nothing checked -- and then a StrPLCopy that took the
-       array's size so that it could not. The setting is a string now, so the
-       size argument and the reason it had to be right are both gone.
+       writing, and the port kept their APPEND faithfully: the contest's own
+       file name was concatenated onto whatever the setting already held.
 
-       APPENDS TO ITSELF, exactly as the lstrcatA pair did: a contest file
-       may already have named a domestic file, and this adds the contest's
-       own default extension to what is there. *)
+       THAT MADE FoundContest NON-IDEMPOTENT, and the tree already carries
+       two scars from it. uLogStore excludes CONTEST from its skip-a-no-op
+       rule and says why -- re-applying it produced `dom\iaruhq.domiaruhq.dom`
+       and took the golden corpus from 20 passed to 10 passed / 14 failed --
+       and the same shape reached an operator on 2026-09-20 with a mount
+       point wrapped around a mount point. Both were treated by arranging
+       for the routine not to run twice, which is a guard around a defect
+       rather than the defect.
+
+       NOTHING LEGITIMATE WAS APPENDING. The only value that could be here
+       is one a contest .cfg set before its CONTEST line, and
+       `fooS48P14DC.dom` is not a file anybody meant. A contest .cfg that
+       names a domestic file AFTER its CONTEST line still wins, exactly as
+       before, because that is a plain assignment through the property. *)
      Settings.Contest.DomesticFilename :=
-        Settings.Contest.DomesticFilename
-        + TempDomesticQTHDataFileName
-        + string(DOM_EXTENSION);
+        TempDomesticQTHDataFileName + string(DOM_EXTENSION);
      end;
 
   case ActiveExchange of
@@ -1898,6 +1905,37 @@ begin
        operator's on the next call -- and the FIRST call can run before the
        callsign has arrived. See TMySettings.DeriveCountry. *)
      Settings.My.DeriveCountry(string(TempQTH.CountryID));
+
+     (* SAY SO, AND SAY FROM WHAT -- 2026-09-20.
+
+       A VALUE THAT APPEARS BY MAGIC IS WORSE THAN ONE THAT IS ABSENT. MY
+       COUNTRY decides the exchange for ARRL DX and ARRL 160, and until
+       today nothing recorded that it had been derived, from which callsign,
+       or that the derivation had come back empty. NY4I spent a bench
+       session on exactly that gap.
+
+       WARN WHEN IT COMES BACK EMPTY. That is not a country; it means the
+       callsign was absent or CTY.DAT could not place it, and every contest
+       that branches on MY COUNTRY is about to take its "not here" arm. *)
+     if logger <> nil then
+        begin
+        if Settings.My.Country = '' then
+           begin
+           logger.Warn('[FCONTEST] MY COUNTRY could not be derived from ' +
+                       'MY CALL = "%s" and is empty. A contest that chooses ' +
+                       'its exchange by country will treat this station as ' +
+                       'DX. Set MY COUNTRY in Preferences > Station.',
+                       [Settings.My.Call]);
+           end
+        else
+           begin
+           logger.Info('[FCONTEST] MY COUNTRY = %s, derived from MY CALL = ' +
+                       '%s through CTY.DAT. The operator has not stated one; ' +
+                       'a value typed in Preferences > Station overrides it.',
+                       [Settings.My.Country, Settings.My.Call]);
+           end;
+        end;
+
      if MRC = '' then
         begin
         MRC := UTF8Encode(Settings.My.Country);

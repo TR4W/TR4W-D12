@@ -1407,11 +1407,11 @@ object PrefsForm: TPrefsForm
       end
       object lblStationHint: TLabel
         Left = 12
-        Height = 51
-        Top = 360
+        Height = 68
+        Top = 352
         Width = 640
         AutoSize = False
-        Caption = 'These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.'
+        Caption = 'These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.'#13#10'Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True

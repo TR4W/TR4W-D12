@@ -153,6 +153,31 @@ function ExistingDataFile(const aPath: string): string;
   and nothing is assumed about the caller's declared size. *)
 procedure ResolveDataFileInPlace(var aPath: array of AnsiChar);
 
+(* THE FILE NAME OUT OF ANYTHING THAT MIGHT BE A PATH -- BOTH SEPARATORS,
+  ON EVERY PLATFORM.
+
+  WHY IT IS NOT ExtractFileName. That reads PathDelim, so on Linux it leaves
+  a Windows-spelled path entirely alone: ExtractFileName('dom\s48p14dc.dom')
+  is the whole string, and the caller then opens a file with a backslash in
+  its name that nothing will ever create.
+
+  WHY IT EXISTS AT ALL. Several settings are documented as NAMES of shipped
+  data files -- DOMESTIC FILENAME is 'OKOM.DOM' in every commands_help_*.ini
+  -- and a name is the only thing that can survive being written into a
+  contest log. An absolute path cannot: an AppImage mounts at a new
+  /tmp/.mount_TR4W-<random> every run, an install moves, a memory stick gets
+  a different drive letter, and a log opened on another machine sees none of
+  them. Measured 2026-09-20, NY4I, Linux Mint: a contest .db held
+
+    DOMESTIC FILENAME = /tmp/.mount_TR4W-5EnhBOm/usr/bin/dom\/tmp/.mount_TR4W-5olHkON/usr/bin/dom/s48p14dc.dom
+
+  -- one run's resolved path, composed into the NEXT run's prefix, because
+  the resolved path had been stored back into the setting.
+
+  Returns aValue unchanged when it holds no separator, so a plain name costs
+  a scan and nothing else. *)
+function DataFileNameOnly(const aValue: string): string;
+
 (* A PROGRAM SHIPPED ALONGSIDE TR4W -- today, tr4wconvert.
 
   THE FIFTH KIND OF PATH, and it is genuinely none of the other four: it is
@@ -181,6 +206,23 @@ function SiblingProgramPath(const aName: string): string;
 implementation
 
 uses SysUtils, StrUtils;
+
+function DataFileNameOnly(const aValue: string): string;
+var
+   i: integer;
+begin
+   Result := aValue;
+   (* Backwards from the end: the LAST separator of either spelling wins,
+     which is what makes the doubled value above collapse to the name. *)
+   for i := Length(Result) downto 1 do
+      begin
+      if (Result[i] = '/') or (Result[i] = '\') then
+         begin
+         Result := Copy(Result, i + 1, Length(Result) - i);
+         Exit;
+         end;
+      end;
+end;
 
 function SiblingProgramPath(const aName: string): string;
 begin

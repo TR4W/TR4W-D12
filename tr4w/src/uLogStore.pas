@@ -1413,6 +1413,52 @@ begin
       rows := TStringList.Create;
       try
          GRepository.LoadContestConfig(rows);
+
+         (* THE CALLSIGN BEFORE THE CONTEST -- 2026-09-20.
+
+           FoundContest DERIVES FROM THE CALLSIGN AND DECIDES WITH THE
+           RESULT. MY COUNTRY, MY CONTINENT and MY ZONE come from MY CALL
+           through CTY.DAT unless the operator stated them, and several
+           contests then BRANCH on MY COUNTRY: ARRL DX sends a power to a
+           K or VE station and a state to everyone else, ARRL 160 picks its
+           exchange on ARRLSectionCountry, and the FCONTEST case runs inside
+           the same call that does the deriving.
+
+           The rows below have no order -- they come back as the table
+           stores them -- so a log-backed contest could apply CONTEST first,
+           derive a country from an EMPTY callsign, and settle the exchange
+           before MY CALL was ever read. The derivation at the foot of this
+           routine then corrected the country and the zone, and could not
+           correct the decision already taken from them.
+
+           MEASURED, NY4I on Linux Mint 2026-09-20: a fresh station (whose
+           settings file holds MAIN CALLSIGN but not MY CALL -- the New
+           Contest dialog queues MY CALL as the CONTEST'S value), ARRL DX
+           SSB, reopened. MY COUNTRY derived to '', so TR4W put a Florida
+           station on the DX side and rejected 'K' as a received power with
+           "Improper domestic QTH". His Windows and macOS stations were
+           unaffected only because their MY CALL arrives from an older
+           configuration.
+
+           ONE COMMAND, HOISTED, NOT A SORT. Everything else here is a value
+           CONTEST does not read. *)
+         idx := rows.IndexOfName('MY CALL');
+         if idx >= 0 then
+            begin
+            cmdName := ShortString(AnsiString('MY CALL'));
+            valAsShort := ShortString(AnsiString(rows.ValueFromIndex[idx]));
+            if CheckCommand(cmdName, valAsShort, True) then
+               begin
+               if logger <> nil then
+                  begin
+                  logger.Info('[LogStore] MY CALL = %s applied before the ' +
+                              'contest, so the country and zone derived ' +
+                              'from it are settled before FCONTEST reads them',
+                              [string(valAsShort)]);
+                  end;
+               end;
+            end;
+
          (* THE CONTEST COMES FROM THE CONTEST TABLE, NOT FROM A CAPTURED
            SETTING -- and it is applied FIRST, because everything else depends
            on it. FoundContest sets the Contest enum, ActiveExchange and the

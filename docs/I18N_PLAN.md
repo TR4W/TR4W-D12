@@ -89,6 +89,50 @@ before the settings object loads, so a change takes effect at the next start. On
 the OS language is now the user's *preferred* language: a Finder launch has no `LANG`,
 and the LCL's own fallback reads the region locale. See `.claude/agents/i18n.md`.
 
+### macOS: the per-app language picker, and what it needs from the bundle
+
+**Done 2026-09-20.** System Settings › General › Language & Region › Applications lets an
+operator choose a language for one app. Until now macOS answered *"TR4W doesn't support
+additional languages"* (NY4I, on `mac-ci`), and the reason was not the code: macOS only
+offers an app in that list if the **bundle declares its localizations**, through
+`CFBundleLocalizations` in `Info.plist` or `.lproj` directories under `Contents/Resources`.
+TR4W has no `.lproj` and never will — its catalogues are `.po` files compiled into the
+executable as RCDATA, which Cocoa cannot see — so nothing told macOS what we speak.
+
+`TR4W.app/Contents/Info.plist` now carries `CFBundleLocalizations` (22 tags) and
+`CFBundleDevelopmentRegion` (`en`). **The list is derived, never typed**: the Darwin arm of
+`tr4w/build/build-unix.sh` reads the resource names out of `tr4w/res/tr4w_languages.res` —
+the `.res` that is `{$R}`-linked into the binary — so it cannot claim a language the
+executable does not carry. Apple's spelling differs from our catalogue keys in two places
+and both are inverses of `uUILanguage.SystemLanguageCode`: `pt_BR` is declared `pt-BR`, and
+`zh_CN` is declared **`zh-Hans`**, because macOS identifies Chinese by script rather than by
+country.
+
+**No other code change was needed, but one was found.** The picker writes the choice into
+the app's own preferences domain, which is exactly what `CFLocaleCopyPreferredLanguages`
+reads, so `SystemUILanguage`'s Darwin arm already sees it. What it then did with the answer
+was wrong for the two region-qualified tags: it took the language half only, so `pt-BR`
+became European Portuguese and `zh-Hans` became `zh`, for which there is no catalogue — the
+picker would have looked as though it worked and the run would have been in English. That
+arm calls `SystemLanguageCode` now. Verified on `mac-ci`, four languages end to end:
+
+```
+UI language: "es"    selected by the macOS preferred language (es)
+UI language: "pt_br" selected by the macOS preferred language (pt-BR)
+UI language: "zh_cn" selected by the macOS preferred language (zh-Hans)
+UI language: "de"    selected by the macOS preferred language (de)
+```
+
+**THE IN-APP SETTING WINS, SO IT MUST BE "SYSTEM DEFAULT" FOR THE PICKER TO DO ANYTHING.**
+The precedence above is unchanged — `--lang`, then `Settings.Display.Language`, then the OS.
+An operator who has chosen a language in Preferences › Appearance has chosen it *instead of*
+the OS, and the macOS picker will appear to be ignored. That is deliberate, not a defect:
+the setting exists precisely because a Mac started from Finder gets no command line. Either
+control works; they are not meant to be used together.
+
+Serbian is declared `sr`, not `sr-Latn`, although our catalogue is in Latin script. Both
+resolve to the same catalogue; nobody has yet confirmed how the macOS picker labels either.
+
 ### `LCLTranslator`, not `DefaultTranslator`
 
 `DefaultTranslator` is a 24-line unit whose entire body is

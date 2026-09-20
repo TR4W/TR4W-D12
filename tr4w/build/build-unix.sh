@@ -771,6 +771,76 @@ stage_server() {
 }
 
 # ---------------------------------------------------------------------------
+# THE LANGUAGES THE BUNDLE DECLARES, TAKEN FROM THE RESOURCE THE BINARY LINKS.
+#
+# WHY THIS EXISTS AT ALL. macOS lists an application in System Settings >
+# General > Language & Region > Applications only if the bundle DECLARES its
+# localizations -- CFBundleLocalizations, or .lproj directories under
+# Contents/Resources. TR4W has no .lproj and never will: its translations are
+# .po catalogues compiled into the executable as RCDATA, which Cocoa cannot
+# see. Without the declaration macOS says "TR4W doesn't support additional
+# languages" and the operator has no per-app picker at all (NY4I, on mac-ci).
+#
+# THE LIST IS DERIVED, NEVER TYPED. A hand-written list here would be a second
+# definition of what we ship, and it would drift the first time a catalogue is
+# added or dropped -- silently, because nothing would compare the two.
+#
+# THE SOURCE OF TRUTH IS tr4w/res/tr4w_languages.res -- the resource that is
+# {$R}-linked into the executable, built from i18n/*.po by
+# build/Make-LanguageRes.ps1. It is deliberately NOT the i18n/ directory, which
+# is one step upstream: a .po added without regenerating the .res is not in the
+# binary, so declaring it would offer the operator a language that silently
+# resolves to English.
+#
+# HOW IT IS READ. fpcres writes resource NAMES as UTF-16LE, so stripping NUL
+# bytes leaves them as plain ASCII. The payload is the .po text and no shipped
+# catalogue contains the string "TR4W_" (checked), so the match cannot pick up
+# content; the LCL_<LANG> entries -- the Lazarus catalogues embedded beside
+# ours -- are excluded by the prefix.
+#
+# THE SPELLING macOS WANTS is BCP 47. Our catalogue keys are lower case with an
+# underscore and Apple uses a hyphen with an upper-case region, so pt_BR becomes
+# pt-BR. Chinese is the one that is not mechanical: Apple identifies Chinese by
+# SCRIPT rather than by country and its own picker offers zh-Hans / zh-Hant.
+# Ours is the Simplified catalogue, so zh_CN is declared as zh-Hans.
+#
+# AND THE PROGRAM AGREES WITH THIS MAPPING RATHER THAN KEEPING ITS OWN. What
+# macOS hands back once the operator picks one of these is read by
+# uUILanguage.SystemUILanguage and mapped BACK by SystemLanguageCode, which
+# turns pt-BR into pt_br and zh-Hans into zh_cn. The two are inverses of each
+# other; when a region-qualified catalogue is added, both need the row.
+#
+# SERBIAN IS DECLARED 'sr', NOT 'sr-Latn', and that is worth knowing: our
+# catalogue is Serbian in LATIN script (Dragan Acimovic YT3W), so 'sr-Latn' is
+# arguably the truer tag. It is not used because nobody has confirmed how the
+# macOS picker labels it, and 'sr' resolves to the same catalogue either way.
+# ---------------------------------------------------------------------------
+mac_bundle_localizations() {
+   res="$TR4W_DIR/res/tr4w_languages.res"
+   [ -f "$res" ] || return 0
+   LC_ALL=C tr -d '\000' < "$res" \
+      | LC_ALL=C grep -ao 'TR4W_[A-Z][A-Z_]*' \
+      | sort -u \
+      | while read -r name; do
+           code=${name#TR4W_}
+           case "$code" in
+              ZH_CN)
+                 printf '    <string>zh-Hans</string>\n'
+                 ;;
+              *_*)
+                 printf '    <string>%s-%s</string>\n' \
+                    "$(printf '%s' "${code%%_*}" | tr '[:upper:]' '[:lower:]')" \
+                    "${code#*_}"
+                 ;;
+              *)
+                 printf '    <string>%s</string>\n' \
+                    "$(printf '%s' "$code" | tr '[:upper:]' '[:lower:]')"
+                 ;;
+           esac
+        done
+}
+
+# ---------------------------------------------------------------------------
 # STAGE 7 -- packaging.
 #
 # WHAT A LINUX RELEASE SHOULD BE, since there is no NSIS and no precedent in
@@ -897,6 +967,20 @@ stage_package() {
       done
       cp "$APP_EXE" "$bundle/Contents/MacOS/tr4w"
       chmod +x "$bundle/Contents/MacOS/tr4w"
+
+      # FAIL RATHER THAN DECLARE NOTHING. An empty list here is not a
+      # cosmetic loss: it is the exact state NY4I hit on the bench, where
+      # macOS reports that TR4W supports no additional languages, and it
+      # would look identical to a build that simply ships one language.
+      localizations=$(mac_bundle_localizations)
+      if [ -z "$localizations" ]; then
+         say '  FAILED: no languages could be read from tr4w/res/tr4w_languages.res,'
+         say '  so the bundle would declare none and the macOS per-app language'
+         say '  picker would refuse TR4W.'
+         record FAIL 'package' 'no CFBundleLocalizations could be derived'
+         return 1
+      fi
+
       cat > "$bundle/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -910,6 +994,11 @@ stage_package() {
   <key>CFBundlePackageType</key>       <string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$TR4W_VERSION</string>
   <key>CFBundleVersion</key>           <string>$TR4W_VERSION</string>
+  <key>CFBundleDevelopmentRegion</key> <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+$localizations
+  </array>
   <key>NSHighResolutionCapable</key>   <true/>
   <key>LSMinimumSystemVersion</key>    <string>11.0</string>
 </dict>

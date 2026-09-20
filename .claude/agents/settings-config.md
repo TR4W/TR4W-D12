@@ -215,6 +215,22 @@ is the only member** (NY4I, 2026-09-19): `StartupUILanguage` has chosen the
 catalogue already, so a `.cfg` line could not take effect — it could only be
 written into the station's file by the next Preferences save.
 
+## `NeedsRestart` is a flag with no consumer
+
+`TSettingBase.NeedsRestart` exists and **nothing reads it** (measured
+2026-09-20). The one setting that tells an operator it needs a restart — the
+Language drop-down — does it with a **hand-typed hint label in the `.lfm`**, and
+the Station page now carries a second such label for `MY CALL`/`MY COUNTRY`.
+That is two hand-written hints where a registry flag already exists.
+
+**Every `Settings.My.*` and `Settings.Contest.*` value `FoundContest` reads has
+this property** — `MY STATE`, `MY ZONE`, `MY GRID`, `MY SECTION`, `MY CHECK`,
+`MY PREC`, `MY FD CLASS` — because the contest is set up once at startup.
+Wiring `NeedsRestart` to emit that hint per bound control is the real fix and is
+`settings-config` + `lcl-ui` work. NY4I lost twenty minutes to this: he set
+`MY COUNTRY` mid-session, nothing said it would not take effect, and the
+contest kept its original exchange.
+
 ## Open
 
 **The startup precedence defect is NARROWER, NOT CLOSED.** The

@@ -479,7 +479,9 @@ begin
 
 //  if not OpenFileForRead(FileRead, FileName) then
      begin
-     UnableToFindFileMessage(FileName);
+     (* THE ONLY SETTING THAT NAMES A .DOM IS DOMESTIC FILENAME, so the
+       attribution is not a guess -- see TF.UnableToFindFileMessage. *)
+     UnableToFindFileMessage(FileName, 'DOMESTIC FILENAME');
      Exit;
      end;
 

@@ -181,6 +181,69 @@ resourcestring
      in that case. *)
    SFileNotFoundThere = 'TR4W could not find this file:';
 
+   (* WHICH SETTING BUILT THAT PATH. A wrong path with no attribution sends an
+     operator looking at the disk when the answer is in the configuration --
+     NY4I, Linux Mint, 2026-09-20. The single %s is the command name, e.g.
+     DOMESTIC FILENAME. *)
+   SFileNameCameFromSetting =
+      'The name came from the %s setting for this contest.';
+
+   { ------------------------------------------- the contest readiness check -
+
+     ONE LINE PER GAP, AND EACH SAYS WHAT TR4W WILL DO INSTEAD. "MY COUNTRY is
+     empty" on its own does not tell an operator that their exchange is about
+     to change shape; NY4I lost a bench session to precisely that gap
+     (2026-09-20). See uContestReadiness. }
+
+   SReadinessHeading =
+      'This contest is set up, but TR4W is missing information it needs:';
+
+   SReadinessFooter =
+      'Set these in Preferences > Station, then restart TR4W: they are read ' +
+      'once when the contest is set up, so changing them now will not ' +
+      'change this contest.';
+
+   SReadinessMyCallMissing =
+      'MY CALL is empty. TR4W cannot work out your country, continent or ' +
+      'zone without it, and nothing that depends on them will be right.';
+
+   SReadinessMyCountryMissing =
+      'MY COUNTRY is empty. It is normally worked out from MY CALL through ' +
+      'CTY.DAT. Until it has a value TR4W treats this station as DX -- in ' +
+      'ARRL DX that means it will ask every station for a state or province ' +
+      'and refuse a power such as K or 100.';
+
+   SReadinessMyStateMissing =
+      'MY STATE is empty and this contest sends your state, province or ' +
+      'section. TR4W will send a serial number instead.';
+
+   SReadinessMyZoneMissing =
+      'MY ZONE is empty and this contest sends your zone.';
+
+   SReadinessMyGridMissing =
+      'MY GRID is empty and this contest sends your grid square.';
+
+   SReadinessDomesticFileMissing =
+      'This contest scores domestic multipliers from a .DOM file and none ' +
+      'is named, so no domestic multiplier will be counted.';
+
+   { WHICH SETTING PUT THE EXCHANGE IN THIS MODE -- shown beside a rejected
+     exchange, where the operator is looking. }
+
+   SExchangeModeFromEmptyCountry =
+      'This contest is asking for a state, province or section because MY ' +
+      'COUNTRY is empty.';
+
+   SExchangeModeFromCountry =
+      'This contest is asking for a state, province or section because MY ' +
+      'COUNTRY is %s.';
+
+   { THE SAME THING IN A FEW WORDS. QuickDisplayError writes into a
+     main-window element, not a dialog, so the sentences above will not fit. }
+
+   SExchangeModeBriefEmptyCountry = '(MY COUNTRY is empty)';
+   SExchangeModeBriefCountry      = '(MY COUNTRY = %s)';
+
    SCtyDownloadFailed =
       'Could not download CTY.DAT to:' + sLineBreak + sLineBreak +
       '    %s' + sLineBreak + sLineBreak +
