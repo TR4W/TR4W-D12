@@ -15,12 +15,38 @@
 # WHAT THIS DOES NOT FIX, AND YOU SHOULD KNOW BEFORE RUNNING IT
 # ============================================================================
 #
-# THE glibc FLOOR IS UNCHANGED. An AppImage bundles everything EXCEPT glibc,
-# so one built here still refuses to start on a machine older than the build
-# host. Measured 2026-09-09: the binary's highest referenced symbol is
-# GLIBC_2.34, which rules out Ubuntu 20.04 and Debian 11. Lowering it means
-# building on an older base -- a container or an old VM -- and the builder has
+# THE glibc FLOOR IS UNCHANGED, AND IT IS HIGHER THAN THE EXECUTABLE'S.
+#
+# An AppImage bundles everything EXCEPT glibc, so one built here still refuses
+# to start on a machine older than the build host.
+#
+# THIS SAID GLIBC_2.34 AND WAS WRONG ABOUT THE BUNDLE, which is the sort of
+# wrong that gets quoted into a release note. 2.34 is the highest symbol the
+# TR4W EXECUTABLE references, and it would be the answer if the executable
+# travelled alone. It does not: it travels with 38 shared libraries lifted off
+# the build host, and THEY have a floor of their own.
+#
+# Measured on linux-ci-build (Ubuntu 24.04, glibc 2.39) 2026-09-20, with
+# objdump -T over everything in usr/lib: THIRTEEN of the 38 reference
+# GLIBC_2.38 -- libglib-2.0, libgio-2.0, libpango-1.0, libcairo, libharfbuzz,
+# libfontconfig, libexpat, libsqlite3, libcrypto, libselinux, libmount,
+# libblkid, libbsd. So the AppImage's real floor is 2.38:
+#
+#     RUNS      Ubuntu 24.04 / 23.10, Debian 13, Fedora 39+
+#     DOES NOT  Ubuntu 22.04 LTS, Ubuntu 20.04, Debian 12, RHEL 9
+#
+# The floor is a property of the BUILD HOST, not of this script -- it is
+# whatever the oldest machine you build on can produce. Lowering it means
+# building on an older base (a container or an old VM), and the builder has
 # neither docker nor podman today. See task #17.
+#
+# WHAT IS NOT IN THE BUNDLE, AND THEREFORE STILL DEPENDS ON THE HOST: HamLib.
+# DLOPENED below lists sqlite3 and OpenSSL and nothing else, and libhamlib is
+# not installed on the build host to be copied even if it were listed. A
+# HamLib-driven radio therefore needs libhamlib.so.4 present on the user's
+# machine -- dlopen will find a system copy through the loader cache, but that
+# combination has never been exercised. Radios TR4W drives itself are not
+# affected.
 #
 # IT ADDS A DEPENDENCY OF ITS OWN: FUSE 2 on the tester's machine, or they run
 # it with --appimage-extract-and-run.
@@ -289,6 +315,13 @@ DESKTOP
 
 # appimagetool insists on an icon. A generated one is honest about there not
 # being real artwork yet; a missing file just fails the build.
+#
+# AND THERE IS NOTHING IN THE TREE TO USE INSTEAD. Measured 2026-09-20:
+# tr4w/res/tr4w.ico holds exactly ONE image, 32x32 at 24bpp -- a Win32 titlebar
+# icon. Scaling that to the 256x256 a desktop wants would look worse than a
+# plain square and would look like somebody's finished work, which is the
+# reason not to do it. Drop real artwork at tr4w/res/tr4w.png and this branch
+# stops running.
 if [ -f "$TR4W/res/tr4w.png" ]; then
    cp "$TR4W/res/tr4w.png" "$APPDIR/tr4w.png"
 else
@@ -329,19 +362,120 @@ fi
 
 echo ""
 echo "=== appimagetool ==="
-TOOL="$OUTROOT/appimagetool-$ARCH.AppImage"
-if [ ! -x "$TOOL" ]; then
-   echo "  downloading appimagetool"
-   curl -sSL -o "$TOOL" \
-     "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$ARCH.AppImage" \
-     || { echo "  download failed -- fetch it by hand into $OUTROOT"; exit 2; }
-   chmod +x "$TOOL"
+
+# ---------------------------------------------------------------------------
+# THE TOOLING IS CACHED OUTSIDE THE WORKSPACE, AND THERE ARE TWO PIECES OF IT.
+#
+# This used to keep appimagetool in build-out/. That is inside the checkout,
+# and actions/checkout runs `git clean -ffdx` before every job -- build-out is
+# gitignored, so it is wiped -- which made the cache a cache that never hit:
+# a release run downloaded the tool EVERY time.
+#
+# AND IT WAS NOT ONE DOWNLOAD BUT TWO. appimagetool fetches the type2 runtime
+# it stamps onto the front of the image from
+# github.com/AppImage/type2-runtime/releases/continuous unless it is handed one
+# with --runtime-file (measured in its own strings, 2026-09-20:
+# "Failed to download runtime file, please download the runtime manually ...
+# and pass it to appimagetool with --runtime-file"). Two GitHub fetches inside
+# a release job are two chances to fail for a reason that has nothing to do
+# with TR4W.
+#
+# So both live in a per-user cache that no checkout touches. $HOME/.cache is
+# the runner's own cache directory as much as a developer's; TR4W_CACHE_DIR
+# overrides it, and TR4W_APPIMAGETOOL pins one specific binary for an air-
+# gapped or offline build.
+#
+# EVERY DOWNLOAD IS STAGED AND VERIFIED BEFORE IT ENTERS THE CACHE. A cache is
+# a place a truncated download can live forever: half a tool, written straight
+# to the cache path, is executable-looking and broken on every subsequent run,
+# with no way to tell it from a good one. Each file is fetched to a temporary
+# name, checked (the tool must answer --version, the runtime must be an ELF of
+# a plausible size) and only then moved into place, which is atomic within a
+# directory.
+# ---------------------------------------------------------------------------
+CACHE_DIR="${TR4W_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/tr4w}"
+mkdir -p "$CACHE_DIR"
+
+TOOL="${TR4W_APPIMAGETOOL:-$CACHE_DIR/appimagetool-$ARCH.AppImage}"
+RUNTIME="$CACHE_DIR/runtime-$ARCH"
+
+tool_works() {
+   [ -x "$1" ] || return 1
+   "$1" --appimage-extract-and-run --version >/dev/null 2>&1
+}
+
+if tool_works "$TOOL"; then
+   echo "  appimagetool: cached at $TOOL"
+elif [ -n "${TR4W_APPIMAGETOOL:-}" ]; then
+   # A PINNED path that does not work is an error, never a silent download:
+   # whoever set it meant that file and nothing else.
+   echo "  TR4W_APPIMAGETOOL=$TOOL is not a working appimagetool"
+   exit 2
+else
+   echo "  downloading appimagetool -> $TOOL"
+   tmp="$TOOL.part.$$"
+   rm -f "$tmp"
+   if curl -fsSL -o "$tmp" \
+        "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$ARCH.AppImage"
+   then
+      chmod +x "$tmp"
+      if tool_works "$tmp"; then
+         mv "$tmp" "$TOOL"
+      else
+         rm -f "$tmp"
+         echo "  the downloaded appimagetool does not run -- not cached"
+         exit 2
+      fi
+   else
+      rm -f "$tmp"
+      echo "  download failed -- put a working appimagetool at $TOOL,"
+      echo "  or point TR4W_APPIMAGETOOL at one"
+      exit 2
+   fi
 fi
+
+# THE RUNTIME IS AN OPTIMISATION, NOT A REQUIREMENT. If it cannot be fetched,
+# appimagetool is left to get its own exactly as before -- a cache miss must
+# not turn into a build failure for something that used to work without a
+# cache at all.
+RUNTIME_ARG=''
+if [ -s "$RUNTIME" ] && [ "$(head -c 4 "$RUNTIME" | od -An -c | tr -d ' \n')" = '177ELF' ]; then
+   echo "  type2 runtime: cached at $RUNTIME"
+   RUNTIME_ARG="$RUNTIME"
+else
+   echo "  downloading the type2 runtime -> $RUNTIME"
+   tmp="$RUNTIME.part.$$"
+   rm -f "$tmp"
+   if curl -fsSL -o "$tmp" \
+        "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$ARCH" \
+      && [ -s "$tmp" ] \
+      && [ "$(wc -c < "$tmp")" -gt 100000 ] \
+      && [ "$(head -c 4 "$tmp" | od -An -c | tr -d ' \n')" = '177ELF' ]
+   then
+      chmod +x "$tmp"
+      mv "$tmp" "$RUNTIME"
+      RUNTIME_ARG="$RUNTIME"
+   else
+      rm -f "$tmp"
+      echo "  could not cache the runtime -- appimagetool will fetch its own"
+   fi
+fi
+
+# REMOVED FIRST, so a failed run cannot leave yesterday's image in the place
+# a packaging or release step looks. "The file is there" has to mean "this run
+# produced it", which is the same reason build-unix.sh rm -f's the tarball.
+rm -f "$OUT"
 
 # --appimage-extract-and-run: the builder may have no FUSE, and requiring it
 # to BUILD an AppImage would be an odd dependency to add to a CI box.
-ARCH="$ARCH" "$TOOL" --appimage-extract-and-run "$APPDIR" "$OUT" \
-  || { echo "  appimagetool failed"; exit 1; }
+if [ -n "$RUNTIME_ARG" ]; then
+   ARCH="$ARCH" "$TOOL" --appimage-extract-and-run \
+     --runtime-file "$RUNTIME_ARG" "$APPDIR" "$OUT" \
+     || { echo "  appimagetool failed"; exit 1; }
+else
+   ARCH="$ARCH" "$TOOL" --appimage-extract-and-run "$APPDIR" "$OUT" \
+     || { echo "  appimagetool failed"; exit 1; }
+fi
 
 echo ""
 echo "=== Summary ==="

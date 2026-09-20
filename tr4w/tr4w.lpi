@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="408">
+    <Units Count="410">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1797,6 +1797,14 @@
         <Filename Value="src/uNewContestCommands.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit407>
+      <Unit408>
+        <Filename Value="src/uLegacyConversionCheck.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit408>
+      <Unit409>
+        <Filename Value="src/ui/lcl/uFirstRunConvert.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit409>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

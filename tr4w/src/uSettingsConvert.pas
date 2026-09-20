@@ -132,8 +132,13 @@ function ConvertOutcomeName(aOutcome: TConvertOutcome): string;
   aApply False is a DRY RUN: everything is decided and reported and nothing is
   written. That is the default an operator should see first.
 
-  Returns False only when the settings file could not be read at all; a file
-  with nothing to convert is a success with an empty-handed report. *)
+  A SETTINGS FILE THAT DOES NOT EXIST YET IS THE NORMAL CASE and is CREATED on
+  apply, from the model's defaults plus whatever the old files hold. That is
+  the whole intended sequence -- install, convert, start TR4W.
+
+  Returns False only when the settings file is there and could not be read or
+  parsed; a file with nothing to convert is a success with an empty-handed
+  report. *)
 function ConvertStationSettings(const aSettingsFile: string;
                                 const aIniFile: string;
                                 aApply: boolean;
@@ -205,22 +210,37 @@ begin
    aError := '';
    aInto.Clear;
 
-   radios := TRadioConfigStore.Create;
-   keyers := TKeyerConfigStore.Create;
-   try
-      if not LoadConfig(aSettingsFile, radios, keyers, aError) then
-         begin
-         Exit;
-         end;
-      for i := 0 to radios.Commands.Count - 1 do
-         begin
-         aInto.Values[radios.Commands.Names[i]] :=
-            radios.Commands.ValueFromIndex[i];
-         end;
-   finally
-      keyers.Free;
-      radios.Free;
-   end;
+   (* NO SETTINGS FILE AT ALL IS THE PRIMARY CASE, NOT AN ERROR (2026-09-20).
+
+     NY4I: "the only reason tr4wconvert should run is if the tr4w.json does not
+     exist so how could we have a settings conflict?" -- the intended sequence
+     is install, convert, THEN start TR4W. A file that is not there has no
+     legacy `commands` bucket to read, so there is simply nothing to collect
+     from it and the ini below is the whole of the old configuration.
+
+     It used to fail here, and that precondition is what forced the installer
+     to tell an operator to start TR4W and close it again just to bring the
+     file into existence. An error should mean something is wrong, not that
+     the thing this tool exists to create is absent. *)
+   if FileExists(aSettingsFile) then
+      begin
+      radios := TRadioConfigStore.Create;
+      keyers := TKeyerConfigStore.Create;
+      try
+         if not LoadConfig(aSettingsFile, radios, keyers, aError) then
+            begin
+            Exit;
+            end;
+         for i := 0 to radios.Commands.Count - 1 do
+            begin
+            aInto.Values[radios.Commands.Names[i]] :=
+               radios.Commands.ValueFromIndex[i];
+            end;
+      finally
+         keyers.Free;
+         radios.Free;
+      end;
+      end;
 
    if (aIniFile <> '') and FileExists(aIniFile) then
       begin

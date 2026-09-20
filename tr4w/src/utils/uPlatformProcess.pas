@@ -84,6 +84,37 @@ function RunProgram(const aExecutable: string;
 function RunWindowsUtility(const aCommandLine: string;
                            const aWindow: TLaunchWindow = lwNormal): boolean;
 
+(* RUN A CONSOLE PROGRAM IN ITS OWN WINDOW AND WAIT FOR IT.
+
+  The third situation, and it is genuinely different from the two above rather
+  than a flag on one of them: the child is INTERACTIVE and it is an ordered
+  step in what the caller is doing.
+
+  poNewConsole, because TR4W is a GUI program and has no console of its own to
+  lend. Without it the child gets no terminal at all -- and tr4wconvert, the
+  one caller, deliberately refuses to ask a question it cannot ask and writes
+  NOTHING in that case. A hidden or piped launch would therefore look like it
+  worked and change nothing.
+
+  poWaitOnExit, because the caller is about to read the file the child writes.
+  This is the one place where freezing TR4W is correct: it happens once, at
+  startup, before any window exists, and the alternative is a race against the
+  operator's own answer.
+
+  The exit STATUS is returned but is not the evidence a caller should reason
+  from -- tr4wconvert exits 0 whether it converted or the operator declined,
+  which is right for a shell and useless as a test of what happened. Look at
+  the file.
+
+  OFF WINDOWS poNewConsole DOES NOTHING; the child inherits whatever stdio
+  this process has, which from a desktop launcher is none. That is stated,
+  not worked around: the caller checks the RESULT on disk and reports
+  honestly when nothing was converted, which covers this case and "the
+  operator said no" with the same sentence. *)
+function RunConsoleProgramAndWait(const aExecutable: string;
+                                  const aArgs: array of string;
+                                  out aExitStatus: integer): boolean;
+
 (* HAND A FILE TO THE DESKTOP'S OWN HANDLER -- the Unix counterpart of asking
   Windows which program is registered for an extension.
 
@@ -305,12 +336,19 @@ end;
   would have left a second copy of everything below. *)
 function Launch(const aExecutable: string;
                 aArgs: TStrings;
-                aShow: TShowWindowOptions): boolean;
+                aShow: TShowWindowOptions;
+                aOptions: TProcessOptions;
+                out aExitStatus: integer): boolean;
 var
    p: TProcess;
    i: integer;
 begin
    Result := False;
+   (* -1 MEANS "NOBODY WAITED", and it is the answer on every path but one.
+     A launch that did not wait has no exit status to report, and a launch
+     that failed never produced one; returning 0 there would read as "the
+     program ran and succeeded". *)
+   aExitStatus := -1;
 
    if Trim(aExecutable) = '' then
       begin
@@ -330,12 +368,22 @@ begin
                end;
             end;
 
-         // NOT poWaitOnExit. Every caller here is "open this thing for the
-         // operator" -- waiting would freeze the contest log until they closed
-         // their text editor.
-         p.Options    := [];
+         (* THE OPTIONS COME FROM THE CALLER, AND THE DEFAULT IS STILL NONE.
+
+           RunProgram and RunWindowsUtility pass [] for the reason that was
+           written here: every one of their callers is "open this thing for
+           the operator", and waiting would freeze the contest log until they
+           closed their text editor.
+
+           RunConsoleProgramAndWait passes the opposite, because it exists for
+           the one case where waiting is the whole point -- see its note. *)
+         p.Options    := aOptions;
          p.ShowWindow := aShow;
          p.Execute;
+         if poWaitOnExit in aOptions then
+            begin
+            aExitStatus := p.ExitStatus;
+            end;
          Result := True;
       except
          // A missing or mistyped executable raises here rather than returning a
@@ -351,19 +399,52 @@ begin
    end;
 end;
 
+(* An open array of arguments as the TStrings Launch wants, written once.
+
+  IT IS ONE ROUTINE ON PURPOSE. The second caller copied this loop and the
+  copy was visible in the build: TStringList holds AnsiString here, so each
+  copy of `args.Add(aArgs[i])` is its own narrowing warning against the
+  build's ceiling. Two copies, two warnings, and the ceiling counts them --
+  which is a small, honest signal of exactly what CLAUDE.md says about copies
+  drifting. *)
+function ArgsToList(const aArgs: array of string): TStringList;
+var
+   i: integer;
+begin
+   Result := TStringList.Create;
+   for i := Low(aArgs) to High(aArgs) do
+      begin
+      Result.Add(aArgs[i]);
+      end;
+end;
+
 function RunProgram(const aExecutable: string;
                     const aArgs: array of string): boolean;
 var
    args: TStringList;
-   i: integer;
+   ignoredStatus: integer;
 begin
-   args := TStringList.Create;
+   args := ArgsToList(aArgs);
    try
-      for i := Low(aArgs) to High(aArgs) do
-         begin
-         args.Add(aArgs[i]);
-         end;
-      Result := Launch(aExecutable, args, swoShowNormal);
+      Result := Launch(aExecutable, args, swoShowNormal, [], ignoredStatus);
+   finally
+      args.Free;
+   end;
+end;
+
+function RunConsoleProgramAndWait(const aExecutable: string;
+                                  const aArgs: array of string;
+                                  out aExitStatus: integer): boolean;
+var
+   args: TStringList;
+begin
+   args := ArgsToList(aArgs);
+   try
+      (* poNewConsole AND poWaitOnExit, and both are load-bearing -- see the
+        interface note. The exit status is only meaningful once Execute has
+        returned, which is what poWaitOnExit guarantees. *)
+      Result := Launch(aExecutable, args, swoShowNormal,
+                       [poNewConsole, poWaitOnExit], aExitStatus);
    finally
       args.Free;
    end;
@@ -376,6 +457,7 @@ var
    parts: TStringList;
    exe: string;
    show: TShowWindowOptions;
+   ignoredStatus: integer;
 {$ENDIF}
 begin
 {$IFDEF WINDOWS}
@@ -419,7 +501,7 @@ begin
 
       exe := parts[0];
       parts.Delete(0);
-      Result := Launch(exe, parts, show);
+      Result := Launch(exe, parts, show, [], ignoredStatus);
    finally
       parts.Free;
    end;

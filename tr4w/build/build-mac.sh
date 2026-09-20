@@ -13,11 +13,17 @@
 #
 # WHAT THIS DOES NOT DO, and should not be assumed to:
 #
-#   IT DOES NOT SIGN OR NOTARIZE.  Gatekeeper refuses an unsigned bundle on any
-#   Mac but the one that built it, and the message the user gets says the app is
-#   DAMAGED rather than unsigned -- which sends people looking for a corrupt
-#   download.  Fixing that needs an Apple Developer ID and is a distribution
-#   decision, not a build step.
+#   IT DOES NOT SIGN OR NOTARIZE BY DEFAULT.  Gatekeeper refuses an unsigned
+#   bundle on any Mac but the one that built it, and the message the user gets
+#   says the app is DAMAGED rather than unsigned -- which sends people looking
+#   for a corrupt download.
+#
+#   Set TR4W_MAC_SIGN=1, with TR4W_SIGN_IDENTITY and the three TR4W_NOTARY_*
+#   variables, and the packaging stage signs, notarizes and staples through
+#   build/mac-sign.sh -- which is what the release workflow does on mac-ci.
+#   ONCE IT IS ON IT IS FAIL-CLOSED: a missing credential or a rejected
+#   submission produces NO tarball and NO disk image, rather than unsigned
+#   ones.  There is no middle setting on purpose.
 #
 #   IT DOES RUN TO COMPLETION NOW.  This said "IT HAS NOT BEEN RUN TO
 #   COMPLETION... the whole unit graph COMPILES, which is not the same as

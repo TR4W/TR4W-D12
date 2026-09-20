@@ -480,6 +480,33 @@ else
    }
 
 # ---------------------------------------------------------------------------
+# tr4wconvert.
+#
+# The standalone settings converter.  It is built HERE, as an ordinary stage,
+# because the INSTALLER SHIPS IT and the message setup shows an upgrading
+# operator names it.  Until 2026-09-19 nothing built it as part of a release,
+# so target\tr4wconvert.exe existed only on a machine where somebody had run
+# build\Build-Convert.ps1 by hand -- and a file that is present only by habit
+# is a file the installer cannot depend on.
+#
+# Unconditional rather than gated on -BuildInstaller: it is a small console
+# build, an operator building from source wants the tool in target\ too, and a
+# stage that runs only sometimes is a stage that rots.
+# ---------------------------------------------------------------------------
+Phase 'tr4wconvert'
+
+$convertExe = Join-Path $TARGET_DIR 'tr4wconvert.exe'
+
+& (Join-Path $BUILD_DIR 'Build-Convert.ps1') `
+      -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
+      -OutExe $convertExe | Out-Host
+
+if ($LASTEXITCODE -ne 0) { Fail 'tr4wconvert build failed' }
+if (-not (Test-Path $convertExe)) { Fail "tr4wconvert binary missing at $convertExe" }
+
+Write-Host "  tr4wconvert.exe ($([int]((Get-Item $convertExe).Length / 1KB)) KB)"
+
+# ---------------------------------------------------------------------------
 # Installer.
 # ---------------------------------------------------------------------------
 if ($BuildInstaller)

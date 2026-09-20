@@ -4,7 +4,8 @@
 # Lazarus installed natively.
 #
 #   sh tr4w/build/build-unix.sh               every stage
-#   sh tr4w/build/build-unix.sh --app         one stage (--tests --server --package)
+#   sh tr4w/build/build-unix.sh --app         one stage (--tests --server
+#                                             --package --appimage)
 #   sh tr4w/build/build-unix.sh --list        what the stages are, and stop
 #
 # build-linux.sh and build-mac.sh are one-line wrappers around this file. There
@@ -166,6 +167,20 @@ VERDICTS="${TMPDIR:-/tmp}/tr4w-$OS-verdicts.$$"
 : > "$VERDICTS"
 FAILURES=0
 
+# SKIPS ARE COUNTED, AND THEY DID NOT USED TO BE (fixed 2026-09-20).
+#
+# record() incremented FAILURES for FAIL only, so a stage that recorded SKIP
+# left the run reporting 'ALL STAGES PASSED' -- with the skipped stage printed
+# two lines above it, in the same summary.  Measured: `--package` on its own
+# printed 'NOT ATTEMPTED: there is no application binary to package' and then
+# 'ALL STAGES PASSED'.
+#
+# A summary that contradicts itself is worse than a wrong one, because the
+# last line is the line people quote.  A skipped stage is a stage that did not
+# complete: it is counted here, named in the closing text as a skip rather
+# than as a failure, and the run exits non-zero.
+SKIPS=0
+
 say() { printf '%s\n' "$*"; }
 
 phase() {
@@ -177,6 +192,7 @@ phase() {
 record() {
    printf '%s\t%s\t%s\n' "$1" "$2" "$3" >> "$VERDICTS"
    [ "$1" = FAIL ] && FAILURES=$((FAILURES + 1))
+   [ "$1" = SKIP ] && SKIPS=$((SKIPS + 1))
    return 0
 }
 
@@ -606,7 +622,12 @@ compile() {
 stage_app() {
    phase 'Application'
    search_paths App
-   APP_EXE="$OUTROOT/app-$ARCH/tr4w"
+   # REMOVED BEFORE THE COMPILE, so "the binary is on disk" means "this run
+   # produced it".  Without this a failed link leaves the PREVIOUS run's
+   # executable sitting at the same path, and the packaging stage -- which asks
+   # the disk, not a shell variable -- would cheerfully tar up a build nobody
+   # made today.
+   rm -f "$APP_EXE"
    # LANG_ENG selects the ENG string table.  VERSIONINFO_RES is deliberately NOT
    # passed: it links tr4w_versioninfo.res, which is a PE resource that neither
    # exists nor means anything here.
@@ -631,21 +652,78 @@ stage_app() {
 # red suite here is a finding, and a suite that will not even start is a bigger
 # one.
 # ---------------------------------------------------------------------------
+#
+# AND IT NEEDS A DISPLAY, which is not obvious and does not fail obviously.
+#
+# The test binary LINKS THE LCL, so gtk2 opens a display during unit
+# initialisation -- before a single assertion runs.  On a headless box that is
+#
+#     Gtk-WARNING **: cannot open display:
+#
+# and an exit code of 1, which this stage then recorded as
+# "FAIL unit tests (run) exit 1" with an empty tally beside it.  A RED RESULT
+# FOR THE WRONG REASON is worse than a red result: it is the shape that gets
+# looked at, dismissed as "the known flaky suite", and stops being read.
+#
+# The wrapping belongs HERE rather than in the caller (the release workflow
+# used to wrap the whole script in xvfb-run) because this stage is the one that
+# knows why a display is needed.  Wrapped here it is right for a developer over
+# ssh, for CI, and for anything else that runs the script -- and the caller
+# cannot forget it.
+#
+# If there is no display AND no xvfb-run, the stage does not run the tests and
+# says exactly that.  It is still counted as not-completed -- see record() --
+# so nothing goes green on a missing display either.
+headless_prefix() {
+   # An existing display is used as-is: xvfb-run inside a desktop session is
+   # pointless, and nesting it inside an outer xvfb-run would be worse.
+   if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
+      return 0
+   fi
+   if command -v xvfb-run >/dev/null 2>&1; then
+      printf 'xvfb-run -a'
+      return 0
+   fi
+   return 1
+}
+
 stage_tests() {
    phase 'Unit tests'
    search_paths Tests
-   TEST_EXE="$TEST_DIR/tr4w_unit_tests_$OS"
+   rm -f "$TEST_EXE"            # same reason as stage_app
    if ! compile tests "$TEST_DIR" tr4w_unit_tests.lpr "$OUTROOT/tests-$ARCH" "$TEST_EXE"; then
       record FAIL 'unit tests (build)' "$(first_error "$OUTROOT/tests-build.log")"
       return 1
    fi
 
+   if XPRE=$(headless_prefix); then
+      [ -n "$XPRE" ] && say '  no display -- running the suite under xvfb-run'
+   else
+      say '  NOT RUN: this binary links the LCL, so it needs a display, and this'
+      say '  machine has neither one nor xvfb-run.  That is a MISSING DISPLAY,'
+      say '  not a test result -- install xvfb (apt install xvfb) and re-run.'
+      record SKIP 'unit tests (run)' 'no display and no xvfb-run -- not a test result'
+      return 1
+   fi
+
    runlog="$OUTROOT/tests-run.log"
-   ( cd "$TEST_DIR" && "$TEST_EXE" ) > "$runlog" 2>&1
+   # Unquoted on purpose: $XPRE is either empty or the two words 'xvfb-run -a',
+   # and it is built here, not taken from anywhere.
+   # shellcheck disable=SC2086
+   ( cd "$TEST_DIR" && $XPRE "$TEST_EXE" ) > "$runlog" 2>&1
    trc=$?
    summary=$(grep 'PASSED:' "$runlog" | tail -1)
    [ -n "$summary" ] && say "  $summary"
    if [ "$trc" -ne 0 ]; then
+      # A display failure that got this far -- xvfb-run present but unable to
+      # start a server, say -- is still not a test result, and is reported as
+      # what it is rather than as a red suite.
+      if grep -q 'cannot open display' "$runlog"; then
+         say '  NOT RUN: the suite could not open a display (see the log).'
+         sed -n '1,5p' "$runlog" | sed 's/^/    /'
+         record SKIP 'unit tests (run)' 'could not open a display -- not a test result'
+         return 1
+      fi
       say "  FAILED (exit $trc)"
       grep '\[FAIL\]' "$runlog" | head -10 | sed 's/^/    /'
       record FAIL 'unit tests (run)' "exit $trc; $(printf '%s' "$summary" | cut -c1-80)"
@@ -667,7 +745,7 @@ stage_tests() {
 stage_server() {
    phase 'TR4WServer'
    search_paths Server
-   SERVER_EXE="$OUTROOT/server-$ARCH/tr4wserver"
+   rm -f "$SERVER_EXE"          # same reason as stage_app
    if compile server "$SERVER_DIR" tr4wserver.lpr "$OUTROOT/server-$ARCH" "$SERVER_EXE"; then
       record PASS 'tr4wserver' "$SERVER_EXE"
       return 0
@@ -714,8 +792,8 @@ stage_server() {
 stage_package() {
    phase 'Package'
 
-   if [ ! -f "${APP_EXE:-}" ]; then
-      say '  NOT ATTEMPTED: there is no application binary to package.'
+   if [ ! -f "$APP_EXE" ]; then
+      say "  NOT ATTEMPTED: there is no application binary at $APP_EXE."
       say '  Nothing is faked here -- a tarball without tr4w in it would be an'
       say '  artifact that exists only to make this script exit 0.'
       record SKIP 'package' 'no application binary'
@@ -784,10 +862,13 @@ stage_package() {
    #     TR4W.app/Contents/MacOS/tr4w       the executable, named by the plist
    #     TR4W.app/Contents/Resources/       cty.dat, dom/, the rest
    #
-   # THIS IS NOT SIGNED OR NOTARIZED, so Gatekeeper will refuse it on any Mac
-   # but the one that built it. That is a distribution problem with an Apple
-   # Developer ID at the centre of it, and it is deliberately not pretended
-   # away here -- see the note at the end of the run.
+   # SIGNING IS CONDITIONAL, AND IT IS OFF BY DEFAULT. With TR4W_MAC_SIGN=1
+   # and the notary credentials set, the bundle, the server binary and the
+   # disk image are signed with a Developer ID, notarized and stapled by
+   # build/mac-sign.sh -- see the block after the payload check. Without it
+   # the artifacts are unsigned, Gatekeeper refuses them on any Mac but the
+   # one that built them, and the run says so rather than pretending
+   # otherwise.
    if [ "$OS" = darwin ]; then
       bundle="$stage/TR4W.app"
       mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
@@ -840,54 +921,222 @@ PLIST
       return 1
    fi
 
+   # -----------------------------------------------------------------
+   # macOS: SIGN AND NOTARIZE THE STAGE BEFORE ANYTHING IS ARCHIVED.
+   #
+   # THE ORDER IS WHY THIS LIVES HERE rather than in the release workflow.
+   # Both macOS artifacts are built FROM $stage, and a notarization ticket is
+   # stapled INTO TR4W.app -- so an archive rolled before stapling carries an
+   # app with no ticket, and the Mac that downloads it has nothing to verify
+   # offline. Signing afterwards in CI would mean re-creating the tarball and
+   # the disk image there: a second copy of this packaging logic, in a second
+   # language, exercised on a different machine, which is exactly the drift
+   # this one-implementation script exists to prevent.
+   #
+   # AND IT MAKES AN UNSIGNED ARTIFACT UNREACHABLE. If signing fails, this
+   # returns with NO tarball and NO disk image on disk, so there is nothing
+   # for a later step to find and upload. The alternative -- build both, then
+   # delete them if signing fails -- is one forgotten `rm` away from
+   # publishing the artifact it was meant to prevent.
+   #
+   # OPT-IN, AND FAIL-CLOSED ONCE IN. Without TR4W_MAC_SIGN=1 a developer
+   # build behaves exactly as it did and says out loud that it is unsigned.
+   # CI sets it, so a missing credential THERE fails the stage instead of
+   # quietly shipping. There is no middle setting.
+   # -----------------------------------------------------------------
+   SIGNING=0
+   if [ "$OS" = darwin ] && [ "${TR4W_MAC_SIGN:-0}" = 1 ]; then
+      SIGNING=1
+      if ! sh "$BUILD_DIR/mac-sign.sh" app "$stage"; then
+         say '  FAILED: the app bundle could not be signed, notarized and stapled.'
+         say '  NOTHING IS ARCHIVED. An unsigned tarball or disk image here would'
+         say '  be indistinguishable from a signed one to every step after this.'
+         record FAIL 'package' 'sign/notarize failed -- no artifact produced'
+         return 1
+      fi
+   fi
+
+   # ON MACOS, A DMG AS WELL -- AND BOTH, NOT ONE.
+   #
+   # The DMG is the distributable: notarization staples its ticket to a disk
+   # image or a directly-submitted zip, and a .tar.gz carries no ticket of its
+   # own -- what it carries is the stapled app inside it, which is why the
+   # order above matters.
+   #
+   # THE TARBALL STAYS because deploy-mac.sh globs
+   # build-out/dist/tr4w-*-darwin.tar.gz, reads its inner directory with
+   # `tar tzf` and extracts it to ~/Applications. Replacing it would break the
+   # local deploy path to buy nothing.
+   #
+   # Same $stage for both, so the two artifacts cannot drift in content.
+   #
+   # IT IS BUILT BEFORE THE TARBALL, which is a change (2026-09-20): the image
+   # is created, signed, notarized and stapled first, so a rejected submission
+   # leaves NEITHER artifact behind. Built the other way round, a rejected
+   # image would leave a perfectly good tarball beside it and the run would
+   # look half-successful.
+   dmg=''
+   if [ "$OS" = darwin ]; then
+      dmg="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.dmg"
+      rm -f "$dmg"
+      if ! command -v hdiutil >/dev/null 2>&1; then
+         say '  WARNING: hdiutil not found -- the .dmg was not produced'
+         dmg=''
+      elif ! hdiutil create -volname TR4W -srcfolder "$stage" -ov -format UDZO "$dmg" >/dev/null 2>&1; then
+         # Reported, not silent: a missing DMG must not look like a choice.
+         say '  WARNING: hdiutil failed -- the .dmg was not produced'
+         rm -f "$dmg"
+         dmg=''
+      else
+         say "  OK -> $dmg ($(($(wc -c < "$dmg") / 1024)) KB)"
+      fi
+
+      if [ "$SIGNING" = 1 ]; then
+         # WITH SIGNING ON, A MISSING DISK IMAGE IS A FAILURE and not a
+         # warning. The .dmg is the notarized distributable; a release that
+         # quietly carried only the tarball would be shipping the artifact
+         # nobody checked.
+         if [ -z "$dmg" ]; then
+            say '  FAILED: signing is required and no disk image was produced.'
+            record FAIL 'package' 'no .dmg to sign'
+            return 1
+         fi
+         if ! sh "$BUILD_DIR/mac-sign.sh" dmg "$dmg"; then
+            say '  FAILED: the disk image could not be signed, notarized and stapled.'
+            rm -f "$dmg"
+            record FAIL 'package' 'dmg sign/notarize failed -- no artifact produced'
+            return 1
+         fi
+      else
+         say '  NOT SIGNED AND NOT NOTARIZED. Gatekeeper will refuse these on any'
+         say '  Mac but the one that built them, and the message a user gets says'
+         say '  the app is damaged rather than unsigned. Set TR4W_MAC_SIGN=1 with'
+         say '  an Apple Developer ID and notary credentials to sign; this is a'
+         say '  build, not a release.'
+      fi
+   fi
+
    tarball="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.tar.gz"
+   rm -f "$tarball"
    ( cd "$OUTROOT/dist" && tar czf "$tarball" "tr4w-$TR4W_VERSION-$ARCH" ) || {
       say '  FAILED: tar'
+      rm -f "$tarball"
+      [ -n "$dmg" ] && rm -f "$dmg"
       record FAIL 'package' 'tar failed'
       return 1
    }
    say "  OK -> $tarball ($(($(wc -c < "$tarball") / 1024)) KB)"
 
-   # ON MACOS, ALSO A DMG -- AND BOTH, NOT ONE.
+   # DOES THE TICKET SURVIVE THE TARBALL?  Asked, not assumed.
    #
-   # The DMG is the distributable: notarization staples its ticket to a disk
-   # image or a directly-submitted zip, and a .tar.gz carries no ticket at
-   # all, so a notarized app inside a tarball still meets Gatekeeper with
-   # nothing to verify. That is why this was added (NY4I, 2026-09-17) ahead of
-   # the Apple Developer ID arriving.
-   #
-   # THE TARBALL STAYS because deploy-mac.sh globs
-   # build-out/dist/tr4w-*-darwin.tar.gz, reads its inner directory with
-   # `tar tzf` and extracts it to ~/Applications. Replacing it would break the
-   # local deploy path to buy nothing until the credentials exist.
-   #
-   # Same $stage for both, so the two artifacts cannot drift in content.
-   if [ "$OS" = darwin ]; then
-      dmg="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.dmg"
-      if command -v hdiutil >/dev/null 2>&1; then
-         rm -f "$dmg"
-         if hdiutil create -volname TR4W -srcfolder "$stage" -ov -format UDZO "$dmg" >/dev/null 2>&1; then
-            say "  OK -> $dmg ($(($(wc -c < "$dmg") / 1024)) KB)"
-         else
-            # Reported, not silent: the tarball still shipped, so the stage is
-            # not a failure -- but a missing DMG must not look like a choice.
-            say '  WARNING: hdiutil failed -- the .dmg was not produced'
-            dmg=''
-         fi
-      else
-         say '  WARNING: hdiutil not found -- the .dmg was not produced'
-         dmg=''
+   # Stapling writes the ticket into the bundle, so in principle tar carries
+   # it -- but "in principle" is how an artifact ships that Gatekeeper refuses
+   # offline, and the failure would surface on a user's Mac rather than here.
+   # So the archive is unpacked into scratch space and the extracted app is
+   # put through `stapler validate`, which is the same question the download
+   # machine asks. It costs a second and it converts a belief into a check.
+   if [ "$SIGNING" = 1 ]; then
+      _vt="$OUTROOT/dist/.staple-check.$$"
+      _vlog="$OUTROOT/staple-check.log"
+      rm -rf "$_vt"
+      mkdir -p "$_vt"
+      _vrc=0
+      # Each status captured on its own, never through a pipe: a pipeline
+      # reports sed's exit code, which would make this check decoration.
+      ( cd "$_vt" && tar xzf "$tarball" ) > "$_vlog" 2>&1 || _vrc=$?
+      if [ "$_vrc" -eq 0 ]; then
+         xcrun stapler validate "$_vt/tr4w-$TR4W_VERSION-$ARCH/TR4W.app" \
+            >> "$_vlog" 2>&1 || _vrc=$?
       fi
-      say '  NOT SIGNED AND NOT NOTARIZED. Gatekeeper will refuse these on any'
-      say '  Mac but the one that built them, and the message a user gets says'
-      say '  the app is damaged rather than unsigned. Distribution needs an'
-      say '  Apple Developer ID; this is a build, not a release.'
-      if [ -n "$dmg" ]; then
-         record PASS 'package' "$tarball, $dmg"
-         return 0
+      sed 's/^/    /' "$_vlog"
+      rm -rf "$_vt"
+      if [ "$_vrc" -ne 0 ]; then
+         say '  FAILED: the notarization ticket did not survive the tarball.'
+         rm -f "$tarball"
+         [ -n "$dmg" ] && rm -f "$dmg"
+         record FAIL 'package' 'tarball carries an unstapled app'
+         return 1
       fi
+      say '  ticket verified inside the tarball'
+   fi
+
+   if [ -n "$dmg" ]; then
+      record PASS 'package' "$tarball, $dmg"
+      return 0
    fi
    record PASS 'package' "$tarball"
+   return 0
+}
+
+# ---------------------------------------------------------------------------
+# STAGE 8 -- the Linux AppImage.
+#
+# WHY IT IS A STAGE OF ITS OWN, AND NOT PART OF PACKAGING THE WAY THE .dmg IS.
+#
+# The disk image is built inside stage_package because it HAS to be: both mac
+# artifacts are rolled from the same staged bundle and the notarization ticket
+# must be stapled into it before either archive exists.  Ordering forces them
+# together.
+#
+# Nothing of the sort is true here.  The AppImage CONSUMES the finished stage
+# directory read-only -- it copies out of it and writes one file beside the
+# tarball -- so the two artifacts are independent, and independent artifacts
+# want independent verdicts.  Folded into stage_package, a failed AppImage
+# would have to either fail the whole stage (throwing away a perfectly good
+# tarball that a release should still ship) or print a warning and let the
+# stage pass (an artifact missing for a reason nobody reads).  A row of its
+# own says the true thing: tarball green, AppImage red.
+#
+# IT RUNS IN THE SAME PROCESS, IMMEDIATELY AFTER PACKAGING, and that is the
+# whole point.  A second invocation -- `sh build-unix.sh --package` after an
+# `--app` -- was the shape that used to fail on an unset shell variable, and
+# splitting the AppImage into a separate CI step would have re-created that
+# class of problem in YAML instead of in shell.  One run, one flow, one place
+# where the ordering is stated.
+#
+# Linux only, and quietly so on macOS: an AppImage is a Linux container format
+# and its absence there is not a finding.
+# ---------------------------------------------------------------------------
+stage_appimage() {
+   [ "$OS" = linux ] || return 0
+
+   phase 'AppImage'
+
+   # build-appimage.sh names its stage directory and its output x86_64 in two
+   # places and has only ever been run there.  On a Pi this would look for a
+   # directory that does not exist and report it as a missing payload, which
+   # would be a misleading answer to a question nobody has asked yet.
+   if [ "$CPU" != x86_64 ]; then
+      say "  NOT ATTEMPTED on $CPU: build-appimage.sh is x86_64-only today."
+      record SKIP 'appimage' "not supported on $CPU"
+      return 1
+   fi
+
+   stage="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH"
+   if [ ! -d "$stage" ]; then
+      say "  NOT ATTEMPTED: there is no staged payload at $stage."
+      say '  The AppImage is built FROM the package stage; run --package first.'
+      record SKIP 'appimage' 'no staged payload'
+      return 1
+   fi
+
+   appimage="$OUTROOT/dist/TR4W-$TR4W_VERSION-$CPU.AppImage"
+   if ! sh "$BUILD_DIR/build-appimage.sh"; then
+      say '  FAILED: build-appimage.sh did not produce an image.'
+      # Belt and braces: the script removes its own output before it starts,
+      # so this should already be true.  An artifact that a release step might
+      # glob is not left to "should".
+      rm -f "$appimage"
+      record FAIL 'appimage' 'build-appimage.sh failed'
+      return 1
+   fi
+   if [ ! -f "$appimage" ]; then
+      say "  FAILED: build-appimage.sh exited 0 with no image at $appimage."
+      record FAIL 'appimage' 'exit 0 but no image'
+      return 1
+   fi
+   say "  OK -> $appimage ($(($(wc -c < "$appimage") / 1024)) KB)"
+   record PASS 'appimage' "$appimage"
    return 0
 }
 
@@ -929,12 +1178,13 @@ case "${1:-}" in
    --tests)     WANT=tests ;;
    --server)    WANT=server ;;
    --package)   WANT=package ;;
+   --appimage)  WANT=appimage ;;
    --list)
-      say 'stages: app  tests  server  package'
+      say 'stages: app  tests  server  package  appimage (linux x86_64 only)'
       exit 0
       ;;
    *)
-      say "usage: $0 [--all|--app|--tests|--server|--package|--list]" >&2
+      say "usage: $0 [--all|--app|--tests|--server|--package|--appimage|--list]" >&2
       exit 2
       ;;
 esac
@@ -955,8 +1205,21 @@ else
    exit 2
 fi
 
-APP_EXE=''
-SERVER_EXE=''
+# WHERE EACH STAGE'S OUTPUT LIVES -- SET ONCE, BEFORE ANY STAGE RUNS.
+#
+# These were assigned INSIDE stage_app and stage_server and initialised to ''
+# here, which made a single-stage run of a later stage impossible: with a
+# perfectly good binary on disk from an earlier `--app`, `--package` tested an
+# empty shell variable and reported 'there is no application binary to
+# package'.  The path is a property of the tree, not of what this process
+# happened to do, so it is stated once and every stage asks THE DISK.
+#
+# That is only safe because each producing stage now rm -f's its own output
+# before it builds: a stale binary from a previous run cannot survive a failed
+# compile and be packaged as though it were current.
+APP_EXE="$OUTROOT/app-$ARCH/tr4w"
+SERVER_EXE="$OUTROOT/server-$ARCH/tr4wserver"
+TEST_EXE="$TEST_DIR/tr4w_unit_tests_$OS"
 
 case "$WANT" in
    all)
@@ -964,11 +1227,13 @@ case "$WANT" in
       stage_tests
       stage_server
       stage_package
+      stage_appimage
       ;;
-   app)     stage_app ;;
-   tests)   stage_tests ;;
-   server)  stage_server ;;
-   package) stage_package ;;
+   app)      stage_app ;;
+   tests)    stage_tests ;;
+   server)   stage_server ;;
+   package)  stage_package ;;
+   appimage) stage_appimage ;;
 esac
 
 report_gates_not_run
@@ -985,13 +1250,19 @@ done < "$VERDICTS"
 rm -f "$VERDICTS"
 
 say ''
-if [ "$FAILURES" -eq 0 ]; then
+if [ "$FAILURES" -eq 0 ] && [ "$SKIPS" -eq 0 ]; then
    say 'ALL STAGES PASSED.'
    say 'Note the gates listed above did NOT run -- this is not a shippable build.'
    exit 0
 fi
 
-say "$FAILURES stage(s) did not complete.  That is the expected answer today:"
-say 'TR4W is a Win32 program being made portable, and the first error of each'
-say 'failing stage above is the next piece of that work.'
+if [ "$FAILURES" -gt 0 ]; then
+   say "$FAILURES stage(s) did not complete.  That is the expected answer today:"
+   say 'TR4W is a Win32 program being made portable, and the first error of each'
+   say 'failing stage above is the next piece of that work.'
+fi
+if [ "$SKIPS" -gt 0 ]; then
+   say "$SKIPS stage(s) were SKIPPED and did not run at all.  A skip is not a"
+   say 'pass: the detail beside it says what was missing.'
+fi
 exit 1

@@ -62,10 +62,34 @@ that in both directions.
   `settings/tr4w.json`.
 - **`tr4w.ini` STORES NOTHING, AND STARTUP DOES NOT READ IT** (2026-09-19).
   On NY4I's station it is 67 bytes of sentinel text. It is the **converter's
-  input** -- `tr4w/tools/tr4wconvert --ini <path>` -- and nothing else:
+  input** -- plain `tr4wconvert`, which reads it BY DEFAULT -- and nothing else:
   `ReadInConfigFile(cfgINI)` is gone and `cfgINI` is no longer a member of
   `TCFGType`, so there is no value left to pass in. The contest `.cfg` is
   still a **read-once-and-convert import format**.
+- **THE CONVERTER REPORTS AND THEN ASKS, IN ONE RUN** (NY4I, 2026-09-20:
+  *"i think it would be cleaner to have the user run it once, they ask them
+  if they want to apply the changes."*). The answer **defaults to No and the
+  prompt says so in words**; Enter and anything unrecognised leave the file
+  alone. `--apply` still writes without asking and is the scripted path;
+  `--report-only` is the old look-first behaviour by name. **It only asks
+  when stdin is a terminal** — piped or redirected it reports, says why it
+  did not ask, and writes nothing, so no script can hang on it. Declining
+  exits **0**: it ran, the operator said no.
+- **IT READS THE ini BY DEFAULT AND IT CREATES THE SETTINGS FILE** (2026-09-20).
+  NY4I: *"the only reason tr4wconvert exists is to convert an ini file to json
+  so I am not sure why you not always read the ini"*, and *"the only reason
+  tr4wconvert should run is if the tr4w.json does not exist"*. So: no flag
+  reads `tr4w.ini` from the directory of the settings file in use; `--ini` is
+  **DEPRECATED but still works** (the installer message and scripts name it);
+  `--no-ini` reads none. **An absent settings file is the PRIMARY path, not an
+  error** — it is created from the model's defaults plus the ini, which is why
+  the installer no longer has to say "start TR4W and close it again".
+  `CollectLegacyValues` skips the JSON bucket read when the file is not there.
+- **THE SETTINGS PATH IS `uAppPaths`, NOT A COPY OF IT.** Order: `--settings`,
+  then a `settings\` folder beside the binary (a D7-style portable/target
+  layout, NY4I 2026-09-20), then `SettingsFilePath('tr4w.json')`. The header
+  says which one it chose and why, and whether it will CREATE or UPDATE it — a
+  converter writing a file the program does not read fails silently.
 - **DO NOT ADD AN IN-PROGRAM DETECTOR FOR A LEFTOVER ini.** One was written
   and withdrawn the same day -- NY4I: *"it frankly kept getting in the way
   and causing confusion"*. Telling the operator to run the conversion once

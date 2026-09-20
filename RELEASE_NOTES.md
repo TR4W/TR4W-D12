@@ -44,7 +44,18 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
-*Nothing yet.*
+#### Setup -- Windows, upgrading from TR4W 4.x
+
+- **If you are coming from TR4W 4.x, your old settings have to be carried across
+  once, and setup tells you how.** TR4W 5 keeps its settings in a new file and no
+  longer reads the old `settings\tr4w.ini`, so a 4.x configuration sits there
+  unused — untouched, nothing lost — until it is converted. The installer spots
+  that file and shows you the one command to run — `tr4wconvert`, now installed
+  with TR4W instead of having to be found elsewhere. Run it before starting TR4W
+  for the first time and it builds your new settings file from the old one; it
+  lists what it would change and then asks whether to apply it, and the answer
+  defaults to No, so nothing is written unless you type Yes. A first-time
+  installation has nothing to convert and is shown nothing.
 
 ---
 

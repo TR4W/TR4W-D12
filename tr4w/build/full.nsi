@@ -166,6 +166,16 @@ Section "tr4w.exe" secexe
 	; uLogDatabase.DiagnoseSQLiteLoad reads the PE header and says so.
 	File ..\target\sqlite3.dll
 
+	; THE CONVERTER, WHICH IS THE TOOL THE UPGRADE MESSAGE AT THE END OF THIS
+	; SCRIPT TELLS AN OPERATOR TO RUN.  It was not shipped until 2026-09-19,
+	; which made that message unfollowable: it named a program the operator
+	; did not have.  Built by FullBuild.ps1 (build\Build-Convert.ps1) into
+	; target\ beside tr4w.exe.
+	;
+	; IT MUST LAND IN $INSTDIR, not a subfolder: it looks for settings\tr4w.json
+	; beside its own binary, which is where TR4W keeps it.
+	File ..\target\tr4wconvert.exe
+
 !ifdef TR4WLANG
 !ifdef include_ini_file
 	File ..\target\commands_help_${TR4WLANG}.ini
@@ -444,6 +454,38 @@ Section "" SecSC
   SetOutPath "$INSTDIR\dvk\fullserialnumbers"
   SetOutPath "$INSTDIR"
   SetOutPath "$INSTDIR\settings"
+
+; ---------------------------------------------------------------------------
+; UPGRADING FROM TR4W 4.x: SAY SO HERE, ONCE, AND ONLY TO UPGRADERS.
+;
+; TR4W 5 stopped reading settings\tr4w.ini at start-up altogether.  An
+; operator coming from 4.x therefore has a file full of working settings that
+; the program now ignores, and NOTHING in the program says so: NY4I ruled
+; (2026-09-19) that the notice belongs in SETUP rather than in TR4W, because
+; in-program detection "kept getting in the way and causing confusion".
+;
+; ONLY UPGRADERS SEE IT.  settings\tr4w.ini is what distinguishes them: TR4W 5
+; neither writes that file nor reads it, so its presence in the install
+; directory means an earlier version left it there.  4.x wrote it to exactly
+; this path (<installdir>\settings\tr4w.ini), and the InstallDirRegKey at the
+; top of this script points $INSTDIR at the existing installation on an
+; upgrade.  A first-time installer has no old settings and is told nothing.
+;
+; WINDOWS ONLY, and that is not an omission: 4.x was Windows-only, so a
+; "previous TR4W user" cannot exist on Linux or macOS.  The tarball and the
+; .app bundle carry no equivalent.
+;
+; /SD IDOK, AFTER THE TEXT, BECAUSE A SILENT INSTALL (setup /S) STILL RUNS
+; this line -- without it the run would stop on a dialog nobody can see.  NSIS
+; wants /SD after the message and not beside the options; putting it with the
+; options makes it the message and the message a jump label, which is the
+; error "could not resolve label".  The DetailPrint is what a silent run
+; leaves behind.
+; ---------------------------------------------------------------------------
+  IfFileExists "$INSTDIR\settings\tr4w.ini" 0 tr4wconvert_not_needed
+    DetailPrint "settings\tr4w.ini from an earlier TR4W found -- see the message about tr4wconvert."
+    MessageBox MB_OK|MB_ICONINFORMATION "TR4W 5 does not read your old settings file.$\r$\n$\r$\nSettings from your previous version are still here:$\r$\n    $INSTDIR\settings\tr4w.ini$\r$\n$\r$\nTR4W 5 keeps its settings in a new file and leaves that one untouched - nothing has been changed or lost, but your old setup is not in use yet.$\r$\n$\r$\nTo bring it across, do this BEFORE starting TR4W for the first time:$\r$\n$\r$\n  1. Open a Command Prompt in$\r$\n         $INSTDIR$\r$\n  2. Run:  tr4wconvert$\r$\n$\r$\nIt lists what it would change and then asks whether to apply it.  The answer defaults to No, so nothing is written unless you type Yes.  Then start TR4W.$\r$\n$\r$\nPrefer to set the station up fresh?  Skip this - TR4W 5 works either way." /SD IDOK
+tr4wconvert_not_needed:
 
 ;    WriteRegStr HKCR ".TRW" "" "TR4W Log file"
 	IfRebootFlag 0 noreboot

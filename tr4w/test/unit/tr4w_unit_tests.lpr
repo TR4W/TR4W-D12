@@ -346,6 +346,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
+   uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
+   uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
    uTestClusterTokens   in 'uTestClusterTokens.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
@@ -471,6 +473,7 @@ begin
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));
+   RegisterSuite(TLegacyConversionCheckTests.Create('LegacyConversionCheck'));
    RegisterSuite(TUILanguageTests.Create('UILanguage'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));

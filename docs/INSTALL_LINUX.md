@@ -33,6 +33,60 @@ least says so plainly.
 
 ---
 
+## The AppImage, and why its floor is HIGHER
+
+The release also offers `TR4W-<version>-x86_64.AppImage`: one file, nothing
+installed, **GTK 2 included**. If the package list below is the thing standing
+between you and a test, take the AppImage instead.
+
+```sh
+chmod +x TR4W-5.0.11-x86_64.AppImage
+./TR4W-5.0.11-x86_64.AppImage
+```
+
+**It needs glibc 2.38, not 2.34.** That is not a typo and it is the one thing
+people get wrong about AppImages: an AppImage carries everything *except* the C
+library, so its floor is set by the newest bundled library rather than by TR4W
+itself. Measured with `objdump -T` over the 38 libraries inside it: thirteen of
+them — glib, gio, pango, cairo, harfbuzz, fontconfig, expat, sqlite3, OpenSSL
+and friends — reference `GLIBC_2.38`, because it is built on Ubuntu 24.04.
+
+| distribution | glibc | tarball | AppImage |
+|---|---|---|---|
+| Ubuntu 24.04 / Mint 22 | 2.39 | yes | yes |
+| Debian 13 | 2.41 | yes | yes |
+| Fedora 39+ | 2.38+ | yes | yes |
+| Ubuntu 22.04 / Mint 21 | 2.35 | yes | **no** |
+| Debian 12 | 2.36 | yes | **no** |
+| Ubuntu 20.04, Debian 11 | 2.31 | **no** | **no** |
+
+**So on Ubuntu 22.04 and Debian 12 the tarball is the answer**, with GTK 2
+installed from the package list below.
+
+**It may also want FUSE.** An AppImage normally mounts itself, which needs
+libfuse2, and several current distributions no longer ship it. If it refuses to
+start with a message about FUSE or about mounting, run it this way instead — it
+unpacks into a temporary directory and needs nothing installed:
+
+```sh
+./TR4W-5.0.11-x86_64.AppImage --appimage-extract-and-run
+```
+
+**Two things are knowingly missing from it:**
+
+- **HamLib is not bundled.** A radio driven through HamLib needs
+  `libhamlib.so.4` installed on the machine (`sudo apt install libhamlib4`),
+  and that combination has not been tested from inside an AppImage. Radios TR4W
+  drives directly — Elecraft, Icom, Kenwood, Yaesu, Flex, TCI — are unaffected.
+- **The icon is a placeholder**, a plain blue square. The only artwork in the
+  tree is a 32×32 Windows titlebar icon, which is too small to use. Real
+  artwork is pending.
+
+Your settings, log and contest files live in the same places either way —
+see *Where it puts things* below. Nothing is written inside the AppImage.
+
+---
+
 ## Packages to install
 
 **GTK 2 is the one most machines are missing.** It is years past its

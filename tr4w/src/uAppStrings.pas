@@ -74,6 +74,68 @@ resourcestring
    SIniRetireFailed   = 'Could not remove %s -- %s.' + sLineBreak +
                         'It is ignored regardless, so nothing is broken.';
 
+   { ------------------------------- the FIRST start after an upgrade ------- }
+
+   (* OFFERED ONCE, AND ONLY WHEN THERE IS AN OLD ini AND NO settings FILE AT
+     ALL -- see uLegacyConversionCheck for why that condition cannot fire
+     twice.  NY4I asked for this on 2026-09-20: "if you do see an INI file but
+     no json file, should you immediately ask them to run the convert program?
+     Warn them if they continue, they could overwrite some saved settings in
+     the new program?"
+
+     THE RISK SENTENCE IS THE POINT OF THE TEXT, AND IT IS NOT "you could lose
+     your settings" -- that would be false and an operator would rightly stop
+     trusting the rest of it.  Continuing loses nothing: TR4W writes a file of
+     defaults, and converting later overwrites those defaults with the 4.x
+     values, which is exactly what was wanted.  The real hazard is an ORDER:
+     continue now, configure the station by hand, convert afterwards -- and
+     the old file overwrites the work just done.  So the text says that, and
+     says it as the reason to convert first rather than as a threat. *)
+   SFirstRunConvertTitle = 'TR4W -- settings from an earlier version';
+
+   SFirstRunConvertPrompt =
+      'TR4W has found settings from an earlier version:' + sLineBreak +
+      '    %s' + sLineBreak + sLineBreak +
+      'and it has not written its own settings file yet:' + sLineBreak +
+      '    %s' + sLineBreak + sLineBreak +
+      'TR4W can carry that old configuration across now. The conversion ' +
+      'lists what it would change and asks before writing anything, so you ' +
+      'can look first and still say no.' + sLineBreak + sLineBreak +
+      'You do not have to do it now. Nothing is lost by continuing: TR4W ' +
+      'starts with its defaults, your old file is left untouched, and ' +
+      'converting later simply replaces those defaults with your old values.' +
+      sLineBreak + sLineBreak +
+      'What is worth knowing is the ORDER. If you continue now and then set ' +
+      'TR4W up by hand, converting afterwards overwrites that work with the ' +
+      'values from the old file. Converting first avoids the question.';
+
+   SFirstRunConvertNow  = 'Convert now';
+   SFirstRunConvertSkip = 'Continue without converting';
+
+   { The conversion program is installed beside TR4W. If it is not there this
+     is almost always a copied executable rather than an installation -- the
+     same shape as the missing-OpenSSL case above -- so the message says where
+     it should be instead of only that it is absent. }
+   SFirstRunConvertMissing =
+      'TR4W could not find the conversion program:' + sLineBreak +
+      '    %s' + sLineBreak + sLineBreak +
+      'It is installed beside TR4W itself. TR4W will start with its ' +
+      'defaults, and your old settings file is left untouched.';
+
+   (* SHOWN WHEN THE CONVERSION RAN AND THE SETTINGS FILE STILL IS NOT THERE.
+     Two different things reach this and the operator need not be told which:
+     they answered No to the converter's own prompt, or the converter had no
+     terminal to ask in and therefore wrote nothing on purpose.  Either way
+     the honest statement is that nothing was converted, and the way to do it
+     later is the same. *)
+   SFirstRunConvertNothingDone =
+      'Nothing was converted.' + sLineBreak + sLineBreak +
+      'TR4W will start with its defaults and your old settings file is ' +
+      'untouched. You can convert at any time by running' + sLineBreak +
+      '    %s' + sLineBreak + sLineBreak +
+      'from a command prompt in that folder. Converting then replaces ' +
+      'whatever you have configured in the meantime with the old values.';
+
    { ------------------------------------------------- downloads that fail --- }
 
    { WHY THIS NAMES THE INSTALLER.  A missing OpenSSL pair almost always means

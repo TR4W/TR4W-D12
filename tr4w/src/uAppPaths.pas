@@ -153,9 +153,43 @@ function ExistingDataFile(const aPath: string): string;
   and nothing is assumed about the caller's declared size. *)
 procedure ResolveDataFileInPlace(var aPath: array of AnsiChar);
 
+(* A PROGRAM SHIPPED ALONGSIDE TR4W -- today, tr4wconvert.
+
+  THE FIFTH KIND OF PATH, and it is genuinely none of the other four: it is
+  not shipped DATA, it is not writable, and it is not the operator's. It is
+  an executable the installer put beside ours, and the platform decides both
+  where that is and what an executable is CALLED.
+
+  NOT AppDir.  On Windows AppDir is the working directory, which is right for
+  data and wrong here: TR4W can legitimately be started from somewhere else
+  and its sibling programs do not move with the shell. This asks the one
+  question that is always true -- where is the binary that is running --
+  which is also the correct answer inside a .app bundle (Contents/MacOS) and
+  under /usr/bin.
+
+  THE EXTENSION IS PART OF THE ANSWER, which is why the caller passes a bare
+  name. '.exe' on Windows and nothing anywhere else is exactly the sort of
+  OS gate this unit exists to hold (NY4I, 2026-09-16: "Minimizing OS gates in
+  the main code makes this more modular"), and asking the LCL for it instead
+  would put a widget-set dependency into every caller that only wants a path.
+
+  It does NOT check that the file is there. The caller must, because "the
+  program is missing" is something an operator has to be told rather than a
+  path this unit could substitute for. *)
+function SiblingProgramPath(const aName: string): string;
+
 implementation
 
 uses SysUtils, StrUtils;
+
+function SiblingProgramPath(const aName: string): string;
+begin
+   Result := ExtractFilePath(ParamStr(0)) + aName
+{$IFDEF WINDOWS}
+             + '.exe'
+{$ENDIF}
+             ;
+end;
 
 { Create on first use. Windows does not need it -- the directories ship -- but
   macOS and Linux both write into a home directory that starts empty. }

@@ -52,6 +52,37 @@
 # Secrets required:
 #   - VIRUS_TOTAL_API_KEY  -- VT public API key (free tier is fine for this
 #                             release cadence).
+#   - APPLE_API_KEY_P8     -- base64 of the App Store Connect API key (.p8),
+#                             used by notarytool on mac-ci.
+#   - APPLE_API_KEY_ID     -- that key's id.
+#   - APPLE_API_ISSUER_ID  -- the issuer UUID.
+#
+# THERE IS NO CERTIFICATE SECRET AND THERE MUST NOT BE. The Developer ID
+# Application certificate and its private key live in mac-ci's own keychain
+# (verified 2026-09-20: one valid codesigning identity, usable unprompted by
+# the runner user). A certificate exported into a repository secret is a
+# signing key that every workflow run, and anyone who can add a workflow, can
+# use -- and it cannot be revoked without reissuing. Keeping it on the machine
+# means the worst a bad workflow can do is ask THAT machine to sign.
+#
+# ---------------------------------------------------------------------------
+# THIRD-PARTY ACTIONS ARE PINNED TO A COMMIT SHA, with the release tag in a
+# trailing comment. Every job here runs on a SELF-HOSTED runner -- the same
+# machines that hold the Developer ID key and the lab's radios -- so an action
+# runs beside things a GitHub-hosted throwaway VM does not have.
+#
+# NY4I reviews every pull request, so the risk a review already covers is a
+# change to this file. What a review CANNOT catch is a mutable tag being moved
+# by a compromised action account: `actions/checkout@v5` is a pointer, and
+# repointing it changes what executes on mac-ci without changing a byte here.
+# A 40-character SHA is not repointable.
+#
+# The tag in each comment was verified against the SHA, not assumed
+# (2026-09-20, `gh api repos/<owner>/<repo>/git/refs/tags`): each major tag and
+# the precise release tag beside it resolve to the SAME commit.
+#
+# To update one, resolve the new tag to its SHA the same way and replace both
+# the SHA and the comment. Do NOT replace the SHA and leave the comment.
 
 name: Release Build
 
@@ -110,7 +141,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Extract version from src/Version.pas
         id: ver
@@ -197,7 +228,7 @@ jobs:
           "release_dir=$releaseDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tr4w-installer-${{ steps.ver.outputs.version }}
           path: ${{ steps.artifact.outputs.release_dir }}\tr4w_setup_${{ steps.ver.outputs.version }}.exe
@@ -234,23 +265,47 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      # A MISSING DISPLAY IS NOT A TEST RESULT, AND IT FAILS HERE RATHER THAN
+      # LOOKING LIKE ONE TWENTY MINUTES LATER.
+      #
+      # The unit-test binary LINKS THE LCL, so gtk2 opens a display during unit
+      # initialisation -- before a single assertion -- and on a headless box it
+      # aborts with "cannot open display" and exit 1. build-unix.sh recorded
+      # that as "FAIL unit tests (run) exit 1", which is the shape that gets
+      # dismissed as the known flaky suite.
+      #
+      # THE WRAPPING NOW LIVES IN build-unix.sh's TEST STAGE, not here. That
+      # stage is the one that knows why a display is needed, so it is right for
+      # a developer over ssh as well as for CI, and this job cannot forget it.
+      # What is left here is the only part CI can usefully add: fail FAST, with
+      # a sentence naming the package, if the tool is not installed at all.
+      - name: Preflight -- xvfb must be installed
+        shell: bash
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            echo "::error::xvfb-run is not installed on this runner, so the unit-test stage cannot run at all. Install it (sudo apt install xvfb). This is a MISSING DISPLAY, not a failing test."
+            exit 1
+          fi
+          echo "xvfb-run: $(command -v xvfb-run)"
 
       - name: Build (build-unix.sh)
         shell: bash
         run: |
-          # xvfb, because the unit-test binary LINKS THE LCL: gtk2 opens a
-          # display at startup, and on a headless runner it aborts with
-          # "cannot open display" BEFORE printing any tally -- which reads as
-          # a crash rather than as a missing display. Measured 2026-09-17:
-          # without it the stage reports an empty failure, with it 88 suites
-          # and 14777 assertions run.
-          if command -v xvfb-run >/dev/null 2>&1; then
-            xvfb-run -a sh tr4w/build/build-unix.sh || true
-          else
-            echo "::warning::xvfb-run not found -- the unit-test stage cannot run headless"
-            sh tr4w/build/build-unix.sh || true
-          fi
+          # `|| true` is deliberate: build-unix.sh does not stop at the first
+          # failing stage, and the known test failures must not withhold the
+          # artifacts. The steps below decide what is publishable by looking at
+          # the FILES, which is the only thing a release can attach.
+          #
+          # ONE INVOCATION, and the AppImage is a stage inside it. Running
+          # `--package` or `--appimage` as a separate step would put the
+          # ordering in YAML instead of in the script, and a separate
+          # invocation is exactly the shape that used to fail: stage_package
+          # guarded on a shell variable set by stage_app IN THE SAME PROCESS,
+          # so a second run reported "there is no application binary to
+          # package" with the binary sitting on disk.
+          sh tr4w/build/build-unix.sh || true
 
       - name: Locate tarball
         id: artifact
@@ -270,10 +325,57 @@ jobs:
           echo "path=$f" >> "$GITHUB_OUTPUT"
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tr4w-linux-${{ needs.build.outputs.version }}
           path: ${{ steps.artifact.outputs.path }}
+          retention-days: 90
+          if-no-files-found: error
+
+      # ---------------------------------------------------------------
+      # THE AppImage, AS ITS OWN ARTIFACT AND AFTER THE TARBALL.
+      #
+      # THE ORDER IS THE POINT. The tarball is uploaded first and is already
+      # safe by the time these two steps run, so a broken AppImage costs the
+      # release its AppImage and nothing else -- while still turning this job
+      # red, which is what "no broken artifact ships silently" means here. Put
+      # the two in one upload and a missing AppImage would take the tarball
+      # with it.
+      #
+      # A SEPARATE ARTIFACT NAME for the same reason: the release job downloads
+      # each optionally, so one absent artifact cannot hide the other.
+      #
+      # This job stays continue-on-error and outside the release job's needs:
+      # (NY4I, 2026-09-17), so red here withholds nothing from Windows.
+      # ---------------------------------------------------------------
+      - name: Locate AppImage
+        id: appimage
+        shell: bash
+        run: |
+          set -e
+          f="build-out/dist/TR4W-${{ needs.build.outputs.version }}-x86_64.AppImage"
+          if [ ! -f "$f" ]; then
+            echo "::error::no AppImage at $f -- the AppImage stage did not produce one. It is absent from this release; the tarball above is unaffected."
+            ls -la build-out/dist 2>/dev/null || true
+            exit 1
+          fi
+          # A TYPE-2 AppImage IS AN ELF with the magic bytes 'AI' + 0x02 at
+          # offset 8. Checked because the one way to ship a broken AppImage is
+          # to ship something that is not one: a truncated write, or an HTML
+          # error page saved under the right name, both pass a -f test.
+          magic=$(dd if="$f" bs=1 skip=8 count=3 2>/dev/null | od -An -tx1 | tr -d ' \n')
+          if [ "$magic" != "414902" ]; then
+            echo "::error::$f is not a type-2 AppImage (bytes 8..10 are 0x$magic, expected 0x414902)"
+            exit 1
+          fi
+          echo "found $f ($(stat -c%s "$f") bytes), type-2 magic OK"
+          echo "path=$f" >> "$GITHUB_OUTPUT"
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tr4w-linux-appimage-${{ needs.build.outputs.version }}
+          path: ${{ steps.appimage.outputs.path }}
           retention-days: 90
           if-no-files-found: error
 
@@ -295,7 +397,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Preflight -- the cocoa widgetset must exist
         shell: bash
@@ -317,9 +419,96 @@ jobs:
           fi
           echo "cocoa widgetset present"
 
-      - name: Build (build-unix.sh)
+      # ---------------------------------------------------------------
+      # THE NOTARY KEY: DECODED OUTSIDE THE WORKSPACE, AND REMOVED AFTERWARDS.
+      #
+      # $RUNNER_TEMP, not _work: the workspace is checked out, cleaned and
+      # archived by other steps, and a private key sitting in it is one glob
+      # away from being uploaded as an artifact. RUNNER_TEMP is outside every
+      # path this workflow packages.
+      #
+      # The name carries the run AND the attempt so two runs cannot collide,
+      # and the removal step below globs the pattern so a key left by a job
+      # that was cancelled before its cleanup ran is swept as well.
+      #
+      # Nothing here echoes the key. The only check made on it is a SHAPE
+      # check on its first line -- enough to turn "the secret is not base64"
+      # or "somebody pasted the .p8 without encoding it" into a clear failure
+      # here instead of an opaque notarytool error later.
+      # ---------------------------------------------------------------
+      - name: Stage the notary API key
         shell: bash
-        run: sh tr4w/build/build-unix.sh || true
+        env:
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          set -eu
+          if [ -z "${APPLE_API_KEY_P8:-}" ]; then
+            echo "::error::secret APPLE_API_KEY_P8 is not set. Refusing to build a macOS artifact that cannot be notarized -- an unsigned bundle must never ship silently."
+            exit 1
+          fi
+          key="$RUNNER_TEMP/tr4w-notary-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.p8"
+          umask 077
+          printf '%s' "$APPLE_API_KEY_P8" | base64 --decode > "$key"
+          chmod 600 "$key"
+          if ! head -1 "$key" | grep -q 'BEGIN PRIVATE KEY'; then
+            rm -f "$key"
+            echo "::error::APPLE_API_KEY_P8 did not decode to a PEM private key. It should be the base64 of the AuthKey_*.p8 file, whole."
+            exit 1
+          fi
+          echo "TR4W_NOTARY_KEY=$key" >> "$GITHUB_ENV"
+          echo "notary key staged at $key ($(stat -f%z "$key") bytes)"
+
+      - name: Build, sign and notarize (build-unix.sh)
+        shell: bash
+        env:
+          # SIGNING IS MANDATORY ON CI. build-unix.sh treats this as
+          # fail-closed: with it set, a missing credential or a rejected
+          # submission produces NO tarball and NO disk image, rather than
+          # unsigned ones. See the packaging stage in that script for why the
+          # signing happens THERE and not in a step after this one.
+          TR4W_MAC_SIGN: '1'
+          # BY FULL NAME, never `security find-identity | head -1`. A second
+          # identity in the keychain -- an Apple Development certificate, say
+          # -- would silently take the slot, and Gatekeeper does not accept
+          # those for distribution. mac-sign.sh additionally requires the name
+          # to match exactly one identity.
+          # QUOTED, and it has to be: the identity contains ": ", which YAML
+          # reads as a mapping separator in a bare scalar.
+          TR4W_SIGN_IDENTITY: "${{ vars.MACOS_SIGN_IDENTITY || 'Developer ID Application: Thomas Schaefer (N3397MADHZ)' }}"
+          # Straight from the secrets to the process environment; neither is
+          # written to $GITHUB_ENV, so neither lands in a file on the runner.
+          TR4W_NOTARY_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          TR4W_NOTARY_ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          # `|| true` is deliberate and predates signing: build-unix.sh does
+          # not stop at the first failing stage, and the known DX-cluster
+          # timing failure must not withhold the artifacts.
+          #
+          # IT MUST NOT SWALLOW A SIGNING FAILURE, though, and a signing
+          # failure is not "one stage red among several" -- it is the whole
+          # reason this job can be trusted. So the run is teed and the
+          # signer's own marker is checked for explicitly, which fails this
+          # job LOUDLY (and, because the job is continue-on-error and outside
+          # the release job's needs:, without withholding the Windows
+          # installer).
+          sh tr4w/build/build-unix.sh 2>&1 | tee "$RUNNER_TEMP/build-unix.log" || true
+          if grep -q 'SIGNING FAILED' "$RUNNER_TEMP/build-unix.log"; then
+            echo "::error::macOS signing or notarization failed -- no artifact was produced. The notarytool log, if Apple returned one, is in the step output above."
+            exit 1
+          fi
+
+      - name: Remove the notary API key
+        if: always()
+        shell: bash
+        run: |
+          # ALWAYS, including on a cancelled or failed run. The glob also
+          # sweeps keys from earlier attempts, because the runners are treated
+          # as a temp folder and a private key is the last thing that should
+          # be left lying in one.
+          rm -f "$RUNNER_TEMP"/tr4w-notary-*.p8 || true
+          rm -f "$RUNNER_TEMP"/build-unix.log || true
+          left=$(ls "$RUNNER_TEMP"/tr4w-notary-*.p8 2>/dev/null | wc -l | tr -d ' ')
+          echo "notary key material remaining in RUNNER_TEMP: $left"
 
       - name: Locate the disk image and the tarball
         id: artifact
@@ -329,29 +518,40 @@ jobs:
           v="${{ needs.build.outputs.version }}"
           base="build-out/dist/tr4w-$v-aarch64-darwin"
 
-          # THE DMG IS THE DISTRIBUTABLE, and the reason is notarization:
-          # a ticket staples to a disk image, not to a .tar.gz. The tarball
-          # still ships beside it because deploy-mac.sh installs from it.
-          if [ ! -f "$base.dmg" ]; then
-            echo "::warning::no disk image at $base.dmg -- macOS ships the tarball only"
+          # BOTH, OR NEITHER -- AND THAT IS NOW A REAL INVARIANT rather than a
+          # preference. With TR4W_MAC_SIGN=1 the packaging stage signs and
+          # notarizes the staged bundle BEFORE it rolls either archive, and
+          # bails without producing either if any of it is rejected. So a
+          # half-present pair means something unexpected happened, and
+          # shipping the half that exists would mean shipping an artifact that
+          # skipped a gate.
+          #
+          # This used to accept "at least one" and warn. That was right when
+          # both were unsigned and interchangeable; it is wrong now, because
+          # the two are verified separately (the image by spctl -t open, the
+          # app by spctl -t exec).
+          missing=''
+          [ -f "$base.dmg" ]    || missing="$missing $base.dmg"
+          [ -f "$base.tar.gz" ] || missing="$missing $base.tar.gz"
+          if [ -n "$missing" ]; then
+            echo "::error::macOS artifact(s) missing:$missing -- nothing is attached to this release. A signed pair is produced together or not at all."
             ls -la build-out/dist 2>/dev/null || true
-          fi
-          if [ ! -f "$base.tar.gz" ]; then
-            echo "::warning::no tarball at $base.tar.gz"
-            ls -la build-out/dist 2>/dev/null || true
-          fi
-          # At least one has to exist, or there is nothing to attach.
-          if [ ! -f "$base.dmg" ] && [ ! -f "$base.tar.gz" ]; then
-            echo "::error::no macOS artifact of either kind was produced"
             exit 1
           fi
           for f in "$base.dmg" "$base.tar.gz"; do
-            [ -f "$f" ] && echo "found $f ($(stat -f%z "$f") bytes)"
+            echo "found $f ($(stat -f%z "$f") bytes)"
           done
+
+          # THE LAST GATE, ON THE FILES THAT ARE ACTUALLY GOING TO BE
+          # UPLOADED. Everything before this validated things in the staging
+          # directory; this asks the same questions of the artifacts
+          # themselves, so a packaging mistake between the two cannot pass.
+          xcrun stapler validate "$base.dmg"
+          spctl --assess -vvv -t open --context context:primary-signature "$base.dmg"
           echo "base=$base" >> "$GITHUB_OUTPUT"
 
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: tr4w-macos-${{ needs.build.outputs.version }}
           # Both, and if-no-files-found stays 'error': the step above has
@@ -382,10 +582,10 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Download installer artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: tr4w-installer-${{ needs.build.outputs.version }}
           path: installers
@@ -410,7 +610,7 @@ jobs:
 
       - name: Upload VT report artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: virustotal-report-${{ needs.build.outputs.version }}
           path: virustotal-report.md
@@ -438,7 +638,7 @@ jobs:
       # fetches tags explicitly. Checked out first so its clean step does not
       # wipe the artifacts downloaded below.
       - name: Checkout source at the tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Fetch tags + history for the changelog range
         shell: powershell
@@ -454,13 +654,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Tag fetch failed with exit code $LASTEXITCODE" }
 
       - name: Download installer artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: tr4w-installer-${{ needs.build.outputs.version }}
           path: release-files
 
       - name: Download VT report artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: virustotal-report-${{ needs.build.outputs.version }}
           path: release-files
@@ -473,14 +673,21 @@ jobs:
       # failed release.
       - name: Download Linux artifact (optional)
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: tr4w-linux-${{ needs.build.outputs.version }}
           path: release-files
 
+      - name: Download Linux AppImage (optional)
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tr4w-linux-appimage-${{ needs.build.outputs.version }}
+          path: release-files
+
       - name: Download macOS artifact (optional)
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: tr4w-macos-${{ needs.build.outputs.version }}
           path: release-files
@@ -514,17 +721,26 @@ jobs:
           Write-Host "--- release notes (previous tag: $prev) ---"
           Write-Host $body
 
-      # SAY THAT THE MAC BUNDLE IS UNSIGNED, IN THE RELEASE ITSELF.
+      # THE MAC NOTE, NOW THAT THE ARTIFACTS ARE SIGNED AND NOTARIZED.
       #
-      # Gatekeeper's message for an unsigned bundle is "damaged", not
-      # "unsigned", so a download with no explanation generates a support
-      # question and looks like a corrupt artifact. NY4I is obtaining the
-      # Developer ID and notarytool credentials; until they are repo secrets
-      # here, the bundle ships unsigned and says so.
+      # This step used to append an "it is NOT signed, run xattr -dr" note.
+      # That instruction is now FALSE and actively harmful to leave in place:
+      # it would tell an operator to strip quarantine from an artifact that
+      # does not need it, and it would say "unsigned" about something Apple
+      # notarized.
+      #
+      # THE PRESENCE OF A MAC ARTIFACT IS THE EVIDENCE, which is what makes
+      # this safe to state unconditionally. The macOS job runs with
+      # TR4W_MAC_SIGN=1, and the packaging stage under that flag signs,
+      # notarizes and staples BEFORE it rolls either archive and produces
+      # NEITHER if any of it is rejected. There is no path that yields an
+      # unsigned .dmg or .tar.gz -- an unsigned build is an absent build. So
+      # "a darwin artifact is in release-files" and "it was notarized" are the
+      # same fact, and this note cannot get ahead of reality.
       #
       # Appended to the generated notes rather than replacing them, and only
       # when a Darwin tarball actually made it into release-files.
-      - name: Note the unsigned macOS bundle
+      - name: Note the signed macOS artifacts
         shell: powershell
         run: |
           $mac = Get-ChildItem -Path release-files -Filter 'tr4w-*-aarch64-darwin.tar.gz' -File -ErrorAction SilentlyContinue
@@ -536,31 +752,100 @@ jobs:
             '',
             '---',
             '',
-            '**macOS: TR4W.app is NOT signed or notarized.**',
-            'Gatekeeper reports an unsigned bundle as *damaged* rather than as unsigned,',
-            'so the message you get does not say what is actually wrong.',
+            '**macOS: signed with a Developer ID and notarized by Apple.**',
+            'The notarization ticket is stapled to both downloads, so Gatekeeper can',
+            'verify them without a network connection. There is no quarantine step to',
+            'run and no *damaged* dialog to work around.',
             '',
             'Two downloads are offered and they carry the same build:',
             '',
-            '- `.dmg` -- the disk image, and the one notarization will staple to once',
-            '  an Apple Developer ID is in place.',
-            '- `.tar.gz` -- the same payload as a tarball.',
+            '- `.dmg` -- the disk image. Open it and drag `TR4W.app` to Applications.',
+            '- `.tar.gz` -- the same payload as a tarball, stapled app included.',
             '',
-            'Either way, drag `TR4W.app` out and clear the quarantine attribute before',
-            'first launch:',
+            '`tr4wserver` ships beside the application in both and is signed as well.',
             '',
-            '```sh',
-            'xattr -dr com.apple.quarantine /Applications/TR4W.app',
-            '```',
-            '',
-            'Signing and notarization are pending an Apple Developer ID.',
+            'macOS builds remain BUILDS: the application is signed and notarized, which',
+            'says it is from us and unmodified -- not that it has been exercised on the',
+            'air. See the README for what has and has not been run.',
             ''
           ) -join "`n"
           Add-Content -Path release-notes.md -Value $note -Encoding utf8
-          Write-Host 'Appended the unsigned-bundle note to release-notes.md'
+          Write-Host 'Appended the signed-artifact note to release-notes.md'
+
+      # THE LINUX AppImage NOTE.
+      #
+      # Written only when an AppImage actually reached release-files, for the
+      # same reason the macOS note is conditional: a note about a download that
+      # is not there is worse than no note.
+      #
+      # EVERYTHING IN IT IS A MEASURED FACT, and the two caveats are the two
+      # things a downloader actually hits. The glibc floor is 2.38 and NOT the
+      # 2.34 the executable itself needs -- measured with objdump -T over the
+      # 38 bundled libraries on 2026-09-20: thirteen of them, glib, pango,
+      # cairo, harfbuzz, fontconfig, sqlite3 and OpenSSL among them, reference
+      # GLIBC_2.38. An AppImage carries everything EXCEPT the C library, so the
+      # bundle's floor is the AppImage's floor, and quoting the executable's
+      # would promise it runs on distributions where it cannot start.
+      #
+      # THE HONEST GAPS ARE STATED, not fixed here: HamLib is not in the
+      # bundle, and the icon is a generated placeholder.
+      - name: Note the Linux AppImage
+        shell: powershell
+        run: |
+          $img = Get-ChildItem -Path release-files -Filter 'TR4W-*-x86_64.AppImage' -File -ErrorAction SilentlyContinue |
+                 Select-Object -First 1
+          if (-not $img) {
+            Write-Host 'No AppImage in this release -- nothing to note.'
+            exit 0
+          }
+          $note = @(
+            '',
+            '---',
+            '',
+            '**Linux: the AppImage is one file. Download it, make it executable, run it.**',
+            'Nothing is installed and nothing is unpacked. GTK 2 travels inside it, so',
+            'there is no `apt install` to do first -- which is the whole reason it exists.',
+            '',
+            '```',
+            "chmod +x $($img.Name)",
+            "./$($img.Name)",
+            '```',
+            '',
+            'Two things can stop it starting, and neither is obvious from the message you get:',
+            '',
+            '**It needs a recent distribution.** It is built on Ubuntu 24.04, and the system',
+            'C library is the one piece that can never travel inside an AppImage. It runs on',
+            'Ubuntu 24.04 and 23.10, Debian 13, and Fedora 39 or newer. It does **not** run on',
+            'Ubuntu 22.04 LTS, Ubuntu 20.04, Debian 12 or RHEL 9 -- on those it stops at once',
+            'complaining about `GLIBC_2.38`. On an older machine use the `.tar.gz` instead,',
+            'which goes back further but expects GTK 2 to be installed already.',
+            '',
+            '**It may need FUSE, and many current distributions no longer ship it.** An',
+            'AppImage normally mounts itself, which wants libfuse2. If it refuses to start',
+            'with a message about FUSE or about mounting, run it this way instead -- it',
+            'unpacks to a temporary directory and needs nothing installed:',
+            '',
+            '```',
+            "./$($img.Name) --appimage-extract-and-run",
+            '```',
+            '',
+            'Two things are knowingly unfinished in this build:',
+            '',
+            '- **Radios driven through HamLib will not work from the AppImage** unless',
+            '  `libhamlib` is already installed on the machine -- it is not bundled, and',
+            '  that combination has not been tested. Radios TR4W drives directly (Elecraft,',
+            '  Icom, Kenwood, Yaesu, Flex, TCI) are unaffected.',
+            '- **The icon is a placeholder**, a plain blue square. Real artwork is pending.',
+            '',
+            'Linux builds remain BUILDS. The AppImage has been launched on the machine that',
+            'made it and on nothing else; see the README for what has and has not been run.',
+            ''
+          ) -join "`n"
+          Add-Content -Path release-notes.md -Value $note -Encoding utf8
+          Write-Host 'Appended the AppImage note to release-notes.md'
 
       - name: Create draft GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ github.ref_name }}
           name: TR4W v${{ needs.build.outputs.version }}
@@ -572,6 +857,7 @@ jobs:
             release-files/tr4w_setup_*.exe
             release-files/virustotal-report.md
             release-files/tr4w-*-x86_64-linux.tar.gz
+            release-files/TR4W-*-x86_64.AppImage
             release-files/tr4w-*-aarch64-darwin.dmg
             release-files/tr4w-*-aarch64-darwin.tar.gz
           # FALSE, AND IT HAS TO BE. The Linux and macOS jobs are

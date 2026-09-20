@@ -271,6 +271,7 @@ uses
   uFunctionKeysForm,
   uBandPlanForm,
   uLegacyIniPrompt,
+  uFirstRunConvert,
   uIniRetireForm,
   uWinManagerForm,
   uMessagesListForm,
@@ -1463,6 +1464,37 @@ begin
   uMenu.InitializeMenuText;
 
   SetCharBuffer(TR4W_INI_FILENAME, SettingsFilePath('tr4w.ini'));
+
+  (* THE FIRST START AFTER AN UPGRADE: OFFER TO RUN tr4wconvert (NY4I,
+    2026-09-20).  The condition is two file tests -- an old tr4w.ini exists
+    and settings\tr4w.json does not -- and uLegacyConversionCheck records why
+    that cannot become the nagging ini detector that was removed the day
+    before.
+
+    WHERE IT SITS, AND WHY IT COULD SIT NOWHERE ELSE.
+
+      after the ini path is known     TR4WConfigFileName is derived from it;
+                                      above this line it names the wrong file
+      after the translation load      the text is resourcestring, and
+                                      InitializeStringTables has just run
+      after the logger exists         the outcome is logged either way
+      BEFORE anything writes the      LoadSettingsForStartup SAVES on its
+      settings file                   no-section branch, so one step further
+                                      down and the condition is already False
+      before ShowNewContest           which is modal and is the first window
+                                      an operator meets; two modals racing for
+                                      the first start is not a sequence
+
+    HEADLESS NEVER REACHES IT.  tSilentExport is the same guard the New
+    Contest dialog below uses and for the identical reason: the golden corpus
+    drives thirteen /EXPORT runs and a modal there hangs rather than fails.
+    An unguarded ShowMessage has cost exactly that before. *)
+  if not tSilentExport then
+     begin
+     OfferFirstRunConversion(CharBufferText(TR4W_INI_FILENAME),
+                             TR4WConfigFileName);
+     end;
+
   (* THE PLATFORM GATE MOVED INTO uPlatformFonts, which already owns every
     per-platform font question this program asks. LuconSZLoadded staying False
     off Windows is still the RIGHT answer rather than a degraded one -- the
@@ -2298,7 +2330,20 @@ begin
   // After the seeding too -- every station setting has been carried into the
   // JSON store by this point, so the question can honestly say the old file is
   // no longer read.
-  OfferToRetireLegacyIni(TR4WConfigFileName);
+  //
+  (* AND NOT AT ALL WHEN THE OPERATOR HAS JUST DECLINED TO CONVERT.
+    OfferToRetireLegacyIni asks on the strength of a settings file EXISTING,
+    and after the first-run offer above is declined one does exist -- written
+    by LoadSettingsForStartup, full of defaults, with nothing converted into
+    it.  Its prompt would then say the settings had been moved, which is
+    false, and offer to delete the operator's only copy of their 4.x
+    configuration minutes after they said "not now".  That is the one way
+    this pair could destroy something, so the second question waits for
+    another day. *)
+  if not FirstRunConversionDeclined then
+     begin
+     OfferToRetireLegacyIni(TR4WConfigFileName);
+     end;
 
   if Settings.SayHi.Enable then
      DisplayNamePercentage;
