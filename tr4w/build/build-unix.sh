@@ -289,7 +289,10 @@ find_toolchain() {
    # the RTL (fpcupdeluxe), it cannot be reachable until these paths exist.
    # Ordering this wrong reports "its RTL is missing or its config is broken"
    # on a perfectly good toolchain.
-   set_fpc_packages
+   #
+   # AND IT CAN FAIL: on macOS it resolves the SDK, and without one nothing
+   # links. Propagated, so find_toolchain's own `|| exit 2` stops the run.
+   set_fpc_packages || return 1
 
    FPCVER=$("$FPC" -iV 2>/dev/null)
    probe="${TMPDIR:-/tmp}/tr4w-fpcprobe.$$"
@@ -474,13 +477,26 @@ set_fpc_packages() {
          # And the SDK, without which NOTHING links -- see the note on
          # fpc_darwin_link_flags. These are LINK flags, not unit paths, so they
          # ride along in the same variable rather than earning a second one.
-         FPC_PKGS="$FPC_PKGS$(fpc_darwin_link_flags)"
+         #
+         # CHECKED, NOT ASSUMED. That function used to answer with an empty
+         # string when it could not find an SDK, and an absent -XR fails every
+         # link with a wall of undefined symbols that names neither the SDK nor
+         # this script. It now reports what it asked and returns non-zero; this
+         # is a TOOLCHAIN fault, so it stops the run here the same way a
+         # missing compiler does, rather than becoming ten red stages.
+         if ! _link=$(fpc_darwin_link_flags); then
+            say 'TOOLCHAIN NOT USABLE'
+            say '  No macOS SDK -- the two xcrun answers are above.'
+            return 1
+         fi
+         FPC_PKGS="$FPC_PKGS$_link"
          ;;
       *)
          # A packaged FPC's /etc/fpc.cfg already supplies these.
          FPC_PKGS=''
          ;;
    esac
+   return 0
 }
 
 # search_paths <App|Tests|Server>

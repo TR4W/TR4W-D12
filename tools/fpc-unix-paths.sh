@@ -77,19 +77,101 @@ fpc_unix_package_paths() {
 # run.  Both SDKs exist and both contain libc.tbd, which is why the error is so
 # unhelpful: the library is there, and the linker is looking in the other place.
 #
-# xcrun IS THE AUTHORITY.  It answers with whatever SDK this machine's selected
-# developer directory uses, so it stays right when Xcode is updated or when only
-# the Command Line Tools are installed -- neither of which a hardcoded path
-# survives.
+# xcrun IS THE AUTHORITY, BUT ONLY WHEN IT IS ASKED THE RIGHT QUESTION, and
+# that distinction cost the v5.0.11 and v5.0.12 release runs.
+#
+# MEASURED ON mac-ci, 2026-09-20 (macOS 27.0, Xcode 26.2):
+#
+#     xcrun --show-sdk-path          /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+#                                    -> the 27.0 SDK
+#     xcrun --sdk macosx --show-sdk-path
+#                                    -> Xcode's own MacOSX26.2.sdk
+#     xcodebuild -version            errors: it cannot locate the 27.0 SDK at all
+#
+# The bare form answers with the Command Line Tools SDK, which on that machine
+# was a MAJOR VERSION AHEAD of the Xcode whose ld actually ran.  Compiling
+# against 27.0 and linking with Xcode 26.2's linker ended every link in
+#
+#     Undefined symbols for architecture arm64:
+#       _CFArrayGetCount, _CFArrayGetValueAtIndex, _AXIsProcessTrusted
+#     ld: symbol(s) not found for architecture arm64
+#
+# -- CoreFoundation and ApplicationServices, i.e. it reads as a broken LCL and
+# not as a mismatched SDK.  Proven by cloning the v5.0.11 TAG, which had built
+# successfully the day before, on that machine: it failed identically, and the
+# one-line change to --sdk macosx made it PASS.
+#
+# THAT MACHINE HAS SINCE MOVED ON, which is the point rather than a footnote:
+# re-measured hours later the same day, mid-update, it carried Xcode 27.0 and
+# BOTH xcrun forms answered `rc=69, You have not agreed to the Xcode license
+# agreements`.  So the pair of answers this function reasons about changes
+# under it without warning -- do not re-derive the rule from whatever the box
+# says today, and do not conclude the bare form is now safe because the two
+# happen to agree again.
+#
+# SO ASK FOR THE macosx SDK BY NAME FIRST.  Compiler, SDK and linker have to
+# come from ONE install; `--sdk macosx` resolves through the selected developer
+# directory, which is the same install that supplies the ld being invoked.  The
+# bare form is a separate default that is free to disagree with it, and on a
+# machine carrying both Xcode and the Command Line Tools it eventually does.
+#
+# The bare form is kept as a FALLBACK for a machine that has the Command Line
+# Tools and no Xcode at all.  UNVERIFIED (2026-09-20): whether `--sdk macosx`
+# answers correctly on such a machine has not been measured here -- no
+# CLT-only Mac was available -- so the fallback is coded rather than assumed
+# away.  If it turns out `--sdk macosx` always answers there too, this branch
+# becomes dead code and can go; do not delete it on reasoning alone.
+#
+# AND IT FAILS LOUDLY IF NEITHER ANSWERS.  This used to `return 0` on every
+# failure path, emitting NO flags at all -- and a missing -XR produces the same
+# wall of undefined symbols as the wrong one, so the silent path and the
+# wrong-SDK path are indistinguishable from the output.  It now prints what it
+# asked and what each answered, and returns non-zero; the caller stops.
 #
 # The two "obsolete flag" warnings FPC 3.2.2 provokes from a modern ld
 # (-macosx_version_min, -multiply_defined) are noise, not failure; the link
 # succeeds through them.
 fpc_darwin_link_flags() {
    [ "$(uname -s)" = Darwin ] || return 0
-   command -v xcrun >/dev/null 2>&1 || return 0
-   _sdk=$(xcrun --show-sdk-path 2>/dev/null) || return 0
-   [ -n "$_sdk" ] && [ -d "$_sdk" ] || return 0
+
+   if ! command -v xcrun >/dev/null 2>&1; then
+      printf '%s\n' 'MACOS SDK NOT FOUND: xcrun is not on PATH.' >&2
+      printf '%s\n' '  Install the Xcode command line tools (xcode-select --install).' >&2
+      return 1
+   fi
+
+   # BOTH ANSWERS ARE TAKEN, so the diagnostic below can report what each one
+   # said rather than only that the chosen one was unusable.  Neither is
+   # allowed to abort the function: a missing SDK is reported by this function,
+   # not by xcrun's exit status.
+   _sdk_named=$(xcrun --sdk macosx --show-sdk-path 2>/dev/null) || _sdk_named=''
+   _sdk_default=$(xcrun --show-sdk-path 2>/dev/null) || _sdk_default=''
+
+   _sdk=''
+   if [ -n "$_sdk_named" ] && [ -d "$_sdk_named" ]; then
+      _sdk=$_sdk_named
+   elif [ -n "$_sdk_default" ] && [ -d "$_sdk_default" ]; then
+      # The Command-Line-Tools-only case described in the header.  Said out
+      # loud, because on a machine that HAS Xcode this branch would mean the
+      # named lookup broke and the link is about to use a possibly mismatched
+      # SDK -- which is the failure this whole function exists to prevent.
+      _sdk=$_sdk_default
+      printf '%s\n' "macOS SDK: 'xcrun --sdk macosx' gave nothing usable; falling back to 'xcrun --show-sdk-path' ($_sdk_default)." >&2
+      printf '%s\n' '  Expected on a machine with the Command Line Tools and no Xcode.  On a machine with Xcode this is a warning: compiler, SDK and linker must come from one install.' >&2
+   fi
+
+   if [ -z "$_sdk" ]; then
+      # LOUDLY, AND NAMING BOTH QUESTIONS.  Emitting nothing here is what made
+      # this expensive: the build carries on, every link fails on undefined
+      # symbols, and nothing in the output mentions an SDK.
+      printf '%s\n' 'MACOS SDK NOT FOUND -- refusing to link without one.' >&2
+      printf '%s\n' "  xcrun --sdk macosx --show-sdk-path -> ${_sdk_named:-<no answer>}" >&2
+      printf '%s\n' "  xcrun --show-sdk-path             -> ${_sdk_default:-<no answer>}" >&2
+      printf '%s\n' '  Neither named a directory that exists.  Check xcode-select -p, and' >&2
+      printf '%s\n' '  that the selected developer directory really holds an SDK.' >&2
+      return 1
+   fi
+
    printf ' -XR%s -Fl%s/usr/lib' "$_sdk" "$_sdk"
 
    # FRAMEWORKS THE LCL REFERENCES BUT DOES NOT ASK FOR.

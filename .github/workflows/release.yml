@@ -507,8 +507,42 @@ jobs:
           # be left lying in one.
           rm -f "$RUNNER_TEMP"/tr4w-notary-*.p8 || true
           rm -f "$RUNNER_TEMP"/build-unix.log || true
-          left=$(ls "$RUNNER_TEMP"/tr4w-notary-*.p8 2>/dev/null | wc -l | tr -d ' ')
+
+          # COUNTED WITHOUT `ls`, AND THAT IS THE WHOLE DEFECT THIS REPLACES.
+          #
+          # This step runs under `bash -e -o pipefail`. It used to count with
+          #
+          #     left=$(ls "$RUNNER_TEMP"/tr4w-notary-*.p8 2>/dev/null | wc -l ...)
+          #
+          # and once the rm above had done its job the glob matched nothing,
+          # ls exited non-zero, pipefail propagated it and the step FAILED --
+          # precisely because the cleanup SUCCEEDED. In run 35523227170 that
+          # failed the macOS job and skipped the two steps after it, so a
+          # signed, notarized pair of artifacts was built and never uploaded.
+          # It would have done that on every fully successful run.
+          #
+          # The shell counts the glob itself instead. An unmatched glob in sh
+          # expands to the pattern text, so each candidate is tested with -e
+          # rather than assumed to exist -- which keeps the number REAL. A
+          # step that always prints 0 would be worse than no step at all.
+          left=0
+          for f in "$RUNNER_TEMP"/tr4w-notary-*.p8; do
+            if [ -e "$f" ]; then
+              left=$((left + 1))
+              echo "::warning::notary key still present after removal: $f"
+            fi
+          done
           echo "notary key material remaining in RUNNER_TEMP: $left"
+
+          # A REMAINING KEY IS A FAILURE, not a note. rm -f does not fail on an
+          # absent file, so a survivor means something stopped the removal --
+          # permissions, or a file owned by another user -- and a private
+          # signing key left on a shared lab machine is the one outcome this
+          # step exists to prevent.
+          if [ "$left" -ne 0 ]; then
+            echo "::error::$left notary key file(s) remain in RUNNER_TEMP after cleanup. Remove them on the runner by hand."
+            exit 1
+          fi
 
       - name: Locate the disk image and the tarball
         id: artifact
