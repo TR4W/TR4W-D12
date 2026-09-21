@@ -380,6 +380,41 @@ procedure ShowTR4WMainForm;
   NSApp.run(), and an activation asked for before the application has finished
   launching is not reliably honoured; from inside the loop it is.
 
+  AND THAT WAS NOT THE DEFECT. 5.0.19 shipped the promotion above and NY4I
+  reported no change: "the mac still has the issue that until I mouse over the
+  menu, it does not appear right away when starting the program."
+
+  THE PROGRAM WAS THEN INSTRUMENTED AND RUN, rather than read. Three findings,
+  each from a log line produced on mac-ci with the app launched through
+  LaunchServices:
+
+    1. THE MAIN FORM IS ALREADY THE KEY WINDOW when the promotion runs --
+       "form.Active=True ... win key=True main=True". His start-up restores NO
+       tool window at all, so the account above of a tool window holding the
+       keyboard, true as a mechanism, was never what happened on his machine.
+       BringToFront therefore had nothing to change, produced no
+       windowDidBecomeKey edge, and could not install anything.
+
+    2. THE MENU IS INSTALLED ANYWAY, and fully: "mainMenu items=10
+       titles=|File|Settings|Windows|Alt-|Ctrl-|Commands|Tools|Net|Help|",
+       with NSApp.active=True, 300 ms into the run and long before any mouse
+       moved.
+
+    3. A HOVER CANNOT INSTALL A MENU. Nothing in this program is reached by
+       the pointer entering the system menu bar.
+
+  So the bar was installed and UNDRAWN, and the hover made the system draw
+  what was already there -- which is also why it never goes away again once it
+  has appeared. The fix is a redraw, not an install: see uMacMenuBar, which
+  holds the one raw AppKit call this needs and the reason the LCL has no
+  equivalent.
+
+  WHAT IS STILL UNVERIFIED, stated plainly because two fixes have now been
+  reported as done and were not: the state above was MEASURED, and the
+  conclusion follows from it, but nobody has seen the bar draw. The screen on
+  mac-ci cannot be captured over ssh -- screencapture is refused without
+  Screen Recording permission -- so an operator has to look.
+
   WINDOWS AND LINUX ARE UNTOUCHED, and not merely because the call would be
   harmless there: the entire body is inside {$IFDEF DARWIN}. Windows has no
   global menu bar and gtk2's is per-window, so neither platform has the defect,
@@ -668,6 +703,7 @@ uses
    uGetServerLog,      // the headless-sync state
    SysUtils,           // UpperCase
    uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
+   uMacMenuBar,        // ForceMenuBarRedraw -- the macOS bar, see ScheduleMainWindowActivation
    (* Grids moved to the INTERFACE clause -- lstPossibleCall is a TDrawGrid
       and a published field's type has to be visible there. It was here
       for TGridOptions (TR4WEditableLogSetGridLines). *)
@@ -3281,8 +3317,10 @@ type
      Modelled on TEntryDeferrer above, which exists for the same reason. *)
    TStartupActivator = class(TObject)
    private
-      FDone: boolean;
+      FDone:  boolean;
+      FRedraw: TTimer;
       procedure Promote;
+      procedure RedrawTheMenuBar(Sender: TObject);
    public
       procedure RunFromQueue(Data: PtrInt);
       procedure ApplicationActivated(Sender: TObject);
@@ -3310,8 +3348,47 @@ begin
      TCocoaWidgetSet.SetForegroundWindow, which does both halves of what is
      wanted here -- activateIgnoringOtherApps, then makeKeyAndOrderFront on
      this window -- and it is the LCL's own way of saying "this window". It
-     also declines while a modal form is up, which is the behaviour we want. *)
+     also declines while a modal form is up, which is the behaviour we want.
+
+     IT IS NOT WHAT PUTS THE MENU BAR UP, and 5.0.19 proved that on the bench:
+     with no tool window restored the main form is ALREADY the key window by
+     the time this runs, so makeKeyAndOrderFront changes nothing, no
+     windowDidBecomeKey edge is produced, and a fix that depended on one was a
+     no-op. It is kept because it is still right for the case it was written
+     for -- a restored tool window holding the keyboard. *)
    TR4WMainForm.BringToFront;
+
+   (* AND THEN THE BAR IS REDRAWN, ONCE, SHORTLY AFTER.
+
+     A TIMER RATHER THAN A SECOND QUEUED CALL, because the thing being ruled
+     out is running too early: this queued call is the first turn of the run
+     loop, and the application has only just finished launching. A quarter of
+     a second puts the redraw unambiguously after that, and start-up already
+     took three seconds -- nobody can see the difference.
+
+     Owned by this object, which is never freed, and disabled by its own
+     handler so it fires exactly once. *)
+   FRedraw          := TTimer.Create(nil);
+   FRedraw.Interval := 250;
+   FRedraw.OnTimer  := RedrawTheMenuBar;
+   FRedraw.Enabled  := True;
+end;
+
+procedure TStartupActivator.RedrawTheMenuBar(Sender: TObject);
+begin
+   FRedraw.Enabled := False;
+
+   (* WHAT THE BAR HELD BEFORE WE TOUCHED IT. Logged at Info on purpose: this
+     defect cost two bench rounds because no line in the log could say whether
+     the menu was missing or merely undrawn, and a report from an operator's
+     machine is the only place the answer exists. *)
+   logger.Info('[MacMenu] start-up redraw, bar before: %s', [MenuBarDescription]);
+   ForceMenuBarRedraw;
+
+   (* AND AFTER, because the one way this fix could do harm is by taking the
+     bar down: it removes the menu before putting it back. If these two lines
+     ever disagree, that is the defect and the log says so. *)
+   logger.Info('[MacMenu] start-up redraw, bar after:  %s', [MenuBarDescription]);
 end;
 
 procedure TStartupActivator.RunFromQueue(Data: PtrInt);
