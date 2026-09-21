@@ -112,6 +112,7 @@ type
 
     procedure ApplyMinimumSize;
     procedure LayoutLatestButton;
+    procedure ReassertLatestCaption;
     function  WrappedTextHeight(const aText: TCaption; const aWidth: integer): integer;
     function  WidestLine(const aText: TCaption): integer;
     function  GetRowCount: integer;
@@ -290,6 +291,7 @@ begin
      Calling it twice is safe: every value it writes derives from the geometry
      captured once from the .lfm and from the current caption, never from the
      controls' present Top and Height. }
+   ReassertLatestCaption;
    LayoutLatestButton;
    ApplyMinimumSize;
 
@@ -477,7 +479,7 @@ end;
   the visible layout beyond the measurement.
 
   ShowAccelChar is left at its default because the caption carries one: the
-  '&' in '(Alt+&A)' is drawn as an underline, not as a character, and measuring
+  '&' in 'Alt+&A' is drawn as an underline, not as a character, and measuring
   it as a character would over-estimate by one glyph.
 
   THE PROBE MUST BE VISIBLE, and that is the whole trick. The LCL does not
@@ -697,7 +699,7 @@ begin
          end;
 
       { STILL TOO LONG FOR THE WHOLE ALLOWANCE: shorten the PATH, and only the
-        path. The caption is 'Latest config file (Alt+&A):' + a line break + the
+        path.  The caption is 'Latest config file, Alt+&A:' + a line break + the
         file name, and eliding into the label would damage the one part that
         says what the button does. Everything after the last line break is the
         path; if there is no line break there is nothing to protect and the
@@ -762,6 +764,40 @@ begin
                     btnLatest.Top, btnLatest.Height, btnBrowse.Top,
                     lstFiles.Height]);
       end;
+end;
+
+(* COCOA ONLY LEARNS A CAPTION IS MULTI-LINE WHEN IT ARRIVES THROUGH SetText.
+
+  TCocoaWSButton.SetText switches an NSButton to NSRegularSquareBezelStyle when
+  the text contains a line ending; TCocoaWSButtonUtil.allocButton, which is the
+  path a caption takes when it was assigned BEFORE the handle existed, does not.
+  A rounded NSButton is a fixed-height single-line control, so a second line --
+  which here is the whole point, it is the file name -- is simply not drawn.
+
+  And ShowLatest runs from PrepareForm, which is before ShowModal, so this form
+  has no handle yet and every caption it sets takes exactly that path.  Nor can
+  it be fixed by assigning the same text again later: TControl.RealSetText exits
+  when the value has not changed, so the widget set would never hear about it.
+
+  Hence the empty assignment.  It runs from HandleShow, before the first paint,
+  and on Win32 and GTK it is two cheap SetText calls that change nothing. *)
+procedure TfrmNewContest.ReassertLatestCaption;
+var
+   want: TCaption;
+begin
+   if not btnLatest.HandleAllocated then
+      begin
+      Exit;
+      end;
+
+   want := btnLatest.Caption;
+   if want = '' then
+      begin
+      Exit;
+      end;
+
+   btnLatest.Caption := '';
+   btnLatest.Caption := want;
 end;
 
 procedure TfrmNewContest.ShowLatest(const aCaption: string);

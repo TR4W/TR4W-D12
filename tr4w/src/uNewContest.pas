@@ -692,9 +692,41 @@ begin
      it away. *)
    latest := GetLatestConfigFile;
 
-   if (latest <> '') and FileExists(latest) then
+   (* A RECORDED FILE THAT IS GONE SAYS SO NOW.
+
+     The stored value is an ABSOLUTE path -- uProgramMain records
+     TR4W_CFG_FILENAME after ExpandFileName -- so nothing that moves the file
+     moves the pointer with it, and a macOS build before 5.0.16 recorded paths
+     INSIDE the .app bundle which no longer exist at all.  All that happened
+     was that the button vanished, which is why it takes a bench session to
+     notice.  One line, once, naming the file. *)
+   if (latest <> '') and (not FileExists(latest)) then
       begin
-      frmNewContest.ShowLatest(Format(TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s',
+      logger.Warn('[NewContest] the last contest file recorded in the settings ' +
+                  'store no longer exists, so the button is hidden: %s', [latest]);
+      latest := '';
+      end;
+
+   if latest <> '' then
+      begin
+      (* NO AMPERSAND INSIDE PARENTHESES.  ON macOS IT COSTS THE WHOLE CAPTION.
+
+        This read ' (Alt+&A):' and NY4I saw a button captioned exactly "Latest
+        config file" on a signed 5.0.17 -- which looks like the designer
+        placeholder and is not.  A parenthesised ampersand is the macOS
+        convention for a CJK accelerator, so the Cocoa widget set DELETES it
+        and everything after it: cocoautils.pas, TCocoaStringUtil
+        .removeAcceleration, `Result := str.Substring(0, posLeft).Trim` when a
+        '(' precedes the '&' and a ')' follows it.  The line break and the file
+        name are after the ')', so the path never reached the screen.  Win32
+        and GTK only strip the '&', which is why this is macOS-only.
+
+        So the accelerator stays Alt+A -- it is documented in
+        docs/keyboard_shortcuts.md -- and the parentheses go.  A translated
+        label that contains an UNCLOSED '(' before the '&' would still trip it;
+        nothing in the catalogues does, and the guard belongs in a caption lint
+        rather than here. *)
+      frmNewContest.ShowLatest(Format(TC_LATEST_CONFIG_FILE + ', Alt+&A:'#13#10'%s',
                                       [LowerCase(latest)]));
       end
    else
