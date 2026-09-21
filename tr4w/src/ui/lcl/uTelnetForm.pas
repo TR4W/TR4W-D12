@@ -105,7 +105,15 @@ type
         without a component. }
       FToolbarImages: TImageList;
 
+      { The console's row height, in pixels. THE ONLY COPY: it is what
+        ApplyConsoleScale measured, and it is read back by ConsoleMeasureItem
+        on the widget sets that ask per row. See ApplyRowHeight. }
+      FRowHeight: integer;
+
       procedure ApplyMinimumSize;
+      procedure ApplyRowHeight(const aHeight: integer);
+      procedure ConsoleMeasureItem(Control: TWinControl; Index: Integer;
+                                   var AHeight: Integer);
    end;
 
 { The toolbar command ids.  DELIBERATELY the same numbers the Win32 toolbar
@@ -319,6 +327,28 @@ procedure TfrmTelnet.HandleCreate(Sender: TObject);
    end;
 
 begin
+   { The .lfm's design value, until the first rescale measures one. }
+   FRowHeight := lstConsole.ItemHeight;
+   lstConsole.OnMeasureItem := ConsoleMeasureItem;
+
+   {$IFDEF DARWIN}
+   (* macOS ONLY, AND IT IS A CRASH FIX -- the whole argument is in
+     ApplyRowHeight. In one line: assigning ItemHeight recreates the list box's
+     handle, and the Cocoa widget set leaves a dangling reference to the
+     strings object when it does. Under this style the row height is ASKED FOR
+     instead, so it is never assigned.
+
+     HERE, BEFORE THE HANDLE EXISTS. Setting Style on a control that has one
+     recreates it too (customlistbox.inc), which is the very thing being
+     avoided; at OnCreate the form has not been shown and there is nothing to
+     recreate.
+
+     NOT DONE ON THE OTHER TWO WIDGET SETS, because a Win32 list box measures
+     an item when it is inserted and never again -- measured, and the rows
+     simply stopped following the font. *)
+   lstConsole.Style := lbOwnerDrawVariable;
+   {$ENDIF}
+
    FToolbarImages := TImageList.Create(Self);
    FToolbarImages.Width := 24;
    FToolbarImages.Height := 24;
@@ -512,7 +542,11 @@ end;
   TListView takes its row height from the font for free; an OWNER-DRAWN list box
   does not -- lbOwnerDrawFixed means the height is whatever ItemHeight says, so
   growing the font alone would draw larger text clipped inside 15-pixel rows.
-  Nothing warns about this; it just looks wrong. }
+  Nothing warns about this; it just looks wrong.
+
+  AND ON macOS, ASSIGNING IT CRASHED THE PROGRAM -- see ApplyRowHeight, which
+  is where the row height is now put and why it is not put there the same way
+  on every widget set. }
 const
    { A DX spot line.  DXSpotLength in uTelnet is 76; the few extra characters
      are the margin the format actually uses in practice -- see any line in the
@@ -630,9 +664,93 @@ begin
    // font is clamped the rows must stop growing with it too.
    lstConsole.Canvas.Font.Assign(lstConsole.Font);
    rowHeight := lstConsole.Canvas.TextHeight('Wg') + 2;
-   if (rowHeight > 0) and (lstConsole.ItemHeight <> rowHeight) then
+   if rowHeight > 0 then
       begin
-      lstConsole.ItemHeight := rowHeight;
+      ApplyRowHeight(rowHeight);
+      end;
+end;
+
+(* THE ROW HEIGHT, AND WHY IT DOES NOT REACH THE CONTROL THE SAME WAY EVERYWHERE.
+
+  NY4I resized this window on macOS and got two recovered EAccessViolations,
+  the first with a program counter of $00730074006F0070 -- not an address, the
+  UTF-16 for 's' 't' 'o' 'p'. Text executed as code is a call through a pointer
+  read out of memory that now holds something else. The build before it logged
+  EBusError from the same window, which on aarch64 is a misaligned pointer.
+  Both are the signature of a message to a FREED object.
+
+  THE ONE STATEMENT THAT CAUSED IT WAS `lstConsole.ItemHeight := n`, and the
+  chain is in the LCL rather than here:
+
+    1  TCustomListBox.SetItemHeight calls RecreateWnd -- unconditionally, on a
+       control with a handle (customlistbox.inc:484-492, carrying the LCL's own
+       "TODO: remove RecreateWnd").
+    2  FinalizeWnd then calls FreeStrings(FItems), and the COCOA list box does
+       not override FreeStrings, so the base runs: AStrings.Free
+       (wsstdctrls.pp:352-356).
+    3  TLCLListBoxCallback.strings STILL POINTS AT THAT FREED OBJECT
+       (cocoawslistbox.pas:29 and :161; its destructor even says "strings are
+       released with FreeStrings call"), and the callback is still installed on
+       the NSTableView, which is destroyed only afterwards.
+    4  Anything Cocoa asks in that window dereferences it --
+       ItemsCount -> strings.Count (:173), GetItemTextAt -> strings[ARow]
+       (:185), or `Assigned(lclcb.strings) and lclcb.strings.isClearing` in the
+       selection handler (:329), where Assigned is TRUE of a dangling pointer.
+       Freed memory on macOS comes back as NSString text, in UTF-16.
+
+  MEASURED, on tr4w/test/tools/listboxprobe: sixty rescales of a 7,000-line
+  owner-drawn list. Assigning ItemHeight replaced the handle EVERY time on
+  gtk2 and on Win32; changing the FONT replaced nothing on either -- so the
+  Begin/EndUpdate pair above does not straddle a recreate, which was the other
+  suspect. Neither of those two widget sets crashes, because neither keeps a
+  second reference to the strings object. This is a Cocoa-only fault.
+
+  SO THE ROW HEIGHT IS STATED, NOT ASSIGNED, WHERE THE WIDGET SET WILL ASK FOR
+  IT. lbOwnerDrawVariable makes the control ask per row -- Cocoa sets
+  isDynamicRowHeight from exactly that style (cocoawslistbox.pas:143) and calls
+  MeasureItem from tableView_heightOfRow (cocoatables.pas:808) -- so no
+  ItemHeight is ever assigned there and step 1 never happens.
+
+  AND IT IS NOT DONE THAT WAY EVERYWHERE, BECAUSE WIN32 DOES NOT RE-MEASURE.
+  The same probe with lbOwnerDrawVariable: gtk2's rows followed the font
+  (asked 31/25/20/16, on screen 33/27/22/18 -- gtk2 adds two pixels of its
+  own), and Win32's sat at 30 for all sixty cycles whatever was asked, because
+  a Win32 list box measures an item when it is INSERTED and never again.
+  Switching everybody would have traded a macOS crash for clipped text on the
+  platform most operators are on.
+
+  THE BRANCH BELOW READS THE CONTROL, NOT THE PLATFORM. Which mechanism is in
+  force is a property of the style the control was given; only HandleCreate
+  needs to know which platform it is on. *)
+procedure TfrmTelnet.ApplyRowHeight(const aHeight: integer);
+begin
+   { CACHED, and that is not a micro-optimisation: on Cocoa MeasureItem is
+     called ONCE PER ROW on every reload, and this console is unbounded. A
+     field read costs nothing; measuring the canvas there would put a text
+     measurement on every row of a 10,000-line list. }
+   FRowHeight := aHeight;
+
+   if lstConsole.Style = lbOwnerDrawVariable then
+      begin
+      { The control asks us. A font change repaints but does not invite it to
+        re-measure, so one empty update cycle says the list changed -- which
+        is what makes the rows follow, verified on gtk2 in the probe. }
+      lstConsole.Items.BeginUpdate;
+      lstConsole.Items.EndUpdate;
+      end
+   else if lstConsole.ItemHeight <> FRowHeight then
+      begin
+      lstConsole.ItemHeight := FRowHeight;
+      end;
+end;
+
+{ Only reached under lbOwnerDrawVariable -- see ApplyRowHeight. }
+procedure TfrmTelnet.ConsoleMeasureItem(Control: TWinControl; Index: Integer;
+                                        var AHeight: Integer);
+begin
+   if FRowHeight > 0 then
+      begin
+      AHeight := FRowHeight;
       end;
 end;
 
