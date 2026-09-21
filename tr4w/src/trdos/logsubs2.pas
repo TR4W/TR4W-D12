@@ -87,8 +87,9 @@ uses
                         SendMessage through, which is what allows the polling
                         thread to finish and exit. That is a property of the
                         Win32 message queue -- where there is no queue there
-                        is nothing to unblock and the wait is an ordinary one,
-                        which the {$IFDEF} inside already says.
+                        is nothing to unblock, and that arm polls the radio's
+                        PollingThreadRunning flag instead. See the {$IFDEF}
+                        inside for why it is a flag and not a join.
       WAIT_OBJECT_0 / WAIT_TIMEOUT
                         the return codes of that wait, so they go with it.
 
@@ -652,8 +653,12 @@ end;
 // Wait for a thread handle to signal, pumping Windows messages so that
 // cross-thread SendMessage calls (e.g. SetDlgItemText from the polling
 // thread) don't deadlock the main thread.
-procedure WaitForPollingThreadWithMessages(H: TThreadID; TimeoutMs: DWORD);
+(* TAKES THE RADIO, NOT A BARE HANDLE, since 2026-09-21.  Off Windows there is
+  nothing to wait on but the radio's own PollingThreadRunning flag, so the
+  routine needs the radio to reach it; the handle is one field away. *)
+procedure WaitForPollingThreadWithMessages(ARig: RadioPtr; TimeoutMs: DWORD);
 var
+   H: TThreadID;
    { QWord: see the note at the assignment -- a 32-bit deadline can wrap
      past its own start and end the wait immediately. }
    Deadline: QWord;
@@ -676,6 +681,11 @@ begin
    (* ThreadStarted, not `= 0` -- TThreadID is a pointer on the BSD/macOS RTL
      and an integer elsewhere, so the ordinal comparison is a type error
      there. See TF. *)
+   if ARig = nil then
+      begin
+      Exit;
+      end;
+   H := ARig^.tRadioInterfaceThreadHandle;
    if not ThreadStarted(H) then
       begin
       Exit;
@@ -685,7 +695,13 @@ begin
       Remaining := Deadline - GetTickCount64;
       if Remaining > TimeoutMs then
          begin
-         Break;  // wrapped past deadline
+         (* Past the deadline: the QWord subtraction has underflowed, so the
+           truncated DWORD is larger than the budget.  This used to break in
+           SILENCE.  On Windows it is normally unreachable -- WAIT_TIMEOUT
+           reports and breaks first -- but off Windows it is the ordinary way
+           the wait ends, and a shutdown that gave up needs to say so. *)
+         logger.Info('[WaitForPollingThread] TIMED OUT after %dms', [TimeoutMs]);
+         Break;
          end;
 {$IFDEF WINDOWS}
       WaitResult := MsgWaitForMultipleObjects(1, H, False, Remaining, QS_SENDMESSAGE);
@@ -700,20 +716,43 @@ begin
          Break;  // timed out
          end;
 {$ELSE}
-      (* NO MESSAGE QUEUE, SO NOTHING TO PUMP -- AND THEREFORE NOTHING FOR
-        THIS ROUTINE TO ADD. The Win32 version exists to wake on a MESSAGE so
-        the peek below can release a blocked SendMessage; where there is no
-        such queue, waiting on the thread handle is an ordinary wait and the
-        caller's own join does it.
+      (* NO MESSAGE QUEUE, SO NOTHING TO PUMP -- but there is still something
+        to WAIT FOR, and until 2026-09-21 this arm did neither: it logged
+        "not implemented on this platform" and returned at once.  NY4I's Linux
+        run showed what that costs -- the polling thread logged a reconnect
+        attempt 22 ms AFTER "Step 3: Disconnecting Radio1", so a thread was
+        touching the radio while shutdown tore it down.
 
-        WaitForThreadTerminate is the RTL's equivalent and takes the same
-        millisecond budget, but H here is a Win32 thread HANDLE from
-        tCreateThread, not a TThreadID, so wiring it up is part of moving the
-        polling thread itself -- not something to fake here. Reported once so
-        a shutdown that hangs off Windows has a line pointing at this. *)
-      logger.Info('[WaitForPollingThread] not implemented on this platform; ' +
-                  'shutdown does not wait for the polling thread');
-      Break;
+        IT IS A FLAG POLL, NOT A JOIN, AND THAT IS DELIBERATE.  The RTL's
+        WaitForThreadTerminate is the obvious reach and the wrong one here:
+        on Unix it is CWaitForThreadTerminate (rtl/unix/cthreads.pp:456-462),
+        a bare pthread_join that IGNORES TimeoutMs outright.  It therefore
+        cannot honour the 3 s budget the caller asked for, and a polling thread
+        stuck in a socket call would hang the exit with no way out -- trading a
+        race for a hung program in front of an operator who has asked to quit.
+        The flag gives the same answer inside a bounded wait and needs no
+        platform call at all.
+
+        (ShutDownRadioInterface in LOGRADIO does use WaitForThreadTerminate.
+        That is a different situation -- a radio being reset while the program
+        stays up, where blocking is recoverable -- and it is left alone.)
+
+        20 ms slices: the polling loop re-tests PollingStopRequested at the top
+        of every pass and inside its backoff sleep, so it exits promptly; the
+        slice only bounds how long we notice. *)
+      if not ARig^.PollingThreadRunning then
+         begin
+         logger.Info('[WaitForPollingThread] Thread exited cleanly');
+         Break;
+         end;
+      if Remaining > 20 then
+         begin
+         Sleep(20);
+         end
+      else
+         begin
+         Sleep(Remaining);
+         end;
 {$ENDIF}
       // WAIT_OBJECT_0 + 1 = message available — pump it so SendMessage unblocks
 {$IFDEF WINDOWS}
@@ -771,9 +810,9 @@ begin
   Radio1.PollingStopRequested := True;
   Radio2.PollingStopRequested := True;
   logger.Info('[ExitProgram] Step 2a: Waiting for Radio1 (handle=%u)', [PtrUInt(Radio1.tRadioInterfaceThreadHandle)]);
-  WaitForPollingThreadWithMessages(Radio1.tRadioInterfaceThreadHandle, 3000);
+  WaitForPollingThreadWithMessages(@Radio1, 3000);
   logger.Info('[ExitProgram] Step 2b: Waiting for Radio2 (handle=%u)', [PtrUInt(Radio2.tRadioInterfaceThreadHandle)]);
-  WaitForPollingThreadWithMessages(Radio2.tRadioInterfaceThreadHandle, 3000);
+  WaitForPollingThreadWithMessages(@Radio2, 3000);
   logger.Info('[ExitProgram] Step 2c: Polling threads done');
 
   // Disconnect network radios BEFORE WSACleanup kills the sockets.

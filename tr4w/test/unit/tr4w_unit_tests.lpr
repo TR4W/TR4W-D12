@@ -311,6 +311,7 @@ uses
    uTestConfigDefaults in 'uTestConfigDefaults.pas',
    uTestTransverterOffset in 'uTestTransverterOffset.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
+   uTestRadioSocketProbe in 'uTestRadioSocketProbe.pas',
    uTestHamLibIDs       in 'uTestHamLibIDs.pas',
    uTestDXClusterClient in 'uTestDXClusterClient.pas',
    uNetFraming in '..\..\src\uNetFraming.pas',
@@ -444,6 +445,7 @@ begin
    RegisterSuite(TRadioTCITests.Create('RadioTCI'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
+   RegisterSuite(TRadioSocketProbeTests.Create('RadioSocketProbe'));
    RegisterSuite(TTransverterOffsetTests.Create('TransverterOffset'));
    RegisterSuite(TComPortEnumeratorTests.Create('ComPortEnumerator'));
    RegisterSuite(TPortAddressTests.Create('PortAddress'));

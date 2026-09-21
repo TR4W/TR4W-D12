@@ -1331,35 +1331,42 @@ const
 
 procedure BeginPolling(rig: RadioPtr); stdcall;
 begin
-   logger.debug('Entered BeginPolling');
-   ClearRadioStatus(rig);
-   rig^.tLastValidResponse := GetTickCount64;   // baseline so the liveness timer can't fire before the first poll
-   Sleep(100);  // The polling thread did not start after reset?
+   (* THE FLAG A SHUTDOWN WAIT CAN SEE.  Set True by SetUpRadioInterface before
+     this thread existed; cleared HERE, in a finally, because this routine has
+     three exits and a fourth is one edit away.  See RadioObject in LOGRADIO. *)
+   try
+      logger.debug('Entered BeginPolling');
+      ClearRadioStatus(rig);
+      rig^.tLastValidResponse := GetTickCount64;   // baseline so the liveness timer can't fire before the first poll
+      Sleep(100);  // The polling thread did not start after reset?
 
-   { If the radio is a network interface, we do not care what type of radio as
-     the same class gets all the information from the derived radio class type.
-     This BeginPolling procedure is fired up as a thread so it may cause some
-     strange issues since we have a thread in the network class. TBD
-   }
-   if rig.tFactoryObject <> nil then
-      begin
-      pFactoryRadio(rig);
-      Exit;   // Nothing else is done here so exit
-      end;
+      { If the radio is a network interface, we do not care what type of radio as
+        the same class gets all the information from the derived radio class type.
+        This BeginPolling procedure is fired up as a thread so it may cause some
+        strange issues since we have a thread in the network class. TBD
+      }
+      if rig.tFactoryObject <> nil then
+         begin
+         pFactoryRadio(rig);
+         Exit;   // Nothing else is done here so exit
+         end;
 
-   (* REACHING HERE IS A DEFECT, AND IT NOW SAYS SO.
+      (* REACHING HERE IS A DEFECT, AND IT NOW SAYS SO.
 
-     Every radio that connects has a factory object and left through the Exit
-     above. The per-model legacy dispatch that used to follow is long gone, and
-     what remained was a PurgeComm on rig^.tCATPortHandle -- the LAST raw
-     serial call in this unit, on a handle the factory has not owned since
-     Track E, in a branch the comment itself said could no longer be reached.
+        Every radio that connects has a factory object and left through the Exit
+        above. The per-model legacy dispatch that used to follow is long gone, and
+        what remained was a PurgeComm on rig^.tCATPortHandle -- the LAST raw
+        serial call in this unit, on a handle the factory has not owned since
+        Track E, in a branch the comment itself said could no longer be reached.
 
-     Purging a handle nobody opened is not a recovery; it is a silent no-op
-     that made the branch look handled. A radio with no factory object cannot
-     be polled at all, so the honest response is to report it and stop. *)
-   logger.Error('[BeginPolling] radio has no factory object -- it cannot be ' +
-                'polled. This is a defect: every connected radio has one.');
+        Purging a handle nobody opened is not a recovery; it is a silent no-op
+        that made the branch look handled. A radio with no factory object cannot
+        be polled at all, so the honest response is to report it and stop. *)
+      logger.Error('[BeginPolling] radio has no factory object -- it cannot be ' +
+                   'polled. This is a defect: every connected radio has one.');
+   finally
+      rig^.PollingThreadRunning := False;
+   end;
 end;
 
 procedure PTTStatusChanged;

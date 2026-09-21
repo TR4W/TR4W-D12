@@ -519,8 +519,39 @@ Type TFactoryRadioBase = class(TObject)
       // everyone's, the same split as the coverage queries above.
       procedure PublishSpectrumFrame(const AFrame: TSpectrumFrame);
 
+      (* ASK THE SOCKET WHETHER IT IS CONNECTED, AND NEVER LET THE ASKING BE
+        THE THING THAT FAILS.
 
+        Indy's TIdTCPConnection.Connected is NOT a flag read.  It reaches
+        TIdIOHandlerStack.Connected (include/Core/IdIOHandlerStack.pas:241),
+        which PROBES the socket -- ReadFromSource(False, 0, False) -- and
+        swallows exactly three errors, no more:
 
+           Id_WSAESHUTDOWN, Id_WSAECONNABORTED, Id_WSAECONNRESET
+
+        and RE-RAISES everything else.  Id_WSAENOTCONN is not on that list.
+
+        On Unix, IdStackConsts.pas maps Id_WSAENOTCONN to the C ENOTCONN --
+        errno 107 on Linux -- so probing a socket that NEVER CONNECTED raises
+        EIdSocketError 'Socket Error # 107'.  On Windows the same constant is
+        WSAENOTCONN (10057), a different numeric space and, in practice, a
+        quiet False.  So a guard written to AVOID an error was the thing
+        raising it, and only off Windows: NY4I quit 5.0.15 on Linux Mint with
+        his K4 switched off and got the LCL's unhandled-exception modal out of
+        ExitProgram (2026-09-21).
+
+        Answering False on ANY exception is the correct reading and not merely
+        the convenient one: the question is "can I write to this socket", and
+        a probe that failed has already answered no.  It is reported at Debug,
+        not swallowed -- see the tree's rule about silent fallbacks -- because
+        a probe failing is normal on the way out and pathological anywhere
+        else, and the log line is what tells the two apart.
+
+        A method on the BASE, so the idiom exists once for every radio rather
+        than as a try/except copied to each call site.  uExternalLoggerBase has
+        the same Indy shape and the same exposure; it is a separate subsystem
+        and is reported, not changed, here. *)
+      function SocketIsConnected: boolean;
 
 
    public
@@ -1457,12 +1488,24 @@ begin
       FreeAndNil(rt);
       end;
 
+   (* SocketIsConnected, not socket.Connected: this is the destructor, so an
+     EIdSocketError escaping here leaves the object half-freed and takes out
+     whatever was tearing it down.  See SocketIsConnected for what Indy's
+     probe does on a socket that never connected. *)
    if socket <> nil then
       begin
-      if socket.Connected then
-         begin
-         socket.Disconnect;
-         end;
+      try
+         if SocketIsConnected then
+            begin
+            socket.Disconnect;
+            end;
+      except
+         on E: Exception do
+            begin
+            logger.Error('[TFactoryRadioBase.Destroy] Exception closing the socket: %s - %s',
+                         [E.ClassName, E.Message]);
+            end;
+      end;
       FreeAndNil(socket);
       end;
 
@@ -1816,43 +1859,85 @@ begin
    Result := Self.Connect;
 end;
 
+(* See the declaration for why this exists and what Indy does. *)
+function TFactoryRadioBase.SocketIsConnected: boolean;
+begin
+   Result := False;
+
+   if socket = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      Result := socket.Connected;
+   except
+      on E: Exception do
+         begin
+         logger.Debug('[SocketIsConnected] the connected-probe raised %s (%s) -- ' +
+                      'treating the socket as NOT connected',
+                      [E.ClassName, E.Message]);
+         Result := False;
+         end;
+   end;
+end;
+
 procedure TFactoryRadioBase.Disconnect;
 begin
-   if socket.Connected then
+   (* CLOSE THE TRANSPORT, THEN STOP THE READING THREAD -- IN THAT ORDER, AND
+     THE SECOND STEP UNCONDITIONALLY.
+
+     This used to be one if/else where each arm closed its transport AND joined
+     rt.  That made the join conditional on the transport being OPEN, so a
+     network radio that never connected -- the rig is switched off -- left its
+     reading thread running while the object was torn down around it.  The
+     thread's own worst sleep is 1000 ms and it re-tests Terminated every
+     iteration, so joining it here is bounded and cheap; not joining it is a
+     use-after-free waiting for the timing to line up.
+
+     Nothing here may escape: Disconnect runs from ExitProgram, where an
+     exception becomes the LCL's unhandled-exception modal in front of an
+     operator who has already asked to quit.  Best effort, and one log line per
+     failure -- the same intent TK4Radio.Disconnect states. *)
+   if SocketIsConnected then
       begin
       try
          logger.debug('Calling Disconnect - user request');
          // Disconnect the socket to pull it off the ReadLn so the thread in Execute sees that it is Terminated.
          socket.Disconnect;
-         if rt <> nil then
-            begin
-            rt.Terminate;
-            rt.WaitFor;
-            FreeAndNil(rt);
-            end;
       except
          on E: Exception do
             begin
-            logger.Error('Exception when disconnecting from radio: %s', [E.Message]);
+            logger.Error('Exception when disconnecting from radio: %s - %s', [E.ClassName, E.Message]);
             end;
       end;
       end
    else if (serialPortObj <> nil) and serialPortObj.IsOpen then
       begin
       try
-         logger.debug('[TFactoryRadioBase.Disconnect] Closing serial port and terminating reading thread');
+         logger.debug('[TFactoryRadioBase.Disconnect] Closing serial port');
          // Close serial port first so ReadString in reading thread returns immediately
          serialPortObj.Close;
-         if rt <> nil then
-            begin
-            rt.Terminate;
-            rt.WaitFor;
-            FreeAndNil(rt);
-            end;
       except
          on E: Exception do
             begin
-            logger.Error('[TFactoryRadioBase.Disconnect] Exception when disconnecting serial radio: %s', [E.Message]);
+            logger.Error('[TFactoryRadioBase.Disconnect] Exception when closing the serial port: %s - %s',
+                         [E.ClassName, E.Message]);
+            end;
+      end;
+      end;
+
+   if rt <> nil then
+      begin
+      try
+         rt.Terminate;
+         rt.WaitFor;
+         FreeAndNil(rt);
+      except
+         on E: Exception do
+            begin
+            logger.Error('[TFactoryRadioBase.Disconnect] Exception stopping the reading thread: %s - %s',
+                         [E.ClassName, E.Message]);
             end;
       end;
       end;
@@ -2302,15 +2387,10 @@ begin
    // Otherwise check network connection
    else if Assigned(Self.socket) then
       begin
-      try
-         Result := socket.Connected;
-      except
-         on E: Exception do
-            begin
-            logger.debug('Exception in GetIsConnected: %s - %s', [E.ClassName, E.Message]);
-            Result := false;
-            end;
-      end;
+      (* This WAS the same try/except, written out again.  It is the one place
+        the idiom was already correct, and it is now the helper's body -- one
+        copy, reachable from every radio.  Same answer, same Debug line. *)
+      Result := SocketIsConnected;
       end
    else
       begin

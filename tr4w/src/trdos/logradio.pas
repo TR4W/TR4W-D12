@@ -224,6 +224,18 @@ type
       tRadioInterfaceThreadID: TThreadID;
       tRadioInterfaceThreadHandle: TThreadID;
       PollingStopRequested: Boolean;
+      (* "THE POLLING THREAD IS STILL IN BeginPolling", so a shutdown wait has
+        something to wait ON that is not a platform handle.
+
+        Set True by SetUpRadioInterface immediately BEFORE tCreateThread -- not
+        by the thread itself, which would race: a main thread that looked
+        before the thread had run would read False and call the wait satisfied.
+        Cleared in BeginPolling's finally, so every exit path clears it.
+
+        WaitForPollingThreadWithMessages (logsubs2) polls this off Windows.
+        The Win32 arm cannot: it must wake on a MESSAGE, not on a flag, so the
+        peek can release a SendMessage the polling thread is blocked in. *)
+      PollingThreadRunning: Boolean;
       tPollCount: integer;
       (* WHICH RADIO PANEL THIS RIG DRAWS ON: 1, 2, or 0 for none open.
 
@@ -1345,8 +1357,15 @@ begin
       if PollingEnable then
          begin
          tPollCount := -1;
+         (* BEFORE the thread exists, deliberately -- see the field. *)
+         PollingThreadRunning := True;
          tRadioInterfaceThreadHandle :=
             tCreateThread(@BeginPolling, tRadioInterfaceThreadID, False, @Self);
+         if not ThreadStarted(tRadioInterfaceThreadHandle) then
+            begin
+            (* Nothing will ever clear the flag if nothing ever ran. *)
+            PollingThreadRunning := False;
+            end;
          logger.Info('Created Radio %s thread with threadid of %u',[Self.RadioName, PtrUInt(tRadioInterfaceThreadID)] );
          end;
       end;
