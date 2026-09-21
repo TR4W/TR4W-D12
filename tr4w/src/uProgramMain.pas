@@ -2752,6 +2752,25 @@ begin
     streaming, which start-up cannot promise.  See uRadioPanelForm. }
   StartPanadapterRestore;
 
+  (* THE MAIN WINDOW TAKES THE KEYBOARD BACK -- macOS only, and it has to be
+    HERE, after everything above has shown its windows.
+
+    On Cocoa the global menu bar is put up by whichever form's window becomes
+    key, so the last window restored above -- a tool window, with no menu --
+    leaves the bar empty until the operator clicks the main window. NY4I
+    reported exactly that on 5.0.17. The full account is on
+    ScheduleMainWindowActivation in uMainForm; what matters at this call site
+    is the ORDER: every tool window has been created, positioned and shown by
+    now, so the main window is the last to be promoted.
+
+    It only SCHEDULES. Nothing is activated until Application.Run is going, and
+    nothing is activated at all unless TR4W is the frontmost application, so an
+    operator who switched away during this long start-up keeps his keyboard.
+
+    THE HEADLESS PATHS NEVER REACH THIS LINE. /EXPORT and /RESCORE halt far
+    above, before any window exists. *)
+  ScheduleMainWindowActivation;
+
   RunLCLApplication;
 end;
 

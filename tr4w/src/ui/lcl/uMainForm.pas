@@ -348,6 +348,45 @@ procedure CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
   the LCL's own state with what already happened. }
 procedure ShowTR4WMainForm;
 
+(* THE MAIN WINDOW TAKES THE KEYBOARD ONCE START-UP HAS FINISHED -- macOS only,
+  and the reason is the global menu bar.
+
+  NY4I, 2026-09-21, running the signed 5.0.17 bundle from /Applications: "when
+  I first run the mac app, I do not see a menu. But if I click where the menu
+  is, then it appears." The bar carried no TR4W menus at all until the window
+  was clicked.
+
+  WHERE THE MENU BAR ACTUALLY COMES FROM. On Cocoa the LCL installs the
+  application's NSMenu in exactly ONE place: TLCLWindowCallback.Activate, in
+  lcl/interfaces/cocoa/cocoawsforms.pas, reached from
+  TCocoaWindow.windowDidBecomeKey. So the menu bar is not a consequence of a
+  form HAVING a menu -- it is a consequence of that form's window BECOMING KEY.
+  A window that never becomes key never puts its menu up, and a window that
+  becomes key with no Menu assigned calls SetMainMenu(0, nil) and can take the
+  menu back down.
+
+  WHY TR4W MEETS THAT AND A HELLO-WORLD DOES NOT. Everything this program does
+  at start-up happens BEFORE Application.Run: the main form is shown, and then
+  the saved layout restores and shows every tool window that was open last time
+  (NY4I's log for this run: "restoring the Telnet window took 249 ms"). Each of
+  those makes itself key as it shows -- TCocoaWSCustomForm.ShowHide calls
+  makeKeyWindow explicitly -- so the window holding key when the run loop
+  finally starts is the LAST tool window restored, not the main form. None of
+  the tool windows has a Menu.
+
+  SO THE FIX IS TO PROMOTE THE MAIN WINDOW TO KEY, ONCE, AFTER THE RUN LOOP IS
+  GOING. That is precisely what the operator's click did by hand. It is QUEUED
+  rather than done at the call site because the whole of start-up runs before
+  NSApp.run(), and an activation asked for before the application has finished
+  launching is not reliably honoured; from inside the loop it is.
+
+  WINDOWS AND LINUX ARE UNTOUCHED, and not merely because the call would be
+  harmless there: the entire body is inside {$IFDEF DARWIN}. Windows has no
+  global menu bar and gtk2's is per-window, so neither platform has the defect,
+  and raising the main window over the restored tool windows at start-up would
+  be a behaviour change on both. *)
+procedure ScheduleMainWindowActivation;
+
 { THE POSSIBLE-CALL LIST.  Phase 3b.
 
   DESIGNED IN uMainForm.lfm and merely configured here.  It replaces a raw
@@ -3227,6 +3266,105 @@ begin
       begin
       TR4WMainForm.BoundsRect := want;
       end;
+end;
+
+
+{ ---------------------------------------------------------------------------
+  THE START-UP ACTIVATION.  macOS only -- see ScheduleMainWindowActivation in
+  the interface for what it is for and why it cannot be done any earlier.
+  --------------------------------------------------------------------------- }
+{$IFDEF DARWIN}
+type
+   (* A CLASS, because both LCL hooks this needs take a METHOD:
+     TApplication.QueueAsyncCall wants a TDataEvent and AddOnActivateHandler a
+     TNotifyEvent. Deliberately NOT a method on TTR4WMainForm -- none of this
+     is about the form's content, and the designed-form lints read that class.
+
+     Modelled on TEntryDeferrer above, which exists for the same reason. *)
+   TStartupActivator = class(TObject)
+   private
+      FDone: boolean;
+      procedure Promote;
+   public
+      procedure RunFromQueue(Data: PtrInt);
+      procedure ApplicationActivated(Sender: TObject);
+   end;
+
+var
+   (* NEVER FREED, and that is the safe choice rather than an oversight: while
+     it is armed, Application holds a method pointer into this object, and
+     finalisation order between this unit and Forms is not ours to decide. TR4W
+     leaves through ExitProcess in any case (tr4w_ShutDown), so a finalisation
+     section here is not a reliable place to release anything. One small object
+     for the life of the process. *)
+   GStartupActivator: TStartupActivator = nil;
+
+procedure TStartupActivator.Promote;
+begin
+   if FDone or (not Assigned(TR4WMainForm)) then
+      begin
+      Exit;
+      end;
+
+   FDone := True;
+
+   (* BringToFront, NOT a raw Cocoa call. TCustomForm.SetZOrder reaches
+     TCocoaWidgetSet.SetForegroundWindow, which does both halves of what is
+     wanted here -- activateIgnoringOtherApps, then makeKeyAndOrderFront on
+     this window -- and it is the LCL's own way of saying "this window". It
+     also declines while a modal form is up, which is the behaviour we want. *)
+   TR4WMainForm.BringToFront;
+end;
+
+procedure TStartupActivator.RunFromQueue(Data: PtrInt);
+begin
+   (* ONLY IF TR4W IS ALREADY THE ACTIVE APPLICATION.
+
+     An operator who switched away while this long start-up ran must not have
+     the keyboard yanked back from whatever he moved to; stealing focus is a
+     defect of its own. In the launch case -- the one reported -- the
+     application IS active, and all this does is choose which of OUR OWN
+     windows holds the keyboard.
+
+     If it is not active, the promotion is armed instead, so the menu bar is
+     right the first time he comes back to TR4W rather than after a click. *)
+   if Application.Active then
+      begin
+      Promote;
+      end
+   else
+      begin
+      Application.AddOnActivateHandler(ApplicationActivated);
+      end;
+end;
+
+procedure TStartupActivator.ApplicationActivated(Sender: TObject);
+begin
+   (* ONE SHOT. The handler is removed before the promotion, so this cannot
+     fight the operator for the key window every time he switches back to
+     TR4W: it fires for the first activation after start-up and never again. *)
+   Application.RemoveOnActivateHandler(ApplicationActivated);
+   Promote;
+end;
+{$ENDIF}
+
+procedure ScheduleMainWindowActivation;
+begin
+{$IFDEF DARWIN}
+   if GStartupActivator = nil then
+      begin
+      GStartupActivator := TStartupActivator.Create;
+      end;
+
+   (* QueueAsyncCall RAISES on a shut-down queue rather than returning False --
+     the same trap Queue() above documents. *)
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+
+   Application.QueueAsyncCall(GStartupActivator.RunFromQueue, 0);
+{$ENDIF}
 end;
 
 
