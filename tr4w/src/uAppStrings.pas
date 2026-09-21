@@ -300,6 +300,25 @@ resourcestring
      for.  %d of %d. *)
    SVerifySomeFailed   = '%d of %d check(s) FAILED. Select a row for details.';
 
+   { --------------------------------------------------- the file manager - }
+
+   (* "Open log directory", AND THE FILE-VIEW WINDOW'S Explore BUTTON, WHEN
+     NOTHING OPENED.
+
+     NY4I, testing 5.0.15 on his Mac: "on the mac version, open log directory
+     does not work".  It did not, and it also did not SAY so -- the launcher
+     it used is Windows-only and declines elsewhere with a log line nobody is
+     reading.  A menu item that does nothing and reports nothing is
+     indistinguishable from a broken menu.
+
+     %s IS THE PATH, and it is in the message because the operator's next
+     question is always "which folder?", and because a stale path and a
+     desktop with no file manager look identical without it. *)
+   SCouldNotShowInFileManager =
+      'TR4W could not open this location in your file manager:' + sLineBreak +
+      sLineBreak + '%s' + sLineBreak + sLineBreak +
+      'Check that it still exists.  tr4w.log records what was tried.';
+
 implementation
 
 end.

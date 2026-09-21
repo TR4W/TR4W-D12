@@ -241,7 +241,10 @@ end;
 
 procedure TfrmFileView.ExploreClick(Sender: TObject);
 begin
-   RunExplorer(PreviewFileNameAddress);
+   (* Was RunExplorer -- a Windows program, named and run as one, so this
+     button did nothing on a Mac or on Linux.  See
+     uPlatformProcess.RevealInFileManager. *)
+   ShowPathInFileManager(PreviewFileNameAddress);
 end;
 
 procedure TfrmFileView.ExitClick(Sender: TObject);

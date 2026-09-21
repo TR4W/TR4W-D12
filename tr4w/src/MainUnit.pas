@@ -49,7 +49,8 @@ uses
   LCLType,             // BOOL, SM_CXSCREEN, VK_CONTROL, VK_MENU -- was Windows
   FileUtil,            // CopyFile -- QUALIFIED at the call site, because this
                        // unit also uses Windows and CopyFile is a name in both
-  uPlatformProcess,    // RunProgram / RunWindowsUtility -- the only launchers
+  uPlatformProcess,    // RunProgram / RunWindowsUtility / RevealInFileManager
+                       // -- the only launchers
   Logstuff,
   uADIF,
   uMenu,
@@ -250,6 +251,7 @@ uses
   IdURI
   ,
   uTR4WStrings,
+  uAppStrings,   { SCouldNotShowInFileManager -- new UI text does not go in uTR4WStrings }
   LCLStrConsts;
 
 var
@@ -322,7 +324,11 @@ procedure CheckQuestionMark;
   Application.Run -- and TranslateAccelerator appears nowhere in live code. An
   LCL edit control receives its own clipboard keys, which is what made the
   function unnecessary rather than merely uncalled. *)
-procedure RunExplorer(const Command: string);
+(* SHOW A FILE OR FOLDER IN THE DESKTOP'S FILE MANAGER, AND SAY SO WHEN IT
+  CANNOT BE DONE.  Was RunExplorer, which named a Windows program and ran one;
+  see uPlatformProcess.RevealInFileManager for what it does now and why it
+  did nothing at all on a Mac. *)
+procedure ShowPathInFileManager(const aPath: string);
 procedure OpenInDefaultTextEditor(const FileName: string);   // Issue #986
 { THE POSSIBLE-CALL LIST'S OWNER-DRAW, declared here because CreateMainWindow
   assigns it long before the drawing code appears further down.
@@ -3249,16 +3255,58 @@ begin
    Result := tr4w_WindowsArray[ID].WndForm;
 end;
 
+var
+  (* THE LAST [SaveRect] SUMMARY, so a summary that says the same thing as the
+    last one is not written again.  -1 means "no call yet", which is how the
+    first call always reports. *)
+  LastSaveRectOpen: integer = -1;
+  LastSaveRectClosed: integer = -1;
+
 procedure FindAndSaveRectOfAllWindows;
-label
-  1;
+(* IT SAID 2,541 TIMES THAT NOTHING HAPPENED.  NY4I, on his macOS 5.0.15 log:
+  "Notice several repeating no open form -> keep saved messages while it is
+  running".  Measured on a ten-minute session: 2,541 of 2,992 log lines --
+  85% of the file -- were [SaveRect], 21 windows x 121 autosave ticks, each
+  one reporting that a window is not open so its saved rectangle was kept.
+
+  THAT MATTERS BECAUSE THE LOG IS THE DIAGNOSTIC.  Both Linux defects found on
+  2026-09-20 were read out of these files; at 85% noise the signal is buried,
+  and an operator sending a log after a crash sends mostly this.
+
+  SO THE RULE HERE IS: LOG WHAT CHANGED, NOT WHAT WAS LOOKED AT.
+
+    - a window that is not open is COUNTED, not announced. Nothing was
+      decided about it, and the count is in the summary.
+    - an open window is announced only when the rect that gets SAVED actually
+      differs from the one already saved -- which is the event a reader is
+      looking for, and it names both rects so the decision is checkable.
+    - one summary line per call, and only when it differs from the last one.
+      In a steady state that is silence; the moment a window opens, closes or
+      moves, it speaks.
+
+  A reader can still answer both questions the old form answered -- "did TR4W
+  save my window positions" and "what did it decide" -- from strictly fewer
+  lines, because a no-op was never an answer to either.
+
+  NOT BY RAISING THE LEVEL.  Moving this to a level nobody enables would lose
+  the diagnostic rather than sharpen it; it is still Trace, and it still says
+  the same things. *)
 var
   tipos: WindowsType;
   temprect: TRect;
+  savedBefore: TRect;
   TempBool: boolean;
   iconic: boolean;
   lclForm: TCustomForm;
+  openCount: integer;
+  closedCount: integer;
+  changedCount: integer;
+  preservedCount: integer;
 begin
+  openCount      := 0;
+  closedCount    := 0;
+  changedCount   := 0;
+  preservedCount := 0;
   for tipos := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
      begin
      { SAVE WHAT THE RESTORE WILL READ -- see LclFormFor.  Windows only for a
@@ -3321,45 +3369,71 @@ begin
      tr4w_WindowsArray[tipos].WndVisible := (lclForm <> nil) and lclForm.Visible;
      if not TempBool then
         begin
-        if logger.IsTraceEnabled then
-           begin
-           logger.Trace('[SaveRect] %s (idx=%d) no open form -> keep saved',
-             [WindowNames[tipos], Ord(tipos)]);
-           end;
+        (* COUNTED, NOT ANNOUNCED. This was one Trace line per closed window
+          per tick and it was 85% of NY4I's log. Nothing is decided here --
+          the saved rect is kept because there is nothing to save from -- so
+          the count in the summary below is the whole of what it had to say. *)
+        Inc(closedCount);
         Continue;
         end;
+
+     Inc(openCount);
+     savedBefore := tr4w_WindowsArray[tipos].WndRect;
      iconic := (lclForm <> nil) and (lclForm.WindowState = wsMinimized);
-     if logger.IsTraceEnabled then
-        begin
-        logger.Trace('[SaveRect] %s (idx=%d) live=(%d,%d,%d,%d) iconic=%d reloc=%d savedWndRect=(%d,%d,%d,%d)',
-          [WindowNames[tipos], Ord(tipos), temprect.Left, temprect.Top, temprect.Right, temprect.Bottom,
-           Ord(iconic), Ord(RelocState[tipos].Relocated),
-           tr4w_WindowsArray[tipos].WndRect.Left, tr4w_WindowsArray[tipos].WndRect.Top,
-           tr4w_WindowsArray[tipos].WndRect.Right, tr4w_WindowsArray[tipos].WndRect.Bottom]);
-        end;
+
      // Issue #739: if we relocated this window at startup because its saved
      // monitor was absent, and the user did not move it this session, keep the
      // ORIGINAL saved rect so reconnecting that display restores the layout.
      if RelocState[tipos].Relocated and
-        BoundsMatch(temprect, tr4w_WindowsArray[tipos].WndRect) then
+        BoundsMatch(temprect, savedBefore) then
         begin
-        if logger.IsTraceEnabled then
-           begin
-           logger.Trace('[SaveRect] %s (idx=%d) PRESERVE -> orig=(%d,%d,%d,%d)',
-             [WindowNames[tipos], Ord(tipos), RelocState[tipos].OrigRect.Left, RelocState[tipos].OrigRect.Top,
-              RelocState[tipos].OrigRect.Right, RelocState[tipos].OrigRect.Bottom]);
-           end;
+        Inc(preservedCount);
         tr4w_WindowsArray[tipos].WndRect := RelocState[tipos].OrigRect;
-        Continue;
-        end;
+        end
      // Issue #739: save any non-minimized position, including negative X/Y on a
      // monitor placed left of / above the primary.  IsIconic skips only minimized
      // windows (which report a -32000 sentinel rect).
-     if not iconic then
+     else if not iconic then
         begin
         tr4w_WindowsArray[tipos].WndRect := temprect;
         end;
+
+     (* THE ONE EVENT WORTH A LINE: the saved rectangle is not what it was.
+       Both rects are named, so the decision can be checked rather than
+       trusted, and iconic/reloc are here because they are the two reasons it
+       might not be the live one. *)
+     if not BoundsMatch(savedBefore, tr4w_WindowsArray[tipos].WndRect) then
+        begin
+        Inc(changedCount);
+        if logger.IsTraceEnabled then
+           begin
+           logger.Trace('[SaveRect] %s (idx=%d) saved=(%d,%d,%d,%d) was=(%d,%d,%d,%d) live=(%d,%d,%d,%d) iconic=%d reloc=%d',
+             [WindowNames[tipos], Ord(tipos),
+              tr4w_WindowsArray[tipos].WndRect.Left, tr4w_WindowsArray[tipos].WndRect.Top,
+              tr4w_WindowsArray[tipos].WndRect.Right, tr4w_WindowsArray[tipos].WndRect.Bottom,
+              savedBefore.Left, savedBefore.Top, savedBefore.Right, savedBefore.Bottom,
+              temprect.Left, temprect.Top, temprect.Right, temprect.Bottom,
+              Ord(iconic), Ord(RelocState[tipos].Relocated)]);
+           end;
+        end;
      end;
+
+  (* ONE LINE PER CALL, AND ONLY WHEN IT HAS NEWS. In a steady state the
+    counts repeat, and repeating them 121 times is the defect this routine was
+    changed for. A window opening or closing moves the counts, a move sets
+    changedCount, and either makes it speak. *)
+  if logger.IsTraceEnabled and
+     ((changedCount > 0)
+      or (openCount <> LastSaveRectOpen)
+      or (closedCount <> LastSaveRectClosed)) then
+     begin
+     logger.Trace('[SaveRect] %d window(s): %d open, %d closed (saved rects kept), %d changed, %d preserved',
+       [openCount + closedCount, openCount, closedCount, changedCount,
+        preservedCount]);
+     end;
+
+  LastSaveRectOpen   := openCount;
+  LastSaveRectClosed := closedCount;
 end;
 
 function TryKillAutoCQ: boolean;
@@ -5455,7 +5529,7 @@ begin
     menu_band_changes: BandChangeReport;
 
     menu_log_file_properties:
-      RunExplorer(CharBufferText(TR4W_LOG_PATH_NAME));
+      ShowPathInFileManager(CharBufferText(TR4W_LOG_PATH_NAME));
 
     menu_exit: ExitProgram(True);
 
@@ -10396,20 +10470,25 @@ end;
   src\Htmlhelp.pas went too: a LoadLibrary of hhctrl.ocx, the HH_* command
   constants, and an ANSI/wide entry-point pair. *)
 
-procedure RunExplorer(const Command: string);
+procedure ShowPathInFileManager(const aPath: string);
+(* IT DID NOTHING AT ALL ON A MAC, AND SAID NOTHING.  NY4I, testing 5.0.15:
+  "on the mac version, open log directory does not work".
+
+  The body used to be two RunWindowsUtility calls building `explorer <path>`
+  and `explorer /select, <path>`.  RunWindowsUtility is Windows-only BY INTENT
+  -- these are Windows programs and it says so -- so off Windows it logged a
+  line and returned False, and the menu item had no effect an operator could
+  see.  Same shape as "Open in text editor" falling back to Notepad on Linux
+  (NY4I, 2026-09-09), and the same fix: the LCL's own launcher, and a REPORT
+  when it will not start.
+
+  The platform choice and the "select the file" verbs live in
+  uPlatformProcess, which is where TR4W's OS gates live.  What is left here is
+  this layer's job: telling the operator. *)
 begin
-  (* A PATH, NOT A POINTER. This took a PAnsiChar and searched it with strpos
-    for the '.' that says "this names a FILE, so select it in the folder"
-    rather than "this names a folder, so open it". Pos on a string says the
-    same thing without a pointer, and the local PAnsiChar that held the two
-    command templates goes with it. *)
-  if Pos('.', Command) > 0 then
+  if not RevealInFileManager(aPath) then
      begin
-     RunWindowsUtility(SysUtils.Format('explorer /select, %s', [Command]));
-     end
-  else
-     begin
-     RunWindowsUtility(SysUtils.Format('explorer %s', [Command]));
+     ShowMessage(SysUtils.Format(SCouldNotShowInFileManager, [aPath]));
      end;
 end;
 
@@ -10581,7 +10660,6 @@ begin
   // stack goes.  The compiler cannot warn -- both are legal and one is nearer.
   LCLIntf.OpenURL(string(sURI));
   { end;}
-  //RunExplorer(url);
 end;
 
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;

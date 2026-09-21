@@ -151,6 +151,36 @@ function OpenWithDesktopHandler(const aPath: string): boolean;
   it wants. *)
 function OpenTextFileInEditor(const aPath: string): boolean;
 
+(* SHOW A PATH IN THE DESKTOP'S OWN FILE MANAGER -- Explorer, Finder, or
+  whatever the Linux desktop supplies.
+
+  THIS IS WHERE "Open log directory" WENT WRONG ON A MAC. NY4I, testing
+  5.0.15: "on the mac version, open log directory does not work". The old
+  route built the command line `explorer <path>` and handed it to
+  RunWindowsUtility -- which is Windows-only BY INTENT and declines elsewhere
+  with a log line. So the menu item did nothing at all, said nothing at all,
+  and was indistinguishable from a broken menu. Exactly the silent-fallback
+  failure CLAUDE.md treats as a defect in its own right, and the same one that
+  "Open in text editor" had on Linux.
+
+  A DIRECTORY IS OPENED WITH LCLIntf.OpenDocument, the LCL's own launcher:
+  ShellExecute on Windows, `open` on macOS, xdg-open / kfmclient / gnome-open
+  on Unix. There is no reason to write any of those three by hand, and the
+  house rule is to reach for the LCL facility first.
+
+  A FILE IS SELECTED IN ITS FOLDER WHERE THE PLATFORM HAS A VERB FOR IT, and
+  that has no LCL facility -- `explorer /select,` and `open -R` are the two
+  platform calls in this routine. They are HERE rather than at a call site
+  because this unit is where TR4W's OS gates live (NY4I, 2026-09-16:
+  "Minimizing OS gates in the main code makes this more modular"). Linux has
+  no freedesktop verb for "select this file", so there the containing folder
+  is opened and the operator finds the file in it.
+
+  False, with the reason logged, when the path does not exist or nothing could
+  be started -- so the CALLER CAN SAY SO. That is the whole point of the
+  change. *)
+function RevealInFileManager(const aPath: string): boolean;
+
 implementation
 
 uses
@@ -170,6 +200,7 @@ uses
    shlwapi,
 {$ENDIF}
    Process,     (* TProcess, TShowWindowOptions, CommandToList *)
+   LCLIntf,     (* OpenDocument -- the LCL's own cross-platform launcher *)
    utils_text,    (* LclText, CharBufferText *)
    Log4D;
 
@@ -326,6 +357,80 @@ begin
 {$ENDIF}
 end;
 {$ENDIF}
+
+(* THE FOLDER HALF, WRITTEN ONCE. It is the answer when the caller named a
+  directory, and it is also the fallback when a FILE could not be selected in
+  its folder -- two paths through RevealInFileManager, one body. *)
+function OpenFolderOrLog(const aFolder: string): boolean;
+begin
+   (* LclText AT THE BOUNDARY. The LCL compiles with AnsiString parameters and
+     sets DefaultSystemCodePage to 65001, so our UTF-16 becomes UTF-8 here.
+     Saying so explicitly is what CLAUDE.md asks for and what keeps the
+     narrowing ceiling meaningful -- the same reason CommandToList is called
+     this way below. *)
+   Result := OpenDocument(LclText(aFolder));
+   if not Result then
+      begin
+      Log.Error(Format('[Process] no file manager could be started for %s',
+                       [aFolder]));
+      end;
+end;
+
+function RevealInFileManager(const aPath: string): boolean;
+var
+   folder: string;
+begin
+   Result := False;
+
+   if Trim(aPath) = '' then
+      begin
+      Log.Warn('[Process] RevealInFileManager refused: empty path');
+      Exit;
+      end;
+
+   (* ASK THE FILE SYSTEM, NOT THE SPELLING. This used to decide between
+     "open the folder" and "select the file" by looking for a '.' in the
+     string -- so a contest directory named CQWW.2026\ was treated as a file,
+     and an extensionless file as a folder. *)
+   if DirectoryExists(aPath) then
+      begin
+      Result := OpenFolderOrLog(aPath);
+      Exit;
+      end;
+
+   if not FileExists(aPath) then
+      begin
+      Log.Error(Format('[Process] %s does not exist -- nothing to show',
+                       [aPath]));
+      Exit;
+      end;
+
+{$IFDEF WINDOWS}
+   (* THE PLATFORM CALL, KEEPING THE SPELLING THAT SHIPPED. `explorer
+     /select,` is the Windows verb for "show this file in its folder,
+     selected"; there is no LCL facility for it, which is why this one is not
+     OpenDocument. Unquoted, as before -- quoting the whole token is what
+     Explorer refuses, and changing it here would be changing the one platform
+     that works today. *)
+   Result := RunWindowsUtility(Format('explorer /select, %s', [aPath]));
+{$ENDIF}
+{$IFDEF DARWIN}
+   (* -R is Finder's "reveal": open the enclosing folder with the file
+     selected. Part of macOS, like `open` itself. *)
+   Result := RunProgram('open', ['-R', aPath]);
+{$ENDIF}
+
+   if Result then
+      begin
+      Exit;
+      end;
+
+   (* NO "SELECT THIS FILE" VERB HERE, or the one there is would not start.
+     The containing folder is the honest answer: the operator asked to see
+     where the file lives, and they can see it. *)
+   folder := ExtractFileDir(aPath);
+   Result := OpenFolderOrLog(folder);
+end;
 
 (* THE ONE PLACE A PROCESS IS ACTUALLY STARTED.
 
