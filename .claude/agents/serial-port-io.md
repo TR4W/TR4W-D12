@@ -64,6 +64,35 @@ gave `SerBreak` the Windows default (`mSec = 250`) in an interface whose Unix bo
 declares `0` — something **no Windows build could ever see**. Cross-check the
 interface against both bodies when you touch it.
 
+**And it has bitten a second time, in the same shape — `SerOpen`'s FAILURE
+SENTINEL (found 2026-09-21).** The interface says *"Returns 0 if device could
+not be found"*, and only the Windows body makes that true: it maps
+`INVALID_HANDLE_VALUE` onto zero itself. The Unix body is `fpopen`, which
+answers **-1**. So `uSerialPort.OpenRaw`'s test of `= NO_PORT` was false for
+every failed open on Linux and macOS, and it went on to configure and hand back
+a handle of -1 — **a radio on a port the user cannot open came up looking
+connected and simply never answered.** The fix is `TSerialPort.OpenFailed`, in
+`uSerialPort` and **not** in the vendored file, whose own header forbids local
+edits because they are invisible to the next person who diffs it against FPC.
+
+**Read that as the rule, not the anecdote: where the two bodies can differ,
+assume they do, and put the reconciliation in `uSerialPort`.**
+
+## Why an open failed
+
+`src/uSerialDiagnosis.pas` turns a failed open into a sentence an operator can
+act on — on POSIX it stats the node, resolves the owning group, and asks
+`FpGetgroups` whether this account is in it. `TSerialPort.OpenRaw` is the only
+caller, which is why both radio and keyer paths get it.
+
+**Three things about it that are load-bearing.** It **never tests for a group
+called `dialout`** — that is `uucp` on Arch and meaningless on macOS, so the
+node is asked. It **never pre-flights the open**; it runs only after a real
+`EACCES`, so nothing here is ever a second source of truth about whether a port
+is usable. And it uses **no `grp`/`users` package**: that FPC package is NOT
+installed on `mac-ci` (measured), so a gid is resolved by reading `/etc/group`,
+and degrades to the number rather than to a wrong name.
+
 ## Coordinate with
 
 `radio-factory` (every serial radio) · `cw-keying` (WinKeyer and CPU keyer ports)

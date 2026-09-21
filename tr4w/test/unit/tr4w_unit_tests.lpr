@@ -303,6 +303,7 @@ uses
    uTestSerialParams    in 'uTestSerialParams.pas',
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
    uTestPortAddress in 'uTestPortAddress.pas',
+   uTestSerialDiagnosis in 'uTestSerialDiagnosis.pas',
    uTestSettingsModel in 'uTestSettingsModel.pas',
    uTestSettingsConvert in 'uTestSettingsConvert.pas',
    uSettingsConvert in '..\..\src\uSettingsConvert.pas',
@@ -449,6 +450,7 @@ begin
    RegisterSuite(TTransverterOffsetTests.Create('TransverterOffset'));
    RegisterSuite(TComPortEnumeratorTests.Create('ComPortEnumerator'));
    RegisterSuite(TPortAddressTests.Create('PortAddress'));
+   RegisterSuite(TSerialDiagnosisTests.Create('SerialDiagnosis'));
    RegisterSuite(TSettingsModelTests.Create('SettingsModel'));
    RegisterSuite(TSettingsConvertTests.Create('SettingsConvert'));
    RegisterSuite(TSettingsPrecedenceTests.Create('SettingsPrecedence'));

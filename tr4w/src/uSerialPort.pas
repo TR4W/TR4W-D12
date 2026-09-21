@@ -56,7 +56,11 @@ uses
   Windows,
 {$ENDIF}
   {$ENDIF}
-  tr4wserial;
+  tr4wserial,
+  (* Why an open failed, in words an operator can act on. No widget set and
+    no platform calls of its own on Windows, so linking it costs tr4wserver
+    nothing. *)
+  uSerialDiagnosis;
 
 type
   ESerialError = class(Exception);
@@ -69,6 +73,7 @@ type
     function GetIsOpen: Boolean;
     procedure CheckHandle;
     function DeviceName: string;
+    class function OpenFailed(AHandle: TSerialHandle): Boolean; static;
   public
     constructor Create(const APortName: string);
     destructor Destroy; override;
@@ -157,7 +162,9 @@ end;
 
 function TSerialPort.GetIsOpen: Boolean;
 begin
-   Result := FHandle <> NO_PORT;
+   (* Through OpenFailed, so that the two platforms sentinels are tested in
+     one place rather than in two that can drift. *)
+   Result := not OpenFailed(FHandle);
 end;
 
 procedure TSerialPort.CheckHandle;
@@ -187,6 +194,33 @@ begin
    {$ENDIF}
 end;
 
+(* DID THE OPEN FAIL? THE TWO PLATFORMS ANSWER DIFFERENTLY, AND THE VENDORED
+  INTERFACE ONLY DOCUMENTS ONE OF THEM.
+
+  tr4wserial.pas's declaration says "Returns 0 if device could not be found",
+  and the WINDOWS body makes that true -- it maps INVALID_HANDLE_VALUE onto
+  zero itself. The UNIX body does not: SerOpen there is fpopen, and fpopen
+  answers -1. So a test of `= 0` is false for every failed open on Linux and
+  macOS, and OpenRaw went on to configure and hand out a handle of -1. A radio
+  on a port this user cannot open came up looking connected and simply never
+  answered.
+
+  This is the same Windows/Unix interface-versus-body split that gave SerBreak
+  a default of 250 ms in a header whose Unix body declares 0 -- the vendored
+  transport's characteristic failure. It is fixed HERE and not there, because
+  that file is a verbatim copy of FreePascal's and a local edit to it is
+  invisible to the next person who diffs it. *)
+class function TSerialPort.OpenFailed(AHandle: TSerialHandle): Boolean;
+begin
+   {$IFDEF UNIX}
+   (* A file descriptor of 0 is stdin and is never a port we opened, so the
+     two sentinels can be tested together. *)
+   Result := AHandle <= 0;
+   {$ELSE}
+   Result := AHandle = NO_PORT;
+   {$ENDIF}
+end;
+
 procedure TSerialPort.OpenRaw(
   ABaudRate: DWORD;
   ADataBits: Byte;
@@ -196,6 +230,7 @@ procedure TSerialPort.OpenRaw(
   ADtr: Boolean);
 var
    parity: TParityType;
+   why:    string;
 begin
    if IsOpen then
       begin
@@ -216,8 +251,21 @@ begin
      platform TR4W runs on -- COMn, /dev/ttyUSB0, /dev/cu.usbserial-A50285BI
      -- so there is nothing to lose, but the conversion is written down. *)
    FHandle := SerOpen(AnsiString(DeviceName));
-   if FHandle = NO_PORT then
+   if OpenFailed(FHandle) then
       begin
+      (* FIRST, BEFORE ANYTHING ELSE: the diagnosis reads errno, and any
+        intervening system call would overwrite it. It answers '' on Windows,
+        whose serial failures are deliberately unchanged. *)
+      why := DiagnoseSerialOpenFailure(FPortName);
+      FHandle := NO_PORT;
+      if why <> '' then
+         begin
+         (* Explicit: Exception.Create takes an AnsiString and this unit is
+           UTF-16. The text is a device name and errno prose, ASCII on every
+           platform TR4W runs on, so there is nothing to lose -- but the
+           conversion is written down rather than left to the compiler. *)
+         raise ESerialError.Create(AnsiString(why));
+         end;
       raise ESerialError.CreateFmt('Cannot open %s', [FPortName]);
       end;
 
