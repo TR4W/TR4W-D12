@@ -1758,6 +1758,17 @@ begin
       // Every library in one atomic write -- see uTR4WConfigFile.
       SaveConfig(StoreFileName, FStore, FKeyerStore, FUDPConfig);
 
+      { AND REPOINT THE CLUSTER WINDOW'S DROP-DOWN AT THE EDITED LIBRARY,
+        without changing what the operator has selected there. Adding or
+        renaming a cluster must not silently move the window to a different
+        server -- possibly one it is connected to right now -- so the refresh
+        restores the previous choice.
+
+        AFTER THE WRITE, because it re-reads the file: see the note in
+        SaveClusterPanels, which is where this used to run and could only ever
+        see the previous contents. }
+      TelnetRefreshClusterList;
+
       // HERE, not in the two ApplyNow call sites.  The broadcaster's settings
       // and the file must change together: a save that did not reconfigure
       // would leave the operator's new destination stored but not broadcasting
@@ -6556,11 +6567,23 @@ begin
    // to prevent.
    ApplyActiveCluster(FStore);
 
-   { AND REPOINT THE CLUSTER WINDOW'S DROP-DOWN AT THE EDITED LIBRARY, without
-     changing what the operator has selected there. Adding or renaming a cluster
-     must not silently move the window to a different server -- possibly one it
-     is not connected to -- so the refresh restores the previous choice. }
-   TelnetRefreshClusterList;
+   { THE CLUSTER WINDOW'S DROP-DOWN IS REFRESHED IN SaveStore, NOT HERE, AND
+     THE MOVE IS A FIX RATHER THAN A TIDY-UP.
+
+     TelnetRefreshClusterList rebuilds the list by RE-READING the store FROM
+     DISK (uTelnet.AddDefinedClustersToHostList opens RadioStoreFileName), and
+     this routine runs from CaptureProfileFields -- on every change, keystroke
+     included, and always BEFORE SaveStore writes that file. So the rebuild saw
+     the library as it was before the edit, every time.
+
+     What an operator saw: adding their first cluster left the window's red
+     "no DX clusters are defined yet" prompt on screen, because the count that
+     decides it was taken from the pre-edit file. It corrected itself only when
+     the window was next closed and reopened -- which looks exactly like a hint
+     that is shown once and never withdrawn (NY4I, screenshot, 2026-09-21).
+
+     It now runs where the rest of "this must take effect with the file" runs,
+     immediately after SaveConfig. }
 
    ApplyIfChanged('BAND MAP DECAY TIME',    Trim(edtBandMapDecay.Text));
    ApplyIfChanged('BAND MAP GUARD BAND',    Trim(edtBandMapGuard.Text));

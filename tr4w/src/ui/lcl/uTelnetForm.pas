@@ -104,6 +104,8 @@ type
         the lfm lint cannot check.  Private, so it is not a published field
         without a component. }
       FToolbarImages: TImageList;
+
+      procedure ApplyMinimumSize;
    end;
 
 { The toolbar command ids.  DELIBERATELY the same numbers the Win32 toolbar
@@ -225,7 +227,9 @@ uses
    uTR4WStrings,      { TC_CONFIGURE_ELLIPSIS, TC_NODXCLUSTERSDEFINED }
    MainUnit,          { CloseTR4WWindow }
    uPlatformFonts,    { MonospaceFontName -- see HandleShow }
-   uLCLFormHelpers;   { OwnFormByMainWindow -- the LCL way to parent a tool window }
+   uLCLFormHelpers;   { OwnFormByMainWindow -- the LCL way to parent a tool
+                        window; ApplyContentMinimumSize -- see
+                        ApplyMinimumSize }
 
 var
    { Staging for the batched host list -- see TelnetBeginHostList.  Nil
@@ -336,6 +340,105 @@ begin
    CloseTR4WWindow(tw_TELNETWINDOW_INDEX);
 end;
 
+(* THE WINDOW MAY NOT BE DRAGGED NARROWER THAN ITS OWN TOOLBAR.
+
+  NY4I dragged this window to roughly 470 px on macOS and Commands, SH/50 and
+  Configure went off the right edge where nothing could reach them, with the
+  console below still working normally (screenshot, 2026-09-21). There was
+  nothing to stop it: the form carried no Constraints of any kind.
+
+  DERIVED, NEVER TYPED. Where the button strip ENDS is not knowable from here
+  and cannot be written into the .lfm: the buttons autosize to their own
+  captions, btnConfigure's caption is assigned at run time from
+  TC_CONFIGURE_ELLIPSIS, and that string is a different length in every
+  language. A number correct in English on one machine would be wrong on the
+  next. So the panel is measured after it has been laid out with the captions
+  and glyphs it will actually show.
+
+  THE STATEMENT GOES ON THE PANEL, AND THE FORM'S MINIMUM FOLLOWS FROM IT.
+  ApplyContentMinimumSize reads a stretching child's own Constraints.MinWidth
+  and adds the margins around it -- the same shape uQTCSendForm uses for its
+  measured command strip. Putting the number straight onto the form would have
+  to know how wide its frame is; putting it on the panel never asks.
+
+  NOTHING HERE IS PART OF THE CONSOLE RESCALE, and the two must not be mixed
+  up. Constraints are a geometry property the widget set enforces during the
+  drag itself -- no timer, no OnResize, nothing to debounce. tmrResize and
+  ApplyConsoleScale below are a separate mechanism answering a separate
+  question.
+
+  CALLED ONLY FROM OnShow, which is what makes that true. Applying a minimum
+  can resize the form, which raises OnResize, which re-arms tmrResize; OnShow
+  is not re-entered by a resize, so that chain runs once and stops. Calling
+  this from OnResize or from ResizeSettled would be a window that resizes
+  itself because it was resized. *)
+procedure TfrmTelnet.ApplyMinimumSize;
+var
+   i, edge, right: integer;
+   c: TControl;
+begin
+   if pnlToolbar = nil then
+      begin
+      Exit;
+      end;
+
+   { THE LAYOUT ON SCREEN CAN PREDATE THE CONTENT. The glyphs are attached at
+     create and btnConfigure's caption a few lines above, both after the form
+     was streamed. Each of those invalidates the button's preferred size on its
+     own; asking again costs nothing and makes the measurement below independent
+     of that. }
+   for i := 0 to pnlToolbar.ControlCount - 1 do
+      begin
+      pnlToolbar.Controls[i].InvalidatePreferredSize;
+      end;
+   pnlToolbar.ReAlign;
+
+   edge := 0;
+   for i := 0 to pnlToolbar.ControlCount - 1 do
+      begin
+      c := pnlToolbar.Controls[i];
+      if not c.Visible then
+         begin
+         Continue;      { a hidden control is not content }
+         end;
+
+      { GetSideSpace is the LCL's own answer for the room a control keeps
+        beyond its bounds on one side -- BorderSpacing.Around plus that side's
+        own value -- so the trailing gap is read rather than assumed to be the
+        2 the .lfm happens to say today. }
+      right := c.Left + c.Width + c.BorderSpacing.GetSideSpace(akRight);
+      if right > edge then
+         begin
+         edge := right;
+         end;
+      end;
+
+   if edge <= 0 then
+      begin
+      Exit;      { nothing laid out -- say nothing rather than guess }
+      end;
+
+   pnlToolbar.Constraints.MinWidth := edge;
+
+   { AND THE FORM'S, WHICH ALSO ANSWERS THE HEIGHT: the three alTop panels are
+     fixed, so what is left is a floor for the console. }
+   ApplyContentMinimumSize(Self);
+
+   { REPORTED, because this cannot be tested from the build machine -- the
+     defect arrived as a screenshot from a Mac. The numbers say whether a
+     clipped button was a wrong measurement or a minimum that was not applied,
+     which is the difference between reading the next screenshot and guessing
+     at it. }
+   if logger <> nil then
+      begin
+      logger.Debug('[Telnet] toolbar content %dpx over %d control(s) -> ' +
+                   'min %dx%d, window now %dx%d',
+                   [edge, pnlToolbar.ControlCount,
+                    Constraints.MinWidth, Constraints.MinHeight,
+                    Width, Height]);
+      end;
+end;
+
 procedure TfrmTelnet.HandleShow(Sender: TObject);
 begin
    { CAPTIONS FROM THE CONSTANTS, NOT FROM THE .lfm -- the uServerLogForm
@@ -373,6 +476,17 @@ begin
       begin
       TelnetFormOnShow;
       end;
+
+   { AFTER TelnetFormOnShow, which is what decides whether the 'no clusters'
+     hint is showing. That panel is content, so its visibility changes the
+     minimum height, and measuring before it was decided would measure the
+     wrong window.
+
+     BEFORE the console fit below, because this can GROW the window -- a
+     rectangle restored from a previous session may be smaller than the
+     toolbar -- and the fit has to measure the width the console ends up
+     with. }
+   ApplyMinimumSize;
 
    // The console had no items and possibly no handle when the form was last
    // resized, so the fit has to run again now that it does.

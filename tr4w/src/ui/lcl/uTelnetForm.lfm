@@ -29,6 +29,9 @@ object frmTelnet: TfrmTelnet
       Height = 28
       Top = 2
       Width = 104
+      Align = alLeft
+      AutoSize = True
+      BorderSpacing.Around = 2
       Caption = 'Connect'
       TabOrder = 0
       OnClick = ConnectClick
@@ -38,6 +41,9 @@ object frmTelnet: TfrmTelnet
       Height = 28
       Top = 2
       Width = 116
+      Align = alLeft
+      AutoSize = True
+      BorderSpacing.Around = 2
       Caption = 'Disconnect'
       TabOrder = 1
       OnClick = DisconnectClick
@@ -47,6 +53,9 @@ object frmTelnet: TfrmTelnet
       Height = 28
       Top = 2
       Width = 98
+      Align = alLeft
+      AutoSize = True
+      BorderSpacing.Around = 2
       Caption = 'Freeze'
       TabOrder = 2
       OnClick = FreezeClick
@@ -56,6 +65,9 @@ object frmTelnet: TfrmTelnet
       Height = 28
       Top = 2
       Width = 90
+      Align = alLeft
+      AutoSize = True
+      BorderSpacing.Around = 2
       Caption = 'Clear'
       TabOrder = 3
       OnClick = ClearClick
@@ -65,6 +77,9 @@ object frmTelnet: TfrmTelnet
       Height = 28
       Top = 2
       Width = 116
+      Align = alLeft
+      AutoSize = True
+      BorderSpacing.Around = 2
       Caption = 'Commands'
       TabOrder = 4
       OnClick = CommandsClick
@@ -74,6 +89,9 @@ object frmTelnet: TfrmTelnet
       Height = 28
       Top = 2
       Width = 92
+      Align = alLeft
+      AutoSize = True
+      BorderSpacing.Around = 2
       Caption = 'SH/50'
       TabOrder = 5
       OnClick = Show50Click
@@ -83,6 +101,9 @@ object frmTelnet: TfrmTelnet
       Height = 28
       Top = 2
       Width = 108
+      Align = alLeft
+      AutoSize = True
+      BorderSpacing.Around = 2
       Caption = 'Configure...'
       TabOrder = 6
       OnClick = ConfigureClick
