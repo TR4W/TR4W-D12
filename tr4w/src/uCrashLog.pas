@@ -152,6 +152,16 @@ uses
    // SysUtils is in the INTERFACE uses -- WriteCrashReport's signature needs
    // TObject there. Naming it twice is a duplicate-identifier error, not a
    // no-op.
+   {$IFDEF UNIX}
+   dl,         (* dladdr -- the image base on a position-independent build.
+                 FPC's OWN binding, not a new DLL dependency; see
+                 DescribeCrashImage for why the RTL's GetModuleByAddr cannot
+                 answer this on Darwin. *)
+   {$ENDIF}
+   {$IFDEF WINDOWS}
+   exeinfo,    (* GetModuleByAddr -- RTL, and already linked here: it is what
+                 the line-info reader uses to locate the running module. *)
+   {$ENDIF}
    (* NO Windows. The one call was GetCurrentProcessId; SysUtils declares
      GetProcessID for every platform and returns the same number.
 
@@ -259,6 +269,214 @@ begin
       end;
 end;
 
+(* WHERE THE IMAGE ACTUALLY LANDED, AND WHY A BACKTRACE IS WORTHLESS WITHOUT IT.
+
+  macOS and Linux build TR4W as a POSITION-INDEPENDENT EXECUTABLE, so the loader
+  slides the whole image to an address it chooses at run time.  A frame logged as
+  $0000000102D5A6F4 therefore says nothing on its own: the same fault in the same
+  binary logs a different number on the next launch, and the symbol table inside
+  the shipped binary is written against the UN-slid addresses.
+
+  MEASURED, NOT ASSUMED.  The published tr4w-5.0.16-aarch64-darwin build has
+  __TEXT at vmaddr $100000000 and ends near $101DC0000 un-slid -- so the frame
+  above sits ABOVE THE TOP OF THE UN-SLID IMAGE, which is proof that the slide
+  was non-zero and that nothing in the log recorded it.  That binary carries
+  283,056 symbols.  Every one of them was unreachable for want of one number, and
+  every macOS crash report we had received was a bag of numbers with no key.
+
+  WHICH FACILITY, PER PLATFORM -- AND WHY NOT THE OBVIOUS ONE.
+
+  The obvious one is the RTL's GetModuleByAddr (exeinfo), and on Unix it cannot
+  answer: it delegates to UnixGetModuleByAddrHook, which exeinfo installs only
+  under FIND_BASEADDR_ELF -- an ELF-only path.  On Darwin the hook is never
+  assigned, so the function hands back a base of NIL and ParamStr(0), which is
+  exactly the hole being fixed.  It IS the right answer on Windows, where it asks
+  VirtualQuery and returns the real module base.
+
+  So: dladdr on Unix, out of FPC's own dl unit, and GetModuleByAddr on Windows.
+  Both are read-only lookups over data the loader already holds -- no file is
+  opened and no symbol table is parsed, which is what makes them safe to call
+  from a dying program. *)
+
+{$IFDEF DARWIN}
+(* THE SLIDE ITSELF, so a reader can move between a logged address and the
+  addresses in `nm` output without having to know what __TEXT's vmaddr was.
+
+  _dyld_get_image_vmaddr_slide is public dyld API (mach-o/dyld.h), it lives in
+  libSystem -- which FPC already links on Darwin as 'c' -- and image 0 is always
+  the main executable.  Verified linking and answering on aarch64-darwin with
+  FPC 3.2.2; on that run base $100E78000 and slide $E78000 agreed exactly with
+  the $100000000 vmaddr in the Mach-O header.
+
+  There is no counterpart here for Linux: FPC's dl declares dlinfo, but walking
+  the per-image link_map is a larger dependency than the base alone is worth,
+  and the base is what atos and addr2line actually take. *)
+function _dyld_get_image_vmaddr_slide(aImageIndex: longword): PtrInt; cdecl;
+   external 'c';
+{$ENDIF}
+
+(* The running image containing aAddr: its base, and its path when the platform
+  offers one cheaply.  False means "unknown", and every caller must carry on
+  regardless -- a crash handler that stops because a lookup failed is worse than
+  one that prints bare numbers. *)
+function DescribeCrashImage(aAddr: CodePointer; out aBase: PtrUInt;
+                            out aPath: string): boolean;
+{$IFDEF UNIX}
+var
+   info: dl_info;
+begin
+   Result := False;
+   aBase  := 0;
+   aPath  := '';
+   try
+      FillChar(info, SizeOf(info), 0);
+      if dladdr(aAddr, @info) = 0 then
+         begin
+         Exit;
+         end;
+      aBase := PtrUInt(info.dli_fbase);
+      if info.dli_fname <> nil then
+         begin
+         (* A C string owned by the loader -- one of the genuine PAnsiChar
+            boundaries.  Assigned, never cast: the conversion is the RTL's. *)
+         aPath := AnsiString(info.dli_fname);
+         end;
+      Result := aBase <> 0;
+   except
+      Result := False;
+   end;
+end;
+{$ELSE}
+var
+   b: pointer;
+   (* exeinfo is an RTL unit compiled without $H+, so its `string` parameter is
+      a ShortString.  Declaring ours to match is not a style choice. *)
+   fn: ShortString;
+begin
+   Result := False;
+   aBase  := 0;
+   aPath  := '';
+   try
+      b  := nil;
+      fn := '';
+      GetModuleByAddr(aAddr, b, fn);
+      aBase  := PtrUInt(b);
+      aPath  := string(fn);
+      Result := aBase <> 0;
+   except
+      Result := False;
+   end;
+end;
+{$ENDIF}
+
+var
+   (* Set once per report, from the header lookup.  Frames are annotated only
+      when that lookup has already succeeded in this process, so a platform
+      where the facility is missing pays nothing per frame. *)
+   GAnnotateFrames: boolean = False;
+
+(* '  [tr4w+$1a2b3c]' for a frame whose image is known, '' otherwise.  Appended
+  to the RTL's own rendering rather than replacing it: on Windows
+  BackTraceStrFunc already names a file and a line and this adds the module
+  offset beside it, while on macOS it is the only thing on the line that can be
+  looked up at all.  On Unix the loader's nearest symbol is included when it has
+  one, which makes the Cocoa frames readable with no tooling whatsoever. *)
+function AnnotateFrame(p: CodePointer): string;
+{$IFDEF UNIX}
+var
+   info: dl_info;
+   sym: string;
+begin
+   Result := '';
+   if not GAnnotateFrames then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(info, SizeOf(info), 0);
+      if dladdr(p, @info) = 0 then
+         begin
+         Exit;
+         end;
+      if info.dli_fbase = nil then
+         begin
+         Exit;
+         end;
+      sym := '';
+      if info.dli_sname <> nil then
+         begin
+         sym := ' ' + AnsiString(info.dli_sname);
+         end;
+      Result := SysUtils.Format('  [%s+$%x%s]',
+                   [ExtractFileName(AnsiString(info.dli_fname)),
+                    Int64(PtrUInt(p) - PtrUInt(info.dli_fbase)), sym]);
+   except
+      Result := '';
+   end;
+end;
+{$ELSE}
+var
+   base: PtrUInt;
+   path: string;
+begin
+   Result := '';
+   if not GAnnotateFrames then
+      begin
+      Exit;
+      end;
+   if not DescribeCrashImage(p, base, path) then
+      begin
+      Exit;
+      end;
+   Result := SysUtils.Format('  [%s+$%x]',
+                [ExtractFileName(path), Int64(PtrUInt(p) - base)]);
+end;
+{$ENDIF}
+
+(* ONE LINE PER CRASH, carrying everything needed to turn the frames below it
+  back into symbols after the fact.  It never raises and never aborts the
+  report: when the base is unknown it says so in those words, so a reader is not
+  left wondering whether the line was simply omitted. *)
+procedure ReportImageBase;
+var
+   base: PtrUInt;
+   path: string;
+   slide: string;
+begin
+   try
+      (* An address certainly inside our own image -- this very routine. *)
+      if not DescribeCrashImage(CodePointer(@ReportImageBase), base, path) then
+         begin
+         GAnnotateFrames := False;
+         CrashLogger.Fatal('[CRASH]   image base UNKNOWN on this platform -- the '
+                      + 'addresses below are run-time addresses and cannot be '
+                      + 'matched to a symbol table for this build');
+         Exit;
+         end;
+
+      GAnnotateFrames := True;
+
+      slide := '';
+      {$IFDEF DARWIN}
+      slide := SysUtils.Format(' slide $%.16x',
+                  [Int64(_dyld_get_image_vmaddr_slide(0))]);
+      {$ENDIF}
+
+      if path = '' then
+         begin
+         path := ParamStr(0);
+         end;
+
+      CrashLogger.Fatal('[CRASH]   image %s base $%.16x%s -- resolve a frame with: '
+                   + 'atos -o "%s" -l 0x%x <address>  (or addr2line -e "%s" -f -C '
+                   + '<address minus base>)',
+                   [path, Int64(base), slide, path, Int64(base), path]);
+   except
+      (* Deliberately empty -- see WriteCrashReport.  A missing header line must
+         never cost the frames. *)
+   end;
+end;
+
 const
    { WHAT THIS BOUNDS, AND WHY IT IS A CLOCK AND NOT AN ADDRESS RANGE.
 
@@ -299,13 +517,13 @@ var
    begin
       if budgetSpent then
          begin
-         Result := SysUtils.Format('$%.8x', [PtrUInt(p)]);
+         Result := SysUtils.Format('$%.8x', [PtrUInt(p)]) + AnnotateFrame(p);
          Exit;
          end;
 
       if (GetTickCount64 - startTick) <= FRAME_RESOLVE_BUDGET_MS then
          begin
-         Result := BackTraceStrFunc(p);
+         Result := BackTraceStrFunc(p) + AnnotateFrame(p);
          Exit;
          end;
 
@@ -341,6 +559,12 @@ begin
       CrashLogger.Fatal('[CRASH] %s: unhandled %s in thread %d%s (TR4W %s) -- %s',
                    [aSource, cls, GetCurrentThreadId, IfMainThread,
                     TR4W_CURRENTVERSION_NUMBER, msg]);
+
+      (* WHERE THIS IMAGE IS, before any frame is written.  On a PIE build the
+         frames are meaningless without it -- see the note above
+         DescribeCrashImage. *)
+      ReportImageBase;
+
       if aAddr <> nil then
          begin
          CrashLogger.Fatal('[CRASH]   at %s', [Frame(aAddr)]);
