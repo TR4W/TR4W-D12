@@ -41,6 +41,11 @@ uses
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   uSystemWatch, (* RefreshColourDepth -- the one colour-depth probe *)
   uPlatformFonts, (* InstallPrivateFont -- the AddFontResource gate lives there *)
+  {$IFDEF DARWIN}
+  (* CocoaConfigPanel -- how the Cocoa widget set draws a TCustomPanel bevel.
+    See ApplyPlatformLook. *)
+  CocoaConfig,
+  {$ENDIF}
   (* WINDOWS STAYS, AND EVERY REMAINING USE IS A DECISION RATHER THAN A
     TRANSLATION (measured 2026-09-08 by removing the import and reading the
     compiler). Messages went with this pass -- it declared nothing this unit
@@ -997,6 +1002,56 @@ begin
 end;
 
 
+(* WHAT THE WIDGET SET SHOULD MAKE OF A PANEL BEVEL.
+
+  THE COMPLAINT, AND IT IS THE WHOLE REASON THIS ROUTINE EXISTS. NY4I,
+  2026-09-21, with TR4W on macOS beside TR4W on Windows: "The fields that have
+  rounded corners make the form look strange. It is not a continuous flow."
+
+  NOTHING IN TR4W ASKS FOR A ROUNDED CORNER. Every main-window readout is a
+  TPanel with BevelOuter = bvLowered, which on Windows and gtk2 is a thin
+  square etch. On Cocoa the LCL answers the same request by allocating an
+  NSBox -- a rounded, filled grouping container:
+
+    TCustomPanel.PaintBevel -> Canvas.Frame3d
+      -> TCocoaWidgetSet.Frame3d (cocoawinapi.inc:880), which for a
+         TCustomPanel consults CocoaConfigPanel.classicFrame3d, FALSE by
+         default (cocoaconfig.inc:255)
+      -> TCocoaContext.Frame3dBox, the NSBox
+
+  Setting it TRUE selects TCocoaContext.Frame3dClassic instead: DrawEdge with
+  BDR_SUNKENOUTER, which is cl3DShadow on the top and left and cl3DHiLight on
+  the bottom and right -- the same two-tone groove Windows draws, square, one
+  pixel, from the widget set rather than from a colour we picked.
+
+  IT IS GLOBAL AND THAT IS SAID OUT LOUD. This is widget-set configuration,
+  not a property of one control: EVERY TCustomPanel in the program changes,
+  including the band map, the cluster console, preferences and the radio
+  panels. That is the intended answer -- the rounded box is wrong everywhere,
+  not only on the main window -- but it means a change here is visible in
+  windows nobody was looking at.
+
+  WHY THE ALTERNATIVES WERE TRIED AND DROPPED is in TElementPanel.ApplyBevel,
+  and the short version is that removing the bevel lost delineation Windows
+  has, and drawing our own rule was invisible at one pixel and "much too big"
+  at two. A groove is not a stroke.
+
+  IT DOES NOT WORK ALONE. The highlight half of the etch is white, so on a
+  white window it cannot be seen and only the shadow edge shows -- which is
+  the solid stroke this was supposed to replace. The companion change is the
+  main window's surface becoming clForm, its real macOS grey, in uMainForm
+  and TElementPanel.SetColor.
+
+  HERE, RATHER THAN IN A UI UNIT, because this is a STARTUP ORDERING fact: it
+  has to be true before any panel paints, and the startup sequence is the one
+  place whose job is saying what happens before what. *)
+procedure ApplyPlatformLook;
+begin
+   {$IFDEF DARWIN}
+   CocoaConfigPanel.classicFrame3d := True;
+   {$ENDIF}
+end;
+
 procedure RunTR4W;
 // NoTransMess and TransMess were declared here and never used -- FPC says so
 // ("Label not defined"), and it has presumably said so for years into a .dpr
@@ -1058,6 +1113,10 @@ begin
      It replaces a hand-maintained array in LOGRADIO that had drifted one
      position out of step with the enum -- see the note where it used to be. }
    PopulateRadioTypeTokens;
+
+   (* HOW THIS WIDGET SET SHOULD DRAW, decided before it draws anything.
+     One assignment on one platform; see the routine. *)
+   ApplyPlatformLook;
 
    // Application.Initialize creates the widgetset.  Application.Run at the
    // bottom of this file drives it -- Phase 3c, 2026-08-23.  The hand-rolled

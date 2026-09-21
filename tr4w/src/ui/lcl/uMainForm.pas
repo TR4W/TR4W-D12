@@ -847,7 +847,9 @@ procedure CreateMainElement(const aElement: TMainWindowElement;
                            const aStyle: cardinal;
                            const aLeft, aTop, aWidth, aHeight: integer);
 var
-   p: TPanel;
+   (* TElementPanel, not TPanel: SetSunken is this class's own, and the array
+     it comes out of has always held the narrower type. *)
+   p: TElementPanel;
 begin
    if TR4WMainForm = nil then
       begin
@@ -872,20 +874,16 @@ begin
      which is the whole reason this control is not painted by a
      WM_CTLCOLORSTATIC handler.
 
-       SS_SUNKEN    -> BevelOuter bvLowered
+       SS_SUNKEN    -> SetSunken, which is a BevelOuter everywhere and, on
+                       Cocoa, a differently DRAWN one -- see
+                       TElementPanel.ApplyBevel for what that widget set
+                       makes of a bevel it is left to draw itself
        SS_CENTER    -> Alignment taCenter, SS_LEFT -> taLeftJustify
        WS_VISIBLE   -> Visible (uVisStyle omits it; those elements start hidden)
        WS_DISABLED  -> Enabled False (DefStyleDis)
        SS_NOPREFIX  -> no counterpart needed: a TPanel caption is not an
                        accelerator string, so there is no '&' to suppress. *)
-   if (aStyle and SS_SUNKEN) <> 0 then
-      begin
-      p.BevelOuter := bvLowered;
-      end
-   else
-      begin
-      p.BevelOuter := bvNone;
-      end;
+   p.SetSunken((aStyle and SS_SUNKEN) <> 0);
 
    if (aStyle and SS_CENTER) <> 0 then
       begin
@@ -3397,6 +3395,19 @@ begin
    //          afterwards with the real geometry, which it can only compute once
    //          the editable-log ListView exists and has been measured.
    TR4WMainForm := TTR4WMainForm.Create(nil);
+
+   {$IFDEF DARWIN}
+   (* THE WINDOW SURFACE, WHICH THE .lfm CANNOT SAY DIFFERENTLY PER PLATFORM.
+
+     The designed Color is clBtnFace, correct on Windows where that IS the
+     window grey. On macOS the LCL resolves it to white (measured: $FFFFFF),
+     which left the white entry fields invisible and gave the panel bevels
+     nothing to sit on. clForm is $ECECEC there -- the real window surface.
+
+     The panels follow through TElementPanel.SetColor, and the two have to
+     agree: a grey window with white panels is worse than either. *)
+   TR4WMainForm.Color := clForm;
+   {$ENDIF}
 
    (* THE DESIGNED PANELS ARE NOW MATCHED TO THEIR ELEMENTS. Before anything
      asks for one -- CreateMainElement, SetMainWindowText, the colour pass --

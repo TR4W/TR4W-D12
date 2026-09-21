@@ -100,11 +100,23 @@ type
         resize so a wider window is measured afresh. See FitCaption. *)
       FOverflowReported: boolean;
       procedure FitCaption;
+      procedure ApplyBevel(const aRequested: TPanelBevel);
    protected
       procedure RealSetText(const aValue: TCaption); override;
       (* Re-measure the caption when the panel changes size. *)
       procedure Resize; override;
+      (* The neutral background follows the window on macOS. See the body. *)
+      procedure SetColor(Value: TColor); override;
+      (* The designed BevelOuter arrives here. See ApplyBevel. *)
+      procedure Loaded; override;
    public
+      (* SUNKEN OR FLAT, ASKED AS A QUESTION ABOUT THE ELEMENT rather than
+        answered as a property assignment.
+
+        uMainForm.CreateMainElement translates SS_SUNKEN out of the TWindows[]
+        style word; what a sunken element LOOKS like is this class's business,
+        and on one platform it is drawn differently. See ApplyBevel. *)
+      procedure SetSunken(const aSunken: boolean);
       (* THE HEIGHT THE CAPTION WOULD LIKE TO BE, which is not always the
         height it gets. FitCaption always measures from here, so a panel that
         shrank for a long value returns to the common size when a short one
@@ -232,6 +244,170 @@ begin
      FBaseFontHeight, so the font grows back as well as shrinking. *)
    FOverflowReported := False;
    FitCaption;
+end;
+
+(* WHAT A SUNKEN ELEMENT LOOKS LIKE, AND WHY macOS GETS A DIFFERENT ANSWER.
+
+  NY4I, 2026-09-21, comparing TR4W on the Mac against a Qt contest logger side
+  by side: "The fields that have rounded corners make the form look strange. It
+  is not a continuous flow ... maybe it is simply the rounded corners and the
+  gray backgrounds that make it look as a striking departure from what I am
+  used to on the windows app."
+
+  NOTHING IN TR4W ASKED FOR A ROUNDED CORNER. The chain is entirely inside the
+  widget set, and it is worth writing down because it is not guessable from a
+  screenshot:
+
+    BevelOuter <> bvNone
+      -> TCustomPanel.PaintBevel calls Canvas.Frame3d
+      -> TCocoaWidgetSet.Frame3d, which for a TCustomPanel consults
+         CocoaConfigPanel.classicFrame3d -- FALSE by default
+      -> TCocoaContext.Frame3dBox, which draws an NSBox (NSBoxSecondary for
+         bvLowered)
+
+  An NSBox is a rounded, filled grouping container. It is the right thing for
+  the request "draw me a box"; it is the wrong thing for a status readout in a
+  dense contest layout, and it accounts for BOTH halves of the complaint -- the
+  corners and the grey. The form and its panels both carry clBtnFace, so the
+  two cannot differ by colour on their own; whatever is grey on those tiles is
+  painted by the bevel.
+
+  TWO ATTEMPTS AT THIS WERE WRONG, AND BOTH ARE WORTH KEEPING.
+
+  REMOVING THE BEVEL WENT TOO FAR. NY4I against Windows 5.0.18 side by side:
+  WINDOWS IS NOT BORDERLESS. It has thin square rules around every readout;
+  what it lacks is the rounded corner and the fill. Flat lost delineation the
+  reference platform has -- the bottom status row ran together into one strip
+  and the totals cells stopped tying a number to its band column.
+
+  DRAWING OUR OWN RULE WAS ALSO WRONG, AND THE BRACKET IS THE USEFUL PART.
+  Setting BevelColor makes TCustomPanel.PaintBevel take a different
+  TCanvas.Frame3d overload -- the one at canvas.inc:1063 that draws with the
+  pen and never reaches the widget set. It works exactly as advertised, and
+  the result was still wrong at both settings anybody could choose:
+
+      1px $929292   NY4I: "I see no lines at all"
+      2px $929292   NY4I: "Frankly, this display is hideous" ...
+                          "The lines are much too big as compared to windows"
+
+  There is no width between one and two, and $929292 was already the darkest
+  usable system colour on that machine (clWindowFrame $AAAAAA and clSilver
+  $C0C0C0 are LIGHTER; the only darker one is black). So the target is not a
+  solid stroke of any size.
+
+  WINDOWS DOES NOT DRAW A LINE. IT DRAWS A GROOVE. A sunken bevel there is
+  two-tone -- shadow on the top and left, highlight on the bottom and right --
+  and it reads as a faint etch because the surface underneath is GREY. We were
+  imitating a groove with a solid stroke on WHITE, and no colour or width
+  reproduces that.
+
+  SO THE ANSWER IS NOT IN THIS UNIT AT ALL. It is two things landing together,
+  and neither is shippable alone:
+
+    1. CocoaConfigPanel.classicFrame3d := True, set once at startup in
+       uProgramMain, which makes Cocoa draw a panel bevel as a square
+       two-tone etch (TCocoaContext.DrawEdge, cl3DShadow over cl3DHiLight)
+       instead of allocating an NSBox.
+    2. The neutral surface becomes clForm rather than clBtnFace, which is
+       what SetColor below does -- because the etch's highlight edge is
+       invisible on white and the whole effect needs a grey to sit on.
+
+  WHICH LEAVES THIS ROUTINE WITH NOTHING PLATFORM-SPECIFIC TO DO, and that is
+  the right outcome: the bevel is the bevel on every platform now, and how a
+  bevel is DRAWN is the widget set's business. *)
+procedure TElementPanel.ApplyBevel(const aRequested: TPanelBevel);
+begin
+   if BevelOuter <> aRequested then
+      begin
+      BevelOuter := aRequested;
+      end;
+end;
+
+(* THE NEUTRAL BACKGROUND IS THE WINDOW'S, NOT THE BUTTON FACE'S -- ON macOS.
+
+  WHY THIS IS NOT A RESTYLE. clBtnFace means "the ordinary surface this
+  program is drawn on", and on Windows it IS that: GetSysColor(COLOR_BTNFACE)
+  is $F0F0F0, the same grey the main window is painted with, so a neutral
+  panel disappears into the form and only the WHITE entry fields stand out.
+
+  ON macOS THE SAME CONSTANT IS WHITE. Measured in the running program on
+  2026-09-21, not inferred -- the LCL maps COLOR_BTNFACE to
+  NSColor.controlBackgroundColor (cocoautils.pas:898), a CONTENT-area colour:
+
+      clBtnFace = $8000000F -> rgb $FFFFFF        <- the window
+      clForm    = $8000001F -> rgb $ECECEC        <- what the window should be
+      the entry fields are trWhite = $FFFFFF
+
+  So the callsign and exchange fields were white on white. NY4I: a caret
+  floating in empty space with no indication where the field is or how wide.
+  That is a usability defect, not a preference, and it is the whole reason
+  this substitution exists.
+
+  clForm IS THE RIGHT NAME FOR WHAT WAS WANTED ALL ALONG. It resolves to
+  NSColor.windowBackgroundColor -- the surface a macOS window is drawn on,
+  which is exactly what COLOR_BTNFACE means on Windows and no longer means
+  here.
+
+  ONLY THE NEUTRAL, AND THE TEST IS EXACT. Every element panel is coloured
+  from tr4wColorsArray[TWindows[e].mweBackG], and trBtnFace is the value that
+  row carries when nothing has been said about it -- it is also the OFF state
+  in every live colour rule (RefreshMainWindowElementColors sets trRed,
+  trYellow or trLightBlue to say something and falls back to trBtnFace to say
+  nothing). A panel that carries a MEANING asks for trWhite, trBlue, trYellow,
+  trCyan or trGreen, never for this, so it passes straight through untouched:
+  the blue band block, the yellow mult-needs row, the need strips, the WSJT-X
+  indicator, the active-radio tint.
+
+  AND VC.pas MAKES THE TEST SAFE. Its startup only overwrites
+  tr4wColorsArray[trBtnFace] with a resolved system value INSIDE an
+  {$IFDEF WINDOWS}; off Windows the entry keeps its declared literal, which is
+  clBtnFace itself. So on the one platform this runs, the neutral request
+  arrives here as exactly this constant.
+
+  THE COMPARISON IN SetElementColors NEVER MATCHES AFTERWARDS, which is
+  harmless and worth knowing: it tests `Color <> aBack`, reads clForm and is
+  handed clBtnFace, so it assigns on every refresh. The assignment lands back
+  here, resolves to the same clForm, and TControl.SetColor's own guard makes
+  it a no-op. No repaint, no flicker. *)
+procedure TElementPanel.SetColor(Value: TColor);
+begin
+   {$IFDEF DARWIN}
+   if Value = clBtnFace then
+      begin
+      Value := clForm;
+      end;
+   {$ENDIF}
+
+   inherited SetColor(Value);
+end;
+
+procedure TElementPanel.SetSunken(const aSunken: boolean);
+begin
+   if aSunken then
+      begin
+      ApplyBevel(bvLowered);
+      end
+   else
+      begin
+      ApplyBevel(bvNone);
+      end;
+end;
+
+(* THE DESIGNED BEVEL NEEDS THE SAME TREATMENT AS THE RUN-TIME ONE, AND MOST OF
+  THEM ARRIVE THAT WAY.
+
+  Of the 111 element panels in uMainForm.lfm, only the rows of TWindows[] reach
+  CreateMainElement -- and not even all of those, since the loop skips any row
+  whose style word is <= 2. The totals grid's cells and headers are panels this
+  class owns that no element loop touches; their bevel comes from the .lfm and
+  nowhere else.
+
+  Loaded runs after every streamed property has been set, so it sees the
+  designed value and is the one place that catches all of them. *)
+procedure TElementPanel.Loaded;
+begin
+   inherited Loaded;
+   ApplyBevel(BevelOuter);
 end;
 
 procedure TElementPanel.FitCaption;
