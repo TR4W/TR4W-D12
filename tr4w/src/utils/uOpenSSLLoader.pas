@@ -18,12 +18,20 @@ unit uOpenSSLLoader;
       ls /usr/lib/libssl*.dylib      no matches
       openssl version                LibreSSL 3.3.6   (the CLI, not a dylib)
 
-  So FPC's default finds nothing and TR4W has no TLS on that platform at all.
-  The Homebrew package supplies one, at a path this unit now looks in --
-  measured, not guessed, which is the standard this unit was written to.  A Mac
-  WITHOUT Homebrew still has no TLS: the durable answer is to ship the dylibs
-  inside TR4W.app the way the Windows installer ships the DLLs, and that is a
-  packaging decision rather than something to slip in here.
+  So FPC's default finds nothing.
+
+  SO TR4W.app CARRIES ITS OWN, as of 5.0.16.  build-unix.sh's packaging stage
+  copies libssl and libcrypto into Contents/Frameworks, rewrites their install
+  names to @loader_path, and mac-sign.sh signs them with the same Developer ID
+  as the executable; this unit looks there FIRST.  Homebrew and MacPorts stay
+  in the list behind it, for a developer running the binary out of build-out
+  with no bundle around it.
+
+  WHAT THIS FIXED, and it was not a degradation: through 5.0.15 a Mac without
+  Homebrew had NO TLS AT ALL, so the country-file update, the TRMASTER update,
+  the version check, the POTA fetch and the score post -- every one of which is
+  an https:// URL -- simply did not work (NY4I, 5.0.15 on his own Mac).  The
+  build machine has Homebrew, so the build machine could never see it.
 
   LINUX IS THE PROBLEM, AND IT IS A NAME, NOT AN API.
 
@@ -156,35 +164,40 @@ begin
       end;
 end;
 
-(* Link under an EXACT name, for the macOS case where the name FPC will try
-  is not <base>.so. *)
-function LinkAs(const aDir, aLinkName, aTarget: string): boolean;
-var
-   link:      string;
-   linkBytes: AnsiString;
-   destBytes: AnsiString;
-begin
-   link      := IncludeTrailingPathDelimiter(aDir) + aLinkName;
-   linkBytes := AnsiString(link);
-   destBytes := AnsiString(aTarget);
-   fpUnlink(linkBytes);
-   Result := fpSymlink(PAnsiChar(destBytes), PAnsiChar(linkBytes)) = 0;
-end;
-
 {$ENDIF}
 
 {$IFDEF DARWIN}
-(* WHERE A MAC KEEPS AN OpenSSL SOMEONE ELSE INSTALLED.  Homebrew on Apple
-  Silicon lives under /opt/homebrew and on Intel under /usr/local, and it
-  already provides the unversioned libssl.dylib symlink that FPC's loader
-  wants -- so unlike Linux there is nothing to link, only a directory to name.
-  MacPorts is included because it is the other common answer.
+(* THE COPY WE SHIP, INSIDE TR4W.app -- Contents/Frameworks, which is where
+  build-unix.sh's packaging stage puts libssl and libcrypto.
+
+  NAMED BY uAppPaths AND NOT COMPUTED HERE. Where this program keeps the
+  libraries it ships itself is a platform question, and that unit is the one
+  place that answers platform questions about paths.
+
+  A DEVELOPER BUILD HAS NO BUNDLE and this simply names a directory that is
+  not there, which the search below skips like any other. *)
+function BundledSSLDir: string;
+begin
+   Result := PrivateLibraryDir;
+end;
+
+(* WHERE A MAC KEEPS AN OpenSSL.  OURS FIRST, AND THAT ORDER IS THE POINT:
+  the library TR4W was built against and signed with is the one it should
+  load, on every Mac, whether or not the operator has ever heard of Homebrew.
+  Apple ships no libssl.dylib at all -- there is no system copy to prefer.
+
+  The rest are fallbacks for a build that is not in a bundle (a developer
+  running the binary straight out of build-out) and for an operator whose
+  bundle has been picked apart.  Homebrew on Apple Silicon lives under
+  /opt/homebrew and on Intel under /usr/local; MacPorts is the other common
+  answer.
 
   Each of these was checked on a real machine or is the documented prefix of
   its package manager.  A directory that is not there is skipped. *)
 function DarwinSSLDirs: TStringArray;
 begin
    Result := TStringArray.Create(
+      BundledSSLDir,
       '/opt/homebrew/opt/openssl@3/lib',
       '/opt/homebrew/opt/openssl/lib',
       '/opt/homebrew/lib',
@@ -229,6 +242,18 @@ begin
          FindClose(rec);
       end;
       end;
+end;
+
+(* '.3' out of 'libssl.3.dylib', '.1.1' out of 'libssl.1.1.dylib' -- the piece
+  FPC appends to the base name, which is what the caller has to hand it.  The
+  path may be absolute; only the file name is read. *)
+function DylibVersionSuffix(const aPath, aBaseName: string): string;
+var
+   name: string;
+begin
+   name   := ExtractFileName(aPath);
+   Result := Copy(name, Length(aBaseName) + 1,
+                  Length(name) - Length(aBaseName) - Length('.dylib'));
 end;
 {$ENDIF}
 
@@ -330,7 +355,6 @@ var
 {$IFDEF DARWIN}
 var
    dir:        string;
-   linkDir:    string;
    sslPath:    string;
    cryptoPath: string;
    i:          integer;
@@ -419,21 +443,27 @@ begin
      still had no TLS -- measured on an Apple Silicon Mac, 2026-09-09, where
      FPC's own LoadLibrary opened the file happily when handed the full name.
 
-     So we hand it a name it WILL try. The link says 1.1 and points at
-     OpenSSL 3; nothing reads that number as a version -- it is a file name
-     FPC's search happens to attempt first, and the library reports its real
-     version once loaded. Renaming a library to be found is ugly, and two
-     answers remove the need. The second is the better one:
+     THE FIX IS NOT TO RENAME A LIBRARY. It is to tell FPC the suffix the
+     file we found actually carries. DLLVersions is a VAR in that unit, not a
+     const -- FPC writes to it itself, two lines up -- so slot 2 is set to the
+     version we are about to load, and the Darwin line above then copies it
+     into slot 1. The very first name attempted is therefore the file we
+     located, by its real name, with the rest of the list left intact behind
+     it for any later attempt.
 
-       ship our own OpenSSL inside TR4W.app, the way the Windows installer
-       ships the DLLs -- packaging work, with notarization consequences;
+     THIS REPLACED A SYMLINK FARM (through 5.0.15): the previous code linked
+     libssl.3.dylib under the name libssl.1.1.dylib in the settings directory
+     so that FPC's stale list would hit it. Nothing read that 1.1 as a
+     version, but a library renamed to be found is a thing every future reader
+     has to be talked out of, and it wrote into the operator's settings tree
+     to do it.
 
-       or stop using OpenSSL on this platform at all and go through
-       NSURLSession, Apple's own HTTPS, which verifies against the Keychain.
-       THAT IS THE INTENDED END STATE -- see the long note at the foot of
-       uTLSTrust's header for what it buys, what it costs, and why it waits
-       until the Mac GUI has actually been run. When it lands, this whole
-       Darwin arm goes with it. *)
+     THE REMAINING END STATE IS STILL NSURLSession -- Apple's own HTTPS,
+     verified against the Keychain, no OpenSSL on this platform at all. See
+     the long note at the foot of uTLSTrust's header for what it buys and what
+     it costs. Until then TR4W.app CARRIES ITS OWN OpenSSL, the way the
+     Windows installer ships the DLLs, and BundledSSLDir is where the
+     packaging stage puts it. *)
    for i := 0 to High(DarwinSSLDirs) do
       begin
       dir := DarwinSSLDirs[i];
@@ -444,32 +474,35 @@ begin
          Continue;
          end;
 
-      linkDir := IncludeTrailingPathDelimiter(SettingsDir) + 'ssl';
-      if not ForceDirectories(linkDir) then
+      (* Both halves have to answer to the same suffix, since FPC walks one
+        list for the pair. A directory holding libssl.3 beside libcrypto.1.1
+        is not a usable pair; skip it rather than load a mismatch. *)
+      if DylibVersionSuffix(sslPath, 'libssl')
+         <> DylibVersionSuffix(cryptoPath, 'libcrypto') then
          begin
-         GDiagnostic := 'found ' + sslPath + ' but could not create ' + linkDir;
-         Result := False;
-         Exit;
+         Continue;
          end;
 
-      if LinkAs(linkDir, 'libssl.1.1.dylib', sslPath) and
-         LinkAs(linkDir, 'libcrypto.1.1.dylib', cryptoPath) then
+      DLLVersions[2] := DylibVersionSuffix(sslPath, 'libssl');
+      DLLSSLName     := IncludeTrailingPathDelimiter(dir) + 'libssl';
+      DLLUtilName    := IncludeTrailingPathDelimiter(dir) + 'libcrypto';
+      if InitSSLInterface then
          begin
-         DLLSSLName  := IncludeTrailingPathDelimiter(linkDir) + 'libssl';
-         DLLUtilName := IncludeTrailingPathDelimiter(linkDir) + 'libcrypto';
-         if InitSSLInterface then
-            begin
-            GUsable     := True;
-            GDiagnostic := 'OpenSSL loaded from ' + sslPath + ' via ' + DLLSSLName;
-            Result      := True;
-            Exit;
-            end;
+         GUsable     := True;
+         GDiagnostic := 'OpenSSL loaded from ' + sslPath;
+         Result      := True;
+         Exit;
          end;
       end;
 
-   GDiagnostic := 'no OpenSSL found. macOS does not ship one -- install it '
-                  + 'with "brew install openssl@3", or use a TR4W.app that '
-                  + 'carries its own copy.';
+   (* THE BUNDLED COPY IS MISSING, which is the only way to reach here on a
+     shipped TR4W.app -- the packaging stage fails rather than produce a
+     bundle without it. So this text describes a broken install, and names
+     the directory an operator or a support answer can actually look at. *)
+   GDiagnostic := 'no OpenSSL could be loaded. TR4W.app ships its own in '
+                  + BundledSSLDir + ' -- that directory is empty or its '
+                  + 'libraries will not load, which means this copy of '
+                  + 'TR4W.app is incomplete.';
    Result := False;
 {$ELSE}
    GDiagnostic := 'OpenSSL could not be initialised (' + DLLSSLName + ')';

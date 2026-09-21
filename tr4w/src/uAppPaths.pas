@@ -203,6 +203,29 @@ function DataFileNameOnly(const aValue: string): string;
   path this unit could substitute for. *)
 function SiblingProgramPath(const aName: string): string;
 
+(* WHERE THIS PROGRAM KEEPS THE SHARED LIBRARIES IT SHIPS ITSELF.
+
+  Not where the SYSTEM keeps libraries -- the dynamic linker already knows
+  that.  This is the directory TR4W's own packaging puts a library in when the
+  platform does not supply one, and the only caller today is uOpenSSLLoader:
+  macOS has shipped no libssl.dylib for years, so TR4W.app carries its own.
+
+  The answer differs by platform in KIND and not just in spelling, which is why
+  it is here and not spelled out at the call site:
+
+    Windows   beside the binary.  ssleay32.dll and libeay32.dll sit next to
+              tr4w.exe, which is where the installer puts them and where the
+              loader looks by default.
+    macOS     Contents/Frameworks, the place Apple prescribes for an
+              application's private dynamic libraries.
+    Linux     beside the binary.  Nothing is shipped there today -- OpenSSL,
+              SQLite and HamLib are packages -- so this is the honest answer
+              for the AppImage layout rather than a promise.
+
+  It does NOT create the directory and does not check that anything is in it.
+  A caller that finds it empty has learned something real. *)
+function PrivateLibraryDir: string;
+
 implementation
 
 uses SysUtils, StrUtils;
@@ -417,6 +440,14 @@ end;
 function DataDir: string;     begin Result := AppDir; end;
 function SettingsDir: string; begin Result := EnsureDir(AppDir + 'settings'); end;
 function LogDir: string;      begin Result := AppDir; end;
+
+(* THE BINARY'S OWN DIRECTORY, NOT AppDir. AppDir is the working directory
+  here, which is right for data and wrong for libraries: the loader resolves a
+  DLL beside the executable no matter where TR4W was started from. *)
+function PrivateLibraryDir: string;
+begin
+   Result := ExtractFilePath(ParamStr(0));
+end;
 // Beside the binary, exactly as it has always been. See the interface note.
 function ContestDir: string;  begin Result := AppDir; end;
 function ContestFilePath(const aName: string): string;
@@ -433,6 +464,16 @@ function BundleResources: string;
 begin
    Result := IncludeTrailingPathDelimiter(
                 ExpandFileName(ExtractFilePath(ParamStr(0)) + '../Resources'));
+end;
+
+{ And Contents/Frameworks is its sibling -- where build-unix.sh's packaging
+  stage puts libssl and libcrypto. A binary run straight out of build-out has
+  no bundle around it, so this names a directory that is not there; the caller
+  treats that as "nothing shipped here" and looks elsewhere. }
+function PrivateLibraryDir: string;
+begin
+   Result := IncludeTrailingPathDelimiter(
+                ExpandFileName(ExtractFilePath(ParamStr(0)) + '../Frameworks'));
 end;
 
 function HomeDir: string;
@@ -538,6 +579,16 @@ end;
 function LogDir: string;
 begin
    Result := XdgDir('XDG_STATE_HOME', '.local/state');
+end;
+
+(* Beside the binary. Nothing is shipped here by the tarball -- OpenSSL,
+  SQLite and HamLib are packages on Linux -- and the AppImage carries its
+  bundled copies where its own runtime finds them, so no caller looks here
+  today. It is answered rather than left out because a missing arm in a
+  per-platform block is a unit that stops compiling for one platform only. *)
+function PrivateLibraryDir: string;
+begin
+   Result := ExtractFilePath(ParamStr(0));
 end;
 
 (* ~/tr4w -- see the interface note. VISIBLE on purpose: XDG would say

@@ -815,6 +815,186 @@ stage_server() {
 # arguably the truer tag. It is not used because nobody has confirmed how the
 # macOS picker labels it, and 'sr' resolves to the same catalogue either way.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# mac_bundle_openssl <bundle-dir> -- put OpenSSL INSIDE TR4W.app.
+#
+# WHY THIS EXISTS. Apple ships no libssl.dylib and has not for years, and FPC's
+# TLS goes through OpenSSL. Through 5.0.15 TR4W on a Mac therefore depended on
+# the OPERATOR having installed Homebrew: uOpenSSLLoader searched
+# /opt/homebrew and /usr/local, and on a Mac with neither it found nothing, so
+# every https:// URL in the program failed -- the country-file update, the
+# TRMASTER update, the version check, POTA, the score post. The build machine
+# HAS Homebrew, which is precisely why no build ever noticed.
+#
+# So the app carries its own, the way the Windows installer ships
+# ssleay32.dll/libeay32.dll beside tr4w.exe. Contents/Frameworks is where a
+# Mac application keeps its private dynamic libraries.
+#
+# THREE THINGS HAVE TO BE TRUE OR THE COPY IS USELESS:
+#
+#   1. its OWN install name must be @loader_path/<file>, not the absolute
+#      Homebrew path it was built with -- otherwise dyld resolves it to a
+#      directory that exists only on this machine;
+#   2. every dependency it names must be rewritten the same way (libssl
+#      references libcrypto BY ITS CELLAR PATH, version number and all);
+#   3. it must be code-signed before the bundle is -- mac-sign.sh does that,
+#      and refuses to run if it finds nothing here to sign.
+#
+# AND IT FAILS RATHER THAN SHIP WITHOUT IT. A bundle with no TLS is the exact
+# state this replaces, and it is invisible until an operator tries to download
+# something. There is no "carry on without OpenSSL" path.
+#
+# THE VERSION IS RECORDED, in the log and in the bundle. Homebrew moves under
+# this box without asking (it has broken a build here before by upgrading Qt),
+# so "which OpenSSL did 5.0.16 ship" has to be answerable from the artifact.
+# ---------------------------------------------------------------------------
+mac_openssl_source_dir() {
+   # Explicit wins: a build that must pin a particular OpenSSL says so.
+   if [ -n "${TR4W_MAC_OPENSSL_DIR:-}" ]; then
+      printf '%s\n' "$TR4W_MAC_OPENSSL_DIR"
+      return 0
+   fi
+   if command -v brew > /dev/null 2>&1; then
+      _p=$(brew --prefix openssl@3 2>/dev/null)
+      if [ -n "$_p" ] && [ -d "$_p/lib" ]; then
+         printf '%s\n' "$_p/lib"
+         return 0
+      fi
+   fi
+   for _d in /opt/homebrew/opt/openssl@3/lib /usr/local/opt/openssl@3/lib; do
+      if [ -d "$_d" ]; then
+         printf '%s\n' "$_d"
+         return 0
+      fi
+   done
+   return 1
+}
+
+# The one libssl/libcrypto in a directory. EXACTLY ONE, because a directory
+# holding both a 1.1 and a 3 gives no honest way to choose here and a wrong
+# choice is a bundle that loads the wrong library on every Mac.
+mac_openssl_pick() {
+   _dir=$1
+   _base=$2
+   _n=0
+   _hit=''
+   for _f in "$_dir/$_base".*.dylib; do
+      [ -f "$_f" ] || continue
+      _n=$((_n + 1))
+      _hit=$(basename "$_f")
+   done
+   [ "$_n" = 1 ] || return 1
+   printf '%s\n' "$_hit"
+}
+
+mac_bundle_openssl() {
+   _bundle=$1
+   _fw="$_bundle/Contents/Frameworks"
+
+   if ! _src=$(mac_openssl_source_dir); then
+      say '  FAILED: no OpenSSL to bundle. macOS ships none, and TR4W.app must'
+      say '  carry its own or it has no TLS at all -- every https:// URL in the'
+      say '  program would fail on any Mac without Homebrew.'
+      say '  Install it with "brew install openssl@3", or set'
+      say '  TR4W_MAC_OPENSSL_DIR to a directory holding libssl/libcrypto.'
+      return 1
+   fi
+
+   _ssl=$(mac_openssl_pick "$_src" libssl) || {
+      say "  FAILED: $_src does not hold exactly one libssl.*.dylib."
+      say '  Set TR4W_MAC_OPENSSL_DIR to name the one to ship.'
+      return 1
+   }
+   _crypto=$(mac_openssl_pick "$_src" libcrypto) || {
+      say "  FAILED: $_src does not hold exactly one libcrypto.*.dylib."
+      say '  Set TR4W_MAC_OPENSSL_DIR to name the one to ship.'
+      return 1
+   }
+
+   mkdir -p "$_fw" || return 1
+   for _f in "$_ssl" "$_crypto"; do
+      cp "$_src/$_f" "$_fw/$_f" || return 1
+      # Homebrew's copies are read-only and install_name_tool rewrites in place.
+      chmod u+w "$_fw/$_f" || return 1
+      install_name_tool -id "@loader_path/$_f" "$_fw/$_f" 2>/dev/null || {
+         say "  FAILED: install_name_tool could not set the id of $_f"
+         return 1
+      }
+   done
+
+   # Rewrite every dependency that is not part of the OS. libssl names
+   # libcrypto by its full Cellar path, version number and all, so this is
+   # read out of the file rather than written down here.
+   for _f in "$_ssl" "$_crypto"; do
+      for _dep in $(otool -L "$_fw/$_f" | tail -n +2 | awk '{print $1}'); do
+         case "$_dep" in
+            /usr/lib/*|/System/*|@loader_path/*) continue ;;
+         esac
+         install_name_tool -change "$_dep" "@loader_path/$(basename "$_dep")" \
+            "$_fw/$_f" 2>/dev/null || {
+            say "  FAILED: install_name_tool could not repoint $_dep in $_f"
+            return 1
+         }
+      done
+   done
+
+   # RE-SIGN, AND IT IS NOT OPTIONAL ON APPLE SILICON.
+   #
+   # install_name_tool rewrites the Mach-O in place and INVALIDATES the code
+   # signature it was shipped with -- Homebrew's dylibs carry an ad-hoc one.
+   # arm64 requires a valid signature on every image, so dyld does not report
+   # a bad library: it SIGKILLs the process. Measured here 2026-09-21, before
+   # this step existed: the probe died with signal 9 and printed nothing at
+   # all, not one line, because the kill happens at dlopen.
+   #
+   # AD-HOC IS THE RIGHT SIGNATURE TO PUT BACK HERE. This runs on every build,
+   # signed or not, and a developer build has no Developer ID to offer; when
+   # TR4W_MAC_SIGN=1 mac-sign.sh replaces these with the real identity a few
+   # lines later. What this guarantees is that an UNSIGNED build is not
+   # silently a build that kills itself the first time it fetches anything.
+   for _f in "$_ssl" "$_crypto"; do
+      codesign --force --sign - "$_fw/$_f" 2>/dev/null || {
+         say "  FAILED: could not ad-hoc re-sign $_f after install_name_tool"
+         return 1
+      }
+      codesign --verify --strict "$_fw/$_f" 2>/dev/null || {
+         say "  FAILED: $_f does not verify after re-signing"
+         return 1
+      }
+   done
+
+   # PROVE IT, on the copies and not on the originals. Anything still naming an
+   # absolute path outside /usr/lib or /System resolves on this machine and
+   # nowhere else, which is a bundle that works here and fails everywhere.
+   _bad=''
+   for _f in "$_ssl" "$_crypto"; do
+      for _dep in $(otool -L "$_fw/$_f" | tail -n +2 | awk '{print $1}'); do
+         case "$_dep" in
+            /usr/lib/*|/System/*|@loader_path/*) ;;
+            *) _bad="$_bad $_f:$_dep" ;;
+         esac
+      done
+   done
+   if [ -n "$_bad" ]; then
+      say "  FAILED: bundled OpenSSL still names paths outside the bundle:$_bad"
+      return 1
+   fi
+
+   # WHICH OpenSSL THIS IS, answerable from the artifact and from the log.
+   # `pwd -P` resolves Homebrew's opt/ symlink to the Cellar directory, whose
+   # name carries the exact version.
+   _real=$(cd "$_src" && pwd -P)
+   {
+      printf 'TR4W %s bundles OpenSSL from:\n' "$TR4W_VERSION"
+      printf '  source    %s\n' "$_src"
+      printf '  resolved  %s\n' "$_real"
+      printf '  libraries %s %s\n' "$_ssl" "$_crypto"
+   } > "$_bundle/Contents/Resources/OPENSSL_VERSION.txt"
+   say "  OpenSSL  : $_ssl, $_crypto"
+   say "  from     : $_real"
+   return 0
+}
+
 mac_bundle_localizations() {
    res="$TR4W_DIR/res/tr4w_languages.res"
    [ -f "$res" ] || return 0
@@ -967,6 +1147,15 @@ stage_package() {
       done
       cp "$APP_EXE" "$bundle/Contents/MacOS/tr4w"
       chmod +x "$bundle/Contents/MacOS/tr4w"
+
+      # TLS, and it is not optional -- see the header on mac_bundle_openssl.
+      # A failure here stops the stage: an app that cannot fetch CTY.DAT is
+      # not an artifact worth producing, and the absence is invisible until an
+      # operator tries.
+      if ! mac_bundle_openssl "$bundle"; then
+         record FAIL 'package' 'OpenSSL could not be bundled into TR4W.app'
+         return 1
+      fi
 
       # FAIL RATHER THAN DECLARE NOTHING. An empty list here is not a
       # cosmetic loss: it is the exact state NY4I hit on the bench, where

@@ -23,6 +23,13 @@
 #                                 in the submission fails the WHOLE
 #                                 notarization, so it is signed first and on
 #                                 its own -- nothing else will reach it.
+#   1a. the nested libraries      Contents/Frameworks/*.  TR4W.app carries its
+#                                 own OpenSSL, because macOS ships none.  They
+#                                 are ENUMERATED, not named, and a missing or
+#                                 empty Frameworks directory is a failure --
+#                                 an unsigned dylib fails the whole
+#                                 notarization, and a bundle without them has
+#                                 no TLS.
 #   2. the app's executable       Contents/MacOS/tr4w.
 #   3. the bundle                 TR4W.app itself, which seals 1-2 in.
 #   4. a zip, via ditto           A .app CANNOT be submitted to notarytool
@@ -255,6 +262,32 @@ case "$MODE" in
       # fails the image's notarization, with an error that names tr4wserver
       # and not this omission.
       sign "$SERVER"                   --options runtime
+
+      # THE NESTED LIBRARIES, INSIDE OUT AND ENUMERATED RATHER THAN NAMED.
+      #
+      # TR4W.app carries its own OpenSSL (Contents/Frameworks) because macOS
+      # ships none and FPC's TLS needs it. Every Mach-O in a submission must
+      # be signed with the same Developer ID: ONE unsigned dylib here fails
+      # the notarization of the WHOLE bundle, with an error that names the
+      # file and not this omission.
+      #
+      # Enumerated, because a list of names is a list somebody has to
+      # remember to extend. And the count is checked, because a glob that
+      # matches nothing would sign nothing and say nothing -- the
+      # fails-open shape this repository has been bitten by before.
+      FRAMEWORKS="$BUNDLE/Contents/Frameworks"
+      [ -d "$FRAMEWORKS" ] ||
+         die "no $FRAMEWORKS -- the bundle carries no OpenSSL, so it would have no TLS at all"
+      nested=0
+      for lib in "$FRAMEWORKS"/*; do
+         [ -f "$lib" ] || continue
+         sign "$lib" --options runtime
+         nested=$((nested + 1))
+      done
+      [ "$nested" -gt 0 ] ||
+         die "$FRAMEWORKS is empty -- see build-unix.sh's mac_bundle_openssl"
+      say "  nested   : $nested library/libraries signed"
+
       sign "$BUNDLE/Contents/MacOS/tr4w" --options runtime
       sign "$BUNDLE"                   --options runtime
 
