@@ -650,7 +650,14 @@ var
    i     : integer;
 begin
    frmNewContest.Caption := TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE;
-   frmNewContest.PopulateFiles(string(TR4W_PATH_NAME));
+   (* ContestDir, NOT TR4W_PATH_NAME -- the same distinction the .db creation
+      site records at length above, missed at the LISTING site. TR4W_PATH_NAME
+      is uAppPaths.DataDir, which on macOS is the read-only Contents/Resources
+      INSIDE the .app bundle, so Browse opened there and the list came back
+      empty: an operator's contests are not, and cannot be, in there (NY4I,
+      2026-09-21). On Windows the two are the same directory, which is why
+      this survived. *)
+   frmNewContest.PopulateFiles(ContestDir);
 
    (* THE FILE, NOT THE SETTINGS OBJECT -- fixed 2026-09-19.
 
