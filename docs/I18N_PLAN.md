@@ -210,10 +210,17 @@ In `c:/tr4w-i18n/tools/i18n`, on branch `i18n-ts-poc`. Nothing in the build depe
 | `ini2po.py` | help INIs ⟷ `.po`, plus `--todo --write-doc` |
 | `mt_seed.py` | libretranslate seeding |
 
-**Machine output cannot reach a build.** `mt_seed.py` touches only entries that are *both
-fuzzy and empty*; its output stays fuzzy; `po2pas.py` skips fuzzy entries. Clearing the
-fuzzy flag is a human's review, and that is what makes an entry usable. Native-speaker work
-is protected by the flag itself, not by anyone remembering to be careful.
+~~**Machine output cannot reach a build.**~~ **IT DOES, SINCE 2026-09-21, AND THAT IS
+NY4I'S DECISION** -- *"We want to show the non-reviewed as well for testing."*
+`Make-LanguageRes.ps1` now embeds a fuzzy entry with its `#,` flag line stripped, which is
+what gets it past LazUtils' run-time gate (`translations.pas:1223`, *"Load translation only
+if it exists and is NOT fuzzy"*). Run it with `-ReviewedOnly` to put both gates back.
+
+**The `.po` files are untouched and the flag still means what it meant.** `mt_seed.py`
+touches only entries that are *both fuzzy and empty* and its output stays fuzzy;
+`po2pas.py` still skips fuzzy entries. Clearing the flag is still a human's review --
+what changed is only what the BUILD does with an unreviewed entry, and it changed
+because the languages are under review and NY4I needs to see them on a screen.
 
 ### Translation state, 2026-08-26
 

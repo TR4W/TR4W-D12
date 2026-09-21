@@ -54,8 +54,11 @@ python tools/i18n/mt_seed.py --lang es
 ```
 
 `mt_seed` touches **only entries that are both fuzzy and empty**, its output stays fuzzy,
-and `po2pas.py` skips fuzzy entries. Clearing the fuzzy flag is a human's review, and that
-is what makes an entry usable.
+and `po2pas.py` skips fuzzy entries. Clearing the fuzzy flag is a human's review.
+
+**It no longer keeps the entry out of the BUILD, though** (2026-09-21, NY4I): the embedded
+catalogue ships fuzzy entries with the flag stripped so the languages can be exercised while
+they are reviewed. `Make-LanguageRes.ps1 -ReviewedOnly` restores the gate.
 
 **Never re-run a generator across entries that already have translations.** ~417 strings
 are native-speaker work. NY4I, 2026-08-26: *"we do not want to re-translate already
@@ -224,4 +227,6 @@ captions only from units it knows are forms.
 * **`src/lang/*.pas` are UTF-8 with a BOM** and per-language codepages. Do not edit them
   with a tool that rewrites the encoding; append ASCII bytes or use `po2pas.py`.
 * **A stale `.rsj` extracts stale strings.** Build before `rstconv`.
-* **Machine output must stay fuzzy.** It is the only thing keeping it out of the build.
+* **Machine output must stay fuzzy in the `.po`.** ~~It is the only thing keeping it out of
+  the build~~ -- the build ships it anyway since 2026-09-21 (see section 3); the flag is now
+  the review record, not the gate.

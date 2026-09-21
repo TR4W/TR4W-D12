@@ -20,7 +20,7 @@ unit uEmbeddedTranslations;
 
   So build\Make-LanguageRes.ps1 compiles i18n\tr4w_<lang>.po into
   res\tr4w_languages.res as RCDATA named TR4W_<LANG>, and this reads it back.
-  514 KB for sixteen languages, because only REVIEWED entries are shipped.
+  5.0 MB for twenty-two languages, reviewed entries and unreviewed alike.
 
   A FILE STILL WINS IF ONE IS PRESENT, deliberately. languages\<lang>\tr4w.po
   beside the exe overrides the embedded copy, so a corrected translation can be
@@ -34,11 +34,21 @@ unit uEmbeddedTranslations;
     resourcestrings   Translations.TranslateResourceStrings(po)
     form properties   LRSTranslator := TPOTranslator.Create(po)
 
-  LazUtils loads a translation "only if it exists and is NOT fuzzy"
-  (translations.pas:1220), which is the same gate po2pas applies to the Pascal
-  side: machine output cannot reach a screen until a human clears it in Poedit.
-  Make-LanguageRes drops fuzzy entries before they are ever embedded, so the
-  binary cannot carry unreviewed text at all.
+  UNREVIEWED TEXT SHIPS, ON PURPOSE (NY4I, 2026-09-21): "we want to show the
+  non-reviewed as well for testing", and earlier "use them fuzzy or not". It
+  used to be excluded TWICE over, and both gates had to open together or the
+  change would have looked done and shown nothing:
+
+    LazUtils refuses a fuzzy entry at run time -- translations.pas:1223,
+    "Load translation only if it exists and is NOT fuzzy" -- and
+    Make-LanguageRes dropped fuzzy entries before they were ever embedded.
+
+  Make-LanguageRes now EMITS a fuzzy entry WITHOUT its `#,` flag line, so the
+  embedded copy is indistinguishable from an approved one and the LazUtils
+  gate never sees it. The i18n .po files keep their markers: the flag is the
+  record that a string is unreviewed and the translators' tools depend on it.
+  `Make-LanguageRes.ps1 -ReviewedOnly` puts the gate back when review is
+  done.
 }
 
 interface

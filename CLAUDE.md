@@ -341,8 +341,15 @@ whose bytes are damaged at the BIT level -- it decodes as neither UTF-8 nor GBK 
 110 literals that come back as well-formed UTF-8 and writes them into `i18n/tr4w_zh_CN.po` as
 **fuzzy suggestions**, because the inversion guesses wrong often enough to matter and a wrong
 hanzi looks exactly like a right one. 144 strings are unrecoverable and need his original file.
-**Never bulk-defuzz that catalogue** -- fuzzy is the only thing keeping unverified text out of a
-build.
+**Never bulk-defuzz that catalogue** -- the flag is the record that a string is unreviewed, and
+the translators' tools depend on it.
+
+~~fuzzy is the only thing keeping unverified text out of a build~~ -- **not since 2026-09-21.**
+NY4I: *"We want to show the non-reviewed as well for testing."* `Make-LanguageRes.ps1` now embeds
+fuzzy entries with the `#,` line stripped, which clears both gates (its own, and LazUtils'
+`translations.pas:1223`), so 22,493 unreviewed strings ship -- the Chinese salvage among them.
+`-ReviewedOnly` puts both gates back when review finishes. **The `.po` files keep their markers**;
+what changed is the BUILD, not the catalogues.
 
 ## Build System
 
