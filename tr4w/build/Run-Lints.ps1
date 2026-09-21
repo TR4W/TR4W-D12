@@ -103,6 +103,7 @@ $lints = @(
    @{ Name = 'Lint-FormOverlap';     Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormEvents';      Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormDefaults';    Arg = $src;     NeedsFpc = $false }
+   @{ Name = 'Lint-CaptionFit';      Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-ConfigOwnership'; Arg = $src;     NeedsFpc = $false }
    # Lint-EditQSOTemplate stood here. It pinned the Edit QSO form against dialog
    # template 46 inside res\tr4w_eng.res, and BOTH went on 2026-08-29 when the

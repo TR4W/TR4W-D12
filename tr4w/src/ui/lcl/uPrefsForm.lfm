@@ -3809,34 +3809,49 @@ object PrefsForm: TPrefsForm
     end
   end
   object btnOK: TButton
+    AnchorSideRight.Control = btnCancel
+    AnchorSideRight.Side = asrLeft
     Left = 570
     Height = 25
     Top = 582
     Width = 85
     Anchors = [akRight, akBottom]
+    AutoSize = True
+    BorderSpacing.Right = 10
     Caption = 'Save and close'
+    Constraints.MinWidth = 85
     Default = True
     TabOrder = 2
     OnClick = btnOKClick
   end
   object btnCancel: TButton
+    AnchorSideRight.Control = btnApply
+    AnchorSideRight.Side = asrLeft
     Left = 665
     Height = 25
     Top = 582
     Width = 85
     Anchors = [akRight, akBottom]
+    AutoSize = True
+    BorderSpacing.Right = 10
     Cancel = True
     Caption = 'Cancel'
+    Constraints.MinWidth = 85
     TabOrder = 3
     OnClick = btnCancelClick
   end
   object btnApply: TButton
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrRight
     Left = 760
     Height = 25
     Top = 582
     Width = 85
     Anchors = [akRight, akBottom]
+    AutoSize = True
+    BorderSpacing.Right = 15
     Caption = 'Save'
+    Constraints.MinWidth = 85
     TabOrder = 4
     OnClick = btnApplyClick
   end
