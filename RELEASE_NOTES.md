@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 98b09de3 -->
+<!-- D12-CHANGELOG-BASELINE: 004fc3bb -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -44,6 +44,117 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+*Nothing yet.*
+
+---
+
+## 5.0.x — September 2026
+
+### 5.0.20 (2026-09-21) - NY4I
+
+#### macOS
+
+- **The menu bar is there when TR4W starts**, instead of appearing only after you
+  move the mouse over it. The menus were always loaded; the bar simply was not
+  being redrawn.
+
+#### Usability
+
+- **Buttons size themselves to their labels.** "Save and close" in Preferences was
+  cut to "Save and clo" on a Mac, where the system font is wider than on Windows.
+  Any translated label -- German's is nearly twice the width -- would have been
+  worse. Buttons now fit whatever text they are given, in any language.
+
+### 5.0.19 (2026-09-21) - NY4I
+
+#### Radio Control
+
+- **A serial port that will not open now says why.** If the port exists but your
+  account cannot use it, TR4W names the group that owns it and gives you the exact
+  command to fix it, including the log-out step that people miss.
+- **A serial port that fails to open is now noticed at all on Linux and macOS.**
+  It was not: the radio came up looking connected and then never answered.
+
+### 5.0.18 (2026-09-21) - NY4I
+
+#### macOS
+
+- **The Latest config file button shows the file name again.** macOS was silently
+  discarding the rest of the label.
+
+#### Languages
+
+- **Translations that have not yet been reviewed now appear**, so they can be seen
+  and corrected. Ten languages previously showed two or three translated phrases
+  and were English in all but name; they now carry around 1,200 each. This is
+  deliberately a testing state -- the text has not been checked by a speaker.
+
+### 5.0.17 (2026-09-21) - NY4I
+
+#### Stability
+
+- **Resizing the DX cluster window on a Mac no longer crashes TR4W.**
+- **A crash report now records where the program was loaded in memory**, which is
+  what makes a macOS crash report readable afterwards. Without it, the addresses
+  in a report cannot be matched to anything.
+
+### 5.0.16 (2026-09-21) - NY4I
+
+#### macOS
+
+- **Downloads work without installing anything else.** CTY.DAT, TRMASTER, POTA
+  parks and the version check all failed on a Mac unless you happened to have
+  Homebrew's OpenSSL. TR4W now carries its own copy.
+- **Browse in the open-contest window opens where your contests are** (`~/tr4w`),
+  not inside the application itself, where the list was always empty.
+
+#### Usability
+
+- **"Open log directory" works on Linux and macOS.** It silently did nothing.
+- **The DX cluster window can no longer be dragged narrower than its own buttons.**
+- **The "no DX clusters are defined" prompt goes away when you define one**, rather
+  than staying up until the window is closed and reopened.
+
+#### Stability
+
+- **Quitting with a radio switched off no longer shows "Socket Error # 107"** on
+  Linux and macOS.
+- **The log file is far quieter.** One routine was writing 85% of it -- around 210
+  lines a minute, all saying nothing had changed.
+
+### 5.0.15 (2026-09-20) - NY4I
+
+#### Downloads
+
+- **A release now carries every platform's download.** The macOS files were
+  occasionally missing from a release even though they had been built
+  successfully.
+
+### 5.0.14 (2026-09-20) - NY4I
+
+#### Contests
+
+- **ARRL DX no longer asks a US station for a state.** If you opened an existing
+  ARRL DX log, TR4W decided which exchange to expect before it had read your
+  callsign, so a DX station's power was rejected as a bad domestic QTH.
+
+### 5.0.13 (2026-09-20) - NY4I
+
+Build-environment only; nothing an operator sees changed. See `CHANGES.md`.
+
+### 5.0.12 (2026-09-20) - NY4I
+
+#### macOS
+
+- **The Mac application is signed and notarized.** It opens with no Gatekeeper
+  warning, and there is no longer any need to strip the quarantine flag by hand.
+
+#### Linux
+
+- **Linux ships an AppImage** -- one file, no installation. Verified on Linux Mint
+  22.3 on a machine that did not build it, including a contact with an Elecraft K4
+  over Ethernet.
+
 #### Setup -- Windows, upgrading from TR4W 4.x
 
 - **If you are coming from TR4W 4.x, your old settings have to be carried across
@@ -57,9 +168,44 @@ user-facing — no file paths or source-level jargon.
   defaults to No, so nothing is written unless you type Yes. A first-time
   installation has nothing to convert and is shown nothing.
 
----
+### 5.0.11 (2026-09-19) - NY4I
 
-## 5.0.x — September 2026
+#### Configuration
+
+- **Every station setting has one home.** Settings that were written in two places
+  could disagree with each other.
+- **Windows installations follow the display language** you have set for Windows.
+- **Verifying a backup no longer alters it.**
+
+### 5.0.10 (2026-09-19) - NY4I
+
+#### Languages
+
+- **A Language setting in Preferences**, so the interface language can be chosen
+  directly instead of being inferred.
+- **macOS follows the language you have chosen** in System Settings.
+- **A run in any language other than English no longer crashes on exit.**
+
+### 5.0.9 (2026-09-19) - NY4I
+
+#### Configuration
+
+- **A fresh installation starts with correct settings.** The debug log level had
+  two homes and could disagree; COMPUTER ID was not stored or cleared properly.
+
+#### Removed
+
+- **The built-in MP3 recorder is gone.** It had not worked and nothing used it.
+
+### 5.0.8 (2026-09-19) - NY4I
+
+#### Usability
+
+- **The New Contest window keeps the callsign you typed** when you change contest.
+
+#### Stability
+
+- Four memory leaks and buffer overruns fixed.
 
 ### 5.0.7 (2026-09-18) — NY4I
 

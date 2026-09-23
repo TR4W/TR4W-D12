@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 98b09de3 -->
+<!-- D12-CHANGELOG-BASELINE: 004fc3bb -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -46,6 +46,383 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 ---
 
 ## 5.0.x — September 2026
+
+### 5.0.20 (2026-09-21) - NY4I
+
+#### The macOS menu bar was never DRAWN, not never installed (`src/ui/lcl/uMacMenuBar.pas`, `uMainForm.pas`)
+
+The LCL installs the main menu in exactly one place -- `TLCLWindowCallback.Activate`,
+reached from `windowDidBecomeKey`. That is an EDGE. The main form was **already** the
+key window when the 5.0.19 promotion ran, so `makeKeyAndOrderFront` changed nothing,
+no edge was produced, and that fix was a no-op in precisely the case it was written
+for.
+
+Measured on `mac-ci` rather than reasoned: `NSApp.mainMenu items=10`, all ten TR4W
+titles, `NSApp.active=True`, 300 ms after the window appeared and before any pointer
+moved. A hover cannot install a menu -- nothing in this program is reached by the
+pointer entering the system bar.
+
+- `ForceMenuBarRedraw` detaches the main menu and re-attaches it, because AppKit
+  rebuilds the bar when the main menu *changes* and re-attaching the same `NSMenu`
+  through the LCL ends at `setMainMenu` with an identical object.
+- **The original account was wrong about NY4I's machine**: his startup restores no
+  tool window at all. What it does do, and what no test run reproduced, is pass
+  through the modal New Contest dialog.
+- **Unrelated, found and not fixed**: an absolute path argument on macOS is taken for
+  a Windows-style switch (leading `/`), so the file is ignored. Relative paths work.
+
+#### Caption fitting (`src/ui/lcl/uPrefsForm.lfm`, `build/Lint-CaptionFit.ps1`, `test/ui/textfit/`)
+
+Measured on both platforms in the form's own font: "Save and close" is 77px on
+Windows and **85px on macOS** -- in an 85px button, before a Cocoa push button insets
+its title inside the bezel. Windows fitted, which is why it shipped. The form asks for
+`Segoe UI`, which does not exist on macOS. Translations into that same box reach
+115px (es), 147px (ru), **163px (de)**.
+
+- The three buttons take `AutoSize` + `Constraints.MinWidth = 85`, chained
+  right-to-left with `AnchorSideRight`. Verified by rebuilding the row in code and
+  running it on Win32 and Cocoa in en/es/de/ru -- every right edge and both 10px gaps
+  land where designed. Only visible Windows change is btnOK 85 -> 103.
+- **`Lint-CaptionFit` is structural, not metric.** A Windows host cannot know Cocoa
+  metrics -- that is the `Lint-LinuxCompile` failure mode. It fails a captioned
+  button-like control carrying a fixed width with no `AutoSize` and no `Constraints`,
+  which makes the defect unrepresentable rather than detected. Ratchet **159**; floors
+  (0 `.lfm` files, or fewer than 100 parsed controls, fails); `-SelfTest` fixture
+  covering all five arms. **Labels are excluded on purpose** -- 283 set
+  `AutoSize = False` and most are right to.
+- Inventory: **404 fixed-width captioned controls across 46 forms**, 72 in Preferences.
+  One clips today in English on **both** platforms: `uServerLogForm.btnCreateNewLog`,
+  98px box against 122px of text.
+- `uTextFitAudit` (run-time, `--textfit`) is the complement: it measures the real
+  window but only sees forms an operator has opened, so it reports nothing headless.
+
+### 5.0.19 (2026-09-21) - NY4I
+
+#### A failed serial open was not DETECTED at all off Windows (`src/uSerialPort.pas`)
+
+`tr4wserial.pas` documents `SerOpen` as returning 0 on failure. Only the **Windows**
+body makes that true -- it maps `INVALID_HANDLE_VALUE` onto zero itself. The Unix body
+is `fpopen`, which returns **-1**. `OpenRaw` tested `FHandle = NO_PORT` with
+`NO_PORT = 0`, so the test was false for every failed open: it proceeded to
+`SerSetParams`, `SerSetDTR` and `SerFlushInput` on fd -1, all silently failing, and
+returned a working-looking port. **A radio on a port the user cannot open came up
+looking connected and never answered.** Same class as the `SerBreak mSec = 250` split.
+
+#### Serial open diagnosis (`src/uSerialDiagnosis.pas`, new)
+
+Called from `TSerialPort.OpenRaw`, the single serial open in the program (callers:
+`uFactoryRadioBase` x2, `logk1ea`, `uWinKey`, `uRotatorControl`). No LCL, so the
+server still links.
+
+- **The owning group comes from `FpStat` on the node, never a hardcoded name** --
+  `dialout` on Debian/Mint, `uucp` on Arch, and on macOS `/dev/cu.*` is `root:wheel`
+  and world-writable. Membership is decided by `FpGetgroups`, authoritative and
+  file-free; gid to name only formats the message.
+- **It diagnoses on `EACCES`; it never pre-flights.** A pre-check can disagree with
+  reality (ACLs, `udev`, container mounts) and would be a second source of truth.
+- It refuses to blame the group when the mode bits already allow this user, and
+  degrades to the gid *number* rather than a wrong name -- macOS does not keep
+  ordinary accounts in `/etc/passwd`, and the first draft called the operator
+  "uid 501".
+- **FPC's `users` package is not installed on `mac-ci`** (verified: 60 packages,
+  `rtl-extra` present, no `users`, no `grp.ppu`), so `getgrgid` would have traded a
+  Linux convenience for a macOS build failure. `/etc/group` is read instead.
+- 8 tests / 27 assertions pin the decision without a device.
+
+**`docs/PORT_IDENTITY_PLAN.md` step 5 is NOT stale** and was deliberately left: every
+Linux and macOS node gets `Addressable := False` (`PortNumber` is 0), so
+`FillSerialPortCombo` tags it `PORT_NONE`/unsupported. Enumeration (step 2) works;
+selection does not. The working path is a hand-edited `controlPort` in `tr4w.json`.
+
+### 5.0.18 (2026-09-21) - NY4I
+
+#### Unreviewed translations now ship (`build/Make-LanguageRes.ps1`)
+
+**Two** gates withheld them, and opening one would have looked like it worked while
+changing nothing: `Make-LanguageRes` never emitted a fuzzy block, and LazUtils refuses
+one at run time (`translations.pas:1223` tests `Item.Flags`). The generator now emits
+a fuzzy entry with its `#,` line stripped, so the embedded copy is indistinguishable
+from an approved one and there is no flag left to refuse. No LazUtils edit, no
+load-time special case.
+
+- **The `.po` files are untouched** -- zero changes under `i18n/`. The marker is the
+  record that a string is unreviewed and the translators' tools depend on it.
+  `-ReviewedOnly` restores both gates and prints a banner on every run otherwise.
+- 4,755 reviewed + **22,493 unreviewed**. Ten catalogues shipped 2-3 usable entries
+  before and now ship ~1,272 each. Empty-`msgstr` fuzzies are still dropped.
+- Cost: `tr4w_languages.res` **1.49 -> 5.05 MB**, on every binary on every platform.
+- It also answered the "config items are not translated" report: 445 of 451
+  Preferences strings existed in Spanish and were withheld. Not the
+  469-captions-ship-English problem, and not a harvest gap. Cabrillo keywords
+  (`CATEGORY-ASSISTED`, `SINGLE-OP`, `HIGH`) are in no catalogue and must stay English.
+
+#### Cocoa discards a caption at a parenthesised accelerator (`src/uNewContest.pas`)
+
+`TCocoaStringUtil.removeAcceleration` -- verified byte-identical on `mac-ci`'s own
+toolchain -- discards everything from `(` when an `&` sits inside it, the macOS
+convention for a CJK accelerator hint. Every `NSButton` title passes through it. The
+caption was `'Latest config file (Alt+&A):' + CRLF + <path>`, so the title became
+`Latest config file` and the path went with it. Win32 and GTK delete only the `&`.
+
+- The parentheses go; `Alt+A` is unchanged (documented in `keyboard_shortcuts.md`).
+- **A second Cocoa defect in the same caption** would have bitten the moment the first
+  was fixed: `SetText` switches to the square bezel for text containing a line ending,
+  but `allocButton` -- the path a caption takes when assigned before the handle
+  exists -- does not, and a rounded `NSButton` is fixed-height. `ReassertLatestCaption`
+  re-sends it once the handle exists, empty-then-real because `RealSetText`
+  short-circuits an unchanged value.
+- The stored value is an **absolute path and stays one**: Browse legitimately opens a
+  contest from any directory, so this is a station-level pointer, not a contest-scoped
+  setting, and the `DOMESTIC FILENAME` name-not-path rule does not transfer.
+
+### 5.0.17 (2026-09-21) - NY4I
+
+#### A use-after-free in the LCL's Cocoa list box (`src/ui/lcl/uTelnetForm.pas`)
+
+`lstConsole.ItemHeight := n`, on every drag-settle, is not a property write:
+`TCustomListBox.SetItemHeight` calls `RecreateWnd` unconditionally (and carries the
+LCL's own `// TODO: remove RecreateWnd`). `FinalizeWnd` frees the strings object via
+the base `FreeStrings`, **which the Cocoa list box does not override**, while
+`TLCLListBoxCallback.strings` still points at it and the callback is still installed
+on the NSTableView.
+
+Freed Pascal memory on macOS returns as Cocoa data, often an NSString's UTF-16
+buffer -- which is why the faulting PC was `$00730074006F0070`, i.e. `s` `t` `o` `p`.
+The 5.0.15 `EBusError` is the same read landing misaligned; aarch64 faults where x86
+absorbs it. **One defect, two reports.**
+
+- `ApplyRowHeight` branches on the **control**, not the platform: an
+  `lbOwnerDrawVariable` list is re-asked through an empty `BeginUpdate`/`EndUpdate`
+  and never assigns `ItemHeight`. `Style` is set on Darwin only, in `HandleCreate`
+  before the handle exists.
+- **Measured with a probe now tracked at `test/tools/listboxprobe/`**: the font change
+  replaces nothing on either widget set (killing the BeginUpdate-straddle theory),
+  `ItemHeight` recreates on both, and 60 rescales of a 7,000-line list under gtk2 do
+  **not** fault -- neither gtk2 nor Win32 keeps a second reference. Cocoa-only.
+- The measurement also killed the naive fix: on Win32 a list box measures an item at
+  insertion and never again, so making everyone owner-draw-variable would have traded
+  a macOS crash for clipped text on Windows.
+- **The `Objects[]` packing is NOT the cause** and was deliberately not "fixed" as
+  consolation -- nothing dereferences it.
+- Still open: `lstConsole.Items` is unbounded; only an explicit Clear empties it.
+
+#### A crash report records where the image was loaded (`src/uCrashLog.pas`)
+
+The macOS binary is PIE and slid, and the log recorded no base, so a frame could not
+be resolved even in principle -- proven by parsing the published 5.0.16 Mach-O: un-slid
+the image tops out near `0x101DC0000`, and the reported frame was above it.
+
+- `dladdr` (`dli_fbase`/`dli_fname`/`dli_sname`) on Linux and macOS;
+  `_dyld_get_image_vmaddr_slide` for the slide; `exeinfo.GetModuleByAddr` on Windows.
+- **`GetModuleByAddr` CANNOT work on Darwin** -- `exeinfo.pp` delegates to a hook
+  assigned only under `FIND_BASEADDR_ELF`, so it returns a nil base. Verified before
+  use rather than trusted.
+- The header carries the `atos` command line; frames gain `[image+$offset]`. Every
+  path degrades to the old output plus an explicit "image base UNKNOWN" line -- a
+  crash handler that faults is worse than one printing bare numbers.
+
+### 5.0.16 (2026-09-21) - NY4I
+
+#### macOS carries its own OpenSSL (`build/build-unix.sh`, `build/mac-sign.sh`, `src/utils/uOpenSSLLoader.pas`, `src/uAppPaths.pas`)
+
+**Not Indy** -- TR4W's HTTPS has been `fphttpclient` + `opensslsockets` since
+2026-09-09. FPC 3.2.2's Darwin loader composes `<name><version>.dylib` and only ever
+tries `.1.1`, `.11`, `.10`, `.1.0.x`; `.3` is not in the list and plain `libssl.dylib`
+is skipped. Apple ships no OpenSSL. So the loader searched Homebrew and MacPorts and
+found neither. **`mac-ci` HAS Homebrew openssl@3**, which is why no build saw it.
+
+- `Contents/Frameworks` carries `libssl.3`/`libcrypto.3`, install names rewritten to
+  `@loader_path`, ad-hoc re-signed and verified; packaging fails the stage if there is
+  no source, or if anything outside `/usr/lib`, `/System` or `@loader_path` survives.
+- The loader looks there first and sets `DLLVersions` to the suffix of the file it
+  located, so FPC asks for the real name. **The symlink farm is gone.**
+- **`install_name_tool` invalidates a code signature, and on Apple Silicon that is a
+  SIGKILL inside `dlopen`** -- exit 137, no output at all. The signed flow would have
+  re-signed and hidden it; every unsigned developer build would have been an app that
+  kills itself on first URL.
+- Proven on `mac-ci` against TR4W's own units: 106,119 bytes of `cty.dat` fetched and
+  verified against the shipped `cacert.pem`, with `DYLD_PRINT_LIBRARIES` showing zero
+  Homebrew images. Hardened runtime and library validation pass with the real
+  Developer ID; no `disable-library-validation`.
+- `PrivateLibraryDir` was required, not cosmetic -- `Lint-AppPaths` fails a path
+  composed outside `uAppPaths`.
+
+#### Socket Error # 107 at shutdown (`src/radioFactory/uFactoryRadioBase.pas`)
+
+`TIdIOHandlerStack.Connected` performs a real `ReadFromSource` and swallows only
+`SHUTDOWN`, `CONNABORTED` and `CONNRESET`. `Id_WSAENOTCONN` is not in that list and
+maps to C `ENOTCONN` -- **107 on Linux**, a different numeric space from Windows'
+10057. `TIdTCPClientCustom` does not override `Connected`, so there is no client-level
+mitigation.
+
+- `SocketIsConnected` (protected, on the base -- one idiom for all registrations)
+  answers False on any exception and reports at Debug. A probe that failed has already
+  answered the question.
+- **A second defect in the same routine**: `Disconnect` joined the reading thread
+  *inside* the arm that closed the transport, so a network radio that never connected
+  left its thread running while the object was torn down around it -- every platform,
+  Windows included. The join is unconditional now.
+- `WaitForPollingThreadWithMessages` did nothing off Windows and the recorded reason
+  was stale. `WaitForThreadTerminate` is the wrong reach: FPC's Unix body is an
+  **unbounded `pthread_join`** that ignores the timeout, trading a race for a hung
+  exit. It is a bounded flag poll, and a wait that times out now says so.
+
+#### Reveal a path in the file manager (`src/utils/uPlatformProcess.pas`, `MainUnit.pas`)
+
+The menu arm built `explorer /select,` and handed it to a Windows-only launcher whose
+off-Windows arm returns False and writes a warning nobody reads.
+`RevealInFileManager` owns the gate: a directory goes through `LCLIntf.OpenDocument`,
+a file is revealed where the platform has a verb (`explorer /select,`, `open -R`), and
+Linux gets the containing folder because freedesktop has no reveal verb. Failure
+raises a dialog naming the path.
+
+- The `Pos` dot heuristic is gone -- it asked the *spelling* whether something was a
+  file, so a contest directory named `CQWW.2026` was treated as one.
+- **`TR4W_LOG_PATH_NAME` is the CONTEST directory**, not the log directory -- the
+  Russian catalogue reads "open contest folder". The menu id is still
+  `menu_log_file_properties`. Neither renamed.
+- **`Invoke-MenuCommand.ps1` no longer drives the menu**: it posts `WM_COMMAND` with a
+  TR4W id against an LCL `TMainMenu` whose ids are the widget set's. A green smoke run
+  shows the process survived, not that a menu item works.
+
+#### `[SaveRect]` was 85% of the log (`MainUnit.pas`)
+
+21 Trace lines every 5 seconds, each reporting that nothing happened. Now: a closed
+window is counted, an open one gets a line only when the rectangle differs, and the
+summary repeats only when it differs from the last. A 50-second idle session went from
+~210 lines to **1**; move a window and it is 2. **Level unchanged.**
+
+**Reported, not fixed**: `[EnsureRect]`'s `GetMonitorInfo` is `external 'user32.dll'`
+behind a Windows gate with an else-arm returning False unconditionally -- so off
+Windows saved window positions are never validated against the actual screens.
+`Screen.MonitorFromRect` is the portable replacement.
+
+#### The DX cluster window (`src/ui/lcl/uTelnetForm.*`, `uPrefsForm.pas`)
+
+- The form carried **no `Constraints`** and its seven toolbar buttons sat on hardcoded
+  `Left` values ending at 732, so it could be dragged over its own buttons. They lay
+  themselves out now (`alLeft` + `AutoSize`), and the minimum is **derived** from the
+  laid-out strip after the run-time captions are assigned -- 495px on Cocoa, not the
+  Windows design figure. Stated on the panel, not the form, so nothing has to know the
+  frame width. A restored too-small rectangle heals: the restore precedes `OnShow`.
+- **The stale "no DX clusters defined" prompt was a read-before-write**:
+  `TelnetRefreshClusterList` re-reads the store from disk and Preferences called it
+  from `CaptureProfileFields`, which always runs **before** `SaveStore` writes that
+  file. Adding a first cluster left the prompt up until the window was reopened. One
+  call moved; it also stops running on every keystroke.
+
+#### Browse listed the wrong directory (`src/uNewContest.pas`)
+
+`PrepareForm` listed `TR4W_PATH_NAME` = `uAppPaths.DataDir`, which on macOS is the
+read-only `Contents/Resources` inside the bundle. The `.db` creation site in the same
+file was fixed on 2026-09-10 with a comment reading *"ContestDir, NOT TR4W_PATH_NAME,
+AND THAT IS THE WHOLE FIX FOR A CLASS OF BUG"*; the **listing** site was missed. On
+Windows the two are the same directory, which is why it survived.
+
+### 5.0.15 (2026-09-20) - NY4I
+
+#### "Must not block" is not "must not wait" (`.github/workflows/release.yml`)
+
+`needs:` is the only thing in Actions that makes a job **wait**. Keeping
+`build-linux`/`build-macos` out of the release job's `needs:` -- so a Unix failure
+could never withhold the Windows installer -- also meant the release never waited for
+them, and the download steps are `continue-on-error`, so a late artifact was
+**silently absent**.
+
+Measured, v5.0.14 (run 35531435287): every job reported success and the release
+carried **no macOS artifacts**. The `.dmg` was built, signed, notarized and uploaded;
+the release job downloaded at 19:17:33 and the macOS job finished at 19:17:45. Linux
+made it by two seconds. Every release before that had been racing.
+
+The shape that satisfies both rules: the optional jobs **are** in `needs:`, and the
+`if:` never consults their result -- `!cancelled()` (not `always()`, which also
+releases a cancelled run) plus the event gate and explicit success requirements for
+the genuine prerequisites. Any status-check function switches off the implicit success
+gate, so those have to be restated. A release now also warns, per expected artifact,
+when one is absent, with the producing job's result beside it.
+
+### 5.0.14 (2026-09-20) - NY4I
+
+#### The order settings arrive in is part of a contest's correctness (`src/uLogStore.pas`, `src/trdos/fcontest.pas`)
+
+`ARRLDXCW`/`ARRLDXSSB` branch on `Settings.My.Country = 'K'` or `'VE'` to choose
+between a power exchange and a domestic-QTH exchange. `LogStoreApplyContestConfig`
+applied `CONTEST` first -- whose effect runs `FoundContest` -- and the config rows
+after, unordered. So on a log opened from its `.db` the country was derived from an
+**empty** `MY CALL`, and the exchange decision was taken from it. The re-derivation at
+the foot of that routine fixes the country and **cannot retract the decision**.
+`MY CALL` is hoisted ahead of `CONTEST`.
+
+Bench symptom: ARRL DX SSB rejected `K` (a kilowatt) from an Italian station as an
+"Improper domestic QTH".
+
+Also: **a contest-scoped setting holds a NAME, never a resolved path.** Those rows are
+captured into the contest `.db` and re-applied on every open, so a path pins a log to
+one machine. `DOMESTIC FILENAME` held a full path and `FoundContest` APPENDED to it,
+producing a doubled path; under an AppImage, whose mount point is new every launch, it
+broke on the second run.
+
+### 5.0.13 (2026-09-20) - NY4I
+
+#### The mac toolchain must be one install (`tools/fpc-unix-paths.sh`)
+
+`fpc_darwin_link_flags` now asks `xcrun --sdk macosx --show-sdk-path` first, falls
+back, and **fails loudly** rather than guessing. The failure it fixes was the machine,
+not the tree -- proven by rebuilding the v5.0.11 tag on the same box and getting the
+same link error.
+
+### 5.0.12 (2026-09-20) - NY4I
+
+#### macOS signing and notarization (`build/mac-sign.sh`, `build/build-unix.sh`)
+
+- **The Developer ID key lives in `mac-ci`'s keychain, not in a secret**, and must
+  stay that way -- the worst a bad workflow can then do is ask that machine to sign.
+  The repo secrets are the notary API key only.
+- **Signing sits BETWEEN staging and archiving**, so a failure leaves no tarball and no
+  `.dmg`: an unsigned build is an ABSENT build, not one a cleanup step is trusted to
+  delete.
+- **`notarytool --wait` can exit 0 on a rejected submission.** Gate on the parsed
+  `status: Accepted`, then `stapler validate` and `spctl`. **A pipeline hides an exit
+  status** -- `stapler validate` piped to `tail` returns 0 while printing failure.
+
+#### AppImage (`build/build-appimage.sh`)
+
+**Unversioned `.so` symlinks are required**: FPC's gtk2 binding `dlopen`s
+`libgdk-x11-2.0.so`, and without the symlink the AppImage loaded the **host's** GTK
+and hung. Note `ldd` is collected for the executable only and does not recurse into a
+`dlopen`'d library, so **HamLib is absent from the AppImage entirely** and every
+HamLib-backed radio is non-functional there.
+
+#### Startup no longer reads `tr4w.ini` (`src/uProgramMain.pas`, `src/uCFG.pas`)
+
+NY4I: *"calling `ReadInConfigFile(cfgINI)` that does nothing is pointless and should
+be removed."* The call is gone and `cfgINI` is no longer a member of `TCFGType`. The
+ini is the converter's input. There is deliberately **no in-program detector** telling
+an operator to convert -- one was written and withdrawn the same day; that message
+belongs to setup.
+
+### 5.0.11 (2026-09-19) - NY4I
+
+- One home for every station setting; Windows asks for the display language;
+  verifying a backup no longer alters it.
+
+### 5.0.10 (2026-09-19) - NY4I
+
+- A Language setting in Preferences; macOS detects the user's language; every
+  translated run no longer crashes at exit.
+
+### 5.0.9 (2026-09-19) - NY4I
+
+- Fresh-install settings: log level has one home, the settings object stops leaking,
+  COMPUTER ID stored and cleared properly, the MP3 recorder retired.
+
+### 5.0.8 (2026-09-19) - NY4I
+
+- New Contest keeps the operator's callsign; four leaks and overruns fixed;
+  `uHPTimer` and the `Move` counter.
+- `LogStoreBackup`'s orchestration extracted into `uLogBackup` and pinned with 15
+  tests; three dead DOS-era keyboard loops and the four helpers only they called
+  deleted.
 
 ### 5.0.7 (2026-09-18) — NY4I
 
