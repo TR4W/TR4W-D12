@@ -9,6 +9,46 @@ implementation has never been contradicted by a radio. A divergence from an impl
 that demonstrably works is therefore a *hypothesis about why ours might not*, and the bench
 section below turns each one into a test.
 
+## WHAT THE BENCH SETTLED — 2026-09-24, and the root cause was OURS
+
+**This document was written from code alone. It now has a 663-second packet capture of a real
+IC-7760 over LAN behind it** (`pcap/ICOM-7760-10-minute-soak.pcapng`, 60,719 packets), the first
+time an Icom LAN radio has ever been run against TR4W.
+
+**SAY IT PLAINLY: THE DEFECT THE BENCH FOUND WAS NOT A PROTOCOL DIVERGENCE AT ALL.** None of D1
+through D7 was the cause. The cause was that **not one of this transport's six timers had ever
+fired** — they were LCL `TTimer`s created on an Indy UDP reader thread, and the LCL's Win32
+`TTimer` is `SetTimer(0, 0, …)`, whose `WM_TIMER` is posted to the *calling thread's* message
+queue. An Indy reader thread has no message pump. So:
+
+| what we should have sent | sent in 663 s |
+|---|---:|
+| self-initiated pings | **0** (our ping count equalled the radio's exactly — we only ever replied) |
+| idle keepalives | **0** (the radio sent us 6,295) |
+| token renewals | **0** (against a 60 s interval, over sessions of 70–83 s) |
+
+The radio expires a session **~90.6 s after login** (measured across thirteen events, σ ≈ 0.25 s,
+quantised to its own 1-second tick) and then stops answering CI-V. Thirteen identical 12.3-second
+CI-V outages followed, each ended only by a forced reconnect — and because our recovery takes
+12.3 s, the *previous* session's expiry killed the next one, giving a self-sustaining ~103 s cycle.
+
+**The fix is a timer thread**, and a probe confirmed the diagnosis on the bench before it was
+written: driving the token renewal off the radio's inbound pings produced renewals at 60 s, 120 s
+and 180 s on **one unchanged token value**, `handshake stuck` 0, `CI-V data timeout` 0 — the first
+Icom LAN session in this program's history to survive past 91 seconds. (A token changes only at
+login, so one constant token across eight minutes is the proof that no new session was made.)
+
+**THE COMPARISON STILL EARNED ITS KEEP, and it is worth being precise about how.** It did not
+identify the mechanism. What it did was point at the right *area* — D1, D4 and D5 are all about
+keepalives and liveness, and reading them is what sent anyone to look at the timers at all. A
+cross-check that directs attention to the correct subsystem has done its job even when every
+individual hypothesis in it is wrong. Do not read the table below as "rigplane was right"; read
+it as "the questions were the right questions".
+
+**And it makes D1 testable for the first time.** Our ping timer now actually runs, so whether the
+radio wants a ping on the CI-V socket is a question a capture can finally answer — before this,
+we were not pinging *either* socket, so the divergence could not have been observed.
+
 ## Provenance and licence
 
 | | |
@@ -119,6 +159,12 @@ radio can tell us. Our log prints it: `Radio: %s, CI-V address=$%.2x, CommonCap=
 **What would settle it:** the `CommonCap=` value from that log line, for each LAN radio. Anything
 other than `$8010` puts that model on the GUID path, and D3 becomes a live defect for it.
 
+**MEASURED 2026-09-24 — REAL, BUT UNREACHABLE ON THIS RADIO.** The IC-7760 logs
+`CommonCap=$8010` at every login, so it takes the **MAC** branch and never reads `FGUID`. The
+defect is confirmed as written (the field is still assigned nowhere) and simply cannot be
+provoked here. It needs a model that reports something other than `$8010`, and we still do not
+know which models those are.
+
 ### D4 — We never ask for a retransmission. We only answer requests for one.
 
 **Them:** every received data packet's sequence is recorded, gaps are computed in uint16 space,
@@ -140,6 +186,22 @@ difference between a momentary glitch and a dropped reply that nothing ever reco
 
 **What would settle it:** run a LAN radio over WiFi with the radio at the edge of usable signal
 and watch for stuck or stale readings.
+
+**MEASURED 2026-09-24 — NOT NEEDED ON A WIRED LAN, AND THE TWO CONSTANTS ARE NOW DELETED.** Over
+663 s and 60,719 packets: **zero** retransmit requests in either direction, **zero** inbound
+sequence gaps, **zero** duplicates. The radio never asked us for a resend and we never missed a
+packet worth asking about.
+
+`ICOM_TIMER_RETRANSMIT` and `ICOM_RETRANSMIT_CHECK_INTERVAL` are **deleted** (2026-09-24). A named
+constant that nothing reads reads as a feature that exists. **This removes no capability:** the
+reactive half is live and always has been — the radio asks with `PktType=$0001`,
+`HandleRetransmitRequest` answers from the TX history `AddToTxBuffer` keeps. The proactive half,
+which is what those constants implied, has never existed and is now honestly absent rather than
+half-declared. The note in `uIcomNetworkTypes.pas` says so at the deletion site.
+
+**This is not proof it is unnecessary over WiFi**, which is what the original entry said and is
+still true. If a capture ever shows an inbound gap, that is the work, and timer id 5004 is still
+free for it.
 
 ### D5 — Dead-link detection only arms if the radio pings us first.
 
@@ -164,6 +226,22 @@ comment defects, not code defects** — flagged because a future reader will tru
 
 **What would settle it:** power the radio off mid-session. If TR4W notices within ~3 s, the
 detector is armed on that model. If it sits there indefinitely, it is not.
+
+**MEASURED 2026-09-24 — THE DETECTOR IS ARMED, AND THE COMMENT THIS ENTRY CRITICISED WAS RIGHT.**
+The IC-7760 **does** initiate pings, on **both** sockets, at **~100 ms**: 6,296 inbound on the
+control socket and 6,295 on CI-V across the capture, and they continued right through every CI-V
+stall. So `FLastPingReceived` is kept fresh and the dead-link detector is genuinely armed on this
+model.
+
+**Correct the correction:** this entry said the `ICOM_PING_DEAD_TIMEOUT_MS` comment's "radio sends
+pings every 100 ms" was *"off by 5x"* because `ICOM_PING_INTERVAL` is 500 ms. That was wrong —
+those are two different rates. 500 ms is how often **we** ping; ~100 ms is how often **the radio**
+does, and the comment was talking about the radio. The measurement backs the comment. (The
+`TDataPacket.DataLen` "big-endian!" comment defect noted alongside it stands, and is still a
+comment defect.)
+
+**The detector had never actually run**, though, which is the sting: `OnPingTimer` is where it
+lives, and `OnPingTimer` never fired. It runs now.
 
 ### D6 — Conninfo audio fields: we ask for a control-only session; they ask for audio.
 
@@ -210,6 +288,30 @@ failure**, and it would be invisible except as "the connect hangs after login".
 
 **What would settle it:** a capture of the connect handshake. It answers this question outright.
 
+**MEASURED 2026-09-24 — THE PADDING CLAIM IS FALSE FOR THIS RADIO, AND THE COMMENT IS CORRECTED.**
+Every datagram length the IC-7760 sent in 663 seconds: **16, 21, 27, 28, 29, 30, 31, 32, 33, 38,
+40, 80, 96, 144, 168, 732**. There is **not one 18-byte packet**. Control packets are exactly 16
+and pings exactly 21, so the stated reason for dispatching on `PktType` rather than length does
+not hold here.
+
+Dispatching on `PktType` is still right — it is what the field is for — and the code comment now
+says that, with the measurement, instead of repeating a padding rule this radio does not follow.
+
+**AND THE CAPTURE FOUND A REAL MISROUTE THE ENTRY MISSED.** The length `case` had arms for 64, 80
+and 96 and an `else` reading `if DataLen >= SizeOf(TCapabilitiesPacket)`. That size is **66**, so
+every **144-byte ConnInfo** cleared the test and entered `HandleCapabilities`, saved from being
+mis-parsed only by that handler's `FState <> icsAuthenticated` guard. **53 ConnInfo packets in the
+capture, every one silently discarded — and 13 of them were the radio announcing that the session
+had been revoked**, arriving ~0.4 s before CI-V went quiet.
+
+144 now has its own arm (`ICOM_CONNINFO_PKT_SIZE`) and a handler. An unsolicited ConnInfo whose
+owner block is empty means *session revoked*, and we reconnect on the spot instead of inferring it
+from a timeout 12.3 s later. The discriminator was validated against all 53 packets in both
+directions: owner-block-empty alone gives 26 hits of which **13 are false** (the handshake's own
+ConnInfo is also unowned); adding the token test changes nothing; adding `FState = icsConnected`
+gives exactly the 13 real events, with no misses and no false positives. All three parts are
+needed.
+
 ## Capability gaps, both directions
 
 **They have, we do not:**
@@ -245,13 +347,14 @@ in it needs to come into TR4W.
 
 ## What I could not determine
 
-- **Whether any Icom actually initiates pings toward the client.** D5's gating depends on it and
-  only a capture or a log answers it.
+- ~~**Whether any Icom actually initiates pings toward the client.**~~ **SETTLED 2026-09-24: yes,
+  on both sockets, at ~100 ms.** See D5.
 - **Which of the eleven LAN models take the GUID branch rather than the MAC branch** (D3). The
   `CommonCap=` log line answers it per radio.
-- **Whether the radio enforces keepalive per socket or per session** (D1). This is the crux of the
-  highest-ranked divergence and neither codebase states it; wfview's behaviour is the best
-  available evidence and both of us claim to follow it.
+- **Whether the radio enforces keepalive per socket or per session** (D1). Still open, and still
+  the highest-ranked divergence — but **for the first time it is answerable**, because until
+  2026-09-24 we were not initiating a ping on *either* socket, so the per-socket question could
+  not have been observed. A capture of a soak on the fixed build settles it.
 - **Whether our control-only conninfo values are accepted by every model** (D6).
 
 ## The bench checklist

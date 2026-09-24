@@ -67,7 +67,10 @@ const
   ICOM_PING_INTERVAL             = 500;
   ICOM_IDLE_INTERVAL             = 100;
   ICOM_TOKEN_RENEWAL_INTERVAL    = 60000;   // 60 seconds
-  ICOM_RETRANSMIT_CHECK_INTERVAL = 100;
+  (* How often the transport's timer thread looks at its six deadlines.
+    Nothing here needs better resolution: the shortest interval armed is the
+    100 ms idle keepalive. *)
+  ICOM_TIMER_TICK_MS             = 50;
   ICOM_CIV_WATCHDOG_INTERVAL     = 500;
   ICOM_CIV_TIMEOUT_THRESHOLD     = 2000;    // 2 seconds
   ICOM_PING_DEAD_TIMEOUT_MS      = 3000;    // 3 seconds without a ping -> declare link lost.  Radio sends pings every 100 ms, so 30 missed pings is unambiguous; a transient sub-3-second network glitch won't trigger a false reconnect cycle.  Was 15000 -- felt sluggish to operators turning the radio off (Issue: IC-7760 disconnect detection delay).
@@ -101,7 +104,22 @@ const
   ICOM_TIMER_PING          = 5001;
   ICOM_TIMER_IDLE          = 5002;
   ICOM_TIMER_TOKEN         = 5003;
-  ICOM_TIMER_RETRANSMIT    = 5004;
+  (* 5004 WAS ICOM_TIMER_RETRANSMIT, deleted 2026-09-24 along with
+    ICOM_RETRANSMIT_CHECK_INTERVAL.  BOTH WERE DECLARED AND NEVER READ, and a
+    named constant nothing reads reads as a feature that exists.
+
+    RETRANSMIT SUPPORT IS NOT REMOVED BY THIS.  The REACTIVE half is live and
+    always has been: the radio asks with PktType=$0001 and
+    HandleRetransmitRequest answers out of the TX history AddToTxBuffer keeps.
+    What these two constants implied, and what has never existed here, is the
+    PROACTIVE half -- noticing a gap in the radio's own sequence numbers and
+    asking IT to resend.
+
+    Measured on the 2026-09-24 IC-7760 bench capture: over 663 s and 60,719
+    packets on a wired LAN, ZERO retransmit requests in either direction and
+    ZERO inbound sequence gaps.  So the proactive half has never been needed
+    here.  That is not proof it is unnecessary over WiFi -- if a capture ever
+    shows an inbound gap, that is the work, and 5004 is still free for it. *)
   ICOM_TIMER_CIV_WATCHDOG  = 5005;
   ICOM_TIMER_AYT           = 5006;
   ICOM_TIMER_LOGIN         = 5007;

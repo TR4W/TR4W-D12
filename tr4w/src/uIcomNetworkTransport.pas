@@ -26,8 +26,7 @@ unit uIcomNetworkTransport;
 
   Architecture:
     - Two TIdUDPServer instances (control + CI-V) with threaded OnUDPRead callbacks
-    - TTimer for keepalive/ping/token timers (was Windows SetTimer against a
-      message-only window; see HandleTimer)
+    - ONE OWNED TIMER THREAD for the six protocol deadlines -- see TIcomTimerThread
     - Critical section protects all socket sends
     - CI-V data extracted from UDP packets and forwarded via OnCivData callback
 
@@ -39,9 +38,7 @@ unit uIcomNetworkTransport;
     - Token timer starts at login response
     - CI-V handshake happens within Connected state
     - Packet dispatch by PktType, with length-based disambiguation for
-      type=0x00 control socket packets (login/token/status/capabilities).
-      NOTE: Icom radios pad 16-byte control packets to 18 bytes in UDP,
-      so exact length matching on ICOM_CONTROL_PKT_SIZE (16) fails.
+      type=0x00 control socket packets (login/token/status/capabilities/conninfo).
     - No RX sequence tracking (wfview doesn't use it either)
 
   Reference: docs/ICOM_NETWORK_DELPHI_REFERENCE.md
@@ -53,10 +50,13 @@ uses
   (* Windows and Messages are gone with the WinSock send path (2026-09-08).
     What is left of them: GetTickCount64 and Sleep are SysUtils', the thread
     wait is the RTL's WaitForThreadTerminate, and nothing here handles a
-    window message -- the six protocol timers became LCL TTimers when
-    FTimerWnd was retired. *)
+    window message.
+
+    AND ExtCtrls IS GONE TOO (2026-09-24).  The six protocol timers were LCL
+    TTimers and NOT ONE OF THEM EVER FIRED -- see TIcomTimerThread for the
+    measurement and the mechanism.  This unit owns a plain TThread now and
+    needs no widget set at all. *)
   SysUtils, Classes, SyncObjs, StrUtils,
-  ExtCtrls,   // TTimer -- the six protocol timers; see HandleTimer
   IdUDPServer, IdSocketHandle, IdGlobal, IdComponent,
   IdStackConsts,   (* Id_SOL_SOCKET / Id_SO_RCVBUF / Id_SOCK_DGRAM -- Indy's
                      names for what WinSock's SOL_SOCKET, SO_RCVBUF and
@@ -126,16 +126,35 @@ type
     FCommonCap: Word;
     FGUID: array[0..15] of Byte;
 
-    (* Timers.  Indexed by the ICOM_TIMER_* id the protocol code already
-      uses, so a call site reads the same as it did when these were SetTimer
-      ids against a window.  Created on first use; 5004 is unassigned and its
-      slot simply stays nil. *)
-    FTimers: array[ICOM_TIMER_PING..ICOM_TIMER_LOGIN] of TTimer;
+    (* THE SIX PROTOCOL DEADLINES, still addressed by the ICOM_TIMER_* id the
+      protocol code has always used, so every call site reads as it did.
+      FTimerEvery[id] = 0 means that timer is off; otherwise FTimerDue[id] is
+      the TickCount32 at which it next fires.  Index 5004 is unassigned and is
+      simply never armed.
+
+      BOTH ARRAYS ARE WRITTEN FROM THE INDY READER THREADS and read from the
+      timer thread, so FTimerLock covers every access to either. *)
+    FTimerEvery: array[ICOM_TIMER_PING..ICOM_TIMER_LOGIN] of LongWord;
+    FTimerDue:   array[ICOM_TIMER_PING..ICOM_TIMER_LOGIN] of LongWord;
+    FTimerLock:  TCriticalSection;
+    FTimerThread: TThread;
     (* What FTimerWnd <> 0 used to mean at six guard sites: the connection is
       up and its timers may run.  It was standing in for this. *)
     FTimersLive: boolean;
     FLastCivData: LongWord;          // TickCount32 of last CI-V data
     FLastPingReceived: LongWord;     // TickCount32 of last ping request from radio (0 = never)
+    (* TickCount32 of the last TRACKED send on either socket.  A tracked send
+      IS a keepalive, so the idle timer skips its turn when one is recent.
+      This REPLACES restarting the idle timer from inside SendTrackedPacket:
+      that ran on the CI-V send thread and mutated the widget set's timer list
+      from there.  A LongWord store is atomic on every target we build for, so
+      this needs no lock. *)
+    FLastTrackedSend: LongWord;
+    (* Set by a reader thread when the radio says this session has no owner;
+      acted on by the timer thread.  IT IS NOT ACTED ON INLINE, because the
+      response is Disconnect, and Disconnect frees the very TIdUDPServer whose
+      listener thread would be running the handler.  See HandleConnInfoPacket. *)
+    FSessionRevoked: Boolean;
     FStartTick: LongWord;            // TickCount32 at connect start
     FAYTRetryCount: Integer;         // Are You There retry counter
     FAYTInterval: Integer;           // Current AYT retry interval (backoff)
@@ -151,6 +170,23 @@ type
 
     // Thread safety
     FSendLock: TCriticalSection;
+    (* CONNECT AND DISCONNECT, ONE AT A TIME.
+
+      Disconnect frees the sockets and Connect builds them, so the two must
+      never overlap -- that is a use-after-free on FControlSocket, not a
+      subtlety.  They have always been reachable from more than one thread
+      (the polling thread, the main thread, and the Indy reader thread, which
+      calls Disconnect when the radio sends $0005 or a stream request fails),
+      but the collision was rare enough never to have been reported.
+
+      IT IS NOT RARE ANY MORE: the timer thread now actually runs, and three
+      of its handlers end in Disconnect.  Making those paths reachable without
+      serialising them would be shipping a race.
+
+      RECURSIVE ON PURPOSE -- Connect calls Disconnect on the same thread when
+      it is asked to connect an already-open transport, and a TCriticalSection
+      is re-entrant for its owning thread on every target we build for. *)
+    FLifecycleLock: TCriticalSection;
 
     // Callbacks
     FOnCivData: TProcessMsgRef;
@@ -187,6 +223,7 @@ type
     procedure HandleLoginResponse(const Data: array of Byte; DataLen: Integer);
     procedure HandleCapabilities(const Data: array of Byte; DataLen: Integer);
     procedure HandleStatusPacket(const Data: array of Byte; DataLen: Integer);
+    procedure HandleConnInfoPacket(const Data: array of Byte; DataLen: Integer);
     procedure HandleTokenResponse(const Data: array of Byte; DataLen: Integer);
     procedure HandleDataPacket(const Data: array of Byte; DataLen: Integer);
     procedure ExtractCivFrames(const Data: array of Byte; DataLen: Integer);
@@ -197,11 +234,11 @@ type
     function GetCivDataFresh: Boolean;
 
     // Internal - timer callbacks
-    procedure HandleTimer(Sender: TObject);
+    procedure TimerTick;                             // the timer thread's whole job
+    procedure DispatchTimer(const aId: integer);
     procedure StartTimer(const aId: integer; const aMs: integer);
     procedure StopTimer(const aId: integer);
     procedure StopAllTimers;
-    procedure FreeTimers;
     procedure StopTimers;
     procedure OnPingTimer;
     procedure OnIdleTimer;
@@ -283,88 +320,220 @@ end;
 
 function BytesToHexStr(const Data; DataLen: Integer): string; forward;
 
-(* THE SIX TIMERS, AS TTimers.
+(* THE SIX PROTOCOL TIMERS, AS ONE OWNED THREAD.
 
-  They were SetTimer/KillTimer ids against a registered, message-only window
-  whose procedure recovered the instance from GWL_USERDATA -- Self smuggled
-  through a window handle, because a window procedure is a bare callback with
-  nowhere else to put it. A TTimer is an object and its OnTimer is a method, so
-  the instance travels the way an instance normally does.
+  THEY WERE LCL TTimers, AND NOT ONE OF THEM EVER FIRED.  That is measured,
+  not suspected.  Bench capture of an IC-7760 over LAN, 2026-09-24, 663
+  seconds and 60,719 packets:
 
-  ADDRESSED BY THE SAME IDS, deliberately: StartTimer(ICOM_TIMER_PING, ms) became StartTimer(ICOM_TIMER_PING, ms), so every call site reads as
-  it did and the protocol code did not have to be re-read to change the timer
-  mechanism. The id travels back in the timer's Tag.
+    - self-initiated pings           0   (our ping count equalled the radio's
+                                          EXACTLY -- we only ever replied)
+    - idle keepalives we sent        0   (the radio sent us 6,295)
+    - token renewals we sent         0   (across sessions of 70 to 83 s,
+                                          against a 60 s renewal interval)
 
-  THEY ALREADY FIRED ON THE MAIN THREAD, which is why this is a swap and not a
-  redesign: this unit has no message pump of its own, so WM_TIMER was only ever
-  dispatched by Application.Run. NY4I, 2026-09-06: "If the TTimer has to fire on
-  the main thread, so be it." If a bench run shows a keepalive being delayed
-  behind UI work, the answer is a threaded timer, not a window. *)
-procedure TIcomNetworkTransport.HandleTimer(Sender: TObject);
+  THE MECHANISM.  Every StartTimer call site here is reached from an Indy UDP
+  reader thread -- HandleLoginResponse, HandleControlResponse and
+  HandleCapabilities all run there, and this unit's own log line says so
+  beside each one ("thread=16096 mainthread=False").  The LCL's Win32 TTimer
+  is win32object.inc:628, Windows.SetTimer(0, 0, Interval, @TimerCallBackProc):
+  a NULL window means WM_TIMER is posted to the CALLING THREAD'S queue.  An
+  Indy reader thread has no message pump, so the callback is never dispatched.
+
+  The comment that stood here predicted exactly this -- "if a bench run shows
+  a keepalive being delayed behind UI work, the answer is a threaded timer,
+  not a window" -- and was wrong only about how bad it was.  The keepalives
+  were not delayed.  They did not happen.
+
+  WHAT IT COST.  The token was never renewed, so the radio expired the session
+  ~90.6 s after each login and stopped answering CI-V -- thirteen times in the
+  capture, each costing 12.3 s to recover.  The probe that proved it (renewal
+  driven off the radio's inbound pings) ran the first Icom LAN session in this
+  program's history past 91 seconds, then eight minutes on one unchanged
+  token.  THE PROBE IS NOT KEPT: a keepalive that depends on the radio talking
+  to us is the wrong shape, and two mechanisms doing one job drift.  This
+  thread is the one that has to work.
+
+  ADDRESSED BY THE SAME IDS, deliberately, so no protocol call site changed.
+
+  AND IT NEEDS NO WIDGET SET, which matters past this defect: a TTimer needs
+  an LCL, and a transport should not. *)
+type
+   TIcomTimerThread = class(TThread)
+   private
+      FOwner: TIcomNetworkTransport;
+      FWake:  TSimpleEvent;          // so Stop does not wait out a whole tick
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(const aOwner: TIcomNetworkTransport);
+      destructor Destroy; override;
+      procedure Stop;
+   end;
+
+constructor TIcomTimerThread.Create(const aOwner: TIcomNetworkTransport);
 begin
-   case TTimer(Sender).Tag of
-     ICOM_TIMER_PING:          OnPingTimer;
-     ICOM_TIMER_IDLE:          OnIdleTimer;
-     ICOM_TIMER_TOKEN:         OnTokenRenewalTimer;
-     ICOM_TIMER_CIV_WATCHDOG:  OnCivWatchdogTimer;
-     ICOM_TIMER_AYT:           OnAYTTimer;
-     ICOM_TIMER_LOGIN:         OnLoginTimer;
+   FOwner := aOwner;
+   FWake  := TSimpleEvent.Create;
+   inherited Create(False);
+end;
+
+destructor TIcomTimerThread.Destroy;
+begin
+   inherited Destroy;
+   FreeAndNil(FWake);
+end;
+
+procedure TIcomTimerThread.Stop;
+begin
+   Terminate;
+   FWake.SetEvent;
+end;
+
+procedure TIcomTimerThread.Execute;
+begin
+   while not Terminated do
+      begin
+      (* AN EXCEPTION HERE MUST NOT KILL THE THREAD.  If it did, every
+        keepalive would stop and the only symptom would be the radio dropping
+        us a minute later -- which is the exact failure this thread exists to
+        end.  DispatchTimer guards each handler; this is the backstop for
+        anything the tick itself raises. *)
+      try
+         FOwner.TimerTick;
+      except
+         on E: Exception do
+            begin
+            logger.Error('[IcomTransport:' + FOwner.FRadioName +
+                         '] Timer thread caught %s: %s', [E.ClassName, E.Message]);
+            end;
+      end;
+
+      FWake.WaitFor(ICOM_TIMER_TICK_MS);
+      FWake.ResetEvent;
+      end;
+end;
+
+(* ONE PASS OVER THE SIX DEADLINES.
+
+  The due set is decided and the next deadlines written UNDER THE LOCK; the
+  handlers then run OUTSIDE it, because a handler sends packets and may call
+  Disconnect, and holding a lock across either is how a transport deadlocks.
+
+  "Due" is a wrapping comparison: LongWord(Now - Due) < $80000000 means "Now
+  is at or past Due" and stays correct across the 49.7-day TickCount32 wrap --
+  the same rule every other comparison in this unit uses. *)
+procedure TIcomNetworkTransport.TimerTick;
+var
+   id:   integer;
+   nowT: LongWord;
+   due:  array[ICOM_TIMER_PING..ICOM_TIMER_LOGIN] of boolean;
+begin
+   (* THE RADIO SAID THE SESSION IS GONE.  Acted on here rather than in the
+     reader thread that saw it, because the response is Disconnect and
+     Disconnect frees that thread's own socket.  See HandleConnInfoPacket. *)
+   if FSessionRevoked then
+      begin
+      FSessionRevoked := False;
+      if FState = icsConnected then
+         begin
+         logger.Warn('[IcomTransport:' + FRadioName + '] Radio reports this ' +
+                     'session has no owner -- session revoked; disconnecting so ' +
+                     'the polling thread reconnects');
+         Disconnect;
+         end;
+      end;
+
+   nowT := TickCount32;
+
+   FTimerLock.Enter;
+   try
+      for id := Low(due) to High(due) do
+         begin
+         due[id] := (FTimerEvery[id] > 0) and
+                    (LongWord(nowT - FTimerDue[id]) < $80000000);
+         if due[id] then
+            begin
+            FTimerDue[id] := nowT + FTimerEvery[id];
+            end;
+         end;
+   finally
+      FTimerLock.Leave;
+   end;
+
+   for id := Low(due) to High(due) do
+      begin
+      if due[id] then
+         begin
+         DispatchTimer(id);
+         end;
+      end;
+end;
+
+procedure TIcomNetworkTransport.DispatchTimer(const aId: integer);
+begin
+   (* A handler running after Disconnect would send on a freed socket.  This
+     closes the window between StopTimers and a tick already in flight. *)
+   if not FTimersLive then
+      begin
+      Exit;
+      end;
+
+   try
+      case aId of
+        ICOM_TIMER_PING:          OnPingTimer;
+        ICOM_TIMER_IDLE:          OnIdleTimer;
+        ICOM_TIMER_TOKEN:         OnTokenRenewalTimer;
+        ICOM_TIMER_CIV_WATCHDOG:  OnCivWatchdogTimer;
+        ICOM_TIMER_AYT:           OnAYTTimer;
+        ICOM_TIMER_LOGIN:         OnLoginTimer;
+      end;
+   except
+      on E: Exception do
+         begin
+         logger.Error('[IcomTransport:' + FRadioName +
+                      '] Timer %d raised %s: %s', [aId, E.ClassName, E.Message]);
+         end;
    end;
 end;
 
-(* CREATED ON FIRST USE, so a transport that never logs in never makes one.
-  Interval is set before Enabled, because a TTimer is born enabled with a
-  1000 ms default -- the difference that the CW-by-CAT timer tests caught when
-  that timer moved off its own SetTimer wrapper. *)
+(* ARMING IS A DEADLINE, NOT AN OBJECT.  Nothing to create on first use and
+  nothing to free, which was most of what the TTimer version did. *)
 procedure TIcomNetworkTransport.StartTimer(const aId: integer;
                                            const aMs: integer);
-var
-   tm: TTimer;
 begin
-   tm := FTimers[aId];
-   if tm = nil then
-      begin
-      tm := TTimer.Create(nil);
-      tm.Enabled := False;
-      tm.Tag     := aId;
-      tm.OnTimer := HandleTimer;
-      FTimers[aId] := tm;
-      end;
-
-   tm.Enabled  := False;
-   tm.Interval := aMs;
-   tm.Enabled  := True;
+   FTimerLock.Enter;
+   try
+      FTimerEvery[aId] := LongWord(aMs);
+      FTimerDue[aId]   := TickCount32 + LongWord(aMs);
+   finally
+      FTimerLock.Leave;
+   end;
 end;
 
 procedure TIcomNetworkTransport.StopTimer(const aId: integer);
 begin
-   if FTimers[aId] <> nil then
-      begin
-      FTimers[aId].Enabled := False;
-      end;
+   FTimerLock.Enter;
+   try
+      FTimerEvery[aId] := 0;
+   finally
+      FTimerLock.Leave;
+   end;
 end;
 
 procedure TIcomNetworkTransport.StopAllTimers;
 var
    i: integer;
 begin
-   for i := Low(FTimers) to High(FTimers) do
-      begin
-      if FTimers[i] <> nil then
+   FTimerLock.Enter;
+   try
+      for i := Low(FTimerEvery) to High(FTimerEvery) do
          begin
-         FTimers[i].Enabled := False;
+         FTimerEvery[i] := 0;
          end;
-      end;
-end;
-
-procedure TIcomNetworkTransport.FreeTimers;
-var
-   i: integer;
-begin
-   for i := Low(FTimers) to High(FTimers) do
-      begin
-      FreeAndNil(FTimers[i]);
-      end;
+   finally
+      FTimerLock.Leave;
+   end;
 end;
 
 // ============================================================================
@@ -379,25 +548,44 @@ begin
   FClientName := ICOM_CLIENT_NAME;
   FControlPort := ICOM_DEFAULT_CONTROL_PORT;
   FSendLock := TCriticalSection.Create;
+  FTimerLock := TCriticalSection.Create;
+  FLifecycleLock := TCriticalSection.Create;
 
   // Create TX buffer lists
   FControlTxBuf := TList.Create;
   FCivTxBuf := TList.Create;
 
+  (* LAST, because it starts running immediately and its first act is to take
+    FTimerLock.  It lives for the object, not for a session: the deadlines are
+    armed and disarmed, the thread is not. *)
+  FTimerThread := TIcomTimerThread.Create(Self);
 end;
 
 destructor TIcomNetworkTransport.Destroy;
 begin
+  (* THE TIMER THREAD GOES FIRST, AND IS JOINED.  It can call Disconnect on
+    its own (OnPingTimer does, and so does a revoked session), so it must be
+    stopped and finished before anything it touches is freed.  The cast is
+    because the field is typed TThread in the interface -- TIcomTimerThread is
+    an implementation detail and stays one. *)
+  if FTimerThread <> nil then
+     begin
+     TIcomTimerThread(FTimerThread).Stop;
+     FTimerThread.WaitFor;
+     FreeAndNil(FTimerThread);
+     end;
+
   if FState <> icsDisconnected then
      begin
      Disconnect;
      end;
 
   ClearAllBuffers;
-  FreeTimers;
   FreeAndNil(FControlTxBuf);
   FreeAndNil(FCivTxBuf);
   FreeAndNil(FSendLock);
+  FreeAndNil(FTimerLock);
+  FreeAndNil(FLifecycleLock);
 
   inherited Destroy;
 end;
@@ -410,6 +598,9 @@ function TIcomNetworkTransport.Connect(Address: string; Port: Word;
   Username, Password: string): Integer;
 begin
   Result := 0;
+
+  FLifecycleLock.Enter;
+  try
 
   if FState <> icsDisconnected then
      begin
@@ -438,6 +629,8 @@ begin
   FAYTInterval := ICOM_AYT_INITIAL_INTERVAL;
   FStartTick := TickCount32;
   FLastCivData := TickCount32;
+  FLastTrackedSend := TickCount32;
+  FSessionRevoked := False;
   FCivStreamOpen := False;
 
   ClearAllBuffers;
@@ -474,10 +667,17 @@ begin
        Result := -1;
        end;
   end;
+
+  finally
+     FLifecycleLock.Leave;
+  end;
 end;
 
 procedure TIcomNetworkTransport.Disconnect;
 begin
+  FLifecycleLock.Enter;
+  try
+
   logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect called from state %s',
               [IcomStateToString(FState)]);
 
@@ -535,6 +735,10 @@ begin
   FCivStreamOpen := False;
   SetState(icsDisconnected);
   logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: complete');
+
+  finally
+     FLifecycleLock.Leave;
+  end;
 end;
 
 procedure TIcomNetworkTransport.SendCivData(const CivFrame: string);
@@ -892,11 +1096,21 @@ begin
                [PktType, DataLen, BoolToStr(FromCivSocket, True),
                 IcomStateToString(FState), PeerIP, PeerPort]);
 
-  // Dispatch by PktType first for control/ping packets.
-  // Icom radios pad 16-byte control packets to 18 bytes (2 trailing zeros),
-  // so exact length matching fails. Use PktType for small packets, length
-  // only for large control-socket packets (login/token/status/capabilities)
-  // that all share type=0x00 and need size-based disambiguation.
+  (* Dispatch by PktType first for control/ping packets.  Length is used only
+    to disambiguate the large control-socket packets -- login, token, status,
+    capabilities, conninfo -- which all share type=$0000.
+
+    THE "RADIOS PAD 16-BYTE CONTROL PACKETS TO 18 BYTES" NOTE THAT STOOD HERE
+    IS NOT TRUE OF THIS RADIO, and it is worth saying so rather than deleting
+    it, because it was the stated reason for dispatching on PktType.  Measured
+    on the 2026-09-24 IC-7760 LAN capture, every datagram length the radio
+    sent in 663 seconds: 16, 21, 27, 28, 29, 30, 31, 32, 33, 38, 40, 80, 96,
+    144, 168, 732.  NOT ONE 18-BYTE PACKET.  Control packets are exactly 16
+    and pings exactly 21.
+
+    Dispatching on PktType is still right -- it is what the field is for --
+    but nobody should carry forward a padding rule this radio does not
+    follow.  If another model does pad, measure it and say which. *)
 
   case PktType of
     ICOM_PKT_I_AM_HERE,
@@ -925,9 +1139,16 @@ begin
            begin
            // Control socket: disambiguate by length
            case DataLen of
-             ICOM_TOKEN_PKT_SIZE:   HandleTokenResponse(Data, DataLen);    // 64
-             ICOM_STATUS_PKT_SIZE:  HandleStatusPacket(Data, DataLen);     // 80
-             ICOM_LOGIN_RESP_SIZE:  HandleLoginResponse(Data, DataLen);    // 96
+             ICOM_TOKEN_PKT_SIZE:    HandleTokenResponse(Data, DataLen);   // 64
+             ICOM_STATUS_PKT_SIZE:   HandleStatusPacket(Data, DataLen);    // 80
+             ICOM_LOGIN_RESP_SIZE:   HandleLoginResponse(Data, DataLen);   // 96
+             (* 144 -- WAS FALLING INTO HandleCapabilities.  SizeOf a
+               TCapabilitiesPacket is only 66, so a 144-byte ConnInfo cleared
+               the ">= capabilities header" test below and was saved from being
+               misparsed only by that handler's state guard.  53 of them in the
+               2026-09-24 capture, silently discarded -- and 13 of those were
+               the radio telling us the session had been revoked. *)
+             ICOM_CONNINFO_PKT_SIZE: HandleConnInfoPacket(Data, DataLen);  // 144
            else
              if DataLen >= SizeOf(TCapabilitiesPacket) then
                 begin
@@ -1217,6 +1438,88 @@ begin
   // Send Stream Request (includes our local CI-V port so radio knows where to connect)
   SendStreamRequest;
   SetState(icsStreamRequested);
+end;
+
+(* CONNINFO FROM THE RADIO: WHO, IF ANYONE, OWNS THIS SESSION.
+
+  The radio sends one of these during the handshake and again once we reach
+  Connected.  It also sends one UNBIDDEN when it has decided the session has
+  no owner any more -- and that is the signal this exists to catch, because
+  CI-V stops within half a second of it.
+
+  THE DISCRIMINATOR IS THREE-PART, and all three parts are needed.  Checked
+  against every one of the 53 ConnInfo packets in the 2026-09-24 IC-7760
+  capture, in both directions:
+
+    empty owner block alone            26 hits -- 13 of them FALSE, because
+                                       the handshake's own ConnInfo is also
+                                       unowned
+    + our token                        still 26
+    + FState = icsConnected            13 hits, and they are exactly the 13
+                                       CI-V stalls.  No misses, no false
+                                       positives.
+
+  The handshake copy is what the state guard removes: it arrives at
+  StreamRequested, never at Connected.  The two that DO arrive at Connected
+  during a handshake both carry an owner, so the owner test removes those.
+
+  WHY A FLAG AND NOT A Disconnect RIGHT HERE.  This runs on the control
+  socket's Indy listener thread, and Disconnect frees that very TIdUDPServer.
+  The timer thread acts on the flag instead; see TimerTick.
+
+  WHAT IT BUYS.  Before this, a revoked session was discovered by INFERENCE --
+  CI-V goes quiet, CivDataFresh ages out at 3 s, the polling supervisor gives
+  it 8 s more, then forces a reconnect: 12.3 s, measured, thirteen times.  This
+  is the radio REPORTING it, ~0.4 s early, which is the house preference and
+  about 1.5 s instead.
+
+  IT SHOULD NOW BE UNREACHABLE.  The session is revoked because the token was
+  never renewed, and the timer thread renews it.  This is the belt to that
+  braces, and if it ever fires the log line says so plainly. *)
+procedure TIcomNetworkTransport.HandleConnInfoPacket(
+  const Data: array of Byte; DataLen: Integer);
+var
+  Pkt: TConnInfoPacket;
+  i: Integer;
+  Owned: Boolean;
+begin
+  if DataLen < SizeOf(TConnInfoPacket) then
+     begin
+     Exit;
+     end;
+
+  Move(Data[0], Pkt, SizeOf(TConnInfoPacket));
+
+  // Only a live session can be revoked, and only ours concerns us.
+  if FState <> icsConnected then
+     begin
+     Exit;
+     end;
+
+  if Pkt.Token <> FToken then
+     begin
+     Exit;
+     end;
+
+  Owned := False;
+  for i := Low(Pkt.Username) to High(Pkt.Username) do
+     begin
+     if Pkt.Username[i] <> 0 then
+        begin
+        Owned := True;
+        Break;
+        end;
+     end;
+
+  if Owned then
+     begin
+     Exit;
+     end;
+
+  logger.Warn('[IcomTransport:' + FRadioName + '] ConnInfo says this session ' +
+              'has no owner (token=$%.8x) -- the radio has revoked it; ' +
+              'reconnecting', [FToken]);
+  FSessionRevoked := True;
 end;
 
 // ============================================================================
@@ -1889,10 +2192,21 @@ end;
 procedure TIcomNetworkTransport.OnIdleTimer;
 begin
   // Idle runs from I Am Here onward (control socket keepalive)
-  if FState <> icsDisconnected then
+  if FState = icsDisconnected then
      begin
-     SendIdlePacket;
+     Exit;
      end;
+
+  (* A TRACKED SEND IS ITSELF A KEEPALIVE, so skip this turn if one is recent.
+    Same intent as before -- "only fire idle if no tracked packet was sent for
+    100 ms" -- but read from a timestamp here rather than by re-arming this
+    timer from inside SendTrackedPacket, which ran on the CI-V send thread. *)
+  if TickCount32 - FLastTrackedSend < ICOM_IDLE_INTERVAL then
+     begin
+     Exit;
+     end;
+
+  SendIdlePacket;
 end;
 
 procedure TIcomNetworkTransport.OnTokenRenewalTimer;
@@ -2031,12 +2345,15 @@ begin
   // Increment sequence counter (caller's variable updated by reference)
   Inc(SeqCounter);
 
-  // Reset idle timer — only fire idle if no tracked packet sent for 100ms
-  if FTimersLive then
-     begin
-     StopTimer(ICOM_TIMER_IDLE);
-     StartTimer(ICOM_TIMER_IDLE, ICOM_IDLE_INTERVAL);
-     end;
+  (* DEFER THE IDLE KEEPALIVE -- a tracked send has just served that purpose.
+
+    This used to stop and restart the idle TTimer from here.  THIS ROUTINE RUNS
+    ON THE CI-V SEND THREAD, so that was toggling Enabled on a widget-set timer
+    from a worker -- which on Win32 means KillTimer/SetTimer against whatever
+    thread happened to own it, plus an unsynchronised mutation of the widget
+    set's own timer list.  A timestamp the idle handler reads is the whole
+    mechanism now; see OnIdleTimer. *)
+  FLastTrackedSend := TickCount32;
 end;
 
 // ============================================================================
