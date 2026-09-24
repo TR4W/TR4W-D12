@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 # export-d12-corpus.sh [only_slug]
 #
-# Automates the D12 golden-master exports.  For each corpus set it runs the
-# D12 build's batch-export mode:
-#     tr4w.exe "<contest>.CFG" /EXPORT
-# (added in tr4w.lpr after SetUpGlobalsAndInitialize -- boots the contest,
-# writes <log>.ADI + <CALL>.LOG with the -D12 banner, then Halts before the
-# GUI/network init), then pull-d12-candidates.sh diffs everything vs the
-# frozen D7 refs.  Replaces hand-doing File->Export on every log.
+# THE QUESTION THIS ASKS: does a given log produce the expected ADIF and
+# Cabrillo?  For each corpus set it runs the build's batch-export mode:
+#     tr4w.exe "<contest>.db" /EXPORT
+# (in uProgramMain after SetUpGlobalsAndInitialize -- opens the contest, writes
+# <log>.ADI + <CALL>.LOG with the -D12 banner, then Halts before the GUI/network
+# init), then pull-d12-candidates.sh diffs everything vs the frozen D7 refs.
 #
-# Usage:  rebuild the app (IDE) first, then:
+# Usage:  rebuild the app first, then:
 #     bash tr4w/test/corpus/export-d12-corpus.sh                # all sets, then sweep
 #     bash tr4w/test/corpus/export-d12-corpus.sh arrl_fd_2026_ny4i   # one set (smoke test)
 #
-# The inputs come from the TRACKED log.cfg/log.trw beside each manifest, staged
-# into build-out/corpus-work -- a fresh clone can run this with no out-of-tree
-# data, and the (destructive) export cannot touch a real log directory.  Set
-# D12_ROOT to export from a raw log directory instead; see corpus-lib.sh.
+# THE INPUT IS THE TRACKED log.db beside each manifest, staged into
+# build-out/corpus-work.  A contest IS a SQLite log in this program, so that is
+# what the oracle is given.  The D7 .trw/.cfg inputs were retired by decision on
+# 2026-09-24 -- corpus-lib.sh carries NY4I's words and says where binary-log
+# import is covered now.  DO NOT reintroduce them here.
+#
+# THE REFERENCES ARE STILL D7-PRODUCED AND ARE NEVER REGENERATED.  That is the
+# half of the oracle we did not write: our input, somebody else's expected
+# output.  A ref that "needs" to change is a behaviour finding, not a step.
 #
 # Override the binary under test with env TR4W_EXE (a file name inside
 # tr4w/target, not a path).  That is how the FPC-built app is put through the
@@ -169,11 +173,10 @@ for m in "$here"/*/manifest.json; do
    slug=$(corpus_manifest_get "$m" slug)
    [ -n "$ONLY" ] && [ "$ONLY" != "$slug" ] && continue
    case "$SKIP" in *" $slug "*) printf '  SKIP   %-26s (interactive dialog)\n' "$slug"; continue;; esac
-   src=$(corpus_manifest_get "$m" source_dir)
-   d12=$(corpus_set_dir "$slug" "$(basename "$src")")
+   d12=$(corpus_set_dir "$slug")
    corpus_stage_set "$m" "$slug" "$d12" || { printf '  MISS   %-26s (staging failed)\n' "$slug"; continue; }
-   cfg=$(ls "$d12"/*.CFG "$d12"/*.cfg 2>/dev/null | grep -vi backup | head -1)
-   [ -n "$cfg" ] || { printf '  MISS   %-26s (no cfg in %s)\n' "$slug" "$d12"; continue; }
+   log=$(ls "$d12"/*.db 2>/dev/null | head -1)
+   [ -n "$log" ] || { printf '  MISS   %-26s (no log database in %s)\n' "$slug" "$d12"; continue; }
    printf '  export %-26s\n' "$slug"
    # Fail-loud: delete this set's prior export outputs (ADIF + the Cabrillo .LOG,
    # identified by its START-OF-LOG header) so an aborted export leaves NO stale
@@ -188,7 +191,7 @@ for m in "$here"/*/manifest.json; do
    # per-set timeout: a stray load dialog can't hang the whole run
    # --settings: the app reads and writes the corpus's fixture, never the
    # operator's. The path is absolute because the export runs from tr4w/target.
-   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$cfg")" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 )
+   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$log")" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 )
    rc=$?
 
    # THE EXIT CODE IS EVIDENCE AND IT WAS BEING THROWN AWAY.

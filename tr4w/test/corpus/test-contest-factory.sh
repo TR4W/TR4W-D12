@@ -67,7 +67,26 @@ run_pass() {   # $1 = extra switch for /RESCORE ("" or /NOFACTORY)
    # reported differences until this line existed, which is what gave it away:
    # both passes were taking the identical legacy path.
    rm -f "$WORK.db" "$WORK.db-wal" "$WORK.db-shm" "$WORK.ADI" "$WORK.RST" ./*.LOG
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
+   # A FRESH COPY OF THE FIXTURE.  The log IS the input since 2026-09-24, so
+   # the pass starts from the untouched database instead of rebuilding one from
+   # a .TRW -- and the line above, which used to delete a DERIVED file, now
+   # deletes the thing under test.  Without this the export produced nothing
+   # and all 13 sets reported DIFF.
+   cp "$SRC_DB" "$WORK.db" || return 1
+   # THE .CFG IS NAMED, NOT THE .db, AND THAT IS DELIBERATE FOR A RESCORE.
+   #
+   # Both open the same database -- every other name is derived from the stem --
+   # but naming the .db makes LogCfg skip the text read, and the DOMESTIC
+   # COUNTRY LIST comes from that read.  Measured while making this change:
+   # with the .db named, every /RESCORE logged "[Domestic] The domestic country
+   # list is EMPTY, so every callsign will be treated as DX".  The A/B still
+   # agreed -- both arms were equally crippled -- so it reported 13 identical
+   # while rescoring a contest that had no domestic countries.  A gate that
+   # passes because both sides are wrong is the failure mode this whole file
+   # exists to avoid.
+   #
+   # The golden corpus is NOT affected and is right to name the .db: /EXPORT
+   # reads stored values and never rescores.
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE $1 >/dev/null 2>&1
    rm -f "$WORK.ADI" ./*.LOG
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
@@ -76,17 +95,21 @@ run_pass() {   # $1 = extra switch for /RESCORE ("" or /NOFACTORY)
 pass=0; fail=0; failed=""
 for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    name=$(basename "$d")
-   [ -f "$d/log.trw" ] || continue
+   [ -f "$d/log.db" ] || continue
 
+   # EACH PASS STARTS FROM THE SAME LOG -- run_pass takes a fresh copy, because
+   # /RESCORE writes back into the database it is given.  (This used to stage a
+   # .cfg and a .trw and let a first /EXPORT migrate them in; the corpus fixture
+   # is the log itself since 2026-09-24, so there is nothing to migrate and that
+   # extra export is gone with it.)
+   SRC_DB="$d/log.db"
    rm -f "$WORK".* ./*.LOG
    cp "$d/log.cfg" "$WORK.CFG" || continue
-   cp "$d/log.trw" "$WORK.TRW" || continue
 
    run_pass ""
    fac=$(mktemp -d); cp "$WORK.ADI" "$fac/" 2>/dev/null; cp ./*.LOG "$fac/" 2>/dev/null
    produced=$(ls "$fac" 2>/dev/null)
 
-   cp "$d/log.trw" "$WORK.TRW"
    run_pass "/NOFACTORY"
 
    ok=1; detail=""

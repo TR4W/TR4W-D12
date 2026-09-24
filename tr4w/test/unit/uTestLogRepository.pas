@@ -32,7 +32,7 @@ type
       FDir: string;
       function TempLogName(const aLeaf: string): string;
       procedure Scrub(const aFileName: string);
-      function CorpusLog(const aSet: string): string;
+      function BinaryLogFixture(const aSet: string): string;
 
       (* A METHOD, not a free function: CheckEquals is protected on TTestCase,
         which is the framework saying assertions belong to a test. *)
@@ -88,14 +88,23 @@ begin
    if FileExists(aFileName + '-shm') then DeleteFile(aFileName + '-shm');
 end;
 
-function TLogRepositoryTests.CorpusLog(const aSet: string): string;
+function TLogRepositoryTests.BinaryLogFixture(const aSet: string): string;
 begin
-   (* PathDelim, NOT HARDCODED BACKSLASHES. Found by RUNNING on Linux, which
+   (* THE D7 BINARY LOGS LIVE HERE, NOT IN THE CORPUS -- 2026-09-24.
+
+     The golden corpus's input is a log.db now, and NY4I scoped what that
+     gives up: "Yes I agree it's remnant allow us to validate .Trw
+     conversion but that becomes a unit test and not the corpus."  Six of
+     the thirteen D7 logs were kept as UNIT fixtures for exactly that, each
+     because some assertion here names it; the other seven were deleted and
+     are in git history.
+
+     PathDelim, NOT HARDCODED BACKSLASHES. Found by RUNNING on Linux, which
      asked to open one file literally named "..\corpus\<set>\log.trw" and
      reported "No such file or directory". It compiles everywhere; it only
      fails where the separator is not a backslash. *)
-   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + 'corpus' +
-             PathDelim + aSet + PathDelim + 'log.trw';
+   Result := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
+             'binarylog' + PathDelim + aSet + '.trw';
 end;
 
 (* --------------------------------------------------------------------------- *)
@@ -228,7 +237,7 @@ begin
    fn := TempLogName('one.db');
    Scrub(fn);
 
-   reader := TLogBinaryReader.Create(CorpusLog('cqww_ssb_2025_ny4i'));
+   reader := TLogBinaryReader.Create(BinaryLogFixture('cqww_ssb_2025_ny4i'));
    try
       CheckTrue(reader.Status = lbOK, 'the fixture opens: ' + reader.Message);
       got := False;
@@ -291,7 +300,7 @@ begin
    BeginTest('Test_LegacySkippedIsReadAsDeleted');
 
    fn := TempLogName('legacyskipped.db');
-   reader := TLogBinaryReader.Create(CorpusLog('cqww_ssb_2025_ny4i'));
+   reader := TLogBinaryReader.Create(BinaryLogFixture('cqww_ssb_2025_ny4i'));
    try
       got := reader.ReadNext(before);
       CheckTrue(got, 'the fixture has a QSO');
@@ -899,7 +908,7 @@ begin
             db.CreateNew(fn);
             repo := TLogRepository.Create(db);
             try
-               reader := TLogBinaryReader.Create(CorpusLog(SETS[s]));
+               reader := TLogBinaryReader.Create(BinaryLogFixture(SETS[s]));
                try
                   CheckTrue(reader.Status = lbOK, SETS[s] + ': ' + reader.Message);
                   n := 0;
@@ -1117,7 +1126,7 @@ begin
    Scrub(fn);
 
    (* The contest comes from a real log, as every other test here takes it. *)
-   reader := TLogBinaryReader.Create(CorpusLog('cqww_ssb_2025_ny4i'));
+   reader := TLogBinaryReader.Create(BinaryLogFixture('cqww_ssb_2025_ny4i'));
    try
       CheckTrue(reader.Status = lbOK, 'the fixture opens: ' + reader.Message);
       got := reader.ReadNext(seed);

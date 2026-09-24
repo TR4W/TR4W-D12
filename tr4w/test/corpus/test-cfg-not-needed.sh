@@ -35,17 +35,24 @@
 #   ReadInConfigFile, halfway through assembling the configuration and before
 #   the log had contributed anything.  It runs once, at the end, now.
 #
-# CURRENT STATE: 11 of 13 identical.  arrl_dx_cw and general_qso still differ,
-# and for an ORDERING reason rather than a missing setting -- every command in
-# both .cfg files IS captured and applied.  MY CALL now arrives from the LOG,
-# which is later than the .cfg used to supply it, so anything derived from the
-# callsign DURING config load (country, continent) is computed while it is still
-# empty.  In ARRL-DX that decides whether the received exchange is a power or a
-# section, and every QSO renders "DX".
+# CURRENT STATE: 13 of 13 identical, since 2026-09-24.
 #
-# The fix is to recompute callsign-derived state after every source has
-# contributed, not to capture more.  The two rows stay here as a failing
-# measurement rather than being excluded, because excluding them would hide it.
+# It was 11 of 13 -- arrl_dx_cw and general_qso differed, for an ORDERING reason
+# rather than a missing setting: MY CALL arrived from the LOG, later than the
+# .cfg used to supply it, so anything derived from the callsign DURING config
+# load (country, continent) was computed while it was still empty.  In ARRL-DX
+# that decides whether the received exchange is a power or a section, and every
+# QSO rendered "DX".
+#
+# BOTH ROWS PASS NOW, and the reason is worth knowing rather than celebrating:
+# this test no longer MIGRATES a .TRW on its first pass.  The corpus fixture is
+# the log itself since 2026-09-24, so both passes open the same finished
+# database and neither depends on when the callsign arrived during a migration.
+# That is a narrower question than the one the 11-of-13 measurement was asking.
+#
+# IF SOMEBODY RE-OPENS THE ORDERING DEFECT, this is not the oracle that shows
+# it.  The corpus itself now exports with no .cfg contents in play at all, which
+# is a stronger statement of the same contract.
 #
 # Usage:  bash tr4w/test/corpus/test-cfg-not-needed.sh
 set -u
@@ -69,13 +76,17 @@ norm() { sed -E 's/(Created by TR4W version .* on ).*/\1TIME/; s/(<CREATED_TIMES
 pass=0; fail=0
 for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    name=$(basename "$d")
-   [ -f "$d/log.trw" ] || continue
+   [ -f "$d/log.db" ] || continue
 
    rm -f "$WORK".* ./*.LOG
    cp "$d/log.cfg" "$WORK.CFG" || continue
-   cp "$d/log.trw" "$WORK.TRW" || continue
+   cp "$d/log.db" "$WORK.db" || continue
 
-   # With the .cfg: migrates the binary log in and captures the configuration.
+   # With the .cfg: opens the log beside it and captures the configuration.
+   # (This used to stage a .trw and let the first export migrate it in.  The
+   # corpus fixture is the log itself since 2026-09-24 -- see corpus-lib.sh --
+   # so the log is simply copied.  The QUESTION is unchanged: does emptying
+   # the .cfg change the exported bytes?)
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
    with=$(mktemp -d); cp "$WORK.ADI" "$with/" 2>/dev/null; cp ./*.LOG "$with/" 2>/dev/null
    produced=$(ls "$with" 2>/dev/null)

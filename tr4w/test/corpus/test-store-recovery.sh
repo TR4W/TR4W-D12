@@ -37,6 +37,9 @@ EXE_SRC="$REPO_ROOT/build-out/app-i386-win32/tr4w_fpc.exe"
 EXE="storerec-run.exe"
 WORK="storerec"
 FIXTURE="$REPO_ROOT/tr4w/test/corpus/cqww_ssb_2025_ny4i"
+# The D7 binary log moved to the unit fixtures on 2026-09-24 when the corpus's
+# input became a log.db -- see corpus-lib.sh.  The contest .cfg did not move.
+BINLOG="$REPO_ROOT/tr4w/test/unit/fixtures/binarylog/cqww_ssb_2025_ny4i.trw"
 
 if [ ! -f "$EXE_SRC" ]; then
    echo "test-store-recovery: no app at $EXE_SRC -- build first" >&2
@@ -47,7 +50,7 @@ cd "$TARGET" || exit 1
 cp "$EXE_SRC" "$EXE" || exit 1
 rm -f "$WORK".* ./*.LOG
 cp "$FIXTURE/log.cfg" "$WORK.CFG" || exit 1
-cp "$FIXTURE/log.trw" "$WORK.TRW" || exit 1
+cp "$BINLOG" "$WORK.TRW" || exit 1
 
 rows() { python -c "import sqlite3,sys;print(sqlite3.connect(sys.argv[1]).execute('SELECT COUNT(*) FROM qso').fetchone()[0])" "$WORK.db" 2>/dev/null || echo 0; }
 qsos() { grep -ci '<eor>' "$WORK.ADI" 2>/dev/null || echo 0; }

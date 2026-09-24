@@ -2,8 +2,10 @@ unit uTestLogBinaryFile;
 
 (* READING A BINARY TR4W LOG.
 
-  These run against the REAL corpus fixtures -- 13 D7-written logs in
-  test\corpus\<set>\log.trw, the same files the golden-master oracle exports.
+  These run against REAL D7-written logs -- the six kept as unit fixtures in
+  test\unit\fixtures\binarylog.  They were corpus fixtures until
+  2026-09-24; the corpus's input is a log.db now, and this suite is where
+  reading a D7 binary log is covered.
   A synthetic fixture would prove the reader agrees with itself; these prove it
   agrees with logs TR4W actually wrote, which is the only interesting claim.
 
@@ -23,7 +25,7 @@ uses
 type
    TLogBinaryFileTests = class(TTestCase)
    private
-      function CorpusLog(const aSet: string): string;
+      function BinaryLogFixture(const aSet: string): string;
    protected
       procedure TestOpensARealCorpusLog;
       procedure TestReadsEveryRecordTheSizeImplies;
@@ -34,7 +36,7 @@ type
       procedure TestUnrepresentableYearRaises;
       procedure TestMissingFileReportsRatherThanRaises;
       procedure TestStrideMismatchIsRefused;
-      procedure TestEverySetInTheCorpusReads;
+      procedure TestEveryBinaryLogFixtureReads;
       procedure TestTheRecordIsTheSameSizeEverywhere;
       procedure TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
    public
@@ -47,15 +49,24 @@ implementation
 uses
    SysUtils, Classes, DateUtils, VC, uLogBinaryFile;
 
-(* The suite runs from test\unit (ParamStr(0)), and the corpus is its sibling. *)
-function TLogBinaryFileTests.CorpusLog(const aSet: string): string;
+(* The suite runs from test\unit (ParamStr(0)); fixtures sit beside the exe. *)
+function TLogBinaryFileTests.BinaryLogFixture(const aSet: string): string;
 begin
-   (* PathDelim, NOT HARDCODED BACKSLASHES. Found by RUNNING on Linux, which
+   (* THE D7 BINARY LOGS LIVE HERE, NOT IN THE CORPUS -- 2026-09-24.
+
+     The golden corpus's input is a log.db now, and NY4I scoped what that
+     gives up: "Yes I agree it's remnant allow us to validate .Trw
+     conversion but that becomes a unit test and not the corpus."  Six of
+     the thirteen D7 logs were kept as UNIT fixtures for exactly that, each
+     because some assertion here names it; the other seven were deleted and
+     are in git history.
+
+     PathDelim, NOT HARDCODED BACKSLASHES. Found by RUNNING on Linux, which
      asked to open one file literally named "..\corpus\<set>\log.trw" and
      reported "No such file or directory". It compiles everywhere; it only
      fails where the separator is not a backslash. *)
-   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + 'corpus' +
-             PathDelim + aSet + PathDelim + 'log.trw';
+   Result := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
+             'binarylog' + PathDelim + aSet + '.trw';
 end;
 
 procedure TLogBinaryFileTests.TestOpensARealCorpusLog;
@@ -63,7 +74,7 @@ var
    r: TLogBinaryReader;
 begin
    BeginTest('TestOpensARealCorpusLog');
-   r := TLogBinaryReader.Create(CorpusLog('arktika_2026_ny4i'));
+   r := TLogBinaryReader.Create(BinaryLogFixture('arktika_2026_ny4i'));
    try
       CheckTrue(r.Status = lbOK, 'a D7-written corpus log opens: ' + r.Message);
       CheckEquals('', r.Message, 'and reports nothing');
@@ -80,7 +91,7 @@ var
    n: integer;
 begin
    BeginTest('TestReadsEveryRecordTheSizeImplies');
-   r := TLogBinaryReader.Create(CorpusLog('arktika_2026_ny4i'));
+   r := TLogBinaryReader.Create(BinaryLogFixture('arktika_2026_ny4i'));
    try
       CheckTrue(r.Status = lbOK, 'opened: ' + r.Message);
       n := 0;
@@ -115,7 +126,7 @@ begin
      so the first good-looking record must be KD6RYO on 2026-02-11 at 00:06.
      Reading it out of the BINARY and matching the reference is what proves the
      reader and the epoch together. *)
-   r := TLogBinaryReader.Create(CorpusLog('general_qso_2026_w1aw4'));
+   r := TLogBinaryReader.Create(BinaryLogFixture('general_qso_2026_w1aw4'));
    try
       CheckTrue(r.Status = lbOK, 'opened: ' + r.Message);
       found := False;
@@ -237,7 +248,7 @@ begin
 
    (* logdump could Halt(2). A unit cannot: the importer has to tell an operator
      which of his logs would not read and carry on with the rest. *)
-   r := TLogBinaryReader.Create(CorpusLog('no_such_contest_set'));
+   r := TLogBinaryReader.Create(BinaryLogFixture('no_such_contest_set'));
    try
       CheckTrue(r.Status = lbCannotOpen, 'a missing log is reported');
       CheckTrue(r.Message <> '', 'and says why');
@@ -265,7 +276,7 @@ begin
       DeleteFile(fn);
       end;
 
-   src := TFileStream.Create(CorpusLog('arktika_2026_ny4i'), fmOpenRead or fmShareDenyNone);
+   src := TFileStream.Create(BinaryLogFixture('arktika_2026_ny4i'), fmOpenRead or fmShareDenyNone);
    try
       dst := TFileStream.Create(fn, fmCreate);
       try
@@ -291,16 +302,30 @@ begin
    DeleteFile(fn);
 end;
 
-procedure TLogBinaryFileTests.TestEverySetInTheCorpusReads;
+procedure TLogBinaryFileTests.TestEveryBinaryLogFixtureReads;
 const
-   (* All thirteen. Named rather than enumerated from the directory, so a set
-     that disappears fails here instead of quietly shrinking the coverage. *)
-   SETS: array[0..12] of string = (
-      'arktika_2026_ny4i', 'arrl_digi_2026_ny4i', 'arrl_dx_cw_2025_ny4i',
-      'arrl_fd_2026_ny4i', 'arrl_ss_ssb_2024_w4ta', 'cqwpx_cw_2026_ny4i',
-      'cqww_ssb_2025_ny4i', 'florida_qp_2026_ny4i', 'general_qso_2026_w1aw4',
-      'iaru_hf_2026_ny4i', 'michigan_qp_2026_ny4i', 'na_sprint_cw_2026_ny4i',
-      'winter_fd_2025_w4ta');
+   (* THE SIX D7 LOGS KEPT AS UNIT FIXTURES, and why each one is here.
+
+     This was all thirteen corpus sets until 2026-09-24, when the golden
+     corpus's input became a log.db and the .trw files stopped living there.
+     NY4I: "that becomes a unit test and not the corpus."  Six were kept
+     rather than one, because each carries an assertion no other log can:
+
+       arktika_2026_ny4i       752 bytes -- the degenerate log, one record
+       florida_qp_2026_ny4i    two county-line PAIRS, and records that
+                               GoodLookingQSO rejects (5 held, 3 exportable)
+       general_qso_2026_w1aw4  the queryable/ordering fixture (KD6RYO first)
+       cqww_ssb_2025_ny4i      a DX zone contest, and the repository
+                               round-trip's largest log
+       cqwpx_cw_2026_ny4i      a serial-number contest
+       arrl_fd_2026_ny4i       Field Day's class/section exchange
+
+     Named rather than enumerated from the directory, so a fixture that
+     disappears fails here instead of quietly shrinking the coverage. *)
+   SETS: array[0..5] of string = (
+      'arktika_2026_ny4i', 'arrl_fd_2026_ny4i', 'cqwpx_cw_2026_ny4i',
+      'cqww_ssb_2025_ny4i', 'florida_qp_2026_ny4i',
+      'general_qso_2026_w1aw4');
 var
    i: integer;
    r: TLogBinaryReader;
@@ -308,11 +333,11 @@ var
    n: integer;
    good: integer;
 begin
-   BeginTest('TestEverySetInTheCorpusReads');
+   BeginTest('TestEveryBinaryLogFixtureReads');
 
    for i := Low(SETS) to High(SETS) do
       begin
-      r := TLogBinaryReader.Create(CorpusLog(SETS[i]));
+      r := TLogBinaryReader.Create(BinaryLogFixture(SETS[i]));
       try
          CheckTrue(r.Status = lbOK, SETS[i] + ' opens: ' + r.Message);
 
@@ -520,7 +545,7 @@ begin
    TestUnrepresentableYearRaises;
    TestMissingFileReportsRatherThanRaises;
    TestStrideMismatchIsRefused;
-   TestEverySetInTheCorpusReads;
+   TestEveryBinaryLogFixtureReads;
    TestTheRecordIsTheSameSizeEverywhere;
    TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
 end;

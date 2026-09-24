@@ -60,15 +60,18 @@ PY
 fail=0
 for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    name=$(basename "$d")
-   [ -f "$d/log.trw" ] || continue
+   [ -f "$d/log.db" ] || continue
 
+   # The corpus fixture IS the log since 2026-09-24, so there is no binary log
+   # to migrate in first -- copy it and rescore it.
    rm -f "$WORK".* ./*.LOG
    cp "$d/log.cfg" "$WORK.CFG" || continue
-   cp "$d/log.trw" "$WORK.TRW" || continue
+   cp "$d/log.db" "$WORK.db" || continue
 
-   # Migrate the binary log in, so there is something to rescore.
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT >/dev/null 2>&1
-
+   # THE .CFG IS NAMED, NOT THE .db.  Both open the same database, but naming
+   # the .db makes LogCfg skip the text read -- and the DOMESTIC COUNTRY LIST
+   # comes from that read, so a rescore would treat every callsign as DX.  See
+   # the longer note in test-contest-factory.sh.
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE >/dev/null 2>&1
    first=$(digest)
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE >/dev/null 2>&1

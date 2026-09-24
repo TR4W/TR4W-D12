@@ -2,8 +2,10 @@
 # import-set.sh <source_contest_dir> <slug>
 #
 # Imports one matched TR4W contest set into the golden-master corpus:
-#   log.trw  <- the main contest .TRW (backups excluded)
-#   log.cfg  <- the contest .CFG (drives export header + scoring context)
+#   log.db   <- THE FIXTURE: the source .TRW converted to a TR4W SQLite log
+#   log.cfg  <- the contest .CFG (the contest definition; NOT an input to the
+#               golden run -- test-adif-roundtrip.sh needs it to create a fresh
+#               empty contest of the right type)
 #   ref.adi  <- the fresh D7 ADIF export        (golden master)
 #   ref.cbr  <- the fresh D7 Cabrillo export     (golden master; TR4W names it <CALL>.LOG)
 #   manifest.json <- provenance (source dir, D7 version, QSO count, claimed score)
@@ -29,9 +31,38 @@ for f in "$src"/*.LOG "$src"/*.log "$src"/*.CBR "$src"/*.cbr; do
 done
 
 [ -n "$log" ] || { echo "ERROR: no contest .TRW found in $src" >&2; exit 1; }
+[ -n "$cfg" ] || { echo "ERROR: no contest .CFG found in $src" >&2; exit 1; }
 mkdir -p "$dest"
-cp "$log" "$dest/log.trw"
-[ -n "$cfg" ] && cp "$cfg" "$dest/log.cfg"
+cp "$cfg" "$dest/log.cfg"
+
+# ---------------------------------------------------------------------------
+# THE FIXTURE IS A LOG DATABASE, 2026-09-24.  See corpus-lib.sh for NY4I's
+# decision and for where binary-log import is covered now.
+#
+# A contest IS a SQLite log in this program, so the set is converted ONCE, here,
+# by the build under test: stage the D7 .CFG and .TRW into a scratch directory,
+# run one headless export (which migrates the binary log in and captures the
+# contest configuration), and keep the database it produced.
+#
+# THE REFERENCES ARE STILL D7'S and are copied straight across, untouched.
+# ---------------------------------------------------------------------------
+EXE_SRC="build-out/app-i386-win32/tr4w_fpc.exe"
+[ -f "$EXE_SRC" ] || EXE_SRC="tr4w/target/tr4w.exe"
+[ -f "$EXE_SRC" ] || { echo "ERROR: no built app -- build first, the fixture is made by it" >&2; exit 1; }
+SETTINGS_WIN=$(cygpath -d "$PWD/tr4w/test/corpus/settings/tr4w.json")
+
+work="build-out/corpus-import/$slug"
+rm -rf "$work"; mkdir -p "$work"
+cp "$cfg" "$work/$(basename "$cfg")"
+cp "$log" "$work/$(basename "$log")"
+cfg_win=$(cygpath -d "$PWD/$work/$(basename "$cfg")")
+exe_leaf=$(basename "$EXE_SRC")
+[ "$EXE_SRC" = "tr4w/target/tr4w.exe" ] || cp "$EXE_SRC" "tr4w/target/$exe_leaf"
+( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 120 "./$exe_leaf" "$cfg_win" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 ) || true
+made=$(ls "$work"/*.db 2>/dev/null | head -1 || true)
+[ -n "$made" ] || { echo "ERROR: the export produced no log database in $work" >&2; exit 1; }
+rm -f "$work"/*.db-wal "$work"/*.db-shm
+cp "$made" "$dest/log.db"
 [ -n "$adi" ] && cp "$adi" "$dest/ref.adi"
 [ -n "$cbr" ] && cp "$cbr" "$dest/ref.cbr"
 

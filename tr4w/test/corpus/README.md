@@ -3,19 +3,48 @@
 Matched real-contest fixtures used to lock byte-exact behavior across the
 ANSI→UnicodeString conversion (see `../../docs/D12_STRING_MODERNIZATION_PLAN.md`).
 
-## Fixture = a matched set (log ↔ its own export)
+## What the corpus asserts
 
-Each set lives in its own `<slug>/` subdir and is the **whole** contest artifact —
-the export was generated from *this exact* `.TRW`, so a byte diff is meaningful:
+**A given log produces the expected ADIF and Cabrillo.**
+
+The input is a TR4W SQLite contest log — which is what a contest *is* in this
+program. The expected output is still **D7-produced and never regenerated**:
+that is the half of the oracle we did not write.
 
 ```
 <slug>/
-  log.trw        the contest log (input)
-  log.cfg        its contest config (drives Cabrillo header + scoring context)
+  log.db         THE FIXTURE: the contest log (input)
+  log.cfg        the contest DEFINITION -- NOT an input to the golden run;
+                 test-adif-roundtrip.sh needs it to create a fresh empty
+                 contest of the right type before importing ref.adi
   ref.adi        fresh D7 ADIF export      — GOLDEN MASTER
   ref.cbr        fresh D7 Cabrillo export  — GOLDEN MASTER  (TR4W emits it as <CALL>.LOG)
   manifest.json  provenance: source dir, D7 version, QSO count, claimed score
 ```
+
+### Why the D7 input formats were dropped (2026-09-24)
+
+Every set used to track a `log.trw` and the run began by importing it. NY4I:
+
+> *"I don't dispute its value to validating our processing today is
+> functionally the same as D7. My point was we are so far past validating that
+> fact, that we do not need that step anymore. Instead, the corpus can adopt
+> the testing methodology of comparing a given `.db` file produces an expected
+> ADIF and Cabrillo file."*
+
+and, on the coverage that gives up:
+
+> *"Yes I agree it's remnant allow us to validate .Trw conversion but that
+> becomes a unit test and not the corpus."*
+
+So **binary-log import is covered by the unit tests** — `uTestLogBinaryFile`,
+`uTestLogImport` and `uTestLogRepository`, over the six D7 logs kept as fixtures
+in `tr4w/test/unit/fixtures/binarylog/`. **Do not put `.trw` files back here.**
+
+The migration was gated set by set: each `.db` was built from that set's old
+`log.cfg` + `log.trw` and had to reproduce its existing `ref.adi` / `ref.cbr`
+before the old inputs were deleted. All thirteen did — 24 passed, 0 failed,
+2 known-divergence, exit 0, unchanged from the `.trw` path.
 
 Every `ref.*` MUST come from **one current D7 build (v4.149.x)** — the importer warns
 on anything else. (An earlier attempt used a version patchwork spanning v4.127.5..v4.149;
@@ -29,8 +58,10 @@ You export from a single current D7 build, then:
 bash tr4w/test/corpus/import-set.sh "/c/radio/TR4w/<CONTEST DIR>" <slug>
 ```
 
-It picks the contest `.TRW`/`.CFG`, the `.ADI`, and the Cabrillo (`START-OF-LOG` file),
-normalizes names, records provenance, and flags any non-v4.149 export.
+It picks the contest `.TRW`/`.CFG`, the `.ADI` and the Cabrillo (`START-OF-LOG` file),
+**converts the `.TRW` into the set's `log.db` using the built app**, records
+provenance, and flags any non-v4.149 export. It needs a built binary for that
+conversion; the references are copied across untouched.
 
 ## Tracking exception
 
@@ -44,7 +75,7 @@ Ground truth is the log record, read by `../logdump/logdump.exe` (canonical `Con
 
 1. **Self-consistency (build-agnostic):** `../python/verify_adif_export.py` checks the export
    faithfully represents the log record — run directly on the CURRENT-D12 export, no reference.
-2. **D7↔D12 byte diff (golden master):** the D12 export of `log.trw` must equal `ref.adi`/`ref.cbr`
+2. **Byte diff against the golden master:** the export of `log.db` must equal `ref.adi`/`ref.cbr`
    after normalizing volatile lines (`CREATED-BY` version, export timestamp).
 3. **Score:** each QSO record stores its points/mult (`VC.pas LogEntryPointsAddress=77`,
    `LogEntryMultAddress=69`); score = sum over the dumped log, cross-checked vs Cabrillo

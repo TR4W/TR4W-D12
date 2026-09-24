@@ -571,14 +571,34 @@ It links only leaf `src` units, so **the TRDOS contest engine is not unit-covere
 
 **2. Golden-master corpus** — the regression oracle for the contest engine.
 `bash tr4w/test/corpus/export-d12-corpus.sh` runs the app's headless export mode
-(`tr4w.exe "<contest>.CFG" /EXPORT`, `src/uProgramMain.pas`) over 13 real D7-written binary logs and
+(`tr4w.exe "<contest>.db" /EXPORT`, `src/uProgramMain.pas`) over 13 real contest logs and
 byte-diffs both artifacts — ADIF and Cabrillo — against frozen D7 references (13 sets × 2 = 26
 comparisons).
 
-- **IT EXERCISES THE DATABASE, NOT THE BINARY LOG.** The tracked fixtures are still D7-written
-  `.trw` files — that independence is the whole value of the oracle — but `uLogSource`'s default is
-  `lsDatabase`, so the export path under test reads SQLite. The `.trw` is the fixture format, not
-  the store.
+- **WHAT IT ASSERTS: A GIVEN LOG PRODUCES THE EXPECTED ADIF AND CABRILLO.** The tracked fixture is
+  a `log.db` — a TR4W SQLite contest log, which is what a contest IS in this program. The
+  references stay **D7-produced and are NEVER regenerated**; that is the independent half of the
+  oracle, and regenerating one would make it a tautology.
+
+- **THE D7 INPUT FORMATS WERE DROPPED BY DECISION ON 2026-09-24, NOT BY DISCOVERY.** Every set used
+  to track a `log.trw` that the run imported. NY4I: *"I don't dispute its value to validating our
+  processing today is functionally the same as D7. My point was we are so far past validating that
+  fact, that we do not need that step anymore. Instead, the corpus can adopt the testing
+  methodology of comparing a given `.db` file produces an expected ADIF and Cabrillo file."* This
+  file argued the opposite until that day (*"that independence is the whole value of the oracle"*),
+  so the next reader will otherwise re-derive the old argument and try to put the `.trw` files back.
+  **Don't.**
+
+- **BINARY-LOG IMPORT IS COVERED BY A UNIT TEST NOW, AND ONLY THERE.** NY4I, same day: *"Yes I
+  agree it's remnant allow us to validate .Trw conversion but that becomes a unit test and not the
+  corpus."* `uTestLogBinaryFile`, `uTestLogImport` and `uTestLogRepository` read the six D7 logs in
+  `tr4w/test/unit/fixtures/binarylog/` — six rather than one because each carries an assertion no
+  other log can (a one-record log, two county-line PAIRS, records `GoodLookingQSO` rejects, a DX
+  zone contest, a serial-number contest, Field Day's class exchange). The other seven are in git
+  history.
+
+- The migration was gated set by set: each `.db` had to reproduce that set's existing `ref.adi` /
+  `ref.cbr` before its `.trw` was deleted. All thirteen did, with the result below unchanged.
 
 - **Baseline: `24 passed, 0 failed, 2 known-divergence, 0 awaiting-candidate` = GREEN**, and
   **every export run must also exit 0.**

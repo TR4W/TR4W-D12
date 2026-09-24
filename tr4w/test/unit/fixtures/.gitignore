@@ -7,3 +7,12 @@
 # and would otherwise be committed as a test that silently reads nothing.
 !*.adi
 !*.ADI
+
+# The six D7-written binary contest logs in binarylog/ -- INPUTS to
+# uTestLogBinaryFile, uTestLogImport and uTestLogRepository, and the only place
+# reading a D7 .TRW is covered since the golden corpus's input became a log.db
+# (2026-09-24; NY4I: "that becomes a unit test and not the corpus").  The root
+# ignores *.TRW so real operating logs are never committed; these are curated
+# fixtures and re-include themselves here, exactly as the corpus set does.
+!binarylog/*.trw
+!binarylog/*.TRW

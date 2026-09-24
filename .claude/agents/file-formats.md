@@ -21,9 +21,23 @@ You own every format TR4W reads from or writes to disk for interchange.
 ## You are the corpus's subject
 
 **`bash tr4w/test/corpus/export-d12-corpus.sh` byte-diffs YOUR output** — 13 real
-D7-written logs × ADIF and Cabrillo = 26 comparisons, against frozen D7
+contest logs × ADIF and Cabrillo = 26 comparisons, against frozen D7
 references. Baseline **`24 passed, 0 failed, 2 known-divergence, 0
 awaiting-candidate`, and every export run must exit 0.**
+
+**THE INPUT IS A `log.db`, SINCE 2026-09-24 — a TR4W SQLite contest log, which
+is what a contest IS here.** The `log.trw` and the `.CFG` invocation are gone by
+NY4I's decision, not by discovery: *"we are so far past validating that fact...
+the corpus can adopt the testing methodology of comparing a given `.db` file
+produces an expected ADIF and Cabrillo file."* **The references stay D7-produced
+and are NEVER regenerated** — that is the independent half, and regenerating one
+turns the oracle into a tautology. If you think a ref must change, that is a
+behaviour FINDING; report it with the diff.
+
+**Binary-log import is covered by a UNIT TEST now, and only there** —
+`uTestLogBinaryFile`, `uTestLogImport`, `uTestLogRepository`, reading the six D7
+logs in `tr4w/test/unit/fixtures/binarylog/`. NY4I: *"that becomes a unit test
+and not the corpus."* Do not put `.trw` fixtures back in the corpus.
 
 Rules for running it:
 
@@ -42,6 +56,10 @@ and `ref.cbr` are byte-diffed; git was previously EOL-converting them, so they
 survived only on one machine's `core.autocrlf`. A differently-configured clone
 would see failures that are purely a git artifact — **on the regression oracle
 itself**.
+
+**`log.db` is `binary` in `.gitattributes`** for the same reason one step
+further: a page-structured database has nothing to give up by not being
+diffable, and a guess about its type is not good enough for a regression input.
 
 **The corpus is blind to scoring.** It proves the bytes, not the points.
 

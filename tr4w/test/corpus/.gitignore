@@ -4,10 +4,24 @@
 # ever commits real operating logs. The curated regression fixtures HERE are the
 # one sanctioned exception: re-include them for this subtree only. Everywhere
 # else in the repo, the root ignores still apply unchanged.
-!*.trw
-!*.TRW
+# log.db -- THE FIXTURE since 2026-09-24.  The corpus's input is the contest
+# log itself; see corpus-lib.sh for NY4I's decision.  Nothing in the root
+# ignores *.db today, and this says so on purpose: a rule added there later
+# must not silently drop thirteen regression inputs.
+!*.db
+
+# log.cfg -- the contest DEFINITION, and no longer an input to the golden run.
+# test-adif-roundtrip.sh needs it to create a fresh empty contest of the right
+# type before importing a ref.adi.
 !*.cfg
 !*.CFG
+
+# NO .trw LIVES HERE ANY MORE.  The six D7 binary logs that are still needed
+# are unit fixtures, in tr4w/test/unit/fixtures/binarylog -- that is where
+# reading a D7 log is covered now.  These two lines stay so a stray operating
+# log dropped in this subtree is still visible rather than silently ignored.
+!*.trw
+!*.TRW
 !*.adi
 !*.ADI
 !*.cbr
@@ -27,3 +41,10 @@ log.adi
 log.ADI
 log.cbr
 log.CBR
+
+# The staged export's own database is NOT written here -- the run stages into
+# build-out/corpus-work -- but a hand-run export in this directory would leave
+# a <stem>.db and a -wal beside the fixture.  log.db is the fixture; anything
+# else with that extension is transient.
+*.db-wal
+*.db-shm

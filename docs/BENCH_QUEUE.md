@@ -3195,16 +3195,18 @@ edits one, deletes one, or opens a log window.
 
 ### KNOWN-FAILING MEASUREMENTS -- recorded, not hidden
 
-- [ ] **`test-cfg-not-needed.sh` is 11 of 13.** With the `.cfg` emptied to zero
-  bytes, eleven logs export byte-identically. `arrl_dx_cw` and `general_qso` do
-  not, and NOT because a setting is missing: every command in both files is
-  captured and applied. It is ORDERING -- `MY CALL` arrives from the log later
-  than the `.cfg` used to supply it, so country and continent derived from the
-  callsign during config load are computed while it is empty. In ARRL-DX that
-  decides whether a received exchange renders as a power or a section, and all 66
-  QSOs come out `DX`. The fix is to recompute callsign-derived state after every
-  source has contributed. The two rows stay in the test as a FAILING measurement
-  rather than being excluded.
+- [x] ~~**`test-cfg-not-needed.sh` is 11 of 13.**~~ **IT IS 13 OF 13 SINCE
+  2026-09-24, AND THE MEASUREMENT WENT AWAY RATHER THAN THE DEFECT BEING FIXED.**
+  It was ORDERING -- `MY CALL` arrived from the log later than the `.cfg` used to
+  supply it, so country and continent derived from the callsign during config
+  load were computed while it was empty; in ARRL-DX that decides whether a
+  received exchange renders as a power or a section, and all 66 QSOs came out
+  `DX`. That only happened on the pass that MIGRATED a `.TRW`. The corpus fixture
+  is a `log.db` now, so that test opens a finished database twice and the
+  migration ordering is no longer in play. **Do not read the green row as proof
+  the ordering is right** -- if anyone re-opens it, a migration is what has to be
+  measured, and that lives in the unit tests over
+  `tr4w/test/unit/fixtures/binarylog/`.
 
 - [ ] **`Test-CountyLineEntry` failed once under load, then passed four times.**
   Ran immediately after three heavy corpus passes; the control-wait deadline is

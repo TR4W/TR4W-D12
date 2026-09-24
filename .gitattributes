@@ -104,6 +104,14 @@ cacert.pem                   -text
 *.zip           binary
 *.resources     binary
 
+# SQLite contest logs.  Since 2026-09-24 the golden-master corpus's INPUT is a
+# tracked log.db per set, so these are regression-suite inputs exactly as the
+# .trw files were, and a guess about their type is not good enough either.
+# `binary` rather than `-text`: a page-structured database is not readable as a
+# diff, so there is nothing to give up by saying so, and it also stops git
+# wasting effort trying.
+*.db            binary
+
 # Raw radio-stream captures (tr4w/test/unit/fixtures/*.bin) -- recorded off the
 # wire by tools/k4panwatch.py and fed to the decoder byte for byte.  A capture
 # is full of 0xFF/0x0D/0x0A bytes that mean SAMPLE DATA, so leaving it to the

@@ -3,9 +3,15 @@ unit uTestLogImport;
 (* IMPORTING A BINARY LOG.
 
   The claim being tested is not "it runs" but "nothing is lost". Every one of
-  the thirteen corpus fixtures is imported and its record count checked against
-  what the file size implies -- so a record silently dropped by the importer
-  fails here, on a real D7-written log, rather than on somebody's contest.
+  the six D7-written fixtures in test\unit\fixtures\binarylog is
+  imported and its record count checked against what the file size implies --
+  so a record silently dropped by the importer fails here, on a real
+  D7-written log, rather than on somebody's contest.
+
+  THIS IS WHERE BINARY-LOG IMPORT IS COVERED, since 2026-09-24. The golden
+  corpus used to import a .trw on every run as a side effect of exporting;
+  its input is a log.db now, so that coverage lives here and only here.
+  NY4I: "that becomes a unit test and not the corpus."
 
   THE FILTER TEST IS THE IMPORTANT ONE. GoodLookingQSO is what ExportToADIF
   emits; using it as an IMPORT filter would quietly discard deleted QSOs, skipped
@@ -25,13 +31,14 @@ type
       FDir: string;
       function TempDb(const aLeaf: string): string;
       procedure Scrub(const aFileName: string);
-      function CorpusLog(const aSet: string): string;
+      function BinaryLogFixture(const aSet: string): string;
    protected
-      procedure TestImportsEveryRecordOfEveryCorpusLog;
+      procedure TestImportsEveryRecordOfEveryFixtureLog;
       procedure TestImportKeepsWhatExportWouldFilterOut;
       procedure TestImportRefusesAnExistingTarget;
       procedure TestImportReportsAMissingSource;
       procedure TestImportedQSOsAreQueryable;
+      procedure TestAKnownQSOKeepsItsRealValues;
       procedure TestCountyLineRowsShareOneSet;
    public
       procedure RunAllTests; override;
@@ -45,12 +52,28 @@ uses
 (* TInt64Array comes from uLogRepository -- see RelatedRowIds. *)
 
 const
-   CORPUS_SETS: array[0..12] of string = (
-      'arktika_2026_ny4i', 'arrl_digi_2026_ny4i', 'arrl_dx_cw_2025_ny4i',
-      'arrl_fd_2026_ny4i', 'florida_qp_2026_ny4i', 'cqwpx_cw_2026_ny4i',
-      'cqww_ssb_2025_ny4i', 'florida_qp_2026_ny4i', 'general_qso_2026_w1aw4',
-      'iaru_hf_2026_ny4i', 'michigan_qp_2026_ny4i', 'na_sprint_cw_2026_ny4i',
-      'winter_fd_2025_w4ta');
+   (* THE SIX D7 LOGS KEPT AS UNIT FIXTURES, and why each one is here.
+
+     This was all thirteen corpus sets until 2026-09-24, when the golden
+     corpus's input became a log.db and the .trw files stopped living there.
+     NY4I: "that becomes a unit test and not the corpus."  Six were kept
+     rather than one, because each carries an assertion no other log can:
+
+       arktika_2026_ny4i       752 bytes -- the degenerate log, one record
+       florida_qp_2026_ny4i    two county-line PAIRS, and records that
+                               GoodLookingQSO rejects (5 held, 3 exportable)
+       general_qso_2026_w1aw4  the queryable/ordering fixture (KD6RYO first)
+       cqww_ssb_2025_ny4i      a DX zone contest, and the repository
+                               round-trip's largest log
+       cqwpx_cw_2026_ny4i      a serial-number contest
+       arrl_fd_2026_ny4i       Field Day's class/section exchange
+
+     Named rather than enumerated from the directory, so a fixture that
+     disappears fails here instead of quietly shrinking the coverage. *)
+   CORPUS_SETS: array[0..5] of string = (
+      'arktika_2026_ny4i', 'arrl_fd_2026_ny4i', 'cqwpx_cw_2026_ny4i',
+      'cqww_ssb_2025_ny4i', 'florida_qp_2026_ny4i',
+      'general_qso_2026_w1aw4');
 
 function TLogImportTests.TempDb(const aLeaf: string): string;
 begin
@@ -70,17 +93,26 @@ begin
    if FileExists(aFileName + '-shm') then DeleteFile(aFileName + '-shm');
 end;
 
-function TLogImportTests.CorpusLog(const aSet: string): string;
+function TLogImportTests.BinaryLogFixture(const aSet: string): string;
 begin
-   (* PathDelim, NOT HARDCODED BACKSLASHES. Found by RUNNING on Linux, which
+   (* THE D7 BINARY LOGS LIVE HERE, NOT IN THE CORPUS -- 2026-09-24.
+
+     The golden corpus's input is a log.db now, and NY4I scoped what that
+     gives up: "Yes I agree it's remnant allow us to validate .Trw
+     conversion but that becomes a unit test and not the corpus."  Six of
+     the thirteen D7 logs were kept as UNIT fixtures for exactly that, each
+     because some assertion here names it; the other seven were deleted and
+     are in git history.
+
+     PathDelim, NOT HARDCODED BACKSLASHES. Found by RUNNING on Linux, which
      asked to open one file literally named "..\corpus\<set>\log.trw" and
      reported "No such file or directory". It compiles everywhere; it only
      fails where the separator is not a backslash. *)
-   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + 'corpus' +
-             PathDelim + aSet + PathDelim + 'log.trw';
+   Result := ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
+             'binarylog' + PathDelim + aSet + '.trw';
 end;
 
-procedure TLogImportTests.TestImportsEveryRecordOfEveryCorpusLog;
+procedure TLogImportTests.TestImportsEveryRecordOfEveryFixtureLog;
 var
    i: integer;
    fn: string;
@@ -88,12 +120,12 @@ var
    reader: TLogBinaryReader;
    expected: Int64;
 begin
-   BeginTest('TestImportsEveryRecordOfEveryCorpusLog');
+   BeginTest('TestImportsEveryRecordOfEveryFixtureLog');
 
    for i := Low(CORPUS_SETS) to High(CORPUS_SETS) do
       begin
       (* What the file itself says it holds -- the independent number. *)
-      reader := TLogBinaryReader.Create(CorpusLog(CORPUS_SETS[i]));
+      reader := TLogBinaryReader.Create(BinaryLogFixture(CORPUS_SETS[i]));
       try
          CheckTrue(reader.Status = lbOK, CORPUS_SETS[i] + ': ' + reader.Message);
          expected := reader.ExpectedRecords;
@@ -104,7 +136,7 @@ begin
       fn := TempDb('import_' + IntToStr(i) + '.db');
       Scrub(fn);
 
-      res := ImportBinaryLog(CorpusLog(CORPUS_SETS[i]), fn);
+      res := ImportBinaryLog(BinaryLogFixture(CORPUS_SETS[i]), fn);
 
       CheckTrue(res.Ok, CORPUS_SETS[i] + ' imports: ' + res.Message);
       CheckEquals(integer(expected), res.RecordsRead,
@@ -140,7 +172,7 @@ begin
      exactly that reason -- which is the check doing its job.) *)
    good := 0;
    total := 0;
-   reader := TLogBinaryReader.Create(CorpusLog('florida_qp_2026_ny4i'));
+   reader := TLogBinaryReader.Create(BinaryLogFixture('florida_qp_2026_ny4i'));
    try
       CheckTrue(reader.Status = lbOK, 'the fixture opens: ' + reader.Message);
       while reader.ReadNext(rec) do
@@ -162,7 +194,7 @@ begin
 
    fn := TempDb('filter.db');
    Scrub(fn);
-   res := ImportBinaryLog(CorpusLog('florida_qp_2026_ny4i'), fn);
+   res := ImportBinaryLog(BinaryLogFixture('florida_qp_2026_ny4i'), fn);
 
    (* THE POINT. GoodLookingQSO is an EXPORT filter. Using it on import would
      drop deleted QSOs, skipped QSOs, QTC traffic and notes -- and would report
@@ -203,11 +235,11 @@ begin
    fn := TempDb('exists.db');
    Scrub(fn);
 
-   res := ImportBinaryLog(CorpusLog('arktika_2026_ny4i'), fn);
+   res := ImportBinaryLog(BinaryLogFixture('arktika_2026_ny4i'), fn);
    CheckTrue(res.Ok, 'the first import works');
 
    (* Importing over somebody's log is the mistake worth refusing outright. *)
-   res := ImportBinaryLog(CorpusLog('arktika_2026_ny4i'), fn);
+   res := ImportBinaryLog(BinaryLogFixture('arktika_2026_ny4i'), fn);
    CheckFalse(res.Ok, 'a second import into the same file is refused');
    CheckTrue(Pos('already exists', res.Message) > 0,
              'and says the log is already there');
@@ -225,7 +257,7 @@ begin
    fn := TempDb('nosource.db');
    Scrub(fn);
 
-   res := ImportBinaryLog(CorpusLog('no_such_set'), fn);
+   res := ImportBinaryLog(BinaryLogFixture('no_such_set'), fn);
 
    (* Never raises: an operator importing a season of logs needs to know which
      one would not read and still get the rest. *)
@@ -247,7 +279,7 @@ begin
 
    fn := TempDb('query.db');
    Scrub(fn);
-   res := ImportBinaryLog(CorpusLog('general_qso_2026_w1aw4'), fn);
+   res := ImportBinaryLog(BinaryLogFixture('general_qso_2026_w1aw4'), fn);
    CheckTrue(res.Ok, 'it imports: ' + res.Message);
 
    db := TLogDatabase.Create;
@@ -281,6 +313,102 @@ begin
                   'and ordering by time gives the same first QSO as the Cabrillo');
 
       CheckTrue(db.CheckIntegrity.Ok, 'the imported log passes its integrity check');
+   finally
+      db.Free;
+   end;
+
+   Scrub(fn);
+end;
+
+(* THE MAPPER IS PINNED TO NAMED VALUES, NOT ONLY TO ITSELF.
+
+  TestWholeCorpusLogRoundTrips in uTestLogRepository compares every persisted
+  field in both directions, which is strong and has one blind spot: it is
+  SYMMETRIC. A mapper that wrote the sent RST into the received column and read
+  it back out of the same place would round-trip perfectly and be wrong.
+
+  So this asserts the values a HUMAN can check, against D7's own Cabrillo for
+  the same contact -- general_qso_2026_w1aw4/ref.cbr, first QSO line:
+
+    QSO: 14248 PH 2026-02-11 0006 W1AW/4  59  TOM  KD6RYO  59  AR
+
+  WHAT IS DELIBERATELY NOT ASSERTED: dxcc_entity, the zones, the continent and
+  qso_points. Those are RECOMPUTED from CTY.DAT, which is not the file D7 used,
+  and seven corpus logs legitimately move when rescored for exactly that reason
+  (see test-contest-factory.sh's header). Pinning them here would make a country
+  file update fail an import test. *)
+procedure TLogImportTests.TestAKnownQSOKeepsItsRealValues;
+var
+   fn: string;
+   res: TLogImportResult;
+   db: TLogDatabase;
+   q: TSQLQuery;
+begin
+   BeginTest('TestAKnownQSOKeepsItsRealValues');
+
+   fn := TempDb('known.db');
+   Scrub(fn);
+   res := ImportBinaryLog(BinaryLogFixture('general_qso_2026_w1aw4'), fn);
+   CheckTrue(res.Ok, 'it imports: ' + res.Message);
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         (* The FIRST contact by time -- the one the reference's first QSO line
+           is, so the two can be read side by side. *)
+         q.SQL.Text :=
+            'SELECT callsign, band, mode, submode, freq_tx_hz, freq_rx_hz, ' +
+            'rst_sent, rst_received, exchange_received, operator_call, ' +
+            'record_kind, deleted, ' +
+            'datetime(qso_at, ''unixepoch'') AS at_utc ' +
+            'FROM qso ORDER BY qso_at LIMIT 1';
+         q.Open;
+
+         CheckEquals('KD6RYO', q.FieldByName('callsign').AsString,
+                     'the callsign D7 logged');
+         CheckEquals('W1AW/4', q.FieldByName('operator_call').AsString,
+                     'worked by the station D7 names in the same line');
+
+         (* 14248 kHz in the Cabrillo; the log carries it in Hz. *)
+         CheckEquals(14248000, q.FieldByName('freq_tx_hz').AsInteger,
+                     'the transmit frequency, in Hz');
+         CheckEquals(14248000, q.FieldByName('freq_rx_hz').AsInteger,
+                     'and the receive frequency, since this QSO was not split');
+         CheckEquals('20m', q.FieldByName('band').AsString,
+                     'which is the band that frequency is in');
+
+         (* PH in the Cabrillo. The binary log distinguishes the sideband, and
+           losing that is a real failure mode: USB on 20m is what ADIF needs. *)
+         CheckEquals('SSB', q.FieldByName('mode').AsString, 'PH is SSB');
+         CheckEquals('USB', q.FieldByName('submode').AsString,
+                     'and the sideband survives the import');
+
+         (* 2026-02-11 0006 in the Cabrillo, which has minute resolution; the
+           binary record carries the second and it is kept. An hour of drift --
+           a local-vs-UTC mistake -- fails here and nowhere else. *)
+         CheckEquals('2026-02-11 00:06:43', q.FieldByName('at_utc').AsString,
+                     'the moment of the QSO, in UTC');
+
+         (* THE ASYMMETRIC PART, and the reason this test exists: sent and
+           received are separate columns and must not be swapped or shared. *)
+         CheckEquals(59, q.FieldByName('rst_sent').AsInteger, 'the RST we sent');
+         CheckEquals(59, q.FieldByName('rst_received').AsInteger,
+                     'and the RST we received');
+         CheckEquals('AR', q.FieldByName('exchange_received').AsString,
+                     'the exchange D7 printed in the received column');
+
+         CheckEquals('QSO', q.FieldByName('record_kind').AsString,
+                     'it is a contact, not a note or a QTC');
+         CheckEquals(0, q.FieldByName('deleted').AsInteger,
+                     'and it is not deleted');
+
+         q.Close;
+      finally
+         q.Free;
+      end;
    finally
       db.Free;
    end;
@@ -331,7 +459,7 @@ begin
 
    fn := TempDb('countyset.db');
    Scrub(fn);
-   res := ImportBinaryLog(CorpusLog('florida_qp_2026_ny4i'), fn);
+   res := ImportBinaryLog(BinaryLogFixture('florida_qp_2026_ny4i'), fn);
    CheckTrue(res.Ok, 'the fixture imports: ' + res.Message);
 
    db := TLogDatabase.Create;
@@ -421,11 +549,12 @@ begin
    WriteLn('  SKIPPED: reads a D7 binary log, which is a Windows migration path.');
    Exit;
 {$ENDIF}
-   TestImportsEveryRecordOfEveryCorpusLog;
+   TestImportsEveryRecordOfEveryFixtureLog;
    TestImportKeepsWhatExportWouldFilterOut;
    TestImportRefusesAnExistingTarget;
    TestImportReportsAMissingSource;
    TestImportedQSOsAreQueryable;
+   TestAKnownQSOKeepsItsRealValues;
    TestCountyLineRowsShareOneSet;
 
    if (FDir <> '') and DirectoryExists(FDir) then

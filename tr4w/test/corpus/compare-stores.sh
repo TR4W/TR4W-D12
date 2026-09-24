@@ -51,14 +51,29 @@ cp "$EXE_SRC" "$EXE" || exit 1
 # else would be hiding exactly what this script exists to find.
 norm() { sed -E 's/(Created by TR4W version .* on ).*/\1TIME/; s/(<CREATED_TIMESTAMP:15>).*/\1TIME/' "$1" 2>/dev/null; }
 
+# THE BINARY LOGS MOVED OUT OF THE CORPUS, 2026-09-24.
+#
+# The golden corpus's input is a log.db now, so the D7 .trw files it used to
+# carry are unit fixtures -- six of the thirteen, kept because assertions in
+# uTestLogBinaryFile / uTestLogImport / uTestLogRepository name them.  This
+# script runs over those six.
+#
+# THAT IS SEVEN LOGS OF COVERAGE GIVEN UP, and it is stated rather than hidden:
+# the binary store is import-only, so what is left to compare is a legacy read
+# path, not the program's log.  The contest .cfg still comes from the corpus set
+# of the same name -- it is the contest definition, and it never moved.
+BINLOGS="$REPO_ROOT/tr4w/test/unit/fixtures/binarylog"
+
 pass=0; fail=0; failed_names=""
-for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
-   name=$(basename "$d")
-   [ -f "$d/log.trw" ] || continue
+for t in "$BINLOGS"/*.trw; do
+   [ -f "$t" ] || continue
+   name=$(basename "$t" .trw)
+   d="$REPO_ROOT/tr4w/test/corpus/$name"
+   [ -f "$d/log.cfg" ] || { echo "  MISS  $name (no log.cfg in the corpus set)"; continue; }
 
    rm -f "$WORK".* ./*.LOG
    cp "$d/log.cfg" "$WORK.CFG" || continue
-   cp "$d/log.trw" "$WORK.TRW" || continue
+   cp "$t" "$WORK.TRW" || continue
 
    # MSYS_NO_PATHCONV: stop Git Bash rewriting /IMPORTLOG and /EXPORT into paths.
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" /IMPORTLOG "$WORK.TRW" "$WORK.db" >/dev/null 2>&1
