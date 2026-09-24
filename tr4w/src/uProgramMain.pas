@@ -589,10 +589,18 @@ begin
      end;
 
   (* THE SAME RULE AS THE MENU ITEM: read from wherever it was found, but
-    WRITE into the contest directory, which is writable by definition.  ctyPath
-    up to here is what TR4W LOOKED FOR, which on a fresh Linux or macOS install
-    is the shipped, read-only copy. *)
-  ctyPath := ContestFilePath('CTY.DAT');
+    WRITE where downloaded data belongs.  ctyPath up to here is what TR4W
+    LOOKED FOR, which on a fresh Linux or macOS install is the shipped,
+    read-only copy -- inside the signed .app bundle on macOS, and inside a
+    read-only mount under an AppImage.
+
+    DownloadedDataFilePath, NOT ContestFilePath (2026-09-24).  A country file
+    is application data, not a contest document, and on Windows ContestDir and
+    DataDir are the SAME directory -- so writing here landed on the shipped
+    copy, which is the tracked target cty.dat in a developer's repository.
+    The resolver ranks the downloaded tier first, so what this writes is what
+    the next load finds. *)
+  ctyPath := DownloadedDataFilePath('CTY.DAT');
 
   logger.Info('CTY.DAT not loaded; downloading to ' + ctyPath);
 
