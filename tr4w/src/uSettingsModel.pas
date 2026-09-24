@@ -212,6 +212,31 @@ type
    TNetStatusInterval   = 1000..10000; // was crMin:1000, crMax:10000
    TFreqPollRate        = 10..1000;   // was crMin:10, crMax:1000 -- ms
    TServerPort          = 0..65535;   // was crMin:0, crMax:MAXWORD
+   (* HOW MANY LINES THE DX CLUSTER CONSOLE KEEPS ON SCREEN.
+
+     A DISPLAY BUDGET, NOT AN ARCHIVE. The session file under DXCluster\ is
+     written as each line ARRIVES and is not bounded by this -- see
+     uTelnet.TelnetSessionLogWrite. The two were the same thing until
+     2026-09-24, which is why capping the window used to mean shortening the
+     record of what the node sent.
+
+     THE DEFAULT IS 10,000 AND IT IS A BUDGET, NOT A MEASUREMENT. The cost
+     that matters is per-ROW and main-thread: under lbOwnerDrawVariable the
+     widget set asks MeasureItem once per row on every reload, so one settled
+     resize is O(rows) of work on the thread that draws. Unbounded, a 48-hour
+     contest against a busy node leaves six figures of rows there, which is
+     the beachball NY4I saw on macOS.
+
+     10,000 rows is about four to ten hours of a busy cluster, and roughly 250
+     screenfuls -- far past what anyone scrolls -- so no session should feel
+     it. It is NOT backed by a per-row timing: the probe that would settle it
+     (tr4w/test/tools/listboxprobe) has to run on gtk2 or Cocoa, and neither
+     was reachable when this was written. Re-measure before narrowing it.
+
+     The floor is 1,000 so the setting cannot make the console useless, and
+     the ceiling is 100,000 so an operator who wants the old behaviour can
+     have it and pay for it. *)
+   TTelnetConsoleLines  = 1000..100000;
    TContactsPerPage     = 10..100;    // was crMin:10, crMax:100
    (* MINITOUR DURATION, in minutes. THE ROW SAID 5..60 AND THE GLOBAL
      SAT AT 0, which MainUnit tests for -- `if TourDuration <> 0` is how
@@ -923,10 +948,18 @@ type
    TTelnetSettings = class(TSettingsGroup)
    private
       FServer: string;
+      FConsoleLines: TTelnetConsoleLines;
+   public
+      constructor Create;
    published
       (* Was TelnetServer in uTelnet, a Str50. uTelnet seeds its host list
         from it and preselects it. *)
       property Server: string read FServer write FServer;
+      (* TELNET CONSOLE LINES -- the scrollback cap. New in 2026-09-24; it
+        migrated from nothing, because nothing trimmed the console at all.
+        See TTelnetConsoleLines for where the number came from. *)
+      property ConsoleLines: TTelnetConsoleLines
+         read FConsoleLines write FConsoleLines;
    end;
 
    (*
@@ -4470,6 +4503,15 @@ begin
    FPossibleCallMode := AnyCall;
    // Empty means every country, which is what the field carried.
    FCountryString := '';
+end;
+
+constructor TTelnetSettings.Create;
+begin
+   inherited Create;
+   (* The default has to be stated: zero is outside the subrange, so an
+     unassigned field would be an illegal ordinal the moment anything read
+     it back through RTTI. *)
+   FConsoleLines := 10000;
 end;
 
 constructor TClusterSettings.Create;

@@ -54,6 +54,7 @@ type
       procedure Test_NoRetiredNameIsAlsoLiveOrOwned;
       procedure Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
       procedure Test_ARangeIsPartOfTheType;
+      procedure Test_TheTelnetConsoleCapIsBoundedAndDefaulted;
       procedure Test_AStoredValueOutOfRangeIsClamped;
       procedure Test_TheReadPathAndTheWritePathAgree;
       procedure Test_AContestParameterNeverReachesTheJson;
@@ -354,7 +355,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(297, names.Count,
+         CheckEquals(298, names.Count,
                      'one name per migrated setting, plus the ten that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -364,7 +365,10 @@ begin
                      + ' for it; 296 since MP3 PATH, MP3 PLAYER and MP3'
                      + ' RECORDER ENABLE were retired, 2026-09-19; 297'
                      + ' with DISPLAY LANGUAGE, the UI language (new, no'
-                     + ' CFGCA row), 2026-09-19');
+                     + ' CFGCA row), 2026-09-19; 298 with TELNET'
+                     + ' CONSOLE LINES, the DX cluster scrollback cap'
+                     + ' (new, no CFGCA row -- nothing bounded that'
+                     + ' console before), 2026-09-24');
       finally
          names.Free;
       end;
@@ -864,6 +868,47 @@ begin
         Integer property must keep accepting ordinary values -- if this fails,
         the check is reading the wrong thing. *)
       CheckTrue(s.TrySetByCommand('EXTERNAL LOGGER PORT', '52099'), 'a plain integer');
+   finally
+      s.Free;
+   end;
+end;
+
+(* THE DX CLUSTER CONSOLE'S SCROLLBACK CAP.
+
+  THE DEFAULT IS THE HALF THAT MATTERS, and it is not a taste question. Zero
+  is OUTSIDE TTelnetConsoleLines, so a group that forgot to state a default
+  would leave an illegal ordinal in the field -- and the value is handed to
+  TelnetConsoleTrim on every arriving line, where a small or zero limit would
+  quietly throw the console away line by line. An unstated default here is a
+  console that empties itself, not a console that is merely mis-sized.
+
+  THE BOUNDS ARE PINNED IN BOTH DIRECTIONS for the usual reason: an off-by-one
+  in the subrange declaration passes any test that only checks the middle. *)
+procedure TSettingsModelTests.Test_TheTelnetConsoleCapIsBoundedAndDefaulted;
+var
+   s: TR4WSettings;
+begin
+   BeginTest('the telnet console cap has a legal default and keeps its range');
+   s := TR4WSettings.Create;
+   try
+      CheckEquals(10000, s.Telnet.ConsoleLines, 'the stated default');
+      CheckTrue(s.Telnet.ConsoleLines >= Low(TTelnetConsoleLines),
+                'the default is inside its own range');
+
+      CheckFalse(s.TrySetByCommand('TELNET CONSOLE LINES', '999'), 'below the min');
+      CheckEquals(10000, s.Telnet.ConsoleLines, 'and it did not move');
+
+      CheckFalse(s.TrySetByCommand('TELNET CONSOLE LINES', '0'),
+                 'zero -- a console that discards every line');
+      CheckEquals(10000, s.Telnet.ConsoleLines, 'and it did not move');
+
+      CheckFalse(s.TrySetByCommand('TELNET CONSOLE LINES', '100001'), 'above the max');
+      CheckEquals(10000, s.Telnet.ConsoleLines, 'and it did not move');
+
+      CheckTrue(s.TrySetByCommand('TELNET CONSOLE LINES', '1000'), 'the minimum');
+      CheckEquals(1000, s.Telnet.ConsoleLines, 'applied');
+      CheckTrue(s.TrySetByCommand('TELNET CONSOLE LINES', '100000'), 'the maximum');
+      CheckEquals(100000, s.Telnet.ConsoleLines, 'applied');
    finally
       s.Free;
    end;
@@ -1542,6 +1587,7 @@ const
       + '"SWAP PACKET SPOT RADIOS",'
       + '"SWAP PADDLES",'
       + '"SWAP RADIO RELAY SENSE",'
+      + '"TELNET CONSOLE LINES",'
       + '"TELNET SERVER",'
       + '"TEN MINUTE RULE",'
       + '"TUNE ALT-D ENABLE",'
@@ -2047,6 +2093,7 @@ begin
    Test_NoRetiredNameIsAlsoLiveOrOwned;
    Test_AStoreOwnedCommandIsAcceptedAndIsNotRetired;
    Test_ARangeIsPartOfTheType;
+   Test_TheTelnetConsoleCapIsBoundedAndDefaulted;
    Test_AStoredValueOutOfRangeIsClamped;
    Test_TheReadPathAndTheWritePathAgree;
    Test_AContestParameterNeverReachesTheJson;

@@ -157,10 +157,14 @@ procedure CreateTR4WTelnetWindow;
 { Every one of these is a no-op when the window is not open: the headless
   /EXPORT path never builds a form, and the cluster can be connected with the
   window closed. }
-procedure TelnetConsoleAdd(const aText: string; const aKind: TelnetStringType);
+{ aLimit is HOW MANY LINES THE CONSOLE KEEPS -- see TelnetConsoleTrim.  It is
+  a parameter rather than state this unit holds because it is a SETTING, and a
+  copy of a setting is a copy that drifts: passing it on every line means the
+  view is never stale and nothing has to remember to tell it. }
+procedure TelnetConsoleAdd(const aText: string; const aKind: TelnetStringType;
+                           const aLimit: integer);
 procedure TelnetConsoleClear;
 procedure TelnetConsoleScrollToEnd;
-function  TelnetConsoleCount: integer;
 function  TelnetConsoleLine(const aIndex: integer): string;
 function  TelnetConsoleKind(const aIndex: integer): TelnetStringType;
 function  TelnetConsoleSelected: integer;
@@ -250,6 +254,12 @@ var
      a caption breaks the moment that caption is translated -- which is coming.
      uTelnet owns the mode; this is the view's copy of what it was last told. }
    GFreezePressed: boolean = False;
+
+   { THE LAST LIMIT TelnetConsoleAdd WAS GIVEN, and the only thing it is used
+     for is the trim deferred while frozen -- unfreezing has no setting to hand
+     and must not invent one.  Zero means "no line has arrived yet", in which
+     case there is nothing to trim either. }
+   GConsoleLimit: integer = 0;
 
 { THE COLOUR OF A CONSOLE LINE.
 
@@ -905,7 +915,103 @@ end;
 
 { ------------------------------------------------------------- console ---- }
 
-procedure TelnetConsoleAdd(const aText: string; const aKind: TelnetStringType);
+(* THE SCROLLBACK CAP, AND IT IS THE DISPLAY'S CAP AND NOTHING ELSE.
+
+  The console was unbounded: nothing here trimmed it and the only emptier was
+  the Clear button.  That is O(rows) of main-thread work on every settled
+  resize, because lbOwnerDrawVariable makes the widget set ask MeasureItem once
+  per row on each reload -- which is what a long session's resize felt like on
+  Cocoa.
+
+  WHAT MAKES THIS SAFE TO DO AT ALL is that the session file no longer comes
+  from here: uTelnet writes each line to DXCluster as it arrives, so trimming
+  the window shortens nothing but the window.  Before 2026-09-24 the dump
+  serialised these very Items and a cap would have truncated the record too.
+
+  IN CHUNKS, NOT ONE PER LINE.  Deleting a single row per arriving line means a
+  widget-level removal on every line for the whole rest of the session; taking
+  a tenth of the buffer at a time makes that cost amortised and leaves the
+  count oscillating between 90% and 100% of the limit.
+
+  ONE TRIM SITE.  Every line enters through TelnetConsoleAdd -- uTelnet's
+  AddStringToTelnetConsole is its only caller -- so this is the only place that
+  removes a row, and a second one would be free to disagree with it.  It is
+  deliberately NOT called from a paint or measure callback: those run while the
+  widget set is iterating the very list this mutates. *)
+procedure TelnetConsoleTrim(const aLimit: integer);
+var
+   lb: TListBox;
+   keep, drop, removed, sel: integer;
+begin
+   if (not ConsoleUsable) or (aLimit <= 0) then
+      begin
+      Exit;
+      end;
+
+   (* FROZEN MEANS FROZEN.  The operator pressed Freeze to read something, and
+     rows leave from the TOP -- so trimming now would slide the content out
+     from under a view that was deliberately pinned, and could discard the very
+     line they froze to read.  The buffer is allowed to overshoot instead; the
+     deferred trim runs when TelnetSetFreezePressed is told the mode is off,
+     which is the same rule the arriving line and the resize already follow. *)
+   if GFreezePressed then
+      begin
+      Exit;
+      end;
+
+   lb := TR4WTelnetForm.lstConsole;
+   if lb.Items.Count <= aLimit then
+      begin
+      Exit;
+      end;
+
+   keep    := aLimit - (aLimit div 10);
+   removed := lb.Items.Count - keep;
+
+   (* READ BEFORE THE DELETE.  Deleting from the top moves the selection under
+     the widget set, and some widget sets clear it outright, so the answer has
+     to be taken while the rows it refers to are still there. *)
+   sel := lb.ItemIndex;
+
+   lb.Items.BeginUpdate;
+   try
+      (* Delete(0) `removed` times rather than a range delete, because TStrings
+        has no range delete; the Begin/EndUpdate pair is what keeps it to one
+        widget refresh. *)
+      drop := removed;
+      while drop > 0 do
+         begin
+         lb.Items.Delete(0);
+         Dec(drop);
+         end;
+   finally
+      lb.Items.EndUpdate;
+   end;
+
+   (* THE SELECTION MOVED WITH THE ROWS.  Every surviving index shifted down by
+     the number removed, so leaving ItemIndex alone would silently reselect a
+     different line -- and TelnetConsoleSelectForEntry hands that line to the
+     entry field.  A selection that was inside the removed block no longer
+     exists and becomes no selection at all. *)
+   if sel >= 0 then
+      begin
+      if sel < removed then
+         begin
+         lb.ItemIndex := -1;
+         end
+      else
+         begin
+         lb.ItemIndex := sel - removed;
+         end;
+      end;
+
+   (* THE VIEW IS NOT REPOSITIONED HERE.  Not frozen means the caller scrolls
+     to the end after every line, so there is no scroll position to preserve;
+     doing it here as well would fight that. *)
+end;
+
+procedure TelnetConsoleAdd(const aText: string; const aKind: TelnetStringType;
+                           const aLimit: integer);
 begin
    if not ConsoleUsable then
       begin
@@ -917,6 +1023,9 @@ begin
      any more: that existed because the owner-draw handler read the item back
      into a fixed stack buffer, and it does not do that now. }
    TR4WTelnetForm.lstConsole.Items.AddObject(aText, TObject(PtrUInt(Ord(aKind))));
+
+   GConsoleLimit := aLimit;
+   TelnetConsoleTrim(aLimit);
 end;
 
 procedure TelnetConsoleClear;
@@ -939,16 +1048,6 @@ begin
       TR4WTelnetForm.lstConsole.TopIndex :=
          TR4WTelnetForm.lstConsole.Items.Count - 1;
       end;
-end;
-
-function TelnetConsoleCount: integer;
-begin
-   Result := 0;
-   if not ConsoleUsable then
-      begin
-      Exit;
-      end;
-   Result := TR4WTelnetForm.lstConsole.Items.Count;
 end;
 
 function TelnetConsoleLine(const aIndex: integer): string;
@@ -1070,6 +1169,11 @@ begin
    else
       begin
       TR4WTelnetForm.btnFreeze.Caption := 'Freeze';
+      { THE DEFERRED TRIM.  Trimming is suppressed while frozen, so the buffer
+        has been allowed to overshoot; this is the moment it is allowed to
+        catch up.  Both routes through unfreeze come here -- the toolbar button
+        and the reset at the start of a new session. }
+      TelnetConsoleTrim(GConsoleLimit);
       end;
 end;
 

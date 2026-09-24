@@ -795,10 +795,14 @@ begin
   // away by the time this runs.
   PutAllRadiosIntoReceive;
 
-  logger.Info('[ExitProgram] Step 1: SaveTelnetWindowSpots');
-  logger.debug('Calling SaveTelnetWindowSpots');
-  SaveTelnetWindowSpots;
-  logger.debug('Back from SaveTelnetWindowSpots');
+  logger.Info('[ExitProgram] Step 1: CloseTelnetSessionLog');
+  logger.debug('Calling CloseTelnetSessionLog');
+  (* WAS SaveTelnetWindowSpots, which SERIALISED THE CONSOLE HERE.  The DX
+    cluster session file is written as each line arrives now, so all that is
+    left to do on the way out is close it -- which also means the file
+    survives a crash, a Clear and a closed window, none of which it used to. *)
+  CloseTelnetSessionLog;
+  logger.debug('Back from CloseTelnetSessionLog');
 
   // Stop polling threads FIRST so they don't recreate transports or call
   // SendMessage (SetDlgItemText) while we're tearing down on the main thread.

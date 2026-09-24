@@ -84,7 +84,9 @@ function SendViaTelnetSocket(const p: AnsiString): integer;
 // unit so nothing outside can drive the socket behind the UI's back.
 function TelnetIsConnected: boolean;
 procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
-procedure SaveTelnetWindowSpots;
+{ THE SESSION LOG.  Closed on the way out; it is written as lines arrive, so
+  there is nothing to serialise here -- see TelnetSessionLogWrite. }
+procedure CloseTelnetSessionLog;
 procedure EnableTelnetToolbatButtons(b: boolean);
 procedure ProcessTelnetLine(const Line: AnsiString);
 function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
@@ -1517,6 +1519,10 @@ begin
       end;
 end;
 
+{ Declared here because the archive is defined below, next to the rest of the
+  session-log machinery, and this is its only caller. }
+procedure TelnetSessionLogWrite(const aLine: string); forward;
+
 procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
 begin
   if TR4W_TELNET_DEBUG then   // Issue #23 -- every line written to the telnet window
@@ -1524,11 +1530,18 @@ begin
      logger.Info('[Telnet WINDOW t=%d] %s', [Ord(c), p]);
      end;
 
+  (* THE ARCHIVE FIRST, AND IT IS NOT GATED ON THE WINDOW.  TelnetConsoleAdd
+    is a no-op when there is no form and keeps only Settings.Telnet.ConsoleLines
+    rows when there is; neither may cost the operator a line of the record. *)
+  TelnetSessionLogWrite(p);
+
   // The 1023-character cap that stood here is GONE with the reason for it.  It
   // existed because the owner-draw handler read each item back through
   // LB_GETTEXT into a fixed stack buffer, so an over-long item was a stack
   // overrun; the view holds strings now and draws them without copying.
-  TelnetConsoleAdd(p, c);
+  (* THE CAP IS PASSED, NOT HELD BY THE VIEW: it is a setting, and a copy of a
+    setting is a copy that drifts.  See TelnetConsoleTrim. *)
+  TelnetConsoleAdd(p, c, Settings.Telnet.ConsoleLines);
 
   if TelnetFreezeMode then
      begin
@@ -1537,32 +1550,46 @@ begin
   TelnetConsoleScrollToEnd;
 end;
 
-{ THE SESSION LOG.  Written on the way out, and only when there is enough to be
-  worth keeping.
+(* THE SESSION LOG, AND IT IS AN ARCHIVE RATHER THAN A DUMP OF THE WINDOW.
 
-  Reads the console through the view rather than through LB_GETTEXT into
-  wsprintfBuffer, which is why the 256-byte truncation is gone: a long spot
-  comment used to be cut off in the saved file and nowhere else, so the file
-  disagreed with what the operator had been looking at. }
-procedure SaveTelnetWindowSpots;
+  IT USED TO BE THE WINDOW.  SaveTelnetWindowSpots walked lstConsole.Items at
+  exit and wrote them out, so the file was whatever the console happened to
+  still be holding.  That made the scrollback buffer do two jobs with two
+  different lifetimes -- what a human can usefully scroll, and the record of
+  what the node sent -- and it is why capping the console could not be done
+  without shortening the record (NY4I's hesitation, 2026-09-24, and he was
+  right to raise it).
+
+  So the line is written WHEN IT ARRIVES and the console is free to forget it.
+  Three defects go with the change, none of which was the point:
+
+    * closing the DX cluster window discarded the whole log, because the old
+      routine exited on tWindowsExist;
+    * so did pressing Clear, for the same reason;
+    * so did a crash, since nothing was written until exit -- which is exactly
+      the session someone would want the file for.
+
+  THE FILE IS OPENED ON THE FIRST LINE, not at start-up: a run that never
+  connects should not leave an empty file behind, and the name carries the
+  time, which is now the time the session STARTED rather than the time the
+  program ended.
+
+  NOT BUFFERED, deliberately.  TFileStream writes straight through, so a line
+  in the file is a line on disk and a crash keeps what arrived.  At cluster
+  rates -- a few lines a second at worst -- that is one small write per line
+  and costs nothing worth saving. *)
 var
-  i, Lines: integer;
+  TelnetSessionLog: TFileStream = nil;
+  TelnetSessionLogPath: string = '';
+  TelnetSessionLogLines: integer = 0;
+  { Reported once and then silent.  A write path that cannot be opened must not
+    log per line for the rest of a contest. }
+  TelnetSessionLogFailed: boolean = False;
+
+function TelnetSessionLogFileName: string;
+var
   TimeString: string;
-  TelnetLogHandle: THandle;
-  Line: AnsiString;
-  logPath: string;   // the spot-log file name -- see where it is built
 begin
-  if not tWindowsExist(tw_TELNETWINDOW_INDEX) then
-     begin
-     Exit;
-     end;
-
-  Lines := TelnetConsoleCount;
-  if Lines < 10 then
-     begin
-     Exit;
-     end;
-
   TimeString := GetTimeString;
 
   { [3], NOT [2].  GetTimeString used to return a PAnsiChar, where index 2 is
@@ -1586,31 +1613,125 @@ begin
     the 4096-byte wsprintfBuffer global, and then converted it back twice
     below -- a round trip through shared memory for a value that was already
     a string, and that FileExists and FileCreate both take as one. *)
-  logPath := SysUtils.Format('%sDXCluster' + PathDelim + 'dxcluster %s %s.txt',
+  Result := SysUtils.Format('%sDXCluster' + PathDelim + 'dxcluster %s %s.txt',
     [CharBufferText(TR4W_PATH_NAME), GetDateString, string(TimeString)]);
+end;
 
-  (* CREATE_NEW MEANT "FAIL IF IT ALREADY EXISTS", and FileCreate does not --
-    it truncates. So the existence test is explicit here rather than lost in the
-    swap. The name carries a date and a time, so a collision means this ran
-    twice in the same second and the first file is the one to keep. *)
-  if FileExists(logPath) then
+(* ONE LINE INTO THE ARCHIVE.  Called from AddStringToTelnetConsole, which is
+  the one place a line reaches the console, so the file and the window see
+  exactly the same traffic -- the window simply keeps less of it.
+
+  MAIN THREAD ONLY, and that is not an assumption -- it is already true and
+  already load-bearing.  AddStringToTelnetConsole hands its line to LCL
+  controls, so a thread could not have called it safely before this stream
+  existed either; cluster events reach the main thread through
+  Application.QueueAsyncCall.  The three calls in uWinKey's reader thread sit
+  inside an IF WINKEYDEBUG block, and VC.pas declares it False, so no build
+  compiles them.  If one is ever turned on, this stream needs a lock and the
+  Items calls need marshalling -- in that order of seriousness. *)
+procedure TelnetSessionLogWrite(const aLine: string);
+var
+  bytes: RawByteString;
+begin
+  if TelnetSessionLogFailed then
      begin
-     TelnetLogHandle := THandle(-1);
+     Exit;
+     end;
+
+  if TelnetSessionLog = nil then
+     begin
+     TelnetSessionLogPath := TelnetSessionLogFileName;
+     try
+        (* THE DIRECTORY IS MADE HERE.  The old routine did not, and FileCreate
+          into a missing directory fails silently -- which on a fresh
+          installation meant the feature had never worked and said nothing.
+          A write path cannot be repaired after the fact. *)
+        ForceDirectories(ExtractFilePath(TelnetSessionLogPath));
+
+        (* fmCreate TRUNCATES an existing file, and the name carries a date and
+          a time to the minute, so a collision means two sessions started
+          inside the same minute.  Appending is the answer that loses nothing;
+          it also makes a reopen after a failed close harmless. *)
+        (* AnsiString(), EXPLICITLY.  This unit compiles with UnicodeStrings
+          and the RTL's TFileStream takes an AnsiString, so the conversion
+          happens either way -- stating it is what keeps the narrowing ceiling
+          meaningful.  Same idiom and same reason as uctydat's CTY.DAT open,
+          which carries the longer explanation. *)
+        if FileExists(TelnetSessionLogPath) then
+           begin
+           TelnetSessionLog := TFileStream.Create(AnsiString(TelnetSessionLogPath),
+                                                  fmOpenWrite or fmShareDenyWrite);
+           TelnetSessionLog.Seek(0, soEnd);
+           end
+        else
+           begin
+           TelnetSessionLog := TFileStream.Create(AnsiString(TelnetSessionLogPath),
+                                                  fmCreate or fmShareDenyWrite);
+           end;
+        TelnetSessionLogLines := 0;
+     except
+        on E: Exception do
+           begin
+           TelnetSessionLogFailed := True;
+           TelnetSessionLog := nil;
+           logger.Error('[Telnet] Cannot write the session log %s -- %s: %s',
+                        [TelnetSessionLogPath, E.ClassName, E.Message]);
+           Exit;
+           end;
+     end;
+     end;
+
+  (* CRLF, NOT LineEnding.  This file has always been CRLF and is read on
+    Windows by people who open it in Notepad; the line ending is part of the
+    artifact, not a property of the machine that wrote it.
+
+    LclText, NOT a cast to AnsiString.  The old routine wrote
+    AnsiString(<console line>), which mangles anything outside the machine's
+    ANSI code page -- and a cluster line can carry a European call sign's
+    comment.  UTF-16 to UTF-8 loses nothing, and for the ASCII that cluster
+    traffic actually is the bytes are identical to what was written before. *)
+  bytes := LclText(aLine + #13#10);
+  try
+     TelnetSessionLog.WriteBuffer(bytes[1], Length(bytes));
+     Inc(TelnetSessionLogLines);
+  except
+     on E: Exception do
+        begin
+        TelnetSessionLogFailed := True;
+        logger.Error('[Telnet] Session log write failed -- %s: %s',
+                     [E.ClassName, E.Message]);
+        end;
+  end;
+end;
+
+procedure CloseTelnetSessionLog;
+var
+  keptLines: integer;
+begin
+  if TelnetSessionLog = nil then
+     begin
+     Exit;
+     end;
+
+  keptLines := TelnetSessionLogLines;
+  FreeAndNil(TelnetSessionLog);
+
+  (* "NOT ENOUGH TO BE WORTH KEEPING" IS PRESERVED, and it is the one rule the
+    old routine had that this still needs: a session that produced under ten
+    lines is a connect attempt, not a log.  It was a test before the file was
+    written; now the file exists, so it is a delete. *)
+  if keptLines < 10 then
+     begin
+     SysUtils.DeleteFile(TelnetSessionLogPath);
      end
   else
      begin
-     TelnetLogHandle := FileCreate(logPath);
+     logger.Info('[Telnet] Session log: %d line(s) in %s',
+                 [keptLines, TelnetSessionLogPath]);
      end;
 
-  if TelnetLogHandle <> THandle(-1) then
-     begin
-     for i := 0 to Lines - 1 do
-        begin
-        Line := AnsiString(TelnetConsoleLine(i)) + #13#10;
-        sWriteFile(TelnetLogHandle, Line[1], Length(Line));
-        end;
-     FileClose(TelnetLogHandle);
-     end;
+  TelnetSessionLogLines := 0;
+  TelnetSessionLogPath  := '';
 end;
 
 { "b" MEANS CONNECTED.  Kept as a one-liner over the view's own routine rather

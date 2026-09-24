@@ -906,6 +906,13 @@ begin
    // --- DX Cluster (1) -------------------------------
    RegisterModelSetting( 'cluster.ctrlj.broadcastAllPacketData','BROADCAST ALL PACKET DATA',
                           RS_CLUSTER_CTRLJ_BROADCASTALLPACKETDATA);
+   (* THE KEY'S FIRST SEGMENT IS A PREFERENCES SECTION, NOT THE MODEL GROUP.
+     The property is Telnet.ConsoleLines -- which is where the command name
+     TELNET CONSOLE LINES comes from -- but the operator looks for it beside
+     the other DX cluster settings, and 'telnet.' is not a section uPrefsForm
+     builds a page for. *)
+   RegisterModelSetting( 'cluster.ctrlj.consoleLines',          'TELNET CONSOLE LINES',
+                          RS_CLUSTER_CTRLJ_CONSOLELINES);
    // Two rows a case-SENSITIVE type scan missed on 2026-08-16: their crType is
    // spelled 'ctFilename' and 'ctinteger' in CFGCA. Pascal does not care; the
    // scan did, and reported Ctrl-J empty while they were still in it.
