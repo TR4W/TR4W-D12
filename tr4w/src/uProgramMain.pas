@@ -227,8 +227,6 @@ uses
   uConfigValues,
   uCrashLog,
   uCrashLogLCL,
-  (* Which store /EXPORT reads its QSOs from -- step B3. *)
-  uLogSource,
   (* The log carries its own contest configuration -- phase E2. *)
   uLogStore,
   uLogDatabase,   // LogDatabaseFileName -- the contest database path
@@ -866,7 +864,6 @@ begin
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
-      '  /EXPORT /EXPORTDB  the same, forcing the SQLite log as the source' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
       '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
@@ -2346,46 +2343,26 @@ begin
 
   if SameText(ParamStr(2), '/EXPORT') then
      begin
-     (* /EXPORTDB -- READ THE QSOs FROM THE SQLITE LOG.
+     (* /EXPORTDB AND /EXPORTTRW ARE BOTH GONE -- 2026-09-24, NY4I.
 
-        It was step B3's equivalence gate, and that is HISTORY rather than what
-        it does now. The exporters do not know which store they are reading;
-        only uLogSource does, so the corpus could run the SAME export twice over
-        the SAME thirteen logs against the SAME frozen D7 references, and two
-        independent readers agreeing on 26 byte-exact artifacts was the proof
-        that the database could replace the binary log. It did, at B4.
+        They were step B3's equivalence gate: the exporters do not know which
+        store they are reading, only uLogSource did, so the corpus could run
+        the SAME export twice over the SAME thirteen logs against the SAME
+        frozen D7 references. Two independent readers agreeing on 26 byte-exact
+        artifacts was the proof that the database could replace the binary log.
+        It did, at B4, and B5 deleted the binary write path.
 
-        THAT COMPARISON CANNOT BE RUN ANY MORE -- its other half was /EXPORTTRW.
-        See the note below.
+        /EXPORTTRW went first; that left /EXPORTDB re-asserting the only value
+        the source variable could hold, which advertises a choice the program
+        cannot make. So the variable, the type and the unreachable binary read
+        path in uLogSource went too, and an export now reads the SQLite log
+        because there is nothing else to read.
 
-        A THIRD ARGUMENT RATHER THAN A SEPARATE MODE, so there is no second
-        export path to keep in step with this one. *)
-     (* /EXPORTTRW IS GONE -- 2026-09-24, NY4I: "remove /exporttrw".
-
-        It forced LogSourceKind := lsBinary so an export could be made to read
-        the .TRW. Its only caller was compare-stores.sh, which answered phase
-        B3 and was deleted the same day; the binary log has been import-only
-        since B5, and the golden corpus's fixture is a log.db.
-
-        WHAT THAT LEAVES, STATED RATHER THAN QUIETLY TRUE: nothing can now
-        assign lsBinary, because these were the ONLY two assignments to
-        LogSourceKind in the tree. So /EXPORTDB below re-asserts the value the
-        variable already has, and the `else` arm of every case in uLogSource --
-        the whole binary read path -- is unreachable. Neither is deleted here:
-        that is a change to uLogSource's surface and a separate decision.
-
-        BOTH SIDES CONVERTED EXPLICITLY. ParamStr returns a UnicodeString and
-        this SameText resolves to the AnsiString overload, so a bare call
-        narrows implicitly -- and the warning sits on the ARGUMENT, not on the
-        literal, which is why converting only the literal does not silence it.
-        Safe because a switch name is ASCII: an argument carrying characters
-        outside the ANSI codepage converts to something that does not match,
-        which is the right answer -- it was not this switch. *)
-     if SameText(AnsiString(ParamStr(3)), AnsiString('/EXPORTDB')) then
-        begin
-        LogSourceKind := lsDatabase;
-        end;
-     EarlyTrace('[Export] reading QSOs from ' + LogSourceDescription);
+        THE COMPARISON CANNOT BE RESTORED BY PUTTING A SWITCH BACK: there is no
+        source selection left to switch. See docs/SQLITE_MIGRATION_TASKS.md,
+        phase B3, for what re-opening the question would actually cost. *)
+     EarlyTrace('[Export] reading QSOs from the SQLite log ' +
+                LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME)));
 
      // tSilentExport was set when the logger was created -- see there for why.
      ExportToADIF;

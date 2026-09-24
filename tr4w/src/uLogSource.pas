@@ -19,40 +19,42 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* WHERE AN EXPORT READS ITS QSOs FROM -- STEP B3, THE EQUIVALENCE GATE.
+(* WHERE AN EXPORT READS ITS QSOs FROM -- THE SQLITE LOG, AND NOTHING ELSE.
 
-  TR4W has two copies of the log now: the binary .TRW it has always written and
-  the SQLite database written beside it (uLogStore). B3 asks the one question
-  that decides whether the second can replace the first:
+  THERE IS NO SOURCE SELECTION HERE ANY MORE (2026-09-24, NY4I). This unit
+  carried a TLogSourceKind with two arms -- the binary .TRW and the SQLite
+  database -- because step B3 had to run the SAME export over the SAME logs
+  from two independent readers and byte-compare the artifacts. That gate passed
+  and the database became the default at B4; B5 deleted the binary WRITE path;
+  and /EXPORTTRW, the only thing in the tree that could ever select the .TRW,
+  went on 2026-09-24. The variable had one reachable state left.
 
-    EXPORTED FROM THE DATABASE, DOES THE PROGRAM PRODUCE THE SAME BYTES?
+  A TWO-STATE VARIABLE WITH ONE REACHABLE STATE IS NOT A CHOICE, IT IS A
+  COMMENT THAT COMPILES -- and a worse one than prose, because it advertises an
+  option the program cannot take and the compiler cannot warn about an
+  unreachable case arm. So the type, the variable and the binary arms are gone
+  and every routine below reads the database in a straight line.
 
-  The golden corpus is what answers it. Its 26 reference artifacts were written
-  by D7 -- A DIFFERENT PROGRAM -- and that independence is the whole value of
-  the oracle, so the references do not change here and must never be rebaselined
-  from our own output. Only the SOURCE changes, and the corpus is run BOTH ways:
-  two independent readers agreeing on 26 byte-exact files is the proof, and it
-  is available only while both readers exist.
+  THE .TRW IS STILL READ, ELSEWHERE, FOR A DIFFERENT QUESTION. uLogBinaryFile
+  and uLogImport read one to BUILD a database, which is how an operator
+  upgrading from 4.x gets their logs in, and six fixtures under
+  test/unit/fixtures/binarylog pin it. That is IMPORT; this unit was SOURCE
+  SELECTION. Nothing here touches it.
 
   WHY A CURSOR AND NOT A LIST. The thirteen export loops in PostUnit are shaped
 
-      if not OpenLogFile then Exit;
-      ReadVersionBlock;
-      while ReadLogFile do          -- fills the TempRXData global
+      if not LogSourceOpen then Exit;
+      LogSourceRewind;
+      while LogSourceNext(rec) do
          if GoodLookingQSO then ...
 
   and several of them accumulate scoring inline, with gotos. Handing them an
   array would mean rewriting every loop -- and then a difference in the output
   could have come from the rewrite rather than from the store, which is exactly
-  what this step exists to rule out. So the shape is preserved exactly and only
-  the three verbs are repointed. A difference in the bytes can then have come
-  from ONE place.
-
-  THE BINARY ARM IS NOT A COPY of MainUnit's cursor, it CALLS it. There is one
-  implementation of reading a .TRW and it stays where it is.
+  what the equivalence gate existed to rule out. The shape is preserved.
 
   This unit is deliberately small and dumb: no filtering, no ordering decisions,
-  no GoodLookingQSO. Those belong to the caller and are identical either way. *)
+  no GoodLookingQSO. Those belong to the caller. *)
 unit uLogSource;
 
 {$I tr4w.inc}
@@ -62,34 +64,6 @@ interface
 uses
    VC;
 
-type
-   (* lsBinary -- the .TRW, exactly as before, and the default.
-      lsDatabase -- the SQLite log written beside it. *)
-   TLogSourceKind = (lsBinary, lsDatabase);
-
-var
-   (* THE DEFAULT IS THE DATABASE -- STEP B4, THE READ FLIP.
-
-      It was lsBinary until B3 proved the two stores produce identical bytes:
-      13 corpus logs, 1,855 QSOs, zero differences in ADIF and Cabrillo. That
-      measurement is the entire warrant for this line.
-
-      IT IS NO LONGER RE-RUNNABLE, and that is deliberate rather than rot.
-      compare-stores.sh made the measurement and was DELETED on 2026-09-24
-      (NY4I: "Dropping an unneeded test is fine"): B5 removed the binary
-      write path, so its subject became an import-only legacy store, and the
-      golden corpus's fixture became a log.db the same day, taking seven of
-      its thirteen logs with it. See docs/SQLITE_MIGRATION_TASKS.md, phase
-      B3, for what re-opening the question would cost.
-
-      WHAT STILL WRITES THE .TRW: everything. B4 moves READS only. The binary
-      log remains authoritative on disk, the shadow keeps it in step, and a
-      reader that cannot make the database current REFUSES rather than quietly
-      falling back -- see LogSourceOpen. Writes move at B5, and that is also
-      where this variable and the whole two-store idea stop being needed. *)
-   LogSourceKind: TLogSourceKind = lsDatabase;
-
-(* Opens the log for a sequential read.  False if it cannot be read at all. *)
 (* WHETHER A READ CAN BE MADE RIGHT NOW.
 
   THE REAL STATE, NOT A FLAG SOMEBODY SET. Thirty-three call sites in twelve
@@ -106,10 +80,11 @@ var
   Ask this, and reopen if it says no. *)
 function LogSourceIsOpen: boolean;
 
+(* Opens the log for a sequential read.  False if it cannot be read at all. *)
 function LogSourceOpen: boolean;
 
-(* Positions at the first QSO -- the ReadVersionBlock equivalent.  Call after
-  LogSourceOpen and before the first LogSourceNext. *)
+(* Positions at the first QSO.  Call after LogSourceOpen and before the first
+  LogSourceNext. *)
 procedure LogSourceRewind;
 
 (* Reads the next QSO.  False at the end.  Fills aQso with zeroes when it
@@ -166,10 +141,6 @@ function LogSourceReadAtIndex(aIndex: Int64;
 function LogSourceReadRange(aFirstIndex: Int64;
                             var aRows: array of ContestExchange): integer;
 
-(* The file the current source reads -- for diagnostics and for the corpus
-  driver to report which store produced an artifact. *)
-function LogSourceDescription: string;
-
 implementation
 
 uses
@@ -181,15 +152,10 @@ uses
       The database's NAME still comes from uLogDatabase, which does outlive the
       shadow. *)
    SysUtils, MainUnit, uLogDatabase, uLogRepository, uLogStore,
-   (* TempRXData, which is declared in PostUnit's INTERFACE and is what
-      MainUnit.ReadLogFile fills. PostUnit uses this unit in ITS
-      implementation, so the pair is circular -- normal in this tree and
-      legal because both edges are implementation-section. *)
-   PostUnit,
    utils_text;   (* CharBufferText -- the log name buffer *)
 
-(* The SQLite log beside the current binary log.  One call, so the two
-  arms below and the diagnostic cannot name different files. *)
+(* The SQLite log beside the contest's log name.  One call, so no routine
+  below can name a different file. *)
 function DatabasePath: string;
 begin
    Result := LogDatabaseFileName(CharBufferText(TR4W_LOG_FILENAME));
@@ -214,9 +180,10 @@ var
   2705 against 2848) so the two never overlap, but nothing enforces that and
   nothing would say so if a later edit moved one line.
 
-  So the nesting that the binary path handles SILENTLY AND BADLY is reported
-  here instead. Not fixed by allowing it: allowing it would make the two arms
-  behave differently, and the entire value of this seam is that they do not. *)
+  So the nesting that the binary path handled SILENTLY AND BADLY is reported
+  here instead. It is reported rather than allowed: a second open abandons the
+  first caller's cursor, and a caller that believes it is still reading is the
+  bug, not the warning. *)
 procedure WarnIfAlreadyOpen;
 begin
    if GOpen and (logger <> nil) then
@@ -238,206 +205,96 @@ end;
 
 function LogSourceIsOpen: boolean;
 begin
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         Result := Repo <> nil;
-         end;
-      else
-         begin
-         (* feInvalidHandle is the RTL's name for the same -1 that
-           INVALID_HANDLE_VALUE holds; it just is not Windows-only. *)
-         Result := LogHandle <> THandle(feInvalidHandle);
-         end;
-      end;
+   Result := Repo <> nil;
 end;
 
 function LogSourceOpen: boolean;
 begin
    WarnIfAlreadyOpen;
    GOpen := True;
-   case LogSourceKind of
-      lsDatabase:
+   LogSourceClose;
+   try
+      (* THE DATABASE MUST EXIST AND BE OPEN BEFORE IT CAN BE READ.
+
+         uLogStore owns that guarantee, so this asks rather than reimplements.
+         A headless export of a log this build has never appended to gets the
+         database opened right here, which is what lets the corpus fixtures be
+         read at all. *)
+      if not LogStoreEnsureOpen then
          begin
-         LogSourceClose;
-         try
-            (* THE DATABASE MUST EXIST AND MATCH BEFORE IT CAN BE READ.
-
-               uLogStore owns that guarantee -- it is the unit that keeps the
-               two stores in step -- so this asks rather than reimplements. A
-               headless export of a log this build has never appended to gets
-               the database built from the .TRW right here, which is what lets
-               the corpus fixtures (a .TRW and nothing else) be read from
-               SQLite at all.
-
-               THE DEPENDENCY ON uLogStore IS DELIBERATE AND TEMPORARY, and it
-               corrects what this unit said at B3. The reason given then -- that
-               uLogStore is deleted at B5 -- was the wrong way round: the need
-               for this call lasts exactly as long as TWO STORES exist, which is
-               exactly uLogStore's lifetime. At B5 the call and the unit go
-               together. *)
-            if not LogStoreEnsureOpen then
-               begin
-               if logger <> nil then
-                  begin
-                  logger.Error('[LogSource] the SQLite log could not be made ' +
-                               'current from %s -- refusing to read. The binary ' +
-                               'log is untouched.', [DatabasePath]);
-                  end;
-               Result := False;
-               Exit;
-               end;
-
-            (* NOTHING IS OPENED HERE ANY MORE. LogStoreEnsureOpen above has
-               made the one connection exist and be current; this unit reads
-               through it. Opening a second one on the same file is what left
-               the grid a QSO behind -- see LogStoreRepository. *)
-            Result := Repo <> nil;
-            if (not Result) and (logger <> nil) then
-               begin
-               logger.Error('[LogSource] the log store reports no repository ' +
-                            'after a successful open -- refusing to read.');
-               end;
-         except
-            on E: Exception do
-               begin
-               (* REPORTED, NOT SILENTLY FALLEN BACK TO THE BINARY LOG. A
-                  fallback here would make a corpus run that was supposed to
-                  prove the database quietly prove the .TRW again, and pass. *)
-               if logger <> nil then
-                  begin
-                  logger.Error('[LogSource] cannot open the SQLite log %s: ' +
-                               '%s -- %s. The export will produce nothing; it ' +
-                               'will NOT fall back to the binary log.',
-                               [DatabasePath, E.ClassName, E.Message]);
-                  end;
-               LogSourceClose;
-               Result := False;
-               end;
+         if logger <> nil then
+            begin
+            logger.Error('[LogSource] the SQLite log %s could not be opened ' +
+                         '-- refusing to read.', [DatabasePath]);
             end;
+         Result := False;
+         Exit;
          end;
-      else
+
+      (* NOTHING IS OPENED HERE. LogStoreEnsureOpen above has made the one
+         connection exist and be current; this unit reads through it. Opening
+         a second one on the same file is what left the grid a QSO behind --
+         see LogStoreRepository. *)
+      Result := Repo <> nil;
+      if (not Result) and (logger <> nil) then
          begin
-         Result := OpenLogFile;
+         logger.Error('[LogSource] the log store reports no repository ' +
+                      'after a successful open -- refusing to read.');
+         end;
+   except
+      on E: Exception do
+         begin
+         (* REPORTED, NOT SILENTLY DEGRADED. An export that cannot reach the
+            log must say so; there is no second store to fall back to, and
+            when there was, falling back made a run that was supposed to prove
+            the database quietly prove the .TRW again, and pass. *)
+         if logger <> nil then
+            begin
+            logger.Error('[LogSource] cannot open the SQLite log %s: ' +
+                         '%s -- %s. The export will produce nothing.',
+                         [DatabasePath, E.ClassName, E.Message]);
+            end;
+         LogSourceClose;
+         Result := False;
          end;
       end;
 end;
 
 procedure LogSourceRewind;
 begin
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         if Repo <> nil then
-            begin
-            Repo.OpenSequentialRead;
-            end;
-         end;
-      else
-         begin
-         ReadVersionBlock;
-         end;
+   if Repo <> nil then
+      begin
+      Repo.OpenSequentialRead;
       end;
 end;
 
 function LogSourceNext(out aQso: ContestExchange): boolean;
 begin
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         Result := (Repo <> nil) and Repo.ReadNext(aQso);
-         end;
-      else
-         begin
-         (* MainUnit's ReadLogFile reads into the TempRXData global rather than
-            into a parameter, which is why this copies. Every caller passes
-            TempRXData itself, so the copy is to the same record and costs
-            nothing; a caller that passes something else gets what it asked
-            for instead of a hidden write to a global. *)
-         Result := ReadLogFile;
-         aQso := TempRXData;
-         end;
-      end;
+   Result := (Repo <> nil) and Repo.ReadNext(aQso);
 end;
 
 procedure LogSourceClose;
 begin
    GOpen := False;
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         (* THE CURSOR, NOT THE CONNECTION. The connection belongs to
-            uLogStore and is closed by LogStoreClose at shutdown. Freeing it
-            here would take the log out from under the writer, and it is what
-            made "open while already open" destructive rather than merely
-            untidy. *)
-         if Repo <> nil then
-            begin
-            Repo.CloseSequentialRead;
-            end;
-         end;
-      else
-         begin
-         CloseLogFile;
-         end;
+   (* THE CURSOR, NOT THE CONNECTION. The connection belongs to uLogStore and
+     is closed by LogStoreClose at shutdown. Freeing it here would take the log
+     out from under the writer, and it is what made "open while already open"
+     destructive rather than merely untidy. *)
+   if Repo <> nil then
+      begin
+      Repo.CloseSequentialRead;
       end;
 end;
 
 function LogSourceRecordCount: Int64;
-var
-   (* Int64, not DWORD. FileSeek reports failure as -1 and returns a 64-bit
-     offset; a DWORD would make the 'sizeBytes < 0' check below unreachable
-     and turn a failed seek into a 4-gigabyte log. *)
-   sizeBytes: Int64;
-   savedPos:  Int64;
 begin
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         if Repo <> nil then
-            begin
-            Result := Repo.RecordCount;
-            end
-         else
-            begin
-            Result := -1;
-            end;
-         end;
-      else
-         begin
-         Result := -1;
-         if LogHandle = THandle(feInvalidHandle) then
-            begin
-            Exit;
-            end;
-         (* FileSeek to the end and back, rather than Windows.GetFileSize.
-
-           SAVING AND RESTORING THE POSITION IS DELIBERATE. GetFileSize did not
-           move the file pointer and a seek does, and this handle is a MainUnit
-           GLOBAL shared with the legacy log routines -- so a size query that
-           silently repositioned it would be a defect visible only as a wrong
-           QSO somewhere else entirely. Both readers below seek before they
-           read, so nothing here depends on the restore; the next caller might.
-
-           FileSeek reports failure as -1, which is what INVALID_FILE_SIZE
-           reported. *)
-         savedPos := FileSeek(LogHandle, Int64(0), fsFromCurrent);
-         sizeBytes := FileSeek(LogHandle, Int64(0), fsFromEnd);
-         if savedPos >= 0 then
-            begin
-            FileSeek(LogHandle, savedPos, fsFromBeginning);
-            end;
-         if sizeBytes < 0 then
-            begin
-            Exit;
-            end;
-         if sizeBytes < SizeOfTLogHeader then
-            begin
-            Result := 0;
-            Exit;
-            end;
-         Result := (Int64(sizeBytes) - SizeOfTLogHeader) div SizeOf(ContestExchange);
-         end;
+   if Repo <> nil then
+      begin
+      Result := Repo.RecordCount;
+      end
+   else
+      begin
+      Result := -1;
       end;
 end;
 
@@ -446,11 +303,6 @@ function LogSourceReadFromEnd(aOffsetFromEnd: Int64;
 var
    total: Int64;
    rowId: Int64;
-   (* Integer, not Cardinal: FileRead returns -1 on error where ReadFile
-     reported it out of band, and an unsigned holder would turn that into
-     4294967295 -- still not SizeOf(ContestExchange), so the Result is right
-     either way, but only by luck. *)
-   bytesRead: Integer;
 begin
    FillChar(aQso, SizeOf(aQso), 0);
    Result := False;
@@ -460,30 +312,12 @@ begin
       Exit;
       end;
 
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         (* RowIdAtIndex is 0-based from the START, in id order -- which is log
-            order. Offset 1 (the last record) is index total - 1. *)
-         rowId := Repo.RowIdAtIndex(total - aOffsetFromEnd);
-         if rowId > 0 then
-            begin
-            Result := Repo.LoadQSO(rowId, aQso);
-            end;
-         end;
-      else
-         begin
-         (* The seek this replaces, unchanged: negative from the end.
-            fsFromEnd is the RTL's FILE_END, and FileSeek/FileRead take the
-            very same THandle -- on Windows they ARE SetFilePointer and
-            ReadFile, which is why this is a spelling change and not a
-            behaviour one. *)
-         FileSeek(LogHandle,
-                  Int64(-1) * aOffsetFromEnd * SizeOf(ContestExchange),
-                  fsFromEnd);
-         bytesRead := FileRead(LogHandle, aQso, SizeOf(ContestExchange));
-         Result := bytesRead = SizeOf(ContestExchange);
-         end;
+   (* RowIdAtIndex is 0-based from the START, in id order -- which is log
+     order. Offset 1 (the last record) is index total - 1. *)
+   rowId := Repo.RowIdAtIndex(total - aOffsetFromEnd);
+   if rowId > 0 then
+      begin
+      Result := Repo.LoadQSO(rowId, aQso);
       end;
 end;
 
@@ -492,11 +326,6 @@ function LogSourceReadAtIndex(aIndex: Int64;
 var
    total: Int64;
    rowId: Int64;
-   (* Integer, not Cardinal: FileRead returns -1 on error where ReadFile
-     reported it out of band, and an unsigned holder would turn that into
-     4294967295 -- still not SizeOf(ContestExchange), so the Result is right
-     either way, but only by luck. *)
-   bytesRead: Integer;
 begin
    FillChar(aQso, SizeOf(aQso), 0);
    Result := False;
@@ -509,32 +338,15 @@ begin
       Exit;
       end;
 
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         rowId := Repo.RowIdAtIndex(aIndex);
-         if rowId > 0 then
-            begin
-            Result := Repo.LoadQSO(rowId, aQso);
-            end;
-         end;
-      else
-         begin
-         (* The header sits ahead of record 0. This is the ONE place that fact
-            is written down now. *)
-         FileSeek(LogHandle,
-                  Int64(SizeOfTLogHeader) + aIndex * SizeOf(ContestExchange),
-                  fsFromBeginning);
-         bytesRead := FileRead(LogHandle, aQso, SizeOf(ContestExchange));
-         Result := bytesRead = SizeOf(ContestExchange);
-         end;
+   rowId := Repo.RowIdAtIndex(aIndex);
+   if rowId > 0 then
+      begin
+      Result := Repo.LoadQSO(rowId, aQso);
       end;
 end;
 
 function LogSourceReadRange(aFirstIndex: Int64;
                             var aRows: array of ContestExchange): integer;
-var
-   i: integer;
 begin
    Result := 0;
    if Length(aRows) <= 0 then
@@ -542,36 +354,9 @@ begin
       Exit;
       end;
 
-   case LogSourceKind of
-      lsDatabase:
-         begin
-         if Repo <> nil then
-            begin
-            Result := Repo.ReadRange(aFirstIndex, aRows);
-            end;
-         end;
-      else
-         begin
-         (* THE BINARY LOG NEEDS NO BATCHING: a record is a seek and a read at
-            a computed offset, with no statement to compile and nothing that
-            grows with the log. The loop IS the batch. *)
-         for i := Low(aRows) to High(aRows) do
-            begin
-            if not LogSourceReadAtIndex(aFirstIndex + (i - Low(aRows)), aRows[i]) then
-               begin
-               Break;
-               end;
-            Inc(Result);
-            end;
-         end;
-      end;
-end;
-
-function LogSourceDescription: string;
-begin
-   case LogSourceKind of
-      lsDatabase: Result := 'SQLite: ' + DatabasePath;
-      else        Result := 'binary: ' + CharBufferText(TR4W_LOG_FILENAME);
+   if Repo <> nil then
+      begin
+      Result := Repo.ReadRange(aFirstIndex, aRows);
       end;
 end;
 

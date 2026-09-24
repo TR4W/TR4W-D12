@@ -9710,8 +9710,8 @@ end;
 
   It walks the log BACKWARDS from the newest QSO and stops at the first one
   from an earlier hour, counting how many times the band changed on the way.
-  That is a question about QSOs, and LogSource answers it -- lsDatabase is the
-  default read source since step B4, so this routine was the odd one out,
+  That is a question about QSOs, and LogSource answers it -- the SQLite log has
+  been the read source since step B4, so this routine was the odd one out,
   opening the .TRW by handle and seeking in it by hand.
 
   THE OLD LOOP BOUND WAS WRONG, and this is the part worth keeping:

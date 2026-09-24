@@ -2522,9 +2522,10 @@ procedure ExportToADIF;
      Exit;
      end;
 
-  (* THE SOURCE SEAM -- step B3. Reads the .TRW as it always has, or the
-     SQLite log under /EXPORTDB, and the loop below does not know which.
-     See uLogSource for why the loop shape is preserved exactly. *)
+  (* THE SOURCE SEAM. Reads the SQLite log, and the loop below does not know
+     that -- which is the point: it read the .TRW through this same seam while
+     step B3 was proving the two stores agree. See uLogSource for why the loop
+     shape is preserved exactly. *)
   if not LogSourceOpen then
      begin
      FileClose(tReportFileWrite);

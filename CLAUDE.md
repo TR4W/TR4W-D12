@@ -644,7 +644,8 @@ strong net, not a proof.
    subsystem … should be built"~~: it IS built, and it is mid-flight, so read
    [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md) before adding to it.
 5. **The contest log is SQLite** — `src/domain/uLogDatabase.pas`, `uLogSchema.pas`,
-   `src/uLogRepository.pas`, `src/uLogSource.pas` (default `lsDatabase`). The binary `.TRW` is
+   `src/uLogRepository.pas`, `src/uLogSource.pas` (**no source selection: it reads the
+   database, and since 2026-09-24 there is no other option to read**). The binary `.TRW` is
    **import-only**: `tAddQSOToLog` writes to the database and nowhere else. See
    [`docs/SQLITE_MIGRATION_TASKS.md`](docs/SQLITE_MIGRATION_TASKS.md).
 

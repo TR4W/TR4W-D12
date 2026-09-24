@@ -19,7 +19,8 @@
 > reader plans from. It says the mapper, the `.trw` importer and the `.cfg`
 > reader/writer are *"not built, and next"*, and that *"nothing in the running
 > program calls it yet"*. All of them exist: `src/uLogRepository.pas`,
-> `src/uLogImport.pas`, `src/uLogSource.pas` (default `lsDatabase`),
+> `src/uLogImport.pas`, `src/uLogSource.pas` (SQLite only -- the source
+> selection was removed on 2026-09-24),
 > `src/uLogStore.pas`, `src/ui/lcl/uLogGrid.pas`, `src/ui/lcl/uLogEditForm.pas`,
 > with tests beside each. **SQLite is the log**; the binary `.TRW` is
 > import-only.

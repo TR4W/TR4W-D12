@@ -14,7 +14,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | backup orchestration (stage, verify, `.bak`, publish) | `tr4w/src/domain/uLogBackup.pas` — `LogStoreBackup` is a thin caller; tests in `test/unit/uTestLogBackup.pas` |
 | schema | `tr4w/src/domain/uLogSchema.pas` |
 | repository | `tr4w/src/uLogRepository.pas` |
-| source selection (default `lsDatabase`) | `tr4w/src/uLogSource.pas` |
+| the read seam — SQLite only, no source selection | `tr4w/src/uLogSource.pas` |
 | store, search, compare, notes, naming, config | `uLogStore.pas`, `uLogSearch.pas`, `uLogCompare.pas`, `uLogNote.pas`, `uLogNaming.pas`, `uLogConfig.pas` |
 | import only | `uLogImport.pas`, `uLogBinaryFile.pas` |
 | docs | `docs/SQLITE_MIGRATION_TASKS.md` (**read before touching log storage**), `docs/SQLITE_LOG_SCHEMA_PLAN.md` |
@@ -85,10 +85,17 @@ fails on both, which is the portable way to make a publish rename fail in a test
 bash tr4w/test/corpus/export-d12-corpus.sh    # 24/0/2 AND exit 0
 ```
 
-**The corpus exercises the DATABASE, not the binary log.** The tracked fixtures
-are still D7-written `.trw` files — that independence is the whole value of the
-oracle — but `uLogSource` defaults to `lsDatabase`, so the export path under test
-reads SQLite. The `.trw` is the fixture format, not the store.
+**The corpus exercises the DATABASE, and its fixture IS a database** — each set
+tracks a `log.db`, since 2026-09-24 (`badc63c5`). The independence that matters
+is unchanged and is in the REFERENCES: `ref.adi` and `ref.cbr` are still
+D7-produced and were never regenerated. Binary-log import keeps its coverage as
+a unit test over the six `.trw` fixtures in `test/unit/fixtures/binarylog/`.
+
+**`uLogSource` HAS NO SOURCE SELECTION.** `TLogSourceKind`, `LogSourceKind`,
+`lsBinary`/`lsDatabase`, `LogSourceDescription` and the binary read path were
+removed on 2026-09-24 along with `/EXPORTDB`: `/EXPORTTRW` had gone first, which
+left one reachable state and eleven unreachable `case` arms that no compiler can
+diagnose. Import is untouched.
 
 `Lint-DomainPurity.ps1` guards `src/domain/`.
 

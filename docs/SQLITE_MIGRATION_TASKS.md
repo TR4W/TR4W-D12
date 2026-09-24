@@ -15,8 +15,9 @@ ORDER and the exit criteria.** It does not restate the schema.
 (`src/trdos/logsubs2.pas`): *"THE QSO GOES TO THE DATABASE, AND NOWHERE ELSE --
 step B5. The .TRW write that stood here is gone."* `uLogShadow` no longer
 exists, and the last binary WRITER of any kind, `MainUnit.MakeTestLog`, was
-deleted in `fc1e907c`. `uLogSource`'s default is `lsDatabase`, so the golden
-corpus exercises the DATABASE.
+deleted in `fc1e907c`. **`uLogSource` has no source selection at all since
+2026-09-24** -- it reads the SQLite log, full stop -- so the golden corpus
+exercises the DATABASE.
 
 **NY4I decided on 2026-09-08 that the `.TRW` is import-only AND Windows-only
 going forward.** The three D7-binary test suites are scoped to Windows for that
@@ -126,13 +127,32 @@ out the script alone would give a run that forces nothing and compares the
 database against itself: 13 identical, proving nothing. That is the failure the
 script's own header warned about, and it is now the only thing it can do.
 
-Re-opening B3 therefore means restoring the switch as well, or asking the
-question a different way. **`/EXPORTDB` survives and now only re-asserts the
-default**, since those two arms were the only assignments to `LogSourceKind` in
-the tree; `lsBinary` is consequently unreachable and the binary read path in
-`uLogSource` -- the `else` arm of eleven `case` statements -- is dead code that
-still compiles. Deleting any of that is a further decision and has NOT been
-made.
+**AND IT CANNOT BE RE-OPENED BY PUTTING A SWITCH BACK EITHER, BECAUSE THERE IS
+NO LONGER A SOURCE TO SELECT.** `/EXPORTTRW` and `/EXPORTDB` were the only two
+assignments to `LogSourceKind` in the tree. Removing the first made `lsBinary`
+unassignable, which left the second re-asserting the only value the variable
+could hold and the `else` arm of eleven `case` statements in `uLogSource`
+unreachable -- code that compiles clean, with no possible compiler diagnostic,
+advertising a choice the program cannot make. So **`LogSourceKind`,
+`TLogSourceKind`, both enum members, `LogSourceDescription`, `/EXPORTDB` and
+the whole binary read path were REMOVED on 2026-09-24** (NY4I, delegated
+decision). `uLogSource` now reads the database in a straight line.
+
+Re-opening B3 therefore means **reconstructing a second reader**, not
+restoring a flag: a source abstraction that does not exist, a `/EXPORTTRW`
+equivalent to select it, and a corpus whose fixture is a `.TRW` again. That is
+new work, and it is the honest price of re-asking a question that was answered
+byte-for-byte over 1,855 QSOs.
+
+**WHAT DID NOT CHANGE: IMPORT.** `uLogBinaryFile` and `uLogImport` still read a
+`.TRW` to BUILD a database -- that is how an operator upgrading from 4.x gets
+their logs in, it is covered by unit tests, and six D7 fixtures in
+`tr4w/test/unit/fixtures/binarylog/` pin it. Reading a `.TRW` to convert it is a
+different question from selecting one as a live source, and only the second was
+removed. A call-graph walk from the externally-referenced symbols confirmed the
+removal orphaned nothing: `MainUnit`'s `OpenLogFile`, `ReadVersionBlock`,
+`ReadLogFile` and `CloseLogFile` all retain live callers in `uNet`, `uQTCS`,
+`uLogCompareForm` and `MainUnit` itself.
 
 **B4 IS DONE.** Every log READ goes through `uLogSource` and the default is the
 database: `tr4w/test/corpus/export-d12-corpus.sh` passes against the D7
