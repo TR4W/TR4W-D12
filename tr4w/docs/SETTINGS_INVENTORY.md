@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (286)
+## Settings that have moved (288)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -122,6 +122,7 @@ comes last, a word run together.
 | `DE ENABLE` |  | global | `Settings.Message.DeEnable` | boolean |  |
 | `DEBUG LOG LEVEL` |  | global | `Settings.Log.DebugLevel` | tLogLevels |  |
 | `DIGITAL MODE ENABLE` |  | **CONTEST** | `Settings.Contest.DigitalModeEnable` | boolean |  |
+| `DISPLAY LANGUAGE` |  | global | `Settings.Display.Language` | string |  |
 | `DISTANCE MODE` |  | global | `Settings.Log.DistanceMode` | DistanceDisplayType |  |
 | `DIT DAH RATIO` |  | global | `Settings.Cw.DitDahRatio` | TCwDitDahRatio |  |
 | `DOMESTIC FILENAME` |  | **CONTEST** | `Settings.Contest.DomesticFilename` | string |  |
@@ -304,6 +305,7 @@ comes last, a word run together.
 | `SWAP PACKET SPOT RADIOS` |  | global | `Settings.So2r.SwapPacketSpotRadios` | boolean |  |
 | `SWAP PADDLES` |  | global | `Settings.Paddle.Swap` | boolean |  |
 | `SWAP RADIO RELAY SENSE` |  | global | `Settings.So2r.SwapRelaySense` | boolean |  |
+| `TELNET CONSOLE LINES` |  | global | `Settings.Telnet.ConsoleLines` | TTelnetConsoleLines |  |
 | `TELNET SERVER` |  | global | `Settings.Telnet.Server` | string |  |
 | `TEN MINUTE RULE` |  | global | `Settings.Operating.TenMinuteRule` | TenMinuteRuleType |  |
 | `TUNE ALT-D ENABLE` |  | global | `Settings.Operating.TuneAltDEnable` | boolean |  |
@@ -351,7 +353,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-296 command names.
+298 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 
