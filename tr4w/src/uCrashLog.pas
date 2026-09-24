@@ -80,6 +80,53 @@ uses
    SysUtils;    // TObject, Exception -- in the INTERFACE because
                 // WriteCrashReport is exported; see below
 
+(* WHAT ELSE WAS GOING ON, FROM THE SUBSYSTEM THAT KNOWS.
+
+  A backtrace says where the program died. It does not say what the DX cluster
+  had just sent, what the radio had just answered, or what the operator had
+  just typed -- and that is usually the half that explains it.
+
+  THE DEPENDENCY GOES THIS WAY ROUND, AND THAT IS THE WHOLE DESIGN. This unit
+  links into tr4wserver, which has no LCL, no DX cluster and no radios; it
+  must never name a subsystem. So a subsystem REGISTERS itself here, from its
+  own initialization, and a program that does not link that subsystem
+  registers nothing and pays nothing.
+
+  That is not a style preference. CLAUDE.md records what the opposite cost:
+  a TF -> uCrashLog -> Forms edge dragged the widget set into a console
+  program and went unnoticed for nine days, because the unit search path is
+  the only guard on that boundary and it fires only on a full build.
+
+  A DUMPER IS CALLED WHILE THE PROGRAM IS ALREADY DYING, so it must be
+  incapable of making things worse: bounded work, no error it lets escape,
+  and correct when it has nothing to say. WriteCrashContext wraps each one in
+  its own try/except so a faulty dumper costs its own section and not the
+  report. *)
+type
+   (* One line into the record. Handed to a dumper so its output goes through
+     the same always-on path the backtrace does, at the same level, with no
+     dumper needing to know about Log4D or about the configured log level. *)
+   TCrashContextWriter = procedure(const aLine: string);
+   TCrashContextProc   = procedure(aWrite: TCrashContextWriter);
+
+{ Register a subsystem's context dumper. Call from a unit's initialization.
+  aName heads the section so a reader can tell an empty section from a
+  missing one. }
+procedure RegisterCrashContext(const aName: string; aProc: TCrashContextProc);
+
+(* Write every registered section into the log, at Fatal so it is emitted
+  whatever DEBUG LOG LEVEL says.
+
+  CALLED BY WriteCrashReport, AND ALSO BY HAND from the places a subsystem
+  already knows something is wrong -- a login that stalls, a link that fails
+  in a way retrying will not fix. The whole point of holding the context in
+  memory rather than writing it continuously is that it costs nothing until
+  somebody asks, so asking has to be possible without a crash.
+
+  A CALLER THAT ASKS REPEATEDLY MUST RATE-LIMIT ITSELF. This does not: a
+  crash must never be suppressed because something dumped a second ago. *)
+procedure WriteCrashContext(const aReason: string);
+
 { Call once at startup, after the logger exists.  Idempotent.
 
   INSTALLS THE RTL HOOK ONLY.  The LCL half lives in ui\lcl\uCrashLogLCL, and
@@ -573,9 +620,82 @@ begin
          begin
          CrashLogger.Fatal('[CRASH]   %s', [Frame(aFrames[i])]);
          end;
+
+      (* AFTER THE FRAMES, because the frames are what a reader looks at
+        first and they are the part most likely to be truncated by whatever
+        kills the process next. *)
+      WriteCrashContext(aSource);
    except
       // Deliberately empty: there is nothing left to report it to.
    end;
+end;
+
+(* FIXED SLOTS, NOT A LIST. Registration happens once per subsystem at
+  initialization, so the count is known at compile time and a fixed array
+  removes the one thing a crash-time walk must not do -- touch the heap. Eight
+  is far more than the subsystems that will ever have context worth dumping;
+  registering a ninth is reported rather than silently dropped. *)
+const
+   MAX_CRASH_CONTEXTS = 8;
+
+var
+   GContextNames: array[0..MAX_CRASH_CONTEXTS - 1] of string;
+   GContextProcs: array[0..MAX_CRASH_CONTEXTS - 1] of TCrashContextProc;
+   GContextCount: integer = 0;
+
+procedure RegisterCrashContext(const aName: string; aProc: TCrashContextProc);
+begin
+   if not Assigned(aProc) then
+      begin
+      Exit;
+      end;
+
+   if GContextCount >= MAX_CRASH_CONTEXTS then
+      begin
+      CrashLogger.Warn('[CRASH] crash-context table full -- "%s" will not be '
+                       + 'dumped; raise MAX_CRASH_CONTEXTS', [aName]);
+      Exit;
+      end;
+
+   GContextNames[GContextCount] := aName;
+   GContextProcs[GContextCount] := aProc;
+   Inc(GContextCount);
+end;
+
+{ The writer handed to every dumper.  Fatal, so the line is emitted whatever
+  the configured level is, and prefixed exactly like a backtrace frame so a
+  pasted log reads as one record. }
+procedure ContextLine(const aLine: string);
+begin
+   try
+      CrashLogger.Fatal('[CRASH]   %s', [aLine]);
+   except
+      (* Deliberately empty -- see WriteCrashReport. *)
+   end;
+end;
+
+procedure WriteCrashContext(const aReason: string);
+var
+   i: integer;
+begin
+   if GContextCount = 0 then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to GContextCount - 1 do
+      begin
+      (* ONE TRY PER DUMPER, not one around the loop: a subsystem that faults
+        must cost its own section and not the sections after it. *)
+      try
+         CrashLogger.Fatal('[CRASH] context "%s" (%s)',
+                           [GContextNames[i], aReason]);
+         GContextProcs[i](@ContextLine);
+      except
+         (* Nothing to report it to, and reporting it is not worth the risk
+           of a second fault inside the handler. *)
+      end;
+      end;
 end;
 
 procedure CatchUnhandledException(Obj: TObject; Addr: CodePointer;

@@ -319,6 +319,9 @@ uses
    uTestNetFraming in 'uTestNetFraming.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
+   uTelnetTrace         in '..\..\src\uTelnetTrace.pas',
+   uCrashLog            in '..\..\src\uCrashLog.pas',
+   Version              in '..\..\src\Version.pas',
    uHPTimer             in '..\..\src\utils\uHPTimer.pas',
    uTestHPTimer         in 'uTestHPTimer.pas',
    uKeychain         in '..\..\src\uKeychain.pas',
@@ -326,6 +329,8 @@ uses
    uClusterTokens       in '..\..\src\uClusterTokens.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    uTestSpotAge         in 'uTestSpotAge.pas',
+   uTestTelnetTrace     in 'uTestTelnetTrace.pas',
+   uTestCrashContext    in 'uTestCrashContext.pas',
    uTestKeychain     in 'uTestKeychain.pas',
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
@@ -471,6 +476,8 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));
+   RegisterSuite(TCrashContextTests.Create('CrashContext'));
    RegisterSuite(THPTimerTests.Create('HPTimer'));
    RegisterSuite(TLogNoteTests.Create('LogNote'));
    RegisterSuite(TKeychainTests.Create('Keychain'));

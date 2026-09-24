@@ -1147,6 +1147,11 @@ dragged the LCL into a console program whose search paths deliberately exclude i
 surfaced it for three days**, because that search path is the only guard on the boundary and it
 fires only on a full build — then `-SkipServer` kept it hidden for six more.
 
+**`uCrashLog` ALSO CARRIES A REGISTRATION POINT FOR SUBSYSTEM CONTEXT** (2026-09-24), and the
+arrow points the same way for the same reason: `RegisterCrashContext` lets a subsystem add what
+it knows to a crash record -- the DX cluster's last 200 lines are the first -- **without
+`uCrashLog` ever naming that subsystem**. A program that does not link it registers nothing.
+
 **There was no LCL conversion to wait for.** `uCrashLog` is split instead: it keeps the RTL
 reporter (`LogCaughtException`, `EarlyTrace`, `OnMainThread`, the `ExceptProc` hook) and links
 anywhere, and the two statements that need a widget set — `Application.OnException` and
@@ -1225,6 +1230,12 @@ extending the `case`.
   Telnet client is now Indy-based (`TDXClusterClient`, fixing lines lost at TCP segment boundaries),
   spot parsing is extracted and unit-tested, and auto-reconnect is on by default (5s doubling to a
   60s cap, gated on having connected at startup).
+  **THE CONSOLE IS CAPPED AND ITS TRAFFIC IS NEVER WRITTEN TO DISK** (2026-09-24). `TELNET CONSOLE
+  LINES` bounds what the window holds, and `uTelnetTrace.pas` keeps the last 200 lines in a ring
+  that reaches the log **only when something has gone wrong** -- a crash, or a site in `uTelnet`
+  that has already decided the session is broken. ~~`DXCluster\dxcluster <date> <time>.txt`~~ is
+  **gone**; the deliberate full-capture path is still the `log all telnet traffic` setting, and it
+  is what produces a capture for the corpus -- a ring of 200 lines cannot, and the code says so.
 - **Country database** (`uctydat.pas`) — CTY.DAT parsing, callsign → country/zone/continent.
 
 ### 10. CW keying — the keyer factory

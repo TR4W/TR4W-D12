@@ -133,6 +133,7 @@ uses
   uDXClusterClient in 'src\uDXClusterClient.pas',
   uDXSpotParse in 'src\uDXSpotParse.pas',
   uTelnet in 'src\uTelnet.pas',
+  uTelnetTrace in 'src\uTelnetTrace.pas',
   uBandmap in 'src\uBandmap.pas',
   uBandMapView in 'src\uBandMapView.pas',
   uBandMapForm in 'src\ui\lcl\uBandMapForm.pas',

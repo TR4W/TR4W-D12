@@ -795,14 +795,12 @@ begin
   // away by the time this runs.
   PutAllRadiosIntoReceive;
 
-  logger.Info('[ExitProgram] Step 1: CloseTelnetSessionLog');
-  logger.debug('Calling CloseTelnetSessionLog');
-  (* WAS SaveTelnetWindowSpots, which SERIALISED THE CONSOLE HERE.  The DX
-    cluster session file is written as each line arrives now, so all that is
-    left to do on the way out is close it -- which also means the file
-    survives a crash, a Clear and a closed window, none of which it used to. *)
-  CloseTelnetSessionLog;
-  logger.debug('Back from CloseTelnetSessionLog');
+  (* STEP 1 WAS SaveTelnetWindowSpots, THEN CloseTelnetSessionLog, AND NOW
+    THERE IS NOTHING TO DO HERE.  The DX cluster's traffic lives in a ring in
+    memory (uTelnetTrace) and reaches the disk only when something has gone
+    wrong, so a clean exit has nothing to flush -- which is the point of the
+    change, not a gap in it.  NY4I, 2026-09-24: "a crash or reboot loses it
+    but that is tolerable to remove any io we can." *)
 
   // Stop polling threads FIRST so they don't recreate transports or call
   // SendMessage (SetDlgItemText) while we're tearing down on the main thread.
