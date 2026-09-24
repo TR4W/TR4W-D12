@@ -190,6 +190,8 @@ Only the **LCL** is used. TR4W is not a Lazarus *project* in the usual sense: it
 
 `Lint-LFMProperties` is the odd one out: it compiles a small FPC helper (`build\lintlfm\`) that links the LCL and asks the same RTTI the form loader uses, because "does this class publish this property, and is this a legal value for it" cannot be answered by grepping a `published` block. It fails *closed* if FPC or the LCL is missing — a lint that cannot run must not look like a lint that found nothing.
 
+`Lint-LFMLoad` is its sibling and goes one step further: it compiles `build\lfmload\` and STREAMS every `.lfm` through `ObjectTextToBinary` + `TReader`, the same code path the running program takes. Asking the same RTTI is nearly the loader and is not it — 5.0.20 and 5.0.21 shipped a Preferences window that could not open (`AnchorSideRight.Side = asrLeft`, a *constant* in `controls.pp` and not a member of `TAnchorSideReference`) with `Lint-LFMProperties` reporting the file clean. Both are kept: the static one names the property and the line number, this one is the final word. Both fail *closed*.
+
 ## Unit tests
 
 4165 tests, 0 failures is the baseline — **0 failures is the part that matters.** The count grows

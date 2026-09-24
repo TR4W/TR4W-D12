@@ -102,6 +102,74 @@ begin
       end;
 end;
 
+// FOLLOWS A DOTTED NAME THE WAY THE LOADER DOES, one segment at a time.
+//
+// THIS IS THE HOLE THAT SHIPPED A BROKEN PREFERENCES WINDOW IN 5.0.20 AND
+// 5.0.21.  This tool resolved only the ROOT segment and then value-checked
+// nothing when a dot was present, so `AnchorSideRight.Side = asrLeft` was
+// seen as "TButton publishes AnchorSideRight -- fine" and the VALUE was never
+// looked at.  asrLeft is a CONSTANT in controls.pp (asrLeft = asrTop), not a
+// member of TAnchorSideReference, and an .lfm streams an enum BY NAME:
+//
+//    EReadError: Error reading btnOK.AnchorSideRight.Side: Invalid value
+//
+// The loader recurses because an intermediate segment is a tkClass property
+// whose instance carries its own published properties, and that is exactly
+// what this does: GetPropInfo, then the sub-object's class, then GetPropInfo
+// again.  Result is the LAST segment's PPropInfo, which is the one holding
+// the enum type the value has to be a member of.
+function ResolvePropChain(aClass: TClass; const aDotted: string;
+                          out aInfo: PPropInfo; out aFailedAt: string): boolean;
+var
+   rest:    string;
+   segment: string;
+   dot:     integer;
+   cls:     TClass;
+begin
+   Result    := False;
+   aInfo     := nil;
+   aFailedAt := '';
+   cls       := aClass;
+   rest      := aDotted;
+
+   while rest <> '' do
+      begin
+      dot := Pos('.', rest);
+      if dot > 0 then
+         begin
+         segment := Copy(rest, 1, dot - 1);
+         rest    := Copy(rest, dot + 1, MaxInt);
+         end
+      else
+         begin
+         segment := rest;
+         rest    := '';
+         end;
+
+      aFailedAt := segment;
+      aInfo     := GetPropInfo(cls, segment);
+      if aInfo = nil then
+         begin
+         Exit;
+         end;
+
+      if rest <> '' then
+         begin
+         // Another segment to go, so this one must be an object. A dotted name
+         // through anything else is not something the loader could follow
+         // either.
+         if aInfo^.PropType^.Kind <> tkClass then
+            begin
+            aInfo := nil;
+            Exit;
+            end;
+         cls := GetTypeData(aInfo^.PropType)^.ClassType;
+         end;
+      end;
+
+   Result := aInfo <> nil;
+end;
+
 // Enum and set VALUES.  Every LCL enum member carries a prefix (alLeft,
 // bvNone, bsSingle, csDropDown, poScreenCenter); the FMX spellings are bare
 // (Left, Client).  GetEnumValue returns -1 for a name the type does not have,
@@ -197,6 +265,8 @@ var
    raw, s:   string;
    propName: string;
    propValue: string;
+   dotted:   string;
+   failedAt: string;
    info:     PPropInfo;
    objName:  string;
    clsName:  string;
@@ -272,7 +342,8 @@ begin
             end;
 
          propValue := Trim(Copy(s, eq + 3, MaxInt));
-         propName  := RootOf(Copy(s, 1, eq - 1));
+         dotted    := Trim(Copy(s, 1, eq - 1));
+         propName  := RootOf(dotted);
          if (propName = '') or not (propName[1] in ['A'..'Z', 'a'..'z', '_']) then
             begin
             Continue;
@@ -295,7 +366,7 @@ begin
 
          Inc(gProps);
 
-         info := GetPropInfo(cls.ClassInfo, propName);
+         info := GetPropInfo(cls, propName);
 
          if info = nil then
             begin
@@ -305,16 +376,33 @@ begin
             Continue;
             end;
 
+         // A DEEPER SEGMENT THAT WILL NOT RESOLVE IS A MISS, NOT A FAILURE.
+         // Not every sub-name in an .lfm is an RTTI property: DefineProperties
+         // invents names the loader knows and RTTI does not, and TStrings is
+         // the live example -- `Items.Strings = (...)` streams perfectly well
+         // and TStrings publishes no `Strings` at all.  Reporting it would be
+         // the false positive this tool refuses to produce elsewhere, so the
+         // VALUE goes unchecked and nothing is claimed about it.
+         //
+         // The root segment above keeps its hard report: it is a real property
+         // of a real class, and a typo there is the defect this lint was
+         // written for.
+         if (Pos('.', dotted) > 0) and
+            (not ResolvePropChain(cls, dotted, info, failedAt)) then
+            begin
+            Continue;
+            end;
+
          // The NAME being real is only half of it.  "Align = Left" names a
          // published property and gives it FMX's spelling of the value, and
          // that was the very first defect this port hit -- so checking names
          // alone would have declared the file clean and left the crash in
-         // place.  Only dotted-free enum and set properties are checked, which
-         // is where the FMX/LCL spellings actually differ.
-         if Pos('.', Copy(s, 1, eq - 1)) = 0 then
-            begin
-            CheckValue(aPath, i + 1, clsName, propName, propValue, info);
-            end;
+         // place.
+         //
+         // DOTTED NAMES ARE CHECKED TOO, since 2026-09-24.  They were not, and
+         // `AnchorSideRight.Side = asrLeft` reached two published builds and
+         // stopped Preferences opening at all -- see ResolvePropChain.
+         CheckValue(aPath, i + 1, clsName, dotted, propValue, info);
          end;
    finally
       stack.Free;

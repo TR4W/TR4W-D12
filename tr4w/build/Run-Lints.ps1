@@ -160,6 +160,14 @@ $lints = @(
    # allow-list now: the nine arms are LCL events, and an event declared but not
    # wired is caught by Lint-FormEvents instead.
    @{ Name = 'Lint-LFMProperties';   Arg = $src;     NeedsFpc = $true  }
+   # AND THEN ACTUALLY STREAM THEM. Lint-LFMProperties asks the same RTTI the
+   # loader asks, which is nearly the loader and is not it: it passed the
+   # commit whose `AnchorSideRight.Side = asrLeft` stopped Preferences opening
+   # in 5.0.20 and 5.0.21. This one runs ObjectTextToBinary + TReader over every
+   # .lfm, so a form that cannot be constructed fails the BUILD rather than the
+   # operator's evening. Both are kept: the static one names the property and
+   # the line, the loader one is the final word.
+   @{ Name = 'Lint-LFMLoad';         Arg = $src;     NeedsFpc = $true  }
    # Every menu row must have a handler in ProcessMenu. 180 numeric ids wired
    # to a 920-line case, and nothing checked that the two agreed -- a row with
    # no arm is a menu item that does nothing when clicked, silently. Added as

@@ -3810,7 +3810,7 @@ object PrefsForm: TPrefsForm
   end
   object btnOK: TButton
     AnchorSideRight.Control = btnCancel
-    AnchorSideRight.Side = asrLeft
+    AnchorSideRight.Side = asrTop
     Left = 570
     Height = 25
     Top = 582
@@ -3826,7 +3826,7 @@ object PrefsForm: TPrefsForm
   end
   object btnCancel: TButton
     AnchorSideRight.Control = btnApply
-    AnchorSideRight.Side = asrLeft
+    AnchorSideRight.Side = asrTop
     Left = 665
     Height = 25
     Top = 582
@@ -3842,7 +3842,7 @@ object PrefsForm: TPrefsForm
   end
   object btnApply: TButton
     AnchorSideRight.Control = Owner
-    AnchorSideRight.Side = asrRight
+    AnchorSideRight.Side = asrBottom
     Left = 760
     Height = 25
     Top = 582

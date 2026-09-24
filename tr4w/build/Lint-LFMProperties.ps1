@@ -41,7 +41,10 @@ param(
    [string] $Laz       = '',
    [string] $Cpu       = 'i386',
    [string] $Os        = 'win32',
-   [switch] $Rebuild
+   [switch] $Rebuild,
+   # Runs the checker against built-in fixtures instead of the tree. Extending
+   # this lint means extending these -- see the header of Invoke-SelfTest.
+   [switch] $SelfTest
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,21 +72,26 @@ $toolSrc = Join-Path $PSScriptRoot 'lintlfm\lintlfm.lpr'
 $toolOut = Join-Path $PSScriptRoot 'lintlfm\units'
 $toolExe = Join-Path $toolOut 'lintlfm.exe'
 
-if (-not (Test-Path -LiteralPath $SourceDir))
-   {
-   Write-Host "Lint-LFMProperties: source directory not found: $SourceDir" -ForegroundColor Red
-   exit 2
-   }
+$forms = @()
 
-$forms = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter '*.lfm' -File | Where-Object { Test-Tr4wScannable $_.FullName })
-
-# A FLOOR, not just a pass/fail.  Zero .lfm files means the search moved or the
-# port finished, and either way "checked nothing, all good" is a lie.
-if ($forms.Count -eq 0)
+if (-not $SelfTest)
    {
-   Write-Host "Lint-LFMProperties: no .lfm files found under $SourceDir -- refusing to pass." -ForegroundColor Red
-   Write-Host "  If the LCL forms moved, update this lint. If they are gone, delete it."
-   exit 1
+   if (-not (Test-Path -LiteralPath $SourceDir))
+      {
+      Write-Host "Lint-LFMProperties: source directory not found: $SourceDir" -ForegroundColor Red
+      exit 2
+      }
+
+   $forms = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter '*.lfm' -File | Where-Object { Test-Tr4wScannable $_.FullName })
+
+   # A FLOOR, not just a pass/fail.  Zero .lfm files means the search moved or the
+   # port finished, and either way "checked nothing, all good" is a lie.
+   if ($forms.Count -eq 0)
+      {
+      Write-Host "Lint-LFMProperties: no .lfm files found under $SourceDir -- refusing to pass." -ForegroundColor Red
+      Write-Host "  If the LCL forms moved, update this lint. If they are gone, delete it."
+      exit 1
+      }
    }
 
 # Rebuild when the source is newer than the binary, so an edit to the checker
@@ -156,6 +164,130 @@ if ($needBuild)
          ForEach-Object { Write-Host "  $($_.Line.Trim())" }
       exit 2
       }
+   }
+
+# ---------------------------------------------------------------- self test --
+#
+# WHY THERE ARE FIXTURES AT ALL, as of 2026-09-24.  This lint reported the
+# commit that broke Preferences clean -- 46 files, 8140 properties, 676 values,
+# 0 unstreamable -- because it value-checked only UNDOTTED properties, and the
+# bad value was `AnchorSideRight.Side = asrLeft`.  A guard that passes what the
+# real loader rejects is worse than no guard, because it is believed.
+#
+# `shipped_broken` is that exact shape.  Every rule this checker grows gets a
+# fixture here, pass AND fail, so the same class of blind spot cannot come back
+# silently.
+
+if ($SelfTest)
+   {
+   $fixtures = @(
+      # Legal: the real member names, and a dotted value that IS checked now.
+      @{ Name = 'clean'; Expect = 0; Body = @'
+object Form1: TForm
+  Caption = 'Fixture'
+  object btnApply: TButton
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Anchors = [akTop, akRight]
+    Font.Style = [fsBold]
+    Caption = 'Apply'
+  end
+end
+'@ },
+
+      # THE 5.0.20 DEFECT.  asrLeft and asrRight are CONSTANTS in controls.pp
+      # (asrLeft = asrTop), not members of TAnchorSideReference, so an .lfm --
+      # which streams an enum by NAME -- cannot carry them.
+      @{ Name = 'shipped_broken'; Expect = 2; Body = @'
+object Form1: TForm
+  Caption = 'Fixture'
+  object btnOK: TButton
+    AnchorSideRight.Control = btnApply
+    AnchorSideRight.Side = asrLeft
+    Caption = 'OK'
+  end
+  object btnApply: TButton
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrRight
+    Caption = 'Apply'
+  end
+end
+'@ },
+
+      # The FMX-ism this lint was written for: a real property name, the other
+      # library's spelling of the value.
+      @{ Name = 'bad_plain_enum'; Expect = 1; Body = @'
+object Form1: TForm
+  object pnlA: TPanel
+    Align = Left
+  end
+end
+'@ },
+
+      # A mistyped ROOT name still fails hard.
+      @{ Name = 'bad_root_name'; Expect = 1; Body = @'
+object Form1: TForm
+  object edtA: TEdit
+    Captionn = 'typo'
+  end
+end
+'@ },
+
+      # NOT EVERY SUB-NAME IS RTTI.  TStrings publishes no `Strings`; the name
+      # comes from DefineProperties and the loader knows it.  Reporting this
+      # would be the false positive the checker refuses to make, so it must
+      # stay silent -- this fixture is what stopped the first version of the
+      # dotted check from failing uPanadapterForm.
+      @{ Name = 'defined_property'; Expect = 0; Body = @'
+object Form1: TForm
+  object cboA: TComboBox
+    Items.Strings = (
+      'one'
+      'two'
+    )
+  end
+end
+'@ }
+   )
+
+   $tmp = Join-Path ([IO.Path]::GetTempPath()) ("lintlfm-selftest-" + [Guid]::NewGuid().ToString('N'))
+   New-Item -ItemType Directory -Path $tmp | Out-Null
+   $failed = 0
+   try
+      {
+      foreach ($f in $fixtures)
+         {
+         $path = Join-Path $tmp ($f.Name + '.lfm')
+         [IO.File]::WriteAllText($path, ($f.Body -replace "`r?`n", "`r`n"))
+         $out = & $toolExe $path 2>&1
+         $bad = -1
+         $out | ForEach-Object {
+            if ($_ -match 'values checked, (\d+) unstreamable') { $bad = [int]$Matches[1] }
+         }
+         if ($bad -ne $f.Expect)
+            {
+            Write-Host ("SELFTEST FAIL {0}: expected {1}, got {2}" -f $f.Name, $f.Expect, $bad) -ForegroundColor Red
+            $out | ForEach-Object { Write-Host "   $_" }
+            $failed++
+            }
+         else
+            {
+            Write-Host ("SELFTEST ok   {0} ({1} unstreamable)" -f $f.Name, $bad)
+            }
+         }
+      }
+   finally
+      {
+      Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+      }
+
+   if ($failed -gt 0)
+      {
+      Write-Host "Lint-LFMProperties SELFTEST: $failed fixture(s) failed." -ForegroundColor Red
+      exit 1
+      }
+   Write-Host ("Lint-LFMProperties SELFTEST: all {0} fixtures behaved as documented." -f $fixtures.Count)
+   exit 0
    }
 
 $result = & $toolExe @($forms.FullName) 2>&1

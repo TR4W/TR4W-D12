@@ -100,12 +100,25 @@ notes at the top of the `src/ui/lcl/` unit you are touching.
 ## Lints
 
 `Lint-DesignedForms`, `Lint-FormDefaults`, `Lint-FormEvents`, `Lint-FormFields`,
-`Lint-FormOverlap`, `Lint-FormTags`, `Lint-LFMProperties`, `Lint-MainElements`,
-`Lint-MenuDispatch`, `Lint-BindKeys`, `Lint-Win32Dialogs`.
+`Lint-FormOverlap`, `Lint-FormTags`, `Lint-LFMProperties`, `Lint-LFMLoad`,
+`Lint-MainElements`, `Lint-MenuDispatch`, `Lint-BindKeys`, `Lint-Win32Dialogs`.
 
 `Lint-LFMProperties` compiles a real FPC helper that links the LCL and asks the
 same RTTI the streaming loader uses — "does this class publish this property, and
 is this a legal value" cannot be answered by grepping a `published` block.
+
+**`Lint-LFMLoad` ACTUALLY STREAMS EVERY FORM**, through `ObjectTextToBinary` +
+`TReader`, because asking the same RTTI is nearly the loader and is not it.
+5.0.20 and 5.0.21 shipped a Preferences window that could not be opened at all —
+`AnchorSideRight.Side = asrLeft`, and `asrLeft` is a CONSTANT in `controls.pp`
+(`asrLeft = asrTop`), not a member of `TAnchorSideReference`. It reads naturally
+in Pascal; an `.lfm` streams an enum BY NAME and there is no such name.
+`Lint-LFMProperties` passed that commit because it value-checked only UNDOTTED
+properties (fixed), and the layout was "verified" by rebuilding the button row
+in code, which never opens the `.lfm`.
+
+**VERIFYING A DESIGNED FORM BY BUILDING IT IN CODE PROVES NOTHING ABOUT THE
+FORM.** Load the resource.
 
 **GUI defects need a running program.** The corpus and the unit tests are blind to
 the UI; measure the screen, not the source.
