@@ -37,7 +37,7 @@ interface
 uses
   VC,
   TF,
-  uAppPaths,      // ResolveDataFileInPlace -- shipped data, whatever case
+  uAppPaths,      // ExistingDataFile / DownloadedDataFilePath -- where data lives
   utils_text,
   uCallSignRoutines,
   uRussiaOblasts,
@@ -96,6 +96,8 @@ var
   chosenName: string;
   chosenStem: string;
   dotPos:     integer;
+  candidate:  string;   (* the file a tier proposes -- see the CTY.DAT note *)
+  source:     string;   (* which tier won, for the log line *)
 begin
 
   (* PathDelim: this file is WRITTEN as well as read, so the separator has to
@@ -164,48 +166,94 @@ begin
   SetCharBuffer(TR4W_REMAININGMULTS_FILENAME,
                 CharBufferText(TR4W_LOG_PATH_NAME) + 'REMAININGMULTS.TXT');
 
-  SetCharBuffer(TR4W_CTY_FILENAME,
-                CharBufferText(TR4W_LOG_PATH_NAME) + 'CTY.DAT');
+  (* THE COUNTRY FILE COMES FROM ONE OF THREE PLACES, IN THIS ORDER: the copy
+    TR4W DOWNLOADED, a copy the operator put beside the contest, then the copy
+    that SHIPPED.
 
-  if not FileExists(TR4W_CTY_FILENAME) then
+    THE DOWNLOAD HAS TO COME FIRST.  On Windows the contest directory and the
+    shipped directory ARE THE SAME DIRECTORY, so a downloaded file ranked below
+    either of them could never be used at all -- the shipped cty.dat sitting in
+    target\ would win over the update the operator had just asked for.
+
+    It follows that an operator with BOTH a per-contest CTY.DAT and a
+    downloaded one gets the downloaded one.  That is the less surprising of the
+    two answers -- pressing Alt-O is an explicit request for the newest file --
+    and the log line below says which copy was taken, so it is never a guess.
+
+    ...AND EACH TIER ACCEPTS IT SPELLED cty.dat, WHICH IS HOW IT ARRIVES.  Two
+    ways that name reaches the disk in lower case and only the first is ours to
+    control: the repository tracks the shipped file as `cty.dat`, and the update
+    an operator downloads from country-files.com is `cty.dat` too.  On Windows
+    that has never mattered.  On Linux the program found nothing, fell through
+    to its download path, and reported an OpenSSL failure -- an error naming the
+    wrong subsystem entirely (NY4I, Linux Mint, 2026-09-09).  That tolerance was
+    a single ResolveDataFileInPlace after the fact; it is ExistingDataFile per
+    candidate now, because a tier has to be able to ANSWER in the case the file
+    is actually spelled in or it will be skipped.
+
+    SysUtils.FileExists explicitly: the unqualified name resolves to a legacy
+    PAnsiChar-taking FileExists pulled in from the TRDOS units. *)
+  candidate := ExistingDataFile(DownloadedDataFilePath('CTY.DAT'));
+  source    := 'downloaded';
+
+  if not SysUtils.FileExists(candidate) then
      begin
-     SetCharBuffer(TR4W_CTY_FILENAME,
-                   CharBufferText(TR4W_PATH_NAME) + 'CTY.DAT');
+     candidate := ExistingDataFile(CharBufferText(TR4W_LOG_PATH_NAME) + 'CTY.DAT');
+     source    := 'contest directory';
+     end;
+
+  if not SysUtils.FileExists(candidate) then
+     begin
        // n4af issue  # 219  & 212
+     candidate := ExistingDataFile(CharBufferText(TR4W_PATH_NAME) + 'CTY.DAT');
+     source    := 'shipped';
      end;
 
-  (* ...AND ACCEPT IT SPELLED cty.dat, WHICH IS HOW IT ARRIVES.
+  SetCharBuffer(TR4W_CTY_FILENAME, candidate);
 
-    Two ways this name reaches the disk in lower case, and only the first is
-    ours to control: the repository tracks the shipped file as `cty.dat`, and
-    the update an operator downloads from country-files.com is `cty.dat` too.
-    On Windows that has never mattered. On Linux the program found nothing,
-    fell through to its download path, and reported an OpenSSL failure -- an
-    error naming the wrong subsystem entirely (NY4I, Linux Mint, 2026-09-09).
-
-    Costs one directory scan, and only when the exact name was already
-    missing. On Windows it is the FileExists test and nothing more. *)
-  ResolveDataFileInPlace(TR4W_CTY_FILENAME);
-
-  SetCharBuffer(CD.ActiveFilename,
-                CharBufferText(TR4W_LOG_PATH_NAME) + 'TRMASTER.DTA');
-
-  if not FileExists(CD.ActiveFilename) then
+  (* SAY WHICH ONE, ONCE.  Two locations with a precedence between them is a
+    thing an operator has to be able to see from the log rather than deduce --
+    "my update did nothing" and "my update took" look identical otherwise. *)
+  if logger <> nil then
      begin
-     SetCharBuffer(CD.ActiveFilename,
-                   CharBufferText(TR4W_PATH_NAME) + 'TRMASTER.DTA');
-     if not FileExists(CD.ActiveFilename) then
-        begin
-        SetCharBuffer(CD.ActiveFilename,
-                      CharBufferText(TR4W_PATH_NAME) + 'MASTER.DTA');
-        end;
-
+     logger.Info('[FCONTEST] Country file: %s (%s)', [candidate, source]);
      end;
 
-  (* The call-history file arrives from as many places as the country file --
-    TRMASTER.DTA, trmaster.dta, and MASTER.DTA from older programs. Same
-    tolerance, same reason. *)
-  ResolveDataFileInPlace(CD.ActiveFilename);
+  (* THE SAME FOUR-TIER RULE FOR THE CALL-HISTORY FILE, and for the same
+    reason: a downloaded TRMASTER.DTA is written to the writable data
+    directory, so it has to be looked for there first.  MASTER.DTA is the old
+    K1EA name and stays last -- it is what an operator may already have, never
+    what TR4W creates.
+
+    The call-history file arrives spelled as many ways as the country file, so
+    each tier is resolved case-tolerantly, as above. *)
+  candidate := ExistingDataFile(DownloadedDataFilePath('TRMASTER.DTA'));
+  source    := 'downloaded';
+
+  if not SysUtils.FileExists(candidate) then
+     begin
+     candidate := ExistingDataFile(CharBufferText(TR4W_LOG_PATH_NAME) + 'TRMASTER.DTA');
+     source    := 'contest directory';
+     end;
+
+  if not SysUtils.FileExists(candidate) then
+     begin
+     candidate := ExistingDataFile(CharBufferText(TR4W_PATH_NAME) + 'TRMASTER.DTA');
+     source    := 'shipped';
+     end;
+
+  if not SysUtils.FileExists(candidate) then
+     begin
+     candidate := ExistingDataFile(CharBufferText(TR4W_PATH_NAME) + 'MASTER.DTA');
+     source    := 'shipped (legacy MASTER.DTA)';
+     end;
+
+  SetCharBuffer(CD.ActiveFilename, candidate);
+
+  if logger <> nil then
+     begin
+     logger.Info('[FCONTEST] Call history file: %s (%s)', [candidate, source]);
+     end;
 
 {$IF MAKE_DEFAULT_VALUES = false}
 

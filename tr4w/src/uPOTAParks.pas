@@ -52,8 +52,19 @@ const
    // lParam = TStringList pointer (already parsed; main thread owns it after this).
    // Main thread must call ApplyLoadedParks(lParam) from the handler.
 
-// Returns full path to the parks CSV (same directory as tr4w.exe).
+(* THE PARKS CSV TO READ: the copy TR4W downloaded if there is one, the copy
+  that shipped otherwise.  Nothing ships one today -- full.nsi installs no
+  pota_parks.csv -- so in practice this is the downloaded file or nothing; the
+  shipped tier costs a FileExists and means a park list CAN be packaged later
+  without another code change. *)
 function POTAParksFilePath: string;
+
+(* WHERE A DOWNLOADED PARKS CSV IS WRITTEN, which is NOT where it is read
+  from.  This used to be the same function, so the download wrote back over
+  whichever tier had answered -- and that tier was DataFilePath, which is
+  Contents/Resources inside a signed macOS bundle and a read-only mount under
+  an AppImage. *)
+function POTAParksDownloadTarget: string;
 
 // Loads parks from CSV file. Returns number of parks loaded, or -1 on error.
 // Safe to call from the main thread only.
@@ -139,7 +150,7 @@ implementation
 
 uses
    uHTTPDownload,   // the shared atomic fetch -- see TPOTADownloadThread.Execute
-   uAppPaths;       // DataFilePath -- the shipped parks file
+   uAppPaths;       // PreferredDataFilePath -- downloaded copy, else shipped
 
 // ---------------------------------------------------------------------------
 // Internal state
@@ -260,7 +271,12 @@ end;
 
 function POTAParksFilePath: string;
 begin
-   Result := DataFilePath(POTA_PARKS_FILENAME);
+   Result := PreferredDataFilePath(POTA_PARKS_FILENAME);
+end;
+
+function POTAParksDownloadTarget: string;
+begin
+   Result := DownloadedDataFilePath(POTA_PARKS_FILENAME);
 end;
 
 function LoadPOTAParks(const AFilename: string): Integer;

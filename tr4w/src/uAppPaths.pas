@@ -107,6 +107,55 @@ function LogDir: string;
 function ContestDir: string;
 function ContestFilePath(const aName: string): string;
 
+(* --settings <path>, IF ONE WAS GIVEN, AND '' OTHERWISE.
+
+  THE COMMAND LINE IS A PATH QUESTION, so it is answered here rather than
+  separately in each unit that cares.  uTR4WConfigFile had this parse; when a
+  second caller appeared, a second COPY would have been the thing CLAUDE.md
+  warns about -- copies drift, and the drift is invisible.
+
+  CACHED, because TR4WConfigFileName is asked before most of startup has run
+  and a variable somebody has to remember to set first would be wrong on the
+  call that matters most.  Answering it lazily cannot be ordered wrongly. *)
+function SettingsFileOverride: string;
+
+(* WHERE A FILE TR4W DOWNLOADED FOR THE OPERATOR LIVES -- CTY.DAT,
+  TRMASTER.DTA, pota_parks.csv.
+
+  NOT DataDir, ON ANY PLATFORM, AND EACH ONE IS WRONG FOR A DIFFERENT REASON:
+
+    Windows   DataDir is the working directory, which on a developer's machine
+              IS THE REPOSITORY.  Alt-O wrote over the tracked
+              tr4w/target/cty.dat every single time (NY4I, 2026-09-24).
+    macOS     DataDir is Contents/Resources -- INSIDE A SIGNED, NOTARIZED
+              BUNDLE.  A write there invalidates the signature.
+    Linux     an AppImage mounts read-only, at a new path every launch.
+
+  IT IS THE SETTINGS DIRECTORY.  That is writable on all three by definition,
+  it is already where the operator's own state lives, and a downloaded country
+  file is exactly what it is for: application data the operator did not author.
+
+  AND --settings MOVES IT, WHICH IS WHAT KEEPS THE GOLDEN CORPUS DETERMINISTIC.
+  The corpus points the program at its own tracked settings fixture; that
+  directory holds no CTY.DAT, so the lookup falls through to the tracked
+  shipped copy no matter what the developer has downloaded.  Without that, a
+  corpus result would depend on whether somebody had pressed Alt-O -- a
+  differently-configured clone failing for a reason that is purely an
+  artifact, on the regression oracle itself. *)
+function DownloadedDataDir: string;
+function DownloadedDataFilePath(const aName: string): string;
+
+(* THE WRITABLE COPY IF THERE IS ONE, THE SHIPPED COPY OTHERWISE.
+
+  The two-tier lookup in ONE place, so "downloaded beats shipped" is stated
+  once instead of being spelled out at each caller.  Case-tolerant at both
+  tiers, through ExistingDataFile: the file an operator downloads from
+  country-files.com is named cty.dat and the program asks for CTY.DAT.
+
+  The country file does NOT come through here -- it has a third tier, a copy
+  beside the contest, and FCONTEST.SetUpFileNames owns that order. *)
+function PreferredDataFilePath(const aName: string): string;
+
 (* THE SAME FILE, WHATEVER CASE IT IS SPELLED IN.
 
   Returns aPath when it exists. When it does not, and the platform has a
@@ -608,5 +657,80 @@ begin
 end;
 
 {$IFEND}
+
+(* ------------------------------------------------------------------------
+  THE WRITABLE DATA TIER.  See the interface notes; these sit at the end
+  because they are answered in terms of SettingsDir and DataDir, which the
+  per-platform blocks above define.
+  ------------------------------------------------------------------------ *)
+
+var
+   GSettingsOverride: string = '';
+   GSettingsOverrideResolved: boolean = False;
+
+function SettingsFileOverride: string;
+var
+   i: integer;
+   arg: string;
+begin
+   if not GSettingsOverrideResolved then
+      begin
+      GSettingsOverrideResolved := True;
+      for i := 1 to ParamCount do
+         begin
+         arg := ParamStr(i);
+         (* UnicodeSameText, NOT SameText.  SysUtils' plain name takes
+           AnsiString, so comparing two UTF-16 values through it narrows
+           BOTH -- two conversions the build counts, for a comparison of
+           ASCII switch text that cannot lose a character. *)
+         if UnicodeSameText(Copy(arg, 1, 11), '--settings=') then
+            begin
+            GSettingsOverride := Copy(arg, 12, Length(arg));
+            Break;
+            end;
+         if UnicodeSameText(arg, '--settings') and (i < ParamCount) then
+            begin
+            GSettingsOverride := ParamStr(i + 1);
+            Break;
+            end;
+         end;
+      end;
+
+   Result := GSettingsOverride;
+end;
+
+function DownloadedDataDir: string;
+var
+   settingsFile: string;
+begin
+   settingsFile := SettingsFileOverride;
+   if settingsFile = '' then
+      begin
+      Result := SettingsDir;
+      Exit;
+      end;
+
+   (* ExpandFileName FIRST.  --settings may name a file with no directory at
+     all, and ExtractFilePath of that is the empty string -- which would put a
+     downloaded country file wherever the program happened to be started from
+     rather than beside the settings it belongs to. *)
+   Result := EnsureDir(ExtractFilePath(ExpandFileName(settingsFile)));
+end;
+
+function DownloadedDataFilePath(const aName: string): string;
+begin
+   Result := DownloadedDataDir + aName;
+end;
+
+function PreferredDataFilePath(const aName: string): string;
+begin
+   Result := ExistingDataFile(DownloadedDataFilePath(aName));
+   if FileExists(Result) then
+      begin
+      Exit;
+      end;
+
+   Result := ExistingDataFile(DataFilePath(aName));
+end;
 
 end.

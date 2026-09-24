@@ -77,6 +77,25 @@ multipliers, CTY.DAT, band lookup and CRC32.
   process inherited the first one's counters.
 - **Ignored read results.** `logscp.pas` had three `sReadFile` calls whose result
   was discarded.
+- **WHERE A DOWNLOADED DATA FILE GOES — and it is NOT where the shipped one is.** Alt-O
+  (CTY.DAT), the TRMASTER.DTA download and the POTA park list all write to
+  `uAppPaths.DownloadedDataFilePath`, the **settings** directory, and the lookup prefers that copy
+  over the shipped one. `DataDir` is wrong on all three platforms: on Windows it is the working
+  directory, which on a developer's machine is the repository (the tracked `tr4w/target/cty.dat`
+  was being overwritten every time); on macOS it is inside the signed, notarized `.app`; on Linux
+  an AppImage mounts read-only. `FCONTEST.SetUpFileNames` owns the order —
+  **downloaded → contest directory → shipped** — and logs which tier answered. Compose the path in
+  `uAppPaths` and nowhere else; `Lint-AppPaths` fails the build otherwise.
+- **The corpus stays pinned to the TRACKED country file through `--settings`**, which moves the
+  writable directory with it: the fixture directory holds no CTY.DAT, so the lookup falls to the
+  shipped copy. **Verified 2026-09-24** by planting a bogus `CTY.DAT` in `tr4w/target/settings/`
+  and re-running: still `24 passed, 0 failed, 2 known-divergence`, and all 26 exports logged
+  `(shipped)`. If you ever make the corpus read a developer-writable location, you have turned the
+  oracle into a machine-dependent test.
+- **A download that reports success is not a reload.** `CTYDownloadFinished` reloaded
+  `TR4W_CTY_FILENAME` — the file resolved at STARTUP — so on macOS it said *"downloaded…
+  reloading… reloaded successfully"* having reloaded the old bundle copy. It repoints the name at
+  the file it just wrote now.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
 

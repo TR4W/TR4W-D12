@@ -668,7 +668,7 @@ implementation
 
 uses
    uSettingsModel,   // Settings -- where retired CFGCA rows live
-  uAppPaths,   // ContestDir -- where an operator's contest files live
+  uAppPaths,   // ContestDir, DownloadedDataFilePath -- where files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
@@ -4801,8 +4801,18 @@ end;
 // TRMASTER.DTA beside it.
 //
 // So: UPDATING replaces whatever file is actually there, whatever it is
-// called; CREATING uses the canonical name, in the directory the resolver
-// already chose.
+// called; CREATING uses the canonical name.
+//
+// AND CREATING NO LONGER USES "the directory the resolver already chose"
+// (2026-09-24).  That directory is DataDir whenever nothing is installed,
+// which is the read-only bundle on macOS, the read-only mount on an AppImage,
+// and the repository on a developer's Windows machine.  A file TR4W downloads
+// goes where TR4W may write, and FCONTEST looks there first.
+//
+// UPDATING IN PLACE IS KEPT DELIBERATELY: an operator who maintains their own
+// TRMASTER.DTA beside a contest gets it refreshed rather than shadowed by a
+// second copy they cannot see.  The only way that file is read-only is if the
+// operator made it so, and then the failure is reported.
 function TRMasterDownloadTarget: string;
 var
    resolved: string;
@@ -4815,7 +4825,7 @@ begin
       end
    else
       begin
-      Result := SysUtils.ExtractFilePath(resolved) + 'TRMASTER.DTA';
+      Result := DownloadedDataFilePath('TRMASTER.DTA');
       end;
 end;
 
@@ -5564,16 +5574,24 @@ begin
     menu_download_latest_cty_dat:
       begin
       QuickDisplay(TC_DOWNLOADINGCTYDAT);
-      (* DOWNLOAD INTO THE CONTEST DIRECTORY, not over whatever
-        TR4W_CTY_FILENAME happens to point at.
+      (* DOWNLOAD INTO THE WRITABLE DATA DIRECTORY, not over whatever
+        TR4W_CTY_FILENAME happens to point at, and not into the contest
+        directory either.
 
-        That name is the file TR4W READ, and on a fresh install it is the
-        SHIPPED copy under DataDir -- read-only on Linux and macOS, which is
-        how this failed with "Read-only file system" on an AppImage (NY4I,
-        2026-09-10).  FCONTEST's lookup already prefers a CTY.DAT in the
-        contest directory, so writing there is also what makes the new file
-        the one used.  On Windows the two are the same directory. *)
-      DownloadCTYAsync(ContestFilePath('CTY.DAT'),
+        TR4W_CTY_FILENAME names the file TR4W READ, and on a fresh install
+        that is the SHIPPED copy under DataDir -- read-only on Linux and
+        macOS, which is how this failed with "Read-only file system" on an
+        AppImage (NY4I, 2026-09-10).
+
+        THE CONTEST DIRECTORY WAS THE FIRST FIX AND IT WAS NOT ENOUGH: on
+        Windows ContestDir IS DataDir, so Alt-O wrote over the shipped
+        tr4w/target/cty.dat -- which on a developer's machine is a tracked
+        file in the repository (NY4I, 2026-09-24).  DownloadedDataDir is
+        writable on all three platforms and is inside none of them.
+
+        FCONTEST.SetUpFileNames looks there FIRST, so this is also what makes
+        the new file the one that gets used. *)
+      DownloadCTYAsync(DownloadedDataFilePath('CTY.DAT'),
         BackgroundEvents.CTYDownloadFinished);
       end;
 
@@ -5604,7 +5622,12 @@ begin
     menu_download_pota_parks:
       begin
       QuickDisplay(TC_DOWNLOADINGPOTAPARKS);
-      DownloadPOTAParksAsync(POTAParksFilePath,
+      (* THE DOWNLOAD TARGET, NOT THE LOOKUP.  POTAParksFilePath is a
+        two-tier READ -- the downloaded copy if there is one, the shipped copy
+        otherwise -- and handing it to the downloader wrote the new file over
+        whichever of the two had answered, including a copy inside the macOS
+        bundle. *)
+      DownloadPOTAParksAsync(POTAParksDownloadTarget,
         BackgroundEvents.PotaDownloadFinished);
       end;
 

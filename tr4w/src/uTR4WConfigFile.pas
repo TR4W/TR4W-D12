@@ -304,71 +304,35 @@ function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcast
 implementation
 
 uses
-   TypInfo;              // GetEnumValue -- StartupLogLevel reads a streamed enum name
+   TypInfo,              // GetEnumValue -- StartupLogLevel reads a streamed enum name
+   uAppPaths;            // SettingsFileOverride -- the --settings switch, parsed once
 
-(* --settings <path>, RESOLVED HERE RATHER THAN AT STARTUP.
+(* --settings <path> IS RESOLVED BY uAppPaths, NOT HERE.
 
-  WHY IT EXISTS. Everything that runs TR4W without an operator -- the golden
-  corpus above all -- was reading whatever settings file happened to be in
-  the developer's target directory. That is a test whose result depends on
+  WHY IT EXISTS AT ALL.  Everything that runs TR4W without an operator -- the
+  golden corpus above all -- was reading whatever settings file happened to be
+  in the developer's target directory.  That is a test whose result depends on
   the machine it runs on, and it bit exactly that way: the corpus refused to
-  run at all because a hand-staged first-run file had no _LOCATION, and the
-  scoring oracle was unavailable for a day (NY4I, 2026-09-12: "you should
-  have your own json file and feed that one to tr4w as a parameter for the
-  corpus").
+  run because a hand-staged first-run file had no _LOCATION, and the scoring
+  oracle was unavailable for a day (NY4I, 2026-09-12: "you should have your own
+  json file and feed that one to tr4w as a parameter for the corpus").
 
-  READ FROM THE COMMAND LINE HERE, AND CACHED, rather than assigned by the
-  startup sequence. TR4WConfigFileName is called from at least four places
-  and the EARLIEST of them decides the log level, before most of startup has
-  run; a variable someone has to remember to set first would be wrong on the
-  call that matters most. Answering the question lazily cannot be ordered
-  wrongly.
+  WHY THE PARSE MOVED (2026-09-24).  The switch acquired a second consumer --
+  a downloaded CTY.DAT lands beside the settings file, so uAppPaths has to know
+  where that is -- and the choice was one parse in the path-owning unit or two
+  copies free to disagree.  uAppPaths caches it for the same reason this unit
+  did: TR4WConfigFileName is called from at least four places and the EARLIEST
+  of them decides the log level, before most of startup has run.
 
-  NO VALIDATION HERE. A path that does not exist is a first run against that
-  path, which is the same thing an absent default file means, and the
-  loader already reports what it found. *)
-var
-   GSettingsPath: string = '';
-   GSettingsPathResolved: boolean = False;
-
-function SettingsPathFromCommandLine: string;
-var
-   i: integer;
-   arg: string;
-begin
-   Result := '';
-   for i := 1 to ParamCount do
-      begin
-      arg := ParamStr(i);
-      (* UnicodeSameText, NOT SameText. SysUtils' plain name takes AnsiString,
-        so comparing two UTF-16 values through it narrows BOTH -- two of the
-        conversions the build counts, for a comparison of ASCII switch text
-        that can never lose a character. See uSettingsEffects for the same
-        note. *)
-      if UnicodeSameText(Copy(arg, 1, 11), '--settings=') then
-         begin
-         Result := Copy(arg, 12, Length(arg));
-         Exit;
-         end;
-      if UnicodeSameText(arg, '--settings') and (i < ParamCount) then
-         begin
-         Result := ParamStr(i + 1);
-         Exit;
-         end;
-      end;
-end;
+  NO VALIDATION, THERE OR HERE.  A path that does not exist is a first run
+  against that path, which is the same thing an absent default file means, and
+  the loader already reports what it found. *)
 
 function TR4WConfigFileName: string;
 begin
-   if not GSettingsPathResolved then
+   Result := SettingsFileOverride;
+   if Result <> '' then
       begin
-      GSettingsPathResolved := True;
-      GSettingsPath := SettingsPathFromCommandLine;
-      end;
-
-   if GSettingsPath <> '' then
-      begin
-      Result := GSettingsPath;
       Exit;
       end;
 

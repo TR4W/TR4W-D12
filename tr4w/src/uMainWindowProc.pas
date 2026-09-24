@@ -156,7 +156,8 @@ uses
   uMMTTY,             // the MMTTY window message
   LOGSUBS2,           // ExitProgram, on WM_CLOSE
   uCTYDAT,            // ctyLoadInCountryFile, after a CTY.DAT download
-  utils_text,         // CharBufferText -- the file name is a NUL-terminated buffer
+  utils_text,         // CharBufferText/SetCharBuffer -- the file name is a NUL-terminated buffer
+  uAppPaths,          // DownloadedDataFilePath -- where the download landed
   LOGSTUFF,           // CallWindowKeyDownProc, ProcessTAB, SpaceBarProc2, ...
   tree,               // KeyboardCallsignChar
   LOGK1EA,
@@ -624,10 +625,34 @@ end;
 
 procedure TTR4WBackgroundEvents.CTYDownloadFinished(Sender: TObject;
                                                     aSucceeded: boolean);
+var
+   downloaded: string;
 begin
    if aSucceeded then
       begin
       QuickDisplay(TC_CTYDATDOWNLOADEDRELOADING);
+
+      (* LOAD THE FILE THAT WAS JUST WRITTEN, NOT THE ONE THAT WAS READ AT
+        STARTUP.
+
+        This reloaded TR4W_CTY_FILENAME, which is whatever SetUpFileNames
+        resolved when the program started -- on a fresh install, the SHIPPED
+        copy.  On Windows the download happened to land on that same file, so
+        it worked by coincidence; anywhere the two differ it reported
+        "reloaded successfully" having reloaded the OLD data.  That is what
+        NY4I's macOS log shows on 2026-09-23: downloaded, reloading, reloaded
+        successfully, and nothing changed, because the write went to a
+        writable directory and the read came out of the .app bundle.
+
+        Repointing TR4W_CTY_FILENAME as well as loading it keeps the rest of
+        the program -- the version check, any later reload -- looking at the
+        file now in force. *)
+      downloaded := DownloadedDataFilePath('CTY.DAT');
+      if SysUtils.FileExists(downloaded) then
+         begin
+         SetCharBuffer(TR4W_CTY_FILENAME, downloaded);
+         end;
+
       (* RELOADED ON THE MAIN THREAD. The CTY tables have no locking, so a
         background reload would race with callsign lookups; arriving here is a
         safe quiescent point. *)

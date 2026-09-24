@@ -1364,6 +1364,32 @@ Read the specific doc before acting in its area — these are current and this f
 **Required in `target/`:** `CTY.DAT` (essential), `TRMASTER.DTA` (SCP, optional but recommended),
 `dom/` (~126 domestic contest configs), `commands_help_*.ini`.
 
+**BUT `CTY.DAT` AND `TRMASTER.DTA` NOW HAVE TWO LOCATIONS WITH A PRECEDENCE BETWEEN THEM**
+(2026-09-24). A file TR4W **downloads** -- Alt-O for the country file, the Help menu for
+TRMASTER.DTA and the POTA park list -- is written to the **writable data directory** and never
+over the shipped copy, and the lookup prefers it:
+
+```
+uAppPaths.DownloadedDataDir  ->  the settings directory: target\settings\ on Windows,
+                                 ~/Library/Application Support/TR4W on macOS,
+                                 $XDG_CONFIG_HOME/tr4w on Linux
+```
+
+`FCONTEST.SetUpFileNames` searches **downloaded -> the contest directory -> shipped**, and logs
+which tier answered (`[FCONTEST] Country file: <path> (<tier>)`). The download had to move
+because `DataDir` is wrong on every platform for a different reason: on Windows it is the working
+directory, which on a developer's machine **is this repository** and the tracked
+`tr4w/target/cty.dat` was being overwritten; on macOS it is `Contents/Resources` **inside a
+signed, notarized bundle**; on Linux an AppImage mounts read-only.
+
+**`--settings <path>` MOVES THE WRITABLE DIRECTORY WITH IT, AND THAT IS WHAT KEEPS THE GOLDEN
+CORPUS DETERMINISTIC** -- the corpus points the program at its own tracked fixture, which holds no
+country file, so the lookup falls through to the tracked shipped copy no matter what the developer
+has downloaded. Do not make the corpus read a location a developer can write to.
+
+**The installer still ships `target/cty.dat` and `target/TRMASTER.DTA`** and `full.nsi` is
+unchanged: those are the shipped tier.
+
 **DLLs:** `libhamlib-4.dll` (+ `libgcc_s_dw2-1.dll`, `libusb-1.0.dll`, `libwinpthread-1.dll`),
 `libeay32.dll` / `ssleay32.dll` (OpenSSL), **`sqlite3.dll` (THE CONTEST LOG — the installer ships
 it; FPC binds SQLite dynamically, so a missing DLL is a run-time failure, not a link error)**, and
