@@ -1273,16 +1273,52 @@ PLIST
    if [ "$OS" = darwin ]; then
       dmg="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.dmg"
       rm -f "$dmg"
+
+      # THE IMAGE IS BUILT FROM ITS OWN ROOT, NOT FROM $stage, and one
+      # symlink is the entire reason.
+      #
+      # A macOS disk image is expected to open showing the application beside
+      # an "Applications" folder, so that installing is a drag from one to the
+      # other (NY4I, 2026-09-24: "it makes it easier for deployment").  That
+      # folder is nothing but a symbolic link to /Applications -- Finder draws
+      # the real folder's icon for it.  It is not a Finder alias file and does
+      # not need to be one.
+      #
+      # IT MUST NOT GO INTO $stage, BECAUSE $stage IS ALSO THE TARBALL'S ROOT.
+      # deploy-mac.sh extracts that tarball into ~/Applications, so a member
+      # named Applications pointing at an absolute path outside the archive is
+      # at best confusing and at worst an extraction that writes through the
+      # link.  The image therefore gets a copy of the stage plus the link, and
+      # the tarball is left exactly as it was.
+      #
+      # ditto, NOT cp: by this point the stage holds a SIGNED and STAPLED
+      # bundle, and ditto is the copy that preserves extended attributes, ACLs
+      # and symlinks.  Nothing is assumed about that -- the app inside the
+      # mounted image is what `spctl` and `codesign --verify --deep` are run
+      # against during verification, so a copy that damaged the seal shows up
+      # as a failure rather than as a belief.
+      dmgroot="$OUTROOT/dist/.dmgroot.$$"
+      rm -rf "$dmgroot"
       if ! command -v hdiutil >/dev/null 2>&1; then
          say '  WARNING: hdiutil not found -- the .dmg was not produced'
          dmg=''
-      elif ! hdiutil create -volname TR4W -srcfolder "$stage" -ov -format UDZO "$dmg" >/dev/null 2>&1; then
+      elif ! ditto "$stage" "$dmgroot" >/dev/null 2>&1; then
+         say '  WARNING: the disk image root could not be staged -- no .dmg'
+         rm -rf "$dmgroot"
+         dmg=''
+      elif ! ln -s /Applications "$dmgroot/Applications"; then
+         say '  WARNING: the /Applications link could not be created -- no .dmg'
+         rm -rf "$dmgroot"
+         dmg=''
+      elif ! hdiutil create -volname TR4W -srcfolder "$dmgroot" -ov -format UDZO "$dmg" >/dev/null 2>&1; then
          # Reported, not silent: a missing DMG must not look like a choice.
          say '  WARNING: hdiutil failed -- the .dmg was not produced'
          rm -f "$dmg"
+         rm -rf "$dmgroot"
          dmg=''
       else
-         say "  OK -> $dmg ($(($(wc -c < "$dmg") / 1024)) KB)"
+         rm -rf "$dmgroot"
+         say "  OK -> $dmg ($(($(wc -c < "$dmg") / 1024)) KB), with an Applications link"
       fi
 
       if [ "$SIGNING" = 1 ]; then
