@@ -867,7 +867,6 @@ begin
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
       '  /EXPORT /EXPORTDB  the same, forcing the SQLite log as the source' + sLineBreak +
-      '  /EXPORT /EXPORTTRW the same, forcing the binary .TRW as the source' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
       '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
@@ -2347,44 +2346,44 @@ begin
 
   if SameText(ParamStr(2), '/EXPORT') then
      begin
-     (* /EXPORTDB -- READ THE QSOs FROM THE SQLITE LOG INSTEAD OF THE .TRW.
+     (* /EXPORTDB -- READ THE QSOs FROM THE SQLITE LOG.
 
-        Step B3's equivalence gate. The exporters themselves are unchanged and
-        do not know which store they are reading; only uLogSource does. So the
-        corpus can run the SAME export twice, over the SAME thirteen logs,
-        against the SAME frozen D7 references -- and two independent readers
-        agreeing on 26 byte-exact artifacts is the proof that the database can
-        replace the binary log.
+        It was step B3's equivalence gate, and that is HISTORY rather than what
+        it does now. The exporters do not know which store they are reading;
+        only uLogSource does, so the corpus could run the SAME export twice over
+        the SAME thirteen logs against the SAME frozen D7 references, and two
+        independent readers agreeing on 26 byte-exact artifacts was the proof
+        that the database could replace the binary log. It did, at B4.
+
+        THAT COMPARISON CANNOT BE RUN ANY MORE -- its other half was /EXPORTTRW.
+        See the note below.
 
         A THIRD ARGUMENT RATHER THAN A SEPARATE MODE, so there is no second
         export path to keep in step with this one. *)
-     (* EITHER STORE, FORCED EXPLICITLY, so a caller states which one it wants
-        instead of inheriting whatever the default happens to be. That mattered
-        once the default moved: a comparison that silently followed the default
-        would compare a store against itself and pass.
+     (* /EXPORTTRW IS GONE -- 2026-09-24, NY4I: "remove /exporttrw".
 
-        /EXPORTTRW HAS NO CALLER IN THIS TREE. Its only one was
-        compare-stores.sh, deleted 2026-09-24 with phase B3's question settled
-        -- the binary log is import-only and the corpus fixture is a log.db.
-        The arm is kept because forcing a store is still a legitimate thing to
-        ask of a build under investigation, and because removing a documented
-        switch is a separate decision nobody has made. Do not read the absence
-        of callers as evidence it is broken; read it as untested.
+        It forced LogSourceKind := lsBinary so an export could be made to read
+        the .TRW. Its only caller was compare-stores.sh, which answered phase
+        B3 and was deleted the same day; the binary log has been import-only
+        since B5, and the golden corpus's fixture is a log.db.
+
+        WHAT THAT LEAVES, STATED RATHER THAN QUIETLY TRUE: nothing can now
+        assign lsBinary, because these were the ONLY two assignments to
+        LogSourceKind in the tree. So /EXPORTDB below re-asserts the value the
+        variable already has, and the `else` arm of every case in uLogSource --
+        the whole binary read path -- is unreachable. Neither is deleted here:
+        that is a change to uLogSource's surface and a separate decision.
 
         BOTH SIDES CONVERTED EXPLICITLY. ParamStr returns a UnicodeString and
         this SameText resolves to the AnsiString overload, so a bare call
         narrows implicitly -- and the warning sits on the ARGUMENT, not on the
         literal, which is why converting only the literal does not silence it.
         Safe because a switch name is ASCII: an argument carrying characters
-        outside the ANSI codepage converts to something that matches neither,
-        which is the right answer -- it was not one of these switches. *)
+        outside the ANSI codepage converts to something that does not match,
+        which is the right answer -- it was not this switch. *)
      if SameText(AnsiString(ParamStr(3)), AnsiString('/EXPORTDB')) then
         begin
         LogSourceKind := lsDatabase;
-        end
-     else if SameText(AnsiString(ParamStr(3)), AnsiString('/EXPORTTRW')) then
-        begin
-        LogSourceKind := lsBinary;
         end;
      EarlyTrace('[Export] reading QSOs from ' + LogSourceDescription);
 

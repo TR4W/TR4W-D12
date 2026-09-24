@@ -117,12 +117,22 @@ binary write path, and when the golden corpus's fixture became a `log.db` on
 a legacy read path measured over half a corpus. NY4I: *"Dropping an unneeded
 test is fine."*
 
-**What this means for anyone re-opening B3:** the script is in git history at
-`badc63c5~1`, and it needs a `.cfg` and a `.TRW` per log -- six of those D7 logs
-survive as unit fixtures in `tr4w/test/unit/fixtures/binarylog/`. **The
-`/EXPORTTRW` switch it drove now has no caller in the tree** (only its own arm
-in `uProgramMain` and the usage text). Removing that switch is a separate
-decision and has NOT been made.
+**B3 CANNOT BE RE-RUN, AND THE RECIPE THAT STOOD HERE NO LONGER WORKS.** The
+script is in git history at `badc63c5~1` and needs a `.cfg` and a `.TRW` per log
+-- six of those D7 logs survive as unit fixtures in
+`tr4w/test/unit/fixtures/binarylog/` -- but it also needs **`/EXPORTTRW`, and
+that switch was REMOVED on 2026-09-24** (NY4I: *"remove /exporttrw"*). Checking
+out the script alone would give a run that forces nothing and compares the
+database against itself: 13 identical, proving nothing. That is the failure the
+script's own header warned about, and it is now the only thing it can do.
+
+Re-opening B3 therefore means restoring the switch as well, or asking the
+question a different way. **`/EXPORTDB` survives and now only re-asserts the
+default**, since those two arms were the only assignments to `LogSourceKind` in
+the tree; `lsBinary` is consequently unreachable and the binary read path in
+`uLogSource` -- the `else` arm of eleven `case` statements -- is dead code that
+still compiles. Deleting any of that is a further decision and has NOT been
+made.
 
 **B4 IS DONE.** Every log READ goes through `uLogSource` and the default is the
 database: `tr4w/test/corpus/export-d12-corpus.sh` passes against the D7
