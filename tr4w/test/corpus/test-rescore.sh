@@ -5,7 +5,7 @@
 # tUpdateLog(actRescore) recomputes country, prefix, zone, multiplier flags,
 # QSO points and dupe state for every QSO in the log.  Its only callers are
 # interactive -- a menu action, an ADIF import, saving an edited QSO -- so the
-# corpus, compare-stores and the unit tests never run it.  B5 rewrote it
+# corpus and the unit tests never run it.  B5 rewrote it
 # completely: it used to memory-map the .TRW PAGE_READWRITE and mutate records
 # where they lay, and it now reads rows, recomputes, and writes back the ones
 # that changed.

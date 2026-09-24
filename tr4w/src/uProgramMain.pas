@@ -2358,10 +2358,18 @@ begin
 
         A THIRD ARGUMENT RATHER THAN A SEPARATE MODE, so there is no second
         export path to keep in step with this one. *)
-     (* EITHER STORE, FORCED EXPLICITLY, so compare-stores.sh states which one
-        it wants instead of inheriting whatever the default happens to be. That
-        matters now that the default has moved: a comparison that silently
-        followed the default would compare a store against itself and pass.
+     (* EITHER STORE, FORCED EXPLICITLY, so a caller states which one it wants
+        instead of inheriting whatever the default happens to be. That mattered
+        once the default moved: a comparison that silently followed the default
+        would compare a store against itself and pass.
+
+        /EXPORTTRW HAS NO CALLER IN THIS TREE. Its only one was
+        compare-stores.sh, deleted 2026-09-24 with phase B3's question settled
+        -- the binary log is import-only and the corpus fixture is a log.db.
+        The arm is kept because forcing a store is still a legitimate thing to
+        ask of a build under investigation, and because removing a documented
+        switch is a separate decision nobody has made. Do not read the absence
+        of callers as evidence it is broken; read it as untested.
 
         BOTH SIDES CONVERTED EXPLICITLY. ParamStr returns a UnicodeString and
         this SameText resolves to the AnsiString overload, so a bare call

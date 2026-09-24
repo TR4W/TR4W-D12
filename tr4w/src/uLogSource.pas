@@ -72,9 +72,15 @@ var
 
       It was lsBinary until B3 proved the two stores produce identical bytes:
       13 corpus logs, 1,855 QSOs, zero differences in ADIF and Cabrillo. That
-      measurement is the entire warrant for this line, and it is re-runnable --
-      tr4w/test/corpus/compare-stores.sh, which forces each store explicitly and
-      is therefore unaffected by whatever this default happens to be.
+      measurement is the entire warrant for this line.
+
+      IT IS NO LONGER RE-RUNNABLE, and that is deliberate rather than rot.
+      compare-stores.sh made the measurement and was DELETED on 2026-09-24
+      (NY4I: "Dropping an unneeded test is fine"): B5 removed the binary
+      write path, so its subject became an import-only legacy store, and the
+      golden corpus's fixture became a log.db the same day, taking seven of
+      its thirteen logs with it. See docs/SQLITE_MIGRATION_TASKS.md, phase
+      B3, for what re-opening the question would cost.
 
       WHAT STILL WRITES THE .TRW: everything. B4 moves READS only. The binary
       log remains authoritative on disk, the shadow keeps it in step, and a

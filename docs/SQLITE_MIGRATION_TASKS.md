@@ -102,11 +102,27 @@ them, and every one would have reached an operator. They are recorded in
 the sharpest is that `ContestExchange.id` identifies the EXCHANGE, not the QSO --
 county-line contacts share it, so it cannot be the unique row key.
 
-**B3 IS GREEN.** `bash tr4w/test/corpus/compare-stores.sh` -- **13 logs, 1,855
-QSOs, 0 differences.** Exported from the database, TR4W produces BYTE-IDENTICAL
-ADIF and Cabrillo to exporting from the binary log, and the golden corpus still
-reads 22/0/4 against the D7 references. *(That corpus figure is the
-2026-09-01 one; C3 closed two divergences and it is 24/0/2 today.)*
+**B3 IS GREEN, AND ITS SCRIPT IS DELETED -- 2026-09-24.** The measurement was
+**13 logs, 1,855 QSOs, 0 differences**: exported from the database, TR4W
+produced BYTE-IDENTICAL ADIF and Cabrillo to exporting from the binary log, and
+the golden corpus still read 22/0/4 against the D7 references. *(That corpus
+figure is the 2026-09-01 one; C3 closed two divergences and it is 24/0/2
+today.)*
+
+`compare-stores.sh` asked *"changing ONLY the source of the QSOs, do the bytes
+change?"*, and **that question is settled and cannot be re-opened by the same
+means.** Its subject became the IMPORT-ONLY legacy store when B5 removed the
+binary write path, and when the golden corpus's fixture became a `log.db` on
+2026-09-24 it lost seven of its thirteen logs with them -- so what remained was
+a legacy read path measured over half a corpus. NY4I: *"Dropping an unneeded
+test is fine."*
+
+**What this means for anyone re-opening B3:** the script is in git history at
+`badc63c5~1`, and it needs a `.cfg` and a `.TRW` per log -- six of those D7 logs
+survive as unit fixtures in `tr4w/test/unit/fixtures/binarylog/`. **The
+`/EXPORTTRW` switch it drove now has no caller in the tree** (only its own arm
+in `uProgramMain` and the usage text). Removing that switch is a separate
+decision and has NOT been made.
 
 **B4 IS DONE.** Every log READ goes through `uLogSource` and the default is the
 database: `tr4w/test/corpus/export-d12-corpus.sh` passes against the D7
