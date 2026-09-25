@@ -66,7 +66,7 @@ This table is the gate on that decision.
 | Icom IC-905 | IC905 | - | - |  |
 | Icom IC-910 | IC910 | - | - |  |
 | Icom IC-9100 | IC9100 | - | - |  |
-| Icom IC-9700 | IC9700 | - | - |  |
+| Icom IC-9700 | IC9700 | 2026-09-24 | NY4I | **Run over LAN, and it found the 23 cm band defect.** Frequency decoded correctly -- the log shows `FS.Freq=1295196200` -- but the band display and `CE.Band` stayed on 432. Cause was not Icom and not the LAN: the factory band enum `TRadioBand` stopped at `rb70cm`, so `FreqToRadioBand` returned `rbNone` for anything at or above 500 MHz, that became `NoBand`, and uRadioPolling's NoBand guard correctly refused to propagate a sentinel. 222 MHz had the same class of fault more quietly (it read as 70 cm). Fixed by adding `rb125cm`/`rb33cm`/`rb23cm` and pinning the two band classifiers against each other in `uTestRadioBand`. **NOT a verification of Icom LAN as a family** -- only that band-following is right; the LAN soak owed on the IC-7760 is still owed. |
 | Icom IC-970D | IC970D | - | - |  |
 | Kenwood TS-140 | TS140 | - | - |  |
 | Kenwood TS-2000 | TS2000 | - | - |  |

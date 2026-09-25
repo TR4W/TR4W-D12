@@ -10902,31 +10902,33 @@ end;
 
 // ADIFDateStringToQSOTime, ADIFTimeStringToQSOTime moved to uADIF.pas (Issue #887).
 
+(*
+   THE MAPPING ITSELF MOVED to radioFactory\uRadioBand.pas (2026-09-24), beside
+   its own inverse.  What stood here was a hand-maintained reverse of
+   GetRadioBandFromBandType, in a unit no test can link, and the two halves had
+   drifted the same way: NEITHER knew 222 MHz, 902 MHz or 1296 MHz.  An IC-9700
+   on 1295.206 MHz reported rbNone, which arrived here as NoBand, and
+   uRadioPolling's NoBand guard then held the display -- and CE.Band -- at 432.
+
+   This is now reporting only.  Note the old `else` arm logged and then fell out
+   with Result NEVER ASSIGNED, so an unmapped band returned whatever was on the
+   stack: an arbitrary BandType, not NoBand.
+*)
 function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
 begin
-  case band of
-    rbNone: Result := NoBand;
-    rb160m: Result := Band160;
-    rb80m: Result := Band80;
-    //   rb60m: Result := Band60;
-    rb40m: Result := Band40;
-    rb30m: Result := Band30;
-    rb20m: Result := Band20;
-    rb17m: Result := Band17;
-    rb15m: Result := Band15;
-    rb12m: Result := Band12;
-    rb10m: Result := Band10;
-    rb6m: Result := Band6;
-    rb4m: Result := NoBand;
-    rb2m: Result := Band2;
-    rb70cm: Result := Band432;
-  else
-    begin
-      logger.Error('[GetTR4WBandFromNetworkBand] band is invalid - Ord is %d',
-        [Ord(band)]);
-    end;
-  end; // of case
+  Result := GetBandTypeFromRadioBand(band);
 
+  if (Result = NoBand) and not (band in [rbNone, rb60m, rb4m]) then
+     begin
+     (* rb4m and rb60m are excluded because BandType genuinely cannot name
+        either -- 70 MHz is Region 1 only and Band60 is commented out of the
+        enum -- so logging them would be a per-poll error line for a radio that
+        is working.  Anything ELSE reaching here means a band was added to
+        TRadioBand and not to the mapping, which is what uTestRadioBand's
+        round-trip exists to stop. *)
+     logger.Error('[GetTR4WBandFromNetworkBand] no BandType for TRadioBand ordinal %d',
+       [Ord(band)]);
+     end;
 end;
 
 // GetRadioBandFromBandType lives in radioFactory\uRadioBand.pas as of 2026-08-07.
