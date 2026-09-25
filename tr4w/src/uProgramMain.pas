@@ -1327,9 +1327,38 @@ begin
      created if missing. Nothing was asking it. The Windows path is unchanged:
      LogFilePath there is AppDir + the name, which is what this line already
      produced. *)
-   appender := TLogRollingFileAppender.Create(
-                  'name', LogFilePath('tr4w.log'));
-   appender.Layout := CreateTR4WLogLayout;
+   (* ONE FILE, NEVER ROLLED (NY4I, 2026-09-24).
+
+     TLogRollingFileAppender was used with Log4D's own defaults -- 10 MB and
+     ONE backup -- which nothing here ever overrode.  At TRACE the Icom
+     network transport alone writes ~126 lines a second (42,423 of 43,000
+     lines in one measured segment), so the file filled in 5.5 minutes and
+     the whole retained history was about ELEVEN MINUTES.
+
+     That is not merely small.  A roll RENAMES the live file to tr4w.log.1
+     and starts an empty one at the same path, so an operator watching
+     tr4w.log in an editor silently loses the run, and a log asked for after
+     the fact no longer contains the event that prompted the request.  It
+     cost exactly that during the 2026-09-24 Icom LAN soak: the
+     'Login successful' line anchoring the whole session had already been
+     rolled away by the time anyone looked for it.
+
+     NY4I: "10MB is comically small nowadays ... for now, let's just not
+     rollover to make this less confusing."
+
+     So: the plain file appender, appending, no rename and no backup index.
+     The file grows for the life of the installation and is the operator's
+     to manage, which is the same bargain every other logger on the machine
+     offers.  Append is passed explicitly rather than left to a default,
+     because truncating per run would lose more than rolling ever did.
+
+     THE RATE IS THE THING TO WATCH, not the ceiling: ~30 KB/s at TRACE is
+     ~108 MB an hour, and 99% of it is one subsystem logging every packet.
+     Gating that behind its own switch -- the pattern the DX cluster, the
+     TCI server and HamLib already use -- is the real fix and is not done
+     here.  DEBUG and INFO are a small fraction of this. *)
+   appender := TLogFileAppender.Create(
+                  'name', LogFilePath('tr4w.log'), CreateTR4WLogLayout, True);
    TLogBasicConfigurator.Configure(appender);
    logger := TLogLogger.GetLogger('TR4WDebugLog');
 
