@@ -27,8 +27,8 @@ unit uRadioIcom705;
   VFO B format: Standard ($25)
 
   Supported bands: 160m-6m (HF), 2m, 70cm.
-  Does NOT support 4m (70 MHz band). ToggleBand skips rb4m to avoid sending
-  a frequency the radio will reject (leaving the display out of sync).
+  Does NOT support 4m (70 MHz band) -- see DeclareCoverage, which is now the
+  one place that says so.  Band stepping is generic (uRadioBand) and reads it.
 }
 
 interface
@@ -40,7 +40,8 @@ type
   TIcom705Radio = class(TIcomModernRadio)
   public
     constructor Create; reintroduce;
-    function ToggleBand(vfo: TVFO = nrVFOA): TRadioBand; override;
+  protected
+    procedure DeclareCoverage; override;
   end;
 
 implementation
@@ -79,38 +80,24 @@ begin
    DeclareScopeGeometry(475, 160);
 end;
 
-function TIcom705Radio.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;
-var
-  currentBand: TRadioBand;
-  nextBand: TRadioBand;
+(* WHAT THIS RADIO HAS, AS DATA RATHER THAN AS A LADDER.
+
+  This unit used to carry its own copy of the family's band-stepping `case`,
+  differing from it in one line: it skipped 4 m.  That one fact is all this
+  model actually knows, so it is all this model now states -- and stating it as
+  RANGES means the generic stepper skips 4 m, and so does the operator's
+  band-up/down (logstuff.BandChange asks CoversFrequency too).  Two behaviours
+  that had to be kept in step by hand now cannot disagree.
+
+  Ranges are generous on purpose: coverage is a FILTER, and a filter that is
+  too tight silently removes a band the operator can really work.  The 70 cm
+  span is the widest any region allows. *)
+procedure TIcom705Radio.DeclareCoverage;
 begin
-  currentBand := Self.vfo[vfo].Band;
-
-  // IC-705 supports: 160m-6m (HF), 2m, 70cm. No 4m (70 MHz).
-  // Skip rb4m in the cycle to avoid sending a frequency the radio rejects.
-  case currentBand of
-    rbNone, rb160m: nextBand := rb80m;
-    rb80m:  nextBand := rb60m;
-    rb60m:  nextBand := rb40m;
-    rb40m:  nextBand := rb30m;
-    rb30m:  nextBand := rb20m;
-    rb20m:  nextBand := rb17m;
-    rb17m:  nextBand := rb15m;
-    rb15m:  nextBand := rb12m;
-    rb12m:  nextBand := rb10m;
-    rb10m:  nextBand := rb6m;
-    rb6m:   nextBand := rb2m;   // Skip rb4m — IC-705 has no 4m band
-    rb4m:   nextBand := rb2m;   // If somehow on rb4m, step to 2m
-    rb2m:   nextBand := rb70cm;
-    rb70cm: nextBand := rb160m;
-  else
-    nextBand := rb20m;
-  end;
-
-  SetBand(nextBand, vfo);
-  logger.debug('[TIcom705Radio.ToggleBand] %s -> %s (skipping 4m)',
-    [IntToStr(Ord(currentBand)), IntToStr(Ord(nextBand))]);
-  Result := nextBand;
+   AddCoverageRange(1800000, 54000000);         (* 160 m through 6 m, contiguous *)
+   AddCoverageRange(144000000, 148000000);      (* 2 m *)
+   AddCoverageRange(430000000, 450000000);      (* 70 cm *)
+   (* Nothing between 54 and 144 MHz: the IC-705 has no 4 m band. *)
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

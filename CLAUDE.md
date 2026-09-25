@@ -1385,6 +1385,7 @@ Read the specific doc before acting in its area — these are current and this f
 | **What is still here only for Delphi (survey, nothing changed)** | **`docs/DELPHI_SHIM_INVENTORY.md`** |
 | **Win32 ARTIFACTS -- the shapes that compile everywhere and are still wrong** | **`docs/WIN32_ARTIFACT_SWEEP.md`** -- the successor to the portability sweep, and a different question: not "does it compile off Windows" but "is this how FPC/LCL would have written it". Worked example: a multiplier's identity exists only as bits in a grid row's `Objects` pointer |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
+| **Asking an Icom which bands it has (raw IC-9700 capture)** | **`docs/ICOM_BAND_ENUMERATION.md`** -- `$1E` enumerates, `$02` only bounds the CURRENT band. Band stepping and band up/down both read the result, so no driver names a band |
 | ~~LPT keying: the inpout32/x64 driver~~ | ~~`docs/inpOut32-64_Info.md`~~ — **HISTORICAL as of 2026-09-13.** The parallel port is gone from the program (NY4I: *"you can remove all references to them in the code"*), and with it `uIO.pas`, the `inpout32` bindings, `Parallel1..Parallel3` and the LPT dialog. The doc is kept for the driver's own notes; nothing in the tree loads it any more |
 | **Icom bandscope -> panadapter (read before touching `$27`)** | **`docs/ICOM_SPECTRUM_DESIGN.md`** |
 | Icom scope findings for upstream (pasteable, cites no third project) | `docs/AETHERSDR_ICOM_SCOPE_REPORT.md` |

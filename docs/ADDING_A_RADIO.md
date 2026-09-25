@@ -230,6 +230,44 @@ Ranged traits are fields, not flags: `CWSpeedMin` / `CWSpeedMax`.
 > FT-2000, rtYaesu2 generation). If TR4W simply never polls it, say so — that is
 > a driver gap and a future improvement, not a hardware limit.
 
+### Which bands it has — `DeclareCoverage`, and usually DON'T
+
+**You almost certainly do not need this, and the default is the right answer.**
+
+Band up/down and the drivers' band stepping both filter on
+`CoversFrequency(hz)`, and an empty coverage table means **no opinion**: every
+band is offered, which is what every radio did before coverage existed. Say
+nothing and your radio behaves like all the others.
+
+**The preferred source is the radio itself.** A networked Icom is interrogated
+on connect (`$1E`) and fills the table from the answer — measured on an IC-9700,
+which reports 2 m, 70 cm and 23 cm and nothing else
+(`docs/ICOM_BAND_ENUMERATION.md`). That is right per region and per fitted
+option in a way no table in this tree can be, so a model that answers for itself
+should declare nothing.
+
+Override `DeclareCoverage` only when the model has band facts that are **not
+obtainable from the radio** and would otherwise be lost:
+
+```pascal
+procedure TIcom705Radio.DeclareCoverage;
+begin
+   AddCoverageRange(1800000, 54000000);         (* 160 m through 6 m *)
+   AddCoverageRange(144000000, 148000000);      (* 2 m *)
+   AddCoverageRange(430000000, 450000000);      (* 70 cm *)
+   (* Nothing between 54 and 144 MHz: no 4 m band. *)
+end;
+```
+
+**Be generous.** Coverage is a FILTER: a range that is too tight silently
+removes a band the operator can really work. Anything the radio later reports
+for itself replaces what you declared.
+
+**Never write a list of `TRadioBand` values.** The sequence is the enum, in
+`uRadioBand.pas`; a per-model list of band names in a driver is the exact shape
+this replaced, and it had already gone stale — three copies of it all stopped at
+70 cm.
+
 ### Yaesu — old binary, `TYaesuFT817Radio` (`uRadioYaesuFT817.pas`)
 
 | flag | default | set it when |

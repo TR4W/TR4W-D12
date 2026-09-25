@@ -131,6 +131,47 @@ function GetRadioBandFromBandType(band: BandType): TRadioBand;
 
 function GetBandTypeFromRadioBand(band: TRadioBand): BandType;
 
+// ---------------------------------------------------------------------------
+// BAND STEPPING -- ONE WALK OF THE ENUM, FOR EVERY RADIO.
+//
+// WHY IT IS HERE AND NOT IN A DRIVER.  Every radio that implemented band
+// stepping did it with a hand-typed `case currentBand of ... rb70cm: rb160m`
+// ladder: one in the Icom family base and a near-identical copy in each of two
+// model units, differing only in that the copies skipped 4 m.  That is a
+// per-model list of bands living in code -- a second definition of what a radio
+// is -- and it had already gone stale the way such lists do: all three stopped
+// at 70 cm, so an IC-9700 could not be stepped onto 23 cm, a band the radio
+// has and TR4W can now name.
+//
+// THE ENUM IS THE SEQUENCE.  TRadioBand is ordered by ascending frequency, so
+// stepping is Succ/Pred with a wrap, and WHICH bands a given radio has is a
+// separate question answered by the radio itself (see TBandCoverageQuery).
+// Adding a band to the enum extends every radio's stepping automatically.
+//
+// A band above 23 cm cannot be stepped to, for the same reason it cannot be
+// classified: a signed 32-bit Hz value stops at 2.147 GHz.  See the unit
+// header.
+// ---------------------------------------------------------------------------
+
+type
+   (* "Can this radio transmit on this frequency?"  Satisfied by
+     TFactoryRadioBase.CoversFrequency, which answers True for everything when
+     the radio has stated no coverage -- so a radio with no opinion steps
+     through the whole enum exactly as it always has. *)
+   TBandCoverageQuery = function(hz: LongInt): boolean of object;
+
+// One step, no filtering: the neighbouring band in the enum, wrapping at both
+// ends.  rbNone is not a band, so it ENTERS the cycle -- at the bottom going
+// up, at the top going down -- rather than stepping to nothing.
+function StepRadioBand(fromBand: TRadioBand; up: boolean): TRadioBand;
+
+// The next band this radio can actually work, skipping the ones it cannot.
+// `covers` nil means no filtering (one plain step).  If every band is refused
+// the radio stays where it is rather than spinning: a walk driven by what a
+// radio reports must be bounded.
+function NextSupportedRadioBand(fromBand: TRadioBand; up: boolean;
+                                covers: TBandCoverageQuery): TRadioBand;
+
 implementation
 
 function FreqToRadioBand(freq: LongInt): TRadioBand;
@@ -247,6 +288,65 @@ begin
       Result := NoBand;
       end;
    end;
+end;
+
+function StepRadioBand(fromBand: TRadioBand; up: boolean): TRadioBand;
+begin
+   if up then
+      begin
+      if (fromBand = rbNone) or (fromBand = High(TRadioBand)) then
+         begin
+         (* Succ(Low(...)) is the lowest REAL band: Low(TRadioBand) is rbNone. *)
+         Result := Succ(Low(TRadioBand));
+         end
+      else
+         begin
+         Result := Succ(fromBand);
+         end;
+      end
+   else
+      begin
+      if (fromBand = rbNone) or (fromBand = Succ(Low(TRadioBand))) then
+         begin
+         Result := High(TRadioBand);
+         end
+      else
+         begin
+         Result := Pred(fromBand);
+         end;
+      end;
+end;
+
+function NextSupportedRadioBand(fromBand: TRadioBand; up: boolean;
+                                covers: TBandCoverageQuery): TRadioBand;
+var
+   candidate: TRadioBand;
+   steps: integer;
+begin
+   candidate := StepRadioBand(fromBand, up);
+
+   if not Assigned(covers) then
+      begin
+      Result := candidate;
+      Exit;
+      end;
+
+   (* Bounded by the number of real bands: one full lap is enough to find any
+     band that exists, and stopping there is what keeps a radio that refuses
+     everything from becoming a loop. *)
+   steps := 0;
+   while steps < Ord(High(TRadioBand)) do
+      begin
+      if covers(RadioBandToFreq(candidate)) then
+         begin
+         Result := candidate;
+         Exit;
+         end;
+      candidate := StepRadioBand(candidate, up);
+      Inc(steps);
+      end;
+
+   Result := fromBand;
 end;
 
 end.

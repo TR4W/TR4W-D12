@@ -28,7 +28,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   - Polling-based operation (no auto-info mode like K4)
   - Standard polling interval: 100ms
   - Triple receivers (Main/Sub/Sub2)
-  - Supports 2m, 70cm, and 23cm bands
+  - Supports 2m, 70cm, and 23cm bands -- AND SAYS SO ITSELF.  This driver
+    declares no band list, deliberately.  Measured on NY4I's radio over LAN
+    (2026-09-24): $1E $00 answers a BCD count of 3, and $1E $01 <n> for n=1..3
+    returns 144.000-148.000, 430.000-450.000 and 1240.000-1300.000 MHz.  The
+    base class turns those into transmit coverage, and band stepping reads it.
+    A hand-typed list here could only repeat -- or contradict -- what the rig
+    already tells us, per region and per fitted option.  See
+    docs/ICOM_BAND_ENUMERATION.md for the raw capture.
 
   VFO tracking:
   - IC-9700 $07 $D2 selects Main/Sub band — it is NOT a VFO A/B query.

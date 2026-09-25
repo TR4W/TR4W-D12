@@ -10,6 +10,9 @@ unit uTestRadioBand;
     - FreqToRadioBand: edge cases (0 Hz, very high frequencies)
     - RadioBandToFreq: default calling frequency for each band
     - Round-trip: RadioBandToFreq → FreqToRadioBand for all named bands
+    - StepRadioBand / NextSupportedRadioBand: band stepping and its wrap, and
+      the coverage filter that makes stepping follow the RADIO rather than a
+      list typed into a base class
 }
 
 interface
@@ -56,6 +59,24 @@ type
 
       // Round-trip
       procedure Test_BandFreq_RoundTrip;
+
+      // Band stepping -- the unfiltered enum walk
+      procedure Test_Step_UpThroughHF;
+      procedure Test_Step_UpFrom70cmReaches23cm;
+      procedure Test_Step_WrapsAtTheTop;
+      procedure Test_Step_WrapsAtTheBottom;
+      procedure Test_Step_NoneEntersTheCycle;
+      procedure Test_Step_DownIsTheInverseOfUp;
+
+      // Band stepping -- filtered by what the radio covers
+      procedure Test_Next_VHFRadio_70cmStepsTo23cm;
+      procedure Test_Next_VHFRadio_WrapsFrom23cmTo2m;
+      procedure Test_Next_VHFRadio_DownFrom2mIs23cm;
+      procedure Test_Next_HFRadio_SequenceUnchanged;
+      procedure Test_Next_HFRadio_10mWrapsTo160m;
+      procedure Test_Next_NoCoverage_IsAPlainStep;
+      procedure Test_Next_NoBandCovered_StaysPut;
+      procedure Test_Next_SkipsTheGap_4mOmitted;
 
       // BandType <-> TRadioBand, and agreement with the strict table
       procedure Test_BandTypeRoundTrip_AllNamedBands;
@@ -412,6 +433,264 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// Band stepping.
+//
+// THE POINT OF THESE, beyond the arithmetic: stepping used to be a hand-typed
+// `case` ladder in the Icom family base and again in two model units, and all
+// three stopped at 70 cm -- so an IC-9700 could not be stepped onto 23 cm.
+// The sequence is now the enum and the filter is the radio's own coverage, and
+// that is testable without a radio because both halves are data.
+//
+// TCoverageStub stands in for TFactoryRadioBase.CoversFrequency: same
+// signature, same contract (an empty range list means NO OPINION, so
+// everything is covered).  Using it rather than a real driver keeps this a
+// leaf test -- no transport, no threads, no logger.
+// ---------------------------------------------------------------------------
+
+type
+   TCoverageStub = class(TObject)
+   private
+      FLow:  array[0 .. 7] of LongInt;
+      FHigh: array[0 .. 7] of LongInt;
+      FCount: integer;
+   public
+      procedure Add(lowHz, highHz: LongInt);
+      function Covers(hz: LongInt): boolean;
+      (* The method AS A POINTER.  Bound through a typed result rather than
+        written at each call site, where a bare `rig.Covers` reads as a call. *)
+      function Query: TBandCoverageQuery;
+   end;
+
+procedure TCoverageStub.Add(lowHz, highHz: LongInt);
+begin
+   FLow[FCount]  := lowHz;
+   FHigh[FCount] := highHz;
+   Inc(FCount);
+end;
+
+function TCoverageStub.Covers(hz: LongInt): boolean;
+var
+   i: integer;
+begin
+   if FCount = 0 then
+      begin
+      Result := True;      (* no opinion -- the base class answers the same *)
+      Exit;
+      end;
+
+   for i := 0 to FCount - 1 do
+      begin
+      if (hz >= FLow[i]) and (hz <= FHigh[i]) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+
+   Result := False;
+end;
+
+function TCoverageStub.Query: TBandCoverageQuery;
+begin
+   Result := Self.Covers;
+end;
+
+(* An IC-9700, as the radio itself reported it over LAN on 2026-09-24:
+  $1E $00 answered a count of 3, and $1E $01 1..3 gave these three ranges. *)
+function NineSevenHundred: TCoverageStub;
+begin
+   Result := TCoverageStub.Create;
+   Result.Add(144000000, 148000000);
+   Result.Add(430000000, 450000000);
+   Result.Add(1240000000, 1300000000);
+end;
+
+procedure TRadioBandTests.Test_Step_UpThroughHF;
+begin
+   BeginTest('StepRadioBand: 20m steps up to 17m');
+   CheckEquals(Ord(rb17m), Ord(StepRadioBand(rb20m, True)));
+end;
+
+procedure TRadioBandTests.Test_Step_UpFrom70cmReaches23cm;
+begin
+   (* THE DEFECT, IN ONE ASSERTION.  The old ladder went rb70cm -> rb160m. *)
+   BeginTest('StepRadioBand: 70cm steps up to 33cm, not back to 160m');
+   CheckEquals(Ord(rb33cm), Ord(StepRadioBand(rb70cm, True)));
+end;
+
+procedure TRadioBandTests.Test_Step_WrapsAtTheTop;
+begin
+   BeginTest('StepRadioBand: the top band wraps up to 160m');
+   CheckEquals(Ord(rb160m), Ord(StepRadioBand(High(TRadioBand), True)));
+end;
+
+procedure TRadioBandTests.Test_Step_WrapsAtTheBottom;
+begin
+   BeginTest('StepRadioBand: 160m wraps down to the top band');
+   CheckEquals(Ord(High(TRadioBand)), Ord(StepRadioBand(rb160m, False)));
+end;
+
+procedure TRadioBandTests.Test_Step_NoneEntersTheCycle;
+begin
+   BeginTest('StepRadioBand: rbNone enters at the bottom going up');
+   CheckEquals(Ord(rb160m), Ord(StepRadioBand(rbNone, True)));
+   BeginTest('StepRadioBand: rbNone enters at the top going down');
+   CheckEquals(Ord(High(TRadioBand)), Ord(StepRadioBand(rbNone, False)));
+end;
+
+procedure TRadioBandTests.Test_Step_DownIsTheInverseOfUp;
+var
+   b: TRadioBand;
+begin
+   BeginTest('StepRadioBand: down undoes up for every band');
+   for b := Succ(Low(TRadioBand)) to High(TRadioBand) do
+      begin
+      CheckEquals(Ord(b), Ord(StepRadioBand(StepRadioBand(b, True), False)));
+      end;
+end;
+
+procedure TRadioBandTests.Test_Next_VHFRadio_70cmStepsTo23cm;
+var
+   rig: TCoverageStub;
+begin
+   rig := NineSevenHundred;
+   try
+      BeginTest('NextSupportedRadioBand: a 9700 steps 70cm -> 23cm (33cm skipped)');
+      CheckEquals(Ord(rb23cm), Ord(NextSupportedRadioBand(rb70cm, True, rig.Query)));
+   finally
+      rig.Free;
+   end;
+end;
+
+procedure TRadioBandTests.Test_Next_VHFRadio_WrapsFrom23cmTo2m;
+var
+   rig: TCoverageStub;
+begin
+   rig := NineSevenHundred;
+   try
+      (* Past the top, round through every HF band it does not have, to 2 m. *)
+      BeginTest('NextSupportedRadioBand: a 9700 wraps 23cm -> 2m, skipping all HF');
+      CheckEquals(Ord(rb2m), Ord(NextSupportedRadioBand(rb23cm, True, rig.Query)));
+   finally
+      rig.Free;
+   end;
+end;
+
+procedure TRadioBandTests.Test_Next_VHFRadio_DownFrom2mIs23cm;
+var
+   rig: TCoverageStub;
+begin
+   rig := NineSevenHundred;
+   try
+      BeginTest('NextSupportedRadioBand: a 9700 steps down 2m -> 23cm');
+      CheckEquals(Ord(rb23cm), Ord(NextSupportedRadioBand(rb2m, False, rig.Query)));
+   finally
+      rig.Free;
+   end;
+end;
+
+procedure TRadioBandTests.Test_Next_HFRadio_SequenceUnchanged;
+var
+   rig: TCoverageStub;
+begin
+   (* HF ONLY, AND THIS IS THE REGRESSION GUARD: an HF radio's sequence must be
+     exactly what it has always been. *)
+   rig := TCoverageStub.Create;
+   try
+      rig.Add(1800000, 29700000);
+
+      BeginTest('NextSupportedRadioBand: HF-only sequence is unchanged');
+      CheckEquals(Ord(rb80m), Ord(NextSupportedRadioBand(rb160m, True, rig.Query)));
+      CheckEquals(Ord(rb60m), Ord(NextSupportedRadioBand(rb80m,  True, rig.Query)));
+      CheckEquals(Ord(rb40m), Ord(NextSupportedRadioBand(rb60m,  True, rig.Query)));
+      CheckEquals(Ord(rb30m), Ord(NextSupportedRadioBand(rb40m,  True, rig.Query)));
+      CheckEquals(Ord(rb20m), Ord(NextSupportedRadioBand(rb30m,  True, rig.Query)));
+      CheckEquals(Ord(rb17m), Ord(NextSupportedRadioBand(rb20m,  True, rig.Query)));
+      CheckEquals(Ord(rb15m), Ord(NextSupportedRadioBand(rb17m,  True, rig.Query)));
+      CheckEquals(Ord(rb12m), Ord(NextSupportedRadioBand(rb15m,  True, rig.Query)));
+      CheckEquals(Ord(rb10m), Ord(NextSupportedRadioBand(rb12m,  True, rig.Query)));
+   finally
+      rig.Free;
+   end;
+end;
+
+procedure TRadioBandTests.Test_Next_HFRadio_10mWrapsTo160m;
+var
+   rig: TCoverageStub;
+begin
+   rig := TCoverageStub.Create;
+   try
+      rig.Add(1800000, 29700000);
+
+      (* 6 m and everything above it are skipped, so the wrap is the same one
+        the old ladder produced for an HF rig. *)
+      BeginTest('NextSupportedRadioBand: HF-only wraps 10m -> 160m');
+      CheckEquals(Ord(rb160m), Ord(NextSupportedRadioBand(rb10m, True, rig.Query)));
+   finally
+      rig.Free;
+   end;
+end;
+
+procedure TRadioBandTests.Test_Next_NoCoverage_IsAPlainStep;
+var
+   rig: TCoverageStub;
+begin
+   (* NO OPINION IS THE DEFAULT AND IT MUST FILTER NOTHING -- this is what
+     keeps every radio that cannot report its ranges behaving as before. *)
+   rig := TCoverageStub.Create;
+   try
+      BeginTest('NextSupportedRadioBand: an empty coverage list filters nothing');
+      CheckEquals(Ord(rb17m),  Ord(NextSupportedRadioBand(rb20m,  True, rig.Query)));
+      CheckEquals(Ord(rb33cm), Ord(NextSupportedRadioBand(rb70cm, True, rig.Query)));
+
+      BeginTest('NextSupportedRadioBand: a nil query is a plain step');
+      CheckEquals(Ord(rb17m), Ord(NextSupportedRadioBand(rb20m, True, nil)));
+   finally
+      rig.Free;
+   end;
+end;
+
+procedure TRadioBandTests.Test_Next_NoBandCovered_StaysPut;
+var
+   rig: TCoverageStub;
+begin
+   (* A walk driven by what a radio REPORTS must be bounded: a rig covering
+     only a frequency no band maps to must not spin. *)
+   rig := TCoverageStub.Create;
+   try
+      rig.Add(100000, 200000);        (* long wave -- no TRadioBand lands here *)
+
+      BeginTest('NextSupportedRadioBand: nothing covered leaves the band alone');
+      CheckEquals(Ord(rb20m), Ord(NextSupportedRadioBand(rb20m, True, rig.Query)));
+   finally
+      rig.Free;
+   end;
+end;
+
+procedure TRadioBandTests.Test_Next_SkipsTheGap_4mOmitted;
+var
+   rig: TCoverageStub;
+begin
+   (* An IC-705 / IC-7110: HF through 6 m, then 2 m and 70 cm, no 4 m.  That
+     one fact is what those two model units used to express as a whole
+     duplicated `case` ladder. *)
+   rig := TCoverageStub.Create;
+   try
+      rig.Add(1800000, 54000000);
+      rig.Add(144000000, 148000000);
+      rig.Add(430000000, 450000000);
+
+      BeginTest('NextSupportedRadioBand: 6m steps up to 2m when there is no 4m');
+      CheckEquals(Ord(rb2m), Ord(NextSupportedRadioBand(rb6m, True, rig.Query)));
+
+      BeginTest('NextSupportedRadioBand: 70cm wraps to 160m with no 23cm');
+      CheckEquals(Ord(rb160m), Ord(NextSupportedRadioBand(rb70cm, True, rig.Query)));
+   finally
+      rig.Free;
+   end;
+end;
+
+// ---------------------------------------------------------------------------
 // RunAllTests
 // ---------------------------------------------------------------------------
 
@@ -453,6 +732,24 @@ begin
 
    // Round-trip
    Test_BandFreq_RoundTrip;
+
+   // Band stepping -- the enum walk
+   Test_Step_UpThroughHF;
+   Test_Step_UpFrom70cmReaches23cm;
+   Test_Step_WrapsAtTheTop;
+   Test_Step_WrapsAtTheBottom;
+   Test_Step_NoneEntersTheCycle;
+   Test_Step_DownIsTheInverseOfUp;
+
+   // Band stepping -- filtered by the radio's own coverage
+   Test_Next_VHFRadio_70cmStepsTo23cm;
+   Test_Next_VHFRadio_WrapsFrom23cmTo2m;
+   Test_Next_VHFRadio_DownFrom2mIs23cm;
+   Test_Next_HFRadio_SequenceUnchanged;
+   Test_Next_HFRadio_10mWrapsTo160m;
+   Test_Next_NoCoverage_IsAPlainStep;
+   Test_Next_NoBandCovered_StaysPut;
+   Test_Next_SkipsTheGap_4mOmitted;
 
    // BandType <-> TRadioBand, and agreement with the strict table
    Test_BandTypeRoundTrip_AllNamedBands;

@@ -510,6 +510,25 @@ Type TFactoryRadioBase = class(TObject)
       procedure ClearCoverage;
       procedure AddCoverageRange(lowHz, highHz: LongInt);
 
+      (* DECLARED coverage, for a radio that cannot be ASKED.
+
+        The preferred source is always the radio: TIcomRadio interrogates $1E
+        and fills the table from the answer, which is right per region and per
+        fitted option in a way no table in this tree could be.  A radio that
+        NAKs $1E -- or speaks a protocol with no such question at all, which is
+        every non-Icom here -- leaves the table empty, and an empty table means
+        "no opinion" and filters nothing.
+
+        This virtual is the third state: a model that HAS per-band hardware
+        facts worth stating may state them.  Called from the base constructor
+        (so it is in force before any link exists) and again whenever a
+        connection resets the table, so a declaration is not lost by
+        reconnecting.  Anything the radio then reports for itself REPLACES it.
+
+        Default: say nothing.  Most radios should keep that. *)
+      procedure DeclareCoverage; virtual;
+      procedure ResetCoverageToDeclared;
+
       // Hand a finished spectrum frame to whoever is listening (the subscriber
       // is the OnSpectrumFrame property, published below).  Does nothing when
       // no one is: a radio may stream spectrum with no window open, which is
@@ -918,6 +937,10 @@ Type TFactoryRadioBase = class(TObject)
       // True for everything.
       function  CoversFrequency(hz: LongInt): boolean;
       function  CoverageRangeCount: integer;
+      (* The next band UP or DOWN that this radio can actually work.
+        The sequence is the TRadioBand enum and the filter is CoversFrequency,
+        so no radio names a band anywhere: see uRadioBand's stepping block. *)
+      function  NextSupportedBand(fromBand: TRadioBand; up: boolean): TRadioBand;
 
       function BaseConstructorRan: Boolean;
       procedure Disconnect; overload; virtual;
@@ -1218,6 +1241,11 @@ begin
    // Families override this; the base declares nothing, which means "grammar
    // not established -- pass tokens through as text".
    DeclareCWProsigns;
+
+   // And, on the same principle, whatever this model can say about which bands
+   // it has.  The base declares nothing, which means "no opinion" -- see
+   // DeclareCoverage.
+   DeclareCoverage;
 
    SocketLock := TCriticalSection.Create;
    Disconnecting := False;
@@ -2472,6 +2500,30 @@ end;
 function TFactoryRadioBase.CoverageRangeCount: integer;
 begin
    Result := FCoverageCount;
+end;
+
+procedure TFactoryRadioBase.DeclareCoverage;
+begin
+   (* Deliberately empty.  A radio that says nothing here can work everything,
+     which is what every radio did before this existed. *)
+end;
+
+procedure TFactoryRadioBase.ResetCoverageToDeclared;
+begin
+   ClearCoverage;
+   DeclareCoverage;
+end;
+
+function TFactoryRadioBase.NextSupportedBand(fromBand: TRadioBand;
+                                             up: boolean): TRadioBand;
+var
+   covers: TBandCoverageQuery;
+begin
+   (* Bound to a local of the method-pointer type first: passing the method
+     straight into the call is the shape that reads as a CALL in some dialects,
+     and this must be the pointer. *)
+   covers := Self.CoversFrequency;
+   Result := NextSupportedRadioBand(fromBand, up, covers);
 end;
 
 function TFactoryRadioBase.CoversFrequency(hz: LongInt): boolean;

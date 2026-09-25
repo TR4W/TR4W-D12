@@ -1009,7 +1009,8 @@ begin
 
    // Coverage was read from the radio that WAS on this port.  Keeping it across
    // a swap would let one radio's band plan filter another radio's band changes.
-   ClearCoverage;
+   // Back to whatever the MODEL declares, which for most models is nothing.
+   ResetCoverageToDeclared;
 end;
 
 procedure TIcomRadio.MaybeReprobeBandEdges(hz: LongInt);
@@ -1090,8 +1091,26 @@ begin
   // therefore not a thing; if segments are selectable it is $1E 01 that takes
   // the number.  $1E 00 tells us how many there are to ask for.
   SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TX_BANDS), #$00));
-  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TX_BANDS), #$01));
 
+  (* THE BARE $1E $01 IS NOT SENT, AND SENDING IT WAS ACTIVELY HARMFUL.
+
+    It was here as a probe, with the comment above already recording that an
+    edge number is required.  Measured on NY4I's IC-9700 over LAN
+    (2026-09-24): the rig NAKs it, exactly as expected -- and the NAK handler
+    cannot tell a refused PROBE from a radio that has no $1E at all, so it set
+    FTXBandsUnsupported and logged, at INFO, "this radio rejects $1E.  TX
+    coverage cannot be read from it."  Thirty milliseconds later the same
+    radio delivered all three of its band edges.
+
+    It survived only on ORDERING: the queue serialises, so $1E $00's count
+    arrived before this frame's NAK and the enumeration had already been
+    requested.  Had the count been delayed -- a retry, a busy bus, a slower
+    model -- the flag would have been set first and the enumeration suppressed
+    in silence, leaving the radio with no coverage and a log entry asserting
+    the reason was the radio's.
+
+    So the one $1E frame on the wire is now the one that has an answer.  Any
+    NAK of $1E from here on is a real capability statement. *)
 end;
 
 function TIcomRadio.SupportsDataMode: Boolean;
@@ -3115,35 +3134,29 @@ begin
   logger.debug('[%s.SetBand] Set band to %d, freq=%d', [radioModel, Ord(band), freq]);
 end;
 
+(* THE LADDER THIS REPLACED NAMED FOURTEEN BANDS AND STOPPED AT 70 cm.
+
+  It was a `case currentBand of` that wrapped rb70cm back to rb160m, with
+  near-identical copies in the IC-705 and IC-7110 units whose only difference
+  was that they skipped 4 m.  Three hand-typed lists of what a radio has, in a
+  family base and in two models -- and, being lists, all three were wrong the
+  moment 23 cm became nameable: an IC-9700 could not be stepped onto 1.2 GHz.
+
+  The sequence is now the enum and the filter is the radio's own coverage, so
+  neither this class nor any model below it states a band.  A radio that has
+  told us its ranges ($1E) or declared them (DeclareCoverage) steps only
+  through bands it can work; a radio that has said nothing steps through all of
+  them, which is what it did before. *)
 function TIcomRadio.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;
 var
   currentBand: TRadioBand;
   nextBand: TRadioBand;
 begin
-  // Get current band from VFO
   currentBand := Self.vfo[vfo].Band;
-
-  // Toggle to next band in sequence
-  case currentBand of
-    rbNone, rb160m: nextBand := rb80m;
-    rb80m:  nextBand := rb60m;
-    rb60m:  nextBand := rb40m;
-    rb40m:  nextBand := rb30m;
-    rb30m:  nextBand := rb20m;
-    rb20m:  nextBand := rb17m;
-    rb17m:  nextBand := rb15m;
-    rb15m:  nextBand := rb12m;
-    rb12m:  nextBand := rb10m;
-    rb10m:  nextBand := rb6m;
-    rb6m:   nextBand := rb4m;
-    rb4m:   nextBand := rb2m;
-    rb2m:   nextBand := rb70cm;
-    rb70cm: nextBand := rb160m;  // Wrap around
-  else
-    nextBand := rb20m;  // Default
-  end;
+  nextBand    := NextSupportedBand(currentBand, True);
 
   SetBand(nextBand, vfo);
+  logger.Debug('[%s.ToggleBand] %d -> %d', [radioModel, Ord(currentBand), Ord(nextBand)]);
   Result := nextBand;
 end;
 
