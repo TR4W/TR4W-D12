@@ -1135,9 +1135,27 @@ end;
 
 procedure TKenwoodLAN.ApplyNetworkCredentials(const user, pass: string);
 begin
+   (* THE CASTS ARE CORRECT AND STAY. Reported as a defect on 2026-09-24 on
+     the strength of a CLAUDE.md claim that ShortString(aString) reinterprets
+     the pointer instead of converting. It does not: the cast and a plain
+     assignment emit the same conversion and give byte-identical results, in
+     this compiler and this mode. Measured, retracted in CLAUDE.md, and pinned
+     by test/unit/uTestShortStringConversion.pas so nobody has to re-derive it.
+
+     THE WIDTHS ARE FINE TOO, which is the question that does matter. Both
+     fields are full ShortStrings (255), while the configuration path that
+     feeds them caps a credential at 50 -- uRadioConfigApply's FitsIn(50)
+     REFUSES a longer one rather than truncating it -- so nothing is lost
+     here, silently or otherwise. *)
    NetworkUsername := ShortString(user);
    NetworkPassword := ShortString(pass);
-   logger.Info('[%s] LAN credentials set (user=%s, pass=*******)', [radioModel, user]);
+
+   (* The LENGTH, never the value -- same reasoning as the Icom path: a stale
+     or blank credential that the layer above believed it had set is invisible
+     when the message only says "set". *)
+   logger.Info('[%s] LAN credentials applied to the radio object ' +
+               '(user=%s, password %d chars); used by the next Connect',
+               [radioModel, user, Length(pass)]);
 end;
 
 

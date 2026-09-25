@@ -146,8 +146,14 @@ var
 begin
    NoteCommandFromContestCFG(aCommand);
 
-   (* PLAIN ASSIGNMENT from an AnsiString. A ShortString() cast of a string
-     reinterprets the pointer rather than converting -- see uLogStore. *)
+   (* PLAIN ASSIGNMENT, and it is a STYLE choice, not a correctness one.
+
+     This used to claim a ShortString() cast "reinterprets the pointer rather
+     than converting". That is false -- measured 2026-09-24, the cast and the
+     assignment emit the same conversion; see
+     test/unit/uTestShortStringConversion.pas. The assignment is kept because
+     it is the plainer of two equivalent spellings, not because the other one
+     is broken. *)
    key := AnsiString(aCommand);
    val := AnsiString(aValue);
 

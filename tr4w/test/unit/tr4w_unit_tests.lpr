@@ -93,6 +93,7 @@ uses
    uWin32Compat         in '..\..\src\utils\uWin32Compat.pas',
    uJSON                in '..\..\src\utils\uJSON.pas',
    uTestStringCompare   in 'uTestStringCompare.pas',
+   uTestShortStringConversion in 'uTestShortStringConversion.pas',
    uTestAudio           in 'uTestAudio.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',
    uTestUtilsText       in 'uTestUtilsText.pas',
@@ -412,6 +413,7 @@ begin
    RegisterSuite(TComboTagTests.Create('ComboTags'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
    RegisterSuite(TStringCompareTests.Create('StringCompare'));
+   RegisterSuite(TShortStringConversionTests.Create('ShortStringConversion'));
    RegisterSuite(TAudioTests.Create('Audio'));
    RegisterSuite(TRegexValidatorTests.Create('RegexValidators'));
    RegisterSuite(TUtilsTextTests.Create('UtilsText'));

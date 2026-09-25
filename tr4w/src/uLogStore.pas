@@ -1753,18 +1753,22 @@ begin
             FillChar(valAsShort, SizeOf(valAsShort), 0);
             cmdName := ShortString(AnsiString(cmd));
 
-            (* PLAIN ASSIGNMENT, NOT ShortString(val).
+            (* THIS COMMENT USED TO SAY THE CAST BELOW WAS A POINTER
+               REINTERPRETATION AND HAD TO BE A PLAIN ASSIGNMENT. It said so
+               while the code kept the cast, which was the first clue.
 
-               THE CAST IS NOT A CONVERSION. FPC reinterprets the string's
-               POINTER as a ShortString -- the first byte of the pointer becomes
-               the length -- so CheckCommand received garbage and rejected every
-               command, silently and with a perfectly plausible warning saying
-               the build would not accept the value. The value was fine; it
-               never arrived.
+               MEASURED 2026-09-24 against FPC 3.2.2 / i386-win32 in this
+               tree's mode: ShortString(x) and `short := x` are the SAME
+               conversion and give byte-identical results, including for a
+               source longer than the target. The claim was folklore; it is
+               retracted in CLAUDE.md and pinned by
+               test/unit/uTestShortStringConversion.pas.
 
-               CLAUDE.md lists this under "Strings and buffers" and it has now
-               cost two separate sessions of this migration. Assignment converts
-               and truncates correctly; the cast compiles and lies. *)
+               WHAT IS REAL AND IS WHY THE FillChar ABOVE STAYS: a ShortString
+               carries no NUL terminator, so anything downstream that treats
+               @s[1] as a C string reads past the text. CheckCommand takes the
+               ShortString itself and is safe; the zero-fill costs nothing and
+               keeps that true if a caller ever changes. *)
             valAsShort := ShortString(AnsiString(val));
             if CheckCommand(cmdName, valAsShort, True) then
                begin

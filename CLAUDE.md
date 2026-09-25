@@ -1714,8 +1714,39 @@ boundary. What it means in practice, for new code:
 | `procedure F(var buf; size: integer)` | `procedure F(var buf: array of AnsiChar)` -- an open array carries its own bounds |
 | `PAnsiChar(@buf)` and pointer walking | index the open array; `Low`/`High` are real |
 | `Move(src[1], dst[1], n)` | plain assignment. `aRec.Name := someAnsiString` converts and truncates, and the compiler does it correctly |
-| `ShortStringType(someAnsiString)` | plain assignment. **The cast is not a conversion** -- FPC reinterprets the string's POINTER as a ShortString |
+| ~~`ShortStringType(someAnsiString)`~~ | **RETRACTED -- see below. The cast IS a conversion.** |
 | `AnsiString(aFixedCharArray)` | a NUL-aware helper. The cast takes the padding too |
+
+### THE `ShortString()` CAST IS A CONVERSION. THIS FILE SAID OTHERWISE FOR MONTHS AND WAS WRONG.
+
+The row above used to read *"the cast is not a conversion -- FPC reinterprets the string's POINTER as
+a ShortString"*, stated as fact. **It is false**, and the claim did real damage before anyone
+measured it: two source comments repeat it as established (`uLogStore`, `uNewContestCommands`), and
+on 2026-09-24 it produced a confident report that `uRadioKenwoodLAN`'s credential assignment was
+corrupting LAN passwords — a defect that does not exist, for which NY4I approved a fix.
+
+**Measured against FPC 3.2.2 / i386-win32 in this tree's exact mode** (`{$MODE Delphi}` +
+`{$MODESWITCH UnicodeStrings}`, so `string` is `UnicodeString`): `ShortString(s)` and `short := s`
+emit the **same conversion** and produce **byte-identical** results — ASCII, non-ASCII, a source
+longer than the target, and a narrow `string[N]` alike. Pinned by
+`tr4w/test/unit/uTestShortStringConversion.pas`, so this cannot drift back into folklore.
+
+**The one real difference is a WARNING, and it cuts the other way.** The assignment raises
+*"Implicit string type conversion with potential data loss"*; the explicit cast suppresses it. That
+count is a ratcheted build gate, so rewriting casts as assignments **raises** the narrowing number
+while changing no behaviour at all.
+
+**What genuinely bit this tree was misattributed.** A `ShortString` has **no NUL terminator**, so
+`@s[1]` handed to something expecting a C string runs off the end into stale bytes — that is what
+corrupted a function-key memory (`uEditMessageForm`), and it is a fact about the *layout*, unaffected
+by how the value was produced. The cast was nearby, not guilty.
+
+**So the rules that survive are about width and termination, not syntax:**
+
+- a `ShortString` is not null-terminated — never hand `@s[1]` to a `PAnsiChar` parameter;
+- it truncates at its declared width **silently, in both spellings** — check the width, not the cast;
+- prefer the assignment where you *want* the narrowing warning; the cast where the narrowing is
+  deliberate and already bounded upstream.
 
 **Measured 2026-09-01, while writing the log mapper:** removing all of this from
 one new unit cost **nothing** -- the narrowing-conversion count stayed at exactly
