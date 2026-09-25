@@ -96,6 +96,18 @@ empty difference.
 .\build\Run-Lints.ps1                 # Lint-RadioRegistry, Lint-NoRadioTables, Lint-PollRadioState
 ```
 
+**ASK THE RADIO BEFORE YOU ARGUE FROM THE CODE.**
+`tr4w/test/bench/bench_icombands.lpr` connects a networked Icom and prints which
+bands it says it has, raw payloads and decode both. It is read-only, it tears
+its session down cleanly, and it takes credentials only from the command line.
+It settled "can a radio enumerate its own bands" in eight seconds after code
+reading could not, and in the same run exposed a false `$1E`-unsupported log
+line that no compiler, lint, test or corpus could have seen — that class of
+defect needs a radio that answers. Reach for it (or write its sibling) rather
+than a throwaway. `bench_icomscope` is the same idea for the bandscope, but it
+DOES touch the radio. **Nothing builds either automatically**: `Build-Bench.ps1`
+is in neither `FullBuild.ps1` nor CI, so build by hand after touching a driver.
+
 `tools/radiosim` **proves things about TR4W, not about radios** — when a driver
 and the simulator disagree, suspect the simulator first.
 `C:\Users\toms\projects\Hamlib` (`rigs/` backends, *not* `simulators/`) is the

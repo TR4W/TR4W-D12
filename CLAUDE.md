@@ -613,7 +613,11 @@ comparisons).
   one shell block.
 
 **3. Integration / bench** — `tr4w/test/integration/` drives real serial radios (or `tools/radiosim`)
-via `run-bench.ps1`. `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
+via `run-bench.ps1`. `tr4w/test/bench/` holds the **measuring instruments** — programs that ask a
+real radio a question and print what it says: `bench_icombands` (which bands does it have; read-only),
+`bench_icomscope` and `bench_k4spectrum` (scope geometry). Build them with
+`tr4w/build/Build-Bench.ps1`, **which no gate and no CI runs**, so a change that breaks one fails
+nobody's build. `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
 `ContestExchange`; `tr4w/test/python/verify_adif_export.py` cross-checks ADIF export against it.
 
 **Lint scripts** in `tr4w/build/`. `Lint-PCharAnsi.ps1`, `Lint-RadioRegistry.ps1` and

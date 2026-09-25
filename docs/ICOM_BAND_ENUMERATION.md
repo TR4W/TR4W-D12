@@ -74,9 +74,28 @@ empty coverage table as *no opinion* rather than *no bands*.
 
 ## Reproducing it
 
-`tr4w/src/radioFactory/uRadioIcomBase.pas` — `QueryBandEdgesOnce` sends the
-queries on the first mode response of a connection, `LogBandEdgePayload` logs
-each payload raw and decoded, and `AddCoverageRange` turns the result into the
-radio's transmit coverage. Run TR4W with `DEBUG LOG LEVEL = INFO` or finer and
-the lines above appear in `tr4w.log` within a second of a networked Icom coming
-up.
+**The capture above came from `tr4w/test/bench/bench_icombands.lpr`**, which
+exists for exactly this. Do not trust this page where you can re-run the tool:
+
+```powershell
+powershell -File tr4w\build\Build-Bench.ps1 -Program bench_icombands
+tr4w\test\bench\bench_icombands.exe IC9700 <host> <user> <password> 10
+```
+
+It is **read-only** — it sends no command of its own — and it tears its session
+down on the way out, which matters because a networked Icom never acknowledges a
+disconnect and holds an abandoned session for ~90 s. The console prints which of
+TR4W's bands the radio can work; the log beside it holds every `$1E` and `$02`
+payload as hex next to the driver's decode. Read its header before running it
+against a live station.
+
+Nothing builds it automatically — `Build-Bench.ps1` is called by neither
+`FullBuild.ps1` nor CI — so build it by hand after touching the radio factory.
+
+The machinery it drives is ordinary driver code, so the same lines appear in
+`tr4w.log` during a normal session: `tr4w/src/radioFactory/uRadioIcomBase.pas`
+— `QueryBandEdgesOnce` sends the queries on the first mode response of a
+connection, `LogBandEdgePayload` logs each payload raw and decoded, and
+`AddCoverageRange` turns the result into the radio's transmit coverage. Run
+TR4W with `DEBUG LOG LEVEL = INFO` or finer and they appear within a second of a
+networked Icom coming up.
