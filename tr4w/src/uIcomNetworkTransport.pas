@@ -124,7 +124,22 @@ type
     FCivAddress: Byte;               // CI-V address from capabilities
     FMacAddress: array[0..5] of Byte;
     FCommonCap: Word;
-    FGUID: array[0..15] of Byte;
+
+    (* WHICH TRANSPORT OBJECT WROTE THIS LINE.
+
+      Every log line this unit writes carries it, and the reason is a defect
+      that could not be diagnosed without it: on 2026-09-24 three transports
+      existed at once, two of them FREED, and their abandoned Indy listener
+      threads went on logging "Received packet ... state=..." against dead
+      memory.  The state values in those lines were garbage -- Unknown,
+      WaitingForReady and Disconnected from the same thread seconds apart --
+      and read as a state machine misbehaving rather than as a use-after-free,
+      because nothing in the line said WHICH object.
+
+      FRadioName alone cannot serve: it is empty until capabilities arrive, so
+      every transport that fails during the handshake logs under the same
+      name -- and a handshake failure is exactly when several exist at once. *)
+    FInstanceId: LongInt;
 
     (* THE SIX PROTOCOL DEADLINES, still addressed by the ICOM_TIMER_* id the
       protocol code has always used, so every call site reads as it did.
@@ -227,6 +242,10 @@ type
     procedure HandleTokenResponse(const Data: array of Byte; DataLen: Integer);
     procedure HandleDataPacket(const Data: array of Byte; DataLen: Integer);
     procedure ExtractCivFrames(const Data: array of Byte; DataLen: Integer);
+
+    (* The prefix on every log line this unit writes: instance, then radio
+      name once one is known.  See FInstanceId. *)
+    function LogPrefix: string;
 
     // Internal - state management
     procedure SetState(NewState: TIcomConnectionState);
@@ -404,8 +423,7 @@ begin
       except
          on E: Exception do
             begin
-            logger.Error('[IcomTransport:' + FOwner.FRadioName +
-                         '] Timer thread caught %s: %s', [E.ClassName, E.Message]);
+            logger.Error(FOwner.LogPrefix + ' Timer thread caught %s: %s', [E.ClassName, E.Message]);
             end;
       end;
 
@@ -437,7 +455,7 @@ begin
       FSessionRevoked := False;
       if FState = icsConnected then
          begin
-         logger.Warn('[IcomTransport:' + FRadioName + '] Radio reports this ' +
+         logger.Warn(LogPrefix + ' Radio reports this ' +
                      'session has no owner -- session revoked; disconnecting so ' +
                      'the polling thread reconnects');
          Disconnect;
@@ -491,8 +509,7 @@ begin
    except
       on E: Exception do
          begin
-         logger.Error('[IcomTransport:' + FRadioName +
-                      '] Timer %d raised %s: %s', [aId, E.ClassName, E.Message]);
+         logger.Error(LogPrefix + ' Timer %d raised %s: %s', [aId, E.ClassName, E.Message]);
          end;
    end;
 end;
@@ -540,9 +557,22 @@ end;
 // Constructor / Destructor
 // ============================================================================
 
+(* HOW MANY TRANSPORTS THIS PROCESS HAS EVER BUILT.  Only ever incremented,
+  and only for the log prefix -- a monotonic number is what makes two lines
+  comparable, so it must not be a reused slot. *)
+var
+  IcomTransportInstances: LongInt = 0;
+
+function TIcomNetworkTransport.LogPrefix: string;
+begin
+  Result := '[IcomTransport#' + IntToStr(FInstanceId) + ':' + FRadioName + ']';
+end;
+
 constructor TIcomNetworkTransport.Create;
 begin
   inherited Create;
+
+  FInstanceId := InterlockedIncrement(IcomTransportInstances);
 
   FState := icsDisconnected;
   FClientName := ICOM_CLIENT_NAME;
@@ -575,10 +605,13 @@ begin
      FreeAndNil(FTimerThread);
      end;
 
-  if FState <> icsDisconnected then
-     begin
-     Disconnect;
-     end;
+  (* UNCONDITIONALLY.  This used to be guarded by FState <> icsDisconnected,
+    which is the same wrong test Disconnect itself carried -- and it is wrong
+    in the same way: the auth-failure path parks the state at Disconnected
+    while the sockets are still open, so the guard skipped the teardown of a
+    transport that very much still owned a bound UDP socket and a running
+    listener thread.  Disconnect is self-guarding now; let it decide. *)
+  Disconnect;
 
   ClearAllBuffers;
   FreeAndNil(FControlTxBuf);
@@ -604,10 +637,14 @@ begin
 
   if FState <> icsDisconnected then
      begin
-     logger.Warn('[IcomTransport:' + FRadioName + '] Connect called while in state %s',
+     logger.Warn(LogPrefix + ' Connect called while in state %s',
                  [IcomStateToString(FState)]);
-     Disconnect;
      end;
+
+  (* ALWAYS, not only when the state says so.  A transport whose login was
+    rejected sits at Disconnected holding a live socket; connecting it again
+    without this leaks that socket and its listener thread. *)
+  Disconnect;
 
   FRadioAddress := Address;
   FControlPort := Port;
@@ -655,7 +692,7 @@ begin
     credentials can be observed before IcomPasscode obfuscates them into the
     login packet, so it is the one line that can prove which copy was actually
     sent -- see the note on TIcomRadio.ApplyNetworkCredentials. *)
-  logger.Info('[IcomTransport:' + FRadioName + '] Connecting to %s:%d user=%s password %d chars',
+  logger.Info(LogPrefix + ' Connecting to %s:%d user=%s password %d chars',
               [Address, Port, Username, Length(Password)]);
 
   try
@@ -666,7 +703,7 @@ begin
 
     // Calculate our ID from the control socket's local port
     FMyId := CalculateMyIdFromSocket(FControlSocket);
-    logger.Debug('[IcomTransport:' + FRadioName + '] My control ID: $%.8x', [FMyId]);
+    logger.Debug(LogPrefix + ' My control ID: $%.8x', [FMyId]);
 
     // Send "Are You There" to start handshake
     // AYT uses Seq=0 (untracked, like wfview), FSendSeq stays at 1
@@ -680,7 +717,7 @@ begin
   except
     on E: Exception do
        begin
-       logger.Error('[IcomTransport:' + FRadioName + '] Exception during connect: %s', [E.Message]);
+       logger.Error(LogPrefix + ' Exception during connect: %s', [E.Message]);
        DestroySockets;
        StopAllTimers;
        FTimersLive := False;
@@ -698,30 +735,62 @@ begin
   FLifecycleLock.Enter;
   try
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect called from state %s',
+  logger.Debug(LogPrefix + ' Disconnect called from state %s',
               [IcomStateToString(FState)]);
 
-  if FState = icsDisconnected then
+  (* IDEMPOTENT ON RESOURCES, NOT ON STATE.  This guard used to be
+    "if FState = icsDisconnected then Exit", and that single line is the
+    2026-09-24 IC-9700 defect.
+
+    HandleLoginResponse cannot call Disconnect when the radio rejects the
+    credentials -- it runs on the control socket's own Indy listener thread,
+    and Disconnect frees that very TIdUDPServer -- so it sets the state to
+    Disconnected and leaves the teardown to the polling thread.  The polling
+    thread then called Disconnect, this guard saw icsDisconnected, and
+    RETURNED WITHOUT FREEING ANYTHING.  TIcomRadio.Disconnect went straight on
+    to FreeAndNil the transport.
+
+    The consequences were both halves of the bench report:
+
+      * the TIdUDPServer and its listener thread outlived the object, so an
+        abandoned thread kept calling HandleReceivedPacket on freed memory --
+        which is why arriving packets logged state=Disconnected (and Unknown,
+        and WaitingForReady) while the LIVE transport was in WaitingForHere.
+        Two such zombies were running by 21:06, one per earlier auth failure;
+
+      * the radio was never told.  The disconnect send below is reached only
+        when Disconnect actually runs, and after a rejected login FRemoteId IS
+        set -- so this is precisely the case where we could have released the
+        radio's session and did not.  Measured over that whole log: 14
+        Disconnect calls, 2 early-exits here, and exactly ONE $0005 ever sent.
+        The radio went on servicing sessions we had abandoned, and refused the
+        next handshake until its own ~90 s expiry ran out.
+
+    So: there is nothing to do only when there is nothing LEFT.  State alone
+    cannot answer that. *)
+  if (FState = icsDisconnected) and
+     (FControlSocket = nil)     and
+     (FCivSocket = nil)         then
      begin
      Exit;
      end;
 
   // Stop all timers first
-  logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: StopTimers');
+  logger.Debug(LogPrefix + ' Disconnect: StopTimers');
   StopTimers;
 
   // Send CI-V Close if stream was open
   if FCivStreamOpen and (FCivSocket <> nil) and (FCivRemoteId <> 0) then
      begin
      try
-        logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: SendCivClose');
+        logger.Debug(LogPrefix + ' Disconnect: SendCivClose');
         SendCivClose;
         SendControlPacket(ICOM_PKT_DISCONNECT, FCivSocket,
            FCivRemoteId, FRadioAddress, FCivPort, FCivSeq);
      except
         on E: Exception do
            begin
-           logger.Debug('[IcomTransport:' + FRadioName + '] Exception during CI-V disconnect: %s', [E.Message]);
+           logger.Debug(LogPrefix + ' Exception during CI-V disconnect: %s', [E.Message]);
            end;
      end;
      end;
@@ -730,23 +799,23 @@ begin
   if (FControlSocket <> nil) and (FRemoteId <> 0) then
      begin
      try
-        logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: SendControlDisconnect');
+        logger.Debug(LogPrefix + ' Disconnect: SendControlDisconnect');
         SendControlPacket(ICOM_PKT_DISCONNECT, FControlSocket,
            FRemoteId, FRadioAddress, FControlPort, FSendSeq);
      except
         on E: Exception do
            begin
-           logger.Debug('[IcomTransport:' + FRadioName + '] Exception during control disconnect: %s', [E.Message]);
+           logger.Debug(LogPrefix + ' Exception during control disconnect: %s', [E.Message]);
            end;
      end;
      end;
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: Sleep(100)');
+  logger.Debug(LogPrefix + ' Disconnect: Sleep(100)');
   Sleep(100);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: DestroySockets');
+  logger.Debug(LogPrefix + ' Disconnect: DestroySockets');
   DestroySockets;
-  logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: DestroySockets done');
+  logger.Debug(LogPrefix + ' Disconnect: DestroySockets done');
   ClearAllBuffers;
 
   StopAllTimers;
@@ -754,7 +823,7 @@ begin
 
   FCivStreamOpen := False;
   SetState(icsDisconnected);
-  logger.Debug('[IcomTransport:' + FRadioName + '] Disconnect: complete');
+  logger.Debug(LogPrefix + ' Disconnect: complete');
 
   finally
      FLifecycleLock.Leave;
@@ -769,7 +838,7 @@ var
 begin
   if not FCivStreamOpen then
      begin
-     logger.Warn('[IcomTransport:' + FRadioName + '] SendCivData called while CI-V stream not open (state=%s)',
+     logger.Warn(LogPrefix + ' SendCivData called while CI-V stream not open (state=%s)',
                  [IcomStateToString(FState)]);
      Exit;
      end;
@@ -799,7 +868,7 @@ begin
 
   SendTrackedPacket(FCivSocket, FullPacket, FRadioAddress, FCivPort, FCivSeq);
 
-  logger.Trace('[IcomTransport:' + FRadioName + '] Sent CI-V data, outer seq=%d, inner seq=%d, len=%d',
+  logger.Trace(LogPrefix + ' Sent CI-V data, outer seq=%d, inner seq=%d, len=%d',
                [FCivSeq - 1, FCivInnerSeq - 1, Length(CivFrame)]);
 end;
 
@@ -833,7 +902,7 @@ procedure TIcomNetworkTransport.CreateSockets;
     RcvBufSize := 256 * 1024;
     Binding.SetSockOpt(Id_SOL_SOCKET, Id_SO_RCVBUF, RcvBufSize);
 
-    logger.Debug('[IcomTransport:' + FRadioName + '] Socket bound to port %d', [Binding.Port]);
+    logger.Debug(LogPrefix + ' Socket bound to port %d', [Binding.Port]);
   end;
 
 begin
@@ -868,19 +937,19 @@ procedure TIcomNetworkTransport.DestroySockets;
 
       // Step 1: Deactivate (stops listener thread, closes socket)
       try
-         logger.Debug('[IcomTransport:' + FRadioName + '] DestroySockets: ' + Name + ' Active:=False');
+         logger.Debug(LogPrefix + ' DestroySockets: ' + Name + ' Active:=False');
          Socket.Active := False;
-         logger.Debug('[IcomTransport:' + FRadioName + '] DestroySockets: ' + Name + ' Active:=False done');
+         logger.Debug(LogPrefix + ' DestroySockets: ' + Name + ' Active:=False done');
       except
          on E: Exception do
             begin
-            logger.Debug('[IcomTransport:' + FRadioName + '] Exception deactivating ' + Name + ': %s', [E.Message]);
+            logger.Debug(LogPrefix + ' Exception deactivating ' + Name + ': %s', [E.Message]);
             end;
       end;
 
       // Step 2: Free the object on a background thread with timeout.
       // If the Indy destructor hangs, we abandon it — ExitProcess cleans up.
-      logger.Debug('[IcomTransport:' + FRadioName + '] DestroySockets: Freeing ' + Name);
+      logger.Debug(LogPrefix + ' DestroySockets: Freeing ' + Name);
       FreeThread := BeginThread(nil, 0, @FreeObjectThread, Pointer(Socket), 0, ThreadId);
       (* PtrUInt, NOT 0. TThreadID is a POINTER on the BSD/macOS RTL and an
         integer on Windows and Linux, so comparing it to an ordinal is a type
@@ -904,11 +973,11 @@ procedure TIcomNetworkTransport.DestroySockets;
          CloseThread(FreeThread);
          if WaitResult = WAIT_TIMEOUT_RESULT then
             begin
-            logger.Warn('[IcomTransport:' + FRadioName + '] DestroySockets: ' + Name + ' Free timed out, abandoning');
+            logger.Warn(LogPrefix + ' DestroySockets: ' + Name + ' Free timed out, abandoning');
             end
          else
             begin
-            logger.Debug('[IcomTransport:' + FRadioName + '] DestroySockets: ' + Name + ' freed OK');
+            logger.Debug(LogPrefix + ' DestroySockets: ' + Name + ' freed OK');
             end;
          end
       else
@@ -925,7 +994,7 @@ procedure TIcomNetworkTransport.DestroySockets;
 begin
   SafeFreeSocket(FControlSocket, 'Control');
   SafeFreeSocket(FCivSocket, 'CIV');
-  logger.Debug('[IcomTransport:' + FRadioName + '] DestroySockets: complete');
+  logger.Debug(LogPrefix + ' DestroySockets: complete');
 end;
 
 (* WHICH LOCAL INTERFACE ROUTES TO THE RADIO.
@@ -1010,7 +1079,7 @@ begin
         begin
         IPStr := '127.0.0.1';  // Last-resort fallback
         end;
-     logger.Debug('[IcomTransport:' + FRadioName + '] Detected local routing IP: %s', [IPStr]);
+     logger.Debug(LogPrefix + ' Detected local routing IP: %s', [IPStr]);
      end;
 
   // Parse IP string to bytes
@@ -1112,7 +1181,7 @@ begin
   Move(Data[0], Pkt, SizeOf(TControlPacket));
   PktType := Pkt.PktType;
 
-  logger.Trace('[IcomTransport:' + FRadioName + '] Received packet: type=$%.4x len=%d fromCIV=%s state=%s peer=%s:%d',
+  logger.Trace(LogPrefix + ' Received packet: type=$%.4x len=%d fromCIV=%s state=%s peer=%s:%d',
                [PktType, DataLen, BoolToStr(FromCivSocket, True),
                 IcomStateToString(FState), PeerIP, PeerPort]);
 
@@ -1179,7 +1248,7 @@ begin
            end;
       end;
   else
-    logger.Debug('[IcomTransport:' + FRadioName + '] Unknown packet type=$%.4x len=%d', [PktType, DataLen]);
+    logger.Debug(LogPrefix + ' Unknown packet type=$%.4x len=%d', [PktType, DataLen]);
   end;
 end;
 
@@ -1203,7 +1272,7 @@ begin
            if (FState = icsConnected) and (FCivRemoteId = 0) then
               begin
               FCivRemoteId := Pkt.SentID;
-              logger.Debug('[IcomTransport:' + FRadioName + '] CI-V I Am Here received, remoteId=$%.8x',
+              logger.Debug(LogPrefix + ' CI-V I Am Here received, remoteId=$%.8x',
                           [FCivRemoteId]);
 
               // Send "Are You Ready" on CI-V socket (seq=1, untracked, like wfview)
@@ -1217,7 +1286,7 @@ begin
            if FState = icsWaitingForHere then
               begin
               FRemoteId := Pkt.SentID;
-              logger.Debug('[IcomTransport:' + FRadioName + '] Control I Am Here received, remoteId=$%.8x',
+              logger.Debug(LogPrefix + ' Control I Am Here received, remoteId=$%.8x',
                           [FRemoteId]);
 
               // Kill AYT timer
@@ -1243,7 +1312,7 @@ begin
            // CI-V I Am Ready (within Connected state)
            if (FState = icsConnected) and (FCivRemoteId <> 0) and (not FCivStreamOpen) then
               begin
-              logger.Debug('[IcomTransport:' + FRadioName + '] CI-V I Am Ready received');
+              logger.Debug(LogPrefix + ' CI-V I Am Ready received');
 
               // Send CI-V Open
               SendCivOpen;
@@ -1253,7 +1322,7 @@ begin
               StartTimer(ICOM_TIMER_CIV_WATCHDOG, ICOM_CIV_WATCHDOG_INTERVAL);
 
               FLastCivData := TickCount32;
-              logger.Info('[IcomTransport:' + FRadioName + '] Fully connected to %s, CI-V stream open', [FRadioName]);
+              logger.Info(LogPrefix + ' Fully connected to %s, CI-V stream open', [FRadioName]);
 
               // Notify state change listeners (radio can now send CI-V commands)
               if Assigned(FOnStateChange) then
@@ -1263,7 +1332,7 @@ begin
                  except
                    on E: Exception do
                       begin
-                      logger.Error('[IcomTransport:' + FRadioName + '] Exception in state change callback: %s', [E.Message]);
+                      logger.Error(LogPrefix + ' Exception in state change callback: %s', [E.Message]);
                       end;
                  end;
                  end;
@@ -1273,7 +1342,7 @@ begin
            begin
            if FState = icsWaitingForReady then
               begin
-              logger.Debug('[IcomTransport:' + FRadioName + '] Control I Am Ready received');
+              logger.Debug(LogPrefix + ' Control I Am Ready received');
 
               // Send Login
               SendLoginPacket;
@@ -1284,7 +1353,7 @@ begin
 
     ICOM_PKT_DISCONNECT:
       begin
-        logger.Warn('[IcomTransport:' + FRadioName + '] Disconnect received from radio');
+        logger.Warn(LogPrefix + ' Disconnect received from radio');
         Disconnect;
       end;
   end;
@@ -1311,7 +1380,7 @@ begin
 
      if (ExpectedId <> 0) and (Pkt.RcvdID <> ExpectedId) then
         begin
-        logger.Debug('[IcomTransport:' + FRadioName + '] Ignoring ping to stale session $%.8x (ours: $%.8x)',
+        logger.Debug(LogPrefix + ' Ignoring ping to stale session $%.8x (ours: $%.8x)',
                      [Pkt.RcvdID, ExpectedId]);
         Exit;
         end;
@@ -1346,13 +1415,20 @@ begin
 
   Move(Data[0], Pkt, SizeOf(TLoginResponsePacket));
 
-  // Check for auth failure.
-  // Do NOT call Disconnect here — we are on the Indy listener thread,
-  // and Disconnect -> DestroySockets -> Active:=False would self-deadlock.
-  // Just set the flag and state; the polling thread will handle cleanup.
+  (* Check for auth failure.
+
+    Do NOT call Disconnect here -- we are on the Indy listener thread, and
+    Disconnect -> DestroySockets -> Active := False would self-deadlock.  Set
+    the flag and the state; the polling thread does the teardown.
+
+    THAT HAND-OFF WAS BROKEN FOR AS LONG AS IT EXISTED, and the break was not
+    here: parking the state at Disconnected made the polling thread's
+    Disconnect a no-op, because its guard tested the state.  Every rejected
+    login therefore leaked a bound socket and a listener thread, and told the
+    radio nothing.  See the guard at the top of Disconnect. *)
   if Pkt.Error = ICOM_AUTH_FAILED then
      begin
-     logger.Error('[IcomTransport:' + FRadioName + '] Authentication failed - check username/password');
+     logger.Error(LogPrefix + ' Authentication failed - check username/password');
      FAuthFailed := True;
      StopTimers;
      SetState(icsDisconnected);
@@ -1362,7 +1438,7 @@ begin
   // Save token and auth start ID
   FToken := Pkt.Token;
   FAuthStartId := Pkt.AuthStartID;
-  logger.Info('[IcomTransport:' + FRadioName + '] Login successful, token=$%.8x, authStartId=$%.4x',
+  logger.Info(LogPrefix + ' Login successful, token=$%.8x, authStartId=$%.4x',
               [FToken, FAuthStartId]);
 
   // Start token renewal timer (matches wfview line 706)
@@ -1386,7 +1462,7 @@ begin
   Move(Data[0], Pkt, SizeOf(TTokenPacket));
 
   // Token renewal response from radio - just log it
-  logger.Trace('[IcomTransport:' + FRadioName + '] Token response received, response=$%.8x', [Pkt.Response]);
+  logger.Trace(LogPrefix + ' Token response received, response=$%.8x', [Pkt.Response]);
 end;
 
 // ============================================================================
@@ -1410,7 +1486,7 @@ begin
   Move(Data[0], CapHdr, SizeOf(TCapabilitiesPacket));
 
   NumRadios := SwapWord(CapHdr.NumRadios);
-  logger.Info('[IcomTransport:' + FRadioName + '] Capabilities received, %d radio(s)', [NumRadios]);
+  logger.Info(LogPrefix + ' Capabilities received, %d radio(s)', [NumRadios]);
 
   // Parse first radio entry (we only care about the first one)
   Offset := SizeOf(TCapabilitiesPacket);
@@ -1434,7 +1510,7 @@ begin
      Move(RadioCap.MacAddress, FMacAddress, 6);
      FCommonCap := RadioCap.CommonCap;
 
-     logger.Info('[IcomTransport:' + FRadioName + '] Radio: %s, CI-V address=$%.2x, CommonCap=$%.4x',
+     logger.Info(LogPrefix + ' Radio: %s, CI-V address=$%.2x, CommonCap=$%.4x',
                  [FRadioName, FCivAddress, FCommonCap]);
      end;
 
@@ -1451,7 +1527,7 @@ begin
      RcvBufSize := 256 * 1024;
      FCivSocket.Bindings[0].SetSockOpt(Id_SOL_SOCKET, Id_SO_RCVBUF, RcvBufSize);
 
-     logger.Debug('[IcomTransport:' + FRadioName + '] CI-V socket pre-bound to port %d',
+     logger.Debug(LogPrefix + ' CI-V socket pre-bound to port %d',
                   [FCivSocket.Bindings[0].Port]);
      end;
 
@@ -1536,7 +1612,7 @@ begin
      Exit;
      end;
 
-  logger.Warn('[IcomTransport:' + FRadioName + '] ConnInfo says this session ' +
+  logger.Warn(LogPrefix + ' ConnInfo says this session ' +
               'has no owner (token=$%.8x) -- the radio has revoked it; ' +
               'reconnecting', [FToken]);
   FSessionRevoked := True;
@@ -1559,7 +1635,7 @@ begin
   // Check for connection error
   if Pkt.Error = $FFFFFFFF then
      begin
-     logger.Error('[IcomTransport:' + FRadioName + '] Stream request failed (error=$FFFFFFFF)');
+     logger.Error(LogPrefix + ' Stream request failed (error=$FFFFFFFF)');
      Disconnect;
      Exit;
      end;
@@ -1571,11 +1647,11 @@ begin
      FCivPort := ICOM_DEFAULT_CIV_PORT;  // Fallback
      end;
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Status received, CI-V port=%d', [FCivPort]);
+  logger.Debug(LogPrefix + ' Status received, CI-V port=%d', [FCivPort]);
 
   // CI-V socket was already created in HandleCapabilities
   FCivMyId := CalculateMyIdFromSocket(FCivSocket);
-  logger.Debug('[IcomTransport:' + FRadioName + '] My CI-V ID: $%.8x', [FCivMyId]);
+  logger.Debug(LogPrefix + ' My CI-V ID: $%.8x', [FCivMyId]);
 
   // Transition to Connected — CI-V handshake happens within this state (like wfview)
   SetState(icsConnected);
@@ -1587,7 +1663,7 @@ begin
   FCivStreamOpen := False;
 
   // Send "Are You There" on CI-V socket — Seq=0 (probe, rcvdId=0)
-  logger.Debug('[IcomTransport:' + FRadioName + '] Sending CI-V AYT: localPort=%d -> %s:%d myId=$%.8x',
+  logger.Debug(LogPrefix + ' Sending CI-V AYT: localPort=%d -> %s:%d myId=$%.8x',
     [FCivSocket.Bindings[0].Port, FRadioAddress, FCivPort, FMyId]);
   SendControlPacket(ICOM_PKT_ARE_YOU_THERE, FCivSocket,
     0, FRadioAddress, FCivPort, 0);
@@ -1649,7 +1725,7 @@ begin
 
            if logger.IsTraceEnabled then
               begin
-              logger.Trace('[IcomTransport:' + FRadioName + '] CIV RX: %s', [BytesToHexStr(Data[FrameStart], FrameEnd - FrameStart + 1)]);
+              logger.Trace(LogPrefix + ' CIV RX: %s', [BytesToHexStr(Data[FrameStart], FrameEnd - FrameStart + 1)]);
               end;
 
            // Forward to callback
@@ -1660,7 +1736,7 @@ begin
               except
                 on E: Exception do
                    begin
-                   logger.Error('[IcomTransport:' + FRadioName + '] Exception in CI-V callback: %s', [E.Message]);
+                   logger.Error(LogPrefix + ' Exception in CI-V callback: %s', [E.Message]);
                    end;
               end;
               end;
@@ -1695,7 +1771,7 @@ begin
     FSendLock.Leave;
   end;
 
-  logger.Trace('[IcomTransport:' + FRadioName + '] Sent control packet: type=$%.4x seq=%d myId=$%.8x rcvdId=$%.8x',
+  logger.Trace(LogPrefix + ' Sent control packet: type=$%.4x seq=%d myId=$%.8x rcvdId=$%.8x',
                [PktType, Seq, FMyId, RemoteId]);
 end;
 
@@ -1786,7 +1862,7 @@ begin
   Move(Pkt, PktStr[1], SizeOf(Pkt));
   SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Sent login packet, authSeq=$%.4x, outerSeq=%d',
+  logger.Debug(LogPrefix + ' Sent login packet, authSeq=$%.4x, outerSeq=%d',
                [FAuthSeq, FSendSeq - 1]);
 end;
 
@@ -1818,7 +1894,7 @@ begin
   Move(Pkt, PktStr[1], SizeOf(Pkt));
   SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Sent token ack, token=$%.8x, outerSeq=%d',
+  logger.Debug(LogPrefix + ' Sent token ack, token=$%.8x, outerSeq=%d',
                [FToken, FSendSeq - 1]);
 end;
 
@@ -1850,7 +1926,7 @@ begin
   Move(Pkt, PktStr[1], SizeOf(Pkt));
   SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
 
-  logger.Trace('[IcomTransport:' + FRadioName + '] Sent token renewal, outerSeq=%d', [FSendSeq - 1]);
+  logger.Trace(LogPrefix + ' Sent token renewal, outerSeq=%d', [FSendSeq - 1]);
 end;
 
 procedure TIcomNetworkTransport.SendStreamRequest;
@@ -1874,17 +1950,43 @@ begin
   Pkt.TokRequest := FTokRequest;
   Pkt.Token := FToken;
 
-  // Copy MAC/GUID based on capabilities
+  (* THE IDENTITY BLOCK.  A radio whose capabilities carry $8010 is identified
+    by its MAC, packed into the same sixteen bytes.
+
+    THE OTHER BRANCH IS DELETED, NOT LEFT UNREACHED (2026-09-24).  It read
+    "Move(FGUID, Pkt.GUID, 16)" against an FGUID that was declared, never
+    assigned anywhere in this unit, and therefore always sixteen zero bytes.
+    It was not a defect waiting for the right radio; it was a path that could
+    not work, sitting here looking supported.
+
+    AND IT CANNOT SIMPLY BE FILLED IN.  The value that belongs there is the
+    RADIO's own GUID, echoed back -- rigplane reads it out of a received
+    ConnInfo packet at offset $20, sixteen bytes
+    (src/rigplane/runtime/_control_phase.py:898) and passes it to its conninfo
+    builder (:924).  This transport receives ConnInfo packets too, but the
+    ordering measured on the 2026-09-24 IC-9700 log is against us: the first
+    144-byte packet the radio sends arrives AFTER our stream request, never
+    before it, so at this point in our handshake there is no GUID to echo.
+    Harvesting one would mean restructuring the handshake to wait for a packet
+    this radio does not send unprompted.
+
+    So the honest statement is that this transport supports MAC-identified
+    radios and no others, and it says so in the log rather than sending
+    sixteen zeroes and letting the session request fail without explanation.
+    Both radios on the bench report CommonCap=$8010. *)
   if (FCommonCap and $8010) = $8010 then
      begin
-     // MAC-based
      Move(FMacAddress, Pkt.GUID[10], 6);  // MAC at offset $0A within GUID field
      Pkt.GUID[7] := Hi(FCommonCap);
      Pkt.GUID[8] := Lo(FCommonCap);
      end
   else
      begin
-     Move(FGUID, Pkt.GUID, 16);
+     logger.Error(LogPrefix + ' Radio reports CommonCap=$%.4x, which does not ' +
+                  'carry the $8010 MAC-identity bits.  This transport has no ' +
+                  'other way to identify the client, so the stream request is ' +
+                  'being sent with an empty identity block and the radio will ' +
+                  'very likely reject it.', [FCommonCap]);
      end;
 
   // Radio name
@@ -1924,7 +2026,7 @@ begin
   Move(Pkt, PktStr[1], SizeOf(Pkt));
   SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Sent stream request for radio %s, outerSeq=%d',
+  logger.Debug(LogPrefix + ' Sent stream request for radio %s, outerSeq=%d',
     [FRadioName, FSendSeq - 1]);
 end;
 
@@ -1948,7 +2050,7 @@ begin
   Move(Pkt, PktStr[1], SizeOf(Pkt));
   SendTrackedPacket(FCivSocket, PktStr, FRadioAddress, FCivPort, FCivSeq);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Sent CI-V Open (seq=%d)', [FCivSeq - 1]);
+  logger.Debug(LogPrefix + ' Sent CI-V Open (seq=%d)', [FCivSeq - 1]);
 end;
 
 procedure TIcomNetworkTransport.SendCivClose;
@@ -1971,7 +2073,7 @@ begin
   Move(Pkt, PktStr[1], SizeOf(Pkt));
   SendTrackedPacket(FCivSocket, PktStr, FRadioAddress, FCivPort, FCivSeq);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] Sent CI-V Close (seq=%d)', [FCivSeq - 1]);
+  logger.Debug(LogPrefix + ' Sent CI-V Close (seq=%d)', [FCivSeq - 1]);
 end;
 
 procedure TIcomNetworkTransport.SendIdlePacket;
@@ -2038,13 +2140,13 @@ var
 begin
   if Socket = nil then
      begin
-     logger.Error('[IcomTransport:' + FRadioName + '] SendRawPacket: socket is nil');
+     logger.Error(LogPrefix + ' SendRawPacket: socket is nil');
      Exit;
      end;
 
   if Socket.Bindings.Count = 0 then
      begin
-     logger.Error('[IcomTransport:' + FRadioName + '] SendRawPacket: no socket binding');
+     logger.Error(LogPrefix + ' SendRawPacket: no socket binding');
      Exit;
      end;
 
@@ -2120,7 +2222,7 @@ procedure TIcomNetworkTransport.SetState(NewState: TIcomConnectionState);
 begin
   if FState <> NewState then
      begin
-     logger.Debug('[IcomTransport:' + FRadioName + '] State: %s -> %s',
+     logger.Debug(LogPrefix + ' State: %s -> %s',
                  [IcomStateToString(FState), IcomStateToString(NewState)]);
      FState := NewState;
 
@@ -2142,7 +2244,7 @@ begin
         except
           on E: Exception do
              begin
-             logger.Error('[IcomTransport:' + FRadioName + '] Exception in state change callback: %s', [E.Message]);
+             logger.Error(LogPrefix + ' Exception in state change callback: %s', [E.Message]);
              end;
         end;
         end;
@@ -2181,7 +2283,7 @@ begin
   StopTimer(ICOM_TIMER_AYT);
   StopTimer(ICOM_TIMER_LOGIN);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] All timers stopped');
+  logger.Debug(LogPrefix + ' All timers stopped');
 end;
 
 procedure TIcomNetworkTransport.OnPingTimer;
@@ -2202,7 +2304,7 @@ begin
      begin
      if TickCount32 - FLastPingReceived > ICOM_PING_DEAD_TIMEOUT_MS then
         begin
-        logger.Warn('[IcomTransport:' + FRadioName + '] No ping from radio for %d ms — network link lost, disconnecting',
+        logger.Warn(LogPrefix + ' No ping from radio for %d ms — network link lost, disconnecting',
                     [TickCount32 - FLastPingReceived]);
         Disconnect;
         end;
@@ -2248,7 +2350,7 @@ begin
   if Elapsed > ICOM_CIV_TIMEOUT_THRESHOLD then
      begin
      // Matches wfview watchdogTimeout(): if stale 2s, send one CivOpen.
-     logger.Warn('[IcomTransport:' + FRadioName + '] CI-V data timeout (%d ms), sending CivOpen',
+     logger.Warn(LogPrefix + ' CI-V data timeout (%d ms), sending CivOpen',
                  [Elapsed]);
      SendCivOpen;
      end;
@@ -2265,7 +2367,7 @@ begin
   Inc(FAYTRetryCount);
   if FAYTRetryCount > ICOM_AYT_MAX_RETRIES then
      begin
-     logger.Error('[IcomTransport:' + FRadioName + '] Radio not found at %s:%d after %d retries',
+     logger.Error(LogPrefix + ' Radio not found at %s:%d after %d retries',
                   [FRadioAddress, FControlPort, ICOM_AYT_MAX_RETRIES]);
      StopTimer(ICOM_TIMER_AYT);
      Disconnect;
@@ -2287,7 +2389,7 @@ begin
   StopTimer(ICOM_TIMER_AYT);
   StartTimer(ICOM_TIMER_AYT, FAYTInterval);
 
-  logger.Debug('[IcomTransport:' + FRadioName + '] AYT retry %d/%d, interval=%dms',
+  logger.Debug(LogPrefix + ' AYT retry %d/%d, interval=%dms',
                [FAYTRetryCount, ICOM_AYT_MAX_RETRIES, FAYTInterval]);
 end;
 
@@ -2302,7 +2404,7 @@ begin
   Inc(FLoginRetryCount);
   if FLoginRetryCount > ICOM_LOGIN_MAX_RETRIES then
      begin
-     logger.Error('[IcomTransport:' + FRadioName + '] No login response after %d retries - giving up',
+     logger.Error(LogPrefix + ' No login response after %d retries - giving up',
                   [ICOM_LOGIN_MAX_RETRIES]);
      StopTimer(ICOM_TIMER_LOGIN);
      Disconnect;
@@ -2311,7 +2413,7 @@ begin
 
   // Resend login packet. The radio may have been busy or a stale session
   // (from a previous run) may still be active on the radio.
-  logger.Debug('[IcomTransport:' + FRadioName + '] Login timeout - resending login packet (retry %d/%d)',
+  logger.Debug(LogPrefix + ' Login timeout - resending login packet (retry %d/%d)',
                [FLoginRetryCount, ICOM_LOGIN_MAX_RETRIES]);
   SendLoginPacket;
 end;
@@ -2485,11 +2587,11 @@ begin
         finally
           FSendLock.Leave;
         end;
-        logger.Debug('[IcomTransport:' + FRadioName + '] Retransmitted seq %d (single request)', [Pkt.Seq]);
+        logger.Debug(LogPrefix + ' Retransmitted seq %d (single request)', [Pkt.Seq]);
         end
      else
         begin
-        logger.Debug('[IcomTransport:' + FRadioName + '] Retransmit request for seq %d - not in buffer', [Pkt.Seq]);
+        logger.Debug(LogPrefix + ' Retransmit request for seq %d - not in buffer', [Pkt.Seq]);
         end;
      end
   else if DataLen > ICOM_CONTROL_PKT_SIZE then
@@ -2508,7 +2610,7 @@ begin
            finally
              FSendLock.Leave;
            end;
-           logger.Debug('[IcomTransport:' + FRadioName + '] Retransmitted seq %d (multi request)', [ReqSeq]);
+           logger.Debug(LogPrefix + ' Retransmitted seq %d (multi request)', [ReqSeq]);
            end;
         Inc(Offset, 2);
         end;
