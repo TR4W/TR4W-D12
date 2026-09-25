@@ -26,6 +26,16 @@ unit uAppInputHooks;
   so the SAME TABLE drives both, and the Win32 menu can convert on its own
   schedule.
 
+  THE MENU HAS SINCE TAKEN MOST OF THE TABLE BACK (2026-09-25), which is the
+  native shape rather than a retreat: a TMenuItem.ShortCut is rendered by the
+  widget set in the shortcut column -- right-aligned on Win32, a key equivalent
+  on the Cocoa menu bar -- and dispatched by it. 74 of the 94 rows are a menu
+  item's shortcut and this handler SKIPS them; what it still answers are the
+  keystrokes a menu item could not own, because a menu shortcut fires from any
+  form and cannot be declined for one window. The guards below are those
+  declines, and the rule deciding which side a row falls on is stated once, in
+  uMenu.AcceleratorRowBelongsToTheMenu.
+
   WHAT IS DELIBERATELY NOT HERE.  QuickQSL.  It was a WM_CHAR arm in the loop,
   and there is no application-wide KeyPress hook -- but it also does nothing
   unless CallWindowString is non-empty, so it belongs to the callsign field and
@@ -52,6 +62,8 @@ uses
   uMainThread,      { RunOnMainThread -- the accelerator runs deferred }
   uMainWindowProc,  { DispatchCommandId -- the one command dispatch }
   uAccelerators,    { ACCELERATORS -- the one table }
+  uMenu,            { AcceleratorRowBelongsToTheMenu -- which rows the menu
+                      items answer, so this handler does not answer them too }
   uSettingsModel,   { Settings.Cw.KeypadMemories }
   uCrashLog,        { LogCaughtException }
   uFunctionKeys,    { ShowFMessages -- the F-key labels }
@@ -221,6 +233,20 @@ begin
         begin
         Continue;
         end;
+
+     (* THE MENU ITEM OWNS THIS ONE.
+       TMenuItem.ShortCut carries most of these keystrokes now: the widget set
+       renders them in the shortcut column and dispatches them through the same
+       DispatchCommandId this handler would have called. Skipping them here is
+       what keeps ONE owner per keystroke, and the rule is stated once --
+       uMenu.AcceleratorRowBelongsToTheMenu -- so the two sides cannot drift.
+       The rows that remain are the ones the guards below must be able to
+       decline: the standard editing keys, and every unmodified key. *)
+     if AcceleratorRowBelongsToTheMenu(i) then
+        begin
+        Continue;
+        end;
+
      if ACCELERATORS[i].acKey <> aKey then
         begin
         Continue;

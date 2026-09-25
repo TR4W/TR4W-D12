@@ -6621,9 +6621,15 @@ begin
   (* THE WINDOW'S TITLE IS ITS MENU ROW'S TEXT, with the accelerator cut off.
 
     Was GetMenuStringW into a local WideChar buffer, then a scan for the tab.
-    MenuCaption returns the row's Caption, and the shortcut is still whatever
-    follows a tab -- BuildTR4WMainMenu appends it there, exactly as the Win32
-    walk did.
+    MenuCaption returns the row's Caption.
+
+    THE TAB IS USUALLY NOT THERE ANY MORE, and the cut is kept because of the
+    few rows where it is. A menu item carries its keystroke in ShortCut now
+    (uMenu, 2026-09-25) and its caption is just the caption, so for every
+    window on this menu Pos returns 0 and the whole caption is the title. The
+    rows whose keystroke the menu may not own still spell it after a tab -- see
+    uMenu.AcceleratorRowBelongsToTheMenu -- so removing this would put "Esc"
+    or "Ctrl+C" in a window title the day one of them grew a window.
 
     THE LOCAL BUFFER IS GONE WITH THE CALL, and so is the trap it existed for:
     a failed GetMenuStringW left whatever the previous caller had put in the

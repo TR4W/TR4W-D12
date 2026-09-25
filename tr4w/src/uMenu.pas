@@ -65,9 +65,77 @@ procedure InitializeMenuText;
   dispatches the whole menu and no window message is involved. A separator is a
   row whose caption starts with '-', exactly as the Win32 walk read it.
 
-  ShortCut is deliberately NOT set -- see the implementation. *)
+  A menu item OWNS its keystroke: item.ShortCut is set from the accelerator
+  table, and the widget set both renders it and binds it. See the
+  implementation. *)
 function BuildTR4WMainMenu(const aOwner: TComponent;
                            const aOnClick: TNotifyEvent): TMainMenu;
+
+(* WHO OWNS A KEYSTROKE -- ONE RULE, READ BY BOTH SIDES.
+
+  THE KEYS DIVIDE IN TWO AND THE TWO SETS MUST NOT OVERLAP. A keystroke that
+  belongs to a menu item is carried by TMenuItem.ShortCut: the widget set draws
+  it in the shortcut column -- right-aligned on Win32, as a key equivalent on
+  the Cocoa menu bar, as an accel label on gtk2 -- and dispatches it. Every
+  other keystroke stays with uAppInputHooks, which answers ACCELERATORS from an
+  application-wide key handler.
+
+  docs\ACCELERATOR_AUDIT.md exists because two things answering one keystroke is
+  a defect. This satisfies it BY CONSTRUCTION rather than by prohibition: the
+  function below is the ONLY rule, the menu builder uses it to decide what to
+  put on an item, and the input hook uses the SAME function to decide what to
+  skip. Neither can drift from the other because there is nothing to drift from.
+
+  WHY SOME ROWS STAY WITH THE HOOK, measured in the LCL source rather than
+  assumed. A TMenuItem.ShortCut is answered before the focused control sees the
+  key and from ANY form in the application -- TApplication.IsShortcut falls back
+  to the MAIN FORM's menu when the active form does not claim it
+  (application.inc:2157). It cannot be declined for one window, and the hook's
+  guards exist precisely to decline:
+
+    * Ctrl+A, Ctrl+C, Ctrl+V and Ctrl+X are send-keyboard-input,
+      clear-mult-sheet and execute-config. Issue #23 -- a Ctrl+C meant to copy a
+      spot in the cluster window cleared the mult sheet -- and NY4I's
+      2026-09-15 report that the standard editing keys do not work on a dialog.
+      Both are answered by guards in uAppInputHooks that a ShortCut would
+      bypass;
+    * an UNMODIFIED keystroke is ordinary typing somewhere. Tab and Escape
+      belong to whatever form has the keyboard (the radio editor closed on Tab,
+      2026-09-09), and Ins, ` and Enter would be eaten inside any edit field on
+      any window;
+    * a row that does not install binds nothing by definition, so it cannot
+      become a binding here.
+
+  Those rows keep advertising their keystroke through the caption, which is the
+  only way left to show it -- there is no display-without-binding in the LCL --
+  and acDisplay survives for them alone.
+
+  TWO THINGS BEHAVE DIFFERENTLY AFTER THIS, BOTH DELIBERATE AND BOTH WORTH
+  KNOWING BEFORE SOMEONE REPORTS THEM AS DEFECTS.
+
+  A DISABLED ITEM NO LONGER ANSWERS ITS KEYSTROKE. TMenu.IsShortcut walks the
+  item's ancestors and gives up if any of them is disabled (menu.inc:265-272),
+  where the input hook dispatched whatever the menu looked like. That is the
+  native semantic and it matches what each grey-out was already saying:
+  Ctrl+Alt+T, Shift+' and Ctrl+Alt+S do nothing until uNet enables the Network
+  popup; Ctrl+Shift+3 and Ctrl+Shift+8 do nothing in WRTC; and Alt+1..Alt+0 do
+  nothing in hand-log mode, where uProgramMain greys them because they "do
+  nothing" anyway.
+
+  AND THEY NOW WORK WHILE THE CLUSTER WINDOW HAS FOCUS. uAppInputHooks exits
+  early for the Telnet form -- a blunt guard whose stated reason is the EDITING
+  keys (Issue #23) -- so today no accelerator at all fires from there. The keys
+  it was protecting are precisely the ones that stayed behind, and the rest now
+  behave as they already do from every other tool window, which that unit calls
+  a capability the LCL conversion gained. *)
+function AcceleratorRowBelongsToTheMenu(const aIndex: integer): boolean;
+
+{ The shortcut a menu item takes for this command, or scNone when the keystroke
+  is not the menu's to own. }
+function MenuShortCutFor(const aId: word): TShortCut;
+
+{ Is there a main-menu row for this command id at all? }
+function MenuCommandExists(const aId: word): boolean;
 
 { THE ITEM WITH THIS COMMAND ID, or nil.
 
@@ -515,16 +583,20 @@ begin
    Inc(i); T_MENU_ARRAY[i].mrText := 'MMTTY';
    Inc(i); T_MENU_ARRAY[i].mrText := 'Alt-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_INC_TIME;
-   Inc(i); T_MENU_ARRAY[i].mrText := '+1'#9'Alt+1';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+2'#9'Alt+2';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+3'#9'Alt+3';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+4'#9'Alt+4';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+5'#9'Alt+5';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+6'#9'Alt+6';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+7'#9'Alt+7';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+8'#9'Alt+8';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+9'#9'Alt+9';
-   Inc(i); T_MENU_ARRAY[i].mrText := '+10'#9'Alt+0';
+   (* THE ONLY TEN CAPTIONS IN THE MAIN MENU THAT SPELLED THEIR OWN SHORTCUT,
+     and they were the only ones showing it TWICE: the builder appends the
+     accelerator table's text as well, so these read "+1<tab>Alt+1<tab>Alt+1".
+     The item carries Alt+1 as a ShortCut now, like every other row. *)
+   Inc(i); T_MENU_ARRAY[i].mrText := '+1';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+2';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+3';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+4';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+5';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+6';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+7';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+8';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+9';
+   Inc(i); T_MENU_ARRAY[i].mrText := '+10';
    Inc(i); T_MENU_ARRAY[i].mrText := '-';
    Inc(i); T_MENU_ARRAY[i].mrText := RC_wkMode;
    Inc(i); T_MENU_ARRAY[i].mrText := RC_BANDUP;
@@ -697,6 +769,130 @@ begin
       end;
 end;
 
+function MenuCommandExists(const aId: word): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+
+   (* THE ROW ARRAY, NOT THE BUILT MENU. This has to answer before
+     BuildTR4WMainMenu has run -- the builder itself is the first caller -- and
+     T_MENU_ARRAY is what the builder walks, so the two cannot disagree about
+     which commands the menu has. *)
+   for i := 0 to T_MENU_ARRAY_SIZE do
+      begin
+      if T_MENU_ARRAY[i].mrId = aId then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* ONE ROW, ASKED IN ISOLATION: could a menu item carry this keystroke?
+
+  Split out from AcceleratorRowBelongsToTheMenu so that the "is this the first
+  such row for the command" test below can ask the same question of an earlier
+  row without recursing. *)
+function RowCouldBeAMenuShortCut(const aIndex: integer): boolean;
+var
+   row: TAcceleratorRow;
+begin
+   Result := False;
+   row    := ACCELERATORS[aIndex];
+
+   if not row.acInstall then
+      begin
+      Exit;
+      end;
+
+   { An unmodified keystroke is typing. }
+   if not (row.acCtrl or row.acAlt or row.acShift) then
+      begin
+      Exit;
+      end;
+
+   { The standard editing keys -- Ctrl and nothing else. }
+   if (row.acCtrl) and (not row.acAlt) and (not row.acShift) then
+      begin
+      if (row.acKey = Ord('A')) or (row.acKey = Ord('C')) or
+         (row.acKey = Ord('V')) or (row.acKey = Ord('X')) then
+         begin
+         Exit;
+         end;
+      end;
+
+   Result := MenuCommandExists(row.acId);
+end;
+
+function AcceleratorRowBelongsToTheMenu(const aIndex: integer): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+
+   if (aIndex < Low(ACCELERATORS)) or (aIndex > High(ACCELERATORS)) then
+      begin
+      Exit;
+      end;
+
+   if not RowCouldBeAMenuShortCut(aIndex) then
+      begin
+      Exit;
+      end;
+
+   (* A SECOND BINDING FOR ONE COMMAND STAYS WITH THE HOOK. TMenuItem holds one
+     ShortCut, and ShortCutKey2 is DISPLAYED by the widget set but is not
+     matched by TMenu.FindItem (menu.inc:217 compares Item.ShortCut alone), so
+     putting the second keystroke there would show a key that does nothing.
+     10317 menu_alt_p is the only case: Alt+P becomes the item's shortcut and
+     Ctrl+Alt+W stays an accelerator, which is what each of them already was --
+     only Alt+P was ever displayed. *)
+   for i := Low(ACCELERATORS) to aIndex - 1 do
+      begin
+      if (ACCELERATORS[i].acId = ACCELERATORS[aIndex].acId) and
+         RowCouldBeAMenuShortCut(i) then
+         begin
+         Exit;
+         end;
+      end;
+
+   Result := True;
+end;
+
+function MenuShortCutFor(const aId: word): TShortCut;
+var
+   i:     integer;
+   shift: TShiftState;
+begin
+   Result := scNone;
+
+   for i := Low(ACCELERATORS) to High(ACCELERATORS) do
+      begin
+      if (ACCELERATORS[i].acId = aId) and AcceleratorRowBelongsToTheMenu(i) then
+         begin
+         shift := [];
+         if ACCELERATORS[i].acCtrl then
+            begin
+            Include(shift, ssCtrl);
+            end;
+         if ACCELERATORS[i].acAlt then
+            begin
+            Include(shift, ssAlt);
+            end;
+         if ACCELERATORS[i].acShift then
+            begin
+            Include(shift, ssShift);
+            end;
+
+         { acKey IS a virtual-key code and TShortCut is one too, which is what
+           makes this a translation of the modifiers and nothing more. }
+         Result := Menus.ShortCut(ACCELERATORS[i].acKey, shift);
+         Exit;
+         end;
+      end;
+end;
+
 function BuildTR4WMainMenu(const aOwner: TComponent;
                            const aOnClick: TNotifyEvent): TMainMenu;
 var
@@ -761,20 +957,40 @@ begin
          end
       else
          begin
-         (* THE SHORTCUT TEXT COMES FROM THE ACCELERATOR TABLE, as it did for
-           the Win32 walk -- one row produces both the binding and the label so
-           they cannot disagree (docs\ACCELERATOR_AUDIT.md).
+         (* THE ITEM OWNS ITS KEYSTROKE.
 
-           AND TMenuItem.ShortCut IS DELIBERATELY NOT SET. It would make the
-           LCL bind the key TOO, on top of uAccelerators, and two things
-           answering one keystroke is the defect that audit exists about. The
-           caption keeps the tab form, which a native menu renders
-           right-aligned exactly as before. *)
+           IT USED TO BE SPELLED INTO THE CAPTION, as AppendMenu wanted it:
+           'Band Up'#9'Alt+B', with ShortCut left unset so that nothing would
+           bind the key twice. That is a Win32 artifact and it does not render.
+           The LCL's Win32 menus are ALWAYS owner-drawn (win32wsmenus.pp:1547,
+           fType := MFT_OWNERDRAW), and the draw path puts the caption through
+           DrawText with DT_EXPANDTABS (:898) -- a TAB STOP, not right
+           alignment -- while the right-aligned shortcut column is drawn from
+           AMenuItem.ShortCut and from nothing else (:930-942, and :1161-1172
+           on the classic path). So every shortcut sat at a tab stop chosen by
+           its own caption's length: NY4I, 2026-09-25, "menu accelerator
+           shortcuts are usually right aligned". Cocoa and gtk2 never had a tab
+           convention at all and passed the character straight to the native
+           widget.
+
+           ShortCut is the property that does both jobs on all three, so the
+           caption is now just the caption. Which rows the menu may own, and
+           why some may not, is AcceleratorRowBelongsToTheMenu -- and the input
+           hook skips exactly those, so no keystroke has two owners. *)
          caption  := row.mrText;
-         shortcut := AcceleratorDisplayFor(row.mrId);
-         if shortcut <> '' then
+         item.ShortCut := MenuShortCutFor(row.mrId);
+
+         if item.ShortCut = scNone then
             begin
-            caption := caption + #9 + shortcut;
+            (* A KEYSTROKE THE MENU MAY NOT OWN still has to be advertised, and
+              a caption is the only place left: the LCL draws a shortcut column
+              from ShortCut alone, so there is no display-without-binding. The
+              tab is ragged here, and it is the lesser of the two defects. *)
+            shortcut := AcceleratorDisplayFor(row.mrId);
+            if shortcut <> '' then
+               begin
+               caption := caption + #9 + shortcut;
+               end;
             end;
 
          item.Caption := TCaption(caption);

@@ -25,6 +25,13 @@ method is described at the end.
 >
 > Still to come in Phase 2: deriving the MENU CAPTION from the same row, which removes the
 > 77 `RC_X + RC_X_HK` concatenations, and `TMenuItem.ShortCut` when the menus become LCL.
+>
+> **BOTH ARE DONE — and `TMenuItem.ShortCut` landed 2026-09-25.** 74 of the 94 rows are
+> carried by the menu item itself; 20 stay with `uAppInputHooks`, because a menu shortcut is
+> answered from any form and cannot be declined for one window, which is what the Ctrl+C,
+> Tab and Escape guards do. The rule is `uMenu.AcceleratorRowBelongsToTheMenu` and both
+> sides read it, so the audit's one-owner-per-keystroke property now holds by construction
+> rather than by a comment. `test/unit/uTestMenuShortcuts.pas` pins the split.
 
 ## Why this exists
 

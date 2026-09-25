@@ -24,7 +24,12 @@ for some ops"*, and asked for an option rather than a silent change.
 
 ## What actually happens today
 
-All **94** rows (`ACCELERATORS: array[0..93]`) are answered from ONE place --
+**Written when all 94 rows were answered here. Since 2026-09-25, 20 are** --
+the other 74 are `TMenuItem.ShortCut` and the widget set answers them. The
+guards below are exactly why those 20 stayed. The rest of this section is
+unchanged and still describes them.
+
+`ACCELERATORS: array[0..93]` is read from
 `uAppInputHooks.InstallTR4WInputHooks`:
 
 ```pascal
@@ -110,6 +115,23 @@ ramifications to this as it concerns logging contacts during the contest."*
 the FOCUSED control, so they fire only when focus is already on the main form --
 Alt+O from the Radio 1 window would have stopped working. Use
 `Application.OnShortCut`.
+
+> **THAT REASON IS WRONG, MEASURED 2026-09-25, and the right one is stronger.**
+> `TApplication.IsShortcut` does not stop at the active form: when the active
+> form does not claim the key it asks **the MAIN FORM's menu**
+> (`application.inc:2157-2162`). So Alt+O from the Radio 1 window works
+> perfectly well as a `TMenuItem.ShortCut`, and 74 rows are one since that date.
+>
+> What a `ShortCut` genuinely cannot do is be **declined for one window**, and
+> that is exactly what this document's guards are: Ctrl+A/C/V/X in the cluster
+> window and on dialogs, and bare Tab/Escape on a non-main form. Those keystrokes
+> therefore stay with the hook -- all five have menu rows, so a naive conversion
+> would have reopened Issue #23 and the 2026-09-09 radio-editor defect in one
+> commit. The split is `uMenu.AcceleratorRowBelongsToTheMenu`.
+>
+> **The move below is still open and still worth doing.** It is what would let a
+> form claim a key in its own `OnShortCut`, which is the only thing that could
+> bring those last rows across.
 
 ### What the move does NOT fix by itself
 
