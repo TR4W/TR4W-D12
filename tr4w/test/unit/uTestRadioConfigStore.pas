@@ -96,6 +96,14 @@ type
       procedure Test_SeedDedupesIdenticalSlotNames;
       procedure Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
 
+      (* THE STALE-CREDENTIAL REGRESSION.  See the block comment above the
+        implementations. *)
+      procedure Test_AppliedSnapshotSeesAChangedPassword;
+      procedure Test_AppliedSnapshotIgnoresAnUnappliedSlot;
+      procedure Test_AppliedSnapshotSeesSlotEmptiedOrFilled;
+      procedure Test_AppliedSnapshotSeesADifferentRadioInTheSlot;
+      procedure Test_AppliedSnapshotKeepsItsOwnCopy;
+
       // --- JSON persistence (Track F-5a) ---------------------------------
       procedure Test_JSONWithoutIdsMigratesProfileReferences;
       procedure Test_RenameLeavesProfileReferencesAlone;
@@ -1655,6 +1663,166 @@ begin
    end;
 end;
 
+{ ------------------------------------------- what is actually on the air - }
+
+(* THE BUG THESE PIN, WHICH HAD BEEN MET SEVERAL TIMES AND NEVER CAUGHT.
+
+  NY4I, IC-9700 over LAN, 2026-09-24 -- and, in his words, "i have seen this
+  before....just did not document it step-by-step like tonight".  The sequence:
+
+    1. the stored LAN password was blank, so the login was rejected;
+    2. he typed the correct password into the radio editor and SAVED;
+    3. every subsequent attempt logged 'network credentials set' one second
+       before it tried, completed the whole handshake, and was rejected again;
+    4. Reset Radio Ports did the same;
+    5. restarting the SAME binary against the SAME settings file logged in on
+       the first attempt.
+
+  Nothing was wrong with the store, the transport or the radio.  A radio's
+  settings reach the running program only through ApplyRadioToSlot, which runs
+  at startup and from ApplyProfile -- and SAVING called neither, so the live
+  radio kept the credentials it was handed when TR4W started, and every layer
+  below reported success for them.
+
+  WHY THE TEST LIVES HERE AND NOT AT THE SEAM THAT BROKE.  uRadioConfigApply
+  needs the whole application -- Radio1/Radio2, CATWTR, CheckCommand -- so it
+  cannot be linked into this binary, and a test of "did the running radio get
+  the new password" needs a radio and a socket.  What CAN be made pure is the
+  QUESTION the applier has to answer: has a radio that is currently on the air
+  changed since it was applied.  That is TAppliedRadioSnapshot, and it is
+  ordinary value comparison, so the rule survives without hardware.
+
+  That is also the shape that would have made this catchable years ago: the
+  defect lived in code that had no seam anything could ask. *)
+
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotSeesAChangedPassword;
+var
+   snap: TAppliedRadioSnapshot;
+   live, edited: TRadioDefinition;
+begin
+   BeginTest('Test_AppliedSnapshotSeesAChangedPassword');
+   snap   := TAppliedRadioSnapshot.Create;
+   live   := MakeFullyPopulatedRadio('IC-9700');
+   edited := nil;
+   try
+      live.NetworkPassword := '';          // the blank one, as it went on the air
+      snap.RecordSlot(1, live);
+
+      CheckFalse(snap.SlotChanged(1, live),
+                 'the radio that was applied is not a change');
+
+      edited := TRadioDefinition.Create;
+      edited.Assign(live);
+      edited.NetworkPassword := 'correcthorse';
+
+      CheckTrue(snap.SlotChanged(1, edited),
+                'a corrected password MUST be seen as needing a re-apply');
+   finally
+      edited.Free;
+      live.Free;
+      snap.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotIgnoresAnUnappliedSlot;
+var
+   snap: TAppliedRadioSnapshot;
+   radio: TRadioDefinition;
+begin
+   BeginTest('Test_AppliedSnapshotIgnoresAnUnappliedSlot');
+   snap  := TAppliedRadioSnapshot.Create;
+   radio := MakeFullyPopulatedRadio('K4');
+   try
+      (* NOTHING HAS GONE ON THE AIR, so nothing can have changed.  Without
+        this, a station that has never activated a profile would have both
+        radios torn down and rebuilt the first time it saved anything. *)
+      CheckFalse(snap.SlotChanged(1, radio), 'slot 1 was never applied');
+      CheckFalse(snap.SlotChanged(2, nil),   'slot 2 was never applied');
+      CheckFalse(snap.SlotChanged(2, radio), 'still never applied');
+   finally
+      radio.Free;
+      snap.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotSeesSlotEmptiedOrFilled;
+var
+   snap: TAppliedRadioSnapshot;
+   radio: TRadioDefinition;
+begin
+   BeginTest('Test_AppliedSnapshotSeesSlotEmptiedOrFilled');
+   snap  := TAppliedRadioSnapshot.Create;
+   radio := MakeFullyPopulatedRadio('K4');
+   try
+      (* An applied-as-EMPTY slot is not the same as an unapplied one. *)
+      snap.RecordSlot(2, nil);
+      CheckFalse(snap.SlotChanged(2, nil), 'empty then empty is no change');
+      CheckTrue(snap.SlotChanged(2, radio), 'a radio put into an empty slot is a change');
+
+      snap.RecordSlot(2, radio);
+      CheckTrue(snap.SlotChanged(2, nil), 'clearing an occupied slot is a change');
+   finally
+      radio.Free;
+      snap.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotSeesADifferentRadioInTheSlot;
+var
+   snap: TAppliedRadioSnapshot;
+   first, second: TRadioDefinition;
+begin
+   BeginTest('Test_AppliedSnapshotSeesADifferentRadioInTheSlot');
+   snap   := TAppliedRadioSnapshot.Create;
+   first  := MakeFullyPopulatedRadio('K4');
+   second := nil;
+   try
+      first.Id := 'radio-one';
+      snap.RecordSlot(1, first);
+
+      (* IDENTICALLY CONFIGURED BUT NOT THE SAME RADIO.  SameAs deliberately
+        ignores the Id -- it is used to compare a clone with its original --
+        so identity has to be tested separately, or swapping in a different
+        radio that happened to match would be applied to nothing. *)
+      second := TRadioDefinition.Create;
+      second.Assign(first);
+      second.Id := 'radio-two';
+
+      CheckTrue(snap.SlotChanged(1, second), 'a different radio is a change');
+   finally
+      second.Free;
+      first.Free;
+      snap.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_AppliedSnapshotKeepsItsOwnCopy;
+var
+   snap: TAppliedRadioSnapshot;
+   radio: TRadioDefinition;
+begin
+   BeginTest('Test_AppliedSnapshotKeepsItsOwnCopy');
+   snap  := TAppliedRadioSnapshot.Create;
+   radio := MakeFullyPopulatedRadio('IC-9700');
+   try
+      radio.NetworkPassword := 'first';
+      snap.RecordSlot(1, radio);
+
+      (* THE SNAPSHOT MUST NOT HOLD THE STORE'S OBJECT.  If it did, editing
+        that object would change both sides of the comparison and the answer
+        would always be "nothing changed" -- the original defect, reproduced
+        inside its own detector.  It would also dangle when the store is
+        freed, which happens on every Preferences reload. *)
+      radio.NetworkPassword := 'second';
+
+      CheckTrue(snap.SlotChanged(1, radio),
+                'the snapshot must compare against a COPY taken at apply time');
+   finally
+      radio.Free;
+      snap.Free;
+   end;
+end;
+
 { ----------------------------------------------------------------- runner - }
 
 { A STORE WRITTEN BEFORE RADIOS HAD IDS.
@@ -2413,6 +2581,12 @@ begin
    Test_JSONFileRoundTripsThroughDisk;
    Test_JSONFileHasNoBOM;
    Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
+
+   Test_AppliedSnapshotSeesAChangedPassword;
+   Test_AppliedSnapshotIgnoresAnUnappliedSlot;
+   Test_AppliedSnapshotSeesSlotEmptiedOrFilled;
+   Test_AppliedSnapshotSeesADifferentRadioInTheSlot;
+   Test_AppliedSnapshotKeepsItsOwnCopy;
    finally
       // Even if a test escapes with an exception, the fixture files go.
       RemoveTempInis;

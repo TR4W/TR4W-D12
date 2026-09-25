@@ -205,10 +205,31 @@ var
    lastRITXITTick: QWord;
    authErrBuf: array[0..127] of AnsiChar;
    handshakeStuckSinceTick: QWord;  // GetTickCount64 when we first noticed IsConnected but not IsOperational; 0 = not tracking
+   (* Reported ONCE per run of failures, not once per retry -- see the auth
+     arms below.  Cleared when a connection actually comes up. *)
+   authFailureReported: boolean;
    actVFO: TVFO;                       // active (RX) VFO for the aggregate main-window status (ro.GetActiveVFO)
 const
    RECONNECT_INITIAL_DELAY = 1000;    // 1 second initial delay
    RECONNECT_MAX_DELAY = 30000;       // 30 seconds max delay
+
+   (* THE BACK-OFF AN AUTHENTICATION FAILURE GETS, and it is deliberately
+     longer than the one a dropped link gets.
+
+     A dropped link usually fixes itself -- the rig finishes booting, the cable
+     is pushed back in -- so retrying briskly costs nothing and wins seconds.
+     BAD CREDENTIALS DO NOT FIX THEMSELVES: nothing changes until an operator
+     types something, so a fast retry buys no recovery and only hammers the
+     radio.  Some network rigs and the servers in front of them rate-limit or
+     lock an account under repeated failed logins, which is the real risk.
+
+     60 s, because the recovery path does not depend on this timer at all:
+     saving the edited radio in Preferences re-applies the profile, which tears
+     the radio down and builds a new one with a new polling thread, so the
+     corrected password is tried within about a second.  This interval is only
+     the floor under "keep trying anyway" for the cases nobody is watching --
+     a radio whose server was down, an account unlocked from elsewhere. *)
+   AUTH_RETRY_DELAY = 60000;          // 60 seconds between retries after an auth rejection
    HANDSHAKE_STUCK_MS = 8000;         // Force a Disconnect+Connect cycle if the transport has been mid-handshake (IsConnected but not IsOperational) for this long.  Covers the "radio was off when Connect() fired, the initial AYH packet was lost, no further AYH retries are sent" failure mode -- without this the polling thread spins forever in the connected branch sending CI-V commands that fail with "stream not open".
 
    // SetRadioAlertState � set or clear RadioDisconnected flag and repaint freq/name
@@ -231,6 +252,32 @@ const
       RequestMainThreadJob(mtMainWindowElementColors);
    end;
 
+   (* ONE REPORT PER RUN OF FAILURES.
+
+     The radio now retries after an authentication rejection instead of giving
+     up, and a retry every AUTH_RETRY_DELAY must NOT mean an error dialog and a
+     log line every AUTH_RETRY_DELAY -- that is how a log becomes unreadable
+     and a message becomes wallpaper.  So the operator is told clearly the
+     first time, the retries say so quietly at Info level, and the flag is
+     cleared only when a connection actually comes up, which is also when the
+     panel stops saying AUTH FAILED. *)
+   procedure ReportAuthFailure;
+   begin
+      if authFailureReported then
+         begin
+         Exit;
+         end;
+      authFailureReported := True;
+      logger.Warn('[pFactoryRadio] Auth failed for %s - check credentials; will retry every %d ms',
+                  [rig^.RadioName, AUTH_RETRY_DELAY]);
+      SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
+      QuickDisplayError(authErrBuf);
+      if rig^.tRadioPanelSlot <> 0 then
+         begin
+         PostPanelText(rig^.tRadioPanelSlot, 130, 'AUTH FAILED');
+         end;
+   end;
+
 begin
 
    { Unlike the other polling procedures, all we have to do here is grab the
@@ -250,6 +297,7 @@ begin
    reconnectDelay := RECONNECT_INITIAL_DELAY;
    handshakeStuckSinceTick := 0;
    loggedNoConnInfo := False;
+   authFailureReported := False;
 
    // Keep polling thread alive until stop is requested (e.g. on Reset Radio Ports)
    while not rig^.PollingStopRequested do
@@ -308,6 +356,21 @@ begin
                logger.trace('[pFactoryRadio] Radio connected � querying initial freq/mode/state');
                wasConnected := True;
                reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on successful connection
+
+               (* THE LINK IS UP, SO THE CREDENTIALS WERE ACCEPTED.  Clear the
+                 one-shot report and the panel's AUTH FAILED, or a radio that
+                 recovered would go on saying it had not -- and the next
+                 rejection would pass unreported. *)
+               if authFailureReported then
+                  begin
+                  logger.Info('[pFactoryRadio] %s connected after an earlier authentication failure',
+                              [rig^.RadioName]);
+                  authFailureReported := False;
+                  if rig^.tRadioPanelSlot <> 0 then
+                     begin
+                     PostPanelText(rig^.tRadioPanelSlot, 130, '');
+                     end;
+                  end;
                // Don't unconditionally clear the alert here -- IsConnected is
                // the loose "transport is doing something" check that stays True
                // throughout the multi-step Icom handshake (WaitingForHere etc.).
@@ -403,16 +466,28 @@ begin
             // Auth failure may happen asynchronously during handshake.
             // IsConnected can still be True if Disconnect couldn't complete
             // (Indy self-deadlock), so check AuthFailed explicitly.
+            (* DO NOT Break.  This used to leave the polling thread, which meant
+              the radio was condemned until the operator restarted TR4W or ran
+              Reset Radio Ports -- NY4I, IC-9700 over LAN, 2026-09-24: he fixed
+              the password, saved, and nothing ever tried again.
+
+              Drop the link and fall into the disconnected branch instead; the
+              auth arm there backs off and retries.  wasConnected is left for
+              that branch to notice, so the normal disconnect housekeeping
+              (blank the frequency, re-arm the startup command) still runs. *)
             if Assigned(ro) and ro.AuthFailed then
                begin
-               logger.Warn('[pFactoryRadio] Auth failed for %s - stopping', [rig^.RadioName]);
-               SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
-               QuickDisplayError(authErrBuf);
-               if rig^.tRadioPanelSlot <> 0 then
-                  begin
-                  PostPanelText(rig^.tRadioPanelSlot, 130, 'AUTH FAILED');
-                  end;
-               Break;
+               ReportAuthFailure;
+               try
+                  ro.Disconnect;
+               except
+                  on E: Exception do
+                     begin
+                     logger.Debug('[pFactoryRadio] Disconnect after auth failure raised: %s - %s',
+                                  [E.ClassName, E.Message]);
+                     end;
+               end;
+               Continue;
                end;
 
             // HamLib Direct: drain user commands first on every cycle (max 50ms latency),
@@ -691,22 +766,33 @@ begin
             Continue;
             end;
 
-         // If auth failed, show error and stop reconnecting
+         (* AN AUTH REJECTION BACKS OFF; IT NO LONGER GIVES UP.
+
+           This arm used to Break, which ended the polling thread -- so the
+           radio could not recover from a wrong password without a restart or
+           Reset Radio Ports, and neither the transport nor the thread was ever
+           coming back on its own.  Keeping the STOP was tempting (hammering a
+           radio with bad credentials can lock an account), and what is kept is
+           the long interval: a rejection waits AUTH_RETRY_DELAY rather than
+           the link back-off, and is reported once rather than once a minute. *)
          if Assigned(ro) and ro.AuthFailed then
             begin
-            logger.Warn('[pFactoryRadio] Authentication failed for %s - not retrying', [rig^.RadioName]);
-            SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
-            QuickDisplayError(authErrBuf);
-            if rig^.tRadioPanelSlot <> 0 then
-               begin
-               PostPanelText(rig^.tRadioPanelSlot, 130, 'AUTH FAILED');
-               end;
-            Break;
+            ReportAuthFailure;
+            reconnectDelay := AUTH_RETRY_DELAY;
             end;
 
          // Attempt to reconnect with exponential backoff.
          // Sleep in short intervals so PollingStopRequested is checked promptly
          // during shutdown (otherwise a 30s sleep blocks ExitProgram).
+         //
+         // THAT SLICED SLEEP IS ALSO THE INTERRUPT.  Every path that means "the
+         // operator changed something about this radio" -- ApplyProfile and
+         // Tools/Reset Radio Ports alike -- goes through
+         // ShutDownRadioInterface, which sets PollingStopRequested and waits for
+         // this thread; the replacement radio object then gets a brand-new
+         // polling thread that connects at once.  So a credential change is
+         // noticed within 250 ms of the request, whatever the back-off had
+         // reached, and no separate wake object is needed for it.
          sleepRemaining := reconnectDelay;
          while (sleepRemaining > 0) and (not rig^.PollingStopRequested) do
             begin
@@ -722,7 +808,22 @@ begin
             end;
          if rig^.PollingStopRequested then
             begin
+            (* THE TWO WAYS OUT OF THE WAIT SAY WHICH ONE HAPPENED.  An
+              operator cannot otherwise tell "my change woke it" from "the
+              timer happened to expire", and after an auth failure those are a
+              minute apart.  This is the WOKEN one: something asked the radio
+              to stop, which in this program always means it is being rebuilt
+              with new settings. *)
+            logger.Info('[pFactoryRadio] %s reconnect wait INTERRUPTED after %d of %d ms -- the radio is being reconfigured',
+                        [rig^.RadioName, reconnectDelay - sleepRemaining, reconnectDelay]);
             Break;
+            end;
+
+         if authFailureReported then
+            begin
+            (* And this is the TIMED-OUT one. *)
+            logger.Info('[pFactoryRadio] %s retrying after authentication failure (waited %d ms)',
+                        [rig^.RadioName, reconnectDelay]);
             end;
 
          // Issue #968 -- a network radio with no IP address or a 0 TCP port has

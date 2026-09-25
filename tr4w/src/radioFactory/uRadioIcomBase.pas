@@ -3175,7 +3175,22 @@ procedure TIcomRadio.ApplyNetworkCredentials(const user, pass: string);
 begin
    FNetworkUsername := user;
    FNetworkPassword := pass;
-   logger.Info('[%s] network credentials set (user=%s, pass=*******)', [radioModel, user]);
+
+   (* SAY WHAT WAS ACTUALLY APPLIED, AND TO WHAT.
+
+     This used to read 'network credentials set', with the password shown as a
+     row of stars, which cost NY4I an evening: it says the work was done, and
+     it was -- faithfully, with a STALE value that the settings screen had
+     never pushed down.  A message that reports success for the wrong data is
+     worse than no
+     message, because it removes the suspicion that would have found it.
+
+     The LENGTH is the one thing that can be said safely and would have ended
+     it in seconds: '0 chars' against a password the operator had just typed
+     names the defect outright.  The value itself is never logged. *)
+   logger.Info('[%s] network credentials applied to the radio object ' +
+               '(user=%s, password %d chars); used by the next Connect',
+               [radioModel, user, Length(pass)]);
 end;
 
 procedure TIcomRadio.ApplyDataModeID(id: integer);

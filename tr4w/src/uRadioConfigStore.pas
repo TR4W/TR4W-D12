@@ -409,6 +409,57 @@ type
       function ReferencesRadio(const aRadioName: string): boolean;
    end;
 
+   { WHAT IS ACTUALLY ON THE AIR, as opposed to what is stored.
+
+     WHY THIS EXISTS.  A radio's settings reach the running program by exactly
+     one route: uRadioConfigApply.ApplyRadioToSlot renders the definition into
+     the configuration, and nothing else writes those globals.  That routine is
+     called from startup and from ApplyProfile -- and from nowhere else -- so
+     SAVING an edited radio changed the library and left the live radio holding
+     whatever it was given when TR4W started.
+
+     That is the defect NY4I hit on an IC-9700 over LAN (2026-09-24) and had
+     seen before without pinning down: the correct password was in the store,
+     every reconnection logged 'network credentials set' one second before it
+     tried, the radio rejected the login every time, and a restart of the same
+     binary against the same file logged in first try.  Nothing was stale
+     except the copy in the running process, and nothing said so.
+
+     So: the applier records here what it put on the air, and the settings
+     screen asks whether the store has since moved away from it.  Recording
+     happens INSIDE the applier rather than at its call sites, which is what
+     stops a future third call site from being forgotten.
+
+     It is deliberately a plain value comparison with no dependency on TR4W --
+     this unit is linked by the unit tests and the live program alike, so the
+     rule "a changed radio must be re-applied" is testable without a radio,
+     a socket or a running application. }
+   TAppliedRadioSnapshot = class(TObject)
+   private
+      { 1..2, matching the radio slots.  nil means "this slot was applied as
+        empty", which is NOT the same as "nothing has been applied yet" -- see
+        HasRecorded. }
+      FSlot: array[1..2] of TRadioDefinition;
+      FRecorded: array[1..2] of boolean;
+   public
+      destructor Destroy; override;
+
+      { Forget everything.  A slot that has never been recorded never reports a
+        change: there is nothing to have changed FROM, and reporting one would
+        make the settings screen restart radios it had not touched. }
+      procedure Clear;
+
+      procedure RecordSlot(const aSlot: integer; const aRadio: TRadioDefinition);
+      function HasRecorded(const aSlot: integer): boolean;
+
+      { True if aRadio would configure the slot differently from what was last
+        applied to it.  Identity counts as well as settings: a slot holding a
+        different radio that happens to be configured identically is a change
+        the operator will expect to see honoured. }
+      function SlotChanged(const aSlot: integer;
+                           const aRadio: TRadioDefinition): boolean;
+   end;
+
    { The library itself: radios, profiles, and which profile is active. }
    TRadioConfigStore = class(TObject)
    private
@@ -1089,6 +1140,73 @@ begin
 end;
 
 { The id for a slot -- what every lookup should ask for. }
+(* ===================================================================== *)
+(* TAppliedRadioSnapshot                                                  *)
+(* ===================================================================== *)
+
+destructor TAppliedRadioSnapshot.Destroy;
+begin
+   Clear;
+   inherited Destroy;
+end;
+
+procedure TAppliedRadioSnapshot.Clear;
+var
+   slot: integer;
+begin
+   for slot := 1 to 2 do
+      begin
+      FreeAndNil(FSlot[slot]);
+      FRecorded[slot] := False;
+      end;
+end;
+
+procedure TAppliedRadioSnapshot.RecordSlot(const aSlot: integer;
+                                           const aRadio: TRadioDefinition);
+begin
+   if (aSlot < 1) or (aSlot > 2) then
+      begin
+      Exit;
+      end;
+
+   (* A COPY, NOT THE STORE'S OBJECT.  The store is reloaded whenever
+     Preferences opens, so holding its instance would compare a definition
+     against itself and never report a change -- and would dangle the moment
+     the store was freed. *)
+   FreeAndNil(FSlot[aSlot]);
+   if aRadio <> nil then
+      begin
+      FSlot[aSlot] := TRadioDefinition.Create;
+      FSlot[aSlot].Assign(aRadio);
+      end;
+   FRecorded[aSlot] := True;
+end;
+
+function TAppliedRadioSnapshot.HasRecorded(const aSlot: integer): boolean;
+begin
+   Result := (aSlot >= 1) and (aSlot <= 2) and FRecorded[aSlot];
+end;
+
+function TAppliedRadioSnapshot.SlotChanged(const aSlot: integer;
+                                           const aRadio: TRadioDefinition): boolean;
+begin
+   Result := False;
+   if not HasRecorded(aSlot) then
+      begin
+      Exit;
+      end;
+
+   if (FSlot[aSlot] = nil) or (aRadio = nil) then
+      begin
+      (* One empty and one not is a change; both empty is not. *)
+      Result := (FSlot[aSlot] <> nil) <> (aRadio <> nil);
+      Exit;
+      end;
+
+   Result := (FSlot[aSlot].Id <> aRadio.Id) or
+             (not FSlot[aSlot].SameAs(aRadio));
+end;
+
 function TStationProfile.RadioIdForSlot(const aSlot: integer): string;
 begin
    if aSlot = 2 then

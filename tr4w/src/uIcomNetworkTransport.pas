@@ -633,10 +633,30 @@ begin
   FSessionRevoked := False;
   FCivStreamOpen := False;
 
+  (* AN ATTEMPT IS NOT FAILED UNTIL IT FAILS.
+
+    FAuthFailed was assigned in exactly ONE place -- HandleLoginResponse, on
+    ICOM_AUTH_FAILED -- and cleared in none, so the flag outlived the attempt
+    that set it and condemned the transport object for the rest of its life.
+    The polling thread reads it through TIcomRadio.GetAuthFailed and stops
+    reconnecting, which meant a corrected password could never be tried: the
+    first thing the retry did was report the PREVIOUS failure.
+
+    Cleared HERE rather than in CreateSockets because Connect is what a fresh
+    attempt IS -- it is the single entry point, it already resets every other
+    per-session latch (token, sequence counters, FSessionRevoked) under
+    FLifecycleLock, and it has an early path that never reaches CreateSockets
+    at all. *)
+  FAuthFailed := False;
+
   ClearAllBuffers;
 
-  logger.Info('[IcomTransport:' + FRadioName + '] Connecting to %s:%d user=%s',
-              [Address, Port, Username]);
+  (* The password LENGTH, never the password.  This is the last place the
+    credentials can be observed before IcomPasscode obfuscates them into the
+    login packet, so it is the one line that can prove which copy was actually
+    sent -- see the note on TIcomRadio.ApplyNetworkCredentials. *)
+  logger.Info('[IcomTransport:' + FRadioName + '] Connecting to %s:%d user=%s password %d chars',
+              [Address, Port, Username, Length(Password)]);
 
   try
     // Create sockets

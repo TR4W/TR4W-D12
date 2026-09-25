@@ -281,7 +281,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # the ini-only machinery deleted with it (RestoreCFGPasswordCase,
 # FileHasCommands, the duplicate-key report, CommandIsSingleValued). Deletion,
 # not conversion.
-$NARROW_CEILING = 1340
+$NARROW_CEILING = 1339
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

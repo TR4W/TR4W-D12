@@ -1111,8 +1111,33 @@ and the proc now appears only in comments — `uMenu.pas` calls it "the legacy p
 
 What IS still live in that unit is the surrounding machinery the Preferences form uses: port
 enumeration, the filtered/greyed COM drop-down (item data, never index arithmetic), string-id
-factory radios in the type combo, and `RestartPollingThread`. Do not delete the unit; do not treat
-`CATDlgProc` as the place to change radio configuration.
+factory radios in the type combo, and `CloseCATAndKeyerForThisRadio`. Do not delete the unit; do not
+treat `CATDlgProc` as the place to change radio configuration.
+
+~~`RestartPollingThread`~~ **DOES NOT EXIST AND APPARENTLY NEVER DID** (checked 2026-09-24: no such
+identifier anywhere in `tr4w/src`, under that name or as `RestartPolling`/`StartPollingThread`).
+**The polling thread is not restarted; the RADIO IS REBUILT, and the thread comes with it.**
+`RadioObject.CheckAndInitializePorts_ForThisRadio` (`src/trdos/logradio.pas`) calls
+`SetUpRadioInterface`, which calls `ShutDownRadioInterface` first — stop the poller, wait for it,
+free the factory object — then constructs a new radio and starts a new thread. Its two drivers are
+`uRadioConfigApply.ApplyProfile` and `MainUnit.ResetRadioPorts`. `uCAT` contributes the teardown
+half, `CloseCATAndKeyerForThisRadio`.
+
+That matters beyond the name: **there is no way to hand new settings to a live radio**, so every
+configuration change is a teardown and rebuild, and anything that does not go through one leaves the
+running radio holding what it was given at startup. See the stale-credential defect recorded under
+[Radio control](#5-radio-control--the-factory).
+
+**A SAVED SETTING THAT NEVER REACHES THE RADIO IS THE DEFECT TO WATCH FOR HERE.** The only route
+from the radio library into the running program is `uRadioConfigApply.ApplyRadioToSlot`, and until
+2026-09-24 it ran at startup and from the **Activate** button only. Saving an edit therefore changed
+the library and nothing else: NY4I corrected an IC-9700's LAN password, saved, and every
+reconnection for the rest of the session sent the blank one — while `ApplyNetworkCredentials`
+faithfully logged `network credentials set` a second before each attempt, and Reset Radio Ports did
+the same. Restarting TR4W fixed it, which is what had made it look intermittent for months. Saving
+now re-applies the profile when a radio in an **active slot** has changed
+(`ActiveRadioSettingsChanged`, pinned by `TAppliedRadioSnapshot` tests), and the credential log lines
+report the password's **length** so a stale or blank value names itself.
 
 **SO2R:** `src/uRadio12.pas` manages Radio 1 / Radio 2, automatic switching on focus, independent VFO
 control.

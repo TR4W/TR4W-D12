@@ -188,6 +188,24 @@ function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
 
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
+(* WHAT IS ON THE AIR.  Written by ApplyRadioToSlot -- see the note there --
+  and read by the settings screen to decide whether saving an edit has to be
+  followed by a re-apply. *)
+function AppliedRadios: TAppliedRadioSnapshot;
+
+{ True if the store's definition of a radio the ACTIVE profile has in a slot
+  differs from the one last applied to that slot -- i.e. the operator has
+  edited a radio that is currently in use.
+
+  aWhich names the radio, for the log line: an operator whose radios were just
+  restarted is owed a reason, and "which one" is the whole of it.
+
+  Answers False when nothing has been applied yet (no profile has gone on the
+  air this run), so a station that has never activated anything is never
+  restarted by a save. }
+function ActiveRadioSettingsChanged(const aStore: TRadioConfigStore;
+                                    out aWhich: string): boolean;
+
 { One config parameter arriving from a MULTI-OP PEER.  Returns True if it was
   accepted, so the caller can tell the operator; False means CFGCA refused it.
 
@@ -1956,6 +1974,20 @@ var
    keyShort, valueShort: ShortString;
    accepted: boolean;
 begin
+   (* RECORDED HERE, AT THE RENDER, NOT AT THE CALL SITES.
+
+     This routine is the ONLY thing that moves a stored radio definition into
+     the running program's configuration, and it has exactly two callers --
+     startup and ApplyProfile.  Recording at the render is what makes
+     "what is on the air" impossible to get out of step with what was applied:
+     a third caller added later is covered without anyone remembering to be.
+
+     What it buys is the settings screen being able to ask whether the store
+     has since moved away from the live configuration, which is the question
+     nothing could answer when an edited password sat in the library while the
+     radio went on offering the one it was given at startup. *)
+   AppliedRadios.RecordSlot(aSlot, aRadio);
+
    if aRadio <> nil then
       begin
       typeRendering := ResolveTypeRendering(aRadio.RegistryId);
@@ -2788,7 +2820,69 @@ begin
    Result := ApplyPeerCommand(aCommand, aValue);
 end;
 
+(* ===================================================================== *)
+(* What is on the air                                                     *)
+(* ===================================================================== *)
+
+var
+   gAppliedRadios: TAppliedRadioSnapshot = nil;
+
+function AppliedRadios: TAppliedRadioSnapshot;
+begin
+   (* Created on first use rather than in initialization: this unit's
+     initialization already runs at a point where order matters, and the
+     snapshot is wanted the first time a slot is rendered, which is later. *)
+   if gAppliedRadios = nil then
+      begin
+      gAppliedRadios := TAppliedRadioSnapshot.Create;
+      end;
+   Result := gAppliedRadios;
+end;
+
+function ActiveRadioSettingsChanged(const aStore: TRadioConfigStore;
+                                    out aWhich: string): boolean;
+var
+   profile: TStationProfile;
+   slot: integer;
+   stored: TRadioDefinition;
+begin
+   Result := False;
+   aWhich := '';
+
+   if aStore = nil then
+      begin
+      Exit;
+      end;
+
+   profile := aStore.ActiveProfile;
+   if profile = nil then
+      begin
+      Exit;
+      end;
+
+   for slot := 1 to 2 do
+      begin
+      stored := aStore.FindRadioById(profile.RadioIdForSlot(slot));
+      if AppliedRadios.SlotChanged(slot, stored) then
+         begin
+         Result := True;
+         if stored <> nil then
+            begin
+            aWhich := stored.Name;
+            end
+         else
+            begin
+            aWhich := Format('radio %d', [slot]);
+            end;
+         Exit;
+         end;
+      end;
+end;
+
 initialization
    uCFG.PersistCommandValue := @PersistCommandThroughStore;
+
+finalization
+   FreeAndNil(gAppliedRadios);
 
 end.

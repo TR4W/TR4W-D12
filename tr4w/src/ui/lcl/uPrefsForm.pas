@@ -7500,8 +7500,8 @@ end;
 
 function TPrefsForm.ApplyNow(const aActivate: boolean): boolean;
 var
-   prof: TStationProfile;
-   err, conflicts: string;
+   prof, active: TStationProfile;
+   err, conflicts, changed: string;
 begin
    Result := False;
    CaptureProfileFields;
@@ -7517,6 +7517,45 @@ begin
    if not aActivate then
       begin
       Result := True;
+
+      (* SAVING AN EDIT TO A RADIO THAT IS ON THE AIR MUST REACH THAT RADIO.
+
+        It did not, and that is the whole of NY4I's IC-9700 episode
+        (2026-09-24, and he had met it before without pinning it down): a
+        radio's settings reach the running program ONLY through
+        ApplyRadioToSlot, which runs at startup and from ApplyProfile.  Save
+        called neither, so the corrected LAN password went into the library
+        while the live radio kept offering the blank one it was handed at
+        startup -- for the rest of the session, through every reconnection and
+        through Reset Radio Ports, each of which faithfully logged
+        'network credentials set' with the stale value.  Restarting TR4W fixed
+        it, which is what made it look intermittent.
+
+        STILL NOT A BLANKET RE-APPLY.  The comment on the Apply button is
+        right: editing a radio you are not using must not restart the ones you
+        are.  So this asks the narrower question -- has a radio the ACTIVE
+        profile actually has in a slot changed since it was applied -- and does
+        nothing at all otherwise. *)
+      if ActiveRadioSettingsChanged(FStore, changed) then
+         begin
+         active := FStore.ActiveProfile;
+         if active <> nil then
+            begin
+            logger.Info('[Prefs] "%s" is in the active profile and its settings ' +
+                        'changed -- re-applying profile "%s" so the running radio ' +
+                        'gets them',
+                        [changed, active.Name]);
+            if not ApplyProfile(FStore, active, err, FKeyerStore) then
+               begin
+               (* Reported, never silent: the operator has just saved a change
+                 that is now in the library and NOT in force, which is exactly
+                 the divergence this whole path exists to end. *)
+               logger.Error('[Prefs] re-apply after save failed: %s', [err]);
+               ShowMessage(err);
+               end;
+            end;
+         end;
+
       Exit;
       end;
 

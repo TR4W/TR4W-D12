@@ -55,7 +55,16 @@ here was wrong within a day, twice.
 - **`uCAT.CATDlgProc` is DEAD — it has no caller.** Do not treat it as the place
   to change radio configuration. What *is* live in that unit: port enumeration,
   the filtered COM drop-down (item data, never index arithmetic), string-id radios
-  in the type combo, and `RestartPollingThread`.
+  in the type combo, and `CloseCATAndKeyerForThisRadio`.
+- **There is no `RestartPollingThread`** — checked 2026-09-24, no such identifier
+  exists. **A radio is never reconfigured in place; it is REBUILT.**
+  `CheckAndInitializePorts_ForThisRadio` → `SetUpRadioInterface` →
+  `ShutDownRadioInterface` (stop the poller, wait, free) → new object, new thread.
+  Its only drivers are `ApplyProfile` and `ResetRadioPorts`. **Anything that
+  changes a radio's settings without going through one of those leaves the live
+  radio holding its startup values** — that is the IC-9700 stale-credential
+  defect of 2026-09-24, where a corrected LAN password sat in the library while
+  every reconnection logged `network credentials set` and sent the old one.
 - **Read the D7 tree at `C:\TR4W` as the authority on old behaviour. Never mirror
   a fix back into it.**
 
