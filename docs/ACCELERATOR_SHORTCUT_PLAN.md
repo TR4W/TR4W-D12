@@ -139,6 +139,37 @@ Step 4 is still ahead of the focused control's `OnKeyDown` at step 6. **An edit
 control does not get Ctrl+C merely by being focused.** A form must claim the key
 explicitly. So the move is the mechanism; the option below is the policy.
 
+### "CLAIM THE KEY" MEANS "DO THE WORK YOURSELF" -- measured 2026-09-25
+
+This is the sharp edge, and it decides whether the last five menu items can ever
+show their keystroke in the shortcut column.
+
+`TShortCutEvent` gives a handler one bit, and **neither value means what is
+wanted here**:
+
+| | |
+|---|---|
+| `Handled := True` | the key is **consumed** -- `wincontrol.inc:5888` does `if IsShortCut then Exit` with `Result := True`, so the focused edit never sees it |
+| `Handled := False` | processing continues **into the menu**, and a `TMenuItem.ShortCut` fires |
+
+There is no third value, and blanking `Message.CharCode` is not one either: the
+record is passed by reference from `CNKeyDown`, so the control loses the key too
+— and a `CharCode` of 0 with no modifier computes to `scNone`, which
+`TMenu.FindItem` happily matches against **every unbound item** (`menu.inc:217`).
+
+So a key held by a menu item can only be declined by **consuming it and
+performing the control's action by hand** -- `CopyToClipboard`, `PasteFromClipboard`,
+`SelectAll`, `SelectNext` for Tab, `ModalResult := mrCancel` for Escape. That is
+a real design and Delphi applications do it; it is also reimplementing behaviour
+the widget already has, and it **fails open**: anything not covered goes to the
+accelerator, so a missed case clears the operator's mult sheet rather than
+copying a callsign.
+
+**That is the price of putting Ctrl+A/C/V/X, Tab and Escape in the shortcut
+column, and it is a decision about a contest keyboard rather than a rendering
+fix.** It is NY4I's to make. Until then those five items show their keystroke in
+the caption, inline, and `uMenu` says why beside the rule.
+
 ## The option
 
 `Operating.StandardEditKeysOutsideMainWindow` (working name), default **False**

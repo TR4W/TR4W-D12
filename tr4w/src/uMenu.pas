@@ -107,8 +107,42 @@ function BuildTR4WMainMenu(const aOwner: TComponent;
       become a binding here.
 
   Those rows keep advertising their keystroke through the caption, which is the
-  only way left to show it -- there is no display-without-binding in the LCL --
-  and acDisplay survives for them alone.
+  only way left to show it, and acDisplay survives for them alone.
+
+  FIVE ITEMS THEREFORE SIT INLINE WHILE THE REST ARE IN A COLUMN, and that is
+  the whole of what NY4I sees (2026-09-25, "a few are still off"):
+
+    Send Keyboard Input          Ctrl+A
+    Clear multsheet              Ctrl+C
+    Execute configuration file   Ctrl+V
+    Exit Program                 Alt+X    -- display-only; File -> Exit answers it
+    Toggle autosend              Alt+-    -- advertised and bound by nothing
+
+  THERE IS NO DISPLAY-WITHOUT-BINDING TO FIX IT WITH, and that is measured in
+  the widget set rather than assumed. EVERY path that reserves or draws the
+  shortcut column is gated on ShortCut <> scNone and there is no other entry to
+  it: win32wsmenus.pp:472 (the themed measure, which is the only place
+  ShortCustSize.cx is computed), :584 (the classic measure), :930 (the themed
+  draw) and :1161 (the classic draw). The item's own OnDrawItem is not a way
+  round it -- menuitem.inc:304-323 makes it ALL OR NOTHING, so we would be
+  reimplementing the themed background, gutter, check mark and icon to gain one
+  column, and neither cocoawsmenus nor gtk2wsmenus routes drawing through it at
+  all, so it would be a Windows-only answer to a defect that is on all three.
+
+  PADDING THE CAPTION IS NOT AN ANSWER EITHER. The item is measured with
+  GetThemeTextExtent in the MENU's font at the item's own monitor DPI
+  (:461-470, GetMenuItemFont + GetDpiForWindow), so a pad would have to be
+  computed in a font this unit does not have, at a DPI it does not know, and
+  recomputed on a theme change or a move to another monitor -- silently wrong
+  when it was not. The classic path measures the caption with the tab STRIPPED
+  (:581, CompleteMenuItemCaption(..., EmptyStr)), so on that theme a padded
+  caption can be clipped outright.
+
+  SO THEY STAY INLINE, and the rule stays crisp: the items showing a keystroke
+  inline are EXACTLY the ones whose keystroke can be declined in a window that
+  needs it. Alignment could only be bought by giving that up, and that is
+  NY4I's decision rather than ours -- see docs\ACCELERATOR_SHORTCUT_PLAN.md,
+  which now records what it would cost.
 
   TWO THINGS BEHAVE DIFFERENTLY AFTER THIS, BOTH DELIBERATE AND BOTH WORTH
   KNOWING BEFORE SOMEONE REPORTS THEM AS DEFECTS.
