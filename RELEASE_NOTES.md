@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 004fc3bb -->
+<!-- D12-CHANGELOG-BASELINE: c8e623e5 -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -49,6 +49,133 @@ user-facing — no file paths or source-level jargon.
 ---
 
 ## 5.0.x — September 2026
+
+### 5.0.23 (2026-09-26) - NY4I
+
+#### Radio Control -- Icom over LAN
+
+- **A networked Icom no longer drops CI-V roughly every ninety seconds.** None of
+  the transport's six timers had ever fired, so TR4W never renewed its session
+  token and never sent a keepalive of its own -- the radio expired the session on
+  its own schedule and stopped answering. An IC-7760 on the bench dropped thirteen
+  times in ten minutes, every outage 12.3 seconds, on a repeating cycle.
+- **A session TR4W is finished with is always handed back to the radio.** A
+  rejected password used to leak the connection without telling the radio, which
+  then kept the abandoned session alive and refused the next login until its own
+  timeout ran out -- the "wait a minute and it works" behaviour.
+- **A teardown started by the radio can no longer wedge TR4W.** A disconnect
+  packet from the radio, a refused stream request or a rejected password could
+  hang shutdown or the next reconnect.
+- **A corrected password takes effect without restarting TR4W.** Saving a radio
+  that is on the air now re-applies it. Previously the radio library held the new
+  value while the running radio kept the one it started with, and the log reported
+  success either way; restarting TR4W was the only cure.
+- **A rejected login is retried**, once a minute, instead of condemning that radio
+  for the rest of the session.
+
+#### Radio Control -- bands
+
+- **23 cm and 1.25 m contacts are logged on the band you were on.** TR4W's
+  internal band list stopped at 70 cm, so an IC-9700 tuned to 1296 MHz kept
+  reading 432 -- and the QSO was logged, duped and scored as 432. 222 MHz and
+  902 MHz were wrong the same way, with nothing on screen to suggest it. 1.25 m,
+  33 cm and 23 cm are now bands TR4W knows.
+- **Band up and band down follow the radio's own band plan.** An Icom is asked
+  which transmit bands it actually has, so an IC-9700 can be stepped onto 23 cm
+  and a radio without 4 m is not stepped onto it. A radio that cannot be asked
+  steps exactly as it did before.
+
+#### Menus and the keyboard
+
+- **Menu shortcuts are drawn in a right-aligned column**, as in any other Windows
+  application, instead of sitting one tab stop after each item's own label.
+- **Ctrl+C, Ctrl+V and Ctrl+A copy, paste and select all in the window that has
+  focus** -- the DX cluster window and the dialogs -- rather than firing the menu
+  command of the same name.
+- **Alt+- (toggle autosend) works.** It had been on the menu for years bound to
+  nothing at all.
+- **PgUp, PgDn, Pause and Ins work from any tool window**, not only from the call
+  and exchange fields. The band map, the log and the cluster console still page
+  with PgUp and PgDn, which is the point of the exception.
+- **Ten menu items stop showing their shortcut twice** -- Increment Time +1
+  through +10.
+
+#### Diagnostics
+
+- **tr4w.log is one file and is never rolled.** It had a 10 MB limit with a single
+  backup, which at TRACE level is about eleven minutes -- so the evidence of a
+  problem was routinely overwritten before anyone looked at it. It appends now.
+  Keep an eye on its size if you run at TRACE: roughly 100 MB an hour.
+
+#### Upgrading from 4.x
+
+- **The first-run conversion reads the folder your old configuration is actually
+  in.** If TR4W had been started with a custom settings location, the converter
+  looked beside the new file instead, and reported "there is no old configuration
+  to convert" about a station that had one.
+
+#### How much of this has been on a radio
+
+- **The Icom LAN work was done on real radios over the network** -- an IC-9700 and
+  an IC-7760. Every defect above was found and diagnosed there, not by reading
+  code: the ninety-second dropout came out of a ten-minute soak on the IC-7760
+  with a packet capture running (60,719 packets), and the band and credential
+  defects were both found on the IC-9700 over LAN. The band enumeration was
+  re-run against the IC-9700 after the fix and still reports all three of its
+  bands.
+- **One thing is still owed on that hardware:** a fresh soak of the new timer
+  thread on the IC-7760. Five keepalive and watchdog handlers inside it are
+  running for the first time -- they had never once executed before -- so the
+  thing to watch is a "CI-V data timeout" appearing during normal operation.
+- **The change that stops a radio-initiated teardown wedging shutdown or
+  reconnect has not been on a radio at all.** It landed the same day as this
+  release and is pinned by a test that drives real UDP through a real listener
+  thread, measured failing against the defect it fixes. That is not a radio.
+- **The menu and keyboard changes are verified on Windows only.** They have not
+  been built or run on Linux (gtk2), and nobody has run them on macOS.
+
+### 5.0.22 (2026-09-24) - NY4I
+
+#### Stability
+
+- **Preferences opens again.** In 5.0.20 and 5.0.21 it failed to open at all,
+  reporting an error about reading a button property. The check that was supposed
+  to catch that now loads each window the way the program does.
+
+### 5.0.21 (2026-09-24) - NY4I
+
+#### Data files
+
+- **A country file or TRMASTER.DTA you download no longer overwrites the copy TR4W
+  shipped.** Downloads go to TR4W's own writable data folder and are preferred
+  from then on. The old behaviour could not work at all on macOS, where the
+  shipped copy is inside a signed application bundle, or on Linux, where it is
+  inside a read-only AppImage.
+- **After downloading a country file, the file TR4W reloads is the one it just
+  downloaded.** On macOS it reported success having reloaded the old copy.
+- **The country file shipped with TR4W is the current one.**
+
+#### DX cluster
+
+- **The console no longer grows without limit.** A contest-length session left six
+  figures of lines in the window, which is what made resizing it crawl, and
+  beachball on a Mac. TELNET CONSOLE LINES sets the cap -- default 10,000, range
+  1,000 to 100,000. Freezing the window still freezes it: nothing is trimmed out
+  from under a view you deliberately pinned.
+- **Cluster traffic is no longer written to a file every session.** The last 200
+  lines are kept in memory and written out only when something has gone wrong. For
+  a complete capture, the "log all telnet traffic" setting still does exactly that.
+
+#### macOS
+
+- **The disk image opens with an Applications folder beside TR4W**, so installing
+  is a drag from one to the other.
+
+#### Removed
+
+- **The /EXPORTTRW and /EXPORTDB command-line switches are gone.** TR4W reads its
+  log from the contest database and there is no longer a second option. Opening a
+  4.x binary log still imports it.
 
 ### 5.0.20 (2026-09-21) - NY4I
 

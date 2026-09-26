@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 004fc3bb -->
+<!-- D12-CHANGELOG-BASELINE: c8e623e5 -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -46,6 +46,323 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 ---
 
 ## 5.0.x — September 2026
+
+### 5.0.23 (2026-09-26) - NY4I
+
+#### The Icom LAN transport's six timers had NEVER fired (`src/uIcomNetworkTransport.pas`, `uIcomNetworkTypes.pas`)
+
+They were LCL `TTimer`s created on an Indy UDP reader thread, and the Win32 `TTimer`
+is `SetTimer(0, 0, ...)`: `WM_TIMER` is posted to the CALLING thread's queue and a
+reader thread has no message pump. Measured over 663 s and 60,719 packets: 0
+self-initiated pings (our count equalled the radio's exactly, so we only ever
+replied), 0 idle keepalives against 6,295 from the radio, 0 token renewals against
+a 60 s interval. The radio expires a session ~90.6 s after login (13 events, sigma
+~0.25 s) and stops answering CI-V; recovery takes 12.3 s, so the previous session's
+expiry killed the next one -- the whole of the observed ~103 s cycle.
+
+- `TIcomTimerThread`, one owned `TThread` ticking every 50 ms against the six
+  deadlines. Same `ICOM_TIMER_*` ids, so no protocol call site changed. Handlers run
+  OUTSIDE the deadline lock because they send and may disconnect, and both the tick
+  and each handler are exception-guarded -- a dead timer thread presents as the
+  radio dropping us a minute later, which is the failure being fixed. The unit no
+  longer needs `ExtCtrls` or a widget set.
+- The probe that confirmed the diagnosis on the bench is NOT kept: renewal driven
+  off the radio's inbound pings is the wrong shape, and two mechanisms doing one job
+  drift.
+
+#### `Disconnect` was idempotent on STATE, so a rejected login leaked its socket (`src/uIcomNetworkTransport.pas`)
+
+`HandleLoginResponse` cannot call `Disconnect` -- it runs on the control socket's own
+Indy listener thread and `Disconnect` frees that `TIdUDPServer` -- so it set
+`FAuthFailed`, stopped the timers and set the state, leaving teardown to the polling
+thread. That thread then hit `if FState = icsDisconnected then Exit` and freed
+nothing; the destructor's guard was the same wrong test. Every rejected login leaked
+a bound UDP socket and a live listener thread pointing at freed memory: ports 58522,
+58524 and 58526 created within 2.1 s with exactly ONE `DestroySockets` after them,
+a thread logging 88 ms past its object's free, and `FMyId` read out of reused heap.
+
+- Idempotent on RESOURCES; `Destroy` and `Connect` call it unconditionally. Every
+  line carries an instance id (`[IcomTransport#3:IC-9700]`) because `FRadioName` is
+  empty until capabilities arrive, which is exactly when several transports exist.
+- It is also most of the orphaned-session problem: the disconnect packet only goes
+  out when `Disconnect` actually runs, and after a rejected login `FRemoteId` IS set.
+  Counted over one log: 14 calls, 2 early exits, ONE `$0005` ever sent.
+- `FGUID` deleted -- declared, never assigned, read once, so the non-MAC branch sent
+  sixteen zero bytes. It could not be filled either: the radio's `ConnInfo` arrives
+  after our stream request, so there is nothing to echo when it is needed.
+
+#### One owner tears an Icom session down, and `Lint-IcomTeardownOwner` keeps it that way (`src/uIcomNetworkTransport.pas`, `build/Lint-IcomTeardownOwner.ps1`)
+
+`DestroySockets` does `Socket.Active := False`, which JOINS that server's listener
+thread. `HandleControlResponse`'s `$0005` arm called `Disconnect` from that listener,
+so the thread joined ITSELF with `FLifecycleLock` HELD -- not contended, so no lock
+tuning reaches it. `HandleStatusPacket`'s `Error = $FFFFFFFF` arm was the same hazard
+and no review had found it, which is why this is a lint and not two hand fixes:
+which thread a routine runs on is not derivable from the text. It names the 13
+reader-thread routines, blanks comments and string bodies through `PascalSource`,
+fails on a bare `Disconnect` in any of them, and has a FLOOR so a rename cannot
+quietly drop coverage.
+
+- `FSessionRevoked` becomes `FTeardownRequested` + `FTeardownReason`, both under
+  `FTimerLock` at every access -- a managed string assigned across threads is a torn
+  refcount, which is heap corruption rather than a wrong message. `FTimerLock` stays
+  a leaf, taken inside `FLifecycleLock` and never the reverse.
+- After this NO reader thread takes `FLifecycleLock` at all.
+- The test stands up a real `TIdUDPServer` on 127.0.0.1, handshakes and sends an
+  unsolicited `$0005`, arriving on the real listener thread; it asserts
+  `icsDisconnected`, set AFTER `DestroySockets` returns. Measured both ways: with the
+  arm reverted the test FAILS rather than hanging.
+
+#### A saved radio setting never reached the running radio (`src/uRadioConfigApply.pas`, `uRadioConfigStore.pas`, `uRadioPolling.pas`, `ui/lcl/uPrefsForm.pas`)
+
+`ApplyRadioToSlot` is the only route from the radio library into the running program
+and it had two callers: startup, and `ApplyProfile` behind Activate. Save/OK/Apply
+call `ApplyNow(False)`, which returns first -- so the library held the new password
+and `rig^.NetworkPassword` held the startup one, and `ApplyNetworkCredentials`
+faithfully pushed the stale value and logged success.
+
+- `ApplyRadioToSlot` records what it rendered (at the render, not at the call sites)
+  and `ApplyNow` asks `ActiveRadioSettingsChanged`. Not a blanket re-apply: editing a
+  radio you are not using restarts nothing.
+- The credential log lines report the password's LENGTH. `0 chars` against one just
+  typed names this defect outright; the value is never logged.
+- Both auth arms in `pFactoryRadio` used to `Break` out of the polling thread; they
+  report once and retry every 60 s. `FAuthFailed` is now cleared in `Connect` -- it
+  was assigned in one place and cleared in none.
+
+#### `TRadioBand` stopped at `rb70cm` (`src/radioFactory/uRadioBand.pas`, `MainUnit.pas`)
+
+`FreqToRadioBand(1295196200)` gave `rbNone`, `GetTR4WBandFromNetworkBand` gave
+`NoBand`, and `uRadioPolling`'s `NoBand` guard correctly refused to propagate a
+sentinel -- so the display held 432 while the frequency read 1295.20640 MHz. Not a
+display defect only: `MainUnit` assigns `CE.Band := ActiveBand`, so the QSO was
+logged, duped and scored on 432. 222 MHz was quieter and worse -- it fell inside the
+170..500 MHz window and reported 70 cm with no sentinel and no guard.
+
+- `rb125cm`, `rb33cm`, `rb23cm` inserted in ascending order with windows, calling
+  frequencies and `BandType` mappings. Nothing persists these ordinals; the only
+  enum-indexed use is `TIcomRadio`'s band-memory array, which the compiler resizes.
+- `MainUnit.GetTR4WBandFromNetworkBand` was a hand-maintained inverse of
+  `uRadioBand.GetRadioBandFromBandType` in a unit no test can link, and the two had
+  drifted the same way. It is `GetBandTypeFromRadioBand` beside its own inverse now.
+  The old `else` arm logged and fell out with `Result` NEVER ASSIGNED.
+- The test seam is the drift: `uTestRadioBand` walks every `FreqModeArray` entry at
+  `frMin` and its midpoint and fails if the permissive classifier disagrees with the
+  strict one. It fails on the pre-fix tree at the 222 MHz row.
+
+#### The band plan is the radio's (`src/radioFactory/uRadioBand.pas`, `uFactoryRadioBase.pas`, `uRadioIcomBase.pas`, `uRadioIcom705.pas`, `uRadioIcom7110.pas`, `uRadioIcom9700.pas`)
+
+Band stepping was a hand-typed `case currentBand of` in the Icom family base, copied
+near-identically into the IC-705 and IC-7110 units where the only difference was one
+skipped band -- three lists of what a radio has, free to disagree, all stopping at
+70 cm. Measured on NY4I's IC-9700 over LAN: `$1E $00` answered a BCD count of 3 and
+`$1E $01 <n>` returned 144-148, 430-450 and 1240-1300 MHz, while `$02` returned only
+the current band's pair and NAKed every argument.
+
+- `StepRadioBand`, `NextSupportedRadioBand`, `TFactoryRadioBase.NextSupportedBand`
+  walk the enum and filter on the existing coverage table (empty = no opinion), so no
+  class names a band and HF is unchanged.
+- `DeclareCoverage` is the fallback for a model that cannot be asked; only the IC-705
+  and IC-7110 use it, and their one fact each now reaches band-up/down too, because
+  `logstuff.BandChange` asks `CoversFrequency`. The IC-9700 declares nothing.
+- Second defect found by the measurement: `QueryBandEdgesOnce` sent a bare `$1E $01`
+  probe knowing the rig would NAK it, and the NAK handler cannot tell a refused probe
+  from a radio with no `$1E`. It set `FTXBandsUnsupported` and logged at INFO that the
+  radio rejects `$1E`, 30 ms before that radio delivered all three of its bands. It
+  survived on send-queue ordering alone. The frame is gone.
+
+#### A menu item owns its keystroke (`src/uMenu.pas`, `uAccelerators.pas`, `uMainWindowProc.pas`, `MainUnit.pas`, `ui/lcl/uEditingKeys.pas`, `uAppInputHooks.pas`, `uMainForm.pas`)
+
+The builder composed `'Band Up'#9'Alt+B'` and deliberately left `ShortCut` unset so
+nothing would bind the key twice. The LCL's Win32 menus are always owner-drawn and
+that path puts the caption through `DrawText` with `DT_EXPANDTABS` -- a tab STOP
+chosen by the caption's own length -- while the right-aligned column is drawn from
+`AMenuItem.ShortCut` and nothing else (`win32wsmenus.pp` 472, 584, 930, 1162). There is
+no display-without-binding, so the column IS the binding.
+
+- 74 of the 94 accelerator rows became a real `ShortCut`, then 79 once
+  `TCustomForm.IsShortcut` was overridden, then 83. `AcceleratorRowBelongsToTheMenu`
+  is the single rule both the builder and `uAppInputHooks` read, so one-owner-per-
+  keystroke holds by construction. `uTestMenuShortcuts` pins the split, proves no
+  keystroke is claimed twice, and round-trips every key/modifier through
+  `ShortCutToKey`.
+- **The third answer was `TCustomForm.IsShortcut`** (`forms.pp:721`), which is virtual
+  and is the door `Application.OnShortCut` is fired from inside. Returning False
+  WITHOUT calling inherited is exactly "skip the menu, let the control have it", so
+  Ctrl+A/C/V carry shortcuts and still copy in a focused edit. `uEditingKeys` is the
+  one place that answers "does the focused control need this keystroke", read by both
+  the hook and the override, with the unconditional telnet arm AHEAD of
+  `Settings.Operating.StandardEditKeys` (False by default) -- lifting the setting-
+  gated predicate alone would have reopened Issue #23 silently.
+- **Four unmodified keys joined the column** -- Pause, Ins, PgUp, PgDn -- each named
+  with its reason in `UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN`, a list of four beside the
+  existing list of four rather than a relaxed guard. `IsAScrollingKeystroke` sits
+  beside `IsAStandardEditingKeystroke` and both are answered by one predicate; the
+  list box is the case that genuinely needs it, since a native Win32 list box answers
+  PgUp in its own window procedure, AFTER the shortcut test.
+- **Deleting the second owner was the real work**: `uMainWindowProc.EntryKeyDown`
+  answered `VK_PRIOR`/`VK_NEXT` with `ProcessMenu` and neither arm set `Key := 0`, so
+  the command would have fired TWICE per press.
+- **Tab, Esc and backtick keep `scNone` and lose the hint**: Tab would stop moving
+  focus in every modeless window, Esc would stop forms closing (`Lint-FormDefaults`
+  asserts every form does), and the backtick is a PRINTABLE CHARACTER.
+- `Alt+-` was `acInstall: false` because NOTHING bound it anywhere -- advertised and
+  dead for years, recorded in the 2026-08-17 audit and closed here. It and Alt+X are
+  named in `DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND`, a list of exactly two.
+- Ten captions were showing their shortcut twice (Increment Time +1..+10, spelling
+  `'+1'#9'Alt+1'` by hand). The inline-key mechanism is DELETED, not left inert, and
+  the caption test builds the real menu and asserts no caption carries a tab.
+- **gtk2 is NOT verified** -- accelerators there are native accel groups and the
+  ordering relative to LCL key delivery was not read. Cocoa gives Cut/Copy/Paste to a
+  focused `NSTextView` before the menu, so the LCL form is never asked.
+- Corrected in passing: three comments claiming PgUp/PgDn are bound by "the MESSAGE
+  LOOP, tr4w.lpr:1589-1590". That loop is gone; `tr4w.lpr` runs `Application.Run`.
+
+#### The log is one file that is never rolled (`src/uProgramMain.pas`)
+
+`TLogRollingFileAppender` was used with Log4D's own defaults -- 10 MB and ONE backup
+-- which nothing overrode. Measured during the 2026-09-24 Icom LAN soak: the file
+filled in 5.5 minutes, so the retained history was about ELEVEN MINUTES. A roll
+RENAMES the live file, so an operator watching it in an editor silently loses the
+run; it cost exactly that twice in one evening. `TLogFileAppender` instead, with
+append passed explicitly. **The rate is the thing to watch, not the ceiling**:
+~30 KB/s at TRACE is ~108 MB an hour and 42,423 of 43,000 lines in a measured segment
+were the Icom transport logging every packet. Gating that behind its own switch is
+the real fix and is not done here.
+
+#### The converter is told which ini to read (`src/ui/lcl/uFirstRunConvert.pas`, `src/uLegacyConversionCheck.pas`)
+
+The first-run offer launched `tr4wconvert --settings <destination>` and named the
+detected ini nowhere, so the converter derived its INPUT from its OUTPUT
+(`GIniFile := DefaultIniFile(GSettingsFile)`). The two agree in an ordinary install
+and diverge under `--settings`, because the detected ini comes from
+`SettingsFilePath` (which does NOT honour `--settings`) and the destination from
+`TR4WConfigFileName` (which does). Measured with `--report-only`: an ini beside the
+destination converts 2 settings, the same ini with the destination elsewhere converts
+0 and prints "There is no old configuration to convert". `LegacyConversionArguments`
+names both paths and re-derives neither. The review's second claim -- that a zero-
+settings run could report success -- does not hold: `uFirstRunConvert` tests
+`FileExists` on the destination, not the exit code.
+
+#### `ShortString(s)` IS a conversion -- the Kenwood defect does not exist (`test/unit/uTestShortStringConversion.pas`, `CLAUDE.md`, `uLogStore.pas`, `uNewContestCommands.pas`)
+
+CLAUDE.md stated categorically that the cast reinterprets the string's POINTER.
+Measured against FPC 3.2.2 / i386-win32 in this tree's exact mode, the cast and the
+plain assignment emit the SAME conversion and give byte-identical results across
+ASCII, non-ASCII, over-length and narrow `string[N]`. **The only difference is a
+warning, and it cuts the other way**: the assignment raises the narrowing warning and
+the cast suppresses it, so "correcting" the two Kenwood lines would have RAISED a
+ratcheted build gate while changing nothing. What really bit this tree was
+misattributed: a `ShortString` has no NUL terminator, so `@s[1]` handed to a
+`PAnsiChar` runs past the text -- a fact about the LAYOUT. Five tests pin the
+semantics, the CLAUDE.md row is retracted and the two source comments repeating it
+are corrected.
+
+#### `bench_icombands` is kept (`test/bench/bench_icombands.lpr`, `docs/ICOM_BAND_ENUMERATION.md`)
+
+Written to settle one question and deleted afterwards; it decided a design in eight
+seconds that code reading could not, and it exposed the NAKed-probe defect above,
+which no gate here can reach. READ-ONLY -- every frame it causes is a read. It
+disconnects through a single exit path, because a networked Icom holds an abandoned
+session to its own ~90 s expiry. Credentials come from argv and nowhere else. Nothing
+builds it: `Build-Bench.ps1` is called by no gate and no workflow.
+
+### 5.0.22 (2026-09-24) - NY4I
+
+#### `asrLeft` is a CONSTANT, not an enum member, so Preferences would not construct (`src/ui/lcl/uPrefsForm.lfm`, `build/lintlfm/`)
+
+`EReadError: Error reading btnOK.AnchorSideRight.Side: Invalid value for property`.
+`controls.pp:216-217` declares `asrLeft = asrTop` and `asrRight = asrBottom` as
+constants; an `.lfm` streams an enum BY NAME and there is no member called `asrLeft`,
+so the loader rejected the value and the whole form failed. Three sites from
+`5eca4b6e`'s autosize work, now `asrTop`/`asrBottom` -- the same ordinals under their
+real member names.
+
+**Why two green checks said it was fine.** `Lint-LFMProperties` value-checked only
+UNDOTTED property lines (`Pos('.', ...) = 0`), so for `AnchorSideRight.Side` it
+confirmed `TButton` publishes `AnchorSideRight` and looked at nothing else. The 41
+dotted enum and set values in the tree had never been checked by anything. `lintlfm`
+now follows a dotted name the way the loader does -- `GetPropInfo`, the sub-object's
+class from the `tkClass` `PropType`, `GetPropInfo` again -- and value-checks the LAST
+segment: 676 values becomes 717. A deeper segment that will not resolve is a MISS,
+not a failure, because `DefineProperties` invents names RTTI does not carry and
+`Items.Strings` is the live example.
+
+### 5.0.21 (2026-09-24) - NY4I
+
+#### A downloaded data file never overwrites the shipped one (`src/uAppPaths.pas`, `src/trdos/fcontest.pas`, `src/uProgramMain.pas`)
+
+Alt-O wrote CTY.DAT over `tr4w/target/cty.dat` -- a TRACKED file, so every developer
+who updated their country file had a permanently modified working tree. Gitignoring
+it is the wrong answer: `full.nsi` packages that path and the golden corpus's output
+depends on which country file is present. The WRITE LOCATION is the defect, and
+`DataDir` is wrong on all three platforms for three different reasons -- the working
+directory (which on a developer's machine is the repository), `Contents/Resources`
+inside a signed notarized bundle, and a read-only AppImage mount.
+
+- `DownloadedDataDir` is the settings directory: `target\settings\` on Windows,
+  `~/Library/Application Support/TR4W` on macOS, `$XDG_CONFIG_HOME/tr4w` on Linux.
+  One body, no new per-platform arms. `FCONTEST.SetUpFileNames` searches downloaded,
+  then the contest directory, then shipped, and LOGS WHICH TIER ANSWERED. The
+  download tier must be first: on Windows the contest and shipped directories ARE
+  THE SAME directory.
+- Second defect out of reading it: `CTYDownloadFinished` reloaded the name resolved
+  at STARTUP, so on macOS it reported "downloaded... reloaded successfully" having
+  reloaded the old bundle copy. On Windows it worked by coincidence.
+- `EnsureCountryFile` (first run) was the one site the first commit could not take
+  and follows in `5fdb254b`. TRMASTER.DTA and the POTA park list share the machinery.
+- `tr4w/target/cty.dat` is updated to the current file (106,119 bytes against the
+  tracked 102,208) -- it had been drifting because Alt-O wrote over it.
+
+#### The DX cluster console is capped, and its session log becomes an in-memory ring (`src/uTelnet.pas`, `src/uTelnetTrace.pas`, `src/uCrashLog.pas`, `src/uSettingsModel.pas`)
+
+Nothing trimmed `lstConsole.Items` and the only emptier was the Clear button, so a
+contest-length session left six figures of rows in an `lbOwnerDrawVariable` list --
+which asks `MeasureItem` once per row on every reload, making one settled resize
+O(rows) of main-thread work. That is the cost under the macOS beachball; it is NOT
+the crash, which was a use-after-free fixed in `6f6a8d92`.
+
+- `TelnetConsoleTrim` caps what the window holds, at the add site, never from a paint
+  or measure callback. Rows leave from the TOP, so trimming is suppressed while the
+  window is frozen and the deferred trim runs on unfreeze; the selection is adjusted
+  by the number of rows removed. `TELNET CONSOLE LINES`, default 10,000, range
+  1000..100000 -- a published property plus one `RegisterModelSetting` line.
+- **Then the file went entirely.** A reversal, two days after the session log was
+  added, and NY4I absorbed the cost of it. `uTelnetTrace` holds the last 200 lines
+  (~20 kB, short enough to paste into an email unedited), a leaf with no LCL and no
+  logger, which is what makes its wrap arithmetic testable.
+- It reaches the disk only when something has gone wrong: `uCrashLog` gains
+  `RegisterCrashContext` / `WriteCrashContext` and `uTelnet` registers from its OWN
+  initialization. THE ARROW HAS TO POINT THIS WAY -- `uCrashLog` links into
+  `tr4wserver`, which has no LCL, and a `TF -> uCrashLog -> Forms` edge once dragged
+  the widget set into a console program for nine days.
+- The deliberate full-capture switch (`log all telnet traffic`) is untouched.
+
+#### The log source is the database, and there is no longer a second one (`src/uLogSource.pas`, `src/uProgramMain.pas`)
+
+`/EXPORTTRW` and `/EXPORTDB` were the only two assignments to `LogSourceKind` in the
+tree, so removing the first left the variable with ONE REACHABLE STATE and made the
+`else` arm of eleven `case` statements unreachable code that compiles clean -- there
+is no compiler diagnostic for an unreachable case arm, only for a missing one. A
+two-state variable with one reachable state is a comment that compiles, and a worse
+one than prose. `TLogSourceKind`, `lsBinary`/`lsDatabase`, `LogSourceKind`,
+`LogSourceDescription`, the eleven cases and the `/EXPORTDB` arm are gone;
+`uLogSource` no longer uses `PostUnit` and `uProgramMain` no longer uses
+`uLogSource`. **The import path is untouched** -- `uLogBinaryFile` and `uLogImport`
+read a `.TRW` to BUILD a database, with six fixtures pinning it. Orphans were
+established by a call-graph walk, not inspection.
+
+#### The `.dmg` carries an Applications link (`tr4w/build/mac-dmg.sh`)
+
+The conventional macOS layout, so installing is a drag. **The link must not go into
+`$stage`**, because that is also the tarball's root and `deploy-mac.sh` extracts it
+into `~/Applications` -- a tar member named `Applications` pointing outside the
+archive is at best confusing. The image is built from a `ditto` copy of the stage
+plus the link; `tar tzf` reports no `Applications` member. `ditto`, not `cp`, because
+by that point the stage holds a SIGNED and STAPLED bundle and `ditto` preserves
+extended attributes, ACLs and symlinks -- measured on `mac-ci` against the real
+5.0.20 stage, mounted, with `stapler validate`, `codesign --verify --deep` and
+`spctl --assess` all rc 0.
 
 ### 5.0.20 (2026-09-21) - NY4I
 
