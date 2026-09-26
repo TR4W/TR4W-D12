@@ -40,8 +40,9 @@ type
       procedure Test_NoKeystrokeHasTwoOwners;
       procedure Test_TheGuardedKeysStayWithTheHook;
       procedure Test_TheThreeEditingKeysJoinTheColumn;
-      procedure Test_TheTwoNamedDisplayOnlyRowsAreBound;
-      procedure Test_TheInlineKeyIsParenthesised;
+      procedure Test_TheFourUnmodifiedKeysJoinTheColumn;
+      procedure Test_TheNamedDisplayOnlyRowsAreBound;
+      procedure Test_TheCaptionIsJustTheCaption;
       procedure Test_MenuCommandExistsFindsAndMisses;
    public
       procedure RunAllTests; override;
@@ -124,10 +125,16 @@ begin
      override: TTR4WMainForm.IsShortcut declines the keystroke when the focused
      control needs it (uEditingKeys, and uTestEditingKeys pins the rule).
 
+     83 AND 11 LATER STILL, when NY4I moved four of the seven UNMODIFIED keys
+     into the column. Pause (10500) and Ins (10501) were acInstall:true and came
+     off the hook's side -- 13 - 2 = 11 -- while PgUp (10503) and PgDn (10504)
+     are acInstall:false and belonged to NEITHER side, being bound by the entry
+     field's own key handler until that arm was deleted in the same change.
+
      The numbers are pinned because a row changing sides is a decision about
      who answers a keystroke, and it must never happen as a side effect. *)
-   CheckEquals(79, menuOwned, 'rows a menu item owns');
-   CheckEquals(13, hookInstalled, 'rows the input hook still installs');
+   CheckEquals(83, menuOwned, 'rows a menu item owns');
+   CheckEquals(11, hookInstalled, 'rows the input hook still installs');
 end;
 
 procedure TMenuShortcutTests.Test_MenuOwnedRowsQualify;
@@ -146,15 +153,22 @@ begin
 
       row := ACCELERATORS[i];
 
-      (* acInstall, OR ONE OF THE TWO ROWS NAMED IN uMenu. Written as two
-        literal ids rather than by calling uMenu's own list, so that adding a
-        third exception fails HERE and has to be argued for. *)
-      CheckTrue(row.acInstall or (row.acId = 10320) or (row.acId = 10337),
-                'a menu-owned row installs a binding, or is one of the two '
+      (* acInstall, OR ONE OF THE FOUR ROWS NAMED IN uMenu. Written as literal
+        ids rather than by calling uMenu's own list, so that adding a fifth
+        exception fails HERE and has to be argued for. *)
+      CheckTrue(row.acInstall     or (row.acId = 10320) or (row.acId = 10337)
+                or (row.acId = 10503) or (row.acId = 10504),
+                'a menu-owned row installs a binding, or is one of the four '
                 + 'named display-only rows: ' + row.acDisplay);
-      CheckTrue(row.acCtrl or row.acAlt or row.acShift,
-                'a menu-owned row has a modifier -- an unmodified key is typing: '
-                + row.acDisplay);
+
+      (* A MODIFIER, OR ONE OF THE FOUR UNMODIFIED ROWS NY4I NAMED. Same
+        reasoning, and the two lists are not the same list: PgUp and PgDn are in
+        BOTH, which is why uMenu keeps them apart. *)
+      CheckTrue(row.acCtrl or row.acAlt or row.acShift
+                or (row.acId = 10500) or (row.acId = 10501)
+                or (row.acId = 10503) or (row.acId = 10504),
+                'a menu-owned row has a modifier, or is one of the four named '
+                + 'unmodified rows: ' + row.acDisplay);
       CheckTrue(MenuCommandExists(row.acId),
                 'a menu-owned row has a menu item: ' + row.acDisplay);
       CheckTrue(MenuShortCutFor(row.acId) <> scNone,
@@ -262,28 +276,36 @@ var
 begin
    BeginTest('Test_TheGuardedKeysStayWithTheHook');
 
-   (* EACH OF THESE IS A CLOSED DEFECT that a ShortCut would reopen, because a
-     menu shortcut is answered from ANY form:
+   (* THREE KEYSTROKES, AND EACH IS HERE FOR A REASON OF ITS OWN -- which is the
+     point of naming them one by one rather than deriving them from the rule.
+     Relaxing the rule fails HERE, where the reasons are.
 
-       Tab, Esc                 the radio editor closed on Tab, 2026-09-09;
-       Ins, `, Pause, Enter     unmodified keys, eaten inside any edit field.
+       Tab (10506)    THE WIDGET SET'S OWN NAVIGATION. A ShortCut on Tab is
+                      tested before the key reaches the focused control, so
+                      focus would stop moving between fields in every tool
+                      window. The radio editor closed on Tab, 2026-09-09.
+       Esc (10502)    ALSO NAVIGATION. Lint-FormDefaults asserts that every form
+                      closes on Escape and TApplication.DoEscapeKey is how that
+                      happens; a ShortCut would take the key first.
+       `   (10507)    A PRINTABLE CHARACTER. An unmodified shortcut on it would
+                      make the backtick untypeable in every edit box in the
+                      program, the callsign field included.
 
-     Named one by one rather than derived from the rule, so that relaxing the
-     rule fails HERE, where the reasons are written down.
+     Enter (10651) is on the list too and is a different case again: it has no
+     menu row at all, so there is nothing for a shortcut to hang on.
 
-     CTRL+A, CTRL+C AND CTRL+V ARE NO LONGER ON THIS LIST (2026-09-26), and the
-     sentence above is why they could leave it: a menu shortcut CAN now be
-     declined for one window. TCustomForm.IsShortcut is virtual, so
-     TTR4WMainForm returns False without calling inherited when the focused
-     control needs the key -- Issue #23 (the DX cluster window) and NY4I's
-     2026-09-15 report (a field on a non-modal dialog) are both still closed,
-     by uEditingKeys rather than by keeping the key out of the menu.
+     CTRL+A, CTRL+C AND CTRL+V LEFT THIS LIST ON 2026-09-26 because a menu
+     shortcut CAN be declined for one window: TCustomForm.IsShortcut is virtual,
+     so TTR4WMainForm returns False without calling inherited when the focused
+     control needs the key. Issue #23 (the DX cluster window) and NY4I's
+     2026-09-15 report (a field on a non-modal dialog) stay closed by
+     uEditingKeys rather than by keeping the key out of the menu.
 
-     THE SEVEN BELOW ARE A DIFFERENT CASE AND MUST NOT FOLLOW. They are
-     UNMODIFIED keystrokes, so giving them a shortcut would not merely move who
-     draws the key: it would widen WHERE the key fires, from the one window that
-     answers it today to every form in the program. That is a behaviour decision
-     for NY4I and it has not been made. *)
+     PAUSE, INS, PGUP AND PGDN LEFT IT THE SAME DAY, by NY4I's decision, and
+     that is a WIDENING he was shown and accepted: those four now fire from
+     every modeless window rather than only where they fired before. None of
+     them is navigation and none of them is a character anybody types, which is
+     exactly what separates them from the three above. *)
    for i := Low(ACCELERATORS) to High(ACCELERATORS) do
       begin
       if not AcceleratorRowBelongsToTheMenu(i) then
@@ -293,32 +315,56 @@ begin
 
       CheckTrue((ACCELERATORS[i].acDisplay <> 'Tab')    and
                 (ACCELERATORS[i].acDisplay <> 'Esc')    and
-                (ACCELERATORS[i].acDisplay <> 'Ins')    and
-                (ACCELERATORS[i].acDisplay <> 'Pause')  and
-                (ACCELERATORS[i].acDisplay <> 'PgUp')   and
-                (ACCELERATORS[i].acDisplay <> 'PgDn')   and
                 (ACCELERATORS[i].acDisplay <> '`')      and
                 (ACCELERATORS[i].acDisplay <> 'Enter'),
                 'the hook must keep ' + ACCELERATORS[i].acDisplay);
       end;
 
-   { And the other direction, id by id: every one of the seven unmodified rows
-     still reports no shortcut, so its item advertises the key in its caption.
+   { And the other direction, id by id: the three rows still report no shortcut.
      THIS IS THE HALF THAT MUST NOT BE WIDENED. }
-   CheckEquals(integer(scNone), integer(MenuShortCutFor(10500)),
-               'Pause is not a menu shortcut');
-   CheckEquals(integer(scNone), integer(MenuShortCutFor(10501)),
-               'Ins is not a menu shortcut');
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10502)),
                'Esc is not a menu shortcut');
-   CheckEquals(integer(scNone), integer(MenuShortCutFor(10503)),
-               'PgUp is not a menu shortcut');
-   CheckEquals(integer(scNone), integer(MenuShortCutFor(10504)),
-               'PgDn is not a menu shortcut');
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10506)),
                'Tab is not a menu shortcut');
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10507)),
                'the spot key is not a menu shortcut');
+end;
+
+procedure TMenuShortcutTests.Test_TheFourUnmodifiedKeysJoinTheColumn;
+begin
+   BeginTest('Test_TheFourUnmodifiedKeysJoinTheColumn');
+
+   (* NY4I, 2026-09-26: FOUR OF THE SEVEN UNMODIFIED KEYS, AND EXACTLY FOUR.
+
+     What makes each safe is stated beside
+     uMenu.UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN. What makes PgUp and PgDn safe is
+     in two more places as well, because they had a second owner: the entry
+     field's arm in uMainWindowProc is DELETED in the same change, and
+     uEditingKeys declines both keys to a focused grid, list box, memo, combo or
+     tree view so the band map and the DX cluster console keep paging. *)
+   CheckEquals(integer(Menus.ShortCut(VK_PAUSE, [])),
+               integer(MenuShortCutFor(10500)),
+               'Focus in main window owns Pause');
+   CheckEquals(integer(Menus.ShortCut(VK_INSERT, [])),
+               integer(MenuShortCutFor(10501)),
+               'Toggle insert mode owns Ins');
+   CheckEquals(integer(Menus.ShortCut(VK_PRIOR, [])),
+               integer(MenuShortCutFor(10503)),
+               'CW Speed Up owns PgUp');
+   CheckEquals(integer(Menus.ShortCut(VK_NEXT, [])),
+               integer(MenuShortCutFor(10504)),
+               'CW Speed Down owns PgDn');
+
+   (* AND THE MODIFIED PAGE KEYS ARE UNTOUCHED AND STILL DIFFERENT COMMANDS.
+     Ctrl+PgUp and Ctrl+PgDn are the INACTIVE radio's CW speed, which is why
+     uEditingKeys declines only the UNMODIFIED pair: declining these would take
+     away a keystroke the operator pressed on purpose. *)
+   CheckEquals(integer(Menus.ShortCut(VK_PRIOR, [ssCtrl])),
+               integer(MenuShortCutFor(10513)),
+               'the inactive radio keeps Ctrl+PgUp');
+   CheckEquals(integer(Menus.ShortCut(VK_NEXT, [ssCtrl])),
+               integer(MenuShortCutFor(10514)),
+               'and Ctrl+PgDn');
 end;
 
 procedure TMenuShortcutTests.Test_TheThreeEditingKeysJoinTheColumn;
@@ -353,9 +399,9 @@ begin
       end;
 end;
 
-procedure TMenuShortcutTests.Test_TheTwoNamedDisplayOnlyRowsAreBound;
+procedure TMenuShortcutTests.Test_TheNamedDisplayOnlyRowsAreBound;
 begin
-   BeginTest('Test_TheTwoNamedDisplayOnlyRowsAreBound');
+   BeginTest('Test_TheNamedDisplayOnlyRowsAreBound');
 
    (* NY4I, 2026-09-26: these two join the shortcut column.
 
@@ -375,51 +421,104 @@ begin
                integer(MenuShortCutFor(10337)),
                'File -> Exit and Exit Program carry the same keystroke');
 
-   (* AND THE OTHER TWO acInstall:false ROWS MUST NOT. PgUp and PgDn are bound
-     by THE ENTRY FIELD'S OWN KEY HANDLER -- uMainWindowProc:359-367, NOT the
-     message loop this said until 2026-09-26; that loop is gone and tr4w.lpr
-     runs Application.Run. A menu shortcut would be a second owner AND would
-     widen where PgUp changes CW speed, because the entry field's handler fires
-     only while a call or exchange field has focus. This is the half of the
-     change that must not be widened. *)
-   CheckEquals(integer(scNone), integer(MenuShortCutFor(10503)),
-               'CW speed up stays with the entry field');
-   CheckEquals(integer(scNone), integer(MenuShortCutFor(10504)),
-               'CW speed down stays with the entry field');
+   (* AND THE OTHER TWO acInstall:false ROWS ARE BOUND NOW TOO, which needed a
+     DELETION to be true: PgUp and PgDn were bound by the entry field's own key
+     handler (uMainWindowProc), so a shortcut would have been a SECOND owner and
+     would have fired each command twice -- the LCL calls the focused control's
+     OnKeyDown before it tests the shortcuts (wincontrol.inc:5881 then :5887),
+     and that arm did not consume the key. The arm is gone; the item owns it.
+
+     Pinned in Test_TheFourUnmodifiedKeysJoinTheColumn rather than repeated
+     here, because for these two the interesting question is not "is it bound"
+     but "is it bound ONCE". *)
+   CheckTrue(MenuShortCutFor(10503) <> scNone,
+             'CW speed up is bound, and by the menu item alone');
+   CheckTrue(MenuShortCutFor(10504) <> scNone,
+             'CW speed down likewise');
 end;
 
-procedure TMenuShortcutTests.Test_TheInlineKeyIsParenthesised;
+{ THE BUILT MENU, ONCE PER PROCESS, AND DELIBERATELY NEVER FREED.
+
+  BuildTR4WMainMenu publishes GMainMenu and GMenuIndex inside uMenu, and there
+  is no way to unpublish them, so freeing the owner would leave MenuItemById
+  handing out dangling pointers to whatever ran next. A test binary that exits
+  is the right place to hold one menu for the life of the run. }
+var
+   GTestMenuOwner: TComponent = nil;
+
+function BuiltMenuItem(const aId: word): TMenuItem;
 begin
-   BeginTest('Test_TheInlineKeyIsParenthesised');
+   if GTestMenuOwner = nil then
+      begin
+      GTestMenuOwner := TComponent.Create(nil);
+      InitializeMenuText;
+      BuildTR4WMainMenu(GTestMenuOwner, nil);
+      end;
 
-   (* A ROW THE MENU MAY NOT OWN READS AS A LABEL, NOT AS A COLUMN. The tab
-     that stood here was a DT_EXPANDTABS tab stop, so a minority of rows sat
-     at a stop of their own beside the real right-aligned column -- the ragged
-     menu NY4I photographed on 2026-09-26. *)
-   CheckEquals('Send Keyboard Input (Ctrl+A)',
-               CaptionWithInlineKey('Send Keyboard Input', 'Ctrl+A'),
-               'the key reads as part of the label');
-   CheckTrue(Pos(#9, CaptionWithInlineKey('Toggle insert mode', 'Ins')) = 0,
-             'no tab survives anywhere in the caption');
+   Result := MenuItemById(aId);
+end;
 
-   { A command with no accelerator is left exactly alone -- no empty
-     parentheses on the end of a perfectly good label. }
-   CheckEquals('Band Rescore', CaptionWithInlineKey('Band Rescore', ''),
-               'no key, no punctuation');
+procedure TMenuShortcutTests.Test_TheCaptionIsJustTheCaption;
+var
+   item: TMenuItem;
+   i:    integer;
+begin
+   BeginTest('Test_TheCaptionIsJustTheCaption');
 
-   { And the inverse, which is what a window title uses. }
-   CheckEquals('CW Speed Up',
-               CaptionWithoutInlineKey('CW Speed Up (PgUp)'),
-               'the title is the label alone');
-   CheckEquals('Bandmap', CaptionWithoutInlineKey('Bandmap'),
-               'a caption with no key is unchanged');
+   (* NY4I, 2026-09-26: THE THREE ROWS THE MENU MAY NOT OWN ADVERTISE NOTHING.
 
-   (* A PARENTHESIS IS NOT ENOUGH TO STRIP: a keystroke holds no space, and
-     that is what keeps an ordinary parenthesised caption intact. Without this
-     rule the inverse would silently eat a real part of a label. *)
-   CheckEquals('Edit Cabrillo Summary (Issue 914)',
-               CaptionWithoutInlineKey('Edit Cabrillo Summary (Issue 914)'),
-               'a parenthesised phrase is not a keystroke');
+     Their keystroke used to be spelled into the caption -- after a TAB, which
+     DrawText expands to a tab stop chosen by the caption's own length, and then
+     in PARENTHESES. He rejected both: "the caption is just the caption". So the
+     assertion is on the CAPTION THE BUILDER PRODUCES, not on a formatting
+     helper, because the helper is deleted and the builder is what puts text on
+     screen.
+
+     Esc's hint was redundant on top of that -- the caption is the word
+     "Escape". *)
+   item := BuiltMenuItem(10502);
+   CheckTrue(item <> nil, 'Escape has a menu item');
+   CheckEquals('Escape', item.Caption, 'Escape reads as itself');
+
+   { '&&' in the resourcestring is a literal ampersand to the widget set. }
+   item := BuiltMenuItem(10506);
+   CheckTrue(item <> nil, 'Search & pounce has a menu item');
+   CheckEquals('Search && pounce mode', item.Caption,
+               'no (Tab) on the end of it');
+
+   item := BuiltMenuItem(10507);
+   CheckTrue(item <> nil, 'Send spot has a menu item');
+   CheckEquals('Send spot', item.Caption, 'no (`) on the end of it');
+
+   { And all three still carry no shortcut, which is what makes the caption the
+     only thing they could have advertised with. }
+   CheckEquals(integer(scNone), integer(BuiltMenuItem(10502).ShortCut), 'Esc');
+   CheckEquals(integer(scNone), integer(BuiltMenuItem(10506).ShortCut), 'Tab');
+   CheckEquals(integer(scNone), integer(BuiltMenuItem(10507).ShortCut), '`');
+
+   (* AND NO CAPTION ANYWHERE CARRIES A TAB. That is the defect NY4I
+     photographed, asked of every row rather than of the three -- a tab is what
+     the Win32 original used and it renders as a stop, never as a column. *)
+   for i := Low(ACCELERATORS) to High(ACCELERATORS) do
+      begin
+      item := BuiltMenuItem(ACCELERATORS[i].acId);
+      if item = nil then
+         begin
+         Continue;
+         end;
+
+      CheckTrue(Pos(#9, item.Caption) = 0,
+                'no tab in the caption for ' + ACCELERATORS[i].acDisplay);
+      end;
+
+   (* THE FOUR THAT JOINED THE COLUMN SHOW THEIR KEY THERE AND NOT IN THE TEXT.
+     "CW Speed Up (PgUp)" is what this would have read a day ago. *)
+   CheckEquals('CW Speed Up', BuiltMenuItem(10503).Caption,
+               'CW Speed Up has its key in the column');
+   CheckEquals('CW Speed Down', BuiltMenuItem(10504).Caption,
+               'CW Speed Down likewise');
+   CheckEquals('Focus in main window', BuiltMenuItem(10500).Caption,
+               'Focus in main window likewise');
 end;
 
 procedure TMenuShortcutTests.Test_MenuCommandExistsFindsAndMisses;
@@ -445,8 +544,9 @@ begin
    Test_NoKeystrokeHasTwoOwners;
    Test_TheGuardedKeysStayWithTheHook;
    Test_TheThreeEditingKeysJoinTheColumn;
-   Test_TheTwoNamedDisplayOnlyRowsAreBound;
-   Test_TheInlineKeyIsParenthesised;
+   Test_TheFourUnmodifiedKeysJoinTheColumn;
+   Test_TheNamedDisplayOnlyRowsAreBound;
+   Test_TheCaptionIsJustTheCaption;
    Test_MenuCommandExistsFindsAndMisses;
 end;
 

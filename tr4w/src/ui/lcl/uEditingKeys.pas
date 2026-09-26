@@ -4,6 +4,25 @@ unit uEditingKeys;
 (*
   DOES THE FOCUSED CONTROL NEED THIS KEYSTROKE? ASKED IN ONE PLACE.
 
+  TWO KEYSTROKE CLASSES REACH IT, AND THERE IS STILL ONE RULE.
+
+    Ctrl+A/C/V/X   the EDITING keys. Gated on OPERATING STANDARD EDIT KEYS,
+                   except in the DX cluster window. Issue #23, and NY4I's
+                   2026-09-15 report that copy and paste do not work on a
+                   dialog.
+    PgUp / PgDn    the SCROLLING keys, added 2026-09-26 when NY4I gave
+                   10503/10504 real menu shortcuts so CW speed changes from
+                   every modeless window rather than only from the call and
+                   exchange fields. Ungated: a grid, a list box or a memo
+                   scrolls whatever the setting says, because nobody asked for
+                   an option about that and a control that stops scrolling
+                   reads as broken.
+
+  ONE FUNCTION ANSWERS BOTH. Two predicates side by side would be two rules
+  free to disagree about the case they share -- which form is the main window,
+  and what "the focused control" even means -- and the cost of that is exactly
+  what the note below records about the hook's copy and the form's copy.
+
   MOVED HERE FROM uAppInputHooks (2026-09-26), unchanged in logic, because a
   SECOND caller appeared: TTR4WMainForm.IsShortcut. The rule decides who owns
   Ctrl+A, Ctrl+C, Ctrl+V and Ctrl+X, and two copies of it would drift -- the
@@ -59,13 +78,23 @@ uses
 function IsAStandardEditingKeystroke(const aKey: word;
                                      const aShift: TShiftState): boolean;
 
+(* PgUp or PgDn with NO modifier. The pure keystroke half of the scrolling
+  rule, with no notion of focus in it.
+
+  Ctrl+PgUp and Ctrl+PgDn are deliberately NOT this: they are 10513 and 10514,
+  the INACTIVE radio's CW speed, and they are ordinary menu shortcuts that
+  nothing should decline. *)
+function IsAScrollingKeystroke(const aKey: word;
+                               const aShift: TShiftState): boolean;
+
 (* Is the operator typing in the DX cluster window? Unchanged from the hook,
   which still calls it for every key it dispatches. *)
 function TelnetHasFocus: boolean;
 
-(* THE RULE, ASKED OF A NAMED CONTROL. Separated from the Screen.ActiveControl
-  form below for one reason: a test can hand it an edit on a form it built,
-  which is the only way to assert this without a focused window on screen. *)
+(* THE RULE, ASKED OF A NAMED CONTROL -- for BOTH keystroke classes; see the
+  unit header. Separated from the Screen.ActiveControl form below for one
+  reason: a test can hand it an edit on a form it built, which is the only way
+  to assert this without a focused window on screen. *)
 function KeystrokeBelongsToTheControl(const aKey: word;
                                       const aShift: TShiftState;
                                       const aFocused: TWinControl): boolean;
@@ -82,9 +111,14 @@ implementation
 
 uses
    Forms,            (* Screen, GetParentForm, KeyDataToShiftState *)
+   LCLType,          (* VK_PRIOR, VK_NEXT *)
    StdCtrls,         (* TCustomEdit, TCustomComboBox -- what "the operator is
                        typing in a field" means, asked of the control rather
-                       than of the form *)
+                       than of the form. TCustomListBox and TCustomMemo are
+                       here too: both scroll on PgUp *)
+   Grids,            (* TCustomGrid -- the log, the band map, both dupe
+                       sheets, SCP, the remaining-mult windows *)
+   ComCtrls,         (* TCustomTreeView *)
    uWindowTable,     (* tr4w_WindowsArray -- which form is the telnet window *)
    uSettingsModel,   (* Settings.Operating.StandardEditKeys *)
    uMainForm,        (* TR4WMainForm -- the one window the rule exempts *)
@@ -113,6 +147,29 @@ begin
 
    Result := (aKey = Ord('C')) or (aKey = Ord('V')) or
              (aKey = Ord('X')) or (aKey = Ord('A'));
+end;
+
+(* PAGE UP AND PAGE DOWN, UNMODIFIED, AND NOTHING ELSE.
+
+  THE MASK IS EXACT EQUALITY WITH THE EMPTY SET, as the editing rule's is with
+  [ssCtrl], and for the same reason: a modifier makes it a DIFFERENT COMMAND
+  rather than a variant of this one. Ctrl+PgUp and Ctrl+PgDn are 10513/10514,
+  the inactive radio's CW speed. Declining those to a focused grid would take
+  away a keystroke the operator pressed on purpose.
+
+  SHIFT+PGUP IS NOT HERE EITHER, and nothing binds it, so a memo extending its
+  selection with it was never at risk. *)
+function IsAScrollingKeystroke(const aKey: word;
+                               const aShift: TShiftState): boolean;
+begin
+   Result := False;
+
+   if (aShift * [ssCtrl, ssAlt, ssShift]) <> [] then
+      begin
+      Exit;
+      end;
+
+   Result := (aKey = VK_PRIOR) or (aKey = VK_NEXT);
 end;
 
 (* IS THE OPERATOR TYPING IN THE DX CLUSTER WINDOW?
@@ -152,7 +209,14 @@ begin
    Result := GetParentForm(focused) = tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm;
 end;
 
-(* IS THIS ONE OF THE STANDARD EDITING KEYS, TYPED INTO A FIELD THAT IS NOT ON
+(* DOES THE FOCUSED CONTROL NEED THIS KEYSTROKE? TWO ARMS, ONE FUNCTION.
+
+  ARM ONE IS PGUP AND PGDN and is documented at the arm itself, because what it
+  turns on is a list of control classes and the list belongs beside the test.
+
+  ARM TWO IS THE EDITING KEYS, and is the original rule, unchanged:
+
+  IS THIS ONE OF THE STANDARD EDITING KEYS, TYPED INTO A FIELD THAT IS NOT ON
   THE MAIN WINDOW?
 
   NY4I, 2026-09-15: "on many dialogs, CTRL-C, CTRL-V, CTRL-Z do not work. Those
@@ -183,17 +247,88 @@ var
 begin
    Result := False;
 
-   if not IsAStandardEditingKeystroke(aKey, aShift) then
-      begin
-      Exit;
-      end;
-
    if aFocused = nil then
       begin
       Exit;
       end;
 
    owner := GetParentForm(aFocused);
+
+   (* ARM ONE: PGUP AND PGDN, WHICH A SCROLLABLE CONTROL ANSWERS ITSELF.
+
+     THE MAIN WINDOW IS NEVER AFFECTED, exactly as in the editing arm below:
+     the log IS a grid, and declining there would take PgUp away from the one
+     place CW speed is certainly what the operator means. Asked again here
+     rather than hoisted above both arms, because the editing arm asks it AFTER
+     the cluster-window arm and after the setting, and that order is
+     load-bearing -- see the comment on the editing arm.
+
+     WHAT IS COVERED, ONE CLASS AT A TIME, AND WHY EACH:
+
+       TCustomGrid       the log, the band map, both dupe sheets, SCP and the
+                         remaining-mult windows. The widget set already
+                         consumes PgUp here (grids.pas:7776, and MoveSel sets
+                         Key := 0), so the shortcut is not even reached -- but
+                         the rule says so anyway, because that is a fact about
+                         TCustomGrid's KeyDown and not a promise.
+       TCustomListBox    ELEVEN of them, the DX CLUSTER CONSOLE among them
+                         (uTelnetForm.lfm, lstConsole). This is the one that
+                         genuinely needs the arm: a Win32 list box answers
+                         PgUp in the NATIVE window procedure, which runs after
+                         the shortcut test, so without this the console would
+                         stop paging.
+       TCustomMemo       same shape, and a memo is the one control where a page
+                         of text is the whole point. It descends from
+                         TCustomEdit, so it has to be named separately.
+       TCustomComboBox   PgUp moves its selection, dropped down or not.
+       TCustomTreeView   scrolls, one in the tree.
+
+     WHAT IS DELIBERATELY NOT COVERED:
+
+       a single-line TCustomEdit    it does not scroll. Declining there would
+                                    take CW speed away from the telnet send
+                                    line and the Send Keyboard field and give
+                                    nothing back.
+       TScrollBox, TScrollingWinControl, a panel
+                                    a scrolling CONTAINER does not take the
+                                    keyboard; the focused child does, and that
+                                    is what this is asked about.
+       Pause and Ins                not scrolling keys. They are menu
+                                    shortcuts now by NY4I's decision, so Ins
+                                    no longer toggles a native edit's
+                                    overwrite mode on a modeless window. A
+                                    MODAL form is unaffected -- it never
+                                    reaches the main form's IsShortcut at all
+                                    (application.inc:2146).
+       a modal form                 same reason. *)
+   if IsAScrollingKeystroke(aKey, aShift) then
+      begin
+      if owner = TCustomForm(TR4WMainForm) then
+         begin
+         Exit;
+         end;
+
+      Result := (aFocused is TCustomGrid)     or
+                (aFocused is TCustomListBox)  or
+                (aFocused is TCustomMemo)     or
+                (aFocused is TCustomComboBox) or
+                (aFocused is TCustomTreeView);
+
+      { owner <> nil BEFORE owner.Name: GetParentForm answers nil for an
+        unparented control, which is a state a test can produce. }
+      if Result and (owner <> nil) and (logger <> nil) and logger.IsTraceEnabled then
+         begin
+         logger.Trace('[EditingKeys] PgUp/PgDn left to %s on %s -- it scrolls',
+                      [aFocused.ClassName, owner.Name]);
+         end;
+
+      Exit;
+      end;
+
+   if not IsAStandardEditingKeystroke(aKey, aShift) then
+      begin
+      Exit;
+      end;
 
    if (tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm <> nil) and
       (owner = tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm) then

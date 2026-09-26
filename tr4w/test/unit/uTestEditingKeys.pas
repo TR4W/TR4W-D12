@@ -1,7 +1,15 @@
 unit uTestEditingKeys;
 {$I ..\..\src\tr4w.inc}
 (*
-  WHO GETS Ctrl+A, Ctrl+C, Ctrl+V AND Ctrl+X -- THE RULE, NOT THE RENDERING.
+  WHO GETS Ctrl+A/C/V/X AND PGUP/PGDN -- THE RULE, NOT THE RENDERING.
+
+  TWO KEYSTROKE CLASSES, ONE RULE, AND THE SECOND ARRIVED ON 2026-09-26 WITH THE
+  PAGE KEYS. NY4I gave 10503/10504 real menu shortcuts, so PgUp changes CW speed
+  from every modeless window instead of only from the call and exchange fields --
+  and a menu shortcut is tested BEFORE the focused control sees the key
+  (wincontrol.inc:5887), so a scrollable control would have stopped scrolling.
+  The decline is what prevents that, and it is the same function, because two
+  predicates would be two answers to "which form is the main window".
 
   Those three (X is bound by nothing) are TMenuItem shortcuts as of 2026-09-26,
   so the widget set draws them right-aligned in the shortcut column. A menu
@@ -29,7 +37,7 @@ unit uTestEditingKeys;
 interface
 
 uses
-   SysUtils, Classes, Controls, Forms, StdCtrls, LCLType,
+   SysUtils, Classes, Controls, Forms, StdCtrls, Grids, ComCtrls, LCLType,
    uTR4WTestFramework, uEditingKeys;
 
 type
@@ -40,6 +48,9 @@ type
       procedure Test_TheMainWindowIsNeverAffected;
       procedure Test_OnlyAnEditingControlCounts;
       procedure Test_TheClusterWindowDoesNotWaitOnTheSetting;
+      procedure Test_TheScrollingKeystrokeHalfIsTheBarePageKeys;
+      procedure Test_AScrollableControlKeepsThePageKeys;
+      procedure Test_ThePageKeysAreNotGatedOnTheSetting;
    public
       procedure RunAllTests; override;
    end;
@@ -202,6 +213,126 @@ begin
    end;
 end;
 
+procedure TEditingKeysTests.Test_TheScrollingKeystrokeHalfIsTheBarePageKeys;
+begin
+   BeginTest('Test_TheScrollingKeystrokeHalfIsTheBarePageKeys');
+
+   CheckTrue(IsAScrollingKeystroke(VK_PRIOR, []), 'PgUp');
+   CheckTrue(IsAScrollingKeystroke(VK_NEXT, []), 'PgDn');
+
+   (* A MODIFIER MAKES IT A DIFFERENT COMMAND, NOT A VARIANT. Ctrl+PgUp and
+     Ctrl+PgDn are 10513/10514, the INACTIVE radio's CW speed, and they are
+     ordinary menu shortcuts. Declining them to a focused grid would take away a
+     keystroke the operator pressed on purpose. *)
+   CheckFalse(IsAScrollingKeystroke(VK_PRIOR, [ssCtrl]),
+              'Ctrl+PgUp is the inactive radio, not scrolling');
+   CheckFalse(IsAScrollingKeystroke(VK_NEXT, [ssCtrl]),
+              'Ctrl+PgDn likewise');
+   CheckFalse(IsAScrollingKeystroke(VK_PRIOR, [ssShift]),
+              'Shift+PgUp is bound by nothing, so nothing has to decline it');
+   CheckFalse(IsAScrollingKeystroke(VK_HOME, []),
+              'Home is not a page key');
+   CheckFalse(IsAScrollingKeystroke(Ord('C'), [ssCtrl]),
+              'an editing key is the other arm');
+end;
+
+procedure TEditingKeysTests.Test_AScrollableControlKeepsThePageKeys;
+var
+   form: TForm;
+   grid: TStringGrid;
+   list: TListBox;
+   memo: TMemo;
+   tree: TTreeView;
+   edit: TEdit;
+   butn: TButton;
+begin
+   BeginTest('Test_AScrollableControlKeepsThePageKeys');
+
+   form := TForm.Create(nil);
+   try
+      grid        := TStringGrid.Create(form);
+      grid.Parent := form;
+      list        := TListBox.Create(form);
+      list.Parent := form;
+      memo        := TMemo.Create(form);
+      memo.Parent := form;
+      tree        := TTreeView.Create(form);
+      tree.Parent := form;
+      edit        := TEdit.Create(form);
+      edit.Parent := form;
+      butn        := TButton.Create(form);
+      butn.Parent := form;
+
+      (* EVERY CLASS THE RULE COVERS, ONE ASSERTION EACH, because the coverage
+        IS the rule: a class dropped from that test is a control that silently
+        stops scrolling, and nothing else in the build would say so. *)
+      CheckTrue(KeystrokeBelongsToTheControl(VK_PRIOR, [], grid),
+                'a grid pages itself -- the log, the band map, the dupe sheets');
+      CheckTrue(KeystrokeBelongsToTheControl(VK_NEXT, [], grid),
+                'and PgDn');
+      CheckTrue(KeystrokeBelongsToTheControl(VK_PRIOR, [], list),
+                'a list box -- THE DX CLUSTER CONSOLE is one, and a native '
+                + 'list box answers PgUp after the shortcut test, not before');
+      CheckTrue(KeystrokeBelongsToTheControl(VK_PRIOR, [], memo),
+                'a memo, where a page of text is the whole point');
+      CheckTrue(KeystrokeBelongsToTheControl(VK_PRIOR, [], tree),
+                'a tree view scrolls');
+
+      (* AND WHAT IS DELIBERATELY NOT COVERED. A single-line edit does not
+        scroll, so declining there would take CW speed away from the telnet send
+        line and the Send Keyboard field and give nothing back. *)
+      CheckFalse(KeystrokeBelongsToTheControl(VK_PRIOR, [], edit),
+                 'a single-line edit does not scroll -- CW speed still changes');
+      CheckFalse(KeystrokeBelongsToTheControl(VK_PRIOR, [], butn),
+                 'nor does a button');
+
+      { Ctrl+PgUp is a command in its own right and is never declined. }
+      CheckFalse(KeystrokeBelongsToTheControl(VK_PRIOR, [ssCtrl], grid),
+                 'Ctrl+PgUp reaches the inactive radio even over a grid');
+
+      CheckFalse(KeystrokeBelongsToTheControl(VK_PRIOR, [], nil),
+                 'nothing focused, nothing to decline for');
+   finally
+      form.Free;
+   end;
+end;
+
+procedure TEditingKeysTests.Test_ThePageKeysAreNotGatedOnTheSetting;
+var
+   grid:  TStringGrid;
+   saved: boolean;
+begin
+   BeginTest('Test_ThePageKeysAreNotGatedOnTheSetting');
+
+   (* TWO PROPERTIES IN ONE TEST, because they are the two halves of what makes
+     the page-key arm different from the editing arm.
+
+     IT IGNORES OPERATING STANDARD EDIT KEYS. Nobody asked for an option about
+     whether a grid scrolls, and a grid that stops scrolling reads as broken
+     rather than as configured.
+
+     AND THE MAIN WINDOW IS STILL EXEMPT. Asked the only way a console test can
+     ask it, exactly as Test_TheMainWindowIsNeverAffected does: TR4WMainForm is
+     nil here and GetParentForm of an UNPARENTED control is nil too, so a
+     control the rule cannot place is indistinguishable from one on the main
+     window -- and must keep the accelerator. That is what preserves PgUp
+     changing CW speed with the callsign field focused. *)
+   saved := Settings.Operating.StandardEditKeys;
+   grid  := TStringGrid.Create(nil);
+   try
+      Settings.Operating.StandardEditKeys := False;
+      CheckFalse(KeystrokeBelongsToTheControl(VK_PRIOR, [], grid),
+                 'a grid the rule cannot place keeps the accelerator');
+
+      Settings.Operating.StandardEditKeys := True;
+      CheckFalse(KeystrokeBelongsToTheControl(VK_PRIOR, [], grid),
+                 'and the setting does not change that either way');
+   finally
+      Settings.Operating.StandardEditKeys := saved;
+      grid.Free;
+   end;
+end;
+
 procedure TEditingKeysTests.RunAllTests;
 begin
    Test_TheKeystrokeHalfIsCtrlAndFourLetters;
@@ -209,6 +340,9 @@ begin
    Test_TheMainWindowIsNeverAffected;
    Test_OnlyAnEditingControlCounts;
    Test_TheClusterWindowDoesNotWaitOnTheSetting;
+   Test_TheScrollingKeystrokeHalfIsTheBarePageKeys;
+   Test_AScrollableControlKeepsThePageKeys;
+   Test_ThePageKeysAreNotGatedOnTheSetting;
 end;
 
 end.

@@ -163,10 +163,16 @@ uses
   LOGK1EA,
   LOGRADIO,           // RITBumpUp/Down, VFOBumpUp/Down
   LogCW,              // RepeatLastCWMessage
-  uSettingsModel,     // Settings.Message.QuickQslKey*, Settings.Cw.StartSendingNowKey
-  uMenu;              // menu_cwspeedup / menu_cwspeeddown via ProcessMenu
-                      // (NOT cty.pas -- that one is the DLL import and takes
-                      // a PWideChar, which is not what this call site passes)
+  uSettingsModel;     // Settings.Message.QuickQslKey*, Settings.Cw.StartSendingNowKey
+                      //
+                      // uMenu IS GONE FROM HERE (2026-09-26) with the PgUp and
+                      // PgDn arms of EntryKeyDown -- see the note at the arms'
+                      // former site below. It was the only thing this unit
+                      // wanted from that unit.
+                      //
+                      // (The uCTYDAT line above is ctyLoadInCountryFile, NOT
+                      // cty.pas -- that one is the DLL import and takes a
+                      // PWideChar, which is not what this call site passes.)
 
 // Column-double-click padding (Issue #750 follow-up).
 //
@@ -356,15 +362,34 @@ begin
       TryPutSpaceinExchangeWindow;
       end;
 
-   if Key = VK_PRIOR {33} then
-      begin
-      ProcessMenu(menu_cwspeedup);
-      end;
+   (* THE PGUP AND PGDN ARMS ARE DELETED (2026-09-26), AND THE MENU ITEM IS THE
+     SINGLE OWNER OF THOSE KEYSTROKES.
 
-   if Key = VK_NEXT {34} then
-      begin
-      ProcessMenu(menu_cwspeeddown);
-      end;
+     They read:
+
+       if Key = VK_PRIOR then ProcessMenu(menu_cwspeedup);
+       if Key = VK_NEXT  then ProcessMenu(menu_cwspeeddown);
+
+     NY4I gave 10503 and 10504 real TMenuItem.ShortCuts, so the widget set draws
+     them right-aligned in the shortcut column like every other row. Leaving
+     these arms in place would have fired each command TWICE, and that is worth
+     being precise about because the LCL's method name suggests otherwise:
+     DoKeyDownBeforeInterface calls the focused control's OnKeyDown FIRST
+     (wincontrol.inc:5881) and tests the shortcuts AFTER it (:5887). Neither arm
+     set Key := 0, so the keystroke survived this handler and would have reached
+     the menu as well -- CW speed up twice per press.
+
+     WHAT CHANGES FOR THE OPERATOR: the keys now work from every modeless
+     window, not only while a call or exchange field has focus. What keeps that
+     safe is uEditingKeys, which hands PgUp and PgDn to a focused grid, list
+     box, memo, combo or tree view so the band map and the cluster console keep
+     paging. The main window is exempt there, which is what preserves the
+     behaviour this arm used to provide.
+
+     NO OTHER ARM OF THIS HANDLER IS AFFECTED. Pause (19) has no arm at all and
+     Ins (45) cannot reach one -- the `Key > 40 then Exit` test above sees to
+     that -- so the two other keystrokes that joined the column the same day
+     were never answered here. *)
 
    if (Key = VK_SPACE {32}) and (aField = efCall) then
       begin

@@ -250,8 +250,8 @@ begin
 
    // Named individually: each is here for a DIFFERENT reason and losing any one
    // of them removes a keystroke from the menu without removing the behaviour.
-   CheckEquals('PgUp', AcceleratorDisplayFor(10503), 'CW speed up, bound by the message loop');
-   CheckEquals('PgDn', AcceleratorDisplayFor(10504), 'CW speed down, bound by the message loop');
+   CheckEquals('PgUp', AcceleratorDisplayFor(10503), 'CW speed up, a menu shortcut since 2026-09-26');
+   CheckEquals('PgDn', AcceleratorDisplayFor(10504), 'CW speed down, likewise');
    CheckEquals('Alt+X', AcceleratorDisplayFor(10337), 'Alt+X, answered by 10002');
    CheckEquals('Alt+-', AcceleratorDisplayFor(10320), 'Alt+-, advertised and unbound');
 end;

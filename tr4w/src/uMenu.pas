@@ -29,7 +29,9 @@ uses
   Controls,        // TCaption -- what a menu caption actually is
   Menus,           // TMainMenu, TMenuItem
   VC,
-  uAccelerators,   // AcceleratorDisplayFor -- the shortcut text a menu item shows
+  uAccelerators,   // ACCELERATORS -- the rows a menu item takes its ShortCut
+                   // from. NOT AcceleratorDisplayFor any more: no caption
+                   // spells a keystroke out since 2026-09-26.
   uTR4WStrings;
 
 type
@@ -99,59 +101,47 @@ function BuildTR4WMainMenu(const aOwner: TComponent;
       2026-09-15 report that the standard editing keys do not work on a dialog.
       Both are answered by guards in uAppInputHooks that a ShortCut would
       bypass;
-    * an UNMODIFIED keystroke is ordinary typing somewhere. Tab and Escape
-      belong to whatever form has the keyboard (the radio editor closed on Tab,
-      2026-09-09), and Ins, ` and Enter would be eaten inside any edit field on
-      any window;
+    * an UNMODIFIED keystroke is ordinary typing somewhere -- UNLESS IT IS ONE
+      OF FOUR NAMED ROWS. Tab and Escape belong to whatever form has the
+      keyboard (the radio editor closed on Tab, 2026-09-09), and the backtick is
+      a PRINTABLE CHARACTER, so a shortcut on it would make it untypeable in
+      every edit box in the program. Pause, Ins, PgUp and PgDn are none of those
+      things and NY4I moved them into the column on 2026-09-26; the exceptions
+      are named in UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN with a reason each;
     * a row that does not install is not automatically excluded any more.
       acInstall False means the INPUT HOOK does not install the key; where
-      nothing else binds it either, the menu item may. That is a list of two,
-      named beside RowCouldBeAMenuShortCut, and it is not a general rule.
+      nothing else binds it either, the menu item may. That is a named list,
+      beside RowCouldBeAMenuShortCut, and it is not a general rule.
 
-  Those rows keep advertising their keystroke through the caption, which is the
-  only way left to show it, and acDisplay survives for them alone. They spell
-  it IN PARENTHESES -- "Toggle insert mode (Ins)" -- which reads as part of the
-  label; see CaptionWithInlineKey.
+  NO CAPTION ADVERTISES A KEYSTROKE ANY MORE (2026-09-26). The four rows the
+  menu still may not own -- Tab, Esc, the backtick and Enter, the last of which
+  has no menu row at all -- show NOTHING, because NY4I chose that: "the caption
+  is just the caption". So CaptionWithInlineKey and its inverse are DELETED, and
+  acDisplay is now read by the tests, by nothing that draws.
 
-  IT WAS A TAB UNTIL 2026-09-26, and that is the defect NY4I photographed
-  across three menus: DrawText is given DT_EXPANDTABS, so a tab is a TAB STOP
-  chosen by each caption's own length, and a handful of rows sitting at their
-  own stop beside a right-aligned column reads as ragged rather than as a
-  second column. "Frankly looks bad."
+  WHAT THAT CLOSED, AND WHY IT COULD NOT BE CLOSED ANY OTHER WAY. The key used
+  to be spelled into the caption after a TAB, and DrawText is given
+  DT_EXPANDTABS, so a tab is a TAB STOP chosen by each caption's own length: a
+  handful of rows sat at their own stop beside a genuinely right-aligned column
+  and read as ragged. NY4I photographed it across three menus -- "frankly looks
+  bad" -- and the parentheses that replaced the tab were an improvement he then
+  asked to be rid of as well.
 
-  TWO OF THE FIVE LEFT THE INLINE SET ENTIRELY, by NY4I's decision the same
-  day -- Alt+X (Exit Program) and Alt+- (Toggle autosend) now carry real
-  ShortCuts and appear in the column. What stays inline is Ctrl+A, Ctrl+C,
-  Ctrl+V and every unmodified key, all of them rows whose keystroke has to be
-  declinable in a window that needs it.
-
-  THERE IS NO DISPLAY-WITHOUT-BINDING TO FIX IT WITH, and that is measured in
-  the widget set rather than assumed. EVERY path that reserves or draws the
-  shortcut column is gated on ShortCut <> scNone and there is no other entry to
-  it: win32wsmenus.pp:472 (the themed measure, which is the only place
-  ShortCustSize.cx is computed), :584 (the classic measure), :930 (the themed
-  draw) and :1161 (the classic draw). The item's own OnDrawItem is not a way
-  round it -- menuitem.inc:304-323 makes it ALL OR NOTHING, so we would be
-  reimplementing the themed background, gutter, check mark and icon to gain one
-  column, and neither cocoawsmenus nor gtk2wsmenus routes drawing through it at
-  all, so it would be a Windows-only answer to a defect that is on all three.
-
-  PADDING THE CAPTION IS NOT AN ANSWER EITHER. The item is measured with
-  GetThemeTextExtent in the MENU's font at the item's own monitor DPI
-  (:461-470, GetMenuItemFont + GetDpiForWindow), so a pad would have to be
-  computed in a font this unit does not have, at a DPI it does not know, and
-  recomputed on a theme change or a move to another monitor -- silently wrong
-  when it was not. The classic path measures the caption with the tab STRIPPED
-  (:581, CompleteMenuItemCaption(..., EmptyStr)), so on that theme a padded
-  caption can be clipped outright.
-
-  SO THE KEY GOES IN THE LABEL, and the rule stays crisp: the items showing a
-  keystroke inline are EXACTLY the ones whose keystroke can be declined in a
-  window that needs it. Alignment could only be bought by giving that up, which
-  was NY4I's decision rather than ours; what he chose instead (2026-09-26) was
-  to stop the inline rows pretending to be a column. See
-  docs\ACCELERATOR_SHORTCUT_PLAN.md, which records what the alternative would
-  have cost.
+  THERE IS NO DISPLAY-WITHOUT-BINDING, which is why the answer had to be a real
+  ShortCut or nothing, and it is measured in the widget set rather than assumed.
+  EVERY path that reserves or draws the shortcut column is gated on
+  ShortCut <> scNone and there is no other entry to it: win32wsmenus.pp:472 (the
+  themed measure, which is the only place ShortCustSize.cx is computed), :584
+  (the classic measure), :930 (the themed draw) and :1161 (the classic draw).
+  The item's own OnDrawItem is not a way round it -- menuitem.inc:304-323 makes
+  it ALL OR NOTHING, so we would be reimplementing the themed background,
+  gutter, check mark and icon to gain one column, and neither cocoawsmenus nor
+  gtk2wsmenus routes drawing through it at all, so it would be a Windows-only
+  answer to a defect that is on all three. Padding the caption is no answer
+  either: the item is measured with GetThemeTextExtent in the MENU's font at the
+  item's own monitor DPI (:461-470), so a pad would be computed in a font this
+  unit does not have at a DPI it does not know. See
+  docs\ACCELERATOR_SHORTCUT_PLAN.md.
 
   TWO THINGS BEHAVE DIFFERENTLY AFTER THIS, BOTH DELIBERATE AND BOTH WORTH
   KNOWING BEFORE SOMEONE REPORTS THEM AS DEFECTS.
@@ -177,31 +167,20 @@ function AcceleratorRowBelongsToTheMenu(const aIndex: integer): boolean;
   is not the menu's to own. }
 function MenuShortCutFor(const aId: word): TShortCut;
 
-(* A KEYSTROKE THE MENU MAY NOT OWN, SPELLED INTO THE LABEL.
+(* CaptionWithInlineKey AND CaptionWithoutInlineKey ARE DELETED (2026-09-26).
 
-  Ctrl+A/C/V/X and every unmodified key stay with the input hook -- see
-  AcceleratorRowBelongsToTheMenu -- and the LCL draws its right-aligned
-  shortcut column from TMenuItem.ShortCut and from nothing else, so those rows
-  have only their caption in which to advertise the key.
+  They put a keystroke into a caption -- "Toggle insert mode (Ins)" -- and took
+  it back out again for a window title. NY4I's decision the same day removed
+  every row that needed either: Pause, Ins, PgUp and PgDn became real
+  ShortCuts, and Tab, Esc and the backtick advertise nothing at all, "so the
+  caption is just the caption".
 
-  IT USED TO BE A TAB, which is what AppendMenu wanted. The Win32 draw path
-  runs the caption through DrawText with DT_EXPANDTABS, so the tab is a TAB
-  STOP chosen by the caption's own length rather than a column: a minority of
-  rows sat at a stop of their own while the majority were right-aligned, which
-  is the ragged menu NY4I photographed on 2026-09-26 -- "frankly looks bad".
-
-  Parentheses read as part of the label and so cannot pretend to be a column.
-  Cocoa and gtk2 never had a tab convention at all and pass the caption
-  straight to the native widget, so this is equally correct there.
-
-  NO NEW TRANSLATABLE TEXT: the words come from the row's resourcestring and
-  the key from uAccelerators.AcceleratorDisplayFor. The punctuation lives HERE,
-  once, rather than at each call site. *)
-function CaptionWithInlineKey(const aCaption: string; const aKey: string): string;
-
-{ The inverse, for the one reader that wants the label alone: a window's title
-  is its menu row's caption (MainUnit.OpenTR4WWindow). }
-function CaptionWithoutInlineKey(const aCaption: string): string;
+  Deleting rather than keeping them as a guard is deliberate. A caption can no
+  longer acquire an inline key, so an inverse that strips one would be guarding
+  against a shape this unit does not produce -- and MainUnit's window titles
+  read MenuCaption straight through now, which is one fewer thing between a
+  resourcestring and a title bar. Both functions, and the tab convention before
+  them, are in git history. *)
 
 { Is there a main-menu row for this command id at all? }
 function MenuCommandExists(const aId: word): boolean;
@@ -880,29 +859,80 @@ end;
                    registry of shortcuts to object to it (TMenuItem.SetShortCut
                    just repaints, menuitem.inc:1574).
 
-  THE OTHER TWO acInstall:false ROWS MUST NOT BE ADDED HERE. 10503 PgUp and
-  10504 PgDn ARE bound -- by THE ENTRY FIELD'S OWN KEY HANDLER,
-  uMainWindowProc.TTR4WEntryEvents.EntryKeyDown (src\uMainWindowProc.pas:359-367)
-  -- so a menu shortcut would give those keystrokes two owners and fire them
-  twice. They advertise their key in the caption instead.
+  AND THE OTHER TWO ARE HERE NOW, WHICH TOOK A DELETION ELSEWHERE TO EARN.
 
-  IT IS NOT THE MESSAGE LOOP, whatever this note said until 2026-09-26 and
-  whatever uAccelerators still said alongside it. That loop is gone: tr4w.lpr is
-  585 lines and runs Application.Run. The difference is not pedantic -- the entry
-  field's handler fires ONLY while a call or exchange field has focus, whereas a
-  TMenuItem.ShortCut fires from any form, so giving these two a shortcut would
-  WIDEN where PgUp changes CW speed (to the band map, the cluster window,
-  everywhere) rather than merely move who draws the key. That is NY4I's decision
-  to make and has not been made.
+    10503  PgUp    CW speed up.
+    10504  PgDn    CW speed down.
 
-  A LIST, NOT A LOOSENED GUARD. Relaxing the acInstall test itself would hand
-  PgUp and PgDn a second owner, and would mean that every acInstall:false row
-  added in future silently gained a binding. Widening this is an edit somebody
-  has to make on purpose, here, against these reasons. *)
+  UNTIL 2026-09-26 THIS NOTE SAID THEY MUST NOT BE ADDED, and the reason was
+  correct at the time: they WERE bound, by the entry field's own key handler,
+  uMainWindowProc.TTR4WEntryEvents.EntryKeyDown -- so a shortcut would have been
+  a SECOND owner. It would also have fired twice rather than instead, and that is
+  worth knowing precisely, because it is not obvious from the LCL's name for the
+  method: DoKeyDownBeforeInterface calls the focused control's OnKeyDown FIRST
+  (wincontrol.inc:5881, KeyDownBeforeInterface -> KeyDown -> FOnKeyDown) and
+  tests the shortcuts AFTER it (:5887). That arm did not set Key := 0, so the
+  keystroke survived its own handler and would have reached the menu as well.
+
+  SO THE ARM IS DELETED AND THE MENU ITEM IS THE SINGLE OWNER. NY4I asked for
+  the keys in the column (2026-09-26) having been shown what it widens: PgUp
+  changes CW speed from every modeless window now, not only from the call and
+  exchange fields. What keeps that safe is the decline -- uEditingKeys hands
+  PgUp and PgDn to a focused grid, list box, memo, combo or tree view -- and the
+  three forms that answer the keys themselves still do, because each sets
+  Key := 0 in its own OnKeyDown and so consumes the keystroke before the
+  shortcut test is reached (uSendKeyboardForm:261, uQTCSendForm:461,
+  uQTCReceiveForm:428).
+
+  A LIST, NOT A LOOSENED GUARD. Relaxing the acInstall test itself would mean
+  every acInstall:false row added in future silently gained a binding. Widening
+  this is an edit somebody has to make on purpose, here, against these
+  reasons. *)
 const
-   DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND: array[0..1] of word = (
+   DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND: array[0..3] of word = (
       menu_alt_toogleautosend,     (* Alt+- -- nothing else binds it *)
-      menu_alt_x                   (* Alt+X -- 10002 binds it, same action *)
+      menu_alt_x,                  (* Alt+X -- 10002 binds it, same action *)
+      menu_cwspeedup,              (* PgUp -- the entry field's arm is deleted *)
+      menu_cwspeeddown             (* PgDn -- likewise *)
+   );
+
+(* THE UNMODIFIED KEYSTROKES A MENU ITEM MAY OWN -- FOUR, NAMED, AND THE THREE
+  THAT STAY OUT ARE NAMED TOO, BECAUSE THAT IS THE HALF THAT MATTERS.
+
+  An unmodified key is ordinary typing somewhere, and a TMenuItem.ShortCut is
+  tested before the focused control sees the keystroke, so the default is that
+  the menu may not have one. These four are exceptions NY4I made on 2026-09-26:
+
+    10500  Pause   Focus in main window. Nothing types Pause.
+    10501  Ins     Toggle insert mode. A native edit's overwrite toggle is the
+                   only thing given up, and only on a MODELESS window -- a modal
+                   dialog never reaches the main form's IsShortcut
+                   (application.inc:2146).
+    10503  PgUp    CW speed up -- see the list above.
+    10504  PgDn    CW speed down.
+
+  AND THE THREE THAT MUST NOT JOIN THEM, each for a reason of its own:
+
+    10506  Tab     THE WIDGET SET'S OWN NAVIGATION. A ShortCut on Tab would stop
+                   focus moving between fields in every tool window. The radio
+                   editor closed on Tab, 2026-09-09.
+    10502  Esc     ALSO NAVIGATION: Lint-FormDefaults asserts that every form
+                   closes on Escape, and TApplication.DoEscapeKey is how that
+                   happens. A ShortCut tested first would take it away.
+    10507  `       A PRINTABLE CHARACTER. An unmodified shortcut on it would make
+                   the backtick untypeable in every edit box in the program --
+                   the callsign field included.
+
+  Those three keep scNone and, since the same day, show NOTHING in their
+  caption: NY4I removed the parenthesised hint as well, so "Search & pounce
+  mode" reads as itself. The hook still dispatches all three (acInstall:true),
+  which is what makes them work at all. *)
+const
+   UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN: array[0..3] of word = (
+      menu_mainwindow_setfocus,    (* Pause *)
+      menu_insertmode,             (* Ins *)
+      menu_cwspeedup,              (* PgUp *)
+      menu_cwspeeddown             (* PgDn *)
    );
 
 function MenuMayBindADisplayOnlyRow(const aId: word): boolean;
@@ -922,55 +952,25 @@ begin
       end;
 end;
 
-(* THE PUNCTUATION OF AN INLINE KEY, IN ONE PLACE -- both halves of it, so the
-  title that strips it cannot disagree with the caption that added it. *)
-const
-   INLINE_KEY_OPEN  = ' (';
-   INLINE_KEY_CLOSE = ')';
-
-function CaptionWithInlineKey(const aCaption: string; const aKey: string): string;
-begin
-   Result := aCaption;
-
-   if aKey = '' then
-      begin
-      Exit;
-      end;
-
-   Result := aCaption + INLINE_KEY_OPEN + aKey + INLINE_KEY_CLOSE;
-end;
-
-function CaptionWithoutInlineKey(const aCaption: string): string;
+(* A SECOND LIST AND A SECOND TEST, DELIBERATELY NOT ONE OF EACH. The two
+  guards ask different questions -- "does anything else already bind this key"
+  and "is this key ordinary typing" -- and PgUp and PgDn are the only rows that
+  need both answers. Merging the lists would make an exception to one guard read
+  as an exception to the other. *)
+function MenuMayOwnAnUnmodifiedRow(const aId: word): boolean;
 var
-   p: integer;
-   q: integer;
+   i: integer;
 begin
-   Result := aCaption;
+   Result := False;
 
-   if (Length(aCaption) < 4) or (aCaption[Length(aCaption)] <> ')') then
+   for i := Low(UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN)
+            to High(UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN) do
       begin
-      Exit;
-      end;
-
-   for p := Length(aCaption) - 1 downto 2 do
-      begin
-      if (aCaption[p] <> '(') or (aCaption[p - 1] <> ' ') then
+      if UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN[i] = aId then
          begin
-         Continue;
+         Result := True;
+         Exit;
          end;
-
-      (* A KEYSTROKE HOLDS NO SPACE -- 'Ctrl+Alt+B', 'PgUp', '`'. Requiring
-        that is what keeps an ordinary parenthesised caption intact. *)
-      for q := p + 1 to Length(aCaption) - 1 do
-         begin
-         if aCaption[q] = ' ' then
-            begin
-            Exit;
-            end;
-         end;
-
-      Result := Copy(aCaption, 1, p - 2);
-      Exit;
       end;
 end;
 
@@ -986,16 +986,24 @@ begin
    Result := False;
    row    := ACCELERATORS[aIndex];
 
-   (* A DISPLAY-ONLY ROW, UNLESS IT IS ONE OF THE TWO NAMED ABOVE. acInstall
-     False means the input hook does not install the key; for those two,
-     nothing else does either, so the menu item may. *)
+   (* A DISPLAY-ONLY ROW, UNLESS IT IS ONE OF THE FOUR NAMED ABOVE. acInstall
+     False means the input hook does not install the key. For two of the four
+     nothing else installs it either; for the other two the other owner was
+     DELETED to make room, which is why each carries its own reason up there
+     rather than sharing one. *)
    if (not row.acInstall) and (not MenuMayBindADisplayOnlyRow(row.acId)) then
       begin
       Exit;
       end;
 
-   { An unmodified keystroke is typing. }
-   if not (row.acCtrl or row.acAlt or row.acShift) then
+   (* AN UNMODIFIED KEYSTROKE BELONGS TO WHATEVER HAS THE KEYBOARD, UNLESS IT IS
+     ONE OF THE FOUR NAMED ABOVE. Pause, Ins, PgUp and PgDn are neither typing
+     nor navigation. Tab and Esc ARE navigation and the backtick IS a character
+     an operator types, which is three different reasons for one answer -- they
+     are written out beside UNMODIFIED_ROWS_A_MENU_ITEM_MAY_OWN rather than
+     here. *)
+   if (not (row.acCtrl or row.acAlt or row.acShift)) and
+      (not MenuMayOwnAnUnmodifiedRow(row.acId)) then
       begin
       Exit;
       end;
@@ -1019,10 +1027,12 @@ begin
      override will hand it to a focused field, which is the behaviour the guard
      was reaching for.
 
-     THE UNMODIFIED-KEYSTROKE GUARD ABOVE IS UNTOUCHED, and it is the half that
-     must not be widened: Tab, Esc, Ins, Pause, PgUp, PgDn and the spot key
-     would each start firing from every window rather than only where they fire
-     now, which is a behaviour decision and not a rendering fix. *)
+     THE UNMODIFIED-KEYSTROKE GUARD ABOVE HAS FOUR NAMED EXCEPTIONS AS OF THE
+     SAME DAY (Pause, Ins, PgUp, PgDn -- NY4I's decision), and what is left of
+     it must not be widened further. Tab, Esc and the backtick each fire from
+     every window the moment they carry a ShortCut, and for those three that is
+     not a widening but a BREAKAGE: two are the widget set's own navigation and
+     the third is a character an operator types. *)
 
    Result := MenuCommandExists(row.acId);
 end;
@@ -1107,7 +1117,6 @@ var
    curr:     TMenuItem;   { where items are being added }
    latest:   TMenuItem;   { the top-level popup most recently opened }
    item:     TMenuItem;
-   caption:  string;
 begin
    Result     := TMainMenu.Create(aOwner);
    GMainMenu  := Result;
@@ -1178,34 +1187,18 @@ begin
            convention at all and passed the character straight to the native
            widget.
 
-           NO CAPTION CARRIES A TAB ANY MORE (2026-09-26). The rows whose
-           keystroke the menu may not own spell it in parentheses instead --
-           CaptionWithInlineKey -- because a tab stop in a minority of rows is
-           exactly what made the column look ragged.
+           THE CAPTION IS JUST THE CAPTION (2026-09-26). No tab, and no
+           parenthesised hint either: the four rows whose keystroke the menu
+           still may not own -- Tab, Esc, the backtick, and Enter, which has no
+           menu row -- advertise NOTHING. NY4I chose that, having seen both the
+           tab and the parentheses on screen.
 
-           ShortCut is the property that does both jobs on all three, so the
-           caption is now just the caption. Which rows the menu may own, and
-           why some may not, is AcceleratorRowBelongsToTheMenu -- and the input
-           hook skips exactly those, so no keystroke has two owners. *)
-         caption  := row.mrText;
+           ShortCut does both jobs on all three widget sets. Which rows the menu
+           may own, and why those four may not, is
+           AcceleratorRowBelongsToTheMenu -- and the input hook skips exactly
+           the rows the menu takes, so no keystroke has two owners. *)
          item.ShortCut := MenuShortCutFor(row.mrId);
-
-         if item.ShortCut = scNone then
-            begin
-            (* A KEYSTROKE THE MENU MAY NOT OWN still has to be advertised, and
-              a caption is the only place left: the LCL draws its shortcut
-              column from ShortCut alone, so there is no
-              display-without-binding.
-
-              IT READS AS PART OF THE LABEL, in parentheses -- "Toggle insert
-              mode (Ins)". A tab stood here and looked like a column without
-              being one; see CaptionWithInlineKey for why that rendered ragged
-              and why the punctuation lives there rather than on this line. *)
-            caption := CaptionWithInlineKey(caption,
-                                            AcceleratorDisplayFor(row.mrId));
-            end;
-
-         item.Caption := TCaption(caption);
+         item.Caption  := TCaption(row.mrText);
          item.Tag     := row.mrId;
          item.OnClick := aOnClick;
 

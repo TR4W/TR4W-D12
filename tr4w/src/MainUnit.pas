@@ -6617,25 +6617,25 @@ begin
   // built with AppendMenuW, and an ANSI round trip here would decode a Cyrillic
   // caption through whatever codepage the machine happens to be running.
   //
-  (* THE WINDOW'S TITLE IS ITS MENU ROW'S TEXT, with the accelerator cut off.
+  (* THE WINDOW'S TITLE IS ITS MENU ROW'S TEXT, AND NOW IT IS ONLY THAT.
 
     Was GetMenuStringW into a local WideChar buffer, then a scan for the tab.
     MenuCaption returns the row's Caption.
 
-    THERE IS NO TAB ANY MORE (2026-09-26), and the cut is kept because the
-    advertisement is not. A menu item carries its keystroke in ShortCut, and
-    the rows whose keystroke the menu may not own spell it in PARENTHESES --
-    "Toggle insert mode (Ins)" -- so removing this would put "(Esc)" or
-    "(Ctrl+C)" in a window title the day one of those rows grew a window.
-    uMenu.CaptionWithoutInlineKey is the exact inverse of the function that
-    adds it, which is why it lives there and not here.
+    THERE IS NOTHING LEFT TO CUT OFF (2026-09-26). A menu caption carried its
+    keystroke after a tab, then in parentheses, and now not at all: every row
+    whose key the menu may own draws it from ShortCut, and the four it may not
+    own -- Tab, Esc, the backtick and Enter -- advertise nothing, by NY4I's
+    decision. So uMenu.CaptionWithoutInlineKey is deleted rather than kept as a
+    guard against a shape uMenu cannot produce, and this reads the caption
+    straight through.
 
-    THE LOCAL BUFFER IS GONE WITH THE CALL, and so is the trap it existed for:
-    a failed GetMenuStringW left whatever the previous caller had put in the
-    shared buffer, which is how three windows once came up titled with stale
-    bytes rather than titled empty. MenuCaption answers '' for a row that is
-    not there. *)
-  menuTitle := CaptionWithoutInlineKey(MenuCaption(10199 + Ord(ID)));
+    THE LOCAL BUFFER IS GONE WITH THE OLD CALL, and so is the trap it existed
+    for: a failed GetMenuStringW left whatever the previous caller had put in
+    the shared buffer, which is how three windows once came up titled with
+    stale bytes rather than titled empty. MenuCaption answers '' for a row that
+    is not there. *)
+  menuTitle := MenuCaption(10199 + Ord(ID));
 
   // THROUGH THE FORM WHEN IT IS ONE, and this is not tidiness -- SetWindowTextW
   // writes the native title BEHIND the LCL's back, leaving Caption holding

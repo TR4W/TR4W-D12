@@ -42,17 +42,20 @@ unit uAccelerators;
   cannot answer one keystroke. 10317 keeps Ctrl+Alt+W as well; nobody asked for
   that to be removed and a second accelerator for one command is legal.
 
-  NOT INCLUDED, and this is the trap to remember: PgUp and PgDn (CW speed
-  up/down, ids 10503/10504) are bound by THE ENTRY FIELD'S OWN KEY HANDLER --
-  uMainWindowProc.TTR4WEntryEvents.EntryKeyDown, src\uMainWindowProc.pas:359-367
-  -- not by any accelerator table. They are invisible to a tool that reads the
-  .RES, so a keystroke can be defined in a third place: a control's key handler.
+  A KEYSTROKE CAN BE DEFINED IN A THIRD PLACE -- A CONTROL'S OWN KEY HANDLER --
+  AND THAT IS WHY 10503/10504 ARE ROWS HERE AT ALL. PgUp and PgDn (CW speed
+  up/down) were bound by uMainWindowProc.TTR4WEntryEvents.EntryKeyDown and by
+  nothing that reads the .RES, so a tool that dumps the accelerator table could
+  not see them. Recording them was what made them visible.
+
+  THEY ARE MENU ITEM SHORTCUTS NOW (NY4I, 2026-09-26) and that entry-field arm
+  is DELETED, so the third place is empty again. The difference mattered and is
+  the behaviour change: the entry field's handler fired ONLY while a call or
+  exchange field had focus, while a TMenuItem.ShortCut fires from any modeless
+  form. uEditingKeys is what keeps a focused grid, list box or memo scrolling.
 
   THIS NOTE SAID "the MESSAGE LOOP at tr4w.lpr:1589-1590" UNTIL 2026-09-26, and
   that loop no longer exists (tr4w.lpr is 585 lines and runs Application.Run).
-  It mattered because the two owners behave differently: the entry field's
-  handler fires ONLY when a call or exchange field has focus, while a
-  TMenuItem.ShortCut fires from any form.
 }
 
 interface
@@ -71,26 +74,27 @@ type
     acShift:   boolean;
     acKey:     Word;     // a virtual-key code; every row is FVIRTKEY
     acDisplay: string;
-    (* False = THE INPUT HOOK DOES NOT INSTALL THIS KEYSTROKE. Three shapes,
-      all real -- see docs\ACCELERATOR_AUDIT.md:
+    (* False = THE INPUT HOOK DOES NOT INSTALL THIS KEYSTROKE. Two shapes now,
+      both real -- see docs\ACCELERATOR_AUDIT.md:
 
-        * A CONTROL'S OWN KEY HANDLER binds it -- PgUp/PgDn in
-          uMainWindowProc.TTR4WEntryEvents.EntryKeyDown (:359-367), which fires
-          only while a call or exchange field has focus. Recording them here is
-          deliberate: they are otherwise invisible to every tool that reads a
-          table. NOTHING ELSE MAY BIND THEM -- a menu shortcut fires from any
-          form, so it would both fire them twice AND widen where they work.
         * another id already answers the key -- Alt+X is bound to 10002
           menu_exit, and 10337 menu_alt_x runs the same ExitProgram(True), so
-          showing Alt+X on both is truthful.
+          showing Alt+X on both is truthful;
         * NOTHING binds it -- 10320 Alt+-, advertised and dead for years.
 
-      AND FOR THOSE LAST TWO, THE MENU ITEM NOW CARRIES THE KEYSTROKE (NY4I,
-      2026-09-26): they are named in uMenu's
-      DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND, which is a list of exactly two
-      and not a relaxation of this flag. So acInstall False no longer means
-      "bound by nothing here"; it means "not installed by uAppInputHooks", and
-      whether a menu item binds it is uMenu's question. *)
+      A THIRD SHAPE IS GONE (2026-09-26): "a control's own key handler binds
+      it", which was PgUp and PgDn in
+      uMainWindowProc.TTR4WEntryEvents.EntryKeyDown. That arm is deleted and the
+      menu item owns those keystrokes, so no row is bound outside this table and
+      the menu.
+
+      ALL FOUR acInstall:false ROWS ARE MENU SHORTCUTS NOW (NY4I, 2026-09-26):
+      they are named in uMenu's DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND, which is
+      a LIST -- four ids with a reason each -- and not a relaxation of this flag.
+      So acInstall False does not mean "bound by nothing here"; it means "not
+      installed by uAppInputHooks", and whether a menu item binds it is uMenu's
+      question. It stays False for exactly that reason: were it True the hook
+      would install the key as well, and the keystroke would have two owners. *)
     acInstall: boolean;
   end;
 
@@ -177,8 +181,8 @@ const
     (acId: 10500; acCtrl: false; acAlt: false; acShift: false; acKey: $13; acDisplay: 'Pause'; acInstall: true),   // menu_mainwindow_setfocus
     (acId: 10501; acCtrl: false; acAlt: false; acShift: false; acKey: $2D; acDisplay: 'Ins'; acInstall: true),   // menu_insertmode
     (acId: 10502; acCtrl: false; acAlt: false; acShift: false; acKey: $1B; acDisplay: 'Esc'; acInstall: true),   // menu_escape
-    (acId: 10503; acCtrl: false; acAlt: false; acShift: false; acKey: $21; acDisplay: 'PgUp'; acInstall: false),   // menu_cwspeedup -- bound by the ENTRY FIELD's key handler, uMainWindowProc:359
-    (acId: 10504; acCtrl: false; acAlt: false; acShift: false; acKey: $22; acDisplay: 'PgDn'; acInstall: false),   // menu_cwspeeddown -- bound by the ENTRY FIELD's key handler, uMainWindowProc:365
+    (acId: 10503; acCtrl: false; acAlt: false; acShift: false; acKey: $21; acDisplay: 'PgUp'; acInstall: false),   // menu_cwspeedup -- the MENU ITEM binds it; see uMenu's two exception lists
+    (acId: 10504; acCtrl: false; acAlt: false; acShift: false; acKey: $22; acDisplay: 'PgDn'; acInstall: false),   // menu_cwspeeddown -- likewise
     (acId: 10505; acCtrl: false; acAlt: false; acShift: true ; acKey: $09; acDisplay: 'Shift+Tab'; acInstall: true),   // menu_cqmode
     (acId: 10506; acCtrl: false; acAlt: false; acShift: false; acKey: $09; acDisplay: 'Tab'; acInstall: true),   // menu_spmode_ortab
     (acId: 10507; acCtrl: false; acAlt: false; acShift: false; acKey: $C0; acDisplay: '`'; acInstall: true),   // menu_ctrl_sendspot
@@ -214,9 +218,14 @@ const
   which is the mechanism now. Only the half that handed a copy to Windows is
   deleted. }
 
-{ What the menu should show for a command, or '' when it has no binding.
-  ONE source for both halves: the menu caption is now derived from the same row
-  that produces the ACCEL entry. }
+(* What a command's keystroke is called, or '' when it has no binding.
+
+  NOTHING ON SCREEN READS THIS ANY MORE (2026-09-26). It fed the menu caption
+  while a row the menu could not own had to advertise its key in its own label;
+  NY4I removed that, so every displayed keystroke comes from TMenuItem.ShortCut
+  and the widget set. What is left is the tests and any diagnostic that wants to
+  NAME a keystroke, which is worth keeping: acDisplay is the only place the
+  spelling of a key exists as text. *)
 function AcceleratorDisplayFor(const aId: Word): string;
 
 implementation
