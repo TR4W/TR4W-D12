@@ -84,13 +84,27 @@ function Get-MenuTree
       [void][Win32.MenuDump]::GetMenuStringW($Menu, $i, $buf, 512, $MF_BYPOSITION)
       $raw = $buf.ToString()
 
-      # THE CAPTION CARRIES ITS OWN SHORTCUT, tab-separated -- CreateTR4WMenu
-      # appends #9 + AcceleratorDisplayFor(id). Split them so a diff can tell
-      # "the label changed" from "the key changed"; the program itself does the
-      # same split when it reads a window's title back out of its menu item.
-      $tab      = $raw.IndexOf([char]9)
-      $caption  = if ($tab -ge 0) { $raw.Substring(0, $tab) } else { $raw }
-      $shortcut = if ($tab -ge 0) { $raw.Substring($tab + 1) } else { '' }
+      # MOST SHORTCUTS ARE INVISIBLE TO THIS TOOL, and that is not a defect in
+      # it. A menu item carries its keystroke in TMenuItem.ShortCut now, which
+      # the widget set draws itself; GetMenuStringW returns the item TEXT, so
+      # the column simply is not in there.
+      #
+      # What IS in the text is the minority of rows whose keystroke the menu
+      # may not own -- Ctrl+A/C/V/X and the unmodified keys -- which spell it
+      # in parentheses: "Toggle insert mode (Ins)". That was a tab until
+      # 2026-09-26; a tab is a DT_EXPANDTABS tab stop and it rendered ragged.
+      #
+      # Split it off so a diff can still tell "the label changed" from "the key
+      # changed". A keystroke holds no space, which is what stops an ordinary
+      # parenthesised caption being cut in half -- the same rule as
+      # uMenu.CaptionWithoutInlineKey.
+      $caption  = $raw
+      $shortcut = ''
+      if ($raw -match '^(.*\S) \(([^()\s]+)\)$')
+         {
+         $caption  = $Matches[1]
+         $shortcut = $Matches[2]
+         }
 
       $state = [Win32.MenuDump]::GetMenuState($Menu, $i, $MF_BYPOSITION)
       $sub   = [Win32.MenuDump]::GetSubMenu($Menu, $i)

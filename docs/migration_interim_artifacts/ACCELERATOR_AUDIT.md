@@ -95,7 +95,7 @@ Three are fine, one is not:
 | 10337 `menu_alt_x` | Alt+X | **Benign.** Alt+X is bound to 10002 `menu_exit`, and both arms call `ExitProgram(True)` — pressing Alt+X does exit. Two ids, one behaviour. |
 | 10503 `menu_cwspeedup` | PgUp | **Handled in the message loop**, `tr4w.lpr:1589`. Truthful today. |
 | 10504 `menu_cwspeeddown` | PgDn | **Handled in the message loop**, `tr4w.lpr:1590`. Truthful today. |
-| 10320 `menu_alt_toogleautosend` | **Alt+-** | **DEFECT, and now explained.** No accelerator entry in English and no handler in the message loop — but `ger` and `ukr` DO bind it. The binding was added to two language files and never to English. See the divergence section. |
+| 10320 `menu_alt_toogleautosend` | **Alt+-** | **DEFECT -- CLOSED 2026-09-26**, when NY4I gave the menu item a real `TMenuItem.ShortCut` (`uMenu.DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND`), so the advertised key now works. As measured here: no accelerator entry in English and no handler in the message loop — but `ger` and `ukr` DO bind it. The binding was added to two language files and never to English. See the divergence section. |
 
 ### The Phase 3 hazard this exposes
 

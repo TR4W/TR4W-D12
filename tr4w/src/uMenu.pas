@@ -103,20 +103,27 @@ function BuildTR4WMainMenu(const aOwner: TComponent;
       belong to whatever form has the keyboard (the radio editor closed on Tab,
       2026-09-09), and Ins, ` and Enter would be eaten inside any edit field on
       any window;
-    * a row that does not install binds nothing by definition, so it cannot
-      become a binding here.
+    * a row that does not install is not automatically excluded any more.
+      acInstall False means the INPUT HOOK does not install the key; where
+      nothing else binds it either, the menu item may. That is a list of two,
+      named beside RowCouldBeAMenuShortCut, and it is not a general rule.
 
   Those rows keep advertising their keystroke through the caption, which is the
-  only way left to show it, and acDisplay survives for them alone.
+  only way left to show it, and acDisplay survives for them alone. They spell
+  it IN PARENTHESES -- "Toggle insert mode (Ins)" -- which reads as part of the
+  label; see CaptionWithInlineKey.
 
-  FIVE ITEMS THEREFORE SIT INLINE WHILE THE REST ARE IN A COLUMN, and that is
-  the whole of what NY4I sees (2026-09-25, "a few are still off"):
+  IT WAS A TAB UNTIL 2026-09-26, and that is the defect NY4I photographed
+  across three menus: DrawText is given DT_EXPANDTABS, so a tab is a TAB STOP
+  chosen by each caption's own length, and a handful of rows sitting at their
+  own stop beside a right-aligned column reads as ragged rather than as a
+  second column. "Frankly looks bad."
 
-    Send Keyboard Input          Ctrl+A
-    Clear multsheet              Ctrl+C
-    Execute configuration file   Ctrl+V
-    Exit Program                 Alt+X    -- display-only; File -> Exit answers it
-    Toggle autosend              Alt+-    -- advertised and bound by nothing
+  TWO OF THE FIVE LEFT THE INLINE SET ENTIRELY, by NY4I's decision the same
+  day -- Alt+X (Exit Program) and Alt+- (Toggle autosend) now carry real
+  ShortCuts and appear in the column. What stays inline is Ctrl+A, Ctrl+C,
+  Ctrl+V and every unmodified key, all of them rows whose keystroke has to be
+  declinable in a window that needs it.
 
   THERE IS NO DISPLAY-WITHOUT-BINDING TO FIX IT WITH, and that is measured in
   the widget set rather than assumed. EVERY path that reserves or draws the
@@ -138,11 +145,13 @@ function BuildTR4WMainMenu(const aOwner: TComponent;
   (:581, CompleteMenuItemCaption(..., EmptyStr)), so on that theme a padded
   caption can be clipped outright.
 
-  SO THEY STAY INLINE, and the rule stays crisp: the items showing a keystroke
-  inline are EXACTLY the ones whose keystroke can be declined in a window that
-  needs it. Alignment could only be bought by giving that up, and that is
-  NY4I's decision rather than ours -- see docs\ACCELERATOR_SHORTCUT_PLAN.md,
-  which now records what it would cost.
+  SO THE KEY GOES IN THE LABEL, and the rule stays crisp: the items showing a
+  keystroke inline are EXACTLY the ones whose keystroke can be declined in a
+  window that needs it. Alignment could only be bought by giving that up, which
+  was NY4I's decision rather than ours; what he chose instead (2026-09-26) was
+  to stop the inline rows pretending to be a column. See
+  docs\ACCELERATOR_SHORTCUT_PLAN.md, which records what the alternative would
+  have cost.
 
   TWO THINGS BEHAVE DIFFERENTLY AFTER THIS, BOTH DELIBERATE AND BOTH WORTH
   KNOWING BEFORE SOMEONE REPORTS THEM AS DEFECTS.
@@ -167,6 +176,32 @@ function AcceleratorRowBelongsToTheMenu(const aIndex: integer): boolean;
 { The shortcut a menu item takes for this command, or scNone when the keystroke
   is not the menu's to own. }
 function MenuShortCutFor(const aId: word): TShortCut;
+
+(* A KEYSTROKE THE MENU MAY NOT OWN, SPELLED INTO THE LABEL.
+
+  Ctrl+A/C/V/X and every unmodified key stay with the input hook -- see
+  AcceleratorRowBelongsToTheMenu -- and the LCL draws its right-aligned
+  shortcut column from TMenuItem.ShortCut and from nothing else, so those rows
+  have only their caption in which to advertise the key.
+
+  IT USED TO BE A TAB, which is what AppendMenu wanted. The Win32 draw path
+  runs the caption through DrawText with DT_EXPANDTABS, so the tab is a TAB
+  STOP chosen by the caption's own length rather than a column: a minority of
+  rows sat at a stop of their own while the majority were right-aligned, which
+  is the ragged menu NY4I photographed on 2026-09-26 -- "frankly looks bad".
+
+  Parentheses read as part of the label and so cannot pretend to be a column.
+  Cocoa and gtk2 never had a tab convention at all and pass the caption
+  straight to the native widget, so this is equally correct there.
+
+  NO NEW TRANSLATABLE TEXT: the words come from the row's resourcestring and
+  the key from uAccelerators.AcceleratorDisplayFor. The punctuation lives HERE,
+  once, rather than at each call site. *)
+function CaptionWithInlineKey(const aCaption: string; const aKey: string): string;
+
+{ The inverse, for the one reader that wants the label alone: a window's title
+  is its menu row's caption (MainUnit.OpenTR4WWindow). }
+function CaptionWithoutInlineKey(const aCaption: string): string;
 
 { Is there a main-menu row for this command id at all? }
 function MenuCommandExists(const aId: word): boolean;
@@ -823,6 +858,112 @@ begin
       end;
 end;
 
+(* THE ROWS A MENU ITEM MAY BIND EVEN THOUGH acInstall IS FALSE -- NAMED, ONE
+  BY ONE, WITH THE REASON EACH IS HERE.
+
+  acInstall False means the INPUT HOOK does not install the keystroke. For two
+  of the four such rows that is not because somebody else answers the key:
+
+    10320  Alt+-   Toggle autosend. NOTHING binds it, anywhere. The accelerator
+                   survived only in the ger and ukr .RES files, so the English
+                   menu has advertised a dead key for years
+                   (docs\ACCELERATOR_AUDIT.md). Giving the item the shortcut is
+                   what makes the advertised key start working, and closes that
+                   defect (NY4I, 2026-09-26, who was shown the consequence and
+                   accepted it).
+
+    10337  Alt+X   Exit program. 10002 menu_exit already owns Alt+X as a real
+                   menu shortcut, and both arms run the SAME ExitProgram(True)
+                   (MainUnit.pas:5004 and :5544). TMenu.FindItem returns the
+                   first match (menu.inc:217), so a second item carrying the
+                   same TShortCut changes no behaviour -- and the LCL keeps no
+                   registry of shortcuts to object to it (TMenuItem.SetShortCut
+                   just repaints, menuitem.inc:1574).
+
+  THE OTHER TWO acInstall:false ROWS MUST NOT BE ADDED HERE. 10503 PgUp and
+  10504 PgDn ARE bound -- by the message loop, tr4w.lpr:1589-1590 -- so a menu
+  shortcut would give those keystrokes two owners and fire them twice. They
+  advertise their key in the caption instead.
+
+  A LIST, NOT A LOOSENED GUARD. Relaxing the acInstall test itself would hand
+  PgUp and PgDn a second owner, and would mean that every acInstall:false row
+  added in future silently gained a binding. Widening this is an edit somebody
+  has to make on purpose, here, against these reasons. *)
+const
+   DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND: array[0..1] of word = (
+      menu_alt_toogleautosend,     (* Alt+- -- nothing else binds it *)
+      menu_alt_x                   (* Alt+X -- 10002 binds it, same action *)
+   );
+
+function MenuMayBindADisplayOnlyRow(const aId: word): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+
+   for i := Low(DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND)
+            to High(DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND) do
+      begin
+      if DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND[i] = aId then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE PUNCTUATION OF AN INLINE KEY, IN ONE PLACE -- both halves of it, so the
+  title that strips it cannot disagree with the caption that added it. *)
+const
+   INLINE_KEY_OPEN  = ' (';
+   INLINE_KEY_CLOSE = ')';
+
+function CaptionWithInlineKey(const aCaption: string; const aKey: string): string;
+begin
+   Result := aCaption;
+
+   if aKey = '' then
+      begin
+      Exit;
+      end;
+
+   Result := aCaption + INLINE_KEY_OPEN + aKey + INLINE_KEY_CLOSE;
+end;
+
+function CaptionWithoutInlineKey(const aCaption: string): string;
+var
+   p: integer;
+   q: integer;
+begin
+   Result := aCaption;
+
+   if (Length(aCaption) < 4) or (aCaption[Length(aCaption)] <> ')') then
+      begin
+      Exit;
+      end;
+
+   for p := Length(aCaption) - 1 downto 2 do
+      begin
+      if (aCaption[p] <> '(') or (aCaption[p - 1] <> ' ') then
+         begin
+         Continue;
+         end;
+
+      (* A KEYSTROKE HOLDS NO SPACE -- 'Ctrl+Alt+B', 'PgUp', '`'. Requiring
+        that is what keeps an ordinary parenthesised caption intact. *)
+      for q := p + 1 to Length(aCaption) - 1 do
+         begin
+         if aCaption[q] = ' ' then
+            begin
+            Exit;
+            end;
+         end;
+
+      Result := Copy(aCaption, 1, p - 2);
+      Exit;
+      end;
+end;
+
 (* ONE ROW, ASKED IN ISOLATION: could a menu item carry this keystroke?
 
   Split out from AcceleratorRowBelongsToTheMenu so that the "is this the first
@@ -835,7 +976,10 @@ begin
    Result := False;
    row    := ACCELERATORS[aIndex];
 
-   if not row.acInstall then
+   (* A DISPLAY-ONLY ROW, UNLESS IT IS ONE OF THE TWO NAMED ABOVE. acInstall
+     False means the input hook does not install the key; for those two,
+     nothing else does either, so the menu item may. *)
+   if (not row.acInstall) and (not MenuMayBindADisplayOnlyRow(row.acId)) then
       begin
       Exit;
       end;
@@ -876,9 +1020,13 @@ begin
       end;
 
    (* A SECOND BINDING FOR ONE COMMAND STAYS WITH THE HOOK. TMenuItem holds one
-     ShortCut, and ShortCutKey2 is DISPLAYED by the widget set but is not
-     matched by TMenu.FindItem (menu.inc:217 compares Item.ShortCut alone), so
-     putting the second keystroke there would show a key that does nothing.
+     ShortCut, and ShortCutKey2 is not matched by TMenu.FindItem (menu.inc:217
+     compares Item.ShortCut alone), so putting the second keystroke there would
+     bind nothing -- and would not even be seen: every path in
+     win32wsmenus.pp that reserves or paints the shortcut column is gated on
+     ShortCut <> scNone (measure :472, size :584, themed :930, classic :1162),
+     and ShortCutKey2 is appended only INSIDE MenuItemShortCut (:275), which
+     those gates call. So ShortCutKey2 alone displays nothing at all.
      10317 menu_alt_p is the only case: Alt+P becomes the item's shortcut and
      Ctrl+Alt+W stays an accelerator, which is what each of them already was --
      only Alt+P was ever displayed. *)
@@ -936,7 +1084,6 @@ var
    latest:   TMenuItem;   { the top-level popup most recently opened }
    item:     TMenuItem;
    caption:  string;
-   shortcut: string;
 begin
    Result     := TMainMenu.Create(aOwner);
    GMainMenu  := Result;
@@ -1007,6 +1154,11 @@ begin
            convention at all and passed the character straight to the native
            widget.
 
+           NO CAPTION CARRIES A TAB ANY MORE (2026-09-26). The rows whose
+           keystroke the menu may not own spell it in parentheses instead --
+           CaptionWithInlineKey -- because a tab stop in a minority of rows is
+           exactly what made the column look ragged.
+
            ShortCut is the property that does both jobs on all three, so the
            caption is now just the caption. Which rows the menu may own, and
            why some may not, is AcceleratorRowBelongsToTheMenu -- and the input
@@ -1017,14 +1169,16 @@ begin
          if item.ShortCut = scNone then
             begin
             (* A KEYSTROKE THE MENU MAY NOT OWN still has to be advertised, and
-              a caption is the only place left: the LCL draws a shortcut column
-              from ShortCut alone, so there is no display-without-binding. The
-              tab is ragged here, and it is the lesser of the two defects. *)
-            shortcut := AcceleratorDisplayFor(row.mrId);
-            if shortcut <> '' then
-               begin
-               caption := caption + #9 + shortcut;
-               end;
+              a caption is the only place left: the LCL draws its shortcut
+              column from ShortCut alone, so there is no
+              display-without-binding.
+
+              IT READS AS PART OF THE LABEL, in parentheses -- "Toggle insert
+              mode (Ins)". A tab stood here and looked like a column without
+              being one; see CaptionWithInlineKey for why that rendered ragged
+              and why the punctuation lives there rather than on this line. *)
+            caption := CaptionWithInlineKey(caption,
+                                            AcceleratorDisplayFor(row.mrId));
             end;
 
          item.Caption := TCaption(caption);

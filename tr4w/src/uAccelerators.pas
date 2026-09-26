@@ -65,20 +65,25 @@ type
     acShift:   boolean;
     acKey:     Word;     // a virtual-key code; every row is FVIRTKEY
     acDisplay: string;
-    { False = DISPLAY ONLY: the menu shows this keystroke but the ACCEL table
-      does not carry it, because something else already does. Three shapes, all
-      real -- see docs\ACCELERATOR_AUDIT.md:
+    (* False = THE INPUT HOOK DOES NOT INSTALL THIS KEYSTROKE. Three shapes,
+      all real -- see docs\ACCELERATOR_AUDIT.md:
 
-        * the MESSAGE LOOP binds it -- PgUp/PgDn at tr4w.lpr:1589-1590. Recording
-          them here is deliberate: they are otherwise invisible to every tool
-          that reads a table, and they die with the loop in Phase 3. This is the
-          list to convert.
+        * the MESSAGE LOOP binds it -- PgUp/PgDn at tr4w.lpr:1589-1590.
+          Recording them here is deliberate: they are otherwise invisible to
+          every tool that reads a table, and they die with the loop in Phase 3.
+          This is the list to convert. NOTHING ELSE MAY BIND THEM meanwhile --
+          a menu shortcut would fire them twice.
         * another id already answers the key -- Alt+X is bound to 10002
           menu_exit, and 10337 menu_alt_x runs the same ExitProgram(True), so
           showing Alt+X on both is truthful.
-        * NOTHING binds it -- 10320 Alt+- is advertised and dead. Kept as
-          display-only to preserve today's exact behaviour rather than quietly
-          changing it; the audit carries the open question. }
+        * NOTHING binds it -- 10320 Alt+-, advertised and dead for years.
+
+      AND FOR THOSE LAST TWO, THE MENU ITEM NOW CARRIES THE KEYSTROKE (NY4I,
+      2026-09-26): they are named in uMenu's
+      DISPLAY_ONLY_ROWS_A_MENU_ITEM_MAY_BIND, which is a list of exactly two
+      and not a relaxation of this flag. So acInstall False no longer means
+      "bound by nothing here"; it means "not installed by uAppInputHooks", and
+      whether a menu item binds it is uMenu's question. *)
     acInstall: boolean;
   end;
 
@@ -118,7 +123,7 @@ const
     (acId: 10317; acCtrl: true ; acAlt: true ; acShift: false; acKey: $57; acDisplay: 'Ctrl+Alt+W'; acInstall: true),   // menu_alt_p
     (acId: 10318; acCtrl: false; acAlt: true ; acShift: false; acKey: $5A; acDisplay: 'Alt+Z'; acInstall: true),   // menu_alt_initialexhange
     (acId: 10319; acCtrl: false; acAlt: true ; acShift: false; acKey: $BB; acDisplay: 'Alt+='; acInstall: true),   // menu_alt_tooglesidetone
-    (acId: 10320; acCtrl: false; acAlt: true ; acShift: false; acKey: $BD; acDisplay: 'Alt+-'; acInstall: false),   // menu_alt_toogleautosend -- NOTHING binds it (defect, see audit)
+    (acId: 10320; acCtrl: false; acAlt: true ; acShift: false; acKey: $BD; acDisplay: 'Alt+-'; acInstall: false),   // menu_alt_toogleautosend -- the MENU ITEM binds it (uMenu, 2026-09-26); the hook does not
     (acId: 10321; acCtrl: false; acAlt: true ; acShift: false; acKey: $42; acDisplay: 'Alt+B'; acInstall: true),   // menu_alt_bandup
     (acId: 10322; acCtrl: false; acAlt: true ; acShift: false; acKey: $56; acDisplay: 'Alt+V'; acInstall: true),   // menu_alt_banddown
     (acId: 10323; acCtrl: false; acAlt: true ; acShift: false; acKey: $4D; acDisplay: 'Alt+M'; acInstall: true),   // menu_alt_ssbcwmode
@@ -135,7 +140,7 @@ const
     (acId: 10334; acCtrl: false; acAlt: true ; acShift: false; acKey: $38; acDisplay: 'Alt+8'; acInstall: true),   // menu_alt_increment_time_8
     (acId: 10335; acCtrl: false; acAlt: true ; acShift: false; acKey: $39; acDisplay: 'Alt+9'; acInstall: true),   // menu_alt_increment_time_9
     (acId: 10336; acCtrl: false; acAlt: true ; acShift: false; acKey: $30; acDisplay: 'Alt+0'; acInstall: true),   // menu_alt_increment_time_0
-    (acId: 10337; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: false),   // menu_alt_x -- Alt+X is bound to 10002, same action
+    (acId: 10337; acCtrl: false; acAlt: true ; acShift: false; acKey: $58; acDisplay: 'Alt+X'; acInstall: false),   // menu_alt_x -- Alt+X is also bound to 10002, same action; both menu items carry it
     (acId: 10400; acCtrl: true ; acAlt: false; acShift: false; acKey: $41; acDisplay: 'Ctrl+A'; acInstall: true),   // menu_ctrl_sendkeyboardinput
     (acId: 10401; acCtrl: true ; acAlt: false; acShift: false; acKey: $42; acDisplay: 'Ctrl+B'; acInstall: true),   // menu_ctrl_commtopacket
     (acId: 10402; acCtrl: true ; acAlt: false; acShift: false; acKey: $4B; acDisplay: 'Ctrl+K'; acInstall: true),   // menu_ctrl_cleardupesheet

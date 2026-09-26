@@ -167,8 +167,24 @@ copying a callsign.
 
 **That is the price of putting Ctrl+A/C/V/X, Tab and Escape in the shortcut
 column, and it is a decision about a contest keyboard rather than a rendering
-fix.** It is NY4I's to make. Until then those five items show their keystroke in
+fix.** It is NY4I's to make. Until then those items show their keystroke in
 the caption, inline, and `uMenu` says why beside the rule.
+
+**They read as part of the label now, in parentheses** -- `Send Keyboard Input
+(Ctrl+A)` -- decided by NY4I on 2026-09-26 after three screenshots of a ragged
+menu. The tab that stood there was a `DT_EXPANDTABS` **tab stop**, so an inline
+row sat at a position its own caption length chose, beside a genuinely
+right-aligned column. A parenthesis cannot pretend to be a column, and it is
+just caption text, so Cocoa and gtk2 -- which never had a tab convention --
+render it the same way.
+
+**Two rows left the inline set the same day and are in the column now:** `Alt+-`
+(10320, toggle autosend), which nothing bound at all, and `Alt+X` (10337, Exit
+Program), which `File -> Exit` already answers with the same
+`ExitProgram(True)`. Both are `acInstall: false`, so this is a **named list of
+two** in `uMenu`, not a relaxation of that flag: `PgUp` and `PgDn` are also
+`acInstall: false` and are bound by the message loop, so a shortcut there would
+fire CW speed twice.
 
 ## The option
 

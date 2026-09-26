@@ -6430,7 +6430,6 @@ const
 var
   TempFlag: Cardinal;
   Radio: RadioPtr;
-  i: integer;
   // The LCL form this window IS, when it is one, so the show at the bottom does
   // not have to ask a second time which windows are forms.
   lclForm: TCustomForm;
@@ -6623,25 +6622,20 @@ begin
     Was GetMenuStringW into a local WideChar buffer, then a scan for the tab.
     MenuCaption returns the row's Caption.
 
-    THE TAB IS USUALLY NOT THERE ANY MORE, and the cut is kept because of the
-    few rows where it is. A menu item carries its keystroke in ShortCut now
-    (uMenu, 2026-09-25) and its caption is just the caption, so for every
-    window on this menu Pos returns 0 and the whole caption is the title. The
-    rows whose keystroke the menu may not own still spell it after a tab -- see
-    uMenu.AcceleratorRowBelongsToTheMenu -- so removing this would put "Esc"
-    or "Ctrl+C" in a window title the day one of them grew a window.
+    THERE IS NO TAB ANY MORE (2026-09-26), and the cut is kept because the
+    advertisement is not. A menu item carries its keystroke in ShortCut, and
+    the rows whose keystroke the menu may not own spell it in PARENTHESES --
+    "Toggle insert mode (Ins)" -- so removing this would put "(Esc)" or
+    "(Ctrl+C)" in a window title the day one of those rows grew a window.
+    uMenu.CaptionWithoutInlineKey is the exact inverse of the function that
+    adds it, which is why it lives there and not here.
 
     THE LOCAL BUFFER IS GONE WITH THE CALL, and so is the trap it existed for:
     a failed GetMenuStringW left whatever the previous caller had put in the
     shared buffer, which is how three windows once came up titled with stale
     bytes rather than titled empty. MenuCaption answers '' for a row that is
     not there. *)
-  menuTitle := MenuCaption(10199 + Ord(ID));
-  i := Pos(#9, menuTitle);
-  if i > 0 then
-     begin
-     menuTitle := Copy(menuTitle, 1, i - 1);
-     end;
+  menuTitle := CaptionWithoutInlineKey(MenuCaption(10199 + Ord(ID)));
 
   // THROUGH THE FORM WHEN IT IS ONE, and this is not tidiness -- SetWindowTextW
   // writes the native title BEHIND the LCL's back, leaving Caption holding

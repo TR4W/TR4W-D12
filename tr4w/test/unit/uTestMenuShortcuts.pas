@@ -29,7 +29,7 @@ unit uTestMenuShortcuts;
 interface
 
 uses
-   SysUtils, Classes, Menus, uTR4WTestFramework, uAccelerators, uMenu;
+   SysUtils, Classes, Menus, LCLType, uTR4WTestFramework, uAccelerators, uMenu;
 
 type
    TMenuShortcutTests = class(TTestCase)
@@ -39,6 +39,8 @@ type
       procedure Test_TheShortCutTranslationIsExact;
       procedure Test_NoKeystrokeHasTwoOwners;
       procedure Test_TheGuardedKeysStayWithTheHook;
+      procedure Test_TheTwoNamedDisplayOnlyRowsAreBound;
+      procedure Test_TheInlineKeyIsParenthesised;
       procedure Test_MenuCommandExistsFindsAndMisses;
    public
       procedure RunAllTests; override;
@@ -108,9 +110,15 @@ begin
      four are display-only rows that bind nothing anywhere (Alt+-, the second
      Alt+X, PgUp and PgDn, which the entry fields answer).
 
+     76 AND 16 SINCE 2026-09-26, when NY4I gave Alt+- and Alt+X real menu
+     shortcuts. Those two rows are acInstall:false, so they were never counted
+     on the hook's side and the 16 is unchanged: what moved is two rows that
+     previously belonged to NEITHER side, advertising a key in a caption while
+     Alt+- in particular was bound by nothing at all.
+
      The numbers are pinned because a row changing sides is a decision about
      who answers a keystroke, and it must never happen as a side effect. *)
-   CheckEquals(74, menuOwned, 'rows a menu item owns');
+   CheckEquals(76, menuOwned, 'rows a menu item owns');
    CheckEquals(16, hookInstalled, 'rows the input hook still installs');
 end;
 
@@ -130,8 +138,12 @@ begin
 
       row := ACCELERATORS[i];
 
-      CheckTrue(row.acInstall,
-                'a menu-owned row installs a binding: ' + row.acDisplay);
+      (* acInstall, OR ONE OF THE TWO ROWS NAMED IN uMenu. Written as two
+        literal ids rather than by calling uMenu's own list, so that adding a
+        third exception fails HERE and has to be argued for. *)
+      CheckTrue(row.acInstall or (row.acId = 10320) or (row.acId = 10337),
+                'a menu-owned row installs a binding, or is one of the two '
+                + 'named display-only rows: ' + row.acDisplay);
       CheckTrue(row.acCtrl or row.acAlt or row.acShift,
                 'a menu-owned row has a modifier -- an unmodified key is typing: '
                 + row.acDisplay);
@@ -212,6 +224,21 @@ begin
             Continue;
             end;
 
+         (* THE ONE DELIBERATE DUPLICATE, NAMED. 10002 File -> Exit and 10337
+           Exit Program both carry Alt+X, both are menu items, and both run
+           ExitProgram(True) (MainUnit.pas:5004 and :5544). TMenu.FindItem
+           returns the first match (menu.inc:217), so which one answers cannot
+           be observed. NY4I accepted this on 2026-09-26 as the price of Exit
+           Program joining the shortcut column.
+
+           This is an allowance for ONE PAIR, not for the array order deciding
+           anything: any other collision still fails. *)
+         if ((ACCELERATORS[i].acId = 10002) and (ACCELERATORS[j].acId = 10337)) or
+            ((ACCELERATORS[i].acId = 10337) and (ACCELERATORS[j].acId = 10002)) then
+            begin
+            Continue;
+            end;
+
          CheckTrue(False,
                    'keystroke ' + ACCELERATORS[i].acDisplay
                    + ' is claimed twice -- commands '
@@ -270,6 +297,72 @@ begin
                'the spot key is not a menu shortcut');
 end;
 
+procedure TMenuShortcutTests.Test_TheTwoNamedDisplayOnlyRowsAreBound;
+begin
+   BeginTest('Test_TheTwoNamedDisplayOnlyRowsAreBound');
+
+   (* NY4I, 2026-09-26: these two join the shortcut column.
+
+     Alt+- was bound by NOTHING -- the accelerator survived only in the ger and
+     ukr .RES files -- so this is the advertised key starting to work, which is
+     the point of the change and closes the defect the audit records. *)
+   CheckEquals(integer(Menus.ShortCut(VK_OEM_MINUS, [ssAlt])),
+               integer(MenuShortCutFor(10320)),
+               'Toggle autosend owns Alt+-');
+
+   { Alt+X on both items, deliberately, and identical -- see the duplicate
+     allowance above. }
+   CheckEquals(integer(Menus.ShortCut(Ord('X'), [ssAlt])),
+               integer(MenuShortCutFor(10337)),
+               'Exit Program owns Alt+X');
+   CheckEquals(integer(MenuShortCutFor(10002)),
+               integer(MenuShortCutFor(10337)),
+               'File -> Exit and Exit Program carry the same keystroke');
+
+   (* AND THE OTHER TWO acInstall:false ROWS MUST NOT. PgUp and PgDn are bound
+     by the message loop (tr4w.lpr:1589-1590); a menu shortcut would be a
+     second owner and would fire CW speed twice per press. This is the half of
+     the change that must not be widened. *)
+   CheckEquals(integer(scNone), integer(MenuShortCutFor(10503)),
+               'CW speed up stays with the message loop');
+   CheckEquals(integer(scNone), integer(MenuShortCutFor(10504)),
+               'CW speed down stays with the message loop');
+end;
+
+procedure TMenuShortcutTests.Test_TheInlineKeyIsParenthesised;
+begin
+   BeginTest('Test_TheInlineKeyIsParenthesised');
+
+   (* A ROW THE MENU MAY NOT OWN READS AS A LABEL, NOT AS A COLUMN. The tab
+     that stood here was a DT_EXPANDTABS tab stop, so a minority of rows sat
+     at a stop of their own beside the real right-aligned column -- the ragged
+     menu NY4I photographed on 2026-09-26. *)
+   CheckEquals('Send Keyboard Input (Ctrl+A)',
+               CaptionWithInlineKey('Send Keyboard Input', 'Ctrl+A'),
+               'the key reads as part of the label');
+   CheckTrue(Pos(#9, CaptionWithInlineKey('Toggle insert mode', 'Ins')) = 0,
+             'no tab survives anywhere in the caption');
+
+   { A command with no accelerator is left exactly alone -- no empty
+     parentheses on the end of a perfectly good label. }
+   CheckEquals('Band Rescore', CaptionWithInlineKey('Band Rescore', ''),
+               'no key, no punctuation');
+
+   { And the inverse, which is what a window title uses. }
+   CheckEquals('CW Speed Up',
+               CaptionWithoutInlineKey('CW Speed Up (PgUp)'),
+               'the title is the label alone');
+   CheckEquals('Bandmap', CaptionWithoutInlineKey('Bandmap'),
+               'a caption with no key is unchanged');
+
+   (* A PARENTHESIS IS NOT ENOUGH TO STRIP: a keystroke holds no space, and
+     that is what keeps an ordinary parenthesised caption intact. Without this
+     rule the inverse would silently eat a real part of a label. *)
+   CheckEquals('Edit Cabrillo Summary (Issue 914)',
+               CaptionWithoutInlineKey('Edit Cabrillo Summary (Issue 914)'),
+               'a parenthesised phrase is not a keystroke');
+end;
+
 procedure TMenuShortcutTests.Test_MenuCommandExistsFindsAndMisses;
 begin
    BeginTest('Test_MenuCommandExistsFindsAndMisses');
@@ -292,6 +385,8 @@ begin
    Test_TheShortCutTranslationIsExact;
    Test_NoKeystrokeHasTwoOwners;
    Test_TheGuardedKeysStayWithTheHook;
+   Test_TheTwoNamedDisplayOnlyRowsAreBound;
+   Test_TheInlineKeyIsParenthesised;
    Test_MenuCommandExistsFindsAndMisses;
 end;
 
