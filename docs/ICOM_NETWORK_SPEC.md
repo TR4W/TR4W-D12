@@ -625,6 +625,37 @@ All protocol-level events logged via Log4D:
 - **WARN:** Retransmit requests, CI-V timeouts, unexpected packet types
 - **ERROR:** Auth failures, socket errors, protocol violations
 
+### 8.4 Threading: WHO MAY TEAR A SESSION DOWN
+
+**A disconnect that ORIGINATES on an Indy listener thread is REQUESTED, never
+performed.** `TIcomNetworkTransport.RequestTeardown` sets a flag and returns;
+`TimerTick`, on the transport's own timer thread, performs the teardown within one
+tick (`ICOM_TIMER_TICK_MS`).
+
+The reason is a self-join. `Disconnect` reaches `DestroySockets`, which does
+`Socket.Active := False`, and deactivating a `TIdUDPServer` **stops and joins its
+listener thread** -- so a listener thread performing its own teardown waits for
+itself to finish, holding `FLifecycleLock`. Any other thread tearing the same
+transport down (the polling thread, at shutdown or on a reconnect) then blocks
+behind it for ever. Shutdown and radio reconnection both wedge permanently.
+
+Four sites reach a teardown from a listener thread and all four request it: a
+rejected login, a `$0005 Disconnect` from the radio, a refused stream request, and
+a ConnInfo saying the session has no owner.
+
+Three properties hold that together, and none is visible to the compiler:
+
+| property | where it lives |
+|---|---|
+| `Disconnect` is idempotent on **resources**, not on state | its own guard -- the 2026-09-24 IC-9700 fix. A deferred teardown arrives with the state already `Disconnected`, so a state-only guard would refuse it and orphan the socket |
+| a request cannot be serviced twice, or service a LATER session | `Disconnect` consumes the request on entry, and `Connect` always calls `Disconnect` before it builds new sockets |
+| a request cannot outlive the object holding a socket open | the destructor joins the timer thread and then calls `Disconnect` unconditionally, on the destroying thread |
+
+Gated by `tr4w/build/Lint-IcomTeardownOwner.ps1` (a listener-thread routine that
+calls `Disconnect` fails the build) and pinned end to end by
+`tr4w/test/unit/uTestIcomTeardown.pas`, which brings up a fake radio on loopback
+UDP and sends the unsolicited `$0005`.
+
 ---
 
 ## 9. Configuration Persistence

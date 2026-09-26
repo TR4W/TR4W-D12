@@ -60,6 +60,13 @@ $lints = @(
    # can never be chosen. 39 tables, 685 spellings.
    @{ Name = 'Lint-SpellingTables'; Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PollRadioState';  Arg = $src;     NeedsFpc = $false }
+   # AN INDY LISTENER THREAD MAY ASK FOR A TEARDOWN, NEVER PERFORM ONE.
+   # Disconnect frees the TIdUDPServer whose listener thread is running the
+   # handler, and deactivating it JOINS that thread -- it waits for itself,
+   # holding FLifecycleLock, so every other thread tearing the transport down
+   # blocks behind it for ever. Two arms shipped that shape in the same file
+   # whose HandleLoginResponse explains at length why they must not.
+   @{ Name = 'Lint-IcomTeardownOwner'; Arg = $src;   NeedsFpc = $false }
    @{ Name = 'Lint-PCharAnsi';       Arg = $src;     NeedsFpc = $false }
    # A RAW POINTER MAY NOT BE A Format ARGUMENT. @x is vtPointer and %s
    # refuses it; FPC calls that 'Invalid argument index in format' and puts

@@ -165,11 +165,33 @@ type
       from there.  A LongWord store is atomic on every target we build for, so
       this needs no lock. *)
     FLastTrackedSend: LongWord;
-    (* Set by a reader thread when the radio says this session has no owner;
-      acted on by the timer thread.  IT IS NOT ACTED ON INLINE, because the
-      response is Disconnect, and Disconnect frees the very TIdUDPServer whose
-      listener thread would be running the handler.  See HandleConnInfoPacket. *)
-    FSessionRevoked: Boolean;
+    (* THE TIMER THREAD IS THIS TRANSPORT'S SINGLE TEARDOWN OWNER, AND A READER
+      THREAD MAY ONLY ASK.
+
+      Every disconnect that ORIGINATES on an Indy listener thread sets this and
+      returns; the timer thread performs it.  The reason is not style.  A
+      listener thread that calls Disconnect itself reaches DestroySockets ->
+      Socket.Active := False, and deactivating a TIdUDPServer STOPS AND JOINS
+      its listener thread -- so the thread waits for itself to finish.  It does
+      that holding FLifecycleLock, so a second thread tearing the same transport
+      down (the polling thread, at shutdown or on a reconnect) then blocks for
+      ever behind a listener that is blocked on itself.  Both wedge, permanently.
+
+      HandleLoginResponse has deferred for exactly this reason since the
+      2026-09-24 bench session; ICOM_PKT_DISCONNECT and the failed stream
+      request did not, and they are the same hazard.  There is one mechanism now
+      rather than two, because two spellings of one rule are free to disagree.
+
+      The hand-off costs at most one timer tick (ICOM_TIMER_TICK_MS).
+
+      FTeardownReason exists so the log still names WHY, which was the whole
+      value of the inline log lines these requests replaced.  Both fields are
+      written by reader threads and read by the timer thread, so FTimerLock
+      covers every access to either -- a managed string assignment is not
+      atomic, and a torn reference count is heap corruption rather than a wrong
+      message. *)
+    FTeardownRequested: Boolean;
+    FTeardownReason: string;
     FStartTick: LongWord;            // TickCount32 at connect start
     FAYTRetryCount: Integer;         // Are You There retry counter
     FAYTInterval: Integer;           // Current AYT retry interval (backoff)
@@ -246,6 +268,11 @@ type
     (* The prefix on every log line this unit writes: instance, then radio
       name once one is known.  See FInstanceId. *)
     function LogPrefix: string;
+
+    (* THE DEFERRED-TEARDOWN HAND-OFF.  See FTeardownRequested. *)
+    procedure RequestTeardown(const aReason: string);
+    procedure ClearTeardownRequest;
+    function TeardownRequested(out aReason: string): Boolean;
 
     // Internal - state management
     procedure SetState(NewState: TIcomConnectionState);
@@ -443,23 +470,24 @@ end;
   the same rule every other comparison in this unit uses. *)
 procedure TIcomNetworkTransport.TimerTick;
 var
-   id:   integer;
-   nowT: LongWord;
-   due:  array[ICOM_TIMER_PING..ICOM_TIMER_LOGIN] of boolean;
+   id:     integer;
+   nowT:   LongWord;
+   reason: string;
+   due:    array[ICOM_TIMER_PING..ICOM_TIMER_LOGIN] of boolean;
 begin
-   (* THE RADIO SAID THE SESSION IS GONE.  Acted on here rather than in the
-     reader thread that saw it, because the response is Disconnect and
-     Disconnect frees that thread's own socket.  See HandleConnInfoPacket. *)
-   if FSessionRevoked then
+   (* A TEARDOWN A READER THREAD ASKED FOR.  Serviced FIRST, and
+     UNCONDITIONALLY: the version of this that only handled a revoked session
+     also tested FState = icsConnected, which is the same class of test as the
+     state-only guard that made Disconnect a no-op on 2026-09-24.  What has to
+     be torn down is RESOURCES, and only Disconnect's own guard can answer that.
+
+     The request is cleared by Disconnect, not here.  See the note at the top of
+     Disconnect for why that placement is what makes a stale request -- one that
+     could tear down a LATER session -- impossible. *)
+   if TeardownRequested(reason) then
       begin
-      FSessionRevoked := False;
-      if FState = icsConnected then
-         begin
-         logger.Warn(LogPrefix + ' Radio reports this ' +
-                     'session has no owner -- session revoked; disconnecting so ' +
-                     'the polling thread reconnects');
-         Disconnect;
-         end;
+      logger.Warn(LogPrefix + ' Teardown requested by a reader thread: ' + reason);
+      Disconnect;
       end;
 
    nowT := TickCount32;
@@ -554,6 +582,47 @@ begin
 end;
 
 // ============================================================================
+// Deferred teardown -- the reader-thread hand-off
+// ============================================================================
+
+(* WHAT A READER THREAD DOES INSTEAD OF CALLING Disconnect.  See
+  FTeardownRequested for why it may not call it, and TimerTick for who does. *)
+procedure TIcomNetworkTransport.RequestTeardown(const aReason: string);
+begin
+   FTimerLock.Enter;
+   try
+      FTeardownRequested := True;
+      FTeardownReason    := aReason;
+   finally
+      FTimerLock.Leave;
+   end;
+end;
+
+procedure TIcomNetworkTransport.ClearTeardownRequest;
+begin
+   FTimerLock.Enter;
+   try
+      FTeardownRequested := False;
+      FTeardownReason    := '';
+   finally
+      FTimerLock.Leave;
+   end;
+end;
+
+(* READS, AND DELIBERATELY DOES NOT CLEAR.  Consuming the request here would
+  reopen the 50 ms log loop described at the top of Disconnect. *)
+function TIcomNetworkTransport.TeardownRequested(out aReason: string): Boolean;
+begin
+   FTimerLock.Enter;
+   try
+      Result  := FTeardownRequested;
+      aReason := FTeardownReason;
+   finally
+      FTimerLock.Leave;
+   end;
+end;
+
+// ============================================================================
 // Constructor / Destructor
 // ============================================================================
 
@@ -610,7 +679,16 @@ begin
     in the same way: the auth-failure path parks the state at Disconnected
     while the sockets are still open, so the guard skipped the teardown of a
     transport that very much still owned a bound UDP socket and a running
-    listener thread.  Disconnect is self-guarding now; let it decide. *)
+    listener thread.  Disconnect is self-guarding now; let it decide.
+
+    AND IT IS WHAT ANSWERS AN OUTSTANDING TEARDOWN REQUEST.  The timer thread --
+    the owner that services those -- has just been joined and freed, so a
+    request set by a reader thread from here on has nobody left to act on it.
+    This call is the answer: it runs on the destroying thread, unconditionally,
+    and it frees the sockets and joins their listener threads whatever the
+    request flag says.  A request can therefore never outlive the object still
+    holding a socket and a thread open; past this point it can only be
+    redundant, and it is a field of an object about to cease to exist. *)
   Disconnect;
 
   ClearAllBuffers;
@@ -667,7 +745,7 @@ begin
   FStartTick := TickCount32;
   FLastCivData := TickCount32;
   FLastTrackedSend := TickCount32;
-  FSessionRevoked := False;
+  ClearTeardownRequest;
   FCivStreamOpen := False;
 
   (* AN ATTEMPT IS NOT FAILED UNTIL IT FAILS.
@@ -681,7 +759,7 @@ begin
 
     Cleared HERE rather than in CreateSockets because Connect is what a fresh
     attempt IS -- it is the single entry point, it already resets every other
-    per-session latch (token, sequence counters, FSessionRevoked) under
+    per-session latch (token, sequence counters, the teardown request) under
     FLifecycleLock, and it has an early path that never reaches CreateSockets
     at all. *)
   FAuthFailed := False;
@@ -737,6 +815,26 @@ begin
 
   logger.Debug(LogPrefix + ' Disconnect called from state %s',
               [IcomStateToString(FState)]);
+
+  (* A PENDING TEARDOWN REQUEST IS CONSUMED HERE, BEFORE THE GUARD, AND THAT
+    PLACEMENT IS THE WHOLE ARGUMENT AGAINST A STALE ONE.
+
+    A reader thread can set the request at any instant up to the moment
+    DestroySockets joins it.  Clearing on entry means:
+
+      * a request set before this line is satisfied by this very call;
+
+      * a request set after it -- by a listener of the session being torn down,
+        in the window before its own join completes -- survives, and is cleared
+        by the NEXT Disconnect, which Connect always performs before it builds
+        new sockets.  So a stale request can never tear down a later session;
+
+      * if no Connect follows, the timer thread services the survivor once,
+        reaches the guard below with nothing left, and returns.  One no-op
+        rather than a request nobody clears and a warning every 50 ms -- which
+        is what consuming it in TimerTick instead would have produced the
+        moment the guard fired. *)
+  ClearTeardownRequest;
 
   (* IDEMPOTENT ON RESOURCES, NOT ON STATE.  This guard used to be
     "if FState = icsDisconnected then Exit", and that single line is the
@@ -1353,8 +1451,11 @@ begin
 
     ICOM_PKT_DISCONNECT:
       begin
+        (* REQUESTED, NEVER PERFORMED HERE.  This runs on an Indy listener
+          thread and Disconnect frees that thread's own TIdUDPServer, so doing
+          it inline self-joins -- see FTeardownRequested. *)
         logger.Warn(LogPrefix + ' Disconnect received from radio');
-        Disconnect;
+        RequestTeardown('the radio sent $0005 Disconnect');
       end;
   end;
 end;
@@ -1419,7 +1520,10 @@ begin
 
     Do NOT call Disconnect here -- we are on the Indy listener thread, and
     Disconnect -> DestroySockets -> Active := False would self-deadlock.  Set
-    the flag and the state; the polling thread does the teardown.
+    the flag and the state, and ASK the teardown owner: the timer thread does
+    it within a tick.  The polling thread's own Disconnect, which notices
+    FAuthFailed, remains a correct second route and is still what frees the
+    transport -- what it is no longer is the ONLY route.
 
     THAT HAND-OFF WAS BROKEN FOR AS LONG AS IT EXISTED, and the break was not
     here: parking the state at Disconnected made the polling thread's
@@ -1432,6 +1536,7 @@ begin
      FAuthFailed := True;
      StopTimers;
      SetState(icsDisconnected);
+     RequestTeardown('authentication rejected by the radio');
      Exit;
      end;
 
@@ -1559,9 +1664,10 @@ end;
   StreamRequested, never at Connected.  The two that DO arrive at Connected
   during a handshake both carry an owner, so the owner test removes those.
 
-  WHY A FLAG AND NOT A Disconnect RIGHT HERE.  This runs on the control
+  WHY A REQUEST AND NOT A Disconnect RIGHT HERE.  This runs on the control
   socket's Indy listener thread, and Disconnect frees that very TIdUDPServer.
-  The timer thread acts on the flag instead; see TimerTick.
+  The timer thread acts on the request instead; see FTeardownRequested and
+  TimerTick.
 
   WHAT IT BUYS.  Before this, a revoked session was discovered by INFERENCE --
   CI-V goes quiet, CivDataFresh ages out at 3 s, the polling supervisor gives
@@ -1615,7 +1721,7 @@ begin
   logger.Warn(LogPrefix + ' ConnInfo says this session ' +
               'has no owner (token=$%.8x) -- the radio has revoked it; ' +
               'reconnecting', [FToken]);
-  FSessionRevoked := True;
+  RequestTeardown(Format('the radio revoked this session (token=$%.8x)', [FToken]));
 end;
 
 // ============================================================================
@@ -1635,8 +1741,10 @@ begin
   // Check for connection error
   if Pkt.Error = $FFFFFFFF then
      begin
+     (* REQUESTED, NEVER PERFORMED HERE -- Indy listener thread; see
+       FTeardownRequested. *)
      logger.Error(LogPrefix + ' Stream request failed (error=$FFFFFFFF)');
-     Disconnect;
+     RequestTeardown('the radio refused the stream request (error=$FFFFFFFF)');
      Exit;
      end;
 
