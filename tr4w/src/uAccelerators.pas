@@ -43,10 +43,16 @@ unit uAccelerators;
   that to be removed and a second accelerator for one command is legal.
 
   NOT INCLUDED, and this is the trap to remember: PgUp and PgDn (CW speed
-  up/down, ids 10503/10504) are bound by the MESSAGE LOOP at tr4w.lpr:1589-1590,
-  not by any accelerator table. They are invisible to a tool that reads the
-  .RES, and they DIE WITH THE LOOP unless they are carried across in Phase 3.
-  The loop's WM_KEYDOWN arms are a third place a keystroke can be defined.
+  up/down, ids 10503/10504) are bound by THE ENTRY FIELD'S OWN KEY HANDLER --
+  uMainWindowProc.TTR4WEntryEvents.EntryKeyDown, src\uMainWindowProc.pas:359-367
+  -- not by any accelerator table. They are invisible to a tool that reads the
+  .RES, so a keystroke can be defined in a third place: a control's key handler.
+
+  THIS NOTE SAID "the MESSAGE LOOP at tr4w.lpr:1589-1590" UNTIL 2026-09-26, and
+  that loop no longer exists (tr4w.lpr is 585 lines and runs Application.Run).
+  It mattered because the two owners behave differently: the entry field's
+  handler fires ONLY when a call or exchange field has focus, while a
+  TMenuItem.ShortCut fires from any form.
 }
 
 interface
@@ -68,11 +74,12 @@ type
     (* False = THE INPUT HOOK DOES NOT INSTALL THIS KEYSTROKE. Three shapes,
       all real -- see docs\ACCELERATOR_AUDIT.md:
 
-        * the MESSAGE LOOP binds it -- PgUp/PgDn at tr4w.lpr:1589-1590.
-          Recording them here is deliberate: they are otherwise invisible to
-          every tool that reads a table, and they die with the loop in Phase 3.
-          This is the list to convert. NOTHING ELSE MAY BIND THEM meanwhile --
-          a menu shortcut would fire them twice.
+        * A CONTROL'S OWN KEY HANDLER binds it -- PgUp/PgDn in
+          uMainWindowProc.TTR4WEntryEvents.EntryKeyDown (:359-367), which fires
+          only while a call or exchange field has focus. Recording them here is
+          deliberate: they are otherwise invisible to every tool that reads a
+          table. NOTHING ELSE MAY BIND THEM -- a menu shortcut fires from any
+          form, so it would both fire them twice AND widen where they work.
         * another id already answers the key -- Alt+X is bound to 10002
           menu_exit, and 10337 menu_alt_x runs the same ExitProgram(True), so
           showing Alt+X on both is truthful.
@@ -170,8 +177,8 @@ const
     (acId: 10500; acCtrl: false; acAlt: false; acShift: false; acKey: $13; acDisplay: 'Pause'; acInstall: true),   // menu_mainwindow_setfocus
     (acId: 10501; acCtrl: false; acAlt: false; acShift: false; acKey: $2D; acDisplay: 'Ins'; acInstall: true),   // menu_insertmode
     (acId: 10502; acCtrl: false; acAlt: false; acShift: false; acKey: $1B; acDisplay: 'Esc'; acInstall: true),   // menu_escape
-    (acId: 10503; acCtrl: false; acAlt: false; acShift: false; acKey: $21; acDisplay: 'PgUp'; acInstall: false),   // menu_cwspeedup -- bound by the MESSAGE LOOP, tr4w.lpr:1589
-    (acId: 10504; acCtrl: false; acAlt: false; acShift: false; acKey: $22; acDisplay: 'PgDn'; acInstall: false),   // menu_cwspeeddown -- bound by the MESSAGE LOOP, tr4w.lpr:1590
+    (acId: 10503; acCtrl: false; acAlt: false; acShift: false; acKey: $21; acDisplay: 'PgUp'; acInstall: false),   // menu_cwspeedup -- bound by the ENTRY FIELD's key handler, uMainWindowProc:359
+    (acId: 10504; acCtrl: false; acAlt: false; acShift: false; acKey: $22; acDisplay: 'PgDn'; acInstall: false),   // menu_cwspeeddown -- bound by the ENTRY FIELD's key handler, uMainWindowProc:365
     (acId: 10505; acCtrl: false; acAlt: false; acShift: true ; acKey: $09; acDisplay: 'Shift+Tab'; acInstall: true),   // menu_cqmode
     (acId: 10506; acCtrl: false; acAlt: false; acShift: false; acKey: $09; acDisplay: 'Tab'; acInstall: true),   // menu_spmode_ortab
     (acId: 10507; acCtrl: false; acAlt: false; acShift: false; acKey: $C0; acDisplay: '`'; acInstall: true),   // menu_ctrl_sendspot

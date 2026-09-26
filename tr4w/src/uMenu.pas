@@ -881,9 +881,19 @@ end;
                    just repaints, menuitem.inc:1574).
 
   THE OTHER TWO acInstall:false ROWS MUST NOT BE ADDED HERE. 10503 PgUp and
-  10504 PgDn ARE bound -- by the message loop, tr4w.lpr:1589-1590 -- so a menu
-  shortcut would give those keystrokes two owners and fire them twice. They
-  advertise their key in the caption instead.
+  10504 PgDn ARE bound -- by THE ENTRY FIELD'S OWN KEY HANDLER,
+  uMainWindowProc.TTR4WEntryEvents.EntryKeyDown (src\uMainWindowProc.pas:359-367)
+  -- so a menu shortcut would give those keystrokes two owners and fire them
+  twice. They advertise their key in the caption instead.
+
+  IT IS NOT THE MESSAGE LOOP, whatever this note said until 2026-09-26 and
+  whatever uAccelerators still said alongside it. That loop is gone: tr4w.lpr is
+  585 lines and runs Application.Run. The difference is not pedantic -- the entry
+  field's handler fires ONLY while a call or exchange field has focus, whereas a
+  TMenuItem.ShortCut fires from any form, so giving these two a shortcut would
+  WIDEN where PgUp changes CW speed (to the band map, the cluster window,
+  everywhere) rather than merely move who draws the key. That is NY4I's decision
+  to make and has not been made.
 
   A LIST, NOT A LOOSENED GUARD. Relaxing the acInstall test itself would hand
   PgUp and PgDn a second owner, and would mean that every acInstall:false row
@@ -990,15 +1000,29 @@ begin
       Exit;
       end;
 
-   { The standard editing keys -- Ctrl and nothing else. }
-   if (row.acCtrl) and (not row.acAlt) and (not row.acShift) then
-      begin
-      if (row.acKey = Ord('A')) or (row.acKey = Ord('C')) or
-         (row.acKey = Ord('V')) or (row.acKey = Ord('X')) then
-         begin
-         Exit;
-         end;
-      end;
+   (* THE STANDARD EDITING KEYS ARE NO LONGER EXCLUDED HERE (2026-09-26), and
+     the guard that excluded them is DELETED rather than narrowed.
+
+     It read: Ctrl and nothing else, with A, C, V or X -- Exit. Its reason was
+     that a menu shortcut is answered from ANY form, so Ctrl+C on the DX cluster
+     window or on a dialog's Name field would have cleared the mult sheet
+     instead of copying. That reason no longer holds:
+     TTR4WMainForm.IsShortcut declines a keystroke the focused control needs
+     (uEditingKeys), which is the decline this guard existed to substitute for.
+     So Ctrl+A (10400), Ctrl+C (10424) and Ctrl+V (10426) join the shortcut
+     column and stop advertising their key inside their own caption.
+
+     Ord('X') WAS DEAD TEXT AND IS NOT REPLACED BY ANYTHING. No row in
+     ACCELERATORS binds Ctrl+X -- checked, not assumed -- so that name excluded
+     nothing. Ctrl+X is still named in uEditingKeys, which is the half that
+     matters: if a Ctrl+X row is ever added, the menu will take it AND the
+     override will hand it to a focused field, which is the behaviour the guard
+     was reaching for.
+
+     THE UNMODIFIED-KEYSTROKE GUARD ABOVE IS UNTOUCHED, and it is the half that
+     must not be widened: Tab, Esc, Ins, Pause, PgUp, PgDn and the spot key
+     would each start firing from every window rather than only where they fire
+     now, which is a behaviour decision and not a rendering fix. *)
 
    Result := MenuCommandExists(row.acId);
 end;

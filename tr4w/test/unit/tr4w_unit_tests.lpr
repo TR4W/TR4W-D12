@@ -239,6 +239,8 @@ uses
    uTestAccelerators in 'uTestAccelerators.pas',
    uMenu in '..\..\src\uMenu.pas',
    uTestMenuShortcuts in 'uTestMenuShortcuts.pas',
+   uEditingKeys       in '..\..\src\ui\lcl\uEditingKeys.pas',
+   uTestEditingKeys   in 'uTestEditingKeys.pas',
    uSHA256 in '..\..\src\utils\uSHA256.pas',
    uTestSHA256 in 'uTestSHA256.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
@@ -471,6 +473,7 @@ begin
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));
+   RegisterSuite(TEditingKeysTests.Create('EditingKeys'));
    RegisterSuite(TPrefsSearchTests.Create('PrefsSearch'));
    RegisterSuite(TRadioStatusTests.Create('RadioStatus'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));

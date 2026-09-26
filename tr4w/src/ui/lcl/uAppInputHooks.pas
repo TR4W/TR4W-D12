@@ -29,12 +29,20 @@ unit uAppInputHooks;
   THE MENU HAS SINCE TAKEN MOST OF THE TABLE BACK (2026-09-25), which is the
   native shape rather than a retreat: a TMenuItem.ShortCut is rendered by the
   widget set in the shortcut column -- right-aligned on Win32, a key equivalent
-  on the Cocoa menu bar -- and dispatched by it. 74 of the 94 rows are a menu
-  item's shortcut and this handler SKIPS them; what it still answers are the
-  keystrokes a menu item could not own, because a menu shortcut fires from any
-  form and cannot be declined for one window. The guards below are those
-  declines, and the rule deciding which side a row falls on is stated once, in
-  uMenu.AcceleratorRowBelongsToTheMenu.
+  on the Cocoa menu bar -- and dispatched by it. MOST rows are a menu item's
+  shortcut and this handler SKIPS them; what it still answers are the keystrokes
+  no menu item may own. No count is written here -- ask
+  uMenu.AcceleratorRowBelongsToTheMenu, which is where the rule deciding which
+  side a row falls on is stated, and the unit test that pins the split.
+
+  AND A MENU SHORTCUT CAN NOW BE DECLINED FOR ONE WINDOW, which this note used
+  to say was impossible (2026-09-26). TCustomForm.IsShortcut is virtual, so
+  TTR4WMainForm refuses the standard editing keys when the focused control needs
+  them -- see uEditingKeys. That is what let Ctrl+A, Ctrl+C and Ctrl+V move to
+  the menu and join the shortcut column. What is still here are the UNMODIFIED
+  keystrokes: Tab, Esc, Ins, Pause, the spot key and Enter, where giving a menu
+  item the shortcut would widen where the key fires rather than only change how
+  it is drawn.
 
   WHAT IS DELIBERATELY NOT HERE.  QuickQSL.  It was a WM_CHAR arm in the loop,
   and there is no application-wide KeyPress hook -- but it also does nothing
@@ -52,18 +60,16 @@ procedure InstallTR4WInputHooks;
 implementation
 
 uses
-   uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   Classes, SysUtils, StrUtils, Forms, Controls, LCLType, LMessages,
   LCLIntf,          { GetKeyState -- the LCL declares it for every widget set,
                       and each one answers for its own keyboard }
-  StdCtrls,         { TCustomEdit, TCustomComboBox -- what "the operator is
-                      typing in a field" means, asked of the control rather
-                      than of the form }
   uMainThread,      { RunOnMainThread -- the accelerator runs deferred }
   uMainWindowProc,  { DispatchCommandId -- the one command dispatch }
   uAccelerators,    { ACCELERATORS -- the one table }
   uMenu,            { AcceleratorRowBelongsToTheMenu -- which rows the menu
                       items answer, so this handler does not answer them too }
+  uEditingKeys,     (* TelnetHasFocus -- and the editing-key rule this unit
+                      used to own; see the note where the call went *)
   uSettingsModel,   { Settings.Cw.KeypadMemories }
   uCrashLog,        { LogCaughtException }
   uFunctionKeys,    { ShowFMessages -- the F-key labels }
@@ -87,8 +93,6 @@ type
     FFaults: integer;
     FLastFault: Int64;
     function  AcceleratorFor(const aKey: word; const aShift: TShiftState): word;
-    function  EditingKeyBelongsToTheField(const aKey: word;
-                                          const aShift: TShiftState): boolean;
   public
     procedure KeyDownBefore(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure AppException(Sender: TObject; E: Exception);
@@ -97,126 +101,13 @@ type
 var
   gHooks: TTR4WInputHooks = nil;
 
-{ Is the DX cluster's command field -- or anything else in the telnet window --
-  where the keystroke is going?  Issue #23: Ctrl-C/V/X/A/Z there must reach the
-  field and paste, not fire Execute Config File or Clear Mult Sheet.
+(* TelnetHasFocus AND EditingKeyBelongsToTheField MOVED TO uEditingKeys
+  (2026-09-26), unchanged.
 
-  STILL AN HWND TEST, and it stays one until the telnet window is a form.  The
-  loop asked the same question of a TMsg; this asks it of the focus, which is
-  the same question with the message taken out of it. }
-(* IS THE OPERATOR TYPING IN THE DX CLUSTER WINDOW?
-
-  If so this hook keeps its hands off the keystroke entirely, because the main
-  accelerator table would otherwise eat the ordinary editing keys: Ctrl-C is
-  menu_ctrl_clearmultsheet (10424), Ctrl-V is menu_ctrl_execute_config (10426)
-  and Ctrl-A is menu_ctrl_sendkeyboardinput (10400). That is Issue #23 -- a
-  Ctrl-C meant to copy a spot cleared the mult sheet instead.
-
-  ASKED OF THE LCL, NOT OF WINDOWS. This was GetFocus plus IsChild against the
-  form's HWND -- a Win32 question about a window this code does not own, and
-  two HWND locals to hold the answer. Screen.ActiveControl is the same question
-  in the framework's own terms, and GetParentForm walks the parent chain for
-  us, so a control nested any number of panels deep still answers correctly --
-  which is what IsChild was there to do.
-
-  It also stops being a Windows question, which is the point: GetFocus and
-  IsChild do not exist on GTK or Cocoa. *)
-function TelnetHasFocus: boolean;
-var
-  focused: TWinControl;
-begin
-  Result := False;
-
-  if tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm = nil then
-     begin
-     Exit;
-     end;
-
-  focused := Screen.ActiveControl;
-  if focused = nil then
-     begin
-     Exit;
-     end;
-
-  Result := GetParentForm(focused) = tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndForm;
-end;
-
-(* IS THIS ONE OF THE STANDARD EDITING KEYS, TYPED INTO A FIELD THAT IS NOT ON
-  THE MAIN WINDOW?
-
-  NY4I, 2026-09-15: "on many dialogs, CTRL-C, CTRL-V, CTRL-Z do not work. Those
-  are standard windows commands." They do not work because they are
-  accelerators -- Ctrl+C is clear mult sheet (10424), Ctrl+V is execute config
-  file (10426), Ctrl+A is send keyboard input (10400) -- and this hook answers
-  before any control sees the key.
-
-  THREE CONDITIONS, AND ALL THREE ARE REQUIRED.
-
-    the option        OFF by default. An operator who has cleared the mult
-                      sheet with Ctrl+C for years keeps doing so until they
-                      say otherwise.
-    not the main form THE MAIN WINDOW IS NEVER AFFECTED. Its call and exchange
-                      fields are edits too, so testing only "is a field
-                      focused" would take Ctrl+C away from the one place the
-                      accelerator is certainly wanted.
-    an edit control   asked of Screen.ActiveControl, not of the form. A
-                      TCustomEdit or a TCustomComboBox is where Ctrl+V means
-                      paste; a grid or a button is not, and on those the
-                      accelerator should still fire.
-
-  CTRL+Z IS NOT IN THE LIST BECAUSE IT IS NOT AN ACCELERATOR. Nothing in the
-  table binds it (only Alt+Z is, 10318) and nothing in tr4w/src handles VK_Z, so
-  this hook already leaves it alone: when no row matches, it exits without
-  consuming. Ctrl+Z failing on some dialog is a different defect and wants the
-  dialog named -- see docs/ACCELERATOR_SHORTCUT_PLAN.md. Listing it here would
-  look like a fix and change nothing.
-
-  Ctrl+X is included though nothing binds it today: cut belongs with copy and
-  paste, and leaving it out would mean a future row silently taking it. *)
-function TTR4WInputHooks.EditingKeyBelongsToTheField(const aKey: word;
-                                                     const aShift: TShiftState): boolean;
-var
-   focused: TWinControl;
-begin
-   Result := False;
-
-   if not Settings.Operating.StandardEditKeys then
-      begin
-      Exit;
-      end;
-
-   if (aShift * [ssCtrl, ssAlt, ssShift]) <> [ssCtrl] then
-      begin
-      Exit;
-      end;
-
-   if not ((aKey = Ord('C')) or (aKey = Ord('V')) or
-           (aKey = Ord('X')) or (aKey = Ord('A'))) then
-      begin
-      Exit;
-      end;
-
-   focused := Screen.ActiveControl;
-   if focused = nil then
-      begin
-      Exit;
-      end;
-
-   if GetParentForm(focused) = TCustomForm(TR4WMainForm) then
-      begin
-      Exit;
-      end;
-
-   Result := (focused is TCustomEdit) or (focused is TCustomComboBox);
-
-   if Result and (logger <> nil) and logger.IsTraceEnabled then
-      begin
-      logger.Trace('[InputHooks] Ctrl+%s left to %s on %s -- OPERATING '
-                   + 'STANDARD EDIT KEYS is on',
-                   [Char(aKey), focused.ClassName,
-                    GetParentForm(focused).Name]);
-      end;
-end;
+  A SECOND CALLER IS WHY: TTR4WMainForm.IsShortcut has to ask the same question,
+  because Ctrl+A, Ctrl+C and Ctrl+V are TMenuItem shortcuts now and the menu --
+  not this handler -- is what answers them. Two copies of the rule would be free
+  to disagree about the one thing they exist to agree on. *)
 
 function TTR4WInputHooks.AcceleratorFor(const aKey: word;
                                         const aShift: TShiftState): word;
@@ -303,10 +194,20 @@ begin
      Exit;
      end;
 
-  if EditingKeyBelongsToTheField(Key, Shift) then
-     begin
-     Exit;
-     end;
+  (* THE EDITING-KEY GUARD IS GONE FROM HERE BECAUSE THIS HANDLER IS NO LONGER
+    ON THOSE KEYSTROKES' PATH (2026-09-26).
+
+    Ctrl+A (10400), Ctrl+C (10424) and Ctrl+V (10426) are TMenuItem shortcuts
+    now, so AcceleratorRowBelongsToTheMenu skips their rows below and this
+    handler could not dispatch them even if it wanted to. Ctrl+X is bound by
+    nothing at all. A guard that can never fire reads as the feature being
+    implemented here, which it is not: the decline moved to
+    TTR4WMainForm.IsShortcut, which is the only place that can refuse a menu
+    shortcut for one window.
+
+    TelnetHasFocus above STAYS, and is a different shape: it covers every key
+    this handler still dispatches -- Tab, Esc, Enter, the spot key -- not just
+    the four editing ones. *)
 
   { A MODAL DIALOG OWNS THE KEYBOARD, AND THIS HOOK DOES NOT.
 

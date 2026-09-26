@@ -39,6 +39,7 @@ type
       procedure Test_TheShortCutTranslationIsExact;
       procedure Test_NoKeystrokeHasTwoOwners;
       procedure Test_TheGuardedKeysStayWithTheHook;
+      procedure Test_TheThreeEditingKeysJoinTheColumn;
       procedure Test_TheTwoNamedDisplayOnlyRowsAreBound;
       procedure Test_TheInlineKeyIsParenthesised;
       procedure Test_MenuCommandExistsFindsAndMisses;
@@ -116,10 +117,17 @@ begin
      previously belonged to NEITHER side, advertising a key in a caption while
      Alt+- in particular was bound by nothing at all.
 
+     79 AND 13 LATER THE SAME DAY, when the three standard editing keys joined
+     the column: Ctrl+A (10400), Ctrl+C (10424) and Ctrl+V (10426). All three
+     were acInstall:true, so unlike Alt+- and Alt+X they came off the hook's
+     side -- 16 - 3 = 13 -- and what makes that safe is not the row but the
+     override: TTR4WMainForm.IsShortcut declines the keystroke when the focused
+     control needs it (uEditingKeys, and uTestEditingKeys pins the rule).
+
      The numbers are pinned because a row changing sides is a decision about
      who answers a keystroke, and it must never happen as a side effect. *)
-   CheckEquals(76, menuOwned, 'rows a menu item owns');
-   CheckEquals(16, hookInstalled, 'rows the input hook still installs');
+   CheckEquals(79, menuOwned, 'rows a menu item owns');
+   CheckEquals(13, hookInstalled, 'rows the input hook still installs');
 end;
 
 procedure TMenuShortcutTests.Test_MenuOwnedRowsQualify;
@@ -255,17 +263,27 @@ begin
    BeginTest('Test_TheGuardedKeysStayWithTheHook');
 
    (* EACH OF THESE IS A CLOSED DEFECT that a ShortCut would reopen, because a
-     menu shortcut is answered from ANY form and cannot be declined for one
-     window:
+     menu shortcut is answered from ANY form:
 
-       Ctrl+A, Ctrl+C, Ctrl+V   Issue #23 and NY4I 2026-09-15 -- the standard
-                                editing keys, in the cluster window and on
-                                every non-modal dialog;
        Tab, Esc                 the radio editor closed on Tab, 2026-09-09;
        Ins, `, Pause, Enter     unmodified keys, eaten inside any edit field.
 
      Named one by one rather than derived from the rule, so that relaxing the
-     rule fails HERE, where the reasons are written down. *)
+     rule fails HERE, where the reasons are written down.
+
+     CTRL+A, CTRL+C AND CTRL+V ARE NO LONGER ON THIS LIST (2026-09-26), and the
+     sentence above is why they could leave it: a menu shortcut CAN now be
+     declined for one window. TCustomForm.IsShortcut is virtual, so
+     TTR4WMainForm returns False without calling inherited when the focused
+     control needs the key -- Issue #23 (the DX cluster window) and NY4I's
+     2026-09-15 report (a field on a non-modal dialog) are both still closed,
+     by uEditingKeys rather than by keeping the key out of the menu.
+
+     THE SEVEN BELOW ARE A DIFFERENT CASE AND MUST NOT FOLLOW. They are
+     UNMODIFIED keystrokes, so giving them a shortcut would not merely move who
+     draws the key: it would widen WHERE the key fires, from the one window that
+     answers it today to every form in the program. That is a behaviour decision
+     for NY4I and it has not been made. *)
    for i := Low(ACCELERATORS) to High(ACCELERATORS) do
       begin
       if not AcceleratorRowBelongsToTheMenu(i) then
@@ -273,28 +291,66 @@ begin
          Continue;
          end;
 
-      CheckTrue((ACCELERATORS[i].acDisplay <> 'Ctrl+A') and
-                (ACCELERATORS[i].acDisplay <> 'Ctrl+C') and
-                (ACCELERATORS[i].acDisplay <> 'Ctrl+V') and
-                (ACCELERATORS[i].acDisplay <> 'Ctrl+X') and
-                (ACCELERATORS[i].acDisplay <> 'Tab')    and
+      CheckTrue((ACCELERATORS[i].acDisplay <> 'Tab')    and
                 (ACCELERATORS[i].acDisplay <> 'Esc')    and
                 (ACCELERATORS[i].acDisplay <> 'Ins')    and
                 (ACCELERATORS[i].acDisplay <> 'Pause')  and
+                (ACCELERATORS[i].acDisplay <> 'PgUp')   and
+                (ACCELERATORS[i].acDisplay <> 'PgDn')   and
+                (ACCELERATORS[i].acDisplay <> '`')      and
                 (ACCELERATORS[i].acDisplay <> 'Enter'),
                 'the hook must keep ' + ACCELERATORS[i].acDisplay);
       end;
 
-   { And the other direction: the commands that DO have a menu item still
-     report no shortcut, so the item advertises the key in its caption. }
-   CheckEquals(integer(scNone), integer(MenuShortCutFor(10424)),
-               'Ctrl+C clear mult sheet is not a menu shortcut');
+   { And the other direction, id by id: every one of the seven unmodified rows
+     still reports no shortcut, so its item advertises the key in its caption.
+     THIS IS THE HALF THAT MUST NOT BE WIDENED. }
+   CheckEquals(integer(scNone), integer(MenuShortCutFor(10500)),
+               'Pause is not a menu shortcut');
+   CheckEquals(integer(scNone), integer(MenuShortCutFor(10501)),
+               'Ins is not a menu shortcut');
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10502)),
                'Esc is not a menu shortcut');
+   CheckEquals(integer(scNone), integer(MenuShortCutFor(10503)),
+               'PgUp is not a menu shortcut');
+   CheckEquals(integer(scNone), integer(MenuShortCutFor(10504)),
+               'PgDn is not a menu shortcut');
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10506)),
                'Tab is not a menu shortcut');
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10507)),
                'the spot key is not a menu shortcut');
+end;
+
+procedure TMenuShortcutTests.Test_TheThreeEditingKeysJoinTheColumn;
+var
+   i: integer;
+begin
+   BeginTest('Test_TheThreeEditingKeysJoinTheColumn');
+
+   (* NY4I, 2026-09-26: EXACTLY THREE ROWS, and the reason they can be three is
+     TTR4WMainForm.IsShortcut, not anything about the rows. The caption read
+     "Send Keyboard Input (Ctrl+A)" beside a right-aligned column; it reads
+     "Send Keyboard Input" with Ctrl+A in the column now. *)
+   CheckEquals(integer(Menus.ShortCut(Ord('A'), [ssCtrl])),
+               integer(MenuShortCutFor(10400)),
+               'Send Keyboard Input owns Ctrl+A');
+   CheckEquals(integer(Menus.ShortCut(Ord('C'), [ssCtrl])),
+               integer(MenuShortCutFor(10424)),
+               'Clear Mult Sheet owns Ctrl+C');
+   CheckEquals(integer(Menus.ShortCut(Ord('V'), [ssCtrl])),
+               integer(MenuShortCutFor(10426)),
+               'Execute Config File owns Ctrl+V');
+
+   (* AND NO FOURTH. Nothing in ACCELERATORS binds Ctrl+X, so the guard that
+     used to name it excluded nothing -- deleting the name changed no row. If a
+     Ctrl+X row is ever added this fails, which is the point: it is a decision,
+     and uEditingKeys already names Ctrl+X on the decline side. *)
+   for i := Low(ACCELERATORS) to High(ACCELERATORS) do
+      begin
+      CheckTrue(ACCELERATORS[i].acDisplay <> 'Ctrl+X',
+                'nothing binds Ctrl+X -- command '
+                + IntToStr(ACCELERATORS[i].acId) + ' now does');
+      end;
 end;
 
 procedure TMenuShortcutTests.Test_TheTwoNamedDisplayOnlyRowsAreBound;
@@ -320,13 +376,16 @@ begin
                'File -> Exit and Exit Program carry the same keystroke');
 
    (* AND THE OTHER TWO acInstall:false ROWS MUST NOT. PgUp and PgDn are bound
-     by the message loop (tr4w.lpr:1589-1590); a menu shortcut would be a
-     second owner and would fire CW speed twice per press. This is the half of
-     the change that must not be widened. *)
+     by THE ENTRY FIELD'S OWN KEY HANDLER -- uMainWindowProc:359-367, NOT the
+     message loop this said until 2026-09-26; that loop is gone and tr4w.lpr
+     runs Application.Run. A menu shortcut would be a second owner AND would
+     widen where PgUp changes CW speed, because the entry field's handler fires
+     only while a call or exchange field has focus. This is the half of the
+     change that must not be widened. *)
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10503)),
-               'CW speed up stays with the message loop');
+               'CW speed up stays with the entry field');
    CheckEquals(integer(scNone), integer(MenuShortCutFor(10504)),
-               'CW speed down stays with the message loop');
+               'CW speed down stays with the entry field');
 end;
 
 procedure TMenuShortcutTests.Test_TheInlineKeyIsParenthesised;
@@ -385,6 +444,7 @@ begin
    Test_TheShortCutTranslationIsExact;
    Test_NoKeystrokeHasTwoOwners;
    Test_TheGuardedKeysStayWithTheHook;
+   Test_TheThreeEditingKeysJoinTheColumn;
    Test_TheTwoNamedDisplayOnlyRowsAreBound;
    Test_TheInlineKeyIsParenthesised;
    Test_MenuCommandExistsFindsAndMisses;

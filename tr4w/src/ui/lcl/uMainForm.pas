@@ -278,6 +278,26 @@ type
 
     procedure MenuItemClick(Sender: TObject);
 
+    (* A MENU SHORTCUT THE FOCUSED CONTROL NEEDS MORE THAN THE MENU DOES.
+
+      TCustomForm.IsShortcut is virtual (forms.pp:721), and EVERY dispatch route
+      to the main menu ends at THIS form's copy of it, because this form owns the
+      TMainMenu: the parent-chain walk for a control on the main window
+      (wincontrol.inc:5820), and TApplication.IsShortcut's fall back to the main
+      form for a modeless tool window (application.inc:2158). A modal dialog
+      never reaches it at all (application.inc:2146).
+
+      So returning False WITHOUT calling inherited is a decline: the menu is
+      never asked, DoKeyDownBeforeInterface returns False (wincontrol.inc:5876),
+      and the native edit control gets the key and does its own Copy, Paste or
+      Select-All. That is what lets Ctrl+A, Ctrl+C and Ctrl+V be real
+      TMenuItem.ShortCuts -- drawn right-aligned in the shortcut column by the
+      widget set -- instead of a caption reading "Send Keyboard Input (Ctrl+A)".
+
+      THE RULE ITSELF IS NOT HERE. It is uEditingKeys, shared with the input
+      hook that used to own it, so the two cannot come to disagree. *)
+    function IsShortcut(var Message: TLMKey): boolean; override;
+
     { Builds the main menu from T_MENU_ARRAY and adopts it. A METHOD, so
       the handler below is named without a qualifier -- see the note there. }
     procedure InstallMenu;
@@ -699,6 +719,7 @@ uses
    uMMTTY,             // MMTTY.MMTTYEngine -- see MainFormWindowStateChange
    Menus,              // TMenuItem -- the menu is a TMainMenu now
    uMenu,              // BuildTR4WMainMenu -- the menu from T_MENU_ARRAY
+   uEditingKeys,       // KeystrokeBelongsToTheFocusedControl -- see IsShortcut
    uSystemWatch,       // the clock/display poll -- see SystemWatchTick
    uGetServerLog,      // the headless-sync state
    SysUtils,           // UpperCase
@@ -2329,6 +2350,21 @@ begin
      overridden width and leaves it out of the surplus, so a hand-sized column
      stays where it was put. *)
    TR4WEditableLog.Sizing := lgsFitAndFill;
+end;
+
+function TTR4WMainForm.IsShortcut(var Message: TLMKey): boolean;
+begin
+   (* NOT inherited FIRST AND THEN UNDONE -- inherited CLICKS the item, and a
+     command that has already run cannot be taken back. The question has to be
+     asked before the menu is. *)
+   if KeystrokeBelongsToTheFocusedControl(Message) then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := inherited IsShortcut(Message);
+      end;
 end;
 
 procedure TTR4WMainForm.InstallMenu;
