@@ -162,14 +162,20 @@ begin
       Exit;
       end;
 
-   (* --settings, EXPLICITLY.  Left to itself tr4wconvert resolves the
-     settings file the same way the program does, which is the right default
-     for an operator typing it -- but "the same way" includes a portable
-     settings folder beside the BINARY and this program's own path rules, and
-     the two can only be guaranteed to agree by naming the file.  A converter
-     that writes a file the program does not read fails in silence. *)
+   (* BOTH FILES, EXPLICITLY, AND NEITHER RE-DERIVED.  Left to itself
+     tr4wconvert resolves both the same way the program does, which is the
+     right default for an operator typing it -- but "the same way" includes a
+     portable settings folder beside the BINARY and this program's own path
+     rules, and the two can only be guaranteed to agree by naming the files.
+     A converter that writes a file the program does not read, or reads an ini
+     that is not the one this offer was made about, fails in silence.
+
+     The command line is built in uLegacyConversionCheck beside the condition
+     -- it is a pure function of the same two paths, and that is what makes it
+     assertable from the test binary, which cannot load this unit. *)
    started := RunConsoleProgramAndWait(converter,
-                                       ['--settings', aSettingsFilePath],
+                                       LegacyConversionArguments(aLegacyIniPath,
+                                                                 aSettingsFilePath),
                                        exitStatus);
 
    if not started then

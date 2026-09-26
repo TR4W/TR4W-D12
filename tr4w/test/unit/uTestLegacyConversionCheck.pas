@@ -18,6 +18,15 @@ unit uTestLegacyConversionCheck;
       no ini, json     a station that never had 4.x             -> silent
       neither          a brand new install, first ever start    -> silent
 
+  AND THE COMMAND LINE, WHICH IS WHERE THIS WENT WRONG.  The offer detected an
+  ini and then launched tr4wconvert naming only the DESTINATION, leaving the
+  converter to look for an ini beside it -- so when the destination was
+  somewhere else, the ini that triggered the offer was not the ini that was
+  read, and the converter reported "there is no old configuration to convert"
+  about a station that had one.  Nothing failed: exit 0, and a first run that
+  converted nothing looks exactly like a first run with nothing to convert.
+  The arguments are a pure function of the two paths, so they are pinned here.
+
   WHAT THIS CANNOT TEST, said plainly rather than implied by omission: the
   DIALOG.  uFirstRunConvert pulls in the LCL and the unit-test binary
   deliberately links no widget set, so nothing here exercises the QuestionDlg,
@@ -40,6 +49,8 @@ type
       procedure Test_ASettingsFileWithNoIniIsSilent;
       procedure Test_NeitherFileIsSilent;
       procedure Test_AnEmptyPathIsNotAFile;
+      procedure Test_TheArgumentsNameBothFiles;
+      procedure Test_ADestinationElsewhereStillNamesTheDetectedIni;
    public
       procedure RunAllTests; override;
    end;
@@ -132,6 +143,60 @@ begin
    CheckFalse(LegacyConversionOffered('x.ini', ''), 'no settings file named');
 end;
 
+(* The command line as one readable string, which is what an assertion about
+  arguments is actually about.  The join is this test's own and says nothing
+  about quoting: RunConsoleProgramAndWait is handed the ARRAY, so a path with a
+  space in it is still one argument.  The fixtures below have none, so reading
+  the joined form back is unambiguous. *)
+function ArgLine(const aArgs: TLegacyConversionArgs): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 0 to High(aArgs) do
+      begin
+      if i > 0 then
+         begin
+         Result := Result + ' ';
+         end;
+      Result := Result + aArgs[i];
+      end;
+end;
+
+procedure TLegacyConversionCheckTests.Test_TheArgumentsNameBothFiles;
+begin
+   BeginTest('the command line names the detected ini and the destination');
+   (* THE INI IS NAMED EVEN WHERE THE CONVERTER WOULD HAVE LOOKED ANYWAY.  Not
+     because it is needed there, but because the alternative is a rule that
+     decides when to name it -- and a second copy of "where does the ini live"
+     is precisely what this defect was. *)
+   CheckEquals('--settings C:\tr4w\settings\tr4w.json '
+               + '--ini C:\tr4w\settings\tr4w.ini',
+               ArgLine(LegacyConversionArguments('C:\tr4w\settings\tr4w.ini',
+                                                 'C:\tr4w\settings\tr4w.json')),
+               'both paths, passed through unchanged');
+end;
+
+procedure TLegacyConversionCheckTests.Test_ADestinationElsewhereStillNamesTheDetectedIni;
+var
+   args: TLegacyConversionArgs;
+begin
+   BeginTest('a destination in another directory still converts the detected ini');
+   (* THE CASE THAT WAS BROKEN.  --settings moves the destination; TR4W resolves
+     its legacy ini from its own settings directory and does not follow.  Before
+     this, these arguments held the destination alone and tr4wconvert looked for
+     D:\elsewhere\tr4w.ini -- a file that is not there, on a station whose
+     entire 4.x configuration was sitting in the ini it had just been told
+     about. *)
+   args := LegacyConversionArguments('C:\tr4w\settings\tr4w.ini',
+                                     'D:\elsewhere\my.json');
+   CheckEquals(4, Length(args), 'four arguments: two switches and two paths');
+   CheckEquals('C:\tr4w\settings\tr4w.ini', args[3],
+               'the ini that was DETECTED is the ini that is converted');
+   CheckEquals('D:\elsewhere\my.json', args[1],
+               'and the destination is still the one the program will read');
+end;
+
 procedure TLegacyConversionCheckTests.RunAllTests;
 begin
    Randomize;
@@ -140,6 +205,8 @@ begin
    Test_ASettingsFileWithNoIniIsSilent;
    Test_NeitherFileIsSilent;
    Test_AnEmptyPathIsNotAFile;
+   Test_TheArgumentsNameBothFiles;
+   Test_ADestinationElsewhereStillNamesTheDetectedIni;
 end;
 
 end.
