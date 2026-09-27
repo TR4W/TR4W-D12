@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 62e6781b -->
+<!-- D12-CHANGELOG-BASELINE: 6509e862 -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -125,6 +125,24 @@ user-facing — no file paths or source-level jargon.
   line greyed out rather than flashing it.
 - **The main window is 23 pixels taller** to make room for the strip. Nothing else
   moved, and a window height saved by an earlier version is adjusted up to fit.
+- **The panels fit the window at any font size.** They overran the border slightly
+  on Radio 2, for a reason that is not what it looked like: the main window's width
+  is PINNED, so the panels were never failing to grow -- their designed widths summed
+  to the design-time width while the running width is a font measurement, so they
+  either fell short of the right edge or ran past it. The real width is now shared
+  out between them.
+- **A radio window opened AFTER a failure shows that radio's condition** instead of
+  being blank. Radio 1's panel read AUTH FAILED because it was open when the failure
+  happened; Radio 2's, opened afterwards, showed nothing. A window now reads the
+  current state when it opens.
+- **The strip says less, and says it in the space available.** "IC7760: Auth failed"
+  is the condition; "check credentials" is the instruction, and it arrives once on
+  the message line with the beep. The cluster and network panels say "Connected to
+  host" and "Connected to server" rather than embedding an address -- the window that
+  owns it has the detail, so nothing on the strip is ever truncated to fit.
+- **Known and deliberately left:** the split-frequency warning is at the width limit
+  and its trailing "!!!" may clip. It is a translated phrase, and shortening it means
+  adding a new one -- NY4I's call, and not a change to make inside a finished release.
 
 #### Diagnostics
 

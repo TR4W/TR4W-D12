@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 62e6781b -->
+<!-- D12-CHANGELOG-BASELINE: 6509e862 -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -48,6 +48,67 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 ## 5.0.x — September 2026
 
 ### 5.0.23 (2026-09-26) - NY4I
+
+#### A status panel states the condition, and a view reads it when it opens (`src/uPanelUpdate.pas`, `ui/lcl/uMainForm.pas`, `uRadioPanelForm.pas`, `uAppStrings.pas`, `VC.pas`, `uNet.pas`, `uTelnet.pas`, `trdos/logradio.pas`)
+
+Two bench reports against `62e6781b`, and they are the same defect twice: a fact the
+program held that the screen did not.
+
+- **The panels were never failing to GROW.** `MinWidth = MaxWidth = Width`
+  (`MainUnit:4538`) pins the main window, so the `.lfm`'s 200/200/200/206 summed to
+  the DESIGN-TIME 806 while the running client width is `ws*46` -- a font
+  measurement, **782 at ws=17 and 828 at ws=18**. The panels fell short of the right
+  edge or ran past it, and which one depended on the font. `LayOutStatusPanels`
+  shares `sbStatus.Width` between them with the remainder on the last, driven from
+  the bar's own `OnResize` (it is `alBottom`, so the LCL resizes it whenever the
+  client width changes) **and** called once at the end of
+  `MakeMainWindowResizeable`, because a layout width that happens to equal 806 fires
+  no resize at all and would leave the hand-typed widths standing.
+- **A view that is only ever PUSHED to shows nothing if it was not open when the
+  event fired** -- the same shape `62e6781b` fixed. A status is a CONDITION, so a
+  view reads the current state when it opens: `RadioPanelStatusText` reads
+  `uPanelUpdate.CurrentStatusText`, the SAME coalescing cache the writer writes and
+  `ClearRadioLinkFailure` interrogates. No second copy of the fact and no field on
+  the form -- that is the `LinkFailureShown` mistake deleted the day before. **It had
+  to be the STATUS cache and not the panel-text one**: with Radio 2's window closed
+  `tRadioPanelSlot` is 0, so not one panel update had ever been posted for it.
+- **`SetRadioStatus` is the only writer of a radio's condition**: one fact, two
+  renderings -- the strip gets `<name>: <condition>`, the radio panel's label gets
+  the condition upper-cased with the prefix stripped. A status with no prefix renders
+  empty, which is how the split warning stays off that 100-px label; it does not
+  belong there anyway, since the panel already shows split as an indicator.
+- **The bounded-status RULE is now written beside `TStatusOwner`**, with both bench
+  reports quoted, because the next person adding a writer is the one who would format
+  a path or a port into 195 pixels. `Auth failed` is the CONDITION and `check
+  credentials` is an INSTRUCTION: the remedy and the particulars belong to the notice
+  channel and to the window that owns them, so **a host name never reaches a panel**
+  -- no truncation, no ellipsis, no clipping.
+- The beep from `62e6781b` survives and now gates the notice too, both inside
+  `PostStatusText`'s coalescing return, so a radio retrying every 60 s beeps once and
+  raises one notice. The five radio SET-UP failures are deliberately unconditional:
+  all are reached from set-up, so they run once per operator action, and suppressing
+  the second would mean pressing Reset Radio Ports twice answered only the first time.
+- **i18n**: no translated constant was re-typed and none lost a placeholder.
+  `TC_CONNECTEDTO` and its siblings are PREFIXES with a trailing space, not format
+  strings, so both panels still use them verbatim and concatenate a different noun.
+  `TC_NETWORK` still formats the network window's caption with the real address; only
+  the panel stopped using it, and the telnet console still names the host. **Two new
+  translatable strings** rather than hardcoded text -- `SStatusHost` and
+  `SStatusServer`, one word each, in `uAppStrings` because `uTR4WStrings` is
+  generated. **`TC_SPLIT_WARN` is LEFT AT THE LIMIT and the call site says so**: 34
+  characters against roughly 32 that fit, so its trailing `!!!` may clip. Shortening
+  a translated constant means inventing a new one, which is NY4I's call and not a
+  thing to do inside a held release.
+- Checked and deliberately not changed: the network window cannot miss a transition
+  (opening it CAUSES the connect), the cluster window has no secondary status label,
+  and the radio panel's VFO and mode fields are pushed on every poll -- so a panel
+  opened while a radio is connected fills within one poll, and Radio 2's blank VFOs
+  are correct because it is not connected. **The link status is the one fact with no
+  poll behind it**, which is why it alone needed the read-on-open. That reasoning is
+  in the code so nobody "fixes" the VFOs later.
+- The narrowing count reached **1340** first, from a direct `Caption` assignment;
+  routing it through `PanelTextToForm` removed the conversion and left one routine
+  writing that label, back to the 1339 ceiling. `Lint-CaptionFit` still 159.
 
 #### Status is a condition and belongs to its owner; a notice is an event and expires (`src/MainUnit.pas`, `uPanelUpdate.pas`, `VC.pas`, `ui/lcl/uMainForm.lfm`, `uAppTimers.pas`, `tools/gen_main_elements.py`, `build/Lint-FormOverlap.ps1`)
 
