@@ -7,7 +7,8 @@
 # Pipeline (TR4W is Windows-only; ALL jobs run on the self-hosted
 # [self-hosted, win-ci] lab runner -- nothing runs on GitHub-hosted servers):
 #   build (win-ci)           -> FullBuild.ps1: lints, unit tests, app, server,
-#                               NSIS installer; upload installer artifact
+#                               NSIS installer; upload installer artifact and
+#                               tr4w.dbg (the symbols) as artifacts
 #   virustotal-scan (win-ci) -> download installer, scan via VT API, produce
 #                               virustotal-report.md, upload as artifact
 #   release (win-ci)         -> only on tag push; download both artifacts,
@@ -235,6 +236,51 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
+      # THE SYMBOLS SHIP AS AN ASSET OF THEIR OWN (NY4I, 2026-09-27).
+      #
+      # They are already INSIDE the installer -- FullBuild.ps1 passes
+      # /DINCLUDE_SYMBOLS unless -ExcludeSymbols is given, nothing passes it,
+      # and NSIS `File` fails the build when the file is absent, so a built
+      # installer provably contains tr4w.dbg. That covers one case: an operator
+      # who has a hard fault and can install a matching build.
+      #
+      # It does not cover the case that actually happens. A tester emails a log
+      # full of raw addresses and it is symbolised by SOMEBODY ELSE, on a
+      # machine that has the log and not the installer. Extracting a 67 MB file
+      # out of an NSIS installer to read a backtrace is a step nobody should
+      # have to work out, so the file is attached to the release by itself.
+      #
+      # NAMED WITH THE VERSION, and that is not cosmetic: a .dbg resolves
+      # addresses for the ONE binary it was linked with and for no other, so
+      # six of them in a downloads folder all called tr4w.dbg is a trap. The
+      # name says which release it belongs to.
+      - name: Stage the debug symbols
+        id: symbols
+        shell: powershell
+        run: |
+          $dbg = Join-Path $env:GITHUB_WORKSPACE 'tr4w\target\tr4w.dbg'
+          if (-not (Test-Path -LiteralPath $dbg)) {
+            # Not a warning. Build-App.ps1 links with -gl -gw2 -Xg, which is
+            # what writes this file, and full.nsi's `File` directive embeds it
+            # -- so a build that got this far without one means the link
+            # changed. Publishing a release whose crash reports can never be
+            # resolved is not something to do quietly.
+            throw "No symbol file at $dbg -- the link no longer produces one. Crash reports from this build could never be resolved."
+          }
+          $version = "${{ steps.ver.outputs.version }}"
+          $named = Join-Path $env:RUNNER_TEMP "tr4w-$version.dbg"
+          Copy-Item -LiteralPath $dbg -Destination $named -Force
+          Write-Host ("staged {0} ({1} MB)" -f $named, [int]((Get-Item $named).Length / 1MB))
+          "path=$named" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Upload debug symbols artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tr4w-symbols-${{ steps.ver.outputs.version }}
+          path: ${{ steps.symbols.outputs.path }}
+          retention-days: 90
+          if-no-files-found: error
+
   # =================================================================
   # Linux and macOS, on their own self-hosted runners.
   #
@@ -386,6 +432,32 @@ jobs:
           path: ${{ steps.appimage.outputs.path }}
           retention-days: 90
           if-no-files-found: error
+
+      # DO THE SYMBOLS STILL EXIST IN WHAT WAS JUST UPLOADED?
+      #
+      # A STEP OF ITS OWN, AND WITHOUT `|| true`, WHICH IS THE ENTIRE POINT.
+      # The build step above discards build-unix.sh's exit code on purpose --
+      # the known unit-test failure must not withhold the artifacts -- so a
+      # stage failing inside that invocation is visible only to somebody
+      # reading the log. That is the shape that let v5.0.14 publish with no
+      # macOS build and report success. Run separately, the symbol gate fails
+      # the STEP, which turns this job red and puts an annotation at the top of
+      # the run.
+      #
+      # RED HERE STILL WITHHOLDS NOTHING. The job is continue-on-error and the
+      # uploads have already happened, which is deliberate: an artifact with no
+      # line information runs perfectly and only fault diagnosis is degraded,
+      # so the right answer is a loud report and a shipped build, not a
+      # withheld one (the same ruling that governs the whole job).
+      #
+      # It re-runs as its own invocation rather than being read out of the
+      # previous log, and that is cheap (a few seconds) because the stage reads
+      # the FINISHED artifacts off disk -- extracting the tarball, unpacking
+      # the AppImage, mounting the disk image -- rather than anything a
+      # compiler produced.
+      - name: Verify symbols survived to the artifact
+        shell: bash
+        run: sh tr4w/build/build-unix.sh --symbols
 
   build-macos:
     name: macOS (aarch64)
@@ -605,6 +677,32 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
+      # DO THE SYMBOLS STILL EXIST IN WHAT WAS JUST UPLOADED?
+      #
+      # A STEP OF ITS OWN, AND WITHOUT `|| true`, WHICH IS THE ENTIRE POINT.
+      # The build step above discards build-unix.sh's exit code on purpose --
+      # the known unit-test failure must not withhold the artifacts -- so a
+      # stage failing inside that invocation is visible only to somebody
+      # reading the log. That is the shape that let v5.0.14 publish with no
+      # macOS build and report success. Run separately, the symbol gate fails
+      # the STEP, which turns this job red and puts an annotation at the top of
+      # the run.
+      #
+      # RED HERE STILL WITHHOLDS NOTHING. The job is continue-on-error and the
+      # uploads have already happened, which is deliberate: an artifact with no
+      # line information runs perfectly and only fault diagnosis is degraded,
+      # so the right answer is a loud report and a shipped build, not a
+      # withheld one (the same ruling that governs the whole job).
+      #
+      # It re-runs as its own invocation rather than being read out of the
+      # previous log, and that is cheap (a few seconds) because the stage reads
+      # the FINISHED artifacts off disk -- extracting the tarball, unpacking
+      # the AppImage, mounting the disk image -- rather than anything a
+      # compiler produced.
+      - name: Verify symbols survived to the artifact
+        shell: bash
+        run: sh tr4w/build/build-unix.sh --symbols
+
   # =================================================================
   # VirusTotal scan. Pulls the installer artifact from the build job, uploads
   # it to VT, polls for completion, builds a Markdown report and uploads it as
@@ -741,6 +839,17 @@ jobs:
           name: virustotal-report-${{ needs.build.outputs.version }}
           path: release-files
 
+      # DELIBERATELY NOT continue-on-error, unlike the three Unix downloads
+      # below. This artifact comes from the `build` job, which this job's `if:`
+      # already requires to have succeeded -- so if it is not here, something
+      # is wrong with THIS workflow rather than with a platform that is allowed
+      # to fail. Failing loudly is the correct answer to that.
+      - name: Download debug symbols artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tr4w-symbols-${{ needs.build.outputs.version }}
+          path: release-files
+
       # THE UNIX ARTIFACTS ARE OPTIONAL BY DESIGN. Their jobs are
       # continue-on-error and this job's `if:` does not consult their results
       # (NY4I, 2026-09-17: a Unix failure must not withhold the Windows
@@ -795,18 +904,34 @@ jobs:
       # cases look identical in a file listing: a Unix job that failed (absence
       # expected, go read that job) and a Unix job that reported success while
       # its artifact did not arrive (absence is a defect in THIS workflow).
+      #
+      # REQUIRED vs OPTIONAL, AND THE LINE IS WHICH JOB PRODUCED IT.
+      #
+      # The three artifacts off win-ci are Required. Their jobs are named in
+      # this job's `if:` as having to have succeeded, so an absent one is not a
+      # platform that was allowed to fail -- it is this workflow losing a file
+      # it was handed, which is exactly the class of failure that made v5.0.14
+      # publish with no macOS build and report success. A warning is the wrong
+      # answer to that; it throws.
+      #
+      # The four Unix artifacts stay warnings, unchanged, because NY4I's ruling
+      # is that a Linux or macOS failure must never withhold the Windows
+      # installer (2026-09-17). What they get is the annotation naming them and
+      # their producing job's result.
       - name: Report which platform artifacts are present
         shell: powershell
         run: |
           $expected = @(
-            @{ Label = 'Windows installer'; Filter = 'tr4w_setup_*.exe';             Job = 'build';           Result = '${{ needs.build.result }}' },
-            @{ Label = 'VirusTotal report'; Filter = 'virustotal-report.md';         Job = 'virustotal-scan'; Result = '${{ needs['virustotal-scan'].result }}' },
-            @{ Label = 'Linux tarball';     Filter = 'tr4w-*-x86_64-linux.tar.gz';   Job = 'build-linux';     Result = '${{ needs['build-linux'].result }}' },
-            @{ Label = 'Linux AppImage';    Filter = 'TR4W-*-x86_64.AppImage';       Job = 'build-linux';     Result = '${{ needs['build-linux'].result }}' },
-            @{ Label = 'macOS disk image';  Filter = 'tr4w-*-aarch64-darwin.dmg';    Job = 'build-macos';     Result = '${{ needs['build-macos'].result }}' },
-            @{ Label = 'macOS tarball';     Filter = 'tr4w-*-aarch64-darwin.tar.gz'; Job = 'build-macos';     Result = '${{ needs['build-macos'].result }}' }
+            @{ Label = 'Windows installer'; Filter = 'tr4w_setup_*.exe';             Job = 'build';           Required = $true;  Result = '${{ needs.build.result }}' },
+            @{ Label = 'Debug symbols';     Filter = 'tr4w-*.dbg';                   Job = 'build';           Required = $true;  Result = '${{ needs.build.result }}' },
+            @{ Label = 'VirusTotal report'; Filter = 'virustotal-report.md';         Job = 'virustotal-scan'; Required = $true;  Result = '${{ needs['virustotal-scan'].result }}' },
+            @{ Label = 'Linux tarball';     Filter = 'tr4w-*-x86_64-linux.tar.gz';   Job = 'build-linux';     Required = $false; Result = '${{ needs['build-linux'].result }}' },
+            @{ Label = 'Linux AppImage';    Filter = 'TR4W-*-x86_64.AppImage';       Job = 'build-linux';     Required = $false; Result = '${{ needs['build-linux'].result }}' },
+            @{ Label = 'macOS disk image';  Filter = 'tr4w-*-aarch64-darwin.dmg';    Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' },
+            @{ Label = 'macOS tarball';     Filter = 'tr4w-*-aarch64-darwin.tar.gz'; Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' }
           )
           $missing = 0
+          $missingRequired = @()
           foreach ($e in $expected) {
             $found = Get-ChildItem -Path release-files -Filter $e.Filter -File -ErrorAction SilentlyContinue |
                      Select-Object -First 1
@@ -815,10 +940,19 @@ jobs:
             }
             else {
               $missing++
-              Write-Host ("::warning::MISSING from this release: {0} (expected {1}; job '{2}' reported '{3}')" -f $e.Label, $e.Filter, $e.Job, $e.Result)
+              if ($e.Required) {
+                $missingRequired += $e.Label
+                Write-Host ("::error::MISSING and REQUIRED: {0} (expected {1}; job '{2}' reported '{3}')" -f $e.Label, $e.Filter, $e.Job, $e.Result)
+              }
+              else {
+                Write-Host ("::warning::MISSING from this release: {0} (expected {1}; job '{2}' reported '{3}')" -f $e.Label, $e.Filter, $e.Job, $e.Result)
+              }
             }
           }
           Write-Host ("{0} of {1} expected artifacts are present." -f ($expected.Count - $missing), $expected.Count)
+          if ($missingRequired.Count -gt 0) {
+            throw ("Required release asset(s) absent: {0}. Nothing is published from a run that cannot account for the Windows artifacts." -f ($missingRequired -join ', '))
+          }
 
       # Generate the changelog body against the REAL previous tag. GitHub's
       # built-in generate_release_notes auto-detects the previous tag via semver
@@ -979,6 +1113,7 @@ jobs:
           body_path: release-notes.md
           files: |
             release-files/tr4w_setup_*.exe
+            release-files/tr4w-*.dbg
             release-files/virustotal-report.md
             release-files/tr4w-*-x86_64-linux.tar.gz
             release-files/TR4W-*-x86_64.AppImage

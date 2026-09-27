@@ -71,7 +71,12 @@ It discovers the toolchain, sets every unit search path, reads the version from
 error. When all four pass it writes
 `build-out/dist/tr4w-<version>-<arch>.tar.gz`.
 
-Individual stages: `--app`, `--tests`, `--server`, `--package`, `--list`.
+Individual stages: `--app`, `--tests`, `--server`, `--package`, `--appimage`
+(Linux x86_64 only), `--symbols`, `--list`. `--symbols` re-reads the FINISHED
+artifacts -- the extracted tarball, the unpacked AppImage, the mounted `.dmg` --
+and fails if the line information the compiler put in the binary is no longer
+there; it is the only thing that would notice a `strip` or a `codesign` having
+removed it.
 
 **It also prints the gates that CANNOT run on Linux** -- ten lints needing
 PowerShell, the UI field check that drives the Windows binary, and the PE

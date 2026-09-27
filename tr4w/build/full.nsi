@@ -123,9 +123,14 @@ Section "tr4w.exe" secexe
 	; installer. I might need it from our testers."
 	;
 	; tr4w.dbg is what turns an address in a tester's log into a file and a
-	; line, and it is valid ONLY for this exact binary. ~46 MB uncompressed.
+	; line, and it is valid ONLY for this exact binary. ~67 MB uncompressed
+	; (measured 2026-09-27; this said 46 MB, which it had not been for a
+	; while -- the number is here to set an expectation about installer size,
+	; so a stale one misleads about the only thing it is for).
 	; A public release should be built with -ExcludeSymbols and ship without
-	; it; the file is archived beside the installer either way.
+	; it. Either way the file is ALSO attached to the GitHub release as
+	; tr4w-<version>.dbg, so an emailed log can be symbolised on a machine
+	; that never ran the installer -- see .github/workflows/release.yml.
 !ifdef INCLUDE_SYMBOLS
 	File ..\target\tr4w.dbg
 !endif

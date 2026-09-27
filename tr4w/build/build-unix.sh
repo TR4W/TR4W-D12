@@ -1471,6 +1471,145 @@ stage_appimage() {
 }
 
 # ---------------------------------------------------------------------------
+# STAGE 9 -- do the symbols survive to the artifact a user downloads?
+#
+# WHAT THIS ANSWERS THAT NOTHING ELSE DID.  compile() puts line information
+# INSIDE the binary (-gl, plus -gw2 on Darwin) and says so in its log.  Six
+# steps then run over that binary -- staging, codesign, notarize, staple, tar,
+# and on Linux the AppImage pack -- and not one of them was asked whether the
+# line information was still there afterwards.  `strip` is one line in a
+# packaging script and removes it without a word; codesign rewrites the Mach-O
+# wholesale.  A build that lost its symbols is green, and the loss surfaces
+# months later as an operator's backtrace printing bare hex.
+#
+# IT RUNS LAST, ON PURPOSE.  Every check reads the binary out of the FINISHED
+# container: the extracted tarball, the mounted .dmg, the unpacked AppImage.
+# Checking build-out/app-*/tr4w would prove the compiler did its job, which
+# was never the question.  On macOS that means after signing, notarization and
+# stapling have all happened, because those are the steps most likely to be
+# the culprit.
+#
+# A FAILING CHECK DOES NOT DESTROY THE ARTIFACT, and that is deliberate.  The
+# unstapled-tarball check in stage_package deletes what it rejects, because an
+# app Gatekeeper refuses is not shippable at all.  Missing symbols are not
+# that: the program runs perfectly, and only fault diagnosis is degraded.  So
+# this records FAIL -- the run exits non-zero and the summary names it -- and
+# leaves the artifacts for NY4I to decide about.
+#
+# The floors, the tools and the per-platform reasoning are all in
+# build/check-symbols.sh; this stage only decides WHICH binaries to hand it.
+# ---------------------------------------------------------------------------
+stage_symbols() {
+   phase 'Symbols in the shipped artifact'
+
+   checker="$BUILD_DIR/check-symbols.sh"
+   if [ ! -f "$checker" ]; then
+      say "  NOT ATTEMPTED: $checker is missing."
+      record SKIP 'symbols' 'check-symbols.sh not found'
+      return 1
+   fi
+
+   _scratch="$OUTROOT/dist/.symbol-check.$$"
+   rm -rf "$_scratch"
+   mkdir -p "$_scratch"
+
+   _checked=0
+   _bad=0
+   _mnt_stuck=0
+
+   # The tarball, on both platforms.  Extracted rather than read in place:
+   # tar is one of the steps under suspicion.
+   tarball="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.tar.gz"
+   if [ -f "$tarball" ]; then
+      if ( cd "$_scratch" && tar xzf "$tarball" ) > /dev/null 2>&1; then
+         if [ "$OS" = darwin ]; then
+            _tb="$_scratch/tr4w-$TR4W_VERSION-$ARCH/TR4W.app/Contents/MacOS/tr4w"
+         else
+            _tb="$_scratch/tr4w-$TR4W_VERSION-$ARCH/tr4w"
+         fi
+         _checked=$((_checked + 1))
+         sh "$checker" "$OS" "$_tb" 'tarball' || _bad=$((_bad + 1))
+      else
+         say '  FAILED to extract the tarball -- it was not checked.'
+         _bad=$((_bad + 1))
+         _checked=$((_checked + 1))
+      fi
+   fi
+
+   # The AppImage.  Its payload goes through mksquashfs, which is a copy this
+   # gate has no other way to see.
+   appimage="$OUTROOT/dist/TR4W-$TR4W_VERSION-$CPU.AppImage"
+   if [ "$OS" = linux ] && [ -f "$appimage" ]; then
+      if ( cd "$_scratch" && "$appimage" --appimage-extract ) > /dev/null 2>&1; then
+         _checked=$((_checked + 1))
+         sh "$checker" "$OS" "$_scratch/squashfs-root/usr/bin/tr4w" 'AppImage' \
+            || _bad=$((_bad + 1))
+      else
+         say '  FAILED to unpack the AppImage -- it was not checked.'
+         _bad=$((_bad + 1))
+         _checked=$((_checked + 1))
+      fi
+   fi
+
+   # The disk image, mounted the way a user's Mac mounts it.  -mountpoint is
+   # given explicitly: left to itself hdiutil appends a counter when a volume
+   # of that name is already attached ('/Volumes/TR4W 1'), and a path this
+   # script then has to guess at is a check waiting to silently examine the
+   # wrong file.
+   dmgfile="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.dmg"
+   if [ "$OS" = darwin ] && [ -f "$dmgfile" ]; then
+      _mnt="$_scratch/mnt"
+      mkdir -p "$_mnt"
+      if hdiutil attach -nobrowse -readonly -mountpoint "$_mnt" "$dmgfile" \
+            > /dev/null 2>&1; then
+         _checked=$((_checked + 1))
+         sh "$checker" "$OS" "$_mnt/TR4W.app/Contents/MacOS/tr4w" 'disk image' \
+            || _bad=$((_bad + 1))
+         hdiutil detach "$_mnt" > /dev/null 2>&1 || \
+            hdiutil detach -force "$_mnt" > /dev/null 2>&1
+         # The scratch tree is about to be rm -rf'd, and a still-attached
+         # volume must never be inside it. The image is mounted read-only so
+         # nothing could actually be deleted, but "it would have failed
+         # anyway" is not a reason to aim a recursive delete at a mount point.
+         if mount | grep -q " $_mnt "; then
+            say "  WARNING: $_mnt is still mounted; leaving the scratch tree"
+            say '  in place rather than deleting into a mounted volume.'
+            _mnt_stuck=1
+         fi
+      else
+         say '  FAILED to mount the disk image -- it was not checked.'
+         _bad=$((_bad + 1))
+         _checked=$((_checked + 1))
+      fi
+   fi
+
+   [ "$_mnt_stuck" -eq 0 ] && rm -rf "$_scratch"
+
+   # NOTHING TO CHECK IS NOT A PASS.  This is the shape CLAUDE.md names
+   # outright -- a guard reporting '0 found' and passing is a guard that fails
+   # open -- and it is the likely one here: packaging skipped, no artifact, and
+   # a gate that reports success on an empty set.
+   if [ "$_checked" -eq 0 ]; then
+      say '  NOT ATTEMPTED: no packaged artifact was found to check.'
+      say '  An empty check is not a passing check; run --package first.'
+      record SKIP 'symbols' 'no artifact to check'
+      return 1
+   fi
+
+   if [ "$_bad" -gt 0 ]; then
+      say ''
+      say "  $_bad of $_checked artifact(s) lost their line information between"
+      say '  the compiler and the package.  The artifacts are LEFT IN PLACE --'
+      say '  they run -- but a crash report from them cannot name a file.'
+      record FAIL 'symbols' "$_bad of $_checked artifact(s) carry no usable line info"
+      return 1
+   fi
+
+   record PASS 'symbols' "$_checked artifact(s) carry line information"
+   return 0
+}
+
+# ---------------------------------------------------------------------------
 # What is NOT run, said explicitly.  A gate that is absent must never be
 # mistaken for a gate that passed -- that is the same rule -SkipServer follows
 # on Windows, where skipping is loud and marks the build unshippable.
@@ -1509,12 +1648,13 @@ case "${1:-}" in
    --server)    WANT=server ;;
    --package)   WANT=package ;;
    --appimage)  WANT=appimage ;;
+   --symbols)   WANT=symbols ;;
    --list)
-      say 'stages: app  tests  server  package  appimage (linux x86_64 only)'
+      say 'stages: app  tests  server  package  appimage (linux x86_64 only)  symbols'
       exit 0
       ;;
    *)
-      say "usage: $0 [--all|--app|--tests|--server|--package|--appimage|--list]" >&2
+      say "usage: $0 [--all|--app|--tests|--server|--package|--appimage|--symbols|--list]" >&2
       exit 2
       ;;
 esac
@@ -1558,12 +1698,14 @@ case "$WANT" in
       stage_server
       stage_package
       stage_appimage
+      stage_symbols
       ;;
    app)      stage_app ;;
    tests)    stage_tests ;;
    server)   stage_server ;;
    package)  stage_package ;;
    appimage) stage_appimage ;;
+   symbols)  stage_symbols ;;
 esac
 
 report_gates_not_run

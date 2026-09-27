@@ -34,7 +34,7 @@
 
 param(
    [switch] $BuildInstaller,
-   # Leave the ~46 MB tr4w.dbg OUT of the installer. Symbols are bundled by
+   # Leave the ~67 MB tr4w.dbg OUT of the installer. Symbols are bundled by
    # default while the build is going to bench testers (NY4I, 2026-08-16), so
    # an address in their log can be turned into a file and a line without
    # shipping them a second download. Pass this for a public release.
@@ -309,17 +309,21 @@ Write-Host "  tr4w.exe $($vi.FileVersion) ($([int]((Get-Item $appExe).Length / 1
 # THE .dbg IS THE RELEASE'S SYMBOLS AND HAS TO BE KEPT WITH IT.
 #
 # -gl -gw2 -Xg puts the line-number info in tr4w.dbg beside the exe rather than
-# inside it: 4.5 MB stays 4.5 MB and the symbols are ~46 MB alongside. That file
+# inside it: the exe stays 11 MB and the symbols are ~67 MB alongside (both
+# measured 2026-09-27 -- this said 4.5 MB and 46 MB). That file
 # is what turns an emailed "$0040DC52" into a file and a line, and it is valid
 # ONLY for the exact binary it was linked with -- rebuild and the addresses in an
 # operator's log become unresolvable for good.
 #
-# It is deliberately NOT put in the installer (46 MB for something almost no user
-# needs). Two ways to use it, both proven 2026-08-15: hand the matching .dbg to
-# an operator with a hard fault and have them drop it beside tr4w.exe, or keep it
-# here and resolve their addresses yourself -- the address is identical whether
-# the file is present or not, and a missing .dbg degrades to bare addresses
-# rather than failing.
+# It IS put in the installer while the build is going to bench testers -- see
+# -ExcludeSymbols above -- and it is ALSO attached to every GitHub release as
+# tr4w-<version>.dbg, because the case that matters is a tester emailing a log
+# and somebody else symbolising it: that person has the log and not the
+# installer (NY4I, 2026-09-27). Two ways to use it, both proven 2026-08-15:
+# hand the matching .dbg to an operator with a hard fault and have them drop it
+# beside tr4w.exe, or keep it here and resolve their addresses yourself -- the
+# address is identical whether the file is present or not, and a missing .dbg
+# degrades to bare addresses rather than failing.
 $appDbg = [System.IO.Path]::ChangeExtension($appExe, '.dbg')
 if (Test-Path -LiteralPath $appDbg) {
    Write-Host ("  tr4w.dbg {0} MB -- ARCHIVE THIS WITH THE RELEASE" -f `
