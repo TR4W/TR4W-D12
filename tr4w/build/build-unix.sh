@@ -1507,7 +1507,204 @@ stage_appimage() {
 }
 
 # ---------------------------------------------------------------------------
-# STAGE 9 -- do the symbols survive to the artifact a user downloads?
+# STAGE 9 -- the macOS debug symbols, as a RELEASE ASSET and not as payload.
+#
+# WHY THIS EXISTS AND WHY IT IS NOT IN THE BUNDLE.
+#
+# ld64 does not put DWARF in the executable.  It leaves it in the .o files and
+# writes a debug map; `dsymutil` follows that map and collects a .dSYM.  Without
+# this stage the DWARF exists only as 529 .o files in a CI work directory that
+# is wiped, so a macOS crash report is unresolvable FOREVER once the runner is
+# cleaned -- the addresses cannot be recovered later at any price.
+#
+# IT DOES NOT GO INSIDE TR4W.app, and that was reversed on evidence rather than
+# preference (NY4I, 2026-09-27).  The bundle is 54,931,456 B and the app's .dSYM
+# is 66,105,344 B, so staging it there would roughly DOUBLE what every operator
+# downloads -- to ship a file FPC 3.2.2 cannot read.  Its exeinfo.pp registers a
+# 32-bit PowerPC Mach-O reader for every darwin target, answering only for
+# '.stab'/'.stabstr', so an in-process backtrace cannot use a .dSYM however it
+# is staged.  Measured with a probe on these exact flags; see compile() above.
+#
+# So it goes BESIDE THE RELEASE, exactly as tr4w.dbg does on Windows, and the
+# resolution happens HERE with atos rather than on the operator's machine.
+# Nothing new enters the bundle, so the signing, notarization and stapling path
+# is untouched by this stage.
+#
+# THE UUID IS THE WHOLE POINT.  A .dSYM is bound to one build by an LC_UUID, and
+# a version is not an identity: two builds of 5.0.23 have different UUIDs, and
+# atos given the wrong .dSYM does not refuse -- it prints a confidently wrong
+# line.  So every .dSYM here is checked against the SHIPPED binary (the signed
+# one inside the artifact, not the one that was linked), and the UUIDs are
+# written into a small text manifest that can be read without downloading 18 MB.
+#
+# The check is check-symbols.sh's, in `dsym-match` mode.  It is not repeated
+# here: one comparison, one place.
+#
+# IT RUNS AFTER PACKAGING because it compares against the SHIPPED binary, and
+# that is a stronger statement than comparing against the linked one -- it
+# proves the .dSYM describes the bytes in the .dmg, through the copy and the
+# signing.  (Measured: codesign does not alter LC_UUID.  That is why this can be
+# generated from the linked binary at all.)
+# ---------------------------------------------------------------------------
+stage_dsym() {
+   [ "$OS" = darwin ] || return 0
+
+   phase 'Debug symbols (.dSYM)'
+
+   checker="$BUILD_DIR/check-symbols.sh"
+   if [ ! -f "$checker" ]; then
+      say "  NOT ATTEMPTED: $checker is missing."
+      record SKIP 'dsym' 'check-symbols.sh not found'
+      return 1
+   fi
+   for t in dsymutil ditto dwarfdump; do
+      if ! command -v "$t" > /dev/null 2>&1; then
+         say "  NOT ATTEMPTED: $t is not installed."
+         say '  These come with the Xcode command line tools.  A missing tool is'
+         say '  reported, never silently skipped: symbols that were not collected'
+         say '  cannot be collected later.'
+         record SKIP 'dsym' "$t not installed"
+         return 1
+      fi
+   done
+
+   # OUTSIDE dist/, deliberately.  The tarball, the AppImage payload and the
+   # disk image are all rolled from dist/, so anything left in there risks being
+   # swept into an artifact by a later glob -- which is the one outcome this
+   # stage exists to avoid.
+   symdir="$OUTROOT/symbols"
+   rm -rf "$symdir"
+   mkdir -p "$symdir"
+
+   manifest="$symdir/symbols-$TR4W_VERSION-$ARCH.txt"
+   shipped_app="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH/TR4W.app/Contents/MacOS/tr4w"
+   shipped_srv="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH/server/tr4wserver"
+
+   _made=0
+   _bad=0
+
+   # THE MANIFEST IS WHAT MAKES THE PILE USABLE A YEAR LATER, so it is written
+   # as the .dSYMs are produced rather than assembled afterwards from guesses.
+   {
+      printf 'TR4W %s -- macOS debug symbols (%s)\n' "$TR4W_VERSION" "$ARCH"
+      printf 'generated %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+      printf '\n'
+      printf 'MATCH BY UUID, NEVER BY VERSION. Two builds of %s have different\n' "$TR4W_VERSION"
+      printf 'UUIDs, and atos given the wrong .dSYM does not refuse -- it resolves\n'
+      printf 'every address against the wrong build and prints a confident,\n'
+      printf 'incorrect line. Check the UUID first, every time.\n'
+      printf '\n'
+      printf '%-14s %-8s %-38s %s\n' 'binary' 'arch' 'uuid' 'archive'
+   } > "$manifest"
+
+   # dsym_one <shipped-binary> <linked-binary> <name>
+   #
+   # Generated from the LINKED binary because that is the one the .o files
+   # belong to -- the debug map holds their absolute paths -- and CHECKED
+   # against the SHIPPED one, which is what an operator actually runs.
+   dsym_one() {
+      _shipped=$1
+      _linked=$2
+      _name=$3
+
+      if [ ! -f "$_linked" ]; then
+         say "  $_name: no linked binary at $_linked -- not collected."
+         _bad=$((_bad + 1))
+         return 1
+      fi
+      if [ ! -f "$_shipped" ]; then
+         say "  $_name: no SHIPPED binary at $_shipped -- nothing to check a"
+         say '  .dSYM against, so none is published. Run --package first.'
+         _bad=$((_bad + 1))
+         return 1
+      fi
+
+      _ds="$symdir/$_name.dSYM"
+      if ! dsymutil -o "$_ds" "$_linked" > "$OUTROOT/$_name-dsymutil.log" 2>&1; then
+         say "  $_name: dsymutil FAILED -- see $OUTROOT/$_name-dsymutil.log"
+         sed 's/^/    /' "$OUTROOT/$_name-dsymutil.log" | head -10
+         rm -rf "$_ds"
+         _bad=$((_bad + 1))
+         return 1
+      fi
+      if [ ! -d "$_ds" ]; then
+         say "  $_name: dsymutil exited 0 and produced no bundle at $_ds."
+         _bad=$((_bad + 1))
+         return 1
+      fi
+
+      # THE ASSERTION.  A .dSYM that does not match the shipped binary is worse
+      # than no .dSYM, so it is DELETED rather than published.
+      if ! sh "$checker" dsym-match "$_shipped" "$_ds" "$_name.dSYM vs the shipped binary"; then
+         say "  $_name: the .dSYM does not describe the shipped binary -- DISCARDED."
+         rm -rf "$_ds"
+         _bad=$((_bad + 1))
+         return 1
+      fi
+
+      _zip="$symdir/$_name-$TR4W_VERSION-$ARCH.dSYM.zip"
+      # ditto, not zip(1): mac-sign.sh records the reason at its head -- /usr/bin/zip
+      # does not preserve the symlinks and resource forks a bundle can contain.
+      # A .dSYM usually has neither, but "usually" is not a reason to archive a
+      # bundle with the wrong tool when the right one is already the house rule.
+      if ! ( cd "$symdir" && ditto -c -k --keepParent "$_name.dSYM" "$_zip" ); then
+         say "  $_name: ditto could not archive the .dSYM."
+         rm -f "$_zip"
+         _bad=$((_bad + 1))
+         return 1
+      fi
+
+      _uuid=$(dwarfdump --uuid "$_ds" 2>/dev/null | awk '{print $2; exit}')
+      _cpu=$(dwarfdump --uuid "$_ds" 2>/dev/null | awk '{print $3; exit}' | tr -d '()')
+      printf '%-14s %-8s %-38s %s\n' \
+             "$_name" "$_cpu" "$_uuid" "$(basename "$_zip")" >> "$manifest"
+
+      say "  OK -> $(basename "$_zip") ($(($(wc -c < "$_zip") / 1024)) KB, \
+from $(du -sk "$_ds" | awk '{print $1}') KB raw)"
+
+      # The unarchived bundle is scratch: 66 MB of it, and the zip is the asset.
+      rm -rf "$_ds"
+      _made=$((_made + 1))
+      return 0
+   }
+
+   dsym_one "$shipped_app" "$APP_EXE"    'tr4w'
+   dsym_one "$shipped_srv" "$SERVER_EXE" 'tr4wserver'
+
+   {
+      printf '\n'
+      printf 'To resolve an address from a crash report:\n'
+      printf '  1. take the "[CRASH] image ... base $..." line from tr4w.log --\n'
+      printf '     uCrashLog prints the ready-made atos command there.\n'
+      printf '  2. confirm the UUID above is the build the report came from.\n'
+      printf '  3. unzip the archive and run:\n'
+      printf '       atos -o <name>.dSYM/Contents/Resources/DWARF/<name> \\\n'
+      printf '            -arch %s -l 0x<base> <address>\n' "$(uname -m)"
+      printf '\n'
+      printf 'These symbols are NOT inside TR4W.app, on purpose: FPC 3.2.2 cannot\n'
+      printf 'read a .dSYM on Darwin, so shipping one would double the download to\n'
+      printf 'no effect. Resolution happens here, from the address and image base.\n'
+   } >> "$manifest"
+
+   if [ "$_made" -eq 0 ]; then
+      say '  NOTHING WAS COLLECTED.  An empty symbol set is not a passing result:'
+      say '  once this runner is cleaned the DWARF is gone for good and a crash'
+      say '  report from this build can never be resolved.'
+      record FAIL 'dsym' 'no .dSYM collected'
+      return 1
+   fi
+   if [ "$_bad" -gt 0 ]; then
+      record FAIL 'dsym' "$_made collected, $_bad failed -- see above"
+      return 1
+   fi
+
+   say "  manifest -> $(basename "$manifest")"
+   record PASS 'dsym' "$_made .dSYM archive(s) in $symdir"
+   return 0
+}
+
+# ---------------------------------------------------------------------------
+# STAGE 10 -- do the symbols survive to the artifact a user downloads?
 #
 # WHAT THIS ANSWERS THAT NOTHING ELSE DID.  compile() puts line information
 # INSIDE the binary (-gl, plus -gw2 on Darwin) and says so in its log.  Six
@@ -1685,12 +1882,13 @@ case "${1:-}" in
    --package)   WANT=package ;;
    --appimage)  WANT=appimage ;;
    --symbols)   WANT=symbols ;;
+   --dsym)      WANT=dsym ;;
    --list)
-      say 'stages: app  tests  server  package  appimage (linux x86_64 only)  symbols'
+      say 'stages: app  tests  server  package  appimage (linux x86_64 only)  dsym (darwin only)  symbols'
       exit 0
       ;;
    *)
-      say "usage: $0 [--all|--app|--tests|--server|--package|--appimage|--symbols|--list]" >&2
+      say "usage: $0 [--all|--app|--tests|--server|--package|--appimage|--dsym|--symbols|--list]" >&2
       exit 2
       ;;
 esac
@@ -1734,6 +1932,7 @@ case "$WANT" in
       stage_server
       stage_package
       stage_appimage
+      stage_dsym
       stage_symbols
       ;;
    app)      stage_app ;;
@@ -1741,6 +1940,7 @@ case "$WANT" in
    server)   stage_server ;;
    package)  stage_package ;;
    appimage) stage_appimage ;;
+   dsym)     stage_dsym ;;
    symbols)  stage_symbols ;;
 esac
 

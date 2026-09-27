@@ -677,6 +677,40 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
+      # THE DEBUG SYMBOLS, COLLECTED AND CHECKED AGAINST WHAT WAS JUST UPLOADED.
+      #
+      # ld64 leaves the DWARF in the .o files rather than in the binary, so
+      # without this step the only copy of it is ~529 object files in a work
+      # directory that gets wiped -- and a crash report from this build becomes
+      # unresolvable FOREVER, not merely inconvenient.
+      #
+      # WITHOUT `|| true`, unlike the build step. dsymutil is fast (~2.6 s for
+      # both) and the stage asserts each .dSYM's UUID against the SHIPPED binary
+      # inside the artifact, discarding any that does not match -- because a
+      # mismatched .dSYM does not refuse, it resolves every address to a
+      # confidently wrong line. That assertion is worth nothing if its failure
+      # is swallowed, so it fails the step and reddens the job.
+      #
+      # RED HERE WITHHOLDS NOTHING: this job is continue-on-error and the .dmg
+      # and tarball are already uploaded above. Symbols are a diagnostic asset,
+      # not payload -- nothing inside TR4W.app depends on them, and nothing in
+      # the bundle changed to produce them.
+      - name: Collect and verify debug symbols (.dSYM)
+        shell: bash
+        run: sh tr4w/build/build-unix.sh --dsym
+
+      - name: Upload macOS symbols
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tr4w-macos-symbols-${{ needs.build.outputs.version }}
+          # The whole staging directory: two .dSYM zips and the manifest that
+          # maps each to its UUID. if-no-files-found stays 'error' because the
+          # step above has already proved they exist -- an empty upload here
+          # would mean the path is wrong, not that there were no symbols.
+          path: build-out/symbols/
+          retention-days: 90
+          if-no-files-found: error
+
       # DO THE SYMBOLS STILL EXIST IN WHAT WAS JUST UPLOADED?
       #
       # A STEP OF ITS OWN, AND WITHOUT `|| true`, WHICH IS THE ENTIRE POINT.
@@ -882,6 +916,17 @@ jobs:
           name: tr4w-macos-${{ needs.build.outputs.version }}
           path: release-files
 
+      # Optional on the same terms as every other macOS artifact, and for the
+      # same reason: a Unix failure must not withhold the Windows installer
+      # (NY4I, 2026-09-17). Absence is reported by the audit below, with the
+      # producing job's result beside it.
+      - name: Download macOS symbols (optional)
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tr4w-macos-symbols-${{ needs.build.outputs.version }}
+          path: release-files
+
       - name: List release files
         shell: powershell
         run: Get-ChildItem -LiteralPath release-files | Format-Table Name, Length, LastWriteTime
@@ -928,7 +973,19 @@ jobs:
             @{ Label = 'Linux tarball';     Filter = 'tr4w-*-x86_64-linux.tar.gz';   Job = 'build-linux';     Required = $false; Result = '${{ needs['build-linux'].result }}' },
             @{ Label = 'Linux AppImage';    Filter = 'TR4W-*-x86_64.AppImage';       Job = 'build-linux';     Required = $false; Result = '${{ needs['build-linux'].result }}' },
             @{ Label = 'macOS disk image';  Filter = 'tr4w-*-aarch64-darwin.dmg';    Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' },
-            @{ Label = 'macOS tarball';     Filter = 'tr4w-*-aarch64-darwin.tar.gz'; Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' }
+            @{ Label = 'macOS tarball';     Filter = 'tr4w-*-aarch64-darwin.tar.gz'; Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' },
+            # THE SYMBOLS ARE OPTIONAL ON THE SAME TERMS as the artifacts they
+            # describe -- they come off build-macos, which is allowed to fail.
+            # Deliberately NOT promoted to Required: that ruling is about which
+            # JOB produced a thing, not about how much anyone wants it.
+            #
+            # The manifest is audited alongside the two archives because it is
+            # what makes them usable: it maps each binary to the UUID its .dSYM
+            # belongs to, and matching by version instead is how you symbolise a
+            # crash against the wrong build and believe the answer.
+            @{ Label = 'macOS app symbols';    Filter = 'tr4w-*-aarch64-darwin.dSYM.zip';       Job = 'build-macos'; Required = $false; Result = '${{ needs['build-macos'].result }}' },
+            @{ Label = 'macOS server symbols'; Filter = 'tr4wserver-*-aarch64-darwin.dSYM.zip'; Job = 'build-macos'; Required = $false; Result = '${{ needs['build-macos'].result }}' },
+            @{ Label = 'macOS symbol manifest';Filter = 'symbols-*-aarch64-darwin.txt';         Job = 'build-macos'; Required = $false; Result = '${{ needs['build-macos'].result }}' }
           )
           $missing = 0
           $missingRequired = @()
@@ -1119,6 +1176,9 @@ jobs:
             release-files/TR4W-*-x86_64.AppImage
             release-files/tr4w-*-aarch64-darwin.dmg
             release-files/tr4w-*-aarch64-darwin.tar.gz
+            release-files/tr4w-*-aarch64-darwin.dSYM.zip
+            release-files/tr4wserver-*-aarch64-darwin.dSYM.zip
+            release-files/symbols-*-aarch64-darwin.txt
           # FALSE, AND IT HAS TO BE. The Linux and macOS jobs are
           # continue-on-error and this job's `if:` does not require either to
           # have succeeded -- a Unix failure must not withhold the Windows

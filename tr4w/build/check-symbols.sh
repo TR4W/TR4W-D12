@@ -40,13 +40,37 @@
 
 set -u
 
-OS=${1:-}
-BIN=${2:-}
-LABEL=${3:-}
+MODE=${1:-}
 
-if [ -z "$OS" ] || [ -z "$BIN" ] || [ -z "$LABEL" ]; then
-   printf 'usage: %s <linux|darwin> <binary> <label>\n' "$0" >&2
-   exit 2
+# TWO CALL FORMS, one UUID comparison.
+#
+#   <linux|darwin> <binary> <label>   the shipped-artifact check
+#   dsym-match <binary> <dsym> <label>   a STAGED .dSYM against the SHIPPED
+#                                        binary it claims to describe
+#
+# The second exists because the .dSYM is deliberately NOT staged beside the
+# binary -- it would land inside TR4W.app and double the bundle -- so the
+# darwin arm's `$BIN.dSYM` convention cannot reach it.  Both forms end up in
+# uuid_match() below: a second copy of that comparison is exactly the kind of
+# duplicate that drifts, and getting it wrong is silent (a mismatched .dSYM
+# does not refuse, it resolves every address to a confidently wrong line).
+if [ "$MODE" = dsym-match ]; then
+   BIN=${2:-}
+   DSYM=${3:-}
+   LABEL=${4:-}
+   if [ -z "$BIN" ] || [ -z "$DSYM" ] || [ -z "$LABEL" ]; then
+      printf 'usage: %s dsym-match <binary> <dsym> <label>\n' "$0" >&2
+      exit 2
+   fi
+else
+   OS=$MODE
+   BIN=${2:-}
+   LABEL=${3:-}
+   if [ -z "$OS" ] || [ -z "$BIN" ] || [ -z "$LABEL" ]; then
+      printf 'usage: %s <linux|darwin> <binary> <label>\n' "$0" >&2
+      printf '       %s dsym-match <binary> <dsym> <label>\n' "$0" >&2
+      exit 2
+   fi
 fi
 
 say() { printf '%s\n' "$*"; }
@@ -73,12 +97,62 @@ need() {
    return 0
 }
 
+# uuid_match <binary> <dsym>
+#
+# THE ONE COMPARISON, used by both call forms.
+#
+# A .dSYM is bound to the binary it was generated from by an LC_UUID the linker
+# wrote, and NOTHING downstream changes it -- measured 2026-09-27, the UUID is
+# byte-identical before and after codesign, notarize and staple, for both
+# tr4w and tr4wserver.  That is what makes this check meaningful: it is the
+# only property that survives signing and still identifies one exact build.
+#
+# Two builds of the SAME VERSION have different UUIDs, so a version match is
+# not a match.  And the failure is silent in the worst way: atos given a
+# mismatched .dSYM does not refuse, it resolves every address against the wrong
+# build and prints confident nonsense.
+uuid_match() {
+   need dwarfdump || return 1
+
+   _um_bin=$(dwarfdump --uuid "$1" 2>/dev/null | awk '{print $2; exit}')
+   _um_dsym=$(dwarfdump --uuid "$2" 2>/dev/null | awk '{print $2; exit}')
+
+   if [ -z "$_um_bin" ]; then
+      fail "could not read a UUID from $1 -- not a Mach-O file?"
+      return 1
+   fi
+   if [ -z "$_um_dsym" ]; then
+      fail "could not read a UUID from $2 -- is it a .dSYM bundle?"
+      return 1
+   fi
+   if [ "$_um_bin" = "$_um_dsym" ]; then
+      pass "UUID matches the binary ($_um_bin)"
+      return 0
+   fi
+
+   fail "UUID MISMATCH -- the .dSYM is $_um_dsym and the binary is $_um_bin. \
+It belongs to a different build, so atos would resolve every address to a \
+confidently wrong line rather than refusing"
+   return 1
+}
+
 say "    $LABEL"
 say "      file  $BIN"
 
 if [ ! -f "$BIN" ]; then
    fail "no such file -- nothing was checked"
    exit 1
+fi
+
+# THE STAGED-.dSYM FORM ends here: one question, asked and answered.
+if [ "$MODE" = dsym-match ]; then
+   say "      dsym  $DSYM"
+   if [ ! -d "$DSYM" ]; then
+      fail "no .dSYM bundle at $DSYM -- nothing was checked"
+      exit 1
+   fi
+   uuid_match "$BIN" "$DSYM" || exit 1
+   exit 0
 fi
 
 # ---------------------------------------------------------------------------
@@ -236,22 +310,16 @@ report from this binary cannot name a file even with a .dSYM present"
    # release, not shipped in the bundle.  See docs/INSTALLER_DESIGN.md.
    _dsym="$BIN.dSYM"
    if [ -d "$_dsym" ]; then
-      need dwarfdump || exit 1
-      _exeuuid=$(dwarfdump --uuid "$BIN" 2>/dev/null | awk '{print $2; exit}')
-      _dsuuid=$(dwarfdump --uuid "$_dsym" 2>/dev/null | awk '{print $2; exit}')
-      if [ -n "$_exeuuid" ] && [ "$_exeuuid" = "$_dsuuid" ]; then
-         pass ".dSYM present and its UUID matches the binary ($_exeuuid)"
-      else
-         fail ".dSYM present but its UUID ($_dsuuid) does not match the \
-binary ($_exeuuid) -- it belongs to a different build, so atos would resolve \
-every address to the wrong line rather than refusing"
-      fi
+      # Its return value is not tested on purpose: uuid_match calls fail(),
+      # which sets FAILED, and this script exits on FAILED at the end.  There
+      # is no `set -e` here, so a plain call is the whole statement.
+      uuid_match "$BIN" "$_dsym"
    else
-      say "      note  no .dSYM beside the binary, and none is expected: \
-nothing produces one yet. A backtrace from this artifact prints bare \
-addresses, and a .dSYM here would NOT change that under FPC 3.2.2 -- see the \
-comment above. Resolve a macOS crash with atos, against the image base \
-uCrashLog logs."
+      say "      note  no .dSYM beside the binary, and none is expected HERE: \
+the build stages one for upload instead, because inside TR4W.app it would \
+double the bundle to describe a file FPC 3.2.2 cannot read. A backtrace from \
+this artifact prints bare addresses; resolve a macOS crash with atos, against \
+the image base uCrashLog logs and the UUID in symbols-<version>.txt."
    fi
    ;;
 

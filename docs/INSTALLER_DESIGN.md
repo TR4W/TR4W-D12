@@ -246,13 +246,68 @@ it is exactly the missing half of offline symbolisation. The ASLR problem is rea
 and visible in the table above -- the same probe printed `$102004738` and
 `$100E04736` on two runs -- which is why the base must be logged and is.
 
-**So the recommended shape is the Windows shape, not the bundle:** produce the
-`.dSYM` at build time and **keep it beside the release**, the way `tr4w.dbg` is
-kept and now attached as a release asset. `TR4W.app` does not grow, the operator
-downloads nothing extra, and a crash report becomes resolvable by whoever has the
-matching `.dSYM`. **This is a recommendation and not a decision -- NY4I approved
-"ship it in the bundle", on the premise this section originally stated, and that
-premise was wrong.**
+### 4.2.3 DECIDED AND BUILT: beside the release, not in the bundle
+
+**NY4I, 2026-09-27: *"yes add .dSYM"*, and the earlier "inside `TR4W.app`"
+instruction was explicitly reversed** -- it rested on the premise 4.2.1 destroyed.
+So the shape is the Windows shape: produce the `.dSYM` at build time and keep it
+**beside the release**, the way `tr4w.dbg` is. `TR4W.app` does not grow, the
+operator downloads nothing extra, and a crash report is resolvable by whoever
+holds the matching `.dSYM`.
+
+`stage_dsym` in `build-unix.sh` does it, Darwin only, **for both binaries**:
+
+| | raw | in the zip | dsymutil |
+|---|---|---|---|
+| `tr4w` | 66,105,344 B | **18,087,829 B** | 1.9 s |
+| `tr4wserver` | 26,464,256 B | **7,063,460 B** | 0.7 s |
+
+DWARF compresses about 3.7:1, so what lands is **17 MB and 7 MB**, not 66 and 26.
+
+**`tr4wserver` gets one for the same reasons the app does**: it is signed, it
+ships (as `server/tr4wserver` beside the bundle, not inside it), it carries a
+full debug map -- 207 `N_OSO` entries -- and since the `uCrashLog` split it has
+crash logging it previously lacked. One second and 7 MB is not a reason to leave
+a shipped binary unresolvable.
+
+**Archived with `ditto -c -k --keepParent`, as a `.zip`.** `tar.gz` was measured
+alongside and is within 300 bytes on 18 MB, so size cannot decide it. Three
+things do: Finder expands a `.zip` on double-click, which matters because NY4I is
+the consumer; `.zip` is the macOS convention for a `.dSYM`; and `ditto` is
+already this tree's ruled-on tool for archiving a bundle -- `mac-sign.sh:35-39`
+records that `/usr/bin/zip` does not preserve the symlinks and resource forks a
+bundle can contain. A `.dSYM` usually has neither, but "usually" is not a reason
+to archive a bundle with the wrong tool when the right one is the house rule.
+
+**THE UUID IS RECORDED IN A MANIFEST, `symbols-<version>-<arch>.txt`**, not in
+the asset names. Both were considered and the manifest wins on the thing that
+matters a year later: a UUID is 36 characters of hex that nobody can eyeball, so
+in a filename it makes the asset unreadable *and* unglobbable by the workflow,
+while buying nothing a 1,186-byte text file does not. The manifest is an asset of
+its own, downloads instantly, names every binary with its UUID and architecture
+and archive, carries the `atos` recipe, and states the match rule outright:
+
+> MATCH BY UUID, NEVER BY VERSION. Two builds of 5.0.23 have different UUIDs,
+> and atos given the wrong .dSYM does not refuse -- it resolves every address
+> against the wrong build and prints a confident, incorrect line.
+
+**And the match is asserted at build time, against the SHIPPED binary** -- the
+signed one inside the artifact, not the one that was linked. That is the stronger
+statement: it proves the `.dSYM` describes the bytes in the `.dmg`, through the
+copy and the signing. It is `check-symbols.sh`'s own comparison in a new
+`dsym-match` mode rather than a second implementation, and **a `.dSYM` that does
+not match is deleted rather than published**, because a wrong one is worse than
+none.
+
+This is possible at all because **codesign does not alter `LC_UUID`** -- measured
+for both binaries, identical before and after signing, notarizing and stapling,
+while the byte sizes differ.
+
+**Nothing new enters the bundle, so the signing path is untouched**, and that was
+verified rather than assumed: the composite SHA-256 of all 151 files in
+`TR4W.app` is identical before and after the stage runs, there is no `.dSYM`
+anywhere inside it, and `codesign --verify --deep --strict`, `spctl` and
+`stapler validate` all still return 0 on the app, the server and the `.dmg`.
 
 **The other route is an RTL fix**, and it exists: FPC main has a 64-bit Mach-O
 reader and the `.dSYM`-by-UUID lookup. Moving the Darwin toolchain to it, or
@@ -671,7 +726,7 @@ uninstaller must not remove without asking.
 | 2 | disk-space check | **WITHDRAWN by NY4I** -- *"the disk space is not a factor"*. Free either way: `installKBytes` is computed | closed |
 | 3 | language at install time | **no -- put it in the wizard** | his ruling |
 | 4 | data-file download at install time | **no -- the app already does it; offer it in the wizard** | his ruling, and a wizard page he has not approved |
-| 5 | macOS `.dSYM` -- produce it, but keep it BESIDE THE RELEASE, not in the bundle | **FPC 3.2.2 cannot read one; measured, see 4.2.1.** In the bundle it is 66 MB that does nothing. Beside the release it makes crashes resolvable with `atos`, which `uCrashLog` already prints the command for | his ruling -- he approved the bundle on a premise that proved false |
+| 5 | macOS `.dSYM` | **DECIDED AND BUILT** (NY4I: *"yes add .dSYM"*) -- both binaries, beside the release, 17 MB and 7 MB zipped, UUID-matched against the shipped binary at build time. See 4.2.3 | closed |
 | 6 | Linux separable symbols | `-Xg` + `objcopy`, own piece of work | not proposed |
 | 7 | `.pkg` alongside or instead of the `.dmg` | **alongside for at least one release** | his ruling |
 | 8 | macOS uninstall story | none formed -- see section 10 | nobody has raised it |
