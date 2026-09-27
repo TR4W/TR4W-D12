@@ -979,7 +979,6 @@ procedure tDispalyTimeFromLastQSO;
 function CQLabel(Callsign: CallString): boolean;
 procedure tSetStartStopBandMode;
 procedure DisplayCountryInformation(FileName: Str80; Call: CallString);
-procedure FlashQickDisplay;
 procedure ShowTourDuration;
 procedure DisplayAutoQSLInterval;
 
@@ -995,9 +994,7 @@ implementation
 
 uses
    uSettingsModel,     // Settings.BandMap -- the eight display filters
-   uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
-  uFlasher,    { the quick-display flash is a timer now }
   uMainForm,   { the call field, named -- wh[] round 3 }
   //  OZCHR,
 //  uStack,
@@ -1699,36 +1696,54 @@ begin
 
 end;
 
+(* A NOTICE, AND ONLY A NOTICE.
+
+  THIS PANEL NOW CARRIES ONE KIND OF MESSAGE.  It used to carry two on one
+  caption: an EVENT announcement ("142 QSOs imported") and a CONDITION ("Auth
+  failed - check credentials"), which is what made "set by one path, cleared by
+  another" possible -- and on 2026-09-26 it happened, with a dead radio error
+  sitting over a working link.  A condition goes to its OWNER'S OWN PANEL on the
+  status strip now; see VC.TStatusOwner and uPanelUpdate.PostStatusText.
+
+  WHAT WENT WITH THE SPLIT:
+
+    * FlashQickDisplay -- six phases of EnableElement(mweQuickCommand, False).
+      Enabled is a SEMANTIC property and greying is a side effect of it, so the
+      flash was borrowing the paint of "you cannot use this".  It also NEVER
+      WORKED (NY4I): phase 0 is applied synchronously and the restore waits on a
+      timer, and the flasher's timer was armed from whatever thread called
+      QuickDisplay -- so from a radio thread the panel simply stayed grey.
+    * StartAppTimer(atQuickDisplayClear, ...) -- same trap, same reason.
+
+  THE 30 s WIPE IS KEPT and is now a form-owned TTimer on the main thread.  A
+  notice has no condition to be cleared by, so without a timer the last thing to
+  happen sits there for an hour (NY4I). *)
 procedure QuickDisplay(Prompt: string);
 begin
   SetTextInQuickCommandWindow(Prompt);
   logger.Info('[QuickDisplay] (' + Prompt + ')');
-  if length(Prompt) > 0 then
-     begin
-     FlashQickDisplay;
-     if AppTimerRunning(atQuickDisplayClear) then
-        begin
-        StopAppTimer(atQuickDisplayClear);
-        end;
-     (* THIS WAS A LATENT STACK BUG, not just an unportable call.
-       ClearQuickDisplayText is a plain procedure and SetTimer calls a TIMERPROC
-       -- stdcall, four arguments, callee-popped on i386 -- so every one of
-       these ticks returned leaving the stack four arguments deep. The @
-       operator is what let it compile. See uAppTimers. *)
-     StartAppTimer(atQuickDisplayClear, 30000, @ClearQuickDisplayText);
-     end;
 end;
 
+(* EVERY NOTICE GOES THROUGH ONE ROUTINE, including the four sites that call
+  this one directly rather than QuickDisplay -- AUTO QSL INTERVAL, the imported
+  QSO count, the auto-CQ repeat and LogCW's clear.  All four are notices by
+  NY4I's own examples, and before this they set the caption and armed nothing,
+  so they were the ones that could never be wiped.
+
+  AND IT NO LONGER ASSIGNS THE CAPTION.  `TR4WMainForm.pnlQuickCommand.Caption
+  := Text` stood here and was reached from ~120 call sites on whatever thread
+  they ran on, which bypassed SetElementText's off-thread guard AND its report.
+  ShowQuickCommandNotice defers an off-thread write and names the caller. *)
 procedure SetTextInQuickCommandWindow(Text: string);
 begin
-  TR4WMainForm.pnlQuickCommand.Caption := Text;
+  ShowQuickCommandNotice(Text);
 end;
 
 procedure ClearQuickDisplayText;
 begin
-  SetTextInQuickCommandWindow('');
-//  Windows.AnimateWindow(wh[mweQuickCommand], 500, AW_HIDE or AW_HOR_POSITIVE);
-  StopAppTimer(atQuickDisplayClear);
+  (* Clears the text and STOPS the timer -- an empty notice has nothing to
+    wipe. *)
+  ShowQuickCommandNotice('');
 end;
 
 procedure QuickDisplayError(Prompt: string);
@@ -3867,50 +3882,6 @@ end;
 { Lazily created, so the headless /EXPORT path -- which boots the contest,
   writes the files and halts before any GUI -- never constructs a timer it
   cannot run. }
-var
-  gQuickDisplayFlasher: TFlasher = nil;
-
-function QuickDisplayFlasher: TFlasher;
-begin
-  if gQuickDisplayFlasher = nil then
-     begin
-     gQuickDisplayFlasher := TFlasher.Create;
-     end;
-  Result := gQuickDisplayFlasher;
-end;
-
-{ One phase of the quick-display flash.  Was a whole OS thread that did six
-  Sleep(100)s -- see uFlasher for why that is not what a timer is for.
-
-  IT STILL FLASHES BY TOGGLING ENABLED, and now that the element IS an LCL
-  control that is a choice rather than a limitation.  The note here used to say
-  "when it becomes an LCL control this becomes a colour assignment"; it has, and
-  it is left alone anyway -- a disabled panel greys its caption, which is what
-  the operator has always seen, and swapping it for a colour flash is a visual
-  change to make in the restyle pass with the others (docs/GRID_RESTYLE_PLAN.md)
-  rather than smuggled into a conversion. }
-
-procedure QuickDisplayFlashPhase(const aOn: boolean);
-begin
-  // The flash was always an Enable/Disable toggle -- a disabled static greys
-  // its text -- and it still is, on the control now instead of on a handle.
-  EnableElement(mweQuickCommand, aOn);
-end;
-
-procedure FlashQickDisplay;
-begin
-  // Nothing to flash before the window exists -- also what keeps a headless
-  // run from ever creating the timer.
-  if MainElement(mweQuickCommand) = nil then
-     begin
-     Exit;
-     end;
-
-  // Six phases at 100 ms, exactly as the Sleep loop ran, and Start RESTARTS a
-  // flash already in progress -- which is what the tFlashQDThreadID guard was
-  // reaching for and could not express.
-  QuickDisplayFlasher.Start(@QuickDisplayFlashPhase, 6, 100);
-end;
 
 procedure ShowTourDuration;
 var

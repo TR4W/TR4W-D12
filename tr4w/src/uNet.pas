@@ -270,6 +270,7 @@ uses
   (* Which store a log read comes from. *)
   uLogSource,
   uMainForm,   { the call field, named -- wh[] round 3 }
+  uPanelUpdate,   { PostStatusText -- the Network status panel, from any thread }
   uNetworkForm,   { the station list is a TListView on a form now }
   Controls,       { TCaption -- see ShowConnectionStatus }
   uCFG,
@@ -848,8 +849,14 @@ begin
       begin
       DisplayClientStatus(i);
       end;
+   (* THE LOST-LINK MESSAGE IS THE STATUS NOW, AND THE QuickDisplay THAT STOOD
+     HERE IS DELETED RATHER THAN MOVED.  ShowConnectionStatus one line up
+     already says the same thing and now writes the Network panel, which HOLDS
+     it until the link comes back -- whereas the notice it replaced was wiped
+     after 30 s, or sooner by any of the ~120 other things that write that
+     caption.  Two spellings of one fact, and the shorter-lived one was the one
+     an operator saw. *)
    ShowConnectionStatus(TC_DISCONNECTEDFROM);
-   QuickDisplay(SysUtils.Format(AnsiString(LclText(TC_CONNECTIONTOTR4WSERVERLOST)), [Settings.Server.Address, Settings.Server.Port]));
 end;
 
 { ON THE READER THREAD. }
@@ -1533,12 +1540,28 @@ end;
   bytes. No
   buffer, no WinAnsi round trip, no pointer into a ShortString's first byte. *)
 procedure ShowConnectionStatus(Operation: string);
+var
+   text: string;
 begin
+  text := Format(TC_NETWORK,
+                 [Operation, Settings.Server.Address, Settings.Server.Port]);
+
   if TR4WNetworkForm <> nil then
      begin
-     TR4WNetworkForm.Caption := TCaption(Format(TC_NETWORK,
-                                  [Operation, Settings.Server.Address, Settings.Server.Port]));
+     TR4WNetworkForm.Caption := TCaption(text);
      end;
+
+  (* AND THE MAIN WINDOW'S NETWORK STATUS PANEL, FROM THE SAME ONE PLACE.
+
+    THE POINT OF PUTTING IT HERE IS THAT THERE IS NOTHING TO KEEP IN STEP.  All
+    four transitions -- connecting, connected, failed, disconnected -- already
+    come through this routine, so the panel cannot be left holding a state the
+    network window has moved on from.  The network window's CAPTION is only
+    visible while that window is open, which is why the same fact is worth a
+    panel: a multi-op operator works with it closed.
+
+    Posted rather than assigned: ConnectThread runs this off the main thread. *)
+  PostStatusText(stoNetwork, text);
 end;
 
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);

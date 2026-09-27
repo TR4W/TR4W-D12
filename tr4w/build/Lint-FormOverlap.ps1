@@ -57,9 +57,41 @@ function Get-FmxControls {
 
    $stack = New-Object System.Collections.Generic.List[object]
    $nodes = @()
+   # A COLLECTION PROPERTY IS NOT A CONTROL, AND ITS `end` IS NOT A CONTROL'S.
+   #
+   # The LCL streams a collection as
+   #
+   #     Panels = <
+   #       item
+   #         Width = 200
+   #       end
+   #       item
+   #         Width = 206
+   #       end>
+   #
+   # -- so every `item` closes with `end`, the terminating `>` is appended to the
+   # LAST one, and none of it opens an `object`. Without this the item ends POP
+   # THE CONTROL STACK: adding a four-panel TStatusBar to uMainForm made this
+   # lint report 35 overlaps, 20 of them against the FORM ITSELF, which it had
+   # measured as 200x393 -- a status panel's Width read as the form's.
+   #
+   # Nothing inside a collection has coordinates a sibling can collide with, so
+   # the whole block is skipped rather than modelled.
+   $inCollection = $false
 
    foreach ($raw in $Lines) {
       $line = $raw.Trim()
+
+      if ($inCollection) {
+         if ($line -match '>\s*$') { $inCollection = $false }
+         continue
+      }
+
+      # `Panels = <>` is an EMPTY collection and closes on its own line.
+      if ($line -match '^[A-Za-z_][A-Za-z0-9_.]*\s*=\s*<') {
+         if ($line -notmatch '>\s*$') { $inCollection = $true }
+         continue
+      }
 
       if ($line -match '^object\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*([A-Za-z_][A-Za-z0-9_]*)') {
          $parent = '(form)'
@@ -341,6 +373,65 @@ object Form1: TForm
       Size.Width = 675.000000000000000000
       Size.Height = 572.000000000000000000
     end
+  end
+end
+'@ },
+
+      # A COLLECTION PROPERTY, WHOSE item/end PAIRS MUST NOT POP THE STACK.
+      # lblA and lblB do not overlap; if the collection's two `end` lines are
+      # taken for control ends, lblB's coordinates land on the FORM and it
+      # reports against every control on it.
+      @{ Name = 'collection'; Expect = 0; Body = @'
+object Form1: TForm
+  ClientWidth = 400
+  ClientHeight = 300
+  object sbStatus: TStatusBar
+    Left = 0
+    Top = 277
+    Width = 400
+    Height = 23
+    Align = alBottom
+    Panels = <
+      item
+        Width = 200
+      end
+      item
+        Width = 200
+      end>
+    SimplePanel = False
+  end
+  object lblA: TLabel
+    Left = 12
+    Top = 8
+    Width = 100
+    Height = 17
+  end
+  object lblB: TLabel
+    Left = 12
+    Top = 30
+    Width = 100
+    Height = 17
+  end
+end
+'@ },
+
+      # AND THE EMPTY FORM OF IT, which closes on its own line.
+      @{ Name = 'collection-empty'; Expect = 0; Body = @'
+object Form1: TForm
+  ClientWidth = 400
+  ClientHeight = 300
+  object sbStatus: TStatusBar
+    Left = 0
+    Top = 277
+    Width = 400
+    Height = 23
+    Panels = <>
+  end
+  object lblA: TLabel
+    Left = 12
+    Top = 8
+    Width = 100
+    Height = 17
   end
 end
 '@ }

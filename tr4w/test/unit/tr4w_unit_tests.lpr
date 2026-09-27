@@ -247,6 +247,10 @@ uses
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
+   (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
+     verified by rebuilding it in code is not verified at all -- so it reaches
+     the LCL, which this binary already links. *)
+   uTestStatusAndNotice in 'uTestStatusAndNotice.pas',
    // Pins the radio-status change detector.  LOGRADIO itself is not listed
    // here -- it arrives through the search path, the same way uTestIcomRegistry
    // reaches RadioParametersArray.
@@ -477,6 +481,7 @@ begin
    RegisterSuite(TSHA256Tests.Create('SHA256'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
+   RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));
    RegisterSuite(TEditingKeysTests.Create('EditingKeys'));

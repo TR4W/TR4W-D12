@@ -14,6 +14,12 @@ unit uAppTimers;
   plain procedures and passed with @:
 
     LOGWIND       SetTimer(..., @ClearQuickDisplayText)   procedure, no stdcall
+                  -- RETIRED 2026-09-26.  atQuickDisplayClear is gone: the
+                  quick-command wipe is a form-owned TTimer on the main
+                  window (uMainForm.tmrQuickCommandNotice), because this one
+                  was armed from whatever thread called QuickDisplay and
+                  CreateTimer is SetTimer(0, 0, ...) -- so from a radio
+                  polling thread it could never fire.
     uCWKeyerCPU   SetTimer(..., @SendMessageStatus)       procedure, no stdcall
 
   so Windows called them stdcall and they returned without unwinding four
@@ -35,7 +41,6 @@ type
      to be killed in a routine nothing ever registered. *)
    TAppTimer = (
       atAutoCQ,            (* the auto-CQ repeat, one shot per CQ *)
-      atQuickDisplayClear, (* wipe the quick-command line after 30 s *)
       atNetCWStatus,       (* tell the multi-op network what CW is sending *)
       atOneSecond);        (* the clock and rate displays *)
 

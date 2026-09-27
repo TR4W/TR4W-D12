@@ -905,6 +905,32 @@ type
 
     );
 
+   (* WHO OWNS A STATUS PANEL ON THE MAIN WINDOW'S STATUS BAR.
+
+     A STATUS IS A PROJECTION OF A CONDITION, AND IT STAYS UNTIL THE CONDITION
+     ENDS.  NY4I, 2026-09-26: "things like status on invalid or off invalid for
+     connecting to a radio, that's a status that should stay until that
+     condition is cleared."  That is the opposite of a NOTICE -- an event
+     announcement such as "142 QSOs imported" -- which is what pnlQuickCommand
+     carries and what the notice timer wipes.
+
+     ONE PANEL PER OWNER, AND THAT IS THE POINT OF THE TYPE.  Both kinds used
+     to share pnlQuickCommand's single caption, so "set by one path and cleared
+     by another" was always possible -- and on 2026-09-26 it happened: a
+     corrected IC-7760 password connected while the banner still read "Auth
+     failed - check credentials", because the failure was written by a polling
+     thread that no longer existed.  A per-owner panel makes that
+     UNREPRESENTABLE: Radio 1 can only write Radio 1's panel, so no other
+     subsystem can leave a message behind for it or wipe one it is showing.
+
+     DECLARED HERE because VC is where this program's types live and because it
+     is the one unit both the view (uMainForm) and the marshaller
+     (uPanelUpdate) already name, so the enum costs no new dependency in
+     either.  The PANELS themselves are uMainForm's; nothing about the strip's
+     geometry is here. *)
+type
+   TStatusOwner = (stoRadio1, stoRadio2, stoCluster, stoNetwork);
+
 var
 
 //  tR150SMode                            : boolean;

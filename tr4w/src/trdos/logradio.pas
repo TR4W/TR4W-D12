@@ -251,24 +251,6 @@ type
         test -- and were assigned the same value as the panel handle on the
         line above. All six were `:= h` in one block. *)
       tRadioPanelSlot: integer;
-      (* IS A LINK-FAILURE MESSAGE CURRENTLY ON SCREEN FOR THIS RADIO?
-
-        IT LIVES ON THE SLOT BECAUSE THE MESSAGE DOES.  The banner and the
-        panel label belong to the radio the operator is looking at, and they
-        outlive any one polling thread -- whereas the state that used to
-        decide whether to clear them was a LOCAL of the polling procedure.
-
-        That is the whole of the 2026-09-26 defect.  A radio is never
-        reconfigured in place, it is REBUILT: correcting the IC-7760's LAN
-        password tore the radio down and started a NEW polling thread, whose
-        fresh local said no failure had been reported -- so the successful
-        login cleared nothing, and "IC7760: Auth failed - check credentials"
-        sat on the main window while VFO A tracked 7034.00 live.
-
-        Written only by uRadioPolling.ShowRadioLinkFailure /
-        ClearRadioLinkFailure, which are the only two places that touch
-        either surface. *)
-      LinkFailureShown: Boolean;
       tBuf: array[1..512] of AnsiChar;
       active : boolean;
       CurrentStatus:   RadioStatusRecord; { Last reading taken }
@@ -763,6 +745,19 @@ procedure VFOBumpUp;
   MainUnit is the only caller. *)
 function DrivePTTLine(const aRadio: RadioPtr; const aOn: boolean): boolean;
 
+(* WHICH STATUS PANEL THIS RIG WRITES.  ONE PLACE, AND IT BELONGS HERE.
+
+  "Which radio is this" is this unit's question -- Radio1 and Radio2 are its
+  variables -- and answering it anywhere else would be a second copy of the
+  answer.  NOT rig^.tRadioPanelSlot, which is 0 when no radio panel is OPEN: a
+  radio that cannot connect is exactly the case where that panel may not be on
+  screen, and the status strip must say so anyway.
+
+  A pointer that is neither Radio1 nor Radio2 cannot exist today; it answers
+  Radio 1 rather than raising, because a diagnostic message is not worth an
+  exception on the polling thread. *)
+function RadioStatusOwner(rig: RadioPtr): TStatusOwner;
+
 implementation
 
 
@@ -771,6 +766,7 @@ uses
    LogK1EA,
    LogWind,
    MainUnit, uRadioPolling,
+   uPanelUpdate,    (* PostStatusText -- a radio's own status panel *)
    uTelnet,
    LogStuff,
    LogSUBS2,
@@ -1651,6 +1647,35 @@ begin
    Self.tFactoryObject := nil;
 end;
 
+(* A RADIO THAT COULD NOT BE SET UP -- ON ITS OWN PANEL, AND IT STAYS THERE.
+
+  THIS IS A CONDITION, NOT AN EVENT.  Nothing about it changes until an operator
+  edits the radio, which rebuilds it -- so a message that auto-wipes after 30 s
+  tells an operator with a misconfigured rig nothing at all thirty-one seconds
+  later, which is what these five sites did through QuickDisplayError.
+
+  Each was also its own sentence with its own wording of "not connected"; the
+  condition IS "not connected", so the panel says it once and the branch
+  supplies only what is specific to it. *)
+procedure SetRadioConfigurationStatus(rig: RadioPtr; const aWhy: string);
+begin
+   PostStatusText(RadioStatusOwner(rig),
+                  string(rig^.RadioName) + ': not connected - ' + aWhy);
+   DoABeep(Warning);
+end;
+
+function RadioStatusOwner(rig: RadioPtr): TStatusOwner;
+begin
+   if rig = @Radio2 then
+      begin
+      Result := stoRadio2;
+      end
+   else
+      begin
+      Result := stoRadio1;
+      end;
+end;
+
 procedure RadioObject.SetUpRadioInterface;
 var
 //   TempCardinal: cardinal;
@@ -1807,7 +1832,7 @@ begin
             // build it, surface it to the operator and do NOT connect.
             logger.Error('[%s.SetUpRadioInterface] Factory could not create serial radio "%s" (id) -- not connecting',
                         [Self.RadioName, uRadioRegistry.DisplayNameId(string(Self.FactoryId))]);
-            QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
+            SetRadioConfigurationStatus(@Self, 'could not be created -- check its configuration');
             end;
          Self.EventHandlers := EventHandlers;
          Self.tmrCWByCAT := TTimer.Create(nil);
@@ -1868,8 +1893,7 @@ begin
                             'serial port %d is in use or unavailable',
                             [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId),
                              Ord(tCATPortType)]);
-               QuickDisplayError('Radio "' + string(Self.RadioName) +
-                                 '" could not open its port -- not connected.');
+               SetRadioConfigurationStatus(@Self, 'could not open its port');
                end;
             end
          else
@@ -1878,7 +1902,7 @@ begin
             // build it, surface it to the operator and do NOT connect.
             logger.Error('[%s.SetUpRadioInterface] Factory could not create serial radio "%s" -- not connecting',
                         [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId)]);
-            QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
+            SetRadioConfigurationStatus(@Self, 'could not be created -- check its configuration');
             end;
 
          // Initialize timer and event handlers — must happen for all radio paths
@@ -1915,7 +1939,7 @@ begin
          // exactly as the by-id branch above already does.
          logger.Error('[%s.SetUpRadioInterface] %s does not support a serial connection -- not connecting. Check RADIO n TYPE / PORT.',
                       [Self.RadioName, uRadioRegistry.DisplayNameId(Self.RadioId)]);
-         QuickDisplayError('Radio "' + string(Self.RadioName) + '" is not a serial radio -- not connected. Check its configuration.');
+         SetRadioConfigurationStatus(@Self, 'is not a serial radio -- check its configuration');
          end;
       end
    else if CATPortKind = pkNetwork then
@@ -1987,7 +2011,7 @@ begin
          // A factory radio has no legacy fallback -- if the factory could not
          // build it, surface it to the operator and do NOT connect.
          logger.Error('[%s.SetUpRadioInterface] Factory could not create the network radio -- not connecting', [Self.RadioName]);
-         QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
+         SetRadioConfigurationStatus(@Self, 'could not be created -- check its configuration');
          end;
       end;
 

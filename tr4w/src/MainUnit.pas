@@ -4562,7 +4562,28 @@ begin
     height and the computed height agree to a pixel there. It is not zero at
     any other Settings.MainWindow.WindowSize, which is exactly the kind of defect that ships
     looking fine on the machine it was written on. *)
-  MakeMainWindowResizeable(ws * 46, 6 + EditableLogHeight + ws * 14);
+  (* PLUS THE STATUS STRIP, WHICH IS SPACE THE WINDOW GAINED.
+
+    The strip is the only Align-ed control on this form; everything else is
+    absolutely positioned, and an absolutely positioned child anchors to the
+    parent's FULL ClientHeight -- DoPosition reads ParentClientHeight
+    (lcl/include/wincontrol.inc) -- so an alBottom sibling does NOT push one out
+    of its way, it covers it.  Adding the height here is what makes the strip
+    NEW space: nothing an operator has muscle memory for moves, and the bottom
+    row of status panels keeps its distance from the bottom edge, which is what
+    the anchoring below then preserves on every resize.
+
+    READ FROM THE CONTROL rather than written down, because how tall a status
+    bar is belongs to the widget set and differs on gtk2 and Cocoa.  Its
+    design-time twin is STATUS_BAR_HEIGHT in tools/gen_main_elements.py, which
+    only has to keep the DESIGNER honest.
+
+    AN OPERATOR'S SAVED WINDOW HEIGHT FROM AN EARLIER VERSION IS 23 px SHORT,
+    and the LCL fixes that for us: MakeMainWindowResizeable sets
+    Constraints.MinHeight from the height it just took, so the restore clamps
+    up rather than opening a window whose strip sits on the bottom panel row. *)
+  MakeMainWindowResizeable(ws * 46,
+                           6 + EditableLogHeight + ws * 14 + MainStatusBarHeight);
   AnchorMainWindowControls;
 
 end;

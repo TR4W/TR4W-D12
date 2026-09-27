@@ -83,6 +83,41 @@ type
       form at all. NY4I, 2026-09-06: "unless there is an alternative cross
       platform way, a timer to check both time and screen info?" *)
     tmrSystemWatch: TTimer;
+
+    (* THE NOTICE TIMER -- A ONE-SHOT WIPE FOR pnlQuickCommand.
+
+      A NOTICE IS AN EVENT ANNOUNCEMENT: "142 QSOs imported", "AUTO QSL
+      INTERVAL = 4", an invalid domestic QTH.  It is not a condition, so it has
+      nothing to be cleared BY -- which is why it keeps a timer while a status
+      never gets one.  NY4I, 2026-09-26: "it could be a considerable amount of
+      time between when I import QSOs and there's some other event that needs to
+      use quick display... that seems like after some amount of time, it should
+      go away."
+
+      A FORM-OWNED TTimer ON THE MAIN THREAD, and that is the whole fix.  The
+      30 s wipe used to be armed with StartAppTimer(atQuickDisplayClear, ...) --
+      a TTimer too, but armed from WHATEVER THREAD called QuickDisplay.
+      TWin32WidgetSet.CreateTimer is SetTimer(0, 0, ...), so WM_TIMER is posted
+      to the CALLING thread's queue: armed from a radio polling thread it could
+      never fire, which is the same trap that hid the Icom transport's six dead
+      timers.  The bug was never TTimer.
+
+      RESTARTED, NOT STACKED, on each new notice -- see ShowQuickCommandNotice. *)
+    tmrQuickCommandNotice: TTimer;
+
+    (* THE STATUS STRIP: ONE PANEL PER OWNER.
+
+      NEW SPACE AT THE BOTTOM OF THE WINDOW, not a re-use of any: the form grew
+      by this control's height so nothing an operator has muscle memory for
+      moved.  See MainStatusBarHeight for the runtime half of that, and
+      tools/gen_main_elements.py for the design-time half.
+
+      IT IS OUTSIDE THE TMainWindowElement COLOUR SYSTEM ON PURPOSE.  The 110
+      element panels take their colours from tr4wColors and the contest scheme;
+      this follows the SYSTEM THEME, because it is chrome rather than contest
+      data.  NY4I has been told and accepts it.  Do not wire it into
+      tr4wColors. *)
+    sbStatus: TStatusBar;
     { PUBLISHED so the streaming loader finds it in uMainForm.lfm, and so
       Lint-FormFields can check the two agree.  Declared in the designer,
       REPOSITIONED at run time -- see CreateTR4WPossibleCallList. }
@@ -165,6 +200,10 @@ type
       in a way WM_SETFOCUS on the form is not: the form's native window and the
       focused CONTROL are different questions. *)
     procedure SystemWatchTick(Sender: TObject);
+
+    (* WIRED IN uMainForm.lfm.  One shot: it disables itself and wipes the
+      notice.  A status is never wiped from here -- it has its own panel. *)
+    procedure QuickCommandNoticeExpired(Sender: TObject);
 
     procedure MainFormActivate(Sender: TObject);
 
@@ -606,6 +645,56 @@ procedure SetElementColors(const aElement: TMainWindowElement;
                            const aBack, aText: TColor);
 procedure ShowElement(const aElement: TMainWindowElement; const aVisible: boolean);
 procedure EnableElement(const aElement: TMainWindowElement; const aEnabled: boolean);
+
+(* ------------------------------------------------------------------------
+  THE TWO CHANNELS THE MAIN WINDOW HAS FOR TELLING THE OPERATOR SOMETHING.
+
+  They were ONE -- pnlQuickCommand's caption, written from ~120 call sites --
+  and mixing them is what let a dead radio error outlive the radio.
+
+    STATUS   a projection of a CONDITION.  Its own panel, one per owner, and
+             it stays until the owner clears it.  NEVER on a timer.
+    NOTICE   an EVENT announcement.  pnlQuickCommand, wiped after 30 s,
+             restarted by the next notice.
+
+  Both are MAIN-THREAD-SAFE FROM ANY THREAD, by different routes: the text
+  goes through SetElementText / the status bar on the main thread, and an
+  off-thread caller is deferred and REPORTED rather than tolerated.
+  ------------------------------------------------------------------------ *)
+
+(* THE HEIGHT THE STRIP TAKES, ASKED OF THE CONTROL.
+
+  MainUnit adds it to the client height it hands MakeMainWindowResizeable, so
+  the strip is space the window GAINED.  It has to be added: an absolutely
+  positioned child anchors to the parent's FULL ClientHeight -- DoPosition
+  reads ParentClientHeight (lcl/include/wincontrol.inc) -- so an alBottom
+  sibling does not push one out of the way, it covers it.  Every control on
+  this form is absolutely positioned; not one uses Align.
+
+  ASKED, NOT STATED, because a status bar's height is the widget set's
+  business and differs between Windows, gtk2 and Cocoa. *)
+function  MainStatusBarHeight: integer;
+
+(* SET (OR CLEAR, WITH '') ONE OWNER'S STATUS PANEL.  MAIN THREAD.
+
+  Off the main thread, go through uPanelUpdate.PostStatusText -- which is what
+  every radio caller does, because it also coalesces. *)
+procedure SetStatusText(const aOwner: TStatusOwner; const aText: string);
+
+(* WHAT THAT PANEL IS SHOWING.  MAIN THREAD.  The panel IS the state, so this
+  is how a test -- or anything else -- asks; there is no shadow flag. *)
+function  StatusText(const aOwner: TStatusOwner): string;
+
+(* PUT A NOTICE UP AND RESTART ITS 30 S WIPE.  Any thread.
+
+  An EMPTY notice clears the panel and STOPS the timer rather than arming one:
+  there is nothing to wipe.  That is what QuickDisplay('') has always meant. *)
+procedure ShowQuickCommandNotice(const aText: string);
+
+(* Is the wipe armed?  For the tests, which pin that a notice arms it and a
+  status does not. *)
+function  QuickCommandNoticeArmed: boolean;
+
 procedure SetElementLeft(const aElement: TMainWindowElement; const aLeft: integer);
 procedure SetElementBounds(const aElement: TMainWindowElement;
                            const aLeft, aTop, aWidth, aHeight: integer);
@@ -1076,9 +1165,27 @@ procedure BindMainElements;
 var
    i: integer;
    c: TComponent;
+   e: TMainWindowElement;
+   b: TMainProgressBar;
 begin
    if TR4WMainForm = nil then
       begin
+      (* NO FORM MEANS BOUND TO NOTHING -- it used to mean "leave whatever was
+        bound before", which is only safe while the main window outlives the
+        process.  A stale pointer to a freed form passes ControlUsable's
+        `aCtrl <> nil` and then reads HandleAllocated off released memory.
+        Nothing in the running program frees the main window, so this changes no
+        behaviour there; it is the difference between a routine that is correct
+        and one that is correct because of a fact stated somewhere else. *)
+      for e := Low(GElements) to High(GElements) do
+         begin
+         GElements[e] := nil;
+         end;
+      for b := Low(GProgressBars) to High(GProgressBars) do
+         begin
+         GProgressBars[b] := nil;
+         end;
+      GTourDurationText := nil;
       Exit;
       end;
 
@@ -1723,6 +1830,158 @@ begin
         safe before. *)
       GElements[aElement].Caption := aText;
       end;
+end;
+
+(* ---------------------------------------------------------------------------
+  STATUS AND NOTICE.  See the interface for the split.
+  --------------------------------------------------------------------------- *)
+
+function MainStatusBarHeight: integer;
+begin
+   Result := 0;
+   if (TR4WMainForm <> nil) and (TR4WMainForm.sbStatus <> nil) then
+      begin
+      Result := TR4WMainForm.sbStatus.Height;
+      end;
+end;
+
+(* THE OWNER *IS* THE PANEL INDEX, and deliberately so: the enum's order is the
+  strip's order, left to right, so there is no table to keep in step and no way
+  to address the wrong panel.  A strip with too few panels is a designer
+  mistake, so it reports rather than writing over a neighbour. *)
+function StatusPanelFor(const aOwner: TStatusOwner): TStatusPanel;
+begin
+   Result := nil;
+   if (TR4WMainForm = nil) or (TR4WMainForm.sbStatus = nil) then
+      begin
+      Exit;
+      end;
+
+   if Ord(aOwner) >= TR4WMainForm.sbStatus.Panels.Count then
+      begin
+      if logger <> nil then
+         begin
+         logger.Error('[Status] sbStatus has %d panel(s); owner %d has nowhere '
+                      + 'to write -- uMainForm.lfm needs one panel per '
+                      + 'TStatusOwner',
+                      [TR4WMainForm.sbStatus.Panels.Count, Ord(aOwner)]);
+         end;
+      Exit;
+      end;
+
+   Result := TR4WMainForm.sbStatus.Panels[Ord(aOwner)];
+end;
+
+procedure SetStatusText(const aOwner: TStatusOwner; const aText: string);
+var
+   pnl: TStatusPanel;
+begin
+   (* NOT SILENT.  Every other accessor in this unit reports an off-thread write
+     and defers it; this one reports and DROPS, because the marshalled route
+     already exists and is the one callers are meant to use
+     (uPanelUpdate.PostStatusText).  A second deferral here would be a second
+     way to do it, and the two would coalesce differently. *)
+   if not OnMainThread then
+      begin
+      ReportOffMainThread('status panel', get_caller_addr(get_frame));
+      Exit;
+      end;
+
+   pnl := StatusPanelFor(aOwner);
+   if pnl = nil then
+      begin
+      Exit;
+      end;
+
+   if pnl.Text <> aText then
+      begin
+      pnl.Text := aText;
+      end;
+end;
+
+function StatusText(const aOwner: TStatusOwner): string;
+var
+   pnl: TStatusPanel;
+begin
+   Result := '';
+   pnl := StatusPanelFor(aOwner);
+   if pnl <> nil then
+      begin
+      Result := pnl.Text;
+      end;
+end;
+
+function QuickCommandNoticeArmed: boolean;
+begin
+   Result := (TR4WMainForm <> nil) and
+             (TR4WMainForm.tmrQuickCommandNotice <> nil) and
+             TR4WMainForm.tmrQuickCommandNotice.Enabled;
+end;
+
+(* RESTARTED, NOT STACKED.  Enabled := False then True is what resets a TTimer's
+  countdown; assigning True to an already-enabled timer does nothing, which
+  would have made the SECOND notice in a 30 s window inherit the first one's
+  remaining time. *)
+procedure ArmQuickCommandNotice(const aOn: boolean);
+begin
+   if (TR4WMainForm = nil) or (TR4WMainForm.tmrQuickCommandNotice = nil) then
+      begin
+      Exit;
+      end;
+
+   TR4WMainForm.tmrQuickCommandNotice.Enabled := False;
+   if aOn then
+      begin
+      TR4WMainForm.tmrQuickCommandNotice.Enabled := True;
+      end;
+end;
+
+type
+   (* ONE OBJECT SO QueueAsyncCall HAS A METHOD TO CALL.  Same shape as
+     TEntryDeferrer further down, and for the same reason. *)
+   TNoticeArmer = class(TObject)
+      procedure Arm(Data: PtrInt);
+   end;
+
+var
+   GNoticeArmer: TNoticeArmer = nil;
+
+procedure TNoticeArmer.Arm(Data: PtrInt);
+begin
+   ArmQuickCommandNotice(Data <> 0);
+end;
+
+procedure ShowQuickCommandNotice(const aText: string);
+begin
+   (* The TEXT is safe from any thread -- SetElementText defers and reports.
+     THE TIMER IS NOT: TTimer.Enabled reaches into the widget set. *)
+   SetElementText(mweQuickCommand, aText);
+
+   if OnMainThread then
+      begin
+      ArmQuickCommandNotice(aText <> '');
+      Exit;
+      end;
+
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;      (* shutting down; the caption write above dropped too *)
+      end;
+
+   if GNoticeArmer = nil then
+      begin
+      GNoticeArmer := TNoticeArmer.Create;
+      end;
+
+   (* AFTER the deferred caption write, because QueueAsyncCall is FIFO -- so the
+     30 s starts when the text actually appears, not before. *)
+   Application.QueueAsyncCall(GNoticeArmer.Arm, PtrInt(Ord(aText <> '')));
+end;
+
+procedure TTR4WMainForm.QuickCommandNoticeExpired(Sender: TObject);
+begin
+   tmrQuickCommandNotice.Enabled := False;      (* one shot *)
+   SetElementText(mweQuickCommand, '');
 end;
 
 procedure SetElementColors(const aElement: TMainWindowElement;

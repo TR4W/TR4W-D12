@@ -76,6 +76,27 @@ EDITABLE_LOG_HEIGHT = 30 + 5 * (WS + 2)
 # possible-call strip -- which this script does not measure.
 FORM_MARGIN = 24
 
+# THE STATUS BAR'S OWN HEIGHT, WHICH IS NEW SPACE AND NOT SPACE TAKEN.
+#
+# sbStatus is hand-written in the .lfm -- it is chrome, not an element of
+# TWindows[], and it has no geometry to generate: Align = alBottom decides
+# where it goes.  It survives a regeneration because strip_generated only
+# removes TElementPanel and TPanel blocks.
+#
+# BUT ITS HEIGHT HAS TO BE ADDED HERE, because size_form OVERWRITES the form's
+# Height/ClientHeight from the panels it measured.  Without this line a
+# regeneration would shrink the form back to 370 and the strip would sit ON TOP
+# of the bottom row of status panels -- not beside it: an alNone child anchors to
+# the parent's FULL ClientHeight (lcl/include/wincontrol.inc, DoPosition reads
+# ParentClientHeight), so an aligned sibling does NOT push absolutely-positioned
+# ones out of its way, and every control on this form is absolutely positioned.
+#
+# The runtime twin of this number is uMainForm.MainStatusBarHeight, which MainUnit
+# adds to the client height it hands MakeMainWindowResizeable -- and that is the
+# one that matters on screen, because the .lfm size is a design-time picture.
+# There it is READ FROM THE CONTROL rather than restated.
+STATUS_BAR_HEIGHT = 23
+
 
 def style_flags(expr):
     """Which of the four style properties a style expression implies.
@@ -357,7 +378,7 @@ def size_form(raw, extent):
     MainUnit's arithmetic.
     """
     w = extent[0] + FORM_MARGIN
-    h = extent[1] + FORM_MARGIN
+    h = extent[1] + FORM_MARGIN + STATUS_BAR_HEIGHT
 
     out = []
     for line in raw.split(CRLF):
@@ -410,7 +431,8 @@ def main():
     print('gen_main_elements: %d panel(s) at ws=%d (%d element, %d totals, '
           '%d needs), form %dx%d'
           % (len(names), WS, len(made), len(grid_names), len(need_names),
-             extent[0] + FORM_MARGIN, extent[1] + FORM_MARGIN))
+             extent[0] + FORM_MARGIN,
+             extent[1] + FORM_MARGIN + STATUS_BAR_HEIGHT))
 
 
 if __name__ == '__main__':

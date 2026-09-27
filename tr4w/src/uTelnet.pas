@@ -166,6 +166,7 @@ uses
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
   uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
   uBandmap,
+  uPanelUpdate,   // PostStatusText -- the Cluster status panel
   LogGrid,
   SysUtils,   // Issue #997: provides SysUtils.Format/StrPCopy for asm removal.
               // ORDER/QUALIFICATION MATTERS: SysUtils also declares SysErrorMessage,
@@ -780,6 +781,22 @@ begin
      end;
 end;
 
+(* THE CLUSTER'S OWN STATUS PANEL ON THE MAIN WINDOW.
+
+  A LINK IS A CONDITION, so it gets a panel rather than a notice.  This is NEW
+  rather than a reclassification: the three transitions below have always
+  reported into the telnet CONSOLE, which is only visible while that window is
+  open -- and an operator working spots off the band map has it closed.
+
+  THE SAME THREE CONSTANTS THE CONSOLE USES, so there is no new English to
+  translate and the two surfaces cannot word it differently. *)
+procedure SetClusterStatus(const aOperation: string);
+begin
+  PostStatusText(stoCluster,
+                 Format('%s%s:%u',
+                        [aOperation, PendingTelnetHost, PendingTelnetPort]));
+end;
+
 // ON THE MAIN THREAD.  One event, handled exactly as the WM_TELNET_MSG arms
 // handled it -- this is a move, not a rewrite.  What changed is how it got
 // here, and that the text arrived with it instead of on the heap.
@@ -799,6 +816,7 @@ begin
         CancelTelnetRetry;
         AddStringToTelnetConsole(Format('%s%s:%u',
            [TC_CONNECTEDTO, PendingTelnetHost, PendingTelnetPort]), tstTR4W);
+        SetClusterStatus(TC_CONNECTEDTO);
         // (The TelnetBuffer clear that stood here is gone with the buffer
         // -- there is no shared receive state to reset between sessions.)
         // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
@@ -855,6 +873,7 @@ begin
 
         AddStringToTelnetConsole(Format('%s%s:%u',
            [TC_FAILEDTOCONNECTTO, PendingTelnetHost, PendingTelnetPort]), tstError);
+        SetClusterStatus(TC_FAILEDTOCONNECTTO);
         // Keep trying, with a longer gap each time.  A failed RETRY comes
         // back through here, which is what makes the backoff advance --
         // and a first connect that fails is retried too, so a TR4W
@@ -910,6 +929,7 @@ begin
               TelnetConnectionError(aEvent.Code);
               end;
            Disconnect;
+           SetClusterStatus(TC_DISCONNECTEDFROM);
            // We did not ask for this -- the node hung up or the link
            // died -- so start trying to get it back.  Disconnect has
            // already restored the toolbar, so the operator can still

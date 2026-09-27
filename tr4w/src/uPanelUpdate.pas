@@ -120,6 +120,29 @@ procedure PostPanelEnable(const aPanel: integer; const aControlId: integer;
   why it cannot simply be SetWindowText on the element's handle. }
 procedure PostElementText(const aElement: TMainWindowElement; const aText: string);
 
+(* ONE OWNER'S STATUS PANEL ON THE MAIN WINDOW'S STATUS STRIP, FROM ANY THREAD.
+
+  WHY THIS SEAM AND NOT A SECOND ONE.  A status is written by the radio polling
+  thread, which is destroyed and rebuilt on every reconnect -- so the transport
+  cannot be TThread.Queue: it stamps an entry with the CALLING thread's id even
+  when the thread argument is nil, and TThread.Destroy purges by that id, so a
+  thread that queues and then exits DELETES ITS OWN PENDING CALLBACK.  That is
+  exactly the moment a link-failure message matters.  QueueAsyncCall is tied to
+  no thread's lifetime, does not block the sender, and is drained by the LCL's
+  own loop -- and this unit already uses it, so there is ONE mechanism here
+  rather than two.
+
+  RETURNS TRUE IF THE TEXT ACTUALLY TRAVELLED -- i.e. it differs from what this
+  owner's panel was last told.  That is what replaced RadioObject
+  .LinkFailureShown: "is there a message on screen for this radio" is answered
+  by the thing that knows, under this unit's own lock, instead of by a boolean
+  sitting beside the control.
+
+  AN OWNER WITH NO CACHE ENTRY COUNTS AS EMPTY, because a panel starts empty.
+  So the first clear of a run coalesces away and returns False, rather than
+  reporting a recovery from a failure that never happened. *)
+function PostStatusText(const aOwner: TStatusOwner; const aText: string): boolean;
+
 // Forget everything remembered about a panel and its children. Call when a
 // panel closes: a window handle can be REUSED by Windows, and a stale cache
 // entry would then suppress the first update to a different window.
@@ -174,7 +197,7 @@ implementation
 uses
   SysUtils, SyncObjs,
   Forms,       // Application.QueueAsyncCall -- the transport
-  uMainForm,   // SetElementText -- writing an element BY ELEMENT, which is
+  uMainForm,   // SetElementText / SetStatusText -- BY ELEMENT and BY OWNER, which is
                // what a dispatcher has; the named sites assign the panel
                // directly
   MainUnit,    // the global `logger` -- an unclaimed panel id is reported,
@@ -194,7 +217,11 @@ type
 
     So the element travels as its ENUM and the main thread does the assignment
     through SetMainWindowText, which is the only supported way to write one. }
-  TPanelUpdateKind = (puText, puEnable, puElement);
+  (* puStatus CARRIES A TStatusOwner IN ControlId AND Target 0, exactly as
+    puElement carries a TMainWindowElement.  Both address something on the MAIN
+    window rather than on a radio panel, which is why neither has a panel to
+    test for openness. *)
+  TPanelUpdateKind = (puText, puEnable, puElement, puStatus);
 
   // The payload handed across the thread boundary. One allocation per update
   // that actually needs to travel; freed by RunQueuedPanelUpdate.
@@ -451,6 +478,11 @@ begin
          begin
          SetElementText(TMainWindowElement(upd.ControlId), upd.Text);
          end;
+
+      if upd.Kind = puStatus then
+         begin
+         SetStatusText(TStatusOwner(upd.ControlId), upd.Text);
+         end;
    finally
       upd.Free;
    end;
@@ -478,6 +510,41 @@ begin
      upd.ControlId := Ord(aElement);
      upd.Text := aText;
      SendAndRemember(upd, idx);
+  finally
+     gLock.Release;
+  end;
+end;
+
+function PostStatusText(const aOwner: TStatusOwner; const aText: string): boolean;
+var
+  upd: TPanelUpdate;
+  idx: integer;
+begin
+  Result := False;
+
+  gLock.Acquire;
+  try
+     idx := IndexOf(puStatus, 0, Ord(aOwner));
+
+     (* NOTHING REMEMBERED MEANS AN EMPTY PANEL -- see the interface note. *)
+     if ((idx < 0) and (aText = '')) or
+        ((idx >= 0) and (gLast[idx].Text = aText)) then
+        begin
+        Exit;
+        end;
+
+     upd := TPanelUpdate.Create;
+     upd.Kind := puStatus;
+     upd.Target := 0;
+     upd.ControlId := Ord(aOwner);
+     upd.Text := aText;
+     SendAndRemember(upd, idx);
+
+     (* ASK THE CACHE, not SendAndRemember: a hand-over that failed FORGETS its
+       entry, so this is the one question that means "the change is genuinely on
+       its way to the panel". *)
+     idx := IndexOf(puStatus, 0, Ord(aOwner));
+     Result := (idx >= 0) and (gLast[idx].Text = aText);
   finally
      gLock.Release;
   end;
@@ -535,10 +602,14 @@ begin
            that the next post simply re-sent, but it is not what any of the
            text above claims and it hid the coalescing the cache is for.
 
-           The slot match is the whole test. puElement entries are excluded
-           explicitly: they belong to the main window, not to either panel,
-           and closing a radio panel has nothing to say about them. *)
-         if (gLast[i].Kind <> puElement) and (gLast[i].Target = aPanel) then
+           The slot match is the whole test. THE TWO MAIN-WINDOW KINDS are
+           excluded explicitly -- puElement and puStatus both belong to the main
+           window rather than to either radio panel, and closing a radio panel
+           has nothing to say about them. Both carry Target = 0, so the slot
+           match already excludes them; naming them is what stops the next
+           main-window kind being added without that being noticed. *)
+         if (not (gLast[i].Kind in [puElement, puStatus])) and
+            (gLast[i].Target = aPanel) then
             begin
             Forget(i);
             end;

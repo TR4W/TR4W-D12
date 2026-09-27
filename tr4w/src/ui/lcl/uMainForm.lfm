@@ -1,12 +1,12 @@
 object TR4WMainForm: TTR4WMainForm
   Left = 0
-  Height = 370
+  Height = 393
   Top = 30
   Width = 806
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSizeable
   Caption = 'TR4W'
-  ClientHeight = 370
+  ClientHeight = 393
   ClientWidth = 806
   Color = clBtnFace
   OnActivate = MainFormActivate
@@ -20,6 +20,32 @@ object TR4WMainForm: TTR4WMainForm
   object tmrSystemWatch: TTimer
     Interval = 2000
     OnTimer = SystemWatchTick
+  end
+  object tmrQuickCommandNotice: TTimer
+    Enabled = False
+    Interval = 30000
+    OnTimer = QuickCommandNoticeExpired
+  end
+  object sbStatus: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 370
+    Width = 806
+    Align = alBottom
+    Panels = <
+      item
+        Width = 200
+      end
+      item
+        Width = 200
+      end
+      item
+        Width = 200
+      end
+      item
+        Width = 206
+      end>
+    SimplePanel = False
   end
   object pbLastHour: TProgressBar
     Left = 476

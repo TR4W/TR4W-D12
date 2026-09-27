@@ -193,72 +193,77 @@ end;
 
 (* THE FAILURE MESSAGE A RADIO PUTS ON SCREEN, SET AND CLEARED IN ONE PLACE.
 
-  There are TWO surfaces -- the main window's quick-command banner and the
-  radio panel's status label -- and on 2026-09-26 NY4I had a stale
-  "IC7760: Auth failed - check credentials" on BOTH while VFO A tracked 7034.00
-  live inches away.  Neither was a second copy of the RULE (only this unit has
-  ever written either of them), but they were poked from a failure path and
-  cleared from nowhere, which is the shape that produces a message outliving
+  There are TWO surfaces -- this radio's own panel on the main window's status
+  strip, and the radio panel form's status label -- and on 2026-09-26 NY4I had a
+  stale "IC7760: Auth failed - check credentials" on BOTH while VFO A tracked
+  7034.00 live inches away.  Neither was a second copy of the RULE (only this
+  unit has ever written either of them), but they were poked from a failure path
+  and cleared from nowhere, which is the shape that produces a message outliving
   what it describes.  A third surface added later is added HERE, once, and
   cannot reintroduce it.
 
-  WHETHER A MESSAGE IS SHOWING IS RECORDED ON THE RADIO SLOT
-  (rig^.LinkFailureShown), NOT in the polling procedure.  A radio is never
-  reconfigured in place -- it is rebuilt, with a new polling thread -- so a
-  flag local to that thread cannot answer "is there something on screen to
-  clear", and answering it wrongly is exactly how the message survived a
-  corrected password.
+  THE FIRST SURFACE WAS THE SHARED QUICK-COMMAND BANNER UNTIL THIS CHANGE.
+  ONE PANEL PER OWNER IS WHAT IT BOUGHT: a condition and this radio's name are
+  the only things that can appear there.  THE COST, SAID OUT LOUD: Radio N has
+  ONE panel, so the split warning further down shares it with this message, and
+  the split warning is edge-triggered on a Split TRANSITION -- so a link failure
+  that lands while it is showing replaces it until the operator next toggles
+  split.  Still strictly better than the banner, which any of ~120 notices wiped
+  within 30 s, but it is a contention that did not exist before and it is not
+  imaginary.
 
-  BOTH surfaces are written through the marshalled seams -- uPanelUpdate for
-  the panel label, PostElementText for the banner -- because this runs on the
-  polling thread.  The one direct call left is QuickDisplayError, for the beep
-  and the flash; see ShowRadioLinkFailure for why the banner text is ALSO
-  posted, and the report for what that direct call does to the flash. *)
+  THE MESSAGE IS A STATUS, NOT A NOTICE, AND IT HAS ITS OWN PANEL NOW.  A radio
+  that cannot be reached is a CONDITION -- NY4I, 2026-09-26: "that's a status
+  that should stay until that condition is cleared" -- so it goes to this
+  radio's panel on the main window's status strip, and nothing else can write
+  there.  It used to share pnlQuickCommand's single caption with every event
+  announcement in the program, which is what made a stale message possible at
+  all: any of ~120 notices could wipe it, and it could wipe any of them.
+
+  rig^.LinkFailureShown IS GONE WITH THE SHARED CAPTION.  "Is a message on
+  screen for this radio" is now answered by PostStatusText's own coalescing
+  cache -- the thing that knows, under its own lock -- instead of by a boolean
+  beside the control.  The flag existed because the surfaces were shared and
+  the state could not be read back off them; a per-owner panel can be.
+
+  EVERYTHING IS WRITTEN THROUGH A MARSHALLED SEAM, because this runs on the
+  polling thread: PostStatusText for the strip, PostPanelText for the radio
+  panel's own label.  The one direct call left is DoABeep -- an operator who
+  cannot work the radio has to NOTICE, and the flash that used to do that was
+  a disable-to-grey that never worked. *)
 procedure ShowRadioLinkFailure(rig: RadioPtr; const aMessage: string;
                                const aPanelText: string);
-var
-   banner: string;
 begin
-   banner := string(rig^.RadioName) + ': ' + aMessage;
-
-   (* QuickDisplayError, not QuickDisplay: it flashes and beeps, and an
-     operator who cannot work the radio has to notice. *)
-   QuickDisplayError(banner);
-
-   (* AND THE SAME TEXT THROUGH THE MARSHALLED WRITER, WHICH IS NOT A SECOND
-     WRITE.  PostElementText remembers the last text handed over for an
-     element and drops a repeat; QuickDisplay sets the caption directly and
-     bypasses that memory.  Without this line the memory would still hold the
-     '' a previous recovery posted, so the SECOND failure-and-recovery cycle in
-     one session would have its clear coalesced away and the stale message
-     would be back.  SetElementText skips a caption that already matches, so
-     on the main thread this costs one comparison. *)
-   PostElementText(mweQuickCommand, banner);
+   if PostStatusText(RadioStatusOwner(rig),
+                     string(rig^.RadioName) + ': ' + aMessage) then
+      begin
+      DoABeep(Warning);
+      end;
 
    if rig^.tRadioPanelSlot <> 0 then
       begin
       PostPanelText(rig^.tRadioPanelSlot, 130, aPanelText);
       end;
-
-   rig^.LinkFailureShown := True;
 end;
 
-procedure ClearRadioLinkFailure(rig: RadioPtr);
+(* TRUE IF THERE WAS SOMETHING TO CLEAR, so the caller can say so in the log
+  without keeping a flag to remember it by.  An owner whose panel is already
+  empty coalesces away and returns False. *)
+function ClearRadioLinkFailure(rig: RadioPtr): boolean;
 begin
    (* Blank, because that is what every other radio state change shows when it
      recovers -- the disconnect path blanks the frequency and the panel rather
      than announcing anything, and a radio that is simply working says nothing.
 
-     This can in principle wipe an unrelated banner posted in the same instant.
-     Accepted deliberately: the banner is transient by design, a permanently
-     false one is not. *)
-   PostElementText(mweQuickCommand, '');
+     AND IT CAN NO LONGER WIPE ANYBODY ELSE'S MESSAGE.  The note that stood here
+     accepted that risk -- "this can in principle wipe an unrelated banner
+     posted in the same instant" -- and the per-owner panel removes it: Radio 1
+     clears Radio 1. *)
+   Result := PostStatusText(RadioStatusOwner(rig), '');
    if rig^.tRadioPanelSlot <> 0 then
       begin
       PostPanelText(rig^.tRadioPanelSlot, 130, '');
       end;
-
-   rig^.LinkFailureShown := False;
 end;
 
 procedure pFactoryRadio(rig: RadioPtr); // Network classes (K4 network, Flex 6000 series network, etc)
@@ -452,14 +457,24 @@ begin
                  polling thread this one REPLACED -- which is the usual case,
                  since fixing a password rebuilds the radio.
 
-                 So the screen is asked of the slot, which outlives both. *)
+                 SO THE SCREEN IS ASKED OF THE PANEL, which outlives both --
+                 through ClearRadioLinkFailure's return value.  It used to be
+                 asked of a flag on the slot (rig^.LinkFailureShown), which was
+                 a boolean kept beside a control to say what the control could
+                 not be asked; a per-owner panel can be asked. *)
                retry.NoteLinkUp;
 
-               if rig^.LinkFailureShown then
+               (* ASK THE PANEL, DO NOT REMEMBER FOR IT.  This was
+                 `if rig^.LinkFailureShown then ... Clear`, and the clear is
+                 unconditional now: it is this radio's own panel, so clearing
+                 one that is already empty costs a comparison and can affect
+                 nothing else.  What the return value buys is the LOG LINE --
+                 only a clear that actually changed something is a recovery
+                 worth reporting. *)
+               if ClearRadioLinkFailure(rig) then
                   begin
                   logger.Info('[pFactoryRadio] %s connected after an earlier link failure -- clearing the message',
                               [rig^.RadioName]);
-                  ClearRadioLinkFailure(rig);
                   end;
                (* Clears the alert colour, and it is the STRICT gate that says so:
                  this block is now reached only when ro.IsOperational, so there is
@@ -1438,13 +1453,19 @@ begin
    if (rig = ActiveRadioPtr) and
       (rig.PreviousStatus.Split <> rig.CurrentStatus.Split) then
       begin
+      (* A STATUS, AND IT IS THE CLEAREST CASE IN THE PROGRAM: a paired
+        set-and-clear driven by confirmed radio state, on the polling thread.
+        As a notice it was doubly wrong -- it wrote pnlQuickCommand's caption
+        directly from a worker thread, and its CLEAR could be beaten by any
+        other notice, leaving a split warning up on a radio that is no longer
+        split. *)
       if rig.CurrentStatus.Split then
          begin
-         QuickDisplay(TC_SPLIT_WARN)
+         PostStatusText(RadioStatusOwner(rig), TC_SPLIT_WARN)
          end
       else
          begin
-         QuickDisplay('');
+         PostStatusText(RadioStatusOwner(rig), '');
          end;
       end;
 
