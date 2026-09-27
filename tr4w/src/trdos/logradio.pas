@@ -251,6 +251,24 @@ type
         test -- and were assigned the same value as the panel handle on the
         line above. All six were `:= h` in one block. *)
       tRadioPanelSlot: integer;
+      (* IS A LINK-FAILURE MESSAGE CURRENTLY ON SCREEN FOR THIS RADIO?
+
+        IT LIVES ON THE SLOT BECAUSE THE MESSAGE DOES.  The banner and the
+        panel label belong to the radio the operator is looking at, and they
+        outlive any one polling thread -- whereas the state that used to
+        decide whether to clear them was a LOCAL of the polling procedure.
+
+        That is the whole of the 2026-09-26 defect.  A radio is never
+        reconfigured in place, it is REBUILT: correcting the IC-7760's LAN
+        password tore the radio down and started a NEW polling thread, whose
+        fresh local said no failure had been reported -- so the successful
+        login cleared nothing, and "IC7760: Auth failed - check credentials"
+        sat on the main window while VFO A tracked 7034.00 live.
+
+        Written only by uRadioPolling.ShowRadioLinkFailure /
+        ClearRadioLinkFailure, which are the only two places that touch
+        either surface. *)
+      LinkFailureShown: Boolean;
       tBuf: array[1..512] of AnsiChar;
       active : boolean;
       CurrentStatus:   RadioStatusRecord; { Last reading taken }

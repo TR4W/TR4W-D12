@@ -116,6 +116,7 @@ uses
   uNewContestCommands in 'src\uNewContestCommands.pas',
   uContestReadiness in 'src\uContestReadiness.pas',
   uRadioPolling in 'src\uRadioPolling.pas',
+  uRadioLinkRetry in 'src\uRadioLinkRetry.pas',
   uEditQSO in 'src\uEditQSO.pas',
   uLogSearch in 'src\uLogSearch.pas',
   uBeacons in 'src\uBeacons.pas',

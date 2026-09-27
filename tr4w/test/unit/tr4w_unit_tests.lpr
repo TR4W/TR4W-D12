@@ -231,6 +231,7 @@ uses
    uSettingsModel in '..\..\src\uSettingsModel.pas',
    uPrefsSearch in '..\..\src\uPrefsSearch.pas',
    uCWFraming in '..\..\src\radioFactory\uCWFraming.pas',
+   uRadioLinkRetry in '..\..\src\uRadioLinkRetry.pas',
    uRadioKYBase in '..\..\src\radioFactory\uRadioKYBase.pas',
    uRadioElecraftBase in '..\..\src\radioFactory\uRadioElecraftBase.pas',
    uRadioKenwoodBase in '..\..\src\radioFactory\uRadioKenwoodBase.pas',
@@ -245,6 +246,7 @@ uses
    uTestSHA256 in 'uTestSHA256.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
+   uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    // Pins the radio-status change detector.  LOGRADIO itself is not listed
    // here -- it arrives through the search path, the same way uTestIcomRegistry
    // reaches RadioParametersArray.
@@ -474,6 +476,7 @@ begin
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
    RegisterSuite(TSHA256Tests.Create('SHA256'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
+   RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));
    RegisterSuite(TEditingKeysTests.Create('EditingKeys'));

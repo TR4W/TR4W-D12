@@ -52,6 +52,7 @@ uses
    Math,
    DateUtils,
    uFactoryRadioBase,
+   uRadioLinkRetry,     (* TRadioLinkRetry -- the reconnect/auth back-off policy *)
    uRadioElecraftK4,
    uRadioHamLibDirect,
   uTR4WStrings;
@@ -190,12 +191,99 @@ begin
    ShowFMessages(0);
 end;
 
+(* THE FAILURE MESSAGE A RADIO PUTS ON SCREEN, SET AND CLEARED IN ONE PLACE.
+
+  There are TWO surfaces -- the main window's quick-command banner and the
+  radio panel's status label -- and on 2026-09-26 NY4I had a stale
+  "IC7760: Auth failed - check credentials" on BOTH while VFO A tracked 7034.00
+  live inches away.  Neither was a second copy of the RULE (only this unit has
+  ever written either of them), but they were poked from a failure path and
+  cleared from nowhere, which is the shape that produces a message outliving
+  what it describes.  A third surface added later is added HERE, once, and
+  cannot reintroduce it.
+
+  WHETHER A MESSAGE IS SHOWING IS RECORDED ON THE RADIO SLOT
+  (rig^.LinkFailureShown), NOT in the polling procedure.  A radio is never
+  reconfigured in place -- it is rebuilt, with a new polling thread -- so a
+  flag local to that thread cannot answer "is there something on screen to
+  clear", and answering it wrongly is exactly how the message survived a
+  corrected password.
+
+  BOTH surfaces are written through the marshalled seams -- uPanelUpdate for
+  the panel label, PostElementText for the banner -- because this runs on the
+  polling thread.  The one direct call left is QuickDisplayError, for the beep
+  and the flash; see ShowRadioLinkFailure for why the banner text is ALSO
+  posted, and the report for what that direct call does to the flash. *)
+procedure ShowRadioLinkFailure(rig: RadioPtr; const aMessage: string;
+                               const aPanelText: string);
+var
+   banner: string;
+begin
+   banner := string(rig^.RadioName) + ': ' + aMessage;
+
+   (* QuickDisplayError, not QuickDisplay: it flashes and beeps, and an
+     operator who cannot work the radio has to notice. *)
+   QuickDisplayError(banner);
+
+   (* AND THE SAME TEXT THROUGH THE MARSHALLED WRITER, WHICH IS NOT A SECOND
+     WRITE.  PostElementText remembers the last text handed over for an
+     element and drops a repeat; QuickDisplay sets the caption directly and
+     bypasses that memory.  Without this line the memory would still hold the
+     '' a previous recovery posted, so the SECOND failure-and-recovery cycle in
+     one session would have its clear coalesced away and the stale message
+     would be back.  SetElementText skips a caption that already matches, so
+     on the main thread this costs one comparison. *)
+   PostElementText(mweQuickCommand, banner);
+
+   if rig^.tRadioPanelSlot <> 0 then
+      begin
+      PostPanelText(rig^.tRadioPanelSlot, 130, aPanelText);
+      end;
+
+   rig^.LinkFailureShown := True;
+end;
+
+procedure ClearRadioLinkFailure(rig: RadioPtr);
+begin
+   (* Blank, because that is what every other radio state change shows when it
+     recovers -- the disconnect path blanks the frequency and the panel rather
+     than announcing anything, and a radio that is simply working says nothing.
+
+     This can in principle wipe an unrelated banner posted in the same instant.
+     Accepted deliberately: the banner is transient by design, a permanently
+     false one is not. *)
+   PostElementText(mweQuickCommand, '');
+   if rig^.tRadioPanelSlot <> 0 then
+      begin
+      PostPanelText(rig^.tRadioPanelSlot, 130, '');
+      end;
+
+   rig^.LinkFailureShown := False;
+end;
+
 procedure pFactoryRadio(rig: RadioPtr); // Network classes (K4 network, Flex 6000 series network, etc)
 var
    ro: TFactoryRadioBase;
-   wasConnected: Boolean;
+   (* "THE LINK IS UP" MEANS ro.IsOperational, NEVER ro.IsConnected.
+
+     IsConnected is the loose "the transport is doing something" check and is
+     True from the first handshake packet -- for a network Icom that is before
+     the login packet has even been SENT.  This flag used to be called
+     wasConnected and was raised on it, so every retry with a bad password
+     announced a successful connection, reset the back-off and cleared the
+     failure report a fraction of a second before the radio rejected the
+     password again (NY4I, IC-7760 over LAN, 2026-09-26).
+
+     IsOperational is each radio's own answer to "am I ready for business",
+     and it needs no knowledge of models here: an Icom requires a completed
+     login plus fresh CI-V, a Flex requires slice 0, TCI requires the server's
+     ready burst, and the base class -- every serial radio -- is operational as
+     soon as it is connected, so nothing changes for them. *)
+   linkWasUp: Boolean;
    loggedNoConnInfo: Boolean;   // Issue #968 -- log the "no IP/port" skip once, not every cycle
-   reconnectDelay: Integer;
+   (* The whole back-off policy, including the rule that an authentication
+     rejection's interval survives the disconnect that rejection causes. *)
+   retry: TRadioLinkRetry;
    sleepRemaining: Integer;
    (* QWord, with GetTickCount64. See the note on the 49.7-day wrap in
      logradio.pas: a truncated 64-bit tick is worse than a 32-bit one,
@@ -203,11 +291,7 @@ var
    lastPollTick: QWord;
    lastHeartbeatTick: QWord;
    lastRITXITTick: QWord;
-   authErrBuf: array[0..127] of AnsiChar;
    handshakeStuckSinceTick: QWord;  // GetTickCount64 when we first noticed IsConnected but not IsOperational; 0 = not tracking
-   (* Reported ONCE per run of failures, not once per retry -- see the auth
-     arms below.  Cleared when a connection actually comes up. *)
-   authFailureReported: boolean;
    actVFO: TVFO;                       // active (RX) VFO for the aggregate main-window status (ro.GetActiveVFO)
 const
    RECONNECT_INITIAL_DELAY = 1000;    // 1 second initial delay
@@ -263,19 +347,19 @@ const
      panel stops saying AUTH FAILED. *)
    procedure ReportAuthFailure;
    begin
-      if authFailureReported then
+      retry.NoteAuthRejected;
+      if not retry.TakeAuthReportDue then
          begin
          Exit;
          end;
-      authFailureReported := True;
+      (* retry.DelayMs, not AUTH_RETRY_DELAY: the announced interval is now the
+        one that will actually be waited out, by construction.  They disagreed
+        -- "will retry every 60000 ms" followed a second later by "retrying
+        after authentication failure (waited 1000 ms)" -- and that was the
+        defect, not the wording. *)
       logger.Warn('[pFactoryRadio] Auth failed for %s - check credentials; will retry every %d ms',
-                  [rig^.RadioName, AUTH_RETRY_DELAY]);
-      SetCharBuffer(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
-      QuickDisplayError(authErrBuf);
-      if rig^.tRadioPanelSlot <> 0 then
-         begin
-         PostPanelText(rig^.tRadioPanelSlot, 130, 'AUTH FAILED');
-         end;
+                  [rig^.RadioName, retry.DelayMs]);
+      ShowRadioLinkFailure(rig, 'Auth failed - check credentials', 'AUTH FAILED');
    end;
 
 begin
@@ -290,14 +374,14 @@ begin
    }
    logger.Trace('[pFactoryRadio] Entering polling procedure');
    ro := rig^.tFactoryObject;
-   wasConnected := False;
+   linkWasUp := False;
    lastPollTick := 0;
    lastHeartbeatTick := 0;
    lastRITXITTick := 0;
-   reconnectDelay := RECONNECT_INITIAL_DELAY;
+   retry := TRadioLinkRetry.Create(RECONNECT_INITIAL_DELAY, RECONNECT_MAX_DELAY,
+                                  AUTH_RETRY_DELAY);
    handshakeStuckSinceTick := 0;
    loggedNoConnInfo := False;
-   authFailureReported := False;
 
    // Keep polling thread alive until stop is requested (e.g. on Reset Radio Ports)
    while not rig^.PollingStopRequested do
@@ -339,7 +423,7 @@ begin
                         end;
                   end;
                   // Brief sleep so the next iteration sees the new state cleanly,
-                  // then loop -- the else-branch will reset wasConnected and
+                  // then loop -- the else-branch will reset linkWasUp and
                   // schedule the reconnect via the existing backoff path.
                   Sleep(100);
                   Continue;
@@ -350,34 +434,41 @@ begin
                handshakeStuckSinceTick := 0;  // operational, or this radio doesn't recycle on stuck
                end;
 
-            // Radio is connected - poll status
-            if not wasConnected then
+            (* THE LINK IS UP -- and for this radio's own definition of up, which
+              is what makes the credentials provably accepted.  Gated on
+              IsOperational: see the note on linkWasUp. *)
+            if ro.IsOperational and (not linkWasUp) then
                begin
                logger.trace('[pFactoryRadio] Radio connected � querying initial freq/mode/state');
-               wasConnected := True;
-               reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on successful connection
+               linkWasUp := True;
 
-               (* THE LINK IS UP, SO THE CREDENTIALS WERE ACCEPTED.  Clear the
-                 one-shot report and the panel's AUTH FAILED, or a radio that
-                 recovered would go on saying it had not -- and the next
-                 rejection would pass unreported. *)
-               if authFailureReported then
+               (* TWO PIECES OF STATE, EACH ASKED OF ITS OWNER, AND THE
+                 DIFFERENCE MATTERS.
+
+                 The POLICY object is per-attempt and per-thread: NoteLinkUp
+                 clears its auth latch and puts the back-off back to the
+                 initial interval.  It cannot be asked whether anything is on
+                 SCREEN, because the failure may have been displayed by the
+                 polling thread this one REPLACED -- which is the usual case,
+                 since fixing a password rebuilds the radio.
+
+                 So the screen is asked of the slot, which outlives both. *)
+               retry.NoteLinkUp;
+
+               if rig^.LinkFailureShown then
                   begin
-                  logger.Info('[pFactoryRadio] %s connected after an earlier authentication failure',
+                  logger.Info('[pFactoryRadio] %s connected after an earlier link failure -- clearing the message',
                               [rig^.RadioName]);
-                  authFailureReported := False;
-                  if rig^.tRadioPanelSlot <> 0 then
-                     begin
-                     PostPanelText(rig^.tRadioPanelSlot, 130, '');
-                     end;
+                  ClearRadioLinkFailure(rig);
                   end;
-               // Don't unconditionally clear the alert here -- IsConnected is
-               // the loose "transport is doing something" check that stays True
-               // throughout the multi-step Icom handshake (WaitingForHere etc.).
-               // The IsOperational query below (and the per-iteration check at
-               // line ~944) is the strict "fully connected" gate that drives
-               // the alert color; clearing here would briefly turn the alert
-               // off during reconnect even when the radio is unreachable.
+               (* Clears the alert colour, and it is the STRICT gate that says so:
+                 this block is now reached only when ro.IsOperational, so there is
+                 no longer any way to clear the alert mid-handshake.  The warning
+                 that stood here -- "do not clear unconditionally, IsConnected
+                 stays True throughout the Icom handshake" -- is what moving this
+                 whole block onto IsOperational settled.  SetRadioAlertState is a
+                 no-op when the state has not changed, and the per-iteration check
+                 further down is what covers a link that goes bad later. *)
                SetRadioAlertState(not ro.IsOperational);
 
                // For serial radios that poll frequency directly (K4/K3-style), honour the
@@ -439,7 +530,7 @@ begin
                // rebuilding the radio.  Issue #436.
                end;
 
-            // Deliberately OUTSIDE the "not wasConnected" block above.  The radio
+            // Deliberately OUTSIDE the link-came-up block above.  The radio
             // holds the command for STARTUP_COMMAND_SETTLE_MS after the link comes
             // up, because a just-powered-on rig answers CAT before it is ready to
             // act on anything (bench-proven on a K3, 2026-08-01: sent at the first
@@ -472,9 +563,11 @@ begin
               the password, saved, and nothing ever tried again.
 
               Drop the link and fall into the disconnected branch instead; the
-              auth arm there backs off and retries.  wasConnected is left for
-              that branch to notice, so the normal disconnect housekeeping
-              (blank the frequency, re-arm the startup command) still runs. *)
+              auth arm there backs off and retries.  linkWasUp is left for
+              that branch to notice: a radio that HAD been operational gets the
+              normal disconnect housekeeping (blank the frequency, re-arm the
+              startup command), and one rejected before it ever came up has
+              nothing to blank and no startup command to re-arm. *)
             if Assigned(ro) and ro.AuthFailed then
                begin
                ReportAuthFailure;
@@ -691,12 +784,12 @@ begin
          begin
          // Radio disconnected - attempt reconnection
          SetRadioAlertState(True);  // TCP disconnected
-         if wasConnected then
+         if linkWasUp then
             begin
             logger.Info('[pFactoryRadio] Radio disconnected, will attempt reconnection');
-            wasConnected := False;
+            linkWasUp := False;
             // Re-arm the startup command.  The reconnect below comes back
-            // through the `if not wasConnected` transition, which calls
+            // through the link-came-up transition, which calls
             // SendStartupCommand -- and that self-guards, so without this the
             // command would never be re-sent for the life of the radio object.
             //
@@ -727,7 +820,11 @@ begin
                PostPanelText(rig^.tRadioPanelSlot, 102, '');
                PostPanelText(rig^.tRadioPanelSlot, 104, '');
                end;
-            reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on new disconnect
+            (* Resets the back-off -- but NOT one an authentication rejection has
+              set, because that rejection is what dropped the link.  This line used
+              to be an unconditional assignment and it silently undid the 60 s
+              interval the auth arm below had just chosen. *)
+            retry.NoteLinkDropped;
             end;
 
          // Serial radio recovery.  A serial radio "disconnects" because it stopped
@@ -775,10 +872,15 @@ begin
            radio with bad credentials can lock an account), and what is kept is
            the long interval: a rejection waits AUTH_RETRY_DELAY rather than
            the link back-off, and is reported once rather than once a minute. *)
+         (* ro.AuthFailed is MOMENTARY and for some radios already gone: reacting
+           to an Icom rejection frees the transport that owns the flag, so this
+           read returned False and the 60 s interval was never applied at all.
+           The interval now lives on the policy object, which latches the
+           rejection -- so this arm only has to report a rejection it can still
+           see, and one seen in the connected branch is no longer lost. *)
          if Assigned(ro) and ro.AuthFailed then
             begin
             ReportAuthFailure;
-            reconnectDelay := AUTH_RETRY_DELAY;
             end;
 
          // Attempt to reconnect with exponential backoff.
@@ -793,7 +895,7 @@ begin
          // polling thread that connects at once.  So a credential change is
          // noticed within 250 ms of the request, whatever the back-off had
          // reached, and no separate wake object is needed for it.
-         sleepRemaining := reconnectDelay;
+         sleepRemaining := retry.DelayMs;
          while (sleepRemaining > 0) and (not rig^.PollingStopRequested) do
             begin
             if sleepRemaining > 250 then
@@ -815,15 +917,15 @@ begin
               to stop, which in this program always means it is being rebuilt
               with new settings. *)
             logger.Info('[pFactoryRadio] %s reconnect wait INTERRUPTED after %d of %d ms -- the radio is being reconfigured',
-                        [rig^.RadioName, reconnectDelay - sleepRemaining, reconnectDelay]);
+                        [rig^.RadioName, retry.DelayMs - sleepRemaining, retry.DelayMs]);
             Break;
             end;
 
-         if authFailureReported then
+         if retry.AuthRejected then
             begin
             (* And this is the TIMED-OUT one. *)
             logger.Info('[pFactoryRadio] %s retrying after authentication failure (waited %d ms)',
-                        [rig^.RadioName, reconnectDelay]);
+                        [rig^.RadioName, retry.DelayMs]);
             end;
 
          // Issue #968 -- a network radio with no IP address or a 0 TCP port has
@@ -844,7 +946,7 @@ begin
          loggedNoConnInfo := False;
 
          try
-            logger.Info('[pFactoryRadio] Reconnection attempt (delay: %dms)', [reconnectDelay]);
+            logger.Info('[pFactoryRadio] Reconnection attempt (delay: %dms)', [retry.DelayMs]);
             ro.Connect;
 
             // Connect only initiates the handshake (sends AYH for Icom, opens TCP for K4).
@@ -854,12 +956,7 @@ begin
             on E: Exception do
                begin
                logger.Debug('[pFactoryRadio] Reconnection failed: %s - %s', [E.ClassName, E.Message]);
-               // Exponential backoff: double the delay, cap at max
-               reconnectDelay := reconnectDelay * 2;
-               if reconnectDelay > RECONNECT_MAX_DELAY then
-                  begin
-                  reconnectDelay := RECONNECT_MAX_DELAY;
-                  end;
+               retry.NoteAttemptFailed;
                end;
          end;
          end;
@@ -868,6 +965,9 @@ begin
             begin
             logger.Error('[pFactoryRadio] ABSTRACT ERROR: %s at address %p', [E.Message, ExceptAddr]);
             logger.Error('[pFactoryRadio] This indicates a missing method implementation in the radio class');
+            (* The re-raise ends this thread, so this is the one exit that is not
+              the bottom of the procedure. *)
+            FreeAndNil(retry);
             raise;  // Re-raise so user sees the dialog
             end;
          on E: Exception do
@@ -878,6 +978,7 @@ begin
       end;  // end of try-except
       end;  // end of while True loop iteration
 
+   FreeAndNil(retry);
 end;
 
 (* THE LEGACY SERIAL READ PATH IS DELETED (2026-09-07).
