@@ -46,6 +46,7 @@ object TR4WMainForm: TTR4WMainForm
         Width = 206
       end>
     SimplePanel = False
+    OnResize = StatusBarResize
   end
   object pbLastHour: TProgressBar
     Left = 476

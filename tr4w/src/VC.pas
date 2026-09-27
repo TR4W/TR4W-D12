@@ -927,7 +927,35 @@ type
      is the one unit both the view (uMainForm) and the marshaller
      (uPanelUpdate) already name, so the enum costs no new dependency in
      either.  The PANELS themselves are uMainForm's; nothing about the strip's
-     geometry is here. *)
+     geometry is here.
+
+     A STATUS STRING MUST BE BOUNDED BY CONSTRUCTION, NOT BY LUCK -- THE RULE
+     FOR ANYONE ADDING A WRITER.  The strip is the window's width shared four
+     ways, so a panel gets roughly a quarter of it and there is no scrolling,
+     no tooltip and no second line.  NY4I hit both ways of overrunning it
+     within an hour of 62e6781b going on the bench:
+
+       * "we overran the border for radio 2 just a bit" -- "IC7760: Auth failed
+         - check credentials" clipped mid-word.  The REMEDY was in the status.
+       * a host name, which no literal can be shortened to fit.  "for cluster
+         and network messages you can jsut generically state host or server.
+         The user wil check the specific window for mor einfo".
+
+     So a status panel states THE CONDITION, tersely:
+
+       * NO REMEDY.  "Auth failed", not "Auth failed - check credentials".
+         Telling the operator what to DO is an event, so it goes once through
+         the notice channel (logwind.QuickDisplay), which beeps and expires.
+       * NO PARTICULARS OF UNBOUNDED LENGTH -- no host name, no port, no path,
+         no file name, no exception text.  Those live in the window that owns
+         the subsystem, and in tr4w.log.  uAppStrings.SStatusHost and
+         SStatusServer are the generic nouns the cluster and network panels use
+         in their place.
+       * NO REASON CODE.  "Not connected", not "not connected - could not open
+         its port"; the reason is a notice and a log line.
+
+     A writer that cannot say what is true in about twenty-five characters is
+     saying more than a status panel is for. *)
 type
    TStatusOwner = (stoRadio1, stoRadio2, stoCluster, stoNetwork);
 

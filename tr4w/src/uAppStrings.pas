@@ -319,6 +319,30 @@ resourcestring
       sLineBreak + '%s' + sLineBreak + sLineBreak +
       'Check that it still exists.  tr4w.log records what was tried.';
 
+   { ------------------------------------- the main window's status strip --- }
+
+   (* THE GENERIC NOUN A STATUS PANEL NAMES INSTEAD OF A HOST OR A SERVER.
+
+     A status panel is about a quarter of the main window wide and a host name
+     has no length limit, so "Connected to dxc.example.org:7300" is a string
+     that fits or does not depending on who the operator's cluster is.  NY4I,
+     2026-09-26: "for cluster and network messages you can jsut generically
+     state host or server. The user wil check the specific window for mor
+     einfo".
+
+     SO THE PANEL STATES THE CONDITION AND THE PARTICULARS STAY WHERE THEY
+     ALREADY ARE -- the DX cluster console and the network window's caption
+     both still name the host, and neither changed.  These two words go into
+     the existing TC_CONNECTEDTO / TC_FAILEDTOCONNECTTO / TC_DISCONNECTEDFROM
+     / TC_CONNECTINGTO prefixes in place of the host, so no translated
+     constant was re-typed and none lost its host name.
+
+     NEW TRANSLATABLE TEXT, declared here rather than as a TC_ constant, which
+     is what this unit is for.  There was no existing constant for either word
+     -- checked, not assumed. *)
+   SStatusHost   = 'host';
+   SStatusServer = 'server';
+
 implementation
 
 end.

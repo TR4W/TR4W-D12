@@ -123,6 +123,17 @@ const
    POLLINGDEBUG = False;
    ICOM_DEBUG = False;
 
+(* THE RADIO LINK-STATUS PAIR.
+
+  IN THE INTERFACE so the split between the two channels can be asserted: the
+  terse CONDITION goes to this radio's status panel and HOLDS; the REMEDY goes
+  ONCE to the notice channel, which beeps and expires.  That is the whole
+  contract, it is what NY4I's overrun report turned on, and it is not observable
+  from outside this unit otherwise.  See the notes on the bodies. *)
+procedure ShowRadioLinkFailure(rig: RadioPtr; const aCondition: string;
+                               const aRemedy: string);
+function  ClearRadioLinkFailure(rig: RadioPtr): boolean;
+
 implementation
 
 uses
@@ -227,22 +238,35 @@ end;
   the state could not be read back off them; a per-owner panel can be.
 
   EVERYTHING IS WRITTEN THROUGH A MARSHALLED SEAM, because this runs on the
-  polling thread: PostStatusText for the strip, PostPanelText for the radio
-  panel's own label.  The one direct call left is DoABeep -- an operator who
-  cannot work the radio has to NOTICE, and the flash that used to do that was
-  a disable-to-grey that never worked. *)
-procedure ShowRadioLinkFailure(rig: RadioPtr; const aMessage: string;
-                               const aPanelText: string);
+  polling thread: LOGRADIO.SetRadioStatus for the strip and the radio panel,
+  QuickDisplay for the notice.  The one direct call left is DoABeep -- an
+  operator who cannot work the radio has to NOTICE, and the flash that used to
+  do that was a disable-to-grey that never worked.
+
+  TWO STRINGS NOW, AND THE SPLIT IS THE POINT.  It took one and posted it to
+  both surfaces, so the STATUS read "IC7760: Auth failed - check credentials"
+  and clipped mid-word in a 200 px panel (NY4I, bench, 2026-09-26: "we overran
+  the border for radio 2 just a bit").  Making the panel wider would not have
+  fixed it, because the sentence is two different things:
+
+    aCondition  WHAT IS TRUE.  "Auth failed".  Goes to the status panel, holds
+                until the condition ends, and is bounded by construction.
+    aRemedy     WHAT TO DO.  "check credentials".  An instruction is an EVENT,
+                so it goes ONCE to the notice channel, which beeps and expires.
+
+  ONCE, NOT PER RETRY, AND IT IS THE SAME GATE THAT ALREADY GUARDED THE BEEP:
+  SetRadioStatus returns False when the condition has not changed, so a radio
+  retrying every 60 s beeps once and raises one notice.  That property arrived
+  in 62e6781b and both the beep and the notice sit inside it. *)
+procedure ShowRadioLinkFailure(rig: RadioPtr; const aCondition: string;
+                               const aRemedy: string);
 begin
-   if PostStatusText(RadioStatusOwner(rig),
-                     string(rig^.RadioName) + ': ' + aMessage) then
+   if SetRadioStatus(rig, aCondition) then
       begin
       DoABeep(Warning);
-      end;
-
-   if rig^.tRadioPanelSlot <> 0 then
-      begin
-      PostPanelText(rig^.tRadioPanelSlot, 130, aPanelText);
+      (* The fuller sentence, once.  QuickDisplay is safe from this thread --
+        ShowQuickCommandNotice defers the caption and the wipe. *)
+      QuickDisplay(string(rig^.RadioName) + ': ' + aCondition + ' - ' + aRemedy);
       end;
 end;
 
@@ -259,11 +283,10 @@ begin
      accepted that risk -- "this can in principle wipe an unrelated banner
      posted in the same instant" -- and the per-owner panel removes it: Radio 1
      clears Radio 1. *)
-   Result := PostStatusText(RadioStatusOwner(rig), '');
-   if rig^.tRadioPanelSlot <> 0 then
-      begin
-      PostPanelText(rig^.tRadioPanelSlot, 130, '');
-      end;
+   (* BOTH SURFACES FROM ONE CALL -- see LOGRADIO.SetRadioStatus.  The panel's
+     label used to be blanked by a second PostPanelText here, which meant the
+     status and the label could be cleared by different code. *)
+   Result := SetRadioStatus(rig, '');
 end;
 
 procedure pFactoryRadio(rig: RadioPtr); // Network classes (K4 network, Flex 6000 series network, etc)
@@ -364,7 +387,7 @@ const
         defect, not the wording. *)
       logger.Warn('[pFactoryRadio] Auth failed for %s - check credentials; will retry every %d ms',
                   [rig^.RadioName, retry.DelayMs]);
-      ShowRadioLinkFailure(rig, 'Auth failed - check credentials', 'AUTH FAILED');
+      ShowRadioLinkFailure(rig, 'Auth failed', 'check credentials');
    end;
 
 begin
@@ -1459,6 +1482,18 @@ begin
         directly from a worker thread, and its CLEAR could be beaten by any
         other notice, leaving a split warning up on a radio that is no longer
         split. *)
+      (* NOT SetRadioStatus, AND NOT "<name>: " PREFIXED, on purpose: this one
+        does NOT go to the radio's own panel.  That panel already shows split as
+        an INDICATOR -- its SPLIT flag, control 123, set four statements up --
+        so the sentence would be a second spelling of a signal already there,
+        in a 100 px label it does not fit.  RadioPanelStatusText returns empty
+        for an unprefixed status for exactly this reason, so a panel opened
+        while the warning is up shows what an open one shows: the flag.
+
+        THE ONE STRING ON THIS STRIP AT ITS WIDTH LIMIT.  TC_SPLIT_WARN is 34
+        characters against roughly 32 that fit, so the trailing "!!!" may clip.
+        It is a TRANSLATED constant and is not re-typed here; shortening it
+        needs a new one, which is NY4I's call and not worth a held release. *)
       if rig.CurrentStatus.Split then
          begin
          PostStatusText(RadioStatusOwner(rig), TC_SPLIT_WARN)

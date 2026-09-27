@@ -167,6 +167,8 @@ uses
   uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
   uBandmap,
   uPanelUpdate,   // PostStatusText -- the Cluster status panel
+  uAppStrings,    // SStatusHost -- the generic noun the panel says instead of
+                  // a host name; see SetClusterStatus
   LogGrid,
   SysUtils,   // Issue #997: provides SysUtils.Format/StrPCopy for asm removal.
               // ORDER/QUALIFICATION MATTERS: SysUtils also declares SysErrorMessage,
@@ -789,12 +791,22 @@ end;
   open -- and an operator working spots off the band map has it closed.
 
   THE SAME THREE CONSTANTS THE CONSOLE USES, so there is no new English to
-  translate and the two surfaces cannot word it differently. *)
+  translate and the two surfaces cannot word it differently.
+
+  AND IT NAMES NO HOST.  It used to append "<host>:<port>", which is a string of
+  no bounded length going into a panel a quarter of the window wide -- whether
+  it fitted depended on who the operator's cluster was.  NY4I, 2026-09-26: "for
+  cluster and network messages you can jsut generically state host or server.
+  The user wil check the specific window for mor einfo".
+
+  SO THE GENERIC NOUN GOES WHERE THE HOST WAS.  The three TC_ constants are
+  unchanged and are still used verbatim -- they are prefixes ("Connected to "),
+  not format strings, so nothing was re-typed and nothing lost a placeholder.
+  THE CONSOLE STILL NAMES THE HOST, on the line right beside this one, which is
+  the window an operator opens for the detail. *)
 procedure SetClusterStatus(const aOperation: string);
 begin
-  PostStatusText(stoCluster,
-                 Format('%s%s:%u',
-                        [aOperation, PendingTelnetHost, PendingTelnetPort]));
+  PostStatusText(stoCluster, aOperation + SStatusHost);
 end;
 
 // ON THE MAIN THREAD.  One event, handled exactly as the WM_TELNET_MSG arms

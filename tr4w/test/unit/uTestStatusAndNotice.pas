@@ -36,7 +36,9 @@ uses
    LogRadio,        (* RadioStatusOwner, Radio1, Radio2 *)
    uCrashLog,       (* InstallCrashLog -- see EnsureMainForm; it is what puts
                       the MAIN THREAD on record *)
-   uPanelUpdate,    (* PostStatusText -- the marshalled writer *)
+   uPanelUpdate,    (* PostStatusText / CurrentStatusText -- the marshalled
+                      writer and the cache a view reads when it opens *)
+   uRadioPolling,   (* ShowRadioLinkFailure -- the condition/remedy split *)
    uMainForm;       (* the form, the panels and the notice timer *)
 
 type
@@ -63,6 +65,10 @@ type
       procedure Test_AStatusWrittenOffTheMainThreadLands;
       procedure Test_PostStatusTextSaysWhetherItTravelled;
       procedure Test_RadioStatusOwnerAnswersForBothSlots;
+      procedure Test_ThePanelsSpanTheStrip;
+      procedure Test_TheConditionGoesToTheStatusAndTheRemedyToTheNotice;
+      procedure Test_TheRemedyIsNotRepeatedOnARetry;
+      procedure Test_APanelOpeningLaterCanReadTheCondition;
    public
       procedure RunAllTests; override;
    end;
@@ -436,6 +442,224 @@ begin
                'an unknown rig falls back to Radio 1 rather than raising');
 end;
 
+(* THE FOUR PANELS SHARE THE STRIP, WHATEVER WIDTH IT IS.
+
+  A TStatusBar PANEL HAS A FIXED WIDTH AND DOES NOT FOLLOW ITS PARENT, and the
+  .lfm's four add up to exactly the DESIGN-TIME client width of 806.  The running
+  window is sized from the layout instead (ws * 46, a font measurement), so the
+  panels overran the client area and the last one clipped -- NY4I, bench,
+  2026-09-26: "we overran the border for radio 2 just a bit".
+
+  ASSERTED AT TWO WIDTHS, one narrower than the design and one wider, because a
+  single width cannot tell "recomputed" from "happens to match". *)
+procedure TStatusAndNoticeTests.Test_ThePanelsSpanTheStrip;
+var
+   bar: TStatusBar;
+
+   procedure CheckSpansAt(const aWidth: integer);
+   var
+      i: integer;
+      total: integer;
+   begin
+      bar.Width := aWidth;
+      LayOutStatusPanels;
+
+      total := 0;
+      for i := 0 to bar.Panels.Count - 1 do
+         begin
+         CheckTrue(bar.Panels[i].Width > 0,
+                   Format('panel %d has a width at strip width %d', [i, aWidth]));
+         total := total + bar.Panels[i].Width;
+         end;
+
+      CheckEquals(bar.Width, total,
+                  Format('the panels span the strip exactly at width %d -- no '
+                         + 'overrun and no gap from integer division',
+                         [aWidth]));
+   end;
+
+begin
+   EnsureMainForm;
+   bar := TR4WMainForm.sbStatus;
+
+   CheckSpansAt(782);      (* ws = 17: narrower than the designed 806 *)
+   CheckSpansAt(829);      (* ws = 18, and not divisible by four *)
+end;
+
+(* THE CONDITION IS WHAT HOLDS; THE REMEDY IS AN EVENT.
+
+  ONE STRING WENT TO BOTH SURFACES UNTIL NOW, which is why the status read
+  "IC7760: Auth failed - check credentials" and clipped mid-word.  Widening the
+  panel was not the fix: "Auth failed" is WHAT IS TRUE and belongs on a panel
+  that holds it; "check credentials" is WHAT TO DO and belongs on the notice
+  channel, which beeps once and expires. *)
+procedure TStatusAndNoticeTests.Test_TheConditionGoesToTheStatusAndTheRemedyToTheNotice;
+var
+   savedName: Str20;      (* the field's OWN type -- assigning a ShortString
+                           back into a string[20] is a narrowing conversion *)
+   savedSlot: integer;
+begin
+   EnsureMainForm;
+
+   savedName := Radio1.RadioName;
+   savedSlot := Radio1.tRadioPanelSlot;
+   try
+      Radio1.RadioName := 'TESTRIG';
+      (* No panel open, so nothing is posted to a radio panel's label -- this
+        test is about the two MAIN-WINDOW channels. *)
+      Radio1.tRadioPanelSlot := 0;
+
+      SetStatusText(stoRadio1, '');
+      PostStatusText(stoRadio1, '');
+      ShowQuickCommandNotice('');
+      Drain;
+
+      ShowRadioLinkFailure(@Radio1, 'Auth failed', 'check credentials');
+
+      CheckTrue(DrainUntilStatus(stoRadio1, 'TESTRIG: Auth failed', 3000),
+                'the STATUS panel gets the condition and only the condition -- '
+                + 'no remedy, so it fits');
+
+      CheckEquals('TESTRIG: Auth failed - check credentials',
+                  string(MainElement(mweQuickCommand).Caption),
+                  'and the fuller sentence, remedy included, goes to the NOTICE '
+                  + 'channel, which beeps and expires');
+
+      CheckTrue(QuickCommandNoticeArmed,
+                'the remedy is an EVENT, so it is armed to expire; the condition '
+                + 'on the panel is not');
+   finally
+      Radio1.RadioName := savedName;
+      Radio1.tRadioPanelSlot := savedSlot;
+      PostStatusText(stoRadio1, '');
+      ShowQuickCommandNotice('');
+      Drain;
+   end;
+end;
+
+(* ONCE PER RUN OF FAILURES, NOT ONCE PER RETRY.
+
+  A network radio retries after an authentication rejection, so a beep and a
+  notice on every attempt would be a beep every 60 s for as long as the password
+  is wrong.  The gate is SetRadioStatus's return value -- an unchanged condition
+  coalesces away -- and both the beep and the notice sit inside it.  The beep
+  property arrived in 62e6781b; this pins that adding the notice did not lose
+  it. *)
+procedure TStatusAndNoticeTests.Test_TheRemedyIsNotRepeatedOnARetry;
+var
+   savedName: Str20;      (* the field's OWN type -- assigning a ShortString
+                           back into a string[20] is a narrowing conversion *)
+   savedSlot: integer;
+begin
+   EnsureMainForm;
+
+   savedName := Radio1.RadioName;
+   savedSlot := Radio1.tRadioPanelSlot;
+   try
+      Radio1.RadioName := 'TESTRIG';
+      Radio1.tRadioPanelSlot := 0;
+      PostStatusText(stoRadio1, '');
+      Drain;
+
+      ShowRadioLinkFailure(@Radio1, 'Auth failed', 'check credentials');
+      CheckTrue(DrainUntilStatus(stoRadio1, 'TESTRIG: Auth failed', 3000),
+                'the first failure reports');
+
+      (* A SECOND, IDENTICAL FAILURE.  The notice is cleared first so that a
+        notice arriving again is visible as a change rather than as the same
+        text still sitting there. *)
+      ShowQuickCommandNotice('');
+      Drain;
+
+      ShowRadioLinkFailure(@Radio1, 'Auth failed', 'check credentials');
+      Drain;
+
+      CheckEquals('', string(MainElement(mweQuickCommand).Caption),
+                  'a retry with the same condition raises NO second notice -- '
+                  + 'and therefore no second beep');
+
+      CheckEquals('TESTRIG: Auth failed', StatusText(stoRadio1),
+                  'while the condition is still on the panel, because it is '
+                  + 'still true');
+   finally
+      Radio1.RadioName := savedName;
+      Radio1.tRadioPanelSlot := savedSlot;
+      PostStatusText(stoRadio1, '');
+      ShowQuickCommandNotice('');
+      Drain;
+   end;
+end;
+
+(* A RADIO PANEL OPENED AFTER THE FAILURE CAN STILL SEE IT.
+
+  NY4I, bench, 2026-09-26: "i opened radio 2 window AFTER I stated the program
+  and received the status message. The newly opened radio 2 window does not have
+  the AUTH FAILED like radio 1 which was open."  A view that is only ever PUSHED
+  to is blank if it missed the push -- the same root shape as the stale banner --
+  and for Radio 2 nothing was even posted, because tRadioPanelSlot is 0 while
+  the panel is closed.
+
+  WHAT IS ASSERTED IS WHAT THE OPENING PANEL READS.  RadioPanelStatusText is
+  the single source: uPanelUpdate's cache, the same one SetRadioStatus wrote and
+  ClearRadioLinkFailure interrogates -- no field on the form, which is the
+  LinkFailureShown shape that was deleted.  The one call site that hands it to
+  the label is uRadioPanelForm.SyncPanelStatusFromCondition; constructing that
+  form needs a parented, handle-allocated window and is not something a console
+  test should build.
+
+  AND THE UNPREFIXED CASE, IN THE SAME TEST, because it is the rule that keeps
+  an opened panel agreeing with an open one: the split warning writes the radio's
+  status panel with no "<name>: ", the radio panel shows split as an INDICATOR
+  instead, so RadioPanelStatusText must answer empty for it. *)
+procedure TStatusAndNoticeTests.Test_APanelOpeningLaterCanReadTheCondition;
+var
+   savedName: Str20;      (* the field's OWN type -- assigning a ShortString
+                           back into a string[20] is a narrowing conversion *)
+   savedSlot: integer;
+begin
+   EnsureMainForm;
+
+   savedName := Radio2.RadioName;
+   savedSlot := Radio2.tRadioPanelSlot;
+   try
+      Radio2.RadioName := '9700-IP';
+      Radio2.tRadioPanelSlot := 0;      (* the panel is CLOSED -- his case *)
+      PostStatusText(stoRadio2, '');
+      Drain;
+
+      CheckEquals('', RadioPanelStatusText(@Radio2),
+                  'nothing wrong, nothing to show');
+
+      ShowRadioLinkFailure(@Radio2, 'Auth failed', 'check credentials');
+      Drain;
+
+      CheckEquals('9700-IP: Auth failed', CurrentStatusText(stoRadio2),
+                  'the condition is recorded for this owner even with no panel '
+                  + 'open to receive it');
+
+      CheckEquals('AUTH FAILED', RadioPanelStatusText(@Radio2),
+                  'so a panel opening NOW reads the condition, in its own short '
+                  + 'voice, without having witnessed the failure');
+
+      (* The split warning: same panel, no name prefix, and not this label's. *)
+      PostStatusText(stoRadio2, 'Warning: You are in SPLIT MODE !!!');
+      Drain;
+      CheckEquals('', RadioPanelStatusText(@Radio2),
+                  'a status with no "<name>: " prefix is not the radio panel''s '
+                  + '-- the split warning is an indicator there, not a sentence');
+
+      CheckTrue(ClearRadioLinkFailure(@Radio2),
+                'and clearing reports that something was there');
+      Drain;
+      CheckEquals('', RadioPanelStatusText(@Radio2), 'cleared');
+   finally
+      Radio2.RadioName := savedName;
+      Radio2.tRadioPanelSlot := savedSlot;
+      PostStatusText(stoRadio2, '');
+      Drain;
+   end;
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -449,6 +673,10 @@ begin
    Test_AStatusWrittenOffTheMainThreadLands;
    Test_PostStatusTextSaysWhetherItTravelled;
    Test_RadioStatusOwnerAnswersForBothSlots;
+   Test_ThePanelsSpanTheStrip;
+   Test_TheConditionGoesToTheStatusAndTheRemedyToTheNotice;
+   Test_TheRemedyIsNotRepeatedOnARetry;
+   Test_APanelOpeningLaterCanReadTheCondition;
    ReleaseMainForm;
 end;
 

@@ -281,6 +281,14 @@ type
       SIZE_RESTORED. That is the window STATE, not its size, and WindowState
       says it without decoding anything. *)
     procedure MainFormWindowStateChange(Sender: TObject);
+
+    (* THE STRIP CHANGED WIDTH -- SHARE IT OUT AGAIN.  See LayOutStatusPanels.
+
+      ON THE STATUS BAR'S OWN OnResize, NOT THE FORM'S.  sbStatus is Align =
+      alBottom, so the LCL resizes it whenever the form's client width changes
+      and raises this; the control that has to be laid out is the one that
+      reports the change, and nothing has to remember to call anything. *)
+    procedure StatusBarResize(Sender: TObject);
   private
     { Body-drag state. PRIVATE, not published: Lint-FormFields requires every
       published field to have a component behind it, and these are not
@@ -684,6 +692,22 @@ procedure SetStatusText(const aOwner: TStatusOwner; const aText: string);
 (* WHAT THAT PANEL IS SHOWING.  MAIN THREAD.  The panel IS the state, so this
   is how a test -- or anything else -- asks; there is no shadow flag. *)
 function  StatusText(const aOwner: TStatusOwner): string;
+
+(* SHARE THE STRIP'S WIDTH OUT BETWEEN ITS PANELS.
+
+  A TStatusBar PANEL HAS A FIXED WIDTH AND DOES NOT FOLLOW ITS PARENT.  The
+  .lfm's four widths -- 200, 200, 200, 206 -- sum to exactly the design-time
+  ClientWidth of 806, which looks correct in the designer and is wrong at run
+  time in both directions: MakeMainWindowResizeable sets the client width from
+  the LAYOUT (ws * 46, which is a font measurement and is not 806), so the
+  panels either fall short of the right edge or run past it, and the last one
+  clips.
+
+  EQUAL SHARES, WITH THE REMAINDER ON THE LAST PANEL, so integer division cannot
+  leave a gap: three panels of Width div 4 and the fourth taking whatever is
+  left.  Public because the test asks for the widths after a resize, and because
+  MakeMainWindowResizeable calls it once when the real client width is known. *)
+procedure LayOutStatusPanels;
 
 (* PUT A NOTICE UP AND RESTART ITS 30 S WIPE.  Any thread.
 
@@ -1684,6 +1708,14 @@ begin
    TR4WMainForm.Constraints.MinHeight := TR4WMainForm.Height;
    TR4WMainForm.Constraints.MinWidth := TR4WMainForm.Width;
    TR4WMainForm.Constraints.MaxWidth := TR4WMainForm.Width;
+
+   (* EXPLICITLY, NOT ONLY OFF OnResize.  Assigning ClientWidth above does raise
+     the status bar's OnResize when it changes the width -- but if the layout's
+     width happens to equal the designed one it does not change, no event fires,
+     and the panels keep the .lfm's four hand-typed widths.  A layout step that
+     only runs when a number happened to differ is a layout step that is wrong
+     on one machine in four. *)
+   LayOutStatusPanels;
 end;
 
 procedure AnchorMainWindowControls;
@@ -1843,6 +1875,44 @@ begin
       begin
       Result := TR4WMainForm.sbStatus.Height;
       end;
+end;
+
+procedure LayOutStatusPanels;
+var
+   bar: TStatusBar;
+   i: integer;
+   share: integer;
+   used: integer;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   bar := TR4WMainForm.sbStatus;
+   if (bar = nil) or (bar.Panels.Count = 0) or (bar.Width <= 0) then
+      begin
+      Exit;
+      end;
+
+   share := bar.Width div bar.Panels.Count;
+   used := 0;
+
+   for i := 0 to bar.Panels.Count - 2 do
+      begin
+      bar.Panels[i].Width := share;
+      used := used + share;
+      end;
+
+   (* THE REMAINDER, NOT ANOTHER SHARE.  Width div Count loses up to Count-1
+     pixels, and those pixels are a gap at the right edge that no amount of
+     rounding in the loop removes. *)
+   bar.Panels[bar.Panels.Count - 1].Width := bar.Width - used;
+end;
+
+procedure TTR4WMainForm.StatusBarResize(Sender: TObject);
+begin
+   LayOutStatusPanels;
 end;
 
 (* THE OWNER *IS* THE PANEL INDEX, and deliberately so: the enum's order is the

@@ -758,6 +758,45 @@ function DrivePTTLine(const aRadio: RadioPtr; const aOn: boolean): boolean;
   exception on the polling thread. *)
 function RadioStatusOwner(rig: RadioPtr): TStatusOwner;
 
+(* THIS RADIO'S CONDITION, ON BOTH SURFACES THAT SHOW IT, FROM ONE PLACE.
+
+  The main window's status panel for this radio gets "<name>: <condition>"; if
+  the radio's own panel is open, its status label gets the SAME condition in the
+  panel's short voice.  Two renderings, ONE fact -- and one function, because
+  the alternative was every caller posting both and the two spellings being free
+  to disagree.  RadioPanelStatusText is the rendering, and it is the same
+  routine a panel opened LATER asks, so there is no second wording to keep in
+  step.
+
+  TRUE IF THE STATUS ACTUALLY TRAVELLED -- see uPanelUpdate.PostStatusText.  An
+  unchanged condition coalesces away and returns False, which is what lets a
+  caller beep and raise a notice ONCE per run of failures without keeping a flag
+  to remember it by.
+
+  THE CONDITION MUST BE SHORT.  No remedy, no host name, no reason code -- the
+  rule and the two bench reports behind it are beside VC.TStatusOwner. *)
+function SetRadioStatus(rig: RadioPtr; const aCondition: string): boolean;
+
+(* WHAT THIS RADIO'S OWN PANEL SHOULD SHOW RIGHT NOW.
+
+  A STATUS IS A CONDITION, SO A PANEL READS IT WHEN IT OPENS rather than relying
+  on having been open when it changed.  NY4I, 2026-09-26: "i opened radio 2
+  window AFTER I stated the program and received the status message. The newly
+  opened radio 2 window does not have the AUTH FAILED like radio 1 which was
+  open."  A view that is only ever pushed to is blank if it missed the push, and
+  that is the same root shape as the stale-banner defect 62e6781b fixed.
+
+  READ FROM uPanelUpdate's CACHE, NOT FROM A FIELD ON THE FORM.  A boolean
+  beside a control saying what the control could be asked is
+  RadioObject.LinkFailureShown, which was deleted for exactly that.
+
+  A STATUS WITH NO "<name>: " PREFIX IS NOT THIS PANEL'S, AND THAT IS
+  DELIBERATE.  The split warning writes the radio's status panel without one,
+  because the radio panel already shows split as an INDICATOR (its SPLIT flag)
+  and a 34-character sentence does not fit a 100 px label.  Returning empty for
+  it keeps a panel opened later showing exactly what an open one shows. *)
+function RadioPanelStatusText(rig: RadioPtr): string;
+
 implementation
 
 
@@ -766,7 +805,8 @@ uses
    LogK1EA,
    LogWind,
    MainUnit, uRadioPolling,
-   uPanelUpdate,    (* PostStatusText -- a radio's own status panel *)
+   uPanelUpdate,    (* PostStatusText / CurrentStatusText / PostPanelText --
+                      a radio's own status panel, and its panel's label *)
    uTelnet,
    LogStuff,
    LogSUBS2,
@@ -1647,6 +1687,67 @@ begin
    Self.tFactoryObject := nil;
 end;
 
+(* THE "<name>: " A RADIO'S STATUS CARRIES, IN ONE PLACE, because
+  RadioPanelStatusText has to take it off again and a second spelling of it
+  would be a second spelling of the whole convention. *)
+function RadioStatusPrefix(rig: RadioPtr): string;
+begin
+   Result := string(rig^.RadioName) + ': ';
+end;
+
+function RadioPanelStatusText(rig: RadioPtr): string;
+var
+   full: string;
+   prefix: string;
+begin
+   Result := '';
+   full := CurrentStatusText(RadioStatusOwner(rig));
+   prefix := RadioStatusPrefix(rig);
+
+   if Copy(full, 1, Length(prefix)) <> prefix then
+      begin
+      (* Not this panel's -- see the interface note.  Empty rather than the
+        whole sentence, so an open panel and one opened later agree. *)
+      Exit;
+      end;
+
+   (* UPPER CASE because that is the voice this label has always spoken in
+     ("AUTH FAILED"), and because it is a two-word alert beside a red bevel
+     rather than a sentence. *)
+   Result := UpperCase(Copy(full, Length(prefix) + 1, Length(full)));
+end;
+
+const
+   (* lblStatus.  The dialog's control id, unchanged: uRadioPolling posts these
+     ids and uPanelUpdate's cache is keyed on them. *)
+   RADIO_PANEL_STATUS_ID = 130;
+
+function SetRadioStatus(rig: RadioPtr; const aCondition: string): boolean;
+var
+   status: string;
+begin
+   if aCondition = '' then
+      begin
+      (* A CLEARED STATUS IS EMPTY, not a bare "<name>: ".  Blank is what every
+        other radio state change shows when it recovers. *)
+      status := '';
+      end
+   else
+      begin
+      status := RadioStatusPrefix(rig) + aCondition;
+      end;
+
+   Result := PostStatusText(RadioStatusOwner(rig), status);
+
+   (* AFTER the status post, so RadioPanelStatusText reads the NEW condition out
+     of the cache rather than the one being replaced. *)
+   if rig^.tRadioPanelSlot <> 0 then
+      begin
+      PostPanelText(rig^.tRadioPanelSlot, RADIO_PANEL_STATUS_ID,
+                    RadioPanelStatusText(rig));
+      end;
+end;
+
 (* A RADIO THAT COULD NOT BE SET UP -- ON ITS OWN PANEL, AND IT STAYS THERE.
 
   THIS IS A CONDITION, NOT AN EVENT.  Nothing about it changes until an operator
@@ -1654,14 +1755,24 @@ end;
   tells an operator with a misconfigured rig nothing at all thirty-one seconds
   later, which is what these five sites did through QuickDisplayError.
 
-  Each was also its own sentence with its own wording of "not connected"; the
-  condition IS "not connected", so the panel says it once and the branch
-  supplies only what is specific to it. *)
+  THE PANEL SAYS "Not connected" AND NOTHING ELSE; aWhy GOES TO THE NOTICE.
+  It used to be "<name>: not connected - could not be created -- check its
+  configuration", which is 60-odd characters into a panel a quarter of the
+  window wide -- the same overrun NY4I reported for "Auth failed - check
+  credentials", and worse.  The reason is WHY rather than WHAT, so it belongs on
+  the event channel with the beep: the operator sees it once, in full, at the
+  moment it happens, and the panel keeps holding the condition afterwards.
+
+  THE NOTICE IS UNCONDITIONAL, unlike the link-failure path's.  Every one of the
+  five callers is reached from radio SET-UP -- startup, Reset Radio Ports, or
+  saving a profile -- so it runs once per operator action rather than on a retry
+  timer, and suppressing the second one would mean an operator who pressed Reset
+  Radio Ports twice got no answer the second time. *)
 procedure SetRadioConfigurationStatus(rig: RadioPtr; const aWhy: string);
 begin
-   PostStatusText(RadioStatusOwner(rig),
-                  string(rig^.RadioName) + ': not connected - ' + aWhy);
-   DoABeep(Warning);
+   SetRadioStatus(rig, 'Not connected');
+   (* Beeps, and arms the 30 s wipe: a remedy is an event and expires. *)
+   QuickDisplayError(string(rig^.RadioName) + ' not connected - ' + aWhy);
 end;
 
 function RadioStatusOwner(rig: RadioPtr): TStatusOwner;

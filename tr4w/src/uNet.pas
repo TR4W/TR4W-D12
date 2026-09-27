@@ -1560,8 +1560,15 @@ begin
     visible while that window is open, which is why the same fact is worth a
     panel: a multi-op operator works with it closed.
 
-    Posted rather than assigned: ConnectThread runs this off the main thread. *)
-  PostStatusText(stoNetwork, text);
+    Posted rather than assigned: ConnectThread runs this off the main thread.
+
+    AND THE PANEL DOES NOT GET `text`.  TC_NETWORK is 'Network : %s %s:%d' and
+    the %s is the server address, which has no bounded length -- the caption of
+    a window the operator sized can carry that; a panel a quarter of the main
+    window wide cannot.  NY4I, 2026-09-26: state "server" generically and let
+    the operator open the network window for the particulars.  Same Operation
+    prefix, so the two surfaces still cannot word the transition differently. *)
+  PostStatusText(stoNetwork, Operation + SStatusServer);
 end;
 
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);

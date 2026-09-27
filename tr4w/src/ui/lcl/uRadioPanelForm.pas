@@ -394,6 +394,41 @@ begin
    Result := FormForSlot(aPanel) <> nil;
 end;
 
+(* READ THE CONDITION THIS RADIO IS IN, RATHER THAN WAIT TO BE TOLD.
+
+  NY4I, bench, 2026-09-26: "i opened radio 2 window AFTER I stated the program
+  and received the status message. The newly opened radio 2 window does not have
+  the AUTH FAILED like radio 1 which was open.  Upon opening a radio window,
+  should it check the status?"
+
+  IT SHOULD, AND THIS IS THE SAME ROOT SHAPE AS THE DEFECT 62e6781b FIXED.  A
+  status is a CONDITION, not an event; a view that is only ever PUSHED to shows
+  nothing if it was not open when the push happened, and for Radio 2 it never
+  was -- tRadioPanelSlot is 0 while the panel is closed, so not one update was
+  even posted for it.
+
+  SO THE PANEL ASKS, AND IT ASKS THE ONE PLACE THAT KNOWS.
+  LOGRADIO.RadioPanelStatusText reads uPanelUpdate's coalescing cache -- the
+  same cache SetRadioStatus wrote and the same one ClearRadioLinkFailure
+  interrogates.  There is no second copy of the fact and no field on this form
+  remembering it; a boolean beside a control saying what the control could be
+  asked was RadioObject.LinkFailureShown, and it was deleted for that.
+
+  THROUGH PanelTextToForm, THE SAME ROUTINE A PUSH LANDS IN.  Not PostPanelText
+  -- that would coalesce against whatever the cache holds for this label, and it
+  would marshal from the main thread to the main thread.  But not a direct
+  assignment either: one routine resolves a control id to a label and writes it,
+  and a second assignment beside it is a second place to change when that label
+  does.
+
+  THE OTHER LABELS ARE NOT DONE HERE, and that is not an omission.  VFO A/B,
+  the modes and RIT are pushed by the polling thread on EVERY poll, so a panel
+  opened while the radio is connected fills in within one poll interval (10 ms
+  to a few hundred); a radio that is NOT connected has no frequency, and a blank
+  VFO row is the correct reading of that.  The link status is the one fact with
+  no poll behind it -- it is written once when the condition changes. *)
+procedure SyncPanelStatusFromCondition(const aSlot: integer); forward;
+
 function PanelTextToForm(const aPanel: integer; const aControlId: integer;
                          const aText: string): boolean;
 var
@@ -416,6 +451,30 @@ begin
    lab.Caption := aText;
    Result := True;
 end;
+
+procedure SyncPanelStatusFromCondition(const aSlot: integer);
+var
+   rig: RadioPtr;
+begin
+   if FormForSlot(aSlot) = nil then
+      begin
+      Exit;
+      end;
+
+   if aSlot = 2 then
+      begin
+      rig := @Radio2;
+      end
+   else
+      begin
+      rig := @Radio1;
+      end;
+
+   (* 130 IS lblStatus -- LabelFor's own spelling, and the id uRadioPolling
+     posts.  PanelTextToForm resolves it and writes the label. *)
+   PanelTextToForm(aSlot, 130, RadioPanelStatusText(rig));
+end;
+
 
 { THE THREE FLAGS, and the two VFO rows.
 
@@ -521,6 +580,13 @@ begin
 
    GForms[slot].SyncActiveTint;
    GForms[slot].UpdateSpectrumButton;
+
+   (* AFTER the form exists and is owned, and on EVERY open rather than only on
+     creation: the form object is kept and re-shown (see MainUnit's
+     CloseTR4WWindow -- Hide, not DestroyWindow), and ForgetPanel clears this
+     label's cache entry on the way out, so a re-show has exactly the same gap a
+     first open does. *)
+   SyncPanelStatusFromCondition(slot);
 end;
 
 initialization

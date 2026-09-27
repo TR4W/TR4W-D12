@@ -140,8 +140,36 @@ procedure PostElementText(const aElement: TMainWindowElement; const aText: strin
 
   AN OWNER WITH NO CACHE ENTRY COUNTS AS EMPTY, because a panel starts empty.
   So the first clear of a run coalesces away and returns False, rather than
-  reporting a recovery from a failure that never happened. *)
+  reporting a recovery from a failure that never happened.
+
+  AND THE TEXT MUST BE SHORT AND BOUNDED BY CONSTRUCTION.  The rule, with the
+  two bench reports that produced it, is written out beside VC.TStatusOwner:
+  no remedy, no host name or other unbounded particular, no reason code -- the
+  condition only.  A panel is about a quarter of the window wide, it does not
+  scroll and it clips mid-word. *)
 function PostStatusText(const aOwner: TStatusOwner; const aText: string): boolean;
+
+(* WHAT THIS OWNER'S STATUS PANEL CURRENTLY SAYS, FROM ANY THREAD.
+
+  A STATUS IS A CONDITION, SO A VIEW THAT OPENS LATER MUST BE ABLE TO ASK.
+  NY4I, 2026-09-26: "i opened radio 2 window AFTER I stated the program and
+  received the status message. The newly opened radio 2 window does not have
+  the AUTH FAILED like radio 1 which was open.  Upon opening a radio window,
+  should it check the status?"  Yes -- and that is the same root shape as the
+  defect the status/notice split fixed: a view that is only ever PUSHED to
+  shows nothing if it was not there when the event fired.
+
+  THE SAME CACHE PostStatusText WRITES, under the same lock -- NOT A SECOND
+  COPY OF THE FACT.  A shadow field on the form saying "this radio has a
+  failure showing" is exactly RadioObject.LinkFailureShown, which 62e6781b
+  deleted for being a boolean kept beside a control to say what the control
+  could be asked.
+
+  IT ANSWERS AHEAD OF THE SCREEN, ON PURPOSE.  The cache records what was
+  POSTED; the panel is written when the async queue drains.  A view opening now
+  wants the current condition, not the one that has finished being painted, and
+  uMainForm.StatusText is there for the other question. *)
+function CurrentStatusText(const aOwner: TStatusOwner): string;
 
 // Forget everything remembered about a panel and its children. Call when a
 // panel closes: a window handle can be REUSED by Windows, and a stale cache
@@ -545,6 +573,24 @@ begin
        its way to the panel". *)
      idx := IndexOf(puStatus, 0, Ord(aOwner));
      Result := (idx >= 0) and (gLast[idx].Text = aText);
+  finally
+     gLock.Release;
+  end;
+end;
+
+function CurrentStatusText(const aOwner: TStatusOwner): string;
+var
+  idx: integer;
+begin
+  Result := '';
+
+  gLock.Acquire;
+  try
+     idx := IndexOf(puStatus, 0, Ord(aOwner));
+     if idx >= 0 then
+        begin
+        Result := gLast[idx].Text;
+        end;
   finally
      gLock.Release;
   end;
