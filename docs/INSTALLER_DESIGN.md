@@ -1,8 +1,9 @@
 # The installer, and what it is allowed to decide
 
 **Status:** DESIGN ONLY. No installer code is written. The `.pkg` is agreed in
-principle (NY4I, 2026-09-27) and blocked on a certificate he is creating; every
-numbered decision below is either stated as decided or explicitly owed from him.
+principle (NY4I, 2026-09-27) and **the certificate is no longer a blocker** --
+see 9.1. Every numbered decision below is either stated as decided or explicitly
+owed from him.
 
 **Read `docs/SETUP_WIZARD_DESIGN.md` first.** This document is its outer layer
 and is deliberately written to not overlap it. The wizard document was reviewed
@@ -175,18 +176,94 @@ packaging removed it -- `ld64` never puts it there. It leaves the DWARF in the
 `.o` files and writes a debug map into the symbol table (679 `N_OSO` entries,
 counted with `nm -ap`), and those `.o` files do not ship.
 
-`dsymutil` is what follows that map. And the payoff is not speculative:
-**FPC's own `rtl/inc/exeinfo.pp:1735`** opens
-`<exe>.dSYM/Contents/Resources/DWARF/<exe>` beside the executable and matches it
-**by UUID** before using it. So a `.dSYM` staged inside
-`TR4W.app/Contents/MacOS/` is read by the FPC runtime with no code change at
-all.
+`dsymutil` is what follows that map, and it works -- 2.8 seconds, 66,105,344 B.
 
-**So the macOS symbols checkbox is the same decision as the Windows one, one
-step behind it**: it needs a `dsymutil` stage first, which is not approved work
-and is not proposed here. What IS already in place is the gate --
-`tr4w/build/check-symbols.sh` validates a `.dSYM` including the UUID match the
-day one appears, verified against a real `dsymutil` output.
+### 4.2.1 CORRECTION: A `.dSYM` DOES NOT MAKE AN FPC 3.2.2 BACKTRACE RESOLVE
+
+**The first version of this section said it did, citing
+`rtl/inc/exeinfo.pp:1735` -- which opens
+`<exe>.dSYM/Contents/Resources/DWARF/<exe>` and matches by UUID -- and concluded
+that a `.dSYM` in the bundle "is read by the FPC runtime with no code change at
+all". THAT IS FALSE, and it was tested rather than argued on 2026-09-27.**
+
+**The mistake was reading the wrong file.** `exeinfo.pp:1735` is in an FPC
+**main** checkout that happens to sit on mac-ci (`~/fpc_main`). It is not the RTL
+this build uses. The installed FPC 3.2.2 source
+(`~/fpcupdeluxe/fpcsrc/rtl/inc/exeinfo.pp`) contains **zero** occurrences of
+`dSYM`, and registers ONE reader for every Darwin target:
+
+```pascal
+{$ifdef darwin}
+   openproc : @OpenMachO32PPC;
+   findproc : @FindSectionMachO32PPC;
+{$endif darwin}
+```
+
+A **32-bit PowerPC** Mach-O reader, on aarch64. `OpenMachO32PPC` does not check
+the magic -- it reads a 28-byte header and returns `true` unconditionally -- and
+`FindSectionMachO32PPC` answers for `'.stab'` and `'.stabstr'` **and nothing
+else**. A request for `.debug_line` can therefore never be satisfied on Darwin
+under 3.2.2. It does not fail loudly; it silently finds nothing.
+
+**Measured, four ways:**
+
+| probe, built with `build-unix.sh`'s own Darwin flags | backtrace |
+|---|---|
+| `-gl -gw2`, no `.dSYM` | `$0000000102004738` -- bare |
+| `-gl -gw2`, **matching `.dSYM` beside the binary** | `$0000000100E04738` -- **still bare** |
+| `-gl -gs` (stabs instead) | bare |
+| **the same probe, same flags, on Linux** | `$0000000000401094  INNERMOST,  line 20 of dwarfprobe.lpr` |
+
+The Linux row is the control: the probe and `BackTraceStrFunc` are fine, and
+Darwin is the difference.
+
+**So the `.dSYM` must NOT be shipped inside the bundle.** It would add 66 MB --
+roughly doubling `TR4W.app` -- to put a file on the operator's disk that the
+runtime cannot read. Windows' 67 MB is a different bargain because the Windows
+RTL *does* read `tr4w.dbg`.
+
+### 4.2.2 What DOES work, and it is already half built
+
+**Offline symbolisation, by us, with `atos`.** Proven the same day against the
+real `.dSYM`:
+
+```
+atos -o tr4w.dSYM/Contents/Resources/DWARF/tr4w -arch arm64      -l 0x100000000 0x100000730
+-> P$DWARFPROBE_$$_INNERMOST (in dwarfprobe) (dwarfprobe.lpr:20)
+```
+
+**And the crash log already carries what that needs.** `uCrashLog`'s
+`ReportImageBase` logs the image path, the base, the dyld slide
+(`_dyld_get_image_vmaddr_slide`) and a **ready-made command line**:
+
+```
+[CRASH] image <path> base $... slide $... -- resolve a frame with:
+        atos -o "<path>" -l 0x<base> <address>
+```
+
+That was added because a logged frame sat above the top of the un-slid image, and
+it is exactly the missing half of offline symbolisation. The ASLR problem is real
+and visible in the table above -- the same probe printed `$102004738` and
+`$100E04736` on two runs -- which is why the base must be logged and is.
+
+**So the recommended shape is the Windows shape, not the bundle:** produce the
+`.dSYM` at build time and **keep it beside the release**, the way `tr4w.dbg` is
+kept and now attached as a release asset. `TR4W.app` does not grow, the operator
+downloads nothing extra, and a crash report becomes resolvable by whoever has the
+matching `.dSYM`. **This is a recommendation and not a decision -- NY4I approved
+"ship it in the bundle", on the premise this section originally stated, and that
+premise was wrong.**
+
+**The other route is an RTL fix**, and it exists: FPC main has a 64-bit Mach-O
+reader and the `.dSYM`-by-UUID lookup. Moving the Darwin toolchain to it, or
+carrying a local `exeinfo.pp`/`lnfodwrf.pp`, would make in-process backtraces
+resolve on macOS the way they already do on Linux -- and only then does shipping
+a `.dSYM` in the bundle buy anything.
+
+**The gate is already correct for either outcome.**
+`tr4w/build/check-symbols.sh` validates a `.dSYM` and its UUID match when one is
+present, and does **not require** one -- requiring it would fail every macOS
+build over a file that cannot help.
 
 ### 4.3 What happens to `-ExcludeSymbols`
 
@@ -443,30 +520,27 @@ proposed here.**
 
 ## 9. The certificate, the build recipe, and shipping alongside
 
-### 9.1 The certificate -- the gate, and it is not open yet
+### 9.1 The certificate -- SORTED, and what was verified
 
 **A `.pkg` is signed with a Developer ID *Installer* certificate, which is a
 DIFFERENT certificate from the Developer ID *Application* one that already signs
-the app and the `.dmg`.** Established 2026-09-27:
+the app and the `.dmg`.** When this document was first written mac-ci had only
+the Application certificate and `macstudio` had none. **NY4I created the
+Installer certificate on 2026-09-27**, and mac-ci's System keychain now holds
+both -- confirmed non-interactively over ssh, which is the runner's own context:
 
-| machine | identities | result |
+| query | result | why it is the query that matters |
 |---|---|---|
-| `mac-ci` | `Developer ID Application: Thomas Schaefer (N3397MADHZ)` | **one** -- no Installer certificate |
-| `macstudio` | none | `0 valid identities found` |
+| `security find-identity -v` | **2** identities, 2 distinct fingerprints | the Installer certificate is present and usable unprompted |
+| `security find-identity -v -p codesigning` | **exactly 1** (the Application cert) | so `mac-sign.sh`'s ambiguity check is provably unaffected |
 
-Checked exhaustively rather than through the default search list: every keychain
-individually (`app-signing.keychain-db`, both `login.keychain-db`,
-`System.keychain`) plus
-`security find-certificate -a -c 'Developer ID'`, which finds only the
-Application certificate and the Developer ID CA.
+**That second row is the one to keep.** An Installer certificate is not a
+codesigning identity, so it does not appear in the `-p codesigning` list at all
+and cannot collide with the app signing that already works. A `.pkg` check has to
+query `-v` and filter by name -- and count **distinct fingerprints**, per 9.2.
 
-NY4I is creating it. The recipe, so it lands in the right place:
-
-1. developer.apple.com -> Certificates -> **+** -> **Developer ID Installer**
-2. Generate the CSR **on mac-ci** (Keychain Access -> Certificate Assistant ->
-   Request a Certificate From a Certificate Authority, saved to disk)
-3. Upload it, download the `.cer`, double-click it **on mac-ci**
-4. Confirm with `security find-identity -v`: two identities where there is one
+The certificate stays in mac-ci's keychain, per the rule below. It was created
+there, so no private key has ever moved.
 
 **It stays in mac-ci's keychain and never becomes a repository secret**, for the
 reason `release.yml` already records for the Application certificate: a
@@ -504,6 +578,22 @@ Facts worth keeping, each from the man page rather than from habit:
 - **`productsign(1)` exists** if a package ever needs signing after the fact.
 - The bundle identifier in the real `Info.plist` is `net.tr4w.TR4W`; the package
   identifier is a separate namespace and is chosen, not derived.
+- **THE IDENTITY CHECK COUNTS DISTINCT FINGERPRINTS, NOT MATCHING LINES.** This
+  is a rule, not a preference, and `mac-sign.sh` was fixed to obey it on
+  2026-09-27: it counted rows with `grep -cF`, so **one** certificate reachable
+  through **two** keychains on the search list counts as two and the build dies
+  with *"ambiguous"* over a certificate that is not ambiguous. That is live risk
+  on this machine -- mac-ci's search list holds **five** copies of one path
+  (appended by a different project's runner, which never checks), and the only
+  reason the count is still right is that the path is stale and the keychain is
+  not there. A fingerprint IS the certificate; two rows sharing one are one
+  certificate seen twice. Two rows with DIFFERENT fingerprints and the same name
+  are genuinely ambiguous and must still fail -- verified both ways.
+- **The Installer identity is not a codesigning identity**, so
+  `security find-identity -v -p codesigning` does **not** list it -- verified,
+  it returns exactly one row (the Application certificate) on mac-ci today. The
+  `.pkg` check must query `-v` (or `-p basic`) and filter by name, and it must
+  not "fix" `mac-sign.sh`'s existing `-p codesigning` query to find it.
 - **`--component` and `--root` both work**; the probe in section 5 used `--root`
   with the app staged under `root/Applications`, which is the shape a scripted
   build wants when more than one thing is being laid down. `--component` is
@@ -578,10 +668,10 @@ uninstaller must not remove without asking.
 | # | decision | recommendation | blocked on |
 |---|---|---|---|
 | 1 | optional debug symbols in the installer | **yes** -- decided, 67 MB and 55% of the Windows install | nothing; needs the `full.nsi` change and the `.pkg` |
-| 2 | disk-space check | **yes** -- free, `installKBytes` is computed | nothing |
+| 2 | disk-space check | **WITHDRAWN by NY4I** -- *"the disk space is not a factor"*. Free either way: `installKBytes` is computed | closed |
 | 3 | language at install time | **no -- put it in the wizard** | his ruling |
 | 4 | data-file download at install time | **no -- the app already does it; offer it in the wizard** | his ruling, and a wizard page he has not approved |
-| 5 | macOS `.dSYM` at all | needs a `dsymutil` stage; 63 MB measured, FPC reads it by UUID | his approval |
+| 5 | macOS `.dSYM` -- produce it, but keep it BESIDE THE RELEASE, not in the bundle | **FPC 3.2.2 cannot read one; measured, see 4.2.1.** In the bundle it is 66 MB that does nothing. Beside the release it makes crashes resolvable with `atos`, which `uCrashLog` already prints the command for | his ruling -- he approved the bundle on a premise that proved false |
 | 6 | Linux separable symbols | `-Xg` + `objcopy`, own piece of work | not proposed |
 | 7 | `.pkg` alongside or instead of the `.dmg` | **alongside for at least one release** | his ruling |
 | 8 | macOS uninstall story | none formed -- see section 10 | nobody has raised it |

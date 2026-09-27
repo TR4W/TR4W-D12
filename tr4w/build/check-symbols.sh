@@ -170,10 +170,15 @@ darwin)
    # So what this checks on Darwin is that the DEBUG MAP AND THE SYMBOL TABLE
    # SURVIVED -- which is precisely what codesign or a stray `strip` would
    # destroy, and is the question asked.  It does NOT claim that a macOS
-   # backtrace resolves to a file and a line: FPC's exeinfo.pp looks for
-   # <exe>.dSYM/Contents/Resources/DWARF/<exe> beside the binary and matches
-   # it by UUID, no such bundle is produced today, and that gap is reported
-   # below rather than passed over.
+   # backtrace resolves to a file and a line -- IT DOES NOT, and no file staged
+   # beside the binary changes that under FPC 3.2.2.  The reason is in the
+   # .dSYM block below and in build-unix.sh's compile(); the short version is
+   # that 3.2.2's exeinfo.pp gives every darwin target a 32-bit PowerPC Mach-O
+   # reader which can only answer for '.stab' and '.stabstr'.
+   #
+   # (uCrashLog:336 records the neighbouring half of the same gap from the
+   # other side -- GetModuleByAddr cannot answer on Darwin either, because
+   # exeinfo installs its Unix hook only for ELF.)
    # -----------------------------------------------------------------------
    need nm || exit 1
 
@@ -213,8 +218,22 @@ report from this binary cannot name a file even with a .dSYM present"
 
    # THE .dSYM, IF ONE IS EVER PRODUCED.  Checked rather than assumed absent,
    # so that the day a dsymutil step is added this gate already validates it
-   # -- including the UUID match, which is what exeinfo.pp itself requires
-   # and is the one way a .dSYM can be present and silently wrong.
+   # -- including the UUID match, which is the one way a .dSYM can be present
+   # and silently wrong, and which `atos` requires.
+   #
+   # IT IS A CHECK AND NOT A REQUIREMENT, and that is measured rather than
+   # cautious (2026-09-27).  A .dSYM does NOT make an FPC 3.2.2 backtrace
+   # resolve on this platform: exeinfo.pp registers a 32-bit PowerPC Mach-O
+   # reader for every darwin target, and it answers only for '.stab' and
+   # '.stabstr', so a request for .debug_line cannot be satisfied at all.
+   # Proven with a probe built on these flags -- bare addresses with a matching
+   # .dSYM staged, and the same probe on Linux naming a unit and a line.
+   #
+   # So REQUIRING one here would fail every macOS build over a file that cannot
+   # help on the operator's machine.  What the .dSYM is genuinely for is
+   # OFFLINE symbolisation by us, with `atos` against the addresses and image
+   # base uCrashLog already logs -- and that wants the file kept beside the
+   # release, not shipped in the bundle.  See docs/INSTALLER_DESIGN.md.
    _dsym="$BIN.dSYM"
    if [ -d "$_dsym" ]; then
       need dwarfdump || exit 1
@@ -224,12 +243,15 @@ report from this binary cannot name a file even with a .dSYM present"
          pass ".dSYM present and its UUID matches the binary ($_exeuuid)"
       else
          fail ".dSYM present but its UUID ($_dsuuid) does not match the \
-binary ($_exeuuid) -- exeinfo.pp will reject it and resolve nothing"
+binary ($_exeuuid) -- it belongs to a different build, so atos would resolve \
+every address to the wrong line rather than refusing"
       fi
    else
-      say "      note  no .dSYM beside the binary. A Mach-O debug map names \
-the .o files, which do not ship, so a backtrace from this artifact prints \
-bare addresses. dsymutil is what would close that; it is not run today."
+      say "      note  no .dSYM beside the binary, and none is expected: \
+nothing produces one yet. A backtrace from this artifact prints bare \
+addresses, and a .dSYM here would NOT change that under FPC 3.2.2 -- see the \
+comment above. Resolve a macOS crash with atos, against the image base \
+uCrashLog logs."
    fi
    ;;
 

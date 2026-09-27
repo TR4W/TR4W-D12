@@ -593,18 +593,54 @@ compile() {
    # -gw2 -Xg are NOT carried over: -Xg writes the debug info to a separate file
    # through objcopy, which is a binutils dependency this script has no reason
    # to require before anything links at all.  Revisit when it does.
-   # -gw2 ON DARWIN. -gl alone links FPC's STABS line-info reader, and on
-   # Darwin there are no stabs -- so a crash backtrace prints bare
-   # addresses, which is exactly what the first macOS crash produced:
+   # -gw2 ON DARWIN, AND THE REASON IS NOT THE ONE THIS COMMENT USED TO GIVE.
    #
-   #     Backtrace:
-   #       $0000000104A4A304
-   #       $0000000104BD1644
+   # IT CLAIMED: "-gl alone links FPC's STABS reader, and on Darwin there are no
+   # stabs -- with DWARF requested, -gl links lnfodwrf instead and the same
+   # backtrace names a unit and a line."  The first half is right.  THE SECOND
+   # HALF IS FALSE, and it was measured false on 2026-09-27 rather than argued:
    #
-   # With DWARF requested, -gl links lnfodwrf instead and the same
-   # backtrace names a unit and a line. Linux resolves without it, and
-   # DWARF costs build time and binary size, so it is asked for only
-   # where it buys something.
+   #   * a probe built with exactly these flags on mac-ci prints BARE ADDRESSES
+   #   * it prints bare addresses with a matching .dSYM staged beside it too
+   #   * it prints bare addresses with -gs (stabs) as well
+   #   * THE SAME PROBE, SAME FLAGS, ON LINUX prints
+   #         $0000000000401094  INNERMOST,  line 20 of dwarfprobe.lpr
+   #     so the probe and the RTL hook are fine; Darwin is the difference
+   #
+   # WHY, from the RTL rather than from a guess.  FPC 3.2.2's exeinfo.pp
+   # registers ONE reader for every darwin target:
+   #
+   #     {$ifdef darwin}  openproc: @OpenMachO32PPC;
+   #                      findproc: @FindSectionMachO32PPC;
+   #
+   # That is a 32-bit PowerPC Mach-O reader.  OpenMachO32PPC does not even check
+   # the magic -- it reads a 28-byte header and returns TRUE unconditionally --
+   # and FindSectionMachO32PPC answers for '.stab' and '.stabstr' AND NOTHING
+   # ELSE.  So a request for .debug_line can never be satisfied on Darwin under
+   # 3.2.2, whatever the compiler was asked to emit.  It does not fail loudly; it
+   # silently finds nothing, which is why this went unnoticed.
+   #
+   # (An FPC main checkout on that machine DOES have a 64-bit Mach-O reader and
+   # .dSYM lookup by UUID.  That is where the fix lives, and it is not in 3.2.2.
+   # Do not cite fpc_main's exeinfo.pp as though it were the shipping RTL -- that
+   # mistake is what produced the false claim above.)
+   #
+   # SO WHY KEEP -gw2?  Because it is load-bearing for the OFFLINE path, which is
+   # the one that actually works today.  ld64 leaves the DWARF in the .o files
+   # and writes a debug map; `dsymutil` follows that map and collects a .dSYM,
+   # and `atos` resolves against it -- proven the same day:
+   #
+   #     atos -o tr4w.dSYM/Contents/Resources/DWARF/tr4w -arch arm64 \
+   #          -l 0x100000000 0x100000730
+   #     -> P$DWARFPROBE_$$_INNERMOST (in dwarfprobe) (dwarfprobe.lpr:20)
+   #
+   # With -gs instead there is no DWARF for dsymutil to collect, so -gw2 is what
+   # keeps macOS crash reports resolvable AT ALL -- by us, from the addresses and
+   # the image base that uCrashLog.ReportImageBase already logs, not by the RTL
+   # on the operator's machine.  Linux resolves in-process and needs none of it.
+   #
+   # NOTHING SHIPS A .dSYM TODAY, deliberately: 66 MB inside the bundle would
+   # double it and the runtime cannot read it.  See docs/INSTALLER_DESIGN.md.
    _dbg='-gl'
    [ "$OS" = darwin ] && _dbg='-gl -gw2'
 

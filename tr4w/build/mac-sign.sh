@@ -130,8 +130,28 @@ done
 # duplicated name can select a certificate nobody intended.  Requiring exactly
 # one match of the FULL name turns that into a build failure here rather than
 # into a Gatekeeper failure on someone's Mac.
+#
+# COUNT DISTINCT FINGERPRINTS, NOT MATCHING LINES (2026-09-27).  This was
+# `grep -cF`, and that counts OUTPUT ROWS -- so ONE certificate reachable
+# through TWO keychains on the search list counts as two and this check kills
+# the build with "ambiguous" over a certificate that is not ambiguous at all.
+#
+# That is not hypothetical on this machine.  mac-ci's search list currently
+# holds FIVE copies of one path (a different project's runner appends it and
+# never checks), and the only reason the line count is still right is that the
+# path is stale and the keychain is not there.  The day it exists, a
+# line-counting check breaks the signing of a release for no reason.
+#
+# A fingerprint is the certificate's identity; two rows with the same
+# fingerprint are one certificate seen twice.  Same rule for the Developer ID
+# INSTALLER identity when the .pkg step is written -- see
+# docs/INSTALLER_DESIGN.md.
 matches=$(security find-identity -v -p codesigning 2>/dev/null |
-          grep -cF "\"$TR4W_SIGN_IDENTITY\"")
+          grep -F "\"$TR4W_SIGN_IDENTITY\"" |
+          awk '{ print $2 }' |
+          sort -u |
+          wc -l |
+          tr -d '[:space:]')
 case "$matches" in
    1) ;;
    0)
