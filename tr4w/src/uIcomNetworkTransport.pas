@@ -2034,7 +2034,7 @@ begin
   Move(Pkt, PktStr[1], SizeOf(Pkt));
   SendTrackedPacket(FControlSocket, PktStr, FRadioAddress, FControlPort, FSendSeq);
 
-  logger.Trace(LogPrefix + ' Sent token renewal, outerSeq=%d', [FSendSeq - 1]);
+  logger.Debug(LogPrefix + ' Sent token renewal, outerSeq=%d', [FSendSeq - 1]);
 end;
 
 procedure TIcomNetworkTransport.SendStreamRequest;
@@ -2263,9 +2263,23 @@ begin
   IsMain   := PtrUInt(GetCurrentThreadId) = PtrUInt(MainThreadID);
   InFlight := System.InterLockedIncrement(FSendInFlight);
   try
+     (* LEVEL FOLLOWS RATE, NOT IMPORTANCE (NY4I, 2026-09-27: "debug is still
+       chatty. These should all be trace, no?").
+
+       PER-PACKET IS TRACE.  This pair fires on every UDP send, and with two
+       radios connected that is a few hundred lines a second -- it drowned an
+       overnight soak whose whole subject was a once-a-minute renewal.  Every
+       other Debug line in this unit is a LIFECYCLE event: a handshake step, a
+       state transition, a disconnect stage, a timer retry.  Those are once per
+       session or once per interval and they stay at Debug, which is the level
+       an operator is asked to run when reporting a fault.
+
+       The test to apply to a new line: could it fire more than once a second
+       in normal operation?  Then it is Trace. *)
+
      (* THE LINE THAT SURVIVES A HANG. Everything a diagnosis needs is here,
        because if Indy blocks there will be no second line. *)
-     logger.Debug('[IcomTransport:%s] SEND ENTER port=%d -> %s:%d len=%d '
+     logger.Trace('[IcomTransport:%s] SEND ENTER port=%d -> %s:%d len=%d '
                   + 'thread=%u mainthread=%s inflight=%d active=%s',
                   [FRadioName, Socket.Bindings[0].Port, TargetAddr, TargetPort,
                    DataLen, GetCurrentThreadId, BoolToStr(IsMain, True),
@@ -2314,7 +2328,7 @@ begin
         end
      else
         begin
-        logger.Debug('[IcomTransport:%s] SEND EXIT  %d ms',
+        logger.Trace('[IcomTransport:%s] SEND EXIT  %d ms',
                      [FRadioName, Elapsed]);
         end;
   finally
