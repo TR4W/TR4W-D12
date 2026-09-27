@@ -75,7 +75,7 @@ well they justify the work:
 | he asked for | verdict | section |
 |---|---|---|
 | ask whether to install the debug files | **yes, installer. This alone justifies the `.pkg`** | [4](#4-decision-1----optional-debug-symbols----installer) |
-| check disk space | **yes, installer, and it is free** | [5](#5-decision-2----disk-space----installer-and-automatic) |
+| check disk space | **no -- withdrawn by NY4I; the number is automatic anyway** | [5](#5-decision-2----disk-space----installer-and-automatic) |
 | specify a language | **recommended: setup wizard, not installer** | [6](#6-decision-3----language----recommended-setup-wizard) |
 | "roll into the basic information such as their Grid" | **no -- that is the wizard, and it already exists as a design** | [1.1](#11-the-prohibition----the-installer-must-not-redeclare-a-field-the-wizard-owns) |
 
@@ -216,7 +216,19 @@ addresses for exactly one binary.
 
 ---
 
-## 5. DECISION 2 -- disk space -- INSTALLER, AND AUTOMATIC
+## 5. DECISION 2 -- disk space -- NOT A DESIGN CONCERN (NY4I, 2026-09-27)
+
+**RULED OUT AS A REQUIREMENT.** NY4I named disk space as one of the things he
+might want the installer to do, and then, once the rest was measured, withdrew
+it: *"the disk space is not a factor"*. It is recorded here rather than deleted
+because the sentence that raised it is quoted at the top of this document, and a
+reader who finds it there and nothing here would reasonably conclude it was
+forgotten.
+
+**Nothing is owed either way**, which is what makes the withdrawal free: the
+number is produced by building a `.pkg` at all. The rest of this section records
+that measurement, because it is the answer to "do we need to state a size
+somewhere" and the answer is no.
 
 **Decided, and it turns out to cost nothing to implement, which is worth
 knowing before anyone hand-writes a size constant.**
