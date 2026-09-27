@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: c8e623e5 -->
+<!-- D12-CHANGELOG-BASELINE: 62e6781b -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -48,6 +48,120 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 ## 5.0.x — September 2026
 
 ### 5.0.23 (2026-09-26) - NY4I
+
+#### Status is a condition and belongs to its owner; a notice is an event and expires (`src/MainUnit.pas`, `uPanelUpdate.pas`, `VC.pas`, `ui/lcl/uMainForm.lfm`, `uAppTimers.pas`, `tools/gen_main_elements.py`, `build/Lint-FormOverlap.ps1`)
+
+One caption carried both, so every subsystem could overwrite every other one and a
+30-second timer wiped the lot. NY4I: *"It should clear when the precipitating event
+clears when used for status rather than items like invalid domestic QTH."*
+
+- STATUS goes to a new `TStatusBar`, one panel per owner -- Radio 1, Radio 2,
+  Cluster, Network. **`TStatusOwner`'s declaration order IS the strip's
+  left-to-right order**, so there is no table to keep in step and no way to address
+  the wrong panel; a strip with fewer panels than owners reports at Error and DROPS
+  rather than writing over a neighbour. Yesterday's defect -- a message set by one
+  path and cleared by another -- is now unrepresentable.
+- `RadioObject.LinkFailureShown`, added the night before, is **DELETED** with the
+  shared caption: the panel IS the state. `ClearRadioLinkFailure` answers from
+  `PostStatusText`'s own coalescing cache under its own lock rather than from a
+  boolean beside a control.
+- NOTICE stays on `pnlQuickCommand` and KEEPS its timer, one-shot, restarted by each
+  new notice. **The timer was never the bug** -- arming it from a polling thread
+  was, since `WM_TIMER` goes to the calling thread's queue. Notices are
+  operator-caused and main-thread by nature, so a form-owned `TTimer` works and
+  always would have. Four that could never be wiped now are.
+- **The flash is deleted.** Its phase 0 was `EnableElement(mweQuickCommand, False)`
+  -- `Enabled` is a SEMANTIC property and greying is a side effect of it, not a
+  styling mechanism -- and it then waited on that same dead timer, so the panel
+  stayed grey until a main-thread message completed a flash. `uFlasher` STAYS: two
+  other legitimate users, and it replaced four hand-rolled `Sleep`-loop threads.
+- **The form had to grow in TWO places for two reasons.** 117 controls, not one
+  using `Align`, so `TWinControl.AlignControls` positions `alNone` children from the
+  FULL `ParentClientHeight` and an `alBottom` sibling covers them rather than
+  pushing them up. And the `.lfm` height is not what sizes the running window --
+  `MakeMainWindowResizeable` overwrites `ClientHeight` at startup, so editing only
+  the `.lfm` gives a correct designer and a strip sitting on the quick-command row.
+  Runtime adds `MainStatusBarHeight` READ FROM THE CONTROL, because a status bar's
+  height is the widget set's business and differs on gtk2 and Cocoa; design time
+  adds `STATUS_BAR_HEIGHT` in `gen_main_elements`. A short saved height from 5.0.23
+  clamps up against the new `MinHeight`.
+- Marshalling is `Application.QueueAsyncCall`, **NOT `TThread.Queue`**: `Queue`
+  stamps an entry with the calling thread's id and `TThread.Destroy` purges by it,
+  so a radio polling thread -- destroyed and recreated on every reconnect -- would
+  delete its own pending write at exactly the moment a link-failure message matters.
+  A test posts from a thread that then EXITS and asserts the panel still receives
+  it, so swapping the mechanism fails it.
+- Eleven call sites moved to status; **three cluster transitions were added that had
+  never reached the main window at all**. ~105 sites stayed notices and needed no
+  change. One deletion: `uNet`'s lost-connection `QuickDisplay`, a second spelling
+  of what `ShowConnectionStatus` now HOLDS on the Network panel.
+- **`Lint-FormOverlap` could not parse a collection property** and failed loudly on
+  the first one in this tree: `item ... end` is not an `object` block, but its `end`
+  handler popped the control stack, so `sbStatus` and then the form were popped and
+  later properties landed on whatever was left -- 35 phantom overlaps, 20 against
+  the form itself, which it had measured as 200x393 from a panel's `Width`. Two new
+  self-test fixtures.
+- Three more found on the way, none of them behaviour changes in the shipping
+  program: `BindMainElements` left `GElements` pointing at a freed form's panels
+  when there was no form; `OnMainThread` returns False for every caller in a program
+  that never calls `InstallCrashLog`, and `ReportOffMainThread` stays silent about
+  it; and `ShowConnectionStatus` assigns `TR4WNetworkForm.Caption` directly from
+  `ConnectThread`.
+- **Recorded rather than hidden**: Radio N has ONE panel, so the split warning and a
+  link failure contend for it, and the split warning is edge-triggered. Strictly
+  better than a banner any of ~120 notices wiped within 30 seconds, but it is a
+  contention that did not exist before.
+
+#### A radio is not "connected" until it is OPERATIONAL (`src/uRadioPolling.pas`, `src/uRadioLinkRetry.pas`, `src/trdos/logradio.pas`)
+
+NY4I on the bench: a bad password on the IC-7760, corrected, Reset Radio Ports --
+and the radio connected while the banner and the Radio 1 panel both still read
+`Auth failed - check credentials`. He went to debug a working link.
+
+**The shared cause**: the polling loop's "connected" was `ro.IsConnected`, which
+`TIcomRadio` deliberately makes true for ANY non-Disconnected transport state so the
+loop will not re-dial mid-handshake. The up-transition therefore fired at
+`WaitingForHere`, BEFORE the login packet was sent -- the whole inversion inside one
+millisecond of log: `Radio connected - querying initial freq/mode/state`, `IC7760
+connected after an earlier authentication failure`, `Sent login packet`,
+`Authentication failed`.
+
+- The seam is `ro.IsOperational`, which already existed and already means "ready for
+  business" on every radio that overrides it -- Icom is `icsConnected` plus a fresh
+  CI-V stream, Flex is slice 0 valid, TCI is the server's ready burst -- and
+  `TFactoryRadioBase` returns True unconditionally, so a serial radio is operational
+  the moment it is connected and nothing changes for it. No new capability, no new
+  virtual, and no base class asking which radio it is.
+- **The back-off had three clobbers and the third is the one that mattered.** The
+  announced 60 s was usually never applied AT ALL, because
+  `if Assigned(ro) and ro.AuthFailed` read False: `GetAuthFailed` proxies
+  `FNetworkTransport.AuthFailed`, and the connected branch's reaction to a rejection
+  calls `ro.Disconnect`, which `FreeAndNil`s that transport. **The fact "this attempt
+  was rejected" was stored in the object that reacting to the rejection destroys.**
+  Measured: eight logins in nine seconds against a radio that holds a session ~90 s.
+- `TRadioLinkRetry` (a new leaf, no dependencies) owns the policy and LATCHES the
+  rejection so it survives the freed transport. It never sleeps and never reads a
+  clock -- the caller keeps the sliced wait, which is what keeps it interruptible --
+  and the warn line formats `retry.DelayMs`, so the announced interval is the waited
+  one by construction.
+- **The message had to outlive the polling thread**, which is what actually produced
+  the screenshot: `authFailureReported` was a LOCAL of `pFactoryRadio`, and a radio
+  is never reconfigured in place, it is REBUILT -- so correcting the password started
+  a new thread with a fresh local and the successful login found nothing to clear.
+  (Superseded the next day by the status strip above, which makes the panel the
+  state.)
+- The failure text is also handed to `PostElementText`, because `QuickDisplay` writes
+  the caption directly and bypasses `uPanelUpdate`'s last-written cache -- without
+  that, the SECOND failure-and-recovery cycle in a session would find the cache
+  already holding `''` and coalesce the clear away.
+- **Recorded, not fixed**: the same LCL `TTimer` trap that hid the Icom transport's
+  six dead timers is in the banner -- `QuickDisplay` arms a 30 s auto-clear with
+  `StartAppTimer`, and armed from a polling thread it can never fire. The honest fix
+  is marshalling `QuickDisplay` itself, a shared UI seam, and it needs a ruling on
+  whether a failure banner should auto-clear at all. Also recorded: a **Kenwood LAN**
+  auth rejection is invisible to this loop -- `uRadioKenwoodLAN` sets
+  `FAuthState := ksAuthFailed` but does not override `GetAuthFailed`, so there is no
+  message, no back-off and no report. Code fact; Kenwood LAN is bench-unproven.
 
 #### The Icom LAN transport's six timers had NEVER fired (`src/uIcomNetworkTransport.pas`, `uIcomNetworkTypes.pas`)
 

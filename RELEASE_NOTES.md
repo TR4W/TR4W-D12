@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: c8e623e5 -->
+<!-- D12-CHANGELOG-BASELINE: 62e6781b -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -72,6 +72,14 @@ user-facing — no file paths or source-level jargon.
   success either way; restarting TR4W was the only cure.
 - **A rejected login is retried**, once a minute, instead of condemning that radio
   for the rest of the session.
+- **A radio that connects after a rejected password stops showing the error.**
+  "Auth failed - check credentials" stayed on the main window and on the Radio 1
+  panel while the radio was working, so a connected radio looked broken. The cause
+  in one sentence: TR4W counted a radio as connected as soon as the network link
+  came up, which is before the radio has accepted the password.
+- **The sixty-second wait after a rejected login is now actually waited.** It was
+  announced and then not applied -- TR4W re-attempted about eight times in nine
+  seconds against a radio that holds a session for about ninety.
 
 #### Radio Control -- bands
 
@@ -100,6 +108,24 @@ user-facing — no file paths or source-level jargon.
 - **Ten menu items stop showing their shortcut twice** -- Increment Time +1
   through +10.
 
+#### A status strip along the bottom of the main window
+
+- **New: a status strip with its own panel for Radio 1, Radio 2, the DX cluster and
+  the multi-op network.** It is empty when all is well. A CONDITION now stays there
+  until it ends, instead of vanishing after thirty seconds or being overwritten by
+  an unrelated message -- which is what used to happen, because one line carried
+  conditions and passing notices alike, and any subsystem could overwrite any other.
+- **Cluster connect and disconnect, and the multi-op network state, are visible
+  without opening either window.** The cluster ones never reached the main window at
+  all before: they went only to the telnet console, invisible with that window shut.
+- **The message line still carries passing notices and still clears itself**, and
+  four that could previously never be cleared now behave like the rest: the auto-QSL
+  interval, the imported-QSO count, the auto-CQ repeat line and the CW clear.
+- **The grey "flash" on the message line is gone.** It never worked -- it left the
+  line greyed out rather than flashing it.
+- **The main window is 23 pixels taller** to make room for the strip. Nothing else
+  moved, and a window height saved by an earlier version is adjusted up to fit.
+
 #### Diagnostics
 
 - **tr4w.log is one file and is never rolled.** It had a 10 MB limit with a single
@@ -123,16 +149,17 @@ user-facing — no file paths or source-level jargon.
   defects were both found on the IC-9700 over LAN. The band enumeration was
   re-run against the IC-9700 after the fix and still reports all three of its
   bands.
+- **The teardown and reconnection work was bench-run on the IC-7760**, in the
+  scenario it was written for: a bad password, corrected, then Reset Radio Ports.
+  The log shows the teardown taken by its new single owner -- "authentication
+  rejected by the radio" -- and the radio fully connected with its CI-V stream open
+  eighty-one seconds later. The status strip was verified in the same session.
 - **One thing is still owed on that hardware:** a fresh soak of the new timer
-  thread on the IC-7760. Five keepalive and watchdog handlers inside it are
-  running for the first time -- they had never once executed before -- so the
-  thing to watch is a "CI-V data timeout" appearing during normal operation.
-- **The change that stops a radio-initiated teardown wedging shutdown or
-  reconnect has not been on a radio at all.** It landed the same day as this
-  release and is pinned by a test that drives real UDP through a real listener
-  thread, measured failing against the defect it fixes. That is not a radio.
-- **The menu and keyboard changes are verified on Windows only.** They have not
-  been built or run on Linux (gtk2), and nobody has run them on macOS.
+  thread on the IC-7760. Five keepalive and watchdog handlers inside it are running
+  for the first time -- they had never once executed before -- so the thing to watch
+  is a "CI-V data timeout" appearing during normal operation.
+- **The menu, keyboard and status-strip changes are verified on Windows only.**
+  They have not been built or run on Linux (gtk2), and nobody has run them on macOS.
 
 ### 5.0.22 (2026-09-24) - NY4I
 
