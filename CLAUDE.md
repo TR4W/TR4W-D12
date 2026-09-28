@@ -413,6 +413,16 @@ broke, but the search path is no longer the guard it describes.
 aarch64. Anything in this file or in `docs/` that says the port "has not been attempted", or that a
 Linux compile is blocked on `VC.pas`, is stale: `VC.pas` uses `LCLType`, not `Windows`.
 
+**TO VERIFY A PLATFORM, RUN THE WORKFLOW. DO NOT SSH IN AND BUILD BY HAND.**
+
+```powershell
+gh workflow run release.yml          # all three platforms, in parallel, NO release created
+```
+
+The commands below are what that workflow runs. Reach for them when you are already ON one of those
+machines and diagnosing something — not as the way to answer "does this build on Linux". See
+[Lints gate the build](#lints-gate-the-build--from-one-place) for why, and for how to watch the run.
+
 ```sh
 sh tr4w/build/build-unix.sh            # every stage; build-linux.sh / build-mac.sh wrap it
 sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
@@ -453,7 +463,16 @@ sh tr4w/build/build-unix.sh --list     # what the stages are, and stop
 
 ### ~~`Lint-LinuxCompile`~~ — RETIRED 2026-09-11, and cross-compiling is not how this is checked
 
-NY4I: *"we do not cross-compile. we use ssh linux-build-ci and mac-ci to build on a native system."*
+NY4I, **2026-09-11**: *"we do not cross-compile. we use ssh linux-build-ci and mac-ci to build on a
+native system."*
+
+**THE FIRST HALF STILL HOLDS; THE SECOND IS SUPERSEDED (2026-09-28).** We still do not
+cross-compile to check. But the checking no longer happens over ssh — those machines are CI runners
+now, so `gh workflow run release.yml` builds all three platforms on them in parallel and creates no
+release. NY4I: *"that was before self-hosted running system and github ci builds were used."* See
+[Lints gate the build](#lints-gate-the-build--from-one-place) for the recipe. The quote is kept
+rather than deleted because it was right when he said it, and because the reason it was right — a
+Windows-hosted cross-compile is the weaker check — is the part that did not change.
 
 **A Windows-hosted cross-compile was always the weaker check**, and this file already recorded why:
 it inherits case-insensitive unit lookup from its host, which is how `uCTYDAT.PAS` passed the lint
@@ -482,8 +501,42 @@ PreBuildEvent, so it gated msbuild and nothing else; an FPC build saw none of th
 editing that one array.
 
 **A WINDOWS GATE IS A GUESS UNTIL A COMPILER DISAGREES**, and the compiler that
-settles it is a NATIVE one. Build on `linux-build-ci` and `mac-ci`; that is the
-check (NY4I, 2026-09-11).
+settles it is a NATIVE one. **RUN THE WORKFLOW -- DO NOT SSH IN TO BUILD.**
+
+```powershell
+gh workflow run release.yml          # all three platforms, no release created
+gh run list --workflow release.yml --limit 1
+gh run watch <run-id>
+```
+
+NY4I, 2026-09-28: *"that was before self-hosted running system and github ci
+builds were used. audit any info about building and ensure all agents are aware
+of ci GH process."* ~~*"we use ssh linux-build-ci and mac-ci to build on a native
+system"*~~ (2026-09-11) was right when he said it and is **superseded**: the same
+machines are now CI runners, so the workflow reaches them in parallel, in the
+environment a release actually uses, and a hand-build over ssh is slower and
+proves less.
+
+**A `workflow_dispatch` run DELIBERATELY CREATES NO RELEASE** -- the release
+job's `if:` requires `github.event_name == 'push'`, and `release.yml` says so in
+terms. So dispatching it has no side effect; there is nothing to clean up and
+nothing to un-publish.
+
+**NEVER pre-flight a native build immediately before tagging.** The tag does
+exactly that, on the same runners. Twenty minutes were wasted that way on
+2026-09-28, minutes before the tag.
+
+**ssh to `linux-ci-build` / `mac-ci` IS STILL RIGHT FOR DIAGNOSIS** -- reading a
+log, probing hardware, an interactive or destructive experiment, anything that
+needs a machine rather than a build. That is not the routine check, and the
+distinction is sharp: the Icom band work and the keychain investigation both
+required a real session and neither was a build.
+
+**AND NOTHING BUILDS ON AN ORDINARY PUSH TO `main`.** `release.yml` triggers on a
+`v[0-9]*.*.*` tag and on `workflow_dispatch`, nothing else; `version-guard.yml`
+runs on every push and PR and **builds nothing** -- its one job parses
+`Version.pas`. So a dispatch is not a convenience over CI, it IS the CI build for
+work that is not being tagged.
 
 `tools/Compile-Linux.ps1 <unit>.pas` still cross-compiles one unit for
 x86_64-linux from Windows and is useful for a quick local answer, but it is no
@@ -1187,18 +1240,74 @@ anywhere, and the two statements that need a widget set — `Application.OnExcep
 `Application.ShowException` — are `src/ui/lcl/uCrashLogLCL.pas`. A program with an LCL calls
 `InstallCrashLogLCL`, which installs both.
 
-~~`tr4wserver` calls `InstallCrashLog` and now gets crash logging, which it never had.~~
-**IT DOES NOT, AND THAT SENTENCE WAS NEVER TRUE** (measured 2026-09-27).
-`InstallCrashLog` has **no live caller anywhere in this tree** -- every occurrence is its
-declaration, its implementation, or a comment, and the only live installation is
-`uProgramMain`'s `InstallCrashLogLCL`. So the server LINKS the reporter -- `uCrashLog` reaches
-it through `tr4wserverUnit` -> `TF`, and the Darwin server binary carries 45 of its symbols --
-but nothing installs the `ExceptProc` hook, so **a `tr4wserver` crash still produces nothing.**
-`uCrashLog`'s `initialization` only creates a critical section.
+**A CRASH REPORT NAMES THE BUILD IT CAME FROM ON BOTH PLATFORMS NOW, AND THE WINDOWS ANSWER IS
+NOT A CODEVIEW GUID.** The obvious analogue of Darwin's `LC_UUID` is the PE debug directory's
+`RSDS` record -- a GUID plus an age. **It does not exist in anything this tree builds:**
+`IMAGE_DIRECTORY_ENTRY_DEBUG` is `rva 0 size 0` in `target/tr4w.exe`, in `build-out`'s
+`tr4w_fpc.exe` and in `tr4wserver.exe`, because FPC emits DWARF or stabs and never CodeView. A
+reader looking for one would have reported "not found" on every build for ever.
 
-Fixing it is one line plus a gate to keep it fixed, and it is **not done**: the reporter is
-ready and waiting, including the Mach-O UUID line added the same day. Whoever adds the call
-should also decide what the server writes, since it has no `tr4w.log` of the application's.
+What the linker actually writes is a **`.gnu_debuglink`** section: the `.dbg` file's NAME and a
+**CRC32 of its contents**, which is the value FPC's own line-info reader checks. `uCrashLog`
+logs it from `ReportSymbolState` at startup, verified three ways against `objdump -s -j
+.gnu_debuglink` and `zlib.crc32` of the actual `.dbg`. Use it to pick the right
+`tr4w-<version>.dbg` out of an archive **before** sending one to an operator -- two builds of
+one version have different CRCs. Unlike `atos` on Darwin, a wrong `.dbg` here is **rejected**
+rather than resolved wrongly, so the CRC buys the choice, not the safety.
+
+**IT IS READ FROM THE FILE, NOT THE MAPPED IMAGE, AND THAT IS NOT A SHORTCUT.** A section whose
+name is too long for its eight name bytes carries only `/<offset>` there, and the COFF string
+table that offset indexes **lies in no section**, so it is never mapped and the name cannot be
+recovered from memory at all. `TFileStream` reads it -- no raw Win32 call, so there is nothing
+to justify.
+
+**And the reporter's own lines were invisible until 2026-09-27.** A 642 MB `tr4w.log` from an
+ordinary session contained **zero `[CRASH]` lines**: Log4D's root defaults to `Error` and
+`DEBUG LOG LEVEL` is applied to the root much later, so `InstallCrashLog`'s confirmation and the
+whole of `ReportSymbolState` had never once been written. `InstallCrashLog` now sets its own
+subtree's level, which also means **a crash report is no longer silenced by `DEBUG LOG LEVEL`**
+-- the intent the unit already claimed for its `Fatal` lines.
+
+~~`tr4wserver` calls `InstallCrashLog` and now gets crash logging, which it never had.~~
+~~**IT DOES NOT, AND THAT SENTENCE WAS NEVER TRUE** (measured 2026-09-27) -- `InstallCrashLog`
+has no live caller anywhere in this tree.~~ **FIXED THE SAME DAY.** Both retractions are kept
+because the first claim was believed for weeks and the second for hours.
+
+**`tr4wserver` NOW INSTALLS IT, AND IT CALLS `InstallCrashLogLCL`, NOT `InstallCrashLog`.**
+The server is **not a console program** -- that premise was stale in this file, in
+`uCrashLogLCL`'s own header and in `uProgramMain`'s comment, all three now corrected. It has
+had a widget set since 2026-09-06: `tr4wserver.lpr` uses `Interfaces`, `Forms` and `Dialogs`,
+its window is a streamed `.lfm`, and `Get-SearchPaths.ps1` gives the **Server** target
+`src/ui/lcl` and the LCL units, saying so in its own header. `InstallCrashLog` alone would have
+installed **half** the reporting, because the LCL never lets a fault raised in its own
+event-handler code reach `ExceptProc`.
+
+**WHERE A SERVER CRASH GOES: `tr4wserver.log`, and no new file was needed.**
+`InitServerLogger` configures the **root** logger with this program's appender, and
+`uCrashLog` writes through `'TR4WDebugLog.CrashLog'`, which is additive and propagates to it.
+Two programs writing one `tr4w.log` would have been its own defect; nothing does.
+
+**WHEN: in the program body, after the single-instance lock and before
+`Application.Initialize`.** `InitServerLogger` moved out of `ServerStartUp` to make that
+possible, and both halves of the placement are load-bearing -- after the lock, because a second
+instance must not open the shared log; before `Application.Initialize`, because `ServerStartUp`
+does not run until the form has been created and shown, and this program has already exited
+twice with no window and nothing in any log.
+
+**`Lint-CrashLogInstalled` IS THE GATE, and the reason it exists is that nothing failed while
+the call was missing.** It reads the source and asserts a live -- not commented-out -- install
+call per shipping program, resolving one level through the `uses` clause (the application
+installs from `uProgramMain`). It fails closed: no `.lpr` found, a named program missing,
+`uCrashLog.pas` missing, or an unclassified `.lpr` outside `test/`, `tools/`, `build/` and
+`docs/` each **fail** rather than pass quietly.
+
+**THE UNIT-TEST BINARY IS REQUIRED TO INSTALL IT TOO, AND NOT FOR CRASH REPORTING.**
+The lint's first draft listed it as must-NOT-install and was wrong:
+`uTestStatusAndNotice.EnsureMainForm` calls `InstallCrashLog` on purpose, because
+**`InstallCrashLog` is what records the main thread id**, so `OnMainThread` is false everywhere
+until it runs -- every `uMainForm` guard reports "off the main thread",
+`SetElementText` defers every write and `SetStatusText` drops every one, silently. Something
+that looks purely diagnostic owns a fact the UI layer reads.
 
 The `{$IFDEF FPC}` that used to guard the LCL half was on the **wrong axis** and could not have
 helped: it asks which *compiler*, when the question is which *program* has a widget set. Both are

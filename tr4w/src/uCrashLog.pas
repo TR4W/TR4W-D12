@@ -208,6 +208,13 @@ uses
    {$IFDEF WINDOWS}
    exeinfo,    (* GetModuleByAddr -- RTL, and already linked here: it is what
                  the line-info reader uses to locate the running module. *)
+   Classes,    (* TFileStream -- MainImageDebugLink reads the PE header out of
+                 the file on disk, because the COFF string table that holds a
+                 long section name is in no section and so is never mapped.
+                 The FPC class rather than Windows.ReadFile, which is the
+                 example CLAUDE.md gives for this exact choice. WINDOWS-only
+                 deliberately: nothing on the Unix side needs it, and a crash
+                 reporter should carry the smallest graph it can. *)
    {$ENDIF}
    (* NO Windows. The one call was GetCurrentProcessId; SysUtils declares
      GetProcessID for every platform and returns the same number.
@@ -519,6 +526,386 @@ begin
       on E: Exception do
          begin
          aWhy := 'exception reading the Mach-O header: ' + E.Message;
+         end;
+   end;
+end;
+{$ENDIF}
+
+{$IFDEF WINDOWS}
+(* WHICH BUILD THIS IS, ON WINDOWS -- AND IT IS NOT A CODEVIEW GUID.
+
+  The Darwin half above logs LC_UUID because a .dSYM is bound to one exact
+  binary by it.  The obvious Windows analogue is the PE debug directory's
+  CodeView RSDS record: a GUID plus an age, which is what identifies a .pdb.
+
+  THERE IS NO SUCH RECORD IN ANYTHING THIS TREE BUILDS, AND THAT WAS MEASURED
+  BEFORE THIS WAS WRITTEN.  IMAGE_DIRECTORY_ENTRY_DEBUG is rva 0 size 0 in
+  target\tr4w.exe, in build-out's tr4w_fpc.exe and in tr4wserver.exe -- FPC
+  emits DWARF or stabs and never CodeView, so a reader looking for an RSDS
+  record would report "not found" on every build for ever.  A field that is
+  always absent is exactly the shape this unit refuses elsewhere: it cannot be
+  told apart from a field we failed to parse.
+
+  WHAT THE LINKER ACTUALLY WRITES IS A .gnu_debuglink SECTION: the NAME of the
+  separate debug file -Xg produced, and a CRC32 OF THAT FILE'S CONTENTS.  It is
+  the same kind of answer the UUID gives -- an exact equality test naming one
+  build out of many -- and it is the value FPC's own line-info reader checks
+  before it will use a .dbg at all.
+
+  IT IS NOT THE SAME JOB THE UUID DOES, AND THE DIFFERENCE MATTERS.
+  ProbeSymbolLine below already reports whether the .dbg SITTING BESIDE THIS
+  BINARY belongs to it, because the RTL validates the link and degrades to raw
+  addresses rather than resolving against the wrong build -- the silent
+  wrong-answer failure atos has on Darwin does not happen here.  The CRC
+  answers the question that comes BEFORE that one: given an archive of .dbg
+  files from several builds of one version, WHICH ONE do we send the operator.
+  Without it that is trial and error against a machine we do not have.
+
+  NO RAW WIN32 CALL, AND THE REASON IS NOT TIDINESS.  The Mach-O side had to
+  import dyld because the load commands exist only in the mapped image.  Here
+  the opposite holds: a section whose name is too long for its eight name bytes
+  carries only '/<offset>' there, and the COFF STRING TABLE THAT OFFSET INDEXES
+  LIES IN NO SECTION, so it is not mapped at run time and the name cannot be
+  recovered from memory at all.  The file has to be read either way -- and
+  TFileStream reads it, which is the very example CLAUDE.md gives for preferring
+  the FPC class over Windows.ReadFile.
+
+  IT RUNS AT STARTUP, NOT IN A DYING PROCESS.  ReportSymbolState is called from
+  InstallCrashLog, so opening a file here is ordinary work on a healthy process.
+  The result is one line in the log that every later crash report in the same
+  file is read against. *)
+const
+   IMAGE_DOS_SIGNATURE = $5A4D;         (* 'MZ' *)
+   IMAGE_NT_SIGNATURE  = $00004550;     (* 'PE' and two NULs *)
+   (* A COFF symbol record.  The string table begins after the last one, which
+     is the only way to find it -- nothing points at it directly. *)
+   COFF_SYMBOL_SIZE    = 18;
+   DEBUGLINK_SECTION   = '.gnu_debuglink';
+   (* A file name and a CRC.  Anything larger is not the section we think it
+     is, and reading it would be trusting a length out of a file. *)
+   DEBUGLINK_MAX_BYTES = 64 * 1024;
+   (* A sane ceiling on how far to read looking for a long name's NUL. *)
+   COFF_NAME_MAX       = 255;
+
+type
+   (* RECORDS, AND THIS IS THE ONE EXEMPTION CLAUDE.md ALLOWS: a layout defined
+     by something outside this code, at the boundary where it is passed.  The
+     PE/COFF specification names these fields and fixes their order, and the
+     linker writes them; the record IS the interface, and changing it would be
+     changing the contract.
+
+     PACKED, DELIBERATELY.  The layout is byte-exact and SizeOf is used below to
+     step over the header and to stride the section table, so a byte of padding
+     the specification does not have would desynchronise the walk -- the same
+     class of defect as the 28-versus-32-byte Mach-O header above. *)
+   TCoffFileHeader = packed record
+      Machine:              word;
+      NumberOfSections:     word;
+      TimeDateStamp:        longword;
+      PointerToSymbolTable: longword;
+      NumberOfSymbols:      longword;
+      SizeOfOptionalHeader: word;
+      Characteristics:      word;
+   end;
+
+   TCoffSectionHeader = packed record
+      Name:                 array[0..7] of AnsiChar;
+      VirtualSize:          longword;
+      VirtualAddress:       longword;
+      SizeOfRawData:        longword;
+      PointerToRawData:     longword;
+      PointerToRelocations: longword;
+      PointerToLinenumbers: longword;
+      NumberOfRelocations:  word;
+      NumberOfLinenumbers:  word;
+      Characteristics:      longword;
+   end;
+
+(* The running executable's .gnu_debuglink: the debug file it was built to be
+  read with, and the CRC32 of that file.  False means "could not read it", and
+  aWhy then says WHY in words -- never an empty name and never a zero CRC,
+  because a blank field in a crash report reads as "this build has no symbols"
+  when what it means is "we could not parse the image".
+
+  EVERY OFFSET TAKEN OUT OF THE FILE IS BOUNDS-CHECKED BEFORE IT IS USED.  A
+  truncated or unexpected binary must produce a sentence, not a fault inside the
+  crash reporter. *)
+function MainImageDebugLink(out aName: string; out aCRC: longword;
+                            out aWhy: string): boolean;
+var
+   fs:       TFileStream;
+   dosMagic: word;
+   ntOffset: longword;
+   ntMagic:  longword;
+   coff:     TCoffFileHeader;
+   sec:      TCoffSectionHeader;
+   secBase:  int64;
+   strBase:  int64;
+   i:        integer;
+   n:        integer;
+   secName:  string;
+   longOfs:  longword;
+   body:     TBytes;
+   crcOfs:   integer;
+
+   (* The eight name bytes, which are NOT NUL-terminated when the name fills
+     them.  Low/High rather than 0..7 so the bound comes from the array. *)
+   function ShortSectionName: string;
+   var
+      k: integer;
+   begin
+      Result := '';
+      for k := Low(sec.Name) to High(sec.Name) do
+         begin
+         if sec.Name[k] = #0 then
+            begin
+            Break;
+            end;
+         Result := Result + sec.Name[k];
+         end;
+   end;
+
+   (* A NUL-terminated name at an absolute file offset, read a byte at a time so
+     a missing terminator costs COFF_NAME_MAX bytes rather than running to the
+     end of an 11 MB file.  Empty means the offset was not usable. *)
+   function NameAtOffset(aOffset: int64): string;
+   var
+      k: integer;
+      c: byte;
+   begin
+      Result := '';
+      if (aOffset <= 0) or (aOffset >= fs.Size) then
+         begin
+         Exit;
+         end;
+      fs.Position := aOffset;
+      for k := 1 to COFF_NAME_MAX do
+         begin
+         if fs.Position >= fs.Size then
+            begin
+            Break;
+            end;
+         fs.ReadBuffer(c, 1);
+         if c = 0 then
+            begin
+            Break;
+            end;
+         Result := Result + AnsiChar(c);
+         end;
+   end;
+
+begin
+   Result := False;
+   aName  := '';
+   aCRC   := 0;
+   aWhy   := '';
+   fs     := nil;
+   try
+      try
+         (* fmShareDenyNone: the loader already holds this file open, and a
+           crash reporter must not be the thing that fails on a sharing mode.
+
+           AnsiString EXPLICITLY, which is this tree's convention at exactly
+           this boundary -- uLogDatabase, uLogBinaryFile, uctydat, TF and
+           uContestFileKind all spell it the same way. Classes is compiled in
+           FPC's default mode, where `string` is AnsiString, so the conversion
+           happens either way; stating it is what CLAUDE.md means by converting
+           at the boundary rather than letting the assignment do it silently.
+
+           IT IS A NARROWING AND THE LIMIT IS REAL: an executable path holding a
+           character outside the ANSI codepage -- a user name with a diacritic --
+           would be mangled and the open would fail, which this reports as a
+           reason rather than a fault. That is a property of every file open in
+           this tree and not of this one, so it is not unilaterally changed in a
+           crash reporter. *)
+         fs := TFileStream.Create(AnsiString(ParamStr(0)),
+                                  fmOpenRead or fmShareDenyNone);
+
+         (* 64 bytes is the smallest DOS header that can carry e_lfanew at $3C. *)
+         if fs.Size < 64 then
+            begin
+            aWhy := SysUtils.Format('%s is %d bytes, too small to be a PE image',
+                                    [ExtractFileName(ParamStr(0)), fs.Size]);
+            Exit;
+            end;
+
+         (* CHECKED, NOT ASSUMED -- the other half of the FPC OpenMachO32PPC
+           defect the Darwin comment above describes.  A reader that skips the
+           magic does not fail, it finds nothing, and "nothing" is
+           indistinguishable from a real answer of none. *)
+         fs.Position := 0;
+         fs.ReadBuffer(dosMagic, SizeOf(dosMagic));
+         if dosMagic <> IMAGE_DOS_SIGNATURE then
+            begin
+            aWhy := SysUtils.Format('unexpected DOS magic $%s (expected $%s)',
+                       [SysUtils.IntToHex(dosMagic, 4),
+                        SysUtils.IntToHex(IMAGE_DOS_SIGNATURE, 4)]);
+            Exit;
+            end;
+
+         fs.Position := $3C;
+         fs.ReadBuffer(ntOffset, SizeOf(ntOffset));
+         if (ntOffset = 0)
+            or (int64(ntOffset) + 4 + SizeOf(TCoffFileHeader) > fs.Size) then
+            begin
+            aWhy := SysUtils.Format('e_lfanew $%s does not leave room for a COFF '
+                                    + 'header in %d bytes',
+                       [SysUtils.IntToHex(ntOffset, 8), fs.Size]);
+            Exit;
+            end;
+
+         fs.Position := ntOffset;
+         fs.ReadBuffer(ntMagic, SizeOf(ntMagic));
+         if ntMagic <> IMAGE_NT_SIGNATURE then
+            begin
+            aWhy := SysUtils.Format('unexpected PE signature $%s (expected $%s)',
+                       [SysUtils.IntToHex(ntMagic, 8),
+                        SysUtils.IntToHex(IMAGE_NT_SIGNATURE, 8)]);
+            Exit;
+            end;
+
+         fs.ReadBuffer(coff, SizeOf(coff));
+         if coff.NumberOfSections = 0 then
+            begin
+            aWhy := 'the COFF header reports no sections';
+            Exit;
+            end;
+
+         (* The section table follows the optional header, whose SIZE is
+           declared rather than implied -- which is why this is read out of the
+           header instead of being a constant per bitness. *)
+         secBase := int64(ntOffset) + 4 + SizeOf(TCoffFileHeader)
+                    + coff.SizeOfOptionalHeader;
+         if secBase + int64(coff.NumberOfSections) * SizeOf(TCoffSectionHeader)
+            > fs.Size then
+            begin
+            aWhy := SysUtils.Format('%d section headers do not fit in %d bytes',
+                                    [coff.NumberOfSections, fs.Size]);
+            Exit;
+            end;
+
+         (* NOTHING POINTS AT THE STRING TABLE.  It begins immediately after the
+           symbol table, so its position has to be computed -- and when there is
+           no symbol table at all a long section name cannot be resolved, which
+           is skipped rather than guessed at. *)
+         strBase := int64(coff.PointerToSymbolTable)
+                    + int64(coff.NumberOfSymbols) * COFF_SYMBOL_SIZE;
+
+         for i := 0 to coff.NumberOfSections - 1 do
+            begin
+            fs.Position := secBase + int64(i) * SizeOf(TCoffSectionHeader);
+            fs.ReadBuffer(sec, SizeOf(sec));
+
+            secName := ShortSectionName;
+
+            (* '/<decimal>' is a name too long for the eight bytes, held in the
+              string table instead.  .gnu_debuglink is fourteen characters, so
+              in practice it is ALWAYS this form -- the short spelling is still
+              accepted below so the walk does not depend on that staying true. *)
+            if (Length(secName) > 1) and (secName[1] = '/') then
+               begin
+               if coff.PointerToSymbolTable = 0 then
+                  begin
+                  Continue;
+                  end;
+               (* AnsiString EXPLICITLY, as above -- and here the narrowing
+                 provably loses nothing: secName was built one AnsiChar at a
+                 time out of the eight name bytes, so it cannot hold anything
+                 outside the ANSI range, and this branch has already established
+                 that it begins with '/'. StrToIntDef rather than TF.StrToInt,
+                 which is lenient and returns 0 for rubbish without saying so --
+                 the default here does the same thing deliberately, and the
+                 Continue below treats it as "not a name we can resolve". *)
+               longOfs := longword(StrToIntDef(AnsiString(Copy(secName, 2,
+                                               Length(secName) - 1)), 0));
+               if longOfs = 0 then
+                  begin
+                  Continue;
+                  end;
+               secName := NameAtOffset(strBase + int64(longOfs));
+               end;
+
+            if secName <> DEBUGLINK_SECTION then
+               begin
+               Continue;
+               end;
+
+            if (sec.SizeOfRawData < 8)
+               or (sec.SizeOfRawData > DEBUGLINK_MAX_BYTES) then
+               begin
+               aWhy := SysUtils.Format('%s is %d bytes, which cannot hold a name '
+                                       + 'and a CRC',
+                                       [DEBUGLINK_SECTION, sec.SizeOfRawData]);
+               Exit;
+               end;
+            if (sec.PointerToRawData = 0)
+               or (int64(sec.PointerToRawData) + sec.SizeOfRawData > fs.Size) then
+               begin
+               aWhy := SysUtils.Format('%s data at $%s runs past the end of %d '
+                                       + 'bytes',
+                          [DEBUGLINK_SECTION,
+                           SysUtils.IntToHex(sec.PointerToRawData, 8), fs.Size]);
+               Exit;
+               end;
+
+            SetLength(body, sec.SizeOfRawData);
+            fs.Position := sec.PointerToRawData;
+            fs.ReadBuffer(body[0], Length(body));
+
+            (* The NUL-terminated file name, then the CRC at the next four-byte
+              boundary after it -- the GNU layout.  THE PADDING IS WHY THE CRC
+              CANNOT SIMPLY BE TAKEN FROM THE END OF THE SECTION: the raw data
+              is padded out to file alignment, so the last four bytes are
+              zeroes.  Reading them instead is how a first draft of this
+              reported a CRC of 00000000 for a binary whose real one is
+              8D35FAB9. *)
+            n := 0;
+            while (n < Length(body)) and (body[n] <> 0) do
+               begin
+               aName := aName + AnsiChar(body[n]);
+               Inc(n);
+               end;
+            if aName = '' then
+               begin
+               aWhy := DEBUGLINK_SECTION + ' names no file';
+               Exit;
+               end;
+
+            crcOfs := ((Length(aName) + 1 + 3) div 4) * 4;
+            if crcOfs + 4 > Length(body) then
+               begin
+               aWhy := SysUtils.Format('%s holds "%s" but no room for a CRC at '
+                                       + 'offset %d of %d',
+                          [DEBUGLINK_SECTION, aName, crcOfs, Length(body)]);
+               aName := '';
+               Exit;
+               end;
+
+            (* Assembled byte by byte rather than cast, so the endianness is
+              stated here instead of inherited from the host. *)
+            aCRC := longword(body[crcOfs])
+                    or (longword(body[crcOfs + 1]) shl 8)
+                    or (longword(body[crcOfs + 2]) shl 16)
+                    or (longword(body[crcOfs + 3]) shl 24);
+            Result := True;
+            Exit;
+            end;
+
+         aWhy := SysUtils.Format('no %s section among %d sections -- this build '
+                                 + 'carries no separate debug file',
+                                 [DEBUGLINK_SECTION, coff.NumberOfSections]);
+      finally
+         fs.Free;
+      end;
+   except
+      (* A crash reporter must not crash.  Anything unexpected becomes a
+        reported reason, exactly as a failed lookup does. *)
+      on E: Exception do
+         begin
+         Result := False;
+         aName  := '';
+         aCRC   := 0;
+         aWhy   := 'exception reading the PE header: ' + E.Message;
          end;
    end;
 end;
@@ -1102,10 +1489,40 @@ procedure ReportSymbolState;
 var
    resolved, dbg: string;
    line: integer;
+   {$IFDEF WINDOWS}
+   linkName: string;
+   linkCRC:  longword;
+   linkWhy:  string;
+   {$ENDIF}
 begin
    // The build itself, so an archived .dbg can be matched to this log.
    CrashLogger.Info('[CRASH] TR4W %s built %s %s',
                [TR4W_CURRENTVERSION_NUMBER, {$I %DATE%}, {$I %TIME%}]);
+
+   (* WHICH .dbg THIS BUILD WANTS, before saying whether one is present.
+     See MainImageDebugLink for why this is a CRC32 and not a CodeView GUID,
+     and for what it answers that the probe below does not. *)
+   {$IFDEF WINDOWS}
+   if MainImageDebugLink(linkName, linkCRC, linkWhy) then
+      begin
+      CrashLogger.Info('[CRASH] symbol file link: %s crc32 %s -- the .dbg this '
+                  + 'binary was linked against. Choose an archived '
+                  + 'tr4w-<version>.dbg by matching that CRC32 (7z h '
+                  + '-scrcCRC32 <file>, or zlib.crc32) rather than by version, '
+                  + 'which two builds share. FPC validates the link itself, so '
+                  + 'a wrong .dbg costs the line numbers and never invents '
+                  + 'them.',
+                  [linkName, SysUtils.IntToHex(linkCRC, 8)]);
+      end
+   else
+      begin
+      CrashLogger.Info('[CRASH] symbol file link UNREADABLE (%s) -- this build '
+                  + 'cannot be matched to a .dbg by checksum. That is NOT a '
+                  + 'statement that it has no symbols; the line below says '
+                  + 'whether symbols resolve.',
+                  [linkWhy]);
+      end;
+   {$ENDIF}
 
    line := ProbeSymbolLine(resolved);
    dbg  := ChangeFileExt(ParamStr(0), '.dbg');
@@ -1140,6 +1557,31 @@ begin
       end;
    GInstalled := True;
    GMainThreadId := PtrUInt(GetCurrentThreadId);
+
+   (* THE REPORTER'S OWN LINES MUST NOT BE GATED BY AN ORDERING ACCIDENT.
+
+     Log4D's root logger defaults to Error, and DEBUG LOG LEVEL is applied to
+     the root LATER -- uCFG does it once the configuration file has been read,
+     which is a long way after this runs. 'TR4WDebugLog.CrashLog' sets no level
+     of its own, so until that moment its effective level is Error and every
+     Info line below is discarded.
+
+     MEASURED, WHICH IS THE ONLY REASON THIS IS HERE: a 642 MB tr4w.log from an
+     ordinary session contained ZERO '[CRASH]' lines. The installation record
+     and the whole of ReportSymbolState -- the two things a reader needs before
+     trusting any address in that file -- had never once been written, on any
+     build, since the unit was created.
+
+     So this subtree carries its own level, which also settles it for
+     tr4wserver, whose hierarchy configures nothing for this branch at all. The
+     output is bounded: two installation lines, the symbol state, a crash
+     report, and the off-main-thread warnings, which dedupe themselves.
+
+     IT DOES MEAN A CRASH REPORT IS NO LONGER SILENCED BY DEBUG LOG LEVEL, and
+     that is the intent the unit already claimed -- WriteCrashContext writes at
+     Fatal precisely so it is emitted "whatever DEBUG LOG LEVEL says", which was
+     true of Fatal and not of anything else here. *)
+   CrashLogger.Level := All;
 
    GPreviousExceptProc := ExceptProc;
    ExceptProc := @CatchUnhandledException;

@@ -203,6 +203,14 @@ $lints = @(
    # dialog the next time the IDE opens -- once per orphan. NY4I hit seventeen
    # of them on 2026-09-07, accumulated over months. Fix with -Fix.
    @{ Name = 'Lint-ProjectFiles';  Arg = $null;    NeedsFpc = $false }
+
+   # LINKING THE CRASH REPORTER IS NOT INSTALLING IT, and for months tr4wserver
+   # did only the first: uCrashLog reached it through TF, the Darwin binary
+   # carried 45 of its symbols, and NOTHING CALLED InstallCrashLog anywhere in
+   # the tree -- so a server crash produced no output at all. CLAUDE.md asserted
+   # the opposite, which is why it lasted: a missing call breaks no build, no
+   # test and no corpus run. This is the only thing that disagrees.
+   @{ Name = 'Lint-CrashLogInstalled'; Arg = $Tr4wDir; NeedsFpc = $false }
 )
 
 $failed  = 0

@@ -1366,10 +1366,16 @@ begin
    // fault. Until now an unhandled exception left tr4w.log ending in the
    // ordinary unit finalizations -- indistinguishable from a clean exit --
    // so a crash report could only say that the program had closed.
-   // The LCL entry point, which installs the RTL hook too.  This
-   // program has a widget set; tr4wserver does not and calls
-   // InstallCrashLog directly.  See the uCrashLogLCL header for
-   // why that is a second unit and not a define.
+   // The LCL entry point, which installs the RTL hook too.
+   //
+   // THE SECOND CLAUSE HERE WAS WRONG TWICE OVER and is corrected
+   // (2026-09-27): it said "tr4wserver does not [have a widget set]
+   // and calls InstallCrashLog directly".  The server HAS had a
+   // widget set since 2026-09-06, and it called nothing at all --
+   // InstallCrashLog had no live caller anywhere in the tree, so a
+   // server crash produced no output.  It calls InstallCrashLogLCL
+   // now, from its own program body.  See the uCrashLogLCL header
+   // for why the LCL half is a second unit and not a define.
    InstallCrashLogLCL;
 
    (* A LOG FILE TR4W CANNOT OPEN IS NOT A REASON TO STOP.  The appender used to

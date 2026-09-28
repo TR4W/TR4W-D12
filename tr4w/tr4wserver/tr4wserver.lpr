@@ -34,6 +34,21 @@ uses
   utils_text,     // SetCharBufferBytes -- StrPLCopy without the pointer
   uAppPaths,      // where written files go, per platform
   uServerForm,    // the window, at last a designed one
+  (* CRASH REPORTING, AND THE LCL ENTRY POINT IS THE RIGHT ONE HERE.
+
+    THIS PROGRAM HAS A WIDGET SET. It is not the console program CLAUDE.md and
+    uCrashLogLCL's own header still describe -- it uses Interfaces, Forms and
+    Dialogs above, its window is a streamed .lfm, and Get-SearchPaths.ps1 gives
+    the Server target src\ui\lcl and the LCL units, saying in its own header
+    that "tr4wserver is an LCL application now". So InstallCrashLog alone would
+    install HALF the reporting: the LCL catches exceptions raised inside its own
+    control and event-handler code and never lets them reach ExceptProc, which
+    is exactly where a fault in frmServer would go.
+
+    uCrashLog itself stays free of the LCL, which is the invariant that matters
+    and is unaffected by this: the split is between the two UNITS, not between
+    the two programs. *)
+  uCrashLogLCL,
   (* LCLType. THE COMMENT THAT STOOD HERE WAS WRONG, AND IT WAS WRITTEN THE
     SAME DAY (2026-09-08).
 
@@ -98,7 +113,11 @@ begin
 //        SendMessage(hwnddlg, WM_SETICON, ICON_SMALL, LoadIcon(0, IDI_APPLICATION));
         SetServerVersion(FullServerVersion);
 
-        InitServerLogger;
+        (* InitServerLogger USED TO BE THE FIRST THING HERE, and it is now the
+          first thing in the program body instead -- see the note there. It had
+          to move so the crash reporter could be installed the moment the log
+          exists rather than after the window had already been built and shown,
+          which is where the faults this program has actually had were raised. *)
         (* THE SETTINGS, THROUGH TIniFile.
 
           Was GetPrivateProfileInt and GetPrivateProfileStringA -- Win32 API on
@@ -318,6 +337,42 @@ begin
         end;
   end;
 
+  (* THE LOG, THEN THE CRASH REPORTER, BEFORE ANYTHING THAT CAN FAULT.
+
+    WHERE A tr4wserver CRASH NOW GOES: tr4wserver.log, and nowhere else. It
+    needs no new file and no second writer on the application's tr4w.log --
+    InitServerLogger configures the ROOT logger with this program's appender
+    (TLogBasicConfigurator.Configure), and uCrashLog writes through
+    'TR4WDebugLog.CrashLog', which is additive and propagates to that same root
+    appender. One file, beside the executable on Windows and under the user's
+    log directory elsewhere, which is the file an operator is already asked for.
+
+    WHY HERE AND NOT IN ServerStartUp, where InitServerLogger used to sit.
+    Two reasons, both load-bearing:
+
+      - AFTER THE LOCK. A second instance must not open the shared log, which is
+        the whole reason the lock is taken first; that is the same rule
+        EarlyTrace exists to respect in the application.
+
+      - BEFORE Application.Initialize. ServerStartUp does not run until the form
+        has been created and shown, so installing there would leave LFM
+        streaming, widgetset start-up and frmServer.Show unreported -- and those
+        are not hypothetical gaps: this program has already exited twice with no
+        window and nothing in any log (a missing DIALOG resource, then a nil
+        GStack), which is what the comments below and in ServerStartUp record.
+
+    uCrashLog captures the main thread at install time, so it must run on the
+    thread that goes on to call Application.Run. It does: this is the program
+    body.
+
+    UNTIL NOW NOTHING INSTALLED IT AT ALL. The reporter has been LINKED into
+    this program for months -- tr4wserverUnit -> TF -> uCrashLog -- and CLAUDE.md
+    claimed the call existed. It did not: InstallCrashLog had no live caller
+    anywhere in the tree, so a tr4wserver crash produced nothing. Nothing
+    failed, which is why it survived; Lint-CrashLogInstalled is the gate that
+    stops it coming back. *)
+  InitServerLogger;
+  InstallCrashLogLCL;
 
   Application.Initialize;
   Application.CreateForm(TfrmServer, frmServer);

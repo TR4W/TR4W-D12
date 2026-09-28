@@ -18,6 +18,20 @@ unit uCrashLogLCL;
   three days: that search path is the only guard on the boundary, and it fires
   only when someone runs a full build.
 
+  THE SERVER IS NOT THAT CONSOLE PROGRAM ANY MORE, AND CALLS THIS UNIT.
+  tr4wserver became an LCL application on 2026-09-06 -- its window is a streamed
+  form, its .lpr uses Interfaces and Forms, and Get-SearchPaths.ps1 gives the
+  Server target the LCL deliberately. So since 2026-09-27 it calls
+  InstallCrashLogLCL like the application does, because the LCL swallows faults
+  raised inside its own event-handler code and frmServer's handlers are exactly
+  such code.
+
+  THE SPLIT IS STILL RIGHT, AND THE REASON IS NOW THE GENERAL ONE RATHER THAN
+  THIS ONE PROGRAM: uCrashLog must link anywhere -- the unit tests, the bench
+  probes, tr4wconvert, anything a future console tool needs -- and keeping the
+  two Application statements out of it is what guarantees that. It is no longer
+  the last program without a widget set that the argument rests on.
+
   It had an IFDEF FPC around it -- spelled without its braces here, because a
   directive written inside a brace comment closes the comment -- which could
   not have helped. That asks which
@@ -37,8 +51,9 @@ interface
 
 { Installs BOTH hooks: calls uCrashLog.InstallCrashLog for the RTL one, then
   adds the LCL one. Call this instead of InstallCrashLog from any program that
-  has a widget set -- one call site, and no way to end up with a GUI program
-  that quietly has only half its crash reporting.
+  has a widget set -- and both programs this tree ships have one, so both call
+  THIS: there is no way to end up with a GUI program that quietly has only half
+  its crash reporting.
 
   Idempotent, like the RTL half. }
 procedure InstallCrashLogLCL;
