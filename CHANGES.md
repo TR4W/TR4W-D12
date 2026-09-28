@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 6509e862 -->
+<!-- D12-CHANGELOG-BASELINE: d14cb21e -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -41,7 +41,106 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
-*Nothing yet.*
+#### Log level follows rate, not importance (`src/uIcomNetworkTransport.pas`)
+
+- **Per-packet is TRACE.** `SEND ENTER`/`SEND EXIT` fired on every UDP send. Every
+  other `Debug` line in the unit is a lifecycle event -- handshake step, state
+  transition, disconnect stage, timer retry -- so the two were the outliers. The test
+  is recorded at the site: could it fire more than once a second in normal operation?
+  Then it is `Trace`.
+- **`Sent token renewal` is DEBUG.** Its partner `Sent token ack` already was, so the
+  pair disagreed -- and the renewal is the single line an Icom LAN soak exists to see.
+- **Re-soak closed** in `docs/RADIO_BENCH_STATUS.md`: 7 h 52 m, two logins, one
+  unchanged token each, zero `CI-V data timeout`, two transport instance ids for the
+  whole run. Proven by the ABSENCE of re-logins against a ~90.6 s session expiry,
+  which is stronger evidence than a log line: a line can be wrong, a surviving
+  session cannot.
+
+#### Symbols ship, and a gate proves they survive packaging (`.github/workflows/release.yml`, `build/check-symbols.sh`, `build/build-unix.sh`, `build/full.nsi`, `FullBuild.ps1`)
+
+- **`tr4w-<version>.dbg` is a standalone release asset**, versioned because a `.dbg`
+  resolves addresses for exactly one binary.
+- **The release audit fails on a missing REQUIRED artifact.** The win-ci ones are
+  required; the Unix ones stay optional, per the 2026-09-17 ruling that a Unix
+  failure must not withhold the installer.
+- **`check-symbols.sh` runs on the shipped container** -- extracted tarball, unpacked
+  AppImage, `.dmg` mounted at an explicit mountpoint because `hdiutil` left to itself
+  appends a counter and a guessed path is a check that silently reads the wrong file.
+  Every test compares a count to a stated floor; a missing tool or an unreadable
+  binary FAILS rather than passing quietly. Proven to fail nine ways.
+- The CI step re-runs it **without `|| true`**, because `release.yml` invokes
+  `build-unix.sh` with it and a stage failing inside that invocation is invisible.
+- Four stale size numbers corrected; one was wrong by 2.6x.
+
+#### A `.dSYM` cannot help an FPC 3.2.2 backtrace on Darwin (`build/build-unix.sh`, `build/check-symbols.sh`, `build/mac-sign.sh`)
+
+- **Measured, with a control.** `-gl -gw2` with a UUID-matched `.dSYM` beside the
+  binary still prints bare addresses; so does `-gs`. The same program on Linux names
+  the unit and the line, which is what proves the probe sound and Darwin the
+  difference.
+- **Cause, from the RTL rather than by inference.** `exeinfo.pp` registers
+  `OpenMachO32PPC`/`FindSectionMachO32PPC` for every Darwin target -- a 32-bit
+  PowerPC reader, on aarch64, that answers only for `.stab` and `.stabstr`. It does
+  not check the magic: it reads a 28-byte header and returns true unconditionally, so
+  it never reports failure, it silently finds nothing.
+- **RETRACTION.** An earlier claim in this file's 5.0.23 work -- that
+  `exeinfo.pp:1735` opens `<exe>.dSYM` and matches by UUID -- was read from a
+  different FPC checkout that happens to sit on mac-ci. The RTL this build uses
+  contains zero occurrences of `dSYM`. Retracted in place in
+  `docs/INSTALLER_DESIGN.md` rather than deleted.
+- **`-gw2` stays**, for a different reason than its comment claimed: without it there
+  is no DWARF in the `.o` files for `dsymutil` to collect, so it is what keeps a
+  macOS crash resolvable by US.
+- **A latent defect in `mac-sign.sh`, found while looking at something else.** Its
+  ambiguity check counted matching LINES. Safe today only because `-p codesigning`
+  returns one row -- but the day a second keychain in the search list reaches the
+  same certificate, one identity counts as two and signing dies over a certificate
+  that is not ambiguous. It counts distinct fingerprints now; genuine ambiguity
+  still fails.
+
+#### macOS symbols ship beside the release, UUID-matched to the shipped binary (`.github/workflows/release.yml`, `build/build-unix.sh`, `build/check-symbols.sh`)
+
+- **Not in the bundle.** The composite SHA-256 of all 151 files in `TR4W.app` is
+  identical before and after; `codesign --verify`, `spctl` and `stapler validate`
+  all still return 0. Staged in `build-out/symbols/`, deliberately outside `dist/`,
+  which is what the tarball, AppImage payload and disk image are rolled from.
+- **`codesign` does not alter `LC_UUID`** -- measured, same UUID before and after
+  while the byte size changes. That is what lets a `.dSYM` built from the linked
+  binary be verified against the SHIPPED one.
+- **25 MB compressed, not 92**: 66 MB -> 18 MB and 26 MB -> 7 MB, about 3.7:1.
+  `.zip` via `ditto`, not `tar.gz` -- within 300 bytes on 18 MB, so size cannot
+  decide it; Finder expands a `.zip` on double-click and `ditto` is already this
+  tree's ruled-on tool for bundles.
+- **`symbols-<version>-<arch>.txt`** maps each binary to UUID and architecture and
+  carries the `atos` recipe. Match by UUID, never by version: `atos` given the wrong
+  `.dSYM` does not refuse, it resolves every address against the wrong build.
+- **A mismatched `.dSYM` is discarded, not published** -- no zip, no manifest row,
+  exit 1, while the other binary's good symbols still publish. The comparison is
+  `check-symbols.sh`'s own, factored onto one `uuid_match()` so the two callers
+  cannot drift.
+- `tr4wserver` gets one too: signed, shipped beside the bundle, 207 `N_OSO` entries,
+  and crash logging it lacked before the `uCrashLog` split.
+
+#### The installer is designed, not built (`docs/INSTALLER_DESIGN.md`)
+
+- **The installer decides about the machine and the payload; the setup wizard decides
+  about the station.** An installer may not write `tr4w.json`, a contest `.cfg` or
+  `tr4w.ini`, nor ask anything the wizard's Station page owns -- a callsign collected
+  at install time would satisfy the wizard's "`MyCall` empty" gate and a new station
+  would never see it.
+- **Optional symbols -- installer.** 54.7% of the Windows install is `tr4w.dbg`.
+- **Language -- recommended for the wizard.** Every catalogue is compiled into the
+  binary ("5.0 MB for twenty-two languages"), so an install-time choice selects
+  nothing and saves nothing.
+- **Data-file download -- argued against**: the app already downloads a country file
+  and names the reason on failure, and an installer would re-derive the tier rule and
+  the platform-specific writable path per platform.
+- **Disk space -- withdrawn** (NY4I). `pkgbuild` computes `installKBytes` from the
+  payload anyway, so there is no hand-maintained number to go stale.
+- **Prior art is left open** with eight questions for a survey of other macOS ham
+  packages -- including one nobody had raised: a `.pkg` has no uninstaller while NSIS
+  ships one, and nothing decides what a macOS uninstall does with the directory
+  holding the log database, the settings and the downloaded country file.
 
 ---
 

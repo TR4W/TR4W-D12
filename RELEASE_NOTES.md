@@ -22,7 +22,7 @@ Various contributors along the way
 
 ---
 
-<!-- D12-CHANGELOG-BASELINE: 6509e862 -->
+<!-- D12-CHANGELOG-BASELINE: d14cb21e -->
 
 <!--
 The marker above is what /update-changes reads to decide what is already
@@ -44,7 +44,34 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
-*Nothing yet.*
+#### Diagnostics
+
+- **The debug log is far quieter.** At DEBUG level TR4W wrote two lines for every
+  network packet sent to a radio. With two radios connected that ran to hundreds of
+  lines a second and filled 642 MB overnight -- in which the thing being diagnosed
+  did not appear at all. Per-packet detail is TRACE now; DEBUG keeps the events that
+  explain a fault. If you are asked to run at DEBUG and send a log, it is a
+  reasonable size again.
+
+- **A networked Icom's session renewal is visible at DEBUG.** It was logged only at
+  TRACE, so the one line proving the radio link is being kept alive could not be seen
+  at the level an operator is normally asked to use.
+
+- **If TR4W crashes on your Mac, the report can now be decoded.** Debug symbols for
+  the macOS build are published with each release, so a crash report you send is
+  resolvable to a source file and line instead of a list of hex addresses. The
+  application download itself is unchanged -- the symbols are a separate file that
+  only we need.
+
+- **Windows debug symbols can be downloaded on their own** from the release page, so
+  a crash report can be decoded without installing that build.
+
+#### Verified since 5.0.23
+
+- **The overnight soak that 5.0.23's notes listed as owed is done, and it passed.** An
+  IC-7760 and an IC-9700 ran connected over LAN for 7 hours 52 minutes with two
+  logins in total -- one each, in the first three seconds -- and no CI-V dropouts.
+  Before 5.0.20 that link failed roughly every 90 seconds.
 
 ---
 
