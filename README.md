@@ -88,7 +88,6 @@ gate is not a build that passed it, so the script says which.
 ```sh
 ./tools/compile-native.sh MainUnit.pas    # one unit
 ./tools/compile-native.sh --tree          # MainUnit and everything it needs
-./tools/compile-native.sh --all           # the pinned list
 ./tools/compile-native.sh --every         # a census of every unit; SLOW
 ```
 
@@ -96,6 +95,21 @@ gate is not a build that passed it, so the script says which.
 tree once -- seconds. `--every` compiles each unit independently with the cache
 cleared between them, which is minutes. What it buys for that price is finding
 units nothing reaches any more.
+
+~~`--all`~~ is **retired** (2026-09-11). It compiled a hand-maintained SUBSET
+read out of a lint that no longer exists; the flag now says so and points at
+`--tree`, which is a superset ordered by the compiler rather than by a list
+somebody had to remember to update. This README listed it as "the pinned list"
+until 2026-09-28.
+
+**AND IF THE QUESTION IS "DOES THIS BUILD ON LINUX OR macOS", THE ANSWER IS CI,
+NOT AN SSH SESSION.** These commands are for when you are already on the machine
+and looking at something. To verify a platform, run the workflow: it builds all
+three in parallel on the same runners and creates no release.
+
+```
+gh workflow run release.yml
+```
 
 ### Raspberry Pi and other ARM boards
 

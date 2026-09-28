@@ -33,6 +33,13 @@ asking `PortType`, **43 sites ask only WHAT KIND and just 4 ask WHICH PORT**.
 
 ## Measured, on real hardware
 
+**ssh TO THE RUNNER IS THE RIGHT TOOL HERE, AND THE BUILD RULE DOES NOT FORBID
+IT.** CLAUDE.md says do not ssh in to *build* -- `gh workflow run release.yml`
+does that on all three platforms in parallel, in the environment a release uses.
+It says nothing against ssh for *diagnosis*, which is what this is: a probe
+against real hardware, or a locale question, needs a machine and cannot be
+answered by a build at all.
+
 `portprobe` on `linux-ci-build` against an FTDI FT232R (2026-09-18): found
 exactly **one port among 32 `ttyS*` stubs**; built `FriendlyName` from USB
 descriptors two levels up; took `InstanceID` from the `/dev/serial/by-id` symlink

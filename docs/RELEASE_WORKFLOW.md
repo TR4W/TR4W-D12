@@ -424,20 +424,58 @@ published, prefer cutting a new version instead of force-retagging.
 
 ~~---~~
 
-## 8. Ad-hoc full builds without a release
+## 8. Ad-hoc full builds without a release -- AND THIS IS HOW YOU VERIFY A PLATFORM
 
-If you want to produce all-language installers for testing without creating a
-GitHub Release (e.g., to give Howie a build of the current master to validate
-language files):
+**REWRITTEN 2026-09-28. Every instruction in the old version of this section was
+unfollowable**: it told you to tick a "Build all language installers" box that no
+longer exists, on a branch called `master`, running `FullBuild.ps1 -AllLanguages
+-BuildInstallers` -- and neither switch exists in `FullBuild.ps1`. The language
+matrix was removed in August; there is one English build now.
 
-- GitHub Actions tab -> "Release Build" workflow -> **Run workflow** button.
-- Check "Build all language installers".
-- Pick the branch (usually `master`).
-- Run.
+```powershell
+gh workflow run release.yml                      # the whole pipeline, no release
+gh run list --workflow release.yml --limit 1     # get the run id
+gh run watch <run-id>                            # follow it
+gh run view <run-id> --log-failed                # only what failed
+```
 
-This runs the same `FullBuild.ps1 -AllLanguages -BuildInstallers` chain and
-uploads the installers as a workflow artifact, but **does not** create a draft
-release. The artifact lives for 90 days; download it from the run's summary page.
+Or: Actions tab -> "Release Build" -> **Run workflow**. The one input is
+`skip_virustotal`, for an emergency only.
+
+**IT BUILDS ALL THREE PLATFORMS.** `build-linux` and `build-macos` carry no event
+gate, so a dispatch runs them exactly as a tag does: the Windows installer on
+`win-ci`, the tarball and AppImage on `linux-ci`, and the signed, notarized
+`.dmg`, `.pkg` and `.dSYM`s on `mac-ci`. Everything lands as a workflow artifact,
+downloadable from the run summary for 90 days.
+
+**AND IT CREATES NO RELEASE.** The release job's `if:` requires
+`github.event_name == 'push'`, so a dispatch has nothing to un-publish and
+nothing to clean up.
+
+### THIS -- NOT AN SSH SESSION -- IS THE ROUTINE PLATFORM CHECK
+
+NY4I, 2026-09-28: *"that was before self-hosted running system and github ci
+builds were used. audit any info about building and ensure all agents are aware
+of ci GH process."*
+
+~~*"we use ssh linux-build-ci and mac-ci to build on a native system"*~~
+(2026-09-11) is **superseded, not wrong**. Only a native compiler settles a
+platform question -- that half stands. What changed is **who runs it**: those
+machines are CI runners now, so one dispatch builds all three in parallel, in the
+environment a release actually uses, and exercises the packaging and signing a
+hand-build skips entirely.
+
+**Never pre-flight a native build immediately before tagging.** The tag does
+exactly that.
+
+**ssh to `linux-ci-build` / `mac-ci` is still right for DIAGNOSIS** -- reading a
+log, probing hardware, an interactive or destructive experiment, a keychain
+question. That is a machine you need, not a build you need.
+
+**Remember nothing builds on an ordinary push to `main`.** `release.yml` fires on
+a `v[0-9]*.*.*` tag or a dispatch; `version-guard.yml` runs on every push and PR
+and only parses `Version.pas`. So for untagged work, a dispatch is not a
+convenience -- it is the only CI build there is.
 
 ---
 

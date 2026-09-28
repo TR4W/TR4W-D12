@@ -5,7 +5,21 @@
 > continuity, although the supported build is now FreePascal + Lazarus.
 
 **Toolchain: Git, FreePascal 3.2.2 + the Lazarus LCL.** Delphi is behind us. The FPC build passes the
-unit tests (4165/0) and the golden corpus (22/0/4), runs the LCL UI, and is what ships.
+unit tests and the golden corpus, runs the LCL UI, and is what ships. **Counts are not quoted here** --
+they grow every week, and a stale one reads as a regression. Take them from the run.
+
+> **THIS DOCUMENT IS ABOUT BUILDING ON *YOUR* MACHINE, WHICH IS WINDOWS.** Linux and macOS are built
+> by CI on their own self-hosted runners, and **that is how a platform question gets answered** --
+> not by an ssh session:
+>
+> ```powershell
+> gh workflow run release.yml     # all three platforms, in parallel, NO release created
+> ```
+>
+> A `workflow_dispatch` run creates no release (the release job requires a tag push), so it is free
+> to use and has nothing to undo. Nothing builds on an ordinary push to `main` --
+> `version-guard.yml` only parses `Version.pas` -- so for untagged work a dispatch IS the CI build.
+> See [`docs/CI_RUNNER_SETUP.md`](../../docs/CI_RUNNER_SETUP.md).
 
 ## Setting up Git
 
@@ -241,9 +255,10 @@ Clones `HEAD` to a temp directory, builds with **no arguments**, asserts the art
 | Everything             | `.\tr4w\FullBuild.ps1`                            | `BUILD SUCCESSFUL`                        |
 | Everything + installer | `.\tr4w\FullBuild.ps1 -BuildInstaller`            | `tr4w_setup_<version>.exe`                |
 | Iterate                | `.\tr4w\build\Build-App.ps1 -Incremental`         | `BUILD OK`                                |
-| Unit tests             | `.\tr4w\build\Build-Tests.ps1 -Run`               | `FAILED: 0` (count grows; 4165 today)     |
-| Lints only             | `.\tr4w\build\Run-Lints.ps1`                      | `10 lint(s) passed`                       |
-| Corpus oracle          | `bash tr4w/test/corpus/export-d12-corpus.sh`      | `22 passed, 0 failed, 4 known-divergence` |
+| Unit tests             | `.\tr4w\build\Build-Tests.ps1 -Run`               | `FAILED: 0` -- the passed count grows     |
+| Lints only             | `.\tr4w\build\Run-Lints.ps1`                      | `N lint(s) passed`, and N grows           |
+| Corpus oracle          | `bash tr4w/test/corpus/export-d12-corpus.sh`      | `0 failed`, and every export exits 0      |
+| All three platforms    | `gh workflow run release.yml`                     | the run is green; no release is created   |
 | Clone-and-build        | `.\tr4w\build\Test-FreshClone.ps1 -WithInstaller` | `FRESH CLONE OK`                          |
 | App binary             | —                                                 | `tr4w\target\tr4w.exe`                    |
 

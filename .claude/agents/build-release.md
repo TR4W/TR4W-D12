@@ -77,11 +77,52 @@ Windows i386, Linux x86_64 (app + server + tarball), macOS aarch64 (app + server
 `.app` bundle). x86_64-win64 **compiles and links** — 0 errors, same ceilings —
 and **does not run; nobody has tried.** Compiling is not running.
 
-**We do not cross-compile to check.** NY4I: *"we use ssh linux-build-ci and mac-ci
-to build on a native system."* A Windows gate is a guess until a **native**
-compiler disagrees — `Lint-LinuxCompile` was retired for exactly that reason: it
-inherited case-insensitive unit lookup from its host, so `uCTYDAT.PAS` passed it
-and still broke on a real Unix box.
+**We do not cross-compile to check**, and a Windows gate is a guess until a
+**native** compiler disagrees — `Lint-LinuxCompile` was retired for exactly that
+reason: it inherited case-insensitive unit lookup from its host, so
+`uCTYDAT.PAS` passed it and still broke on a real Unix box.
+
+### RUN THE WORKFLOW. DO NOT SSH IN TO BUILD.
+
+```powershell
+gh workflow run release.yml                      # all three platforms, NO release created
+gh run list --workflow release.yml --limit 1     # get the run id
+gh run watch <run-id>                            # follow it
+gh run view <run-id> --log-failed                # only what failed
+```
+
+NY4I, **2026-09-28**: *"that was before self-hosted running system and github ci
+builds were used. audit any info about building and ensure all agents are aware
+of ci GH process."*
+
+~~*"we use ssh linux-build-ci and mac-ci to build on a native system"*~~
+(**2026-09-11**) is **superseded, not wrong**: it was correct when he said it, and
+the reason behind it — only a native compiler settles a platform question — is
+the half that did not change. What changed is **who answers it**. Those same
+machines are CI runners now, so the workflow reaches all three in parallel, in
+the environment a release actually uses.
+
+**A `workflow_dispatch` RUN CREATES NO RELEASE.** The release job's `if:`
+requires `github.event_name == 'push'` and `release.yml` says so in terms. So a
+dispatch has no side effect — nothing to clean up, nothing to un-publish — which
+is what makes it the cheap routine check.
+
+**NEVER pre-flight a native build immediately before tagging.** The tag does
+exactly that. Twenty minutes went that way on 2026-09-28, minutes before a tag
+that built all three platforms by itself.
+
+**NOTHING BUILDS ON AN ORDINARY PUSH TO `main`**, which is why this matters:
+`release.yml` fires on a `v[0-9]*.*.*` tag and on `workflow_dispatch` and nothing
+else, and `version-guard.yml` — which does run on every push and PR — **builds
+nothing**, its one job parses `Version.pas`. A dispatch is therefore not a
+shortcut around CI; for untagged work it IS the CI build.
+
+**ssh REMAINS RIGHT FOR DIAGNOSIS**, and keep that line sharp because the
+machines are genuinely needed: reading a log, probing hardware, an interactive or
+destructive experiment, a keychain or signing-identity question — anything that
+needs a machine rather than a build. `portprobe` against a real FTDI adapter on
+`linux-ci-build` and the Developer ID investigation on `mac-ci` are both correct
+uses. "Does this compile on Linux" is not.
 
 **The macOS artifacts are SIGNED AND NOTARIZED since 5.0.13** (2026-09-20), by
 `tr4w/build/mac-sign.sh` called from `build-unix.sh`'s packaging stage. Facts worth

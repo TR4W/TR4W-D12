@@ -31,7 +31,14 @@ a re-measurement and a reason invites agreement. Re-measure before citing.
 ```bash
 bash tr4w/test/corpus/export-d12-corpus.sh        # 24/0/2 AND exit 0
 bash tr4w/test/corpus/test-contest-factory.sh     # factory vs legacy rescore
-sh  tr4w/build/build-unix.sh                      # on linux-ci / mac-ci
+```
+
+**Linux and macOS are verified by CI, not by an ssh session** (NY4I, 2026-09-28).
+`sh tr4w/build/build-unix.sh` is what the runners execute; reach for it directly
+only when you are already on one of them and diagnosing something:
+
+```powershell
+gh workflow run release.yml     # all three platforms, in parallel, NO release created
 ```
 
 **Three things no oracle can prove**, and they gate more of this roadmap than

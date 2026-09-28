@@ -1,22 +1,51 @@
 # Setting up a self-hosted CI runner
 
-**Written 2026-08-14**, from actually doing it on `win-ci`.
+**Written 2026-08-14**, from actually doing it on `win-ci`. **Corrected 2026-09-28: there are now
+THREE runners, and this document described only the first.**
 
-TR4W's workflows run on a **self-hosted Windows runner**, because the build needs a 32-bit
-FreePascal + Lazarus toolchain that no GitHub-hosted image carries. This is the whole setup.
+TR4W's workflows run on **self-hosted runners** — one per platform — because the build needs a
+32-bit FreePascal + Lazarus toolchain that no GitHub-hosted image carries, and because the macOS
+signing identity lives in a machine's keychain rather than in a secret. This is the whole setup.
+
+| runner | label | builds |
+|---|---|---|
+| `windows11-ci-d12` | `win-ci` | the app, `tr4wserver`, the NSIS installer, the VirusTotal scan, the release |
+| `linux-ci-build-tr4w` | `linux-ci` | the app, the server, the tarball and the AppImage |
+| `mac-ci-tr4w` | `mac-ci` | the app, the server, the `.dmg`, the `.pkg`, the `.dSYM`s — and signs and notarizes them |
+
+**ONE WINDOWS RUNNER, so queue time reads as slow runs.** A job reported at 19m57s once ran in ~18s.
+Check queue time before diagnosing a hang.
 
 For the toolchain itself, [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md) is authoritative — a runner
 needs exactly what a developer's PC needs and nothing extra. Don't duplicate it here.
 
 ## What the workflows expect
 
-| workflow | needs a toolchain? | what it does |
-|---|---|---|
-| `version-guard.yml` | **no** | asserts `tr4w/src/Version.pas` exists and parses |
-| `release.yml` | yes | lints, tests, app, server, NSIS installer, GitHub release |
+| workflow | fires on | needs a toolchain? | what it does |
+|---|---|---|---|
+| `version-guard.yml` | every push to `main`, every PR | **no** | asserts `tr4w/src/Version.pas` exists and parses. **It builds NOTHING** |
+| `release.yml` | a `v[0-9]*.*.*` tag, or `workflow_dispatch` | yes | lints, tests, app, server, installer on `win-ci`; the Unix artifacts on `linux-ci` and `mac-ci`; a draft release **on a tag only** |
 
-Both use `runs-on: [self-hosted, win-ci]`, so **the runner must carry the label `win-ci`**. That is
-the single most common way to end up with a job queued forever against a healthy runner.
+**SO NOTHING BUILDS ON AN ORDINARY PUSH TO `main`.** That is worth knowing before concluding a
+change is verified because CI was green: on a push, the only thing that ran was the version guard.
+
+**A `workflow_dispatch` RUN BUILDS ALL THREE PLATFORMS AND CREATES NO RELEASE** — the release job's
+`if:` requires `github.event_name == 'push'`. That makes it the routine way to verify a platform:
+
+```powershell
+gh workflow run release.yml
+gh run list --workflow release.yml --limit 1
+gh run watch <run-id>
+```
+
+**Prefer it to an ssh session.** Hand-building over ssh takes longer, runs on one platform at a
+time, and does not exercise the packaging, signing and upload path a release takes. ssh is for
+*diagnosis* — a log, hardware, an interactive experiment. (NY4I, 2026-09-28: *"that was before
+self-hosted running system and github ci builds were used."*)
+
+**Each job's `runs-on:` label must exist on its runner** — `win-ci`, `linux-ci`, `mac-ci`. A missing
+or misspelled label is the single most common way to end up with a job queued forever against a
+healthy runner.
 
 ## Order of work, and why this order
 
@@ -72,7 +101,13 @@ another install — which on a runner would mean shipping from a toolchain nobod
 C:\path\to\clone\tr4w\FullBuild.ps1 -BuildInstaller
 ```
 
-Expect 10 lints, 3978/0 unit tests, `tr4w.exe`, `tr4wserver.exe` and `tr4w_setup_<version>.exe`.
+Expect every lint to pass, zero unit-test failures, and `tr4w.exe`, `tr4wserver.exe` and
+`tr4w_setup_<version>.exe`. **The lint and test COUNTS are deliberately not written here** — they
+grow every week and a stale number reads as a regression. Take them from the run's own output.
+
+On a Unix runner the equivalent is `sh tr4w/build/build-unix.sh`, but prove a fresh runner with a
+`workflow_dispatch` run instead where you can: it checks the labels, the toolchain and the artifact
+upload in one pass, which is what you actually want to know.
 
 ## Known state of `win-ci` (2026-08-14)
 
