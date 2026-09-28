@@ -566,27 +566,124 @@ jobs:
           # QUOTED, and it has to be: the identity contains ": ", which YAML
           # reads as a mapping separator in a bare scalar.
           TR4W_SIGN_IDENTITY: "${{ vars.MACOS_SIGN_IDENTITY || 'Developer ID Application: Thomas Schaefer (N3397MADHZ)' }}"
+          # THE INSTALLER CERTIFICATE, WHICH IS A DIFFERENT CERTIFICATE.
+          #
+          # Nothing set this until 5.0.25, and the .pkg stage therefore failed
+          # its credential check on the first release that built one:
+          # "SIGNING FAILED: these are not set: TR4W_PKG_IDENTITY" (v5.0.24,
+          # run 36380418211). Apple never saw a package -- none was built.
+          #
+          # productbuild will NOT accept the Application identity above, and an
+          # Installer identity is not a codesigning identity at all: it does not
+          # appear in `security find-identity -p codesigning`, which is exactly
+          # why mac-sign.sh's require_identity takes the policy as a parameter
+          # and queries this one without it.
+          #
+          # SAME PATTERN AS THE LINE ABOVE -- an optional repo variable with the
+          # real name as the fallback -- because it is the same kind of value: a
+          # certificate's common name is not a secret, and the private key never
+          # leaves mac-ci's keychain. Neither MACOS_SIGN_IDENTITY nor
+          # MACOS_PKG_IDENTITY is currently defined (no repo variables exist),
+          # so both fall back, and defining one later overrides without editing
+          # this file.
+          #
+          # QUOTED for the same reason as the line above: the name contains
+          # ": ", which YAML reads as a mapping separator in a bare scalar.
+          TR4W_PKG_IDENTITY: "${{ vars.MACOS_PKG_IDENTITY || 'Developer ID Installer: Thomas Schaefer (N3397MADHZ)' }}"
           # Straight from the secrets to the process environment; neither is
           # written to $GITHUB_ENV, so neither lands in a file on the runner.
           TR4W_NOTARY_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           TR4W_NOTARY_ISSUER: ${{ secrets.APPLE_API_ISSUER_ID }}
         run: |
+          set -u
           # `|| true` is deliberate and predates signing: build-unix.sh does
           # not stop at the first failing stage, and the known DX-cluster
           # timing failure must not withhold the artifacts.
           #
           # IT MUST NOT SWALLOW A SIGNING FAILURE, though, and a signing
           # failure is not "one stage red among several" -- it is the whole
-          # reason this job can be trusted. So the run is teed and the
-          # signer's own marker is checked for explicitly, which fails this
-          # job LOUDLY (and, because the job is continue-on-error and the
-          # release job's `if:` does not consult its result, without
-          # withholding the Windows installer).
+          # reason this job can be trusted.
+          #
+          # =====================================================================
+          # THIS ASKS WHICH STAGE FAILED. IT USED TO GREP THE WHOLE LOG FOR
+          # 'SIGNING FAILED', AND THAT COST v5.0.24 FOUR GOOD ARTIFACTS.
+          #
+          # The marker is emitted by mac-sign.sh, which signs the .app, the
+          # .dmg AND the .pkg. The grep was written when only the first two
+          # existed, so it meant "the .dmg could not be signed". Once the .pkg
+          # stage arrived in 5.0.24 the same marker came from a stage whose
+          # entire design is that it must not withhold anything -- and the grep
+          # matched it, exited 1, and skipped every upload step below. The
+          # summary from that run says exactly what was thrown away:
+          #
+          #   PASS  package   tr4w-5.0.24-aarch64-darwin.tar.gz, ...dmg
+          #   FAIL  pkg       build/sign/notarize failed -- no .pkg produced
+          #   PASS  dsym      2 .dSYM archive(s)
+          #   PASS  symbols   2 artifact(s) carry line information
+          #
+          # A notarized .dmg, a notarized tarball and both .dSYM archives, all
+          # past their own gates, discarded by a test about a different stage.
+          #
+          # AND THIS IS THE SECOND TIME BY A SECOND ROUTE. The comment three
+          # lines further down already described run 35523227170: the cleanup
+          # step failed BECAUSE it succeeded, skipped the steps after it, and
+          # "a signed, notarized pair of artifacts was built and never
+          # uploaded." Different cause, identical outcome. The lesson the first
+          # one did not teach is the general one: A STEP MAY ONLY WITHHOLD THE
+          # ARTIFACTS IT IS ABOUT. Anything that can fail for a reason
+          # unrelated to an artifact must not stand between that artifact and
+          # its upload.
+          #
+          # SO THE TEST IS SCOPED TO A STAGE, AND IT IS NOT PROSE. build-unix.sh
+          # writes build-out/stage-results.tsv -- one tab-separated row per
+          # stage, status first -- which is read here instead of the log. A
+          # marker that moves, or a new stage that emits one, cannot change the
+          # meaning of this gate.
+          #
+          # WHAT IS PRESERVED, WHICH IS THE WHOLE REASON THE GREP EXISTED:
+          #   * a 'package' stage that is not PASS still fails this step, so a
+          #     genuine .dmg signing or notarization failure still reddens the
+          #     job, and no upload step runs;
+          #   * nothing unsigned can ship either way -- with TR4W_MAC_SIGN=1
+          #     that stage signs, notarizes and staples BEFORE it rolls either
+          #     archive and produces NEITHER if any of it is rejected, and the
+          #     'Locate the disk image and the tarball' step below re-asks
+          #     stapler and spctl of the FILE about to be uploaded;
+          #   * a failed .pkg still turns this job RED -- at the end of the job,
+          #     after the artifacts that passed have been uploaded. See the
+          #     final step.
+          # =====================================================================
+          results='build-out/stage-results.tsv'
+          # Deleted first. The runners are a temp folder and a stale row from an
+          # earlier run read as this run's result is the one outcome that would
+          # make this gate worse than the grep.
+          rm -f "$results"
+
           sh tr4w/build/build-unix.sh 2>&1 | tee "$RUNNER_TEMP/build-unix.log" || true
-          if grep -q 'SIGNING FAILED' "$RUNNER_TEMP/build-unix.log"; then
-            echo "::error::macOS signing or notarization failed -- no artifact was produced. The notarytool log, if Apple returned one, is in the step output above."
+
+          if [ ! -f "$results" ]; then
+            echo "::error::build-unix.sh produced no $results, so it did not reach its summary -- it died outright. Nothing from this run can be trusted; see the step output above."
             exit 1
           fi
+          echo '--- stage results ---'
+          cat "$results"
+
+          # stage_status <name> -- the status column, or the empty string if the
+          # stage produced no row at all (which is itself not a pass).
+          stage_status() {
+            awk -F '\t' -v s="$1" '$2 == s { print $1; exit }' "$results"
+          }
+
+          pkgres=$(stage_status pkg)
+          pkgres=${pkgres:-ABSENT}
+          echo "TR4W_PKG_STAGE_RESULT=$pkgres" >> "$GITHUB_ENV"
+
+          pkres=$(stage_status package)
+          if [ "$pkres" != PASS ]; then
+            echo "::error::the macOS 'package' stage reported '${pkres:-no row}' -- the signed .dmg and tarball were not produced, so nothing is uploaded from this run. If signing or notarization was rejected, the notarytool log Apple returned is in the step output above."
+            exit 1
+          fi
+          echo "package stage PASS; pkg stage $pkgres"
 
       - name: Remove the notary API key
         if: always()
@@ -796,6 +893,44 @@ jobs:
       - name: Verify symbols survived to the artifact
         shell: bash
         run: sh tr4w/build/build-unix.sh --symbols
+
+      # A FAILED .pkg IS RED -- HERE, AT THE END, AFTER EVERYTHING ELSE HAS
+      # BEEN UPLOADED.
+      #
+      # The build step above deliberately does NOT fail on a .pkg failure: that
+      # is what threw away a notarized .dmg, tarball and both .dSYM archives in
+      # v5.0.24. But "must not withhold the other artifacts" is not "must be
+      # reported as fine" -- a release that was meant to carry an installer
+      # package and does not is a defect, and a green job is how it stays
+      # invisible.
+      #
+      # So the result is carried forward from that step and asserted last,
+      # when there is nothing left for it to withhold. The job goes red, the
+      # .pkg is simply absent, and the release audit warns about it by name
+      # with this job's result beside it -- which is the arrangement every
+      # optional macOS artifact already has.
+      #
+      # `!cancelled()` rather than `always()`, and rather than nothing at all:
+      # a later step failing (a .dSYM that would not verify, say) must not
+      # swallow this annotation, but a run somebody cancelled has no result to
+      # report. The default guards the case where the build step exited before
+      # writing the variable -- that path has already failed the job loudly and
+      # is not this step's to re-diagnose.
+      - name: The installer package must have been produced
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          res="${TR4W_PKG_STAGE_RESULT:-UNKNOWN}"
+          if [ "$res" = PASS ]; then
+            echo "pkg stage PASS"
+            exit 0
+          fi
+          if [ "$res" = UNKNOWN ]; then
+            echo "pkg stage result unknown -- the build step did not get far enough to report one. See its output."
+            exit 0
+          fi
+          echo "::error::the macOS installer package (.pkg) stage reported '$res' -- no .pkg is in this release. The .dmg, the tarball and the debug symbols are UNAFFECTED and have been uploaded; they passed their own gates. See the 'Installer package (.pkg)' section of the build output for the reason."
+          exit 1
 
   # =================================================================
   # VirusTotal scan. Pulls the installer artifact from the build job, uploads

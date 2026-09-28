@@ -167,6 +167,35 @@ VERDICTS="${TMPDIR:-/tmp}/tr4w-$OS-verdicts.$$"
 : > "$VERDICTS"
 FAILURES=0
 
+# ---------------------------------------------------------------------------
+# THE SAME VERDICTS, MACHINE-READABLE, SO NOBODY HAS TO GREP THE PROSE.
+#
+# The summary below is for a human: aligned columns, a ranked worklist, and
+# sentences around it.  A caller that needs to know WHICH STAGE failed -- CI,
+# mostly -- was reading that prose instead, and the way it did so was
+# `grep -q 'SIGNING FAILED'` over the whole log.  That matches the marker
+# wherever it appears, so when the .pkg stage was added in 5.0.24 a .pkg
+# signing failure tripped a test written about the .dmg, and release.yml threw
+# away a notarized .dmg, tarball and both .dSYM archives that had all passed
+# their own gates.
+#
+# ONE LINE PER STAGE, TAB-SEPARATED, at a fixed path: status, stage, detail.
+# A caller asks about the stage it cares about and is unaffected by any other.
+#
+# Cleared HERE rather than only written at the end.  The runners are treated as
+# a temp folder, so a file left by an earlier run is a real possibility, and a
+# stale PASS read as this run's result is the worst failure this file could
+# have.  If the script dies before the summary there is simply no file, which a
+# caller must treat as a failure.
+#
+# Each invocation rewrites it with ONLY the stages that ran, which is why
+# `--dsym` and `--symbols` do not leave a misleading partial file behind for a
+# later reader: read it in the same step that produced it.
+# ---------------------------------------------------------------------------
+STAGE_RESULTS="$OUTROOT/stage-results.tsv"
+mkdir -p "$OUTROOT" 2> /dev/null || true
+rm -f "$STAGE_RESULTS"
+
 # SKIPS ARE COUNTED, AND THEY DID NOT USED TO BE (fixed 2026-09-20).
 #
 # record() incremented FAILURES for FAIL only, so a stage that recorded SKIP
@@ -2030,6 +2059,12 @@ TAB=$(printf '	')
 while IFS="$TAB" read -r status stage detail; do
    printf '  %-4s  %-22s  %s\n' "$status" "$stage" "$detail"
 done < "$VERDICTS"
+
+# The machine-readable copy, written before the scratch file goes.  Same rows,
+# no formatting -- see the header beside STAGE_RESULTS for why a caller reads
+# this rather than the columns printed above.
+mkdir -p "$OUTROOT" 2> /dev/null || true
+cp "$VERDICTS" "$STAGE_RESULTS" 2> /dev/null || true
 rm -f "$VERDICTS"
 
 say ''
