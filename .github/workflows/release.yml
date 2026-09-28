@@ -644,6 +644,13 @@ jobs:
           # both were unsigned and interchangeable; it is wrong now, because
           # the two are verified separately (the image by spctl -t open, the
           # app by spctl -t exec).
+          #
+          # THE .pkg IS DELIBERATELY NOT PART OF THIS INVARIANT. It is built by
+          # a stage of its own and verified in a step of its own below, for the
+          # reason that stage's header gives: it is new, its Gatekeeper path has
+          # never been walked by a human, and withholding the PROVEN pair
+          # because the unproven addition failed would be a regression caused
+          # by an addition.
           missing=''
           [ -f "$base.dmg" ]    || missing="$missing $base.dmg"
           [ -f "$base.tar.gz" ] || missing="$missing $base.tar.gz"
@@ -674,6 +681,48 @@ jobs:
           path: |
             ${{ steps.artifact.outputs.base }}.dmg
             ${{ steps.artifact.outputs.base }}.tar.gz
+          retention-days: 90
+          if-no-files-found: error
+
+      # THE INSTALLER PACKAGE, ON ITS OWN, AND continue-on-error IS THE POINT.
+      #
+      # A .pkg is assessed under a policy nothing here had exercised before
+      # 5.0.24 -- `spctl -a -t install`, not `-t open` -- so it is the one
+      # macOS artifact whose Gatekeeper path no human has walked. It therefore
+      # must not be able to withhold the .dmg, which NY4I has personally
+      # confirmed opens clean (5.0.13). Its absence is reported by the release
+      # audit with this job's result beside it, which is how a missing artifact
+      # stops being invisible (the v5.0.14 lesson).
+      #
+      # THE GATES ARE STILL REAL. build-unix.sh's pkg stage deletes the .pkg if
+      # signing or notarization is rejected, so this step either finds a
+      # notarized package or finds nothing -- never an unsigned one. What is
+      # checked here is the FILE ABOUT TO BE UPLOADED rather than anything in
+      # the staging directory, and `-t install` genuinely tests notarization:
+      # measured on a signed-but-not-notarized package it exits 3 with
+      # `source=Unnotarized Developer ID`.
+      - name: Verify and upload the macOS installer package
+        id: pkg
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -e
+          p="${{ steps.artifact.outputs.base }}.pkg"
+          if [ ! -f "$p" ]; then
+            echo "::warning::no installer package at $p -- the .pkg will be absent from this release"
+            exit 1
+          fi
+          echo "found $p ($(stat -f%z "$p") bytes)"
+          xcrun stapler validate "$p"
+          spctl --assess -vvv -t install "$p"
+          echo "path=$p" >> "$GITHUB_OUTPUT"
+
+      - name: Upload macOS installer package
+        if: steps.pkg.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tr4w-macos-pkg-${{ needs.build.outputs.version }}
+          path: ${{ steps.pkg.outputs.path }}
           retention-days: 90
           if-no-files-found: error
 
@@ -927,6 +976,16 @@ jobs:
           name: tr4w-macos-symbols-${{ needs.build.outputs.version }}
           path: release-files
 
+      # Its own artifact because it is uploaded by its own step -- the .pkg must
+      # be able to be absent without the .dmg being absent, which is the whole
+      # arrangement on the producing side.
+      - name: Download macOS installer package (optional)
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tr4w-macos-pkg-${{ needs.build.outputs.version }}
+          path: release-files
+
       - name: List release files
         shell: powershell
         run: Get-ChildItem -LiteralPath release-files | Format-Table Name, Length, LastWriteTime
@@ -974,6 +1033,12 @@ jobs:
             @{ Label = 'Linux AppImage';    Filter = 'TR4W-*-x86_64.AppImage';       Job = 'build-linux';     Required = $false; Result = '${{ needs['build-linux'].result }}' },
             @{ Label = 'macOS disk image';  Filter = 'tr4w-*-aarch64-darwin.dmg';    Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' },
             @{ Label = 'macOS tarball';     Filter = 'tr4w-*-aarch64-darwin.tar.gz'; Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' },
+            # THE INSTALLER PACKAGE, alongside the disk image rather than
+            # instead of it -- the .dmg is the artifact whose Gatekeeper path a
+            # human has actually walked, and a .pkg is assessed under a
+            # different policy nothing here had exercised before 5.0.24.
+            # Optional on the same terms as every other macOS artifact.
+            @{ Label = 'macOS installer pkg';  Filter = 'tr4w-*-aarch64-darwin.pkg';           Job = 'build-macos'; Required = $false; Result = '${{ needs['build-macos'].result }}' },
             # THE SYMBOLS ARE OPTIONAL ON THE SAME TERMS as the artifacts they
             # describe -- they come off build-macos, which is allowed to fail.
             # Deliberately NOT promoted to Required: that ruling is about which
@@ -1176,6 +1241,7 @@ jobs:
             release-files/TR4W-*-x86_64.AppImage
             release-files/tr4w-*-aarch64-darwin.dmg
             release-files/tr4w-*-aarch64-darwin.tar.gz
+            release-files/tr4w-*-aarch64-darwin.pkg
             release-files/tr4w-*-aarch64-darwin.dSYM.zip
             release-files/tr4wserver-*-aarch64-darwin.dSYM.zip
             release-files/symbols-*-aarch64-darwin.txt

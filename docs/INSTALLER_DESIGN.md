@@ -1,9 +1,12 @@
 # The installer, and what it is allowed to decide
 
-**Status:** DESIGN ONLY. No installer code is written. The `.pkg` is agreed in
-principle (NY4I, 2026-09-27) and **the certificate is no longer a blocker** --
-see 9.1. Every numbered decision below is either stated as decided or explicitly
-owed from him.
+**Status:** PART BUILT. **The `.pkg` is built, signed and shipped alongside the
+`.dmg` as of 2026-09-28** -- `mac-sign.sh pkg`, wired into `build-unix.sh`'s
+packaging stage and uploaded by `release.yml`. It installs
+`/Applications/TR4W.app` and asks nothing; **the optional-components pane of
+section 4 is NOT built**, and is the thing the `.pkg` exists to make possible
+later. Everything else below is design, and every numbered decision is either
+stated as decided or explicitly owed from NY4I.
 
 **Read `docs/SETUP_WIZARD_DESIGN.md` first.** This document is its outer layer
 and is deliberately written to not overlap it. The wizard document was reviewed
@@ -604,20 +607,74 @@ and that cannot be revoked without reissuing. Keeping it on the machine means
 the worst a bad workflow can do is ask THAT machine to sign. The repo secrets
 stay the notary API key only.
 
-### 9.2 The build recipe
+### 9.2 The build recipe -- AS BUILT
 
-Verified against `man pkgbuild` and `man productbuild` on mac-ci, 2026-09-27,
-and by building a throwaway package from the real v5.0.23 bundle.
+`tr4w/build/mac-sign.sh pkg <stage-dir> <out.pkg>`, called from **`stage_pkg`**
+-- a stage of its own, after `stage_package` has signed, notarized and stapled
+the bundle and rolled the `.dmg` and the tarball. Verified against
+`man pkgbuild` and `man productbuild` on mac-ci and then run there.
+
+**A STAGE OF ITS OWN, FOR THE REASON THE APPIMAGE IS ONE**, and this was got
+wrong once before being corrected: folded into `stage_package`, a rejected
+`.pkg` would have had to either fail the whole stage -- destroying an
+already-notarized `.dmg` and tarball that passed their own gates -- or warn and
+let the stage pass, which is an artifact missing for a reason nobody reads.
+`stage_appimage`'s header makes exactly that argument. It matters more here than
+there: the `.pkg` is the one macOS artifact whose Gatekeeper path
+(`spctl -a -t install`) no human has walked, and withholding the proven `.dmg`
+because the unproven addition failed would be a regression caused by an
+addition. So a failed `.pkg` turns its own row red and leaves everything else
+alone, and `release.yml` verifies and uploads it in a `continue-on-error` step
+of its own rather than inside the `.dmg`'s both-or-neither invariant.
+
+**WITHOUT CREDENTIALS IT IS NOT BUILT AT ALL**, which differs from the tarball.
+An unsigned drag-install `.dmg` is merely refused; an unsigned INSTALLER is
+something a user grants authority to before finding out macOS will refuse it. So
+`stage_pkg` SKIPS rather than producing one.
 
 ```
-pkgbuild  --identifier net.tr4w.app --version <version> \
+pkgbuild  --identifier net.tr4w.TR4W --version <read from the bundle> \
           --component <staged>/TR4W.app --install-location /Applications \
-          tr4w-app.pkg
+          $WORK/tr4w-component.pkg
 
-productbuild --distribution Distribution.xml --package-path . \
+productbuild --synthesize --package $WORK/tr4w-component.pkg \
+             $WORK/Distribution.xml
+
+productbuild --distribution $WORK/Distribution.xml --package-path $WORK \
              --sign "Developer ID Installer: ..." \
-             tr4w-<version>-aarch64.pkg
+             build-out/dist/tr4w-<version>-aarch64-darwin.pkg
 ```
+
+Then `notarize` and `staple_and_verify ... -t install`, the same two helpers the
+`.dmg` goes through.
+
+**THE VERSION IS READ FROM THE BUNDLE, NOT PASSED IN.**
+`CFBundleShortVersionString` out of `TR4W.app/Contents/Info.plist`. A version
+passed as a parameter can disagree with the thing it describes; one read from
+the artifact being packaged cannot.
+
+**THE PACKAGE IDENTIFIER IS `net.tr4w.TR4W` AND MUST NOT CHANGE BETWEEN
+RELEASES.** It is how macOS recognises an upgrade rather than a second
+installation. It is a separate namespace from the bundle id and is deliberately
+spelled the same, so there is one name to remember. (The throwaway probe of
+2026-09-27 used `net.tr4w.app`; that was a probe, and this is the name.)
+
+**IT IS BUILT INSIDE `mac-sign.sh`, WHICH IS NOT THE PATTERN THE `.dmg`
+FOLLOWS**, and the difference belongs to `productbuild`. A disk image can be
+created unsigned and signed afterwards, so `build-unix.sh` builds it and
+`mac-sign.sh` signs it. `productbuild --sign` fuses those two steps: there is no
+supported way to build a product archive and then sign it with `productbuild`
+-- `productsign(1)` exists for that, and adds a step whose only product is a
+briefly-unsigned `.pkg` on disk. Fusing them also satisfies this file's own rule
+better: an unsigned artifact never exists to be shipped by accident.
+
+**THE SERVER IS NOT IN THE PACKAGE, AND THAT IS AN OPEN QUESTION RATHER THAN A
+DECISION.** The `.dmg` and the tarball both carry `server/tr4wserver` beside
+`TR4W.app`; the `.pkg` installs the app only, because `--install-location
+/Applications` has no obvious home for a command-line server and inventing one
+(`/usr/local/bin`?) is a decision with consequences -- it needs root, it changes
+what an uninstall has to remove, and nobody has asked for it. A `.pkg` user
+therefore gets no multi-op server today. **NY4I's call.**
 
 Facts worth keeping, each from the man page rather than from habit:
 
@@ -728,7 +785,7 @@ uninstaller must not remove without asking.
 | 4 | data-file download at install time | **no -- the app already does it; offer it in the wizard** | his ruling, and a wizard page he has not approved |
 | 5 | macOS `.dSYM` | **DECIDED AND BUILT** (NY4I: *"yes add .dSYM"*) -- both binaries, beside the release, 17 MB and 7 MB zipped, UUID-matched against the shipped binary at build time. See 4.2.3 | closed |
 | 6 | Linux separable symbols | `-Xg` + `objcopy`, own piece of work | not proposed |
-| 7 | `.pkg` alongside or instead of the `.dmg` | **alongside for at least one release** | his ruling |
+| 7 | `.pkg` alongside or instead of the `.dmg` | **BUILT, alongside** (NY4I, 2026-09-28: *"tag a build so I can test a mac pkg"*). Retire the `.dmg`, if ever, only after a release where he has watched the `.pkg` work | closed for now |
 | 8 | macOS uninstall story | none formed -- see section 10 | nobody has raised it |
 
 ---

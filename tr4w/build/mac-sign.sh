@@ -6,6 +6,11 @@
 #   sh mac-sign.sh app <stage-dir>    sign the .app and the server binary,
 #                                     notarize the app, staple the ticket
 #   sh mac-sign.sh dmg <disk-image>   sign the image, notarize it, staple
+#   sh mac-sign.sh pkg <stage-dir> <out.pkg>
+#                                     BUILD the installer package from the
+#                                     already-stapled bundle, sign it with the
+#                                     Developer ID INSTALLER certificate,
+#                                     notarize it and staple.
 #
 # WHY IT IS A SEPARATE FILE.  build-unix.sh is the ONE implementation of the
 # Unix build and is deliberately platform-neutral above four documented
@@ -74,6 +79,13 @@
 # ---------------------------------------------------------------------------
 # ENVIRONMENT (all required; there are no defaults that guess):
 #
+#   TR4W_PKG_IDENTITY    (pkg mode only) the FULL common name of the Developer
+#                        ID INSTALLER certificate.  A DIFFERENT certificate
+#                        from the one below and not interchangeable with it:
+#                        productbuild will not accept an Application identity,
+#                        and an Installer identity is not a codesigning
+#                        identity at all -- it does not appear in
+#                        `security find-identity -p codesigning` output.
 #   TR4W_SIGN_IDENTITY   the FULL common name of the Developer ID Application
 #                        certificate.  Selected by name and never by
 #                        `find-identity | head -1`: a second identity in the
@@ -100,10 +112,15 @@ die() {
    exit 1
 }
 
+OUTPKG=${3:-}
+
 case "$MODE" in
    app|dmg) ;;
+   pkg)
+      [ -n "$OUTPKG" ] || die 'pkg mode needs an output path: mac-sign.sh pkg <stage-dir> <out.pkg>'
+      ;;
    *)
-      say "usage: $0 <app|dmg> <path>" >&2
+      say "usage: $0 <app|dmg|pkg> <path> [out.pkg]" >&2
       exit 2
       ;;
 esac
@@ -116,8 +133,18 @@ esac
 # alternative -- failing on the first one missing -- means three CI runs to
 # discover three unset secrets.
 # ---------------------------------------------------------------------------
+# THE IDENTITY VARIABLE DEPENDS ON THE MODE, because the certificate does.
+# Requiring TR4W_SIGN_IDENTITY in pkg mode would demand a credential that mode
+# never uses, and requiring TR4W_PKG_IDENTITY in app mode would break every
+# existing caller.
+if [ "$MODE" = pkg ]; then
+   IDENTITY_VAR=TR4W_PKG_IDENTITY
+else
+   IDENTITY_VAR=TR4W_SIGN_IDENTITY
+fi
+
 missing=''
-for v in TR4W_SIGN_IDENTITY TR4W_NOTARY_KEY TR4W_NOTARY_KEY_ID TR4W_NOTARY_ISSUER; do
+for v in "$IDENTITY_VAR" TR4W_NOTARY_KEY TR4W_NOTARY_KEY_ID TR4W_NOTARY_ISSUER; do
    eval "val=\${$v:-}"
    [ -n "$val" ] || missing="$missing $v"
 done
@@ -126,10 +153,12 @@ done
 
 # THE IDENTITY MUST BE PRESENT AND UNAMBIGUOUS.
 #
-# codesign -s matches the string against the common name, so a partial or
-# duplicated name can select a certificate nobody intended.  Requiring exactly
-# one match of the FULL name turns that into a build failure here rather than
-# into a Gatekeeper failure on someone's Mac.
+# codesign -s and productbuild --sign both match the string against the common
+# name, so a partial or duplicated name can select a certificate nobody
+# intended.  Requiring exactly one match of the FULL name turns that into a
+# build failure here rather than into a Gatekeeper failure on someone's Mac.
+#
+# require_identity <full-common-name> [policy args for find-identity...]
 #
 # COUNT DISTINCT FINGERPRINTS, NOT MATCHING LINES (2026-09-27).  This was
 # `grep -cF`, and that counts OUTPUT ROWS -- so ONE certificate reachable
@@ -143,27 +172,43 @@ done
 # line-counting check breaks the signing of a release for no reason.
 #
 # A fingerprint is the certificate's identity; two rows with the same
-# fingerprint are one certificate seen twice.  Same rule for the Developer ID
-# INSTALLER identity when the .pkg step is written -- see
-# docs/INSTALLER_DESIGN.md.
-matches=$(security find-identity -v -p codesigning 2>/dev/null |
-          grep -F "\"$TR4W_SIGN_IDENTITY\"" |
-          awk '{ print $2 }' |
-          sort -u |
-          wc -l |
-          tr -d '[:space:]')
-case "$matches" in
-   1) ;;
-   0)
-      say '  Identities available to this user:'
-      security find-identity -v -p codesigning 2>&1 | sed 's/^/    /'
-      die "no valid codesigning identity named \"$TR4W_SIGN_IDENTITY\""
-      ;;
-   *)
-      security find-identity -v -p codesigning 2>&1 | sed 's/^/    /'
-      die "$matches identities match \"$TR4W_SIGN_IDENTITY\" -- ambiguous"
-      ;;
-esac
+# fingerprint are one certificate seen twice.  Two rows with DIFFERENT
+# fingerprints and the same name are genuinely ambiguous and still fail.
+#
+# THE POLICY IS A PARAMETER, AND THAT IS THE WHOLE REASON THIS IS A FUNCTION.
+# An Installer certificate IS NOT A CODESIGNING IDENTITY: it does not appear in
+# `security find-identity -p codesigning` at all -- verified on mac-ci, which
+# holds both certificates and lists exactly one under that policy.  So the pkg
+# mode must ask WITHOUT the policy filter, and a second copy of this check with
+# one argument changed is precisely the duplicate that drifts.
+require_identity() {
+   _rq_name=$1
+   shift
+   _rq_matches=$(security find-identity -v "$@" 2>/dev/null |
+                 grep -F "\"$_rq_name\"" |
+                 awk '{ print $2 }' |
+                 sort -u |
+                 wc -l |
+                 tr -d '[:space:]')
+   case "$_rq_matches" in
+      1) return 0 ;;
+      0)
+         say '  Identities available to this user:'
+         security find-identity -v "$@" 2>&1 | sed 's/^/    /'
+         die "no valid identity named \"$_rq_name\""
+         ;;
+      *)
+         security find-identity -v "$@" 2>&1 | sed 's/^/    /'
+         die "$_rq_matches distinct certificates match \"$_rq_name\" -- ambiguous"
+         ;;
+   esac
+}
+
+if [ "$MODE" = pkg ]; then
+   require_identity "$TR4W_PKG_IDENTITY"
+else
+   require_identity "$TR4W_SIGN_IDENTITY" -p codesigning
+fi
 
 # Scratch space for the notarization zip and the notarytool output.  Removed on
 # every exit path, including a failure: the runners are treated as a temp
@@ -264,9 +309,11 @@ staple_and_verify() {
    return 0
 }
 
+eval "ACTIVE_IDENTITY=\${$IDENTITY_VAR}"
+
 say ''
 say "=== macOS signing ($MODE) ==="
-say "  identity : $TR4W_SIGN_IDENTITY"
+say "  identity : $ACTIVE_IDENTITY"
 
 case "$MODE" in
    app)
@@ -332,6 +379,96 @@ case "$MODE" in
       say '  stapled here.'
       ;;
 
+   pkg)
+      # ---------------------------------------------------------------------
+      # THE INSTALLER PACKAGE.
+      #
+      # BUILT HERE RATHER THAN IN build-unix.sh, WHICH IS NOT THE PATTERN THE
+      # .dmg FOLLOWS, and the difference is productbuild's.  A disk image can
+      # be created unsigned and signed afterwards, so build-unix.sh builds it
+      # and this script signs it.  `productbuild --sign` FUSES those two: there
+      # is no supported way to build a product archive and then sign it with
+      # productbuild (productsign(1) exists for that, and adds a step whose
+      # only product is a briefly-unsigned .pkg on disk).  Fusing them is also
+      # the better outcome against this file's own rule -- an unsigned artifact
+      # never exists to be shipped by accident.
+      #
+      # FROM THE STAPLED BUNDLE, which is why this runs after `app` mode and
+      # not beside it.  The .pkg wraps the very bundle the .dmg carries; it
+      # neither re-signs nor modifies it.
+      # ---------------------------------------------------------------------
+      STAGE=$ARTIFACT
+      BUNDLE="$STAGE/TR4W.app"
+      [ -d "$BUNDLE" ] || die "no bundle at $BUNDLE"
+
+      for t in pkgbuild productbuild; do
+         command -v "$t" > /dev/null 2>&1 ||
+            die "$t is not installed -- it ships with the Xcode command line tools"
+      done
+
+      # THE VERSION COMES OUT OF THE BUNDLE BEING PACKAGED, not from a
+      # parameter.  A version passed in can disagree with the thing it
+      # describes; one read from Info.plist cannot.
+      PKGVER=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+                  "$BUNDLE/Contents/Info.plist" 2>/dev/null)
+      [ -n "$PKGVER" ] ||
+         die "no CFBundleShortVersionString in $BUNDLE/Contents/Info.plist"
+      say "  version  : $PKGVER (from the bundle)"
+
+      # THE PACKAGE IDENTIFIER IS HOW macOS RECOGNISES AN UPGRADE, so it is
+      # stated rather than left to pkgbuild's inference and must not change
+      # between releases.  It is a separate namespace from the bundle id and
+      # deliberately spelled the same, so there is one name to remember.
+      PKGID=net.tr4w.TR4W
+
+      COMPONENT="$WORK/tr4w-component.pkg"
+      DIST="$WORK/Distribution.xml"
+
+      say '  pkgbuild : the component'
+      run pkgbuild --identifier "$PKGID" --version "$PKGVER" \
+                   --component "$BUNDLE" --install-location /Applications \
+                   "$COMPONENT" ||
+         die 'pkgbuild could not build the component package'
+
+      # THE COMPONENT IS DELIBERATELY NOT SIGNED.  man pkgbuild: "if you are
+      # going to create a signed product with the resulting package, using
+      # productbuild(1), there is no reason to sign the individual package."
+      # Signing it as well would be two signatures where one is checked.
+      #
+      # A SYNTHESIZED DISTRIBUTION, for now.  productbuild --synthesize writes
+      # one that installs everything with customize="never" -- no choices pane,
+      # which is exactly this task's scope.  When the optional-symbols pane
+      # arrives it replaces this file with a tracked one; the distribution is
+      # where that lives, and nothing else here changes.
+      say '  synthesize: the distribution'
+      run productbuild --synthesize --package "$COMPONENT" "$DIST" ||
+         die 'productbuild --synthesize failed'
+
+      rm -f "$OUTPKG"
+      say "  productbuild: $OUTPKG"
+      # --timestamp is NOT passed: with a Developer ID identity productbuild
+      # includes a trusted timestamp by default (man pkgbuild, SIGNED
+      # PACKAGES), and the same is true of codesign above.
+      run productbuild --distribution "$DIST" --package-path "$WORK" \
+                       --sign "$TR4W_PKG_IDENTITY" "$OUTPKG" ||
+         die 'productbuild could not build and sign the product archive'
+      [ -f "$OUTPKG" ] ||
+         die "productbuild exited 0 with no package at $OUTPKG"
+
+      notarize "$OUTPKG" || {
+         # NO UNSIGNED OR UNNOTARIZED .pkg SURVIVES. An installer macOS
+         # refuses is worse than no installer: the user has already
+         # double-clicked it by the time they find out.
+         rm -f "$OUTPKG"
+         die 'the installer package was not accepted -- no .pkg was produced'
+      }
+
+      # -t install, NOT -t exec OR -t open.  A .pkg is assessed by Gatekeeper
+      # under the installer policy, and asking either of the other two
+      # questions passes things the Installer would refuse.
+      staple_and_verify "$OUTPKG" -t install
+      ;;
+
    dmg)
       DMG=$ARTIFACT
       sign "$DMG"
@@ -343,5 +480,9 @@ case "$MODE" in
       ;;
 esac
 
-say "  done: $ARTIFACT"
+if [ "$MODE" = pkg ]; then
+   say "  done: $OUTPKG"
+else
+   say "  done: $ARTIFACT"
+fi
 exit 0

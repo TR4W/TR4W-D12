@@ -1373,6 +1373,7 @@ PLIST
             record FAIL 'package' 'dmg sign/notarize failed -- no artifact produced'
             return 1
          fi
+
       else
          say '  NOT SIGNED AND NOT NOTARIZED. Gatekeeper will refuse these on any'
          say '  Mac but the one that built them, and the message a user gets says'
@@ -1507,7 +1508,78 @@ stage_appimage() {
 }
 
 # ---------------------------------------------------------------------------
-# STAGE 9 -- the macOS debug symbols, as a RELEASE ASSET and not as payload.
+# STAGE 9 -- the macOS installer package.
+#
+# A STAGE OF ITS OWN, FOR THE REASON THE APPIMAGE IS ONE.  Read stage_appimage's
+# header: an artifact that CONSUMES the finished stage directory read-only and
+# writes one file beside the others wants its own verdict, because folded into
+# stage_package a failure would have to either fail the whole stage -- throwing
+# away a perfectly good, already-notarized .dmg and tarball -- or warn and let
+# the stage pass, which is an artifact missing for a reason nobody reads.
+#
+# THAT IS NOT HYPOTHETICAL HERE, IT IS THE POINT.  The .pkg is NEW and its
+# Gatekeeper path (`spctl -a -t install`) has never been walked by a human,
+# while the .dmg's has (NY4I, 5.0.13).  Withholding the proven artifact because
+# the unproven one failed would be a regression caused by an addition.  So a
+# failed .pkg turns this row red and leaves everything else alone.
+#
+# WHAT IT DOES NOT DO IS SHIP A BAD ONE.  mac-sign.sh deletes the .pkg if
+# signing or notarization is rejected, so the choice here is between a good
+# .pkg and none -- never an unsigned one.  An installer macOS refuses is worse
+# than no installer: the user finds out after double-clicking it.
+#
+# Darwin only, and quietly so elsewhere: a .pkg is a macOS container format and
+# its absence on Linux is not a finding.
+# ---------------------------------------------------------------------------
+stage_pkg() {
+   [ "$OS" = darwin ] || return 0
+
+   phase 'Installer package (.pkg)'
+
+   stage="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH"
+   if [ ! -d "$stage" ]; then
+      say "  NOT ATTEMPTED: there is no staged payload at $stage."
+      say '  The .pkg is built FROM the package stage; run --package first.'
+      record SKIP 'pkg' 'no staged payload'
+      return 1
+   fi
+
+   # UNSIGNED IS NOT AN OPTION FOR THIS ARTIFACT, unlike the tarball.  A
+   # drag-install .dmg that is unsigned is merely refused; an unsigned
+   # INSTALLER is a thing a user grants authority to.  Without credentials the
+   # honest answer is not to build one.
+   if [ "${TR4W_MAC_SIGN:-0}" != 1 ]; then
+      say '  NOT ATTEMPTED: TR4W_MAC_SIGN is not 1, so there are no signing'
+      say '  credentials. An unsigned installer package is not built at all --'
+      say '  it is worse than none, because a user grants an installer authority'
+      say '  before finding out macOS will refuse it.'
+      record SKIP 'pkg' 'signing not enabled'
+      return 1
+   fi
+
+   pkg="$OUTROOT/dist/tr4w-$TR4W_VERSION-$ARCH.pkg"
+   rm -f "$pkg"
+   if ! sh "$BUILD_DIR/mac-sign.sh" pkg "$stage" "$pkg"; then
+      say '  FAILED: the installer package could not be built, signed,'
+      say '  notarized and stapled.  The .dmg and the tarball are UNAFFECTED --'
+      say '  they passed their own gates and are still on disk.'
+      rm -f "$pkg"
+      record FAIL 'pkg' 'build/sign/notarize failed -- no .pkg produced'
+      return 1
+   fi
+   if [ ! -f "$pkg" ]; then
+      say "  FAILED: mac-sign.sh exited 0 with no package at $pkg."
+      record FAIL 'pkg' 'exit 0 but no package'
+      return 1
+   fi
+
+   say "  OK -> $pkg ($(($(wc -c < "$pkg") / 1024)) KB)"
+   record PASS 'pkg' "$pkg"
+   return 0
+}
+
+# ---------------------------------------------------------------------------
+# STAGE 10 -- the macOS debug symbols, as a RELEASE ASSET and not as payload.
 #
 # WHY THIS EXISTS AND WHY IT IS NOT IN THE BUNDLE.
 #
@@ -1704,7 +1776,7 @@ from $(du -sk "$_ds" | awk '{print $1}') KB raw)"
 }
 
 # ---------------------------------------------------------------------------
-# STAGE 10 -- do the symbols survive to the artifact a user downloads?
+# STAGE 11 -- do the symbols survive to the artifact a user downloads?
 #
 # WHAT THIS ANSWERS THAT NOTHING ELSE DID.  compile() puts line information
 # INSIDE the binary (-gl, plus -gw2 on Darwin) and says so in its log.  Six
@@ -1883,12 +1955,13 @@ case "${1:-}" in
    --appimage)  WANT=appimage ;;
    --symbols)   WANT=symbols ;;
    --dsym)      WANT=dsym ;;
+   --pkg)       WANT=pkg ;;
    --list)
-      say 'stages: app  tests  server  package  appimage (linux x86_64 only)  dsym (darwin only)  symbols'
+      say 'stages: app  tests  server  package  appimage (linux x86_64 only)  pkg (darwin only)  dsym (darwin only)  symbols'
       exit 0
       ;;
    *)
-      say "usage: $0 [--all|--app|--tests|--server|--package|--appimage|--dsym|--symbols|--list]" >&2
+      say "usage: $0 [--all|--app|--tests|--server|--package|--appimage|--pkg|--dsym|--symbols|--list]" >&2
       exit 2
       ;;
 esac
@@ -1932,6 +2005,7 @@ case "$WANT" in
       stage_server
       stage_package
       stage_appimage
+      stage_pkg
       stage_dsym
       stage_symbols
       ;;
@@ -1940,6 +2014,7 @@ case "$WANT" in
    server)   stage_server ;;
    package)  stage_package ;;
    appimage) stage_appimage ;;
+   pkg)      stage_pkg ;;
    dsym)     stage_dsym ;;
    symbols)  stage_symbols ;;
 esac
