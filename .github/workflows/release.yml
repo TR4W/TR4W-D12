@@ -4,15 +4,26 @@
 #   1. Tag push vX.Y.Z       -> build + installer + draft release
 #   2. Manual (Actions UI)   -> build + installer, no release
 #
-# Pipeline (TR4W is Windows-only; ALL jobs run on the self-hosted
-# [self-hosted, win-ci] lab runner -- nothing runs on GitHub-hosted servers):
+# Pipeline. NOTHING RUNS ON A GITHUB-HOSTED SERVER -- every job is on one of
+# three self-hosted lab runners. This header said "TR4W is Windows-only; ALL
+# jobs run on [self-hosted, win-ci]" until 2026-09-28, by which time the file
+# below had built Linux and macOS for weeks; it was read as authority and it
+# was wrong:
 #   build (win-ci)           -> FullBuild.ps1: lints, unit tests, app, server,
 #                               NSIS installer; upload installer artifact and
 #                               tr4w.dbg (the symbols) as artifacts
+#   build-linux (linux-ci)   -> build-unix.sh: app, tr4wserver, tarball,
+#                               AppImage
+#   build-macos (mac-ci)     -> build-unix.sh: app, tr4wserver, signed and
+#                               notarized .app / .dmg / .pkg
 #   virustotal-scan (win-ci) -> download installer, scan via VT API, produce
 #                               virustotal-report.md, upload as artifact
-#   release (win-ci)         -> only on tag push; download both artifacts,
+#   release (win-ci)         -> only on tag push; download the artifacts,
 #                               create a draft release with each attached
+#
+# The two non-Windows build jobs are continue-on-error and the release job's
+# `if:` does not consult their results -- so a Linux or macOS failure does not
+# block a Windows release. That is deliberate and is documented at each job.
 #
 # Single source of truth = tr4w/src/Version.pas; FullBuild passes /DTR4WVERSION
 # to NSIS and then VERIFIES the linked tr4w.exe reports that version, so a

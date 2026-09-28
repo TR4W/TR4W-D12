@@ -4,13 +4,20 @@
 page shape below is the part that was argued about and settled, so change it
 deliberately rather than in passing.
 
-**Reviewed 2026-09-11** against an external critique
-(`docs/Critique of Wizard Design Plan.md`), written from this document alone by
-an agent with no access to the tree. Its accepted points are folded into the
-sections below; everything it got wrong about TR4W is recorded in
+**Reviewed 2026-09-11** against an external critique, written from this document
+alone by an agent with no access to the tree. Its accepted points are folded into
+the sections below; everything it got wrong about TR4W is recorded in
 [section 12](#12-considered-and-rejected) with the evidence, so that a
 plausible-sounding recommendation does not arrive again next month with nothing
 to argue against it.
+
+> **The critique itself is NOT in the repository and is not coming.** It lives on
+> NY4I's machine as `docs/Critique of Wizard Design Plan.md`, is **untracked and
+> deliberately so** — it carries pre-signed URLs and **TR4W-D12 is public** — and
+> three tracked files cited it as though a reader could open it (corrected
+> 2026-09-28). **Section 12 is the record**; it exists precisely so the critique
+> does not have to be readable to be answered. Do not go looking for the file on
+> a fresh clone, and do not commit it if you find it on this one.
 
 ---
 

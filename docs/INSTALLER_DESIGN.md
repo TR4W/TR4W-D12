@@ -10,9 +10,10 @@ stated as decided or explicitly owed from NY4I.
 
 **Read `docs/SETUP_WIZARD_DESIGN.md` first.** This document is its outer layer
 and is deliberately written to not overlap it. The wizard document was reviewed
-against `docs/Critique of Wizard Design Plan.md`, and the single most important
-line it took from that review -- *the wizard must not redeclare a field* -- is
-the line this document applies one layer further out.
+against an external critique -- **which is not in this repository and is not
+coming**; see the note at the top of that document -- and the single most
+important line it took from that review, *the wizard must not redeclare a
+field*, is the line this document applies one layer further out.
 
 ---
 

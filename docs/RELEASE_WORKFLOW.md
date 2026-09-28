@@ -237,9 +237,9 @@ Use this when the feature PR is intended to be the next release.
 
 1. On the feature branch, as part of the PR's commits, bump
    `TR4W_CURRENTVERSION_NUMBER` and `TR4W_CURRENTVERSIONDATE`.
-2. PR gets reviewed + merged to master normally.
-3. After merge, **immediately** tag master (see [section 6](#6-tagging-for-an-english-only-release)).
-   The bumped version is already on master; no separate bump step.
+2. PR gets reviewed + merged to `main` normally.
+3. After merge, **immediately** tag `main` (see [section 6](#6-tagging-for-an-english-only-release)).
+   The bumped version is already on `main`; no separate bump step.
 
 Pro: one PR, atomic. The version-bump diff and the changes that justify it travel
 together; reviewer sees both.
@@ -248,7 +248,7 @@ Con: requires deciding the version number when the PR opens. If multiple PRs are
 in flight, only one of them can carry the bump -- the others need rebasing or
 will conflict.
 
-### Pattern B: Standalone bump on master, no PR
+### Pattern B: Standalone bump on `main`, no PR
 
 Use this when:
 
@@ -283,7 +283,7 @@ branch + PR.
 
 - **Don't tag without bumping first.** The CI's tag-vs-`Version.pas` validation
   will fail, the build won't run, and you'll have to delete the tag and re-push.
-- **Don't bump and then forget to tag.** A bumped `Version.pas` on master with no
+- **Don't bump and then forget to tag.** A bumped `Version.pas` on `main` with no
   matching tag means the EXE built locally claims version N+1 but there's no
   corresponding release artifact anywhere.
 - **Don't reuse a version.** Once `v4.147.18` is tagged and published, the next

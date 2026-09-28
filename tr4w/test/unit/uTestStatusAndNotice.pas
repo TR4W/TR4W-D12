@@ -127,9 +127,11 @@ begin
    (* WITHOUT THIS EVERY GUARD IN uMainForm SAYS "OFF THE MAIN THREAD", AND
      THAT IS A FACT ABOUT THIS BINARY, NOT ABOUT THE CODE UNDER TEST.
      uCrashLog.OnMainThread compares against GMainThreadId, which is recorded by
-     InstallCrashLog and is 0 until something calls it -- the app calls
-     InstallCrashLogLCL at startup and tr4wserver calls InstallCrashLog, so the
-     shipping programs are fine.  A test binary that skips it finds
+     InstallCrashLog and is 0 until something calls it -- BOTH shipping programs
+     call InstallCrashLogLCL (the app from uProgramMain, tr4wserver from its own
+     program body), and that installs the RTL half too, so both are fine.  This
+     said "tr4wserver calls InstallCrashLog" until 2026-09-28; it does not, and
+     for a while it called neither.  A test binary that skips it finds
      SetElementText deferring every write and SetStatusText dropping every one,
      with nothing in the log to say so, because ReportOffMainThread also stays
      quiet while GMainThreadId is 0.  Idempotent. *)

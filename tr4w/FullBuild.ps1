@@ -463,9 +463,18 @@ if ($SkipServer)
    # It said "pending its LCL conversion" from 2026-08-23 to 2026-08-29. There
    # was no conversion to pend on: the server had simply acquired a path to
    # Forms through TF -> uCrashLog, and the fix was to split uCrashLog.
-   Write-Host '  AND you have skipped the only guard on the console/LCL boundary --' -ForegroundColor Yellow
-   Write-Host "  the server's LCL-free search path is what catches a unit that has" -ForegroundColor Yellow
-   Write-Host '  quietly grown a Forms dependency. Nothing else looks.' -ForegroundColor Yellow
+   #
+   # AND FROM 2026-09-06 TO 2026-09-28 IT SAID SOMETHING FALSE: that skipping
+   # the server skipped "the only guard on the console/LCL boundary -- the
+   # server's LCL-free search path". That search path stopped being LCL-free
+   # the day tr4wserver became an LCL application. Get-SearchPaths.ps1 gives
+   # the Server target src\ui\lcl and the LCL units, and says so in its own
+   # header ("Server -- the SAME as App for the LCL, since 2026-09-06").
+   #
+   # So the guard does not exist and nothing replaced it. Nothing in this build
+   # catches a unit that quietly grows a Forms dependency. That is worth
+   # knowing, but it is not a cost of -SkipServer, and telling an operator it
+   # is makes a real gap sound like a switch they chose.
    }
 else
    {
