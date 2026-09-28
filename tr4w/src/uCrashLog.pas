@@ -360,6 +360,168 @@ end;
   and the base is what atos and addr2line actually take. *)
 function _dyld_get_image_vmaddr_slide(aImageIndex: longword): PtrInt; cdecl;
    external 'c';
+
+(* THE BUILD'S IDENTITY, AND WHY A VERSION IS NOT ONE.
+
+  A .dSYM is bound to one exact binary by an LC_UUID the linker wrote, and
+  tr4w-<version>-<arch>.dSYM.zip is published beside every macOS release with
+  symbols-<version>-<arch>.txt listing that UUID.  Without this line the only
+  way to pair a crash report with a .dSYM is the VERSION -- and two builds of
+  5.0.23 have different UUIDs.  The failure is silent in the worst way: atos
+  handed a .dSYM from another build does not refuse, it resolves every address
+  against the wrong image and prints a confident, wrong line.
+
+  So the report carries the UUID, and matching becomes an equality test that a
+  human can do by eye against `dwarfdump --uuid`, `otool -l`, the manifest, or
+  the Binary Images section of a macOS crash report -- all of which print the
+  same canonical uppercase 8-4-4-4-12 spelling this produces.
+
+  WHY THE RAW CALL.  _dyld_get_image_header is public dyld API (mach-o/dyld.h)
+  in libSystem, which FPC already links on Darwin as 'c', and image 0 is always
+  the main executable.  It is THE SAME BOUNDARY the slide import above already
+  crosses -- one more function at a boundary already crossed, no new dependency
+  and no new library to ship.  There is no FPC or LCL wrapper that answers it:
+  the RTL's own Mach-O reader is exeinfo's OpenMachO32PPC, which is 32-bit
+  PowerPC, does not check the magic, and cannot be asked for a load command at
+  all (see build/check-symbols.sh for the measurement).  Reading the header
+  ourselves is not a shortcut around a wrapper; there is no wrapper.
+
+  It is safe in a dying process for the same reason the slide is: the header is
+  already mapped in memory by the loader.  No file is opened and no symbol
+  table is parsed. *)
+function _dyld_get_image_header(aImageIndex: longword): pointer; cdecl;
+   external 'c';
+
+const
+   (* mach-o/loader.h.  MH_MAGIC_64 is checked rather than assumed -- see
+     MainImageUUID for why that is not defensive padding. *)
+   MH_MAGIC_64 = $FEEDFACF;
+   LC_UUID     = $1B;
+
+type
+   (* RECORDS, AND THIS IS THE ONE EXEMPTION CLAUDE.md ALLOWS: a layout defined
+     by something outside this code, at the boundary where it is passed.  The
+     kernel and the linker name these fields and their order; the record IS the
+     interface, and changing it would be changing the contract.
+
+     THE 64-BIT HEADER IS 32 BYTES, NOT 28.  mach_header_64 has a `reserved`
+     field that mach_header does not, so the load commands begin at offset 32.
+     Getting this wrong is not theoretical: it is precisely the defect in FPC's
+     own OpenMachO32PPC, which reads a 28-byte header AND returns true without
+     checking the magic, so on aarch64 it walks garbage and silently reports
+     nothing found.  That bug cost this project a working macOS backtrace; it is
+     not being reproduced three metres away from where it was written up. *)
+   TMachHeader64 = record
+      magic:      longword;
+      cputype:    longint;
+      cpusubtype: longint;
+      filetype:   longword;
+      ncmds:      longword;
+      sizeofcmds: longword;
+      flags:      longword;
+      reserved:   longword;
+   end;
+   PMachHeader64 = ^TMachHeader64;
+
+   TLoadCommand = record
+      cmd:     longword;
+      cmdsize: longword;
+   end;
+   PLoadCommand = ^TLoadCommand;
+
+   TUUIDBytes = array[0..15] of byte;
+   PUUIDBytes = ^TUUIDBytes;
+
+(* The canonical spelling: uppercase hex, 8-4-4-4-12.  Produced here rather
+  than left to the reader, because a UUID that has to be reformatted before it
+  can be compared with dwarfdump's output is half a feature. *)
+function FormatMachUUID(const aBytes: TUUIDBytes): string;
+const
+   (* Where a hyphen follows, by byte index -- 4-2-2-2-6 bytes. *)
+   BREAKS = [3, 5, 7, 9];
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 0 to 15 do
+      begin
+      Result := Result + SysUtils.IntToHex(aBytes[i], 2);
+      if i in BREAKS then
+         begin
+         Result := Result + '-';
+         end;
+      end;
+end;
+
+(* The running executable's LC_UUID.  False means "could not read it", and
+  aWhy then says WHY in words -- never an empty string and never a zero UUID,
+  because a blank field in a crash report reads as "this build has no symbols"
+  when what it means is "we could not parse the header". *)
+function MainImageUUID(out aUUID: string; out aWhy: string): boolean;
+var
+   hdr:  PMachHeader64;
+   cmd:  PLoadCommand;
+   walk: PtrUInt;
+   i:    longword;
+begin
+   Result := False;
+   aUUID  := '';
+   aWhy   := '';
+   try
+      hdr := PMachHeader64(_dyld_get_image_header(0));
+      if hdr = nil then
+         begin
+         aWhy := 'dyld returned no header for image 0';
+         Exit;
+         end;
+
+      (* CHECKED, NOT ASSUMED.  A wrong magic means this is not the image shape
+        the walk below understands -- a 32-bit or fat binary, say -- and walking
+        it anyway produces a plausible-looking UUID from whatever bytes happen
+        to follow.  Reporting the magic we actually saw turns that into a
+        diagnosis instead of a mystery. *)
+      if hdr^.magic <> MH_MAGIC_64 then
+         begin
+         aWhy := SysUtils.Format('unexpected Mach-O magic $%.8x (expected $%.8x)',
+                                 [hdr^.magic, longword(MH_MAGIC_64)]);
+         Exit;
+         end;
+
+      walk := PtrUInt(hdr) + SizeOf(TMachHeader64);
+      for i := 1 to hdr^.ncmds do
+         begin
+         cmd := PLoadCommand(walk);
+         (* A zero or short cmdsize would loop forever or step backwards. *)
+         if cmd^.cmdsize < SizeOf(TLoadCommand) then
+            begin
+            aWhy := SysUtils.Format('load command %d has cmdsize %d', [i, cmd^.cmdsize]);
+            Exit;
+            end;
+         if cmd^.cmd = LC_UUID then
+            begin
+            if cmd^.cmdsize < SizeOf(TLoadCommand) + SizeOf(TUUIDBytes) then
+               begin
+               aWhy := SysUtils.Format('LC_UUID is %d bytes, too short to hold one',
+                                       [cmd^.cmdsize]);
+               Exit;
+               end;
+            aUUID  := FormatMachUUID(PUUIDBytes(walk + SizeOf(TLoadCommand))^);
+            Result := True;
+            Exit;
+            end;
+         walk := walk + cmd^.cmdsize;
+         end;
+
+      aWhy := SysUtils.Format('no LC_UUID among %d load commands', [hdr^.ncmds]);
+   except
+      (* A crash reporter must not crash.  Anything unexpected here becomes a
+        reported reason, exactly as a failed lookup does. *)
+      on E: Exception do
+         begin
+         aWhy := 'exception reading the Mach-O header: ' + E.Message;
+         end;
+   end;
+end;
 {$ENDIF}
 
 (* The running image containing aAddr: its base, and its path when the platform
@@ -489,6 +651,10 @@ var
    base: PtrUInt;
    path: string;
    slide: string;
+   {$IFDEF DARWIN}
+   imageUUID: string;
+   uuidWhy:   string;
+   {$ENDIF}
 begin
    try
       (* An address certainly inside our own image -- this very routine. *)
@@ -518,6 +684,27 @@ begin
                    + 'atos -o "%s" -l 0x%x <address>  (or addr2line -e "%s" -f -C '
                    + '<address minus base>)',
                    [path, Int64(base), slide, path, Int64(base), path]);
+
+      (* WHICH BUILD THIS IS, on its own line so it can be grepped out of a
+        report and compared by eye.  See MainImageUUID for why the version is
+        not an answer to that question. *)
+      {$IFDEF DARWIN}
+      if MainImageUUID(imageUUID, uuidWhy) then
+         begin
+         CrashLogger.Fatal('[CRASH]   uuid %s -- match this against '
+                      + 'symbols-<version>-<arch>.txt before symbolising; a '
+                      + '.dSYM from another build of the same version resolves '
+                      + 'every address to a confidently wrong line',
+                      [imageUUID]);
+         end
+      else
+         begin
+         CrashLogger.Fatal('[CRASH]   uuid UNAVAILABLE (%s) -- this report '
+                      + 'cannot be matched to a .dSYM by UUID; pairing it by '
+                      + 'version alone is a guess and the result is unverified',
+                      [uuidWhy]);
+         end;
+      {$ENDIF}
    except
       (* Deliberately empty -- see WriteCrashReport.  A missing header line must
          never cost the frames. *)

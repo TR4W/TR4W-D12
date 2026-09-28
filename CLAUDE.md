@@ -1185,8 +1185,20 @@ it knows to a crash record -- the DX cluster's last 200 lines are the first -- *
 reporter (`LogCaughtException`, `EarlyTrace`, `OnMainThread`, the `ExceptProc` hook) and links
 anywhere, and the two statements that need a widget set — `Application.OnException` and
 `Application.ShowException` — are `src/ui/lcl/uCrashLogLCL.pas`. A program with an LCL calls
-`InstallCrashLogLCL`, which installs both; `tr4wserver` calls `InstallCrashLog` and now gets crash
-logging, which it never had.
+`InstallCrashLogLCL`, which installs both.
+
+~~`tr4wserver` calls `InstallCrashLog` and now gets crash logging, which it never had.~~
+**IT DOES NOT, AND THAT SENTENCE WAS NEVER TRUE** (measured 2026-09-27).
+`InstallCrashLog` has **no live caller anywhere in this tree** -- every occurrence is its
+declaration, its implementation, or a comment, and the only live installation is
+`uProgramMain`'s `InstallCrashLogLCL`. So the server LINKS the reporter -- `uCrashLog` reaches
+it through `tr4wserverUnit` -> `TF`, and the Darwin server binary carries 45 of its symbols --
+but nothing installs the `ExceptProc` hook, so **a `tr4wserver` crash still produces nothing.**
+`uCrashLog`'s `initialization` only creates a critical section.
+
+Fixing it is one line plus a gate to keep it fixed, and it is **not done**: the reporter is
+ready and waiting, including the Mach-O UUID line added the same day. Whoever adds the call
+should also decide what the server writes, since it has no `tr4w.log` of the application's.
 
 The `{$IFDEF FPC}` that used to guard the LCL half was on the **wrong axis** and could not have
 helped: it asks which *compiler*, when the question is which *program* has a widget set. Both are
