@@ -53,10 +53,54 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   GetDXMultiplierType describe the ROW, not an in-state operator's contest.
 
   ---------------------------------------------------------------------------
-  THE ROW CARRIES NO CountyLineAllowed FIELD, so the array boolean reads False,
-  which means UNKNOWN rather than "forbidden". No maximum has been established
-  from the sponsor's rules, so this inherits CountyLineCountiesUnlimited --
-  what TR4W does today.
+  ===========================================================================
+  THIS CLASS DELIBERATELY CHANGES THE SCORE, ON NY4I'S RULING OF 2026-09-29:
+  the Salmon Run scores on the sponsor's CURRENT rules,
+  https://salmonrun.wwdxc.org/rules/, and no longer on the legacy arm.
+
+  WHAT THE LEGACY ARM DID, identical in D7 and still in LOGSTUFF, where this
+  class shadows it (SalmonRunQSOPointMethod):
+      if Mode = CW then 4 else 2
+  so CW scored FOUR, and every other mode -- digital included -- scored two.
+
+  WHAT THE SPONSOR PUBLISHES, and what this class implements:
+      "QSO POINTS  2 points for Phone  3 points for CW"
+      "Contest Modes: Phone and CW. We cannot accept WJST modes (e.g.
+       FT-8/FT-4) because they do not provide the proper exchange."
+  So CW 3 and phone 2, and DIGITAL 0 -- NY4I ruled 0 rather than refusing the
+  contact, which matches how TR4W treats any QSO a contest does not credit.
+
+  FM IS SCORED AS PHONE, 2, AND THAT IS THIS CLASS'S READING, NOT A RULING.
+  The sponsor's modes are "Phone and CW"; FM is a phone emission, and 6 metres
+  is a contest band, so an FM contact is a phone contact there. It is written
+  out because FixedModePoints files FM under "everything else" -- which would
+  have scored it with digital, at 0.
+
+  THE ONE PIECE OF THE CURRENT RULES THIS CLASS DOES NOT IMPLEMENT, stated so
+  it is a known gap and not an oversight: "A QSO with the sponsoring club's
+  (Western Washington DX Club) call sign, W7DX, will add a 500-point bonus for
+  each mode (Phone and CW). A total of 1000 points may be earned in this
+  manner", and "Bonus points are added after all other scoring is completed
+  (they are not multiplied by the 'multiplier')."
+
+  IT CANNOT LIVE HERE, for the reason North Carolina's rare-county sweep
+  cannot: CalculateQSOPoints scores ONE QSO before multipliers, and this bonus
+  is awarded once per mode for the whole log, AFTER multiplication. No seam
+  for a contest to contribute to the final score exists in this factory yet --
+  ADDING_A_CONTEST.md section 6 lists calculateTotalScore among the things not
+  built until the responsibility moves. The W7DX contact itself still scores
+  its ordinary 3 or 2 points, which the sponsor also says.
+
+  ---------------------------------------------------------------------------
+  TWO COUNTIES ON A COUNTY LINE, FROM THE SAME PUBLISHED RULES.
+
+  "In the case of 3-county or more intersections, and in accordance with the
+  MARAC rules, only one county line consisting of two counties may be run at a
+  time."
+
+  So GetCountyLineCountiesMax returns 2, the way North Carolina's and
+  Indiana's do. The row carries no CountyLineAllowed field at all; the number
+  is read out of the rules, never out of that boolean.
 
   BOTH NAMES WERE BLANK UNTIL 2026-09-29, AND NY4I RULED BOTH.
 
@@ -121,6 +165,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
+
+      (* The county-line maximum, from the sponsor -- see the header. *)
+      function GetCountyLineCountiesMax: integer; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
@@ -128,7 +175,6 @@ type
 implementation
 
 uses
-   uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
 
 function TContestWashingtonSalmonRun.GetDisplayName: string;
@@ -223,16 +269,35 @@ begin
    Result := SalmonRunQSOPointMethod;
 end;
 
-(* SalmonRunQSOPointMethod -- `if Mode = CW then 4 else 2`, identical in D7.
-   DIGITAL scores the PHONE value, 2, which is why the third number is stated.
+function TContestWashingtonSalmonRun.GetCountyLineCountiesMax: integer;
+begin
+   Result := 2;
+end;
 
-   THE MECHANISM IS FixedModePoints, CALLED RATHER THAN INHERITED: this class's
-   one base is spent on the state-party family, and inheriting
-   TContestFixedPoints instead would silently take it out of that family (the
-   Florida trap in uContestFixedPoints' header). *)
+(* THE SPONSOR'S CURRENT POINTS -- CW 3, phone 2, and nothing else credited.
+   See the unit header for the ruling and for FM.
+
+   A case AND NOT FixedModePoints. That mechanism is "CW, phone, everything
+   else", and FM belongs with phone here while digital belongs with nothing,
+   so its three numbers cannot say it -- the Field Day trap
+   ADDING_A_CONTEST.md records. *)
 procedure TContestWashingtonSalmonRun.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 4, 2, 2);
+   case aQso.Mode of
+      CW:
+         begin
+         aQso.QSOPoints := 3;
+         end;
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      else
+         begin
+         (* Digital: "We cannot accept WJST modes" -- NY4I ruled 0. *)
+         aQso.QSOPoints := 0;
+         end;
+      end;
 end;
 
 initialization

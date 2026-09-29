@@ -48,6 +48,9 @@ const
 
 type
    TContestFactoryTests = class(TTestCase)
+   private
+      procedure CheckCountyLineMaximum(aContest: ContestType; const aWhat: string;
+                                       aMax: integer);
    protected
       procedure Test_EveryRegisteredContestConstructs;
       procedure Test_EveryStatePartyNamesItsState;
@@ -69,7 +72,8 @@ type
       procedure Test_NorthCarolinaBonusIsTheCurrentRules;
       procedure Test_NorthCarolinaAllowsTwoCounties;
       procedure Test_FourBespokeArmsCountyLineMaxima;
-      procedure Test_NewYorkAndSalmonRunTranscribeTheirArms;
+      procedure Test_NewYorkTranscribesItsArm;
+      procedure Test_SalmonRunScoresTheCurrentRules;
       procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
       procedure Test_ADIFIdsResolveOldAndNew;
@@ -1119,40 +1123,58 @@ end;
    IT IS NOT DERIVED FROM ContestsArray's BOOLEAN, which says True and carries
    no limit. This is the third party whose number has been read out of a
    rulebook, after Florida's two and California's four. *)
-procedure TContestFactoryTests.Test_NorthCarolinaAllowsTwoCounties;
+(* A STATE PARTY WHOSE COUNTY-LINE MAXIMUM HAS BEEN READ OUT OF ITS RULES.
+
+   ONE COPY OF THE ASSERTION, for every party with an established number. It
+   was written inline for North Carolina and would have been copied for the
+   Salmon Run and New York; copies of a check drift exactly as copies of the
+   rule do.
+
+   The maximum must be accepted silently and one more refused WITH a reason --
+   the refusal is the half that proves the number is a limit and not merely a
+   value the class happens to return. *)
+procedure TContestFactoryTests.CheckCountyLineMaximum(aContest: ContestType;
+                                                      const aWhat: string;
+                                                      aMax: integer);
 var
    obj: TContestBase;
    party: TContestStateQSOPartyBase;
    msg: string;
 begin
-   BeginTest('Test_NorthCarolinaAllowsTwoCounties');
-   obj := MakeContest(NCQSOPARTY);
-   CheckTrue(obj <> nil, 'North Carolina QSO Party has no registered class');
+   obj := MakeContest(aContest);
+   CheckTrue(obj <> nil, aWhat + ' has no registered class');
    if obj = nil then
       begin
       Exit;
       end;
    try
       CheckTrue(obj is TContestStateQSOPartyBase,
-                'North Carolina is not on the state-party base');
+                aWhat + ' is not on the state-party base');
       if not (obj is TContestStateQSOPartyBase) then
          begin
          Exit;
          end;
       party := TContestStateQSOPartyBase(obj);
-      CheckEquals(2, party.CountyLineCountiesMax,
-                  'North Carolina allows two counties');
+      CheckEquals(aMax, party.CountyLineCountiesMax,
+                  aWhat + ' allows ' + IntToStr(aMax) + ' counties');
       CheckTrue(party.CountyLineAllowed,
-                'North Carolina allows county-line operation');
-      CheckTrue(party.ValidateQTHCount(2, msg),
-                'North Carolina: two counties at once');
-      CheckEquals('', msg, 'North Carolina: two is accepted silently');
-      CheckFalse(party.ValidateQTHCount(3, msg),
-                 'North Carolina: three counties is too many');
-      CheckTrue(msg <> '', 'North Carolina: a refusal must say why');
+                aWhat + ' allows county-line operation');
+      msg := '';
+      CheckTrue(party.ValidateQTHCount(aMax, msg),
+                aWhat + ': ' + IntToStr(aMax) + ' counties at once');
+      CheckEquals('', msg, aWhat + ': the maximum is accepted silently');
+      CheckFalse(party.ValidateQTHCount(aMax + 1, msg),
+                 aWhat + ': ' + IntToStr(aMax + 1) + ' counties is too many');
+      CheckTrue(msg <> '', aWhat + ': a refusal must say why');
    finally
       obj.Free;
       end;
+end;
+
+procedure TContestFactoryTests.Test_NorthCarolinaAllowsTwoCounties;
+begin
+   BeginTest('Test_NorthCarolinaAllowsTwoCounties');
+   CheckCountyLineMaximum(NCQSOPARTY, 'North Carolina', 2);
 end;
 
 (* THE OTHER THREE HAVE NO ESTABLISHED NUMBER, AND THAT IS THE UNCHANGED
@@ -1209,74 +1231,107 @@ begin
    CheckUnlimited(VAQP, 'Virginia');
 end;
 
-(* NEW YORK AND THE WASHINGTON STATE SALMON RUN, MOVED 2026-09-29.
+(* NEW YORK, MOVED 2026-09-29.
 
-   BOTH ARMS ARE THE CW-VERSUS-NOT SHAPE, so digital takes the PHONE value:
-   OnePhoneTwoCW is `if Mode = CW then 2 else 1` and SalmonRunQSOPointMethod is
-   `if Mode = CW then 4 else 2`, the latter identical in D7. The digital
-   assertion is the one that would catch the inverted shape.
+   OnePhoneTwoCW is `if Mode = CW then 2 else 1`, so digital takes the PHONE
+   value -- the digital assertion is the one that would catch the inverted
+   shape.
 
-   NEITHER ROW CARRIES A CountyLineAllowed FIELD, and neither party has a
-   maximum established from its sponsor's rules, so both must inherit
+   ITS ROW CARRIES NO CountyLineAllowed FIELD, and no maximum has been
+   established from its sponsor's rules, so it must inherit
    CountyLineCountiesUnlimited and accept a four-county junction exactly as
    TR4W does today. Reading the absent boolean as zero is the defect this pins
-   against.
+   against. *)
+procedure TContestFactoryTests.Test_NewYorkTranscribesItsArm;
+var
+   obj: TContestBase;
+   party: TContestStateQSOPartyBase;
+   msg: string;
+begin
+   BeginTest('Test_NewYorkTranscribesItsArm');
+   obj := MakeContest(NYQP);
+   CheckTrue(obj <> nil, 'New York has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckEquals(2, PointsFor(obj, CW), 'New York CW');
+      CheckEquals(1, PointsFor(obj, Phone), 'New York phone');
+      CheckEquals(1, PointsFor(obj, Digital),
+                  'New York digital -- takes the phone value');
 
-   THE SALMON RUN IS A STATE PARTY WITHOUT THE WORDS IN ITS NAME. It has its
-   own QSOParties entry (WA), so it was already IsUSQSOParty before it had a
-   class; the host-state assertion is what says it landed on the right base. *)
-procedure TContestFactoryTests.Test_NewYorkAndSalmonRunTranscribeTheirArms;
-
-   procedure CheckParty(aContest: ContestType; const aWhat, aState: string;
-                        aCW, aPhone, aDigital: integer);
-   var
-      obj: TContestBase;
-      party: TContestStateQSOPartyBase;
-      msg: string;
-   begin
-      obj := MakeContest(aContest);
-      CheckTrue(obj <> nil, aWhat + ' has no registered class');
-      if obj = nil then
+      CheckTrue(obj is TContestStateQSOPartyBase,
+                'New York is not on the state-party base');
+      if not (obj is TContestStateQSOPartyBase) then
          begin
          Exit;
          end;
-      try
-         CheckEquals(aCW, PointsFor(obj, CW), aWhat + ' CW');
-         CheckEquals(aPhone, PointsFor(obj, Phone), aWhat + ' phone');
-         CheckEquals(aDigital, PointsFor(obj, Digital),
-                     aWhat + ' digital -- takes the phone value');
+      CheckEquals('NY', obj.HostState, 'New York host state');
+      CheckTrue(obj.IsUSQSOParty, 'New York is a US QSO party');
 
-         CheckTrue(obj is TContestStateQSOPartyBase,
-                   aWhat + ' is not on the state-party base');
-         if not (obj is TContestStateQSOPartyBase) then
-            begin
-            Exit;
-            end;
-         CheckEquals(aState, obj.HostState, aWhat + ' host state');
-         CheckTrue(obj.IsUSQSOParty, aWhat + ' is a US QSO party');
+      party := TContestStateQSOPartyBase(obj);
+      CheckEquals(CountyLineCountiesUnlimited, party.CountyLineCountiesMax,
+                  'New York has no established maximum and must inherit unlimited');
+      CheckTrue(party.CountyLineAllowed,
+                'New York: unlimited must read as allowed');
+      msg := '';
+      CheckTrue(party.ValidateQTHCount(4, msg),
+                'New York: a four-county junction must still pass');
+      CheckEquals('', msg, 'New York: nothing refused, so nothing said');
+   finally
+      obj.Free;
+      end;
+end;
 
-         party := TContestStateQSOPartyBase(obj);
-         CheckEquals(CountyLineCountiesUnlimited, party.CountyLineCountiesMax,
-                     aWhat + ' has no established maximum and must inherit'
-                     + ' unlimited');
-         CheckTrue(party.CountyLineAllowed,
-                   aWhat + ': unlimited must read as allowed');
-         CheckTrue(party.ValidateQTHCount(4, msg),
-                   aWhat + ': a four-county junction must still pass');
-         CheckEquals('', msg, aWhat + ': nothing refused, so nothing said');
-      finally
-         obj.Free;
-         end;
-   end;
+(* THE WASHINGTON STATE SALMON RUN SCORES ON ITS SPONSOR'S CURRENT RULES --
+   NY4I, 2026-09-29. https://salmonrun.wwdxc.org/rules/ :
 
+      "QSO POINTS  2 points for Phone  3 points for CW"
+      "Contest Modes: Phone and CW. We cannot accept WJST modes (e.g.
+       FT-8/FT-4) ..."
+
+   THIS IS A DELIBERATE CHANGE OF SCORE. The legacy arm, identical in D7, was
+   `if Mode = CW then 4 else 2`, so CW was 4 and digital 2; both assertions
+   below would fail against it, and that is their job. Digital scores 0 on
+   NY4I's ruling. FM scores as phone -- the class's reading of "Phone", noted
+   in its header, and pinned here because FixedModePoints would have filed it
+   with digital.
+
+   TWO COUNTIES ON A COUNTY LINE: "only one county line consisting of two
+   counties may be run at a time."
+
+   THE SALMON RUN IS A STATE PARTY WITHOUT THE WORDS IN ITS NAME. It has its
+   own QSOParties entry (WA), so it was already IsUSQSOParty before it had a
+   class; the host-state assertion is what says it landed on the right base.
+
+   NOT COVERED HERE, because nothing implements it: the W7DX bonus, 500 per
+   mode added after multiplication. See the class header. *)
+procedure TContestFactoryTests.Test_SalmonRunScoresTheCurrentRules;
+var
+   obj: TContestBase;
 begin
-   BeginTest('Test_NewYorkAndSalmonRunTranscribeTheirArms');
+   BeginTest('Test_SalmonRunScoresTheCurrentRules');
+   obj := MakeContest(SALMONRUN);
+   CheckTrue(obj <> nil, 'Salmon Run has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckEquals(3, PointsFor(obj, CW), 'Salmon Run CW is 3 -- not the legacy 4');
+      CheckEquals(2, PointsFor(obj, Phone), 'Salmon Run phone is 2');
+      CheckEquals(2, PointsFor(obj, FM), 'Salmon Run FM is phone, 2');
+      CheckEquals(0, PointsFor(obj, Digital),
+                  'Salmon Run digital is 0 -- not the legacy 2');
 
-   (* OnePhoneTwoCW: if Mode = CW then 2 else 1. *)
-   CheckParty(NYQP, 'New York', 'NY', 2, 1, 1);
+      CheckEquals('WA', obj.HostState, 'Salmon Run host state');
+      CheckTrue(obj.IsUSQSOParty, 'Salmon Run is a US QSO party');
+   finally
+      obj.Free;
+      end;
 
-   (* SalmonRunQSOPointMethod: if Mode = CW then 4 else 2. *)
-   CheckParty(SALMONRUN, 'Salmon Run', 'WA', 4, 2, 2);
+   CheckCountyLineMaximum(SALMONRUN, 'Salmon Run', 2);
 end;
 
 (* THE FIXED-POINT CONTESTS, MOVED 2026-09-29 IN TWO SLICES.
@@ -1719,7 +1774,8 @@ begin
    Test_NorthCarolinaBonusIsTheCurrentRules;
    Test_NorthCarolinaAllowsTwoCounties;
    Test_FourBespokeArmsCountyLineMaxima;
-   Test_NewYorkAndSalmonRunTranscribeTheirArms;
+   Test_NewYorkTranscribesItsArm;
+   Test_SalmonRunScoresTheCurrentRules;
    Test_FixedPointContestsTranscribeTheirArms;
    Test_MovedRowValuesStillMatchTheArray;
    Test_ADIFIdsResolveOldAndNew;
