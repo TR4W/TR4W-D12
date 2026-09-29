@@ -107,6 +107,7 @@ var
 begin
    Result.MyCountry := UTF8Encode(Settings.My.Country);
    Result.MyContinent := MyContinent;
+   Result.MyGrid := Settings.My.Grid;
 
    Val(Settings.My.Zone, Result.MyZone, code);
    Result.MyZoneValid := (code = 0) and (Settings.My.Zone <> '');

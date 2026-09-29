@@ -71,16 +71,19 @@ uses
    VC;
 
 const
-   (* NO LIMIT IS ENFORCED ANYWHERE IN TR4W TODAY -- measured, not assumed:
-      LOGSTUFF.ApplyFirstQTHAndQueueRest pushes EVERY valid county after the
-      first onto uPendingCounties and MainUnit.DrainPendingMultiQSORefs writes
-      one QSO for each. Nothing counts them, so "two versus four" is a
-      behaviour this program does not have.
+   (* THE SHAPE OF ONE QSO: LINE IN A CABRILLO FILE, for every contest that has
+      not said otherwise.
 
-      This value is what a contest means when it permits county-line operation
-      without stating a limit, which is every contest until somebody
-      characterises one. *)
-   CountyLineCountiesUnlimited = High(integer);
+      The five arguments, in order: the frequency/mode/date/time prefix already
+      assembled by PostUnit, our sent exchange, the worked callsign, the
+      received exchange, and the multi-op transmitter flag.
+
+      IT IS DECLARED HERE RATHER THAN IN PostUnit SO THERE IS ONE COPY. PostUnit
+      needs it for the contests that have no class; the base returns it for the
+      contests that have one and do not override. Two literals would be two
+      definitions of one layout, and the drift would show up as a malformed log
+      for exactly the contests nobody rechecked. *)
+   CabrilloQSOLineFormatDefault = '%s%s%-15s%-10s %-5s' + #13#10;
 
 type
    (* WHAT SCORING KNOWS ABOUT US.
@@ -114,6 +117,14 @@ type
          "zone 0" from "no zone set" instead of scoring against a silent 0. *)
       MyZone: integer;
       MyZoneValid: boolean;
+
+      (* THE OPERATOR'S OWN MAIDENHEAD GRID.
+
+         Added when ARRL-DIGI moved, which is the growth rule this record's
+         header states: a field arrives with the first contest that needs it,
+         not in advance. Distance scoring is a function of BOTH grids, and only
+         one of them is on the QSO. *)
+      MyGrid: string;
    end;
 
    (* THE MY-STATION HALF OF AN EXCHANGE.
@@ -181,32 +192,38 @@ type
       function GetFormatsExchange: boolean; virtual;
       function GetHostState: string; virtual;
 
-      (* THE COUNTY-LINE RULE, AS A COUNT -- AND THE BOOLEAN DERIVED FROM IT.
+      (* ~~GetCountyLineCountiesMax~~ AND ~~GetCountyLineAllowed~~ ARE NOT HERE.
+         They are on TContestStateQSOPartyBase -- 2026-09-29, NY4I: "Arktika
+         Spring is clearly not a qso party so I am not sure why that would be in
+         the conversation of two counties", and "ARRL-DIGI is not of course
+         either."
 
-         NY4I, 2026-09-28: "some qso parties allow county line operation where
-         you can claim multiple counties and some do not so that is a good item
-         to keep in mind too. Some allow 2 counties, some like california qso
-         party allow a junction of 4 counties."
+         A COUNTY LINE IS A QSO-PARTY CONCEPT, so putting it on the root made
+         every contest in the program answer a question only about twenty of
+         them can be asked -- and three classes duly answered it, two of which
+         (Arktika Spring, ARRL Digital) have no counties at all.
 
-         A BOOLEAN CANNOT SAY THAT. Three answers exist -- none, two, and
-         California's four-county junction -- and a flag expresses only the
-         first distinction, so the wrong answer reads as a legal one. That is
-         CLAUDE.md note 9 with a different noun.
+         Moving it down is not tidiness. Nothing outside the QSO-party
+         hierarchy can now EXPRESS a county-line rule, which is the same guard
+         "a base must never ask which contest it is" buys one level up. *)
 
-         ONE VALUE, TWO READINGS. The count is the stored rule; the boolean is
-         computed from it, on NY4I's own sketch ("CountyLineAllowed could be a
-         property that returns a boolean where the accessor states return
-         FCountyLineCountiesAllowed > 0"). A site that only cares WHETHER reads
-         better asking CountyLineAllowed; a site that needs the limit asks for
-         the number. Nothing is stored twice, so the two cannot disagree.
+      (* THE CABRILLO QSO: LINE LAYOUT.
 
-         AND THE BOOLEAN IS DELIBERATELY NOT VIRTUAL. If both were virtual a
-         descendant could override the boolean to True while the count still
-         answered 0, and the two would contradict each other silently. Leaving
-         it non-virtual makes the contradiction unrepresentable rather than
-         merely discouraged -- so this is a decision, not a missing keyword. *)
-      function GetCountyLineCountiesMax: integer; virtual;
-      function GetCountyLineAllowed: boolean;
+         A CONTEST-SHAPED FACT THAT WAS WRITTEN AS `if Contest = ...` IN
+         PostUnit -- ARKTIKA-SPRING uses a narrower line than everything else --
+         which is precisely the shape this factory exists to remove.
+
+         SEPARATE FROM FormatsExchange, AND NOT GATED BY IT. FormatsExchange
+         asks whether the contest arranges its own exchange COLUMNS; this is the
+         line those columns are placed into, and a contest can own one without
+         the other. Gating them together would have obliged Arktika Spring to
+         take over an exchange formatter it shares with contests that have no
+         class.
+
+         The base answers CabrilloQSOLineFormatDefault, which is also what
+         PostUnit uses when there is no class at all, so a contest joining the
+         factory changes nothing here until it overrides. *)
+      function GetCabrilloQSOLineFormat: string; virtual;
 
       (* WHICH CONTEST THIS INSTANCE IS -- READABLE BY SUBCLASSES, AND NOT TO BE
          BRANCHED ON.
@@ -249,8 +266,7 @@ type
          cannot name the state from the exchange and has to ask the contest. *)
       property HostState: string read GetHostState;
 
-      property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
-      property CountyLineAllowed: boolean read GetCountyLineAllowed;
+      property CabrilloQSOLineFormat: string read GetCabrilloQSOLineFormat;
 
       (* THE CONTEST'S NAME, for logging and for the "which class am I" question
          a bench session asks. Defaults to the enum's own spelling. *)
@@ -404,32 +420,40 @@ type
          stored settings, from the operator editing it mid-contest -- and a
          contest holding the startup value would score the rest of the log
          against a station that has moved. *)
-      (* HOW MANY COUNTIES MAY ONE ON-AIR EXCHANGE NAME?
+      (* HOW MANY QTHs MAY ONE ON-AIR EXCHANGE CLAIM?
 
-         THE APPLICATION COUNTS; THE CONTEST SUPPLIES THE LIMIT. This takes an
-         integer and not a list, and that is the design rule rather than a
-         convenience: a contest that was handed the counties would be one step
-         from being handed the prior QSOs so it could count them itself, and at
-         that point the order in which callers invoke factory methods starts
-         changing what a log scores. LOGSTUFF already has the count -- it just
-         tokenised the exchange -- so it passes the number and asks.
+         THE NAME IS QTH AND NOT COUNTY, BECAUSE THE BASE IS ASKED ABOUT EVERY
+         CONTEST. It was ValidateCountyCount, which made CQ WW and the ARRL
+         Digital contest answer a question about counties; the thing LOGSTUFF
+         actually has in hand at the call site is a count of QTH tokens, and
+         that is a question any contest can be asked.
 
-         A COUNTY-LINE CONTACT IS N SEPARATE QSOs, NOT ONE QSO WITH N KEYS.
-         Florida's rules: "Florida stations on a county line (maximum of two
-         counties) may be claimed as a separate QSO and multiplier from each
-         county." TR4W already writes it that way -- one row per county sharing
-         the transmitted serial number, with ceClearDupeSheet set on the
-         follow-ups so the generic dupe check does not blank them.
+         THE BASE ALWAYS SAYS YES, AND THAT IS BEHAVIOUR-PRESERVING BY
+         CONSTRUCTION. TR4W has never counted QTHs for any contest:
+         LOGSTUFF.ApplyFirstQTHAndQueueRest queues every valid one the operator
+         typed and no site anywhere bounds them. So "no opinion" is not a
+         permissive placeholder -- it is an exact statement of what the program
+         does, and a contest acquiring a class cannot change it by accident.
 
-         NOT VIRTUAL, for the same reason CountyLineAllowed is not: the rule is
-         the COUNT, and a contest that could override the verdict as well could
-         contradict its own limit.
+         THAT WAS A REAL DEFECT AND THIS IS THE FIX. While the rule lived here,
+         the inherited answer read ContestsArray's CountyLineAllowed boolean,
+         which is absent from most rows -- so the moment a contest got a class
+         of any kind, a two-QTH exchange started being REFUSED for it. Arktika
+         Spring hit exactly that.
 
-         ONE COUNTY ALWAYS PASSES, including for the contests whose maximum is
-         zero. Zero means "no county LINE", not "no county" -- every domestic
-         exchange names one. *)
-      function ValidateCountyCount(aCount: integer;
-                                   out aErrorMessage: string): boolean;
+         VIRTUAL, so a contest that does have a limit can state one.
+         TContestStateQSOPartyBase is the only overrider today and the only
+         place a county-line limit exists.
+
+         IT TAKES AN INTEGER AND NEVER A LIST, and that is the design rule
+         rather than a convenience: a contest that was handed the QTHs would be
+         one step from being handed the prior QSOs so it could count them
+         itself, and at that point the order in which callers invoke factory
+         methods starts changing what a log scores. LOGSTUFF already has the
+         count -- it just tokenised the exchange -- so it passes the number and
+         asks. *)
+      function ValidateQTHCount(aCount: integer;
+                                out aErrorMessage: string): boolean; virtual;
 
       procedure SetStation(const aStation: TStationContext);
    protected
@@ -585,60 +609,20 @@ begin
    Result := USQSOPartyStateName(FContest);
 end;
 
-function TContestBase.GetCountyLineCountiesMax: integer;
+function TContestBase.GetCabrilloQSOLineFormat: string;
 begin
-   (* WHAT THE ARRAY CAN SAY, AND NOTHING MORE. ContestsArray carries a
-      BOOLEAN, so the only honest translation of True is "allowed, with no
-      limit stated" -- and unlimited is also what TR4W actually DOES today:
-      LOGSTUFF.ApplyFirstQTHAndQueueRest queues every valid county the operator
-      typed and no site anywhere counts them. Returning 2 here would be a
-      number nobody measured, and it would be wrong for the California QSO
-      Party, whose junctions are four.
-
-      A contest that KNOWS its limit overrides this. Until one does, the value
-      describes the program rather than the rulebook, and says so. *)
-   if ContestsArray[FContest].CountyLineAllowed then
-      begin
-      Result := CountyLineCountiesUnlimited;
-      end
-   else
-      begin
-      Result := 0;
-      end;
+   Result := CabrilloQSOLineFormatDefault;
 end;
 
-function TContestBase.GetCountyLineAllowed: boolean;
+function TContestBase.ValidateQTHCount(aCount: integer;
+                                      out aErrorMessage: string): boolean;
 begin
-   Result := GetCountyLineCountiesMax > 0;
-end;
-
-function TContestBase.ValidateCountyCount(aCount: integer;
-                                          out aErrorMessage: string): boolean;
-var
-   maxCounties: integer;
-begin
+   (* NO OPINION, AND THAT IS THE WHOLE IMPLEMENTATION. See the declaration:
+      accepting every count is an exact statement of what TR4W does for every
+      contest, so a contest joining the factory cannot tighten this by
+      inheriting something. A limit has to be stated to exist. *)
    aErrorMessage := '';
-   maxCounties := GetCountyLineCountiesMax;
-
-   (* A CONTEST THAT HAS NOT ESTABLISHED ITS LIMIT ENFORCES NOTHING, WHICH IS
-      WHAT TR4W HAS ALWAYS DONE. Eleven of the thirteen parties carrying the
-      county-line flag have no published number in this tree, and a party
-      wrongly capped at two would reject a valid three-county junction in the
-      middle of a contest -- failing only for the operator who is right. That
-      is worse than today's uniform permissiveness, so unlimited stays
-      unlimited until somebody reads the rules. *)
-   if maxCounties = CountyLineCountiesUnlimited then
-      begin
-      Result := True;
-      Exit;
-      end;
-
-   Result := (aCount <= 1) or (aCount <= maxCounties);
-
-   if not Result then
-      begin
-      aErrorMessage := Format(TC_TOOMANYCOUNTIES, [maxCounties]);
-      end;
+   Result := True;
 end;
 
 procedure TContestBase.CalculateQSOPoints(var aQso: ContestExchange);

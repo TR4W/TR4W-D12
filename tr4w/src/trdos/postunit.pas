@@ -427,6 +427,8 @@ uses
   uLogSource,
   (* ActiveContest -- the contest formats its own exchange, phase F. *)
   uContestFactory,
+  (* CabrilloQSOLineFormatDefault -- the layout for a contest with no class. *)
+  uContestBase,
   uCFG,
   uLogNote;   (* NoteText -- MakeNotesList *)
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
@@ -3149,16 +3151,21 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    end;
                 // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
                 // first-part, my-exchange, his-callsign, his-exchange, multi-op flag.
-                // ARKTIKA_SPRING uses a narrower layout that consumes only the first 4
+                // A contest may use a narrower layout that consumes only the first 4
                 // args (the multi-op flag is omitted); Delphi Format ignores the extra
-                // trailing argument, so a single arg list serves both formats.
-                if Contest = ARKTIKA_SPRING then
+                // trailing argument, so a single arg list serves every layout.
+                (* WHICH LAYOUT IS THE CONTEST'S ANSWER -- phase F.
+                   This was `if Contest = ARKTIKA_SPRING`, one contest's rule
+                   written where its name had to be asked for. The contest class
+                   states it now; a contest with no class gets the same default
+                   constant the base returns, so there is one copy of it. *)
+                if ActiveContest( Contest ) <> nil then
                    begin
-                   sFmt := '%s%-12s%-10s%-10s'#13#10 // 4.100.3
+                   sFmt := ActiveContest( Contest ).CabrilloQSOLineFormat
                    end
                 else
                    begin
-                   sFmt := '%s%s%-15s%-10s %-5s'#13#10; // 4.100.3
+                   sFmt := CabrilloQSOLineFormatDefault; // 4.100.3
                    end;
                 sWriteFileFromString( tReportFileWrite,
                    sysutils.Format( sFmt, [ sFirstPart, CABRILLO_MYEX,

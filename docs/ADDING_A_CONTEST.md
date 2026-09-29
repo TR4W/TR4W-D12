@@ -125,6 +125,35 @@ ones.
 Override only what the contest actually owns; everything else inherits, and the
 inherited answer reads `ContestsArray`, so a half-moved contest still behaves.
 
+### Step 3b — state the contest's row in the class
+
+NY4I, 2026-09-29, pointing at a contest's `ContestsArray` row: *"all the info in
+[the row] should go into the contest class."*
+
+So a class overrides the row accessors with LITERALS rather than letting them
+default to `ContestsArray[FContest]`. Copy
+[`uContestARRLFieldDay.pas`](../tr4w/src/contestFactory/uContestARRLFieldDay.pas)
+or either of the two newest,
+[`uContestArktikaSpring.pas`](../tr4w/src/contestFactory/uContestArktikaSpring.pas)
+and [`uContestARRLDigi.pas`](../tr4w/src/contestFactory/uContestARRLDigi.pas):
+each quotes its array row verbatim in a comment and then states every field.
+
+**DO NOT delete the array row.** It still answers for every contest that has no
+class, and for every accessor a class chooses not to override.
+
+**TWO FIELDS ARE BLANK IN THE ARRAY AND BLANK IS NOT THE ANSWER.** `CABName` and
+`FriendlyName` both mean *"use `ContestTypeSA[ct]`"* when empty — the array says
+so itself — so a class transcribing them as `''` silently produces a blank
+`CONTEST:` header line and a nameless contest in the selection UI. `ADIFName` is
+the opposite: empty there is a real answer, because ADIF defines no id.
+
+`uTestContestFactory.Test_MovedRowValuesStillMatchTheArray` is the guard. It
+compares each class's literals against a plain `TContestBase` on the same
+`ContestType` — the same accessor, so the two-step fallbacks are included — and
+it caught exactly that `FriendlyName` mistake while Arktika Spring was written.
+Add your contest to it, and delete the whole test when `ContestsArray` goes,
+because at that point there is nothing left to compare against.
+
 ### Step 4 — register and list it
 
 ```pascal
@@ -161,9 +190,15 @@ shared files a contest touches; the search path already covers
 | `InitialExchangeKind`, `ExchangeKind`, `QSOPointMethod` | the array row |
 | `IsUSQSOParty` | the array row (`P <> 0`) |
 | `HostState` | **`USQSOPartyStateName`** -- derived from the array's `P` index, which is the one place a QSO party's state is written down. `''` for every contest that has no host state, which is a real answer |
-| `CountyLineCountiesMax` | `CountyLineCountiesUnlimited` when the array says the contest allows a county line, `0` when it does not. **A count, not a flag** -- Florida allows two, 7QP four, Michigan none |
-| `CountyLineAllowed` | **derived, and NOT virtual**: `CountyLineCountiesMax > 0`. One stored value, two readings, so the two cannot disagree. Overriding the count is the only way to state the rule |
+
+**`CountyLineCountiesMax` and `CountyLineAllowed` ARE NOT ON THE BASE** — they
+moved to `TContestStateQSOPartyBase` on 2026-09-29 and are listed with it below.
+NY4I: *"Arktika Spring is clearly not a qso party so I am not sure why that
+would be in the conversation of two counties"*, and *"ARRL-DIGI is not of course
+either."* A county line is a QSO-party concept, and on the root every contest in
+the program could state one — three classes did, two of which have no counties.
 | `FormatsExchange` | **False** — see below |
+| `CabrilloQSOLineFormat` | `CabrilloQSOLineFormatDefault` — the layout of a whole `QSO:` line, which is NOT the exchange columns. Arktika Spring is the one contest that overrides it, with a narrower line that uses only four of the five arguments. **Deliberately not gated by `FormatsExchange`**: a contest can own the line without owning the columns, and Arktika Spring shares its exchange arm with contests that have no class. PostUnit uses the same constant when there is no class, so there is one copy of the layout |
 
 **Everything defaults to `ContestsArray` on purpose.** A contest states what it
 wants to own and inherits the rest, and a contest with no class is unaffected.
@@ -209,7 +244,7 @@ the wrongness.
 | `CalculateQSOPoints` | scores 0 (`NoQSOPointMethod` is a real value) |
 | `ValidateClass` | accepts anything |
 | `ValidateDXQTH` | accepts nothing |
-| `ValidateCountyCount` | **not virtual** -- derived from `CountyLineCountiesMax`. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the counties would be the first step toward handing it the log. One county always passes, even where the maximum is zero |
+| `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
 | `FormatCabrilloSentExchange` / `...Received...` / `FormatADIFSentExchange` | `''`, and only called when `FormatsExchange` is True |
 
 **`FormatsExchange` is False by default and that matters.** A contest whose
@@ -233,11 +268,25 @@ would duplicate the part that cannot differ.
 |---|---|---|
 | `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
 | `TContestFixedPoints` | mechanism | "a number per mode". Its rule is also a plain function, `FixedModePoints`, so a contest that already has a family base can call it instead of inheriting it -- Object Pascal has one base class to spend |
-| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. **Two members**: `IsUSQSOParty` is stated rather than read from the `P` index, and `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated. Deliberately NOT here: NAQP (a QSO party by name only), and 7QP / NEQP / IN7QPNE (multi-state, unresolved) |
+| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP (a QSO party by name only), and 7QP / NEQP / IN7QPNE (multi-state, unresolved) |
+
+**THE DEFECT THAT MOVED IT, because the shape will look tempting again.** While
+the rule was on `TContestBase`, the inherited maximum read
+`ContestsArray[c].CountyLineAllowed` — a boolean that most rows do not carry, so
+it answered **0**, and 0 refuses a second QTH. The effect was that **acquiring a
+class of any kind started rejecting a two-QTH exchange**, for contests with no
+counties at all; Arktika Spring hit it the day it was moved, while the comment
+at the `logstuff.pas` call site asserted the opposite. The array's boolean
+carries no *limit*, so the only honest reading of it was never a number — which
+is why the party base's default is unconditional and the array is not consulted.
 
 ### `TStationContext` — what scoring knows about us
 
-`Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`.
+`Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`.
+
+`MyGrid` arrived with ARRL-DIGI, whose points are a function of BOTH grids and
+only one of them is on the QSO. That is the growth rule the record states: a
+field arrives with the first contest that needs it.
 
 **Pushed in by the factory, never read from globals.** An earlier version had the
 base reach into `LOGWIND`, which put the display layer in the dependency graph of

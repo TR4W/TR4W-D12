@@ -1972,24 +1972,32 @@ begin
      Exit;
      end;
 
-  (* HOW MANY COUNTIES MAY THIS CONTEST'S EXCHANGE NAME?
+  (* HOW MANY QTHs MAY THIS CONTEST'S EXCHANGE CLAIM?
 
      THE COUNT IS OURS AND THE LIMIT IS THE CONTEST'S. We have just tokenised
      the exchange, so the number is in hand; the rule about it belongs to the
      contest object, which is handed the NUMBER and never the list -- a
-     contest that could see the counties would be one step from being handed
-     the log to count them in.
+     contest that could see the QTHs would be one step from being handed the
+     log to count them in.
 
-     A CONTEST WITH NO CLASS, AND ANY CONTEST THAT HAS NOT ESTABLISHED ITS
-     LIMIT, IS UNCHANGED. ActiveContest is nil for the former and
-     CountyLineCountiesUnlimited is the default for the latter, so this gate
-     opens for everything TR4W accepted before and closes only where a number
-     was actually read out of a rulebook. *)
+     EVERYTHING EXCEPT A STATE QSO PARTY IS UNCHANGED, AND THAT SENTENCE USED
+     TO BE WRONG. It read "a contest with no class, and any contest that has
+     not established its limit, is unchanged ... this gate opens for everything
+     TR4W accepted before" -- which was false the moment any contest acquired a
+     class, because the inherited answer read ContestsArray's CountyLineAllowed
+     boolean and a row without that field answered ZERO, refusing a second QTH.
+     Arktika Spring hit it (fixed 2026-09-29).
+
+     TContestBase.ValidateQTHCount now always passes, so ActiveContest being
+     nil and ActiveContest being a non-QSO-party class give the SAME answer as
+     each other and as TR4W before the factory existed. Only
+     TContestStateQSOPartyBase overrides it, and only where a number was
+     actually read out of a sponsor's rulebook. *)
   contestObject := ActiveContest(Contest);
   if contestObject <> nil then
      begin
-     if not contestObject.ValidateCountyCount(ValidQTHs.Count,
-                                              countyCountError) then
+     if not contestObject.ValidateQTHCount(ValidQTHs.Count,
+                                           countyCountError) then
         begin
         ExchangeErrorMessage := countyCountError;
         logger.Error('[ApplyFirstQTHAndQueueRest] %s Counties = %d',

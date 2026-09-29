@@ -126,6 +126,22 @@ interface
 uses
    uContestBase;
 
+const
+   (* NO LIMIT IS ENFORCED ANYWHERE IN TR4W TODAY -- measured, not assumed:
+      LOGSTUFF.ApplyFirstQTHAndQueueRest pushes EVERY valid county after the
+      first onto uPendingCounties and MainUnit.DrainPendingMultiQSORefs writes
+      one QSO for each. Nothing counts them, so "two versus four" is a
+      behaviour this program does not have.
+
+      This value is what a QSO party means when it permits county-line
+      operation without stating a limit, which is every party until somebody
+      characterises one.
+
+      IT LIVES HERE AND NOT ON TContestBase (moved 2026-09-29). It is only
+      meaningful to a contest that HAS counties, and a constant reachable from
+      the root invites the same mistake the accessors did. *)
+   CountyLineCountiesUnlimited = High(integer);
+
 type
    TContestStateQSOPartyBase = class(TContestBase)
    protected
@@ -151,13 +167,121 @@ type
          Abstract turns that into a compile error instead: a state party that
          does not override this cannot be instantiated. *)
       function GetHostState: string; override; abstract;
+
+      (* THE COUNTY-LINE RULE, AS A COUNT -- AND THE BOOLEAN DERIVED FROM IT.
+
+         IT MOVED HERE FROM TContestBase ON 2026-09-29. NY4I: "Arktika Spring
+         is clearly not a qso party so I am not sure why that would be in the
+         conversation of two counties", and "Generally qso parties will have
+         QSO PARTY or QP in their name (NAQP an exception)." On the root, every
+         contest in the program answered a county-line question and three
+         classes had written an answer down; two of them have no counties.
+
+         NY4I, 2026-09-28, on the shape itself: "some qso parties allow county
+         line operation where you can claim multiple counties and some do not
+         so that is a good item to keep in mind too. Some allow 2 counties,
+         some like california qso party allow a junction of 4 counties."
+
+         A BOOLEAN CANNOT SAY THAT. Three answers exist -- none, two, and
+         California's four-county junction -- and a flag expresses only the
+         first distinction, so the wrong answer reads as a legal one. That is
+         CLAUDE.md note 9 with a different noun.
+
+         ONE VALUE, TWO READINGS. The count is the stored rule; the boolean is
+         computed from it, on NY4I's own sketch ("CountyLineAllowed could be a
+         property that returns a boolean where the accessor states return
+         FCountyLineCountiesAllowed > 0"). A site that only cares WHETHER reads
+         better asking CountyLineAllowed; a site that needs the limit asks for
+         the number. Nothing is stored twice, so the two cannot disagree.
+
+         AND THE BOOLEAN IS DELIBERATELY NOT VIRTUAL. If both were virtual a
+         descendant could override the boolean to True while the count still
+         answered 0, and the two would contradict each other silently. Leaving
+         it non-virtual makes the contradiction unrepresentable rather than
+         merely discouraged -- so this is a decision, not a missing keyword. *)
+      function GetCountyLineCountiesMax: integer; virtual;
+      function GetCountyLineAllowed: boolean;
+   public
+      property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
+      property CountyLineAllowed: boolean read GetCountyLineAllowed;
+
+      (* THE ONLY OVERRIDE OF THE BASE'S VALIDATOR IN THIS TREE.
+
+         TContestBase.ValidateQTHCount always passes, because TR4W has never
+         counted QTHs for any contest. A state QSO party is the one kind of
+         contest for which a number exists in a rulebook, so it is the one kind
+         that may refuse.
+
+         SEMANTICS UNCHANGED FROM THE VERSION THAT LIVED ON THE ROOT: one QTH
+         always passes (zero means "no county LINE", not "no county" -- every
+         domestic exchange names one), CountyLineCountiesUnlimited accepts any
+         number, and a stated maximum refuses more with TC_TOOMANYCOUNTIES.
+
+         A COUNTY-LINE CONTACT IS N SEPARATE QSOs, NOT ONE QSO WITH N KEYS.
+         Florida's rules: "Florida stations on a county line (maximum of two
+         counties) may be claimed as a separate QSO and multiplier from each
+         county." TR4W already writes it that way -- one row per county sharing
+         the transmitted serial number, with ceClearDupeSheet set on the
+         follow-ups so the generic dupe check does not blank them. *)
+      function ValidateQTHCount(aCount: integer;
+                                out aErrorMessage: string): boolean; override;
    end;
 
 implementation
 
+uses
+   SysUtils,        (* Format *)
+   uTR4WStrings;    (* TC_TOOMANYCOUNTIES *)
+
 function TContestStateQSOPartyBase.GetIsUSQSOParty: boolean;
 begin
    Result := True;
+end;
+
+function TContestStateQSOPartyBase.GetCountyLineCountiesMax: integer;
+begin
+   (* UNLIMITED, UNCONDITIONALLY -- AND DELIBERATELY NOT READ FROM
+      ContestsArray[c].CountyLineAllowed.
+
+      That field is a BOOLEAN and carries no limit, so the best it could say is
+      "allowed, number unknown" -- which is this value -- while its False arm
+      would say zero, and zero REFUSES a second QTH. Eleven of the thirteen
+      flagged parties have no published number in this tree, and a party
+      wrongly capped would reject a valid junction in the middle of a contest,
+      failing only for the operator who is right.
+
+      Unlimited is also what the program actually does: nothing counts the
+      queued counties. So this describes TR4W today, and a party that KNOWS its
+      number overrides -- Florida with two, Michigan with none, both quoting
+      their sponsors. *)
+   Result := CountyLineCountiesUnlimited;
+end;
+
+function TContestStateQSOPartyBase.GetCountyLineAllowed: boolean;
+begin
+   Result := GetCountyLineCountiesMax > 0;
+end;
+
+function TContestStateQSOPartyBase.ValidateQTHCount(aCount: integer;
+                                        out aErrorMessage: string): boolean;
+var
+   maxCounties: integer;
+begin
+   aErrorMessage := '';
+   maxCounties := GetCountyLineCountiesMax;
+
+   if maxCounties = CountyLineCountiesUnlimited then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   Result := (aCount <= 1) or (aCount <= maxCounties);
+
+   if not Result then
+      begin
+      aErrorMessage := Format(TC_TOOMANYCOUNTIES, [maxCounties]);
+      end;
 end;
 
 end.

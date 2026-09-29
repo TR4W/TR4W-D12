@@ -274,6 +274,8 @@ uses
    uContestNASprintRTTY in '..\..\src\contestFactory\uContestNASprintRTTY.pas',
    uContestFloridaQP in '..\..\src\contestFactory\uContestFloridaQP.pas',
    uContestMichiganQP in '..\..\src\contestFactory\uContestMichiganQP.pas',
+   uContestArktikaSpring in '..\..\src\contestFactory\uContestArktikaSpring.pas',
+   uContestARRLDigi in '..\..\src\contestFactory\uContestARRLDigi.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
