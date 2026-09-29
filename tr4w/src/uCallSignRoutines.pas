@@ -65,6 +65,7 @@ function UKEIStation(ID: string): boolean;
 function GetPrefix(Call: string): string;
 function GetOblast(Call: string): string;
 function MobileCall(Call: string): boolean;  //n4af 4.41.8
+function MarineOrAirMobileStation(Call: string): boolean;
 //function IsUA1AStation(Call: string): boolean;
 function StandardCallFormat(Call: string; Complete: boolean): string;
 function GetRussiaOblastID(Call: string): string; //
@@ -546,6 +547,52 @@ end;
 function MobileCall(Call: string): boolean;      //n4af 4.41.8
 begin
   MobileCall := UpperCase(Copy(Call, length(Call) - 1, 2)) = '/M';
+end;
+
+(* '/AM' OR '/MM' -- AIR MOBILE OR MARITIME MOBILE.
+
+   LIFTED OUT OF LOGSTUFF ON 2026-09-29, NOT COPIED. The Virginia QSO Party
+   scores such a station at three points, so a contest class needs to ask the
+   question -- and the answer lived in LOGSTUFF, whose dependency cone is the
+   whole TRDOS engine. Duplicating it into the contest factory would have made
+   two copies of one predicate, which is the drift CLAUDE.md forbids; so the
+   single copy moved HERE, beside MobileCall and RoverCall, which are the same
+   kind of suffix test on the same kind of leaf unit. LOGSTUFF's two callers
+   resolve to this one -- it already has uCallSignRoutines in its interface
+   uses.
+
+   FAITHFUL, INCLUDING THE PARTS THAT LOOK LIKE OVERSIGHTS. It is
+   case-SENSITIVE (the original did no UpperCase, unlike MobileCall directly
+   above), and it requires at least four characters, so a bare '/AM' is not a
+   marine station. Both are reproduced rather than corrected: this move must
+   change no score.
+
+   THE ONE CHANGE IS THE PARAMETER TYPE -- CallString became string, matching
+   every other routine in this unit. Callers pass ContestExchange.Callsign, a
+   ShortString, which converts at the call site; callsigns are ASCII, so the
+   char comparisons below are identical either way.
+
+   The original also used `Call[l - 1] in ['A', 'M']`, which does not compile
+   against a WideChar. It is written out as two comparisons, which is what the
+   set meant. *)
+function MarineOrAirMobileStation(Call: string): boolean;
+var
+   l: integer;
+begin
+   Result := False;
+   l := Length(Call);
+   if l < 4 then
+      begin
+      Exit;
+      end;
+   if Call[l - 2] <> '/' then
+      begin
+      Exit;
+      end;
+   if (Call[l] = 'M') and ((Call[l - 1] = 'A') or (Call[l - 1] = 'M')) then
+      begin
+      Result := True;
+      end;
 end;
 function SimilarCall(Call1: string; Call2: string): boolean;
 { This function will return true if the two calls only differ in one

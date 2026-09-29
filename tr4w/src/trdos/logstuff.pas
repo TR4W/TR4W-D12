@@ -623,8 +623,11 @@ function LogFileLooksOkay: boolean;
 procedure LogStringToRXData(LogString: Str80; var RXData: ContestExchange);
 function LooksLikeACallSign(Call: Str40): boolean;
 
-function MarineOrAirMobileStation(Call: CallString): boolean;
-{KK1L: 6.68 Used in WRTC 2002}
+(* MarineOrAirMobileStation MOVED to uCallSignRoutines on 2026-09-29 -- it
+   is a pure suffix test on a callsign, and the Virginia QSO Party class
+   needs it without the TRDOS engine behind it. This unit already has
+   uCallSignRoutines in its interface uses, so both call sites below still
+   resolve. *)
 
 {
 procedure NewBandMapEntry(Call: CallString;
@@ -9885,39 +9888,6 @@ begin
   uRotatorControl.TurnRotator(Heading,
     string(BandStringsArrayWithOutSpaces[ActiveBand]));
 end;
-
-function MarineOrAirMobileStation(Call: CallString): boolean;
-
-{KK1L: 6.68 This function will return TRUE if the callsign passed to it is marine
-  or air mobile station. }
-
-var
-
-  l: integer;
-begin
-  MarineOrAirMobileStation := False;
-  l := length(Call);
-  if l < 4 then
-     begin
-     Exit;
-     end;
-  if Call[l - 2] <> '/' then
-     begin
-     Exit;
-     end;
-  if (Call[l] = 'M') and (Call[l - 1] in ['A', 'M']) then
-     begin
-     MarineOrAirMobileStation := True;
-     end;
-  {
-    MarineOrAirMobileStation := False;
-    TempString := PostcedingString(Call, '/');
-    if StringHas(TempString, '/') then TempString := PostcedingString(TempString, '/');
-    if length(TempString) = 2 then if ((TempString = 'MM') or (TempString = 'AM')) then MarineOrAirMobileStation := True;
-  }
-end;
-{
-}
 
 function InSameFederalOkrug(HisCallsign: CallString): boolean;
 var

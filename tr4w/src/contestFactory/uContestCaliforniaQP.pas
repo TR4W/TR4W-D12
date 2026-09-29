@@ -119,7 +119,16 @@ end;
 
 function TContestCaliforniaQP.GetADIFContestId: string;
 begin
-   Result := '';
+   (* STATED, NOT LEFT BLANK. The row held '' until 2026-09-29; ADIF 3.1.7
+      defines CA-QSO-PARTY and NY4I had VC.pas corrected.
+
+      ADIFName IS WHAT ADIF EXPORT WRITES AS CONTEST_ID (NY4I, who wrote
+      that code), and it is also what import matches on. A BLANK IS NOT
+      'no id' -- export falls back to the contest's quoted name -- so a
+      blank row still produced a CONTEST_ID, just not the standard one.
+      Stating it means the exported file now carries the ADIF identifier
+      a sponsor's robot expects, and the class cannot drift from it. *)
+   Result := 'CA-QSO-PARTY';
 end;
 
 function TContestCaliforniaQP.GetWA7BNMId: integer;

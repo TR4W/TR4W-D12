@@ -33,6 +33,19 @@ uses
    uTR4WTestFramework, VC, uContestBase, uContestRegistry,
    uContestStateQSOPartyBase;
 
+const
+   (* THE TEN "RAREST OF NC" COUNTIES, TRANSCRIBED A SECOND TIME ON PURPOSE.
+
+      A test that read NCRareCounties out of the class would assert that the
+      class agrees with itself. These are typed from the sponsor's list at
+      https://ncqsoparty.org/rules/ and each was checked against
+      target\dom\nc_cty.dom.
+
+      GRAHAM IS 'GRM'. 'GRA' is a different county, also in that file, and is
+      asserted NOT rare below. *)
+   NCRareCountyCodes: array[0..9] of string =
+      ('CAB', 'GRM', 'VAN', 'MAC', 'DAV', 'CUR', 'PAM', 'ALL', 'PER', 'CAS');
+
 type
    TContestFactoryTests = class(TTestCase)
    protected
@@ -51,6 +64,11 @@ type
       procedure Test_ARRLDigiScoresNothingWithoutBothGrids;
       procedure Test_TenStatePartiesScoreTheirLegacyArms;
       procedure Test_TenStatePartiesCountyLineMaxima;
+      procedure Test_FourBespokeArmsScoreTheirLegacyShape;
+      procedure Test_VirginiaScoresMarineAndAirMobileAtThree;
+      procedure Test_NorthCarolinaBonusIsTheCurrentRules;
+      procedure Test_NorthCarolinaAllowsTwoCounties;
+      procedure Test_FourBespokeArmsCountyLineMaxima;
       procedure Test_MovedRowValuesStillMatchTheArray;
    public
       procedure RunAllTests; override;
@@ -868,6 +886,324 @@ begin
    CheckUnlimited(ArizonaQsoParty, 'Arizona');
 end;
 
+(* THE FOUR PARTIES WITH A POINT METHOD OF THEIR OWN, MOVED 2026-09-29.
+
+   EVERY ONE OF THEM TESTS PHONE-VERSUS-NOT, WHICH IS THE INVERTED SHAPE. The
+   ten parties moved before these mostly test CW-versus-not, so their digital
+   QSOs score the PHONE number. Here digital scores the CW number -- 4 for
+   British Columbia, 2 for Pennsylvania, 5 for North Carolina's own three-way
+   split, 2 for Virginia.
+
+   SO THE DIGITAL ASSERTION IS THE ONE THAT EARNS ITS KEEP. A class written
+   from the habit of the previous batch reproduces the phone and CW arms
+   perfectly and is silently wrong about every digital contact -- and no other
+   gate in this tree would see it: the golden corpus is blind to scoring, and
+   test-contest-factory.sh only rescores logs that happen to contain a digital
+   QSO in one of these four contests. *)
+procedure TContestFactoryTests.Test_FourBespokeArmsScoreTheirLegacyShape;
+
+   procedure CheckPoints(aContest: ContestType; const aWhat: string;
+                         aCW, aPhone, aDigital: integer);
+   var
+      obj: TContestBase;
+   begin
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, aWhat + ' has no registered class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      try
+         CheckEquals(aCW, PointsFor(obj, CW), aWhat + ' CW');
+         CheckEquals(aPhone, PointsFor(obj, Phone), aWhat + ' phone');
+         CheckEquals(aDigital, PointsFor(obj, Digital),
+                     aWhat + ' digital -- takes the CW value, not the phone one');
+      finally
+         obj.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_FourBespokeArmsScoreTheirLegacyShape');
+
+   (* BCQPQSOPointMethod: if Mode = PHONE then 2 else 4. *)
+   CheckPoints(BCQP, 'British Columbia', 4, 2, 4);
+
+   (* PAQSOPointMethod: if Mode = PHONE then 1 else 2. *)
+   CheckPoints(PAQSOPARTY, 'Pennsylvania', 2, 1, 2);
+
+   (* NCQSOPointMethod: phone 2, CW 3, digital 5 -- three distinct numbers,
+      before any bonus. PointsFor zeroes the whole exchange, so the callsign
+      and the DomesticQTH are blank and neither bonus fires. *)
+   CheckPoints(NCQSOPARTY, 'North Carolina', 3, 2, 5);
+
+   (* VAQSOPointMethod: phone 1, else marine/air mobile 3, else 2. A blank
+      callsign is not marine, so this is the plain case. *)
+   CheckPoints(VAQP, 'Virginia', 2, 1, 2);
+end;
+
+(* VIRGINIA'S THIRD ARM, IN BOTH DIRECTIONS.
+
+   The legacy chain is `if PHONE then 1 else if MarineOrAirMobileStation then 3
+   else 2`, and THE ORDER IS THE ASSERTION THAT MATTERS: a maritime-mobile
+   station worked on PHONE scores ONE, not three, because the phone test comes
+   first and returns. A class that tested the callsign first would look more
+   natural and would change a score.
+
+   MarineOrAirMobileStation was lifted from LOGSTUFF into uCallSignRoutines for
+   this class. It is case-SENSITIVE and that is faithful, not an oversight, so
+   the lower-case case is pinned too -- anybody who "fixes" it with an
+   UpperCase will be told they changed a score. *)
+procedure TContestFactoryTests.Test_VirginiaScoresMarineAndAirMobileAtThree;
+var
+   obj: TContestBase;
+
+   function PointsForCall(const aCall: string; aMode: ModeType): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Mode := aMode;
+      qso.Callsign := aCall;
+      obj.CalculateQSOPoints(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_VirginiaScoresMarineAndAirMobileAtThree');
+   obj := MakeContest(VAQP);
+   CheckTrue(obj <> nil, 'Virginia QSO Party has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckEquals(3, PointsForCall('K4ABC/MM', CW),
+                  'maritime mobile on CW');
+      CheckEquals(3, PointsForCall('K4ABC/AM', CW),
+                  'air mobile on CW');
+      CheckEquals(3, PointsForCall('K4ABC/MM', Digital),
+                  'maritime mobile on digital -- not a phone contact');
+
+      CheckEquals(2, PointsForCall('K4ABC', CW),
+                  'a plain callsign on CW');
+      CheckEquals(2, PointsForCall('K4ABC/M', CW),
+                  'land mobile is NOT marine or air mobile');
+      CheckEquals(2, PointsForCall('K4ABC/P', CW),
+                  'portable is not either');
+
+      (* THE ORDER OF THE CHAIN. *)
+      CheckEquals(1, PointsForCall('K4ABC/MM', Phone),
+                  'phone is tested FIRST -- a /MM phone contact scores one');
+
+      (* Faithful case sensitivity, and the length floor: the legacy routine
+         refuses anything shorter than four characters, so a bare suffix is
+         not a marine station. *)
+      CheckEquals(2, PointsForCall('k4abc/mm', CW),
+                  'the legacy test is case-sensitive and must stay so');
+      CheckEquals(2, PointsForCall('/MM', CW),
+                  'fewer than four characters is refused');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* NORTH CAROLINA'S CURRENT PUBLISHED SCORING -- AND THIS IS THE ONE CONTEST IN
+   THE MIGRATION WHOSE SCORE DELIBERATELY CHANGED.
+
+   NY4I, 2026-09-29: "the rules given are it. tarheel was back in 2020 so go
+   with the current rules." So the 2020 TARHEEL callsign bonuses and the flat
+   +50 for DomesticQTH in ('ALL','COL') are GONE, and https://ncqsoparty.org/rules/
+   is implemented instead: base phone 2 / CW 3 / digital 5, multiplied by ten
+   for a QSO with a station in one of ten "Rarest of NC" counties.
+
+   THIS TEST IS THE ONLY THING THAT CAN SEE ANY OF IT. The golden corpus is
+   blind to scoring; test-contest-factory.sh compares against TR4W's own former
+   output and NO CORPUS LOG IS AN NC QSO PARTY LOG, so it cannot move either
+   way. An approved scoring change with no assertion behind it is an unverified
+   change.
+
+   THE NEAR-MISS GUARD IS THE ASSERTION THAT MATTERS MOST. Graham is 'GRM';
+   'GRA' is a DIFFERENT county and is also in nc_cty.dom, so a three-letter
+   slip pays ten times the points to the wrong county and fails nothing. *)
+procedure TContestFactoryTests.Test_NorthCarolinaBonusIsTheCurrentRules;
+var
+   obj: TContestBase;
+   i: integer;
+
+   function PointsForQSO(const aCall: string; const aQTH: string;
+                         aMode: ModeType): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Mode := aMode;
+      qso.Callsign := aCall;
+      qso.DomesticQTH := aQTH;
+      obj.CalculateQSOPoints(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_NorthCarolinaBonusIsTheCurrentRules');
+   obj := MakeContest(NCQSOPARTY);
+   CheckTrue(obj <> nil, 'North Carolina QSO Party has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      (* BASE POINTS, on a county that is not rare. *)
+      CheckEquals(3, PointsForQSO('K4ABC', 'WAK', CW), 'a plain CW QSO');
+      CheckEquals(2, PointsForQSO('K4ABC', 'WAK', Phone), 'a plain phone QSO');
+      CheckEquals(5, PointsForQSO('K4ABC', 'WAK', Digital),
+                  'a plain digital QSO');
+
+      (* TEN TIMES, on a rare one. The sponsor writes these three numbers out
+         -- "Phone - 20 points each CW - 30 points each Digital - 50 points
+         each" -- so they are asserted as literals here even though the class
+         derives them, which is what makes the multiplier form provable. *)
+      CheckEquals(30, PointsForQSO('K4ABC', 'CAB', CW), 'rare county, CW');
+      CheckEquals(20, PointsForQSO('K4ABC', 'CAB', Phone), 'rare county, phone');
+      CheckEquals(50, PointsForQSO('K4ABC', 'CAB', Digital),
+                  'rare county, digital');
+
+      (* ALL TEN, not a sample -- each abbreviation is an independent chance to
+         have mistyped one, and a mistyped one is silent. *)
+      for i := Low(NCRareCountyCodes) to High(NCRareCountyCodes) do
+         begin
+         CheckEquals(30, PointsForQSO('K4ABC', NCRareCountyCodes[i], CW),
+                     'rare county ' + NCRareCountyCodes[i] + ' must pay 10x');
+         end;
+
+      (* THE NEAR MISS. Graham is GRM; GRA is a different county in the same
+         file and must score base points. *)
+      CheckEquals(3, PointsForQSO('K4ABC', 'GRA', CW),
+                  'GRA is NOT Graham -- Graham is GRM');
+
+      (* THE OLD FLAT +50 IS GONE. COL is Columbus, which the legacy arm paid
+         and the current rules do not. *)
+      CheckEquals(3, PointsForQSO('K4ABC', 'COL', CW),
+                  'COL no longer carries a bonus');
+      CheckEquals(2, PointsForQSO('K4ABC', 'COL', Phone),
+                  'COL scores base points on phone too');
+
+      (* AND ALL IS PAID ON ITS OWN MERITS NOW -- it is Alleghany, one of the
+         ten, so it pays 10x rather than the old flat +50 (which would have
+         been 3 + 50 = 53 on CW). *)
+      CheckEquals(30, PointsForQSO('K4ABC', 'ALL', CW),
+                  'ALL is Alleghany, a rare county -- 10x, not the old +50');
+
+      (* THE TARHEEL CALLSIGN BONUSES ARE DELETED. *)
+      CheckEquals(3, PointsForQSO('N4T', 'WAK', CW),
+                  'N4T was a 2020 special-event station and gets nothing now');
+      CheckEquals(30, PointsForQSO('N4T', 'CAB', CW),
+                  'and the county rule is all that is left to pay it');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* NORTH CAROLINA ALLOWS TWO COUNTIES, AND THE NUMBER IS THE SPONSOR'S.
+
+   https://ncqsoparty.org/rules/ : "A Mobile (while stationary,) Portable, or
+   Expedition may operate on a county line and contacts can be used as credit
+   for two counties. A maximum of two counties may be worked simultaneously
+   under this provision."
+
+   IT IS NOT DERIVED FROM ContestsArray's BOOLEAN, which says True and carries
+   no limit. This is the third party whose number has been read out of a
+   rulebook, after Florida's two and California's four. *)
+procedure TContestFactoryTests.Test_NorthCarolinaAllowsTwoCounties;
+var
+   obj: TContestBase;
+   party: TContestStateQSOPartyBase;
+   msg: string;
+begin
+   BeginTest('Test_NorthCarolinaAllowsTwoCounties');
+   obj := MakeContest(NCQSOPARTY);
+   CheckTrue(obj <> nil, 'North Carolina QSO Party has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckTrue(obj is TContestStateQSOPartyBase,
+                'North Carolina is not on the state-party base');
+      if not (obj is TContestStateQSOPartyBase) then
+         begin
+         Exit;
+         end;
+      party := TContestStateQSOPartyBase(obj);
+      CheckEquals(2, party.CountyLineCountiesMax,
+                  'North Carolina allows two counties');
+      CheckTrue(party.CountyLineAllowed,
+                'North Carolina allows county-line operation');
+      CheckTrue(party.ValidateQTHCount(2, msg),
+                'North Carolina: two counties at once');
+      CheckEquals('', msg, 'North Carolina: two is accepted silently');
+      CheckFalse(party.ValidateQTHCount(3, msg),
+                 'North Carolina: three counties is too many');
+      CheckTrue(msg <> '', 'North Carolina: a refusal must say why');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* THE OTHER THREE HAVE NO ESTABLISHED NUMBER, AND THAT IS THE UNCHANGED
+   BEHAVIOUR ASSERTION.
+
+   British Columbia and Virginia carry no CountyLineAllowed field in their rows
+   at all, so the array boolean reads False -- which means UNKNOWN, not none.
+   Pennsylvania carries True, which means "allowed, number unknown". All three
+   answers are the same: inherit CountyLineCountiesUnlimited, and accept any
+   count, because nothing in TR4W has ever counted the queued counties.
+
+   FOUR QTHs IS THE ASSERTION BECAUSE FOUR IS THE MOST THAT CAN PHYSICALLY
+   MEET. It is also the count that a wrongly-derived zero would refuse, which
+   is the defect this pins against. *)
+procedure TContestFactoryTests.Test_FourBespokeArmsCountyLineMaxima;
+
+   procedure CheckUnlimited(aContest: ContestType; const aWhat: string);
+   var
+      obj: TContestBase;
+      party: TContestStateQSOPartyBase;
+      msg: string;
+   begin
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, aWhat + ' has no registered class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      try
+         CheckTrue(obj is TContestStateQSOPartyBase,
+                   aWhat + ' is not on the state-party base');
+         if not (obj is TContestStateQSOPartyBase) then
+            begin
+            Exit;
+            end;
+         party := TContestStateQSOPartyBase(obj);
+         CheckEquals(CountyLineCountiesUnlimited, party.CountyLineCountiesMax,
+                     aWhat + ' has no established maximum and must inherit'
+                     + ' unlimited');
+         CheckTrue(party.CountyLineAllowed,
+                   aWhat + ': unlimited must read as allowed');
+         CheckTrue(party.ValidateQTHCount(4, msg),
+                   aWhat + ': a four-county junction must still pass');
+         CheckEquals('', msg, aWhat + ': nothing refused, so nothing said');
+      finally
+         obj.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_FourBespokeArmsCountyLineMaxima');
+   CheckUnlimited(BCQP, 'British Columbia');
+   CheckUnlimited(PAQSOPARTY, 'Pennsylvania');
+   CheckUnlimited(VAQP, 'Virginia');
+end;
+
 procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
 
    procedure CheckAgainstArray(aContest: ContestType; const aWhat: string);
@@ -931,6 +1267,22 @@ begin
    CheckAgainstArray(TENNESSEEQSOPARTY, 'Tennessee QSO Party');
    CheckAgainstArray(TEXASQSOPARTY, 'Texas QSO Party');
    CheckAgainstArray(ArizonaQsoParty, 'Arizona QSO Party');
+
+   (* THE FOUR BESPOKE-SCORING PARTIES MOVED ON 2026-09-29. Two of their rows
+      hold a trap the others do not. British Columbia has a BLANK CABName, so
+      its Cabrillo name is the enum's own spelling BCQP and not the empty
+      string -- and a blank ADIFName, which IS the empty string.
+
+      NORTH CAROLINA'S ADIFName WAS A SENTENCE AND THE ARRAY WAS CORRECTED ON
+      2026-09-29. It held 'North Carolina QSO Party' where every other contest
+      uses an upper-case token; NY4I confirmed the real name is 'NC-QSO-PARTY'
+      and approved changing VC.pas. This assertion compares the class against
+      the array, so it holds either way -- what it cannot see is whether the
+      value is the RIGHT one, which is why the correction needed him. *)
+   CheckAgainstArray(BCQP, 'British Columbia QSO Party');
+   CheckAgainstArray(NCQSOPARTY, 'North Carolina QSO Party');
+   CheckAgainstArray(PAQSOPARTY, 'Pennsylvania QSO Party');
+   CheckAgainstArray(VAQP, 'Virginia QSO Party');
 end;
 
 procedure TContestFactoryTests.RunAllTests;
@@ -950,6 +1302,11 @@ begin
    Test_ARRLDigiScoresNothingWithoutBothGrids;
    Test_TenStatePartiesScoreTheirLegacyArms;
    Test_TenStatePartiesCountyLineMaxima;
+   Test_FourBespokeArmsScoreTheirLegacyShape;
+   Test_VirginiaScoresMarineAndAirMobileAtThree;
+   Test_NorthCarolinaBonusIsTheCurrentRules;
+   Test_NorthCarolinaAllowsTwoCounties;
+   Test_FourBespokeArmsCountyLineMaxima;
    Test_MovedRowValuesStillMatchTheArray;
 end;
 
