@@ -2,6 +2,7 @@
 name: contest-factory
 description: The contest factory — uContestBase, the contest registry, and one unit per contest under src/contestFactory/. Use when adding a contest, changing a contest's rules object, or working on the migration of contest behaviour out of the TRDOS engine into a contest class.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own `tr4w/src/contestFactory/` — the strangler-pattern replacement for

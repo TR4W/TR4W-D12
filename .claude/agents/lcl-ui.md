@@ -2,6 +2,7 @@
 name: lcl-ui
 description: The user interface — LCL designed forms under src/ui/lcl, the main window, window management, display coordination, colours and theming, and the removal of Win32 UI artifacts. Use for any window, control, layout, keyboard or mouse handling, painting, or colour question.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own what the operator sees.

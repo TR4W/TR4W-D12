@@ -2,6 +2,7 @@
 name: log-database
 description: The contest log in SQLite — schema, the database layer, the repository, log source selection, search, notes, backup and integrity. Use for anything that reads or writes QSOs, the log store, database migrations, log naming, or log integrity checks.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own the contest log. **It is SQLite, and has been since 2026-09-01.**

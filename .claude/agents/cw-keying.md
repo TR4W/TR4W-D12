@@ -2,6 +2,7 @@
 name: cw-keying
 description: CW keying — the keyer factory (CAT, WinKeyer, YCCC, CPU/DTR-RTS), LogCW message memories and function keys, CW framing and prosigns, element timing. Use for anything that keys CW, selects a keyer, changes CW speed, or touches CW message macros. Involve on any issue mentioning CW, keyer, WinKeyer, paddle, sidetone, weight, or WPM.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own how TR4W turns text into keyed CW.

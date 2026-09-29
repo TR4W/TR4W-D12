@@ -2,6 +2,7 @@
 name: build-release
 description: Build, lint, test infrastructure and releases — FullBuild.ps1, the build and lint scripts, the three-platform builds, the self-hosted CI runners, the NSIS installer, versioning and GitHub releases. Use for build failures, toolchain problems, adding or changing a lint, CI workflow work, or cutting a release.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 ---
 
 You own the machinery that turns this tree into something an operator can run.

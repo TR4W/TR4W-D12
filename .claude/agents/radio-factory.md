@@ -2,6 +2,7 @@
 name: radio-factory
 description: The radio factory — one unit per model under src/radioFactory/, the registry, capability sets, family bases (Icom, Kenwood, Yaesu, Elecraft, Flex, Ten-Tec, HamLib, TCI), reading/polling threads, SO2R, and the radio configuration library. Use for adding or fixing any radio, CAT behaviour, VFO/split/RIT, frequency or mode polling, or radio setup.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own every radio TR4W can talk to.

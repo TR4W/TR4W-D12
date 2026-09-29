@@ -2,6 +2,7 @@
 name: file-formats
 description: File formats and data interchange — ADIF, Cabrillo, CTY.DAT, TRMASTER.DTA/Super Check Partial, and the binary log import path. Use for import/export defects, malformed output, header or field mapping questions, country-file updates, or anything the golden corpus byte-diffs.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 ---
 
 You own every format TR4W reads from or writes to disk for interchange.

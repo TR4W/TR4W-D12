@@ -2,6 +2,7 @@
 name: contest-scoring
 description: Contest scoring and the TRDOS contest engine — exchange parsing, QSO validation, multipliers, dupe checking, QSO points, and the contest flow from typed callsign to logged QSO. Use for any issue about points, multipliers, dupes, exchange fields, serial numbers, or a contest scoring wrongly.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own the scoring and exchange logic in the TRDOS engine — the oldest,

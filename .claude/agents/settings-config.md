@@ -2,6 +2,7 @@
 name: settings-config
 description: Settings and configuration — the uSettingsModel published-property model, JSON storage, the config command vocabulary, the read-once ini and contest .cfg import paths, and the settings UI binding. Use for adding or changing a setting, config file parsing, defaults, or anything about tr4w.json / tr4w.ini / a contest .cfg.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own where a setting lives and how it gets there.

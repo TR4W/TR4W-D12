@@ -2,6 +2,7 @@
 name: dx-cluster
 description: DX cluster and the DX terminal — the Telnet client, cluster login and auto-reconnect, DX spot parsing, the spot store, spot ageing, and the band map. Use for anything about cluster connections, telnet, spots, spot colours or filters, the band map, or click-to-tune.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 ---
 
 You own how spots reach TR4W and how they are shown.

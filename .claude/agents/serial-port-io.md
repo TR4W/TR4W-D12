@@ -2,6 +2,7 @@
 name: serial-port-io
 description: Serial ports and low-level device I/O — port enumeration, port identity and naming, the serial transport, COM port selection in the UI, and byte-exact device framing. Use for anything about COM ports, /dev/tty devices, port selection, FTDI or USB adapters, or raw serial read/write.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: opus
 ---
 
 You own how TR4W finds, names and talks to a serial device.
