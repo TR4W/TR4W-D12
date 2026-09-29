@@ -46,21 +46,31 @@ interface
 uses
    VC, uContestBase;
 
-(* SWITCHES THE FACTORY OFF, so the legacy `case` runs instead.
+(* ~~ContestFactoryEnabled~~ AND ITS /NOFACTORY SWITCH ARE GONE -- 2026-09-29.
 
-  THIS EXISTS TO MAKE EACH CONTEST MOVE PROVABLE, and it is the only way to
-  prove one. The golden corpus is BLIND to scoring -- measured: changing ARRL DX
-  from 3 points to 7 leaves export-d12-corpus.sh at 24 passed, because /EXPORT
-  reads the points STORED in the log and never recomputes them. And comparing a
-  rescore against the D7 references is too blunt to be a gate: 7 of the 13 logs
-  legitimately move, because our CTY.DAT is not D7's.
+  They answered "does the factory produce what the legacy arm produced" by
+  running the same rescore twice in one invocation, once each way, and diffing.
+  That was the only exact measurement available, because the golden corpus is
+  BLIND to scoring: changing ARRL DX from 3 points to 7 leaves
+  export-d12-corpus.sh at 24 passed, since /EXPORT sums the points STORED in the
+  log and never recomputes them.
 
-  So the question that CAN be answered exactly is: does the factory produce what
-  the legacy arm produced, on the same program with the same data? Run the same
-  rescore twice, once each way, and diff. That is test-contest-factory.sh, and it
-  is what every contest moved into the factory has to survive. *)
-var
-   ContestFactoryEnabled: boolean = True;
+  IT HAD A DEATH DATE BUILT IN. Every contest moved into the factory deletes
+  more of the legacy arm, so the A/B weakened exactly as the work proceeded and
+  would be unrunnable the day the last contest moved. NY4I, 2026-09-29, with the
+  remaining contests due to move inside two weeks: "We should deprecate
+  NOFACTORY."
+
+  THE MEASUREMENT IS NOT LOST, IT IS FROZEN. The legacy pass was run once and
+  written down as each corpus set's rescored.adi / rescored.cbr, and
+  test-contest-factory.sh now rescores through the factory and diffs against
+  those bytes. Same assertion, same sensitivity to a point-rule change, and it
+  survives the deletion of the path it was measured against.
+
+  WHAT THAT GATE DOES NOT ASSERT is whether the scoring is CORRECT -- it is our
+  own former output, so it says the factory agrees with what TR4W did before the
+  move, exactly as /NOFACTORY did. freeze-rescore-baseline.sh carries the full
+  statement of that, and of when re-freezing a set is legitimate. *)
 
 (* The object for aContest, or nil when that contest has no class yet.
   Do not free it -- this unit owns it.
@@ -115,12 +125,6 @@ function ActiveContest(aContest: ContestType): TContestBase;
 var
    cls: TContestClass;
 begin
-   if not ContestFactoryEnabled then
-      begin
-      Result := nil;
-      Exit;
-      end;
-
    if GHaveActive and (GActiveFor = aContest) then
       begin
       Result := GActive;

@@ -261,7 +261,7 @@ never recomputes them.
 
 | change | caught by |
 |---|---|
-| scoring | **`test-contest-factory.sh` only** — rescores each log through the factory and again through the legacy case via `/NOFACTORY`, and diffs |
+| scoring | **`test-contest-factory.sh` only** — rescores each log through the factory and diffs against that set's **frozen** `rescored.adi` / `rescored.cbr` -- the legacy output, captured once by `freeze-rescore-baseline.sh`. **`/NOFACTORY` was DELETED 2026-09-29**: it could only work while both paths existed, and the contests were all moving inside two weeks. The frozen bytes are OUR OWN former output, so this gate says the factory agrees with what TR4W did before the move -- not that either answer is correct |
 | Cabrillo / ADIF exchange columns | **the golden corpus** — they are in the QSO lines, which `golden_diff.py` compares. Verified: `%-7s` → `%-8s` gives `FAIL arrl_fd cbr` |
 | Cabrillo *header* | **nothing** — `golden_diff.py` drops header lines |
 | exchange validation and parsing | **nothing** — no gate types an exchange |

@@ -140,10 +140,13 @@ end;
    written where the contest's name has to be asked for. It is expressed here as
    behaviour instead.
 
-   THE LEGACY TESTS STAY IN PLACE, deliberately. RSTDomesticOrDXQTHExchange is
-   still reached by Florida under /NOFACTORY, which is how test-contest-factory
-   compares the two paths -- deleting them would make the A/B meaningless. They
-   become removable when the legacy exporter does. *)
+   THE LEGACY TESTS STAY IN PLACE, and the reason CHANGED on 2026-09-29 when
+   /NOFACTORY was deleted. It used to be that Florida still reached
+   RSTDomesticOrDXQTHExchange under that switch, so removing them would have
+   made the A/B meaningless. The A/B is frozen bytes now and no longer runs the
+   legacy arm at all -- so what keeps them is simply that EVERY CONTEST WITHOUT
+   A CLASS still goes through them. They become removable when the last one has
+   a class, not before. *)
 function TContestFloridaQP.GetFormatsExchange: boolean;
 begin
    Result := True;

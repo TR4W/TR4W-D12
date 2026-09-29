@@ -230,8 +230,8 @@ uses
   (* The log carries its own contest configuration -- phase E2. *)
   uLogStore,
   uLogDatabase,   // LogDatabaseFileName -- the contest database path
-  (* ContestFactoryEnabled -- phase F. *)
-  uContestFactory,
+  (* ~~uContestFactory -- phase F~~ was here for ContestFactoryEnabled alone,
+     and went with it on 2026-09-29. This unit references nothing else in it. *)
   uCFG,
   uCRC32,
   uAltP,
@@ -2325,15 +2325,11 @@ begin
      changed. tr4w/test/corpus/test-rescore.sh asserts it. *)
   if SameText(AnsiString(ParamStr(2)), AnsiString('/RESCORE')) then
      begin
-     (* /NOFACTORY -- rescore through the LEGACY case instead of the contest
-        factory, so the two can be diffed against each other. See
-        uContestFactory.ContestFactoryEnabled for why that is the only exact
-        measurement available. *)
-     if SameText(AnsiString(ParamStr(3)), AnsiString('/NOFACTORY')) then
-        begin
-        ContestFactoryEnabled := False;
-        EarlyTrace('[Rescore] the contest factory is OFF for this run');
-        end;
+     (* ~~/NOFACTORY~~ IS GONE (2026-09-29). It rescored through the legacy
+        `case` so the two paths could be diffed, and it could only work while
+        both existed. The legacy side is frozen per corpus set now --
+        tr4w/test/corpus/freeze-rescore-baseline.sh, compared by
+        test-contest-factory.sh -- so the gate outlives the path it measured. *)
      EarlyTrace('[Rescore] recomputing scoring for every QSO');
      tUpdateLog(actRescore);
 

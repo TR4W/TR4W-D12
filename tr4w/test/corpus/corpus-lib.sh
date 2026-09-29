@@ -92,3 +92,23 @@ corpus_stage_set(){
    rm -f "$dest/$stem.db-wal" "$dest/$stem.db-shm"
    return 0
 }
+
+# corpus_norm_artifact <file>
+# Print an exported .ADI or Cabrillo with the two fields that are REGENERATED
+# ON EVERY RUN BY DESIGN reduced to placeholders: the creation timestamp, and
+# APP_TR4W_ID -- the per-QSO UUIDv7, minted at import, so the same contact gets
+# a different id every time a log is rebuilt.
+#
+# NOTHING ELSE IS NORMALISED, and that is the whole point: every other byte has
+# to match exactly.
+#
+# IT LIVES HERE BECAUSE TWO SCRIPTS NEED IT AND A SECOND COPY WOULD DRIFT.
+# freeze-rescore-baseline.sh writes the frozen bytes through it and
+# test-contest-factory.sh compares fresh output through it, so if the two ever
+# disagreed about what is volatile, every set would report a difference that is
+# not one -- on the only gate that watches scoring.
+corpus_norm_artifact(){
+   sed -E 's/(Created by TR4W version .* on ).*/\1TIME/;
+           s/(<CREATED_TIMESTAMP:15>).*/\1TIME/;
+           s/<APP_TR4W_ID:32>[0-9a-f]*/<APP_TR4W_ID:32>ID/g' "$1" 2>/dev/null
+}

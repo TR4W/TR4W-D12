@@ -545,8 +545,11 @@ are the honest progress metric.
 ### 5.4 The blind spot that matters
 
 **The golden corpus is blind to scoring.** It reads QSO points already stored in
-the log and never recomputes them. `test-contest-factory.sh` (factory vs legacy
-`/NOFACTORY` rescore) is the only thing that catches a scoring regression, and
+the log and never recomputes them. `test-contest-factory.sh` is the only thing that catches a scoring regression -- it
+rescores through the factory and diffs against each set's FROZEN legacy output
+(`rescored.adi` / `rescored.cbr`, captured by `freeze-rescore-baseline.sh`).
+~~factory vs legacy `/NOFACTORY` rescore~~ -- **that switch was deleted 2026-09-29**,
+because an A/B against the legacy arm dies with the legacy arm. And
 **exchange validation and Cabrillo headers are caught by nothing.** Extend the
 golden comparison to headers as part of step 3 — do not treat a green corpus as
 completion.
