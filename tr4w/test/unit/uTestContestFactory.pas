@@ -70,7 +70,7 @@ type
       procedure Test_NorthCarolinaAllowsTwoCounties;
       procedure Test_FourBespokeArmsCountyLineMaxima;
       procedure Test_NewYorkAndSalmonRunTranscribeTheirArms;
-      procedure Test_FixedPointSliceOneTranscribesItsArms;
+      procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
    public
       procedure RunAllTests; override;
@@ -1276,14 +1276,17 @@ begin
    CheckParty(SALMONRUN, 'Salmon Run', 'WA', 4, 2, 2);
 end;
 
-(* THE FIRST SLICE OF THE FIXED-POINT CONTESTS, MOVED 2026-09-29.
+(* THE FIXED-POINT CONTESTS, MOVED 2026-09-29 IN TWO SLICES.
 
-   Fifteen contests whose scoring arm is a constant, or a constant chosen by
-   mode, and which nothing outside their ContestsArray row (and FCONTEST's
-   setup) names. Each is its own class on TContestFixedPoints, because none has
-   another family: none is a state QSO party, and the three Minitest rows and
-   the two QCWA rows follow the NA Sprint precedent of sibling classes with no
-   base between them.
+   Contests whose scoring arm is a constant, or a constant chosen by mode, and
+   which nothing outside their ContestsArray row names except SETUP -- FCONTEST,
+   uNewContest's prompts, LOGCFG's CQ-exchange defaults. Each is its own class
+   on TContestFixedPoints, because none has another family: none is a state QSO
+   party, and the three Minitest rows and the two QCWA rows follow the NA
+   Sprint precedent of sibling classes with no base between them.
+
+   The second slice is the six the first deferred only for the batch cap; each
+   had setup references outside the row and none had a scoring branch.
 
    THE DIGITAL COLUMN IS THE ONE THAT CATCHES AN INVERTED SHAPE. Every
    two-branch arm is `if Mode = CW then X else Y`, so digital takes the PHONE
@@ -1293,7 +1296,7 @@ end;
    must not start refusing a two-QTH exchange; TContestBase.ValidateQTHCount
    always passes, and County Hunter -- a log whose operators work county
    lines, and which is NOT a QSO party -- is where a regression would bite. *)
-procedure TContestFactoryTests.Test_FixedPointSliceOneTranscribesItsArms;
+procedure TContestFactoryTests.Test_FixedPointContestsTranscribeTheirArms;
 
    procedure CheckFixed(aContest: ContestType; const aWhat: string;
                         aCW, aPhone, aDigital: integer);
@@ -1331,7 +1334,7 @@ procedure TContestFactoryTests.Test_FixedPointSliceOneTranscribesItsArms;
    end;
 
 begin
-   BeginTest('Test_FixedPointSliceOneTranscribesItsArms');
+   BeginTest('Test_FixedPointContestsTranscribeTheirArms');
 
    (* OnePhoneTwoCW: if Mode = CW then 2 else 1. *)
    CheckFixed(QCWA, 'QCWA', 2, 1, 1);
@@ -1356,6 +1359,24 @@ begin
    CheckFixed(MINI40, 'Mini-Test 40', 1, 1, 1);
    CheckFixed(MINI80, 'Mini-Test 80', 1, 1, 1);
    CheckFixed(MINITEST, 'Minitest', 1, 1, 1);
+
+   (* THE SECOND SLICE. *)
+
+   (* OnePhoneTwoCW. *)
+   CheckFixed(KVP, 'KVP', 2, 1, 1);
+
+   (* TwoPhoneThreeCW: if Mode = CW then 3 else 2 -- the only arm of this
+      shape in either slice, so the only check that would notice 3 and 2
+      transposed. *)
+   CheckFixed(CQIR, 'CQIR', 3, 2, 2);
+
+   (* AlwaysOnePointPerQSO, as Internet Sprint above. *)
+   CheckFixed(YOUTHCHAMPIONSHIPRF, 'SRR-JR', 1, 1, 1);
+
+   (* OnePointPerQSO. *)
+   CheckFixed(MST, 'MST', 1, 1, 1);
+   CheckFixed(EUROPEANHFC, 'European HFC', 1, 1, 1);
+   CheckFixed(DARCXMAS, 'DARC Xmas', 1, 1, 1);
 end;
 
 procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
@@ -1467,6 +1488,19 @@ begin
    CheckAgainstArray(MINI40, 'Mini-Test 40');
    CheckAgainstArray(MINI80, 'Mini-Test 80');
    CheckAgainstArray(MINITEST, 'Minitest');
+
+   (* THE SECOND FIXED-POINT SLICE, MOVED 2026-09-29. Two traps in these rows.
+      YOUTHCHAMPIONSHIPRF's blank CABName and FriendlyName resolve to its enum
+      SPELLING, 'SRR-JR', which looks nothing like the identifier. And CQIR's
+      row has NO AIE FIELD AT ALL, so its class deliberately does not state
+      one; the InitialExchangeKind comparison is what proves that leaving it
+      to the array still gives the array's answer. *)
+   CheckAgainstArray(KVP, 'KVP');
+   CheckAgainstArray(MST, 'ICWC MST');
+   CheckAgainstArray(YOUTHCHAMPIONSHIPRF, 'SRR-JR');
+   CheckAgainstArray(EUROPEANHFC, 'European HF Championship');
+   CheckAgainstArray(CQIR, 'CQIR - Ireland Calling');
+   CheckAgainstArray(DARCXMAS, 'DARC Christmas Contest');
 end;
 
 procedure TContestFactoryTests.RunAllTests;
@@ -1492,7 +1526,7 @@ begin
    Test_NorthCarolinaAllowsTwoCounties;
    Test_FourBespokeArmsCountyLineMaxima;
    Test_NewYorkAndSalmonRunTranscribeTheirArms;
-   Test_FixedPointSliceOneTranscribesItsArms;
+   Test_FixedPointContestsTranscribeTheirArms;
    Test_MovedRowValuesStillMatchTheArray;
 end;
 
