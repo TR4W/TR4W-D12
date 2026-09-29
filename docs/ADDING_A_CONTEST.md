@@ -171,6 +171,37 @@ They are *accessors*, not a copied record: a copy would be a second definition
 that drifts the moment the array is edited, which is exactly what
 `RadioParametersArray` did before it was deleted.
 
+#### The county-line worksheet -- numbers established from sponsor rules
+
+**A number here has been read out of a sponsor's published rules by NY4I and is
+not a guess.** It is recorded because the party it describes may have no class
+yet: a number established today and implemented next month is otherwise lost in
+a transcript. **A party absent from this table is not "unlimited by decision"** --
+it is simply not looked up yet, and `CountyLineCountiesUnlimited` preserves
+today's behaviour exactly while that stays true.
+
+| party | max | the rule, as the sponsor writes it | class |
+|---|---:|---|---|
+| Florida QSO Party | **2** | *"Florida stations on a county line (maximum of two counties) may be claimed as a separate QSO and multiplier from each county."* | `uContestFloridaQP` |
+| Michigan QSO Party | **0** | *"No station may claim simultaneous operation in more than one county, state, or province."* | `uContestMichiganQP` |
+| Indiana QSO Party | **2** | two counties at once (NY4I, 2026-09-29) | none yet |
+| 7QP | **4** | *"County-line contacts may be logged with one entry showing all counties or with separate entries for each county."* -- four being the intersection of four counties meeting at right angles | none yet; multi-state, see below |
+| California QSO Party | **4** | a four-county junction is claimable | none yet |
+
+**MICHIGAN IS THE ONE CORRECTION SO FAR.** `VC.pas` gives it
+`CountyLineAllowed: True` and the sponsor forbids the practice outright, so
+the array has been wrong for as long as the flag has existed. Every other
+number above **confirms** what the array already says. That ratio is the
+argument for doing the lookup rather than trusting the flag: one in five.
+
+**AND `IN7QPNE` CARRIES NO `CountyLineAllowed` FIELD AT ALL** (`VC.pas:4033`),
+so it reads as `False` -- while two of the four events it combines allow a
+county line (Indiana two, 7QP four). A combined entry that forbids what its
+components permit is a defect, not a policy; it is left alone here because the
+multi-state parties are unresolved (see `uContestStateQSOPartyBase`'s header),
+and fixing the flag without deciding whose county rule applies would only move
+the wrongness.
+
 ### Methods — what a contest does
 
 | method | base behaviour |
