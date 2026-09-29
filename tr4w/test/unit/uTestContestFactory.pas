@@ -1237,16 +1237,13 @@ end;
    value -- the digital assertion is the one that would catch the inverted
    shape.
 
-   ITS ROW CARRIES NO CountyLineAllowed FIELD, and no maximum has been
-   established from its sponsor's rules, so it must inherit
-   CountyLineCountiesUnlimited and accept a four-county junction exactly as
-   TR4W does today. Reading the absent boolean as zero is the defect this pins
-   against. *)
+   TWO COUNTIES ON A COUNTY LINE -- NY4I, 2026-09-29: "NY allows up to 2
+   counties on a county line." Its row carries no CountyLineAllowed field, so
+   the number is the ruling's and not the boolean's; until then it inherited
+   unlimited and accepted a four-county junction. *)
 procedure TContestFactoryTests.Test_NewYorkTranscribesItsArm;
 var
    obj: TContestBase;
-   party: TContestStateQSOPartyBase;
-   msg: string;
 begin
    BeginTest('Test_NewYorkTranscribesItsArm');
    obj := MakeContest(NYQP);
@@ -1269,19 +1266,11 @@ begin
          end;
       CheckEquals('NY', obj.HostState, 'New York host state');
       CheckTrue(obj.IsUSQSOParty, 'New York is a US QSO party');
-
-      party := TContestStateQSOPartyBase(obj);
-      CheckEquals(CountyLineCountiesUnlimited, party.CountyLineCountiesMax,
-                  'New York has no established maximum and must inherit unlimited');
-      CheckTrue(party.CountyLineAllowed,
-                'New York: unlimited must read as allowed');
-      msg := '';
-      CheckTrue(party.ValidateQTHCount(4, msg),
-                'New York: a four-county junction must still pass');
-      CheckEquals('', msg, 'New York: nothing refused, so nothing said');
    finally
       obj.Free;
       end;
+
+   CheckCountyLineMaximum(NYQP, 'New York', 2);
 end;
 
 (* THE WASHINGTON STATE SALMON RUN SCORES ON ITS SPONSOR'S CURRENT RULES --

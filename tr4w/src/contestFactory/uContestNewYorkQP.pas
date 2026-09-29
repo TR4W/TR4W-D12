@@ -29,12 +29,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    XM: NoDXMults;  QP: OnePhoneTwoCW;  ADIFName: 'NY-QSO-PARTY';
    CABName: '';  FriendlyName: 'New York QSO Party'
 
-  THE ROW CARRIES NO CountyLineAllowed FIELD AT ALL, so the array boolean reads
-  False -- and that means UNKNOWN, not "forbidden". No county-line maximum has
-  been established for this party from its sponsor's rules, so it inherits
-  TContestStateQSOPartyBase's CountyLineCountiesUnlimited, which is exactly
-  what TR4W does today: nothing in the program has ever counted the queued
-  counties. A number here must come from a rulebook, never from that boolean.
+  TWO COUNTIES ON A COUNTY LINE -- NY4I, 2026-09-29: "NY allows up to 2
+  counties on a county line."
+
+  So GetCountyLineCountiesMax returns 2, the way North Carolina's and
+  Indiana's do. THE ROW CARRIES NO CountyLineAllowed FIELD AT ALL, so the
+  array boolean reads False -- which only ever meant UNKNOWN -- and the number
+  was never going to come from it. Until this ruling the class inherited
+  CountyLineCountiesUnlimited; a third county on one exchange is now refused.
 
   CABName IS BLANK, AND BLANK MEANS "THE ENUM'S SPELLING", which for this
   contest is 'NY-QSO-PARTY' (ContestTypeSA). GetCabrilloName states that
@@ -99,6 +101,9 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
+
+      (* The county-line maximum, from NY4I's ruling -- see the header. *)
+      function GetCountyLineCountiesMax: integer; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
@@ -195,6 +200,11 @@ end;
 (* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the PHONE
    value. That is why the third number is stated rather than left to a
    CW-versus-not test, which would be wrong here and silent about it. *)
+function TContestNewYorkQP.GetCountyLineCountiesMax: integer;
+begin
+   Result := 2;
+end;
+
 procedure TContestNewYorkQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);

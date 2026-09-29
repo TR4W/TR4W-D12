@@ -223,12 +223,18 @@ today's behaviour exactly while that stays true.
 | Indiana QSO Party | **2** | two counties at once (NY4I, 2026-09-29) | `uContestIndianaQP` |
 | 7QP | **4** | *"County-line contacts may be logged with one entry showing all counties or with separate entries for each county."* -- four being the intersection of four counties meeting at right angles | none yet; multi-state, see below |
 | California QSO Party | **4** | a four-county junction is claimable -- NY4I, 2026-09-29: "4 since that is the intersection of 4 counties with common 90 degree angle borders" | `uContestCaliforniaQP` |
+| North Carolina QSO Party | **2** | *"A maximum of two counties may be worked simultaneously under this provision."* -- https://ncqsoparty.org/rules/ | `uContestNorthCarolinaQP` |
+| New York QSO Party | **2** | NY4I 2026-09-29: *"NY allows up to 2 counties on a county line."* | `uContestNewYorkQP` |
+| Washington State Salmon Run | **2** | *"In the case of 3-county or more intersections, and in accordance with the MARAC rules, only one county line consisting of two counties may be run at a time."* -- https://salmonrun.wwdxc.org/rules/ | `uContestWashingtonSalmonRun` |
 
-**MICHIGAN IS THE ONE CORRECTION SO FAR.** `VC.pas` gives it
-`CountyLineAllowed: True` and the sponsor forbids the practice outright, so
-the array has been wrong for as long as the flag has existed. Every other
-number above **confirms** what the array already says. That ratio is the
-argument for doing the lookup rather than trusting the flag: one in five.
+**THE ARRAY'S FLAG DISAGREES WITH THE RULES FOR HALF OF THESE.** Michigan's row
+says `CountyLineAllowed: True` and the sponsor forbids the practice outright.
+7QP, New York and the Salmon Run are the opposite case: their rows carry **no**
+`CountyLineAllowed` field, so it reads `False`, and all three allow a county
+line. Florida, Indiana, California and North Carolina say `True` and agree.
+~~"Every other number above confirms what the array already says"~~ stood here
+and was already wrong about 7QP when it was written. That is the argument for
+doing the lookup rather than trusting the flag.
 
 **AND `IN7QPNE` CARRIES NO `CountyLineAllowed` FIELD AT ALL** (`VC.pas:4033`),
 so it reads as `False` -- while two of the four events it combines allow a
