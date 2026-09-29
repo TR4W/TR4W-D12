@@ -31,7 +31,7 @@ uses
       the RULE rather than the geodesic's constants. *)
    Math, LogGrid,
    uTR4WTestFramework, VC, uContestBase, uContestRegistry,
-   uContestStateQSOPartyBase;
+   uContestStateQSOPartyBase, uContestFixedPoints;
 
 const
    (* THE TEN "RAREST OF NC" COUNTIES, TRANSCRIBED A SECOND TIME ON PURPOSE.
@@ -70,6 +70,7 @@ type
       procedure Test_NorthCarolinaAllowsTwoCounties;
       procedure Test_FourBespokeArmsCountyLineMaxima;
       procedure Test_NewYorkAndSalmonRunTranscribeTheirArms;
+      procedure Test_FixedPointSliceOneTranscribesItsArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
    public
       procedure RunAllTests; override;
@@ -1275,6 +1276,88 @@ begin
    CheckParty(SALMONRUN, 'Salmon Run', 'WA', 4, 2, 2);
 end;
 
+(* THE FIRST SLICE OF THE FIXED-POINT CONTESTS, MOVED 2026-09-29.
+
+   Fifteen contests whose scoring arm is a constant, or a constant chosen by
+   mode, and which nothing outside their ContestsArray row (and FCONTEST's
+   setup) names. Each is its own class on TContestFixedPoints, because none has
+   another family: none is a state QSO party, and the three Minitest rows and
+   the two QCWA rows follow the NA Sprint precedent of sibling classes with no
+   base between them.
+
+   THE DIGITAL COLUMN IS THE ONE THAT CATCHES AN INVERTED SHAPE. Every
+   two-branch arm is `if Mode = CW then X else Y`, so digital takes the PHONE
+   value.
+
+   THE TWO-QTH ASSERTION IS THE TRAP FIXED ONCE ALREADY. A non-party class
+   must not start refusing a two-QTH exchange; TContestBase.ValidateQTHCount
+   always passes, and County Hunter -- a log whose operators work county
+   lines, and which is NOT a QSO party -- is where a regression would bite. *)
+procedure TContestFactoryTests.Test_FixedPointSliceOneTranscribesItsArms;
+
+   procedure CheckFixed(aContest: ContestType; const aWhat: string;
+                        aCW, aPhone, aDigital: integer);
+   var
+      obj: TContestBase;
+      msg: string;
+   begin
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, aWhat + ' has no registered class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      try
+         CheckEquals(aCW, PointsFor(obj, CW), aWhat + ' CW');
+         CheckEquals(aPhone, PointsFor(obj, Phone), aWhat + ' phone');
+         CheckEquals(aDigital, PointsFor(obj, Digital), aWhat + ' digital');
+         CheckEquals(aPhone, PointsFor(obj, FM),
+                     aWhat + ' FM -- not folded into phone, takes the other value');
+
+         CheckTrue(obj is TContestFixedPoints,
+                   aWhat + ' is not on TContestFixedPoints');
+         CheckFalse(obj is TContestStateQSOPartyBase,
+                    aWhat + ' must not be on the state-party base');
+         CheckFalse(obj.IsUSQSOParty, aWhat + ' is not a US QSO party');
+         CheckEquals('', obj.HostState, aWhat + ' has no host state');
+
+         msg := '';
+         CheckTrue(obj.ValidateQTHCount(2, msg),
+                   aWhat + ': a two-QTH exchange must still pass');
+         CheckEquals('', msg, aWhat + ': nothing refused, so nothing said');
+      finally
+         obj.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_FixedPointSliceOneTranscribesItsArms');
+
+   (* OnePhoneTwoCW: if Mode = CW then 2 else 1. *)
+   CheckFixed(QCWA, 'QCWA', 2, 1, 1);
+   CheckFixed(QCWAGOLDEN, 'QCWA Golden', 2, 1, 1);
+
+   (* TwoPointsPerQSO. *)
+   CheckFixed(XMAS, 'XMAS', 2, 2, 2);
+
+   (* AlwaysOnePointPerQSO -- scores as one point; its "ignores dupes" meaning
+      is LOGSUBS2's, read from the global, and not the class's. *)
+   CheckFixed(INTERNETSPRINT, 'Internet Sprint', 1, 1, 1);
+
+   (* OnePointPerQSO. *)
+   CheckFixed(COUNTYHUNTER, 'County Hunter', 1, 1, 1);
+   CheckFixed(GRIDLOC, 'Grid Loc', 1, 1, 1);
+   CheckFixed(MARCONIMEMORIAL, 'Marconi Memorial', 1, 1, 1);
+   CheckFixed(SASPRINT, 'SA Sprint', 1, 1, 1);
+   CheckFixed(ALLJA, 'All JA', 1, 1, 1);
+   CheckFixed(APSPRINT, 'AP Sprint', 1, 1, 1);
+   CheckFixed(JALONGPREFECT, 'JA Long Prefect', 1, 1, 1);
+   CheckFixed(KIDSDAY, 'Kids Day', 1, 1, 1);
+   CheckFixed(MINI40, 'Mini-Test 40', 1, 1, 1);
+   CheckFixed(MINI80, 'Mini-Test 80', 1, 1, 1);
+   CheckFixed(MINITEST, 'Minitest', 1, 1, 1);
+end;
+
 procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
 
    procedure CheckAgainstArray(aContest: ContestType; const aWhat: string);
@@ -1361,6 +1444,29 @@ begin
       string. *)
    CheckAgainstArray(NYQP, 'New York QSO Party');
    CheckAgainstArray(SALMONRUN, 'Washington State Salmon Run');
+
+   (* THE FIRST FIXED-POINT SLICE, MOVED 2026-09-29. Most of these rows have a
+      BLANK CABName and FriendlyName, both of which resolve to the enum's
+      spelling -- 'QCWA GOLDEN', 'GRID LOC', 'SA-SPRINT' -- and a blank
+      ADIFName, which IS the empty string. The two Mini-Test rows are the odd
+      ones: both names end in a SPACE ('MINITEST-40 '), transcribed as the row
+      holds it, and this is the assertion that would notice a class quietly
+      trimming it. *)
+   CheckAgainstArray(QCWA, 'QCWA QSO Party');
+   CheckAgainstArray(QCWAGOLDEN, 'QCWA Golden');
+   CheckAgainstArray(COUNTYHUNTER, 'County Hunter');
+   CheckAgainstArray(GRIDLOC, 'Grid Loc');
+   CheckAgainstArray(MARCONIMEMORIAL, 'Marconi Memorial');
+   CheckAgainstArray(SASPRINT, 'SA Sprint');
+   CheckAgainstArray(XMAS, 'XMAS');
+   CheckAgainstArray(INTERNETSPRINT, 'Internet Sprint');
+   CheckAgainstArray(ALLJA, 'All JA');
+   CheckAgainstArray(APSPRINT, 'AP Sprint');
+   CheckAgainstArray(JALONGPREFECT, 'JA Long Prefect');
+   CheckAgainstArray(KIDSDAY, 'Kids Day');
+   CheckAgainstArray(MINI40, 'Mini-Test 40');
+   CheckAgainstArray(MINI80, 'Mini-Test 80');
+   CheckAgainstArray(MINITEST, 'Minitest');
 end;
 
 procedure TContestFactoryTests.RunAllTests;
@@ -1386,6 +1492,7 @@ begin
    Test_NorthCarolinaAllowsTwoCounties;
    Test_FourBespokeArmsCountyLineMaxima;
    Test_NewYorkAndSalmonRunTranscribeTheirArms;
+   Test_FixedPointSliceOneTranscribesItsArms;
    Test_MovedRowValuesStillMatchTheArray;
 end;
 
