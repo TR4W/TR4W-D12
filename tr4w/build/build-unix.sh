@@ -1086,6 +1086,82 @@ mac_bundle_localizations() {
 }
 
 # ---------------------------------------------------------------------------
+# THE FINDER ICON, AND WHY IT IS BUILT HERE RATHER THAN COMMITTED.
+#
+# NY4I, 2026-09-28, after installing the 5.0.24 .pkg: the Dock showed the TR4W
+# mark and the Applications folder showed the generic placeholder.  Those are
+# two different icons with two different sources, which is the whole reason
+# they disagreed.  The LCL sets the DOCK icon at run time from the Windows
+# resource the binary already carries, so the Dock is right even in a bundle
+# that holds no artwork at all.  FINDER never runs the program: it reads
+# CFBundleIconFile and the .icns beside it, and the bundle had neither.
+#
+# .icns IS GENERATED, NOT TRACKED.  The tracked art is tr4w/res/icon/*.png,
+# written by tools/make_app_icon.py, and iconutil turns it into an .icns in
+# about a second.  Committing the .icns as well would give one piece of
+# artwork two representations in the tree, free to drift, with nothing
+# comparing them -- and the one a Mac actually shows would be the one nobody
+# can read in a diff.  The cost is that generating needs iconutil, which
+# exists only on macOS, and that cost is paid by nobody: this runs inside the
+# darwin arm of the packaging stage, so no Linux or Windows build reaches it.
+#
+# FAIL, DO NOT WARN.  A missing icon here reproduces exactly the defect that
+# was reported, and it stays invisible until somebody opens Applications --
+# the build would look entirely successful.  iconutil is part of the base
+# system, so a failure means either the artwork is wrong or the toolchain is,
+# and both are worth stopping for.
+#
+# THE NAMES ARE APPLE'S, NOT OURS.  iconutil rejects any other spelling, and
+# an @2x entry is the NEXT SIZE UP at the same logical dimensions -- so 1024
+# is icon_512x512@2x.png, and 32 appears twice: once as icon_32x32.png and
+# once as icon_16x16@2x.png.
+mac_bundle_icon() {
+   _bundle=$1
+   _art="$TR4W_DIR/res/icon"
+   _iconset="$OUTROOT/tr4w.iconset"
+
+   if ! command -v iconutil >/dev/null 2>&1; then
+      say '  FAILED: iconutil not found -- the Finder icon cannot be built.'
+      return 1
+   fi
+
+   # OUTSIDE THE STAGE ON PURPOSE.  $stage is the tarball root and the disk
+   # image root; a working directory created inside it would ship if anything
+   # below returned early.
+   rm -rf "$_iconset"
+   mkdir -p "$_iconset" || return 1
+
+   # <source size>:<Apple's name>, one pair per word.
+   for _pair in \
+      16:icon_16x16 32:icon_16x16@2x 32:icon_32x32 64:icon_32x32@2x \
+      128:icon_128x128 256:icon_128x128@2x 256:icon_256x256 \
+      512:icon_256x256@2x 512:icon_512x512 1024:icon_512x512@2x
+   do
+      _png="$_art/tr4w_${_pair%%:*}.png"
+      if [ ! -f "$_png" ]; then
+         say "  FAILED: icon artwork missing: $_png"
+         say '  Regenerate it with: python3 tools/make_app_icon.py'
+         rm -rf "$_iconset"
+         return 1
+      fi
+      if ! cp "$_png" "$_iconset/${_pair#*:}.png"; then
+         rm -rf "$_iconset"
+         return 1
+      fi
+   done
+
+   _icns="$_bundle/Contents/Resources/TR4W.icns"
+   if ! iconutil -c icns "$_iconset" -o "$_icns"; then
+      say '  FAILED: iconutil could not build TR4W.icns from the artwork.'
+      rm -rf "$_iconset"
+      return 1
+   fi
+   rm -rf "$_iconset"
+   say "  icon     : TR4W.icns ($(($(wc -c < "$_icns") / 1024)) KB, 16..1024 px)"
+   return 0
+}
+
+# ---------------------------------------------------------------------------
 # STAGE 7 -- packaging.
 #
 # WHAT A LINUX RELEASE SHOULD BE, since there is no NSIS and no precedent in
@@ -1222,6 +1298,13 @@ stage_package() {
          return 1
       fi
 
+      # The Finder icon.  See the header on mac_bundle_icon for why this is
+      # generated rather than tracked, and why it fails instead of warning.
+      if ! mac_bundle_icon "$bundle"; then
+         record FAIL 'package' 'the Finder icon could not be built into TR4W.app'
+         return 1
+      fi
+
       # FAIL RATHER THAN DECLARE NOTHING. An empty list here is not a
       # cosmetic loss: it is the exact state NY4I hit on the bench, where
       # macOS reports that TR4W supports no additional languages, and it
@@ -1244,6 +1327,7 @@ stage_package() {
   <key>CFBundleName</key>              <string>TR4W</string>
   <key>CFBundleDisplayName</key>       <string>TR4W</string>
   <key>CFBundleExecutable</key>        <string>tr4w</string>
+  <key>CFBundleIconFile</key>          <string>TR4W</string>
   <key>CFBundleIdentifier</key>        <string>net.tr4w.TR4W</string>
   <key>CFBundlePackageType</key>       <string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$TR4W_VERSION</string>

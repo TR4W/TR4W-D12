@@ -313,52 +313,27 @@ Categories=HamRadio;Network;
 Terminal=false
 DESKTOP
 
-# appimagetool insists on an icon. A generated one is honest about there not
-# being real artwork yet; a missing file just fails the build.
+# appimagetool insists on an icon, and the desktop entry above names it `tr4w`,
+# so this file is what a Linux launcher and an application menu draw.
 #
-# AND THERE IS NOTHING IN THE TREE TO USE INSTEAD. Measured 2026-09-20:
-# tr4w/res/tr4w.ico holds exactly ONE image, 32x32 at 24bpp -- a Win32 titlebar
-# icon. Scaling that to the 256x256 a desktop wants would look worse than a
-# plain square and would look like somebody's finished work, which is the
-# reason not to do it. Drop real artwork at tr4w/res/tr4w.png and this branch
-# stops running.
-if [ -f "$TR4W/res/tr4w.png" ]; then
-   cp "$TR4W/res/tr4w.png" "$APPDIR/tr4w.png"
-else
-   # PURE PYTHON, NO PIL. The builder has no imaging library and installing
-   # one to draw a placeholder square would be a dependency added for a
-   # placeholder. zlib is in the standard library and a PNG is a header, one
-   # deflated IDAT and an IEND -- forty lines, and no reason for it ever to
-   # fail on a machine that can run the rest of this script.
-   python3 - "$APPDIR/tr4w.png" <<'PY'
-import struct, sys, zlib
-
-W = H = 256
-BG = (20, 40, 80)
-
-rows = b''
-for y in range(H):
-    rows += b'\x00' + bytes(BG) * W          # filter 0, then RGB per pixel
-
-
-def chunk(tag, data):
-    return (struct.pack('>I', len(data)) + tag + data
-            + struct.pack('>I', zlib.crc32(tag + data) & 0xFFFFFFFF))
-
-
-png = (b'\x89PNG\r\n\x1a\n'
-       + chunk(b'IHDR', struct.pack('>IIBBBBB', W, H, 8, 2, 0, 0, 0))
-       + chunk(b'IDAT', zlib.compress(rows, 9))
-       + chunk(b'IEND', b''))
-
-open(sys.argv[1], 'wb').write(png)
-PY
-   [ -f "$APPDIR/tr4w.png" ] || {
-      echo "  could not generate an icon -- add tr4w/res/tr4w.png"
-      exit 2
-   }
-   echo "  icon: a generated placeholder. Real artwork goes in tr4w/res/tr4w.png."
+# IT IS THE SAME ARTWORK THE MAC BUNDLE USES -- tr4w/res/icon/, written by
+# tools/make_app_icon.py -- at the 256 px a desktop asks for.  Before
+# 2026-09-28 this branch generated a flat blue square, because the only art in
+# the tree was tr4w/res/tr4w.ico: ONE image, 32x32 at 24bpp, a Win32 titlebar
+# icon that would have looked worse scaled up than the square did.  That is no
+# longer true, so the placeholder is gone rather than kept as a fallback.
+#
+# FAIL, DO NOT SUBSTITUTE.  A generated stand-in is indistinguishable from
+# finished work once it is inside an AppImage, and nothing downstream looks at
+# it again.
+ICON_SRC="$TR4W/res/icon/tr4w_256.png"
+if [ ! -f "$ICON_SRC" ]; then
+   echo "  no icon artwork at $ICON_SRC"
+   echo "  regenerate it with: python3 tools/make_app_icon.py"
+   exit 2
 fi
+cp "$ICON_SRC" "$APPDIR/tr4w.png"
+echo "  icon: $ICON_SRC (256x256)"
 
 echo ""
 echo "=== appimagetool ==="
