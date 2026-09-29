@@ -3597,6 +3597,57 @@ Nothing here is a bench test. They need an answer, not a radio.
 
 ---
 
+## Contest factory -- state QSO parties (added 2026-09-29)
+
+**None of this is covered by any automated gate.** ADDING_A_CONTEST.md section 4
+is explicit: the golden corpus is blind to scoring, `test-contest-factory.sh`
+sees only the factory-versus-legacy A/B, and **nothing in this tree types an
+exchange**. The unit tests added alongside this work pin the contest classes'
+ANSWERS; they cannot press a key.
+
+- [ ] **Florida QSO Party now refuses a three-county exchange.** Type
+      `599 PIN/HIL/CIT` into the exchange window in FQP. Expected: the exchange
+      is refused with "Too many counties for this contest (maximum 2)!!" and
+      nothing is logged. Two counties (`599 PIN/HIL`) must still log TWO QSOs
+      sharing one serial number. **This is NEW behaviour** -- TR4W has never
+      enforced a county limit; NY4I chose it ("knowing and setting a limit makes
+      our edit checking of the exchange more robust").
+
+- [ ] **Michigan QSO Party now refuses ANY county-line exchange.** `599 WAYN/OAK`
+      must be refused; `599 WAYN` must log normally. Michigan's rules: "No
+      station may claim simultaneous operation in more than one county, state,
+      or province." Also new behaviour.
+
+- [ ] **Every other QSO party must be UNCHANGED.** Spot-check one -- California
+      is the useful one, because its junctions are four. `599 SLUI/MONT/ALAM`
+      must still log three QSOs, exactly as before. If it is refused, the
+      unlimited default has been lost.
+
+- [ ] **ADIF STATE now appears for four QSO parties that never had it.** The
+      hand-typed contest-to-state tables in `PostUnit` and `uADIF` were
+      identical, incomplete copies; both omitted New York, Washington, Arizona
+      and Virginia. The single derivation reads `ContestsArray[c].P`, so those
+      four now emit `<STATE>` and `<CNTY>` in ADIF. **No corpus log covers any
+      of them.** Export one QSO from NYQP and confirm `<STATE:2>NY`.
+
+---
+
+## Decisions owed from NY4I -- contest factory
+
+- **`ContestsArray` says `CountyLineAllowed: True` for MICHQSOPARTY and the
+  sponsor's rules say otherwise.** `TContestMichiganQP` overrides the accessor,
+  but `MainUnit`'s ADIF import and `uADIF.ResolveRoverCall` still read the ARRAY
+  directly -- so a genuine duplicate in an imported Michigan log is still
+  accepted rather than flagged. Fixing the array, or repointing those two sites
+  at the factory, is a separate change with its own evidence.
+
+- **Eleven flagged parties have no established county limit** and are left
+  unlimited (today's behaviour). 7QP is known to be 4 on NY4I's geometric
+  argument -- four counties is the most that can meet at a point with
+  right-angle borders -- but 7QP has no class yet.
+
+---
+
 ## Known and accepted — no action, listed so they are not re-reported
 
 - **CW-by-CAT keys one character per `KY` command** when typing into the

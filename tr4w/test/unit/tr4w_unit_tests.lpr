@@ -246,6 +246,35 @@ uses
    uTestSHA256 in 'uTestSHA256.pas',
    uTestAllSettings in 'uTestAllSettings.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
+   (* THE CONTEST FACTORY. uContestFactory is deliberately NOT here: it reads
+      LOGWIND and the settings model, and the point of uTestContestFactory is
+      that a contest class needs neither. The classes are listed so their
+      initialization sections register them. *)
+   uContestBase in '..\..\src\contestFactory\uContestBase.pas',
+   uContestRegistry in '..\..\src\contestFactory\uContestRegistry.pas',
+   uContestStateQSOPartyBase in '..\..\src\contestFactory\uContestStateQSOPartyBase.pas',
+   uContestFixedPoints in '..\..\src\contestFactory\uContestFixedPoints.pas',
+   uContestARRLDXBase in '..\..\src\contestFactory\uContestARRLDXBase.pas',
+   uContestARRLDXCW in '..\..\src\contestFactory\uContestARRLDXCW.pas',
+   uContestARRLDXPhone in '..\..\src\contestFactory\uContestARRLDXPhone.pas',
+   uContestARRLSSBase in '..\..\src\contestFactory\uContestARRLSSBase.pas',
+   uContestARRLSSCW in '..\..\src\contestFactory\uContestARRLSSCW.pas',
+   uContestARRLSSSSB in '..\..\src\contestFactory\uContestARRLSSSSB.pas',
+   uContestCQWPXBase in '..\..\src\contestFactory\uContestCQWPXBase.pas',
+   uContestCQWPXCW in '..\..\src\contestFactory\uContestCQWPXCW.pas',
+   uContestCQWPXSSB in '..\..\src\contestFactory\uContestCQWPXSSB.pas',
+   uContestCQWWBase in '..\..\src\contestFactory\uContestCQWWBase.pas',
+   uContestCQWWCW in '..\..\src\contestFactory\uContestCQWWCW.pas',
+   uContestCQWWSSB in '..\..\src\contestFactory\uContestCQWWSSB.pas',
+   uContestARRLFieldDay in '..\..\src\contestFactory\uContestARRLFieldDay.pas',
+   uContestWinterFieldDay in '..\..\src\contestFactory\uContestWinterFieldDay.pas',
+   uContestIARU in '..\..\src\contestFactory\uContestIARU.pas',
+   uContestGeneralQSO in '..\..\src\contestFactory\uContestGeneralQSO.pas',
+   uContestNASprintCW in '..\..\src\contestFactory\uContestNASprintCW.pas',
+   uContestNASprintRTTY in '..\..\src\contestFactory\uContestNASprintRTTY.pas',
+   uContestFloridaQP in '..\..\src\contestFactory\uContestFloridaQP.pas',
+   uContestMichiganQP in '..\..\src\contestFactory\uContestMichiganQP.pas',
+   uTestContestFactory in 'uTestContestFactory.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
@@ -480,6 +509,7 @@ begin
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
    RegisterSuite(TSHA256Tests.Create('SHA256'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
+   RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));

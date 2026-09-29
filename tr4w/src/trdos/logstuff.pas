@@ -754,6 +754,7 @@ uses uNet,
    (* LogStoreBackup -- the verified SQLite snapshot BackupLogNow publishes. *)
    uLogStore,
    (* The contest factory -- phase F. *)
+   uContestBase,
    uContestFactory,
   PostUnit,
   MainUnit,
@@ -1959,6 +1960,8 @@ function ApplyFirstQTHAndQueueRest(ValidQTHs: TStringList;
 
 var
   i                                     : integer;
+  contestObject                         : TContestBase;
+  countyCountError                      : string;
 
 begin
   Result := False;
@@ -1967,6 +1970,32 @@ begin
      begin
      ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH;
      Exit;
+     end;
+
+  (* HOW MANY COUNTIES MAY THIS CONTEST'S EXCHANGE NAME?
+
+     THE COUNT IS OURS AND THE LIMIT IS THE CONTEST'S. We have just tokenised
+     the exchange, so the number is in hand; the rule about it belongs to the
+     contest object, which is handed the NUMBER and never the list -- a
+     contest that could see the counties would be one step from being handed
+     the log to count them in.
+
+     A CONTEST WITH NO CLASS, AND ANY CONTEST THAT HAS NOT ESTABLISHED ITS
+     LIMIT, IS UNCHANGED. ActiveContest is nil for the former and
+     CountyLineCountiesUnlimited is the default for the latter, so this gate
+     opens for everything TR4W accepted before and closes only where a number
+     was actually read out of a rulebook. *)
+  contestObject := ActiveContest(Contest);
+  if contestObject <> nil then
+     begin
+     if not contestObject.ValidateCountyCount(ValidQTHs.Count,
+                                              countyCountError) then
+        begin
+        ExchangeErrorMessage := countyCountError;
+        logger.Error('[ApplyFirstQTHAndQueueRest] %s Counties = %d',
+                     [countyCountError, ValidQTHs.Count]);
+        Exit;
+        end;
      end;
 
   RXData.QTHString := ValidQTHs[0];

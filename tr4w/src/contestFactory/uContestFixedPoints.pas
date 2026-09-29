@@ -72,7 +72,48 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
+(* THE RULE ITSELF, REACHABLE WITHOUT INHERITING IT.
+
+   OBJECT PASCAL HAS ONE BASE CLASS PER CLASS, and a contest has two things to
+   say about itself: what KIND of contest it is, and how it scores. The first
+   is the hierarchy -- a state QSO party is a TContestStateQSOPartyBase -- so the
+   second cannot also be one, for any contest that has a family.
+
+   The Florida QSO Party is exactly that case: it descended from
+   TContestFixedPoints purely to get three integers and a `case aMode of`, and
+   reparenting it to the QSO-party base would otherwise have meant COPYING
+   those seven lines into it -- then into Michigan, then into every state party
+   after. Copies drift.
+
+   So the mechanism is a function and the base is a convenience over it. A
+   contest whose only family IS its scoring still inherits TContestFixedPoints
+   and states three numbers; one that belongs to a real family calls this. *)
+function FixedModePoints(aMode: ModeType; aCW, aPhone, aOther: integer): integer;
+
 implementation
+
+function FixedModePoints(aMode: ModeType; aCW, aPhone, aOther: integer): integer;
+begin
+   (* The legacy shape exactly: CW, then Phone, then everything else. FM is not
+      folded into Phone here and must not be -- the arms this replaces do not
+      fold it either, and the routine that DOES fold FM into Phone
+      (LoadinLog's totals) is a different question about which column a QSO
+      counts in, not what it scores. *)
+   case aMode of
+      CW:
+         begin
+         Result := aCW;
+         end;
+      Phone:
+         begin
+         Result := aPhone;
+         end;
+      else
+         begin
+         Result := aOther;
+         end;
+      end;
+end;
 
 procedure TContestFixedPoints.SetPoints(aCW, aPhone: integer;
                                         aOther: integer = -1);
@@ -91,25 +132,8 @@ end;
 
 procedure TContestFixedPoints.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   (* The legacy shape exactly: CW, then Phone, then everything else. FM is not
-      folded into Phone here and must not be -- the arms this replaces do not
-      fold it either, and the routine that DOES fold FM into Phone
-      (LoadinLog's totals) is a different question about which column a QSO
-      counts in, not what it scores. *)
-   case aQso.Mode of
-      CW:
-         begin
-         aQso.QSOPoints := FCWPoints;
-         end;
-      Phone:
-         begin
-         aQso.QSOPoints := FPhonePoints;
-         end;
-      else
-         begin
-         aQso.QSOPoints := FOtherPoints;
-         end;
-      end;
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, FCWPoints, FPhonePoints,
+                                     FOtherPoints);
 end;
 
 end.

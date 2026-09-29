@@ -70,6 +70,18 @@ interface
 uses
    VC;
 
+const
+   (* NO LIMIT IS ENFORCED ANYWHERE IN TR4W TODAY -- measured, not assumed:
+      LOGSTUFF.ApplyFirstQTHAndQueueRest pushes EVERY valid county after the
+      first onto uPendingCounties and MainUnit.DrainPendingMultiQSORefs writes
+      one QSO for each. Nothing counts them, so "two versus four" is a
+      behaviour this program does not have.
+
+      This value is what a contest means when it permits county-line operation
+      without stating a limit, which is every contest until somebody
+      characterises one. *)
+   CountyLineCountiesUnlimited = High(integer);
+
 type
    (* WHAT SCORING KNOWS ABOUT US.
 
@@ -167,7 +179,34 @@ type
       function GetQSOPointMethod: QSOPointMethodType; virtual;
       function GetIsUSQSOParty: boolean; virtual;
       function GetFormatsExchange: boolean; virtual;
-      function GetCountyLineAllowed: boolean; virtual;
+      function GetHostState: string; virtual;
+
+      (* THE COUNTY-LINE RULE, AS A COUNT -- AND THE BOOLEAN DERIVED FROM IT.
+
+         NY4I, 2026-09-28: "some qso parties allow county line operation where
+         you can claim multiple counties and some do not so that is a good item
+         to keep in mind too. Some allow 2 counties, some like california qso
+         party allow a junction of 4 counties."
+
+         A BOOLEAN CANNOT SAY THAT. Three answers exist -- none, two, and
+         California's four-county junction -- and a flag expresses only the
+         first distinction, so the wrong answer reads as a legal one. That is
+         CLAUDE.md note 9 with a different noun.
+
+         ONE VALUE, TWO READINGS. The count is the stored rule; the boolean is
+         computed from it, on NY4I's own sketch ("CountyLineAllowed could be a
+         property that returns a boolean where the accessor states return
+         FCountyLineCountiesAllowed > 0"). A site that only cares WHETHER reads
+         better asking CountyLineAllowed; a site that needs the limit asks for
+         the number. Nothing is stored twice, so the two cannot disagree.
+
+         AND THE BOOLEAN IS DELIBERATELY NOT VIRTUAL. If both were virtual a
+         descendant could override the boolean to True while the count still
+         answered 0, and the two would contradict each other silently. Leaving
+         it non-virtual makes the contradiction unrepresentable rather than
+         merely discouraged -- so this is a decision, not a missing keyword. *)
+      function GetCountyLineCountiesMax: integer; virtual;
+      function GetCountyLineAllowed: boolean;
 
       (* WHICH CONTEST THIS INSTANCE IS -- READABLE BY SUBCLASSES, AND NOT TO BE
          BRANCHED ON.
@@ -201,6 +240,16 @@ type
       property QSOPointMethod: QSOPointMethodType read GetQSOPointMethod;
       property IsUSQSOParty: boolean read GetIsUSQSOParty;
       property FormatsExchange: boolean read GetFormatsExchange;
+
+      (* THE TWO-LETTER POSTAL CODE OF THE STATE THIS CONTEST BELONGS TO.
+
+         '' FOR ALMOST EVERY CONTEST, AND THAT IS A REAL ANSWER -- CQ WW has no
+         host state. It is the single-state QSO parties that have one, and they
+         need it because their QTHString carries a COUNTY: the ADIF exporter
+         cannot name the state from the exchange and has to ask the contest. *)
+      property HostState: string read GetHostState;
+
+      property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
       property CountyLineAllowed: boolean read GetCountyLineAllowed;
 
       (* THE CONTEST'S NAME, for logging and for the "which class am I" question
@@ -355,6 +404,33 @@ type
          stored settings, from the operator editing it mid-contest -- and a
          contest holding the startup value would score the rest of the log
          against a station that has moved. *)
+      (* HOW MANY COUNTIES MAY ONE ON-AIR EXCHANGE NAME?
+
+         THE APPLICATION COUNTS; THE CONTEST SUPPLIES THE LIMIT. This takes an
+         integer and not a list, and that is the design rule rather than a
+         convenience: a contest that was handed the counties would be one step
+         from being handed the prior QSOs so it could count them itself, and at
+         that point the order in which callers invoke factory methods starts
+         changing what a log scores. LOGSTUFF already has the count -- it just
+         tokenised the exchange -- so it passes the number and asks.
+
+         A COUNTY-LINE CONTACT IS N SEPARATE QSOs, NOT ONE QSO WITH N KEYS.
+         Florida's rules: "Florida stations on a county line (maximum of two
+         counties) may be claimed as a separate QSO and multiplier from each
+         county." TR4W already writes it that way -- one row per county sharing
+         the transmitted serial number, with ceClearDupeSheet set on the
+         follow-ups so the generic dupe check does not blank them.
+
+         NOT VIRTUAL, for the same reason CountyLineAllowed is not: the rule is
+         the COUNT, and a contest that could override the verdict as well could
+         contradict its own limit.
+
+         ONE COUNTY ALWAYS PASSES, including for the contests whose maximum is
+         zero. Zero means "no county LINE", not "no county" -- every domestic
+         exchange names one. *)
+      function ValidateCountyCount(aCount: integer;
+                                   out aErrorMessage: string): boolean;
+
       procedure SetStation(const aStation: TStationContext);
    protected
       (* THE PARSE, WHICH IS MECHANISM AND NOT A RULE.
@@ -502,9 +578,67 @@ begin
    Result := ContestsArray[FContest].P <> 0;
 end;
 
+function TContestBase.GetHostState: string;
+begin
+   (* Derived from ContestsArray's P index, which is the one place this is
+      written down -- see VC.USQSOPartyStateName. *)
+   Result := USQSOPartyStateName(FContest);
+end;
+
+function TContestBase.GetCountyLineCountiesMax: integer;
+begin
+   (* WHAT THE ARRAY CAN SAY, AND NOTHING MORE. ContestsArray carries a
+      BOOLEAN, so the only honest translation of True is "allowed, with no
+      limit stated" -- and unlimited is also what TR4W actually DOES today:
+      LOGSTUFF.ApplyFirstQTHAndQueueRest queues every valid county the operator
+      typed and no site anywhere counts them. Returning 2 here would be a
+      number nobody measured, and it would be wrong for the California QSO
+      Party, whose junctions are four.
+
+      A contest that KNOWS its limit overrides this. Until one does, the value
+      describes the program rather than the rulebook, and says so. *)
+   if ContestsArray[FContest].CountyLineAllowed then
+      begin
+      Result := CountyLineCountiesUnlimited;
+      end
+   else
+      begin
+      Result := 0;
+      end;
+end;
+
 function TContestBase.GetCountyLineAllowed: boolean;
 begin
-   Result := ContestsArray[FContest].CountyLineAllowed;
+   Result := GetCountyLineCountiesMax > 0;
+end;
+
+function TContestBase.ValidateCountyCount(aCount: integer;
+                                          out aErrorMessage: string): boolean;
+var
+   maxCounties: integer;
+begin
+   aErrorMessage := '';
+   maxCounties := GetCountyLineCountiesMax;
+
+   (* A CONTEST THAT HAS NOT ESTABLISHED ITS LIMIT ENFORCES NOTHING, WHICH IS
+      WHAT TR4W HAS ALWAYS DONE. Eleven of the thirteen parties carrying the
+      county-line flag have no published number in this tree, and a party
+      wrongly capped at two would reject a valid three-county junction in the
+      middle of a contest -- failing only for the operator who is right. That
+      is worse than today's uniform permissiveness, so unlimited stays
+      unlimited until somebody reads the rules. *)
+   if maxCounties = CountyLineCountiesUnlimited then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   Result := (aCount <= 1) or (aCount <= maxCounties);
+
+   if not Result then
+      begin
+      aErrorMessage := Format(TC_TOOMANYCOUNTIES, [maxCounties]);
+      end;
 end;
 
 procedure TContestBase.CalculateQSOPoints(var aQso: ContestExchange);

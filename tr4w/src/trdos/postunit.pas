@@ -499,43 +499,16 @@ procedure WriteADIFField( sFieldName: string; sFieldValue: string );
      end;
   end;
 
-// For state-based QSO parties, return the host state's 2-letter ADIF
-// postal code; for any other contest return ''.  Used during ADIF export
-// when QTHString carries a county/section code instead of a 2-letter
-// state code -- in those contests we know the state by the contest itself.
-function GetStateForContest( c: ContestType ): string;
-  begin
-  case c of
-    CALQSOPARTY:
-      Result := 'CA';
-    FLORIDAQSOPARTY:
-      Result := 'FL';
-    MICHQSOPARTY:
-      Result := 'MI';
-    MINNQSOPARTY:
-      Result := 'MN';
-    MOQSOPARTY:
-      Result := 'MO';
-    NCQSOPARTY:
-      Result := 'NC';
-    OHIOQSOPARTY:
-      Result := 'OH';
-    TEXASQSOPARTY:
-      Result := 'TX';
-    WISCONSINQSOPARTY:
-      Result := 'WI';
-    TENNESSEEQSOPARTY:
-      Result := 'TN';
-    COLORADOQSOPARTY:
-      Result := 'CO';
-    PAQSOPARTY:
-      Result := 'PA';
-    INQSOPARTY:
-      Result := 'IN';
-    else
-      Result := '';
-  end;
-  end;
+(* THE DUPLICATE OF uADIF.GetStateForContest THAT STOOD HERE IS DELETED.
+
+   It was byte-for-byte the same 13-arm case, and this unit already uses uADIF,
+   so the local copy did nothing but shadow the shared one and give the same
+   list a second place to fall behind. CLAUDE.md: "If it is already duplicated,
+   extract it to one callable function and repoint every copy."
+
+   The call below now resolves to uADIF's, which derives the answer from
+   ContestsArray's P index instead of naming contests. *)
+
 
 procedure CreateCabrilloFile;
   label

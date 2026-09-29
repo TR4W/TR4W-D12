@@ -267,6 +267,7 @@ resourcestring
    TC_NOTENOUGHINFOINEXCHANGE            = 'Not enough info in exchange!!';
    TC_IMPROPERDOMESITCQTH                = 'Improper domestic QTH!!';
    TC_IGNOREDUNKNOWNQTH                  = 'Ignored, not a known QTH:';
+   TC_TOOMANYCOUNTIES                    = 'Too many counties for this contest (maximum %d)!!';
    TC_BANKSTANDARD                       = 'Standard';
    TC_BANKCONTROL                        = 'Control';
    TC_BANKALT                            = 'Alt';

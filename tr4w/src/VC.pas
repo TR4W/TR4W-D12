@@ -4512,12 +4512,54 @@ QSOPartiesCount = 20;
     // zero-initialized to NoDXMults (its first value), matching the old default.
     ActiveDXMult                        : DXMultType;
 
+  (* THE HOST STATE OF A SINGLE-STATE QSO PARTY, DERIVED FROM THE ONE TABLE
+    THAT ALREADY HOLDS IT.
+
+    ContestsArray[c].P is an INDEX into QSOParties, not a boolean -- 11 is
+    Florida, 2 is Michigan -- and QSOParties[P].StateName is that party's
+    two-letter postal code. Zero means "not a state QSO party".
+
+    IT EXISTS BECAUSE THE SAME FACT WAS HAND-TYPED TWICE MORE. PostUnit and
+    uADIF each carried an identical 13-arm `case c of FLORIDAQSOPARTY:
+    Result := 'FL'` and both were INCOMPLETE against this table: New York,
+    Washington, Arizona and Virginia are state QSO parties with a two-letter
+    StateName here and were missing from both copies, so their ADIF export
+    emitted no STATE at all. That is the drift CLAUDE.md warns about -- two
+    copies of a list, neither of them the one that grows.
+
+    THE TWO-CHARACTER TEST IS THE FILTER, NOT A LIST OF CONTESTS. Four rows of
+    QSOParties are multi-state or non-US -- '7th area', 'IN7QPNE', 'VE7' -- and
+    none of those is an ADIF STATE. Asking the value what shape it is keeps the
+    rule where the data is; naming the four contests would start a fourth
+    copy. *)
+  function USQSOPartyStateName(c: ContestType): string;
+
   { Fills the string tables that cannot be initialised where they are declared.
     uProgramMain calls this after the translation loads and before the main
     window is built. The body says why these three tables are special. }
   procedure InitializeStringTables;
 
 implementation
+
+function USQSOPartyStateName(c: ContestType): string;
+var
+   partyIndex: byte;
+begin
+   Result := '';
+   partyIndex := ContestsArray[c].P;
+   if partyIndex = 0 then
+      begin
+      Exit;
+      end;
+   if partyIndex > QSOPartiesCount then
+      begin
+      Exit;
+      end;
+   if Length(QSOParties[partyIndex].StateName) = 2 then
+      begin
+      Result := QSOParties[partyIndex].StateName;
+      end;
+end;
 
 procedure InitializeStringTables;
    { WHY THESE THREE TABLES ARE FILLED HERE AND NOT AT THEIR DECLARATION.

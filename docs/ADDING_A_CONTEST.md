@@ -159,7 +159,10 @@ shared files a contest touches; the search path already covers
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | the array row |
 | `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | the array row |
 | `InitialExchangeKind`, `ExchangeKind`, `QSOPointMethod` | the array row |
-| `IsUSQSOParty`, `CountyLineAllowed` | the array row |
+| `IsUSQSOParty` | the array row (`P <> 0`) |
+| `HostState` | **`USQSOPartyStateName`** -- derived from the array's `P` index, which is the one place a QSO party's state is written down. `''` for every contest that has no host state, which is a real answer |
+| `CountyLineCountiesMax` | `CountyLineCountiesUnlimited` when the array says the contest allows a county line, `0` when it does not. **A count, not a flag** -- Florida allows two, 7QP four, Michigan none |
+| `CountyLineAllowed` | **derived, and NOT virtual**: `CountyLineCountiesMax > 0`. One stored value, two readings, so the two cannot disagree. Overriding the count is the only way to state the rule |
 | `FormatsExchange` | **False** — see below |
 
 **Everything defaults to `ContestsArray` on purpose.** A contest states what it
@@ -175,6 +178,7 @@ that drifts the moment the array is edited, which is exactly what
 | `CalculateQSOPoints` | scores 0 (`NoQSOPointMethod` is a real value) |
 | `ValidateClass` | accepts anything |
 | `ValidateDXQTH` | accepts nothing |
+| `ValidateCountyCount` | **not virtual** -- derived from `CountyLineCountiesMax`. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the counties would be the first step toward handing it the log. One county always passes, even where the maximum is zero |
 | `FormatCabrilloSentExchange` / `...Received...` / `FormatADIFSentExchange` | `''`, and only called when `FormatsExchange` is True |
 
 **`FormatsExchange` is False by default and that matters.** A contest whose
@@ -191,6 +195,14 @@ responsibility arrives when it is actually lifted.
 The split is deliberate: **splitting digits from letters cannot differ between
 contests; which letters are legal can.** Duplicating the parse into every class
 would duplicate the part that cannot differ.
+
+### Family and mechanism bases that exist today
+
+| base | kind | holds |
+|---|---|---|
+| `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
+| `TContestFixedPoints` | mechanism | "a number per mode". Its rule is also a plain function, `FixedModePoints`, so a contest that already has a family base can call it instead of inheriting it -- Object Pascal has one base class to spend |
+| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. **Two members**: `IsUSQSOParty` is stated rather than read from the `P` index, and `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated. Deliberately NOT here: NAQP (a QSO party by name only), and 7QP / NEQP / IN7QPNE (multi-state, unresolved) |
 
 ### `TStationContext` — what scoring knows about us
 

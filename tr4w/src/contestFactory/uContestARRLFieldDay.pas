@@ -86,7 +86,7 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetIsUSQSOParty: boolean; override;
-      function GetCountyLineAllowed: boolean; override;
+      function GetCountyLineCountiesMax: integer; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       function ValidateClass(const aClass: string;
@@ -277,12 +277,13 @@ begin
    Result := False;
 end;
 
-function TContestARRLFieldDay.GetCountyLineAllowed: boolean;
+function TContestARRLFieldDay.GetCountyLineCountiesMax: integer;
 begin
-   (* False: Field Day has no county line. The flag exists for the single-state
-      QSO parties, where a station on a boundary legitimately logs the same
-      band and mode twice with different QTH. *)
-   Result := False;
+   (* Zero: Field Day has no county line, so CountyLineAllowed reads False.
+      The rule exists for the single-state QSO parties, where a station on a
+      boundary legitimately logs the same band and mode twice with different
+      QTH. *)
+   Result := 0;
 end;
 
 initialization

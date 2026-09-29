@@ -1254,25 +1254,22 @@ end;
 // Export side
 // ---------------------------------------------------------------------------
 
+(* ONE DEFINITION, IN VC, WHERE THE TABLE IS.
+
+   THIS WAS A 13-ARM `case c of FLORIDAQSOPARTY: Result := 'FL'`, AND SO WAS
+   PostUnit's -- two hand-typed copies of a fact ContestsArray already carries
+   as its P index. Both were incomplete in the same way: New York, Washington,
+   Arizona and Virginia are state QSO parties with a two-letter StateName in
+   QSOParties and appeared in neither copy, so their ADIF export emitted no
+   STATE field at all. That is the drift CLAUDE.md describes -- the newest bug
+   living in the oldest copy, with nothing in the build pointing at it.
+
+   THE FUNCTION IS KEPT RATHER THAN THE CALL SITES REPOINTED, because the name
+   is what documents the intent at the two places that use it and it is named
+   in the ADIF verifier's README. It is a wrapper now, not a table. *)
 function GetStateForContest(c: ContestType): string;
 begin
-   case c of
-      CALQSOPARTY        : Result := 'CA';
-      FLORIDAQSOPARTY    : Result := 'FL';
-      MICHQSOPARTY       : Result := 'MI';
-      MINNQSOPARTY       : Result := 'MN';
-      MOQSOPARTY         : Result := 'MO';
-      NCQSOPARTY         : Result := 'NC';
-      OHIOQSOPARTY       : Result := 'OH';
-      TEXASQSOPARTY      : Result := 'TX';
-      WISCONSINQSOPARTY  : Result := 'WI';
-      TENNESSEEQSOPARTY  : Result := 'TN';
-      COLORADOQSOPARTY   : Result := 'CO';
-      PAQSOPARTY         : Result := 'PA';
-      INQSOPARTY         : Result := 'IN';
-   else
-      Result := '';
-   end;
+   Result := USQSOPartyStateName(c);
 end;
 
 function EmitADIFField(const name, value: string): string;
