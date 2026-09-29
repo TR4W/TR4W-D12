@@ -69,6 +69,7 @@ type
       procedure Test_NorthCarolinaBonusIsTheCurrentRules;
       procedure Test_NorthCarolinaAllowsTwoCounties;
       procedure Test_FourBespokeArmsCountyLineMaxima;
+      procedure Test_NewYorkAndSalmonRunTranscribeTheirArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
    public
       procedure RunAllTests; override;
@@ -1204,6 +1205,76 @@ begin
    CheckUnlimited(VAQP, 'Virginia');
 end;
 
+(* NEW YORK AND THE WASHINGTON STATE SALMON RUN, MOVED 2026-09-29.
+
+   BOTH ARMS ARE THE CW-VERSUS-NOT SHAPE, so digital takes the PHONE value:
+   OnePhoneTwoCW is `if Mode = CW then 2 else 1` and SalmonRunQSOPointMethod is
+   `if Mode = CW then 4 else 2`, the latter identical in D7. The digital
+   assertion is the one that would catch the inverted shape.
+
+   NEITHER ROW CARRIES A CountyLineAllowed FIELD, and neither party has a
+   maximum established from its sponsor's rules, so both must inherit
+   CountyLineCountiesUnlimited and accept a four-county junction exactly as
+   TR4W does today. Reading the absent boolean as zero is the defect this pins
+   against.
+
+   THE SALMON RUN IS A STATE PARTY WITHOUT THE WORDS IN ITS NAME. It has its
+   own QSOParties entry (WA), so it was already IsUSQSOParty before it had a
+   class; the host-state assertion is what says it landed on the right base. *)
+procedure TContestFactoryTests.Test_NewYorkAndSalmonRunTranscribeTheirArms;
+
+   procedure CheckParty(aContest: ContestType; const aWhat, aState: string;
+                        aCW, aPhone, aDigital: integer);
+   var
+      obj: TContestBase;
+      party: TContestStateQSOPartyBase;
+      msg: string;
+   begin
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, aWhat + ' has no registered class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      try
+         CheckEquals(aCW, PointsFor(obj, CW), aWhat + ' CW');
+         CheckEquals(aPhone, PointsFor(obj, Phone), aWhat + ' phone');
+         CheckEquals(aDigital, PointsFor(obj, Digital),
+                     aWhat + ' digital -- takes the phone value');
+
+         CheckTrue(obj is TContestStateQSOPartyBase,
+                   aWhat + ' is not on the state-party base');
+         if not (obj is TContestStateQSOPartyBase) then
+            begin
+            Exit;
+            end;
+         CheckEquals(aState, obj.HostState, aWhat + ' host state');
+         CheckTrue(obj.IsUSQSOParty, aWhat + ' is a US QSO party');
+
+         party := TContestStateQSOPartyBase(obj);
+         CheckEquals(CountyLineCountiesUnlimited, party.CountyLineCountiesMax,
+                     aWhat + ' has no established maximum and must inherit'
+                     + ' unlimited');
+         CheckTrue(party.CountyLineAllowed,
+                   aWhat + ': unlimited must read as allowed');
+         CheckTrue(party.ValidateQTHCount(4, msg),
+                   aWhat + ': a four-county junction must still pass');
+         CheckEquals('', msg, aWhat + ': nothing refused, so nothing said');
+      finally
+         obj.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_NewYorkAndSalmonRunTranscribeTheirArms');
+
+   (* OnePhoneTwoCW: if Mode = CW then 2 else 1. *)
+   CheckParty(NYQP, 'New York', 'NY', 2, 1, 1);
+
+   (* SalmonRunQSOPointMethod: if Mode = CW then 4 else 2. *)
+   CheckParty(SALMONRUN, 'Salmon Run', 'WA', 4, 2, 2);
+end;
+
 procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
 
    procedure CheckAgainstArray(aContest: ContestType; const aWhat: string);
@@ -1283,6 +1354,13 @@ begin
    CheckAgainstArray(NCQSOPARTY, 'North Carolina QSO Party');
    CheckAgainstArray(PAQSOPARTY, 'Pennsylvania QSO Party');
    CheckAgainstArray(VAQP, 'Virginia QSO Party');
+
+   (* NEW YORK AND THE SALMON RUN, MOVED 2026-09-29. Both have a BLANK
+      CABName, which resolves to the enum's spelling -- 'NY-QSO-PARTY' and
+      'SALMON RUN' -- and the Salmon Run's blank ADIFName IS the empty
+      string. *)
+   CheckAgainstArray(NYQP, 'New York QSO Party');
+   CheckAgainstArray(SALMONRUN, 'Washington State Salmon Run');
 end;
 
 procedure TContestFactoryTests.RunAllTests;
@@ -1307,6 +1385,7 @@ begin
    Test_NorthCarolinaBonusIsTheCurrentRules;
    Test_NorthCarolinaAllowsTwoCounties;
    Test_FourBespokeArmsCountyLineMaxima;
+   Test_NewYorkAndSalmonRunTranscribeTheirArms;
    Test_MovedRowValuesStillMatchTheArray;
 end;
 

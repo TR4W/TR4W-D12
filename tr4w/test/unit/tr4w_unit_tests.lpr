@@ -288,6 +288,8 @@ uses
    uContestNorthCarolinaQP in '..\..\src\contestFactory\uContestNorthCarolinaQP.pas',
    uContestPennsylvaniaQP in '..\..\src\contestFactory\uContestPennsylvaniaQP.pas',
    uContestVirginiaQP in '..\..\src\contestFactory\uContestVirginiaQP.pas',
+   uContestNewYorkQP in '..\..\src\contestFactory\uContestNewYorkQP.pas',
+   uContestWashingtonSalmonRun in '..\..\src\contestFactory\uContestWashingtonSalmonRun.pas',
    uContestArktikaSpring in '..\..\src\contestFactory\uContestArktikaSpring.pas',
    uContestARRLDigi in '..\..\src\contestFactory\uContestARRLDigi.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
