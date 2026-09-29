@@ -1,0 +1,7 @@
+# Hosted build; mkdocs.yml remains the offline/local-file preview configuration.
+INHERIT: mkdocs.yml
+site_url: https://tr4w.github.io/TR4W-D12/
+plugins:
+  search: {}
+  offline:
+    enabled: false

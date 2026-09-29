@@ -1,0 +1,110 @@
+site_name: TR4W Operator Guide
+site_description: TR4W — Cross-platform contest logging, rooted in TRLOG. Operator guide for the 5.x preview.
+docs_dir: user-guide
+site_dir: build-out/docs-site
+use_directory_urls: false
+theme:
+  name: material
+  font: false
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.footer
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+plugins:
+  - search
+  - offline
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    not_found: warn
+    anchors: warn
+nav:
+  - Welcome: index.md
+  - Get started:
+      - Choose your version: start/version.md
+      - Install TR4W: start/install.md
+      - Files and folders: start/files.md
+      - Update reference data: start/data-updates.md
+      - Open your first contest: start/first-contest.md
+      - Moving from 4.x: start/migration.md
+      - Convert INI settings to JSON: start/ini-to-json.md
+  - Station setup:
+      - Connect a radio: station/radio.md
+      - WSJT-X: station/wsjtx.md
+      - TCI connections: station/tci.md
+      - External loggers: station/external-loggers.md
+      - CW sending options: station/cw.md
+      - Program CW function keys: station/cw-messages.md
+      - SO2R operation: station/so2r.md
+      - HamScore online scoring: station/online-scores.md
+      - Language and translations: station/language.md
+      - Multi-station networking: station/network.md
+  - Operating:
+      - POTA and park-to-park: operating/pota.md
+      - Keyboard essentials: operating/keyboard.md
+      - Colors, sizing, and lost windows: operating/appearance.md
+      - Radio 1 and Radio 2 windows: operating/radio-windows.md
+      - Possible calls and SCP: operating/callsign-assistance.md
+      - Band map: operating/bandmap.md
+      - DX cluster: operating/dxcluster.md
+      - Multiplier windows: operating/multipliers.md
+  - Your log:
+      - Back up your log: log/backup.md
+      - Restore files and recover a log: log/restore.md
+      - Export ADIF and Cabrillo: log/export.md
+      - Reports: log/reports.md
+      - Import contacts: log/import.md
+      - Diagnostic logging: log/diagnostics.md
+  - Theory of operation:
+      - How the parts work together: theory/overview.md
+      - SQLite integrity and durability: theory/database.md
+      - Test methodology: theory/testing.md
+  - Reference:
+      - Command reference:
+          - Find a command: reference/commands/index.md
+          - A–D: reference/commands/a-d.md
+          - E–L: reference/commands/e-l.md
+          - M–P: reference/commands/m-p.md
+          - Q–S: reference/commands/q-s.md
+          - T–Z: reference/commands/t-z.md
+          - Old-to-new lookup: reference/commands/legacy-map.md
+          - Actions and moved settings: reference/commands/lifecycle.md
+          - Coverage and gaps: reference/commands/coverage.md
+      - Radio support: reference/radios.md
+      - Available contests: reference/contests.md
+      - Languages and review status: reference/languages.md
+      - WSJT-X settings: reference/wsjtx.md
+      - Earlier manuals and wiki: reference/legacy.md
+  - About this preview:
+      - About TR4W: about/tr4w.md
+      - Evidence and review: about/sources.md
+      - Evaluate the prototype: about/evaluation.md

@@ -1,0 +1,50 @@
+{
+  "EXTERNAL LOGGER": {
+    "description": "Select the destination logging application. The factory recognizes NONE, DXKEEPER, ACLOG, and HRD. DXKeeper has a QSO delivery implementation; the ACLog and HRD QSO-send methods are unimplemented in this snapshot, despite being selectable. This setting is separate from Hamlib radio-control bridges.",
+    "guide": "../../station/external-loggers.md"
+  },
+  "EXTERNAL LOGGER ENABLED": {
+    "description": "Enable forwarding of newly logged contacts to the selected external logger. Select an implemented destination and configure its address and port first. The Preferences panel says these changes take effect on the next TR4W start. Confirm delivery in the receiving application.",
+    "guide": "../../station/external-loggers.md"
+  },
+  "EXTERNAL LOGGER ADDRESS": {
+    "description": "Address of the receiving external logger's TCP service. Use the service's local address when both programs run on one computer. This is the logger service address, not the radio's address. Changes take effect on the next TR4W start.",
+    "guide": "../../station/external-loggers.md"
+  },
+  "EXTERNAL LOGGER PORT": {
+    "description": "TCP listening port of the receiving external logger. Match the receiver's actual configuration and restart TR4W after applying the change. An open connection alone is not proof of a successful QSO transfer.",
+    "guide": "../../station/external-loggers.md"
+  },
+  "BACKUP LOG FILE NAME": {
+    "description": "Destination filename for a verified snapshot of the open contest database. Set it before invoking Backup Log; an empty destination causes the manual handler to return without creating a copy. Use a distinct destination for each contest. The implementation stages and verifies the new snapshot before publishing it, retaining the preceding destination as .bak.",
+    "guide": "../../log/backup.md"
+  },
+  "BACKUP LOG FREQUENCY": {
+    "description": "Number of QSOs between automatic backups. Zero disables the automatic schedule. Set a backup destination as well. The logging path tests the total QSO count against this interval; this value is not a time interval.",
+    "guide": "../../log/backup.md"
+  },
+  "MY PARK": {
+    "description": "Your activating park reference, for example US-0663. POTA exchange normalization uses its country prefix for digits-only worked-park entries. ADIF export takes MY_SIG_INFO and MY_POTA_REF from the current value, so confirm this setting before exporting.",
+    "guide": "../../operating/pota.md"
+  },
+  "WSJT-X ENABLED": {
+    "description": "Controls whether TR4W enables the WSJT-X listener. The source initializes this to true. Match the UDP destination and port in WSJT-X, then verify that a completed contact reaches the intended TR4W contest.",
+    "guide": "../../station/wsjtx.md"
+  },
+  "WSJT-X BROADCAST PORT": {
+    "description": "UDP receive port for the WSJT-X connection. Match it to the sending application's port. The initial value is 2237; this is separate from a radio-control TCP port.",
+    "guide": "../../station/wsjtx.md"
+  },
+  "WSJT-X MULTICAST GROUP": {
+    "description": "Multicast group for the WSJT-X listener. An empty value selects ordinary unicast. A multicast configuration requires matching group and port settings and an appropriate network interface in the sending application.",
+    "guide": "../../station/wsjtx.md"
+  },
+  "WSJT-X SEND HIGHLIGHTS": {
+    "description": "Controls whether TR4W sends callsign highlight information to WSJT-X. Receiving logged QSOs and sending highlights are separate checks; enable Accept UDP requests in WSJT-X when using the highlighting path.",
+    "guide": "../../station/wsjtx.md"
+  },
+  "WSJT-X RADIO CONTROL ENABLED": {
+    "description": "Allows frequency changes from WSJT-X to move the radio. The source initializes this to false. Enabling it is not by itself a complete CAT setup; first establish the radio connection and the integration's control path.",
+    "guide": "../../station/wsjtx.md"
+  }
+}
