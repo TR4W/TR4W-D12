@@ -1760,6 +1760,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#recent-connection-and-interface-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recent connection and interface evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#supporting-documents" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2384,6 +2395,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../about/updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recent guide updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../about/sources.html" class="md-nav__link">
         
   
@@ -2511,6 +2550,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#recent-connection-and-interface-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recent connection and interface evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#supporting-documents" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2591,6 +2641,10 @@
 <h2 id="how-to-read-a-test-result">How to read a test result<a class="headerlink" href="#how-to-read-a-test-result" title="Permanent link">&para;</a></h2>
 <p>A useful result identifies the source revision, platform/toolchain, suite or corpus, and pass/fail/skip outcome. A skipped hardware or platform check is not a pass. An accepted export difference should be documented rather than silently changing the expected output.</p>
 <p>This documentation update ran the documentation generator and strict MkDocs build, not the application test suites. The existence of a test in the repository is evidence of intended coverage, not evidence that it passed today.</p>
+<h2 id="recent-connection-and-interface-evidence">Recent connection and interface evidence<a class="headerlink" href="#recent-connection-and-interface-evidence" title="Permanent link">&para;</a></h2>
+<p>The September 27 development record reports a <strong>7 hour 52 minute</strong> LAN soak with an IC-7760 and IC-9700: one login per radio, no CI-V data timeouts, and clean shutdown. This is evidence for those radios and that tested setup, not certification of every supported model or platform.</p>
+<p>New focused tests cover radio-band mapping, Icom teardown ownership, retry delays, status-versus-notice lifetime, menu shortcuts, and focused editing keys. Release packaging also checks that separate debug symbols match the binaries shipped. A matching symbol file improves crash diagnosis; it does not prove a contest workflow works.</p>
+<p>These are recorded development results and source coverage reviewed for this guide. No application, installer, or hardware test was rerun during the September 29 documentation update.</p>
 <h2 id="supporting-documents">Supporting documents<a class="headerlink" href="#supporting-documents" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Current corpus methodology (<code>tr4w/test/corpus/README.md</code>)</li>

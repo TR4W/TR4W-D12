@@ -1183,6 +1183,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Radio 1 and Radio 2 windows
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="radio-windows.html" class="md-nav__link md-nav__link--active">
         
   
@@ -1199,6 +1217,36 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#main-window-connection-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Main-window connection status
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2292,6 +2340,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../about/updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recent guide updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../about/sources.html" class="md-nav__link">
         
   
@@ -2368,6 +2444,25 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#main-window-connection-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Main-window connection status
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2433,6 +2528,10 @@
 </table>
 <p>These panels display what the driver reports; a model's registration does not guarantee every field is supported. Compare the panel with the front panel while commissioning a radio. For SO2R, keep both panels visible and verify the active radio before sending or logging. Each spectrum-capable slot has its own panadapter window.</p>
 <p>For a frozen frequency or a disconnected interface, use the checks under <a href="../station/radio.html#reset-radio-ports">Reset Radio Ports</a>.</p>
+<h2 id="main-window-connection-status">Main-window connection status<a class="headerlink" href="#main-window-connection-status" title="Permanent link">&para;</a></h2>
+<p>A strip at the bottom of the main window gives Radio 1, Radio 2, DX Cluster, and Network separate status panels. A condition stays until it changes or clears; an unrelated subsystem cannot overwrite it. Short notices, such as an imported-contact count, still appear on the message line and expire.</p>
+<p>Cluster and network text identifies the subsystem. Open its own window for the host/address and full details. Radio panels show the current condition even when opened after a connection failure. A connected network socket alone is not enough to mark an Icom operational: authentication and its control stream must complete.</p>
+<p>Saved main-window heights from older builds are adjusted for the new strip. Continue to resize vertically to control how many QSOs are visible.</p>
 <details class="info">
 <summary>Source check</summary>
 <p><code>ui/lcl/uRadioPanelForm.lfm</code> and <code>.pas</code>, particularly <code>LabelFor</code>, <code>SetFlag</code>, <code>SyncActiveTint</code>, and <code>OpenPanadapterForSlot</code>; updates arrive through <code>uPanelUpdate</code> and <code>uRadioPolling</code>.</p>

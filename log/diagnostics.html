@@ -1584,6 +1584,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#log-size-and-retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log size and retention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#trace-a-particular-subsystem" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1599,6 +1610,17 @@
     <span class="md-ellipsis">
       
         Where diagnostic files go
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#report-a-crash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Report a crash
       
     </span>
   </a>
@@ -2362,6 +2384,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../about/updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recent guide updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../about/sources.html" class="md-nav__link">
         
   
@@ -2456,6 +2506,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#log-size-and-retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log size and retention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#trace-a-particular-subsystem" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2471,6 +2532,17 @@
     <span class="md-ellipsis">
       
         Where diagnostic files go
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#report-a-crash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Report a crash
       
     </span>
   </a>
@@ -2543,6 +2615,9 @@
 </tbody>
 </table>
 <p>The current setting name is <a href="../reference/commands/a-d.html#debug-log-level">DEBUG LOG LEVEL</a>. Despite its name, its allowed values include all seven levels above.</p>
+<h2 id="log-size-and-retention">Log size and retention<a class="headerlink" href="#log-size-and-retention" title="Permanent link">&para;</a></h2>
+<p><code>tr4w.log</code> now appends without automatic rotation or the former 10 MB limit. Check available space during long diagnostic sessions. TRACE can produce roughly 100 MB per hour, depending on activity. Close TR4W before archiving or removing an old diagnostic log; preserve the relevant session before starting another capture.</p>
+<p>Networked-Icom packet-by-packet output is now TRACE. DEBUG retains connection lifecycle events and session renewal, making it the more useful first choice for connection problems.</p>
 <h2 id="trace-a-particular-subsystem">Trace a particular subsystem<a class="headerlink" href="#trace-a-particular-subsystem" title="Permanent link">&para;</a></h2>
 <p>The Logging panel also provides separate controls:</p>
 <table>
@@ -2601,6 +2676,10 @@
 </table>
 <p>The Hamlib trace uses the same diagnostic-log root with filename <code>hamlib_trace.log</code>. The panel's active path and <strong>Open log file</strong> command are useful when several installations or launch profiles exist. <a href="../start/files.html">Files and folders</a> shows directory trees, contest databases, and reference-data locations.</p>
 <p>For a useful diagnostic report, retain the relevant log together with the TR4W version, platform, radio or integration involved, reproduction steps, and approximate time. The Logging panel also offers <strong>Warn when the log file grows unexpectedly</strong>; this is a warning control, not a backup or retention policy.</p>
+<h2 id="report-a-crash">Report a crash<a class="headerlink" href="#report-a-crash" title="Permanent link">&para;</a></h2>
+<p>Preserve <code>tr4w.log</code>, including its startup and <code>[CRASH]</code> records, with the version, operating system, approximate time, and actions leading to the failure. Keep the macOS crash report too if the system supplies one. Exception reporting is installed in the application, headless export path, and multi-op server; it cannot guarantee a report after every kind of process or machine failure.</p>
+<p>On macOS, raw addresses in a backtrace are expected. The log records the running binary's identity and load address so a developer can decode it afterward. The 5.0.26 release offers separate application and server <code>.dSYM.zip</code> files plus a symbol manifest. Symbols must match the report's <strong>UUID</strong>, not just its version number. They do not need to be installed inside <code>TR4W.app</code>.</p>
+<p>The Windows <code>.dbg</code> is also available separately for matching crash reports. Most operators should send the report and log; download symbols only when helping investigate a failure. These symbol downloads are intended for the alpha/beta testing period.</p>
 <details class="info">
 <summary>Source check</summary>
 <p>Levels: <code>uSettingsModel.pas</code>, <code>LOG_LEVEL_SPELLINGS</code>. UI and apply behavior: <code>ui/lcl/uPrefsForm.lfm</code> and <code>.pas</code>, including <code>SaveLoggingPanel</code> and <code>cbxLogLevelChange</code>. Main log path: <code>uProgramMain.pas</code>. Hamlib trace path: <code>radioFactory/uRadioHamLibDirect.pas</code>. This guide has not exercised the panel in a running application.</p>

@@ -2362,6 +2362,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../about/updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recent guide updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../about/sources.html" class="md-nav__link">
         
   
@@ -2495,7 +2523,7 @@
 
 
 <h1 id="install-tr4w">Install TR4W<a class="headerlink" href="#install-tr4w" title="Permanent link">&para;</a></h1>
-<p>Choose a package for your operating system and CPU, and read the release notes supplied with that package. This guide describes the 5.x source snapshot; it does not establish which preview artifacts are currently published.</p>
+<p>Choose a package for your operating system and CPU, and read the release notes supplied with that package. This guide covers the 5.x preview. The <a href="https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.26">5.0.26 release</a> includes a Windows installer, Linux x86-64 tarball/AppImage, and macOS Apple Silicon packages; check the asset name before downloading.</p>
 <p>TR4W runs natively on Windows, macOS, and Linux. Start at the <a href="https://tr4w.net/">TR4W website</a> or the project's release channel and select the intended version; these pages document 5.x.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Windows</label><label for="__tabbed_1_2">Linux</label><label for="__tabbed_1_3">macOS</label></div>
 <div class="tabbed-content">
@@ -2555,8 +2583,37 @@
 <p>Both package formats use the same <a href="files.html">operator file locations</a>: contest databases default to <code>~/tr4w</code>, with settings and diagnostic logs in their separate user directories. Nothing should be stored inside an AppImage. For startup problems, record the distribution/version, package filename, exact error, glibc version, and the <a href="../log/diagnostics.html">diagnostic log</a> if one was created.</p>
 </div>
 <div class="tabbed-block">
-<p>TR4W runs natively on macOS as a <code>TR4W.app</code> bundle. The packaging code supports signed/notarized releases. Use a package built for your Mac and supplied through the project's release channel.</p>
-<p>If supplied as a disk image, open the image and copy the application bundle to Applications before launching. If supplied as an archive, extract and retain the complete bundle. Follow the package's own installation instructions if they differ.</p>
+<p>TR4W runs natively on macOS. The <a href="https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.26">5.0.26 release</a> provides signed and Apple-notarized downloads for <strong>Apple Silicon</strong> (<code>aarch64-darwin</code>). These are not Intel Mac packages.</p>
+<table>
+<thead>
+<tr>
+<th>Download</th>
+<th>How to install</th>
+<th>Includes multi-op server?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.pkg</code> — installer</td>
+<td>Double-click the package and follow Installer. It installs <code>TR4W.app</code> in <code>/Applications</code>.</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>.dmg</code> — disk image</td>
+<td>Open the image and drag <code>TR4W.app</code> to Applications, then eject the image.</td>
+<td>Yes, <code>tr4wserver</code> is beside the app in the image.</td>
+</tr>
+<tr>
+<td><code>.tar.gz</code> — archive</td>
+<td>Extract the archive, keep the app bundle intact, and copy it to Applications.</td>
+<td>Yes, beside the app in the extracted payload.</td>
+</tr>
+</tbody>
+</table>
+<p>For a normal desktop installation, download <code>tr4w-5.0.26-aarch64-darwin.pkg</code>. Close any running TR4W instance before installing an update, complete Installer, then open <strong>Applications → TR4W</strong> and confirm the version. Station setup, including callsign and grid, happens in TR4W after installation.</p>
+<p>All three formats carry the same application build. Choose the disk image or archive if this Mac must also run the <a href="../station/network.html">multi-op server</a>; the installer alone does not install it. Installing the app does not start a server automatically.</p>
+<p>The <code>.dSYM.zip</code> archives and <code>symbols-…txt</code> manifest are diagnostic aids for alpha/beta testing, not installers or runtime dependencies. You do not need them to run TR4W. See <a href="../log/diagnostics.html#report-a-crash">crash reporting</a>.</p>
+<p>The published packages have stapled notarization tickets. Normal installation does not require removing quarantine attributes or disabling Gatekeeper.</p>
 <p>Keep contest files and downloaded updates outside the bundle. The application writes operator files under your home directory. If macOS rejects a package, retain the exact message and request a correctly packaged build; this guide does not require disabling system protections.</p>
 </div>
 </div>

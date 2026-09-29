@@ -822,6 +822,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#icom-network-recovery-and-band-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Icom network recovery and band selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reset-radio-ports" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2351,6 +2362,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../about/updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recent guide updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../about/sources.html" class="md-nav__link">
         
   
@@ -2445,6 +2484,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#icom-network-recovery-and-band-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Icom network recovery and band selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reset-radio-ports" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2531,6 +2581,10 @@
 <summary>Source check</summary>
 <p>Control names: <code>tr4w/src/ui/lcl/uRadioEditForm.lfm</code>. This page documents the configuration surface; it does not certify a particular radio/OS combination. The older <a href="https://github.com/TR4W/TR4W/wiki/Connecting-TR4W-to-Radios-via-TCP-IP">TCP/IP wiki guide</a> has additional model context.</p>
 </details>
+<h2 id="icom-network-recovery-and-band-selection">Icom network recovery and band selection<a class="headerlink" href="#icom-network-recovery-and-band-selection" title="Permanent link">&para;</a></h2>
+<p>After a rejected login, check the credentials in the radio configuration and save the correction. Saving reapplies the configuration to a running radio. Authentication failures are retried with a 60-second delay; repeated resets are not a substitute for waiting for recovery. A successful operational connection clears the prior authentication condition. If updates still do not resume, use <strong>Reset Radio Ports</strong> below.</p>
+<p>Icom session renewal and keepalives now maintain the LAN connection. Band-up/down uses the radio's reported transmit bands where supported; a radio that cannot provide a band plan retains its fallback stepping behavior.</p>
+<p>The current band model includes <strong>1.25 m (222 MHz), 33 cm (902 MHz), and 23 cm (1296 MHz)</strong>. Earlier builds could classify these as 70 cm, affecting logging, dupe checks, and scoring. Verify the band shown before logging; do not assume upgrading repairs contacts already stored under the wrong band. Compare suspect contacts with your station records before correcting or exporting them.</p>
 <h2 id="reset-radio-ports">Reset Radio Ports<a class="headerlink" href="#reset-radio-ports" title="Permanent link">&para;</a></h2>
 <p>Use <strong>Reset Radio Ports</strong> when CAT frequency/mode updates have stopped after a USB interruption, a radio restart, or a lost network connection and the connection has not recovered. First check the radio power, cable or network, and configured device/address. A reset cannot fix a wrong serial device, baud rate, network address, or credentials.</p>
 <p>Stop transmitting before resetting. The action reinitializes <strong>both the active and inactive radio interfaces</strong>: it stops old polling, disconnects, frees and recreates the radio objects, and reconnects using their configuration. It is not limited to serial ports despite its name.</p>

@@ -2373,6 +2373,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../about/updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recent guide updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../about/sources.html" class="md-nav__link">
         
   
@@ -2517,7 +2545,7 @@
 
 
 <h1 id="convert-ini-settings-to-json">Convert INI settings to JSON<a class="headerlink" href="#convert-ini-settings-to-json" title="Permanent link">&para;</a></h1>
-<p><code>tr4wconvert</code> brings legacy <strong>station settings</strong> into the current JSON settings file. It is a separate utility; it does not convert your contest log or complete every part of contest migration.</p>
+<p><code>tr4wconvert</code> brings legacy <strong>station settings</strong> into the current JSON settings file. It is a separate utility for users bringing existing settings from an older Windows installation; it does not convert your contest log or complete every part of contest migration. New Linux and macOS installations start with fresh settings and do not require this conversion.</p>
 <h2 id="recommended-sequence">Recommended sequence<a class="headerlink" href="#recommended-sequence" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Close TR4W and preserve the old installation, <code>tr4w.ini</code>, and any existing <code>tr4w.json</code>.</li>
@@ -2532,8 +2560,9 @@
 <p>Run the matching executable from its installed location. On Windows, for an explicitly selected destination:</p>
 <div class="highlight"><pre><span></span><code><span class="p">.\</span><span class="n">tr4wconvert</span><span class="p">.</span><span class="n">exe</span> <span class="p">-</span><span class="n">-settings</span> <span class="s2">&quot;C:\TR4W\settings\tr4w.json&quot;</span> <span class="p">-</span><span class="n">-report-only</span>
 </code></pre></div>
-<p>That example reads <code>C:\TR4W\settings\tr4w.ini</code> by default. Substitute your actual location. On native Unix packages, invoke the converter by its path without <code>.exe</code>.</p>
+<p>That example reads <code>C:\TR4W\settings\tr4w.ini</code> by default. Substitute your actual location. Do not look for this utility as a required Linux or macOS installation step.</p>
 <p>With no explicit settings path, the utility first considers a settings folder beside itself, then the platform settings location. Always read the reported path; the shell's current directory is not a reliable substitute for that check.</p>
+<p>The first-run migration launcher now passes the detected legacy INI path explicitly, including when the destination JSON is in a custom settings directory. Review both paths before accepting conversion.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
