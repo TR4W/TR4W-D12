@@ -166,9 +166,8 @@ uses
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
   uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
   uBandmap,
-  uPanelUpdate,   // PostStatusText -- the Cluster status panel
-  uAppStrings,    // SStatusHost -- the generic noun the panel says instead of
-                  // a host name; see SetClusterStatus
+  uPanelUpdate,   // PostStatusText, and StatusSubsystemName -- the Cluster
+                  // status panel and the name it states
   LogGrid,
   SysUtils,   // Issue #997: provides SysUtils.Format/StrPCopy for asm removal.
               // ORDER/QUALIFICATION MATTERS: SysUtils also declares SysErrorMessage,
@@ -799,14 +798,27 @@ end;
   cluster and network messages you can jsut generically state host or server.
   The user wil check the specific window for mor einfo".
 
-  SO THE GENERIC NOUN GOES WHERE THE HOST WAS.  The three TC_ constants are
-  unchanged and are still used verbatim -- they are prefixes ("Connected to "),
-  not format strings, so nothing was re-typed and nothing lost a placeholder.
-  THE CONSOLE STILL NAMES THE HOST, on the line right beside this one, which is
-  the window an operator opens for the detail. *)
+  SO THE SUBSYSTEM'S OWN NAME GOES WHERE THE HOST WAS -- AND THE GENERIC NOUN
+  THAT STOOD HERE FOR A DAY IS THE SECOND BENCH REPORT.  "host" is bounded, and
+  it identifies nothing.  NY4I, 2026-09-27: "'Connected to host' is not specific
+  enough. What host? Do you mean connected to DX Cluster? Connected to radio
+  host (via IP)?"  The strip has four panels, no labels, and three of them are
+  usually empty, so position was the only thing naming an owner -- and only the
+  radio panels named themselves ("IC7760: Auth failed"), because a radio's name
+  was never the unbounded part.
+
+  THE NAME COMES FROM uPanelUpdate.StatusSubsystemName AND NOT FROM A CONSTANT
+  SPELLED OUT HERE, because uNet's network panel needs exactly the same rule
+  and two spellings of one rule are free to disagree.  It answers RC_TELNET --
+  'DX Cluster', what the Windows menu and this window's own title already call
+  it, translated in every catalogue.  The TC_ constants are unchanged and still
+  used verbatim -- they are prefixes ("Connected to "), not format strings, so
+  nothing was re-typed and nothing lost a placeholder.  THE CONSOLE STILL NAMES
+  THE HOST, on the line right beside this one, which is the window an operator
+  opens for the detail. *)
 procedure SetClusterStatus(const aOperation: string);
 begin
-  PostStatusText(stoCluster, aOperation + SStatusHost);
+  PostStatusText(stoCluster, aOperation + StatusSubsystemName(stoCluster));
 end;
 
 // ON THE MAIN THREAD.  One event, handled exactly as the WM_TELNET_MSG arms

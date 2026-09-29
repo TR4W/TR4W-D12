@@ -30,14 +30,18 @@ unit uTestStatusAndNotice;
 interface
 
 uses
-   SysUtils, Classes, Forms, ComCtrls,
+   SysUtils, Classes, Forms, ComCtrls, Graphics,
    uTR4WTestFramework,
+   uTR4WStrings,    (* TC_CONNECTEDTO and its three siblings -- the PREFIXES
+                      both the cluster console and the two status panels use *)
    VC,              (* TStatusOwner, mweQuickCommand *)
    LogRadio,        (* RadioStatusOwner, Radio1, Radio2 *)
    uCrashLog,       (* InstallCrashLog -- see EnsureMainForm; it is what puts
                       the MAIN THREAD on record *)
    uPanelUpdate,    (* PostStatusText / CurrentStatusText -- the marshalled
-                      writer and the cache a view reads when it opens *)
+                      writer and the cache a view reads when it opens; and
+                      StatusSubsystemName, the one statement of "a panel names
+                      its owner" that a test can reach *)
    uRadioPolling,   (* ShowRadioLinkFailure -- the condition/remedy split *)
    uMainForm;       (* the form, the panels and the notice timer *)
 
@@ -69,6 +73,8 @@ type
       procedure Test_TheConditionGoesToTheStatusAndTheRemedyToTheNotice;
       procedure Test_TheRemedyIsNotRepeatedOnARetry;
       procedure Test_APanelOpeningLaterCanReadTheCondition;
+      procedure Test_EveryStatusNamesItsOwnSubsystem;
+      procedure Test_NoStatusOverrunsItsPanel;
    public
       procedure RunAllTests; override;
    end;
@@ -662,6 +668,190 @@ begin
    end;
 end;
 
+(* A STATUS PANEL SAYS WHOSE CONDITION IT IS SHOWING.
+
+  THE STRIP CARRIES NO LABELS.  Four panels, three of them usually empty, so
+  position is the only other thing that identifies an owner -- and NY4I could
+  not use it, the day after the strip reached the bench: "'Connected to host' is
+  not specific enough. What host? Do you mean connected to DX Cluster? Connected
+  to radio host (via IP)?"
+
+  WHAT IS ASSERTED IS THE PROPERTY, NOT THE WORDING.  Re-typing the expected
+  sentences here would assert only that this file and uTelnet hold the same
+  literal.  So: each owner has a name, the two names differ, and neither is one
+  of the two generic nouns that were there for a day.
+
+  AND IT ASKS THE PRODUCTION CODE, WHICH TOOK MOVING ONE LINE.  uTelnet's writer
+  is implementation-private and uNet's has side effects on the network window,
+  so a test can reach neither; uPanelUpdate.StatusSubsystemName is the single
+  statement of the rule that both of them now ask, and that this can ask too.
+
+  THE RADIO OWNERS ARE IN IT BECAUSE THEY ARE THE HALF THAT WAS ALREADY RIGHT,
+  and the rule is one rule.  A radio names itself from its own RadioName, which
+  is why StatusSubsystemName answers EMPTY for those two slots rather than
+  guessing at a rig this unit cannot see. *)
+procedure TStatusAndNoticeTests.Test_EveryStatusNamesItsOwnSubsystem;
+var
+   cluster:   string;
+   network:   string;
+   savedName: Str20;      (* the field's OWN type -- see the test above *)
+   savedSlot: integer;
+begin
+   EnsureMainForm;
+
+   cluster := StatusSubsystemName(stoCluster);
+   network := StatusSubsystemName(stoNetwork);
+
+   CheckTrue(cluster <> '',
+             'the Cluster panel has a subsystem name to state');
+   CheckTrue(network <> '',
+             'the Network panel has a subsystem name to state');
+   CheckTrue(cluster <> network,
+             'and the two names differ, or the panels still do not say which '
+             + 'is which');
+
+   (* THE TWO WORDS THAT WERE THERE FOR A DAY.  They are bounded, which was the
+     problem they were solving, and they identify nothing, which is the problem
+     they caused.  Named as literals on purpose: this guards against them
+     coming back, so it must not be written in terms of whatever is there now. *)
+   CheckFalse(SameText(cluster, 'host'),
+              'the Cluster panel names the cluster, not a generic "host"');
+   CheckFalse(SameText(network, 'server'),
+              'the Network panel names the network, not a generic "server"');
+
+   (* A RADIO SLOT HAS NO FIXED NAME, and asking for one would be a second
+     answer to "which rig is in slot 1". *)
+   CheckEquals('', StatusSubsystemName(stoRadio1),
+               'a radio slot has no fixed subsystem name -- the RADIO supplies '
+               + 'it');
+   CheckEquals('', StatusSubsystemName(stoRadio2),
+               'and the same for slot 2');
+
+   savedName := Radio1.RadioName;
+   savedSlot := Radio1.tRadioPanelSlot;
+   try
+      Radio1.RadioName        := 'TESTRIG';
+      Radio1.tRadioPanelSlot  := 0;
+
+      PostStatusText(stoRadio1, '');
+      ShowQuickCommandNotice('');
+      Drain;
+
+      ShowRadioLinkFailure(@Radio1, 'Auth failed', 'check credentials');
+      Drain;
+
+      CheckEquals(1, Pos('TESTRIG', CurrentStatusText(stoRadio1)),
+                  'a radio''s status leads with the radio''s own name, which is '
+                  + 'the half of the strip that was never ambiguous');
+   finally
+      Radio1.RadioName       := savedName;
+      Radio1.tRadioPanelSlot := savedSlot;
+      PostStatusText(stoRadio1, '');
+      ShowQuickCommandNotice('');
+      Drain;
+   end;
+end;
+
+(* AND IT FITS THE PANEL IT IS SHOWN IN.
+
+  A PANEL DOES NOT SCROLL, HAS NO TOOLTIP AND CLIPS MID-WORD.  NY4I reported an
+  overrun within an hour of the strip going on the bench, so lengthening a
+  status is not free: naming the subsystem instead of a generic noun added six
+  characters to every cluster line and one to every network line.
+
+  MEASURED IN PIXELS, NOT CHARACTERS.  The rule beside VC.TStatusOwner says
+  "about twenty-five characters", which is a rule of thumb for a writer; what
+  decides whether text clips is its width in the strip's own font.  A bitmap's
+  canvas carries that font rather than the strip's, because a TStatusBar paints
+  its panels itself and its canvas is only valid inside that paint -- the FONT
+  is the part that matters and it is the same object.
+
+  AT BOTH RUNNING WIDTHS for the reason Test_ThePanelsSpanTheStrip uses them:
+  the window is sized from a font measurement, so 782 and 829 are both real.
+
+  THE ALLOWANCE IS PANEL_PADDING.  A status-bar panel insets its text by a few
+  pixels each side and the amount is the widget set's business; 8 is a
+  deliberate under-estimate of the room, so this errs towards failing.
+
+  MEASURED ON THIS MACHINE, 2026-09-28, AT THE NARROW WIDTH (panel = 195 px,
+  so avail = 187):
+
+     Connected to Network             120 px
+     Connecting to Network            124 px
+     Connected to DX Cluster          130 px
+     Connecting to DX Cluster         134 px
+     Failed to connect to Network     153 px
+     Failed to connect to DX Cluster  163 px
+     ** DISCONNECTED from Network     177 px
+     ** DISCONNECTED from DX Cluster  187 px   <-- exactly at the allowance
+
+  THAT LAST ONE IS THE ONE TO WATCH, AND IT IS DELIBERATELY LEFT ALONE.
+  TC_DISCONNECTEDFROM is '** DISCONNECTED from ' -- a console line's attention
+  marker, shouting, in a panel that has no traffic to stand out from.  It is
+  ALSO the only string in the set with no margin.  It was not changed because
+  the three surfaces that report a transition -- the telnet console, the
+  network window's caption and these panels -- share these four prefixes on
+  purpose, so they cannot word one differently; a panel-only spelling means a
+  new translatable string AND either a second prefix parameter through
+  uNet.ShowConnectionStatus or a hidden comparison against a constant.  Same
+  call as TC_SPLIT_WARN in 6509e862: left at the limit, measured, and said out
+  loud rather than fixed by inventing a constant. *)
+procedure TStatusAndNoticeTests.Test_NoStatusOverrunsItsPanel;
+const
+   PANEL_PADDING = 8;
+var
+   bar:   TStatusBar;
+   probe: TBitmap;
+
+   procedure CheckFitsAt(const aStripWidth: integer; const aOwner: TStatusOwner;
+                         const aText: string);
+   var
+      avail: integer;
+      px:    integer;
+   begin
+      bar.Width := aStripWidth;
+      LayOutStatusPanels;
+
+      avail := bar.Panels[Ord(aOwner)].Width - PANEL_PADDING;
+      px    := probe.Canvas.TextWidth(aText);
+
+      CheckTrue(px <= avail,
+                Format('"%s" is %d px wide and its panel offers %d at strip '
+                       + 'width %d', [aText, px, avail, aStripWidth]));
+   end;
+
+   procedure CheckOwnerAtBothWidths(const aOwner: TStatusOwner);
+   var
+      name: string;
+   begin
+      name := StatusSubsystemName(aOwner);
+
+      CheckFitsAt(782, aOwner, TC_CONNECTINGTO      + name);
+      CheckFitsAt(782, aOwner, TC_CONNECTEDTO       + name);
+      CheckFitsAt(782, aOwner, TC_FAILEDTOCONNECTTO + name);
+      CheckFitsAt(782, aOwner, TC_DISCONNECTEDFROM  + name);
+
+      CheckFitsAt(829, aOwner, TC_CONNECTINGTO      + name);
+      CheckFitsAt(829, aOwner, TC_CONNECTEDTO       + name);
+      CheckFitsAt(829, aOwner, TC_FAILEDTOCONNECTTO + name);
+      CheckFitsAt(829, aOwner, TC_DISCONNECTEDFROM  + name);
+   end;
+
+begin
+   EnsureMainForm;
+   bar := TR4WMainForm.sbStatus;
+
+   probe := TBitmap.Create;
+   try
+      probe.Canvas.Font.Assign(bar.Font);
+
+      CheckOwnerAtBothWidths(stoCluster);
+      CheckOwnerAtBothWidths(stoNetwork);
+   finally
+      probe.Free;
+   end;
+end;
+
 procedure TStatusAndNoticeTests.RunAllTests;
 begin
    Test_TheStripHasOnePanelPerOwner;
@@ -679,6 +869,8 @@ begin
    Test_TheConditionGoesToTheStatusAndTheRemedyToTheNotice;
    Test_TheRemedyIsNotRepeatedOnARetry;
    Test_APanelOpeningLaterCanReadTheCondition;
+   Test_EveryStatusNamesItsOwnSubsystem;
+   Test_NoStatusOverrunsItsPanel;
    ReleaseMainForm;
 end;
 

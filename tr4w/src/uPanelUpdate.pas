@@ -171,6 +171,34 @@ function PostStatusText(const aOwner: TStatusOwner; const aText: string): boolea
   uMainForm.StatusText is there for the other question. *)
 function CurrentStatusText(const aOwner: TStatusOwner): string;
 
+(* THE SUBSYSTEM NAME A STATUS PANEL PUTS WHERE AN UNBOUNDED PARTICULAR WOULD
+  NOT FIT -- 'DX Cluster' or 'Network'.
+
+  THE STRIP'S PANELS CARRY NO LABELS, so the only thing that says whose
+  condition a panel is showing is the text in it.  The radio panels have always
+  named themselves ("IC7760: Auth failed") because a radio's name was never the
+  unbounded part; the cluster and network ones did not, and for one day they
+  said "Connected to host" -- bounded, and identifying nothing.  NY4I,
+  2026-09-27: "What host? Do you mean connected to DX Cluster? Connected to
+  radio host (via IP)?"
+
+  HERE RATHER THAN AT THE TWO CALL SITES, for the reason CLAUDE.md gives for
+  lifting anything out at its second caller: uTelnet and uNet would each be
+  spelling out the same rule, free to disagree, and a third subsystem panel
+  would have to remember it.  It is also the only way the rule is TESTABLE --
+  uTelnet's writer is implementation-private and uNet's has side effects on the
+  network window, so a test can reach neither, but it can reach this.
+
+  RC_TELNET AND RC_NETWORK ALREADY EXIST AND ARE ALREADY TRANSLATED: they are
+  the names the Windows menu labels those two windows with.  No new English was
+  invented for this and no prefix was re-typed -- TC_CONNECTEDTO and its
+  siblings are still used verbatim by both surfaces.
+
+  A RADIO OWNER ANSWERS EMPTY, and that is not an oversight.  A radio's name is
+  per-instance and lives on the radio, so LOGRADIO.SetRadioStatus supplies it;
+  this unit has no way to know which rig is in a slot and must not grow one. *)
+function StatusSubsystemName(const aOwner: TStatusOwner): string;
+
 // Forget everything remembered about a panel and its children. Call when a
 // panel closes: a window handle can be REUSED by Windows, and a stale cache
 // entry would then suppress the first update to a different window.
@@ -230,6 +258,7 @@ uses
                // directly
   MainUnit,    // the global `logger` -- an unclaimed panel id is reported,
                // not swallowed
+  uTR4WStrings, // RC_TELNET / RC_NETWORK -- see StatusSubsystemName
   uCrashLog;   // LogCaughtException -- a failed hand-off must not be silent
 
 type
@@ -576,6 +605,25 @@ begin
   finally
      gLock.Release;
   end;
+end;
+
+function StatusSubsystemName(const aOwner: TStatusOwner): string;
+begin
+   case aOwner of
+      stoCluster:
+         begin
+         Result := RC_TELNET;
+         end;
+      stoNetwork:
+         begin
+         Result := RC_NETWORK;
+         end;
+      else
+         begin
+         (* stoRadio1 / stoRadio2 -- SetRadioStatus names the rig. *)
+         Result := '';
+         end;
+      end;
 end;
 
 function CurrentStatusText(const aOwner: TStatusOwner): string;

@@ -1565,10 +1565,25 @@ begin
     AND THE PANEL DOES NOT GET `text`.  TC_NETWORK is 'Network : %s %s:%d' and
     the %s is the server address, which has no bounded length -- the caption of
     a window the operator sized can carry that; a panel a quarter of the main
-    window wide cannot.  NY4I, 2026-09-26: state "server" generically and let
-    the operator open the network window for the particulars.  Same Operation
-    prefix, so the two surfaces still cannot word the transition differently. *)
-  PostStatusText(stoNetwork, Operation + SStatusServer);
+    window wide cannot.  NY4I, 2026-09-26: state it generically and let the
+    operator open the network window for the particulars.
+
+    SO THE PANEL NAMES THE SUBSYSTEM, NOT A GENERIC NOUN.  It said "server" for
+    a day and NY4I reported the cost, 2026-09-27: "'Connected to host' is not
+    specific enough. What host? Do you mean connected to DX Cluster? Connected
+    to radio host (via IP)?"  The panels carry no labels, so a word that names
+    no subsystem names nothing.
+
+    THE NAME COMES FROM uPanelUpdate.StatusSubsystemName, WHICH THE CLUSTER
+    PANEL ALSO ASKS -- one statement of the rule rather than two that can
+    drift.  For this owner it answers RC_NETWORK, AND THAT IS NOT TC_NETWORK:
+    TC_NETWORK is the FORMAT two statements above and cannot be concatenated;
+    RC_NETWORK is the plain 'Network' the Windows menu already labels this
+    window with, translated in every catalogue.  Same Operation prefix as that
+    caption, so the two surfaces still cannot word the transition differently
+    -- and the caption still carries the address, which is the detail view this
+    panel points at. *)
+  PostStatusText(stoNetwork, Operation + StatusSubsystemName(stoNetwork));
 end;
 
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);

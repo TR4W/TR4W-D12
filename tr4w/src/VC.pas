@@ -948,9 +948,13 @@ type
          the notice channel (logwind.QuickDisplay), which beeps and expires.
        * NO PARTICULARS OF UNBOUNDED LENGTH -- no host name, no port, no path,
          no file name, no exception text.  Those live in the window that owns
-         the subsystem, and in tr4w.log.  uAppStrings.SStatusHost and
-         SStatusServer are the generic nouns the cluster and network panels use
-         in their place.
+         the subsystem, and in tr4w.log.  The cluster and network panels put
+         THE SUBSYSTEM'S OWN NAME in their place -- RC_TELNET ('DX Cluster')
+         and RC_NETWORK ('Network'), so a panel that carries no label still
+         says whose condition it is.  A GENERIC NOUN IS NOT ENOUGH, and that
+         was tried: "Connected to host" is bounded and identifies nothing
+         (NY4I, 2026-09-27: "What host? Do you mean connected to DX Cluster?
+         Connected to radio host (via IP)?").
        * NO REASON CODE.  "Not connected", not "not connected - could not open
          its port"; the reason is a notice and a log line.
 
