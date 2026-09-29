@@ -4,7 +4,7 @@ TRMASTER.DTA codec — read/write the K1EA "CT / TRlog" Super Check Partial
 binary format, plus a self-test that proves the writer round-trips against a
 real file.
 
-Format (confirmed against tr4w/src/trdos/LOGSCP.PAS, src/uSCP.pas, src/VC.pas
+Format (confirmed against tr4w/src/trdos/logscp.pas, src/uSCP.pas, src/VC.pas
 and supercheckpartial.com's formats page):
 
   Header: 37 x 37 = 1369 little-endian uint32 bucket *start* offsets, then a
