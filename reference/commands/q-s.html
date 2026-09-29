@@ -1,0 +1,7031 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="TR4W — Cross-platform contest logging, rooted in TRLOG. Operator guide for the 5.x preview.">
+      
+      
+      
+        <link rel="canonical" href="https://tr4w.github.io/TR4W-D12/reference/commands/q-s.html">
+      
+      
+        <link rel="prev" href="m-p.html">
+      
+      
+        <link rel="next" href="t-z.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Q–S - TR4W Operator Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#commands-qs" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../index.html" title="TR4W Operator Guide" class="md-header__button md-logo" aria-label="TR4W Operator Guide" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            TR4W Operator Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Q–S
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Welcome
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../start/version.html" class="md-tabs__link">
+          
+  
+  
+  Get started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../station/radio.html" class="md-tabs__link">
+          
+  
+  
+  Station setup
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../operating/pota.html" class="md-tabs__link">
+          
+  
+  
+  Operating
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../log/backup.html" class="md-tabs__link">
+          
+  
+  
+  Your log
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../theory/overview.html" class="md-tabs__link">
+          
+  
+  
+  Theory of operation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="index.html" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../about/tr4w.html" class="md-tabs__link">
+          
+  
+  
+  About this preview
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="TR4W Operator Guide" class="md-nav__button md-logo" aria-label="TR4W Operator Guide" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    TR4W Operator Guide
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Get started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Get started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/version.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Choose your version
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install TR4W
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Files and folders
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/data-updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Update reference data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/first-contest.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/migration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moving from 4.x
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/ini-to-json.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Convert INI settings to JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Station setup
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Station setup
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/radio.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connect a radio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/wsjtx.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WSJT-X
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/tci.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TCI connections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/external-loggers.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    External loggers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/cw.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CW sending options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/cw-messages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Program CW function keys
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/so2r.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SO2R operation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/online-scores.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HamScore online scoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/language.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language and translations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/network.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-station networking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operating
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operating
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/pota.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    POTA and park-to-park
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/keyboard.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keyboard essentials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Colors, sizing, and lost windows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/radio-windows.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Radio 1 and Radio 2 windows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/callsign-assistance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Possible calls and SCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/bandmap.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Band map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/dxcluster.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DX cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/multipliers.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multiplier windows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your log
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Your log
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/backup.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Back up your log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/restore.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Restore files and recover a log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/export.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export ADIF and Cabrillo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/reports.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/import.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Import contacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/diagnostics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnostic logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theory of operation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Theory of operation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How the parts work together
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/database.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite integrity and durability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/testing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7_1" id="__nav_7_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Command reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find a command
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="a-d.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A–D
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="e-l.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E–L
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="m-p.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M–P
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Q–S
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="q-s.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Q–S
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#qsl-cw-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSL CW MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsl-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSL MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsl-ssb-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSL SSB MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-before-cw-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BEFORE CW MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-before-ssb-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BEFORE SSB MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-by-band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BY BAND
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-by-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BY MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-number-by-band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO NUMBER BY BAND
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-point-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINT METHOD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-domestic-cw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DOMESTIC CW
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-domestic-phone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DOMESTIC PHONE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-dx-cw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DX CW
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-dx-phone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DX PHONE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsx-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSX ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsy-inactive-radio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSY INACTIVE RADIO
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-extra-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC EXTRA SPACE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC MINUTES
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-qrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC QRS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#question-mark-char" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUESTION MARK CHAR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-cw-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL CW MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-key-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL KEY 1
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-key-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL KEY 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-message-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL MESSAGE 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-ssb-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL SSB MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qzb-random-offset-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QZB RANDOM OFFSET ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#r150s-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        R150S MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#radio-tcp-server-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RADIO TCP SERVER PORT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#radius-of-earth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RADIUS OF EARTH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#random-cq-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RANDOM CQ MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-display" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RATE DISPLAY
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remaining-mult-display-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REMAINING MULT DISPLAY MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repeat-s-p-cw-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REPEAT S&amp;P CW EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repeat-s-p-ssb-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REPEAT S&amp;P SSB EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reverse-initial-ex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REVERSE INITIAL EX
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfobl-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RFOBL MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotator-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROTATOR PORT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotator-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROTATOR TYPE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#row-count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROW COUNT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s-p-cw-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S&amp;P CW EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s-p-ssb-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S&amp;P SSB EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#say-hi-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SAY HI ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#say-hi-rate-cutoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SAY HI RATE CUTOFF
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#score-posting-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCORE POSTING URL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#score-reading-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCORE READING URL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scp-country-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCP COUNTRY STRING
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scp-minimum-letters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCP MINIMUM LETTERS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#send-complete-four-letter-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SEND COMPLETE FOUR LETTER CALL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-address" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER ADDRESS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-auto-synchronize-log-on-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER AUTO SYNCHRONIZE LOG ON CONNECT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-password" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER PASSWORD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER PORT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shift-key-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHIFT KEY ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 1
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 9
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-integers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT INTEGERS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-all-serial-ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW ALL SERIAL PORTS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-domestic-multiplier-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW DOMESTIC MULTIPLIER NAME
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-frequency-in-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW FREQUENCY IN LOG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-gridlines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW GRIDLINES
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-typed-callsign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW TYPED CALLSIGN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-band-score" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SINGLE BAND SCORE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skip-active-band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SKIP ACTIVE BAND
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#slash-mark-char" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SLASH MARK CHAR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#space-bar-dupe-check-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPACE BAR DUPE CHECK ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spot-collector-enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPOT COLLECTOR ENABLED
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sprint-qsy-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPRINT QSY RULE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#start-sending-now-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        START SENDING NOW KEY
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stations-callsigns-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STATIONS CALLSIGNS MASK
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stereo-pin-high" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STEREO PIN HIGH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swap-packet-spot-radios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP PACKET SPOT RADIOS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swap-paddles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP PADDLES
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swap-radio-relay-sense" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP RADIO RELAY SENSE
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="t-z.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    T–Z
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="legacy-map.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Old-to-new lookup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="lifecycle.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions and moved settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="coverage.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage and gaps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../radios.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Radio support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Available contests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../languages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Languages and review status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wsjtx.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WSJT-X settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../legacy.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earlier manuals and wiki
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About this preview
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    About this preview
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/tr4w.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About TR4W
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/sources.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluate the prototype
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#qsl-cw-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSL CW MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsl-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSL MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsl-ssb-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSL SSB MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-before-cw-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BEFORE CW MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-before-ssb-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BEFORE SSB MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-by-band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BY BAND
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-by-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO BY MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-number-by-band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO NUMBER BY BAND
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-point-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINT METHOD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-domestic-cw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DOMESTIC CW
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-domestic-phone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DOMESTIC PHONE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-dx-cw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DX CW
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qso-points-dx-phone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSO POINTS DX PHONE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsx-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSX ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qsy-inactive-radio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QSY INACTIVE RADIO
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-extra-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC EXTRA SPACE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC MINUTES
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qtc-qrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QTC QRS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#question-mark-char" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUESTION MARK CHAR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-cw-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL CW MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-key-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL KEY 1
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-key-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL KEY 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-message-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL MESSAGE 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-qsl-ssb-message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK QSL SSB MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qzb-random-offset-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QZB RANDOM OFFSET ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#r150s-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        R150S MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#radio-tcp-server-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RADIO TCP SERVER PORT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#radius-of-earth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RADIUS OF EARTH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#random-cq-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RANDOM CQ MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rate-display" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RATE DISPLAY
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remaining-mult-display-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REMAINING MULT DISPLAY MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repeat-s-p-cw-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REPEAT S&amp;P CW EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repeat-s-p-ssb-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REPEAT S&amp;P SSB EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reverse-initial-ex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REVERSE INITIAL EX
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rfobl-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RFOBL MODE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotator-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROTATOR PORT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotator-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROTATOR TYPE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#row-count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROW COUNT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s-p-cw-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S&amp;P CW EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s-p-ssb-exchange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S&amp;P SSB EXCHANGE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#say-hi-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SAY HI ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#say-hi-rate-cutoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SAY HI RATE CUTOFF
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#score-posting-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCORE POSTING URL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#score-reading-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCORE READING URL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scp-country-string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCP COUNTRY STRING
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scp-minimum-letters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SCP MINIMUM LETTERS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#send-complete-four-letter-call" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SEND COMPLETE FOUR LETTER CALL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-address" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER ADDRESS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-auto-synchronize-log-on-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER AUTO SYNCHRONIZE LOG ON CONNECT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-password" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER PASSWORD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SERVER PORT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shift-key-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHIFT KEY ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 1
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT 9
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#short-integers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHORT INTEGERS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-all-serial-ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW ALL SERIAL PORTS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-domestic-multiplier-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW DOMESTIC MULTIPLIER NAME
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-frequency-in-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW FREQUENCY IN LOG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-gridlines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW GRIDLINES
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-typed-callsign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SHOW TYPED CALLSIGN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-band-score" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SINGLE BAND SCORE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skip-active-band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SKIP ACTIVE BAND
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#slash-mark-char" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SLASH MARK CHAR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#space-bar-dupe-check-enable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPACE BAR DUPE CHECK ENABLE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spot-collector-enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPOT COLLECTOR ENABLED
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sprint-qsy-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SPRINT QSY RULE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#start-sending-now-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        START SENDING NOW KEY
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stations-callsigns-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STATIONS CALLSIGNS MASK
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stereo-pin-high" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STEREO PIN HIGH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swap-packet-spot-radios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP PACKET SPOT RADIOS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swap-paddles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP PADDLES
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#swap-radio-relay-sense" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWAP RADIO RELAY SENSE
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="commands-qs">Commands Q–S<a class="headerlink" href="#commands-qs" title="Permanent link">&para;</a></h1>
+<p>Current setting metadata comes from the 5.0.22 inventory and source snapshot. Inherited help is explicitly labeled and may describe older behavior. <a href="index.html">Read the reference conventions</a> before editing settings.</p>
+<h2 id="qsl-cw-message">QSL CW MESSAGE<a class="headerlink" href="#qsl-cw-message" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;TU \ TEST&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>QSL MESSAGE</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>The CW message sent to confirm (QSL) a completed QSO when logging in CQ Mode. Programmed via Alt+P. Typically includes your callsign and a TU or similar.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.QslCw</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="qsl-mode">QSL MODE<a class="headerlink" href="#qsl-mode" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;NONE&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: STANDARD, QSL AND LOG, or QSL BUT NO LOG. This command can be used to change the criteria used to QSL an exchange and to log it when you are in CQ Mode. Normally, TR4W requires the complete exchange to be entered before you can QSL and log the contact. However, if you select QSL BUT NO LOG, the QSL message will be sent even if the exchange information is not completed, but you need to finish entering the exchange and hit &lt;Enter&gt; again before it will be logged. QSL AND LOG will totally eliminate any syntax checking on the exchange and log whatever you have entered. This mode is NOT recommended in normal operations.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Contest.QslMode</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: STANDARD. This is not a verified current default.</p>
+</details>
+<h2 id="qsl-ssb-message">QSL SSB MESSAGE<a class="headerlink" href="#qsl-ssb-message" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;QSL.WAV&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>The SSB voice message sent to confirm a completed QSO. Programmed via Alt+P.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.QslSsb</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="qso-before-cw-message">QSO BEFORE CW MESSAGE<a class="headerlink" href="#qso-before-cw-message" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27; SRI QSO B4 TU \ TEST&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>QSO BEFORE MESSAGE</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>CW message sent before the QSO exchange in CQ Mode - typically not used in standard operation. Programmed via Alt+P.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.QsoBeforeCw</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="qso-before-ssb-message">QSO BEFORE SSB MESSAGE<a class="headerlink" href="#qso-before-ssb-message" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;QSOB4.WAV&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>SSB voice message sent before the QSO exchange. Programmed via Alt+P.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.QsoBeforeSsb</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="qso-by-band">QSO BY BAND<a class="headerlink" href="#qso-by-band" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>These parameters determine whether QSOs can be counted again if they occur on different bands or modes. The parameters are set up automatically when the CONTEST statement in your *.CFG file is executed, and normally do not require any changes.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qso.ByBand</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="qso-by-mode">QSO BY MODE<a class="headerlink" href="#qso-by-mode" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>These parameters determine whether QSOs can be counted again if they occur on different bands or modes. The parameters are set up automatically when the CONTEST statement in your *.CFG file is executed, and normally do not require any changes.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qso.ByMode</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="qso-number-by-band">QSO NUMBER BY BAND<a class="headerlink" href="#qso-number-by-band" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When set to TRUE, the QSO numbers that are displayed on the screen, those that are sent in a CW message with the # character, and those shown in the log will be calculated from the total number of contacts on the active band. This is useful in a multi-transmitter situation where QSO numbers are being sent (e.g., the CQ WPX contest).</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Contest.QsoNumberByBand</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="qso-point-method">QSO POINT METHOD<a class="headerlink" href="#qso-point-method" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;NONE&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Explanation not yet written</p>
+<p>The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Contest.QsoPointMethod</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: NONE. This is not a verified current default.</p>
+</details>
+<h2 id="qso-points-domestic-cw">QSO POINTS DOMESTIC CW<a class="headerlink" href="#qso-points-domestic-cw" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>-1–65535 (numeric type bounds; see description for units)</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qso.PointsDomesticCw</code>. Source type: <code>TQsoPoints</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: -1. This is not a verified current default.</p>
+</details>
+<h2 id="qso-points-domestic-phone">QSO POINTS DOMESTIC PHONE<a class="headerlink" href="#qso-points-domestic-phone" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>-1–65535 (numeric type bounds; see description for units)</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qso.PointsDomesticPhone</code>. Source type: <code>TQsoPoints</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: -1. This is not a verified current default.</p>
+</details>
+<h2 id="qso-points-dx-cw">QSO POINTS DX CW<a class="headerlink" href="#qso-points-dx-cw" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>-1–65535 (numeric type bounds; see description for units)</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qso.PointsDxCw</code>. Source type: <code>TQsoPoints</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: -1. This is not a verified current default.</p>
+</details>
+<h2 id="qso-points-dx-phone">QSO POINTS DX PHONE<a class="headerlink" href="#qso-points-dx-phone" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>-1–65535 (numeric type bounds; see description for units)</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qso.PointsDxPhone</code>. Source type: <code>TQsoPoints</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: -1. This is not a verified current default.</p>
+</details>
+<h2 id="qsx-enable">QSX ENABLE<a class="headerlink" href="#qsx-enable" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>True</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>This parameter determines whether QSX information is decoded from packet spots. You might want to disable this feature if you are a DX station and are not interested in split spots.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qsx.Enable</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TRUE. This is not a verified current default.</p>
+</details>
+<h2 id="qsy-inactive-radio">QSY INACTIVE RADIO<a class="headerlink" href="#qsy-inactive-radio" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If TRUE, when you click on BANDMAP entry, it will QSY on the inactive radio. Note that TwoRadioMode must also be enabled for this to work.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.So2r.QsyInactiveRadio</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="qtc-enable">QTC ENABLE<a class="headerlink" href="#qtc-enable" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>This is normally turned on automatically when a WAE is being configured. When you have enabled QTCs, you will need to remember that ctrl-Q is the magic key to send (if you are not in EU) or receive (if you are in EU) QTCs. TR4W will automatically ensure that you do not send a QTC containing the call of the station to whom you are sending the QTC. On CW, both the ctrl-Enter and alt-K keys work as usual even when QTCs are being sent.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qtc.Enable</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="qtc-extra-space">QTC EXTRA SPACE<a class="headerlink" href="#qtc-extra-space" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>True</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When this parameter is TRUE, extra spaces are inserted between the elements of a QTC.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qtc.ExtraSpace</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TRUE. This is not a verified current default.</p>
+</details>
+<h2 id="qtc-minutes">QTC MINUTES<a class="headerlink" href="#qtc-minutes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When this parameter is TRUE, the QTC function will send only the minutes of QTC times that are in the same hour as the time previously sent.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qtc.Minutes</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="qtc-qrs">QTC QRS<a class="headerlink" href="#qtc-qrs" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>True</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When this parameter is TRUE, TR4W will send QTCs with the CW. speed approximately 6% slower than the normal sending speed.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qtc.Qrs</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TRUE. This is not a verified current default.</p>
+</details>
+<h2 id="question-mark-char">QUESTION MARK CHAR<a class="headerlink" href="#question-mark-char" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;?&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any key. Some keyboards require the use of a shift key to type the question mark. This command can be used to assign the ? key to another key2. This allows 2The author finds it useful to assign the = character with this command. operation without pressing the shift key, which may be inconvenient, or may change the rig frequency if your rig is interfaced to the computer.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.QuestionMarkChar</code>. Source type: <code>Char</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: ?. This is not a verified current default.</p>
+</details>
+<h2 id="quick-qsl-cw-message">QUICK QSL CW MESSAGE<a class="headerlink" href="#quick-qsl-cw-message" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;TU&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>QUICK QSL CW MESSAGE1, QUICK QSL MESSAGE 1</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.QuickQslCw1</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="quick-qsl-key-1">QUICK QSL KEY 1<a class="headerlink" href="#quick-qsl-key-1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;\&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any key. When you finish a contact while running on CW, normally you press &lt;Enter&gt; to log the contact and send the QSL MESSAGE. If you want to send the QUICK QSL MESSAGE 1 instead, you press the QUICK QSL KEY1 instead of &lt;Enter&gt;.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Message.QuickQslKey1</code>. Source type: <code>Char</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="quick-qsl-key-2">QUICK QSL KEY 2<a class="headerlink" href="#quick-qsl-key-2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;=&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any key. When you finish a contact while running on CW, normally you press &lt;Enter&gt; to log the contact and send the QSL MESSAGE. If you want to send the QUICK QSL MESSAGE 2 instead, you press the QUICK QSL KEY2 instead of &lt;Enter&gt;.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Message.QuickQslKey2</code>. Source type: <code>Char</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: =. This is not a verified current default.</p>
+</details>
+<h2 id="quick-qsl-message-2">QUICK QSL MESSAGE 2<a class="headerlink" href="#quick-qsl-message-2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;TU&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Short CW acknowledgement message 2, sent when QUICK QSL KEY 2 is pressed. Programmed via Alt+P.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.QuickQslCw2</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: Blank. This is not a verified current default.</p>
+</details>
+<h2 id="quick-qsl-ssb-message">QUICK QSL SSB MESSAGE<a class="headerlink" href="#quick-qsl-ssb-message" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;QUICKQSL.WAV&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Short SSB voice acknowledgement message. Programmed via Alt+P. ### R</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.QuickQslSsb</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: Blank. This is not a verified current default.</p>
+</details>
+<h2 id="qzb-random-offset-enable">QZB RANDOM OFFSET ENABLE<a class="headerlink" href="#qzb-random-offset-enable" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Explanation not yet written</p>
+<p>The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Qzb.RandomOffsetEnable</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="r150s-mode">R150S MODE<a class="headerlink" href="#r150s-mode" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If TRUE calculation of contriyes-multipliers will be based on R-150-S list.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Contest.R150SMode</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="radio-tcp-server-port">RADIO TCP SERVER PORT<a class="headerlink" href="#radio-tcp-server-port" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>52002</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Explanation not yet written</p>
+<p>The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Radio.TcpServerPort</code>. Source type: <code>integer</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+</details>
+<h2 id="radius-of-earth">RADIUS OF EARTH<a class="headerlink" href="#radius-of-earth" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Number</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>Not extracted; see source</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any number. This parameter can be used to override the internal value of the Earths radius that is used for distance calculations. Enter the new radius in kilometers. A value of 0 causes TR4W to use the default internal value (which is 6378.1370 km3).</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.GridMap.RadiusOfEarth</code>. Source type: <code>double</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: 0.00. This is not a verified current default.</p>
+</details>
+<h2 id="random-cq-mode">RANDOM CQ MODE<a class="headerlink" href="#random-cq-mode" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When this parameter is TRUE, the Auto-CQ function will behave differently when selecting CQ MEMORY F1. Instead of always playing the message recorded in F1, the Auto-CQ procedure will randomly pick CQs from memories F1 through F4. This allows you to sound like you are awake. Blank messages in F1 through F4 are ignored.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cq.RandomMode</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="rate-display">RATE DISPLAY<a class="headerlink" href="#rate-display" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>See type RateDisplayType; allowed values need editorial review</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>Not extracted; see source</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: QSOS or QSO POINTS. The rate display can show either the rate at which you are making QSOs, or the rate at which your QSO points are increasing.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.MainWindow.RateDisplay</code>. Source type: <code>RateDisplayType</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: QSOS. This is not a verified current default.</p>
+</details>
+<h2 id="remaining-mult-display-mode">REMAINING MULT DISPLAY MODE<a class="headerlink" href="#remaining-mult-display-mode" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>See type RemainingMultDisplayModeType; allowed values need editorial review</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>Not extracted; see source</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: NONE, ERASE, HILIGHT. This command allows you to control how the remaining multiplier display function will work. If it is set to NONE, there will not be any display of remaining multipliers. If set to ERASE, the multipliers will be removed from the list as they are worked. If set to HILIGHT, multipliers that you have not worked yet will be highlighted.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.RemainingMults.DisplayMode</code>. Source type: <code>RemainingMultDisplayModeType</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: HILIGHT. This is not a verified current default.</p>
+</details>
+<h2 id="repeat-s-p-cw-exchange">REPEAT S&amp;P CW EXCHANGE<a class="headerlink" href="#repeat-s-p-cw-exchange" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>REPEAT S&amp;P EXCHANGE</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>CW Exchange sent ween repeating the exchange in S&amp;P mode.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.RepeatSpExchangeCw</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+<p>Historical help default: Blank. This is not a verified current default.</p>
+</details>
+<h2 id="repeat-s-p-ssb-exchange">REPEAT S&amp;P SSB EXCHANGE<a class="headerlink" href="#repeat-s-p-ssb-exchange" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;RPTSPEX.WAV&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>SSB exchange message sent when repeating your exchange in S&amp;P mode. Programmed via Alt+P. ### S</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.RepeatSpExchangeSsb</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="reverse-initial-ex">REVERSE INITIAL EX<a class="headerlink" href="#reverse-initial-ex" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Turning REVERSE INITIAL EX on to TRUE will reverse the search order so that TRMASTER is searched before Initial.Ex</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.InitialExchange.Reverse</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="rfobl-mode">RFOBL MODE<a class="headerlink" href="#rfobl-mode" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>TO BE COMPLETED</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Contest.RfoblMode</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+<p>Historical help default: TO BE COMPLETED. This is not a verified current default.</p>
+</details>
+<h2 id="rotator-port">ROTATOR PORT<a class="headerlink" href="#rotator-port" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>Not extracted; see source</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: SERIAL 1 to SERIAL 6. This command is used to choose a serial port over which commands will be sent to the rotator control (which may be set with the ROTATOR TYPE command). To send the rotator to the direction for the country of a callsign in the Call Window, use the ctrl-P command.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Rotator.Port</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: NONE. This is not a verified current default.</p>
+</details>
+<h2 id="rotator-type">ROTATOR TYPE<a class="headerlink" href="#rotator-type" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;NONE&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: DCU1, ORION, YAESU, ALFA SPID or PSTROTATOR. Sets the type of the rotator control.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Rotator.RotatorType</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: NONE. This is not a verified current default.</p>
+</details>
+<h2 id="row-count">ROW COUNT<a class="headerlink" href="#row-count" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>5–15 (numeric type bounds; see description for units)</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Number of log lines displayed in the main window.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.MainWindow.RowCount</code>. Source type: <code>TLogRowCount</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: 5. This is not a verified current default.</p>
+</details>
+<h2 id="s-p-cw-exchange">S&amp;P CW EXCHANGE<a class="headerlink" href="#s-p-cw-exchange" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>S&amp;P EXCHANGE</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>The CW exchange message sent in Search and Pounce mode. This is separate from the CQ exchange to allow different content when calling a station. Programmed via Alt+P.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.SpExchangeCw</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="s-p-ssb-exchange">S&amp;P SSB EXCHANGE<a class="headerlink" href="#s-p-ssb-exchange" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;SAPEXCHG.WAV&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>The SSB voice exchange message sent in S&amp;P mode. Programmed via Alt+P. ### T</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Messages.SpExchangeSsb</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+</details>
+<h2 id="say-hi-enable">SAY HI ENABLE<a class="headerlink" href="#say-hi-enable" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If you have programmed CW messages that include names from the TRMASTER database, SAY HI ENABLE will determine whether the names are actually used. This allows you to program the messages with the names included, but to disable them all without having to edit each message.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.SayHi.Enable</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="say-hi-rate-cutoff">SAY HI RATE CUTOFF<a class="headerlink" href="#say-hi-rate-cutoff" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>0–65535 (numeric type bounds; see description for units)</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>200</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If SAY HI ENABLE is TRUE, TR4W will cease to greet the other station when your rate exceeds the value of SAY HI RATE CUTOFF.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.SayHi.RateCutoff</code>. Source type: <code>TSayHiRateCutoff</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: 200. This is not a verified current default.</p>
+</details>
+<h2 id="score-posting-url">SCORE POSTING URL<a class="headerlink" href="#score-posting-url" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;https://post.contestonlinescore.com/post/&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Post to Online Scoreboard</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Score.PostingUrl</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: http://post.contestonlinescore.com/. This is not a verified current default.</p>
+</details>
+<h2 id="score-reading-url">SCORE READING URL<a class="headerlink" href="#score-reading-url" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;https://contestonlinescore.com/scoreboard/&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Read Online Scoreboard</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Score.ReadingUrl</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: https://contestonlinescore.com/scoreboard/. This is not a verified current default.</p>
+</details>
+<h2 id="scp-country-string">SCP COUNTRY STRING<a class="headerlink" href="#scp-country-string" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Comma-separated list of country prefixes. This command allows you to limit the stations that are displayed by the Super Check Partial function. Entering a comma-separated list of country prefixes (e.g., K, VE, KL7, KH6, KP2, KP4) causes only stations from those countries to be displayed when performing the Super Check Partial function. The default is to list stations from all countries. If you place a ! or - in front of the list of countries, then only stations in countries not in the list will be displayed by Super Check Partial.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Scp.CountryString</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: NONE. This is not a verified current default.</p>
+</details>
+<h2 id="scp-minimum-letters">SCP MINIMUM LETTERS<a class="headerlink" href="#scp-minimum-letters" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: 0, 3, 4, or 5. When this parameter is non-zero, it enables the automatic Super Check Partial function. When you enter the number of characters specified, partial calls will be automatically displayed. You must have a TRMASTER.DTA file available for the program for this feature to work.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Scp.MinimumLetters</code>. Source type: <code>integer</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: 0. This is not a verified current default.</p>
+</details>
+<h2 id="send-complete-four-letter-call">SEND COMPLETE FOUR LETTER CALL<a class="headerlink" href="#send-complete-four-letter-call" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>The } character in a CW message will send the prefix or suffix of a corrected callsign. If you set this parameter to TRUE, it will send the complete callsign if it is only four characters in length.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.SendCompleteFourLetterCall</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="server-address">SERVER ADDRESS<a class="headerlink" href="#server-address" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;LOCALHOST&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>The name or IP address of the computer that is running TR4WSERVER.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Server.Address</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: LOCALHOST. This is not a verified current default.</p>
+</details>
+<h2 id="server-auto-synchronize-log-on-connect">SERVER AUTO SYNCHRONIZE LOG ON CONNECT<a class="headerlink" href="#server-auto-synchronize-log-on-connect" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When running in network mode, rather than asking th euser if they want to sync the logs, the program does so automatically. It reports any errors it finds.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Server.AutoSynchronizeLogOnConnect</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="server-password">SERVER PASSWORD<a class="headerlink" href="#server-password" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Credential; use the settings UI</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;TR4WSERVER&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Value: 10 chars length string. Password for connection to TR4WSERVER.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Server.Password</code>. Source type: <code>TSecretText</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TR4WSERVER. This is not a verified current default.</p>
+</details>
+<h2 id="server-port">SERVER PORT<a class="headerlink" href="#server-port" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>0–65535 (numeric type bounds; see description for units)</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>1061</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Ethernet port number, which will used connection with TR4WSERVER.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Server.Port</code>. Source type: <code>TServerPort</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: 1061. This is not a verified current default.</p>
+</details>
+<h2 id="shift-key-enable">SHIFT KEY ENABLE<a class="headerlink" href="#shift-key-enable" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>True</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>The shift keys can be used to adjust the frequency of Kenwood, Flex, Icom and some Yaesu rigs. To disable this feature, set this parameter to FALSE.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Operating.ShiftKeyEnable</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TRUE. This is not a verified current default.</p>
+</details>
+<h2 id="short-0">SHORT 0<a class="headerlink" href="#short-0" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;0&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any character. Defines the character to be sent instead of a 0 in a QSO number if SHORT INTEGERS is TRUE.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.Short0</code>. Source type: <code>AnsiChar</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: T. This is not a verified current default.</p>
+</details>
+<h2 id="short-1">SHORT 1<a class="headerlink" href="#short-1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;1&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any character. Defines the character to be sent instead of a 1 in a QSO number if SHORT INTEGERS is TRUE.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.Short1</code>. Source type: <code>AnsiChar</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: A. This is not a verified current default.</p>
+</details>
+<h2 id="short-2">SHORT 2<a class="headerlink" href="#short-2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;2&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any character. Defines the character to be sent instead of a 2 in a QSO number if SHORT INTEGERS is TRUE.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.Short2</code>. Source type: <code>AnsiChar</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: 2. This is not a verified current default.</p>
+</details>
+<h2 id="short-9">SHORT 9<a class="headerlink" href="#short-9" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;9&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any character. Defines the character to be sent instead of a 9 in a QSO number if SHORT INTEGERS is TRUE.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.Short9</code>. Source type: <code>AnsiChar</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: N. This is not a verified current default.</p>
+</details>
+<h2 id="short-integers">SHORT INTEGERS<a class="headerlink" href="#short-integers" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When this parameter is TRUE, TR4W will allow short abbreviations for some integers when they are sent as part of a QSO number. The actual abbreviations that are used can be programmed using the Alt-P command or the SHORT 0, SHORT 1, SHORT 2, and SHORT 9 commands.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.ShortIntegers</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="show-all-serial-ports">SHOW ALL SERIAL PORTS<a class="headerlink" href="#show-all-serial-ports" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Explanation not yet written</p>
+<p>The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.SerialPorts.ShowAll</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+</details>
+<h2 id="show-domestic-multiplier-name">SHOW DOMESTIC MULTIPLIER NAME<a class="headerlink" href="#show-domestic-multiplier-name" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Explanation not yet written</p>
+<p>The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.RemainingMults.ShowDomesticName</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="show-frequency-in-log">SHOW FREQUENCY IN LOG<a class="headerlink" href="#show-frequency-in-log" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>True</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If the value is TRUE in Cabrillo log will substitute the actual frequency of QSO.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Log.ShowFrequency</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TRUE. This is not a verified current default.</p>
+</details>
+<h2 id="show-gridlines">SHOW GRIDLINES<a class="headerlink" href="#show-gridlines" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>Not extracted; see source</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Explanation not yet written</p>
+<p>The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.MainWindow.ShowGridlines</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="show-typed-callsign">SHOW TYPED CALLSIGN<a class="headerlink" href="#show-typed-callsign" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>True</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If TRUE typed callsign in callsign window will displayed in &quot;Network&quot; window.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Network.ShowTypedCallsign</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TRUE. This is not a verified current default.</p>
+</details>
+<h2 id="single-band-score">SINGLE BAND SCORE<a class="headerlink" href="#single-band-score" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;160&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>This command can be used to force the score calculator to use the QSOs for only a single band. If you change the value of the SINGLE BAND SCORE parameter during a contest, you will need to delete your *.RST file before restarting TR4W.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Contest.SingleBandScore</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: All. This is not a verified current default.</p>
+</details>
+<h2 id="skip-active-band">SKIP ACTIVE BAND<a class="headerlink" href="#skip-active-band" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If you are using two rigs and SKIP ACTIVE BAND is TRUE, TR4W will skip over the band to which the other rig is tuned when switching bands using the alt-B or alt-V commands.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.So2r.SkipActiveBand</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="slash-mark-char">SLASH MARK CHAR<a class="headerlink" href="#slash-mark-char" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;/&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any character. If you wish to use a different keyboard character to make the / mark, use this command to specify it. This is handy for some European keyboards.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.SlashMarkChar</code>. Source type: <code>Char</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: /. This is not a verified current default.</p>
+</details>
+<h2 id="space-bar-dupe-check-enable">SPACE BAR DUPE CHECK ENABLE<a class="headerlink" href="#space-bar-dupe-check-enable" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>True</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Normally when you press &lt;Space&gt; when a callsign is present in the Call Window, TR4W will perform a dupe check on the displayed callsign. If you press &lt;Space&gt; without a callsign in the window, you will be put into S&amp;P Mode and your callsign will be sent. If you set SPACE BAR DUPE CHECK ENABLE to FALSE, you will always go into S&amp;P Mode and send your call, even if a call is present in the Call Window.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.CallWindow.SpaceBarDupeCheck</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: TRUE. This is not a verified current default.</p>
+</details>
+<h2 id="spot-collector-enabled">SPOT COLLECTOR ENABLED<a class="headerlink" href="#spot-collector-enabled" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>Not extracted; see source</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When using the DXLab Suite of programs, this will allow SpotCollector to populate the TR4W callsign window when clicking on a spot.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.SpotCollector.Enabled</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="sprint-qsy-rule">SPRINT QSY RULE<a class="headerlink" href="#sprint-qsy-rule" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Contest</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>If this parameter is TRUE, TR4W will automatically enter CQ Mode after completing a QSO in S&amp;P Mode. This parameter is automatically set to TRUE when the Sprint contest is selected. See subsection 6.18.1 for more information on operating the Sprint. You should not set this variable to TRUE unless you are operating the Sprint. For similar (but not quite identical) behaviour in other contests, see the AUTO S&amp;P ENABLE command.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Contest.SprintQsyRule</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="start-sending-now-key">START SENDING NOW KEY<a class="headerlink" href="#start-sending-now-key" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Single character</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;&#x27;&#x27;&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>Values: Any key. If you are running stations on CW and a station that has answered you has already finished sending his call, but you have not yet finished typing his call, you can press the START SENDING NOW KEY. This will send the characters you have already typed, and also the ones that you type after hitting the key, until you press &lt;Enter&gt;. After pressing &lt;Enter&gt;, the normal exchange will be sent. You may set the START SENDING NOW KEY to the &lt;Space&gt; key with the command: START SENDING NOW KEY = SPACE If the cursor is in the Call Window, then the space bar only causes sending to begin if there is at least one character in the window.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.StartSendingNowKey</code>. Source type: <code>Char</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: «&#x27;» (the open-single-quote key, not the apostrophe). This is not a verified current default.</p>
+</details>
+<h2 id="stations-callsigns-mask">STATIONS CALLSIGNS MASK<a class="headerlink" href="#stations-callsigns-mask" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>&#x27;&#x27;</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Explanation not yet written</p>
+<p>The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Stations.CallsignsMask</code>. Source type: <code>string</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: NONE. This is not a verified current default.</p>
+</details>
+<h2 id="stereo-pin-high">STEREO PIN HIGH<a class="headerlink" href="#stereo-pin-high" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>This command sets the state of the STEREO CONTROL PIN on the STEREO CONTROL PORT. The value may be toggled with the function key command TOGGLESTEREOPIN.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Cw.StereoPinHigh</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="swap-packet-spot-radios">SWAP PACKET SPOT RADIOS<a class="headerlink" href="#swap-packet-spot-radios" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When this parameter is TRUE, TR4W reverses which rig receives a packet spot when ctrl-U and the left/right cursor keys are used. This is useful if your station is configured such that your rig number 2 is physically on the left.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.So2r.SwapPacketSpotRadios</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="swap-paddles">SWAP PADDLES<a class="headerlink" href="#swap-paddles" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>This parameter swaps the dit and dah inputs on the paddle port. This is handy if your paddle is wired backwards.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.Paddle.Swap</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+<h2 id="swap-radio-relay-sense">SWAP RADIO RELAY SENSE<a class="headerlink" href="#swap-radio-relay-sense" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Current metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope</td>
+<td>Station</td>
+</tr>
+<tr>
+<td>Values</td>
+<td>TRUE or FALSE</td>
+</tr>
+<tr>
+<td>Initial value in constructor</td>
+<td>False</td>
+</tr>
+<tr>
+<td>Other accepted names</td>
+<td>None listed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition quote">
+<p class="admonition-title">Inherited English help — behavior needs review</p>
+<p>When this parameter is TRUE, TR4W reverses the polarity of the relay for controlling the radio.</p>
+</div>
+<details class="info">
+<summary>Evidence and historical context</summary>
+<p>Model path: <code>Settings.So2r.SwapRelaySense</code>. Source type: <code>boolean</code>.</p>
+<p>Settings model (<code>tr4w/src/uSettingsModel.pas</code>) · Inventory (<code>tr4w/docs/SETTINGS_INVENTORY.md</code>) · Inherited help (<code>tr4w/target/commands_help_eng.ini</code>)</p>
+<p>This exact name appears in the v4.01 manual contents.</p>
+<p>Historical help default: FALSE. This is not a verified current default.</p>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="m-p.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: M–P">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                M–P
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="t-z.html" class="md-footer__link md-footer__link--next" aria-label="Next: T–Z">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                T–Z
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.footer", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

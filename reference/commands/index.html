@@ -1,0 +1,3822 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="TR4W — Cross-platform contest logging, rooted in TRLOG. Operator guide for the 5.x preview.">
+      
+      
+      
+        <link rel="canonical" href="https://tr4w.github.io/TR4W-D12/reference/commands/index.html">
+      
+      
+        <link rel="prev" href="../../theory/testing.html">
+      
+      
+        <link rel="next" href="a-d.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Find a command - TR4W Operator Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#command-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../index.html" title="TR4W Operator Guide" class="md-header__button md-logo" aria-label="TR4W Operator Guide" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            TR4W Operator Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Find a command
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Welcome
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../start/version.html" class="md-tabs__link">
+          
+  
+  
+  Get started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../station/radio.html" class="md-tabs__link">
+          
+  
+  
+  Station setup
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../operating/pota.html" class="md-tabs__link">
+          
+  
+  
+  Operating
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../log/backup.html" class="md-tabs__link">
+          
+  
+  
+  Your log
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../theory/overview.html" class="md-tabs__link">
+          
+  
+  
+  Theory of operation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="index.html" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../about/tr4w.html" class="md-tabs__link">
+          
+  
+  
+  About this preview
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="TR4W Operator Guide" class="md-nav__button md-logo" aria-label="TR4W Operator Guide" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    TR4W Operator Guide
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Get started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Get started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/version.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Choose your version
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/install.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install TR4W
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Files and folders
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/data-updates.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Update reference data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/first-contest.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open your first contest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/migration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Moving from 4.x
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../start/ini-to-json.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Convert INI settings to JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Station setup
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Station setup
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/radio.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connect a radio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/wsjtx.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WSJT-X
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/tci.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TCI connections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/external-loggers.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    External loggers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/cw.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CW sending options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/cw-messages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Program CW function keys
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/so2r.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SO2R operation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/online-scores.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HamScore online scoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/language.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language and translations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../station/network.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-station networking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operating
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operating
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/pota.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    POTA and park-to-park
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/keyboard.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keyboard essentials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/appearance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Colors, sizing, and lost windows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/radio-windows.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Radio 1 and Radio 2 windows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/callsign-assistance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Possible calls and SCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/bandmap.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Band map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/dxcluster.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DX cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operating/multipliers.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multiplier windows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your log
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Your log
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/backup.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Back up your log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/restore.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Restore files and recover a log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/export.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export ADIF and Cabrillo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/reports.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/import.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Import contacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../log/diagnostics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnostic logging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Theory of operation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Theory of operation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How the parts work together
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/database.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQLite integrity and durability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../theory/testing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7_1" id="__nav_7_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Command reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find a command
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find a command
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#browse-by-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browse by name
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#read-an-entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read an entry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#topic-starting-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topic starting points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#all-current-setting-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All current setting names
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="a-d.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A–D
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="e-l.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E–L
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="m-p.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    M–P
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="q-s.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Q–S
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="t-z.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    T–Z
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="legacy-map.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Old-to-new lookup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="lifecycle.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions and moved settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="coverage.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coverage and gaps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../radios.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Radio support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contests.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Available contests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../languages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Languages and review status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wsjtx.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WSJT-X settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../legacy.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earlier manuals and wiki
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About this preview
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    About this preview
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/tr4w.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About TR4W
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/sources.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluate the prototype
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#browse-by-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browse by name
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#read-an-entry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read an entry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#topic-starting-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topic starting points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#all-current-setting-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All current setting names
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="command-reference">Command reference<a class="headerlink" href="#command-reference" title="Permanent link">&para;</a></h1>
+<p><strong>Find a setting by its current name or an older name from the reference manual.</strong></p>
+<p>This reference combines the current settings inventory, source declarations, English help, and the v4.01 manual contents. It targets the same 5.0.22 snapshot as this guide.</p>
+<p>There are <strong>288 settings</strong> with <strong>298 accepted names</strong>, plus <strong>4 action commands</strong> documented separately. Radio, keyer, message, and compatibility command routes are not all ordinary settings.</p>
+<h2 id="browse-by-name">Browse by name<a class="headerlink" href="#browse-by-name" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="a-d.html">Commands A–D</a></li>
+<li><a href="e-l.html">Commands E–L</a></li>
+<li><a href="m-p.html">Commands M–P</a></li>
+<li><a href="q-s.html">Commands Q–S</a></li>
+<li><a href="t-z.html">Commands T–Z</a></li>
+<li><a href="legacy-map.html">Old-to-new lookup</a></li>
+<li><a href="lifecycle.html">Actions and moved configuration</a></li>
+<li><a href="coverage.html">Coverage and review gaps</a></li>
+</ul>
+<h2 id="read-an-entry">Read an entry<a class="headerlink" href="#read-an-entry" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Station</strong> settings belong to the station settings model; <strong>Contest</strong> settings are captured with the contest. Do not carry forward the old manual’s INI/CFG storage column as a current editing recipe.</li>
+<li><strong>Initial value</strong> means a direct literal in the source constructor. Loading a station, a contest definition, or a saved database can change it. An unextracted value is not an empty or zero default.</li>
+<li><strong>Values</strong> gives boolean choices or literal numeric type bounds when available. Other validation can apply; numeric bounds do not establish units.</li>
+<li><strong>Other accepted names</strong> are inventory aliases. They do not imply that every input route applies the value.</li>
+<li><strong>Inherited help</strong> is useful background, not a reviewed 5.x procedure. Older hotkeys, file paths, default values, and platform assumptions require checking.</li>
+</ul>
+<p>Prefer the settings UI. Current command dispatch can recognize a name without applying it, depending on the caller and ownership. Recognition alone does not prove a legacy config line takes effect.</p>
+<h2 id="topic-starting-points">Topic starting points<a class="headerlink" href="#topic-starting-points" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../log/backup.html">Log backup</a></li>
+<li><a href="../../station/radio.html">Radio connection</a></li>
+<li><a href="../../station/wsjtx.html">WSJT-X</a></li>
+<li><a href="../../operating/pota.html">POTA</a></li>
+</ul>
+<h2 id="all-current-setting-names">All current setting names<a class="headerlink" href="#all-current-setting-names" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="a-d.html#alert-color">ALERT COLOR</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#all-cw-messages-chainable">ALL CW MESSAGES CHAINABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#allow-auto-update">ALLOW AUTO UPDATE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#alt-d-buffer-enable">ALT-D BUFFER ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#alt-d-cq-enable">ALT-D CQ ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#always-call-blind-cq">ALWAYS CALL BLIND CQ</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#ask-for-frequencies">ASK FOR FREQUENCIES</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-call-terminate">AUTO CALL TERMINATE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-display-dupe-qso">AUTO DISPLAY DUPE QSO</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-dupe-enable-cq">AUTO DUPE ENABLE CQ</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-dupe-enable-s-and-p">AUTO DUPE ENABLE S AND P</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-qsl-interval">AUTO QSL INTERVAL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-qso-number-decrement">AUTO QSO NUMBER DECREMENT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-return-to-cq-mode">AUTO RETURN TO CQ MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-s-p-enable">AUTO S&amp;P ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-s-p-enable-sensitivity">AUTO S&amp;P ENABLE SENSITIVITY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-send-character-count">AUTO SEND CHARACTER COUNT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-time-increment">AUTO TIME INCREMENT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#auto-cq-delay-time">AUTO-CQ DELAY TIME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#backup-log-file-name">BACKUP LOG FILE NAME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#backup-log-frequency">BACKUP LOG FREQUENCY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band">BAND</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-all-bands">BAND MAP ALL BANDS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-all-modes">BAND MAP ALL MODES</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-call-window-enable">BAND MAP CALL WINDOW ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-decay-time">BAND MAP DECAY TIME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-display-cq">BAND MAP DISPLAY CQ</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-display-ghz">BAND MAP DISPLAY GHZ</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-display-limit">BAND MAP DISPLAY LIMIT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-dupe-display">BAND MAP DUPE DISPLAY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-guard-band">BAND MAP GUARD BAND</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-item-height">BAND MAP ITEM HEIGHT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-item-width">BAND MAP ITEM WIDTH</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-mults-only">BAND MAP MULTS ONLY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-size">BAND MAP SIZE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-so2r-display">BAND MAP SO2R DISPLAY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#band-map-split-mode">BAND MAP SPLIT MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#beep-enable">BEEP ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#beep-every-10-qsos">BEEP EVERY 10 QSOS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#bold-font">BOLD FONT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#broadcast-all-packet-data">BROADCAST ALL PACKET DATA</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#call-ok-now-cw-message">CALL OK NOW CW MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#call-ok-now-ssb-message">CALL OK NOW SSB MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#call-window-show-all-spots">CALL WINDOW SHOW ALL SPOTS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#callsign-update-enable">CALLSIGN UPDATE ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#category-assisted">CATEGORY-ASSISTED</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#category-band">CATEGORY-BAND</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#category-mode">CATEGORY-MODE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#category-operator">CATEGORY-OPERATOR</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#category-overlay">CATEGORY-OVERLAY</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#category-power">CATEGORY-POWER</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#category-transmitter">CATEGORY-TRANSMITTER</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#check-log-file-size">CHECK LOG FILE SIZE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#code-speed">CODE SPEED</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#column-autosize">COLUMN AUTOSIZE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#complete-callsign-mask">COMPLETE CALLSIGN MASK</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#computer-id">COMPUTER ID</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#computer-name">COMPUTER NAME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#confirm-edit-changes">CONFIRM EDIT CHANGES</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#connection-at-startup">CONNECTION AT STARTUP</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#contacts-per-page">CONTACTS PER PAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#contest">CONTEST</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#contest-name">CONTEST NAME</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#contest-title">CONTEST TITLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#count-domestic-countries">COUNT DOMESTIC COUNTRIES</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#country-information-file">COUNTRY INFORMATION FILE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cq-cw-exchange">CQ CW EXCHANGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cq-cw-exchange-name-known">CQ CW EXCHANGE NAME KNOWN</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cq-ssb-exchange">CQ SSB EXCHANGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cq-ssb-exchange-name-known">CQ SSB EXCHANGE NAME KNOWN</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cty-update-check-on-startup">CTY UPDATE CHECK ON STARTUP</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#custom-initial-exchange-string">CUSTOM INITIAL EXCHANGE STRING</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#custom-user-string">CUSTOM USER STRING</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cw-enable">CW ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cw-speed-from-database">CW SPEED FROM DATABASE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cw-speed-increment">CW SPEED INCREMENT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#cw-tone">CW TONE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#de-enable">DE ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#debug-log-level">DEBUG LOG LEVEL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#digital-mode-enable">DIGITAL MODE ENABLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#display-language">DISPLAY LANGUAGE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#distance-mode">DISTANCE MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dit-dah-ratio">DIT DAH RATIO</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#domestic-filename">DOMESTIC FILENAME</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#domestic-multiplier">DOMESTIC MULTIPLIER</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dupe-check-sound">DUPE CHECK SOUND</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dupe-sheet-auto-reset">DUPE SHEET AUTO RESET</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dvk-enable">DVK ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dvk-localized-messages-enable">DVK LOCALIZED MESSAGES ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dvk-path">DVK PATH</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dvk-recorder">DVK RECORDER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="a-d.html#dx-multiplier">DX MULTIPLIER</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#escape-exits-search-and-pounce">ESCAPE EXITS SEARCH AND POUNCE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#exchange-memory-enable">EXCHANGE MEMORY ENABLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#exchange-received">EXCHANGE RECEIVED</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#external-logger">EXTERNAL LOGGER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#external-logger-address">EXTERNAL LOGGER ADDRESS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#external-logger-enabled">EXTERNAL LOGGER ENABLED</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#external-logger-port">EXTERNAL LOGGER PORT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#farnsworth-enable">FARNSWORTH ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#farnsworth-speed">FARNSWORTH SPEED</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#font-size">FONT SIZE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#frequency-memory-enable">FREQUENCY MEMORY ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#frequency-poll-rate">FREQUENCY POLL RATE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#grid-map-center">GRID MAP CENTER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hamscore-enable">HAMSCORE ENABLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hamscore-password">HAMSCORE PASSWORD</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hamscore-send-contact-info">HAMSCORE SEND CONTACT INFO</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hamscore-url">HAMSCORE URL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hamscore-username">HAMSCORE USERNAME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hand-log-mode">HAND LOG MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hf-band-enable">HF BAND ENABLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#hour-display">HOUR DISPLAY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#ie-switch">IE SWITCH</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#in-band-lockout">IN BAND LOCKOUT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#include-f-key-number">INCLUDE F-KEY NUMBER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#increment-time-enable">INCREMENT TIME ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#initial-exchange">INITIAL EXCHANGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#initial-exchange-cursor-pos">INITIAL EXCHANGE CURSOR POS</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#initial-exchange-filename">INITIAL EXCHANGE FILENAME</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#initial-exchange-overwrite">INITIAL EXCHANGE OVERWRITE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#insert-mode">INSERT MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#intercom-file-enable">INTERCOM FILE ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#keypad-cw-memories">KEYPAD CW MEMORIES</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#leading-zero-character">LEADING ZERO CHARACTER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#leading-zeros">LEADING ZEROS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#leave-cursor-in-call-window">LEAVE CURSOR IN CALL WINDOW</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#literal-domestic-qth">LITERAL DOMESTIC QTH</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="e-l.html#log-frequency-enable">LOG FREQUENCY ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#log-rs-sent">LOG RS SENT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#log-rst-sent">LOG RST SENT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#log-sub-title">LOG SUB TITLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#log-with-single-enter">LOG WITH SINGLE ENTER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="e-l.html#look-for-rst-sent">LOOK FOR RST SENT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#main-callsign">MAIN CALLSIGN</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#main-font">MAIN FONT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#message-enable">MESSAGE ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#minitour-duration">MINITOUR DURATION</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#missingcallsigns-file-enable">MISSINGCALLSIGNS FILE ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#mmtty-engine">MMTTY ENGINE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#mode">MODE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#mult-by-band">MULT BY BAND</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#mult-by-mode">MULT BY MODE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#mult-report-minimum-bands">MULT REPORT MINIMUM BANDS</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#mult-sheet-auto-reset">MULT SHEET AUTO RESET</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#multi-mults-only">MULTI MULTS ONLY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#multiple-bands">MULTIPLE BANDS</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#multiple-modes">MULTIPLE MODES</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-call">MY CALL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-check">MY CHECK</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-continent">MY CONTINENT</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-country">MY COUNTRY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-fd-class">MY FD CLASS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-foc-number">MY FOC NUMBER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-grid">MY GRID</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-iota">MY IOTA</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-itu-zone">MY ITU ZONE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-name">MY NAME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-park">MY PARK</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-postal-code">MY POSTAL CODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-prec">MY PREC</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-section">MY SECTION</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-state">MY STATE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#my-zone">MY ZONE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#name-flag-enable">NAME FLAG ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#net-status-update-interval">NET STATUS UPDATE INTERVAL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#no-border">NO BORDER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#no-caption">NO CAPTION</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#no-column-header">NO COLUMN HEADER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#no-log">NO LOG</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#no-poll-during-ptt">NO POLL DURING PTT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#operating-standard-edit-keys">OPERATING STANDARD EDIT KEYS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#paddle-monitor-tone">PADDLE MONITOR TONE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#paddle-ptt-hold-count">PADDLE PTT HOLD COUNT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#paddle-speed">PADDLE SPEED</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#partial-call-enable">PARTIAL CALL ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#possible-call-accept-key">POSSIBLE CALL ACCEPT KEY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#possible-call-left-key">POSSIBLE CALL LEFT KEY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#possible-call-mode">POSSIBLE CALL MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#possible-call-right-key">POSSIBLE CALL RIGHT KEY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#possible-calls">POSSIBLE CALLS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#prefix-multiplier">PREFIX MULTIPLIER</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="m-p.html#pstrotator-ip-address">PSTROTATOR IP ADDRESS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#pstrotator-udp-port">PSTROTATOR UDP PORT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#ptt-enable">PTT ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#ptt-lockout">PTT LOCKOUT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#ptt-turn-on-delay">PTT TURN ON DELAY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="m-p.html#ptt-via-commands">PTT VIA COMMANDS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qsl-cw-message">QSL CW MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qsl-mode">QSL MODE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qsl-ssb-message">QSL SSB MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-before-cw-message">QSO BEFORE CW MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-before-ssb-message">QSO BEFORE SSB MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-by-band">QSO BY BAND</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-by-mode">QSO BY MODE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-number-by-band">QSO NUMBER BY BAND</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-point-method">QSO POINT METHOD</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-points-domestic-cw">QSO POINTS DOMESTIC CW</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-points-domestic-phone">QSO POINTS DOMESTIC PHONE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-points-dx-cw">QSO POINTS DX CW</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qso-points-dx-phone">QSO POINTS DX PHONE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qsx-enable">QSX ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qsy-inactive-radio">QSY INACTIVE RADIO</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qtc-enable">QTC ENABLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qtc-extra-space">QTC EXTRA SPACE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qtc-minutes">QTC MINUTES</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qtc-qrs">QTC QRS</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#question-mark-char">QUESTION MARK CHAR</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#quick-qsl-cw-message">QUICK QSL CW MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#quick-qsl-key-1">QUICK QSL KEY 1</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#quick-qsl-key-2">QUICK QSL KEY 2</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#quick-qsl-message-2">QUICK QSL MESSAGE 2</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#quick-qsl-ssb-message">QUICK QSL SSB MESSAGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#qzb-random-offset-enable">QZB RANDOM OFFSET ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#r150s-mode">R150S MODE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#radio-tcp-server-port">RADIO TCP SERVER PORT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#radius-of-earth">RADIUS OF EARTH</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#random-cq-mode">RANDOM CQ MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#rate-display">RATE DISPLAY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#remaining-mult-display-mode">REMAINING MULT DISPLAY MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#repeat-s-p-cw-exchange">REPEAT S&amp;P CW EXCHANGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#repeat-s-p-ssb-exchange">REPEAT S&amp;P SSB EXCHANGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#reverse-initial-ex">REVERSE INITIAL EX</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#rfobl-mode">RFOBL MODE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#rotator-port">ROTATOR PORT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#rotator-type">ROTATOR TYPE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#row-count">ROW COUNT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#s-p-cw-exchange">S&amp;P CW EXCHANGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#s-p-ssb-exchange">S&amp;P SSB EXCHANGE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#say-hi-enable">SAY HI ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#say-hi-rate-cutoff">SAY HI RATE CUTOFF</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#score-posting-url">SCORE POSTING URL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#score-reading-url">SCORE READING URL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#scp-country-string">SCP COUNTRY STRING</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#scp-minimum-letters">SCP MINIMUM LETTERS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#send-complete-four-letter-call">SEND COMPLETE FOUR LETTER CALL</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#server-address">SERVER ADDRESS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#server-auto-synchronize-log-on-connect">SERVER AUTO SYNCHRONIZE LOG ON CONNECT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#server-password">SERVER PASSWORD</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#server-port">SERVER PORT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#shift-key-enable">SHIFT KEY ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#short-0">SHORT 0</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#short-1">SHORT 1</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#short-2">SHORT 2</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#short-9">SHORT 9</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#short-integers">SHORT INTEGERS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#show-all-serial-ports">SHOW ALL SERIAL PORTS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#show-domestic-multiplier-name">SHOW DOMESTIC MULTIPLIER NAME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#show-frequency-in-log">SHOW FREQUENCY IN LOG</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#show-gridlines">SHOW GRIDLINES</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#show-typed-callsign">SHOW TYPED CALLSIGN</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#single-band-score">SINGLE BAND SCORE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#skip-active-band">SKIP ACTIVE BAND</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#slash-mark-char">SLASH MARK CHAR</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#space-bar-dupe-check-enable">SPACE BAR DUPE CHECK ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#spot-collector-enabled">SPOT COLLECTOR ENABLED</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#sprint-qsy-rule">SPRINT QSY RULE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="q-s.html#start-sending-now-key">START SENDING NOW KEY</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#stations-callsigns-mask">STATIONS CALLSIGNS MASK</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#stereo-pin-high">STEREO PIN HIGH</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#swap-packet-spot-radios">SWAP PACKET SPOT RADIOS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#swap-paddles">SWAP PADDLES</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="q-s.html#swap-radio-relay-sense">SWAP RADIO RELAY SENSE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#telnet-console-lines">TELNET CONSOLE LINES</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#telnet-server">TELNET SERVER</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#ten-minute-rule">TEN MINUTE RULE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#tune-alt-d-enable">TUNE ALT-D ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#tune-with-dits">TUNE WITH DITS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#two-radio-mode">TWO RADIO MODE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#unknown-country-file-enable">UNKNOWN COUNTRY FILE ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#unknown-country-file-name">UNKNOWN COUNTRY FILE NAME</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#update-restart-file-enable">UPDATE RESTART FILE ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#use-recorded-signs">USE RECORDED SIGNS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#user-info-shown">USER INFO SHOWN</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#vhf-band-enable">VHF BAND ENABLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wait-for-strength">WAIT FOR STRENGTH</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wake-up-time-out">WAKE UP TIME OUT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#warc-band-enable">WARC BAND ENABLE</a></td>
+<td>Contest</td>
+</tr>
+<tr>
+<td><a href="t-z.html#weight">WEIGHT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wildcard-partials">WILDCARD PARTIALS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#window-size">WINDOW SIZE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wsjt-x-broadcast-port">WSJT-X BROADCAST PORT</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wsjt-x-enabled">WSJT-X ENABLED</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wsjt-x-multicast-group">WSJT-X MULTICAST GROUP</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wsjt-x-radio-control-enabled">WSJT-X RADIO CONTROL ENABLED</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#wsjt-x-send-highlights">WSJT-X SEND HIGHLIGHTS</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#yccc-so2r-enable">YCCC SO2R ENABLE</a></td>
+<td>Station</td>
+</tr>
+<tr>
+<td><a href="t-z.html#zone-multiplier">ZONE MULTIPLIER</a></td>
+<td>Contest</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../theory/testing.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Test methodology">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Test methodology
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="a-d.html" class="md-footer__link md-footer__link--next" aria-label="Next: A–D">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                A–D
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.footer", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
