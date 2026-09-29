@@ -31,6 +31,14 @@ A useful result identifies the source revision, platform/toolchain, suite or cor
 
 This documentation update ran the documentation generator and strict MkDocs build, not the application test suites. The existence of a test in the repository is evidence of intended coverage, not evidence that it passed today.
 
+## Recent connection and interface evidence
+
+The September 27 development record reports a **7 hour 52 minute** LAN soak with an IC-7760 and IC-9700: one login per radio, no CI-V data timeouts, and clean shutdown. This is evidence for those radios and that tested setup, not certification of every supported model or platform.
+
+New focused tests cover radio-band mapping, Icom teardown ownership, retry delays, status-versus-notice lifetime, menu shortcuts, and focused editing keys. Release packaging also checks that separate debug symbols match the binaries shipped. A matching symbol file improves crash diagnosis; it does not prove a contest workflow works.
+
+These are recorded development results and source coverage reviewed for this guide. No application, installer, or hardware test was rerun during the September 29 documentation update.
+
 ## Supporting documents
 
 - Current corpus methodology (`tr4w/test/corpus/README.md`)

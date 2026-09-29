@@ -88,3 +88,7 @@ The reference expansion adds 288 settings, 298 accepted setting names, the 335-n
 Keep TR4W as the established product name. The guide leads with “TR4W — Cross-platform contest logging” and places the TRLOG lineage in its introduction and About page. Platform-specific editions remain TR4W for Windows, TR4W for macOS, and TR4W for Linux. Availability and readiness are qualified separately; this development snapshot is not evidence of a production-ready release on every platform.
 
 Project-owner clarification on September 25 confirms that this version runs natively on macOS as well as Windows and Linux. The guide states that support directly while retaining feature-specific test limits.
+
+## September 29 update
+
+Reviewed operator-facing main-branch changes from `24f06a3` through `3753d2ba` (5.0.26), and checked published release filenames and installation notes with the GitHub API. Updated installation, radio/band/status behavior, keyboard handling, migration, diagnostics, and recorded testing evidence. Reference inventories retain their baseline provenance because no inventory entries changed in this range. The separate `contestFactory` branch through `20943bc1` is not the published 5.0.26 target. Strict hosted build and generated-link/tab checks passed; no installer or hardware tests were performed.

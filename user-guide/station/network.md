@@ -1,5 +1,7 @@
 # Multi-station networking
 
+On macOS, the `.pkg` installs the desktop application only. Obtain `tr4wserver` from the matching `.dmg` or `.tar.gz` when this station will host the network. A client-only station does not need its own server. The main-window status strip now shows the Network condition separately; open the network window for connection details.
+
 TR4W stations connect to TR4WServer to exchange contest activity. This network is separate from a radio's network CAT connection, a DX cluster, and WSJT-X UDP traffic.
 
 ## Set up a practice network

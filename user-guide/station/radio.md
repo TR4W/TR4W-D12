@@ -37,6 +37,14 @@ The form has separate **Keyer output port**, **Keyer RTS line**, and **Keyer DTR
 
 ??? info "Source check"
     Control names: `tr4w/src/ui/lcl/uRadioEditForm.lfm`. This page documents the configuration surface; it does not certify a particular radio/OS combination. The older [TCP/IP wiki guide](https://github.com/TR4W/TR4W/wiki/Connecting-TR4W-to-Radios-via-TCP-IP) has additional model context.
+## Icom network recovery and band selection
+
+After a rejected login, check the credentials in the radio configuration and save the correction. Saving reapplies the configuration to a running radio. Authentication failures are retried with a 60-second delay; repeated resets are not a substitute for waiting for recovery. A successful operational connection clears the prior authentication condition. If updates still do not resume, use **Reset Radio Ports** below.
+
+Icom session renewal and keepalives now maintain the LAN connection. Band-up/down uses the radio's reported transmit bands where supported; a radio that cannot provide a band plan retains its fallback stepping behavior.
+
+The current band model includes **1.25 m (222 MHz), 33 cm (902 MHz), and 23 cm (1296 MHz)**. Earlier builds could classify these as 70 cm, affecting logging, dupe checks, and scoring. Verify the band shown before logging; do not assume upgrading repairs contacts already stored under the wrong band. Compare suspect contacts with your station records before correcting or exporting them.
+
 ## Reset Radio Ports
 
 Use **Reset Radio Ports** when CAT frequency/mode updates have stopped after a USB interruption, a radio restart, or a lost network connection and the connection has not recovered. First check the radio power, cable or network, and configured device/address. A reset cannot fix a wrong serial device, baud rate, network address, or credentials.

@@ -1,6 +1,6 @@
 # Convert INI settings to JSON
 
-`tr4wconvert` brings legacy **station settings** into the current JSON settings file. It is a separate utility; it does not convert your contest log or complete every part of contest migration.
+`tr4wconvert` brings legacy **station settings** into the current JSON settings file. It is a separate utility for users bringing existing settings from an older Windows installation; it does not convert your contest log or complete every part of contest migration. New Linux and macOS installations start with fresh settings and do not require this conversion.
 
 ## Recommended sequence
 
@@ -21,9 +21,11 @@ Run the matching executable from its installed location. On Windows, for an expl
 .\tr4wconvert.exe --settings "C:\TR4W\settings\tr4w.json" --report-only
 ```
 
-That example reads `C:\TR4W\settings\tr4w.ini` by default. Substitute your actual location. On native Unix packages, invoke the converter by its path without `.exe`.
+That example reads `C:\TR4W\settings\tr4w.ini` by default. Substitute your actual location. Do not look for this utility as a required Linux or macOS installation step.
 
 With no explicit settings path, the utility first considers a settings folder beside itself, then the platform settings location. Always read the reported path; the shell's current directory is not a reliable substitute for that check.
+
+The first-run migration launcher now passes the detected legacy INI path explicitly, including when the destination JSON is in a custom settings directory. Review both paths before accepting conversion.
 
 ## Options
 

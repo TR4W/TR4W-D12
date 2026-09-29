@@ -1,5 +1,7 @@
 # Connect a DX cluster
 
+The main-window status strip now shows the DX Cluster connection state even with the console closed. It identifies the subsystem; open the cluster window for the host and detailed messages.
+
 The cluster console shows the node's messages and lets you send commands. Parsed DX spots feed the [band map](bandmap.md), where contest and display rules determine what you see.
 
 ## Connect and check reception

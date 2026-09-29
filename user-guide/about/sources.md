@@ -4,7 +4,9 @@
 
 | Source | Revision / scope |
 | --- | --- |
-| Development tree | `24f06a30081b607dbca5020fe583d97944be97d8`, version 5.0.22 |
+| Original reference baseline | `24f06a30081b607dbca5020fe583d97944be97d8`, version 5.0.22 |
+| Operator-guide update | Changes through `3753d2ba0327285fde1a11fb0956a010b0a088f9` on main, version 5.0.26; reviewed September 29, 2026 |
+| Published packages | [5.0.26 release assets](https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.26), checked September 29, 2026 |
 | TR4W wiki | `d512ef6d6adfa8c187b6c9c7992af0cc9d60d791`, fetched September 24, 2026 |
 | Public website | [tr4w.net](https://tr4w.net/), consulted September 24, 2026; describes 4.x |
 | Local documentation | Files in the development snapshot above; includes historical manuals and design proposals |

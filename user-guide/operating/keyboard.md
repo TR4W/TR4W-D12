@@ -29,6 +29,12 @@ Learn a small set of commands in a practice contest before adding more. These bi
 
 Ctrl+Enter is a logging action: check the call and exchange before using it. Function-key messages depend on your configuration; review their contents before transmitting.
 
+## Focus and menu shortcuts
+
+Menus now display assigned shortcuts in a separate column. **Ctrl+C**, **Ctrl+V**, and **Ctrl+A** perform normal copy, paste, and select-all operations in focused text controls, including the cluster console and dialogs. Their effect depends on which window has focus.
+
+**Alt+-** toggles autosend. **PgUp**, **PgDn**, **Pause**, and **Ins** can reach the operating actions from tool windows. The band map, log, and cluster console retain their own PgUp/PgDn paging behavior. Practice these actions with transmission disabled before relying on them during a contest.
+
 ## If a shortcut does not work
 
 Return focus to the main operating window and check the matching menu item. A dialog, text field, desktop shortcut, or keyboard layout may affect delivery of the key combination. Record the operating system, active window, and exact combination when reporting a mismatch.

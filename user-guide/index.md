@@ -5,7 +5,7 @@ A free, open-source contest logger rooted in N6TR's TRLOG. TR4W brings keyboard-
 Native on **Windows, macOS, and Linux**. [Install the build for your platform](start/install.md) and check its release-specific notes.
 
 !!! warning "5.x documentation preview"
-    These pages target the **5.0.22 source snapshot**, not the public 4.x manual. They have been checked against source files, but the procedures still need an operator walkthrough. See [Choose your version](start/version.md) before following them.
+    These pages target the **5.x preview, updated through 5.0.26**, not the public 4.x manual. They have been checked against source files, but the procedures still need an operator walkthrough. See [Choose your version](start/version.md) before following them.
 
 For the earlier TR4W version, see the [existing TR4W documentation](https://tr4w.github.io/).
 

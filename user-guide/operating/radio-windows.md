@@ -18,5 +18,13 @@ These panels display what the driver reports; a model's registration does not gu
 
 For a frozen frequency or a disconnected interface, use the checks under [Reset Radio Ports](../station/radio.md#reset-radio-ports).
 
+## Main-window connection status
+
+A strip at the bottom of the main window gives Radio 1, Radio 2, DX Cluster, and Network separate status panels. A condition stays until it changes or clears; an unrelated subsystem cannot overwrite it. Short notices, such as an imported-contact count, still appear on the message line and expire.
+
+Cluster and network text identifies the subsystem. Open its own window for the host/address and full details. Radio panels show the current condition even when opened after a connection failure. A connected network socket alone is not enough to mark an Icom operational: authentication and its control stream must complete.
+
+Saved main-window heights from older builds are adjusted for the new strip. Continue to resize vertically to control how many QSOs are visible.
+
 ??? info "Source check"
     `ui/lcl/uRadioPanelForm.lfm` and `.pas`, particularly `LabelFor`, `SetFlag`, `SyncActiveTint`, and `OpenPanadapterForSlot`; updates arrive through `uPanelUpdate` and `uRadioPolling`.
