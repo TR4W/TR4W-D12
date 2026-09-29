@@ -26,7 +26,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: '';  WA7BNM: 0000;  QRZRUID: 77;  Pxm: Prefix;
    ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: NoDomesticMults;
    P: 0;  AE: RSTQSONumberExchange;  XM: NoDXMults;
-   QP: OnePointPerQSO;  ADIFName: '';  CABName: '';  FriendlyName: ''
+   QP: OnePointPerQSO;  ADIFName: 'AP-SPRINT';  CABName: '';  FriendlyName: ''
 
   SCORING IS OnePointPerQSO, one arm of LOGSTUFF.CalculateQSOPoints:
 
@@ -42,8 +42,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   BLANK CABName AND FriendlyName MEAN "THE ENUM'S SPELLING"; the getters
   below state the value each resolves to, never the empty string.
-  ADIFName is the opposite: blank there is a real answer, and it is
-  stated as the empty string.
+  ADIFName is the opposite: blank there is a real answer -- though this
+  contest's is no longer blank.
+
+  THE ADIF ID WAS BLANK UNTIL 2026-09-29 AND IS NOW 'AP-SPRINT', on NY4I's
+  ruling. It needs NO former id: while the row was blank, ADIF export fell
+  back to the enum's spelling, which is also 'AP-SPRINT' -- so every file
+  TR4W ever exported for this contest carries the id it has now.
 
   EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED. FormatsExchange is
   inherited False, so uCabrilloExchange and uADIFExchange still format
@@ -108,9 +113,7 @@ end;
 
 function TContestAPSprint.GetADIFContestId: string;
 begin
-   (* Blank in the row, and blank is the answer -- no ADIF id is
-      stated for this contest. *)
-   Result := '';
+   Result := 'AP-SPRINT';
 end;
 
 function TContestAPSprint.GetWA7BNMId: integer;

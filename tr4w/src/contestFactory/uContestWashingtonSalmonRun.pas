@@ -31,8 +31,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: 'washington_cty';  WA7BNM: 126;  QRZRUID: 0;
    Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
    DM: DomesticFile;  P: 9;  AE: RSTDomesticOrDXQTHExchange;
-   XM: NoDXMults;  QP: SalmonRunQSOPointMethod;  ADIFName: '';
-   CABName: '';  FriendlyName: 'Washington State Salmon Run'
+   XM: NoDXMults;  QP: SalmonRunQSOPointMethod;  ADIFName: 'WA-QSO-PARTY';
+   CABName: 'WA-SALMON-RUN';  FriendlyName: 'Washington State Salmon Run'
 
   ---------------------------------------------------------------------------
   THE ROW IS NOT WHAT A RUNNING CONTEST USES FOR TWO OF THESE FIELDS, AND THE
@@ -58,13 +58,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   from the sponsor's rules, so this inherits CountyLineCountiesUnlimited --
   what TR4W does today.
 
-  ADIFName IS BLANK, AND BLANK IS A REAL ANSWER HERE: export falls back to the
-  contest's quoted name. ADIF 3.1.7 defines WA-QSO-PARTY ("Washington QSO
-  Party"); whether that is this contest's identifier is NY4I's decision, and
-  this class transcribes the row until he makes it.
+  BOTH NAMES WERE BLANK UNTIL 2026-09-29, AND NY4I RULED BOTH.
 
-  CABName IS BLANK, AND BLANK MEANS "THE ENUM'S SPELLING" -- 'SALMON RUN' from
-  ContestTypeSA, space included. GetCabrilloName states that resolved value.
+    ADIF    'WA-QSO-PARTY' -- ADIF 3.1.7's "Washington QSO Party".
+    Cabrillo 'WA-SALMON-RUN' -- the sponsor's own: "the WA-SALMON-RUN (our
+            official name)", https://salmonrun.wwdxc.org/rules/.
+
+  While they were blank, both exports fell back to the enum's spelling,
+  'SALMON RUN', space included. So every ADIF file exported before the change
+  carries CONTEST_ID 'SALMON RUN', and that is this contest's former id --
+  import accepts it: "Yes support old spellings." The display name is
+  unchanged; it was never the blank.
  *)
 unit uContestWashingtonSalmonRun;
 
@@ -73,7 +77,7 @@ unit uContestWashingtonSalmonRun;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestWashingtonSalmonRun = class(TContestStateQSOPartyBase)
@@ -104,6 +108,7 @@ type
          override. *)
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
@@ -138,15 +143,19 @@ end;
 
 function TContestWashingtonSalmonRun.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it resolves to. *)
-   Result := 'SALMON RUN';
+   Result := 'WA-SALMON-RUN';
 end;
 
 function TContestWashingtonSalmonRun.GetADIFContestId: string;
 begin
-   (* The row's value, blank, transcribed. See the unit header: ADIF 3.1.7
-      defines WA-QSO-PARTY, and adopting it is a decision for NY4I. *)
-   Result := '';
+   Result := 'WA-QSO-PARTY';
+end;
+
+function TContestWashingtonSalmonRun.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* What ADIF export wrote while the row's ADIFName was blank: the enum's
+      spelling. See the unit header. *)
+   Result := ContestIdList(['SALMON RUN']);
 end;
 
 function TContestWashingtonSalmonRun.GetWA7BNMId: integer;

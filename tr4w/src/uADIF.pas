@@ -155,13 +155,19 @@ function ADIFDateStringToQSOTime(sDate: string;
 function ADIFTimeStringToQSOTime(sTime: string;
                                  var qsoTime: TQSOTime): Boolean;
 
-// Look up a contest by its ADIF CONTEST_ID value.  Returns the first
-// ContestType whose ContestsArray[].ADIFName matches sADIFName; otherwise
-// returns the contest at Low(ContestsArray) (DummyContest).  Caller must
-// then verify ContestsArray[Result].ADIFName = sADIFName to distinguish
-// "not found" from "first contest".  Cached single-entry for the common
-// case of all QSOs in a file sharing the same contest.
-function GetContestByADIFName(sADIFName: string): ContestType;
+(* LOOK UP A CONTEST BY ITS ADIF CONTEST_ID. True, with aContest set, when a
+  contest answers to it -- by its current id or by one it was exported under
+  before a rename; False otherwise, INCLUDING for an empty or all-blank value.
+  The rule itself is uContestRegistry.FindContestByADIFContestId; this adds a
+  single-entry cache for the common case of every QSO in a file sharing one
+  contest.
+
+  IT RETURNS WHETHER IT FOUND ONE. It used to return a contest always and
+  leave the caller to compare that row's ADIFName with the input, which
+  cannot recognise a former id -- and which accepted an EMPTY input as
+  "found", landing on the first contest whose ADIFName was blank. *)
+function GetContestByADIFName(const sADIFName: string;
+                              out aContest: ContestType): Boolean;
 
 // Validate an ADIF GUID/UUID string.  Accepts 32 hex characters with
 // optional 8-4-4-4-12 hyphens and optional `{...}` braces.  Used to gate
@@ -298,15 +304,26 @@ implementation
   wanted for SetCharBuffer, which writes a fixed AnsiChar field through
   its own bounds instead of StrPLCopy plus a hand-passed High(). *)
 uses
-   TF;
+   TF,
+   (* FindContestByADIFContestId -- which contest answers to a CONTEST_ID,
+      including the ids it was exported under before a rename. The contest
+      owns that answer; this unit only caches it. *)
+   uContestRegistry;
 
 var
    logger : TLogLogger;
 
    // Single-entry cache for GetContestByADIFName.  All QSOs in a typical
    // import file share the same CONTEST_ID, so this is a hot path.
+   (* THE CACHE HOLDS THE ANSWER AND WHETHER THERE WAS ONE. It used to hold
+      only the contest, and callers told "found" from "not found" by comparing
+      the row's ADIFName with the input -- which cannot work once a contest
+      also answers to a FORMER id. saveLastValid keeps an untouched cache from
+      answering for an empty input. *)
+   saveLastValid    : boolean;
    saveLastADIFName : string;
    saveLastContest  : ContestType;
+   saveLastFound    : boolean;
 
 // ---------------------------------------------------------------------------
 // Lexer helpers
@@ -716,27 +733,22 @@ begin
       end;
 end;
 
-function GetContestByADIFName(sADIFName: string): ContestType;
-var
-   i : ContestType;
+function GetContestByADIFName(const sADIFName: string;
+                              out aContest: ContestType): Boolean;
 begin
-   if sADIFName = saveLastADIFName then
+   if saveLastValid and (sADIFName = saveLastADIFName) then
       begin
-      Result := saveLastContest;
+      aContest := saveLastContest;
+      Result := saveLastFound;
       Exit;
       end;
 
-   Result := Low(ContestsArray); // first contest = DummyContest
-   for i := Low(ContestsArray) to High(ContestsArray) do
-      begin
-      if ContestsArray[i].ADIFName = sADIFName then
-         begin
-         Result := i;
-         saveLastADIFName := sADIFName;
-         saveLastContest  := i;
-         Break;
-         end;
-      end;
+   Result := FindContestByADIFContestId(sADIFName, aContest);
+
+   saveLastADIFName := sADIFName;
+   saveLastContest  := aContest;
+   saveLastFound    := Result;
+   saveLastValid    := True;
 end;
 
 // ---------------------------------------------------------------------------
@@ -962,8 +974,7 @@ begin
 
             tAdifCONTEST_ID:
                begin
-               contest := GetContestByADIFName(fieldValue);
-               if ContestsArray[contest].ADIFName = fieldValue then
+               if GetContestByADIFName(fieldValue, contest) then
                   begin
                   exch.ceContest := contest;
                   end;
@@ -1683,6 +1694,8 @@ end;
 
 initialization
    logger := TLogLogger.GetLogger('uADIF');
+   saveLastValid    := False;
    saveLastADIFName := '';
+   saveLastFound    := False;
 
 end.

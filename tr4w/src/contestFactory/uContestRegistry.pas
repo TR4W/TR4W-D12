@@ -64,6 +64,32 @@ function ContestClassFor(aContest: ContestType): TContestClass;
   the legacy path". *)
 function RegisteredContestCount: integer;
 
+(* WHICH CONTEST ANSWERS TO THIS ADIF CONTEST_ID? True with aContest set when
+  one does; False, with aContest at Low(ContestType), when none does.
+
+  IT ASKS EVERY CONTEST, CLASS OR NOT, THROUGH THE SAME ACCESSOR. A contest
+  with a class answers from its class; one without is asked through a plain
+  TContestBase, whose accessor reads ContestsArray. So there is one rule for
+  "what is this contest's id", and this is not a second copy of it.
+
+  THE ORDER IS THE RULE:
+    1. the input is TRIMMED, and an empty result matches NOTHING. A blank id
+       means "this contest has none", so it can never identify one -- matching
+       it is how an import used to land on the first blank row;
+    2. every contest's CURRENT id is tried first, over the whole table;
+    3. only then its FORMER ids (TContestBase.FormerADIFContestIds).
+  So a rename can never let an old spelling steal a name another contest uses
+  today. Within each pass the lowest ContestType wins, which is what the old
+  lookup did for the one id two rows still share (RSGB-ROLO, CW and SSB).
+
+  COMPARISON IS EXACT after the trim, as the lookup it replaces was.
+
+  WHY IT LIVES HERE AND NOT IN uADIF. "Which contest is this" is a question
+  about the whole set of contests, and this unit is the one that knows which
+  class serves each. uADIF keeps its cache and calls this. *)
+function FindContestByADIFContestId(const aId: string;
+                                    out aContest: ContestType): boolean;
+
 implementation
 
 uses
@@ -109,6 +135,81 @@ begin
          begin
          inc(Result);
          end;
+      end;
+end;
+
+(* The object that answers for aContest: its class, or a plain TContestBase
+   reading ContestsArray when it has none. The caller frees it. *)
+function NewContestObject(aContest: ContestType): TContestBase;
+begin
+   if GRegistry[aContest] <> nil then
+      begin
+      Result := GRegistry[aContest].Create(aContest);
+      end
+   else
+      begin
+      Result := TContestBase.Create(aContest);
+      end;
+end;
+
+function FindContestByADIFContestId(const aId: string;
+                                    out aContest: ContestType): boolean;
+var
+   id: string;
+   c: ContestType;
+   obj: TContestBase;
+   former: TContestIdList;
+   i: integer;
+   haveFormer: boolean;
+   formerContest: ContestType;
+begin
+   Result := False;
+   aContest := Low(ContestType);
+
+   id := Trim(aId);
+   if id = '' then
+      begin
+      Exit;
+      end;
+
+   (* ONE WALK, TWO ANSWERS. A current-id match ends the search at once; a
+      former-id match is only remembered, because a later contest's CURRENT id
+      must still beat it. *)
+   haveFormer := False;
+   formerContest := Low(ContestType);
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      obj := NewContestObject(c);
+      try
+         if obj.ADIFContestId = id then
+            begin
+            aContest := c;
+            Result := True;
+            Exit;
+            end;
+
+         if not haveFormer then
+            begin
+            former := obj.FormerADIFContestIds;
+            for i := 0 to High(former) do
+               begin
+               if former[i] = id then
+                  begin
+                  haveFormer := True;
+                  formerContest := c;
+                  Break;
+                  end;
+               end;
+            end;
+      finally
+         obj.Free;
+         end;
+      end;
+
+   if haveFormer then
+      begin
+      aContest := formerContest;
+      Result := True;
       end;
 end;
 

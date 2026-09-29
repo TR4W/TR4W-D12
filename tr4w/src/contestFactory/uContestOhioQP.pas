@@ -26,14 +26,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: 'ohio_cty';  WA7BNM: 100;  QRZRUID: 0;
    Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
    DM: DomesticFile;  P: 5;  AE: RSTQSONumberAndDomesticQTHExchange;
-   XM: NoDXMults;  QP: OnePhoneTwoCW;  ADIFName: '';
+   XM: NoDXMults;  QP: OnePhoneTwoCW;  ADIFName: 'OH-QSO-PARTY';
    CABName: 'MRRC-OHQP';  CountyLineAllowed: True;
    FriendlyName: 'Ohio QSO Party'
 
-  ITS ADIFName IS EMPTY AND THAT IS A REAL ANSWER, unlike CABName: ADIF defines
-  no contest id for this party, so GetADIFContestId returns '' and uADIF has
-  nothing to match on. CABName is the opposite case -- 'MRRC-OHQP' is stated,
-  and it is the sponsoring club's spelling rather than the enum's.
+  ITS ADIFName IS 'OH-QSO-PARTY', ADIF 3.1.7's id, since 2026-09-29. CABName
+  is a different spelling on purpose -- 'MRRC-OHQP' is the sponsoring club's,
+  not ADIF's and not the enum's.
+
+  ITS FORMER ADIF ID IS 'OHIO QSO PARTY'. The ADIF id was blank until
+  2026-09-29, and while it was, ADIF export fell back to the enum's spelling
+  -- so every file exported before then carries CONTEST_ID 'OHIO QSO PARTY'.
+  Import accepts it, export never writes it: NY4I, "Yes support old
+  spellings."
 
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
   TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- which is exactly
@@ -54,7 +59,7 @@ unit uContestOhioQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestOhioQP = class(TContestStateQSOPartyBase)
@@ -85,6 +90,7 @@ type
          override. *)
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
@@ -134,6 +140,13 @@ begin
       Stating it means the exported file now carries the ADIF identifier
       a sponsor's robot expects, and the class cannot drift from it. *)
    Result := 'OH-QSO-PARTY';
+end;
+
+function TContestOhioQP.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* What ADIF export wrote while the row's ADIFName was blank: the enum's
+      spelling. See the unit header. *)
+   Result := ContestIdList(['OHIO QSO PARTY']);
 end;
 
 function TContestOhioQP.GetWA7BNMId: integer;

@@ -36,17 +36,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   adif name is in fact NC-QSO-PARTY." So VC.pas was changed, with his explicit
   approval, and this class states the corrected value.
 
-  THE COMPATIBILITY COST IS REAL AND WAS MEASURED BEFORE THE CHANGE. D7 holds
-  the same sentence, so every NC log TR4W has EVER exported carries
-  CONTEST_ID = 'North Carolina QSO Party', and GetContestByADIFName matches on
-  exact string equality with no normalisation. Re-importing one of those files
-  now falls through to the first array entry rather than NCQSOPARTY.
-
-  NOTHING IN THE TREE DEPENDED ON THE OLD VALUE -- no corpus set is an NC log,
-  and the only other references were this class and its transcription test.
-  Accepting BOTH spellings on import while emitting only the new one would
-  close the gap for an operator's existing files; that is a change to ADIF
-  import semantics and is NY4I's to call, not this migration's.
+  THE COMPATIBILITY COST WAS REAL AND IS CLOSED. D7 holds the same sentence,
+  so every NC log TR4W has EVER exported carries CONTEST_ID = 'North Carolina
+  QSO Party'. NY4I ruled that import accept both spellings while export writes
+  only the new one -- "Yes support old spellings" (2026-09-29) -- so the
+  sentence is this contest's former id, GetFormerADIFContestIds below.
 
   ===========================================================================
   THIS CLASS DELIBERATELY CHANGES THE SCORE. IT IS THE ONLY CONTEST IN THE
@@ -105,7 +99,7 @@ unit uContestNorthCarolinaQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestNorthCarolinaQP = class(TContestStateQSOPartyBase)
@@ -137,6 +131,7 @@ type
          override. *)
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
@@ -217,6 +212,12 @@ end;
 function TContestNorthCarolinaQP.GetADIFContestId: string;
 begin
    Result := 'NC-QSO-PARTY';
+end;
+
+function TContestNorthCarolinaQP.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* The row's ADIFName until 2026-09-29, and D7's -- see the unit header. *)
+   Result := ContestIdList(['North Carolina QSO Party']);
 end;
 
 function TContestNorthCarolinaQP.GetWA7BNMId: integer;

@@ -26,8 +26,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: 'california_cty';  WA7BNM: 140;  QRZRUID: 0;
    Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
    DM: DomesticFile;  P: 6;  AE: QSONumberDomesticOrDXQTHExchange;
-   XM: NoDXMults;  QP: ThreePointsPerQSO;  ADIFName: '';  CABName: '';
+   XM: NoDXMults;  QP: ThreePointsPerQSO;  ADIFName: 'CA-QSO-PARTY';  CABName: '';
    CountyLineAllowed: True;  FriendlyName: 'California QSO Party'
+
+  ITS FORMER ADIF ID IS 'CALIFORNIA QSO PARTY'. The ADIF id was blank until
+  2026-09-29, and while it was, ADIF export fell back to the enum's spelling
+  -- so every file exported before then carries CONTEST_ID 'CALIFORNIA QSO
+  PARTY'. Import accepts it, export never writes it: NY4I, "Yes support old
+  spellings."
 
   FOUR COUNTIES, AND THE NUMBER IS THE SPONSOR'S RATHER THAN A GUESS. NY4I,
   2026-09-29: "4 since that is the intersection of 4 counties with common 90
@@ -46,7 +52,7 @@ unit uContestCaliforniaQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestCaliforniaQP = class(TContestStateQSOPartyBase)
@@ -77,6 +83,7 @@ type
          override. *)
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
@@ -129,6 +136,13 @@ begin
       Stating it means the exported file now carries the ADIF identifier
       a sponsor's robot expects, and the class cannot drift from it. *)
    Result := 'CA-QSO-PARTY';
+end;
+
+function TContestCaliforniaQP.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* What ADIF export wrote while the row's ADIFName was blank: the enum's
+      spelling. See the unit header. *)
+   Result := ContestIdList(['CALIFORNIA QSO PARTY']);
 end;
 
 function TContestCaliforniaQP.GetWA7BNMId: integer;

@@ -97,6 +97,16 @@ multipliers, CTY.DAT, band lookup and CRC32.
   `TR4W_CTY_FILENAME` — the file resolved at STARTUP — so on macOS it said *"downloaded…
   reloading… reloaded successfully"* having reloaded the old bundle copy. It repoints the name at
   the file it just wrote now.
+- **An ADIF `CONTEST_ID` is resolved by the CONTEST FACTORY, not by `uADIF`.**
+  `uADIF.GetContestByADIFName` only caches; the rule is
+  `uContestRegistry.FindContestByADIFContestId` — input trimmed, a blank matches
+  nothing, every contest's current id first, then each class's
+  `FormerADIFContestIds`. A renamed id keeps its old spelling as a former id so
+  operators' existing files still import (NY4I, 2026-09-29). It used to return a
+  contest always and let the caller compare, which matched an **empty**
+  CONTEST_ID to the first blank row. Export still writes `ADIFName`, else the
+  enum's spelling — that fallback is also why a contest that gains an id lists
+  the enum spelling as a former one.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
 

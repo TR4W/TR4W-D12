@@ -26,7 +26,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: '';  WA7BNM: 82;  QRZRUID: 31;
    Pxm: NoPrefixMults;  ZnM: EUHFCYear;  AIE: NoInitialExchange;
    DM: NoDomesticMults;  P: 0;  AE: RSTZoneExchange;  XM: NoDXMults;
-   QP: OnePointPerQSO;  ADIFName: '';  CABName: '';
+   QP: OnePointPerQSO;  ADIFName: 'EU-HF';  CABName: '';
    FriendlyName: 'European HF Championship'
 
   SCORING IS OnePointPerQSO, one arm of LOGSTUFF.CalculateQSOPoints:
@@ -46,17 +46,20 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   that behaviour is keyed on the multiplier type, which KVP shares, and is
   unaffected by this class.
 
-  FLAGGED, NOT CHANGED: ADIFName IS BLANK, and the ADIF 3.1.7 Contest_ID
-  enumeration lists this contest as 'EU-HF' (EU HF Championship). The
-  blank is transcribed exactly; adopting the standard id is NY4I's call.
+  THE ADIF ID WAS BLANK UNTIL 2026-09-29 AND IS NOW 'EU-HF', the ADIF 3.1.7
+  Contest_ID enumeration's spelling (EU HF Championship), on NY4I's ruling.
+  While it was blank, ADIF export fell back to the enum's spelling, so every
+  file exported before the change carries CONTEST_ID 'EUROPEAN HFC'. That is
+  this contest's former id, and import accepts it: "Yes support old
+  spellings."
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
   inherits TContestFixedPoints.
 
   BLANK CABName AND FriendlyName MEAN "THE ENUM'S SPELLING"; the getters
   below state the value each resolves to, never the empty string.
-  ADIFName is the opposite: blank there is a real answer, and it is
-  stated as the empty string.
+  ADIFName is the opposite: blank there is a real answer -- though this
+  contest's is no longer blank.
 
   EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED. FormatsExchange is
   inherited False, so uCabrilloExchange and uADIFExchange still format
@@ -68,7 +71,7 @@ unit uContestEuropeanHFC;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase, uContestFixedPoints;
 
 type
    TContestEuropeanHFC = class(TContestFixedPoints)
@@ -79,6 +82,7 @@ type
       function GetDisplayName: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
@@ -121,9 +125,14 @@ end;
 
 function TContestEuropeanHFC.GetADIFContestId: string;
 begin
-   (* Blank in the row, and blank is the answer -- no ADIF id is
-      stated for this contest. *)
-   Result := '';
+   Result := 'EU-HF';
+end;
+
+function TContestEuropeanHFC.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* What ADIF export wrote while the row's ADIFName was blank: the enum's
+      spelling. See the unit header. *)
+   Result := ContestIdList(['EUROPEAN HFC']);
 end;
 
 function TContestEuropeanHFC.GetWA7BNMId: integer;

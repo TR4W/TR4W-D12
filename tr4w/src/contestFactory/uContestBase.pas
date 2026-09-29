@@ -152,6 +152,9 @@ type
       MyPark      : string;
    end;
 
+   (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
+   TContestIdList = array of string;
+
    TContestBase = class
    private
       FContest: ContestType;
@@ -176,6 +179,7 @@ type
       function GetDisplayName: string; virtual;
       function GetCabrilloName: string; virtual;
       function GetADIFContestId: string; virtual;
+      function GetFormerADIFContestIds: TContestIdList; virtual;
       function GetWA7BNMId: integer; virtual;
       function GetSubmissionEmail: string; virtual;
       function GetDomesticFileName: string; virtual;
@@ -243,6 +247,34 @@ type
       property DisplayName: string read GetDisplayName;
       property CabrilloName: string read GetCabrilloName;
       property ADIFContestId: string read GetADIFContestId;
+
+      (* EVERY ADIF CONTEST_ID THIS CONTEST HAS BEEN EXPORTED UNDER BEFORE, AND
+         IS NO LONGER. Import accepts them; export never writes them.
+
+         NY4I, 2026-09-29, renaming several ids at once: "Yes support old
+         spellings." An operator's existing files carry whatever TR4W wrote the
+         day they were exported, and a rename must not make those files stop
+         resolving to their contest.
+
+         THE CONTEST OWNS ITS OWN HISTORY, rather than a table in the ADIF unit
+         owning everyone's. A rename is a change to ONE contest, and the old
+         name belongs beside the new one in that contest's file -- where the
+         next person to rename it will see both. A central alias table would be
+         a second place a contest's identity is written down, which is the
+         drift RadioParametersArray demonstrated.
+
+         WHAT GOES HERE is an id TR4W actually EMITTED. That includes the
+         export fallback for a contest whose ADIFName was blank -- ADIF export
+         wrote the enum's spelling (ContestTypeSA) then -- so a contest that
+         gained an ADIF id also lists the spelling it used to be exported under.
+         An id that only differed by surrounding whitespace does NOT go here:
+         the lookup trims its input.
+
+         EMPTY BY DEFAULT, and empty for every contest that has no class. A
+         contest with no class therefore cannot carry a former id -- see the
+         lookup, uContestRegistry.FindContestByADIFContestId. *)
+      property FormerADIFContestIds: TContestIdList read GetFormerADIFContestIds;
+
       property WA7BNMId: integer read GetWA7BNMId;
       property SubmissionEmail: string read GetSubmissionEmail;
       property DomesticFileName: string read GetDomesticFileName;
@@ -295,8 +327,9 @@ type
 
          ADIF IS THE OTHER WAY ROUND AND IS LEFT THAT WAY: an empty ADIFName
          means the contest has no ADIF CONTEST_ID, which is a real answer --
-         GetContestByADIFName matches on it -- so this returns '' rather than
-         inventing one from the enum. *)
+         uContestRegistry.FindContestByADIFContestId matches on it, and never
+         on a blank -- so this returns '' rather than inventing one from the
+         enum. *)
                   
       (* THE REST OF THE ContestsArray ROW.
 
@@ -484,6 +517,13 @@ type
 
    TContestClass = class of TContestBase;
 
+(* A TContestIdList from literals -- what an override of
+   GetFormerADIFContestIds returns: `Result := ContestIdList(['MST']);`.
+
+   ONE COPY OF THE CONSTRUCTION, so no override writes SetLength on its own
+   unassigned result -- which FPC rightly warns about, once per class. *)
+function ContestIdList(const aIds: array of string): TContestIdList;
+
 implementation
 
 uses
@@ -491,6 +531,18 @@ uses
    (* TC_IMPROPERTRANSMITTERCOUNT -- the one message that is NOT contest
       specific: every class-carrying contest counts transmitters the same way. *)
    uTR4WStrings;
+
+function ContestIdList(const aIds: array of string): TContestIdList;
+var
+   i: integer;
+begin
+   Result := nil;
+   SetLength(Result, Length(aIds));
+   for i := 0 to High(aIds) do
+      begin
+      Result[i] := aIds[i];
+      end;
+end;
 
 constructor TContestBase.Create(aContest: ContestType);
 begin
@@ -524,6 +576,14 @@ end;
 function TContestBase.GetADIFContestId: string;
 begin
    Result := ContestsArray[FContest].ADIFName;
+end;
+
+function TContestBase.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* No former ids. ContestsArray has no column for them and must not grow
+      one -- the array is being retired, not extended. nil IS the empty
+      dynamic array; SetLength on an unassigned result draws a warning. *)
+   Result := nil;
 end;
 
 function TContestBase.GetWA7BNMId: integer;

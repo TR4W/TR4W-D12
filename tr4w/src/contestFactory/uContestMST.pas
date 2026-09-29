@@ -26,7 +26,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: '';  WA7BNM: 720;  QRZRUID: 0;
    Pxm: CallSignPrefix;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
    DM: NoDomesticMults;  P: 0;  AE: QSONumberandNameExchange;
-   XM: NoDXMults;  QP: OnePointPerQSO;  ADIFName: 'MST';  CABName: '';
+   XM: NoDXMults;  QP: OnePointPerQSO;  ADIFName: 'ICWC-MST';  CABName: '';
    FriendlyName: 'ICWC Medium Speed Test'
 
   SCORING IS OnePointPerQSO, one arm of LOGSTUFF.CalculateQSOPoints:
@@ -39,10 +39,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   uNewContest shares an arm with CWOPEN for this contest -- operator
   SETUP, not scoring, and it stays there. FCONTEST has no arm for it.
 
-  FLAGGED, NOT CHANGED: ADIFName IS 'MST', and the ADIF 3.1.7 Contest_ID
-  enumeration lists this contest as 'ICWC-MST' (ICWC Medium Speed Test).
-  The row's value is transcribed exactly; whether to adopt the standard
-  id is NY4I's call, as it was for North Carolina.
+  THE ADIF ID WAS 'MST' UNTIL 2026-09-29 AND IS NOW 'ICWC-MST', the ADIF
+  3.1.7 Contest_ID enumeration's spelling (ICWC Medium Speed Test). NY4I
+  ruled the change, and ruled that import keep accepting the old spelling:
+  "Yes support old spellings." So 'MST' is this contest's former id --
+  every MST log TR4W exported before the change carries it. The Cabrillo
+  name stays 'MST' (the enum's spelling); only the ADIF id moved.
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
   inherits TContestFixedPoints.
@@ -62,7 +64,7 @@ unit uContestMST;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase, uContestFixedPoints;
 
 type
    TContestMST = class(TContestFixedPoints)
@@ -73,6 +75,7 @@ type
       function GetDisplayName: string; override;
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
@@ -115,7 +118,13 @@ end;
 
 function TContestMST.GetADIFContestId: string;
 begin
-   Result := 'MST';
+   Result := 'ICWC-MST';
+end;
+
+function TContestMST.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* The row's ADIFName until 2026-09-29 -- see the unit header. *)
+   Result := ContestIdList(['MST']);
 end;
 
 function TContestMST.GetWA7BNMId: integer;

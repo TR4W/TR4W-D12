@@ -26,8 +26,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: '';  WA7BNM: 711;  QRZRUID: 0;  Pxm: CallSignPrefix;
    ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: NoDomesticMults;
    P: 0;  AE: RSTQSONumberExchange;  XM: NoDXMults;
-   QP: OnePointPerQSO;  ADIFName: 'MINITEST-40 ';
-   CABName: 'MINITEST-40 ';  FriendlyName: 'Mini-Test 40'
+   QP: OnePointPerQSO;  ADIFName: 'MINITEST-40';
+   CABName: 'MINITEST-40';  FriendlyName: 'Mini-Test 40'
 
   SCORING IS OnePointPerQSO, one arm of LOGSTUFF.CalculateQSOPoints:
 
@@ -41,11 +41,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   That is contest SETUP, not scoring, and it stays in FCONTEST with the
   rest of contest setup.
 
-  ADIFName AND CABName BOTH END IN A SPACE: 'MINITEST-40 '. Transcribed exactly,
-  because this class changes no behaviour: whatever reads CabrilloName and
-  ADIFContestId gets the same bytes the row gave it. It looks like a typo;
-  it is flagged for NY4I rather than fixed, because a fix could change what
-  an export writes.
+  ADIFName AND CABName BOTH ENDED IN A SPACE -- 'MINITEST-40 ' -- UNTIL
+  2026-09-29, when NY4I ruled it a typo and the row was corrected. Every file
+  exported before then carries the space. It is deliberately NOT listed as a
+  former ADIF id: uContestRegistry.FindContestByADIFContestId trims its input,
+  so the old spelling resolves to this contest by the current id.
 
   THE THREE MINITEST ROWS ARE THREE CLASSES WITH NO BASE BETWEEN THEM --
   uContestMinitest, uContestMini40, uContestMini80 -- following the NA
@@ -114,12 +114,12 @@ end;
 
 function TContestMini40.GetCabrilloName: string;
 begin
-   Result := 'MINITEST-40 ';
+   Result := 'MINITEST-40';
 end;
 
 function TContestMini40.GetADIFContestId: string;
 begin
-   Result := 'MINITEST-40 ';
+   Result := 'MINITEST-40';
 end;
 
 function TContestMini40.GetWA7BNMId: integer;

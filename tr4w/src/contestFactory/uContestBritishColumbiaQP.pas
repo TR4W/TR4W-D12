@@ -26,15 +26,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    Email: '';  DF: 've7_cty';  WA7BNM: 269;  QRZRUID: 0;
    Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
    DM: DomesticFile;  P: 16;  AE: RSTDomesticQTHExchange;
-   XM: NoDXMults;  QP: BCQPQSOPointMethod;  ADIFName: '';  CABName: '';
+   XM: NoDXMults;  QP: BCQPQSOPointMethod;  ADIFName: 'BC-QSO-PARTY';  CABName: '';
    FriendlyName: 'British Columbia QSO Party'
 
   ITS CABName IS BLANK IN THE ROW AND BLANK IS NOT THE ANSWER. PostUnit's rule,
   reproduced by TContestBase.GetCabrilloName, is that an empty CABName means
   ContestTypeSA[ct] -- which for this contest is the four letters BCQP, so that
   is what a submitted log's CONTEST: line reads and what is stated below.
-  ADIFName is the opposite: empty there is a real answer, because ADIF defines
-  no id for this party.
+  ADIFName is 'BC-QSO-PARTY', ADIF 3.1.7's id, since 2026-09-29.
+
+  ITS FORMER ADIF ID IS 'BCQP'. The ADIF id was blank until 2026-09-29, and
+  while it was, ADIF export fell back to the enum's spelling -- so every file
+  exported before then carries CONTEST_ID 'BCQP'. Import accepts it, export
+  never writes it: NY4I, "Yes support old spellings."
 
   ---------------------------------------------------------------------------
   A QUESTION OWED TO NY4I: THIS IS A CANADIAN PROVINCE AND THE PROGRAM CALLS IT
@@ -92,7 +96,7 @@ unit uContestBritishColumbiaQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestBritishColumbiaQP = class(TContestStateQSOPartyBase)
@@ -124,6 +128,7 @@ type
          override. *)
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
+      function GetFormerADIFContestIds: TContestIdList; override;
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
@@ -173,6 +178,13 @@ begin
       Stating it means the exported file now carries the ADIF identifier
       a sponsor's robot expects, and the class cannot drift from it. *)
    Result := 'BC-QSO-PARTY';
+end;
+
+function TContestBritishColumbiaQP.GetFormerADIFContestIds: TContestIdList;
+begin
+   (* What ADIF export wrote while the row's ADIFName was blank: the enum's
+      spelling. See the unit header. *)
+   Result := ContestIdList(['BCQP']);
 end;
 
 function TContestBritishColumbiaQP.GetWA7BNMId: integer;

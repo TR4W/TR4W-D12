@@ -72,6 +72,9 @@ type
       procedure Test_NewYorkAndSalmonRunTranscribeTheirArms;
       procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
+      procedure Test_ADIFIdsResolveOldAndNew;
+      procedure Test_NoADIFIdIsClaimedTwice;
+      procedure Test_NRAUAndJockWhiteRowsAreNotShifted;
    public
       procedure RunAllTests; override;
    end;
@@ -1459,20 +1462,21 @@ begin
    CheckAgainstArray(PAQSOPARTY, 'Pennsylvania QSO Party');
    CheckAgainstArray(VAQP, 'Virginia QSO Party');
 
-   (* NEW YORK AND THE SALMON RUN, MOVED 2026-09-29. Both have a BLANK
-      CABName, which resolves to the enum's spelling -- 'NY-QSO-PARTY' and
-      'SALMON RUN' -- and the Salmon Run's blank ADIFName IS the empty
-      string. *)
+   (* NEW YORK AND THE SALMON RUN, MOVED 2026-09-29. New York has a BLANK
+      CABName, which resolves to the enum's spelling, 'NY-QSO-PARTY'. The
+      Salmon Run's names were blank too until NY4I ruled them the same day --
+      'WA-QSO-PARTY' and 'WA-SALMON-RUN' -- and this is the assertion that the
+      class and the row were changed together. *)
    CheckAgainstArray(NYQP, 'New York QSO Party');
    CheckAgainstArray(SALMONRUN, 'Washington State Salmon Run');
 
    (* THE FIRST FIXED-POINT SLICE, MOVED 2026-09-29. Most of these rows have a
       BLANK CABName and FriendlyName, both of which resolve to the enum's
       spelling -- 'QCWA GOLDEN', 'GRID LOC', 'SA-SPRINT' -- and a blank
-      ADIFName, which IS the empty string. The two Mini-Test rows are the odd
-      ones: both names end in a SPACE ('MINITEST-40 '), transcribed as the row
-      holds it, and this is the assertion that would notice a class quietly
-      trimming it. *)
+      ADIFName, which IS the empty string. The two Mini-Test rows' names ended
+      in a SPACE ('MINITEST-40 ') until NY4I ruled it a typo on 2026-09-29;
+      row and class were corrected together, and this is the assertion that
+      would notice them disagree. *)
    CheckAgainstArray(QCWA, 'QCWA QSO Party');
    CheckAgainstArray(QCWAGOLDEN, 'QCWA Golden');
    CheckAgainstArray(COUNTYHUNTER, 'County Hunter');
@@ -1503,6 +1507,196 @@ begin
    CheckAgainstArray(DARCXMAS, 'DARC Christmas Contest');
 end;
 
+(* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
+   directly of uContestRegistry. uTestADIFRegression asks the same through
+   ADIF import; this is where a failure names the lookup rather than the
+   lexer.
+
+   NY4I, 2026-09-29: "Yes support old spellings." So both the renamed ids and
+   what TR4W wrote before the rename must land on the contest. *)
+procedure TContestFactoryTests.Test_ADIFIdsResolveOldAndNew;
+
+   procedure CheckFinds(const aId: string; aExpected: ContestType);
+   var
+      c: ContestType;
+   begin
+      CheckTrue(FindContestByADIFContestId(aId, c),
+                '[' + aId + '] resolves to a contest');
+      CheckEquals(Ord(aExpected), Ord(c),
+                  '[' + aId + '] -> ' + string(ContestTypeSA[aExpected]));
+   end;
+
+var
+   c: ContestType;
+begin
+   BeginTest('Test_ADIFIdsResolveOldAndNew');
+
+   CheckFinds('ICWC-MST', MST);
+   CheckFinds('MST', MST);
+   CheckFinds('EU-HF', EUROPEANHFC);
+   CheckFinds('EUROPEAN HFC', EUROPEANHFC);
+   CheckFinds('AP-SPRINT', APSPRINT);
+   CheckFinds('WA-QSO-PARTY', SALMONRUN);
+   CheckFinds('SALMON RUN', SALMONRUN);
+   CheckFinds('MINITEST-40', MINI40);
+   CheckFinds('MINITEST-40 ', MINI40);
+   CheckFinds('MINITEST-80', MINI80);
+   CheckFinds('MINITEST-80 ', MINI80);
+   CheckFinds('NC-QSO-PARTY', NCQSOPARTY);
+   CheckFinds('North Carolina QSO Party', NCQSOPARTY);
+   CheckFinds('CA-QSO-PARTY', CALQSOPARTY);
+   CheckFinds('CALIFORNIA QSO PARTY', CALQSOPARTY);
+   CheckFinds('OH-QSO-PARTY', OHIOQSOPARTY);
+   CheckFinds('OHIO QSO PARTY', OHIOQSOPARTY);
+   CheckFinds('BC-QSO-PARTY', BCQP);
+   CheckFinds('BCQP', BCQP);
+   CheckFinds('NY-QSO-PARTY', NYQP);
+
+   (* A contest WITH NO CLASS answers by its current id through the same
+      lookup -- NZ Field Day's row was renamed and it has no class. *)
+   CheckFinds('JW-FD', NZFIELDDAY);
+
+   (* Surrounding whitespace is not part of an id, on either side. *)
+   CheckFinds('  ICWC-MST  ', MST);
+
+   (* A BLANK IS NOT AN ID. The old lookup matched it against the first
+      contest whose ADIFName was blank. *)
+   CheckFalse(FindContestByADIFContestId('', c), 'an empty id matches nothing');
+   CheckEquals(Ord(Low(ContestType)), Ord(c), 'no match answers the first contest');
+   CheckFalse(FindContestByADIFContestId('   ', c), 'an all-blank id matches nothing');
+   CheckFalse(FindContestByADIFContestId('NOT-A-CONTEST', c),
+              'an unknown id matches nothing');
+end;
+
+(* NO IDENTIFIER MAY NAME TWO CONTESTS THROUGH A FORMER ID.
+
+   A former id that equalled some contest's CURRENT id would be silently
+   ignored -- current ids win -- and one that equalled another contest's
+   former id would resolve to whichever sits first in the enum. Both are the
+   kind of mistake a rename makes without anyone noticing, so every former id
+   is checked against every id in the program.
+
+   AND EVERY CURRENT ID IS ALREADY TRIMMED. The lookup trims its input, so an
+   id stored with a space could never be matched by anything -- which is what
+   the Mini-Test rows were until 2026-09-29.
+
+   CURRENT IDS ARE NOT REQUIRED TO BE UNIQUE, and that is recorded rather than
+   hidden: RSGB-ROLO is the id of both the CW and the SSB running. Import
+   resolves it to the first, as it always has. *)
+procedure TContestFactoryTests.Test_NoADIFIdIsClaimedTwice;
+var
+   c, d: ContestType;
+   a, b: TContestBase;
+   former, other: TContestIdList;
+   i, j: integer;
+   formerCount: integer;
+   who: string;
+
+   function Make(aContest: ContestType): TContestBase;
+   begin
+      Result := MakeContest(aContest);
+      if Result = nil then
+         begin
+         Result := TContestBase.Create(aContest);
+         end;
+   end;
+
+begin
+   BeginTest('Test_NoADIFIdIsClaimedTwice');
+   formerCount := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      who := string(ContestTypeSA[c]);
+      a := Make(c);
+      try
+         CheckEquals(Trim(a.ADIFContestId), a.ADIFContestId,
+                     who + ': ADIF id carries whitespace');
+
+         former := a.FormerADIFContestIds;
+         for i := 0 to High(former) do
+            begin
+            inc(formerCount);
+            CheckTrue(former[i] <> '', who + ': a blank former id');
+            CheckEquals(Trim(former[i]), former[i],
+                        who + ': former id carries whitespace');
+
+            for d := Low(ContestType) to High(ContestType) do
+               begin
+               b := Make(d);
+               try
+                  CheckTrue(former[i] <> b.ADIFContestId,
+                            who + ': former id [' + former[i] +
+                            '] is the current id of ' + string(ContestTypeSA[d]));
+                  if d <> c then
+                     begin
+                     other := b.FormerADIFContestIds;
+                     for j := 0 to High(other) do
+                        begin
+                        CheckTrue(former[i] <> other[j],
+                                  '[' + former[i] + '] is a former id of both ' +
+                                  who + ' and ' + string(ContestTypeSA[d]));
+                        end;
+                     end;
+               finally
+                  b.Free;
+                  end;
+               end;
+            end;
+      finally
+         a.Free;
+         end;
+      end;
+
+   (* A FLOOR, so the loop cannot pass by finding nothing to check. Seven
+      classes state a former id as of 2026-09-29 -- MST, European HFC, the
+      Salmon Run, North Carolina, California, Ohio, British Columbia. *)
+   CheckTrue(formerCount >= 7,
+             'expected at least seven former ids, found ' + IntToStr(formerCount));
+end;
+
+(* THREE ROWS WERE SHIFTED BY ONE, SINCE D7.
+
+   NRAU-BALTIC-CW had no friendly name, NRAU-BALTIC-SSB carried the CW one,
+   and NZ FIELD DAY carried the SSB one -- and their WA7BNM calendar ids were
+   shifted the same way, so the calendar menu on NZ Field Day opened the NRAU
+   SSB page. Measured against contestcalendar.com on 2026-09-29: ref=220 is
+   "NRAU-Baltic Contest, CW", ref=222 is "NRAU-Baltic Contest, SSB", and the
+   Jock White Memorial Field Day is not listed at all, so it has no id -- 0,
+   which disables the menu item rather than opening a wrong page.
+
+   NZ FIELD DAY IS RENAMED, per NY4I: the event is the Jock White Memorial
+   Field Day (https://www.nzart.org.nz/activities/contests/jwfd), ADIF and
+   Cabrillo id JW-FD.
+
+   None of the three has a class, so these are asked of a plain TContestBase --
+   which reads the row, and is what the program reads. *)
+procedure TContestFactoryTests.Test_NRAUAndJockWhiteRowsAreNotShifted;
+
+   procedure CheckRow(aContest: ContestType; const aFriendly: string;
+                      aWA7BNM: integer; const aADIF, aCabrillo: string);
+   var
+      row: TContestBase;
+      who: string;
+   begin
+      who := string(ContestTypeSA[aContest]);
+      row := TContestBase.Create(aContest);
+      try
+         CheckEquals(aFriendly, row.FriendlyName, who + ' friendly name');
+         CheckEquals(aWA7BNM, row.WA7BNMId, who + ' WA7BNM id');
+         CheckEquals(aADIF, row.ADIFContestId, who + ' ADIF id');
+         CheckEquals(aCabrillo, row.CabrilloName, who + ' Cabrillo name');
+      finally
+         row.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_NRAUAndJockWhiteRowsAreNotShifted');
+   CheckRow(NRAUBALTICCW, 'NRAU-Baltic Contest, CW', 220, '', 'NRAU-BALTIC-CW');
+   CheckRow(NRAUBALTICSSB, 'NRAU-Baltic Contest, SSB', 222, '', 'NRAU-BALTIC-SSB');
+   CheckRow(NZFIELDDAY, 'Jock White Memorial Field Day', 0, 'JW-FD', 'JW-FD');
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -1528,6 +1722,9 @@ begin
    Test_NewYorkAndSalmonRunTranscribeTheirArms;
    Test_FixedPointContestsTranscribeTheirArms;
    Test_MovedRowValuesStillMatchTheArray;
+   Test_ADIFIdsResolveOldAndNew;
+   Test_NoADIFIdIsClaimedTwice;
+   Test_NRAUAndJockWhiteRowsAreNotShifted;
 end;
 
 end.
