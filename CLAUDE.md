@@ -1873,6 +1873,29 @@ the reasoning rather than the mechanics.
 - **Pascal identifier search is case-insensitive.** Always `grep -i` for Delphi symbols — TR4W spells
   the same identifier differently at declaration, assignment and use, and a case-sensitive grep has
   already produced a false "dead code" conclusion.
+- **A LINE REGEX CANNOT PARSE PASCAL, AND `rg` DOES NOT CHANGE THAT.** `grep -i` answers WHERE AN
+  IDENTIFIER APPEARS. It does not answer a STRUCTURAL question -- how many `case` arms exist, which
+  ones are live, how many call sites a routine has -- and the failure is quiet rather than empty:
+  you get a plausible number that is wrong. Measured in one session, 2026-09-29, three causes:
+
+  | the wrong answer | why |
+  |---|---|
+  | a contest scoring arm reported MISSING | the arm spells it `VAQSOPOINTMETHOD`, the search did not |
+  | 188 `case` arms counted where 91 exist | the regex matched the arms of NESTED cases too |
+  | a second arm reported MISSING | its label is `RadioVHFFDQSOPointMethod {, Championship...}:` -- a BRACE COMMENT SITS BETWEEN THE NAME AND THE COLON |
+
+  The first was nearly reported to NY4I as a port regression, with the D7 arm quoted as proof of
+  what had been lost. Nothing had been lost.
+
+  **`tr4w/build/PascalSource.psm1` reads Pascal the way the COMPILER sees it** -- comments and
+  string literals stripped, block-comment state carried across lines, `{$IFDEF}` treated as live
+  code. Every lint that counts something is built on it, and `Count-LivePChar.ps1` /
+  `Count-LiveAsm.ps1` exist because a raw grep over-reports those by 10x and 2x. Use it, or an
+  `rg -i` for ONE named identifier, and do not invent a regex for the shape of the language.
+
+  `rg` IS the right search tool here, and is what NY4I asks for: `rg -oNI -r '$1' 'QP:(\w+)'`
+  replaces a `grep -o | sed` pair exactly, verified identical. It is faster and shorter. It is
+  not more correct, and reaching for it does not make a text search into a parse.
 
 ### File encodings and line endings
 Two silent-corruption traps live here, and neither produces a compiler diagnostic.
