@@ -3618,10 +3618,33 @@ ANSWERS; they cannot press a key.
       station may claim simultaneous operation in more than one county, state,
       or province." Also new behaviour.
 
-- [ ] **Every other QSO party must be UNCHANGED.** Spot-check one -- California
-      is the useful one, because its junctions are four. `599 SLUI/MONT/ALAM`
-      must still log three QSOs, exactly as before. If it is refused, the
-      unlimited default has been lost.
+- [ ] **California QSO Party now refuses a FIVE-county exchange.** NY4I set the
+      maximum at four -- "4 since that is the intersection of 4 counties with
+      common 90 degree angle borders". `599 SLUI/MONT/ALAM/STAN` must log FOUR
+      QSOs sharing one serial; a fifth county must be refused. Also new
+      behaviour.
+
+- [ ] **Indiana QSO Party now refuses a THREE-county exchange.** Maximum two,
+      per NY4I. Two must still log two QSOs sharing one serial.
+
+      **California was this list's "unchanged" canary until 2026-09-29 and is
+      no longer usable as one** -- it now has a limit of its own. Use a party
+      that states NO maximum instead: Colorado, Minnesota, Missouri, Ohio,
+      Wisconsin, Tennessee, Texas or Arizona. All eight inherit
+      `CountyLineCountiesUnlimited`.
+
+- [ ] **Every QSO party WITHOUT an established maximum must be UNCHANGED.**
+      Spot-check one of the eight above with four counties; it must log four,
+      exactly as before. If it is refused, the unlimited default has been lost
+      -- which is the defect fixed on 2026-09-29, where a class of any kind
+      made the base answer 0 from ContestsArray's boolean and refuse a second
+      QTH.
+
+- [ ] **A contest that is NOT a QSO party must not be asked at all.** Arktika
+      Spring, ARRL Digital and ARRL Field Day each have a class now and none is
+      a QSO party; a multi-QTH exchange in any of them must behave exactly as
+      it did before they were moved. The unit tests assert they accept two;
+      only the bench can say what the operator sees.
 
 - [ ] **ADIF STATE now appears for four QSO parties that never had it.** The
       hand-typed contest-to-state tables in `PostUnit` and `uADIF` were

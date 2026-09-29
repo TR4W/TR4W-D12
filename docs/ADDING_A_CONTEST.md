@@ -219,9 +219,9 @@ today's behaviour exactly while that stays true.
 |---|---:|---|---|
 | Florida QSO Party | **2** | *"Florida stations on a county line (maximum of two counties) may be claimed as a separate QSO and multiplier from each county."* | `uContestFloridaQP` |
 | Michigan QSO Party | **0** | *"No station may claim simultaneous operation in more than one county, state, or province."* | `uContestMichiganQP` |
-| Indiana QSO Party | **2** | two counties at once (NY4I, 2026-09-29) | none yet |
+| Indiana QSO Party | **2** | two counties at once (NY4I, 2026-09-29) | `uContestIndianaQP` |
 | 7QP | **4** | *"County-line contacts may be logged with one entry showing all counties or with separate entries for each county."* -- four being the intersection of four counties meeting at right angles | none yet; multi-state, see below |
-| California QSO Party | **4** | a four-county junction is claimable | none yet |
+| California QSO Party | **4** | a four-county junction is claimable -- NY4I, 2026-09-29: "4 since that is the intersection of 4 counties with common 90 degree angle borders" | `uContestCaliforniaQP` |
 
 **MICHIGAN IS THE ONE CORRECTION SO FAR.** `VC.pas` gives it
 `CountyLineAllowed: True` and the sponsor forbids the practice outright, so
@@ -268,7 +268,7 @@ would duplicate the part that cannot differ.
 |---|---|---|
 | `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
 | `TContestFixedPoints` | mechanism | "a number per mode". Its rule is also a plain function, `FixedModePoints`, so a contest that already has a family base can call it instead of inheriting it -- Object Pascal has one base class to spend |
-| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP (a QSO party by name only), and 7QP / NEQP / IN7QPNE (multi-state, unresolved) |
+| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP (a QSO party by name only), and 7QP / NEQP / IN7QPNE (multi-state, unresolved). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
 
 **THE DEFECT THAT MOVED IT, because the shape will look tempting again.** While
 the rule was on `TContestBase`, the inherited maximum read

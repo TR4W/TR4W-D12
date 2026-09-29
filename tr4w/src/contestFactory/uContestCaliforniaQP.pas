@@ -1,0 +1,201 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* CALIFORNIA QSO PARTY.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: 'california_cty';  WA7BNM: 140;  QRZRUID: 0;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
+   DM: DomesticFile;  P: 6;  AE: QSONumberDomesticOrDXQTHExchange;
+   XM: NoDXMults;  QP: ThreePointsPerQSO;  ADIFName: '';  CABName: '';
+   CountyLineAllowed: True;  FriendlyName: 'California QSO Party'
+
+  FOUR COUNTIES, AND THE NUMBER IS THE SPONSOR'S RATHER THAN A GUESS. NY4I,
+  2026-09-29: "4 since that is the intersection of 4 counties with common 90
+  degree angle borders." A four-county junction is the most counties that can
+  physically meet at a point, and CQP lets a station on one claim all four.
+
+  IT IS THE LARGEST OF THE THREE ANSWERS THAT EXIST SO FAR -- Michigan none,
+  Florida two, California four -- which is precisely why the rule is a COUNT on
+  the base and not a boolean. A flag can express only the first distinction and
+  the wrong answer would read as a legal one.
+ *)
+unit uContestCaliforniaQP;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestStateQSOPartyBase;
+
+type
+   TContestCaliforniaQP = class(TContestStateQSOPartyBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- a class body with no visibility
+         section defaults to public, which would make both X.HostState and
+         X.GetHostState callable. Callers use the property; descendants
+         override the getter. *)
+      function GetDisplayName: string; override;
+
+      (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES.
+
+         Stated, not derived. The inherited getter would reach ContestsArray's
+         P index and arrive at the same 'CA' -- but the base makes it abstract
+         for state parties precisely so that answer is never an accident. *)
+      function GetHostState: string; override;
+
+      (* THE WHOLE ContestsArray ROW, STATED HERE.
+
+         NY4I, 2026-09-29: "all the info in [the row] should go into the contest
+         class." Every getter below returns what the array holds today, so this
+         changes no behaviour -- it moves the ANSWER, so that reading this one
+         file tells you what the contest is without cross-referencing a 185-row
+         table by enum position.
+
+         THE ROW IS NOT DELETED AND MUST NOT BE. It still answers for every
+         contest that has no class, and for every accessor a class does not
+         override. *)
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetPrefixMultiplierType: PrefixMultType; override;
+      function GetZoneMultiplierType: ZoneMultType; override;
+      function GetDXMultiplierType: DXMultType; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetQSOPointMethod: QSOPointMethodType; override;
+
+      (* The county-line maximum, from the sponsor -- see the header. *)
+      function GetCountyLineCountiesMax: integer; override;
+   public
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   end;
+
+implementation
+
+uses
+   uContestFixedPoints,   (* FixedModePoints *)
+   uContestRegistry;
+
+function TContestCaliforniaQP.GetDisplayName: string;
+begin
+   Result := 'California QSO Party';
+end;
+
+function TContestCaliforniaQP.GetHostState: string;
+begin
+   Result := 'CA';
+end;
+
+function TContestCaliforniaQP.GetCabrilloName: string;
+begin
+   Result := 'CALIFORNIA QSO PARTY';
+end;
+
+function TContestCaliforniaQP.GetADIFContestId: string;
+begin
+   Result := '';
+end;
+
+function TContestCaliforniaQP.GetWA7BNMId: integer;
+begin
+   Result := 140;
+end;
+
+function TContestCaliforniaQP.GetQRZRUId: integer;
+begin
+   Result := 0;
+end;
+
+function TContestCaliforniaQP.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestCaliforniaQP.GetDomesticFileName: string;
+begin
+   Result := 'california_cty';
+end;
+
+function TContestCaliforniaQP.GetFriendlyName: string;
+begin
+   Result := 'California QSO Party';
+end;
+
+function TContestCaliforniaQP.GetPrefixMultiplierType: PrefixMultType;
+begin
+   Result := NoPrefixMults;
+end;
+
+function TContestCaliforniaQP.GetZoneMultiplierType: ZoneMultType;
+begin
+   Result := NoZoneMults;
+end;
+
+function TContestCaliforniaQP.GetDXMultiplierType: DXMultType;
+begin
+   Result := NoDXMults;
+end;
+
+function TContestCaliforniaQP.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := DomesticFile;
+end;
+
+function TContestCaliforniaQP.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NoInitialExchange;
+end;
+
+function TContestCaliforniaQP.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberDomesticOrDXQTHExchange;
+end;
+
+function TContestCaliforniaQP.GetQSOPointMethod: QSOPointMethodType;
+begin
+   Result := ThreePointsPerQSO;
+end;
+
+function TContestCaliforniaQP.GetCountyLineCountiesMax: integer;
+begin
+   Result := 4;
+end;
+
+(* ThreePointsPerQSO -- `RXData.QSOPoints := 3`, a flat three whatever the
+   mode. All three numbers are the same and are still written out: the
+   day this contest gains a mode rule, the shape is already here. *)
+procedure TContestCaliforniaQP.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 3, 3);
+end;
+
+initialization
+   RegisterContest(CALQSOPARTY, TContestCaliforniaQP);
+
+end.

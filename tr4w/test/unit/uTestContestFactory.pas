@@ -49,6 +49,8 @@ type
       procedure Test_ArktikaSpringOwnsTheNarrowCabrilloLine;
       procedure Test_ARRLDigiScoresByGridDistance;
       procedure Test_ARRLDigiScoresNothingWithoutBothGrids;
+      procedure Test_TenStatePartiesScoreTheirLegacyArms;
+      procedure Test_TenStatePartiesCountyLineMaxima;
       procedure Test_MovedRowValuesStillMatchTheArray;
    public
       procedure RunAllTests; override;
@@ -400,9 +402,15 @@ begin
    BeginTest('Test_CountyCountIsInertWhereNoLimitIsKnown');
 
    (* A CONTEST WITH NO CLASS AT ALL -- what the program does for most of the
-      table. TContestBase stands in for it here exactly as it does at run
-      time. *)
-   obj := TContestBase.Create(CALQSOPARTY);
+      table. TContestBase stands in for it here exactly as it does at run time.
+
+      IT USED TO BE CALQSOPARTY AND CANNOT BE ANY MORE: California acquired a
+      class on 2026-09-29, and a state party with a stated maximum is the one
+      kind of contest that CAN refuse. The New York QSO Party is a genuine
+      single-state party with no class yet, so it is what the program still
+      does for the majority of the table. Its four-county assertion is the same
+      one, made where it is still true. *)
+   obj := TContestBase.Create(NYQP);
    try
       CheckTrue(obj.ValidateQTHCount(3, msg), 'no class: three QTHs pass');
       CheckTrue(obj.ValidateQTHCount(4, msg),
@@ -679,6 +687,187 @@ end;
    IT STOPS BEING USEFUL THE DAY ContestsArray GOES, and that is correct: at
    that point the class IS the definition and there is nothing left to compare
    against. Delete it then, not before. *)
+(* ---------------------------------------------------------------------------
+   THE TEN STATE QSO PARTIES MOVED ON 2026-09-29
+   ------------------------------------------------------------------------ *)
+
+(* EVERY ONE OF THEM IS PINNED IN DIGITAL, AND THAT IS THE POINT OF THE TEST.
+
+   All four point methods these ten use are written in LOGSTUFF as either a
+   bare assignment or `if Mode = CW then X else Y`. The two-branch shape gives
+   DIGITAL the PHONE value -- checked arm by arm in logstuff.pas, because some
+   arms elsewhere in that case are written `if Mode = PHONE then X else Y` and
+   hand digital the CW value instead. Nothing distinguishes the two by
+   inspection of the class, so the digital case is asserted for all ten rather
+   than for the ones that look interesting.
+
+   THE FLAT METHODS ARE ASSERTED IN DIGITAL TOO. ThreePointsPerQSO and
+   TwoPointsPerQSO cannot get it wrong today, and the assertion is what would
+   catch somebody "tidying" three equal numbers into a mode test later. *)
+procedure TContestFactoryTests.Test_TenStatePartiesScoreTheirLegacyArms;
+
+   procedure CheckPoints(aContest: ContestType; const aWhat: string;
+                         aCW, aPhone, aDigital: integer);
+   var
+      obj: TContestBase;
+   begin
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, aWhat + ' has no registered class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      try
+         CheckEquals(aCW, PointsFor(obj, CW), aWhat + ' CW');
+         CheckEquals(aPhone, PointsFor(obj, Phone), aWhat + ' phone');
+         CheckEquals(aDigital, PointsFor(obj, Digital),
+                     aWhat + ' digital -- the third argument to FixedModePoints');
+      finally
+         obj.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_TenStatePartiesScoreTheirLegacyArms');
+
+   (* ThreePointsPerQSO: RXData.QSOPoints := 3, whatever the mode. *)
+   CheckPoints(CALQSOPARTY, 'California', 3, 3, 3);
+
+   (* TwoPointsPerQSO: RXData.QSOPoints := 2, whatever the mode. *)
+   CheckPoints(INQSOPARTY, 'Indiana', 2, 2, 2);
+   CheckPoints(COLORADOQSOPARTY, 'Colorado', 2, 2, 2);
+   CheckPoints(MINNQSOPARTY, 'Minnesota', 2, 2, 2);
+
+   (* OnePhoneTwoCW: if Mode = CW then 2 else 1 -- digital takes the 1. *)
+   CheckPoints(MOQSOPARTY, 'Missouri', 2, 1, 1);
+   CheckPoints(OHIOQSOPARTY, 'Ohio', 2, 1, 1);
+   CheckPoints(WISCONSINQSOPARTY, 'Wisconsin', 2, 1, 1);
+   CheckPoints(ArizonaQsoParty, 'Arizona', 2, 1, 1);
+
+   (* TwoPhoneThreeCW: if Mode = CW then 3 else 2 -- digital takes the 2. *)
+   CheckPoints(TENNESSEEQSOPARTY, 'Tennessee', 3, 2, 2);
+   CheckPoints(TEXASQSOPARTY, 'Texas', 3, 2, 2);
+end;
+
+(* THE COUNTY-LINE RULE FOR THE TEN, AND THE ASYMMETRY IS DELIBERATE.
+
+   EXACTLY TWO OF THEM HAVE A NUMBER, because exactly two have been looked up
+   in a sponsor's published rules: California four and Indiana two. The other
+   eight inherit CountyLineCountiesUnlimited, which is what TR4W does today --
+   nothing in the program has ever counted the queued counties.
+
+   SO THE EIGHT ARE ASSERTED AS *UNCHANGED BEHAVIOUR*, not as a decision. A
+   number must never be derived from ContestsArray's CountyLineAllowed boolean:
+   it carries no limit, and reading its False arm as zero is the defect that
+   made a contest start refusing a two-QTH exchange the moment it got a class.
+   Arizona is the sharp case -- its row has no such field at all, so the flag
+   reads False, and that means UNKNOWN rather than none. *)
+procedure TContestFactoryTests.Test_TenStatePartiesCountyLineMaxima;
+var
+   party: TContestStateQSOPartyBase;
+   msg: string;
+
+   function PartyFor(aContest: ContestType;
+                     const aWhat: string): TContestStateQSOPartyBase;
+   var
+      obj: TContestBase;
+   begin
+      Result := nil;
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, aWhat + ' has no registered class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      CheckTrue(obj is TContestStateQSOPartyBase,
+                aWhat + ' is not on the state-party base');
+      if not (obj is TContestStateQSOPartyBase) then
+         begin
+         obj.Free;
+         Exit;
+         end;
+      Result := TContestStateQSOPartyBase(obj);
+   end;
+
+   (* The eight with no established number: unlimited, and a four-county
+      junction must still be accepted exactly as it was before the move. *)
+   procedure CheckUnlimited(aContest: ContestType; const aWhat: string);
+   var
+      party: TContestStateQSOPartyBase;
+      msg: string;
+   begin
+      party := PartyFor(aContest, aWhat);
+      if party = nil then
+         begin
+         Exit;
+         end;
+      try
+         CheckEquals(CountyLineCountiesUnlimited, party.CountyLineCountiesMax,
+                     aWhat + ' has no established maximum and must inherit'
+                     + ' unlimited');
+         CheckTrue(party.CountyLineAllowed,
+                   aWhat + ': unlimited must read as allowed');
+         CheckTrue(party.ValidateQTHCount(4, msg),
+                   aWhat + ': a four-county junction must still pass');
+         CheckEquals('', msg, aWhat + ': nothing refused, so nothing said');
+      finally
+         party.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_TenStatePartiesCountyLineMaxima');
+
+   (* CALIFORNIA -- FOUR. NY4I, 2026-09-29: "4 since that is the intersection
+      of 4 counties with common 90 degree angle borders." *)
+   party := PartyFor(CALQSOPARTY, 'California');
+   if party <> nil then
+      begin
+      try
+         CheckEquals(4, party.CountyLineCountiesMax, 'California allows four');
+         CheckTrue(party.CountyLineAllowed, 'California allows a county line');
+         CheckTrue(party.ValidateQTHCount(4, msg),
+                   'California: a four-county junction is the rule');
+         CheckEquals('', msg, 'California: four is accepted silently');
+         CheckFalse(party.ValidateQTHCount(5, msg),
+                    'California: five counties cannot meet at a point');
+         CheckTrue(msg <> '', 'California: a refusal must say why');
+      finally
+         party.Free;
+         end;
+      end;
+
+   (* INDIANA -- TWO. NY4I, 2026-09-29: "Indiana qso party allows 2 counties
+      max at once." *)
+   party := PartyFor(INQSOPARTY, 'Indiana');
+   if party <> nil then
+      begin
+      try
+         CheckEquals(2, party.CountyLineCountiesMax, 'Indiana allows two');
+         CheckTrue(party.CountyLineAllowed, 'Indiana allows a county line');
+         CheckTrue(party.ValidateQTHCount(2, msg),
+                   'Indiana: two counties at once');
+         CheckEquals('', msg, 'Indiana: two is accepted silently');
+         CheckFalse(party.ValidateQTHCount(3, msg),
+                    'Indiana: three counties is too many');
+         CheckTrue(msg <> '', 'Indiana: a refusal must say why');
+      finally
+         party.Free;
+         end;
+      end;
+
+   (* THE EIGHT WITH NO ESTABLISHED NUMBER -- all of them, not a sample, since
+      each one is an independent opportunity to have invented a limit. *)
+   CheckUnlimited(COLORADOQSOPARTY, 'Colorado');
+   CheckUnlimited(MINNQSOPARTY, 'Minnesota');
+   CheckUnlimited(MOQSOPARTY, 'Missouri');
+   CheckUnlimited(OHIOQSOPARTY, 'Ohio');
+   CheckUnlimited(WISCONSINQSOPARTY, 'Wisconsin');
+   CheckUnlimited(TENNESSEEQSOPARTY, 'Tennessee');
+   CheckUnlimited(TEXASQSOPARTY, 'Texas');
+   CheckUnlimited(ArizonaQsoParty, 'Arizona');
+end;
+
 procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
 
    procedure CheckAgainstArray(aContest: ContestType; const aWhat: string);
@@ -725,6 +914,23 @@ begin
    BeginTest('Test_MovedRowValuesStillMatchTheArray');
    CheckAgainstArray(ARKTIKA_SPRING, 'Arktika Spring');
    CheckAgainstArray(ARRLDIGI, 'ARRL Digital');
+
+   (* THE TEN STATE QSO PARTIES MOVED ON 2026-09-29. Each states its whole row
+      as literals, and each is an independent chance to have mistyped one -- in
+      particular the two-step fallbacks, which is why this compares against a
+      plain TContestBase rather than against the record field. California and
+      Texas both have a BLANK CABName in the array and neither means the empty
+      string; Ohio's ADIFName is blank and that one does. *)
+   CheckAgainstArray(CALQSOPARTY, 'California QSO Party');
+   CheckAgainstArray(INQSOPARTY, 'Indiana QSO Party');
+   CheckAgainstArray(COLORADOQSOPARTY, 'Colorado QSO Party');
+   CheckAgainstArray(MINNQSOPARTY, 'Minnesota QSO Party');
+   CheckAgainstArray(MOQSOPARTY, 'Missouri QSO Party');
+   CheckAgainstArray(OHIOQSOPARTY, 'Ohio QSO Party');
+   CheckAgainstArray(WISCONSINQSOPARTY, 'Wisconsin QSO Party');
+   CheckAgainstArray(TENNESSEEQSOPARTY, 'Tennessee QSO Party');
+   CheckAgainstArray(TEXASQSOPARTY, 'Texas QSO Party');
+   CheckAgainstArray(ArizonaQsoParty, 'Arizona QSO Party');
 end;
 
 procedure TContestFactoryTests.RunAllTests;
@@ -742,6 +948,8 @@ begin
    Test_ArktikaSpringOwnsTheNarrowCabrilloLine;
    Test_ARRLDigiScoresByGridDistance;
    Test_ARRLDigiScoresNothingWithoutBothGrids;
+   Test_TenStatePartiesScoreTheirLegacyArms;
+   Test_TenStatePartiesCountyLineMaxima;
    Test_MovedRowValuesStillMatchTheArray;
 end;
 
