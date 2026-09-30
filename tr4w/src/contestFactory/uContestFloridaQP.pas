@@ -140,13 +140,13 @@ end;
    written where the contest's name has to be asked for. It is expressed here as
    behaviour instead.
 
-   THE LEGACY TESTS STAY IN PLACE, and the reason CHANGED on 2026-09-29 when
-   /NOFACTORY was deleted. It used to be that Florida still reached
-   RSTDomesticOrDXQTHExchange under that switch, so removing them would have
-   made the A/B meaningless. The A/B is frozen bytes now and no longer runs the
-   legacy arm at all -- so what keeps them is simply that EVERY CONTEST WITHOUT
-   A CLASS still goes through them. They become removable when the last one has
-   a class, not before. *)
+   THE LEGACY FLORIDA-NAMED TESTS WERE DELETED ON 2026-09-29. They were kept
+   while /NOFACTORY still let Florida reach RSTDomesticOrDXQTHExchange; when that
+   switch went, the exporter's `aContest.FormatsExchange` seam became the only
+   route and it exits before the case, so a branch testing for Florida BY NAME
+   could only ever be reached by Florida -- i.e. never. The SHARED ARM
+   (RSTDomesticOrDXQTHExchange) stays, unchanged for every contest without a
+   class; only the two `Contest = FLORIDAQSOPARTY` tests inside it are gone. *)
 function TContestFloridaQP.GetFormatsExchange: boolean;
 begin
    Result := True;

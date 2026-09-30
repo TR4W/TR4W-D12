@@ -469,13 +469,12 @@ begin
     ClassDomesticOrDXQTHExchange:
       begin
         (* Reached only when the contest has no class -- both contests that use
-           this exchange type now format it themselves, above. Kept because a
-           contest can be un-registered and this must still work. *)
+           this exchange type (ARRL and Winter Field Day) now format it
+           themselves, above. The `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
+           that overwrote csQTHString here (issue 407) was deleted 2026-09-29:
+           only those two could reach it and the class exits first. Kept because
+           a contest can be un-registered and this must still work. *)
         SetMyEx('%-3s %-7s ', [my.MyFDClass, my.MySection]);
-        if Contest in [ARRLFIELDDAY, WINTERFIELDDAY] then
-           begin
-           csQTHString := string(rx.QTHString);   // Issue 407 ny4i
-           end;
         SetHisEx('%-3s %-7s', [string(rx.ceClass), csQTHString]);
       end;
 
@@ -534,23 +533,13 @@ begin
               end
            else
               begin
-              if Contest = FLORIDAQSOPARTY then
-                 begin
-                 csQTHString := string(rx.QTH.Prefix);
-                 end
-              else
-                 begin
-                 csQTHString := string(rx.DXQTH);
-                 end;
-              end;
-           end
-        else if rx.QTHString = 'DX' then
-           begin
-           if Contest = FLORIDAQSOPARTY then
-              begin
-              csQTHString := string(rx.QTH.Prefix);
+              csQTHString := string(rx.DXQTH);
               end;
            end;
+        (* The Florida QP's two `Contest = FLORIDAQSOPARTY` tests (DXCC prefix in
+           place of the DXQTH text) were deleted 2026-09-29: TContestFloridaQP
+           answers FormatsExchange and exits first, so only Florida could reach
+           them. *)
 
         SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
         SetMyEx('%-3s %-7s', [RSTSent, cMyState]);

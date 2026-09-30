@@ -178,9 +178,12 @@ end;
    log a robot scorer reads wrongly.
 
    THE RECEIVED QTH IS THE QSO'S OWN, not the his-QTH the exporter selected.
-   The legacy arm says so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
+   The legacy arm said so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
    that overwrote csQTHString just before use (issue 407) -- one more contest
-   test, now expressed by simply not using the parameter. *)
+   test, now expressed by simply not using the parameter. That branch was
+   DELETED 2026-09-29: this class exits first, so only these two contests could
+   reach it. The shared arm (ClassDomesticOrDXQTHExchange) stays, for contests
+   without a class. *)
 function TContestARRLFieldDay.GetFormatsExchange: boolean;
 begin
    Result := True;

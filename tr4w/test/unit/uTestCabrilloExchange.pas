@@ -375,7 +375,7 @@ var rx: ContestExchange; my: TMyStationExchange; pnr: integer; MyEx, HisEx: stri
 begin
    BeginTest('Test_ClassSection_FieldDay');
    rx := EmptyRx;  rx.ceClass := '2A';  rx.QTHString := 'SC';  my := EmptyMy;  my.MyFDClass := '3A';  my.MySection := 'GA';  pnr := 0;
-   FormatCabrilloExchange(ClassDomesticOrDXQTHExchange, ARRLFIELDDAY, '', '', rx, my, '', '', '', '', 1, pnr, MyEx, HisEx);
+   FormatCabrilloExchange(ClassDomesticOrDXQTHExchange, ARRLFIELDDAY, '', '', rx, my, '', '', 'SC', '', 1, pnr, MyEx, HisEx);
    CheckEquals('3A  GA      ', MyEx,  'FD MyEx');
    CheckEquals('2A  SC     ', HisEx, 'FD HisEx');
 end;
