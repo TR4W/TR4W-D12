@@ -39,6 +39,9 @@ which side of that seam you are on before you change anything.
 | the **class** in this factory | `docs/ADDING_A_CONTEST.md` |
 
 `Lint-DomCoverage.ps1` checks the ~126 domestic configs under `target/dom/`.
+`Lint-ContestNameTests.ps1` ratchets per file the tests of the global `Contest`
+by name outside this directory — when you move a branch into a class, lower that
+file's ceiling in the same commit.
 
 ## Standing constraint
 

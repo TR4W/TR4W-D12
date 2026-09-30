@@ -211,6 +211,11 @@ $lints = @(
    # the opposite, which is why it lasted: a missing call breaks no build, no
    # test and no corpus run. This is the only thing that disagrees.
    @{ Name = 'Lint-CrashLogInstalled'; Arg = $Tr4wDir; NeedsFpc = $false }
+
+   # SHARED CODE MAY NOT ASK "WHICH CONTEST IS THIS". A per-file ratchet on
+   # `Contest = X`, `Contest in [...]` and `case Contest of` outside
+   # src\contestFactory\: what differs about a contest belongs in its class.
+   @{ Name = 'Lint-ContestNameTests'; Arg = $src; NeedsFpc = $false }
 )
 
 $failed  = 0

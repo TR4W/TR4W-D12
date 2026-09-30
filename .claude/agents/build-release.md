@@ -60,6 +60,12 @@ Add a lint by editing the array in `Run-Lints.ps1` — **one place**. The list
 previously lived only in `tr4w.dproj`'s PreBuildEvent, so it gated msbuild and
 nothing else.
 
+**`Lint-ContestNameTests` is a per-file ratchet** (`$CEILINGS` table in the
+script; `-List` prints the lines, `-Emit` the table, `-SelfTest` the fixture).
+It counts `Contest = X`, `Contest in [...]` and `case Contest of` (one per case,
+not per arm) outside `src\contestFactory\`. When a file's count drops, lower its
+ceiling — the script names the files that are below theirs.
+
 **`Lint-PascalBeginEnd` and `Lint-ChangedPascal` do NOT gate the build.** The
 first runs as a warn-only `PostToolUse` hook; the second is run by hand.
 
