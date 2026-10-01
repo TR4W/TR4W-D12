@@ -545,6 +545,10 @@ So the CONTEST owns the bands it uses, and the scoring call answers 0 for any
 other band. The QSO is logged normally. Idaho (160/80/40/20/15/10 m) is the
 first contest to state it.
 
+**And no multiplier credit either** (NY4I, 2026-10-01: *"correct, no multiplier
+credit for off-band QSOs"*). A new country worked on 30 m during a contest
+without WARC is in the log, scores 0 and counts no multiplier.
+
 ### 7.5 Idaho QSO Party rulings owed to the class (NY4I, 2026-10-01)
 
 - **QRP means OUR power** -- the entrant's Cabrillo `CATEGORY-POWER` from the New
