@@ -547,7 +547,7 @@ Each is behaviour-preserving unless marked.
 
 | step | what | gate |
 |---|---|---|
-| **M0** | **Decide Q1 and Q3** (Q2 is ruled: no interim fix). Build the legacy-fixture harness (§8.1) | the harness |
+| **M0** | **Decide Q3** (Q1 and Q2 are ruled). Build the legacy-fixture harness (§8.1) | the harness |
 | **M1** | **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
 | **M2** | **Setup head reads the class.** `ContestDefinition`, `InHostState`, `Active*` written from the class's traits. Arms stay. Freeze a setup fixture first: every `ContestType` x station variants (in-state/out, K/VE/DX) -> `Active*` and settings | setup fixture; corpus |
 | **M3** | **Scoring finishes on the class.** The ten secondary `ActiveQSOPointMethod` readers move into their contests (§2; **behaviour change** for an operator override). Family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
@@ -589,9 +589,17 @@ is read from it.
 Renumbered 2026-10-01. Each one names the question it came from: **Cn** from
 this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 
-- **Q1** (C2). ARRL Field Day's DX multiplier (inventory D8): the class says
-  `ARRLDXCC`, while the arm says `NoDXMults` and wins. Which is right? Correct
-  the class before M2 makes it the source.
+- **Q1** (C2). **RULED 2026-10-01 (NY4I): ARRL Field Day has NO multipliers at all.**
+  `NoDXMults` (the setup arm) is right and the class's `ARRLDXCC` is wrong; the
+  class is corrected before M2 makes it the source. A DX station CAN be worked:
+  it sends a class and `DX` (e.g. `1D DX`) where a US station sends a section
+  (`1A WCF`). **DX IS NOT AN ARRL SECTION.** It goes in the section POSITION of
+  the Cabrillo QSO line but NOT in ADIF's `ARRL_SECT` -- the Field Day class
+  already emits it that way. NY4I: legacy used one `QTHString` for both, which
+  is why the interchange worked, *"but I find it better to be explicit about the
+  source and never call DX an ARRL section."* So the Field Day exchange models
+  section and DX as distinct (M4 export, M5 import/parse); `QTHString` is not
+  the representation.
 - **Q2** (old Q2, Finding 1). **RULED 2026-10-01: no.** Nothing is fixed for the
   interim; the table retires with the setting, and Idaho gets its own class (§7.2).
 - **Q3** (C1 + old Q1, Finding 2). Every corpus log stores the seven settings as
