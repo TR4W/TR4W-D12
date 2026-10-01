@@ -481,6 +481,14 @@ that should not be borrowing NEQP at all. The end state is an **Idaho QSO Party
 class** owning its own rules -- 1 point phone, 2 points CW or digital, county line
 at most 2 (NY4I, 2026-10-01) -- at which point its `.cfg` no longer names a point
 method and the table cannot touch it.
+**AND NO `.cfg` BORROWS ANOTHER CONTEST'S TYPE** (NY4I, 2026-10-01: *"The only
+contest that should say CONTEST = NEQP is the NEQP"*). An event is a `ContestType`
+and a class of its own, never a `.cfg` naming a look-alike and overriding its
+settings. Measured 2026-10-01: of the 15 tracked `.cfg` files, Idaho's is the ONLY
+one that borrows -- the 13 corpus logs and `tr4wserver.cfg` do not -- and there is
+no Idaho `ContestType` at all; the file arrived with D7 4.129.1 (`f93d06dc`)
+alongside `IDAHO.DOM` / `IDAHO_CTY.DOM`. The end state adds `IDAHOQSOPARTY` with its
+class, and the `.cfg` names it.
 
 It changes what an existing `.cfg` selects, but the change is towards what the
 operator wrote.
