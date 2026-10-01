@@ -225,7 +225,7 @@ today's behaviour exactly while that stays true.
 | California QSO Party | **4** | a four-county junction is claimable -- NY4I, 2026-09-29: "4 since that is the intersection of 4 counties with common 90 degree angle borders" | `uContestCaliforniaQP` |
 | North Carolina QSO Party | **2** | *"A maximum of two counties may be worked simultaneously under this provision."* -- https://ncqsoparty.org/rules/ | `uContestNorthCarolinaQP` |
 | New York QSO Party | **2** | NY4I 2026-09-29: *"NY allows up to 2 counties on a county line."* | `uContestNewYorkQP` |
-| Idaho QSO Party | **2** | NY4I 2026-10-01: *"ID QP allows up to 2 counties on a county line."* Scoring per NY4I the same day: 1 point phone, 2 points CW or digital | none yet -- today a `.cfg` borrowing `CONTEST = NEQP`; it needs its own class |
+| Idaho QSO Party | **2** | NY4I 2026-10-01: *"ID QP allows up to 2 counties on a county line."* Scoring per NY4I the same day: 1 point phone, 2 points CW or digital | `uContestIdahoQP` -- a new `ContestType`, `IDAHOQSOPARTY` (2026-10-01). The sponsor agrees: *"Idaho stations on a county line may be claimed as a QSO and a multiplier from each county (2 QSO's and 2 multipliers)."* -- https://www.idahoqsoparty.org/rules.htm. Until then it was a `.cfg` borrowing `CONTEST = NEQP` |
 | Washington State Salmon Run | **2** | *"In the case of 3-county or more intersections, and in accordance with the MARAC rules, only one county line consisting of two counties may be run at a time."* -- https://salmonrun.wwdxc.org/rules/ | `uContestWashingtonSalmonRun` |
 
 **THE ARRAY'S FLAG DISAGREES WITH THE RULES FOR HALF OF THESE.** Michigan's row

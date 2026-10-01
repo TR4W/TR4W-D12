@@ -1298,7 +1298,12 @@ type
     IN7QPNE,
     MST ,        // 4.110.5
     SST,
-    RTC          // Real-Time Contest (COS) -- exchange: RST + serial + 4-char grid; distance-based scoring
+    RTC,         // Real-Time Contest (COS) -- exchange: RST + serial + 4-char grid; distance-based scoring
+    // APPENDED, NEVER INSERTED: the ORDINAL is persisted outside this program --
+    // the binary .TRW record's ceContest byte (import), the multi-op packet's
+    // ContestExchange, and HamScore's <contestnr>. The SQLite log stores the
+    // ContestTypeSA spelling instead. See uContestIdahoQP.
+    IDAHOQSOPARTY
     );
 
     { NOTE: pls ensure VC INTERFACEDRADIOTYPE and LOGRADIO INTEFACEDRADIOTYPE ARE IN THE SAME ORDER }
@@ -3764,7 +3769,7 @@ type
   end;
 
 const
-QSOPartiesCount = 20;
+QSOPartiesCount = 21;
 
   QSOParties                         : array[1..QSOPartiesCount] of TUSQSOPartyRecord =
   (
@@ -3788,7 +3793,8 @@ QSOPartiesCount = 20;
   (InsideStateDOMFile:'va';         {OutsideStateDOMFile:'VA';         }StateName:'VA'),
   (InsideStateDOMFile:'in7qpne';    {OutsideStateDOMFile:'IN7QPNE';    }StateName:'IN7QPNE'),
   (InsideStateDOMFile:'arizona';    {OutsideStateDOMFile:'ARIZONA';    }StateName:'AZ'),
-  (InsideStateDOMFile:'missouri';   {OutsideStateDOMFile:'MISSOURI';   }StateName:'MO')
+  (InsideStateDOMFile:'missouri';   {OutsideStateDOMFile:'MISSOURI';   }StateName:'MO'),
+  (InsideStateDOMFile:'idaho';                                         StateName:'ID')     // P = 21, IDAHOQSOPARTY
   );
 {*)}
 
@@ -4033,7 +4039,9 @@ QSOPartiesCount = 20;
  ({Name: 'IN7QPNE';                    }Email: '';                       DF: 'in7qpne_cty';            WA7BNM: 0000; {SK3BG:  nil ;        } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 18; AE: RSTDomesticQTHExchange;                XM:NoDXMults; QP:PAQSOPointMethod; ADIFName:'IN7QPNE-QSO-PARTY';   CABName:'IN7QPNE-QSO-PARTY'; FriendlyName: 'Combined Indiana, 7th Call Area, New England and Delaware QSO Party'),     // 4.88.2
  ({Name: 'MST';                        }Email: '';                       DF: '';                  WA7BNM:  720; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: CallSignPrefix;        ZnM: NoZoneMults; AIE:NoInitialExchange ; DM: NoDomesticMults; P: 0; AE: QSONumberandNameExchange;             XM:NoDXMults; QP:OnePointPerQSO; ADIFName:'ICWC-MST';   CABName:''; FriendlyName: 'ICWC Medium Speed Test'),          // 4.110.5
  ({Name: 'SST';                        }Email: 'k1usn.radioclub.sst@gmail.com';   DF: 'naqp';              WA7BNM:  681; {SK3BG: 'naqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: NameAndDomesticOrDXQTHExchange;              XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'K1USN-SST';   CABName:'K1USNSST'; FriendlyName: 'K1USN Slow Speed Test'),
- ({Name: 'RTC';                        }Email: '';                       DF: '';                  WA7BNM:  782; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: GridSquares;     P: 0; AE: RSTQSONumberAndGridSquareExchange;          XM:NoDXMults; QP:RTCQSOPointMethod; ADIFName:'RTC';   CABName:'RTC'; FriendlyName: 'Real Time Contest')   // Issue #902 Real-Time Contest (COS)
+ ({Name: 'RTC';                        }Email: '';                       DF: '';                  WA7BNM:  782; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: GridSquares;     P: 0; AE: RSTQSONumberAndGridSquareExchange;          XM:NoDXMults; QP:RTCQSOPointMethod; ADIFName:'RTC';   CABName:'RTC'; FriendlyName: 'Real Time Contest'),   // Issue #902 Real-Time Contest (COS)
+ (* Name: 'IDAHO QSO PARTY'. Stated in full by uContestIdahoQP, which owns it; the rules and their sources are in that unit's header. *)
+ (Email: '';                       DF: 'idaho_cty';         WA7BNM:  305; QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 21; AE: RSTDomesticOrDXQTHExchange;                  XM:ARRLDXCCWithNoUSAOrCanada;  QP:ARRLFieldDayQSOPointMethod; ADIFName:'ID-QSO-PARTY';   CABName:'ID-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Idaho QSO Party')
  );
 
 
@@ -4227,7 +4235,8 @@ QSOPartiesCount = 20;
       'IN7QPNE',
       'MST',           // 4.110.5
       'SST',
-      'RTC'            // Issue #902
+      'RTC',           // Issue #902
+      'IDAHO QSO PARTY'
      );
 
   const
@@ -4462,7 +4471,11 @@ QSOPartiesCount = 20;
       ({Name: 'IN7QPNE     ';               }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM0),     // 4.99.7
       ({Name: 'MST';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB0 + ciMM0 + ciRTC1),        // 4.110.5
       ({Name: 'SST';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1),
-      ({Name: 'RTC';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1)        // Issue #902
+      ({Name: 'RTC';                        }ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM0 + ciMB1 + ciMM0 + ciRTC1),       // Issue #902
+      (* IDAHO QSO PARTY -- "Stations may be worked once per mode, per band" (QB1 QM1);
+         a multiplier "is counted once per mode, regardless of the number of bands" (MB0 MM1);
+         160-10 m only (VHF0). https://www.idahoqsoparty.org/rules.htm *)
+      (ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1)
 
         );
 

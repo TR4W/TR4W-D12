@@ -344,6 +344,8 @@ Section "Domestic multiplier files" Secdom
    File ..\target\dom\hawaii.dom
    File ..\target\dom\hungary.dom
    File ..\target\dom\iaruhq.dom
+   File ..\target\dom\IDAHO.DOM
+   File ..\target\dom\IDAHO_CTY.DOM
    File ..\target\dom\in7qpne.dom
    File ..\target\dom\in7qpne_cty.dom
    File ..\target\dom\illinois_cty.dom

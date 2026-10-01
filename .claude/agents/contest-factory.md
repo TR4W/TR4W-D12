@@ -38,6 +38,16 @@ which side of that seam you are on before you change anything.
 | the **data** — a new `ContestType` in `VC.pas`, `fcontest.pas` init, a `.cfg` in `target/dom/` | `docs/ADDING_A_NEW_CONTEST.md` |
 | the **class** in this factory | `docs/ADDING_A_CONTEST.md` |
 
+**No `.cfg` borrows another contest's type** (NY4I, 2026-10-01: *"The only
+contest that should say CONTEST = NEQP is the NEQP."*). A new event is a new
+`ContestType` -- **appended**, because the ordinal is persisted (the `.TRW`
+record, the multi-op packet, HamScore's `<contestnr>`) -- plus a class. Idaho
+(`uContestIdahoQP`) is the worked example: enum, the three `VC.pas` rows, a
+`QSOParties` entry for a state party (and both `.dom` files in `full.nsi`, which
+`Lint-DomCoverage` demands), the class, and a `.cfg` that overrides nothing.
+`docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated from `git ls-files`, so it
+cannot see a new unit until it is committed -- regenerate after the commit.
+
 `Lint-DomCoverage.ps1` checks the ~126 domestic configs under `target/dom/`.
 `Lint-ContestNameTests.ps1` ratchets per file every use of a `ContestType` member as
 a comparison operand (any operand, not just the global `Contest`), an `in [...]`

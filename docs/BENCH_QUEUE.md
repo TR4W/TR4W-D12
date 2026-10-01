@@ -23,6 +23,26 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-01 -- THE IDAHO QSO PARTY HAS ITS OWN CONTEST
+
+`IDAHOQSOPARTY` is a new contest type with its own class (`uContestIdahoQP`); the
+shipped `Idaho QSO Party.cfg` no longer borrows `CONTEST = NEQP`. Unit tests pin
+the class; **nothing automated types an Idaho exchange**, and the multiplier
+lists come from `.dom` files no gate loads. To exercise:
+
+- **In-state** (`MY STATE` an Idaho county, e.g. ADA): states, Canadian
+  provinces and DX countries are multipliers, and every Idaho county counts as
+  the ONE multiplier "Idaho". Before this change in-state got the 44 counties
+  and no states or provinces at all -- `IDAHO.DOM` wrote `INCLUDE S50.DOM`
+  without the word `FILE`, which `logdom` silently skips.
+- **Out-of-state**: each of the 44 counties is its own multiplier; nothing else.
+- **Points**: CW 2, phone 1, digital 2, FM 1 -- the old `.cfg` scored CW 4 and
+  phone 2 through the rotated spelling table.
+- **County line**: a third county in one exchange is refused; two are accepted.
+- **Export**: Cabrillo `CONTEST: ID-QSO-PARTY`, ADIF `CONTEST_ID` `ID-QSO-PARTY`.
+
+---
+
 ## Added 2026-09-11 -- WHAT NY4I'S "WERE THEY REFERENCED?" QUESTION FOUND
 
 He asked whether each deleted `csRem` row had been checked for references. It

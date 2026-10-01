@@ -111,8 +111,9 @@ into 508 comparison-or-arm records --
    two disagree for 29 registered contests (section 7, D9).
 5. **An `Active*` value is a DEFAULT, not a fact.** The operator's `.cfg` can
    set `EXCHANGE RECEIVED`, `QSO POINT METHOD` and the four multiplier commands
-   (`uSettingsEffects.ApplyMultiplierToken`), and the one shipped contest
-   config does exactly that (`target/dom/Idaho QSO Party.cfg`). So "reach" in
+   (`uSettingsEffects.ApplyMultiplierToken`). The one shipped contest config
+   that did (`target/dom/Idaho QSO Party.cfg`, borrowing NEQP) no longer does:
+   Idaho is `IDAHOQSOPARTY` with a class since 2026-10-01. So "reach" in
    this document means "the contests that reach this value with no operator
    override". That is the right basis for deciding where a rule belongs; it is
    not a proof that an arm is dead.

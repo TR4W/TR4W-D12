@@ -74,6 +74,7 @@ type
       procedure Test_FourBespokeArmsCountyLineMaxima;
       procedure Test_NewYorkTranscribesItsArm;
       procedure Test_SalmonRunScoresTheCurrentRules;
+      procedure Test_IdahoOwnsItsRules;
       procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
       procedure Test_ADIFIdsResolveOldAndNew;
@@ -1323,6 +1324,85 @@ begin
    CheckCountyLineMaximum(SALMONRUN, 'Salmon Run', 2);
 end;
 
+(* THE IDAHO QSO PARTY -- A NEW ContestType WITH ITS OWN CLASS, 2026-10-01.
+
+   Until then it was a .cfg borrowing CONTEST = NEQP, whose
+   QSO POINT METHOD = ONE PHONE TWO CW the rotated spelling table read as
+   TwoPhoneFourCW -- 4 for CW, 2 for phone. The CW and phone assertions below
+   are what would fail against that.
+
+   NY4I, 2026-10-01: "1 point phone, 2 points CW or digital", county line at
+   most 2. The sponsor (https://www.idahoqsoparty.org/rules.htm) agrees on
+   both. FM is a phone mode -- the assertion that would catch FixedModePoints,
+   which files FM with digital.
+
+   THE NAMES ARE ADIF 3.1.7's AND WA7BNM's: ID-QSO-PARTY for both. And NO
+   FORMER ADIF ID: Idaho logs were exported as NEQP and cannot be told apart
+   from NEQP's, so 'NEQP' must keep resolving to NEQP. *)
+procedure TContestFactoryTests.Test_IdahoOwnsItsRules;
+var
+   obj: TContestBase;
+   c: ContestType;
+begin
+   BeginTest('Test_IdahoOwnsItsRules');
+   obj := MakeContest(IDAHOQSOPARTY);
+   CheckTrue(obj <> nil, 'Idaho QSO Party has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckEquals(2, PointsFor(obj, CW), 'Idaho CW is 2 -- not TwoPhoneFourCW''s 4');
+      CheckEquals(1, PointsFor(obj, Phone), 'Idaho phone is 1 -- not TwoPhoneFourCW''s 2');
+      CheckEquals(2, PointsFor(obj, Digital), 'Idaho digital is 2, with CW');
+      CheckEquals(1, PointsFor(obj, FM), 'Idaho FM is phone, 1');
+
+      CheckTrue(obj is TContestStateQSOPartyBase,
+                'Idaho is not on the state-party base');
+      CheckEquals('ID', obj.HostState, 'Idaho host state');
+      CheckTrue(obj.IsUSQSOParty, 'Idaho is a US QSO party');
+
+      CheckEquals('Idaho QSO Party', obj.DisplayName, 'Idaho display name');
+      CheckEquals('Idaho QSO Party', obj.FriendlyName, 'Idaho friendly name');
+      CheckEquals('ID-QSO-PARTY', obj.CabrilloName, 'Idaho Cabrillo name');
+      CheckEquals('ID-QSO-PARTY', obj.ADIFContestId, 'Idaho ADIF CONTEST_ID');
+      CheckEquals(0, Length(obj.FormerADIFContestIds),
+                  'Idaho claims no former ADIF id -- its old logs say NEQP');
+      CheckEquals(305, obj.WA7BNMId, 'Idaho WA7BNM calendar id');
+      CheckEquals('idaho_cty', obj.DomesticFileName, 'Idaho county file');
+      CheckEquals(Ord(DomesticFile), Ord(obj.DomesticMultiplierType),
+                  'Idaho domestic multiplier is the dom file');
+      CheckEquals(Ord(ARRLDXCCWithNoUSAOrCanada), Ord(obj.DXMultiplierType),
+                  'Idaho stations count DXCC countries');
+      CheckEquals(Ord(RSTDomesticOrDXQTHExchange), Ord(obj.ExchangeKind),
+                  'Idaho exchange is RST and a domestic or DX QTH');
+      CheckFalse(obj.FormatsExchange,
+                 'Idaho uses the shared exchange formatter until M4');
+   finally
+      obj.Free;
+      end;
+
+   (* THE P INDEX REACHES THE SAME STATE, so the legacy reader and the class
+      agree -- and the row's ordinal place in QSOParties is right. *)
+   CheckEquals('ID', USQSOPartyStateName(IDAHOQSOPARTY),
+               'Idaho QSOParties entry names ID');
+   CheckEquals('IDAHO QSO PARTY', string(ContestTypeSA[IDAHOQSOPARTY]),
+               'the spelling a .cfg names');
+
+   CheckCountyLineMaximum(IDAHOQSOPARTY, 'Idaho', 2);
+
+   CheckTrue(FindContestByADIFContestId('ID-QSO-PARTY', c),
+             'ID-QSO-PARTY resolves');
+   CheckEquals(Ord(IDAHOQSOPARTY), Ord(c), 'ID-QSO-PARTY -> Idaho');
+   (* NEQP HAS NO CLASS AND A BLANK ADIFName, so 'NEQP' resolves to nothing
+      through the registry today. What matters here is only that it never
+      resolves to Idaho. *)
+   if FindContestByADIFContestId('NEQP', c) then
+      begin
+      CheckTrue(c <> IDAHOQSOPARTY, 'NEQP must never resolve to Idaho');
+      end;
+end;
+
 (* THE FIXED-POINT CONTESTS, MOVED 2026-09-29 IN TWO SLICES.
 
    Contests whose scoring arm is a constant, or a constant chosen by mode, and
@@ -1514,6 +1594,11 @@ begin
    CheckAgainstArray(NYQP, 'New York QSO Party');
    CheckAgainstArray(SALMONRUN, 'Washington State Salmon Run');
 
+   (* IDAHO, ADDED 2026-10-01 -- a new ContestType, so its row was written for
+      the class rather than transcribed from it. Its CABName and FriendlyName
+      are stated, not blank. *)
+   CheckAgainstArray(IDAHOQSOPARTY, 'Idaho QSO Party');
+
    (* THE FIRST FIXED-POINT SLICE, MOVED 2026-09-29. Most of these rows have a
       BLANK CABName and FriendlyName, both of which resolve to the enum's
       spelling -- 'QCWA GOLDEN', 'GRID LOC', 'SA-SPRINT' -- and a blank
@@ -1595,6 +1680,7 @@ begin
    CheckFinds('BC-QSO-PARTY', BCQP);
    CheckFinds('BCQP', BCQP);
    CheckFinds('NY-QSO-PARTY', NYQP);
+   CheckFinds('ID-QSO-PARTY', IDAHOQSOPARTY);
 
    (* A contest WITH NO CLASS answers by its current id through the same
       lookup -- NZ Field Day's row was renamed and it has no class. *)
@@ -1765,6 +1851,7 @@ begin
    Test_FourBespokeArmsCountyLineMaxima;
    Test_NewYorkTranscribesItsArm;
    Test_SalmonRunScoresTheCurrentRules;
+   Test_IdahoOwnsItsRules;
    Test_FixedPointContestsTranscribeTheirArms;
    Test_MovedRowValuesStillMatchTheArray;
    Test_ADIFIdsResolveOldAndNew;

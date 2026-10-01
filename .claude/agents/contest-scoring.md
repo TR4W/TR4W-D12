@@ -114,8 +114,11 @@ serves only classless contests. **`QSO POINT METHOD` is retired at the end of
 the migration.**
 
 **Its spelling table is rotated:** `QSOPointMethodArray` selects the wrong
-method for 46 spellings, a D7 defect. The shipped
-`target/dom/Idaho QSO Party.cfg` is affected (ownership doc §7.2).
+method for 46 spellings, a D7 defect. The one shipped `.cfg` it reached,
+`target/dom/Idaho QSO Party.cfg`, no longer names a point method: Idaho is
+`IDAHOQSOPARTY` with its own class since 2026-10-01 (ownership doc §7.2). **No
+`.cfg` borrows another contest's type** -- an event is a `ContestType` and a
+class.
 
 ## Coordinate with
 

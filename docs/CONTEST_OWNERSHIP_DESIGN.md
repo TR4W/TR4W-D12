@@ -466,7 +466,7 @@ port regression**.
 | `TWO POINTS PER QSO` | `OnePointPerQSO` |
 | `SALMON RUN` / `STEW PERRY` / `LABRE` | `RDAQSOPointMethod` / `SLFivePointQSOMethod` / `RadioVHFFDQSOPointMethod` |
 
-**It reaches a shipped file.** `target/dom/Idaho QSO Party.cfg` is a contest
+**It reached a shipped file** (until 2026-10-01 -- see DONE below). `target/dom/Idaho QSO Party.cfg` was a contest
 configured as `CONTEST = NEQP` (which has no class) with
 `QSO POINT METHOD = ONE PHONE TWO CW`. That selects `TwoPhoneFourCW`, whose arm
 scores 4 per CW QSO and 2 per phone, where 2 and 1 were asked for, so every
@@ -489,6 +489,18 @@ one that borrows -- the 13 corpus logs and `tr4wserver.cfg` do not -- and there 
 no Idaho `ContestType` at all; the file arrived with D7 4.129.1 (`f93d06dc`)
 alongside `IDAHO.DOM` / `IDAHO_CTY.DOM`. The end state adds `IDAHOQSOPARTY` with its
 class, and the `.cfg` names it.
+
+**DONE 2026-10-01.** `IDAHOQSOPARTY` is appended to `ContestType` (the ordinal is
+persisted by the `.TRW` record, the multi-op packet and HamScore's
+`<contestnr>`), with QSOParties entry 21 (`idaho`, `ID`), and
+`uContestIdahoQP` owns its rules on `TContestStateQSOPartyBase`. The `.cfg` is
+now `MY CALL` and `CONTEST = IDAHO QSO PARTY` and overrides nothing. The class
+header records the sponsor sources and the changes from the NEQP-borrowing
+setup: the DX multiplier the sponsor requires and NEQP's row did not have, the
+in-state `.dom` whose `INCLUDE` lines had never loaded (they lacked `FILE`, and
+one named a `P3.DOM` that does not exist), and ADIF/Cabrillo id `ID-QSO-PARTY`.
+There is deliberately **no** former ADIF id: old Idaho logs were exported as
+NEQP and cannot be told apart from NEQP's.
 
 It changes what an existing `.cfg` selects, but the change is towards what the
 operator wrote.
@@ -608,8 +620,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 - **Q4** (new; the residue of C5). Do `EXCHANGE RECEIVED`, the four multiplier
   commands and `INITIAL EXCHANGE` retire with `QSO POINT METHOD` at the
   endpoint? **Recommended yes**, since they select from shared sets in the same
-  way. The Idaho config uses three of them, so Idaho needs a `ContestType` and a
-  class first (see Q8).
+  way. ~~The Idaho config uses three of them~~ -- no longer: Idaho has its
+  `ContestType` and class (2026-10-01, §7.2) and its `.cfg` sets none of them.
 - **Q5** (C6). Should the Salmon Run W7DX bonus be implemented now, or stay
   recorded as missing? The bonuses-as-data shape (§5) is recommended.
 - **Q6** (C7). POTA as a contest class (recommended, §6), keeping the root name
@@ -619,8 +631,9 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   pairs where one mode is rarely run?
 - **Q8** (C9a, plus Idaho). Events with no `ContestType` are identified by
   string. These are `'TRC'`, `'PGA'`, `'EURASIA'` and `'DL-DX-RTTY'` (inventory
-  D7), and Idaho, which is configured as NEQP plus overrides. Should each become
-  a `ContestType` with a class, or be deleted?
+  D7). Should each become a `ContestType` with a class, or be deleted?
+  **Idaho is answered** -- it became `IDAHOQSOPARTY` with a class on
+  2026-10-01 (§7.2).
 - **Q9** (C9b). Should an operator-edited CQ memory survive re-selecting the
   contest (§4.2)?
 - **Q10** (C11, narrowed). The retirement ruling implies that every live

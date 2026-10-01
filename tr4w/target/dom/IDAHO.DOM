@@ -1,6 +1,9 @@
 Entries for Idaho QSO Party used by in-state stations
-44 Idaho Counties + 49 states + DC + 13 Canadian mults
+50 states + 13 Canadian provinces and territories; the 44 Idaho counties count as Idaho
+(IDAHO_CTY.DOM maps each county to Id). DXCC countries are the DX multiplier.
+Sponsor: "count each US state (including Idaho), Canada province, and DXCC country"
+https://www.idahoqsoparty.org/rules.htm
 
+INCLUDE FILE S50.DOM
+INCLUDE FILE P13.DOM
 INCLUDE FILE IDAHO_CTY.DOM
-INCLUDE S50.DOM
-INCLUDE P3.DOM

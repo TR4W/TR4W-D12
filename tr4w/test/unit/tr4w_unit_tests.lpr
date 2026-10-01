@@ -290,6 +290,7 @@ uses
    uContestVirginiaQP in '..\..\src\contestFactory\uContestVirginiaQP.pas',
    uContestNewYorkQP in '..\..\src\contestFactory\uContestNewYorkQP.pas',
    uContestWashingtonSalmonRun in '..\..\src\contestFactory\uContestWashingtonSalmonRun.pas',
+   uContestIdahoQP in '..\..\src\contestFactory\uContestIdahoQP.pas',
    uContestQCWA in '..\..\src\contestFactory\uContestQCWA.pas',
    uContestQCWAGolden in '..\..\src\contestFactory\uContestQCWAGolden.pas',
    uContestCountyHunter in '..\..\src\contestFactory\uContestCountyHunter.pas',
