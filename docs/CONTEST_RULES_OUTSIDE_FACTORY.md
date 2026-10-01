@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `c2efdf18` (2026-10-01).
+directory). This copy was generated from commit `7d29ea05` (2026-10-01).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -80,7 +80,7 @@ into 508 comparison-or-arm records --
 
 ### 1.4 The headline facts
 
-1. **52 of the 55 registered contests still have rules outside the factory.**
+1. **53 of the 56 registered contests still have rules outside the factory.**
    With none: `FLORIDAQSOPARTY`, `MARCONIMEMORIAL`, `MICHQSOPARTY`. The per-contest index (section 6)
    lists every site, registered contests first.
 
@@ -178,13 +178,13 @@ shape 2.
 
 ### 2.2 Which contests have a class
 
-`RegisterContest(<enum>, <class>)` in `src/contestFactory/`: **55**
-(`model.Registry`, which also walks each class's ancestry). All 55 score through their own chain -- none falls through to `TContestBase`'s zero.
+`RegisterContest(<enum>, <class>)` in `src/contestFactory/`: **56**
+(`model.Registry`, which also walks each class's ancestry). All 56 score through their own chain -- none falls through to `TContestBase`'s zero.
 
 ### 2.3 Shape 4 -- who reaches an `Active*` value
 
 The reach of a value is each contest's `ContestsArray` row
-(185 enum values against 185 rows, matched by position)
+(186 enum values against 186 rows, matched by position)
 UNION every `Active* :=` inside `FoundContest`'s arms (71 assignments).
 That over-approximates who uses a value, which is the safe direction for
 deciding "only one contest uses this". Values are compared case-insensitively,
@@ -250,7 +250,7 @@ is used and marked `(s6)`.
 | `trdos/logstuff.pas:6650` | CalculateQSOPoints | 4 | ARCI | none | CalculateQSOPoints (existing) | reach 1: `QP` = ARCIQSOPointMethod (arm of case @6571) |
 | `trdos/logstuff.pas:6666` | CalculateQSOPoints | 4 | ARI_DX | none | CalculateQSOPoints (existing) | reach 1: `QP` = ARIQSOPointMethod (arm of case @6571) |
 | `trdos/logstuff.pas:6685` | CalculateQSOPoints | 4 | **ARRLDXCW**, **ARRLDXSSB** | all | CalculateQSOPoints (existing) | reach 2: `QP` = ARRLDXQSOPointMethod (arm of case @6571) |
-| `trdos/logstuff.pas:6709` | CalculateQSOPoints | 4 | **ARRLFIELDDAY**, **WINTERFIELDDAY** | all | CalculateQSOPoints (existing) | reach 2: `QP` = ARRLFieldDayQSOPointMethod (arm of case @6571) |
+| `trdos/logstuff.pas:6709` | CalculateQSOPoints | 4 | **ARRLFIELDDAY**, **IDAHOQSOPARTY**, **WINTERFIELDDAY** | all | CalculateQSOPoints (existing) | reach 3: `QP` = ARRLFieldDayQSOPointMethod (arm of case @6571) |
 | `trdos/logstuff.pas:6732` | CalculateQSOPoints | 4 | **ARRLDIGI** | all | CalculateQSOPoints (existing) | reach 1: `QP` = ARRLDIGIQSOPointMethod (arm of case @6571) |
 | `trdos/logstuff.pas:6746` | CalculateQSOPoints | 4 | ARRL160 | none | CalculateQSOPoints (existing) | reach 1: `QP` = ARRL160QSOPointMethod (arm of case @6571) |
 | `trdos/logstuff.pas:6760` | CalculateQSOPoints | 4 | ARRL10 | none | CalculateQSOPoints (existing) | reach 1: `QP` = ARRL10QSOPointMethod (arm of case @6571) |
@@ -989,7 +989,7 @@ every contest the tested value reaches (reach 1-3).
 
 ### 6.1 Registered contests -- rules that should already have moved
 
-**52 of 55.** Sorted by number of sites. Registered contests with
+**53 of 56.** Sorted by number of sites. Registered contests with
 **no** site outside the factory: `FLORIDAQSOPARTY`, `MARCONIMEMORIAL`, `MICHQSOPARTY`.
 
 *Hand-maintained below -- judgement, not measurement. The generator preserves it verbatim and does not re-check it; its line numbers are as of when it was written.*
@@ -1053,6 +1053,7 @@ Worth reading first, because they are the ones the brief named:
 | APSPRINT | **setup** `trdos/fcontest.pas:757` |
 | ArizonaQsoParty | **setup** `trdos/fcontest.pas:486` |
 | COLORADOQSOPARTY | **ui** `uNewContest.pas:267` |
+| IDAHOQSOPARTY | **scoring** `trdos/logstuff.pas:6709` |
 | INQSOPARTY | **multipliers** `trdos/logdupe.pas:1280` |
 | MINI40 | **setup** `trdos/fcontest.pas:1656` |
 | MINI80 | **setup** `trdos/fcontest.pas:1648` |
@@ -1065,8 +1066,8 @@ Worth reading first, because they are the ones the brief named:
 
 ### 6.2 Contests with no class
 
-**129** -- every contest without a class (184 non-sentinel enum values minus
-55) appears at least once in section 4 or section 5.
+**129** -- every contest without a class (185 non-sentinel enum values minus
+56) appears at least once in section 4 or section 5.
 Contests that exist only as an operator-configured name, with no
 `ContestType` at all, appear only in the shape-3 rows: **TRC Digital** (`cMyState = 'TRC'`, 5 sites) and **PGA** (`ContestTitle = 'PGA'`, 2 sites).
 
@@ -1487,7 +1488,7 @@ classes whose `FormatsExchange` is True (14 classes).
 | arm | routine | value | reached by |
 |---|---|---|---|
 | `trdos/logstuff.pas:6685` | CalculateQSOPoints | `ARRLDXQSOPointMethod` | ARRLDXCW, ARRLDXSSB |
-| `trdos/logstuff.pas:6709` | CalculateQSOPoints | `ARRLFieldDayQSOPointMethod` | ARRLFIELDDAY, WINTERFIELDDAY |
+| `trdos/logstuff.pas:6709` | CalculateQSOPoints | `ARRLFieldDayQSOPointMethod` | ARRLFIELDDAY, IDAHOQSOPARTY, WINTERFIELDDAY |
 | `trdos/logstuff.pas:6732` | CalculateQSOPoints | `ARRLDIGIQSOPointMethod` | ARRLDIGI |
 | `trdos/logstuff.pas:7221` | CalculateQSOPoints | `CQWWQSOPointMethod` | CQWWCW, CQWWSSB |
 | `trdos/logstuff.pas:7563` | CalculateQSOPoints | `NCQSOPointMethod` | NCQSOPARTY |
@@ -1503,7 +1504,7 @@ classes whose `FormatsExchange` is True (14 classes).
 
 ### 9.2 Class traits the engine contradicts (D8)
 
-**156** trait overrides checked (`GetQSOPointMethod`, `GetExchangeKind`,
+**160** trait overrides checked (`GetQSOPointMethod`, `GetExchangeKind`,
 `GetDomesticMultiplierType`, `GetDXMultiplierType`), each against the value the
 ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
 `ContestsArray` row. **7** disagree or could not be read:
@@ -1524,7 +1525,7 @@ ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
   GENERALQSO, POTA, which write no `CONTEST_ID`), so their exported id is the
   `ContestTypeSA` spelling and import cannot resolve it; **29** of them are
   registered: ALLJA, ARRLDIGI, ARRLDXCW, ARRLDXSSB, ARRLSSCW, ARRLSSSSB, COUNTYHUNTER, CQWPXCW, CQWPXSSB, CQWWCW, CQWWSSB, GRIDLOC, IARU, INTERNETSPRINT, JALONGPREFECT, KIDSDAY, KVP, MARCONIMEMORIAL, MINITEST, NASPRINTCW, NASPRINTRTTY, QCWA, QCWAGOLDEN, DARCXMAS, XMAS, YOUTHCHAMPIONSHIPRF, ARKTIKA_SPRING, SASPRINT, CQIR.
-- 80 literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were
+- 82 literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were
   compared with what the exporters emit; **18** differ:
 
 | contest | format | class says | exporter emits |
