@@ -502,6 +502,10 @@ Order, each phase gated by proof before the next:
 3. **Exports end-to-end** — replace the all-or-nothing `FormatsExchange`
    boolean with typed operations for Cabrillo headers and columns and for ADIF
    sent/received. **Golden byte-level fixtures first** — widths and spacing.
+   **Columns, line layout and ADIF contest fields DONE at M4 (2026-10-01)**:
+   `FormatsExchange` is deleted and every contest is asked
+   (CONTEST_OWNERSHIP_DESIGN.md §8.2e). Cabrillo headers and mode string are
+   M9's.
 4. **Setup and metadata last** — `FCONTEST`'s `case Contest` setup and
    `ActiveExchange` mutation move into the class layer; those two globals become
    compatibility-only projections.

@@ -72,8 +72,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   LOGDUPE.SetMultFlags names this contest for the same branch rule (and also
   skips zone 00); that is the multiplier seam's, M8, and stays where it is.
-  The branch exchange is NZFieldDayExchange (M5); FormatsExchange is
-  inherited False (M4). LOGCFG and uNewContest name it for set-up (M7). *)
+  The branch exchange is NZFieldDayExchange (M5); export is the base's
+  default (M4). LOGCFG and uNewContest name it for set-up (M7). *)
 unit uContestJockWhiteFieldDay;
 
 {$I tr4w.inc}

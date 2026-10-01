@@ -56,9 +56,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     - No multipliers: the row has DM: DomesticFile on 'naqp', so TR4W
       counts states/provinces as domestic multipliers.
 
-  EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED (M4/M5); FormatsExchange
-  is inherited False. FCONTEST, LOGCFG and uNewContest name it for set-up
-  (M7). *)
+  EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE BASE'S DEFAULT (M4), the
+  shared arm for its exchange. FCONTEST, LOGCFG and uNewContest name it for
+  set-up (M7). *)
 unit uContestLocustQP;
 
 {$I tr4w.inc}

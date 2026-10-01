@@ -112,8 +112,14 @@ Two fields are the thread to pull:
 | `QP:` | the arm of `case ActiveQSOPointMethod of` in `LOGSTUFF.CalculateQSOPoints` |
 | `AE:` | the arm of `case ActiveExchange of` in `LOGSTUFF.ProcessExchange`, which names a `Process...Exchange` function — the exchange parsing |
 
-`AE:` also selects the arm in `uCabrilloExchange.FormatCabrilloExchange` and in
-`uADIFExchange.FormatADIFMyExchange` — the two export formats.
+`AE:` is also what the contest's EXPORT looks like by default -- through the
+SESSION's exchange, which is `AE:` unless FCONTEST's arm or the operator
+changes it: `TContestBase` formats the Cabrillo columns and the ADIF
+`STX_STRING` with the shared arm for that exchange
+(`uCabrilloExchange.FormatCabrilloExchangeOfKind`,
+`uADIFExchange.FormatADIFExchangeOfKind`). Those arms name no contest; a rule
+of your contest's goes in your class (section 3, "How a contest formats its
+export").
 
 **Watch for a commented-out field.** Field Day's row has `{DM: ...}`, so its
 domestic-multiplier value comes from whatever the record initialises to rather
@@ -229,12 +235,14 @@ shared files a contest touches; the search path already covers
 |---|---|
 | `DisplayName` | the enum's spelling |
 | `CabrilloName` | `CABName`, or the enum's spelling when blank |
-| `ADIFContestId` | `ADIFName`, or the enum's spelling when blank. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (`uADIF`'s exclusion, pending a POTA class — design Q6) |
+| `ADIFContestId` | `ADIFName`, or the enum's spelling when blank. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (`WritesADIFContestId` for General QSO; POTA by name in `uADIF`, pending a POTA class — design Q6) |
 | `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | the array row |
 | `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | the array row |
 | `InitialExchangeKind`, `ExchangeKind`, `QSOPointMethod` | the array row |
 | `IsUSQSOParty` | the array row (`P <> 0`) |
+| `ADIFPowerTag` | `RX_PWR` -- the ADIF tag the QSO's `Power` field goes to. FOC Marathon says `FOC_NUM`, because its parser puts the membership number there (M4) |
+| `WritesADIFContestId` | True. General QSO says False -- an operating mode, not a contest (M4). POTA is still excluded by name in `uADIF` until it has a class (design Q6) |
 | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries` | `ContestsBooleanArray`'s bits. **Set-up reads these** (M2) |
 | `ZoneMode` | `CQZoneMode` when the array's CQ bit is set, else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
 | `InStateDomesticFileName` | a QSO party's in-state file -- the `QSOParties` entry the row's `P` indexes; `''` otherwise. `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads |
@@ -257,8 +265,8 @@ NY4I: *"Arktika Spring is clearly not a qso party so I am not sure why that
 would be in the conversation of two counties"*, and *"ARRL-DIGI is not of course
 either."* A county line is a QSO-party concept, and on the root every contest in
 the program could state one — three classes did, two of which have no counties.
-| `FormatsExchange` | **False** — see below |
-| `CabrilloQSOLineFormat` | `CabrilloQSOLineFormatDefault` — the layout of a whole `QSO:` line, which is NOT the exchange columns. Arktika Spring is the one contest that overrides it, with a narrower line that uses only four of the five arguments. **Deliberately not gated by `FormatsExchange`**: a contest can own the line without owning the columns, and Arktika Spring shares its exchange arm with contests that have no class. PostUnit uses the same constant when there is no class, so there is one copy of the layout |
+| ~~`FormatsExchange`~~ | **DELETED at M4 (2026-10-01).** Every contest formats its own export -- see "How a contest formats its export" below |
+| `CabrilloQSOLineFormat` | `CabrilloQSOLineFormatDefault` — the layout of a whole `QSO:` line, which is NOT the exchange columns. Arktika Spring is the one contest that overrides it, with a narrower line that uses only four of the five arguments; its columns are the base's. PostUnit asks every contest, so the constant exists once |
 
 **Everything defaults to `ContestsArray` on purpose.** A contest states what it
 wants to own and inherits the rest, and a contest with no class is unaffected.
@@ -314,11 +322,41 @@ the wrongness.
 | `ValidateClass` | accepts anything |
 | `ValidateDXQTH` | accepts nothing |
 | `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
-| `FormatCabrilloSentExchange` / `...Received...` / `FormatADIFSentExchange` | `''`, and only called when `FormatsExchange` is True |
+| `FormatCabrilloSentExchange` / `FormatCabrilloReceivedExchange` | the shared arm for the session's exchange (`TCabrilloQSOContext.SessionExchange`) -- `uCabrilloExchange.FormatCabrilloExchangeOfKind` |
+| `FormatADIFSentExchange` | the shared arm for the session's exchange -- `uADIFExchange.FormatADIFExchangeOfKind` |
+| `EmitADIFContestFields` | nothing -- `uADIF.EmitADIFRecord` has already written the generic `QTH` |
 
-**`FormatsExchange` is False by default and that matters.** A contest whose
-*scoring* has been moved must not silently take over its *export* as well. Each
-responsibility arrives when it is actually lifted.
+### How a contest formats its export (M4, 2026-10-01)
+
+**EVERY CONTEST IS ASKED.** PostUnit's Cabrillo writer and ADIF tail, and
+`uADIF.EmitADIFRecord`, call `uContestRegistry.ContestIdentity(c)` -- your
+class, or a plain `TContestBase` for a contest with none -- and there is no
+opt-in switch any more. A contest with no export rule of its own simply
+inherits the base's answer, which is the shared arm for its session's
+exchange: what an RST-and-serial or a name-and-QTH line LOOKS LIKE. Those arms
+name no contest, and must not start to: **a rule that is your contest's goes
+in your class.**
+
+- **Your own columns**: override `FormatCabrilloSentExchange` and/or
+  `FormatCabrilloReceivedExchange`, and `FormatADIFSentExchange` for the
+  `STX_STRING`. Reproduce the widths exactly -- Cabrillo is a column format.
+  `uContestFOCMarathon`, `uContestPCC`, `uContestARRLSSBase` are examples.
+- **Only an input differs** (a placeholder for an absent QTH, the QSO's own
+  QTH instead of the exporter's choice): copy the context, change the field,
+  and call `inherited` -- the shared arm still lays out the line.
+  `uContestUKEI`, `uContestCaliforniaQP`, `uContestWWDigi`.
+- **Your ADIF fields** (a section, a society, a DOK, a grid): override
+  `EmitADIFContestFields` and call `uADIF.EmitADIFField` -- the tag spelling is
+  ADIF's, the meaning is yours. `uContestARRLFieldDay` (and its copy in
+  `uContestWinterFieldDay`), `uContestWAG`, `uContestIARU`.
+- **What the exporter decides stays the exporter's**: the formatted RSTs, the
+  chosen his-QTH, the previous record's values, the session's exchange --
+  `TCabrilloQSOContext`. Your class reads no global to format a line.
+
+**And pin it**: golden strings in `uTestContestExport`, and a row in its
+round trip (`Test_RoundTripThroughTodaysImport`) for anything that writes ADIF.
+The golden corpus byte-diffs the 13 contests that have a set; the contest
+matrix sees every contest's export.
 
 ### Protected helpers — mechanism, not rules
 
@@ -359,7 +397,10 @@ Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
 
 ### `TStationContext` — what scoring knows about us
 
-`Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`.
+`Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`,
+`.MyPower`, `.PointOverrides`, and since M4 `.MyState` (IOTA, PCC),
+`.ContestTitle` (Batavia FT8) and `.LogClockUTCHour` -- a FUNCTION, because
+reading the logging clock refreshes a global (UK/EI DX).
 
 `MyGrid` arrived with ARRL-DIGI, whose points are a function of BOTH grids and
 only one of them is on the QSO. That is the growth rule the record states: a
@@ -440,6 +481,13 @@ It fails closed: no contests captured, a frozen record with no fresh one, a
 fresh record never frozen, or any byte difference exits 1. A record carrying
 `RUN FAILED` or `RAISED` passes only if it said so when frozen, and is listed on
 every run.
+
+**RUN IT OUTSIDE 23:00-05:00 UTC, or expect CROATIAN to differ** (measured at
+M4, 2026-10-01). The legacy Croatian arm doubles every point when the LOGGING
+CLOCK reads 23:00-04:59 UTC, so a run in that window shows its record with every
+point doubled and nothing else moved -- a clock, not a regression, and never a
+reason to re-freeze. UK/EI DX's class has the same shape of rule for a UK/EI
+station, which no variant exercises (design Q21).
 
 Comparing a rescore against the D7 references was tried as a scoring gate and
 rejected: 7 of the 13 logs move when rescored, before any factory work, because

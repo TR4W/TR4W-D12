@@ -55,19 +55,18 @@ uses
 type
    TContestCQWWBase = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
    end;
 
 implementation
@@ -83,10 +82,10 @@ uses
    log full of "3" where the sponsor expects "03" is a formatting difference a
    robot scorer sees.
 
-   THE JIDX HALF OF THE LEGACY ARM IS NOT HERE. RSTZoneExchange is shared, and
-   inside it `if Contest in [JIDXSSB, JIDXCW]` takes the zone from MyState
-   instead -- that is JIDX's rule and stays in the legacy case until JIDX has a
-   class. *)
+   THE JIDX HALF OF THE LEGACY ARM IS GONE. RSTZoneExchange is shared, and
+   inside it `if Contest in [JIDXSSB, JIDXCW]` took the zone from MyState. It
+   was dead -- the contest matrix shows JIDX always runs RSTPrefectureExchange
+   -- and was deleted at M4 (2026-10-01) rather than given a class to live in. *)
 (* THE ZONE COMES FROM aMy, NOT FROM Station.MyZone, and that is not
    interchangeable. PostUnit.ZoneSentForThisContest decides which zone a contest
    actually sends -- the ITU zone for an ITUZones contest, the CQ zone
@@ -97,28 +96,23 @@ uses
    AnsiString() EXPLICITLY: StrToIntDef resolves to the AnsiString overload, so a
    bare call narrows implicitly. A zone is ASCII digits, so the conversion is
    safe; saying so is the point. *)
-function TContestCQWWBase.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
 function TContestCQWWBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                       const aQso: ContestExchange;
-                                       const aRSTSent: string): string;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7.2d', [aRSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+   Result := Format('%-3s %-7.2d', [aCtx.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
 end;
 
 function TContestCQWWBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                           const aQso: ContestExchange;
-                                           const aRSTReceived: string;
-                                           const aHisQTH: string): string;
+                                                         const aQso: ContestExchange;
+                                                         const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7.2d', [aRSTReceived, aQso.Zone]);
+   Result := Format('%-3s %-7.2d', [aCtx.RSTReceived, aQso.Zone]);
 end;
 
 function TContestCQWWBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                   const aQso: ContestExchange): string;
+                                                 const aQso: ContestExchange;
+                                                 aSessionExchange: ExchangeType): string;
 begin
    Result := Format('%-3d %-7.2d', [aQso.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
 end;

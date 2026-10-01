@@ -34,7 +34,6 @@ uses
 type
    TContestFloridaQP = class(TContestStateQSOPartyBase)
    protected
-      function GetFormatsExchange: boolean; override;
 
       (* THE STATE WHOSE COUNTIES THIS CONTEST'S EXCHANGE NAMES.
 
@@ -74,13 +73,13 @@ type
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
    end;
 
 implementation
@@ -144,54 +143,49 @@ end;
 
    THE LEGACY FLORIDA-NAMED TESTS WERE DELETED ON 2026-09-29. They were kept
    while /NOFACTORY still let Florida reach RSTDomesticOrDXQTHExchange; when that
-   switch went, the exporter's `aContest.FormatsExchange` seam became the only
-   route and it exits before the case, so a branch testing for Florida BY NAME
-   could only ever be reached by Florida -- i.e. never. The SHARED ARM
-   (RSTDomesticOrDXQTHExchange) stays, unchanged for every contest without a
-   class; only the two `Contest = FLORIDAQSOPARTY` tests inside it are gone. *)
-function TContestFloridaQP.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
+   switch went, this class's override became the only route, so a branch
+   testing for Florida BY NAME could only ever be reached by Florida -- i.e.
+   never. The SHARED ARM (RSTDomesticOrDXQTHExchange) is TContestBase's default
+   for every other contest that runs it; only the two `Contest =
+   FLORIDAQSOPARTY` tests inside it are gone. *)
 function TContestFloridaQP.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
+   Result := Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
 end;
 
 function TContestFloridaQP.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
+                                                          const aQso: ContestExchange;
+                                                          const aCtx: TCabrilloQSOContext): string;
 begin
-   (* Reproduces the legacy decision tree exactly.  aHisQTH is what the
+   (* Reproduces the legacy decision tree exactly.  aCtx.HisQTH is what the
       exporter resolved from rx.QTHString, so the '' and 'DX' cases below are
       the same two the legacy arm tests. *)
    if aQso.QTHString = '' then
       begin
       if aQso.DXQTH = '' then
          begin
-         Result := Format('%-3s %-7s', [aRSTReceived, 'DX']);
+         Result := Format('%-3s %-7s', [aCtx.RSTReceived, 'DX']);
          end
       else
          begin
-         Result := Format('%-3s %-7s', [aRSTReceived, string(aQso.QTH.Prefix)]);
+         Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.QTH.Prefix)]);
          end;
       end
    else if aQso.QTHString = 'DX' then
       begin
-      Result := Format('%-3s %-7s', [aRSTReceived, string(aQso.QTH.Prefix)]);
+      Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.QTH.Prefix)]);
       end
    else
       begin
-      Result := Format('%-3s %-7s', [aRSTReceived, aHisQTH]);
+      Result := Format('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
       end;
 end;
 
 function TContestFloridaQP.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+                                                  const aQso: ContestExchange;
+                                                  aSessionExchange: ExchangeType): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
 end;

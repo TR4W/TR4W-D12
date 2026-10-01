@@ -48,25 +48,27 @@ uses
 type
    TContestARRLSSBase = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
+      function EmitADIFContestFields(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestFixedPoints;
+   SysUtils, uContestFixedPoints,
+   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   uADIF;
 
 procedure TContestARRLSSBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -76,7 +78,7 @@ end;
 (* THE SWEEPSTAKES EXCHANGE: SERIAL, PRECEDENCE, CHECK, SECTION.
 
    FOUR FIELDS AND NONE OF THEM RST -- Sweepstakes is the contest that does not
-   send a signal report at all, which is why aRSTSent and aRSTReceived are
+   send a signal report at all, which is why aCtx.RSTSent and aCtx.RSTReceived are
    accepted and deliberately unused here. The base passes them to every contest;
    this one has nowhere to put them.
 
@@ -89,46 +91,86 @@ end;
    "no serial" sentinel and `%-4d` would print it as "-1", four columns of
    nonsense in a field a scorer parses as a number.
 
-   THE SHARED ARM STAYS. QSONumberPrecedenceCheckDomesticQTHExchange has
-   QSONumberAndNameExchange falling into it in both exporters, so other contests
-   reach this body; only Sweepstakes has been lifted out of it. *)
-function TContestARRLSSBase.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
+   THE SHARED ARM IS GONE (M4, 2026-10-01; inventory D4). Only Sweepstakes
+   runs QSONumberPrecedenceCheckDomesticQTHExchange, and it formats its own;
+   QSONumberAndNameExchange, which an older note here said fell into that arm,
+   has an arm of its own in both exporters. *)
 function TContestARRLSSBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-4d %s %s %-3s ',
                     [aQso.NumberSent, aMy.MyPrec, aMy.MyCheck, aMy.MySection]);
 end;
 
-function TContestARRLSSBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
+(* THE RECEIVED PRECEDENCE COLUMN -- AND NEVER A NUL. Defect #4 of the M0
+   matrix (design 8.2a), FIXED AT M4, 2026-10-01.
+
+   The precedence is one AnsiChar, and a QSO that has none holds #0 there --
+   the parser never filled it. string(#0) is not an empty string, it is a
+   one-character string holding a NUL, and the Cabrillo line carried that
+   byte straight into a file a robot scorer reads. A NUL in a text file is
+   at best a stray character and at worst the end of the line, depending on
+   the reader.
+
+   WHAT TO WRITE INSTEAD IS A BLANK, ONE COLUMN WIDE. The Cabrillo
+   Sweepstakes template has no "absent" spelling for a precedence -- a log
+   without one is a broken QSO, not a different format -- so this writes the
+   least that is still a well-formed line: the column stays one character
+   wide, and every later column lands where it would have. Whether a QSO
+   with no precedence should be exported at all, or marked X-QSO, is a
+   sponsor question recorded for NY4I (design 8.2e); it is not answered by
+   inventing a letter. *)
+function PrecedenceColumn(aPrecedence: AnsiChar): string;
 begin
-   (* THE SECTION COMES FROM aHisQTH, which is what the exporter resolved for
+   if aPrecedence = #0 then
+      begin
+      Result := ' ';
+      end
+   else
+      begin
+      Result := string(aPrecedence);
+      end;
+end;
+
+function TContestARRLSSBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                           const aQso: ContestExchange;
+                                                           const aCtx: TCabrilloQSOContext): string;
+begin
+   (* THE SECTION COMES FROM aCtx.HisQTH, which is what the exporter resolved for
       this QSO -- the legacy arm formats csQTHString here, not rx.QTHString. *)
    if aQso.NumberReceived = -1 then
       begin
       Result := Format('%-4d %s %.2u %-3s',
-                       [0, string(aQso.Precedence), aQso.Check, aHisQTH]);
+                       [0, PrecedenceColumn(aQso.Precedence), aQso.Check, aCtx.HisQTH]);
       end
    else
       begin
       Result := Format('%-4d %s %.2u %-3s',
-                       [aQso.NumberReceived, string(aQso.Precedence), aQso.Check, aHisQTH]);
+                       [aQso.NumberReceived, PrecedenceColumn(aQso.Precedence), aQso.Check,
+                        aCtx.HisQTH]);
       end;
 end;
 
 function TContestARRLSSBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+                                                   const aQso: ContestExchange;
+                                                   aSessionExchange: ExchangeType): string;
 begin
    Result := Format('%-4d %s %s %-3s ',
                     [aQso.NumberSent, aMy.MyPrec, aMy.MyCheck, aMy.MySection]);
+end;
+
+(* THE WORKED STATION'S SECTION GOES TO ADIF ARRL_SECT -- M4, 2026-10-01,
+   the Sweepstakes arm of postunit's EmitContestSpecificTailForExport, moved
+   here. A DX station's 'DX' is not a section and writes nothing, as the arm
+   had it. *)
+function TContestARRLSSBase.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   Result := '';
+   if aQso.QTHString <> 'DX' then
+      begin
+      Result := EmitADIFField('ARRL_SECT', string(aQso.QTHString));
+      end;
 end;
 
 end.

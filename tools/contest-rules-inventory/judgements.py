@@ -94,13 +94,18 @@ ROUTINES = {
    ("logstuff.pas", "ResolvePOTAParkFromADIF"): ("adif-import", new("ApplyADIFImport (SIG / SIG_INFO)")),
    ("uADIF.pas", "ApplyADIFFieldsToExchange"): ("adif-import", new("ApplyADIFImport (APP_N1MM_EXCHANGE1)")),
    # ------------------------------------------------------------ ADIF export
-   ("postunit.pas", "EmitContestSpecificTailForExport"): ("adif-export", new("EmitADIFContestFields(const aQso): string")),
-   ("uADIF.pas", "EmitADIFRecord"): ("adif-export", "ADIFContestId (existing) / " + new("EmitADIFContestFields")),
-   ("uADIFExchange.pas", "FormatADIFMyExchange"): ("adif-export", "FormatADIFSentExchange + FormatsExchange (existing)"),
+   # M4 (2026-10-01): every contest is asked through ContestIdentity, and
+   # these three seams exist. FormatsExchange is gone.
+   ("postunit.pas", "EmitContestSpecificTailForExport"): ("adif-export", "EmitADIFContestFields (existing)"),
+   ("uADIF.pas", "EmitADIFRecord"): ("adif-export", "ADIFContestId / WritesADIFContestId / ADIFPowerTag (existing)"),
+   ("uADIFExchange.pas", "FormatADIFExchangeOfKind"): ("adif-export", "FormatADIFSentExchange (existing; this is the base's default)"),
    # -------------------------------------------------------- Cabrillo export
    ("postunit.pas", "GetCabrilloTagText"): ("cabrillo-export", "CabrilloName (existing) + " + new("CabrilloHeaders (s6)")),
    ("postunit.pas", "tGenerateLogPortionOfCabrilloFile"): ("cabrillo-export", "FormatCabrilloReceivedExchange / CabrilloQSOLineFormat (existing) + " + new("CabrilloModeString")),
-   ("uCabrilloExchange.pas", "SetHisEx"): ("cabrillo-export", "FormatCabrilloSentExchange / FormatCabrilloReceivedExchange + FormatsExchange (existing)"),
+   # The arms sit after the nested SetMyEx/SetHisEx helpers, so the routine
+   # the walker attributes them to is SetHisEx; both names are listed.
+   ("uCabrilloExchange.pas", "SetHisEx"): ("cabrillo-export", "FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default)"),
+   ("uCabrilloExchange.pas", "FormatCabrilloExchangeOfKind"): ("cabrillo-export", "FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default)"),
    # ---------------------------------------------------- score/summary/totals
    ("logedit.pas", "TotalScore"): ("score-summary", new("CalculateTotalScore (s6)")),
    ("postunit.pas", "WriteScoreInformationToSummarySheet"): ("score-summary", new("SummarySheetMultColumns")),
@@ -195,8 +200,8 @@ SHAPE3 = [
     "`Settings.Contest.Name = 'EURASIA'` in the EuropeanVHF arm -- see dead code"),
    ("tr4w/src/trdos/logstuff.pas", r"Settings\.Contest\.Title\s*=\s*'YBDXDI-FT8'", 1, ["BATAVIA_FT8"],
     "`Settings.Contest.Title = 'YBDXDI-FT8'` in the YBFT8QP arm -- see dead code"),
-   ("tr4w/src/trdos/postunit.pas", r"Settings\.Contest\.Name\s*=\s*'WWDIGI'", 1, ["WWDIGI"],
-    "`Settings.Contest.Name = 'WWDIGI'`"),
+   # postunit's `Settings.Contest.Name = 'WWDIGI'` went at M4 (2026-10-01):
+   # TContestWWDigi chooses its own received QTH.
    ("tr4w/src/trdos/postunit.pas", r"Settings\.Contest\.Name\s*=\s*'LABRE'", 1, ["LABRE"],
     "`Settings.Contest.Name = 'LABRE'`"),
    ("tr4w/src/trdos/postunit.pas", r"Settings\.Contest\.Name\s*=\s*'EURASIA'", 1, [],

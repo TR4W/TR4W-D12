@@ -795,7 +795,8 @@ procedure GetRidOfPostcedingSpaces(var s: OpenString);
 procedure GetRidOfPrecedingSpaces(var s: OpenString);
 function GetSCPCharFromInteger(Index: integer): Char;
 function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
-function GetStateFromSection(Section: Str20): string;
+(* GetStateFromSection moved to uARRLSections.StateFromARRLSection at M4
+   (2026-10-01), together with PostUnit's layer over it -- one function now. *)
 function GetSuffix(Call: CallString): CallString;
 function GetTimeString: string;
 function GetTomorrowString: Str80;
@@ -3727,85 +3728,6 @@ begin
      end;
 
   CallSortValue := round(Total - 2147483648.0);
-end;
-
-function GetStateFromSection(Section: Str20): string;
-
-begin
-  Section := UpperCase(Section);
-
-  if (Section = 'AK') or (Section = 'AL') or (Section = 'AR') or
-    (Section = 'AZ') or (Section = 'CO') or (Section = 'CT') or
-    (Section = 'DE') or (Section = 'GA') or (Section = 'IA') or
-    (Section = 'ID') or (Section = 'IN') or (Section = 'IL') or
-    (Section = 'KS') or (Section = 'KY') or (Section = 'LA') or
-    (Section = 'ME') or (Section = 'MI') or (Section = 'MN') or
-    (Section = 'MO') or (Section = 'MS') or (Section = 'MT') or
-    (Section = 'NC') or (Section = 'ND') or (Section = 'NE') or
-    (Section = 'NH') or (Section = 'NM') or (Section = 'NV') or
-    (Section = 'OH') or (Section = 'OK') or (Section = 'OR') or
-
-  (Section = 'RI') or (Section = 'SD') or (Section = 'TN') or
-    (Section = 'UT') or (Section = 'VA') or (Section = 'VT') or
-    (Section = 'WI') or (Section = 'WV') or (Section = 'WY') or
-    (Section = 'SC') then
-     begin
-     GetStateFromSection := Section;
-     Exit;
-     end;
-
-  if (Section = 'EB') or (Section = 'LAX') or (Section = 'ORG') or
-    (Section = 'SB') or (Section = 'SCV') or (Section = 'SDG') or
-    (Section = 'SF') or (Section = 'SJV') or (Section = 'SV') then
-     begin
-     GetStateFromSection := 'CA';
-     Exit;
-     end;
-
-  if (Section = 'EM') or (Section = 'WM') then
-     begin
-     GetStateFromSection := 'MA';
-     Exit;
-     end;
-
-  if (Section = 'EN') or (Section = 'WNY') or (Section = 'NNY') or
-    (Section = 'ENY') or (Section = 'NLI') then
-     begin
-     GetStateFromSection := 'NY';
-     Exit;
-     end;
-
-  if (Section = 'EP') or (Section = 'WP') then
-     begin
-     GetStateFromSection := 'PA';
-     Exit;
-     end;
-
-  if (Section = 'EW') or (Section = 'WWA') or (Section = 'EWA') then
-     begin
-     GetStateFromSection := 'WA';
-     Exit;
-     end;
-
-  if (Section = 'NF') or (Section = 'SF') or (Section = 'WCF') then // ny4i 4.44.9...unrelated but I happened to notice this
-     begin
-     GetStateFromSection := 'FL';
-     Exit;
-     end;
-
-  if (Section = 'NNJ') or (Section = 'SNJ') then
-     begin
-     GetStateFromSection := 'NJ';
-     Exit;
-     end;
-
-  if (Section = 'NTX') or (Section = 'STX') or (Section = 'WTX') then
-     begin
-     GetStateFromSection := 'TX';
-     Exit;
-     end;
-
-  GetStateFromSection := '';
 end;
 
 function LooksLikeAState(state: string): boolean;

@@ -83,11 +83,10 @@ const
       assembled by PostUnit, our sent exchange, the worked callsign, the
       received exchange, and the multi-op transmitter flag.
 
-      IT IS DECLARED HERE RATHER THAN IN PostUnit SO THERE IS ONE COPY. PostUnit
-      needs it for the contests that have no class; the base returns it for the
-      contests that have one and do not override. Two literals would be two
-      definitions of one layout, and the drift would show up as a malformed log
-      for exactly the contests nobody rechecked. *)
+      IT IS DECLARED HERE, ONCE, AND ONLY THE BASE RETURNS IT. Since M4 PostUnit
+      asks every contest -- uContestRegistry.ContestIdentity answers a
+      classless one with a plain TContestBase -- so no second copy of the
+      layout exists anywhere to drift. *)
    CabrilloQSOLineFormatDefault = '%s%s%-15s%-10s %-5s' + #13#10;
 
 type
@@ -117,6 +116,9 @@ type
       DXPhone: TQSOPointOverride;
    end;
 
+   (* A CLOCK, ASKED -- see TStationContext.LogClockUTCHour. *)
+   TClockHourFunction = function: integer;
+
    (* WHAT SCORING KNOWS ABOUT US.
 
       Contest rules are a function of two things: the QSO, and the station
@@ -138,8 +140,8 @@ type
 
       (* THE ZONE AS AN INTEGER, converted once here rather than at each use.
 
-         MyZone is a STRING global, and the scoring arms that want it all do
-         `Val(MyZone, MyZoneValue, Result)` and then compare. Doing that per QSO
+         MyZone is a STRING global, and the scoring arms that want it all
+         call `Val(MyZone, MyZoneValue, Result)` and compare the result. Doing that per QSO
          in every contest that scores by zone is the sort of repetition that
          eventually disagrees with itself -- and a Val whose error code nobody
          reads is a 0 that looks like zone 0.
@@ -181,6 +183,42 @@ type
 
          The zero value states none of them; see TQSOPointOverride. *)
       PointOverrides: TQSOPointOverrides;
+
+      (* THE STATION'S OWN STATE, PROVINCE OR ISLAND -- MY STATE, as text.
+
+         Added at M4 (2026-10-01), when the RSGB IOTA contest and the PCC
+         gained classes: both score against it (IOTA compares it with the
+         worked island; PCC asks whether it is all digits). Same growth rule
+         as every field here. '' when unset, which both rules test for. *)
+      MyState: string;
+
+      (* THE CONTEST TITLE the operator's session carries -- Settings.Contest.
+         Title, usually '<year> <name> <call>'.
+
+         Added at M4 for the Batavia FT8 contest, whose legacy arm tests it
+         for 'YBDXDI-FT8'. Recorded in the inventory (D7) as a test that
+         cannot match with default settings; it is transcribed, not judged. *)
+      ContestTitle: string;
+
+      (* THE HOUR OF THE LOGGING CLOCK, UTC -- not the QSO's own hour -- ASKED,
+         NOT COPIED.
+
+         Added at M4 for UK/EI DX, whose legacy arm doubles a UK or EI
+         station's points when THIS hour is 01-04: it calls tGetSystemTime and
+         reads the UTC global, which is the wall clock, or the hand-entered
+         time in hand-log mode. That reads like a defect (a rescore at 02:00
+         doubles the whole log) and is recorded as a question for NY4I in the
+         design doc; it is transcribed, not corrected.
+
+         A FUNCTION, BECAUSE READING THE CLOCK HAS A SIDE EFFECT. tGetSystemTime
+         refreshes the program's UTC global, and the station is rebuilt on
+         every ActiveContest request -- copying the hour here would refresh
+         that global for every contest, many times per QSO. The legacy arm read
+         it only for a UK or EI station in this one contest; asking through a
+         function keeps it exactly there. nil -- the zero value, and what a
+         test gets -- means the clock is not known, and the doubling never
+         applies. *)
+      LogClockUTCHour: TClockHourFunction;
    end;
 
    (* THE MY-STATION HALF OF AN EXCHANGE.
@@ -206,6 +244,54 @@ type
       MyFOCNumber : string;
       MyPostalCode: string;
       MyPark      : string;
+   end;
+
+   (* WHAT THE CABRILLO EXPORTER HAS DECIDED ABOUT ONE QSO BEFORE IT ASKS THE
+      CONTEST FOR THE TWO EXCHANGE COLUMNS -- M4, 2026-10-01.
+
+      CHOOSING THE INPUTS IS THE EXPORTER'S; ARRANGING THEM INTO COLUMNS IS THE
+      CONTEST'S. The RST strings are already formatted (599, or an FT8 report
+      converted), the his-QTH is already selected, and the previous record's
+      values are carried by the exporter's loop -- none of that is a contest
+      rule, and a contest asked to format a line must never need the log.
+
+      A RECORD BECAUSE IT IS AN INTERFACE PARAMETER, the one exemption CLAUDE.md
+      grants: it is the argument list of three virtuals, and a class here would
+      need constructing and freeing per QSO for no gain.
+
+      SessionExchange IS THE EXCHANGE THE SESSION RESOLVED, NOT THE CONTEST'S
+      ExchangeKind TRAIT, AND THAT IS MEASURED, NOT CHOSEN. Export has always
+      keyed on the ActiveExchange global, and FCONTEST.FoundContest's arms set
+      it per STATION after the head writes the trait: in the contest matrix
+      twelve contests' ActiveExchange differs from their row in some variant
+      (ARRL DX and ARRL 160, the 7QP, Arizona, NEQP, Texas, California and
+      Salmon Run parties, JIDX, PACC), and an operator's EXCHANGE RECEIVED
+      line moves it too. Keying the base's default on the trait would have
+      changed those contests' Cabrillo; until M7 moves the arms into the
+      contest's DescribeSession, the session's answer is the global, and the
+      exporter hands it in as data -- the contest still reads no global. *)
+   TCabrilloQSOContext = record
+      SessionExchange: ExchangeType;
+      RSTSent: string;
+      RSTReceived: string;
+      HisQTH: string;
+
+      (* The QTHString of the PREVIOUS log record, whatever it was -- RSGB
+         RoPoCo sends the postcode it was given last. Truncated to 10 by the
+         exporter, as it always was. *)
+      PreviousQTH: string;
+
+      (* The previous GOOD QSO's received number, mod 1000 -- Radio YOC sends
+         it back. The exporter carries it; nothing here mutates state. *)
+      PreviousNumberReceived: integer;
+
+      (* 1-based count of log records read so far, the current one included.
+         RSGB RoPoCo's first QSO sends its own postcode. *)
+      RecordNumber: integer;
+
+      (* Settings.Contest.Title -- read by the shared arms' 'PGA' test, an
+         operator-titled event with no ContestType (inventory D7, design Q8). *)
+      ContestTitle: string;
    end;
 
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
@@ -253,8 +339,26 @@ type
       function GetExchangeKind: ExchangeType; virtual;
       function GetQSOPointMethod: QSOPointMethodType; virtual;
       function GetIsUSQSOParty: boolean; virtual;
-      function GetFormatsExchange: boolean; virtual;
       function GetHostState: string; virtual;
+
+      (* WHICH ADIF TAG CARRIES THE QSO'S Power FIELD -- M4, 2026-10-01.
+
+         The Power field holds what the parser put there, and that MEANS
+         different things per contest: a power for ARRL DX, the FOC
+         membership number for the FOC Marathon. ADIF has a tag for each, and
+         which one applies is the contest's knowledge, so uADIF.EmitADIFRecord
+         asks rather than testing `ceContest = FOCMARATHON`. The base answers
+         RX_PWR, what every other contest has always written. *)
+      function GetADIFPowerTag: string; virtual;
+
+      (* DOES ADIF EXPORT WRITE A CONTEST_ID FOR THIS CONTEST? -- M4.
+
+         True for every contest, except an operating mode that is not a contest
+         at all: General QSO says False. uADIF.EmitADIFRecord asks; it used to
+         test `ceContest in [POTA, GENERALQSO]`. POTA still has its own test
+         there until it has a class (design Q6, which is NY4I's and open). The
+         id itself is still answered -- the score-posting clients send it. *)
+      function GetWritesADIFContestId: boolean; virtual;
 
       (* WHAT CONTEST SET-UP READS BESIDES THE ROW -- M2, 2026-10-01.
 
@@ -336,16 +440,14 @@ type
          PostUnit -- ARKTIKA-SPRING uses a narrower line than everything else --
          which is precisely the shape this factory exists to remove.
 
-         SEPARATE FROM FormatsExchange, AND NOT GATED BY IT. FormatsExchange
-         asks whether the contest arranges its own exchange COLUMNS; this is the
-         line those columns are placed into, and a contest can own one without
-         the other. Gating them together would have obliged Arktika Spring to
-         take over an exchange formatter it shares with contests that have no
-         class.
+         SEPARATE FROM THE EXCHANGE COLUMNS. FormatCabrilloSentExchange and
+         FormatCabrilloReceivedExchange arrange the columns; this is the line
+         they are placed into, and a contest overrides either without the
+         other -- Arktika Spring states its line and keeps the shared columns.
 
-         The base answers CabrilloQSOLineFormatDefault, which is also what
-         PostUnit uses when there is no class at all, so a contest joining the
-         factory changes nothing here until it overrides. *)
+         The base answers CabrilloQSOLineFormatDefault, and PostUnit asks every
+         contest through ContestIdentity, so a contest changes nothing here
+         until it overrides. *)
       function GetCabrilloQSOLineFormat: string; virtual;
 
       (* WHICH CONTEST THIS INSTANCE IS -- READABLE BY SUBCLASSES, AND NOT TO BE
@@ -407,7 +509,10 @@ type
       property ExchangeKind: ExchangeType read GetExchangeKind;
       property QSOPointMethod: QSOPointMethodType read GetQSOPointMethod;
       property IsUSQSOParty: boolean read GetIsUSQSOParty;
-      property FormatsExchange: boolean read GetFormatsExchange;
+
+      (* ADIF facts -- see the getters. *)
+      property ADIFPowerTag: string read GetADIFPowerTag;
+      property WritesADIFContestId: boolean read GetWritesADIFContestId;
 
       (* Set-up's facts -- see the getters. *)
       property QSOByBand: boolean read GetQSOByBand;
@@ -475,10 +580,10 @@ type
          WHAT EXPORT WRITES, by construction: one getter, read by both.
 
          ONE EXCEPTION, AND IT IS NOT HERE: POTA and GENERALQSO write no
-         CONTEST_ID at all. That is uADIF.EmitADIFRecord's
-         `ceContest in [POTA, GENERALQSO]` test, which predates M1 and moves
-         when POTA has a class to say so (design Q6). Their ids still answer
-         here, because the score-posting clients send them. *)
+         CONTEST_ID at all. General QSO says so through WritesADIFContestId
+         (M4); POTA, which has no class, is still a `ceContest <> POTA` test
+         in uADIF.EmitADIFRecord until design Q6 is answered. Their ids still
+         answer here, because the score-posting clients send them. *)
                   
       (* THE REST OF THE ContestsArray ROW.
 
@@ -604,32 +709,63 @@ type
                              out aResolved: string;
                              out aErrorMessage: string): boolean; virtual;
 
-      (* DOES THIS CONTEST FORMAT ITS OWN EXCHANGE COLUMNS?
+      (* THE CONTEST FORMATS ITS OWN EXPORT -- M4, 2026-10-01.
 
-         False by default, so a contest that has only had its SCORING moved does
-         not silently take over its Cabrillo and ADIF output as well. Each
-         responsibility arrives when it is actually lifted, and the ones that
-         have not are still the legacy case's. *)
-      
-      (* THE TWO CABRILLO EXCHANGE COLUMNS, and the ADIF sent exchange.
+         EVERY CONTEST IS ASKED. PostUnit and uADIF ask
+         uContestRegistry.ContestIdentity, which answers a classless contest
+         with a plain TContestBase, so there is no switch deciding WHETHER a
+         contest formats its export: it always does, and FormatsExchange --
+         the opt-in that stood here from phase F -- is gone.
 
-         WHAT IS PASSED IN, AND WHY EACH OF IT. aRSTSent and aRSTReceived are the
-         ALREADY-FORMATTED display strings -- PostUnit decides whether a report
-         reads 599 or 59 and it is not the contest's business; aHisQTH is the
-         his-QTH the exporter already selected (DoingDomesticMults /
-         LiteralDomesticQTH / ...), for the same reason. Choosing them is the
-         exporter's job; arranging them into columns is the contest's.
+         THE BASE'S ANSWER IS THE SHARED ARM FOR THE SESSION'S EXCHANGE, and
+         only that. uCabrilloExchange.FormatCabrilloExchangeOfKind and
+         uADIFExchange.FormatADIFExchangeOfKind hold one arm per exchange SHAPE
+         -- what an RST-and-serial or a name-and-QTH line looks like -- and
+         NOTHING that names a contest: every `if Contest = ...` that stood
+         inside those arms is an override on that contest's class now. A base
+         that asked which contest it is would be the defect this factory
+         exists to remove. The kind is TCabrilloQSOContext.SessionExchange --
+         see that record for why it is the session's and not the trait.
 
-         Only called when FormatsExchange is True. *)
+         A CONTEST WITH ITS OWN RULE OVERRIDES, and owns the result whatever
+         the session's exchange says -- as the classes that formatted their
+         own columns before M4 always did. One that only adjusts an input
+         (UK/EI's '--' for an absent QTH) changes the context and calls
+         inherited, so the shared arm still lays out the line.
+
+         THE WIDTHS ARE THE CONTRACT. Cabrillo is a column format and these
+         strings are what a robot scorer reads, so an override reproduces its
+         arm's widths exactly, trailing spaces included. *)
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; virtual;
+                                          const aCtx: TCabrilloQSOContext): string; virtual;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; virtual;
+                                              const aCtx: TCabrilloQSOContext): string; virtual;
+
+      (* THE ADIF STX_STRING -- our side of the exchange. aSessionExchange as
+         for Cabrillo. The caller has already decided the QSO is a good one;
+         an exception is the caller's to report (PostUnit writes the marker
+         uADIFExchange.ADIFMyExchangeErrorMarker, as it always did). *)
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; virtual;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; virtual;
+
+      (* THE CONTEST'S OWN ADIF FIELDS FOR THE WORKED STATION -- M4.
+
+         Asked by PostUnit's tail emitter, for a QSO whose QTHString is not
+         empty and is not a grid (a grid has already gone to GRIDSQUARE). What
+         it returns is ADIF text, written after CNTY and before the zone: the
+         Field Days' ARRL_SECT/CLASS/STATE, Sweepstakes' ARRL_SECT, IARU's
+         APP_TR4W_HQ, the RSGB IOTA's IOTA, WAG's DOK, the digital contests'
+         GRIDSQUARE.
+
+         TAG SPELLINGS ARE ADIF'S, THE MEANING IS THE CONTEST'S: an override
+         calls uADIF.EmitADIFField for the tag and decides what goes in it.
+
+         The base writes nothing -- uADIF.EmitADIFRecord has already written
+         the generic QTH, which is all most contests have ever exported. *)
+      function EmitADIFContestFields(const aQso: ContestExchange): string; virtual;
 
       (* Hands the contest the station it is operating as.
 
@@ -769,7 +905,13 @@ uses
    SysUtils,
    (* TC_IMPROPERTRANSMITTERCOUNT -- the one message that is NOT contest
       specific: every class-carrying contest counts transmitters the same way. *)
-   uTR4WStrings;
+   uTR4WStrings,
+   (* THE SHARED EXCHANGE ARMS the base's export defaults call -- M4. Both
+      units name this one in their interface for the record types, so the
+      reference back is from the implementation, which Pascal allows. They
+      name no contest, and depend on VC, SysUtils and Log4D only. *)
+   uCabrilloExchange,
+   uADIFExchange;
 
 function ContestIdList(const aIds: array of string): TContestIdList;
 var
@@ -1089,30 +1231,54 @@ begin
    Result := True;
 end;
 
-function TContestBase.GetFormatsExchange: boolean;
-begin
-   Result := False;
-end;
+(* THE SHARED ARM FOR THE SESSION'S EXCHANGE -- see the declaration.
 
+   ONE CALL COMPUTES BOTH COLUMNS and each method keeps its half. The arms
+   were written as pairs, and splitting forty of them in two to save a Format
+   per QSO would be forty chances to change a byte. Only the sent half reports
+   an exchange with no arm, so an unhandled kind is logged once per QSO line,
+   not twice. *)
 function TContestBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                                  const aQso: ContestExchange;
-                                                 const aRSTSent: string): string;
+                                                 const aCtx: TCabrilloQSOContext): string;
+var
+   received: string;
 begin
-   Result := '';
+   FormatCabrilloExchangeOfKind(aCtx, aQso, aMy, string(ContestTypeSA[FContest]),
+                                True, Result, received);
 end;
 
 function TContestBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                      const aQso: ContestExchange;
-                                                     const aRSTReceived: string;
-                                                     const aHisQTH: string): string;
+                                                     const aCtx: TCabrilloQSOContext): string;
+var
+   sent: string;
 begin
-   Result := '';
+   FormatCabrilloExchangeOfKind(aCtx, aQso, aMy, string(ContestTypeSA[FContest]),
+                                False, sent, Result);
 end;
 
 function TContestBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                             const aQso: ContestExchange): string;
+                                             const aQso: ContestExchange;
+                                             aSessionExchange: ExchangeType): string;
 begin
+   Result := FormatADIFExchangeOfKind(aSessionExchange, aQso, aMy);
+end;
+
+function TContestBase.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   (* Nothing beyond the generic QTH uADIF has already written. *)
    Result := '';
+end;
+
+function TContestBase.GetADIFPowerTag: string;
+begin
+   Result := 'RX_PWR';
+end;
+
+function TContestBase.GetWritesADIFContestId: boolean;
+begin
+   Result := True;
 end;
 
 function TContestBase.ValidateDXQTH(const aQTH: string;

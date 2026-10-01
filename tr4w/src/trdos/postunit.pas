@@ -56,9 +56,9 @@ uses
   LCLType,
   uCabrilloFormat,
   // tCabrilloFreqString / tCabrilloModeString + per-field formatters (extracted from this unit, see uCabrilloFormat.pas)
-  uCabrilloExchange,
-  uADIFExchange,      { the ADIF twin -- see GetMyExchangeForExport }
-  // #998 capstone: FormatCabrilloExchange (the case ActiveExchange MYEX/HISEX builder, extracted + unit-tested)
+  (* ADIFMyExchangeErrorMarker -- what STX_STRING carries when the exchange
+     cannot be built. The exchange itself is the contest's (M4). *)
+  uADIFExchange,
   uSuperCheckPartialFileUpload,
   uTR4WStrings;
 
@@ -168,7 +168,6 @@ procedure BandChangeReport;
 procedure MakeReportFileName( const ShortFileName: string );
 procedure MakeNotesList;
 function GoodLookingQSO: boolean;
-function GetStateFromSection( section: string ): string;
 // function CorrectContestExchange: boolean;
 
 var
@@ -425,11 +424,12 @@ uses
   MainUnit,
   (* Which store an export reads from -- step B3. *)
   uLogSource,
-  (* ActiveContest -- the contest formats its own exchange, phase F. *)
-  uContestFactory,
-  (* CabrilloQSOLineFormatDefault -- the layout for a contest with no class. *)
+  (* TMyStationExchange and TCabrilloQSOContext -- what the exporter hands a
+     contest when it asks for its exchange columns. *)
   uContestBase,
-  (* ContestIdentity -- the contest's Cabrillo and friendly names, M1. *)
+  (* ContestIdentity -- the contest's names (M1) and, since M4, its export:
+     every contest is asked, a classless one answering as a plain
+     TContestBase. *)
   uContestRegistry,
   uCFG,
   uLogNote;   (* NoteText -- MakeNotesList *)
@@ -2358,10 +2358,21 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // ----- Contest-specific primary-location field -----
   //
   // uADIF.EmitADIFRecord already emitted <QTH> when QTHString is non-empty.
-  // Most contests have a more specific tag (GRIDSQUARE / IOTA / ARRL_SECT /
-  // DOK / APP_TR4W_HQ / POTA_REF) -- emit it here too so the file matches
-  // the original ExportToADIF output.  A few contests deliberately suppress
-  // any location field (CQ160, NA-SPRINT, NAQSO).
+  // A grid goes to GRIDSQUARE here.  Anything else is the CONTEST'S to
+  // place (M4, 2026-10-01): EmitADIFContestFields, asked of every contest
+  // through ContestIdentity -- the Field Days' ARRL_SECT/CLASS/STATE,
+  // Sweepstakes' ARRL_SECT, IARU's APP_TR4W_HQ, the RSGB IOTA's IOTA, WAG's
+  // DOK, the digital contests' GRIDSQUARE.  The base writes nothing.
+  //
+  // TWO CONTESTS ARE STILL NAMED HERE, EACH FOR A STATED REASON (design
+  // 8.2e).  POTA has no class: whether it gets one is NY4I's open Q6, and its
+  // export leans on three TRDOS helpers a class may not call.  ARRL 160 has
+  // no class because its SCORING reads the domestic-country list through a
+  // CTY lookup (ZoneCont.DomesticCountryCall) that a contest cannot yet be
+  // handed.  The no-op arm that named the NA Sprints, the SSB Sprint, CQ 160
+  // and the NAQP runnings, and the comment that said they "suppress any
+  // location field", were deleted: the arm and the else did the same nothing
+  // (inventory D6).
   if rec.QTHString <> '' then
      begin
      qthForGrid := rec.DomesticQTH;
@@ -2374,55 +2385,12 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
      else
         begin
         case rec.ceContest of
-          WAG:
-            Result := Result + EmitADIFField( 'DOK', string( rec.QTHString ) );
           ARRL160:
             if ( rec.QTH.CountryID = 'K' ) or ( rec.QTH.CountryID = 'VE' ) then
                begin
                Result := Result + EmitADIFField( 'ARRL_SECT',
                   string( rec.QTHString ) );
                end;
-          ARRLFIELDDAY, WINTERFIELDDAY:
-            begin
-            if rec.QTHString <> 'DX' then
-               begin
-               if rec.QTH.CountryID = 'K' then
-                  begin
-                  Result := Result + EmitADIFField( 'DXCC', '291' );
-                  // Yes, hard-coded to US country ARRL code    ny4i
-                  Result := Result + EmitADIFField( 'STATE',
-                     GetStateFromSection( rec.QTHString ) );
-                  end
-               else
-                 if rec.QTH.CountryID = 'VE' then
-                    begin
-                    Result := Result + EmitADIFField( 'DXCC', '1' );
-                    // Yes, hard-coded to VE country ARRL code    ny4i
-                    Result := Result + EmitADIFField( 'STATE',
-                       GetStateFromSection( rec.QTHString ) );
-                    end;
-               Result := Result + EmitADIFField( 'ARRL_SECT',
-                  string( rec.QTHString ) );
-               Result := Result + EmitADIFField( 'CLASS', string( rec.ceClass ) );
-               end;
-            // No STX_STRING here (#1050).  It is already emitted once above
-            // from GetMyExchangeForExport, which builds "<class> <section>" for
-            // both FD and WFD (AE = ClassDomesticOrDXQTHExchange).  The
-            // former extra emission here produced a duplicate STX_STRING
-            // tag once the general emitter was fixed to run per-record
-            // (#1049) -- before that the general one was the broken
-            // "Error generating my exchange" default, so this explicit
-            // copy was the one that "won on parse".  Now redundant.
-            end;
-          ARRLSSCW, ARRLSSSSB:
-            if rec.QTHString <> 'DX' then
-               begin
-               Result := Result + EmitADIFField( 'ARRL_SECT',
-                  string( rec.QTHString ) );
-               end;
-          CQ160CW, CQ160SSB, NASPRINTCW, SPRINTSSB, NASPRINTRTTY, NAQSOCW,
-             NAQSOSSB, NAQSORTTY:
-            ; // legacy: no extra location field
           POTA:
             if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
                begin
@@ -2432,17 +2400,11 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
                Result := Result + EmitADIFField( 'POTA_REF',
                   string( rec.QTHString ) );
                end;
-          IOTA:
-            Result := Result + EmitADIFField( 'IOTA', string( rec.DomesticQTH ) );
-          IARU:
-            Result := Result + EmitADIFField( 'APP_TR4W_HQ',
-               string( rec.QTHString ) );
-          ARRLDIGI, WWDIGI, BATAVIA_FT8:
-            Result := Result + EmitADIFField( 'GRIDSQUARE',
-               string( rec.QTHString ) );
           else
-            // Default: uADIF already emitted <QTH:...>.  Nothing more.
-            ;
+            begin
+            Result := Result
+               + ContestIdentity( rec.ceContest ).EmitADIFContestFields( rec );
+            end;
         end;
         end;
      end;
@@ -2833,9 +2795,11 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       Result := true;
       end;
 
-  // Issue #998 capstone: the per-exchange SetMyEx/SetHisEx + the whole
-  // `case ActiveExchange of` were extracted into uCabrilloExchange.pas
-  // (FormatCabrilloExchange) so the exchange formatting is unit-testable.
+  (* THE EXCHANGE COLUMNS ARE THE CONTEST'S -- M4, 2026-10-01. Issue #998
+    lifted the `case ActiveExchange of` out of this routine into
+    uCabrilloExchange; M4 made it TContestBase's default, so this routine
+    asks the contest (ContestIdentity) and no longer knows how any exchange
+    is laid out. *)
 
     function tGenerateLogPortionOfCabrilloFile: boolean;
       label
@@ -2865,37 +2829,34 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         sCall1: string; // Issue #998: QTC from-call (QTCR/QTCS swap)
         sCall2: string; // Issue #998: QTC to-call (QTCR/QTCS swap)
         myStationEx: TMyStationExchange;
-        // #998 capstone: My-station fields for FormatCabrilloExchange
+        (* What this routine has decided about the QSO before it asks the
+          contest for the two columns -- see TCabrilloQSOContext. *)
+        qsoContext: TCabrilloQSOContext;
+        exportContest: TContestBase;
         cRandomCharsReceived: string;
         cKids: string;
+        (* THE PREVIOUS GOOD QSO'S RECEIVED NUMBER, mod 1000 -- what Radio YOC
+          sends back. It was computed here and never read, while the exchange
+          arm kept its own copy (pnr) by writing back through a var
+          parameter; the two were always equal, and since M4 this is the one
+          the contest is handed. *)
         previousqsonr: integer;
-        TransmitterIDPos: integer;
         contacts: integer;
         PreviousQTHString: Str10;
-        pnr: integer;
         slOperators: TStringList;
 
       begin
-      TransmitterIDPos := 83;
-      pnr              := 0;
+      (* PreviousQTHString is a Str10 -- a ShortString, so not
+        zero-initialised -- and the contest is handed it before the first
+        record has set it. FPC reports it. Empty is what the first QSO has
+        always been given.
 
-      (* BESIDE pnr AND contacts, WHICH THIS ROUTINE ALREADY ZEROES.
-
-        PreviousQTHString is declared with them and is a Str10 -- a
-        ShortString, so not zero-initialised -- but nothing set it before the
-        FormatCabrilloExchange call below reads it.  The assignments further
-        down happen AFTER that read, so the first QSO handed it stack garbage.
-        FPC reports it.
-
-        Its siblings are initialised here; this belongs with them. *)
+        A NAQP-ONLY TransmitterIDPos (83, or 92 for the three NAQP runnings)
+        stood here, written and never read; it went at M4 with the only
+        contest test it carried. *)
       PreviousQTHString := '';
-      if ( Contest = NAQSOCW ) or ( Contest = NAQSOSSB ) or
-         ( Contest = NAQSORTTY ) then
-         begin
-         TransmitterIDPos := 92; // 4.67.7
-         end;
-      // if Contest =  NAQPCW  then TransmitterIDPos := 92;
       contacts := 0;
+      exportContest := ContestIdentity( Contest );
       Result   := False;
 
       logger.Info( 'In tGenerateLogPortionOfCabrilloFile' );
@@ -3033,19 +2994,18 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    csQTHString := string( TempRXData.QTHString )
                    end
                 else
-                  if Settings.Contest.Name = 'WWDIGI' then
+                  (* WWDIGI's own QTHString is TContestWWDigi's override since
+                    M4 -- the test named the contest by Settings.Contest.Name,
+                    which FoundContest sets to the contest's own spelling.
+                    LABRE has no ContestType of that name; its test stays. *)
+                  if Settings.Contest.Name = 'LABRE' then
                      begin
                      csQTHString := string( TempRXData.QTHString )
                      end
                   else
-                    if Settings.Contest.Name = 'LABRE' then
-                       begin
-                       csQTHString := string( TempRXData.QTHString )
-                       end
-                    else
-                       begin
-                       csQTHString := string( TempRXData.DomesticQTH ) { DomMultQTH };
-                       end;
+                     begin
+                     csQTHString := string( TempRXData.DomesticQTH ) { DomMultQTH };
+                     end;
                 end
              else
                 begin
@@ -3062,18 +3022,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 csQTHString := string( TempRXData.QTHString );
                 end;
 
-             if Contest in [ CALQSOPARTY ] then
-                begin
-
-                csQTHString := string( TempRXData.QTHString );
-                // else
-                // csQTHString := @TempRXData.DomMultQTH[1];
-                if TempRXData.DomMultQTH = '' then
-                   begin
-                   TempRXData.DomMultQTH := 'DX';
-                   csQTHString           := 'DX';
-                   end;
-                end;
+             (* California's QTHString-or-'DX' is TContestCaliforniaQP's
+               received column since M4. *)
 
              if GoodLookingQSO then
                 begin
@@ -3108,11 +3058,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 FillChar(CABRILLO_RST_RCVD, SizeOf(CABRILLO_RST_RCVD), 0);
                 Windows.lstrcat(CABRILLO_RST_RCVD, '599');
               }
-                { Make Exchanges Strings }
-                // Issue #998 capstone: the per-exchange MYEX/HISEX builder was extracted
-                // into uCabrilloExchange.FormatCabrilloExchange (dependency-light + unit-
-                // tested).  Build the My-station record and pass the per-QSO derived
-                // strings; it fills CABRILLO_MYEX / CABRILLO_HISEX (and carries pnr).
+                (* THE TWO EXCHANGE COLUMNS, ASKED OF THE CONTEST -- M4. This
+                  routine fills the My-station record and the per-QSO inputs
+                  it has decided; the contest arranges them. *)
                 myStationEx.MyState      := Settings.My.State;
                 myStationEx.MyGrid       := Settings.My.Grid;
                 myStationEx.MyName       := Settings.My.Name;
@@ -3123,15 +3071,18 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 myStationEx.MyPrec       := Settings.My.Prec;
                 myStationEx.MyFOCNumber  := Settings.My.FocNumber;
                 myStationEx.MyPostalCode := Settings.My.PostalCode;
-                FormatCabrilloExchange( ActiveExchange, Contest, Settings.Contest.Title,
-                   Settings.Contest.Name, TempRXData, myStationEx, RSTSent,
-                   RSTReceived, string( csQTHString ),
-                   string(PreviousQTHString), contacts, pnr,
-                   CABRILLO_MYEX, CABRILLO_HISEX,
-                   { The contest formats its own columns if it has been moved
-                     into the factory; nil is the ordinary answer today. }
-                   ActiveContest( Contest ) );
-                // ----------------------------
+                qsoContext.SessionExchange        := ActiveExchange;
+                qsoContext.RSTSent                := RSTSent;
+                qsoContext.RSTReceived            := RSTReceived;
+                qsoContext.HisQTH                 := csQTHString;
+                qsoContext.PreviousQTH            := string( PreviousQTHString );
+                qsoContext.PreviousNumberReceived := previousqsonr;
+                qsoContext.RecordNumber           := contacts;
+                qsoContext.ContestTitle           := Settings.Contest.Title;
+                CABRILLO_MYEX  := exportContest.FormatCabrilloSentExchange(
+                   myStationEx, TempRXData, qsoContext );
+                CABRILLO_HISEX := exportContest.FormatCabrilloReceivedExchange(
+                   myStationEx, TempRXData, qsoContext );
 
                 // Issue #998: StrUpper (ASCII a-z only) on the old PChar buffer -> UpperCase
                 // on the string (also ASCII a-z; Cabrillo exchanges are ASCII so identical).
@@ -3158,17 +3109,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // trailing argument, so a single arg list serves every layout.
                 (* WHICH LAYOUT IS THE CONTEST'S ANSWER -- phase F.
                    This was `if Contest = ARKTIKA_SPRING`, one contest's rule
-                   written where its name had to be asked for. The contest class
-                   states it now; a contest with no class gets the same default
-                   constant the base returns, so there is one copy of it. *)
-                if ActiveContest( Contest ) <> nil then
-                   begin
-                   sFmt := ActiveContest( Contest ).CabrilloQSOLineFormat
-                   end
-                else
-                   begin
-                   sFmt := CabrilloQSOLineFormatDefault; // 4.100.3
-                   end;
+                   written where its name had to be asked for. Every contest
+                   answers now (M4); the base's answer is the one layout
+                   constant, CabrilloQSOLineFormatDefault (4.100.3). *)
+                sFmt := exportContest.CabrilloQSOLineFormat;
                 sWriteFileFromString( tReportFileWrite,
                    sysutils.Format( sFmt, [ sFirstPart, CABRILLO_MYEX,
                    string( HisCallsign ), CABRILLO_HISEX, string( T4 ) ] ) );
@@ -3756,10 +3700,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       var
         my: TMyStationExchange;
       begin
-      { THE 61-ARM `case ActiveExchange of` MOVED TO uADIFExchange, unchanged,
-        and is pinned arm-by-arm there.  What is left here is the part that
-        needs PostUnit's globals: filling the record.  Same split, same reason,
-        as tGenerateLogPortionOfCabrilloFile and uCabrilloExchange. }
+      (* THE EXCHANGE IS THE CONTEST'S -- M4, 2026-10-01. What is left here
+        is the part that needs PostUnit's globals: filling the record, and
+        deciding the QSO is a good one. The contest is asked through
+        ContestIdentity, so a classless contest answers with TContestBase's
+        default -- the shared arm for the session's exchange, in
+        uADIFExchange. *)
       my.MyState      := Settings.My.State;
       my.MyGrid       := Settings.My.Grid;
       my.MyName       := Settings.My.Name;
@@ -3772,10 +3718,22 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       my.MyPostalCode := Settings.My.PostalCode;
       my.MyPark       := Settings.My.Park;
 
-      Result := FormatADIFMyExchange(ActiveExchange, Contest, TempRXData, my,
-                                     GoodLookingQSO,
-                                     { nil unless this contest formats its own }
-                                     ActiveContest( Contest ));
+      Result := ADIFMyExchangeErrorMarker;
+      if not GoodLookingQSO then
+         begin
+         Exit;
+         end;
+
+      (* A FORMAT THAT RAISES LEAVES THE MARKER, as it always did -- the
+        exchange was built inside a try/except that kept the initial value.
+        One contest's formatter raising must not take the whole export
+        down. *)
+      try
+         Result := ContestIdentity( Contest ).FormatADIFSentExchange( my,
+            TempRXData, ActiveExchange );
+      except
+         Result := ADIFMyExchangeErrorMarker;
+      end;
       end;
   (* ---------------------------------------------------------------------------- *)
     function GetOperatorsFromLog: string;
@@ -3875,48 +3833,6 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          end;
       end;
 
-  (* ---------------------------------------------------------------------------- *)
-    function GetStateFromSection( section: string ): string;
-      begin
-      logger.debug( 'Entering GetStateFromSection with ' + section );
-      Case AnsiIndexText( AnsiUpperCase( section ), [ 'EMA', 'WMA', // 0..1
-         'ENY', 'NLI', 'NNY', 'WNY', // 2..5
-         'NNJ', 'SNJ', // 6..7
-         'EPA', 'WPA', // 8..9
-         'NFL', 'SFL', 'WCF', // 10..12
-         'NTX', 'WTX', 'STX', 'EB', 'LAX', 'ORG', 'SB', 'SCV', 'SDG', 'SF',
-         'SJV', 'SV', 'PAC', 'EWA', 'WWA', 'GTA', 'ONE', 'ONN', 'ONS',
-         'MAR' ] ) of
-
-        0 .. 1:
-          Result := 'MA';
-        2 .. 5:
-          Result := 'NY';
-        6 .. 7:
-          Result := 'NJ';
-        8 .. 9:
-          Result := 'PA';
-        10 .. 12:
-          Result := 'FL';
-        13 .. 15:
-          Result := 'TX';
-        16 .. 24:
-          Result := 'CA';
-        25:
-          Result := 'HI';
-        26 .. 27:
-          Result := 'WA';
-        28 .. 31:
-          Result := 'ON';
-        32:
-          Result := 'NS';
-        else
-          Result := Tree.GetStateFromSection( section );
-          // This is to not return VE providences that do map directly from sections.
-      end;
-
-      logger.debug( 'Leaving GetSectionFromState with ' + Result );
-      end;
 
     function DeleteRepeatedSpaces( const s: string ): string;
       var

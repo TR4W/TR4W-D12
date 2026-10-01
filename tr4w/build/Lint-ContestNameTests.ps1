@@ -109,6 +109,10 @@ $CEILINGS = @{
    # 12 files; that figure is not comparable, it counted each case once and
    # skipped every qualified operand. No false positive was found in the tree:
    # no TENTEN / RDA / PCC / IOTA hit is a local or a field.
+   #
+   # M4, 2026-10-01 -- each contest formats its own export: postunit 26 -> 15,
+   # uadif 4 -> 3, uadifexchange 5 -> 0 and ucabrilloexchange 11 -> 0 (both
+   # unlisted now, so their ceiling is 0 and any contest test fails them).
    'mainunit.pas'          = 26
    'trdos\fcontest.pas'    = 107
    'trdos\logcfg.pas'      = 14
@@ -117,10 +121,8 @@ $CEILINGS = @{
    'trdos\logstuff.pas'    = 14
    'trdos\logsubs2.pas'    = 4
    'trdos\logwind.pas'     = 1
-   'trdos\postunit.pas'    = 26
-   'uadif.pas'             = 4
-   'uadifexchange.pas'     = 5
-   'ucabrilloexchange.pas' = 11
+   'trdos\postunit.pas'    = 15
+   'uadif.pas'             = 3
    'uexchangebuilder.pas'  = 11
    'unewcontest.pas'       = 92
    'utotal.pas'            = 5

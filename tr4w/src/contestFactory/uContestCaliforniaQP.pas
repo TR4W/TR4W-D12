@@ -100,6 +100,11 @@ type
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* The received column -- see the implementation. *)
+      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aCtx: TCabrilloQSOContext): string; override;
    end;
 
 implementation
@@ -107,6 +112,33 @@ implementation
 uses
    uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
+
+(* THE RECEIVED COUNTY IS THE QSO'S OWN QTHString, OR 'DX' -- M4, 2026-10-01.
+
+   PostUnit's Cabrillo writer carried this as `if Contest in [CALQSOPARTY]`:
+   whatever his-QTH the exporter had chosen, California's column took the
+   QSO's QTHString, and 'DX' when the QSO earned no domestic multiplier
+   (DomMultQTH empty) -- an out-of-state or DX station. That is California's
+   rule about its own column, so it is stated here and the shared arm for the
+   session's exchange still lays out the line.
+
+   The writer also set the record's DomMultQTH to 'DX' while doing it. Nothing
+   downstream read that -- the arm reads only the his-QTH, and the next record
+   replaces the whole exchange -- so the copy is not made. *)
+function TContestCaliforniaQP.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                             const aQso: ContestExchange;
+                                                             const aCtx: TCabrilloQSOContext): string;
+var
+   ctx: TCabrilloQSOContext;
+begin
+   ctx := aCtx;
+   ctx.HisQTH := string(aQso.QTHString);
+   if aQso.DomMultQTH = '' then
+      begin
+      ctx.HisQTH := 'DX';
+      end;
+   Result := inherited FormatCabrilloReceivedExchange(aMy, aQso, ctx);
+end;
 
 function TContestCaliforniaQP.GetDisplayName: string;
 begin

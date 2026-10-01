@@ -318,7 +318,6 @@ begin
       CheckEquals('Florida QSO Party', obj.DisplayName, 'Florida display name');
       CheckEquals('FCG-FQP', obj.CabrilloName, 'Florida Cabrillo name');
       CheckTrue(obj.IsUSQSOParty, 'Florida is a US QSO party');
-      CheckTrue(obj.FormatsExchange, 'Florida owns its exchange columns');
 
       (* From the published rules: "Florida stations on a county line (maximum
          of two counties) may be claimed as a separate QSO and multiplier from
@@ -363,8 +362,6 @@ begin
       CheckEquals('MI', obj.HostState, 'Michigan host state');
       CheckEquals('Michigan QSO Party', obj.DisplayName, 'Michigan display name');
       CheckEquals('MI-QSO-PARTY', obj.CabrilloName, 'Michigan Cabrillo name');
-      CheckFalse(obj.FormatsExchange,
-                 'Michigan must still use the legacy exchange formatter');
       CheckEquals(0, TContestStateQSOPartyBase(obj).CountyLineCountiesMax,
                   'Michigan forbids simultaneous operation in two counties');
       CheckFalse(TContestStateQSOPartyBase(obj).CountyLineAllowed,
@@ -1418,8 +1415,6 @@ begin
                   'Idaho stations count DXCC countries');
       CheckEquals(Ord(RSTDomesticOrDXQTHExchange), Ord(obj.ExchangeKind),
                   'Idaho exchange is RST and a domestic or DX QTH');
-      CheckFalse(obj.FormatsExchange,
-                 'Idaho uses the shared exchange formatter until M4');
    finally
       obj.Free;
       end;
@@ -1878,6 +1873,26 @@ begin
    CheckAgainstArray(SPRINTSSB, 'Sprint SSB');
    CheckAgainstArray(LQP, 'Locust QSO Party');
    CheckAgainstArray(NZFIELDDAY, 'Jock White Memorial Field Day');
+
+   (* THE CONTESTS THAT GAINED A CLASS AT M4 (2026-10-01), each because an
+      exporter named it. Most rows have a BLANK CABName and ADIFName, which
+      resolve to the enum's spelling -- 'URAL-CUP', 'RSGB-IOTA', 'DARC-10M'.
+      Two traps: WWDIGI and BATAVIA_FT8 STATE a CABName ('WW-DIGI',
+      'BATAVIA') that is not their spelling while their ADIF id is; and
+      PACC's row says RSTAndQSONumberOrDomesticQTHExchange although every
+      PACC session runs RSTDomesticQTHExchange (FCONTEST's arm) -- the class
+      transcribes the row, and the export rule follows the session. *)
+   CheckAgainstArray(FOCMARATHON, 'FOC Marathon');
+   CheckAgainstArray(UKRAINECHAMPIONSHIP, 'Ukraine Championship');
+   CheckAgainstArray(CUPURAL, 'Ural Cup');
+   CheckAgainstArray(UKEI, 'UK/EI DX');
+   CheckAgainstArray(IOTA, 'RSGB IOTA');
+   CheckAgainstArray(DARC10M, 'DARC 10 m');
+   CheckAgainstArray(PACC, 'PACC');
+   CheckAgainstArray(PCC, 'PCC');
+   CheckAgainstArray(WAG, 'WAG');
+   CheckAgainstArray(WWDIGI, 'WW Digi');
+   CheckAgainstArray(BATAVIA_FT8, 'Batavia FT8');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
@@ -2708,8 +2723,6 @@ procedure TContestFactoryTests.Test_NRAUBalticIsOneContestInTwoModes;
                      aWhat + ' exchange');
          CheckEquals(Ord(TwoPointsPerQSO), Ord(obj.QSOPointMethod),
                      aWhat + ' point method');
-         CheckFalse(obj.FormatsExchange,
-                    aWhat + ' does not format its own exchange yet (M4)');
          CheckFalse(obj.IsUSQSOParty, aWhat + ' is not a US QSO party');
       finally
          obj.Free;
@@ -2757,8 +2770,6 @@ begin
       CheckEquals('North American Sprint, SSB', obj.FriendlyName,
                   'Sprint SSB friendly name');
       CheckEquals(242, obj.WA7BNMId, 'Sprint SSB WA7BNM id');
-      CheckFalse(obj.FormatsExchange,
-                 'Sprint SSB does not format its own exchange yet (M4)');
    finally
       obj.Free;
       end;

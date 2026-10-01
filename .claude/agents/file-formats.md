@@ -118,6 +118,24 @@ multipliers, CTY.DAT, band lookup and CRC32.
   external logger (DXKeeper) sends the same getter's id since M1 — it used to
   send the bare enum spelling. A contest that gains an id still lists its old
   enum spelling as a former one.
+- **THE EXCHANGE COLUMNS AND CONTEST FIELDS ARE THE CONTEST'S (M4,
+  2026-10-01).** `uCabrilloExchange` and `uADIFExchange` are TContestBase's
+  default -- one arm per exchange SHAPE, naming no contest, keyed on the
+  session's exchange (`TCabrilloQSOContext.SessionExchange`). PostUnit asks
+  `ContestIdentity(c)` for the two Cabrillo columns, the `QSO:` layout and the
+  `STX_STRING`, and the tail asks `EmitADIFContestFields` for the worked
+  station's fields (ARRL_SECT, CLASS, DOK, IOTA, APP_TR4W_HQ, GRIDSQUARE);
+  `uADIF.EmitADIFRecord` asks `ADIFPowerTag` (RX_PWR / FOC_NUM) and
+  `WritesADIFContestId`. **Do not put a contest test back in these units** --
+  the `Lint-ContestNameTests` ceiling for both exchange units is 0 now. POTA
+  and ARRL 160 are the two contests the tail still names, with the reason
+  beside each. A contest-field change shows in the corpus only for the 13
+  sets; the contest matrix sees every contest, and
+  `uTestContestExport.Test_RoundTripThroughTodaysImport` pins export against
+  today's import (WAG's DOK and the RSGB IOTA's IOTA are exported and not
+  imported -- M5's).
+- **`StateFromARRLSection` (`uARRLSections`) is the one section-to-state
+  table** -- PostUnit's and Tree's layered copies were merged into it at M4.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
 

@@ -56,7 +56,6 @@ uses
 type
    TContestIARU = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -71,19 +70,22 @@ type
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
+      function EmitADIFContestFields(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   SysUtils, uContestRegistry,
+   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   uADIF;
 
 procedure TContestIARU.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -132,47 +134,42 @@ end;
    spellings are kept so a future reader diffing against the legacy sees no
    difference at all.
 
-   THE SHARED ARM STAYS: RSTZoneOrDomesticQTH sits on the same body and belongs
-   to contests that have no class yet. *)
-function TContestIARU.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
+   THE SHARED ARM STAYS: RSTZoneOrDomesticQTH sits on the same body and is
+   TContestBase's default for the contests that run it. *)
 function TContestIARU.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
 begin
    if aMy.MyState <> '' then
       begin
-      Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
+      Result := Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
       end
    else
       begin
-      Result := Format('%-3s %-7d', [aRSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+      Result := Format('%-3s %-7d', [aCtx.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
       end;
 end;
 
 function TContestIARU.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
 begin
-   (* aQso.QTHString, not aHisQTH: the legacy arm TESTS rx.QTHString and then
+   (* aQso.QTHString, not aCtx.HisQTH: the legacy arm TESTS rx.QTHString, and
       formats csQTHString, which the exporter set from it. The test and the
       value are the same source. *)
    if aQso.QTHString <> '' then
       begin
-      Result := Format('%-3s %-7s', [aRSTReceived, aHisQTH]);
+      Result := Format('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
       end
    else
       begin
-      Result := Format('%-3s %-7u', [aRSTReceived, aQso.Zone]);
+      Result := Format('%-3s %-7u', [aCtx.RSTReceived, aQso.Zone]);
       end;
 end;
 
 function TContestIARU.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+                                             const aQso: ContestExchange;
+                                             aSessionExchange: ExchangeType): string;
 begin
    if aMy.MyState <> '' then
       begin
@@ -182,6 +179,16 @@ begin
       begin
       Result := Format('%-3d %-7d', [aQso.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
       end;
+end;
+
+(* A HEADQUARTERS STATION'S SOCIETY GOES TO APP_TR4W_HQ -- M4, 2026-10-01,
+   the IARU arm of postunit's EmitContestSpecificTailForExport, moved here.
+   ADIF has no standard tag for an IARU society; this is TR4W's own, and
+   import reads it back (with N1MM's APP_N1MM_HQ). PostUnit asks only for a
+   non-empty QTH, and writes it, as the arm did. *)
+function TContestIARU.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   Result := EmitADIFField('APP_TR4W_HQ', string(aQso.QTHString));
 end;
 
 initialization

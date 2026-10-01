@@ -244,10 +244,9 @@ end;
    inventing the seam and the arm in one move would be unverifiable. It moves
    when the parsing seam is designed.
 
-   THE EXCHANGE COLUMNS STAY TOO: FormatsExchange is left False, so
-   uCabrilloExchange and uADIFExchange still use the shared
-   RSTAndQSONumberOrDomesticQTHExchange arm -- which several contests with no
-   class also use, so the arm is live regardless. *)
+   THE EXCHANGE COLUMNS ARE THE BASE'S DEFAULT (M4): TContestBase formats
+   them through the shared RSTAndQSONumberOrDomesticQTHExchange arm, which
+   several other contests run as well. Only the LINE is this contest's. *)
 
 initialization
    RegisterContest(ARKTIKA_SPRING, TContestArktikaSpring);

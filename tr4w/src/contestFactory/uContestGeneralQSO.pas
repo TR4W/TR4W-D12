@@ -38,8 +38,8 @@ uses
 type
    TContestGeneralQSO = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      function GetWritesADIFContestId: boolean; override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -52,13 +52,13 @@ type
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
    end;
 
 implementation
@@ -82,32 +82,38 @@ end;
    same three widths, because General QSO has no rule about who sends what. It
    is the fallback contest, so there is nothing contest-specific to encode.
 
-   THE SHARED ARM STAYS: RSTNameAndQTHExchange serves other contests that have
-   no class. *)
-function TContestGeneralQSO.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
+   THE SHARED ARM STAYS: RSTNameAndQTHExchange is TContestBase's default for
+   every other contest that runs it.
 
+   NO CONTEST_ID IN ADIF (WritesADIFContestId False): General QSO is an
+   operating mode, not a contest, and uADIF.EmitADIFRecord has never written
+   one for it. It tested `ceContest in [POTA, GENERALQSO]` until M4. *)
 function TContestGeneralQSO.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-5s %-7s', [aRSTSent, aMy.MyName, aMy.MyState]);
+   Result := Format('%-3s %-5s %-7s', [aCtx.RSTSent, aMy.MyName, aMy.MyState]);
 end;
 
 function TContestGeneralQSO.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
+                                                           const aQso: ContestExchange;
+                                                           const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-5s %-7s', [aRSTReceived, string(aQso.Name), aHisQTH]);
+   Result := Format('%-3s %-5s %-7s', [aCtx.RSTReceived, string(aQso.Name), aCtx.HisQTH]);
 end;
 
 function TContestGeneralQSO.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+                                                   const aQso: ContestExchange;
+                                                   aSessionExchange: ExchangeType): string;
 begin
    Result := Format('%-3d %-5s %-7s', [aQso.RSTSent, aMy.MyName, aMy.MyState]);
+end;
+
+function TContestGeneralQSO.GetWritesADIFContestId: boolean;
+begin
+   (* An operating mode, not a contest -- see the note above
+      FormatCabrilloSentExchange. *)
+   Result := False;
 end;
 
 initialization

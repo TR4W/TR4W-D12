@@ -2,7 +2,7 @@
 == identity
 contest.requested = 124 UKRAINECHAMPIONSHIP
 contest.selected = 124 UKRAINECHAMPIONSHIP
-contest.class = (none -- the legacy engine)
+contest.class = TContestUkraineChampionship
 == setup
 active.qsopointmethod = ChampionshipUkrMethod
 active.exchange = QSONumberDomesticQTHExchange
@@ -116,7 +116,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   KS   0017  G3ABC               0000
 == identity
 contest.requested = 124 UKRAINECHAMPIONSHIP
 contest.selected = 124 UKRAINECHAMPIONSHIP
-contest.class = (none -- the legacy engine)
+contest.class = TContestUkraineChampionship
 == setup
 active.qsopointmethod = ChampionshipUkrMethod
 active.exchange = QSONumberDomesticQTHExchange
@@ -230,7 +230,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  ON   0017  G3ABC               0000
 == identity
 contest.requested = 124 UKRAINECHAMPIONSHIP
 contest.selected = 124 UKRAINECHAMPIONSHIP
-contest.class = (none -- the legacy engine)
+contest.class = TContestUkraineChampionship
 == setup
 active.qsopointmethod = ChampionshipUkrMethod
 active.exchange = QSONumberDomesticQTHExchange

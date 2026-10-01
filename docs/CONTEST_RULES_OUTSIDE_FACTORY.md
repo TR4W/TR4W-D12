@@ -88,13 +88,17 @@ into 507 comparison-or-arm records --
 
 <!-- BEGIN HAND-MAINTAINED: headline-facts -->
 2. **The factory owns per-QSO scoring (`logstuff.pas:6564`), class and DX-QTH
-   validation (`:10920`, `:1518`), the QTH count (`:1999`), Arktika's
-   Cabrillo line layout (`postunit.pas:3162`), ADIF contest-id lookup on
-   import, and -- for the 14 contests whose class sets `FormatsExchange` --
-   the Cabrillo and ADIF exchange columns. Nothing else.**
-   Exchange parsing, multipliers, dupes, ADIF import, the ADIF contest tail,
-   Cabrillo headers, the summary sheet, totals, the UI and session setup are
-   still decided outside it for every contest, registered or not.
+   validation (`:10920`, `:1518`), the QTH count (`:1999`), ADIF contest-id
+   lookup on import, and -- since M4 (2026-10-01), for EVERY contest -- the
+   Cabrillo and ADIF exchange columns, the Cabrillo line layout and the ADIF
+   contest fields (`EmitADIFContestFields`, `ADIFPowerTag`,
+   `WritesADIFContestId`). `FormatsExchange` is gone: PostUnit and uADIF ask
+   `ContestIdentity`, and a contest with no export rule gets TContestBase's
+   default, the shared arm for its session's exchange.** POTA and ARRL 160
+   are still named in PostUnit's ADIF tail, each for a stated reason
+   (CONTEST_OWNERSHIP_DESIGN.md 8.2e). Exchange parsing, multipliers, dupes,
+   ADIF import, Cabrillo headers and mode string, the summary sheet, totals,
+   the UI and session setup are still decided outside it.
 3. **SUPERSEDED BY M2 (2026-10-01): `FoundContest`'s head now READS the
    traits**, through `FCONTEST.ApplyContestTraits` -- the operator's statement,
    else `ContestIdentity` (CONTEST_OWNERSHIP_DESIGN.md section 7.9). The arms
@@ -1011,8 +1015,9 @@ Worth reading first, because they are the ones the brief named:
 - **CQ WW / IARU / ARRL SS / the Field Days in the ADIF tail** --
   `MainUnit.pas:9997` (SS + both Field Days), `:10023` (CQ WW), `:10041`
   (IARU), plus `:9964` (GENERALQSO) and `:10098` (ARRL Digi). All registered.
-  Their export twins are `trdos/postunit.pas:2377` (Field Days), `:2409` (SS),
-  `:2429` (IARU), `:2432` (ARRL Digi).
+  These are the IMPORT halves (M5). Their export twins in
+  `trdos/postunit.pas` moved onto the classes at M4 (2026-10-01) as
+  `EmitADIFContestFields`.
 <!-- END HAND-MAINTAINED: registered-first-reads -->
 
 | contest | sites outside the factory, by category |
@@ -1280,6 +1285,13 @@ both of its registered contests.
 
 ### D4. Four export arms pre-empted by `FormatsExchange` -- dead by default
 
+**DELETED AT M4 (2026-10-01).** Every contest formats its own export now, and
+the shared arms are TContestBase's default; these two exchanges are run only
+by contests that format their own, so an operator who states either for
+another contest gets the unhandled marker. Pinned by
+`uTestCabrilloExchange.Test_D4ExchangesAreUnhandled`. The record below is the
+state at M3.
+
 `uCabrilloExchange.pas:180` and `uADIFExchange.pas:258` hand the exchange to
 the class and `Exit` when `FormatsExchange` is True (14 classes). These arms'
 exchange types reach only such classes:
@@ -1318,6 +1330,9 @@ shared code whichever way the rule moves. **Not reproduced on a real file --
 found by reading; an import test with a `SIG`-only record would confirm it.**
 
 ### D6. `postunit.pas:2415` -- a no-op arm identical to its `else`
+
+**DELETED AT M4 (2026-10-01)**, with the comment above the case that described
+a difference that did not exist. The record below is the state at M3.
 
 `CQ160CW, CQ160SSB, NASPRINTCW, SPRINTSSB, NASPRINTRTTY, NAQSOCW, NAQSOSSB,
 NAQSORTTY: ;` in `EmitContestSpecificTailForExport`. The `else` at `:2435` is

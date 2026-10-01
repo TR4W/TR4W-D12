@@ -72,7 +72,6 @@ type
          this object. Two ways to ask the same question is exactly the
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
-      function GetFormatsExchange: boolean; override;
       function GetDisplayName: string; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
@@ -84,19 +83,26 @@ type
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
+
+      (* THE WORKED STATION'S ADIF FIELDS -- see the implementation. *)
+      function EmitADIFContestFields(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uTR4WStrings, uContestRegistry;
+   SysUtils, uTR4WStrings, uContestRegistry,
+   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   uADIF,
+   (* STATE from the worked station's section -- a leaf, lifted at M4. *)
+   uARRLSections;
 
 procedure TContestWinterFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -141,31 +147,66 @@ end;
    The legacy arm said so with an `if Contest in [ARRLFIELDDAY, WINTERFIELDDAY]`
    that overwrote csQTHString just before use (issue 407) -- one more contest
    test, now expressed by simply not using the parameter. That branch was
-   DELETED 2026-09-29: this class exits first, so only these two contests could
-   reach it. The shared arm (ClassDomesticOrDXQTHExchange) stays, for contests
-   without a class. *)
-function TContestWinterFieldDay.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
+   DELETED 2026-09-29, and at M4 (2026-10-01) the shared
+   ClassDomesticOrDXQTHExchange arm went too: only the two Field Days run this
+   exchange, and both format their own (inventory D4). *)
 function TContestWinterFieldDay.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                       const aQso: ContestExchange;
-                                       const aRSTSent: string): string;
+                                                           const aQso: ContestExchange;
+                                                           const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;
 
 function TContestWinterFieldDay.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                           const aQso: ContestExchange;
-                                           const aRSTReceived: string;
-                                           const aHisQTH: string): string;
+                                                               const aQso: ContestExchange;
+                                                               const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s', [string(aQso.ceClass), string(aQso.QTHString)]);
 end;
 
+(* THE WORKED STATION'S ADIF FIELDS -- M4, 2026-10-01: the arm postunit's
+   EmitContestSpecificTailForExport kept for ARRLFIELDDAY and WINTERFIELDDAY,
+   moved here, and copied into uContestARRLFieldDay (design 1.4: the two Field Days diverge,
+   so each owns its copy).
+
+   DX IS NEVER AN ARRL SECTION. NY4I, 2026-10-01: a DX station sends its
+   class and 'DX'; that goes in the section POSITION of the Cabrillo line
+   (FormatCabrilloReceivedExchange writes QTHString there) but never into
+   ADIF ARRL_SECT -- "be explicit about the source and never call DX an ARRL
+   section". So a QSO whose QTH is 'DX' writes NONE of these fields: no
+   ARRL_SECT, no STATE, no DXCC and no CLASS. The CLASS half of that is what
+   the arm always did and is recorded as a question for NY4I (design 8.2e): a
+   DX station does send a class.
+
+   DXCC 291 and 1 are hard-coded as the arm had them (ny4i): a K section is
+   in the US and a VE section in Canada. *)
+function TContestWinterFieldDay.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   Result := '';
+   if aQso.QTHString = 'DX' then
+      begin
+      Exit;
+      end;
+
+   if aQso.QTH.CountryID = 'K' then
+      begin
+      Result := Result + EmitADIFField('DXCC', '291');
+      Result := Result + EmitADIFField('STATE',
+         StateFromARRLSection(string(aQso.QTHString)));
+      end
+   else if aQso.QTH.CountryID = 'VE' then
+      begin
+      Result := Result + EmitADIFField('DXCC', '1');
+      Result := Result + EmitADIFField('STATE',
+         StateFromARRLSection(string(aQso.QTHString)));
+      end;
+   Result := Result + EmitADIFField('ARRL_SECT', string(aQso.QTHString));
+   Result := Result + EmitADIFField('CLASS', string(aQso.ceClass));
+end;
+
 function TContestWinterFieldDay.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                   const aQso: ContestExchange): string;
+                                                       const aQso: ContestExchange;
+                                                       aSessionExchange: ExchangeType): string;
 begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;

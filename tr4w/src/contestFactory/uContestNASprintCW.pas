@@ -45,7 +45,6 @@ uses
 type
    TContestNASprintCW = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
@@ -59,13 +58,13 @@ type
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
    end;
 
 implementation
@@ -94,16 +93,12 @@ end;
    marker in the legacy source, so they were set to those numbers together and
    on purpose.
 
-   THE SHARED ARM STAYS: SSB-SPRINT uses the same body and does not format its
-   own exchange yet (M4), so QSONumberNameDomesticOrDXQTHExchange is still live. *)
-function TContestNASprintCW.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
+   THE SHARED ARM STAYS: the SSB Sprint and the NA Sprint RTTY run the same
+   exchange with no rule of their own, so TContestBase formats them through
+   QSONumberNameDomesticOrDXQTHExchange -- the arm this class copies. *)
 function TContestNASprintCW.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                            const aQso: ContestExchange;
-                                            const aRSTSent: string): string;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
    if aMy.MyState = '' then
       begin
@@ -116,11 +111,10 @@ begin
 end;
 
 function TContestNASprintCW.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aRSTReceived: string;
-                                                const aHisQTH: string): string;
+                                                           const aQso: ContestExchange;
+                                                           const aCtx: TCabrilloQSOContext): string;
 begin
-   (* Tested on aQso.QTHString and formatted from aHisQTH, matching the
+   (* Tested on aQso.QTHString and formatted from aCtx.HisQTH, matching the
       legacy arm exactly. *)
    if aQso.QTHString = '' then
       begin
@@ -128,12 +122,13 @@ begin
       end
    else
       begin
-      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), aHisQTH]);
+      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), aCtx.HisQTH]);
       end;
 end;
 
 function TContestNASprintCW.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                        const aQso: ContestExchange): string;
+                                                   const aQso: ContestExchange;
+                                                   aSessionExchange: ExchangeType): string;
 begin
    if aMy.MyState = '' then
       begin

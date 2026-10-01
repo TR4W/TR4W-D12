@@ -159,7 +159,31 @@ the target shape, the M-step migration order and the open questions.
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog
-  writes that setting. A field is added when the first contest needs it.
+  writes that setting. A field is added when the first contest needs it
+  (M4 added `MyState`, `ContestTitle` and `LogClockUTCHour` -- the last a
+  FUNCTION, because reading the logging clock refreshes a global).
+- **A contest formats its own export, and every exporter asks it** (M4,
+  2026-10-01). PostUnit's Cabrillo writer and ADIF tail and
+  `uADIF.EmitADIFRecord` call `ContestIdentity(c)`; **`FormatsExchange` is
+  gone.** Seams: `FormatCabrilloSentExchange` / `...Received...` (with a
+  `TCabrilloQSOContext`), `FormatADIFSentExchange`, `EmitADIFContestFields`,
+  `ADIFPowerTag`, `WritesADIFContestId`, `CabrilloQSOLineFormat`. **The base's
+  default is the shared arm for the SESSION's exchange**
+  (`uCabrilloExchange.FormatCabrilloExchangeOfKind`,
+  `uADIFExchange.FormatADIFExchangeOfKind`) -- the session's, not the
+  `ExchangeKind` trait, because FCONTEST's arms change it per station for
+  twelve contests (design §8.2e). **Those arms name no contest and must not
+  start to**: a contest's export rule is an override on its class, and one
+  that only changes an input copies the context and calls `inherited`.
+  POTA and ARRL 160 are still named in PostUnit's tail, each for a recorded
+  reason; CUP RF's his-QTH, LABRE/EURASIA and the `'TRC'`/`'PGA'` tests too.
+- **Creating a class to hold ONE rule means transcribing the whole contest**
+  -- the row, AND its scoring arm, because a registered class is that
+  contest's scorer from the moment it exists. M4 did that for eleven
+  contests; the matrix proved each by changing only `contest.class =`.
+- **The matrix is wall-clock dependent for CROATIAN** between 23:00 and 05:00
+  UTC (its legacy arm doubles points by the logging clock). A doubling there,
+  and nothing else, is the clock -- never re-freeze it (design Q21).
 
 The contest `.cfg` is **deliberately exempt** from the JSON destination: its
 parameters go to the **contest SQLite database**, not to `settings/tr4w.json`.

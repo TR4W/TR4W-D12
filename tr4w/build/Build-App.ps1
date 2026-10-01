@@ -291,7 +291,14 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # domestic-file path stopped going through fixed AnsiChar buffers --
 # uAppPaths.ShippedDomFilePath returns the path as a string, and
 # uDomFileKeys replaced FCONTEST's ShortString EnumDOM2 callback.
-$NARROW_CEILING = 1335
+# 1335 -> 1331, 2026-10-01: M4, each contest formats its own export.
+# Measured against a HEAD build of the same tree, per file: PostUnit's
+# GetStateFromSection passed a UnicodeString to Tree's Str20 parameter and
+# called StrUtils.AnsiIndexText (AnsiString), Tree's own UpperCase'd into a
+# Str20, and uCabrilloExchange's dead JIDX branch handed MY STATE to
+# StrToIntDef. The section table is one string-typed function in
+# uARRLSections now, with a native lookup, and the JIDX branch is deleted.
+$NARROW_CEILING = 1331
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

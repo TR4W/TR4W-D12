@@ -2,7 +2,7 @@
 == identity
 contest.requested = 174 WWDIGI
 contest.selected = 174 WWDIGI
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWDigi
 == setup
 active.qsopointmethod = WWDIGIQP
 active.exchange = Grid2Exchange
@@ -111,7 +111,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   EM17       G3ABC
 == identity
 contest.requested = 174 WWDIGI
 contest.selected = 174 WWDIGI
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWDigi
 == setup
 active.qsopointmethod = WWDIGIQP
 active.exchange = Grid2Exchange
@@ -220,7 +220,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  FN03       G3ABC
 == identity
 contest.requested = 174 WWDIGI
 contest.selected = 174 WWDIGI
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWDigi
 == setup
 active.qsopointmethod = WWDIGIQP
 active.exchange = Grid2Exchange

@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M3 built; see §8.2)
+# What a contest owns -- DESIGN (M0-M4 built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -70,9 +70,9 @@ lives in a helper or in the format's own unit.
 | identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity` | existing properties (**existing**) |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
 | exchange parsing and validation | `ProcessExchange`'s `case ActiveExchange of`; the class's `ValidateClass` / `ValidateDXQTH` / `ValidateQTHCount` | `ParseReceivedExchange`, plus the existing validators |
-| ADIF export: sent exchange and contest fields | `uADIFExchange` (the class when `FormatsExchange`); `postunit.EmitContestSpecificTailForExport` | `FormatADIFSentExchange` (existing), `EmitADIFContestFields` |
+| ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. POTA and ARRL 160 still named in PostUnit's tail (§8.2e) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
 | ADIF import interpretation | `MainUnit.ApplyContestSpecificADIFTail`, `ProcessImportedSRX_String`, the `APP_N1MM_EXCHANGE1` arm of `uADIF.ApplyADIFFieldsToExchange` | `ApplyADIFImport` (§3.2) |
-| Cabrillo: QSO columns, line layout, headers, mode string | `uCabrilloExchange` (the class when `FormatsExchange`); `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` |
+| Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; headers and mode string: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` (M9) |
 | session setup: memories, settings defaults, domestic file and countries, band/mode | `FoundContest`'s 104 arms (inventory §5) | `DescribeSession` (§4) |
 | total score and bonuses | `logedit.TotalScore`, plus D10's three places | `CombineScore`, `BonusPoints` (§5) |
 | multipliers and dupes | `logdupe`, `logedit`, `uMults` | contest virtuals, named as each moves (`MultiplierValue`, `MarksDupes`, ...) |
@@ -311,9 +311,9 @@ fixed in place. It is done here, the right way (M5).
 | its `else` (grid kinds, then the domestic QTH, then raw SRX) | the classless fallback while migrating; each contest that moves takes its own share |
 | `ProcessImportedSRX_String` (Field Day) | the Field Day classes' `ApplyADIFImport` calling their own `ParseReceivedExchange` on the SRX text |
 | `logstuff.ResolvePOTAParkFromADIF` (D5's fix, `3f9e3f28`) | POTA's `ApplyADIFImport` |
-| `EmitContestSpecificTailForExport` arms | `EmitADIFContestFields` of each contest named. The no-op arm (D6) is deleted |
-| the `Contest` tests inside the `uCabrilloExchange` / `uADIFExchange` arms (FOC, JIDX, PACC/SPDX, CQVHF, PCC, ...) | that contest's own formatter |
-| `FormatsExchange` | stays as the per-contest opt-in while migrating. It is deleted at the endpoint, when every contest formats its own |
+| `EmitContestSpecificTailForExport` arms | `EmitADIFContestFields` of each contest named. The no-op arm (D6) is deleted. **DONE at M4** but for POTA and ARRL 160 (§8.2e) |
+| the `Contest` tests inside the `uCabrilloExchange` / `uADIFExchange` arms (FOC, JIDX, PACC/SPDX, CQVHF, PCC, ...) | that contest's own formatter. **DONE at M4**; JIDX's, CQ VHF's and SP DX's were dead and were deleted |
+| `FormatsExchange` | ~~stays as the per-contest opt-in while migrating~~. **DELETED at M4**: every contest is asked, and the base's answer is the shared arm |
 | `logddx` per-contest sample exchanges | the contest's `SampleExchange`, so the simulator exercises its parser |
 
 **Arm boundaries are not contest boundaries.** For example, `ARRL160, CQ160CW,
@@ -468,6 +468,15 @@ demonstrated. POTA's rules map onto the seams above:
 
 Introduce a `TActivityBase` only when a second activity (SOTA, WWFF) arrives and
 shows what is genuinely shared.
+
+**NOT BUILT AT M4, on evidence (DECIDED, §8.2e).** M4 offered POTA a class for
+its export alone. It was declined: Q6 is NY4I's and still open; POTA's export
+leans on three TRDOS helpers a class may not call (`logstuff.IsValidPOTAPark`,
+and `Tree.LooksLikeAState` and `Tree.LooksLikeAGrid`, the last of which reads
+the `ActiveExchange` global), so a class would first need three lifts; and a
+registered class takes over scoring and validation the moment it exists. So
+POTA's three tail tests in PostUnit and its `CONTEST_ID` test in uADIF stay,
+and are the next thing to move when Q6 is answered.
 
 ---
 
@@ -895,7 +904,7 @@ Each is behaviour-preserving unless marked.
 | **M1** | **DONE 2026-10-01 (§8.2b).** **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
 | **M2** | **DONE 2026-10-01 (§7.9, §8.2c).** **Setup head reads the class.** `FCONTEST.ApplyContestTraits`: the operator's statement, else `ContestIdentity` (M1's accessor serves as `ContestDefinition`). `Active*` and the head's flags come from the class's traits. Arms stay. Defects #1, #2, #3 and #5 fixed. `InHostState` deferred to M7 | the contest matrix; corpus |
 | **M3** | **DONE 2026-10-01 (§8.2d).** **Scoring finishes on the class.** `ScoreQSO`, the one entry point (§7.7); the dupe-marking reader moved to `MarksDupes` (**behaviour change** for an operator override); the off-band multiplier pin; `TContestFixedPoints` retired (`FixedModePoints` kept as a helper); the NRAU-Baltic family base; classes for NRAU-Baltic CW/SSB, Sprint SSB, Locust and the Jock White Field Day. The other secondary readers are scheduled where their rule lives -- parsing M5, total score M6 (§2) | the contest matrix; unit tests; `test-contest-factory.sh` |
-| **M4** | **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields. D4's dead arms and the D6 no-op go | corpus; per-class round-trip unit test |
+| **M4** | **DONE 2026-10-01 (§8.2e).** **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields, asked through `ContestIdentity`; `FormatsExchange` deleted. Eleven contests gained classes to hold a rule an exporter named. D4's dead arms and the D6 no-op deleted; defect #4 fixed. POTA and ARRL 160 left named in PostUnit, with reasons | corpus; per-class round-trip unit test |
 | **M5** | **Exchange import and parse.** Generic importer, then `ApplyADIFImport` (§3.2), including the `APP_N1MM_EXCHANGE1` arm, pinned in both tag orders. `ParseReceivedExchange` per contest over lifted helpers. D1/D2's dead paths go | `test-adif-roundtrip.sh`; legacy fixture; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **Total score.** `TScoreTotals`, `CombineScore`, `BonusPoints`; `TotalScore`'s arms deleted; Missouri moved; Salmon Run per Q5 | corpus `CLAIMED-SCORE`; unit tests over totals |
 | **M7** | **Session arms and the classless contests.** Each `FoundContest` arm becomes its contest's `DescribeSession`, and the arm is deleted. Classless contests gain a class: a family member, or a copy of the nearest class (§1.4) | setup fixture; legacy fixture; the arm count ratchets |
@@ -918,7 +927,7 @@ re-freezes only the contests the fix reaches, with the reason:
 | 1 | no station is ever in-state for a QSO party: `FoundMyStateInDomFile` builds `'DOM' + DF + '.DOM'` with no separator (D7: `'%sDOM\%s.DOM'`) -- port regression | **FIXED M2.** `uAppPaths.ShippedDomFilePath` (now the one composition for all three dom readers: FCONTEST, `LogCfg`, `logdom`'s INCLUDE) and `uDomFileKeys` (EnumDOM2's rule, unit-tested). Matrix: the 21 parties' us-host variants are now in state, plus NC's ve variant -- see §7.9 |
 | 2 | CTY zone mode 255 in 500 of 575 records: `ZoneModeType(<boolean>)` at `fcontest.pas:421`; no `uctydat` arm matches, zone 0 | **FIXED M2.** `TContestBase.ZoneMode`, the array legend's rule (bit set CQ, clear ITU) -- D7's. Matrix: 160 contests; MY ZONE now derives an ITU zone, and with it the zone memories, sent zones and four contests' sparse-QSO points |
 | 3 | NEQP crashes in setup with an empty MY STATE (`PWORD` of an empty string; can never match ME/NH since `string` is 2-byte) | **FIXED M2.** A string comparison of MY STATE's first two characters (D7's rule). Matrix: the dx variant records |
-| 4 | ARRL SS Cabrillo writes a NUL for an empty precedence | M4 |
+| 4 | ARRL SS Cabrillo writes a NUL for an empty precedence | **FIXED M4.** A one-column blank (`TContestARRLSSBase`'s `PrecedenceColumn`); every later column keeps its place. Matrix: ARRLSSCW and ARRLSSSSB, the two sparse QSOs per variant. Whether such a QSO should export at all is Q19 |
 | 5 | COLORADOQSOPARTY's row is shifted: `Email` holds `'colorado_cty'`, `DF` is `''` | **FIXED M2**, row and class together; no neighbouring row is shifted. Matrix: Colorado's us-host input only |
 | 6 | REF's `FrenchID` AVs on an empty `CountryID` (latent) | M5 |
 
@@ -1188,6 +1197,170 @@ with that reason; it was not done in this change.
   (the class, and `logdupe.SetMultFlags`, which also skips zone 00): does
   the sponsor count one's own branch at all?
 
+### 8.2e M4 -- what it covered (2026-10-01)
+
+**Every contest formats its own export, and every exporter asks it.** PostUnit's
+Cabrillo writer and ADIF tail, and `uADIF.EmitADIFRecord`, ask
+`uContestRegistry.ContestIdentity(c)` -- the registered class, else a plain
+`TContestBase`. There is no switch deciding WHETHER a contest formats its
+export; `FormatsExchange` is deleted, with every assertion about it.
+
+| seam on `TContestBase` | what it answers | the base's answer |
+|---|---|---|
+| `FormatCabrilloSentExchange` / `...Received...` `(aMy, aQso, aCtx: TCabrilloQSOContext)` | the two Cabrillo exchange columns | `uCabrilloExchange.FormatCabrilloExchangeOfKind` for `aCtx.SessionExchange` |
+| `FormatADIFSentExchange(aMy, aQso, aSessionExchange)` | ADIF `STX_STRING` | `uADIFExchange.FormatADIFExchangeOfKind` |
+| `EmitADIFContestFields(aQso)` | the worked station's contest fields, after `CNTY` | nothing |
+| `ADIFPowerTag` | which tag carries the QSO's `Power` | `RX_PWR` (FOC Marathon: `FOC_NUM`) |
+| `WritesADIFContestId` | whether `CONTEST_ID` is written | True (General QSO: False) |
+| `CabrilloQSOLineFormat` | the `QSO:` line | unchanged, now always asked |
+
+`TCabrilloQSOContext` carries what the exporter has decided before it asks:
+the formatted RSTs, the chosen his-QTH, the previous record's QTH and the
+previous good QSO's received number (RSGB RoPoCo and Radio YOC send them
+back), the record number, and the contest title. The YOC arm used to write
+its "previous number" back through a var parameter; the exporter's own
+`previousqsonr`, always equal and never read until now, is what it is handed.
+
+**DECIDED: the base's default keys on the SESSION's exchange, not the
+contest's `ExchangeKind` trait.** The brief said trait; the measurement said
+no. In the M0 matrix, twelve contests' `ActiveExchange` differs from their row
+in some station variant, because FCONTEST's arms set it per station after the
+head: ARRL DX CW/SSB, ARRL 160, 7QP, Arizona, California, NEQP, Texas, Salmon
+Run, JIDX CW/SSB, PACC -- measured by comparing every `active.exchange =` line
+in `tr4w/test/contest-matrix/frozen/*.matrix` with that contest's `AE` in
+`ContestsArray`. Keying on the trait would have changed those
+contests' Cabrillo, and an operator's `EXCHANGE RECEIVED` line would have
+stopped reaching it. So the exporter hands the session's exchange in as data
+-- the contest still reads no global -- and when M7 turns the arms into
+`DescribeSession`, the session's exchange becomes the class's own answer.
+
+**DECIDED: the shared arms stay in uCabrilloExchange and uADIFExchange, as the
+base's helpers.** They are what an exchange SHAPE looks like and name no
+contest; the base calls them, nothing selects them. Moving forty arms into
+`uContestBase` would have been the same bytes with a larger diff and the
+golden-line tests repointed for nothing.
+
+**The contest-named export branches, measured** (`Lint-ContestNameTests -List`
+on uCabrilloExchange, uADIFExchange, postunit and uADIF at `e931f27a`, plus the
+string tests in the same routines):
+
+| branch | where it went |
+|---|---|
+| FOC Marathon's membership number (Cabrillo x2, ADIF x2), uADIF's `FOC_NUM` | `TContestFOCMarathon` -- sent columns, `ADIFPowerTag` |
+| Ukraine Championship / Ural Cup QTH-first order | `TContestUkraineChampionship`, `TContestUralCup` (copies, §1.4) |
+| UK/EI `'--'` for no QTH | `TContestUKEI` (adjusts the context, calls inherited) |
+| RSGB IOTA `'------'` for no island; ADIF `IOTA` | `TContestRSGBIOTA` |
+| DARC 10 m's received column | `TContestDARC10M` |
+| PACC's serial in the state column (Cabrillo, ADIF) | `TContestPACC` -- reached because FCONTEST sets PACC's session to `RSTDomesticQTHExchange` |
+| PCC's sent branch and its `'/M'` | `TContestPCC`; the `'/M'` branch was the PCC's alone and left the shared arm |
+| CQ VHF in `RSTDomesticQTHExchange` (both exporters) | **deleted, dead**: CQ VHF runs `RSTAndOrGridExchange` in every variant |
+| SP DX in the same arm (both exporters) | **deleted, dead**: SP DX runs `RSTDomesticQTHOrQSONumberExchange` |
+| JIDX in `RSTZoneExchange` | **deleted, dead**: JIDX runs `RSTPrefectureExchange` |
+| D4: Sweepstakes' and the Field Days' shared arms | **deleted**; only those three contests run the exchanges, and each formats its own |
+| PostUnit tail: WAG `DOK`, Field Days, Sweepstakes `ARRL_SECT`, IARU `APP_TR4W_HQ`, IOTA, `ARRLDIGI, WWDIGI, BATAVIA_FT8` `GRIDSQUARE` | each contest's `EmitADIFContestFields`; the Field Day arm is copied into both Field Days |
+| PostUnit tail: D6 no-op (NA Sprints, SSB Sprint, CQ 160, NAQP) | **deleted** |
+| uADIF `ceContest in [POTA, GENERALQSO]` | `WritesADIFContestId` for General QSO; POTA stays named (below) |
+| PostUnit Cabrillo: `Contest in [CALQSOPARTY]` his-QTH | `TContestCaliforniaQP.FormatCabrilloReceivedExchange` |
+| PostUnit Cabrillo: `Settings.Contest.Name = 'WWDIGI'` his-QTH | `TContestWWDigi.FormatCabrilloReceivedExchange` |
+| PostUnit Cabrillo: NAQP `TransmitterIDPos` | **deleted**: written, never read |
+
+**Eleven contests gained a class to hold those rules** -- FOCMARATHON,
+UKRAINECHAMPIONSHIP, CUPURAL, UKEI, IOTA, DARC10M, PACC, PCC, WAG, WWDIGI,
+BATAVIA_FT8 -- each on `TContestBase`, each stating its whole row
+(`Test_MovedRowValuesStillMatchTheArray`) and transcribing its scoring arm,
+because a registered class is that contest's scorer too. `TStationContext`
+grew the three fields those arms read: `MyState` (IOTA, PCC), `ContestTitle`
+(Batavia's dead `'YBDXDI-FT8'` test, D7) and `LogClockUTCHour` -- a FUNCTION,
+because UK/EI's arm reads the logging clock through `tGetSystemTime`, which
+refreshes a global; copying the hour into every station refresh would have
+spread that side effect to every contest.
+
+**DECIDED: POTA and ARRL 160 stay named in PostUnit's ADIF tail.** POTA: see
+§6 -- Q6 is open and its export needs three TRDOS helpers lifted first. ARRL
+160: its only export rule is one `ARRL_SECT` arm, but a class must also score
+it, and its arm asks `ZoneCont.DomesticCountryCall` -- a CTY lookup of the call
+against the domestic-country list -- which no contest can yet be handed; that
+list becomes the contest's at M8. Each is one line of the tail's `case`, with
+the reason beside it.
+
+**NOT MOVED, AND WHY.** The CUP RF CW/SSB his-QTH test in the Cabrillo writer
+(two classes and the CupRF distance table for one line, and it leaves out
+CUP RF DIGITAL -- Q23); LABRE's and EURASIA's `Settings.Contest.Name` tests and
+the shared arms' `'TRC'` / `'PGA'` tests (no ContestType -- Q8); the Cabrillo
+headers and Winter Field Day's FM mode string (M9); the summary sheet (M6, M9).
+
+**`GetStateFromSection` WAS TWO LAYERED COPIES AND IS ONE LEAF.** The Field
+Days need STATE from the section, and a class may not call TRDOS. PostUnit's
+function (modern names) fell back to Tree's (states, older names); nothing
+else called either. Both are `uARRLSections.StateFromARRLSection`, pinned by
+`Test_StateFromARRLSection`, and both originals are deleted.
+
+**DEFECT #4 FIXED** (§8.2a): Sweepstakes writes a one-column blank, not a NUL,
+for a QSO with no received precedence. **THE FIELD DAY RULING IS PINNED**
+(Q1): a QSO whose QTH is `DX` puts DX in the Cabrillo section position and
+writes no `ARRL_SECT` -- nor `STATE`, `DXCC` or `CLASS`, which is the arm's
+behaviour and Q20 -- for both Field Days
+(`Test_FieldDayDXIsNeverAnARRLSection`).
+
+**THE ROUND TRIP** (`uTestContestExport.Test_RoundTripThroughTodaysImport`):
+for 27 contests -- every class with an export rule of its own -- one QSO is
+written through `EmitADIFRecord` plus the class's `STX_STRING` and contest
+fields, read back through `ApplyADIFFieldsToExchange`, and compared: call,
+band, mode, both RSTs, both serials, QTH, precedence, check, name,
+`CONTEST_ID`, power (or `FOC_NUM`), `STX_STRING`, and `ARRL_SECT` / `CLASS` /
+`STATE` / `APP_TR4W_HQ` / `GRIDSQUARE` where the contest writes them. WAG's
+`DOK` and the RSGB IOTA's `IOTA` go out and do not come back -- uADIF has no
+arm for either -- and the test pins that they go out; reading them is M5's.
+
+**BEHAVIOUR CHANGES OUTSIDE EVERY ORACLE**, all in what an operator's
+statement reaches, as M3's dupe policy was:
+
+- a contest whose class owns a column formats it whatever the operator's
+  `EXCHANGE RECEIVED` says -- as the fourteen `FormatsExchange` classes always
+  did; it now also covers the FOC, Ukraine/Ural, PACC and PCC sent columns
+  and the DARC 10 m, UK/EI, IOTA, California and WW Digi received ones;
+- an operator who states Sweepstakes' or the Field Days' exchange for another
+  contest gets the unhandled marker (Cabrillo) or `ADIFMyExchangeErrorMarker`
+  (ADIF) rather than a line laid out for a contest he is not running;
+- WW Digi's received QTH no longer follows an operator's `CONTEST NAME`;
+- an ADIF exchange with no shared arm now logs an Error; the bytes are the
+  same marker as before.
+
+**Gates, run 2026-10-01 (full build).** Unit tests 0 failed (`ContestExport`
+is new). Narrowing 1335 -> 1331, range warnings 4, both measured against a
+HEAD build of the same tree. `Lint-ContestNameTests`: postunit 26 -> 15, uadif
+4 -> 3, uadifexchange 5 -> 0, ucabrilloexchange 11 -> 0. Golden corpus 24
+passed, 0 failed, 2 known-divergence, every export exit 0. **The contest
+matrix: 171 identical, 14 differing.** The eleven new classes differ in
+`contest.class =` ONLY (diffed with that line excluded: empty), which is the
+transcription proof; ARRLSSCW and ARRLSSSSB in the defect #4 lines only.
+**CROATIAN differed too, and that is not this change**: every one of its point
+values doubled and nothing else moved, because the legacy Croatian arm doubles
+points when `tGetSystemTime` reads 23:00-04:59 UTC and the run was at 23:05
+UTC. It is classless and untouched here; it is NOT re-frozen (Q21).
+
+**FINDING: the matrix is wall-clock dependent for CROATIAN** between 23:00
+and 05:00 UTC. Run it outside that window, or expect that record to differ by
+a doubling. UK/EI's class carries the same shape of rule (01-04 UTC, for a
+UK/EI station), which no matrix variant exercises.
+
+**Sponsor-rule questions this raised -- NY4I's, recorded, not acted on:**
+
+- **Q19** Sweepstakes: a QSO with no received precedence now exports a blank
+  column. Should such a QSO be exported at all, or as an X-QSO?
+- **Q20** Field Day: a DX station sends a class (`1D DX`), but the export
+  writes no ADIF `CLASS` for a DX QSO -- the arm skips every field when the
+  QTH is `DX`. Write `CLASS` for DX?
+- **Q21** Two scoring rules read the LOGGING CLOCK, not the QSO's time:
+  Croatian (doubles 23:00-04:59 UTC) and UK/EI (a UK/EI station doubles 01-04
+  UTC). A rescore at night doubles a whole log. Should both read the QSO's
+  own time?
+- **Q22** PACC: its row says `RSTAndQSONumberOrDomesticQTHExchange`, every
+  PACC session runs `RSTDomesticQTHExchange` (FCONTEST's arm). Which should
+  the class state when M7 moves the arm?
+- **Q23** CUP RF: the Cabrillo writer takes the QSO's own QTH for the CW and
+  SSB runnings but not for CUP RF DIGITAL. Intended?
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -1286,6 +1459,11 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   SSB's names and multipliers, Locust's bands and multipliers, and the Jock
   White Field Day's points and own-branch multiplier. Stated in full at the
   end of §8.2d, where the classes that raised them are recorded.
+
+- **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
+  station's class in ADIF, the two scoring rules that read the logging clock
+  (Croatian, UK/EI), PACC's row exchange against its session's, and CUP RF
+  DIGITAL's received QTH. Stated in full at the end of §8.2e.
 
 **Answered by the ruling, and dropped:** C3 (`CreateOwned...`), C4 (the
 exchange-field model), C5 (`EXCHANGE RECEIVED` as a strategy swap; its residue

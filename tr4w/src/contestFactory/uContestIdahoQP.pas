@@ -128,9 +128,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   id would have stolen every New England file. Listing it now would be dead
   and misleading, so it stays unlisted.
 
-  FormatsExchange STAYS FALSE. The Cabrillo and ADIF columns come from the
-  shared RSTDomesticOrDXQTHExchange arms, as they did under NEQP; export moves
-  into the class at M4.
+  EXPORT IS THE BASE'S DEFAULT (M4): the Cabrillo and ADIF columns come from
+  the shared RSTDomesticOrDXQTHExchange arms, as they did under NEQP. Idaho
+  has no export rule of its own to state.
  *)
 unit uContestIdahoQP;
 

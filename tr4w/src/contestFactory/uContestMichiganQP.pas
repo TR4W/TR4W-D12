@@ -35,14 +35,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   has no DX side at all. Two state parties, two parsers -- which is the whole
   argument for this base being a mechanism base and not a family one.
 
-  IT DOES NOT FORMAT ITS OWN EXCHANGE. FormatsExchange stays False, so Cabrillo
-  and ADIF still come from the legacy RSTDomesticQTHExchange arm. That arm is
-  shared with roughly a dozen other contests and carries three cases that are
-  not Michigan's (CQVHF's grid, SPDX and PACC's serial number), so taking it
-  over means reproducing a decision tree no gate can see -- ADDING_A_CONTEST.md
-  section 4: exchange formatting is checked by the golden corpus only where the
-  corpus log happens to exercise it. The move is section 6.3's, done for every
-  contest on the arm at once, not smuggled in here.
+  IT HAS NO EXPORT RULE OF ITS OWN. TContestBase formats it through the
+  shared RSTDomesticQTHExchange arm (M4). The three cases in that arm that
+  were not Michigan's -- CQ VHF's grid, SP DX's and PACC's serial -- left it at
+  M4: PACC's is TContestPACC's own, and the other two were dead.
 
   ITS POINTS ARE ITS OWN, though they happen to equal Florida's. OnePhoneTwoCW
   is 11 contests' answer and two of them being state parties is a coincidence

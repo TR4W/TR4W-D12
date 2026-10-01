@@ -107,6 +107,7 @@ uses
    uTestCabrilloFormat  in 'uTestCabrilloFormat.pas',
    uCabrilloExchange    in '..\..\src\uCabrilloExchange.pas',
    uADIFExchange        in '..\..\src\uADIFExchange.pas',
+   uARRLSections        in '..\..\src\uARRLSections.pas',
    uTestADIFExchange    in 'uTestADIFExchange.pas',
    uTestCabrilloExchange in 'uTestCabrilloExchange.pas',
    uCRC32               in '..\..\src\uCRC32.pas',
@@ -321,7 +322,19 @@ uses
    uContestSprintSSB in '..\..\src\contestFactory\uContestSprintSSB.pas',
    uContestLocustQP in '..\..\src\contestFactory\uContestLocustQP.pas',
    uContestJockWhiteFieldDay in '..\..\src\contestFactory\uContestJockWhiteFieldDay.pas',
+   uContestFOCMarathon in '..\..\src\contestFactory\uContestFOCMarathon.pas',
+   uContestUkraineChampionship in '..\..\src\contestFactory\uContestUkraineChampionship.pas',
+   uContestUralCup in '..\..\src\contestFactory\uContestUralCup.pas',
+   uContestUKEI in '..\..\src\contestFactory\uContestUKEI.pas',
+   uContestRSGBIOTA in '..\..\src\contestFactory\uContestRSGBIOTA.pas',
+   uContestDARC10M in '..\..\src\contestFactory\uContestDARC10M.pas',
+   uContestPACC in '..\..\src\contestFactory\uContestPACC.pas',
+   uContestPCC in '..\..\src\contestFactory\uContestPCC.pas',
+   uContestWAG in '..\..\src\contestFactory\uContestWAG.pas',
+   uContestWWDigi in '..\..\src\contestFactory\uContestWWDigi.pas',
+   uContestBataviaFT8 in '..\..\src\contestFactory\uContestBataviaFT8.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
+   uTestContestExport in 'uTestContestExport.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
@@ -517,6 +530,7 @@ begin
    RegisterSuite(TBandLookupTests.Create('BandLookup'));
    RegisterSuite(TCabrilloFormatTests.Create('CabrilloFormat'));
    RegisterSuite(TCabrilloExchangeTests.Create('CabrilloExchange'));
+   RegisterSuite(TContestExportTests.Create('ContestExport'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

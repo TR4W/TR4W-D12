@@ -71,6 +71,7 @@ type
       function GetIsUSQSOParty: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      function EmitADIFContestFields(const aQso: ContestExchange): string; override;
 
       (* THE WHOLE ContestsArray ROW, STATED HERE.
 
@@ -118,7 +119,9 @@ uses
       gate -- eleven other scoring arms in LOGSTUFF call the same function, so
       it is not this contest's to do alone. *)
    LogGrid,
-   uContestRegistry;
+   uContestRegistry,
+   (* EmitADIFField -- the tag spellings are ADIF's. *)
+   uADIF;
 
 procedure TContestARRLDigi.CalculateQSOPoints(var aQso: ContestExchange);
 var
@@ -256,9 +259,18 @@ end;
    contest rule, and TContestBase has no seam for it -- nor should it acquire
    one to serve a dialog.
 
-   THE EXCHANGE COLUMNS STAY TOO: FormatsExchange is left False, so
-   uCabrilloExchange and uADIFExchange still use the shared Grid2Exchange arm,
-   which other contests use as well. *)
+   THE EXCHANGE COLUMNS ARE THE BASE'S DEFAULT (M4), the shared Grid2Exchange
+   arm. What IS this contest's in export is the worked station's grid going
+   to ADIF GRIDSQUARE -- EmitADIFContestFields, below. *)
+
+(* THE WORKED STATION'S GRID GOES TO ADIF GRIDSQUARE -- M4, 2026-10-01, the
+   ARRLDIGI share of postunit's `ARRLDIGI, WWDIGI, BATAVIA_FT8` arm, moved
+   here; the other two contests have their own copies. PostUnit asks only for
+   a QTH it did not already recognise as a grid. *)
+function TContestARRLDigi.EmitADIFContestFields(const aQso: ContestExchange): string;
+begin
+   Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+end;
 
 initialization
    RegisterContest(ARRLDIGI, TContestARRLDigi);

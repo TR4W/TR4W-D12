@@ -51,9 +51,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   back to the enum's spelling, which is also 'AP-SPRINT' -- so every file
   TR4W ever exported for this contest carries the id it has now.
 
-  EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED. FormatsExchange is
-  inherited False, so uCabrilloExchange and uADIFExchange still format
-  this contest through its shared AE arm. *)
+  EXCHANGE PARSING IS NOT MOVED (M5). EXPORT IS THE BASE'S DEFAULT (M4):
+  the contest has no export rule of its own, so TContestBase formats it
+  through the shared arm for its exchange. *)
 unit uContestAPSprint;
 
 {$I tr4w.inc}

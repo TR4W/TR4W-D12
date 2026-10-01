@@ -104,6 +104,9 @@ uses
       asks one a question, such as uCabrilloExchange -- stay free of the display
       layer and testable without booting TR4W. *)
    LOGWIND,
+   (* tGetSystemTime -- the logging clock UK/EI DX reads (M4). VC, in the
+      interface, holds the UTC global it refreshes. *)
+   MainUnit,
    uSettingsModel,
    uContestRegistry;
 
@@ -124,6 +127,16 @@ begin
    Take(Settings.Qso.PointsDxPhone, Result.DXPhone);
 end;
 
+(* THE LOGGING CLOCK'S HOUR, UTC -- what UK/EI DX's legacy arm read: refresh
+   the UTC global (MainUnit.tGetSystemTime: the wall clock, or nothing in
+   hand-log mode) and take its hour. A function so that only the one rule that
+   asks pays the side effect -- see TStationContext.LogClockUTCHour. *)
+function LogClockUTCHour: integer;
+begin
+   tGetSystemTime;
+   Result := UTC.wHour;
+end;
+
 (* The station as the program currently has it. *)
 function CurrentStation: TStationContext;
 var
@@ -133,6 +146,9 @@ begin
    Result.MyCountry := UTF8Encode(Settings.My.Country);
    Result.MyContinent := MyContinent;
    Result.MyGrid := Settings.My.Grid;
+   Result.MyState := Settings.My.State;
+   Result.ContestTitle := Settings.Contest.Title;
+   Result.LogClockUTCHour := @LogClockUTCHour;
    (* CATEGORY-POWER as the New Contest dialog set it -- see
       TStationContext.MyPower. *)
    Result.MyPower := Settings.Contest.CategoryPower;

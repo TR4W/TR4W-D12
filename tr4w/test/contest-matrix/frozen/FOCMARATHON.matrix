@@ -2,7 +2,7 @@
 == identity
 contest.requested = 44 FOCMARATHON
 contest.selected = 44 FOCMARATHON
-contest.class = (none -- the legacy engine)
+contest.class = TContestFOCMarathon
 == setup
 active.qsopointmethod = FOCMarathonQSOPointMethod
 active.exchange = RSTPowerExchange
@@ -110,7 +110,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   59         G3ABC          59
 == identity
 contest.requested = 44 FOCMARATHON
 contest.selected = 44 FOCMARATHON
-contest.class = (none -- the legacy engine)
+contest.class = TContestFOCMarathon
 == setup
 active.qsopointmethod = FOCMarathonQSOPointMethod
 active.exchange = RSTPowerExchange
@@ -218,7 +218,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  59         G3ABC          59
 == identity
 contest.requested = 44 FOCMARATHON
 contest.selected = 44 FOCMARATHON
-contest.class = (none -- the legacy engine)
+contest.class = TContestFOCMarathon
 == setup
 active.qsopointmethod = FOCMarathonQSOPointMethod
 active.exchange = RSTPowerExchange

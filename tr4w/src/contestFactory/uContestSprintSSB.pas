@@ -46,11 +46,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   stated here through the FixedModePoints helper.
 
-  EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED (M4/M5). FormatsExchange
-  is inherited False, so the shared QSONumberNameDomesticOrDXQTHExchange arm
-  still formats it -- the same arm the NA Sprint CW class reproduces for
-  itself. postunit's EmitContestSpecificTailForExport names this contest in
-  its no-op arm beside the NA Sprints (D6); that arm goes at M4. FCONTEST,
+  EXCHANGE PARSING IS NOT MOVED (M5). EXPORT IS THE BASE'S DEFAULT (M4): the
+  shared QSONumberNameDomesticOrDXQTHExchange arm, the same one the NA Sprint
+  CW class reproduces for itself. postunit's no-op arm that named this
+  contest beside the NA Sprints (inventory D6) was deleted at M4. FCONTEST,
   uNewContest and LOGCFG name it for set-up (M7). *)
 unit uContestSprintSSB;
 

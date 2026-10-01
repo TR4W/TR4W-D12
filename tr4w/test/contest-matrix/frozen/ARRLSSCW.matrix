@@ -117,8 +117,8 @@ QSO:    50 PH 2026-01-15 1212 K0AAA   12   A 99 KS  PY2ABC         112  A 99
 QSO: 14025 CW 2026-01-15 1213 K0AAA   13   A 99 KS  VK2ABC         113  A 99          
 QSO: 28400 PH 2026-01-15 1214 K0AAA   14   A 99 KS  ZS6ABC         114  A 99          
 QSO: 14250 PH 2026-01-15 1215 K0AAA   15   A 99 KS  KH6ABC         115  A 99 HI       
-QSO:  3530 CW 2026-01-15 1216 K0AAA   16   A 99 KS  W1AW           0    <#00> 00          
-QSO: 14250 PH 2026-01-15 1217 K0AAA   17   A 99 KS  G3ABC          0    <#00> 00          
+QSO:  3530 CW 2026-01-15 1216 K0AAA   16   A 99 KS  W1AW           0      00          
+QSO: 14250 PH 2026-01-15 1217 K0AAA   17   A 99 KS  G3ABC          0      00          
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
 contest.requested = 13 ARRLSSCW
@@ -238,8 +238,8 @@ QSO:    50 PH 2026-01-15 1212 VE3AAA  12   A 99 ON  PY2ABC         112  A 99
 QSO: 14025 CW 2026-01-15 1213 VE3AAA  13   A 99 ON  VK2ABC         113  A 99          
 QSO: 28400 PH 2026-01-15 1214 VE3AAA  14   A 99 ON  ZS6ABC         114  A 99          
 QSO: 14250 PH 2026-01-15 1215 VE3AAA  15   A 99 ON  KH6ABC         115  A 99 HI       
-QSO:  3530 CW 2026-01-15 1216 VE3AAA  16   A 99 ON  W1AW           0    <#00> 00          
-QSO: 14250 PH 2026-01-15 1217 VE3AAA  17   A 99 ON  G3ABC          0    <#00> 00          
+QSO:  3530 CW 2026-01-15 1216 VE3AAA  16   A 99 ON  W1AW           0      00          
+QSO: 14250 PH 2026-01-15 1217 VE3AAA  17   A 99 ON  G3ABC          0      00          
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
 contest.requested = 13 ARRLSSCW
@@ -357,5 +357,5 @@ QSO:    50 PH 2026-01-15 1212 DL1AAA  12   A 99 DX  PY2ABC         112  A 99
 QSO: 14025 CW 2026-01-15 1213 DL1AAA  13   A 99 DX  VK2ABC         113  A 99          
 QSO: 28400 PH 2026-01-15 1214 DL1AAA  14   A 99 DX  ZS6ABC         114  A 99          
 QSO: 14250 PH 2026-01-15 1215 DL1AAA  15   A 99 DX  KH6ABC         115  A 99 HI       
-QSO:  3530 CW 2026-01-15 1216 DL1AAA  16   A 99 DX  W1AW           0    <#00> 00          
-QSO: 14250 PH 2026-01-15 1217 DL1AAA  17   A 99 DX  G3ABC          0    <#00> 00          
+QSO:  3530 CW 2026-01-15 1216 DL1AAA  16   A 99 DX  W1AW           0      00          
+QSO: 14250 PH 2026-01-15 1217 DL1AAA  17   A 99 DX  G3ABC          0      00          

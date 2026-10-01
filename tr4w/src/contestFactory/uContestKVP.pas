@@ -62,9 +62,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   was always exported as the enum's spelling, and the id is now what
   export writes, so import matches it.
 
-  EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED. FormatsExchange is
-  inherited False, so uCabrilloExchange and uADIFExchange still format
-  this contest through its shared AE arm. *)
+  EXCHANGE PARSING IS NOT MOVED (M5). EXPORT IS THE BASE'S DEFAULT (M4):
+  the contest has no export rule of its own, so TContestBase formats it
+  through the shared arm for its exchange. *)
 unit uContestKVP;
 
 {$I tr4w.inc}

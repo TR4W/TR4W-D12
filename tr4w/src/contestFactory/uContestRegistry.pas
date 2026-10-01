@@ -72,7 +72,10 @@ function RegisteredContestCount: integer;
   every consumer asks it here (M1, 2026-10-01). Contest SET-UP asks it too
   (M2, 2026-10-01): FCONTEST.ApplyContestTraits writes the engine's Active*
   values and set-up flags from this object, under the operator's
-  statements -- what a contest IS, which is this accessor's whole job.
+  statements -- what a contest IS, which is this accessor's whole job. And
+  since M4 (2026-10-01) every EXPORTER asks it how the contest formats its
+  Cabrillo columns, its ADIF exchange and its ADIF contest fields: that
+  formatting needs the QSO and the exporter's context, never the station.
 
   OWNED BY THIS UNIT. Do not free it. Built the first time a contest is asked
   about and kept until the program ends, so a caller asking per QSO -- ADIF

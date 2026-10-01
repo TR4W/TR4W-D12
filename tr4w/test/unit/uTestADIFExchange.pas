@@ -73,7 +73,7 @@ end;
 
 function Ex(const aExchange: ExchangeType): string;
 begin
-   Result := FormatADIFMyExchange(aExchange, CQWWCW, MakeRx, MakeMy, True);
+   Result := FormatADIFExchangeOfKind(aExchange, MakeRx, MakeMy);
 end;
 
 procedure TTestADIFExchange.Test_GridIsJustTheGrid;
@@ -113,11 +113,13 @@ begin
                'RST, serial, grid');
 end;
 
+(* THE FIELD DAYS' ARM IS GONE (M4, inventory D4) -- both Field Days format
+   their own STX_STRING, pinned on their classes in uTestContestExport. An
+   exchange with no shared arm keeps the marker. *)
 procedure TTestADIFExchange.Test_ClassAndSection;
 begin
-   // '%-3s %-7s ' -- note the trailing space, which is in the format string
-   CheckEquals('1D  WCF     ', Ex(ClassDomesticOrDXQTHExchange),
-               'Field Day class and section');
+   CheckEquals(ADIFMyExchangeErrorMarker, Ex(ClassDomesticOrDXQTHExchange),
+               'the Field Days'' exchange has no shared arm');
 end;
 
 { '%-3d %03d ' -- AND THE SERIAL IS NOT ZERO-PADDED, WHICH IS ALMOST CERTAINLY
@@ -144,13 +146,13 @@ begin
    CheckEquals('K-1234', Ex(RSTAndPOTAPark), 'the park reference alone');
 end;
 
-{ A QSO the caller rejected never reaches the case at all, and the initial value
-  of Result is what comes back.  That string is what PostUnit writes into the
-  ADIF field, so it is worth knowing it is this and not empty. }
+(* A QSO PostUnit rejects never reaches a contest at all, and this marker is
+  what it writes into STX_STRING instead (since M4 the decision is PostUnit's,
+  which owns the log). Its spelling is pinned because it lands in exported
+  files: it is worth knowing it is this and not empty. *)
 procedure TTestADIFExchange.Test_BadQSOYieldsTheErrorMarker;
 begin
-   CheckEquals('Error generating my exchange',
-               FormatADIFMyExchange(GridExchange, CQWWCW, MakeRx, MakeMy, False),
+   CheckEquals('Error generating my exchange', ADIFMyExchangeErrorMarker,
                'a rejected QSO yields the marker, not a blank field');
 end;
 

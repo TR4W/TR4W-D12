@@ -54,9 +54,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   SETUP STAYS WHERE IT IS (M7): FCONTEST's arm, LOGCFG's CQ exchange
   (' 5NN # ' + MY STATE) and uNewContest's province prompt all name both
-  runnings together. EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED
-  (M4/M5): FormatsExchange is inherited False, so the shared
-  RSTQSONumberAndDomesticQTHExchange arm still formats it. *)
+  runnings together. EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE BASE'S
+  DEFAULT (M4), the shared RSTQSONumberAndDomesticQTHExchange arm. *)
 unit uContestNRAUBalticBase;
 
 {$I tr4w.inc}

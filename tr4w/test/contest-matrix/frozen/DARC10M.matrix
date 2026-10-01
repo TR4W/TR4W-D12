@@ -2,7 +2,7 @@
 == identity
 contest.requested = 149 DARC10M
 contest.selected = 149 DARC10M
-contest.class = (none -- the legacy engine)
+contest.class = TContestDARC10M
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
@@ -112,7 +112,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   59  0017     KS      G3ABC          59  00
 == identity
 contest.requested = 149 DARC10M
 contest.selected = 149 DARC10M
-contest.class = (none -- the legacy engine)
+contest.class = TContestDARC10M
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
@@ -222,7 +222,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  0017     ON      G3ABC          59  00
 == identity
 contest.requested = 149 DARC10M
 contest.selected = 149 DARC10M
-contest.class = (none -- the legacy engine)
+contest.class = TContestDARC10M
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange

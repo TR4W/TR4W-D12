@@ -2,7 +2,7 @@
 == identity
 contest.requested = 173 BATAVIA_FT8
 contest.selected = 173 BATAVIA_FT8
-contest.class = (none -- the legacy engine)
+contest.class = TContestBataviaFT8
 == setup
 active.qsopointmethod = YBFT8QP
 active.exchange = GridExchange
@@ -110,7 +110,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   EM17       G3ABC
 == identity
 contest.requested = 173 BATAVIA_FT8
 contest.selected = 173 BATAVIA_FT8
-contest.class = (none -- the legacy engine)
+contest.class = TContestBataviaFT8
 == setup
 active.qsopointmethod = YBFT8QP
 active.exchange = GridExchange
@@ -218,7 +218,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  FN03       G3ABC
 == identity
 contest.requested = 173 BATAVIA_FT8
 contest.selected = 173 BATAVIA_FT8
-contest.class = (none -- the legacy engine)
+contest.class = TContestBataviaFT8
 == setup
 active.qsopointmethod = YBFT8QP
 active.exchange = GridExchange

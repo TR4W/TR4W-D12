@@ -77,19 +77,18 @@ uses
 type
    TContestARRLDXBase = class(TContestBase)
    protected
-      function GetFormatsExchange: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aRSTSent: string): string; override;
+                                          const aCtx: TCabrilloQSOContext): string; override;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aRSTReceived: string;
-                                              const aHisQTH: string): string; override;
+                                              const aCtx: TCabrilloQSOContext): string; override;
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                      const aQso: ContestExchange): string; override;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType): string; override;
    end;
 
 implementation
@@ -105,36 +104,30 @@ uses
    received side is simply the QSO's Power field, which is where the parser puts
    a state as readily as a number.
 
-   THE FOCMARATHON HALF OF THE LEGACY ARM IS NOT HERE. RSTPowerExchange is
-   shared, and inside it sits `if Contest = FOCMARATHON` swapping in the FOC
-   membership number. That is FOC Marathon's rule, not ARRL DX's, and it stays in
-   the legacy case until FOC Marathon gets a class of its own -- copying it here
-   would put one contest's rule in another contest's file, which is the shape
-   this factory exists to remove. *)
-function TContestARRLDXBase.GetFormatsExchange: boolean;
-begin
-   Result := True;
-end;
-
+   THE FOC MARATHON HALF OF THE LEGACY ARM IS NOT HERE. RSTPowerExchange is
+   shared, and inside it sat `if Contest = FOCMARATHON` swapping in the FOC
+   membership number. That is FOC Marathon's rule, not ARRL DX's, and since M4
+   it is TContestFOCMarathon's own -- copying it here would have put one
+   contest's rule in another contest's file. *)
 function TContestARRLDXBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                                        const aQso: ContestExchange;
-                                                       const aRSTSent: string): string;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aRSTSent, aMy.MyState]);
+   Result := Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
 end;
 
 function TContestARRLDXBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                            const aQso: ContestExchange;
-                                                           const aRSTReceived: string;
-                                                           const aHisQTH: string): string;
+                                                           const aCtx: TCabrilloQSOContext): string;
 begin
    (* The QSO's OWN Power, not the his-QTH the exporter selected -- the legacy
       arm reads rx.Power here and ignores csQTHString. *)
-   Result := Format('%-3s %-7s', [aRSTReceived, string(aQso.Power)]);
+   Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.Power)]);
 end;
 
 function TContestARRLDXBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
-                                                   const aQso: ContestExchange): string;
+                                                   const aQso: ContestExchange;
+                                                   aSessionExchange: ExchangeType): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
 end;

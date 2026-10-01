@@ -2,7 +2,7 @@
 == identity
 contest.requested = 52 UKEI
 contest.selected = 52 UKEI
-contest.class = (none -- the legacy engine)
+contest.class = TContestUKEI
 == setup
 active.qsopointmethod = UKEIQSOPointMethod
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
@@ -117,7 +117,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   59  0017     KS      G3ABC          59  00
 == identity
 contest.requested = 52 UKEI
 contest.selected = 52 UKEI
-contest.class = (none -- the legacy engine)
+contest.class = TContestUKEI
 == setup
 active.qsopointmethod = UKEIQSOPointMethod
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
@@ -232,7 +232,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  0017     ON      G3ABC          59  00
 == identity
 contest.requested = 52 UKEI
 contest.selected = 52 UKEI
-contest.class = (none -- the legacy engine)
+contest.class = TContestUKEI
 == setup
 active.qsopointmethod = UKEIQSOPointMethod
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange

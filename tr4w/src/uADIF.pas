@@ -1526,8 +1526,9 @@ begin
       Result := Result + EmitADIFField('APP_TR4W_ROVERCALL', roverFullCall);
       end;
 
-   (* CONTEST_ID, unless POTA/GENERALQSO (legacy behaviour; it moves into the
-      contest when POTA has a class -- design Q6).
+   (* CONTEST_ID, unless the contest says it writes none (General QSO, an
+      operating mode, since M4), or it is POTA -- which has no class to say
+      so until NY4I answers design Q6.
 
       THE CONTEST'S OWN ID, ASKED OF THE CONTEST (M1, 2026-10-01). This used to
       spell out "ADIFName, else the enum's spelling" here, one of four copies
@@ -1535,7 +1536,8 @@ begin
       (uContestRegistry.FindContestByADIFContestId) matches the same getter,
       so what is written here always reads back to the contest that wrote
       it -- inventory D9, which this closes. *)
-   if not (rec.ceContest in [POTA, GENERALQSO]) then
+   if (rec.ceContest <> POTA)                                and
+      ContestIdentity(rec.ceContest).WritesADIFContestId then
       begin
       Result := Result + EmitADIFField('CONTEST_ID',
          ContestIdentity(rec.ceContest).ADIFContestId);
@@ -1601,16 +1603,14 @@ begin
       begin
       Result := Result + EmitADIFField('NAME', string(rec.Name));
       end;
+
+   (* WHICH TAG THE POWER FIELD GOES TO IS THE CONTEST'S (M4): it holds the
+      FOC membership number for the FOC Marathon, a power for everything
+      else. This tested `ceContest = FOCMARATHON`. *)
    if rec.Power <> '' then
       begin
-      if rec.ceContest = FOCMARATHON then
-         begin
-         Result := Result + EmitADIFField('FOC_NUM', string(rec.Power))
-         end
-      else
-         begin
-         Result := Result + EmitADIFField('RX_PWR', string(rec.Power));
-         end;
+      Result := Result + EmitADIFField(ContestIdentity(rec.ceContest).ADIFPowerTag,
+                                       string(rec.Power));
       end;
 
    // SRX / STX (numeric serials).  Two "unset" sentinels are in use:

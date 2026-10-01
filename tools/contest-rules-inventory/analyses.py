@@ -21,11 +21,11 @@ def dead_arms(proxies, registry):
      scoring  logstuff.CalculateQSOPoints hands the QSO to the class and Exits
               when one is registered, so a `case ActiveQSOPointMethod of` arm
               reached only by registered contests is dead by default.
-     export   uCabrilloExchange.SetHisEx / uADIFExchange.FormatADIFMyExchange
-              Exit when the class's FormatsExchange is True, so an arm reached
-              only by such classes is dead by default."""
+     export   the shared arms in uCabrilloExchange / uADIFExchange are
+              TContestBase's default (M4), so an arm reached only by classes
+              that override FormatCabrilloSentExchange is dead by default."""
    reg = registry.registered()
-   formats = registry.implementers("GetFormatsExchange")
+   formats = registry.implementers("FormatCabrilloSentExchange")
    scoring, export = [], []
    for r in sorted(proxies, key=lambda r: (r["file"], r["line"])):
       cs = set(r["contests"])
@@ -33,7 +33,8 @@ def dead_arms(proxies, registry):
          continue
       if r["routine"].upper() == "CALCULATEQSOPOINTS" and cs <= reg:
          scoring.append(r)
-      if r["routine"].upper() in ("SETHISEX", "FORMATADIFMYEXCHANGE") and cs <= formats:
+      if r["routine"].upper() in ("SETHISEX", "FORMATCABRILLOEXCHANGEOFKIND",
+                                  "FORMATADIFEXCHANGEOFKIND") and cs <= formats:
          export.append(r)
    return {"scoring": scoring, "export": export, "formats": sorted(formats)}
 
@@ -70,7 +71,8 @@ def trait_disagreements(registry, contests, overrides):
    return {"checked": checked, "rows": rows}
 
 
-# Contests whose ADIF export writes no CONTEST_ID at all (uADIF.EmitADIFRecord).
+# Contests whose ADIF export writes no CONTEST_ID at all (uADIF.EmitADIFRecord:
+# POTA by name until it has a class, General QSO through WritesADIFContestId).
 NO_CONTEST_ID = {"POTA", "GENERALQSO"}
 
 
