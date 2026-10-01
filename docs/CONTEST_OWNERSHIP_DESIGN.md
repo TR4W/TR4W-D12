@@ -604,6 +604,21 @@ Each is behaviour-preserving unless marked.
 corpus can see byte for byte. Once a class's export is pinned, its round-trip
 test pins its import to it.
 
+### 8.2a Defects the M0 matrix pinned, and the step that fixes each
+
+Frozen as today's behaviour by `93fbc053`, NOT fixed in place (NY4I: build for the
+end state). Each is fixed by the step that rewrites its code, and that step
+re-freezes only the contests the fix reaches, with the reason:
+
+| # | defect | fixed in |
+|---|---|---|
+| 1 | no station is ever in-state for a QSO party: `FoundMyStateInDomFile` builds `'DOM' + DF + '.DOM'` with no separator (D7: `'%sDOM\%s.DOM'`) -- port regression | M2 |
+| 2 | CTY zone mode 255 in 500 of 575 records: `ZoneModeType(<boolean>)` at `fcontest.pas:421`; no `uctydat` arm matches, zone 0 | M2 |
+| 3 | NEQP crashes in setup with an empty MY STATE (`PWORD` of an empty string; can never match ME/NH since `string` is 2-byte) | M2 |
+| 4 | ARRL SS Cabrillo writes a NUL for an empty precedence | M4 |
+| 5 | COLORADOQSOPARTY's row is shifted: `Email` holds `'colorado_cty'`, `DF` is `''` | M2 |
+| 6 | REF's `FrenchID` AVs on an empty `CountryID` (latent) | M5 |
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
