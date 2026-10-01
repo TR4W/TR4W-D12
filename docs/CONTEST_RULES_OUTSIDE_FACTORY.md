@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `217f0378` (2026-10-01), **plus uncommitted changes under `tr4w/`**.
+directory). This copy was generated from commit `f5dfe3a8` (2026-10-01).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -129,7 +129,7 @@ into 508 comparison-or-arm records --
 
 **Scope.** `git ls-files 'tr4w/*.pas' 'tr4w/*.inc' 'tr4w/*.lpr'`, minus
 `tr4w/include/` (vendored) and `tr4w/test/`, minus `src/contestFactory/`:
-**443 files**. Using the tracked list excludes the gitignored `backup/`,
+**444 files**. Using the tracked list excludes the gitignored `backup/`,
 `graphify-out/` and `.claude/worktrees/` copies by construction.
 
 **Parsing.** Every file is first reduced to CODE ONLY by
