@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `c3841b55` (2026-10-01).
+directory). This copy was generated from commit `c2efdf18` (2026-10-01).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -1257,9 +1257,13 @@ methods reach only registered contests (section 9.1):
 The North Carolina arm is the sharpest case: it still awards +50 for seven
 callsigns (`'N4T'` .. `'N4L'`, `:7577-7601`), and `uContestNorthCarolinaQP.pas`
 records that the sponsor's current rules have no callsign bonus. **This is the
-scoring-side twin of the retired Florida Cabrillo branches**, and
-`docs/QSO_POINT_METHOD_DESIGN.md` (untracked in this tree) is the plan that
-retires the whole case -- these ten are the arms it can drop first.
+scoring-side twin of the retired Florida Cabrillo branches.** Under NY4I's
+2026-10-01 ruling (`docs/CONTEST_OWNERSHIP_DESIGN.md`, which supersedes
+`docs/QSO_POINT_METHOD_DESIGN.md`), each contest's class owns its scoring
+outright and there are no shared point-method strategies. These ten arms are
+now reachable only through an operator's `QSO POINT METHOD` in a classless
+contest, so the recommendation there (its Q11) is to delete them together with
+the whole case when that setting retires.
 
 `AlwaysOnePointPerQSO` is NOT dead everywhere: `logsubs2.pas:1614` still reads
 it to stop dupes being marked (section 4, Dupe), and that rule is live for

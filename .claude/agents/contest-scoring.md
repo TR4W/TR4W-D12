@@ -101,6 +101,22 @@ never in one shell block.
 `ContestExchange`, and `tr4w/test/python/verify_adif_export.py` cross-checks ADIF
 against it.
 
+## Where this engine's rules are going
+
+Each rule moves into the contest's own class, which **owns** it outright (NY4I,
+2026-10-01; `docs/CONTEST_OWNERSHIP_DESIGN.md`). It does **not** move into
+shared point-method, exchange or multiplier strategies.
+`docs/QSO_POINT_METHOD_DESIGN.md` is SUPERSEDED.
+
+**For a contest WITH a class, `logstuff.CalculateQSOPoints` already hands over**
+after the four `QSO POINTS ...` overrides, and the `case ActiveQSOPointMethod`
+serves only classless contests. **`QSO POINT METHOD` is retired at the end of
+the migration.**
+
+**Its spelling table is rotated:** `QSOPointMethodArray` selects the wrong
+method for 46 spellings, a D7 defect. The shipped
+`target/dom/Idaho QSO Party.cfg` is affected (ownership doc §7.2).
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

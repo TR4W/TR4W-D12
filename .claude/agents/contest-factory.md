@@ -53,6 +53,28 @@ outranks refactoring convenience — the factory is a classic factory pattern wi
 proper inheritance, like the radio factory. Build to that standard rather than a
 `case` statement.
 
+## The model -- a contest OWNS its rules (NY4I, 2026-10-01)
+
+Read **`docs/CONTEST_OWNERSHIP_DESIGN.md`** before moving any rule. It covers
+the target shape, the M-step migration order and the open questions.
+
+- **A contest class owns its rules outright**, through virtuals on
+  `TContestBase`: scoring, exchange parsing and validation, ADIF import
+  interpretation, ADIF and Cabrillo export, setup, and total score and bonuses.
+- **No shared strategy objects and no registries** for point methods, exchange,
+  multiplier or initial-exchange kinds. Nothing is picked from a shared set.
+  `docs/QSO_POINT_METHOD_DESIGN.md` proposed exactly that and is
+  **SUPERSEDED**. Do not build from it.
+- **Family bases only for one family under one rule** (`TContestStateQSOPartyBase`,
+  the CW/SSB pairs, NRAU-Baltic).
+- **A contest that resembles another starts as a COPY and owns it.** That is
+  ownership, not drift, so never merge such copies.
+- **Helpers only for genuinely shared computation**, called by the class's own
+  code. `uContestARRLDigi` calling `LOGGRID.GetDistanceBetweenGrids` is the
+  worked example.
+- **`QSO POINT METHOD` retires when the migration ends.** The four
+  `QSO POINTS ...` overrides stay and run before the class.
+
 The contest `.cfg` is **deliberately exempt** from the JSON destination: its
 parameters go to the **contest SQLite database**, not to `settings/tr4w.json`.
 

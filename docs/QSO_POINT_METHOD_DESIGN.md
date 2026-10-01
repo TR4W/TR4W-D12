@@ -1,6 +1,40 @@
-# QSO point methods as factory strategies -- DESIGN (nothing built)
+# QSO point methods as factory strategies -- SUPERSEDED 2026-10-01
 
-**Status:** design only, 2026-09-29, branch `contestFactory`. Nothing here
+> **SUPERSEDED, 2026-10-01 -- DO NOT BUILD ANYTHING FROM THIS DOCUMENT.**
+>
+> **NY4I's ruling of that day:** a contest class OWNS its rules outright through
+> virtuals on `TContestBase`. That covers scoring, exchange parsing, ADIF
+> import interpretation, ADIF and Cabrillo export, setup, and total score and
+> bonuses. There are **no shared strategy objects and no registries** for point
+> methods, exchange kinds, multiplier kinds or initial exchange. The
+> `QSOPointMethodType` enum was the legacy engine's way to reuse arms of one
+> `case`, and in a factory it has no job: *"if I have a field day class, all I
+> really need to is call a function in the class that provides the qso info ...
+> and the class returns the points."* `QSO POINT METHOD` keeps working for
+> classless contests until the migration ends, and is then **retired**. The
+> four `QSO POINTS ...` overrides stay. Everything below about
+> `TQSOPointMethod`, the registry, `TModeTablePoints`, the resolver, the
+> operator "swapping" a method, and deleting `TContestBase.CalculateQSOPoints`
+> is therefore **void**. That last one inverts: `CalculateQSOPoints` is the
+> permanent seam.
+>
+> **Read [`CONTEST_OWNERSHIP_DESIGN.md`](CONTEST_OWNERSHIP_DESIGN.md) instead.**
+> Only two findings here remain live, and both are restated there (§7.2, §7.3)
+> so that document stands alone:
+>
+> - **Finding 1, the rotated `QSOPointMethodArray`.** It matters only until the
+>   setting retires, but the recommendation there is to **fix it now**: the
+>   shipped `target/dom/Idaho QSO Party.cfg` asks for `ONE PHONE TWO CW` and
+>   gets `TwoPhoneFourCW`.
+> - **Finding 2, the sentinels.** Every corpus log stores `NONE` / `UNKNOWN` for
+>   all seven `Active*` settings, which stays relevant while `FoundContest` sets
+>   globals.
+>
+> Finding 3 (OQP scores by the session's mode) survives as that document's Q13.
+> The body below is kept unedited as the record of the superseded design and of
+> the measurements behind it. Its Q1-Q7 are renumbered there with provenance.
+
+**Status (as written):** design only, 2026-09-29, branch `contestFactory`. Nothing here
 exists in code yet. Owner: `contest-scoring`, with `contest-factory` and
 `settings-config`.
 
