@@ -121,10 +121,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ---------------------------------------------------------------------------
   NO FORMER ADIF ID, AND THAT IS A DECISION. Every Idaho log TR4W ever wrote
   was exported as NEQP -- its CONTEST_ID was NEQP's enum spelling, because
-  NEQP's ADIFName is blank. Claiming 'NEQP' here would make every New England
-  QSO Party file import as Idaho: NEQP's current id is blank and a blank
-  matches nothing, so the former id would win. Those Idaho files cannot be
-  told apart from NEQP's, and they stay NEQP.
+  NEQP's ADIFName is blank. Those Idaho files cannot be told apart from
+  NEQP's, and they stay NEQP. Since M1 (2026-10-01) 'NEQP' IS NEQP's current
+  id -- the spelling export writes -- so a current-id match would beat a
+  former 'NEQP' here anyway; before M1 NEQP's id was blank, and such a former
+  id would have stolen every New England file. Listing it now would be dead
+  and misleading, so it stays unlisted.
 
   FormatsExchange STAYS FALSE. The Cabrillo and ADIF columns come from the
   shared RSTDomesticOrDXQTHExchange arms, as they did under NEQP; export moves

@@ -487,7 +487,8 @@ implementation
 uses
    uADIF, uLogBinaryFile, ZONECONT, TF,
    utils_text,   (* CharBufferBytes -- a fixed char field read back *)
-   uLogNote;   (* NoteText / SetNoteText -- where a note's text lives *)
+   uLogNote,   (* NoteText / SetNoteText -- where a note's text lives *)
+   uContestRegistry;   (* ContestIdentity -- the contest's friendly name *)
 
 (* --------------------------------------------------------------------------- *)
 (* sentinels -- crosswalk finding 3                                            *)
@@ -1714,11 +1715,9 @@ begin
    FContest := aContest;
    token := AnsiString(ContestTypeSA[aContest]);
 
-   friendly := AnsiString(ContestsArray[aContest].FriendlyName);
-   if friendly = '' then
-      begin
-      friendly := token;
-      end;
+   (* Asked of the contest -- M1. Its FriendlyName already falls back to the
+      enum spelling, which is the rule this used to restate. *)
+   friendly := AnsiString(ContestIdentity(aContest).FriendlyName);
 
    q := TSQLQuery.Create(nil);
    try

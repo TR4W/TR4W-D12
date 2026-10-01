@@ -95,6 +95,19 @@ the target shape, the M-step migration order and the open questions.
   and a class must not repeat the band rule there. When a contest states its
   bands, add it to the exception list in
   `Test_EveryOtherContestStillCreditsEveryBand`. Design doc §7.4.
+- **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
+  `uContestRegistry.ContestIdentity(c)` answers for EVERY `ContestType` --
+  the class, else a plain `TContestBase` reading the row; never nil, owned by
+  the registry, thread-safe, and carrying no station (ask it what a contest
+  IS, never to score). The Cabrillo `CONTEST:` line, ADIF `CONTEST_ID`, both
+  UDP broadcasts, both score-posting clients, the external logger, the
+  summary sheet, the log database's friendly name and the calendar menus all
+  ask it. `CabrilloName`, `ADIFContestId` and `FriendlyName` are each "the
+  row's field, else the enum's spelling", stated ONCE in the base -- do not
+  restate that fallback at a call site, and do not transcribe a blank as `''`
+  in a class. `ADIFContestId` is what export writes AND what import matches,
+  which closed inventory D9. Use `ActiveContest` (nil for a classless
+  contest) only for behaviour.
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog

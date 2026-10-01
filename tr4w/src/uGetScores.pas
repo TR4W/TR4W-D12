@@ -90,7 +90,8 @@ uses
   MainUnit,
   uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
-  uSettingsModel;    // Settings.My.ItuZone
+  uSettingsModel,    // Settings.My.ItuZone
+  uContestRegistry;  // ContestIdentity -- the contest's ADIF id
 
 procedure RunPOSTGetScoresThread;
 begin
@@ -298,14 +299,8 @@ begin
   nTotal := 0;
   nQSOs  := 0;
 
-  if Length(ContestsArray[Contest].ADIFName) = 0 then
-     begin
-     sContest := ContestTypeSA[Contest]
-     end
-  else
-     begin
-     sContest := ContestsArray[Contest].ADIFName;
-     end;
+  (* The contest's ADIF id, asked of the contest -- M1. *)
+  sContest := ContestIdentity(Contest).ADIFContestId;
 
   // <ops> = Settings.My.Call (single-op) -- issue #930.  Multi-op operator-list comes
   // from the Cabrillo summary _OPERATORS in production use; defer until users

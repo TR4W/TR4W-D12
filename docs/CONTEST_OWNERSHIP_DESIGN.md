@@ -66,7 +66,7 @@ lives in a helper or in the format's own unit.
 |---|---|---|
 | per-QSO points | the class, for every registered contest (`logstuff.CalculateQSOPoints` hands over and `Exit`s) | `CalculateQSOPoints` (**existing -- this is the shape**) |
 | the bands it uses (an off-band QSO is logged, scores 0, earns no multiplier) | the class; base says every band | `UsesBand` (**existing**, §7.4) |
-| identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | the class, but **five exporters read `ContestsArray` directly** (inventory §1.4 fact 4, D9) | existing properties. The fix is making the exporters ask |
+| identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity` | existing properties (**existing**) |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
 | exchange parsing and validation | `ProcessExchange`'s `case ActiveExchange of`; the class's `ValidateClass` / `ValidateDXQTH` / `ValidateQTHCount` | `ParseReceivedExchange`, plus the existing validators |
 | ADIF export: sent exchange and contest fields | `uADIFExchange` (the class when `FormatsExchange`); `postunit.EmitContestSpecificTailForExport` | `FormatADIFSentExchange` (existing), `EmitADIFContestFields` |
@@ -627,7 +627,7 @@ Each is behaviour-preserving unless marked.
 | step | what | gate |
 |---|---|---|
 | **M0** | **Decide Q3** (Q1 and Q2 are ruled). Build the legacy-fixture harness (§8.1) | the harness |
-| **M1** | **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
+| **M1** | **DONE 2026-10-01 (§8.2b).** **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
 | **M2** | **Setup head reads the class.** `ContestDefinition`, `InHostState`, `Active*` written from the class's traits. Arms stay. Freeze a setup fixture first: every `ContestType` x station variants (in-state/out, K/VE/DX) -> `Active*` and settings | setup fixture; corpus |
 | **M3** | **Scoring finishes on the class.** The ten secondary `ActiveQSOPointMethod` readers move into their contests (§2; **behaviour change** for an operator override). Family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
 | **M4** | **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields. D4's dead arms and the D6 no-op go | corpus; per-class round-trip unit test |
@@ -656,6 +656,67 @@ re-freezes only the contests the fix reaches, with the reason:
 | 4 | ARRL SS Cabrillo writes a NUL for an empty precedence | M4 |
 | 5 | COLORADOQSOPARTY's row is shifted: `Email` holds `'colorado_cty'`, `DF` is `''` | M2 |
 | 6 | REF's `FrenchID` AVs on an empty `CountryID` (latent) | M5 |
+
+### 8.2b M1 -- what it covered (2026-10-01)
+
+**One answer per identity question, owned by the contest, and every consumer
+outside the factory asks it.** The accessor is
+`uContestRegistry.ContestIdentity(c)`: the registered class, else a plain
+`TContestBase` reading the row. It is never nil, the registry owns it (one
+instance per contest, built on first ask, thread-safe because the score-posting
+clients ask from worker threads), and it carries no station -- `ActiveContest`
+stays the scoring object, and its `nil` for a classless contest is right for
+behaviour and wrong for a name, which is why this is a second accessor.
+
+| consumer | read before | asks now |
+|---|---|---|
+| `uADIF.EmitADIFRecord` (ADIF `CONTEST_ID`) | `ADIFName`, else `ContestTypeSA` | `ADIFContestId` |
+| `postunit` Cabrillo header (`CONTEST:`) | `CABName`, else `ContestTypeSA` | `CabrilloName` |
+| `postunit.ContestFriendlyParens` (summary sheet, score report) | raw `FriendlyName` | `FriendlyName`, shown when it is not the enum spelling |
+| `logsubs2` UDP score broadcast `<contest>` | `ADIFName`, else `ContestTypeSA` | `ADIFContestId` |
+| `logsubs2` UDP contact broadcast `<contestname>` | the ACTIVE contest's `CABName`, else the QSO's `ContestTypeSA` -- two contests in one rule | the QSO's `CabrilloName` |
+| `uGetScores` `<contest>` | `ADIFName`, else `ContestTypeSA` | `ADIFContestId` |
+| `uHamScore.RenderDeleteLogBody` | `ADIFName`, else `ContestTypeSA` | `ADIFContestId` |
+| `uExternalLogger` (DXKeeper) `CONTEST_ID` | bare `ContestTypeSA` | `ADIFContestId` -- **a behaviour change**, see below |
+| `uLogRepository.SetContest` friendly name | `FriendlyName`, else the token | `FriendlyName` |
+| `MainUnit` calendar menus (enable + URL) | `QRZRUID`, `WA7BNM` | `QRZRUId`, `WA7BNMId` |
+
+**Seven hand-written copies of "the field, else the enum's spelling" are gone**;
+the rule is stated once per field in `TContestBase`. Nothing reads
+`SubmissionEmail` (the MAPI send was removed 2026-09-08) or `DisplayName`
+outside the factory.
+
+**D9 is closed.** `TContestBase.GetADIFContestId` is now "`ADIFName`, else the
+enum's spelling" -- what export always wrote -- and the eighteen classes that
+transcribed a blank as `''` state their spelling. Export and import ask the
+same getter, so they agree by construction: every `ContestType` round-trips
+except DUMMYCONTEST (not a contest), POTA and GENERALQSO (export writes no
+`CONTEST_ID`; that `in [POTA, GENERALQSO]` test in `uADIF` moves when POTA has
+a class, Q6), and RSGB_ROPOCO_SSB, whose row shares `RSGB-ROLO` with the CW
+running and reads back as CW. **No new collision**: no enum spelling equals
+another contest's id or former id (measured, and pinned by
+`Test_OnlyRSGBRoloSharesACurrentADIFId`). "A current id beats a former id" is
+unchanged, and is now what keeps Idaho off `NEQP`: `NEQP` is NEQP's current id.
+
+**What M1 changed on purpose, with no oracle to see it.** DXKeeper now receives
+the contest's ADIF id rather than the enum spelling, which differs for the 34
+contests whose row states an `ADIFName` other than their spelling (ARRL Field
+Day sent `ARRL-FD`; it now sends `ARRL-FIELD-DAY`, as export does). And the UDP
+contact broadcast names the QSO's contest consistently; it differs from before
+only when a QSO's contest is not the active one.
+
+**Gates:** the contest matrix 185 identical; `test-adif-roundtrip.sh` 13/0/0;
+`Lint-ContestNameTests` unchanged (M1 removed fallback copies, not contest-name
+tests). The score-posting and UDP ids have no oracle, so
+`Test_IdentityIsWhatTheExportersWroteBeforeM1` pins every getter over every
+`ContestType` to what the removed copies produced.
+
+**Not M1:** the `ContestTypeSA` *token* reads -- the `.cfg`/database key, the
+contest-selection lists, and diagnostic messages -- are the enum's own
+spelling, not a class property, and `ContestTypeSA` does not retire at M10.
+`MainUnit`'s `pos('CQ-WW', ...)` off-time test is a sponsor rule (M2/M7).
+`test/logdump` still keeps its own diverged rule (`'CONTEST_' + ordinal`), and
+`verify_adif_export.py`'s note on `CONTEST_ID` predates the fallback.
 
 ### 8.3 What "a contest has moved" means -- checkably
 

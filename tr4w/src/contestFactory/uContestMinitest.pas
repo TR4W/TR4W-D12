@@ -46,10 +46,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   agree on scoring today; if a Minitest rule ever reaches all three by
   definition, that is the moment for a family base, not before.
 
-  BLANK CABName AND FriendlyName MEAN "THE ENUM'S SPELLING"; the getters
-  below state the value each resolves to, never the empty string.
-  ADIFName is the opposite: blank there is a real answer, and it is
-  stated as the empty string.
+  BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
+  the getters below state the value each resolves to, never the empty
+  string. ADIFName joined the other two at M1 (2026-10-01): a blank one
+  was always exported as the enum's spelling, and the id is now what
+  export writes, so import matches it.
 
   EXCHANGE PARSING AND EXPORT COLUMNS ARE NOT MOVED. FormatsExchange is
   inherited False, so uCabrilloExchange and uADIFExchange still format
@@ -114,9 +115,13 @@ end;
 
 function TContestMinitest.GetADIFContestId: string;
 begin
-   (* Blank in the row, and blank is the answer -- no ADIF id is
-      stated for this contest. *)
-   Result := '';
+   (* WHAT TR4W'S ADIF EXPORT WRITES, AND SO WHAT ITS IMPORT MATCHES. The
+      row's ADIFName is blank, and export has always written the enum's own
+      spelling in its place; this states that id. It was '' until M1
+      (2026-10-01), which is why a file TR4W exported for this contest
+      never re-imported to it (inventory D9). See
+      TContestBase.GetADIFContestId. *)
+   Result := 'MINITEST';
 end;
 
 function TContestMinitest.GetWA7BNMId: integer;

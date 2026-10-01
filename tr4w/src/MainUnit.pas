@@ -744,7 +744,8 @@ uses
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
   uWSJTXState,       // the state the WSJT-X indicator paints from
   uLogNote,          // NoteText / SetNoteText -- a note's text, spelled once
-  uPanadapterForm;   // it is not a tw_ window, so it saves its own row
+  uPanadapterForm,   // it is not a tw_ window, so it saves its own row
+  uContestRegistry;  // ContestIdentity -- the contest's calendar ids, M1
 
 
 
@@ -4470,11 +4471,12 @@ begin
      begin
      T1 := 1800000; // normal 30min break
      end;
-  if ContestsArray[Contest].QRZRUID = 0 then
+  (* The calendar ids, asked of the contest -- M1. 0 means "not listed". *)
+  if ContestIdentity(Contest).QRZRUId = 0 then
      begin
      SetMenuEnabled(menu_qrzru_calendar, False);
      end;
-  if ContestsArray[Contest].WA7BNM = 0 then
+  if ContestIdentity(Contest).WA7BNMId = 0 then
      begin
      SetMenuEnabled(menu_WA7BNM_calendar, False);
      end;
@@ -5800,13 +5802,13 @@ begin
     menu_qrzru_calendar:
       begin
         OpenUrl(SysUtils.Format('http://www.qrz.ru/contest/detail/%d.html',
-                                [ContestsArray[Contest].QRZRUID]));
+                                [ContestIdentity(Contest).QRZRUId]));
       end;
 
     menu_WA7BNM_calendar:
       begin
         OpenUrl(SysUtils.Format('https://contestcalendar.com/contestdetails.php?ref=%u',
-                                [ContestsArray[Contest].WA7BNM]));   // 4.127.1
+                                [ContestIdentity(Contest).WA7BNMId]));   // 4.127.1
 
       end;
 

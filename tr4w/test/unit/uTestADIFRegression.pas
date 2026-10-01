@@ -26,6 +26,7 @@ type
       procedure Test_Import_ContestID_OldAndNewSpellings;
       procedure Test_Import_ContestID_BlankMatchesNothing;
       procedure Test_Emit_ContestID_WritesOnlyTheNewSpelling;
+      procedure Test_ContestID_EveryContestReimportsItsOwnExport;
    end;
 
 implementation
@@ -209,6 +210,86 @@ begin
    CheckEmits(NZFIELDDAY, '<CONTEST_ID:5>JW-FD ');
 end;
 
+(* TR4W READS BACK EVERY CONTEST_ID IT WRITES -- inventory D9, closed by M1
+   (2026-10-01).
+
+   Until M1, export wrote "ADIFName, else the enum's spelling" while import
+   matched the class's ADIFContestId, which was '' for a blank ADIFName. So a
+   file TR4W exported for 139 contests -- CQ WW, CQ WPX, ARRL DX, Sweepstakes,
+   IARU among them -- never resolved back to its contest. Both sides now ask
+   the same getter.
+
+   THROUGH THE REAL EMITTER AND THE REAL IMPORTER, for every ContestType, so
+   the assertion covers the lexer and the cache as well as the lookup.
+
+   THE EXCEPTIONS, each asserted rather than skipped:
+     DUMMYCONTEST     "no contest". Not exported for, never selectable.
+     POTA, GENERALQSO export writes NO CONTEST_ID at all, so there is nothing
+                      to read back -- asserted absent.
+     RSGB_ROPOCO_SSB  shares 'RSGB-ROLO' with the CW running, the one current
+                      id two rows hold, so it reads back as CW. Import has
+                      always resolved it so; telling them apart needs the
+                      MODE, which is M5's import work, not an id. *)
+procedure TADIFRegressionTests.Test_ContestID_EveryContestReimportsItsOwnExport;
+var
+   c        : ContestType;
+   rec      : ContestExchange;
+   s        : string;
+   records  : TContestExchangeArray;
+   who      : string;
+   expected : ContestType;
+   resolved : integer;
+begin
+   BeginTest('Test_ContestID_EveryContestReimportsItsOwnExport');
+   CheckEquals(Ord(DUMMYCONTEST), Ord(Low(ContestType)),
+               'DUMMYCONTEST is the first ContestType');
+
+   resolved := 0;
+   for c := Succ(Low(ContestType)) to High(ContestType) do
+      begin
+      who := string(ContestTypeSA[c]);
+
+      FillChar(rec, SizeOf(rec), 0);
+      rec.ceContest := c;
+      rec.Band      := Band20;
+      rec.Callsign  := 'KG1S';
+      s := EmitADIFRecord(rec) + '<EOR>';
+
+      if c in [POTA, GENERALQSO] then
+         begin
+         CheckTrue(Pos('<CONTEST_ID', s) = 0,
+                   who + ' writes no CONTEST_ID -- got: ' + s);
+         Continue;
+         end;
+
+      CheckTrue(Pos('<CONTEST_ID', s) > 0, who + ' writes a CONTEST_ID');
+      CheckEquals(1, ImportADIFFromString(s, records),
+                  who + ': one record read back');
+      if Length(records) <> 1 then
+         begin
+         Continue;
+         end;
+
+      expected := c;
+      if c = RSGB_ROPOCO_SSB then
+         begin
+         expected := RSGB_ROPOCO_CW;
+         end;
+      CheckEquals(Ord(expected), Ord(records[0].ceContest),
+                  who + ' read back as ' +
+                  string(ContestTypeSA[records[0].ceContest]) + ' -- wrote: ' + s);
+      if records[0].ceContest = c then
+         begin
+         inc(resolved);
+         end;
+      end;
+
+   (* A FLOOR, so the loop cannot pass by checking nothing: every contest but
+      the four exceptions above round-trips to itself. *)
+   CheckEquals(Ord(High(ContestType)) + 1 - 4, resolved,
+               'contests whose own export reads back to them');
+end;
+
 procedure TADIFRegressionTests.RunAllTests;
 begin
    Test_Import_CQZField_PopulatesZone;
@@ -217,6 +298,7 @@ begin
    Test_Import_ContestID_OldAndNewSpellings;
    Test_Import_ContestID_BlankMatchesNothing;
    Test_Emit_ContestID_WritesOnlyTheNewSpelling;
+   Test_ContestID_EveryContestReimportsItsOwnExport;
 end;
 
 end.

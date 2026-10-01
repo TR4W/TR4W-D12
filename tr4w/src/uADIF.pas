@@ -306,8 +306,9 @@ implementation
 uses
    TF,
    (* FindContestByADIFContestId -- which contest answers to a CONTEST_ID,
-      including the ids it was exported under before a rename. The contest
-      owns that answer; this unit only caches it. *)
+      including the ids it was exported under before a rename -- and
+      ContestIdentity, the contest's own id for export. The contest owns both
+      answers; this unit only caches the first. *)
    uContestRegistry;
 
 var
@@ -1525,25 +1526,19 @@ begin
       Result := Result + EmitADIFField('APP_TR4W_ROVERCALL', roverFullCall);
       end;
 
-   // CONTEST_ID, unless POTA/GENERALQSO (legacy behaviour).
-   // Mirror the fallback used by logsubs2.pas:2782, uGetScores.pas:435 and 564:
-   // if ContestsArray[].ADIFName is empty (true for 156 of TR4W's contests),
-   // fall back to the parallel ContestTypeSA[] string, which IS the standard
-   // ADIF Contest_ID for the major contests (e.g. 'CQ-WPX-SSB', 'CQ-WW-CW',
-   // 'ARRL-DX-CW').  This was the behaviour before Issue #887's extraction;
-   // it did not survive the move into uADIF.pas.
+   (* CONTEST_ID, unless POTA/GENERALQSO (legacy behaviour; it moves into the
+      contest when POTA has a class -- design Q6).
+
+      THE CONTEST'S OWN ID, ASKED OF THE CONTEST (M1, 2026-10-01). This used to
+      spell out "ADIFName, else the enum's spelling" here, one of four copies
+      of that rule. The rule is TContestBase.GetADIFContestId now, and import
+      (uContestRegistry.FindContestByADIFContestId) matches the same getter,
+      so what is written here always reads back to the contest that wrote
+      it -- inventory D9, which this closes. *)
    if not (rec.ceContest in [POTA, GENERALQSO]) then
       begin
-      if Length(ContestsArray[rec.ceContest].ADIFName) = 0 then
-         begin
-         Result := Result + EmitADIFField('CONTEST_ID',
-            string(ContestTypeSA[rec.ceContest]))
-         end
-      else
-         begin
-         Result := Result + EmitADIFField('CONTEST_ID',
-            ContestsArray[rec.ceContest].ADIFName);
-         end;
+      Result := Result + EmitADIFField('CONTEST_ID',
+         ContestIdentity(rec.ceContest).ADIFContestId);
       end;
 
    // MODE / SUBMODE

@@ -283,7 +283,11 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # not conversion.
 # 1339 -> 1338, 2026-10-01: the POTA ADIF-import arm's two QTHString
 # assignments became one, through ResolvePOTAParkFromADIF.
-$NARROW_CEILING = 1338
+# 1338 -> 1337, 2026-10-01: M1, contest identity read from the class. The UDP
+# contact broadcast's "CABName, else the enum's spelling" copy assigned the
+# spelling (a UnicodeString) straight into an AnsiString; it is one explicit
+# conversion of the class's CabrilloName now.
+$NARROW_CEILING = 1337
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

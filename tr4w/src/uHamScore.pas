@@ -210,7 +210,8 @@ uses
   uGetScores,        // BuildDynamicResultsXml (added by this PR)
   uExchangeBuilder,  // Shared SentExchange / RxExchange canonical builders
   uCabrillo,         // BuildSingleQsoCabrilloLine (RTC 3.0 -- issue #920)
-  PostUnit;          // Contest global (RTC 3.0 deletelog needs contest name)
+  PostUnit,          // Contest global (RTC 3.0 deletelog needs contest name)
+  uContestRegistry;  // ContestIdentity -- the contest's ADIF id
 
 const
   DEFAULT_CYCLE_MS = 120000;   // 2 minutes per RTC spec section 1.2
@@ -398,16 +399,10 @@ var sContest: string;
 begin
   // RTC 3.0 (issue #920): <deletelog> now carries a <contest> child so the
   // server can scope the wipe to a single contest if the operator has
-  // posted to multiple in the same session.  Prefer ADIFName when set,
-  // else the internal name.
-  if Length(ContestsArray[Contest].ADIFName) = 0 then
-     begin
-     sContest := ContestTypeSA[Contest]
-     end
-  else
-     begin
-     sContest := ContestsArray[Contest].ADIFName;
-     end;
+  // posted to multiple in the same session.
+  (* The contest's ADIF id, asked of the contest -- M1. It is the same id
+     BuildDynamicResultsXml sends, from the same getter. *)
+  sContest := ContestIdentity(Contest).ADIFContestId;
 
   Result :=
     '<deletelog>' + sLineBreak +

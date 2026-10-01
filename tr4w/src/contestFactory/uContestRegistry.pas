@@ -64,13 +64,38 @@ function ContestClassFor(aContest: ContestType): TContestClass;
   the legacy path". *)
 function RegisteredContestCount: integer;
 
+(* THE OBJECT THAT SAYS WHAT aContest IS -- its names and ids, and the rest of
+  its row. NEVER nil: a contest with a class answers from its class, one
+  without is answered by a plain TContestBase reading ContestsArray. So every
+  identity question -- the Cabrillo CONTEST: name, the ADIF CONTEST_ID, the
+  friendly name, the WA7BNM and QRZ.RU ids -- has one answer per contest, and
+  every consumer asks it here (M1, 2026-10-01).
+
+  OWNED BY THIS UNIT. Do not free it. Built the first time a contest is asked
+  about and kept until the program ends, so a caller asking per QSO -- ADIF
+  export, the UDP broadcast -- allocates nothing.
+
+  SAFE FROM ANY THREAD. The score-posting clients ask from their worker
+  threads, so building an instance is serialised; the getters themselves read
+  constant tables.
+
+  IT HAS NO STATION, AND IS NOT THE SCORING OBJECT. Ask it what a contest IS,
+  never to score a QSO: uContestFactory.ActiveContest is the object that
+  carries the station, and answers nil for a contest with no class so its
+  callers keep the legacy path. That nil is right for scoring and wrong for a
+  name, which is why this is a separate accessor rather than a mode of that
+  one. *)
+function ContestIdentity(aContest: ContestType): TContestBase;
+
 (* WHICH CONTEST ANSWERS TO THIS ADIF CONTEST_ID? True with aContest set when
   one does; False, with aContest at Low(ContestType), when none does.
 
-  IT ASKS EVERY CONTEST, CLASS OR NOT, THROUGH THE SAME ACCESSOR. A contest
-  with a class answers from its class; one without is asked through a plain
-  TContestBase, whose accessor reads ContestsArray. So there is one rule for
-  "what is this contest's id", and this is not a second copy of it.
+  IT ASKS EVERY CONTEST, CLASS OR NOT, THROUGH ContestIdentity -- the object
+  ADIF export asks too. So the id this matches IS the id export writes, by
+  construction, and a file TR4W exported resolves to the contest it came from
+  (inventory D9, closed by M1). The one current-id collision is RSGB-ROLO,
+  which the CW and SSB rows share: it resolves to the CW running, as it
+  always has.
 
   THE ORDER IS THE RULE:
     1. the input is TRIMMED, and an empty result matches NOTHING. A blank id
@@ -93,10 +118,16 @@ function FindContestByADIFContestId(const aId: string;
 implementation
 
 uses
-   SysUtils;
+   SysUtils,
+   SyncObjs;
 
 var
    GRegistry: array[ContestType] of TContestClass;
+
+   (* ContestIdentity's instances, one per contest, built on first ask, and
+      the lock that serialises building them. *)
+   GIdentity: array[ContestType] of TContestBase;
+   GIdentityLock: TCriticalSection;
 
 procedure RegisterContest(aContest: ContestType; aCls: TContestClass);
 begin
@@ -114,6 +145,18 @@ begin
          'register as well. One contest, one class.',
          [string(ContestTypeSA[aContest]),
           GRegistry[aContest].ClassName, aCls.ClassName]);
+      end;
+
+   (* A REGISTRATION AFTER THE CONTEST WAS ASKED ABOUT. ContestIdentity would
+      already hold a plain TContestBase for it and keep answering from the
+      row, silently. Registration belongs in a unit's initialization, which
+      runs before anything asks. *)
+   if GIdentity[aContest] <> nil then
+      begin
+      raise Exception.CreateFmt(
+         '%s registered for %s after the contest''s identity was already ' +
+         'asked for. Register from the unit''s initialization section.',
+         [aCls.ClassName, string(ContestTypeSA[aContest])]);
       end;
 
    GRegistry[aContest] := aCls;
@@ -138,17 +181,24 @@ begin
       end;
 end;
 
-(* The object that answers for aContest: its class, or a plain TContestBase
-   reading ContestsArray when it has none. The caller frees it. *)
-function NewContestObject(aContest: ContestType): TContestBase;
+function ContestIdentity(aContest: ContestType): TContestBase;
 begin
-   if GRegistry[aContest] <> nil then
-      begin
-      Result := GRegistry[aContest].Create(aContest);
-      end
-   else
-      begin
-      Result := TContestBase.Create(aContest);
+   GIdentityLock.Acquire;
+   try
+      if GIdentity[aContest] = nil then
+         begin
+         if GRegistry[aContest] <> nil then
+            begin
+            GIdentity[aContest] := GRegistry[aContest].Create(aContest);
+            end
+         else
+            begin
+            GIdentity[aContest] := TContestBase.Create(aContest);
+            end;
+         end;
+      Result := GIdentity[aContest];
+   finally
+      GIdentityLock.Release;
       end;
 end;
 
@@ -179,30 +229,26 @@ begin
    formerContest := Low(ContestType);
    for c := Low(ContestType) to High(ContestType) do
       begin
-      obj := NewContestObject(c);
-      try
-         if obj.ADIFContestId = id then
-            begin
-            aContest := c;
-            Result := True;
-            Exit;
-            end;
+      obj := ContestIdentity(c);
+      if obj.ADIFContestId = id then
+         begin
+         aContest := c;
+         Result := True;
+         Exit;
+         end;
 
-         if not haveFormer then
+      if not haveFormer then
+         begin
+         former := obj.FormerADIFContestIds;
+         for i := 0 to High(former) do
             begin
-            former := obj.FormerADIFContestIds;
-            for i := 0 to High(former) do
+            if former[i] = id then
                begin
-               if former[i] = id then
-                  begin
-                  haveFormer := True;
-                  formerContest := c;
-                  Break;
-                  end;
+               haveFormer := True;
+               formerContest := c;
+               Break;
                end;
             end;
-      finally
-         obj.Free;
          end;
       end;
 
@@ -212,5 +258,22 @@ begin
       Result := True;
       end;
 end;
+
+procedure FreeIdentities;
+var
+   c: ContestType;
+begin
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      FreeAndNil(GIdentity[c]);
+      end;
+end;
+
+initialization
+   GIdentityLock := TCriticalSection.Create;
+
+finalization
+   FreeIdentities;
+   FreeAndNil(GIdentityLock);
 
 end.

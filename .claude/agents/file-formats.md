@@ -104,9 +104,20 @@ multipliers, CTY.DAT, band lookup and CRC32.
   `FormerADIFContestIds`. A renamed id keeps its old spelling as a former id so
   operators' existing files still import (NY4I, 2026-09-29). It used to return a
   contest always and let the caller compare, which matched an **empty**
-  CONTEST_ID to the first blank row. Export still writes `ADIFName`, else the
-  enum's spelling — that fallback is also why a contest that gains an id lists
-  the enum spelling as a former one.
+  CONTEST_ID to the first blank row.
+- **Export and import ask ONE getter for a contest's `CONTEST_ID` (M1,
+  2026-10-01).** `TContestBase.ADIFContestId` is `ADIFName`, else the enum's
+  spelling, and `uADIF.EmitADIFRecord` writes
+  `uContestRegistry.ContestIdentity(c).ADIFContestId` — the same object the
+  lookup matches. Before M1 export spelled that fallback itself while the
+  getter said `''`, so TR4W could not re-import its own export for 139 contests
+  (inventory D9). `uTestADIFRegression.Test_ContestID_EveryContestReimportsItsOwnExport`
+  pins every `ContestType`. The exceptions: POTA and GENERALQSO write no
+  `CONTEST_ID` (an `in [...]` test in `uADIF`, waiting on a POTA class), and
+  RSGB-ROLO is the row id of both RoLo runnings, so SSB reads back as CW. The
+  external logger (DXKeeper) sends the same getter's id since M1 — it used to
+  send the bare enum spelling. A contest that gains an id still lists its old
+  enum spelling as a former one.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table
   (`b56e1ef9`); the table is sized, and a reload is not a fresh start.
 

@@ -429,6 +429,8 @@ uses
   uContestFactory,
   (* CabrilloQSOLineFormatDefault -- the layout for a contest with no class. *)
   uContestBase,
+  (* ContestIdentity -- the contest's Cabrillo and friendly names, M1. *)
+  uContestRegistry,
   uCFG,
   uLogNote;   (* NoteText -- MakeNotesList *)
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
@@ -926,11 +928,17 @@ function ContestFriendlyParens: string;
   // Returns ' (<FriendlyName>)' for the current contest, or '' when the contest
   // has no FriendlyName defined.  Shared by the human-readable summary-sheet and
   // score-report headers so the friendly-name formatting lives in one place.
+  (* ASKED OF THE CONTEST -- M1. Its FriendlyName is never empty: a contest
+     with none answers with its enum spelling, which is a token and not a
+     friendly name. So "has no friendly name" is "the friendly name IS the
+     enum spelling"; no row states a friendly name equal to its own spelling
+     (measured 2026-10-01), so this prints exactly what the empty-row test
+     did. *)
   var
     sFriendly: string;
   begin
-  sFriendly := ContestsArray[ Contest ].FriendlyName;
-  if sFriendly <> '' then
+  sFriendly := ContestIdentity( Contest ).FriendlyName;
+  if sFriendly <> string( ContestTypeSA[ Contest ] ) then
      begin
      Result := ' (' + sFriendly + ')';
      end
@@ -2678,14 +2686,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          Exit;
          end;
       T2 := Settings.My.Call;
-      if length( ContestsArray[ Contest ].CABName ) = 0 then
-         begin
-         T3 := ContestTypeSA[ Contest ]
-         end
-      else
-         begin
-         T3 := ContestsArray[ Contest ].CABName; // NY4I
-         end;
+      (* The contest's Cabrillo name, asked of the contest -- M1. *)
+      T3 := ContestIdentity( Contest ).CabrilloName;
 
       // T3 := ContestTypeSA[contest];        // 4.78.2
       if Contest = GENERALQSO then

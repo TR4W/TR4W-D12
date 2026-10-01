@@ -141,11 +141,15 @@ each quotes its array row verbatim in a comment and then states every field.
 **DO NOT delete the array row.** It still answers for every contest that has no
 class, and for every accessor a class chooses not to override.
 
-**TWO FIELDS ARE BLANK IN THE ARRAY AND BLANK IS NOT THE ANSWER.** `CABName` and
-`FriendlyName` both mean *"use `ContestTypeSA[ct]`"* when empty — the array says
-so itself — so a class transcribing them as `''` silently produces a blank
-`CONTEST:` header line and a nameless contest in the selection UI. `ADIFName` is
-the opposite: empty there is a real answer, because ADIF defines no id.
+**THREE FIELDS ARE BLANK IN THE ARRAY AND BLANK IS NOT THE ANSWER.** `CABName`,
+`FriendlyName` and `ADIFName` all mean *"use `ContestTypeSA[ct]`"* when empty —
+the array says so itself — so a class transcribing one as `''` silently produces
+a blank `CONTEST:` header line, a nameless contest in the selection UI, or an
+ADIF id that nothing exports. **`ADIFName` joined the other two at M1
+(2026-10-01).** It used to be read as "blank means no ADIF id", while ADIF export
+wrote the enum's spelling anyway — so import, which matches the class's
+`ADIFContestId`, could never resolve TR4W's own export for 139 contests
+(inventory D9). The id is now what export writes, by construction.
 
 `uTestContestFactory.Test_MovedRowValuesStillMatchTheArray` is the guard. It
 compares each class's literals against a plain `TContestBase` on the same
@@ -184,7 +188,7 @@ shared files a contest touches; the search path already covers
 |---|---|
 | `DisplayName` | the enum's spelling |
 | `CabrilloName` | `CABName`, or the enum's spelling when blank |
-| `ADIFContestId` | `ADIFName` (blank is a real answer — some contests have none) |
+| `ADIFContestId` | `ADIFName`, or the enum's spelling when blank. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (`uADIF`'s exclusion, pending a POTA class — design Q6) |
 | `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` does not resolve |
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | the array row |
 | `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | the array row |
@@ -384,7 +388,7 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 |---|---|
 | what does this contest score | its class, else `LOGSTUFF.CalculateQSOPoints` |
 | what is its exchange | its `AE` in `ContestsArray` → `LOGSTUFF.ProcessExchange` |
-| its Cabrillo / ADIF name | its class, else `ContestsArray` |
+| its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` reading the row. Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not read `ContestsArray` or spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
 | how TR4QT decomposes a contest | `C:\projects\tr4qt\docs\CONTEST_DEVELOPMENT.md` and `src/contests/` |
 

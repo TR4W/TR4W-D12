@@ -86,6 +86,9 @@ type
       procedure Test_ADIFIdsResolveOldAndNew;
       procedure Test_NoADIFIdIsClaimedTwice;
       procedure Test_NRAUAndJockWhiteRowsAreNotShifted;
+      procedure Test_IdentityIsWhatTheExportersWroteBeforeM1;
+      procedure Test_EveryContestResolvesItsOwnADIFId;
+      procedure Test_OnlyRSGBRoloSharesACurrentADIFId;
    public
       procedure RunAllTests; override;
    end;
@@ -1400,13 +1403,11 @@ begin
    CheckTrue(FindContestByADIFContestId('ID-QSO-PARTY', c),
              'ID-QSO-PARTY resolves');
    CheckEquals(Ord(IDAHOQSOPARTY), Ord(c), 'ID-QSO-PARTY -> Idaho');
-   (* NEQP HAS NO CLASS AND A BLANK ADIFName, so 'NEQP' resolves to nothing
-      through the registry today. What matters here is only that it never
-      resolves to Idaho. *)
-   if FindContestByADIFContestId('NEQP', c) then
-      begin
-      CheckTrue(c <> IDAHOQSOPARTY, 'NEQP must never resolve to Idaho');
-      end;
+   (* 'NEQP' IS NEQP'S OWN ID SINCE M1 -- its ADIFName is blank, and the id is
+      the enum spelling export writes. So it resolves, and to NEQP: never to
+      Idaho, whose pre-2026-10-01 logs were exported under that spelling. *)
+   CheckTrue(FindContestByADIFContestId('NEQP', c), 'NEQP resolves');
+   CheckEquals(Ord(NEWENGLANDQSO), Ord(c), 'NEQP -> NEWENGLANDQSO, never Idaho');
 end;
 
 (* A QSO's points from aContest, on aBand, through the SAME composition the
@@ -2030,9 +2031,182 @@ procedure TContestFactoryTests.Test_NRAUAndJockWhiteRowsAreNotShifted;
 
 begin
    BeginTest('Test_NRAUAndJockWhiteRowsAreNotShifted');
-   CheckRow(NRAUBALTICCW, 'NRAU-Baltic Contest, CW', 220, '', 'NRAU-BALTIC-CW');
-   CheckRow(NRAUBALTICSSB, 'NRAU-Baltic Contest, SSB', 222, '', 'NRAU-BALTIC-SSB');
+   (* The NRAU rows' ADIFName is blank, so their ADIF id is the enum's
+      spelling -- what export writes (M1). *)
+   CheckRow(NRAUBALTICCW, 'NRAU-Baltic Contest, CW', 220, 'NRAU-BALTIC-CW', 'NRAU-BALTIC-CW');
+   CheckRow(NRAUBALTICSSB, 'NRAU-Baltic Contest, SSB', 222, 'NRAU-BALTIC-SSB', 'NRAU-BALTIC-SSB');
    CheckRow(NZFIELDDAY, 'Jock White Memorial Field Day', 0, 'JW-FD', 'JW-FD');
+end;
+
+(* M1 -- A CONTEST'S IDENTITY IS ASKED OF THE CONTEST, AND M1 CHANGED NO BYTE.
+
+   Before M1 (2026-10-01) the exporters each spelled the rule themselves --
+   "the row's ADIFName, else the enum's spelling" in four places (ADIF export,
+   the UDP score broadcast, both score-posting clients), "CABName, else the
+   spelling" in two, "FriendlyName, else the spelling" in one -- and read the
+   calendar ids straight off the row. They all ask
+   uContestRegistry.ContestIdentity now.
+
+   THE SCORE-POSTING IDS HAVE NO OTHER ORACLE. The contest matrix and the
+   golden corpus see the Cabrillo CONTEST: line and the ADIF records; nothing
+   captures what uGetScores, uHamScore or the UDP broadcasts send. So this pins
+   the getters, over EVERY ContestType, to what those copies produced -- each
+   expectation below is the old copy's rule, written once more here as the
+   frozen reference. A contest whose identity deliberately changes updates
+   its row, and this follows.
+
+   AND THE ACCESSOR ITSELF: never nil, one instance per contest however often
+   it is asked, and the registered class where there is one -- a plain
+   TContestBase only where there is not. *)
+procedure TContestFactoryTests.Test_IdentityIsWhatTheExportersWroteBeforeM1;
+var
+   c: ContestType;
+   obj: TContestBase;
+   who: string;
+   expectADIF: string;
+   expectCabrillo: string;
+   expectFriendly: string;
+   checked: integer;
+begin
+   BeginTest('Test_IdentityIsWhatTheExportersWroteBeforeM1');
+   checked := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      who := string(ContestTypeSA[c]);
+      obj := ContestIdentity(c);
+      CheckTrue(obj <> nil, who + ': ContestIdentity answered nil');
+      if obj = nil then
+         begin
+         Continue;
+         end;
+
+      CheckTrue(obj = ContestIdentity(c),
+                who + ': a second ask built a second object');
+      if ContestClassFor(c) <> nil then
+         begin
+         CheckTrue(obj.ClassType = ContestClassFor(c),
+                   who + ' is answered by ' + obj.ClassName +
+                   ', not its registered class');
+         end
+      else
+         begin
+         CheckTrue(obj.ClassType = TContestBase,
+                   who + ' has no class but is answered by ' + obj.ClassName);
+         end;
+
+      expectADIF := ContestsArray[c].ADIFName;
+      if expectADIF = '' then
+         begin
+         expectADIF := who;
+         end;
+      expectCabrillo := ContestsArray[c].CABName;
+      if expectCabrillo = '' then
+         begin
+         expectCabrillo := who;
+         end;
+      expectFriendly := ContestsArray[c].FriendlyName;
+      if expectFriendly = '' then
+         begin
+         expectFriendly := who;
+         end;
+
+      CheckEquals(expectADIF, obj.ADIFContestId, who + ' ADIF CONTEST_ID');
+      CheckEquals(expectCabrillo, obj.CabrilloName, who + ' Cabrillo CONTEST:');
+      CheckEquals(expectFriendly, obj.FriendlyName, who + ' friendly name');
+      CheckEquals(integer(ContestsArray[c].WA7BNM), obj.WA7BNMId,
+                  who + ' WA7BNM calendar id');
+      CheckEquals(integer(ContestsArray[c].QRZRUID), obj.QRZRUId,
+                  who + ' QRZ.RU calendar id');
+      inc(checked);
+      end;
+
+   CheckEquals(Ord(High(ContestType)) + 1, checked, 'every ContestType checked');
+end;
+
+(* EVERY CONTEST'S ADIF ID RESOLVES BACK TO THAT CONTEST -- inventory D9.
+
+   The lookup alone, over every ContestType; uTestADIFRegression asks the same
+   through the real emitter and importer. Before M1 the id of a contest with a
+   blank ADIFName was '' and a blank matches nothing, so 139 contests failed
+   here -- CQ WW, CQ WPX, ARRL DX, Sweepstakes and IARU among them.
+
+   DUMMYCONTEST is "no contest" and is skipped. RSGB_ROPOCO_SSB shares its id
+   with the CW running and resolves to it -- see the test below. *)
+procedure TContestFactoryTests.Test_EveryContestResolvesItsOwnADIFId;
+var
+   c: ContestType;
+   found: ContestType;
+   id: string;
+   who: string;
+   resolved: integer;
+begin
+   BeginTest('Test_EveryContestResolvesItsOwnADIFId');
+   CheckEquals(Ord(DUMMYCONTEST), Ord(Low(ContestType)),
+               'DUMMYCONTEST is the first ContestType');
+
+   resolved := 0;
+   for c := Succ(Low(ContestType)) to High(ContestType) do
+      begin
+      who := string(ContestTypeSA[c]);
+      id := ContestIdentity(c).ADIFContestId;
+      CheckTrue(id <> '', who + ' has an ADIF id');
+      CheckTrue(FindContestByADIFContestId(id, found),
+                who + ': its own id [' + id + '] resolves to nothing');
+
+      if c = RSGB_ROPOCO_SSB then
+         begin
+         CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(found),
+                     who + ': the shared RSGB-ROLO resolves to the CW running');
+         Continue;
+         end;
+
+      CheckEquals(Ord(c), Ord(found),
+                  who + ': its own id [' + id + '] resolves to ' +
+                  string(ContestTypeSA[found]));
+      if found = c then
+         begin
+         inc(resolved);
+         end;
+      end;
+
+   (* Every contest except DUMMYCONTEST and RSGB_ROPOCO_SSB. *)
+   CheckEquals(Ord(High(ContestType)) + 1 - 2, resolved,
+               'contests whose own ADIF id resolves to them');
+end;
+
+(* ONE ID, TWO CONTESTS -- AND ONLY ONE SUCH PAIR.
+
+   Making the enum's spelling an id (M1) could have created a collision: a
+   spelling equal to another contest's real ADIFName. Measured 2026-10-01,
+   none did. The pair that exists predates M1 and is the ROW's: RSGB-ROLO is
+   the ADIF id of both the CW and the SSB running, as ADIF defines it, so a
+   CONTEST_ID alone cannot tell them apart. Any NEW pair fails here, because
+   the second contest of it could never be re-imported. *)
+procedure TContestFactoryTests.Test_OnlyRSGBRoloSharesACurrentADIFId;
+var
+   c, d: ContestType;
+   pairs: integer;
+   idC: string;
+begin
+   BeginTest('Test_OnlyRSGBRoloSharesACurrentADIFId');
+   pairs := 0;
+   (* To Pred(High): Succ of the last member would be out of range. *)
+   for c := Low(ContestType) to Pred(High(ContestType)) do
+      begin
+      idC := ContestIdentity(c).ADIFContestId;
+      for d := Succ(c) to High(ContestType) do
+         begin
+         if idC = ContestIdentity(d).ADIFContestId then
+            begin
+            inc(pairs);
+            CheckTrue((c = RSGB_ROPOCO_CW) and (d = RSGB_ROPOCO_SSB),
+                      '[' + idC + '] is the ADIF id of both ' +
+                      string(ContestTypeSA[c]) + ' and ' +
+                      string(ContestTypeSA[d]));
+            end;
+         end;
+      end;
+   CheckEquals(1, pairs, 'contest pairs sharing a current ADIF id');
 end;
 
 procedure TContestFactoryTests.RunAllTests;
@@ -2068,6 +2242,9 @@ begin
    Test_ADIFIdsResolveOldAndNew;
    Test_NoADIFIdIsClaimedTwice;
    Test_NRAUAndJockWhiteRowsAreNotShifted;
+   Test_IdentityIsWhatTheExportersWroteBeforeM1;
+   Test_EveryContestResolvesItsOwnADIFId;
+   Test_OnlyRSGBRoloSharesACurrentADIFId;
 end;
 
 end.

@@ -40,10 +40,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   That is contest SETUP, not scoring, and it stays in FCONTEST with the
   rest of contest setup.
 
-  BLANK CABName AND FriendlyName MEAN "THE ENUM'S SPELLING"; the getters
-  below state the value each resolves to, never the empty string.
-  ADIFName is the opposite: blank there is a real answer -- though this
-  contest's is no longer blank.
+  BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
+  the getters below state the value each resolves to, never the empty
+  string. ADIFName joined the other two at M1 (2026-10-01): a blank one
+  was always exported as the enum's spelling, and the id is now what
+  export writes, so import matches it.
 
   THE ADIF ID WAS BLANK UNTIL 2026-09-29 AND IS NOW 'AP-SPRINT', on NY4I's
   ruling. It needs NO former id: while the row was blank, ADIF export fell

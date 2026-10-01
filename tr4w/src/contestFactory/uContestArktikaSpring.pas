@@ -141,11 +141,13 @@ end;
 
 function TContestArktikaSpring.GetADIFContestId: string;
 begin
-   (* EMPTY, AND EMPTY IS THE REAL ANSWER: this contest has no ADIF CONTEST_ID.
-      Unlike the Cabrillo name there is no enum fallback -- uADIF matches on
-      this string, so inventing one would claim an identifier ADIF does not
-      define. *)
-   Result := '';
+   (* WHAT TR4W'S ADIF EXPORT WRITES, AND SO WHAT ITS IMPORT MATCHES. The
+      row's ADIFName is blank, and export has always written the enum's own
+      spelling in its place; this states that id. It was '' until M1
+      (2026-10-01), which is why a file TR4W exported for this contest
+      never re-imported to it (inventory D9). See
+      TContestBase.GetADIFContestId. *)
+   Result := 'ARKTIKA-SPRING';
 end;
 
 function TContestArktikaSpring.GetWA7BNMId: integer;

@@ -202,7 +202,10 @@ uses
     LogStoreAppendQSO. }
   uLogStore,
   { SQsoNotLogged. }
-  uAppStrings;
+  uAppStrings,
+  (* ContestIdentity -- the contest's own ADIF id and Cabrillo name for the
+     two UDP broadcasts. *)
+  uContestRegistry;
 procedure PutContactIntoLogFile(LogString: string {Str80});
 
 begin
@@ -2717,14 +2720,8 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
    if UDPBroadcaster.Enabled(usScore) then    // Issue 304 NY4I
       begin
       CalculateTotals;    // This reads the log so be careful how often it is done.
-      if length(ContestsArray[Contest].ADIFName) = 0 then
-         begin
-         sContestName := ContestTypeSA[Contest]
-         end
-      else
-         begin
-         sContestName := ContestsArray[Contest].ADIFName;
-         end;
+      (* The contest's ADIF id, asked of the contest -- M1. *)
+      sContestName := ContestIdentity(Contest).ADIFContestId;
       sBuf := '<?xml version="1.0"?>' + sLineBreak +
              '<dynamicresults>' +  sLineBreak +
              #9 + '<soft>TR4W</soft>' + sLineBreak +
@@ -2985,14 +2982,11 @@ begin
          end;
       end; // case nMultCount
 
-   if length(ContestsArray[Contest].CABName) = 0 then
-      begin
-      sContestName := ContestTypeSA[RxData.ceContest]
-      end
-   else
-      begin
-      sContestName := AnsiString(ContestsArray[Contest].CABName);
-      end;
+   (* THE QSO'S CONTEST, ASKED FOR ITS CABRILLO NAME -- M1. The copy this
+      replaced tested the ACTIVE contest's CABName and then spelled the QSO's
+      contest, so the two halves of one rule read two different contests.
+      <contestnr> below has always been the QSO's, and so is this now. *)
+   sContestName := AnsiString(ContestIdentity(RxData.ceContest).CabrilloName);
 
    nNumberReceived := IfThen(RxData.NumberReceived > 0,RxData.NumberReceived,0);
    sTimestamp := SysUtils.format('20%0.2d-%0.2d-%0.2d %0.2d:%0.2d:%0.2d',[

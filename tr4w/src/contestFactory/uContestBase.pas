@@ -338,17 +338,33 @@ type
          is the eventual one, and they can disagree only where somebody has
          deliberately made them.
 
-         THE CABRILLO FALLBACK IS REPRODUCED EXACTLY. PostUnit uses the enum's
-         own spelling when CABName is empty, which is most contests -- so the
-         default here is that same two-step, not just the field. Returning ''
-         for the 150-odd contests with no CABName would put an empty CONTEST:
-         line in their headers.
+         THESE GETTERS ARE THE ONLY ANSWER, SINCE M1 (2026-10-01). Every
+         consumer outside the factory -- the Cabrillo header, ADIF export, the
+         UDP score and contact broadcasts, both score-posting clients, the
+         external logger, the summary sheet, the log database and the calendar
+         menus -- asks through uContestRegistry.ContestIdentity. Before M1 the
+         two-step below existed in seven hand-written copies at those sites,
+         and one of them had already drifted (logsubs2's contact broadcast
+         tested the ACTIVE contest's CABName and then spelled the QSO's).
 
-         ADIF IS THE OTHER WAY ROUND AND IS LEFT THAT WAY: an empty ADIFName
-         means the contest has no ADIF CONTEST_ID, which is a real answer --
-         uContestRegistry.FindContestByADIFContestId matches on it, and never
-         on a blank -- so this returns '' rather than inventing one from the
-         enum. *)
+         CabrilloName AND ADIFContestId ARE THE SAME TWO-STEP: the row's field,
+         else the enum's own spelling. That is what the exporters always wrote
+         -- most contests have neither field -- so it is the default here, not
+         just the field. Returning '' for the contests with no CABName would
+         put an empty CONTEST: line in their headers.
+
+         ADIFContestId WAS ONCE THE OTHER WAY ROUND, and that was inventory
+         defect D9. It returned '' for a blank ADIFName, calling that "no ADIF
+         id", while export wrote the enum's spelling -- so import
+         (uContestRegistry.FindContestByADIFContestId, which matches this
+         getter) could not resolve 139 contests' own export. The id is now
+         WHAT EXPORT WRITES, by construction: one getter, read by both.
+
+         ONE EXCEPTION, AND IT IS NOT HERE: POTA and GENERALQSO write no
+         CONTEST_ID at all. That is uADIF.EmitADIFRecord's
+         `ceContest in [POTA, GENERALQSO]` test, which predates M1 and moves
+         when POTA has a class to say so (design Q6). Their ids still answer
+         here, because the score-posting clients send them. *)
                   
       (* THE REST OF THE ContestsArray ROW.
 
@@ -634,7 +650,16 @@ end;
 
 function TContestBase.GetADIFContestId: string;
 begin
-   Result := ContestsArray[FContest].ADIFName;
+   (* THE SAME TWO-STEP AS CabrilloName, and the ONE copy of it -- see the
+      note on the declaration. *)
+   if Length(ContestsArray[FContest].ADIFName) = 0 then
+      begin
+      Result := string(ContestTypeSA[FContest]);
+      end
+   else
+      begin
+      Result := ContestsArray[FContest].ADIFName;
+      end;
 end;
 
 function TContestBase.GetFormerADIFContestIds: TContestIdList;
