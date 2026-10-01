@@ -531,6 +531,31 @@ come from (Q3).
 
 ## 8. Migration
 
+### 7.4 A QSO on a band the contest does not use scores ZERO -- it is not refused
+
+NY4I, 2026-10-01: *"No WARC so just mark it as zero points. That is useful if say
+during the contest, we want to work a new country we need unrelated to the
+contest. I would not want to disallow an operator from logging but we should not
+score it."* And not an automatic X-QSO either: *"that would be confusing to an op
+to not know why the qso was in gray so let's not go that far."* *"This rule
+applies to basically any contest. When we submit the qso info to the factory if
+it saw the band was 30m, it should return 0 points."*
+
+So the CONTEST owns the bands it uses, and the scoring call answers 0 for any
+other band. The QSO is logged normally. Idaho (160/80/40/20/15/10 m) is the
+first contest to state it.
+
+### 7.5 Idaho QSO Party rulings owed to the class (NY4I, 2026-10-01)
+
+- **QRP means OUR power** -- the entrant's Cabrillo `CATEGORY-POWER` from the New
+  Contest dialog. Sponsor: *"ALL QRP QSO's count 5 points. voice, CW, digital"*,
+  QRP being 5 W output or less.
+- **Dormant-county bonus** (https://www.idahoqsoparty.org/idaho_rovers.htm): an
+  Idaho station operating FROM a listed county earns that county's bonus (500 /
+  1000 / 1500) once it makes 10 valid QSOs there. A final-score bonus -- M6.
+- **No WARC**: 0 points, per 7.4.
+- Rules: https://www.idahoqsoparty.org/rules.htm
+
 ### 8.1 Which oracle sees what
 
 | oracle | sees | blind to |
@@ -539,7 +564,7 @@ come from (Q3).
 | `test-contest-factory.sh` | rescored points against the frozen legacy output -- 13 logs | parsing, import, classless contests |
 | `test-adif-roundtrip.sh` | import against our own export -- 13 sets | classless contests |
 | unit tests (`Build-Tests.ps1 -Run`) | a contest class against fixtures, round-trip included | anything needing globals booted |
-| frozen legacy fixture (new, one harness) | a contest's legacy arms on synthetic inputs, captured before they are deleted | correctness: it only proves "same as before" |
+| frozen legacy fixture -- **built (M0, 2026-10-01)**: `tr4w/test/contest-matrix/run-contest-matrix.sh` | every `ContestType` x four station variants: set-up, per-QSO scoring, and the real exporters' Cabrillo/ADIF output (`ADDING_A_CONTEST.md` §4) | correctness: it only proves "same as before"; parsing and import until M5 adds them |
 | bench / a real contest | whether a rule is **right**; the operator UI | -- |
 
 **Every corpus set is a registered contest**, so the corpus says nothing about a
