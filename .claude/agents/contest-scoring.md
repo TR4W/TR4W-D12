@@ -92,6 +92,7 @@ which also heals existing logs.
 ```bash
 bash tr4w/test/corpus/export-d12-corpus.sh        # 24/0/2 AND exit 0
 bash tr4w/test/corpus/test-contest-factory.sh     # scoring
+bash tr4w/test/contest-matrix/run-contest-matrix.sh  # every ContestType, classless included
 ```
 
 Rebuild the app first; confirm TR4W is not running. Run, read, **then** commit —

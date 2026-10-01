@@ -262,7 +262,8 @@ factory.~~ **SQLITE IS NO LONGER OUT OF SCOPE — IT IS THE LOG** (started 2026-
 **THE CONTEST FACTORY IS ALSO NO LONGER OUT OF SCOPE** — `tr4w/src/contestFactory/` exists and is
 compiled into `tr4w.lpr`. Read [`docs/ADDING_A_CONTEST.md`](docs/ADDING_A_CONTEST.md), and its
 section 4 before believing a green run: the golden corpus is blind to scoring, and
-`tr4w/test/corpus/test-contest-factory.sh` is the only thing that is not. **Count the units with
+`tr4w/test/corpus/test-contest-factory.sh` (13 logs) and the contest matrix
+(`tr4w/test/contest-matrix/run-contest-matrix.sh`, every `ContestType`) are what is not. **Count the units with
 `ls tr4w/src/contestFactory` rather than writing a number here.**
 ~~Still out of scope: 64-bit.~~ **64-BIT IS NO LONGER OUT OF SCOPE, AND THE
 APP COMPILES AND LINKS FOR x86_64-win64** (2026-09-14):
@@ -1570,7 +1571,7 @@ Read the specific doc before acting in its area — these are current and this f
 | Legacy removal plan | **archived** — `docs/migration_interim_artifacts/LEGACY_DEPENDENCY_AUDIT.md`, `.../PHASE_INVENTORIES.md`. The legacy radio path was deleted 2026-08-02 and live `asm` is zero |
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
 | Adding a contest -- the DATA (a new `ContestType`, `FCONTEST` init, a `.cfg`) | `docs/ADDING_A_NEW_CONTEST.md` |
-| **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring, and `test-contest-factory.sh` is the only thing that is not |
+| **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring; `test-contest-factory.sh` and the contest matrix (`tr4w/test/contest-matrix`) are not |
 | **What a contest OWNS -- the factory's target shape (DESIGN; NY4I's ruling 2026-10-01)** | **`docs/CONTEST_OWNERSHIP_DESIGN.md`** -- a contest class owns its rules outright through `TContestBase` virtuals (scoring, parsing, ADIF import interpretation, ADIF/Cabrillo export, setup, total score); NO shared strategies and NO registries; family bases only for one family under one rule; a look-alike contest starts as a COPY it owns. Holds the migration order M0-M10, the checkable definition of "a contest has moved", the rotated `QSOPointMethodArray` finding (a shipped `.cfg` is affected) and open questions Q1-Q13 |
 | ~~Point methods as factory strategies~~ **SUPERSEDED 2026-10-01** | `docs/QSO_POINT_METHOD_DESIGN.md` -- the strategy/registry design NY4I's ownership ruling replaced. Kept for its measurements only; its two live findings are restated in `CONTEST_OWNERSHIP_DESIGN.md` section 7. Do not build from it |
 | **Every contest rule still OUTSIDE the factory -- GENERATED** | **`docs/CONTEST_RULES_OUTSIDE_FACTORY.md`** -- `python tools/contest-rules-inventory/generate.py` regenerates it; only the marked hand-maintained blocks are prose. `Lint-ContestNameTests` gates the same ground |

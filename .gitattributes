@@ -71,6 +71,12 @@
 *.trw           -text
 *.dat           -text
 
+# The contest matrix's frozen records (tr4w/test/contest-matrix/frozen) are
+# byte-compared by run-contest-matrix.sh for the same reason, and written CRLF
+# by the program on every platform -- a converted checkout would fail every
+# contest at once on a difference that is not in the code.
+*.matrix        -text
+
 # The radio status-pipeline trace baseline is byte-compared the same way, by
 # tr4w/test/integration/run-status-trace.ps1.  Same reasoning as the corpus
 # references above: the harness writes CRLF, and a clone that converted the

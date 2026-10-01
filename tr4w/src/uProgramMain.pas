@@ -230,6 +230,7 @@ uses
   (* The log carries its own contest configuration -- phase E2. *)
   uLogStore,
   uLogDatabase,   // LogDatabaseFileName -- the contest database path
+  uContestMatrix, // /MATRIX and /MATRIXLIST -- the legacy-fixture harness
   (* ~~uContestFactory -- phase F~~ was here for ContestFactoryEnabled alone,
      and went with it on 2026-09-29. This unit references nothing else in it. *)
   uCFG,
@@ -697,7 +698,9 @@ begin
      thought about and one that just happened. *)
    Result := SameText(AnsiString(aArg), AnsiString('/EXPORT')) or
              SameText(AnsiString(aArg), AnsiString('/RESCORE')) or
-             SameText(AnsiString(aArg), AnsiString('/IMPORT'));
+             SameText(AnsiString(aArg), AnsiString('/IMPORT')) or
+             SameText(AnsiString(aArg), AnsiString('/MATRIX')) or
+             SameText(AnsiString(aArg), AnsiString('/MATRIXLIST'));
 end;
 
 function HasHeadlessSwitch: boolean;
@@ -872,6 +875,8 @@ begin
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
+      '  /MATRIX <out> <n>  write this contest''s legacy-fixture record, then exit' + sLineBreak +
+      '  /MATRIXLIST <out>  list every contest for the matrix, then exit' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
       '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
@@ -1422,6 +1427,13 @@ begin
    if UpperCase(ParamStr(1)) = '/IMPORTLOG' then
       begin
       Halt(RunLogImport);
+      end;
+
+   (* /MATRIXLIST -- the contest matrix's list of every ContestType. It reads
+     only compiled tables, so it needs nothing below; see uContestMatrix. *)
+   if UpperCase(ParamStr(1)) = '/MATRIXLIST' then
+      begin
+      Halt(RunContestMatrixList(ParamStr(2)));
       end;
 
    { THE SETTINGS REGISTRY, AND THIS IS THE 'once at startup' ITS OWN COMMENT
@@ -2378,6 +2390,17 @@ begin
      ImportFromADIF(ImportFileFromCommandLine);
      EarlyTrace('[Import] done');
      Halt(0);
+     end;
+
+  (* /MATRIX <out-file> <ordinal> -- THE CONTEST MATRIX (milestone M0).
+
+     HERE, BESIDE /EXPORT, for /EXPORT's reason: the .cfg has been read, the
+     contest set up and the log opened, by the same path an operator's start
+     takes. It captures that contest's set-up, scoring and export and halts.
+     See uContestMatrix and tr4w/test/contest-matrix. *)
+  if SameText(AnsiString(ParamStr(2)), AnsiString('/MATRIX')) then
+     begin
+     Halt(RunContestMatrix(ParamStr(3), ParamStr(4)));
      end;
 
   if SameText(ParamStr(2), '/EXPORT') then

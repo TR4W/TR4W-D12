@@ -581,6 +581,8 @@ uLogEditForm in 'src\ui\lcl\uLogEditForm.pas',
   // a search of src\ can find it.  See the unit header for why.
   uTelnetForm in 'src\ui\lcl\uTelnetForm.pas',
   uMMTTYForm in 'src\ui\lcl\uMMTTYForm.pas',
+  // The contest matrix -- /MATRIX and /MATRIXLIST, milestone M0.
+  uContestMatrix in 'src\uContestMatrix.pas',
   uProgramMain in 'src\uProgramMain.pas';
 
 { THE PROJECT RESOURCE -- tr4w.res, written by Lazarus from the .lpi.

@@ -625,6 +625,11 @@ function AskConvertLog(sVersion: string): boolean; // ny4i
 
 procedure UpdateWindows;
 procedure tUpdateLog(UpdAction: UpadateAction);
+(* The per-QSO body of the rescore -- see the implementation. *)
+procedure RecomputeQSOScoring(var aRX: ContestExchange);
+(* The country lookup live entry and ADIF import both run on a new QSO --
+  exported for the contest matrix, which builds a stored QSO the same way. *)
+function ctyLocateCallStripRover(const Call: CallString; var QTH: QTHRecord): Boolean;
 //procedure SelectFileOfFolder(Parent: HWND; FileName: PChar; Mask: PChar; SelectType: CFGType);
 
 //procedure main(LogFileName: pchar; var CreatedReport: pchar; var ReLoadLog: boolean); stdcall external 'Plugins/tr4wSortLog.dll' name 'main';
@@ -8627,6 +8632,44 @@ begin
   FKButtonWidth := ws * 4 - 3;
 end;
 
+(* ONE QSO'S SCORING, RECOMPUTED FROM WHAT IS STORED ON IT.
+
+  The body of the rescore loop below, lifted out unchanged (2026-10-01) so the
+  contest matrix (uContestMatrix) runs EXACTLY the path /RESCORE runs rather
+  than a copy of it -- a copy would drift, and the matrix exists to say "the
+  program does what it did before". Country and prefix are looked up again,
+  the mult flags are set against the current sheet, then the points.
+
+  What it deliberately does NOT do: mint an id (GetGUID is a clock and a random
+  number, so the caller owns it), or mark dupes (that needs the log walked in
+  order, which is the rescore loop's business). *)
+procedure RecomputeQSOScoring(var aRX: ContestExchange);
+begin
+  if DoingPrefixMults then
+     begin
+     FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
+     FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
+     // State-QP rover (KG1S/MON): strip suffix for country lookup so
+     // /M doesn't get misread as a GB prefix.  Without this the
+     // rescore wipes the correct USA lookup done at log-time and
+     // restamps the record as DX=G.
+     ctyLocateCallStripRover(aRX.Callsign, aRX.QTH);
+     SetPrefix(aRX);
+     end;
+
+  if DoingZoneMults or DoingDXMults then
+     begin
+     FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
+     FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
+     // The same rover strip as above, for the same reason.
+     ctyLocateCallStripRover(aRX.Callsign, aRX.QTH);
+     GetDXQTH(aRX);
+     end;
+
+  Sheet.SetMultFlags(aRX);
+  CalculateQSOPoints(aRX);
+end;
+
 procedure tUpdateLog(UpdAction: UpadateAction);
 label
   1, 2, 3, 4;
@@ -8739,60 +8782,16 @@ begin
             beforeQSOPoints  := RescoredRXData.QSOPoints;
             beforeDupe       := RescoredRXData.ceDupe;
 
-            if DoingPrefixMults then
-               begin
-               FillChar(RescoredRXData.QTH, SizeOf(RescoredRXData.QTH), 0);
-               FillChar(RescoredRXData.DXQTH, SizeOf(RescoredRXData.DXQTH), 0);
-               // State-QP rover (KG1S/MON): strip suffix for country lookup so
-               // /M doesn't get misread as a GB prefix.  Without this the
-               // rescore wipes the correct USA lookup done at log-time and
-               // restamps the record as DX=G.
-               ctyLocateCallStripRover(RescoredRXData.Callsign, RescoredRXData.QTH);
-               SetPrefix(RescoredRXData);
-               end;
-            // if (RXData.Prefix <> '') and DoingPrefixMults then
-            {
-          if RescoredRXData.Callsign = 'RP7X' then
-          asm
-          nop
-          end;
-          }
-
-            if DoingZoneMults or DoingDXMults then
-               begin
-               FillChar(RescoredRXData.QTH, SizeOf(RescoredRXData.QTH), 0);
-               FillChar(RescoredRXData.DXQTH, SizeOf(RescoredRXData.DXQTH), 0);
-               // State-QP rover (KG1S/MON): strip suffix for country lookup so
-               // /M doesn't get misread as a GB prefix.  Without this the
-               // rescore wipes the correct USA lookup done at log-time and
-               // restamps the record as DX=G.
-               ctyLocateCallStripRover(RescoredRXData.Callsign, RescoredRXData.QTH);
-               GetDXQTH(RescoredRXData);
-               //.DXQTH := RescoredRXData.QTH.CountryID;
-               end;
-
-            {rk4wwq}
-            // RescoredRXData.ceContest := Contest;
-            {
-          if RescoredRXData.Zone = 255 then
-          begin
-          if (RescoredRXData.NumberReceived > 999) and (RescoredRXData.NumberReceived < 9999) then
-          begin
-          asm nop end;
-          RescoredRXData.Zone := RescoredRXData.NumberReceived div 1000;
-          RescoredRXData.NumberReceived := RescoredRXData.NumberReceived mod 1000;
-          end;
-          end;
-          }
-            {rk4wwq}
-
+            (* THE ID IS MINTED BEFORE THE SCORING, where it used to follow the
+              country lookups. Nothing in RecomputeQSOScoring reads it, so the
+              order is immaterial -- and keeping GetGUID out of that routine is
+              what lets the contest matrix call it and stay deterministic. *)
             if RescoredRXData.id = '' then
                begin
                RescoredRXData.id := GetGUID;
                end;
 
-            Sheet.SetMultFlags(RescoredRXData);
-            CalculateQSOPoints(RescoredRXData);
+            RecomputeQSOScoring(RescoredRXData);
             if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
               and (VisibleLog.CallIsADupe(RescoredRXData.Callsign,
               RescoredRXData.Band, RescoredRXData.Mode)) then

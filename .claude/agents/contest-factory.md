@@ -24,8 +24,11 @@ believing a green run**.
 
 **THE GOLDEN CORPUS IS BLIND TO SCORING.** It byte-diffs ADIF and Cabrillo
 artifacts; a contest class that computes points wrongly can pass all 24
-comparisons. `tr4w/test/corpus/test-contest-factory.sh` is **the only oracle that
-is not blind**. Run it, and say which one you ran.
+comparisons. `tr4w/test/corpus/test-contest-factory.sh` sees scoring over the 13
+corpus logs, and **the contest matrix** (`tr4w/test/contest-matrix/run-contest-matrix.sh`,
+M0, 2026-10-01) sees set-up, scoring and export for **every** `ContestType` on
+synthetic QSOs. Run them, and say which ones you ran. **Never re-freeze the matrix
+to clear a red run** -- `freeze-contest-matrix.sh` demands a written reason.
 
 This is mid-flight work. The engine (`src/trdos/`) still owns most behaviour —
 see `contest-scoring`, whose territory this is progressively taking over. Know
@@ -92,7 +95,8 @@ parameters go to the **contest SQLite database**, not to `settings/tr4w.json`.
 
 ```bash
 bash tr4w/test/corpus/export-d12-corpus.sh        # 24 passed / 0 failed / 2 known-divergence, AND exit 0
-bash tr4w/test/corpus/test-contest-factory.sh     # the only one that sees scoring
+bash tr4w/test/corpus/test-contest-factory.sh     # scoring, over the 13 corpus logs
+bash tr4w/test/contest-matrix/run-contest-matrix.sh  # every ContestType: set-up, scoring, export
 ```
 
 ```powershell

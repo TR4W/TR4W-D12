@@ -322,9 +322,53 @@ never recomputes them.
 | Cabrillo / ADIF exchange columns | **the golden corpus** — they are in the QSO lines, which `golden_diff.py` compares. Verified: `%-7s` → `%-8s` gives `FAIL arrl_fd cbr` |
 | Cabrillo *header* | **nothing, EXCEPT `CLAIMED-SCORE:`** — `golden_diff.py` drops every other header line (`golden_diff.py:87-88` keeps that one). It is arithmetic over the log's STORED points, so a per-QSO scoring change still does not move it; a change to the total-score formula or a bonus does (corrected 2026-10-01) |
 | exchange validation and parsing | **nothing** — no gate types an exchange |
+| set-up, per-QSO scoring and export of **every** `ContestType`, classless included | **the contest matrix** — `bash tr4w/test/contest-matrix/run-contest-matrix.sh` (below) |
 
 So `ValidateClass` and `ValidateDXQTH` changes are unverified by any automated
 gate and belong in `BENCH_QUEUE.md`.
+
+### The contest matrix -- the legacy fixture (milestone M0, built 2026-10-01)
+
+**What it is.** One headless harness, `tr4w.exe <cfg> /MATRIX <out> <ordinal>`
+(`src/uContestMatrix.pas`), driven by `tr4w/test/contest-matrix/`. For every
+`ContestType` but `DUMMYCONTEST` -- the program lists them itself with
+`/MATRIXLIST`, so nothing names a contest -- and for four station variants
+(`us` K0AAA/KS, `us-host` for a contest with a host state, `ve` VE3AAA/ON,
+`dx` DL1AAA), it boots the contest through the ordinary `.cfg` path and records:
+
+| section | what | the milestone it gates |
+|---|---|---|
+| `identity` | requested vs selected `ContestType`, the class or none | M1 |
+| `setup` | the seven `Active*`, the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7 |
+| `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body | M3, M8 |
+| `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
+
+One process per contest and variant, because `FoundContest` is not idempotent --
+see the unit header. About five minutes for the whole matrix.
+
+**NOT captured yet: parsing and ADIF import** -- the synthetic QSOs arrive with
+their exchange fields filled, the way a stored QSO does. That is M5's section,
+marked as an extension point in `uContestMatrix`; add and freeze it **before**
+the first parse arm moves.
+
+**It asserts "same as before", never "correct".** The frozen records in
+`tr4w/test/contest-matrix/frozen/` are this program's own output. Defects
+present on the day of the freeze are pinned exactly as faithfully as correct
+rules -- two of them are visible in the first freeze (`NEWENGLANDQSO`'s `dx`
+variant crashes in set-up; `cty.zonemode` reads 255 for most contests).
+
+**NEVER RE-FREEZE TO CLEAR A RED RUN.** `run-contest-matrix.sh` only compares
+and never writes the frozen files. A record that moved is a finding: find out
+why. Only a rule that changed **on purpose** -- a sponsor's change, or a defect
+fixed deliberately -- justifies `freeze-contest-matrix.sh --reason "..."
+IDENTIFIER...`, for the contests that change reaches and no others, with the
+reason and what moved in the commit message. The script refuses to run without
+a reason. A new `ContestType` is frozen the same way, by name.
+
+It fails closed: no contests captured, a frozen record with no fresh one, a
+fresh record never frozen, or any byte difference exits 1. A record carrying
+`RUN FAILED` or `RAISED` passes only if it said so when frozen, and is listed on
+every run.
 
 Comparing a rescore against the D7 references was tried as a scoring gate and
 rejected: 7 of the 13 logs move when rescored, before any factory work, because
