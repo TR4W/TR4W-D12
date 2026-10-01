@@ -32,7 +32,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
       if RXData.Mode = CW then 2 else 1
 
-  so the whole rule is SetPoints(2, 1, 1) -- CW, phone, everything
+  so the whole rule is FixedModePoints(Mode, 2, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
   FCONTEST has an arm for this contest:
@@ -53,7 +53,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   this class.
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
-  inherits TContestFixedPoints.
+  sits on TContestBase directly and states its own points, calling
+  FixedModePoints as a helper (TContestFixedPoints retired at M3).
 
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
@@ -71,10 +72,10 @@ unit uContestKVP;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestKVP = class(TContestFixedPoints)
+   TContestKVP = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -95,19 +96,19 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestKVP.Create(aContest: ContestType);
+procedure TContestKVP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(2, 1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
 end;
 
 function TContestKVP.GetDisplayName: string;

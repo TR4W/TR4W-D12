@@ -315,6 +315,12 @@ uses
    uContestDARCXmas in '..\..\src\contestFactory\uContestDARCXmas.pas',
    uContestArktikaSpring in '..\..\src\contestFactory\uContestArktikaSpring.pas',
    uContestARRLDigi in '..\..\src\contestFactory\uContestARRLDigi.pas',
+   uContestNRAUBalticBase in '..\..\src\contestFactory\uContestNRAUBalticBase.pas',
+   uContestNRAUBalticCW in '..\..\src\contestFactory\uContestNRAUBalticCW.pas',
+   uContestNRAUBalticSSB in '..\..\src\contestFactory\uContestNRAUBalticSSB.pas',
+   uContestSprintSSB in '..\..\src\contestFactory\uContestSprintSSB.pas',
+   uContestLocustQP in '..\..\src\contestFactory\uContestLocustQP.pas',
+   uContestJockWhiteFieldDay in '..\..\src\contestFactory\uContestJockWhiteFieldDay.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form

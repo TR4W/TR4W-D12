@@ -48,12 +48,19 @@ so in the file — otherwise somebody will extract it.
 ### A family base is for what genuinely cannot differ
 
 `TContestARRLDXBase` (CW + Phone), `TContestARRLSSBase`, `TContestCQWWBase`,
-`TContestCQWPXBase`: two runnings of ONE contest, where a rule change reaches
-both by definition. Compare that with the two Field Days, which are two contests
-run by different organisations.
+`TContestCQWPXBase`, `TContestNRAUBalticBase`: two runnings of ONE contest,
+where a rule change reaches both by definition. Compare that with the two Field
+Days, which are two contests run by different organisations.
 
-`TContestFixedPoints` is the other kind — a base for a shared MECHANISM
-("a number per mode") rather than a shared contest.
+**A shared MECHANISM is not a family, and gets a helper, not a base.**
+`TContestFixedPoints` was such a base ("a number per mode", ~25 unrelated
+sponsors) and **retired at M3 (2026-10-01)**: it spent the one base class
+Object Pascal gives on arithmetic. The arithmetic survives as the
+`FixedModePoints` function, which a class calls from its own
+`CalculateQSOPoints`. `Test_EveryClassSitsOnTheBaseOrAFamily` holds the list of
+bases closed -- a new base fails it until it is added there, which is the moment
+to ask whether it is a family. A contest that merely RESEMBLES another starts as
+a copy it owns (`CONTEST_OWNERSHIP_DESIGN.md` §1.4).
 
 ### Properties for what a contest IS, methods for what it DOES
 
@@ -124,13 +131,31 @@ NY4I, 2026-09-02:
 
 **Lift first, consolidate after.** Ten of the 127 scoring arms are "a number per
 mode" and cover more contests than the other 117 combined — that one earned
-`TContestFixedPoints`. Most will not.
+a helper, `FixedModePoints` (`uContestFixedPoints`). Most will not.
 
-**And check the family actually fits before reusing it.** Field Day looked like a
-`TContestFixedPoints` contest and is not: it counts FM *with* phone and leaves
+**A fixed-points contest, since M3 (2026-10-01)**, sits on `TContestBase` (or
+its real family base) and says its numbers in its own rule:
+
+```pascal
+protected
+   procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+...
+procedure TContestKVP.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);   (* CW, phone, other *)
+end;
+```
+
+The third number is digital AND FM. A two-branch legacy arm
+(`if Mode = CW then X else Y`) gives them the phone value, so pass it twice.
+`uContestKVP.pas` and `uContestCQIR.pas` are worked examples, and
+`Test_FixedPointContestsTranscribeTheirArms` is where the numbers are pinned.
+
+**And check the helper actually fits before calling it.** Field Day looked like
+a fixed-points contest and is not: it counts FM *with* phone and leaves
 digital at two, which "CW / Phone / everything else" cannot express. Either FM
 would have scored 2 or digital 1, in a contest where nobody would check the FM
-ones.
+ones. Such a contest writes its own body; do not widen the helper.
 
 ### Step 3 — write the unit
 
@@ -205,7 +230,7 @@ shared files a contest touches; the search path already covers
 | `DisplayName` | the enum's spelling |
 | `CabrilloName` | `CABName`, or the enum's spelling when blank |
 | `ADIFContestId` | `ADIFName`, or the enum's spelling when blank. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (`uADIF`'s exclusion, pending a POTA class — design Q6) |
-| `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` does not resolve |
+| `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | the array row |
 | `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | the array row |
 | `InitialExchangeKind`, `ExchangeKind`, `QSOPointMethod` | the array row |
@@ -311,8 +336,9 @@ would duplicate the part that cannot differ.
 | base | kind | holds |
 |---|---|---|
 | `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
-| `TContestFixedPoints` | mechanism | "a number per mode". Its rule is also a plain function, `FixedModePoints`, so a contest that already has a family base can call it instead of inheriting it -- Object Pascal has one base class to spend |
-| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP (a QSO party by name only), and 7QP / NEQP / IN7QPNE (multi-state, unresolved). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
+| `TContestNRAUBalticBase` | family | the NRAU-Baltic contest, CW and SSB -- NY4I's ruling (2026-10-01), built at M3. The base holds every shared row field and the points; each mode class states only its names and calendar id. **The template for any other two-mode pair, once Q7 says that pair is a family** |
+| ~~`TContestFixedPoints`~~ | ~~mechanism~~ | **retired at M3 (2026-10-01).** Its rule lives on as the helper `FixedModePoints`, called from a class's own `CalculateQSOPoints` (section 2, step 2) |
+| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP / IN7QPNE (multi-state, unresolved). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
 
 **THE DEFECT THAT MOVED IT, because the shape will look tempting again.** While
 the rule was on `TContestBase`, the inherited maximum read
@@ -323,6 +349,13 @@ counties at all; Arktika Spring hit it the day it was moved, while the comment
 at the `logstuff.pas` call site asserted the opposite. The array's boolean
 carries no *limit*, so the only honest reading of it was never a number — which
 is why the party base's default is unconditional and the array is not consulted.
+
+**Siblings, not families, on evidence (M3, design §8.2d).** The NA Sprint CW
+and RTTY have no base: their rows already differ (domestic file) and only CW
+owns its export; whether they become a family is NY4I's Q7. The three Minitest
+rows and the two QCWA rows are siblings for the same kind of reason. **The SSB
+Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
+-- and is its own class, `uContestSprintSSB`, on `TContestBase`.
 
 ### `TStationContext` — what scoring knows about us
 

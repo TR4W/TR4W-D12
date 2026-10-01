@@ -2,7 +2,7 @@
 == identity
 contest.requested = 137 LQP
 contest.selected = 137 LQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestLocustQP
 == setup
 active.qsopointmethod = LQPQSOPointMethod
 active.exchange = NameAndDomesticOrDXQTHExchange
@@ -119,7 +119,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA     TOM        KS  G3ABC
 == identity
 contest.requested = 137 LQP
 contest.selected = 137 LQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestLocustQP
 == setup
 active.qsopointmethod = LQPQSOPointMethod
 active.exchange = NameAndDomesticOrDXQTHExchange
@@ -236,7 +236,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA    TOM        ON  G3ABC
 == identity
 contest.requested = 137 LQP
 contest.selected = 137 LQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestLocustQP
 == setup
 active.qsopointmethod = LQPQSOPointMethod
 active.exchange = NameAndDomesticOrDXQTHExchange

@@ -21,7 +21,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* North American Sprint - RTTY.
 
-  OnePointPerQSO, as the CW running. *)
+  OnePointPerQSO, as the CW running -- stated here, not inherited: the CW
+  running is a sibling class, not a family base (see uContestNASprintCW's
+  header for why no NA Sprint base exists). On TContestBase since M3. *)
 unit uContestNASprintRTTY;
 
 {$I tr4w.inc}
@@ -29,10 +31,10 @@ unit uContestNASprintRTTY;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestNASprintRTTY = class(TContestFixedPoints)
+   TContestNASprintRTTY = class(TContestBase)
    protected
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
@@ -43,19 +45,19 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestNASprintRTTY.Create(aContest: ContestType);
+procedure TContestNASprintRTTY.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestNASprintRTTY.GetDisplayName: string;

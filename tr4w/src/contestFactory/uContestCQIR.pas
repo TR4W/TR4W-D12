@@ -33,7 +33,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
       if RXData.Mode = CW then 3 else 2
 
-  so the whole rule is SetPoints(3, 2, 2) -- CW, phone, everything
+  so the whole rule is FixedModePoints(Mode, 3, 2, 2) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
   FCONTEST has an arm for this contest: AddDomesticCountry('EI'). LOGCFG
@@ -49,7 +49,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   choice nobody made. It keeps reading the array.
 
   NOT A STATE QSO PARTY: P is 0, and DomesticFile names Irish counties,
-  not a US state's. No other family, so it inherits TContestFixedPoints.
+  not a US state's. No other family, so it sits on
+  TContestBase and states its own points, calling FixedModePoints as
+  a helper (TContestFixedPoints retired at M3).
 
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
@@ -67,10 +69,10 @@ unit uContestCQIR;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestCQIR = class(TContestFixedPoints)
+   TContestCQIR = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -90,19 +92,19 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestCQIR.Create(aContest: ContestType);
+procedure TContestCQIR.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(3, 2, 2);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 2, 2);
 end;
 
 function TContestCQIR.GetDisplayName: string;

@@ -34,7 +34,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   WHICH KIND OF BASE THIS IS DECIDES WHAT MAY GO IN IT. ADDING_A_CONTEST.md
   draws the line: a FAMILY base (TContestARRLDXBase) is two runnings of ONE
   contest, where a rule change reaches both by definition. This is the other
-  kind -- TContestFixedPoints' kind -- a shared MECHANISM across contests run by
+  kind -- a shared MECHANISM across contests run by
   different people, and there are of the order of twenty sponsors involved. NY4I
   has already ruled on what that implies, about the two Field Days: "They keep
   diverging with rule changes each year."
@@ -50,7 +50,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE SINGLE-STATE PARTIES WITH COUNTY MULTIPLIERS. Thirteen carry
   CountyLineAllowed: True in ContestsArray today, and a handful more are
   single-state with no flag set at all (Arizona, British Columbia, New York,
-  Virginia, Locust) -- whose correct value is simply unknown rather than False.
+  Virginia) -- whose correct value is simply unknown rather than False.
+
+  NOT THE LOCUST QSO PARTY, which this list named until M3 (2026-10-01). It is
+  a QSO party by name only: K6VVA's event, P 0 in its row, no host state and no
+  counties. It is uContestLocustQP, directly on TContestBase.
 
   NOT NAQP (CW / SSB / RTTY). It is a QSO party by NAME only: its exchange is a
   name plus a state, province or country, its multipliers are not counties, and

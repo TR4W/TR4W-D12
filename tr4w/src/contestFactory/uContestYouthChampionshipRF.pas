@@ -33,7 +33,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
       RXData.QSOPoints := 1;
 
-  so the whole rule is SetPoints(1, 1, 1) -- CW, phone, everything
+  so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
   FCONTEST has an arm for this contest: a 60-minute tour, RFOBL MODE on,
@@ -60,8 +60,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   blank CABName and FriendlyName resolve to.
 
   NOT A STATE QSO PARTY: P is 0 and DomesticFile names Russian oblasts,
-  not a US state's counties. No other family, so it inherits
-  TContestFixedPoints.
+  not a US state's counties. No other family, so it sits on
+  TContestBase and states its own points, calling FixedModePoints
+  as a helper (TContestFixedPoints retired at M3).
 
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
@@ -79,10 +80,10 @@ unit uContestYouthChampionshipRF;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestYouthChampionshipRF = class(TContestFixedPoints)
+   TContestYouthChampionshipRF = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -104,19 +105,19 @@ type
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       function GetMarksDupes: boolean; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestYouthChampionshipRF.Create(aContest: ContestType);
+procedure TContestYouthChampionshipRF.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestYouthChampionshipRF.GetDisplayName: string;

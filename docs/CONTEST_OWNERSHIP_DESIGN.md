@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (nothing built)
+# What a contest owns -- DESIGN (M0-M3 built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -139,25 +139,31 @@ A copied class says so in its header: what it was copied from, and that the
 copy is deliberate. `ADDING_A_CONTEST.md` §1 already requires this ("say so in
 the file -- otherwise somebody will extract it").
 
-### 1.5 Families, and what `TContestFixedPoints` becomes
+### 1.5 Families, and what `TContestFixedPoints` became
 
 A base class is justified only for **a family**: contests under one rule, where
 a rule change reaches every member by definition.
+
+**As built at M3 (2026-10-01).** `Test_EveryClassSitsOnTheBaseOrAFamily` holds
+this list closed: every registered class's parent is `TContestBase` or one of
+these bases, and each base sits on `TContestBase` itself.
 
 ```
 TContestBase
 +-- TContestStateQSOPartyBase        county line, host state (abstract)
 |   +-- one class per single-state party
 +-- TContestARRLDXBase    -> CW, Phone
-+-- TContestARRLSSBase    -> CW, SSB      (reparented off TContestFixedPoints)
++-- TContestARRLSSBase    -> CW, SSB      (reparented off TContestFixedPoints at M3)
 +-- TContestCQWWBase      -> CW, SSB
 +-- TContestCQWPXBase     -> CW, SSB
-+-- TContestNASprintBase  -> CW, RTTY     new; both are TContestFixedPoints today
-+-- TContestNRAUBalticBase -> CW, SSB     NY4I's ruling
++-- TContestNRAUBalticBase -> CW, SSB     NY4I's ruling; built at M3
++-- TContestNASprintCW, TContestNASprintRTTY      SIBLINGS, no base (DECIDED at M3, §8.2d; Q7)
 +-- TContestARRLFieldDay, TContestWinterFieldDay    no shared base -- NY4I's ruling
-+-- TContestSprintSSB                     its own contest, NOT an NA Sprint -- NY4I's ruling
-+-- TContestPOTA, TContestGeneralQSO      section 6
-+-- every other contest, directly
++-- TContestSprintSSB                     its own contest, NOT an NA Sprint -- NY4I's ruling; built at M3
++-- TContestPOTA, TContestGeneralQSO      section 6 (POTA not built)
++-- every other contest, directly -- 24 of the 25 former TContestFixedPoints
+    subclasses among them (the 25th was TContestARRLSSBase), each calling
+    FixedModePoints
 ```
 
 - **Every other two-mode pair follows the NRAU ruling.** That covers JIDX, All
@@ -165,10 +171,18 @@ TContestBase
   CQ 160, NAQP's three modes, the EU Sprints and Cup RF. A `Base` holds the
   contest, and each mode class states only its identity. **One class per
   `ContestType` and one `RegisterContest` per unit still hold** (Q7).
+  **That extension is Q7 and is NOT applied yet** (M3): NY4I's ruling names
+  NRAU-Baltic, and none of the pairs listed has a class. The one existing
+  pair it would have reached, the NA Sprint CW/RTTY, was left as siblings on
+  evidence (§8.2d).
 - **The multi-state parties (7QP, NEQP, IN7QPNE) stay open**, for the reason
   `uContestStateQSOPartyBase`'s header gives.
 
-**`TContestFixedPoints` and `FixedModePoints` -- recommendation (Q12):**
+**`TContestFixedPoints` and `FixedModePoints` -- recommendation (Q12).
+DONE at M3, 2026-10-01 (§8.2d):** the base is deleted, the helper kept in
+`uContestFixedPoints`, and all 25 subclasses moved -- as one step rather than
+per family, because only one of them (ARRL SS) had a family, and its base
+already existed. The bullets below are the reasoning, kept.
 
 - **Keep `FixedModePoints` as a helper.** It is a pure function of the mode and
   three numbers the contest supplies, which is exactly the §1.3 shape. 16 units
@@ -880,7 +894,7 @@ Each is behaviour-preserving unless marked.
 | **M0** | **DONE `93fbc053`.** Q1/Q2 ruled, Q3 decided (§7.8). Build the legacy-fixture harness (§8.1) | the harness |
 | **M1** | **DONE 2026-10-01 (§8.2b).** **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
 | **M2** | **DONE 2026-10-01 (§7.9, §8.2c).** **Setup head reads the class.** `FCONTEST.ApplyContestTraits`: the operator's statement, else `ContestIdentity` (M1's accessor serves as `ContestDefinition`). `Active*` and the head's flags come from the class's traits. Arms stay. Defects #1, #2, #3 and #5 fixed. `InHostState` deferred to M7 | the contest matrix; corpus |
-| **M3** | **PARTIAL 2026-10-01 (§8.2d).** **Scoring finishes on the class.** DONE: `ScoreQSO`, the one entry point (§7.7); the dupe-marking reader moved to `MarksDupes` (**behaviour change** for an operator override); the off-band multiplier pin. The other secondary readers are scheduled where their rule lives -- parsing M5, total score M6 (§2). OPEN: family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
+| **M3** | **DONE 2026-10-01 (§8.2d).** **Scoring finishes on the class.** `ScoreQSO`, the one entry point (§7.7); the dupe-marking reader moved to `MarksDupes` (**behaviour change** for an operator override); the off-band multiplier pin; `TContestFixedPoints` retired (`FixedModePoints` kept as a helper); the NRAU-Baltic family base; classes for NRAU-Baltic CW/SSB, Sprint SSB, Locust and the Jock White Field Day. The other secondary readers are scheduled where their rule lives -- parsing M5, total score M6 (§2) | the contest matrix; unit tests; `test-contest-factory.sh` |
 | **M4** | **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields. D4's dead arms and the D6 no-op go | corpus; per-class round-trip unit test |
 | **M5** | **Exchange import and parse.** Generic importer, then `ApplyADIFImport` (§3.2), including the `APP_N1MM_EXCHANGE1` arm, pinned in both tag orders. `ParseReceivedExchange` per contest over lifted helpers. D1/D2's dead paths go | `test-adif-roundtrip.sh`; legacy fixture; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **Total score.** `TScoreTotals`, `CombineScore`, `BonusPoints`; `TotalScore`'s arms deleted; Missouri moved; Salmon Run per Q5 | corpus `CLAIMED-SCORE`; unit tests over totals |
@@ -997,7 +1011,7 @@ an in-state AZ or Salmon Run station gets. Its exchange,
 `case ActiveExchange`, so its F3-F5 memories are left blank. That is what D7
 did for an in-state station, and nobody saw it because nobody was in state.
 
-### 8.2d M3 -- what it covered (2026-10-01; PARTIAL)
+### 8.2d M3 -- what it covered (2026-10-01; DONE)
 
 NY4I delegated M3's design forks. Each DECIDED entry rests on the evidence
 given with it.
@@ -1079,8 +1093,100 @@ pin through `CallsignsList` -- a leaf unit, so the test program can drive it.
 1335 and range warnings 4, both unchanged; `Lint-ContestNameTests` unchanged --
 M3 moved point-method tests, not contest-name tests, so no ceiling moves.
 
-**Not M3 yet:** the family bases and the retirement of `TContestFixedPoints`
-(§1.5), which this row of §8.2 also names.
+**M3's second part (same day): the family bases, and `TContestFixedPoints`
+retires.**
+
+**DECIDED: `TContestFixedPoints` is deleted; `FixedModePoints` stays, in
+`uContestFixedPoints`, as the helper (Q12).** Measured first:
+`rg -l "class\(TContestFixedPoints\)"` gave 25 subclasses. Each now states its
+own numbers in its own protected `CalculateQSOPoints`
+(`aQso.QSOPoints := FixedModePoints(aQso.Mode, cw, phone, other)`), with the
+two-argument `SetPoints(cw, phone)` written out as `other = phone` -- what the
+base's default did. Where they went:
+
+| moved to | contests |
+|---|---|
+| `TContestBase`, directly (24) | AP Sprint, All JA, County Hunter, CQIR, DARC Xmas, European HFC, General QSO, Grid Loc, Internet Sprint, JA Long Prefect, Kids Day, KVP, Marconi Memorial, Mini-Test 40, Mini-Test 80, Minitest, MST, NA Sprint CW, NA Sprint RTTY, QCWA, QCWA Golden, SA Sprint, XMAS, SRR-JR |
+| its existing family base | `TContestARRLSSBase` itself (CW and SSB beneath it): the family states the two points, on `TContestBase` |
+
+It was one step, not one per family as §1.5 first proposed, because only ARRL
+SS had a family and its base already existed. Nothing moved:
+`Test_FixedPointContestsTranscribeTheirArms` pins every number including
+digital and FM, and the matrix records of all 25 are identical.
+
+**DECIDED: one family is introduced, NRAU-Baltic, and no other.**
+`TContestNRAUBalticBase` holds the contest -- every shared row field and the
+TwoPointsPerQSO rule, written as `FixedModePoints(mode, 2, 2, 2)` so that a
+per-mode change is a change of numbers -- and `TContestNRAUBalticCW` /
+`...SSB` state only what differs: display, Cabrillo and ADIF names, WA7BNM
+id, friendly name. NY4I's ruling is the evidence: *"a NRAU_Baltic base class
+then the derived SSB and CW respectively"*, *"in case they ever decide to
+change points per mode."*
+
+**DECIDED: the NA Sprint CW and RTTY stay SIBLINGS -- no `TContestNASprintBase`
+(§1.5 had drawn one).** Evidence: NY4I's ruling names NRAU-Baltic only, and
+extending it to every pair is Q7, still open; their rows already differ
+(domestic file `naqp` for CW, `s49p8` for RTTY), so TR4W's own data does not
+treat them as one rule; and the CW class owns its export while RTTY's does
+not. A base would either carry CW's formatters into RTTY (an export move M4
+has not made) or hold one constant. The Minitest trio and the two QCWA rows
+were already decided siblings and stay so. If NY4I answers Q7 yes, the NA
+Sprint base is a small, mechanical follow-up.
+
+**The contests held from earlier slices, each a class on its own terms:**
+
+| `ContestType` | class | parent | scoring transcribed from |
+|---|---|---|---|
+| `NRAUBALTICCW` / `NRAUBALTICSSB` | `TContestNRAUBalticCW` / `...SSB` | `TContestNRAUBalticBase` | `TwoPointsPerQSO`: 2 |
+| `SPRINTSSB` | `TContestSprintSSB` | `TContestBase` -- NY4I: *"a different contest with a different sponsor so keep it separate"* | `OnePointPerQSO`: 1 |
+| `LQP` | `TContestLocustQP` | `TContestBase` -- a QSO party by name only; `uContestStateQSOPartyBase`'s header no longer lists it | `LQPQSOPointMethod`: 1000, 5000 if the name is `LOCUST` or the call `K6VVA` |
+| `NZFIELDDAY` | `TContestJockWhiteFieldDay` | `TContestBase` | `NZFieldDayQSOPointMethod`: ZL 5 CW / 3 otherwise, else 10; and **`ZoneMult := False`** for our own branch (`Station.MyZone`, 0 when unset -- what the arm's `StrToIntDef(MY ZONE, 0)` gave) |
+
+Each states its whole row as literals and is in
+`Test_MovedRowValuesStillMatchTheArray`. None states its bands, so none joins
+the exception list of `Test_EveryOtherContestStillCreditsEveryBand`. None
+formats its own exchange (M4) or parses it (M5). postunit's no-op arm that
+names `SPRINTSSB` beside the NA Sprints (D6) was checked and left for M4; no
+contest-name test was added anywhere, so no `Lint-ContestNameTests` ceiling
+moves.
+
+**ONE DELIBERATE CHANGE, outside every oracle: `NZ FIELD DAY` now imports.**
+The Jock White Field Day's ADIF id was renamed to `JW-FD` on 2026-09-29 while
+it had no class, and `ADDING_A_CONTEST.md` recorded that its old export
+spelling could not resolve for exactly that reason. With a class it carries
+`FormerADIFContestIds = ['NZ FIELD DAY']`, per NY4I's standing ruling
+(*"Yes support old spellings"*). Export never writes it.
+`Test_ADIFIdsResolveOldAndNew` and `Test_NoADIFIdIsClaimedTwice` pin it.
+
+**Gates, run 2026-10-01:** unit tests 0 failed; narrowing 1335 and range
+warnings 4, both at their ceilings and unchanged. **The contest matrix:
+180 identical, 5 differing -- LQP, NRAUBALTICCW, NRAUBALTICSSB, NZFIELDDAY,
+SPRINTSSB -- and in each the ONLY changed lines are `contest.class =`** (three
+variants each, `(none -- the legacy engine)` becoming the new class). Every
+set-up, scoring (points and every multiplier flag, `ZoneMult` included) and
+export line is byte-identical, which is the proof the transcriptions are
+exact. Those five records need re-freezing for the identity line alone,
+with that reason; it was not done in this change.
+
+**Sponsor-rule questions this raised -- NY4I's, recorded, not acted on:**
+
+- **Q15** NRAU-Baltic: the contest calendar lists Cabrillo names `NRAU-CW` /
+  `NRAU-SSB`; TR4W sends `NRAU-BALTIC-CW` / `NRAU-BALTIC-SSB`. Which is right?
+- **Q16** Sprint SSB: it is its own contest, but its row's ADIF/Cabrillo name
+  is `NA-SPRINT-SSB` and its friendly name *"North American Sprint, SSB"*.
+  Should either change to the sponsor's own name (https://ssbsprint.com/rules/)?
+  Its `XM: NoDXMults` with the `naqp` domestic file also differs from the NA
+  Sprints' North American DXCC multiplier -- intended?
+- **Q17** Locust: the calendar describes CW only, 80 and 40 m, no
+  multipliers. The legacy arm scores every mode and band, and the row counts
+  domestic multipliers from `naqp`. State the bands (`UsesBand`) and drop the
+  multipliers, or leave an inactive contest as it was?
+- **Q18** Jock White Field Day, against
+  https://www.nzart.org.nz/activities/contests/jwfd: are ZL contacts 5 CW /
+  3 phone and non-ZL 10 still the rule? Digital and FM score 3 today (they
+  fall in "not CW"). The own-branch multiplier is suppressed in two places
+  (the class, and `logdupe.SetMultFlags`, which also skips zone 00): does
+  the sponsor count one's own branch at all?
 
 ### 8.3 What "a contest has moved" means -- checkably
 
@@ -1136,7 +1242,9 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   `TContestBase`, with "contest" meaning "an operating event with rules" as
   `ContestType` already does?
 - **Q7** (C8). Apply the NRAU ruling to every two-mode pair (§1.5), including
-  pairs where one mode is rarely run?
+  pairs where one mode is rarely run? **Still open after M3**, which applied
+  it to NRAU-Baltic only and left the NA Sprint CW/RTTY as siblings, citing
+  this question (§8.2d). Does the NA Sprint pair get a base?
 - **Q8** (C9a, plus Idaho). Events with no `ContestType` are identified by
   string. These are `'TRC'`, `'PGA'`, `'EURASIA'` and `'DL-DX-RTTY'` (inventory
   D7). Should each become a `ContestType` with a class, or be deleted?
@@ -1154,6 +1262,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   values one at a time.
 - **Q12** (new; the ruling asked for it). Keep `FixedModePoints` as a helper and
   retire the `TContestFixedPoints` base as family bases arrive (§1.5)?
+  **DONE at M3 under the delegation (§8.2d)** -- the helper kept, the base
+  deleted.
 - **Q13** (old Q7, Finding 3). The OQP arm scores by the session's `ActiveMode`,
   not the QSO's own mode, so a rescore follows the radio. Fix it when OQP gains
   its class? (This is a behaviour change.)
@@ -1171,6 +1281,11 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   `NC_CTY.DOM`. **Should `nc_cty.dom` hold the 100 counties only?** That
   would correct both. It is a data change that moves NC's out-of-state
   scoring, so it is NY4I's decision.
+
+- **Q15-Q18** (M3, sponsor rules): NRAU-Baltic's Cabrillo names, the Sprint
+  SSB's names and multipliers, Locust's bands and multipliers, and the Jock
+  White Field Day's points and own-branch multiplier. Stated in full at the
+  end of §8.2d, where the classes that raised them are recorded.
 
 **Answered by the ruling, and dropped:** C3 (`CreateOwned...`), C4 (the
 exchange-field model), C5 (`EXCHANGE RECEIVED` as a strategy swap; its residue

@@ -33,7 +33,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
       if RXData.Mode = CW then 2 else 1
 
-  so the whole rule is SetPoints(2, 1, 1) -- CW, phone, everything
+  so the whole rule is FixedModePoints(Mode, 2, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
   FCONTEST has an arm for this contest:
@@ -42,13 +42,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   rest of contest setup.
 
   NOT A STATE QSO PARTY despite the name: P is 0 and QCWA is a national
-  organisation, so it has no host state and no counties. It inherits
-  TContestFixedPoints, which is its only family.
+  organisation, so it has no host state and no counties. It sits on
+  TContestBase and states its own points, calling FixedModePoints as
+  a helper (TContestFixedPoints retired at M3).
 
   THE QCWA GOLDEN ANNIVERSARY CONTEST IS A SEPARATE CLASS
   (uContestQCWAGolden) and deliberately not a shared base: the two rows
   agree today, but they are two events, and the NA Sprint precedent is two
-  classes on TContestFixedPoints with nothing between them. LOGSTUFF's two
+  sibling classes with nothing between them. LOGSTUFF's two
   "Used for the QCWA ..." parse routines are keyed on the EXCHANGE, not on
   this contest, and stay where they are.
 
@@ -68,10 +69,10 @@ unit uContestQCWA;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestQCWA = class(TContestFixedPoints)
+   TContestQCWA = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -92,19 +93,19 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestQCWA.Create(aContest: ContestType);
+procedure TContestQCWA.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(2, 1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
 end;
 
 function TContestQCWA.GetDisplayName: string;

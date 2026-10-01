@@ -2,7 +2,7 @@
 == identity
 contest.requested = 82 NRAUBALTICCW
 contest.selected = 82 NRAUBALTICCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestNRAUBalticCW
 == setup
 active.qsopointmethod = TwoPointsPerQSO
 active.exchange = RSTQSONumberAndDomesticQTHExchange
@@ -116,7 +116,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   59  0017     KS      G3ABC          59  00
 == identity
 contest.requested = 82 NRAUBALTICCW
 contest.selected = 82 NRAUBALTICCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestNRAUBalticCW
 == setup
 active.qsopointmethod = TwoPointsPerQSO
 active.exchange = RSTQSONumberAndDomesticQTHExchange
@@ -230,7 +230,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  0017     ON      G3ABC          59  00
 == identity
 contest.requested = 82 NRAUBALTICCW
 contest.selected = 82 NRAUBALTICCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestNRAUBalticCW
 == setup
 active.qsopointmethod = TwoPointsPerQSO
 active.exchange = RSTQSONumberAndDomesticQTHExchange

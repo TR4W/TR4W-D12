@@ -33,7 +33,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
       RXData.QSOPoints := 2;
 
-  so the whole rule is SetPoints(2, 2, 2) -- CW, phone, everything
+  so the whole rule is FixedModePoints(Mode, 2, 2, 2) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
   NOTHING ELSE IN THE PROGRAM NAMES THIS CONTEST. This finds only the
@@ -57,10 +57,10 @@ unit uContestXmas;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestXmas = class(TContestFixedPoints)
+   TContestXmas = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -81,19 +81,19 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestXmas.Create(aContest: ContestType);
+procedure TContestXmas.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(2, 2, 2);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 2, 2);
 end;
 
 function TContestXmas.GetDisplayName: string;

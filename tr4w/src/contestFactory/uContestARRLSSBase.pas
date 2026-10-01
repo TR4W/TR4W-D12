@@ -29,8 +29,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   for the same pair, and the reason shows the moment anything beyond scoring
   moves in: the exchange parser, the section list, the "you may work a station
   once per contest regardless of band" rule. Those belong to Sweepstakes, not to
-  the CW running of it, and they will land here. Writing SetPoints(2, 2) twice
-  in two unrelated classes would leave nowhere for them to go. *)
+  the CW running of it, and they will land here. Writing the two points twice
+  in two unrelated classes would leave nowhere for them to go.
+
+  ON TContestBase SINCE M3 (2026-10-01). It descended from TContestFixedPoints,
+  a mechanism base that retired then (CONTEST_OWNERSHIP_DESIGN.md 1.5): the
+  rule is stated here, as the family's, with FixedModePoints as the helper.
+  The legacy arm is TwoPointsPerQSO -- 2 on every mode, digital included. *)
 unit uContestARRLSSBase;
 
 {$I tr4w.inc}
@@ -38,16 +43,15 @@ unit uContestARRLSSBase;
 interface
 
 uses
-   VC, uContestBase, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestARRLSSBase = class(TContestFixedPoints)
+   TContestARRLSSBase = class(TContestBase)
    protected
       function GetFormatsExchange: boolean; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
    public
-      constructor Create(aContest: ContestType); override;
-
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
                                           const aRSTSent: string): string; override;
@@ -62,12 +66,11 @@ type
 implementation
 
 uses
-   SysUtils;
+   SysUtils, uContestFixedPoints;
 
-constructor TContestARRLSSBase.Create(aContest: ContestType);
+procedure TContestARRLSSBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(2, 2);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 2, 2);
 end;
 
 (* THE SWEEPSTAKES EXCHANGE: SERIAL, PRECEDENCE, CHECK, SECTION.

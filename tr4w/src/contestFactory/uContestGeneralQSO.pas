@@ -21,7 +21,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* General QSO.
 
-  OnePointPerQSO -- the plainest rule there is, and the default for 31 contests. GENERAL QSO is TR4W's everyday non-contest logging mode, so this is the one that runs when nothing else does. *)
+  OnePointPerQSO -- the plainest rule there is, and the default for 31 contests. GENERAL QSO is TR4W's everyday non-contest logging mode, so this is the one that runs when nothing else does.
+
+  ON TContestBase SINCE M3 (2026-10-01): TContestFixedPoints, the mechanism
+  base it descended from, retired (CONTEST_OWNERSHIP_DESIGN.md 1.5). The one
+  point is stated here, through the FixedModePoints helper. *)
 unit uContestGeneralQSO;
 
 {$I tr4w.inc}
@@ -29,12 +33,13 @@ unit uContestGeneralQSO;
 interface
 
 uses
-   VC, uContestBase, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestGeneralQSO = class(TContestFixedPoints)
+   TContestGeneralQSO = class(TContestBase)
    protected
       function GetFormatsExchange: boolean; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -45,8 +50,6 @@ type
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
    public
-      constructor Create(aContest: ContestType); override;
-
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
                                           const aRSTSent: string): string; override;
@@ -61,12 +64,11 @@ type
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   SysUtils, uContestRegistry, uContestFixedPoints;
 
-constructor TContestGeneralQSO.Create(aContest: ContestType);
+procedure TContestGeneralQSO.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestGeneralQSO.GetDisplayName: string;

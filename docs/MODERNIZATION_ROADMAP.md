@@ -539,7 +539,8 @@ only once every selectable contest has the capability.
 
 Coverage is ~19 contest classes against 189 `ContestType` members. **That ratio
 is not the work** — most enum members share a handful of rules, which is what
-`TContestFixedPoints` already demonstrates — but the 92 branches are, and they
+the `FixedModePoints` helper demonstrates (the `TContestFixedPoints` base it
+grew out of retired at M3, 2026-10-01) — but the 92 branches are, and they
 are the honest progress metric.
 
 ### 5.4 The blind spot that matters

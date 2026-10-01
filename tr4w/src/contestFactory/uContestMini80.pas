@@ -33,7 +33,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
       RXData.QSOPoints := 1;
 
-  so the whole rule is SetPoints(1, 1, 1) -- CW, phone, everything
+  so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
   FCONTEST has an arm for this contest:
@@ -49,7 +49,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   THE THREE MINITEST ROWS ARE THREE CLASSES WITH NO BASE BETWEEN THEM --
   uContestMinitest, uContestMini40, uContestMini80 -- following the NA
-  Sprint precedent (CW and RTTY each on TContestFixedPoints directly). They
+  Sprint precedent (CW and RTTY sibling classes, no base between). They
   agree on scoring today; if a Minitest rule ever reaches all three by
   definition, that is the moment for a family base, not before.
 
@@ -69,10 +69,10 @@ unit uContestMini80;
 interface
 
 uses
-   VC, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestMini80 = class(TContestFixedPoints)
+   TContestMini80 = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -93,19 +93,19 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestMini80.Create(aContest: ContestType);
+procedure TContestMini80.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestMini80.GetDisplayName: string;

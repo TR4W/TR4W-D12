@@ -33,7 +33,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
       RXData.QSOPoints := 1;
 
-  so the whole rule is SetPoints(1, 1, 1) -- CW, phone, everything
+  so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
   uNewContest shares an arm with CWOPEN for this contest -- operator
@@ -47,7 +47,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   name stays 'MST' (the enum's spelling); only the ADIF id moved.
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
-  inherits TContestFixedPoints.
+  sits on TContestBase directly and states its own points, calling
+  FixedModePoints as a helper (TContestFixedPoints retired at M3).
 
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
@@ -65,10 +66,10 @@ unit uContestMST;
 interface
 
 uses
-   VC, uContestBase, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestMST = class(TContestFixedPoints)
+   TContestMST = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
          descendants override the getters. Every getter below states
@@ -90,19 +91,19 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
-      constructor Create(aContest: ContestType); override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry, uContestFixedPoints;
 
-constructor TContestMST.Create(aContest: ContestType);
+procedure TContestMST.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestMST.GetDisplayName: string;

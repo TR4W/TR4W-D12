@@ -34,7 +34,11 @@ uses
       VC's names win wherever the two overlap. *)
    uSettingsModel,
    uTR4WTestFramework, VC, uContestBase, uContestRegistry,
-   uContestStateQSOPartyBase, uContestFixedPoints,
+   uContestStateQSOPartyBase,
+   (* THE FAMILY BASES -- the whole list, for
+      Test_EveryClassSitsOnTheBaseOrAFamily. *)
+   uContestARRLDXBase, uContestARRLSSBase, uContestCQWWBase, uContestCQWPXBase,
+   uContestNRAUBalticBase,
    (* M2's in-state detection: the shipped .dom path and the key reader. *)
    Classes, uAppPaths, uDomFileKeys;
 
@@ -99,6 +103,11 @@ type
       procedure Test_AnInStateStationIsFoundInItsCountyFile;
       procedure Test_ScoreQSORunsBandThenOverridesThenTheRule;
       procedure Test_MarksDupesIsTheRowsDupePolicy;
+      procedure Test_EveryClassSitsOnTheBaseOrAFamily;
+      procedure Test_NRAUBalticIsOneContestInTwoModes;
+      procedure Test_SprintSSBIsItsOwnContest;
+      procedure Test_LocustScoresItsLegacyArm;
+      procedure Test_JockWhiteScoresItsLegacyArm;
    public
       procedure RunAllTests; override;
    end;
@@ -1615,9 +1624,18 @@ end;
    Contests whose scoring arm is a constant, or a constant chosen by mode, and
    which nothing outside their ContestsArray row names except SETUP -- FCONTEST,
    uNewContest's prompts, LOGCFG's CQ-exchange defaults. Each is its own class
-   on TContestFixedPoints, because none has another family: none is a state QSO
-   party, and the three Minitest rows and the two QCWA rows follow the NA
-   Sprint precedent of sibling classes with no base between them.
+   with no family: none is a state QSO party, and the three Minitest rows and
+   the two QCWA rows follow the NA Sprint precedent of sibling classes with no
+   base between them.
+
+   THEY SIT ON TContestBase DIRECTLY SINCE M3 (2026-10-01). They were on
+   TContestFixedPoints, a mechanism base that retired then
+   (CONTEST_OWNERSHIP_DESIGN.md 1.5); each now states its own numbers in its
+   own CalculateQSOPoints through the FixedModePoints helper. So the class
+   assertion is now "the parent is TContestBase" -- a contest here that gained
+   a base would have to come through Test_EveryClassSitsOnTheBaseOrAFamily.
+   The NA Sprint CW and RTTY runnings and General QSO, which used the same
+   base, are checked here too.
 
    The second slice is the six the first deferred only for the batch cap; each
    had setup references outside the row and none had a scoring branch.
@@ -1651,8 +1669,8 @@ procedure TContestFactoryTests.Test_FixedPointContestsTranscribeTheirArms;
          CheckEquals(aPhone, PointsFor(obj, FM),
                      aWhat + ' FM -- not folded into phone, takes the other value');
 
-         CheckTrue(obj is TContestFixedPoints,
-                   aWhat + ' is not on TContestFixedPoints');
+         CheckTrue(obj.ClassParent = TContestBase,
+                   aWhat + ' sits on TContestBase directly');
          CheckFalse(obj is TContestStateQSOPartyBase,
                     aWhat + ' must not be on the state-party base');
          CheckFalse(obj.IsUSQSOParty, aWhat + ' is not a US QSO party');
@@ -1711,6 +1729,13 @@ begin
    CheckFixed(MST, 'MST', 1, 1, 1);
    CheckFixed(EUROPEANHFC, 'European HFC', 1, 1, 1);
    CheckFixed(DARCXMAS, 'DARC Xmas', 1, 1, 1);
+
+   (* THE OTHER THREE THAT WERE ON TContestFixedPoints -- OnePointPerQSO.
+      The two NA Sprint runnings are siblings, not a family (no NA Sprint base
+      exists; see uContestNASprintCW's header). *)
+   CheckFixed(NASPRINTCW, 'NA Sprint CW', 1, 1, 1);
+   CheckFixed(NASPRINTRTTY, 'NA Sprint RTTY', 1, 1, 1);
+   CheckFixed(GENERALQSO, 'General QSO', 1, 1, 1);
 end;
 
 procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
@@ -1841,6 +1866,18 @@ begin
    CheckAgainstArray(EUROPEANHFC, 'European HF Championship');
    CheckAgainstArray(CQIR, 'CQIR - Ireland Calling');
    CheckAgainstArray(DARCXMAS, 'DARC Christmas Contest');
+
+   (* THE CONTESTS HELD FROM EARLIER SLICES, MOVED AT M3 (2026-10-01). The
+      NRAU-Baltic pair states its shared fields on the family base and its
+      names per mode, so this is what proves the split lost nothing. Sprint
+      SSB's ADIF and Cabrillo names are STATED in its row and are not its enum
+      spelling (SSB-SPRINT); Locust's are blank and ARE its spelling; the Jock
+      White Field Day's DomesticFileName is blank and means the empty string. *)
+   CheckAgainstArray(NRAUBALTICCW, 'NRAU-Baltic CW');
+   CheckAgainstArray(NRAUBALTICSSB, 'NRAU-Baltic SSB');
+   CheckAgainstArray(SPRINTSSB, 'Sprint SSB');
+   CheckAgainstArray(LQP, 'Locust QSO Party');
+   CheckAgainstArray(NZFIELDDAY, 'Jock White Memorial Field Day');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
@@ -1889,9 +1926,11 @@ begin
    CheckFinds('NY-QSO-PARTY', NYQP);
    CheckFinds('ID-QSO-PARTY', IDAHOQSOPARTY);
 
-   (* A contest WITH NO CLASS answers by its current id through the same
-      lookup -- NZ Field Day's row was renamed and it has no class. *)
+   (* THE JOCK WHITE FIELD DAY, renamed 2026-09-29 while it had NO class, so
+      its old export spelling could not be carried then. It gained its class
+      at M3 (2026-10-01) and carries it now. *)
    CheckFinds('JW-FD', NZFIELDDAY);
+   CheckFinds('NZ FIELD DAY', NZFIELDDAY);
 
    (* Surrounding whitespace is not part of an id, on either side. *)
    CheckFinds('  ICWC-MST  ', MST);
@@ -2005,8 +2044,9 @@ end;
    Field Day (https://www.nzart.org.nz/activities/contests/jwfd), ADIF and
    Cabrillo id JW-FD.
 
-   None of the three has a class, so these are asked of a plain TContestBase --
-   which reads the row, and is what the program reads. *)
+   These are asked of a plain TContestBase -- the ROW. All three gained a
+   class at M3 (2026-10-01); Test_MovedRowValuesStillMatchTheArray holds each
+   class to this row, so the row is what is pinned here. *)
 procedure TContestFactoryTests.Test_NRAUAndJockWhiteRowsAreNotShifted;
 
    procedure CheckRow(aContest: ContestType; const aFriendly: string;
@@ -2539,6 +2579,341 @@ begin
    CheckTrue(ContestIdentity(CQWWCW).MarksDupes, 'CQ WW CW marks dupes');
 end;
 
+(* M3 -- A BASE CLASS IS A FAMILY, AND THE FAMILIES ARE A CLOSED LIST.
+
+   TContestFixedPoints RETIRED AT M3 (2026-10-01). It was a MECHANISM base --
+   "contests that score a number per mode", some twenty-five sponsors -- and
+   NY4I's ownership ruling allows a base only for a FAMILY, contests under one
+   rule (CONTEST_OWNERSHIP_DESIGN.md 1.5). Its subclasses now sit on
+   TContestBase and call FixedModePoints as a helper.
+
+   SO EVERY REGISTERED CLASS'S PARENT IS TContestBase OR ONE OF THE FAMILY
+   BASES BELOW, AND EVERY FAMILY BASE SITS ON TContestBase ITSELF. The list is
+   the ratchet: a new base fails this test until somebody adds it here, which
+   is the moment to ask whether it is a family or a convenience. Families are
+   NOT invented for resemblance -- a contest that looks like another starts
+   as a COPY it owns (1.4).
+
+   NRAU-BALTIC IS THE FAMILY M3 ADDED, by NY4I's ruling. Its two members are
+   counted, so a third contest cannot be slipped under it unnoticed. *)
+procedure TContestFactoryTests.Test_EveryClassSitsOnTheBaseOrAFamily;
+const
+   FamilyCount = 6;
+var
+   families: array[0..FamilyCount - 1] of TClass;
+   c: ContestType;
+   obj: TContestBase;
+   parent: TClass;
+   i, direct, nrau: integer;
+   known: boolean;
+begin
+   BeginTest('Test_EveryClassSitsOnTheBaseOrAFamily');
+
+   families[0] := TContestStateQSOPartyBase;
+   families[1] := TContestARRLDXBase;
+   families[2] := TContestARRLSSBase;
+   families[3] := TContestCQWWBase;
+   families[4] := TContestCQWPXBase;
+   families[5] := TContestNRAUBalticBase;
+
+   for i := 0 to FamilyCount - 1 do
+      begin
+      CheckTrue(families[i].ClassParent = TContestBase,
+                families[i].ClassName + ' sits on TContestBase -- a family is'
+                + ' never nested under another base');
+      end;
+
+   direct := 0;
+   nrau := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      obj := MakeContest(c);
+      if obj = nil then
+         begin
+         Continue;
+         end;
+      try
+         parent := obj.ClassParent;
+         known := parent = TContestBase;
+         if known then
+            begin
+            inc(direct);
+            end;
+         for i := 0 to FamilyCount - 1 do
+            begin
+            if parent = families[i] then
+               begin
+               known := True;
+               end;
+            end;
+         if parent = TContestNRAUBalticBase then
+            begin
+            inc(nrau);
+            end;
+         CheckTrue(known,
+                   string(ContestTypeSA[c]) + ' (' + obj.ClassName + ') sits on '
+                   + parent.ClassName + ', which is neither TContestBase nor a'
+                   + ' listed family base');
+      finally
+         obj.Free;
+         end;
+      end;
+
+   CheckEquals(2, nrau, 'the NRAU-Baltic family is its CW and SSB runnings');
+
+   (* A FLOOR, so the loop cannot pass by finding nothing: the 25 former
+      TContestFixedPoints contests alone put more than twenty on the base. *)
+   CheckTrue(direct >= 20,
+             'only ' + IntToStr(direct) + ' classes sit on TContestBase directly');
+end;
+
+(* NRAU-BALTIC -- ONE CONTEST, TWO RUNNINGS (NY4I, 2026-10-01).
+
+   The legacy arm is TwoPointsPerQSO for both rows: 2 on every mode. Asserted
+   on all four modes for both runnings, because the reason the family base
+   exists is that points per mode may one day differ -- and the day they do,
+   this is what has to change, deliberately.
+
+   IDENTITY. The four fields that differ between the two rows are stated per
+   mode class; everything else is the family's. The calendar ids are the ones
+   bf395987 un-shifted (220 CW, 222 SSB). The Cabrillo names are what TR4W has
+   always sent; the calendar's NRAU-CW / NRAU-SSB is a question for NY4I. *)
+procedure TContestFactoryTests.Test_NRAUBalticIsOneContestInTwoModes;
+
+   procedure CheckRunning(aContest: ContestType; const aWhat, aName,
+                          aFriendly: string; aWA7BNM: integer);
+   var
+      obj: TContestBase;
+   begin
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, aWhat + ' has no registered class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      try
+         CheckTrue(obj.ClassParent = TContestNRAUBalticBase,
+                   aWhat + ' is a member of the NRAU-Baltic family');
+         CheckEquals(2, PointsFor(obj, CW), aWhat + ' CW');
+         CheckEquals(2, PointsFor(obj, Phone), aWhat + ' phone');
+         CheckEquals(2, PointsFor(obj, Digital), aWhat + ' digital');
+         CheckEquals(2, PointsFor(obj, FM), aWhat + ' FM');
+
+         CheckEquals(aName, obj.CabrilloName, aWhat + ' Cabrillo name');
+         CheckEquals(aName, obj.ADIFContestId, aWhat + ' ADIF id');
+         CheckEquals(aFriendly, obj.FriendlyName, aWhat + ' friendly name');
+         CheckEquals(aWA7BNM, obj.WA7BNMId, aWhat + ' WA7BNM id');
+         CheckEquals('nrau', obj.DomesticFileName, aWhat + ' domestic file');
+         CheckEquals(Ord(RSTQSONumberAndDomesticQTHExchange), Ord(obj.ExchangeKind),
+                     aWhat + ' exchange');
+         CheckEquals(Ord(TwoPointsPerQSO), Ord(obj.QSOPointMethod),
+                     aWhat + ' point method');
+         CheckFalse(obj.FormatsExchange,
+                    aWhat + ' does not format its own exchange yet (M4)');
+         CheckFalse(obj.IsUSQSOParty, aWhat + ' is not a US QSO party');
+      finally
+         obj.Free;
+         end;
+   end;
+
+begin
+   BeginTest('Test_NRAUBalticIsOneContestInTwoModes');
+   CheckRunning(NRAUBALTICCW, 'NRAU-Baltic CW', 'NRAU-BALTIC-CW',
+                'NRAU-Baltic Contest, CW', 220);
+   CheckRunning(NRAUBALTICSSB, 'NRAU-Baltic SSB', 'NRAU-BALTIC-SSB',
+                'NRAU-Baltic Contest, SSB', 222);
+end;
+
+(* THE SSB SPRINT IS ITS OWN CONTEST (NY4I, 2026-10-01: "a different contest
+   with a different sponsor so keep it separate").
+
+   So it sits on TContestBase -- not under, and not beside as a family member
+   of, the NCJ's NA Sprint classes -- and states OnePointPerQSO itself. Its
+   ADIF and Cabrillo names are the ones its row STATES, NA-SPRINT-SSB, not its
+   enum spelling SSB-SPRINT; whether they should still say NA Sprint is a
+   question for NY4I, so the assertion pins today's. *)
+procedure TContestFactoryTests.Test_SprintSSBIsItsOwnContest;
+var
+   obj: TContestBase;
+begin
+   BeginTest('Test_SprintSSBIsItsOwnContest');
+   obj := MakeContest(SPRINTSSB);
+   CheckTrue(obj <> nil, 'Sprint SSB has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckTrue(obj.ClassParent = TContestBase, 'Sprint SSB sits on TContestBase');
+      CheckEquals('TContestSprintSSB', obj.ClassName, 'Sprint SSB is its own class');
+
+      CheckEquals(1, PointsFor(obj, CW), 'Sprint SSB CW');
+      CheckEquals(1, PointsFor(obj, Phone), 'Sprint SSB phone');
+      CheckEquals(1, PointsFor(obj, Digital), 'Sprint SSB digital');
+      CheckEquals(1, PointsFor(obj, FM), 'Sprint SSB FM');
+
+      CheckEquals('NA-SPRINT-SSB', obj.CabrilloName, 'Sprint SSB Cabrillo name');
+      CheckEquals('NA-SPRINT-SSB', obj.ADIFContestId, 'Sprint SSB ADIF id');
+      CheckEquals('North American Sprint, SSB', obj.FriendlyName,
+                  'Sprint SSB friendly name');
+      CheckEquals(242, obj.WA7BNMId, 'Sprint SSB WA7BNM id');
+      CheckFalse(obj.FormatsExchange,
+                 'Sprint SSB does not format its own exchange yet (M4)');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* A Locust QSO Party contact's points: aCall, aName, on aBand in aMode. *)
+function LocustPoints(aContest: TContestBase; aMode: ModeType; aBand: BandType;
+                      const aCall, aName: ShortString): integer;
+var
+   qso: ContestExchange;
+begin
+   FillChar(qso, SizeOf(qso), 0);
+   qso.Band := aBand;
+   qso.Mode := aMode;
+   qso.Callsign := aCall;
+   qso.Name := aName;
+   qso.QSOPoints := 99;
+   aContest.ScoreQSO(qso);
+   Result := qso.QSOPoints;
+end;
+
+(* THE LOCUST QSO PARTY -- LQPQSOPointMethod, TRANSCRIBED.
+
+   1000 a contact; 5000 when the name is LOCUST or the call is K6VVA. Every
+   mode and every band score, because the legacy arm asks neither: the
+   calendar says CW on 80 and 40 m only, and that is a question for NY4I, not
+   a rule to slip in with the move. The 20 m and phone cases pin that the
+   class did NOT narrow it.
+
+   And it is NOT a state QSO party, which the party base's header claimed
+   until M3. *)
+procedure TContestFactoryTests.Test_LocustScoresItsLegacyArm;
+var
+   obj: TContestBase;
+begin
+   BeginTest('Test_LocustScoresItsLegacyArm');
+   obj := MakeContest(LQP);
+   CheckTrue(obj <> nil, 'Locust has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckTrue(obj.ClassParent = TContestBase, 'Locust sits on TContestBase');
+      CheckFalse(obj is TContestStateQSOPartyBase,
+                 'Locust is not on the state-party base');
+      CheckFalse(obj.IsUSQSOParty, 'Locust is not a US state QSO party');
+      CheckEquals('', obj.HostState, 'Locust has no host state');
+
+      CheckEquals(1000, LocustPoints(obj, CW, Band40, 'W1AW', 'JOE'),
+                  'an ordinary contact');
+      CheckEquals(5000, LocustPoints(obj, CW, Band40, 'W1AW', 'LOCUST'),
+                  'the name LOCUST');
+      CheckEquals(5000, LocustPoints(obj, CW, Band80, 'K6VVA', 'RICK'),
+                  'the sponsor K6VVA');
+      CheckEquals(5000, LocustPoints(obj, CW, Band80, 'K6VVA', 'LOCUST'),
+                  'both at once is still 5000, not more');
+      CheckEquals(1000, LocustPoints(obj, CW, Band40, 'K6VVA/7', 'JOE'),
+                  'the call must match exactly -- K6VVA/7 is not K6VVA');
+      CheckEquals(1000, LocustPoints(obj, Phone, Band20, 'W1AW', 'JOE'),
+                  'phone on 20 m still scores: the arm asks neither');
+
+      CheckEquals('LOCUST QSO PARTY', obj.CabrilloName, 'Locust Cabrillo name');
+      CheckEquals('LOCUST QSO PARTY', obj.ADIFContestId, 'Locust ADIF id');
+      CheckEquals('Locust QSO Party', obj.FriendlyName, 'Locust friendly name');
+      CheckEquals(446, obj.WA7BNMId, 'Locust WA7BNM id');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* THE JOCK WHITE MEMORIAL FIELD DAY -- NZFieldDayQSOPointMethod, TRANSCRIBED.
+
+   A ZL contact is 5 on CW and 3 on everything else; any other country is 10.
+   And the arm writes a second field: a contact in OUR branch (zone) earns no
+   branch multiplier, so ZoneMult is cleared. The legacy arm compared against
+   StrToIntDef(MY ZONE, 0); Station.MyZone is that same number, 0 when MY ZONE
+   is unset, so an unset zone still clears a zone-0 contact. *)
+procedure TContestFactoryTests.Test_JockWhiteScoresItsLegacyArm;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Score(aMode: ModeType; const aCountry: ShortString; aZone: byte;
+                  out aZoneMult: boolean): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := Band40;
+      qso.Mode := aMode;
+      qso.QTH.CountryID := aCountry;
+      qso.Zone := aZone;
+      qso.ZoneMult := True;
+      qso.QSOPoints := 99;
+      obj.ScoreQSO(qso);
+      aZoneMult := qso.ZoneMult;
+      Result := qso.QSOPoints;
+   end;
+
+var
+   zoneMult: boolean;
+begin
+   BeginTest('Test_JockWhiteScoresItsLegacyArm');
+   obj := MakeContest(NZFIELDDAY);
+   CheckTrue(obj <> nil, 'Jock White Field Day has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckTrue(obj.ClassParent = TContestBase,
+                'Jock White Field Day sits on TContestBase');
+
+      FillChar(station, SizeOf(station), 0);
+      station.MyCountry := 'ZL';
+      station.MyZone := 3;
+      station.MyZoneValid := True;
+      obj.SetStation(station);
+
+      CheckEquals(5, Score(CW, 'ZL', 4, zoneMult), 'ZL on CW');
+      CheckTrue(zoneMult, 'another branch keeps its multiplier');
+      CheckEquals(3, Score(Phone, 'ZL', 4, zoneMult), 'ZL on phone');
+      CheckEquals(3, Score(Digital, 'ZL', 4, zoneMult), 'ZL on digital scores the phone value');
+      CheckEquals(3, Score(FM, 'ZL', 4, zoneMult), 'ZL on FM scores the phone value');
+      CheckEquals(10, Score(CW, 'VK', 4, zoneMult), 'outside ZL on CW');
+      CheckEquals(10, Score(Phone, 'K', 4, zoneMult), 'outside ZL on phone');
+
+      CheckEquals(5, Score(CW, 'ZL', 3, zoneMult), 'own branch still scores');
+      CheckFalse(zoneMult, 'our own branch earns no branch multiplier');
+
+      (* MY ZONE unset: the arm's StrToIntDef gave 0, and so does MyZone. *)
+      FillChar(station, SizeOf(station), 0);
+      obj.SetStation(station);
+      Score(CW, 'ZL', 0, zoneMult);
+      CheckFalse(zoneMult, 'an unset MY ZONE is 0, and matches a zone-0 contact');
+      Score(CW, 'ZL', 3, zoneMult);
+      CheckTrue(zoneMult, 'an unset MY ZONE does not match branch 3');
+
+      CheckEquals('JW-FD', obj.CabrilloName, 'Cabrillo name');
+      CheckEquals('JW-FD', obj.ADIFContestId, 'ADIF id');
+      CheckEquals(1, Length(obj.FormerADIFContestIds), 'one former ADIF id');
+      if Length(obj.FormerADIFContestIds) = 1 then
+         begin
+         CheckEquals('NZ FIELD DAY', obj.FormerADIFContestIds[0],
+                     'the enum spelling export wrote before the rename');
+         end;
+      CheckEquals('Jock White Memorial Field Day', obj.FriendlyName, 'friendly name');
+      CheckEquals(0, obj.WA7BNMId, 'not on the calendar: 0 disables the menu item');
+      CheckEquals(Ord(BranchZones), Ord(obj.ZoneMultiplierType), 'branch multipliers');
+   finally
+      obj.Free;
+      end;
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -2583,6 +2958,11 @@ begin
    Test_AnInStateStationIsFoundInItsCountyFile;
    Test_ScoreQSORunsBandThenOverridesThenTheRule;
    Test_MarksDupesIsTheRowsDupePolicy;
+   Test_EveryClassSitsOnTheBaseOrAFamily;
+   Test_NRAUBalticIsOneContestInTwoModes;
+   Test_SprintSSBIsItsOwnContest;
+   Test_LocustScoresItsLegacyArm;
+   Test_JockWhiteScoresItsLegacyArm;
 end;
 
 end.

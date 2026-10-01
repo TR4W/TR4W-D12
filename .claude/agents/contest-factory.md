@@ -11,9 +11,15 @@ contest behaviour hard-coded in the TRDOS engine.
 ## Your files
 
 `uContestBase.pas`, `uContestRegistry.pas`, `uContestFactory.pas`, plus one unit
-per contest (ARRL DX CW/Phone, ARRL SS CW/SSB, CQ WPX CW/SSB, CQ WW CW/SSB, ARRL
-Field Day, Winter Field Day, IARU, NA Sprint CW/RTTY, Florida QP, GeneralQSO,
-FixedPoints, and the family bases beneath them).
+per contest (ARRL DX CW/Phone, ARRL SS CW/SSB, CQ WPX CW/SSB, CQ WW CW/SSB,
+NRAU-Baltic CW/SSB, ARRL Field Day, Winter Field Day, IARU, NA Sprint CW/RTTY,
+Sprint SSB, the state QSO parties, Florida QP, GeneralQSO, ...), the family
+bases beneath them, and `uContestFixedPoints` -- which since M3 holds only the
+`FixedModePoints` HELPER. **`TContestFixedPoints` is gone** (retired 2026-10-01):
+a fixed-points contest sits on `TContestBase` and calls the helper from its own
+`CalculateQSOPoints`. The family bases are a closed list held by
+`Test_EveryClassSitsOnTheBaseOrAFamily` (state parties, ARRL DX, ARRL SS, CQ WW,
+CQ WPX, NRAU-Baltic); adding one means adding it there, on evidence.
 
 **Count them with `ls tr4w/src/contestFactory` — never write the number down.**
 
@@ -79,7 +85,16 @@ the target shape, the M-step migration order and the open questions.
   `docs/QSO_POINT_METHOD_DESIGN.md` proposed exactly that and is
   **SUPERSEDED**. Do not build from it.
 - **Family bases only for one family under one rule** (`TContestStateQSOPartyBase`,
-  the CW/SSB pairs, NRAU-Baltic).
+  the CW/SSB pairs, NRAU-Baltic). Extending NY4I's NRAU ruling to every
+  two-mode pair is his open Q7 -- so the NA Sprint CW/RTTY stay siblings (M3,
+  design §8.2d). The SSB Sprint is NOT an NA Sprint (different sponsor) and
+  Locust is NOT a state party (P 0, no counties); both sit on `TContestBase`.
+- **A newly registered class changes the matrix's `contest.class =` line and
+  NOTHING else.** At M3 five held contests gained classes: every other line of
+  their records stayed byte-identical, which is the transcription proof. Diff
+  the records excluding that line before believing a red run is only that;
+  the identity line then needs a re-freeze WITH that reason, for those
+  contests only.
 - **A contest that resembles another starts as a COPY and owns it.** That is
   ownership, not drift, so never merge such copies.
 - **Helpers only for genuinely shared computation**, called by the class's own

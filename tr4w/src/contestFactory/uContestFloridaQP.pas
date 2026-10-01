@@ -99,8 +99,10 @@ end;
    base for "a number per mode" -- and mechanism is all it ever gave: three
    integers and a case. Being a state QSO party is the stronger classification
    and there is only one base class to spend, so the scoring arrives as a call
-   to the same routine TContestFixedPoints itself now calls. No behaviour moved
-   and nothing is duplicated.
+   to the FixedModePoints helper. No behaviour moved and nothing is
+   duplicated. (Florida was the first to leave that base; the base itself
+   retired at M3, 2026-10-01, and every contest that used it now calls the
+   helper the same way.)
 
    THE THIRD NUMBER MATTERS AND IS NOT A GUESS: the legacy arm is
    `if Mode = CW then 2 else 1`, so DIGITAL scores the PHONE value. Passing 1

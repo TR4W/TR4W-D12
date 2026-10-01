@@ -21,7 +21,18 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* North American Sprint - CW.
 
-  OnePointPerQSO. A sprint's character is its QSY rule and its exchange, not its scoring. *)
+  OnePointPerQSO. A sprint's character is its QSY rule and its exchange, not its scoring.
+
+  ON TContestBase SINCE M3 (2026-10-01), with the RTTY running a SIBLING class,
+  not a family member -- no NA Sprint base is introduced. The evidence: the two
+  rows already differ (domestic file 'naqp' here, 's49p8' for RTTY), this class
+  owns its export and RTTY's does not, and NY4I's family ruling names NRAU-Baltic
+  only; whether every two-mode pair follows it is Q7 in
+  CONTEST_OWNERSHIP_DESIGN.md, still his. TContestFixedPoints retired at M3; the
+  one point is stated here through the FixedModePoints helper.
+
+  THE SSB SPRINT IS NOT THIS CONTEST'S SIBLING EITHER. NY4I: a different contest
+  with a different sponsor -- uContestSprintSSB, on TContestBase. *)
 unit uContestNASprintCW;
 
 {$I tr4w.inc}
@@ -29,12 +40,13 @@ unit uContestNASprintCW;
 interface
 
 uses
-   VC, uContestBase, uContestFixedPoints;
+   VC, uContestBase;
 
 type
-   TContestNASprintCW = class(TContestFixedPoints)
+   TContestNASprintCW = class(TContestBase)
    protected
       function GetFormatsExchange: boolean; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE GETTERS BEHIND TContestBase's PROPERTIES.
 
          PROTECTED, MATCHING THE BASE. Left public -- which is what the first
@@ -45,8 +57,6 @@ type
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
    public
-      constructor Create(aContest: ContestType); override;
-
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
                                           const aRSTSent: string): string; override;
@@ -61,12 +71,11 @@ type
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   SysUtils, uContestRegistry, uContestFixedPoints;
 
-constructor TContestNASprintCW.Create(aContest: ContestType);
+procedure TContestNASprintCW.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   inherited Create(aContest);
-   SetPoints(1, 1);
+   aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
 function TContestNASprintCW.GetDisplayName: string;
@@ -85,8 +94,8 @@ end;
    marker in the legacy source, so they were set to those numbers together and
    on purpose.
 
-   THE SHARED ARM STAYS: SSB-SPRINT uses the same body and has no class yet, so
-   QSONumberNameDomesticOrDXQTHExchange is still live. *)
+   THE SHARED ARM STAYS: SSB-SPRINT uses the same body and does not format its
+   own exchange yet (M4), so QSONumberNameDomesticOrDXQTHExchange is still live. *)
 function TContestNASprintCW.GetFormatsExchange: boolean;
 begin
    Result := True;
