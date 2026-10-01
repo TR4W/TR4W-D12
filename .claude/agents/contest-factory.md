@@ -39,8 +39,10 @@ which side of that seam you are on before you change anything.
 | the **class** in this factory | `docs/ADDING_A_CONTEST.md` |
 
 `Lint-DomCoverage.ps1` checks the ~126 domestic configs under `target/dom/`.
-`Lint-ContestNameTests.ps1` ratchets per file the tests of the global `Contest`
-by name outside this directory — when you move a branch into a class, lower that
+`Lint-ContestNameTests.ps1` ratchets per file every use of a `ContestType` member as
+a comparison operand (any operand, not just the global `Contest`), an `in [...]`
+member, or a `case` arm label — one per arm — outside this directory. A new arm in an
+existing `case` now fails it. When you move a branch into a class, lower that
 file's ceiling in the same commit.
 
 ## Standing constraint

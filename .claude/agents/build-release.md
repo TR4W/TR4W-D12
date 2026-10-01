@@ -62,8 +62,12 @@ nothing else.
 
 **`Lint-ContestNameTests` is a per-file ratchet** (`$CEILINGS` table in the
 script; `-List` prints the lines, `-Emit` the table, `-SelfTest` the fixture).
-It counts `Contest = X`, `Contest in [...]` and `case Contest of` (one per case,
-not per arm) outside `src\contestFactory\`. When a file's count drops, lower its
+It counts any `ContestType` member (read from `VC.pas`, `DUMMYCONTEST` excepted;
+fails closed under 150 names) used inside a body as a `=`/`<>` operand **whatever the
+other operand is** (`exch.ceContest`, `rec.liContest`, `Contest`...), in an `in [...]`
+set (one per test), or as a label of a **`case` arm (one per arm)** — all outside
+`src\contestFactory\`. It is a token walk with a block stack, not a line regex. When a
+file's count drops, lower its
 ceiling — the script names the files that are below theirs.
 
 **`Lint-PascalBeginEnd` and `Lint-ChangedPascal` do NOT gate the build.** The
