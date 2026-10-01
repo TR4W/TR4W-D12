@@ -108,6 +108,9 @@ begin
    Result.MyCountry := UTF8Encode(Settings.My.Country);
    Result.MyContinent := MyContinent;
    Result.MyGrid := Settings.My.Grid;
+   (* CATEGORY-POWER as the New Contest dialog set it -- see
+      TStationContext.MyPower. *)
+   Result.MyPower := Settings.Contest.CategoryPower;
 
    Val(Settings.My.Zone, Result.MyZone, code);
    Result.MyZoneValid := (code = 0) and (Settings.My.Zone <> '');

@@ -68,6 +68,11 @@ unit uContestBase;
 interface
 
 uses
+   (* tCategoryPower, the entrant's CATEGORY-POWER -- see TStationContext.
+      FIRST, so that VC's names win anywhere the two units overlap. The type is
+      the settings model's own enum rather than a copy here: a second
+      HIGH/LOW/QRP list would be a second definition, free to drift. *)
+   uSettingsModel,
    VC;
 
 const
@@ -125,6 +130,20 @@ type
          not in advance. Distance scoring is a function of BOTH grids, and only
          one of them is on the QSO. *)
       MyGrid: string;
+
+      (* THE ENTRANT'S OWN POWER CATEGORY -- Cabrillo CATEGORY-POWER.
+
+         Added when Idaho's QRP rule moved (2026-10-01), by the same growth
+         rule. NY4I: "qrp means our power. You can get that from the cabrillo
+         fields in the new contest dialog." The New Contest dialog applies its
+         CATEGORY-POWER choice as a command, which the settings model aliases
+         to Contest.CategoryPower, so uContestFactory.CurrentStation reads it
+         from there -- the same value Stew Perry's legacy arm already reads.
+
+         The zero value is cpHIGH, so a test that FillChars this record scores
+         as a high-power entrant, which is what every contest did before this
+         field existed. *)
+      MyPower: tCategoryPower;
    end;
 
    (* THE MY-STATION HALF OF AN EXCHANGE.
@@ -359,8 +378,38 @@ type
 
          The base scores nothing. That is deliberate rather than a placeholder:
          NoQSOPointMethod is a real value in QSOPointMethodType and it means
-         exactly this, so a contest that does not score is not a special case. *)
+         exactly this, so a contest that does not score is not a special case.
+
+         IT IS ONLY ASKED ABOUT A QSO ON A BAND THE CONTEST USES. The engine
+         asks UsesBand first and scores an off-band QSO 0 without calling this,
+         so a contest states its bands once, in UsesBand, and never repeats the
+         rule here. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); virtual;
+
+      (* DOES THIS CONTEST USE THIS BAND? -- the contest owns its bands.
+
+         NY4I, 2026-10-01: a QSO on a band the contest does not use is LOGGED
+         normally, "but we should not score it". It is not refused and not an
+         automatic X-QSO ("that would be confusing to an op"), and it earns no
+         multiplier ("correct, no multiplier credit for off-band QSOs"). "This
+         rule applies to basically any contest."
+
+         SO IT IS ONE QUESTION, ASKED AT BOTH PLACES CREDIT IS DECIDED -- both
+         through ContestCreditsBand below, so neither can forget the classless
+         case:
+           points       logstuff.CalculateQSOPoints, BEFORE the four
+                        QSO POINTS ... overrides, so an operator's override
+                        cannot give an off-band QSO points either;
+           multipliers  logdupe's DupeAndMultSheet.SetMultFlags, after it has
+                        cleared the four flags, so nothing is set and nothing
+                        reaches the multiplier sheet.
+
+         THE BASE ANSWERS TRUE FOR EVERY BAND, which is exactly what every
+         contest did before this existed. A contest that states its bands
+         overrides; one that has not yet is unchanged, and a classless contest
+         is unchanged by construction because ContestCreditsBand answers True
+         for nil. Each contest's band rule is its own move. Idaho was first. *)
+      function UsesBand(aBand: BandType): boolean; virtual;
 
       (* IS THIS RECEIVED CLASS LEGAL FOR THIS CONTEST?
 
@@ -444,9 +493,10 @@ type
          needed the program's globals booted.
 
          So the direction is inverted: uContestFactory reads the globals and
-         hands the result down. A contest class now depends on VC, SysUtils and
-         the string constants, which means a test can construct one and ask it
-         to score a QSO without starting TR4W.
+         hands the result down. A contest class now depends on VC, SysUtils,
+         the string constants and -- for the tCategoryPower TYPE only, never
+         the Settings object -- uSettingsModel, which means a test can
+         construct one and ask it to score a QSO without starting TR4W.
 
          SET BEFORE EVERY SCORE rather than once at construction: MyCountry is
          recomputed whenever MY CALL changes -- from the config, from the log's
@@ -523,6 +573,15 @@ type
    ONE COPY OF THE CONSTRUCTION, so no override writes SetLength on its own
    unassigned result -- which FPC rightly warns about, once per class. *)
 function ContestIdList(const aIds: array of string): TContestIdList;
+
+(* DOES A QSO ON aBand EARN CREDIT -- points or multipliers -- IN aContest?
+
+   aContest is the active contest's object, or nil for a contest that has no
+   class yet; nil answers True, which is today's behaviour for every classless
+   contest. This is the ONE place that rule is written, and the two seams that
+   decide credit (see TContestBase.UsesBand) both call it, so the points and
+   the multipliers cannot disagree about which QSOs count. *)
+function ContestCreditsBand(aContest: TContestBase; aBand: BandType): boolean;
 
 implementation
 
@@ -685,9 +744,29 @@ begin
    Result := True;
 end;
 
+function ContestCreditsBand(aContest: TContestBase; aBand: BandType): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := aContest.UsesBand(aBand);
+      end;
+end;
+
 procedure TContestBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := 0;
+end;
+
+function TContestBase.UsesBand(aBand: BandType): boolean;
+begin
+   (* Every band, as before -- see the declaration. Not a permissive
+      placeholder: it is an exact statement of what TR4W did for every contest
+      until a contest stated its own bands. *)
+   Result := True;
 end;
 
 function TContestBase.ValidateClass(const aClass: string;

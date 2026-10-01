@@ -51,10 +51,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     agrees: "Each phone QSO counts as one point. Each CW and Digital QSO counts
     as two points." CalculateQSOPoints. FM is phone (see the routine).
 
-    NOT IMPLEMENTED, AND ON PURPOSE: the sponsor's next line, "ALL QRP QSO's
-    count 5 points. voice, CW, digital." It does not say whose power is QRP --
-    the entrant's category or the worked station's -- and the class is handed
-    neither. A question for NY4I, not a guess.
+    QRP -- sponsor: "ALL QRP QSO's count 5 points. voice, CW, digital", QRP
+    being 5 W output or less. NY4I, 2026-10-01: "qrp means our power. You can
+    get that from the cabrillo fields in the new contest dialog." So it is the
+    ENTRANT'S CATEGORY-POWER, handed in as Station.MyPower; when it is QRP,
+    every QSO on an Idaho band scores 5 whatever its mode. LOW and HIGH score
+    as above.
 
   COUNTY LINE -- NY4I: "ID QP allows up to 2 counties on a county line." The
     sponsor agrees: "Idaho stations on a county line may be claimed as a QSO
@@ -90,10 +92,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DUPES -- sponsor: "Stations may be worked once per mode, per band (for
     mobiles in each new county)". ContestsBooleanArray's QB1 QM1.
 
-  BANDS -- sponsor: "160 - 80 - 40 - 20 - 15 - 10 meters" (VHF0). WARC is
-    excluded and NOTHING ENFORCES THAT: disabling WARC is a FoundContest arm,
-    which would be a new contest-name test in shared code. It waits for the
-    setup seam (DescribeSession, ownership design section 4).
+  BANDS -- sponsor: "160 - 80 - 40 - 20 - 15 - 10 meters" (VHF0). UsesBand
+    says exactly those six. NY4I, 2026-10-01: a QSO on any other band -- WARC,
+    6 m, VHF -- is LOGGED normally, scores 0 and earns no multiplier; it is not
+    refused and not an X-QSO. The engine asks UsesBand before scoring (and
+    before the four QSO POINTS ... overrides) and before setting multiplier
+    flags, so this class's CalculateQSOPoints is never asked about such a QSO.
+    Idaho is the first contest to state its bands (ownership design 7.4).
+
+    STILL NOT HERE: hiding WARC from band stepping (WarcEnabled), which is a
+    FoundContest arm -- a setup concern for DescribeSession (ownership design
+    section 4), not a scoring one.
 
   NAMES -- ADIF 3.1.7 lists "ID-QSO-PARTY -- Idaho QSO Party"; WA7BNM's
     Cabrillo name is ID-QSO-PARTY (aliases IDQP, IDAHO-QSO-PARTY), and the
@@ -101,8 +110,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     uploaded at https://idqp.contesting.com; there is no e-mail address.
 
   NOT HERE, BECAUSE NO SEAM EXISTS YET (ownership design section 5):
-    the dormant-county activation bonus (500 / 1000 / 1500, in-state rovers
-    and expeditions); WA7BNM's "5 bonus points each for working K7S, K7P, K7U
+    the dormant-county activation bonus (500 / 1000 / 1500, earned by an Idaho
+    station once it makes 10 valid QSOs from a listed county -- M6, ownership
+    design 7.5); WA7BNM's "5 bonus points each for working K7S, K7P, K7U
     or K7D", which the sponsor's rules page does not mention; and the final
     score, which the sponsor writes as "Multiply QSO x Mode multiplier x
     Mults" against WA7BNM's "(total QSO points x total mults) + bonus points".
@@ -127,6 +137,9 @@ unit uContestIdahoQP;
 interface
 
 uses
+   (* cpQRP -- the entrant's CATEGORY-POWER, as TStationContext carries it.
+      First, so VC's names win wherever the two overlap. *)
+   uSettingsModel,
    VC, uContestStateQSOPartyBase;
 
 type
@@ -163,6 +176,10 @@ type
       function GetCountyLineCountiesMax: integer; override;
    public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* 160, 80, 40, 20, 15 and 10 m -- the sponsor's list, quoted in the
+         header. *)
+      function UsesBand(aBand: BandType): boolean; override;
    end;
 
 implementation
@@ -279,9 +296,29 @@ end;
    body).
 
    Both and NoMode are not modes a contact is made in, so they score nothing
-   rather than inheriting either number. *)
+   rather than inheriting either number -- QRP included.
+
+   QRP IS THE ENTRANT'S CATEGORY-POWER (see the header): five for every mode
+   a contact is made in.
+
+   An off-band QSO never reaches here -- see UsesBand. *)
 procedure TContestIdahoQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
+   if Station.MyPower = cpQRP then
+      begin
+      case aQso.Mode of
+         CW, Digital, Phone, FM:
+            begin
+            aQso.QSOPoints := 5;
+            end;
+         else
+            begin
+            aQso.QSOPoints := 0;
+            end;
+         end;
+      Exit;
+      end;
+
    case aQso.Mode of
       CW, Digital:
          begin
@@ -296,6 +333,11 @@ begin
          aQso.QSOPoints := 0;
          end;
       end;
+end;
+
+function TContestIdahoQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
 end;
 
 initialization

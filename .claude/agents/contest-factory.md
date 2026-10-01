@@ -87,6 +87,18 @@ the target shape, the M-step migration order and the open questions.
   worked example.
 - **`QSO POINT METHOD` retires when the migration ends.** The four
   `QSO POINTS ...` overrides stay and run before the class.
+- **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
+  An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
+  2026-10-01). The engine asks it through `ContestCreditsBand` in two places:
+  `logstuff.CalculateQSOPoints`, **before** the overrides, and
+  `logdupe.SetMultFlags`. So `CalculateQSOPoints` never sees an off-band QSO,
+  and a class must not repeat the band rule there. When a contest states its
+  bands, add it to the exception list in
+  `Test_EveryOtherContestStillCreditsEveryBand`. Design doc §7.4.
+- **The station's facts arrive in `TStationContext`**, filled by
+  `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
+  `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog
+  writes that setting. A field is added when the first contest needs it.
 
 The contest `.cfg` is **deliberately exempt** from the JSON destination: its
 parameters go to the **contest SQLite database**, not to `settings/tr4w.json`.

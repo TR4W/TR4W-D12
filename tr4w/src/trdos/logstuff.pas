@@ -6525,6 +6525,20 @@ begin
   RXData.QSOPoints := 0;
   RXCty := RXData.QTH.CountryID; // 4.67.1
 
+  (* A QSO ON A BAND THE CONTEST DOES NOT USE SCORES ZERO -- NY4I, 2026-10-01.
+     It is logged normally; it is simply worth nothing. The contest owns its
+     bands (TContestBase.UsesBand), and a classless contest uses every band.
+
+     ASKED BEFORE THE FOUR QSO POINTS ... OVERRIDES, on purpose: the ruling is
+     that an off-band QSO scores 0, and an override is an operator's point
+     VALUE for in-contest QSOs, not permission to score one the contest does
+     not count. The multiplier half of the same rule is in
+     LogDupe.SetMultFlags. *)
+  if not ContestCreditsBand(ActiveContest(Contest), RXData.Band) then
+     begin
+     Exit;
+     end;
+
   if (Settings.Qso.PointsDomesticCw >= 0) and (RXData.Mode = CW) and (RXData.DomesticQTH  <>  '') then
      begin
      RXData.QSOPoints := Settings.Qso.PointsDomesticCw;

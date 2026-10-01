@@ -65,6 +65,7 @@ lives in a helper or in the format's own unit.
 | concern | today | seam on the class (new unless marked) |
 |---|---|---|
 | per-QSO points | the class, for every registered contest (`logstuff.CalculateQSOPoints` hands over and `Exit`s) | `CalculateQSOPoints` (**existing -- this is the shape**) |
+| the bands it uses (an off-band QSO is logged, scores 0, earns no multiplier) | the class; base says every band | `UsesBand` (**existing**, §7.4) |
 | identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | the class, but **five exporters read `ContestsArray` directly** (inventory §1.4 fact 4, D9) | existing properties. The fix is making the exporters ask |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
 | exchange parsing and validation | `ProcessExchange`'s `case ActiveExchange of`; the class's `ValidateClass` / `ValidateDXQTH` / `ValidateQTHCount` | `ParseReceivedExchange`, plus the existing validators |
@@ -549,6 +550,31 @@ first contest to state it.
 credit for off-band QSOs"*). A new country worked on 30 m during a contest
 without WARC is in the log, scores 0 and counts no multiplier.
 
+**LANDED 2026-10-01.** The seam is **`TContestBase.UsesBand(aBand): boolean`**,
+a virtual whose base answers `True` for every band. That is exactly what every
+contest did before, so only a contest that overrides changes. Idaho is the only
+overrider. The engine asks it through one helper,
+**`uContestBase.ContestCreditsBand(aContest, aBand)`**, which also answers
+`True` for `nil` (a classless contest). It asks at both places credit is
+decided:
+
+| credit | where | why there |
+|---|---|---|
+| points | `logstuff.CalculateQSOPoints`, **before** the four `QSO POINTS ...` overrides | the ruling is 0, so an override must not score an off-band QSO either; the class's `CalculateQSOPoints` is then never asked about one |
+| multipliers | `logdupe` `DupeAndMultSheet.SetMultFlags`, after the four flags are cleared and after the `DomMultQTH` fill | every multiplier flag is set there: live entry, the rescore, the editable log and the multiplier alarm. `AddQSOToSheets` marks the sheet only for a flag set there. The QSO keeps the QTH it was worked with; only its credit goes |
+
+Neither site names a contest, so no `Lint-ContestNameTests` ceiling moves.
+`Test_EveryOtherContestStillCreditsEveryBand` pins the default for every other
+registered contest. It is a ratchet: a contest that states its bands joins its
+exception list in the same commit. Each contest's own band list is that
+contest's own move.
+
+**Not covered yet:** the "is this a new multiplier" display hints
+(`EditableLog.DetermineIfNewMult` and its neighbours) read the multiplier sheet
+directly. They can still highlight an off-band call as a needed multiplier,
+although logging it gives no credit. Hiding WARC from band stepping
+(`WarcEnabled`) is a `FoundContest` arm and belongs to `DescribeSession` (§4).
+
 ### 7.5 Idaho QSO Party rulings owed to the class (NY4I, 2026-10-01)
 
 - **QRP means OUR power** -- the entrant's Cabrillo `CATEGORY-POWER` from the New
@@ -559,6 +585,18 @@ without WARC is in the log, scores 0 and counts no multiplier.
   1000 / 1500) once it makes 10 valid QSOs there. A final-score bonus -- M6.
 - **No WARC**: 0 points, per 7.4.
 - Rules: https://www.idahoqsoparty.org/rules.htm
+
+**LANDED 2026-10-01, except the bonus.** `TContestIdahoQP.UsesBand` names
+160/80/40/20/15/10 m. Every other band, including WARC, 6 m and VHF, scores 0
+and earns no multiplier. QRP is read from **`TStationContext.MyPower`**, which
+`uContestFactory.CurrentStation` fills from `Settings.Contest.CategoryPower`.
+The New Contest dialog applies its `CATEGORY-POWER` choice as a command, and the
+settings model aliases that command to this property. Stew Perry's legacy arm
+reads the same value. For a QRP entrant every in-band QSO scores 5, whatever
+its mode, and LOW and HIGH score 2/1/2/1. The contest matrix re-froze
+IDAHOQSOPARTY alone for this change. Its 2 m, 30 m and 6 m QSOs went to
+`pts=0` with every multiplier flag false, in all four station variants, and
+nothing else moved. The dormant-county bonus waits for M6.
 
 ### 8.1 Which oracle sees what
 

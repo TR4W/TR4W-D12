@@ -394,6 +394,10 @@ uses
   TypInfo,          // enum names, so an inserted band cannot shift a value
   uNet,
   uGetScores,
+  (* ContestCreditsBand / ActiveContest -- SetMultFlags asks the contest
+    whether an off-band QSO earns a multiplier. *)
+  uContestBase,
+  uContestFactory,
   PostUnit,
 //  uStack,
   MainUnit;
@@ -1266,6 +1270,21 @@ begin
   if (RXData.DomMultQTH = '') and (RXData.DomesticQTH <> '') then
      begin
      RXData.DomMultQTH := RXData.DomesticQTH;
+     end;
+
+  (* NO MULTIPLIER CREDIT FOR A QSO ON A BAND THE CONTEST DOES NOT USE -- NY4I,
+     2026-10-01: "correct, no multiplier credit for off-band QSOs". The points
+     half is in LOGSTUFF.CalculateQSOPoints and asks the same question.
+
+     HERE, AFTER THE FOUR FLAGS ARE CLEARED, because every flag the program
+     keeps is set in this routine: live entry, the rescore, the editable log
+     and the multiplier alarm all come through it, and AddQSOToSheets only
+     marks the multiplier sheet for a flag set here. So one exit leaves the
+     QSO with no multiplier anywhere. AFTER the DomMultQTH fill, too, so the
+     QSO still records the QTH it was worked with -- only its credit goes. *)
+  if not ContestCreditsBand(ActiveContest(Contest), RXData.Band) then
+     begin
+     Exit;
      end;
 
   SkipDomesticMult:

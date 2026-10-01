@@ -30,6 +30,9 @@ uses
       checked against the same geodesic the class uses, so the assertion pins
       the RULE rather than the geodesic's constants. *)
    Math, LogGrid,
+   (* cpHIGH / cpLOW / cpQRP -- the entrant's CATEGORY-POWER. Before VC, so
+      VC's names win wherever the two overlap. *)
+   uSettingsModel,
    uTR4WTestFramework, VC, uContestBase, uContestRegistry,
    uContestStateQSOPartyBase, uContestFixedPoints;
 
@@ -75,6 +78,9 @@ type
       procedure Test_NewYorkTranscribesItsArm;
       procedure Test_SalmonRunScoresTheCurrentRules;
       procedure Test_IdahoOwnsItsRules;
+      procedure Test_IdahoCreditsOnlyItsSixBands;
+      procedure Test_IdahoQRPScoresFiveOnEveryMode;
+      procedure Test_EveryOtherContestStillCreditsEveryBand;
       procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
       procedure Test_ADIFIdsResolveOldAndNew;
@@ -1403,6 +1409,208 @@ begin
       end;
 end;
 
+(* A QSO's points from aContest, on aBand, through the SAME composition the
+   engine uses: LOGSTUFF.CalculateQSOPoints asks ContestCreditsBand first and
+   leaves an off-band QSO at 0 without calling the class. Reproduced here so a
+   test can say "30 m scores 0" about the contest rather than about one half
+   of it. The record arrives holding 99 so a path that forgot to write the
+   points cannot pass as a zero. *)
+function PointsOnBand(aContest: TContestBase; aBand: BandType;
+                      aMode: ModeType): integer;
+var
+   qso: ContestExchange;
+begin
+   FillChar(qso, SizeOf(qso), 0);
+   qso.Band := aBand;
+   qso.Mode := aMode;
+   qso.QSOPoints := 99;
+   if ContestCreditsBand(aContest, aBand) then
+      begin
+      aContest.CalculateQSOPoints(qso);
+      end
+   else
+      begin
+      qso.QSOPoints := 0;
+      end;
+   Result := qso.QSOPoints;
+end;
+
+(* IDAHO'S BANDS -- the sponsor's "160 - 80 - 40 - 20 - 15 - 10 meters", and
+   NY4I's ruling of 2026-10-01: a QSO on any other band is logged, scores 0 and
+   earns no multiplier.
+
+   ContestCreditsBand IS THE QUESTION BOTH ENGINE SEAMS ASK -- LOGSTUFF for the
+   points, LOGDUPE.SetMultFlags for the multipliers -- so asserting it False is
+   asserting "no multiplier" in the only form a unit test can reach; the
+   contest matrix shows the engine honouring it (IDAHOQSOPARTY's 2 m, 30 m and
+   6 m QSOs). *)
+procedure TContestFactoryTests.Test_IdahoCreditsOnlyItsSixBands;
+var
+   obj: TContestBase;
+   b: BandType;
+   inBand: boolean;
+begin
+   BeginTest('Test_IdahoCreditsOnlyItsSixBands');
+   obj := MakeContest(IDAHOQSOPARTY);
+   CheckTrue(obj <> nil, 'Idaho QSO Party has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      (* 20 m, every mode a contact is made in: the in-band rule. *)
+      CheckEquals(2, PointsOnBand(obj, Band20, CW), 'Idaho 20 m CW is 2');
+      CheckEquals(1, PointsOnBand(obj, Band20, Phone), 'Idaho 20 m phone is 1');
+      CheckEquals(2, PointsOnBand(obj, Band20, Digital), 'Idaho 20 m digital is 2');
+      CheckEquals(1, PointsOnBand(obj, Band20, FM), 'Idaho 20 m FM is phone, 1');
+
+      (* THE WARC BANDS: zero points, and no multiplier credit. *)
+      CheckEquals(0, PointsOnBand(obj, Band30, CW), 'Idaho 30 m CW scores 0');
+      CheckEquals(0, PointsOnBand(obj, Band17, Phone), 'Idaho 17 m phone scores 0');
+      CheckEquals(0, PointsOnBand(obj, Band12, Digital), 'Idaho 12 m digital scores 0');
+      CheckFalse(ContestCreditsBand(obj, Band30), 'Idaho 30 m earns no multiplier');
+      CheckFalse(ContestCreditsBand(obj, Band17), 'Idaho 17 m earns no multiplier');
+      CheckFalse(ContestCreditsBand(obj, Band12), 'Idaho 12 m earns no multiplier');
+
+      (* EVERY BAND, so a band added to BandType later is not credited by
+         accident -- exactly the six the sponsor names, and nothing else. *)
+      for b := Low(BandType) to High(BandType) do
+         begin
+         inBand := b in [Band160, Band80, Band40, Band20, Band15, Band10];
+         CheckTrue(inBand = obj.UsesBand(b),
+                   'Idaho UsesBand(' + IntToStr(Ord(b)) + ')');
+         end;
+   finally
+      obj.Free;
+      end;
+end;
+
+(* QRP IS THE ENTRANT'S CATEGORY-POWER -- NY4I, 2026-10-01: "qrp means our
+   power". The sponsor: "ALL QRP QSO's count 5 points. voice, CW, digital".
+   Off-band is still 0 for a QRP entrant: the band rule comes first. LOW and
+   HIGH are the ordinary 2 / 1 / 2 / 1. *)
+procedure TContestFactoryTests.Test_IdahoQRPScoresFiveOnEveryMode;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   procedure CheckOrdinary(const aWhat: string);
+   begin
+      CheckEquals(2, PointsOnBand(obj, Band20, CW), aWhat + ' CW is 2');
+      CheckEquals(1, PointsOnBand(obj, Band20, Phone), aWhat + ' phone is 1');
+      CheckEquals(2, PointsOnBand(obj, Band20, Digital), aWhat + ' digital is 2');
+      CheckEquals(1, PointsOnBand(obj, Band20, FM), aWhat + ' FM is 1');
+   end;
+
+begin
+   BeginTest('Test_IdahoQRPScoresFiveOnEveryMode');
+   obj := MakeContest(IDAHOQSOPARTY);
+   CheckTrue(obj <> nil, 'Idaho QSO Party has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyPower := cpQRP;
+      obj.SetStation(station);
+      CheckEquals(5, PointsOnBand(obj, Band20, CW), 'Idaho QRP CW is 5');
+      CheckEquals(5, PointsOnBand(obj, Band20, Phone), 'Idaho QRP phone is 5');
+      CheckEquals(5, PointsOnBand(obj, Band20, Digital), 'Idaho QRP digital is 5');
+      CheckEquals(5, PointsOnBand(obj, Band20, FM), 'Idaho QRP FM is 5');
+      CheckEquals(5, PointsOnBand(obj, Band160, CW), 'Idaho QRP 160 m is 5');
+      CheckEquals(0, PointsOnBand(obj, Band30, CW), 'Idaho QRP 30 m is still 0');
+      CheckEquals(0, PointsOnBand(obj, Band17, Phone), 'Idaho QRP 17 m is still 0');
+      CheckEquals(0, PointsOnBand(obj, Band12, Digital), 'Idaho QRP 12 m is still 0');
+      CheckEquals(0, PointsOnBand(obj, Band20, NoMode),
+                  'Idaho QRP NoMode is not a contact mode');
+
+      station.MyPower := cpLOW;
+      obj.SetStation(station);
+      CheckOrdinary('Idaho LOW');
+
+      station.MyPower := cpHIGH;
+      obj.SetStation(station);
+      CheckOrdinary('Idaho HIGH');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* THE DEFAULT CHANGES NOTHING. TContestBase.UsesBand answers True for every
+   band, so a contest that has not stated its bands scores and multiplies a
+   30 m QSO exactly as it did before the rule existed -- and a contest with no
+   class (nil) is the same.
+
+   EVERY REGISTERED CONTEST BUT IDAHO IS CHECKED, so the exception list below
+   is a ratchet: when another contest states its bands, it joins the list in
+   the commit that does it, and nothing can narrow its bands by inheriting.
+
+   CQ WW CW is the worked example the other way round: a 30 m QSO with
+   Europe from a North American station scores its three points, as on 20 m. *)
+procedure TContestFactoryTests.Test_EveryOtherContestStillCreditsEveryBand;
+var
+   c: ContestType;
+   b: BandType;
+   obj: TContestBase;
+   station: TStationContext;
+   qso: ContestExchange;
+begin
+   BeginTest('Test_EveryOtherContestStillCreditsEveryBand');
+
+   for b := Low(BandType) to High(BandType) do
+      begin
+      CheckTrue(ContestCreditsBand(nil, b),
+                'a classless contest credits band ' + IntToStr(Ord(b)));
+      end;
+
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if c = IDAHOQSOPARTY then
+         begin
+         Continue;
+         end;
+      obj := MakeContest(c);
+      if obj = nil then
+         begin
+         Continue;
+         end;
+      try
+         for b := Low(BandType) to High(BandType) do
+            begin
+            CheckTrue(ContestCreditsBand(obj, b),
+                      string(ContestTypeSA[c]) + ' credits band ' + IntToStr(Ord(b)));
+            end;
+      finally
+         obj.Free;
+         end;
+      end;
+
+   obj := MakeContest(CQWWCW);
+   CheckTrue(obj <> nil, 'CQ WW CW has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyCountry := 'K';
+      station.MyContinent := NorthAmerica;
+      obj.SetStation(station);
+
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := Band30;
+      qso.Mode := CW;
+      qso.QTH.Continent := Europe;
+      qso.QTH.CountryID := 'G';
+      CheckTrue(ContestCreditsBand(obj, qso.Band), 'CQ WW CW still credits 30 m');
+      obj.CalculateQSOPoints(qso);
+      CheckEquals(3, qso.QSOPoints, 'CQ WW CW 30 m QSO with Europe is still 3');
+   finally
+      obj.Free;
+      end;
+end;
+
 (* THE FIXED-POINT CONTESTS, MOVED 2026-09-29 IN TWO SLICES.
 
    Contests whose scoring arm is a constant, or a constant chosen by mode, and
@@ -1852,6 +2060,9 @@ begin
    Test_NewYorkTranscribesItsArm;
    Test_SalmonRunScoresTheCurrentRules;
    Test_IdahoOwnsItsRules;
+   Test_IdahoCreditsOnlyItsSixBands;
+   Test_IdahoQRPScoresFiveOnEveryMode;
+   Test_EveryOtherContestStillCreditsEveryBand;
    Test_FixedPointContestsTranscribeTheirArms;
    Test_MovedRowValuesStillMatchTheArray;
    Test_ADIFIdsResolveOldAndNew;

@@ -249,7 +249,8 @@ the wrongness.
 
 | method | base behaviour |
 |---|---|
-| `CalculateQSOPoints` | scores 0 (`NoQSOPointMethod` is a real value) |
+| `CalculateQSOPoints` | scores 0 (`NoQSOPointMethod` is a real value). Never asked about a QSO on a band the contest does not use |
+| `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `logstuff.CalculateQSOPoints` and `logdupe.SetMultFlags`. Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
 | `ValidateClass` | accepts anything |
 | `ValidateDXQTH` | accepts nothing |
 | `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
