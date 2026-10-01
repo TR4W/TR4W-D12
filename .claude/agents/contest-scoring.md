@@ -125,10 +125,22 @@ Each rule moves into the contest's own class, which **owns** it outright (NY4I,
 shared point-method, exchange or multiplier strategies.
 `docs/QSO_POINT_METHOD_DESIGN.md` is SUPERSEDED.
 
-**For a contest WITH a class, `logstuff.CalculateQSOPoints` already hands over**
-after the four `QSO POINTS ...` overrides, and the `case ActiveQSOPointMethod`
-serves only classless contests. **`QSO POINT METHOD` is retired at the end of
-the migration.**
+**For a contest WITH a class, `logstuff.CalculateQSOPoints` hands over FIRST**
+to the class's `ScoreQSO` (M3, 2026-10-01), which runs the band check and the
+four `QSO POINTS ...` overrides itself. Below that line the routine is the
+classless path only: the same `uContestBase.ApplyQSOPointOverride`, then the
+`case ActiveQSOPointMethod`. Do not add a band check or an override there for
+a classed contest -- it would never run. **`QSO POINT METHOD` is retired at
+the end of the migration.**
+
+**Dupe marking no longer reads the point method** -- `logsubs2` asks
+`ContestIdentity(Contest).MarksDupes`. The point-method readers still in the
+engine are exchange parsing (`ProcessRSTAndQSONumberOrDomesticQTHExchange`:
+RAC, PCC, Arktika; `zonecont.GetVEInitialExchange`: RussianDX) for M5, and
+`logedit.TotalScore`'s five formulas for M6. **Known latent defect (M8):**
+`TCallsignsList.AddCallsign` marks `AllBands` for an off-band QSO, so for a
+contest not counting QSOs per band an off-band contact would make a later
+on-band one a dupe (ownership doc §8.2d).
 
 **Its spelling table is rotated:** `QSOPointMethodArray` selects the wrong
 method for 46 spellings, a D7 defect. The one shipped `.cfg` it reached,

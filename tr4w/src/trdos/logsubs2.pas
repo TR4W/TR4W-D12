@@ -1614,7 +1614,12 @@ begin
   if (not RXData.ceClearDupeSheet) and
     (VisibleLog.CallIsADupe(RXData.Callsign, RXData.Band, RXData.Mode) or
     ((ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
-    if not (ActiveQSOPointMethod = AlwaysOnePointPerQSO) then
+    (* THE CONTEST'S DUPE POLICY -- M3, 2026-10-01. This tested the global
+       ActiveQSOPointMethod for AlwaysOnePointPerQSO ("ignores dupes"), so an
+       operator's QSO POINT METHOD line switched dupe marking. The contest
+       states it now (TContestBase.MarksDupes); a classless contest answers
+       from its row, as the global did with no override stated. *)
+    if ContestIdentity(Contest).MarksDupes then
        begin
        //      if Trace then Write('#');
      RXData.ceDupe := True;

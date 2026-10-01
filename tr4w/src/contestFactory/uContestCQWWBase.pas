@@ -56,8 +56,8 @@ type
    TContestCQWWBase = class(TContestBase)
    protected
       function GetFormatsExchange: boolean; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;

@@ -69,8 +69,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
 
       (* THE WHOLE ContestsArray ROW, STATED HERE.
 

@@ -174,6 +174,7 @@ uses
    uTestContestReadiness in 'uTestContestReadiness.pas',
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
+   uTestOffBandCredit   in 'uTestOffBandCredit.pas',
    uCallSignRoutines    in '..\..\src\uCallSignRoutines.pas',
    uTestCallSignRoutines in 'uTestCallSignRoutines.pas',
    uFactoryRadioBase    in '..\..\src\radioFactory\uFactoryRadioBase.pas',
@@ -553,6 +554,7 @@ begin
    RegisterSuite(TSHA256Tests.Create('SHA256'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TContestFactoryTests.Create('ContestFactory'));
+   RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));

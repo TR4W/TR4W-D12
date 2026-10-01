@@ -147,7 +147,6 @@ type
 
       (* Two counties, from the sponsor's rules -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 

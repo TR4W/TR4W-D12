@@ -89,12 +89,28 @@ the target shape, the M-step migration order and the open questions.
   `QSO POINTS ...` overrides stay and run before the class.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
-  2026-10-01). The engine asks it through `ContestCreditsBand` in two places:
-  `logstuff.CalculateQSOPoints`, **before** the overrides, and
-  `logdupe.SetMultFlags`. So `CalculateQSOPoints` never sees an off-band QSO,
-  and a class must not repeat the band rule there. When a contest states its
-  bands, add it to the exception list in
-  `Test_EveryOtherContestStillCreditsEveryBand`. Design doc §7.4.
+  2026-10-01). It is asked through `ContestCreditsBand` in two places:
+  `ScoreQSO`, **before** the overrides, and `logdupe.SetMultFlags`. So
+  `CalculateQSOPoints` never sees an off-band QSO, and a class must not repeat
+  the band rule there. When a contest states its bands, add it to the
+  exception list in `Test_EveryOtherContestStillCreditsEveryBand`. Design doc
+  §7.4. `uTestOffBandCredit` pins the multiplier half through the real sheet.
+  **The dupe half does NOT hold yet** for a contest whose QSOs are not counted
+  per band: `TCallsignsList.AddCallsign` marks `AllBands` for an off-band QSO
+  too (M8; design §8.2d).
+- **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
+  non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
+  overrides (`TStationContext.PointOverrides`, filled by
+  `uContestFactory.CurrentQSOPointOverrides`, applied by
+  `uContestBase.ApplyQSOPointOverride` -- the same function the classless
+  engine path calls), then the **protected** `CalculateQSOPoints`. Declare an
+  override of it `protected`, never `public`. Tests call `ScoreQSO`. Design
+  doc §7.7, §8.2d.
+- **The dupe policy is `MarksDupes`** (M3): `logsubs2` asks
+  `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. The other
+  secondary point-method readers wait for their seams: exchange parsing (RAC,
+  PCC, Arktika) and RussianDX's initial exchange at M5, `logedit.TotalScore`'s
+  five formulas at M6 (design §2).
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(c)` answers for EVERY `ContestType` --
   the class, else a plain `TContestBase` reading the row; never nil, owned by

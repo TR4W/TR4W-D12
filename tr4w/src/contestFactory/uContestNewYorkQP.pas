@@ -104,7 +104,6 @@ type
 
       (* The county-line maximum, from NY4I's ruling -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 

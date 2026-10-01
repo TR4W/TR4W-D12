@@ -95,7 +95,6 @@ type
          against uADIF.ResolveRoverCall and MainUnit's import, both of which
          read the array -- so the golden corpus cannot move. *)
       function GetCountyLineCountiesMax: integer; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 

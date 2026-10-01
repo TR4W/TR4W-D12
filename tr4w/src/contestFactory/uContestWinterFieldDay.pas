@@ -74,8 +74,8 @@ type
          surface: callers use the property, descendants override the getter. *)
       function GetFormatsExchange: boolean; override;
       function GetDisplayName: string; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
       function ValidateDXQTH(const aQTH: string;

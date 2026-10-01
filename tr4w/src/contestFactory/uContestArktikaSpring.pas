@@ -74,8 +74,8 @@ type
          rather than tidied -- changing the argument list would change the
          bytes of every other contest's Cabrillo. *)
       function GetCabrilloQSOLineFormat: string; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
 
       (* THE WHOLE ContestsArray ROW, STATED HERE.
 

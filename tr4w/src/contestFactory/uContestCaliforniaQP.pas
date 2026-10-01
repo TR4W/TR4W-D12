@@ -99,7 +99,6 @@ type
 
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 

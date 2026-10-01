@@ -64,7 +64,8 @@ lives in a helper or in the format's own unit.
 
 | concern | today | seam on the class (new unless marked) |
 |---|---|---|
-| per-QSO points | the class, for every registered contest (`logstuff.CalculateQSOPoints` hands over and `Exit`s) | `CalculateQSOPoints` (**existing -- this is the shape**) |
+| per-QSO points | the class, for every registered contest (`logstuff.CalculateQSOPoints` hands over to `ScoreQSO` and `Exit`s) | `ScoreQSO`, the one public entry point, over the protected `CalculateQSOPoints` (**existing**, M3, §7.7) |
+| dupe policy (does a repeated contact get marked as a dupe) | the class, asked by `logsubs2` through `ContestIdentity` (M3) | `MarksDupes` (**existing**) |
 | the bands it uses (an off-band QSO is logged, scores 0, earns no multiplier) | the class; base says every band | `UsesBand` (**existing**, §7.4) |
 | identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity` | existing properties (**existing**) |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
@@ -188,21 +189,31 @@ TContestBase
 
 ## 2. Scoring -- the seam is already the target
 
-`logstuff.CalculateQSOPoints` does exactly what the ruling describes. Read it
-from `procedure CalculateQSOPoints(var RXData` downward:
+**Since M3 (2026-10-01) the order lives on the class**, in
+`TContestBase.ScoreQSO` -- non-virtual, the one public scoring entry point
+(§7.7):
 
-1. The four `QSO POINTS DOMESTIC/DX CW/PHONE` settings each apply when they
-   match the QSO, and each falls through when it does not. They are generic
-   configuration, so they run **before** the class and a class cannot silently
-   ignore them. **Kept.**
-2. `if ActiveContest(Contest) <> nil` -- the class scores and the routine
-   `Exit`s.
-3. Otherwise `case ActiveQSOPointMethod of`, which is the legacy engine.
+1. `QSOPoints := 0`.
+2. A band the contest does not use scores 0 (`UsesBand`, through
+   `ContestCreditsBand`, §7.4), and nothing below is asked.
+3. The four `QSO POINTS DOMESTIC/DX CW/PHONE` settings each apply when they
+   match the QSO, and each falls through when it does not. They are the
+   station's statement, handed to the class in
+   `TStationContext.PointOverrides`, and applied by
+   `uContestBase.ApplyQSOPointOverride`. **Kept.**
+4. Otherwise the contest's own rule, the **protected** `CalculateQSOPoints`.
 
-So `TContestBase.CalculateQSOPoints` is **the permanent seam**. The superseded
-design would have deleted it. Since phase F, a contest with a class has ignored
-`QSO POINT METHOD` for points, and under this ruling that is correct rather than
-a gap.
+`logstuff.CalculateQSOPoints` asks `ActiveContest(Contest).ScoreQSO` first
+and `Exit`s. What follows it there is the classless path only: the same
+`ApplyQSOPointOverride` (fed by `uContestFactory.CurrentQSOPointOverrides`,
+the one reader of the four settings), then `case ActiveQSOPointMethod of`, the
+legacy engine. Its band check was deleted -- a classless contest uses every
+band, so it could never refuse one.
+
+So `CalculateQSOPoints` is still **the permanent seam** for a contest's rule;
+`ScoreQSO` is how everything reaches it. Since phase F, a contest with a class
+has ignored `QSO POINT METHOD` for points, and under this ruling that is
+correct rather than a gap.
 
 **What is left on scoring:**
 
@@ -212,11 +223,17 @@ a gap.
   `rg -n -i "ActiveQSOPointMethod" tr4w/src --glob '*.pas'`, dropping
   comments and `backup/` by eye. Each moves into the contest:
 
-  | site | moves to |
-  |---|---|
-  | dupe marking, `logsubs2` (`AlwaysOnePointPerQSO`) | the contest's dupe-policy property (`MarksDupes`). Internet Sprint and Youth Championship RF reach it today |
-  | exchange parsing, `logstuff` x3 (RAC, PCC, Arktika) and `zonecont` (RussianDX) | that contest's `ParseReceivedExchange` / initial exchange |
-  | total-score formulas, `logedit` x5 (WAE, CupRF, ALRS, ChampionshipRF, OZHCR) | that contest's `CombineScore` (§5) |
+  | site | moves to | status |
+  |---|---|---|
+  | dupe marking, `logsubs2` (`AlwaysOnePointPerQSO`) | the contest's dupe-policy property (`MarksDupes`). Internet Sprint and Youth Championship RF reach it today | **MOVED, M3** (§8.2d) |
+  | exchange parsing, `logstuff` `ProcessRSTAndQSONumberOrDomesticQTHExchange` x3 (RAC: CANADA_WINTER/CANADA_DAY; PCC; Arktika Spring) | that contest's `ParseReceivedExchange` | **M5** |
+  | initial exchange, `zonecont.GetVEInitialExchange` (RussianDX: RDXC, RU3AX MEMORIAL -- a UA oblast) | that contest's initial exchange | **M5** |
+  | total-score formulas, `logedit.TotalScore` x5 (WAE weighted mults; CupRF +100, ALRS +300, ChampionshipRF +50, OZHCR +1000 per mult) | that contest's `CombineScore` (§5) | **M6** |
+
+  Measured 2026-10-01 at M3 with `rg -i -w ActiveQSOPointMethod tr4w/src`:
+  those are every rule reader. The rest are its writers (`fcontest`'s set-up
+  head, `uSettingsEffects`), its declaration, the matrix's diagnostic print,
+  and comments.
 
   **This is a behaviour change for an operator who overrides today:** their
   `QSO POINT METHOD` currently reaches these sites even for a registered
@@ -573,12 +590,15 @@ band question the scoring does (M8 multipliers / M9 display).
 **Nor does it mark a multiplier worked** (NY4I, 2026-10-01: *"if I work an off-band
 multiplier, it should not make it appear worked when I find the same mult
 on-band"*). `1e4f66f9` clears an off-band QSO's mult flags inside
-`SetMultFlags`, and the sheet marks a multiplier only from flags set there, so this
-should already hold -- **read from the code, not proven**. M8 pins it: log an
-off-band QSO with a new multiplier, then the same multiplier on-band must still
-be new, score, and show as needed until it is worked on-band. **And an off-band
+`SetMultFlags`, and the sheet marks a multiplier only from flags set there.
+**PINNED at M3** (`uTestOffBandCredit`, through the real `Sheet.SetMultFlags` and
+`AddQSOToSheets`): an off-band Idaho QSO with a new county leaves it new on-band.
+"Shows as needed" (the display hints) is still M8/M9, below. **And an off-band
 QSO is not a dupe and makes no later on-band QSO a dupe** (NY4I confirmed,
-2026-10-01).
+2026-10-01) -- **which does NOT hold today for a contest whose QSOs are not
+counted per band**: `TCallsignsList.AddCallsign` marks the `AllBands` bit for
+every logged QSO, off-band included (§8.2d). No shipped contest reaches it,
+because Idaho counts QSOs per band; it is M8's.
 
 **LANDED 2026-10-01.** The seam is **`TContestBase.UsesBand(aBand): boolean`**,
 a virtual whose base answers `True` for every band. That is exactly what every
@@ -590,7 +610,7 @@ decided:
 
 | credit | where | why there |
 |---|---|---|
-| points | `logstuff.CalculateQSOPoints`, **before** the four `QSO POINTS ...` overrides | the ruling is 0, so an override must not score an off-band QSO either; the class's `CalculateQSOPoints` is then never asked about one |
+| points | `TContestBase.ScoreQSO` since M3 (`logstuff.CalculateQSOPoints` until then), **before** the four `QSO POINTS ...` overrides | the ruling is 0, so an override must not score an off-band QSO either; the class's `CalculateQSOPoints` is then never asked about one |
 | multipliers | `logdupe` `DupeAndMultSheet.SetMultFlags`, after the four flags are cleared and after the `DomMultQTH` fill | every multiplier flag is set there: live entry, the rescore, the editable log and the multiplier alarm. `AddQSOToSheets` marks the sheet only for a flag set there. The QSO keeps the QTH it was worked with; only its credit goes |
 
 Neither site names a contest, so no `Lint-ContestNameTests` ceiling moves.
@@ -673,8 +693,8 @@ point"*): a non-virtual template on `TContestBase` -- band check (`UsesBand`), t
 the four `QSO POINTS` station overrides, then the protected virtual
 `CalculateQSOPoints`. Every caller -- engine, rescore, matrix, tests -- gets the
 order; nothing can score while skipping the band check. `UsesBand` stays public
-because stages 2 and the need-mult display must ask the same question. Lands at
-the start of M3.
+because stages 2 and the need-mult display must ask the same question.
+**LANDED at M3, 2026-10-01** -- shape and callers in §8.2d.
 
 ### 7.8 DECIDED (2026-10-01): Q3 -- the log stores only what the OPERATOR stated
 
@@ -860,7 +880,7 @@ Each is behaviour-preserving unless marked.
 | **M0** | **DONE `93fbc053`.** Q1/Q2 ruled, Q3 decided (§7.8). Build the legacy-fixture harness (§8.1) | the harness |
 | **M1** | **DONE 2026-10-01 (§8.2b).** **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
 | **M2** | **DONE 2026-10-01 (§7.9, §8.2c).** **Setup head reads the class.** `FCONTEST.ApplyContestTraits`: the operator's statement, else `ContestIdentity` (M1's accessor serves as `ContestDefinition`). `Active*` and the head's flags come from the class's traits. Arms stay. Defects #1, #2, #3 and #5 fixed. `InHostState` deferred to M7 | the contest matrix; corpus |
-| **M3** | **Scoring finishes on the class.** The ten secondary `ActiveQSOPointMethod` readers move into their contests (§2; **behaviour change** for an operator override). Family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
+| **M3** | **PARTIAL 2026-10-01 (§8.2d).** **Scoring finishes on the class.** DONE: `ScoreQSO`, the one entry point (§7.7); the dupe-marking reader moved to `MarksDupes` (**behaviour change** for an operator override); the off-band multiplier pin. The other secondary readers are scheduled where their rule lives -- parsing M5, total score M6 (§2). OPEN: family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
 | **M4** | **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields. D4's dead arms and the D6 no-op go | corpus; per-class round-trip unit test |
 | **M5** | **Exchange import and parse.** Generic importer, then `ApplyADIFImport` (§3.2), including the `APP_N1MM_EXCHANGE1` arm, pinned in both tag orders. `ParseReceivedExchange` per contest over lifted helpers. D1/D2's dead paths go | `test-adif-roundtrip.sh`; legacy fixture; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **Total score.** `TScoreTotals`, `CombineScore`, `BonusPoints`; `TotalScore`'s arms deleted; Missouri moved; Salmon Run per Q5 | corpus `CLAIMED-SCORE`; unit tests over totals |
@@ -976,6 +996,91 @@ an in-state AZ or Salmon Run station gets. Its exchange,
 `RSTDomesticOrDXQTHExchange`, has no arm in `FoundContest`'s closing
 `case ActiveExchange`, so its F3-F5 memories are left blank. That is what D7
 did for an in-state station, and nobody saw it because nobody was in state.
+
+### 8.2d M3 -- what it covered (2026-10-01; PARTIAL)
+
+NY4I delegated M3's design forks. Each DECIDED entry rests on the evidence
+given with it.
+
+**DECIDED: `ScoreQSO` is a non-virtual PROCEDURE on a `var ContestExchange`,
+and `CalculateQSOPoints` is protected.**
+
+- A procedure, not a function returning points, because a contest's rule
+  writes more than the points: ARRL DX inhibits a W/VE-to-W/VE contact's
+  multipliers, and the matrix's scoring line exists because thirteen legacy
+  arms write `InhibitMults`, `DomMultQTH`, `DomesticMult`, `ZoneMult`,
+  `Prefix` or `DXQTH`. A function would read as pure and hide those writes.
+- Non-virtual, so no contest can reorder the steps; protected
+  `CalculateQSOPoints`, so nothing outside the hierarchy can score while
+  skipping them. All 28 overrides moved from `public` to `protected` with it
+  -- a public redeclaration in a descendant would reopen the bypass.
+
+**DECIDED: the four overrides reach the class as data, with a `Stated` flag.**
+`TStationContext.PointOverrides` (`TQSOPointOverrides`, four
+`TQSOPointOverride = (Stated, Points)`), filled by
+`uContestFactory.CurrentQSOPointOverrides`. Not the setting's `-1` sentinel:
+that would make the record's zero value "every QSO scores 0", and every test
+FillChars a station. **The rule is written once**,
+`uContestBase.ApplyQSOPointOverride`, called by `ScoreQSO` and by the classless
+engine path -- a second copy in `ScoreQSO` would have been two definitions of
+one rule.
+
+**Callers.** One production caller of the class: `logstuff.CalculateQSOPoints`,
+which every scoring path goes through (live entry, `uEditQSO`, the rescore,
+`MainUnit.RecomputeQSOScoring` and so the contest matrix). The unit tests call
+`ScoreQSO`; their `PointsOnBand` helper, which reproduced the engine's order,
+is deleted -- `PointsFor` now takes an optional band and calls `ScoreQSO`.
+
+**DECIDED: the dupe policy is `TContestBase.MarksDupes`**, read by `logsubs2`
+through `ContestIdentity(Contest)` (what a contest IS -- it carries no station
+-- and it answers for classless contests too). The base reads the row:
+`QP <> AlwaysOnePointPerQSO`, exactly what the global held with no override
+stated. Internet Sprint and the Youth Championship of Russia, the two rows that
+say `AlwaysOnePointPerQSO`, state `False`.
+`Test_MarksDupesIsTheRowsDupePolicy` checks every `ContestType` against the
+row.
+
+**The secondary readers, sorted by where their rule lives** (§2's table):
+dupe marking moved now (stage 2's dupe rule, §7.7); the three exchange-parsing
+tests and the RussianDX initial exchange go to M5 with `ParseReceivedExchange`;
+the five `TotalScore` formulas go to M6 with `CombineScore`. Moving those now
+would mean inventing their seams ahead of the milestone that designs them --
+"a virtual is added when its responsibility actually moves" (§1.2).
+
+**BEHAVIOUR CHANGE, stated explicitly.** Before M3 an operator's
+`QSO POINT METHOD` line also switched dupe marking: a spelling that selects
+`AlwaysOnePointPerQSO` -- `ONE POINT PER QSO` does, through the rotated
+spelling table (§7.2) -- turned dupe marking OFF for any contest, and
+stating anything else for Internet Sprint or SRR-JR turned it ON. **Now dupe
+marking follows the contest and ignores that line.** This is the end state --
+the setting retires at M10 -- and it is the same thing that happened to points
+at phase F. The other secondary readers still follow an operator's statement
+until M5/M6. With no statement, nothing changed: the matrix stayed 185
+identical.
+
+**PINNED: an off-band multiplier does not mark the multiplier worked**
+(§7.4). `uTestOffBandCredit` drives the real `Sheet.SetMultFlags` and
+`Sheet.AddQSOToSheets` on the program's `uMults.mo`, Idaho, mult by mode: 30 m
+Ada gets no flag and the sheet counts nothing; 20 m Ada is still new; 40 m Ada
+is NOT new (the positive control -- without it the second assertion would pass
+on a sheet that never marks anything).
+
+**FOUND, recorded for M8 -- the dupe half of §7.4 does not hold in general.**
+`logsubs2.LogContact` adds every logged QSO to `CallsignsList`, and
+`TCallsignsList.AddCallsign` sets the `AllBands` bit with no band question. For
+a contest whose QSOs are **not** counted per band, an off-band QSO therefore
+makes a later on-band QSO with the same station a dupe, and is itself marked a
+dupe of an earlier on-band one. No shipped contest reaches it: the only contest
+that states its bands, Idaho, counts QSOs per band. It needs the same
+`ContestCreditsBand` question at `AddCallsign` (and in `CallIsADupe`), with a
+pin through `CallsignsList` -- a leaf unit, so the test program can drive it.
+
+**Gates:** the contest matrix 185 identical; unit tests 0 failed; narrowing
+1335 and range warnings 4, both unchanged; `Lint-ContestNameTests` unchanged --
+M3 moved point-method tests, not contest-name tests, so no ceiling moves.
+
+**Not M3 yet:** the family bases and the retirement of `TContestFixedPoints`
+(§1.5), which this row of §8.2 also names.
 
 ### 8.3 What "a contest has moved" means -- checkably
 

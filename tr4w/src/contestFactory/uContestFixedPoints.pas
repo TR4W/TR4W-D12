@@ -68,7 +68,6 @@ type
          two-branch legacy arms do for digital. Call from the subclass
          constructor, before anything scores. *)
       procedure SetPoints(aCW, aPhone: integer; aOther: integer = -1);
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 

@@ -91,6 +91,32 @@ const
    CabrilloQSOLineFormatDefault = '%s%s%-15s%-10s %-5s' + #13#10;
 
 type
+   (* ONE OF THE FOUR `QSO POINTS ...` OVERRIDES -- QSO POINTS DOMESTIC CW and
+      its three siblings: a fixed point value the OPERATOR states, which
+      replaces the contest's own rule for the QSOs it matches.
+
+      STATED IS A FIELD, NOT A SENTINEL VALUE. The setting itself says "not
+      stated" with -1 (uSettingsModel.TQsoPoints), and copying that here would
+      make the record's ZERO value mean "every QSO scores 0" -- so a test, or
+      anything else, that FillChars a TStationContext would silently score
+      every QSO zero. With a Stated flag the zero value is "no override",
+      which is what every contest did with no such line in its .cfg. *)
+   TQSOPointOverride = record
+      Stated: boolean;
+      Points: integer;
+   end;
+
+   (* THE FOUR, matched on mode (CW or phone) and on whether the QSO carries a
+      domestic QTH. FM and digital match none of them -- that is the engine's
+      rule as it has always been written, and it is reproduced, not
+      corrected. *)
+   TQSOPointOverrides = record
+      DomesticCW: TQSOPointOverride;
+      DXCW: TQSOPointOverride;
+      DomesticPhone: TQSOPointOverride;
+      DXPhone: TQSOPointOverride;
+   end;
+
    (* WHAT SCORING KNOWS ABOUT US.
 
       Contest rules are a function of two things: the QSO, and the station
@@ -144,6 +170,17 @@ type
          as a high-power entrant, which is what every contest did before this
          field existed. *)
       MyPower: tCategoryPower;
+
+      (* THE FOUR `QSO POINTS ...` OVERRIDES the operator has stated.
+
+         Added at M3 (2026-10-01), when ScoreQSO became the one scoring entry
+         point: the overrides run INSIDE it, between the band check and the
+         contest's rule, so the class must be handed them -- the base never
+         reads a global. They are the station's statement, not the contest's,
+         which is why they arrive here and not as a class trait.
+
+         The zero value states none of them; see TQSOPointOverride. *)
+      PointOverrides: TQSOPointOverrides;
    end;
 
    (* THE MY-STATION HALF OF AN EXCHANGE.
@@ -262,6 +299,22 @@ type
          where it is written down today. *)
       function GetInStateDomesticFileName: string; virtual;
 
+      (* DOES THIS CONTEST MARK A REPEATED CONTACT AS A DUPE? -- M3, 2026-10-01.
+
+         A SPONSOR'S DUPE POLICY, AND IT WAS SPELLED AS A POINT METHOD.
+         LOGSUBS2 skipped the dupe flag when the global ActiveQSOPointMethod
+         was AlwaysOnePointPerQSO, whose only meaning beside OnePointPerQSO is
+         VC.pas's own note "Ignores dupes". So the rule was "this contest counts
+         every contact", reached through the scoring vocabulary -- and an
+         operator's QSO POINT METHOD line reached it too, although it is a
+         statement about points.
+
+         THE BASE READS THE ROW, the same answer the global gave with no
+         override stated: True unless the row's point method is
+         AlwaysOnePointPerQSO. A contest with a class states it (Internet
+         Sprint and the Youth Championship of Russia say False). *)
+      function GetMarksDupes: boolean; virtual;
+
       (* ~~GetCountyLineCountiesMax~~ AND ~~GetCountyLineAllowed~~ ARE NOT HERE.
          They are on TContestStateQSOPartyBase -- 2026-09-29, NY4I: "Arktika
          Spring is clearly not a qso party so I am not sure why that would be in
@@ -366,6 +419,10 @@ type
       property ZoneMode: ZoneModeType read GetZoneMode;
       property InStateDomesticFileName: string read GetInStateDomesticFileName;
 
+      (* The dupe policy -- see the getter. LOGSUBS2 asks it through
+         uContestRegistry.ContestIdentity when a QSO is logged. *)
+      property MarksDupes: boolean read GetMarksDupes;
+
       (* THE TWO-LETTER POSTAL CODE OF THE STATE THIS CONTEST BELONGS TO.
 
          '' FOR ALMOST EVERY CONTEST, AND THAT IS A REAL ANSWER -- CQ WW has no
@@ -445,19 +502,36 @@ type
          is why they arrive as string here: a contest class should not be handing
          out pointers into a const table. *)
                                                                               
-      (* SCORING. Sets aQso.QSOPoints, and nothing else -- multipliers and dupe
-         state are decided elsewhere and a scorer that changed them would make
-         the order of the two calls significant.
+      (* SCORING -- THE ONE PUBLIC ENTRY POINT (M3, 2026-10-01; design 7.7).
 
-         The base scores nothing. That is deliberate rather than a placeholder:
-         NoQSOPointMethod is a real value in QSOPointMethodType and it means
-         exactly this, so a contest that does not score is not a special case.
+         NY4I: "yes one public entry point". Every caller -- the engine's
+         LOGSTUFF.CalculateQSOPoints, and through it live entry, the rescore,
+         the editable log and the contest matrix; and the unit tests -- scores
+         through this, and gets the order below whether or not it knows it:
 
-         IT IS ONLY ASKED ABOUT A QSO ON A BAND THE CONTEST USES. The engine
-         asks UsesBand first and scores an off-band QSO 0 without calling this,
-         so a contest states its bands once, in UsesBand, and never repeats the
-         rule here. *)
-      procedure CalculateQSOPoints(var aQso: ContestExchange); virtual;
+           1. QSOPoints := 0;
+           2. a band the contest does not use (UsesBand) scores 0 -- NY4I,
+              2026-10-01, design 7.4 -- and nothing below is asked;
+           3. the four QSO POINTS ... overrides the operator stated
+              (Station.PointOverrides), each applying to the QSOs it matches;
+           4. otherwise the contest's own rule, CalculateQSOPoints.
+
+         That is exactly the order the engine ran it in before M3, moved here
+         so it is written once. The overrides come after the band check on
+         purpose: an override is the operator's point VALUE for contest QSOs,
+         not permission to score one the contest does not count.
+
+         NOT VIRTUAL. It is a template; a contest's rule is CalculateQSOPoints,
+         which is protected so that nothing outside the hierarchy can score a
+         QSO while skipping steps 1-3.
+
+         A PROCEDURE ON A var RECORD, NOT A FUNCTION RETURNING POINTS. A
+         contest's rule writes more than the points -- ARRL DX inhibits the
+         multipliers of a W/VE-to-W/VE contact, and thirteen legacy arms write
+         InhibitMults, DomMultQTH, DomesticMult, ZoneMult, Prefix or DXQTH. A
+         function returning an integer would read as pure and hide those
+         writes; this is the shape the engine's own entry already has. *)
+      procedure ScoreQSO(var aQso: ContestExchange);
 
       (* DOES THIS CONTEST USE THIS BAND? -- the contest owns its bands.
 
@@ -470,9 +544,10 @@ type
          SO IT IS ONE QUESTION, ASKED AT BOTH PLACES CREDIT IS DECIDED -- both
          through ContestCreditsBand below, so neither can forget the classless
          case:
-           points       logstuff.CalculateQSOPoints, BEFORE the four
-                        QSO POINTS ... overrides, so an operator's override
-                        cannot give an off-band QSO points either;
+           points       ScoreQSO (LOGSTUFF.CalculateQSOPoints until M3),
+                        BEFORE the four QSO POINTS ... overrides, so an
+                        operator's override cannot give an off-band QSO
+                        points either;
            multipliers  logdupe's DupeAndMultSheet.SetMultFlags, after it has
                         cleared the four flags, so nothing is set and nothing
                         reaches the multiplier sheet.
@@ -613,6 +688,24 @@ type
 
       procedure SetStation(const aStation: TStationContext);
    protected
+      (* THE CONTEST'S OWN PER-QSO RULE -- step 4 of ScoreQSO, and only that.
+
+         Sets aQso.QSOPoints, and the fields the rule it replaced wrote (see
+         ScoreQSO); never dupe state, which is decided elsewhere.
+
+         PROTECTED SINCE M3. It is asked only through ScoreQSO, so it is
+         never asked about a QSO on a band the contest does not use, nor about
+         one an operator's QSO POINTS ... override has already scored, and it
+         always receives QSOPoints = 0. A contest states its bands once, in
+         UsesBand, and never repeats that rule here. An override in a
+         descendant is declared protected too: a public redeclaration would
+         reopen the bypass.
+
+         The base scores nothing. That is deliberate rather than a placeholder:
+         NoQSOPointMethod is a real value in QSOPointMethodType and it means
+         exactly this, so a contest that does not score is not a special case. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); virtual;
+
       (* THE PARSE, WHICH IS MECHANISM AND NOT A RULE.
 
          A Field-Day-shaped class is a transmitter COUNT followed by one
@@ -655,6 +748,20 @@ function ContestIdList(const aIds: array of string): TContestIdList;
    decide credit (see TContestBase.UsesBand) both call it, so the points and
    the multipliers cannot disagree about which QSOs count. *)
 function ContestCreditsBand(aContest: TContestBase; aBand: BandType): boolean;
+
+(* THE FOUR `QSO POINTS ...` OVERRIDES, APPLIED -- the one statement of their
+   rule. True, with aQso.QSOPoints set, when one of them matches this QSO;
+   False, with aQso untouched, when none does.
+
+   TWO CALLERS, ONE RULE: TContestBase.ScoreQSO for a contest with a class, and
+   LOGSTUFF.CalculateQSOPoints for a classless contest until M10 deletes the
+   legacy case. Before M3 the rule was written once, in LOGSTUFF; moving it into
+   ScoreQSO as a copy would have been two definitions free to drift.
+
+   First match wins, in the engine's order: domestic CW, DX CW, domestic phone,
+   DX phone. "Domestic" is a non-empty DomesticQTH. *)
+function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
+                               var aQso: ContestExchange): boolean;
 
 implementation
 
@@ -899,9 +1006,69 @@ begin
       end;
 end;
 
+function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
+                               var aQso: ContestExchange): boolean;
+
+   function Apply(const aOverride: TQSOPointOverride;
+                  aMode: ModeType;
+                  aDomestic: boolean): boolean;
+   begin
+      Result := (aOverride.Stated)                    and
+                (aQso.Mode = aMode)                   and
+                ((Length(aQso.DomesticQTH) > 0) = aDomestic);
+      if Result then
+         begin
+         aQso.QSOPoints := aOverride.Points;
+         end;
+   end;
+
+begin
+   (* AN EXPLICIT CHAIN, NOT `a or b or c`: Apply writes the points, so the
+      first match must stop the rest, and that should not hang on the
+      compiler's short-circuit switch. *)
+   Result := Apply(aOverrides.DomesticCW, CW, True);
+   if not Result then
+      begin
+      Result := Apply(aOverrides.DXCW, CW, False);
+      end;
+   if not Result then
+      begin
+      Result := Apply(aOverrides.DomesticPhone, Phone, True);
+      end;
+   if not Result then
+      begin
+      Result := Apply(aOverrides.DXPhone, Phone, False);
+      end;
+end;
+
+procedure TContestBase.ScoreQSO(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := 0;
+
+   (* THROUGH ContestCreditsBand, so the points and LOGDUPE.SetMultFlags's
+      multipliers ask the one function that states the band rule. *)
+   if not ContestCreditsBand(Self, aQso.Band) then
+      begin
+      Exit;
+      end;
+
+   if ApplyQSOPointOverride(FStation.PointOverrides, aQso) then
+      begin
+      Exit;
+      end;
+
+   CalculateQSOPoints(aQso);
+end;
+
 procedure TContestBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := 0;
+end;
+
+function TContestBase.GetMarksDupes: boolean;
+begin
+   (* The row, as the global read it -- see the declaration. *)
+   Result := ContestsArray[FContest].QP <> AlwaysOnePointPerQSO;
 end;
 
 function TContestBase.UsesBand(aBand: BandType): boolean;

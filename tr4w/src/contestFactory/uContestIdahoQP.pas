@@ -176,8 +176,8 @@ type
 
       (* Two -- NY4I and the sponsor, quoted in the header. *)
       function GetCountyLineCountiesMax: integer; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
 
       (* 160, 80, 40, 20, 15 and 10 m -- the sponsor's list, quoted in the
          header. *)

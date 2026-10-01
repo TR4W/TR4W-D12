@@ -44,11 +44,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   AlwaysOnePointPerQSO SCORES EXACTLY LIKE OnePointPerQSO, and the
   difference is not scoring. Its meaning -- "ignores dupes" in VC.pas --
-  is enforced by LOGSUBS2, which skips the dupe flag when the GLOBAL
-  ActiveQSOPointMethod is AlwaysOnePointPerQSO. That global is still set
-  from the ContestsArray row by FCONTEST, so it is unaffected by this class;
-  GetQSOPointMethod below states the same value so the two cannot be read
-  as disagreeing.
+  is a DUPE POLICY, and since M3 (2026-10-01) this class states it:
+  GetMarksDupes answers False, and LOGSUBS2 asks MarksDupes through
+  ContestIdentity rather than testing the global ActiveQSOPointMethod. So an
+  operator's QSO POINT METHOD line no longer switches dupe marking for this
+  contest, in either direction. GetQSOPointMethod still states the row's
+  value, for the legacy engine's vocabulary.
 
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
@@ -90,6 +91,7 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
+      function GetMarksDupes: boolean; override;
    public
       constructor Create(aContest: ContestType); override;
    end;
@@ -193,6 +195,13 @@ end;
 function TContestInternetSprint.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
+   Result := False;
+end;
+
+function TContestInternetSprint.GetMarksDupes: boolean;
+begin
+   (* "Ignores dupes" -- the meaning the row's AlwaysOnePointPerQSO carried.
+      See the unit header. *)
    Result := False;
 end;
 

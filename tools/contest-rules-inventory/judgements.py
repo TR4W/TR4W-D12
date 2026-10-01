@@ -139,9 +139,9 @@ ROUTINES = {
 
 # A site that does not belong to its routine's category. Keyed by (file base,
 # routine, regex over the code-only line); each must match at least one site.
+# The logsubs2 dupe-marking site (ActiveQSOPointMethod = AlwaysOnePointPerQSO)
+# left this list at M3 (2026-10-01): it asks TContestBase.MarksDupes now.
 SITE_OVERRIDES = [
-   ("logsubs2.pas", "LogContact", r"ActiveQSOPointMethod\s*=\s*AlwaysOnePointPerQSO",
-    ("dupe", new("MarksDupes (trait)"))),
    ("MainUnit.pas", "LoadinLog", r"\bcontest\s*=\s*RADIOYOC\b",
     ("exchange", new("SessionExchangeState (previous QSO number)"))),
 ]

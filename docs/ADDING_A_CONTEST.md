@@ -66,6 +66,19 @@ and `X.GetCabrilloName` callable.
 `CalculateQSOPoints`, `ValidateClass`, `ValidateDXQTH` and the exchange
 formatters take arguments and do work, so they stay methods.
 
+### Scoring: override `CalculateQSOPoints`, call `ScoreQSO` (M3, 2026-10-01)
+
+**`ScoreQSO(var aQso)` is the one public scoring entry point** -- non-virtual,
+on `TContestBase`. It zeroes the points, scores an off-band QSO 0
+(`UsesBand`), applies the operator's four `QSO POINTS ...` overrides
+(`Station.PointOverrides`), and only then calls the contest's rule.
+
+**A contest overrides `CalculateQSOPoints`, which is `protected`**, and
+declares its override in a **`protected`** section too -- a `public`
+redeclaration would let a caller score while skipping the band check and the
+overrides. Never repeat the band rule or the overrides in it; state the bands
+in `UsesBand`. Tests call `ScoreQSO`, never the rule directly.
+
 ---
 
 ## 2. How to add a contest
@@ -200,6 +213,7 @@ shared files a contest touches; the search path already covers
 | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries` | `ContestsBooleanArray`'s bits. **Set-up reads these** (M2) |
 | `ZoneMode` | `CQZoneMode` when the array's CQ bit is set, else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
 | `InStateDomesticFileName` | a QSO party's in-state file -- the `QSOParties` entry the row's `P` indexes; `''` otherwise. `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads |
+| `MarksDupes` | the dupe policy: True unless the row's `QP` is `AlwaysOnePointPerQSO` ("ignores dupes"). **`logsubs2` reads it** through `ContestIdentity` when a QSO is logged (M3) -- an operator's `QSO POINT METHOD` no longer reaches it. Internet Sprint and SRR-JR state False |
 
 **SET-UP ASKS THE CONTEST, SINCE M2 (2026-10-01).** `FCONTEST.FoundContest`'s
 head writes the seven `Active*` globals, the flags above, the zone list and the
@@ -269,8 +283,9 @@ the wrongness.
 
 | method | base behaviour |
 |---|---|
-| `CalculateQSOPoints` | scores 0 (`NoQSOPointMethod` is a real value). Never asked about a QSO on a band the contest does not use |
-| `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `logstuff.CalculateQSOPoints` and `logdupe.SetMultFlags`. Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
+| `ScoreQSO` | **not virtual** -- the one public scoring entry point: zero, band check, the four overrides, then `CalculateQSOPoints` (section 1) |
+| `CalculateQSOPoints` | **protected**. Scores 0 (`NoQSOPointMethod` is a real value). Asked only by `ScoreQSO`, so never about a QSO on a band the contest does not use, nor one an override already scored |
+| `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags`. Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
 | `ValidateClass` | accepts anything |
 | `ValidateDXQTH` | accepts nothing |
 | `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
@@ -404,7 +419,7 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 
 | question | answer |
 |---|---|
-| what does this contest score | its class, else `LOGSTUFF.CalculateQSOPoints` |
+| what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`), else that routine's legacy case |
 | what is its exchange | its `AE` in `ContestsArray` → `LOGSTUFF.ProcessExchange` |
 | its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` reading the row. Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not read `ContestsArray` or spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |

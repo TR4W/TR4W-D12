@@ -86,8 +86,8 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetIsUSQSOParty: boolean; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
       function ValidateDXQTH(const aQTH: string;

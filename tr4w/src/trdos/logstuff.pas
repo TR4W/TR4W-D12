@@ -6525,60 +6525,30 @@ begin
   RXData.QSOPoints := 0;
   RXCty := RXData.QTH.CountryID; // 4.67.1
 
-  (* A QSO ON A BAND THE CONTEST DOES NOT USE SCORES ZERO -- NY4I, 2026-10-01.
-     It is logged normally; it is simply worth nothing. The contest owns its
-     bands (TContestBase.UsesBand), and a classless contest uses every band.
+  (* A CONTEST WITH A CLASS IS SCORED BY ITS ScoreQSO, AND NOTHING HERE RUNS
+     -- M3, 2026-10-01 (docs/CONTEST_OWNERSHIP_DESIGN.md 7.7).
 
-     ASKED BEFORE THE FOUR QSO POINTS ... OVERRIDES, on purpose: the ruling is
-     that an off-band QSO scores 0, and an override is an operator's point
-     VALUE for in-contest QSOs, not permission to score one the contest does
-     not count. The multiplier half of the same rule is in
-     LogDupe.SetMultFlags. *)
-  if not ContestCreditsBand(ActiveContest(Contest), RXData.Band) then
-     begin
-     Exit;
-     end;
+     ScoreQSO is the contest's one public scoring entry point, and it runs the
+     order this routine used to: an off-band QSO scores 0 (UsesBand, NY4I
+     2026-10-01), then the four QSO POINTS ... overrides, then the contest's
+     own rule. Asking it here, FIRST, is what makes that order the class's
+     rather than a convention every caller has to repeat.
 
-  if (Settings.Qso.PointsDomesticCw >= 0) and (RXData.Mode = CW) and (RXData.DomesticQTH  <>  '') then
-     begin
-     RXData.QSOPoints := Settings.Qso.PointsDomesticCw;
-     Exit;
-     end;
-
-  if (Settings.Qso.PointsDxCw >= 0) and (RXData.Mode = CW) and (RXData.DomesticQTH = '')
-    then
-     begin
-     RXData.QSOPoints := Settings.Qso.PointsDxCw;
-     Exit;
-     end;
-
-  if (Settings.Qso.PointsDomesticPhone >= 0) and (RXData.Mode = Phone) and
-    (RXData.DomesticQTH <> '') then
-     begin
-     RXData.QSOPoints := Settings.Qso.PointsDomesticPhone;
-     Exit;
-     end;
-
-  if (Settings.Qso.PointsDxPhone >= 0) and (RXData.Mode = Phone) and (RXData.DomesticQTH =
-    '') then
-     begin
-     RXData.QSOPoints := Settings.Qso.PointsDxPhone;
-     Exit;
-     end;
-
-  (* THE CONTEST FACTORY GETS FIRST REFUSAL -- phase F.
-
-     A contest with a class scores itself and returns; one without falls through
-     to the case below, untouched. That is the strangler seam, and it is placed
-     HERE rather than at the top of the routine on purpose: the four
-     QSO POINTS ... overrides above are configuration, they apply to every
-     contest, and a contest class replacing them would silently ignore a setting
-     an operator had made.
-
-     So a contest class replaces exactly one thing -- its arm of this case. *)
+     WHAT FOLLOWS IS THE CLASSLESS PATH ONLY, until M10 deletes the case. It
+     has no band check: a classless contest uses every band
+     (ContestCreditsBand answers True for nil), so the check that stood here
+     could never refuse one. *)
   if ActiveContest(Contest) <> nil then
      begin
-     ActiveContest(Contest).CalculateQSOPoints(RXData);
+     ActiveContest(Contest).ScoreQSO(RXData);
+     Exit;
+     end;
+
+  (* THE FOUR QSO POINTS ... OVERRIDES, for a classless contest -- the same
+     function ScoreQSO applies, fed the same settings, so the two paths
+     cannot read them differently. *)
+  if ApplyQSOPointOverride(CurrentQSOPointOverrides, RXData) then
+     begin
      Exit;
      end;
 

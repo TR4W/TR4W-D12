@@ -103,7 +103,6 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
-   public
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 

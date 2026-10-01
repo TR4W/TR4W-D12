@@ -85,6 +85,13 @@ function ActiveContest(aContest: ContestType): TContestBase;
   the next ActiveContest simply builds another. *)
 procedure ReleaseActiveContest;
 
+(* THE FOUR `QSO POINTS ...` OVERRIDES AS THE OPERATOR HAS STATED THEM, read
+  from the settings model. CurrentStation puts them in every contest's
+  TStationContext, and LOGSTUFF.CalculateQSOPoints hands them to
+  uContestBase.ApplyQSOPointOverride for a classless contest -- one reader of
+  the four settings, so the two paths cannot read them differently. *)
+function CurrentQSOPointOverrides: TQSOPointOverrides;
+
 implementation
 
 uses
@@ -100,11 +107,29 @@ uses
    uSettingsModel,
    uContestRegistry;
 
+function CurrentQSOPointOverrides: TQSOPointOverrides;
+
+   (* -1 is the setting's "not stated" (uSettingsModel.TQsoPoints); the
+      record says it with a flag instead -- see TQSOPointOverride. *)
+   procedure Take(aValue: integer; out aOverride: TQSOPointOverride);
+   begin
+      aOverride.Stated := aValue >= 0;
+      aOverride.Points := aValue;
+   end;
+
+begin
+   Take(Settings.Qso.PointsDomesticCw, Result.DomesticCW);
+   Take(Settings.Qso.PointsDxCw, Result.DXCW);
+   Take(Settings.Qso.PointsDomesticPhone, Result.DomesticPhone);
+   Take(Settings.Qso.PointsDxPhone, Result.DXPhone);
+end;
+
 (* The station as the program currently has it. *)
 function CurrentStation: TStationContext;
 var
    code: integer;
 begin
+   Result.PointOverrides := CurrentQSOPointOverrides;
    Result.MyCountry := UTF8Encode(Settings.My.Country);
    Result.MyContinent := MyContinent;
    Result.MyGrid := Settings.My.Grid;

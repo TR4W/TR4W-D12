@@ -68,9 +68,9 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       constructor Create(aContest: ContestType); override;
-      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;

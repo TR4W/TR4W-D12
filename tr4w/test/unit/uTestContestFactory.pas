@@ -97,6 +97,8 @@ type
       procedure Test_ShippedDomFilePathHasItsSeparator;
       procedure Test_DomFileKeysAreEnumDOM2sRule;
       procedure Test_AnInStateStationIsFoundInItsCountyFile;
+      procedure Test_ScoreQSORunsBandThenOverridesThenTheRule;
+      procedure Test_MarksDupesIsTheRowsDupePolicy;
    public
       procedure RunAllTests; override;
    end;
@@ -117,13 +119,25 @@ begin
       end;
 end;
 
-function PointsFor(aContest: TContestBase; aMode: ModeType): integer;
+(* A QSO's points from aContest, through ScoreQSO -- the one public scoring
+   entry point, so the band check and the station's overrides run exactly as
+   they do for the engine (M3; the PointsOnBand helper that reproduced that
+   order here is gone with the reason for it).
+
+   aBand defaults to Band160, the band a FillChar'd record carries, which is
+   what every caller that names no band has always scored on. The record
+   arrives holding 99 so a path that forgot to write the points cannot pass
+   as a zero. *)
+function PointsFor(aContest: TContestBase; aMode: ModeType;
+                   aBand: BandType = Band160): integer;
 var
    qso: ContestExchange;
 begin
    FillChar(qso, SizeOf(qso), 0);
+   qso.Band := aBand;
    qso.Mode := aMode;
-   aContest.CalculateQSOPoints(qso);
+   qso.QSOPoints := 99;
+   aContest.ScoreQSO(qso);
    Result := qso.QSOPoints;
 end;
 
@@ -534,19 +548,19 @@ begin
       FillChar(qso, SizeOf(qso), 0);
       qso.Mode := CW;
       qso.DomMultQTH := 'AR';
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(3, qso.QSOPoints, 'a domestic multiplier QTH is three points');
 
       FillChar(qso, SizeOf(qso), 0);
       qso.Mode := CW;
       qso.DomesticQTH := 'AR';
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(1, qso.QSOPoints,
                   'the rule reads DomMultQTH, not DomesticQTH');
 
       FillChar(qso, SizeOf(qso), 0);
       qso.Mode := Phone;
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(1, qso.QSOPoints, 'no domestic multiplier QTH is one point');
 
       (* MODE DOES NOT ENTER INTO IT, which is worth pinning because most of
@@ -554,7 +568,7 @@ begin
       FillChar(qso, SizeOf(qso), 0);
       qso.Mode := Digital;
       qso.DomMultQTH := 'AR';
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(3, qso.QSOPoints, 'digital scores the same three points');
    finally
       obj.Free;
@@ -634,14 +648,14 @@ begin
       qso.Mode := Digital;
       qso.QTHString := 'EL88';
       qso.DomesticQTH := 'EL88';
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(2, qso.QSOPoints, 'a station in our own grid is two points');
 
       FillChar(qso, SizeOf(qso), 0);
       qso.Mode := Digital;
       qso.QTHString := 'CM87';
       qso.DomesticQTH := 'CM87';
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       km := GetDistanceBetweenGrids('EL88', 'CM87');
       CheckTrue(km > 3000, 'EL88 to CM87 should be a transcontinental hop');
       CheckEquals(Ceil(km / 500) + 1, qso.QSOPoints,
@@ -654,7 +668,7 @@ begin
       qso.Mode := Digital;
       qso.QTHString := 'EL98';
       qso.DomesticQTH := 'EL98';
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       km := GetDistanceBetweenGrids('EL88', 'EL98');
       CheckTrue(km > 0, 'EL88 and EL98 are different grids');
       CheckTrue(km < 500, 'EL88 to EL98 is one grid square east');
@@ -668,10 +682,12 @@ end;
 
    The legacy arm has NO else: CalculateQSOPoints zeroes QSOPoints on entry and
    the arm simply does not run. That is easy to reproduce by accident and easy
-   to break by accident -- a class that left the record alone would hand back
+   to break by accident -- a path that left the record alone would hand back
    whatever the caller had in it, which is why the record below arrives holding
-   99. Both guards are pinned: no grid of ours, and no domestic QTH of
-   theirs. *)
+   99. Since M3 ScoreQSO zeroes the points before it asks the class, exactly as
+   the engine always did, so the 99 now pins that step of the entry point as
+   well as the class's guard. Both guards are pinned: no grid of ours, and no
+   domestic QTH of theirs. *)
 procedure TContestFactoryTests.Test_ARRLDigiScoresNothingWithoutBothGrids;
 var
    obj: TContestBase;
@@ -691,7 +707,7 @@ begin
       qso.QTHString := 'CM87';
       qso.DomesticQTH := 'CM87';
       qso.QSOPoints := 99;
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(0, qso.QSOPoints, 'no grid of ours scores zero, not 99');
 
       (* THEIR domestic QTH missing, ours present. *)
@@ -703,7 +719,7 @@ begin
       qso.Mode := Digital;
       qso.QTHString := 'CM87';
       qso.QSOPoints := 99;
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(0, qso.QSOPoints,
                   'the guard is on DomesticQTH, and it scores zero');
    finally
@@ -992,7 +1008,7 @@ var
       FillChar(qso, SizeOf(qso), 0);
       qso.Mode := aMode;
       qso.Callsign := aCall;
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       Result := qso.QSOPoints;
    end;
 
@@ -1067,7 +1083,7 @@ var
       qso.Mode := aMode;
       qso.Callsign := aCall;
       qso.DomesticQTH := aQTH;
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       Result := qso.QSOPoints;
    end;
 
@@ -1418,32 +1434,6 @@ begin
    CheckEquals(Ord(NEWENGLANDQSO), Ord(c), 'NEQP -> NEWENGLANDQSO, never Idaho');
 end;
 
-(* A QSO's points from aContest, on aBand, through the SAME composition the
-   engine uses: LOGSTUFF.CalculateQSOPoints asks ContestCreditsBand first and
-   leaves an off-band QSO at 0 without calling the class. Reproduced here so a
-   test can say "30 m scores 0" about the contest rather than about one half
-   of it. The record arrives holding 99 so a path that forgot to write the
-   points cannot pass as a zero. *)
-function PointsOnBand(aContest: TContestBase; aBand: BandType;
-                      aMode: ModeType): integer;
-var
-   qso: ContestExchange;
-begin
-   FillChar(qso, SizeOf(qso), 0);
-   qso.Band := aBand;
-   qso.Mode := aMode;
-   qso.QSOPoints := 99;
-   if ContestCreditsBand(aContest, aBand) then
-      begin
-      aContest.CalculateQSOPoints(qso);
-      end
-   else
-      begin
-      qso.QSOPoints := 0;
-      end;
-   Result := qso.QSOPoints;
-end;
-
 (* IDAHO'S BANDS -- the sponsor's "160 - 80 - 40 - 20 - 15 - 10 meters", and
    NY4I's ruling of 2026-10-01: a QSO on any other band is logged, scores 0 and
    earns no multiplier.
@@ -1468,15 +1458,15 @@ begin
       end;
    try
       (* 20 m, every mode a contact is made in: the in-band rule. *)
-      CheckEquals(2, PointsOnBand(obj, Band20, CW), 'Idaho 20 m CW is 2');
-      CheckEquals(1, PointsOnBand(obj, Band20, Phone), 'Idaho 20 m phone is 1');
-      CheckEquals(2, PointsOnBand(obj, Band20, Digital), 'Idaho 20 m digital is 2');
-      CheckEquals(1, PointsOnBand(obj, Band20, FM), 'Idaho 20 m FM is phone, 1');
+      CheckEquals(2, PointsFor(obj, CW, Band20), 'Idaho 20 m CW is 2');
+      CheckEquals(1, PointsFor(obj, Phone, Band20), 'Idaho 20 m phone is 1');
+      CheckEquals(2, PointsFor(obj, Digital, Band20), 'Idaho 20 m digital is 2');
+      CheckEquals(1, PointsFor(obj, FM, Band20), 'Idaho 20 m FM is phone, 1');
 
       (* THE WARC BANDS: zero points, and no multiplier credit. *)
-      CheckEquals(0, PointsOnBand(obj, Band30, CW), 'Idaho 30 m CW scores 0');
-      CheckEquals(0, PointsOnBand(obj, Band17, Phone), 'Idaho 17 m phone scores 0');
-      CheckEquals(0, PointsOnBand(obj, Band12, Digital), 'Idaho 12 m digital scores 0');
+      CheckEquals(0, PointsFor(obj, CW, Band30), 'Idaho 30 m CW scores 0');
+      CheckEquals(0, PointsFor(obj, Phone, Band17), 'Idaho 17 m phone scores 0');
+      CheckEquals(0, PointsFor(obj, Digital, Band12), 'Idaho 12 m digital scores 0');
       CheckFalse(ContestCreditsBand(obj, Band30), 'Idaho 30 m earns no multiplier');
       CheckFalse(ContestCreditsBand(obj, Band17), 'Idaho 17 m earns no multiplier');
       CheckFalse(ContestCreditsBand(obj, Band12), 'Idaho 12 m earns no multiplier');
@@ -1505,10 +1495,10 @@ var
 
    procedure CheckOrdinary(const aWhat: string);
    begin
-      CheckEquals(2, PointsOnBand(obj, Band20, CW), aWhat + ' CW is 2');
-      CheckEquals(1, PointsOnBand(obj, Band20, Phone), aWhat + ' phone is 1');
-      CheckEquals(2, PointsOnBand(obj, Band20, Digital), aWhat + ' digital is 2');
-      CheckEquals(1, PointsOnBand(obj, Band20, FM), aWhat + ' FM is 1');
+      CheckEquals(2, PointsFor(obj, CW, Band20), aWhat + ' CW is 2');
+      CheckEquals(1, PointsFor(obj, Phone, Band20), aWhat + ' phone is 1');
+      CheckEquals(2, PointsFor(obj, Digital, Band20), aWhat + ' digital is 2');
+      CheckEquals(1, PointsFor(obj, FM, Band20), aWhat + ' FM is 1');
    end;
 
 begin
@@ -1523,15 +1513,15 @@ begin
       FillChar(station, SizeOf(station), 0);
       station.MyPower := cpQRP;
       obj.SetStation(station);
-      CheckEquals(5, PointsOnBand(obj, Band20, CW), 'Idaho QRP CW is 5');
-      CheckEquals(5, PointsOnBand(obj, Band20, Phone), 'Idaho QRP phone is 5');
-      CheckEquals(5, PointsOnBand(obj, Band20, Digital), 'Idaho QRP digital is 5');
-      CheckEquals(5, PointsOnBand(obj, Band20, FM), 'Idaho QRP FM is 5');
-      CheckEquals(5, PointsOnBand(obj, Band160, CW), 'Idaho QRP 160 m is 5');
-      CheckEquals(0, PointsOnBand(obj, Band30, CW), 'Idaho QRP 30 m is still 0');
-      CheckEquals(0, PointsOnBand(obj, Band17, Phone), 'Idaho QRP 17 m is still 0');
-      CheckEquals(0, PointsOnBand(obj, Band12, Digital), 'Idaho QRP 12 m is still 0');
-      CheckEquals(0, PointsOnBand(obj, Band20, NoMode),
+      CheckEquals(5, PointsFor(obj, CW, Band20), 'Idaho QRP CW is 5');
+      CheckEquals(5, PointsFor(obj, Phone, Band20), 'Idaho QRP phone is 5');
+      CheckEquals(5, PointsFor(obj, Digital, Band20), 'Idaho QRP digital is 5');
+      CheckEquals(5, PointsFor(obj, FM, Band20), 'Idaho QRP FM is 5');
+      CheckEquals(5, PointsFor(obj, CW, Band160), 'Idaho QRP 160 m is 5');
+      CheckEquals(0, PointsFor(obj, CW, Band30), 'Idaho QRP 30 m is still 0');
+      CheckEquals(0, PointsFor(obj, Phone, Band17), 'Idaho QRP 17 m is still 0');
+      CheckEquals(0, PointsFor(obj, Digital, Band12), 'Idaho QRP 12 m is still 0');
+      CheckEquals(0, PointsFor(obj, NoMode, Band20),
                   'Idaho QRP NoMode is not a contact mode');
 
       station.MyPower := cpLOW;
@@ -1613,7 +1603,7 @@ begin
       qso.QTH.Continent := Europe;
       qso.QTH.CountryID := 'G';
       CheckTrue(ContestCreditsBand(obj, qso.Band), 'CQ WW CW still credits 30 m');
-      obj.CalculateQSOPoints(qso);
+      obj.ScoreQSO(qso);
       CheckEquals(3, qso.QSOPoints, 'CQ WW CW 30 m QSO with Europe is still 3');
    finally
       obj.Free;
@@ -2427,6 +2417,128 @@ begin
       end;
 end;
 
+(* ScoreQSO IS THE ONE PUBLIC SCORING ENTRY POINT, AND ITS ORDER IS THE RULE
+   -- M3, 2026-10-01 (docs/CONTEST_OWNERSHIP_DESIGN.md 7.7):
+
+     1. an off-band QSO scores 0, even under a stated override (7.4);
+     2. a stated QSO POINTS ... override scores the QSOs it matches, first
+        match winning in the engine's order -- domestic CW, DX CW, domestic
+        phone, DX phone; FM and digital match none of them;
+     3. otherwise the contest's own rule.
+
+   Idaho is the contest because it is the one that states its bands, so all
+   three steps are visible in one class: 20 m is in, 30 m is out, and its rule
+   (CW 2, phone and FM 1, digital 2) differs from every override value used.
+
+   THE ZERO-VALUE STATION STATES NO OVERRIDE. That is what the Stated flag
+   buys over copying the setting's -1: a FillChar'd context scores by the
+   contest's rule, not 0. And a stated override OF 0 is a real statement. *)
+procedure TContestFactoryTests.Test_ScoreQSORunsBandThenOverridesThenTheRule;
+var
+   obj: TContestBase;
+   station: TStationContext;
+   qso: ContestExchange;
+
+   function Score(aBand: BandType; aMode: ModeType;
+                  const aDomesticQTH: string): integer;
+   var
+      rx: ContestExchange;
+   begin
+      FillChar(rx, SizeOf(rx), 0);
+      rx.Band := aBand;
+      rx.Mode := aMode;
+      rx.DomesticQTH := ShortString(aDomesticQTH);
+      rx.QSOPoints := 99;
+      obj.ScoreQSO(rx);
+      Result := rx.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_ScoreQSORunsBandThenOverridesThenTheRule');
+   obj := MakeContest(IDAHOQSOPARTY);
+   CheckTrue(obj <> nil, 'Idaho QSO Party has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      (* No override stated: the contest's rule. *)
+      FillChar(station, SizeOf(station), 0);
+      obj.SetStation(station);
+      CheckEquals(2, Score(Band20, CW, 'ADA'), 'no override: Idaho CW is 2');
+      CheckEquals(1, Score(Band20, Phone, 'ADA'), 'no override: Idaho phone is 1');
+
+      (* Each override, on the QSOs it matches and no others. *)
+      station.PointOverrides.DomesticCW.Stated := True;
+      station.PointOverrides.DomesticCW.Points := 7;
+      obj.SetStation(station);
+      CheckEquals(7, Score(Band20, CW, 'ADA'), 'domestic CW override scores a domestic CW QSO');
+      CheckEquals(2, Score(Band20, CW, ''), 'domestic CW override leaves a DX CW QSO to the rule');
+      CheckEquals(2, Score(Band20, Digital, 'ADA'), 'no override matches digital');
+      CheckEquals(0, Score(Band30, CW, 'ADA'), 'the band check runs BEFORE the override');
+
+      station.PointOverrides.DXCW.Stated := True;
+      station.PointOverrides.DXCW.Points := 9;
+      obj.SetStation(station);
+      CheckEquals(9, Score(Band20, CW, ''), 'DX CW override scores a DX CW QSO');
+      CheckEquals(7, Score(Band20, CW, 'ADA'), 'domestic CW still wins for a domestic QSO');
+
+      station.PointOverrides.DomesticPhone.Stated := True;
+      station.PointOverrides.DomesticPhone.Points := 4;
+      station.PointOverrides.DXPhone.Stated := True;
+      station.PointOverrides.DXPhone.Points := 6;
+      obj.SetStation(station);
+      CheckEquals(4, Score(Band20, Phone, 'ADA'), 'domestic phone override');
+      CheckEquals(6, Score(Band20, Phone, ''), 'DX phone override');
+      CheckEquals(1, Score(Band20, FM, 'ADA'), 'FM is not Phone to the overrides: the rule scores it');
+      CheckEquals(0, Score(Band17, Phone, ''), 'off-band phone is 0 under an override too');
+
+      (* A stated ZERO is a statement, not "not stated". *)
+      station.PointOverrides.DomesticCW.Points := 0;
+      obj.SetStation(station);
+      CheckEquals(0, Score(Band20, CW, 'ADA'), 'a stated 0 scores 0');
+   finally
+      obj.Free;
+      end;
+
+   (* THE HELPER ALONE, as the classless engine path calls it: no override
+      stated leaves the record untouched and answers False. *)
+   FillChar(station, SizeOf(station), 0);
+   FillChar(qso, SizeOf(qso), 0);
+   qso.Mode := CW;
+   qso.QSOPoints := 99;
+   CheckFalse(ApplyQSOPointOverride(station.PointOverrides, qso),
+              'no override stated answers False');
+   CheckEquals(99, qso.QSOPoints, 'and leaves the points alone');
+end;
+
+(* THE DUPE POLICY IS THE CONTEST'S -- M3, 2026-10-01.
+
+   LOGSUBS2 used to skip the dupe flag when the GLOBAL point method was
+   AlwaysOnePointPerQSO ("ignores dupes"). It asks
+   ContestIdentity(Contest).MarksDupes now. With no QSO POINT METHOD stated
+   the global was the row's QP, so the class answer must equal
+   "row QP <> AlwaysOnePointPerQSO" for EVERY ContestType -- class or not --
+   or this move changed a default. The two that ignore dupes are named, so a
+   row edit that drops one is caught here and not in a contest. *)
+procedure TContestFactoryTests.Test_MarksDupesIsTheRowsDupePolicy;
+var
+   c: ContestType;
+begin
+   BeginTest('Test_MarksDupesIsTheRowsDupePolicy');
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      CheckTrue(ContestIdentity(c).MarksDupes =
+                   (ContestsArray[c].QP <> AlwaysOnePointPerQSO),
+                string(ContestTypeSA[c]) + ' MarksDupes is its row''s policy');
+      end;
+   CheckFalse(ContestIdentity(INTERNETSPRINT).MarksDupes,
+              'Internet Sprint ignores dupes');
+   CheckFalse(ContestIdentity(YOUTHCHAMPIONSHIPRF).MarksDupes,
+              'the Youth Championship of Russia ignores dupes');
+   CheckTrue(ContestIdentity(CQWWCW).MarksDupes, 'CQ WW CW marks dupes');
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -2469,6 +2581,8 @@ begin
    Test_ShippedDomFilePathHasItsSeparator;
    Test_DomFileKeysAreEnumDOM2sRule;
    Test_AnInStateStationIsFoundInItsCountyFile;
+   Test_ScoreQSORunsBandThenOverridesThenTheRule;
+   Test_MarksDupesIsTheRowsDupePolicy;
 end;
 
 end.
