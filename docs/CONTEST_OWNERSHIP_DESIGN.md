@@ -474,14 +474,13 @@ claimed score doubles. **Found by reading the table, the token loop and the arm;
 not reproduced on a run.** A unit test pinning the Idaho spelling would confirm
 it.
 
-**Recommendation (Q2): fix it now; do not wait for the retirement.** The
-retirement is the end of the migration. Meanwhile the defect mis-scores the one
-shipped config and silently turns off dupe marking for anyone who writes
-`ONE POINT PER QSO`. The fix has two parts:
-
-- a unit test pinning **every** spelling to its kind, which catches a rotation
-  the compiler cannot;
-- reordering the array.
+**RULED (Q2), NY4I 2026-10-01: NOT fixed in place.** *"Today is of no consequence.
+This is built for the end result not anything interim."* The rotated table belongs
+to a setting that is retired at M10, and Idaho's mis-score belongs to a contest
+that should not be borrowing NEQP at all. The end state is an **Idaho QSO Party
+class** owning its own rules -- 1 point phone, 2 points CW or digital, county line
+at most 2 (NY4I, 2026-10-01) -- at which point its `.cfg` no longer names a point
+method and the table cannot touch it.
 
 It changes what an existing `.cfg` selects, but the change is towards what the
 operator wrote.
@@ -540,7 +539,7 @@ Each is behaviour-preserving unless marked.
 
 | step | what | gate |
 |---|---|---|
-| **M0** | **Decide Q1-Q3.** If Q2 is yes: pin every `QSOPointMethodArray` spelling, then fix the rotation (**behaviour change, deliberate**). Build the legacy-fixture harness (§8.1) | the pin test; the Idaho spelling test |
+| **M0** | **Decide Q1 and Q3** (Q2 is ruled: no interim fix). Build the legacy-fixture harness (§8.1) | the harness |
 | **M1** | **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
 | **M2** | **Setup head reads the class.** `ContestDefinition`, `InHostState`, `Active*` written from the class's traits. Arms stay. Freeze a setup fixture first: every `ContestType` x station variants (in-state/out, K/VE/DX) -> `Active*` and settings | setup fixture; corpus |
 | **M3** | **Scoring finishes on the class.** The ten secondary `ActiveQSOPointMethod` readers move into their contests (§2; **behaviour change** for an operator override). Family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
@@ -585,9 +584,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 - **Q1** (C2). ARRL Field Day's DX multiplier (inventory D8): the class says
   `ARRLDXCC`, while the arm says `NoDXMults` and wins. Which is right? Correct
   the class before M2 makes it the source.
-- **Q2** (old Q2, Finding 1). Fix the rotated `QSOPointMethodArray` now, with a
-  pin test of every spelling? **Recommended yes, before the retirement** (§7.2):
-  the shipped Idaho config scores double today.
+- **Q2** (old Q2, Finding 1). **RULED 2026-10-01: no.** Nothing is fixed for the
+  interim; the table retires with the setting, and Idaho gets its own class (§7.2).
 - **Q3** (C1 + old Q1, Finding 2). Every corpus log stores the seven settings as
   `NONE` / `UNKNOWN`. Establish which code writes them and why they are not
   applied, before M2. Should a stored sentinel then read as "not stated"?
