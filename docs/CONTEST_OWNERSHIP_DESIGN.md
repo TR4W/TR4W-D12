@@ -550,6 +550,22 @@ first contest to state it.
 credit for off-band QSOs"*). A new country worked on 30 m during a contest
 without WARC is in the log, scores 0 and counts no multiplier.
 
+**And no need-multiplier hint** (NY4I, 2026-10-01: *"off-band should not impact
+need multiplier. It is really a one-off with no impact on the contest at all."*).
+Today `EditableLog.DetermineIfNewMult` and its neighbours read the mult sheet and
+can still flag an off-band call as a needed multiplier; they must ask the same
+band question the scoring does (M8 multipliers / M9 display).
+
+**Nor does it mark a multiplier worked** (NY4I, 2026-10-01: *"if I work an off-band
+multiplier, it should not make it appear worked when I find the same mult
+on-band"*). `1e4f66f9` clears an off-band QSO's mult flags inside
+`SetMultFlags`, and the sheet marks a multiplier only from flags set there, so this
+should already hold -- **read from the code, not proven**. M8 pins it: log an
+off-band QSO with a new multiplier, then the same multiplier on-band must still
+be new, score, and show as needed until it is worked on-band. **And an off-band
+QSO is not a dupe and makes no later on-band QSO a dupe** (NY4I confirmed,
+2026-10-01).
+
 **LANDED 2026-10-01.** The seam is **`TContestBase.UsesBand(aBand): boolean`**,
 a virtual whose base answers `True` for every band. That is exactly what every
 contest did before, so only a contest that overrides changes. Idaho is the only
@@ -597,6 +613,21 @@ its mode, and LOW and HIGH score 2/1/2/1. The contest matrix re-froze
 IDAHOQSOPARTY alone for this change. Its 2 m, 30 m and 6 m QSOs went to
 `pts=0` with every multiplier flag false, in all four station variants, and
 nothing else moved. The dormant-county bonus waits for M6.
+
+### 7.6 The entrant's power is ONE value, and the last touch wins
+
+NY4I, 2026-10-01. Today two stores hold it: `Settings.Contest.CategoryPower`
+(set by the New Contest dialog, read by scoring through `TStationContext.MyPower`)
+and the Cabrillo summary's own `_CATEGORY-POWER`. The end state has one:
+
+- **The last touch point wins.** *"If they select QRP right before cabrillo
+  generation, we have to assume they know what they are doing."* The summary
+  writes the same setting scoring reads, and a change rescores the log.
+- **It may change mid-contest**, or be set late. *"Maybe we remind them of that
+  mid-contest but let it be changed"* -- a reminder that it changes the scoring
+  class, never a block.
+
+Lands with the Cabrillo-header and UI work (M9).
 
 ### 8.1 Which oracle sees what
 
