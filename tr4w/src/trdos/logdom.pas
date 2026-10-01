@@ -90,7 +90,7 @@ var
 implementation
 
 uses
-  uAppPaths,     // ResolveDataFileInPlace -- shipped data, whatever case
+  uAppPaths,     // ShippedDomFilePath -- shipped data, whatever case
   ZoneCont,
   LogWind,
   MainUnit, LogSCP; {KK1L: DEBUG}
@@ -541,15 +541,14 @@ begin
        re-read it from the ShortString's CHARACTERS -- @FileString^[n] -- and a
        ShortString has no terminator, so that read ran on until it met a zero
        byte belonging to something else. *)
-     (* 'DOM\', WITH THE SEPARATOR. D7 built this with '%sDOM\%s'; the
-       conversion that replaced the sprintf (c51dcc1d) dropped the backslash,
-       so 'INCLUDE FILE S50.DOM' asked for <program dir>DOMS50.DOM -- which
-       does not exist, and every .dom that includes the states, provinces or
-       Mexico loaded without them. *)
-     SetCharBuffer(TempFileName,
-                   CharBufferText(TR4W_PATH_NAME) + 'DOM\' + string(TempString));
-     (* Windows spelling, resolved for this platform -- see fcontest. *)
-     ResolveDataFileInPlace(TempFileName);
+     (* THE dom DIRECTORY, WITH ITS SEPARATOR. D7 built this with
+       '%sDOM\%s'; the conversion that replaced the sprintf (c51dcc1d)
+       dropped the backslash, so 'INCLUDE FILE S50.DOM' asked for
+       <program dir>DOMS50.DOM -- which does not exist, and every .dom that
+       includes the states, provinces or Mexico loaded without them. FCONTEST's
+       in-state test had the same slip; all three dom readers compose the path
+       in one place now, uAppPaths.ShippedDomFilePath. *)
+     SetCharBuffer(TempFileName, ShippedDomFilePath(string(TempString)));
      DomQTHTable.ReadDomQTHFile(CharBufferText(TempFileName), True);
      end;
 //todo process ;

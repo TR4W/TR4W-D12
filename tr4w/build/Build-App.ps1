@@ -287,7 +287,11 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # contact broadcast's "CABName, else the enum's spelling" copy assigned the
 # spelling (a UnicodeString) straight into an AnsiString; it is one explicit
 # conversion of the class's CabrilloName now.
-$NARROW_CEILING = 1337
+# 1337 -> 1335, 2026-10-01: M2. The QSO-party in-state test and LogCfg's
+# domestic-file path stopped going through fixed AnsiChar buffers --
+# uAppPaths.ShippedDomFilePath returns the path as a string, and
+# uDomFileKeys replaced FCONTEST's ShortString EnumDOM2 callback.
+$NARROW_CEILING = 1335
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

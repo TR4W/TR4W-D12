@@ -417,6 +417,7 @@ uses
    uTestKeychain     in 'uTestKeychain.pas',
    uTestWindowSnap      in 'uTestWindowSnap.pas',
    uAppPaths            in '..\..\src\uAppPaths.pas',
+   uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
    uTLSTrust            in '..\..\src\utils\uTLSTrust.pas',
    uHTTPDownload        in '..\..\src\utils\uHTTPDownload.pas',
    uLogBinaryFile       in '..\..\src\uLogBinaryFile.pas',

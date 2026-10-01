@@ -23,43 +23,27 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   The ContestsArray row this class states, verbatim:
 
-   Email: 'colorado_cty';  DF: '';  WA7BNM: 431;  QRZRUID: 0;
+   Email: '';  DF: 'colorado_cty';  WA7BNM: 431;  QRZRUID: 0;
    Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
    DM: DomesticFile;  P: 12;  AE: NameAndDomesticOrDXQTHExchange;
    XM: NoDXMults;  QP: TwoPointsPerQSO;  ADIFName: 'CO-QSO-PARTY';
    CABName: 'COQP';  CountyLineAllowed: True;
    FriendlyName: 'Colorado QSO Party'
 
-  THE ROW'S Email AND DF LOOK SWAPPED, AND THEY ARE TRANSCRIBED AS THEY STAND.
-  Email holds 'colorado_cty' -- a domestic file name, not an address -- and DF
-  is empty, where every other state party in this group names its <state>_cty
-  file in DF. That is almost certainly a typing slip in VC.pas.
+  THE ROW'S Email AND DF WERE SWAPPED, AND ARE CORRECTED -- in the row and here
+  together, 2026-10-01 (M2, inventory defect #5). Email held 'colorado_cty',
+  a domestic file name, and DF was empty, where every other state party names
+  its <state>_cty county file in DF. It came from D7: C:\TR4W VC.pas carries
+  the same Email: 'colorado_cty' with DF: nil, so it was never a port
+  regression.
 
-  IT IS NOT CORRECTED HERE. This class is a transcription of the row and
-  nothing more; correcting the array is a separate change with its own
-  evidence, exactly as Michigan's wrong CountyLineAllowed was left alone.
-  Silently "fixing" it here would make the class and the array disagree where
-  nobody had decided they should, and the pin test would fail -- which is the
-  test doing its job.
-
-  WHAT IT COSTS TODAY: NOTHING, AND THAT WAS MEASURED RATHER THAN ASSUMED.
-  FCONTEST asks the row for a domestic file ONLY when the contest has no QSO
-  PARTY INDEX -- fcontest.pas, `if ContestsArray[Contest].p <> 0 then` takes
-  the file from QSOParties[p].InsideStateDOMFile (plus '_cty' when out of
-  state), and DF is read in the `else` arm alone. Colorado is P: 12, whose
-  entry is 'colorado', and both colorado.dom and colorado_cty.dom ship in
-  target/dom. So the empty DF is INERT for this contest and every other state
-  party: none of them can reach that arm.
-
-  The first draft of this comment said the opposite -- that Colorado "finds
-  none from the row" -- and sent the rest to the bench. The code answers it,
-  which is where a question like this belongs. A wrong REASON in a new file is
-  worse than no comment, because it invites agreement instead of a check.
-
-  The misplaced Email is likewise inert: nothing outside TContestBase's own
-  accessor reads the row's Email field. Both are cosmetic, and both are
-  INHERITED FROM D7 -- C:\TR4W VC.pas carries the same Email: 'colorado_cty'
-  with DF: nil -- so this is not a port regression and predates this tree.
+  IT WAS INERT UNTIL M2 AND WOULD NOT HAVE STAYED SO. FCONTEST took a party's
+  files from QSOParties[P] and never asked DF, so the empty name cost nothing
+  -- but the in-state test read DF, and once M2 made that test work (defect
+  #1) and set-up began asking the contest for its county file, an empty DF
+  would have left Colorado the one party whose stations could never be in
+  state. The sponsor's submission address is not known here, so Email is
+  blank, as it is for most parties.
 
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
   TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- which is exactly
@@ -165,12 +149,12 @@ end;
 
 function TContestColoradoQP.GetSubmissionEmail: string;
 begin
-   Result := 'colorado_cty';
+   Result := '';
 end;
 
 function TContestColoradoQP.GetDomesticFileName: string;
 begin
-   Result := '';
+   Result := 'colorado_cty';
 end;
 
 function TContestColoradoQP.GetFriendlyName: string;

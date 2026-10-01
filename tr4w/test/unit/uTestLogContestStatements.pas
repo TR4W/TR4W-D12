@@ -55,6 +55,7 @@ type
       procedure Test_PreFlagNonDefaultRowIsAppliedAndStated;
       procedure Test_MarkedLogKeepsAStatedDefault;
       procedure Test_D2_CfgStatementBeatsAStoredSentinel;
+      procedure Test_ContestSetUpAsksRealContestScopedNames;
    public
       procedure RunAllTests; override;
    end;
@@ -612,6 +613,65 @@ begin
    Scrub(fn);
 end;
 
+(* M2 -- CONTEST SET-UP ASKS THESE NAMES, AND A MISSPELLING WOULD BE SILENT.
+
+  FCONTEST.ApplyContestTraits asks CommandIsStated for each value it writes,
+  and uSettingsEffects.ReplayContestStatements asks PathIsStated for the seven
+  contest tokens by PROPERTY PATH. A name or path that does not resolve
+  answers False -- "not stated" -- so the contest's value would quietly beat
+  the operator's statement, which is the exact defect the precedence exists to
+  prevent. So every name and path set-up uses is checked here to be a real,
+  contest-scoped setting that records a statement.
+
+  THE PATHS ARE TYPED A SECOND TIME, from uSettingsEffects' constants, because
+  that unit cannot be linked here. The list is case-sensitive, as the
+  statement list is. *)
+procedure TLogContestStatementsTests.Test_ContestSetUpAsksRealContestScopedNames;
+
+   procedure CheckToken(s: TR4WSettings; const aCommand, aValue, aPath: string);
+   begin
+      CheckTrue(s.CommandIsContestScoped(aCommand), aCommand + ' is contest-scoped');
+      CheckFalse(s.PathIsStated(aPath), aPath + ' is not stated before');
+      CheckTrue(s.TrySetByCommand(aCommand, aValue), aCommand + ' sets by name');
+      CheckTrue(s.CommandIsStated(aCommand), aCommand + ' is then stated');
+      CheckTrue(s.PathIsStated(aPath), aPath + ' is then stated, by path');
+   end;
+
+   procedure CheckValue(s: TR4WSettings; const aCommand, aValue: string);
+   begin
+      CheckTrue(s.CommandIsContestScoped(aCommand), aCommand + ' is contest-scoped');
+      CheckTrue(s.TrySetByCommand(aCommand, aValue), aCommand + ' sets by name');
+      CheckTrue(s.CommandIsStated(aCommand), aCommand + ' is then stated');
+   end;
+
+var
+   s: TR4WSettings;
+begin
+   BeginTest('every name and path contest set-up asks is a real statement');
+   s := TR4WSettings.Create;
+   try
+      CheckToken(s, POINT_METHOD,          A_METHOD,  'Contest.QsoPointMethod');
+      CheckToken(s, EX_RECEIVED,           'UNKNOWN', 'Contest.ExchangeReceived');
+      CheckToken(s, DX_MULT,               'NONE',    'Contest.DxMultiplier');
+      CheckToken(s, 'DOMESTIC MULTIPLIER', 'NONE',    'Contest.DomesticMultiplier');
+      CheckToken(s, 'PREFIX MULTIPLIER',   'NONE',    'Contest.PrefixMultiplier');
+      CheckToken(s, 'ZONE MULTIPLIER',     'NONE',    'Contest.ZoneMultiplier');
+      CheckToken(s, INITIAL_EX,            'ZONE',    'Contest.InitialExchange');
+
+      CheckValue(s, 'QSO BY MODE',              'TRUE');
+      CheckValue(s, 'QSO BY BAND',              'TRUE');
+      CheckValue(s, 'MULT BY MODE',             'TRUE');
+      CheckValue(s, 'MULT BY BAND',             'TRUE');
+      CheckValue(s, 'VHF BAND ENABLE',          'TRUE');
+      CheckValue(s, 'COUNT DOMESTIC COUNTRIES', 'TRUE');
+      CheckValue(s, 'DOMESTIC FILENAME',        'arrlsect.dom');
+
+      CheckFalse(s.PathIsStated('My.Call'), 'a station path is never stated');
+   finally
+      s.Free;
+   end;
+end;
+
 procedure TLogContestStatementsTests.RunAllTests;
 begin
    Test_ByNameIsAStatement_UnstatedIsNot;
@@ -626,6 +686,7 @@ begin
    Test_PreFlagNonDefaultRowIsAppliedAndStated;
    Test_MarkedLogKeepsAStatedDefault;
    Test_D2_CfgStatementBeatsAStoredSentinel;
+   Test_ContestSetUpAsksRealContestScopedNames;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

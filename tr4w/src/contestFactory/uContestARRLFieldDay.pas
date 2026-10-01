@@ -124,6 +124,9 @@ type
            QP: ARRLFieldDayQSOPointMethod;  ADIFName: 'ARRL-FIELD-DAY';
            CABName: 'ARRL-FD';  FriendlyName: 'ARRL Field Day'
 
+         XM WAS WRONG and is NoDXMults in both the row and this class since
+         2026-10-01 -- see GetDXMultiplierType.
+
          NOTE DM IS COMMENTED OUT IN THE ARRAY. Its value therefore comes from
          whatever the record initialises to, not from NoDomesticMults being
          chosen -- so DomesticMultiplierType is deliberately NOT overridden
@@ -261,7 +264,16 @@ end;
 
 function TContestARRLFieldDay.GetDXMultiplierType: DXMultType;
 begin
-   Result := ARRLDXCC;
+   (* NONE. RULED BY NY4I, 2026-10-01 (design Q1): ARRL Field Day has no
+      multipliers at all. A DX station may be worked -- it sends a class and
+      DX -- but it is not a multiplier.
+
+      THIS USED TO SAY ARRLDXCC, transcribed from the row, while FCONTEST's
+      Field Day arm set NoDXMults; the class lost silently because nothing
+      read it (inventory D8). Corrected, together with the row, BEFORE M2
+      made the class the source set-up reads, so Field Day's effective value
+      did not move. *)
+   Result := NoDXMults;
 end;
 
 function TContestARRLFieldDay.GetInitialExchangeKind: InitialExchangeType;

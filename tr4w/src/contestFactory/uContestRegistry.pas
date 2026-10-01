@@ -69,7 +69,10 @@ function RegisteredContestCount: integer;
   without is answered by a plain TContestBase reading ContestsArray. So every
   identity question -- the Cabrillo CONTEST: name, the ADIF CONTEST_ID, the
   friendly name, the WA7BNM and QRZ.RU ids -- has one answer per contest, and
-  every consumer asks it here (M1, 2026-10-01).
+  every consumer asks it here (M1, 2026-10-01). Contest SET-UP asks it too
+  (M2, 2026-10-01): FCONTEST.ApplyContestTraits writes the engine's Active*
+  values and set-up flags from this object, under the operator's
+  statements -- what a contest IS, which is this accessor's whole job.
 
   OWNED BY THIS UNIT. Do not free it. Built the first time a contest is asked
   about and kept until the program ends, so a caller asking per QSO -- ADIF

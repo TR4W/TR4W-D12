@@ -78,9 +78,12 @@ Everything TR4W currently knows about a contest is one row. ARRL Field Day's:
 Email: 'fieldday@arrl.org';  DF: 'arrlsect';  WA7BNM: 57;  QRZRUID: 0;
 Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
 {DM: NoDomesticMults;}  P: 0;  AE: ClassDomesticOrDXQTHExchange;
-XM: ARRLDXCC;  QP: ARRLFieldDayQSOPointMethod;
+XM: NoDXMults;  QP: ARRLFieldDayQSOPointMethod;
 ADIFName: 'ARRL-FIELD-DAY';  CABName: 'ARRL-FD';  FriendlyName: 'ARRL Field Day'
 ```
+
+(`XM` said `ARRLDXCC` until 2026-10-01. NY4I ruled that Field Day has no
+multipliers, and the row and the class were corrected together.)
 
 Two fields are the thread to pull:
 
@@ -194,6 +197,19 @@ shared files a contest touches; the search path already covers
 | `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | the array row |
 | `InitialExchangeKind`, `ExchangeKind`, `QSOPointMethod` | the array row |
 | `IsUSQSOParty` | the array row (`P <> 0`) |
+| `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries` | `ContestsBooleanArray`'s bits. **Set-up reads these** (M2) |
+| `ZoneMode` | `CQZoneMode` when the array's CQ bit is set, else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
+| `InStateDomesticFileName` | a QSO party's in-state file -- the `QSOParties` entry the row's `P` indexes; `''` otherwise. `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads |
+
+**SET-UP ASKS THE CONTEST, SINCE M2 (2026-10-01).** `FCONTEST.FoundContest`'s
+head writes the seven `Active*` globals, the flags above, the zone list and the
+domestic file from `uContestRegistry.ContestIdentity(Contest)` -- your class --
+through one resolver, `FCONTEST.ApplyContestTraits`, and an **operator's
+statement beats your value** whatever the line order. So a trait override is
+no longer inert: **changing one changes the contest's set-up**, and the
+contest matrix will show it. FCONTEST's per-contest arms still run after the
+head and still win where they assign (they move into the class at M7). Design
+§7.9.
 | `HostState` | **`USQSOPartyStateName`** -- derived from the array's `P` index, which is the one place a QSO party's state is written down. `''` for every contest that has no host state, which is a real answer |
 
 **`CountyLineCountiesMax` and `CountyLineAllowed` ARE NOT ON THE BASE** — they
@@ -359,8 +375,10 @@ the first parse arm moves.
 **It asserts "same as before", never "correct".** The frozen records in
 `tr4w/test/contest-matrix/frozen/` are this program's own output. Defects
 present on the day of the freeze are pinned exactly as faithfully as correct
-rules -- two of them are visible in the first freeze (`NEWENGLANDQSO`'s `dx`
-variant crashes in set-up; `cty.zonemode` reads 255 for most contests).
+rules -- two of them were visible in the first freeze (`NEWENGLANDQSO`'s `dx`
+variant crashed in set-up; `cty.zonemode` read 255 for most contests). Both
+were fixed on purpose at M2 and re-frozen with a reason, for only the contests
+they reached (design §8.2c) -- the procedure below.
 
 **NEVER RE-FREEZE TO CLEAR A RED RUN.** `run-contest-matrix.sh` only compares
 and never writes the frozen files. A record that moved is a finding: find out

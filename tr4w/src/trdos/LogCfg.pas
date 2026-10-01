@@ -106,7 +106,7 @@ implementation
 uses
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uSettingsModel, // Settings.My -- the station's own facts
-  uAppPaths,     // DataFilePath / ResolveDataFileInPlace -- shipped data
+  uAppPaths,     // ShippedDomFilePath -- shipped data
   uCFG,
   MainUnit,
   uRadioPolling,
@@ -320,15 +320,12 @@ end;
 
 procedure SetUpGlobalsAndInitialize;
 var
-  (* A LOCAL buffer, not the shared wsprintfBuffer global.
+  (* THE DOMESTIC FILE'S PATH, AS A STRING -- 2026-10-01.
 
-    This one genuinely needs a CHARACTER BUFFER rather than a string:
-    ResolveDataFileInPlace takes an open array of AnsiChar by reference and
-    rewrites it, and StrLCopy below reads it. That is the open-array shape CLAUDE.md
-    asks for -- it carries its own bounds -- so what was wrong here was the
-    buffer being GLOBAL and shared with forty other call sites, not the
-    buffer existing. *)
-  domPath                               : array[0..MAX_PATH - 1] of AnsiChar;
+    It was a character buffer because ResolveDataFileInPlace rewrote it in
+    place. uAppPaths.ShippedDomFilePath returns the resolved path, so nothing
+    here writes into a buffer any more and the path is text, as a path is. *)
+  domPath                               : string;
 begin
 
   { GetTickCount64 -- StartCPU is QWord, see MainUnit. }
@@ -373,21 +370,19 @@ begin
      begin
      if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
         begin
-        SetCharBuffer(domPath, CharBufferText(TR4W_DOM_FILENAME))
+        domPath := CharBufferText(TR4W_DOM_FILENAME);
         end
       else
          begin
-         (* DataFilePath AND PathDelim, NOT '%sdom\%s' -- 2026-09-20.
+         (* uAppPaths.ShippedDomFilePath, NOT '%sdom\%s' -- 2026-09-20,
+           and one composition for all three dom readers since 2026-10-01.
 
            The literal spelled the separator for Windows, leaving the
            resolver to undo it everywhere else -- and it can only manage
            that when every component of the result exists. Given a path
            already correct for this platform, the resolver is left with the
            one job it is for: matching the CASE of a shipped file. *)
-        SetCharBuffer(domPath,
-            DataFilePath('dom' + PathDelim +
-                         string(Settings.Contest.DomesticFilename)));
-         ResolveDataFileInPlace(domPath);
+        domPath := ShippedDomFilePath(string(Settings.Contest.DomesticFilename));
          end;
       (* THE RESOLVED PATH IS NOT WRITTEN BACK -- 2026-09-20.
 
@@ -398,12 +393,11 @@ begin
         uSettingsModel; the setting holds the NAME and this local holds the
         only path, for as long as it takes to open the file.
 
-        LoadInDomQTHFile IS HANDED domPath'S TEXT. It took a PAnsiChar until
+        LoadInDomQTHFile IS HANDED domPath. It took a PAnsiChar until
         2026-09-15, and PAnsiChar of a property is the address of a
         TEMPORARY -- the compiler accepts it and the pointer dangles at the
-        end of the statement -- which is why it is given the local array and
-        not the setting. It takes a string now. *)
-      if not DomQTHTable.LoadInDomQTHFile(CharBufferText(domPath)) then
+        end of the statement. It takes a string now. *)
+      if not DomQTHTable.LoadInDomQTHFile(domPath) then
          begin
          halt;
          end;

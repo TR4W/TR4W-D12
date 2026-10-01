@@ -236,6 +236,16 @@ station setting.
   entries. It also skips any setting that is already stated.
 - **`SetCommandStated(cmd, False)`** withdraws a statement. No control offers
   it yet.
+- **`PathIsStated(path)`** asks the same by property path
+  (`'Contest.QsoPointMethod'`). `CommandIsStated` resolves the name and calls
+  it. Since M2 (2026-10-01) **contest set-up reads the flag**:
+  `FCONTEST.ApplyContestTraits` leaves a stated flag setting alone and
+  `uSettingsEffects.ReplayContestStatements` replays the seven stated
+  contest tokens through `ApplyTokenSetting` -- the token half of
+  `SettingChanged`, lifted so the replay and a `.cfg` line run one arm. So a
+  statement made before the `CONTEST` line now survives set-up.
+  `Test_ContestSetUpAsksRealContestScopedNames` pins every name and path
+  set-up asks; a misspelled one would read "not stated" and silently lose.
 - Before this, the log captured every contest-scoped value, which put the
   constructor's `NONE`/`UNKNOWN` into every log. A stored sentinel then
   overwrote a `.cfg` line on reopen (D2). The flag generalises

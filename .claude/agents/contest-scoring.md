@@ -67,6 +67,22 @@ each run. **Never persist a derived value**: it reads back as stated and
 permanently blocks re-derivation — that is the defect `DeriveCountry` exists to
 fix (a latched derivation once exported `59 15` against zone 5).
 
+**`FoundContest`'s HEAD READS THE CONTEST CLASS, NOT THE ARRAYS (M2,
+2026-10-01).** One resolver, `ApplyContestTraits`, writes the `Active*`
+globals, the by-band/mode flags and the CTY zone list: the operator's
+statement, else `ContestIdentity(Contest)`. A statement made BEFORE the
+`CONTEST` line now stands (it used to be overwritten); the per-contest arms
+still run after the head and still overwrite. Three defects went with it:
+**no station was ever in state for a QSO party** (`'DOM'` + name, no
+separator -- now `uAppPaths.ShippedDomFilePath`, shared with `LogCfg` and
+`logdom`'s INCLUDE), **`CTY.ctyZoneMode` was 255** for every contest without
+the CQ bit (a Boolean cast; now `TContestBase.ZoneMode`, ITU unless the bit is
+set, as in D7 -- so MY ZONE derives an ITU zone where it read 0), and **NEQP
+crashed** on an empty MY STATE (a `PWORD` read of a UnicodeString). Design doc
+§7.9 / §8.2c. **`nc_cty.dom` holds provinces, DC and the states, not only
+NC's counties** -- a Canadian or DC station is now "in state" for NC (Q14,
+NY4I's call).
+
 **THE ORDER THE SETTINGS ARRIVE IN IS PART OF THE CONTEST'S CORRECTNESS.**
 `ARRLDXCW/ARRLDXSSB` branches on `Settings.My.Country = 'K' or 'VE'` to choose
 between a power exchange and a domestic-QTH exchange. Until 2026-09-20

@@ -34,7 +34,9 @@ uses
       VC's names win wherever the two overlap. *)
    uSettingsModel,
    uTR4WTestFramework, VC, uContestBase, uContestRegistry,
-   uContestStateQSOPartyBase, uContestFixedPoints;
+   uContestStateQSOPartyBase, uContestFixedPoints,
+   (* M2's in-state detection: the shipped .dom path and the key reader. *)
+   Classes, uAppPaths, uDomFileKeys;
 
 const
    (* THE TEN "RAREST OF NC" COUNTIES, TRANSCRIBED A SECOND TIME ON PURPOSE.
@@ -89,6 +91,12 @@ type
       procedure Test_IdentityIsWhatTheExportersWroteBeforeM1;
       procedure Test_EveryContestResolvesItsOwnADIFId;
       procedure Test_OnlyRSGBRoloSharesACurrentADIFId;
+      procedure Test_ZoneModeIsCQOrITUForEveryContest;
+      procedure Test_FieldDayHasNoDXMultiplier;
+      procedure Test_EveryQSOPartyNamesBothDomesticFiles;
+      procedure Test_ShippedDomFilePathHasItsSeparator;
+      procedure Test_DomFileKeysAreEnumDOM2sRule;
+      procedure Test_AnInStateStationIsFoundInItsCountyFile;
    public
       procedure RunAllTests; override;
    end;
@@ -2209,6 +2217,216 @@ begin
    CheckEquals(1, pairs, 'contest pairs sharing a current ADIF id');
 end;
 
+(* M2 -- DEFECT #2: THE ZONE LIST IS A MEMBER OF ZoneModeType FOR EVERY CONTEST.
+
+   FCONTEST cast a Boolean to ZoneModeType, and FPC produced 255 for 160 of
+   185 contests -- neither CQ nor ITU -- so every `case CTY.ctyZoneMode of`
+   in uctydat matched nothing and a zone came back 0. The contest states the
+   mode now (TContestBase.GetZoneMode). This pins, for EVERY ContestType and
+   through the accessor set-up reads, that the answer is a real member and
+   that it is the array legend's rule: the bit set is CQ, clear is ITU -- which
+   is what D7 did. Then four contests by name, whose zones are their
+   exchange. *)
+procedure TContestFactoryTests.Test_ZoneModeIsCQOrITUForEveryContest;
+var
+   c: ContestType;
+   mode: ZoneModeType;
+   cqBit: boolean;
+   cqCount: integer;
+begin
+   BeginTest('Test_ZoneModeIsCQOrITUForEveryContest');
+   cqCount := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      mode := ContestIdentity(c).ZoneMode;
+      CheckTrue(Ord(mode) <= Ord(High(ZoneModeType)),
+                string(ContestTypeSA[c]) + ' zone mode is out of range: ' +
+                IntToStr(Ord(mode)));
+      cqBit := (ContestsBooleanArray[c] and (1 shl CQ_ZONE_MODE_BIT)) <> 0;
+      CheckTrue((mode = CQZoneMode) = cqBit,
+                string(ContestTypeSA[c]) + ' zone mode follows the CQ bit');
+      if mode = CQZoneMode then
+         begin
+         inc(cqCount);
+         end;
+      end;
+
+   (* A FLOOR, so a table that lost every CQ bit cannot pass as "consistent". *)
+   CheckTrue(cqCount >= 10, 'only ' + IntToStr(cqCount) + ' contests use CQ zones');
+
+   CheckTrue(ContestIdentity(CQWWCW).ZoneMode = CQZoneMode, 'CQ WW CW uses CQ zones');
+   CheckTrue(ContestIdentity(CQWWSSB).ZoneMode = CQZoneMode, 'CQ WW SSB uses CQ zones');
+   CheckTrue(ContestIdentity(CQWPXCW).ZoneMode = CQZoneMode, 'CQ WPX CW uses CQ zones');
+   CheckTrue(ContestIdentity(IARU).ZoneMode = ITUZoneMode, 'IARU uses ITU zones');
+end;
+
+(* M2 -- Q1, RULED BY NY4I 2026-10-01: ARRL FIELD DAY HAS NO MULTIPLIERS.
+   The class said ARRLDXCC, transcribed from the row, while FCONTEST's arm set
+   NoDXMults. Class and row were both corrected before set-up began reading
+   the class, so the value set-up starts from is the value it ends with. *)
+procedure TContestFactoryTests.Test_FieldDayHasNoDXMultiplier;
+var
+   row: TContestBase;
+begin
+   BeginTest('Test_FieldDayHasNoDXMultiplier');
+   CheckTrue(ContestIdentity(ARRLFIELDDAY).DXMultiplierType = NoDXMults,
+             'the Field Day class states no DX multiplier');
+   row := TContestBase.Create(ARRLFIELDDAY);
+   try
+      CheckTrue(row.DXMultiplierType = NoDXMults,
+                'and the row agrees with it');
+   finally
+      row.Free;
+      end;
+end;
+
+(* The shipped dom directory, from the test binary -- ParamStr(0), never the
+   working directory, as the CTY.DAT tests do. *)
+function ShippedDomDir: string;
+begin
+   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim +
+             'target' + PathDelim + 'dom' + PathDelim;
+end;
+
+(* M2 -- DEFECT #5 AND THE SHAPE SET-UP RELIES ON.
+
+   A QSO party has TWO domestic files: the host's counties, which every other
+   station loads and which in-state detection reads (DomesticFileName), and
+   the in-state file (InStateDomesticFileName). Colorado's row had them
+   shifted -- Email held 'colorado_cty' and DF was empty -- so its county file
+   had no name. For every party, through the accessor set-up reads: both
+   names are given, the county file is the in-state name plus _cty, and both
+   ship. *)
+procedure TContestFactoryTests.Test_EveryQSOPartyNamesBothDomesticFiles;
+var
+   c: ContestType;
+   obj: TContestBase;
+   who: string;
+   parties: integer;
+begin
+   BeginTest('Test_EveryQSOPartyNamesBothDomesticFiles');
+   parties := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      obj := ContestIdentity(c);
+      if not obj.IsUSQSOParty then
+         begin
+         CheckEquals('', obj.InStateDomesticFileName,
+                     string(ContestTypeSA[c]) + ' is no party and has no in-state file');
+         Continue;
+         end;
+      inc(parties);
+      who := string(ContestTypeSA[c]);
+      CheckTrue(obj.InStateDomesticFileName <> '', who + ' names its in-state file');
+      CheckEquals(obj.InStateDomesticFileName + '_cty', obj.DomesticFileName,
+                  who + ' county file is the in-state name plus _cty');
+      CheckTrue(FileExists(ShippedDomDir + obj.DomesticFileName + '.dom'),
+                who + ' county file ' + obj.DomesticFileName + '.dom ships');
+      CheckTrue(FileExists(ShippedDomDir + obj.InStateDomesticFileName + '.dom'),
+                who + ' in-state file ' + obj.InStateDomesticFileName + '.dom ships');
+      end;
+   CheckTrue(parties >= 15, 'only ' + IntToStr(parties) + ' QSO parties found');
+
+   CheckEquals('colorado_cty', ContestIdentity(COLORADOQSOPARTY).DomesticFileName,
+               'Colorado names its county file');
+   CheckEquals('', ContestIdentity(COLORADOQSOPARTY).SubmissionEmail,
+               'and a file name is no longer its e-mail address');
+end;
+
+(* M2 -- DEFECT #1, THE SEPARATOR ITSELF. FCONTEST built 'DOM' + name and no
+   file of that name exists, so no station was ever in state. A name that is
+   not on disk comes back unchanged from the case-tolerant lookup, so this
+   asserts the composition: the dom directory, the platform's separator, the
+   name. *)
+procedure TContestFactoryTests.Test_ShippedDomFilePathHasItsSeparator;
+var
+   path: string;
+begin
+   BeginTest('Test_ShippedDomFilePathHasItsSeparator');
+   path := ShippedDomFilePath('no_such_file_m2.dom');
+   CheckEquals(DataFilePath('dom' + PathDelim + 'no_such_file_m2.dom'), path,
+               'the shipped dom file is dom, a separator, then the name');
+   CheckTrue(Pos('dom' + PathDelim + 'no_such_file_m2.dom', path) > 0,
+             'the separator is there');
+end;
+
+(* M2 -- THE KEY RULE, EnumDOM2's LINE FOR LINE. Before '=', cut at '>',
+   trimmed, compared without case. INCLUDE lines declare nothing, and an empty
+   MY STATE is in nobody's state. *)
+procedure TContestFactoryTests.Test_DomFileKeysAreEnumDOM2sRule;
+var
+   lines: TStringList;
+begin
+   BeginTest('Test_DomFileKeysAreEnumDOM2sRule');
+   CheckEquals('APH', DomFileLineKey('APH = Apache'), 'the text before =');
+   CheckEquals('APH', DomFileLineKey('  aph>Apache County = APH'),
+               'cut at >, trimmed, upper-cased');
+   CheckEquals('', DomFileLineKey('INCLUDE FILE S50.DOM'), 'an include declares nothing');
+   CheckEquals('', DomFileLineKey(''), 'nor does an empty line');
+
+   lines := TStringList.Create;
+   try
+      lines.Add('INCLUDE FILE S50.DOM');
+      lines.Add('APH = Apache');
+      lines.Add('COC>Cochise = COC');
+      CheckTrue(DomFileDeclaresKey(lines, 'COC'), 'a key is declared');
+      CheckTrue(DomFileDeclaresKey(lines, 'aph'), 'whatever its case');
+      CheckFalse(DomFileDeclaresKey(lines, 'KS'), 'a state that is not a key is not');
+      CheckFalse(DomFileDeclaresKey(lines, ''), 'an empty MY STATE is never in state');
+      CheckFalse(DomFileDeclaresKey(lines, 'S50.DOM'), 'an include is not followed');
+   finally
+      lines.Free;
+      end;
+end;
+
+(* M2 -- DEFECT #1 END TO END, OVER THE SHIPPED FILES: for every QSO party, a
+   station whose MY STATE is the first key of the party's county file is in
+   state -- what the contest matrix's us-host variant states -- and one whose
+   MY STATE is not a key is not. Before the fix the first could not be true
+   for any party, because the file was never found. *)
+procedure TContestFactoryTests.Test_AnInStateStationIsFoundInItsCountyFile;
+var
+   c: ContestType;
+   obj: TContestBase;
+   lines: TStringList;
+   path, firstKey: string;
+   i: integer;
+begin
+   BeginTest('Test_AnInStateStationIsFoundInItsCountyFile');
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      obj := ContestIdentity(c);
+      if not obj.IsUSQSOParty then
+         begin
+         Continue;
+         end;
+      path := ShippedDomDir + obj.DomesticFileName + '.dom';
+      firstKey := '';
+      lines := TStringList.Create;
+      try
+         if FileExists(path) then
+            begin
+            lines.LoadFromFile(AnsiString(path));
+            end;
+         for i := 0 to lines.Count - 1 do
+            begin
+            firstKey := DomFileLineKey(lines[i]);
+            if firstKey <> '' then
+               begin
+               Break;
+               end;
+            end;
+      finally
+         lines.Free;
+         end;
+      CheckTrue(firstKey <> '', string(ContestTypeSA[c]) + ' county file declares a key');
+      CheckTrue(DomFileOnDiskDeclaresKey(path, firstKey),
+                string(ContestTypeSA[c]) + ' finds ' + firstKey + ' in state');
+      CheckFalse(DomFileOnDiskDeclaresKey(path, 'NOT-A-COUNTY'),
+                 string(ContestTypeSA[c]) + ' does not find a non-key in state');
+      end;
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -2245,6 +2463,12 @@ begin
    Test_IdentityIsWhatTheExportersWroteBeforeM1;
    Test_EveryContestResolvesItsOwnADIFId;
    Test_OnlyRSGBRoloSharesACurrentADIFId;
+   Test_ZoneModeIsCQOrITUForEveryContest;
+   Test_FieldDayHasNoDXMultiplier;
+   Test_EveryQSOPartyNamesBothDomesticFiles;
+   Test_ShippedDomFilePathHasItsSeparator;
+   Test_DomFileKeysAreEnumDOM2sRule;
+   Test_AnInStateStationIsFoundInItsCountyFile;
 end;
 
 end.

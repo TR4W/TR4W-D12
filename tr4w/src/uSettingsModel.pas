@@ -3713,6 +3713,16 @@ type
         other meaning there. *)
       function CommandIsStated(const aCommand: string): boolean;
 
+      (* THE SAME QUESTION ASKED BY PROPERTY PATH -- 'Contest.QsoPointMethod'.
+
+        For the code that already holds the path rather than a command name:
+        uSettingsEffects, whose token arms are keyed by path, replays the
+        stated ones when a contest is set up. The statements are recorded BY
+        PATH, so this is the lookup CommandIsStated makes after resolving the
+        name. Only contest-scoped paths are ever recorded, so any other path
+        answers False. *)
+      function PathIsStated(const aPath: string): boolean;
+
       (* RECORD OR WITHDRAW A STATEMENT WITHOUT ASSIGNING A VALUE.
 
         True: the log's reapply uses it when a stored statement already
@@ -6045,9 +6055,14 @@ var
    path: string;
 begin
    path := ContestScopedPath(aCommand);
+   Result := (path <> '') and PathIsStated(path);
+end;
+
+function TR4WSettings.PathIsStated(const aPath: string): boolean;
+begin
    (* EXPLICIT AT THE CROSSING: a property path is a Pascal identifier
      chain, ASCII by construction, and the list holds AnsiStrings. *)
-   Result := (path <> '') and (FStated.IndexOf(AnsiString(path)) >= 0);
+   Result := FStated.IndexOf(AnsiString(aPath)) >= 0;
 end;
 
 procedure TR4WSettings.SetCommandStated(const aCommand: string; aStated: boolean);

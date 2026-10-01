@@ -178,6 +178,10 @@ type
    private
       FContest: ContestType;
       FStation: TStationContext;
+
+      (* One bit of this contest's ContestsBooleanArray word -- the defaults of
+         the set-up getters below, read in one place. *)
+      function RowFlag(aBit: integer): boolean;
    protected
       (* THE GETTERS BEHIND THE PROPERTIES BELOW.
 
@@ -214,6 +218,49 @@ type
       function GetIsUSQSOParty: boolean; virtual;
       function GetFormatsExchange: boolean; virtual;
       function GetHostState: string; virtual;
+
+      (* WHAT CONTEST SET-UP READS BESIDES THE ROW -- M2, 2026-10-01.
+
+         FCONTEST.FoundContest's head used to read these straight out of
+         ContestsBooleanArray, a word of flag bits per contest. They are facts
+         about the contest -- whether a station may be worked once per band or
+         per mode, whether a multiplier counts per band or per mode, whether
+         the VHF bands are on, which zone list CTY.DAT answers with, whether a
+         domestic country counts as a country -- so the contest states them,
+         and set-up asks the contest (FCONTEST.ApplyContestTraits).
+
+         EVERY ONE DEFAULTS TO THE ARRAY, as the row accessors above default
+         to ContestsArray. A contest states one when it moves; until then the
+         answer is the one the head always read. *)
+      function GetQSOByBand: boolean; virtual;
+      function GetQSOByMode: boolean; virtual;
+      function GetMultByBand: boolean; virtual;
+      function GetMultByMode: boolean; virtual;
+      function GetVHFBandsEnabled: boolean; virtual;
+      function GetCountsDomesticCountries: boolean; virtual;
+
+      (* CQ ZONES OR ITU ZONES -- which list CTY.DAT answers a zone from.
+
+         A STATED MAPPING, NOT A CAST, and that is the fix for inventory defect
+         #2 (docs/CONTEST_OWNERSHIP_DESIGN.md section 8.2a). The head wrote
+         `ZoneModeType(<flag test> = 0)`: a Boolean cast to an enum. Delphi 7
+         gave True the ordinal 1, so the D7 program got ITUZoneMode for a
+         contest without the bit and CQZoneMode for one with it. FPC gave 255
+         for True -- measured in the contest matrix, 160 of 185 contests --
+         which is neither member, so every `case CTY.ctyZoneMode of` in
+         uctydat matched no arm and a zone came back 0.
+
+         The array's own legend states the rule this restores: ciCQZoneMode0
+         is "ITU ZONE MODE", ciCQZoneMode1 is "CQ ZONE MODE". The bit is
+         identical in D7's VC.pas for every contest (compared 2026-10-01). *)
+      function GetZoneMode: ZoneModeType; virtual;
+
+      (* A QSO PARTY'S OTHER DOMESTIC FILE -- the one an IN-STATE station
+         loads. DomesticFileName is the file every other station loads: for a
+         state party, the host's counties. '' for a contest that is not a QSO
+         party. Default: the QSOParties entry the row's P indexes, which is
+         where it is written down today. *)
+      function GetInStateDomesticFileName: string; virtual;
 
       (* ~~GetCountyLineCountiesMax~~ AND ~~GetCountyLineAllowed~~ ARE NOT HERE.
          They are on TContestStateQSOPartyBase -- 2026-09-29, NY4I: "Arktika
@@ -308,6 +355,16 @@ type
       property QSOPointMethod: QSOPointMethodType read GetQSOPointMethod;
       property IsUSQSOParty: boolean read GetIsUSQSOParty;
       property FormatsExchange: boolean read GetFormatsExchange;
+
+      (* Set-up's facts -- see the getters. *)
+      property QSOByBand: boolean read GetQSOByBand;
+      property QSOByMode: boolean read GetQSOByMode;
+      property MultByBand: boolean read GetMultByBand;
+      property MultByMode: boolean read GetMultByMode;
+      property VHFBandsEnabled: boolean read GetVHFBandsEnabled;
+      property CountsDomesticCountries: boolean read GetCountsDomesticCountries;
+      property ZoneMode: ZoneModeType read GetZoneMode;
+      property InStateDomesticFileName: string read GetInStateDomesticFileName;
 
       (* THE TWO-LETTER POSTAL CODE OF THE STATE THIS CONTEST BELONGS TO.
 
@@ -756,6 +813,67 @@ end;
 function TContestBase.GetCabrilloQSOLineFormat: string;
 begin
    Result := CabrilloQSOLineFormatDefault;
+end;
+
+function TContestBase.RowFlag(aBit: integer): boolean;
+begin
+   Result := (ContestsBooleanArray[FContest] and (1 shl aBit)) <> 0;
+end;
+
+function TContestBase.GetQSOByBand: boolean;
+begin
+   Result := RowFlag(QSO_BY_BAND_BIT);
+end;
+
+function TContestBase.GetQSOByMode: boolean;
+begin
+   Result := RowFlag(QSO_BY_MODE_BIT);
+end;
+
+function TContestBase.GetMultByBand: boolean;
+begin
+   Result := RowFlag(MULT_BY_BAND_BIT);
+end;
+
+function TContestBase.GetMultByMode: boolean;
+begin
+   Result := RowFlag(MULT_BY_MODE_BIT);
+end;
+
+function TContestBase.GetVHFBandsEnabled: boolean;
+begin
+   Result := RowFlag(VHF_BAND_ENABLE_BIT);
+end;
+
+function TContestBase.GetCountsDomesticCountries: boolean;
+begin
+   Result := RowFlag(CDC_BIT);
+end;
+
+function TContestBase.GetZoneMode: ZoneModeType;
+begin
+   (* See the declaration: the bit set means CQ zones, clear means ITU. *)
+   if RowFlag(CQ_ZONE_MODE_BIT) then
+      begin
+      Result := CQZoneMode;
+      end
+   else
+      begin
+      Result := ITUZoneMode;
+      end;
+end;
+
+function TContestBase.GetInStateDomesticFileName: string;
+var
+   partyIndex: integer;
+begin
+   (* The same index USQSOPartyStateName reads, bounded the same way. *)
+   Result := '';
+   partyIndex := ContestsArray[FContest].P;
+   if (partyIndex >= 1) and (partyIndex <= QSOPartiesCount) then
+      begin
+      Result := QSOParties[partyIndex].InsideStateDOMFile;
+      end;
 end;
 
 function TContestBase.ValidateQTHCount(aCount: integer;

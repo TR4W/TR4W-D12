@@ -98,6 +98,16 @@ procedure InstallTokenEffects;
   yet. *)
 procedure InstallSettingsEffects;
 
+(* REPLAY EVERY CONTEST TOKEN THE OPERATOR HAS STATED -- QSO POINT METHOD,
+  EXCHANGE RECEIVED, the four multipliers and INITIAL EXCHANGE -- through the
+  same arm a .cfg line runs, side effects included.
+
+  Called by contest set-up (FCONTEST.ApplyContestTraits) after it has written
+  the contest's own values, so a statement beats the contest by construction
+  and not only when its line happened to come after CONTEST. An unstated
+  setting is left alone: the contest's value stands. *)
+procedure ReplayContestStatements;
+
 implementation
 
 uses
@@ -314,7 +324,14 @@ begin
       end;
 end;
 
-procedure SettingChanged(const aPath: string);
+(* THE TOKEN ARMS -- the half of SettingChanged that turns a token into the
+  ordinal the engine reads, and that must run during a config load.
+
+  ITS OWN PROCEDURE SINCE M2 (2026-10-01) so that contest set-up can replay a
+  stated contest token through exactly this code -- see
+  ReplayContestStatements. A second copy of any arm would be a second rule for
+  what a statement does, free to drift from the first. *)
+procedure ApplyTokenSetting(const aPath: string);
 var
    i: tr4wColors;   // the ALERT COLOR token search, below
 begin
@@ -496,6 +513,35 @@ begin
          CTY.ctyZoneMode := ITUZoneMode;
          end;
       end;
+end;
+
+(* THE CONTEST'S SETTINGS THE OPERATOR HAS STATED, IN THE ORDER THEY ARE
+  REPLAYED. See ReplayContestStatements.
+
+  INITIAL EXCHANGE IS LAST, AFTER ZONE MULTIPLIER, because the zone arm sets
+  the initial exchange as a side effect: a stated INITIAL EXCHANGE must win
+  over that, whichever order the two lines had in the file. *)
+const
+   CONTEST_STATEMENT_PATHS: array[0..6] of string =
+      (QSO_POINT_METHOD, EXCHANGE_RECEIVED, DX_MULTIPLIER, DOMESTIC_MULTIPLIER,
+       PREFIX_MULTIPLIER, ZONE_MULTIPLIER, INITIAL_EXCHANGE);
+
+procedure ReplayContestStatements;
+var
+   i: integer;
+begin
+   for i := Low(CONTEST_STATEMENT_PATHS) to High(CONTEST_STATEMENT_PATHS) do
+      begin
+      if Settings.PathIsStated(CONTEST_STATEMENT_PATHS[i]) then
+         begin
+         ApplyTokenSetting(CONTEST_STATEMENT_PATHS[i]);
+         end;
+      end;
+end;
+
+procedure SettingChanged(const aPath: string);
+begin
+   ApplyTokenSetting(aPath);
 
    (* EVERYTHING BELOW REPAINTS, RECALCULATES OR TOUCHES A WINDOW, and none of
      it can run during the config load: the windows do not exist yet and the

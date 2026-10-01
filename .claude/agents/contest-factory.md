@@ -108,6 +108,23 @@ the target shape, the M-step migration order and the open questions.
   in a class. `ADIFContestId` is what export writes AND what import matches,
   which closed inventory D9. Use `ActiveContest` (nil for a classless
   contest) only for behaviour.
+- **Set-up reads the contest** (M2, 2026-10-01). `FCONTEST.ApplyContestTraits`
+  is the ONE writer of the seven `Active*` globals, the QSO/mult by band/mode
+  flags, VHF, count-domestic-countries, the CTY zone list and (in the head)
+  the domestic file: **the operator's statement (`CommandIsStated`), else
+  `ContestIdentity(Contest)`** -- never `ContestsArray` /
+  `ContestsBooleanArray` directly. The seven tokens are replayed through
+  `uSettingsEffects.ReplayContestStatements`, the same arm a `.cfg` line runs.
+  So **a trait override changes set-up now** -- the matrix sees it. The
+  per-contest `FoundContest` arms still run after and still win (M7 moves
+  them into `DescribeSession`); `InHostState` waits for M7 too. New traits:
+  `ZoneMode` (stated, never a Boolean cast -- that gave 255),
+  `QSOByBand/Mode`, `MultByBand/Mode`, `VHFBandsEnabled`,
+  `CountsDomesticCountries`, `InStateDomesticFileName`. A QSO party's
+  `DomesticFileName` is its COUNTY file (out-of-state load, in-state test);
+  `Test_EveryQSOPartyNamesBothDomesticFiles` holds the two names together.
+  In-state detection reads it through `uAppPaths.ShippedDomFilePath` and
+  `uDomFileKeys`. Design doc §7.9, §8.2c.
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog

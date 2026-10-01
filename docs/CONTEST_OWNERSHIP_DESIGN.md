@@ -309,6 +309,12 @@ The operator's `.cfg` rows are applied **after** that, by
 `uSettingsEffects.ApplyMultiplierToken`. "Operator beats contest" is enforced
 only by that ordering.
 
+**Item 1 and the head of item 2 changed at M2 (2026-10-01, §7.9, §8.2c).** The
+head no longer reads `ContestsArray` or `ContestsBooleanArray`: one resolver,
+`FCONTEST.ApplyContestTraits`, writes every head value from the operator's
+statement, else `ContestIdentity(Contest)`. Item 3, the arms, is unchanged and
+still runs after it.
+
 ### 4.2 Target
 
 `FoundContest`'s head asks `ContestDefinition(Contest)` for the contest object.
@@ -330,7 +336,9 @@ so expose it rather than write a second one. The head pushes the station in
   `TStationContext.InHostState`. It is computed by `uContestFactory`, the one
   unit allowed to read globals, from `FoundMyStateInDomFile`. That resolves
   **D8's six conditional disagreements**, which no single trait value could
-  express.
+  express. **Deferred to M7 (DECIDED at M2, §7.9):** the head asks
+  `ContestIdentity`, which carries no station, and the arms that branch on
+  in-state still run after it, so today's values survive without it.
 - **D8's one unconditional disagreement is a decision, not a refactor:** Field
   Day's DX multiplier (Q1).
 - **`ContestsArray` follows the class.** It is `array[ContestType]`, so rows
@@ -751,6 +759,76 @@ stated continent differs from the derived one. The fix is to move it to
 `TMySettings`, so it goes into `settings/tr4w.json` with the other `MY`
 fields. That changes the settings file's shape, so it was not done here.
 
+### 7.9 DECIDED (2026-10-01, M2): what set-up starts from, and in what order
+
+NY4I delegated the design forks of M2. Each decision below rests on the
+evidence given with it.
+
+- **ONE RESOLVER: `FCONTEST.ApplyContestTraits(aContest)`**, called by
+  `FoundContest`'s head with `ContestIdentity(Contest)`. It is the only writer
+  of the seven `Active*` globals, of `Settings.Qso.ByMode/ByBand`,
+  `Settings.Mult.ByMode/ByBand`, `Settings.Bands.VhfEnabled`,
+  `Settings.Contest.CountDomesticCountries` and of `CTY.ctyZoneMode`. The head
+  then takes the domestic file from the same object (`DomesticFileName`, and
+  `InStateDomesticFileName` for an in-state party station).
+- **THE PRECEDENCE: the operator's statement, else the contest.**
+  - A setting that IS its property (the flags, `DOMESTIC FILENAME`) is not
+    assigned when `CommandIsStated`.
+  - The seven tokens are assigned from the class, then every stated one is
+    **replayed** through `uSettingsEffects.ReplayContestStatements`, which runs
+    the same arm a `.cfg` line runs (`ApplyTokenSetting`), side effects
+    included. Replaying rather than "leave the global alone" is necessary: the
+    log's reapply records a statement equal to the value in force without
+    assigning, so no setter ran and the global can hold the contest's value.
+    The order is fixed, with `INITIAL EXCHANGE` last because the `ZONE
+    MULTIPLIER` arm sets the initial exchange as a side effect.
+  - `TR4WSettings.PathIsStated(path)` was added for the replay, which knows
+    paths rather than names. `CommandIsStated` now calls it, so the lookup
+    exists once. `Test_ContestSetUpAsksRealContestScopedNames` checks every
+    name and path set-up asks.
+- **A STATEMENT BEFORE THE `CONTEST` LINE NOW STANDS. This is a behaviour
+  change, and it removes a defect.** Before M2 the head overwrote such a
+  statement for every one of these values. "Operator beats contest" held only
+  when the operator's line came after `CONTEST`. It now holds whatever the
+  line order. Verified with one-off runs (not frozen): `ARRL-10` with `QSO
+  POINT METHOD`, `MULT BY BAND`, `ZONE MULTIPLIER = CQ ZONES` and `DOMESTIC
+  FILENAME` stated before `CONTEST` keeps all four, and the zone statement
+  brings its zone list and initial exchange. **A per-contest arm still
+  overwrites a pre-`CONTEST` statement, exactly as before**, because the arms
+  run after the head. For example, `ARRL-10`'s arm sets its DX multiplier and
+  Field Day's arm sets `NoDXMults`. That moves with each arm at M7. A line
+  after `CONTEST` is unchanged: its setter still runs last. The matrix and
+  every corpus `.cfg` state none of these values before `CONTEST` (measured),
+  so neither oracle moves.
+- **THE ZONE LIST IS A CLASS TRAIT: `TContestBase.ZoneMode`** (defect #2). It
+  is "CQ zones or ITU zones", a fact about the contest. The base reads the
+  array legend, which is D7's rule, and a class states it when it moves.
+  `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled` and
+  `CountsDomesticCountries` joined it for the same reason. They are one
+  property per fact (§1.2, "sponsor parameters") and each defaults to
+  `ContestsBooleanArray`.
+- **A QSO PARTY'S TWO FILES ARE TWO CLASS FACTS.** `DomesticFileName` is the
+  host's county file: every other station loads it, and the in-state test
+  reads it. `InStateDomesticFileName` is the in-state file. Until M2 the head
+  spelled the out-of-state name a second way, as the in-state name plus
+  `_cty`. It now uses `DomesticFileName`, which is equal for every party once
+  Colorado's row is fixed. `Test_EveryQSOPartyNamesBothDomesticFiles` pins
+  the two together and checks that both files ship.
+- **`InHostState` WAITS FOR M7, AND THE ARMS KEEP D8's SIX CONDITIONALS.**
+  `ContestIdentity` carries no station; it answers what a contest IS. An
+  answer that varies with the station belongs to `DescribeSession` (§4.2).
+  Each conditional arm (AZ, CQP, Salmon Run, TX and the rest) still runs after
+  the head and still overwrites the head's value, so the class can keep
+  stating one branch without changing behaviour. The matrix confirmed it: the
+  resolver alone moved 0 of 185 records.
+- **D8's UNCONDITIONAL DISAGREEMENT, Field Day's DX multiplier, was corrected
+  first (Q1):** both the class and the row now say `NoDXMults`, so the value
+  the head starts from is the value the arm ends with.
+- **The in-state test keeps D7's rule**: MY STATE is a key of the county file.
+  It differs in one way: the comparison ignores case. EnumDOM2 upper-cased the
+  line but not MY STATE, and a county code is not case-significant anywhere
+  else. **The rule takes the data at its word**, and one file abuses it (Q14).
+
 ### 8.1 Which oracle sees what
 
 | oracle | sees | blind to |
@@ -781,7 +859,7 @@ Each is behaviour-preserving unless marked.
 |---|---|---|
 | **M0** | **DONE `93fbc053`.** Q1/Q2 ruled, Q3 decided (§7.8). Build the legacy-fixture harness (§8.1) | the harness |
 | **M1** | **DONE 2026-10-01 (§8.2b).** **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
-| **M2** | **Setup head reads the class.** `ContestDefinition`, `InHostState`, `Active*` written from the class's traits. Arms stay. Freeze a setup fixture first: every `ContestType` x station variants (in-state/out, K/VE/DX) -> `Active*` and settings | setup fixture; corpus |
+| **M2** | **DONE 2026-10-01 (§7.9, §8.2c).** **Setup head reads the class.** `FCONTEST.ApplyContestTraits`: the operator's statement, else `ContestIdentity` (M1's accessor serves as `ContestDefinition`). `Active*` and the head's flags come from the class's traits. Arms stay. Defects #1, #2, #3 and #5 fixed. `InHostState` deferred to M7 | the contest matrix; corpus |
 | **M3** | **Scoring finishes on the class.** The ten secondary `ActiveQSOPointMethod` readers move into their contests (§2; **behaviour change** for an operator override). Family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
 | **M4** | **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields. D4's dead arms and the D6 no-op go | corpus; per-class round-trip unit test |
 | **M5** | **Exchange import and parse.** Generic importer, then `ApplyADIFImport` (§3.2), including the `APP_N1MM_EXCHANGE1` arm, pinned in both tag orders. `ParseReceivedExchange` per contest over lifted helpers. D1/D2's dead paths go | `test-adif-roundtrip.sh`; legacy fixture; `BENCH_QUEUE.md` for typed entry |
@@ -803,11 +881,11 @@ re-freezes only the contests the fix reaches, with the reason:
 
 | # | defect | fixed in |
 |---|---|---|
-| 1 | no station is ever in-state for a QSO party: `FoundMyStateInDomFile` builds `'DOM' + DF + '.DOM'` with no separator (D7: `'%sDOM\%s.DOM'`) -- port regression | M2 |
-| 2 | CTY zone mode 255 in 500 of 575 records: `ZoneModeType(<boolean>)` at `fcontest.pas:421`; no `uctydat` arm matches, zone 0 | M2 |
-| 3 | NEQP crashes in setup with an empty MY STATE (`PWORD` of an empty string; can never match ME/NH since `string` is 2-byte) | M2 |
+| 1 | no station is ever in-state for a QSO party: `FoundMyStateInDomFile` builds `'DOM' + DF + '.DOM'` with no separator (D7: `'%sDOM\%s.DOM'`) -- port regression | **FIXED M2.** `uAppPaths.ShippedDomFilePath` (now the one composition for all three dom readers: FCONTEST, `LogCfg`, `logdom`'s INCLUDE) and `uDomFileKeys` (EnumDOM2's rule, unit-tested). Matrix: the 21 parties' us-host variants are now in state, plus NC's ve variant -- see §7.9 |
+| 2 | CTY zone mode 255 in 500 of 575 records: `ZoneModeType(<boolean>)` at `fcontest.pas:421`; no `uctydat` arm matches, zone 0 | **FIXED M2.** `TContestBase.ZoneMode`, the array legend's rule (bit set CQ, clear ITU) -- D7's. Matrix: 160 contests; MY ZONE now derives an ITU zone, and with it the zone memories, sent zones and four contests' sparse-QSO points |
+| 3 | NEQP crashes in setup with an empty MY STATE (`PWORD` of an empty string; can never match ME/NH since `string` is 2-byte) | **FIXED M2.** A string comparison of MY STATE's first two characters (D7's rule). Matrix: the dx variant records |
 | 4 | ARRL SS Cabrillo writes a NUL for an empty precedence | M4 |
-| 5 | COLORADOQSOPARTY's row is shifted: `Email` holds `'colorado_cty'`, `DF` is `''` | M2 |
+| 5 | COLORADOQSOPARTY's row is shifted: `Email` holds `'colorado_cty'`, `DF` is `''` | **FIXED M2**, row and class together; no neighbouring row is shifted. Matrix: Colorado's us-host input only |
 | 6 | REF's `FrenchID` AVs on an empty `CountryID` (latent) | M5 |
 
 ### 8.2b M1 -- what it covered (2026-10-01)
@@ -871,6 +949,34 @@ spelling, not a class property, and `ContestTypeSA` does not retire at M10.
 `test/logdump` still keeps its own diverged rule (`'CONTEST_' + ordinal`), and
 `verify_adif_export.py`'s note on `CONTEST_ID` predates the fallback.
 
+### 8.2c M2 -- what it covered (2026-10-01)
+
+The decisions are in §7.9. Each change was matrix-run on its own, and only the
+contests it reached were re-frozen, with a reason:
+
+| change | contests re-frozen | what moved |
+|---|---|---|
+| the resolver, with Field Day's DX multiplier corrected first | **none** (185 identical) | nothing -- every class trait equals the row except Field Day's, and its arm wins |
+| #2 zone list | 160 (every contest without the CQ bit) | `cty.zonemode` 255 -> `ITUZoneMode`; MY ZONE derives the station's ITU zone (K0AAA 7, DL1AAA 28) where it read 0; `qthzone` is CTY's ITU zone; the zone exchange memories, `STX_STRING` and the Cabrillo sent zone follow MY ZONE; sparse-QSO points move for IARU, BSCI and OZCR_Z (a zone-0 exchange no longer "matches" a zone-0 station); NZ Field Day's VE zone flag |
+| #5 Colorado's row | COLORADOQSOPARTY | the matrix's us-host input only: its MY STATE is the county file's first key, `Ada`, where the empty DF made it fall back to `CO` |
+| #1 in-state | the 21 parties with a host index | every us-host variant is in state: `(in state)`, the in-state domestic file, `MultipliersIsCounties` FALSE, and the in-state branch of each conditional arm. Also NCQSOPARTY's **ve** variant (Q14) |
+| #3 NEQP | NEWENGLANDQSO | the dx variant records -- outside New England -- instead of `RUN FAILED: exit 217` |
+
+**Also measured, not frozen:** an NEQP station with MY STATE `ME` now gets
+`NEQSOW1.dom`, `RSTDomesticOrDXQTHExchange` and
+`ARRLDXCCWithNoUSACanadaKH6OrKL7`. The matrix has no variant for that, because
+NEQP has no host index.
+
+**Ceilings:** narrowing 1337 -> 1335. The in-state test and `LogCfg`'s domestic
+path stopped going through `AnsiChar` buffers. `Lint-ContestNameTests` did not
+move: the resolver names no contest, and the NEQP arm was already one.
+
+**Not M2:** the per-contest arms (M7), `InHostState` (M7), and the CW memories
+an in-state AZ or Salmon Run station gets. Its exchange,
+`RSTDomesticOrDXQTHExchange`, has no arm in `FoundContest`'s closing
+`case ActiveExchange`, so its F3-F5 memories are left blank. That is what D7
+did for an in-state station, and nobody saw it because nobody was in state.
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -899,7 +1005,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 
 - **Q1** (C2). **RULED 2026-10-01 (NY4I): ARRL Field Day has NO multipliers at all.**
   `NoDXMults` (the setup arm) is right and the class's `ARRLDXCC` is wrong; the
-  class is corrected before M2 makes it the source. A DX station CAN be worked:
+  class is corrected before M2 makes it the source. **Done at M2: the class and
+  the row both say `NoDXMults`** (`Test_FieldDayHasNoDXMultiplier`). A DX station CAN be worked:
   it sends a class and `DX` (e.g. `1D DX`) where a US station sends a section
   (`1A WCF`). **DX IS NOT AN ARRL SECTION.** It goes in the section POSITION of
   the Cabrillo QSO line but NOT in ADIF's `ARRL_SECT` -- the Field Day class
@@ -945,6 +1052,20 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 - **Q13** (old Q7, Finding 3). The OQP arm scores by the session's `ActiveMode`,
   not the QSO's own mode, so a rescore follows the radio. Fix it when OQP gains
   its class? (This is a behaviour change.)
+
+- **Q14** (M2, sponsor data). **`nc_cty.dom`, the North Carolina file
+  out-of-state stations load, is not a list of NC counties.** It includes
+  `S50.DOM` (the states) and declares `Dc` and the thirteen Canadian
+  provinces, then the counties. The sponsor's out-of-state multipliers are the
+  100 counties (https://ncqsoparty.org/rules/), but the frozen matrix shows an
+  out-of-state NC entrant scoring `CT` and `ON` as domestic multipliers. Now
+  that in-state detection works (defect #1), the same file also makes a DC or
+  Canadian station that states its own S/P (`ON`) "in state" for NC, and the
+  matrix's ve variant moved that way. D7 used the same rule on the same file.
+  `nc.dom`, the in-state list, already includes `S50`, `P13` and
+  `NC_CTY.DOM`. **Should `nc_cty.dom` hold the 100 counties only?** That
+  would correct both. It is a data change that moves NC's out-of-state
+  scoring, so it is NY4I's decision.
 
 **Answered by the ruling, and dropped:** C3 (`CreateOwned...`), C4 (the
 exchange-field model), C5 (`EXCHANGE RECEIVED` as a strategy swap; its residue

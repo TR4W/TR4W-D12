@@ -68,20 +68,22 @@ procedure Add_KVEKH6KL;
 procedure Add_KVE;
 procedure AddRussianDomesticCountrys;
 function FoundMyStateInDomFile: boolean;
-procedure EnumDOM2(FileString: PShortString);
 
 procedure SetUpNameAndStateExchange;
 procedure SetUpRSTQSONumberExchange;
 procedure SetUpRSTMyStateExchange;
 procedure SetUpRSTMyZoneExchange;
 
-var
-  InState: boolean;
-
 implementation
 
 uses
    uSettingsModel,     // Settings.Bands -- HF / VHF / WARC enables
+   (* ContestIdentity -- the contest object set-up reads -- and
+      ReplayContestStatements, the operator's half of ApplyContestTraits. *)
+   uContestBase,
+   uContestRegistry,
+   uSettingsEffects,
+   uDomFileKeys,       // FoundMyStateInDomFile's reading rule
    SysUtils,      // ExtractFilePath/ExtractFileName -- see SetUpFileNames
    uConfigValues, LogGrid,
   LogStuff,
@@ -387,11 +389,90 @@ begin
   AddDomesticCountry('KP5');
 end;
 
+(* WHAT A CONTEST'S SET-UP STARTS FROM, AND THE ONE PLACE IT IS WRITTEN -- M2,
+  2026-10-01 (docs/CONTEST_OWNERSHIP_DESIGN.md section 4.2).
+
+  THE PRECEDENCE, FOR EVERY VALUE HERE:
+    1. what the OPERATOR STATED (TR4WSettings.CommandIsStated -- a .cfg line,
+       the New Contest dialog, Preferences, Alt-P, a peer, the log's own
+       statements);
+    2. otherwise what the CONTEST says -- aContest, which is
+       uContestRegistry.ContestIdentity: the registered class, or a plain
+       TContestBase reading the row for a contest that has none.
+  Never ContestsArray or ContestsBooleanArray directly: the class is the
+  single source, and its getters default to the arrays until it states its
+  own.
+
+  WHAT CHANGED, AND WHAT DID NOT. Before M2 the head copied the arrays and an
+  operator's statement won only because it was APPLIED LATER -- a .cfg line
+  after CONTEST re-ran its setter after this. That still happens. What is new
+  is that a statement made BEFORE the CONTEST line is no longer overwritten
+  here: it used to be, for every one of these values, which is "operator beats
+  contest" holding by accident of line order. FoundContest's per-contest arms
+  still run AFTER this and still overwrite what they always overwrote; they
+  move into the contest's DescribeSession at M7.
+
+  THE SEVEN Active* TOKENS ARE REPLAYED, NOT LEFT ALONE. Their statement lives
+  in a settings property, but the engine reads a global, and the global can
+  disagree with the property: the log's reapply records a statement that
+  equals the value in force without assigning anything, so no setter ran.
+  uSettingsEffects.ReplayContestStatements runs the very arm a .cfg line runs,
+  side effects included (ZONE MULTIPLIER also sets the initial exchange and
+  the zone list). The other values ARE their property, so a stated one is
+  simply not assigned. *)
+procedure ApplyContestTraits(aContest: TContestBase);
+begin
+  if not Settings.CommandIsStated('QSO BY MODE') then
+     begin
+     Settings.Qso.ByMode := aContest.QSOByMode;
+     end;
+  if not Settings.CommandIsStated('QSO BY BAND') then
+     begin
+     Settings.Qso.ByBand := aContest.QSOByBand;
+     end;
+  if not Settings.CommandIsStated('MULT BY MODE') then
+     begin
+     Settings.Mult.ByMode := aContest.MultByMode;
+     end;
+  if not Settings.CommandIsStated('MULT BY BAND') then
+     begin
+     Settings.Mult.ByBand := aContest.MultByBand;
+     end;
+  if not Settings.CommandIsStated('VHF BAND ENABLE') then
+     begin
+     Settings.Bands.VhfEnabled := aContest.VHFBandsEnabled;
+     end;
+  if not Settings.CommandIsStated('COUNT DOMESTIC COUNTRIES') then
+     begin
+     Settings.Contest.CountDomesticCountries := aContest.CountsDomesticCountries;
+     end;
+
+  (* CQ OR ITU ZONES, AS THE CONTEST STATES IT. This was a Boolean cast to
+    ZoneModeType, which FPC evaluated to 255 for most contests -- no member
+    at all, so CTY.DAT answered every zone 0. See TContestBase.GetZoneMode.
+    A stated ZONE MULTIPLIER of CQ or ITU zones still overrides it below. *)
+  CTY.ctyZoneMode := aContest.ZoneMode;
+
+  ActiveQSOPointMethod := aContest.QSOPointMethod;
+  ActiveExchange := aContest.ExchangeKind;
+  ActiveInitialExchange := aContest.InitialExchangeKind;
+  ActiveDomesticMult := aContest.DomesticMultiplierType;
+  ActiveDXMult := aContest.DXMultiplierType;
+  ActiveZoneMult := aContest.ZoneMultiplierType;
+  ActivePrefixMult := aContest.PrefixMultiplierType;
+
+  ReplayContestStatements;
+end;
+
 function FoundContest(CMD: ShortString): boolean;
 
 var
 
-  TempWord: Word;
+  (* The first two characters of MY STATE -- the New England QSO Party arm. *)
+  NewEnglandState: string;
+
+  (* What this contest IS -- owned by uContestRegistry, never freed here. *)
+  definition: TContestBase;
 
   TempDomesticQTHDataFileName: string;
   TempOblast: Str2;
@@ -408,53 +489,27 @@ begin
   //  Contest := GetContestFromString(CMD);
   if Contest <> DUMMYCONTEST then
      begin
-     Settings.Qso.ByMode := ContestsBooleanArray[Contest] and (1 shl QSO_BY_MODE_BIT) <> 0;
-     Settings.Qso.ByBand := ContestsBooleanArray[Contest] and (1 shl QSO_BY_BAND_BIT) <> 0;
-     Settings.Mult.ByMode := ContestsBooleanArray[Contest] and (1 shl MULT_BY_MODE_BIT) <>
-       0;
-     Settings.Mult.ByBand := ContestsBooleanArray[Contest] and (1 shl MULT_BY_BAND_BIT) <>
-       0;
+     definition := ContestIdentity(Contest);
+     ApplyContestTraits(definition);
 
-     Settings.Bands.VhfEnabled := ContestsBooleanArray[Contest] and (1 shl
-       VHF_BAND_ENABLE_BIT) <> 0;
-
-     CTY.ctyZoneMode := ZoneModeType(ContestsBooleanArray[Contest] and (1 shl
-       CQ_ZONE_MODE_BIT) = 0);
-
-     Settings.Contest.CountDomesticCountries := ContestsBooleanArray[Contest] and (1 shl CDC_BIT)
-       <> 0;
-
-     ActiveQSOPointMethod := ContestsArray[Contest].QP;
-     ActiveExchange := ContestsArray[Contest].AE;
-     ActiveInitialExchange := ContestsArray[Contest].AIE;
-
-     ActiveDomesticMult := ContestsArray[Contest].dm;
-     ActiveDXMult := ContestsArray[Contest].XM;
-     ActiveZoneMult := ContestsArray[Contest].ZnM;
-     ActivePrefixMult := ContestsArray[Contest].PxM;
-
-     //if ActiveZoneMult = ITUZones then
      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
 
-     //TempDomesticQTHDataFileName := nil;
-
-     if ContestsArray[Contest].p <> 0 then
+     if definition.IsUSQSOParty then
         begin
         if FoundMyStateInDomFile then
            begin
-           TempDomesticQTHDataFileName :=
-             QSOParties[ContestsArray[Contest].p].InsideStateDOMFile;
+           TempDomesticQTHDataFileName := definition.InStateDomesticFileName;
            Settings.Contest.Name := ContestTypeSA[Contest] + ' (in state)';
            end
         else
            begin
-           (* THE OUT-OF-STATE FILE: the in-state name with _cty. It was
-             built in a 256-byte buffer -- StrPas of a PAnsiChar field, then a
-             pointer to the buffer. The field and this local are strings now,
-             so it is a concatenation. *)
-           TempDomesticQTHDataFileName :=
-             QSOParties[ContestsArray[Contest].p].InsideStateDOMFile + '_cty';
-             //QSOParties[ContestsArray[Contest].p].OutsideStateDOMFile;
+           (* THE OUT-OF-STATE FILE IS THE CONTEST'S DOMESTIC FILE -- the
+             host's counties, the same file FoundMyStateInDomFile reads. It
+             was built here as the in-state name plus '_cty', a second
+             spelling of the same name; every party's row agrees with it
+             since Colorado's was corrected, and
+             Test_EveryQSOPartyNamesBothDomesticFiles holds them together. *)
+           TempDomesticQTHDataFileName := definition.DomesticFileName;
            Settings.Contest.Name := ContestTypeSA[Contest] + ' (out of state)';
            MultipliersIsCounties := True;
            end;
@@ -462,10 +517,17 @@ begin
         end
      else
         begin
-        //      TempInt := StrLen(ContestsArray[Contest].DF);
-        //      DomesticQTHDataFileName[0] := CHR(TempInt);
-        //      Move(ContestsArray[Contest].DF^, DomesticQTHDataFileName[1], TempInt);
-        TempDomesticQTHDataFileName := ContestsArray[Contest].DF;
+        TempDomesticQTHDataFileName := definition.DomesticFileName;
+        end;
+
+     (* A STATED DOMESTIC FILENAME STANDS -- the same precedence as
+       ApplyContestTraits. The foot of this routine writes the setting only
+       when this local is not empty, so emptying it leaves the operator's
+       file in place; an arm below that names a file still overwrites it, as
+       an arm overwrites every value the head writes. *)
+     if Settings.CommandIsStated('DOMESTIC FILENAME') then
+        begin
+        TempDomesticQTHDataFileName := '';
         end;
      end;
 
@@ -1109,14 +1171,23 @@ begin
 
     NEWENGLANDQSO:
       begin
-        TempWord := PWORD(@Settings.My.State[1])^;
-        if
-          (TempWord = Ord('M') + Ord('E') * $100) or
-          (TempWord = Ord('N') + Ord('H') * $100) or
-          (TempWord = Ord('V') + Ord('T') * $100) or
-          (TempWord = Ord('M') + Ord('A') * $100) or
-          (TempWord = Ord('C') + Ord('T') * $100) or
-          (TempWord = Ord('R') + Ord('I') * $100) then
+        (* A NEW ENGLAND STATION: MY STATE BEGINS WITH ONE OF THE SIX STATES.
+
+          A STRING COMPARISON OF THE FIRST TWO CHARACTERS -- 2026-10-01, M2,
+          inventory defect #3. This read PWORD(@Settings.My.State[1])^, which
+          was D7's way to take two AnsiChars at once. Here string is
+          UnicodeString, so the word held ONE character and could never equal
+          'ME' or any of the others -- no station was ever in New England --
+          and an EMPTY MY STATE gave PWORD the address of nothing: set-up
+          crashed for every DX station (the contest matrix's dx variant,
+          exit 217). The first-two-characters rule is D7's, kept as it was. *)
+        NewEnglandState := Copy(Settings.My.State, 1, 2);
+        if (NewEnglandState = 'ME') or
+           (NewEnglandState = 'NH') or
+           (NewEnglandState = 'VT') or
+           (NewEnglandState = 'MA') or
+           (NewEnglandState = 'CT') or
+           (NewEnglandState = 'RI') then
            begin
            TempDomesticQTHDataFileName := 'NEQSOW1';
            ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
@@ -2017,52 +2088,43 @@ begin
                              + string(Settings.Contest.Name) + ' ' + Settings.My.Call);
 end;
 
-procedure EnumDOM2(FileString: PShortString);
-var
-  TempString: ShortString;
-begin
-  if StringHas(FileString^, '=') then
-     begin
-     TempString := PrecedingString(FileString^, '=');
-     if tPos(TempString, '>') <> 0 then
-        begin
-        TempString := PrecedingString(TempString, '>');
-        end;
-     GetRidOfPrecedingSpaces(TempString);
-     GetRidOfPostcedingSpaces(TempString);
-     if TempString = Settings.My.State then
-        begin
-        InState := True;
-        end;
-     end;
-end;
+(* IS THIS STATION IN THE HOST STATE OF THE QSO PARTY BEING SET UP?
 
+  It is when MY STATE is one of the keys of the party's county file -- the
+  contest's DomesticFileName, the file every out-of-state station loads. An
+  in-state station's "state" is its county.
+
+  THIS HAD NEVER ANSWERED YES IN THIS TREE (inventory defect #1, fixed in
+  M2, 2026-10-01). The path was 'DOM' + name + '.DOM' -- D7 wrote
+  '%sDOM\%s.DOM' and the separator was lost in the port -- so the file was
+  never found and every station was out of state: the out-of-state domestic
+  file, exchange and multipliers for every operator of every party, the host
+  state's own included. The path now comes from uAppPaths, which the two
+  other dom readers use too, and the reading rule -- EnumDOM2's, which was a
+  callback writing a unit-level flag -- is uDomFileKeys, where a test reaches
+  it.
+
+  The file name is asked of the contest (ContestIdentity), as set-up's head
+  asks it, so the in-state test and the out-of-state file are one name. *)
 function FoundMyStateInDomFile: boolean;
 var
-
-  TempFileName: FileNameType;
+  countyFile: string;
 begin
   Result := False;
   if Contest = DUMMYCONTEST then
      begin
      Exit;
      end;
-  InState := False;
-  SetCharBuffer(TempFileName,
-                CharBufferText(TR4W_PATH_NAME) + 'DOM' +
-                ContestsArray[Contest].DF + '.DOM');
-  (* THE PATH IS SPELLED FOR WINDOWS -- separator AND case. Left as written
-    because it is correct on Windows and because 153 literals in this tree
-    spell a path this way; the resolver handles the whole class in one place
-    rather than each literal being edited and re-broken. It converts the
-    backslash and matches DOM/ against the shipped dom/ and .DOM against
-    .dom, none of which differ on Windows. *)
-  ResolveDataFileInPlace(TempFileName);
-  if not EnumerateLinesInFile(TempFileName, EnumDOM2, True) then
+
+  countyFile := ContestIdentity(Contest).DomesticFileName;
+  if countyFile = '' then
      begin
      Exit;
      end;
-  Result := InState;
-  // Result := True;
+
+  Result := DomFileOnDiskDeclaresKey(
+               ShippedDomFilePath(countyFile + string(DOM_EXTENSION)),
+               Settings.My.State);
 end;
+
 end.

@@ -156,6 +156,23 @@ function DownloadedDataFilePath(const aName: string): string;
   beside the contest, and FCONTEST.SetUpFileNames owns that order. *)
 function PreferredDataFilePath(const aName: string): string;
 
+(* A SHIPPED DOMESTIC FILE -- dom<separator>aName under the data directory,
+  matched case-tolerantly (see ExistingDataFile). aName is a file NAME,
+  extension included: 'arrlsect.dom'.
+
+  ONE COMPOSITION, THREE CALLERS (2026-10-01). LogCfg loads the contest's
+  domestic file, logdom follows an INCLUDE FILE line, and FCONTEST reads a
+  QSO party's county file to decide whether the station is in state. Each
+  spelled the path itself, and the third had dropped the separator --
+  'DOM' + name -- so no station was ever in state for any QSO party
+  (inventory defect #1). D7 wrote '%sDOM\%s.DOM'; this is that, for every
+  platform.
+
+  NOT the per-contest override. A <log stem>.DOM beside the contest replaces
+  the domestic file a contest LOADS, and LogCfg looks for that first; it is
+  not a shipped file and this does not look for it. *)
+function ShippedDomFilePath(const aName: string): string;
+
 (* THE SAME FILE, WHATEVER CASE IT IS SPELLED IN.
 
   Returns aPath when it exists. When it does not, and the platform has a
@@ -731,6 +748,11 @@ begin
       end;
 
    Result := ExistingDataFile(DataFilePath(aName));
+end;
+
+function ShippedDomFilePath(const aName: string): string;
+begin
+   Result := ExistingDataFile(DataFilePath('dom' + PathDelim + aName));
 end;
 
 end.
