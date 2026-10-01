@@ -612,6 +612,7 @@ function GetSentRSTFromExchangeString(var ExchangeString: OpenString {Str40}):
 
 procedure IncrementQTCCount(Call: CallString);
 function IsValidPOTAPark(const park: string): boolean;
+function ResolvePOTAParkFromADIF(const aPOTARef, aSIG, aSIGInfo: string): string;
 function IsValidGUID(const guid: string): boolean;
 function KeyRecentlyPressed(Key: Char; MaxElaspedSec100: LONGINT): boolean;
 procedure KeyStamp(Key: Char);
@@ -11163,6 +11164,30 @@ begin
 
    Result := True;
    logger.debug('%s is a valid park', [park]);
+end;
+
+(* The park an imported ADIF record names, or '' when it names none.
+
+  POTA_REF wins when it is a valid park.  Failing that, a record written by
+  a logger that only knows the generic SIG / SIG_INFO pair carries the park
+  there, and it counts only when SIG says POTA -- a WWFF or SOTA reference
+  in SIG_INFO is not a park.  The caller falls back to the state otherwise. *)
+function ResolvePOTAParkFromADIF(const aPOTARef, aSIG, aSIGInfo: string): string;
+begin
+   Result := '';
+
+   if IsValidPOTAPark(aPOTARef) then
+      begin
+      Result := aPOTARef;
+      end
+   else
+      begin
+      if (AnsiUpperCase(aSIG) = 'POTA') and
+         (IsValidPOTAPark(aSIGInfo))    then
+         begin
+         Result := aSIGInfo;
+         end;
+      end;
 end;
 
 begin

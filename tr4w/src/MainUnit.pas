@@ -9942,6 +9942,8 @@ var
   (* SRX_STRING with the received RST taken off -- see
     uADIF.ExchangeFromSRXString. *)
   srxExchange : string;
+  (* The POTA park the record names, or '' -- see ResolvePOTAParkFromADIF. *)
+  parkRef : string;
 begin
   // fix up operator
   if exch.ceOperator = '' then
@@ -10073,27 +10075,21 @@ begin
          end;
 
     POTA:
-      if IsValidPOTAPark(temps.POTARef) then
+      begin
+      parkRef := ResolvePOTAParkFromADIF(temps.POTARef, temps.SIG, temps.SIG_Info);
+      if parkRef <> '' then
          begin
-         if Length(temps.POTARef) = 0 then
-            begin
-            if AnsiUpperCase(temps.SIG) = 'POTA' then
-              if IsValidPOTAPark(temps.SIG_Info) then
-                 begin
-                 exch.QTHString := temps.SIG_Info;
-                 end;
-            end
-         else
-            begin
-            exch.QTHString := temps.POTARef;
-            end;
+         exch.QTHString := parkRef;
          end
       else
-        if LooksLikeAState(temps.State) then
-           begin
-           exch.QTHString   := temps.State;
-           exch.DomesticQTH := temps.State;
-           end;
+         begin
+         if LooksLikeAState(temps.State) then
+            begin
+            exch.QTHString   := temps.State;
+            exch.DomesticQTH := temps.State;
+            end;
+         end;
+      end;
 
     WWDIGI, ARRLDIGI:
       begin

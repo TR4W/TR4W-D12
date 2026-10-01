@@ -51,6 +51,7 @@ type
    private
       procedure Test_IsValidGUID;
       procedure Test_IsValidPOTAPark;
+      procedure Test_ResolvePOTAParkFromADIF;
    end;
 
 implementation
@@ -62,6 +63,7 @@ procedure TRegexValidatorTests.RunAllTests;
 begin
    Test_IsValidGUID;
    Test_IsValidPOTAPark;
+   Test_ResolvePOTAParkFromADIF;
 end;
 
 // ---------------------------------------------------------------------------
@@ -110,6 +112,34 @@ begin
    CheckFalse(IsValidPOTAPark('U-1234'),   'one letter');
    CheckFalse(IsValidPOTAPark('US1234'),   'no hyphen');
    CheckFalse(IsValidPOTAPark(''),         'empty');
+end;
+
+// ---------------------------------------------------------------------------
+// ResolvePOTAParkFromADIF -- the POTA arm of MainUnit's ADIF import tail
+// ---------------------------------------------------------------------------
+
+procedure TRegexValidatorTests.Test_ResolvePOTAParkFromADIF;
+begin
+   BeginTest('Test_ResolvePOTAParkFromADIF');
+
+   CheckEquals('US-1234', ResolvePOTAParkFromADIF('US-1234', '', ''),
+               'a valid POTA_REF wins');
+   CheckEquals('US-1234', ResolvePOTAParkFromADIF('US-1234', 'POTA', 'US-9999'),
+               'POTA_REF beats SIG_INFO');
+   CheckEquals('US-5678', ResolvePOTAParkFromADIF('', 'POTA', 'US-5678'),
+               'no POTA_REF: SIG=POTA, SIG_INFO is the park');
+   CheckEquals('US-5678', ResolvePOTAParkFromADIF('', 'pota', 'US-5678'),
+               'SIG is compared case-insensitively');
+   CheckEquals('US-5678', ResolvePOTAParkFromADIF('59', 'POTA', 'US-5678'),
+               'an invalid POTA_REF falls through to SIG_INFO');
+   CheckEquals('', ResolvePOTAParkFromADIF('', 'WWFF', 'US-5678'),
+               'SIG_INFO is not taken when SIG is not POTA');
+   CheckEquals('', ResolvePOTAParkFromADIF('', '', 'US-5678'),
+               'SIG_INFO is not taken when SIG is absent');
+   CheckEquals('', ResolvePOTAParkFromADIF('', 'POTA', '59'),
+               'an RST in SIG_INFO is not a park');
+   CheckEquals('', ResolvePOTAParkFromADIF('', '', ''),
+               'nothing valid: empty, so the caller uses the state');
 end;
 
 end.
