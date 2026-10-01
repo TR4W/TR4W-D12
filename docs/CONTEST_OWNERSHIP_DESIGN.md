@@ -629,6 +629,57 @@ and the Cabrillo summary's own `_CATEGORY-POWER`. The end state has one:
 
 Lands with the Cabrillo-header and UI work (M9).
 
+### 7.7 DECIDED (2026-10-01): three scoring stages, one entry point each
+
+NY4I delegated the stage boundaries (*"the stages are your choosing"*) after
+asking how rules relative to OTHER QSOs work if the class sees one QSO. The
+measurement that decides it: the legacy per-QSO scoring (`logstuff.pas`
+`CalculateQSOPoints`, ~3,300 lines) reads **no** log and **no** mult sheet -- every
+point rule TR4W has is a function of the QSO and our station. History-dependent
+rules already live elsewhere: dupes and mults in the sheet (`logdupe`), once-only
+bonuses scattered (Missouri, inventory D10).
+
+| stage | question | the class gets | examples |
+|---|---|---|---|
+| 1 per QSO -- `ScoreQSO` | what is this contact worth? | the QSO and the station context, nothing else | mode points, distance, county line, off-band 0, QRP 5 |
+| 2 running state -- dupes and mults | dupe? new multiplier? | the contest DECLARES the rules (by band, by mode, which fields); the shared sheet keeps the state | Idaho once per mode; CQ WW per band |
+| 3 end of contest -- `CombineScore` + `BonusPoints` (M6) | what is the final score? | a READ-ONLY view of the whole log | NC sweep, Idaho dormant county, W7DX, Missouri, a rare county worth 500 once |
+
+Why stage 1 never sees the log: "first QSO with W7DX gets 500" changes meaning
+under rescore, delete, edit and a multi-op merge; a bonus computed at the end from
+the whole log is the same however it was reached. Stage 1 also stays pure, which
+is what lets the matrix and unit tests pin it -- and the sponsors themselves write
+these as bonuses on top of the QSO total. A live "+500" for the operator is a
+display question answered from stage 3's view, not a reason to move the bonus.
+If a contest ever genuinely needs history in one QSO's points, widen stage 1 then;
+none does today.
+
+**`ScoreQSO` is the ONE public scoring entry point** (NY4I: *"yes one public entry
+point"*): a non-virtual template on `TContestBase` -- band check (`UsesBand`), then
+the four `QSO POINTS` station overrides, then the protected virtual
+`CalculateQSOPoints`. Every caller -- engine, rescore, matrix, tests -- gets the
+order; nothing can score while skipping the band check. `UsesBand` stays public
+because stages 2 and the need-mult display must ask the same question. Lands at
+the start of M3.
+
+### 7.8 DECIDED (2026-10-01): Q3 -- the log stores only what the OPERATOR stated
+
+Evidence (investigation, 2026-10-01): the seven stored `NONE`/`UNKNOWN` rows are
+`TR4WSettings` constructor defaults written by `uLogStore.CaptureConfiguration`
+(on create/rebuild and every clean close); `FoundContest` sets the globals and
+never those properties; the rows are harmless only because the apply skips a
+value equal to the property; nothing distinguishes "operator chose NONE" from
+"nobody chose". Since 2026-09-13/14 every log records defaults, not rules, and
+overwrites older logs' real values on close.
+
+Decided: the contest log's `config` table holds **only operator-stated
+overrides**; **absence means the contest class decides**. The stated/not-stated
+fact lives on the setting (a was-set flag, the `MyContinentIsSet` pattern);
+`CaptureConfiguration` writes a contest-scoped row only when set and deletes it
+when cleared. For a log written before the flag, a stored value equal to the
+constructor default reads as not stated. Lands in M2, because once the class
+supplies these values the equality skip no longer protects the contest.
+
 ### 8.1 Which oracle sees what
 
 | oracle | sees | blind to |
@@ -657,7 +708,7 @@ Each is behaviour-preserving unless marked.
 
 | step | what | gate |
 |---|---|---|
-| **M0** | **Decide Q3** (Q1 and Q2 are ruled). Build the legacy-fixture harness (§8.1) | the harness |
+| **M0** | **DONE `93fbc053`.** Q1/Q2 ruled, Q3 decided (§7.8). Build the legacy-fixture harness (§8.1) | the harness |
 | **M1** | **DONE 2026-10-01 (§8.2b).** **Identity read from the class.** The five exporters that read `ContestsArray` for names and ids ask the class (D9) | corpus (ADIF `CONTEST_ID`, Cabrillo `CONTEST:`); `test-adif-roundtrip.sh` |
 | **M2** | **Setup head reads the class.** `ContestDefinition`, `InHostState`, `Active*` written from the class's traits. Arms stay. Freeze a setup fixture first: every `ContestType` x station variants (in-state/out, K/VE/DX) -> `Active*` and settings | setup fixture; corpus |
 | **M3** | **Scoring finishes on the class.** The ten secondary `ActiveQSOPointMethod` readers move into their contests (§2; **behaviour change** for an operator override). Family bases arrive and `TContestFixedPoints` retires with them (§1.5) | `test-contest-factory.sh`; unit tests; `BENCH_QUEUE.md` |
