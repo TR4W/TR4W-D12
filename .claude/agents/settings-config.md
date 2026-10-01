@@ -216,6 +216,32 @@ is the only member** (NY4I, 2026-09-19): `StartupUILanguage` has chosen the
 catalogue already, so a `.cfg` line could not take effect — it could only be
 written into the station's file by the next Preferences save.
 
+## A contest-scoped setting has a WAS-SET flag, and the log stores only that (2026-10-01)
+
+`TR4WSettings.CommandIsStated(cmd)` answers "did the operator state this for
+the open contest". Section 7.8 of `docs/CONTEST_OWNERSHIP_DESIGN.md` has the
+decision. The flag is one set of property paths, so every alias of a setting
+shares it, and it covers every `IsContestScoped` group. It answers False for a
+station setting.
+
+- **`TrySetByCommand` SETS IT, and that is the whole design.** Every operator
+  channel reaches a setting by name: the `.cfg`, the New Contest queue,
+  Preferences (`TModelSetting`), Alt-P, a peer, and the log's own statements.
+  `FoundContest` and the constructor assign properties directly, so "arrived
+  by name" and "stated" are the same set. **Never route contest set-up through
+  `TrySetByCommand`**, or the contest's computed value becomes the operator's
+  statement in the log.
+- **`TrySetUnstated`** is for a by-name value that is not a statement. Its
+  one caller is `ApplyStoredCommands` for the bucket's contest-scoped
+  entries. It also skips any setting that is already stated.
+- **`SetCommandStated(cmd, False)`** withdraws a statement. No control offers
+  it yet.
+- Before this, the log captured every contest-scoped value, which put the
+  constructor's `NONE`/`UNKNOWN` into every log. A stored sentinel then
+  overwrote a `.cfg` line on reopen (D2). The flag generalises
+  `MyContinentIsSet` / `ZoneWasSet` / `CountryWasSet`; those three predate it
+  and are NOT folded in.
+
 ## `NeedsRestart` is a flag with no consumer
 
 `TSettingBase.NeedsRestart` exists and **nothing reads it** (measured
@@ -238,11 +264,27 @@ contest kept its original exchange.
 station-settings half is done — one home, one writer, and the bucket collapses
 on first start. What remains:
 
-- **The contest-scoped settings still live only in the legacy bucket.**
-  `ToJSON` excludes them from the `settings` section, so the bucket is their
-  ONLY copy and `ApplyStoredCommands` still applies them. Their destination is
-  the contest database (`uLogStore.CaptureConfiguration`), and that is a
-  separate migration — the collapse deliberately leaves them alone.
+- **The bucket's `commands/contest` section still exists**, but since
+  2026-10-01 it is a station default and not a statement.
+  - **Its writers:** the one-time `tr4w.ini` seed, `ApplyPeerCommand`, and
+    one Preferences control: `MY CONTINENT` on the Station page, through
+    `ApplyAndStoreCommand`. That setting is a station fact filed in the
+    contest-scoped `TContestSettings`. Moving it to `TMySettings` is Q-M2b in
+    the design doc.
+  - **How it applies:** unstated, never over a stated setting, and the log
+    does not capture it.
+  - **The contest's own values** live in the contest database
+    (`uLogStore.CaptureConfiguration`), as stated rows only.
+  - **Open (Q-M2a in the design doc):** whether to retire this section or
+    convert it is NY4I's call.
+- **A STATION-scoped row a `.cfg` stated can be DEMOTED.**
+  `CaptureConfiguration` gives it source `contest` only while
+  `CommandCameFromContestCFG` says so. A reopen that applies it from the log
+  does not note it, so with the `.cfg` gone the next clean close rewrites it
+  as `station`, and from then on it is never applied. This is reasoned, not
+  measured, and was outside M2a. It has the same root as the contest-scoped
+  defect: provenance is re-derived from session state instead of recorded
+  where the statement is made.
 - ~~**`tr4w.ini` is still read at startup**~~ **DONE 2026-09-19.** The call,
   the `cfgINI` enum member and every ini-only routine in `LogCfg` are gone
   (`RestoreCFGPasswordCase`, `FileHasCommands`, the duplicate-key report,

@@ -246,6 +246,9 @@ uses
    (* Settings.CommandIsContestScoped -- which commands belong to the contest
       rather than to the station. See the capture classifier below. *)
    uSettingsModel,
+   (* Which contest-scoped rows the log writes, and which stored ones are
+     operator statements -- section 7.8. A leaf, so the rules are tested. *)
+   uLogContestStatements,
    (* RecalculateMyCountryContinentAndZoneNew -- run once the log has supplied
       the callsign; see the end of LogStoreApplyContestConfig. *)
    FContest,
@@ -407,11 +410,13 @@ end;
   real log rather than by trusting a reading of the code. E2 makes them
   authoritative, and that is the step that can break a contest.
 
-  EVERY LIVE ROW, NOT THE ONES THAT LOOK CONTEST-SHAPED. Choosing a subset would
-  mean this unit deciding which settings matter, which is exactly the judgement
-  that leaves an operator's log missing the one thing they changed. Only csRem
-  is skipped, because csRem means the command was WITHDRAWN -- recognised so an
-  old config does not error, applied by nothing.
+  EVERY STATION ROW, AND EVERY CONTEST-SCOPED ROW THE OPERATOR STATED. The
+  station rows are a record of the station config and are applied by nothing.
+  A contest-scoped row is written only while TR4WSettings.CommandIsStated says
+  the operator stated it, and deleted otherwise -- absence means the contest
+  decides (2026-10-01, section 7.8; see uLogContestStatements). That is not
+  this unit choosing which settings matter: the operator's statement is the
+  test, and it is recorded where the statement is made.
 
   THE SOURCE COLUMN IS NOT DESCRIPTIVE. With no .cfg left, 'contest' versus
   'station' is the only thing that will say an explicit contest setting outranks
@@ -501,14 +506,22 @@ begin
             Continue;
             end;
 
-         (* A CONTEST-SCOPED SETTING IS ALWAYS THE CONTEST'S, whatever file it
-           arrived in. The band enables are the case: FCONTEST assigns them
-           when a contest loads, so CommandCameFromContestCFG can say no --
-           the value was not typed in a .cfg, it was computed -- and they
-           would be recorded as the STATION'S. Measured in a real log before
-           changing anything: HF, VHF and WARC BAND ENABLE all carried source
-           'station' in target/2026 ARRL-10 NY4I, with WARC TRUE in a
-           ten-metre contest.
+         (* A CONTEST-SCOPED SETTING IS CAPTURED BELOW, AND ONLY IF THE
+           OPERATOR STATED IT -- 2026-10-01, docs/CONTEST_OWNERSHIP_DESIGN.md
+           section 7.8. This walk wrote its current value unconditionally,
+           which for the contest-rule settings is the constructor's 'NONE' /
+           'UNKNOWN' (FoundContest sets the globals, not these properties) --
+           so every log recorded defaults, not rules, and reread them as
+           though they had been chosen. See uLogContestStatements. *)
+         if Settings.CommandIsContestScoped(cmd) then
+            begin
+            Continue;
+            end;
+
+         (* A CONTEST-SCOPED SETTING NEVER REACHES HERE -- it is skipped above
+           and captured by CaptureContestStatements, always as 'contest' and
+           only while stated. The 'or contest-scoped' arm that stood in this
+           test is gone with it.
 
            MY CALL IS A CONTEST SETTING AND HAS TO BE NAMED AS ONE.
            CommandCameFromContestCFG says no for it, and not because it came
@@ -520,8 +533,7 @@ begin
            empty .cfg halts on "No callsign specified" while its own callsign
            sits in the config table unread. *)
          if CommandCameFromContestCFG(cmd)
-            or (cmd = 'MY CALL')
-            or Settings.CommandIsContestScoped(cmd) then
+            or (cmd = 'MY CALL') then
             begin
             src := AnsiString('contest');
             end
@@ -554,6 +566,10 @@ begin
    finally
       names.Free;
    end;
+
+   (* THE CONTEST-SCOPED SETTINGS: written while stated, deleted otherwise,
+     and the log marked as holding statements only. *)
+   saved := saved + CaptureContestStatements(Settings, GRepository);
 
    (* THE EDITABLE-LOG COLUMN WIDTHS.
 
@@ -1387,6 +1403,8 @@ function LogStoreApplyContestConfig: integer;
 var
    rebuilt: boolean;
    rows: TStringList;
+   (* Stored contest rows that are not statements -- reported, not applied. *)
+   dropped: TStringList;
    i: integer;
    cmd, val: string;
    renderable: boolean;
@@ -1411,8 +1429,31 @@ begin
          end;
 
       rows := TStringList.Create;
+      dropped := TStringList.Create;
       try
          GRepository.LoadContestConfig(rows);
+
+         (* ONLY THE OPERATOR'S STATEMENTS ARE APPLIED -- 2026-10-01, section
+           7.8 of docs/CONTEST_OWNERSHIP_DESIGN.md.
+
+           A LOG WRITTEN BEFORE THAT RULE stored every contest-scoped
+           setting, so its 'NONE' / 'UNKNOWN' rows are constructor defaults,
+           not choices. Applied, one of them CLOBBERED a contest .cfg line
+           that had just stated the setting (D2) -- the equality skip below
+           protected only the case where the value in force happened to equal
+           the sentinel. Such a row is dropped here and deleted at the next
+           capture; a non-default row in that era was a real value from a
+           .cfg or the New Contest dialog, so it is kept and applied as a
+           statement. A log captured under the rule holds statements only. *)
+         KeepOnlyStatements(rows, LogHoldsStatementsOnly(GRepository), dropped);
+         if (dropped.Count > 0) and (logger <> nil) then
+            begin
+            logger.Info('[LogStore] %d stored contest setting(s) hold the ' +
+                        'built-in default and were written before the log ' +
+                        'stored only what the operator stated -- not applied, ' +
+                        'the contest decides: %s',
+                        [dropped.Count, dropped.CommaText]);
+            end;
 
          (* THE CALLSIGN BEFORE THE CONTEST -- 2026-09-20.
 
@@ -1745,6 +1786,13 @@ begin
             if (CFGCommandValueAsString(cmd) = val) and
                (not UnicodeSameText(cmd, 'CONTEST')) then
                begin
+               (* NOTHING TO ASSIGN, BUT THE STATEMENT STILL STANDS. Every row
+                 that reaches here is one (see KeepOnlyStatements above), and
+                 a CheckCommand would have recorded it as such -- skipping the
+                 assignment must not skip that, or the next capture would
+                 delete a statement because it happened to match. A no-op for
+                 a setting that is not contest-scoped. *)
+               Settings.SetCommandStated(cmd, True);
                inc(Result);
                Continue;
                end;
@@ -1791,6 +1839,7 @@ begin
                end;
             end;
       finally
+         dropped.Free;
          rows.Free;
       end;
 

@@ -150,6 +150,7 @@ uses
   uLogNote in 'src\domain\uLogNote.pas',
 uContestFileKind in 'src\domain\uContestFileKind.pas',
   uLogRepository in 'src\uLogRepository.pas',
+  uLogContestStatements in 'src\uLogContestStatements.pas',
   uLogImport in 'src\uLogImport.pas',
   uLogDatabase in 'src\domain\uLogDatabase.pas',
   uLogBackup in 'src\domain\uLogBackup.pas',

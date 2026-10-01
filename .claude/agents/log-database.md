@@ -16,7 +16,8 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | schema | `tr4w/src/domain/uLogSchema.pas` |
 | repository | `tr4w/src/uLogRepository.pas` |
 | the read seam — SQLite only, no source selection | `tr4w/src/uLogSource.pas` |
-| store, search, compare, notes, naming, config | `uLogStore.pas`, `uLogSearch.pas`, `uLogCompare.pas`, `uLogNote.pas`, `uLogNaming.pas`, `uLogConfig.pas` |
+| store, search, compare, notes, naming, config | `uLogStore.pas`, `uLogSearch.pas`, `uLogCompare.pas`, `uLogNote.pas`, `uLogNaming.pas`, `uLogConfig.pas` (**the Log4D layout, NOT the config table**) |
+| which contest-scoped `config` rows are written, and which stored ones are statements | `uLogContestStatements.pas`, a leaf so the rules are unit-tested (`uTestLogContestStatements`) |
 | import only | `uLogImport.pas`, `uLogBinaryFile.pas` |
 | docs | `docs/SQLITE_MIGRATION_TASKS.md` (**read before touching log storage**), `docs/SQLITE_LOG_SCHEMA_PLAN.md` |
 
@@ -75,6 +76,34 @@ read-only connection to a rollback-journal file creates no WAL at all.
 **`SysUtils.RenameFile` differs by platform:** `MoveFileW` on Windows refuses an
 existing target; `rename(2)` on Unix replaces it. A directory at the target
 fails on both, which is the portable way to make a publish rename fail in a test.
+
+## The `config` table holds only what the operator STATED (2026-10-01)
+
+For a contest-scoped setting, a row means the operator stated it, and a
+missing row means the contest decides. See `docs/CONTEST_OWNERSHIP_DESIGN.md`
+section 7.8.
+
+- **Capture.** `CaptureContestStatements` writes a row while
+  `Settings.CommandIsStated` is True and deletes it otherwise. It never writes
+  `CONTEST`. It then sets the **mark** `session_state.configHoldsStatementsOnly
+  = 1`.
+- **Read.** `KeepOnlyStatements` filters the rows `LoadContestConfig`
+  returns.
+  - **A marked log:** every row is a statement.
+  - **An unmarked log** (written before the rule; every corpus fixture is
+    one): a contest-scoped row equal to the `TR4WSettings` constructor default
+    is dropped and logged. A non-default row is a statement.
+- **The mark is how a stated `NONE` survives.** Without it, an operator who
+  chose the default on purpose would be indistinguishable from the old
+  sentinel.
+- **Station rows are unchanged.**
+
+`/EXPORT` never captures, so the tracked fixtures keep their sentinels for
+good. The reader handles them; do not rewrite the fixtures to "clean" them.
+
+**Not linkable:** `uLogStore` still links `MainUnit`, so the tests model its
+apply as two steps, `KeepOnlyStatements` then `TrySetByCommand`. If you
+change the apply loop, keep it that pair.
 
 ## Oracles
 

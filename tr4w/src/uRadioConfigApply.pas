@@ -871,6 +871,53 @@ begin
          Continue;
          end;
 
+      (* A CONTEST-SCOPED VALUE HERE IS A STATION DEFAULT, NOT A STATEMENT
+        ABOUT THE CONTEST THAT IS OPEN -- 2026-10-01, section 7.8 of
+        docs/CONTEST_OWNERSHIP_DESIGN.md.
+
+        WHO WRITES THESE, measured 2026-10-01: the one-time seed from a
+        legacy tr4w.ini (SeedMigratedCommandsFromIni), a multi-op peer's
+        change (ApplyPeerCommand), and ONE Preferences control -- MY
+        CONTINENT on the Station page, which goes through
+        ApplyAndStoreCommand. Every other contest-scoped setting in
+        Preferences is a TModelSetting, applied by name and captured by the
+        log, and writes no bucket entry. None of the three was speaking about
+        the contest now open, and this loop applies them to every contest
+        the station opens.
+
+        MY CONTINENT IS THE ODD ONE: a STATION fact filed in a contest-scoped
+        group. In force every session from here as before, it is no longer
+        captured into a NEW log, so a headless /EXPORT of that log derives
+        the continent from the callsign instead. Its fix is to move the
+        property to the station's group, which is NY4I's call -- see section
+        7.8 of the design document.
+
+        SO TWO RULES. A setting the operator HAS stated for this contest --
+        the .cfg, the New Contest dialog, the log's own stored statement --
+        is not overridden: that is the contest-over-station rule the
+        CommandCameFromContestCFG test above already states, extended to
+        every way a statement arrives. Applying it last used to undo the
+        log's own value on every interactive start.
+
+        And a value applied from here is applied UNSTATED: in force for the
+        session, as before, but not captured into the log as though the
+        operator had chosen it for this contest. *)
+      if Settings.CommandIsContestScoped(name) then
+         begin
+         if Settings.CommandIsStated(name) then
+            begin
+            logger.Info('[ApplyStoredCommands] %s is stated for this contest -- ' +
+                        'the station''s stored value is not applied', [name]);
+            Continue;
+            end;
+         if not Settings.TrySetUnstated(name, value) then
+            begin
+            logger.Warn('[ApplyStoredCommands] the settings object refused "%s" = "%s"',
+                        [name, value]);
+            end;
+         Continue;
+         end;
+
       FillChar(keyShort, SizeOf(keyShort), 0);
       FillChar(valueShort, SizeOf(valueShort), 0);
       keyShort   := ShortString(AnsiString(name));

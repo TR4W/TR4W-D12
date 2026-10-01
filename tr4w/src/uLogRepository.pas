@@ -329,6 +329,15 @@ type
          which -- this does not re-derive it. *)
       procedure SaveConfigValue(const aCommand, aValue, aSource: AnsiString);
 
+      (* REMOVE A COMMAND'S ROW, if it has one. An absent row is not an error.
+
+        A contest-scoped row exists only while the operator has STATED that
+        setting -- absence means the contest decides (section 7.8 of
+        docs/CONTEST_OWNERSHIP_DESIGN.md) -- so the capture deletes the row of
+        every contest-scoped setting that is not stated, which is also what
+        clears the sentinel rows a log written before that rule carries. *)
+      procedure DeleteConfigValue(const aCommand: AnsiString);
+
       (* WHERE THE OPERATOR LEFT OFF -- the session_state table.
 
         DELIBERATELY SEPARATE FROM SaveConfigValue, though the shape is the
@@ -1546,6 +1555,21 @@ begin
       q.ParamByName('value').AsString := aValue;
       q.ParamByName('source').AsString := aSource;
       q.ParamByName('set_at').AsLargeInt := DateTimeToUnix(Now);
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TLogRepository.DeleteConfigValue(const aCommand: AnsiString);
+var
+   q: TSQLQuery;
+begin
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'DELETE FROM config WHERE command = :command';
+      q.ParamByName('command').AsString := aCommand;
       q.ExecSQL;
    finally
       q.Free;

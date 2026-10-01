@@ -425,6 +425,8 @@ uses
 uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
    uLogRepository       in '..\..\src\uLogRepository.pas',
    uTestLogRepository   in 'uTestLogRepository.pas',
+   uLogContestStatements in '..\..\src\uLogContestStatements.pas',
+   uTestLogContestStatements in 'uTestLogContestStatements.pas',
    uLogNote             in '..\..\src\domain\uLogNote.pas',
    uTestLogNote         in 'uTestLogNote.pas',
    uTestLogNaming       in 'uTestLogNaming.pas',
@@ -579,6 +581,7 @@ begin
    RegisterSuite(TLegacyConversionCheckTests.Create('LegacyConversionCheck'));
    RegisterSuite(TUILanguageTests.Create('UILanguage'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));
+   RegisterSuite(TLogContestStatementsTests.Create('LogContestStatements'));
    RegisterSuite(TLogNamingTests.Create('LogNaming'));
    RegisterSuite(TContestFileKindTests.Create('ContestFileKind'));
    RegisterSuite(TLogImportTests.Create('LogImport'));

@@ -3509,6 +3509,9 @@ type
    private
       // command name -> property path, built once by walking the RTTI.
       FCommands: TStringList;
+      (* THE PROPERTY PATHS OF THE CONTEST-SCOPED SETTINGS THE OPERATOR HAS
+        STATED, for the contest that is open. See CommandIsStated. *)
+      FStated: TStringList;
       FOnChanged: TSettingChanged;
       FExternalLogger: TExternalLoggerSettings;
       FSpotCollector: TSpotCollectorSettings;
@@ -3584,6 +3587,14 @@ type
       procedure ReadEmptyCharAsUnset(aSender: TObject; aObject: TObject;
                                      aInfo: PPropInfo; aValue: TJSONData;
                                      var aHandled: boolean);
+      (* THE PARSE-AND-ASSIGN HALF OF TrySetByCommand, with no opinion on
+        whether the value is a statement. Both public setters below are this
+        plus one line saying which it is. *)
+      function AssignByCommand(const aCommand, aValue: string): boolean;
+      (* The property path of a CONTEST-SCOPED command, or '' for any other
+        name -- the one question CommandIsStated and SetCommandStated both
+        need answered first. *)
+      function ContestScopedPath(const aCommand: string): string;
    public
       constructor Create;
       destructor Destroy; override;
@@ -3653,7 +3664,63 @@ type
         set it? False for a name the model does not own at all, so a caller
         can ask about any command. See TSettingsGroup.IsStationOnly. *)
       function CommandIsStationOnly(const aCommand: string): boolean;
+
+      (* SET A SETTING BY ITS COMMAND NAME -- AND, FOR A CONTEST-SCOPED ONE,
+        RECORD THAT THE OPERATOR STATED IT.
+
+        Every channel that reaches a setting BY NAME is an operator speaking:
+        the contest .cfg, the New Contest dialog, Preferences, the Alt-P
+        message editor, a multi-op peer, and the log's own stored statements
+        on reopen. Contest set-up does NOT come through here -- FoundContest
+        and the constructor assign the properties directly -- so "arrived by
+        name" and "the operator said so" are the same set, and the flag is
+        set in the one place every one of those channels already passes.
+
+        The one by-name channel that is NOT a statement is the station's
+        legacy `commands` bucket; it uses TrySetUnstated. *)
       function TrySetByCommand(const aCommand, aValue: string): boolean;
+
+      (* THE SAME ASSIGNMENT, RECORDED AS NOT STATED for this contest.
+
+        For a value that reaches a contest-scoped setting from somewhere that
+        is not a statement about THIS contest: the station's legacy
+        `commands` bucket, which ApplyStoredCommands applies to whatever
+        contest is open. The value is in force for the session and the log
+        does not capture it, so the contest decides again on the next open.
+        Identical to TrySetByCommand for a setting that is not
+        contest-scoped. *)
+      function TrySetUnstated(const aCommand, aValue: string): boolean;
+
+      (* DID THE OPERATOR STATE THIS CONTEST-SCOPED SETTING FOR THE CONTEST
+        THAT IS OPEN? -- the was-set flag (docs/CONTEST_OWNERSHIP_DESIGN.md
+        section 7.8).
+
+        THE CONTEST LOG STORES ONLY WHAT THIS ANSWERS TRUE FOR, and deletes
+        the row of anything it answers False for: absence means the contest
+        decides. Before the flag, the log stored every contest-scoped value
+        including the constructor's 'NONE'/'UNKNOWN' sentinels, and nothing
+        could tell "the operator chose NONE" from "nobody chose" -- which is
+        how a stored sentinel could clobber a .cfg statement on reopen.
+
+        ONE MECHANISM FOR EVERY CONTEST-SCOPED SETTING, keyed by property
+        path, so every alias of a setting answers the same. It is the
+        generalisation of MyContinentIsSet / ZoneWasSet / CountryWasSet,
+        which predate it and are not folded in (they belong to station
+        groups and drive derivation rather than storage).
+
+        FALSE FOR EVERY NAME THAT IS NOT CONTEST-SCOPED: a station setting's
+        statement is settings\tr4w.json itself, and the question has no
+        other meaning there. *)
+      function CommandIsStated(const aCommand: string): boolean;
+
+      (* RECORD OR WITHDRAW A STATEMENT WITHOUT ASSIGNING A VALUE.
+
+        True: the log's reapply uses it when a stored statement already
+        equals the value in force, so nothing is assigned but the statement
+        still stands. False: the operator withdraws it, and the contest
+        decides again -- the capture deletes the row. Ignored for a name
+        that is not contest-scoped. *)
+      procedure SetCommandStated(const aCommand: string; aStated: boolean);
       (* IS THIS SETTING A CREDENTIAL? Asked by the multi-op sync before it
         sends anything, by the importer before it upper-cases a line, and by
         Preferences before it shows a value. *)
@@ -5196,10 +5263,18 @@ begin
    FCommands.Sorted := True;
    FCommands.Duplicates := dupError;   // two properties claiming one command name
    BuildCommandMap;
+
+   (* Nothing is stated by construction: a default is the contest's, not the
+     operator's. Paths are canonical, so the comparison is exact. *)
+   FStated := TStringList.Create;
+   FStated.CaseSensitive := True;
+   FStated.Sorted := True;
+   FStated.Duplicates := dupIgnore;
 end;
 
 destructor TR4WSettings.Destroy;
 begin
+   FStated.Free;
    FCommands.Free;
    (* EVERY GROUP THE CONSTRUCTOR CREATES IS FREED HERE, and eleven were not
      until 2026-09-19 -- Wsjtx through Hamscore, and Mp3 before it was
@@ -5943,7 +6018,85 @@ begin
    Result := (owner is TSettingsGroup) and TSettingsGroup(owner).IsStationOnly;
 end;
 
+function TR4WSettings.ContestScopedPath(const aCommand: string): string;
+var
+   path: string;
+   owner: TObject;
+   info: PPropInfo;
+begin
+   Result := '';
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   if not ResolvePath(Self, path, owner, info) then
+      begin
+      Exit;
+      end;
+   if (owner is TSettingsGroup) and TSettingsGroup(owner).IsContestScoped then
+      begin
+      Result := path;
+      end;
+end;
+
+function TR4WSettings.CommandIsStated(const aCommand: string): boolean;
+var
+   path: string;
+begin
+   path := ContestScopedPath(aCommand);
+   (* EXPLICIT AT THE CROSSING: a property path is a Pascal identifier
+     chain, ASCII by construction, and the list holds AnsiStrings. *)
+   Result := (path <> '') and (FStated.IndexOf(AnsiString(path)) >= 0);
+end;
+
+procedure TR4WSettings.SetCommandStated(const aCommand: string; aStated: boolean);
+var
+   path: string;
+   i: integer;
+begin
+   path := ContestScopedPath(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+
+   if aStated then
+      begin
+      FStated.Add(AnsiString(path));
+      end
+   else
+      begin
+      i := FStated.IndexOf(AnsiString(path));
+      if i >= 0 then
+         begin
+         FStated.Delete(i);
+         end;
+      end;
+end;
+
 function TR4WSettings.TrySetByCommand(const aCommand, aValue: string): boolean;
+begin
+   Result := AssignByCommand(aCommand, aValue);
+   if Result then
+      begin
+      SetCommandStated(aCommand, True);
+      end;
+end;
+
+function TR4WSettings.TrySetUnstated(const aCommand, aValue: string): boolean;
+begin
+   Result := AssignByCommand(aCommand, aValue);
+   if Result then
+      begin
+      (* THE VALUE NOW IN FORCE IS NOT A STATEMENT, so any earlier one no
+        longer describes it. ApplyStoredCommands never reaches here for a
+        stated setting -- it skips those -- so this only ever confirms. *)
+      SetCommandStated(aCommand, False);
+      end;
+end;
+
+function TR4WSettings.AssignByCommand(const aCommand, aValue: string): boolean;
 var
    path: string;
    owner: TObject;

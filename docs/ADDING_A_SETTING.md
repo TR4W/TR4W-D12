@@ -126,6 +126,22 @@ A group marked contest-scoped (`IsContestScoped`) is excluded from
 table by `uLogStore.CaptureConfiguration`. That is the whole mechanism: **you
 put the property in the right group and the routing follows.**
 
+**A contest-scoped value is captured ONLY WHILE THE OPERATOR HAS STATED IT**
+(2026-10-01, `docs/CONTEST_OWNERSHIP_DESIGN.md` §7.8).
+`TR4WSettings.CommandIsStated` is the was-set flag, and you add nothing for
+it: `TrySetByCommand` sets it, and every operator channel reaches a setting
+by name. The one rule this puts on you is about where contest set-up writes:
+
+- **Contest set-up (`FoundContest`, a default, a computed value) assigns the
+  property directly**, as `Settings.Contest.X := ...`. It never goes through
+  `TrySetByCommand`, because that would record the contest's own value as
+  the operator's.
+- **A value that reaches the setting by name but is not a statement about
+  this contest** uses `TrySetUnstated`. The station's legacy bucket is the one
+  case.
+
+When nothing is stated, the log has no row and the contest decides.
+
 `tr4w.ini` is **the converter's input and nothing else**: startup has not read
 it since 2026-09-19 (NY4I -- `ReadInConfigFile(cfgINI)` removed, and `cfgINI`
 removed from `TCFGType` with it, so there is no longer a value to pass in).

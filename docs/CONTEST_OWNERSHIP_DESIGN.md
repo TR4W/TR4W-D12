@@ -528,6 +528,12 @@ them on open does not already break the logs. The corpus is green, so some path
 does not apply them. Establish both before M2 changes where the `Active*` values
 come from (Q3).
 
+**Established and fixed in M2a, 2026-10-01 (§7.8).** The dumping capture wrote
+the rows. The equality skip hid them: they were applied only when the value in
+force differed, and a sentinel never differed except after a `.cfg` had stated
+the setting (D2). The rows stay in the tracked fixtures, but the reader no
+longer treats them as statements.
+
 ---
 
 ## 8. Migration
@@ -679,6 +685,71 @@ fact lives on the setting (a was-set flag, the `MyContinentIsSet` pattern);
 when cleared. For a log written before the flag, a stored value equal to the
 constructor default reads as not stated. Lands in M2, because once the class
 supplies these values the equality skip no longer protects the contest.
+
+**LANDED 2026-10-01 (M2a).** Scoring is unchanged: the contest matrix stays
+185 identical, and `FoundContest` still sets the globals.
+
+- **The flag** is `TR4WSettings.CommandIsStated(cmd)` in `uSettingsModel`. It
+  is one set of property paths, so every alias of a setting shares it, and it
+  applies to every contest-scoped group (`IsContestScoped`). It answers False
+  for a station setting.
+  - **Set by `TrySetByCommand`.** Every channel that reaches a setting by name
+    is an operator speaking: the `.cfg`, the New Contest queue, Preferences,
+    Alt-P, a multi-op peer, and the log's own statements on reopen. Contest
+    set-up assigns the properties directly, so it never sets the flag.
+  - **Not set by `TrySetUnstated`.** Its one caller is the station bucket (see
+    below).
+  - **Cleared by `SetCommandStated(cmd, False)`.** No control offers "back to
+    the contest's value" yet.
+- **The capture** is `uLogContestStatements.CaptureContestStatements`, called
+  from `uLogStore.CaptureConfiguration`. It writes a stated contest-scoped row
+  and deletes every other one. It never writes `CONTEST`. It marks the log by
+  setting `session_state.configHoldsStatementsOnly = 1`. The station rows are
+  untouched.
+- **The read** is `KeepOnlyStatements`, called from
+  `LogStoreApplyContestConfig`.
+  - **A marked log:** every row is a statement. This includes a stated
+    `NONE`, which matters because Field Day has no multipliers (Q1).
+  - **An unmarked log** (every log written before this, including the corpus
+    fixtures): a contest-scoped row equal to the constructor default is
+    dropped and logged, and deleted at the next interactive capture. A
+    non-default row is applied and flagged.
+  - **When a statement already equals the value in force**, the skip still
+    records it as stated.
+- **D2 is closed by construction.** A stored sentinel is no longer a
+  statement, so it cannot overwrite a `.cfg` line. This is pinned by
+  `uTestLogContestStatements`. It was also checked end to end: a copy of
+  `cqww_ssb_2025_ny4i/log.db` plus a `.cfg` stating `QSO POINT METHOD` gives
+  that method in `active.qsopointmethod`, not `NoQSOPointMethod`.
+- **The station bucket is not a statement.** The `commands/contest` values
+  (for example `INITIAL EXCHANGE = ZONE` on NY4I's station and in the corpus
+  settings) come from three writers, measured 2026-10-01:
+  - the one-time `tr4w.ini` seed;
+  - `ApplyPeerCommand`;
+  - one Preferences control, `MY CONTINENT` on the Station page, which goes
+    through `ApplyAndStoreCommand`.
+
+  Every other contest-scoped setting in Preferences is a `TModelSetting` and
+  writes no bucket entry. None of these writers speaks for the contest that is
+  open, so `ApplyStoredCommands` applies the values unstated, and never over a
+  setting already stated for the open contest. They stay in force for the
+  session, and the log no longer captures them as the contest's.
+
+**Q-M2a (NY4I): the contest section of the station bucket.** It has no
+writer that speaks for a contest. Should it:
+
+1. keep applying as a station default, which is today's behaviour;
+2. be converted once into the open log as statements; or
+3. retire, so the contest decides?
+
+**Q-M2b (NY4I): `MY CONTINENT` is a station fact in a contest-scoped
+group.** It is `Contest.MyContinent`, yet the Station page edits it. Under
+M2a it stays in force every interactive session from the bucket, but a NEW
+log no longer captures it. A headless `/EXPORT` of that log therefore derives
+the continent from the callsign. That only matters for a station whose
+stated continent differs from the derived one. The fix is to move it to
+`TMySettings`, so it goes into `settings/tr4w.json` with the other `MY`
+fields. That changes the settings file's shape, so it was not done here.
 
 ### 8.1 Which oracle sees what
 
