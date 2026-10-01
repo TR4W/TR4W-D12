@@ -1571,6 +1571,9 @@ Read the specific doc before acting in its area — these are current and this f
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
 | Adding a contest -- the DATA (a new `ContestType`, `FCONTEST` init, a `.cfg`) | `docs/ADDING_A_NEW_CONTEST.md` |
 | **Adding a contest to the FACTORY -- the class, and which oracle sees what** | **`docs/ADDING_A_CONTEST.md`** -- read section 4 before believing a green run: the golden corpus is BLIND to scoring, and `test-contest-factory.sh` is the only thing that is not |
+| **What a contest OWNS vs PICKS -- the factory's target shape (DESIGN)** | **`docs/CONTEST_OWNERSHIP_DESIGN.md`** -- strategies per axis, one exchange object owning parse + Cabrillo + ADIF export + import, the migration order M0-M10, and the checkable definition of "a contest has moved". Open questions C1-C12 are NY4I's |
+| **Point methods as factory strategies (DESIGN)** | **`docs/QSO_POINT_METHOD_DESIGN.md`** -- why `QSO POINT METHOD` is ignored by a classed contest, and the rotated spelling table. Open questions Q1-Q7 are NY4I's; **do not wire the operator override before Q1**, every corpus log stores `NONE` |
+| **Every contest rule still OUTSIDE the factory -- GENERATED** | **`docs/CONTEST_RULES_OUTSIDE_FACTORY.md`** -- `python tools/contest-rules-inventory/generate.py` regenerates it; only the marked hand-maintained blocks are prose. `Lint-ContestNameTests` gates the same ground |
 | **THE ROADMAP — the single phased task list for the modernization** | **[`docs/MODERNIZATION_ROADMAP.md`](docs/MODERNIZATION_ROADMAP.md)** — replaces eleven tracking documents. Carries the measured baseline WITH the command for each number, the four-week phases, the bench block, and the decisions owed from NY4I |
 | Finished and superseded migration notes | [`docs/migration_interim_artifacts/`](docs/migration_interim_artifacts/) — read for *why*, never for *status* |
 | **The order the three big pieces go in** | **`docs/DOMAIN_LAYER_SEQUENCE.md`** |
