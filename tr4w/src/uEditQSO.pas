@@ -797,8 +797,7 @@ begin
     The three globals this used -- FullLogEditHandle, LogEditListView,
     FullLogEditIndex -- went with the dialog. *)
 
-  tUpdateLog(actRescore);
-  LoadinLog;
+  RescoreLog;
   if FindStationInCallsignColumn(EditableQSORXData.Callsign) = -1 then
      begin
      AddCallsignToStationColumn(EditableQSORXData.Callsign);

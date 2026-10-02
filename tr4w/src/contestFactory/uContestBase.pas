@@ -196,6 +196,9 @@ type
          CATEGORY-POWER choice as a command, which the settings model aliases
          to Contest.CategoryPower, so uContestFactory.CurrentStation reads it
          from there -- the same value Stew Perry's legacy arm already reads.
+         Since M9b (design 7.6) it is the ONLY value: the Cabrillo summary
+         window's CATEGORY-POWER row writes this setting too, and a change
+         with QSOs logged rescores (uCategoryPowerChange).
 
          The zero value is cpHIGH, so a test that FillChars this record scores
          as a high-power entrant, which is what every contest did before this
@@ -1182,6 +1185,13 @@ type
       function GetPermittedOperatingAids: TOperatingAids; virtual;
       function GetOffersQTCs: boolean; virtual;
 
+      (* WHAT THE UI ITSELF ASKS -- M9b. See the properties. *)
+      function GetIsActive: boolean; virtual;
+      function GetShowsContestStatus: boolean; virtual;
+      function GetMaximumContestDates: integer; virtual;
+      function GetBandStepIncludesWARC: boolean; virtual;
+      function GetPowerFieldIsFOCNumber: boolean; virtual;
+
       (* WHICH CONTEST THIS INSTANCE IS -- READABLE BY SUBCLASSES, AND NOT TO BE
          BRANCHED ON.
 
@@ -1815,6 +1825,47 @@ type
       (* DOES THIS CONTEST EXCHANGE QTCs? The QTC functions menu is offered
          only then -- the two WAE runnings. The base does not. *)
       property OffersQTCs: boolean read GetOffersQTCs;
+
+      (* IS THIS CONTEST STILL RUN? -- M9b. An inactive contest stays in the
+         factory so an old log still opens and scores (NY4I, 2026-10-01), and
+         the New Contest drop-down lists it after every active one, marked
+         (NY4I, 2026-10-02: "inactive contests go at the bottom of the drop
+         down"). The base is active; a class says otherwise only on NY4I's
+         word -- SA Sprint and Locust today. *)
+      property IsActive: boolean read GetIsActive;
+
+      (* DOES CALL ENTRY SHOW THIS CONTEST'S STATUS? -- M9b. Typing or
+         answering a call shows whether it is a new multiplier, which bands it
+         is needed on, the station's information and the possible calls.
+         General QSO is a log, not a contest, and shows none of them; the base
+         shows them all. (MainUnit, LOGEDIT, LOGSUBS2, LOGWIND render it.) *)
+      property ShowsContestStatus: boolean read GetShowsContestStatus;
+
+      (* HOW MANY DATES A LOG OF THIS CONTEST MAY SPAN BEFORE THE SUMMARY
+         WARNS (TC_TOOMANYCONTESTDATES) -- M9b. 0 means it never warns. The
+         base is ten; General QSO, a log kept for as long as the station
+         operates, is 0. (PostUnit.CheckForNewContestDate renders it.) *)
+      property MaximumContestDates: integer read GetMaximumContestDates;
+
+      (* DOES BAND UP/DOWN STEP ONTO 30, 17 AND 12 M? -- M9b. No contest is
+         held there, so the base skips them; General QSO steps through them.
+         Settings.Bands.WarcEnabled still has the last word either way.
+         (LOGSTUFF's band stepping renders it.) *)
+      property BandStepIncludesWARC: boolean read GetBandStepIncludesWARC;
+
+      (* DOES THE EXCHANGE'S POWER FIELD HOLD AN FOC MEMBER NUMBER? -- M9b.
+         The FOC Marathon's exchange is RST and member number, carried in the
+         power field, so the log shows it under FOC# rather than PWR. The base
+         does not. (MainUnit's log columns render it.) *)
+      property PowerFieldIsFOCNumber: boolean read GetPowerFieldIsFOCNumber;
+
+      (* THE WARNING CALL ENTRY SHOWS FOR THE RADIO'S FREQUENCY, IN kHz, or ''
+         for none -- M9b. A sponsor that confines its contest to part of a
+         band says where; WAG's manager asked for the warning (n4af). The base
+         has none. MainUnit asks it as a call is typed and shows the answer as
+         a notice; the words are the contest's, read when asked so a loaded
+         translation reaches the screen. *)
+      function CallEntryFrequencyWarning(aFreqKHz: integer): string; virtual;
 
       (* Hands the contest the station it is operating as.
 
@@ -3033,6 +3084,36 @@ end;
 function TContestBase.GetOffersQTCs: boolean;
 begin
    Result := False;
+end;
+
+function TContestBase.GetIsActive: boolean;
+begin
+   Result := True;
+end;
+
+function TContestBase.GetShowsContestStatus: boolean;
+begin
+   Result := True;
+end;
+
+function TContestBase.GetMaximumContestDates: integer;
+begin
+   Result := 10;
+end;
+
+function TContestBase.GetBandStepIncludesWARC: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.GetPowerFieldIsFOCNumber: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.CallEntryFrequencyWarning(aFreqKHz: integer): string;
+begin
+   Result := '';
 end;
 
 procedure TNewContestPrompts.AddChoice(aKind: TNewContestPromptKind;

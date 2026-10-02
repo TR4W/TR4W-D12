@@ -209,8 +209,18 @@ because at that point there is nothing left to compare against.
 ruling, enforced since M9a, 2026-10-02): override `GetDisplayName`,
 `GetCabrilloName` and `GetADIFContestId` in YOUR class, not in a family base --
 a base stating a name would give two contests one name. **The display name is
-the HUMAN name**, the row's `FriendlyName` where it has one (the New Contest
-drop-down will show it, M9b); `FriendlyName` is stated too.
+the HUMAN name**, the row's `FriendlyName` where it has one -- **the New Contest
+drop-down shows it** (M9b, 2026-10-02; the token `ContestTypeSA` is still what
+the dialog writes); `FriendlyName` is stated too. **Give it a name no other
+contest has**: two contests with one display name are told apart in the
+drop-down only by their tokens in brackets (`IARU HF World Championship [WRTC]`),
+and `uTestContestUI.Test_ChoicesShowDisplayNamesAndMarkInactive` holds the one
+pair that shares a name today as a ratchet -- a new pair fails it.
+
+**IF THE CONTEST IS NO LONGER RUN, STATE `GetIsActive` = False** (M9b) -- on
+NY4I's word only. It stays in the factory so an old log still opens and scores;
+the drop-down lists it after every active contest, marked `(inactive)`. Add it
+to `uTestContestUI.INACTIVE_CONTESTS` in the same change.
 `uTestContestDisplay.Test_EveryClassStatesItsIdentity` fails a class whose getter
 is its parent's, and holds the list of contests whose display name is still
 their enum spelling (no `FriendlyName` in the row -- design Q53) as a ratchet:
@@ -244,7 +254,8 @@ shared files a contest touches; the search path already covers
 
 | property | default |
 |---|---|
-| `DisplayName` | the enum's spelling |
+| `DisplayName` | the enum's spelling. **The New Contest drop-down shows it** (M9b), sorted by it -- every class states its own (see Step 3b) |
+| `IsActive` | True. **SA Sprint and Locust say False** (NY4I) -- the drop-down lists an inactive contest last, marked `(inactive)`; it still opens and scores an old log (M9b) |
 | `CabrilloName` | `CABName`, or the enum's spelling when blank |
 | `ADIFContestId` | `ADIFName`, or the enum's spelling when blank. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (`WritesADIFContestId` for General QSO; POTA by name in `uADIF`, pending a POTA class — design Q6) |
 | `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
@@ -654,7 +665,13 @@ every other does. All are asked of `ContestIdentity` (no station) except
 
 | you state | with | who asks |
 |---|---|---|
-| what the New Contest dialog asks for | `DescribeNewContestPrompts(aPrompts)` -- `AskField`, `AskFieldWithComment`, `OfferIAmIn`, `OfferIAmInCaption`, and `AskFieldWithCommentWhenInside` for the ticked box. **ORDER MATTERS**: rows are handed out in the order fields are asked, and the last comment wins. The base asks a US state party for its county or state; call `inherited` to keep that | `uNewContest` (M9b renders the display name in the drop-down) |
+| what the New Contest dialog asks for | `DescribeNewContestPrompts(aPrompts)` -- `AskField`, `AskFieldWithComment`, `OfferIAmIn`, `OfferIAmInCaption`, and `AskFieldWithCommentWhenInside` for the ticked box. **ORDER MATTERS**: rows are handed out in the order fields are asked, and the last comment wins. The base asks a US state party for its county or state; call `inherited` to keep that | `uNewContest` |
+| how the New Contest drop-down names and places it (M9b) | `GetDisplayName`, `GetIsActive` | `uContestChoices` -- active first, then by display name |
+| whether call entry shows contest status -- new multiplier, needed bands, station information, possible calls (M9b) | `GetShowsContestStatus` (base True; General QSO, a log, False) | `MainUnit`, `LOGEDIT`, `LOGSUBS2`, `LOGWIND` |
+| how many dates a log may span before the summary warns (M9b) | `GetMaximumContestDates` (base 10; 0 never warns -- General QSO) | `PostUnit.CheckForNewContestDate` |
+| whether band up/down steps onto WARC (M9b) | `GetBandStepIncludesWARC` (base False; General QSO True) | `LOGSTUFF`'s band stepping |
+| whether the exchange's power field is an FOC member number (M9b) | `GetPowerFieldIsFOCNumber` (the FOC Marathon) | `MainUnit`'s log columns: FOC# instead of PWR |
+| a warning for where the radio is (M9b) | `CallEntryFrequencyWarning(aFreqKHz)` -- '' for none, else the words (WAG's seven windows, `TC_WAGWarn`) | `MainUnit.ShowCallEntryFrequencyWarning`, as a notice while a call is typed |
 | the totals window's labels and mode shares | `GetTotalsDisplay` (`TTotalsDisplay`) -- start from `inherited` | `uTotal.UpdateTotals2` |
 | the summary sheet's counting | `GetSummarySheet` (`TSummarySheetLayout`) | `PostUnit.WriteScoreInformationToSummarySheet` |
 | whether the hour report carries a running score | `GetReportsRunningScore` | `PostUnit.PrintHourTotals` |
@@ -669,8 +686,8 @@ every other does. All are asked of `ContestIdentity` (no station) except
 written into MY STATE -- the operator's setting in `settings/tr4w.json` (design
 7.11). Every reader of the sent exchange asks `SentMyState`; a new one must too.
 
-**Pin it** in `uTestContestDisplay`: each override, and the base for every other
-contest as a ratchet. The New Contest prompts are compared, for every contest,
+**Pin it** in `uTestContestDisplay` (M9a's seams) or `uTestContestUI` (M9b's):
+each override, and the base for every other contest as a ratchet. The New Contest prompts are compared, for every contest,
 against a table generated from the dialog's own arms. No oracle but the
 corpus's Cabrillo header (Winter Field Day, General QSO) sees any of this, so a
 change here needs a `BENCH_QUEUE.md` entry too.

@@ -95,6 +95,10 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* WHERE ON THE BAND THE SPONSOR WANTS NO WAG QSO -- M9b. See the
+         body. *)
+      function CallEntryFrequencyWarning(aFreqKHz: integer): string; override;
    end;
 
 implementation
@@ -275,6 +279,35 @@ procedure TContestWAG.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_GERMANY);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURDOK, ncfMyState);
+end;
+
+(* MainUnit.WagCheck's seven windows, moved here as they stood at M9b
+   (2026-10-02) -- "added by n4af at behest of wag contest mgr", 4.90.3.
+   Every bound is EXCLUSIVE, as the `(ARF > a) and (ARF < b)` tests were, so
+   7080 kHz itself, between two windows, does not warn. MainUnit asks this as
+   a call is typed and shows the answer as a notice. *)
+function TContestWAG.CallEntryFrequencyWarning(aFreqKHz: integer): string;
+const
+   WINDOWS: array[0..6, 0..1] of integer = (
+      (3650, 3700),
+      (7043, 7080),
+      (7080, 7143),
+      (14060, 14125),
+      (14280, 14350),
+      (21347, 21450),
+      (28225, 28400));
+var
+   i: integer;
+begin
+   Result := '';
+   for i := Low(WINDOWS) to High(WINDOWS) do
+      begin
+      if (aFreqKHz > WINDOWS[i, 0]) and (aFreqKHz < WINDOWS[i, 1]) then
+         begin
+         Result := TC_WAGWarn;
+         Exit;
+         end;
+      end;
 end;
 
 initialization

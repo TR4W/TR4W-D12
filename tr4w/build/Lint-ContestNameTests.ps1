@@ -182,14 +182,20 @@ $CEILINGS = @{
    # operating aids and the WAE QTC menu) and logsubs2 3 -> 2 (WRTC's
    # score-posting labels). What is left in those files is listed in design
    # 8.2m with the step it waits for.
-   'mainunit.pas'          = 8
+   #
+   # M9b, 2026-10-02 -- the UI asks the contest: mainunit 8 -> 3 (General
+   # QSO's call-entry status is ShowsContestStatus, the FOC Marathon's three
+   # power-column tests are PowerFieldIsFOCNumber, WAG's frequency warning is
+   # CallEntryFrequencyWarning), logedit 6 -> 5, logsubs2 2 -> 0 and logwind
+   # 1 -> 0 (ShowsContestStatus; both unlisted now), postunit 5 -> 4 (the
+   # ten-date warning is MaximumContestDates) and logstuff 3 -> 2 (WARC band
+   # stepping is BandStepIncludesWARC). Design 8.2n.
+   'mainunit.pas'          = 3
    'trdos\fcontest.pas'    = 2
    'trdos\logcfg.pas'      = 1
-   'trdos\logedit.pas'     = 6
-   'trdos\logstuff.pas'    = 3
-   'trdos\logsubs2.pas'    = 2
-   'trdos\logwind.pas'     = 1
-   'trdos\postunit.pas'    = 5
+   'trdos\logedit.pas'     = 5
+   'trdos\logstuff.pas'    = 2
+   'trdos\postunit.pas'    = 4
    'uadif.pas'             = 1
    'unewcontest.pas'       = 5
 }
@@ -214,7 +220,10 @@ $CEILINGS = @{
 # M9a, 2026-10-02: 120 -> 27. The total fell 151 -> 34 (117 tests moved into
 # the classes, ceilings above -- 87 of them the New Contest dialog's arms);
 # 27 is again about 80% of it.
-$TOTAL_FLOOR  = 27
+#
+# M9b, 2026-10-02: 27 -> 18. The total fell 34 -> 23 (11 tests moved into the
+# classes, ceilings above); 18 is again about 80% of it.
+$TOTAL_FLOOR  = 18
 $MEMBER_FLOOR = 130
 
 # --------------------------------------------------------------------------

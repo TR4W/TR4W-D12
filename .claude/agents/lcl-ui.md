@@ -100,9 +100,29 @@ reads `TotalsDisplay`, the menus and `OpenTR4WWindow` ask
 back into a window** -- `Lint-ContestNameTests` holds each file's ceiling. What
 only the UI knows stays here: which window IS which operating aid is
 `MainUnit.OperatingAidOfWindow`, and how a prompt's steps become rows, a comment
-and the "I am in" box is `uNewContest.RenderPrompt`. M9b renders each contest's
-`DisplayName` in the New Contest drop-down and makes CATEGORY-POWER one value
-(design 7.6); `BENCH_QUEUE.md` carries what to look at.
+and the "I am in" box is `uNewContest.RenderPrompt`.
+
+**Since M9b (2026-10-02) the UI asks the contest for the rest** (design 8.2n):
+
+- **The New Contest drop-down lists `DisplayName`s**, active contests first
+  (`IsActive`), built by `uContestChoices` (no LCL, unit tested). The combo
+  is **not `Sorted`** and must not be: `TfrmNewContest.FContests` holds the
+  `ContestType` of each line, filled in the same loop as `Items`, and a
+  sorted combo would reorder `Items` behind it. `SelectedContest` is the
+  identity; `ContestName` is still the TOKEN (`ContestTypeSA`) -- it names
+  the log file and the `CONTEST` command, so it must not become the caption.
+- **CATEGORY-POWER is one value**: the Cabrillo summary window writes
+  `Settings.Contest.CategoryPower` through `SetCFGCommandValue`, before the
+  export runs and on close; a change with QSOs logged calls
+  `MainUnit.RescoreLog` (the Rescore command, named once) and shows a
+  NOTICE (`QuickDisplay`), never a modal question. The decision is
+  `uCategoryPowerChange`, unit tested.
+- **Call entry, band stepping, the log columns** ask
+  `ShowsContestStatus`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber` and
+  `CallEntryFrequencyWarning` (`MainUnit.ShowCallEntryFrequencyWarning`
+  replaced `WagCheck`).
+
+`BENCH_QUEUE.md` carries what to look at.
 
 ## Before converting another window
 

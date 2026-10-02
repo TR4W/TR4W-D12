@@ -1992,8 +1992,10 @@ begin
      DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call, False)));
      end;
 
-  if Contest <> GENERALQSO then
-    // Gav 4.44.8   Uses intiial exchange & previous qso DOM to display Domestic mults, if it exists
+  (* Gav 4.44.8: uses the initial exchange and the previous QSO's domestic
+    QTH to show the domestic multiplier status -- not for General QSO, a log
+    (TContestBase.ShowsContestStatus, M9b). *)
+  if ContestIdentity(Contest).ShowsContestStatus then
      begin
      if DoingDomesticMults then
         begin

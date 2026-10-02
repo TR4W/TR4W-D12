@@ -87,6 +87,8 @@ type
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       function GetADIFPowerTag: string; override;
+      (* THE LOG'S FOC# COLUMN -- M9b. See the body. *)
+      function GetPowerFieldIsFOCNumber: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -286,6 +288,15 @@ end;
 procedure TContestFOCMarathon.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURFOCNUMBER, ncfMyFOC);
+end;
+
+(* THE MEMBER NUMBER RIDES IN THE POWER FIELD (RSTPowerExchange; the ADIF
+   import above fills aExch.Power from FOC_NUM), so the log shows it under
+   FOC#, not PWR. MainUnit's three `Contest = FOCMARATHON` tests (n4af
+   4.32.5) moved here at M9b, 2026-10-02. *)
+function TContestFOCMarathon.GetPowerFieldIsFOCNumber: boolean;
+begin
+   Result := True;
 end;
 
 initialization

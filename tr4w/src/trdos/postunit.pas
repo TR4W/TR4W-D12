@@ -760,7 +760,9 @@ procedure ExportTo3830Scores;
     is that long, and a silent truncation is not a property worth keeping. *)
   operatorsStr := HeaderValue( CABRILLOSECTION, '_OPERATORS' );
   classStr     := HeaderValue( CABRILLOSECTION, '_CATEGORY-OPERATOR' );
-  powerStr     := HeaderValue( CABRILLOSECTION, '_CATEGORY-POWER' );
+  (* CATEGORY-POWER IS THE ONE SETTING SCORING READS, not a header-store copy
+    -- M9b, design 7.6; uCbrSum.CabrilloTagText answers it. *)
+  powerStr     := CabrilloTagText( ctCategoryPower );
 
   buf := buf + sysutils.Format( 'Call Used: %s'#13#10, [ string( Settings.My.Call ) ] );
   buf := buf + sysutils.Format( 'Operators: %s'#13#10, [ operatorsStr ] );
@@ -1269,6 +1271,7 @@ procedure CheckForNewContestDate( Date: TQSOTime );
 
   var
     Index: integer;
+    maxDates: integer;
 
   begin
   if NumberDates = 0 then
@@ -1287,7 +1290,10 @@ procedure CheckForNewContestDate( Date: TQSOTime );
   ContestDates[ NumberDates ] := Date;
   inc( NumberDates );
 
-  if ( NumberDates > 10 ) and ( Contest <> GENERALQSO ) then // 4.72.1
+  (* HOW MANY DATES THE CONTEST ALLOWS, ASKED OF IT -- M9b. Ten for a
+    contest, none for General QSO, a log (4.72.1). 0 never warns. *)
+  maxDates := ContestIdentity( Contest ).MaximumContestDates;
+  if ( maxDates > 0 ) and ( NumberDates > maxDates ) then
      begin
      showwarning( TC_TOOMANYCONTESTDATES );
      // halt;

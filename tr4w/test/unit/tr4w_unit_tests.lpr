@@ -579,6 +579,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
+   (* M9b: the New Contest drop-down's list, and a CATEGORY-POWER change. *)
+   uContestChoices      in '..\..\src\uContestChoices.pas',
+   uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
+   uTestContestUI       in 'uTestContestUI.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
    uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
    uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
@@ -656,6 +660,7 @@ begin
    RegisterSuite(TContestMultipliersTests.Create('ContestMultipliers'));
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
+   RegisterSuite(TContestUITests.Create('ContestUI'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

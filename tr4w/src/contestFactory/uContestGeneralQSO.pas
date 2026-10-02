@@ -65,6 +65,13 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+      (* WHAT THE UI ASKS -- M9b. General QSO is a log, not a contest: call
+         entry shows no contest status, the summary never warns of too many
+         dates, and band stepping reaches the WARC bands. Each was an
+         `if Contest <> GENERALQSO` in the code that showed it. *)
+      function GetShowsContestStatus: boolean; override;
+      function GetMaximumContestDates: integer; override;
+      function GetBandStepIncludesWARC: boolean; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -199,6 +206,28 @@ begin
       begin
       Result := inherited CabrilloContestName(aContestTitle, aSessionName);
       end;
+end;
+
+(* MainUnit (station information and possible calls), LOGEDIT (the
+   domestic-multiplier status), LOGSUBS2 x2 and LOGWIND (multiplier and QSO
+   status) each skipped these for General QSO -- M9b. *)
+function TContestGeneralQSO.GetShowsContestStatus: boolean;
+begin
+   Result := False;
+end;
+
+(* PostUnit.CheckForNewContestDate tested `( NumberDates > 10 ) and
+   ( Contest <> GENERALQSO )` (4.72.1): a log never warns -- M9b. *)
+function TContestGeneralQSO.GetMaximumContestDates: integer;
+begin
+   Result := 0;
+end;
+
+(* LOGSTUFF's band stepping skipped a WARC band when `CONTEST <> GeneralQSO`
+   (n4af 4.37.11), so General QSO alone steps onto WARC -- M9b. *)
+function TContestGeneralQSO.GetBandStepIncludesWARC: boolean;
+begin
+   Result := True;
 end;
 
 initialization

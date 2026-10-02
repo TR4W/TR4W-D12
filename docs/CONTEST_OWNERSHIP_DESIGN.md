@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M9a built; see §8.2)
+# What a contest owns -- DESIGN (M0-M9b built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -77,6 +77,7 @@ lives in a helper or in the format's own unit.
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz still reads the sheet in its scoring (Q33) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); the multiplier KEY at M10 |
 | summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest keeps the arms of POTA, RSGB 1.8 and the UA4W Championship | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
+| the New Contest drop-down's name and place, call entry's contest status, the ten-date warning, WARC band stepping, the FOC# log column, a frequency warning | **the class, as data the UI renders** (M9b, done 2026-10-02, §8.2n); the off-time minimum stays named (Q60) | `DisplayName`, `IsActive`, `ShowsContestStatus`, `MaximumContestDates`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber`, `CallEntryFrequencyWarning` (**existing**, M9b) |
 
 The seam names on the right are the generator's
 (`tools/contest-rules-inventory/judgements.py`), with two deliberate
@@ -709,9 +710,12 @@ and the Cabrillo summary's own `_CATEGORY-POWER`. The end state has one:
   mid-contest but let it be changed"* -- a reminder that it changes the scoring
   class, never a block.
 
-Lands with the UI work (M9b): the summary's CATEGORY-POWER control writes the
-one setting. M9a moved the contest-specific Cabrillo header lines and left the
-general header, CATEGORY-POWER included, where it is.
+~~Lands with the UI work (M9b)~~ **LANDED at M9b (2026-10-02, §8.2n).** The
+summary window's CATEGORY-POWER row writes `Settings.Contest.CategoryPower`
+through `SetCFGCommandValue`; `uCbrSum.CabrilloTagText` answers the header's
+CATEGORY-POWER from the setting; a change with QSOs logged rescores through the
+Rescore command (`MainUnit.RescoreLog`) and shows a notice. The New Contest
+dialog sets it as before and never reminds.
 
 ### 7.7 DECIDED (2026-10-01): three scoring stages, one entry point each
 
@@ -1001,7 +1005,7 @@ Each is behaviour-preserving unless marked.
 | **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE (NY4I) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
 | **M8** | **DONE 2026-10-02 (§8.2l).** **Multipliers and dupes**, as contest-declared rules over the shared sheet (§7.7 stage 2). `CountsAsMultiplier` and `DomesticMultiplierFromCall`; the five `SetMultFlags` rules and the four hint arms moved; YB DX's no-op deleted with ParametersOkay's copy of `SetPrefix`; the off-band dupe gap and need-multiplier hint fixed (§7.4). Multiplier-KIND arms stay in the sheet until Q4; RSGB 1.8 still classless (Q33) | corpus `CLAIMED-SCORE`; the matrix; `uTestContestMultipliers`, `uTestOffBandCredit` |
 | **M9a** | **DONE 2026-10-02 (§8.2m).** **What the display and the reports show**, as data the UI asks for: the New Contest prompts, the totals window, the summary sheet, the hour report, the Cabrillo header lines and mode column, HamScore's canonical exchanges, the score-posting labels, WRTC's operating aids and the QTC menu; design 7.11 (MY STATE never written by set-up); every class states its display name, Cabrillo name and ADIF id | the matrix (only the 7.11 setting lines move); corpus; `uTestContestDisplay`; `BENCH_QUEUE.md` |
-| **M9b** | **The UI itself.** The New Contest drop-down shows `DisplayName`; CATEGORY-POWER is one value (7.6); General QSO's display rules, the FOC log columns, WAG's call-window warning and the off-time tests (§8.2m) | bench (no automated gate sees the UI) |
+| **M9b** | **DONE 2026-10-02 (§8.2n).** **The UI itself.** The New Contest drop-down shows `DisplayName`, active contests first and inactive ones marked (`IsActive`; SA Sprint and Locust); CATEGORY-POWER is one value and a change rescores (7.6); General QSO's display rules, the FOC log columns and WAG's call-window warning are the contest's. The off-time minimum stays named -- its two readers disagree (Q60) | `uTestContestUI`; the matrix and corpus unchanged; `BENCH_QUEUE.md` (no automated gate sees the UI) |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
 
 **Export comes before import and parse** because export is the only half the
@@ -2745,6 +2749,145 @@ file against a HEAD build: PostUnit's X-EXCHANGE line, LOGSUBS2's second
 
 **Questions this raised -- NY4I's:** Q52-Q57 (§9).
 
+### 8.2n M9b -- what it covered (2026-10-02)
+
+**The UI itself asks the contest.** NY4I approved M9b and delegated its design
+forks; each DECIDED entry rests on the evidence given with it. No contest
+gained a class. Three of NY4I's rulings are implemented: the drop-down shows
+the display name, inactive contests go to the bottom, and CATEGORY-POWER is
+one value with the last touch winning (7.6).
+
+| site | contests | seam / change | moved |
+|---|---|---|---|
+| `uNewContestForm.FillContests` -- `all.Add(ContestTypeSA[ct])`, a `Sorted` combo, and `uNewContest` reading the caption back through `GetContestFromString` | all | `DisplayName`, the new `IsActive`; `uContestChoices` (order, mark); the form holds a `ContestType` per line | -- (no contest-name test) |
+| `MainUnit` call entry, `LOGEDIT.ShowStationInformation`, `LOGSUBS2` x2, `LOGWIND` -- `Contest <> GENERALQSO` around the status displays | General QSO | `ShowsContestStatus` | 5 |
+| `PostUnit.CheckForNewContestDate` -- the ten-date warning | General QSO | `MaximumContestDates` (base 10, 0 never) | 1 |
+| `LOGSTUFF` band stepping -- WARC skipped unless General QSO | General QSO | `BandStepIncludesWARC` | 1 |
+| `MainUnit` log columns -- `Contest = / <> FOCMARATHON` x3 | FOC Marathon | `PowerFieldIsFOCNumber` | 3 |
+| `MainUnit.CallWindowChange` -- `if Contest = WAG then WagCheck` | WAG | `CallEntryFrequencyWarning(aFreqKHz)`; `WagCheck` is `ShowCallEntryFrequencyWarning` | 1 |
+| the Cabrillo summary's `_CATEGORY-POWER` header-store copy; PostUnit's 3830 report reading it | all | one value, `Settings.Contest.CategoryPower` (7.6) | -- |
+| `MainUnit` / `PostUnit` off-time minimum -- `pos('CQ-WW', ...)` / `'IARU-HF'` | CQ WW x3, IARU | **NOT MOVED** -- Q60 | -- |
+
+**DECIDED: THE DROP-DOWN HOLDS A `ContestType` PER LINE, AND THE TOKEN IS
+STILL WHAT IS WRITTEN.** `TfrmNewContest.FContests[i]` is line i's contest,
+filled in the same loop as `Items` from one `TContestChoices` -- a typed field
+the view owns, not an `Objects[]` cast and not the caption read back.
+`SelectedContest` answers the identity; `ContestName` still answers
+`ContestTypeSA`, because it names the log file and is the `CONTEST` command's
+value -- choosing by display name writes exactly what choosing by token did.
+**The combo's `Sorted` is off** (the `.lfm`): a sorted combo reorders `Items`
+behind the array.
+
+**DECIDED: THE ORDER IS ACTIVE FIRST, THEN BY DISPLAY NAME** (case-insensitive,
+`UnicodeCompareText` -- the platform's collation, as a sorted LCL list uses),
+a tie by the enum. The Win32 combo sorted the tokens (`CBS_SORT`); sorting by
+what the operator reads is the only order that helps him find it. Considered
+and rejected: grouping by sponsor or by mode -- no contest states either, and
+inventing a grouping is a design of its own.
+
+**DECIDED: AN INACTIVE CONTEST IS MARKED `'%s (inactive)'`** -- `SContestInactive`,
+a resourcestring, so a translation reaches it -- and listed last. `IsActive` is
+a property on `TContestBase` (base True), stated False on SA Sprint and Locust
+only, on NY4I's word; Q59 asks for others. It changes nothing else: an
+inactive contest's log opens and scores as before.
+
+**DECIDED: THE DISPLAY NAMES ARE NOT TRANSLATED.** They are the sponsors'
+proper names, and the same names are the friendly names the summary sheet's
+`CONTEST:` line and the log database carry -- a translation there would change
+output. The dialog's other captions are translated from `TC_`/`RC_` constants
+(`HandleShow`), which is where its translatable words are.
+
+**DECIDED: A SHARED DISPLAY NAME IS TOLD APART BY THE TOKEN IN BRACKETS.**
+`uTestContestUI` found it on its first run: WRTC's row gives it IARU's friendly
+name, so IARU-HF and WRTC were two identical lines -- a contest an operator
+could not pick, the radio list's "a duplicate display name makes a model
+invisible". Each such line adds its token (`IARU HF World Championship [WRTC]`);
+a unique name is bare. Brackets, not words: nothing to translate. Considered and
+rejected: renaming WRTC here -- its display name is its friendly name (NY4I's
+M9a ruling), which is the summary sheet's `CONTEST:` line, so that is NY4I's
+(Q58). The pair is held as a ratchet.
+
+**DECIDED (7.6): CATEGORY-POWER IS `Settings.Contest.CategoryPower`, AND THE
+SUMMARY WINDOW WRITES IT.**
+
+- `uCbrSum`: `_CATEGORY-POWER` is no longer saved to the header store
+  (`ctrSave` False), and `CabrilloTagText(ctCategoryPower)` answers the setting
+  when the window is closed -- so the Cabrillo header, the 3830 report (which
+  read the store directly; repointed) and the log's entry declaration all read
+  the one value scoring reads. A `_CATEGORY-POWER` left in `tr4w.json` is inert.
+- **The evidence the two disagreed:** the golden corpus's `arrl_digi` log says
+  `CATEGORY-POWER=LOW`; its exported Cabrillo header said `HIGH`, from the
+  corpus settings' header store. After M9b it says `LOW` (and `winter_fd`, also
+  LOW, likewise) -- the score was always LOW's. **This is the one output
+  change**, and the corpus does not compare the header (`golden_diff.py` keeps
+  `QSO:`, `X-QSO:` and `CLAIMED-SCORE:` only), so it stays green.
+- `uCabrilloSummaryForm.CommitCategoryPower` applies the row through
+  `SetCFGCommandValue('CATEGORY-POWER', ...)` -- the route every settings screen
+  takes (applies, records the operator's statement, tells a multi-op peer) --
+  **before** the export action runs, so the file's CLAIMED-SCORE is scored with
+  the power its header declares, and again on close (every exit saves, as it
+  always did; the second call finds nothing changed).
+- **The decision is `uCategoryPowerChange.DecideCategoryPowerChange`** --
+  unchanged (same power, or text that is no power), set (no QSOs logged), set
+  and rescore (QSOs logged). Re-saving the same value does nothing, so closing
+  the window never rescores by accident.
+- **The rescore is the existing Rescore command.** `tUpdateLog(actRescore);
+  LoadinLog;` was written out at four sites (the menu, the QSO editor, ADIF
+  import, a multi-op update); it is `MainUnit.RescoreLog` now and all four call
+  it, with the summary window the fifth. No new rescore was written.
+- **The reminder is a NOTICE** (`QuickDisplay`, the main window's 30-second
+  strip): *"CATEGORY-POWER is now %s -- the scoring category changed and the
+  log was rescored."* (`SCategoryPowerChangedRescored`). Considered and
+  rejected: a modal confirm -- NY4I's ruling is that the change is allowed
+  ("let it be changed"), so a question would be a block with an extra click;
+  the notice is the app's own channel for an event announcement. It shows only
+  with QSOs logged: with none there is no category to have changed, which is
+  also why the New Contest dialog, which sets the first value, never shows it.
+
+**DECIDED: GENERAL QSO'S DISPLAY RULES ARE THREE TRAITS, NOT ONE "IS A LOG"
+FLAG.** `ShowsContestStatus`, `MaximumContestDates`, `BandStepIncludesWARC` --
+each names what the UI does with it, so a contest other than General QSO can
+answer one without the others. This answers 8.2m's "is General QSO a contest at
+all?" only as far as the UI needs: whatever NY4I decides, these are the facts.
+`MainUnit`'s site also hides the possible calls for General QSO and `LOGSUBS2`'s
+does not -- transcribed as it stood.
+
+**DECIDED: THE FOC MARATHON'S COLUMN IS A FACT ABOUT ITS EXCHANGE**
+(`PowerFieldIsFOCNumber`): the member number rides in the power field
+(`RSTPowerExchange`; its ADIF import fills `Power` from `FOC_NUM`, M5a), so the
+log shows FOC# instead of PWR. The column itself stays MainUnit's. The PWR
+column's Enable is left untouched for the FOC Marathon, exactly as the two
+tests left it.
+
+**DECIDED: WAG'S WARNING IS THE CONTEST'S WINDOWS AND WORDS**
+(`CallEntryFrequencyWarning(aFreqKHz)`, '' for none): the seven ranges moved
+as they stood, every bound exclusive (7080 kHz, between two windows, does not
+warn), and the words are `TC_WAGWarn`, read when asked. Which radio, and
+showing it as a notice, stay MainUnit's (`ShowCallEntryFrequencyWarning`).
+
+**NOT MOVED, WITH THE REASON: THE OFF-TIME MINIMUM (Q60).** It is a sponsor
+rule and the seam would be one integer -- but its two readers disagree:
+`MainUnit.CreateMainWindow` uses 60 minutes for CQ WW *and IARU HF* (4.115.4),
+`PostUnit.CalculateTotals` 60 for CQ WW only, keyed on `Settings.Contest.Name`
+(so a stated `CONTEST NAME` changes it). The same in D7. One value would change
+one reader's output for IARU -- a sponsor question, not a UI move.
+
+**Gates, run 2026-10-02 on a full build.** The contest matrix **185
+identical, 0 differing** -- no re-freeze. Golden corpus **24
+passed, 0 failed, 2 known-divergence, 13 sets exported, exit 0**;
+`test-adif-roundtrip.sh` **13 passed**; unit tests **0 failed** (78,271 passed;
+`uTestContestUI` new). `Lint-ContestNameTests` 34 -> 23: mainunit 8 -> 3,
+logedit 6 -> 5, logsubs2 2 -> 0, logwind 1 -> 0, postunit 5 -> 4, logstuff
+3 -> 2; its floor 27 -> 18. Narrowing 1279 -> 1277 (both in the drop-down:
+`TStringList.Add` of a native string, and the caption into
+`GetContestFromString`'s ShortString), range 4 -> 4. i18n: two resourcestrings
+(`SContestInactive`, `SCategoryPowerChangedRescored`) entered all 22
+catalogues through `po_merge --pot` from a two-entry scratch template, fuzzy
+and empty; every catalogue +2 entries, reviewed and with-text counts unchanged,
+the diff adds lines only.
+
+**Questions this raised -- NY4I's:** Q58-Q61 (§9).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -3014,6 +3157,24 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     after the restore. Build the messages from a local instead (MY ZONE
     derived from MY CALL would then stay derived -- a behaviour change only
     for a later MY CALL change)?
+
+- **Q58-Q61** (M9b, the UI itself, §8.2n):
+  - **Q58** WRTC's row carries IARU's friendly name, "IARU HF World
+    Championship", so its display name equals IARU-HF's and the drop-down
+    tells them apart only by token ("... [IARU-HF]", "... [WRTC]"). A name of
+    WRTC's own? It becomes its `FriendlyName` too -- the summary sheet's
+    `CONTEST:` line and the log database's friendly name, an output change.
+  - **Q59** `IsActive` is False for SA Sprint and Locust only. Any others?
+  - **Q60** The off-time minimum: `MainUnit` uses 60 minutes for CQ WW and
+    IARU HF, `PostUnit`'s operating time 60 for CQ WW only (by contest NAME).
+    Which is right for IARU HF? Once ruled, one `MinimumOffTimeMinutes` on the
+    class and both readers ask it.
+  - **Q61** CATEGORY-ASSISTED, -BAND, -MODE and -OPERATOR have the same
+    two-store shape CATEGORY-POWER had: the summary window starts from the
+    setting, but writes MODE to its header-store copy and the other three
+    nowhere, so headless /EXPORT reads a stale or absent copy (`uLogStore`'s
+    entry declaration says so). One value each, as 7.6 did for power (no
+    rescore -- no contest scores by them)?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

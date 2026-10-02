@@ -9078,3 +9078,13 @@ msgstr ""
 msgid "Out of state: work %s stations only"
 msgstr ""
 
+#: uappstrings.scontestinactive
+#, fuzzy
+msgid "%s (inactive)"
+msgstr ""
+
+#: uappstrings.scategorypowerchangedrescored
+#, fuzzy
+msgid "CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored."
+msgstr ""
+

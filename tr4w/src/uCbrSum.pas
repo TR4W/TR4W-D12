@@ -136,7 +136,9 @@ const
     (ctrTag: '_CATEGORY-BAND';          ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
     (ctrTag: '_CATEGORY-MODE';          ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),
     (ctrTag: '_CATEGORY-OPERATOR';      ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),    // ny4i changed this since we dete3rmine from the log
-    (ctrTag: '_CATEGORY-POWER';         ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),
+    // NOT SAVED HERE (M9b): CATEGORY-POWER is ONE value, Settings.Contest
+    // .CategoryPower, the one scoring reads (design 7.6) -- see CabrilloTagText.
+    (ctrTag: '_CATEGORY-POWER';         ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
     (ctrTag: '_CATEGORY-STATION';       ctrCFG:False; ctrSave: True; ctrList: True; ctrOpen: False), // Issue #976: now a drop-down
     (ctrTag: '_CATEGORY-TIME';          ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),  // Issue #976: persist + restore selection
     // Cabrillo v3 publishes ONE/TWO/LIMITED/UNLIMITED/SWL here, and sponsors
@@ -265,6 +267,21 @@ begin
    if CabrilloSummaryOpen then
       begin
       Result := CabrilloSummary.TagText(aTag);
+      Exit;
+      end;
+
+   (* CATEGORY-POWER IS THE SETTING, NOT A HEADER-STORE COPY -- M9b, design
+     7.6 (NY4I: the last touch point wins). It had two stores: this one's
+     '_CATEGORY-POWER', written by the summary window, and
+     Settings.Contest.CategoryPower, written by the New Contest dialog and read
+     by scoring. They disagreed in the golden corpus -- arrl_digi's log says
+     LOW, its Cabrillo header said HIGH -- so a Winter Field Day header could
+     declare one power while the score used another. The window now writes
+     the setting, and everything that reads the header reads the setting. A
+     '_CATEGORY-POWER' left in settings\tr4w.json is inert. *)
+   if aTag = ctCategoryPower then
+      begin
+      Result := tCategoryPowerSA[Settings.Contest.CategoryPower];
       Exit;
       end;
 

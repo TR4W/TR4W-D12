@@ -333,6 +333,21 @@ resourcestring
      error like we would with an invalid county".  %s is the host state. *)
    SExchangeOutOfStateWorksHostOnly = 'Out of state: work %s stations only';
 
+   (* --------------------------------------------- the contest UI (M9b) - *)
+
+   (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,
+     2026-10-02: "inactive contests go at the bottom of the drop down". They
+     stay listed so an old log can still be started again; the mark says why
+     they are last. %s is the contest's display name. *)
+   SContestInactive = '%s (inactive)';
+
+   (* CATEGORY-POWER CHANGED WITH QSOs IN THE LOG. NY4I, 2026-10-01: "Maybe
+     we remind them of that mid-contest but let it be changed." A notice, not
+     a question -- the change has already been made and the log rescored.
+     %s is the new power category (HIGH, LOW, QRP). *)
+   SCategoryPowerChangedRescored =
+      'CATEGORY-POWER is now %s -- the scoring category changed and the log was rescored.';
+
 implementation
 
 end.

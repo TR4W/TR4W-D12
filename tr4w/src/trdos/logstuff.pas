@@ -980,9 +980,13 @@ begin
      goto NextBand;
      end;
 
-  if (CONTEST <> GeneralQSO) and (BandChangeArray[TempInteger].bcWARC) then
+  (* A CONTEST IS NOT HELD ON WARC, so band stepping skips it -- unless the
+    contest says it steps there: General QSO, a log (n4af 04.37.11;
+    TContestBase.BandStepIncludesWARC, M9b). *)
+  if (BandChangeArray[TempInteger].bcWARC) and
+     (not ContestIdentity(Contest).BandStepIncludesWARC) then
      begin
-     goto NextBand; //n4af 04.37.11
+     goto NextBand;
      end;
   if (not Settings.Bands.WarcEnabled) and (BandChangeArray[TempInteger].bcWARC) then
      begin

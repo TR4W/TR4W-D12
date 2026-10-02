@@ -23,6 +23,73 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-02 -- THE NEW CONTEST DROP-DOWN SHOWS DISPLAY NAMES, AND CATEGORY-POWER IS ONE VALUE (M9b)
+
+The UI itself (`CONTEST_OWNERSHIP_DESIGN.md` §8.2n). `uTestContestUI` pins the
+list the drop-down is built from and the power decision; **nothing sees the
+windows**. The first two groups are DELIBERATE changes; the rest should look
+exactly as before.
+
+- **The New Contest drop-down** (`uNewContestForm.FillContests`,
+  `uContestChoices`):
+  - it lists **display names**, sorted by them -- *"ARRL Inter. DX Contest,
+    CW"*, *"CQ Worldwide DX Contest, SSB"*, *"General QSO/DX Logging"* -- and
+    47 contests with no human name yet still show their token (`UKEI`,
+    `RF-CUP-CW`, ...; design Q53);
+  - **IARU-HF and WRTC** share a display name, so they read *"IARU HF World
+    Championship [IARU-HF]"* and *"... [WRTC]"* (design Q58);
+  - the **last two lines** are *"Locust QSO Party (inactive)"* and
+    *"SA-SPRINT (inactive)"*, after every active contest;
+  - choose a contest and press OK: **the log's file name and the contest that
+    opens are what they were** (the file is still named by the token, e.g.
+    `CQ-WW-CW`, not the display name). Check one QSO party, Field Day and
+    General QSO;
+  - **type-ahead**: the list is a drop-down list -- typing a letter should jump
+    to display names starting with it;
+  - **long names**: a 30-plus-character name (*"RAEM Ernst Krenkel Memorial
+    Contest"*) -- is it readable in the closed combo and the open list, or
+    clipped? Widen the dialog: the combo is right-anchored and should grow;
+  - the prompts per contest (M9a's list below) are unchanged.
+- **CATEGORY-POWER is one value** (`uCabrilloSummaryForm.CommitCategoryPower`,
+  design 7.6):
+  - open a contest with a few QSOs, power HIGH. Start the **Cabrillo** export
+    (its station-information window opens), choose **QRP**, OK: a Cabrillo
+    file is written whose
+    header says **CATEGORY-POWER: QRP** and whose **CLAIMED-SCORE** is the QRP
+    score -- Winter Field Day (power factor), Idaho (QRP points) or Stew Perry
+    show the difference; a plain contest's score does not move;
+  - the main window's notice strip shows *"CATEGORY-POWER is now QRP -- the
+    scoring category changed and the log was rescored."* and the score display
+    updates **without** using Tools > Rescore;
+  - reopen it (Tools > Edit Cabrillo Summary...): the row shows QRP. Choose
+    LOW and OK -- no file is written (no export), but the notice shows and the
+    score moves. Close it **without** changing it --
+    no notice, no rescore (re-saving the same power does nothing);
+  - **Cancel** and the window's close button save it too (every exit has always
+    saved the summary);
+  - a **brand-new contest** (no QSOs): choosing a power in the New Contest
+    dialog, or later in the summary, shows **no** notice;
+  - restart TR4W and reopen the log: the power is the one chosen last.
+  - **headless /EXPORT**: a log whose `.cfg` says LOW now writes
+    `CATEGORY-POWER: LOW` in the Cabrillo header (the golden corpus's
+    `arrl_digi` and `winter_fd` sets did write HIGH, from the header store's
+    copy; the corpus compares only QSO lines and CLAIMED-SCORE, so it cannot
+    see this).
+- **Call entry, General QSO** (`ShowsContestStatus`): in a General QSO log,
+  typing a call shows **no** multiplier/QSO status, station information or
+  possible calls, as before; in any contest they show as before.
+- **Band up/down, General QSO** (`BandStepIncludesWARC`): steps onto 30, 17 and
+  12 m (with WARC enabled); a contest skips them, as before.
+- **The summary sheet's ten-date warning** (`MaximumContestDates`): a contest
+  log spanning more than ten dates warns; General QSO never does -- as before.
+- **The FOC Marathon log** (`PowerFieldIsFOCNumber`): the member number shows
+  under **FOC#**, and there is no PWR column; any contest with a power exchange
+  shows PWR as before.
+- **WAG** (`CallEntryFrequencyWarning`): with the radio at 3.675 MHz, typing a
+  call shows *"Warning: Out of WAG allowed frequency range"*; at 7.080 MHz
+  exactly it does **not** (between two windows, as before); in any other
+  contest no warning.
+
 ## Added 2026-10-02 -- THE DIALOG, THE TOTALS, THE REPORTS AND HAMSCORE ASK THE CONTEST (M9a)
 
 What each contest shows and reports moved onto its class as data the UI renders

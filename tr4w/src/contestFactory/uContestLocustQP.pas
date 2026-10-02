@@ -91,6 +91,8 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
+      (* NO LONGER RUN -- M9b. See the body. *)
+      function GetIsActive: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -251,6 +253,13 @@ procedure TContestLocustQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompt
 begin
    aPrompts.AskField(ncfMyName);
    aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+end;
+
+(* INACTIVE, ON NY4I'S WORD -- see the header. Stated at M9b (2026-10-02):
+   the New Contest drop-down lists it after every active contest, marked. *)
+function TContestLocustQP.GetIsActive: boolean;
+begin
+   Result := False;
 end;
 
 initialization

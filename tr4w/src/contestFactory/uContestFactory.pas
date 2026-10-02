@@ -161,7 +161,8 @@ begin
    Result.MyCall := Settings.My.Call;
    (* FoundContest's own in-state decision -- see TStationContext.InHostState. *)
    Result.InHostState := StationInHostState;
-   (* CATEGORY-POWER as the New Contest dialog set it -- see
+   (* CATEGORY-POWER, the one value -- set by the New Contest dialog or the
+      Cabrillo summary window, the last touch winning (M9b, design 7.6). See
       TStationContext.MyPower. *)
    Result.MyPower := Settings.Contest.CategoryPower;
    (* CATEGORY-MODE, the same way -- see TStationContext.MyCategoryMode. *)

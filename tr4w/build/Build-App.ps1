@@ -345,7 +345,14 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # two `<mult>` loops (`Contest <> WRTC` and WRTC's) are one loop asking the
 # contest for its labels. uExchangeBuilder's one moved, unchanged, to
 # uCanonicalExchange with the code it sits in.
-$NARROW_CEILING = 1279
+# 1279 -> 1277, 2026-10-02: M9b, the New Contest drop-down shows display
+# names. Both are uNewContest/uNewContestForm: the old FillContests handed
+# ContestTypeSA (a native string) to TStringList.Add, and ApplyContestChoice
+# read the caption back into GetContestFromString's ShortString. The combo
+# now holds UTF8Encode'd display names and a typed ContestType per line, and
+# no new unit adds one (uContestChoices and uCategoryPowerChange compare with
+# UnicodeSameText / UnicodeCompareText, not SysUtils' AnsiString names).
+$NARROW_CEILING = 1277
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

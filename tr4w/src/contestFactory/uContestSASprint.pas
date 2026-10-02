@@ -89,6 +89,8 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
+      (* NO LONGER RUN -- M9b. See the body. *)
+      function GetIsActive: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -192,6 +194,14 @@ end;
 function TContestSASprint.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
+   Result := False;
+end;
+
+(* INACTIVE, ON NY4I'S WORD (2026-10-02): the SA Sprint is no longer run. It
+   stays in the factory so an old log still opens and scores; the New Contest
+   drop-down lists it after every active contest, marked. *)
+function TContestSASprint.GetIsActive: boolean;
+begin
    Result := False;
 end;
 

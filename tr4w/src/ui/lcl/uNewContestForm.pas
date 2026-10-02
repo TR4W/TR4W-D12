@@ -41,7 +41,8 @@ interface
 uses
   Classes, Controls, Forms, StdCtrls, ExtCtrls, Dialogs,
   uTR4WStrings,
-  LCLStrConsts;   // RC_/TC_ captions -- see the note on SetRowLabels
+  LCLStrConsts,   // RC_/TC_ captions -- see the note on SetRowLabels
+  VC;             (* ContestType -- the identity each contest line holds (M9b) *)
 
 type
   { The nine dynamic rows: three free-text fields then six CATEGORY-* choices.
@@ -97,6 +98,12 @@ type
     procedure FieldChanged(Sender: TObject);
   private
     FRows: array[1..9] of TNewContestRow;
+    (* WHICH CONTEST EACH LINE OF cboContest IS -- M9b. Filled in the same
+       loop as the combo's Items, from one TContestChoices, so line i is
+       FContests[i]. A typed field the view owns, never the caption read
+       back and never an Objects[] cast: the caption is the display name, and
+       the contest is the identity. *)
+    FContests: array of ContestType;
     FChoice: TNewContestChoice;
     FDir: string;            { the directory lstFiles was filled from }
     FBrowsedFile: string;    { set only when Browse... was used }
@@ -127,6 +134,7 @@ type
     function  SelectedFile: string;
     function  MyCall: string;
     function  ContestName: string;
+    function  SelectedContest: ContestType;
     function  ContestChosen: boolean;
     function  IAmIn: boolean;
     function  RowCaption(aRow: integer): string;
@@ -165,7 +173,8 @@ uses
   uSettingsModel,   // the Cabrillo category settings and their spellings
   MainUnit,   // logger
   Log4D,
-  VC;   { ContestTypeSA, tCategory*SA -- the source of truth for types }
+  (* The drop-down's contests, in order, with their display names -- M9b. *)
+  uContestChoices;
 
 const
   { Client coordinates of gbNew, not of the form -- the rows are its children,
@@ -402,21 +411,40 @@ begin
       end;
 end;
 
+(* THE CONTESTS, BY THEIR DISPLAY NAMES, ACTIVE FIRST -- M9b, 2026-10-02.
+
+  NY4I: "i would like the display name in the drop down". The ORDER and the
+  inactive mark are uContestChoices' (unit tested there); this puts the
+  captions in the combo and keeps which contest each line is, line for line,
+  in FContests.
+
+  THE COMBO IS NOT Sorted ANY MORE (.lfm), and must not be: a sorted combo
+  reorders its Items behind FContests' back, and line i would stop being
+  FContests[i]. It sorted the enum's spellings, which is what the operator
+  used to read; uContestChoices sorts what they read now.
+
+  ONE Assign, not one Add per line: Items proxies the widget. *)
 procedure TfrmNewContest.FillContests;
 var
-   ct:  ContestType;
-   all: TStringList;
+   choices: TContestChoices;
+   captions: TStringList;
+   i: integer;
 begin
-   all := TStringList.Create;
+   choices := TContestChoices.Create;
+   captions := TStringList.Create;
    try
-      all.Sorted := True;   { CBS_SORT, which the Win32 combo asked for }
-      for ct := Succ(DUMMYCONTEST) to High(ContestType) do
+      SetLength(FContests, choices.Count);
+      for i := 0 to choices.Count - 1 do
          begin
-         all.Add(ContestTypeSA[ct]);
+         FContests[i] := choices.Contest[i];
+         (* UTF-8, stated: the LCL's strings are UTF-8 AnsiStrings and a
+            display name is the sponsor's, not necessarily ASCII. *)
+         captions.Add(UTF8Encode(choices.Caption[i]));
          end;
-      cboContest.Items.Assign(all);
+      cboContest.Items.Assign(captions);
    finally
-      all.Free;
+      captions.Free;
+      choices.Free;
    end;
 end;
 
@@ -831,9 +859,31 @@ begin
    Result := Trim(edtMyCall.Text);
 end;
 
+(* THE CHOSEN CONTEST, from the line's typed identity -- M9b. DUMMYCONTEST
+  when none is chosen, which no line holds. *)
+function TfrmNewContest.SelectedContest: ContestType;
+var
+   i: integer;
+begin
+   Result := DUMMYCONTEST;
+   i := cboContest.ItemIndex;
+   if (i >= 0) and (i <= High(FContests)) then
+      begin
+      Result := FContests[i];
+      end;
+end;
+
+(* THE CONTEST'S TOKEN -- the spelling the CONTEST command and the log's file
+  name have always carried, NOT the caption: the line shows the display name
+  since M9b, and what is written must not move with it. '' when none is
+  chosen, as the empty combo text was. *)
 function TfrmNewContest.ContestName: string;
 begin
-   Result := cboContest.Text;
+   Result := '';
+   if ContestChosen then
+      begin
+      Result := ContestTypeSA[SelectedContest];
+      end;
 end;
 
 { CB_GETCURSEL = -1, named. Text that matches no entry is not a chosen contest,

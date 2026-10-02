@@ -303,16 +303,27 @@ the target shape, the M-step migration order and the open questions.
   `PermittedOperatingAids` (WRTC: no SCP, cluster or score posting --
   `MainUnit.OperatingAidOfWindow` is the UI's window-to-aid wiring);
   `OffersQTCs` (the WAE QTC menu). **uNewContest still names POTA, RSGB 1.8
-  and the UA4W Championship** (`ClasslessPrompts`). Left for M9b and later:
-  General QSO's display rules, the FOC log columns, WAG's call-window
-  warning, the off-time string tests, the drop-down's display names and
-  CATEGORY-POWER's one value (7.6). `uTestContestDisplay` pins every seam
-  and compares every contest's prompts with a table generated from the
-  dialog's own arms.
+  and the UA4W Championship** (`ClasslessPrompts`). `uTestContestDisplay`
+  pins every seam and compares every contest's prompts with a table
+  generated from the dialog's own arms.
+- **The UI itself asks the contest** (M9b, 2026-10-02, design §8.2n).
+  `IsActive` (base True; SA Sprint and Locust False, on NY4I's word only --
+  `uTestContestUI.INACTIVE_CONTESTS` is the ratchet) places a contest in the
+  New Contest drop-down, which shows `DisplayName` (`uContestChoices`;
+  a shared display name gets its token in brackets -- IARU-HF and WRTC
+  today, Q58). General QSO, a log, says False to `ShowsContestStatus`, 0 to
+  `MaximumContestDates` (base 10) and True to `BandStepIncludesWARC`; the FOC
+  Marathon says True to `PowerFieldIsFOCNumber`; WAG answers
+  `CallEntryFrequencyWarning(aFreqKHz)` from its seven exclusive windows.
+  **CATEGORY-POWER is ONE value** (design 7.6): the summary window writes
+  `Settings.Contest.CategoryPower`, so `TStationContext.MyPower` is what the
+  Cabrillo header declares, and a change with QSOs logged rescores. **The
+  off-time minimum stays named** in MainUnit and PostUnit: its two readers
+  disagree about IARU (Q60).
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog
-  writes that setting. A field is added when the first contest needs it
+  and (since M9b) the Cabrillo summary window write that setting. A field is added when the first contest needs it
   (M4 added `MyState` and `ContestTitle`). **It carries NO clock**:
   ~~`LogClockUTCHour`~~ is deleted (design Q21).
 - **A time-of-day rule reads the QSO's recorded time, never the clock**

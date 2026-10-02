@@ -354,6 +354,12 @@ procedure GetTRModeAndExtendedModeFromNetworkMode(netMode: TRadioMode; var mode:
   ModeType; var extMode: extendedModeType);
 
 procedure LoadinLog;
+
+(* RESCORE THE WHOLE LOG AND RELOAD IT -- the Rescore command. Was the pair
+  `tUpdateLog(actRescore); LoadinLog;` written out at four sites (the menu,
+  the QSO editor, ADIF import, a multi-op update); named at M9b, when a fifth
+  needed it -- a CATEGORY-POWER change in the Cabrillo summary window. *)
+procedure RescoreLog;
 (* THE TEXT OF ONE LOG ROW, COLUMN BY COLUMN.
 
   BuildLogRow is the only thing that knows how a QSO is displayed -- 360 lines
@@ -636,7 +642,6 @@ procedure PTTOn;
 procedure PTTOff;
 
 procedure ResetRadioPorts;
-procedure WagCheck;
 
 (* Tmain AND Ttr4wGetPlugin WERE HERE -- the ABI of the binary plug-in
   interface, deleted 2026-09-16 with the subsystem. They were the last
@@ -1750,7 +1755,9 @@ begin
      end;
   DisplayGridSquareStatus(CallWindowString);
 
-  if Contest <> GENERALQSO then
+  (* ASKED OF THE CONTEST -- M9b: General QSO, a log, shows no contest
+    status (TContestBase.ShowsContestStatus). *)
+  if ContestIdentity(Contest).ShowsContestStatus then
      begin
      ShowStationInformation(CallWindowString); //gav 4.44.8
      VisibleLog.DoPossibleCalls(CallWindowString);
@@ -4062,53 +4069,22 @@ begin
 
 end;
 
-procedure WagCheck; //added by n4af at behest of wag contest mgr
+(* THE CONTEST'S WARNING FOR THE RADIO'S FREQUENCY, AS A NOTICE -- M9b.
+
+  Was WagCheck: `if Contest = WAG` at the call site and WAG's seven kHz
+  windows here (n4af, 4.31.4 / 4.90.3). Where a sponsor wants no QSO is the
+  contest's, so the windows and the words are
+  TContestBase.CallEntryFrequencyWarning; what stays here is the UI's half --
+  which radio, and how a warning is shown. *)
+procedure ShowCallEntryFrequencyWarning;
 var
-  ARF: integer;
-
+  warning: string;
 begin
-  ARF := ActiveRadioPtr.CurrentStatus.Freq div 1000;
-
-  if (ARF > 3650) and (ARF < 3700) then
+  warning := ContestIdentity(Contest).CallEntryFrequencyWarning(
+                ActiveRadioPtr.CurrentStatus.Freq div 1000);
+  if warning <> '' then
      begin
-     QuickDisplay(TC_WagWarn); // 4.90.3
-     exit;
-     end;
-
-  if (ARF > 7043) and (ARF < 7080) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 7080) and (ARF < 7143) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 14060) and (ARF < 14125) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 14280) and (ARF < 14350) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 21347) and (ARF < 21450) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
-     end;
-
-  if (ARF > 28225) and (ARF < 28400) then
-     begin
-     QuickDisplay(TC_WagWarn);
-     exit;
+     QuickDisplay(warning);
      end;
 end;
 
@@ -4123,10 +4099,7 @@ begin
   TR4WMainForm.pnlName.Caption := '';
   TR4WMainForm.pnlUserInfo.Caption := '';
 
-  if Contest = WAG then //n4af 4.31.4
-     begin
-     WagCheck; //n4af
-     end;
+  ShowCallEntryFrequencyWarning;
 
   CallWindowString := ShortString(AnsiString(Copy(EntryText(TR4WCallEdit), 1,
                                                   CallstringLength)));
@@ -5698,8 +5671,7 @@ begin
 
     menu_rescore:
       begin
-        tUpdateLog(actRescore);
-        LoadinLog;
+        RescoreLog;
       end;
 
     //tLoadinLog({True, }True);
@@ -7840,6 +7812,12 @@ begin
     'rundll32.exe shell32.dll,Control_RunDLL timedate.cpl,,%u', [i]));
 end;
 
+procedure RescoreLog;
+begin
+  tUpdateLog(actRescore);
+  LoadinLog;
+end;
+
 procedure LoadinLog;
 label
   1, 2, start;
@@ -8306,8 +8284,10 @@ begin
         end;
      end;
 
-  if ((ColumnsArray[logColPower].Enable) and (Contest <> FOCMARATHON)) then
-    //n4af 4.32.5
+  (* The FOC Marathon's power field is its member number, shown under FOC#
+    (n4af 4.32.5) -- the contest's to say since M9b. *)
+  if ((ColumnsArray[logColPower].Enable) and
+      (not ContestIdentity(Contest).PowerFieldIsFOCNumber)) then
      begin
      if RXData.Power <> '' then
         begin
@@ -9541,13 +9521,16 @@ begin
 
   ColumnsArray[logColName].Enable := ExchangeInformation.Name;
   ColumnsArray[logColZoneMult].Enable := ExchangeInformation.Zone;
-  if Contest <> FOCMARATHON then //n4af 4.32.5
+  (* PWR or FOC#: the FOC Marathon's power field is its member number (n4af
+    4.32.5), and the contest says so since M9b. PWR is left as it was when
+    the field is the number, exactly as the two tests here left it. *)
+  if ContestIdentity(Contest).PowerFieldIsFOCNumber then
+     begin
+     ColumnsArray[logColFOC].Enable := ExchangeInformation.Power;
+     end
+  else
      begin
      ColumnsArray[logColPower].Enable := ExchangeInformation.Power;
-     end;
-  if Contest = FOCMARATHON then //n4af 4.32.5
-     begin
-     ColumnsArray[logColFOC].Enable := ExchangeInformation.Power; //n4af 4.32.5
      end;
   ColumnsArray[logColChapter].Enable := ExchangeInformation.Chapter;
 
@@ -10288,8 +10271,7 @@ begin
      CloseLogFile;
      end;
 
-  tUpdateLog(actRescore);
-  LoadinLog;
+  RescoreLog;
   DisplayLoadedQSOs;
   ReportAnyThatFailed;
   ClearThread(ImportFromADIFThreadID);

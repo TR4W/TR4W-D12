@@ -100,7 +100,6 @@ object frmNewContest: TfrmNewContest
       Width = 200
       Anchors = [akTop, akLeft, akRight]
       ItemHeight = 0
-      Sorted = True
       Style = csDropDownList
       TabOrder = 1
       OnChange = cboContestChange

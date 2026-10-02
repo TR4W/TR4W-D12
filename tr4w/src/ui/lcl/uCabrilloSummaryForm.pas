@@ -93,6 +93,7 @@ type
       procedure ApplyErmakCategories;
       procedure LoadValues;
       procedure SaveValues;
+      procedure CommitCategoryPower;
    public
       { AnsiString, NOT string.  Every LCL caption and edit is a
         TTranslateString, which is an AnsiString; declaring these as the
@@ -127,8 +128,14 @@ uses
    PostUnit,              { ErmakOverlayCategory, NumberErmakOverlayCategories }
    uCabrilloHeader,       { the header store, settings\tr4w.json }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
-   MainUnit,              { logger }
-   Log4D;
+   MainUnit,              { logger, RescoreLog }
+   Log4D,
+   (* CATEGORY-POWER, ONE VALUE -- M9b, design 7.6. See CommitCategoryPower. *)
+   uCategoryPowerChange,
+   uCFG,                  (* SetCFGCommandValue -- the settings screens' route *)
+   LogDupe,               (* QSOTotals -- is anything logged yet *)
+   LogWind,               (* QuickDisplay -- the main window's notice *)
+   uAppStrings;           (* SCategoryPowerChangedRescored *)
 
 var
    GForm: TfrmCabrilloSummary = nil;
@@ -408,6 +415,43 @@ begin
    end;
 end;
 
+(* THE CATEGORY-POWER ROW WRITES THE ONE SETTING SCORING READS -- M9b, design
+  7.6. NY4I: "If they select QRP right before cabrillo generation, we have to
+  assume they know what they are doing" -- so the last touch wins, here as in
+  the New Contest dialog, and a change with QSOs logged rescores the log and
+  says so ("Maybe we remind them of that mid-contest but let it be changed").
+
+  The decision is uCategoryPowerChange's, unit tested; this does what it says.
+  RUN BEFORE THE EXPORT ACTION (OKClick) as well as on close, so a Cabrillo
+  file's CLAIMED-SCORE is computed with the power its header declares. The
+  second call finds nothing changed and does nothing. *)
+procedure TfrmCabrilloSummary.CommitCategoryPower;
+var
+   chosen: tCategoryPower;
+   change: TCategoryPowerChange;
+begin
+   change := DecideCategoryPowerChange(Settings.Contest.CategoryPower,
+                                       string(TagText(ctCategoryPower)),
+                                       QSOTotals[AllBands, Both],
+                                       chosen);
+   if change = cpcUnchanged then
+      begin
+      Exit;
+      end;
+
+   if not SetCFGCommandValue('CATEGORY-POWER', tCategoryPowerSA[chosen]) then
+      begin
+      Exit;
+      end;
+
+   if change = cpcSetAndRescore then
+      begin
+      RescoreLog;
+      QuickDisplay(SysUtils.Format(SCategoryPowerChangedRescored,
+                                   [tCategoryPowerSA[chosen]]));
+      end;
+end;
+
 function TfrmCabrilloSummary.TagText(const aTag: CabrilloTags): AnsiString;
 begin
    Result := '';
@@ -519,6 +563,7 @@ begin
    { EVERY exit saves, including Cancel and the window button.  That is what the
      Win32 WM_CLOSE / ExitAndClose path did. }
    SaveValues;
+   CommitCategoryPower;
    Action := caHide;
 end;
 
@@ -550,6 +595,9 @@ begin
    { THE ACTION RUNS FIRST AND THE WINDOW IS STILL OPEN, which is not
      incidental: the export reads the operator's answers back out of these
      controls through uCbrSum.CabrilloTagText while it runs. }
+   (* AFTER THE POWER IS COMMITTED, though -- M9b: the export's
+     CLAIMED-SCORE must be scored with the power its header says. *)
+   CommitCategoryPower;
    act;
 
    { Issue #976: close after a successful export rather than dropping the

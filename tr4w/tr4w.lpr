@@ -115,6 +115,8 @@ uses
   uTextFitAudit in 'src\ui\lcl\uTextFitAudit.pas',
   uNewContest in 'src\uNewContest.pas',
   uNewContestCommands in 'src\uNewContestCommands.pas',
+  uContestChoices in 'src\uContestChoices.pas',
+  uCategoryPowerChange in 'src\uCategoryPowerChange.pas',
   uContestReadiness in 'src\uContestReadiness.pas',
   uRadioPolling in 'src\uRadioPolling.pas',
   uRadioLinkRetry in 'src\uRadioLinkRetry.pas',

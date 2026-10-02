@@ -576,11 +576,12 @@ var
               if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
                  begin
                  if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
-                   if Settings.Network.AllowAutoUpdate then
-                      begin
-                      tUpdateLog(actRescore);
-                      LoadinLog;
-                      end;
+                    begin
+                    if Settings.Network.AllowAutoUpdate then
+                       begin
+                       RescoreLog;
+                       end;
+                    end;
                  end;
             end;
 

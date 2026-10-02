@@ -211,6 +211,43 @@ Three groups:
   them per mode, add the row, or leave it (WRTC forbids score posting anyway)?
   **Answer:**
 
+### Added after M9b (the New Contest drop-down and CATEGORY-POWER)
+
+- **Q52 note** -- M9b did what you asked: the drop-down shows the display
+  name, which is now the friendly name. Q52 still asks WHICH words; answering
+  it changes the drop-down with no further code.
+
+- **Q58** WRTC's row gives it IARU's friendly name, "IARU HF World
+  Championship", so the two were identical lines in the drop-down. They now
+  read "IARU HF World Championship [IARU-HF]" and "... [WRTC]" (the token in
+  brackets, only where a name is shared). A name of WRTC's own, please -- it
+  also becomes its friendly name, which the summary sheet's `CONTEST:` line
+  and the log database show.
+  **Answer:**
+
+- **Q59** Inactive contests: SA Sprint and Locust are marked inactive and
+  listed last, as you said. Any others? (A contest marked inactive still
+  opens and scores an old log; it only moves to the bottom of the list.)
+  **Answer:**
+
+- **Q60** The off-time minimum (the gap that counts as a break) is 60 minutes
+  for CQ WW and 30 for everything else -- but the two places that use it
+  disagree about IARU: the main window's on-screen operating time uses 60 for
+  CQ WW **and IARU HF** (n4af, 4.115.4), the summary sheet's OPERATING TIME
+  uses 60 for CQ WW only (and reads it from the contest NAME, so a stated
+  `CONTEST NAME` changes it). Same in D7. The IARU HF rules have no off-time
+  rule that I know of. Which is right for IARU -- 60 or 30? Once you say, it
+  becomes one value on the contest and both places use it.
+  **Answer:**
+
+- **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
+  categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
+  start from the setting the New Contest dialog wrote, but the summary window
+  writes MODE to a copy of its own and the other three nowhere, so a headless
+  export reads a stale or empty copy. Make them one value each, the same way
+  (no rescore -- no contest scores by them)?
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -355,7 +392,9 @@ Three groups:
 | Q39 | A contest never writes a station setting | design 7.11 (decided); LANDED at M9a for MY STATE (Q57 is MY ZONE) |
 | -- | Out-of-state x out-of-state in a QSO party: refuse with an error | M5b |
 | -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 (points, mults); M8 (dupes, hints) |
-| -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6 (M9) |
+| -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6; LANDED at M9b (the summary writes the one setting, a change with QSOs rescores and shows a notice) |
+| -- | The New Contest drop-down shows the display name | M9b (Q52 still asks which words) |
+| -- | Inactive contests go at the bottom of the drop-down (SA Sprint, Locust) | M9b (`IsActive`; Q59 asks for others) |
 | -- | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE` | e1c6f873 |
 | -- | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`) | M7b batch 2 (decided under delegation, design 8.2k) |
 

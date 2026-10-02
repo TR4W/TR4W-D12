@@ -270,7 +270,9 @@ end;
 (* A contest was chosen in the combo. *)
 procedure ApplyContestChoice;
 begin
-   SelectedContest := GetContestFromString(frmNewContest.ContestName);
+   (* THE LINE'S IDENTITY, not its caption read back through
+     GetContestFromString -- the caption is the display name since M9b. *)
+   SelectedContest := frmNewContest.SelectedContest;
    ClearFields;
    frmNewContest.SetComment('');
    frmNewContest.ResetIAmIn;

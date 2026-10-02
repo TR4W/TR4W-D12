@@ -2494,7 +2494,8 @@ var
      LogContact(PreviousQSOReceivedData, True);
      TailEnding := False;
          end;
-      if Contest <> GENERALQSO then
+      (* Not for General QSO, a log -- ShowsContestStatus, M9b. *)
+      if ContestIdentity(Contest).ShowsContestStatus then
          begin
          VisibleLog.ShowMultiplierStatus(CallsignICameBackTo);
          VisibleLog.ShowQSOStatus(CallsignICameBackTo);
@@ -2518,7 +2519,8 @@ var
           begin
           DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
           end;
-       if Contest <> GENERALQSO then
+       (* Not for General QSO, a log -- ShowsContestStatus, M9b. *)
+       if ContestIdentity(Contest).ShowsContestStatus then
           begin
           VisibleLog.ShowMultiplierStatus(CallWindowString);
           VisibleLog.ShowQSOStatus(CallWindowString);
