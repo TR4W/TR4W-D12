@@ -86,6 +86,11 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetIsUSQSOParty: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FINAL SCORE IS THE POINTS -- no multipliers at all (Q1, NY4I
+         2026-10-01). It was LogEdit.TotalScore's Field Day arm, which
+         returned QPoints; moved at M6. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
@@ -168,6 +173,11 @@ begin
       begin
       aQso.QSOPoints := 2;
       end;
+end;
+
+function TContestARRLFieldDay.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals);
 end;
 
 (* A through F -- ARRL Field Day class letters.

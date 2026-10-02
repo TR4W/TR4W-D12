@@ -40,8 +40,44 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   the way Florida's two and California's four did. It must NOT be derived from
   ContestsArray's CountyLineAllowed boolean, which carries no limit at all --
   reading it as a number is the defect that made a class of any kind start
+
   refusing a two-QTH exchange.
- *)
+
+
+
+  ---------------------------------------------------------------------------
+
+  THE BONUSES -- M6, 2026-10-02, moved with ZERO change.
+
+
+
+  TWO BONUS STATIONS, W0MA AND K0GQ, 100 POINTS EACH, ONCE. The legacy score
+
+  set a flag when either was logged (LOGDUPE.CheckMOQSOPartyBonusStation, from
+
+  live entry and from the log's loader) and LogEdit.TotalScore added 100 per
+
+  flag after the multiplication. They are this class's declared data now
+
+  (GetBonusStations), counted over the whole log by the base -- any mode, and
+
+  dupes included, because the loader's walk included them. WA7BNM states the
+
+  same rule: "100 points for at least one QSO with a special event station
+
+  (W0MA, K0GQ)".
+
+
+
+  THE PEAK-HOUR TALLY IS A PRESERVED DEFECT. Live entry counted each 80 or
+
+  40 m QSO logged from 1400 to 1959 UTC, up to 250, and TotalScore added the
+
+  count; the log's loader never counted, so a reopened log lost it. That is
+
+  kept exactly (TalliesLiveQSO, TContestBase's header on it) and asked of NY4I
+
+  as design Q32: WA7BNM's summary of the sponsor's rules has no such bonus. *)
 unit uContestMissouriQP;
 
 {$I tr4w.inc}
@@ -49,7 +85,7 @@ unit uContestMissouriQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestMissouriQP = class(TContestStateQSOPartyBase)
@@ -93,6 +129,16 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* W0MA and K0GQ, 100 each, once -- see the header. *)
+      function GetBonusStations: TBonusStationList; override;
+   public
+      (* An 80 or 40 m QSO logged from 1400 to 1959 UTC -- see the header. *)
+      function TalliesLiveQSO(const aQso: ContestExchange): boolean; override;
+
+      (* The bonus stations, plus the live tally capped at 250. *)
+      function BonusPoints(const aTotals: TScoreTotals;
+                           aView: TLoggedQSOView): longint; override;
    end;
 
 implementation
@@ -187,6 +233,42 @@ end;
 procedure TContestMissouriQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+end;
+
+const
+   (* The legacy tally stopped counting at 250. *)
+   MissouriLiveTallyCap = 250;
+
+function TContestMissouriQP.GetBonusStations: TBonusStationList;
+begin
+   Result := nil;
+   SetLength(Result, 2);
+   Result[0].Call := 'W0MA';
+   Result[0].Points := 100;
+   Result[0].OncePerMode := False;
+   Result[1].Call := 'K0GQ';
+   Result[1].Points := 100;
+   Result[1].OncePerMode := False;
+end;
+
+function TContestMissouriQP.TalliesLiveQSO(const aQso: ContestExchange): boolean;
+begin
+   Result := (aQso.Band in [Band80, Band40])  and
+             (aQso.tSysTime.qtHour >= 14)    and
+             (aQso.tSysTime.qtHour < 20);
+end;
+
+function TContestMissouriQP.BonusPoints(const aTotals: TScoreTotals;
+                                        aView: TLoggedQSOView): longint;
+var
+   tally: longint;
+begin
+   tally := aTotals.LiveSessionTally;
+   if tally > MissouriLiveTallyCap then
+      begin
+      tally := MissouriLiveTallyCap;
+      end;
+   Result := inherited BonusPoints(aTotals, aView) + tally;
 end;
 
 initialization

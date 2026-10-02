@@ -218,6 +218,21 @@ type
          only host-state stations. TContestStateQSOPartyBase reads this. *)
       InHostState: boolean;
 
+      (* THE ENTRANT'S OWN MODE CATEGORY -- Cabrillo CATEGORY-MODE.
+
+         Added at M6 (2026-10-02) for the Salmon Run's W7DX bonus, by the
+         same growth rule: "A single-mode entry ... may claim the 500-point
+         bonus only once", and "contacts on modes other than the mode of
+         entry may not be counted for ... bonus credit". It is read from
+         Settings.Contest.CategoryMode, the value the Cabrillo header
+         writes, so the score and the category the log declares cannot
+         disagree.
+
+         THE ZERO VALUE IS cmCW, NOT "UNSTATED" -- the setting has no unstated
+         state, and an operator who never chooses one exports CATEGORY-MODE:
+         CW. A rule that reads this must say what it does with cmCW. *)
+      MyCategoryMode: tCategoryMode;
+
       (* THERE IS NO CLOCK HERE, AND THERE MUST NOT BE ONE.
 
          A time-of-day rule -- Croatian's 23-05 UTC doubling, UK/EI's 01-05 --
@@ -416,6 +431,107 @@ type
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
    TContestIdList = array of string;
 
+   (* THE MULTIPLIER SHEET'S COUNTS AND THE QSO COUNTS, as the score reads
+      them: by band (AllBands included), by mode (CW, Digital, Phone and
+      Both), and for the multipliers by kind. The application copies them
+      out of the sheet; the contest never sees the sheet itself. *)
+   TScoreMultTotals = array[BandType, CW..Both, RemainingMultiplierType] of longint;
+   TScoreQSOTotals = array[BandType, CW..Both] of longint;
+
+   (* WHAT THE FINAL SCORE IS COMPUTED FROM -- M6, 2026-10-02, stage 3 of
+      the three scoring stages (docs/CONTEST_OWNERSHIP_DESIGN.md 7.7).
+
+      FILLED BY THE APPLICATION, which owns the log and the sheet
+      (uScoreTotals.GatherScoreTotals); the contest reads these and never a
+      global. A field arrives with the first rule that needs it, as in
+      TStationContext.
+
+      A RECORD BECAUSE IT IS AN INTERFACE PARAMETER -- the argument of the
+      score virtuals below -- which is the one exemption CLAUDE.md grants. It
+      is pure data with no behaviour; a class would have to be constructed,
+      filled and freed by every caller for no gain, as TCabrilloQSOContext
+      records for the export.
+
+      THE "Session" FIELDS ARE THE SESSION'S, NOT THE CONTEST'S TRAITS, for
+      the reason TCabrilloQSOContext states: FCONTEST's arms and the
+      operator's statements set them per station, and today's score has
+      always read the session's answer. *)
+   TScoreTotals = record
+      (* The QSO points stored in the log, summed -- for a single-band entry,
+         the points of that band only (LOGDUPE's TotalQSOPoints). *)
+      QSOPoints: longint;
+
+      (* QTCs counted as points: TotalNumberQTCsProcessed when QTCs are
+         enabled, else 0. Every contest with QTCs on has always added them. *)
+      QTCPoints: longint;
+
+      Mults: TScoreMultTotals;
+      QSOs: TScoreQSOTotals;
+
+      (* AllBands, or the one band a single-band entry scores (SingleBand). *)
+      ScoredBand: BandType;
+
+      (* Does the session count any multiplier at all? False when the four
+         Active* multiplier kinds are all None. *)
+      SessionCountsMultipliers: boolean;
+
+      (* The session's exchange and DX multiplier kind. *)
+      SessionExchange: ExchangeType;
+      SessionDXMult: DXMultType;
+
+      (* A COUNT KEPT WHILE THE PROGRAM RUNS, NOT FROM THE LOG -- see
+         TContestBase.TalliesLiveQSO, which says why it exists and that it is
+         a defect preserved on purpose. 0 after every reload. *)
+      LiveSessionTally: longint;
+   end;
+
+   (* A READ-ONLY VIEW OF THE LOGGED QSOs -- what a bonus rule reads (M6).
+
+      EVERY QSO THAT COUNTS TOWARD THE TOTALS (QSOCountsTowardTotals): the
+      set the log's loader adds to the sheet when a contest is opened, in log
+      order, and every QSO live entry has counted since. Dupes are in it, as
+      they are in the loader's walk; a rule that does not want them says so
+      (TContestBase.CountsTowardBonus).
+
+      AN ABSTRACT CLASS AND NOT AN ARRAY, so the contest can only READ: there
+      is no Add here. The application keeps its list beside the totals
+      (uScoreTotals says why, with the measurement); a test hands in its own
+      TLoggedQSOList. *)
+   TLoggedQSOView = class
+   public
+      function Count: integer; virtual; abstract;
+      function QSO(aIndex: integer): ContestExchange; virtual; abstract;
+   end;
+
+   (* A VIEW HELD IN MEMORY -- what a test fills, and what the application
+      keeps beside the totals (uScoreTotals). *)
+   TLoggedQSOList = class(TLoggedQSOView)
+   private
+      FQSOs: array of ContestExchange;
+      FCount: integer;
+   public
+      procedure Add(const aQso: ContestExchange);
+      (* Empties the list and keeps its storage, for the next fill. *)
+      procedure Clear;
+      function Count: integer; override;
+      function QSO(aIndex: integer): ContestExchange; override;
+   end;
+
+   (* A STATION WHOSE CONTACT EARNS A BONUS -- DECLARED DATA (M6).
+
+      The contest LISTS its bonus stations; the base counts them over the view
+      (TContestBase.BonusPoints). The two contests that have them -- Missouri's
+      W0MA and K0GQ, the Salmon Run's W7DX -- differ only in these three
+      values and in which contacts and modes they credit, which are the two
+      virtuals beside BonusPoints. Points is paid once, or once for each mode
+      the contest credits when OncePerMode. *)
+   TBonusStation = record
+      Call: string;
+      Points: longint;
+      OncePerMode: boolean;
+   end;
+   TBonusStationList = array of TBonusStation;
+
    TContestBase = class
    private
       FContest: ContestType;
@@ -568,6 +684,10 @@ type
          contest through ContestIdentity, so a contest changes nothing here
          until it overrides. *)
       function GetCabrilloQSOLineFormat: string; virtual;
+
+      (* THE CONTEST'S BONUS STATIONS -- declared data, M6. The base has none.
+         See TBonusStation and BonusPoints. *)
+      function GetBonusStations: TBonusStationList; virtual;
 
       (* WHICH CONTEST THIS INSTANCE IS -- READABLE BY SUBCLASSES, AND NOT TO BE
          BRANCHED ON.
@@ -1040,6 +1160,68 @@ type
                                 out aErrorMessage: string): boolean; virtual;
 
       procedure SetStation(const aStation: TStationContext);
+
+      (* THE FINAL SCORE -- STAGE 3, M6 (2026-10-02; design 5 and 7.7).
+
+         ONE FUNCTION, AND EVERY READER OF THE SCORE ASKS IT: LogEdit.TotalScore
+         is its only caller, and the score display, the summary sheet, the
+         Cabrillo CLAIMED-SCORE, the XML score report and both score-posting
+         clients read TotalScore.
+
+            final score = CombineScore(totals) + BonusPoints(totals, view)
+
+         NOT VIRTUAL, for ScoreQSO's reason: a bonus is added once, after the
+         sponsor's formula, and no contest can fold one into the other or apply
+         it per QSO. A contest's formula is CombineWithMultipliers; its bonuses
+         are BonusStations and BonusPoints. *)
+      function FinalScore(const aTotals: TScoreTotals;
+                          aView: TLoggedQSOView): longint;
+
+      (* THE SPONSOR'S FORMULA, AS A TEMPLATE -- not virtual.
+
+         A SESSION THAT COUNTS NO MULTIPLIER SCORES ITS POINTS, and so does a
+         session whose exchange is the FISTS one (a D7 note: "Ugly fix for
+         FISTS because mults don't work ... too long an exchange"). Both were
+         the first two tests of LogEdit.TotalScore, ahead of every contest's
+         own rule, and they name no contest -- they are the session's answer --
+         so they are stated here, once, and no override can skip them.
+         Otherwise the contest's CombineWithMultipliers. *)
+      function CombineScore(const aTotals: TScoreTotals): longint;
+
+      (* THE BONUSES, ADDED ONCE AFTER THE FORMULA -- never per QSO.
+
+         THE BASE PAYS THE DECLARED BONUS STATIONS over the view (see
+         TBonusStation) and nothing else; a contest with none declared adds 0
+         and never reads the view. A contest with a rule of its own (North
+         Carolina's sweep, Idaho's dormant county) overrides, and adds
+         inherited so a declared station is still paid.
+
+         THE VIEW IS READ-ONLY AND IS THE WHOLE LOG, so a bonus is the same
+         however the log was reached -- live, reloaded, rescored, edited or
+         merged -- which is why it is not decided as each QSO is logged
+         (design 7.7). *)
+      function BonusPoints(const aTotals: TScoreTotals;
+                           aView: TLoggedQSOView): longint; virtual;
+
+      (* DOES THIS LIVE QSO ADD TO THE SESSION'S RUNNING TALLY?
+
+         A PRESERVED DEFECT, AND THE ONE PLACE A BONUS IS STILL COUNTED AS QSOs
+         ARE LOGGED. Missouri's legacy score added one point for each 80 or
+         40 m QSO logged between 1400 and 1959 UTC, up to 250 -- but counted
+         them only in live entry (LOGSUBS2.LogContact). The log's loader never
+         did, so the same log scored the tally while it was being worked and
+         lost it on every reopen, /EXPORT's CLAIMED-SCORE included. M6 moved
+         that score with ZERO change, so the rule is the contest's here, the
+         count is still the engine's (TScoreTotals.LiveSessionTally), and the
+         defect is unchanged. Design Q32 asks NY4I whether the sponsor has the
+         bonus at all; if it stands, it becomes a rule over the view and this
+         seam is deleted.
+
+         The base tallies nothing. *)
+      function TalliesLiveQSO(const aQso: ContestExchange): boolean; virtual;
+
+      (* The contest's bonus stations -- see TBonusStation. *)
+      property BonusStations: TBonusStationList read GetBonusStations;
    protected
       (* THE CONTEST'S OWN PER-QSO RULE -- step 4 of ScoreQSO, and only that.
 
@@ -1058,6 +1240,41 @@ type
          NoQSOPointMethod is a real value in QSOPointMethodType and it means
          exactly this, so a contest that does not score is not a special case. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); virtual;
+
+      (* THE SPONSOR'S FORMULA WHEN THE SESSION COUNTS MULTIPLIERS -- step 2
+         of CombineScore, and only that (M6).
+
+         THE BASE IS LogEdit.TotalScore'S GENERAL CASE, unchanged: the points
+         times the sum of every multiplier kind -- on the one band a
+         single-band entry scores, else on all bands. A contest whose sponsor
+         combines them otherwise overrides: Winter Field Day, WAE's weighted
+         multipliers, the Russian cups' points-plus-N-per-multiplier, the Ural
+         Cup. Protected, as CalculateQSOPoints is. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; virtual;
+
+      (* MECHANISM FOR THE FORMULAS, not rules: the QSO points plus the QTC
+         points, and the general case's multiplier sum. *)
+      function ContestPoints(const aTotals: TScoreTotals): longint;
+      function SummedMultipliers(const aTotals: TScoreTotals): longint;
+
+      (* WHICH LOGGED CONTACTS A BONUS STATION'S CONTACT MAY BE.
+
+         The base takes every QSO in the view, dupes included -- exactly the
+         QSOs the log's loader handed Missouri's bonus check. A contest whose
+         sponsor wants valid contacts only says so (the Salmon Run). *)
+      function CountsTowardBonus(const aQso: ContestExchange): boolean; virtual;
+
+      (* WHICH MODES A OncePerMode BONUS IS PAID IN -- aMode is CW, Digital or
+         Phone (FM is phone). The base pays every mode. *)
+      function CreditsBonusMode(aMode: ModeType): boolean; virtual;
+
+      (* MECHANISM: was aCall worked in the view, in aMode (CW, Digital or
+         Phone) or in any mode when aAnyMode, by a contact CountsTowardBonus
+         accepts? An exact comparison with the logged callsign. *)
+      function BonusStationWorked(aView: TLoggedQSOView;
+                                  const aCall: string;
+                                  aAnyMode: boolean;
+                                  aMode: ModeType): boolean;
 
       (* THE PARSE, WHICH IS MECHANISM AND NOT A RULE.
 
@@ -1115,6 +1332,17 @@ function ContestCreditsBand(aContest: TContestBase; aBand: BandType): boolean;
    DX phone. "Domestic" is a non-empty DomesticQTH. *)
 function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
                                var aQso: ContestExchange): boolean;
+
+(* DOES A LOGGED RECORD COUNT TOWARD THE TOTALS? -- M6, the one statement of
+   it. A QSO record, not deleted, with a band and a mode, and not an X-QSO:
+   what MainUnit.LoadinLog adds to the sheet and the counters, and so what the
+   view a bonus rule reads holds. LoadinLog asks this too, so the totals and
+   the view cannot disagree about which QSOs exist. *)
+function QSOCountsTowardTotals(const aQso: ContestExchange): boolean;
+
+(* THE MODE A BONUS IS COUNTED IN: FM is phone, as the engine's totals count
+   it; every other mode is itself. *)
+function BonusModeOf(aMode: ModeType): ModeType;
 
 implementation
 
@@ -1426,6 +1654,182 @@ end;
 procedure TContestBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := 0;
+end;
+
+(* ------------------------------------------------------------------------ *)
+(* STAGE 3 -- THE FINAL SCORE (M6)                                          *)
+(* ------------------------------------------------------------------------ *)
+
+procedure TLoggedQSOList.Add(const aQso: ContestExchange);
+begin
+   if FCount >= Length(FQSOs) then
+      begin
+      SetLength(FQSOs, FCount * 2 + 16);
+      end;
+   FQSOs[FCount] := aQso;
+   inc(FCount);
+end;
+
+procedure TLoggedQSOList.Clear;
+begin
+   FCount := 0;
+end;
+
+function TLoggedQSOList.Count: integer;
+begin
+   Result := FCount;
+end;
+
+function TLoggedQSOList.QSO(aIndex: integer): ContestExchange;
+begin
+   Result := FQSOs[aIndex];
+end;
+
+function QSOCountsTowardTotals(const aQso: ContestExchange): boolean;
+begin
+   Result := (aQso.ceRecordKind = rkQSO)  and
+             (not aQso.ceQSO_Deleted)     and
+             (aQso.Band <> NoBand)        and
+             (aQso.Mode <> NoMode)        and
+             (not aQso.ceXQSO);
+end;
+
+function BonusModeOf(aMode: ModeType): ModeType;
+begin
+   if aMode = FM then
+      begin
+      Result := Phone;
+      end
+   else
+      begin
+      Result := aMode;
+      end;
+end;
+
+function TContestBase.FinalScore(const aTotals: TScoreTotals;
+                                 aView: TLoggedQSOView): longint;
+begin
+   Result := CombineScore(aTotals) + BonusPoints(aTotals, aView);
+end;
+
+function TContestBase.CombineScore(const aTotals: TScoreTotals): longint;
+begin
+   (* LogEdit.TotalScore's first two tests, in their order -- see the
+      declaration. *)
+   if not aTotals.SessionCountsMultipliers then
+      begin
+      Result := ContestPoints(aTotals);
+      Exit;
+      end;
+
+   if aTotals.SessionExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
+      begin
+      Result := ContestPoints(aTotals);
+      Exit;
+      end;
+
+   Result := CombineWithMultipliers(aTotals);
+end;
+
+function TContestBase.ContestPoints(const aTotals: TScoreTotals): longint;
+begin
+   Result := aTotals.QSOPoints + aTotals.QTCPoints;
+end;
+
+function TContestBase.SummedMultipliers(const aTotals: TScoreTotals): longint;
+var
+   m: RemainingMultiplierType;
+begin
+   (* THE SCORED BAND'S ROW: the one band a single-band entry scores, else
+      AllBands -- TotalScore's two arms, which differed only in that index.
+      EVERY KIND, rmNoRemMultDisplay included, as TotalScore summed them; the
+      sheet never counts that one, so it adds 0. *)
+   Result := 0;
+   for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
+      begin
+      Result := Result + aTotals.Mults[aTotals.ScoredBand, Both, m];
+      end;
+end;
+
+function TContestBase.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals) * SummedMultipliers(aTotals);
+end;
+
+function TContestBase.GetBonusStations: TBonusStationList;
+begin
+   (* None. nil IS the empty dynamic array. *)
+   Result := nil;
+end;
+
+function TContestBase.CountsTowardBonus(const aQso: ContestExchange): boolean;
+begin
+   Result := True;
+end;
+
+function TContestBase.CreditsBonusMode(aMode: ModeType): boolean;
+begin
+   Result := True;
+end;
+
+function TContestBase.TalliesLiveQSO(const aQso: ContestExchange): boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.BonusStationWorked(aView: TLoggedQSOView;
+                                         const aCall: string;
+                                         aAnyMode: boolean;
+                                         aMode: ModeType): boolean;
+var
+   i: integer;
+   qso: ContestExchange;
+begin
+   Result := False;
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      if (string(qso.Callsign) = aCall)                       and
+         (aAnyMode or (BonusModeOf(qso.Mode) = aMode))        and
+         CountsTowardBonus(qso)                               then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function TContestBase.BonusPoints(const aTotals: TScoreTotals;
+                                  aView: TLoggedQSOView): longint;
+const
+   (* THE THREE MODES A OncePerMode BONUS CAN BE PAID IN. FM counts as
+      phone (BonusModeOf), so it is not a fourth. *)
+   BONUS_MODES: array[0..2] of ModeType = (CW, Digital, Phone);
+var
+   stations: TBonusStationList;
+   i, m: integer;
+begin
+   Result := 0;
+   stations := BonusStations;
+   (* A CONTEST WITH NO BONUS STATION NEVER TOUCHES THE VIEW. *)
+   for i := 0 to High(stations) do
+      begin
+      if stations[i].OncePerMode then
+         begin
+         for m := Low(BONUS_MODES) to High(BONUS_MODES) do
+            begin
+            if CreditsBonusMode(BONUS_MODES[m])                                    and
+               BonusStationWorked(aView, stations[i].Call, False, BONUS_MODES[m])  then
+               begin
+               Result := Result + stations[i].Points;
+               end;
+            end;
+         end
+      else if BonusStationWorked(aView, stations[i].Call, True, CW) then
+         begin
+         Result := Result + stations[i].Points;
+         end;
+      end;
 end;
 
 function TContestBase.GetMarksDupes: boolean;

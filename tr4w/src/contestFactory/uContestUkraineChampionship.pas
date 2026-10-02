@@ -89,6 +89,9 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FINAL SCORE -- see the implementation. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
@@ -110,6 +113,13 @@ begin
       Exit;
       end;
    aQso.QSOPoints := 2;
+end;
+
+(* THE POINTS PLUS TEN FOR EACH MULTIPLIER -- added, not multiplied.
+   LogEdit.TotalScore's `Contest in [UKRAINECHAMPIONSHIP]` arm, moved at M6. *)
+function TContestUkraineChampionship.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals) + 10 * SummedMultipliers(aTotals);
 end;
 
 function TContestUkraineChampionship.FormatCabrilloSentExchange(const aMy: TMyStationExchange;

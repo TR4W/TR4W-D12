@@ -58,6 +58,7 @@ uses {Dos, Printer,}Tree,
   SysUtils, // ny4i 4.44.9
   StrUtils, // 4.90.11
   uMults,
+  uRFChampionshipPoints,   (* the Championship's points table, lifted at M6 *)
   (* LCLType, for MAXWORD -- the only thing this unit still wanted from the
     Windows unit.
 
@@ -100,18 +101,9 @@ const
 
   ProcessedMultiMessageBufferLength = 256;
 
-  ChampionshipRFPointsArray: array[1..49] of Byte =
-    (
-
-    11, 12, 13, 14, 16, 20, 25,
-    12, 11, 12, 13, 15, 19, 23,
-    13, 12, 11, 12, 14, 18, 21,
-    14, 13, 12, 11, 12, 15, 18,
-    16, 15, 14, 12, 11, 12, 14,
-    20, 19, 18, 15, 12, 11, 12,
-    25, 23, 21, 18, 14, 12, 11
-
-    );
+  (* ChampionshipRFPointsArray WAS HERE. It is uRFChampionshipPoints'
+     RFChampionshipPoints now (M6), read by the ChampionshipRFMethod arm below
+     and by the Championship's two classes -- one table, not three. *)
 
   ZeroZuluOffsetCQZoneArray: array[1..39] of Byte =
     (
@@ -8930,7 +8922,7 @@ begin
               begin
               Exit;
               end;
-           RXData.QSOPoints := ChampionshipRFPointsArray[Ord(Settings.My.State[1]) - 48 +
+           RXData.QSOPoints := RFChampionshipPoints[Ord(Settings.My.State[1]) - 48 +
              (RXData.Zone - 1) * 7];
            end;
       end;

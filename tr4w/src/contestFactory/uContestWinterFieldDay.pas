@@ -59,6 +59,10 @@ unit uContestWinterFieldDay;
 interface
 
 uses
+   (* cpLOW and cpQRP -- the entrant's CATEGORY-POWER, which multiplies the
+      final score (M6). FIRST, so VC's names win where the two overlap, as
+      in uContestBase. *)
+   uSettingsModel,
    VC, uContestBase;
 
 type
@@ -74,6 +78,11 @@ type
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FINAL SCORE -- Issue 301 (NY4I): the points times the band-mode
+         multiplier, times two for a LOW entry and five for a QRP one. It was
+         LogEdit.TotalScore's Winter Field Day arm; moved at M6. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
@@ -122,6 +131,46 @@ begin
    else
       begin
       aQso.QSOPoints := 2;
+      end;
+end;
+
+(* THE BAND-MODE MULTIPLIER: one for each band from 160 m to 1296 MHz and
+   each of digital, CW and phone that has a QSO -- read from the QSO counts,
+   which FM already joins to phone. Transcribed from LogEdit.TotalScore, which
+   read the same counts from the totals window's copy of them (QTotals); the
+   score now reads the counts themselves (TScoreTotals.QSOs), which that copy
+   is taken from. The power factor is the entrant's CATEGORY-POWER, the value
+   TotalScore read through Settings.Contest.CategoryPower. *)
+function TContestWinterFieldDay.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+var
+   b: BandType;
+   bandModes: longint;
+begin
+   bandModes := 0;
+   for b := Low(BandType) to Band1296 do
+      begin
+      if aTotals.QSOs[b, Digital] > 0 then
+         begin
+         inc(bandModes);
+         end;
+      if aTotals.QSOs[b, CW] > 0 then
+         begin
+         inc(bandModes);
+         end;
+      if aTotals.QSOs[b, Phone] > 0 then
+         begin
+         inc(bandModes);
+         end;
+      end;
+
+   Result := bandModes * ContestPoints(aTotals);
+   if Station.MyPower = cpLOW then
+      begin
+      Result := Result * 2;
+      end
+   else if Station.MyPower = cpQRP then
+      begin
+      Result := Result * 5;
       end;
 end;
 

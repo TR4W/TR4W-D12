@@ -69,17 +69,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       as follows: Phone - 20 points each CW - 30 points each Digital - 50
       points each" -- the ten "Rarest of NC" counties, listed below.
 
-  THE ONE PIECE OF THE CURRENT RULES THIS CLASS DOES NOT IMPLEMENT, stated so
-  it is a known gap and not an oversight: "If at least one QSO is made with a
+  THE SWEEP -- IMPLEMENTED AT M6 (2026-10-02), the gap this header recorded
+  until the final-score seam existed: "If at least one QSO is made with a
   station in five of the 'Rarest of NC' counties, 500 additional bonus points
-  are added to the score after multiplication."
+  are added to the score after multiplication. This would constitute a
+  sweep." And: "Add bonus points to score (as applicable) after the
+  multiplication."
 
-  IT CANNOT LIVE HERE. CalculateQSOPoints scores ONE QSO, before multipliers
-  are applied; that bonus is awarded ONCE for the whole log and lands AFTER
-  multiplication. It belongs wherever the total score is assembled, and no
-  seam for a contest to contribute to the total exists in this factory yet --
-  ADDING_A_CONTEST.md section 6 lists calculateTotalScore among the things
-  deliberately not built until the responsibility actually moves.
+  So BonusPoints, awarded ONCE for the whole log and never per QSO: five of
+  the ten counties below, each by at least one contact, pays 500, and more
+  than five pays the same 500. A county counts by the received county the
+  per-QSO rule reads (DomesticQTH), from a contact that is not a dupe; a
+  county-line station is logged as one QSO per county, so each of its
+  counties counts.
 
   ---------------------------------------------------------------------------
   TWO COUNTIES ON A COUNTY LINE, FROM THE SAME PUBLISHED RULES.
@@ -148,6 +150,10 @@ type
       (* Two counties, from the sponsor's rules -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE RAREST-OF-NC SWEEP -- see the header. *)
+      function BonusPoints(const aTotals: TScoreTotals;
+                           aView: TLoggedQSOView): longint; override;
    end;
 
 implementation
@@ -192,6 +198,11 @@ const
       drift from the first the day the sponsor changes one of them -- and the
       sponsor's own wording derives the three numbers exactly this way. *)
    NCRareCountyMultiplier = 10;
+
+   (* "at least one QSO ... in five of the 'Rarest of NC' counties, 500
+      additional bonus points" -- the two numbers of the sweep. *)
+   NCSweepCounties = 5;
+   NCSweepBonus = 500;
 
 function TContestNorthCarolinaQP.GetDisplayName: string;
 begin
@@ -325,6 +336,52 @@ begin
       end;
 
    aQso.QSOPoints := points;
+end;
+
+function TContestNorthCarolinaQP.BonusPoints(const aTotals: TScoreTotals;
+                                             aView: TLoggedQSOView): longint;
+var
+   worked: array[Low(NCRareCounties)..High(NCRareCounties)] of boolean;
+   countiesWorked: integer;
+   i, c: integer;
+   qso: ContestExchange;
+begin
+   Result := inherited BonusPoints(aTotals, aView);
+
+   for c := Low(worked) to High(worked) do
+      begin
+      worked[c] := False;
+      end;
+
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      if qso.ceDupe then
+         begin
+         Continue;
+         end;
+      for c := Low(NCRareCounties) to High(NCRareCounties) do
+         begin
+         if string(qso.DomesticQTH) = NCRareCounties[c] then
+            begin
+            worked[c] := True;
+            end;
+         end;
+      end;
+
+   countiesWorked := 0;
+   for c := Low(worked) to High(worked) do
+      begin
+      if worked[c] then
+         begin
+         inc(countiesWorked);
+         end;
+      end;
+
+   if countiesWorked >= NCSweepCounties then
+      begin
+      Result := Result + NCSweepBonus;
+      end;
 end;
 
 initialization

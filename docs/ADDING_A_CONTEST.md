@@ -329,6 +329,12 @@ the wrongness.
 | `FormatCabrilloSentExchange` / `FormatCabrilloReceivedExchange` | the shared arm for the session's exchange (`TCabrilloQSOContext.SessionExchange`) -- `uCabrilloExchange.FormatCabrilloExchangeOfKind` |
 | `FormatADIFSentExchange` | the shared arm for the session's exchange -- `uADIFExchange.FormatADIFExchangeOfKind` |
 | `EmitADIFContestFields` | nothing -- `uADIF.EmitADIFRecord` has already written the generic `QTH` |
+| `FinalScore` | **not virtual** -- the one final score: `CombineScore` + `BonusPoints`. `LogEdit.TotalScore` is its only caller (M6, below) |
+| `CombineScore` | **not virtual** -- the points for a session with no multiplier or the FISTS exchange, else `CombineWithMultipliers` |
+| `CombineWithMultipliers` | **protected** -- the points (QTCs included) times the sum of every multiplier kind on the scored band |
+| `BonusPoints` | the declared `BonusStations` over the view, else 0 |
+| `BonusStations` / `CountsTowardBonus` / `CreditsBonusMode` | none / every contact / every mode |
+| `TalliesLiveQSO` | false -- a preserved Missouri defect (design Q32); do not override it |
 
 ### How a contest formats its export (M4, 2026-10-01)
 
@@ -454,6 +460,60 @@ window's notice line).
 Typed entry itself -- that a refusal SHOWS its message, that a valid exchange
 logs -- is seen by no gate; `docs/BENCH_QUEUE.md` carries it.
 
+### How a contest owns its final score and bonuses (M6, 2026-10-02)
+
+**ONE FUNCTION IS THE SCORE.** `LogEdit.TotalScore` gathers the totals the
+program holds (`uScoreTotals.GatherScoreTotals`) and asks your contest
+`FinalScore(totals, view)` -- and the score display, the summary sheet, the
+Cabrillo `CLAIMED-SCORE`, the XML score report and both score-posting
+clients all read `TotalScore`. Your class never sees the sheet, the globals
+or the database:
+
+```
+FinalScore = CombineScore(aTotals) + BonusPoints(aTotals, aView)     (not virtual)
+CombineScore: session with no multiplier, or the FISTS exchange -> the points  (not virtual)
+              otherwise -> CombineWithMultipliers(aTotals)                    (yours)
+```
+
+- **Do nothing** and you get the general case: the points (QTCs included)
+  times the sum of every multiplier kind, on the band a single-band entry
+  scores or on all bands. No bonus.
+- **Your sponsor combines them otherwise**: override the protected
+  `CombineWithMultipliers`. `ContestPoints(aTotals)` and
+  `SummedMultipliers(aTotals)` are the two pieces of the general case, for
+  you to call. `uContestWinterFieldDay` (band-mode multiplier x power),
+  `uContestDARCWAEDCCW` (weighted by band), `uContestUralCup`,
+  `uContestCupRFCW` (points + 100 per multiplier).
+- **A bonus station** -- "a contact with this call pays N, once or once per
+  mode": declare it in `GetBonusStations` (a `TBonusStation` row), and the
+  base pays it over the whole log. Say which contacts count
+  (`CountsTowardBonus`; the base takes every one, dupes included) and which
+  modes pay (`CreditsBonusMode`). `uContestMissouriQP`,
+  `uContestWashingtonSalmonRun`.
+- **Any other bonus** -- override `BonusPoints`, add `inherited`, and compute
+  yours from the view. `uContestNorthCarolinaQP` (the sweep),
+  `uContestIdahoQP` (the dormant county).
+- **What you are handed**: `TScoreTotals` -- the stored QSO points, QTC
+  points, the multiplier and QSO counts by band, mode and kind, the scored
+  band, and the SESSION's facts (does it count multipliers, its exchange, its
+  DX multiplier) -- and a `TLoggedQSOView`: every logged record that counts
+  toward the totals (`QSOCountsTowardTotals`), read-only, in log order. The
+  application keeps it in memory beside the totals (`uScoreTotals` -- reading
+  the database per score was measured at ~130 us a row), so walking it is
+  cheap; do not cache anything from it in your class.
+- **A BONUS IS NEVER DECIDED AS A QSO IS LOGGED** (design 7.7): decided from
+  the whole log at the end, it is the same however the log was reached --
+  live, reloaded, rescored, edited or merged. `TalliesLiveQSO` is the one
+  exception, and it is a defect kept for Missouri (design Q32): do not use it.
+- **A field you need and nobody has** goes into `TScoreTotals` (filled in
+  `GatherScoreTotals`) or `TStationContext`, with the first rule that needs
+  it. The Salmon Run's single-mode rule brought `MyCategoryMode`.
+- **Pin it** in `uTestContestTotals` with a hand-built `TScoreTotals` and a
+  `TLoggedQSOList`, at the bonus's edges (nine QSOs and ten; four counties and
+  five; one mode and two). The matrix's `totals` section sees the formula for
+  every contest; a bonus its synthetic QSOs do not trigger needs the unit
+  test and a `docs/BENCH_QUEUE.md` item.
+
 ### Protected helpers — mechanism, not rules
 
 | helper | for |
@@ -494,8 +554,10 @@ Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
 ### `TStationContext` — what scoring knows about us
 
 `Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`,
-`.MyPower`, `.PointOverrides`, and since M4 `.MyState` (IOTA, PCC) and
-`.ContestTitle` (Batavia FT8). ~~`.LogClockUTCHour`~~ is **gone** (2026-10-01,
+`.MyPower`, `.PointOverrides`, since M4 `.MyState` (IOTA, PCC) and
+`.ContestTitle` (Batavia FT8), since M5b `.MyCall` and `.InHostState`, and
+since M6 `.MyCategoryMode` (the Salmon Run's single-mode rule -- its zero
+value is CW, which is what an operator who never chooses one exports). ~~`.LogClockUTCHour`~~ is **gone** (2026-10-01,
 design Q21) -- see the next paragraph.
 
 **A TIME-OF-DAY RULE READS THE QSO'S RECORDED TIME, NEVER THE CLOCK.** NY4I,
@@ -538,7 +600,7 @@ never recomputes them.
 |---|---|
 | scoring | **`test-contest-factory.sh` only** — rescores each log through the factory and diffs against that set's **frozen** `rescored.adi` / `rescored.cbr` -- the legacy output, captured once by `freeze-rescore-baseline.sh`. **`/NOFACTORY` was DELETED 2026-09-29**: it could only work while both paths existed, and the contests were all moving inside two weeks. The frozen bytes are OUR OWN former output, so this gate says the factory agrees with what TR4W did before the move -- not that either answer is correct |
 | Cabrillo / ADIF exchange columns | **the golden corpus** — they are in the QSO lines, which `golden_diff.py` compares. Verified: `%-7s` → `%-8s` gives `FAIL arrl_fd cbr` |
-| Cabrillo *header* | **nothing, EXCEPT `CLAIMED-SCORE:`** — `golden_diff.py` drops every other header line (`golden_diff.py:87-88` keeps that one). It is arithmetic over the log's STORED points, so a per-QSO scoring change still does not move it; a change to the total-score formula or a bonus does (corrected 2026-10-01) |
+| Cabrillo *header* | **nothing, EXCEPT `CLAIMED-SCORE:`** — `golden_diff.py` drops every other header line (`golden_diff.py:87-88` keeps that one). It is arithmetic over the log's STORED points, so a per-QSO scoring change still does not move it; a change to the total-score formula or a bonus does (corrected 2026-10-01). For every contest, **the contest matrix's `totals` section** (M6) |
 | exchange validation and parsing | **the contest matrix's `parse` section** (M5b) -- a fixed list of typed exchanges through the real `ParametersOkay`, for every contest; and `uTestContestParse` for a class's own rule. **Nothing sees the window**: whether a refusal's message reaches the screen, and whether the caret lands after the bad token, are `BENCH_QUEUE.md`'s |
 | set-up, per-QSO scoring and export of **every** `ContestType`, classless included | **the contest matrix** — `bash tr4w/test/contest-matrix/run-contest-matrix.sh` (below) |
 
@@ -562,6 +624,7 @@ and the typed-entry check belongs in `BENCH_QUEUE.md`.
 | `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body | M3, M8 |
 | `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
 | `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a |
+| `totals` (M6) | the log the scoring section wrote, **reloaded** through `MainUnit.LoadinLog` (what `/EXPORT`'s start runs), then the QSO points, QTCs, QSO and multiplier counts by band and mode, `LogEdit.TotalScore` and the `CLAIMED-SCORE:` line of a Cabrillo file written after the reload. Appended LAST and frozen before the first total-score rule moved | M6 |
 | `parse` (M5b) | **66 typed exchanges** through `MainUnit.ParametersOkay` -- the routine live entry's Enter calls -- with the call in the call window and the band and mode in force: every exchange SHAPE well-formed (serials, states, zones, names, powers, ages, grids, classes and sections, Sweepstakes' four fields, counties and a county line from the contest's own domestic file, prefectures, oblasts, departments, parks) and then the malformed and edge cases (missing and extra fields, the wrong order, a bad section or county, DX, a serial with letters, Sweepstakes without a precedence, an out-of-state station's own state). Each line: accepted or refused, the message and token a refusal shows, the counties a county line queued, and every field the parse set -- **not the points**, which are the scoring section's, and not the QSO's time and GUID, which come from the clock | M5b |
 
 One process per contest and variant, because `FoundContest` is not idempotent --
@@ -622,6 +685,7 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 | question | answer |
 |---|---|
 | what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`), else that routine's legacy case |
+| what is its final score | its class's `FinalScore` (asked by `LOGEDIT.TotalScore`, which every score reader reads), else the base's general formula through its identity -- section 3, M6 |
 | what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after `FoundContest`'s arms) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
 | its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` reading the row. Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not read `ContestsArray` or spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
@@ -654,7 +718,8 @@ and is the target shape:
   (section 3). `formatSentExchange` is M4's `FormatCabrillo...` /
   `FormatADIFSentExchange`
 - `getMultiplierTypes` / `getMultiplierValue`
-- `calculateTotalScore`
+- ~~`calculateTotalScore`~~ -- **BUILT at M6** as `FinalScore` = `CombineScore` +
+  `BonusPoints` (section 3)
 - `getCabrilloHeaders`
 - an order-agnostic parser. TR4W **does** parse out of order today — the
   "flips it around if given in section class order" block in

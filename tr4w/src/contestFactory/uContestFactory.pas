@@ -143,6 +143,8 @@ begin
    (* CATEGORY-POWER as the New Contest dialog set it -- see
       TStationContext.MyPower. *)
    Result.MyPower := Settings.Contest.CategoryPower;
+   (* CATEGORY-MODE, the same way -- see TStationContext.MyCategoryMode. *)
+   Result.MyCategoryMode := Settings.Contest.CategoryMode;
 
    Val(Settings.My.Zone, Result.MyZone, code);
    Result.MyZoneValid := (code = 0) and (Settings.My.Zone <> '');

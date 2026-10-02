@@ -1282,6 +1282,12 @@ left unchanged.
 
 ### D10. Total-score bonuses have no seam, and live in three places
 
+**RESOLVED at M6 (2026-10-02, ownership design 8.2h)** -- the seam is
+`TContestBase.FinalScore` = `CombineScore` + `BonusPoints`. Missouri's stations
+are its class's declared data (its live peak-hour tally is a preserved defect,
+Q32); the Salmon Run W7DX bonus and the NC sweep are implemented. The
+findings below are as written before.
+
 - **Missouri** (registered): the bonus-station check is
   `logdupe.CheckMOQSOPartyBonusStation` (`logdupe.pas:1104`, `'W0MA'`,
   `'K0GQ'`), called from `logsubs2.LogContact:1735` (with the peak-hour count)

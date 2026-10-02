@@ -316,9 +316,15 @@ var
 
   TotalNamesSent                        : integer;
   TotalQSOPoints                        : LONGINT {= 0};
-  MOQSOPartyW0MAWorked                  : Boolean;   // W0MA worked at least once (+100 flat bonus)
-  MOQSOPartyK0GQWorked                  : Boolean;   // K0GQ worked at least once (+100 flat bonus)
-  MOQSOPartyPeakHourCount               : Integer;   // 40/80m QSOs in 1400-2000 UTC window (max 250)
+  (* THE CONTEST'S LIVE TALLY -- the QSOs LOGSUBS2.LogContact logged that the
+     contest's TalliesLiveQSO accepts, counted while the program runs and
+     never by the log's loader. Missouri's peak-hour count, a defect kept on
+     purpose at M6: see TContestBase.TalliesLiveQSO. It was
+     MOQSOPartyPeakHourCount, beside two flags for Missouri's bonus stations
+     (W0MA, K0GQ); those are declared by the Missouri class now and counted
+     over the whole log, so the flags and CheckMOQSOPartyBonusStation are
+     gone. *)
+  LiveSessionTally                      : Integer;
 
   //  tTotalRecordsInLog               : integer;
   tRestartInfo                          : RestartInfo;
@@ -327,7 +333,6 @@ var
 
 //procedure AddCallToPartialList(Call: CallString; InitialExchange: CallString);
 
-procedure CheckMOQSOPartyBonusStation(const Callsign: CallString);
 function BigEntryAddress(Entry: FourBytes): integer;
 
 function CallNotInPossibleCallList(Call: CallString; PossCallList: PossibleCallRecord): boolean;
@@ -398,6 +403,9 @@ uses
     whether an off-band QSO earns a multiplier. *)
   uContestBase,
   uContestFactory,
+  (* ResetLoggedQSOs -- the final score's view of the log is emptied with
+    the totals it is kept beside (M6). *)
+  uScoreTotals,
   PostUnit,
 //  uStack,
   MainUnit;
@@ -1092,27 +1100,15 @@ begin
      end;
 
   TotalQSOPoints := 0;
-  MOQSOPartyW0MAWorked := False;
-  MOQSOPartyK0GQWorked := False;
-  MOQSOPartyPeakHourCount := 0;
+  LiveSessionTally := 0;
+  (* THE VIEW A BONUS RULE READS GOES WITH THE TOTALS -- see uScoreTotals. *)
+  ResetLoggedQSOs;
   TotalNamesSent := 0;
   tRestartInfo.riTotalRecordsInLog := 0;
   tUSQ := 0;
   tUSQE := 0;
   FillChar(tRestartInfo.riQSOByOpMode, SizeOf(tRestartInfo.riQSOByOpMode), 0);
   tThisHourPreviousBand := NoBand;
-end;
-
-procedure CheckMOQSOPartyBonusStation(const Callsign: CallString);
-begin
-   if Callsign = 'W0MA' then
-      begin
-      MOQSOPartyW0MAWorked := True;
-      end;
-   if Callsign = 'K0GQ' then
-      begin
-      MOQSOPartyK0GQWorked := True;
-      end;
 end;
 
 procedure DupeAndMultSheet.DupeSheetTotals(var Totals: QSOTotalArray);

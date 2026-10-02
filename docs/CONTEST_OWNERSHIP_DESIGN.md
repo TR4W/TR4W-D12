@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M5b built; see §8.2)
+# What a contest owns -- DESIGN (M0-M6 built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -74,7 +74,7 @@ lives in a helper or in the format's own unit.
 | ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. ARRL 160 and POTA still keep an arm in `MainUnit.ApplyClasslessADIFImport` (§8.2f) | `ApplyADIFImport` (**existing**, §3.2) |
 | Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; headers and mode string: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` (M9) |
 | session setup: memories, settings defaults, domestic file and countries, band/mode | `FoundContest`'s 104 arms (inventory §5) | `DescribeSession` (§4) |
-| total score and bonuses | `logedit.TotalScore`, plus D10's three places | `CombineScore`, `BonusPoints` (§5) |
+| total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | `logdupe`, `logedit`, `uMults` | contest virtuals, named as each moves (`MultiplierValue`, `MarksDupes`, ...) |
 | summary sheet, totals window, new-contest prompts | `postunit`, `uTotal`, `uNewContest` | `SummarySheetMultColumns`, `TotalsDisplay`, `NewContestPrompts` |
 
@@ -242,7 +242,7 @@ correct rather than a gap.
   | dupe marking, `logsubs2` (`AlwaysOnePointPerQSO`) | the contest's dupe-policy property (`MarksDupes`). Internet Sprint and Youth Championship RF reach it today | **MOVED, M3** (§8.2d) |
   | exchange parsing, `logstuff` `ProcessRSTAndQSONumberOrDomesticQTHExchange` x3 (RAC: CANADA_WINTER/CANADA_DAY; PCC; Arktika Spring) | that contest's `ParseReceivedExchange` | **MOVED, M5b** (§8.2g) |
   | initial exchange, `zonecont.GetVEInitialExchange` (RussianDX: RDXC, RU3AX MEMORIAL -- a UA oblast) | that contest's `InitialExchangeFromCall` | **MOVED, M5b** (§8.2g) |
-  | total-score formulas, `logedit.TotalScore` x5 (WAE weighted mults; CupRF +100, ALRS +300, ChampionshipRF +50, OZHCR +1000 per mult) | that contest's `CombineScore` (§5) | **M6** |
+  | total-score formulas, `logedit.TotalScore` x5 (WAE weighted mults; CupRF +100, ALRS +300, ChampionshipRF +50, OZHCR +1000 per mult) | that contest's `CombineWithMultipliers` (§5) | **MOVED, M6** (§8.2h) |
 
   Measured 2026-10-01 at M3 with `rg -i -w ActiveQSOPointMethod tr4w/src`:
   those are every rule reader. The rest are its writers (`fcontest`'s set-up
@@ -382,66 +382,60 @@ so expose it rather than write a second one. The head pushes the station in
 
 ## 5. End of contest -- the final-score seam
 
-There is **one** computation, `logedit.TotalScore`, and every consumer reads it:
-the score display (`logwind`), the summary sheet and Cabrillo `CLAIMED-SCORE`
-(`postunit`), the XML score report (`logsubs2`) and `uGetScores`
-(`git ls-files 'tr4w/src/*.pas' | xargs rg -n -i -w "TotalScore"`). So the seam
-goes in exactly one place, and nothing downstream changes.
+**BUILT AT M6 (2026-10-02, §8.2h).** There is **one** computation,
+`logedit.TotalScore`, and every consumer reads it: the score display
+(`logwind`), the summary sheet and Cabrillo `CLAIMED-SCORE` (`postunit`), the
+XML score report (`logsubs2`) and the two score-posting clients (`uGetScores`,
+`uHamScore`) (`git ls-files 'tr4w/src/*.pas' | xargs rg -n -i -w "TotalScore"`).
+So the seam went in exactly one place, and nothing downstream changed.
 
-```pascal
-(* WHAT THE SCORE IS COMPUTED FROM. Filled by the application, which has the
-   log; the contest never sees the log. A field arrives with the first contest
-   that needs it, as in TStationContext. *)
-TScoreTotals = record
-   QSOPoints: longint;
-   QTCPoints: longint;
-   Mults: TMultTotals;              (* by band, mode and multiplier kind *)
-   QSOsByBandMode: TQSOTotals;
-   CategoryPower: string;
-   BonusStationsWorked: integer;    (* Missouri; Salmon Run if implemented *)
-   PeakHourCount: integer;          (* Missouri *)
-end;
+`TotalScore` gathers the totals and asks the session's contest:
 
-TContestBase = class
-public
-   (* THE SPONSOR'S FORMULA. The base: points times the sum of all multipliers,
-      or points alone with no multipliers -- TotalScore's general case. *)
-   function CombineScore(const aTotals: TScoreTotals): longint; virtual;
-
-   (* APPLIED ONCE, AFTER CombineScore, NEVER PER QSO. The base adds nothing. *)
-   function BonusPoints(const aTotals: TScoreTotals): longint; virtual;
-
-   (* WHICH CALLS ARE BONUS STATIONS -- data, not a test. The application
-      counts them; the contest prices them. *)
-   property BonusStations: TContestIdList read GetBonusStations;
-end;
+```
+final score = contest.FinalScore(totals, view)
+            = CombineScore(totals) + BonusPoints(totals, view)
 ```
 
-This is `ADDING_A_CONTEST.md` §6's reserved `calculateTotalScore`, split in two
-so that a bonus cannot be applied per QSO. **Final score = `CombineScore` +
-`BonusPoints`.**
+| piece | where | what |
+|---|---|---|
+| `TScoreTotals` | `uContestBase` | a RECORD -- an interface parameter, pure data. QSO points (the log's stored points; a single-band entry's band only), QTC points, the sheet's multiplier counts and the QSO counts by band, mode and kind, the scored band, and the session's facts (counts multipliers? its exchange, its DX multiplier) |
+| `TLoggedQSOView` | `uContestBase` | an ABSTRACT CLASS with `Count` and `QSO(i)` and nothing that writes: the whole log, every record `QSOCountsTowardTotals` accepts (the set the log's loader counts, dupes included). The application's is a `TLoggedQSOList` **kept beside the totals** (`uScoreTotals`): emptied with them, filled by the log's loader and by live entry, so it costs memory, not a database read per score; a test hands in its own |
+| `GatherScoreTotals`, `ResetLoggedQSOs` / `AddLoggedQSO`, `ContestFinalScore` | `uScoreTotals` (new, `src/`) | the application's half: the sheet and counters into the record; the view kept where the totals are kept; the active contest (else its identity) asked |
+| `FinalScore` | `TContestBase`, **not virtual** | the one entry point; a bonus cannot be folded into the formula or applied per QSO |
+| `CombineScore` | `TContestBase`, **not virtual** | a TEMPLATE: a session with no multiplier, or the FISTS exchange, scores its points -- TotalScore's first two tests, which name no contest -- otherwise `CombineWithMultipliers` |
+| `CombineWithMultipliers` | protected virtual | the base is TotalScore's general case: points times the sum of every multiplier kind on the scored band |
+| `BonusPoints` | virtual | the base pays the DECLARED bonus stations over the view (`BonusStations`, `TBonusStation`: call, points, once or once per mode); a contest with a rule of its own overrides and adds `inherited` |
+| `CountsTowardBonus`, `CreditsBonusMode` | protected virtual | which contacts and which modes a declared station is paid for (base: every contact, every mode) |
+| `TalliesLiveQSO` | virtual | **a preserved defect, not a seam to use** -- Missouri's live-only peak-hour count (Q32) |
 
-| today's `TotalScore` arm | goes to |
+| today's `TotalScore` arm | went to |
 |---|---|
-| ARRL Field Day (points only); Winter Field Day (band-mode mults x points x power factor) | `CombineScore` of each |
-| WAE weighted mults; Cup RF / ALRS / RF Championship / Ukraine Championship / OZHCR `points + N x mults`; RSGB18; CUPURAL | `CombineScore` of each. Five of these read `ActiveQSOPointMethod` today (§2) |
-| FISTS "mults don't work" short-circuit | `CombineScore` of FISTS |
-| Missouri W0MA/K0GQ +100 each, plus peak hour | `BonusStations` + `BonusPoints` |
-| Salmon Run W7DX (unimplemented, D10) | `BonusPoints`, **when NY4I says so** (Q5) |
-| North Carolina +50 callsigns (D3) | **not a bonus.** The sponsor's current rules have none; it dies with the legacy arm |
+| ARRL Field Day (points only); Winter Field Day (band-mode mults x points x power factor) | `CombineWithMultipliers` of each |
+| WAE weighted mults; Cup RF / ALRS / RF Championship / Ukraine Championship / OZHCR `points + N x mults`; Ural Cup | `CombineWithMultipliers` of each. **Nine of these contests had no class** and gained one (§8.2h) |
+| RSGB 1.8 MHz "times one" | **stays named in `TotalScore`, with its reason** (Q33): its per-QSO arm reads the multiplier sheet, which no class can be handed |
+| FISTS "mults don't work" short-circuit | **the template** -- it keys on the session's EXCHANGE, not on a contest |
+| Missouri W0MA/K0GQ +100 each | `BonusStations` of Missouri, counted over the whole log |
+| Missouri peak hour | `TalliesLiveQSO` + Missouri's `BonusPoints` -- **unchanged, including its defect** (Q32) |
+| Salmon Run W7DX | **IMPLEMENTED** (Q5): a declared station, 500 once per mode, CW and phone, a single-mode entry once |
+| North Carolina +50 callsigns (D3) | **not a bonus** -- gone with the legacy arm (2026-09-29). The sponsor's Rarest-of-NC **sweep** (+500 once, five of ten counties) is **IMPLEMENTED** as NC's `BonusPoints` |
+| Idaho dormant county (7.5) | **IMPLEMENTED** as Idaho's `BonusPoints`, fixed stations; the rover is Q34 |
 
-**Bonuses are data plus a count, never a log query.** `ValidateQTHCount`'s
-comment states why: a contest handed a list is one step from being handed the
-log. Once it has the log, the order in which callers invoke it would change
-what a log scores.
+**Bonuses are declared data plus a read-only view, never a log query of the
+contest's own making.** The design said "data plus a count" here before 7.7
+was decided; 7.7's read-only view is what was built, because a count the
+application computed would have needed the application to know each bonus
+rule. The contest still cannot reach the log: it is handed a view that only
+reads, and the order in which callers ask it cannot change what a log scores,
+because every answer is computed from the whole log.
 
 **The corpus sees this.** `golden_diff.py` keeps `CLAIMED-SCORE:`
-(`ADDING_A_CONTEST.md` §4, corrected 2026-10-01). That value is arithmetic over
-**stored** points and recomputed multipliers, so a `CombineScore` / `BonusPoints`
-move IS visible for the 13 sets. A per-QSO point change still is not. None of
-the three bonus contests has a corpus set (`ls tr4w/test/corpus`), so their
-bonuses need a unit test over a hand-built `TScoreTotals` plus a
-`BENCH_QUEUE.md` item.
+(`ADDING_A_CONTEST.md` §4). That value is arithmetic over **stored** points and
+recomputed multipliers, so a `CombineScore` / `BonusPoints` move IS visible for
+the 13 sets -- and stayed byte-identical at M6, the Winter and ARRL Field Day
+sets included. The contest matrix's `totals` section (M6) sees it for every
+contest. None of the four bonus contests has a corpus set, and the matrix's
+synthetic QSOs trigger none of the bonuses, so **their proof is
+`uTestContestTotals`** plus a `BENCH_QUEUE.md` item.
 
 ---
 
@@ -669,7 +663,14 @@ reads the same value. For a QRP entrant every in-band QSO scores 5, whatever
 its mode, and LOW and HIGH score 2/1/2/1. The contest matrix re-froze
 IDAHOQSOPARTY alone for this change. Its 2 m, 30 m and 6 m QSOs went to
 `pts=0` with every multiplier flag false, in all four station variants, and
-nothing else moved. The dormant-county bonus waits for M6.
+nothing else moved.
+
+**The dormant-county bonus LANDED at M6 (2026-10-02, §8.2h)**, from the
+sponsor's "2027 Bonus" table: an in-state station whose MY STATE county is
+listed earns its 500 or 1000 once the log holds ten valid QSOs (not dupes, on
+an Idaho band). A rover is scored as a fixed station in its MY STATE county
+-- no QSO records the county it was sent from (Q34); the sponsor's two pages
+differ on ten against more than ten (Q35).
 
 ### 7.6 The entrant's power is ONE value, and the last touch wins
 
@@ -709,7 +710,13 @@ is what lets the matrix and unit tests pin it -- and the sponsors themselves wri
 these as bonuses on top of the QSO total. A live "+500" for the operator is a
 display question answered from stage 3's view, not a reason to move the bonus.
 If a contest ever genuinely needs history in one QSO's points, widen stage 1 then;
-none does today.
+~~none does today~~ -- **one does, measured at M6**: RSGB 1.8 MHz's arm pays 7
+for a contact that is a new multiplier on the sheet (`mo.isdmmult` /
+`mo.isdxmult`). It is the reason that contest has no class yet (Q33, §8.2h).
+
+**Stage 3 LANDED at M6 (2026-10-02)** -- `FinalScore` = `CombineScore` +
+`BonusPoints`, the contest handed a `TScoreTotals` and a read-only
+`TLoggedQSOView` (§5, §8.2h).
 
 **`ScoreQSO` is the ONE public scoring entry point** (NY4I: *"yes one public entry
 point"*): a non-virtual template on `TContestBase` -- band check (`UsesBand`), then
@@ -944,7 +951,7 @@ Each is behaviour-preserving unless marked.
 | **M4** | **DONE 2026-10-01 (§8.2e).** **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields, asked through `ContestIdentity`; `FormatsExchange` deleted. Eleven contests gained classes to hold a rule an exporter named. D4's dead arms and the D6 no-op deleted; defect #4 fixed. POTA and ARRL 160 left named in PostUnit, with reasons | corpus; per-class round-trip unit test |
 | **M5a** | **DONE 2026-10-01 (§8.2f).** **ADIF import.** Generic importer, then `ApplyADIFImport` (§3.2), including the `APP_N1MM_EXCHANGE1` arm, pinned in both tag orders. Thirteen contests gained classes; `ApplyContestSpecificADIFTail` and the dead `ProcessImportedSRX_String` deleted; defect #6 fixed; WAG's DOK and IOTA's IOTA read back. ARRL 160 and POTA keep an arm | `test-adif-roundtrip.sh`; the matrix's `import` section; the corpus; per-class unit tests |
 | **M5b** | **DONE 2026-10-02 (§8.2g).** **Exchange parse.** `ParseReceivedExchange` per contest, the base reaching the engine's shape parsers through the session as data; the matrix gained a `parse` section first. Seven contests gained classes; D1/D2 deleted; NY4I's 7.10 refusals; Field Day DX export and import (Q20, Q25); `nc_cty.dom` to the sponsor's counties (Q14). UA4W stays named in LOGSTUFF, with its reason | the matrix's `parse` section; `uTestContestParse`; `BENCH_QUEUE.md` for typed entry |
-| **M6** | **Total score.** `TScoreTotals`, `CombineScore`, `BonusPoints`; `TotalScore`'s arms deleted; Missouri moved; Salmon Run per Q5 | corpus `CLAIMED-SCORE`; unit tests over totals |
+| **M6** | **DONE 2026-10-02 (§8.2h).** **Total score.** The matrix gained a `totals` section first. `TScoreTotals`, the read-only view, `FinalScore` = `CombineScore` + `BonusPoints`; `TotalScore`'s arms deleted but RSGB 1.8's (Q33); nine contests gained classes; Missouri moved with its live tally preserved (Q32); the NC sweep, the Salmon Run W7DX bonus (Q5) and Idaho's dormant county implemented | corpus `CLAIMED-SCORE`; the matrix's `totals` section; `uTestContestTotals` |
 | **M7** | **Session arms and the classless contests.** Each `FoundContest` arm becomes its contest's `DescribeSession`, and the arm is deleted. Classless contests gain a class: a family member, or a copy of the nearest class (§1.4) | setup fixture; legacy fixture; the arm count ratchets |
 | **M8** | **Multipliers and dupes**, as contest virtuals | corpus `CLAIMED-SCORE`; legacy fixture |
 | **M9** | **UI and the rest.** `NewContestPrompts`, `TotalsDisplay`, `SummarySheetMultColumns`, Cabrillo headers and mode string | bench (no automated gate sees the UI) |
@@ -1755,6 +1762,132 @@ logstuff 14 -> 3 (300 -> 289 in all).
 - **Q31** Sweepstakes says `Missing precedence` for ANY refused exchange with
   no precedence in it -- `599` alone included. Wording acceptable?
 
+### 8.2h M6 -- what it covered (2026-10-02)
+
+**Each contest owns its final score and its bonuses.** `logedit.TotalScore`
+gathers the totals (`uScoreTotals.GatherScoreTotals`) and asks the session's
+contest -- its class, else its identity -- for `FinalScore(totals, view)`,
+which is `CombineScore` plus `BonusPoints` (§5 has the pieces). Every reader of
+the score reads `TotalScore`, so the display, the summary sheet, the Cabrillo
+`CLAIMED-SCORE`, the XML score report and both score-posting clients changed
+together.
+
+**Step 1 froze the totals first.** The matrix gained a `totals` section per
+contest and variant -- the log the scoring section wrote, reloaded through
+`MainUnit.LoadinLog` (what `/EXPORT`'s start runs), then the QSO points, the
+QTCs, the QSO and multiplier counts by band and mode, `TotalScore`, and the
+`CLAIMED-SCORE:` line of a Cabrillo file written after the reload. Frozen
+with `--reason "M6: add totals capture before scoring totals move"`: 185
+files, 29,282 lines added, none deleted; every earlier section byte-identical
+after stripping the new one (scripted, per variant), and a second full run
+185 identical.
+
+**DECIDED (delegated), and the evidence for each:**
+
+- **`TScoreTotals` IS A RECORD; THE VIEW IS A CLASS.** The totals are the
+  argument of three virtuals and carry no behaviour -- the interface-parameter
+  exemption CLAUDE.md grants, as `TCabrilloQSOContext` uses. The view is an
+  abstract class with read methods only, so a contest CANNOT write to what it
+  is handed; an array would have been mutable.
+- **THE VIEW IS KEPT BESIDE THE TOTALS, NOT READ FROM THE DATABASE PER
+  SCORE -- MEASURED.** The first build read the SQLite log on the first
+  question. Timed on a 5,000-QSO log: 659 ms in one statement, 676 ms in runs
+  of 256 -- the cost is decoding a row, about 130 us, not the query. With
+  `TotalScore` running after every logged QSO, a 1,500-QSO Missouri log would
+  have paused about 200 ms on each Enter. So `uScoreTotals` keeps a
+  `TLoggedQSOList` exactly where the totals are kept: emptied in LOGDUPE's
+  `DisposeOfMemoryAndZeroTotals`, filled by `LoadinLog` beside
+  `AddQSOToSheets`, and extended by `LogContact` where it counts a new QSO.
+  Every path found that changes a logged QSO (editor, rescore, import,
+  deletion, network update) already ends in `LoadinLog`, because the totals
+  need it too -- so the view and the totals can never describe two different
+  logs. The view is still read-only to the contest, and still the whole log.
+- **`CombineScore` IS A TEMPLATE, `FinalScore` IS NOT VIRTUAL** -- `ScoreQSO`'s
+  shape (7.7). TotalScore's first two tests (a session with no multiplier, and
+  the FISTS exchange, scores its points) named no contest and ran ahead of
+  every contest's arm; as a template no override can skip them, so every
+  formula that moved kept its order exactly.
+- **BONUSES ARE DECLARED DATA WHERE THEY ARE THE SAME SHAPE, AND THE CLASS'S
+  OWN CODE WHERE THEY ARE NOT.** Missouri's W0MA/K0GQ and the Salmon Run's W7DX
+  are one shape -- "a contact with this call pays N, once or once per mode" --
+  so they are `TBonusStation` rows the base evaluates over the view; the two
+  differ only in which contacts and modes count (`CountsTowardBonus`,
+  `CreditsBonusMode`). North Carolina's sweep and Idaho's dormant county share
+  nothing with them or each other, so each is its class's `BonusPoints`, over
+  the same view, adding `inherited`. A rule language to express those two
+  would be the shared strategy §1 rules out.
+- **OFF THE MAIN THREAD, `TotalScore` RETURNS THE LAST MAIN-THREAD SCORE.** The
+  score-posting clients build their reports on worker threads (`uHamScore`'s
+  uploader calls `uGetScores.BuildDynamicResultsXml`). The final score now
+  reads the log through the store's one SQLite connection and the object
+  `ActiveContest` owns; neither may be shared across threads. The main thread
+  recomputes after every QSO, so the posted score is the one on the screen.
+- **MISSOURI'S PEAK-HOUR TALLY IS PRESERVED, DEFECT AND ALL (Q32).** Live entry
+  counted each 80/40 m QSO logged 1400-1959 UTC (to 250) and added it; the
+  log's loader never counted it, so the same log scored differently live and
+  reopened (and `/EXPORT` never had it). Zero change was the brief, and no
+  single function of the log can reproduce a value that depends on when the
+  program started. So the RULE is the class's (`TalliesLiveQSO`, the cap in its
+  `BonusPoints`), the COUNT is still the engine's
+  (`LOGDUPE.LiveSessionTally`, `TScoreTotals.LiveSessionTally`), and the seam
+  says it is a defect to delete. WA7BNM's summary of the sponsor's rules has no
+  such bonus.
+- **RSGB 1.8 MHz STAYS NAMED IN `TotalScore` (Q33).** Its "times one" is one
+  line, but a class is the contest's scorer too, and its per-QSO arm
+  (`RSGB160Method`) pays 7 for a contact that is a new multiplier ON THE SHEET
+  -- `mo.isdmmult` / `mo.isdxmult`. **That is a finding against 7.7's
+  measurement** ("every point rule TR4W has is a function of the QSO and our
+  station"): this one reads the multiplier sheet. Its class waits for M8.
+- **WINTER FIELD DAY READS THE QSO COUNTS, NOT THE TOTALS WINDOW'S COPY.**
+  `TotalScore` read `LogEdit.QTotals`, a snapshot `uTotal.UpdateTotals2` takes
+  of `QSOTotals`; the class reads `TScoreTotals.QSOs`, filled from `QSOTotals`
+  itself. Every reload path refreshes the snapshot first (`UpdateWindows`), so
+  the gated values agree -- the Winter Field Day corpus set's 42364 is
+  unchanged; live, the display can no longer read a snapshot one QSO behind.
+- **THE RF CHAMPIONSHIP'S POINTS TABLE IS LIFTED** to `uRFChampionshipPoints`,
+  read by both runnings' classes and by LOGSTUFF's arm (reachable through
+  `QSO POINT METHOD` until M10) -- one table, as `uExchangeTokens` at M5b.
+
+**Nine contests gained classes**, each stating its whole row
+(`Test_MovedRowValuesStillMatchTheArray`) and transcribing its scoring arm: RF
+Cup CW, SSB and digital; RF Championship CW and SSB; WAE CW and SSB (siblings,
+Q7); OZHCR VHF; ALRS UA1DZ Cup. Their formulas went to
+`CombineWithMultipliers`, as did ARRL Field Day's, Winter Field Day's, the Ural
+Cup's and the Ukraine Championship's on their existing classes.
+
+**THE MATRIX after the move: 176 identical; 8 differ in `contest.class` only**
+(the RF Cups, RF Championships, WAEs and OZHCR -- scripted per category); **and
+ALRS differs in one more place, which is a finding, not a transcription.**
+Its record moved one QSO's points per variant (`us` 43 -> 42, `ve` 37 -> 38)
+and the totals by the same 1. The QSO is the empty-QTH one, and the frozen
+LEGACY record already scored three QSOs with IDENTICAL inputs (MY STATE `KS`,
+empty QTH, not Russian) 43, 42 and 42 -- the class scores them 42, 42, 42. The
+cause is `LOGGRID.ConvertGridToLatLon`: the arm hands it `'' + 'LL'`, a
+two-character grid, which it reads at indexes 3 to 6 -- past the end of the
+string, into whatever the heap holds. So that QSO's points were never a
+function of the QSO; they follow the heap, and a class calling the same
+function from another frame sees another heap. `CLAIMED-SCORE` = points +
+300 x 17 multipliers both before and after: the formula moved exactly. Q37.
+
+**BEHAVIOUR CHANGES OUTSIDE EVERY ORACLE**, as at M3-M5b:
+
+- An operator's `QSO POINT METHOD` line no longer reaches the final score: the
+  five formulas read `ActiveQSOPointMethod`, so `QSO POINT METHOD = WAE` once
+  weighted any contest's multipliers. They are their contests' own now.
+- Missouri's bonus stations are counted over the log: a deleted or X-QSO
+  W0MA contact no longer pays until the next restart (the reload already
+  said so). And Missouri's bonus is added even when an operator's statements
+  leave the session with no multiplier, where TotalScore's short-circuit
+  skipped it.
+- Off the main thread the score is the last one the main thread computed.
+
+**Gates:** golden corpus **24 / 0 / 2, exit 0** (13 sets exported); unit tests
+0 failed (`uTestContestTotals`, new); narrowing 1301 -> 1301, range 4 -> 4;
+`Lint-ContestNameTests` 289 -> 281 -- logedit 17 -> 11, mainunit 14 -> 13,
+logsubs2 4 -> 3.
+
+**Sponsor-rule and design questions this raised -- NY4I's:** Q32-Q37, §9.
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -1805,6 +1938,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   `ContestType` and class (2026-10-01, §7.2) and its `.cfg` sets none of them.
 - **Q5** (C6). Should the Salmon Run W7DX bonus be implemented now, or stay
   recorded as missing? The bonuses-as-data shape (§5) is recommended.
+  **CLOSED: IMPLEMENTED at M6** (§8.2h) on the sponsor's current rules -- 500
+  once per mode, CW and phone, a single-mode entry once.
 - **Q6** (C7). POTA as a contest class (recommended, §6), keeping the root name
   `TContestBase`, with "contest" meaning "an operating event with rules" as
   `ContestType` already does?
@@ -1865,6 +2000,36 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   UA4W Championship's class, the out-of-state rule for the sponsors not read,
   Winter Field Day's `MX`, and the Sweepstakes message's wording. Stated in
   full at the end of §8.2g. **Q14 is answered and done** (§8.2g, 7.10).
+
+- **Q32-Q37** (M6, the final score). Stated in full here, because §8.2h
+  points to them:
+  - **Q32** Missouri's peak-hour tally (+1 per 80/40 m QSO logged 1400-1959
+    UTC, to 250) is counted only in live entry and lost on every reopen and
+    `/EXPORT`. WA7BNM's summary of the sponsor's rules has no such bonus (W0MA
+    and K0GQ +100 each, and +100 for an electronic log). Is it a sponsor rule?
+    If yes, it becomes a rule over the view (and the reopened score changes);
+    if no, it is deleted. Either way `TalliesLiveQSO` goes.
+  - **Q33** RSGB 1.8 MHz scores 7 for a contact that is a new multiplier on the
+    sheet. May a class be handed the sheet's "is this a new multiplier"
+    question (M8), so this contest can have a class and leave `TotalScore`?
+  - **Q34** Idaho's rover: a rover earns a dormant-county bonus per county it
+    activates, but no QSO records the county it was SENT FROM. Add a per-QSO
+    "my county" field (log schema, entry, ADIF `MY_CNTY`), or leave rovers
+    scored as fixed stations in their MY STATE county?
+  - **Q35** Idaho's threshold: the rovers page says "makes 10 valid QSO's",
+    the rules page "MORE THAN 10 contacts". Ten is implemented, from 7.5. And
+    the rovers page says "Only counties listed in RED are eligible" while its
+    table lists BLUE 500-point counties beside red 1000-point ones; all are
+    paid. Which reading is the sponsor's?
+  - **Q36** Locust: `TContestLocustQP` scores 5000 per QSO with K6VVA or name
+    LOCUST, multiplied like any QSO point. Is that the sponsor's rule, or a
+    once-only bonus after multiplication (which would be `BonusPoints`)?
+  - **Q37** `LOGGRID.ConvertGridToLatLon` reads a grid shorter than four
+    characters past its end (an ALRS QSO with an empty QTH hands it `'LL'`), so
+    such a QSO's points follow the heap -- identical QSOs scored 43, 42, 42.
+    Bounding it is a behaviour change for every grid contest's malformed
+    grids. Fix it (what should a malformed grid score?), and re-freeze ALRS
+    with that reason?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

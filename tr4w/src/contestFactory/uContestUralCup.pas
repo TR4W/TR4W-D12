@@ -88,6 +88,9 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FINAL SCORE -- see the implementation. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
@@ -105,6 +108,25 @@ uses
 procedure TContestUralCup.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
+end;
+
+(* THE PREFIXES ARE NOT MULTIPLIERS BUT TEN POINTS EACH, ADDED AFTER THE
+   MULTIPLICATION. Transcribed from the two `Contest = CUPURAL` arms of
+   LogEdit.TotalScore (M6): on all bands the prefix count comes out of the
+   multiplier sum; a single-band entry's sum keeps it, as TotalScore's
+   single-band arm did; and the ten per prefix is always the all-band count. *)
+function TContestUralCup.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+var
+   mults: longint;
+begin
+   mults := SummedMultipliers(aTotals);
+   if aTotals.ScoredBand = AllBands then
+      begin
+      mults := mults - aTotals.Mults[AllBands, Both, rmPrefix];
+      end;
+
+   Result := ContestPoints(aTotals) * mults;
+   Result := Result + 10 * aTotals.Mults[AllBands, Both, rmPrefix];
 end;
 
 function TContestUralCup.FormatCabrilloSentExchange(const aMy: TMyStationExchange;

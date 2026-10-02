@@ -139,8 +139,32 @@ the end of the migration.**
 **Dupe marking no longer reads the point method** -- `logsubs2` asks
 `ContestIdentity(Contest).MarksDupes`. **Nor does exchange parsing (M5b,
 2026-10-02):** RAC, PCC and Arktika's branches and RussianDX's initial
-exchange are their classes' own now. The point-method readers left in the
-engine are `logedit.TotalScore`'s five formulas, for M6.
+exchange are their classes' own now. **Nor does the final score (M6,
+2026-10-02)**: `logedit.TotalScore`'s five point-method formulas are their
+contests' `CombineWithMultipliers` -- nine of those contests gained classes for
+it. No reader of `ActiveQSOPointMethod` is left outside the classless `case`.
+
+**`TotalScore` IS ONE FUNCTION AND ASKS THE CONTEST (M6).** It gathers a
+`TScoreTotals` (`uScoreTotals.GatherScoreTotals`: stored points, QTCs, the
+sheet's multiplier and QSO counts, the scored band, the session's facts) and
+asks `FinalScore(totals, view)` = `CombineScore` + `BonusPoints`, the view a
+read-only `TLoggedQSOView` of the log, kept in memory beside the totals
+(`uScoreTotals`: emptied in `DisposeOfMemoryAndZeroTotals`, filled in
+`LoadinLog` and `LogContact` -- a per-score database read was measured at
+~130 us a row). Every reader of the score
+-- display, summary, Cabrillo `CLAIMED-SCORE`, XML report, both posting
+clients -- reads `TotalScore`. **Do not put a formula or a bonus back in it.**
+The one contest still named there, with its reason: RSGB 1.8 MHz, whose
+per-QSO arm reads the multiplier sheet (`mo.isdmmult`), which no class can be
+handed (design Q33). Off the main thread `TotalScore` returns the last
+main-thread score: the final score reads SQLite and `ActiveContest`, and the
+posting clients run on worker threads. **Missouri's peak-hour tally** is still
+counted in `LogContact` only (`LiveSessionTally`, asked through
+`TalliesLiveQSO`) -- a defect preserved on purpose, design Q32; the bonus
+stations are counted over the view. `LoadinLog` and the view share one
+predicate, `uContestBase.QSOCountsTowardTotals`. **Latent defect (Q37):**
+`LOGGRID.ConvertGridToLatLon` reads a grid shorter than four characters past
+its end, so a malformed-grid QSO's distance follows the heap.
 
 **`ProcessExchange` ASKS THE CONTEST (M5b).** It keeps the contest-blind
 tokenising gate (`ParseArray`), then calls

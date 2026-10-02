@@ -207,6 +207,11 @@ uses
   uRemMults,
   uRemMultsForm,   { the five multiplier windows are forms -- wh[] conversion }
   uBandmap,
+  (* THE FINAL SCORE -- M6: the totals and the contest that combines them,
+     and OnMainThread for the worker threads that read the score. *)
+  uContestBase,
+  uScoreTotals,
+  uCrashLog,
   MainUnit; {KK1L: 6.71 attempt to get POST to compile. Moved here from INTERFACE section. Was not there in original}
 
 var
@@ -2821,195 +2826,64 @@ begin
      end;
 end;
 
-function TotalScore: LONGINT;
+(* THE ONE SCORE -- M6, 2026-10-02 (docs/CONTEST_OWNERSHIP_DESIGN.md 5, 7.7).
 
-{ This routine will return the current contest score }
+  EVERY READER OF THE SCORE READS THIS: the score display (LOGWIND), the
+  summary sheet and the Cabrillo CLAIMED-SCORE (POSTUNIT), the XML score
+  report (LOGSUBS2), and the two score-posting clients (uGetScores, uHamScore).
 
+  THE FORMULA AND THE BONUSES ARE THE CONTEST'S. This gathers the totals the
+  program holds (uScoreTotals.GatherScoreTotals) and asks the session's
+  contest for its final score -- TContestBase.FinalScore, the sponsor's
+  formula plus the bonuses, over a read-only view of the log. Until M6 the
+  formulas stood here: the Field Days, WAE's weighted multipliers, the
+  Russian cups' points-plus-N-per-multiplier (read through
+  ActiveQSOPointMethod, so an operator's QSO POINT METHOD line reached them in
+  any contest), the Ukraine Championship, the Ural Cup and Missouri's
+  bonuses. Each is its contest's class now.
+
+  ONE CONTEST IS STILL NAMED, WITH ITS REASON. The RSGB 1.8 MHz contest scores
+  its points alone -- its multipliers are already in them: its per-QSO arm
+  (LOGSTUFF, RSGB160Method) pays 7 for a contact that is a new multiplier on
+  the sheet and 2 otherwise. A class would have to score that, and a class
+  cannot be handed the multiplier sheet (design 7.7: stage 1 sees the QSO and
+  the station only). So it has none yet, and its "times one" stays here,
+  where it always was, until M8 gives the sheet's question a seam (design
+  Q33).
+
+  OFF THE MAIN THREAD, THE LAST SCORE THE MAIN THREAD COMPUTED. The
+  score-posting clients build their reports on worker threads. The final
+  score reads the log through the store's one SQLite connection and the
+  contest object ActiveContest owns, neither of which is safe to share; the
+  main thread recomputes the score after every logged QSO (the score
+  display), so the value they get is the one on the screen. A longint is read
+  and written whole on every platform this builds for. *)
 var
-  QPoints, TotalMults: LONGINT;
-  m: RemainingMultiplierType;
-  b: BandType;
+  LastMainThreadTotalScore: LONGINT = 0;
+
+function TotalScore: LONGINT;
+var
+  totals: TScoreTotals;
 begin
-   TotalMults := 0;    // 4.69.5
-  QPoints := TotalQSOPoints;
-
-  //  VisibleLog.IncrementQSOPointsWithContentsOfEditableWindow(QPoints);
-
-  if Settings.Qtc.Enable then
+  if not OnMainThread then
      begin
-     QPoints := QPoints + TotalNumberQTCsProcessed;
-     end;
-
-   if (ActiveDomesticMult = NoDomesticMults)  and        // 4.57.2    //4.69.5  // 4.70.2
-    (ActiveDXMult = NoDXMults) and
-    (ActivePrefixMult = NoPrefixMults) and
-    (ActiveZoneMult = NoZoneMults) then
-      begin
-      TotalScore := QPoints;
-      Exit;
-      end;
-
-  {KK1L: 6.70 Ugly fix for FISTS because mults don't work...too long an exchange}
-  if ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
-     begin
-     TotalScore := QPoints;
+     Result := LastMainThreadTotalScore;
      Exit;
      end;
 
-  if Contest = ARRLFIELDDAY then    // 4.72.4
-     begin
-     totalscore := QPoints;
-     exit;
-     end;
-{ if contest = DL-DX RTTY then
- exit
- }
-
-  if Contest = WINTERFIELDDAY then // Issue 301 NY4I
-     begin
-     TotalMults := 0;
-     for b := Low(BandType) to Band1296 do
-        begin
-        if QTotals[b, Digital] > 0 then
-           begin
-           inc(TotalMults);
-           end;
-        if QTotals[b, CW] > 0 then
-           begin
-           inc(TotalMults);
-           end;
-        if QTotals[b, Phone] > 0 then
-           begin
-           inc(TotalMults);
-           end;
-        end;
-     TotalScore := TotalMults * QPoints;
-     if tCategoryPowerSA[Settings.Contest.CategoryPower] = 'LOW' then
-        begin
-        Result := Result * 2;
-        end
-     else if tCategoryPowerSA[Settings.Contest.CategoryPower] = 'QRP' then
-        begin
-        Result := Result * 5;
-        end;
-
-
-     Exit;
-     end;
-
-  //  Sheet.MultSheetTotals(MTotals);
-    //  VisibleLog.IncrementMultTotalsWithContentsOfEditableWindow(MTotals);
-//   TotalMults := 0;
-
-  if SingleBand <> AllBands then
-     begin
-      
-     for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-        begin
-        TotalMults := TotalMults + mo.MTotals[SingleBand, Both, m];
-        end;
-
-     //    TotalMults := MTotals[SingleBand, Both].NumberDomesticMults;
-     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberDXMults;
-     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberPrefixMults;
-     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberZoneMults;
-     end
-  else if (ActiveQSOPointMethod = WAEQSOPointMethod)  then               // 4.116.1
-     begin
-
-     if ActiveDXMult = CQEuropeanCountries then
-        begin
-        m := rmDX
-        end
-     else
-        begin
-        m := rmPrefix;
-        end;
-
-     TotalMults := mo.MTotals[Band80, Both, m] * 4;
-     TotalMults := TotalMults + mo.MTotals[Band40, Both, m] * 3;
-     TotalMults := TotalMults + mo.MTotals[Band20, Both, m] * 2;
-     TotalMults := TotalMults + mo.MTotals[Band15, Both, m] * 2;
-     TotalMults := TotalMults + mo.MTotals[Band10, Both, m] * 2;
-     end
-  else
-     begin
-     for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-        begin
-        TotalMults := TotalMults + mo.MTotals[AllBands, Both, m];
-        end;
-
-     //      TotalMults := mo.MTotals[All, Both, rmDomestic];
-
-     //      TotalMults := TotalMults + moMTotals[All, Both].NumberDXMults;
-
-     //      if (Contest = RDA) and (not RussianID(Settings.My.Country)) then        TotalMults := TotalMults - MTotals[All, Both].NumberDXMults;
-
-     //      if Contest <> CUPURAL then        TotalMults := TotalMults + MTotals[All, Both].NumberPrefixMults;
-
-     //      TotalMults := TotalMults + MTotals[All, Both].NumberZoneMults;
-     if Contest = CUPURAL then
-        begin
-        TotalMults := TotalMults - mo.MTotals[AllBands, Both, rmPrefix];
-        end;
-     end;
+  GatherScoreTotals(totals);
 
   if Contest = RSGB18 then
      begin
-     TotalMults := 1;
-     end;
-
-  if ActiveQSOPointMethod = CupRFMethod then
+     (* Points times one -- see above. *)
+     Result := totals.QSOPoints + totals.QTCPoints;
+     end
+  else
      begin
-     TotalScore := QPoints + (100 * TotalMults);
-     Exit;
+     Result := ContestFinalScore(Contest, totals);
      end;
 
-  if ActiveQSOPointMethod = ALRSUA1DZCupQSOPointMethod then
-     begin
-     TotalScore := QPoints + (300 * TotalMults);
-     Exit;
-     end;
-
-  if ActiveQSOPointMethod = ChampionshipRFMethod then
-     begin
-     TotalScore := QPoints + (50 * TotalMults);
-     Exit;
-     end;
-
-  //  if ActiveQSOPointMethod = ChampionshipUkrMethod then
-  if Contest in [UKRAINECHAMPIONSHIP {, RADIOYOC}] then
-     begin
-     TotalScore := QPoints + (10 * TotalMults);
-     Exit;
-     end;
-
-  if ActiveQSOPointMethod = OZHCRVHFQSOPointMethod then
-     begin
-     TotalScore := QPoints + (1000 * TotalMults);
-     Exit;
-     end;
-  
-  TotalScore := QPoints * TotalMults;
-
-  if Contest = MOQSOPARTY then
-     begin
-     if MOQSOPartyW0MAWorked then
-        begin
-        TotalScore := Result + 100;
-        end;
-     if MOQSOPartyK0GQWorked then
-        begin
-        TotalScore := Result + 100;
-        end;
-     TotalScore := Result + MOQSOPartyPeakHourCount;
-     end;
-
-  if Contest = CUPURAL then
-     begin
-     Result := Result + 10 * mo.MTotals[AllBands, Both, rmPrefix];
-     end;
-
+  LastMainThreadTotalScore := Result;
 end;
 
 procedure SetPrefix(var RData: ContestExchange {Ptr});

@@ -743,7 +743,9 @@ uses
   uWSJTXState,       // the state the WSJT-X indicator paints from
   uLogNote,          // NoteText / SetNoteText -- a note's text, spelled once
   uPanadapterForm,   // it is not a tw_ window, so it saves its own row
-  uContestRegistry;  // ContestIdentity -- the contest's calendar ids, M1
+  uContestRegistry,  // ContestIdentity -- the contest's calendar ids, M1
+  uContestBase,      // QSOCountsTowardTotals -- which records the loader counts, M6
+  uScoreTotals;      // AddLoggedQSO -- the bonus view, kept with the totals, M6
 
 
 
@@ -7914,8 +7916,11 @@ begin
           // sheet.  tUpdateLog(actRescore) has the same guard for the
           // same reason; this load-time path (LoadinLog) also needs
           // it so totals are correct after a fresh log open / load.
-          if (TempRXData.ceQSO_Deleted = False) and
-             (TempRXData.ceXQSO        = False) then
+          (* THE ONE STATEMENT OF WHICH RECORDS COUNT (M6) -- the view a bonus
+             rule reads at the final score holds exactly these. Inside the
+             outer test it adds only the X-QSO exclusion, as the line it
+             replaced did. *)
+          if QSOCountsTowardTotals(TempRXData) then
              begin
              TempMode := TempRXData.Mode;
              if TempMode = FM then
@@ -7931,12 +7936,14 @@ begin
                 TotalQSOPoints := TotalQSOPoints + TempRXData.QSOPoints;
                 end;
 
-             if Contest = MOQSOPARTY then
-                begin
-                CheckMOQSOPartyBonusStation(TempRXData.Callsign);
-                end;
-
+             (* MISSOURI'S BONUS-STATION CHECK STOOD HERE. Its stations are the
+                Missouri class's declared data now, counted over the whole log
+                at the final score (M6), so the loader decides nothing about
+                them. *)
              Sheet.AddQSOToSheets(@TempRXData, True);
+             (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6) -- kept
+                beside the totals; see uScoreTotals. *)
+             AddLoggedQSO(TempRXData);
              CallsignsList.AddCallsign(TempRXData.Callsign, TempMode,
                TempRXData.Band, TempRXData.ceClearDupeSheet);
              if not IntitialExLoaded then

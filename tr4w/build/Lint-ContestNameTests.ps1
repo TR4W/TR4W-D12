@@ -127,13 +127,20 @@ $CEILINGS = @{
    # scoring arm (dead by default -- both contests have classes -- and kept
    # until M10 like the other D3 arms), and the UA4W Championship's parse rule,
    # which stays named until its class can be handed a CTY lookup of MY CALL.
-   'mainunit.pas'          = 14
+   #
+   # M6, 2026-10-02 -- each contest owns its final score: logedit 17 -> 11
+   # (TotalScore's ARRL and Winter Field Day, Ural Cup x2, Ukraine Championship
+   # and Missouri arms went to their classes; the RSGB 1.8 MHz "times one"
+   # stays, its class blocked on the multiplier sheet -- design Q33),
+   # mainunit 14 -> 13 and logsubs2 4 -> 3 (Missouri's bonus-station check in
+   # the log's loader and in live entry).
+   'mainunit.pas'          = 13
    'trdos\fcontest.pas'    = 107
    'trdos\logcfg.pas'      = 14
    'trdos\logdupe.pas'     = 5
-   'trdos\logedit.pas'     = 17
+   'trdos\logedit.pas'     = 11
    'trdos\logstuff.pas'    = 3
-   'trdos\logsubs2.pas'    = 4
+   'trdos\logsubs2.pas'    = 3
    'trdos\logwind.pas'     = 1
    'trdos\postunit.pas'    = 15
    'uadif.pas'             = 1

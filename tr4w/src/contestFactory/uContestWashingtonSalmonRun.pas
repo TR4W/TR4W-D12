@@ -76,20 +76,34 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   out because FixedModePoints files FM under "everything else" -- which would
   have scored it with digital, at 0.
 
-  THE ONE PIECE OF THE CURRENT RULES THIS CLASS DOES NOT IMPLEMENT, stated so
-  it is a known gap and not an oversight: "A QSO with the sponsoring club's
-  (Western Washington DX Club) call sign, W7DX, will add a 500-point bonus for
-  each mode (Phone and CW). A total of 1000 points may be earned in this
-  manner", and "Bonus points are added after all other scoring is completed
-  (they are not multiplied by the 'multiplier')."
+  THE W7DX BONUS -- IMPLEMENTED AT M6 (2026-10-02; design Q5), the gap this
+  header recorded until the final-score seam existed. The sponsor, read
+  2026-10-02 at https://salmonrun.wwdxc.org/rules/:
 
-  IT CANNOT LIVE HERE, for the reason North Carolina's rare-county sweep
-  cannot: CalculateQSOPoints scores ONE QSO before multipliers, and this bonus
-  is awarded once per mode for the whole log, AFTER multiplication. No seam
-  for a contest to contribute to the final score exists in this factory yet --
-  ADDING_A_CONTEST.md section 6 lists calculateTotalScore among the things not
-  built until the responsibility moves. The W7DX contact itself still scores
-  its ordinary 3 or 2 points, which the sponsor also says.
+    "A QSO with the sponsoring club's (Western Washington DX Club) call sign,
+     W7DX, will add a 500-point bonus for each mode (Phone and CW). A total of
+     1000 points may be earned in this manner (not 500 points for each QSO on
+     each different band). A single-mode entry (Phone and CW) may claim the
+     500-point bonus only once."
+    "Bonus points are added after all other scoring is completed (they are
+     not multiplied by the 'multiplier')."
+    "For single-mode entries, contacts on modes other than the mode of entry
+     may not be counted for QSO point, multiplier, or bonus credit."
+
+  So W7DX is a DECLARED BONUS STATION, 500 once per mode (GetBonusStations),
+  and the base pays it over the whole log. This class says which contacts and
+  modes it credits: a contact that is not a dupe (CountsTowardBonus), in CW
+  or phone -- FM is phone, as the points say, and digital is no Salmon Run
+  mode -- and only in the entry's own mode for a single-mode entry
+  (CreditsBonusMode), read from the entrant's CATEGORY-MODE
+  (Station.MyCategoryMode): MIXED pays both, CW pays CW, SSB or FM pays
+  phone, and a digital entry pays nothing. The 1000 maximum is the two modes;
+  more contacts on more bands add nothing. The W7DX contact itself still
+  scores its ordinary 3 or 2 points, which the sponsor also says.
+
+  AN OPERATOR WHO NEVER CHOOSES A CATEGORY-MODE IS A CW ENTRY. The setting's
+  zero value is CW and its Cabrillo header says so, so the bonus agrees with
+  the category the log declares (see TStationContext.MyCategoryMode).
 
   ---------------------------------------------------------------------------
   TWO COUNTIES ON A COUNTY LINE, FROM THE SAME PUBLISHED RULES.
@@ -121,6 +135,9 @@ unit uContestWashingtonSalmonRun;
 interface
 
 uses
+   (* cmMIXED and the other CATEGORY-MODE values -- the W7DX bonus (M6).
+      FIRST, so VC's names win where the two overlap, as in uContestBase. *)
+   uSettingsModel,
    VC, uContestBase, uContestStateQSOPartyBase;
 
 type
@@ -169,6 +186,12 @@ type
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE W7DX BONUS -- declared data and the two answers that qualify it;
+         see the header. *)
+      function GetBonusStations: TBonusStationList; override;
+      function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
+      function CreditsBonusMode(aMode: ModeType): boolean; override;
    end;
 
 implementation
@@ -295,6 +318,45 @@ begin
          begin
          (* Digital: "We cannot accept WJST modes" -- NY4I ruled 0. *)
          aQso.QSOPoints := 0;
+         end;
+      end;
+end;
+
+function TContestWashingtonSalmonRun.GetBonusStations: TBonusStationList;
+begin
+   Result := nil;
+   SetLength(Result, 1);
+   Result[0].Call := 'W7DX';
+   Result[0].Points := 500;
+   Result[0].OncePerMode := True;
+end;
+
+function TContestWashingtonSalmonRun.CountsTowardBonus(const aQso: ContestExchange): boolean;
+begin
+   Result := not aQso.ceDupe;
+end;
+
+(* aMode is CW, Digital or Phone -- the base has already counted FM as
+   phone. *)
+function TContestWashingtonSalmonRun.CreditsBonusMode(aMode: ModeType): boolean;
+begin
+   case Station.MyCategoryMode of
+      cmMIXED:
+         begin
+         Result := aMode in [CW, Phone];
+         end;
+      cmCW:
+         begin
+         Result := aMode = CW;
+         end;
+      cmSSB, cmFM:
+         begin
+         Result := aMode = Phone;
+         end;
+      else
+         begin
+         (* A digital entry: no Salmon Run mode, so no bonus. *)
+         Result := False;
          end;
       end;
 end;

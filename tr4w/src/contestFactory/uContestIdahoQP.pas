@@ -109,14 +109,41 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     sponsor's own Cabrillo example says CONTEST: ID-QSO-PARTY. Logs are
     uploaded at https://idqp.contesting.com; there is no e-mail address.
 
-  NOT HERE, BECAUSE NO SEAM EXISTS YET (ownership design section 5):
-    the dormant-county activation bonus (500 / 1000 / 1500, earned by an Idaho
-    station once it makes 10 valid QSOs from a listed county -- M6, ownership
-    design 7.5); WA7BNM's "5 bonus points each for working K7S, K7P, K7U
-    or K7D", which the sponsor's rules page does not mention; and the final
-    score, which the sponsor writes as "Multiply QSO x Mode multiplier x
-    Mults" against WA7BNM's "(total QSO points x total mults) + bonus points".
-    TR4W computes points times multipliers, as for every state party.
+  THE DORMANT-COUNTY BONUS -- IMPLEMENTED AT M6 (2026-10-02; ownership design
+    7.5), from https://www.idahoqsoparty.org/idaho_rovers.htm, read
+    2026-10-02: "IDQP rules will award 500 or 1000 or 1500 bonus points to
+    any station that activates any Idaho County that was NOT activated in the
+    previous year", and "The bonus points will be given to stations in bonus
+    county that makes 10 valid QSO's." The page's table is headed "2027
+    Bonus" and lists twenty-five counties, 500 or 1000 each (none at 1500
+    this year); IdahoBonusCounties below is that table, abbreviation for
+    abbreviation -- every one checked against idaho_cty.dom.
+
+    WHOSE COUNTY: AN IDAHO STATION'S OWN, which TR4W records ONCE, as MY
+    STATE (an in-state station's MY STATE is its county -- that is how set-up
+    found it in state). So BonusPoints pays the station's county when the
+    station is in state (Station.InHostState), the county is listed, and the
+    log holds at least ten valid QSOs: not dupes, on an Idaho band (UsesBand).
+    Once, after the multiplication.
+
+    A ROVER IS NOT COVERED, AND THAT IS A GAP, NOT A RULING. A rover earns a
+    bonus per county it activates, but no QSO in TR4W records the county it
+    was SENT FROM -- the sponsor says "Each QSO record needs to indicate the
+    county the QSO was completed in", and the log has no such field. A rover
+    is therefore scored as a fixed station in its MY STATE county (design
+    Q34).
+
+    THE SPONSOR'S TWO PAGES DIFFER ON THE THRESHOLD: the rovers page says
+    "makes 10 valid QSO's", the rules page "if they make MORE THAN 10
+    contacts". Ten is what NY4I wrote (design 7.5) and what this does; the
+    eleventh-QSO reading is design Q35.
+
+  NOT HERE: WA7BNM's "5 bonus points each for working K7S, K7P, K7U or K7D",
+    which the sponsor's rules page does not mention; and the final score,
+    which the sponsor writes as "Multiply QSO x Mode multiplier x Mults"
+    against WA7BNM's "(total QSO points x total mults) + bonus points". TR4W
+    computes points times multipliers (CombineScore, the base's), as for
+    every state party.
 
   ---------------------------------------------------------------------------
   NO FORMER ADIF ID, AND THAT IS A DECISION. Every Idaho log TR4W ever wrote
@@ -142,7 +169,7 @@ uses
    (* cpQRP -- the entrant's CATEGORY-POWER, as TStationContext carries it.
       First, so VC's names win wherever the two overlap. *)
    uSettingsModel,
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestIdahoQP = class(TContestStateQSOPartyBase)
@@ -182,12 +209,58 @@ type
       (* 160, 80, 40, 20, 15 and 10 m -- the sponsor's list, quoted in the
          header. *)
       function UsesBand(aBand: BandType): boolean; override;
+
+      (* THE DORMANT-COUNTY BONUS -- see the header. *)
+      function BonusPoints(const aTotals: TScoreTotals;
+                           aView: TLoggedQSOView): longint; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   SysUtils, uContestRegistry;
+
+type
+   TIdahoBonusCounty = record
+      County: string;
+      Points: longint;
+   end;
+
+const
+   (* THE SPONSOR'S "2027 Bonus" TABLE, https://www.idahoqsoparty.org/
+      idaho_rovers.htm, read 2026-10-02 -- the dormant counties and what each
+      pays. THE LIST CHANGES EVERY YEAR, so this is the one place to edit. *)
+   IdahoBonusCounties: array[0..24] of TIdahoBonusCounty =
+      (
+      (County: 'ADM'; Points:  500),
+      (County: 'BEA'; Points:  500),
+      (County: 'BEN'; Points:  500),
+      (County: 'BIN'; Points:  500),
+      (County: 'BOU'; Points:  500),
+      (County: 'BUT'; Points: 1000),
+      (County: 'CAR'; Points:  500),
+      (County: 'CAS'; Points:  500),
+      (County: 'CLA'; Points: 1000),
+      (County: 'CUS'; Points: 1000),
+      (County: 'FRE'; Points:  500),
+      (County: 'GEM'; Points:  500),
+      (County: 'GOO'; Points:  500),
+      (County: 'IDA'; Points:  500),
+      (County: 'JEF'; Points: 1000),
+      (County: 'JER'; Points:  500),
+      (County: 'LAT'; Points:  500),
+      (County: 'LEW'; Points:  500),
+      (County: 'MIN'; Points:  500),
+      (County: 'NEZ'; Points:  500),
+      (County: 'POW'; Points:  500),
+      (County: 'SHO'; Points:  500),
+      (County: 'TET'; Points:  500),
+      (County: 'VAL'; Points: 1000),
+      (County: 'WAS'; Points:  500)
+      );
+
+   (* "stations in bonus county that makes 10 valid QSO's". *)
+   IdahoBonusMinimumQSOs = 10;
 
 function TContestIdahoQP.GetDisplayName: string;
 begin
@@ -340,6 +413,53 @@ end;
 function TContestIdahoQP.UsesBand(aBand: BandType): boolean;
 begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+function TContestIdahoQP.BonusPoints(const aTotals: TScoreTotals;
+                                     aView: TLoggedQSOView): longint;
+var
+   county: string;
+   countyBonus: longint;
+   validQSOs: integer;
+   i: integer;
+   qso: ContestExchange;
+begin
+   Result := inherited BonusPoints(aTotals, aView);
+
+   if not Station.InHostState then
+      begin
+      Exit;
+      end;
+
+   county := UpperCase(Trim(Station.MyState));
+   countyBonus := 0;
+   for i := Low(IdahoBonusCounties) to High(IdahoBonusCounties) do
+      begin
+      if IdahoBonusCounties[i].County = county then
+         begin
+         countyBonus := IdahoBonusCounties[i].Points;
+         Break;
+         end;
+      end;
+   if countyBonus = 0 then
+      begin
+      Exit;
+      end;
+
+   validQSOs := 0;
+   for i := 0 to aView.Count - 1 do
+      begin
+      qso := aView.QSO(i);
+      if (not qso.ceDupe) and UsesBand(qso.Band) then
+         begin
+         inc(validQSOs);
+         end;
+      end;
+
+   if validQSOs >= IdahoBonusMinimumQSOs then
+      begin
+      Result := Result + countyBonus;
+      end;
 end;
 
 initialization

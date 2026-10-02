@@ -235,6 +235,66 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" 
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
+== totals
+totals.qsopoints = 60
+totals.qtcs = 0
+totals.singleband = AllBands
+totals.qsos Band160 CW = 1
+totals.qsos Band160 Both = 1
+totals.qsos Band80 CW = 1
+totals.qsos Band80 Both = 1
+totals.qsos Band40 Digital = 1
+totals.qsos Band40 Phone = 1
+totals.qsos Band40 Both = 2
+totals.qsos Band20 CW = 2
+totals.qsos Band20 Digital = 1
+totals.qsos Band20 Phone = 3
+totals.qsos Band20 Both = 6
+totals.qsos Band15 CW = 1
+totals.qsos Band15 Phone = 1
+totals.qsos Band15 Both = 2
+totals.qsos Band10 CW = 1
+totals.qsos Band10 Phone = 1
+totals.qsos Band10 Both = 2
+totals.qsos Band30 CW = 1
+totals.qsos Band30 Both = 1
+totals.qsos Band6 Phone = 1
+totals.qsos Band6 Both = 1
+totals.qsos Band2 Phone = 1
+totals.qsos Band2 Both = 1
+totals.qsos AllBands CW = 7
+totals.qsos AllBands Digital = 2
+totals.qsos AllBands Phone = 8
+totals.qsos AllBands Both = 17
+totals.mults Band160 CW = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band160 Both = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band80 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band80 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band40 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band40 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band20 CW = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band20 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band20 Phone = dom=2 dx=3 zone=0 pfx=0
+totals.mults Band20 Both = dom=4 dx=6 zone=0 pfx=0
+totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band15 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band15 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band10 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band10 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band10 Both = dom=0 dx=2 zone=0 pfx=0
+totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band2 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band2 Both = dom=1 dx=1 zone=0 pfx=0
+totals.mults AllBands CW = dom=2 dx=7 zone=0 pfx=0
+totals.mults AllBands Digital = dom=2 dx=2 zone=0 pfx=0
+totals.mults AllBands Phone = dom=4 dx=8 zone=0 pfx=0
+totals.mults AllBands Both = dom=8 dx=17 zone=0 pfx=0
+totals.totalscore = 1500
+totals.cabrillo = CLAIMED-SCORE: 1500
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
 contest.requested = 109 RUSSIANDX
@@ -472,6 +532,66 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" 
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
+== totals
+totals.qsopoints = 66
+totals.qtcs = 0
+totals.singleband = AllBands
+totals.qsos Band160 CW = 1
+totals.qsos Band160 Both = 1
+totals.qsos Band80 CW = 1
+totals.qsos Band80 Both = 1
+totals.qsos Band40 Digital = 1
+totals.qsos Band40 Phone = 1
+totals.qsos Band40 Both = 2
+totals.qsos Band20 CW = 2
+totals.qsos Band20 Digital = 1
+totals.qsos Band20 Phone = 3
+totals.qsos Band20 Both = 6
+totals.qsos Band15 CW = 1
+totals.qsos Band15 Phone = 1
+totals.qsos Band15 Both = 2
+totals.qsos Band10 CW = 1
+totals.qsos Band10 Phone = 1
+totals.qsos Band10 Both = 2
+totals.qsos Band30 CW = 1
+totals.qsos Band30 Both = 1
+totals.qsos Band6 Phone = 1
+totals.qsos Band6 Both = 1
+totals.qsos Band2 Phone = 1
+totals.qsos Band2 Both = 1
+totals.qsos AllBands CW = 7
+totals.qsos AllBands Digital = 2
+totals.qsos AllBands Phone = 8
+totals.qsos AllBands Both = 17
+totals.mults Band160 CW = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band160 Both = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band80 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band80 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band40 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band40 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band20 CW = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band20 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band20 Phone = dom=2 dx=3 zone=0 pfx=0
+totals.mults Band20 Both = dom=4 dx=6 zone=0 pfx=0
+totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band15 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band15 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band10 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band10 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band10 Both = dom=0 dx=2 zone=0 pfx=0
+totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band2 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band2 Both = dom=1 dx=1 zone=0 pfx=0
+totals.mults AllBands CW = dom=2 dx=7 zone=0 pfx=0
+totals.mults AllBands Digital = dom=2 dx=2 zone=0 pfx=0
+totals.mults AllBands Phone = dom=4 dx=8 zone=0 pfx=0
+totals.mults AllBands Both = dom=8 dx=17 zone=0 pfx=0
+totals.totalscore = 1650
+totals.cabrillo = CLAIMED-SCORE: 1650
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
 contest.requested = 109 RUSSIANDX
@@ -709,3 +829,63 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" 
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper domestic QTH!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=UA/29/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=0 cty=PY/15/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
+== totals
+totals.qsopoints = 78
+totals.qtcs = 0
+totals.singleband = AllBands
+totals.qsos Band160 CW = 1
+totals.qsos Band160 Both = 1
+totals.qsos Band80 CW = 1
+totals.qsos Band80 Both = 1
+totals.qsos Band40 Digital = 1
+totals.qsos Band40 Phone = 1
+totals.qsos Band40 Both = 2
+totals.qsos Band20 CW = 2
+totals.qsos Band20 Digital = 1
+totals.qsos Band20 Phone = 3
+totals.qsos Band20 Both = 6
+totals.qsos Band15 CW = 1
+totals.qsos Band15 Phone = 1
+totals.qsos Band15 Both = 2
+totals.qsos Band10 CW = 1
+totals.qsos Band10 Phone = 1
+totals.qsos Band10 Both = 2
+totals.qsos Band30 CW = 1
+totals.qsos Band30 Both = 1
+totals.qsos Band6 Phone = 1
+totals.qsos Band6 Both = 1
+totals.qsos Band2 Phone = 1
+totals.qsos Band2 Both = 1
+totals.qsos AllBands CW = 7
+totals.qsos AllBands Digital = 2
+totals.qsos AllBands Phone = 8
+totals.qsos AllBands Both = 17
+totals.mults Band160 CW = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band160 Both = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band80 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band80 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band40 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band40 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band40 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band20 CW = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band20 Digital = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band20 Phone = dom=2 dx=3 zone=0 pfx=0
+totals.mults Band20 Both = dom=4 dx=6 zone=0 pfx=0
+totals.mults Band15 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band15 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band15 Both = dom=1 dx=2 zone=0 pfx=0
+totals.mults Band10 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band10 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band10 Both = dom=0 dx=2 zone=0 pfx=0
+totals.mults Band30 CW = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band30 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band6 Phone = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band6 Both = dom=0 dx=1 zone=0 pfx=0
+totals.mults Band2 Phone = dom=1 dx=1 zone=0 pfx=0
+totals.mults Band2 Both = dom=1 dx=1 zone=0 pfx=0
+totals.mults AllBands CW = dom=2 dx=7 zone=0 pfx=0
+totals.mults AllBands Digital = dom=2 dx=2 zone=0 pfx=0
+totals.mults AllBands Phone = dom=4 dx=8 zone=0 pfx=0
+totals.mults AllBands Both = dom=8 dx=17 zone=0 pfx=0
+totals.totalscore = 1950
+totals.cabrillo = CLAIMED-SCORE: 1950

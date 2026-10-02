@@ -124,7 +124,7 @@ the target shape, the M-step migration order and the open questions.
 - **The dupe policy is `MarksDupes`** (M3): `logsubs2` asks
   `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. Exchange
   parsing (RAC, PCC, Arktika) and RussianDX's initial exchange moved at M5b
-  (below); `logedit.TotalScore`'s five formulas wait for M6 (design §2).
+  (below); `logedit.TotalScore`'s five formulas moved at M6 (below).
 - **A contest parses and validates its own received exchange** (M5b,
   2026-10-02). `LOGSTUFF.ProcessExchange` runs the contest-blind gate, then
   asks `TContestBase.ParseReceivedExchange(aText, aSession, var aExch, out
@@ -149,6 +149,29 @@ the target shape, the M-step migration order and the open questions.
   matrix's `parse` section (66 typed exchanges per contest and variant, no
   points) gates it. UA4W stays named in LOGSTUFF: its class would have to
   score with a CTY lookup of MY CALL, which no class can be handed yet.
+- **A contest owns its final score and its bonuses** (M6, 2026-10-02).
+  `LOGEDIT.TotalScore` -- what every score reader reads -- gathers a
+  `TScoreTotals` (a record: the interface-parameter exemption) and asks
+  `FinalScore(aTotals, aView)` = `CombineScore` + `BonusPoints`; both public
+  entries are NOT virtual, `CombineScore` being a template (a session with no
+  multiplier, or the FISTS exchange, scores its points) over the protected
+  `CombineWithMultipliers`. **The view is read-only** (`TLoggedQSOView`, an
+  abstract class; `TLoggedQSOList` for tests) and the application keeps it in
+  memory beside the totals (`uScoreTotals`), because reading the database per
+  score was measured at ~130 us a row. Bonuses: **declared data**
+  where they share a shape (`GetBonusStations` -> `TBonusStation`, paid by the
+  base, qualified by `CountsTowardBonus` / `CreditsBonusMode` -- Missouri's
+  W0MA/K0GQ, the Salmon Run's W7DX once per mode with the single-mode rule
+  from `Station.MyCategoryMode`), otherwise the class's own `BonusPoints` over
+  the view, adding `inherited` (NC's Rarest-of-NC sweep, Idaho's dormant
+  county). `TalliesLiveQSO` is Missouri's live-only peak-hour tally, a
+  preserved defect -- never a model (design Q32). Nine contests gained classes
+  for their formula (RF Cup x3, RF Championship x2, WAE x2, OZHCR, ALRS);
+  the RF Championship's table is the leaf `uRFChampionshipPoints`. The matrix
+  gained a `totals` section (reload, counts, `TotalScore`, `CLAIMED-SCORE`)
+  frozen first; `uTestContestTotals` pins every formula and every bonus edge.
+  **ALRS's empty-QTH QSO scores from heap garbage** (`LOGGRID`, design Q37) --
+  it moved under the class while the formula did not; see design §8.2h.
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(c)` answers for EVERY `ContestType` --
   the class, else a plain `TContestBase` reading the row; never nil, owned by

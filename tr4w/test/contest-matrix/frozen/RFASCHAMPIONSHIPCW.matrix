@@ -234,6 +234,39 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" 
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 qth=599 exch=599 75 cty=F/27/Europe/F5
+== totals
+totals.qsopoints = 0
+totals.qtcs = 0
+totals.singleband = AllBands
+totals.qsos Band160 CW = 1
+totals.qsos Band160 Both = 1
+totals.qsos Band80 CW = 1
+totals.qsos Band80 Both = 1
+totals.qsos Band40 Digital = 1
+totals.qsos Band40 Phone = 1
+totals.qsos Band40 Both = 2
+totals.qsos Band20 CW = 2
+totals.qsos Band20 Digital = 1
+totals.qsos Band20 Phone = 3
+totals.qsos Band20 Both = 6
+totals.qsos Band15 CW = 1
+totals.qsos Band15 Phone = 1
+totals.qsos Band15 Both = 2
+totals.qsos Band10 CW = 1
+totals.qsos Band10 Phone = 1
+totals.qsos Band10 Both = 2
+totals.qsos Band30 CW = 1
+totals.qsos Band30 Both = 1
+totals.qsos Band6 Phone = 1
+totals.qsos Band6 Both = 1
+totals.qsos Band2 Phone = 1
+totals.qsos Band2 Both = 1
+totals.qsos AllBands CW = 7
+totals.qsos AllBands Digital = 2
+totals.qsos AllBands Phone = 8
+totals.qsos AllBands Both = 17
+totals.totalscore = 0
+totals.cabrillo = CLAIMED-SCORE: 0
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
 contest.requested = 105 RFASCHAMPIONSHIPCW
@@ -470,6 +503,39 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" 
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 qth=599 exch=599 75 cty=F/27/Europe/F5
+== totals
+totals.qsopoints = 0
+totals.qtcs = 0
+totals.singleband = AllBands
+totals.qsos Band160 CW = 1
+totals.qsos Band160 Both = 1
+totals.qsos Band80 CW = 1
+totals.qsos Band80 Both = 1
+totals.qsos Band40 Digital = 1
+totals.qsos Band40 Phone = 1
+totals.qsos Band40 Both = 2
+totals.qsos Band20 CW = 2
+totals.qsos Band20 Digital = 1
+totals.qsos Band20 Phone = 3
+totals.qsos Band20 Both = 6
+totals.qsos Band15 CW = 1
+totals.qsos Band15 Phone = 1
+totals.qsos Band15 Both = 2
+totals.qsos Band10 CW = 1
+totals.qsos Band10 Phone = 1
+totals.qsos Band10 Both = 2
+totals.qsos Band30 CW = 1
+totals.qsos Band30 Both = 1
+totals.qsos Band6 Phone = 1
+totals.qsos Band6 Both = 1
+totals.qsos Band2 Phone = 1
+totals.qsos Band2 Both = 1
+totals.qsos AllBands CW = 7
+totals.qsos AllBands Digital = 2
+totals.qsos AllBands Phone = 8
+totals.qsos AllBands Both = 17
+totals.totalscore = 0
+totals.cabrillo = CLAIMED-SCORE: 0
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
 contest.requested = 105 RFASCHAMPIONSHIPCW
@@ -704,3 +770,36 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" 
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
 parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=75 qth=599 exch=599 75 cty=F/27/Europe/F5
+== totals
+totals.qsopoints = 0
+totals.qtcs = 0
+totals.singleband = AllBands
+totals.qsos Band160 CW = 1
+totals.qsos Band160 Both = 1
+totals.qsos Band80 CW = 1
+totals.qsos Band80 Both = 1
+totals.qsos Band40 Digital = 1
+totals.qsos Band40 Phone = 1
+totals.qsos Band40 Both = 2
+totals.qsos Band20 CW = 2
+totals.qsos Band20 Digital = 1
+totals.qsos Band20 Phone = 3
+totals.qsos Band20 Both = 6
+totals.qsos Band15 CW = 1
+totals.qsos Band15 Phone = 1
+totals.qsos Band15 Both = 2
+totals.qsos Band10 CW = 1
+totals.qsos Band10 Phone = 1
+totals.qsos Band10 Both = 2
+totals.qsos Band30 CW = 1
+totals.qsos Band30 Both = 1
+totals.qsos Band6 Phone = 1
+totals.qsos Band6 Both = 1
+totals.qsos Band2 Phone = 1
+totals.qsos Band2 Both = 1
+totals.qsos AllBands CW = 7
+totals.qsos AllBands Digital = 2
+totals.qsos AllBands Phone = 8
+totals.qsos AllBands Both = 17
+totals.totalscore = 0
+totals.cabrillo = CLAIMED-SCORE: 0

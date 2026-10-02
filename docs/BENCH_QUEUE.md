@@ -23,6 +23,45 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-02 -- EACH CONTEST OWNS ITS FINAL SCORE (M6), AND THREE BONUSES ARE NEW
+
+The final score moved onto the contest classes (`TContestBase.FinalScore` =
+`CombineScore` + `BonusPoints`), and `LogEdit.TotalScore` -- what the score
+display, the summary sheet, Cabrillo `CLAIMED-SCORE`, the XML report and the
+posting clients read -- asks it. The golden corpus and the matrix's `totals`
+section prove the formulas did not move; **no gate sees the score ON SCREEN,
+and none sees a bonus pay**: the matrix's synthetic QSOs trigger none of them,
+so `uTestContestTotals` is their only proof. To exercise, watching the main
+window's score after each QSO and the `CLAIMED-SCORE` of an exported Cabrillo:
+
+- **North Carolina, the Rarest-of-NC sweep (NEW)**: log stations in four of
+  CAB, GRM, VAN, MAC, DAV, CUR, PAM, ALL, PER, CAS -- no bonus; the fifth adds
+  **500 once**, after the multiplication (the score is points x mults + 500).
+  A sixth county adds nothing more.
+- **Salmon Run, W7DX (NEW)**: CATEGORY-MODE MIXED -- a W7DX CW contact adds
+  500, a W7DX phone contact another 500, a second CW band nothing. Set
+  CATEGORY-MODE CW and the phone contact stops paying (the score drops 500).
+  **An operator who never chose a CATEGORY-MODE is a CW entry** -- that is the
+  setting's default and what the Cabrillo header says.
+- **Idaho, the dormant county (NEW)**: an in-state station with MY STATE
+  `BUT` (Butte) -- nine valid QSOs, no bonus; the tenth adds **1000**. `WAS`
+  pays 500, `ADA` nothing. A dupe or a 30 m QSO is not a valid QSO.
+- **Missouri (MOVED, unchanged)**: W0MA and K0GQ add 100 each, once. The
+  peak-hour tally (80/40 m, 1400-1959 UTC, to 250) still counts only while
+  TR4W is open and still vanishes on reopen -- that is the preserved defect
+  (design Q32); check that it did NOT get worse, not that it is right.
+- **The moved formulas -- spot-check one each against a hand calculation**:
+  WAE (weighted multipliers, QTCs as points), Winter Field Day (band-modes x
+  points x 2 for LOW / 5 for QRP), RF Cup / ALRS / RF Championship / Ukraine
+  Championship / OZHCR (points PLUS 100 / 300 / 50 / 10 / 1000 per
+  multiplier), Ural Cup (prefixes are 10 points each, after the
+  multiplication).
+- **A score-posting client** (HamScore / getscores.org) posts the score the
+  main window shows -- off the main thread it now reads the last score the
+  window computed.
+
+---
+
 ## Added 2026-10-02 -- EACH CONTEST PARSES ITS OWN EXCHANGE (M5b), AND TWO NEW REFUSALS
 
 Exchange parsing moved onto the contest classes

@@ -92,13 +92,23 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                one fixed list of exchange texts for every contest, recording
                whether each was accepted, the message and token a refusal
                shows, the counties a county line queued, and every
-               ContestExchange field the parse set. Appended LAST and frozen
-               before the first parse arm moved, so every section above it
-               kept its bytes.
+               ContestExchange field the parse set. Appended after import and
+               frozen before the first parse arm moved, so every section
+               above it kept its bytes.
 
-  NOT CAPTURED, deliberately: Cabrillo header lines other than CONTEST: (they
-  carry the build version and the totals, which belong to M6/M9), and the
-  other identity readers (HamScore, WA7BNM, QRZ.RU), which produce no file.
+    totals     (M6) the log the scoring section wrote, RELOADED through the
+               path opening a contest takes (MainUnit.LoadinLog -- what
+               /EXPORT's start runs), then the totals the program computes
+               from it: the QSO points, the QTCs, the QSO and multiplier
+               counts by band and mode, LogEdit.TotalScore -- the one score
+               every display and export reads -- and the CLAIMED-SCORE: line
+               of a Cabrillo file written after the reload. Appended LAST and
+               frozen before the first total-score rule moved.
+
+  NOT CAPTURED, deliberately: Cabrillo header lines other than CONTEST: and,
+  since M6, CLAIMED-SCORE: (the rest carry the build version or the
+  operator's categories, which belong to M9), and the other identity readers
+  (HamScore, WA7BNM, QRZ.RU), which produce no file.
 
   ---------------------------------------------------------------------------
   DETERMINISM
@@ -155,6 +165,10 @@ uses
    uPOTAParks,
    uDomFileKeys,
    uAppPaths,
+   (* THE totals SECTION (M6): the multiplier totals, and the one score
+     function every display and export reads. *)
+   uMults,
+   LogEdit,
    MainUnit;
 
 type
@@ -1345,6 +1359,111 @@ begin
       end;
 end;
 
+(* ------------------------------------------------------------------------ *)
+(* /MATRIX -- totals (M6)                                                   *)
+(* ------------------------------------------------------------------------ *)
+
+(* THE CLAIMED-SCORE: LINE OF THE CABRILLO FILE, as written. '' when the
+  writer produced no file or no such line. *)
+function CabrilloClaimedScoreLine(const aFile: string): string;
+var
+   lines: TStringList;
+   i: integer;
+begin
+   Result := '';
+   if (aFile = '') or (not FileExists(aFile)) then
+      begin
+      Exit;
+      end;
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(aFile));
+      for i := 0 to lines.Count - 1 do
+         begin
+         if Pos('CLAIMED-SCORE:', string(lines[i])) = 1 then
+            begin
+            Result := string(lines[i]);
+            Exit;
+            end;
+         end;
+   finally
+      lines.Free;
+   end;
+end;
+
+(* THE TOTALS THE PROGRAM COMPUTES FROM THE LOG THE SCORING SECTION WROTE.
+
+  THE LOG IS RELOADED FIRST, through MainUnit.LoadinLog -- the routine that
+  opens a contest's log, and the one /EXPORT's start has run before it writes
+  a CLAIMED-SCORE. The scoring section appended its QSOs to the store without
+  passing through live entry, so until the reload the sheet and the counters
+  still describe the log as it was at start-up: empty. After it, they are what
+  an operator who reopened this log would see.
+
+  ONLY NON-ZERO CELLS of the QSO and multiplier tables are written, so a
+  record stays readable. The multiplier counts are the four kinds the sheet
+  keeps, in the order domestic/dx/zone/prefix. *)
+procedure CaptureTotals;
+var
+   b: BandType;
+   m: ModeType;
+   cabrilloFile: string;
+begin
+   Emit('== totals');
+   LoadinLog;
+
+   EmitField('totals.qsopoints', IntToStr(TotalQSOPoints));
+   EmitField('totals.qtcs', IntToStr(TotalNumberQTCsProcessed));
+   EmitField('totals.singleband', EnumText(TypeInfo(BandType), Ord(SingleBand)));
+
+   for b := Low(BandType) to High(BandType) do
+      begin
+      for m := CW to Both do
+         begin
+         if QSOTotals[b, m] <> 0 then
+            begin
+            EmitField(Format('totals.qsos %s %s',
+                             [EnumText(TypeInfo(BandType), Ord(b)),
+                              EnumText(TypeInfo(ModeType), Ord(m))]),
+                      IntToStr(QSOTotals[b, m]));
+            end;
+         end;
+      end;
+
+   for b := Low(BandType) to High(BandType) do
+      begin
+      for m := CW to Both do
+         begin
+         if (mo.MTotals[b, m, rmDomestic] <> 0) or
+            (mo.MTotals[b, m, rmDX] <> 0)       or
+            (mo.MTotals[b, m, rmZone] <> 0)     or
+            (mo.MTotals[b, m, rmPrefix] <> 0)   then
+            begin
+            EmitField(Format('totals.mults %s %s',
+                             [EnumText(TypeInfo(BandType), Ord(b)),
+                              EnumText(TypeInfo(ModeType), Ord(m))]),
+                      Format('dom=%d dx=%d zone=%d pfx=%d',
+                             [mo.MTotals[b, m, rmDomestic], mo.MTotals[b, m, rmDX],
+                              mo.MTotals[b, m, rmZone], mo.MTotals[b, m, rmPrefix]]));
+            end;
+         end;
+      end;
+
+   EmitField('totals.totalscore', IntToStr(TotalScore));
+
+   cabrilloFile := '';
+   try
+      CreateCabrilloFile;
+      cabrilloFile := CharBufferText(tReportsFilename);
+   except
+      on E: Exception do
+         begin
+         EmitRaised('totals CreateCabrilloFile', E);
+         end;
+   end;
+   EmitField('totals.cabrillo', CabrilloClaimedScoreLine(cabrilloFile));
+end;
+
 function RunContestMatrix(const aOutFile: string;
                           const aRequested: string): integer;
 var
@@ -1398,14 +1517,26 @@ begin
             end;
       end;
 
-      (* LAST, so every section before it is byte-for-byte what it was
-        before this one existed (M5b's freeze appended it). *)
+      (* AFTER import, so every section before it is byte-for-byte what it
+        was before this one existed (M5b's freeze appended it). *)
       try
          CaptureParse;
       except
          on E: Exception do
             begin
             EmitRaised('parse', E);
+            end;
+      end;
+
+      (* LAST, for the same reason: M6's freeze appended it, and every section
+        above it kept its bytes. It reloads the log, so nothing may follow it
+        that expects the session as the sections above left it. *)
+      try
+         CaptureTotals;
+      except
+         on E: Exception do
+            begin
+            EmitRaised('totals', E);
             end;
       end;
 

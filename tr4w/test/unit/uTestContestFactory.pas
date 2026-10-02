@@ -1936,6 +1936,21 @@ begin
    CheckAgainstArray(LABRE, 'LABRE DX');
    CheckAgainstArray(RUSSIANDX, 'Russian DX');
    CheckAgainstArray(RU3AXMEMORIAL, 'RU3AX Memorial');
+
+   (* THE NINE THAT GAINED A CLASS AT M6 (2026-10-02), each because its final
+      score was a test of ActiveQSOPointMethod inside LogEdit.TotalScore. Two
+      traps: the RF Cup CW and SSB rows carry their DF commented out, so it is
+      blank where the digital running's says 'grids'; and the WAE rows state
+      a FriendlyName while their Cabrillo and ADIF names are the spelling. *)
+   CheckAgainstArray(CUPRFCW, 'RF Cup CW');
+   CheckAgainstArray(CUPRFSSB, 'RF Cup SSB');
+   CheckAgainstArray(CUPRFDIG, 'RF Cup digital');
+   CheckAgainstArray(RFCHAMPIONSHIPCW, 'RF Championship CW');
+   CheckAgainstArray(RFCHAMPIONSHIPSSB, 'RF Championship SSB');
+   CheckAgainstArray(DARCWAEDCCW, 'WAE CW');
+   CheckAgainstArray(DARCWAEDCSSB, 'WAE SSB');
+   CheckAgainstArray(OZHCRVHF, 'OZHCR VHF');
+   CheckAgainstArray(ALRS_UA1DZ_CUP, 'ALRS UA1DZ Cup');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked

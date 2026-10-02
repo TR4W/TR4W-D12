@@ -203,6 +203,9 @@ uses
   uLogStore,
   { SQsoNotLogged. }
   uAppStrings,
+  (* AddLoggedQSO -- the final score's view of the log, kept with the totals
+     (M6). *)
+  uScoreTotals,
   (* ContestIdentity -- the contest's own ADIF id and Cabrillo name for the
      two UDP broadcasts. *)
   uContestRegistry;
@@ -1724,6 +1727,10 @@ begin
      inc(QSOTotals[AllBands, Both]);
      Sheet.SetMultFlags(RXData);
      Sheet.AddQSOToSheets(@RXData, True);
+     (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6), as the log's
+        loader does -- see uScoreTotals. It keeps only what
+        QSOCountsTowardTotals accepts, which is the loader's test. *)
+     AddLoggedQSO(RXData);
      CallsignsList.AddCallsign(RXData.Callsign, TempMode, RXData.Band, False);
      CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      SendStationStatus(sstQSOs);
@@ -1740,16 +1747,16 @@ begin
      TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
      end;
 
-  if Contest = MOQSOPARTY then
+  (* THE CONTEST'S LIVE TALLY -- M6. Missouri's peak-hour count stood here
+     as `if Contest = MOQSOPARTY`, with its bonus-station check beside it. The
+     rule is the contest's own now (TalliesLiveQSO) and the cap is applied
+     where the bonus is paid; the bonus stations are counted over the whole
+     log at the final score, so nothing is decided here about them. The count
+     is still kept only here, in live entry -- a defect preserved on purpose,
+     see TContestBase.TalliesLiveQSO. *)
+  if ContestIdentity(Contest).TalliesLiveQSO(RXData) then
      begin
-     CheckMOQSOPartyBonusStation(RXData.Callsign);
-     if (RXData.Band in [Band80, Band40]) and
-        (RXData.tSysTime.qtHour >= 14) and
-        (RXData.tSysTime.qtHour < 20) and
-        (MOQSOPartyPeakHourCount < 250) then
-        begin
-        inc(MOQSOPartyPeakHourCount);
-        end;
+     inc(LiveSessionTally);
      end;
   //  ProcessPartialCallAndInitialExchange(RXData);
     //  PushLogStringIntoEditableLogAndLogPopedQSO(LogString, True);

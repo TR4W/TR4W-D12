@@ -354,11 +354,22 @@ uses
    uContestLABRE in '..\..\src\contestFactory\uContestLABRE.pas',
    uContestRussianDX in '..\..\src\contestFactory\uContestRussianDX.pas',
    uContestRU3AXMemorial in '..\..\src\contestFactory\uContestRU3AXMemorial.pas',
+   uContestCupRFCW in '..\..\src\contestFactory\uContestCupRFCW.pas',
+   uContestCupRFSSB in '..\..\src\contestFactory\uContestCupRFSSB.pas',
+   uContestCupRFDIG in '..\..\src\contestFactory\uContestCupRFDIG.pas',
+   uContestRFChampionshipCW in '..\..\src\contestFactory\uContestRFChampionshipCW.pas',
+   uContestRFChampionshipSSB in '..\..\src\contestFactory\uContestRFChampionshipSSB.pas',
+   uContestDARCWAEDCCW in '..\..\src\contestFactory\uContestDARCWAEDCCW.pas',
+   uContestDARCWAEDCSSB in '..\..\src\contestFactory\uContestDARCWAEDCSSB.pas',
+   uContestOZHCRVHF in '..\..\src\contestFactory\uContestOZHCRVHF.pas',
+   uContestALRSUA1DZCup in '..\..\src\contestFactory\uContestALRSUA1DZCup.pas',
+   uRFChampionshipPoints in '..\..\src\uRFChampionshipPoints.pas',
    uExchangeTokens in '..\..\src\uExchangeTokens.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
    uTestContestExport in 'uTestContestExport.pas',
    uTestContestImport in 'uTestContestImport.pas',
    uTestContestParse in 'uTestContestParse.pas',
+   uTestContestTotals in 'uTestContestTotals.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
@@ -557,6 +568,7 @@ begin
    RegisterSuite(TContestExportTests.Create('ContestExport'));
    RegisterSuite(TContestImportTests.Create('ContestImport'));
    RegisterSuite(TContestParseTests.Create('ContestParse'));
+   RegisterSuite(TContestTotalsTests.Create('ContestTotals'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));
