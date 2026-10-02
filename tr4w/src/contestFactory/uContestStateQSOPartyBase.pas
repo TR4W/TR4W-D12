@@ -128,6 +128,7 @@ unit uContestStateQSOPartyBase;
 interface
 
 uses
+   VC,
    uContestBase;
 
 const
@@ -229,13 +230,67 @@ type
          follow-ups so the generic dupe check does not blank them. *)
       function ValidateQTHCount(aCount: integer;
                                 out aErrorMessage: string): boolean; override;
+
+      (* AN OUT-OF-STATE STATION WORKS ONLY THE HOST STATE -- M5b, NY4I's
+         ruling of 2026-10-02 (design 7.10):
+
+           "In QSO parties, out of state stations usually only log the state
+           county. It's not valid for a fl station to work an Idaho or VE
+           station in the NC QSO party." In-state stations work everyone.
+           "It's an invalid station so we should refuse to log it and show an
+           error like we would with an invalid county."
+
+         THE DEFAULT FOR EVERY SINGLE-STATE PARTY, so it is here; a party
+         whose sponsor rules otherwise overrides. None does today -- every
+         class's header was read for an exception and none states one.
+
+         WHO IS OUT OF STATE: Station.InHostState, the answer set-up took
+         when it chose which domestic file to load. WHO IS HOST STATE: a
+         station whose received QTH the session's domestic table knows
+         (aSession.IsDomesticQTH) -- for an out-of-state station that table
+         is the host's COUNTY file, which holds the host's counties and
+         nothing else (Test_EveryPartyCountyFileHoldsOnlyCounties holds that;
+         NC's file held the states and provinces until M5b). So an exchange
+         the shape accepted whose QTH is not a host county is the DX branch of
+         a DomesticOrDX shape -- a station outside the host state -- and is
+         refused. A county the shape parser itself refused is refused as it
+         always was, with its own message.
+
+         ASKED OF THE TABLE, NOT READ OFF DomesticQTH. The DX branch never
+         writes DomesticQTH, so a value left in the record by an earlier
+         attempt would read as a host county. And the table's own
+         placeholder, 'XXX' -- a QTH not yet copied -- is accepted by the
+         table as before: it says nothing about where the station is. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
    end;
 
 implementation
 
 uses
    SysUtils,        (* Format *)
-   uTR4WStrings;    (* TC_TOOMANYCOUNTIES *)
+   uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
+   uAppStrings;     (* SExchangeOutOfStateWorksHostOnly *)
+
+function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;
+                                                         const aSession: TReceivedExchangeSession;
+                                                         var aExch: ContestExchange;
+                                                         out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   if (not Result) or Station.InHostState then
+      begin
+      Exit;
+      end;
+
+   if not aSession.IsDomesticQTH(string(aExch.QTHString)) then
+      begin
+      Result := False;
+      aErrorMessage := Format(SExchangeOutOfStateWorksHostOnly, [HostState]);
+      end;
+end;
 
 function TContestStateQSOPartyBase.GetIsUSQSOParty: boolean;
 begin

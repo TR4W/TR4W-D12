@@ -319,6 +319,20 @@ resourcestring
       sLineBreak + '%s' + sLineBreak + sLineBreak +
       'Check that it still exists.  tr4w.log records what was tried.';
 
+   (* ------------------------------------ refused exchanges (M5b, 7.10) - *)
+
+   (* SWEEPSTAKES WITHOUT A PRECEDENCE. NY4I, 2026-10-02: "A sweepstakes
+     entry should not have been logged without a precedence." Shown where an
+     improper section is shown -- the main window's one-line notice -- so it
+     is a few words, and it names the letters that are legal. *)
+   SExchangeNoPrecedence = 'Missing precedence (Q A B U M S)';
+
+   (* A QSO PARTY'S OUT-OF-STATE STATION WORKING ANOTHER OUT-OF-STATE ONE.
+     NY4I, 2026-10-02: "It's not valid for a fl station to work an Idaho or
+     VE station in the NC QSO party", "we should refuse to log it and show an
+     error like we would with an invalid county".  %s is the host state. *)
+   SExchangeOutOfStateWorksHostOnly = 'Out of state: work %s stations only';
+
 implementation
 
 end.

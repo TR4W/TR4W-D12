@@ -319,8 +319,12 @@ the wrongness.
 | `ScoreQSO` | **not virtual** -- the one public scoring entry point: zero, band check, the four overrides, then `CalculateQSOPoints` (section 1) |
 | `CalculateQSOPoints` | **protected**. Scores 0 (`NoQSOPointMethod` is a real value). Asked only by `ScoreQSO`, so never about a QSO on a band the contest does not use, nor one an override already scored |
 | `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags`. Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
-| `ValidateClass` | accepts anything |
-| `ValidateDXQTH` | accepts nothing |
+| `ParseReceivedExchange` | the engine's shared parse for the SESSION's exchange shape, `aSession.ParseShape(aSession.Exchange, ...)` -- see "How a contest parses and validates" below (M5b) |
+| `MayBeACallsign` | every word may be a call (the PCC says `N/X` is not) |
+| `InitialExchangeFromCall` | no answer (the Russian DX contests give a Russian station's oblast) |
+| `FormatADIFReceivedExchange` | the ADIF `SRX_STRING`: the received RST in front of the typed exchange when the session's exchange carries an RST, else the typed exchange (the Field Days write a DX station's `1D DX`) |
+| `ValidateClass` | accepts anything. Since M5b every contest is asked, a classless one through its identity -- `LOGSTUFF.ValidClass`'s own letter loop is deleted (inventory D1) |
+| `ValidateDXQTH` | accepts nothing. Asked of every contest the same way; the fallback copy in LOGSTUFF is deleted (inventory D2) |
 | `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
 | `FormatCabrilloSentExchange` / `FormatCabrilloReceivedExchange` | the shared arm for the session's exchange (`TCabrilloQSOContext.SessionExchange`) -- `uCabrilloExchange.FormatCabrilloExchangeOfKind` |
 | `FormatADIFSentExchange` | the shared arm for the session's exchange -- `uADIFExchange.FormatADIFExchangeOfKind` |
@@ -401,6 +405,54 @@ arm that read `exch.ceContest` as it went by is the bug that proved why
 Two contests with no class keep an arm in `MainUnit.ApplyClasslessADIFImport`
 for a stated reason each (POTA: design Q6 is open; ARRL 160: its scoring asks
 the domestic-country list). It is deleted when they gain a class.
+
+### How a contest parses and validates its received exchange (M5b, 2026-10-02)
+
+**THE CUTTING IS GENERIC, THE MEANING IS YOURS.** `LOGSTUFF.ProcessExchange` --
+what live entry's `ParametersOkay`, the log-line reader and the sender all call
+-- runs the contest-blind tokenising gate (`ParseArray`) and then asks the
+contest: `TContestBase.ParseReceivedExchange(aText, aSession, var aExch, out
+aErrorMessage)`. True accepts and False refuses. A refusal that names a reason
+puts it in `aErrorMessage`, and the engine shows it exactly as it shows an
+improper county or a bad ARRL section (`ExchangeErrorMessage`, the main
+window's notice line).
+
+- **Do nothing** and you get the base: `aSession.ParseShape(aSession.Exchange,
+  ...)` -- the engine's shared parser for the SESSION's exchange shape
+  (`LOGSTUFF.ParseExchangeShape`, the old `case ActiveExchange of`, which names
+  no contest).
+- **Your own rule**: override and call `inherited` (or `aSession.ParseShape`
+  with another shape) for what you do not decide yourself. The worked examples:
+  RAC's `uContestCanadaDay` (a VE0 station's serial), `uContestPCC` and
+  `uContestArktikaSpring` (choose between two shapes), `uContestLABRE` (a PY
+  station's state), `uContestIARU` (fills the zone after the parse),
+  `uContestUKEI` and `uContestSACCW` (refuse before it), `uContestARRLSSBase`
+  (names a missing precedence after it), `uContestStateQSOPartyBase` (refuses an
+  out-of-state station working another one -- NY4I's ruling, design 7.10).
+- **Apply your rule under the shape it was written for** -- test
+  `aSession.Exchange` -- and defer otherwise. Every rule that moved at M5b was
+  a branch inside one shape's parser; guarding on the shape is what kept the
+  move exact.
+- **The session is DATA** (`TReceivedExchangeSession`): the session's exchange,
+  the shape parser, and the engine services a rule needs -- `ZoneOfCall` (CTY),
+  `IsDomesticQTH` (the loaded domestic table), `CallWindowHasCall` and
+  `AbandonEntry` (live entry). Your class reads no global; a unit test hands it
+  stubs (`uTestContestParse`). **A service is added when the first rule needs
+  one**, like a `TStationContext` field.
+- **Word cutting a class needs is in `uExchangeTokens`**, LIFTED from LOGSTUFF
+  line for line (`SplitExchangeInThree`, `ProcessSweepstakesEntry`,
+  `IsSingleNonNumericToken`) and called by both, so the engine and the class
+  cut one way. Do not write a "tidier" splitter: it would hand your rule a
+  different word than the parser saw.
+- **Two more seams**: `MayBeACallsign` (a word of the exchange that looks like a
+  call and is not one -- the PCC's `N/X`) and `InitialExchangeFromCall` (an
+  initial exchange known from the call alone -- the Russian DX contests'
+  oblast).
+- **Pin it** in `uTestContestParse`, and know the matrix's `parse` section
+  (section 4) sees what the engine did with the same typed text.
+
+Typed entry itself -- that a refusal SHOWS its message, that a valid exchange
+logs -- is seen by no gate; `docs/BENCH_QUEUE.md` carries it.
 
 ### Protected helpers — mechanism, not rules
 
@@ -487,11 +539,12 @@ never recomputes them.
 | scoring | **`test-contest-factory.sh` only** — rescores each log through the factory and diffs against that set's **frozen** `rescored.adi` / `rescored.cbr` -- the legacy output, captured once by `freeze-rescore-baseline.sh`. **`/NOFACTORY` was DELETED 2026-09-29**: it could only work while both paths existed, and the contests were all moving inside two weeks. The frozen bytes are OUR OWN former output, so this gate says the factory agrees with what TR4W did before the move -- not that either answer is correct |
 | Cabrillo / ADIF exchange columns | **the golden corpus** — they are in the QSO lines, which `golden_diff.py` compares. Verified: `%-7s` → `%-8s` gives `FAIL arrl_fd cbr` |
 | Cabrillo *header* | **nothing, EXCEPT `CLAIMED-SCORE:`** — `golden_diff.py` drops every other header line (`golden_diff.py:87-88` keeps that one). It is arithmetic over the log's STORED points, so a per-QSO scoring change still does not move it; a change to the total-score formula or a bonus does (corrected 2026-10-01) |
-| exchange validation and parsing | **nothing** — no gate types an exchange |
+| exchange validation and parsing | **the contest matrix's `parse` section** (M5b) -- a fixed list of typed exchanges through the real `ParametersOkay`, for every contest; and `uTestContestParse` for a class's own rule. **Nothing sees the window**: whether a refusal's message reaches the screen, and whether the caret lands after the bad token, are `BENCH_QUEUE.md`'s |
 | set-up, per-QSO scoring and export of **every** `ContestType`, classless included | **the contest matrix** — `bash tr4w/test/contest-matrix/run-contest-matrix.sh` (below) |
 
-So `ValidateClass` and `ValidateDXQTH` changes are unverified by any automated
-gate and belong in `BENCH_QUEUE.md`.
+So a parse change is seen as "same as before" by the matrix and as "right" by
+nobody -- a refusal NY4I ruled (design 7.10) is a re-freeze with that reason,
+and the typed-entry check belongs in `BENCH_QUEUE.md`.
 
 ### The contest matrix -- the legacy fixture (milestone M0, built 2026-10-01)
 
@@ -508,16 +561,20 @@ gate and belong in `BENCH_QUEUE.md`.
 | `setup` | the seven `Active*`, the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7 |
 | `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body | M3, M8 |
 | `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
-| `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a, M5b |
+| `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a |
+| `parse` (M5b) | **66 typed exchanges** through `MainUnit.ParametersOkay` -- the routine live entry's Enter calls -- with the call in the call window and the band and mode in force: every exchange SHAPE well-formed (serials, states, zones, names, powers, ages, grids, classes and sections, Sweepstakes' four fields, counties and a county line from the contest's own domestic file, prefectures, oblasts, departments, parks) and then the malformed and edge cases (missing and extra fields, the wrong order, a bad section or county, DX, a serial with letters, Sweepstakes without a precedence, an out-of-state station's own state). Each line: accepted or refused, the message and token a refusal shows, the counties a county line queued, and every field the parse set -- **not the points**, which are the scoring section's, and not the QSO's time and GUID, which come from the clock | M5b |
 
 One process per contest and variant, because `FoundContest` is not idempotent --
 see the unit header. About five minutes for the whole matrix.
 
-**NOT captured yet: PARSING a typed exchange** -- the synthetic QSOs arrive
-with their exchange fields filled, the way a stored QSO does. That is M5b's
-section, marked as an extension point in `uContestMatrix`; add and freeze it
-**before** the first parse arm moves. ADIF import is captured (the `import`
-section above, frozen before M5a moved anything).
+**PARSING IS CAPTURED (M5b, 2026-10-02)**, appended LAST and frozen before the
+first parse arm moved, with every earlier section proved byte-identical. Two
+findings made it deterministic first: the CQ WW RTTY shape handed `ValidRST` an
+uninitialised word (`FirstStringRST`, the same in D7), so `599 14` -- refused
+either way -- left different fields behind on every run -- fixed; and
+ALRS-UA1DZ's grid-distance scoring of a QTH
+that is not a grid gave a different number every run -- which is why the parse
+lines carry no points.
 
 **The N1MM cases name a contest that is not the session's** (`ARRL-FIELD-DAY`,
 `FOC MARATHON`, as literal ADIF text): a record is only misread when the contest
@@ -565,7 +622,7 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 | question | answer |
 |---|---|
 | what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`), else that routine's legacy case |
-| what is its exchange | its `AE` in `ContestsArray` → `LOGSTUFF.ProcessExchange` |
+| what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after `FoundContest`'s arms) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
 | its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` reading the row. Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not read `ContestsArray` or spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
 | how TR4QT decomposes a contest | `C:\projects\tr4qt\docs\CONTEST_DEVELOPMENT.md` and `src/contests/` |
@@ -593,7 +650,9 @@ and is the target shape:
 
 - `getReceivedExchangeFields` / `getSentExchangeFields` — a structured
   description of the exchange
-- `parseReceivedExchange` / `formatSentExchange`
+- ~~`parseReceivedExchange`~~ -- **BUILT at M5b** as `ParseReceivedExchange`
+  (section 3). `formatSentExchange` is M4's `FormatCabrillo...` /
+  `FormatADIFSentExchange`
 - `getMultiplierTypes` / `getMultiplierValue`
 - `calculateTotalScore`
 - `getCabrilloHeaders`

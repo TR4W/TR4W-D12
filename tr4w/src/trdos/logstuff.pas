@@ -67,14 +67,18 @@ uses {Dos, Printer,}Tree,
     left in this unit, or anywhere in the program. *)
   LCLType,
   FileUtil,       // CopyFile -- was Windows.CopyFileA (LazUtils, not LazFileUtils)
-  uTR4WStrings;
+  uTR4WStrings,
+  (* THE CONTEST-BLIND WORD CUTTING, lifted at M5b so the contest classes cut
+    an exchange exactly as this unit does -- ParseExchange, the Sweepstakes
+    word and its record (SSExchangeType). SSPrec went with it, as
+    uExchangeTokens.SweepstakesPrecedences. *)
+  uExchangeTokens;
 
 var
   MRC: Str10;
   MyCo: string[14];
 
 const
-  SSPrec: set of AnsiChar = ['A', 'B', 'Q', 'U', 'M', 'S'];
 
   { Control Byte Constants for Multi-Multi communications }
 
@@ -244,12 +248,9 @@ type
     Yuzhniy
     );
 
-  SSExchangeType = record
-    Number: string[4];
-    Check: string[2];
-    Section: Str10;
-    Prec: AnsiChar;
-  end;
+  (* LIFTED TO uExchangeTokens AT M5b with the routine that fills it, so the
+    Sweepstakes class reads an exchange the way this parser does. *)
+  SSExchangeType = TSweepstakesFields;
 
   RememberRecord = record
     Frequency: LONGINT;
@@ -760,6 +761,9 @@ uses uNet,
    (* The contest factory -- phase F. *)
    uContestBase,
    uContestFactory,
+   (* ContestIdentity -- the contest a classless session parses and validates
+     an exchange through (M5b). *)
+   uContestRegistry,
   PostUnit,
   MainUnit,
   uRotatorControl,   // RotorControl delegates here -- see its body
@@ -769,6 +773,23 @@ uses uNet,
     domestic-QTH mode. See the rejections below. *)
   uContestReadiness,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
+
+(* THE CONTEST THAT PARSES AND VALIDATES AN EXCHANGE -- M5b, 2026-10-02.
+
+  The active contest's object, which carries the station (a state party asks
+  whether we are in its host state), else the contest's identity: a plain
+  TContestBase for a contest with no class, whose answers are the shared
+  ones. Never nil, so no caller keeps a fallback of its own -- the two that
+  did (ValidClass's letter loop and the Field Day DX check, inventory D1 and
+  D2) are deleted. *)
+function ExchangeContest: TContestBase;
+begin
+  Result := ActiveContest(Contest);
+  if Result = nil then
+     begin
+     Result := ContestIdentity(Contest);
+     end;
+end;
 
 (* THE BAND TABLE, AT UNIT LEVEL.
 
@@ -1360,37 +1381,10 @@ procedure ParseExchange(Exchange: ShortString {Str80} {WLI}; var FirstString,
   SecondString, ThirdString: Str10 {Str20});
 
 begin
-  FirstString := '';
-  SecondString := '';
-  ThirdString := '';
-
-  if length(Exchange) = 0 then
-     begin
-     Exit;
-     end;
-
-  if StringHas(Exchange, ' ') then
-     begin
-     FirstString := PrecedingString(Exchange, ' ');
-     Delete(Exchange, 1, length(FirstString) + 1);
-     GetRidOfPrecedingSpaces(Exchange);
-
-     if StringHas(Exchange, ' ') then
-        begin
-        SecondString := PrecedingString(Exchange, ' ');
-        Delete(Exchange, 1, length(SecondString));
-        GetRidOfPrecedingSpaces(Exchange);
-        ThirdString := Exchange;
-        end
-     else
-        begin
-        SecondString := Exchange;
-        end;
-     end
-  else
-     begin
-     FirstString := Exchange;
-     end;
+  (* LIFTED TO uExchangeTokens AT M5b (2026-10-02), line for line, so a contest
+    class can split an exchange the way the engine does -- UK/EI's rule needs
+    the second word. One copy; this name stays for its twenty callers here. *)
+  SplitExchangeInThree(Exchange, FirstString, SecondString, ThirdString);
 end;
 
 function ProcessKidsExchange(ExchangeString: Str80; var RData: ContestExchange):
@@ -1515,36 +1509,26 @@ begin
            The contest returns what to STORE as well as whether it is legal,
            because an EMPTY exchange resolves to 'DX' -- a DX station sending
            only a class means DX -- and that substitution is a decision, not
-           formatting. *)
-        if ActiveContest(Contest) <> nil then
+           formatting.
+
+           EVERY CONTEST IS ASKED SINCE M5b (2026-10-02) -- ExchangeContest,
+           which answers a classless contest with its identity. The
+           `TempString = 'DX'` chain that stood below, a copy of the Field
+           Days' rule for a contest with no class, is deleted (inventory D2):
+           only the two Field Days run this exchange, and both have a
+           class. *)
+        Result := ExchangeContest.ValidateDXQTH(string(TempString),
+                                                resolvedQTH,
+                                                factoryError);
+        (* VIA AnsiString: a UnicodeString assigned straight to a
+           ShortString narrows, but an AnsiString to a ShortString does not
+           -- CLAUDE.md states exactly that, and it is why the step is here
+           rather than a cast. The values are 'DX', 'MX' or what the operator
+           typed into a Str10, so nothing can be lost. *)
+        RXData.QTHString := AnsiString(resolvedQTH);
+        if not Result then
            begin
-           Result := ActiveContest(Contest).ValidateDXQTH(string(TempString),
-                                                          resolvedQTH,
-                                                          factoryError);
-           (* VIA AnsiString: a UnicodeString assigned straight to a
-              ShortString narrows, but an AnsiString to a ShortString does not
-              -- CLAUDE.md states exactly that, and it is why the step is here
-              rather than a cast. The values are 'DX', 'MX' or what the operator
-              typed into a Str10, so nothing can be lost. *)
-           RXData.QTHString := AnsiString(resolvedQTH);
-           if not Result then
-              begin
-              ExchangeErrorMessage := factoryError;
-              end;
-           end
-        else if TempString = 'DX' then
-           begin
-           RXData.QTHString := 'DX';
-           end
-        else if TempString = '' then
-           begin
-           // Set this to DX
-           RXData.QTHString := 'DX';
-           end
-        else
-           begin
-           Result := False;
-           ExchangeErrorMessage := TC_ARRLFIELDDAYIMPROPERDXEXCHANGE;
+           ExchangeErrorMessage := factoryError;
            end;
         end;
      //if TempString <> '' then RXData.QTHString := TempString;
@@ -2776,13 +2760,17 @@ var
 
 begin
   LooksLikeACallSign := false;
-  if (contest = PCC) then // 4.83.7
+  (* A WORD THE CONTEST SAYS IS NOT A CALL -- the PCC's 'N/X' (4.83.7) stood
+    here as `if contest = PCC`. TContestPCC.MayBeACallsign says it since M5b;
+    every other contest has no objection to any word.
+
+    ContestIdentity, NOT the active contest: the rule is what the contest IS
+    and needs no station, and LOGDVP calls this routine too -- the identity is
+    the registry's thread-safe answer, where ActiveContest rebuilds the
+    station on every call. *)
+  if not ContestIdentity(Contest).MayBeACallsign(string(Call)) then
      begin
-     if (length(Call) = 3) and (Call[2] = '/') then
-        begin
-        LooksLikeACallSign := False;
-        Exit;
-        end;
+     Exit;
      end;
 
   {MMAA contest}
@@ -3140,121 +3128,12 @@ end;
 
 procedure ProcessSSEntry(InputString: Str80);
 
-var
-  NumberStr, TempString: Str20;
-
 begin
-  TempString := InputString;
-
-  NumberStr := '';
-
-  { Gobble up all the leading numbers }
-
-  while StringIsAllNumbers(Copy(TempString, 1, 1)) do
-     begin
-     NumberStr := NumberStr + Copy(TempString, 1, 1);
-     Delete(TempString, 1, 1);
-     end;
-
-  if length(NumberStr) > 4 then
-     begin
-     Exit; { I don't like this! }
-     end;
-
-  if (TempString = '') then { All we had was numbers.  Is it a check? }
-     begin
-     if (length(NumberStr) = 2) then
-        begin
-        if SSEx.Check = '' then
-           begin
-           SSEx.Check := NumberStr
-           end
-        else if (SSEx.Number = '') {and (SSEx.Prec <> CHR(0))} then
-           begin
-           SSEx.Number := NumberStr;
-           end;
-        end
-     else if SSEx.Number = '' then
-        begin
-        SSEx.Number := NumberStr;
-        end;
-
-     Exit;
-     end;
-
-  { Gee, this next one works even if the guy only entered A B or Q! }
-  if length(TempString) = 1 then
-    if TempString[1] in SSPrec then
-      {
-          IF (TempString = 'A') OR (TempString = 'B') OR (TempString = 'Q') OR
-             (TempString = 'U') OR (TempString = 'M') OR (TempString = 'S') THEN
-          }
-       begin
-       if SSEx.Number = '' then
-          begin
-          SSEx.Number := NumberStr;
-          end;
-       if SSEx.Prec = CHR(0) then
-          begin
-          SSEx.Prec := TempString[1];
-          end;
-       Exit;
-       end;
-
-  { There is more than one character left in the string. }
-
-  if length(TempString) > 0 then
-    if TempString[1] in SSPrec then
-      {
-          IF (Copy (TempString, 1, 1) = 'A') OR
-             (Copy (TempString, 1, 1) = 'B') OR
-             (Copy (TempString, 1, 1) = 'Q') OR
-             (Copy (TempString, 1, 1) = 'U') OR
-             (Copy (TempString, 1, 1) = 'M') OR
-             (Copy (TempString, 1, 1) = 'S') THEN
-      }
-        { We might have a precedence and more info.  The only legal thing after
-          a real precedence is a number.  Otherwise, it must be part of the
-          section (ie: AB or AL) }
-
-      if StringIsAllNumbers(Copy(TempString, 2, 1)) then
-
-        { Okay, we have the A/B/Q/U/M/S followed by a number.  We will
-          assume this to be the precedence. }
-
-         begin
-         if SSEx.Number = '' then
-            begin
-            SSEx.Number := NumberStr;
-            end;
-         if SSEx.Prec = CHR(0) then
-            begin
-            SSEx.Prec := TempString[1];
-            end;
-         if SSEx.Check = '' then
-            begin
-            SSEx.Check := Copy(TempString, 2, 2);
-            end;
-         Delete(TempString, 1, 3);
-         if SSEx.Section = '' then
-            begin
-            SSEx.Section := TempString;
-            end;
-         Exit;
-         end;
-
-  { We must be looking at a check and section, or maybe just a section }
-
-  if length(NumberStr) = 2 then
-    if SSEx.Check = '' then
-       begin
-       SSEx.Check := NumberStr;
-       end;
-
-  if SSEx.Section = '' then
-     begin
-     SSEx.Section := TempString;
-     end;
+  (* LIFTED TO uExchangeTokens AT M5b (2026-10-02), line for line, so the
+    Sweepstakes class reads a word the way this parser does when it decides
+    whether a refused exchange was missing its precedence (NY4I, design 7.10).
+    One copy of the rule; this unit's SSEx is the record it fills. *)
+  ProcessSweepstakesEntry(InputString, SSEx);
 end;
 
 function ProcessQSONumberPrecedenceCheckDomesticQTHExchange(Exchange: ShortString
@@ -3996,7 +3875,11 @@ begin
 
   // Single-token, non-numeric branch: still a single QTH after slash mapping
   // (e.g. plain "DAL").  Behavior unchanged from prior code.
-  if not StringHas(Exchange, ' ') and not StringIsAllNumbers(Exchange) then
+  (* THE TEST IS uExchangeTokens's SINCE M5b, so the IARU class -- whose rule
+    applies exactly when this branch is taken -- asks the same question. On
+    the already trimmed and slash-mapped text here it is the test that stood
+    here, character for character. *)
+  if IsSingleNonNumericToken(string(Exchange)) then
      begin
      RXData.RSTReceived := DefaultRST;
      RXData.QTHString := Exchange;
@@ -4034,25 +3917,10 @@ begin
         ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH +
            ExchangeModeAttribution(ActiveExchange, Settings.My.Country, True);
         end;
-      { The code below to handle IARU-HF was commented out but it is not quite right anyway.
-      The issue is that when the exchange is a member society like IARU, the RXData.Zone is
-      not being set from the callsign. This is only a factor for external processors like
-      UDP as the Society, not the zone goes in the exchange in Cabrillo for example.
-      So I am adding the following code to check if we the ActiveExchange is
-      RSTZoneOrSocietyExchange and RXData.Zone is 255 (initialized value apparently),
-      then I lookup the zone from the call and set that. - NY4I 2026JUL07
-     }
-      if ActiveExchange = RSTZoneOrSocietyExchange then
-         begin
-         if (CONTEST = IARU)     and
-             (RXData.Zone = 255) then
-            begin
-            RXData.Zone := ctyGetZone(RXData.Callsign);
-            end;
-         end;
-     {WLI}
- //    if ActiveExchange = RSTZoneOrSocietyExchange then
- //      if CONTEST <> IARU then RXData.Zone := CountryTable.GetITUZone(RXData.Callsign);
+     (* IARU's ZONE FROM THE CALL, for a member society's single-word exchange,
+       stood here as `if Contest = IARU` (NY4I 2026JUL07). It is the IARU
+       class's rule since M5b: TContestIARU.ParseReceivedExchange, under the
+       same shape and the same single-word test. *)
      Exit;
      end;
 
@@ -4411,14 +4279,11 @@ var
 
 begin
   ProcessRSTAndQSONumberExchange := False;
-  if (CallWindowString <> '') then // 4.123.10
-    if ((contest = SACCW) or (contest = SACSSB)) then
-      if (rxdata.qth.countryid = 'UA') or (rxdata.qth.countryid = 'EU') or
-        (rxdata.qth.countryid = 'UA9') or (rxdata.qth.countryid = 'UA2') then
-         begin
-         initializeqso;
-         exit;
-         end;
+  (* SAC'S RUSSIAN-STATION RULE (4.123.10) stood here as
+    `if (contest = SACCW) or (contest = SACSSB)`. It is the SAC classes' rule
+    since M5b -- TContestSACCW / TContestSACSSB.ParseReceivedExchange, under
+    this shape, with live entry abandoned through the session exactly as
+    initializeqso did here. *)
   LookForCutNumbers(Exchange);
 
   if StringIsAllNumbers(Exchange) then
@@ -4839,19 +4704,9 @@ begin
      end;
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
-  if Contest = UKEI then
-     begin
-     if (UKEIStation(RXData.Callsign)) then
-       if (SecondString = '') then
-          begin
-          ExchangeErrorMessage := TC_INVALID;
-          exit;
-          end;
-     end;
-  {  if Contest = '
-      if pos(SecondString,'/') > 0 then
-       SecondString[1] := ' ';
-  }
+  (* UK/EI's RULE -- a UK or Irish station must send more than one word --
+    stood here as `if Contest = UKEI`. It is TContestUKEI's since M5b, made
+    before this shape is parsed, as it was here. *)
   if not stringisallnumbers(FirstString) then //   n4af 4.42.9
     if not stringisallnumbers(SecondString) then
       if not stringisallnumbers(ThirdString) then
@@ -5301,52 +5156,15 @@ end;
 function ProcessRSTAndQSONumberOrDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 
-label
-  1;
-
 begin
-  if (ActiveQSOPointMethod = RACQSOPointMethod) and (Copy(RXData.Callsign, 1, 3)
-    = 'VE0') then
-     begin
-     ProcessRSTAndQSONumberOrDomesticQTHExchange :=
-       ProcessRSTAndQSONumberExchange(Exchange, RXData);
-     Exit;
-     end;
-
-  if ActiveQSOPointMethod = PCCQSOPointMethod then // 4.83.2
-     begin
-     //    if RXData.DomesticQTH <> ''  then
-     if not StringIsAllNumbers(Exchange) then
-        begin
-        ProcessRSTAndQSONumberOrDomesticQTHExchange :=
-          ProcessRSTAndDomesticQTHExchange(Exchange, RXData)
-        end
-     else
-
-        begin
-        ProcessRSTAndQSONumberOrDomesticQTHExchange :=
-          ProcessRSTAndQSONumberExchange(Exchange, RXData);
-        end;
-
-     Exit;
-     end;
-
-  if ActiveQSOPointMethod = ArktikaSpringQSOPointMethod then
-     begin
-     if StringIsAllNumbersOrSpaces(Exchange) then
-        begin
-        ProcessRSTAndQSONumberOrDomesticQTHExchange :=
-          ProcessRSTAndQSONumberExchange(Exchange, RXData)
-        end
-     else
-        begin
-        ProcessRSTAndQSONumberOrDomesticQTHExchange :=
-          ProcessRSTAndDomesticQTHExchange(Exchange, RXData);
-        end;
-     Exit;
-     end;
-
-  1:
+  (* THREE POINT-METHOD TESTS STOOD HERE AND ARE THE CONTESTS' OWN SINCE M5b
+    (2026-10-02): RAC (a VE0 station sends a serial), the PCC (letters are a
+    QTH, digits a serial) and Arktika Spring (digits and blanks are a serial).
+    Each read ActiveQSOPointMethod, so an operator's QSO POINT METHOD line
+    reached them; each is now an override of ParseReceivedExchange on the
+    contest's class -- the Canada Day and Canada Winter contests, TContestPCC
+    and TContestArktikaSpring -- under this shape. What is left is the shape
+    itself: a domestic station's QTH, anybody else's serial. *)
   if DomesticCountryCall(RXData.Callsign) then
      begin
      ProcessRSTAndQSONumberOrDomesticQTHExchange :=
@@ -5604,6 +5422,16 @@ begin
   RXData.QTHString := '';
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
+
+  (* THE RS(T) IS THE FIRST TOKEN IN BOTH BRANCHES BELOW, AND IT IS SET HERE.
+    Only the three-token branch used to assign it; the two-token branch
+    handed ValidRST whatever the stack held, so "599 14" from a DX station --
+    refused either way, by the length test below -- left a different RS(T)
+    and zone behind on every run. The same in the D7 source. Found by the
+    contest matrix's parse capture (M5b), whose records came out different on
+    two runs of the same binary. *)
+  FirstStringRST := FirstString;
+
   if (IsAlpha(FirstString) and (StringIsAllNumbers(SecondString))) then
     // n4af 4.52.2
      begin
@@ -5616,7 +5444,6 @@ begin
 
   if ThirdString <> '' then
      begin
-     FirstStringRST := FirstString;
      if not ValidRST(FirstStringRST, RXData.RSTReceived, ActiveMode) then
         begin
         Exit;
@@ -10139,9 +9966,6 @@ function ProcessRSTAndGridSquareOrRDAExchange(Exchange: ShortString {Str80}; var
   RXData: ContestExchange): boolean;
 var
   TestString: Str20;
-  Oblast: Str2;
-  RussianRegionMy: RussianRegionType;
-  RussianRegionHis: RussianRegionType;
 begin
   Result := False;
   //RXData.DomesticQTH := '';
@@ -10182,288 +10006,279 @@ begin
 
   Result := RXData.QTHString <> '';
 
-  if (Result) then
+  (* THE UA4W CHAMPIONSHIP'S RULE STAYS NAMED HERE, WITH ITS REASON -- M5b.
 
-    if Contest = UA4WCHAMPIONSHIP then
-       begin
-       RXData.DomesticQTH := RXData.QTHString;
-       end;
-
-  if Contest = ALRS_UA1DZ_CUP then
+    It is that contest's (the QTH is the domestic QTH), and it would move to
+    the contest's ParseReceivedExchange the day the contest has a class. It
+    has none, because a registered class is the contest's SCORER too, and
+    the UA4W arm scores by ctyGetCQZone(MY CALL) -- a CTY.DAT lookup that
+    swaps the global zone list while it runs, which no contest class can be
+    handed. The same reason ARRL 160 kept its import and export arms at M4
+    and M5a. *)
+  if Result then
      begin
-
-     FillChar(Oblast, SizeOf(Oblast), 0);
-     Oblast := Tree.GetOblast(RXData.Callsign);
-     RussianRegionHis := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
-     RXData.DomesticQTH := RXData.QTHString;
-     if (RussianID(Settings.My.Call)) then
+     if Contest = UA4WCHAMPIONSHIP then
         begin
-        FillChar(Oblast, SizeOf(Oblast), 0);
-        Oblast := Tree.GetOblast(UTF8Encode(Settings.My.Call));
-        RussianRegionMy := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
-        if not (RussianRegionMy in [rtUA1A, rtUA1C]) then
-           begin
-           if RussianRegionHis in [rtUA1A, rtUA1C] then
-              begin
-              RXData.DomesticQTH := RXData.QTHString;
-              end;
-           Exit;
-           end;
+        RXData.DomesticQTH := RXData.QTHString;
         end;
-
-     if (RussianID(RXData.QTH.CountryID)) then
-        begin
-        RXData.DomesticQTH := RussianRegionsTypeIdArray[RussianRegionHis];
-        end;
-
      end;
 
+  (* `if Contest = ALRS_UA1DZ_CUP` worked out an oblast-based domestic QTH. It
+    was DEAD BY DEFAULT and is deleted, not moved: the ALRS-UA1DZ Cup runs
+    RSTDomesticQTHExchange in every station variant (its row, and the contest
+    matrix), so this shape -- and the branch inside it -- was reached only
+    by an operator stating EXCHANGE RECEIVED = RST AND GRID SQUARE OR RDA for
+    it. The same rule as the dead export arms M4 deleted. *)
 end;
 
-function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
-  boolean;
+(* ONE EXCHANGE SHAPE, PARSED -- the engine's half of M5b (2026-10-02).
 
+  THIS IS ProcessExchange's OLD `case ActiveExchange of`, keyed on the shape it
+  is HANDED rather than on the global, and with the one contest test it held
+  (LABRE) moved to LABRE's class. One parser per exchange shape, none naming a
+  contest. A contest reaches it only through the TReceivedExchangeSession the
+  engine hands it (its ParseShape) -- the base's default parses the session's
+  own shape, and an override may ask for another (RAC, the PCC, Arktika
+  Spring and LABRE do).
+
+  THE TEXT ARRIVES AS A string AND IS PUT BACK INTO THE Str80 IT WAS TYPED AS
+  -- a typed exchange, ANSI and at most 80 characters, so the explicit cast
+  loses nothing. *)
+function ParseExchangeShape(aShape: ExchangeType; const aText: string;
+  var RData: ContestExchange): boolean;
+var
+  ExchangeString: Str80;
 begin
   Result := False;
-  if not ParseArray(ExchangeString) then
-    if not (ActiveExchange in [RSTNameAndQTHExchange, RSTAndPOTAPark]) then
-       begin
-       Exit;
-       end;
+  ExchangeString := ShortString(aText);
 
-
-  case ActiveExchange of
+  case aShape of
 
     RSTAndGridSquareOrRDAExchange:
-      ProcessExchange := ProcessRSTAndGridSquareOrRDAExchange(ExchangeString,
+      ParseExchangeShape := ProcessRSTAndGridSquareOrRDAExchange(ExchangeString,
         RData);
 
     CheckAndChapterOrQTHExchange:
-      ProcessExchange := ProcessCheckAndChapterOrQTHExchange(ExchangeString,
+      ParseExchangeShape := ProcessCheckAndChapterOrQTHExchange(ExchangeString,
         RData);
 
     ClassDomesticOrDXQTHExchange:
       begin
-        logger.debug('Calling ProcessClassAndDomesticOrDXQTHExchange from ProcessExchange');
-        ProcessExchange :=
+        logger.debug('Calling ProcessClassAndDomesticOrDXQTHExchange from ParseExchangeShape');
+        ParseExchangeShape :=
           ProcessClassAndDomesticOrDXQTHExchange(ExchangeString, RData);
       end;
 
     KidsDayExchange:
-      ProcessExchange := ProcessKidsExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessKidsExchange(ExchangeString, RData);
 
     NameQTHAndPossibleTenTenNumber:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessNameQTHAndPossibleTenTenNumberExchange(ExchangeString, RData);
 
     NameAndDomesticOrDXQTHExchange:
-      ProcessExchange := ProcessNameAndDomesticOrDXQTHExchange(ExchangeString,
+      ParseExchangeShape := ProcessNameAndDomesticOrDXQTHExchange(ExchangeString,
         RData);
 
     NameAndPossibleGridSquareExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessNameAndPossibleGridSquareExchange(ExchangeString, RData);
 
     QSONumberAndNameExchange:
-      ProcessExchange := ProcessQSONumberAndNameExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessQSONumberAndNameExchange(ExchangeString, RData);
 
     QSONumberAndGeoCoordinates:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessQSONumberAndGeoCoordinatesExchange(ExchangeString, RData);
 
     QSONumberAndCoordinatesSum:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessQSONumberAndCoordinatesSumExchange(ExchangeString, RData);
 
     QSONumberAndZone:
-      ProcessExchange := ProcessQSONumberAndZoneExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessQSONumberAndZoneExchange(ExchangeString, RData);
 
     QSONumberDomesticOrDXQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessQSONumberAndDomesticOrDXQTHExchange(ExchangeString, RData);
 
     QSONumberDomesticQTHExchange:
-      ProcessExchange := ProcessQSONumberAndDomesticQTHExchange(ExchangeString,
+      ParseExchangeShape := ProcessQSONumberAndDomesticQTHExchange(ExchangeString,
         RData);
 
     QSONumberAndGridSquare:
-      ProcessExchange := ProcessQSONumberAndGridSquareExchange(ExchangeString,
+      ParseExchangeShape := ProcessQSONumberAndGridSquareExchange(ExchangeString,
         RData);
 
     QSONumberNameChapterAndQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessQSONumberNameChapterAndQTHExchange(ExchangeString, RData);
 
     QSONumberNameDomesticOrDXQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessQSONumberNameAndDomesticOrDXQTHExchange(ExchangeString, RData);
 
     RSTAgeExchange:
-      ProcessExchange := ProcessRSTAndAgeExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndAgeExchange(ExchangeString, RData);
 
     RSTAndFOCNumberExchange: //n4af
-      ProcessExchange := ProcessRSTAndPowerExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndPowerExchange(ExchangeString, RData);
     //n4af
 
-    AgeAndQSONumberExchange: ProcessExchange :=
+    AgeAndQSONumberExchange: ParseExchangeShape :=
       ProcessAgeAndQSONumberExchange(ExchangeString, RData);
 
-    QSONumberAndAgeExchange: ProcessExchange :=
+    QSONumberAndAgeExchange: ParseExchangeShape :=
       ProcessQSONumberAndAgeExchange(ExchangeString, Rdata);
 
     RSTAgeAndPossibleSK:
-      ProcessExchange := ProcessRSTAgeAndPossibleSK(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAgeAndPossibleSK(ExchangeString, RData);
 
     RSTAndContinentExchange:
-      ProcessExchange := ProcessRSTAndContinentExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndContinentExchange(ExchangeString, RData);
 
     RSTALLJAPrefectureAndPrecedenceExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTAllJAPrefectureAndPrecedenceExchange(ExchangeString, RData);
 
     RSTAndGridExchange:
-      ProcessExchange := ProcessRSTAndGridSquareExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndGridSquareExchange(ExchangeString, RData);
 
     RSTAndOrGridExchange:
-      ProcessExchange := ProcessRSTAndOrGridSquareExchange(ExchangeString,
+      ParseExchangeShape := ProcessRSTAndOrGridSquareExchange(ExchangeString,
         RData);
 
     GridExchange:
-      ProcessExchange := ProcessGridSquareExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessGridSquareExchange(ExchangeString, RData);
 
     Grid2Exchange:
-      ProcessExchange := ProcessGrid2Exchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessGrid2Exchange(ExchangeString, RData);
 
     RSTAndGrid3Exchange:
-      ProcessExchange := ProcessRSTAndGrid3Exchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndGrid3Exchange(ExchangeString, RData);
     // 4.96.3
 
     RSTAndPostalCodeExchange:
-      ProcessExchange := ProcessRSTAndPostalCodeExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndPostalCodeExchange(ExchangeString, RData);
 
     RSTAndPOTAPark:
-      ProcessExchange := ProcessRSTAndPOTAPark(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndPOTAPark(ExchangeString, RData);
 
     RSTAndQSONumberOrDomesticQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTAndQSONumberOrDomesticQTHExchange(ExchangeString, RData);
 
     RSTAndQSONumberOrFrenchDepartmentExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTAndQSONumberOrFrenchDepartmentExchange(ExchangeString, RData);
 
     RSTDomesticQTHExchange:
-      ProcessExchange := ProcessRSTAndDomesticQTHExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString, RData);
 
     RSTDomesticOrDXQTHExchange:
-      if (Contest = LABRE) and (RData.qth.countryid = 'PY') then
-         begin
-         ProcessExchange := ProcessRSTAndDomesticQTHExchange(ExchangeString, RData)
-         end
-       else
-          begin
-          ProcessExchange := ProcessRSTAndDomesticOrDXQTHExchange(ExchangeString,
-           RData);
-          end;
+      (* LABRE's 'a PY station sends a state' stood here as
+        `if Contest = LABRE`; it is TContestLABRE's rule since M5b. *)
+      ParseExchangeShape := ProcessRSTAndDomesticOrDXQTHExchange(ExchangeString,
+        RData);
 
     RSTDomesticQTHOrQSONumberExchange:
       if DomesticCountryCall(RData.Callsign) and
         (StringHasLetters(ExchangeString)) then //n4af 4.44.4 HADX
          begin
-         ProcessExchange := ProcessRSTAndDomesticQTHExchange(ExchangeString,
+         ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString,
            RData)
          end
       else
          begin
-         ProcessExchange := ProcessRSTAndQSONumberExchange(ExchangeString,
+         ParseExchangeShape := ProcessRSTAndQSONumberExchange(ExchangeString,
            RData);
          end;
 
     RSTNameAndQTHExchange:
-      ProcessExchange := ProcessRSTNameAndQTHExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTNameAndQTHExchange(ExchangeString, RData);
 
     RSTPossibleDomesticQTHAndPower:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTPossibleDomesticQTHAndPowerExchange(ExchangeString, RData);
 
     RSTPowerExchange:
-      ProcessExchange := ProcessRSTAndPowerExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndPowerExchange(ExchangeString, RData);
 
     RSTPrefectureExchange:
-      ProcessExchange := ProcessRSTAndPrefectureExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndPrefectureExchange(ExchangeString, RData);
 
     RSTQSONumberExchange:
-      ProcessExchange := ProcessRSTAndQSONumberExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndQSONumberExchange(ExchangeString, RData);
 
     NZFieldDayExchange:
-      ProcessExchange := ProcessNZFieldDayExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessNZFieldDayExchange(ExchangeString, RData);
 
     RSTQSONumberAndDomesticQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTQSONumberAndDomesticQTHExchange(ExchangeString, RData);
 
     QSONumberAndPreviousQSONumber:
-      ProcessExchange := ProcessQSONumberAndPreviousQSONumber(ExchangeString,
+      ParseExchangeShape := ProcessQSONumberAndPreviousQSONumber(ExchangeString,
         RData);
 
     RSTQSONumberAndGridSquareExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTQSONumberAndGridSquareExchange(ExchangeString, RData);
 
     RSTQSONumberOrDomesticQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTQSONumberorDomesticQTHExchange(ExchangeString, RData);
     // 4.53.2
 
     RSTQSONumberAndPossibleDomesticQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTQSONumberAndPossibleDomesticQTHExchange(ExchangeString,
         RData);
 
     QSONumberAndPossibleDomesticQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessQSONumberAndPossibleDomesticQTHExchange(ExchangeString, RData);
     {KK1L: 6.73}
 
     RSTQSONumberAndRandomCharactersExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTQSONumberAndRandomCharactersExchange(ExchangeString, RData);
 
     RSTQTHNameAndFistsNumberOrPowerExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTQTHNameAndFistsNumberOrPowerExchange(ExchangeString, RData);
 
     RSTQTHExchange:
-      ProcessExchange := ProcessRSTAndQTHExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndQTHExchange(ExchangeString, RData);
 
     RSTZoneAndPossibleDomesticQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessRSTZoneAndPossibleDomesticQTHExchange(ExchangeString, RData);
 
     RSTZoneExchange:
-      ProcessExchange := ProcessRSTAndZoneExchange(ExchangeString, RData);
+      ParseExchangeShape := ProcessRSTAndZoneExchange(ExchangeString, RData);
 
     RSTZoneOrSocietyExchange:
       if StringIsAllNumbersOrSpaces(ExchangeString) then
          begin
-         ProcessExchange := ProcessRSTAndZoneExchange(ExchangeString, RData)
+         ParseExchangeShape := ProcessRSTAndZoneExchange(ExchangeString, RData)
          end
       else
          begin
          ExchangeString := UpperCase(ExchangeString);
-         ProcessExchange := ProcessRSTAndDomesticQTHExchange(ExchangeString,
+         ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString,
            RData);
          end;
 
     QSONumberPrecedenceCheckDomesticQTHExchange:
-      ProcessExchange :=
+      ParseExchangeShape :=
         ProcessQSONumberPrecedenceCheckDomesticQTHExchange(ExchangeString,
         RData);
 
     RSTLongJAPrefectureExchange: {KK1L: 6.72 JA}
       begin
         ExchangeString := UpperCase(ExchangeString);
-        ProcessExchange := ProcessRSTAndJAPrefectureExchange(ExchangeString,
+        ParseExchangeShape := ProcessRSTAndJAPrefectureExchange(ExchangeString,
           RData);
       end;
 
@@ -10471,16 +10286,89 @@ begin
       if (DomesticCountryCall(RData.Callsign) or (not
         (StringisAllNumbersorSpaces(exchangestring)))) then // 4.77.6
          begin
-         ProcessExchange := ProcessRSTAndDomesticQTHExchange(ExchangeString,
+         ParseExchangeShape := ProcessRSTAndDomesticQTHExchange(ExchangeString,
            RData)
          end
       else
          begin
-         ProcessExchange := ProcessRSTAndZoneExchange(ExchangeString, RData);
+         ParseExchangeShape := ProcessRSTAndZoneExchange(ExchangeString, RData);
          end;
 
   end; { of case }
 end;
+
+(* CTY.DAT's zone for a call -- the TReceivedExchangeSession service IARU's
+  rule asks for. *)
+function ParseSessionZoneOfCall(const aCall: string): Byte;
+begin
+  Result := ctyGetZone(aCall);
+end;
+
+(* What live entry does to give up on the QSO being typed -- the
+  TReceivedExchangeSession service SAC's rule asks for. *)
+procedure ParseSessionAbandonEntry;
+begin
+  InitializeQSO;
+end;
+
+(* Does the loaded domestic QTH table know this QTH? -- the
+  TReceivedExchangeSession service a state party's out-of-state rule asks
+  for. FoundDomesticQTH itself, on a scratch exchange, so the answer is the
+  table's own and the QSO being parsed is not touched. *)
+function ParseSessionIsDomesticQTH(const aQTH: string): boolean;
+var
+  scratch: ContestExchange;
+begin
+  (* No QTH is no domestic QTH -- answered here so FoundDomesticQTH does not
+    log its blank-QTH error for a question nobody typed. *)
+  if aQTH = '' then
+     begin
+     Result := False;
+     Exit;
+     end;
+  FillChar(scratch, SizeOf(scratch), 0);
+  (* The cast is a received QTH returning to the width it was typed in. *)
+  scratch.QTHString := ShortString(aQTH);
+  Result := FoundDomesticQTH(scratch);
+end;
+
+(* THE CONTEST PARSES AND VALIDATES ITS RECEIVED EXCHANGE -- M5b, 2026-10-02.
+
+  The tokenising gate stays here, contest-blind: an exchange ParseArray cannot
+  cut is refused for every shape but the two that allow a blank exchange.
+  Then the CONTEST is asked (TContestBase.ParseReceivedExchange), handed the
+  session -- its exchange, the shape parser above and two engine services --
+  as data. A refusal it names goes where every exchange error goes,
+  ExchangeErrorMessage, which ParametersOkay shows exactly as it shows an
+  improper county. *)
+function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
+  boolean;
+var
+  session: TReceivedExchangeSession;
+  refusal: string;
+begin
+  Result := False;
+  if (not ParseArray(ExchangeString))                                  and
+     (not (ActiveExchange in [RSTNameAndQTHExchange, RSTAndPOTAPark])) then
+     begin
+     Exit;
+     end;
+
+  session.Exchange := ActiveExchange;
+  session.ParseShape := @ParseExchangeShape;
+  session.ZoneOfCall := @ParseSessionZoneOfCall;
+  session.IsDomesticQTH := @ParseSessionIsDomesticQTH;
+  session.CallWindowHasCall := CallWindowString <> '';
+  session.AbandonEntry := @ParseSessionAbandonEntry;
+
+  Result := ExchangeContest.ParseReceivedExchange(string(ExchangeString),
+                                                  session, RData, refusal);
+  if refusal <> '' then
+     begin
+     ExchangeErrorMessage := refusal;
+     end;
+end;
+
 
 procedure LogStringToRXData(LogString: Str80; var RXData: ContestExchange);
 
@@ -10874,99 +10762,27 @@ end; // SendPSTRotorCommand
 
 function ValidClass(sClass: Str10): boolean; // ny4i 4.45.3
 var
-  i: integer;
-  sXmit: string;
-  sCategory: string;
-  classSet: boolean;
   factoryError: string;
 begin
-  (* THE CONTEST DECIDES WHAT ITS CLASS LOOKS LIKE -- phase F.
+  (* THE CONTEST DECIDES WHAT ITS CLASS LOOKS LIKE -- phase F, and only the
+     contest since M5b (2026-10-02).
 
      NY4I, 2026-09-02: "Shouldn't this class have a function called
      ValidExchange where we move the exchange rules? Basically, anywhere the
      main program goes through a case statement on the contest type."
 
-     This routine is that case statement in miniature, and holds TWO
-     contest-specific facts: which letters are legal (A-F for ARRL Field Day,
-     I/O/H/M for Winter Field Day) and which message to show. Both are now the
-     contest class's, so adding a contest with a class no longer means editing
-     a shared routine, and the two Field Days -- which "keep diverging with rule
-     changes each year" -- diverge in separate files instead of inside one `if`.
-
-     THE BASE ACCEPTS ANYTHING, AND THAT CANNOT LOOSEN ANYTHING -- checked
-     rather than assumed. The legacy routine REJECTS every non-Field-Day
-     contest: its letter test is (contest = ARRLFIELDDAY and ...) or
-     (contest = WINTERFIELDDAY and ...), so any letter from any other contest
-     falls into the "something else here" arm, empties the category and fails.
-     A permissive base would therefore be a real change -- if anything else
-     reached here.
-
-     Nothing does. ValidClass is called only from
-     ProcessClassAndDomesticOrDXQTHExchange, which ProcessExchange dispatches
-     only for ClassDomesticOrDXQTHExchange, and exactly TWO rows in
-     ContestsArray carry that exchange type: ARRL Field Day and Winter Field
-     Day. Both now have classes, so the base default is unreachable. *)
-  if ActiveContest(Contest) <> nil then
+     The letter loop that followed the class's answer named both Field Days
+     (A-F for ARRL Field Day, I/O/H/M for Winter Field Day) and ran only for a
+     contest with NO class -- and the two contests that run this exchange both
+     have one (inventory D1). It is deleted: every contest is asked, a
+     classless one through its identity, whose base answer accepts any class.
+     That differs from the loop only for an operator who states the Field Day
+     exchange for a classless contest, which the loop refused. *)
+  Result := ExchangeContest.ValidateClass(string(sClass), factoryError);
+  if not Result then
      begin
-     Result := ActiveContest(Contest).ValidateClass(string(sClass), factoryError);
-     if not Result then
-        begin
-        ExchangeErrorMessage := factoryError;
-        end;
-     Exit;
+     ExchangeErrorMessage := factoryError;
      end;
-
-  classSet := false;
-  for i := 1 to length(sClass) do
-     begin
-     if sClass[i] in ['0'..'9'] then
-        begin
-        sXmit := sXmit + sClass[i];
-        end
-     else if (((contest = ARRLFIELDDAY) and (sClass[i] in ['A'..'F'])) or
-       ((contest = WINTERFIELDDAY) and (sClass[i] in ['I', 'O', 'H', 'M']))) then
-
-        begin
-        if classSet then
-           begin
-           sCategory := '';
-           break;
-           end
-        else
-           begin
-           classSet := true;
-           sCategory := sCategory + sClass[i];
-           end;
-        end
-     else
-        begin // ny4i Issue163 There is something else here - Error
-        sCategory := '';
-        // Used to force an TC_IMPROPERARRLFIELDDAYCLASS error later
-        break; // jump to next part to evaluate error
-        end;
-     end;
-  if (length(sXmit) = 0) or
-    (not (StrToIntDef(sXmit, 0) in [1..99])) then
-     begin
-     ExchangeErrorMessage := TC_IMPROPERTRANSMITTERCOUNT;
-     end
-  else if length(sCategory) <> 1 then
-     begin
-     if contest = ARRLFIELDDAY then
-        begin
-        ExchangeErrorMessage := TC_IMPROPERARRLFIELDDAYCLASS;
-        end
-     else if contest = WINTERFIELDDAY then
-        begin
-        ExchangeErrorMessage := TC_IMPROPERWINTERFIELDDAYCLASS;
-        end;
-
-     end
-  else
-     begin
-     Result := true;
-     end;
-  // Result := (StrToInt(sXmit) in [1..99]) and (length(sCategory) = 1);
 end;
 
 (* ---------------------------------------------------------------------------

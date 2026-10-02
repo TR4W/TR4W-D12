@@ -59,6 +59,17 @@ const
 //  Help,
 //  Country9;
 
+var
+  (* IS THE STATION IN THE OPEN QSO PARTY'S HOST STATE? -- M5b, 2026-10-02.
+
+    Written once, by FoundContest's head, from the same FoundMyStateInDomFile
+    answer that chooses the in-state or the out-of-state domestic file -- so
+    the rule a party applies to a received exchange and the table that
+    exchange was looked up in are one decision, not two. False for a contest
+    that is not a state party. uContestFactory hands it to the contest as
+    TStationContext.InHostState; nothing else reads it. *)
+  StationInHostState: boolean = False;
+
 function FoundContest(CMD: ShortString): boolean;
 procedure SetUpFileNames;
 procedure RecalculateMyCountryContinentAndZone;
@@ -494,9 +505,11 @@ begin
 
      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
 
+     StationInHostState := False;
      if definition.IsUSQSOParty then
         begin
-        if FoundMyStateInDomFile then
+        StationInHostState := FoundMyStateInDomFile;
+        if StationInHostState then
            begin
            TempDomesticQTHDataFileName := definition.InStateDomesticFileName;
            Settings.Contest.Name := ContestTypeSA[Contest] + ' (in state)';

@@ -119,12 +119,20 @@ $CEILINGS = @{
    # Field Day arm of the dead ProcessImportedSRX_String went; what remains is
    # ARRL 160 and POTA, the two contests with no class that still own an import
    # arm) and uadif 3 -> 1 (the two APP_N1MM_EXCHANGE1 tests).
+   #
+   # M5b, 2026-10-02 -- each contest parses its own exchange: logstuff 14 -> 3.
+   # Gone: IARU's zone, SAC x2, UK/EI, LABRE, ALRS (dead, deleted), the PCC's
+   # call shape, and D1's four Field Day tests in ValidClass. Left: GeneralQSO's
+   # WARC band stepping (set-up), the RU3AX doubling in the legacy RussianDX
+   # scoring arm (dead by default -- both contests have classes -- and kept
+   # until M10 like the other D3 arms), and the UA4W Championship's parse rule,
+   # which stays named until its class can be handed a CTY lookup of MY CALL.
    'mainunit.pas'          = 14
    'trdos\fcontest.pas'    = 107
    'trdos\logcfg.pas'      = 14
    'trdos\logdupe.pas'     = 5
    'trdos\logedit.pas'     = 17
-   'trdos\logstuff.pas'    = 14
+   'trdos\logstuff.pas'    = 3
    'trdos\logsubs2.pas'    = 4
    'trdos\logwind.pas'     = 1
    'trdos\postunit.pas'    = 15

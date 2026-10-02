@@ -347,9 +347,18 @@ uses
    uContestLZDX in '..\..\src\contestFactory\uContestLZDX.pas',
    uContestBataviaFT8 in '..\..\src\contestFactory\uContestBataviaFT8.pas',
    uContestCroatian in '..\..\src\contestFactory\uContestCroatian.pas',
+   uContestCanadaDay in '..\..\src\contestFactory\uContestCanadaDay.pas',
+   uContestCanadaWinter in '..\..\src\contestFactory\uContestCanadaWinter.pas',
+   uContestSACCW in '..\..\src\contestFactory\uContestSACCW.pas',
+   uContestSACSSB in '..\..\src\contestFactory\uContestSACSSB.pas',
+   uContestLABRE in '..\..\src\contestFactory\uContestLABRE.pas',
+   uContestRussianDX in '..\..\src\contestFactory\uContestRussianDX.pas',
+   uContestRU3AXMemorial in '..\..\src\contestFactory\uContestRU3AXMemorial.pas',
+   uExchangeTokens in '..\..\src\uExchangeTokens.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
    uTestContestExport in 'uTestContestExport.pas',
    uTestContestImport in 'uTestContestImport.pas',
+   uTestContestParse in 'uTestContestParse.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
@@ -547,6 +556,7 @@ begin
    RegisterSuite(TCabrilloExchangeTests.Create('CabrilloExchange'));
    RegisterSuite(TContestExportTests.Create('ContestExport'));
    RegisterSuite(TContestImportTests.Create('ContestImport'));
+   RegisterSuite(TContestParseTests.Create('ContestParse'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

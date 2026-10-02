@@ -100,6 +100,17 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
+
+      (* A UK OR IRISH STATION MUST SEND MORE THAN ONE WORD -- its district
+         as well as its serial. M5b, 2026-10-02: the rule stood in
+         LOGSTUFF.ProcessRSTQSONumberAndPossibleDomesticQTHExchange as
+         `if Contest = UKEI`, ahead of that shape's parse, and refused with
+         TC_INVALID. It is applied here under that shape, before the parse,
+         exactly so. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
    end;
 
 implementation
@@ -107,7 +118,33 @@ implementation
 uses
    SysUtils, uContestRegistry,
    (* UKEIStation -- the UK/EI test the arm asks, already a leaf. *)
-   uCallSignRoutines;
+   uCallSignRoutines,
+   (* SplitExchangeInThree -- the engine's own three-word split. *)
+   uExchangeTokens,
+   uTR4WStrings;
+
+function TContestUKEI.ParseReceivedExchange(const aText: string;
+                                           const aSession: TReceivedExchangeSession;
+                                           var aExch: ContestExchange;
+                                           out aErrorMessage: string): boolean;
+var
+   firstWord, secondWord, thirdWord: Str10;
+begin
+   if (aSession.Exchange = RSTQSONumberAndPossibleDomesticQTHExchange) and
+      (aText <> '')                                                       then
+      begin
+      (* The cast is a typed exchange returning to the width it was typed in. *)
+      SplitExchangeInThree(ShortString(aText), firstWord, secondWord, thirdWord);
+      if UKEIStation(string(aExch.Callsign)) and (secondWord = '') then
+         begin
+         aErrorMessage := TC_INVALID;
+         Result := False;
+         Exit;
+         end;
+      end;
+
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+end;
 
 procedure TContestUKEI.CalculateQSOPoints(var aQso: ContestExchange);
 var

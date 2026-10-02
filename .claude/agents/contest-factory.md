@@ -32,8 +32,8 @@ believing a green run**.
 artifacts; a contest class that computes points wrongly can pass all 24
 comparisons. `tr4w/test/corpus/test-contest-factory.sh` sees scoring over the 13
 corpus logs, and **the contest matrix** (`tr4w/test/contest-matrix/run-contest-matrix.sh`,
-M0, 2026-10-01) sees set-up, scoring and export for **every** `ContestType` on
-synthetic QSOs. Run them, and say which ones you ran. **Never re-freeze the matrix
+M0, 2026-10-01) sees set-up, scoring, export, ADIF import (M5a) and typed-exchange
+parsing (M5b) for **every** `ContestType` on synthetic QSOs. Run them, and say which ones you ran. **Never re-freeze the matrix
 to clear a red run** -- `freeze-contest-matrix.sh` demands a written reason.
 
 This is mid-flight work. The engine (`src/trdos/`) still owns most behaviour —
@@ -122,10 +122,33 @@ the target shape, the M-step migration order and the open questions.
   override of it `protected`, never `public`. Tests call `ScoreQSO`. Design
   doc §7.7, §8.2d.
 - **The dupe policy is `MarksDupes`** (M3): `logsubs2` asks
-  `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. The other
-  secondary point-method readers wait for their seams: exchange parsing (RAC,
-  PCC, Arktika) and RussianDX's initial exchange at M5b, `logedit.TotalScore`'s
-  five formulas at M6 (design §2).
+  `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. Exchange
+  parsing (RAC, PCC, Arktika) and RussianDX's initial exchange moved at M5b
+  (below); `logedit.TotalScore`'s five formulas wait for M6 (design §2).
+- **A contest parses and validates its own received exchange** (M5b,
+  2026-10-02). `LOGSTUFF.ProcessExchange` runs the contest-blind gate, then
+  asks `TContestBase.ParseReceivedExchange(aText, aSession, var aExch, out
+  aErrorMessage)` of the active contest (its identity when classless). The
+  session is DATA (`TReceivedExchangeSession`): the session's exchange, the
+  engine's per-shape parser `ParseShape`, and services `ZoneOfCall`,
+  `IsDomesticQTH`, `CallWindowHasCall`, `AbandonEntry` -- the class reads no
+  global and `uTestContestParse` hands it stubs. **The base parses the
+  session's shape; an override applies its rule UNDER THE SHAPE IT WAS
+  WRITTEN FOR** (test `aSession.Exchange`) and defers otherwise -- that is what
+  kept every move exact. A refusal's reason goes in `aErrorMessage` and shows
+  like an improper county. Seven contests gained classes for it (Canada Day,
+  Canada Winter, SAC CW/SSB, LABRE, Russian DX, RU3AX -- siblings, copies,
+  design 1.4); NY4I's two rulings (design 7.10) live on
+  `TContestARRLSSBase` (no precedence) and `TContestStateQSOPartyBase`
+  (out-of-state works only the host state, judged by `IsDomesticQTH` against
+  the host's county file, never by a `DomesticQTH` left in the record).
+  `TStationContext` grew `MyCall` and `InHostState` (FCONTEST's own in-state
+  answer). New seams beside it: `MayBeACallsign`, `InitialExchangeFromCall`,
+  `FormatADIFReceivedExchange` (the SRX_STRING; Field Day DX writes `1D DX`).
+  Word cutting is `uExchangeTokens`, lifted from LOGSTUFF line for line. The
+  matrix's `parse` section (66 typed exchanges per contest and variant, no
+  points) gates it. UA4W stays named in LOGSTUFF: its class would have to
+  score with a CTY lookup of MY CALL, which no class can be handed yet.
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(c)` answers for EVERY `ContestType` --
   the class, else a plain `TContestBase` reading the row; never nil, owned by

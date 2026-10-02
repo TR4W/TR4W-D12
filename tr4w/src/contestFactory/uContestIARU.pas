@@ -81,6 +81,24 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+
+      (* A MEMBER SOCIETY'S EXCHANGE STILL CARRIES THE STATION'S ZONE -- M5b.
+
+         NY4I, 2026JUL07: when the exchange is a society (ARRL, DARC) rather
+         than a zone, RXData.Zone was never set, and the zone matters to the
+         external processors that read it (UDP). So the zone comes from the
+         call. It stood in LOGSTUFF.ProcessRSTAndDomesticQTHExchange as
+         `if Contest = IARU`, inside the single-word QTH branch, reached only
+         for RSTZoneOrSocietyExchange; it is IARU's rule, stated here under
+         exactly those conditions: that shape, a word that is not all digits
+         (the shape's own split between a zone and a society), one word once
+         '/' is read as a blank (uExchangeTokens, the test that branch makes),
+         and a zone not set yet. Applied after the parse whatever it
+         answered, as it was. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
    end;
 
 implementation
@@ -88,7 +106,27 @@ implementation
 uses
    SysUtils, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
-   uADIF;
+   uADIF,
+   (* StringIsAllNumbersOrSpaces -- the shape's zone-or-society split. *)
+   utils_text,
+   (* IsSingleNonNumericToken -- the single-word test. *)
+   uExchangeTokens;
+
+function TContestIARU.ParseReceivedExchange(const aText: string;
+                                           const aSession: TReceivedExchangeSession;
+                                           var aExch: ContestExchange;
+                                           out aErrorMessage: string): boolean;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+
+   if (aSession.Exchange = RSTZoneOrSocietyExchange) and
+      (not StringIsAllNumbersOrSpaces(aText))        and
+      IsSingleNonNumericToken(aText)                 and
+      (aExch.Zone = DUMMYZONE)                       then
+      begin
+      aExch.Zone := aSession.ZoneOfCall(string(aExch.Callsign));
+      end;
+end;
 
 procedure TContestIARU.CalculateQSOPoints(var aQso: ContestExchange);
 begin

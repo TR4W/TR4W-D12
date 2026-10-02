@@ -1162,7 +1162,8 @@ Both are archived — the array is gone.
 2. Super Check Partial → `logscp.pas` (TRMASTER.DTA)
 3. Dupe check → `logdupe.pas`
 4. Country/multiplier → `uctydat.pas` (CTY.DAT), `uMults.pas`
-5. Exchange parsing → `logstuff.pas` `ProcessExchange()`
+5. Exchange parsing → `logstuff.pas` `ProcessExchange()` → the contest's
+   `ParseReceivedExchange` (M5b; design doc §8.2g)
 6. Validation → `ContestExchange` record
 7. Network broadcast → `uNet.pas`
 8. Display update → `logwind.pas`

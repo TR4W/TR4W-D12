@@ -305,7 +305,15 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # default as explicit ShortString conversions, which is the deliberate form
 # this file asks for -- so thirteen new classes copying an arm each (design
 # 1.4) added no warning, and the sites that moved took theirs with them.
-$NARROW_CEILING = 1306
+# 1306 -> 1301, 2026-10-02: M5b, each contest parses its own exchange.
+# Measured as a total; the per-site accounting below is by READING, not a
+# per-file diff. The code that left LOGSTUFF took its implicit narrowings
+# with it -- ParseExchange's two PrecedingString results
+# into Str10 (lifted to uExchangeTokens as explicit ShortString conversions),
+# the dead ALRS branch's GetOblast/UTF8Encode into Str2, and ValidClass's
+# letter loop (D1) -- and the seven new classes and the new seams were written
+# with explicit conversions, adding none.
+$NARROW_CEILING = 1301
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

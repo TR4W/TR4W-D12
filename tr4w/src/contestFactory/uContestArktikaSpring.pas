@@ -99,12 +99,46 @@ type
          THE ROW IS NOT DELETED AND MUST NOT BE. It still answers for every
          contest that has no class, and TContestBase still reads it for the ones
          that do not override. *)
+
+      (* DIGITS AND BLANKS ARE A SERIAL, ANYTHING ELSE A QTH -- M5b.
+
+         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
+         test of ActiveQSOPointMethod = ArktikaSpringQSOPointMethod, ahead of
+         that shape's own rule; stated here under that shape. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   (* StringIsAllNumbersOrSpaces -- the test the arm made. *)
+   utils_text;
+
+function TContestArktikaSpring.ParseReceivedExchange(const aText: string;
+                                                    const aSession: TReceivedExchangeSession;
+                                                    var aExch: ContestExchange;
+                                                    out aErrorMessage: string): boolean;
+begin
+   if aSession.Exchange <> RSTAndQSONumberOrDomesticQTHExchange then
+      begin
+      Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+      Exit;
+      end;
+
+   aErrorMessage := '';
+   if StringIsAllNumbersOrSpaces(aText) then
+      begin
+      Result := aSession.ParseShape(RSTQSONumberExchange, aText, aExch);
+      end
+   else
+      begin
+      Result := aSession.ParseShape(RSTDomesticQTHExchange, aText, aExch);
+      end;
+end;
 
 procedure TContestArktikaSpring.CalculateQSOPoints(var aQso: ContestExchange);
 begin

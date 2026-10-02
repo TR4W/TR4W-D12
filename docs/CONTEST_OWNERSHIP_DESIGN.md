@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M5a built; see §8.2)
+# What a contest owns -- DESIGN (M0-M5b built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -69,7 +69,7 @@ lives in a helper or in the format's own unit.
 | the bands it uses (an off-band QSO is logged, scores 0, earns no multiplier) | the class; base says every band | `UsesBand` (**existing**, §7.4) |
 | identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity` | existing properties (**existing**) |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
-| exchange parsing and validation | `ProcessExchange`'s `case ActiveExchange of`; the class's `ValidateClass` / `ValidateDXQTH` / `ValidateQTHCount` | `ParseReceivedExchange`, plus the existing validators |
+| exchange parsing and validation | **the class, for every contest** (M5b, done 2026-10-02): `logstuff.ProcessExchange` asks it after the contest-blind gate; the base parses the session's shape through the engine's `ParseExchangeShape`, handed in as data. The UA4W Championship's rule stays named in LOGSTUFF (§8.2g) | `ParseReceivedExchange`, `MayBeACallsign`, `InitialExchangeFromCall` (**existing**), plus the validators |
 | ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. POTA and ARRL 160 still named in PostUnit's tail (§8.2e) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
 | ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. ARRL 160 and POTA still keep an arm in `MainUnit.ApplyClasslessADIFImport` (§8.2f) | `ApplyADIFImport` (**existing**, §3.2) |
 | Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; headers and mode string: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` (M9) |
@@ -240,8 +240,8 @@ correct rather than a gap.
   | site | moves to | status |
   |---|---|---|
   | dupe marking, `logsubs2` (`AlwaysOnePointPerQSO`) | the contest's dupe-policy property (`MarksDupes`). Internet Sprint and Youth Championship RF reach it today | **MOVED, M3** (§8.2d) |
-  | exchange parsing, `logstuff` `ProcessRSTAndQSONumberOrDomesticQTHExchange` x3 (RAC: CANADA_WINTER/CANADA_DAY; PCC; Arktika Spring) | that contest's `ParseReceivedExchange` | **M5** |
-  | initial exchange, `zonecont.GetVEInitialExchange` (RussianDX: RDXC, RU3AX MEMORIAL -- a UA oblast) | that contest's initial exchange | **M5** |
+  | exchange parsing, `logstuff` `ProcessRSTAndQSONumberOrDomesticQTHExchange` x3 (RAC: CANADA_WINTER/CANADA_DAY; PCC; Arktika Spring) | that contest's `ParseReceivedExchange` | **MOVED, M5b** (§8.2g) |
+  | initial exchange, `zonecont.GetVEInitialExchange` (RussianDX: RDXC, RU3AX MEMORIAL -- a UA oblast) | that contest's `InitialExchangeFromCall` | **MOVED, M5b** (§8.2g) |
   | total-score formulas, `logedit.TotalScore` x5 (WAE weighted mults; CupRF +100, ALRS +300, ChampionshipRF +50, OZHCR +1000 per mult) | that contest's `CombineScore` (§5) | **M6** |
 
   Measured 2026-10-01 at M3 with `rg -i -w ActiveQSOPointMethod tr4w/src`:
@@ -309,7 +309,7 @@ fixed in place. It is done here, the right way (M5).
 |---|---|
 | `ApplyContestSpecificADIFTail` arms | `ApplyADIFImport` of each contest the arm names |
 | its `else` (grid kinds, then the domestic QTH, then raw SRX) | the classless fallback while migrating; each contest that moves takes its own share |
-| `ProcessImportedSRX_String` (Field Day) | the Field Day classes' `ApplyADIFImport` calling their own `ParseReceivedExchange` on the SRX text |
+| `ProcessImportedSRX_String` (Field Day) | ~~the Field Day classes' `ApplyADIFImport` calling their own `ParseReceivedExchange` on the SRX text~~ -- **deleted at M5a, it had no caller** (§8.2f); M5b made the import stop calling DX a section instead (Q25, §8.2g) |
 | `logstuff.ResolvePOTAParkFromADIF` (D5's fix, `3f9e3f28`) | POTA's `ApplyADIFImport` |
 | `EmitContestSpecificTailForExport` arms | `EmitADIFContestFields` of each contest named. The no-op arm (D6) is deleted. **DONE at M4** but for POTA and ARRL 160 (§8.2e) |
 | the `Contest` tests inside the `uCabrilloExchange` / `uADIFExchange` arms (FOC, JIDX, PACC/SPDX, CQVHF, PCC, ...) | that contest's own formatter. **DONE at M4**; JIDX's, CQ VHF's and SP DX's were dead and were deleted |
@@ -895,7 +895,19 @@ evidence given with it.
   DX in Field Day (which would contradict 7.1). Until answered, Field Day keeps
   accepting `DX`.
 
-Lands in M5b (parsing and validation move onto the classes).
+~~Lands in M5b (parsing and validation move onto the classes).~~ **LANDED at
+M5b, 2026-10-02 (§8.2g)**, but for the OPEN item, which is unchanged: Field Day
+still accepts `DX`.
+
+- The QSO-party default is `TContestStateQSOPartyBase.ParseReceivedExchange`;
+  no party overrides it (every class's header and code was read for an
+  exception, and the NC sponsor's page was read: *"Stations outside of North
+  Carolina (Non-NC) work NC stations only"*). `nc_cty.dom` is the hundred
+  counties of the sponsor's abbreviation list.
+- Sweepstakes: `TContestARRLSSBase.ParseReceivedExchange` names the missing
+  precedence. The shape parser already refused such an exchange -- silently.
+- Field Day DX export and import: `FormatADIFReceivedExchange`,
+  `EmitADIFContestFields` and `ApplyADIFImport` on both Field Day classes.
 
 ### 8.1 Which oracle sees what
 
@@ -905,7 +917,7 @@ Lands in M5b (parsing and validation move onto the classes).
 | `test-contest-factory.sh` | rescored points against the frozen legacy output -- 13 logs | parsing, import, classless contests |
 | `test-adif-roundtrip.sh` | import against our own export -- 13 sets | classless contests |
 | unit tests (`Build-Tests.ps1 -Run`) | a contest class against fixtures, round-trip included | anything needing globals booted |
-| frozen legacy fixture -- **built (M0, 2026-10-01)**: `tr4w/test/contest-matrix/run-contest-matrix.sh` | every `ContestType` x four station variants: set-up, per-QSO scoring, and the real exporters' Cabrillo/ADIF output (`ADDING_A_CONTEST.md` §4) | correctness: it only proves "same as before"; parsing and import until M5 adds them |
+| frozen legacy fixture -- **built (M0, 2026-10-01)**: `tr4w/test/contest-matrix/run-contest-matrix.sh` | every `ContestType` x four station variants: set-up, per-QSO scoring, the real exporters' Cabrillo/ADIF output, ADIF import (M5a) and typed-exchange parsing through `ParametersOkay` (M5b) (`ADDING_A_CONTEST.md` §4) | correctness: it only proves "same as before"; and the entry WINDOW -- whether a refusal's message shows |
 | bench / a real contest | whether a rule is **right**; the operator UI | -- |
 
 **Every corpus set is a registered contest**, so the corpus says nothing about a
@@ -931,7 +943,7 @@ Each is behaviour-preserving unless marked.
 | **M3** | **DONE 2026-10-01 (§8.2d).** **Scoring finishes on the class.** `ScoreQSO`, the one entry point (§7.7); the dupe-marking reader moved to `MarksDupes` (**behaviour change** for an operator override); the off-band multiplier pin; `TContestFixedPoints` retired (`FixedModePoints` kept as a helper); the NRAU-Baltic family base; classes for NRAU-Baltic CW/SSB, Sprint SSB, Locust and the Jock White Field Day. The other secondary readers are scheduled where their rule lives -- parsing M5, total score M6 (§2) | the contest matrix; unit tests; `test-contest-factory.sh` |
 | **M4** | **DONE 2026-10-01 (§8.2e).** **Exchange export.** Each contest formats its own Cabrillo and ADIF columns and emits its own ADIF contest fields, asked through `ContestIdentity`; `FormatsExchange` deleted. Eleven contests gained classes to hold a rule an exporter named. D4's dead arms and the D6 no-op deleted; defect #4 fixed. POTA and ARRL 160 left named in PostUnit, with reasons | corpus; per-class round-trip unit test |
 | **M5a** | **DONE 2026-10-01 (§8.2f).** **ADIF import.** Generic importer, then `ApplyADIFImport` (§3.2), including the `APP_N1MM_EXCHANGE1` arm, pinned in both tag orders. Thirteen contests gained classes; `ApplyContestSpecificADIFTail` and the dead `ProcessImportedSRX_String` deleted; defect #6 fixed; WAG's DOK and IOTA's IOTA read back. ARRL 160 and POTA keep an arm | `test-adif-roundtrip.sh`; the matrix's `import` section; the corpus; per-class unit tests |
-| **M5b** | **Exchange parse.** `ParseReceivedExchange` per contest over lifted helpers (`ProcessExchange`'s `Process...Exchange` routines), the matrix gaining a `parse` section first. D1/D2's dead paths go. Field Day's DX-is-not-a-section import (Q1, Q25) | legacy fixture; `BENCH_QUEUE.md` for typed entry |
+| **M5b** | **DONE 2026-10-02 (§8.2g).** **Exchange parse.** `ParseReceivedExchange` per contest, the base reaching the engine's shape parsers through the session as data; the matrix gained a `parse` section first. Seven contests gained classes; D1/D2 deleted; NY4I's 7.10 refusals; Field Day DX export and import (Q20, Q25); `nc_cty.dom` to the sponsor's counties (Q14). UA4W stays named in LOGSTUFF, with its reason | the matrix's `parse` section; `uTestContestParse`; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **Total score.** `TScoreTotals`, `CombineScore`, `BonusPoints`; `TotalScore`'s arms deleted; Missouri moved; Salmon Run per Q5 | corpus `CLAIMED-SCORE`; unit tests over totals |
 | **M7** | **Session arms and the classless contests.** Each `FoundContest` arm becomes its contest's `DescribeSession`, and the arm is deleted. Classless contests gain a class: a family member, or a copy of the nearest class (§1.4) | setup fixture; legacy fixture; the arm count ratchets |
 | **M8** | **Multipliers and dupes**, as contest virtuals | corpus `CLAIMED-SCORE`; legacy fixture |
@@ -1540,7 +1552,8 @@ the RSGB IOTA's `IOTA` is its domestic QTH. FOC's number is read back into
 but no handler" and now does not.
 
 **NOT DONE, AND WHY -- Q1's import half (a Field Day DX station is not a
-section).** M4 stopped the export writing `ARRL_SECT` for a DX station. The
+section).** *(Done at M5b, §8.2g -- NY4I's 7.10 ruling made the decision
+this paragraph waited for.)* M4 stopped the export writing `ARRL_SECT` for a DX station. The
 import still turns `QTH=DX` into `DomesticQTH='DX'` (frozen: `section.dx`),
 because Q1 says the Field Day exchange must model section and DX as distinct
 and **`QTHString` is not the representation**, and nothing else is yet: that is
@@ -1572,6 +1585,175 @@ WAG's export read-back, and the FOC Marathon's own `n1mm.own.*`.
   for a record with no `DOK` -- a foreign WAG log's QTH is its RST. Parsing the
   exchange is M5b; is the right answer for a record with neither the `DOK` nor a
   typed exchange an empty QTH?
+
+### 8.2g M5b -- what it covered (2026-10-02)
+
+**Each contest parses and validates its own received exchange.**
+`logstuff.ProcessExchange` keeps the contest-blind tokenising gate
+(`ParseArray`) and then asks `TContestBase.ParseReceivedExchange(aText,
+aSession, var aExch, out aErrorMessage)` of `ExchangeContest` -- the active
+contest's object, else its identity; never nil. A refusal's reason goes where
+every exchange error goes (`ExchangeErrorMessage`) and shows like an improper
+county.
+
+| piece | where it lives now |
+|---|---|
+| the tokenising gate (`ParseArray`) | `ProcessExchange`, contest-blind, unchanged |
+| one parser per exchange SHAPE | `logstuff.ParseExchangeShape(aShape, ...)` -- the old `case ActiveExchange of`, keyed on the shape it is handed; it names no contest |
+| `TReceivedExchangeSession` -- the session's exchange, the shape parser, and the engine services a rule needs (`ZoneOfCall`, `IsDomesticQTH`, `CallWindowHasCall`, `AbandonEntry`) | `uContestBase`, handed in as DATA, as `TADIFImportSession` is |
+| the contest's own rule | `ParseReceivedExchange`; the base's default is `aSession.ParseShape(aSession.Exchange, ...)` |
+| word cutting a class also needs | `uExchangeTokens` (new leaf): `SplitExchangeInThree` (`ParseExchange`), `ProcessSweepstakesEntry` + `ScanSweepstakesExchange` (`ProcessSSEntry`), `IsSingleNonNumericToken` -- LIFTED line for line; LOGSTUFF calls them too |
+| `TStationContext` | grew `MyCall` and `InHostState` (FCONTEST's own in-state answer, `StationInHostState`) |
+
+**DECIDED: THE BASE'S DEFAULT REACHES THE ENGINE'S SHAPE PARSERS THROUGH THE
+SESSION, AS DATA -- THEY ARE NOT LIFTED YET.** The brief's base default is
+"today's shared per-exchange-kind behaviour keyed on the session's exchange
+passed as data". That behaviour is about fifty `Process...Exchange` routines
+that read the domestic QTH table, CTY.DAT, `DefaultRST`, the county-line queue
+and `ExchangeErrorMessage`; a class may not call TRDOS (§1.3) and a class unit
+is linked by the unit-test binary, so it cannot name LOGSTUFF. Handing the
+engine's parser in -- a function value in the session record -- keeps the
+class reading no global (a test hands it a stub, `uTestContestParse`) and
+moves no parser that no rule needed moved. Each shape parser is lifted when a
+contest that owns it needs its pieces, as `uExchangeTokens` was lifted for
+UK/EI, IARU and Sweepstakes. The alternative, a trait the engine asks inside
+each shape parser, would have put a contest question back inside shared code.
+
+**DECIDED: AN OVERRIDE APPLIES ITS RULE UNDER THE SHAPE IT WAS WRITTEN FOR.**
+Every rule that moved was a branch inside one shape's parser, reached only when
+the session ran that shape (RAC/PCC/Arktika inside
+`ProcessRSTAndQSONumberOrDomesticQTHExchange`, UK/EI inside
+`...PossibleDomesticQTHExchange`, SAC inside `ProcessRSTAndQSONumberExchange`,
+IARU inside `ProcessRSTAndDomesticQTHExchange` under
+`RSTZoneOrSocietyExchange`, LABRE in the case arm). Each override tests
+`aSession.Exchange` for that shape and otherwise calls `inherited`. With no
+`EXCHANGE RECEIVED` statement that is exact; with one, a contest's rule no
+longer follows the operator into a shape it was never written for.
+
+**BEHAVIOUR CHANGES OUTSIDE EVERY ORACLE**, as at M3/M4: RAC, PCC and Arktika's
+branches read `ActiveQSOPointMethod`, and the RussianDX initial exchange did
+too, so an operator's `QSO POINT METHOD` line reached them in ANY contest; they
+now follow the contest. `ValidClass`'s loop and the Field Day DX fallback
+(D1/D2) answered a classless contest with an operator-stated Field Day
+exchange; that contest now gets the base's validators (any class; no DX QTH).
+
+**The rules, and where each went:**
+
+| rule (where it stood) | now |
+|---|---|
+| RAC: a VE0 station sends a serial (`ActiveQSOPointMethod = RACQSOPointMethod`) | `TContestCanadaDay`, `TContestCanadaWinter` (new, copies -- §1.4) |
+| PCC: letters a QTH, digits a serial (point method) | `TContestPCC.ParseReceivedExchange` |
+| Arktika Spring: digits and blanks a serial (point method) | `TContestArktikaSpring.ParseReceivedExchange` |
+| LABRE: a PY station sends a state (`Contest = LABRE`, ProcessExchange) | `TContestLABRE` (new) |
+| IARU: a society's one word fills the zone from the call (`Contest = IARU`) | `TContestIARU.ParseReceivedExchange`, through `ZoneOfCall` |
+| UK/EI: a UK/EI station must send more than one word (`Contest = UKEI`) | `TContestUKEI.ParseReceivedExchange` |
+| SAC: a Russian station entered live is abandoned (`contest = SACCW/SACSSB`) | `TContestSACCW`, `TContestSACSSB` (new, siblings -- Q7), through `CallWindowHasCall` and `AbandonEntry` |
+| PCC: `N/X` is not a callsign (`LooksLikeACallSign`) | `TContestPCC.MayBeACallsign` (new seam), asked through `ContestIdentity` -- LOGDVP calls it too, maybe off the main thread |
+| RussianDX: a Russian station's initial exchange is its oblast (`zonecont.GetVEInitialExchange`, point method) | `TContestRussianDX`, `TContestRU3AXMemorial` (new, copies) `.InitialExchangeFromCall` (new seam) |
+| ALRS-UA1DZ's oblast domestic QTH, in the grid-or-RDA shape | **DELETED, dead by default**: ALRS runs `RSTDomesticQTHExchange` in every variant (row and matrix), so the shape was reached only by an operator's `EXCHANGE RECEIVED` -- M4's rule for dead arms |
+| D1 `ValidClass`'s letter loop, D2 the `TempString = 'DX'` chain | **DELETED** -- every contest is asked, no fallback |
+
+**Seven contests gained classes**, each stating its whole row
+(`Test_MovedRowValuesStillMatchTheArray`) and transcribing its scoring arm:
+Canada Day, Canada Winter, SAC CW, SAC SSB, LABRE, Russian DX and the RU3AX
+Memorial. The RU3AX phone doubling, a `Contest = RU3AXMEMORIAL` test inside the
+shared RussianDX arm, is the RU3AX class's own line.
+
+**DECIDED: THE UA4W CHAMPIONSHIP'S RULE STAYS NAMED IN LOGSTUFF, with its
+reason beside it.** Its parse rule is one line (the QTH is the domestic QTH),
+but a class is the contest's scorer too, and the UA4W arm scores by
+`ctyGetCQZone(MY CALL)` -- a CTY lookup that swaps the global zone list while
+it runs, which no class can be handed. The same reason ARRL 160 kept its arms
+at M4 and M5a. It moves with a station-context answer for the CQ zone of MY
+CALL (Q28).
+
+**NY4I's RULINGS (7.10), and the evidence they rest on:**
+
+- **Sweepstakes without a precedence is refused WITH A MESSAGE.** The shape
+  parser already refused it -- it accepts only when serial, precedence, check
+  and section are all present -- but SILENTLY. `TContestARRLSSBase` names
+  `Missing precedence (Q A B U M S)` when the parse refused and the engine's
+  own reading of the words (`ScanSweepstakesExchange`, the lifted
+  `ProcessSSEntry`) found no precedence. Pinned by
+  `Test_SweepstakesNamesAMissingPrecedence`.
+- **A QSO party's out-of-state station may work only host-state stations.**
+  `TContestStateQSOPartyBase.ParseReceivedExchange`: out of state
+  (`Station.InHostState` False) and accepted by the shape, but a received QTH
+  the session's domestic table does not know (`IsDomesticQTH` -- for an
+  out-of-state station the host's county file) is refused with `Out of state:
+  work <host> stations only`. **Asked of the table, not read off
+  `DomesticQTH`**: the DX branch never writes it, so a value left by an
+  earlier attempt would pass as a county (pinned). The table's own placeholder
+  `XXX` is accepted as before. **No class overrides the default**: every party
+  class's header and code was read for an exception, and the sponsors that
+  could be read state the rule -- NC (*"Stations outside of North Carolina
+  (Non-NC) work NC stations only"*), California (*"Non-CA to non-CA contacts
+  do not count for QSO credit"*), Salmon Run (*"Stations outside Washington
+  state work only Washington state stations"*), British Columbia (*"work only
+  BC stations"*), Arizona (*"a valid contact ... between an Arizona station
+  and any other station"*), Florida and Idaho (their objects). The rest are
+  Q29.
+- **Field Day DX export** (Q20): a DX QSO writes `CLASS` (the logged class),
+  no `ARRL_SECT`, `STATE` or `DXCC`, and `SRX_STRING` is the class and `DX`
+  -- through a new seam, `FormatADIFReceivedExchange`, whose base is the
+  RST-or-not choice PostUnit's tail made. `Test_FieldDayDXIsNeverAnARRLSection`.
+- **Field Day DX import** (Q25, closed): a QTH of `DX`, in `<QTH>` or in
+  another logger's `ARRL_SECT`, stays the QSO's QTH and is never its domestic
+  QTH -- what the live parse already did. `Test_FieldDayImportDXIsNotASection`.
+- **Field Day keeps accepting DX** (the OPEN item).
+- **NC's county file is the sponsor's hundred counties** (Q14, closed).
+  `nc_cty.dom` lost its `INCLUDE S50`, DC, the provinces and `Alc` (not an NC
+  county), checked against the sponsor's abbreviation PDF
+  (`Test_NCCountyFileIsTheSponsorsList`); the DC and province lines moved into
+  `nc.dom` in the position they were reached from, so an IN-STATE station's
+  table answers exactly as before but for `Alc`. A VE station is no longer
+  "in state" for NC. `Test_EveryPartyCountyFileHoldsOnlyCounties` holds every
+  party's county file to counties.
+
+**TWO DETERMINISM FINDINGS, fixed in step 1 before anything moved.** The parse
+capture came out different on two runs of one binary. (1) The CQ WW RTTY
+shape (`ProcessRSTZoneAndPossibleDomesticQTHExchange`) handed `ValidRST` an
+uninitialised `FirstStringRST` in its two-word branch -- the same in D7 -- so
+`599 14`, refused either way by the shape's later length test, left a
+different RS(T) and zone behind each run; it is assigned before both branches
+now. (2) ALRS-UA1DZ's scoring takes a grid distance from a QTH that is not a
+grid and gets a different number each run, so the parse lines record no
+points (the scoring section owns points, on fixed times).
+
+**THE MATRIX.** Step 1 appended a `parse` section (66 typed exchanges through
+`MainUnit.ParametersOkay`, per contest and variant) and froze it: 185 files,
+39,168 lines added, none deleted, every earlier section byte-identical after
+stripping the new one (scripted), and a second full run 185 identical. Against
+that freeze, after the move: **168 identical**; `contest.class` only in the
+seven new classes; the parse verdict only (`ok`, `err`, and the two fields
+`ParametersOkay` writes only after an accept, `exch` and the default
+`rst.rcvd`) in ARRL SS CW/SSB (165 lines each -- the message) and the
+Colorado, Florida, Idaho, Minnesota (45 each) and Virginia (33) parties --
+the out-of-state refusal, in the `us`, `ve` and `dx` variants and never in
+`us-host`; the Field Days' `section.dx` import (`domqth=DX` gone); and NC,
+whose data changed (the `us-host` station is `ALA` now; the `ve` station is
+out of state). **No other line moved.**
+
+**Gates:** narrowing 1306 -> see the commit; range 4; `Lint-ContestNameTests`
+logstuff 14 -> 3 (300 -> 289 in all).
+
+**Sponsor-rule and design questions this raised -- NY4I's:**
+
+- **Q27** SAC refuses a Russian station (UA, UA2, UA9, EU) entered live by
+  clearing the entry, SILENTLY -- transcribed as it was. Under 7.10 ("an
+  invalid station is refused, with an error") should it show a message? And is
+  a Russian station really not workable in SAC, or only not a multiplier?
+- **Q28** UA4W: may the station context carry MY CALL's CQ zone, so the UA4W
+  Championship can have a class (and its parse rule leave LOGSTUFF)?
+- **Q29** Out-of-state rule, sponsors NOT checked (no rules page reachable, or
+  no sentence found): Michigan, Minnesota, Missouri, Texas, Ohio,
+  Pennsylvania, New York, Virginia, Wisconsin, Tennessee, Colorado, Indiana.
+  The default applies to all of them; does any sponsor let out-of-state
+  stations work each other?
+- **Q30** Winter Field Day's `MX` (a DX QTH it accepts) still exports as
+  `ARRL_SECT` and imports as a section. Is `MX` "DX" for the 7.10 ruling?
+- **Q31** Sweepstakes says `Missing precedence` for ANY refused exchange with
+  no precedence in it -- `599` alone included. Wording acceptable?
 
 ### 8.3 What "a contest has moved" means -- checkably
 
@@ -1665,7 +1847,9 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   `nc.dom`, the in-state list, already includes `S50`, `P13` and
   `NC_CTY.DOM`. **Should `nc_cty.dom` hold the 100 counties only?** That
   would correct both. It is a data change that moves NC's out-of-state
-  scoring, so it is NY4I's decision.
+  scoring, so it is NY4I's decision. **RULED (7.10) and DONE at M5b
+  (§8.2g):** the hundred counties of the sponsor's list; DC and the provinces
+  moved into `nc.dom`.
 
 - **Q15-Q18** (M3, sponsor rules): NRAU-Baltic's Cabrillo names, the Sprint
   SSB's names and multipliers, Locust's bands and multipliers, and the Jock
@@ -1674,7 +1858,13 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 
 - **Q24-Q26** (M5a, import): the FOC Marathon's N1MM tag now landing, Field
   Day's DX import (Q1's other half), and WAG's QTH for a record with no DOK.
-  Stated in full at the end of §8.2f.
+  Stated in full at the end of §8.2f. **Q25 is answered and done at M5b**
+  (§8.2g): DX is the QTH and never the domestic QTH, on import as on entry.
+
+- **Q27-Q31** (M5b, parse): SAC's silent refusal of a Russian station, the
+  UA4W Championship's class, the out-of-state rule for the sponsors not read,
+  Winter Field Day's `MX`, and the Sweepstakes message's wording. Stated in
+  full at the end of §8.2g. **Q14 is answered and done** (§8.2g, 7.10).
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

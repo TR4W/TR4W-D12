@@ -197,6 +197,27 @@ type
          cannot match with default settings; it is transcribed, not judged. *)
       ContestTitle: string;
 
+      (* THE STATION'S OWN CALLSIGN -- MY CALL.
+
+         Added at M5b (2026-10-02), when the UA4W Championship gained a class:
+         its scoring asks which Russian oblast the station's own call is in.
+         Same growth rule as every field here. *)
+      MyCall: string;
+
+      (* IS THE STATION IN THE QSO PARTY'S HOST STATE? -- M5b.
+
+         FCONTEST.FoundContest decides it once, as it opens a state QSO party
+         (MY STATE is a key of the host's county file), and loads the
+         in-state or the out-of-state domestic file by the answer. This is
+         that same answer, so the rule a party applies to an exchange and the
+         table the exchange was looked up in can never disagree. False for a
+         contest that is not a state party, and for a station with no MY
+         STATE -- an operator with no state is in nobody's state.
+
+         NY4I, 2026-10-02 (design 7.10): an out-of-state station may work
+         only host-state stations. TContestStateQSOPartyBase reads this. *)
+      InHostState: boolean;
+
       (* THERE IS NO CLOCK HERE, AND THERE MUST NOT BE ONE.
 
          A time-of-day rule -- Croatian's 23-05 UTC doubling, UK/EI's 01-05 --
@@ -344,6 +365,52 @@ type
       Exchange: ExchangeType;
       DomesticMult: DomesticMultType;
       DoingDomesticMults: boolean;
+   end;
+
+   (* THE ENGINE'S PARSE OF ONE EXCHANGE SHAPE -- M5b, 2026-10-02.
+
+      An exchange SHAPE is what an RST-and-serial, a name-and-QTH or a
+      class-and-section looks like typed: which word is which, and what the
+      domestic-QTH table makes of a QTH. LOGSTUFF holds one parser per shape
+      (ParseExchangeShape) and they name no contest. They read the engine's
+      tables -- the domestic QTH table, CTY.DAT -- so a contest class cannot
+      call them directly; the engine hands this function in, as DATA, and the
+      class calls it with the shape it wants. *)
+   TExchangeShapeParser = function(aShape: ExchangeType; const aText: string;
+                                   var aExch: ContestExchange): boolean;
+
+   (* CTY.DAT's zone for a callsign, in the session's zone list. *)
+   TCallZoneLookup = function(const aCall: string): Byte;
+
+   (* Does the session's domestic QTH table know this QTH? The table the
+      engine loaded for this contest and this station -- for a state QSO
+      party's out-of-state station, the host's county file. *)
+   TDomesticQTHTest = function(const aQTH: string): boolean;
+
+   (* What live entry does to give up on the QSO being typed: the call and
+      exchange windows are cleared and the cursor goes back to the call. *)
+   TEntryAbandon = procedure;
+
+   (* WHAT A CONTEST IS HANDED WITH A TYPED EXCHANGE -- M5b, 2026-10-02.
+
+      The counterpart of TADIFImportSession: the contest reads no global, so
+      the engine passes in what it knows about the session, and the two
+      engine services a rule needs. A RECORD BECAUSE IT IS AN INTERFACE
+      PARAMETER, the exemption CLAUDE.md grants.
+
+      Exchange IS THE SESSION'S EXCHANGE, NOT THE CONTEST'S ExchangeKind
+      TRAIT, for the reason TCabrilloQSOContext records: FCONTEST's arms set
+      it per station, and an operator's EXCHANGE RECEIVED line moves it.
+
+      CallWindowHasCall says the exchange is being entered against a call in
+      the call window -- live entry. SAC's rule acts only then. *)
+   TReceivedExchangeSession = record
+      Exchange: ExchangeType;
+      ParseShape: TExchangeShapeParser;
+      ZoneOfCall: TCallZoneLookup;
+      IsDomesticQTH: TDomesticQTHTest;
+      CallWindowHasCall: boolean;
+      AbandonEntry: TEntryAbandon;
    end;
 
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
@@ -733,7 +800,10 @@ type
 
          THE BASE ACCEPTS EVERYTHING, because most contests have no class at
          all and "no rule" is the honest answer for them rather than a special
-         case. A contest with a class overrides.
+         case. A contest with a class overrides. Since M5b LOGSTUFF.ValidClass
+         asks every contest -- ContestIdentity for a classless one -- and its
+         own letter loop, which named both Field Days (inventory D1), is
+         deleted.
 
          TR4QT names the equivalent validateReceivedExchange and gives it the
          same shape -- a boolean with the message out by reference, so the
@@ -755,11 +825,78 @@ type
          editing the input keeps that substitution visible at the call site.
 
          The base accepts nothing, since a contest with no DX side has no rule
-         to state -- and, as with ValidateClass, nothing reaches it: only the
-         two Field Days use this exchange type. *)
+         to state. Only the two Field Days run this exchange type by default;
+         since M5b the engine asks EVERY contest (ContestIdentity for a
+         classless one) and has no fallback of its own -- the
+         `TempString = 'DX'` copy of the Field Day rule that stood in LOGSTUFF
+         for a contest with no class (inventory D2) is deleted. *)
       function ValidateDXQTH(const aQTH: string;
                              out aResolved: string;
                              out aErrorMessage: string): boolean; virtual;
+
+      (* THE CONTEST PARSES AND VALIDATES ITS RECEIVED EXCHANGE -- M5b,
+         2026-10-02.
+
+         LOGSTUFF.ProcessExchange asks this for every exchange typed or
+         re-parsed -- live entry's ParametersOkay, the log-line reader, the
+         sender -- after the contest-blind tokenising gate (ParseArray). True
+         accepts and False refuses; a refusal that names a reason puts it in
+         aErrorMessage, which the engine shows exactly as it shows an
+         improper county or a bad ARRL section. An empty message leaves
+         whatever the shape parser said.
+
+         THE BASE IS TODAY'S SHARED PARSE FOR THE SESSION'S SHAPE:
+         aSession.ParseShape(aSession.Exchange, ...). It names no contest. A
+         contest whose rule differs overrides, and calls inherited, or
+         aSession.ParseShape with another shape, for what it does not decide
+         itself -- RAC takes a VE0 station's serial, PCC chooses between a
+         serial and a QTH, a state party refuses an out-of-state station
+         working another out-of-state one (NY4I, design 7.10).
+
+         AN OVERRIDE APPLIES ITS RULE UNDER THE SHAPE THAT CARRIED IT. Every
+         rule that moved here was a branch inside one shape's parser, reached
+         only when the session ran that shape; the override tests
+         aSession.Exchange for it and otherwise defers. So with no
+         EXCHANGE RECEIVED statement nothing moved; with one, the contest's
+         branch no longer follows the operator into a shape it was never
+         written for. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; virtual;
+
+      (* MAY THIS WORD OF A TYPED EXCHANGE BE A CALLSIGN? -- M5b.
+
+         LOGSTUFF.LooksLikeACallSign decides, from the word's shape, whether a
+         call typed into the exchange corrects the call window's. That shape
+         test names no contest. A contest whose exchange carries a word that
+         looks like a call and is not one says so here: the PCC's 'N/X'.
+         The base says nothing against any word. *)
+      function MayBeACallsign(const aWord: string): boolean; virtual;
+
+      (* THE INITIAL EXCHANGE A CONTEST KNOWS FROM THE WORKED CALL ALONE --
+         M5b.
+
+         Asked by ZoneCont.GetVEInitialExchange, the routine behind the
+         SECTION and QTH initial exchanges, with the call in standard format
+         and its CTY.DAT country, BEFORE its own Canadian-province rule. True
+         and aExchange when the contest has an answer; the base has none.
+         The Russian DX contests answer a Russian station's oblast. *)
+      function InitialExchangeFromCall(const aStandardCall: string;
+                                       const aCountryID: string;
+                                       out aExchange: string): boolean; virtual;
+
+      (* THE ADIF SRX_STRING -- the worked station's side of the exchange, as
+         received. M5b, 2026-10-02: the counterpart of FormatADIFSentExchange.
+
+         The base is what PostUnit's tail always wrote: the received RST in
+         front of the typed exchange when the session's exchange carries an
+         RST (aExchangeCarriesRST, LOGDUPE's ExchangeInformation.RST), the
+         typed exchange as it stands when it does not. The Field Days
+         override for a DX station, whose full exchange is its class and
+         'DX' (NY4I, design 7.10, Q20). *)
+      function FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                          aExchangeCarriesRST: boolean): string; virtual;
 
       (* THE CONTEST FORMATS ITS OWN EXPORT -- M4, 2026-10-01.
 
@@ -991,7 +1128,11 @@ uses
       reference back is from the implementation, which Pascal allows. They
       name no contest, and depend on VC, SysUtils and Log4D only. *)
    uCabrilloExchange,
-   uADIFExchange;
+   uADIFExchange,
+   (* ResolveSRXString -- the received-exchange half of the ADIF SRX_STRING
+      the base's FormatADIFReceivedExchange writes (M5b). The Field Day
+      classes already reach uADIF the same way, from their implementation. *)
+   uADIF;
 
 function ContestIdList(const aIds: array of string): TContestIdList;
 var
@@ -1399,6 +1540,43 @@ begin
    else
       begin
       aExch.ExchString := ShortString(aTemps.SRX_String);
+      end;
+end;
+
+function TContestBase.ParseReceivedExchange(const aText: string;
+                                            const aSession: TReceivedExchangeSession;
+                                            var aExch: ContestExchange;
+                                            out aErrorMessage: string): boolean;
+begin
+   (* The shared parse for the session's shape -- see the declaration. *)
+   aErrorMessage := '';
+   Result := aSession.ParseShape(aSession.Exchange, aText, aExch);
+end;
+
+function TContestBase.MayBeACallsign(const aWord: string): boolean;
+begin
+   Result := True;
+end;
+
+function TContestBase.InitialExchangeFromCall(const aStandardCall: string;
+                                              const aCountryID: string;
+                                              out aExchange: string): boolean;
+begin
+   aExchange := '';
+   Result := False;
+end;
+
+function TContestBase.FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                                 aExchangeCarriesRST: boolean): string;
+begin
+   (* PostUnit's SRX_STRING arm, moved -- see the declaration. *)
+   if aExchangeCarriesRST then
+      begin
+      Result := ResolveSRXString(aQso);
+      end
+   else
+      begin
+      Result := string(aQso.ExchString);
       end;
 end;
 

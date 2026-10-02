@@ -139,6 +139,14 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+
+      (* A DX STATION'S SRX_STRING IS ITS CLASS AND 'DX' -- M5b, NY4I
+         2026-10-02 (design 7.10, Q20): "SRX_STRING is the full received
+         exchange, 1D DX." Whatever was typed -- the class alone resolves to
+         DX -- the record says what the DX station sent. Every other QSO is
+         the base's. *)
+      function FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                          aExchangeCarriesRST: boolean): string; override;
    end;
 
 implementation
@@ -219,10 +227,13 @@ end;
    class and 'DX'; that goes in the section POSITION of the Cabrillo line
    (FormatCabrilloReceivedExchange writes QTHString there) but never into
    ADIF ARRL_SECT -- "be explicit about the source and never call DX an ARRL
-   section". So a QSO whose QTH is 'DX' writes NONE of these fields: no
-   ARRL_SECT, no STATE, no DXCC and no CLASS. The CLASS half of that is what
-   the arm always did and is recorded as a question for NY4I (design 8.2e): a
-   DX station does send a class.
+   section". So a QSO whose QTH is 'DX' writes no ARRL_SECT, no STATE and no
+   DXCC.
+
+   IT WRITES ITS CLASS, SINCE M5b. NY4I, 2026-10-02 (design 7.10, Q20):
+   "CLASS is whatever was logged (usually 1D); ARRL_SECT is never written for
+   DX" -- "class and section are different". The arm wrote no CLASS for a DX
+   station, although a DX station sends one.
 
    DXCC 291 and 1 are hard-coded as the arm had them (ny4i): a K section is
    in the US and a VE section in Canada. *)
@@ -231,6 +242,7 @@ begin
    Result := '';
    if aQso.QTHString = 'DX' then
       begin
+      Result := EmitADIFField('CLASS', string(aQso.ceClass));
       Exit;
       end;
 
@@ -349,15 +361,31 @@ end;
    arrive in no longer decides anything: the standard CLASS wins when the
    record has it, and N1MM's tag fills in a record that has none. (Until M5a
    whichever tag came LAST won, and the N1MM tag was read only when it came
-   after CONTEST_ID.) *)
+   after CONTEST_ID.)
+
+   DX IS NOT A SECTION, ON THE WAY IN EITHER -- M5b, design Q25. NY4I: "never
+   call DX an ARRL section"; Field Day has no multipliers at all (Q1). A QTH
+   of 'DX' -- in <QTH>, or in an ARRL_SECT another logger wrote -- stays the
+   QSO's QTH, where Cabrillo puts it in the section position, and is never
+   made its domestic QTH. That is exactly what the live parse does: a DX
+   station's 'DX' is QTHString and DomesticQTH stays empty. Until M5b the
+   import alone made it a section. *)
 procedure TContestARRLFieldDay.ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                              const aSession: TADIFImportSession;
                                              var aExch: ContestExchange);
 begin
-   if aTemps.ARRL_Sect <> '' then
+   if UpperCase(Trim(aTemps.ARRL_Sect)) = 'DX' then
+      begin
+      aExch.QTHString := 'DX';
+      end
+   else if aTemps.ARRL_Sect <> '' then
       begin
       aExch.DomesticQTH := ShortString(aTemps.ARRL_Sect);
       aExch.QTHString   := ShortString(aTemps.ARRL_Sect);
+      end
+   else if UpperCase(Trim(string(aExch.QTHString))) = 'DX' then
+      begin
+      aExch.QTHString := 'DX';
       end
    else if aExch.QTHString <> '' then
       begin
@@ -367,6 +395,19 @@ begin
    if (aExch.ceClass = '') and (aTemps.N1MM_Exchange1 <> '') then
       begin
       aExch.ceClass := ShortString(UpperCase(aTemps.N1MM_Exchange1));
+      end;
+end;
+
+function TContestARRLFieldDay.FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                                         aExchangeCarriesRST: boolean): string;
+begin
+   if aQso.QTHString = 'DX' then
+      begin
+      Result := Trim(string(aQso.ceClass) + ' DX');
+      end
+   else
+      begin
+      Result := inherited FormatADIFReceivedExchange(aQso, aExchangeCarriesRST);
       end;
 end;
 

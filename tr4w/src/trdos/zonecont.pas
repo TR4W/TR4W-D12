@@ -73,7 +73,12 @@ function IndonesianDistrict(QTH: QTHRecord): string;
 function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
 
 implementation
-uses LogWind,
+uses
+     (* FIRST, so that no name either exports hides one the units below
+       already supplied here (this program resolves by use-order). *)
+     PostUnit,         // Contest -- the contest asked for its initial exchange (M5b)
+     uContestRegistry, // ContestIdentity
+     LogWind,
      uSettingsModel,   // Settings.My.Country
      MainUnit;   // the logger global
 
@@ -82,6 +87,7 @@ function GetVEInitialExchange(Call: CallString): string;
 var
   CountryID                             : Str20;
   QTH                                   : QTHRecord;
+  contestAnswer                         : string;
 begin
   GetVEInitialExchange := '';
 
@@ -89,13 +95,18 @@ begin
   ctyLocateCall(Call, QTH);
   CountryID := QTH.CountryID;
 
-  if ActiveQSOPointMethod = RussianDXQSOPointMethod then
-    if (CountryID[1] = 'U') then
-      if (CountryID[2] = 'A') then
-         begin
-         Result := GetRussiaOblastID(Call);
-         Exit;
-         end;
+  (* THE CONTEST'S OWN ANSWER FIRST -- M5b (2026-10-02). A Russian station's
+    oblast in the Russian DX contests stood here as a test of
+    ActiveQSOPointMethod, which an operator's QSO POINT METHOD line reached in
+    any contest; it is TContestRussianDX's and TContestRU3AXMemorial's rule
+    now, asked of the contest. ContestIdentity: the rule needs no station. *)
+  if ContestIdentity(Contest).InitialExchangeFromCall(string(Call),
+                                                      string(CountryID),
+                                                      contestAnswer) then
+     begin
+     Result := contestAnswer;
+     Exit;
+     end;
 
   if CountryID <> 'VE' then Exit;
   Call := Copy(Call, 1, 3);

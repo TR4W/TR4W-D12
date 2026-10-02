@@ -23,13 +23,14 @@
 #                           writes, and the Cabrillo CONTEST:/QSO: lines and
 #                           ADIF records the real exporters produce, and
 #                           what the ADIF import makes of those records and of
-#                           synthetic foreign-logger ones
+#                           synthetic foreign-logger ones, and what live
+#                           entry makes of 66 typed exchanges
 #
 # It sees ADIF IMPORT (M5a): the records the export wrote, plus synthetic
-# foreign-logger records, read back through the real import path.  It does NOT
-# see PARSING a typed exchange yet -- the synthetic QSOs carry their exchange
-# fields already filled.  That capture is M5b's, and is marked as an extension
-# point in uContestMatrix.
+# foreign-logger records, read back through the real import path.  And it sees
+# PARSING (M5b): a fixed list of typed exchanges through MainUnit.ParametersOkay,
+# the routine Enter calls -- accepted or refused, the message, and every field
+# the parse set.  It does NOT see the entry window itself.
 #
 # ---------------------------------------------------------------------------
 # WHAT A GREEN RUN MEANS, AND WHAT IT DOES NOT

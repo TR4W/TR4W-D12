@@ -1153,7 +1153,12 @@ UNREGISTERED contest into it (section 1.4, fact 5), so these are dead by
 default rather than unreachable -- which matters for how they are removed:
 deleting one withdraws a value an operator could select.
 
-### D1. `logstuff.ValidClass` after the class returns -- dead by default, 4 lint hits
+### D1. `logstuff.ValidClass` after the class returns -- DELETED at M5b (2026-10-02)
+
+**Gone.** `ValidClass` now asks every contest -- `ExchangeContest`, the active
+contest's object else its identity -- and keeps no loop of its own; the four
+`ARRLFIELDDAY` / `WINTERFIELDDAY` tests went with it (CONTEST_OWNERSHIP_DESIGN
+§8.2g). What follows is the finding as it stood.
 
 `logstuff.pas:10920` asks the class and `Exit`s. `ValidClass` is called only
 from `ProcessClassAndDomesticOrDXQTHExchange`, whose two callers
@@ -1166,7 +1171,10 @@ at `:10937`, `:10938`, `:10966`, `:10970` -- is the shape the Florida Cabrillo
 branches had before they were deleted. Removing it lowers `logstuff.pas`'s
 lint ceiling from 14 to 10.
 
-### D2. `ValidateDXQTH`'s fallback -- dead by default, same reason
+### D2. `ValidateDXQTH`'s fallback -- DELETED at M5b (2026-10-02)
+
+**Gone**, with D1: the Field Day DX check asks `ExchangeContest.ValidateDXQTH`
+and has no `TempString = 'DX'` chain of its own. The finding as it stood:
 
 `logstuff.pas:1518` asks the class; the `else if TempString = 'DX'` legacy
 path at `:1534` is reached only when the class is nil, and the same two

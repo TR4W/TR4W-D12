@@ -87,10 +87,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                contest-dependent tags. Every ContestExchange field the import
                set is recorded.
 
-  M5b EXTENSION POINT -- NOT CAPTURED YET. Parsing a TYPED exchange
-  (ProcessExchange) is not exercised: the synthetic QSOs carry their exchange
-  fields already filled, the way a STORED QSO does. Add a "parse" section
-  beside "import" when M5b starts, and freeze it BEFORE the first arm moves.
+    parse      (M5b) TYPED exchanges through the path live entry takes
+               (MainUnit.ParametersOkay, which TryLogContact calls on Enter):
+               one fixed list of exchange texts for every contest, recording
+               whether each was accepted, the message and token a refusal
+               shows, the counties a county line queued, and every
+               ContestExchange field the parse set. Appended LAST and frozen
+               before the first parse arm moved, so every section above it
+               kept its bytes.
 
   NOT CAPTURED, deliberately: Cabrillo header lines other than CONTEST: (they
   carry the build version and the totals, which belong to M6/M9), and the
@@ -144,6 +148,13 @@ uses
    uContestStateQSOPartyBase,
    uLogStore,
    uCrashLog,     (* EarlyTrace -- /MATRIXLIST runs before tr4w.log is configured *)
+   (* THE parse SECTION (M5b): the call-window text, the error a refusal
+     shows, the county-line queue, and the domestic file's keys. *)
+   LogStuff,
+   uPendingCounties,
+   uPOTAParks,
+   uDomFileKeys,
+   uAppPaths,
    MainUnit;
 
 type
@@ -1062,6 +1073,278 @@ begin
    ImportSyntheticRecords;
 end;
 
+(* ------------------------------------------------------------------------ *)
+(* /MATRIX -- parse (M5b)                                                   *)
+(* ------------------------------------------------------------------------ *)
+
+type
+   (* ONE TYPED EXCHANGE, as the operator enters it: the call in the call
+     window, the text in the exchange window, the band and mode in force. *)
+   TMatrixParseCase = record
+      Name: string;
+      Call: string;
+      Band: BandType;
+      Mode: ModeType;
+      FreqHz: longint;
+      Exch: string;
+   end;
+
+const
+   (* THE TYPED EXCHANGES. Fixed, and their order is part of the record.
+
+     ONE LIST FOR EVERY CONTEST, so nothing here names a contest. It holds
+     every exchange SHAPE the program parses -- serials, states, zones,
+     names, powers, ages, grids, continents, societies, classes and sections,
+     Sweepstakes' four fields, counties, prefectures, oblasts, departments,
+     postcodes and parks -- each well-formed, and then the malformed and edge
+     cases: missing fields, extra fields, the wrong order, a section or a
+     county that does not exist, DX, a serial with letters, Sweepstakes with
+     no precedence, and an out-of-state station's own state sent to a QSO
+     party. A contest refuses most of them; WHICH it refuses, and with what
+     message, is what this section records.
+
+     <K1> AND <K2> ARE THE FIRST TWO KEYS OF THE CONTEST'S OWN DOMESTIC FILE
+     -- for a QSO party, two of its counties -- so a county exchange is one
+     the contest could accept; a contest with no file gets CT and MA.
+
+     CHANGING THIS LIST CHANGES EVERY parse SECTION. A re-freeze with a
+     reason, like any other. *)
+   MATRIX_PARSE_CASES: array[1..66] of TMatrixParseCase =
+      (
+      (Name: 'empty';             Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: ''),
+      (Name: 'rst';               Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599'),
+      (Name: 'serial';            Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123'),
+      (Name: 'rst.serial';        Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123'),
+      (Name: 'cut.serial';        Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '5NN TT7'),
+      (Name: 'serial.letters';    Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 12A'),
+      (Name: 'state';             Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'CT'),
+      (Name: 'rst.state';         Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 CT'),
+      (Name: 'serial.state';      Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123 CT'),
+      (Name: 'rst.serial.state';  Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123 CT'),
+      (Name: 'state.serial';      Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'CT 123'),
+      (Name: 'phone.rs.state';    Call: 'W1AW';   Band: Band20; Mode: Phone; FreqHz: 14250000; Exch: '59 CT'),
+      (Name: 'extra.fields';      Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123 CT XYZ 45'),
+      (Name: 'call.in.exchange';  Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 CT K1ABC'),
+      (Name: 'zone';              Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '5'),
+      (Name: 'rst.zone';          Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 5'),
+      (Name: 'zone.state';        Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 5 CT'),
+      (Name: 'society';           Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'ARRL'),
+      (Name: 'rst.society';       Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 ARRL'),
+      (Name: 'name.state';        Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'JOE CT'),
+      (Name: 'serial.name.state'; Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123 JOE CT'),
+      (Name: 'name.serial';       Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'JOE 123'),
+      (Name: 'name.state.tenten'; Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'JOE CT 1234'),
+      (Name: 'name.age.state';    Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'JOE 10 CT'),
+      (Name: 'power.letters';     Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 KW'),
+      (Name: 'power.number';      Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 100'),
+      (Name: 'age';               Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 45'),
+      (Name: 'grid';              Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'FN31'),
+      (Name: 'rst.grid';          Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 FN31'),
+      (Name: 'serial.grid';       Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123 FN31'),
+      (Name: 'continent';         Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 NA'),
+      (Name: 'fd.class.section';  Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '2A CT'),
+      (Name: 'fd.section.class';  Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'CT 2A'),
+      (Name: 'fd.bad.class';      Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '2Z CT'),
+      (Name: 'fd.bad.section';    Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '2A XYZ'),
+      (Name: 'fd.class.only';     Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '2A'),
+      (Name: 'fd.dx';             Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '1D DX'),
+      (Name: 'fd.dx.class.only';  Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '1D'),
+      (Name: 'fd.dx.mx';          Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '1D MX'),
+      (Name: 'ss.full';           Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123 A 99 CT'),
+      (Name: 'ss.packed';         Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123A 99CT'),
+      (Name: 'ss.no.precedence';  Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123 99 CT'),
+      (Name: 'ss.wrong.order';    Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: 'CT 99 A 123'),
+      (Name: 'ss.no.check';       Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123 A CT'),
+      (Name: 'ss.bad.section';    Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123 A 99 XYZ'),
+      (Name: 'county';            Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '<K1>'),
+      (Name: 'rst.county';        Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 <K1>'),
+      (Name: 'serial.county';     Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123 <K1>'),
+      (Name: 'county.line';       Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 <K1>/<K2>'),
+      (Name: 'county.bad';        Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 ZZZ'),
+      (Name: 'oos.state';         Call: 'K4ABC';  Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '599 GA'),
+      (Name: 'oos.serial.state';  Call: 'K4ABC';  Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '123 GA'),
+      (Name: 've.province';       Call: 'VE3ABC'; Band: Band15; Mode: Phone; FreqHz: 21300000; Exch: '59 ON'),
+      (Name: 've0.serial';        Call: 'VE0ABC'; Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123'),
+      (Name: 'dx.dx';             Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '599 DX'),
+      (Name: 'dx.serial';         Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '599 001'),
+      (Name: 'dx.zone';           Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '599 14'),
+      (Name: 'dx.name.country';   Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: 'HANS DL'),
+      (Name: 'uk.serial.only';    Call: 'G3ABC';  Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '123'),
+      (Name: 'uk.serial.district';Call: 'G3ABC';  Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123 LN'),
+      (Name: 'ja.prefecture';     Call: 'JA1ABC'; Band: Band15; Mode: CW;    FreqHz: 21025000; Exch: '599 13'),
+      (Name: 'ru.oblast';         Call: 'UA3ABC'; Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 MO'),
+      (Name: 'ru.serial';         Call: 'UA3ABC'; Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123'),
+      (Name: 'ru.rda';            Call: 'UA3ABC'; Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 MO12'),
+      (Name: 'py.state';          Call: 'PY2ABC'; Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 SP'),
+      (Name: 'f.department';      Call: 'F5ABC';  Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 75')
+      );
+
+(* THE FIRST TWO KEYS OF THE CONTEST'S DOMESTIC FILE, for <K1> and <K2>.
+  The reader is uDomFileKeys -- the rule FoundMyStateInDomFile applies -- so a
+  key here is one the contest's own tables know. *)
+procedure DomesticFileKeys(out aFirst, aSecond: string);
+var
+   path: string;
+   lines: TStringList;
+   i: integer;
+   key: string;
+begin
+   aFirst := '';
+   aSecond := '';
+   path := '';
+   if ContestIdentity(Contest).DomesticFileName <> '' then
+      begin
+      path := ShippedDomFilePath(ContestIdentity(Contest).DomesticFileName + '.dom');
+      end;
+   if (path <> '') and FileExists(path) then
+      begin
+      lines := TStringList.Create;
+      try
+         lines.LoadFromFile(AnsiString(path));
+         for i := 0 to lines.Count - 1 do
+            begin
+            key := DomFileLineKey(string(lines[i]));
+            if key = '' then
+               begin
+               Continue;
+               end;
+            if aFirst = '' then
+               begin
+               aFirst := key;
+               end
+            else
+               begin
+               aSecond := key;
+               Break;
+               end;
+            end;
+      finally
+         lines.Free;
+      end;
+      end;
+   if aFirst = '' then
+      begin
+      aFirst := 'CT';
+      end;
+   if aSecond = '' then
+      begin
+      aSecond := 'MA';
+      end;
+end;
+
+(* ONE TYPED EXCHANGE THROUGH THE PATH LIVE ENTRY TAKES.
+
+  TryLogContact calls MainUnit.ParametersOkay with the call window's text, the
+  exchange window's text, the band and mode in force and ReceivedData; that is
+  the routine that accepts an exchange or refuses it, parses it
+  (LOGSTUFF.ProcessExchange) and scores it. This calls it the same way, with
+  the call in the call window as an operator would have it, on a cleared
+  exchange. The record is whether it was accepted, the message and token a
+  refusal shows, the counties a county line queued, and every field that
+  moved off the cleared exchange -- the QSO's time and id excepted, which
+  ParametersOkay takes from the clock and a GUID. *)
+procedure ParseOne(const aCase: TMatrixParseCase; const aFirst, aSecond: string);
+var
+   rx: ContestExchange;
+   blank: ContestExchange;
+   parts: TStringList;
+   blankParts: TStringList;
+   ok: boolean;
+   i: integer;
+   line: string;
+   exch: string;
+   pending: string;
+   savedBand: BandType;
+   savedMode: ModeType;
+begin
+   exch := UnicodeStringReplace(aCase.Exch, '<K1>', aFirst, [rfReplaceAll]);
+   exch := UnicodeStringReplace(exch, '<K2>', aSecond, [rfReplaceAll]);
+
+   parts := TStringList.Create;
+   blankParts := TStringList.Create;
+   savedBand := ActiveBand;
+   savedMode := ActiveMode;
+   try
+      try
+         ClearPendingCounties;
+         ClearPendingParks;
+         ActiveBand := aCase.Band;
+         ActiveMode := aCase.Mode;
+         (* The casts are deliberate narrowings of ASCII literals from the
+           table above, bounded by construction. *)
+         CallWindowString := ShortString(aCase.Call);
+
+         ClearContestExchange(blank);
+         DescribeExchange(blank, blankParts);
+         ClearContestExchange(rx);
+         ok := ParametersOkay(ShortString(aCase.Call), ShortString(exch),
+                              aCase.Band, aCase.Mode, aCase.FreqHz, rx);
+
+         pending := '';
+         while HasPendingCounties do
+            begin
+            pending := pending + ' ' + DequeuePendingCounty;
+            end;
+
+         DescribeExchange(rx, parts);
+         line := '';
+         for i := 0 to parts.Count - 1 do
+            begin
+            (* THE CLOCK AND THE GUID are not the parse's, and would make the
+              record differ on every run. *)
+            if (Pos('time=', string(parts[i])) = 1) or (Pos('id=', string(parts[i])) = 1) then
+               begin
+               Continue;
+               end;
+            if parts[i] <> blankParts[i] then
+               begin
+               line := line + ' ' + string(parts[i]);
+               end;
+            end;
+
+         (* NO POINTS. ParametersOkay scores the QSO it accepts, but the
+           points are the scoring section's to record, on QSOs whose time is
+           fixed: here the QSO carries the clock's time, and one legacy arm
+           (ALRS-UA1DZ's grid distance, on a QTH that is not a grid) scored a
+           different number on every run. Every field the PARSE set is below,
+           and the points follow from those. *)
+         Emit(Format('parse %s %s %s/%s "%s" | ok=%s err="%s" token="%s" pending="%s"',
+                     [aCase.Name, aCase.Call,
+                      EnumText(TypeInfo(BandType), Ord(aCase.Band)),
+                      EnumText(TypeInfo(ModeType), Ord(aCase.Mode)),
+                      exch, BoolText(ok), ExchangeErrorMessage,
+                      string(ExchangeErrorToken), Trim(pending)]) + line);
+      except
+         on E: Exception do
+            begin
+            EmitRaised('parse ' + aCase.Name, E);
+            end;
+      end;
+   finally
+      CallWindowString := '';
+      ActiveBand := savedBand;
+      ActiveMode := savedMode;
+      ClearPendingCounties;
+      ClearPendingParks;
+      parts.Free;
+      blankParts.Free;
+   end;
+end;
+
+procedure CaptureParse;
+var
+   i: integer;
+   first, second: string;
+begin
+   Emit('== parse');
+   DomesticFileKeys(first, second);
+   EmitField('parse.keys', first + ' ' + second);
+   for i := Low(MATRIX_PARSE_CASES) to High(MATRIX_PARSE_CASES) do
+      begin
+      ParseOne(MATRIX_PARSE_CASES[i], first, second);
+      end;
+end;
+
 function RunContestMatrix(const aOutFile: string;
                           const aRequested: string): integer;
 var
@@ -1112,6 +1395,17 @@ begin
          on E: Exception do
             begin
             EmitRaised('import', E);
+            end;
+      end;
+
+      (* LAST, so every section before it is byte-for-byte what it was
+        before this one existed (M5b's freeze appended it). *)
+      try
+         CaptureParse;
+      except
+         on E: Exception do
+            begin
+            EmitRaised('parse', E);
             end;
       end;
 

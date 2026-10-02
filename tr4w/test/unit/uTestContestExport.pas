@@ -404,7 +404,13 @@ end;
 
 (* NY4I, 2026-10-01 (design Q1): "DX IS NOT AN ARRL SECTION." A DX station
    sends a class and DX; the DX goes in the section POSITION of the Cabrillo
-   line and never into ADIF ARRL_SECT. Pinned for both Field Days. *)
+   line and never into ADIF ARRL_SECT. Pinned for both Field Days.
+
+   AND SINCE M5b (NY4I 2026-10-02, design 7.10, Q20): the DX station's ADIF
+   CLASS is the class it was logged with, and its SRX_STRING is the full
+   received exchange, '1D DX' -- whether the operator typed the DX or the
+   class alone resolved to it. A domestic QSO's SRX_STRING is unchanged: the
+   typed exchange. *)
 procedure TContestExportTests.Test_FieldDayDXIsNeverAnARRLSection;
 var
    qso: ContestExchange;
@@ -423,11 +429,20 @@ begin
       c := Ctx(ClassDomesticOrDXQTHExchange, '', 'DX');
       CheckEquals('1D  DX     ', Received(fd, my, qso, c),
                   string(ContestTypeSA[fd]) + ': DX in the section position of the line');
-      CheckEquals('', ContestIdentity(fd).EmitADIFContestFields(qso),
-                  string(ContestTypeSA[fd]) + ': DX writes no ARRL_SECT, STATE or DXCC');
+      CheckEquals('<CLASS:2>1D ', ContestIdentity(fd).EmitADIFContestFields(qso),
+                  string(ContestTypeSA[fd]) + ': DX writes its CLASS and no ARRL_SECT, STATE or DXCC');
+      qso.ExchString := '1D';
+      CheckEquals('1D DX', ContestIdentity(fd).FormatADIFReceivedExchange(qso, False),
+                  string(ContestTypeSA[fd]) + ': SRX_STRING is the class and DX, though only the class was typed');
+      qso.ExchString := '1D DX';
+      CheckEquals('1D DX', ContestIdentity(fd).FormatADIFReceivedExchange(qso, False),
+                  string(ContestTypeSA[fd]) + ': SRX_STRING when DX was typed');
 
       qso.QTHString := 'WCF';
       qso.QTH.CountryID := 'K';
+      qso.ExchString := '1D WCF';
+      CheckEquals('1D WCF', ContestIdentity(fd).FormatADIFReceivedExchange(qso, False),
+                  string(ContestTypeSA[fd]) + ': a section''s SRX_STRING is the typed exchange');
       CheckEquals('<DXCC:3>291 <STATE:2>FL <ARRL_SECT:3>WCF <CLASS:2>1D ',
                   ContestIdentity(fd).EmitADIFContestFields(qso),
                   string(ContestTypeSA[fd]) + ': a US section');

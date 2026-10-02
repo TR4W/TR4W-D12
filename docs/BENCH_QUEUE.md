@@ -23,6 +23,41 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-02 -- EACH CONTEST PARSES ITS OWN EXCHANGE (M5b), AND TWO NEW REFUSALS
+
+Exchange parsing moved onto the contest classes
+(`TContestBase.ParseReceivedExchange`). The contest matrix types 66 exchanges
+through `ParametersOkay` for every contest and proved nothing else moved; **no
+gate types into the real window**, so nothing has seen a refusal's message on
+screen or a valid exchange log from the entry fields. To exercise:
+
+- **Sweepstakes, no precedence** (NY4I, design 7.10): type `123 99 CT` and
+  Enter -- NOT logged, and the notice line says `Missing precedence (Q A B U M S)`.
+  It used to refuse silently. `123 A 99 CT` logs as before.
+- **A QSO party, out-of-state station** (NY4I, design 7.10) -- Florida, MY
+  STATE `KS`: a DX station `DL1ABC` with `599 DL` is NOT logged and the notice
+  says `Out of state: work FL stations only`; a Florida county logs. With MY
+  STATE a Florida county (in state), the DX station logs.
+- **NC QSO Party**: out of state, `599 GA` from `K4ABC` is now refused (an
+  improper domestic QTH -- `nc_cty.dom` is the hundred counties); a county logs.
+  A VE station with MY STATE `ON` is now OUT of state for NC. In state, states,
+  provinces, DC and DX are still accepted.
+- **Field Day DX**: log `DL1ABC` with `1D` (or `1D DX`), export ADIF -- the
+  record carries `CLASS 1D`, `SRX_STRING 1D DX`, and no `ARRL_SECT`. Import that
+  file back: the QSO's QTH is DX and it is NOT a section.
+- **Unchanged, but moved -- spot-check one each**: RAC Canada Day `VE0ABC 599 123`
+  logs a serial; PCC `599 GR` a QTH and `599 123` a serial; IARU `ARRL` alone
+  logs with the station's zone filled; UK/EI `G3ABC` with only `123` is refused
+  `Invalid Entry`; SAC with `UA3ABC` in the call window clears the entry; LABRE
+  `PY2ABC 599 SP` logs SP as the state.
+- **CQ WW RTTY `599 14` from a DX station** now answers the same every time --
+  REFUSED, by the shape's own later test of a first word over two characters.
+  The fields it left behind used to differ run to run (an uninitialised word
+  handed to `ValidRST`, also in D7). Whether `RST zone` should log at all for
+  CQ WW RTTY is a question, not a regression: it never did reliably.
+
+---
+
 ## Added 2026-10-01 -- NIGHT-TIME RULES READ THE QSO'S TIME, NOT THE CLOCK
 
 Croatian (23:00-04:59 UTC doubles) and UK/EI (01:00-04:59 UTC for a UK/EI

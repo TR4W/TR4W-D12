@@ -64,6 +64,19 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+
+      (* AN EXCHANGE WITH NO PRECEDENCE IS REFUSED, AND SAYS SO -- M5b.
+
+         NY4I, 2026-10-02 (design 7.10, Q19): "A sweepstakes entry should
+         not have been logged without a precedence." The shape parser
+         already refused such an exchange -- it accepts only when serial,
+         precedence, check and section are all present -- but SILENTLY, so
+         the operator saw a QSO that did not log and no reason. The
+         precedence now names itself, the way an improper section does. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
    end;
 
 implementation
@@ -71,7 +84,42 @@ implementation
 uses
    SysUtils, uContestFixedPoints,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
-   uADIF;
+   uADIF,
+   (* ScanSweepstakesExchange -- the engine's own reading of the words. *)
+   uExchangeTokens,
+   uAppStrings;
+
+(* THE ENGINE'S PARSE FIRST, then the refusal's reason.
+
+   ONLY WHEN THE SHAPE IS SWEEPSTAKES', the one that carries a precedence,
+   and only when the parse refused. The precedence is looked for with
+   uExchangeTokens.ScanSweepstakesExchange -- the same word reading the shape
+   parser applies -- so this says "no precedence" exactly when the parser
+   found none. An exchange refused for another reason (no check, a bad
+   section) keeps whatever the parser said. *)
+function TContestARRLSSBase.ParseReceivedExchange(const aText: string;
+                                                  const aSession: TReceivedExchangeSession;
+                                                  var aExch: ContestExchange;
+                                                  out aErrorMessage: string): boolean;
+var
+   fields: TSweepstakesFields;
+begin
+   Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+   if Result then
+      begin
+      Exit;
+      end;
+   if aSession.Exchange <> QSONumberPrecedenceCheckDomesticQTHExchange then
+      begin
+      Exit;
+      end;
+
+   ScanSweepstakesExchange(aText, fields);
+   if fields.Prec = Chr(0) then
+      begin
+      aErrorMessage := SExchangeNoPrecedence;
+      end;
+end;
 
 procedure TContestARRLSSBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin

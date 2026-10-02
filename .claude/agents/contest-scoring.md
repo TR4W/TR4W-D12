@@ -27,7 +27,8 @@ best-proven and least-covered code in the tree.
 2. Super Check Partial → `logscp.pas` (TRMASTER.DTA)
 3. Dupe check → `logdupe.pas`
 4. Country/multiplier → `uctydat.pas`, `uMults.pas`
-5. Exchange parsing → `logstuff.ProcessExchange()`
+5. Exchange parsing → `logstuff.ProcessExchange()` → the contest's
+   `ParseReceivedExchange` (M5b), whose base is `logstuff.ParseExchangeShape`
 6. Validation → `ContestExchange`
 7. Network broadcast → `uNet.pas`
 8. Display update → `logwind.pas`
@@ -38,7 +39,9 @@ best-proven and least-covered code in the tree.
 units; `ProcessExchange`, scoring and dupe need the app's globals booted. Your
 oracle is the **golden corpus**, and **the corpus is blind to scoring** — it
 byte-diffs ADIF and Cabrillo output. `tr4w/test/corpus/test-contest-factory.sh`
-is the only thing that sees points.
+is the only thing that sees points. **The contest matrix sees parsing** (its
+`parse` section, M5b: typed exchanges through `ParametersOkay` for every
+contest) -- "same as before", never "right".
 
 So: **scoring, multiplier and exchange-parsing changes deserve real-contest
 testing.** The corpus is a strong net, not a proof. Say so in your report rather
@@ -134,10 +137,29 @@ a classed contest -- it would never run. **`QSO POINT METHOD` is retired at
 the end of the migration.**
 
 **Dupe marking no longer reads the point method** -- `logsubs2` asks
-`ContestIdentity(Contest).MarksDupes`. The point-method readers still in the
-engine are exchange parsing (`ProcessRSTAndQSONumberOrDomesticQTHExchange`:
-RAC, PCC, Arktika; `zonecont.GetVEInitialExchange`: RussianDX) for M5, and
-`logedit.TotalScore`'s five formulas for M6. **Known latent defect (M8):**
+`ContestIdentity(Contest).MarksDupes`. **Nor does exchange parsing (M5b,
+2026-10-02):** RAC, PCC and Arktika's branches and RussianDX's initial
+exchange are their classes' own now. The point-method readers left in the
+engine are `logedit.TotalScore`'s five formulas, for M6.
+
+**`ProcessExchange` ASKS THE CONTEST (M5b).** It keeps the contest-blind
+tokenising gate (`ParseArray`), then calls
+`ExchangeContest.ParseReceivedExchange` (the active contest's object, else its
+identity -- never nil) with a `TReceivedExchangeSession`: the session's
+exchange, `ParseExchangeShape` (the old `case ActiveExchange of`, now keyed on
+the shape it is HANDED and naming no contest), and engine services
+(`ZoneOfCall`, `IsDomesticQTH`, `CallWindowHasCall`, `AbandonEntry`). **Do not
+put a contest test back inside a shape parser** -- a contest's parse rule is an
+override on its class, under the shape it was written for. The one still named,
+with its reason: the UA4W Championship in `ProcessRSTAndGridSquareOrRDAExchange`
+(its class would have to score it, and its arm asks `ctyGetCQZone(MY CALL)`).
+`ValidClass` and the Field Day DX check ask the contest with no fallback (D1/D2
+deleted). Word cutting a class also needs (`ParseExchange`, `ProcessSSEntry`,
+the single-word test) is LIFTED to `uExchangeTokens` and called by both.
+**Two refusals NY4I ruled (design 7.10)**: Sweepstakes without a precedence
+says so; a state party's out-of-state station working a non-host station is
+refused. The matrix's `parse` section sees all of it; nothing sees the window
+(`BENCH_QUEUE.md`). **Known latent defect (M8):**
 `TCallsignsList.AddCallsign` marks `AllBands` for an off-band QSO, so for a
 contest not counting QSOs per band an off-band contact would make a later
 on-band one a dupe (ownership doc §8.2d).

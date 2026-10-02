@@ -2297,17 +2297,15 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // ExchangeInformation.RST (trdos/logdupe.pas), which uADIF cannot
   // see without taking a trdos dependency.  POTA's own SRX_STRING is
   // emitted further down -- this branch handles every other contest.
+  //
+  // M5b (2026-10-02): the QSO's CONTEST writes it -- FormatADIFReceivedExchange,
+  // whose base is exactly the RST-or-not choice that stood here. The Field
+  // Days write a DX station's class and 'DX' (NY4I, design 7.10).
   if rec.ceContest <> POTA then
      begin
-     if ExchangeInformation.RST then
-        begin
-        Result := Result + EmitADIFField( 'SRX_STRING', ResolveSRXString( rec ) )
-        end
-     else
-        begin
-        Result := Result + EmitADIFField( 'SRX_STRING',
-           string( rec.ExchString ) );
-        end;
+     Result := Result + EmitADIFField( 'SRX_STRING',
+        ContestIdentity( rec.ceContest ).FormatADIFReceivedExchange( rec,
+           ExchangeInformation.RST ) );
      end;
 
   // ----- POTA-specific (uADIF skips SRX_STRING for POTA) -----

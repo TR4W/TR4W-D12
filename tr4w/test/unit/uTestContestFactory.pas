@@ -1921,6 +1921,21 @@ begin
    CheckAgainstArray(UKRAINIAN, 'Ukrainian DX');
    CheckAgainstArray(OKDX, 'OK/OM DX');
    CheckAgainstArray(LZDX, 'LZ DX');
+
+   (* THE SEVEN THAT GAINED A CLASS AT M5b (2026-10-02), each because a rule
+      of its exchange parsing (RAC, SAC, LABRE) or of its initial exchange
+      (the two Russian DX contests) was a test of the contest or of
+      ActiveQSOPointMethod inside a shared routine. Blank CABName and
+      ADIFName resolve to the enum's spelling -- 'CANADA DAY', 'SAC-CW',
+      'RDXC', 'RU3AX MEMORIAL'. One trap: LABRE STATES a CABName ('LABRE-DX')
+      that is not its spelling while its ADIF id is ('LABRE'). *)
+   CheckAgainstArray(CANADA_DAY, 'RAC Canada Day');
+   CheckAgainstArray(CANADA_WINTER, 'RAC Winter');
+   CheckAgainstArray(SACCW, 'SAC CW');
+   CheckAgainstArray(SACSSB, 'SAC SSB');
+   CheckAgainstArray(LABRE, 'LABRE DX');
+   CheckAgainstArray(RUSSIANDX, 'Russian DX');
+   CheckAgainstArray(RU3AXMEMORIAL, 'RU3AX Memorial');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked

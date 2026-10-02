@@ -105,6 +105,8 @@ uses
       layer and testable without booting TR4W. *)
    LOGWIND,
    uSettingsModel,
+   (* StationInHostState -- set-up's in-state answer for a QSO party (M5b). *)
+   FCONTEST,
    uContestRegistry;
 
 function CurrentQSOPointOverrides: TQSOPointOverrides;
@@ -135,6 +137,9 @@ begin
    Result.MyGrid := Settings.My.Grid;
    Result.MyState := Settings.My.State;
    Result.ContestTitle := Settings.Contest.Title;
+   Result.MyCall := Settings.My.Call;
+   (* FoundContest's own in-state decision -- see TStationContext.InHostState. *)
+   Result.InHostState := StationInHostState;
    (* CATEGORY-POWER as the New Contest dialog set it -- see
       TStationContext.MyPower. *)
    Result.MyPower := Settings.Contest.CategoryPower;

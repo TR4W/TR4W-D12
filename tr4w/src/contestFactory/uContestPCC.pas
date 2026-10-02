@@ -94,6 +94,25 @@ type
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
+
+      (* LETTERS ARE A QTH, DIGITS A SERIAL -- M5b, 2026-10-02 (4.83.2).
+
+         It stood in LOGSTUFF.ProcessRSTAndQSONumberOrDomesticQTHExchange as a
+         test of ActiveQSOPointMethod = PCCQSOPointMethod, ahead of that
+         shape's own rule (a domestic station's QTH, anybody else's serial),
+         so an operator's QSO POINT METHOD line reached it in any contest.
+         Stated here under that shape; with another shape the session's
+         parse decides. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+
+      (* 'N/X' IS NOT A CALLSIGN IN THE PCC (4.83.7) -- a three-character
+         word with '/' in the middle. It stood in LOGSTUFF.LooksLikeACallSign
+         as `if contest = PCC`, which kept such a word from replacing the
+         call in the call window. *)
+      function MayBeACallsign(const aWord: string): boolean; override;
    end;
 
 implementation
@@ -102,6 +121,33 @@ uses
    SysUtils, uContestRegistry,
    (* StringIsAllNumbers -- the test the arm asks of MY STATE. *)
    utils_text;
+
+function TContestPCC.ParseReceivedExchange(const aText: string;
+                                          const aSession: TReceivedExchangeSession;
+                                          var aExch: ContestExchange;
+                                          out aErrorMessage: string): boolean;
+begin
+   if aSession.Exchange <> RSTAndQSONumberOrDomesticQTHExchange then
+      begin
+      Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
+      Exit;
+      end;
+
+   aErrorMessage := '';
+   if not StringIsAllNumbers(aText) then
+      begin
+      Result := aSession.ParseShape(RSTDomesticQTHExchange, aText, aExch);
+      end
+   else
+      begin
+      Result := aSession.ParseShape(RSTQSONumberExchange, aText, aExch);
+      end;
+end;
+
+function TContestPCC.MayBeACallsign(const aWord: string): boolean;
+begin
+   Result := not ((Length(aWord) = 3) and (aWord[2] = '/'));
+end;
 
 procedure TContestPCC.CalculateQSOPoints(var aQso: ContestExchange);
 var
