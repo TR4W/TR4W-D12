@@ -61,7 +61,7 @@ unit uContestArizonaQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestArizonaQP = class(TContestStateQSOPartyBase)
@@ -105,6 +105,10 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -199,6 +203,31 @@ end;
 procedure TContestArizonaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestArizonaQP.DescribeSession(const aStation: TStationContext;
+                                            aSession: TSessionDefaults);
+begin
+   aSession.SetCQMemory(CW, smkF1, 'CQ AZ \ \ AZ');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^AZ CQ^AZ \ \ AZQP');
+   aSession.CQExchangeCW := aStation.MyState;
+   aSession.SPExchangeCW := aStation.MyState;
+   aSession.QSLCW := '73 \/AZ ';
+
+   (* BOTH SIDES OF THE STATE LINE, STATED (inventory D8). The trait is the
+      row's RSTDomesticOrDXQTHExchange, and an in-state station keeps it;
+      out of state the exchange is the county alone. *)
+   if aStation.InHostState then
+      begin
+      aSession.MultByBand := False;
+      end
+   else
+      begin
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
 end;
 
 initialization

@@ -48,6 +48,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -63,6 +67,48 @@ end;
 function TContestNASprintRTTY.GetDisplayName: string;
 begin
    Result := 'North American Sprint - RTTY';
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named NASPRINTCW, NASPRINTRTTY; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestNASprintRTTY.DescribeSession(const aStation: TStationContext;
+                                               aSession: TSessionDefaults);
+begin
+   aSession.Band := Band20;
+
+   aSession.CQExchangeCW := '^  \   # ' + aStation.MyName + ' ' + aStation.MyState;
+   aSession.QSLCW := 'TU';
+   aSession.QuickQSLCW1 := 'EE';
+   aSession.QSOBeforeCW := 'B4 \ NA';
+   aSession.SPExchangeCW := '@ # ' + aStation.MyName + ' ' + aStation.MyState + '  \ ';
+   aSession.RepeatSPExchangeCW := '# ' + aStation.MyName + ' ' + aStation.MyState;
+   aSession.CallOkNowCW := '} R';
+
+   aSession.SetCQMemory(CW, smkF1, 'NA \');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^NA CQ^NA \ \ NA');
+   aSession.SetCQMemory(CW, smkF5, '   ? ');
+   aSession.SetCQMemory(CW, smkF6, '   NA \ NA ');
+   aSession.SetCQMemory(CW, smkF7, '   CQ^NA \ \ NA ');
+   aSession.SetCQMemory(CW, smkF8, '   CQ^NA CQ^NA \ \ NA ');
+   (* The arm set Alt-F1 to 'NA \ NA' first and overwrote it with this. *)
+   aSession.SetCQMemory(CW, smkAltF1, 'NA \ \ NA');
+
+   aSession.SetExchangeMemory(CW, smkF3, 'NR #');
+   aSession.SetExchangeMemory(CW, smkF4, aStation.MyName);
+   aSession.SetExchangeMemory(CW, smkF5, aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkF6, '@ \ NR^# ' + aStation.MyName + ' ' + aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkF7, '   CQ^NA \ \ NA ');
+   aSession.SetExchangeMemory(CW, smkF8, '   CQ^NA CQ^NA \ \ NA ');
+   aSession.SetExchangeMemory(CW, smkAltF3, 'NR?');
+   aSession.SetExchangeMemory(CW, smkAltF4, 'NAME?');
+   aSession.SetExchangeMemory(CW, smkAltF5, 'QTH?');
+
+   aSession.SprintQSYRule := True;
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+   aSession.AddDomesticCountry('KL');
 end;
 
 initialization

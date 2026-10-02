@@ -83,6 +83,12 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE SPONSOR'S FORMULA -- see the header. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -262,6 +268,43 @@ function TContestALRSUA1DZCup.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestALRSUA1DZCup.DescribeSession(const aStation: TStationContext;
+                                               aSession: TSessionDefaults);
+var
+   oblast: string[2];
+begin
+   aSession.LiteralDomesticQTH := True;
+
+   (* A RUSSIAN STATION OUTSIDE ST PETERSBURG AND ITS OBLAST counts RDA
+      districts, with no DX multiplier and no domestic file. The oblast is read
+      from MY CALL, as ScoreQSO reads it. A call with no oblast reads two
+      zeros, as ScoreQSO's does; the arm's Str2 was never initialised, so
+      that case read whatever the stack held. *)
+   FillChar(oblast, SizeOf(oblast), 0);
+   if RussianID(string(aStation.MyCountry)) then
+      begin
+      oblast := ShortString(GetOblast(aStation.MyCall));
+      if not (GetRussiaOblastByTwoChars(Char(oblast[1]), Char(oblast[2])) in [rtUA1A, rtUA1C]) then
+         begin
+         aSession.DXMult := NoDXMults;
+         aSession.DomesticMult := RDADistrict;
+         aSession.DomesticFile := '';
+         aSession.MultByBand := False;
+         end;
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestALRSUA1DZCup.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN ' + aStation.MyState;
 end;
 
 initialization

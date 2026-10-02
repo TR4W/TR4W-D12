@@ -370,6 +370,7 @@ uses
    uTestContestImport in 'uTestContestImport.pas',
    uTestContestParse in 'uTestContestParse.pas',
    uTestContestTotals in 'uTestContestTotals.pas',
+   uTestContestSession in 'uTestContestSession.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
@@ -569,6 +570,7 @@ begin
    RegisterSuite(TContestImportTests.Create('ContestImport'));
    RegisterSuite(TContestParseTests.Create('ContestParse'));
    RegisterSuite(TContestTotalsTests.Create('ContestTotals'));
+   RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

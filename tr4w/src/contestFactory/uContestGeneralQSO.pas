@@ -62,6 +62,10 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -133,6 +137,18 @@ begin
       aExch.QTHString   := ShortString(aTemps.GridSquare);
       aExch.DomesticQTH := ShortString(aTemps.GridSquare);
       end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestGeneralQSO.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   aSession.AutoDupeEnableCQ := False;
+   aSession.AutoDupeEnableSAndP := False;
+   aSession.ContestName := 'General QSOs';
+   aSession.WARCEnabled := True;
 end;
 
 initialization

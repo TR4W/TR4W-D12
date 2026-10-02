@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M6 built; see §8.2)
+# What a contest owns -- DESIGN (M0-M7a built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -73,7 +73,7 @@ lives in a helper or in the format's own unit.
 | ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. POTA and ARRL 160 still named in PostUnit's tail (§8.2e) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
 | ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. ARRL 160 and POTA still keep an arm in `MainUnit.ApplyClasslessADIFImport` (§8.2f) | `ApplyADIFImport` (**existing**, §3.2) |
 | Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; headers and mode string: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` (M9) |
-| session setup: memories, settings defaults, domestic file and countries, band/mode | `FoundContest`'s 104 arms (inventory §5) | `DescribeSession` (§4) |
+| session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. The classless contests keep their arm until they gain a class (M7b) | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | `logdupe`, `logedit`, `uMults` | contest virtuals, named as each moves (`MultiplierValue`, `MarksDupes`, ...) |
 | summary sheet, totals window, new-contest prompts | `postunit`, `uTotal`, `uNewContest` | `SummarySheetMultColumns`, `TotalsDisplay`, `NewContestPrompts` |
@@ -346,7 +346,18 @@ head no longer reads `ContestsArray` or `ContestsBooleanArray`: one resolver,
 statement, else `ContestIdentity(Contest)`. Item 3, the arms, is unchanged and
 still runs after it.
 
+**Item 3 changed at M7a (2026-10-02, §8.2i).** Every arm for a contest that
+has a class is that class's `DescribeSession`; the `case` holds the classless
+contests' arms only.
+
 ### 4.2 Target
+
+**BUILT at M7a (2026-10-02, §8.2i)**, as below with three refinements: the
+contest object is `ContestIdentity` (M1's accessor serves as
+`ContestDefinition`); the defaults object is `TSessionDefaults`, a class
+because each value has a third state, NOT STATED; and the station arrives as
+`DescribeSession`'s parameter, `uContestFactory.CurrentStation`, because the
+identity object carries none. `InHostState` was already in it (M5b).
 
 `FoundContest`'s head asks `ContestDefinition(Contest)` for the contest object.
 A classless contest gets a plain `TContestBase` that reads `ContestsArray`;
@@ -870,7 +881,9 @@ evidence given with it.
   Each conditional arm (AZ, CQP, Salmon Run, TX and the rest) still runs after
   the head and still overwrites the head's value, so the class can keep
   stating one branch without changing behaviour. The matrix confirmed it: the
-  resolver alone moved 0 of 185 records.
+  resolver alone moved 0 of 185 records. **DONE at M7a (§8.2i):** each of
+  those classes states both branches in `DescribeSession` on
+  `aStation.InHostState`.
 - **D8's UNCONDITIONAL DISAGREEMENT, Field Day's DX multiplier, was corrected
   first (Q1):** both the class and the row now say `NoDXMults`, so the value
   the head starts from is the value the arm ends with.
@@ -952,7 +965,8 @@ Each is behaviour-preserving unless marked.
 | **M5a** | **DONE 2026-10-01 (§8.2f).** **ADIF import.** Generic importer, then `ApplyADIFImport` (§3.2), including the `APP_N1MM_EXCHANGE1` arm, pinned in both tag orders. Thirteen contests gained classes; `ApplyContestSpecificADIFTail` and the dead `ProcessImportedSRX_String` deleted; defect #6 fixed; WAG's DOK and IOTA's IOTA read back. ARRL 160 and POTA keep an arm | `test-adif-roundtrip.sh`; the matrix's `import` section; the corpus; per-class unit tests |
 | **M5b** | **DONE 2026-10-02 (§8.2g).** **Exchange parse.** `ParseReceivedExchange` per contest, the base reaching the engine's shape parsers through the session as data; the matrix gained a `parse` section first. Seven contests gained classes; D1/D2 deleted; NY4I's 7.10 refusals; Field Day DX export and import (Q20, Q25); `nc_cty.dom` to the sponsor's counties (Q14). UA4W stays named in LOGSTUFF, with its reason | the matrix's `parse` section; `uTestContestParse`; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **DONE 2026-10-02 (§8.2h).** **Total score.** The matrix gained a `totals` section first. `TScoreTotals`, the read-only view, `FinalScore` = `CombineScore` + `BonusPoints`; `TotalScore`'s arms deleted but RSGB 1.8's (Q33); nine contests gained classes; Missouri moved with its live tally preserved (Q32); the NC sweep, the Salmon Run W7DX bonus (Q5) and Idaho's dormant county implemented | corpus `CLAIMED-SCORE`; the matrix's `totals` section; `uTestContestTotals` |
-| **M7** | **Session arms and the classless contests.** Each `FoundContest` arm becomes its contest's `DescribeSession`, and the arm is deleted. Classless contests gain a class: a family member, or a copy of the nearest class (§1.4) | setup fixture; legacy fixture; the arm count ratchets |
+| **M7a** | **DONE 2026-10-02 (§8.2i).** **Session arms of the registered contests.** `DescribeSession` filling a `TSessionDefaults`, one applier (`FCONTEST.ApplySessionDefaults`); all 55 arms naming a registered contest moved and were deleted; LogCfg's CQ-exchange defaults became `CQExchangeDefault`; D8 resolved by stating both branches; Winter Field Day's DX multiplier row and class made the effective value. No contest gained a class | the matrix (185 identical, no re-freeze); corpus; `uTestContestSession` |
+| **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. The All Asian's former ADIF id `AL-ASIAN-DX-PHONE` goes in with `ALLASIANSSB`'s class | the matrix (only `contest.class =` moves); the arm count ratchets to 0 |
 | **M8** | **Multipliers and dupes**, as contest virtuals | corpus `CLAIMED-SCORE`; legacy fixture |
 | **M9** | **UI and the rest.** `NewContestPrompts`, `TotalsDisplay`, `SummarySheetMultColumns`, Cabrillo headers and mode string | bench (no automated gate sees the UI) |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
@@ -1888,6 +1902,141 @@ logsubs2 4 -> 3.
 
 **Sponsor-rule and design questions this raised -- NY4I's:** Q32-Q37, §9.
 
+### 8.2i M7a -- what it covered (2026-10-02)
+
+**Every `FoundContest` arm for a contest that HAS A CLASS moved onto that
+class.** 102 contests are registered (`rg "RegisterContest\(" tr4w/src/contestFactory`);
+55 arms named them, and all 55 are gone from FCONTEST -- the `case` keeps
+only the arms of classless contests. No contest gained a class. LogCfg's
+per-contest CQ-exchange defaults moved the same way. NY4I delegated the
+design forks; each DECIDED entry rests on the evidence given with it.
+
+**DECIDED: the seam is `TContestBase.DescribeSession(const aStation:
+TStationContext; aSession: TSessionDefaults)`, and the defaults object is a
+CLASS, not a record.**
+
+- Every value a set-up states has THREE states -- stated True, stated False,
+  NOT STATED -- and the third is the one that preserves behaviour: an arm that
+  named no exchange left the head's exchange (the trait, or the operator's
+  statement) untouched. A record field has two states; "not stated" cannot be
+  spelled as a value of `ExchangeType`, `WarcEnabled` or MY STATE, and an
+  empty MY STATE is a real statement (Canada Day blanks a non-VE station's).
+  So each setter records that its value was stated, and the applier writes
+  only those. It also owns two ORDERED lists -- the domestic countries and the
+  memories. That is behaviour, so it is a class (CLAUDE.md: prefer a class to
+  a record). Its one element type, `TSessionMemory`, IS a record: it is the
+  interface parameter the object hands the applier, pure data.
+- `TSessionDefaults` lives in `uContestBase`, beside the other seam types.
+  One member of `TSessionValue` per value a REGISTERED contest's arm wrote
+  (exchange, three multiplier kinds, band, mode, `DomesticMultByBand`,
+  `tAllowDupeQSOs`; the settings; MY STATE; the domestic file; the seven CW
+  messages; the shared RST-and-serial memories). The classless arms write
+  more -- a zone multiplier, an initial exchange, the R150S list -- and those
+  join when their contest gains a class (M7b), by the same growth rule as
+  `TStationContext`.
+- **The class writes no global and reads only `aStation`.** It is asked of
+  `ContestIdentity(Contest)`, which carries no station, so the station is a
+  parameter -- `uContestFactory.CurrentStation`, now exported, the same
+  snapshot scoring is handed. `TStationContext` gained `MyName`, `MyFDClass`,
+  `MySection`, `MyPrec`, `MyCheck` (the messages are built from them) and
+  `MyZoneText` (LogCfg sent the zone's TEXT; `'05'` is not `5`).
+- **The memory keys are named, not coded** (`TSessionMemoryKey`): the
+  engine's codes are TRDOS constants (Tree's `F1 = CHR(112)`) and a class does
+  not reach into TRDOS for them. FCONTEST's applier translates.
+- **The domestic-country groups are constants in `uContestBase`**
+  (`DomesticCountriesKVE`, `...KVEKH6KL`, `...ARRLSections`, `...Russia`).
+  FCONTEST's `Add_KVE`, `Add_KVEKH6KL`, `AddARRLSectionDomesticCountries` and
+  `AddRussianDomesticCountrys` -- still called by the QSO-party head and the
+  classless arms -- loop over the same constants, so each group is written
+  once and read by both sides.
+
+**DECIDED: ONE APPLIER, `FCONTEST.ApplySessionDefaults`, at the arms' old
+position, and today's precedence exactly.** `FoundContest` asks EVERY contest
+-- a classless one's identity is a plain `TContestBase`, whose
+`DescribeSession` states nothing -- after the head (`ApplyContestTraits`, the
+operator's statements, the in-state decision) and before the closing
+`case ActiveExchange`. Then the classless `case` runs. A stated value
+overwrites unconditionally, as the arm did: it beats a statement made before
+the CONTEST line and loses to one made after it (the M2 behaviour, §7.9,
+unchanged). Order inside the applier: engine choices, settings, MY STATE,
+domestic file, countries (the contest's order), the shared RST-and-serial
+memories, the contest's memories (its order), the messages. No arm wrote a
+value that another value read, so the order is not a rule; a memory written
+twice keeps its last value because the list is ordered.
+
+**DECIDED: LogCfg's CQ-exchange defaults are a SIBLING virtual,
+`CQExchangeDefault(const aStation): string`, not a field of the defaults
+object.** `tSetupExchangeNumbers` runs once the whole configuration is read,
+after `FoundContest`, and builds the text from MY STATE / NAME / ZONE / GRID
+as they stand THEN -- a station line may follow the CONTEST line. A value
+captured at `DescribeSession` would be the wrong snapshot. LogCfg asks
+`ContestIdentity(Contest).CQExchangeDefault(CurrentStation)` first (the base
+offers `''`, which is what LogCfg gave every contest it did not name) and its
+`case` keeps the classless arms. Four arms went whole; six lost their
+registered labels and stay for the classless contests beside them. The ARRL
+DX phone running offers nothing -- LogCfg named `ARRLDXCW` only, so the
+default is on the CW class, not the family base.
+
+**D8 IS RESOLVED FOR EVERY REGISTERED CONTEST.** A choice that depends on the
+station is stated BOTH WAYS in `DescribeSession`: Arizona, California, the
+Salmon Run and Texas on `aStation.InHostState` (FoundContest's own in-state
+answer since M5b, so `FoundMyStateInDomFile` is no longer called per arm);
+ARRL DX, Croatian, PACC, SAC, UBA, Ukrainian, DARC 10 m, WAG, OKDX and ALRS on
+the station's country or oblast; the WAEDC on its continent. The traits keep
+saying what the contest IS, the same for everyone; inventory section 9.2's
+"engine uses" column read the arms, which are gone.
+`Test_PartiesDescribeBothSidesOfTheStateLine` pins each side of the four state
+lines, and that each side states NOTHING of the other's.
+
+**DECIDED: WINTER FIELD DAY'S DX MULTIPLIER -- row, class and session now say
+`ARRLDXCCWithNoARRLSections`, the value every session ran.** The row said
+`ARRLDXCC`; the arm overwrote it with `ARRLDXCCWithNoARRLSections` on every
+set-up, so the row's value was never in force -- D8's shape, as Field Day's
+was before Q1. Following M2's Field Day precedent, the class
+(`GetDXMultiplierType`) and the VC.pas row were changed to the effective
+value, and `DescribeSession` still states it, so a pre-CONTEST `DX
+MULTIPLIER` line is still overwritten as before. **No behaviour changed** --
+nothing reads the trait but `ApplyContestTraits`, whose value the describe
+overwrites. Field Day was already consistent (Q1): row, class and session all
+`NoDXMults`. `Test_FieldDayDXMultipliersAreWhatTheSessionRuns` pins both. Q38
+asks whether Winter Field Day should count a DX multiplier at all.
+
+**Not changed, on purpose:**
+
+- Field Day still ACCEPTS a DX station (7.10's OPEN item).
+- The All Asian's former ADIF id `AL-ASIAN-DX-PHONE` (NY4I ruled
+  `ALL-ASIAN-DX-PHONE` correct; the old spelling must still import) goes in
+  with `ALLASIANSSB`'s class at M7b. Both All Asian contests are classless,
+  so their arm stays in FCONTEST, and M7a created no class.
+- An operator-edited memory is still overwritten each time the contest is set
+  up (Q9) -- the arms did that, and the applier does it the same way.
+- The QSO-party head (`MultipliersIsCounties`, the in/out-of-state file and
+  contest name, `Add_KVEKH6KL`) is trait-driven, not an arm, and stays.
+
+**Transcription notes.** Two arms added a country twice (UK/EI's `GM`, DARC
+10 m's `DL`); the duplicates are kept. Four memories the arms wrote twice
+(Sweepstakes' and the NA Sprints' CQ Alt-F1, Sweepstakes' exchange Alt-F7,
+NAQP's CQ Alt-F1) are written once, with the surviving value -- the memory
+holds only the last write. ALRS's oblast is zero-filled first, as its
+scoring already does; the arm's `Str2` was never initialised, so a call with
+no oblast read whatever the stack held. Every memory now reaches the engine
+through `UTF8Encode` once, in the applier; four arms passed a UnicodeString
+straight to the `ShortString` parameter instead. Identical for every ASCII
+value (every callsign, section and state), and it is why narrowing fell.
+
+**Gates:** the contest matrix **185 identical, 0 differing** -- every section,
+set-up included, with no re-freeze and no class line moved; golden corpus
+**24 / 0 / 2, exit 0** (13 sets exported); unit tests 0 failed
+(`uTestContestSession`, new: the base states nothing for every classless
+contest, a stated value is distinguishable from an unstated one, D8's four
+state lines, ARRL DX's two kinds of station, the Field Days' DX multipliers,
+Canada Day's blank MY STATE, and LogCfg's defaults including the contests it
+never named). `Lint-ContestNameTests` 281 -> 220: fcontest 107 -> 50, logcfg
+14 -> 10, its parse-sanity floor 228 -> 180. Narrowing 1301 -> 1291, range
+4 -> 4.
+
+**Questions this raised -- NY4I's:** Q38, Q39 (§9).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -2030,6 +2179,23 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     Bounding it is a behaviour change for every grid contest's malformed
     grids. Fix it (what should a malformed grid score?), and re-freeze ALRS
     with that reason?
+
+- **Q38-Q39** (M7a, set-up):
+  - **Q38** Winter Field Day's score is points times band-modes times the power
+    factor -- it counts no DX multiplier -- yet its session counts
+    `ARRLDXCCWithNoARRLSections` (now also its row and class, the value every
+    session ran; §8.2i). Field Day was ruled to have no multipliers (Q1). Is
+    the sponsor's rule that Winter Field Day has none either (`NoDXMults`, a
+    behaviour change for the remaining-multiplier display only), or does it
+    keep the DXCC count?
+  - **Q39** Three set-ups write MY STATE, a STATION setting (`TMySettings` is
+    not contest-scoped, so a later save of the station's settings can carry the
+    contest's value into `settings/tr4w.json`): Canada Day/Winter and the Russian DX contests blank
+    it for a station outside their country, the Russian cups replace it with
+    the grid. That is today's behaviour, moved exactly; but a contest
+    overwriting the operator's state can outlive the contest. Should the
+    sent exchange carry the contest's value instead (a contest-scoped field),
+    leaving MY STATE alone?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

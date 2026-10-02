@@ -89,6 +89,30 @@ const
       layout exists anywhere to drift. *)
    CabrilloQSOLineFormatDefault = '%s%s%-15s%-10s %-5s' + #13#10;
 
+   (* THE DOMESTIC-COUNTRY GROUPS SEVERAL CONTESTS NAME -- M7a, 2026-10-02.
+
+      DATA, STATED ONCE, AND READ BY TWO SIDES: a class's DescribeSession
+      passes one to TSessionDefaults.AddDomesticCountries, and FCONTEST's
+      Add_KVE / Add_KVEKH6KL / AddARRLSectionDomesticCountries /
+      AddRussianDomesticCountrys -- which the classless arms and the QSO-party
+      head still call -- loop over the same constant. Before M7a each group
+      was written once, in FCONTEST; a copy here would have been a second
+      list free to drift from the first. The order is the order they are
+      added, which is the order the domestic-country list holds them. *)
+   DomesticCountriesKVE: array[0..1] of string = ('K', 'VE');
+   DomesticCountriesKVEKH6KL: array[0..3] of string = ('K', 'VE', 'KH6', 'KL');
+
+   (* K, VE, KH6 and KL, then every other US possession that has an ARRL
+      section -- the Field Days' and Sweepstakes' domestic countries. *)
+   DomesticCountriesARRLSections: array[0..19] of string = (
+      'K', 'VE', 'KH6', 'KL',
+      'KC6', 'KG4', 'KH0', 'KH1', 'KH2', 'KH3', 'KH4', 'KH5', 'KH7', 'KH8',
+      'KH9', 'KP1', 'KP2', 'KP3', 'KP4', 'KP5');
+
+   (* European and Asiatic Russia and the two Russian islands with their
+      own country entry. *)
+   DomesticCountriesRussia: array[0..4] of string = ('UA', 'UA2', 'UA9', 'R1FJ', 'R1MV');
+
 type
    (* ONE OF THE FOUR `QSO POINTS ...` OVERRIDES -- QSO POINTS DOMESTIC CW and
       its three siblings: a fixed point value the OPERATOR states, which
@@ -233,6 +257,28 @@ type
          CW. A rule that reads this must say what it does with cmCW. *)
       MyCategoryMode: tCategoryMode;
 
+      (* THE REST OF THE STATION'S OWN EXCHANGE -- MY NAME, MY FD CLASS, MY
+         SECTION, MY PREC and MY CHECK, as text.
+
+         Added at M7a (2026-10-02), when FCONTEST.FoundContest's arms moved
+         into DescribeSession: those arms build the CW exchange messages and
+         memories out of them (the Field Days' class and section,
+         Sweepstakes' precedence and check, the sprints' name). Same growth
+         rule as every field here. '' when unset. *)
+      MyName: string;
+      MyFDClass: string;
+      MySection: string;
+      MyPrec: string;
+      MyCheck: string;
+
+      (* MY ZONE AS THE SETTING HOLDS IT -- the text, not MyZone's integer.
+
+         Added at M7a for CQExchangeDefault: the default CQ exchange LogCfg
+         built put the setting's TEXT into the message, and '05' is not '5'.
+         A rule that compares zones reads MyZone; one that SENDS the zone
+         reads this. *)
+      MyZoneText: string;
+
       (* THERE IS NO CLOCK HERE, AND THERE MUST NOT BE ONE.
 
          A time-of-day rule -- Croatian's 23-05 UTC doubling, UK/EI's 01-05 --
@@ -284,15 +330,17 @@ type
 
       SessionExchange IS THE EXCHANGE THE SESSION RESOLVED, NOT THE CONTEST'S
       ExchangeKind TRAIT, AND THAT IS MEASURED, NOT CHOSEN. Export has always
-      keyed on the ActiveExchange global, and FCONTEST.FoundContest's arms set
-      it per STATION after the head writes the trait: in the contest matrix
+      keyed on the ActiveExchange global, and set-up chooses it per STATION
+      after the head writes the trait -- a contest's DescribeSession since M7a,
+      a classless contest's FoundContest arm otherwise: in the contest matrix
       twelve contests' ActiveExchange differs from their row in some variant
       (ARRL DX and ARRL 160, the 7QP, Arizona, NEQP, Texas, California and
       Salmon Run parties, JIDX, PACC), and an operator's EXCHANGE RECEIVED
       line moves it too. Keying the base's default on the trait would have
-      changed those contests' Cabrillo; until M7 moves the arms into the
-      contest's DescribeSession, the session's answer is the global, and the
-      exporter hands it in as data -- the contest still reads no global. *)
+      changed those contests' Cabrillo. So the session's answer is the
+      global, and the exporter hands it in as data -- the contest still reads
+      no global. A single trait value cannot carry an answer that varies per
+      station (inventory D8), which is why this stays the session's. *)
    TCabrilloQSOContext = record
       SessionExchange: ExchangeType;
       RSTSent: string;
@@ -414,8 +462,8 @@ type
       PARAMETER, the exemption CLAUDE.md grants.
 
       Exchange IS THE SESSION'S EXCHANGE, NOT THE CONTEST'S ExchangeKind
-      TRAIT, for the reason TCabrilloQSOContext records: FCONTEST's arms set
-      it per station, and an operator's EXCHANGE RECEIVED line moves it.
+      TRAIT, for the reason TCabrilloQSOContext records: set-up chooses
+      it per station (DescribeSession), and an operator's EXCHANGE RECEIVED line moves it.
 
       CallWindowHasCall says the exchange is being entered against a call in
       the call window -- live entry. SAC's rule acts only then. *)
@@ -453,7 +501,7 @@ type
       records for the export.
 
       THE "Session" FIELDS ARE THE SESSION'S, NOT THE CONTEST'S TRAITS, for
-      the reason TCabrilloQSOContext states: FCONTEST's arms and the
+      the reason TCabrilloQSOContext states: set-up (DescribeSession) and the
       operator's statements set them per station, and today's score has
       always read the session's answer. *)
    TScoreTotals = record
@@ -531,6 +579,207 @@ type
       OncePerMode: boolean;
    end;
    TBonusStationList = array of TBonusStation;
+
+   (* EVERY VALUE A CONTEST'S SET-UP MAY STATE -- M7a, 2026-10-02.
+
+      One member per value FCONTEST.FoundContest's per-contest arms wrote for
+      a contest that has a class: the engine's Active* choices the arms made
+      per station, the session settings, the CW exchange messages, MY STATE
+      where a contest blanks or replaces it, and the domestic file. A member
+      arrives with the first contest that states it -- the arms of the
+      CLASSLESS contests set more (a zone multiplier, an initial exchange,
+      the R150S list) and those join when their contest gains a class. *)
+   TSessionValue = (
+      svExchange, svDomesticMult, svDXMult, svPrefixMult,
+      svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
+      svMultByBand, svQSOByMode, svQSOByBand,
+      svWARCEnabled, svHFEnabled,
+      svContestName, svMyState, svDomesticFile,
+      svLiteralDomesticQTH, svDigitalModeEnable, svExchangeMemoryEnable,
+      svSprintQSYRule, svMultipleBands, svMultipleModes,
+      svInitialExchangeOverwrite, svQSONumberByBand,
+      svMinitourDuration, svContactsPerPage, svQTCEnable, svRfoblMode,
+      svAutoDupeEnableCQ, svAutoDupeEnableSAndP,
+      svCQExchangeCW, svSPExchangeCW, svRepeatSPExchangeCW, svQSLCW,
+      svQuickQSLCW1, svQSOBeforeCW, svCallOkNowCW,
+      svRSTQSONumberExchangeMemories);
+   TSessionValues = set of TSessionValue;
+
+   (* A FUNCTION-KEY MEMORY A CONTEST'S SET-UP FILLS.
+
+      NAMED, NOT CODED: the engine's key codes are TRDOS constants (Tree's F1
+      is CHR(112)), and a contest class does not reach into TRDOS for them.
+      FCONTEST's applier translates; the class says which key it means. Only
+      the keys some contest fills are here. *)
+   TSessionMemoryKey = (smkF1, smkF2, smkF3, smkF4, smkF5, smkF6, smkF7, smkF8,
+                        smkAltF1, smkAltF2, smkAltF3, smkAltF4, smkAltF5,
+                        smkAltF6, smkAltF7);
+
+   (* The CQ memories, or the exchange (search-and-pounce) memories. *)
+   TSessionMemoryBank = (smbCQ, smbExchange);
+
+   (* ONE MEMORY A CONTEST FILLS -- an element of TSessionDefaults' list.
+
+      A RECORD BECAUSE IT IS AN INTERFACE PARAMETER, the exemption CLAUDE.md
+      grants: it is what the defaults object hands FCONTEST's applier, and it
+      is pure data. *)
+   TSessionMemory = record
+      Bank: TSessionMemoryBank;
+      Mode: ModeType;
+      Key: TSessionMemoryKey;
+      Text: string;
+   end;
+
+   (* WHAT A CONTEST WANTS ITS SESSION TO START FROM -- M7a, 2026-10-02
+      (docs/CONTEST_OWNERSHIP_DESIGN.md section 4.2).
+
+      FILLED BY THE CONTEST (TContestBase.DescribeSession), APPLIED BY
+      FCONTEST (ApplySessionDefaults), the only writer. The class touches no
+      global: it says what it wants, and the program decides how that reaches
+      the engine. That is what lets a test construct a contest, hand it a
+      station and read back what it would set up, without booting TR4W.
+
+      A CLASS, NOT A RECORD, because every value has THREE states and a record
+      field has two. A contest that names no exchange must leave the engine's
+      exchange exactly as the head wrote it -- the trait, or the operator's
+      statement -- and "not stated" cannot be spelled as a value of
+      ExchangeType, WarcEnabled or MY STATE (an empty MY STATE is a real
+      statement: Canada Day blanks a non-VE station's). So each setter
+      records that its value was stated, and the applier writes only what
+      was. It also owns two ordered lists, the domestic countries and the
+      memories. It is created and freed by the one caller, FoundContest.
+
+      A STATED VALUE OVERWRITES, AS THE ARM DID. Today's precedence is kept
+      exactly: the head applies the contest's traits and the operator's
+      statements (FCONTEST.ApplyContestTraits), then this, so a value a
+      contest states here wins over a statement made BEFORE the CONTEST line
+      and loses to one made after it -- what the arm always did. *)
+   TSessionDefaults = class
+   private
+      FStated: TSessionValues;
+      FExchange: ExchangeType;
+      FDomesticMult: DomesticMultType;
+      FDXMult: DXMultType;
+      FPrefixMult: PrefixMultType;
+      FBand: BandType;
+      FMode: ModeType;
+      FDomesticMultByBand: TAdditionalMultByBand;
+      FMinitourDuration: TTourDuration;
+      FContactsPerPage: TContactsPerPage;
+      FFlags: array[TSessionValue] of boolean;
+      FTexts: array[TSessionValue] of string;
+      FDomesticCountries: array of string;
+      FMemories: array of TSessionMemory;
+
+      procedure Stated(aValue: TSessionValue);
+      procedure SetExchange(aValue: ExchangeType);
+      procedure SetDomesticMult(aValue: DomesticMultType);
+      procedure SetDXMult(aValue: DXMultType);
+      procedure SetPrefixMult(aValue: PrefixMultType);
+      procedure SetBand(aValue: BandType);
+      procedure SetMode(aValue: ModeType);
+      procedure SetDomesticMultByBand(aValue: TAdditionalMultByBand);
+      procedure SetMinitourDuration(aValue: TTourDuration);
+      procedure SetContactsPerPage(aValue: TContactsPerPage);
+      function GetFlag(aIndex: integer): boolean;
+      procedure SetFlag(aIndex: integer; aValue: boolean);
+      function GetText(aIndex: integer): string;
+      procedure SetText(aIndex: integer; const aValue: string);
+      procedure AddMemory(aBank: TSessionMemoryBank; aMode: ModeType;
+                          aKey: TSessionMemoryKey; const aText: string);
+   public
+      (* DID THE CONTEST STATE THIS VALUE? The applier writes nothing else. *)
+      function IsStated(aValue: TSessionValue): boolean;
+
+      (* THE ENGINE'S CHOICES -- ActiveExchange, ActiveDomesticMult,
+         ActiveDXMult, ActivePrefixMult, ActiveBand, ActiveMode,
+         DomesticMultByBand and tAllowDupeQSOs. *)
+      property Exchange: ExchangeType read FExchange write SetExchange;
+      property DomesticMult: DomesticMultType read FDomesticMult write SetDomesticMult;
+      property DXMult: DXMultType read FDXMult write SetDXMult;
+      property PrefixMult: PrefixMultType read FPrefixMult write SetPrefixMult;
+      property Band: BandType read FBand write SetBand;
+      property Mode: ModeType read FMode write SetMode;
+      property DomesticMultByBand: TAdditionalMultByBand
+         read FDomesticMultByBand write SetDomesticMultByBand;
+      property AllowDupeQSOs: boolean index Ord(svAllowDupeQSOs)
+         read GetFlag write SetFlag;
+
+      (* THE SESSION'S SETTINGS -- each is the setting of the same name. *)
+      property MultByBand: boolean index Ord(svMultByBand) read GetFlag write SetFlag;
+      property QSOByMode: boolean index Ord(svQSOByMode) read GetFlag write SetFlag;
+      property QSOByBand: boolean index Ord(svQSOByBand) read GetFlag write SetFlag;
+      property WARCEnabled: boolean index Ord(svWARCEnabled) read GetFlag write SetFlag;
+      property HFEnabled: boolean index Ord(svHFEnabled) read GetFlag write SetFlag;
+      property LiteralDomesticQTH: boolean index Ord(svLiteralDomesticQTH)
+         read GetFlag write SetFlag;
+      property DigitalModeEnable: boolean index Ord(svDigitalModeEnable)
+         read GetFlag write SetFlag;
+      property ExchangeMemoryEnable: boolean index Ord(svExchangeMemoryEnable)
+         read GetFlag write SetFlag;
+      property SprintQSYRule: boolean index Ord(svSprintQSYRule)
+         read GetFlag write SetFlag;
+      property MultipleBands: boolean index Ord(svMultipleBands)
+         read GetFlag write SetFlag;
+      property MultipleModes: boolean index Ord(svMultipleModes)
+         read GetFlag write SetFlag;
+      property InitialExchangeOverwrite: boolean index Ord(svInitialExchangeOverwrite)
+         read GetFlag write SetFlag;
+      property QSONumberByBand: boolean index Ord(svQSONumberByBand)
+         read GetFlag write SetFlag;
+      property QTCEnable: boolean index Ord(svQTCEnable) read GetFlag write SetFlag;
+      property RfoblMode: boolean index Ord(svRfoblMode) read GetFlag write SetFlag;
+      property AutoDupeEnableCQ: boolean index Ord(svAutoDupeEnableCQ)
+         read GetFlag write SetFlag;
+      property AutoDupeEnableSAndP: boolean index Ord(svAutoDupeEnableSAndP)
+         read GetFlag write SetFlag;
+      property MinitourDuration: TTourDuration
+         read FMinitourDuration write SetMinitourDuration;
+      property ContactsPerPage: TContactsPerPage
+         read FContactsPerPage write SetContactsPerPage;
+      property ContestName: string index Ord(svContestName) read GetText write SetText;
+
+      (* MY STATE FOR THIS CONTEST -- a contest that blanks it for a station
+         outside its country (Canada Day, the Russian DX contests) or sends
+         the grid in its place (the Russian cups). *)
+      property MyState: string index Ord(svMyState) read GetText write SetText;
+
+      (* THE DOMESTIC FILE, without its extension -- what the head chose,
+         overwritten. An EMPTY one is a statement too: it leaves DOMESTIC
+         FILENAME as it stood (the ALRS cup's non-capital Russian station). *)
+      property DomesticFile: string index Ord(svDomesticFile) read GetText write SetText;
+
+      (* THE CW EXCHANGE MESSAGES -- CQ EXCHANGE, S&P EXCHANGE and the rest. *)
+      property CQExchangeCW: string index Ord(svCQExchangeCW) read GetText write SetText;
+      property SPExchangeCW: string index Ord(svSPExchangeCW) read GetText write SetText;
+      property RepeatSPExchangeCW: string index Ord(svRepeatSPExchangeCW)
+         read GetText write SetText;
+      property QSLCW: string index Ord(svQSLCW) read GetText write SetText;
+      property QuickQSLCW1: string index Ord(svQuickQSLCW1) read GetText write SetText;
+      property QSOBeforeCW: string index Ord(svQSOBeforeCW) read GetText write SetText;
+      property CallOkNowCW: string index Ord(svCallOkNowCW) read GetText write SetText;
+
+      (* THE RST-AND-SERIAL EXCHANGE MEMORIES, as FCONTEST's shared set-up
+         for that exchange writes them (UK/EI's non-UK station). A shared
+         arm, asked for by name rather than copied: it carries a per-language
+         caption, and it is the same set the session's closing exchange
+         set-up writes for every RST-and-serial contest. *)
+      procedure UseRSTQSONumberExchangeMemories;
+
+      (* DOMESTIC COUNTRIES, in the order AddDomesticCountry is to see them. *)
+      procedure AddDomesticCountry(const aID: string);
+      procedure AddDomesticCountries(const aIDs: array of string);
+      function DomesticCountryCount: integer;
+      function DomesticCountry(aIndex: integer): string;
+
+      (* FUNCTION-KEY MEMORIES, applied in the order they were set. *)
+      procedure SetCQMemory(aMode: ModeType; aKey: TSessionMemoryKey;
+                            const aText: string);
+      procedure SetExchangeMemory(aMode: ModeType; aKey: TSessionMemoryKey;
+                                  const aText: string);
+      function MemoryCount: integer;
+      function Memory(aIndex: integer): TSessionMemory;
+   end;
 
    TContestBase = class
    private
@@ -1103,6 +1352,50 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); virtual;
+
+      (* THE CONTEST DESCRIBES THE SESSION IT WANTS -- M7a, 2026-10-02
+         (docs/CONTEST_OWNERSHIP_DESIGN.md section 4.2).
+
+         ASKED BY FCONTEST.FoundContest, once per set-up, after the head has
+         applied the contest's traits and the operator's statements
+         (ApplyContestTraits) and decided whether the station is in a QSO
+         party's host state. The contest fills aSession with what it wants
+         its session to start from -- the CW messages and memories, the
+         settings, the domestic countries, and the engine choices it makes
+         PER STATION -- and FCONTEST's ApplySessionDefaults writes them. The
+         contest writes no global, and reads only aStation: the identity
+         object this is asked of (uContestRegistry.ContestIdentity) carries
+         no station of its own.
+
+         A CHOICE THAT DEPENDS ON THE STATION IS STATED BOTH WAYS HERE. The
+         traits say what a contest IS, the same for everyone; whether an
+         Arizona station is in Arizona changes its exchange, and a single
+         trait value could not say so (inventory D8). The class states the
+         in-state and the out-of-state branch explicitly, on
+         aStation.InHostState.
+
+         THE BASE STATES NOTHING, which is exactly what FoundContest did for
+         a contest with no arm. A CLASSLESS contest is asked too (its
+         identity is a plain TContestBase) and its arm still runs after, in
+         FoundContest's `case`, until it gains a class. Each override was its
+         contest's FoundContest arm, moved line for line at M7a. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); virtual;
+
+      (* THE CQ EXCHANGE A CONTEST OFFERS WHEN THE OPERATOR HAS NONE -- M7a.
+
+         LogCfg.tSetupExchangeNumbers asks it once the whole configuration is
+         read, and puts the answer into CQ EXCHANGE (and what follows from
+         it) only where that message is still EMPTY -- so this is a default
+         in the strict sense, and anything the operator or DescribeSession
+         set wins. It is asked then rather than at DescribeSession because
+         the station's lines may follow the CONTEST line, and the text is
+         built from them.
+
+         THE BASE OFFERS NOTHING (''), which is what LogCfg gave every
+         contest it did not name. Each override was its contest's share of
+         LogCfg's `case`, moved at M7a. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; virtual;
 
       (* Hands the contest the station it is operating as.
 
@@ -2113,6 +2406,176 @@ begin
       begin
       Result := True;
       end;
+end;
+
+(* ------------------------------------------------------------------------ *)
+(* SET-UP -- M7a                                                            *)
+(* ------------------------------------------------------------------------ *)
+
+procedure TContestBase.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   (* Nothing: see the declaration. *)
+end;
+
+function TContestBase.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := '';
+end;
+
+procedure TSessionDefaults.Stated(aValue: TSessionValue);
+begin
+   Include(FStated, aValue);
+end;
+
+function TSessionDefaults.IsStated(aValue: TSessionValue): boolean;
+begin
+   Result := aValue in FStated;
+end;
+
+procedure TSessionDefaults.SetExchange(aValue: ExchangeType);
+begin
+   FExchange := aValue;
+   Stated(svExchange);
+end;
+
+procedure TSessionDefaults.SetDomesticMult(aValue: DomesticMultType);
+begin
+   FDomesticMult := aValue;
+   Stated(svDomesticMult);
+end;
+
+procedure TSessionDefaults.SetDXMult(aValue: DXMultType);
+begin
+   FDXMult := aValue;
+   Stated(svDXMult);
+end;
+
+procedure TSessionDefaults.SetPrefixMult(aValue: PrefixMultType);
+begin
+   FPrefixMult := aValue;
+   Stated(svPrefixMult);
+end;
+
+procedure TSessionDefaults.SetBand(aValue: BandType);
+begin
+   FBand := aValue;
+   Stated(svBand);
+end;
+
+procedure TSessionDefaults.SetMode(aValue: ModeType);
+begin
+   FMode := aValue;
+   Stated(svMode);
+end;
+
+procedure TSessionDefaults.SetDomesticMultByBand(aValue: TAdditionalMultByBand);
+begin
+   FDomesticMultByBand := aValue;
+   Stated(svDomesticMultByBand);
+end;
+
+procedure TSessionDefaults.SetMinitourDuration(aValue: TTourDuration);
+begin
+   FMinitourDuration := aValue;
+   Stated(svMinitourDuration);
+end;
+
+procedure TSessionDefaults.SetContactsPerPage(aValue: TContactsPerPage);
+begin
+   FContactsPerPage := aValue;
+   Stated(svContactsPerPage);
+end;
+
+function TSessionDefaults.GetFlag(aIndex: integer): boolean;
+begin
+   Result := FFlags[TSessionValue(aIndex)];
+end;
+
+procedure TSessionDefaults.SetFlag(aIndex: integer; aValue: boolean);
+begin
+   FFlags[TSessionValue(aIndex)] := aValue;
+   Stated(TSessionValue(aIndex));
+end;
+
+function TSessionDefaults.GetText(aIndex: integer): string;
+begin
+   Result := FTexts[TSessionValue(aIndex)];
+end;
+
+procedure TSessionDefaults.SetText(aIndex: integer; const aValue: string);
+begin
+   FTexts[TSessionValue(aIndex)] := aValue;
+   Stated(TSessionValue(aIndex));
+end;
+
+procedure TSessionDefaults.UseRSTQSONumberExchangeMemories;
+begin
+   Stated(svRSTQSONumberExchangeMemories);
+end;
+
+procedure TSessionDefaults.AddDomesticCountry(const aID: string);
+var
+   n: integer;
+begin
+   n := Length(FDomesticCountries);
+   SetLength(FDomesticCountries, n + 1);
+   FDomesticCountries[n] := aID;
+end;
+
+procedure TSessionDefaults.AddDomesticCountries(const aIDs: array of string);
+var
+   i: integer;
+begin
+   for i := Low(aIDs) to High(aIDs) do
+      begin
+      AddDomesticCountry(aIDs[i]);
+      end;
+end;
+
+function TSessionDefaults.DomesticCountryCount: integer;
+begin
+   Result := Length(FDomesticCountries);
+end;
+
+function TSessionDefaults.DomesticCountry(aIndex: integer): string;
+begin
+   Result := FDomesticCountries[aIndex];
+end;
+
+procedure TSessionDefaults.AddMemory(aBank: TSessionMemoryBank; aMode: ModeType;
+                                     aKey: TSessionMemoryKey; const aText: string);
+var
+   n: integer;
+begin
+   n := Length(FMemories);
+   SetLength(FMemories, n + 1);
+   FMemories[n].Bank := aBank;
+   FMemories[n].Mode := aMode;
+   FMemories[n].Key := aKey;
+   FMemories[n].Text := aText;
+end;
+
+procedure TSessionDefaults.SetCQMemory(aMode: ModeType; aKey: TSessionMemoryKey;
+                                       const aText: string);
+begin
+   AddMemory(smbCQ, aMode, aKey, aText);
+end;
+
+procedure TSessionDefaults.SetExchangeMemory(aMode: ModeType; aKey: TSessionMemoryKey;
+                                             const aText: string);
+begin
+   AddMemory(smbExchange, aMode, aKey, aText);
+end;
+
+function TSessionDefaults.MemoryCount: integer;
+begin
+   Result := Length(FMemories);
+end;
+
+function TSessionDefaults.Memory(aIndex: integer): TSessionMemory;
+begin
+   Result := FMemories[aIndex];
 end;
 
 end.

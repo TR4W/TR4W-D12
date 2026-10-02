@@ -55,7 +55,7 @@ unit uContestTexasQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestTexasQP = class(TContestStateQSOPartyBase)
@@ -99,6 +99,10 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -193,6 +197,23 @@ end;
 procedure TContestTexasQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 2, 2);
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestTexasQP.DescribeSession(const aStation: TStationContext;
+                                          aSession: TSessionDefaults);
+begin
+   (* BOTH SIDES OF THE STATE LINE, STATED (inventory D8). *)
+   if aStation.InHostState then
+      begin
+      aSession.DXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
+      end
+   else
+      begin
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
 end;
 
 initialization

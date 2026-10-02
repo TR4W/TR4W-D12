@@ -36,10 +36,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
-  FCONTEST has an arm for this contest: a 60-minute tour, RFOBL MODE on,
+  FCONTEST had an arm for this contest: a 60-minute tour, RFOBL MODE on,
   phone, and a contest name. uNewContest shares an arm with the All Asian
-  and YOTA contests. Both are contest SETUP, not scoring, and stay where
-  they are.
+  and YOTA contests. Both are contest SETUP, not scoring; the arm is
+  DescribeSession since M7a, and the prompt moves at M9.
 
   AlwaysOnePointPerQSO SCORES EXACTLY LIKE OnePointPerQSO, and the
   difference is not scoring. Its meaning -- "ignores dupes" in VC.pas --
@@ -108,6 +108,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -216,6 +220,21 @@ begin
    (* "Ignores dupes" -- the meaning the row's AlwaysOnePointPerQSO carried.
       See the unit header. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestYouthChampionshipRF.DescribeSession(const aStation: TStationContext;
+                                                      aSession: TSessionDefaults);
+begin
+   aSession.MinitourDuration := 60;
+   (* n4af 4.42.7 *)
+   aSession.RfoblMode := True;
+   aSession.Mode := Phone;
+   (* THE NAME IS LITERAL QUESTION MARKS -- Cyrillic lost to an old code-page
+      conversion long before this tree; transcribed as it stands. *)
+   aSession.ContestName := '?????????? ?????????? ??';
 end;
 
 initialization

@@ -192,6 +192,12 @@ type
       function GetBonusStations: TBonusStationList; override;
       function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
       function CreditsBonusMode(aMode: ModeType): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -359,6 +365,32 @@ begin
          Result := False;
          end;
       end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestWashingtonSalmonRun.DescribeSession(const aStation: TStationContext;
+                                                      aSession: TSessionDefaults);
+begin
+   (* BOTH SIDES OF THE STATE LINE, STATED (inventory D8). *)
+   if aStation.InHostState then
+      begin
+      aSession.Exchange := RSTDomesticOrDXQTHExchange;
+      aSession.DXMult := ARRLDXCCWithNoUSAOrCanada;
+      end
+   else
+      begin
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestWashingtonSalmonRun.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN ' + aStation.MyState;
 end;
 
 initialization

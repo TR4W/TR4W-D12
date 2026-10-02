@@ -88,6 +88,10 @@ type
       function InitialExchangeFromCall(const aStandardCall: string;
                                        const aCountryID: string;
                                        out aExchange: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -229,6 +233,22 @@ function TContestRussianDX.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named RUSSIANDX, RU3AXMEMORIAL; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestRussianDX.DescribeSession(const aStation: TStationContext;
+                                            aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountries(DomesticCountriesRussia);
+   aSession.AddDomesticCountry('CE9');
+   if not RussianID(string(aStation.MyCountry)) then
+      begin
+      aSession.MyState := '';
+      end;
 end;
 
 initialization

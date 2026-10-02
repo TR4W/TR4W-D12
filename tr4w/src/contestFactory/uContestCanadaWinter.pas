@@ -91,6 +91,10 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -214,6 +218,23 @@ function TContestCanadaWinter.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named CANADA_DAY, CANADA_WINTER; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestCanadaWinter.DescribeSession(const aStation: TStationContext;
+                                               aSession: TSessionDefaults);
+begin
+   if aStation.MyCountry <> 'VE' then
+      begin
+      aSession.MyState := '';
+      end;
+   aSession.AddDomesticCountry('VE');
+   aSession.AddDomesticCountry('CY0');
+   aSession.AddDomesticCountry('CY9');
 end;
 
 initialization

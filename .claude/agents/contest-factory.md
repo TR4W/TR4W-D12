@@ -192,9 +192,9 @@ the target shape, the M-step migration order and the open questions.
   `ContestIdentity(Contest)`** -- never `ContestsArray` /
   `ContestsBooleanArray` directly. The seven tokens are replayed through
   `uSettingsEffects.ReplayContestStatements`, the same arm a `.cfg` line runs.
-  So **a trait override changes set-up now** -- the matrix sees it. The
-  per-contest `FoundContest` arms still run after and still win (M7 moves
-  them into `DescribeSession`); `InHostState` waits for M7 too. New traits:
+  So **a trait override changes set-up now** -- the matrix sees it. What a
+  contest states in `DescribeSession` runs after and wins (M7a, below); a
+  classless contest's `FoundContest` arm still does. New traits:
   `ZoneMode` (stated, never a Boolean cast -- that gave 255),
   `QSOByBand/Mode`, `MultByBand/Mode`, `VHFBandsEnabled`,
   `CountsDomesticCountries`, `InStateDomesticFileName`. A QSO party's
@@ -202,6 +202,30 @@ the target shape, the M-step migration order and the open questions.
   `Test_EveryQSOPartyNamesBothDomesticFiles` holds the two names together.
   In-state detection reads it through `uAppPaths.ShippedDomFilePath` and
   `uDomFileKeys`. Design doc §7.9, §8.2c.
+- **A contest describes its own session** (M7a, 2026-10-02).
+  `FCONTEST.FoundContest` asks `ContestIdentity(Contest).DescribeSession(
+  CurrentStation, aSession)` after the head (traits, the operator's
+  statements, the in-state decision) and `FCONTEST.ApplySessionDefaults` --
+  the ONE writer -- applies it, where the arms used to run, before the closing
+  `case ActiveExchange`. **`TSessionDefaults` is a class** because every value
+  has a third state, NOT STATED: the applier writes only what was stated, and
+  a stated value overwrites unconditionally (today's precedence: it beats a
+  pre-`CONTEST` statement, loses to a later line). The class writes no global
+  and reads only `aStation` -- the identity object carries no station, so
+  `uContestFactory.CurrentStation` is exported and passed in. Memory keys are
+  named (`TSessionMemoryKey`), never Tree's codes; the domestic-country groups
+  are `uContestBase` constants FCONTEST's own `Add_KVE`-style helpers read too.
+  **All 55 arms naming a registered contest are gone**; FoundContest's `case`
+  holds classless contests only (M7b gives them classes). LogCfg's per-contest
+  CQ-exchange defaults are the sibling `CQExchangeDefault(aStation)` -- asked
+  later, once the whole config is read -- and the ARRL DX one is on the CW
+  class only (LogCfg never named the phone running). **D8 is resolved by
+  stating both branches** on `aStation.InHostState` / country / continent.
+  Winter Field Day's row and class now say `ARRLDXCCWithNoARRLSections`, the
+  value its arm always set (Q38 asks whether it should count one at all).
+  The matrix was 185 identical with no re-freeze; `uTestContestSession` pins
+  the base stating nothing, the three-state values, and D8's four state lines.
+  Design §8.2i; `ADDING_A_CONTEST.md` "How a contest describes its session".
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog

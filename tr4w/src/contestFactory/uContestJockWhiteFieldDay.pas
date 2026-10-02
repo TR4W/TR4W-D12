@@ -73,7 +73,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   LOGDUPE.SetMultFlags names this contest for the same branch rule (and also
   skips zone 00); that is the multiplier seam's, M8, and stays where it is.
   The branch exchange is NZFieldDayExchange (M5); export is the base's
-  default (M4). LOGCFG and uNewContest name it for set-up (M7). *)
+  default (M4). LOGCFG's CQ exchange is CQExchangeDefault since M7a;
+  uNewContest still names it (M9). *)
 unit uContestJockWhiteFieldDay;
 
 {$I tr4w.inc}
@@ -109,6 +110,9 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -226,6 +230,14 @@ function TContestJockWhiteFieldDay.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestJockWhiteFieldDay.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN # ' + aStation.MyZoneText;
 end;
 
 initialization

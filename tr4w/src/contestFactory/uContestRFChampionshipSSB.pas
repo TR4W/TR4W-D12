@@ -89,6 +89,12 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE SPONSOR'S FORMULA -- see the header. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -217,6 +223,27 @@ function TContestRFChampionshipSSB.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestRFChampionshipSSB.DescribeSession(const aStation: TStationContext;
+                                                    aSession: TSessionDefaults);
+begin
+   aSession.Mode := Phone;
+   aSession.DomesticMultByBand := dmbbAllBand;
+   aSession.InitialExchangeOverwrite := True;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestRFChampionshipSSB.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' ' + aStation.MyState + '#';
 end;
 
 initialization

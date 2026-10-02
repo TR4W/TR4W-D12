@@ -93,6 +93,10 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -251,6 +255,24 @@ function TContestSACCW.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named SACCW, SACSSB; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestSACCW.DescribeSession(const aStation: TStationContext;
+                                        aSession: TSessionDefaults);
+begin
+   if ScandinavianCountry(string(aStation.MyCountry)) then
+      begin
+      aSession.DXMult := ARRLDXCC;
+      end
+   else
+      begin
+      aSession.PrefixMult := SACDistricts;
+      end;
 end;
 
 initialization

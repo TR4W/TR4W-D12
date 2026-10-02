@@ -77,6 +77,10 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -245,6 +249,52 @@ begin
       begin
       aExch.DomesticQTH := aExch.QTHString;
       end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named ARRLSSCW, ARRLSSSSB, one contest in two
+   modes, so the family base holds it once. *)
+procedure TContestARRLSSBase.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountries(DomesticCountriesARRLSections);
+
+   aSession.CQExchangeCW := '_# ' + aStation.MyPrec + '  ' + aStation.MyCall
+                            + '  ' + aStation.MyCheck + ' ' + aStation.MySection;
+   aSession.SPExchangeCW := 'NR # ' + aStation.MyPrec + ' ' + aStation.MyCall
+                            + ' ' + aStation.MyCheck + ' ' + aStation.MySection;
+   aSession.RepeatSPExchangeCW := aSession.SPExchangeCW;
+   aSession.QSLCW := '73 ' + aStation.MyCall + ' SS>';
+   aSession.QSOBeforeCW := 'SRI QSO ' + aStation.MyCall + ' SS';
+   aSession.QuickQSLCW1 := 'TU>';
+   aSession.CallOkNowCW := '} R';
+
+   aSession.SetCQMemory(CW, smkF1, 'SS ' + aStation.MyCall + ' SS>');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^SS ' + aStation.MyCall + ' ' + aStation.MyCall + ' SS>');
+   aSession.SetCQMemory(CW, smkF3, 'CQ^SS CQ^SS ' + aStation.MyCall + ' ' + aStation.MyCall + ' SS>');
+   aSession.SetCQMemory(CW, smkF7, '  CQ^SS ' + aStation.MyCall + ' SS');
+   aSession.SetCQMemory(CW, smkF8, '  CQ^SS CQ^SS ' + aStation.MyCall + ' ' + aStation.MyCall + ' SS');
+
+   (* The arm set Alt-F1 to 'CQ^SS \ SS' first and overwrote it with this. *)
+   aSession.SetCQMemory(CW, smkAltF1, 'SS ' + aStation.MyCall + ' SS');
+   aSession.SetCQMemory(CW, smkAltF2, 'CQ^SS cq^ss ' + aStation.MyCall + ' ' + aStation.MyCall + ' SS');
+   aSession.SetCQMemory(CW, smkAltF3, 'CQ^SS cq^ss ' + aStation.MyCall + ' ' + aStation.MyCall + ' SS');
+
+   aSession.SetExchangeMemory(CW, smkF3, 'NR #');
+   aSession.SetExchangeMemory(CW, smkF4, aStation.MyPrec);
+   aSession.SetExchangeMemory(CW, smkF5, aStation.MyCheck);
+   aSession.SetExchangeMemory(CW, smkF6, aStation.MySection);
+   aSession.SetExchangeMemory(CW, smkF7, '  CQ^SS ' + aStation.MyCall + ' SS');
+   aSession.SetExchangeMemory(CW, smkF8, '  CQ^SS CQ^SS ' + aStation.MyCall + ' SS');
+
+   aSession.SetExchangeMemory(CW, smkAltF3, 'NR?');
+   aSession.SetExchangeMemory(CW, smkAltF4, 'PREC?');
+   aSession.SetExchangeMemory(CW, smkAltF5, 'CK?');
+   aSession.SetExchangeMemory(CW, smkAltF6, 'SEC?');
+   (* The arm set Alt-F7 twice, to this value both times. *)
+   aSession.SetExchangeMemory(CW, smkAltF7, ' CQ^SS CQ^SS ' + aStation.MyCall + ' ' + aStation.MyCall + ' SS');
 end;
 
 end.

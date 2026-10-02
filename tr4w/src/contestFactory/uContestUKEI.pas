@@ -41,7 +41,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record
   but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
-  (M5) and set-up (M7) are not moved.
+  (M5b) and set-up (M7a) have moved since.
 
   SCORING IS UKEIQSOPointMethod, transcribed exactly. Outside Europe: 4 for a
   UK/EI station, 2 for a European, 1 otherwise. In Europe but not UK/EI: 1
@@ -111,6 +111,10 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -306,6 +310,28 @@ function TContestUKEI.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestUKEI.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountry('G');
+   aSession.AddDomesticCountry('GD');
+   aSession.AddDomesticCountry('GI');
+   aSession.AddDomesticCountry('GJ');
+   (* GM TWICE, AS THE ARM ADDED IT -- transcribed, not tidied. *)
+   aSession.AddDomesticCountry('GM');
+   aSession.AddDomesticCountry('GM');
+   aSession.AddDomesticCountry('GW');
+   aSession.AddDomesticCountry('GU');
+   aSession.AddDomesticCountry('EI');
+   if not UKEIStation(string(aStation.MyCountry)) then
+      begin
+      aSession.UseRSTQSONumberExchangeMemories;
+      end;
 end;
 
 initialization

@@ -134,9 +134,17 @@ $CEILINGS = @{
    # stays, its class blocked on the multiplier sheet -- design Q33),
    # mainunit 14 -> 13 and logsubs2 4 -> 3 (Missouri's bonus-station check in
    # the log's loader and in live entry).
+   #
+   # M7a, 2026-10-02 -- each contest describes its own session: fcontest
+   # 107 -> 50 (FoundContest's 55 arms for contests with a class went into
+   # their DescribeSession, with the two Contest = tests inside the Cup RF and
+   # RF Championship arms; ALLJA left the ALLJA/YOTA arm, which stays for
+   # YOTA) and logcfg 14 -> 10 (four of tSetupExchangeNumbers' arms went
+   # whole into CQExchangeDefault; six more lost their registered labels and
+   # stay for the classless contests beside them).
    'mainunit.pas'          = 13
-   'trdos\fcontest.pas'    = 107
-   'trdos\logcfg.pas'      = 14
+   'trdos\fcontest.pas'    = 50
+   'trdos\logcfg.pas'      = 10
    'trdos\logdupe.pas'     = 5
    'trdos\logedit.pas'     = 11
    'trdos\logstuff.pas'    = 3
@@ -151,7 +159,11 @@ $CEILINGS = @{
 
 # Roughly two thirds of the count at the time of writing, and far above what a
 # parser that read nothing would find. See "It fails closed".
-$TOTAL_FLOOR  = 228
+#
+# M7a, 2026-10-02: 228 -> 180. The total fell 281 -> 220 because 61 tests
+# genuinely moved into the contest classes (the ceilings above); 180 keeps
+# the floor at about the ratio to the count (81%) it had before.
+$TOTAL_FLOOR  = 180
 $MEMBER_FLOOR = 150
 
 # --------------------------------------------------------------------------

@@ -99,6 +99,9 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+   public
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -249,6 +252,21 @@ begin
    if ADIFTextIsAlphabetic(srxExchange) then
       begin
       aExch.QTHString := ShortString(srxExchange);
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestIARU.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   if aStation.MyState <> '' then
+      begin
+      Result := ' 5NN ' + aStation.MyState;
+      end
+   else
+      begin
+      Result := ' 5NN ' + aStation.MyZoneText;
       end;
 end;
 

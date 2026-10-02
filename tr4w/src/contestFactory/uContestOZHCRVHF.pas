@@ -82,6 +82,12 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE SPONSOR'S FORMULA -- see the header. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -209,6 +215,23 @@ function TContestOZHCRVHF.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestOZHCRVHF.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   aSession.QSONumberByBand := True;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestOZHCRVHF.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN # ' + aStation.MyGrid;
 end;
 
 initialization

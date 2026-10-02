@@ -40,9 +40,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   unchanged, which is the transcription proof (its synthetic QSOs are
   stamped 12:xx UTC, outside the night window).
 
-  NOT MOVED: FCONTEST.FoundContest's CROATIAN arm, which gives a 9A station
-  CQ DXCC multipliers. That is set-up, and moves with every other arm into
-  DescribeSession at M7.
+  MOVED AT M7a: FCONTEST.FoundContest's CROATIAN arm, which gives a 9A
+  station CQ DXCC multipliers, is this class's DescribeSession.
 
   SCORING IS CroatianQSOPointMethod, transcribed in its order, because later
   steps overwrite earlier ones and the order IS the rule:
@@ -102,6 +101,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -285,6 +288,18 @@ function TContestCroatian.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestCroatian.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   if aStation.MyCountry = '9A' then
+      begin
+      aSession.DXMult := CQDXCC;
+      end;
 end;
 
 initialization

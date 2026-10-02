@@ -39,7 +39,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record
   but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
-  (M5) and set-up (M7) are not moved.
+  (M5b) and set-up (M7a) have moved since.
 
   SCORING IS WAGQSOPointMethod, transcribed exactly. A German station (our
   country DL): 1 for another German, 3 for a European, 5 otherwise. Anyone
@@ -87,6 +87,10 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -230,6 +234,27 @@ begin
       begin
       aExch.QTHString := ShortString(aTemps.DOK);
       end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestWAG.DescribeSession(const aStation: TStationContext;
+                                      aSession: TSessionDefaults);
+begin
+   (* A German station counts countries, everyone else counts DOKs. For the
+      WAG, German stations count Germany as a country multiplier by hand after
+      the contest. *)
+   if aStation.MyCountry = 'DL' then
+      begin
+      aSession.DXMult := CQDXCC;
+      end
+   else
+      begin
+      aSession.DomesticMult := DOKCodes;
+      end;
+   aSession.LiteralDomesticQTH := True;
+   aSession.AddDomesticCountry('DL');
 end;
 
 initialization

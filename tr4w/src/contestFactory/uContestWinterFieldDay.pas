@@ -77,6 +77,8 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
+      function GetDXMultiplierType: DXMultType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
       (* THE FINAL SCORE -- Issue 301 (NY4I): the points times the band-mode
@@ -111,6 +113,10 @@ type
          its own copy (design 1.4). *)
       function FormatADIFReceivedExchange(const aQso: ContestExchange;
                                           aExchangeCarriesRST: boolean): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -121,6 +127,22 @@ uses
    uADIF,
    (* STATE from the worked station's section -- a leaf, lifted at M4. *)
    uARRLSections;
+
+(* THE DX MULTIPLIER IS DXCC WITHOUT THE ARRL SECTIONS -- M7a, 2026-10-02.
+
+   THE ROW SAID ARRLDXCC AND NO SESSION EVER RAN IT. FCONTEST.FoundContest's
+   Winter Field Day arm set ARRLDXCCWithNoARRLSections after the head had
+   written the row's value, every time, so the row was a value nothing used --
+   the shape of inventory D8, as Field Day's was before Q1. When the arm moved
+   into DescribeSession the class, the row and the session were made to say
+   the one value that is actually in force, as Field Day's were at M2. A
+   sponsor rule is not being changed: the multiplier every Winter Field Day
+   session has counted is now also what the contest SAYS it counts.
+   Test_WinterFieldDayDXMultiplierIsWhatTheSessionRuns pins the three. *)
+function TContestWinterFieldDay.GetDXMultiplierType: DXMultType;
+begin
+   Result := ARRLDXCCWithNoARRLSections;
+end;
 
 procedure TContestWinterFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -336,6 +358,27 @@ begin
       begin
       Result := inherited FormatADIFReceivedExchange(aQso, aExchangeCarriesRST);
       end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestWinterFieldDay.DescribeSession(const aStation: TStationContext;
+                                                 aSession: TSessionDefaults);
+begin
+   aSession.WARCEnabled := False;
+   aSession.SetCQMemory(CW, smkF1, 'CQ^WFD \ \ TEST');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^WFD CQ^WFD \ \ TEST');
+   aSession.CQExchangeCW := ' ' + aStation.MyFDClass + ' ' + aStation.MySection;
+   aSession.SPExchangeCW := aStation.MyFDClass + ' ' + aStation.MySection;
+   aSession.QSLCW := '73 \ WFD';
+
+   (* THE SAME VALUE AS THE TRAIT SINCE M7a -- see GetDXMultiplierType. It is
+      still stated here because the arm stated it, and so it still overwrites
+      a DX MULTIPLIER statement made before the CONTEST line, as it always
+      did. *)
+   aSession.DXMult := ARRLDXCCWithNoARRLSections;
+   aSession.AddDomesticCountries(DomesticCountriesARRLSections);
 end;
 
 initialization

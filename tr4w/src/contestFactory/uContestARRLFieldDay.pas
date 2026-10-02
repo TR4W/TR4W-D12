@@ -152,6 +152,10 @@ type
          the base's. *)
       function FormatADIFReceivedExchange(const aQso: ContestExchange;
                                           aExchangeCarriesRST: boolean): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -419,6 +423,29 @@ begin
       begin
       Result := inherited FormatADIFReceivedExchange(aQso, aExchangeCarriesRST);
       end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestARRLFieldDay.DescribeSession(const aStation: TStationContext;
+                                               aSession: TSessionDefaults);
+begin
+   aSession.DomesticMult := DomesticFile;
+
+   (* The trait's value too (Q1, M2) -- stated because the arm stated it, so
+      it overwrites a pre-CONTEST statement as it always did. *)
+   aSession.DXMult := NoDXMults;
+
+   (* WARC is not allowed during Field Day -- ny4i 4.45.3. *)
+   aSession.WARCEnabled := False;
+   aSession.SetCQMemory(CW, smkF1, 'CQ^FD \ \ FD');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^FD CQ^FD \ \ FD');
+   aSession.CQExchangeCW := ' ' + aStation.MyFDClass + ' ' + aStation.MySection;
+   aSession.SPExchangeCW := aStation.MyFDClass + ' ' + aStation.MySection;
+   aSession.QSLCW := '73 \ FD';
+   aSession.AddDomesticCountries(DomesticCountriesARRLSections);
+   aSession.LiteralDomesticQTH := True;
 end;
 
 initialization

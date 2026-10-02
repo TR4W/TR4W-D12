@@ -254,9 +254,10 @@ domestic file from `uContestRegistry.ContestIdentity(Contest)` -- your class --
 through one resolver, `FCONTEST.ApplyContestTraits`, and an **operator's
 statement beats your value** whatever the line order. So a trait override is
 no longer inert: **changing one changes the contest's set-up**, and the
-contest matrix will show it. FCONTEST's per-contest arms still run after the
-head and still win where they assign (they move into the class at M7). Design
-§7.9.
+contest matrix will show it. What your class states in `DescribeSession`
+(below) runs after the head and wins where it assigns, exactly as the arms it
+replaced did; a classless contest's FoundContest arm still does the same.
+Design §7.9, §8.2i.
 | `HostState` | **`USQSOPartyStateName`** -- derived from the array's `P` index, which is the one place a QSO party's state is written down. `''` for every contest that has no host state, which is a real answer |
 
 **`CountyLineCountiesMax` and `CountyLineAllowed` ARE NOT ON THE BASE** — they
@@ -514,6 +515,55 @@ CombineScore: session with no multiplier, or the FISTS exchange -> the points  (
   every contest; a bonus its synthetic QSOs do not trigger needs the unit
   test and a `docs/BENCH_QUEUE.md` item.
 
+### How a contest describes its session (M7a, 2026-10-02)
+
+**SET-UP IS DATA YOUR CLASS HANDS OVER, NOT GLOBALS IT WRITES.**
+`FCONTEST.FoundContest` asks `ContestIdentity(Contest).DescribeSession(
+aStation, aSession)` once per set-up -- after the head has applied your traits
+and the operator's statements and decided whether the station is in a QSO
+party's host state -- and `FCONTEST.ApplySessionDefaults`, the only writer,
+applies what you stated. Then the closing exchange set-up runs. Your class
+reads `aStation` only: the identity object it is asked of carries no station.
+
+- **Do nothing** and nothing is stated: the session is exactly what the head
+  made of your traits. That is what most contests want.
+- **State what your contest sets** on `aSession` (a `TSessionDefaults`):
+  - the engine choices that vary by station -- `Exchange`, `DomesticMult`,
+    `DXMult`, `PrefixMult`, `Band`, `Mode`, `DomesticMultByBand`,
+    `AllowDupeQSOs`;
+  - the session's settings -- `WARCEnabled`, `QSOByMode`, `MultByBand`,
+    `LiteralDomesticQTH`, `SprintQSYRule`, `MinitourDuration`, ... each the
+    setting of the same name;
+  - the CW messages (`CQExchangeCW`, `SPExchangeCW`, `QSLCW`, ...) and the
+    function-key memories (`SetCQMemory(CW, smkF1, ...)`,
+    `SetExchangeMemory`), built from `aStation` -- `MyName`, `MyState`,
+    `MyFDClass`, `MySection`, `MyPrec`, `MyCheck`, `MyCall`;
+  - the domestic countries, in order (`AddDomesticCountry`, or a shared group
+    -- `AddDomesticCountries(DomesticCountriesKVE)`; the groups are
+    `uContestBase` constants that FCONTEST's own helpers read too);
+  - the domestic file (`DomesticFile`, no extension), MY STATE where your
+    contest blanks or replaces it, the contest name.
+- **A STATED VALUE IS STATED, EVEN WHEN IT IS FALSE OR EMPTY**, and an
+  unstated one is left alone -- so state only what your contest sets, and
+  never restate a trait "to be safe": a stated value overwrites a statement
+  the operator made before the CONTEST line, as the arms always did.
+- **A CHOICE THAT DEPENDS ON THE STATION IS STATED BOTH WAYS**, on
+  `aStation.InHostState` (a state party's in-state station), the station's
+  country or continent. A trait cannot vary per station; that was inventory
+  D8. `uContestArizonaQP`, `uContestTexasQP`, `uContestARRLDXBase`.
+- **A value nobody has stated yet** joins `TSessionValue` with the first
+  contest that needs it, and FCONTEST's applier gains its line -- the same
+  growth rule as `TStationContext`.
+
+**THE DEFAULT CQ EXCHANGE IS A SIBLING, `CQExchangeDefault(aStation)`**, asked
+by `LogCfg.tSetupExchangeNumbers` once the whole configuration is read (a
+station line can follow CONTEST). It is a default in the strict sense -- LogCfg
+uses it only where CQ EXCHANGE is still empty -- and the base offers `''`.
+
+**Pin it** in `uTestContestSession` (hand it a station, read back what it
+stated, both sides of any station-dependent choice). The matrix's `setup`
+section sees the applied result for every contest and variant.
+
 ### Protected helpers — mechanism, not rules
 
 | helper | for |
@@ -555,9 +605,13 @@ Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
 
 `Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`,
 `.MyPower`, `.PointOverrides`, since M4 `.MyState` (IOTA, PCC) and
-`.ContestTitle` (Batavia FT8), since M5b `.MyCall` and `.InHostState`, and
+`.ContestTitle` (Batavia FT8), since M5b `.MyCall` and `.InHostState`,
 since M6 `.MyCategoryMode` (the Salmon Run's single-mode rule -- its zero
-value is CW, which is what an operator who never chooses one exports). ~~`.LogClockUTCHour`~~ is **gone** (2026-10-01,
+value is CW, which is what an operator who never chooses one exports), and
+since M7a `.MyName`, `.MyFDClass`, `.MySection`, `.MyPrec`, `.MyCheck` and
+`.MyZoneText` (MY ZONE as text -- what a message SENDS; compare zones with
+`.MyZone`). `uContestFactory.CurrentStation` fills it; set-up is handed the
+same snapshot as a parameter of `DescribeSession`. ~~`.LogClockUTCHour`~~ is **gone** (2026-10-01,
 design Q21) -- see the next paragraph.
 
 **A TIME-OF-DAY RULE READS THE QSO'S RECORDED TIME, NEVER THE CLOCK.** NY4I,
@@ -620,7 +674,7 @@ and the typed-entry check belongs in `BENCH_QUEUE.md`.
 | section | what | the milestone it gates |
 |---|---|---|
 | `identity` | requested vs selected `ContestType`, the class or none | M1 |
-| `setup` | the seven `Active*`, the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7 |
+| `setup` | the seven `Active*`, the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7a (185 identical, no re-freeze), M7b |
 | `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body | M3, M8 |
 | `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
 | `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a |
@@ -685,8 +739,9 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 | question | answer |
 |---|---|
 | what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`), else that routine's legacy case |
+| what does its session start from | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its class's `DescribeSession` applied by `FCONTEST.ApplySessionDefaults` (M7a); a classless contest's `FoundContest` arm. LogCfg's default CQ exchange is `CQExchangeDefault` |
 | what is its final score | its class's `FinalScore` (asked by `LOGEDIT.TotalScore`, which every score reader reads), else the base's general formula through its identity -- section 3, M6 |
-| what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after `FoundContest`'s arms) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
+| what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after its `DescribeSession` -- or a classless contest's `FoundContest` arm) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
 | its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` reading the row. Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not read `ContestsArray` or spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
 | how TR4QT decomposes a contest | `C:\projects\tr4qt\docs\CONTEST_DEVELOPMENT.md` and `src/contests/` |

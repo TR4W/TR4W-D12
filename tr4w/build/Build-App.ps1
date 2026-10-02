@@ -313,7 +313,15 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # the dead ALRS branch's GetOblast/UTF8Encode into Str2, and ValidClass's
 # letter loop (D1) -- and the seven new classes and the new seams were written
 # with explicit conversions, adding none.
-$NARROW_CEILING = 1301
+# 1301 -> 1291, 2026-10-02: M7a, each contest describes its own session.
+# Measured as a total; the accounting is by READING. FoundContest's arms for
+# the contests with a class handed UnicodeString expressions straight to the
+# ShortString memory parameters (the Sweepstakes, Sprint and NAQP memories
+# built from MY CALL, MY STATE and MY NAME) and the ALRS arm narrowed
+# GetOblast into a Str2; the arms are DescribeSession now, which builds
+# native strings, and FCONTEST's one applier converts each memory once with
+# UTF8Encode -- not a narrowing. fcontest.pas is left with 2.
+$NARROW_CEILING = 1291
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

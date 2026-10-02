@@ -39,6 +39,8 @@ unit uContestARRLDXCW;
 interface
 
 uses
+   (* TStationContext -- CQExchangeDefault's parameter (M7a). *)
+   uContestBase,
    uContestARRLDXBase;
 
 type
@@ -54,6 +56,8 @@ type
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
    public
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -64,6 +68,15 @@ uses
 function TContestARRLDXCW.GetDisplayName: string;
 begin
    Result := 'ARRL International DX Contest - CW';
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestARRLDXCW.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   (* CW ONLY: LogCfg named ARRLDXCW and not the phone running. *)
+   Result := ' 5NN ' + aStation.MyState;
 end;
 
 initialization

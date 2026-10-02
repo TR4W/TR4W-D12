@@ -37,10 +37,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
-  FCONTEST has an arm for this contest:
+  FCONTEST had an arm for this contest:
       band, auto-dupe, sprint QSY rule, CW messages.
-  That is contest SETUP, not scoring, and it stays in FCONTEST with the
-  rest of contest setup.
+  That is contest SETUP, not scoring, and since M7a it is this class's
+  DescribeSession -- the arm is gone from FCONTEST.
 
   AlwaysOnePointPerQSO SCORES EXACTLY LIKE OnePointPerQSO, and the
   difference is not scoring. Its meaning -- "ignores dupes" in VC.pas --
@@ -95,6 +95,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -203,6 +207,43 @@ begin
    (* "Ignores dupes" -- the meaning the row's AlwaysOnePointPerQSO carried.
       See the unit header. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestInternetSprint.DescribeSession(const aStation: TStationContext;
+                                                 aSession: TSessionDefaults);
+begin
+   aSession.Band := Band20;
+   aSession.AutoDupeEnableCQ := False;
+   aSession.AutoDupeEnableSAndP := False;
+   aSession.ExchangeMemoryEnable := False;
+   aSession.SprintQSYRule := True;
+
+   aSession.SPExchangeCW := '@ #   (   ' + aStation.MyState + ' \';
+   aSession.RepeatSPExchangeCW := '@ #   (   ' + aStation.MyState;
+   aSession.CQExchangeCW := ' \ #   (   ' + aStation.MyState;
+   aSession.QSLCW := 'EE';
+
+   aSession.SetCQMemory(CW, smkF1, 'INT \');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^INT \ \ INT');
+   aSession.SetCQMemory(CW, smkF5, '  ?');
+   aSession.SetCQMemory(CW, smkF6, '  INT \');
+   aSession.SetCQMemory(CW, smkF7, '  CQ^INT \ \ INT');
+   aSession.SetCQMemory(CW, smkF8, '  CQ^INT CQ^INT \ \ INT');
+
+   aSession.SetExchangeMemory(CW, smkF7, '  CQ^INT \ \ INT');
+   aSession.SetExchangeMemory(CW, smkF8, '  CQ^INT CQ^INT \ \ INT');
+   aSession.SetExchangeMemory(CW, smkF3, '#');
+   aSession.SetExchangeMemory(CW, smkF4, '  (  ');
+   aSession.SetExchangeMemory(CW, smkF5, aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkF6, '@ \ # ( ' + aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkAltF3, 'NR?');
+   aSession.SetExchangeMemory(CW, smkAltF4, 'NAME?');
+   aSession.SetExchangeMemory(CW, smkAltF5, 'QTH?');
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+   aSession.AddDomesticCountry('KL');
 end;
 
 initialization

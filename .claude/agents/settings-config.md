@@ -228,9 +228,11 @@ station setting.
   channel reaches a setting by name: the `.cfg`, the New Contest queue,
   Preferences (`TModelSetting`), Alt-P, a peer, and the log's own statements.
   `FoundContest` and the constructor assign properties directly, so "arrived
-  by name" and "stated" are the same set. **Never route contest set-up through
-  `TrySetByCommand`**, or the contest's computed value becomes the operator's
-  statement in the log.
+  by name" and "stated" are the same set. Since M7a (2026-10-02) a contest
+  with a class states its set-up in `DescribeSession` and
+  `FCONTEST.ApplySessionDefaults` assigns it -- still directly, by property.
+  **Never route contest set-up through `TrySetByCommand`**, or the contest's
+  computed value becomes the operator's statement in the log.
 - **`TrySetUnstated`** is for a by-name value that is not a statement. Its
   one caller is `ApplyStoredCommands` for the bucket's contest-scoped
   entries. It also skips any setting that is already stated.
@@ -260,8 +262,9 @@ Language drop-down — does it with a **hand-typed hint label in the `.lfm`**, a
 the Station page now carries a second such label for `MY CALL`/`MY COUNTRY`.
 That is two hand-written hints where a registry flag already exists.
 
-**Every `Settings.My.*` and `Settings.Contest.*` value `FoundContest` reads has
-this property** — `MY STATE`, `MY ZONE`, `MY GRID`, `MY SECTION`, `MY CHECK`,
+**Every `Settings.My.*` and `Settings.Contest.*` value `FoundContest` reads
+(since M7a, through `uContestFactory.CurrentStation`, the station a contest's
+`DescribeSession` is handed) has this property** — `MY STATE`, `MY ZONE`, `MY GRID`, `MY SECTION`, `MY CHECK`,
 `MY PREC`, `MY FD CLASS` — because the contest is set up once at startup.
 Wiring `NeedsRestart` to emit that hint per bound control is the real fix and is
 `settings-config` + `lcl-ui` work. NY4I lost twenty minutes to this: he set

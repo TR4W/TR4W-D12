@@ -38,7 +38,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record but
   `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
-  set-up (M7) are not moved.
+  set-up (M7a) have moved since.
 
   SCORING, transcribed from UkrainianQSOPointMethod: 10 for Ukraine (UR), 1 for
   the station's own country, 2 for its own continent, 3 otherwise. A Ukrainian
@@ -84,6 +84,10 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -219,6 +223,19 @@ function TContestUkrainianDX.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestUkrainianDX.DescribeSession(const aStation: TStationContext;
+                                              aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountry('UR');
+   if aStation.MyCountry = 'UR' then
+      begin
+      aSession.DomesticMult := NoDomesticMults;
+      end;
 end;
 
 initialization

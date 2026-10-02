@@ -57,8 +57,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       counts states/provinces as domestic multipliers.
 
   EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE BASE'S DEFAULT (M4), the
-  shared arm for its exchange. FCONTEST, LOGCFG and uNewContest name it for
-  set-up (M7). *)
+  shared arm for its exchange. FCONTEST's and LOGCFG's set-up are this
+  class's DescribeSession and CQExchangeDefault since M7a; uNewContest
+  still names it (M9). *)
 unit uContestLocustQP;
 
 {$I tr4w.inc}
@@ -93,6 +94,12 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -200,6 +207,31 @@ function TContestLocustQP.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- a QSO party by name only; see the header. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named LQP, NCCCSPRINT; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestLocustQP.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   aSession.AutoDupeEnableCQ := True;
+   aSession.AutoDupeEnableSAndP := True;
+   aSession.AddDomesticCountry('KH6');
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+   aSession.ExchangeMemoryEnable := True;
+   aSession.SprintQSYRule := True;
+   aSession.AllowDupeQSOs := False;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestLocustQP.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' # ' + aStation.MyName + ' ' + aStation.MyState;
 end;
 
 initialization

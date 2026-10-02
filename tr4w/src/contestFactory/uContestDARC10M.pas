@@ -40,7 +40,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record
   but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
-  (M5) and set-up (M7) are not moved.
+  (M5b) and set-up (M7a) have moved since.
 
   SCORING IS OnePointPerQSO, stated through the FixedModePoints helper:
 
@@ -89,6 +89,10 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -191,6 +195,28 @@ function TContestDARC10M.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestDARC10M.DescribeSession(const aStation: TStationContext;
+                                          aSession: TSessionDefaults);
+begin
+   aSession.Band := Band10;
+   aSession.AddDomesticCountry('DL');
+   aSession.QSOByMode := True;
+   if aStation.MyCountry = 'DL' then
+      begin
+      aSession.DXMult := CQDXCC;
+      end
+   else
+      begin
+      aSession.DomesticMult := DOKCodes;
+      end;
+   aSession.LiteralDomesticQTH := True;
+   (* DL A SECOND TIME, AS THE ARM ADDED IT -- transcribed, not tidied. *)
+   aSession.AddDomesticCountry('DL');
 end;
 
 initialization

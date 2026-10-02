@@ -38,7 +38,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record but
   `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
-  set-up (M7) are not moved.
+  set-up (M7a) have moved since.
 
   SCORING, transcribed from LZDXQSOPointMethod: Bulgaria (LZ) scores 1 for
   another LZ if the station is LZ itself and 10 otherwise; any other country
@@ -84,6 +84,12 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -216,6 +222,31 @@ function TContestLZDX.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestLZDX.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountry('LZ');
+   aSession.Band := Band80;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestLZDX.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   if aStation.MyState <> '' then
+      begin
+      Result := ' 5NN ' + aStation.MyState;
+      end
+   else
+      begin
+      Result := ' 5NN ' + aStation.MyZoneText;
+      end;
 end;
 
 initialization

@@ -92,6 +92,13 @@ procedure ReleaseActiveContest;
   the four settings, so the two paths cannot read them differently. *)
 function CurrentQSOPointOverrides: TQSOPointOverrides;
 
+(* THE STATION AS THE PROGRAM CURRENTLY HAS IT -- the one place the station's
+  globals are read into a TStationContext. ActiveContest hands it to the
+  scoring object on every request; since M7a (2026-10-02) FCONTEST hands it to
+  TContestBase.DescribeSession and LogCfg to CQExchangeDefault, so a contest's
+  set-up reads the same snapshot its scoring does. *)
+function CurrentStation: TStationContext;
+
 implementation
 
 uses
@@ -126,7 +133,6 @@ begin
    Take(Settings.Qso.PointsDxPhone, Result.DXPhone);
 end;
 
-(* The station as the program currently has it. *)
 function CurrentStation: TStationContext;
 var
    code: integer;
@@ -145,6 +151,13 @@ begin
    Result.MyPower := Settings.Contest.CategoryPower;
    (* CATEGORY-MODE, the same way -- see TStationContext.MyCategoryMode. *)
    Result.MyCategoryMode := Settings.Contest.CategoryMode;
+   (* The rest of MY exchange, for set-up -- see TStationContext.MyName. *)
+   Result.MyName := Settings.My.Name;
+   Result.MyFDClass := Settings.My.FdClass;
+   Result.MySection := Settings.My.Section;
+   Result.MyPrec := Settings.My.Prec;
+   Result.MyCheck := Settings.My.Check;
+   Result.MyZoneText := Settings.My.Zone;
 
    Val(Settings.My.Zone, Result.MyZone, code);
    Result.MyZoneValid := (code = 0) and (Settings.My.Zone <> '');

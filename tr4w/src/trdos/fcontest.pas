@@ -93,6 +93,8 @@ uses
       ReplayContestStatements, the operator's half of ApplyContestTraits. *)
    uContestBase,
    uContestRegistry,
+   (* CurrentStation -- the station DescribeSession is handed (M7a). *)
+   uContestFactory,
    uSettingsEffects,
    uDomFileKeys,       // FoundMyStateInDomFile's reading rule
    SysUtils,      // ExtractFilePath/ExtractFileName -- see SetUpFileNames
@@ -378,26 +380,247 @@ begin
   SetEXCaptionMemoryString(CW, F3, 'RST');
 end;
 
+(* ADDS EACH COUNTRY OF A LIST, IN ORDER -- the one loop behind the named
+  groups below and the applier. The groups themselves are uContestBase's
+  constants, which a contest class names too (M7a): one list, two readers. *)
+procedure AddDomesticCountryList(const aIDs: array of string);
+var
+  i: integer;
+begin
+  for i := Low(aIDs) to High(aIDs) do
+     begin
+     AddDomesticCountry(CallString(aIDs[i]));
+     end;
+end;
+
 procedure AddARRLSectionDomesticCountries;
 begin
-  Add_KVEKH6KL;
+  AddDomesticCountryList(DomesticCountriesARRLSections);
+end;
 
-  AddDomesticCountry('KC6');
-  AddDomesticCountry('KG4');
-  AddDomesticCountry('KH0');
-  AddDomesticCountry('KH1');
-  AddDomesticCountry('KH2');
-  AddDomesticCountry('KH3');
-  AddDomesticCountry('KH4');
-  AddDomesticCountry('KH5');
-  AddDomesticCountry('KH7');
-  AddDomesticCountry('KH8');
-  AddDomesticCountry('KH9');
-  AddDomesticCountry('KP1');
-  AddDomesticCountry('KP2');
-  AddDomesticCountry('KP3');
-  AddDomesticCountry('KP4');
-  AddDomesticCountry('KP5');
+(* THE ENGINE'S KEY CODE FOR A MEMORY A CONTEST NAMES -- see
+  uContestBase.TSessionMemoryKey. Tree's constants, assigned exactly as the
+  arms passed them. *)
+function EngineMemoryKey(aKey: TSessionMemoryKey): AnsiChar;
+begin
+  case aKey of
+    smkF1: Result := F1;
+    smkF2: Result := F2;
+    smkF3: Result := F3;
+    smkF4: Result := F4;
+    smkF5: Result := F5;
+    smkF6: Result := F6;
+    smkF7: Result := F7;
+    smkF8: Result := F8;
+    smkAltF1: Result := AltF1;
+    smkAltF2: Result := AltF2;
+    smkAltF3: Result := AltF3;
+    smkAltF4: Result := AltF4;
+    smkAltF5: Result := AltF5;
+    smkAltF6: Result := AltF6;
+    smkAltF7: Result := AltF7;
+  else
+    Result := F1;
+  end;
+end;
+
+(* THE ONE WRITER OF WHAT A CONTEST'S SET-UP STATES -- M7a, 2026-10-02.
+
+  The contest filled aSession (TContestBase.DescribeSession) and wrote
+  nothing; this writes each value it STATED, and nothing it did not -- so a
+  contest that names no exchange leaves the head's exchange exactly as
+  ApplyContestTraits and the operator's statements left it. A stated value
+  overwrites unconditionally, which is what the contest's FoundContest arm
+  did, so today's precedence is unchanged: it beats a statement made before
+  the CONTEST line and loses to one made after it.
+
+  aDomesticFileName is FoundContest's local, the name the foot of that
+  routine writes to DOMESTIC FILENAME; an empty one writes nothing.
+
+  THE ORDER: the engine's choices, the settings, MY STATE, the domestic
+  file, the domestic countries (in the contest's order), the shared
+  RST-and-serial memories when asked for, the contest's own memories (in
+  its order), then the messages. No value here reads another, and no arm
+  wrote one value twice except a memory, whose order the list keeps. *)
+procedure ApplySessionDefaults(aSession: TSessionDefaults;
+                               var aDomesticFileName: string);
+var
+  i: integer;
+  memory: TSessionMemory;
+begin
+  if aSession.IsStated(svExchange) then
+     begin
+     ActiveExchange := aSession.Exchange;
+     end;
+  if aSession.IsStated(svDomesticMult) then
+     begin
+     ActiveDomesticMult := aSession.DomesticMult;
+     end;
+  if aSession.IsStated(svDXMult) then
+     begin
+     ActiveDXMult := aSession.DXMult;
+     end;
+  if aSession.IsStated(svPrefixMult) then
+     begin
+     ActivePrefixMult := aSession.PrefixMult;
+     end;
+  if aSession.IsStated(svBand) then
+     begin
+     ActiveBand := aSession.Band;
+     end;
+  if aSession.IsStated(svMode) then
+     begin
+     ActiveMode := aSession.Mode;
+     end;
+  if aSession.IsStated(svDomesticMultByBand) then
+     begin
+     DomesticMultByBand := aSession.DomesticMultByBand;
+     end;
+  if aSession.IsStated(svAllowDupeQSOs) then
+     begin
+     tAllowDupeQSOs := aSession.AllowDupeQSOs;
+     end;
+
+  if aSession.IsStated(svMultByBand) then
+     begin
+     Settings.Mult.ByBand := aSession.MultByBand;
+     end;
+  if aSession.IsStated(svQSOByMode) then
+     begin
+     Settings.Qso.ByMode := aSession.QSOByMode;
+     end;
+  if aSession.IsStated(svQSOByBand) then
+     begin
+     Settings.Qso.ByBand := aSession.QSOByBand;
+     end;
+  if aSession.IsStated(svWARCEnabled) then
+     begin
+     Settings.Bands.WarcEnabled := aSession.WARCEnabled;
+     end;
+  if aSession.IsStated(svHFEnabled) then
+     begin
+     Settings.Bands.HfEnabled := aSession.HFEnabled;
+     end;
+  if aSession.IsStated(svLiteralDomesticQTH) then
+     begin
+     Settings.Contest.LiteralDomesticQth := aSession.LiteralDomesticQTH;
+     end;
+  if aSession.IsStated(svDigitalModeEnable) then
+     begin
+     Settings.Contest.DigitalModeEnable := aSession.DigitalModeEnable;
+     end;
+  if aSession.IsStated(svExchangeMemoryEnable) then
+     begin
+     Settings.Contest.ExchangeMemoryEnable := aSession.ExchangeMemoryEnable;
+     end;
+  if aSession.IsStated(svSprintQSYRule) then
+     begin
+     Settings.Contest.SprintQsyRule := aSession.SprintQSYRule;
+     end;
+  if aSession.IsStated(svMultipleBands) then
+     begin
+     Settings.Contest.MultipleBands := aSession.MultipleBands;
+     end;
+  if aSession.IsStated(svMultipleModes) then
+     begin
+     Settings.Contest.MultipleModes := aSession.MultipleModes;
+     end;
+  if aSession.IsStated(svInitialExchangeOverwrite) then
+     begin
+     Settings.Contest.InitialExchangeOverwrite := aSession.InitialExchangeOverwrite;
+     end;
+  if aSession.IsStated(svQSONumberByBand) then
+     begin
+     Settings.Contest.QsoNumberByBand := aSession.QSONumberByBand;
+     end;
+  if aSession.IsStated(svMinitourDuration) then
+     begin
+     Settings.Contest.MinitourDuration := aSession.MinitourDuration;
+     end;
+  if aSession.IsStated(svContactsPerPage) then
+     begin
+     Settings.Contest.ContactsPerPage := aSession.ContactsPerPage;
+     end;
+  if aSession.IsStated(svQTCEnable) then
+     begin
+     Settings.Qtc.Enable := aSession.QTCEnable;
+     end;
+  if aSession.IsStated(svRfoblMode) then
+     begin
+     Settings.Contest.RfoblMode := aSession.RfoblMode;
+     end;
+  if aSession.IsStated(svAutoDupeEnableCQ) then
+     begin
+     Settings.AutoDupe.EnableCq := aSession.AutoDupeEnableCQ;
+     end;
+  if aSession.IsStated(svAutoDupeEnableSAndP) then
+     begin
+     Settings.AutoDupe.EnableSAndP := aSession.AutoDupeEnableSAndP;
+     end;
+  if aSession.IsStated(svContestName) then
+     begin
+     Settings.Contest.Name := aSession.ContestName;
+     end;
+  if aSession.IsStated(svMyState) then
+     begin
+     Settings.My.State := aSession.MyState;
+     end;
+  if aSession.IsStated(svDomesticFile) then
+     begin
+     aDomesticFileName := aSession.DomesticFile;
+     end;
+
+  for i := 0 to aSession.DomesticCountryCount - 1 do
+     begin
+     AddDomesticCountry(CallString(aSession.DomesticCountry(i)));
+     end;
+
+  if aSession.IsStated(svRSTQSONumberExchangeMemories) then
+     begin
+     SetUpRSTQSONumberExchange;
+     end;
+
+  for i := 0 to aSession.MemoryCount - 1 do
+     begin
+     memory := aSession.Memory(i);
+     if memory.Bank = smbCQ then
+        begin
+        SetCQMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+        end
+     else
+        begin
+        SetEXMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+        end;
+     end;
+
+  if aSession.IsStated(svCQExchangeCW) then
+     begin
+     Settings.Messages.CqExchangeCw := aSession.CQExchangeCW;
+     end;
+  if aSession.IsStated(svSPExchangeCW) then
+     begin
+     Settings.Messages.SpExchangeCw := aSession.SPExchangeCW;
+     end;
+  if aSession.IsStated(svRepeatSPExchangeCW) then
+     begin
+     Settings.Messages.RepeatSpExchangeCw := aSession.RepeatSPExchangeCW;
+     end;
+  if aSession.IsStated(svQSLCW) then
+     begin
+     Settings.Messages.QslCw := aSession.QSLCW;
+     end;
+  if aSession.IsStated(svQuickQSLCW1) then
+     begin
+     Settings.Messages.QuickQslCw1 := aSession.QuickQSLCW1;
+     end;
+  if aSession.IsStated(svQSOBeforeCW) then
+     begin
+     Settings.Messages.QsoBeforeCw := aSession.QSOBeforeCW;
+     end;
+  if aSession.IsStated(svCallOkNowCW) then
+     begin
+     Settings.Messages.CallOkNowCw := aSession.CallOkNowCW;
+     end;
 end;
 
 (* WHAT A CONTEST'S SET-UP STARTS FROM, AND THE ONE PLACE IT IS WRITTEN -- M2,
@@ -419,9 +642,10 @@ end;
   after CONTEST re-ran its setter after this. That still happens. What is new
   is that a statement made BEFORE the CONTEST line is no longer overwritten
   here: it used to be, for every one of these values, which is "operator beats
-  contest" holding by accident of line order. FoundContest's per-contest arms
-  still run AFTER this and still overwrite what they always overwrote; they
-  move into the contest's DescribeSession at M7.
+  contest" holding by accident of line order. What a contest states in its
+  DescribeSession (M7a; a classless contest's FoundContest arm until it has a
+  class) still runs AFTER this and still overwrites what the arm always
+  overwrote -- see ApplySessionDefaults.
 
   THE SEVEN Active* TOKENS ARE REPLAYED, NOT LEFT ALONE. Their statement lives
   in a settings property, but the engine reads a global, and the global can
@@ -485,8 +709,10 @@ var
   (* What this contest IS -- owned by uContestRegistry, never freed here. *)
   definition: TContestBase;
 
+  (* What the contest wants its session to start from -- owned here. *)
+  session: TSessionDefaults;
+
   TempDomesticQTHDataFileName: string;
-  TempOblast: Str2;
   // i,j                                   : integer;
   // k                                     : str10;
 begin
@@ -542,45 +768,28 @@ begin
         begin
         TempDomesticQTHDataFileName := '';
         end;
+
+     (* THE CONTEST DESCRIBES ITS SESSION, AND THIS APPLIES IT -- M7a,
+       2026-10-02 (docs/CONTEST_OWNERSHIP_DESIGN.md section 4.2).
+
+       Every contest is asked -- a classless one's identity is a plain
+       TContestBase, which states nothing -- and it is asked HERE, where the
+       per-contest arms ran, so everything a contest states lands in the
+       order it always did: after the head's traits and the operator's
+       statements, before the closing exchange set-up below. The arms of
+       every contest that has a class are gone into its DescribeSession;
+       the `case` below holds only the classless contests' arms, each of
+       which goes when its contest gains a class. *)
+     session := TSessionDefaults.Create;
+     try
+        definition.DescribeSession(CurrentStation, session);
+        ApplySessionDefaults(session, TempDomesticQTHDataFileName);
+     finally
+        session.Free;
+        end;
      end;
 
   case Contest of
-
-    LABRE:
-      begin
-        // if Settings.My.Country <> 'PY' then
-          //             activeexchange :=  RSTDomesticQTHExchange;
-
-        SetCQMemoryString(CW, F1, 'CQ TEST \ \ LABRE');
-        SetCQMemoryString(CW, F2, 'CQ TEST \ \ LABRE');
-        Settings.Messages.CqExchangeCw := UTF8Encode('5NN' + Settings.My.State);
-        Settings.Messages.SpExchangeCw := UTF8Encode('5NN' + Settings.My.State);
-        Settings.Messages.QslCw := '73 \ ';
-      end;
-
-    ARIZONAQSOPARTY:
-      begin
-        SetCQMemoryString(CW, F1, 'CQ AZ \ \ AZ');
-        SetCQMemoryString(CW, F2, 'CQ^AZ CQ^AZ \ \ AZQP');
-        Settings.Messages.CqExchangeCw := UTF8Encode(Settings.My.State);
-        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.State);
-        Settings.Messages.QslCw := '73 \/AZ ';
-        if not FoundMyStateInDomFile then
-           begin
-           ActiveExchange := RSTDomesticQTHExchange
-           end
-        else
-           begin
-           Settings.Mult.ByBand := False;
-           end;
-
-      end;
-
-    NYQP:
-      begin
-        //ActiveDxMult := NoDXMults;
-        ActiveDomesticMult := DomesticFile;
-      end;
 
     { RSGBDX:
       begin
@@ -595,50 +804,6 @@ begin
           end;;
       end;
     }
-    BCQP:
-      begin
-        ActiveDXMult := NoDXMults;
-        if Settings.My.Country = 'VE7' then
-           begin
-           AddDomesticCountry('VE7'); // 4.97.8
-           end;
-
-      end;
-
-    WINTERFIELDDAY:
-      begin
-        Settings.Bands.WarcEnabled := False;
-        SetCQMemoryString(CW, F1, 'CQ^WFD \ \ TEST');
-        SetCQMemoryString(CW, F2, 'CQ^WFD CQ^WFD \ \ TEST');
-        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
-        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
-        Settings.Messages.QslCw := '73 \ WFD';
-        ActiveDXMult := ARRLDXCCWithNoARRLSections;
-        AddARRLSectionDomesticCountries;
-      end;
-
-    ARRLFIELDDAY:
-      begin
-        ActiveDomesticMult := DomesticFile;
-        ActiveDXMult := NoDXMults;
-        Settings.Bands.WarcEnabled := False; // WARC is not allowed during FD ny4i 4.45.3
-        SetCQMemoryString(CW, F1, 'CQ^FD \ \ FD');
-        SetCQMemoryString(CW, F2, 'CQ^FD CQ^FD \ \ FD');
-        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.FdClass + ' ' + Settings.My.Section);
-        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.FdClass + ' ' + Settings.My.Section);
-        Settings.Messages.QslCw := '73 \ FD';
-        AddARRLSectionDomesticCountries;
-        Settings.Contest.LiteralDomesticQth := True;
-      end;
-
-    CROATIAN:
-      begin
-        if Settings.My.Country = '9A' then
-           begin
-           ACTIVEDXMULT := CQDXCC;
-           end;
-      end;
-
     JIDXSSB, JIDXCW:
       begin
         if Settings.My.Country = 'JA' then
@@ -691,17 +856,10 @@ begin
            end;
       end;
 
-    ALLJA, YOTA:
+    YOTA:
       begin
         ActiveBand := Band80;
         //        VHFBandsEnabled := True;
-      end;
-
-    JALONGPREFECT:
-      begin
-        ActiveBand := Band80;
-        //        Settings.Contest.Name := 'JA PREFECTURE';
-        //        VHFBandsEnabled := False;
       end;
 
     ARCI:
@@ -747,29 +905,6 @@ begin
         AddARRLSectionDomesticCountries;
       end;
 
-    ARRLDXCW, ARRLDXSSB:
-      begin
-        if (Settings.My.Country = 'K') or (Settings.My.Country = 'VE') then
-           begin
-           ActiveExchange := RSTPowerExchange; {*}
-           ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
-           end
-        else
-           begin
-           ActiveDomesticMult := DomesticFile;
-           TempDomesticQTHDataFileName := 'S48P14DC';
-           ActiveExchange := RSTDomesticQTHExchange; {*}
-           end;
-
-        Settings.Contest.Name := 'ARRL DX Test';
-        Add_KVE;
-      end;
-
-    ARRL_RTTY_ROUNDUP:
-      begin
-        Add_KVE;
-      end;
-
     {
         ARRLRTTYROUNDUP:
           begin
@@ -786,14 +921,6 @@ begin
             Add_KVE;
           end;
     }
-    WWDIGI:
-      begin
-        Settings.Contest.DigitalModeEnable := true;
-        Settings.Qso.ByMode := False;
-        Settings.Qso.ByBand := True;
-        //     Settings.Contest.LiteralDomesticQth := true;    // 4.91.5
-      end;
-
     RTC: // Issue #902 -- Real-Time Contest (COS)
       begin
         // Rules permit only 40/20/15/10 m on CW and SSB.  TR4W cannot
@@ -829,13 +956,6 @@ begin
          //         Settings.My.State := Settings.My.Grid; //Copy(Settings.My.Grid, 1, 4);
       end;
 
-    APSPRINT:
-      begin
-        ActiveBand := Band20;
-        //        ActivePrefixMult := Prefix;
-        //        Settings.Contest.Name := 'ASIA PACIFIC SPRINT';
-      end;
-
     BALTIC:
       begin
         ActiveBand := Band80;
@@ -843,31 +963,6 @@ begin
 
     //    BWQP:
     //    ActiveExchange := RSTPowerExchange;
-
-    BATAVIA_FT8:
-      begin
-        Settings.Contest.DigitalModeEnable := true;
-        Settings.Qso.ByMode := False;
-        Settings.Qso.ByBand := True;
-      end;
-
-    CALQSOPARTY:
-      begin
-
-        if FoundMyStateInDomFile then
-           begin
-
-           ActiveExchange := QSONumberDomesticOrDXQTHExchange;
-
-           end
-        else
-           begin
-           //          DomesticQTHDataFileName := 'CALCTY';
-           ActiveExchange := QSONumberDomesticQTHExchange; {*}
-           end;
-        //        Settings.Contest.Name := 'California QSO Party';
-        //        Add_KVEKH6KL;
-      end;
 
     CIS:
       begin
@@ -890,14 +985,6 @@ begin
 
 //        Settings.Contest.CountDomesticCountries := True;
 //        Settings.Contest.Name := 'CIS DX Contest';
-      end;
-
-    CQ160SSB, CQ160CW:
-      begin
-        //        CountryTable.ZoneMode := CQZoneMode;
-        //        ActiveInitialExchange := ZoneInitialExchange;
-        Settings.Contest.MultipleBands := False;
-        Add_KVE;
       end;
 
     CQM:
@@ -961,17 +1048,6 @@ begin
         //        VHFBandsEnabled := True;
       end;
 
-    FOCMARATHON:
-      Settings.Contest.ExchangeMemoryEnable := True;
-
-    GENERALQSO:
-      begin
-        Settings.AutoDupe.EnableCq := False;
-        Settings.AutoDupe.EnableSAndP := False;
-        Settings.Contest.Name := 'General QSOs';
-        Settings.Bands.WarcEnabled := True;
-      end;
-
     HADX:
       begin
         AddDomesticCountry('HA');
@@ -1004,24 +1080,6 @@ begin
            end
       end;
 
-    UKEI: // 4.58.2
-      begin
-        AddDomesticCountry('G');
-        AddDomesticCountry('GD');
-        AddDomesticCountry('GI');
-        AddDomesticCountry('GJ');
-        AddDomesticCountry('GM');
-        AddDomesticCountry('GM');
-        AddDomesticCountry('GW');
-        AddDomesticCountry('GU');
-        AddDomesticCountry('EI');
-        if not UKEIStation(Settings.My.Country) then
-           begin
-           SetUpRSTQSONumberExchange;
-           end;
-
-      end;
-
     HELVETIA:
       begin
         if Settings.My.Country = 'HB' then
@@ -1045,59 +1103,12 @@ begin
         Settings.Contest.InitialExchangeOverwrite := TRUE;
       end;
 
-    INTERNETSPRINT:
-      begin
-        ActiveBand := Band20;
-        Settings.AutoDupe.EnableCq := False;
-        Settings.AutoDupe.EnableSAndP := False;
-        //        Settings.Contest.Name := 'Internet SprINT';
-        Settings.Contest.ExchangeMemoryEnable := False;
-        Settings.Contest.SprintQsyRule := True;
-
-        Settings.Messages.SpExchangeCw := UTF8Encode('@ #   (   ' + Settings.My.State + ' \');
-        Settings.Messages.RepeatSpExchangeCw := UTF8Encode('@ #   (   ' + Settings.My.State);
-        Settings.Messages.CqExchangeCw := UTF8Encode(' \ #   (   ' + Settings.My.State);
-        Settings.Messages.QslCw := 'EE';
-
-        SetCQMemoryString(CW, F1, 'INT \');
-        SetCQMemoryString(CW, F2, 'CQ^INT \ \ INT');
-
-        SetCQMemoryString(CW, F5, '  ?');
-        SetCQMemoryString(CW, F6, '  INT \');
-        SetCQMemoryString(CW, F7, '  CQ^INT \ \ INT');
-        SetCQMemoryString(CW, F8, '  CQ^INT CQ^INT \ \ INT');
-
-        SetEXMemoryString(CW, F7, '  CQ^INT \ \ INT');
-        SetEXMemoryString(CW, F8, '  CQ^INT CQ^INT \ \ INT');
-        SetEXMemoryString(CW, F3, '#');
-        SetEXMemoryString(CW, F4, '  (  ');
-        SetEXMemoryString(CW, F5, UTF8Encode(Settings.My.State));
-        SetEXMemoryString(CW, F6, UTF8Encode('@ \ # ( ' + Settings.My.State));
-        SetEXMemoryString(CW, AltF3, 'NR?');
-        SetEXMemoryString(CW, AltF4, 'NAME?');
-        SetEXMemoryString(CW, AltF5, 'QTH?');
-        Add_KVE;
-        AddDomesticCountry('KL');
-      end;
-
     KCJ:
       begin
         ActiveInitialExchange := ZoneInitialExchange; // 4.114.1
         Settings.Contest.InitialExchangeOverwrite := True;
       end;
 
-    KIDSDAY:
-      begin
-        Settings.AutoDupe.EnableCq := False;
-      end;
-
-    KVP:
-      begin
-        ActiveBand := Band80;
-        //        ActiveInitialExchange := ZoneInitialExchange;
-        //        ActiveZoneMult := BranchZones;
-        //        Settings.Contest.Name := 'KV Prvenstvo ZRS';
-      end;
     {
         MICHQSOPARTY:
           begin
@@ -1114,23 +1125,6 @@ begin
             Add_KVEKH6KL;
           end;
     }
-    MINNQSOPARTY:
-      begin
-        {
-                if FoundMyStateInDomFile then
-                  DomesticQTHDataFileName := 'MINNESOTA'
-                else
-                  DomesticQTHDataFileName := 'MINNESOTA_CTY';
-
-                Add_KVEKH6KL;
-        }
-        //        VHFBandsEnabled := True;
-      end;
-
-    MOQSOPARTY:
-      begin
-      end;
-
     MWC:
       begin
         ActiveBand := Band80;
@@ -1145,41 +1139,6 @@ begin
         Add_KVE;
         Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
         Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
-      end;
-
-    NAQSOCW, NAQSOSSB, NAQSORTTY:
-      begin
-        //        ActiveInitialExchange := NameInitialExchange;
-        //        Settings.Contest.Name := 'North American QSO Party';
-
-        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
-        Settings.Messages.QslCw := '73 \ NA>';
-        Settings.Messages.QuickQslCw1 := 'TU';
-        Settings.Messages.QsoBeforeCw := ' QSO B4 \ NA';
-        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
-        Settings.Messages.CallOkNowCw := '} R';
-
-        SetCQMemoryString(CW, F1, 'CQ^NA \ \ NA>');
-        SetCQMemoryString(CW, F2, 'CQ^NA CQ^NA \ \ NA>');
-
-        SetCQMemoryString(CW, F5, '   ? ');
-        SetCQMemoryString(CW, F6, '   NA \ NA ');
-        SetCQMemoryString(CW, F7, '   CQ^NA \ \ NA ');
-        SetCQMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
-
-        SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
-        SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
-
-        SetEXMemoryString(CW, F3, UTF8Encode(Settings.My.Name));
-        SetEXMemoryString(CW, F4, Settings.My.State);
-        SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Settings.My.Name + ' ' + Settings.My.State));
-        SetEXMemoryString(CW, AltF3, 'NAME?');
-        SetEXMemoryString(CW, AltF4, 'QTH?');
-
-        SetEXMemoryString(CW, F7, '   CQ^NA \ \ NA ');
-        SetEXMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
-        Add_KVEKH6KL;
-        Settings.Contest.LiteralDomesticQth := True;
       end;
 
     NEWENGLANDQSO:
@@ -1219,63 +1178,11 @@ begin
         Add_KVEKH6KL;
       end;
 
-    NRAUBALTICCW, NRAUBALTICSSB:
-      begin
-        ActiveBand := Band80;
-        AddDomesticCountry('ES');
-        AddDomesticCountry('JW');
-        AddDomesticCountry('JX');
-        AddDomesticCountry('LA');
-        AddDomesticCountry('LY');
-        AddDomesticCountry('OH');
-        AddDomesticCountry('OH0');
-        AddDomesticCountry('OX');
-        AddDomesticCountry('OY');
-        AddDomesticCountry('OZ');
-        AddDomesticCountry('SM');
-        AddDomesticCountry('TF');
-        AddDomesticCountry('YL');
-
-      end;
     OKOMSSB: // 4.80.1
       begin
         AddDomesticCountry('OK');
         AddDomesticCountry('OM');
         ActiveMode := Phone;
-      end;
-
-    OKDX:
-      begin
-        AddDomesticCountry('OK');
-        AddDomesticCountry('OM');
-        if not OKOMStation(Settings.My.Country) then
-           begin
-           ActiveDomesticMult := DomesticFile;
-           TempDomesticQTHDataFileName := 'OKOM';
-           end
-        else
-           begin
-           ActivePrefixMult := Prefix;
-           end;
-      end;
-
-    PACC:
-      begin
-
-        if Settings.My.Country = 'PA' then
-           begin
-           ActiveDXMult := PACCCountriesAndPrefixes;
-           ActiveExchange := RSTAndQSONumberOrDomesticQTHExchange;
-           AddDomesticCountry('PA');
-           TempDomesticQTHDataFileName := 'PACCPA';
-           Settings.Contest.LiteralDomesticQth := True;
-           end
-        else
-           begin
-           ActiveExchange := RSTDomesticQTHExchange;
-           TempDomesticQTHDataFileName := 'PACC';
-           end;
-
       end;
 
     POTA:
@@ -1294,31 +1201,11 @@ begin
         InitOperatorNameSet;
       end;
 
-    QCWA:
-      begin
-        AddDomesticCountry('K');
-        AddDomesticCountry('KH6');
-        AddDomesticCountry('KL');
-        //        Settings.Contest.Name := 'QCWA QSO Party';
-      end;
-
     RAEM:
       begin
         ActiveBand := Band80;
         Settings.Contest.Name := 'RAEM Ernst Krenkel Memorial Contest';
         InitialExchangeCursorPos := AtStart;
-      end;
-
-    CANADA_DAY, CANADA_WINTER:
-      begin
-        if Settings.My.Country <> 'VE' then // 4.82.1
-           begin
-           Settings.My.State := '';
-           end;
-        AddDomesticCountry('VE');
-        AddDomesticCountry('CY0');
-        AddDomesticCountry('CY9');
-        //        VHFBandsEnabled := True;
       end;
 
     RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB:
@@ -1348,49 +1235,6 @@ begin
         DomesticMultByBand := dmbbAllBand;
       end;
 
-    RUSSIANDX, RU3AXMEMORIAL:
-      begin
-        AddRussianDomesticCountrys;
-        AddDomesticCountry('CE9');
-        if not RussianID(Settings.My.Country) then // 4.79.2
-           begin
-           Settings.My.State := '';
-           end;
-        //        Settings.Contest.CountDomesticCountries := True;
-        //        Settings.Contest.Name := 'Russian DX Contest';
-      end;
-
-    SALMONRUN:
-      begin
-        //        if PWORD(@Settings.My.State[1])^ = $4157 {WA} then
-        if FoundMyStateInDomFile then
-           begin
-           //          DomesticQTHDataFileName := 'SALMONWA';
-           ActiveExchange := RSTDomesticOrDXQTHExchange;
-           ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
-           end
-        else
-           begin
-           //          DomesticQTHDataFileName := 'SALMON';
-           ActiveExchange := RSTDomesticQTHExchange;
-           end;
-        //        Settings.Contest.Name := 'Washington State Salmon Run';
-        //        Add_KVEKH6KL;
-
-      end;
-
-    SACCW, SACSSB:
-      begin
-        if ScandinavianCountry(Settings.My.Country) then
-           begin
-           ActiveDXMult := ARRLDXCC
-           end
-        else
-           begin
-           ActivePrefixMult := SACDistricts;
-           end;
-      end;
-
     YBDX: // 4.64.1
       begin
         ActiveMode := Phone;
@@ -1404,277 +1248,18 @@ begin
         AddDomesticCountry('SP');
       end;
 
-    NASPRINTCW, NASPRINTRTTY:
-      begin
-        ActiveBand := Band20;
-        //        ActiveInitialExchange := NameQTHInitialExchange;
-        //        Settings.Contest.Name := 'North American Sprint';
-        SetCQMemoryString(CW, AltF1, 'NA \ NA');
-
-        Settings.Messages.CqExchangeCw := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
-        Settings.Messages.QslCw := 'TU';
-        Settings.Messages.QuickQslCw1 := 'EE';
-        Settings.Messages.QsoBeforeCw := 'B4 \ NA';
-        Settings.Messages.SpExchangeCw := UTF8Encode('@ # ' + Settings.My.Name + ' ' + Settings.My.State + '  \ ');
-        Settings.Messages.RepeatSpExchangeCw := UTF8Encode('# ' + Settings.My.Name + ' ' + Settings.My.State);
-        Settings.Messages.CallOkNowCw := '} R';
-
-        SetCQMemoryString(CW, F1, 'NA \');
-        SetCQMemoryString(CW, F2, 'CQ^NA CQ^NA \ \ NA');
-        SetCQMemoryString(CW, F5, '   ? ');
-        SetCQMemoryString(CW, F6, '   NA \ NA ');
-        SetCQMemoryString(CW, F7, '   CQ^NA \ \ NA ');
-        SetCQMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
-        SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
-
-        SetEXMemoryString(CW, F3, 'NR #');
-        SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Name));
-        SetEXMemoryString(CW, F5, Settings.My.State);
-        SetEXMemoryString(CW, F6, UTF8Encode('@ \ NR^# ' + Settings.My.Name + ' ' + Settings.My.State));
-        SetEXMemoryString(CW, F7, '   CQ^NA \ \ NA ');
-        SetEXMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
-        SetEXMemoryString(CW, AltF3, 'NR?');
-        SetEXMemoryString(CW, AltF4, 'NAME?');
-        SetEXMemoryString(CW, AltF5, 'QTH?');
-
-        //Settings.Qso.ByBand := True;
-        Settings.Contest.SprintQsyRule := True;
-        Add_KVE;
-
-        AddDomesticCountry('KL');
-      end;
-
-    SPRINTSSB:
-      begin
-        ActiveBand := Band20;
-        //        ActiveInitialExchange := NameQTHInitialExchange;
-        //        Settings.Contest.Name := 'North American Sprint';
-        SetCQMemoryString(CW, AltF1, 'NA \ NA');
-
-        Settings.Messages.CqExchangeCw := UTF8Encode('^  \   # ' + Settings.My.Name + ' ' + Settings.My.State);
-        Settings.Messages.QslCw := 'TU';
-        Settings.Messages.QuickQslCw1 := 'EE';
-        Settings.Messages.QsoBeforeCw := 'B4 \ NA';
-        Settings.Messages.SpExchangeCw := UTF8Encode('@ # ' + Settings.My.Name + ' ' + Settings.My.State + '  \ ');
-        Settings.Messages.RepeatSpExchangeCw := UTF8Encode('# ' + Settings.My.Name + ' ' + Settings.My.State);
-        Settings.Messages.CallOkNowCw := '} R';
-
-        SetCQMemoryString(CW, F1, 'NA \');
-        SetCQMemoryString(CW, F2, 'CQ^NA CQ^NA \ \ NA');
-        SetCQMemoryString(CW, F5, '   ? ');
-        SetCQMemoryString(CW, F6, '   NA \ NA ');
-        SetCQMemoryString(CW, F7, '   CQ^NA \ \ NA ');
-        SetCQMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
-        SetCQMemoryString(CW, AltF1, 'NA \ \ NA');
-
-        SetEXMemoryString(CW, F3, 'NR #');
-        SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Name));
-        SetEXMemoryString(CW, F5, Settings.My.State);
-        SetEXMemoryString(CW, F6, UTF8Encode('@ \ NR^# ' + Settings.My.Name + ' ' + Settings.My.State));
-        SetEXMemoryString(CW, F7, '   CQ^NA \ \ NA ');
-        SetEXMemoryString(CW, F8, '   CQ^NA CQ^NA \ \ NA ');
-        SetEXMemoryString(CW, AltF3, 'NR?');
-        SetEXMemoryString(CW, AltF4, 'NAME?');
-        SetEXMemoryString(CW, AltF5, 'QTH?');
-
-        //Settings.Qso.ByBand := True;
-        Settings.Contest.SprintQsyRule := True;
-        Add_KVEKH6KL;
-
-        //     AddDomesticCountry('KL');
-      end;
-
-    ARRLSSCW, ARRLSSSSB:
-      begin
-        //        ActiveInitialExchange := CheckSectionInitialExchange;
-        (* THE SWEEPSTAKES ASSIGNMENT IS GONE, 2026-09-12. The setting is
-          the station's now and defaults TRUE, so a contest turning it on
-          would only be writing the operator's own preference over with
-          the value it already has -- and would make it impossible to
-          turn off. One setting, one writer (NY4I). *)
-        //        Settings.Contest.Name := 'ARRL Sweepstakes';
-
-        AddARRLSectionDomesticCountries;
-
-        SetCQMemoryString(CW, AltF1, 'CQ^SS \ SS');
-
-        (* UTF8Encode ONCE around the whole expression: Settings.Messages.CqExchangeCw is a
-          Str40, and an AnsiString-family value assigned to a ShortString
-          is not a narrowing conversion where a UTF-16 one is. Encoded
-          LAST, because concatenating onto the result would promote it
-          straight back to UnicodeString. *)
-        Settings.Messages.CqExchangeCw := UTF8Encode('_# ' + Settings.My.Prec + '  ' + Settings.My.Call
-                                 + '  ' + Settings.My.Check + ' ' + Settings.My.Section);
-{(*}
-        Settings.Messages.SpExchangeCw       := UTF8Encode('NR # ' + Settings.My.Prec
-           + ' ' + Settings.My.Call + ' ' + Settings.My.Check + ' ' + Settings.My.Section);
-        Settings.Messages.RepeatSpExchangeCw := Settings.Messages.SpExchangeCw;//'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
-{*)}
-        Settings.Messages.QslCw := UTF8Encode('73 ' + Settings.My.Call + ' SS>');
-        Settings.Messages.QsoBeforeCw := UTF8Encode('SRI QSO ' + Settings.My.Call + ' SS');
-
-        Settings.Messages.QuickQslCw1 := 'TU>';
-{(*}
-//        Settings.Messages.SpExchangeCw       := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
-//        Settings.Messages.RepeatSpExchangeCw := 'NR # ' + MyPrec + ' ' + Settings.My.Call + ' ' + MyCheck + ' ' + MySection;
-{*)}
-        Settings.Messages.CallOkNowCw := '} R';
-
-        SetCQMemoryString(CW, F1, UTF8Encode('SS ' + Settings.My.Call + ' SS>'));
-        SetCQMemoryString(CW, F2,
-           UTF8Encode('CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call + ' SS>'));
-        SetCQMemoryString(CW, F3, 'CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
-          ' SS>');
-        SetCQMemoryString(CW, F7, UTF8Encode('  CQ^SS ' + Settings.My.Call + ' SS'));
-        SetCQMemoryString(CW, F8, '  CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
-          ' SS');
-
-        SetCQMemoryString(CW, AltF1, UTF8Encode('SS ' + Settings.My.Call + ' SS'));
-        SetCQMemoryString(CW, AltF2, 'CQ^SS cq^ss ' + Settings.My.Call + ' ' + Settings.My.Call +
-          ' SS');
-        SetCQMemoryString(CW, AltF3, 'CQ^SS cq^ss ' + Settings.My.Call + ' ' + Settings.My.Call +
-          ' SS');
-
-        SetEXMemoryString(CW, AltF7, ' CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
-          ' SS');
-
-        SetEXMemoryString(CW, F3, 'NR #');
-        SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Prec));
-        SetEXMemoryString(CW, F5, UTF8Encode(Settings.My.Check));
-        SetEXMemoryString(CW, F6, UTF8Encode(Settings.My.Section));
-        SetEXMemoryString(CW, F7, UTF8Encode('  CQ^SS ' + Settings.My.Call + ' SS'));
-        SetEXMemoryString(CW, F8,
-           UTF8Encode('  CQ^SS CQ^SS ' + Settings.My.Call + ' SS'));
-
-        SetEXMemoryString(CW, AltF3, 'NR?');
-        SetEXMemoryString(CW, AltF4, 'PREC?');
-        SetEXMemoryString(CW, AltF5, 'CK?');
-        SetEXMemoryString(CW, AltF6, 'SEC?');
-        SetEXMemoryString(CW, AltF7, ' CQ^SS CQ^SS ' + Settings.My.Call + ' ' + Settings.My.Call +
-          ' SS');
-      end;
-
     TENTEN:
       begin
         //        Settings.Contest.Name := 'Ten Ten QSO Party';
         Add_KVEKH6KL;
       end;
 
-    TEXASQSOPARTY:
-      begin
-        if FoundMyStateInDomFile then
-           begin
-           ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-           //          DomesticQTHDataFileName := 'TEXASTX';
-           //          CQP := True;
-           end
-        else
-           begin
-           //          DomesticQTHDataFileName := 'TEXAS';
-           ActiveExchange := RSTDomesticQTHExchange;
-           end;
-
-        //        Add_KVEKH6KL;
-      end;
-
-    UBACW, UBASSB:
-      begin
-        Settings.Contest.LiteralDomesticQth := True;
-        if Settings.My.Country = 'ON' then // 4.96.2
-           begin
-           ActiveDXMult := CQDXCC;
-           ActiveDomesticMult := NoDomesticMults;
-           ActiveBand := Band80;
-           ActivePrefixMult := NoPrefixMults;
-           end
-        else
-           begin
-           ActivePrefixMult := BelgiumPrefixes;
-           ActiveDomesticMult := DomesticFile;
-           end;
-      end;
-
-    UKRAINIAN:
-      begin
-        AddDomesticCountry('UR');
-        if Settings.My.Country = 'UR' then
-           begin
-           ActiveDomesticMult := NoDomesticMults;
-           end;
-      end;
-
-    VAQP:
-      tAllowDupeQSOs := TRUE;
     {
         REFCW:
           begin
             AddDomesticCountry('F');
           end;
     }
-    DARC10M:
-      begin
-        ActiveBand := Band10;
-        AddDomesticCountry('DL');
-        Settings.Qso.ByMode := True;
-        if Settings.My.Country = 'DL' then
-
-           begin
-           ActiveDXMult := CQDXCC
-           end
-
-        else
-           begin
-           ActiveDomesticMult := DOKCodes;
-           end;
-
-        Settings.Contest.LiteralDomesticQth := True;
-        AddDomesticCountry('DL');
-      end;
-
-    DARCXMAS:
-      begin
-        //        CountryTable.ZoneMode := CQZoneMode;
-        //        ActivePrefixMult := Prefix;
-        Settings.Contest.LiteralDomesticQth := True;
-        AddDomesticCountry('DL');
-        Settings.Contest.SprintQsyRule := True;
-      end;
-
-    WAG:
-      begin
-        //        CountryTable.ZoneMode := CQZoneMode;
-
-        if Settings.My.Country = 'DL' then
-           begin
-           ActiveDXMult := CQDXCC;
-           //For the WAG contest - German stations will need to count Germany as a country multiplier manually after the contest.
-           end
-        else
-           begin
-           ActiveDomesticMult := DOKCodes;
-           end;
-
-        Settings.Contest.LiteralDomesticQth := True;
-        AddDomesticCountry('DL');
-      end;
-
-    DARCWAEDCCW, DARCWAEDCSSB {, DARCWAEDCRTTY}:
-      begin
-        //        CountryTable.ZoneMode := CQZoneMode;
-
-        if MyContinent <> Europe then
-           begin
-           ActiveDXMult := CQEuropeanCountries
-           end
-        else
-           begin
-           ActivePrefixMult := CQNonEuropeanCountriesAndWAECallRegions;
-           end;
-
-        ActiveBand := Band80;
-        Settings.Contest.ContactsPerPage := 40;
-        Settings.Qtc.Enable := True;
-      end;
     {
         ,QSOPARTY:
           begin
@@ -1695,17 +1280,6 @@ begin
         AddDomesticCountry('YO');
       end;
 
-    CUPRFCW, CUPRFSSB, CUPRFDIG:
-      begin
-        ActiveMode := CW;
-        if Contest = CUPRFSSB then
-           begin
-           ActiveMode := Phone;
-           end;
-        Settings.My.State := UTF8Encode(Settings.My.Grid);
-        Settings.Contest.LiteralDomesticQth := True;
-      end;
-
     UA4WCHAMPIONSHIP:
       begin
         Settings.Contest.MinitourDuration := 15;
@@ -1716,59 +1290,6 @@ begin
         Settings.Contest.MinitourDuration := 20;
       end;
 
-    RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB:
-      begin
-        ActiveMode := Phone;
-        if Contest = RFCHAMPIONSHIPCW then
-           begin
-           ActiveMode := CW;
-           end;
-        DomesticMultByBand := dmbbAllBand;
-        Settings.Contest.InitialExchangeOverwrite := True;
-        //        ActiveZoneMult := RFChampionchipZones;
-        //        ActiveInitialExchange := ZoneInitialExchange;
-      end;
-
-    MINITEST, MINI80:
-      begin
-        ActiveBand := Band80;
-        Settings.Contest.MultipleBands := False;
-        Settings.Contest.MultipleModes := False;
-        Settings.Contest.MinitourDuration := 10;
-      end;
-
-    MINI40:
-      begin
-        ActiveBand := Band40;
-        Settings.Contest.MultipleBands := False;
-        Settings.Contest.MultipleModes := False;
-        Settings.Contest.MinitourDuration := 10;
-      end;
-
-    LZDX:
-      begin
-        AddDomesticCountry('LZ');
-        ActiveBand := Band80;
-      end;
-
-    ALRS_UA1DZ_CUP:
-      begin
-        Settings.Contest.LiteralDomesticQth := true;
-        if RussianID(Settings.My.Country) then
-           begin
-           TempOblast := GetOblast(UTF8Encode(Settings.My.Call));
-           if not (GetRussiaOblastByTwoChars(Char(TempOblast[1]), Char(TempOblast[2])) in
-             [rtUA1A, rtUA1C]) then
-              begin
-              ActiveDXMult := NoDXMults;
-              ActiveDomesticMult := RDADistrict;
-              TempDomesticQTHDataFileName := '';
-              Settings.Mult.ByBand := false;
-              end;
-           end;
-
-      end;
-
     OLDNEWYEAR:
       begin
         ActiveBand := Band80;
@@ -1777,15 +1298,6 @@ begin
 
     CQWPXRTTY, WRTC:
       ActiveBand := Band80;
-
-    YOUTHCHAMPIONSHIPRF:
-      begin
-
-        Settings.Contest.MinitourDuration := 60;
-        Settings.Contest.RfoblMode := True; // n4af 4.42.7
-        ActiveMode := Phone;
-        Settings.Contest.Name := '?????????? ?????????? ??';
-      end;
 
     RFASCHAMPIONSHIPCW {, RFASCHAMPIONSHIPSSB}:
       begin
@@ -1821,30 +1333,12 @@ begin
         Settings.Contest.R150SMode := True;
       end;
 
-    LQP, NCCCSPRINT:
-      begin
-        Settings.AutoDupe.EnableCq := True;
-        Settings.AutoDupe.EnableSAndP := True;
-        AddDomesticCountry('KH6');
-        Add_KVE;
-        Settings.Contest.ExchangeMemoryEnable := True;
-          //(turns on the Exchange Memory for Initial Exchange pre - fill)
-        //        ActiveInitialExchange := NameQTHInitialExchange; //(turns on Initial Exchange pre - fill using TRMASTER.DTA)
-        Settings.Contest.SprintQsyRule := True;
-        tAllowDupeQSOs := False;
-      end;
-
     //    UA4N: Settings.Contest.MinitourDuration := 15;
 
     JTDX: // 4.67.9
       begin
         ActiveInitialExchange := ZoneInitialExchange;
         ActivePrefixMult := MongolianCallSignPrefix;
-      end;
-
-    CQIR:
-      begin
-        AddDomesticCountry('EI');
       end;
 
     UNDX:
@@ -1871,37 +1365,8 @@ begin
         ActiveBand := Band80;
       end;
 
-    OZHCRVHF:
-      Settings.Contest.QsoNumberByBand := True;
-
     //    RADIOMEMORY:
     //      CallsignUpdateEnable := False;   -- see the note above
-
-    PCC:
-      begin
-        Settings.Contest.ExchangeMemoryEnable := False;
-        (* SetCursorPos(0, 1) IS DELETED (2026-09-08), and it was doing
-          something absurd rather than nothing.
-
-          In DOS TR that call positioned the TEXT CURSOR at column 0, row 1.
-          Bound against the Windows unit it is a completely different function
-          -- Windows.SetCursorPos MOVES THE MOUSE POINTER -- so selecting the
-          PCC contest yanked the operator's mouse to the top-left corner of the
-          screen. It compiled clean because the signature happens to match.
-
-          The only one in the tree, and nothing replaces it: this window has
-          had no text cursor to position since the DOS port, and the entry
-          fields manage their own caret. *)
-        Settings.Contest.InitialExchangeOverwrite := TRUE;
-      end;
-
-    ARRLDIGI:
-      begin
-        Settings.Contest.DigitalModeEnable := true;
-        Settings.Qso.ByMode := False;
-        Settings.Qso.ByBand := True;
-        //     Settings.Contest.LiteralDomesticQth := true;    // 4.91.5
-      end;
 
   end;
 
@@ -1977,25 +1442,17 @@ end;
 
 procedure AddRussianDomesticCountrys;
 begin
-  AddDomesticCountry('UA');
-  AddDomesticCountry('UA2');
-  AddDomesticCountry('UA9');
-  AddDomesticCountry('R1FJ');
-  AddDomesticCountry('R1MV');
+  AddDomesticCountryList(DomesticCountriesRussia);
 end;
 
 procedure Add_KVEKH6KL;
 begin
-  AddDomesticCountry('K');
-  AddDomesticCountry('VE');
-  AddDomesticCountry('KH6');
-  AddDomesticCountry('KL');
+  AddDomesticCountryList(DomesticCountriesKVEKH6KL);
 end;
 
 procedure Add_KVE;
 begin
-  AddDomesticCountry('K');
-  AddDomesticCountry('VE');
+  AddDomesticCountryList(DomesticCountriesKVE);
 end;
 
 procedure RecalculateMyCountryContinentAndZone;

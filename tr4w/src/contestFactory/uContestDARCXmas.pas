@@ -36,16 +36,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
-  FCONTEST has an arm for this contest: LITERAL DOMESTIC QTH on,
+  FCONTEST had an arm for this contest: LITERAL DOMESTIC QTH on,
   AddDomesticCountry('DL'), and SPRINT QSY RULE on. uNewContest asks for
   the DOK and shows a "Germany" check box. LOGCFG names it in a
   CQ-exchange arm that is inside a commented-out block, so nothing is
-  read from it. All of that is contest SETUP, not scoring, and it stays
-  where it is.
+  read from it. The arm is this class's DescribeSession since M7a; the
+  uNewContest prompt moves at M9.
 
   SPRINT QSY RULE IS A SETTING, NOT A BRANCH: MainUnit and LOGDDX read
-  Settings.Contest.SprintQsyRule, which FCONTEST sets, so this class
-  neither sees nor changes it.
+  Settings.Contest.SprintQsyRule, which this class's DescribeSession
+  states and FCONTEST's applier sets; scoring neither sees nor changes it.
 
   THIS IS NOT THE XMAS CONTEST (uContestXmas) -- a different row, a
   different event, and a different point rule.
@@ -97,6 +97,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -196,6 +200,17 @@ function TContestDARCXmas.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestDARCXmas.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   aSession.LiteralDomesticQTH := True;
+   aSession.AddDomesticCountry('DL');
+   aSession.SprintQSYRule := True;
 end;
 
 initialization

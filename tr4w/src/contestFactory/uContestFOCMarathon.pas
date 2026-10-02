@@ -40,7 +40,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record
   but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
-  (M5) and set-up (M7) are not moved.
+  (M5b) and set-up (M7a) have moved since.
 
   SCORING IS FOCMarathonQSOPointMethod, transcribed exactly:
 
@@ -103,6 +103,10 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -258,6 +262,15 @@ begin
       begin
       aExch.Power := ShortString(aTemps.FOC_Num);
       end;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestFOCMarathon.DescribeSession(const aStation: TStationContext;
+                                              aSession: TSessionDefaults);
+begin
+   aSession.ExchangeMemoryEnable := True;
 end;
 
 initialization

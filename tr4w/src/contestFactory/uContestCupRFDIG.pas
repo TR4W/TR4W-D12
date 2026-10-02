@@ -89,6 +89,10 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE SPONSOR'S FORMULA -- see the header. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -233,6 +237,19 @@ function TContestCupRFDIG.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named CUPRFCW, CUPRFSSB, CUPRFDIG; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestCupRFDIG.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   aSession.Mode := CW;
+   aSession.MyState := aStation.MyGrid;
+   aSession.LiteralDomesticQTH := True;
 end;
 
 initialization

@@ -52,9 +52,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   with three equal numbers so that "change points per mode" is a change of
   numbers here, or an override in one mode class, and nothing else.
 
-  SETUP STAYS WHERE IT IS (M7): FCONTEST's arm, LOGCFG's CQ exchange
-  (' 5NN # ' + MY STATE) and uNewContest's province prompt all name both
-  runnings together. EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE BASE'S
+  SET-UP IS THE FAMILY'S (M7a): FCONTEST's arm and LOGCFG's CQ exchange
+  (' 5NN # ' + MY STATE) named both runnings together, so this base holds
+  them once, as DescribeSession and CQExchangeDefault. uNewContest's
+  province prompt moves at M9. EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE BASE'S
   DEFAULT (M4), the shared RSTQSONumberAndDomesticQTHExchange arm. *)
 unit uContestNRAUBalticBase;
 
@@ -84,6 +85,12 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -150,6 +157,38 @@ function TContestNRAUBalticBase.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named NRAUBALTICCW, NRAUBALTICSSB, one contest in two
+   modes, so the family base holds it once. *)
+procedure TContestNRAUBalticBase.DescribeSession(const aStation: TStationContext;
+                                                 aSession: TSessionDefaults);
+begin
+   aSession.Band := Band80;
+   aSession.AddDomesticCountry('ES');
+   aSession.AddDomesticCountry('JW');
+   aSession.AddDomesticCountry('JX');
+   aSession.AddDomesticCountry('LA');
+   aSession.AddDomesticCountry('LY');
+   aSession.AddDomesticCountry('OH');
+   aSession.AddDomesticCountry('OH0');
+   aSession.AddDomesticCountry('OX');
+   aSession.AddDomesticCountry('OY');
+   aSession.AddDomesticCountry('OZ');
+   aSession.AddDomesticCountry('SM');
+   aSession.AddDomesticCountry('TF');
+   aSession.AddDomesticCountry('YL');
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestNRAUBalticBase.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN # ' + aStation.MyState;
 end;
 
 end.

@@ -35,13 +35,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   so the whole rule is FixedModePoints(Mode, 2, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
-  FCONTEST has an arm for this contest:
+  FCONTEST had an arm for this contest:
       ActiveBand := Band80, with three lines commented out beside it
       (a ZoneInitialExchange, a BranchZones zone mult, and the contest
       name 'KV Prvenstvo ZRS').
   uNewContest asks the operator for the last two digits of the year,
-  into the MY ZONE field. Both are contest SETUP, not scoring, and stay
-  where they are.
+  into the MY ZONE field. Both are contest SETUP, not scoring; the arm is
+  DescribeSession since M7a, and the prompt moves at M9.
 
   FLAGGED, NOT CHANGED: THE ZONE MULTIPLIER IS EUHFCYear -- the European
   HF Championship's "year licensed" multiplier -- while FCONTEST's
@@ -99,6 +99,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -200,6 +204,15 @@ function TContestKVP.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestKVP.DescribeSession(const aStation: TStationContext;
+                                      aSession: TSessionDefaults);
+begin
+   aSession.Band := Band80;
 end;
 
 initialization

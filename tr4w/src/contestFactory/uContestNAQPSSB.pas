@@ -38,7 +38,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record but
   `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
-  set-up (M7) are not moved.
+  set-up (M7a) have moved since.
 
   SCORING IS OnePointPerQSO, stated through the FixedModePoints helper:
 
@@ -84,6 +84,10 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -186,6 +190,42 @@ function TContestNAQPSSB.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named NAQSOCW, NAQSOSSB, NAQSORTTY; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestNAQPSSB.DescribeSession(const aStation: TStationContext;
+                                          aSession: TSessionDefaults);
+begin
+   aSession.CQExchangeCW := ' ' + aStation.MyName + ' ' + aStation.MyState;
+   aSession.QSLCW := '73 \ NA>';
+   aSession.QuickQSLCW1 := 'TU';
+   aSession.QSOBeforeCW := ' QSO B4 \ NA';
+   aSession.SPExchangeCW := aStation.MyName + ' ' + aStation.MyState;
+   aSession.CallOkNowCW := '} R';
+
+   aSession.SetCQMemory(CW, smkF1, 'CQ^NA \ \ NA>');
+   aSession.SetCQMemory(CW, smkF2, 'CQ^NA CQ^NA \ \ NA>');
+   aSession.SetCQMemory(CW, smkF5, '   ? ');
+   aSession.SetCQMemory(CW, smkF6, '   NA \ NA ');
+   aSession.SetCQMemory(CW, smkF7, '   CQ^NA \ \ NA ');
+   aSession.SetCQMemory(CW, smkF8, '   CQ^NA CQ^NA \ \ NA ');
+   (* The arm set Alt-F1 twice, to this value both times. *)
+   aSession.SetCQMemory(CW, smkAltF1, 'NA \ \ NA');
+
+   aSession.SetExchangeMemory(CW, smkF3, aStation.MyName);
+   aSession.SetExchangeMemory(CW, smkF4, aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkF5, '@ DE \ ' + aStation.MyName + ' ' + aStation.MyState);
+   aSession.SetExchangeMemory(CW, smkAltF3, 'NAME?');
+   aSession.SetExchangeMemory(CW, smkAltF4, 'QTH?');
+   aSession.SetExchangeMemory(CW, smkF7, '   CQ^NA \ \ NA ');
+   aSession.SetExchangeMemory(CW, smkF8, '   CQ^NA CQ^NA \ \ NA ');
+
+   aSession.AddDomesticCountries(DomesticCountriesKVEKH6KL);
+   aSession.LiteralDomesticQTH := True;
 end;
 
 initialization

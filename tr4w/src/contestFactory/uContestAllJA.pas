@@ -36,10 +36,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   so the whole rule is FixedModePoints(Mode, 1, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
-  FCONTEST has an arm for this contest:
+  FCONTEST had an arm for this contest:
       ActiveBand := Band80, shared with YOTA.
-  That is contest SETUP, not scoring, and it stays in FCONTEST with the
-  rest of contest setup.
+  That is contest SETUP, not scoring, and since M7a it is this class's
+  DescribeSession -- the arm is gone from FCONTEST.
 
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
@@ -84,6 +84,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -185,6 +189,17 @@ function TContestAllJA.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named ALLJA and YOTA; YOTA has no class and keeps its
+   arm in FCONTEST. *)
+procedure TContestAllJA.DescribeSession(const aStation: TStationContext;
+                                        aSession: TSessionDefaults);
+begin
+   aSession.Band := Band80;
 end;
 
 initialization

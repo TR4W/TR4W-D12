@@ -40,7 +40,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record
   but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
-  (M5) and set-up (M7) are not moved.
+  (M5b) and set-up (M7a) have moved since.
 
   SCORING IS ChampionshipUkrMethod, transcribed exactly: a QSO with a station
   outside Ukraine (CTY country UR) scores nothing, every other QSO scores 2 --
@@ -99,6 +99,9 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
+   public
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -221,6 +224,14 @@ function TContestUkraineChampionship.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestUkraineChampionship.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' ' + aStation.MyState + '#';
 end;
 
 initialization

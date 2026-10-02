@@ -38,7 +38,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record but
   `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
-  set-up (M7) are not moved.
+  set-up (M7a) have moved since.
 
   SCORING, transcribed from OKDXQSOPointMethod. An OK/OM station scores 2 for
   its own country and 3 for another, then 3 for a European and 5 for a
@@ -86,6 +86,10 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -238,6 +242,25 @@ function TContestOKDX.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestOKDX.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountry('OK');
+   aSession.AddDomesticCountry('OM');
+   if not OKOMStation(string(aStation.MyCountry)) then
+      begin
+      aSession.DomesticMult := DomesticFile;
+      aSession.DomesticFile := 'OKOM';
+      end
+   else
+      begin
+      aSession.PrefixMult := Prefix;
+      end;
 end;
 
 initialization

@@ -36,10 +36,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   so the whole rule is FixedModePoints(Mode, 2, 1, 1) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
-  FCONTEST has an arm for this contest:
+  FCONTEST had an arm for this contest:
       AddDomesticCountry for K, KH6 and KL.
-  That is contest SETUP, not scoring, and it stays in FCONTEST with the
-  rest of contest setup.
+  That is contest SETUP, not scoring, and since M7a it is this class's
+  DescribeSession -- the arm is gone from FCONTEST.
 
   NOT A STATE QSO PARTY despite the name: P is 0 and QCWA is a national
   organisation, so it has no host state and no counties. It sits on
@@ -96,6 +96,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -195,6 +199,17 @@ function TContestQCWA.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestQCWA.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountry('K');
+   aSession.AddDomesticCountry('KH6');
+   aSession.AddDomesticCountry('KL');
 end;
 
 initialization

@@ -89,6 +89,10 @@ type
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -167,5 +171,31 @@ end;
   select, and registering it for both modes -- which is what this unit did
   before the split -- makes "which class serves ARRL-DX-CW" answerable only by
   reading the base. Each mode registers itself, in its own unit. *)
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named ARRLDXCW, ARRLDXSSB, one contest in two
+   modes, so the family base holds it once. *)
+procedure TContestARRLDXBase.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   (* A W/VE STATION SENDS POWER AND COUNTS DXCC; EVERYONE ELSE SENDS A STATE
+      OR PROVINCE OUT OF S48P14DC. *)
+   if (aStation.MyCountry = 'K') or (aStation.MyCountry = 'VE') then
+      begin
+      aSession.Exchange := RSTPowerExchange;
+      aSession.DXMult := ARRLDXCCWithNoUSAOrCanada;
+      end
+   else
+      begin
+      aSession.DomesticMult := DomesticFile;
+      aSession.DomesticFile := 'S48P14DC';
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
+
+   aSession.ContestName := 'ARRL DX Test';
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+end;
 
 end.

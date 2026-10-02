@@ -39,7 +39,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record
   but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
-  (M5) and set-up (M7) are not moved.
+  (M5b) and set-up (M7a) have moved since.
 
   SCORING IS OnePointPerQSO, stated through the FixedModePoints helper:
 
@@ -52,8 +52,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SERIAL in the state column. That is this class's sent side now, Cabrillo
   and ADIF alike; the received column is the shared arm's. (SP DX's half of
   that test was dead -- SP DX never runs that exchange -- and went with it.)
-  The row's own AE is transcribed unchanged; which exchange PACC's set-up
-  should state is M7's question, when the arm becomes DescribeSession. *)
+  The row's own AE is transcribed unchanged. M7a moved the arm into
+  DescribeSession as it stood: a PA station runs the row's exchange and
+  everyone else RSTDomesticQTHExchange -- the matrix has no PA variant, so
+  only the second is pinned there. *)
 unit uContestPACC;
 
 {$I tr4w.inc}
@@ -95,6 +97,10 @@ type
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -205,6 +211,27 @@ function TContestPACC.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestPACC.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   if aStation.MyCountry = 'PA' then
+      begin
+      aSession.DXMult := PACCCountriesAndPrefixes;
+      aSession.Exchange := RSTAndQSONumberOrDomesticQTHExchange;
+      aSession.AddDomesticCountry('PA');
+      aSession.DomesticFile := 'PACCPA';
+      aSession.LiteralDomesticQTH := True;
+      end
+   else
+      begin
+      aSession.Exchange := RSTDomesticQTHExchange;
+      aSession.DomesticFile := 'PACC';
+      end;
 end;
 
 initialization

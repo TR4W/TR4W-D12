@@ -48,8 +48,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   contest class owns yet; British Columbia and Indiana have the same shape in
   the same routine and were left there too. It is the same in D7.
 
-  FCONTEST's NYQP arm sets ActiveDomesticMult := DomesticFile, which is what
-  the row already says; it stays in FCONTEST with the rest of contest setup.
+  FCONTEST's NYQP arm set ActiveDomesticMult := DomesticFile, which is what
+  the row already says; it is DescribeSession since M7a, still stated, so it
+  still overwrites a DOMESTIC MULTIPLIER line before CONTEST as it did.
  *)
 unit uContestNewYorkQP;
 
@@ -58,7 +59,7 @@ unit uContestNewYorkQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase;
 
 type
    TContestNewYorkQP = class(TContestStateQSOPartyBase)
@@ -105,6 +106,10 @@ type
       (* The county-line maximum, from NY4I's ruling -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -207,6 +212,15 @@ end;
 procedure TContestNewYorkQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestNewYorkQP.DescribeSession(const aStation: TStationContext;
+                                            aSession: TSessionDefaults);
+begin
+   aSession.DomesticMult := DomesticFile;
 end;
 
 initialization

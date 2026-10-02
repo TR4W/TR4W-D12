@@ -105,6 +105,12 @@ type
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -247,6 +253,31 @@ end;
 procedure TContestCaliforniaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 3, 3);
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestCaliforniaQP.DescribeSession(const aStation: TStationContext;
+                                               aSession: TSessionDefaults);
+begin
+   (* BOTH SIDES OF THE STATE LINE, STATED (inventory D8). *)
+   if aStation.InHostState then
+      begin
+      aSession.Exchange := QSONumberDomesticOrDXQTHExchange;
+      end
+   else
+      begin
+      aSession.Exchange := QSONumberDomesticQTHExchange;
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestCaliforniaQP.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' # ' + aStation.MyState;
 end;
 
 initialization

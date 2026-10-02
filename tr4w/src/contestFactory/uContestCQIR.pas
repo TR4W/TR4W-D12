@@ -36,10 +36,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   so the whole rule is FixedModePoints(Mode, 3, 2, 2) -- CW, phone, everything
   else. Digital scores the phone value, as the legacy arm does.
 
-  FCONTEST has an arm for this contest: AddDomesticCountry('EI'). LOGCFG
-  builds its CQ exchange from MY STATE. uNewContest asks for the county
-  code and shows an "Ireland" check box. All of that is contest SETUP,
-  not scoring, and it stays where it is.
+  FCONTEST had an arm for this contest: AddDomesticCountry('EI'). LOGCFG
+  built its CQ exchange from MY STATE. Both are this class's since M7a
+  (DescribeSession, CQExchangeDefault). uNewContest asks for the county
+  code and shows an "Ireland" check box; that prompt moves at M9.
 
   THE ROW HAS NO AIE FIELD AT ALL -- not commented out, simply absent --
   so its initial-exchange kind is whatever the typed constant initialises
@@ -95,6 +95,12 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -189,6 +195,30 @@ function TContestCQIR.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestCQIR.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountry('EI');
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestCQIR.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   if aStation.MyState <> '' then
+      begin
+      Result := ' ' + aStation.MyState + ' #';
+      end
+   else
+      begin
+      Result := ' #';
+      end;
 end;
 
 initialization

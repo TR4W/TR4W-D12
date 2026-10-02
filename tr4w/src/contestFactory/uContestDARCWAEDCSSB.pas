@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    ADIFName: '';  CABName: '';  FriendlyName: 'WAE DX Contest, SSB'
 
   Blank ADIFName and CABName resolve to the enum's spelling, 'DARC-WAEDC-SSB'. The row
-  names no multiplier at all: FCONTEST's arm gives a non-European station
+  names no multiplier at all: DescribeSession gives a non-European station
   CQEuropeanCountries and anybody else the WAE prefixes, so the score reads
   the SESSION's DX multiplier, never this row's.
 
@@ -52,7 +52,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   them on) times WEIGHTED multipliers -- four for each on 80 m, three on 40 m
   and two on 20, 15 and 10 m, counting the session's European countries when
   its DX multiplier is CQEuropeanCountries (a non-European station, set by
-  FCONTEST's arm) and its WAE prefixes otherwise. A single-band entry counts
+  DescribeSession) and its WAE prefixes otherwise. A single-band entry counts
   its band's multipliers once each, the general case. LogEdit.TotalScore's
   `ActiveQSOPointMethod = WAEQSOPointMethod` arm, moved at M6.
 
@@ -94,6 +94,10 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
       (* THE SPONSOR'S FORMULA -- see the header. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -236,6 +240,27 @@ function TContestDARCWAEDCSSB.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named DARCWAEDCCW, DARCWAEDCSSB; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestDARCWAEDCSSB.DescribeSession(const aStation: TStationContext;
+                                               aSession: TSessionDefaults);
+begin
+   if aStation.MyContinent <> Europe then
+      begin
+      aSession.DXMult := CQEuropeanCountries;
+      end
+   else
+      begin
+      aSession.PrefixMult := CQNonEuropeanCountriesAndWAECallRegions;
+      end;
+   aSession.Band := Band80;
+   aSession.ContactsPerPage := 40;
+   aSession.QTCEnable := True;
 end;
 
 initialization

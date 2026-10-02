@@ -98,6 +98,10 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -282,6 +286,17 @@ procedure TContestARRLDigi.ApplyADIFImport(const aTemps: TADIFRecordTemps;
 begin
    aExch.ExchString  := ShortString(aTemps.GridSquare);
    aExch.DomesticQTH := ShortString(aTemps.GridSquare);
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestARRLDigi.DescribeSession(const aStation: TStationContext;
+                                           aSession: TSessionDefaults);
+begin
+   aSession.DigitalModeEnable := True;
+   aSession.QSOByMode := False;
+   aSession.QSOByBand := True;
 end;
 
 initialization

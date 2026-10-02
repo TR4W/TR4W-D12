@@ -142,6 +142,10 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -265,6 +269,19 @@ end;
 procedure TContestBritishColumbiaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 4, 2, 4);
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestBritishColumbiaQP.DescribeSession(const aStation: TStationContext;
+                                                    aSession: TSessionDefaults);
+begin
+   aSession.DXMult := NoDXMults;
+   if aStation.MyCountry = 'VE7' then
+      begin
+      aSession.AddDomesticCountry('VE7');
+      end;
 end;
 
 initialization

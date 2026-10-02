@@ -85,6 +85,10 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
    end;
 
 implementation
@@ -264,6 +268,19 @@ function TContestLABRE.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestLABRE.DescribeSession(const aStation: TStationContext;
+                                        aSession: TSessionDefaults);
+begin
+   aSession.SetCQMemory(CW, smkF1, 'CQ TEST \ \ LABRE');
+   aSession.SetCQMemory(CW, smkF2, 'CQ TEST \ \ LABRE');
+   aSession.CQExchangeCW := '5NN' + aStation.MyState;
+   aSession.SPExchangeCW := '5NN' + aStation.MyState;
+   aSession.QSLCW := '73 \ ';
 end;
 
 initialization

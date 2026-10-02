@@ -74,8 +74,9 @@ fix (a latched derivation once exported `59 15` against zone 5).
 2026-10-01).** One resolver, `ApplyContestTraits`, writes the `Active*`
 globals, the by-band/mode flags and the CTY zone list: the operator's
 statement, else `ContestIdentity(Contest)`. A statement made BEFORE the
-`CONTEST` line now stands (it used to be overwritten); the per-contest arms
-still run after the head and still overwrite. Three defects went with it:
+`CONTEST` line now stands (it used to be overwritten); what a contest states
+in its `DescribeSession` (M7a -- every contest that has a class; a classless
+contest's arm otherwise) still runs after the head and still overwrites. Three defects went with it:
 **no station was ever in state for a QSO party** (`'DOM'` + name, no
 separator -- now `uAppPaths.ShippedDomFilePath`, shared with `LogCfg` and
 `logdom`'s INCLUDE), **`CTY.ctyZoneMode` was 255** for every contest without

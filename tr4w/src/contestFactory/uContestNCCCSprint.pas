@@ -38,7 +38,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record but
   `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
-  set-up (M7) are not moved.
+  set-up (M7a) have moved since.
 
   SCORING IS OnePointPerQSO, stated through the FixedModePoints helper:
 
@@ -84,6 +84,12 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -186,6 +192,31 @@ function TContestNCCCSprint.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named LQP, NCCCSPRINT; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestNCCCSprint.DescribeSession(const aStation: TStationContext;
+                                             aSession: TSessionDefaults);
+begin
+   aSession.AutoDupeEnableCQ := True;
+   aSession.AutoDupeEnableSAndP := True;
+   aSession.AddDomesticCountry('KH6');
+   aSession.AddDomesticCountries(DomesticCountriesKVE);
+   aSession.ExchangeMemoryEnable := True;
+   aSession.SprintQSYRule := True;
+   aSession.AllowDupeQSOs := False;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestNCCCSprint.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' # ' + aStation.MyName + ' ' + aStation.MyState;
 end;
 
 initialization

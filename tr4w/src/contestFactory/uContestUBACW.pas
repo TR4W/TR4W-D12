@@ -38,7 +38,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly; Test_MovedRowValuesStillMatchTheArray holds the row, and the
   contest matrix the scoring and the export -- every line of its record but
   `contest.class` is unchanged, which is the proof. EXCHANGE PARSING (M5b) and
-  set-up (M7) are not moved.
+  set-up (M7a) have moved since.
 
   SCORING, transcribed from UBAQSOPointMethod (4.106.5). A Belgian station
   (ON) scores 1 for ON, 2 for another UBA European country and 3 for the rest
@@ -86,6 +86,12 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -222,6 +228,37 @@ function TContestUBACW.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named UBACW, UBASSB; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestUBACW.DescribeSession(const aStation: TStationContext;
+                                        aSession: TSessionDefaults);
+begin
+   aSession.LiteralDomesticQTH := True;
+   if aStation.MyCountry = 'ON' then
+      begin
+      aSession.DXMult := CQDXCC;
+      aSession.DomesticMult := NoDomesticMults;
+      aSession.Band := Band80;
+      aSession.PrefixMult := NoPrefixMults;
+      end
+   else
+      begin
+      aSession.PrefixMult := BelgiumPrefixes;
+      aSession.DomesticMult := DomesticFile;
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestUBACW.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN # ' + aStation.MyState;
 end;
 
 initialization

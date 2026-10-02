@@ -89,6 +89,12 @@ type
       function InitialExchangeFromCall(const aStandardCall: string;
                                        const aCountryID: string;
                                        out aExchange: string): boolean; override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    end;
 
 implementation
@@ -235,6 +241,30 @@ function TContestRU3AXMemorial.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation.
+   The arm named RUSSIANDX, RU3AXMEMORIAL; each of them holds its own
+   copy (design 1.4), so a sponsor changing one changes one. *)
+procedure TContestRU3AXMemorial.DescribeSession(const aStation: TStationContext;
+                                                aSession: TSessionDefaults);
+begin
+   aSession.AddDomesticCountries(DomesticCountriesRussia);
+   aSession.AddDomesticCountry('CE9');
+   if not RussianID(string(aStation.MyCountry)) then
+      begin
+      aSession.MyState := '';
+      end;
+end;
+
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
+   TContestBase.CQExchangeDefault. *)
+function TContestRU3AXMemorial.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN # ' + aStation.MyState;
 end;
 
 initialization
