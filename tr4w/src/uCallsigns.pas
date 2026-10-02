@@ -88,6 +88,10 @@ type
   public
 //  destructor Destroy; override;
     constructor Init;
+    (* RELEASES THE LIST'S MEMORY -- the counterpart of Init, for a list that
+      is not the program's own CallsignsList (that one lives as long as the
+      process). Added at M8 for the unit test that drives a list of its own. *)
+    procedure Done;
     function Get(Index: integer): string;
     function GetQSOs(Index: integer): Byte;
     function GetDupesArray(Index: integer; var da: TDupesArray): boolean;
@@ -124,13 +128,23 @@ uses
   uSettingsModel,   // Settings.PossibleCall.Enable
   LogStuff,
   LogDupe,
-  LogWind;
+  LogWind,
+  (* Contest, and the band question an off-band QSO is asked (M8). *)
+  PostUnit,
+  uContestBase,
+  uContestRegistry;
 
 { TStringList }
 
 constructor TCallsignsList.Init;
 begin
   Grow;
+end;
+
+procedure TCallsignsList.Done;
+begin
+   FCount := 0;
+   SetCapacity(0);
 end;
 {
 destructor TCallsignsList.Destroy;
@@ -213,6 +227,21 @@ begin
 
   if JustAddToList then Exit;
 
+  (* AN OFF-BAND QSO MARKS NO DUPE BIT -- M8, design 7.4. NY4I, 2026-10-01:
+    an off-band QSO "is not a dupe and makes no later on-band QSO a dupe".
+
+    The AllBands bit below is what a contest whose QSOs are NOT counted per
+    band checks, so before M8 a 30 m QSO in such a contest made the same
+    station a dupe on 20 m. The same question scoring and SetMultFlags ask
+    (ContestCreditsBand), of the session's contest; ContestIdentity, which
+    carries no station and is safe off the main thread, because the band
+    list is what the contest IS. The QSO still counts as a QSO with the
+    station (FQSOs above): it is in the log. *)
+  if not ContestCreditsBand(ContestIdentity(Contest), Band) then
+     begin
+     Exit;
+     end;
+
   Value := FList^[Result].FDupesArray[Mode];
   FList^[Result].FDupesArray[Mode] := Value or (1 shl Ord(Band));
 
@@ -234,6 +263,25 @@ var
   TempBand                              : BandType;
 begin
   Result := False;
+
+  (* AN OFF-BAND QSO IS NOT A DUPE -- M8, design 7.4; the other half of the
+    rule in AddCallsign, asked the same way. Band is the REAL band here:
+    EditableLog.CallIsADupe used to turn it into the AllBands key before
+    calling, which hid the band this asks about; it passes it through now and
+    the key is made below, once. AllBands from a caller (the QSO-needs strip
+    of a contest not counted per band) is a key, not a band, and asks
+    nothing. IndexInList is still reported, so a caller can still show the
+    station's history. *)
+  if (Band <> AllBands) and
+     (not ContestCreditsBand(ContestIdentity(Contest), Band)) then
+     begin
+     if not FindCallsign(s, IndexInList) then
+        begin
+        IndexInList := -1;
+        end;
+     Exit;
+     end;
+
   if FindCallsign(s, Index) then
      begin
      //    TempMode := Mode;

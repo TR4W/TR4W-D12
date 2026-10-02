@@ -91,6 +91,12 @@ type
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
+         this contest (4.116.5), moved here at M8 and transcribed exactly: a
+         multiplier QTH of 'DX' earns no multiplier of any kind. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    end;
 
 implementation
@@ -98,6 +104,13 @@ implementation
 uses
    uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
+
+function TContestIndianaQP.CountsAsMultiplier(const aQso: ContestExchange;
+                                              aKind: RemainingMultiplierType): boolean;
+begin
+   (* Every kind: the legacy rule returned before any flag was set. *)
+   Result := aQso.DomMultQTH <> 'DX';
+end;
 
 function TContestIndianaQP.GetDisplayName: string;
 begin

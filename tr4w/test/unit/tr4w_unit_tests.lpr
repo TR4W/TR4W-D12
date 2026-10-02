@@ -449,6 +449,8 @@ uses
    uTestContestImport in 'uTestContestImport.pas',
    uTestContestParse in 'uTestContestParse.pas',
    uTestContestTotals in 'uTestContestTotals.pas',
+   uTestContestObjects in 'uTestContestObjects.pas',
+   uTestContestMultipliers in 'uTestContestMultipliers.pas',
    uTestContestSession in 'uTestContestSession.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
@@ -649,6 +651,7 @@ begin
    RegisterSuite(TContestImportTests.Create('ContestImport'));
    RegisterSuite(TContestParseTests.Create('ContestParse'));
    RegisterSuite(TContestTotalsTests.Create('ContestTotals'));
+   RegisterSuite(TContestMultipliersTests.Create('ContestMultipliers'));
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));

@@ -104,15 +104,26 @@ the target shape, the M-step migration order and the open questions.
   `QSO POINTS ...` overrides stay and run before the class.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
-  2026-10-01). It is asked through `ContestCreditsBand` in two places:
-  `ScoreQSO`, **before** the overrides, and `logdupe.SetMultFlags`. So
-  `CalculateQSOPoints` never sees an off-band QSO, and a class must not repeat
-  the band rule there. When a contest states its bands, add it to the
-  exception list in `Test_EveryOtherContestStillCreditsEveryBand`. Design doc
-  §7.4. `uTestOffBandCredit` pins the multiplier half through the real sheet.
-  **The dupe half does NOT hold yet** for a contest whose QSOs are not counted
-  per band: `TCallsignsList.AddCallsign` marks `AllBands` for an off-band QSO
-  too (M8; design §8.2d).
+  2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO
+  could affect the contest: `ScoreQSO`, **before** the overrides,
+  `logdupe.SetMultFlags`, and since M8 the dupe sheet
+  (`TCallsignsList.AddCallsign` / `CallsignIsDupe`) and the need-multiplier
+  hint (`LogEdit`, `uContestBase.CreditedBands`). So `CalculateQSOPoints`
+  never sees an off-band QSO, and a class must not repeat the band rule
+  there, nor in `CountsAsMultiplier`. When a contest states its bands, add it
+  to the exception list in `Test_EveryOtherContestStillCreditsEveryBand`.
+  Design doc §7.4. `uTestOffBandCredit` pins the multiplier half through the
+  real sheet, and since M8 the dupe half and the hint.
+- **Multipliers and dupes: the sheet keeps the state, the class declares
+  the rules** (M8, 2026-10-02, design §8.2l; `ADDING_A_CONTEST.md` "How a
+  contest declares its multipliers"). `CountsAsMultiplier(aQso, aKind)`
+  (base True) is asked by `SetMultFlags` before the sheet; the BC, NY and
+  Indiana parties, the PCC and the Jock White Field Day override it.
+  `DomesticMultiplierFromCall(aCall, aLookups)` (base `''`) is the hint's;
+  Russian DX, both RF Championships, Ural Cup, RDA and YO DX override it.
+  `uTestContestMultipliers` holds both, with every other contest as a
+  ratchet. **No dupe-key virtual** -- no contest's own dupe rule exists to
+  move. A multiplier KIND's arm stays in the sheet until Q4.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by
@@ -254,8 +265,11 @@ the target shape, the M-step migration order and the open questions.
   are classless on purpose** -- POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33),
   IN7QPNE and DUMMYCONTEST; `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
   fails if a sixth appears. Sites still naming a batch-2 contest are seams
-  not built (M8 multipliers: YB DX, RDA, YO DX; M9 display/HamScore: WRTC,
-  SST, CW Open, RTC; Radio YOC's loader) -- listed in §8.2k.
+  not built (M9 display/HamScore: WRTC, SST, CW Open, RTC; Radio YOC's
+  loader) -- listed in §8.2k. ~~M8 multipliers: YB DX, RDA, YO DX~~ -- done
+  at M8: RDA's and YO DX's hint arms are their classes', YB DX's was a no-op
+  and is deleted (§8.2l). RDA's initial-exchange fallback in LOGEDIT is an
+  EXCHANGE rule and stays (Q50).
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog

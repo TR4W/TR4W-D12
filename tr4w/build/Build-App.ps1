@@ -331,7 +331,13 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # native string into a Str20 twice; it was lifted to uCallSignRoutines with
 # native strings (the Region 1 Field Day class and the legacy arm share it),
 # and the classes were written with explicit conversions, adding none.
-$NARROW_CEILING = 1287
+# 1287 -> 1281, 2026-10-02: M8, multipliers declared by the contests. Four
+# are LOGEDIT.GetMultArray's `case Contest of` putting native strings
+# (GetRussiaOblastID, ctyGetGrid, GetIniitialExchange twice) into a Str10; the
+# classes return a string and the engine converts once, explicitly. Two are
+# MainUnit.ParametersOkay's copy of SetPrefix's arms (SACDistrict and
+# IndonesianDistrict into RData.Prefix), deleted for the one SetPrefix call.
+$NARROW_CEILING = 1281
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

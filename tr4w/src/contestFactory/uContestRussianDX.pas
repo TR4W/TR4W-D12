@@ -88,6 +88,15 @@ type
       function InitialExchangeFromCall(const aStandardCall: string;
                                        const aCountryID: string;
                                        out aExchange: string): boolean; override;
+
+      (* A RUSSIAN CALL'S OBLAST, FOR THE NEED-MULTIPLIER HINT -- the arm
+         LOGEDIT.GetMultArray held for this contest beside the two RF
+         Championships, moved here at M8 and transcribed exactly: RussianID
+         of the CALL, then GetRussiaOblastID. NOT InitialExchangeFromCall
+         above, which tests the CTY.DAT country for 'UA' -- two rules that
+         answer differently for an 'R...' entity outside UA (design Q50). *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -149,6 +158,16 @@ begin
    if Result then
       begin
       aExchange := GetRussiaOblastID(aStandardCall);
+      end;
+end;
+
+function TContestRussianDX.DomesticMultiplierFromCall(const aCall: string;
+                                                      const aLookups: TMultiplierHintLookups): string;
+begin
+   Result := '';
+   if RussianID(aCall) then
+      begin
+      Result := GetRussiaOblastID(aCall);
       end;
 end;
 

@@ -95,6 +95,14 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+
+      (* A RUSSIAN CALL'S OBLAST, FOR THE NEED-MULTIPLIER HINT -- the arm
+         LOGEDIT.GetMultArray held for this contest beside the Russian DX
+         contest and the SSB running, moved here at M8 and transcribed
+         exactly: RussianID of the CALL (not of its country), and its
+         oblast from GetRussiaOblastID. *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
    end;
 
 implementation
@@ -105,6 +113,16 @@ uses
    uCallSignRoutines,
    (* The Championship's points table, one copy for both runnings. *)
    uRFChampionshipPoints;
+
+function TContestRFChampionshipCW.DomesticMultiplierFromCall(const aCall: string;
+                                                             const aLookups: TMultiplierHintLookups): string;
+begin
+   Result := '';
+   if RussianID(aCall) then
+      begin
+      Result := GetRussiaOblastID(aCall);
+      end;
+end;
 
 (* ChampionshipRFMethod, transcribed. A Russian station's oblast is its
    domestic multiplier, and the points come from the Championship's table --

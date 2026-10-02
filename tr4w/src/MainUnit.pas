@@ -7243,34 +7243,30 @@ begin
      GetDXQTH(RData);
      end;
 
-  if DoingPrefixMults then
+  (* THE PREFIX MULTIPLIER, SET BY LOGEDIT.SetPrefix AND BY NOTHING ELSE -- M8.
+
+     A `case ActivePrefixMult of` stood after this call and was a COPY of six
+     of SetPrefix's arms (Belgium, SAC, Indonesian districts, Prefix, South
+     American, non-South American), line for line -- so it set the same
+     prefix again when DoingPrefixMults was on, and was the only thing that
+     set one when an operator's PREFIX MULTIPLIER line had chosen one of
+     those six without DoingPrefixMults following. Both are kept: SetPrefix
+     runs in exactly the cases where either copy ran, and every SetPrefix arm
+     sets the prefix from the QTH or the call alone, so running it once is
+     running it twice.
+
+     ITS INDONESIAN ARM NAMED THE YB DX CONTEST AND DID NOTHING: for an
+     Indonesian entrant it called SetPrefix, whose IndonesianDistricts arm
+     sets the very value the line before had just set. It was the same in D7
+     (MainUnit.pas:5225). It is deleted rather than moved -- a rule that
+     changes nothing is not a rule its class could state -- and what it was
+     meant to do is design Q48. *)
+  if DoingPrefixMults or
+     (ActivePrefixMult in [BelgiumPrefixes, SACDistricts, IndonesianDistricts,
+                           Prefix, SouthAmericanPrefixes, NonSouthAmericanPrefixes]) then
      begin
      SetPrefix(RData);
      end;
-  case ActivePrefixMult of
-    BelgiumPrefixes: if RData.QTH.CountryID = 'ON' then
-                        begin
-                        RData.Prefix := RData.QTH.Prefix;
-                        end;
-    SACDistricts: RData.Prefix := SACDistrict(RData.QTH);
-    IndonesianDistricts:
-      begin
-        RData.Prefix := IndonesianDistrict(Rdata.QTH); // 4.64.1
-        if (Contest = YBDX) and (IndonesianCountry(Settings.My.Country)) then
-           begin
-           SetPrefix(RData);
-           end;
-      end;
-    Prefix: RData.Prefix := RData.QTH.Prefix;
-    SouthAmericanPrefixes: if RData.QTH.Continent = SouthAmerica then
-                              begin
-                              RData.Prefix := RData.QTH.Prefix;
-                              end;
-    NonSouthAmericanPrefixes: if RData.QTH.Continent <> SouthAmerica then
-                                 begin
-                                 RData.Prefix := RData.QTH.Prefix;
-                                 end;
-  end;
 
   GetRidOfPrecedingSpaces(ExchangeString);
   GetRidOfPostcedingSpaces(ExchangeString);

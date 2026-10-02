@@ -210,6 +210,9 @@ uses
   (* THE FINAL SCORE -- M6: the totals and the contest that combines them,
      and OnMainThread for the worker threads that read the score. *)
   uContestBase,
+  (* ContestIdentity -- the multiplier hint asks the session's contest which
+     domestic multiplier a call implies, and which bands it uses (M8). *)
+  uContestRegistry,
   uScoreTotals,
   uCrashLog,
   MainUnit; {KK1L: 6.71 attempt to get POST to compile. Moved here from INTERFACE section. Was not there in original}
@@ -461,8 +464,6 @@ function EditableLog.CallIsADupe(var Call: CallString; Band: BandType; Mode:
   ModeType): boolean;
 
 var
-  TempMode: ModeType;
-  TempBand: BandType;
   Index: integer;
 begin
   CallIsADupe := False;
@@ -476,24 +477,12 @@ begin
      Exit;
      end;
 
-  if Settings.Qso.ByMode then
-     begin
-     TempMode := Mode
-     end
-  else
-     begin
-     TempMode := Both;
-     end;
-  if Settings.Qso.ByBand then
-     begin
-     TempBand := Band
-     end
-  else
-     begin
-     TempBand := AllBands;
-     end;
-  //  call[length(call)+1] := #0;
-  Result := CallsignsList.CallsignIsDupe(Call, TempBand, TempMode, Index);
+  (* THE BAND AND MODE GO THROUGH AS THEY ARE -- M8. This routine used to turn
+     them into the dupe sheet's keys (Both, AllBands) first, a copy of what
+     CallsignIsDupe does again on entry, so the second copy changed nothing --
+     and the first hid the REAL band from the off-band question CallsignIsDupe
+     now asks (design 7.4). One copy remains, there. *)
+  Result := CallsignsList.CallsignIsDupe(Call, Band, Mode, Index);
 end;
 
 {
@@ -684,6 +673,19 @@ begin
   MultString := 0;
   FillChar(TempRXData, SizeOf(ContestExchange), 0);
   TempRXData.Band := Band;
+  (* ALLBANDS IS A KEY, NOT A BAND -- M8. CreateModeSpecificDomesticMultiplier-
+     Info asks with it when multipliers are not counted per band, meaning
+     "needed anywhere". SetMultFlags asks the contest whether the QSO's band
+     earns credit, and a contest that states its bands credits no AllBands --
+     so for Idaho this hint said "not needed" for every county, always. The
+     band such a hint is FOR is the one the operator is on, which is also the
+     band NY4I's ruling turns on (design 7.4: off-band shows no need). Only
+     the credit question sees it: with multipliers not counted per band,
+     SetMultFlags keys the sheet on AllBands whatever the QSO's band. *)
+  if (Band = AllBands) and (not Settings.Mult.ByBand) then
+     begin
+     TempRXData.Band := ActiveBand;
+     end;
   TempRXData.Mode := Mode;
   SetExtendedModeFromMode(TempRXData);
   TempRXData.QTHString := DomesticMult;
@@ -728,10 +730,19 @@ begin
      begin
      TempBand := Band;
      end;
+  (* NO MULTIPLIER IS NEEDED ON A BAND THE CONTEST DOES NOT USE -- design 7.4,
+     NY4I: "off-band should not impact need multiplier. It is really a
+     one-off with no impact on the contest at all." Band is the real band the
+     hint is for (the radio's, or a spot's), asked before it becomes the
+     AllBands key of a contest whose multipliers are not counted per band. *)
+  if not ContestCreditsBand(ContestIdentity(Contest), Band) then
+     begin
+     Result := False;
+     Exit;
+     end;
+
   OutputValue := GetMultArray(Call, TempMode, '');
   Result := (OutputValue and (1 shl Cardinal(TempBand))) <> 0;
- 
-
 end;
 
 procedure EditableLog.CreateModeSpecificDomesticMultiplierInfo(DomQTH: Str20;
@@ -923,6 +934,21 @@ begin
   SetMultStatus(Call, '');
 end;
 
+(* THE ENGINE'S TWO ANSWERS A CONTEST'S DomesticMultiplierFromCall MAY ASK
+  FOR -- see uContestBase.TMultiplierHintLookups. Each is exactly the call the
+  `case Contest of` arm made before M8. *)
+function EngineInitialExchangeOf(const aCall: string): string;
+begin
+  Result := CallsignsList.GetIniitialExchange(aCall);
+end;
+
+function EngineGridOfCall(const aCall: string): string;
+var
+  id: DXMultiplierString;
+begin
+  Result := ctyGetGrid(aCall, id);
+end;
+
 function EditableLog.GetMultArray(Call: CallString; Mode: ModeType; TempMult:
   Str10): Cardinal;
 var
@@ -930,7 +956,7 @@ var
   TempRXData: ContestExchange;
   Index: integer;
   TempDomMult: Str10;
-  TempID: DXMultiplierString;
+  hintLookups: TMultiplierHintLookups;
   Zone: Byte;
 begin
   Result := 0;
@@ -1016,29 +1042,15 @@ begin
         end
      else
         begin
-        case Contest of
-          RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB:
-            if RussianID(Call) then
-               begin
-               TempDomMult := GetRussiaOblastID(Call);
-               end;
-
-          CUPURAL:
-            TempDomMult := ctyGetGrid(Call, TempID);
-
-          RDA:
-            if RussianID(Call) then
-               begin
-               TempDomMult := CallsignsList.GetIniitialExchange(Call);
-               end;
-
-          YODX:
-            if Call[1] = 'Y' then
-               begin
-               TempDomMult := CallsignsList.GetIniitialExchange(Call);
-               end;
-        
-        end;
+        (* WHICH DOMESTIC MULTIPLIER THE CALL IMPLIES IS THE CONTEST'S RULE --
+           M8. The `case Contest of` that stood here (the Russian DX contest
+           and the RF Championships, the Ural Cup, RDA, YO DX) is each
+           contest's DomesticMultiplierFromCall now. Assigned to a Str10, as
+           the arms did, so a longer answer is cut where it always was. *)
+        hintLookups.InitialExchangeOf := @EngineInitialExchangeOf;
+        hintLookups.GridOfCall := @EngineGridOfCall;
+        TempDomMult := ShortString(ContestIdentity(Contest).DomesticMultiplierFromCall(string(Call),
+                                                                                       hintLookups));
         end;
 
      if TempDomMult <> '' then
@@ -1071,7 +1083,9 @@ var
 
 begin
 
-  OutputString := GetMultArray(Call, Mode, TempMult);
+  (* NO BAND THE CONTEST DOES NOT USE IS SHOWN NEEDING A MULTIPLIER -- design
+     7.4, M8. The per-band strip reads these bits. *)
+  OutputString := CreditedBands(ContestIdentity(Contest), GetMultArray(Call, Mode, TempMult));
 
   if Settings.Mult.ByMode and (Mode <> ActiveMode) then
      begin
@@ -1079,6 +1093,14 @@ begin
      end;
 
   nCmndShow := SW_HIDE;
+
+  (* AND NO "NEW MULTIPLIER" WHILE THE OPERATOR IS ON SUCH A BAND -- the
+     AllBands bit below is kept by CreditedBands, so it is asked here. *)
+  if not ContestCreditsBand(ContestIdentity(Contest), ActiveBand) then
+     begin
+     DispalayNewMult(nCmndShow);
+     Exit;
+     end;
 
   if Settings.Mult.ByBand then
      begin
@@ -1127,7 +1149,8 @@ begin
      if not Settings.Mult.ByBand then
        if (OutputValue and (1 shl integer(AllBands))) <> 0 then
           begin
-          OutputValue := $FFFFFFFF
+          (* Needed on every band -- every band the contest USES (M8). *)
+          OutputValue := CreditedBands(ContestIdentity(Contest), $FFFFFFFF);
           end
        else
           begin

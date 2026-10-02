@@ -86,12 +86,33 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+
+      (* THE COUNTY THE LOG REMEMBERS FOR A ROMANIAN CALL, FOR THE
+         NEED-MULTIPLIER HINT -- the arm LOGEDIT.GetMultArray held for this
+         contest, moved here at M8 and transcribed exactly: a call whose
+         first character is 'Y', then the initial exchange the session holds
+         for it (CallsignsList, through aLookups.InitialExchangeOf). *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
    end;
 
 implementation
 
 uses
    uContestRegistry;
+
+function TContestYODX.DomesticMultiplierFromCall(const aCall: string;
+                                                 const aLookups: TMultiplierHintLookups): string;
+begin
+   Result := '';
+   (* The arm read Call[1] of a ShortString, which for an empty call reads a
+      stale byte. The length test answers '' there; so did the arm, because
+      no entry has an empty call. *)
+   if (Length(aCall) > 0) and (aCall[1] = 'Y') and Assigned(aLookups.InitialExchangeOf) then
+      begin
+      Result := aLookups.InitialExchangeOf(aCall);
+      end;
+end;
 
 (* YODXQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)

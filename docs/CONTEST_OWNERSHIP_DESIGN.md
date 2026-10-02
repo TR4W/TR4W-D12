@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M7b built; see §8.2)
+# What a contest owns -- DESIGN (M0-M8 built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -75,7 +75,7 @@ lives in a helper or in the format's own unit.
 | Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; headers and mode string: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` (M9) |
 | session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` keeps only the arms of POTA and the UA4W Championship, classless on purpose | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
-| multipliers and dupes | `logdupe`, `logedit`, `uMults` | contest virtuals, named as each moves (`MultiplierValue`, `MarksDupes`, ...) |
+| multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz still reads the sheet in its scoring (Q33) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); the multiplier KEY at M10 |
 | summary sheet, totals window, new-contest prompts | `postunit`, `uTotal`, `uNewContest` | `SummarySheetMultColumns`, `TotalsDisplay`, `NewContestPrompts` |
 
 The seam names on the right are the generator's
@@ -630,10 +630,13 @@ on-band"*). `1e4f66f9` clears an off-band QSO's mult flags inside
 `AddQSOToSheets`): an off-band Idaho QSO with a new county leaves it new on-band.
 "Shows as needed" (the display hints) is still M8/M9, below. **And an off-band
 QSO is not a dupe and makes no later on-band QSO a dupe** (NY4I confirmed,
-2026-10-01) -- **which does NOT hold today for a contest whose QSOs are not
-counted per band**: `TCallsignsList.AddCallsign` marks the `AllBands` bit for
-every logged QSO, off-band included (§8.2d). No shipped contest reaches it,
-because Idaho counts QSOs per band; it is M8's.
+2026-10-01) -- ~~which does NOT hold today for a contest whose QSOs are not
+counted per band~~ **HOLDS SINCE M8 (2026-10-02, §8.2l)**: until then
+`TCallsignsList.AddCallsign` marked the `AllBands` bit for every logged QSO,
+off-band included (§8.2d). It now marks no dupe bit for an off-band QSO,
+and `CallsignIsDupe` calls no off-band QSO a dupe. No shipped contest
+reached the defect -- Idaho counts QSOs per band -- and the unit tests pin
+it with QSO-by-band turned off.
 
 **LANDED 2026-10-01.** The seam is **`TContestBase.UsesBand(aBand): boolean`**,
 a virtual whose base answers `True` for every band. That is exactly what every
@@ -654,10 +657,13 @@ registered contest. It is a ratchet: a contest that states its bands joins its
 exception list in the same commit. Each contest's own band list is that
 contest's own move.
 
-**Not covered yet:** the "is this a new multiplier" display hints
+~~**Not covered yet:** the "is this a new multiplier" display hints
 (`EditableLog.DetermineIfNewMult` and its neighbours) read the multiplier sheet
 directly. They can still highlight an off-band call as a needed multiplier,
-although logging it gives no credit. Hiding WARC from band stepping
+although logging it gives no credit.~~ **COVERED AT M8 (§8.2l):**
+`DetermineIfNewMult` answers no on an off-band band, the needs strip clears
+every band the contest does not use (`uContestBase.CreditedBands`), and the
+"new multiplier" indicator stays off while the operator is on one. Hiding WARC from band stepping
 (`WarcEnabled`) is a `FoundContest` arm and belongs to `DescribeSession` (§4).
 
 ### 7.5 Idaho QSO Party rulings owed to the class (NY4I, 2026-10-01)
@@ -984,7 +990,7 @@ Each is behaviour-preserving unless marked.
 | **M6** | **DONE 2026-10-02 (§8.2h).** **Total score.** The matrix gained a `totals` section first. `TScoreTotals`, the read-only view, `FinalScore` = `CombineScore` + `BonusPoints`; `TotalScore`'s arms deleted but RSGB 1.8's (Q33); nine contests gained classes; Missouri moved with its live tally preserved (Q32); the NC sweep, the Salmon Run W7DX bonus (Q5) and Idaho's dormant county implemented | corpus `CLAIMED-SCORE`; the matrix's `totals` section; `uTestContestTotals` |
 | **M7a** | **DONE 2026-10-02 (§8.2i).** **Session arms of the registered contests.** `DescribeSession` filling a `TSessionDefaults`, one applier (`FCONTEST.ApplySessionDefaults`); all 55 arms naming a registered contest moved and were deleted; LogCfg's CQ-exchange defaults became `CQExchangeDefault`; D8 resolved by stating both branches; Winter Field Day's DX multiplier row and class made the effective value. No contest gained a class | the matrix (185 identical, no re-freeze); corpus; `uTestContestSession` |
 | **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE (NY4I) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
-| **M8** | **Multipliers and dupes**, as contest virtuals | corpus `CLAIMED-SCORE`; legacy fixture |
+| **M8** | **DONE 2026-10-02 (§8.2l).** **Multipliers and dupes**, as contest-declared rules over the shared sheet (§7.7 stage 2). `CountsAsMultiplier` and `DomesticMultiplierFromCall`; the five `SetMultFlags` rules and the four hint arms moved; YB DX's no-op deleted with ParametersOkay's copy of `SetPrefix`; the off-band dupe gap and need-multiplier hint fixed (§7.4). Multiplier-KIND arms stay in the sheet until Q4; RSGB 1.8 still classless (Q33) | corpus `CLAIMED-SCORE`; the matrix; `uTestContestMultipliers`, `uTestOffBandCredit` |
 | **M9** | **UI and the rest.** `NewContestPrompts`, `TotalsDisplay`, `SummarySheetMultColumns`, Cabrillo headers and mode string | bench (no automated gate sees the UI) |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
 
@@ -2236,7 +2242,7 @@ sit on `TContestBase`.
   runnings under CQ's rules, its own Cabrillo and ADIF columns among them;
   UCG has always exported through the shared RST-and-serial arm. WWIH's arm
   is `TContestCQWWRTTY`'s, a batch-1 sibling of another sponsor. Each arm is
-  a COPY its contest owns (�1.4).
+  a COPY its contest owns (§1.4).
 - **The pairs are siblings while Q7 is open** -- King of Spain CW/SSB and REF
   CW/SSB (identical rows bar names and ids), RSGB RoPoCo CW/SSB (one shared
   set-up arm), and the two Region 1 Field Day RCC runnings (identical rows).
@@ -2330,7 +2336,10 @@ Indonesian-district prefix rule, RDA and YO DX in LOGEDIT's new-multiplier
 check, and RDA beside the Russian DX contests in LOGEDIT's initial-exchange
 fallback (M8 -- the Russian DX contests, registered since M5b, are named in
 the same routines); Radio YOC in MainUnit's log loader (the previous received
-number -- engine state, not a rule); SST, CW Open and RTC in
+number -- engine state, not a rule); **[M8, §8.2l: the YB DX test was a
+no-op and is deleted; RDA's and YO DX's new-multiplier arms are their
+classes' `DomesticMultiplierFromCall`; RDA's initial-exchange fallback is an
+exchange rule and stays (Q50)]**; SST, CW Open and RTC in
 `uExchangeBuilder`'s HamScore exchanges (M9, beside fourteen registered
 contests); and the New Contest dialog's prompts (`uNewContest`, M9). The
 `TENTEN` in LOGSCP, LOGWIND and LOGEDIT is TRMASTER's Ten-Ten field and the
@@ -2359,6 +2368,153 @@ its floor 150 -> 130. Narrowing 1289 -> 1287 (Tree's `PortableStation`), range
 4 -> 4.
 
 **Questions this raised -- NY4I's:** Q44-Q47 (§9).
+
+### 8.2l M8 -- what it covered (2026-10-02)
+
+**Multipliers and dupes are contest-declared rules over the shared sheet** --
+stage 2 of §7.7: the sheet (`logdupe`, `uMults`, `uCallsigns`) keeps the
+state, and the contest declares what counts. NY4I approved M8 and delegated
+its design forks; each DECIDED entry rests on its evidence.
+
+**MEASURED FIRST -- every multiplier and dupe rule outside the factory.**
+Shapes 1/2 from `Lint-ContestNameTests -List` (161 at the start), shapes 3/4
+from the inventory's Multipliers table, and the `Active*Mult` reach
+re-measured from the classes' traits and `DescribeSession` assignments (a
+script over `src/contestFactory`; reach = contests stating the value):
+
+| rule | where | shape | contests | classified | M8 |
+|---|---|---|---|---|---|
+| a `DX` QTH earns no multiplier | `logdupe.SetMultFlags` | 1 | BCQP (`'dx'`), NYQP, INQSOPARTY | contest rule | **moved** -- `CountsAsMultiplier` |
+| own country's prefix is no multiplier | `SetMultFlags` | 1 | PCC | contest rule | **moved** |
+| own branch and branch 00 are no zone multiplier | `SetMultFlags` | 1 | NZFIELDDAY | contest rule | **moved** |
+| the domestic multiplier a call implies (the hint) | `LogEdit.GetMultArray` | 1 | RUSSIANDX with RF Championship CW/SSB, CUPURAL, RDA, YODX | contest rule | **moved** -- `DomesticMultiplierFromCall` |
+| an Indonesian entrant re-sets the prefix | `MainUnit.ParametersOkay` | 1 | YBDX | a no-op (below) | **deleted** |
+| a Russian call's oblast as the initial exchange when none was found | `LogEdit` initial exchange, `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]` | 1 | three | an EXCHANGE rule, not a multiplier one | stays -- it has drifted from `InitialExchangeFromCall` (Q50) |
+| the zone initial exchange (OZCR, RF Championship), IARU's first word | `LogEdit` initial exchange | 1 | four | exchange rules | stays (M9, the initial-exchange seam) |
+| points times one | `LogEdit.TotalScore` | 1 | RSGB18 | final score | stays (Q33) |
+| totals-window captions (OZCR_O, IARU, RUSSIANDX, RU3AX), summary sheet (Winter FD), score posting (WRTC) | `uTotal`, `postunit`, `logsubs2` | 1 | several | display | M9 |
+| the six GC stations | `LogEdit.SetPrefix` | 3 | GAGARINCUP | the `GCStation` KIND's arm | stays with its kind |
+| reach-1-3 KINDS: `ARRLDXCCWithNoIOrIS0` (ARI), `ARRLDXCCWithNoJT` (JTDX), `CQUBAEuropeanCountries` (UBA), `BlackSeaCountries` (BSCI), `PACCCountriesAndPrefixes` (PACC), `CQEuropeanCountries` (WAEDC), `CQDXCCWithNoUSAOrCanada` (CQ 160); `BelgiumPrefixes`, `SouthAmericanPrefixes`, `MongolianCallSignPrefix`, `GCStation`, `IndonesianDistricts`, `SACDistricts`, `NonSouthAmericanPrefixes`, `SouthAndNorthAmericanPrefixes`, `CQNonEuropeanCountriesAndWAECallRegions`; `EUHFCYear`, `BranchZones`, `RFChampionchipZones`; `RDADistrict`, `DOKCodes`, `IOTADomestic` | `GetDXQTH`, `SetPrefix`, `SetUpRemainingMultiplierArrays`, `LogEdit.Add`, `uMults.FillVisibleBytes`, `logdom.GetDomQTH` | 4 | 1-3 each | contest rules in disguise -- but see DECIDED | stay keyed on the kind until Q4 |
+| a rover is never a dupe in a grid contest | `LogEdit.CallIsADupe`, `logsubs2` | 4 | `GridSquares`, 6 | SHARED: engine behaviour on a kind | stays |
+| a QSO-party mobile's county | `logsubs2` | 4 | `DomesticFile`, 86 | SHARED | stays |
+| dupes per band and per mode; whether repeats are marked at all | `CallsignIsDupe`, `logsubs2` | -- | every | declared (`QSOByBand`, `QSOByMode`, `MarksDupes`) | already the contest's |
+
+**No dupe rule outside the factory names a contest** -- the inventory's Dupe
+category was 0 rows, and reading the dupe code found none either.
+
+**DECIDED: TWO SEAMS, BOTH ASKED BY THE SHEET, NEITHER HANDED THE SHEET.**
+
+- `TContestBase.CountsAsMultiplier(aQso, aKind): boolean` (base True) --
+  does this QSO earn a multiplier of this kind AT ALL. `SetMultFlags` asks
+  it per kind through `uContestBase.ContestCountsMultiplier(ActiveContest(
+  Contest), ...)` (nil answers True, as `ContestCreditsBand` does), after the
+  band question and before the sheet's "is it new". `aKind` is the sheet's own
+  `RemainingMultiplierType` (`rmDomestic`/`rmDX`/`rmZone`/`rmPrefix`), the
+  type `TScoreMultTotals` already keys by kind -- not a new enum. Asked of
+  `ActiveContest` because the PCC's and the Jock White rules read the
+  station. Each of the five rules was an early `exit` or a `False`; a False
+  answer leaves the flag cleared, which is the same thing.
+- `TContestBase.DomesticMultiplierFromCall(aCall, aLookups): string` (base
+  `''`) -- the hint's. Asked of `ContestIdentity` (no station needed). What
+  only the engine holds arrives as `TMultiplierHintLookups` (the remembered
+  initial exchange, CTY.DAT's grid), the shape of M5b's
+  `TReceivedExchangeSession`.
+- Considered and rejected: one `MultiplierKey(aQso, aKind)` virtual with the
+  shared kind `case` as its base -- the base would have to reach TRDOS's
+  `GetDXQTH`/`SetPrefix`, which read globals, and it would move no rule (next
+  entry). And a dupe-key virtual "alongside MarksDupes" -- no contest's own
+  dupe rule exists to put in it (§1.2: a virtual is added when its
+  responsibility moves).
+
+**DECIDED: A REACH-1-3 MULTIPLIER KIND STAYS IN THE SHEET, KEYED ON THE KIND,
+UNTIL THE MULTIPLIER COMMANDS RETIRE (Q4).** They are contest rules in
+disguise -- the inventory's reading -- but each arm is ALSO the meaning of an
+operator's statement: `uSettingsEffects.ApplyMultiplierToken` lets `DX
+MULTIPLIER`, `PREFIX MULTIPLIER`, `ZONE MULTIPLIER` and `DOMESTIC
+MULTIPLIER` select ANY kind for ANY contest, and M2 made that statement beat
+the contest's trait. Moving `BlackSeaCountries` into the Black Sea Cup's
+class would leave the arm behind for the operator's statement -- two
+definitions, the drift CLAUDE.md forbids. When Q4 retires the commands, each
+kind moves into the class(es) that declare it and the kind enums die with
+the engine (§0.2). The contest already DECLARES its kind (M2's traits, M7's
+`DescribeSession`), which is the half of stage 2 that can move now.
+
+**DECIDED: YB DX's TEST IS DELETED, NOT MOVED -- IT DID NOTHING.** In
+`ParametersOkay`'s `IndonesianDistricts` arm, `if (Contest = YBDX) and
+IndonesianCountry(MY COUNTRY) then SetPrefix(RData)` follows `RData.Prefix :=
+IndonesianDistrict(RData.QTH)`, and `SetPrefix`'s `IndonesianDistricts` arm
+is that same assignment. The same in D7 (`MainUnit.pas:5225`). What it was
+meant to do is Q48. The `case ActivePrefixMult of` it sat in was itself a
+COPY of six of `SetPrefix`'s arms, run unconditionally after `if
+DoingPrefixMults then SetPrefix`: it is replaced by one `SetPrefix` call when
+`DoingPrefixMults` is on or the kind is one of those six -- exactly the cases
+either copy ran in, and every `SetPrefix` arm assigns from the QTH or the
+call alone, so running it once is running it twice.
+
+**THE OFF-BAND FIXES (§7.4) -- the only behaviour M8 changes, and only for a
+contest that states its bands (Idaho is the only one).**
+
+- **Dupes.** `TCallsignsList.AddCallsign` marks no dupe bit for a QSO on a
+  band the contest does not use (it still counts as a QSO with the station),
+  and `CallsignIsDupe` answers False for one -- both through
+  `ContestCreditsBand(ContestIdentity(Contest), Band)`. `ContestIdentity`,
+  not `ActiveContest`: the band list is what the contest IS, and the dupe
+  check is asked by the band map, the spot clients and WSJT-X, where
+  `ActiveContest` (which frees and rebuilds its object) is not safe.
+  `EditableLog.CallIsADupe` turned the band into the `AllBands` key BEFORE
+  calling -- a copy of what `CallsignIsDupe` does on entry, so it changed
+  nothing except hiding the real band from the new question; the copy is
+  deleted.
+- **The hint.** `DetermineIfNewMult` answers False on an off-band band (the
+  radio's, a spot's); the needs strip clears those bands
+  (`uContestBase.CreditedBands`, which keeps the `AllBands` key); the "new
+  multiplier" indicator stays off while the operator is on one.
+- **A defect found on the way, fixed with it.** `DetermineIfNewDomesticMult`
+  asked with `AllBands` (the not-per-band strip) handed `SetMultFlags` a QSO
+  ON `AllBands`, which a contest that states its bands does not credit -- so
+  since `1e4f66f9` the Idaho county strip said "not needed" for every county.
+  The band such a hint is for is the one the operator is on, and that is
+  what it asks now.
+- **Pinned** in `uTestOffBandCredit`: Idaho with QSO-by-band OFF (the case no
+  shipped contest reaches) -- 30 m makes no 20 m dupe, 30 m is never a dupe,
+  20 m does make 40 m a dupe (the control) -- and per band as Idaho ships;
+  CQ WW CW (every band) still marks a 30 m QSO, exactly as before;
+  `CreditedBands` against Idaho's list band by band; `DetermineIfNewMult`
+  needed on 20 m and not on 30 m with the real CTY.DAT; the domestic strip on
+  20 m (needed -- the defect) and on 30 m (not).
+
+**`uTestContestMultipliers`** pins each moved rule against its arm (BC's
+lower-case `'dx'` included) and every other contest's base answer for both
+seams -- a ratchet, as `Test_EveryOtherContestStillCreditsEveryBand` is.
+`uTestContestObjects` holds the test helpers `Make`/`NoStation`, lifted out of
+`uTestContestTotals` and `uTestContestSession` rather than copied a third
+time.
+
+**RSGB 1.8 MHz STAYS CLASSLESS (Q33).** M8's seam is a contest DECLARING
+which QSOs count; RSGB 1.8's points READ the sheet (`mo.isdmmult` /
+`mo.isdxmult`: 7 for a multiplier unworked on the sheet). What it needs,
+measured: a read-only sheet query handed to scoring with the station -- "is
+domestic key X / DX country N unworked" over ALL bands and BOTH modes,
+whatever the session's by-band and by-mode keys, and whether or not DX
+multipliers are on (its arm asks both) -- and NY4I's yes to widening stage 1
+for a history-dependent point rule (§7.7). Nothing was built for it.
+
+**Gates, run 2026-10-02 on a full build.** The contest matrix: **185
+identical, 0 differing** -- a per-section comparison script found 0 changed
+lines in every category. **The off-band fixes move NO record, and that is the
+matrix's blindness, not their absence**: it scores each QSO against an EMPTY
+sheet and records no dupe verdict and no hint, and Idaho's three off-band QSOs
+per variant (2 m FM, 30 m CW, 6 m phone) already scored 0 with every
+multiplier flag false (§7.5). The unit tests are what see them;
+`BENCH_QUEUE.md` carries the window. Golden corpus **24 passed, 0 failed, 2
+known-divergence, every export exit 0** (13 sets); `test-adif-roundtrip.sh`
+**13 passed**; unit tests **0 failed** (46,591 passed). `Lint-ContestNameTests`
+161 -> 151: logdupe 5 -> 0, logedit 11 -> 7, mainunit 12 -> 11; its floor
+130 -> 120. Narrowing 1287 -> 1281 (GetMultArray's four Str10 conversions,
+ParametersOkay's two copied `SetPrefix` arms), range 4 -> 4. Nothing to
+re-freeze.
+
+**Questions this raised -- NY4I's:** Q48-Q51 (§9); Q33 updated.
 
 ### 8.3 What "a contest has moved" means -- checkably
 
@@ -2408,6 +2564,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   endpoint? **Recommended yes**, since they select from shared sets in the same
   way. ~~The Idaho config uses three of them~~ -- no longer: Idaho has its
   `ContestType` and class (2026-10-01, §7.2) and its `.cfg` sets none of them.
+  **M8 depends on it:** the reach-1-3 multiplier KINDS stay in the sheet
+  because these commands can state any of them for any contest (§8.2l).
 - **Q5** (C6). Should the Salmon Run W7DX bonus be implemented now, or stay
   recorded as missing? The bonuses-as-data shape (§5) is recommended.
   **CLOSED: IMPLEMENTED at M6** (§8.2h) on the sponsor's current rules -- 500
@@ -2484,6 +2642,9 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   - **Q33** RSGB 1.8 MHz scores 7 for a contact that is a new multiplier on the
     sheet. May a class be handed the sheet's "is this a new multiplier"
     question (M8), so this contest can have a class and leave `TotalScore`?
+    **M8 did not build it** (§8.2l): its seam is the contest DECLARING which
+    QSOs count, not READING the sheet; this needs a read-only query over all
+    bands and both modes, and a yes to a history-dependent stage-1 rule.
   - **Q34** Idaho's rover: a rover earns a dormant-county bonus per county it
     activates, but no QSO records the county it was SENT FROM. Add a per-QSO
     "my county" field (log schema, entry, ADIF `MY_CNTY`), or leave rovers
@@ -2562,6 +2723,31 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     Region 1 Field Day reads MY COUNTRY's first character with no length
     check; the RCC runnings score 4 for a one-character call. Bound them when
     each contest is next touched (no scored QSO moves)?
+
+- **Q48-Q51** (M8, multipliers and dupes):
+  - **Q48** YB DX: `ParametersOkay` re-set an Indonesian entrant's prefix
+    multiplier to the value it already had -- a no-op, also in D7, deleted
+    (§8.2l). What was it meant to do: does an Indonesian entrant count a
+    different multiplier (prefixes rather than districts?) by the sponsor's
+    rules?
+  - **Q49** BC QSO Party: "a DX station earns no multiplier" tests the
+    lower-case `'dx'`, but the in-province file maps `dx=DX`
+    (`target/dom/ve7.dom` line 2), so the multiplier is `DX` and the rule
+    never fires; New York and Indiana test `DX`. Should BC's be `DX`? (A
+    scoring change for in-province BC logs with DX contacts; moved exactly
+    at M8.)
+  - **Q50** "A Russian call's oblast" is written three ways that disagree:
+    `InitialExchangeFromCall` (Russian DX, RU3AX -- the CTY.DAT country
+    starts `UA`, standard call format), LOGEDIT's initial-exchange fallback
+    (Russian DX, RDA, RU3AX -- `RussianID` of the country, raw call) and the
+    need-multiplier hint (Russian DX, RF Championships -- `RussianID` of the
+    CALL). They differ for an `R...` entity outside `UA`. Make it one helper
+    each contest calls? The fallback stayed in LOGEDIT at M8: it is an
+    exchange rule, not a multiplier one.
+  - **Q51** An off-band QSO marks no dupe bit (M8), so the off-band band's
+    dupe sheet and the Stations window's `+` no longer show it -- consistent
+    with "not a dupe", but those are also "worked there" displays. Keep it so
+    (recommended: one rule), or keep a worked-there mark that is not a dupe?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

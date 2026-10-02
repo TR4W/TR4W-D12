@@ -169,6 +169,23 @@ Three groups:
   Ten-Ten number score 1, as the code was evidently meant to?
   **Answer:**
 
+### Added after M8 (multipliers and dupes)
+
+- **Q48** YB DX: the program had a rule "for an Indonesian entrant, set the
+  prefix multiplier again" that set exactly the value it already had -- it did
+  nothing, here and in D7. It is deleted (nothing moved). What was it meant to
+  do -- does an Indonesian entrant count a different multiplier (prefixes
+  rather than districts?) in the sponsor's rules?
+  **Answer:**
+
+- **Q49** BC QSO Party: "a DX station earns no multiplier" tests the
+  multiplier for lower-case `dx`, but the in-province file maps `dx=DX`
+  (`target/dom/ve7.dom` line 2), so the multiplier is always upper-case `DX`
+  and the rule never fires -- an in-province station gets a `DX` domestic
+  multiplier. New York and Indiana test `DX` and do fire. Should BC's be
+  `DX` like theirs? (A scoring change for in-province BC logs with DX QSOs.)
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -190,6 +207,13 @@ Three groups:
 - **Q33** RSGB 1.8 MHz scores 7 for a contact that is a new multiplier. May a class
   be handed the multiplier sheet's "is this a new multiplier?" answer, so it can
   get a class? *Recommended: yes, as a read-only question at M8.*
+  **M8 did not build it, on purpose (unanswered):** M8's seam is the contest
+  DECLARING which QSOs count; this is the contest READING the sheet while
+  scoring one QSO -- a history-dependent point rule, which design 7.7 says to
+  allow only by widening stage 1 deliberately. What it needs, measured: a
+  read-only query handed in with the station (is domestic key X / DX country
+  N unworked over ALL bands and BOTH modes -- the arm ignores the session's
+  by-band and by-mode keys and whether DX multipliers are on at all).
   **Answer:**
 
 - **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
@@ -243,6 +267,25 @@ Three groups:
   score moves.
   **Answer:**
 
+- **Q50** "A Russian call's oblast" is written three ways that disagree: the
+  initial exchange from a call (Russian DX, RU3AX -- CTY.DAT country starting
+  `UA`, standard call format), LOGEDIT's initial-exchange fallback (Russian DX,
+  RDA, RU3AX -- `RussianID` of the country, so any `R...` entity too, raw
+  call), and the need-multiplier hint (Russian DX, RF Championships --
+  `RussianID` of the CALL). M8 moved the hint as it was and left the fallback
+  in LOGEDIT (it is an exchange rule, not a multiplier one). Make it one rule
+  each contest calls? *Recommended: yes* -- `RussianID` of the country is the
+  likely intent; only `R...` entities outside `UA` (e.g. Franz Josef Land)
+  move, and only in what is pre-filled or hinted.
+  **Answer:**
+
+- **Q51** An off-band QSO no longer marks the dupe sheet at all (M8), so the
+  30 m dupe sheet and the Stations window's `+` do not show it -- consistent
+  with "not a dupe", but they are also "have I worked him there" displays.
+  Keep it so, or keep a worked-there mark that is not a dupe? *Recommended:
+  keep it so* -- one rule, and no shipped contest but Idaho states bands.
+  **Answer:**
+
 ---
 
 ## 3. Already answered (for reference)
@@ -261,7 +304,7 @@ Three groups:
 | Q25 | FD DX import is not a section | M5b |
 | Q39 | A contest never writes a station setting | design 7.11 (decided), lands M9 |
 | -- | Out-of-state x out-of-state in a QSO party: refuse with an error | M5b |
-| -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 and later |
+| -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 (points, mults); M8 (dupes, hints) |
 | -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6 (M9) |
 | -- | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE` | e1c6f873 |
 | -- | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`) | M7b batch 2 (decided under delegation, design 8.2k) |

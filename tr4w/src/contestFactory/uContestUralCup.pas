@@ -101,12 +101,29 @@ type
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+
+      (* THE CALL'S GRID FROM CTY.DAT, FOR THE NEED-MULTIPLIER HINT -- the
+         arm LOGEDIT.GetMultArray held for this contest, moved here at M8:
+         ctyGetGrid of the call, which the engine answers through
+         aLookups.GridOfCall. *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
    end;
 
 implementation
 
 uses
    SysUtils, uContestRegistry, uContestFixedPoints;
+
+function TContestUralCup.DomesticMultiplierFromCall(const aCall: string;
+                                                    const aLookups: TMultiplierHintLookups): string;
+begin
+   Result := '';
+   if Assigned(aLookups.GridOfCall) then
+      begin
+      Result := aLookups.GridOfCall(aCall);
+      end;
+end;
 
 procedure TContestUralCup.CalculateQSOPoints(var aQso: ContestExchange);
 begin

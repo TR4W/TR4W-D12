@@ -79,7 +79,9 @@ implementation
 uses
    SysUtils, VC, uSettingsModel, uContestBase, uContestRegistry,
    (* The application's view, kept beside the totals. *)
-   uScoreTotals;
+   uScoreTotals,
+   (* Make and NoStation -- lifted there at M8, the third copy being due. *)
+   uTestContestObjects;
 
 (* ---------------------------------------------------------------------------
    HAND-BUILT INPUTS
@@ -97,28 +99,6 @@ begin
    Result.SessionDXMult := ARRLDXCC;
 end;
 
-(* aContest's registered class -- or, for a classless contest, the plain base
-   the registry answers with -- with the station given. Caller frees. *)
-function Make(aContest: ContestType; const aStation: TStationContext): TContestBase;
-var
-   cls: TContestClass;
-begin
-   cls := ContestClassFor(aContest);
-   if cls = nil then
-      begin
-      Result := TContestBase.Create(aContest);
-      end
-   else
-      begin
-      Result := cls.Create(aContest);
-      end;
-   Result.SetStation(aStation);
-end;
-
-function NoStation: TStationContext;
-begin
-   FillChar(Result, SizeOf(Result), 0);
-end;
 
 (* A logged QSO: a QSO record, as the log's loader would count it. *)
 function LoggedQSO(const aCall: string; aBand: BandType; aMode: ModeType): ContestExchange;

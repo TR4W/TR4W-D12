@@ -74,29 +74,9 @@ type
 implementation
 
 uses
-   VC, uContestBase, uContestRegistry;
-
-(* aContest's registered class, or the plain base for a classless one. Caller
-   frees. *)
-function Make(aContest: ContestType): TContestBase;
-var
-   cls: TContestClass;
-begin
-   cls := ContestClassFor(aContest);
-   if cls = nil then
-      begin
-      Result := TContestBase.Create(aContest);
-      end
-   else
-      begin
-      Result := cls.Create(aContest);
-      end;
-end;
-
-function NoStation: TStationContext;
-begin
-   FillChar(Result, SizeOf(Result), 0);
-end;
+   VC, uContestBase, uContestRegistry,
+   (* Make and NoStation -- lifted there at M8. *)
+   uTestContestObjects;
 
 (* A US station in Kansas, every exchange field filled. *)
 function KansasStation: TStationContext;

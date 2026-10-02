@@ -23,6 +23,38 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-02 -- OFF-BAND QSOs LEAVE THE DUPE SHEET AND THE NEED-MULT HINTS (M8)
+
+Multipliers and dupes became contest-declared rules over the shared sheet
+(`CONTEST_OWNERSHIP_DESIGN.md` §8.2l), and NY4I's off-band ruling (§7.4,
+*"off-band should not impact need multiplier. It is really a one-off with no
+impact on the contest at all"*) now reaches the dupe sheet and the hints.
+**Only the Idaho QSO Party states its bands today**, so only Idaho can move;
+every other contest credits every band and is unchanged by construction. The
+unit tests pin the logic; **nothing sees the windows**. Open an Idaho log
+(160/80/40/20/15/10 m only) and work one station on 20 m CW, then the same
+station on 30 m CW:
+
+- **Dupes**: the 30 m QSO is **not** shown or logged as a dupe, and a second
+  30 m QSO with it is not either. A 20 m repeat still is.
+- **Displays that read the dupe sheet** -- a deliberate consequence, Q51:
+  the 30 m dupe sheet does not list the station, and the Stations window
+  shows no `+` for an off-band band it shows (6 m and up, in its VHF view).
+  The possible-calls strip does not mark it a dupe on 30 m.
+- **Need-multiplier hints** on 30 m: typing a DX call that is a needed
+  country on 20 m shows **no** "new multiplier" indicator, the mult-needs
+  strip shows no off-band band as needed, and the band map does not flag a
+  30 m spot as a multiplier.
+- **A defect that went with it**: in Idaho (multipliers not counted per
+  band) typing a county the log does not have now shows it **needed** while
+  on an Idaho band -- before M8 the county strip said "not needed" for every
+  county, always.
+- **Everything else is as before** -- the score, the multiplier counts and
+  the Cabrillo `CLAIMED-SCORE` (the golden corpus and the contest matrix
+  hold those).
+
+---
+
 ## Added 2026-10-02 -- EACH CONTEST OWNS ITS FINAL SCORE (M6), AND THREE BONUSES ARE NEW
 
 The final score moved onto the contest classes (`TContestBase.FinalScore` =

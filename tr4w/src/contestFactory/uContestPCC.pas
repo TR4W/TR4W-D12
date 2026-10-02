@@ -119,6 +119,13 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+
+      (* OUR OWN COUNTRY'S PREFIXES ARE NO MULTIPLIER (4.83.6) --
+         logdupe's SetMultFlags rule for this contest, moved here at M8 and
+         transcribed exactly: a QSO whose CTY.DAT country is MY COUNTRY earns
+         no prefix multiplier. Every other kind is the sheet's. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    end;
 
 implementation
@@ -127,6 +134,12 @@ uses
    SysUtils, uContestRegistry,
    (* StringIsAllNumbers -- the test the arm asks of MY STATE. *)
    utils_text;
+
+function TContestPCC.CountsAsMultiplier(const aQso: ContestExchange;
+                                        aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not ((aKind = rmPrefix) and (aQso.QTH.CountryID = Station.MyCountry));
+end;
 
 function TContestPCC.ParseReceivedExchange(const aText: string;
                                           const aSession: TReceivedExchangeSession;

@@ -184,10 +184,29 @@ the single-word test) is LIFTED to `uExchangeTokens` and called by both.
 **Two refusals NY4I ruled (design 7.10)**: Sweepstakes without a precedence
 says so; a state party's out-of-state station working a non-host station is
 refused. The matrix's `parse` section sees all of it; nothing sees the window
-(`BENCH_QUEUE.md`). **Known latent defect (M8):**
-`TCallsignsList.AddCallsign` marks `AllBands` for an off-band QSO, so for a
-contest not counting QSOs per band an off-band contact would make a later
-on-band one a dupe (ownership doc §8.2d).
+(`BENCH_QUEUE.md`).
+
+**THE SHEET KEEPS THE STATE; THE CONTEST DECLARES THE RULES (M8,
+2026-10-02, ownership doc §8.2l).** `logdupe.SetMultFlags` names no contest:
+after the band question it asks `ContestCountsMultiplier(ActiveContest(Contest),
+RXData, kind)` per kind -- the class's `CountsAsMultiplier` (BC/NY/Indiana
+`DX`, the PCC's own-country prefix, the Jock White own branch and branch 00)
+-- and only then the sheet whether the multiplier is NEW. The need-multiplier
+hint's call-to-domestic-multiplier (`LogEdit.GetMultArray`) is the class's
+`DomesticMultiplierFromCall`, handed the engine's lookups. **Do not put a
+contest test back in the sheet.** A multiplier KIND's arm (`GetDXQTH`,
+`SetPrefix`, the remaining-mult lists) stays keyed on the kind even when one
+contest uses it: the four multiplier commands let an operator state any kind
+for any contest, so the arm is that statement's meaning (it moves when Q4
+retires the commands). **`UsesBand` is asked at four places now** -- points,
+multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO
+marks no dupe bit and is never a dupe; the M3-found `AllBands` gap is FIXED),
+and the hint (`DetermineIfNewMult`, `uContestBase.CreditedBands`).
+`EditableLog.CallIsADupe` no longer pre-translates the band and mode -- a copy
+of what `CallsignIsDupe` does, which hid the real band from the question.
+`DetermineIfNewDomesticMult` asked with `AllBands` answers for `ActiveBand`
+(it had said "not needed" for every Idaho county). RSGB 1.8 MHz is still
+classless: its points read the sheet (`mo.isdmmult`), Q33.
 
 **Its spelling table is rotated:** `QSOPointMethodArray` selects the wrong
 method for 46 spellings, a D7 defect. The one shipped `.cfg` it reached,

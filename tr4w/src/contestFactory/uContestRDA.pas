@@ -95,6 +95,14 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+
+      (* THE DISTRICT THE LOG REMEMBERS FOR A RUSSIAN CALL, FOR THE
+         NEED-MULTIPLIER HINT -- the arm LOGEDIT.GetMultArray held for this
+         contest, moved here at M8 and transcribed exactly: RussianID of the
+         CALL, then the initial exchange the session holds for it
+         (CallsignsList, through aLookups.InitialExchangeOf). *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
    end;
 
 implementation
@@ -102,6 +110,16 @@ implementation
 uses
    uContestRegistry,
    uCallSignRoutines;
+
+function TContestRDA.DomesticMultiplierFromCall(const aCall: string;
+                                                const aLookups: TMultiplierHintLookups): string;
+begin
+   Result := '';
+   if RussianID(aCall) and Assigned(aLookups.InitialExchangeOf) then
+      begin
+      Result := aLookups.InitialExchangeOf(aCall);
+      end;
+end;
 
 (* RDAQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)

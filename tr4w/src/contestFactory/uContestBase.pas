@@ -500,6 +500,26 @@ type
       AbandonEntry: TEntryAbandon;
    end;
 
+   (* A TEXT ANSWER ABOUT A CALL THAT ONLY THE ENGINE HOLDS -- M8. '' when the
+      engine has none. *)
+   TCallTextLookup = function(const aCall: string): string;
+
+   (* WHAT A CONTEST IS HANDED WHEN THE NEED-MULTIPLIER HINT ASKS IT WHICH
+      DOMESTIC MULTIPLIER A CALL IMPLIES -- M8, 2026-10-02. See
+      TContestBase.DomesticMultiplierFromCall.
+
+      The contest reads no global, so the engine passes in the two answers
+      the rules that moved here asked of it: the initial exchange the session
+      remembers for a call (CallsignsList, loaded from the log and the
+      initial-exchange file), and CTY.DAT's grid for a call. A RECORD BECAUSE
+      IT IS AN INTERFACE PARAMETER, the exemption CLAUDE.md grants -- the
+      same shape as TReceivedExchangeSession. A nil lookup is "no service",
+      which a rule answers as ''. *)
+   TMultiplierHintLookups = record
+      InitialExchangeOf: TCallTextLookup;
+      GridOfCall: TCallTextLookup;
+   end;
+
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
    TContestIdList = array of string;
 
@@ -1211,16 +1231,23 @@ type
          multiplier ("correct, no multiplier credit for off-band QSOs"). "This
          rule applies to basically any contest."
 
-         SO IT IS ONE QUESTION, ASKED AT BOTH PLACES CREDIT IS DECIDED -- both
-         through ContestCreditsBand below, so neither can forget the classless
-         case:
+         SO IT IS ONE QUESTION, ASKED WHEREVER A QSO COULD AFFECT THE CONTEST
+         -- every time through ContestCreditsBand below, so none can forget
+         the classless case:
            points       ScoreQSO (LOGSTUFF.CalculateQSOPoints until M3),
                         BEFORE the four QSO POINTS ... overrides, so an
                         operator's override cannot give an off-band QSO
                         points either;
            multipliers  logdupe's DupeAndMultSheet.SetMultFlags, after it has
                         cleared the four flags, so nothing is set and nothing
-                        reaches the multiplier sheet.
+                        reaches the multiplier sheet;
+           dupes        uCallsigns' TCallsignsList.AddCallsign marks no dupe
+                        bit for an off-band QSO, and CallsignIsDupe calls none
+                        a dupe (M8) -- "an off-band QSO is not a dupe and
+                        makes no later QSO a dupe", NY4I, 7.4;
+           the hint     LOGEDIT's need-multiplier display shows no off-band
+                        band as needing a multiplier (CreditedBands, M8) --
+                        "off-band should not impact need multiplier".
 
          THE BASE ANSWERS TRUE FOR EVERY BAND, which is exactly what every
          contest did before this existed. A contest that states its bands
@@ -1228,6 +1255,51 @@ type
          is unchanged by construction because ContestCreditsBand answers True
          for nil. Each contest's band rule is its own move. Idaho was first. *)
       function UsesBand(aBand: BandType): boolean; virtual;
+
+      (* DOES THIS QSO EARN A MULTIPLIER OF THIS KIND AT ALL? -- M8,
+         2026-10-02: stage 2 of design 7.7, "the contest DECLARES the rules;
+         the shared sheet keeps the state".
+
+         Asked by logdupe's DupeAndMultSheet.SetMultFlags, through
+         ContestCountsMultiplier below, before it asks the sheet whether the
+         multiplier is NEW. False means the QSO earns no multiplier of
+         aKind whatever the sheet holds; True leaves it to the sheet. aKind
+         is one of the sheet's four kinds -- rmDomestic, rmDX, rmZone,
+         rmPrefix -- never rmNoRemMultDisplay.
+
+         A RULE ABOUT THE QSO, NOT ABOUT THE LOG. Whether the multiplier was
+         worked before is the sheet's question and stays there; this is what
+         a sponsor writes as "a DX station is not a multiplier" or "your own
+         branch does not count". Each such rule stood in SetMultFlags naming
+         its contest (BC, NY and Indiana QSO parties, the PCC, the Jock White
+         Field Day) and is the contest's own override now.
+
+         A BAND THE CONTEST DOES NOT USE IS NOT ASKED HERE -- that is UsesBand,
+         which SetMultFlags asks first, as ScoreQSO does. A contest never
+         restates its band list in this.
+
+         THE BASE ANSWERS TRUE FOR EVERY QSO AND KIND, which is exactly what
+         SetMultFlags did for every contest it did not name. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; virtual;
+
+      (* THE DOMESTIC MULTIPLIER A CALL IMPLIES BEFORE ANY EXCHANGE IS TYPED
+         -- M8, 2026-10-02.
+
+         The need-multiplier hint (LOGEDIT's EditableLog.GetMultArray, behind
+         DetermineIfNewMult and the "needs" display) asks it when no exchange
+         has been typed: a Russian station's oblast from its call, a grid
+         from CTY.DAT, the exchange the log remembers for that call. Each
+         rule stood in GetMultArray's `case Contest of` and is its contest's
+         own now. aLookups carries what only the engine holds (see
+         TMultiplierHintLookups).
+
+         A HINT, NOT A CREDIT. What the QSO earns is decided from the typed
+         exchange by SetMultFlags; this only says what to show while the call
+         is in the window. THE BASE ANSWERS '' -- no opinion -- which is what
+         GetMultArray did for every contest it did not name. *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; virtual;
 
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
@@ -1715,6 +1787,26 @@ function ContestIdList(const aIds: array of string): TContestIdList;
    the multipliers cannot disagree about which QSOs count. *)
 function ContestCreditsBand(aContest: TContestBase; aBand: BandType): boolean;
 
+(* THE BANDS OF A NEED-MULTIPLIER MASK THE CONTEST CREDITS -- M8, design 7.4:
+   "off-band should not impact need multiplier".
+
+   aBandMask is the hint's shape (LOGEDIT's GetMultArray): bit Ord(b) set
+   means a multiplier is still needed on band b. Every real band the contest
+   does not use (ContestCreditsBand) is cleared. The AllBands bit is KEPT --
+   it is the any-band key of a contest whose multipliers are not counted per
+   band, not a band, so whether to show it is the caller's band question
+   (the band the operator is on). nil credits every band, so the mask comes
+   back unchanged for a classless contest and for every contest that states
+   no bands. *)
+function CreditedBands(aContest: TContestBase; aBandMask: Cardinal): Cardinal;
+
+(* DOES aQso EARN A MULTIPLIER OF aKind IN aContest AT ALL? -- see
+   TContestBase.CountsAsMultiplier. nil answers True: a classless contest's
+   multipliers are the sheet's alone, as they always were. The one way the
+   sheet asks, as ContestCreditsBand is for the band. *)
+function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExchange;
+                                 aKind: RemainingMultiplierType): boolean;
+
 (* THE FOUR `QSO POINTS ...` OVERRIDES, APPLIED -- the one statement of their
    rule. True, with aQso.QSOPoints set, when one of them matches this QSO;
    False, with aQso untouched, when none does.
@@ -1993,6 +2085,33 @@ begin
       end;
 end;
 
+function CreditedBands(aContest: TContestBase; aBandMask: Cardinal): Cardinal;
+var
+   b: BandType;
+begin
+   Result := aBandMask;
+   for b := Low(BandType) to BandLight do
+      begin
+      if not ContestCreditsBand(aContest, b) then
+         begin
+         Result := Result and not (Cardinal(1) shl Ord(b));
+         end;
+      end;
+end;
+
+function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExchange;
+                                 aKind: RemainingMultiplierType): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := aContest.CountsAsMultiplier(aQso, aKind);
+      end;
+end;
+
 function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
                                var aQso: ContestExchange): boolean;
 
@@ -2240,6 +2359,21 @@ begin
       placeholder: it is an exact statement of what TR4W did for every contest
       until a contest stated its own bands. *)
    Result := True;
+end;
+
+function TContestBase.CountsAsMultiplier(const aQso: ContestExchange;
+                                         aKind: RemainingMultiplierType): boolean;
+begin
+   (* The sheet decides, as it did for every contest SetMultFlags did not
+      name -- see the declaration. *)
+   Result := True;
+end;
+
+function TContestBase.DomesticMultiplierFromCall(const aCall: string;
+                                                 const aLookups: TMultiplierHintLookups): string;
+begin
+   (* No opinion, as GetMultArray had for every contest it did not name. *)
+   Result := '';
 end;
 
 function TContestBase.RunsInMode(aMode: ModeType): boolean;

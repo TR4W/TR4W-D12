@@ -160,11 +160,19 @@ $CEILINGS = @{
    # stays, RAEM having left its label). Every other site that names a batch 2
    # contest is a seam not built yet (M8 multipliers, M9 display and HamScore)
    # and is unchanged -- design 8.2k lists them.
-   'mainunit.pas'          = 12
+   #
+   # M8, 2026-10-02 -- each contest declares its own multiplier rules:
+   # logdupe 5 -> 0 (SetMultFlags' BC, New York and Indiana 'DX' tests, the
+   # PCC's own-country prefix and the Jock White Field Day's own branch are
+   # their classes' CountsAsMultiplier; unlisted now, so any contest test
+   # there fails), logedit 11 -> 7 (GetMultArray's four need-multiplier arms
+   # are DomesticMultiplierFromCall) and mainunit 12 -> 11 (ParametersOkay's
+   # YB DX test, which changed nothing, deleted with the copy of SetPrefix it
+   # sat in).
+   'mainunit.pas'          = 11
    'trdos\fcontest.pas'    = 2
    'trdos\logcfg.pas'      = 1
-   'trdos\logdupe.pas'     = 5
-   'trdos\logedit.pas'     = 11
+   'trdos\logedit.pas'     = 7
    'trdos\logstuff.pas'    = 3
    'trdos\logsubs2.pas'    = 3
    'trdos\logwind.pas'     = 1
@@ -187,7 +195,11 @@ $CEILINGS = @{
 #
 # M7b batch 2, 2026-10-02: 150 -> 130. The total fell 189 -> 161 (28 tests
 # moved into the classes, ceilings above); 130 is again about 80% of it.
-$TOTAL_FLOOR  = 130
+#
+# M8, 2026-10-02: 130 -> 120. The total fell 161 -> 151 (10 tests moved into
+# the classes or were deleted as no-ops, ceilings above); 120 is again about
+# 80% of it.
+$TOTAL_FLOOR  = 120
 $MEMBER_FLOOR = 130
 
 # --------------------------------------------------------------------------

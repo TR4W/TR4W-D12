@@ -1229,8 +1229,6 @@ begin
 end;
 
 procedure DupeAndMultSheet.SetMultFlags(var RXData: ContestExchange);
-label
-  SkipDomesticMult;
 { This procedure will look at the contest exchange passed to it and see
   if any multiplier flags should be set.  No updating of multiplier arrays
   of totals is done.        }
@@ -1240,6 +1238,7 @@ var
  // TempBand                              : BandType;
   MultBand                              : BandType;
   MultMode                              : ModeType;
+  contestRules                          : TContestBase;
   //CompressedMult                        : FourBytes;
   //DomQTH                                : Str20;
  // c                                     : integer;
@@ -1278,52 +1277,39 @@ begin
      marks the multiplier sheet for a flag set here. So one exit leaves the
      QSO with no multiplier anywhere. AFTER the DomMultQTH fill, too, so the
      QSO still records the QTH it was worked with -- only its credit goes. *)
-  if not ContestCreditsBand(ActiveContest(Contest), RXData.Band) then
+  contestRules := ActiveContest(Contest);
+  if not ContestCreditsBand(contestRules, RXData.Band) then
      begin
      Exit;
      end;
 
-  SkipDomesticMult:
-  if (Contest = BCQP) and (RXData.DomMultQTH = 'dx') then         // 4.98.2
-     begin
-     exit;   // no mults for dx
-     end;
-  if (Contest = NYQP) and (RXData.DomMultQTH = 'DX') then         // 4.116.5
-     begin
-     exit;
-     end;
-   if (Contest = INQSOPARTY) and (RXData.DomMultQTH = 'DX') then         // 4.116.5
-      begin
-      exit;
-      end;
-  if (RXData.DomMultQTH <> '') and DoingDomesticMults then
+  (* WHETHER THE QSO EARNS A MULTIPLIER OF A KIND AT ALL IS THE CONTEST'S
+     DECLARATION; WHETHER IT IS NEW IS THIS SHEET'S -- M8, design 7.7 stage 2.
+     Five rules that named their contest here went to their classes'
+     CountsAsMultiplier: a 'DX' QTH earns none in the BC (spelt 'dx'), New
+     York and Indiana QSO parties, the PCC's own-country prefix earns none,
+     and the Jock White Field Day's own branch and branch 00 earn no zone.
+     A false answer leaves the flag false, as each `exit` here did. *)
+  if (RXData.DomMultQTH <> '') and DoingDomesticMults and
+     ContestCountsMultiplier(contestRules, RXData, rmDomestic) then
      begin
      RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ActiveDomesticMult);
      end;
 
-  if (RXData.DXQTH <> '') and DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
- // if (activeqsopointmethod = DLRTTY then
+  if (RXData.DXQTH <> '') and DoingDXMults and
+     ContestCountsMultiplier(contestRules, RXData, rmDX) then
      begin
      RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);
      end;
 
-   if (RXData.Prefix <> '') and DoingPrefixMults then
-      begin        // 4.83.6
-      if (contest = PCC) and
-         (RXData.QTH.CountryID = Settings.My.Country) then
-         begin
-         RXData.PrefixMult := False
-         end
-      else
-         begin
-         RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);
-         end;
-      end;
-    if (Contest = NZFIELDDAY) then
-    if (RXData.Zone = StrToIntDef(UTF8Encode(Settings.My.Zone), 0)) or (RXData.Zone = 00) then   exit;  //n4af 4.41.6
+  if (RXData.Prefix <> '') and DoingPrefixMults and
+     ContestCountsMultiplier(contestRules, RXData, rmPrefix) then
+     begin
+     RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);
+     end;
 
-
-  if (RXData.Zone <> DUMMYZONE) and DoingZoneMults then              // n4af 4.42.1
+  if (RXData.Zone <> DUMMYZONE) and DoingZoneMults and
+     ContestCountsMultiplier(contestRules, RXData, rmZone) then
      begin
      RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultBand, MultMode);
      end;

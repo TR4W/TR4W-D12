@@ -319,7 +319,9 @@ the wrongness.
 |---|---|
 | `ScoreQSO` | **not virtual** -- the one public scoring entry point: zero, band check, the four overrides, then `CalculateQSOPoints` (section 1) |
 | `CalculateQSOPoints` | **protected**. Scores 0 (`NoQSOPointMethod` is a real value). Asked only by `ScoreQSO`, so never about a QSO on a band the contest does not use, nor one an override already scored |
-| `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags`. Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
+| `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags` -- and since M8 by the dupe sheet (`TCallsignsList.AddCallsign` marks no dupe bit for it, `CallsignIsDupe` calls none a dupe) and the need-multiplier hint (`LogEdit`, through `CreditedBands`). Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
+| `CountsAsMultiplier` | **True for every QSO and kind** -- whether a QSO earns a multiplier of a kind AT ALL, asked by `logdupe.SetMultFlags` (through `ContestCountsMultiplier`) before the sheet says whether it is new. The BC, New York and Indiana parties (a `DX` QTH), the PCC (its own country's prefix) and the Jock White Field Day (its own branch, and branch 00) override it (M8, below) |
+| `DomesticMultiplierFromCall` | `''` -- the domestic multiplier a CALL implies before any exchange is typed, for the need-multiplier hint (`LogEdit.GetMultArray`). The Russian DX contest and the RF Championships (a Russian call's oblast), the Ural Cup (CTY.DAT's grid), RDA and YO DX (the remembered exchange) override it (M8, below) |
 | `ParseReceivedExchange` | the engine's shared parse for the SESSION's exchange shape, `aSession.ParseShape(aSession.Exchange, ...)` -- see "How a contest parses and validates" below (M5b) |
 | `MayBeACallsign` | every word may be a call (the PCC says `N/X` is not) |
 | `InitialExchangeFromCall` | no answer (the Russian DX contests give a Russian station's oblast) |
@@ -581,6 +583,54 @@ uses it only where CQ EXCHANGE is still empty -- and the base offers `''`.
 stated, both sides of any station-dependent choice). The matrix's `setup`
 section sees the applied result for every contest and variant.
 
+### How a contest declares its multipliers and dupe policy (M8, 2026-10-02)
+
+**THE SHEET KEEPS THE STATE; YOUR CLASS DECLARES THE RULES** -- stage 2 of
+`CONTEST_OWNERSHIP_DESIGN.md` §7.7. Whether a multiplier was worked before,
+and whether a call was, is the shared sheet's question (`logdupe`,
+`uMults`, `uCallsigns`); it never moves into a class and a class is never
+handed the sheet. What your class says is which QSOs COUNT, as data and
+virtuals the sheet asks:
+
+| you declare | with | the sheet asks it |
+|---|---|---|
+| the multiplier kinds | the four traits (`DomesticMultiplierType`, `DXMultiplierType`, `ZoneMultiplierType`, `PrefixMultiplierType`), or per station in `DescribeSession` | set-up writes them to the session; the sheet keys every multiplier on them |
+| per band / per mode | `MultByBand`, `MultByMode`, `QSOByBand`, `QSOByMode` (and `DomesticMultByBand`, `DXCCMultByBand` in `DescribeSession`) | the sheet's band and mode keys |
+| the bands at all | `UsesBand` | points, multipliers, dupes and the hint all ask it (§7.4) |
+| a QSO that earns no multiplier of a kind | `CountsAsMultiplier(aQso, aKind)` | `SetMultFlags`, before the sheet's "is it new" |
+| whether a repeat is marked a dupe | `MarksDupes` | `logsubs2` as the QSO is logged |
+| the domestic multiplier a call implies, for the hint | `DomesticMultiplierFromCall(aCall, aLookups)` | `LogEdit.GetMultArray` when no exchange is typed |
+
+- **`CountsAsMultiplier` is about the QSO, never the log.** "A DX station
+  is no multiplier", "our own country's prefixes do not count", "our own
+  branch does not count" -- each a sponsor rule. `aKind` is `rmDomestic`,
+  `rmDX`, `rmZone` or `rmPrefix`. Read the station from `Station` (MY
+  COUNTRY, MY ZONE); the object `SetMultFlags` asks is `ActiveContest`, so
+  its station is current. **Do not restate your band list here** --
+  `SetMultFlags` asks `UsesBand` first, as `ScoreQSO` does.
+- **`DomesticMultiplierFromCall` is a HINT.** What the QSO earns is decided
+  from the typed exchange. What only the engine holds -- the exchange the log
+  remembers for a call, CTY.DAT's grid -- arrives in `aLookups` (a
+  `TMultiplierHintLookups`); a nil lookup answers `''`. Asked of
+  `ContestIdentity`, so it reads no station.
+- **There is no dupe-key virtual, deliberately** (DECIDED at M8). Every dupe
+  rule outside the factory is either one of the declarations above or a
+  shared rule keyed on a multiplier KIND many contests use (a rover in a grid
+  contest is never a dupe -- `GridSquares`, six contests). A seam is added
+  when a contest's own dupe rule moves.
+- **A multiplier KIND's arm stays in the sheet** even when one contest uses
+  it (`BlackSeaCountries`, `GCStation`, ...): the four multiplier commands
+  let an operator state ANY kind for ANY contest, so the arm is the meaning
+  of that statement, not a copy of the contest's rule. It moves into the
+  class when those commands retire (design Q4, M10). Do not copy it into
+  your class now -- that would be two definitions.
+
+**Pin it** in `uTestContestMultipliers` (each override, and the base for
+every other contest, which is a ratchet: a contest that gains a rule joins
+its list in the same commit). The matrix's `scoring` line records every
+multiplier flag for every contest and variant, and the corpus's
+`CLAIMED-SCORE` the counts for its thirteen logs.
+
 ### Protected helpers — mechanism, not rules
 
 | helper | for |
@@ -811,7 +861,11 @@ and is the target shape:
 - ~~`parseReceivedExchange`~~ -- **BUILT at M5b** as `ParseReceivedExchange`
   (section 3). `formatSentExchange` is M4's `FormatCabrillo...` /
   `FormatADIFSentExchange`
-- `getMultiplierTypes` / `getMultiplierValue`
+- `getMultiplierTypes` / `getMultiplierValue` -- **partly built at M8**:
+  which QSOs count is `CountsAsMultiplier`, and the hint's call-to-multiplier
+  `DomesticMultiplierFromCall` (section 3). The multiplier KEY itself -- the
+  `case` arms of `GetDXQTH`, `SetPrefix` and the remaining-multiplier lists
+  -- stays keyed on the KIND until the four multiplier commands retire (Q4)
 - ~~`calculateTotalScore`~~ -- **BUILT at M6** as `FinalScore` = `CombineScore` +
   `BonusPoints` (section 3)
 - `getCabrilloHeaders`

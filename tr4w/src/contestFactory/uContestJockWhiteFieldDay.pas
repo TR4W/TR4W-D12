@@ -70,8 +70,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Station.MyZone, which is 0 when it is unset or not a number -- exactly
   what StrToIntDef(..., 0) gave the arm.
 
-  LOGDUPE.SetMultFlags names this contest for the same branch rule (and also
-  skips zone 00); that is the multiplier seam's, M8, and stays where it is.
+  LOGDUPE.SetMultFlags named this contest for the same branch rule, and also
+  skipped zone 00. That is CountsAsMultiplier's since M8 (2026-10-02),
+  transcribed exactly, and SetMultFlags names no contest. THE TWO RULES ARE
+  NOT THE SAME RULE, and both are kept as they were: scoring clears ZoneMult
+  for our own branch only; the sheet refuses our own branch AND branch 00.
+  Whether the sponsor counts one's own branch at all is design Q18.
   The branch exchange is NZFieldDayExchange (M5); export is the base's
   default (M4). LOGCFG's CQ exchange is CQExchangeDefault since M7a;
   uNewContest still names it (M9). *)
@@ -113,12 +117,25 @@ type
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+
+      (* OUR OWN BRANCH AND BRANCH 00 EARN NO BRANCH (ZONE) MULTIPLIER --
+         see the header. MY ZONE is Station.MyZone, 0 when unset or not a
+         number: what the legacy StrToIntDef(MY ZONE, 0) gave. *)
+      function CountsAsMultiplier(const aQso: ContestExchange;
+                                  aKind: RemainingMultiplierType): boolean; override;
    end;
 
 implementation
 
 uses
    uContestRegistry;
+
+function TContestJockWhiteFieldDay.CountsAsMultiplier(const aQso: ContestExchange;
+                                                      aKind: RemainingMultiplierType): boolean;
+begin
+   Result := not ((aKind = rmZone) and
+                  ((aQso.Zone = Station.MyZone) or (aQso.Zone = 0)));
+end;
 
 procedure TContestJockWhiteFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
