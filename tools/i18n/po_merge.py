@@ -196,7 +196,12 @@ def merge(path, template, ours, apply_changes):
       added += 1
 
    if apply_changes and (added or retired):
-      lang = os.path.basename(path).rsplit('_', 1)[-1].replace('.po', '')
+      # The code is everything between the 'tr4w_' prefix and '.po'. Splitting
+      # on the LAST underscore instead turned tr4w_pt_BR.po into 'BR' and
+      # tr4w_zh_CN.po into 'CN' in the written header (found 2026-10-01 by a
+      # read/write round-trip of every catalogue; the other twenty matched).
+      name = os.path.basename(path)
+      lang = name[len('tr4w_'):-len('.po')]
       pofile.write_po(path, existing, lang)
    return added, carried, retired, len(existing)
 

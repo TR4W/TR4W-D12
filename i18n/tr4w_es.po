@@ -8463,3 +8463,13 @@ msgstr "TRCLUSTER.DAT no fue encontrado junto al programa, por lo que la lista e
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "Aún no se definen grupos DX -- haga clic en Configurar para añadir uno."
 
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr ""
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr ""
+

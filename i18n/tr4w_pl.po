@@ -11197,3 +11197,13 @@ msgctxt "utr4wstrings.rc_createaunl"
 msgid "&Create and use new log"
 msgstr "&Utwórz i użyj nowego dziennika"
 
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr ""
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr ""
+

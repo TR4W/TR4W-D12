@@ -8268,3 +8268,13 @@ msgstr "TRCLUSTER. DAT 在程序旁没有找到,所以列表是空的. 输入服
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "尚未定义 DX 集群 -- 单击配置以添加一个 。"
 
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr ""
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr ""
+

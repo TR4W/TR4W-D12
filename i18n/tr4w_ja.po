@@ -9433,3 +9433,13 @@ msgstr "TRCLUSTER.DATはプログラムの横に見つかりませんでした�
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "DX クラスターはまだ定義されていません。 Configure をクリックして 1 つを追加します。"
 
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr ""
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr ""
+

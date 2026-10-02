@@ -9433,3 +9433,13 @@ msgstr "TRCLUSTER.DAT는 프로그램 옆에 있지 않았으므로 목록이 �
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "DX 클러스터가 아직 정의되지 않습니다 -- 하나를 추가하려면 구성을 클릭합니다."
 
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr ""
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr ""
+

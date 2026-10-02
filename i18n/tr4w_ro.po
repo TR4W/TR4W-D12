@@ -9001,3 +9001,13 @@ msgstr "TRCLUSTER.DAT nu a fost găsit lângă program, deci lista este goală. 
 msgid "No DX clusters are defined yet -- click Configure to add one."
 msgstr "Nu sunt definite clustere DX încă -- faceți clic pe Configurează pentru a adăuga unul."
 
+#: uappstrings.sexchangenoprecedence
+#, fuzzy
+msgid "Missing precedence (Q A B U M S)"
+msgstr ""
+
+#: uappstrings.sexchangeoutofstateworkshostonly
+#, fuzzy
+msgid "Out of state: work %s stations only"
+msgstr ""
+
