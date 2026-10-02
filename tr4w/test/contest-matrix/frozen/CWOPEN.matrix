@@ -2,7 +2,7 @@
 == identity
 contest.requested = 159 CWOPEN
 contest.selected = 159 CWOPEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestCWOpen
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = QSONumberAndNameExchange
@@ -297,7 +297,7 @@ totals.cabrillo = CLAIMED-SCORE: 578
 == identity
 contest.requested = 159 CWOPEN
 contest.selected = 159 CWOPEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestCWOpen
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = QSONumberAndNameExchange
@@ -592,7 +592,7 @@ totals.cabrillo = CLAIMED-SCORE: 578
 == identity
 contest.requested = 159 CWOPEN
 contest.selected = 159 CWOPEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestCWOpen
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = QSONumberAndNameExchange

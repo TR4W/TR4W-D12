@@ -2,7 +2,7 @@
 == identity
 contest.requested = 123 UCG
 contest.selected = 123 UCG
-contest.class = (none -- the legacy engine)
+contest.class = TContestUCG
 == setup
 active.qsopointmethod = CQWPXQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -298,7 +298,7 @@ totals.cabrillo = CLAIMED-SCORE: 544
 == identity
 contest.requested = 123 UCG
 contest.selected = 123 UCG
-contest.class = (none -- the legacy engine)
+contest.class = TContestUCG
 == setup
 active.qsopointmethod = CQWPXQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -594,7 +594,7 @@ totals.cabrillo = CLAIMED-SCORE: 714
 == identity
 contest.requested = 123 UCG
 contest.selected = 123 UCG
-contest.class = (none -- the legacy engine)
+contest.class = TContestUCG
 == setup
 active.qsopointmethod = CQWPXQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE

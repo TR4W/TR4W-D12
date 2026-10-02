@@ -216,7 +216,7 @@ the target shape, the M-step migration order and the open questions.
   named (`TSessionMemoryKey`), never Tree's codes; the domestic-country groups
   are `uContestBase` constants FCONTEST's own `Add_KVE`-style helpers read too.
   **All 55 arms naming a registered contest are gone**; FoundContest's `case`
-  holds classless contests only (M7b gives them classes). LogCfg's per-contest
+  holds only POTA's and the UA4W Championship's arms since M7b batch 2. LogCfg's per-contest
   CQ-exchange defaults are the sibling `CQExchangeDefault(aStation)` -- asked
   later, once the whole config is read -- and the ARRL DX one is on the CW
   class only (LogCfg never named the phone running). **D8 is resolved by
@@ -239,8 +239,23 @@ the target shape, the M-step migration order and the open questions.
   JIDX name test in FoundContest's closing `case`); the sibling
   `RepeatSPExchangeDefault` (the EU Sprints). The CQ-M okrug test was lifted to
   `uCallSignRoutines.InSameFederalOkrug(aMyCall, aHisCall)`. Tesla's arm's
-  `DisplayTotalScore` repaint did not move (display, not a rule). Still
-  classless on purpose: POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE.
+  `DisplayTotalScore` repaint did not move (display, not a rule).
+  **Batch 2 (2026-10-02, design §8.2k) gave the other forty classes** -- no
+  new family again (UCG and WWIH COPY CQ's arms; the King of Spain, REF,
+  RoPoCo and Region 1 RCC pairs are siblings until Q7). It added
+  `TSessionDefaults.InitialExchangeCursorAtStart`, `DXCCMultByBand` and
+  caption memories (`SetExchangeCaptionMemory`, the RTC's); lifted
+  `PortableStation` from Tree to `uCallSignRoutines`; and, a DECIDED behaviour
+  change, `TContestBase.RunsInMode` -- the RoPoCo runnings share ADIF id
+  `RSGB-ROLO`, and `uContestRegistry.ContestOfADIFRecordMode` picks the one
+  that runs in the record's mode once the record is read (the matrix moves
+  only their phone import lines). Ten-Ten's arm always scored 2 (a Word
+  against -1, Q46): the class says 2. **M7b is done: exactly five contests
+  are classless on purpose** -- POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33),
+  IN7QPNE and DUMMYCONTEST; `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
+  fails if a sixth appears. Sites still naming a batch-2 contest are seams
+  not built (M8 multipliers: YB DX, RDA, YO DX; M9 display/HamScore: WRTC,
+  SST, CW Open, RTC; Radio YOC's loader) -- listed in §8.2k.
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog

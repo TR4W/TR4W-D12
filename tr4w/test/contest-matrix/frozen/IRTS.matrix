@@ -2,7 +2,7 @@
 == identity
 contest.requested = 176 IRTS
 contest.selected = 176 IRTS
-contest.class = (none -- the legacy engine)
+contest.class = TContestIRTS
 == setup
 active.qsopointmethod = EUDXQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -286,7 +286,7 @@ totals.cabrillo = CLAIMED-SCORE: 1360
 == identity
 contest.requested = 176 IRTS
 contest.selected = 176 IRTS
-contest.class = (none -- the legacy engine)
+contest.class = TContestIRTS
 == setup
 active.qsopointmethod = EUDXQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -570,7 +570,7 @@ totals.cabrillo = CLAIMED-SCORE: 1360
 == identity
 contest.requested = 176 IRTS
 contest.selected = 176 IRTS
-contest.class = (none -- the legacy engine)
+contest.class = TContestIRTS
 == setup
 active.qsopointmethod = EUDXQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH

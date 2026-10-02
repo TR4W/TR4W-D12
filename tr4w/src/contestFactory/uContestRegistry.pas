@@ -100,8 +100,9 @@ function ContestIdentity(aContest: ContestType): TContestBase;
   ADIF export asks too. So the id this matches IS the id export writes, by
   construction, and a file TR4W exported resolves to the contest it came from
   (inventory D9, closed by M1). The one current-id collision is RSGB-ROLO,
-  which the CW and SSB rows share: it resolves to the CW running, as it
-  always has.
+  which the CW and SSB rows share: it resolves to the CW running here, and an
+  ADIF record is then told apart by its MODE -- ContestOfADIFRecordMode,
+  below (M7b batch 2).
 
   THE ORDER IS THE RULE:
     1. the input is TRIMMED, and an empty result matches NOTHING. A blank id
@@ -120,6 +121,23 @@ function ContestIdentity(aContest: ContestType): TContestBase;
   class serves each. uADIF keeps its cache and calls this. *)
 function FindContestByADIFContestId(const aId: string;
                                     out aContest: ContestType): boolean;
+
+(* WHICH CONTEST SHARING aContest's ADIF ID RUNS IN aMode? -- M7b batch 2,
+  2026-10-02.
+
+  For a record whose CONTEST_ID resolved to aContest, once the WHOLE record
+  -- its MODE included -- has been read. The contests whose CURRENT ADIF id
+  equals aContest's are asked TContestBase.RunsInMode, in enum order; the
+  first that says yes is the answer. When none does, aContest stands.
+
+  THE ONE ID THAT NEEDS IT IS RSGB-ROLO, ADIF's id for both RSGB RoPoCo
+  runnings: a phone record is the SSB running's, a CW record the CW
+  running's. Every other contest's id is its own and the base runs in every
+  mode, so for them this answers aContest, always. DECIDED on evidence, M7b
+  batch 2 (design 8.2k): before it, a phone QSO that TR4W exported for the SSB
+  running imported to the CW one. *)
+function ContestOfADIFRecordMode(aContest: ContestType;
+                                 aMode: ModeType): ContestType;
 
 implementation
 
@@ -262,6 +280,32 @@ begin
       begin
       aContest := formerContest;
       Result := True;
+      end;
+end;
+
+function ContestOfADIFRecordMode(aContest: ContestType;
+                                 aMode: ModeType): ContestType;
+var
+   id: string;
+   c: ContestType;
+   obj: TContestBase;
+begin
+   Result := aContest;
+   id := ContestIdentity(aContest).ADIFContestId;
+   if id = '' then
+      begin
+      Exit;
+      end;
+
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      obj := ContestIdentity(c);
+      if (obj.ADIFContestId = id) and
+         obj.RunsInMode(aMode)    then
+         begin
+         Result := c;
+         Exit;
+         end;
       end;
 end;
 

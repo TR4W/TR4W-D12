@@ -2,7 +2,7 @@
 == identity
 contest.requested = 146 R9W_UW9WK_MEMORIAL
 contest.selected = 146 R9W_UW9WK_MEMORIAL
-contest.class = (none -- the legacy engine)
+contest.class = TContestR9WUW9WKMemorial
 == setup
 active.qsopointmethod = R9WUW9WKMemorialQSOPointMethod
 active.exchange = QSONumberAndZone
@@ -271,7 +271,7 @@ totals.cabrillo = CLAIMED-SCORE: 60
 == identity
 contest.requested = 146 R9W_UW9WK_MEMORIAL
 contest.selected = 146 R9W_UW9WK_MEMORIAL
-contest.class = (none -- the legacy engine)
+contest.class = TContestR9WUW9WKMemorial
 == setup
 active.qsopointmethod = R9WUW9WKMemorialQSOPointMethod
 active.exchange = QSONumberAndZone
@@ -540,7 +540,7 @@ totals.cabrillo = CLAIMED-SCORE: 60
 == identity
 contest.requested = 146 R9W_UW9WK_MEMORIAL
 contest.selected = 146 R9W_UW9WK_MEMORIAL
-contest.class = (none -- the legacy engine)
+contest.class = TContestR9WUW9WKMemorial
 == setup
 active.qsopointmethod = R9WUW9WKMemorialQSOPointMethod
 active.exchange = QSONumberAndZone

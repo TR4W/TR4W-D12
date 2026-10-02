@@ -151,9 +151,18 @@ $CEILINGS = @{
    # mainunit 13 -> 12 and postunit 15 -> 14 (ARRL 160's import and export
    # arms -- its class was handed the domestic-country lookup its scoring
    # needed).
+   #
+   # M7b batch 2, 2026-10-02 -- forty more classless contests gained a class:
+   # fcontest 25 -> 2 (FoundContest's 23 arms for them went into
+   # DescribeSession; the `case` keeps POTA and the UA4W Championship, the two
+   # arms of contests still classless on purpose) and logcfg 6 -> 1 (five
+   # CQ-exchange arms whole into CQExchangeDefault; the UA4W Championship's
+   # stays, RAEM having left its label). Every other site that names a batch 2
+   # contest is a seam not built yet (M8 multipliers, M9 display and HamScore)
+   # and is unchanged -- design 8.2k lists them.
    'mainunit.pas'          = 12
-   'trdos\fcontest.pas'    = 25
-   'trdos\logcfg.pas'      = 6
+   'trdos\fcontest.pas'    = 2
+   'trdos\logcfg.pas'      = 1
    'trdos\logdupe.pas'     = 5
    'trdos\logedit.pas'     = 11
    'trdos\logstuff.pas'    = 3
@@ -175,8 +184,11 @@ $CEILINGS = @{
 #
 # M7b batch 1, 2026-10-02: 180 -> 150. The total fell 220 -> 189 (31 tests
 # moved into the classes, ceilings above); 150 is again about 80% of it.
-$TOTAL_FLOOR  = 150
-$MEMBER_FLOOR = 150
+#
+# M7b batch 2, 2026-10-02: 150 -> 130. The total fell 189 -> 161 (28 tests
+# moved into the classes, ceilings above); 130 is again about 80% of it.
+$TOTAL_FLOOR  = 130
+$MEMBER_FLOOR = 130
 
 # --------------------------------------------------------------------------
 # THE MEMBER LIST. Read from VC.pas's ContestType declaration, never typed

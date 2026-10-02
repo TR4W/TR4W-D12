@@ -209,7 +209,8 @@ begin
    ResetStub;
    GShapeResult := False;
    exch := NewExch('W1AW', 'K');
-   (* WRTC has no class: its identity is a plain TContestBase. *)
+   (* WRTC's class (M7b batch 2) states no parse rule: it inherits the
+      base's, which is what this pins. *)
    ok := ContestIdentity(WRTC).ParseReceivedExchange('599 ARRL',
             Session(RSTZoneOrSocietyExchange, True), exch, msg);
    CheckFalse(ok, 'the base returns the shape''s answer');

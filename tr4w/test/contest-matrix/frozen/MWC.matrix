@@ -2,7 +2,7 @@
 == identity
 contest.requested = 175 MWC
 contest.selected = 175 MWC
-contest.class = (none -- the legacy engine)
+contest.class = TContestMWC
 == setup
 active.qsopointmethod = MWCQP
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -289,7 +289,7 @@ totals.cabrillo = CLAIMED-SCORE: 136
 == identity
 contest.requested = 175 MWC
 contest.selected = 175 MWC
-contest.class = (none -- the legacy engine)
+contest.class = TContestMWC
 == setup
 active.qsopointmethod = MWCQP
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -576,7 +576,7 @@ totals.cabrillo = CLAIMED-SCORE: 136
 == identity
 contest.requested = 175 MWC
 contest.selected = 175 MWC
-contest.class = (none -- the legacy engine)
+contest.class = TContestMWC
 == setup
 active.qsopointmethod = MWCQP
 active.exchange = RSTQSONUMBEREXCHANGE

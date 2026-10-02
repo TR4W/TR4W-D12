@@ -2,7 +2,7 @@
 == identity
 contest.requested = 177 EUDX
 contest.selected = 177 EUDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestEUDX
 == setup
 active.qsopointmethod = EUDXQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -297,7 +297,7 @@ totals.cabrillo = CLAIMED-SCORE: 4250
 == identity
 contest.requested = 177 EUDX
 contest.selected = 177 EUDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestEUDX
 == setup
 active.qsopointmethod = EUDXQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -592,7 +592,7 @@ totals.cabrillo = CLAIMED-SCORE: 4250
 == identity
 contest.requested = 177 EUDX
 contest.selected = 177 EUDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestEUDX
 == setup
 active.qsopointmethod = EUDXQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH

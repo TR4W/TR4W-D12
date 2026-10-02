@@ -336,6 +336,7 @@ the wrongness.
 | `BonusPoints` | the declared `BonusStations` over the view, else 0 |
 | `BonusStations` / `CountsTowardBonus` / `CreditsBonusMode` | none / every contact / every mode |
 | `TalliesLiveQSO` | false -- a preserved Missouri defect (design Q32); do not override it |
+| `RunsInMode` | **every mode**. An IDENTITY question, asked only of an ADIF record whose `CONTEST_ID` two contests share: once the whole record is read, the first contest sharing the id that runs in the record's mode is its contest (`uContestRegistry.ContestOfADIFRecordMode`). The RSGB RoPoCo runnings are the only overriders (CW and phone; M7b batch 2, design §8.2k). It scores nothing |
 | `DescribeSession` | states nothing -- see "How a contest describes its session" (M7a) |
 | `CQExchangeDefault` / `RepeatSPExchangeDefault` | `''` -- LogCfg's default CQ and repeat S&P exchanges, used only where the operator has none (M7a; the repeat at M7b, for the EU Sprints) |
 
@@ -551,7 +552,12 @@ reads `aStation` only: the identity object it is asked of carries no station.
     (`InitialExchange`, `ZoneMult`), the DX multiplier limit (`DXMultLimit`),
     the R150S list (`R150SMode`), and `SuppressZoneExchangeMessages` -- the
     JIDX contests' refusal of the zone-exchange messages FoundContest's
-    closing set-up would otherwise write (it named them there).
+    closing set-up would otherwise write (it named them there);
+  - since M7b batch 2: the initial exchange's cursor at the start
+    (`InitialExchangeCursorAtStart` -- IRTS, RAEM), the DXCC multiplier by
+    band (`DXCCMultByBand` -- CQMM), and an exchange memory's CAPTION
+    (`SetExchangeCaptionMemory` -- the RTC's `NR` and `Cl+Ex`), which goes in
+    the same ordered list as the memories.
 - **A STATED VALUE IS STATED, EVEN WHEN IT IS FALSE OR EMPTY**, and an
   unstated one is left alone -- so state only what your contest sets, and
   never restate a trait "to be safe": a stated value overwrites a statement
@@ -619,6 +625,16 @@ parties, which the single-state base's rules do not fit (7QP's row still makes
 set-up treat it as a party -- `IsUSQSOParty`); the JIDX, All Asian and Oceania
 pairs, the EU Sprints and the ARRL VHF runnings are copies until Q7 says
 otherwise.
+
+**So are the forty of M7b batch 2** (design §8.2k). UCG scores by the CQ WPX
+arm and WWIH by the CQ WW RTTY arm, but neither is that sponsor's contest and
+both have always exported through the shared arms -- so each COPIES the arm
+rather than joining its owner. The King of Spain, REF and RSGB RoPoCo CW/SSB
+pairs and the two Region 1 Field Day RCC runnings are siblings until Q7; IRTS
+and EUDX share a scoring arm by their rows and nothing else, so they are
+copies too. M7b ends with five contests classless on purpose -- POTA, the UA4W
+Championship, RSGB 1.8 MHz, IN7QPNE and DUMMYCONTEST --
+and `Test_M7bBatch2ContestsAreSiblingsOnTheBase` fails if a sixth appears.
 
 ### `TStationContext` — what scoring knows about us
 

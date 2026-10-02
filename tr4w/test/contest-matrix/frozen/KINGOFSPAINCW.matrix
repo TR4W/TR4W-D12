@@ -2,7 +2,7 @@
 == identity
 contest.requested = 141 KINGOFSPAINCW
 contest.selected = 141 KINGOFSPAINCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestKingOfSpainCW
 == setup
 active.qsopointmethod = KingOfSpainQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -299,7 +299,7 @@ totals.cabrillo = CLAIMED-SCORE: 425
 == identity
 contest.requested = 141 KINGOFSPAINCW
 contest.selected = 141 KINGOFSPAINCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestKingOfSpainCW
 == setup
 active.qsopointmethod = KingOfSpainQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -596,7 +596,7 @@ totals.cabrillo = CLAIMED-SCORE: 425
 == identity
 contest.requested = 141 KINGOFSPAINCW
 contest.selected = 141 KINGOFSPAINCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestKingOfSpainCW
 == setup
 active.qsopointmethod = KingOfSpainQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange

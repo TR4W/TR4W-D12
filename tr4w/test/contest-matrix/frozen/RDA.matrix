@@ -2,7 +2,7 @@
 == identity
 contest.requested = 99 RDA
 contest.selected = 99 RDA
-contest.class = (none -- the legacy engine)
+contest.class = TContestRDA
 == setup
 active.qsopointmethod = RDAQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -289,7 +289,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 99 RDA
 contest.selected = 99 RDA
-contest.class = (none -- the legacy engine)
+contest.class = TContestRDA
 == setup
 active.qsopointmethod = RDAQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -576,7 +576,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 99 RDA
 contest.selected = 99 RDA
-contest.class = (none -- the legacy engine)
+contest.class = TContestRDA
 == setup
 active.qsopointmethod = RDAQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange

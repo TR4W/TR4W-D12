@@ -873,7 +873,9 @@ function OperatorEscape: boolean;
 
 function PacketCharReady(SerialPort: PortType; var CIn: Char): boolean;
 function PartialCall(Pattern: CallString; Call: CallString): boolean;
-function PortableStation(Call: CallString): boolean;
+(* ~~PortableStation~~ IS uCallSignRoutines.PortableStation since M7b batch 2
+   -- lifted so the Region 1 Field Day class and the legacy scoring arm ask
+   one function. *)
 
 function ReadChar(SerialPort: PortType): Char;
 
@@ -2833,34 +2835,6 @@ begin
                   Key := ReadKey;
           END;
  }
-end;
-
-function PortableStation(Call: CallString): boolean;
-
-{ This function will return TRUE if the callsign passed to it is a portable
-  station. }
-
-var
-  TempString                            : Str20;
-  TempChar                              : Char;
-
-begin
-  PortableStation := False;
-  TempString := PostcedingString(Call, '/');
-
-  if StringHas(TempString, '/') then
-     begin
-     TempString := PostcedingString(TempString, '/');
-     end;
-
-  if length(TempString) = 1 then
-     begin
-     TempChar := Char(TempString[1]);
-     if ((TempChar >= '0') and (TempChar <= '9')) or (TempChar = 'P') or (TempChar = 'M') then
-        begin
-        PortableStation := True;
-        end;
-     end;
 end;
 
 function ReadChar(SerialPort: PortType): Char;

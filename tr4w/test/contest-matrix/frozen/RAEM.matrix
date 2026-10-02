@@ -2,7 +2,7 @@
 == identity
 contest.requested = 98 RAEM
 contest.selected = 98 RAEM
-contest.class = (none -- the legacy engine)
+contest.class = TContestRAEM
 == setup
 active.qsopointmethod = RAEMQSOPointMethod
 active.exchange = QSONumberAndGeoCoordinates
@@ -270,7 +270,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 98 RAEM
 contest.selected = 98 RAEM
-contest.class = (none -- the legacy engine)
+contest.class = TContestRAEM
 == setup
 active.qsopointmethod = RAEMQSOPointMethod
 active.exchange = QSONumberAndGeoCoordinates
@@ -538,7 +538,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 98 RAEM
 contest.selected = 98 RAEM
-contest.class = (none -- the legacy engine)
+contest.class = TContestRAEM
 == setup
 active.qsopointmethod = RAEMQSOPointMethod
 active.exchange = QSONumberAndGeoCoordinates

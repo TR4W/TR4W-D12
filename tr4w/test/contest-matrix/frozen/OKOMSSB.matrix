@@ -2,7 +2,7 @@
 == identity
 contest.requested = 172 OKOMSSB
 contest.selected = 172 OKOMSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestOKOMSSB
 == setup
 active.qsopointmethod = OKOMSSBQSOPointMethod
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
@@ -299,7 +299,7 @@ totals.cabrillo = CLAIMED-SCORE: 1325
 == identity
 contest.requested = 172 OKOMSSB
 contest.selected = 172 OKOMSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestOKOMSSB
 == setup
 active.qsopointmethod = OKOMSSBQSOPointMethod
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
@@ -596,7 +596,7 @@ totals.cabrillo = CLAIMED-SCORE: 1625
 == identity
 contest.requested = 172 OKOMSSB
 contest.selected = 172 OKOMSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestOKOMSSB
 == setup
 active.qsopointmethod = OKOMSSBQSOPointMethod
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange

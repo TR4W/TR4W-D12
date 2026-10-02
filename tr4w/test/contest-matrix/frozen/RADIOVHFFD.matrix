@@ -2,7 +2,7 @@
 == identity
 contest.requested = 97 RADIOVHFFD
 contest.selected = 97 RADIOVHFFD
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioVHFFD
 == setup
 active.qsopointmethod = RadioVHFFDQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -275,7 +275,7 @@ totals.cabrillo = CLAIMED-SCORE: 4064
 == identity
 contest.requested = 97 RADIOVHFFD
 contest.selected = 97 RADIOVHFFD
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioVHFFD
 == setup
 active.qsopointmethod = RadioVHFFDQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -548,7 +548,7 @@ totals.cabrillo = CLAIMED-SCORE: 3124
 == identity
 contest.requested = 97 RADIOVHFFD
 contest.selected = 97 RADIOVHFFD
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioVHFFD
 == setup
 active.qsopointmethod = RadioVHFFDQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange

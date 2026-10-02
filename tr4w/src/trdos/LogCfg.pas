@@ -869,7 +869,6 @@ end;
 procedure tSetupExchangeNumbers;
 var
   tCQExchange, tSPExchange              : ShortString;
-  Grid                                  : ShortString;
 begin
 
 
@@ -883,21 +882,9 @@ begin
     from. *)
   tSPExchange := UTF8Encode(ContestIdentity(Contest).RepeatSPExchangeDefault(CurrentStation));
   tCQExchange := UTF8Encode(ContestIdentity(Contest).CQExchangeDefault(CurrentStation));
-  Grid := UTF8Encode(Copy(Settings.My.Grid, 1, 4));
   case Contest of
 
-    MAKROTHEN:
-      begin
-        tCQExchange := ' ' + Grid + ' ' + Grid;
-      end;
-
-    RADIOMEMORY: tCQExchange := UTF8Encode(' ' + Settings.My.State);
-
-//    JTDX, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW, UCG: tCQExchange := ' 5NN #';
-
-    R9W_UW9WK_MEMORIAL, RFASCHAMPIONSHIPCW: tCQExchange := UTF8Encode(' ' + Settings.My.State + '#');
-
-    UA4WCHAMPIONSHIP, RAEM: tCQExchange := UTF8Encode(' # ' + Settings.My.State);
+    UA4WCHAMPIONSHIP: tCQExchange := UTF8Encode(' # ' + Settings.My.State);
 {
     ARI, SPDX, ARKTIKA_SPRING, PACC, WAG, CUPUA1DZ, RUSSIANDX, RDA, OKDX, UKRAINIAN, OLDNEWYEAR, ARRL10, HADX, YODX, RSGB18, DARCXMAS:
       begin
@@ -905,12 +892,6 @@ begin
       end;
 }
 //    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + Settings.My.Zone;
-    {CZECH_ACTIVITY_VHF,}RADIOVHFFD: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Grid);
-
-    CWOPEN:
-      begin
-        tCQExchange := UTF8Encode(' # ' + Settings.My.Name);
-      end;
 
   end;
 

@@ -2,7 +2,7 @@
 == identity
 contest.requested = 148 RADIOMEMORY
 contest.selected = 148 RADIOMEMORY
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioMemory
 == setup
 active.qsopointmethod = RadioMemoryQSOPointMethod
 active.exchange = RSTAgeAndPossibleSK
@@ -271,7 +271,7 @@ totals.cabrillo = CLAIMED-SCORE: 600
 == identity
 contest.requested = 148 RADIOMEMORY
 contest.selected = 148 RADIOMEMORY
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioMemory
 == setup
 active.qsopointmethod = RadioMemoryQSOPointMethod
 active.exchange = RSTAgeAndPossibleSK
@@ -540,7 +540,7 @@ totals.cabrillo = CLAIMED-SCORE: 600
 == identity
 contest.requested = 148 RADIOMEMORY
 contest.selected = 148 RADIOMEMORY
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioMemory
 == setup
 active.qsopointmethod = RadioMemoryQSOPointMethod
 active.exchange = RSTAgeAndPossibleSK

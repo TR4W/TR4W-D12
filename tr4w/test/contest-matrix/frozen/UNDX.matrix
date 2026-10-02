@@ -2,7 +2,7 @@
 == identity
 contest.requested = 139 UNDX
 contest.selected = 139 UNDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestUNDX
 == setup
 active.qsopointmethod = UNDXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -301,7 +301,7 @@ totals.cabrillo = CLAIMED-SCORE: 1500
 == identity
 contest.requested = 139 UNDX
 contest.selected = 139 UNDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestUNDX
 == setup
 active.qsopointmethod = UNDXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -600,7 +600,7 @@ totals.cabrillo = CLAIMED-SCORE: 1650
 == identity
 contest.requested = 139 UNDX
 contest.selected = 139 UNDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestUNDX
 == setup
 active.qsopointmethod = UNDXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange

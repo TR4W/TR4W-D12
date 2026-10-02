@@ -2,7 +2,7 @@
 == identity
 contest.requested = 160 MAKROTHEN
 contest.selected = 160 MAKROTHEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestMakrothen
 == setup
 active.qsopointmethod = MakrothenQSOPointMethod
 active.exchange = GridExchange
@@ -270,7 +270,7 @@ totals.cabrillo = CLAIMED-SCORE: 77216
 == identity
 contest.requested = 160 MAKROTHEN
 contest.selected = 160 MAKROTHEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestMakrothen
 == setup
 active.qsopointmethod = MakrothenQSOPointMethod
 active.exchange = GridExchange
@@ -538,7 +538,7 @@ totals.cabrillo = CLAIMED-SCORE: 59356
 == identity
 contest.requested = 160 MAKROTHEN
 contest.selected = 160 MAKROTHEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestMakrothen
 == setup
 active.qsopointmethod = MakrothenQSOPointMethod
 active.exchange = GridExchange

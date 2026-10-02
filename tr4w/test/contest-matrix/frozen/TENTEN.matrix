@@ -2,7 +2,7 @@
 == identity
 contest.requested = 117 TENTEN
 contest.selected = 117 TENTEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestTenTen
 == setup
 active.qsopointmethod = TenTenQSOPointMethod
 active.exchange = NameQTHAndPossibleTenTenNumber
@@ -267,7 +267,7 @@ totals.cabrillo = CLAIMED-SCORE: 34
 == identity
 contest.requested = 117 TENTEN
 contest.selected = 117 TENTEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestTenTen
 == setup
 active.qsopointmethod = TenTenQSOPointMethod
 active.exchange = NameQTHAndPossibleTenTenNumber
@@ -532,7 +532,7 @@ totals.cabrillo = CLAIMED-SCORE: 34
 == identity
 contest.requested = 117 TENTEN
 contest.selected = 117 TENTEN
-contest.class = (none -- the legacy engine)
+contest.class = TContestTenTen
 == setup
 active.qsopointmethod = TenTenQSOPointMethod
 active.exchange = NameQTHAndPossibleTenTenNumber

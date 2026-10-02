@@ -2,7 +2,7 @@
 == identity
 contest.requested = 105 RFASCHAMPIONSHIPCW
 contest.selected = 105 RFASCHAMPIONSHIPCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestRFASChampionshipCW
 == setup
 active.qsopointmethod = ChampionshipRFASMethod
 active.exchange = QSONumberAndCoordinatesSum
@@ -271,7 +271,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 105 RFASCHAMPIONSHIPCW
 contest.selected = 105 RFASCHAMPIONSHIPCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestRFASChampionshipCW
 == setup
 active.qsopointmethod = ChampionshipRFASMethod
 active.exchange = QSONumberAndCoordinatesSum
@@ -540,7 +540,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 105 RFASCHAMPIONSHIPCW
 contest.selected = 105 RFASCHAMPIONSHIPCW
-contest.class = (none -- the legacy engine)
+contest.class = TContestRFASChampionshipCW
 == setup
 active.qsopointmethod = ChampionshipRFASMethod
 active.exchange = QSONumberAndCoordinatesSum

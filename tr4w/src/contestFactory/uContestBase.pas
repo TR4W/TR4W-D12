@@ -617,11 +617,14 @@ type
       M7b (2026-10-02) brought the first of them: the initial exchange and
       the zone multiplier (JIDX, JTDX, KCJ), the DX multiplier limit (NEQP,
       7QP), the R150S list (CQ-M, Gagarin Cup, OZCHR teams), and JIDX's
-      refusal of the shared zone-exchange messages. *)
+      refusal of the shared zone-exchange messages. M7b batch 2 brought the
+      last two the arms wrote: the initial-exchange cursor at the start (IRTS,
+      RAEM) and the DXCC multiplier by band (CQMM). *)
    TSessionValue = (
       svExchange, svDomesticMult, svDXMult, svPrefixMult,
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
       svInitialExchange, svZoneMult, svDXMultLimit,
+      svInitialExchangeCursorAtStart, svDXCCMultByBand,
       svR150SMode, svSuppressZoneExchangeMessages,
       svMultByBand, svQSOByMode, svQSOByBand,
       svWARCEnabled, svHFEnabled,
@@ -646,8 +649,10 @@ type
                         smkAltF1, smkAltF2, smkAltF3, smkAltF4, smkAltF5,
                         smkAltF6, smkAltF7);
 
-   (* The CQ memories, or the exchange (search-and-pounce) memories. *)
-   TSessionMemoryBank = (smbCQ, smbExchange);
+   (* The CQ memories, the exchange (search-and-pounce) memories, or the
+      exchange memories' CAPTIONS -- the key's label in the function-key
+      window (the RTC contest names F4 'NR' and F5 'Cl+Ex'; M7b batch 2). *)
+   TSessionMemoryBank = (smbCQ, smbExchange, smbExchangeCaption);
 
    (* ONE MEMORY A CONTEST FILLS -- an element of TSessionDefaults' list.
 
@@ -698,6 +703,7 @@ type
       FInitialExchange: InitialExchangeType;
       FZoneMult: ZoneMultType;
       FDXMultLimit: integer;
+      FDXCCMultByBand: TAdditionalMultByBand;
       FMinitourDuration: TTourDuration;
       FContactsPerPage: TContactsPerPage;
       FFlags: array[TSessionValue] of boolean;
@@ -716,6 +722,7 @@ type
       procedure SetInitialExchange(aValue: InitialExchangeType);
       procedure SetZoneMult(aValue: ZoneMultType);
       procedure SetDXMultLimit(aValue: integer);
+      procedure SetDXCCMultByBand(aValue: TAdditionalMultByBand);
       procedure SetMinitourDuration(aValue: TTourDuration);
       procedure SetContactsPerPage(aValue: TContactsPerPage);
       function GetFlag(aIndex: integer): boolean;
@@ -747,6 +754,18 @@ type
          read FInitialExchange write SetInitialExchange;
       property ZoneMult: ZoneMultType read FZoneMult write SetZoneMult;
       property DXMultLimit: integer read FDXMultLimit write SetDXMultLimit;
+
+      (* THE INITIAL EXCHANGE'S CURSOR AT THE START OF THE WINDOW -- M7b
+         batch 2. The engine's InitialExchangeCursorPos (LOGWIND), which the
+         IRTS and RAEM arms set to AtStart; True is AtStart, False AtEnd. A
+         flag and not the engine's type, which is TRDOS's to declare. *)
+      property InitialExchangeCursorAtStart: boolean
+         index Ord(svInitialExchangeCursorAtStart) read GetFlag write SetFlag;
+
+      (* DXCCMultByBand -- the CQMM arm's dmbbAllBand (M7b batch 2), the
+         DXCC twin of DomesticMultByBand. *)
+      property DXCCMultByBand: TAdditionalMultByBand
+         read FDXCCMultByBand write SetDXCCMultByBand;
 
       (* THE CLOSING EXCHANGE SET-UP WRITES NO ZONE-EXCHANGE MESSAGES -- M7b.
 
@@ -832,6 +851,9 @@ type
                             const aText: string);
       procedure SetExchangeMemory(aMode: ModeType; aKey: TSessionMemoryKey;
                                   const aText: string);
+      (* An exchange memory's CAPTION, in the same ordered list. *)
+      procedure SetExchangeCaptionMemory(aMode: ModeType; aKey: TSessionMemoryKey;
+                                         const aText: string);
       function MemoryCount: integer;
       function Memory(aIndex: integer): TSessionMemory;
    end;
@@ -1206,6 +1228,23 @@ type
          is unchanged by construction because ContestCreditsBand answers True
          for nil. Each contest's band rule is its own move. Idaho was first. *)
       function UsesBand(aBand: BandType): boolean; virtual;
+
+      (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
+         an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
+
+         ADIF's CONTEST_ID cannot always name one contest: RSGB-ROLO is ADIF's
+         id for both RSGB RoPoCo runnings, the CW and the SSB, and TR4W keeps
+         them as two ContestTypes. Once the whole record is read, the importer
+         asks the contests that share the record's id which of them runs in
+         its MODE (uContestRegistry.ContestOfADIFRecordMode); the lowest that
+         says yes is the record's contest, and when none does the id's own
+         answer stands.
+
+         IT DOES NOT SCORE. A QSO in another mode is not refused, credited or
+         zeroed by this -- that would be a band-like rule (UsesBand), and no
+         contest has stated one for modes. THE BASE ANSWERS TRUE FOR EVERY
+         MODE, so a contest that shares no id is untouched by construction. *)
+      function RunsInMode(aMode: ModeType): boolean; virtual;
 
       (* IS THIS RECEIVED CLASS LEGAL FOR THIS CONTEST?
 
@@ -2203,6 +2242,12 @@ begin
    Result := True;
 end;
 
+function TContestBase.RunsInMode(aMode: ModeType): boolean;
+begin
+   (* Every mode -- see the declaration. *)
+   Result := True;
+end;
+
 function TContestBase.ValidateClass(const aClass: string;
                                     out aErrorMessage: string): boolean;
 begin
@@ -2562,6 +2607,12 @@ begin
    Stated(svDXMultLimit);
 end;
 
+procedure TSessionDefaults.SetDXCCMultByBand(aValue: TAdditionalMultByBand);
+begin
+   FDXCCMultByBand := aValue;
+   Stated(svDXCCMultByBand);
+end;
+
 procedure TSessionDefaults.SetMinitourDuration(aValue: TTourDuration);
 begin
    FMinitourDuration := aValue;
@@ -2653,6 +2704,13 @@ procedure TSessionDefaults.SetExchangeMemory(aMode: ModeType; aKey: TSessionMemo
                                              const aText: string);
 begin
    AddMemory(smbExchange, aMode, aKey, aText);
+end;
+
+procedure TSessionDefaults.SetExchangeCaptionMemory(aMode: ModeType;
+                                                    aKey: TSessionMemoryKey;
+                                                    const aText: string);
+begin
+   AddMemory(smbExchangeCaption, aMode, aKey, aText);
 end;
 
 function TSessionDefaults.MemoryCount: integer;

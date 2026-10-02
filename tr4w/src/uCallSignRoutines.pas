@@ -81,6 +81,19 @@ function GetRussiaOblastID(Call: string): string; //
    TRUE WHEN IT CANNOT TELL -- a portable call, a call with no oblast, or an
    oblast with no okrug -- exactly as the engine's version answered. *)
 function InSameFederalOkrug(const aMyCall: string; const aHisCall: string): boolean;
+
+(* IS THIS A PORTABLE STATION? -- a call whose last '/' part is a single
+   digit, P or M (G4ABC/P, DL1XYZ/3, F5AA/M). The Region 1 Field Day's
+   points read it.
+
+   LIFTED FROM TREE LINE FOR LINE AT M7b BATCH 2 (2026-10-02), so the Region 1
+   Field Day class and the engine's legacy EuropeanFieldDay arm ask one
+   function: a contest class may not call TRDOS
+   (docs/CONTEST_OWNERSHIP_DESIGN.md 1.3). Tree's copy took a CallString and
+   kept the tail in a Str20; a callsign is shorter than either, so the string
+   here changes nothing. Only the second '/' part is looked through, as
+   before: K/G4ABC/P answers P. *)
+function PortableStation(const aCall: string): boolean;
 function CaliforniaCall(Call: string): boolean;
 function RootCall(Call: string): string;
 function RoverCall(Call: string): boolean;
@@ -820,5 +833,28 @@ begin
       end;
 
    Result := o1 = o2;
+end;
+
+function PortableStation(const aCall: string): boolean;
+var
+   tail: string;
+   c: Char;
+begin
+   Result := False;
+   tail := PostcedingString(aCall, '/');
+
+   if StringHas(tail, '/') then
+      begin
+      tail := PostcedingString(tail, '/');
+      end;
+
+   if Length(tail) = 1 then
+      begin
+      c := tail[1];
+      if ((c >= '0') and (c <= '9')) or (c = 'P') or (c = 'M') then
+         begin
+         Result := True;
+         end;
+      end;
 end;
 end.

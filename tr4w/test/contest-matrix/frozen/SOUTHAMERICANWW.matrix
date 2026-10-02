@@ -2,7 +2,7 @@
 == identity
 contest.requested = 114 SOUTHAMERICANWW
 contest.selected = 114 SOUTHAMERICANWW
-contest.class = (none -- the legacy engine)
+contest.class = TContestSouthAmericanWW
 == setup
 active.qsopointmethod = SouthAmericanWWQSOPointMethod
 active.exchange = RSTAndContinentExchange
@@ -276,7 +276,7 @@ totals.cabrillo = CLAIMED-SCORE: 42
 == identity
 contest.requested = 114 SOUTHAMERICANWW
 contest.selected = 114 SOUTHAMERICANWW
-contest.class = (none -- the legacy engine)
+contest.class = TContestSouthAmericanWW
 == setup
 active.qsopointmethod = SouthAmericanWWQSOPointMethod
 active.exchange = RSTAndContinentExchange
@@ -550,7 +550,7 @@ totals.cabrillo = CLAIMED-SCORE: 42
 == identity
 contest.requested = 114 SOUTHAMERICANWW
 contest.selected = 114 SOUTHAMERICANWW
-contest.class = (none -- the legacy engine)
+contest.class = TContestSouthAmericanWW
 == setup
 active.qsopointmethod = SouthAmericanWWQSOPointMethod
 active.exchange = RSTAndContinentExchange

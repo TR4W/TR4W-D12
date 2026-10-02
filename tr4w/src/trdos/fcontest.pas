@@ -492,6 +492,21 @@ begin
      begin
      DXMultLimit := aSession.DXMultLimit;
      end;
+  if aSession.IsStated(svInitialExchangeCursorAtStart) then
+     begin
+     if aSession.InitialExchangeCursorAtStart then
+        begin
+        InitialExchangeCursorPos := AtStart;
+        end
+     else
+        begin
+        InitialExchangeCursorPos := AtEnd;
+        end;
+     end;
+  if aSession.IsStated(svDXCCMultByBand) then
+     begin
+     DXCCMultByBand := aSession.DXCCMultByBand;
+     end;
 
   if aSession.IsStated(svMultByBand) then
      begin
@@ -599,14 +614,20 @@ begin
   for i := 0 to aSession.MemoryCount - 1 do
      begin
      memory := aSession.Memory(i);
-     if memory.Bank = smbCQ then
-        begin
-        SetCQMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
-        end
-     else
-        begin
-        SetEXMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
-        end;
+     case memory.Bank of
+       smbCQ:
+         begin
+         SetCQMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+         end;
+       smbExchange:
+         begin
+         SetEXMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+         end;
+       smbExchangeCaption:
+         begin
+         SetEXCaptionMemoryString(memory.Mode, EngineMemoryKey(memory.Key), UTF8Encode(memory.Text));
+         end;
+     end;
      end;
 
   if aSession.IsStated(svCQExchangeCW) then
@@ -823,32 +844,6 @@ begin
           end;;
       end;
     }
-    SOUTHAMERICANWW: //, SA-SSPRINT: // issue 177
-      begin
-        if MyContinent = SouthAmerica then
-           begin
-           ActivePrefixMult := NonSouthAmericanPrefixes
-           end
-        else
-           begin
-           ActivePrefixMult := SouthAmericanPrefixes;
-           end;
-      end;
-
-    STEWPERRY:
-      begin
-        Settings.Contest.Name := 'STEW-PERRY'; // 4.76.6
-        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Grid);
-        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Grid);
-        ActiveBand := Band160;
-      end;
-
-    YOTA:
-      begin
-        ActiveBand := Band80;
-        //        VHFBandsEnabled := True;
-      end;
-
     {
         ARRLRTTYROUNDUP:
           begin
@@ -865,60 +860,6 @@ begin
             Add_KVE;
           end;
     }
-    RTC: // Issue #902 -- Real-Time Contest (COS)
-      begin
-        // Rules permit only 40/20/15/10 m on CW and SSB.  TR4W cannot
-        // disable individual HF bands (no per-band toggle exists), so
-        // 160/80 stay clickable; the scoring branch in CalculateQSOPoints
-        // awards 0 points and inhibits mults for any QSO outside the
-        // 40/20/15/10 + CW/SSB rules.  WARC bands ARE disabled here.
-        Settings.Bands.WarcEnabled := False;
-
-        // CW function-key defaults and SAP exchange strings.
-        // Exchange shape: <serial#> <grid> -- e.g. "001 FN20".
-        // RST is optional per the rules and is not transmitted by default.
-        // The grid is substituted at FCONTEST init time (same idiom as the zone
-        // in SetUpRSTMyZoneExchange); the operator must restart the contest
-        // setup if it changes.
-        Settings.Messages.CqExchangeCw := UTF8Encode(' # ' + Settings.My.Grid);
-        Settings.Messages.RepeatSpExchangeCw := UTF8Encode(' # ' + Settings.My.Grid);
-        Settings.Messages.SpExchangeCw := UTF8Encode(' # ' + Settings.My.Grid);
-        SetCQMemoryString(CW, F3, UTF8Encode('# ' + Settings.My.Grid));
-        SetEXMemoryString(CW, F4, UTF8Encode('NR # ' + Settings.My.Grid));
-        SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ # ' + Settings.My.Grid));
-        SetEXMemoryString(CW, AltF4, 'NR?');
-        SetEXCaptionMemoryString(CW, F4, 'NR');
-        SetEXCaptionMemoryString(CW, F5, 'Cl+Ex');
-      end;
-
-    RADIOVHFFD:
-      begin
-        Settings.Bands.HfEnabled := False;
-        ActiveBand := Band2;
-        Settings.Contest.DigitalModeEnable := False;
-        Settings.Contest.Name := 'RF-VHF-FD';
-        Settings.Qso.ByMode := False;
-        Settings.Qso.ByBand := True;
-        Settings.Contest.QsoNumberByBand := True;
-      end;
-
-    IRTS: // 4.93.1
-      begin
-        ActiveBand := Band80;
-        Settings.Contest.DigitalModeEnable := FALSE;
-        INITIALEXCHANGECURSORPOS := ATSTART;
-        if (Settings.My.Country <> 'EI') and (Settings.My.Country <> 'GI') then
-           begin
-           ActiveDXMult := NoDXMults;
-           end;
-      end;
-
-    EUDX: // 4.95.6
-      begin
-        //     AddDomesticCountry
-
-      end;
-
     {
         MICHQSOPARTY:
           begin
@@ -935,29 +876,6 @@ begin
             Add_KVEKH6KL;
           end;
     }
-    MWC:
-      begin
-        ActiveBand := Band80;
-        AddDomesticCountry('MWC');
-
-      end;
-
-    SST:
-      begin
-        Settings.Contest.Name := 'Slow Speed Test';
-        ActiveDomesticMult := DomesticFile;
-        Add_KVE;
-        Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
-        Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
-      end;
-
-    OKOMSSB: // 4.80.1
-      begin
-        AddDomesticCountry('OK');
-        AddDomesticCountry('OM');
-        ActiveMode := Phone;
-      end;
-
     POTA:
       begin
         tAllowDupeQSOs := TRUE;
@@ -974,65 +892,6 @@ begin
         InitOperatorNameSet;
       end;
 
-    RAEM:
-      begin
-        ActiveBand := Band80;
-        Settings.Contest.Name := 'RAEM Ernst Krenkel Memorial Contest';
-        InitialExchangeCursorPos := AtStart;
-      end;
-
-    RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB:
-      begin
-        ActiveBand := Band80;
-        //        Settings.Contest.Name := 'UK Rotating Postal Code';
-        Settings.Contest.MultipleBands := False;
-        Settings.Messages.CqExchangeCw := '_~ %5NN ('; // + MyPostalCode;
-        Settings.Messages.RepeatSpExchangeCw := '5NN (';
-        Settings.Messages.SpExchangeCw := '~ %5NN (';
-        SetCQMemoryString(CW, F3, '5NN (');
-        SetEXMemoryString(CW, F3, '5NN');
-        SetEXMemoryString(CW, F4, '(');
-        SetEXMemoryString(CW, F5, '@ DE \ 5NN (');
-        SetEXMemoryString(CW, AltF3, 'RST?');
-        SetEXMemoryString(CW, AltF4, 'PC?');
-      end;
-
-    RDA:
-      begin
-        AddRussianDomesticCountrys;
-        //        Settings.Contest.CountDomesticCountries := True;
-        if not RussianID(Settings.My.Country) then
-           begin
-           ActiveDXMult := NoDXMults;
-           end;
-        DomesticMultByBand := dmbbAllBand;
-      end;
-
-    YBDX: // 4.64.1
-      begin
-        ActiveMode := Phone;
-        ActiveDXMult := ARRLDXCC;
-        ActivePrefixMult := IndonesianDistricts;
-      end;
-
-    SPDX:
-      begin
-        //        Settings.Contest.Name := 'SP-DX Contest';
-        AddDomesticCountry('SP');
-      end;
-
-    TENTEN:
-      begin
-        //        Settings.Contest.Name := 'Ten Ten QSO Party';
-        Add_KVEKH6KL;
-      end;
-
-    {
-        REFCW:
-          begin
-            AddDomesticCountry('F');
-          end;
-    }
     {
         ,QSOPARTY:
           begin
@@ -1047,59 +906,12 @@ begin
           end;
     }
 
-    YODX:
-      begin
-        Settings.Contest.Name := 'YO-DX-HF Contest';
-        AddDomesticCountry('YO');
-      end;
-
     UA4WCHAMPIONSHIP:
       begin
         Settings.Contest.MinitourDuration := 15;
       end;
 
-    R9W_UW9WK_MEMORIAL:
-      begin
-        Settings.Contest.MinitourDuration := 20;
-      end;
-
-    WRTC:
-      ActiveBand := Band80;
-
-    RFASCHAMPIONSHIPCW {, RFASCHAMPIONSHIPSSB}:
-      begin
-        //        ActiveMode := CW;
-        //        if Contest = RFASCHAMPIONSHIPSSB then ActiveMode := Phone;
-      end;
-
     //    UA4N: Settings.Contest.MinitourDuration := 15;
-
-    UNDX:
-      begin
-        AddDomesticCountry('UN');
-        //        Settings.Contest.CountDomesticCountries := True;
-      end;
-
-    KINGOFSPAINCW, KINGOFSPAINSSB:
-      begin
-        AddDomesticCountry('EA');
-        AddDomesticCountry('EA6');
-        AddDomesticCountry('EA8');
-        AddDomesticCountry('EA9');
-      end;
-
-    CQMM:
-      begin
-        if MyContinent = SouthAmerica then
-           begin
-           ActivePrefixMult := SouthAndNorthAmericanPrefixes;
-           end;
-        DXCCMultByBand := dmbbAllBand;
-        ActiveBand := Band80;
-      end;
-
-    //    RADIOMEMORY:
-    //      CallsignUpdateEnable := False;   -- see the note above
 
   end;
 

@@ -361,6 +361,13 @@ var
    saveLastContest  : ContestType;
    saveLastFound    : boolean;
 
+   (* Single-entry cache for ContestOfRecordMode, for the same reason: a file
+      is one contest and, nearly always, one or two modes. *)
+   modeLastValid    : boolean;
+   modeLastContest  : ContestType;
+   modeLastMode     : ModeType;
+   modeLastAnswer   : ContestType;
+
 // ---------------------------------------------------------------------------
 // Lexer helpers
 // ---------------------------------------------------------------------------
@@ -787,6 +794,26 @@ begin
    saveLastValid    := True;
 end;
 
+(* THE RECORD'S CONTEST, NOW THAT ITS MODE IS KNOWN -- M7b batch 2. See
+  uContestRegistry.ContestOfADIFRecordMode; this only caches it. *)
+function ContestOfRecordMode(aContest: ContestType; aMode: ModeType): ContestType;
+begin
+   if modeLastValid               and
+      (aContest = modeLastContest) and
+      (aMode = modeLastMode)       then
+      begin
+      Result := modeLastAnswer;
+      Exit;
+      end;
+
+   Result := ContestOfADIFRecordMode(aContest, aMode);
+
+   modeLastContest := aContest;
+   modeLastMode    := aMode;
+   modeLastAnswer  := Result;
+   modeLastValid   := True;
+end;
+
 // ---------------------------------------------------------------------------
 // IsValidGUID
 //
@@ -969,10 +996,12 @@ var
    contest              : ContestType;
    saveDecimalSeparator : Char;
    haveRoverCall        : Boolean;
+   contestFromId        : Boolean;
 begin
    Result := True;
    InitADIFRecordTemps(temps);
    haveRoverCall := False;
+   contestFromId := False;
 
    for i := 0 to High(fields) do
       begin
@@ -1017,6 +1046,7 @@ begin
                if GetContestByADIFName(fieldValue, contest) then
                   begin
                   exch.ceContest := contest;
+                  contestFromId := True;
                   end;
                end;
 
@@ -1215,6 +1245,17 @@ begin
                         [fieldName, fieldValue, e.Message]);
             end;
       end;
+      end;
+
+   (* ONE ID, TWO CONTESTS: TOLD APART BY THE MODE, ONCE THE WHOLE RECORD IS
+      READ -- M7b batch 2 (design 8.2k). RSGB-ROLO names both RSGB RoPoCo
+      runnings; the contest that runs in this record's mode is its contest.
+      After the loop, so MODE may arrive before or after CONTEST_ID. Only a
+      contest that came FROM the id is refined: one the caller set has no id
+      to share. *)
+   if contestFromId then
+      begin
+      exch.ceContest := ContestOfRecordMode(exch.ceContest, exch.Mode);
       end;
 end;
 

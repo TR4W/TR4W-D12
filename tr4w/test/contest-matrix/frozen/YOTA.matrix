@@ -2,7 +2,7 @@
 == identity
 contest.requested = 180 YOTA
 contest.selected = 180 YOTA
-contest.class = (none -- the legacy engine)
+contest.class = TContestYOTA
 == setup
 active.qsopointmethod = YOTAQSOPointMethod
 active.exchange = RSTAgeExchange
@@ -286,7 +286,7 @@ totals.cabrillo = CLAIMED-SCORE: 264
 == identity
 contest.requested = 180 YOTA
 contest.selected = 180 YOTA
-contest.class = (none -- the legacy engine)
+contest.class = TContestYOTA
 == setup
 active.qsopointmethod = YOTAQSOPointMethod
 active.exchange = RSTAgeExchange
@@ -570,7 +570,7 @@ totals.cabrillo = CLAIMED-SCORE: 264
 == identity
 contest.requested = 180 YOTA
 contest.selected = 180 YOTA
-contest.class = (none -- the legacy engine)
+contest.class = TContestYOTA
 == setup
 active.qsopointmethod = YOTAQSOPointMethod
 active.exchange = RSTAgeExchange

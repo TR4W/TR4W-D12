@@ -149,6 +149,26 @@ Three groups:
   three ARRL VHF runnings?
   **Answer:**
 
+### Added after M7b batch 2
+
+- **Q43, extended** Batch 2 added four more sibling pairs to the same question:
+  King of Spain CW/SSB and REF CW/SSB (identical rows but for names and ids),
+  RSGB RoPoCo CW/SSB (one shared set-up), and the Region 1 Field Day RCC CW/SSB
+  runnings (identical rows). Are any of them one contest under one rule?
+  **Answer:**
+
+- **Q45** EUDX and IRTS score "is the worked station in the EU?" with a test that
+  can never be false (`DomMultQTH[4] <> ''`), so every contact scores as an EU
+  contact -- 10 points (2 for our own country when we are in an EU region). The
+  sponsor's table needs a real EU test. What should decide it (the domestic
+  file's region code?), and should it be fixed now? Both contests' scores move.
+  **Answer:**
+
+- **Q46** Ten-Ten scores 2 for every QSO: the "2 with a Ten-Ten number, else 1"
+  test can never be false (a 16-bit field compared with -1). Should a QSO with no
+  Ten-Ten number score 1, as the code was evidently meant to?
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -208,6 +228,21 @@ Three groups:
   same kind of fix as the Croatian clock).
   **Answer:**
 
+- **Q44** Three contests keep their band rule inside their scoring, not as the
+  contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off
+  CW/SSB), and CQMM and WRTC (0 points off 80-10 m, but the multiplier still
+  counts). Your off-band ruling is 0 points and no multiplier. State each one's
+  bands the standard way? *Recommended: yes* -- RTC changes nothing visible; CQMM
+  and WRTC stop crediting a multiplier from an off-band QSO.
+  **Answer:**
+
+- **Q47** Three harmless read-past-the-end shapes were kept exactly: MWC (a call
+  longer than ten characters, or ending in `/`), the Region 1 Field Day (no MY
+  COUNTRY), and the Region 1 RCC runnings (a one-character call scores 4). Bound
+  them the next time each contest is touched? *Recommended: yes* -- no real QSO's
+  score moves.
+  **Answer:**
+
 ---
 
 ## 3. Already answered (for reference)
@@ -229,6 +264,7 @@ Three groups:
 | -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 and later |
 | -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6 (M9) |
 | -- | ALL ASIAN SSB is `ALL-ASIAN-DX-PHONE` | e1c6f873 |
+| -- | RSGB RoPoCo: an ADIF record is the SSB running's when its mode is phone (one ADIF id, `RSGB-ROLO`) | M7b batch 2 (decided under delegation, design 8.2k) |
 
 ---
 

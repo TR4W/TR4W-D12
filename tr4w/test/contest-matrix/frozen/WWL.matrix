@@ -2,7 +2,7 @@
 == identity
 contest.requested = 131 WWL
 contest.selected = 131 WWL
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWL
 == setup
 active.qsopointmethod = WWLQSOPointMethod
 active.exchange = RSTAndGridExchange
@@ -284,7 +284,7 @@ totals.cabrillo = CLAIMED-SCORE: 1544
 == identity
 contest.requested = 131 WWL
 contest.selected = 131 WWL
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWL
 == setup
 active.qsopointmethod = WWLQSOPointMethod
 active.exchange = RSTAndGridExchange
@@ -566,7 +566,7 @@ totals.cabrillo = CLAIMED-SCORE: 1504
 == identity
 contest.requested = 131 WWL
 contest.selected = 131 WWL
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWL
 == setup
 active.qsopointmethod = WWLQSOPointMethod
 active.exchange = RSTAndGridExchange

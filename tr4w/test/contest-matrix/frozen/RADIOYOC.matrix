@@ -2,7 +2,7 @@
 == identity
 contest.requested = 169 RADIOYOC
 contest.selected = 169 RADIOYOC
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioYOC
 == setup
 active.qsopointmethod = ThreePointsPerQSO
 active.exchange = QSONumberAndPreviousQSONumber
@@ -293,7 +293,7 @@ totals.cabrillo = CLAIMED-SCORE: 867
 == identity
 contest.requested = 169 RADIOYOC
 contest.selected = 169 RADIOYOC
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioYOC
 == setup
 active.qsopointmethod = ThreePointsPerQSO
 active.exchange = QSONumberAndPreviousQSONumber
@@ -584,7 +584,7 @@ totals.cabrillo = CLAIMED-SCORE: 867
 == identity
 contest.requested = 169 RADIOYOC
 contest.selected = 169 RADIOYOC
-contest.class = (none -- the legacy engine)
+contest.class = TContestRadioYOC
 == setup
 active.qsopointmethod = ThreePointsPerQSO
 active.exchange = QSONumberAndPreviousQSONumber

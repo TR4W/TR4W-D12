@@ -2,7 +2,7 @@
 == identity
 contest.requested = 111 YBDX
 contest.selected = 111 YBDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestYBDX
 == setup
 active.qsopointmethod = IndonesianQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -299,7 +299,7 @@ totals.cabrillo = CLAIMED-SCORE: 595
 == identity
 contest.requested = 111 YBDX
 contest.selected = 111 YBDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestYBDX
 == setup
 active.qsopointmethod = IndonesianQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -596,7 +596,7 @@ totals.cabrillo = CLAIMED-SCORE: 697
 == identity
 contest.requested = 111 YBDX
 contest.selected = 111 YBDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestYBDX
 == setup
 active.qsopointmethod = IndonesianQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE

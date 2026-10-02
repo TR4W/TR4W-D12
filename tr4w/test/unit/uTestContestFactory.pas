@@ -115,6 +115,10 @@ type
       procedure Test_ARRL160AsksTheDomesticCountryService;
       procedure Test_M7bContestsAreSiblingsOnTheBase;
       procedure Test_CQMOkrugRuleIsTheLiftedHelper;
+      procedure Test_M7bBatch2ContestsAreSiblingsOnTheBase;
+      procedure Test_PortableStationIsTheLiftedHelper;
+      procedure Test_RoPoCoRunningsAreToldApartByMode;
+      procedure Test_M7bBatch2ScoringEdges;
    public
       procedure RunAllTests; override;
    end;
@@ -2020,6 +2024,55 @@ begin
    CheckAgainstArray(OLDNEWYEAR, 'Old New Year');
    CheckAgainstArray(OZCR_O, 'OZCHR teams');
    CheckAgainstArray(OZCR_Z, 'OZCHR');
+
+   (* M7b BATCH 2 (2026-10-02) -- forty more classless contests gained a
+      class. Traps in these rows: most have a BLANK CABName and ADIFName,
+      which resolve to the enum's SPELLING, and several spellings are not the
+      identifier -- RDA is 'RDAC', RFASCHAMPIONSHIPCW 'AS-CHAMP', YODX
+      'YO-DX-HF', BSCI 'BLACK SEA CUP', MAKROTHEN 'MAKROTHEN-RTTY', OKOMSSB
+      'OK-OM DX SSB'. Seven STATE an ADIFName: the RoPoCo pair share
+      'RSGB-ROLO' (and a CABName), Stew Perry, CW Open ('CWOPS-CW-OPEN'), YOTA,
+      SST ('K1USN-SST', CABName 'K1USNSST') and RTC. WA7BNM '0000' is 0. *)
+   CheckAgainstArray(RADIOVHFFD, 'Radio VHF Field Day');
+   CheckAgainstArray(RAEM, 'RAEM');
+   CheckAgainstArray(RDA, 'RDA');
+   CheckAgainstArray(REGION1FIELDDAY, 'Region 1 Field Day');
+   CheckAgainstArray(REGION1FIELDDAY_RCC_CW, 'Region 1 Field Day RCC CW');
+   CheckAgainstArray(REGION1FIELDDAY_RCC_SSB, 'Region 1 Field Day RCC SSB');
+   CheckAgainstArray(RFASCHAMPIONSHIPCW, 'RF AS Championship CW');
+   CheckAgainstArray(RSGB_ROPOCO_CW, 'RSGB RoPoCo CW');
+   CheckAgainstArray(RSGB_ROPOCO_SSB, 'RSGB RoPoCo SSB');
+   CheckAgainstArray(YBDX, 'YB DX');
+   CheckAgainstArray(SOUTHAMERICANWW, 'South American WW');
+   CheckAgainstArray(SPDX, 'SP DX');
+   CheckAgainstArray(STEWPERRY, 'Stew Perry');
+   CheckAgainstArray(TENTEN, 'Ten-Ten');
+   CheckAgainstArray(TOEC, 'TOEC');
+   CheckAgainstArray(UCG, 'UCG');
+   CheckAgainstArray(WWL, 'WWL');
+   CheckAgainstArray(WWPMC, 'WW PMC');
+   CheckAgainstArray(YODX, 'YO DX');
+   CheckAgainstArray(UNDX, 'UN DX');
+   CheckAgainstArray(KINGOFSPAINCW, 'King of Spain CW');
+   CheckAgainstArray(KINGOFSPAINSSB, 'King of Spain SSB');
+   CheckAgainstArray(WRTC, 'WRTC');
+   CheckAgainstArray(R9W_UW9WK_MEMORIAL, 'R9W UW9WK Memorial');
+   CheckAgainstArray(RADIOMEMORY, 'Radio Memory');
+   CheckAgainstArray(REFCW, 'REF CW');
+   CheckAgainstArray(REFSSB, 'REF SSB');
+   CheckAgainstArray(BSCI, 'Black Sea Cup');
+   CheckAgainstArray(CQMM, 'CQMM');
+   CheckAgainstArray(CWOPEN, 'CW Open');
+   CheckAgainstArray(MAKROTHEN, 'Makrothen');
+   CheckAgainstArray(WWIH, 'WWIH');
+   CheckAgainstArray(RADIOYOC, 'Radio YOC');
+   CheckAgainstArray(OKOMSSB, 'OK/OM SSB');
+   CheckAgainstArray(MWC, 'MWC');
+   CheckAgainstArray(IRTS, 'IRTS');
+   CheckAgainstArray(EUDX, 'EUDX');
+   CheckAgainstArray(YOTA, 'YOTA');
+   CheckAgainstArray(SST, 'SST');
+   CheckAgainstArray(RTC, 'RTC');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
@@ -2319,7 +2372,8 @@ end;
    here -- CQ WW, CQ WPX, ARRL DX, Sweepstakes and IARU among them.
 
    DUMMYCONTEST is "no contest" and is skipped. RSGB_ROPOCO_SSB shares its id
-   with the CW running and resolves to it -- see the test below. *)
+   with the CW running and the id alone resolves to it -- see the test below;
+   an ADIF RECORD is then told apart by its mode (Test_RoPoCoRunningsAreToldApartByMode). *)
 procedure TContestFactoryTests.Test_EveryContestResolvesItsOwnADIFId;
 var
    c: ContestType;
@@ -3390,6 +3444,337 @@ begin
       end;
 end;
 
+(* THE FORTY M7b BATCH 2 CLASSES SIT ON TContestBase DIRECTLY -- DECIDED on
+   evidence (design 8.2k): no new family base, and none joins an existing one.
+   UCG scores by the CQ WPX arm and WWIH by the CQ WW RTTY arm, but neither
+   is CQ's contest and both have always exported through the shared arms, so
+   the arms are copies; the CW/SSB pairs (King of Spain, REF, RoPoCo) and the
+   two Region 1 Field Day RCC runnings are siblings while Q7 is open; IRTS
+   and EUDX share a scoring arm by their rows and nothing else. *)
+procedure TContestFactoryTests.Test_M7bBatch2ContestsAreSiblingsOnTheBase;
+const
+   M7B2: array[0..39] of ContestType = (
+      RADIOVHFFD, RAEM, RDA, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
+      REGION1FIELDDAY_RCC_SSB, RFASCHAMPIONSHIPCW, RSGB_ROPOCO_CW,
+      RSGB_ROPOCO_SSB, YBDX, SOUTHAMERICANWW, SPDX, STEWPERRY, TENTEN, TOEC,
+      UCG, WWL, WWPMC, YODX, UNDX, KINGOFSPAINCW, KINGOFSPAINSSB, WRTC,
+      R9W_UW9WK_MEMORIAL, RADIOMEMORY, REFCW, REFSSB, BSCI, CQMM, CWOPEN,
+      MAKROTHEN, WWIH, RADIOYOC, OKOMSSB, MWC, IRTS, EUDX, YOTA, SST, RTC);
+
+   (* M7b ENDS WITH THESE FIVE STILL CLASSLESS, each for a recorded reason:
+      POTA (Q6), the UA4W Championship (Q28), RSGB 1.8 MHz (Q33), IN7QPNE
+      (deferred by NY4I) and DUMMYCONTEST, which is "no contest". *)
+   STILL_CLASSLESS: array[0..4] of ContestType = (
+      DUMMYCONTEST, POTA, UA4WCHAMPIONSHIP, RSGB18, IN7QPNE);
+var
+   i: integer;
+   c: ContestType;
+   obj: TContestBase;
+   classless: integer;
+begin
+   BeginTest('Test_M7bBatch2ContestsAreSiblingsOnTheBase');
+   for i := Low(M7B2) to High(M7B2) do
+      begin
+      obj := MakeContest(M7B2[i]);
+      CheckTrue(obj <> nil, string(ContestTypeSA[M7B2[i]]) + ' has no registered class');
+      if obj = nil then
+         begin
+         Continue;
+         end;
+      try
+         CheckTrue(obj.ClassParent = TContestBase,
+                   string(ContestTypeSA[M7B2[i]]) + ' sits on TContestBase directly');
+         CheckFalse(obj.IsUSQSOParty,
+                    string(ContestTypeSA[M7B2[i]]) + ': P 0, not a US QSO party');
+      finally
+         obj.Free;
+         end;
+      end;
+
+   for i := Low(STILL_CLASSLESS) to High(STILL_CLASSLESS) do
+      begin
+      CheckTrue(ContestClassFor(STILL_CLASSLESS[i]) = nil,
+                string(ContestTypeSA[STILL_CLASSLESS[i]]) + ' is classless on purpose');
+      end;
+
+   (* AND NOTHING ELSE IS. A contest added to the enum without a class fails
+      here, which is the point: it would be scored by the legacy engine. *)
+   classless := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if ContestClassFor(c) = nil then
+         begin
+         inc(classless);
+         end;
+      end;
+   CheckEquals(Length(STILL_CLASSLESS), classless, 'the classless contests are exactly those five');
+end;
+
+(* PORTABLE, LIFTED FROM TREE AT M7b BATCH 2 -- the Region 1 Field Day class and
+   the legacy EuropeanFieldDay arm ask the one function. A single digit, P or M
+   after the last '/' looked through (only two are looked through, as Tree's
+   copy did). *)
+procedure TContestFactoryTests.Test_PortableStationIsTheLiftedHelper;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Score(const aCall: string; const aCountry: string;
+                  aContinent: ContinentType; aBand: BandType): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := aBand;
+      qso.Mode := CW;
+      qso.Callsign := CallString(aCall);
+      qso.QTH.CountryID := CallString(aCountry);
+      qso.QTH.Continent := aContinent;
+      qso.QSOPoints := 99;
+      obj.ScoreQSO(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_PortableStationIsTheLiftedHelper');
+   CheckTrue(PortableStation('G4ABC/P'), 'G4ABC/P is portable');
+   CheckTrue(PortableStation('DL1XYZ/3'), 'a call-area digit is portable');
+   CheckTrue(PortableStation('F5AA/M'), 'mobile counts');
+   CheckTrue(PortableStation('K/G4ABC/P'), 'the second part is looked through');
+   CheckFalse(PortableStation('G4ABC'), 'no slash, not portable');
+   CheckFalse(PortableStation('G4ABC/QRP'), 'a longer suffix is not');
+   CheckFalse(PortableStation('W1AW/MM'), 'nor is maritime mobile');
+
+   obj := MakeContest(REGION1FIELDDAY);
+   CheckTrue(obj <> nil, 'Region 1 Field Day has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyCountry := 'F';
+      station.MyContinent := Europe;
+      obj.SetStation(station);
+      CheckEquals(50, Score('F5AA/P', 'F', Europe, Band20), 'France: a French portable 50');
+      CheckEquals(10, Score('F5AA', 'F', Europe, Band20), 'France: a French fixed station 10');
+      CheckEquals(5, Score('DL1AA/P', 'DL', Europe, Band20), 'France: a European portable 5');
+      CheckEquals(3, Score('W1AW', 'K', NorthAmerica, Band20), 'France: elsewhere 3');
+
+      station.MyCountry := 'G';
+      obj.SetStation(station);
+      CheckEquals(8, Score('DL1AA/P', 'DL', Europe, Band160), 'G: a European portable 4, doubled on 160');
+      CheckEquals(2, Score('DL1AA', 'DL', Europe, Band20), 'G: a European fixed station 2');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* ONE ADIF ID, TWO CONTESTS (design 8.2k). RSGB-ROLO resolves to the CW
+   running by the id alone, as it always has; the record's MODE then picks
+   the running that runs in it. A mode neither runs in keeps the id's answer,
+   and a contest that shares no id is never moved. *)
+procedure TContestFactoryTests.Test_RoPoCoRunningsAreToldApartByMode;
+var
+   cwRunning, ssbRunning: TContestBase;
+   found: ContestType;
+begin
+   BeginTest('Test_RoPoCoRunningsAreToldApartByMode');
+   cwRunning := MakeContest(RSGB_ROPOCO_CW);
+   ssbRunning := MakeContest(RSGB_ROPOCO_SSB);
+   try
+      CheckTrue((cwRunning <> nil) and (ssbRunning <> nil), 'both RoPoCo runnings have a class');
+      if (cwRunning = nil) or (ssbRunning = nil) then
+         begin
+         Exit;
+         end;
+      CheckTrue(cwRunning.RunsInMode(CW), 'the CW running runs in CW');
+      CheckFalse(cwRunning.RunsInMode(Phone), 'the CW running does not run in phone');
+      CheckTrue(ssbRunning.RunsInMode(Phone), 'the SSB running runs in phone');
+      CheckFalse(ssbRunning.RunsInMode(CW), 'the SSB running does not run in CW');
+   finally
+      cwRunning.Free;
+      ssbRunning.Free;
+      end;
+
+   CheckTrue(FindContestByADIFContestId('RSGB-ROLO', found), 'RSGB-ROLO resolves');
+   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(found), 'the id alone answers the CW running');
+
+   CheckEquals(Ord(RSGB_ROPOCO_SSB), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_CW, Phone)),
+               'a phone record is the SSB running''s');
+   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_CW, CW)),
+               'a CW record is the CW running''s');
+   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_SSB, CW)),
+               'from either side');
+   CheckEquals(Ord(RSGB_ROPOCO_CW), Ord(ContestOfADIFRecordMode(RSGB_ROPOCO_CW, Digital)),
+               'a mode neither runs in keeps the id''s answer');
+   CheckEquals(Ord(CQWWCW), Ord(ContestOfADIFRecordMode(CQWWCW, Phone)),
+               'a contest that shares no id is never moved');
+   CheckEquals(Ord(KINGOFSPAINCW), Ord(ContestOfADIFRecordMode(KINGOFSPAINCW, Phone)),
+               'not even a CW contest by a phone record');
+end;
+
+(* THE EDGES OF THE BATCH 2 ARMS THAT A WRONG TRANSCRIPTION WOULD MOVE, each
+   against its LOGSTUFF arm. The matrix scores seventeen QSOs per variant; these
+   are the branches it does not reach. *)
+procedure TContestFactoryTests.Test_M7bBatch2ScoringEdges;
+var
+   obj: TContestBase;
+   station: TStationContext;
+   qso: ContestExchange;
+
+   procedure Use(aContest: ContestType);
+   begin
+      FreeAndNil(obj);
+      obj := MakeContest(aContest);
+      CheckTrue(obj <> nil, string(ContestTypeSA[aContest]) + ' has no registered class');
+      if obj <> nil then
+         begin
+         obj.SetStation(station);
+         end;
+   end;
+
+   procedure Fresh(aBand: BandType; aMode: ModeType; const aCountry: string;
+                   aContinent: ContinentType);
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := aBand;
+      qso.Mode := aMode;
+      qso.QTH.CountryID := CallString(aCountry);
+      qso.QTH.Continent := aContinent;
+      qso.QSOPoints := 99;
+   end;
+
+   function Scored: integer;
+   begin
+      Result := -1;
+      if obj <> nil then
+         begin
+         obj.ScoreQSO(qso);
+         Result := qso.QSOPoints;
+         end;
+   end;
+
+begin
+   BeginTest('Test_M7bBatch2ScoringEdges');
+   obj := nil;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyCountry := 'K';
+      station.MyContinent := NorthAmerica;
+      station.MyGrid := 'FN36';
+
+      (* RTC: off its bands, or off CW and phone, 0 AND no multiplier; on them
+         the haversine tier -- FN36 to DM18 is the rules' 3664.72 km, tier 2. *)
+      Use(RTC);
+      Fresh(Band80, CW, 'K', NorthAmerica);
+      qso.QTHString := 'DM18';
+      CheckEquals(0, Scored, 'RTC 80 m: 0');
+      CheckTrue(qso.InhibitMults, 'RTC 80 m: no multiplier');
+      Fresh(Band20, Digital, 'K', NorthAmerica);
+      qso.QTHString := 'DM18';
+      CheckEquals(0, Scored, 'RTC digital: 0');
+      CheckTrue(qso.InhibitMults, 'RTC digital: no multiplier');
+      Fresh(Band20, Phone, 'K', NorthAmerica);
+      qso.QTHString := 'DM18';
+      CheckEquals(2, Scored, 'RTC FN36 to DM18: 2000-4000 km, 2');
+      CheckFalse(qso.InhibitMults, 'RTC on its bands: multipliers stand');
+
+      (* TEN-TEN: 2 whether a number was sent or not -- design Q46. *)
+      Use(TENTEN);
+      Fresh(Band10, Phone, 'K', NorthAmerica);
+      qso.TenTenNum := $FFFF;
+      CheckEquals(2, Scored, 'Ten-Ten with no number still scores 2');
+
+      (* WRTC and CQMM: off 80-10 m, 0 -- and no InhibitMults. *)
+      Use(WRTC);
+      Fresh(Band160, CW, 'DL', Europe);
+      CheckEquals(0, Scored, 'WRTC 160 m: 0');
+      CheckFalse(qso.InhibitMults, 'WRTC 160 m: the arm sets no InhibitMults');
+      Fresh(Band20, CW, 'DL', Europe);
+      CheckEquals(2, Scored, 'WRTC Europe: 2');
+      Use(CQMM);
+      Fresh(Band160, CW, 'DL', Europe);
+      CheckEquals(0, Scored, 'CQMM 160 m: 0');
+      Fresh(Band40, CW, 'DL', Europe);
+      CheckEquals(6, Scored, 'CQMM another continent on 40 m: 3, doubled');
+      Fresh(Band20, CW, 'K', NorthAmerica);
+      qso.QTHString := 'SAM';
+      CheckEquals(10, Scored, 'CQMM a QTH ending M: 10');
+
+      (* STEW PERRY: the entrant's power. Two equal grids are 0 km, 1 point. *)
+      Use(STEWPERRY);
+      Fresh(Band160, CW, 'K', NorthAmerica);
+      qso.DomesticQTH := 'FN36';
+      CheckEquals(1, Scored, 'Stew Perry high power: 1');
+      station.MyPower := cpQRP;
+      Use(STEWPERRY);
+      Fresh(Band160, CW, 'K', NorthAmerica);
+      qso.DomesticQTH := 'FN36';
+      CheckEquals(3, Scored, 'Stew Perry QRP: 3');
+      station.MyPower := cpLOW;
+      Use(STEWPERRY);
+      Fresh(Band160, CW, 'K', NorthAmerica);
+      qso.DomesticQTH := 'FN36';
+      CheckEquals(2, Scored, 'Stew Perry low power: Round(1.5), 2');
+      Fresh(Band160, CW, 'K', NorthAmerica);
+      CheckEquals(1, Scored, 'Stew Perry with no received grid: 1');
+      station.MyPower := cpHIGH;
+
+      (* MWC: the multiplier is the call's last character, or the one before
+         a '/' followed by a letter. *)
+      Use(MWC);
+      Fresh(Band80, CW, 'OK', Europe);
+      qso.Callsign := 'OK1ABC';
+      CheckEquals(1, Scored, 'MWC: 1');
+      CheckEquals('C', string(qso.DomMultQTH), 'MWC: the last character');
+      Fresh(Band80, CW, 'OK', Europe);
+      qso.Callsign := 'OK2/DL1AB';
+      Scored;
+      CheckEquals('2', string(qso.DomMultQTH), 'MWC: the character before /D');
+
+      (* YOTA: the age is the multiplier and picks the points. *)
+      Use(YOTA);
+      Fresh(Band80, CW, 'K', NorthAmerica);
+      qso.Age := 15;
+      CheckEquals(12, Scored, 'YOTA age 15: 12');
+      CheckEquals('15', string(qso.DomMultQTH), 'YOTA: the age is the multiplier');
+      Fresh(Band80, CW, 'DL', Europe);
+      qso.Age := 30;
+      CheckEquals(3, Scored, 'YOTA over 25, another continent: 3');
+
+      (* RDA: a Russian portable worked by a Russian, 10. *)
+      station.MyCountry := 'UA';
+      station.MyContinent := Europe;
+      Use(RDA);
+      Fresh(Band40, CW, 'UA', Europe);
+      qso.Callsign := 'UA3ABC/P';
+      CheckEquals(10, Scored, 'RDA: a Russian portable, 10');
+      Fresh(Band40, CW, 'UA9', Asia);
+      qso.Callsign := 'UA9ABC';
+      CheckEquals(2, Scored, 'RDA: a Russian on another continent, 2');
+
+      (* REF: only a French station scores. *)
+      Use(REFCW);
+      Fresh(Band40, CW, 'DL', Europe);
+      CheckEquals(0, Scored, 'REF: not French, 0');
+      Fresh(Band40, CW, 'F', Europe);
+      CheckEquals(1, Scored, 'REF: French on our continent, 1');
+
+      (* EUDX: the arm's DomMultQTH[4] <> '' -- design Q45. With MY STATE not
+         a four-character region, a station from another country on our
+         continent scores as an EU station. *)
+      station.MyCountry := 'K';
+      station.MyContinent := NorthAmerica;
+      station.MyState := 'KS';
+      Use(EUDX);
+      Fresh(Band20, CW, 'VE', NorthAmerica);
+      CheckEquals(10, Scored, 'EUDX: the EU test is never false (Q45)');
+   finally
+      obj.Free;
+      end;
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -3444,6 +3829,10 @@ begin
    Test_ARRL160AsksTheDomesticCountryService;
    Test_M7bContestsAreSiblingsOnTheBase;
    Test_CQMOkrugRuleIsTheLiftedHelper;
+   Test_M7bBatch2ContestsAreSiblingsOnTheBase;
+   Test_PortableStationIsTheLiftedHelper;
+   Test_RoPoCoRunningsAreToldApartByMode;
+   Test_M7bBatch2ScoringEdges;
 end;
 
 end.

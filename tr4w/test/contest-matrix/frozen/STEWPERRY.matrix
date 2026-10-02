@@ -2,7 +2,7 @@
 == identity
 contest.requested = 116 STEWPERRY
 contest.selected = 116 STEWPERRY
-contest.class = (none -- the legacy engine)
+contest.class = TContestStewPerry
 == setup
 active.qsopointmethod = StewPerryQSOPointMethod
 active.exchange = RSTAndOrGridExchange
@@ -267,7 +267,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 116 STEWPERRY
 contest.selected = 116 STEWPERRY
-contest.class = (none -- the legacy engine)
+contest.class = TContestStewPerry
 == setup
 active.qsopointmethod = StewPerryQSOPointMethod
 active.exchange = RSTAndOrGridExchange
@@ -532,7 +532,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 116 STEWPERRY
 contest.selected = 116 STEWPERRY
-contest.class = (none -- the legacy engine)
+contest.class = TContestStewPerry
 == setup
 active.qsopointmethod = StewPerryQSOPointMethod
 active.exchange = RSTAndOrGridExchange

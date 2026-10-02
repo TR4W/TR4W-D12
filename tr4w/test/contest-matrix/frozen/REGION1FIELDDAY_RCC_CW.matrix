@@ -2,7 +2,7 @@
 == identity
 contest.requested = 101 REGION1FIELDDAY_RCC_CW
 contest.selected = 101 REGION1FIELDDAY_RCC_CW
-contest.class = (none -- the legacy engine)
+contest.class = TContestRegion1FieldDayRCCCW
 == setup
 active.qsopointmethod = RegionOneFieldDayRCCQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -298,7 +298,7 @@ totals.cabrillo = CLAIMED-SCORE: 714
 == identity
 contest.requested = 101 REGION1FIELDDAY_RCC_CW
 contest.selected = 101 REGION1FIELDDAY_RCC_CW
-contest.class = (none -- the legacy engine)
+contest.class = TContestRegion1FieldDayRCCCW
 == setup
 active.qsopointmethod = RegionOneFieldDayRCCQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -594,7 +594,7 @@ totals.cabrillo = CLAIMED-SCORE: 714
 == identity
 contest.requested = 101 REGION1FIELDDAY_RCC_CW
 contest.selected = 101 REGION1FIELDDAY_RCC_CW
-contest.class = (none -- the legacy engine)
+contest.class = TContestRegion1FieldDayRCCCW
 == setup
 active.qsopointmethod = RegionOneFieldDayRCCQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE

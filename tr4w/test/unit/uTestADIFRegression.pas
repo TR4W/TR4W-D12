@@ -227,9 +227,11 @@ end;
      POTA, GENERALQSO export writes NO CONTEST_ID at all, so there is nothing
                       to read back -- asserted absent.
      RSGB_ROPOCO_SSB  shares 'RSGB-ROLO' with the CW running, the one current
-                      id two rows hold, so it reads back as CW. Import has
-                      always resolved it so; telling them apart needs the
-                      MODE, which is M5's import work, not an id. *)
+                      id two rows hold. Since M7b batch 2 the import tells
+                      them apart by the record's MODE (RunsInMode,
+                      ContestOfADIFRecordMode), so the SSB running round-trips
+                      too -- exported as a PHONE QSO, which is what it is. It
+                      read back as CW before. *)
 procedure TADIFRegressionTests.Test_ContestID_EveryContestReimportsItsOwnExport;
 var
    c        : ContestType;
@@ -253,6 +255,10 @@ begin
       rec.ceContest := c;
       rec.Band      := Band20;
       rec.Callsign  := 'KG1S';
+      if c = RSGB_ROPOCO_SSB then
+         begin
+         rec.Mode := Phone;
+         end;
       s := EmitADIFRecord(rec) + '<EOR>';
 
       if c in [POTA, GENERALQSO] then
@@ -271,10 +277,6 @@ begin
          end;
 
       expected := c;
-      if c = RSGB_ROPOCO_SSB then
-         begin
-         expected := RSGB_ROPOCO_CW;
-         end;
       CheckEquals(Ord(expected), Ord(records[0].ceContest),
                   who + ' read back as ' +
                   string(ContestTypeSA[records[0].ceContest]) + ' -- wrote: ' + s);
@@ -285,8 +287,9 @@ begin
       end;
 
    (* A FLOOR, so the loop cannot pass by checking nothing: every contest but
-      the four exceptions above round-trips to itself. *)
-   CheckEquals(Ord(High(ContestType)) + 1 - 4, resolved,
+      the three exceptions above (DUMMYCONTEST, POTA, GENERALQSO) round-trips
+      to itself. *)
+   CheckEquals(Ord(High(ContestType)) + 1 - 3, resolved,
                'contests whose own export reads back to them');
 end;
 

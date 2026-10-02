@@ -2,7 +2,7 @@
 == identity
 contest.requested = 143 WRTC
 contest.selected = 143 WRTC
-contest.class = (none -- the legacy engine)
+contest.class = TContestWRTC
 == setup
 active.qsopointmethod = WRTCQSOPointMethod
 active.exchange = RSTZoneOrSocietyExchange
@@ -300,7 +300,7 @@ totals.cabrillo = CLAIMED-SCORE: 1003
 == identity
 contest.requested = 143 WRTC
 contest.selected = 143 WRTC
-contest.class = (none -- the legacy engine)
+contest.class = TContestWRTC
 == setup
 active.qsopointmethod = WRTCQSOPointMethod
 active.exchange = RSTZoneOrSocietyExchange
@@ -598,7 +598,7 @@ totals.cabrillo = CLAIMED-SCORE: 1003
 == identity
 contest.requested = 143 WRTC
 contest.selected = 143 WRTC
-contest.class = (none -- the legacy engine)
+contest.class = TContestWRTC
 == setup
 active.qsopointmethod = WRTCQSOPointMethod
 active.exchange = RSTZoneOrSocietyExchange

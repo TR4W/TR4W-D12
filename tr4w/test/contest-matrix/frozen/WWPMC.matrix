@@ -2,7 +2,7 @@
 == identity
 contest.requested = 132 WWPMC
 contest.selected = 132 WWPMC
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWPMC
 == setup
 active.qsopointmethod = WWPMCQSOPointMethod
 active.exchange = RSTZoneOrSocietyExchange
@@ -290,7 +290,7 @@ totals.cabrillo = CLAIMED-SCORE: 1000
 == identity
 contest.requested = 132 WWPMC
 contest.selected = 132 WWPMC
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWPMC
 == setup
 active.qsopointmethod = WWPMCQSOPointMethod
 active.exchange = RSTZoneOrSocietyExchange
@@ -578,7 +578,7 @@ totals.cabrillo = CLAIMED-SCORE: 960
 == identity
 contest.requested = 132 WWPMC
 contest.selected = 132 WWPMC
-contest.class = (none -- the legacy engine)
+contest.class = TContestWWPMC
 == setup
 active.qsopointmethod = WWPMCQSOPointMethod
 active.exchange = RSTZoneOrSocietyExchange

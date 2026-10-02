@@ -2,7 +2,7 @@
 == identity
 contest.requested = 115 SPDX
 contest.selected = 115 SPDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestSPDX
 == setup
 active.qsopointmethod = ThreePointsPerQSO
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -289,7 +289,7 @@ totals.cabrillo = CLAIMED-SCORE: 408
 == identity
 contest.requested = 115 SPDX
 contest.selected = 115 SPDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestSPDX
 == setup
 active.qsopointmethod = ThreePointsPerQSO
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -576,7 +576,7 @@ totals.cabrillo = CLAIMED-SCORE: 408
 == identity
 contest.requested = 115 SPDX
 contest.selected = 115 SPDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestSPDX
 == setup
 active.qsopointmethod = ThreePointsPerQSO
 active.exchange = RSTDomesticQTHOrQSONumberExchange

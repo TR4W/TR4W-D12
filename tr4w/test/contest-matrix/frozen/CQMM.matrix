@@ -2,7 +2,7 @@
 == identity
 contest.requested = 153 CQMM
 contest.selected = 153 CQMM
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQMM
 == setup
 active.qsopointmethod = CQMMQSOPointMethod
 active.exchange = RSTAndContinentExchange
@@ -298,7 +298,7 @@ totals.cabrillo = CLAIMED-SCORE: 540
 == identity
 contest.requested = 153 CQMM
 contest.selected = 153 CQMM
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQMM
 == setup
 active.qsopointmethod = CQMMQSOPointMethod
 active.exchange = RSTAndContinentExchange
@@ -594,7 +594,7 @@ totals.cabrillo = CLAIMED-SCORE: 684
 == identity
 contest.requested = 153 CQMM
 contest.selected = 153 CQMM
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQMM
 == setup
 active.qsopointmethod = CQMMQSOPointMethod
 active.exchange = RSTAndContinentExchange

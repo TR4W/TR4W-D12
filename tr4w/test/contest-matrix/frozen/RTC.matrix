@@ -2,7 +2,7 @@
 == identity
 contest.requested = 184 RTC
 contest.selected = 184 RTC
-contest.class = (none -- the legacy engine)
+contest.class = TContestRTC
 == setup
 active.qsopointmethod = RTCQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -287,7 +287,7 @@ totals.cabrillo = CLAIMED-SCORE: 32
 == identity
 contest.requested = 184 RTC
 contest.selected = 184 RTC
-contest.class = (none -- the legacy engine)
+contest.class = TContestRTC
 == setup
 active.qsopointmethod = RTCQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -572,7 +572,7 @@ totals.cabrillo = CLAIMED-SCORE: 32
 == identity
 contest.requested = 184 RTC
 contest.selected = 184 RTC
-contest.class = (none -- the legacy engine)
+contest.class = TContestRTC
 == setup
 active.qsopointmethod = RTCQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange

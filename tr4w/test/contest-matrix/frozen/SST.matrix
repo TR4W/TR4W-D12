@@ -2,7 +2,7 @@
 == identity
 contest.requested = 183 SST
 contest.selected = 183 SST
-contest.class = (none -- the legacy engine)
+contest.class = TContestSST
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = NameAndDomesticOrDXQTHExchange
@@ -290,7 +290,7 @@ totals.cabrillo = CLAIMED-SCORE: 153
 == identity
 contest.requested = 183 SST
 contest.selected = 183 SST
-contest.class = (none -- the legacy engine)
+contest.class = TContestSST
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = NameAndDomesticOrDXQTHExchange
@@ -578,7 +578,7 @@ totals.cabrillo = CLAIMED-SCORE: 153
 == identity
 contest.requested = 183 SST
 contest.selected = 183 SST
-contest.class = (none -- the legacy engine)
+contest.class = TContestSST
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = NameAndDomesticOrDXQTHExchange

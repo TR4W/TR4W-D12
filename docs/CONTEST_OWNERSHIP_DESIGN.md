@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M7a built, M7b in progress; see §8.2)
+# What a contest owns -- DESIGN (M0-M7b built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -67,13 +67,13 @@ lives in a helper or in the format's own unit.
 | per-QSO points | the class, for every registered contest (`logstuff.CalculateQSOPoints` hands over to `ScoreQSO` and `Exit`s) | `ScoreQSO`, the one public entry point, over the protected `CalculateQSOPoints` (**existing**, M3, §7.7) |
 | dupe policy (does a repeated contact get marked as a dupe) | the class, asked by `logsubs2` through `ContestIdentity` (M3) | `MarksDupes` (**existing**) |
 | the bands it uses (an off-band QSO is logged, scores 0, earns no multiplier) | the class; base says every band | `UsesBand` (**existing**, §7.4) |
-| identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity` | existing properties (**existing**) |
+| identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity`. An ADIF id two contests share (RSGB-ROLO) is told apart by the record's MODE once the record is read (M7b batch 2, §8.2k) | existing properties (**existing**); `RunsInMode` (M7b batch 2) |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
 | exchange parsing and validation | **the class, for every contest** (M5b, done 2026-10-02): `logstuff.ProcessExchange` asks it after the contest-blind gate; the base parses the session's shape through the engine's `ParseExchangeShape`, handed in as data. The UA4W Championship's rule stays named in LOGSTUFF (§8.2g) | `ParseReceivedExchange`, `MayBeACallsign`, `InitialExchangeFromCall` (**existing**), plus the validators |
 | ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. POTA still named in PostUnit's tail (§8.2e); ARRL 160 left it at M7b (§8.2j) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
 | ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. POTA still keeps an arm in `MainUnit.ApplyClasslessADIFImport` (§8.2f); ARRL 160's moved to its class at M7b (§8.2j) | `ApplyADIFImport` (**existing**, §3.2) |
 | Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; headers and mode string: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` (M9) |
-| session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. The classless contests keep their arm until they gain a class (M7b; batch 1, thirty-nine contests, done 2026-10-02, §8.2j) | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
+| session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` keeps only the arms of POTA and the UA4W Championship, classless on purpose | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | `logdupe`, `logedit`, `uMults` | contest virtuals, named as each moves (`MultiplierValue`, `MarksDupes`, ...) |
 | summary sheet, totals window, new-contest prompts | `postunit`, `uTotal`, `uNewContest` | `SummarySheetMultColumns`, `TotalsDisplay`, `NewContestPrompts` |
@@ -163,7 +163,9 @@ TContestBase
 +-- TContestPOTA, TContestGeneralQSO      section 6 (POTA not built)
 +-- the M7b classes -- CQ WPX RTTY, CQ WW RTTY, 7QP, NEQP, the JIDX, All
 |   Asian and Oceania pairs, the EU Sprints, the ARRL VHF runnings and the
-|   rest -- each directly: no family, DECIDED on evidence (§8.2j)
+|   rest -- each directly: no family, DECIDED on evidence (§8.2j); batch 2's
+|   forty the same -- UCG and WWIH copy CQ's arms, the King of Spain, REF,
+|   RoPoCo and Region 1 RCC pairs are siblings (§8.2k)
 +-- every other contest, directly -- 24 of the 25 former TContestFixedPoints
     subclasses among them (the 25th was TContestARRLSSBase), each calling
     FixedModePoints
@@ -981,7 +983,7 @@ Each is behaviour-preserving unless marked.
 | **M5b** | **DONE 2026-10-02 (§8.2g).** **Exchange parse.** `ParseReceivedExchange` per contest, the base reaching the engine's shape parsers through the session as data; the matrix gained a `parse` section first. Seven contests gained classes; D1/D2 deleted; NY4I's 7.10 refusals; Field Day DX export and import (Q20, Q25); `nc_cty.dom` to the sponsor's counties (Q14). UA4W stays named in LOGSTUFF, with its reason | the matrix's `parse` section; `uTestContestParse`; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **DONE 2026-10-02 (§8.2h).** **Total score.** The matrix gained a `totals` section first. `TScoreTotals`, the read-only view, `FinalScore` = `CombineScore` + `BonusPoints`; `TotalScore`'s arms deleted but RSGB 1.8's (Q33); nine contests gained classes; Missouri moved with its live tally preserved (Q32); the NC sweep, the Salmon Run W7DX bonus (Q5) and Idaho's dormant county implemented | corpus `CLAIMED-SCORE`; the matrix's `totals` section; `uTestContestTotals` |
 | **M7a** | **DONE 2026-10-02 (§8.2i).** **Session arms of the registered contests.** `DescribeSession` filling a `TSessionDefaults`, one applier (`FCONTEST.ApplySessionDefaults`); all 55 arms naming a registered contest moved and were deleted; LogCfg's CQ-exchange defaults became `CQExchangeDefault`; D8 resolved by stating both branches; Winter Field Day's DX multiplier row and class made the effective value. No contest gained a class | the matrix (185 identical, no re-freeze); corpus; `uTestContestSession` |
-| **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. Left: the second half of the enum, and the held contests (POTA Q6, UA4W Q28, RSGB 1.8 Q33, IN7QPNE) | the matrix (only `contest.class =` moves); the arm count ratchets to 0 |
+| **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE (NY4I) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
 | **M8** | **Multipliers and dupes**, as contest virtuals | corpus `CLAIMED-SCORE`; legacy fixture |
 | **M9** | **UI and the rest.** `NewContestPrompts`, `TotalsDisplay`, `SummarySheetMultColumns`, Cabrillo headers and mode string | bench (no automated gate sees the UI) |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
@@ -2206,6 +2208,158 @@ Field Day in PostUnit's Cabrillo-header location check, and the New Contest
 dialog's prompts (`uNewContest`) -- each a seam not built yet (M9), where
 registered contests are still named too.
 
+### 8.2k M7b batch 2 -- what it covered (2026-10-02)
+
+**Forty classless contests gained a class** -- every contest left classless
+after batch 1 but the five that stay so on purpose: POTA (Q6), the UA4W
+Championship (Q28), RSGB 1.8 MHz (Q33), IN7QPNE (deferred by NY4I) and
+DUMMYCONTEST. Measured, not listed: the enum minus every `RegisterContest`
+call, comments stripped, is exactly those five now
+(`Test_M7bBatch2ContestsAreSiblingsOnTheBase` holds it). Each class states its
+row and transcribes every legacy arm that named it -- its scoring arm, its
+`FoundContest` arm (now `DescribeSession`) and its LogCfg CQ-exchange arm (now
+`CQExchangeDefault`) -- and each moved arm is deleted. NY4I approved the batch
+and delegated its design forks; each DECIDED entry rests on its evidence.
+
+The contests: Radio VHF FD, RAEM, RDA, Region 1 Field Day and its RCC CW/SSB
+runnings, AS-CHAMP (RFAS CW), RSGB RoPoCo CW/SSB, YB DX, South American WW, SP
+DX, Stew Perry, Ten-Ten, TOEC, UCG, WWL, WW PMC, YO DX, UN DX, King of Spain
+CW/SSB, WRTC, R9W-UW9WK Memorial, Radio Memory, REF CW/SSB, Black Sea Cup,
+CQMM, CW Open, Makrothen, WWIH, Radio YOC, OK/OM SSB, MWC, IRTS, EUDX, YOTA,
+SST and RTC.
+
+**DECIDED: NO NEW FAMILY BASE, AND NONE JOINS AN EXISTING ONE.** All forty
+sit on `TContestBase`.
+
+- **UCG scores by the CQ WPX arm and WWIH by the CQ WW RTTY arm, and neither
+  joins the class that owns that arm.** `TContestCQWPXBase` is CQ's two
+  runnings under CQ's rules, its own Cabrillo and ADIF columns among them;
+  UCG has always exported through the shared RST-and-serial arm. WWIH's arm
+  is `TContestCQWWRTTY`'s, a batch-1 sibling of another sponsor. Each arm is
+  a COPY its contest owns (�1.4).
+- **The pairs are siblings while Q7 is open** -- King of Spain CW/SSB and REF
+  CW/SSB (identical rows bar names and ids), RSGB RoPoCo CW/SSB (one shared
+  set-up arm), and the two Region 1 Field Day RCC runnings (identical rows).
+  The plain Region 1 Field Day scores by another arm (each society's table)
+  and is no family with them. **IRTS and EUDX** share a scoring arm by their
+  rows and nothing else -- another sponsor, another set-up -- so they are
+  copies. **OK/OM SSB** is not the OK/OM DX class's sibling: that one scores
+  by `OKDXQSOPointMethod`.
+
+**DECIDED: THE LAST SESSION VALUES THE ARMS WROTE JOIN `TSessionDefaults`**, by
+M7a's growth rule, each with its line in `FCONTEST.ApplySessionDefaults`:
+
+- `InitialExchangeCursorAtStart` (IRTS, RAEM) -- LOGWIND's
+  `InitialExchangeCursorPos := AtStart`. A flag, not the engine's
+  `InitialExchangeCursorPosType`, which is TRDOS's to declare; the applier
+  writes the global, exactly what the arm wrote (not the setting).
+- `DXCCMultByBand` (CQMM's `dmbbAllBand`), the DXCC twin of
+  `DomesticMultByBand`.
+- **Caption memories** (`smbExchangeCaption`, `SetExchangeCaptionMemory`) -- the
+  RTC arm captioned exchange F4 `NR` and F5 `Cl+Ex` through
+  `SetEXCaptionMemoryString`. In the same ordered memory list, so they apply
+  after the memories they label, as in the arm.
+
+**DECIDED: `PortableStation` IS LIFTED, NOT HANDED IN.** The Region 1 Field
+Day's arm calls `Tree.PortableStation`, a pure function of the call. It is
+`uCallSignRoutines.PortableStation(const aCall: string)` now, line for line,
+and Tree's copy is deleted -- the legacy arm has one caller of the one
+function (`Test_PortableStationIsTheLiftedHelper`). No other batch-2 rule
+needed an engine fact: every station fact the arms read (`Settings.My.Country`,
+`MyContinent`, MY STATE / GRID / NAME, CATEGORY-POWER) was already on
+`TStationContext`, and LOGGRID (`GetDistanceBetweenGrids`, `RTCGridDistance`,
+`LooksLikeAGeoCoordinates`) is the helper the grid classes already call.
+
+**DECIDED: THE RSGB RoPoCo RUNNINGS ARE TOLD APART ON IMPORT BY THE RECORD'S
+MODE -- a behaviour change, made on purpose.** ADIF's id for both is
+`RSGB-ROLO` (ADIF's own definition), and the id alone has always resolved to
+the CW running -- so a phone QSO TR4W exported for the SSB running imported
+to the CW one (`uTestADIFRegression` carried it as its one exception). With
+both classes in place a contest can say which modes it is:
+`TContestBase.RunsInMode` (base: every mode; the CW running `CW`, the SSB
+running `Phone`). `uContestRegistry.ContestOfADIFRecordMode` asks the
+contests that share the resolved contest's id, in enum order, which runs in
+the record's mode; the first is the answer, and when none does the id's own
+answer stands. `uADIF.ApplyADIFFieldsToExchange` asks it once the whole
+record is read (so tag order cannot matter), and only for a contest that
+came FROM the id. `FindContestByADIFContestId` is unchanged: an id alone
+still answers the CW running. A contest that shares no id cannot move --
+the base runs in every mode. Considered and rejected: refining in
+`ApplyADIFImport` (a class re-pointing a record to its sibling, by name); and
+resolving by the open session's contest (not a fact of the record).
+`RunsInMode` is an identity question only; it scores nothing.
+
+**What the matrix shows for it, verified line by line by script:** in the two
+RoPoCo records, and nowhere else, 30 import lines each moved -- the ten phone
+imports (FM included) in each of three variants -- and each moved ONLY in its
+`contest=` token: the CW record's phone imports now resolve to the SSB
+running, the SSB record's now resolve to itself. The CW record moves too
+because it exports phone QSOs under the same id; that is the rule working,
+not a leak. The round-trip test covers both runnings (the SSB running is
+exported as a phone QSO).
+
+**ONE TRANSCRIPTION CHOSE WHAT THE CODE DOES OVER HOW IT READ.** Ten-Ten's arm
+is `if TenTenNum <> -1 then 2 else 1`, and `TenTenNum` is a Word whose "no
+number" is MAXWORD: the comparison is never false (FPC: "Comparison might be
+always true", one of the four range warnings the build ratchets), so every
+Ten-Ten QSO has scored 2. The class says `QSOPoints := 2` and records why, so
+the range ceiling did not rise; the legacy arm keeps its warning until M10.
+What the rule should be is Q46.
+
+**Transcribed, not judged, and recorded in each class:** EUDX and IRTS test
+"he is in the EU" as `DomMultQTH[4] <> ''`, a character against the empty
+string -- never equal, so every QSO scores as with an EU station (the frozen
+matrix: 10 for all seventeen; Q45). RTC's arm keeps its own band and mode
+rule (0 and `InhibitMults`); CQMM's and WRTC's score 0 off 80-10 m and still
+earn multipliers -- none states `UsesBand` (Q44). MWC walks a ten-character
+copy of the call to the call's full length; the Region 1 Field Day reads MY
+COUNTRY's first character without a length check; the RCC runnings score 4
+for a one-character call -- all as the arms did (Q47). IRTS scores by
+`EUDXQSOPointMethod`, its row's, not by `IRTSQSOPointMethod`, which only an
+operator's `QSO POINT METHOD` line reaches (inventory D3).
+
+**Design Q37 reaches four of these classes**: Radio VHF FD and Makrothen (an
+empty received grid, whenever MY GRID is set), Stew Perry and WWL (a received
+grid of one to three characters). RTC is not reached: `GridHaversineKm`
+bounds a short grid. The grid handling is untouched and each class says so.
+
+**Not changed, on purpose -- seams not built yet:** WRTC's three display
+rules (the main menu, `OpenTR4WWindow`, LOGEDIT's Super Check Partial) and its
+score-posting multipliers in LOGSUBS2 (M9); YB DX in `MainUnit.ParametersOkay`'s
+Indonesian-district prefix rule, RDA and YO DX in LOGEDIT's new-multiplier
+check, and RDA beside the Russian DX contests in LOGEDIT's initial-exchange
+fallback (M8 -- the Russian DX contests, registered since M5b, are named in
+the same routines); Radio YOC in MainUnit's log loader (the previous received
+number -- engine state, not a rule); SST, CW Open and RTC in
+`uExchangeBuilder`'s HamScore exchanges (M9, beside fourteen registered
+contests); and the New Contest dialog's prompts (`uNewContest`, M9). The
+`TENTEN` in LOGSCP, LOGWIND and LOGEDIT is TRMASTER's Ten-Ten field and the
+`'RAEM'` in `IsAGoodCall` a callsign -- neither is the contest.
+
+**Transcription notes.** The generator that wrote the forty units parsed each
+row out of `VC.pas`; several enum spellings are not their identifier (RDA
+`RDAC`, RFASCHAMPIONSHIPCW `AS-CHAMP`, YODX `YO-DX-HF`, BSCI `BLACK SEA CUP`,
+MAKROTHEN `MAKROTHEN-RTTY`, OKOMSSB `OK-OM DX SSB`), and
+`Test_MovedRowValuesStillMatchTheArray` holds all forty. The commented-out
+FoundContest arms for REFCW and RADIOMEMORY were deleted with the live ones,
+and LogCfg's commented `JTDX, REGION1FIELDDAY, ...` line and its now-unused
+`Grid` local (MAKROTHEN's) with them. BSCI's `Val` of MY ZONE is
+`Station.MyZone`, the IARU class's precedent (FPC's `Val` gives 0 on failure,
+as the snapshot does).
+
+**Gates, run 2026-10-02 on a full build.** The contest matrix: **145
+identical, 40 differing**; compared with `contest.class =` excluded, by script,
+38 records are identical and the two RoPoCo records differ only in their 30
+phone import lines' `contest=` token each (above); no record outside the
+batch moved. Re-freeze the 40 for that reason. Golden corpus **24 passed, 0
+failed, 2 known-divergence, every export exit 0** (13 sets);
+`test-adif-roundtrip.sh` **13 passed**; unit tests **0 failed** (46,161
+passed). `Lint-ContestNameTests` 189 -> 161: fcontest 25 -> 2, logcfg 6 -> 1;
+its floor 150 -> 130. Narrowing 1289 -> 1287 (Tree's `PortableStation`), range
+4 -> 4.
+
+**Questions this raised -- NY4I's:** Q44-Q47 (§9).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -2385,6 +2539,29 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     names -- the NRAU-Baltic shape exactly), All Asian CW/SSB, Oceania CW/SSB,
     the four EU Sprints and the three ARRL VHF runnings are siblings (copies)
     until Q7 is answered. Which, if any, are one contest under one rule?
+
+- **Q44-Q47** (M7b batch 2):
+  - **Q44** Three contests state their bands inside the scoring arm, not as
+    `UsesBand`. RTC scores 0 AND inhibits the multiplier off 40/20/15/10 m
+    and off CW/phone; CQMM (off 80-10 m) and WRTC (off 80-10 m) score 0 but
+    still EARN the multiplier. NY4I's off-band ruling (7.4) is 0 points and
+    no multiplier. Should each state `UsesBand` (RTC also a mode rule), which
+    changes CQMM's and WRTC's multipliers for an off-band QSO?
+  - **Q45** EUDX and IRTS test "is the worked station in the EU" as
+    `DomMultQTH[4] <> ''` -- a character against the empty string, never
+    equal -- so every QSO scores as an EU contact (10, or 2 for our own
+    country when we are in an EU region). The sponsor's table needs a real
+    EU test. What should it read (the domestic file's region code?), and
+    is the fix wanted now (a re-freeze of both contests)?
+  - **Q46** Ten-Ten scores 2 for every QSO: its arm's `TenTenNum <> -1` is
+    never false on a Word. The intent reads "2 with a Ten-Ten number, 1
+    without" (`<> MAXWORD`). Fix it (a behaviour change for QSOs with no
+    number)?
+  - **Q47** Three preserved read-past shapes, harmless for real calls: MWC
+    walks a ten-character copy of the call to the call's full length; the
+    Region 1 Field Day reads MY COUNTRY's first character with no length
+    check; the RCC runnings score 4 for a one-character call. Bound them when
+    each contest is next touched (no scored QSO moves)?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

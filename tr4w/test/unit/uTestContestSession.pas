@@ -66,6 +66,9 @@ type
       procedure Test_JIDXDescribesBothSidesAndRefusesZoneMessages;
       procedure Test_M7bStationChoicesAreStatedPerSide;
       procedure Test_M7bCQExchangeDefaults;
+      procedure Test_M7bBatch2StationChoicesAreStatedPerSide;
+      procedure Test_M7bBatch2MessagesMemoriesAndCaptions;
+      procedure Test_M7bBatch2CQExchangeDefaults;
    end;
 
 implementation
@@ -199,8 +202,11 @@ begin
       end;
    (* A FLOOR, so the loop cannot pass by finding nothing to check. M7b
       batch 1 left 45 classless (DUMMYCONTEST among them), down from 84;
-      the floor follows the work down, and goes when M7b ends. *)
-   CheckTrue(classless > 40, 'fewer than 40 classless contests were checked');
+      batch 2 left the five that stay classless on purpose -- DUMMYCONTEST,
+      POTA, the UA4W Championship, RSGB 1.8 MHz and IN7QPNE
+      (uTestContestFactory.Test_M7bBatch2ContestsAreSiblingsOnTheBase holds
+      the list). *)
+   CheckTrue(classless >= 5, 'fewer than five classless contests were checked');
 end;
 
 (* EVERY VALUE HAS THREE STATES. A stated False, a stated empty text and a
@@ -236,6 +242,18 @@ begin
       CheckEquals('SECOND', memory.Text, 'and it is the later value');
       memory := session.Memory(1);
       CheckTrue(memory.Bank = smbExchange, 'the second is an exchange memory');
+
+      (* M7b batch 2's two values: a stated False cursor and a stated first
+         member are stated; a caption is a memory in the same ordered list. *)
+      session.InitialExchangeCursorAtStart := False;
+      session.DXCCMultByBand := Low(TAdditionalMultByBand);
+      CheckTrue(session.IsStated(svInitialExchangeCursorAtStart), 'a stated False cursor is stated');
+      CheckTrue(session.IsStated(svDXCCMultByBand), 'a stated first DXCC-by-band is stated');
+      session.SetExchangeCaptionMemory(CW, smkF4, 'NR');
+      CheckEquals(4, session.MemoryCount, 'a caption joins the memories');
+      memory := session.Memory(3);
+      CheckTrue(memory.Bank = smbExchangeCaption, 'the fourth is a caption');
+      CheckEquals('NR', memory.Text, 'and it says NR');
 
       session.AddDomesticCountries(DomesticCountriesKVE);
       session.AddDomesticCountry('KL');
@@ -705,6 +723,189 @@ begin
    CheckEquals('', RepeatDefault(ARRL160, KansasStation), 'only the EU Sprints offer a repeat');
 end;
 
+(* M7b BATCH 2 -- THE ARMS THAT CHOSE BY THE STATION STATE ONE SIDE EACH, as
+   the arm did: the South American WW both ways on the continent; IRTS, RDA and
+   CQMM one way (the other side leaves the head's value). *)
+procedure TContestSessionTests.Test_M7bBatch2StationChoicesAreStatedPerSide;
+var
+   brazil, ireland, russia, dl: TStationContext;
+   session: TSessionDefaults;
+begin
+   BeginTest('Test_M7bBatch2StationChoicesAreStatedPerSide');
+   brazil := KansasStation;
+   brazil.MyCountry := 'PY';
+   brazil.MyContinent := SouthAmerica;
+   ireland := KansasStation;
+   ireland.MyCountry := 'EI';
+   ireland.MyContinent := Europe;
+   russia := KansasStation;
+   russia.MyCountry := 'UA';
+   russia.MyContinent := Europe;
+   dl := KansasStation;
+   dl.MyCountry := 'DL';
+   dl.MyContinent := Europe;
+
+   session := Describe(SOUTHAMERICANWW, brazil);
+   try
+      CheckTrue(session.PrefixMult = NonSouthAmericanPrefixes, 'SA WW, PY: non-SA prefixes');
+   finally
+      session.Free;
+      end;
+   session := Describe(SOUTHAMERICANWW, KansasStation);
+   try
+      CheckTrue(session.PrefixMult = SouthAmericanPrefixes, 'SA WW, W: SA prefixes');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(IRTS, ireland);
+   try
+      CheckTrue(not session.IsStated(svDXMult), 'IRTS, EI: the DX multiplier is the head''s');
+      CheckTrue(session.IsStated(svInitialExchangeCursorAtStart) and
+                session.InitialExchangeCursorAtStart, 'IRTS: the cursor at the start');
+      CheckTrue(session.Band = Band80, 'IRTS: 80 m');
+      CheckTrue(session.IsStated(svDigitalModeEnable) and not session.DigitalModeEnable,
+                'IRTS: digital off');
+   finally
+      session.Free;
+      end;
+   session := Describe(IRTS, dl);
+   try
+      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = NoDXMults),
+                'IRTS, DL: no DX multiplier');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(RDA, russia);
+   try
+      CheckTrue(not session.IsStated(svDXMult), 'RDA, UA: the DX multiplier is the head''s');
+      CheckEquals(5, session.DomesticCountryCount, 'RDA: the Russian countries');
+      CheckTrue(session.DomesticMultByBand = dmbbAllBand, 'RDA: domestic mults over all bands');
+   finally
+      session.Free;
+      end;
+   session := Describe(RDA, dl);
+   try
+      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = NoDXMults),
+                'RDA, DL: no DX multiplier');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(CQMM, brazil);
+   try
+      CheckTrue(session.PrefixMult = SouthAndNorthAmericanPrefixes, 'CQMM, PY: S and N American prefixes');
+      CheckTrue(session.IsStated(svDXCCMultByBand) and (session.DXCCMultByBand = dmbbAllBand),
+                'CQMM: DXCC by band over all bands');
+      CheckTrue(session.Band = Band80, 'CQMM: 80 m');
+   finally
+      session.Free;
+      end;
+   session := Describe(CQMM, KansasStation);
+   try
+      CheckTrue(not session.IsStated(svPrefixMult), 'CQMM, W: the prefix multiplier is the head''s');
+   finally
+      session.Free;
+      end;
+end;
+
+(* M7b BATCH 2 -- MESSAGES, MEMORIES AND THE RTC'S CAPTIONS, in the arm's order,
+   built from the station's grid, name and state. *)
+procedure TContestSessionTests.Test_M7bBatch2MessagesMemoriesAndCaptions;
+var
+   session: TSessionDefaults;
+   memory: TSessionMemory;
+begin
+   BeginTest('Test_M7bBatch2MessagesMemoriesAndCaptions');
+
+   session := Describe(RTC, KansasStation);
+   try
+      CheckTrue(session.IsStated(svWARCEnabled) and not session.WARCEnabled, 'RTC: WARC off');
+      CheckEquals(' # EM17', session.CQExchangeCW, 'RTC: CQ exchange');
+      CheckEquals(' # EM17', session.SPExchangeCW, 'RTC: S&P exchange');
+      CheckEquals(' # EM17', session.RepeatSPExchangeCW, 'RTC: repeat S&P exchange');
+      CheckEquals(6, session.MemoryCount, 'RTC: four memories and two captions');
+      memory := session.Memory(0);
+      CheckTrue((memory.Bank = smbCQ) and (memory.Key = smkF3), 'RTC: CQ F3 first');
+      CheckEquals('# EM17', memory.Text, 'RTC: CQ F3');
+      memory := session.Memory(2);
+      CheckEquals('@ DE \ # EM17', memory.Text, 'RTC: exchange F5');
+      memory := session.Memory(4);
+      CheckTrue((memory.Bank = smbExchangeCaption) and (memory.Key = smkF4), 'RTC: F4 caption');
+      CheckEquals('NR', memory.Text, 'RTC: F4 is NR');
+      memory := session.Memory(5);
+      CheckEquals('Cl+Ex', memory.Text, 'RTC: F5 is Cl+Ex');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(RSGB_ROPOCO_SSB, KansasStation);
+   try
+      CheckEquals('_~ %5NN (', session.CQExchangeCW, 'RoPoCo: CQ exchange');
+      CheckTrue(session.IsStated(svMultipleBands) and not session.MultipleBands, 'RoPoCo: one band');
+      CheckEquals(6, session.MemoryCount, 'RoPoCo: six memories, the CW ones for both runnings');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(SST, KansasStation);
+   try
+      CheckEquals(' TOM KS', session.CQExchangeCW, 'SST: CQ exchange');
+      CheckEquals('TOM KS', session.SPExchangeCW, 'SST: S&P exchange');
+      CheckTrue(session.DomesticMult = DomesticFile, 'SST: domestic mults from the file');
+      CheckEquals(2, session.DomesticCountryCount, 'SST: K and VE');
+      CheckEquals('Slow Speed Test', session.ContestName, 'SST: name');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(STEWPERRY, KansasStation);
+   try
+      CheckEquals(' EM17', session.CQExchangeCW, 'Stew Perry: CQ exchange');
+      CheckEquals('EM17', session.SPExchangeCW, 'Stew Perry: S&P exchange');
+      CheckTrue(session.Band = Band160, 'Stew Perry: 160 m');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(RAEM, KansasStation);
+   try
+      CheckTrue(session.InitialExchangeCursorAtStart, 'RAEM: the cursor at the start');
+   finally
+      session.Free;
+      end;
+
+   (* THE EMPTY ARMS STATE NOTHING. *)
+   session := Describe(EUDX, KansasStation);
+   try
+      CheckTrue(StatesNothing(session), 'EUDX: its arm was empty');
+   finally
+      session.Free;
+      end;
+   session := Describe(RFASCHAMPIONSHIPCW, KansasStation);
+   try
+      CheckTrue(StatesNothing(session), 'AS-CHAMP: its arm was empty');
+   finally
+      session.Free;
+      end;
+end;
+
+(* LogCfg's DEFAULTS FOR THE BATCH 2 CONTESTS -- every arm tSetupExchangeNumbers
+   held for them, and one it never had. *)
+procedure TContestSessionTests.Test_M7bBatch2CQExchangeDefaults;
+begin
+   BeginTest('Test_M7bBatch2CQExchangeDefaults');
+   CheckEquals(' 5NN # EM17', CQDefault(RADIOVHFFD, KansasStation), 'Radio VHF FD');
+   CheckEquals(' # KS', CQDefault(RAEM, KansasStation), 'RAEM');
+   CheckEquals(' KS#', CQDefault(RFASCHAMPIONSHIPCW, KansasStation), 'AS-CHAMP');
+   CheckEquals(' KS#', CQDefault(R9W_UW9WK_MEMORIAL, KansasStation), 'R9W UW9WK Memorial');
+   CheckEquals(' KS', CQDefault(RADIOMEMORY, KansasStation), 'Radio Memory');
+   CheckEquals(' # TOM', CQDefault(CWOPEN, KansasStation), 'CW Open');
+   CheckEquals(' EM17 EM17', CQDefault(MAKROTHEN, KansasStation), 'Makrothen: four characters, twice');
+   CheckEquals('', CQDefault(SST, KansasStation), 'SST was never named');
+end;
+
 procedure TContestSessionTests.RunAllTests;
 begin
    Test_TheBaseStatesNothing;
@@ -719,6 +920,9 @@ begin
    Test_JIDXDescribesBothSidesAndRefusesZoneMessages;
    Test_M7bStationChoicesAreStatedPerSide;
    Test_M7bCQExchangeDefaults;
+   Test_M7bBatch2StationChoicesAreStatedPerSide;
+   Test_M7bBatch2MessagesMemoriesAndCaptions;
+   Test_M7bBatch2CQExchangeDefaults;
 end;
 
 end.

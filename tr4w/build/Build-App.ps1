@@ -326,7 +326,12 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # GetOblast's native string into two string[2] locals; it was lifted to
 # uCallSignRoutines with native strings, and the classes were written with
 # explicit conversions, adding none.
-$NARROW_CEILING = 1289
+# 1289 -> 1287, 2026-10-02: M7b batch 2, forty more classless contests gained
+# a class. The two are Tree's PortableStation, which put PostcedingString's
+# native string into a Str20 twice; it was lifted to uCallSignRoutines with
+# native strings (the Region 1 Field Day class and the legacy arm share it),
+# and the classes were written with explicit conversions, adding none.
+$NARROW_CEILING = 1287
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"
