@@ -112,6 +112,10 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
@@ -121,7 +125,8 @@ uses
    (* ARRLSectionCountry -- the leaf the set-up arm asked. *)
    uCallSignRoutines,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
-   uADIF;
+   uADIF,
+   uTR4WStrings;
 
 procedure TContestARRL160.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -153,7 +158,7 @@ end;
 
 function TContestARRL160.GetDisplayName: string;
 begin
-   Result := 'ARRL-160';
+   Result := 'ARRL 160-Meter Contest';
 end;
 
 function TContestARRL160.GetCabrilloName: string;
@@ -280,6 +285,23 @@ end;
 function TContestARRL160.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' 5NN ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRL10, ARRL_RTTY_ROUNDUP,
+   CQ160CW, CQ160SSB, CQWWRTTY.
+   The same steps on ticking the box stood for ARRL10, ARRLDXCW,
+   ARRL_RTTY_ROUNDUP.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARRL160.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
 end;
 
 initialization

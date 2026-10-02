@@ -77,6 +77,9 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
       (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
       function GetDXMultiplierType: DXMultType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -117,6 +120,24 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE SUMMARY SHEET AND THE CABRILLO HEADER -- M9a. *)
+      function GetSummarySheet: TSummarySheetLayout; override;
+      function GetRequiresCabrilloLocation: boolean; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+      (* THE CABRILLO HEADER AND MODE COLUMN -- M9a. *)
+      function CabrilloHeaderLinesBeforeTag(const aTagName: string;
+                                            const aTagValue: string;
+                                            const aStation: TStationContext): string; override;
+      function CabrilloModeString(aMode: ModeType;
+                                  aExtMode: ExtendedModeType): string; override;
    end;
 
 implementation
@@ -126,7 +147,9 @@ uses
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
    (* STATE from the worked station's section -- a leaf, lifted at M4. *)
-   uARRLSections;
+   uARRLSections,
+   uCabrilloFormat,
+   uCanonicalExchange;
 
 (* THE DX MULTIPLIER IS DXCC WITHOUT THE ARRL SECTIONS -- M7a, 2026-10-02.
 
@@ -299,6 +322,27 @@ begin
    Result := 'Winter Field Day';
 end;
 
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestWinterFieldDay.GetCabrilloName: string;
+begin
+   Result := 'WFD';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestWinterFieldDay.GetADIFContestId: string;
+begin
+   Result := 'WFD';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestWinterFieldDay.GetFriendlyName: string;
+begin
+   Result := 'Winter Field Day';
+end;
+
 (* THE SECTION, FROM ARRL_SECT -- BUT AN ABSENT TAG IS NOT AN EMPTY SECTION.
    D7 writes ARRL_SECT for Sweepstakes and does not write it for Winter Field
    Day -- that log carries the section in <QTH> alone. Assigning it
@@ -379,6 +423,70 @@ begin
       did. *)
    aSession.DXMult := ARRLDXCCWithNoARRLSections;
    aSession.AddDomesticCountries(DomesticCountriesARRLSections);
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLFIELDDAY.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestWinterFieldDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskField(ncfMyFDClass);
+   aPrompts.AskField(ncfMySection);
+end;
+
+(* THE SUMMARY SHEET COUNTS ONE MULTIPLIER FOR EACH BAND AND MODE WORKED --
+   PostUnit's two WINTERFIELDDAY tests in WriteScoreInformationToSummarySheet,
+   moved here at M9a (2026-10-02): each multiplier column of a band/mode row
+   shows 1, and the total row shows how many rows there were. *)
+function TContestWinterFieldDay.GetSummarySheet: TSummarySheetLayout;
+begin
+   Result := inherited GetSummarySheet;
+   Result.MultiplierPerBandModeRow := True;
+end;
+
+(* THE CABRILLO FILE IS NOT STARTED WITHOUT A LOCATION -- PostUnit's guard,
+   which named ARRL 10 and this contest (M9a). The section comes from it. *)
+function TContestWinterFieldDay.GetRequiresCabrilloLocation: boolean;
+begin
+   Result := True;
+end;
+
+(* THE SECTION AND THE CLASS, BEFORE THE LOCATION LINE -- PostUnit's
+   WINTERFIELDDAY test in the header writer, moved here at M9a: the sponsor's
+   robot reads ARRL-SECTION (the location) and X-EXCHANGE (MY FD CLASS). *)
+function TContestWinterFieldDay.CabrilloHeaderLinesBeforeTag(const aTagName: string;
+                                                             const aTagValue: string;
+                                                             const aStation: TStationContext): string;
+begin
+   Result := '';
+   if aTagName = 'LOCATION' then
+      begin
+      Result := 'ARRL-SECTION: ' + aTagValue + #13#10 +
+                'X-EXCHANGE: ' + aStation.MyFDClass + #13#10;
+      end;
+end;
+
+(* FM IS WRITTEN AS PHONE -- PostUnit's WINTERFIELDDAY test in the QSO lines,
+   moved here at M9a: the sponsor scores FM as phone. *)
+function TContestWinterFieldDay.CabrilloModeString(aMode: ModeType;
+                                                   aExtMode: ExtendedModeType): string;
+begin
+   Result := FormatCabrilloMode(aMode, aExtMode, True);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the class and the section (or
+   DX). The arm named ARRLFIELDDAY and WINTERFIELDDAY; each holds its own
+   copy (design 1.4). See TContestBase.CanonicalReceivedExchange; the
+   caller collapses the whitespace. *)
+function TContestWinterFieldDay.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.ceClass)) + ' ' + Trim(string(aQso.QTHString));
 end;
 
 initialization

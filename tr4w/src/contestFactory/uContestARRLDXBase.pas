@@ -93,12 +93,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   SysUtils;
+   SysUtils,
+   uCanonicalExchange;
 
 (* THE EXCHANGE IS RST AND EITHER A STATE OR A POWER.
 
@@ -196,6 +201,26 @@ begin
 
    aSession.ContestName := 'ARRL DX Test';
    aSession.AddDomesticCountries(DomesticCountriesKVE);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the state or the
+   power. It named ARRLDXCW and ARRLDXSSB, the family, so it is the
+   family's. See TContestBase.CanonicalReceivedExchange; the caller
+   collapses the whitespace. *)
+function TContestARRLDXBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   (* The US side sends RST and state, the DX side RST and power; the
+      parser puts the state in QTHString and the power in Power, so the one
+      the worked station sent is the one that is there. *)
+   if Trim(string(aQso.QTHString)) <> '' then
+      begin
+      Result := RSTReceivedText(aQso) + ' ' + Trim(string(aQso.QTHString));
+      end
+   else
+      begin
+      Result := RSTReceivedText(aQso) + ' ' + Trim(string(aQso.Power));
+      end;
 end;
 
 end.

@@ -89,12 +89,17 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 procedure TContestARRLVHFJan.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -156,7 +161,7 @@ end;
 
 function TContestARRLVHFJan.GetDisplayName: string;
 begin
-   Result := 'ARRL-VHF-JAN';
+   Result := 'ARRL January VHF Contest';
 end;
 
 function TContestARRLVHFJan.GetCabrilloName: string;
@@ -235,6 +240,21 @@ function TContestARRLVHFJan.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLDIGI, ARRLVHFJUN, ARRLVHFSEP,
+   BATAVIA_FT8, CQVHF, CUPRFCW, CUPRFDIG, CUPRFSSB, MAKROTHEN, RTC,
+   STEWPERRY, TESLA, WWDIGI.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARRLVHFJan.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
 end;
 
 initialization

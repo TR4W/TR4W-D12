@@ -186,6 +186,31 @@ Three groups:
   `DX` like theirs? (A scoring change for in-province BC logs with DX QSOs.)
   **Answer:**
 
+### Added after M9a (the display and the reports)
+
+- **Q52** Every contest's display name is now its row's friendly name, as you
+  asked -- the name the New Contest drop-down will show at M9b. Twelve
+  classes had a longer hand-written one: "ARRL International DX Contest - CW"
+  is now "ARRL Inter. DX Contest, CW", "CQ World Wide DX - CW" is "CQ Worldwide
+  DX Contest, CW", "General QSO" is "General QSO/DX Logging" (and the
+  Sweepstakes, CQ WPX, NA Sprint and ARRL Digital ones). Which should the
+  drop-down show? If the longer ones, the friendly name changes with them,
+  and that also changes the summary sheet's `CONTEST:` line and the log
+  database's friendly name.
+  **Answer:**
+
+- **Q53** Forty-seven contests have no friendly name, so their display name is
+  still the internal spelling -- `ALRS-UA1DZ-CUP`, `RF-CUP-CW`, `UKEI`,
+  `YOUTHCHAMPIONSHIPRF` and the rest
+  (`uTestContestDisplay.ENUM_SPELLED_DISPLAY_NAMES`). Human names for them,
+  please; any you give leave that list.
+  **Answer:**
+
+- **Q55** WRTC's live-score XML has never carried a multiplier: its rule
+  posts HQ and country on an "all modes" row the writer never produces. Post
+  them per mode, add the row, or leave it (WRTC forbids score posting anyway)?
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -288,6 +313,31 @@ Three groups:
 
 ---
 
+### Added after M9a
+
+- **Q54** HamScore's one-QSO Cabrillo line writes Winter Field Day's FM
+  contacts as `FM`; the Cabrillo file writes `PH`. Should HamScore ask the
+  contest too? *Recommended: yes* -- one rule for both; it changes what
+  HamScore receives for WFD FM QSOs.
+  **Answer:**
+
+- **Q56** (decided under the delegation; please confirm) A contest's sent
+  state now stands for the whole session: a MY STATE line after CONTEST in a
+  `.cfg`, or a Preferences edit mid-contest, no longer changes what Canada
+  Day/Winter, the Russian DX contests or the Cup RF send. The alternative
+  would have sent a stale state after reopening a log (design 8.2m).
+  *Recommended: accept.*
+  **Answer:**
+
+- **Q57** CQ WW RTTY's set-up writes MY ZONE as "zone state" while it builds
+  its messages, then puts it back -- and the write marks MY ZONE as yours, so
+  it no longer follows MY CALL. Build the messages without touching MY ZONE?
+  *Recommended: yes* (the messages are identical; only a later MY CALL change
+  behaves differently).
+  **Answer:**
+
+---
+
 ## 3. Already answered (for reference)
 
 | Q | Answer | Where it landed |
@@ -302,7 +352,7 @@ Three groups:
 | Q20 | FD DX exports `CLASS` as logged, `SRX_STRING` `1D DX`, never `ARRL_SECT` | M5b |
 | Q21 | Night rules read the QSO's recorded time | after M4 |
 | Q25 | FD DX import is not a section | M5b |
-| Q39 | A contest never writes a station setting | design 7.11 (decided), lands M9 |
+| Q39 | A contest never writes a station setting | design 7.11 (decided); LANDED at M9a for MY STATE (Q57 is MY ZONE) |
 | -- | Out-of-state x out-of-state in a QSO party: refuse with an error | M5b |
 | -- | Off-band QSO: logged, 0 points, no mult, no need-mult hint, not a dupe | 1e4f66f9 (points, mults); M8 (dupes, hints) |
 | -- | QRP = our power; last touch point wins; may change mid-contest with a reminder | Idaho, design 7.6 (M9) |

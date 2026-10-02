@@ -45,6 +45,9 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -52,12 +55,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry, uContestFixedPoints;
+   uContestRegistry, uContestFixedPoints,
+   uTR4WStrings;
 
 procedure TContestNASprintRTTY.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -66,7 +74,28 @@ end;
 
 function TContestNASprintRTTY.GetDisplayName: string;
 begin
-   Result := 'North American Sprint - RTTY';
+   Result := 'North American Sprint, RTTY';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestNASprintRTTY.GetCabrilloName: string;
+begin
+   Result := 'NA-SPRINT-RTTY';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestNASprintRTTY.GetADIFContestId: string;
+begin
+   Result := 'NA-SPRINT-RTTY';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestNASprintRTTY.GetFriendlyName: string;
+begin
+   Result := 'North American Sprint, RTTY';
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
@@ -109,6 +138,20 @@ begin
    aSession.SprintQSYRule := True;
    aSession.AddDomesticCountries(DomesticCountriesKVE);
    aSession.AddDomesticCountry('KL');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for NASPRINTCW, SPRINTSSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestNASprintRTTY.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURQTHANDTHENAME, ncfMyState);
+   aPrompts.AskField(ncfMyName);
 end;
 
 initialization

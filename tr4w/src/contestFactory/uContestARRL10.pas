@@ -82,6 +82,13 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE CABRILLO HEADER -- M9a. *)
+      function GetRequiresCabrilloLocation: boolean; override;
    end;
 
 implementation
@@ -89,7 +96,8 @@ implementation
 uses
    uContestRegistry,
    (* FixedModePoints -- the helper for a number per mode. *)
-   uContestFixedPoints;
+   uContestFixedPoints,
+   uTR4WStrings;
 
 procedure TContestARRL10.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -98,7 +106,7 @@ end;
 
 function TContestARRL10.GetDisplayName: string;
 begin
-   Result := 'ARRL-10';
+   Result := 'ARRL 10-Meter Contest';
 end;
 
 function TContestARRL10.GetCabrilloName: string;
@@ -192,6 +200,31 @@ begin
    aSession.MultipleBands := False;
    aSession.AddDomesticCountries(DomesticCountriesKVEKH6KL);
    aSession.AddDomesticCountry('XE');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRL160, ARRL_RTTY_ROUNDUP,
+   CQ160CW, CQ160SSB, CQWWRTTY.
+   The same steps on ticking the box stood for ARRL160, ARRLDXCW,
+   ARRL_RTTY_ROUNDUP.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARRL10.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
+end;
+
+(* THE CABRILLO FILE IS NOT STARTED WITHOUT A LOCATION -- PostUnit's guard,
+   which named this contest and Winter Field Day, moved here at M9a
+   (2026-10-02). Each holds its own copy (design 1.4). *)
+function TContestARRL10.GetRequiresCabrilloLocation: boolean;
+begin
+   Result := True;
 end;
 
 initialization

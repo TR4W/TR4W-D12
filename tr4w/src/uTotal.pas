@@ -57,7 +57,11 @@ uses
      uMainGrids is deliberately narrow -- but the compiler bug that made it
      urgent was dcc32's, and dcc32 has been gone from this tree since August. *)
    uMainGrids,
-   uSettingsModel;   // Settings.Qso / .Mult / .Qtc -- the contest's own rules
+   uSettingsModel,   // Settings.Qso / .Mult / .Qtc -- the contest's own rules
+   (* ContestIdentity(Contest).TotalsDisplay -- what the contest shows
+     differently (M9a). *)
+   uContestBase,
+   uContestRegistry;
 
 var
    // This unit's own reference to the program's log category, rather than
@@ -241,6 +245,7 @@ var
 //  PHR : integer;
   s1 : string;
   S2 : string;
+  display : TTotalsDisplay;
 begin
   ActiveMode := LogWind.ActiveMode;
   if ActiveMode = FM then
@@ -257,21 +262,27 @@ begin
 //  CallsignsList.DisplayDupeSheet(@Radio1);
 //  CallsignsList.DisplayDupeSheet(@Radio2);
 
+  (* WHAT THIS CONTEST SHOWS DIFFERENTLY -- asked of the contest since M9a
+    (2026-10-02), where it was three tests of its name (the OZCHR teams' mode
+    shares, IARU's and the Russian contests' domestic-multiplier labels). *)
+  display := ContestIdentity(Contest).TotalsDisplay;
+
   Row := -1;
   if Settings.Qso.ByMode then
      begin
-     if Contest = OZCR_O   then      //n4af 04.34.8
-     if (QTotals[AllBands,CW] > 0) and (QTotals[AllBands,Phone]> 0)   then
+     if display.ShowsModeShares      and                           //n4af 04.34.8
+        (QTotals[AllBands,CW] > 0)   and
+        (QTotals[AllBands,Phone] > 0) then
         begin
         CWi  := (QTotals[AllBands,CW]) / ((Qtotals[AllBands,CW])+(Qtotals[AllBands,Phone])) * 100;
         PHi  := ((QTotals[AllBands,Phone]) / (Qtotals[AllBands,CW]+Qtotals[AllBands,Phone]) * 100);
         Str(round(CWi),s1);
-         S1 := concat('CW: ',s1,'%');
-         S2 := concat('PH: ',inttostr(round(PHi)),'%');
+        S1 := concat('CW: ',s1,'%');
+        S2 := concat('PH: ',inttostr(round(PHi)),'%');
 
         WriteLeftColumnText(S1);
         WriteLeftColumnText(S2);
-         goto skip;
+        goto skip;
         end;
      end;
   if Settings.Qso.ByMode then
@@ -298,46 +309,18 @@ begin
      begin
      if Settings.Mult.ByMode then
         begin
-        if Contest = IARU then
+        if ActiveMode = CW then
            begin
-           if ActiveMode = CW then
-              begin
-              WriteLeftColumnText('CW HQ');
-              end;
-           if ActiveMode = Phone then
-              begin
-              WriteLeftColumnText('Ph HQ');
-              end;
-           end
-        else
+           WriteLeftColumnText(display.DomesticMultsCaptionCW);
+           end;
+        if ActiveMode = Phone then
            begin
-           if ActiveMode = CW then
-              begin
-              WriteLeftColumnText('CW Dom');
-              end;
-           if ActiveMode = Phone then
-              begin
-              WriteLeftColumnText('Ph Dom');
-              end;
+           WriteLeftColumnText(display.DomesticMultsCaptionPhone);
            end;
         end
      else
         begin
-        begin
-          if Contest = IARU then
-             begin
-             WriteLeftColumnText(TC_HQMULTS)
-             end
-          else
-            if (Contest = RUSSIANDX) or (Contest = RU3AXMemorial) then
-               begin
-               WriteLeftColumnText(TC_OBLASTS)
-               end
-            else
-               begin
-               WriteLeftColumnText(TC_DOMMULTS);
-               end;
-        end;
+        WriteLeftColumnText(display.DomesticMultsCaption);
         end;
      end;
 

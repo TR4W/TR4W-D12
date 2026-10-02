@@ -4241,6 +4241,8 @@ procedure CreateMainWindow;
 var
   e: TMainWindowElement;
   temprect: TRect;
+  (* The operating aids the contest allows -- M9a. *)
+  aids: TOperatingAids;
   // OffsetY : integer;
 begin
   // PHASE 3a: the main window is an LCL TForm, and tr4whandle is its Handle.
@@ -4480,10 +4482,20 @@ begin
      begin
      SetMenuEnabled(menu_WA7BNM_calendar, False);
      end;
-  if Contest = WRTC then
+  (* THE OPERATING AIDS THE CONTEST FORBIDS ARE GREYED -- M9a. This was
+    `Contest = WRTC`; the contest says which aids it allows (TOperatingAid),
+    and each menu row is the aid it opens. *)
+  aids := ContestIdentity(Contest).PermittedOperatingAids;
+  if not (oaSuperCheckPartial in aids) then
      begin
      SetMenuEnabled(menu_windows_trmasterdta, False);
+     end;
+  if not (oaDXCluster in aids) then
+     begin
      SetMenuEnabled(menu_windows_telnet, False);
+     end;
+  if not (oaScorePosting in aids) then
+     begin
      SetMenuEnabled(menu_windows_getscores, False);
      end;
 
@@ -4496,7 +4508,9 @@ begin
   // DeleteMenu(tr4w_main_menu, menu_windows_mf, MF_BYCOMMAND or MF_GRAYED);
 {$IFEND}
 
-  if not (Contest in [DARCWAEDCCW..DARCWAEDCSSB]) then
+  (* THE QTC MENU IS THE CONTEST'S -- M9a; this was the WAE range
+    DARCWAEDCCW..DARCWAEDCSSB. *)
+  if not ContestIdentity(Contest).OffersQTCs then
      begin
      SetMenuEnabled(menu_ctrl_qtcfunctions, False);
      end;
@@ -6428,6 +6442,37 @@ begin
       end;
 end;
 
+(* WHICH OPERATING AID A WINDOW IS -- M9a, 2026-10-02.
+
+  UI WIRING, NOT A RULE. The contest says which aids it allows
+  (TContestBase.PermittedOperatingAids); this says which window IS which aid,
+  which only the UI knows: the master-file window is Super Check Partial, the
+  Telnet window the DX cluster, the post-scores window live score posting.
+  False for every other window. *)
+function OperatingAidOfWindow(aID: WindowsType; out aAid: TOperatingAid): boolean;
+begin
+   Result := True;
+   aAid := oaSuperCheckPartial;
+   case aID of
+      tw_MASTERWINDOW_INDEX:
+         begin
+         aAid := oaSuperCheckPartial;
+         end;
+      tw_TELNETWINDOW_INDEX:
+         begin
+         aAid := oaDXCluster;
+         end;
+      tw_POSTSCORESWINDOW_INDEX:
+         begin
+         aAid := oaScorePosting;
+         end;
+   else
+      begin
+      Result := False;
+      end;
+   end;
+end;
+
 procedure OpenTR4WWindow(ID: WindowsType);
 const
   NORESIZEEDWINDOW = SWP_SHOWWINDOW or SWP_NOSIZE;
@@ -6463,13 +6508,17 @@ var
   lclForm: TCustomForm;
   { The window's title, taken from its menu row -- see below. }
   menuTitle: string;
+  (* The operating aid this window is, if it is one -- M9a. *)
+  aid: TOperatingAid;
 begin
-  if Contest = WRTC then
-    if ID in [tw_MASTERWINDOW_INDEX, tw_TELNETWINDOW_INDEX,
-      tw_POSTSCORESWINDOW_INDEX] then
-       begin
-       Exit;
-       end;
+  (* A WINDOW FOR AN AID THE CONTEST FORBIDS DOES NOT OPEN -- M9a. This was
+    `Contest = WRTC` and the same three windows: the master file (Super Check
+    Partial), the DX cluster and score posting. *)
+  if OperatingAidOfWindow(ID, aid) and
+     (not (aid in ContestIdentity(Contest).PermittedOperatingAids)) then
+     begin
+     Exit;
+     end;
 
 
   if ID = tw_NETWINDOW_INDEX then

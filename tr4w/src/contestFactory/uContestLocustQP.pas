@@ -100,12 +100,17 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 const
    (* THE SPONSOR'S STATION AND THE SPONSOR'S NAME -- a contact with either
@@ -232,6 +237,20 @@ end;
 function TContestLocustQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' # ' + aStation.MyName + ' ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for CWOPS, NCCCSPRINT.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestLocustQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskField(ncfMyName);
+   aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
 end;
 
 initialization

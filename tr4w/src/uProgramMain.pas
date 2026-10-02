@@ -2585,7 +2585,8 @@ begin
                                 ActiveDomesticMult,
                                 Settings.My.Call,
                                 Settings.My.Country,
-                                Settings.My.State,
+                                (* The state SENT -- design 7.11 (M9a). *)
+                                SentMyState,
                                 Settings.My.Zone,
                                 Settings.My.Grid,
                                 Settings.Contest.DomesticFilename,

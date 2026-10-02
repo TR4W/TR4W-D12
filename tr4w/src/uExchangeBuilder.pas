@@ -3,7 +3,7 @@ unit uExchangeBuilder;
 
 (*
   Shared exchange string builders for RTC / HamScore / N1MM-style UDP
-  ContactInfo broadcasts.
+  ContactInfo broadcasts, and the log's exchange_sent column.
 
   The TR4W exchange parser is intentionally forgiving about field order --
   for a grid contest you can type either "EL88 1234" or "1234 EL88" and
@@ -12,14 +12,19 @@ unit uExchangeBuilder;
   that the same QSO doesn't appear two different ways depending on what
   the operator typed.
 
-  These helpers rebuild the SentExchange and RxExchange strings from the
-  ContestExchange record's typed fields, per contest type, in the
-  scoring-canonical order.  Output is plain text; XML escaping is the
-  caller's job.
+  THE CONTEST BUILDS ITS OWN CANONICAL FORM -- M9a, 2026-10-02. This unit
+  held a `case RXData.ceContest of` naming fourteen contests' field orders
+  and an `if ceContest = RTC` for the sent side; each is that contest's
+  TContestBase.CanonicalReceivedExchange / CanonicalSentExchange now, and
+  the shared pieces (whitespace, the default RST, the CQ-template rebuild)
+  are the leaf uCanonicalExchange. What is left here is what a contest may
+  not do itself: read the session's settings, and ask the QSO's contest
+  (ContestIdentity -- the QSO's own, as the `case` keyed on it).
 
-  Future: when the radio/contest factory grows an "RTC exchange template"
-  field per contest, these dispatchers move there and the case statement
-  disappears.
+  "Future: when the contest factory grows an RTC exchange template field per
+  contest, these dispatchers move there and the case statement disappears" --
+  that is what M9a did. Output is plain text; XML escaping is the caller's
+  job.
 *)
 
 interface
@@ -34,190 +39,31 @@ function BuildRxExchangeText  (const RXData: ContestExchange): string;
 implementation
 
 uses
-  SysUtils, StrUtils,
   (* LogCW went with the CQ exchange template, 2026-09-12: that global was
     the only symbol this unit took from it. *)
-  uSettingsModel;   // the CQ exchange template, and Settings.My.Grid
-
-// Collapse runs of whitespace (space + tab) to a single space and trim
-// both ends.  Used after substituting into the CQ exchange template so
-// the template's leading space and any double spaces from optional
-// fields don't survive.
-function CollapseWhitespace(const s: string): string;
-var
-   i: Integer;
-   prevSpace: Boolean;
-begin
-   Result := '';
-   prevSpace := True;
-   for i := 1 to Length(s) do
-      begin
-      if (s[i] = ' ') or (s[i] = #9) then
-         begin
-         if not prevSpace then
-            begin
-            Result := Result + ' ';
-            prevSpace := True;
-            end;
-         end
-      else
-         begin
-         Result := Result + s[i];
-         prevSpace := False;
-         end;
-      end;
-   while (Length(Result) > 0) and (Result[Length(Result)] = ' ') do
-      begin
-      SetLength(Result, Length(Result) - 1);
-      end;
-end;
-
-// 599 on CW/Digital, 59 on Phone/FM -- used when RSTReceived = 0 because
-// the operator accepted the parser default and it never picked up an
-// explicit value.
-function DefaultRST(mode: ModeType): string;
-begin
-   case mode of
-      CW, Digital: Result := '599';
-   else
-      Result := '59';
-   end;
-end;
-
-function RSTReceivedString(const RXData: ContestExchange): string;
-begin
-   if RXData.RSTReceived > 0 then
-      begin
-      Result := IntToStr(RXData.RSTReceived)
-      end
-   else
-      begin
-      Result := DefaultRST(RXData.Mode);
-      end;
-end;
+  uSettingsModel,      // the CQ exchange template, and Settings.My.Grid
+  uContestBase,        // TCanonicalExchangeContext
+  uContestRegistry,    // ContestIdentity -- the QSO's contest
+  uCanonicalExchange;  // CollapseWhitespace
 
 function BuildSentExchangeText(const RXData: ContestExchange): string;
 var
-   tpl: string;
+   ctx: TCanonicalExchangeContext;
 begin
-   // RTC HamScore canonical SentExchange is "<serial> <grid>" -- NO RST.
-   // (Per HamScore RTC organizer email 2026-05: the signal report must be
-   // skipped in SentExchange, matching what RxExchange already does.)
-   //
-   // RTC rules permit RST on air, and some operators customize their
-   // CQ exchange template to include 5NN/599. We deliberately ignore the
-   // on-air template here so any such customization does NOT leak RST
-   // into the upload string. On-air keying is unaffected -- this only
-   // controls what TR4W reports to HamScore.
-   if RXData.ceContest = RTC then
-      begin
-      Result := CollapseWhitespace(
-                   IntToStr(RXData.NumberSent) + ' ' +
-                   Trim(Settings.My.Grid));
-      Exit;
-      end;
-
-   tpl := string(Settings.Messages.CqExchangeCw);
-   if tpl = '' then
-      begin
-      // No template configured -- fall back to whatever the operator
-      // typed.  Still echoes the received exchange, but no worse than
-      // pre-fix behaviour and avoids fabricating data we don't have.
-      Result := Trim(string(RXData.ExchString));
-      Exit;
-      end;
-
-   // '#' -> our sent serial number for this QSO.
-   tpl := StringReplace(tpl, '#',   IntToStr(RXData.NumberSent), [rfReplaceAll]);
-   // CW shorthand '5NN' -> '599' (T = N in CW).  RTC consumers want
-   // canonical numeric RST, not keyer shorthand.
-   tpl := StringReplace(tpl, '5NN', '599',                       [rfReplaceAll, rfIgnoreCase]);
-
-   Result := CollapseWhitespace(tpl);
+   (* THE SESSION'S VALUES, HANDED IN -- the contest reads no global. The
+      template is CQ EXCHANGE CW as it stands; the RTC builds from MY GRID
+      instead, with no RST (its HamScore organizer, 2026-05). *)
+   ctx.CQExchangeTemplate := string(Settings.Messages.CqExchangeCw);
+   ctx.MyGrid := Settings.My.Grid;
+   Result := ContestIdentity(RXData.ceContest).CanonicalSentExchange(RXData, ctx);
 end;
 
 function BuildRxExchangeText(const RXData: ContestExchange): string;
-var
-   rst, serial, age, zone, qth, pwr, nm, cls: string;
 begin
-   rst    := RSTReceivedString(RXData);
-   serial := IntToStr(RXData.NumberReceived);
-   age    := IntToStr(RXData.Age);
-   zone   := IntToStr(RXData.Zone);
-   qth    := Trim(string(RXData.QTHString));
-   pwr    := Trim(string(RXData.Power));
-   nm     := Trim(string(RXData.Name));
-   cls    := Trim(string(RXData.ceClass));
-
-   case RXData.ceContest of
-      // RST + serial
-      CQWPXCW, CQWPXSSB, DARCWAEDCCW:
-         Result := rst + ' ' + serial;
-
-      // RST + zone
-      CQWWCW, CQWWSSB, IARU:
-         Result := rst + ' ' + zone;
-
-      // RST + state/section literal
-      CQ160CW:
-         Result := rst + ' ' + qth;
-
-      // ARRL DX: US side sends RST+state, DX side sends RST+power.
-      // TR4W's parser puts state in QTHString and power in Power; pick
-      // whichever the worked station actually sent.
-      ARRLDXCW, ARRLDXSSB:
-         if qth <> '' then
-            begin
-            Result := rst + ' ' + qth
-            end
-         else
-            begin
-            Result := rst + ' ' + pwr;
-            end;
-
-      // RST + age
-      ALLASIANCW, ALLASIANSSB:
-         Result := rst + ' ' + age;
-
-      // CWT: Name + (member# or QTH) -- both go through QTHString.
-      CWOPS:
-         Result := nm + ' ' + qth;
-
-      // K1USN SST / NAQP family: Name + State (or "DX").  Same exchange
-      // shape; ContestsArray AE field is NameAndDomesticOrDXQTHExchange
-      // for all four.  Rebuilding from canonical fields here lets edits
-      // to QTHString or Name via the Edit QSO dialog flow through to
-      // HamScore (issue surfaced 2026-05-28 when state edit didn't
-      // reach the server because the fallback used the raw operator-
-      // typed ExchString captured at log time).
-      SST, NAQSOCW, NAQSOSSB, NAQSORTTY:
-         Result := nm + ' ' + qth;
-
-      // CWOpen: serial + Name
-      CWOPEN:
-         Result := serial + ' ' + nm;
-
-      // RTC (Real-Time Contest, Issue #902): "<serial> <grid>" -- NO RST.
-      // Per HamScore RTC organizer email 2026-05, the signal report is
-      // intentionally omitted from BOTH RxExchange and SentExchange.
-      // Parser accepts RSTQSONumberAndGridSquareExchange (RST optional)
-      // and discards the RST field for the canonical RxExchange string.
-      RTC:
-         Result := serial + ' ' + qth;
-
-      // ARRL Field Day / Winter Field Day: class + section.
-      // Both contests use ClassDomesticOrDXQTHExchange; class lands in
-      // ceClass (e.g. "2A"), section in QTHString (e.g. "FL" or "DX").
-      ARRLFIELDDAY, WINTERFIELDDAY:
-         Result := cls + ' ' + qth;
-
-   else
-      // Unknown contest -- emit the raw operator-typed string.  Same as
-      // pre-fix behaviour; no worse, and avoids fabricating fields.
-      Result := Trim(string(RXData.ExchString));
-   end;
-
-   Result := CollapseWhitespace(Result);
+   (* COLLAPSED HERE, FOR EVERY CONTEST, as the `case` collapsed every arm
+      and its `else`. *)
+   Result := CollapseWhitespace(
+                ContestIdentity(RXData.ceContest).CanonicalReceivedExchange(RXData));
 end;
 
 end.

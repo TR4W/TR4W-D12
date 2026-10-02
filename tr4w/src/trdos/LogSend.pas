@@ -56,7 +56,8 @@ implementation
 
 uses uTelnet,
   uSettingsModel,   // Settings.Cw.SendCompleteFourLetterCall
-  MainUnit;
+  MainUnit,
+  FCONTEST;         // SentMyState -- the state sent, design 7.11 (M9a)
 
 procedure SendCrypticDVPString(SendString: ShortString);
 
@@ -361,7 +362,8 @@ begin
   
         '~': SendSalutation(CallWindowString);
         '\': AddStringToBuffer(UTF8Encode(Settings.My.Call), Config.CWTone);
-        '&': AddStringToBuffer(UTF8Encode(Settings.My.State), Config.CWTone);
+        (* The state SENT in this contest, not MY STATE -- design 7.11 (M9a). *)
+        '&': AddStringToBuffer(UTF8Encode(SentMyState), Config.CWTone);
 
         '|':
           begin

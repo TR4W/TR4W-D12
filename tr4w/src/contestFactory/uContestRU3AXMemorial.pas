@@ -95,6 +95,16 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
+   protected
+      (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
+      function GetReportsRunningScore: boolean; override;
    end;
 
 implementation
@@ -102,7 +112,8 @@ implementation
 uses
    uContestRegistry,
    (* RussianID, GetRussiaOblastID -- the leaves the arm and ZoneCont asked. *)
-   uCallSignRoutines;
+   uCallSignRoutines,
+   uTR4WStrings;
 
 procedure TContestRU3AXMemorial.CalculateQSOPoints(var aQso: ContestExchange);
 var
@@ -255,7 +266,7 @@ begin
    aSession.AddDomesticCountry('CE9');
    if not RussianID(string(aStation.MyCountry)) then
       begin
-      aSession.MyState := '';
+      aSession.SentState := '';
       end;
 end;
 
@@ -265,6 +276,40 @@ end;
 function TContestRU3AXMemorial.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' 5NN # ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for RDA, RUSSIANDX.
+   The same steps on ticking the box stood for CIS, RUSSIANDX, UKRAINIAN,
+   UNDX.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestRU3AXMemorial.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_RUSSIA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOUROBLASTID, ncfMyState);
+end;
+
+(* THE TOTALS WINDOW LABELS THE DOMESTIC MULTIPLIERS AS OBLASTS -- uTotal's
+   arm, moved here at M9a (2026-10-02). It named RUSSIANDX and RU3AXMEMORIAL;
+   each holds its own copy (design 1.4). Per mode the labels are the
+   default ones, as they always were. *)
+function TContestRU3AXMemorial.GetTotalsDisplay: TTotalsDisplay;
+begin
+   Result := inherited GetTotalsDisplay;
+   Result.DomesticMultsCaption := TC_OBLASTS;
+end;
+
+(* THE HOUR-BY-HOUR REPORT CARRIES NO RUNNING SCORE -- PostUnit.PrintHourTotals
+   named this contest among the seven whose score is not points times
+   multipliers hour by hour (M9a, 2026-10-02). Each of the seven holds its own copy (design 1.4). *)
+function TContestRU3AXMemorial.GetReportsRunningScore: boolean;
+begin
+   Result := False;
 end;
 
 initialization

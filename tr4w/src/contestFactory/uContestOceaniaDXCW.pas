@@ -130,7 +130,7 @@ end;
 
 function TContestOceaniaDXCW.GetDisplayName: string;
 begin
-   Result := 'OCEANIA-DX-CW';
+   Result := 'Oceania DX Contest, CW';
 end;
 
 function TContestOceaniaDXCW.GetCabrilloName: string;

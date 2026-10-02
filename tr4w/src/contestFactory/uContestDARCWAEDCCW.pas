@@ -98,12 +98,21 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   protected
+      (* THE QTC MENU -- see TContestBase.OffersQTCs (M9a). *)
+      function GetOffersQTCs: boolean; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   SysUtils,
+   uCanonicalExchange;
 
 (* WAEQSOPointMethod, transcribed. A European station scores 1 for a QSO
    outside Europe, and anybody else 1 for a QSO in Europe -- 160 m excepted;
@@ -261,6 +270,24 @@ begin
    aSession.Band := Band80;
    aSession.ContactsPerPage := 40;
    aSession.QTCEnable := True;
+end;
+
+(* THE QTC FUNCTIONS MENU IS OFFERED -- MainUnit.CreateMainWindow greyed it
+   for every contest but DARCWAEDCCW..DARCWAEDCSSB, moved here at M9a
+   (2026-10-02). Each WAE running holds its own copy (design 1.4). *)
+function TContestDARCWAEDCCW.GetOffersQTCs: boolean;
+begin
+   Result := True;
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the serial, the
+   arm it shared with CQ WPX. The SSB running was never named there, and
+   is not here. See TContestBase.CanonicalReceivedExchange; the caller
+   collapses the whitespace. *)
+function TContestDARCWAEDCCW.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.NumberReceived);
 end;
 
 initialization

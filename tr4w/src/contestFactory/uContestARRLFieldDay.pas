@@ -156,6 +156,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE SUMMARY SHEET -- M9a. *)
+      function GetSummarySheet: TSummarySheetLayout; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
@@ -165,7 +176,8 @@ uses
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
    (* STATE from the worked station's section -- a leaf, lifted at M4. *)
-   uARRLSections;
+   uARRLSections,
+   uCanonicalExchange;
 
 procedure TContestARRLFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -446,6 +458,40 @@ begin
    aSession.QSLCW := '73 \ FD';
    aSession.AddDomesticCountries(DomesticCountriesARRLSections);
    aSession.LiteralDomesticQTH := True;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for WINTERFIELDDAY.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARRLFieldDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskField(ncfMyFDClass);
+   aPrompts.AskField(ncfMySection);
+end;
+
+(* THE SUMMARY SHEET CLAIMS THE QSO POINT TOTAL -- PostUnit's ARRLFIELDDAY
+   test in WriteScoreInformationToSummarySheet (4.108.9), moved here at M9a
+   (2026-10-02): the claimed-score line states the total row's QSO points,
+   one column further in, where every other contest states the score. *)
+function TContestARRLFieldDay.GetSummarySheet: TSummarySheetLayout;
+begin
+   Result := inherited GetSummarySheet;
+   Result.ClaimedScoreIsQSOPoints := True;
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the class and the section (or
+   DX). The arm named ARRLFIELDDAY and WINTERFIELDDAY; each holds its own
+   copy (design 1.4). See TContestBase.CanonicalReceivedExchange; the
+   caller collapses the whitespace. *)
+function TContestARRLFieldDay.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.ceClass)) + ' ' + Trim(string(aQso.QTHString));
 end;
 
 initialization

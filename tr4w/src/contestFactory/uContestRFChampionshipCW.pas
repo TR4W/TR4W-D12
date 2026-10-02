@@ -103,6 +103,13 @@ type
          oblast from GetRussiaOblastID. *)
       function DomesticMultiplierFromCall(const aCall: string;
                                           const aLookups: TMultiplierHintLookups): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
+      function GetReportsRunningScore: boolean; override;
    end;
 
 implementation
@@ -112,7 +119,8 @@ uses
    (* RussianID, GetRussiaOblastID -- the leaves the arm asked. *)
    uCallSignRoutines,
    (* The Championship's points table, one copy for both runnings. *)
-   uRFChampionshipPoints;
+   uRFChampionshipPoints,
+   uTR4WStrings;
 
 function TContestRFChampionshipCW.DomesticMultiplierFromCall(const aCall: string;
                                                              const aLookups: TMultiplierHintLookups): string;
@@ -262,6 +270,27 @@ end;
 function TContestRFChampionshipCW.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' ' + aStation.MyState + '#';
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for RFCHAMPIONSHIPSSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestRFChampionshipCW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURZONE, ncfMyState);
+end;
+
+(* THE HOUR-BY-HOUR REPORT CARRIES NO RUNNING SCORE -- PostUnit.PrintHourTotals
+   named this contest among the seven whose score is not points times
+   multipliers hour by hour (M9a, 2026-10-02). Each of the seven holds its own copy (design 1.4). *)
+function TContestRFChampionshipCW.GetReportsRunningScore: boolean;
+begin
+   Result := False;
 end;
 
 initialization

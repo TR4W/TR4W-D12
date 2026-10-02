@@ -49,7 +49,9 @@ uses
   LogCW,
   LogWind,
   LogDupe,
-  ZoneCont;
+  ZoneCont,
+  (* TSessionDefaults -- ApplyContestSentState's parameter (M9a). *)
+  uContestBase;
 
 const
   { TYPED, so appending it to an AnsiString is not a narrowing conversion.
@@ -69,6 +71,35 @@ var
     that is not a state party. uContestFactory hands it to the contest as
     TStationContext.InHostState; nothing else reads it. *)
   StationInHostState: boolean = False;
+
+(* THE STATE THE STATION SENDS IN THIS CONTEST -- design 7.11, M9a (2026-10-02).
+
+  MY STATE, unless the contest's set-up stated what to send in its place: a
+  contest that sends nothing there for a station outside its country (Canada
+  Day and Winter, the Russian DX contests) or the grid instead (the Russian
+  cups) -- TSessionDefaults.SentState.
+
+  EVERY READER OF THE SENT EXCHANGE ASKS THIS, never MY STATE: the exchange
+  messages set-up builds, LogCfg's CQ exchange, the CW '&' macro, the Cabrillo
+  and ADIF sent columns, score posting, the readiness check and the contests'
+  own station snapshot (uContestFactory.CurrentStation).
+
+  WHY IT IS NOT MY STATE. Until M9a the applier WROTE the contest's value into
+  MY STATE -- the operator's own setting, stored in settings/tr4w.json -- so a
+  later save carried the contest's blank or grid out of the contest and into
+  the next one (design 7.11, Q39). MY STATE is now never written by set-up.
+
+  FOR THE SESSION. FoundContest clears it at its head and the contest states
+  it again, so a contest chosen next starts from MY STATE. A MY STATE statement
+  later in the session no longer reaches the sent exchange of a contest that
+  states one -- the contest's rule stands for the session it describes (design
+  8.2m records why the log's reopen decided it). *)
+function SentMyState: string;
+
+(* WHAT THE APPLIER DOES WITH TSessionDefaults.SentState -- exported so a
+  unit test can pin that set-up never writes MY STATE (design 7.11). *)
+procedure ApplyContestSentState(aSession: TSessionDefaults);
+procedure ClearContestSentState;
 
 function FoundContest(CMD: ShortString): boolean;
 procedure SetUpFileNames;
@@ -91,7 +122,6 @@ uses
    uSettingsModel,     // Settings.Bands -- HF / VHF / WARC enables
    (* ContestIdentity -- the contest object set-up reads -- and
       ReplayContestStatements, the operator's half of ApplyContestTraits. *)
-   uContestBase,
    uContestRegistry,
    (* CurrentStation -- the station DescribeSession is handed (M7a). *)
    uContestFactory,
@@ -302,6 +332,39 @@ begin
 
 end;
 
+var
+  (* The contest's sent state, and whether set-up stated one -- see
+    SentMyState. *)
+  GContestSentState: string = '';
+  GContestSentStateStated: boolean = False;
+
+function SentMyState: string;
+begin
+  if GContestSentStateStated then
+     begin
+     Result := GContestSentState;
+     end
+  else
+     begin
+     Result := Settings.My.State;
+     end;
+end;
+
+procedure ApplyContestSentState(aSession: TSessionDefaults);
+begin
+  if aSession.IsStated(svSentState) then
+     begin
+     GContestSentState := aSession.SentState;
+     GContestSentStateStated := True;
+     end;
+end;
+
+procedure ClearContestSentState;
+begin
+  GContestSentState := '';
+  GContestSentStateStated := False;
+end;
+
 procedure SetUpRSTMyZoneExchange;
 var
   OldMyZone: string;
@@ -310,12 +373,12 @@ const
 begin
   OldMyZone := '';
 
-  if Settings.My.State <> '' then
-    if ActiveExchange = RSTZoneAndPossibleDomesticQTHExchange then
-       begin
-       OldMyZone := Settings.My.Zone;
-       Settings.My.Zone := Settings.My.Zone + ' ' + string(Settings.My.State);
-       end;
+  if (SentMyState <> '') and
+     (ActiveExchange = RSTZoneAndPossibleDomesticQTHExchange) then
+     begin
+     OldMyZone := Settings.My.Zone;
+     Settings.My.Zone := Settings.My.Zone + ' ' + SentMyState;
+     end;
 
   Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
   SetCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone));
@@ -336,22 +399,22 @@ end;
 
 procedure SetUpNameAndStateExchange;
 begin
-  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + SentMyState);
   Settings.Messages.RepeatSpExchangeCw := Settings.Messages.CqExchangeCw;
   Settings.Messages.SpExchangeCw := Settings.Messages.CqExchangeCw;
 end;
 
 procedure SetUpRSTMyStateExchange;
 begin
-  Settings.Messages.CqExchangeCw := UTF8Encode(' 5NN ' + Settings.My.State);
-  Settings.Messages.RepeatSpExchangeCw := UTF8Encode('5NN ' + Settings.My.State);
-  Settings.Messages.SpExchangeCw := UTF8Encode('~ %5NN ' + Settings.My.State);
+  Settings.Messages.CqExchangeCw := UTF8Encode(' 5NN ' + SentMyState);
+  Settings.Messages.RepeatSpExchangeCw := UTF8Encode('5NN ' + SentMyState);
+  Settings.Messages.SpExchangeCw := UTF8Encode('~ %5NN ' + SentMyState);
 
-  SetCQMemoryString(CW, F3, UTF8Encode('5NN ' + Settings.My.State));
+  SetCQMemoryString(CW, F3, UTF8Encode('5NN ' + SentMyState));
 
   SetEXMemoryString(CW, F3, '5NN');
-  SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.State));
-  SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ 5NN ' + Settings.My.State));
+  SetEXMemoryString(CW, F4, UTF8Encode(SentMyState));
+  SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ 5NN ' + SentMyState));
   SetEXMemoryString(CW, AltF3, 'RST?');
   SetEXMemoryString(CW, AltF4, 'QTH?');
 end;
@@ -437,7 +500,7 @@ end;
   aDomesticFileName is FoundContest's local, the name the foot of that
   routine writes to DOMESTIC FILENAME; an empty one writes nothing.
 
-  THE ORDER: the engine's choices, the settings, MY STATE, the domestic
+  THE ORDER: the engine's choices, the settings, the state sent, the domestic
   file, the domestic countries (in the contest's order), the shared
   RST-and-serial memories when asked for, the contest's own memories (in
   its order), then the messages. No value here reads another, and no arm
@@ -592,10 +655,9 @@ begin
      begin
      Settings.Contest.Name := aSession.ContestName;
      end;
-  if aSession.IsStated(svMyState) then
-     begin
-     Settings.My.State := aSession.MyState;
-     end;
+  (* THE STATE SENT, HELD FOR THE SESSION -- never written into MY STATE
+    (design 7.11, M9a). *)
+  ApplyContestSentState(aSession);
   if aSession.IsStated(svDomesticFile) then
      begin
      aDomesticFileName := aSession.DomesticFile;
@@ -759,6 +821,10 @@ begin
 
   NoMultMarineMobile := False;
     {KK1L: 6.68 Added for WRTC 2002 as flag to not count /MM or /AM as mults or countries}
+
+  (* A NEW SET-UP STARTS FROM MY STATE -- the previous contest's sent state
+    is not this one's (design 7.11, M9a). *)
+  ClearContestSentState;
 
   Settings.Contest.Name := CMD;
 
@@ -952,7 +1018,7 @@ begin
       RSTAndQSONumberOrDomesticQTHExchange,
       RSTDomesticQTHOrQSONumberExchange:
 
-      if Settings.My.State = '' then
+      if SentMyState = '' then
          begin
          SetUpRSTQSONumberExchange
          end
@@ -971,7 +1037,7 @@ begin
          end;
 
     RSTZoneOrSocietyExchange:
-      if Settings.My.State = '' then
+      if SentMyState = '' then
          begin
          SetUpRSTMyZoneExchange
          end

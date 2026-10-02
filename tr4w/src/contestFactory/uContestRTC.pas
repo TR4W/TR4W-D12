@@ -93,13 +93,27 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+      (* THE CANONICAL SENT EXCHANGE -- M9a. *)
+      function CanonicalSentExchange(const aQso: ContestExchange;
+                                     const aCtx: TCanonicalExchangeContext): string; override;
    end;
 
 implementation
 
 uses
    uContestRegistry,
-   LOGGRID;
+   LOGGRID,
+   uTR4WStrings,
+   SysUtils,
+   uCanonicalExchange;
 
 (* RTCQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)
@@ -143,7 +157,7 @@ end;
 
 function TContestRTC.GetDisplayName: string;
 begin
-   Result := 'RTC';
+   Result := 'Real Time Contest';
 end;
 
 function TContestRTC.GetCabrilloName: string;
@@ -238,6 +252,42 @@ begin
    aSession.SetExchangeMemory(CW, smkAltF4, 'NR?');
    aSession.SetExchangeCaptionMemory(CW, smkF4, 'NR');
    aSession.SetExchangeCaptionMemory(CW, smkF5, 'Cl+Ex');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLDIGI, ARRLVHFJAN, ARRLVHFJUN,
+   ARRLVHFSEP, BATAVIA_FT8, CQVHF, CUPRFCW, CUPRFDIG, CUPRFSSB, MAKROTHEN,
+   STEWPERRY, TESLA, WWDIGI.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestRTC.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the serial and the grid, with
+   NO RST -- the HamScore RTC organizer, 2026-05: the signal report is
+   left out of both exchanges. See TContestBase.CanonicalReceivedExchange;
+   the caller collapses the whitespace. *)
+function TContestRTC.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := IntToStr(aQso.NumberReceived) + ' ' + Trim(string(aQso.QTHString));
+end;
+
+(* THE CANONICAL SENT EXCHANGE IS OUR SERIAL AND OUR GRID, WITH NO RST --
+   uExchangeBuilder's `ceContest = RTC` test, moved here at M9a (2026-10-02).
+   The rules permit an RST on air, and an operator may put 5NN in the CQ
+   exchange template; the template is deliberately not read, so none leaks
+   into the upload. On-air keying is unaffected. *)
+function TContestRTC.CanonicalSentExchange(const aQso: ContestExchange;
+                                           const aCtx: TCanonicalExchangeContext): string;
+begin
+   Result := CollapseWhitespace(IntToStr(aQso.NumberSent) + ' ' + Trim(aCtx.MyGrid));
 end;
 
 initialization

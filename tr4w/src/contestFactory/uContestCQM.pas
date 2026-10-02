@@ -158,7 +158,7 @@ end;
 
 function TContestCQM.GetDisplayName: string;
 begin
-   Result := 'CQ-M';
+   Result := 'CQ-M International DX Contest';
 end;
 
 function TContestCQM.GetCabrilloName: string;

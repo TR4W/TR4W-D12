@@ -98,6 +98,10 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
@@ -105,7 +109,8 @@ implementation
 uses
    uContestRegistry,
    (* FixedModePoints -- the helper for a number per mode. *)
-   uContestFixedPoints;
+   uContestFixedPoints,
+   uTR4WStrings;
 
 procedure TContestNewEnglandQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -127,7 +132,7 @@ end;
 
 function TContestNewEnglandQP.GetDisplayName: string;
 begin
-   Result := 'NEQP';
+   Result := 'New England QSO Party';
 end;
 
 function TContestNewEnglandQP.GetCabrilloName: string;
@@ -230,6 +235,17 @@ begin
 
    aSession.DXMultLimit := 20;
    aSession.AddDomesticCountries(DomesticCountriesKVEKH6KL);
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts. *)
+procedure TContestNewEnglandQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_NEWENGLAND);
+   aPrompts.AskFieldWithCommentWhenInside(TC_NEWENGLANDSTATEABREVIATION, ncfMyState);
 end;
 
 initialization

@@ -83,12 +83,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 (* UNDXQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)
@@ -122,7 +127,7 @@ end;
 
 function TContestUNDX.GetDisplayName: string;
 begin
-   Result := 'UN DX';
+   Result := 'UN DX Contest';
 end;
 
 function TContestUNDX.GetCabrilloName: string;
@@ -212,6 +217,21 @@ procedure TContestUNDX.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
    aSession.AddDomesticCountry('UN');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on ticking the box stood for CIS, RU3AXMEMORIAL,
+   RUSSIANDX, UKRAINIAN.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestUNDX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_KAZAKHSTAN);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOUROBLASTID, ncfMyState);
 end;
 
 initialization

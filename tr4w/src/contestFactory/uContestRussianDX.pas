@@ -101,6 +101,13 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
    end;
 
 implementation
@@ -108,7 +115,8 @@ implementation
 uses
    uContestRegistry,
    (* RussianID, GetRussiaOblastID -- the leaves the arm and ZoneCont asked. *)
-   uCallSignRoutines;
+   uCallSignRoutines,
+   uTR4WStrings;
 
 procedure TContestRussianDX.CalculateQSOPoints(var aQso: ContestExchange);
 var
@@ -266,8 +274,34 @@ begin
    aSession.AddDomesticCountry('CE9');
    if not RussianID(string(aStation.MyCountry)) then
       begin
-      aSession.MyState := '';
+      aSession.SentState := '';
       end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for RDA, RU3AXMEMORIAL.
+   The same steps on ticking the box stood for CIS, RU3AXMEMORIAL,
+   UKRAINIAN, UNDX.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestRussianDX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_RUSSIA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOUROBLASTID, ncfMyState);
+end;
+
+(* THE TOTALS WINDOW LABELS THE DOMESTIC MULTIPLIERS AS OBLASTS -- uTotal's
+   arm, moved here at M9a (2026-10-02). It named RUSSIANDX and RU3AXMEMORIAL;
+   each holds its own copy (design 1.4). Per mode the labels are the
+   default ones, as they always were. *)
+function TContestRussianDX.GetTotalsDisplay: TTotalsDisplay;
+begin
+   Result := inherited GetTotalsDisplay;
+   Result.DomesticMultsCaption := TC_OBLASTS;
 end;
 
 initialization

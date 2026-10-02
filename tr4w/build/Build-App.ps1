@@ -337,7 +337,15 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # classes return a string and the engine converts once, explicitly. Two are
 # MainUnit.ParametersOkay's copy of SetPrefix's arms (SACDistrict and
 # IndonesianDistrict into RData.Prefix), deleted for the one SetPrefix call.
-$NARROW_CEILING = 1281
+# 1281 -> 1279, 2026-10-02: M9a, the display and the reports ask the contest
+# (measured against a HEAD build of the same tree, file by file). One is
+# PostUnit's Winter Field Day header line, 'X-EXCHANGE: ' + MY FD CLASS handed
+# to the AnsiString writer -- the class's header lines go through UTF8Encode
+# now, as ARRL-SECTION always did. One is LOGSUBS2's score-posting XML, whose
+# two `<mult>` loops (`Contest <> WRTC` and WRTC's) are one loop asking the
+# contest for its labels. uExchangeBuilder's one moved, unchanged, to
+# uCanonicalExchange with the code it sits in.
+$NARROW_CEILING = 1279
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

@@ -62,6 +62,9 @@ type
          X.GetHostState callable. Callers use the property; descendants
          override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
       function GetHostState: string; override;
 
       (* NO COUNTY LINE AT ALL -- AND ContestsArray SAYS OTHERWISE.
@@ -100,6 +103,27 @@ uses
    uContestFixedPoints, uContestRegistry;
 
 function TContestMichiganQP.GetDisplayName: string;
+begin
+   Result := 'Michigan QSO Party';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestMichiganQP.GetCabrilloName: string;
+begin
+   Result := 'MI-QSO-PARTY';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestMichiganQP.GetADIFContestId: string;
+begin
+   Result := 'MI-QSO-PARTY';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestMichiganQP.GetFriendlyName: string;
 begin
    Result := 'Michigan QSO Party';
 end;

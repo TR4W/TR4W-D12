@@ -91,7 +91,8 @@ uses
   uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
   uSettingsModel,    // Settings.My.ItuZone
-  uContestRegistry;  // ContestIdentity -- the contest's ADIF id
+  uContestRegistry,  // ContestIdentity -- the contest's ADIF id
+  FCONTEST;          // SentMyState -- the state sent, design 7.11 (M9a)
 
 procedure RunPOSTGetScoresThread;
 begin
@@ -371,7 +372,8 @@ begin
      sSection := ReadCabrilloSummaryField('_LOCATION');
      end;
 
-  sState := Trim(Settings.My.State);
+  (* The state SENT in this contest -- design 7.11 (M9a). *)
+  sState := Trim(SentMyState);
   if sState = '' then
      begin
      sState := ReadCabrilloSummaryField('_ADDRESS-STATE-PROVINCE');

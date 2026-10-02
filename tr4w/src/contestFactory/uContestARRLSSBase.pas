@@ -81,6 +81,10 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
@@ -91,7 +95,8 @@ uses
    uADIF,
    (* ScanSweepstakesExchange -- the engine's own reading of the words. *)
    uExchangeTokens,
-   uAppStrings;
+   uAppStrings,
+   uTR4WStrings;
 
 (* THE ENGINE'S PARSE FIRST, then the refusal's reason.
 
@@ -295,6 +300,20 @@ begin
    aSession.SetExchangeMemory(CW, smkAltF6, 'SEC?');
    (* The arm set Alt-F7 twice, to this value both times. *)
    aSession.SetExchangeMemory(CW, smkAltF7, ' CQ^SS CQ^SS ' + aStation.MyCall + ' ' + aStation.MyCall + ' SS');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   ARRLSSCW and ARRLSSSSB ran the same arms; they are
+   one family under one rule, so the prompts are the family's. *)
+procedure TContestARRLSSBase.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURPRECEDENCECHECKSECTION, ncfMyPrec);
+   aPrompts.AskField(ncfMyCheck);
+   aPrompts.AskField(ncfMySection);
 end;
 
 end.

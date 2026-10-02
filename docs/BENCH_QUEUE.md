@@ -23,6 +23,77 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-02 -- THE DIALOG, THE TOTALS, THE REPORTS AND HAMSCORE ASK THE CONTEST (M9a)
+
+What each contest shows and reports moved onto its class as data the UI renders
+(`CONTEST_OWNERSHIP_DESIGN.md` §8.2m). **Every item below should look exactly
+as it did before** -- the change is where the answer comes from, not the answer.
+`uTestContestDisplay` pins the data; **nothing sees the windows or the files
+below but the golden corpus's Cabrillo header** (Winter Field Day, General QSO).
+One deliberate change is listed last.
+
+- **The New Contest dialog** (`uNewContest` renders
+  `TContestBase.DescribeNewContestPrompts`; its two 240-line `case`s are gone).
+  Choose, and check the rows, their labels, the comment and the "I am in" box:
+  - a state QSO party (Florida): one MY STATE row, comment *"Enter your county
+    if you are in FL state ..."*; **7QP** says *"7th area"*; **Colorado** adds a
+    MY NAME row after it; **British Columbia** shows only its VE7 district
+    comment;
+  - **NAQP CW**: MY STATE (comment *name and state*) then MY NAME; **CWops**:
+    MY NAME first, then MY STATE -- the order is the point;
+  - **Sweepstakes**: MY PREC (comment), MY CHECK, MY SECTION; **ARRL Field
+    Day**: MY FD CLASS, MY SECTION;
+  - **Russian DX**: the box reads *"I am in Russia"*; tick it -- MY STATE row,
+    comment *"Enter your oblast ID:"*; untick -- the rows clear;
+  - **IOTA**: the box reads *"Island station"* (its own caption, not "I am in");
+    **WW PMC**: *"I am in PMC"*;
+  - the three still named in the dialog: **POTA** (box *"Activator"*, tick for
+    MY PARK), **RSGB 1.8 MHz** (*"I am in UK"*, tick for the district), the
+    **UA4W Championship** (MY QTH, the RDA/grid comment);
+  - **IN7QPNE** (classless): the county-or-state comment naming *IN7QPNE*.
+  OK must still enable only when every offered row is filled.
+- **The totals window** (`uTotal` reads `TotalsDisplay`): **IARU** labels the
+  domestic row *HQ Mults* (by mode: *CW HQ* / *Ph HQ*); **Russian DX** and
+  **RU3AX** *Oblasts*; **OZCHR teams** (QSO by mode, CW and phone both worked)
+  shows *CW: nn%* / *PH: nn%* in place of the per-mode QSO rows. Every other
+  contest *Dom Mults*, *CW Dom*, *Ph Dom* as before.
+- **The summary sheet** (PostUnit reads `SummarySheet`): **Winter Field Day**'s
+  multiplier columns show 1 per band/mode row and the row count on the total
+  line; **ARRL Field Day**'s claimed score is the QSO point total, one column
+  further in; every other contest states `Claimed Score = <score>`.
+- **The hour-by-hour report** (`ReportsRunningScore`): no SCORE column for the
+  Cup RF CW/SSB, Ural Cup, Ukraine Championship, RF Championship CW/SSB and
+  RU3AX; every other contest keeps it.
+- **The Cabrillo header**: ARRL 10 and Winter Field Day still refuse to start
+  without a LOCATION (`TC_LOCATIONFIELDEMPTY`); Winter Field Day's
+  `ARRL-SECTION:` and `X-EXCHANGE:` lines still precede `LOCATION:`; General
+  QSO's `CONTEST:` is the title, else the contest name.
+- **HamScore / the UDP contact broadcast / the log's `exchange_sent`**
+  (`uExchangeBuilder` asks `CanonicalReceived/SentExchange`): with HamScore on,
+  log one QSO each in **CQ WW** (`599 5`), **ARRL DX** from a W and from a DX
+  station (`599 CT` / `599 100`), **NAQP** (`JOE CT`), **CW Open** (`123 JOE`),
+  **RTC** (`123 EM17` received, `7 EM17` sent -- no RST either way) and **Field
+  Day** (`2A CT`); every other contest sends the exchange as typed.
+- **WRTC**: the master-file, Telnet and post-scores menu rows are greyed, the
+  three windows do not open, and Super Check Partial shows nothing -- now from
+  `PermittedOperatingAids`. The **WAE** runnings still offer the QTC menu; every
+  other contest greys it.
+- **Score posting XML** (UDP score broadcast): every contest posts `state`,
+  `country`, `zone`, `prefix` `<mult>` rows per band and mode, as before. WRTC
+  posts none (it never did -- Q55).
+- **THE ONE DELIBERATE CHANGE -- design 7.11, MY STATE IS NEVER WRITTEN BY A
+  CONTEST.** As a **K or DL station**, open **Canada Day** (or Canada Winter,
+  Russian DX, RU3AX) or the **Cup RF**: the CW messages, the `&` macro, the
+  Cabrillo and ADIF sent columns and HamScore send what they always did (no
+  state; the grid for the Cup RF) -- **but Preferences' MY STATE still shows
+  YOUR state**, and after exiting and opening another contest MY STATE is what
+  you set, not blank or a grid. Before M9a the contest wrote its value into MY
+  STATE and a save carried it out. A MY STATE edit made mid-session no longer
+  reaches those contests' sent exchange (the contest's rule stands for the
+  session; design Q56).
+
+---
+
 ## Added 2026-10-02 -- OFF-BAND QSOs LEAVE THE DUPE SHEET AND THE NEED-MULT HINTS (M8)
 
 Multipliers and dupes became contest-declared rules over the shared sheet

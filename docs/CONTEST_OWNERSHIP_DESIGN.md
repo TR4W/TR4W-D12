@@ -1,4 +1,4 @@
-# What a contest owns -- DESIGN (M0-M8 built; see §8.2)
+# What a contest owns -- DESIGN (M0-M9a built; see §8.2)
 
 **Status:** decision document, rewritten 2026-10-01 at `c2efdf18` to NY4I's
 ruling of that day. The ruling **replaced** the strategy-and-registry model that
@@ -72,11 +72,11 @@ lives in a helper or in the format's own unit.
 | exchange parsing and validation | **the class, for every contest** (M5b, done 2026-10-02): `logstuff.ProcessExchange` asks it after the contest-blind gate; the base parses the session's shape through the engine's `ParseExchangeShape`, handed in as data. The UA4W Championship's rule stays named in LOGSTUFF (§8.2g) | `ParseReceivedExchange`, `MayBeACallsign`, `InitialExchangeFromCall` (**existing**), plus the validators |
 | ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. POTA still named in PostUnit's tail (§8.2e); ARRL 160 left it at M7b (§8.2j) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
 | ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. POTA still keeps an arm in `MainUnit.ApplyClasslessADIFImport` (§8.2f); ARRL 160's moved to its class at M7b (§8.2j) | `ApplyADIFImport` (**existing**, §3.2) |
-| Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; headers and mode string: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloHeaders`, `CabrilloModeString` (M9) |
+| Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; the contest-specific header lines and the mode column: **the class** (M9a, §8.2m); the general header: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloContestName`, `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag`, `CabrilloModeString` (**existing**, M9a) |
 | session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` keeps only the arms of POTA and the UA4W Championship, classless on purpose | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz still reads the sheet in its scoring (Q33) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); the multiplier KEY at M10 |
-| summary sheet, totals window, new-contest prompts | `postunit`, `uTotal`, `uNewContest` | `SummarySheetMultColumns`, `TotalsDisplay`, `NewContestPrompts` |
+| summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest keeps the arms of POTA, RSGB 1.8 and the UA4W Championship | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
 
 The seam names on the right are the generator's
 (`tools/contest-rules-inventory/judgements.py`), with two deliberate
@@ -709,7 +709,9 @@ and the Cabrillo summary's own `_CATEGORY-POWER`. The end state has one:
   mid-contest but let it be changed"* -- a reminder that it changes the scoring
   class, never a block.
 
-Lands with the Cabrillo-header and UI work (M9).
+Lands with the UI work (M9b): the summary's CATEGORY-POWER control writes the
+one setting. M9a moved the contest-specific Cabrillo header lines and left the
+general header, CATEGORY-POWER included, where it is.
 
 ### 7.7 DECIDED (2026-10-01): three scoring stages, one entry point each
 
@@ -952,6 +954,13 @@ contest-scoped value (TSessionDefaults / the contest log, never the station
 bucket), and MY STATE stays what the operator set. Lands with the sent-exchange
 and Cabrillo-header work (M9); behaviour of the sent exchange must not change.
 
+**LANDED at M9a (2026-10-02, §8.2m).** `TSessionDefaults.SentState` (was
+`MyState`) is held by FCONTEST as the session's (`SentMyState`), every reader
+of the sent exchange asks it, and MY STATE is never written by set-up --
+`Test_SetUpNeverWritesMyState`; the matrix's setup section moved in exactly
+the seven contests that state one, and nowhere else. A transient MY ZONE write
+in one shared set-up routine is Q57.
+
 ### 8.1 Which oracle sees what
 
 | oracle | sees | blind to |
@@ -991,7 +1000,8 @@ Each is behaviour-preserving unless marked.
 | **M7a** | **DONE 2026-10-02 (§8.2i).** **Session arms of the registered contests.** `DescribeSession` filling a `TSessionDefaults`, one applier (`FCONTEST.ApplySessionDefaults`); all 55 arms naming a registered contest moved and were deleted; LogCfg's CQ-exchange defaults became `CQExchangeDefault`; D8 resolved by stating both branches; Winter Field Day's DX multiplier row and class made the effective value. No contest gained a class | the matrix (185 identical, no re-freeze); corpus; `uTestContestSession` |
 | **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE (NY4I) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
 | **M8** | **DONE 2026-10-02 (§8.2l).** **Multipliers and dupes**, as contest-declared rules over the shared sheet (§7.7 stage 2). `CountsAsMultiplier` and `DomesticMultiplierFromCall`; the five `SetMultFlags` rules and the four hint arms moved; YB DX's no-op deleted with ParametersOkay's copy of `SetPrefix`; the off-band dupe gap and need-multiplier hint fixed (§7.4). Multiplier-KIND arms stay in the sheet until Q4; RSGB 1.8 still classless (Q33) | corpus `CLAIMED-SCORE`; the matrix; `uTestContestMultipliers`, `uTestOffBandCredit` |
-| **M9** | **UI and the rest.** `NewContestPrompts`, `TotalsDisplay`, `SummarySheetMultColumns`, Cabrillo headers and mode string | bench (no automated gate sees the UI) |
+| **M9a** | **DONE 2026-10-02 (§8.2m).** **What the display and the reports show**, as data the UI asks for: the New Contest prompts, the totals window, the summary sheet, the hour report, the Cabrillo header lines and mode column, HamScore's canonical exchanges, the score-posting labels, WRTC's operating aids and the QTC menu; design 7.11 (MY STATE never written by set-up); every class states its display name, Cabrillo name and ADIF id | the matrix (only the 7.11 setting lines move); corpus; `uTestContestDisplay`; `BENCH_QUEUE.md` |
+| **M9b** | **The UI itself.** The New Contest drop-down shows `DisplayName`; CATEGORY-POWER is one value (7.6); General QSO's display rules, the FOC log columns, WAG's call-window warning and the off-time tests (§8.2m) | bench (no automated gate sees the UI) |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
 
 **Export comes before import and parse** because export is the only half the
@@ -2212,7 +2222,9 @@ OZCHR teams' mode-split display in `uTotal`, All Asian's arm in
 `uExchangeBuilder` (HamScore's received exchange) and ARRL 10 beside Winter
 Field Day in PostUnit's Cabrillo-header location check, and the New Contest
 dialog's prompts (`uNewContest`) -- each a seam not built yet (M9), where
-registered contests are still named too.
+registered contests are still named too. **[M9a, §8.2m: the totals window,
+`uExchangeBuilder`, the Cabrillo-header check and the prompts are their
+classes' now; LOGEDIT's initial exchange stays (Q50).]**
 
 ### 8.2k M7b batch 2 -- what it covered (2026-10-02)
 
@@ -2331,7 +2343,8 @@ bounds a short grid. The grid handling is untouched and each class says so.
 
 **Not changed, on purpose -- seams not built yet:** WRTC's three display
 rules (the main menu, `OpenTR4WWindow`, LOGEDIT's Super Check Partial) and its
-score-posting multipliers in LOGSUBS2 (M9); YB DX in `MainUnit.ParametersOkay`'s
+score-posting multipliers in LOGSUBS2 (M9) **[done at M9a, §8.2m:
+`PermittedOperatingAids` and `ScorePostingMultiplierType`]**; YB DX in `MainUnit.ParametersOkay`'s
 Indonesian-district prefix rule, RDA and YO DX in LOGEDIT's new-multiplier
 check, and RDA beside the Russian DX contests in LOGEDIT's initial-exchange
 fallback (M8 -- the Russian DX contests, registered since M5b, are named in
@@ -2341,7 +2354,8 @@ no-op and is deleted; RDA's and YO DX's new-multiplier arms are their
 classes' `DomesticMultiplierFromCall`; RDA's initial-exchange fallback is an
 exchange rule and stays (Q50)]**; SST, CW Open and RTC in
 `uExchangeBuilder`'s HamScore exchanges (M9, beside fourteen registered
-contests); and the New Contest dialog's prompts (`uNewContest`, M9). The
+contests); and the New Contest dialog's prompts (`uNewContest`, M9) **[both
+done at M9a, §8.2m]**. The
 `TENTEN` in LOGSCP, LOGWIND and LOGEDIT is TRMASTER's Ten-Ten field and the
 `'RAEM'` in `IsAGoodCall` a callsign -- neither is the contest.
 
@@ -2392,7 +2406,7 @@ script over `src/contestFactory`; reach = contests stating the value):
 | a Russian call's oblast as the initial exchange when none was found | `LogEdit` initial exchange, `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]` | 1 | three | an EXCHANGE rule, not a multiplier one | stays -- it has drifted from `InitialExchangeFromCall` (Q50) |
 | the zone initial exchange (OZCR, RF Championship), IARU's first word | `LogEdit` initial exchange | 1 | four | exchange rules | stays (M9, the initial-exchange seam) |
 | points times one | `LogEdit.TotalScore` | 1 | RSGB18 | final score | stays (Q33) |
-| totals-window captions (OZCR_O, IARU, RUSSIANDX, RU3AX), summary sheet (Winter FD), score posting (WRTC) | `uTotal`, `postunit`, `logsubs2` | 1 | several | display | M9 |
+| totals-window captions (OZCR_O, IARU, RUSSIANDX, RU3AX), summary sheet (Winter FD), score posting (WRTC) | `uTotal`, `postunit`, `logsubs2` | 1 | several | display | M9 -- **done at M9a** (§8.2m) |
 | the six GC stations | `LogEdit.SetPrefix` | 3 | GAGARINCUP | the `GCStation` KIND's arm | stays with its kind |
 | reach-1-3 KINDS: `ARRLDXCCWithNoIOrIS0` (ARI), `ARRLDXCCWithNoJT` (JTDX), `CQUBAEuropeanCountries` (UBA), `BlackSeaCountries` (BSCI), `PACCCountriesAndPrefixes` (PACC), `CQEuropeanCountries` (WAEDC), `CQDXCCWithNoUSAOrCanada` (CQ 160); `BelgiumPrefixes`, `SouthAmericanPrefixes`, `MongolianCallSignPrefix`, `GCStation`, `IndonesianDistricts`, `SACDistricts`, `NonSouthAmericanPrefixes`, `SouthAndNorthAmericanPrefixes`, `CQNonEuropeanCountriesAndWAECallRegions`; `EUHFCYear`, `BranchZones`, `RFChampionchipZones`; `RDADistrict`, `DOKCodes`, `IOTADomestic` | `GetDXQTH`, `SetPrefix`, `SetUpRemainingMultiplierArrays`, `LogEdit.Add`, `uMults.FillVisibleBytes`, `logdom.GetDomQTH` | 4 | 1-3 each | contest rules in disguise -- but see DECIDED | stay keyed on the kind until Q4 |
 | a rover is never a dupe in a grid contest | `LogEdit.CallIsADupe`, `logsubs2` | 4 | `GridSquares`, 6 | SHARED: engine behaviour on a kind | stays |
@@ -2515,6 +2529,221 @@ ParametersOkay's two copied `SetPrefix` arms), range 4 -> 4. Nothing to
 re-freeze.
 
 **Questions this raised -- NY4I's:** Q48-Q51 (§9); Q33 updated.
+
+### 8.2m M9a -- what it covered (2026-10-02)
+
+**Everything a contest owns that feeds the display and the reports is on its
+class, as DATA the UI asks for.** No class touches a form, a canvas or a
+global: the New Contest dialog, the totals window, the summary sheet, the hour
+report, the Cabrillo writer, the score-posting clients and the WRTC menus ask
+the contest (`ContestIdentity`) and render the answer. And design 7.11 landed:
+**set-up never writes MY STATE**. NY4I approved M9a and delegated its design
+forks; each DECIDED entry rests on the evidence given with it. No contest
+gained a class.
+
+**MEASURED FIRST** -- `Lint-ContestNameTests -List` at 69828f2a (151 in 12
+files), the inventory's UI, score/summary/totals, Cabrillo-export and
+networking tables, and every reader of `Settings.My.State`:
+
+| site | contests | seam (on `TContestBase`) | moved |
+|---|---|---|---|
+| `uNewContest.ApplyIAmIn` / `ApplyContestChoice`, two `case SelectedContest of` (92 arms and the party head's BCQP test) | 115 registered contests (and two no-op arms), 3 classless | `DescribeNewContestPrompts(TNewContestPrompts)` | 87 of its 92 tests; POTA, RSGB 1.8 and the UA4W Championship stay (`ClasslessPrompts`) |
+| `uTotal.UpdateTotals2` | OZCR_O, IARU, RUSSIANDX, RU3AX | `TotalsDisplay` (`TTotalsDisplay`) | all 5 |
+| `PostUnit.WriteScoreInformationToSummarySheet` | WINTERFIELDDAY x2, ARRLFIELDDAY | `SummarySheet` (`TSummarySheetLayout`) | all 3 |
+| `PostUnit.PrintHourTotals` | the Cup RF CW/SSB, Ural Cup, Ukraine Championship, RF Championship CW/SSB, RU3AX | `ReportsRunningScore` | 1 |
+| PostUnit's Cabrillo header: the LOCATION guard, General QSO's name, Winter Field Day's section lines | ARRL10, WINTERFIELDDAY, GENERALQSO | `RequiresCabrilloLocation`, `CabrilloContestName`, `CabrilloHeaderLinesBeforeTag` | all 4 |
+| PostUnit's Cabrillo QSO lines: FM as PH | WINTERFIELDDAY | `CabrilloModeString` | 1 |
+| `uExchangeBuilder` (HamScore, the UDP contact broadcast, the log's `exchange_sent`) | 19 contests, RTC's sent side | `CanonicalReceivedExchange`, `CanonicalSentExchange` | all 11 |
+| LOGSUBS2's score-posting XML | WRTC | `ScorePostingMultiplierType` | 1 |
+| `MainUnit.CreateMainWindow` menus, `OpenTR4WWindow`, LOGEDIT's Super Check Partial | WRTC | `PermittedOperatingAids` (`TOperatingAid`) | all 3 |
+| `MainUnit.CreateMainWindow`'s QTC menu | DARCWAEDCCW..DARCWAEDCSSB | `OffersQTCs` | 1 |
+| every set-up that blanked or replaced MY STATE | Canada Day/Winter, Russian DX, RU3AX, Cup RF CW/SSB/DIG | `TSessionDefaults.SentState` -- 7.11 | all 7 |
+
+**DECIDED: THE PROMPTS ARE ORDERED STEPS IN THE DIALOG'S OWN TERMS, IN A CLASS
+(`TNewContestPrompts`).** Each step is what one statement of an arm did: offer a
+field's row, offer it with a comment, show the "I am in" box. Two lists: on
+choosing the contest, and on ticking its box. Considered and rejected: a SET of
+fields plus one comment -- the dialog hands rows out in the ORDER fields are
+asked and the last comment wins, and those orders differ (NAQP asks MY STATE
+then MY NAME, CWops the other way), so a set would lose behaviour. A class for
+`TSessionDefaults`' reason (it owns ordered lists); its element
+`TNewContestPrompt` is a record, the interface parameter. The field list moved
+from uNewContest (`InitialCommands`, deleted) to `uContestBase.TNewContestField`
+-- same members, same order -- because a contest has to name a field and may
+not reach into a UI unit.
+
+**DECIDED: THE CLASS STATES ITS WORDS, AS THE `TC_` RESOURCESTRINGS THE ARMS
+USED.** A contest owns its wording; it is read when the dialog asks, so a
+loaded translation still reaches the screen. Considered and rejected: a
+text-key enum the dialog maps to strings -- a shared set of wording, which §0.2
+retires. "I am in %s" (`TC_IAMIN`) stays the DIALOG's words: a contest states
+the region (`OfferIAmIn`), and the two that set the whole caption say so
+(`OfferIAmInCaption`: IOTA's island station; POTA's Activator, classless).
+
+**DECIDED: THE QSO-PARTY HEAD IS THE BASE'S, KEYED ON THE TRAIT, NAMING THE
+QSOParties AREA.** The dialog put up the county-or-state row for any contest
+whose row has a P, but BC. The base does it for `IsUSQSOParty` (equal to P for
+every class -- `Test_MovedRowValuesStillMatchTheArray`), so IN7QPNE, classless,
+keeps it; British Columbia overrides without `inherited`; Colorado and
+Minnesota call `inherited` and add MY NAME. **The area is the QSOParties
+entry, NOT `HostState`**: `USQSOPartyStateName` answers only a two-letter
+state, so the 7QP's '7th area' and IN7QPNE came out blank. The new test caught
+it on its first run.
+
+**THE PROOF.** `uTestContestDisplay.Test_NewContestPromptsAreTheDialogsArms`
+renders every contest's prompts -- all 185, class or not -- and compares them
+with `ExpectedOnChoice` / `ExpectedWhenTicked`, which were GENERATED by a parse
+of the two `case`s at 69828f2a, not from the classes; the party head is
+computed in the test from the row's P and the table, as the dialog computed
+it. The classes themselves were generated from the same parse, and the parse
+was read against the source arm by arm. Arms that named several contests are
+copies (§1.4), each class saying which others shared it; the Sweepstakes and
+NRAU-Baltic runnings, identical in both lists, are their family base's. Two
+no-op arms (MWC, VAQP in the ticked case) did nothing and have no override.
+
+**DECIDED: THE TOTALS WINDOW AND THE SUMMARY SHEET READ RECORDS**
+(`TTotalsDisplay`, `TSummarySheetLayout`) -- one getter each, pure data, the
+interface-parameter exemption. Each override starts from `inherited` and states
+what differs. ARRL Field Day's summary states its QSO points as the claimed
+score, one column further in, as its arm did.
+
+**DECIDED: THE CABRILLO HEADER IS PER TAG, KEYED ON THE TAG'S NAME.** Winter
+Field Day's two lines come before `LOCATION:`; the writer asks every tag. The
+key is the Cabrillo spelling (`LOCATION`), not `uCbrSum.CabrilloTags` -- a UI
+unit a class may not reach. The general header stays PostUnit's (CATEGORY-POWER
+is M9b, 7.6). **The class's lines are written through `UTF8Encode`**, as the
+ARRL-SECTION line always was; `X-EXCHANGE:` went through an implicit ANSI
+conversion before -- identical for every legal FD class (`1A`..), and narrowing
+fell by one.
+
+**DECIDED: THE CABRILLO MODE COLUMN'S BASE CALLS `uCabrilloFormat.FormatCabrilloMode`,
+AND POSTUNIT'S INLINE COPY OF IT IS DELETED.** The helper existed, was unit
+tested, and already took the "FM is phone" flag Winter Field Day needs; PostUnit
+had written it out a second time with the contest test inside. HamScore's
+one-QSO line (`uCabrillo`) calls the helper with no override, so it writes
+Winter Field Day's FM as `FM` where the file writes `PH` -- unchanged, Q54.
+
+**DECIDED: THE CANONICAL EXCHANGES ARE THE CONTEST'S; THE SHARED PIECES ARE A
+LEAF.** `uExchangeBuilder` keeps its two entry points, reads the session's
+settings (the CQ exchange template, MY GRID), asks the QSO's contest -- the
+`case` keyed on `ceContest` too -- and collapses the received form, as every
+arm was. Its helpers (`CollapseWhitespace`, the default RST, the template
+rebuild) moved line for line to `uCanonicalExchange` (VC, SysUtils, StrUtils),
+which the classes call. The arms that named both runnings of a family are the
+family base's (CQ WPX, CQ WW, ARRL DX); the WAEDC's CW running and CQ 160's CW
+running alone were named, and alone override. The base's received form is the
+exchange as typed; its sent form is the template, `#` our serial, `5NN` as 599.
+
+**DECIDED: WRTC'S THREE TESTS ARE ONE FACT -- THE OPERATING AIDS IT FORBIDS --
+AND IT IS THE CONTEST'S, NOT M9b's.** The menu greying, the windows refused and
+the Super Check Partial skipped all said "WRTC is unassisted"; which aids a
+sponsor forbids is a rule. `TOperatingAid` names three (Super Check Partial,
+DX cluster, score posting); which WINDOW is which aid is UI wiring and stays in
+MainUnit (`OperatingAidOfWindow`). The WAE QTC menu in the same block is
+`OffersQTCs`. Tesla's `DisplayTotalScore` repaint stays where M7b left it:
+display, not a rule.
+
+**DECIDED: SCORE POSTING ASKS A LABEL PER KIND, AND '' POSTS NONE.** The base's
+labels are the four LOGSUBS2 always posted; WRTC's class holds its own two and
+the all-modes-row rule. **Finding: the writer walks CW, digital and phone rows
+only, so the all-modes row never comes and WRTC has never posted a multiplier**
+-- transcribed, Q55.
+
+**DECIDED (design 7.11): THE STATE SENT IS THE SESSION'S, AND MY STATE IS NEVER
+WRITTEN BY SET-UP.**
+
+- `TSessionDefaults.MyState` is `SentState` (`svSentState`): what the contest
+  sends where MY STATE goes. FCONTEST's applier holds it for the session
+  (`ApplyContestSentState`); `FCONTEST.SentMyState` answers it when stated, else
+  MY STATE; FoundContest clears it at its head, so the next contest starts from
+  MY STATE. Exported for `Test_SetUpNeverWritesMyState`, which runs every
+  contest's set-up for three stations and asserts MY STATE untouched.
+- **Every reader of the SENT exchange was found and repointed:** set-up's
+  exchange messages (`SetUpRSTMyStateExchange`, `SetUpNameAndStateExchange`,
+  `SetUpRSTMyZoneExchange`, the closing `case ActiveExchange`), LogCfg's UA4W
+  default, the CW `&` macro (LogSend), PostUnit's Cabrillo sent column and ADIF
+  `STX_STRING`, uGetScores' posted state, the readiness check, and
+  `CurrentStation.MyState` -- so every class's `CQExchangeDefault` and scoring
+  sees what it saw.
+- **Not repointed, and why:** LOGSTUFF's legacy scoring arms (reachable only by
+  a classless contest, which never states a sent state; they die at M10); the
+  in-state test (`FoundMyStateInDomFile` -- where the station IS); uTelnet's
+  `MY_STATE` script token and Preferences (the station's own value, not the
+  exchange).
+- **The precedence, decided on evidence:** the contest's sent state stands for
+  the session it describes. Considered: clearing it whenever MY STATE is written,
+  which would have kept "a later MY STATE line wins" exactly. Rejected: the log's
+  reopen re-applies its captured STATION rows after CONTEST
+  (`LogStoreApplyContestConfig`), and a log captured by this build holds the
+  operator's MY STATE -- so any change of MY STATE between sessions would clear
+  the contest's state and send the stale one, where the old build re-blanked on
+  every set-up. What changes instead: a MY STATE statement after the CONTEST
+  line, or a mid-session Preferences edit, no longer reaches these seven
+  contests' sent exchange (Q56).
+- **The setup section of the matrix moves, and only there:** `setting.MY STATE`
+  and its alias `setting.MY QTH` now show the station's value in these seven
+  contests' records, in exactly the variants whose set-up stated one.
+
+**Found on the way, not changed (Q57):** `SetUpRSTMyZoneExchange` writes MY
+ZONE (zone + state) and restores it -- a transient station write, and the
+write marks MY ZONE operator-stated (`TMySettings.SetZone` sets `FZoneWasSet`)
+for CQ WW RTTY whenever MY STATE is set.
+
+**DECIDED (NY4I's ruling, enforced): EVERY CLASS STATES ITS DISPLAY NAME,
+CABRILLO NAME AND ADIF ID.** Fifteen classes inherited `CabrilloName`,
+`ADIFContestId` and `FriendlyName` from the row (the ARRL DX, Sweepstakes, CQ
+WW and CQ WPX runnings, Florida, Michigan, General QSO, IARU, the NA Sprints,
+Winter Field Day); each now states the value the row gave it. **`DisplayName`
+is the human name, the `FriendlyName` where the row has one**: 56 classes
+whose display name was their enum spelling now say their friendly name, and 12
+whose hand-written display name differed from it now say it too (the old names
+are Q52); 47 rows have no friendly name, so their display name is still the
+enum spelling (Q53). `DisplayName` has no reader outside the tests until M9b
+renders it, so no output moved. **The detection:**
+`Test_EveryClassStatesItsIdentity` reaches each protected getter as a
+descendant does and compares its code with the parent class's -- a family base
+stating a name would give two contests one name -- with a negative control (the
+ARRL DX base, which states none) proving the comparison can fail; the
+enum-spelled list is a ratchet.
+
+**Left for M9b and later, with the step each waits for** (the 34 contest-name
+tests still in shared code):
+
+- the New Contest drop-down showing `DisplayName`, and CATEGORY-POWER as one
+  value (7.6) -- M9b, the UI;
+- General QSO's display rules -- multiplier and QSO status, station
+  information and possible calls (MainUnit, LOGEDIT, LOGSUBS2 x2, LOGWIND), the
+  ten-date warning (PostUnit) and WARC band stepping (LOGSTUFF) -- one question
+  first: is General QSO a contest at all (it is a log)? M9b;
+- the FOC Marathon's log columns (MainUnit x3) -- a `LogColumns` seam; WAG's
+  call-window frequency warning (MainUnit); the CQ WW / IARU off-time minimum,
+  a string test on the name (MainUnit, PostUnit) -- M9b;
+- the classless arms: POTA (MainUnit x2, PostUnit x3, uADIF, FCONTEST,
+  uNewContest x2; Q6), the UA4W Championship (FCONTEST, LogCfg, LOGSTUFF,
+  uNewContest; Q28), RSGB 1.8 (LOGEDIT, uNewContest x2; Q33);
+- LOGEDIT's initial-exchange rules (OZCHR, RF Championship, Russian DX, IARU;
+  Q50), Radio YOC's loader (engine state), the Cup RF his-QTH in the Cabrillo
+  writer (Q23), the legacy RU3AX doubling in LOGSTUFF (dead, M10).
+
+**Gates, run 2026-10-02 on a full build.** The contest matrix: **178 identical, 7
+differing** -- Canada Day, Canada Winter, the Cup RF CW/SSB/digital, Russian DX
+and RU3AX. Compared by script with `setting.MY STATE` and its alias
+`setting.MY QTH` excluded, **no other line moved in any of the seven**, and no
+record outside them moved at all. The moved lines are exactly the variants
+whose set-up stated a sent state (Canada: the us variant; the Russian DX
+contests: us and ve; the Cup RF: all three), now showing the station's value
+-- 7.11 working. Re-freeze the seven for that reason. Golden corpus **24
+passed, 0 failed, 2 known-divergence, 13 sets exported, exit 0** -- it pins
+Winter Field Day's header lines and FM-as-PH column and General QSO's
+`CONTEST:` name through the new seams; `test-adif-roundtrip.sh` **13
+passed**; unit tests **0 failed** (54,700 passed; `uTestContestDisplay`
+new). `Lint-ContestNameTests` 151 -> 34: unewcontest 92 -> 5, uexchangebuilder
+11 -> 0, utotal 5 -> 0, postunit 14 -> 5, mainunit 11 -> 8, logedit 7 -> 6,
+logsubs2 3 -> 2; its floor 120 -> 27. Narrowing 1281 -> 1279 (measured file by
+file against a HEAD build: PostUnit's X-EXCHANGE line, LOGSUBS2's second
+`<mult>` loop), range 4 -> 4.
+
+**Questions this raised -- NY4I's:** Q52-Q57 (§9).
 
 ### 8.3 What "a contest has moved" means -- checkably
 
@@ -2748,6 +2977,43 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     dupe sheet and the Stations window's `+` no longer show it -- consistent
     with "not a dupe", but those are also "worked there" displays. Keep it so
     (recommended: one rule), or keep a worked-there mark that is not a dupe?
+
+- **Q52-Q57** (M9a, the display and the reports, §8.2m):
+  - **Q52** Twelve classes had a hand-written display name that is not the
+    row's friendly name; M9a made every display name the friendly name, as
+    asked. The old ones: ARRL International DX Contest - CW / - Phone, ARRL
+    Sweepstakes - CW / - Phone, CQ WPX - CW / - SSB, CQ World Wide DX - CW /
+    - SSB, North American Sprint - CW / - RTTY, ARRL International Digital
+    Contest, General QSO. The friendly names are shorter ("ARRL Inter. DX
+    Contest, CW", "General QSO/DX Logging"). Which should the New Contest
+    drop-down show (M9b)? If the longer, should `FriendlyName` change with it
+    -- it also feeds the summary sheet's `CONTEST:` line and the log
+    database's friendly name, so that is an output change.
+  - **Q53** Forty-seven contests' rows have no friendly name, so their display
+    name is still their enum spelling (`ALRS-UA1DZ-CUP`, `RF-CUP-CW`, `UKEI`,
+    `YOUTHCHAMPIONSHIPRF`, ...; the list is
+    `uTestContestDisplay.ENUM_SPELLED_DISPLAY_NAMES`). Human names for the
+    drop-down, please -- each one given leaves the ratchet list.
+  - **Q54** HamScore's one-QSO Cabrillo line (`uCabrillo`) writes Winter
+    Field Day's FM contacts as `FM`; the Cabrillo file writes `PH`. Should
+    HamScore ask the contest's `CabrilloModeString` too? (A HamScore change.)
+  - **Q55** WRTC's score-posting XML has never carried a multiplier: its rule
+    posts HQ and country on the all-modes row, and the writer walks only the
+    CW, digital and phone rows. Post them per mode, add the all-modes row, or
+    leave it (WRTC posts no live score anyway -- its aids forbid it)?
+  - **Q56** (DECIDED under the delegation; for confirmation) A contest's
+    sent state stands for the whole session: a MY STATE statement after the
+    CONTEST line, or a Preferences edit mid-contest, no longer reaches the
+    sent exchange of Canada Day/Winter, the Russian DX contests or the Cup RF
+    (§8.2m says why: a log's reopen re-applies the station's captured MY
+    STATE). Was "a later MY STATE wins" relied on anywhere?
+  - **Q57** `SetUpRSTMyZoneExchange` (CQ WW RTTY's zone-and-state exchange)
+    writes MY ZONE as "zone state" while it builds the messages and then
+    restores it -- a contest writing a station setting, briefly; and because
+    `SetZone` records an operator statement, MY ZONE stays marked stated
+    after the restore. Build the messages from a local instead (MY ZONE
+    derived from MY CALL would then stay derived -- a behaviour change only
+    for a later MY CALL change)?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

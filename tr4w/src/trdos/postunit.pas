@@ -431,6 +431,11 @@ uses
      every contest is asked, a classless one answering as a plain
      TContestBase. *)
   uContestRegistry,
+  (* CurrentStation -- the station a contest's Cabrillo header lines are for
+     (M9a). *)
+  uContestFactory,
+  (* SentMyState -- the state SENT in this contest, design 7.11 (M9a). *)
+  FCONTEST,
   uCFG,
   uLogNote;   (* NoteText -- MakeNotesList *)
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
@@ -1023,6 +1028,10 @@ procedure WriteScoreInformationToSummarySheet;
     m: RemainingMultiplierType;
     TotalLine: boolean;
     totalMults: integer;
+    (* HOW THIS CONTEST'S SHEET COUNTS -- asked of the contest since M9a,
+      where it was three tests of its name (Winter Field Day's multipliers,
+      ARRL Field Day's claimed score). *)
+    layout: TSummarySheetLayout;
   const
     h = #13#10'  BAND   Raw QSOs   Valid QSOs   Points';
     mn: array [ RemainingMultiplierType ] of string = ( '', 'Mults',
@@ -1030,6 +1039,7 @@ procedure WriteScoreInformationToSummarySheet;
     breakline =
        #13#10' __________________________________________________________________';
   begin
+  layout     := ContestIdentity( Contest ).SummarySheet;
   TotalLine  := False;
   totalMults := -1; // To accomodate the totals line that will add one too many
   sWriteFile( tReportFileWrite, h, length( h ) ); // QSO part of header
@@ -1082,7 +1092,7 @@ procedure WriteScoreInformationToSummarySheet;
              sysutils.Format( #13#10' %5s%4s %8d  %12d %8d', [ string( BString ),
              string( MString ), RawQSOTotals[ Band, TempMode ],
              PostQSOTotals[ Band, TempMode ], SumInteger ] ) );
-          if Contest = WINTERFIELDDAY then
+          if layout.MultiplierPerBandModeRow then
              begin
              inc( totalMults );
              end;
@@ -1094,7 +1104,7 @@ procedure WriteScoreInformationToSummarySheet;
                 begin
                 Continue;
                 end;
-             if Contest = WINTERFIELDDAY then
+             if layout.MultiplierPerBandModeRow then
                // or any contest where it is one mults if QSOs on this band/mode
                 begin
                 if TotalLine then
@@ -1123,7 +1133,7 @@ procedure WriteScoreInformationToSummarySheet;
         sysutils.Format( #13#10#13#10'    There were %d QTC points.',
         [ TotalNumberQTCsProcessed ] ) );
      end;
-  if Contest <> ARRLFIELDDAY then
+  if not layout.ClaimedScoreIsQSOPoints then
      begin
      sWriteFileFromString( tReportFileWrite,
         sysutils.Format( #13#10#13#10'    Claimed Score = %d points.',
@@ -1451,8 +1461,9 @@ procedure PrintHourTotals;
     TempBand: BandType;
     ShowScore: boolean;
   begin
-  ShowScore := not( Contest in [ CUPRFCW, CUPRFSSB, RU3AXMEMORIAL, CUPURAL,
-     UKRAINECHAMPIONSHIP, { RADIOYOC, } RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB ] );
+  (* THE CONTEST SAYS WHETHER ITS HOURS CARRY A RUNNING SCORE -- M9a; this
+    named the seven that do not (the Russian cups and championships). *)
+  ShowScore := ContestIdentity( Contest ).ReportsRunningScore;
   OpenFileForWrite( FileWrite, ReportsFilename );
 
   // if Header = '' then
@@ -2593,6 +2604,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
     T3: String;
     TempTag: CabrilloTags;
     tagName: string;
+    (* What the contest writes before a tag -- see CabrilloHeaderLinesBeforeTag. *)
+    contestLines: string;
     Operator: integer;
     ControlID:
       integer;
@@ -2630,33 +2643,27 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
       Result := False;
 
-      if ( Contest = ARRL10 ) or ( Contest = WINTERFIELDDAY ) then
-        if GetCabrilloTagText( ctLocation ) = 0 then
-           begin
-           showwarning( TC_LOCATIONFIELDEMPTY );
-           Exit;
-           end;
+      (* THE CONTEST SAYS WHETHER ITS HEADER NEEDS A LOCATION -- M9a; this
+        named ARRL 10 and Winter Field Day. *)
+      if ContestIdentity( Contest ).RequiresCabrilloLocation then
+         begin
+         if GetCabrilloTagText( ctLocation ) = 0 then
+            begin
+            showwarning( TC_LOCATIONFIELDEMPTY );
+            Exit;
+            end;
+         end;
 
       if not tOpenFileForWrite( tReportFileWrite, CharBufferText( tReportsFilename ) ) then
          begin
          Exit;
          end;
       T2 := Settings.My.Call;
-      (* The contest's Cabrillo name, asked of the contest -- M1. *)
-      T3 := ContestIdentity( Contest ).CabrilloName;
-
-      // T3 := ContestTypeSA[contest];        // 4.78.2
-      if Contest = GENERALQSO then
-        // 4.78.3        // ALLOW CUSTOM CONFIG Contest Title or Contest Name
-        if length( Settings.Contest.Title ) <> 0 then
-           begin
-           T3 := Settings.Contest.Title
-           end
-        else
-          if length( Settings.Contest.Name ) <> 0 then // 4.78.3
-             begin
-             T3 := Settings.Contest.Name;
-             end;
+      (* The contest's Cabrillo name, asked of the contest -- M1; handed the
+        session's title and name since M9a, which General QSO names instead
+        (4.78.3, "ALLOW CUSTOM CONFIG Contest Title or Contest Name"). *)
+      T3 := ContestIdentity( Contest ).CabrilloContestName(
+               Settings.Contest.Title, Settings.Contest.Name );
 
       // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString.
       // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(TotalScore).
@@ -2685,21 +2692,20 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
               Continue;
               end;
 
-         if Contest = WINTERFIELDDAY then
-            begin
-            if TempTag = ctLocation then
-               begin
-               sWriteFileFromString( tReportFileWrite,
-                  UTF8Encode( 'ARRL-SECTION: ' + CharBufferText( TempBuffer2 ) + #13#10 ) );
-               sWriteFileFromString( tReportFileWrite,
-                  'X-EXCHANGE: ' + Settings.My.FdClass + #13#10 );
-               end;
-            end;
          (* THE TAG WITHOUT ITS LEADING '_'. This was @...ctrTag[ 1 ] -- ctrTag was
            a PAnsiChar constant, so [ 1 ] was its SECOND character, and the pointer
            dropped the '_' that marks each entry in CabrilloTagsArray. Copy from
            position 2 says the same thing without the address. *)
          tagName := Copy( CabrilloTagsArray[ TempTag ].ctrTag, 2, MaxInt );
+         (* LINES THE CONTEST WRITES BEFORE THIS TAG -- M9a. Winter Field Day's
+           ARRL-SECTION and X-EXCHANGE before LOCATION stood here as a test of
+           its name. UTF8Encode, as the ARRL-SECTION line always was. *)
+         contestLines := ContestIdentity( Contest ).CabrilloHeaderLinesBeforeTag(
+                            tagName, CharBufferText( TempBuffer2 ), CurrentStation );
+         if contestLines <> '' then
+            begin
+            sWriteFileFromString( tReportFileWrite, UTF8Encode( contestLines ) );
+            end;
          if TempTag = ctOperators then
             begin
             SetCharBuffer( TempBuffer2, GetOperatorsFromLog );
@@ -2950,36 +2956,13 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 Freq := tCabrilloFreqString[ TempRXData.Band ];
                 end;
 
-             // This was just assuming any digital contact was RY which is obviously not true.
-             if TempRXData.Mode = Digital then
-                begin
-                case TempRXData.ExtMode of
-                  eNoMode, eRTTY:
-                    begin
-                    ModeString := 'RY';
-                    end;
-                  else
-                    begin
-                    ModeString := 'DG';
-                    end;
-                end; // case
-                end
-             else
-               if TempRXData.Mode = FM then
-                  begin
-                  if Contest = WINTERFIELDDAY then
-                     begin
-                     ModeString := 'PH';
-                     end
-                  else
-                     begin
-                     ModeString := tCabrilloModeString[ TempRXData.Mode ];
-                     end;
-                  end
-               else
-                  begin
-                  ModeString := tCabrilloModeString[ TempRXData.Mode ];
-                  end;
+             (* THE MODE COLUMN IS THE CONTEST'S -- M9a. This was a copy of
+               uCabrilloFormat.FormatCabrilloMode written inline (RY or DG for
+               digital, the mode's own spelling otherwise) with a test of
+               Winter Field Day's name for FM as PH; the base calls the helper
+               and Winter Field Day passes its override. *)
+             ModeString := ContestIdentity( Contest ).CabrilloModeString(
+                              TempRXData.Mode, TempRXData.ExtMode );
 
              if DoingDomesticMults then
                 begin
@@ -3055,7 +3038,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 (* THE TWO EXCHANGE COLUMNS, ASKED OF THE CONTEST -- M4. This
                   routine fills the My-station record and the per-QSO inputs
                   it has decided; the contest arranges them. *)
-                myStationEx.MyState      := Settings.My.State;
+                (* THE STATE SENT IN THIS CONTEST, NOT MY STATE -- design 7.11
+                  (M9a). A contest that sends nothing there, or the grid, says
+                  so for the session; the operator's MY STATE is untouched. *)
+                myStationEx.MyState      := SentMyState;
                 myStationEx.MyGrid       := Settings.My.Grid;
                 myStationEx.MyName       := Settings.My.Name;
                 myStationEx.MyZone       := ZoneSentForThisContest;
@@ -3700,7 +3686,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         ContestIdentity, so a classless contest answers with TContestBase's
         default -- the shared arm for the session's exchange, in
         uADIFExchange. *)
-      my.MyState      := Settings.My.State;
+      (* The state SENT in this contest -- design 7.11 (M9a). *)
+      my.MyState      := SentMyState;
       my.MyGrid       := Settings.My.Grid;
       my.MyName       := Settings.My.Name;
       my.MyZone       := ZoneSentForThisContest;

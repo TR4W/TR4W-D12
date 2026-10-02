@@ -152,7 +152,11 @@ begin
    Result.MyCountry := UTF8Encode(Settings.My.Country);
    Result.MyContinent := MyContinent;
    Result.MyGrid := Settings.My.Grid;
-   Result.MyState := Settings.My.State;
+   (* THE STATE SENT IN THIS SESSION, NOT MY STATE -- design 7.11 (M9a).
+      Until then set-up wrote a contest's sent state into MY STATE and this
+      read it back; it reads the session's value now, so every contest sees
+      exactly what it saw. *)
+   Result.MyState := SentMyState;
    Result.ContestTitle := Settings.Contest.Title;
    Result.MyCall := Settings.My.Call;
    (* FoundContest's own in-state decision -- see TStationContext.InHostState. *)

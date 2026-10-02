@@ -92,12 +92,17 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry, uCallSignRoutines;
+   SysUtils, uContestRegistry, uCallSignRoutines,
+   uTR4WStrings;
 
 procedure TContestUBACW.CalculateQSOPoints(var aQso: ContestExchange);
 var
@@ -259,6 +264,22 @@ end;
 function TContestUBACW.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' 5NN # ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for UBASSB.
+   The same steps on ticking the box stood for ARI_DX, CANADA_DAY,
+   CANADA_WINTER, HELVETIA, KINGOFSPAINCW, KINGOFSPAINSSB, PACC, UBASSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestUBACW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_BELGIUM);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
 end;
 
 initialization

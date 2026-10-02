@@ -85,6 +85,10 @@ type
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
@@ -92,7 +96,8 @@ implementation
 uses
    uContestRegistry,
    SysUtils,
-   utils_text;
+   utils_text,
+   uTR4WStrings;
 
 (* RadioMemoryQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)
@@ -206,6 +211,16 @@ end;
 function TContestRadioMemory.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts. *)
+procedure TContestRadioMemory.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_AGECALLSIGNAGE, ncfMyQTH);
 end;
 
 initialization

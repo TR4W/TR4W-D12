@@ -110,7 +110,7 @@ end;
 
 function TContestGACWWWSACW.GetDisplayName: string;
 begin
-   Result := 'GACW-WWSA-CW';
+   Result := 'GACW WWSA CW DX Contest';
 end;
 
 function TContestGACWWWSACW.GetCabrilloName: string;

@@ -128,7 +128,7 @@ end;
 
 function TContestCQWPXRTTY.GetDisplayName: string;
 begin
-   Result := 'CQ-WPX-RTTY';
+   Result := 'CQ WW RTTY WPX Contest';
 end;
 
 function TContestCQWPXRTTY.GetCabrilloName: string;

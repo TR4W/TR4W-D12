@@ -101,13 +101,18 @@ type
       (* WHICH MODE THIS RUNNING IS -- see the header and
          TContestBase.RunsInMode. *)
       function RunsInMode(aMode: ModeType): boolean; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
    uContestRegistry,
-   uContestFixedPoints;
+   uContestFixedPoints,
+   uTR4WStrings;
 
 (* TenPointsPerQSO -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)
@@ -118,7 +123,7 @@ end;
 
 function TContestRSGBRoPoCoCW.GetDisplayName: string;
 begin
-   Result := 'RSGB-ROPOCO-CW';
+   Result := 'RSGB RoLo CW';
 end;
 
 function TContestRSGBRoPoCoCW.GetCabrilloName: string;
@@ -221,6 +226,19 @@ end;
 function TContestRSGBRoPoCoCW.RunsInMode(aMode: ModeType): boolean;
 begin
    Result := aMode = CW;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for RSGB_ROPOCO_SSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestRSGBRoPoCoCW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURPOSTCODE, ncfMyPostalCode);
 end;
 
 initialization

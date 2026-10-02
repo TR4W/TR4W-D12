@@ -84,13 +84,24 @@ type
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
    uContestRegistry,
-   uContestFixedPoints;
+   uContestFixedPoints,
+   uTR4WStrings,
+   SysUtils,
+   uCanonicalExchange;
 
 (* OnePointPerQSO -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)
@@ -101,7 +112,7 @@ end;
 
 function TContestCWOpen.GetDisplayName: string;
 begin
-   Result := 'CWOPEN';
+   Result := 'CWOps CW Open';
 end;
 
 function TContestCWOpen.GetCabrilloName: string;
@@ -185,6 +196,29 @@ end;
 function TContestCWOpen.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' # ' + aStation.MyName;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for EUSPRINT_AUTUMN_CW,
+   EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW, EUSPRINT_SPRING_SSB, MST.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestCWOpen.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURNAME, ncfMyName);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the serial and the name. See
+   TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestCWOpen.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := IntToStr(aQso.NumberReceived) + ' ' + Trim(string(aQso.Name));
 end;
 
 initialization

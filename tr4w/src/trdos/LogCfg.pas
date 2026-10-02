@@ -884,7 +884,8 @@ begin
   tCQExchange := UTF8Encode(ContestIdentity(Contest).CQExchangeDefault(CurrentStation));
   case Contest of
 
-    UA4WCHAMPIONSHIP: tCQExchange := UTF8Encode(' # ' + Settings.My.State);
+    (* The state SENT -- design 7.11 (M9a). *)
+    UA4WCHAMPIONSHIP: tCQExchange := UTF8Encode(' # ' + SentMyState);
 {
     ARI, SPDX, ARKTIKA_SPRING, PACC, WAG, CUPUA1DZ, RUSSIANDX, RDA, OKDX, UKRAINIAN, OLDNEWYEAR, ARRL10, HADX, YODX, RSGB18, DARCXMAS:
       begin

@@ -66,12 +66,17 @@ type
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   SysUtils;
+   SysUtils,
+   uCanonicalExchange;
 
 (* THE EXCHANGE IS RST AND A SERIAL NUMBER.
 
@@ -146,6 +151,16 @@ begin
             end;
          end;
       end;
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the serial. It
+   named CQWPXCW and CQWPXSSB, the family, so it is the family's. See
+   TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestCQWPXBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.NumberReceived);
 end;
 
 end.

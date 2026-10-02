@@ -103,13 +103,18 @@ type
          (CallsignsList, through aLookups.InitialExchangeOf). *)
       function DomesticMultiplierFromCall(const aCall: string;
                                           const aLookups: TMultiplierHintLookups): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
    uContestRegistry,
-   uCallSignRoutines;
+   uCallSignRoutines,
+   uTR4WStrings;
 
 function TContestRDA.DomesticMultiplierFromCall(const aCall: string;
                                                 const aLookups: TMultiplierHintLookups): string;
@@ -163,7 +168,7 @@ end;
 
 function TContestRDA.GetDisplayName: string;
 begin
-   Result := 'RDAC';
+   Result := 'Russian District Award Contest';
 end;
 
 function TContestRDA.GetCabrilloName: string;
@@ -258,6 +263,20 @@ begin
       aSession.DXMult := NoDXMults;
       end;
    aSession.DomesticMultByBand := dmbbAllBand;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for RU3AXMEMORIAL, RUSSIANDX.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestRDA.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_RUSSIA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURRDAID, ncfMyState);
 end;
 
 initialization

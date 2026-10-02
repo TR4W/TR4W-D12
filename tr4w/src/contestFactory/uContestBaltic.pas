@@ -130,7 +130,7 @@ end;
 
 function TContestBaltic.GetDisplayName: string;
 begin
-   Result := 'BALTIC';
+   Result := 'Baltic Contest';
 end;
 
 function TContestBaltic.GetCabrilloName: string;

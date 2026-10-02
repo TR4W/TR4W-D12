@@ -94,12 +94,23 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings,
+   SysUtils,
+   uCanonicalExchange;
 
 procedure TContestAllAsianCW.CalculateQSOPoints(var aQso: ContestExchange);
 var
@@ -189,7 +200,7 @@ end;
 
 function TContestAllAsianCW.GetDisplayName: string;
 begin
-   Result := 'ALL-ASIAN-DX-CW';
+   Result := 'All Asian DX Contest, CW';
 end;
 
 function TContestAllAsianCW.GetCabrilloName: string;
@@ -291,6 +302,30 @@ end;
 function TContestAllAsianCW.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' 5NN ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ALLASIANSSB, YOTA,
+   YOUTHCHAMPIONSHIPRF.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestAllAsianCW.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURAGEINMYSTATEFIELD, ncfMyState);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the age. The arm
+   named ALLASIANCW and ALLASIANSSB; each holds its own copy (design 1.4).
+   See TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestAllAsianCW.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.Age);
 end;
 
 initialization

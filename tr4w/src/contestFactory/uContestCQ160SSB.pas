@@ -90,12 +90,17 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry;
+   SysUtils, uContestRegistry,
+   uTR4WStrings;
 
 procedure TContestCQ160SSB.CalculateQSOPoints(var aQso: ContestExchange);
 var
@@ -233,6 +238,22 @@ begin
       begin
       Result := ' 5NN ' + aStation.MyZoneText;
       end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRL10, ARRL160,
+   ARRL_RTTY_ROUNDUP, CQ160CW, CQWWRTTY.
+   The same steps on ticking the box stood for CQ160CW, CQWWRTTY.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestCQ160SSB.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_NORTHAMERICA);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERSTATEFORUSPROVINCEFORCANADA, ncfMyState);
 end;
 
 initialization

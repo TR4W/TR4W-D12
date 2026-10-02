@@ -116,7 +116,7 @@ end;
 
 function TContestSevenQP.GetDisplayName: string;
 begin
-   Result := '7QP';
+   Result := '7th Call Area QSO Party';
 end;
 
 function TContestSevenQP.GetCabrilloName: string;

@@ -84,12 +84,22 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
-   SysUtils, uContestRegistry, uContestFixedPoints;
+   SysUtils, uContestRegistry, uContestFixedPoints,
+   uTR4WStrings,
+   uCanonicalExchange;
 
 procedure TContestCWOps.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -183,6 +193,30 @@ function TContestCWOps.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for LQP, NCCCSPRINT.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestCWOps.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskField(ncfMyName);
+   aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDQTH, ncfMyState);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the name, then the member
+   number or QTH -- both arrive in QTHString. See
+   TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestCWOps.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.Name)) + ' ' + Trim(string(aQso.QTHString));
 end;
 
 initialization

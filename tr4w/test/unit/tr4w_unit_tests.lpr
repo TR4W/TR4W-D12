@@ -252,6 +252,7 @@ uses
       LOGWIND and the settings model, and the point of uTestContestFactory is
       that a contest class needs neither. The classes are listed so their
       initialization sections register them. *)
+   uCanonicalExchange in '..\..\src\uCanonicalExchange.pas',
    uContestBase in '..\..\src\contestFactory\uContestBase.pas',
    uContestRegistry in '..\..\src\contestFactory\uContestRegistry.pas',
    uContestStateQSOPartyBase in '..\..\src\contestFactory\uContestStateQSOPartyBase.pas',
@@ -452,6 +453,7 @@ uses
    uTestContestObjects in 'uTestContestObjects.pas',
    uTestContestMultipliers in 'uTestContestMultipliers.pas',
    uTestContestSession in 'uTestContestSession.pas',
+   uTestContestDisplay in 'uTestContestDisplay.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
@@ -653,6 +655,7 @@ begin
    RegisterSuite(TContestTotalsTests.Create('ContestTotals'));
    RegisterSuite(TContestMultipliersTests.Create('ContestMultipliers'));
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
+   RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

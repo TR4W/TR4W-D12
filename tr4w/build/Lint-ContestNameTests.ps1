@@ -169,18 +169,29 @@ $CEILINGS = @{
    # are DomesticMultiplierFromCall) and mainunit 12 -> 11 (ParametersOkay's
    # YB DX test, which changed nothing, deleted with the copy of SetPrefix it
    # sat in).
-   'mainunit.pas'          = 11
+   #
+   # M9a, 2026-10-02 -- each contest tells the display and the reports what to
+   # show, as data the UI renders: unewcontest 92 -> 5 (the New Contest
+   # dialog's two `case SelectedContest of` are DescribeNewContestPrompts;
+   # left are the arms of POTA, RSGB 1.8 MHz and the UA4W Championship,
+   # classless on purpose), uexchangebuilder 11 -> 0 and utotal 5 -> 0 (both
+   # unlisted now: CanonicalReceived/SentExchange and TotalsDisplay),
+   # postunit 14 -> 5 (the summary sheet, the hour totals' score column, the
+   # Cabrillo header's location guard, contest name and section lines, and the
+   # Cabrillo mode column), mainunit 11 -> 8 and logedit 7 -> 6 (WRTC's
+   # operating aids and the WAE QTC menu) and logsubs2 3 -> 2 (WRTC's
+   # score-posting labels). What is left in those files is listed in design
+   # 8.2m with the step it waits for.
+   'mainunit.pas'          = 8
    'trdos\fcontest.pas'    = 2
    'trdos\logcfg.pas'      = 1
-   'trdos\logedit.pas'     = 7
+   'trdos\logedit.pas'     = 6
    'trdos\logstuff.pas'    = 3
-   'trdos\logsubs2.pas'    = 3
+   'trdos\logsubs2.pas'    = 2
    'trdos\logwind.pas'     = 1
-   'trdos\postunit.pas'    = 14
+   'trdos\postunit.pas'    = 5
    'uadif.pas'             = 1
-   'uexchangebuilder.pas'  = 11
-   'unewcontest.pas'       = 92
-   'utotal.pas'            = 5
+   'unewcontest.pas'       = 5
 }
 
 # Roughly two thirds of the count at the time of writing, and far above what a
@@ -199,7 +210,11 @@ $CEILINGS = @{
 # M8, 2026-10-02: 130 -> 120. The total fell 161 -> 151 (10 tests moved into
 # the classes or were deleted as no-ops, ceilings above); 120 is again about
 # 80% of it.
-$TOTAL_FLOOR  = 120
+#
+# M9a, 2026-10-02: 120 -> 27. The total fell 151 -> 34 (117 tests moved into
+# the classes, ceilings above -- 87 of them the New Contest dialog's arms);
+# 27 is again about 80% of it.
+$TOTAL_FLOOR  = 27
 $MEMBER_FLOOR = 130
 
 # --------------------------------------------------------------------------

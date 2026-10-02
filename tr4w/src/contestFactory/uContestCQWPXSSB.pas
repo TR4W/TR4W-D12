@@ -43,6 +43,9 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
    public
    end;
 
@@ -53,7 +56,28 @@ uses
 
 function TContestCQWPXSSB.GetDisplayName: string;
 begin
-   Result := 'CQ WPX - SSB';
+   Result := 'CQ WW WPX Contest, SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWPXSSB.GetCabrilloName: string;
+begin
+   Result := 'CQ-WPX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWPXSSB.GetADIFContestId: string;
+begin
+   Result := 'CQ-WPX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestCQWPXSSB.GetFriendlyName: string;
+begin
+   Result := 'CQ WW WPX Contest, SSB';
 end;
 
 initialization

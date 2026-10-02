@@ -205,6 +205,17 @@ it caught exactly that `FriendlyName` mistake while Arktika Spring was written.
 Add your contest to it, and delete the whole test when `ContestsArray` goes,
 because at that point there is nothing left to compare against.
 
+**EVERY CLASS STATES ITS DISPLAY NAME, CABRILLO NAME AND ADIF ID ITSELF** (NY4I's
+ruling, enforced since M9a, 2026-10-02): override `GetDisplayName`,
+`GetCabrilloName` and `GetADIFContestId` in YOUR class, not in a family base --
+a base stating a name would give two contests one name. **The display name is
+the HUMAN name**, the row's `FriendlyName` where it has one (the New Contest
+drop-down will show it, M9b); `FriendlyName` is stated too.
+`uTestContestDisplay.Test_EveryClassStatesItsIdentity` fails a class whose getter
+is its parent's, and holds the list of contests whose display name is still
+their enum spelling (no `FriendlyName` in the row -- design Q53) as a ratchet:
+**a new contest may not join it.**
+
 ### Step 4 — register and list it
 
 ```pascal
@@ -548,8 +559,9 @@ reads `aStation` only: the identity object it is asked of carries no station.
   - the domestic countries, in order (`AddDomesticCountry`, or a shared group
     -- `AddDomesticCountries(DomesticCountriesKVE)`; the groups are
     `uContestBase` constants that FCONTEST's own helpers read too);
-  - the domestic file (`DomesticFile`, no extension), MY STATE where your
-    contest blanks or replaces it, the contest name;
+  - the domestic file (`DomesticFile`, no extension), what your contest
+    SENDS where MY STATE goes when it blanks or replaces it (`SentState` --
+    the session's, never MY STATE itself, since M9a), the contest name;
   - since M7b: the initial exchange and the zone multiplier
     (`InitialExchange`, `ZoneMult`), the DX multiplier limit (`DXMultLimit`),
     the R150S list (`R150SMode`), and `SuppressZoneExchangeMessages` -- the
@@ -631,6 +643,38 @@ its list in the same commit). The matrix's `scoring` line records every
 multiplier flag for every contest and variant, and the corpus's
 `CLAIMED-SCORE` the counts for its thirteen logs.
 
+### How a contest tells the display and the reports (M9a, 2026-10-02)
+
+**THE CONTEST ANSWERS WITH DATA; THE UI RENDERS IT.** A class never touches a
+form, a canvas or a global. Each seam below stood as a test of a contest's
+name in the unit that renders it, and every base answer is what that unit did
+for a contest it did not name -- so state nothing, and your contest renders as
+every other does. All are asked of `ContestIdentity` (no station) except
+`CabrilloHeaderLinesBeforeTag`, which is handed one.
+
+| you state | with | who asks |
+|---|---|---|
+| what the New Contest dialog asks for | `DescribeNewContestPrompts(aPrompts)` -- `AskField`, `AskFieldWithComment`, `OfferIAmIn`, `OfferIAmInCaption`, and `AskFieldWithCommentWhenInside` for the ticked box. **ORDER MATTERS**: rows are handed out in the order fields are asked, and the last comment wins. The base asks a US state party for its county or state; call `inherited` to keep that | `uNewContest` (M9b renders the display name in the drop-down) |
+| the totals window's labels and mode shares | `GetTotalsDisplay` (`TTotalsDisplay`) -- start from `inherited` | `uTotal.UpdateTotals2` |
+| the summary sheet's counting | `GetSummarySheet` (`TSummarySheetLayout`) | `PostUnit.WriteScoreInformationToSummarySheet` |
+| whether the hour report carries a running score | `GetReportsRunningScore` | `PostUnit.PrintHourTotals` |
+| the Cabrillo `CONTEST:` name, a required LOCATION, extra header lines, the mode column | `CabrilloContestName`, `GetRequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag`, `CabrilloModeString` | PostUnit's Cabrillo writer |
+| the canonical exchanges a scoreboard is sent | `CanonicalReceivedExchange`, `CanonicalSentExchange` -- build from `uCanonicalExchange`'s helpers (`RSTReceivedText`, `CollapseWhitespace`, `CanonicalFromCQTemplate`) | `uExchangeBuilder` -- HamScore, the UDP contact broadcast, the log's `exchange_sent` |
+| the score-posting XML's multiplier labels | `ScorePostingMultiplierType` ('' posts none) | `LOGSUBS2`'s dynamic results |
+| the operating aids it forbids | `GetPermittedOperatingAids` (`TOperatingAid`) | the menus, `OpenTR4WWindow`, `LOGEDIT`'s Super Check Partial |
+| whether it has QTCs | `GetOffersQTCs` | the QTC menu |
+
+**WHAT YOU SEND WHERE MY STATE GOES IS `TSessionDefaults.SentState`** (was
+`MyState` until M9a). It is the SESSION's (`FCONTEST.SentMyState`) and never
+written into MY STATE -- the operator's setting in `settings/tr4w.json` (design
+7.11). Every reader of the sent exchange asks `SentMyState`; a new one must too.
+
+**Pin it** in `uTestContestDisplay`: each override, and the base for every other
+contest as a ratchet. The New Contest prompts are compared, for every contest,
+against a table generated from the dialog's own arms. No oracle but the
+corpus's Cabrillo header (Winter Field Day, General QSO) sees any of this, so a
+change here needs a `BENCH_QUEUE.md` entry too.
+
 ### Protected helpers — mechanism, not rules
 
 | helper | for |
@@ -689,7 +733,9 @@ and `Test_M7bBatch2ContestsAreSiblingsOnTheBase` fails if a sixth appears.
 ### `TStationContext` — what scoring knows about us
 
 `Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`,
-`.MyPower`, `.PointOverrides`, since M4 `.MyState` (IOTA, PCC) and
+`.MyPower`, `.PointOverrides`, since M4 `.MyState` (IOTA, PCC -- since M9a
+the state SENT in the session, `FCONTEST.SentMyState`, which is MY STATE unless
+the contest's set-up stated another) and
 `.ContestTitle` (Batavia FT8), since M5b `.MyCall` and `.InHostState`,
 since M6 `.MyCategoryMode` (the Salmon Run's single-mode rule -- its zero
 value is CW, which is what an operator who never chooses one exports), and
@@ -868,7 +914,11 @@ and is the target shape:
   -- stays keyed on the KIND until the four multiplier commands retire (Q4)
 - ~~`calculateTotalScore`~~ -- **BUILT at M6** as `FinalScore` = `CombineScore` +
   `BonusPoints` (section 3)
-- `getCabrilloHeaders`
+- `getCabrilloHeaders` -- **partly built at M9a**: the contest-specific lines
+  (`CabrilloHeaderLinesBeforeTag`, `RequiresCabrilloLocation`,
+  `CabrilloContestName`) and the mode column (`CabrilloModeString`, section 3).
+  The general header (CATEGORY-*, the summary tags) is still PostUnit's and the
+  Cabrillo summary dialog's, and CATEGORY-POWER's one value is M9b (design 7.6)
 - an order-agnostic parser. TR4W **does** parse out of order today — the
   "flips it around if given in section class order" block in
   `ProcessClassAndDomesticOrDXQTHExchange` — but per-arm, not as a shared

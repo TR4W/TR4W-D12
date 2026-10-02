@@ -114,7 +114,7 @@ end;
 
 function TContestWWIH.GetDisplayName: string;
 begin
-   Result := 'WWIH';
+   Result := 'World Wide Iron Ham Contest';
 end;
 
 function TContestWWIH.GetCabrilloName: string;

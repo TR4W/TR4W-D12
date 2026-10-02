@@ -65,6 +65,9 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
 
@@ -102,6 +105,17 @@ type
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
@@ -113,7 +127,9 @@ uses
    (* StringIsAllNumbersOrSpaces -- the shape's zone-or-society split. *)
    utils_text,
    (* IsSingleNonNumericToken -- the single-word test. *)
-   uExchangeTokens;
+   uExchangeTokens,
+   uTR4WStrings,
+   uCanonicalExchange;
 
 function TContestIARU.ParseReceivedExchange(const aText: string;
                                            const aSession: TReceivedExchangeSession;
@@ -155,6 +171,27 @@ begin
 end;
 
 function TContestIARU.GetDisplayName: string;
+begin
+   Result := 'IARU HF World Championship';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestIARU.GetCabrilloName: string;
+begin
+   Result := 'IARU-HF';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestIARU.GetADIFContestId: string;
+begin
+   Result := 'IARU-HF';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestIARU.GetFriendlyName: string;
 begin
    Result := 'IARU HF World Championship';
 end;
@@ -268,6 +305,41 @@ begin
       begin
       Result := ' 5NN ' + aStation.MyZoneText;
       end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for BSCI.
+   The same steps on ticking the box stood for BSCI.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestIARU.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_HQ_OR_MEMBER);
+   aPrompts.AskFieldWithCommentWhenInside('', ncfMyState);
+end;
+
+(* THE TOTALS WINDOW LABELS THE DOMESTIC MULTIPLIERS AS HQ STATIONS --
+   uTotal's two IARU arms, moved here at M9a (2026-10-02): the HQ and member
+   society stations are this contest's domestic multipliers. *)
+function TContestIARU.GetTotalsDisplay: TTotalsDisplay;
+begin
+   Result := inherited GetTotalsDisplay;
+   Result.DomesticMultsCaption := TC_HQMULTS;
+   Result.DomesticMultsCaptionCW := 'CW HQ';
+   Result.DomesticMultsCaptionPhone := 'Ph HQ';
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the zone, the arm
+   it shared with CQ WW. See TContestBase.CanonicalReceivedExchange; the
+   caller collapses the whitespace. *)
+function TContestIARU.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.Zone);
 end;
 
 initialization

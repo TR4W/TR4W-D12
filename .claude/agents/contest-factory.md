@@ -195,7 +195,13 @@ the target shape, the M-step migration order and the open questions.
   restate that fallback at a call site, and do not transcribe a blank as `''`
   in a class. `ADIFContestId` is what export writes AND what import matches,
   which closed inventory D9. Use `ActiveContest` (nil for a classless
-  contest) only for behaviour.
+  contest) only for behaviour. **Since M9a every class STATES
+  `DisplayName`, `CabrilloName` and `ADIFContestId` itself** (NY4I's ruling)
+  -- in the leaf, never a family base -- and `DisplayName` is the human name,
+  the `FriendlyName` where the row has one.
+  `uTestContestDisplay.Test_EveryClassStatesItsIdentity` compares each
+  getter with the parent class's (a negative control proves it can fail)
+  and holds the enum-spelled display names as a ratchet (design Q53).
 - **Set-up reads the contest** (M2, 2026-10-01). `FCONTEST.ApplyContestTraits`
   is the ONE writer of the seven `Active*` globals, the QSO/mult by band/mode
   flags, VHF, count-domestic-countries, the CTY zone list and (in the head)
@@ -237,6 +243,15 @@ the target shape, the M-step migration order and the open questions.
   The matrix was 185 identical with no re-freeze; `uTestContestSession` pins
   the base stating nothing, the three-state values, and D8's four state lines.
   Design §8.2i; `ADDING_A_CONTEST.md` "How a contest describes its session".
+  **What a contest SENDS where MY STATE goes is `TSessionDefaults.SentState`**
+  (was `MyState`; M9a, design 7.11): the applier holds it as the SESSION's
+  (`FCONTEST.SentMyState`, cleared at FoundContest's head) and **never writes
+  MY STATE** -- the operator's setting. Every reader of the sent exchange
+  (set-up's messages, LogCfg, the CW `&` macro, PostUnit's Cabrillo and ADIF
+  sent columns, uGetScores, the readiness check, `CurrentStation.MyState`)
+  asks `SentMyState`; the in-state test, uTelnet's `MY_STATE` token and
+  Preferences read the station's. `Test_SetUpNeverWritesMyState` pins it for
+  every contest.
 - **The classless contests gain classes** (M7b; batch 1, 2026-10-02 --
   thirty-nine contests, design §8.2j). Each transcribes its row and EVERY arm
   that named it, and the arm is deleted. **No new family base**: CQ WPX RTTY
@@ -264,12 +279,36 @@ the target shape, the M-step migration order and the open questions.
   against -1, Q46): the class says 2. **M7b is done: exactly five contests
   are classless on purpose** -- POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33),
   IN7QPNE and DUMMYCONTEST; `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
-  fails if a sixth appears. Sites still naming a batch-2 contest are seams
-  not built (M9 display/HamScore: WRTC, SST, CW Open, RTC; Radio YOC's
-  loader) -- listed in §8.2k. ~~M8 multipliers: YB DX, RDA, YO DX~~ -- done
+  fails if a sixth appears. Sites still naming a batch-2 contest were seams
+  not built -- ~~M9 display/HamScore: WRTC, SST, CW Open, RTC~~ done at
+  M9a (§8.2m); Radio YOC's loader stays (engine state) -- listed in §8.2k. ~~M8 multipliers: YB DX, RDA, YO DX~~ -- done
   at M8: RDA's and YO DX's hint arms are their classes', YB DX's was a no-op
   and is deleted (§8.2l). RDA's initial-exchange fallback in LOGEDIT is an
   EXCHANGE rule and stays (Q50).
+- **A contest tells the display and the reports what to show, as DATA the
+  UI renders** (M9a, 2026-10-02, design §8.2m; `ADDING_A_CONTEST.md` "How a
+  contest tells the display and the reports"). No class touches a form, a
+  canvas or a global. Seams: `DescribeNewContestPrompts(TNewContestPrompts)`
+  -- the New Contest dialog's two `case`s, ordered steps (rows go out in the
+  order asked, the last comment wins), the QSO-party head on the base from
+  the QSOParties AREA (not `HostState`, which is two letters only: 7QP's
+  '7th area'); `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
+  `ReportsRunningScore` (hour totals); `CabrilloContestName`,
+  `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` (keyed on the
+  Cabrillo tag NAME -- `CabrilloTags` is a UI unit's),
+  `CabrilloModeString` (the base calls `uCabrilloFormat.FormatCabrilloMode`;
+  PostUnit's inline copy is deleted); `CanonicalReceived/SentExchange`
+  (uExchangeBuilder dispatches and collapses; the shared pieces are the leaf
+  `uCanonicalExchange`); `ScorePostingMultiplierType` (LOGSUBS2's XML);
+  `PermittedOperatingAids` (WRTC: no SCP, cluster or score posting --
+  `MainUnit.OperatingAidOfWindow` is the UI's window-to-aid wiring);
+  `OffersQTCs` (the WAE QTC menu). **uNewContest still names POTA, RSGB 1.8
+  and the UA4W Championship** (`ClasslessPrompts`). Left for M9b and later:
+  General QSO's display rules, the FOC log columns, WAG's call-window
+  warning, the off-time string tests, the drop-down's display names and
+  CATEGORY-POWER's one value (7.6). `uTestContestDisplay` pins every seam
+  and compares every contest's prompts with a table generated from the
+  dialog's own arms.
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog

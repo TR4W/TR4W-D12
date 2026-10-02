@@ -218,7 +218,13 @@ type
          Added at M4 (2026-10-01), when the RSGB IOTA contest and the PCC
          gained classes: both score against it (IOTA compares it with the
          worked island; PCC asks whether it is all digits). Same growth rule
-         as every field here. '' when unset, which both rules test for. *)
+         as every field here. '' when unset, which both rules test for.
+
+         SINCE M9a (2026-10-02) IT IS THE STATE THE SESSION SENDS --
+         FCONTEST.SentMyState, which is MY STATE unless the contest's set-up
+         stated another (TSessionDefaults.SentState, design 7.11). Set-up
+         used to write that value into MY STATE and this read it back, so
+         every rule sees exactly what it saw. *)
       MyState: string;
 
       (* THE CONTEST TITLE the operator's session carries -- Settings.Contest.
@@ -628,8 +634,9 @@ type
 
       One member per value FCONTEST.FoundContest's per-contest arms wrote for
       a contest that has a class: the engine's Active* choices the arms made
-      per station, the session settings, the CW exchange messages, MY STATE
-      where a contest blanks or replaces it, and the domestic file. A member
+      per station, the session settings, the CW exchange messages, what a
+      contest sends where MY STATE goes (SentState -- never written into MY
+      STATE since M9a), and the domestic file. A member
       arrives with the first contest that states it -- the arms of the
       CLASSLESS contests set more (a zone multiplier, an initial exchange,
       the R150S list) and those join when their contest gains a class.
@@ -648,7 +655,7 @@ type
       svR150SMode, svSuppressZoneExchangeMessages,
       svMultByBand, svQSOByMode, svQSOByBand,
       svWARCEnabled, svHFEnabled,
-      svContestName, svMyState, svDomesticFile,
+      svContestName, svSentState, svDomesticFile,
       svLiteralDomesticQTH, svDigitalModeEnable, svExchangeMemoryEnable,
       svSprintQSYRule, svMultipleBands, svMultipleModes,
       svInitialExchangeOverwrite, svQSONumberByBand,
@@ -699,8 +706,8 @@ type
       field has two. A contest that names no exchange must leave the engine's
       exchange exactly as the head wrote it -- the trait, or the operator's
       statement -- and "not stated" cannot be spelled as a value of
-      ExchangeType, WarcEnabled or MY STATE (an empty MY STATE is a real
-      statement: Canada Day blanks a non-VE station's). So each setter
+      ExchangeType, WarcEnabled or the state sent (an empty one is a real
+      statement: Canada Day sends none for a non-VE station). So each setter
       records that its value was stated, and the applier writes only what
       was. It also owns two ordered lists, the domestic countries and the
       memories. It is created and freed by the one caller, FoundContest.
@@ -833,10 +840,19 @@ type
          read FContactsPerPage write SetContactsPerPage;
       property ContestName: string index Ord(svContestName) read GetText write SetText;
 
-      (* MY STATE FOR THIS CONTEST -- a contest that blanks it for a station
-         outside its country (Canada Day, the Russian DX contests) or sends
-         the grid in its place (the Russian cups). *)
-      property MyState: string index Ord(svMyState) read GetText write SetText;
+      (* WHAT THE STATION SENDS WHERE MY STATE GOES, IN THIS CONTEST -- a
+         contest that sends nothing there for a station outside its country
+         (Canada Day, the Russian DX contests) or the grid in its place (the
+         Russian cups).
+
+         IT WAS `MyState` UNTIL M9a (2026-10-02), AND THE APPLIER WROTE IT
+         INTO THE STATION'S MY STATE. That was design 7.11's defect: MY STATE
+         is the operator's, stored in settings/tr4w.json, so a later save
+         carried the contest's value out of the contest. FCONTEST's applier
+         now holds it as the SESSION's sent state (FCONTEST.SentMyState) and
+         MY STATE is never written by set-up. Every reader of the sent
+         exchange asks SentMyState. *)
+      property SentState: string index Ord(svSentState) read GetText write SetText;
 
       (* THE DOMESTIC FILE, without its extension -- what the head chose,
          overwritten. An EMPTY one is a statement too: it leaves DOMESTIC
@@ -876,6 +892,129 @@ type
                                          const aText: string);
       function MemoryCount: integer;
       function Memory(aIndex: integer): TSessionMemory;
+   end;
+
+   (* ------------------------------------------------------------------------
+      M9a (2026-10-02): WHAT A CONTEST TELLS THE DISPLAY AND THE REPORTS.
+
+      EVERY TYPE BELOW IS DATA THE UI ASKS FOR. A contest never touches a
+      form, a canvas or a global: the New Contest dialog, the totals window,
+      the summary sheet, the Cabrillo writer and the score-posting clients
+      ask the contest (ContestIdentity) and render the answer. Each stood as a
+      `case Contest of` or an `if Contest = ...` in the unit that renders it.
+      ------------------------------------------------------------------------ *)
+
+   (* ONE OF THE STATION'S OWN FIELDS THE NEW CONTEST DIALOG MAY ASK FOR --
+      each is the MY ... command of the same name, which is what the dialog
+      queues the answer as. It was uNewContest's InitialCommands, a list
+      private to the dialog; a contest has to be able to name a field
+      without reaching into a UI unit, so the list lives here and the dialog
+      reads it. *)
+   TNewContestField = (ncfMyCheck, ncfMyFDClass, ncfMyGrid, ncfMyFOC, ncfMyIOTA,
+                       ncfMyName, ncfMyPark, ncfMyPrec, ncfMyQTH, ncfMySection,
+                       ncfMyState, ncfMyZone, ncfMyPostalCode);
+
+   (* WHAT ONE STEP OF A PROMPT DOES, in the dialog's own terms:
+        npkField             offer the field's row (the next free one);
+        npkFieldWithComment  offer the row, then put the text in the comment;
+        npkIAmIn             show the "I am in <region>" box;
+        npkIAmInCaption      show the box with this caption as it stands. *)
+   TNewContestPromptKind = (npkField, npkFieldWithComment, npkIAmIn, npkIAmInCaption);
+
+   (* ONE STEP -- the element of TNewContestPrompts' two lists. A RECORD
+      BECAUSE IT IS AN INTERFACE PARAMETER, as TSessionMemory is: pure data
+      the prompts object hands the dialog. *)
+   TNewContestPrompt = record
+      Kind: TNewContestPromptKind;
+      Field: TNewContestField;
+      Text: string;
+   end;
+
+   (* WHAT THE NEW CONTEST DIALOG ASKS FOR WHEN THIS CONTEST IS CHOSEN -- M9a.
+
+      TWO ORDERED LISTS, because the dialog asks at two moments: when the
+      contest is CHOSEN, and when its "I am in ..." box is TICKED. Each step
+      is what one line of the dialog's two `case SelectedContest of` did,
+      in the order it did it -- the order matters, because rows are handed
+      out in the order the fields are asked for, and the last comment wins.
+
+      A CLASS, NOT A RECORD, for TSessionDefaults' reason: it owns two
+      ordered lists and the steps that fill them. Filled by
+      TContestBase.DescribeNewContestPrompts; read and freed by the dialog. *)
+   TNewContestPrompts = class
+   private
+      FOnChoice: array of TNewContestPrompt;
+      FWhenInside: array of TNewContestPrompt;
+      procedure AddChoice(aKind: TNewContestPromptKind; aField: TNewContestField;
+                          const aText: string);
+   public
+      (* WHEN THE CONTEST IS CHOSEN. *)
+      procedure AskField(aField: TNewContestField);
+      procedure AskFieldWithComment(const aComment: string; aField: TNewContestField);
+      (* "I am in <aRegion>" -- the dialog supplies the words around it. *)
+      procedure OfferIAmIn(const aRegion: string);
+      (* The box with aCaption as it stands (the IOTA's island station). *)
+      procedure OfferIAmInCaption(const aCaption: string);
+
+      (* WHEN THE "I AM IN" BOX IS TICKED -- every arm of the ticked case
+         offered one row with a comment. *)
+      procedure AskFieldWithCommentWhenInside(const aComment: string;
+                                              aField: TNewContestField);
+
+      function ChoiceCount: integer;
+      function Choice(aIndex: integer): TNewContestPrompt;
+      function InsideCount: integer;
+      function Inside(aIndex: integer): TNewContestPrompt;
+   end;
+
+   (* WHAT THE TOTALS WINDOW SHOWS DIFFERENTLY FOR THIS CONTEST -- M9a
+      (uTotal.UpdateTotals2). A RECORD BECAUSE IT IS AN INTERFACE PARAMETER --
+      the answer of one getter, pure data -- as TScoreTotals is.
+
+      ShowsModeShares: when QSOs count per mode and both CW and phone have
+      QSOs, the left column shows each mode's SHARE of the QSOs ('CW: 60%',
+      'PH: 40%') in place of the per-mode QSO rows -- the OZCHR teams'
+      display. The domestic-multiplier captions are the row labels for the
+      domestic multipliers: all modes, and per mode on CW and on phone. *)
+   TTotalsDisplay = record
+      ShowsModeShares: boolean;
+      DomesticMultsCaption: string;
+      DomesticMultsCaptionCW: string;
+      DomesticMultsCaptionPhone: string;
+   end;
+
+   (* HOW THIS CONTEST'S SUMMARY SHEET COUNTS -- M9a
+      (PostUnit.WriteScoreInformationToSummarySheet). A RECORD BECAUSE IT IS
+      AN INTERFACE PARAMETER, as TTotalsDisplay is.
+
+      MultiplierPerBandModeRow: each multiplier column of a band/mode row
+      shows 1, and the total row shows the number of rows -- Winter Field
+      Day's "one multiplier for each band and mode worked".
+      ClaimedScoreIsQSOPoints: the claimed-score line states the QSO point
+      total, not the final score -- ARRL Field Day's sheet. *)
+   TSummarySheetLayout = record
+      MultiplierPerBandModeRow: boolean;
+      ClaimedScoreIsQSOPoints: boolean;
+   end;
+
+   (* AN OPERATING AID A SPONSOR MAY FORBID -- M9a. WRTC is the contest that
+      forbids them: no Super Check Partial (the master file and its window),
+      no DX cluster, no live score posting. The menus, OpenTR4WWindow and
+      LOGEDIT's Super Check Partial ask TContestBase.PermittedOperatingAids. *)
+   TOperatingAid = (oaSuperCheckPartial, oaDXCluster, oaScorePosting);
+   TOperatingAids = set of TOperatingAid;
+
+   (* WHAT A SCORE-REPORTING CLIENT HANDS A CONTEST WITH THE QSO WHEN IT ASKS
+      FOR THE CANONICAL SENT EXCHANGE -- M9a. The contest reads no global;
+      these are the station's own values the canonical forms are built from.
+      A RECORD BECAUSE IT IS AN INTERFACE PARAMETER.
+
+      CQExchangeTemplate is CQ EXCHANGE CW as the session holds it -- the base
+      rebuilds what was SENT from it. MyGrid is MY GRID (the RTC's sent
+      exchange is its serial and grid). *)
+   TCanonicalExchangeContext = record
+      CQExchangeTemplate: string;
+      MyGrid: string;
    end;
 
    TContestBase = class
@@ -1034,6 +1173,14 @@ type
       (* THE CONTEST'S BONUS STATIONS -- declared data, M6. The base has none.
          See TBonusStation and BonusPoints. *)
       function GetBonusStations: TBonusStationList; virtual;
+
+      (* WHAT THE DISPLAY AND THE REPORTS ASK -- M9a. See the properties. *)
+      function GetTotalsDisplay: TTotalsDisplay; virtual;
+      function GetSummarySheet: TSummarySheetLayout; virtual;
+      function GetRequiresCabrilloLocation: boolean; virtual;
+      function GetReportsRunningScore: boolean; virtual;
+      function GetPermittedOperatingAids: TOperatingAids; virtual;
+      function GetOffersQTCs: boolean; virtual;
 
       (* WHICH CONTEST THIS INSTANCE IS -- READABLE BY SUBCLASSES, AND NOT TO BE
          BRANCHED ON.
@@ -1572,6 +1719,103 @@ type
          but the four EU Sprints -- the arm that added this. *)
       function RepeatSPExchangeDefault(const aStation: TStationContext): string; virtual;
 
+      (* ------------------------------------------------------------------
+         M9a (2026-10-02): THE DISPLAY AND THE REPORTS ASK THE CONTEST.
+
+         Each answer below stood in the unit that renders it, as a test of
+         the contest's name. The contest answers with DATA; the dialog, the
+         window or the writer renders it, and the contest touches no form,
+         canvas or global. Asked of ContestIdentity -- none needs a station
+         but CabrilloHeaderLinesBeforeTag, which is handed one.
+
+         EVERY BASE ANSWER IS WHAT THE RENDERING UNIT DID FOR A CONTEST IT DID
+         NOT NAME, so a contest that states nothing renders exactly as before.
+         ------------------------------------------------------------------ *)
+
+      (* THE NEW CONTEST DIALOG'S PROMPTS FOR THIS CONTEST -- uNewContest's two
+         `case SelectedContest of`, one arm per contest, moved line for line.
+
+         THE BASE ASKS A US STATE QSO PARTY'S STATION FOR ITS COUNTY OR STATE,
+         in the words that name the party's area (the QSOParties entry, so the
+         7QP's '7th area' too), and asks nothing of any other contest -- the
+         head uNewContest ran before its `case`, keyed then on the row's P and
+         now on the IsUSQSOParty trait. A classless party (IN7QPNE) is asked
+         through its plain TContestBase. An override calls inherited when its
+         contest kept that head (Colorado, Minnesota) and does not when it did
+         not (British Columbia, which the dialog named out of it). *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); virtual;
+
+      (* THE CABRILLO CONTEST: NAME, given the session's contest title and
+         name. The base is CabrilloName; General QSO, a log rather than a
+         contest, names the title the operator gave it, else the session's
+         name (PostUnit's GENERALQSO test, 4.78.3). *)
+      function CabrilloContestName(const aContestTitle: string;
+                                   const aSessionName: string): string; virtual;
+
+      (* CABRILLO HEADER LINES THIS CONTEST WRITES BEFORE A SUMMARY TAG --
+         aTagName without its leading '_' (LOCATION, CLUB, ...), aTagValue the
+         text the operator gave it. Each line ends in CRLF; the base writes
+         none. Winter Field Day writes ARRL-SECTION and X-EXCHANGE before
+         LOCATION. aStation is the station the header is for. *)
+      function CabrilloHeaderLinesBeforeTag(const aTagName: string;
+                                            const aTagValue: string;
+                                            const aStation: TStationContext): string; virtual;
+
+      (* THE CABRILLO MODE COLUMN for one QSO. The base is
+         uCabrilloFormat.FormatCabrilloMode without the phone override -- RY or
+         DG for digital, else the mode's own spelling; Winter Field Day writes
+         FM as PH. *)
+      function CabrilloModeString(aMode: ModeType;
+                                  aExtMode: ExtendedModeType): string; virtual;
+
+      (* THE CANONICAL EXCHANGES A SCORE-REPORTING CLIENT SENDS -- the HamScore
+         RTC upload, the UDP contact broadcast and the log's exchange_sent
+         column (uExchangeBuilder). TR4W's parser accepts the fields of an
+         exchange in any order; a scoreboard wants one spelling of each QSO.
+
+         RECEIVED: the base is the exchange as typed. A contest that knows
+         its own fields rebuilds them in its sponsor's order (uCanonicalExchange
+         holds the shared pieces); the caller collapses the whitespace.
+         SENT: the base rebuilds what was sent from the CQ exchange template --
+         '#' our serial, 5NN as 599 -- or, with no template, the typed exchange;
+         the RTC sends its serial and grid with no RST. *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; virtual;
+      function CanonicalSentExchange(const aQso: ContestExchange;
+                                     const aCtx: TCanonicalExchangeContext): string; virtual;
+
+      (* THE type= LABEL OF ONE MULTIPLIER KIND IN THE SCORE-POSTING XML
+         (LOGSUBS2's dynamic results), or '' to post no element for it.
+         aAllModes says the row is the all-modes one. The base labels every
+         kind on every row -- state, country, zone, prefix; WRTC's score
+         computer wants HQ and country on the all-modes row only. *)
+      function ScorePostingMultiplierType(aKind: RemainingMultiplierType;
+                                          aAllModes: boolean): string; virtual;
+
+      (* What the totals window shows differently -- see TTotalsDisplay. *)
+      property TotalsDisplay: TTotalsDisplay read GetTotalsDisplay;
+
+      (* How the summary sheet counts -- see TSummarySheetLayout. *)
+      property SummarySheet: TSummarySheetLayout read GetSummarySheet;
+
+      (* DOES THE CABRILLO HEADER NEED A LOCATION? The writer refuses to start
+         the file without one (TC_LOCATIONFIELDEMPTY) -- ARRL 10 and Winter
+         Field Day. The base does not. *)
+      property RequiresCabrilloLocation: boolean read GetRequiresCabrilloLocation;
+
+      (* DOES THE HOUR-BY-HOUR REPORT CARRY A RUNNING SCORE COLUMN?
+         (PostUnit.PrintHourTotals.) The base does; the Russian cups and
+         championships, whose score is not points times multipliers per hour,
+         do not. *)
+      property ReportsRunningScore: boolean read GetReportsRunningScore;
+
+      (* THE OPERATING AIDS THIS CONTEST ALLOWS -- see TOperatingAid. The base
+         allows every one. *)
+      property PermittedOperatingAids: TOperatingAids read GetPermittedOperatingAids;
+
+      (* DOES THIS CONTEST EXCHANGE QTCs? The QTC functions menu is offered
+         only then -- the two WAE runnings. The base does not. *)
+      property OffersQTCs: boolean read GetOffersQTCs;
+
       (* Hands the contest the station it is operating as.
 
          PUSHED IN, NOT READ. An earlier version had the base reach into LOGWIND
@@ -1845,6 +2089,12 @@ uses
       name no contest, and depend on VC, SysUtils and Log4D only. *)
    uCabrilloExchange,
    uADIFExchange,
+   (* FormatCabrilloMode -- the base's Cabrillo mode column (M9a). A leaf: VC
+      and SysUtils only. *)
+   uCabrilloFormat,
+   (* CanonicalFromCQTemplate -- the base's canonical sent exchange (M9a). A
+      leaf: VC, SysUtils and StrUtils only. *)
+   uCanonicalExchange,
    (* ResolveSRXString -- the received-exchange half of the ADIF SRX_STRING
       the base's FormatADIFReceivedExchange writes (M5b). The Field Day
       classes already reach uADIF the same way, from their implementation. *)
@@ -2669,6 +2919,187 @@ end;
 function TContestBase.RepeatSPExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := '';
+end;
+
+(* ------------------------------------------------------------------------ *)
+(* THE DISPLAY AND THE REPORTS -- M9a                                        *)
+(* ------------------------------------------------------------------------ *)
+
+(* THE AREA A QSO PARTY'S PROMPT NAMES -- the QSOParties entry the row's P
+   indexes, as uNewContest read it. NOT HostState: that answers only a
+   two-letter state (VC.USQSOPartyStateName), and the table names areas that
+   are not one -- the 7QP's '7th area', IN7QPNE -- which the dialog showed.
+   uTestContestDisplay caught the difference. '' for a contest with no entry. *)
+function QSOPartyAreaName(aContest: ContestType): string;
+var
+   partyIndex: byte;
+begin
+   Result := '';
+   partyIndex := ContestsArray[aContest].P;
+   if (partyIndex >= 1) and (partyIndex <= QSOPartiesCount) then
+      begin
+      Result := QSOParties[partyIndex].StateName;
+      end;
+end;
+
+procedure TContestBase.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+var
+   area: string;
+begin
+   (* uNewContest's head, keyed on the trait: a US state QSO party asks for
+      the county or the state, in words that name the host twice -- see the
+      declaration. *)
+   if IsUSQSOParty then
+      begin
+      area := QSOPartyAreaName(FContest);
+      aPrompts.AskFieldWithComment(Format(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX,
+                                          [area, area]),
+                                   ncfMyState);
+      end;
+end;
+
+function TContestBase.CabrilloContestName(const aContestTitle: string;
+                                          const aSessionName: string): string;
+begin
+   Result := CabrilloName;
+end;
+
+function TContestBase.CabrilloHeaderLinesBeforeTag(const aTagName: string;
+                                                   const aTagValue: string;
+                                                   const aStation: TStationContext): string;
+begin
+   Result := '';
+end;
+
+function TContestBase.CabrilloModeString(aMode: ModeType;
+                                         aExtMode: ExtendedModeType): string;
+begin
+   Result := FormatCabrilloMode(aMode, aExtMode, False);
+end;
+
+function TContestBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   (* The exchange as the operator typed it -- what uExchangeBuilder sent for
+      a contest it did not name, "no worse, and avoids fabricating fields". *)
+   Result := Trim(string(aQso.ExchString));
+end;
+
+function TContestBase.CanonicalSentExchange(const aQso: ContestExchange;
+                                            const aCtx: TCanonicalExchangeContext): string;
+begin
+   Result := CanonicalFromCQTemplate(aQso, aCtx.CQExchangeTemplate);
+end;
+
+function TContestBase.ScorePostingMultiplierType(aKind: RemainingMultiplierType;
+                                                 aAllModes: boolean): string;
+const
+   (* LOGSUBS2's GetScoresMults, the labels every contest but WRTC posted. *)
+   LABELS: array[RemainingMultiplierType] of string =
+      ('', 'state', 'country', 'zone', 'prefix');
+begin
+   Result := LABELS[aKind];
+end;
+
+function TContestBase.GetTotalsDisplay: TTotalsDisplay;
+begin
+   (* What uTotal showed for every contest it did not name. *)
+   Result.ShowsModeShares := False;
+   Result.DomesticMultsCaption := TC_DOMMULTS;
+   Result.DomesticMultsCaptionCW := 'CW Dom';
+   Result.DomesticMultsCaptionPhone := 'Ph Dom';
+end;
+
+function TContestBase.GetSummarySheet: TSummarySheetLayout;
+begin
+   Result.MultiplierPerBandModeRow := False;
+   Result.ClaimedScoreIsQSOPoints := False;
+end;
+
+function TContestBase.GetRequiresCabrilloLocation: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.GetReportsRunningScore: boolean;
+begin
+   Result := True;
+end;
+
+function TContestBase.GetPermittedOperatingAids: TOperatingAids;
+begin
+   Result := [oaSuperCheckPartial, oaDXCluster, oaScorePosting];
+end;
+
+function TContestBase.GetOffersQTCs: boolean;
+begin
+   Result := False;
+end;
+
+procedure TNewContestPrompts.AddChoice(aKind: TNewContestPromptKind;
+                                       aField: TNewContestField;
+                                       const aText: string);
+var
+   n: integer;
+begin
+   n := Length(FOnChoice);
+   SetLength(FOnChoice, n + 1);
+   FOnChoice[n].Kind := aKind;
+   FOnChoice[n].Field := aField;
+   FOnChoice[n].Text := aText;
+end;
+
+procedure TNewContestPrompts.AskField(aField: TNewContestField);
+begin
+   AddChoice(npkField, aField, '');
+end;
+
+procedure TNewContestPrompts.AskFieldWithComment(const aComment: string;
+                                                 aField: TNewContestField);
+begin
+   AddChoice(npkFieldWithComment, aField, aComment);
+end;
+
+procedure TNewContestPrompts.OfferIAmIn(const aRegion: string);
+begin
+   (* The field is not read for a box; ncfMyState is its zero. *)
+   AddChoice(npkIAmIn, ncfMyState, aRegion);
+end;
+
+procedure TNewContestPrompts.OfferIAmInCaption(const aCaption: string);
+begin
+   AddChoice(npkIAmInCaption, ncfMyState, aCaption);
+end;
+
+procedure TNewContestPrompts.AskFieldWithCommentWhenInside(const aComment: string;
+                                                           aField: TNewContestField);
+var
+   n: integer;
+begin
+   n := Length(FWhenInside);
+   SetLength(FWhenInside, n + 1);
+   FWhenInside[n].Kind := npkFieldWithComment;
+   FWhenInside[n].Field := aField;
+   FWhenInside[n].Text := aComment;
+end;
+
+function TNewContestPrompts.ChoiceCount: integer;
+begin
+   Result := Length(FOnChoice);
+end;
+
+function TNewContestPrompts.Choice(aIndex: integer): TNewContestPrompt;
+begin
+   Result := FOnChoice[aIndex];
+end;
+
+function TNewContestPrompts.InsideCount: integer;
+begin
+   Result := Length(FWhenInside);
+end;
+
+function TNewContestPrompts.Inside(aIndex: integer): TNewContestPrompt;
+begin
+   Result := FWhenInside[aIndex];
 end;
 
 procedure TSessionDefaults.Stated(aValue: TSessionValue);

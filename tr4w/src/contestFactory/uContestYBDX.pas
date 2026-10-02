@@ -143,7 +143,7 @@ end;
 
 function TContestYBDX.GetDisplayName: string;
 begin
-   Result := 'YBDX';
+   Result := 'YB ORARI DX Contest';
 end;
 
 function TContestYBDX.GetCabrilloName: string;

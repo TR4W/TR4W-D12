@@ -67,6 +67,9 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       constructor Create(aContest: ContestType); override;
@@ -114,6 +117,27 @@ begin
 end;
 
 function TContestFloridaQP.GetDisplayName: string;
+begin
+   Result := 'Florida QSO Party';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestFloridaQP.GetCabrilloName: string;
+begin
+   Result := 'FCG-FQP';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestFloridaQP.GetADIFContestId: string;
+begin
+   Result := 'FL-QSO-PARTY';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestFloridaQP.GetFriendlyName: string;
 begin
    Result := 'Florida QSO Party';
 end;

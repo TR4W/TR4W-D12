@@ -70,13 +70,18 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
    uADIF,
-   SysUtils;
+   SysUtils,
+   uCanonicalExchange;
 
 (* THE EXCHANGE IS RST AND A CQ ZONE, zero-padded to two digits.
 
@@ -159,6 +164,16 @@ procedure TContestCQWWBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;
 begin
    aExch.Zone := StrToIntDef(ExchangeFromSRXString(aTemps.SRX_String,
                                                    aExch.RSTReceived), 0);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the RST and the zone. It named
+   CQWWCW and CQWWSSB, the family, so it is the family's. See
+   TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestCQWWBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.Zone);
 end;
 
 end.

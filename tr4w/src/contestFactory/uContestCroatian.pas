@@ -207,7 +207,7 @@ end;
 
 function TContestCroatian.GetDisplayName: string;
 begin
-   Result := 'CROATIAN';
+   Result := 'Croatian DX Contest';
 end;
 
 function TContestCroatian.GetCabrilloName: string;

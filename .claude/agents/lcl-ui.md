@@ -89,6 +89,21 @@ not actually commented out, and lists every marked line so the pile gets swept.
   holds its own bounds and pushes the designed ones back down when it shows, which
   silently undid a restored position.
 
+## A window that shows something per contest asks the contest
+
+Since M9a (2026-10-02) the New Contest dialog, the totals window, the summary
+sheet, the WRTC menus and windows and the QTC menu render DATA a contest class
+gives them (`docs/ADDING_A_CONTEST.md`, "How a contest tells the display and
+the reports"): `uNewContest` renders `DescribeNewContestPrompts`, `uTotal`
+reads `TotalsDisplay`, the menus and `OpenTR4WWindow` ask
+`PermittedOperatingAids` / `OffersQTCs`. **Do not put an `if Contest = ...`
+back into a window** -- `Lint-ContestNameTests` holds each file's ceiling. What
+only the UI knows stays here: which window IS which operating aid is
+`MainUnit.OperatingAidOfWindow`, and how a prompt's steps become rows, a comment
+and the "I am in" box is `uNewContest.RenderPrompt`. M9b renders each contest's
+`DisplayName` in the New Contest drop-down and makes CATEGORY-POWER one value
+(design 7.6); `BENCH_QUEUE.md` carries what to look at.
+
 ## Before converting another window
 
 Read `docs/BANDMAP_LCL_DESIGN.md`, `docs/COLOR_ROLES_DESIGN.md` (**the palette

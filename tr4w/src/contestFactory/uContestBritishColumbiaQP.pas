@@ -155,13 +155,18 @@ type
          design Q49 asks; nothing is corrected here. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
    uContestFixedPoints,   (* FixedModePoints *)
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 function TContestBritishColumbiaQP.CountsAsMultiplier(const aQso: ContestExchange;
                                                       aKind: RemainingMultiplierType): boolean;
@@ -298,6 +303,16 @@ begin
       begin
       aSession.AddDomesticCountry('VE7');
       end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts. *)
+procedure TContestBritishColumbiaQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURISTRICTIFINVE7, ncfMyState);
 end;
 
 initialization

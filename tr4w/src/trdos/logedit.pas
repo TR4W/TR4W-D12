@@ -1733,7 +1733,9 @@ begin
      begin
      Exit;
      end;
-  if Contest = WRTC then           
+  (* A CONTEST THAT FORBIDS SUPER CHECK PARTIAL GETS NONE -- M9a. This was
+    `Contest = WRTC`. *)
+  if not (oaSuperCheckPartial in ContestIdentity(Contest).PermittedOperatingAids) then
      begin
      Exit;
      end;

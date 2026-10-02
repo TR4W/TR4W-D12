@@ -202,10 +202,10 @@ begin
       CheckTrue(StatesNothing(session), 'a new object states nothing');
 
       session.WARCEnabled := False;
-      session.MyState := '';
+      session.SentState := '';
       session.Band := Low(BandType);
       CheckTrue(session.IsStated(svWARCEnabled), 'a stated False is stated');
-      CheckTrue(session.IsStated(svMyState), 'a stated empty MY STATE is stated');
+      CheckTrue(session.IsStated(svSentState), 'a stated empty sent state is stated');
       CheckTrue(session.IsStated(svBand), 'a stated first band is stated');
       CheckTrue(not session.IsStated(svHFEnabled), 'an unset flag is not');
       CheckTrue(not session.IsStated(svContestName), 'an unset text is not');
@@ -421,8 +421,9 @@ begin
       end;
 end;
 
-(* AN EMPTY MY STATE IS A STATEMENT: Canada Day blanks a non-VE station's,
-   and leaves a VE station's alone. *)
+(* AN EMPTY SENT STATE IS A STATEMENT: Canada Day sends none for a non-VE
+   station, and leaves a VE station's MY STATE as what it sends. Since M9a
+   the statement is the session's sent state, never MY STATE (design 7.11). *)
 procedure TContestSessionTests.Test_CanadaDayBlanksANonVEState;
 var
    ve: TStationContext;
@@ -431,8 +432,8 @@ begin
    BeginTest('Test_CanadaDayBlanksANonVEState');
    session := Describe(CANADA_DAY, KansasStation);
    try
-      CheckTrue(session.IsStated(svMyState), 'a K station''s MY STATE is stated');
-      CheckEquals('', session.MyState, 'and it is blank');
+      CheckTrue(session.IsStated(svSentState), 'a K station''s sent state is stated');
+      CheckEquals('', session.SentState, 'and it is blank');
       CheckEquals(3, session.DomesticCountryCount, 'VE, CY0, CY9');
    finally
       session.Free;
@@ -443,7 +444,7 @@ begin
    ve.MyState := 'ON';
    session := Describe(CANADA_DAY, ve);
    try
-      CheckTrue(not session.IsStated(svMyState), 'a VE station''s MY STATE is left alone');
+      CheckTrue(not session.IsStated(svSentState), 'a VE station sends its MY STATE');
    finally
       session.Free;
       end;

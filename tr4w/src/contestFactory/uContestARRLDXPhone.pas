@@ -39,6 +39,8 @@ unit uContestARRLDXPhone;
 interface
 
 uses
+   (* TNewContestPrompts -- the New Contest dialog's prompts (M9a). *)
+   uContestBase,
    uContestARRLDXBase;
 
 type
@@ -53,17 +55,59 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
    public
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   VC, uContestRegistry;
+   VC, uContestRegistry,
+   uTR4WStrings;
 
 function TContestARRLDXPhone.GetDisplayName: string;
 begin
-   Result := 'ARRL International DX Contest - Phone';
+   Result := 'ARRL Inter. DX Contest, SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLDXPhone.GetCabrilloName: string;
+begin
+   Result := 'ARRL-DX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLDXPhone.GetADIFContestId: string;
+begin
+   Result := 'ARRL-DX-SSB';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestARRLDXPhone.GetFriendlyName: string;
+begin
+   Result := 'ARRL Inter. DX Contest, SSB';
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for ARRLDXCW.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARRLDXPhone.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURQTHORPOWER, ncfMyState);
 end;
 
 initialization

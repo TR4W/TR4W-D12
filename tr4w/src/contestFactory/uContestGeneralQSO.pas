@@ -49,6 +49,9 @@ type
          ambiguity a property removes, so the getter is not part of the
          surface: callers use the property, descendants override the getter. *)
       function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetFriendlyName: string; override;
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
@@ -66,6 +69,10 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE CABRILLO CONTEST: NAME -- M9a. *)
+      function CabrilloContestName(const aContestTitle: string;
+                                   const aSessionName: string): string; override;
    end;
 
 implementation
@@ -80,7 +87,28 @@ end;
 
 function TContestGeneralQSO.GetDisplayName: string;
 begin
-   Result := 'General QSO';
+   Result := 'General QSO/DX Logging';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestGeneralQSO.GetCabrilloName: string;
+begin
+   Result := 'GENERAL QSO';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestGeneralQSO.GetADIFContestId: string;
+begin
+   Result := 'GENERAL QSO';
+end;
+
+(* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
+   identity, and this is the value the row gave it. *)
+function TContestGeneralQSO.GetFriendlyName: string;
+begin
+   Result := 'General QSO/DX Logging';
 end;
 
 (* THE EXCHANGE IS RST, A NAME AND A QTH -- the plain ragchew-style log.
@@ -149,6 +177,28 @@ begin
    aSession.AutoDupeEnableSAndP := False;
    aSession.ContestName := 'General QSOs';
    aSession.WARCEnabled := True;
+end;
+
+(* THE CABRILLO CONTEST: LINE NAMES WHAT THE OPERATOR CALLED THIS LOG --
+   PostUnit's GENERALQSO test (4.78.3, "ALLOW CUSTOM CONFIG Contest Title or
+   Contest Name"), moved here at M9a (2026-10-02). General QSO is a log, not
+   a contest, so the title the operator gave it, else the session's contest
+   name, else the Cabrillo name. *)
+function TContestGeneralQSO.CabrilloContestName(const aContestTitle: string;
+                                                const aSessionName: string): string;
+begin
+   if Length(aContestTitle) <> 0 then
+      begin
+      Result := aContestTitle;
+      end
+   else if Length(aSessionName) <> 0 then
+      begin
+      Result := aSessionName;
+      end
+   else
+      begin
+      Result := inherited CabrilloContestName(aContestTitle, aSessionName);
+      end;
 end;
 
 initialization

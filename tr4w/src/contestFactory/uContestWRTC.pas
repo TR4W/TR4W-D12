@@ -91,6 +91,13 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   protected
+      (* THE OPERATING AIDS -- M9a. *)
+      function GetPermittedOperatingAids: TOperatingAids; override;
+   public
+      (* THE SCORE-POSTING XML -- M9a. *)
+      function ScorePostingMultiplierType(aKind: RemainingMultiplierType;
+                                          aAllModes: boolean): string; override;
    end;
 
 implementation
@@ -117,7 +124,7 @@ end;
 
 function TContestWRTC.GetDisplayName: string;
 begin
-   Result := 'WRTC';
+   Result := 'IARU HF World Championship';
 end;
 
 function TContestWRTC.GetCabrilloName: string;
@@ -207,6 +214,41 @@ procedure TContestWRTC.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
    aSession.Band := Band80;
+end;
+
+(* WRTC IS UNASSISTED: NO SUPER CHECK PARTIAL, NO DX CLUSTER, NO LIVE SCORE
+   POSTING -- the three `Contest = WRTC` tests that greyed the menus
+   (MainUnit.CreateMainWindow), refused the windows (OpenTR4WWindow) and
+   skipped the partial-call check (LOGEDIT's SuperCheckPartial), moved here
+   at M9a (2026-10-02) as the one thing they each said. *)
+function TContestWRTC.GetPermittedOperatingAids: TOperatingAids;
+begin
+   Result := [];
+end;
+
+(* THE WRTC SCORE COMPUTER WANTS HQ AND COUNTRY, ON THE ALL-MODES ROW ONLY --
+   LOGSUBS2's `Contest = WRTC` branch of the dynamic-results XML, moved here at
+   M9a: rmDomestic and rmDX with their WRTC labels, nothing else. The rows the
+   writer walks are CW, digital and phone, so the all-modes row is never
+   reached and WRTC posts no multiplier at all -- as it never has. *)
+function TContestWRTC.ScorePostingMultiplierType(aKind: RemainingMultiplierType;
+                                                 aAllModes: boolean): string;
+begin
+   Result := '';
+   if not aAllModes then
+      begin
+      Exit;
+      end;
+   case aKind of
+      rmDomestic:
+         begin
+         Result := 'HQ';
+         end;
+      rmDX:
+         begin
+         Result := 'country';
+         end;
+   end;
 end;
 
 initialization

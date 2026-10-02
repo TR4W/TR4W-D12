@@ -82,12 +82,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 procedure TContestHADX.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -109,7 +114,7 @@ end;
 
 function TContestHADX.GetDisplayName: string;
 begin
-   Result := 'HA DX';
+   Result := 'Hungarian DX Contest';
 end;
 
 function TContestHADX.GetCabrilloName: string;
@@ -197,6 +202,20 @@ procedure TContestHADX.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
    aSession.AddDomesticCountry('HA');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on ticking the box stood for CQIR, YUDX.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestHADX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_HUNGARY);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURCOUNTYCODE, ncfMyState);
 end;
 
 initialization

@@ -130,7 +130,7 @@ end;
 
 function TContestOceaniaDXSSB.GetDisplayName: string;
 begin
-   Result := 'OCEANIA-DX-SSB';
+   Result := 'Oceania DX Contest, Phone';
 end;
 
 function TContestOceaniaDXSSB.GetCabrilloName: string;

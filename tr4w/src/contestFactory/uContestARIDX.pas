@@ -82,12 +82,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 procedure TContestARIDX.CalculateQSOPoints(var aQso: ContestExchange);
 var
@@ -117,7 +122,7 @@ end;
 
 function TContestARIDX.GetDisplayName: string;
 begin
-   Result := 'ARI-DX';
+   Result := 'ARI International DX Contest';
 end;
 
 function TContestARIDX.GetCabrilloName: string;
@@ -209,6 +214,21 @@ begin
    aSession.AddDomesticCountry('I');
    aSession.AddDomesticCountry('IS');
    aSession.AddDomesticCountry('*IT9');
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on ticking the box stood for CANADA_DAY, CANADA_WINTER,
+   HELVETIA, KINGOFSPAINCW, KINGOFSPAINSSB, PACC, UBACW, UBASSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestARIDX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.OfferIAmIn(TC_ITALY);
+   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
 end;
 
 initialization

@@ -109,7 +109,7 @@ end;
 
 function TContestTenTen.GetDisplayName: string;
 begin
-   Result := 'TEN TEN';
+   Result := 'Ten-Ten On Air Activities';
 end;
 
 function TContestTenTen.GetCabrilloName: string;

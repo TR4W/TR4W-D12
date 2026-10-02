@@ -86,13 +86,24 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE CANONICAL RECEIVED EXCHANGE -- see
+         TContestBase.CanonicalReceivedExchange (M9a). *)
+      function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    end;
 
 implementation
 
 uses
    uContestRegistry,
-   uContestFixedPoints;
+   uContestFixedPoints,
+   uTR4WStrings,
+   SysUtils,
+   uCanonicalExchange;
 
 (* OnePointPerQSO -- LOGSTUFF.CalculateQSOPoints's arm for this
    contest's point method, moved here as it stood (M7b batch 2). *)
@@ -103,7 +114,7 @@ end;
 
 function TContestSST.GetDisplayName: string;
 begin
-   Result := 'SST';
+   Result := 'K1USN Slow Speed Test';
 end;
 
 function TContestSST.GetCabrilloName: string;
@@ -193,6 +204,32 @@ begin
    aSession.AddDomesticCountries(DomesticCountriesKVE);
    aSession.CQExchangeCW := ' ' + aStation.MyName + ' ' + aStation.MyState;
    aSession.SPExchangeCW := aStation.MyName + ' ' + aStation.MyState;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts.
+   The same steps on choosing stood for NAQSOCW, NAQSORTTY, NAQSOSSB.
+   Each contest holds its own copy (design 1.4), so a sponsor
+   changing one changes one. *)
+procedure TContestSST.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_ENTERYOURNAMEANDSTATE, ncfMyState);
+   aPrompts.AskField(ncfMyName);
+end;
+
+(* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this
+   contest, moved here at M9a (2026-10-02): the name and the state (or
+   DX), rebuilt from the fields so an edit to either reaches the
+   scoreboard (2026-05-28). The arm named SST and the three NAQP runnings;
+   each holds its own copy (design 1.4). See
+   TContestBase.CanonicalReceivedExchange; the caller collapses the
+   whitespace. *)
+function TContestSST.CanonicalReceivedExchange(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.Name)) + ' ' + Trim(string(aQso.QTHString));
 end;
 
 initialization

@@ -101,7 +101,7 @@ end;
 
 function TContestFISTS.GetDisplayName: string;
 begin
-   Result := 'FISTS';
+   Result := 'FISTS Winter Unlimited Sprint';
 end;
 
 function TContestFISTS.GetCabrilloName: string;

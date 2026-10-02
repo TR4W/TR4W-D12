@@ -153,6 +153,24 @@ multipliers, CTY.DAT, band lookup and CRC32.
   (POTA: design Q6; ARRL 160: its scoring needs the domestic-country list), and
   it is deleted when each gains a class. The contest matrix has an `== import`
   section (design 8.2f): a change to import shows there for every contest.
+- **THE CABRILLO HEADER'S CONTEST LINES AND THE MODE COLUMN ARE THE
+  CONTEST'S TOO (M9a, 2026-10-02).** PostUnit asks `CabrilloContestName`
+  (General QSO's title), `RequiresCabrilloLocation` (ARRL 10, Winter Field
+  Day), `CabrilloHeaderLinesBeforeTag` (Winter Field Day's `ARRL-SECTION:` /
+  `X-EXCHANGE:` before `LOCATION:`, written through `UTF8Encode` -- X-EXCHANGE
+  used to be an implicit ANSI conversion, identical for every legal FD class)
+  and `CabrilloModeString` for every QSO line; the base calls
+  `uCabrilloFormat.FormatCabrilloMode`, and PostUnit's inline copy of that
+  helper is deleted. **HamScore's one-QSO line (`uCabrillo`) still calls the
+  helper with no override**, so Winter Field Day's FM is `FM` there and `PH`
+  in the file -- design Q54, not changed. The summary sheet asks
+  `SummarySheet` and the hour report `ReportsRunningScore`. The corpus sees the
+  header for its Winter Field Day and General QSO sets; nothing else does.
+- **THE STATE SENT IS NOT MY STATE (M9a, design 7.11).** The Cabrillo sent
+  column and the ADIF `STX_STRING` read `FCONTEST.SentMyState` -- MY STATE,
+  unless the contest's set-up states what it sends instead (Canada Day/Winter
+  and the Russian DX contests send none from outside; the Cup RF sends the
+  grid). Never read `Settings.My.State` for a sent exchange.
 - **`StateFromARRLSection` (`uARRLSections`) is the one section-to-state
   table** -- PostUnit's and Tree's layered copies were merged into it at M4.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table

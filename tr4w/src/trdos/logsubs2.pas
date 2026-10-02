@@ -2693,9 +2693,12 @@ var
     nQSOs                                 : integer;
     nTotal                                : integer;
     sContestName                          : string;
+    (* The contest's type= label for one multiplier kind -- M9a. *)
+    multType                              : string;
 const
-  GetScoresMults                        : array[RemainingMultiplierType] of string = ('', 'state', 'country', 'zone', 'prefix');
-  GetScoresMultsWRTC                   : array[RemainingMultiplierType] of string = ('', 'HQ', 'country', 'zone', 'prefix');
+  (* ~~GetScoresMults~~ AND ~~GetScoresMultsWRTC~~ ARE GONE -- M9a, 2026-10-02.
+    The type= labels are the contest's: TContestBase.ScorePostingMultiplierType
+    (the base's are GetScoresMults' four; WRTC's class holds its own two). *)
   GetScoresModesArray                   : array[ModeType] of string = ('CW', 'DIG', 'PH', 'ALL', '', '');
 begin
 // Score formatted for WRTC Score Computer
@@ -2768,26 +2771,20 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
                                '" mode="' + GetScoresModesArray[TempMode] +
                                '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
             end;
-         if Contest <> WRTC then
+         (* ONE <mult> PER KIND THE CONTEST LABELS, IN KIND ORDER -- M9a. This
+           was `if Contest <> WRTC` with two loops; the contest says which kinds
+           it posts on this row, and under what label ('' posts none). *)
+         for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
             begin
-            for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
+            multType := ContestIdentity(Contest).ScorePostingMultiplierType(
+                           m, GetScoresModesArray[TempMode] = 'ALL');
+            if multType = '' then
                begin
-               sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
-                                         '" type="' +  GetScoresMults[m] + '">' + IntToStr(mo.MTotals[TempBand, TempMode, m]) +
-                                         '</mult>' + sLineBreak;
+               Continue;
                end;
-            end
-         else
-            begin // WRTC
-            if GetScoresModesArray[TempMode] = 'ALL' then
-               begin
-               for m := Succ(Low(RemainingMultiplierType)) to Succ(Succ(Low(RemainingMultiplierType))) do  // odd bit of code to select rmDomestic and rmDX
-                  begin
-                  sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
-                                            '" type="' + GetScoresMultsWRTC[m] + '">' +
-                                             IntToStr(mo.MTotals[TempBand, TempMode, m]) + '</mult>' + sLineBreak;
-                  end;
-               end;
+            sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
+                                      '" type="' + multType + '">' + IntToStr(mo.MTotals[TempBand, TempMode, m]) +
+                                      '</mult>' + sLineBreak;
             end;
          if GetScoresModesArray[TempMode] = 'ALL' then
             begin

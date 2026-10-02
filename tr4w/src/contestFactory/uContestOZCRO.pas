@@ -94,12 +94,20 @@ type
                                 aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+   public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
+         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   protected
+      (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
+      function GetTotalsDisplay: TTotalsDisplay; override;
    end;
 
 implementation
 
 uses
-   uContestRegistry;
+   uContestRegistry,
+   uTR4WStrings;
 
 procedure TContestOZCRO.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -215,6 +223,26 @@ begin
       begin
       Result := ' 5NN ' + aStation.MyZoneText;
       end;
+end;
+
+(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
+   `case SelectedContest of` arms for this contest, moved here as they
+   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
+   ones on ticking its "I am in" box. See
+   TContestBase.DescribeNewContestPrompts. *)
+procedure TContestOZCRO.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(TC_OZCR, ncfMyState);
+end;
+
+(* THE TOTALS WINDOW SHOWS EACH MODE'S SHARE OF THE QSOs -- uTotal's OZCHR
+   teams arm (n4af, 4.34.8), moved here at M9a (2026-10-02): when QSOs count
+   per mode and both CW and phone have some, 'CW: 60%' and 'PH: 40%' stand
+   where the per-mode QSO rows would. *)
+function TContestOZCRO.GetTotalsDisplay: TTotalsDisplay;
+begin
+   Result := inherited GetTotalsDisplay;
+   Result.ShowsModeShares := True;
 end;
 
 initialization
