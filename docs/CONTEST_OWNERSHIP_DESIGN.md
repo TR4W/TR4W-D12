@@ -929,6 +929,16 @@ still accepts `DX`.
 - Field Day DX export and import: `FormatADIFReceivedExchange`,
   `EmitADIFContestFields` and `ApplyADIFImport` on both Field Day classes.
 
+### 7.11 DECIDED (2026-10-02, delegated): a contest never writes a station setting (Q39)
+
+Canada Day/Winter blank MY STATE for an outside station and the Russian cups put
+the grid there -- moved exactly in M7a (`db6c1477`). MY STATE is a STATION fact
+stored in `tr4w.json`, so a later settings save can carry the contest's value out
+of the contest. End state: the contest states its SENT exchange in a
+contest-scoped value (TSessionDefaults / the contest log, never the station
+bucket), and MY STATE stays what the operator set. Lands with the sent-exchange
+and Cabrillo-header work (M9); behaviour of the sent exchange must not change.
+
 ### 8.1 Which oracle sees what
 
 | oracle | sees | blind to |
