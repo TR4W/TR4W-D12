@@ -872,6 +872,31 @@ evidence given with it.
   line but not MY STATE, and a county code is not case-significant anywhere
   else. **The rule takes the data at its word**, and one file abuses it (Q14).
 
+### 7.10 RULED (NY4I, 2026-10-02): exchange validation refuses an invalid station
+
+- **QSO parties -- out-of-state works only the host state** (answers Q14). *"In QSO
+  parties, out of state stations usually only log the state county. It's not valid
+  for a fl station to work an Idaho or VE station in the NC QSO party."* In-state
+  stations work everyone. This is the DEFAULT on the state-QSO-party base; a party
+  whose sponsor differs overrides it. So `nc_cty.dom` holds NC's 100 counties only.
+- **An invalid station is REFUSED, with an error** -- *"It's an invalid station so
+  we should refuse to log it and show an error like we would with an invalid
+  county"* -- *"or with a bad ARRL section"*. NOT the off-band treatment (7.4):
+  off-band is a legal QSO with no contest impact; this is an exchange that is not
+  valid for the contest.
+- **Sweepstakes without a precedence** (Q19): *"A sweepstakes entry should not have
+  been logged without a precedence"* -- refused at entry. The blank-not-NUL export
+  (defect #4) stays as the safe output for a record already in a log.
+- **Field Day DX export** (Q20): `CLASS` is whatever was logged (usually `1D`);
+  `ARRL_SECT` is never written for DX (*"class and section are different"*);
+  `SRX_STRING` is the full received exchange, `1D DX`.
+- **OPEN:** NY4I also wrote *"or DX on field day"* alongside the bad-section
+  example; asked whether that is an existing-error example or a ruling to refuse
+  DX in Field Day (which would contradict 7.1). Until answered, Field Day keeps
+  accepting `DX`.
+
+Lands in M5b (parsing and validation move onto the classes).
+
 ### 8.1 Which oracle sees what
 
 | oracle | sees | blind to |
