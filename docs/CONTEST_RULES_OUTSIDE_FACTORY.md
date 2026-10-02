@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `7d11853a` (2026-10-01).
+directory). This copy was generated from commit `f677cded` (2026-10-01).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -80,7 +80,7 @@ into 440 comparison-or-arm records --
 
 ### 1.4 The headline facts
 
-1. **69 of the 72 registered contests still have rules outside the factory.**
+1. **70 of the 73 registered contests still have rules outside the factory.**
    With none: `FLORIDAQSOPARTY`, `MARCONIMEMORIAL`, `MICHQSOPARTY`. The per-contest index (section 6)
    lists every site, registered contests first.
 
@@ -186,8 +186,8 @@ shape 2.
 
 ### 2.2 Which contests have a class
 
-`RegisterContest(<enum>, <class>)` in `src/contestFactory/`: **72**
-(`model.Registry`, which also walks each class's ancestry). All 72 score through their own chain -- none falls through to `TContestBase`'s zero.
+`RegisterContest(<enum>, <class>)` in `src/contestFactory/`: **73**
+(`model.Registry`, which also walks each class's ancestry). All 73 score through their own chain -- none falls through to `TContestBase`'s zero.
 
 ### 2.3 Shape 4 -- who reaches an `Active*` value
 
@@ -252,7 +252,7 @@ is used and marked `(s6)`.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `MainUnit.pas:7927` | LoadinLog | 1 | **MOQSOPARTY** | all | new seam needed: CalculateTotalScore (s6) | `Contest` compare |
+| `MainUnit.pas:7936` | LoadinLog | 1 | **MOQSOPARTY** | all | new seam needed: CalculateTotalScore (s6) | `Contest` compare |
 | `trdos/logdupe.pas:1108` | CheckMOQSOPartyBonusStation | 3 | **MOQSOPARTY** | all | new seam needed: CalculateTotalScore (s6) | bonus callsigns `'W0MA'` / `'K0GQ'` |
 | `trdos/logstuff.pas:6584` | CalculateQSOPoints | 4 | ALLASIANCW, ALLASIANSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = AllAsianQSOPointMethod (arm of case @6555) |
 | `trdos/logstuff.pas:6634` | CalculateQSOPoints | 4 | ARCI | none | CalculateQSOPoints (existing) | reach 1: `QP` = ARCIQSOPointMethod (arm of case @6555) |
@@ -275,91 +275,91 @@ is used and marked `(s6)`.
 | `trdos/logstuff.pas:7179` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `Settings.Contest.Title = 'DL-DX-RTTY'` in the DLRTTY arm -- see dead code |
 | `trdos/logstuff.pas:7205` | CalculateQSOPoints | 4 | **CQWWCW**, **CQWWSSB** | all | CalculateQSOPoints (existing) | reach 2: `QP` = CQWWQSOPointMethod (arm of case @6555) |
 | `trdos/logstuff.pas:7224` | CalculateQSOPoints | 4 | CQWWRTTY, WWIH | none | CalculateQSOPoints (existing) | reach 2: `QP` = CQWWRTTYQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7238` | CalculateQSOPoints | 4 | CROATIAN | none | CalculateQSOPoints (existing) | reach 1: `QP` = CroatianQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7320` | CalculateQSOPoints | 4 | REGION1FIELDDAY | none | CalculateQSOPoints (existing) | reach 1: `QP` = EuropeanFieldDayQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7476` | CalculateQSOPoints | 4 | **FOCMARATHON** | all | CalculateQSOPoints (existing) | reach 1: `QP` = FOCMarathonQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7478` | CalculateQSOPoints | 3 | **FOCMARATHON** | all | CalculateQSOPoints (existing) | bonus callsign `'G4FOC'` |
-| `trdos/logstuff.pas:7489` | CalculateQSOPoints | 4 | RADIOVHFFD | none | CalculateQSOPoints (existing) | reach 1: `QP` = RadioVHFFDQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7521` | CalculateQSOPoints | 4 | MAKROTHEN | none | CalculateQSOPoints (existing) | reach 1: `QP` = MakrothenQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7547` | CalculateQSOPoints | 4 | **NCQSOPARTY** | all | CalculateQSOPoints (existing) | reach 1: `QP` = NCQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7562` | CalculateQSOPoints | 3 | **NCQSOPARTY** | all | CalculateQSOPoints (existing) | seven bonus callsigns `'N4T'`..`'N4L'` -- arm is dead, see dead code |
-| `trdos/logstuff.pas:7596` | CalculateQSOPoints | 4 | **BCQP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = BCQPQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7610` | CalculateQSOPoints | 4 | IN7QPNE, **PAQSOPARTY** | some: PAQSOPARTY | CalculateQSOPoints (existing) | reach 2: `QP` = PAQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7647` | CalculateQSOPoints | 4 | OZHCRVHF | none | CalculateQSOPoints (existing) | reach 1: `QP` = OZHCRVHFQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7669` | CalculateQSOPoints | 4 | EUROPEANVHF | none | CalculateQSOPoints (existing) | reach 1: `QP` = EuropeanVHFQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7674` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `Settings.Contest.Name = 'EURASIA'` in the EuropeanVHF arm -- see dead code |
-| `trdos/logstuff.pas:7710` | CalculateQSOPoints | 4 | TESLA | none | CalculateQSOPoints (existing) | reach 1: `QP` = TeslaQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7758` | CalculateQSOPoints | 4 | FISTS | none | CalculateQSOPoints (existing) | reach 1: `QP` = FistsQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7768` | CalculateQSOPoints | 4 | HADX | none | CalculateQSOPoints (existing) | reach 1: `QP` = HADXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7789` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `DomesticQTH = 'TRC'` in the TRCDIGITAL arm |
-| `trdos/logstuff.pas:7801` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `Settings.My.State = 'TRC'` |
-| `trdos/logstuff.pas:7835` | CalculateQSOPoints | 4 | YUDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = YUDXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7853` | CalculateQSOPoints | 4 | **UKEI** | all | CalculateQSOPoints (existing) | reach 1: `QP` = UKEIQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7911` | CalculateQSOPoints | 4 | MWC | none | CalculateQSOPoints (existing) | reach 1: `QP` = MWCQP (arm of case @6555) |
-| `trdos/logstuff.pas:7927` | CalculateQSOPoints | 4 | HELVETIA | none | CalculateQSOPoints (existing) | reach 1: `QP` = HelvetiaQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7941` | CalculateQSOPoints | 4 | BSCI | none | CalculateQSOPoints (existing) | reach 1: `QP` = BSCIQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:7983` | CalculateQSOPoints | 4 | **IARU**, OZCR_Z | some: IARU | CalculateQSOPoints (existing) | reach 2: `QP` = IARUQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8063` | CalculateQSOPoints | 4 | **IOTA** | all | CalculateQSOPoints (existing) | reach 1: `QP` = IOTAQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8098` | CalculateQSOPoints | 4 | JIDXCW, JIDXSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = JapanInternationalDXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8171` | CalculateQSOPoints | 4 | KCJ | none | CalculateQSOPoints (existing) | reach 1: `QP` = KCJQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8205` | CalculateQSOPoints | 4 | **NZFIELDDAY** | all | CalculateQSOPoints (existing) | reach 1: `QP` = NZFieldDayQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8230` | CalculateQSOPoints | 4 | OKDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = OKDXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8276` | CalculateQSOPoints | 4 | OKOMSSB | none | CalculateQSOPoints (existing) | reach 1: `QP` = OKOMSSBQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8315` | CalculateQSOPoints | 4 | RAEM | none | CalculateQSOPoints (existing) | reach 1: `QP` = RAEMQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8327` | CalculateQSOPoints | 3 | RAEM | none | CalculateQSOPoints (existing) | special callsign `'RAEM'` |
-| `trdos/logstuff.pas:8342` | CalculateQSOPoints | 4 | CANADA_DAY, CANADA_WINTER | none | CalculateQSOPoints (existing) | reach 2: `QP` = RACQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8374` | CalculateQSOPoints | 4 | RSGB18 | none | CalculateQSOPoints (existing) | reach 1: `QP` = RSGB160Method (arm of case @6555) |
-| `trdos/logstuff.pas:8406` | CalculateQSOPoints | 4 | RDA | none | CalculateQSOPoints (existing) | reach 1: `QP` = RDAQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8440` | CalculateQSOPoints | 4 | RU3AXMEMORIAL, RUSSIANDX | none | CalculateQSOPoints (existing) | reach 2: `QP` = RussianDXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8477` | CalculateQSOPoints | 1 | RU3AXMEMORIAL | none | CalculateQSOPoints (existing) | `Contest` compare |
-| `trdos/logstuff.pas:8484` | CalculateQSOPoints | 4 | **SALMONRUN** | all | CalculateQSOPoints (existing) | reach 1: `QP` = SalmonRunQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8496` | CalculateQSOPoints | 4 | SACCW, SACSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = ScandinavianQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8536` | CalculateQSOPoints | 4 | YBDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = IndonesianQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8575` | CalculateQSOPoints | 4 | **BATAVIA_FT8** | all | CalculateQSOPoints (existing) | reach 1: `QP` = YBFT8QP (arm of case @6555) |
-| `trdos/logstuff.pas:8604` | CalculateQSOPoints | 3 | **BATAVIA_FT8** | all | CalculateQSOPoints (existing) | `Settings.Contest.Title = 'YBDXDI-FT8'` in the YBFT8QP arm -- see dead code |
-| `trdos/logstuff.pas:8622` | CalculateQSOPoints | 4 | SOUTHAMERICANWW | none | CalculateQSOPoints (existing) | reach 1: `QP` = SouthAmericanWWQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8645` | CalculateQSOPoints | 4 | STEWPERRY | none | CalculateQSOPoints (existing) | reach 1: `QP` = StewPerryQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8666` | CalculateQSOPoints | 4 | **WWDIGI** | all | CalculateQSOPoints (existing) | reach 1: `QP` = WWDigiQP (arm of case @6555) |
-| `trdos/logstuff.pas:8673` | CalculateQSOPoints | 4 | RTC | none | CalculateQSOPoints (existing) | reach 1: `QP` = RTCQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8710` | CalculateQSOPoints | 4 | TENTEN | none | CalculateQSOPoints (existing) | reach 1: `QP` = TenTenQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8720` | CalculateQSOPoints | 4 | TOEC | none | CalculateQSOPoints (existing) | reach 1: `QP` = TOECQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8736` | CalculateQSOPoints | 4 | UBACW, UBASSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = UBAQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8784` | CalculateQSOPoints | 4 | UKRAINIAN | none | CalculateQSOPoints (existing) | reach 1: `QP` = UkrainianQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8813` | CalculateQSOPoints | 4 | OCEANIADXCW, OCEANIADXSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = VKZLQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8830` | CalculateQSOPoints | 4 | **WAG** | all | CalculateQSOPoints (existing) | reach 1: `QP` = WAGQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8858` | CalculateQSOPoints | 4 | DARCWAEDCCW, DARCWAEDCSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = WAEQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8877` | CalculateQSOPoints | 4 | WWL | none | CalculateQSOPoints (existing) | reach 1: `QP` = WWLQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8900` | CalculateQSOPoints | 4 | YODX | none | CalculateQSOPoints (existing) | reach 1: `QP` = YODXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:8922` | CalculateQSOPoints | 4 | **INTERNETSPRINT**, **YOUTHCHAMPIONSHIPRF** | all | CalculateQSOPoints (existing) | reach 2 GENERIC-NAMED: `QP` = AlwaysOnePointPerQSO (arm of case @6555) |
-| `trdos/logstuff.pas:8925` | CalculateQSOPoints | 4 | **CALQSOPARTY**, RADIOYOC, SPDX | some: CALQSOPARTY | CalculateQSOPoints (existing) | reach 3 GENERIC-NAMED: `QP` = ThreePointsPerQSO (arm of case @6555) |
-| `trdos/logstuff.pas:8926` | CalculateQSOPoints | 4 | RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB | none | CalculateQSOPoints (existing) | reach 2 GENERIC-NAMED: `QP` = TenPointsPerQSO (arm of case @6555) |
-| `trdos/logstuff.pas:8990` | CalculateQSOPoints | 4 | CUPRFCW, CUPRFDIG, CUPRFSSB | none | CalculateQSOPoints (existing) | reach 3: `QP` = CupRFMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9034` | CalculateQSOPoints | 4 | UA4WCHAMPIONSHIP | none | CalculateQSOPoints (existing) | reach 1: `QP` = UA4WMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9085` | CalculateQSOPoints | 4 | RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = ChampionshipRFMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9107` | CalculateQSOPoints | 4 | **UKRAINECHAMPIONSHIP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = ChampionshipUkrMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9117` | CalculateQSOPoints | 4 | WWPMC | none | CalculateQSOPoints (existing) | reach 1: `QP` = WWPMCQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9137` | CalculateQSOPoints | 4 | JTDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = JTDXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9178` | CalculateQSOPoints | 4 | LABRE | none | CalculateQSOPoints (existing) | reach 1: `QP` = LABREQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9216` | CalculateQSOPoints | 4 | LZDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = LZDXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9249` | CalculateQSOPoints | 4 | OLDNEWYEAR | none | CalculateQSOPoints (existing) | reach 1: `QP` = OldNewYearQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9269` | CalculateQSOPoints | 4 | RFASCHAMPIONSHIPCW | none | CalculateQSOPoints (existing) | reach 1: `QP` = ChampionshipRFASMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9285` | CalculateQSOPoints | 4 | REGION1FIELDDAY_RCC_CW, REGION1FIELDDAY_RCC_SSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = RegionOneFieldDayRCCQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9324` | CalculateQSOPoints | 4 | GACWWWSACW | none | CalculateQSOPoints (existing) | reach 1: `QP` = GACWWWSACWQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9345` | CalculateQSOPoints | 4 | **LQP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = LQPQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9348` | CalculateQSOPoints | 3 | **LQP** | all | CalculateQSOPoints (existing) | `Name = 'LOCUST'` / `Callsign = 'K6VVA'` |
-| `trdos/logstuff.pas:9354` | CalculateQSOPoints | 4 | **ARKTIKA_SPRING** | all | CalculateQSOPoints (existing) | reach 1: `QP` = ArktikaSpringQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9366` | CalculateQSOPoints | 4 | REFCW, REFSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = REFQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9383` | CalculateQSOPoints | 4 | RADIOMEMORY | none | CalculateQSOPoints (existing) | reach 1: `QP` = RadioMemoryQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9398` | CalculateQSOPoints | 4 | **PCC** | all | CalculateQSOPoints (existing) | reach 1: `QP` = PCCQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9428` | CalculateQSOPoints | 4 | UNDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = UNDXQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9450` | CalculateQSOPoints | 4 | KINGOFSPAINCW, KINGOFSPAINSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = KingOfSpainQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9469` | CalculateQSOPoints | 4 | GAGARINCUP | none | CalculateQSOPoints (existing) | reach 1: `QP` = GagarinCupQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9508` | CalculateQSOPoints | 4 | CQMM | none | CalculateQSOPoints (existing) | reach 1: `QP` = CQMMQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9566` | CalculateQSOPoints | 4 | R9W_UW9WK_MEMORIAL | none | CalculateQSOPoints (existing) | reach 1: `QP` = R9WUW9WKMemorialQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9577` | CalculateQSOPoints | 4 | WRTC | none | CalculateQSOPoints (existing) | reach 1: `QP` = WRTCQSOPointMethod (arm of case @6555) |
-| `trdos/logstuff.pas:9723` | CalculateQSOPoints | 4 | **VAQP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = VAQSOPOINTMETHOD (arm of case @6555) |
-| `trdos/logstuff.pas:9739` | CalculateQSOPoints | 4 | EUDX, IRTS | none | CalculateQSOPoints (existing) | reach 2: `QP` = EUDXQSOPOINTMETHOD (arm of case @6555) |
-| `trdos/logstuff.pas:9797` | CalculateQSOPoints | 4 | YOTA | none | CalculateQSOPoints (existing) | reach 1: `QP` = YOTAQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7238` | CalculateQSOPoints | 4 | **CROATIAN** | all | CalculateQSOPoints (existing) | reach 1: `QP` = CroatianQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7322` | CalculateQSOPoints | 4 | REGION1FIELDDAY | none | CalculateQSOPoints (existing) | reach 1: `QP` = EuropeanFieldDayQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7478` | CalculateQSOPoints | 4 | **FOCMARATHON** | all | CalculateQSOPoints (existing) | reach 1: `QP` = FOCMarathonQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7480` | CalculateQSOPoints | 3 | **FOCMARATHON** | all | CalculateQSOPoints (existing) | bonus callsign `'G4FOC'` |
+| `trdos/logstuff.pas:7491` | CalculateQSOPoints | 4 | RADIOVHFFD | none | CalculateQSOPoints (existing) | reach 1: `QP` = RadioVHFFDQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7523` | CalculateQSOPoints | 4 | MAKROTHEN | none | CalculateQSOPoints (existing) | reach 1: `QP` = MakrothenQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7549` | CalculateQSOPoints | 4 | **NCQSOPARTY** | all | CalculateQSOPoints (existing) | reach 1: `QP` = NCQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7564` | CalculateQSOPoints | 3 | **NCQSOPARTY** | all | CalculateQSOPoints (existing) | seven bonus callsigns `'N4T'`..`'N4L'` -- arm is dead, see dead code |
+| `trdos/logstuff.pas:7598` | CalculateQSOPoints | 4 | **BCQP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = BCQPQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7612` | CalculateQSOPoints | 4 | IN7QPNE, **PAQSOPARTY** | some: PAQSOPARTY | CalculateQSOPoints (existing) | reach 2: `QP` = PAQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7649` | CalculateQSOPoints | 4 | OZHCRVHF | none | CalculateQSOPoints (existing) | reach 1: `QP` = OZHCRVHFQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7671` | CalculateQSOPoints | 4 | EUROPEANVHF | none | CalculateQSOPoints (existing) | reach 1: `QP` = EuropeanVHFQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7676` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `Settings.Contest.Name = 'EURASIA'` in the EuropeanVHF arm -- see dead code |
+| `trdos/logstuff.pas:7712` | CalculateQSOPoints | 4 | TESLA | none | CalculateQSOPoints (existing) | reach 1: `QP` = TeslaQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7760` | CalculateQSOPoints | 4 | FISTS | none | CalculateQSOPoints (existing) | reach 1: `QP` = FistsQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7770` | CalculateQSOPoints | 4 | HADX | none | CalculateQSOPoints (existing) | reach 1: `QP` = HADXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7791` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `DomesticQTH = 'TRC'` in the TRCDIGITAL arm |
+| `trdos/logstuff.pas:7803` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `Settings.My.State = 'TRC'` |
+| `trdos/logstuff.pas:7837` | CalculateQSOPoints | 4 | YUDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = YUDXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7855` | CalculateQSOPoints | 4 | **UKEI** | all | CalculateQSOPoints (existing) | reach 1: `QP` = UKEIQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7915` | CalculateQSOPoints | 4 | MWC | none | CalculateQSOPoints (existing) | reach 1: `QP` = MWCQP (arm of case @6555) |
+| `trdos/logstuff.pas:7931` | CalculateQSOPoints | 4 | HELVETIA | none | CalculateQSOPoints (existing) | reach 1: `QP` = HelvetiaQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7945` | CalculateQSOPoints | 4 | BSCI | none | CalculateQSOPoints (existing) | reach 1: `QP` = BSCIQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:7987` | CalculateQSOPoints | 4 | **IARU**, OZCR_Z | some: IARU | CalculateQSOPoints (existing) | reach 2: `QP` = IARUQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8067` | CalculateQSOPoints | 4 | **IOTA** | all | CalculateQSOPoints (existing) | reach 1: `QP` = IOTAQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8102` | CalculateQSOPoints | 4 | JIDXCW, JIDXSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = JapanInternationalDXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8175` | CalculateQSOPoints | 4 | KCJ | none | CalculateQSOPoints (existing) | reach 1: `QP` = KCJQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8209` | CalculateQSOPoints | 4 | **NZFIELDDAY** | all | CalculateQSOPoints (existing) | reach 1: `QP` = NZFieldDayQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8234` | CalculateQSOPoints | 4 | OKDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = OKDXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8280` | CalculateQSOPoints | 4 | OKOMSSB | none | CalculateQSOPoints (existing) | reach 1: `QP` = OKOMSSBQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8319` | CalculateQSOPoints | 4 | RAEM | none | CalculateQSOPoints (existing) | reach 1: `QP` = RAEMQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8331` | CalculateQSOPoints | 3 | RAEM | none | CalculateQSOPoints (existing) | special callsign `'RAEM'` |
+| `trdos/logstuff.pas:8346` | CalculateQSOPoints | 4 | CANADA_DAY, CANADA_WINTER | none | CalculateQSOPoints (existing) | reach 2: `QP` = RACQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8378` | CalculateQSOPoints | 4 | RSGB18 | none | CalculateQSOPoints (existing) | reach 1: `QP` = RSGB160Method (arm of case @6555) |
+| `trdos/logstuff.pas:8410` | CalculateQSOPoints | 4 | RDA | none | CalculateQSOPoints (existing) | reach 1: `QP` = RDAQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8444` | CalculateQSOPoints | 4 | RU3AXMEMORIAL, RUSSIANDX | none | CalculateQSOPoints (existing) | reach 2: `QP` = RussianDXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8481` | CalculateQSOPoints | 1 | RU3AXMEMORIAL | none | CalculateQSOPoints (existing) | `Contest` compare |
+| `trdos/logstuff.pas:8488` | CalculateQSOPoints | 4 | **SALMONRUN** | all | CalculateQSOPoints (existing) | reach 1: `QP` = SalmonRunQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8500` | CalculateQSOPoints | 4 | SACCW, SACSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = ScandinavianQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8540` | CalculateQSOPoints | 4 | YBDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = IndonesianQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8579` | CalculateQSOPoints | 4 | **BATAVIA_FT8** | all | CalculateQSOPoints (existing) | reach 1: `QP` = YBFT8QP (arm of case @6555) |
+| `trdos/logstuff.pas:8608` | CalculateQSOPoints | 3 | **BATAVIA_FT8** | all | CalculateQSOPoints (existing) | `Settings.Contest.Title = 'YBDXDI-FT8'` in the YBFT8QP arm -- see dead code |
+| `trdos/logstuff.pas:8626` | CalculateQSOPoints | 4 | SOUTHAMERICANWW | none | CalculateQSOPoints (existing) | reach 1: `QP` = SouthAmericanWWQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8649` | CalculateQSOPoints | 4 | STEWPERRY | none | CalculateQSOPoints (existing) | reach 1: `QP` = StewPerryQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8670` | CalculateQSOPoints | 4 | **WWDIGI** | all | CalculateQSOPoints (existing) | reach 1: `QP` = WWDigiQP (arm of case @6555) |
+| `trdos/logstuff.pas:8677` | CalculateQSOPoints | 4 | RTC | none | CalculateQSOPoints (existing) | reach 1: `QP` = RTCQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8714` | CalculateQSOPoints | 4 | TENTEN | none | CalculateQSOPoints (existing) | reach 1: `QP` = TenTenQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8724` | CalculateQSOPoints | 4 | TOEC | none | CalculateQSOPoints (existing) | reach 1: `QP` = TOECQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8740` | CalculateQSOPoints | 4 | UBACW, UBASSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = UBAQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8788` | CalculateQSOPoints | 4 | UKRAINIAN | none | CalculateQSOPoints (existing) | reach 1: `QP` = UkrainianQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8817` | CalculateQSOPoints | 4 | OCEANIADXCW, OCEANIADXSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = VKZLQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8834` | CalculateQSOPoints | 4 | **WAG** | all | CalculateQSOPoints (existing) | reach 1: `QP` = WAGQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8862` | CalculateQSOPoints | 4 | DARCWAEDCCW, DARCWAEDCSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = WAEQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8881` | CalculateQSOPoints | 4 | WWL | none | CalculateQSOPoints (existing) | reach 1: `QP` = WWLQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8904` | CalculateQSOPoints | 4 | YODX | none | CalculateQSOPoints (existing) | reach 1: `QP` = YODXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:8926` | CalculateQSOPoints | 4 | **INTERNETSPRINT**, **YOUTHCHAMPIONSHIPRF** | all | CalculateQSOPoints (existing) | reach 2 GENERIC-NAMED: `QP` = AlwaysOnePointPerQSO (arm of case @6555) |
+| `trdos/logstuff.pas:8929` | CalculateQSOPoints | 4 | **CALQSOPARTY**, RADIOYOC, SPDX | some: CALQSOPARTY | CalculateQSOPoints (existing) | reach 3 GENERIC-NAMED: `QP` = ThreePointsPerQSO (arm of case @6555) |
+| `trdos/logstuff.pas:8930` | CalculateQSOPoints | 4 | RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB | none | CalculateQSOPoints (existing) | reach 2 GENERIC-NAMED: `QP` = TenPointsPerQSO (arm of case @6555) |
+| `trdos/logstuff.pas:8994` | CalculateQSOPoints | 4 | CUPRFCW, CUPRFDIG, CUPRFSSB | none | CalculateQSOPoints (existing) | reach 3: `QP` = CupRFMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9038` | CalculateQSOPoints | 4 | UA4WCHAMPIONSHIP | none | CalculateQSOPoints (existing) | reach 1: `QP` = UA4WMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9089` | CalculateQSOPoints | 4 | RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = ChampionshipRFMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9111` | CalculateQSOPoints | 4 | **UKRAINECHAMPIONSHIP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = ChampionshipUkrMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9121` | CalculateQSOPoints | 4 | WWPMC | none | CalculateQSOPoints (existing) | reach 1: `QP` = WWPMCQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9141` | CalculateQSOPoints | 4 | JTDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = JTDXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9182` | CalculateQSOPoints | 4 | LABRE | none | CalculateQSOPoints (existing) | reach 1: `QP` = LABREQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9220` | CalculateQSOPoints | 4 | LZDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = LZDXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9253` | CalculateQSOPoints | 4 | OLDNEWYEAR | none | CalculateQSOPoints (existing) | reach 1: `QP` = OldNewYearQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9273` | CalculateQSOPoints | 4 | RFASCHAMPIONSHIPCW | none | CalculateQSOPoints (existing) | reach 1: `QP` = ChampionshipRFASMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9289` | CalculateQSOPoints | 4 | REGION1FIELDDAY_RCC_CW, REGION1FIELDDAY_RCC_SSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = RegionOneFieldDayRCCQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9328` | CalculateQSOPoints | 4 | GACWWWSACW | none | CalculateQSOPoints (existing) | reach 1: `QP` = GACWWWSACWQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9349` | CalculateQSOPoints | 4 | **LQP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = LQPQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9352` | CalculateQSOPoints | 3 | **LQP** | all | CalculateQSOPoints (existing) | `Name = 'LOCUST'` / `Callsign = 'K6VVA'` |
+| `trdos/logstuff.pas:9358` | CalculateQSOPoints | 4 | **ARKTIKA_SPRING** | all | CalculateQSOPoints (existing) | reach 1: `QP` = ArktikaSpringQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9370` | CalculateQSOPoints | 4 | REFCW, REFSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = REFQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9387` | CalculateQSOPoints | 4 | RADIOMEMORY | none | CalculateQSOPoints (existing) | reach 1: `QP` = RadioMemoryQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9402` | CalculateQSOPoints | 4 | **PCC** | all | CalculateQSOPoints (existing) | reach 1: `QP` = PCCQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9432` | CalculateQSOPoints | 4 | UNDX | none | CalculateQSOPoints (existing) | reach 1: `QP` = UNDXQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9454` | CalculateQSOPoints | 4 | KINGOFSPAINCW, KINGOFSPAINSSB | none | CalculateQSOPoints (existing) | reach 2: `QP` = KingOfSpainQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9473` | CalculateQSOPoints | 4 | GAGARINCUP | none | CalculateQSOPoints (existing) | reach 1: `QP` = GagarinCupQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9512` | CalculateQSOPoints | 4 | CQMM | none | CalculateQSOPoints (existing) | reach 1: `QP` = CQMMQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9570` | CalculateQSOPoints | 4 | R9W_UW9WK_MEMORIAL | none | CalculateQSOPoints (existing) | reach 1: `QP` = R9WUW9WKMemorialQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9581` | CalculateQSOPoints | 4 | WRTC | none | CalculateQSOPoints (existing) | reach 1: `QP` = WRTCQSOPointMethod (arm of case @6555) |
+| `trdos/logstuff.pas:9727` | CalculateQSOPoints | 4 | **VAQP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = VAQSOPOINTMETHOD (arm of case @6555) |
+| `trdos/logstuff.pas:9743` | CalculateQSOPoints | 4 | EUDX, IRTS | none | CalculateQSOPoints (existing) | reach 2: `QP` = EUDXQSOPOINTMETHOD (arm of case @6555) |
+| `trdos/logstuff.pas:9801` | CalculateQSOPoints | 4 | YOTA | none | CalculateQSOPoints (existing) | reach 1: `QP` = YOTAQSOPointMethod (arm of case @6555) |
 | `trdos/logsubs2.pas:1743` | LogContact | 1 | **MOQSOPARTY** | all | new seam needed: CalculateTotalScore (s6) | `Contest` compare |
 
 ### Exchange parsing and validation (112 rows)
@@ -370,14 +370,14 @@ is used and marked `(s6)`.
 | `MainUnit.pas:969` | DetectRoverSlashInCall | 4 | **COUNTYHUNTER** | all | new seam needed: RoverCallRules | reach 1: `AE` = RSTQTHExchange |
 | `MainUnit.pas:2052` | ReturnInSAPOpMode | 4 | **COUNTYHUNTER** | all | new seam needed: RoverCallRules | reach 1: `AE` = RSTQTHEXCHANGE |
 | `MainUnit.pas:4045` | ExchangeWindowChange | 4 | POTA | none | new seam needed: ReceivedExchangeFields (s6) | reach 1 GENERIC-NAMED: `AE` = RSTAndPOTAPark |
-| `MainUnit.pas:7087` | ParametersOkay | 4 | BWQP, **GENERALQSO**, POTA | some: GENERALQSO | new seam needed: ValidateExchange | reach 3 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange, RSTAndPOTAPark |
-| `MainUnit.pas:7242` | ParametersOkay | 4 | UBACW, UBASSB | none | new seam needed: ValidateExchange | reach 2: `Pxm` = BelgiumPrefixes (arm of case @7241) |
-| `MainUnit.pas:7246` | ParametersOkay | 4 | SACCW, SACSSB | none | new seam needed: ValidateExchange | reach 2: `Pxm` = SACDistricts (arm of case @7241) |
-| `MainUnit.pas:7247` | ParametersOkay | 4 | YBDX | none | new seam needed: ValidateExchange | reach 1: `Pxm` = IndonesianDistricts (arm of case @7241) |
-| `MainUnit.pas:7250` | ParametersOkay | 1 | YBDX | none | new seam needed: ValidateExchange | `Contest` compare |
-| `MainUnit.pas:7256` | ParametersOkay | 4 | CQMM, **SASPRINT**, SOUTHAMERICANWW | some: SASPRINT | new seam needed: ValidateExchange | reach 3: `Pxm` = SouthAmericanPrefixes (arm of case @7241) |
-| `MainUnit.pas:7260` | ParametersOkay | 4 | SOUTHAMERICANWW | none | new seam needed: ValidateExchange | reach 1: `Pxm` = NonSouthAmericanPrefixes (arm of case @7241) |
-| `MainUnit.pas:8004` | LoadinLog | 1 | RADIOYOC | none | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
+| `MainUnit.pas:7096` | ParametersOkay | 4 | BWQP, **GENERALQSO**, POTA | some: GENERALQSO | new seam needed: ValidateExchange | reach 3 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange, RSTAndPOTAPark |
+| `MainUnit.pas:7251` | ParametersOkay | 4 | UBACW, UBASSB | none | new seam needed: ValidateExchange | reach 2: `Pxm` = BelgiumPrefixes (arm of case @7250) |
+| `MainUnit.pas:7255` | ParametersOkay | 4 | SACCW, SACSSB | none | new seam needed: ValidateExchange | reach 2: `Pxm` = SACDistricts (arm of case @7250) |
+| `MainUnit.pas:7256` | ParametersOkay | 4 | YBDX | none | new seam needed: ValidateExchange | reach 1: `Pxm` = IndonesianDistricts (arm of case @7250) |
+| `MainUnit.pas:7259` | ParametersOkay | 1 | YBDX | none | new seam needed: ValidateExchange | `Contest` compare |
+| `MainUnit.pas:7265` | ParametersOkay | 4 | CQMM, **SASPRINT**, SOUTHAMERICANWW | some: SASPRINT | new seam needed: ValidateExchange | reach 3: `Pxm` = SouthAmericanPrefixes (arm of case @7250) |
+| `MainUnit.pas:7269` | ParametersOkay | 4 | SOUTHAMERICANWW | none | new seam needed: ValidateExchange | reach 1: `Pxm` = NonSouthAmericanPrefixes (arm of case @7250) |
+| `MainUnit.pas:8013` | LoadinLog | 1 | RADIOYOC | none | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
 | `trdos/logdom.pas:224` | DomQTHTableObject.GetDomQTH | 4 | ALRS_UA1DZ_CUP, RDA | none | new seam needed: ParseDomesticQTH | reach 2: `DM` = RDADistrict |
 | `trdos/logdom.pas:247` | DomQTHTableObject.GetDomQTH | 4 | **DARC10M**, **WAG** | all | new seam needed: ParseDomesticQTH | reach 2: `DM` = DOKCodes |
 | `trdos/logdom.pas:263` | DomQTHTableObject.GetDomQTH | 4 | **IOTA** | all | new seam needed: ParseDomesticQTH | reach 1: `DM` = IOTADomestic |
@@ -430,52 +430,52 @@ is used and marked `(s6)`.
 | `trdos/logstuff.pas:5316` | ProcessRSTAndQSONumberOrDomesticQTHExchange | 4 | **PCC** | all | new seam needed: ParseReceivedExchange (s6) | reach 1: `QP` = PCCQSOPointMethod |
 | `trdos/logstuff.pas:5334` | ProcessRSTAndQSONumberOrDomesticQTHExchange | 4 | **ARKTIKA_SPRING** | all | new seam needed: ParseReceivedExchange (s6) | reach 1: `QP` = ArktikaSpringQSOPointMethod |
 | `trdos/logstuff.pas:5762` | ProcessRSTAndZoneExchange | 4 | **EUROPEANHFC**, **KVP** | all | new seam needed: ParseReceivedExchange (s6) | reach 2: `ZnM` = EUHFCYear |
-| `trdos/logstuff.pas:10183` | ProcessRSTAndGridSquareOrRDAExchange | 1 | UA4WCHAMPIONSHIP | none | new seam needed: ParseReceivedExchange (s6) | `Contest` compare |
-| `trdos/logstuff.pas:10188` | ProcessRSTAndGridSquareOrRDAExchange | 1 | ALRS_UA1DZ_CUP | none | new seam needed: ParseReceivedExchange (s6) | `Contest` compare |
-| `trdos/logstuff.pas:10225` | ProcessExchange | 4 | BWQP, **GENERALQSO**, POTA | some: GENERALQSO | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange, RSTAndPOTAPark |
-| `trdos/logstuff.pas:10233` | ProcessExchange | 4 | UA4WCHAMPIONSHIP | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTAndGridSquareOrRDAExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10241` | ProcessExchange | 4 | **ARRLFIELDDAY**, **WINTERFIELDDAY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = ClassDomesticOrDXQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10248` | ProcessExchange | 4 | **KIDSDAY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = KidsDayExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10251` | ProcessExchange | 4 | TENTEN | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = NameQTHAndPossibleTenTenNumber (arm of case @10231) |
-| `trdos/logstuff.pas:10259` | ProcessExchange | 4 | **GRIDLOC** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = NameAndPossibleGridSquareExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10266` | ProcessExchange | 4 | RAEM | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndGeoCoordinates (arm of case @10231) |
-| `trdos/logstuff.pas:10270` | ProcessExchange | 4 | RFASCHAMPIONSHIPCW | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndCoordinatesSum (arm of case @10231) |
-| `trdos/logstuff.pas:10274` | ProcessExchange | 4 | R9W_UW9WK_MEMORIAL, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3: `AE` = QSONumberAndZone (arm of case @10231) |
-| `trdos/logstuff.pas:10277` | ProcessExchange | 4 | **CALQSOPARTY**, **VAQP** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2 GENERIC-NAMED: `AE` = QSONumberDomesticOrDXQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10285` | ProcessExchange | 4 | CUPRFCW, CUPRFDIG, CUPRFSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3: `AE` = QSONumberAndGridSquare (arm of case @10231) |
-| `trdos/logstuff.pas:10289` | ProcessExchange | 4 | **QCWA**, **QCWAGOLDEN** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = QSONumberNameChapterAndQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10297` | ProcessExchange | 4 | ALLASIANCW, ALLASIANSSB, YOTA | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3 GENERIC-NAMED: `AE` = RSTAgeExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10304` | ProcessExchange | 4 | **YOUTHCHAMPIONSHIPRF** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = AgeAndQSONumberExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10310` | ProcessExchange | 4 | RADIOMEMORY | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTAgeAndPossibleSK (arm of case @10231) |
-| `trdos/logstuff.pas:10313` | ProcessExchange | 4 | CQMM, SOUTHAMERICANWW | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTAndContinentExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10316` | ProcessExchange | 4 | **ALLJA** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10320` | ProcessExchange | 4 | WWL | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTAndGridExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10327` | ProcessExchange | 4 | **BATAVIA_FT8**, MAKROTHEN | some: BATAVIA_FT8 | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2 GENERIC-NAMED: `AE` = GridExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10330` | ProcessExchange | 4 | **ARRLDIGI**, **WWDIGI** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = Grid2Exchange (arm of case @10231) |
-| `trdos/logstuff.pas:10337` | ProcessExchange | 4 | RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTAndPostalCodeExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10340` | ProcessExchange | 4 | POTA | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1 GENERIC-NAMED: `AE` = RSTAndPOTAPark (arm of case @10231) |
-| `trdos/logstuff.pas:10347` | ProcessExchange | 4 | REFCW, REFSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTAndQSONumberOrFrenchDepartmentExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10355` | ProcessExchange | 1 | LABRE | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | `Contest` compare |
-| `trdos/logstuff.pas:10378` | ProcessExchange | 4 | BWQP, **GENERALQSO** | some: GENERALQSO | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10381` | ProcessExchange | 4 | ARCI | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTPossibleDomesticQTHAndPower (arm of case @10231) |
-| `trdos/logstuff.pas:10388` | ProcessExchange | 4 | JIDXCW, JIDXSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTPrefectureExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10394` | ProcessExchange | 4 | **NZFIELDDAY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = NZFieldDayExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10397` | ProcessExchange | 4 | **NRAUBALTICCW**, **NRAUBALTICSSB**, **OHIOQSOPARTY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3 GENERIC-NAMED: `AE` = RSTQSONumberAndDomesticQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10401` | ProcessExchange | 4 | RADIOYOC | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndPreviousQSONumber (arm of case @10231) |
-| `trdos/logstuff.pas:10419` | ProcessExchange | 4 | **CQIR** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndPossibleDomesticQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10424` | ProcessExchange | 4 | **XMAS** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTQSONumberAndRandomCharactersExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10428` | ProcessExchange | 4 | FISTS | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10432` | ProcessExchange | 4 | **COUNTYHUNTER** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10435` | ProcessExchange | 4 | CQWWRTTY | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTZoneAndPossibleDomesticQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10454` | ProcessExchange | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10459` | ProcessExchange | 4 | **JALONGPREFECT** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTLongJAPrefectureExchange (arm of case @10231) |
-| `trdos/logstuff.pas:10554` | DomStringParse | 4 | ALRS_UA1DZ_CUP, RDA | none | new seam needed: ParseDomesticQTH | reach 2: `DM` = RDADistrict |
-| `trdos/logstuff.pas:10568` | DomStringParse | 4 | **DARC10M**, **WAG** | all | new seam needed: ParseDomesticQTH | reach 2: `DM` = DOKCodes |
-| `trdos/logstuff.pas:10583` | DomStringParse | 4 | **IOTA** | all | new seam needed: ParseDomesticQTH | reach 1: `DM` = IOTADomestic |
-| `trdos/logstuff.pas:10922` | ValidClass | 1 | **ARRLFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
-| `trdos/logstuff.pas:10923` | ValidClass | 1 | **WINTERFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
-| `trdos/logstuff.pas:10951` | ValidClass | 1 | **ARRLFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
-| `trdos/logstuff.pas:10955` | ValidClass | 1 | **WINTERFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
+| `trdos/logstuff.pas:10187` | ProcessRSTAndGridSquareOrRDAExchange | 1 | UA4WCHAMPIONSHIP | none | new seam needed: ParseReceivedExchange (s6) | `Contest` compare |
+| `trdos/logstuff.pas:10192` | ProcessRSTAndGridSquareOrRDAExchange | 1 | ALRS_UA1DZ_CUP | none | new seam needed: ParseReceivedExchange (s6) | `Contest` compare |
+| `trdos/logstuff.pas:10229` | ProcessExchange | 4 | BWQP, **GENERALQSO**, POTA | some: GENERALQSO | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange, RSTAndPOTAPark |
+| `trdos/logstuff.pas:10237` | ProcessExchange | 4 | UA4WCHAMPIONSHIP | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTAndGridSquareOrRDAExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10245` | ProcessExchange | 4 | **ARRLFIELDDAY**, **WINTERFIELDDAY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = ClassDomesticOrDXQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10252` | ProcessExchange | 4 | **KIDSDAY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = KidsDayExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10255` | ProcessExchange | 4 | TENTEN | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = NameQTHAndPossibleTenTenNumber (arm of case @10235) |
+| `trdos/logstuff.pas:10263` | ProcessExchange | 4 | **GRIDLOC** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = NameAndPossibleGridSquareExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10270` | ProcessExchange | 4 | RAEM | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndGeoCoordinates (arm of case @10235) |
+| `trdos/logstuff.pas:10274` | ProcessExchange | 4 | RFASCHAMPIONSHIPCW | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndCoordinatesSum (arm of case @10235) |
+| `trdos/logstuff.pas:10278` | ProcessExchange | 4 | R9W_UW9WK_MEMORIAL, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3: `AE` = QSONumberAndZone (arm of case @10235) |
+| `trdos/logstuff.pas:10281` | ProcessExchange | 4 | **CALQSOPARTY**, **VAQP** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2 GENERIC-NAMED: `AE` = QSONumberDomesticOrDXQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10289` | ProcessExchange | 4 | CUPRFCW, CUPRFDIG, CUPRFSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3: `AE` = QSONumberAndGridSquare (arm of case @10235) |
+| `trdos/logstuff.pas:10293` | ProcessExchange | 4 | **QCWA**, **QCWAGOLDEN** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = QSONumberNameChapterAndQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10301` | ProcessExchange | 4 | ALLASIANCW, ALLASIANSSB, YOTA | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3 GENERIC-NAMED: `AE` = RSTAgeExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10308` | ProcessExchange | 4 | **YOUTHCHAMPIONSHIPRF** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = AgeAndQSONumberExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10314` | ProcessExchange | 4 | RADIOMEMORY | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTAgeAndPossibleSK (arm of case @10235) |
+| `trdos/logstuff.pas:10317` | ProcessExchange | 4 | CQMM, SOUTHAMERICANWW | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTAndContinentExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10320` | ProcessExchange | 4 | **ALLJA** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10324` | ProcessExchange | 4 | WWL | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTAndGridExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10331` | ProcessExchange | 4 | **BATAVIA_FT8**, MAKROTHEN | some: BATAVIA_FT8 | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2 GENERIC-NAMED: `AE` = GridExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10334` | ProcessExchange | 4 | **ARRLDIGI**, **WWDIGI** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = Grid2Exchange (arm of case @10235) |
+| `trdos/logstuff.pas:10341` | ProcessExchange | 4 | RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTAndPostalCodeExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10344` | ProcessExchange | 4 | POTA | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1 GENERIC-NAMED: `AE` = RSTAndPOTAPark (arm of case @10235) |
+| `trdos/logstuff.pas:10351` | ProcessExchange | 4 | REFCW, REFSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTAndQSONumberOrFrenchDepartmentExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10359` | ProcessExchange | 1 | LABRE | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | `Contest` compare |
+| `trdos/logstuff.pas:10382` | ProcessExchange | 4 | BWQP, **GENERALQSO** | some: GENERALQSO | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10385` | ProcessExchange | 4 | ARCI | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTPossibleDomesticQTHAndPower (arm of case @10235) |
+| `trdos/logstuff.pas:10392` | ProcessExchange | 4 | JIDXCW, JIDXSSB | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = RSTPrefectureExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10398` | ProcessExchange | 4 | **NZFIELDDAY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = NZFieldDayExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10401` | ProcessExchange | 4 | **NRAUBALTICCW**, **NRAUBALTICSSB**, **OHIOQSOPARTY** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 3 GENERIC-NAMED: `AE` = RSTQSONumberAndDomesticQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10405` | ProcessExchange | 4 | RADIOYOC | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndPreviousQSONumber (arm of case @10235) |
+| `trdos/logstuff.pas:10423` | ProcessExchange | 4 | **CQIR** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = QSONumberAndPossibleDomesticQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10428` | ProcessExchange | 4 | **XMAS** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTQSONumberAndRandomCharactersExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10432` | ProcessExchange | 4 | FISTS | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10436` | ProcessExchange | 4 | **COUNTYHUNTER** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10439` | ProcessExchange | 4 | CQWWRTTY | none | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTZoneAndPossibleDomesticQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10458` | ProcessExchange | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10463` | ProcessExchange | 4 | **JALONGPREFECT** | all | new seam needed: ParseReceivedExchange (s6), keyed today by the ExchangeKind trait | reach 1: `AE` = RSTLongJAPrefectureExchange (arm of case @10235) |
+| `trdos/logstuff.pas:10558` | DomStringParse | 4 | ALRS_UA1DZ_CUP, RDA | none | new seam needed: ParseDomesticQTH | reach 2: `DM` = RDADistrict |
+| `trdos/logstuff.pas:10572` | DomStringParse | 4 | **DARC10M**, **WAG** | all | new seam needed: ParseDomesticQTH | reach 2: `DM` = DOKCodes |
+| `trdos/logstuff.pas:10587` | DomStringParse | 4 | **IOTA** | all | new seam needed: ParseDomesticQTH | reach 1: `DM` = IOTADomestic |
+| `trdos/logstuff.pas:10926` | ValidClass | 1 | **ARRLFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
+| `trdos/logstuff.pas:10927` | ValidClass | 1 | **WINTERFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
+| `trdos/logstuff.pas:10955` | ValidClass | 1 | **ARRLFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
+| `trdos/logstuff.pas:10959` | ValidClass | 1 | **WINTERFIELDDAY** | all | ValidateClass (existing) -- already answers first; see dead code | `contest` compare |
 | `trdos/zonecont.pas:92` | GetVEInitialExchange | 4 | RU3AXMEMORIAL, RUSSIANDX | none | new seam needed: InitialExchangeFromHistory | reach 2: `QP` = RussianDXQSOPointMethod |
 | `uCallSignRoutines.pas:669` | IsAGoodCall | 3 | RAEM | none | new seam needed: IsAcceptableCallsign | `Call = 'RAEM'` accepted as a callsign |
 
@@ -524,23 +524,23 @@ None found.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `MainUnit.pas:9967` | ApplyContestSpecificADIFTail | 2 | **GENERALQSO** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:9978` | ApplyContestSpecificADIFTail | 2 | **WAG** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:9981` | ApplyContestSpecificADIFTail | 2 | ARRL160, CQ160CW, CQ160SSB, UBACW, UBASSB | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:9984` | ApplyContestSpecificADIFTail | 2 | ARRL_RTTY_ROUNDUP | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10000` | ApplyContestSpecificADIFTail | 2 | **ARRLFIELDDAY**, **ARRLSSCW**, **ARRLSSSSB**, **WINTERFIELDDAY** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10023` | ApplyContestSpecificADIFTail | 2 | CWOPS | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10026` | ApplyContestSpecificADIFTail | 2 | **CQWWCW**, **CQWWSSB** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10041` | ApplyContestSpecificADIFTail | 2 | **FOCMARATHON** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10044` | ApplyContestSpecificADIFTail | 2 | **IARU** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10061` | ApplyContestSpecificADIFTail | 2 | NAQSOCW, NAQSORTTY, NAQSOSSB, NCCCSPRINT | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10068` | ApplyContestSpecificADIFTail | 2 | LZDX, OKDX, UKRAINIAN | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10078` | ApplyContestSpecificADIFTail | 2 | POTA | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10095` | ApplyContestSpecificADIFTail | 2 | **ARRLDIGI**, **WWDIGI** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9966 |
-| `MainUnit.pas:10104` | ApplyContestSpecificADIFTail | 4 | **ARRLDIGI**, **WWDIGI** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | reach 2: `AE` = Grid2Exchange |
-| `MainUnit.pas:10106` | ApplyContestSpecificADIFTail | 4 | **BATAVIA_FT8**, MAKROTHEN | some: BATAVIA_FT8 | new seam needed: ApplyADIFImport(const aTemps; var aQso) | reach 2 GENERIC-NAMED: `AE` = GridExchange |
-| `MainUnit.pas:11422` | ProcessImportedSRX_String | 2 | **ARRLFIELDDAY**, **WINTERFIELDDAY** | all | new seam needed: ApplyADIFImport (SRX_STRING) | arm of `case exch.ceContest of` @11421 |
-| `trdos/logstuff.pas:11169` | ResolvePOTAParkFromADIF | 3 | POTA | none | new seam needed: ApplyADIFImport (SIG / SIG_INFO) | ADIF `SIG = 'POTA'` -- the park from `SIG_INFO` (D5, fixed in `3f9e3f28`) |
+| `MainUnit.pas:9976` | ApplyContestSpecificADIFTail | 2 | **GENERALQSO** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:9987` | ApplyContestSpecificADIFTail | 2 | **WAG** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:9990` | ApplyContestSpecificADIFTail | 2 | ARRL160, CQ160CW, CQ160SSB, UBACW, UBASSB | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:9993` | ApplyContestSpecificADIFTail | 2 | ARRL_RTTY_ROUNDUP | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10009` | ApplyContestSpecificADIFTail | 2 | **ARRLFIELDDAY**, **ARRLSSCW**, **ARRLSSSSB**, **WINTERFIELDDAY** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10032` | ApplyContestSpecificADIFTail | 2 | CWOPS | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10035` | ApplyContestSpecificADIFTail | 2 | **CQWWCW**, **CQWWSSB** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10050` | ApplyContestSpecificADIFTail | 2 | **FOCMARATHON** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10053` | ApplyContestSpecificADIFTail | 2 | **IARU** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10070` | ApplyContestSpecificADIFTail | 2 | NAQSOCW, NAQSORTTY, NAQSOSSB, NCCCSPRINT | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10077` | ApplyContestSpecificADIFTail | 2 | LZDX, OKDX, UKRAINIAN | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10087` | ApplyContestSpecificADIFTail | 2 | POTA | none | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10104` | ApplyContestSpecificADIFTail | 2 | **ARRLDIGI**, **WWDIGI** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | arm of `case exch.ceContest of` @9975 |
+| `MainUnit.pas:10113` | ApplyContestSpecificADIFTail | 4 | **ARRLDIGI**, **WWDIGI** | all | new seam needed: ApplyADIFImport(const aTemps; var aQso) | reach 2: `AE` = Grid2Exchange |
+| `MainUnit.pas:10115` | ApplyContestSpecificADIFTail | 4 | **BATAVIA_FT8**, MAKROTHEN | some: BATAVIA_FT8 | new seam needed: ApplyADIFImport(const aTemps; var aQso) | reach 2 GENERIC-NAMED: `AE` = GridExchange |
+| `MainUnit.pas:11431` | ProcessImportedSRX_String | 2 | **ARRLFIELDDAY**, **WINTERFIELDDAY** | all | new seam needed: ApplyADIFImport (SRX_STRING) | arm of `case exch.ceContest of` @11430 |
+| `trdos/logstuff.pas:11173` | ResolvePOTAParkFromADIF | 3 | POTA | none | new seam needed: ApplyADIFImport (SIG / SIG_INFO) | ADIF `SIG = 'POTA'` -- the park from `SIG_INFO` (D5, fixed in `3f9e3f28`) |
 | `uADIF.pas:1110` | ApplyADIFFieldsToExchange | 2 | **ARRLFIELDDAY**, **WINTERFIELDDAY** | all | new seam needed: ApplyADIFImport (APP_N1MM_EXCHANGE1) | `exch.ceContest` in |
 | `uADIF.pas:1114` | ApplyADIFFieldsToExchange | 2 | **FOCMARATHON** | all | new seam needed: ApplyADIFImport (APP_N1MM_EXCHANGE1) | `exch.ceContest` in |
 
@@ -614,11 +614,11 @@ None found.
 | `MainUnit.pas:4499` | CreateMainWindow | 1 | DARCWAEDCCW, DARCWAEDCSSB | none | new seam needed: UIFeatures (menus, QTC, off-time) | `Contest` in |
 | `MainUnit.pas:4512` | CreateMainWindow | 1 | POTA | none | new seam needed: UIFeatures (menus, QTC, off-time) | `Contest` compare |
 | `MainUnit.pas:6467` | OpenTR4WWindow | 1 | WRTC | none | new seam needed: UIFeatures (hidden windows) | `Contest` compare |
-| `MainUnit.pas:8250` | BuildLogRow | 1 | **FOCMARATHON** | all | new seam needed: LogColumns | `Contest` compare |
-| `MainUnit.pas:9470` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
-| `MainUnit.pas:9472` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
-| `MainUnit.pas:9485` | SetColumnsWidth | 1 | **FOCMARATHON** | all | new seam needed: LogColumns | `Contest` compare |
-| `MainUnit.pas:9489` | SetColumnsWidth | 1 | **FOCMARATHON** | all | new seam needed: LogColumns | `Contest` compare |
+| `MainUnit.pas:8259` | BuildLogRow | 1 | **FOCMARATHON** | all | new seam needed: LogColumns | `Contest` compare |
+| `MainUnit.pas:9479` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
+| `MainUnit.pas:9481` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
+| `MainUnit.pas:9494` | SetColumnsWidth | 1 | **FOCMARATHON** | all | new seam needed: LogColumns | `Contest` compare |
+| `MainUnit.pas:9498` | SetColumnsWidth | 1 | **FOCMARATHON** | all | new seam needed: LogColumns | `Contest` compare |
 | `trdos/logedit.pas:1708` | EditableLog.SuperCheckPartial | 1 | WRTC | none | new seam needed: UIFeatures (SCP allowed) | `Contest` compare |
 | `trdos/logedit.pas:1965` | ShowStationInformation | 1 | **GENERALQSO** | all | new seam needed: ShowsMultiplierStatus | `Contest` compare |
 | `trdos/logstuff.pas:969` | BandChange | 1 | **GENERALQSO** | all | new seam needed: AllowsWARCBands | `CONTEST` compare |
@@ -793,7 +793,7 @@ None found.
 
 ## 5. Setup -- `FoundContest`'s `case Contest of` (`fcontest.pas:534`)
 
-**104 arms naming 131 contests; 44 of those contests have a class**
+**104 arms naming 131 contests; 45 of those contests have a class**
 (`scan.found_contest_arms`). The arm is where a
 contest's session is configured, and it is the biggest single block of
 contest identity outside the factory. Registered contests are listed first.
@@ -831,6 +831,7 @@ and are in the Setup table in section 4.
 | `fcontest.pas:585-594` | **BCQP** | Active* 1, domfile 1 |
 | `fcontest.pas:595-606` | **WINTERFIELDDAY** | Active* 1, CQmem 2, Settings 4, domfile 1 |
 | `fcontest.pas:607-620` | **ARRLFIELDDAY** | Active* 2, CQmem 2, Settings 5, domfile 1 |
+| `fcontest.pas:621-628` | **CROATIAN** | Active* 1 |
 | `fcontest.pas:681-686` | **ALLJA**, YOTA | band 1 |
 | `fcontest.pas:687-693` | **JALONGPREFECT** | band 1 |
 | `fcontest.pas:737-754` | **ARRLDXCW**, **ARRLDXSSB** | Active* 4, Settings 1, domfile 2 |
@@ -866,7 +867,6 @@ and are in the Setup table in section 4.
 | `fcontest.pas:1867-1884` | **PCC** | Settings 2 |
 | `fcontest.pas:1885-1893` | **ARRLDIGI** | Settings 3 |
 | `fcontest.pas:536-547` | LABRE | CQmem 2, Settings 3 |
-| `fcontest.pas:621-628` | CROATIAN | Active* 1 |
 | `fcontest.pas:629-648` | JIDXSSB, JIDXCW | Active* 6, domfile 1 |
 | `fcontest.pas:649-660` | SOUTHAMERICANWW | Active* 2 |
 | `fcontest.pas:661-668` | STEWPERRY | Settings 3, band 1 |
@@ -940,7 +940,7 @@ every contest the tested value reaches (reach 1-3).
 
 ### 6.1 Registered contests -- rules that should already have moved
 
-**69 of 72.** Sorted by number of sites. Registered contests with
+**70 of 73.** Sorted by number of sites. Registered contests with
 **no** site outside the factory: `FLORIDAQSOPARTY`, `MARCONIMEMORIAL`, `MICHQSOPARTY`.
 
 *Hand-maintained below -- judgement, not measurement. The generator preserves it verbatim and does not re-check it; its line numbers are as of when it was written.*
@@ -962,62 +962,63 @@ Worth reading first, because they are the ones the brief named:
 
 | contest | sites outside the factory, by category |
 |---|---|
-| WINTERFIELDDAY | **scoring** `trdos/logstuff.pas:6693`; **exchange** `trdos/logdupe.pas:1651`, `trdos/logstuff.pas:10241`, `trdos/logstuff.pas:10923`, `trdos/logstuff.pas:10955`; **multipliers** `trdos/logdupe.pas:687`; **adif-import** `MainUnit.pas:10000`, `MainUnit.pas:11422`, `uADIF.pas:1110`; **cabrillo-export** `trdos/postunit.pas:2639`, `trdos/postunit.pas:2694`, `trdos/postunit.pas:2976`; **score-summary** `trdos/logedit.pas:2868`, `trdos/postunit.pas:1085`, `trdos/postunit.pas:1097`; **ui** `uNewContest.pas:381`; **setup** `trdos/fcontest.pas:595`; **networking** `uExchangeBuilder.pas:211`; **other** `trdos/logddx.pas:606`, `trdos/logddx.pas:632`, `trdos/logddx.pas:653`, `trdos/logddx.pas:674`, `trdos/logddx.pas:705`, `trdos/logddx.pas:732`, `trdos/logddx.pas:753`, `trdos/logddx.pas:856`, `trdos/logddx.pas:907` |
-| ARRLFIELDDAY | **scoring** `trdos/logstuff.pas:6693`; **exchange** `trdos/logdupe.pas:1651`, `trdos/logstuff.pas:10241`, `trdos/logstuff.pas:10922`, `trdos/logstuff.pas:10951`; **adif-import** `MainUnit.pas:10000`, `MainUnit.pas:11422`, `uADIF.pas:1110`; **score-summary** `trdos/logedit.pas:2859`, `trdos/postunit.pas:1126`; **ui** `uNewContest.pas:387`; **setup** `trdos/fcontest.pas:607`; **networking** `uExchangeBuilder.pas:211`; **other** `trdos/logddx.pas:606`, `trdos/logddx.pas:632`, `trdos/logddx.pas:653`, `trdos/logddx.pas:674`, `trdos/logddx.pas:705`, `trdos/logddx.pas:732`, `trdos/logddx.pas:753`, `trdos/logddx.pas:856`, `trdos/logddx.pas:907` |
-| ARRLSSCW | **exchange** `trdos/logdupe.pas:1740`, `trdos/logedit.pas:2521`, `trdos/logedit.pas:2669`, `trdos/logstuff.pas:10454`; **adif-import** `MainUnit.pas:10000`; **ui** `MainUnit.pas:9470`, `MainUnit.pas:9472`, `uNewContest.pas:393`; **setup** `trdos/fcontest.pas:1474`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
-| ARRLSSSSB | **exchange** `trdos/logdupe.pas:1740`, `trdos/logedit.pas:2521`, `trdos/logedit.pas:2669`, `trdos/logstuff.pas:10454`; **adif-import** `MainUnit.pas:10000`; **ui** `MainUnit.pas:9470`, `MainUnit.pas:9472`, `uNewContest.pas:393`; **setup** `trdos/fcontest.pas:1474`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
-| GENERALQSO | **exchange** `MainUnit.pas:7087`, `trdos/logdupe.pas:1842`, `trdos/logstuff.pas:10225`, `trdos/logstuff.pas:10378`; **adif-import** `MainUnit.pas:9967`; **cabrillo-export** `trdos/postunit.pas:2655`; **score-summary** `trdos/postunit.pas:1280`; **ui** `MainUnit.pas:1753`, `trdos/logedit.pas:1965`, `trdos/logstuff.pas:969`, `trdos/logsubs2.pas:2490`, `trdos/logsubs2.pas:2514`, `trdos/logwind.pas:2421`; **setup** `trdos/fcontest.pas:954` |
-| IARU | **scoring** `trdos/logstuff.pas:7983`; **exchange** `trdos/logedit.pas:2681`, `trdos/logstuff.pas:4047`; **adif-import** `MainUnit.pas:10044`; **score-summary** `uTotal.pas:301`, `uTotal.pas:327`; **ui** `MainUnit.pas:4465`, `uNewContest.pas:225`, `uNewContest.pas:340`; **setup** `trdos/LogCfg.pas:899`; **networking** `uExchangeBuilder.pas:158` |
-| FOCMARATHON | **scoring** `trdos/logstuff.pas:7476`, `trdos/logstuff.pas:7478`; **adif-import** `MainUnit.pas:10041`, `uADIF.pas:1114`; **ui** `MainUnit.pas:8250`, `MainUnit.pas:9485`, `MainUnit.pas:9489`, `uNewContest.pas:366`; **setup** `trdos/fcontest.pas:951` |
-| PCC | **scoring** `trdos/logstuff.pas:9398`; **exchange** `trdos/logstuff.pas:2779`, `trdos/logstuff.pas:5316`; **multipliers** `trdos/logdupe.pas:1316`; **ui** `uNewContest.pas:235`, `uNewContest.pas:347`; **setup** `trdos/LogCfg.pas:931`, `trdos/fcontest.pas:1867` |
-| WAG | **scoring** `trdos/logstuff.pas:8830`; **exchange** `trdos/logdom.pas:247`, `trdos/logstuff.pas:10568`; **adif-import** `MainUnit.pas:9978`; **ui** `MainUnit.pas:4126`, `uNewContest.pas:218`, `uNewContest.pas:336`; **setup** `trdos/fcontest.pas:1630` |
-| ARRLDIGI | **scoring** `trdos/logstuff.pas:6716`; **exchange** `trdos/logdupe.pas:1792`, `trdos/logstuff.pas:10330`; **adif-import** `MainUnit.pas:10095`, `MainUnit.pas:10104`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:1885` |
-| BATAVIA_FT8 | **scoring** `trdos/logstuff.pas:8575`, `trdos/logstuff.pas:8604`; **exchange** `trdos/logdupe.pas:1802`, `trdos/logstuff.pas:10327`; **adif-import** `MainUnit.pas:10106`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:834` |
-| NZFIELDDAY | **scoring** `trdos/logstuff.pas:8205`; **exchange** `trdos/logdupe.pas:1687`, `trdos/logstuff.pas:10394`; **multipliers** `trdos/logdupe.pas:1326`, `trdos/logdupe.pas:2278`; **ui** `uNewContest.pas:277`; **setup** `trdos/LogCfg.pas:923` |
-| WWDIGI | **scoring** `trdos/logstuff.pas:8666`; **exchange** `trdos/logdupe.pas:1792`, `trdos/logstuff.pas:10330`; **adif-import** `MainUnit.pas:10095`, `MainUnit.pas:10104`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:776` |
+| WINTERFIELDDAY | **scoring** `trdos/logstuff.pas:6693`; **exchange** `trdos/logdupe.pas:1651`, `trdos/logstuff.pas:10245`, `trdos/logstuff.pas:10927`, `trdos/logstuff.pas:10959`; **multipliers** `trdos/logdupe.pas:687`; **adif-import** `MainUnit.pas:10009`, `MainUnit.pas:11431`, `uADIF.pas:1110`; **cabrillo-export** `trdos/postunit.pas:2639`, `trdos/postunit.pas:2694`, `trdos/postunit.pas:2976`; **score-summary** `trdos/logedit.pas:2868`, `trdos/postunit.pas:1085`, `trdos/postunit.pas:1097`; **ui** `uNewContest.pas:381`; **setup** `trdos/fcontest.pas:595`; **networking** `uExchangeBuilder.pas:211`; **other** `trdos/logddx.pas:606`, `trdos/logddx.pas:632`, `trdos/logddx.pas:653`, `trdos/logddx.pas:674`, `trdos/logddx.pas:705`, `trdos/logddx.pas:732`, `trdos/logddx.pas:753`, `trdos/logddx.pas:856`, `trdos/logddx.pas:907` |
+| ARRLFIELDDAY | **scoring** `trdos/logstuff.pas:6693`; **exchange** `trdos/logdupe.pas:1651`, `trdos/logstuff.pas:10245`, `trdos/logstuff.pas:10926`, `trdos/logstuff.pas:10955`; **adif-import** `MainUnit.pas:10009`, `MainUnit.pas:11431`, `uADIF.pas:1110`; **score-summary** `trdos/logedit.pas:2859`, `trdos/postunit.pas:1126`; **ui** `uNewContest.pas:387`; **setup** `trdos/fcontest.pas:607`; **networking** `uExchangeBuilder.pas:211`; **other** `trdos/logddx.pas:606`, `trdos/logddx.pas:632`, `trdos/logddx.pas:653`, `trdos/logddx.pas:674`, `trdos/logddx.pas:705`, `trdos/logddx.pas:732`, `trdos/logddx.pas:753`, `trdos/logddx.pas:856`, `trdos/logddx.pas:907` |
+| ARRLSSCW | **exchange** `trdos/logdupe.pas:1740`, `trdos/logedit.pas:2521`, `trdos/logedit.pas:2669`, `trdos/logstuff.pas:10458`; **adif-import** `MainUnit.pas:10009`; **ui** `MainUnit.pas:9479`, `MainUnit.pas:9481`, `uNewContest.pas:393`; **setup** `trdos/fcontest.pas:1474`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
+| ARRLSSSSB | **exchange** `trdos/logdupe.pas:1740`, `trdos/logedit.pas:2521`, `trdos/logedit.pas:2669`, `trdos/logstuff.pas:10458`; **adif-import** `MainUnit.pas:10009`; **ui** `MainUnit.pas:9479`, `MainUnit.pas:9481`, `uNewContest.pas:393`; **setup** `trdos/fcontest.pas:1474`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
+| GENERALQSO | **exchange** `MainUnit.pas:7096`, `trdos/logdupe.pas:1842`, `trdos/logstuff.pas:10229`, `trdos/logstuff.pas:10382`; **adif-import** `MainUnit.pas:9976`; **cabrillo-export** `trdos/postunit.pas:2655`; **score-summary** `trdos/postunit.pas:1280`; **ui** `MainUnit.pas:1753`, `trdos/logedit.pas:1965`, `trdos/logstuff.pas:969`, `trdos/logsubs2.pas:2490`, `trdos/logsubs2.pas:2514`, `trdos/logwind.pas:2421`; **setup** `trdos/fcontest.pas:954` |
+| IARU | **scoring** `trdos/logstuff.pas:7987`; **exchange** `trdos/logedit.pas:2681`, `trdos/logstuff.pas:4047`; **adif-import** `MainUnit.pas:10053`; **score-summary** `uTotal.pas:301`, `uTotal.pas:327`; **ui** `MainUnit.pas:4465`, `uNewContest.pas:225`, `uNewContest.pas:340`; **setup** `trdos/LogCfg.pas:899`; **networking** `uExchangeBuilder.pas:158` |
+| FOCMARATHON | **scoring** `trdos/logstuff.pas:7478`, `trdos/logstuff.pas:7480`; **adif-import** `MainUnit.pas:10050`, `uADIF.pas:1114`; **ui** `MainUnit.pas:8259`, `MainUnit.pas:9494`, `MainUnit.pas:9498`, `uNewContest.pas:366`; **setup** `trdos/fcontest.pas:951` |
+| PCC | **scoring** `trdos/logstuff.pas:9402`; **exchange** `trdos/logstuff.pas:2779`, `trdos/logstuff.pas:5316`; **multipliers** `trdos/logdupe.pas:1316`; **ui** `uNewContest.pas:235`, `uNewContest.pas:347`; **setup** `trdos/LogCfg.pas:931`, `trdos/fcontest.pas:1867` |
+| WAG | **scoring** `trdos/logstuff.pas:8834`; **exchange** `trdos/logdom.pas:247`, `trdos/logstuff.pas:10572`; **adif-import** `MainUnit.pas:9987`; **ui** `MainUnit.pas:4126`, `uNewContest.pas:218`, `uNewContest.pas:336`; **setup** `trdos/fcontest.pas:1630` |
+| ARRLDIGI | **scoring** `trdos/logstuff.pas:6716`; **exchange** `trdos/logdupe.pas:1792`, `trdos/logstuff.pas:10334`; **adif-import** `MainUnit.pas:10104`, `MainUnit.pas:10113`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:1885` |
+| BATAVIA_FT8 | **scoring** `trdos/logstuff.pas:8579`, `trdos/logstuff.pas:8608`; **exchange** `trdos/logdupe.pas:1802`, `trdos/logstuff.pas:10331`; **adif-import** `MainUnit.pas:10115`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:834` |
+| NZFIELDDAY | **scoring** `trdos/logstuff.pas:8209`; **exchange** `trdos/logdupe.pas:1687`, `trdos/logstuff.pas:10398`; **multipliers** `trdos/logdupe.pas:1326`, `trdos/logdupe.pas:2278`; **ui** `uNewContest.pas:277`; **setup** `trdos/LogCfg.pas:923` |
+| WWDIGI | **scoring** `trdos/logstuff.pas:8670`; **exchange** `trdos/logdupe.pas:1792`, `trdos/logstuff.pas:10334`; **adif-import** `MainUnit.pas:10104`, `MainUnit.pas:10113`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:776` |
 | ARRLDXCW | **scoring** `trdos/logstuff.pas:6669`; **ui** `uNewContest.pas:180`, `uNewContest.pas:418`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:737`; **networking** `uExchangeBuilder.pas:168` |
-| CALQSOPARTY | **scoring** `trdos/logstuff.pas:8925`; **exchange** `trdos/logedit.pas:2644`, `trdos/logstuff.pas:10277`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:841`; **other** `trdos/logddx.pas:860` |
-| CQIR | **exchange** `trdos/logedit.pas:2653`, `trdos/logstuff.pas:10419`; **ui** `uNewContest.pas:212`, `uNewContest.pas:313`; **setup** `trdos/LogCfg.pas:911`, `trdos/fcontest.pas:1832` |
-| CQWWCW | **scoring** `trdos/logstuff.pas:7205`; **exchange** `trdos/logedit.pas:2239`; **adif-import** `MainUnit.pas:10026`; **score-summary** `trdos/postunit.pas:1156`; **ui** `MainUnit.pas:4465`; **networking** `uExchangeBuilder.pas:158` |
+| CALQSOPARTY | **scoring** `trdos/logstuff.pas:8929`; **exchange** `trdos/logedit.pas:2644`, `trdos/logstuff.pas:10281`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:841`; **other** `trdos/logddx.pas:860` |
+| CQIR | **exchange** `trdos/logedit.pas:2653`, `trdos/logstuff.pas:10423`; **ui** `uNewContest.pas:212`, `uNewContest.pas:313`; **setup** `trdos/LogCfg.pas:911`, `trdos/fcontest.pas:1832` |
+| CQWWCW | **scoring** `trdos/logstuff.pas:7205`; **exchange** `trdos/logedit.pas:2239`; **adif-import** `MainUnit.pas:10035`; **score-summary** `trdos/postunit.pas:1156`; **ui** `MainUnit.pas:4465`; **networking** `uExchangeBuilder.pas:158` |
 | CUPURAL | **multipliers** `trdos/logedit.pas:1021`; **score-summary** `trdos/logedit.pas:2951`, `trdos/logedit.pas:3008`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:422`; **setup** `trdos/LogCfg.pas:888` |
-| IOTA | **scoring** `trdos/logstuff.pas:8063`; **exchange** `trdos/logdom.pas:263`, `trdos/logstuff.pas:10583`; **ui** `uNewContest.pas:228`, `uNewContest.pas:341`; **setup** `trdos/LogCfg.pas:931` |
-| VAQP | **scoring** `trdos/logstuff.pas:9723`; **exchange** `trdos/logedit.pas:2644`, `trdos/logstuff.pas:10277`; **ui** `uNewContest.pas:171`; **setup** `trdos/fcontest.pas:1593`; **other** `trdos/logddx.pas:860` |
-| BCQP | **scoring** `trdos/logstuff.pas:7596`; **multipliers** `trdos/logdupe.pas:1291`; **ui** `uNewContest.pas:254`, `uNewContest.pas:263`; **setup** `trdos/fcontest.pas:585` |
-| CQWWSSB | **scoring** `trdos/logstuff.pas:7205`; **adif-import** `MainUnit.pas:10026`; **score-summary** `trdos/postunit.pas:1156`; **ui** `MainUnit.pas:4465`; **networking** `uExchangeBuilder.pas:158` |
-| DARC10M | **exchange** `trdos/logdom.pas:247`, `trdos/logstuff.pas:10568`; **ui** `uNewContest.pas:218`, `uNewContest.pas:336`; **setup** `trdos/fcontest.pas:1601` |
+| IOTA | **scoring** `trdos/logstuff.pas:8067`; **exchange** `trdos/logdom.pas:263`, `trdos/logstuff.pas:10587`; **ui** `uNewContest.pas:228`, `uNewContest.pas:341`; **setup** `trdos/LogCfg.pas:931` |
+| VAQP | **scoring** `trdos/logstuff.pas:9727`; **exchange** `trdos/logedit.pas:2644`, `trdos/logstuff.pas:10281`; **ui** `uNewContest.pas:171`; **setup** `trdos/fcontest.pas:1593`; **other** `trdos/logddx.pas:860` |
+| BCQP | **scoring** `trdos/logstuff.pas:7598`; **multipliers** `trdos/logdupe.pas:1291`; **ui** `uNewContest.pas:254`, `uNewContest.pas:263`; **setup** `trdos/fcontest.pas:585` |
+| CQWWSSB | **scoring** `trdos/logstuff.pas:7205`; **adif-import** `MainUnit.pas:10035`; **score-summary** `trdos/postunit.pas:1156`; **ui** `MainUnit.pas:4465`; **networking** `uExchangeBuilder.pas:158` |
+| DARC10M | **exchange** `trdos/logdom.pas:247`, `trdos/logstuff.pas:10572`; **ui** `uNewContest.pas:218`, `uNewContest.pas:336`; **setup** `trdos/fcontest.pas:1601` |
 | KVP | **exchange** `trdos/logstuff.pas:5762`; **multipliers** `trdos/logdupe.pas:2275`, `trdos/logedit.pas:1471`; **ui** `uNewContest.pas:281`; **setup** `trdos/fcontest.pas:1081` |
-| LQP | **scoring** `trdos/logstuff.pas:9345`, `trdos/logstuff.pas:9348`; **ui** `uNewContest.pas:360`; **setup** `trdos/LogCfg.pas:884`, `trdos/fcontest.pas:1811` |
-| MOQSOPARTY | **scoring** `MainUnit.pas:7927`, `trdos/logdupe.pas:1108`, `trdos/logsubs2.pas:1743`; **score-summary** `trdos/logedit.pas:2995`; **setup** `trdos/fcontest.pas:1117` |
-| NRAUBALTICCW | **exchange** `trdos/logedit.pas:2652`, `trdos/logstuff.pas:10397`; **ui** `uNewContest.pas:293`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1209` |
-| NRAUBALTICSSB | **exchange** `trdos/logedit.pas:2652`, `trdos/logstuff.pas:10397`; **ui** `uNewContest.pas:293`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1209` |
-| UKEI | **scoring** `trdos/logstuff.pas:7853`; **exchange** `trdos/logstuff.pas:4842`; **ui** `uNewContest.pas:216`, `uNewContest.pas:331`; **setup** `trdos/fcontest.pas:994` |
-| UKRAINECHAMPIONSHIP | **scoring** `trdos/logstuff.pas:9107`; **score-summary** `trdos/logedit.pas:2981`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:415`; **setup** `trdos/LogCfg.pas:888` |
-| YOUTHCHAMPIONSHIPRF | **scoring** `trdos/logstuff.pas:8922`; **exchange** `trdos/logdupe.pas:1748`, `trdos/logstuff.pas:10304`; **ui** `uNewContest.pas:412`; **setup** `trdos/fcontest.pas:1768` |
-| ALLJA | **exchange** `trdos/logdupe.pas:1778`, `trdos/logdupe.pas:2093`, `trdos/logstuff.pas:10316`; **setup** `trdos/fcontest.pas:681` |
-| ARKTIKA_SPRING | **scoring** `trdos/logstuff.pas:9354`; **exchange** `trdos/logstuff.pas:5334`; **ui** `uNewContest.pas:235`, `uNewContest.pas:347` |
+| LQP | **scoring** `trdos/logstuff.pas:9349`, `trdos/logstuff.pas:9352`; **ui** `uNewContest.pas:360`; **setup** `trdos/LogCfg.pas:884`, `trdos/fcontest.pas:1811` |
+| MOQSOPARTY | **scoring** `MainUnit.pas:7936`, `trdos/logdupe.pas:1108`, `trdos/logsubs2.pas:1743`; **score-summary** `trdos/logedit.pas:2995`; **setup** `trdos/fcontest.pas:1117` |
+| NRAUBALTICCW | **exchange** `trdos/logedit.pas:2652`, `trdos/logstuff.pas:10401`; **ui** `uNewContest.pas:293`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1209` |
+| NRAUBALTICSSB | **exchange** `trdos/logedit.pas:2652`, `trdos/logstuff.pas:10401`; **ui** `uNewContest.pas:293`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1209` |
+| UKEI | **scoring** `trdos/logstuff.pas:7855`; **exchange** `trdos/logstuff.pas:4842`; **ui** `uNewContest.pas:216`, `uNewContest.pas:331`; **setup** `trdos/fcontest.pas:994` |
+| UKRAINECHAMPIONSHIP | **scoring** `trdos/logstuff.pas:9111`; **score-summary** `trdos/logedit.pas:2981`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:415`; **setup** `trdos/LogCfg.pas:888` |
+| YOUTHCHAMPIONSHIPRF | **scoring** `trdos/logstuff.pas:8926`; **exchange** `trdos/logdupe.pas:1748`, `trdos/logstuff.pas:10308`; **ui** `uNewContest.pas:412`; **setup** `trdos/fcontest.pas:1768` |
+| ALLJA | **exchange** `trdos/logdupe.pas:1778`, `trdos/logdupe.pas:2093`, `trdos/logstuff.pas:10320`; **setup** `trdos/fcontest.pas:681` |
+| ARKTIKA_SPRING | **scoring** `trdos/logstuff.pas:9358`; **exchange** `trdos/logstuff.pas:5334`; **ui** `uNewContest.pas:235`, `uNewContest.pas:347` |
 | ARRLDXSSB | **scoring** `trdos/logstuff.pas:6669`; **ui** `uNewContest.pas:418`; **setup** `trdos/fcontest.pas:737`; **networking** `uExchangeBuilder.pas:168` |
-| COUNTYHUNTER | **exchange** `MainUnit.pas:928`, `MainUnit.pas:969`, `MainUnit.pas:2052`, `trdos/logstuff.pas:10432` |
+| COUNTYHUNTER | **exchange** `MainUnit.pas:928`, `MainUnit.pas:969`, `MainUnit.pas:2052`, `trdos/logstuff.pas:10436` |
 | EUROPEANHFC | **exchange** `trdos/logstuff.pas:5762`; **multipliers** `trdos/logdupe.pas:2275`, `trdos/logedit.pas:1471`; **ui** `uNewContest.pas:279` |
 | PACC | **multipliers** `trdos/logdupe.pas:752`; **ui** `uNewContest.pas:209`, `uNewContest.pas:335`; **setup** `trdos/fcontest.pas:1249` |
-| QCWA | **exchange** `trdos/logdupe.pas:1725`, `trdos/logstuff.pas:10289`; **setup** `trdos/fcontest.pas:1284`; **other** `trdos/logddx.pas:862` |
+| QCWA | **exchange** `trdos/logdupe.pas:1725`, `trdos/logstuff.pas:10293`; **setup** `trdos/fcontest.pas:1284`; **other** `trdos/logddx.pas:862` |
 | DARCXMAS | **ui** `uNewContest.pas:218`, `uNewContest.pas:336`; **setup** `trdos/fcontest.pas:1621` |
-| GRIDLOC | **exchange** `trdos/logdupe.pas:1681`, `trdos/logstuff.pas:10259`; **other** `trdos/logddx.pas:859` |
-| JALONGPREFECT | **exchange** `trdos/logdupe.pas:1921`, `trdos/logstuff.pas:10459`; **setup** `trdos/fcontest.pas:687` |
-| KIDSDAY | **exchange** `trdos/logdupe.pas:1657`, `trdos/logstuff.pas:10248`; **setup** `trdos/fcontest.pas:1076` |
-| OHIOQSOPARTY | **exchange** `trdos/logedit.pas:2652`, `trdos/logstuff.pas:10397`; **setup** `trdos/LogCfg.pas:892` |
-| QCWAGOLDEN | **exchange** `trdos/logdupe.pas:1725`, `trdos/logstuff.pas:10289`; **other** `trdos/logddx.pas:862` |
-| SALMONRUN | **scoring** `trdos/logstuff.pas:8484`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:1350` |
+| GRIDLOC | **exchange** `trdos/logdupe.pas:1681`, `trdos/logstuff.pas:10263`; **other** `trdos/logddx.pas:859` |
+| JALONGPREFECT | **exchange** `trdos/logdupe.pas:1921`, `trdos/logstuff.pas:10463`; **setup** `trdos/fcontest.pas:687` |
+| KIDSDAY | **exchange** `trdos/logdupe.pas:1657`, `trdos/logstuff.pas:10252`; **setup** `trdos/fcontest.pas:1076` |
+| OHIOQSOPARTY | **exchange** `trdos/logedit.pas:2652`, `trdos/logstuff.pas:10401`; **setup** `trdos/LogCfg.pas:892` |
+| QCWAGOLDEN | **exchange** `trdos/logdupe.pas:1725`, `trdos/logstuff.pas:10293`; **other** `trdos/logddx.pas:862` |
+| SALMONRUN | **scoring** `trdos/logstuff.pas:8488`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:1350` |
 | CQWPXCW | **scoring** `trdos/logstuff.pas:7092`; **networking** `uExchangeBuilder.pas:154` |
 | CQWPXSSB | **scoring** `trdos/logstuff.pas:7092`; **networking** `uExchangeBuilder.pas:154` |
-| INTERNETSPRINT | **scoring** `trdos/logstuff.pas:8922`; **setup** `trdos/fcontest.pas:1035` |
+| CROATIAN | **scoring** `trdos/logstuff.pas:7238`; **setup** `trdos/fcontest.pas:621` |
+| INTERNETSPRINT | **scoring** `trdos/logstuff.pas:8926`; **setup** `trdos/fcontest.pas:1035` |
 | MINNQSOPARTY | **ui** `uNewContest.pas:267`; **setup** `trdos/fcontest.pas:1104` |
 | NASPRINTCW | **ui** `uNewContest.pas:400`; **setup** `trdos/fcontest.pas:1394` |
 | NASPRINTRTTY | **ui** `uNewContest.pas:400`; **setup** `trdos/fcontest.pas:1394` |
-| NCQSOPARTY | **scoring** `trdos/logstuff.pas:7547`, `trdos/logstuff.pas:7562` |
+| NCQSOPARTY | **scoring** `trdos/logstuff.pas:7549`, `trdos/logstuff.pas:7564` |
 | NYQP | **multipliers** `trdos/logdupe.pas:1295`; **setup** `trdos/fcontest.pas:566` |
-| SASPRINT | **exchange** `MainUnit.pas:7256`; **multipliers** `trdos/logedit.pas:3027` |
+| SASPRINT | **exchange** `MainUnit.pas:7265`; **multipliers** `trdos/logedit.pas:3027` |
 | SPRINTSSB | **ui** `uNewContest.pas:400`; **setup** `trdos/fcontest.pas:1434` |
-| XMAS | **exchange** `trdos/logdupe.pas:1894`, `trdos/logstuff.pas:10424` |
+| XMAS | **exchange** `trdos/logdupe.pas:1894`, `trdos/logstuff.pas:10428` |
 | APSPRINT | **setup** `trdos/fcontest.pas:819` |
 | ArizonaQsoParty | **setup** `trdos/fcontest.pas:548` |
 | COLORADOQSOPARTY | **ui** `uNewContest.pas:267` |
@@ -1027,131 +1028,130 @@ Worth reading first, because they are the ones the brief named:
 | MINI80 | **setup** `trdos/fcontest.pas:1719` |
 | MINITEST | **setup** `trdos/fcontest.pas:1719` |
 | MST | **ui** `uNewContest.pas:355` |
-| PAQSOPARTY | **scoring** `trdos/logstuff.pas:7610` |
+| PAQSOPARTY | **scoring** `trdos/logstuff.pas:7612` |
 | TENNESSEEQSOPARTY | **setup** `trdos/LogCfg.pas:890` |
 | TEXASQSOPARTY | **setup** `trdos/fcontest.pas:1550` |
 | WISCONSINQSOPARTY | **setup** `trdos/LogCfg.pas:882` |
 
 ### 6.2 Contests with no class
 
-**113** -- every contest without a class (185 non-sentinel enum values minus
-72) appears at least once in section 4 or section 5.
+**112** -- every contest without a class (185 non-sentinel enum values minus
+73) appears at least once in section 4 or section 5.
 Contests that exist only as an operator-configured name, with no
 `ContestType` at all, appear only in the shape-3 rows: **TRC Digital** (`cMyState = 'TRC'`, 5 sites) and **PGA** (`ContestTitle = 'PGA'`, 2 sites).
 
 | contest | sites outside the factory, by category |
 |---|---|
-| POTA | **exchange** `MainUnit.pas:4045`, `MainUnit.pas:7087`, `trdos/logdupe.pas:1759`, `trdos/logstuff.pas:10225`, `trdos/logstuff.pas:10340`; **adif-import** `MainUnit.pas:10078`, `trdos/logstuff.pas:11169`; **adif-export** `trdos/postunit.pas:2300`, `trdos/postunit.pas:2314`, `trdos/postunit.pas:2394`, `uADIF.pas:1539`; **ui** `MainUnit.pas:4512`, `uNewContest.pas:233`, `uNewContest.pas:377`; **setup** `trdos/fcontest.pas:1268` |
-| RFCHAMPIONSHIPCW | **scoring** `trdos/logstuff.pas:9085`; **exchange** `trdos/logdupe.pas:1706`, `trdos/logedit.pas:2404`, `trdos/logstuff.pas:10274`; **multipliers** `trdos/logdupe.pas:2279`, `trdos/logedit.pas:1015`; **score-summary** `trdos/logedit.pas:2974`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:283`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1706`, `trdos/fcontest.pas:1709` |
-| RFCHAMPIONSHIPSSB | **scoring** `trdos/logstuff.pas:9085`; **exchange** `trdos/logdupe.pas:1706`, `trdos/logedit.pas:2404`, `trdos/logstuff.pas:10274`; **multipliers** `trdos/logdupe.pas:2279`, `trdos/logedit.pas:1015`; **score-summary** `trdos/logedit.pas:2974`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:283`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1706` |
-| ALRS_UA1DZ_CUP | **scoring** `trdos/logstuff.pas:6798`; **exchange** `trdos/logdom.pas:224`, `trdos/logstuff.pas:10188`, `trdos/logstuff.pas:10554`; **adif-export** `trdos/postunit.pas:2379`; **score-summary** `trdos/logedit.pas:2968`; **ui** `uNewContest.pas:174`, `uNewContest.pas:272`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:1741` |
-| CUPRFSSB | **scoring** `trdos/logstuff.pas:8990`; **exchange** `trdos/logedit.pas:2647`, `trdos/logstuff.pas:10285`; **cabrillo-export** `trdos/postunit.pas:3015`; **score-summary** `trdos/logedit.pas:2962`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:299`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1685`, `trdos/fcontest.pas:1688` |
-| DARCWAEDCCW | **scoring** `trdos/logstuff.pas:8858`; **multipliers** `trdos/logdupe.pas:720`, `trdos/logedit.pas:3018`, `uMults.pas:268`; **score-summary** `trdos/logedit.pas:2917`, `trdos/logedit.pas:2920`; **ui** `MainUnit.pas:4499`; **setup** `trdos/fcontest.pas:1648`; **networking** `uExchangeBuilder.pas:154`; **other** `trdos/logddx.pas:311` |
-| RU3AXMEMORIAL | **scoring** `trdos/logstuff.pas:8440`, `trdos/logstuff.pas:8477`; **exchange** `trdos/logedit.pas:2616`, `trdos/zonecont.pas:92`; **score-summary** `trdos/postunit.pas:1454`, `uTotal.pas:332`; **ui** `uNewContest.pas:206`, `uNewContest.pas:312`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1338` |
-| UBACW | **scoring** `trdos/logstuff.pas:8736`; **exchange** `MainUnit.pas:7242`; **multipliers** `trdos/logdupe.pas:726`, `trdos/logedit.pas:3020`, `uMults.pas:271`; **adif-import** `MainUnit.pas:9981`; **ui** `uNewContest.pas:209`, `uNewContest.pas:334`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1567` |
-| UBASSB | **scoring** `trdos/logstuff.pas:8736`; **exchange** `MainUnit.pas:7242`; **multipliers** `trdos/logdupe.pas:726`, `trdos/logedit.pas:3020`, `uMults.pas:271`; **adif-import** `MainUnit.pas:9981`; **ui** `uNewContest.pas:209`, `uNewContest.pas:334`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1567` |
-| CUPRFCW | **scoring** `trdos/logstuff.pas:8990`; **exchange** `trdos/logedit.pas:2647`, `trdos/logstuff.pas:10285`; **cabrillo-export** `trdos/postunit.pas:3015`; **score-summary** `trdos/logedit.pas:2962`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:299`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1685` |
-| DARCWAEDCSSB | **scoring** `trdos/logstuff.pas:8858`; **multipliers** `trdos/logdupe.pas:720`, `trdos/logedit.pas:3018`, `uMults.pas:268`; **score-summary** `trdos/logedit.pas:2917`, `trdos/logedit.pas:2920`; **ui** `MainUnit.pas:4499`; **setup** `trdos/fcontest.pas:1648`; **other** `trdos/logddx.pas:311` |
-| RDA | **scoring** `trdos/logstuff.pas:8406`; **exchange** `trdos/logdom.pas:224`, `trdos/logedit.pas:2616`, `trdos/logstuff.pas:10554`; **multipliers** `trdos/logedit.pas:1024`; **adif-export** `trdos/postunit.pas:2379`; **ui** `uNewContest.pas:223`, `uNewContest.pas:312`; **setup** `trdos/fcontest.pas:1327` |
-| ALLASIANCW | **scoring** `trdos/logstuff.pas:6584`; **exchange** `trdos/logdupe.pas:1772`, `trdos/logstuff.pas:10297`; **ui** `uNewContest.pas:412`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:669`; **networking** `uExchangeBuilder.pas:179`; **other** `trdos/logddx.pas:1061` |
-| ALLASIANSSB | **scoring** `trdos/logstuff.pas:6584`; **exchange** `trdos/logdupe.pas:1772`, `trdos/logstuff.pas:10297`; **ui** `uNewContest.pas:412`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:669`; **networking** `uExchangeBuilder.pas:179`; **other** `trdos/logddx.pas:1061` |
-| ARRL160 | **scoring** `trdos/logstuff.pas:6730`; **multipliers** `trdos/logdupe.pas:687`; **adif-import** `MainUnit.pas:9981`; **adif-export** `trdos/postunit.pas:2388`; **ui** `uNewContest.pas:180`, `uNewContest.pas:310`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:720` |
-| CQMM | **scoring** `trdos/logstuff.pas:9508`; **exchange** `MainUnit.pas:7256`, `trdos/logdupe.pas:1662`, `trdos/logstuff.pas:10313`; **multipliers** `trdos/logedit.pas:3027`, `trdos/logedit.pas:3039`; **ui** `uNewContest.pas:291`; **setup** `trdos/fcontest.pas:1851` |
-| CQWWRTTY | **scoring** `trdos/logstuff.pas:7224`; **exchange** `trdos/logdupe.pas:1901`, `trdos/logstuff.pas:10435`; **score-summary** `trdos/postunit.pas:1156`; **ui** `MainUnit.pas:4465`, `uNewContest.pas:193`, `uNewContest.pas:310`; **setup** `trdos/fcontest.pas:301` |
-| JIDXCW | **scoring** `trdos/logstuff.pas:8098`; **exchange** `trdos/logedit.pas:2763`, `trdos/logstuff.pas:10388`; **ui** `uNewContest.pas:238`, `uNewContest.pas:320`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:629`, `trdos/fcontest.pas:1942` |
-| JIDXSSB | **scoring** `trdos/logstuff.pas:8098`; **exchange** `trdos/logedit.pas:2763`, `trdos/logstuff.pas:10388`; **ui** `uNewContest.pas:238`, `uNewContest.pas:320`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:629`, `trdos/fcontest.pas:1942` |
-| RAEM | **scoring** `trdos/logstuff.pas:8315`, `trdos/logstuff.pas:8327`; **exchange** `trdos/logdupe.pas:1694`, `trdos/logstuff.pas:10266`, `uCallSignRoutines.pas:669`; **ui** `uNewContest.pas:284`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1292` |
-| RUSSIANDX | **scoring** `trdos/logstuff.pas:8440`; **exchange** `trdos/logedit.pas:2616`, `trdos/zonecont.pas:92`; **multipliers** `trdos/logedit.pas:1015`; **score-summary** `uTotal.pas:332`; **ui** `uNewContest.pas:206`, `uNewContest.pas:312`; **setup** `trdos/fcontest.pas:1338` |
-| SOUTHAMERICANWW | **scoring** `trdos/logstuff.pas:8622`; **exchange** `MainUnit.pas:7256`, `MainUnit.pas:7260`, `trdos/logdupe.pas:1662`, `trdos/logstuff.pas:10313`; **multipliers** `trdos/logedit.pas:3027`, `trdos/logedit.pas:3044`; **setup** `trdos/fcontest.pas:649` |
-| CQ160CW | **scoring** `trdos/logstuff.pas:6934`; **adif-import** `MainUnit.pas:9981`; **ui** `uNewContest.pas:193`, `uNewContest.pas:310`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:882`; **networking** `uExchangeBuilder.pas:162` |
+| POTA | **exchange** `MainUnit.pas:4045`, `MainUnit.pas:7096`, `trdos/logdupe.pas:1759`, `trdos/logstuff.pas:10229`, `trdos/logstuff.pas:10344`; **adif-import** `MainUnit.pas:10087`, `trdos/logstuff.pas:11173`; **adif-export** `trdos/postunit.pas:2300`, `trdos/postunit.pas:2314`, `trdos/postunit.pas:2394`, `uADIF.pas:1539`; **ui** `MainUnit.pas:4512`, `uNewContest.pas:233`, `uNewContest.pas:377`; **setup** `trdos/fcontest.pas:1268` |
+| RFCHAMPIONSHIPCW | **scoring** `trdos/logstuff.pas:9089`; **exchange** `trdos/logdupe.pas:1706`, `trdos/logedit.pas:2404`, `trdos/logstuff.pas:10278`; **multipliers** `trdos/logdupe.pas:2279`, `trdos/logedit.pas:1015`; **score-summary** `trdos/logedit.pas:2974`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:283`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1706`, `trdos/fcontest.pas:1709` |
+| RFCHAMPIONSHIPSSB | **scoring** `trdos/logstuff.pas:9089`; **exchange** `trdos/logdupe.pas:1706`, `trdos/logedit.pas:2404`, `trdos/logstuff.pas:10278`; **multipliers** `trdos/logdupe.pas:2279`, `trdos/logedit.pas:1015`; **score-summary** `trdos/logedit.pas:2974`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:283`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1706` |
+| ALRS_UA1DZ_CUP | **scoring** `trdos/logstuff.pas:6798`; **exchange** `trdos/logdom.pas:224`, `trdos/logstuff.pas:10192`, `trdos/logstuff.pas:10558`; **adif-export** `trdos/postunit.pas:2379`; **score-summary** `trdos/logedit.pas:2968`; **ui** `uNewContest.pas:174`, `uNewContest.pas:272`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:1741` |
+| CUPRFSSB | **scoring** `trdos/logstuff.pas:8994`; **exchange** `trdos/logedit.pas:2647`, `trdos/logstuff.pas:10289`; **cabrillo-export** `trdos/postunit.pas:3015`; **score-summary** `trdos/logedit.pas:2962`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:299`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1685`, `trdos/fcontest.pas:1688` |
+| DARCWAEDCCW | **scoring** `trdos/logstuff.pas:8862`; **multipliers** `trdos/logdupe.pas:720`, `trdos/logedit.pas:3018`, `uMults.pas:268`; **score-summary** `trdos/logedit.pas:2917`, `trdos/logedit.pas:2920`; **ui** `MainUnit.pas:4499`; **setup** `trdos/fcontest.pas:1648`; **networking** `uExchangeBuilder.pas:154`; **other** `trdos/logddx.pas:311` |
+| RU3AXMEMORIAL | **scoring** `trdos/logstuff.pas:8444`, `trdos/logstuff.pas:8481`; **exchange** `trdos/logedit.pas:2616`, `trdos/zonecont.pas:92`; **score-summary** `trdos/postunit.pas:1454`, `uTotal.pas:332`; **ui** `uNewContest.pas:206`, `uNewContest.pas:312`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1338` |
+| UBACW | **scoring** `trdos/logstuff.pas:8740`; **exchange** `MainUnit.pas:7251`; **multipliers** `trdos/logdupe.pas:726`, `trdos/logedit.pas:3020`, `uMults.pas:271`; **adif-import** `MainUnit.pas:9990`; **ui** `uNewContest.pas:209`, `uNewContest.pas:334`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1567` |
+| UBASSB | **scoring** `trdos/logstuff.pas:8740`; **exchange** `MainUnit.pas:7251`; **multipliers** `trdos/logdupe.pas:726`, `trdos/logedit.pas:3020`, `uMults.pas:271`; **adif-import** `MainUnit.pas:9990`; **ui** `uNewContest.pas:209`, `uNewContest.pas:334`; **setup** `trdos/LogCfg.pas:929`, `trdos/fcontest.pas:1567` |
+| CUPRFCW | **scoring** `trdos/logstuff.pas:8994`; **exchange** `trdos/logedit.pas:2647`, `trdos/logstuff.pas:10289`; **cabrillo-export** `trdos/postunit.pas:3015`; **score-summary** `trdos/logedit.pas:2962`, `trdos/postunit.pas:1454`; **ui** `uNewContest.pas:299`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1685` |
+| DARCWAEDCSSB | **scoring** `trdos/logstuff.pas:8862`; **multipliers** `trdos/logdupe.pas:720`, `trdos/logedit.pas:3018`, `uMults.pas:268`; **score-summary** `trdos/logedit.pas:2917`, `trdos/logedit.pas:2920`; **ui** `MainUnit.pas:4499`; **setup** `trdos/fcontest.pas:1648`; **other** `trdos/logddx.pas:311` |
+| RDA | **scoring** `trdos/logstuff.pas:8410`; **exchange** `trdos/logdom.pas:224`, `trdos/logedit.pas:2616`, `trdos/logstuff.pas:10558`; **multipliers** `trdos/logedit.pas:1024`; **adif-export** `trdos/postunit.pas:2379`; **ui** `uNewContest.pas:223`, `uNewContest.pas:312`; **setup** `trdos/fcontest.pas:1327` |
+| ALLASIANCW | **scoring** `trdos/logstuff.pas:6584`; **exchange** `trdos/logdupe.pas:1772`, `trdos/logstuff.pas:10301`; **ui** `uNewContest.pas:412`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:669`; **networking** `uExchangeBuilder.pas:179`; **other** `trdos/logddx.pas:1061` |
+| ALLASIANSSB | **scoring** `trdos/logstuff.pas:6584`; **exchange** `trdos/logdupe.pas:1772`, `trdos/logstuff.pas:10301`; **ui** `uNewContest.pas:412`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:669`; **networking** `uExchangeBuilder.pas:179`; **other** `trdos/logddx.pas:1061` |
+| ARRL160 | **scoring** `trdos/logstuff.pas:6730`; **multipliers** `trdos/logdupe.pas:687`; **adif-import** `MainUnit.pas:9990`; **adif-export** `trdos/postunit.pas:2388`; **ui** `uNewContest.pas:180`, `uNewContest.pas:310`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:720` |
+| CQMM | **scoring** `trdos/logstuff.pas:9512`; **exchange** `MainUnit.pas:7265`, `trdos/logdupe.pas:1662`, `trdos/logstuff.pas:10317`; **multipliers** `trdos/logedit.pas:3027`, `trdos/logedit.pas:3039`; **ui** `uNewContest.pas:291`; **setup** `trdos/fcontest.pas:1851` |
+| CQWWRTTY | **scoring** `trdos/logstuff.pas:7224`; **exchange** `trdos/logdupe.pas:1901`, `trdos/logstuff.pas:10439`; **score-summary** `trdos/postunit.pas:1156`; **ui** `MainUnit.pas:4465`, `uNewContest.pas:193`, `uNewContest.pas:310`; **setup** `trdos/fcontest.pas:301` |
+| JIDXCW | **scoring** `trdos/logstuff.pas:8102`; **exchange** `trdos/logedit.pas:2763`, `trdos/logstuff.pas:10392`; **ui** `uNewContest.pas:238`, `uNewContest.pas:320`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:629`, `trdos/fcontest.pas:1942` |
+| JIDXSSB | **scoring** `trdos/logstuff.pas:8102`; **exchange** `trdos/logedit.pas:2763`, `trdos/logstuff.pas:10392`; **ui** `uNewContest.pas:238`, `uNewContest.pas:320`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:629`, `trdos/fcontest.pas:1942` |
+| RAEM | **scoring** `trdos/logstuff.pas:8319`, `trdos/logstuff.pas:8331`; **exchange** `trdos/logdupe.pas:1694`, `trdos/logstuff.pas:10270`, `uCallSignRoutines.pas:669`; **ui** `uNewContest.pas:284`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1292` |
+| RUSSIANDX | **scoring** `trdos/logstuff.pas:8444`; **exchange** `trdos/logedit.pas:2616`, `trdos/zonecont.pas:92`; **multipliers** `trdos/logedit.pas:1015`; **score-summary** `uTotal.pas:332`; **ui** `uNewContest.pas:206`, `uNewContest.pas:312`; **setup** `trdos/fcontest.pas:1338` |
+| SOUTHAMERICANWW | **scoring** `trdos/logstuff.pas:8626`; **exchange** `MainUnit.pas:7265`, `MainUnit.pas:7269`, `trdos/logdupe.pas:1662`, `trdos/logstuff.pas:10317`; **multipliers** `trdos/logedit.pas:3027`, `trdos/logedit.pas:3044`; **setup** `trdos/fcontest.pas:649` |
+| CQ160CW | **scoring** `trdos/logstuff.pas:6934`; **adif-import** `MainUnit.pas:9990`; **ui** `uNewContest.pas:193`, `uNewContest.pas:310`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:882`; **networking** `uExchangeBuilder.pas:162` |
 | ARI_DX | **scoring** `trdos/logstuff.pas:6650`; **multipliers** `trdos/logdupe.pas:700`; **ui** `uNewContest.pas:209`, `uNewContest.pas:322`; **setup** `trdos/fcontest.pas:700`; **other** `trdos/logddx.pas:296` |
 | ARRL10 | **scoring** `trdos/logstuff.pas:6744`; **multipliers** `trdos/logdupe.pas:687`; **cabrillo-export** `trdos/postunit.pas:2639`; **ui** `uNewContest.pas:180`, `uNewContest.pas:310`; **setup** `trdos/fcontest.pas:708` |
-| CQ160SSB | **scoring** `trdos/logstuff.pas:6934`; **adif-import** `MainUnit.pas:9981`; **ui** `uNewContest.pas:193`, `uNewContest.pas:310`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:882` |
-| CUPRFDIG | **scoring** `trdos/logstuff.pas:8990`; **exchange** `trdos/logedit.pas:2647`, `trdos/logstuff.pas:10285`; **score-summary** `trdos/logedit.pas:2962`; **ui** `uNewContest.pas:299`; **setup** `trdos/fcontest.pas:1685` |
-| FISTS | **scoring** `trdos/logstuff.pas:7758`; **exchange** `trdos/logdupe.pas:1885`, `trdos/logdupe.pas:1980`, `trdos/logdupe.pas:2116`, `trdos/logstuff.pas:10428`; **score-summary** `trdos/logedit.pas:2853` |
-| GAGARINCUP | **scoring** `trdos/logstuff.pas:9469`; **multipliers** `trdos/logedit.pas:3059`, `trdos/logedit.pas:3061`; **ui** `uNewContest.pas:214`, `uNewContest.pas:332`; **setup** `trdos/fcontest.pas:1027` |
-| LZDX | **scoring** `trdos/logstuff.pas:9216`; **adif-import** `MainUnit.pas:10068`; **ui** `uNewContest.pas:220`, `uNewContest.pas:327`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:1735` |
-| MAKROTHEN | **scoring** `trdos/logstuff.pas:7521`; **exchange** `trdos/logdupe.pas:1802`, `trdos/logstuff.pas:10327`; **adif-import** `MainUnit.pas:10106`; **ui** `uNewContest.pas:301`; **setup** `trdos/LogCfg.pas:877` |
-| R9W_UW9WK_MEMORIAL | **scoring** `trdos/logstuff.pas:9566`; **exchange** `trdos/logdupe.pas:1706`, `trdos/logstuff.pas:10274`; **ui** `uNewContest.pas:297`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1701` |
-| RFASCHAMPIONSHIPCW | **scoring** `trdos/logstuff.pas:9269`; **exchange** `trdos/logdupe.pas:1694`, `trdos/logstuff.pas:10270`; **ui** `uNewContest.pas:300`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1777` |
-| SACCW | **scoring** `trdos/logstuff.pas:8496`; **exchange** `MainUnit.pas:7246`, `trdos/logstuff.pas:4415`; **multipliers** `trdos/logedit.pas:3024`; **setup** `trdos/fcontest.pas:1369`; **other** `trdos/logddx.pas:250` |
-| SACSSB | **scoring** `trdos/logstuff.pas:8496`; **exchange** `MainUnit.pas:7246`, `trdos/logstuff.pas:4415`; **multipliers** `trdos/logedit.pas:3024`; **setup** `trdos/fcontest.pas:1369`; **other** `trdos/logddx.pas:250` |
-| UA4WCHAMPIONSHIP | **scoring** `trdos/logstuff.pas:9034`; **exchange** `trdos/logstuff.pas:10183`, `trdos/logstuff.pas:10233`; **ui** `uNewContest.pas:409`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1696` |
-| WRTC | **scoring** `trdos/logstuff.pas:9577`; **ui** `MainUnit.pas:4483`, `MainUnit.pas:6467`, `trdos/logedit.pas:1708`; **setup** `trdos/fcontest.pas:1765`; **networking** `trdos/logsubs2.pas:2764` |
-| YOTA | **scoring** `trdos/logstuff.pas:9797`; **exchange** `trdos/logdupe.pas:1772`, `trdos/logstuff.pas:10297`; **ui** `uNewContest.pas:412`; **setup** `trdos/fcontest.pas:681`; **other** `trdos/logddx.pas:1061` |
-| BWQP | **scoring** `trdos/logstuff.pas:6899`; **exchange** `MainUnit.pas:7087`, `trdos/logdupe.pas:1842`, `trdos/logstuff.pas:10225`, `trdos/logstuff.pas:10378` |
-| CANADA_DAY | **scoring** `trdos/logstuff.pas:8342`; **exchange** `trdos/logstuff.pas:5308`; **ui** `uNewContest.pas:199`, `uNewContest.pas:314`; **setup** `trdos/fcontest.pas:1299` |
-| CANADA_WINTER | **scoring** `trdos/logstuff.pas:8342`; **exchange** `trdos/logstuff.pas:5308`; **ui** `uNewContest.pas:199`, `uNewContest.pas:314`; **setup** `trdos/fcontest.pas:1299` |
-| HELVETIA | **scoring** `trdos/logstuff.pas:7927`; **ui** `uNewContest.pas:209`, `uNewContest.pas:321`; **setup** `trdos/LogCfg.pas:931`, `trdos/fcontest.pas:1012` |
-| LABRE | **scoring** `trdos/logstuff.pas:9178`; **exchange** `trdos/logstuff.pas:10355`; **cabrillo-export** `trdos/postunit.pas:3001`; **ui** `uNewContest.pas:260`; **setup** `trdos/fcontest.pas:536` |
-| OKDX | **scoring** `trdos/logstuff.pas:8230`; **adif-import** `MainUnit.pas:10068`; **ui** `uNewContest.pas:220`, `uNewContest.pas:325`; **setup** `trdos/fcontest.pas:1234` |
+| CQ160SSB | **scoring** `trdos/logstuff.pas:6934`; **adif-import** `MainUnit.pas:9990`; **ui** `uNewContest.pas:193`, `uNewContest.pas:310`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:882` |
+| CUPRFDIG | **scoring** `trdos/logstuff.pas:8994`; **exchange** `trdos/logedit.pas:2647`, `trdos/logstuff.pas:10289`; **score-summary** `trdos/logedit.pas:2962`; **ui** `uNewContest.pas:299`; **setup** `trdos/fcontest.pas:1685` |
+| FISTS | **scoring** `trdos/logstuff.pas:7760`; **exchange** `trdos/logdupe.pas:1885`, `trdos/logdupe.pas:1980`, `trdos/logdupe.pas:2116`, `trdos/logstuff.pas:10432`; **score-summary** `trdos/logedit.pas:2853` |
+| GAGARINCUP | **scoring** `trdos/logstuff.pas:9473`; **multipliers** `trdos/logedit.pas:3059`, `trdos/logedit.pas:3061`; **ui** `uNewContest.pas:214`, `uNewContest.pas:332`; **setup** `trdos/fcontest.pas:1027` |
+| LZDX | **scoring** `trdos/logstuff.pas:9220`; **adif-import** `MainUnit.pas:10077`; **ui** `uNewContest.pas:220`, `uNewContest.pas:327`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:1735` |
+| MAKROTHEN | **scoring** `trdos/logstuff.pas:7523`; **exchange** `trdos/logdupe.pas:1802`, `trdos/logstuff.pas:10331`; **adif-import** `MainUnit.pas:10115`; **ui** `uNewContest.pas:301`; **setup** `trdos/LogCfg.pas:877` |
+| R9W_UW9WK_MEMORIAL | **scoring** `trdos/logstuff.pas:9570`; **exchange** `trdos/logdupe.pas:1706`, `trdos/logstuff.pas:10278`; **ui** `uNewContest.pas:297`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1701` |
+| RFASCHAMPIONSHIPCW | **scoring** `trdos/logstuff.pas:9273`; **exchange** `trdos/logdupe.pas:1694`, `trdos/logstuff.pas:10274`; **ui** `uNewContest.pas:300`; **setup** `trdos/LogCfg.pas:888`, `trdos/fcontest.pas:1777` |
+| SACCW | **scoring** `trdos/logstuff.pas:8500`; **exchange** `MainUnit.pas:7255`, `trdos/logstuff.pas:4415`; **multipliers** `trdos/logedit.pas:3024`; **setup** `trdos/fcontest.pas:1369`; **other** `trdos/logddx.pas:250` |
+| SACSSB | **scoring** `trdos/logstuff.pas:8500`; **exchange** `MainUnit.pas:7255`, `trdos/logstuff.pas:4415`; **multipliers** `trdos/logedit.pas:3024`; **setup** `trdos/fcontest.pas:1369`; **other** `trdos/logddx.pas:250` |
+| UA4WCHAMPIONSHIP | **scoring** `trdos/logstuff.pas:9038`; **exchange** `trdos/logstuff.pas:10187`, `trdos/logstuff.pas:10237`; **ui** `uNewContest.pas:409`; **setup** `trdos/LogCfg.pas:892`, `trdos/fcontest.pas:1696` |
+| WRTC | **scoring** `trdos/logstuff.pas:9581`; **ui** `MainUnit.pas:4483`, `MainUnit.pas:6467`, `trdos/logedit.pas:1708`; **setup** `trdos/fcontest.pas:1765`; **networking** `trdos/logsubs2.pas:2764` |
+| YOTA | **scoring** `trdos/logstuff.pas:9801`; **exchange** `trdos/logdupe.pas:1772`, `trdos/logstuff.pas:10301`; **ui** `uNewContest.pas:412`; **setup** `trdos/fcontest.pas:681`; **other** `trdos/logddx.pas:1061` |
+| BWQP | **scoring** `trdos/logstuff.pas:6899`; **exchange** `MainUnit.pas:7096`, `trdos/logdupe.pas:1842`, `trdos/logstuff.pas:10229`, `trdos/logstuff.pas:10382` |
+| CANADA_DAY | **scoring** `trdos/logstuff.pas:8346`; **exchange** `trdos/logstuff.pas:5308`; **ui** `uNewContest.pas:199`, `uNewContest.pas:314`; **setup** `trdos/fcontest.pas:1299` |
+| CANADA_WINTER | **scoring** `trdos/logstuff.pas:8346`; **exchange** `trdos/logstuff.pas:5308`; **ui** `uNewContest.pas:199`, `uNewContest.pas:314`; **setup** `trdos/fcontest.pas:1299` |
+| HELVETIA | **scoring** `trdos/logstuff.pas:7931`; **ui** `uNewContest.pas:209`, `uNewContest.pas:321`; **setup** `trdos/LogCfg.pas:931`, `trdos/fcontest.pas:1012` |
+| LABRE | **scoring** `trdos/logstuff.pas:9182`; **exchange** `trdos/logstuff.pas:10359`; **cabrillo-export** `trdos/postunit.pas:3001`; **ui** `uNewContest.pas:260`; **setup** `trdos/fcontest.pas:536` |
+| OKDX | **scoring** `trdos/logstuff.pas:8234`; **adif-import** `MainUnit.pas:10077`; **ui** `uNewContest.pas:220`, `uNewContest.pas:325`; **setup** `trdos/fcontest.pas:1234` |
 | OZCR_O | **exchange** `trdos/logedit.pas:2386`; **score-summary** `uTotal.pas:263`; **ui** `uNewContest.pas:294`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:1805` |
-| OZHCRVHF | **scoring** `trdos/logstuff.pas:7647`; **score-summary** `trdos/logedit.pas:2987`; **ui** `uNewContest.pas:303`; **setup** `trdos/LogCfg.pas:927`, `trdos/fcontest.pas:1861` |
-| RADIOMEMORY | **scoring** `trdos/logstuff.pas:9383`; **exchange** `trdos/logdupe.pas:1765`, `trdos/logstuff.pas:10310`; **ui** `uNewContest.pas:290`; **setup** `trdos/LogCfg.pas:882` |
-| RSGB_ROPOCO_CW | **scoring** `trdos/logstuff.pas:8926`; **exchange** `trdos/logdupe.pas:1813`, `trdos/logstuff.pas:10337`; **ui** `uNewContest.pas:287`; **setup** `trdos/fcontest.pas:1311` |
-| RSGB_ROPOCO_SSB | **scoring** `trdos/logstuff.pas:8926`; **exchange** `trdos/logdupe.pas:1813`, `trdos/logstuff.pas:10337`; **ui** `uNewContest.pas:287`; **setup** `trdos/fcontest.pas:1311` |
-| RTC | **scoring** `trdos/logstuff.pas:8673`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:784`; **networking** `uExchangeBuilder.pas:112`, `uExchangeBuilder.pas:205` |
-| TENTEN | **scoring** `trdos/logstuff.pas:8710`; **exchange** `trdos/logdupe.pas:1668`, `trdos/logstuff.pas:10251`; **setup** `trdos/fcontest.pas:1544`; **other** `trdos/logddx.pas:858` |
-| UKRAINIAN | **scoring** `trdos/logstuff.pas:8784`; **adif-import** `MainUnit.pas:10068`; **ui** `uNewContest.pas:206`, `uNewContest.pas:324`; **setup** `trdos/fcontest.pas:1584` |
-| YBDX | **scoring** `trdos/logstuff.pas:8536`; **exchange** `MainUnit.pas:7247`, `MainUnit.pas:7250`; **multipliers** `trdos/logedit.pas:3025`; **setup** `trdos/fcontest.pas:1381` |
-| YODX | **scoring** `trdos/logstuff.pas:8900`; **multipliers** `trdos/logedit.pas:1030`; **ui** `uNewContest.pas:220`, `uNewContest.pas:328`; **setup** `trdos/fcontest.pas:1679` |
-| ARCI | **scoring** `trdos/logstuff.pas:6634`; **exchange** `trdos/logdupe.pas:1785`, `trdos/logstuff.pas:10381`; **setup** `trdos/fcontest.pas:694` |
-| ARRL_RTTY_ROUNDUP | **adif-import** `MainUnit.pas:9984`; **ui** `uNewContest.pas:180`, `uNewContest.pas:310`; **setup** `trdos/fcontest.pas:755` |
-| BSCI | **scoring** `trdos/logstuff.pas:7941`; **multipliers** `trdos/logdupe.pas:744`; **ui** `uNewContest.pas:225`, `uNewContest.pas:340` |
+| OZHCRVHF | **scoring** `trdos/logstuff.pas:7649`; **score-summary** `trdos/logedit.pas:2987`; **ui** `uNewContest.pas:303`; **setup** `trdos/LogCfg.pas:927`, `trdos/fcontest.pas:1861` |
+| RADIOMEMORY | **scoring** `trdos/logstuff.pas:9387`; **exchange** `trdos/logdupe.pas:1765`, `trdos/logstuff.pas:10314`; **ui** `uNewContest.pas:290`; **setup** `trdos/LogCfg.pas:882` |
+| RSGB_ROPOCO_CW | **scoring** `trdos/logstuff.pas:8930`; **exchange** `trdos/logdupe.pas:1813`, `trdos/logstuff.pas:10341`; **ui** `uNewContest.pas:287`; **setup** `trdos/fcontest.pas:1311` |
+| RSGB_ROPOCO_SSB | **scoring** `trdos/logstuff.pas:8930`; **exchange** `trdos/logdupe.pas:1813`, `trdos/logstuff.pas:10341`; **ui** `uNewContest.pas:287`; **setup** `trdos/fcontest.pas:1311` |
+| RTC | **scoring** `trdos/logstuff.pas:8677`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:784`; **networking** `uExchangeBuilder.pas:112`, `uExchangeBuilder.pas:205` |
+| TENTEN | **scoring** `trdos/logstuff.pas:8714`; **exchange** `trdos/logdupe.pas:1668`, `trdos/logstuff.pas:10255`; **setup** `trdos/fcontest.pas:1544`; **other** `trdos/logddx.pas:858` |
+| UKRAINIAN | **scoring** `trdos/logstuff.pas:8788`; **adif-import** `MainUnit.pas:10077`; **ui** `uNewContest.pas:206`, `uNewContest.pas:324`; **setup** `trdos/fcontest.pas:1584` |
+| YBDX | **scoring** `trdos/logstuff.pas:8540`; **exchange** `MainUnit.pas:7256`, `MainUnit.pas:7259`; **multipliers** `trdos/logedit.pas:3025`; **setup** `trdos/fcontest.pas:1381` |
+| YODX | **scoring** `trdos/logstuff.pas:8904`; **multipliers** `trdos/logedit.pas:1030`; **ui** `uNewContest.pas:220`, `uNewContest.pas:328`; **setup** `trdos/fcontest.pas:1679` |
+| ARCI | **scoring** `trdos/logstuff.pas:6634`; **exchange** `trdos/logdupe.pas:1785`, `trdos/logstuff.pas:10385`; **setup** `trdos/fcontest.pas:694` |
+| ARRL_RTTY_ROUNDUP | **adif-import** `MainUnit.pas:9993`; **ui** `uNewContest.pas:180`, `uNewContest.pas:310`; **setup** `trdos/fcontest.pas:755` |
+| BSCI | **scoring** `trdos/logstuff.pas:7945`; **multipliers** `trdos/logdupe.pas:744`; **ui** `uNewContest.pas:225`, `uNewContest.pas:340` |
 | CIS | **scoring** `trdos/logstuff.pas:6910`; **ui** `uNewContest.pas:206`, `uNewContest.pas:338`; **setup** `trdos/fcontest.pas:859` |
-| EUDX | **scoring** `trdos/logstuff.pas:9739`; **ui** `uNewContest.pas:220`, `uNewContest.pas:317`; **setup** `trdos/fcontest.pas:978` |
-| HADX | **scoring** `trdos/logstuff.pas:7768`; **ui** `uNewContest.pas:212`, `uNewContest.pas:329`; **setup** `trdos/fcontest.pas:962` |
-| IRTS | **scoring** `trdos/logstuff.pas:9739`; **ui** `uNewContest.pas:196`, `uNewContest.pas:316`; **setup** `trdos/fcontest.pas:967` |
-| JTDX | **scoring** `trdos/logstuff.pas:9137`; **multipliers** `trdos/logdupe.pas:709`, `trdos/logedit.pas:3049`; **setup** `trdos/fcontest.pas:1826` |
-| KINGOFSPAINCW | **scoring** `trdos/logstuff.pas:9450`; **ui** `uNewContest.pas:209`, `uNewContest.pas:319`; **setup** `trdos/fcontest.pas:1843` |
-| KINGOFSPAINSSB | **scoring** `trdos/logstuff.pas:9450`; **ui** `uNewContest.pas:209`, `uNewContest.pas:319`; **setup** `trdos/fcontest.pas:1843` |
-| NAQSOCW | **adif-import** `MainUnit.pas:10061`; **ui** `uNewContest.pas:349`; **setup** `trdos/fcontest.pas:1137`; **networking** `uExchangeBuilder.pas:193` |
-| NAQSORTTY | **adif-import** `MainUnit.pas:10061`; **ui** `uNewContest.pas:349`; **setup** `trdos/fcontest.pas:1137`; **networking** `uExchangeBuilder.pas:193` |
-| NAQSOSSB | **adif-import** `MainUnit.pas:10061`; **ui** `uNewContest.pas:349`; **setup** `trdos/fcontest.pas:1137`; **networking** `uExchangeBuilder.pas:193` |
-| NCCCSPRINT | **adif-import** `MainUnit.pas:10061`; **ui** `uNewContest.pas:360`; **setup** `trdos/LogCfg.pas:884`, `trdos/fcontest.pas:1811` |
-| OKOMSSB | **scoring** `trdos/logstuff.pas:8276`; **ui** `uNewContest.pas:220`, `uNewContest.pas:325`; **setup** `trdos/fcontest.pas:1227` |
-| OLDNEWYEAR | **scoring** `trdos/logstuff.pas:9249`; **ui** `uNewContest.pas:286`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:1759` |
-| OZCR_Z | **scoring** `trdos/logstuff.pas:7983`; **exchange** `trdos/logedit.pas:2386`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:1022` |
-| RADIOVHFFD | **scoring** `trdos/logstuff.pas:7489`; **ui** `uNewContest.pas:303`; **setup** `trdos/LogCfg.pas:927`, `trdos/fcontest.pas:932` |
-| RADIOYOC | **scoring** `trdos/logstuff.pas:8925`; **exchange** `MainUnit.pas:8004`, `trdos/logdupe.pas:1700`, `trdos/logstuff.pas:10401` |
-| REFCW | **scoring** `trdos/logstuff.pas:9366`; **exchange** `trdos/logstuff.pas:10347`; **ui** `uNewContest.pas:203`, `uNewContest.pas:315` |
-| REFSSB | **scoring** `trdos/logstuff.pas:9366`; **exchange** `trdos/logstuff.pas:10347`; **ui** `uNewContest.pas:203`, `uNewContest.pas:315` |
-| RSGB18 | **scoring** `trdos/logstuff.pas:8374`; **score-summary** `trdos/logedit.pas:2957`; **ui** `uNewContest.pas:220`, `uNewContest.pas:337` |
-| SPDX | **scoring** `trdos/logstuff.pas:8925`; **ui** `uNewContest.pas:220`, `uNewContest.pas:339`; **setup** `trdos/fcontest.pas:1388` |
-| UNDX | **scoring** `trdos/logstuff.pas:9428`; **ui** `uNewContest.pas:206`, `uNewContest.pas:323`; **setup** `trdos/fcontest.pas:1837` |
-| YUDX | **scoring** `trdos/logstuff.pas:7835`; **ui** `uNewContest.pas:212`, `uNewContest.pas:330`; **setup** `trdos/fcontest.pas:984` |
+| EUDX | **scoring** `trdos/logstuff.pas:9743`; **ui** `uNewContest.pas:220`, `uNewContest.pas:317`; **setup** `trdos/fcontest.pas:978` |
+| HADX | **scoring** `trdos/logstuff.pas:7770`; **ui** `uNewContest.pas:212`, `uNewContest.pas:329`; **setup** `trdos/fcontest.pas:962` |
+| IRTS | **scoring** `trdos/logstuff.pas:9743`; **ui** `uNewContest.pas:196`, `uNewContest.pas:316`; **setup** `trdos/fcontest.pas:967` |
+| JTDX | **scoring** `trdos/logstuff.pas:9141`; **multipliers** `trdos/logdupe.pas:709`, `trdos/logedit.pas:3049`; **setup** `trdos/fcontest.pas:1826` |
+| KINGOFSPAINCW | **scoring** `trdos/logstuff.pas:9454`; **ui** `uNewContest.pas:209`, `uNewContest.pas:319`; **setup** `trdos/fcontest.pas:1843` |
+| KINGOFSPAINSSB | **scoring** `trdos/logstuff.pas:9454`; **ui** `uNewContest.pas:209`, `uNewContest.pas:319`; **setup** `trdos/fcontest.pas:1843` |
+| NAQSOCW | **adif-import** `MainUnit.pas:10070`; **ui** `uNewContest.pas:349`; **setup** `trdos/fcontest.pas:1137`; **networking** `uExchangeBuilder.pas:193` |
+| NAQSORTTY | **adif-import** `MainUnit.pas:10070`; **ui** `uNewContest.pas:349`; **setup** `trdos/fcontest.pas:1137`; **networking** `uExchangeBuilder.pas:193` |
+| NAQSOSSB | **adif-import** `MainUnit.pas:10070`; **ui** `uNewContest.pas:349`; **setup** `trdos/fcontest.pas:1137`; **networking** `uExchangeBuilder.pas:193` |
+| NCCCSPRINT | **adif-import** `MainUnit.pas:10070`; **ui** `uNewContest.pas:360`; **setup** `trdos/LogCfg.pas:884`, `trdos/fcontest.pas:1811` |
+| OKOMSSB | **scoring** `trdos/logstuff.pas:8280`; **ui** `uNewContest.pas:220`, `uNewContest.pas:325`; **setup** `trdos/fcontest.pas:1227` |
+| OLDNEWYEAR | **scoring** `trdos/logstuff.pas:9253`; **ui** `uNewContest.pas:286`; **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:1759` |
+| OZCR_Z | **scoring** `trdos/logstuff.pas:7987`; **exchange** `trdos/logedit.pas:2386`; **setup** `trdos/LogCfg.pas:899`, `trdos/fcontest.pas:1022` |
+| RADIOVHFFD | **scoring** `trdos/logstuff.pas:7491`; **ui** `uNewContest.pas:303`; **setup** `trdos/LogCfg.pas:927`, `trdos/fcontest.pas:932` |
+| RADIOYOC | **scoring** `trdos/logstuff.pas:8929`; **exchange** `MainUnit.pas:8013`, `trdos/logdupe.pas:1700`, `trdos/logstuff.pas:10405` |
+| REFCW | **scoring** `trdos/logstuff.pas:9370`; **exchange** `trdos/logstuff.pas:10351`; **ui** `uNewContest.pas:203`, `uNewContest.pas:315` |
+| REFSSB | **scoring** `trdos/logstuff.pas:9370`; **exchange** `trdos/logstuff.pas:10351`; **ui** `uNewContest.pas:203`, `uNewContest.pas:315` |
+| RSGB18 | **scoring** `trdos/logstuff.pas:8378`; **score-summary** `trdos/logedit.pas:2957`; **ui** `uNewContest.pas:220`, `uNewContest.pas:337` |
+| SPDX | **scoring** `trdos/logstuff.pas:8929`; **ui** `uNewContest.pas:220`, `uNewContest.pas:339`; **setup** `trdos/fcontest.pas:1388` |
+| UNDX | **scoring** `trdos/logstuff.pas:9432`; **ui** `uNewContest.pas:206`, `uNewContest.pas:323`; **setup** `trdos/fcontest.pas:1837` |
+| YUDX | **scoring** `trdos/logstuff.pas:7837`; **ui** `uNewContest.pas:212`, `uNewContest.pas:330`; **setup** `trdos/fcontest.pas:984` |
 | ARRLVHFJUN | **scoring** `trdos/logstuff.pas:6761`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:810` |
 | ARRLVHFSEP | **scoring** `trdos/logstuff.pas:6761`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:810` |
 | CQVHF | **scoring** `trdos/logstuff.pas:7008`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:896` |
 | CWOPEN | **ui** `uNewContest.pas:355`; **setup** `trdos/LogCfg.pas:939`; **networking** `uExchangeBuilder.pas:197` |
-| CWOPS | **adif-import** `MainUnit.pas:10023`; **ui** `uNewContest.pas:360`; **networking** `uExchangeBuilder.pas:183` |
-| EUROPEANVHF | **scoring** `trdos/logstuff.pas:7669`; **ui** `uNewContest.pas:303`; **setup** `trdos/fcontest.pas:943` |
+| CWOPS | **adif-import** `MainUnit.pas:10032`; **ui** `uNewContest.pas:360`; **networking** `uExchangeBuilder.pas:183` |
+| EUROPEANVHF | **scoring** `trdos/logstuff.pas:7671`; **ui** `uNewContest.pas:303`; **setup** `trdos/fcontest.pas:943` |
 | EUSPRINT_AUTUMN_CW | **ui** `uNewContest.pas:275`; **setup** `trdos/LogCfg.pas:933`, `trdos/fcontest.pas:925` |
 | EUSPRINT_AUTUMN_SSB | **ui** `uNewContest.pas:275`; **setup** `trdos/LogCfg.pas:933`, `trdos/fcontest.pas:925` |
 | EUSPRINT_SPRING_CW | **ui** `uNewContest.pas:275`; **setup** `trdos/LogCfg.pas:933`, `trdos/fcontest.pas:925` |
 | EUSPRINT_SPRING_SSB | **ui** `uNewContest.pas:275`; **setup** `trdos/LogCfg.pas:933`, `trdos/fcontest.pas:925` |
-| KCJ | **scoring** `trdos/logstuff.pas:8171`; **ui** `uNewContest.pas:372`; **setup** `trdos/fcontest.pas:1070` |
-| MWC | **scoring** `trdos/logstuff.pas:7911`; **ui** `uNewContest.pas:169`; **setup** `trdos/fcontest.pas:1121` |
+| KCJ | **scoring** `trdos/logstuff.pas:8175`; **ui** `uNewContest.pas:372`; **setup** `trdos/fcontest.pas:1070` |
+| MWC | **scoring** `trdos/logstuff.pas:7915`; **ui** `uNewContest.pas:169`; **setup** `trdos/fcontest.pas:1121` |
 | NEWENGLANDQSO | **ui** `uNewContest.pas:177`, `uNewContest.pas:308`; **setup** `trdos/fcontest.pas:1172` |
 | SST | **ui** `uNewContest.pas:349`; **setup** `trdos/fcontest.pas:1128`; **networking** `uExchangeBuilder.pas:193` |
-| STEWPERRY | **scoring** `trdos/logstuff.pas:8645`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:661` |
-| WWPMC | **scoring** `trdos/logstuff.pas:9117`; **ui** `uNewContest.pas:231`, `uNewContest.pas:346` |
+| STEWPERRY | **scoring** `trdos/logstuff.pas:8649`; **ui** `uNewContest.pas:301`; **setup** `trdos/fcontest.pas:661` |
+| WWPMC | **scoring** `trdos/logstuff.pas:9121`; **ui** `uNewContest.pas:231`, `uNewContest.pas:346` |
 | ARRLVHFJAN | **scoring** `trdos/logstuff.pas:6761`; **ui** `uNewContest.pas:301` |
 | BALTIC | **scoring** `trdos/logstuff.pas:6869`; **setup** `trdos/fcontest.pas:826` |
 | CQM | **scoring** `trdos/logstuff.pas:6953`; **setup** `trdos/fcontest.pas:890` |
 | CQWPXRTTY | **scoring** `trdos/logstuff.pas:7128`; **setup** `trdos/fcontest.pas:1765` |
-| CROATIAN | **scoring** `trdos/logstuff.pas:7238`; **setup** `trdos/fcontest.pas:621` |
 | SEVENQP | **setup** `trdos/LogCfg.pas:890`, `trdos/fcontest.pas:1783` |
-| TESLA | **scoring** `trdos/logstuff.pas:7710`; **ui** `uNewContest.pas:305` |
-| WWL | **scoring** `trdos/logstuff.pas:8877`; **exchange** `trdos/logstuff.pas:10320` |
-| GACWWWSACW | **scoring** `trdos/logstuff.pas:9324` |
-| IN7QPNE | **scoring** `trdos/logstuff.pas:7610` |
-| OCEANIADXCW | **scoring** `trdos/logstuff.pas:8813` |
-| OCEANIADXSSB | **scoring** `trdos/logstuff.pas:8813` |
-| REGION1FIELDDAY | **scoring** `trdos/logstuff.pas:7320` |
-| REGION1FIELDDAY_RCC_CW | **scoring** `trdos/logstuff.pas:9285` |
-| REGION1FIELDDAY_RCC_SSB | **scoring** `trdos/logstuff.pas:9285` |
-| TOEC | **scoring** `trdos/logstuff.pas:8720` |
+| TESLA | **scoring** `trdos/logstuff.pas:7712`; **ui** `uNewContest.pas:305` |
+| WWL | **scoring** `trdos/logstuff.pas:8881`; **exchange** `trdos/logstuff.pas:10324` |
+| GACWWWSACW | **scoring** `trdos/logstuff.pas:9328` |
+| IN7QPNE | **scoring** `trdos/logstuff.pas:7612` |
+| OCEANIADXCW | **scoring** `trdos/logstuff.pas:8817` |
+| OCEANIADXSSB | **scoring** `trdos/logstuff.pas:8817` |
+| REGION1FIELDDAY | **scoring** `trdos/logstuff.pas:7322` |
+| REGION1FIELDDAY_RCC_CW | **scoring** `trdos/logstuff.pas:9289` |
+| REGION1FIELDDAY_RCC_SSB | **scoring** `trdos/logstuff.pas:9289` |
+| TOEC | **scoring** `trdos/logstuff.pas:8724` |
 | UCG | **scoring** `trdos/logstuff.pas:7092` |
 | WWIH | **scoring** `trdos/logstuff.pas:7224` |
 
@@ -1458,35 +1458,37 @@ format their own exchange (19 classes).
 | `trdos/logstuff.pas:6693` | CalculateQSOPoints | `ARRLFieldDayQSOPointMethod` | ARRLFIELDDAY, IDAHOQSOPARTY, WINTERFIELDDAY |
 | `trdos/logstuff.pas:6716` | CalculateQSOPoints | `ARRLDIGIQSOPointMethod` | ARRLDIGI |
 | `trdos/logstuff.pas:7205` | CalculateQSOPoints | `CQWWQSOPointMethod` | CQWWCW, CQWWSSB |
-| `trdos/logstuff.pas:7476` | CalculateQSOPoints | `FOCMarathonQSOPointMethod` | FOCMARATHON |
-| `trdos/logstuff.pas:7547` | CalculateQSOPoints | `NCQSOPointMethod` | NCQSOPARTY |
-| `trdos/logstuff.pas:7596` | CalculateQSOPoints | `BCQPQSOPointMethod` | BCQP |
-| `trdos/logstuff.pas:7853` | CalculateQSOPoints | `UKEIQSOPointMethod` | UKEI |
-| `trdos/logstuff.pas:8063` | CalculateQSOPoints | `IOTAQSOPointMethod` | IOTA |
-| `trdos/logstuff.pas:8205` | CalculateQSOPoints | `NZFieldDayQSOPointMethod` | NZFIELDDAY |
-| `trdos/logstuff.pas:8484` | CalculateQSOPoints | `SalmonRunQSOPointMethod` | SALMONRUN |
-| `trdos/logstuff.pas:8575` | CalculateQSOPoints | `YBFT8QP` | BATAVIA_FT8 |
-| `trdos/logstuff.pas:8666` | CalculateQSOPoints | `WWDigiQP` | WWDIGI |
-| `trdos/logstuff.pas:8830` | CalculateQSOPoints | `WAGQSOPointMethod` | WAG |
-| `trdos/logstuff.pas:8922` | CalculateQSOPoints | `AlwaysOnePointPerQSO` | INTERNETSPRINT, YOUTHCHAMPIONSHIPRF |
-| `trdos/logstuff.pas:8924` | CalculateQSOPoints | `TwoPointsPerQSO` | ARRLSSCW, ARRLSSSSB, COLORADOQSOPARTY, INQSOPARTY, MINNQSOPARTY, NRAUBALTICCW, NRAUBALTICSSB, XMAS |
-| `trdos/logstuff.pas:9107` | CalculateQSOPoints | `ChampionshipUkrMethod` | UKRAINECHAMPIONSHIP |
-| `trdos/logstuff.pas:9345` | CalculateQSOPoints | `LQPQSOPointMethod` | LQP |
-| `trdos/logstuff.pas:9354` | CalculateQSOPoints | `ArktikaSpringQSOPointMethod` | ARKTIKA_SPRING |
-| `trdos/logstuff.pas:9398` | CalculateQSOPoints | `PCCQSOPointMethod` | PCC |
-| `trdos/logstuff.pas:9723` | CalculateQSOPoints | `VAQSOPOINTMETHOD` | VAQP |
+| `trdos/logstuff.pas:7238` | CalculateQSOPoints | `CroatianQSOPointMethod` | CROATIAN |
+| `trdos/logstuff.pas:7478` | CalculateQSOPoints | `FOCMarathonQSOPointMethod` | FOCMARATHON |
+| `trdos/logstuff.pas:7549` | CalculateQSOPoints | `NCQSOPointMethod` | NCQSOPARTY |
+| `trdos/logstuff.pas:7598` | CalculateQSOPoints | `BCQPQSOPointMethod` | BCQP |
+| `trdos/logstuff.pas:7855` | CalculateQSOPoints | `UKEIQSOPointMethod` | UKEI |
+| `trdos/logstuff.pas:8067` | CalculateQSOPoints | `IOTAQSOPointMethod` | IOTA |
+| `trdos/logstuff.pas:8209` | CalculateQSOPoints | `NZFieldDayQSOPointMethod` | NZFIELDDAY |
+| `trdos/logstuff.pas:8488` | CalculateQSOPoints | `SalmonRunQSOPointMethod` | SALMONRUN |
+| `trdos/logstuff.pas:8579` | CalculateQSOPoints | `YBFT8QP` | BATAVIA_FT8 |
+| `trdos/logstuff.pas:8670` | CalculateQSOPoints | `WWDigiQP` | WWDIGI |
+| `trdos/logstuff.pas:8834` | CalculateQSOPoints | `WAGQSOPointMethod` | WAG |
+| `trdos/logstuff.pas:8926` | CalculateQSOPoints | `AlwaysOnePointPerQSO` | INTERNETSPRINT, YOUTHCHAMPIONSHIPRF |
+| `trdos/logstuff.pas:8928` | CalculateQSOPoints | `TwoPointsPerQSO` | ARRLSSCW, ARRLSSSSB, COLORADOQSOPARTY, INQSOPARTY, MINNQSOPARTY, NRAUBALTICCW, NRAUBALTICSSB, XMAS |
+| `trdos/logstuff.pas:9111` | CalculateQSOPoints | `ChampionshipUkrMethod` | UKRAINECHAMPIONSHIP |
+| `trdos/logstuff.pas:9349` | CalculateQSOPoints | `LQPQSOPointMethod` | LQP |
+| `trdos/logstuff.pas:9358` | CalculateQSOPoints | `ArktikaSpringQSOPointMethod` | ARKTIKA_SPRING |
+| `trdos/logstuff.pas:9402` | CalculateQSOPoints | `PCCQSOPointMethod` | PCC |
+| `trdos/logstuff.pas:9727` | CalculateQSOPoints | `VAQSOPOINTMETHOD` | VAQP |
 
 ### 9.2 Class traits the engine contradicts (D8)
 
-**224** trait overrides checked (`GetQSOPointMethod`, `GetExchangeKind`,
+**228** trait overrides checked (`GetQSOPointMethod`, `GetExchangeKind`,
 `GetDomesticMultiplierType`, `GetDXMultiplierType`), each against the value the
 ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
-`ContestsArray` row. **11** disagree or could not be read:
+`ContestsArray` row. **12** disagree or could not be read:
 
 | contest | getter | class says | engine uses | row | FoundContest arms |
 |---|---|---|---|---|---|
 | ArizonaQsoParty | GETEXCHANGEKIND | `RSTDomesticOrDXQTHExchange` | `RSTDomesticQTHExchange` | `RSTDomesticOrDXQTHExchange` | `RSTDomesticQTHExchange` |
 | CALQSOPARTY | GETEXCHANGEKIND | `QSONumberDomesticOrDXQTHExchange` | `QSONumberDomesticQTHExchange` | `QSONumberDomesticOrDXQTHExchange` | `QSONumberDomesticOrDXQTHExchange`, `QSONumberDomesticQTHExchange` |
+| CROATIAN | GETDXMULTIPLIERTYPE | `NoDXMults` | `CQDXCC` | `NODXMULTS` | `CQDXCC` |
 | DARC10M | GETDOMESTICMULTIPLIERTYPE | `WYSIWYGDomestic` | `DOKCodes` | `WYSIWYGDomestic` | `DOKCodes` |
 | PACC | GETEXCHANGEKIND | `RSTAndQSONumberOrDomesticQTHExchange` | `RSTDomesticQTHExchange` | `RSTAndQSONumberOrDomesticQTHExchange` | `RSTAndQSONumberOrDomesticQTHExchange`, `RSTDomesticQTHExchange` |
 | PACC | GETDXMULTIPLIERTYPE | `NoDXMults` | `PACCCountriesAndPrefixes` | `NoDXMults` | `PACCCountriesAndPrefixes` |
@@ -1501,9 +1503,9 @@ ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
 
 - **139** contests have a blank `ContestsArray` `ADIFName` (excluding
   GENERALQSO, POTA, which write no `CONTEST_ID`), so their exported id is the
-  `ContestTypeSA` spelling and import cannot resolve it; **43** of them are
-  registered: ALLJA, ARRLDIGI, ARRLDXCW, ARRLDXSSB, ARRLSSCW, ARRLSSSSB, COUNTYHUNTER, CQWPXCW, CQWPXSSB, CQWWCW, CQWWSSB, CUPURAL, FOCMARATHON, GRIDLOC, UKEI, IARU, INTERNETSPRINT, IOTA, JALONGPREFECT, KIDSDAY, KVP, MARCONIMEMORIAL, MINITEST, NASPRINTCW, NASPRINTRTTY, NRAUBALTICCW, NRAUBALTICSSB, PACC, QCWA, QCWAGOLDEN, UKRAINECHAMPIONSHIP, DARCXMAS, WAG, XMAS, YOUTHCHAMPIONSHIPRF, LQP, ARKTIKA_SPRING, PCC, DARC10M, SASPRINT, CQIR, BATAVIA_FT8, WWDIGI.
-- 114 literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were
+  `ContestTypeSA` spelling and import cannot resolve it; **44** of them are
+  registered: ALLJA, ARRLDIGI, ARRLDXCW, ARRLDXSSB, ARRLSSCW, ARRLSSSSB, COUNTYHUNTER, CQWPXCW, CQWPXSSB, CQWWCW, CQWWSSB, CROATIAN, CUPURAL, FOCMARATHON, GRIDLOC, UKEI, IARU, INTERNETSPRINT, IOTA, JALONGPREFECT, KIDSDAY, KVP, MARCONIMEMORIAL, MINITEST, NASPRINTCW, NASPRINTRTTY, NRAUBALTICCW, NRAUBALTICSSB, PACC, QCWA, QCWAGOLDEN, UKRAINECHAMPIONSHIP, DARCXMAS, WAG, XMAS, YOUTHCHAMPIONSHIPRF, LQP, ARKTIKA_SPRING, PCC, DARC10M, SASPRINT, CQIR, BATAVIA_FT8, WWDIGI.
+- 116 literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were
   compared with what the exporters emit; **0** differ.
 
 ### 9.4 Shape 1 against shapes 1 + 2, per file (section 8.2)
@@ -1538,8 +1540,8 @@ once here; `Lint-ContestNameTests` counts its contest-naming arms instead (secti
 | `uNewContest.pas:259` | ApplyContestChoice | 2 | 68 |
 | `uNewContest.pas:168` | ApplyIAmIn | 2 | 23 |
 | `trdos/LogCfg.pas:875` | tSetupExchangeNumbers | 1 | 14 |
-| `MainUnit.pas:9966` | ApplyContestSpecificADIFTail | 2 | 13 |
+| `MainUnit.pas:9975` | ApplyContestSpecificADIFTail | 2 | 13 |
 | `uExchangeBuilder.pas:152` | BuildRxExchangeText | 2 | 10 |
 | `trdos/logedit.pas:1014` | EditableLog.GetMultArray | 1 | 4 |
 | `trdos/postunit.pas:2387` | EmitContestSpecificTailForExport | 2 | 2 |
-| `MainUnit.pas:11421` | ProcessImportedSRX_String | 2 | 1 |
+| `MainUnit.pas:11430` | ProcessImportedSRX_String | 2 | 1 |
