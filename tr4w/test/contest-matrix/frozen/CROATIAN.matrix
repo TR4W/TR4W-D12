@@ -2,7 +2,7 @@
 == identity
 contest.requested = 33 CROATIAN
 contest.selected = 33 CROATIAN
-contest.class = (none -- the legacy engine)
+contest.class = TContestCroatian
 == setup
 active.qsopointmethod = CroatianQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -114,7 +114,7 @@ QSO: 14250 PH 2026-01-15 1217 K0AAA   59  KS     G3ABC          59  0
 == identity
 contest.requested = 33 CROATIAN
 contest.selected = 33 CROATIAN
-contest.class = (none -- the legacy engine)
+contest.class = TContestCroatian
 == setup
 active.qsopointmethod = CroatianQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -226,7 +226,7 @@ QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  ON     G3ABC          59  0
 == identity
 contest.requested = 33 CROATIAN
 contest.selected = 33 CROATIAN
-contest.class = (none -- the legacy engine)
+contest.class = TContestCroatian
 == setup
 active.qsopointmethod = CroatianQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH

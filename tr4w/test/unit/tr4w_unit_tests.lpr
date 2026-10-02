@@ -333,6 +333,7 @@ uses
    uContestWAG in '..\..\src\contestFactory\uContestWAG.pas',
    uContestWWDigi in '..\..\src\contestFactory\uContestWWDigi.pas',
    uContestBataviaFT8 in '..\..\src\contestFactory\uContestBataviaFT8.pas',
+   uContestCroatian in '..\..\src\contestFactory\uContestCroatian.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
    uTestContestExport in 'uTestContestExport.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',

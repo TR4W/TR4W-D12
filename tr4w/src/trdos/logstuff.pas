@@ -7308,13 +7308,15 @@ begin
          Band10: RXData.QSOPoints := 3;
        end;
        end;
-         tGetSystemTime;
-          TempHour := UTC.wHour;
+          (* The hour the QSO was RECORDED in, UTC -- never the clock at
+             scoring time (NY4I 2026-10-01, design Q21). CROATIAN itself is
+             scored by TContestCroatian; this arm runs only for an operator's
+             QSO POINT METHOD on a classless contest. *)
+          TempHour := RXData.tSysTime.qtHour;
           if (TempHour >= 23) or (TempHour < 05) then
              begin
-             RxData.QSOPoints := RXData.QSOPoints + RXData.QSOPoints;  
+             RxData.QSOPoints := RXData.QSOPoints + RXData.QSOPoints;
              end;
-          // double points if gmthours
       end;
 
     EuropeanFieldDayQSOPointMethod:
@@ -7892,13 +7894,15 @@ begin
               begin
               RXData.QSOPoints := 4;
               end;
-           tGetSystemTime;
-           TempHour := UTC.wHour;
+           (* The hour the QSO was RECORDED in, UTC -- never the clock at
+              scoring time (NY4I 2026-10-01, design Q21). UKEI itself is
+              scored by TContestUKEI; this arm runs only for an operator's
+              QSO POINT METHOD on a classless contest. *)
+           TempHour := RXData.tSysTime.qtHour;
            if (TempHour >= 01) and (TempHour < 05) then
               begin
               RxData.QSOPoints := RXData.QSOPoints + RXData.QSOPoints;
               end;
-           // double points if gmthours
            end;
 
         case RxData.Band of

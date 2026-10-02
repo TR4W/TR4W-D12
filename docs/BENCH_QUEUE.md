@@ -23,6 +23,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-01 -- NIGHT-TIME RULES READ THE QSO'S TIME, NOT THE CLOCK
+
+Croatian (23:00-04:59 UTC doubles) and UK/EI (01:00-04:59 UTC for a UK/EI
+station) used to read the PC's clock at SCORING time, so a rescore at night
+doubled daytime QSOs. Both now read `ContestExchange.tSysTime`, and live entry
+(`MainUnit.ParametersOkay`) stamps the QSO's time BEFORE scoring it -- without
+that, a fresh record scored as hour 00, inside both windows. Unit tests pin
+the rules; nothing automated drives live entry. To exercise:
+
+- Log a Croatian QSO by day and one at night (or with the clock set): day
+  points by day, doubled at night.
+- Rescore the log at the other time of day: points do NOT change.
+- Same for UK/EI from a G station.
+
+---
+
 ## Added 2026-10-01 -- THE IDAHO QSO PARTY HAS ITS OWN CONTEST
 
 `IDAHOQSOPARTY` is a new contest type with its own class (`uContestIdahoQP`); the

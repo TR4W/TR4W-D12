@@ -108,6 +108,8 @@ type
       procedure Test_SprintSSBIsItsOwnContest;
       procedure Test_LocustScoresItsLegacyArm;
       procedure Test_JockWhiteScoresItsLegacyArm;
+      procedure Test_CroatianDoublesByTheQSOsRecordedHour;
+      procedure Test_UKEIDoublesByTheQSOsRecordedHour;
    public
       procedure RunAllTests; override;
    end;
@@ -1893,6 +1895,11 @@ begin
    CheckAgainstArray(WAG, 'WAG');
    CheckAgainstArray(WWDIGI, 'WW Digi');
    CheckAgainstArray(BATAVIA_FT8, 'Batavia FT8');
+
+   (* CROATIAN GAINED A CLASS WHEN ITS NIGHT DOUBLING MOVED OFF THE CLOCK
+      (design Q21, 2026-10-01). Blank CABName and ADIFName resolve to the
+      enum's spelling, 'CROATIAN'. *)
+   CheckAgainstArray(CROATIAN, 'Croatian DX');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
@@ -2925,6 +2932,167 @@ begin
       end;
 end;
 
+(* A QSO's points from aContest, worked with aCall in aCountry on aContinent,
+   on aBand, RECORDED at aHour:aMinute UTC -- the time a time-of-day rule
+   must read (design Q21). *)
+function PointsAtRecordedTime(aContest: TContestBase; aBand: BandType;
+                              const aCall, aCountry: ShortString;
+                              aContinent: ContinentType;
+                              aHour, aMinute: byte): integer;
+var
+   qso: ContestExchange;
+begin
+   FillChar(qso, SizeOf(qso), 0);
+   qso.Band := aBand;
+   qso.Mode := CW;
+   qso.Callsign := aCall;
+   qso.QTH.CountryID := aCountry;
+   qso.QTH.Continent := aContinent;
+   qso.tSysTime.qtYear := 26;
+   qso.tSysTime.qtMonth := 10;
+   qso.tSysTime.qtDay := 3;
+   qso.tSysTime.qtHour := aHour;
+   qso.tSysTime.qtMinute := aMinute;
+   qso.QSOPoints := 99;
+   aContest.ScoreQSO(qso);
+   Result := qso.QSOPoints;
+end;
+
+(* THE CROATIAN DX CONTEST DOUBLES BY THE HOUR THE QSO WAS RECORDED IN.
+
+   NY4I, 2026-10-01: "the event source is the wall clock recorded in the
+   QSO". The legacy arm read the PC's clock at scoring time, so a rescore at
+   23:30 UTC doubled every QSO. THIS TEST CANNOT PASS IF ANY CLOCK IS READ:
+   it asserts the day value and the night value for the same contact in one
+   run, and whatever hour the machine says, one of the two would be wrong.
+
+   The window is 23:00-04:59 UTC, and both edges are pinned. The rest is the
+   arm transcribed: a DL station working a W on 20 m is 3 (another continent,
+   not 9A); a 9A station's own two steps EXIT before the doubling, so they
+   never double -- which the arm always did, and is kept. *)
+procedure TContestFactoryTests.Test_CroatianDoublesByTheQSOsRecordedHour;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Points(aHour, aMinute: byte): integer;
+   begin
+      Result := PointsAtRecordedTime(obj, Band20, 'W1AW', 'K', NorthAmerica,
+                                     aHour, aMinute);
+   end;
+
+begin
+   BeginTest('Test_CroatianDoublesByTheQSOsRecordedHour');
+   obj := MakeContest(CROATIAN);
+   CheckTrue(obj <> nil, 'Croatian has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckTrue(obj.ClassParent = TContestBase, 'Croatian sits on TContestBase');
+      CheckEquals('TContestCroatian', obj.ClassName, 'Croatian is its own class');
+
+      FillChar(station, SizeOf(station), 0);
+      station.MyCountry := 'DL';
+      station.MyContinent := Europe;
+      obj.SetStation(station);
+
+      CheckEquals(3, Points(12, 0), 'midday: the day value');
+      CheckEquals(3, Points(22, 59), '22:59 is still day');
+      CheckEquals(6, Points(23, 0), '23:00 doubles');
+      CheckEquals(6, Points(0, 0), '00:00 doubles');
+      CheckEquals(6, Points(4, 59), '04:59 still doubles');
+      CheckEquals(3, Points(5, 0), '05:00 is day again');
+
+      (* The other steps, at night, so the doubling is visible. *)
+      CheckEquals(12, PointsAtRecordedTime(obj, Band80, 'W1AW', 'K', NorthAmerica, 2, 0),
+                  'another continent on 80 m: 6, doubled');
+      CheckEquals(2, PointsAtRecordedTime(obj, Band20, 'F5ABC', 'F', Europe, 2, 0),
+                  'our own continent on 20 m: 1, doubled');
+      CheckEquals(2, PointsAtRecordedTime(obj, Band20, '9A1A', '9A', Europe, 2, 0),
+                  'a 9A on our own continent: step 4 overwrites step 3, doubled');
+      CheckEquals(12, PointsAtRecordedTime(obj, Band40, 'W1AW', 'K', NorthAmerica, 2, 0),
+                  'another continent on 40 m: 6, doubled');
+      CheckEquals(1, PointsAtRecordedTime(obj, Band20, '9A1A', '9A', Europe, 12, 0),
+                  'a 9A on our own continent by day: 1');
+      CheckEquals(0, PointsAtRecordedTime(obj, Band30, 'W1AW', 'K', NorthAmerica, 2, 0),
+                  'a band outside the six scores 0, and 0 doubled is 0');
+
+      (* A 9A STATION'S STEPS EXIT BEFORE THE DOUBLING. *)
+      station.MyCountry := '9A';
+      obj.SetStation(station);
+      CheckEquals(1, PointsAtRecordedTime(obj, Band20, '9A1A', '9A', Europe, 2, 0),
+                  '9A working 9A at night: 1, never doubled');
+      CheckEquals(6, PointsAtRecordedTime(obj, Band20, 'W1AW', 'K', NorthAmerica, 2, 0),
+                  '9A working another continent at night: 6, never doubled');
+      CheckEquals(4, PointsAtRecordedTime(obj, Band80, 'DL1ABC', 'DL', Europe, 12, 0),
+                  '9A working Europe on 80 m by day: 4');
+
+      CheckEquals('CROATIAN', obj.CabrilloName, 'Croatian Cabrillo name');
+      CheckEquals('CROATIAN', obj.ADIFContestId, 'Croatian ADIF id');
+      CheckEquals('Croatian DX Contest', obj.FriendlyName, 'Croatian friendly name');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* UK/EI DX DOUBLES A UK OR EI STATION'S POINTS BY THE HOUR THE QSO WAS
+   RECORDED IN -- the same defect and the same fix as Croatian (design Q21).
+   Its window is 01:00-04:59 UTC, both edges pinned, and day and night are
+   asserted in one run so no clock can satisfy both. Only a UK/EI station
+   doubles; 80 and 40 m double again on top. *)
+procedure TContestFactoryTests.Test_UKEIDoublesByTheQSOsRecordedHour;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Points(aHour, aMinute: byte): integer;
+   begin
+      Result := PointsAtRecordedTime(obj, Band20, 'W1AW', 'K', NorthAmerica,
+                                     aHour, aMinute);
+   end;
+
+begin
+   BeginTest('Test_UKEIDoublesByTheQSOsRecordedHour');
+   obj := MakeContest(UKEI);
+   CheckTrue(obj <> nil, 'UK/EI has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyCountry := 'G';
+      station.MyContinent := Europe;
+      obj.SetStation(station);
+
+      CheckEquals(4, Points(12, 0), 'a G working outside Europe at midday: 4');
+      CheckEquals(4, Points(0, 59), '00:59 is still day');
+      CheckEquals(8, Points(1, 0), '01:00 doubles');
+      CheckEquals(8, Points(4, 59), '04:59 still doubles');
+      CheckEquals(4, Points(5, 0), '05:00 is day again');
+      CheckEquals(4, Points(23, 30), '23:30 is day for UK/EI');
+
+      CheckEquals(16, PointsAtRecordedTime(obj, Band40, 'W1AW', 'K', NorthAmerica, 2, 0),
+                  '40 m at night: 4, doubled by the hour, doubled by the band');
+      CheckEquals(8, PointsAtRecordedTime(obj, Band40, 'W1AW', 'K', NorthAmerica, 12, 0),
+                  '40 m by day: doubled by the band only');
+      CheckEquals(4, PointsAtRecordedTime(obj, Band20, 'DL1ABC', 'DL', Europe, 2, 0),
+                  'a G working Europe at night: 2, doubled');
+
+      (* ONLY A UK/EI STATION DOUBLES BY THE HOUR. *)
+      station.MyCountry := 'DL';
+      obj.SetStation(station);
+      CheckEquals(2, PointsAtRecordedTime(obj, Band20, 'W1AW', 'K', NorthAmerica, 2, 0),
+                  'a DL station at night: 2, not doubled');
+      CheckEquals(2, PointsAtRecordedTime(obj, Band20, 'W1AW', 'K', NorthAmerica, 12, 0),
+                  'a DL station by day: 2');
+   finally
+      obj.Free;
+      end;
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -2974,6 +3142,8 @@ begin
    Test_SprintSSBIsItsOwnContest;
    Test_LocustScoresItsLegacyArm;
    Test_JockWhiteScoresItsLegacyArm;
+   Test_CroatianDoublesByTheQSOsRecordedHour;
+   Test_UKEIDoublesByTheQSOsRecordedHour;
 end;
 
 end.

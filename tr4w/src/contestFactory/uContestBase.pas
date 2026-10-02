@@ -116,9 +116,6 @@ type
       DXPhone: TQSOPointOverride;
    end;
 
-   (* A CLOCK, ASKED -- see TStationContext.LogClockUTCHour. *)
-   TClockHourFunction = function: integer;
-
    (* WHAT SCORING KNOWS ABOUT US.
 
       Contest rules are a function of two things: the QSO, and the station
@@ -200,25 +197,15 @@ type
          cannot match with default settings; it is transcribed, not judged. *)
       ContestTitle: string;
 
-      (* THE HOUR OF THE LOGGING CLOCK, UTC -- not the QSO's own hour -- ASKED,
-         NOT COPIED.
+      (* THERE IS NO CLOCK HERE, AND THERE MUST NOT BE ONE.
 
-         Added at M4 for UK/EI DX, whose legacy arm doubles a UK or EI
-         station's points when THIS hour is 01-04: it calls tGetSystemTime and
-         reads the UTC global, which is the wall clock, or the hand-entered
-         time in hand-log mode. That reads like a defect (a rescore at 02:00
-         doubles the whole log) and is recorded as a question for NY4I in the
-         design doc; it is transcribed, not corrected.
-
-         A FUNCTION, BECAUSE READING THE CLOCK HAS A SIDE EFFECT. tGetSystemTime
-         refreshes the program's UTC global, and the station is rebuilt on
-         every ActiveContest request -- copying the hour here would refresh
-         that global for every contest, many times per QSO. The legacy arm read
-         it only for a UK or EI station in this one contest; asking through a
-         function keeps it exactly there. nil -- the zero value, and what a
-         test gets -- means the clock is not known, and the doubling never
-         applies. *)
-      LogClockUTCHour: TClockHourFunction;
+         A time-of-day rule -- Croatian's 23-05 UTC doubling, UK/EI's 01-05 --
+         reads the hour the QSO was RECORDED in, aQso.tSysTime, never the
+         time it is scored at. NY4I, 2026-10-01: "the event source is the wall
+         clock recorded in the QSO." M4 added a LogClockUTCHour function here
+         that asked the PC's clock, transcribing the legacy arms, and a
+         rescore at night doubled a whole log; it is gone (design Q21). The
+         clock is not a fact about the station. *)
    end;
 
    (* THE MY-STATION HALF OF AN EXCHANGE.

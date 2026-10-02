@@ -7083,6 +7083,15 @@ begin
   { Need this in case we exit soon }
   FillChar(RData.Callsign, SizeOf(RData.Callsign), 0);
   RData.ID := GetGUID;
+  (* THE QSO'S TIME, STAMPED BEFORE IT IS SCORED. A time-of-day rule
+     (Croatian, UK/EI) reads the hour the QSO was recorded in, never the
+     clock (NY4I 2026-10-01, design Q21), and this function scores the QSO
+     below -- so it must carry its time here, or a cleared record would
+     score at hour 00. LogContact stamps it again when the QSO is written,
+     as it always has; the two are the same moment to within the seconds
+     between Enter and the write, which is what the old clock read gave
+     live scoring too. *)
+  tGetQSOSystemTime(RData.tSysTime);
   RData.Callsign := Call;
   if (ExchangeString = '') and not (ActiveExchange in [RSTNameAndQTHExchange,
     RSTAndPOTAPark]) then // These two exchanges allow blank exchanges

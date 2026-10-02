@@ -398,9 +398,21 @@ Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
 ### `TStationContext` — what scoring knows about us
 
 `Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`,
-`.MyPower`, `.PointOverrides`, and since M4 `.MyState` (IOTA, PCC),
-`.ContestTitle` (Batavia FT8) and `.LogClockUTCHour` -- a FUNCTION, because
-reading the logging clock refreshes a global (UK/EI DX).
+`.MyPower`, `.PointOverrides`, and since M4 `.MyState` (IOTA, PCC) and
+`.ContestTitle` (Batavia FT8). ~~`.LogClockUTCHour`~~ is **gone** (2026-10-01,
+design Q21) -- see the next paragraph.
+
+**A TIME-OF-DAY RULE READS THE QSO'S RECORDED TIME, NEVER THE CLOCK.** NY4I,
+2026-10-01: *"the event source is the wall clock recorded in the QSO."* Read
+`aQso.tSysTime` (UTC, as stamped when the QSO was logged or read from
+`TIME_ON` on import). A rule that asks the PC's clock scores by when the
+button was pressed: a rescore, an edit, an import or a multi-op merge at
+23:30 UTC doubled every Croatian QSO until it was fixed. `TStationContext`
+carries no clock and must not grow one. The live path stamps the QSO before
+it is scored (`MainUnit.ParametersOkay`), so live scoring sees the same hour.
+Test such a rule on BOTH sides of its window in one run -- no clock can
+satisfy both -- and pin the edges (`Test_CroatianDoublesByTheQSOsRecordedHour`,
+`Test_UKEIDoublesByTheQSOsRecordedHour`).
 
 `MyGrid` arrived with ARRL-DIGI, whose points are a function of BOTH grids and
 only one of them is on the QSO. That is the growth rule the record states: a
@@ -482,12 +494,12 @@ fresh record never frozen, or any byte difference exits 1. A record carrying
 `RUN FAILED` or `RAISED` passes only if it said so when frozen, and is listed on
 every run.
 
-**RUN IT OUTSIDE 23:00-05:00 UTC, or expect CROATIAN to differ** (measured at
-M4, 2026-10-01). The legacy Croatian arm doubles every point when the LOGGING
-CLOCK reads 23:00-04:59 UTC, so a run in that window shows its record with every
-point doubled and nothing else moved -- a clock, not a regression, and never a
-reason to re-freeze. UK/EI DX's class has the same shape of rule for a UK/EI
-station, which no variant exercises (design Q21).
+~~**RUN IT OUTSIDE 23:00-05:00 UTC, or expect CROATIAN to differ**~~ -- **NO
+LONGER TRUE (fixed 2026-10-01, design Q21).** The Croatian and UK/EI night
+rules read the QSO's recorded time, and the matrix stamps its QSOs 12:xx UTC,
+so the run is independent of the time of day. Verified by running it at
+23:45 UTC: CROATIAN differed in `contest.class =` only. A CROATIAN record whose
+points all doubled now means a real regression, not the clock.
 
 Comparing a rescore against the D7 references was tried as a scoring gate and
 rejected: 7 of the 13 logs move when rescored, before any factory work, because

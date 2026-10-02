@@ -1273,7 +1273,9 @@ grew the three fields those arms read: `MyState` (IOTA, PCC), `ContestTitle`
 (Batavia's dead `'YBDXDI-FT8'` test, D7) and `LogClockUTCHour` -- a FUNCTION,
 because UK/EI's arm reads the logging clock through `tGetSystemTime`, which
 refreshes a global; copying the hour into every station refresh would have
-spread that side effect to every contest.
+spread that side effect to every contest. **`LogClockUTCHour` WAS DELETED THE
+SAME DAY** when Q21 was decided: the rule reads the QSO's recorded time, and
+the station context carries no clock.
 
 **DECIDED: POTA and ARRL 160 stay named in PostUnit's ADIF tail.** POTA: see
 §6 -- Q6 is open and its export needs three TRDOS helpers lifted first. ARRL
@@ -1339,10 +1341,10 @@ values doubled and nothing else moved, because the legacy Croatian arm doubles
 points when `tGetSystemTime` reads 23:00-04:59 UTC and the run was at 23:05
 UTC. It is classless and untouched here; it is NOT re-frozen (Q21).
 
-**FINDING: the matrix is wall-clock dependent for CROATIAN** between 23:00
-and 05:00 UTC. Run it outside that window, or expect that record to differ by
-a doubling. UK/EI's class carries the same shape of rule (01-04 UTC, for a
-UK/EI station), which no matrix variant exercises.
+~~**FINDING: the matrix is wall-clock dependent for CROATIAN** between 23:00
+and 05:00 UTC.~~ **FIXED with Q21 (below)**: both rules read the QSO's recorded
+time and the matrix stamps its QSOs 12:xx UTC, so the run no longer depends on
+when it is made. Proved by running it at 23:45 UTC.
 
 **Sponsor-rule questions this raised -- NY4I's, recorded, not acted on:**
 
@@ -1351,10 +1353,44 @@ UK/EI station), which no matrix variant exercises.
 - **Q20** Field Day: a DX station sends a class (`1D DX`), but the export
   writes no ADIF `CLASS` for a DX QSO -- the arm skips every field when the
   QTH is `DX`. Write `CLASS` for DX?
-- **Q21** Two scoring rules read the LOGGING CLOCK, not the QSO's time:
+- ~~**Q21** Two scoring rules read the LOGGING CLOCK, not the QSO's time:
   Croatian (doubles 23:00-04:59 UTC) and UK/EI (a UK/EI station doubles 01-04
   UTC). A rescore at night doubles a whole log. Should both read the QSO's
-  own time?
+  own time?~~ **DECIDED AND FIXED, 2026-10-01.** NY4I: *"the event source is
+  the wall clock recorded in the QSO."* Both rules read `aQso.tSysTime.qtHour`
+  (UTC, stamped by `tGetQSOSystemTime` when the QSO is logged, or read from
+  `TIME_ON` by ADIF import), so rescore, edit, import and a multi-op merge
+  score the hour the QSO happened in. Stage 1 stays pure (§7.7): no clock, no
+  global.
+  - **Croatian gained a class**, `uContestCroatian` on `TContestBase`, with
+    its row (`Test_MovedRowValuesStillMatchTheArray`) and its whole arm
+    transcribed in order -- a 9A station's two steps still `Exit` before the
+    doubling, as they always did. Its only other named site,
+    `FCONTEST.FoundContest`'s `CROATIAN` arm (CQ DXCC for a 9A station), is
+    set-up and waits for M7.
+  - **UK/EI's class** reads the QSO's hour; `TStationContext.LogClockUTCHour`
+    and its plumbing in `uContestFactory` (and that unit's `MainUnit` use)
+    are deleted.
+  - **The two legacy arms in `logstuff`** read `RXData.tSysTime` too. Neither
+    contest reaches them now; an operator's `QSO POINT METHOD` on a classless
+    contest still can, and no scoring path anywhere reads the clock.
+  - **THE LIVE PATH HAD TO MOVE, AND THIS IS THE PART A REVIEW WOULD MISS.**
+    Live scoring (`MainUnit.ParametersOkay`) ran BEFORE `LogContact` stamped
+    the QSO's time, on a cleared record whose hour is 00 -- inside both
+    windows. `ParametersOkay` now stamps `RData.tSysTime` before it scores;
+    `LogContact` stamps again at the write, as it always has. Live scoring
+    therefore reads the same instant the old clock read gave it.
+    **Residual, recorded:** a QSO whose Enter and write straddle an hour
+    boundary (seconds, or longer for a tail-ended QSO) can score by one hour
+    and be recorded in the next -- exactly what live scoring did before; a
+    rescore settles it by the recorded hour.
+  - **Pinned:** `Test_CroatianDoublesByTheQSOsRecordedHour` (22:59 / 23:00 /
+    00:00 / 04:59 / 05:00) and `Test_UKEIDoublesByTheQSOsRecordedHour`
+    (00:59 / 01:00 / 04:59 / 05:00, and only a UK/EI station). Each asserts
+    both sides of its window in one run, so no clock could satisfy both.
+  - **The matrix:** CROATIAN differs in `contest.class =` only (diffed with
+    that line excluded: empty), UK/EI not at all; run at 23:45 UTC, inside
+    the old window.
 - **Q22** PACC: its row says `RSTAndQSONumberOrDomesticQTHExchange`, every
   PACC session runs `RSTDomesticQTHExchange` (FCONTEST's arm). Which should
   the class state when M7 moves the arm?
@@ -1462,7 +1498,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock
-  (Croatian, UK/EI), PACC's row exchange against its session's, and CUP RF
+  (Croatian, UK/EI -- Q21, DECIDED and FIXED 2026-10-01), PACC's row exchange
+  against its session's, and CUP RF
   DIGITAL's received QTH. Stated in full at the end of §8.2e.
 
 **Answered by the ruling, and dropped:** C3 (`CreateOwned...`), C4 (the

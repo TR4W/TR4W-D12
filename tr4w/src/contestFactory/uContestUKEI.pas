@@ -46,15 +46,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING IS UKEIQSOPointMethod, transcribed exactly. Outside Europe: 4 for a
   UK/EI station, 2 for a European, 1 otherwise. In Europe but not UK/EI: 1
   for a non-UK/EI European, 2 otherwise. A UK/EI station: 2 for a European, 4
-  otherwise -- DOUBLED when the logging clock's hour is 01 to 04 UTC. And
+  otherwise -- DOUBLED when the QSO was recorded in hours 01 to 04 UTC. And
   everything doubles again on 80 and 40 m. "UK/EI" is uCallSignRoutines.UKEIStation
   (G, M, 2 or EI), asked of the worked CALLSIGN and of our own COUNTRY.
 
-  THE CLOCK IS THE LOGGING CLOCK, NOT THE QSO'S TIME -- the arm calls
-  tGetSystemTime and reads the UTC global, so a rescore at 02:00 doubles a UK
-  station's whole log. It reads like a defect, is recorded as a question for
-  NY4I (design 8.2e), and is transcribed, not corrected:
-  TStationContext.LogClockUTCHour asks the same clock.
+  THE NIGHT DOUBLING READS THE QSO'S RECORDED TIME, NEVER THE CLOCK. NY4I,
+  2026-10-01: "the event source is the wall clock recorded in the QSO". The
+  legacy arm called tGetSystemTime, so a rescore at 02:00 UTC doubled a UK
+  station's whole log, and M4 first transcribed that through a station-context
+  clock function (design Q21, now fixed). aQso.tSysTime is the UTC time
+  stamped when the QSO was logged, or read from TIME_ON on import: 01:00
+  doubles, 00:59 does not, 04:59 does, 05:00 does not.
 
   THE RECEIVED QTH IS '--' WHEN THE QSO CARRIES NONE. The legacy arm wrote
   that as `if Contest = UKEI` inside the shared
@@ -109,7 +111,7 @@ uses
 
 procedure TContestUKEI.CalculateQSOPoints(var aQso: ContestExchange);
 var
-   clockHour: integer;
+   qsoHour: integer;
 begin
    if Station.MyContinent <> Europe then
       begin
@@ -152,14 +154,11 @@ begin
          aQso.QSOPoints := 4;
          end;
 
-      (* The logging clock -- see the header. Unknown (a test) never
-         doubles. *)
-      clockHour := -1;
-      if Assigned(Station.LogClockUTCHour) then
-         begin
-         clockHour := Station.LogClockUTCHour();
-         end;
-      if (clockHour >= 1) and (clockHour < 5) then
+      (* The hour the QSO was recorded in, UTC -- see the header. Never
+         the clock. *)
+      qsoHour := aQso.tSysTime.qtHour;
+      if (qsoHour >= 1) and
+         (qsoHour < 5)  then
          begin
          aQso.QSOPoints := aQso.QSOPoints + aQso.QSOPoints;
          end;

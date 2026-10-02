@@ -160,8 +160,16 @@ the target shape, the M-step migration order and the open questions.
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog
   writes that setting. A field is added when the first contest needs it
-  (M4 added `MyState`, `ContestTitle` and `LogClockUTCHour` -- the last a
-  FUNCTION, because reading the logging clock refreshes a global).
+  (M4 added `MyState` and `ContestTitle`). **It carries NO clock**:
+  ~~`LogClockUTCHour`~~ is deleted (design Q21).
+- **A time-of-day rule reads the QSO's recorded time, never the clock**
+  (NY4I, 2026-10-01: *"the event source is the wall clock recorded in the
+  QSO"*). `aQso.tSysTime` is UTC, stamped at logging or read from `TIME_ON`.
+  Croatian (23:00-04:59, `uContestCroatian`) and UK/EI (01:00-04:59, a UK/EI
+  station) are the two; their tests assert both sides of the window in one
+  run and pin the edges. `MainUnit.ParametersOkay` stamps the live QSO
+  BEFORE scoring it -- a scoring path that runs before the stamp would see a
+  cleared record's hour 00, which is inside both windows.
 - **A contest formats its own export, and every exporter asks it** (M4,
   2026-10-01). PostUnit's Cabrillo writer and ADIF tail and
   `uADIF.EmitADIFRecord` call `ContestIdentity(c)`; **`FormatsExchange` is
@@ -181,9 +189,10 @@ the target shape, the M-step migration order and the open questions.
   -- the row, AND its scoring arm, because a registered class is that
   contest's scorer from the moment it exists. M4 did that for eleven
   contests; the matrix proved each by changing only `contest.class =`.
-- **The matrix is wall-clock dependent for CROATIAN** between 23:00 and 05:00
-  UTC (its legacy arm doubles points by the logging clock). A doubling there,
-  and nothing else, is the clock -- never re-freeze it (design Q21).
+- ~~**The matrix is wall-clock dependent for CROATIAN**~~ -- **fixed
+  2026-10-01** (design Q21): the matrix is independent of the time of day,
+  verified by a run at 23:45 UTC. A CROATIAN record whose points all doubled
+  is now a real regression.
 
 The contest `.cfg` is **deliberately exempt** from the JSON destination: its
 parameters go to the **contest SQLite database**, not to `settings/tr4w.json`.
