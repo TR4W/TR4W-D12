@@ -332,10 +332,24 @@ uses
    uContestPCC in '..\..\src\contestFactory\uContestPCC.pas',
    uContestWAG in '..\..\src\contestFactory\uContestWAG.pas',
    uContestWWDigi in '..\..\src\contestFactory\uContestWWDigi.pas',
+   uContestCQ160CW in '..\..\src\contestFactory\uContestCQ160CW.pas',
+   uContestCQ160SSB in '..\..\src\contestFactory\uContestCQ160SSB.pas',
+   uContestUBACW in '..\..\src\contestFactory\uContestUBACW.pas',
+   uContestUBASSB in '..\..\src\contestFactory\uContestUBASSB.pas',
+   uContestARRLRTTYRoundup in '..\..\src\contestFactory\uContestARRLRTTYRoundup.pas',
+   uContestCWOps in '..\..\src\contestFactory\uContestCWOps.pas',
+   uContestNAQPCW in '..\..\src\contestFactory\uContestNAQPCW.pas',
+   uContestNAQPSSB in '..\..\src\contestFactory\uContestNAQPSSB.pas',
+   uContestNAQPRTTY in '..\..\src\contestFactory\uContestNAQPRTTY.pas',
+   uContestNCCCSprint in '..\..\src\contestFactory\uContestNCCCSprint.pas',
+   uContestUkrainianDX in '..\..\src\contestFactory\uContestUkrainianDX.pas',
+   uContestOKDX in '..\..\src\contestFactory\uContestOKDX.pas',
+   uContestLZDX in '..\..\src\contestFactory\uContestLZDX.pas',
    uContestBataviaFT8 in '..\..\src\contestFactory\uContestBataviaFT8.pas',
    uContestCroatian in '..\..\src\contestFactory\uContestCroatian.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
    uTestContestExport in 'uTestContestExport.pas',
+   uTestContestImport in 'uTestContestImport.pas',
    uTestRadioLinkRetry in 'uTestRadioLinkRetry.pas',
    (* THE STATUS/NOTICE SPLIT.  It streams uMainForm.lfm -- a designed form
      verified by rebuilding it in code is not verified at all -- so it reaches
@@ -532,6 +546,7 @@ begin
    RegisterSuite(TCabrilloFormatTests.Create('CabrilloFormat'));
    RegisterSuite(TCabrilloExchangeTests.Create('CabrilloExchange'));
    RegisterSuite(TContestExportTests.Create('ContestExport'));
+   RegisterSuite(TContestImportTests.Create('ContestImport'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

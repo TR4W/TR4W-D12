@@ -344,8 +344,6 @@ procedure RunOptionsDialog(f: CFGFunc);
 // the program passes strings, and conversions belong at the real boundary.
 procedure OpenUrl(const url: string);
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
-procedure ProcessImportedSRX_String(fieldValue: string; var exch:
-  ContestExchange);
 // GetContestByADIFName moved to uADIF.pas (Issue #887).
 procedure SetExtendedModeFromMode(RData: ContestExchange);
 function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
@@ -9930,159 +9928,34 @@ end;
 
 // GetADIFMode, GetADIFSubMode, GetADIFBand moved to uADIF.pas (Issue #887).
 
-// ---------------------------------------------------------------------------
-// Contest-specific post-processing for an imported ADIF record.
-//
-// Most ADIF tag-to-ContestExchange mapping is done by uADIF.ApplyADIFFields-
-// ToExchange (a pure function, no MainUnit globals).  But for several
-// contests, the tag-level value needs contest-aware reinterpretation:
-// e.g. for ARRL_RTTY_ROUNDUP, the QTHString is built from RST + STATE in
-// a contest-defined format; for POTA, the QTHString comes from POTA_REF
-// or SIG_INFO depending on which was supplied.
-//
-// This routine takes the temps captured during field mapping and applies
-// the contest-specific logic.  It uses MainUnit-scope globals
-// (currentOperator, ActiveDomesticMult, ActiveExchange, DoingDomesticMults)
-// which is why it stays in MainUnit rather than moving to uADIF.
-// ---------------------------------------------------------------------------
-procedure ApplyContestSpecificADIFTail(const temps: TADIFRecordTemps;
-                                       var exch: ContestExchange);
+(* THE CONTESTS WITH NO CLASS THAT STILL OWN AN ADIF IMPORT RULE -- M5a,
+  2026-10-01.
+
+  EVERY OTHER CONTEST'S RULE IS ITS CLASS'S (TContestBase.ApplyADIFImport, asked
+  by uADIF.ApplyADIFContestImport once the whole record is read) and the
+  classless default is the base's. Two arms stay here, each for a reason that
+  is a missing class and not a missing seam:
+
+    POTA       has no class: whether it becomes one is design Q6, which is
+               NY4I's and open. Its arm calls ResolvePOTAParkFromADIF and
+               LooksLikeAState, TRDOS routines a contest class may not reach.
+    ARRL160    has no class because a class must score it, and its scoring arm
+               asks ZoneCont.DomesticCountryCall -- a CTY lookup against the
+               domestic-country list, which no contest can yet be handed (that
+               list becomes the contest's at M8, design 8.2e).
+
+  Each arm is deleted when its contest gains a class. True when the contest
+  was handled here; False leaves it to its class. *)
+function ApplyClasslessADIFImport(const temps: TADIFRecordTemps;
+                                  var exch: ContestExchange): boolean;
 var
-  j : Integer;
-  (* SRX_STRING with the received RST taken off -- see
-    uADIF.ExchangeFromSRXString. *)
-  srxExchange : string;
   (* The POTA park the record names, or '' -- see ResolvePOTAParkFromADIF. *)
   parkRef : string;
 begin
-  // fix up operator
-  if exch.ceOperator = '' then
-     begin
-     exch.ceOperator := currentOperator;
-     end;
-
-  (* THE RECEIVED RST COMES OFF HERE, ONCE, FOR EVERY CONTEST. The export
-    side prepends it unconditionally (uADIF.ResolveSRXString) to make the
-    field symmetric with STX_STRING, so this is the exact inverse and
-    belongs at the same level -- not in the contest arms, which is where
-    the first two instances of this fault were fixed one at a time. *)
-  if Length(temps.SRX_String) > 0 then
-     begin
-     exch.ExchString := ExchangeFromSRXString(temps.SRX_String,
-                                              exch.RSTReceived);
-     end;
-
+  Result := True;
   case exch.ceContest of
-    GENERALQSO:
-      // Use grid square as exchange for any ADIF source, not just WSJT-X.
-      // WSJT-X does not always include PROGRAMID, so gating on FromWSJTX
-      // caused ExchString to stay empty when PROGRAMID was absent.
-      if temps.GridSquare <> '' then
-         begin
-         exch.ExchString  := temps.GridSquare;
-         exch.QTHString   := temps.GridSquare;
-         exch.DomesticQTH := temps.GridSquare;
-         end;
-
-    WAG:
-      exch.QTHString := temps.SRX_String;
-
-    ARRL160, CQ160CW, CQ160SSB, UBACW, UBASSB:
+    ARRL160:
       exch.DomesticQTH := temps.SRX_String;
-
-    ARRL_RTTY_ROUNDUP:
-      begin
-        logger.Debug('[ParseADIF] exch.QTH.CountryID = %s',
-                     [exch.QTH.CountryID]);
-        if (exch.QTH.CountryID = 'K') or (exch.QTH.CountryID = 'VE') then
-           begin
-           exch.QTHString := IntToStr(exch.RSTReceived) + ' ' + temps.State
-           end
-        else
-           begin
-           exch.QTHString := IntToStr(exch.RSTReceived) + ' ' +
-                             IntToStr(exch.NumberReceived);
-           end;
-        exch.ExchString := exch.QTHString;
-      end;
-
-    ARRLSSCW, ARRLSSSSB, WINTERFIELDDAY, ARRLFIELDDAY:
-      begin
-        (* ARRL_SECT IS NOT ALWAYS THERE, AND AN ABSENT TAG IS NOT AN
-          EMPTY SECTION. D7 writes ARRL_SECT for Sweepstakes and does not
-          write it for Winter Field Day -- that log carries the section in
-          <QTH> alone. Assigning it unconditionally therefore ERASED a
-          section the parser had already read correctly, on 1310 of the
-          1316 QSOs in the corpus's winter_fd set.
-
-          So ARRL_SECT wins when it is present, because it is the
-          unambiguous field; otherwise whatever <QTH> supplied stands, and
-          the domestic multiplier is taken from it. *)
-        if temps.ARRL_Sect <> '' then
-           begin
-           exch.DomesticQTH := temps.ARRL_Sect;
-           exch.QTHString   := temps.ARRL_Sect;
-           end
-        else if exch.QTHString <> '' then
-           begin
-           exch.DomesticQTH := exch.QTHString;
-           end;
-      end;
-
-    CWOPS:
-      exch.Age := StrToIntDef(exch.QTHString, 0);
-
-    CQWWCW, CQWWSSB:
-      begin
-        (* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST
-          and the zone -- because the exporter prepends the RST to make the
-          field symmetric with STX_STRING. The old code stored the whole thing
-          as the QTH and then asked StrToIntDef for a zone, which answered 0
-          because '59 8' is not a number.
-
-          AND A ZONE IS NOT A LOCATION. D7 emits no QTH for these QSOs at all;
-          filling QTHString put a <QTH>59 8 into every re-exported record. The
-          zone has its own field and CQZ already populates it. *)
-        exch.zone := StrToIntDef(ExchangeFromSRXString(temps.SRX_String,
-                                                       exch.RSTReceived), 0);
-      end;
-
-    FOCMARATHON:
-      exch.Power := temps.FOC_Num;
-
-    IARU:
-      begin
-        (* IARU SENDS RST PLUS EITHER A ZONE OR A SOCIETY, and only the society
-          is a QTH. The zone already arrived through ITUZ, and QTHString is what
-          the export tail turns into APP_TR4W_HQ -- so storing a zone here put
-          both a <QTH> and an <APP_TR4W_HQ> of '59 8' into every re-exported
-          record, neither of which D7 wrote.
-
-          The alphabetic test is the one this file already uses to tell a
-          domestic QTH from a number -- see UKRAINIAN, OKDX and LZDX below. *)
-        srxExchange := ExchangeFromSRXString(temps.SRX_String, exch.RSTReceived);
-        if IsAlpha(srxExchange) then
-           begin
-           exch.QTHString := ShortString(srxExchange);
-           end;
-      end;
-
-    NAQSOCW, NAQSOSSB, NAQSORTTY, NCCCSPRINT:
-      begin
-        exch.QTHString   := temps.State;
-        exch.DomesticQTH := temps.State;
-        exch.ExchString  := temps.State;
-      end;
-
-    UKRAINIAN, OKDX, LZDX:
-      if IsAlpha(temps.SRX_String) then
-         begin
-         exch.DomesticQTH := temps.SRX_String
-         end
-      else
-         begin
-         exch.QTHString := temps.SRX_String;
-         end;
 
     POTA:
       begin
@@ -10101,58 +9974,16 @@ begin
          end;
       end;
 
-    WWDIGI, ARRLDIGI:
-      begin
-        exch.ExchString  := temps.GridSquare;
-        exch.DomesticQTH := temps.GridSquare;
-      end;
-
   else
-    if (ActiveDomesticMult = GridSquares) or
-       (ActiveExchange = RSTAndOrGridExchange) or
-       (ActiveExchange = Grid2Exchange) or
-       (ActiveExchange = RSTAndGrid3Exchange) or
-       (ActiveExchange = GridExchange) then
-       begin
-       exch.QTHString   := temps.GridSquare;
-       exch.DomesticQTH := temps.GridSquare;
-       exch.ExchString  := IntToStr(exch.RSTReceived) + ' ' + temps.GridSquare;
-       end
-    else if DoingDomesticMults then
-       begin
-       if exch.QTHString <> '' then
-         // ADIF QTH tag carries the county/state code unambiguously
-         // for state QSO parties.  Prefer it when present -- the
-         // alpha-prefix-of-SRX_STRING heuristic below was already
-         // unreliable, and now fails outright because SRX_STRING is
-         // normalized to include a leading RST ("59 MON") on export.
-          begin
-          exch.DomesticQTH := exch.QTHString
-          end
-       else
-          begin
-          // Legacy fallback for ADIF imports that lack a QTH tag.
-          // Loads DomesticQTH with the ALPHA prefix of SRX_STRING.
-          j := 1;
-          while (j <= Length(temps.SRX_String)) and
-                not (temps.SRX_String[j] in ['0'..'9']) do
-             begin
-             Inc(j);
-             end;
-          exch.DomesticQTH := Copy(temps.SRX_String, 1, j - 1);
-          end;
-       end
-    else
-       begin
-       exch.ExchString := temps.SRX_String;
-       end;
+    Result := False;
   end;
 end;
 
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
 var
-  fields : TADIFFieldList;
-  temps  : TADIFRecordTemps;
+  fields  : TADIFFieldList;
+  temps   : TADIFRecordTemps;
+  session : TADIFImportSession;
 begin
   logger.debug('[ParseADIFRecord] Parsing %s', [sADIF]);
   Result := ParseADIFFieldsList(sADIF, fields);
@@ -10160,7 +9991,19 @@ begin
   // managed to parse -- same forgiving behaviour as the legacy
   // implementation, which logged at error but kept the partial exch.
   ApplyADIFFieldsToExchange(fields, exch, temps);
-  ApplyContestSpecificADIFTail(temps, exch);
+
+  (* WHAT THE OPEN CONTEST KNOWS, handed in as data: the contest that reads the
+    record is the one it NAMES, and never reads a global itself. *)
+  session.Operator           := CurrentOperator;
+  session.Exchange           := ActiveExchange;
+  session.DomesticMult       := ActiveDomesticMult;
+  session.DoingDomesticMults := DoingDomesticMults;
+
+  ApplyADIFCommonImport(temps, session, exch);
+  if not ApplyClasslessADIFImport(temps, exch) then
+     begin
+     ApplyADIFContestImport(temps, session, exch);
+     end;
   // State-QP rover (KG1S/MON): strip suffix for country lookup so /M
   // doesn't get misread as a GB prefix indicator.  Done here (rather
   // than inside uADIF) because the strip uses MainUnit-scope state
@@ -11424,23 +11267,11 @@ begin
 
 end;
 
-procedure ProcessImportedSRX_String(fieldValue: string; var exch:
-  ContestExchange);
-begin
-  case exch.ceContest of
-    ARRLFIELDDAY, WINTERFIELDDAY:
-      begin
-        // parse SRX_STRING of 1A EPA into class 1A and QTHString of EPA
-        logger.debug('Calling ProcessClassAndDomesticOrDXQTHExchange from ProcessImportedSRX_String');
-        ProcessClassAndDomesticOrDXQTHExchange(fieldValue, exch);
-        exch.exchString := fieldValue;
-        if length(exch.DomesticQTH) = 0 then
-           begin
-           exch.DomesticQTH := exch.QTHString;
-           end;
-      end;
-  end; // case
-end;
+(* ProcessImportedSRX_String IS DELETED (M5a, 2026-10-01). It parsed a Field
+  Day SRX_STRING ('1A EPA') into a class and a section, and NOTHING CALLED IT:
+  no caller anywhere in the tree, so a Field Day import never did what it said.
+  Reading a received exchange is the contest's, and arrives as
+  ParseReceivedExchange on the two Field Day classes (M5b, design 3.2). *)
 
 (* IsWin64 IS DELETED (2026-09-08), and it was here TWICE.
 

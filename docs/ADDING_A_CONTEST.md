@@ -358,6 +358,50 @@ round trip (`Test_RoundTripThroughTodaysImport`) for anything that writes ADIF.
 The golden corpus byte-diffs the 13 contests that have a set; the contest
 matrix sees every contest's export.
 
+### How a contest owns its ADIF import (M5a, 2026-10-01)
+
+**IMPORT IS GENERIC FIRST, THEN YOURS.** `uADIF.ApplyADIFFieldsToExchange`
+names no contest: it maps the standard tags (`CALL`, `BAND`, `MODE`, the RSTs,
+`SRX`, `STX`, `QTH`, `CLASS`, `CQZ`/`ITUZ` ...) to the standard fields and
+CAPTURES every tag whose meaning is a contest's into `TADIFRecordTemps` -- the
+raw text, as ADIF carried it. Once the WHOLE record is read, the contest its
+`CONTEST_ID` names interprets them: `TContestBase.ApplyADIFImport(aTemps,
+aSession, var aExch)`. Because it runs after the last tag, **the order a
+logger wrote its tags in cannot change the answer**; the `APP_N1MM_EXCHANGE1`
+arm that read `exch.ceContest` as it went by is the bug that proved why
+(`Test_N1MMTagOrderDoesNotMatter` pins both orders).
+
+- **Do nothing** and you get the base's default -- the old classless `else`:
+  a grid exchange takes `GRIDSQUARE`, a contest with domestic multipliers
+  takes the `QTH` tag (else the letters leading `SRX_STRING`), anything else
+  keeps `SRX_STRING` as the exchange.
+- **Your own rule**: override `ApplyADIFImport` and write the fields your
+  contest keeps. The operator and the received RST are already taken care of
+  for every contest before you are asked (`ApplyADIFCommonImport`): `ExchString`
+  is `SRX_STRING` with the received RST off the front, and `ceOperator` is
+  filled. Call `inherited` only for the cases you do not handle.
+  `uContestARRLSSBase`, `uContestARRLFieldDay`, `uContestCQWWBase`,
+  `uContestIARU`, `uContestUkrainianDX` are examples; **an arm that named
+  several contests is copied into each** (design 1.4).
+- **A tag the generic importer does not capture yet** is a field of
+  `TADIFRecordTemps`, an entry in `TADIF_Fields` and `ADIF_FIELD_NAMES` (their
+  order MUST match), and a `temps.X := fieldValue` arm in `uADIF`. WAG's `DOK`
+  and the RSGB IOTA's `IOTA` were added this way, so the two contests read back
+  what they write.
+- **The session arrives as data** (`TADIFImportSession`: the session's exchange
+  and domestic-multiplier kind, whether it counts domestic multipliers, the
+  operator) -- your class reads no global, so a unit test constructs it and
+  asks. **THE SESSION IS THE OPEN CONTEST'S, NOT NECESSARILY YOURS**: an operator
+  can import another contest's log, and the base's default has always read the
+  session for whatever contest the record names.
+- **Pin it**: `uTestContestImport` for the arm, and a row in
+  `uTestContestExport.Test_RoundTripThroughTodaysImport` for anything you export
+  that you must read back.
+
+Two contests with no class keep an arm in `MainUnit.ApplyClasslessADIFImport`
+for a stated reason each (POTA: design Q6 is open; ARRL 160: its scoring asks
+the domestic-country list). It is deleted when they gain a class.
+
 ### Protected helpers — mechanism, not rules
 
 | helper | for |
@@ -464,14 +508,22 @@ gate and belong in `BENCH_QUEUE.md`.
 | `setup` | the seven `Active*`, the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7 |
 | `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body | M3, M8 |
 | `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
+| `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a, M5b |
 
 One process per contest and variant, because `FoundContest` is not idempotent --
 see the unit header. About five minutes for the whole matrix.
 
-**NOT captured yet: parsing and ADIF import** -- the synthetic QSOs arrive with
-their exchange fields filled, the way a stored QSO does. That is M5's section,
-marked as an extension point in `uContestMatrix`; add and freeze it **before**
-the first parse arm moves.
+**NOT captured yet: PARSING a typed exchange** -- the synthetic QSOs arrive
+with their exchange fields filled, the way a stored QSO does. That is M5b's
+section, marked as an extension point in `uContestMatrix`; add and freeze it
+**before** the first parse arm moves. ADIF import is captured (the `import`
+section above, frozen before M5a moved anything).
+
+**The N1MM cases name a contest that is not the session's** (`ARRL-FIELD-DAY`,
+`FOC MARATHON`, as literal ADIF text): a record is only misread when the contest
+in force at the tag is not the contest the record names. The record that pinned
+the old order bug is `n1mm.fd.before` in the step-1 freeze, and its fix is in
+the re-freeze that followed (design 8.2f).
 
 **It asserts "same as before", never "correct".** The frozen records in
 `tr4w/test/contest-matrix/frozen/` are this program's own output. Defects

@@ -93,6 +93,9 @@ type
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -231,6 +234,20 @@ function TContestRSGBIOTA.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE ISLAND COMES BACK FROM THE IOTA TAG (M5a). Export writes the QSO's
+   DomesticQTH as IOTA (EmitADIFContestFields); a record from another logger has
+   no such tag and is read as every contest without a rule of its own is. *)
+procedure TContestRSGBIOTA.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                           const aSession: TADIFImportSession;
+                                           var aExch: ContestExchange);
+begin
+   inherited ApplyADIFImport(aTemps, aSession, aExch);
+   if aTemps.IOTA <> '' then
+      begin
+      aExch.DomesticQTH := ShortString(aTemps.IOTA);
+      end;
 end;
 
 initialization

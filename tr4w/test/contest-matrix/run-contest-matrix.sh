@@ -21,11 +21,15 @@
 #                           domestic countries, the county-line answer, the CW
 #                           memories), per-QSO points and the fields scoring
 #                           writes, and the Cabrillo CONTEST:/QSO: lines and
-#                           ADIF records the real exporters produce
+#                           ADIF records the real exporters produce, and
+#                           what the ADIF import makes of those records and of
+#                           synthetic foreign-logger ones
 #
-# It does NOT see parsing or ADIF import yet -- the synthetic QSOs carry their
-# exchange fields already filled.  That capture is M5's, and is marked as an
-# extension point in uContestMatrix.
+# It sees ADIF IMPORT (M5a): the records the export wrote, plus synthetic
+# foreign-logger records, read back through the real import path.  It does NOT
+# see PARSING a typed exchange yet -- the synthetic QSOs carry their exchange
+# fields already filled.  That capture is M5b's, and is marked as an extension
+# point in uContestMatrix.
 #
 # ---------------------------------------------------------------------------
 # WHAT A GREEN RUN MEANS, AND WHAT IT DOES NOT

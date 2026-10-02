@@ -61,6 +61,9 @@ type
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -170,6 +173,29 @@ begin
    if aQso.QTHString <> 'DX' then
       begin
       Result := EmitADIFField('ARRL_SECT', string(aQso.QTHString));
+      end;
+end;
+
+(* THE SECTION, FROM ARRL_SECT -- BUT AN ABSENT TAG IS NOT AN EMPTY SECTION.
+   D7 writes ARRL_SECT for Sweepstakes and does not write it for Winter Field
+   Day -- that log carries the section in <QTH> alone. Assigning it
+   unconditionally ERASED a section the generic import had already read
+   correctly, on 1310 of the 1316 QSOs in the corpus's winter_fd set. So
+   ARRL_SECT wins when it is present, because it is the unambiguous field;
+   otherwise whatever <QTH> supplied stands, and the domestic multiplier is
+   taken from it. *)
+procedure TContestARRLSSBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                             const aSession: TADIFImportSession;
+                                             var aExch: ContestExchange);
+begin
+   if aTemps.ARRL_Sect <> '' then
+      begin
+      aExch.DomesticQTH := ShortString(aTemps.ARRL_Sect);
+      aExch.QTHString   := ShortString(aTemps.ARRL_Sect);
+      end
+   else if aExch.QTHString <> '' then
+      begin
+      aExch.DomesticQTH := aExch.QTHString;
       end;
 end;
 

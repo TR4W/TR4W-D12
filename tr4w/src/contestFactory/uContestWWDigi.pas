@@ -96,6 +96,9 @@ type
                                               const aQso: ContestExchange;
                                               const aCtx: TCabrilloQSOContext): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -215,6 +218,15 @@ function TContestWWDigi.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE GRID IS THE EXCHANGE AND THE DOMESTIC QTH. *)
+procedure TContestWWDigi.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                    const aSession: TADIFImportSession;
+                                    var aExch: ContestExchange);
+begin
+   aExch.ExchString  := ShortString(aTemps.GridSquare);
+   aExch.DomesticQTH := ShortString(aTemps.GridSquare);
 end;
 
 initialization

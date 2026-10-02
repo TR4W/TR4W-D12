@@ -1900,6 +1900,27 @@ begin
       (design Q21, 2026-10-01). Blank CABName and ADIFName resolve to the
       enum's spelling, 'CROATIAN'. *)
    CheckAgainstArray(CROATIAN, 'Croatian DX');
+
+   (* THE THIRTEEN THAT GAINED A CLASS AT M5a (2026-10-01), each because its
+      ADIF import rule was an arm of a `case` in the main unit. Most rows have a
+      BLANK CABName and ADIFName, which resolve to the enum's spelling. Two
+      traps: the ARRL RTTY Roundup's row has NO AIE FIELD, so its class does not
+      state one and the InitialExchangeKind comparison is what proves the array
+      still answers; and CWOPS states an ADIFName ('CWOPS-CWT') that is not its
+      spelling. *)
+   CheckAgainstArray(CQ160CW, 'CQ 160 CW');
+   CheckAgainstArray(CQ160SSB, 'CQ 160 SSB');
+   CheckAgainstArray(UBACW, 'UBA CW');
+   CheckAgainstArray(UBASSB, 'UBA SSB');
+   CheckAgainstArray(ARRL_RTTY_ROUNDUP, 'ARRL RTTY Roundup');
+   CheckAgainstArray(CWOPS, 'CWOPS CWT');
+   CheckAgainstArray(NAQSOCW, 'NAQP CW');
+   CheckAgainstArray(NAQSOSSB, 'NAQP SSB');
+   CheckAgainstArray(NAQSORTTY, 'NAQP RTTY');
+   CheckAgainstArray(NCCCSPRINT, 'NCCC Sprint');
+   CheckAgainstArray(UKRAINIAN, 'Ukrainian DX');
+   CheckAgainstArray(OKDX, 'OK/OM DX');
+   CheckAgainstArray(LZDX, 'LZ DX');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked

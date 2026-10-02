@@ -84,6 +84,9 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -211,6 +214,22 @@ function TContestWAG.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* WAG WRITES ITS DOK AS THE DOK TAG AND READS IT BACK (M5a). Export puts the
+   QSO's QTHString in DOK (EmitADIFContestFields), so a record that carries one
+   gets it back as the QTH -- the round trip the design asks of every class.
+   A record from another logger has no DOK, and keeps what this arm has always
+   done: SRX_STRING as the QTH. *)
+procedure TContestWAG.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                      const aSession: TADIFImportSession;
+                                      var aExch: ContestExchange);
+begin
+   aExch.QTHString := ShortString(aTemps.SRX_String);
+   if aTemps.DOK <> '' then
+      begin
+      aExch.QTHString := ShortString(aTemps.DOK);
+      end;
 end;
 
 initialization

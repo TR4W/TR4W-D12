@@ -132,8 +132,27 @@ multipliers, CTY.DAT, band lookup and CRC32.
   beside each. A contest-field change shows in the corpus only for the 13
   sets; the contest matrix sees every contest, and
   `uTestContestExport.Test_RoundTripThroughTodaysImport` pins export against
-  today's import (WAG's DOK and the RSGB IOTA's IOTA are exported and not
-  imported -- M5's).
+  import, WAG's DOK and the RSGB IOTA's IOTA included (M5a: both are read
+  back by their classes).
+- **THE ADIF IMPORT IS GENERIC FIRST, THEN THE CONTEST'S (M5a, 2026-10-01).**
+  `uADIF.ApplyADIFFieldsToExchange` is contest-blind: it maps the standard tags
+  and captures every tag whose meaning is the contest's into
+  `TADIFRecordTemps` (a record that lives in `uContestBase` and is aliased in
+  `uADIF`). After the WHOLE record is read, `ApplyADIFCommonImport` does what
+  every contest wants (the operator, the received RST off SRX_STRING) and
+  `ApplyADIFContestImport` asks `ContestIdentity(exch.ceContest).ApplyADIFImport`
+  -- the base's default is the old classless `else`, keyed on a
+  `TADIFImportSession` handed in as DATA (the session's exchange, multiplier
+  kind and operator; the contest reads no global). **Do not read
+  `exch.ceContest` inside `ApplyADIFFieldsToExchange`**: ADIF fixes no field
+  order, and the `APP_N1MM_EXCHANGE1` arm that did is the order bug this
+  replaced (`uTestContestImport.Test_N1MMTagOrderDoesNotMatter`). A new tag
+  whose meaning is a contest's is a field of `TADIFRecordTemps` plus the enum
+  entry and name in `uADIF`, and the interpretation goes in that class. Two
+  classless contests still own an arm in `MainUnit.ApplyClasslessADIFImport`
+  (POTA: design Q6; ARRL 160: its scoring needs the domestic-country list), and
+  it is deleted when each gains a class. The contest matrix has an `== import`
+  section (design 8.2f): a change to import shows there for every contest.
 - **`StateFromARRLSection` (`uARRLSections`) is the one section-to-state
   table** -- PostUnit's and Tree's layered copies were merged into it at M4.
 - **CTY.DAT reloads.** A reload wrote past the end of the country table

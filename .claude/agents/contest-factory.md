@@ -124,7 +124,7 @@ the target shape, the M-step migration order and the open questions.
 - **The dupe policy is `MarksDupes`** (M3): `logsubs2` asks
   `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. The other
   secondary point-method readers wait for their seams: exchange parsing (RAC,
-  PCC, Arktika) and RussianDX's initial exchange at M5, `logedit.TotalScore`'s
+  PCC, Arktika) and RussianDX's initial exchange at M5b, `logedit.TotalScore`'s
   five formulas at M6 (design §2).
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(c)` answers for EVERY `ContestType` --
@@ -185,10 +185,24 @@ the target shape, the M-step migration order and the open questions.
   that only changes an input copies the context and calls `inherited`.
   POTA and ARRL 160 are still named in PostUnit's tail, each for a recorded
   reason; CUP RF's his-QTH, LABRE/EURASIA and the `'TRC'`/`'PGA'` tests too.
+- **A contest interprets its own ADIF import** (M5a, 2026-10-01).
+  `TContestBase.ApplyADIFImport(aTemps, aSession, var aExch)` is the other
+  half of `EmitADIFContestFields`: the generic importer captures, the contest
+  named by `CONTEST_ID` interprets once the whole record is read, so tag order
+  cannot matter. The base's default is the old classless `else` (grid kinds,
+  then the domestic QTH, then raw SRX_STRING), keyed on the session data
+  passed in -- never a global. An override states its contest's rule and calls
+  `inherited` only for the cases it does not handle. Class arms that named
+  several contests were copied into each (design 1.4), and the Field Days
+  carry N1MM's class tag (standard `CLASS` wins, N1MM fills a gap). Thirteen
+  contests gained classes for this: CQ 160 CW/SSB, UBA CW/SSB, the ARRL RTTY
+  Roundup, CWOPS, NAQP CW/SSB/RTTY, the NCCC Sprint, Ukrainian DX, OK/OM DX and
+  LZ DX. POTA and ARRL 160 keep their arm in `MainUnit.ApplyClasslessADIFImport`.
 - **Creating a class to hold ONE rule means transcribing the whole contest**
   -- the row, AND its scoring arm, because a registered class is that
   contest's scorer from the moment it exists. M4 did that for eleven
-  contests; the matrix proved each by changing only `contest.class =`.
+  contests and M5a for thirteen; the matrix proved each by changing only
+  `contest.class =`.
 - ~~**The matrix is wall-clock dependent for CROATIAN**~~ -- **fixed
   2026-10-01** (design Q21): the matrix is independent of the time of day,
   verified by a run at 23:45 UTC. A CROATIAN record whose points all doubled

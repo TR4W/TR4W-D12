@@ -45,6 +45,7 @@ type
       procedure Test_RoverAndMobile;
       procedure Test_RootCall_Simple;
       procedure Test_CountryPredicates;
+      procedure Test_FrenchID;
       procedure Test_SimilarCall;
       procedure Test_StandardCallFormat;
    end;
@@ -306,6 +307,23 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// FrenchID: F, TM and TK. Design defect #6, fixed at M5a: an EMPTY id raised a
+// range error (ID[1]), and both REF callers hand it a QTH.CountryID that is
+// empty whenever the country lookup found nothing.
+// ---------------------------------------------------------------------------
+procedure TCallSignRoutinesTests.Test_FrenchID;
+begin
+   BeginTest('Test_FrenchID');
+   CheckFalse(FrenchID(''),   'an empty id is not French, and does not raise');
+   CheckTrue(FrenchID('F'),   'F');
+   CheckTrue(FrenchID('FR'),  'any id starting with F');
+   CheckTrue(FrenchID('TM'),  'TM');
+   CheckTrue(FrenchID('TK'),  'TK');
+   CheckFalse(FrenchID('T'),  'T alone is not');
+   CheckFalse(FrenchID('DL'), 'DL is not');
+end;
+
+// ---------------------------------------------------------------------------
 // SimilarCall: true when two calls differ in <=1 position ('?' is a wildcard),
 // or one contains the other. Portable designators are stripped first.
 // ---------------------------------------------------------------------------
@@ -349,6 +367,7 @@ begin
    Test_RoverAndMobile;
    Test_RootCall_Simple;
    Test_CountryPredicates;
+   Test_FrenchID;
    Test_SimilarCall;
    Test_StandardCallFormat;
 end;

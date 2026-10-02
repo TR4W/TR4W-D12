@@ -243,7 +243,12 @@ begin
 end;
 function FrenchID(ID: string): boolean;
 begin
-  Result := (ID[1] = 'F') or (ID = 'TM') or (ID = 'TK');
+  (* AN EMPTY ID IS NOT FRENCH, AND ASKING MUST NOT RAISE (design defect #6,
+    fixed M5a). ID[1] on an empty string is a range error, and both callers
+    hand this a QTH.CountryID that is empty whenever the country lookup found
+    nothing -- a call the cty file does not know, or a record that never had
+    one looked up. The REF scoring arm and the REF exchange parser both ask. *)
+  Result := ((Length(ID) > 0) and (ID[1] = 'F')) or (ID = 'TM') or (ID = 'TK');
 end;
 function RussianID(ID: string): boolean;
 begin

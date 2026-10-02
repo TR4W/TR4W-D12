@@ -67,11 +67,15 @@ type
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
 
 uses
+   uADIF,
    SysUtils;
 
 (* THE EXCHANGE IS RST AND A CQ ZONE, zero-padded to two digits.
@@ -138,6 +142,23 @@ begin
       begin
       aQso.QSOPoints := 0;
       end;
+end;
+
+(* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST and the
+   zone -- because the exporter prepends the RST to make the field symmetric
+   with STX_STRING. The old code stored the whole thing as the QTH and then
+   asked StrToIntDef for a zone, which answered 0 because '59 8' is not a
+   number.
+
+   AND A ZONE IS NOT A LOCATION. D7 emits no QTH for these QSOs at all;
+   filling QTHString put a <QTH>59 8 into every re-exported record. The zone
+   has its own field and CQZ already populates it. *)
+procedure TContestCQWWBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                           const aSession: TADIFImportSession;
+                                           var aExch: ContestExchange);
+begin
+   aExch.Zone := StrToIntDef(ExchangeFromSRXString(aTemps.SRX_String,
+                                                   aExch.RSTReceived), 0);
 end;
 
 end.

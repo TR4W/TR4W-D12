@@ -298,7 +298,14 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # Str20, and uCabrilloExchange's dead JIDX branch handed MY STATE to
 # StrToIntDef. The section table is one string-typed function in
 # uARRLSections now, with a native lookup, and the JIDX branch is deleted.
-$NARROW_CEILING = 1331
+# 1331 -> 1306, 2026-10-01: M5a, each contest interprets its own ADIF import.
+# The arms of MainUnit's ApplyContestSpecificADIFTail (and the dead
+# ProcessImportedSRX_String) assigned UnicodeStrings straight into Str10 and
+# Str40 fields; the same assignments now live on the classes and the base's
+# default as explicit ShortString conversions, which is the deliberate form
+# this file asks for -- so thirteen new classes copying an arm each (design
+# 1.4) added no warning, and the sites that moved took theirs with them.
+$NARROW_CEILING = 1306
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

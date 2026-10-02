@@ -95,6 +95,9 @@ type
          THE ROW IS NOT DELETED AND MUST NOT BE. It still answers for every
          contest that has no class, and TContestBase still reads it for the ones
          that do not override. *)
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -270,6 +273,15 @@ end;
 function TContestARRLDigi.EmitADIFContestFields(const aQso: ContestExchange): string;
 begin
    Result := EmitADIFField('GRIDSQUARE', string(aQso.QTHString));
+end;
+
+(* THE GRID IS THE EXCHANGE AND THE DOMESTIC QTH. *)
+procedure TContestARRLDigi.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                    const aSession: TADIFImportSession;
+                                    var aExch: ContestExchange);
+begin
+   aExch.ExchString  := ShortString(aTemps.GridSquare);
+   aExch.DomesticQTH := ShortString(aTemps.GridSquare);
 end;
 
 initialization

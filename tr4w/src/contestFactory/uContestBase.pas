@@ -281,6 +281,71 @@ type
       ContestTitle: string;
    end;
 
+   (* WHAT THE GENERIC ADIF IMPORTER CAPTURED FOR THE CONTEST TO INTERPRET --
+      M5a, 2026-10-01.
+
+      THE IMPORTER NAMES NO CONTEST. uADIF.ApplyADIFFieldsToExchange maps the
+      standard tags to the standard fields (CALL, BAND, MODE, RST, SRX, STX,
+      QTH, CLASS, CQZ/ITUZ and the rest) and puts every tag whose MEANING
+      depends on the contest here, as the raw text ADIF carried. Once the
+      WHOLE record has been read -- so the order its tags arrived in no longer
+      matters -- the contest named by its CONTEST_ID turns these into the
+      fields it keeps, through ApplyADIFImport below.
+
+      TAG SPELLINGS ARE ADIF'S, AND MEANINGS ARE THE CONTEST'S: STATE is a US
+      state to one contest, the second half of the exchange to another, and a
+      NAQP multiplier to a third.
+
+      A RECORD HERE AS ELSEWHERE IN THIS UNIT BECAUSE IT IS AN INTERFACE
+      PARAMETER -- the argument of a virtual. It lived in uADIF until M5a;
+      uADIF re-exports it under its old name so no caller moves. *)
+   TADIFRecordTemps = record
+      SRX_String: string;
+      STX_String: string;
+      State: string;
+      ARRL_Sect: string;
+      VE_Prov: string;
+      POTARef: string;
+      SIG: string;
+      SIG_Info: string;
+      GridSquare: string;
+      FOC_Num: string;
+      APP_HQ: string;
+
+      (* The WAG DOK and the RSGB IOTA island: written by those contests'
+         exporters and, until M5a, read by nothing. *)
+      DOK: string;
+      IOTA: string;
+
+      (* APP_N1MM_EXCHANGE1, the tag N1MM writes the contest's own exchange
+         item into: a class for the Field Days, a membership number for the
+         FOC Marathon. WHICH, is the contest's to say -- and the tag can arrive
+         before or after CONTEST_ID, which is why it is captured and not read
+         as it goes by. *)
+      N1MM_Exchange1: string;
+
+      FromWSJTX: boolean;
+   end;
+
+   (* WHAT THE IMPORT KNOWS ABOUT THE SESSION IT RUNS IN.
+
+      THE CONTEST READS NO GLOBAL, SO THE IMPORTER HANDS THESE IN AS DATA --
+      the way TCabrilloQSOContext hands the exporter's decisions to a contest.
+      They are the engine's own answers for the contest the OPERATOR has open,
+      which is not necessarily the contest a record names (an operator can
+      import another contest's log into this one), and the classless default
+      below has always read them for whatever contest the record names. That
+      is reproduced, not corrected.
+
+      Operator is the logging operator -- a record with none gets it, for every
+      contest, before the contest is asked. *)
+   TADIFImportSession = record
+      Operator: OperatorType;
+      Exchange: ExchangeType;
+      DomesticMult: DomesticMultType;
+      DoingDomesticMults: boolean;
+   end;
+
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
    TContestIdList = array of string;
 
@@ -753,6 +818,34 @@ type
          The base writes nothing -- uADIF.EmitADIFRecord has already written
          the generic QTH, which is all most contests have ever exported. *)
       function EmitADIFContestFields(const aQso: ContestExchange): string; virtual;
+
+      (* THE CONTEST INTERPRETS AN IMPORTED ADIF RECORD -- M5a, 2026-10-01.
+
+         The other half of EmitADIFContestFields: export turns the QSO into
+         tags, this turns the tags back into the QSO. Asked by
+         uADIF.InterpretADIFRecord after the WHOLE record is read, the standard
+         tags are already in aExch, the operator and the received RST have
+         already been taken care of for every contest, and aTemps holds the raw
+         text of every tag whose meaning is the contest's.
+
+         WHAT AN OVERRIDE WRITES is the received exchange: ExchString,
+         QTHString, DomesticQTH, the class, the zone, the age -- whatever its
+         contest keeps. aExch.ceContest is this contest, because that is how
+         it was chosen.
+
+         THE BASE IS THE CLASSLESS FALLBACK, which is the arm
+         MainUnit.ApplyContestSpecificADIFTail ended in until M5a: a grid
+         exchange takes the grid, a contest with domestic multipliers takes
+         the QTH tag (else the letters leading SRX_STRING), anything else
+         keeps SRX_STRING as the exchange. It keys on the SESSION's exchange
+         and multiplier kind (aSession), for the reason TCabrilloQSOContext
+         records: the session's answer is the engine's, and varies per
+         station. An override states its contest's own rule and does not call
+         inherited unless it wants this fallback for the cases it does not
+         handle. *)
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); virtual;
 
       (* Hands the contest the station it is operating as.
 
@@ -1256,6 +1349,57 @@ function TContestBase.EmitADIFContestFields(const aQso: ContestExchange): string
 begin
    (* Nothing beyond the generic QTH uADIF has already written. *)
    Result := '';
+end;
+
+procedure TContestBase.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                       const aSession: TADIFImportSession;
+                                       var aExch: ContestExchange);
+var
+   j: integer;
+begin
+   (* THE CLASSLESS FALLBACK, transcribed from the `else` of
+      MainUnit.ApplyContestSpecificADIFTail. The first test is a list of
+      session kinds and the last two are the session's multiplier flag, so
+      none of it names a contest. *)
+   if (aSession.DomesticMult = GridSquares)                 or
+      (aSession.Exchange = RSTAndOrGridExchange)            or
+      (aSession.Exchange = Grid2Exchange)                   or
+      (aSession.Exchange = RSTAndGrid3Exchange)             or
+      (aSession.Exchange = GridExchange)                    then
+      begin
+      aExch.QTHString   := ShortString(aTemps.GridSquare);
+      aExch.DomesticQTH := ShortString(aTemps.GridSquare);
+      aExch.ExchString  := ShortString(IntToStr(aExch.RSTReceived) + ' ' +
+                                       aTemps.GridSquare);
+      end
+   else if aSession.DoingDomesticMults then
+      begin
+      if aExch.QTHString <> '' then
+         begin
+         (* The ADIF QTH tag carries the county or state code unambiguously
+            for state QSO parties. Prefer it when present: the alpha-prefix
+            of SRX_STRING below was already unreliable, and now fails
+            outright because SRX_STRING is normalised to include a leading
+            RST ("59 MON") on export. *)
+         aExch.DomesticQTH := aExch.QTHString;
+         end
+      else
+         begin
+         (* Legacy fallback for an import that lacks a QTH tag: the ALPHA
+            prefix of SRX_STRING. *)
+         j := 1;
+         while (j <= Length(aTemps.SRX_String)) and
+               not (aTemps.SRX_String[j] in ['0'..'9']) do
+            begin
+            Inc(j);
+            end;
+         aExch.DomesticQTH := ShortString(Copy(aTemps.SRX_String, 1, j - 1));
+         end;
+      end
+   else
+      begin
+      aExch.ExchString := ShortString(aTemps.SRX_String);
+      end;
 end;
 
 function TContestBase.GetADIFPowerTag: string;

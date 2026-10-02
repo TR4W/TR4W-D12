@@ -100,6 +100,9 @@ type
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -233,6 +236,28 @@ function TContestFOCMarathon.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE MEMBERSHIP NUMBER, FROM FOC_NUM -- or from N1MM's APP_N1MM_EXCHANGE1
+   when the record has no FOC_NUM (M5a).
+
+   Export writes the number as FOC_NUM (ADIFPowerTag). The old import read N1MM's
+   tag into Power as the tag went by and then OVERWROTE it with FOC_NUM, empty
+   or not, so a record that carried only N1MM's tag came in with no number in
+   either tag order. The tag now counts, and a record with neither still comes
+   in with an empty number, as before. *)
+procedure TContestFOCMarathon.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                              const aSession: TADIFImportSession;
+                                              var aExch: ContestExchange);
+begin
+   if (aTemps.FOC_Num = '') and (aTemps.N1MM_Exchange1 <> '') then
+      begin
+      aExch.Power := ShortString(aTemps.N1MM_Exchange1);
+      end
+   else
+      begin
+      aExch.Power := ShortString(aTemps.FOC_Num);
+      end;
 end;
 
 initialization

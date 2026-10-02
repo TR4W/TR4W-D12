@@ -113,7 +113,13 @@ $CEILINGS = @{
    # M4, 2026-10-01 -- each contest formats its own export: postunit 26 -> 15,
    # uadif 4 -> 3, uadifexchange 5 -> 0 and ucabrilloexchange 11 -> 0 (both
    # unlisted now, so their ceiling is 0 and any contest test fails them).
-   'mainunit.pas'          = 26
+   #
+   # M5a, 2026-10-01 -- each contest interprets its own ADIF import:
+   # mainunit 26 -> 14 (the twelve arms of ApplyContestSpecificADIFTail and the
+   # Field Day arm of the dead ProcessImportedSRX_String went; what remains is
+   # ARRL 160 and POTA, the two contests with no class that still own an import
+   # arm) and uadif 3 -> 1 (the two APP_N1MM_EXCHANGE1 tests).
+   'mainunit.pas'          = 14
    'trdos\fcontest.pas'    = 107
    'trdos\logcfg.pas'      = 14
    'trdos\logdupe.pas'     = 5
@@ -122,7 +128,7 @@ $CEILINGS = @{
    'trdos\logsubs2.pas'    = 4
    'trdos\logwind.pas'     = 1
    'trdos\postunit.pas'    = 15
-   'uadif.pas'             = 3
+   'uadif.pas'             = 1
    'uexchangebuilder.pas'  = 11
    'unewcontest.pas'       = 92
    'utotal.pas'            = 5

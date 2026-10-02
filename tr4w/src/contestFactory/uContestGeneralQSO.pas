@@ -59,6 +59,9 @@ type
       function FormatADIFSentExchange(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -114,6 +117,22 @@ begin
    (* An operating mode, not a contest -- see the note above
       FormatCabrilloSentExchange. *)
    Result := False;
+end;
+
+(* THE GRID IS THE EXCHANGE, for any ADIF source -- not just WSJT-X, which does
+   not always include PROGRAMID. Gating on that flag left ExchString empty
+   when PROGRAMID was absent. A record with no grid keeps what the generic
+   import gave it: this contest has no other rule. *)
+procedure TContestGeneralQSO.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                             const aSession: TADIFImportSession;
+                                             var aExch: ContestExchange);
+begin
+   if aTemps.GridSquare <> '' then
+      begin
+      aExch.ExchString  := ShortString(aTemps.GridSquare);
+      aExch.QTHString   := ShortString(aTemps.GridSquare);
+      aExch.DomesticQTH := ShortString(aTemps.GridSquare);
+      end;
 end;
 
 initialization

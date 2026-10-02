@@ -80,11 +80,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                (ExportToADIF, CreateCabrilloFile): the Cabrillo CONTEST: and
                QSO: lines, and every ADIF record after <EOH>
 
-  M5 EXTENSION POINT -- NOT CAPTURED YET. Parsing (ProcessExchange over a typed
-  exchange) and ADIF import interpretation are not exercised: the synthetic
-  QSOs carry their exchange fields already filled, the way a STORED QSO does.
-  Add a "parse" section beside "scoring" when M5 starts, freeze it BEFORE the
-  first arm moves, and say so in docs/ADDING_A_CONTEST.md section 4.
+    import     (M5a) ADIF records read back through the real import path
+               (MainUnit.ParseADIFRecord, the routine ImportFromADIF and the
+               WSJT-X reader call): the records the export above just wrote,
+               plus synthetic FOREIGN-LOGGER records carrying the
+               contest-dependent tags. Every ContestExchange field the import
+               set is recorded.
+
+  M5b EXTENSION POINT -- NOT CAPTURED YET. Parsing a TYPED exchange
+  (ProcessExchange) is not exercised: the synthetic QSOs carry their exchange
+  fields already filled, the way a STORED QSO does. Add a "parse" section
+  beside "import" when M5b starts, and freeze it BEFORE the first arm moves.
 
   NOT CAPTURED, deliberately: Cabrillo header lines other than CONTEST: (they
   carry the build version and the totals, which belong to M6/M9), and the
@@ -134,6 +140,7 @@ uses
    uSettingsModel,
    uContestBase,
    uContestFactory,
+   uContestRegistry,
    uContestStateQSOPartyBase,
    uLogStore,
    uCrashLog,     (* EarlyTrace -- /MATRIXLIST runs before tr4w.log is configured *)
@@ -208,6 +215,9 @@ var
    GOut: TStringList;
    GLogDir: string;
    GDataDir: string;
+   (* THE ADIF FILE CaptureExport WROTE, for the import capture to read back.
+     '' when the export wrote none. *)
+   GExportedAdif: string;
 
 
 (* THE COMPILER'S OWN NAME FOR AN ENUMERATED VALUE.
@@ -765,6 +775,7 @@ begin
       begin
       EmitExportedLines('export.adif', adifFile, True);
       end;
+   GExportedAdif := adifFile;
 
    try
       CreateCabrilloFile;
@@ -780,6 +791,275 @@ begin
       begin
       EmitExportedLines('export.cabrillo', cabrilloFile, False);
       end;
+end;
+
+(* ------------------------------------------------------------------------ *)
+(* /MATRIX -- import (M5a)                                                  *)
+(* ------------------------------------------------------------------------ *)
+
+(* EVERY FIELD THE IMPORT PATH CAN SET, as name=value parts. Two exchanges are
+  described by the same routine, so the parts line up by position and a field
+  the import set is the part that differs from a CLEARED exchange -- which is
+  how a record stays short without this file listing what each contest
+  writes. *)
+procedure DescribeExchange(const aRX: ContestExchange; aParts: TStringList);
+
+   procedure Part(const aName, aValue: string);
+   begin
+      aParts.Add(AnsiString(aName + '=' + aValue));
+   end;
+
+   (* A NUL IS "NOT SET", and a one-character field is written as the character. *)
+   function CharText(aChar: AnsiChar): string;
+   begin
+      if Ord(aChar) = 0 then
+         begin
+         Result := '';
+         end
+      else
+         begin
+         Result := string(aChar);
+         end;
+   end;
+
+begin
+   Part('contest', EnumText(TypeInfo(ContestType), Ord(aRX.ceContest)));
+   Part('call', string(aRX.Callsign));
+   Part('band', EnumText(TypeInfo(BandType), Ord(aRX.Band)));
+   Part('mode', EnumText(TypeInfo(ModeType), Ord(aRX.Mode)) + '/' +
+                EnumText(TypeInfo(ExtendedModeType), Ord(aRX.ExtMode)));
+   Part('freq', IntToStr(aRX.Frequency));
+   Part('time', Format('%.2d%.2d%.2d %.2d%.2d%.2d',
+                       [aRX.tSysTime.qtYear, aRX.tSysTime.qtMonth, aRX.tSysTime.qtDay,
+                        aRX.tSysTime.qtHour, aRX.tSysTime.qtMinute, aRX.tSysTime.qtSecond]));
+   Part('rst.sent', IntToStr(aRX.RSTSent));
+   Part('rst.rcvd', IntToStr(aRX.RSTReceived));
+   Part('nr.sent', IntToStr(aRX.NumberSent));
+   Part('nr.rcvd', IntToStr(aRX.NumberReceived));
+   Part('tenten', IntToStr(aRX.TenTenNum));
+   Part('zone', IntToStr(aRX.Zone));
+   Part('qth', string(aRX.QTHString));
+   Part('domqth', string(aRX.DomesticQTH));
+   Part('dommultqth', string(aRX.DomMultQTH));
+   Part('exch', string(aRX.ExchString));
+   Part('class', string(aRX.ceClass));
+   Part('check', IntToStr(aRX.Check));
+   Part('prec', CharText(aRX.Precedence));
+   Part('name', string(aRX.Name));
+   Part('power', string(aRX.Power));
+   Part('age', IntToStr(aRX.Age));
+   Part('chapter', string(aRX.Chapter));
+   Part('operator', CharBufferText(aRX.ceOperator));
+   Part('id', string(aRX.id));
+   Part('xqso', BoolText(aRX.ceXQSO));
+   Part('cty', string(aRX.QTH.CountryID) + '/' + IntToStr(aRX.QTH.Zone) + '/' +
+               EnumText(TypeInfo(ContinentType), Ord(aRX.QTH.Continent)) + '/' +
+               string(aRX.QTH.Prefix));
+   Part('prefix', string(aRX.Prefix));
+   Part('dxqth', string(aRX.DXQTH));
+end;
+
+(* ONE RECORD THROUGH THE PATH ImportFromADIF TAKES: a cleared exchange (which
+  carries the SESSION's contest), then MainUnit.ParseADIFRecord. The result is
+  every field that moved off a cleared exchange. *)
+procedure ImportOne(const aLabel, aAdif: string);
+var
+   rx: ContestExchange;
+   blank: ContestExchange;
+   parts: TStringList;
+   blankParts: TStringList;
+   ok: boolean;
+   i: integer;
+   line: string;
+begin
+   parts := TStringList.Create;
+   blankParts := TStringList.Create;
+   try
+      try
+         ClearContestExchange(blank);
+         DescribeExchange(blank, blankParts);
+         ClearContestExchange(rx);
+         ok := ParseADIFRecord(aAdif, rx);
+         DescribeExchange(rx, parts);
+         line := '';
+         for i := 0 to parts.Count - 1 do
+            begin
+            if parts[i] <> blankParts[i] then
+               begin
+               line := line + ' ' + string(parts[i]);
+               end;
+            end;
+         Emit('imp ' + aLabel + ' | parsed=' + BoolText(ok) + line);
+      except
+         on E: Exception do
+            begin
+            EmitRaised('import ' + aLabel, E);
+            end;
+      end;
+   finally
+      parts.Free;
+      blankParts.Free;
+   end;
+end;
+
+(* ONE ADIF FIELD, as another logger writes it: <NAME:length>value *)
+function AdifTag(const aName, aValue: string): string;
+begin
+   Result := '<' + aName + ':' + IntToStr(Length(aValue)) + '>' + aValue + ' ';
+end;
+
+(* THE FRONT OF EVERY SYNTHETIC RECORD: who, when, where and the reports. *)
+function AdifHead(const aCall, aBand, aMode, aRST: string): string;
+begin
+   Result := AdifTag('CALL', aCall) + AdifTag('QSO_DATE', '20260115') +
+             AdifTag('TIME_ON', '121800') + AdifTag('BAND', aBand) +
+             AdifTag('MODE', aMode) + AdifTag('RST_SENT', aRST) +
+             AdifTag('RST_RCVD', aRST);
+end;
+
+(* THE RECORDS THE EXPORT JUST WROTE, read back. This is the round trip the
+  corpus's test-adif-roundtrip.sh makes for thirteen contests, here for every
+  one and every station variant. *)
+procedure ImportExportedRecords;
+var
+   lines: TStringList;
+   i, n: integer;
+   pastHeader: boolean;
+begin
+   if (GExportedAdif = '') or (not FileExists(GExportedAdif)) then
+      begin
+      Emit('(no exported ADIF to read back)');
+      Exit;
+      end;
+
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(GExportedAdif));
+      pastHeader := False;
+      n := 0;
+      for i := 0 to lines.Count - 1 do
+         begin
+         if not pastHeader then
+            begin
+            pastHeader := Pos('<EOH>', UpperCase(lines[i])) > 0;
+            Continue;
+            end;
+         if Trim(lines[i]) = '' then
+            begin
+            Continue;
+            end;
+         inc(n);
+         ImportOne(Format('export.%.2d', [n]), string(lines[i]));
+         end;
+   finally
+      lines.Free;
+   end;
+end;
+
+(* SYNTHETIC FOREIGN-LOGGER RECORDS -- what an operator imports from N1MM,
+  DXLog or a D7 TR4W, which this program did not write and whose shape its
+  exporter does not dictate. One record per contest-dependent tag family, so
+  a contest that reads a tag finds it.
+
+  EVERY CASE CARRIES THE SESSION CONTEST'S OWN CONTEST_ID, except where its
+  name says otherwise: the contest that interprets a record is the one its
+  CONTEST_ID names, and the matrix runs one contest per process, so that is
+  how each contest is asked about each tag.
+
+  THE N1MM CASES ARE THE ORDER TEST. APP_N1MM_EXCHANGE1 means a class for the
+  Field Days and a power for the FOC Marathon, and ADIF fixes no field order.
+  Each pair puts the tag BEFORE and AFTER CONTEST_ID, and the .fd and .foc
+  pairs name a contest that is not the session's: a record is only misread
+  when the contest in force at the tag is not the contest the record names.
+  The ids are literals -- foreign data, not this unit naming a contest. *)
+procedure ImportSyntheticRecords;
+var
+   ownId: string;
+   own: string;
+   cw: string;
+   phone: string;
+
+   procedure Run(const aLabel, aBody: string);
+   begin
+      ImportOne(aLabel, aBody + '<EOR>');
+   end;
+
+begin
+   ownId := ContestIdentity(Contest).ADIFContestId;
+   own := AdifTag('CONTEST_ID', ownId);
+   cw := AdifHead('W1AW', '20m', 'CW', '599');
+   phone := AdifHead('W1AW', '20m', 'SSB', '59') + AdifTag('SUBMODE', 'USB') +
+            AdifTag('FREQ', '14.250');
+
+   Run('srx.rst+alpha', cw + own + AdifTag('SRX_STRING', '599 CT') + AdifTag('STATE', 'CT'));
+   Run('srx.alpha', cw + own + AdifTag('SRX_STRING', 'CT') + AdifTag('STATE', 'CT'));
+   Run('srx.rst+number', cw + own + AdifTag('SRX_STRING', '599 8'));
+   Run('srx.number.phone', phone + own + AdifTag('SRX_STRING', '59 123') + AdifTag('SRX', '123'));
+   Run('srx.none', cw + own + AdifTag('QTH', 'CT'));
+   Run('section.arrl_sect', cw + own + AdifTag('ARRL_SECT', 'CT') + AdifTag('CLASS', '2A') +
+                            AdifTag('SRX_STRING', '2A CT') + AdifTag('QTH', 'CT'));
+   Run('section.qth-only', cw + own + AdifTag('CLASS', '1H') + AdifTag('SRX_STRING', '1H EWA') +
+                           AdifTag('QTH', 'EWA'));
+   Run('section.dx', AdifHead('DL1ABC', '40m', 'CW', '599') + own + AdifTag('CLASS', '1D') +
+                     AdifTag('SRX_STRING', '1D DX') + AdifTag('QTH', 'DX'));
+   Run('province', AdifHead('VE3ABC', '15m', 'SSB', '59') + own + AdifTag('VE_PROV', 'ON') +
+                   AdifTag('SRX_STRING', '59 ON'));
+   Run('county', cw + own + AdifTag('QTH', 'MON') + AdifTag('CNTY', 'MON') +
+                 AdifTag('STATE', 'PA') + AdifTag('SRX_STRING', '59 MON'));
+   Run('grid.srx', cw + own + AdifTag('GRIDSQUARE', 'FN31') + AdifTag('SRX_STRING', '599 FN31'));
+   Run('grid.only', AdifHead('DL1ABC', '20m', 'FT8', '-05') + own + AdifTag('GRIDSQUARE', 'JO62'));
+   Run('pota.ref', cw + own + AdifTag('SIG', 'POTA') + AdifTag('SIG_INFO', 'K-0001') +
+                   AdifTag('POTA_REF', 'K-0001') + AdifTag('STATE', 'PA'));
+   Run('pota.sig', cw + own + AdifTag('SIG', 'POTA') + AdifTag('SIG_INFO', 'K-0002'));
+   Run('pota.state', cw + own + AdifTag('STATE', 'PA'));
+
+   Run('n1mm.own.before', cw + AdifTag('APP_N1MM_EXCHANGE1', '3A') + own);
+   Run('n1mm.own.after', cw + own + AdifTag('APP_N1MM_EXCHANGE1', '3A'));
+   Run('n1mm.fd.before', cw + AdifTag('APP_N1MM_EXCHANGE1', '3A') +
+                         AdifTag('CONTEST_ID', 'ARRL-FIELD-DAY'));
+   Run('n1mm.fd.after', cw + AdifTag('CONTEST_ID', 'ARRL-FIELD-DAY') +
+                        AdifTag('APP_N1MM_EXCHANGE1', '3A'));
+   Run('n1mm.foc.before', cw + AdifTag('APP_N1MM_EXCHANGE1', '100') +
+                          AdifTag('CONTEST_ID', 'FOC MARATHON'));
+   Run('n1mm.foc.after', cw + AdifTag('CONTEST_ID', 'FOC MARATHON') +
+                         AdifTag('APP_N1MM_EXCHANGE1', '100'));
+   Run('n1mm.no-contest-id', cw + AdifTag('APP_N1MM_EXCHANGE1', '3A'));
+
+   Run('foc', cw + own + AdifTag('FOC_NUM', '1234') + AdifTag('RX_PWR', '100') +
+              AdifTag('SRX_STRING', '599 1234'));
+   Run('zone.cqz', cw + own + AdifTag('CQZ', '5') + AdifTag('SRX_STRING', '599 5'));
+   Run('zone.cqz+ituz', cw + own + AdifTag('CQZ', '5') + AdifTag('ITUZ', '28') +
+                        AdifTag('SRX_STRING', '599 28'));
+   Run('society', cw + own + AdifTag('APP_TR4W_HQ', 'DARC') + AdifTag('DOK', 'A01') +
+                  AdifTag('IOTA', 'EU-005') + AdifTag('SRX_STRING', '59 DARC'));
+   Run('n1mm.hq', cw + own + AdifTag('APP_N1MM_HQ', 'RSGB') + AdifTag('SRX_STRING', '59 RSGB'));
+   Run('fields', cw + own + AdifTag('SRX', '45') + AdifTag('STX', '12') + AdifTag('CHECK', '99') +
+                 AdifTag('PRECEDENCE', 'A') + AdifTag('NAME', 'JOE') +
+                 AdifTag('TEN_TEN', '1234') + AdifTag('QTH', 'XYZ') +
+                 AdifTag('RX_PWR', '100') + AdifTag('SRX_STRING', '45 XYZ'));
+   Run('name+age', cw + own + AdifTag('NAME', 'JOE') + AdifTag('QTH', '45') +
+                   AdifTag('SRX_STRING', 'JOE 45'));
+   Run('name+state', cw + own + AdifTag('NAME', 'JOE') + AdifTag('STATE', 'PA') +
+                     AdifTag('SRX_STRING', 'JOE PA'));
+   Run('rtty.us', AdifHead('K4ABC', '40m', 'RTTY', '599') + own + AdifTag('STATE', 'FL') +
+                  AdifTag('SRX_STRING', '599 FL'));
+   Run('rtty.dx', AdifHead('DL1ABC', '40m', 'RTTY', '599') + own + AdifTag('SRX', '45') +
+                  AdifTag('SRX_STRING', '599 45'));
+   Run('no-contest-id', cw + AdifTag('SRX_STRING', '599 CT') + AdifTag('STATE', 'CT'));
+   Run('operator', cw + own + AdifTag('OPERATOR', 'K0XYZ') + AdifTag('SRX_STRING', '599 CT'));
+   Run('xqso+id', cw + own + AdifTag('APP_TR4W_CLAIMEDQSO', '0') +
+                  AdifTag('APP_TR4W_ID', '0123456789ABCDEF0123456789ABCDEF'));
+   Run('wsjtx', AdifHead('DL1ABC', '20m', 'FT8', '-05') + AdifTag('PROGRAMID', 'WSJT-X') +
+                own + AdifTag('RST_SENT', '+05') + AdifTag('GRIDSQUARE', 'JO62'));
+   Run('rover', cw + own + AdifTag('APP_TR4W_ROVERCALL', 'KG1S/MON') +
+                AdifTag('QTH', 'MON') + AdifTag('SRX_STRING', '59 MON'));
+end;
+
+procedure CaptureImport;
+begin
+   Emit('== import');
+   ImportExportedRecords;
+   ImportSyntheticRecords;
 end;
 
 function RunContestMatrix(const aOutFile: string;
@@ -825,6 +1105,15 @@ begin
 
       CaptureScoringAndLog;
       CaptureExport;
+
+      try
+         CaptureImport;
+      except
+         on E: Exception do
+            begin
+            EmitRaised('import', E);
+            end;
+      end;
 
       try
          GOut.SaveToFile(AnsiString(aOutFile));

@@ -111,6 +111,61 @@ QSO: 28400 PH 2026-01-15 1214 K0AAA   59  0014 EM17   ZS6ABC         59  0114
 QSO: 14250 PH 2026-01-15 1215 K0AAA   59  0015 EM17   KH6ABC         59  0115 HI           
 QSO:  3530 CW 2026-01-15 1216 K0AAA   599 0016 EM17   W1AW           599 0000              
 QSO: 14250 PH 2026-01-15 1217 K0AAA   59  0017 EM17   G3ABC          59  0000              
+== import
+imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=101 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
+imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 nr.rcvd=102 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
+imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 nr.rcvd=103 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
+imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 nr.rcvd=104 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
+imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 nr.rcvd=105 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
+imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 nr.rcvd=106 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
+imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 nr.rcvd=107 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
+imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 nr.rcvd=108 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
+imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 nr.rcvd=109 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
+imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 nr.rcvd=110 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
+imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 nr.rcvd=111 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
+imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 nr.rcvd=112 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
+imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 nr.rcvd=113 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
+imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 nr.rcvd=114 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
+imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 nr.rcvd=115 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=K0AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
+imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 tenten=0 exch=599  operator=K0AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
+imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 tenten=0 exch=59  operator=K0AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
+imp srx.rst+alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp srx.alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp srx.number.phone | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121800 rst.sent=59 rst.rcvd=59 nr.rcvd=123 exch=59  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp srx.none | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=2A operator=K0AAA cty=K/8/NorthAmerica/W1
+imp section.qth-only | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=1H operator=K0AAA cty=K/8/NorthAmerica/W1
+imp section.dx | parsed=TRUE call=DL1ABC band=Band40 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=1D operator=K0AAA cty=DL/28/Europe/DL1
+imp province | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eSSB time=260115 121800 rst.sent=59 rst.rcvd=59 exch=59  operator=K0AAA cty=VE/9/NorthAmerica/VE3
+imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp grid.srx | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=FN31 domqth=FN31 exch=599 FN31 operator=K0AAA cty=K/8/NorthAmerica/W1
+imp grid.only | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=-5 rst.rcvd=-5 qth=JO62 domqth=JO62 exch=-5 JO62 operator=K0AAA cty=DL/28/Europe/DL1
+imp pota.ref | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp pota.sig | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp pota.state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.own.before | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.own.after | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.fd.before | parsed=TRUE contest=ARRLFIELDDAY call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 class=3A operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.fd.after | parsed=TRUE contest=ARRLFIELDDAY call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 class=3A operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.foc.before | parsed=TRUE contest=FOCMARATHON call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 power=100 operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.foc.after | parsed=TRUE contest=FOCMARATHON call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 power=100 operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp foc | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  power=100 operator=K0AAA cty=K/8/NorthAmerica/W1
+imp zone.cqz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=5 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp zone.cqz+ituz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=28 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp society | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp n1mm.hq | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 nr.sent=12 nr.rcvd=45 tenten=1234 exch=599  check=99 prec=A name=JOE power=100 operator=K0AAA cty=K/8/NorthAmerica/W1
+imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  name=JOE operator=K0AAA cty=K/8/NorthAmerica/W1
+imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  name=JOE operator=K0AAA cty=K/8/NorthAmerica/W1
+imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/K4
+imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 exch=599  operator=K0AAA cty=DL/28/Europe/DL1
+imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=K/8/NorthAmerica/W1
+imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0XYZ cty=K/8/NorthAmerica/W1
+imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
+imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 qth=JO62 domqth=JO62 exch=-5 JO62 operator=K0AAA cty=DL/28/Europe/DL1
+imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0AAA cty=G/27/Europe/MON0
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
 contest.requested = 184 RTC
@@ -224,6 +279,61 @@ QSO: 28400 PH 2026-01-15 1214 VE3AAA  59  0014 FN03   ZS6ABC         59  0114
 QSO: 14250 PH 2026-01-15 1215 VE3AAA  59  0015 FN03   KH6ABC         59  0115 HI           
 QSO:  3530 CW 2026-01-15 1216 VE3AAA  599 0016 FN03   W1AW           599 0000              
 QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  0017 FN03   G3ABC          59  0000              
+== import
+imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=101 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
+imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 nr.rcvd=102 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
+imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 nr.rcvd=103 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
+imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 nr.rcvd=104 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
+imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 nr.rcvd=105 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
+imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 nr.rcvd=106 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
+imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 nr.rcvd=107 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
+imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 nr.rcvd=108 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
+imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 nr.rcvd=109 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
+imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 nr.rcvd=110 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
+imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 nr.rcvd=111 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
+imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 nr.rcvd=112 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
+imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 nr.rcvd=113 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
+imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 nr.rcvd=114 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
+imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 nr.rcvd=115 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=VE3AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
+imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 tenten=0 exch=599  operator=VE3AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
+imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 tenten=0 exch=59  operator=VE3AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
+imp srx.rst+alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp srx.alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp srx.number.phone | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121800 rst.sent=59 rst.rcvd=59 nr.rcvd=123 exch=59  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp srx.none | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=2A operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp section.qth-only | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=1H operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp section.dx | parsed=TRUE call=DL1ABC band=Band40 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=1D operator=VE3AAA cty=DL/28/Europe/DL1
+imp province | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eSSB time=260115 121800 rst.sent=59 rst.rcvd=59 exch=59  operator=VE3AAA cty=VE/9/NorthAmerica/VE3
+imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp grid.srx | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=FN31 domqth=FN31 exch=599 FN31 operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp grid.only | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=-5 rst.rcvd=-5 qth=JO62 domqth=JO62 exch=-5 JO62 operator=VE3AAA cty=DL/28/Europe/DL1
+imp pota.ref | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp pota.sig | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp pota.state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.own.before | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.own.after | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.fd.before | parsed=TRUE contest=ARRLFIELDDAY call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 class=3A operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.fd.after | parsed=TRUE contest=ARRLFIELDDAY call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 class=3A operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.foc.before | parsed=TRUE contest=FOCMARATHON call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 power=100 operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.foc.after | parsed=TRUE contest=FOCMARATHON call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 power=100 operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp foc | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  power=100 operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp zone.cqz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=5 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp zone.cqz+ituz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=28 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp society | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp n1mm.hq | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 nr.sent=12 nr.rcvd=45 tenten=1234 exch=599  check=99 prec=A name=JOE power=100 operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  name=JOE operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  name=JOE operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/K4
+imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 exch=599  operator=VE3AAA cty=DL/28/Europe/DL1
+imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0XYZ cty=K/8/NorthAmerica/W1
+imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
+imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 qth=JO62 domqth=JO62 exch=-5 JO62 operator=VE3AAA cty=DL/28/Europe/DL1
+imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=VE3AAA cty=G/27/Europe/MON0
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
 contest.requested = 184 RTC
@@ -335,3 +445,58 @@ QSO: 28400 PH 2026-01-15 1214 DL1AAA  59  0014 JO62   ZS6ABC         59  0114
 QSO: 14250 PH 2026-01-15 1215 DL1AAA  59  0015 JO62   KH6ABC         59  0115 HI           
 QSO:  3530 CW 2026-01-15 1216 DL1AAA  599 0016 JO62   W1AW           599 0000              
 QSO: 14250 PH 2026-01-15 1217 DL1AAA  59  0017 JO62   G3ABC          59  0000              
+== import
+imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 nr.rcvd=101 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
+imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 nr.rcvd=102 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
+imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 nr.rcvd=103 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
+imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 nr.rcvd=104 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
+imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 nr.rcvd=105 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
+imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 nr.rcvd=106 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
+imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 nr.rcvd=107 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
+imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 nr.rcvd=108 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
+imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 nr.rcvd=109 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
+imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 nr.rcvd=110 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
+imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 nr.rcvd=111 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
+imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 nr.rcvd=112 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
+imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 nr.rcvd=113 tenten=0 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
+imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 nr.rcvd=114 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
+imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 nr.rcvd=115 tenten=0 exch=59  check=99 prec=A name=JOE power=100 operator=DL1AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
+imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 tenten=0 exch=599  operator=DL1AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
+imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 tenten=0 exch=59  operator=DL1AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
+imp srx.rst+alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp srx.alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp srx.number.phone | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121800 rst.sent=59 rst.rcvd=59 nr.rcvd=123 exch=59  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp srx.none | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=2A operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp section.qth-only | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=1H operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp section.dx | parsed=TRUE call=DL1ABC band=Band40 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  class=1D operator=DL1AAA cty=DL/28/Europe/DL1
+imp province | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eSSB time=260115 121800 rst.sent=59 rst.rcvd=59 exch=59  operator=DL1AAA cty=VE/9/NorthAmerica/VE3
+imp county | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp grid.srx | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=FN31 domqth=FN31 exch=599 FN31 operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp grid.only | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=-5 rst.rcvd=-5 qth=JO62 domqth=JO62 exch=-5 JO62 operator=DL1AAA cty=DL/28/Europe/DL1
+imp pota.ref | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp pota.sig | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp pota.state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.own.before | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.own.after | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.fd.before | parsed=TRUE contest=ARRLFIELDDAY call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 class=3A operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.fd.after | parsed=TRUE contest=ARRLFIELDDAY call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 class=3A operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.foc.before | parsed=TRUE contest=FOCMARATHON call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 power=100 operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.foc.after | parsed=TRUE contest=FOCMARATHON call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 power=100 operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp foc | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  power=100 operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp zone.cqz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=5 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp zone.cqz+ituz | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=28 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp society | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp n1mm.hq | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 nr.sent=12 nr.rcvd=45 tenten=1234 exch=599  check=99 prec=A name=JOE power=100 operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  name=JOE operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  name=JOE operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/K4
+imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 exch=599  operator=DL1AAA cty=DL/28/Europe/DL1
+imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=K0XYZ cty=K/8/NorthAmerica/W1
+imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
+imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 qth=JO62 domqth=JO62 exch=-5 JO62 operator=DL1AAA cty=DL/28/Europe/DL1
+imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599  operator=DL1AAA cty=G/27/Europe/MON0

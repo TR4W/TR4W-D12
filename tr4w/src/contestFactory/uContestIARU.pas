@@ -78,6 +78,9 @@ type
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -189,6 +192,26 @@ end;
 function TContestIARU.EmitADIFContestFields(const aQso: ContestExchange): string;
 begin
    Result := EmitADIFField('APP_TR4W_HQ', string(aQso.QTHString));
+end;
+
+(* IARU SENDS RST PLUS EITHER A ZONE OR A SOCIETY, and only the society is a
+   QTH. The zone already arrived through ITUZ, and QTHString is what the export
+   tail turns into APP_TR4W_HQ -- so storing a zone here put both a <QTH> and
+   an <APP_TR4W_HQ> of '59 8' into every re-exported record, neither of which
+   D7 wrote.
+
+   The alphabetic test tells a society from a number. *)
+procedure TContestIARU.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                       const aSession: TADIFImportSession;
+                                       var aExch: ContestExchange);
+var
+   srxExchange: string;
+begin
+   srxExchange := ExchangeFromSRXString(aTemps.SRX_String, aExch.RSTReceived);
+   if ADIFTextIsAlphabetic(srxExchange) then
+      begin
+      aExch.QTHString := ShortString(srxExchange);
+      end;
 end;
 
 initialization

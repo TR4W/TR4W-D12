@@ -23,10 +23,11 @@ unit uADIF;
     - ParseADIFFieldsList (the lexer)
     - TADIFField / TADIFFieldList types
 
-  Still in MainUnit, will move in follow-up commits:
-    - The field-name -> ContestExchange mapping case statement
-    - The contest-specific post-processing tail
-    - ImportADIFFromString multi-record entry point
+  Moved since (M5a, 2026-10-01): the contest-specific post-processing tail is
+  the contest's own -- TContestBase.ApplyADIFImport, asked by
+  ApplyADIFContestImport after the whole record is read. This unit names no
+  contest on the way in; TADIFRecordTemps (what it captures for the contest)
+  lives in uContestBase and is aliased below.
 
   See docs/tr4w-migration-strategy.md.  ADIF string handling is the
   highest-risk surface for Phase 2 (Unicode correctness); each function
@@ -47,6 +48,9 @@ uses
    StrUtils,
    Log4D,
    VC,
+   (* TADIFRecordTemps and TADIFImportSession, the two records the generic
+      importer hands to a contest -- see below. *)
+   uContestBase,
    utils_text;
 
 type
@@ -57,34 +61,19 @@ type
 
    TADIFFieldList = array of TADIFField;
 
-   // Transient fields populated by ApplyADIFFieldsToExchange that the
-   // contest-specific post-processing (in MainUnit) needs.  Some ADIF
-   // tags map directly to ContestExchange fields; others need contest-
-   // aware re-interpretation (e.g. STATE in ARRL_RTTY_ROUNDUP becomes
-   // part of QTHString in a contest-defined format).  This record
-   // carries the raw field values forward so the contest tail can do
-   // its job without re-parsing.
-   TADIFRecordTemps = record
-      SRX_String : string;
-      STX_String : string;
-      State      : string;
-      ARRL_Sect  : string;
-      VE_Prov    : string;
-      POTARef    : string;
-      SIG        : string;
-      SIG_Info   : string;
-      GridSquare : string;
-      FOC_Num    : string;
-      APP_HQ     : string;
-      FromWSJTX  : Boolean;
-   end;
+   (* The raw values of every ADIF tag whose MEANING depends on the contest,
+     captured by ApplyADIFFieldsToExchange for the contest to interpret once
+     the whole record is read. The record is the contest model's -- it is the
+     argument of TContestBase.ApplyADIFImport -- and lives in uContestBase;
+     these aliases keep its old home's name working. *)
+   TADIFRecordTemps = uContestBase.TADIFRecordTemps;
+   TADIFImportSession = uContestBase.TADIFImportSession;
 
    TContestExchangeArray = array of ContestExchange;
 
-   // ADIF field-name dispatch enum.  Order MUST match the AnsiIndexText
-   // string array in MainUnit.ParseADIFRecord (and in the future, in
-   // ApplyADIFFieldsToExchange when that moves here).  Adding entries
-   // requires updating both the enum and the lookup array.
+   // ADIF field-name dispatch enum.  Order MUST match ADIF_FIELD_NAMES (the
+   // lookup array in the implementation).  Adding entries requires updating
+   // both.
    TADIF_Fields = (tAdifARRL_SECT = 0, tAdifBAND, tAdifCALL, tAdifCHECK,
       tAdifCLASS, tAdifCQ_Z,
       tAdifCONTEST_ID, tAdifCNTY, tadifFOC_NUM, tAdifGRIDSQUARE, tAdifFREQ,
@@ -104,7 +93,9 @@ type
       //   APP_DXLOG_XQSO       value 'Y' = X-QSO                (DXLog.net)
       // Export emits only APP_TR4W_CLAIMEDQSO; the others are import-only.
       tAdifAPP_TR4W_CLAIMEDQSO, tAdifAPP_N1MM_CLAIMEDQSO,
-      tAdifAPP_DXLOG_XQSO);
+      tAdifAPP_DXLOG_XQSO,
+      // The WAG DOK, written by that contest's exporter (M5a).
+      tAdifDOK);
 
 // =========================================================================
 // Lexer
@@ -203,15 +194,59 @@ function ApplyADIFFieldsToExchange(const fields: TADIFFieldList;
                                    var exch: ContestExchange;
                                    var temps: TADIFRecordTemps): Boolean;
 
+(* THE TWO STEPS AFTER THE GENERIC READ -- M5a, 2026-10-01.
+
+  ApplyADIFFieldsToExchange is contest-blind: it knows ADIF, not contests.
+  What a record MEANS to its contest is decided only after the whole record is
+  read, in this order, so the order its tags arrived in cannot matter:
+
+    1. ApplyADIFCommonImport -- what every contest wants: a record with no
+       OPERATOR gets the session's, and the received RST comes off the front
+       of SRX_STRING to make ExchString (the exact inverse of what export
+       prepends, ResolveSRXString);
+    2. ApplyADIFContestImport -- the contest named by the record's CONTEST_ID
+       is asked to interpret what the importer captured
+       (TContestBase.ApplyADIFImport). The contest is
+       uContestRegistry.ContestIdentity(exch.ceContest): its class, or the
+       classless default.
+
+  InterpretADIFRecord is both. They are separate so that a caller can put its
+  own step between them for a contest that has no class yet. *)
+procedure ApplyADIFCommonImport(const temps: TADIFRecordTemps;
+                                const session: TADIFImportSession;
+                                var exch: ContestExchange);
+procedure ApplyADIFContestImport(const temps: TADIFRecordTemps;
+                                 const session: TADIFImportSession;
+                                 var exch: ContestExchange);
+procedure InterpretADIFRecord(const temps: TADIFRecordTemps;
+                              const session: TADIFImportSession;
+                              var exch: ContestExchange);
+
+(* A SESSION THAT STATES NOTHING: no operator, no exchange kind, no domestic
+  multiplier. For an import that has no session to describe -- the unit tests'
+  ImportADIFFromString -- so the classless default sees exactly what a contest
+  with no domestic multipliers and no grid exchange sees. *)
+function NeutralADIFImportSession: TADIFImportSession;
+
+(* TRUE WHEN aText IS ONE OR MORE ASCII LETTERS AND NOTHING ELSE -- false for
+  empty text, a digit, a space or a hyphen. It is what a contest asks of an
+  SRX_STRING to tell a domestic QTH from a serial number ('CT' against '123'),
+  and it is Indy's IdGlobal.IsAlpha, which the main unit used for the same
+  question, restated here because a contest class may not reach for the
+  network library. *)
+function ADIFTextIsAlphabetic(const aText: string): Boolean;
+
 // =========================================================================
 // Multi-record entry point
 // =========================================================================
 
 // Parse a multi-record ADIF string into `records`.  Splits on <EOR>
-// (case-insensitive), lexes each record, and applies the field mapping
-// for each.  The contest-specific post-processing tail is NOT applied
-// here -- the caller is responsible for that (e.g. MainUnit.ImportFromADIF
-// applies it via ApplyContestSpecificADIFTail).
+// (case-insensitive), lexes each record, applies the generic field mapping
+// and then InterpretADIFRecord -- the contest named by the record's
+// CONTEST_ID interprets what the mapping captured -- under
+// NeutralADIFImportSession: there is no running contest here to describe.
+// (MainUnit.ParseADIFRecord, which the operator's import runs, passes the
+// session it really has.)
 //
 // Skips an optional ADIF header section (everything up to the first
 // <EOH>, also case-insensitive).
@@ -832,13 +867,16 @@ begin
    temps.GridSquare := '';
    temps.FOC_Num    := '';
    temps.APP_HQ     := '';
+   temps.DOK        := '';
+   temps.IOTA       := '';
+   temps.N1MM_Exchange1 := '';
    temps.FromWSJTX  := False;
 end;
 
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..47] of string = (
+   ADIF_FIELD_NAMES : array[0..48] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -856,7 +894,8 @@ const
       'APP_TR4W_ID', 'SIG', 'SIG_INFO', 'POTA_REF',
       'APP_TR4W_ROVERCALL',
       // X-QSO marker fields (Issue #750) -- order must match the enum
-      'APP_TR4W_CLAIMEDQSO', 'APP_N1MM_CLAIMEDQSO', 'APP_DXLOG_XQSO');
+      'APP_TR4W_CLAIMEDQSO', 'APP_N1MM_CLAIMEDQSO', 'APP_DXLOG_XQSO',
+      'DOK');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -991,6 +1030,12 @@ begin
             tAdifGRIDSQUARE:
                temps.GridSquare := fieldValue;
 
+            tAdifIOTA:
+               temps.IOTA := fieldValue;
+
+            tAdifDOK:
+               temps.DOK := fieldValue;
+
             tAdifFREQ:
                begin
                saveDecimalSeparator := FormatSettings.DecimalSeparator;
@@ -1104,17 +1149,17 @@ begin
                   end;
 
             tAdifAPP_N1MM_EXCHANGE1:
-               // N1MM stores CLASS in APP_N1MM_EXCHANGE1 instead of
-               // the standard CLASS field.  Map back depending on
-               // the active contest.
-               if exch.ceContest in [ARRLFIELDDAY, WINTERFIELDDAY] then
-                  begin
-                  exch.ceClass := AnsiUpperCase(fieldValue)
-                  end
-               else if exch.ceContest in [FOCMARATHON] then
-                  begin
-                  exch.Power := fieldValue;
-                  end;
+               (* CAPTURED, NOT READ AS IT GOES BY. N1MM stores the contest's
+                  own exchange item here -- a class for the Field Days instead
+                  of the standard CLASS tag, a membership number for the FOC
+                  Marathon -- so what it MEANS is the contest's. The contest
+                  is known only when CONTEST_ID has been read, and ADIF fixes
+                  no field order: the arm that used to stand here read
+                  exch.ceContest as it went by, so a record with this tag
+                  AHEAD of CONTEST_ID was interpreted for the SESSION's
+                  contest and not the record's. The contest interprets it
+                  after the whole record is in (ApplyADIFImport). *)
+               temps.N1MM_Exchange1 := fieldValue;
 
             tAdifAPP_N1MM_ID, tAdifAPP_TR4W_ID:
                if IsValidGUID(fieldValue) then
@@ -1201,6 +1246,72 @@ begin
    exch.QTH.Zone       := DUMMYZONE;
 end;
 
+procedure ApplyADIFCommonImport(const temps: TADIFRecordTemps;
+                                const session: TADIFImportSession;
+                                var exch: ContestExchange);
+begin
+   // fix up operator
+   if exch.ceOperator = '' then
+      begin
+      exch.ceOperator := session.Operator;
+      end;
+
+   (* THE RECEIVED RST COMES OFF HERE, ONCE, FOR EVERY CONTEST. The export
+     side prepends it unconditionally (ResolveSRXString) to make the field
+     symmetric with STX_STRING, so this is the exact inverse and belongs at
+     the same level -- not in a contest's interpretation, which is where the
+     first two instances of this fault were fixed one at a time. *)
+   if Length(temps.SRX_String) > 0 then
+      begin
+      exch.ExchString := ExchangeFromSRXString(temps.SRX_String,
+                                               exch.RSTReceived);
+      end;
+end;
+
+procedure ApplyADIFContestImport(const temps: TADIFRecordTemps;
+                                 const session: TADIFImportSession;
+                                 var exch: ContestExchange);
+begin
+   ContestIdentity(exch.ceContest).ApplyADIFImport(temps, session, exch);
+end;
+
+procedure InterpretADIFRecord(const temps: TADIFRecordTemps;
+                              const session: TADIFImportSession;
+                              var exch: ContestExchange);
+begin
+   ApplyADIFCommonImport(temps, session, exch);
+   ApplyADIFContestImport(temps, session, exch);
+end;
+
+function NeutralADIFImportSession: TADIFImportSession;
+begin
+   FillChar(Result, SizeOf(Result), 0);
+   Result.Exchange := UnknownExchange;
+   Result.DomesticMult := NoDomesticMults;
+   Result.DoingDomesticMults := False;
+end;
+
+function ADIFTextIsAlphabetic(const aText: string): Boolean;
+var
+   i: Integer;
+begin
+   Result := False;
+   if Length(aText) = 0 then
+      begin
+      Exit;
+      end;
+
+   for i := 1 to Length(aText) do
+      begin
+      if not (((aText[i] >= 'a') and (aText[i] <= 'z')) or
+              ((aText[i] >= 'A') and (aText[i] <= 'Z'))) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := True;
+end;
+
 function ImportADIFFromString(const s: string;
                               var records: TContestExchangeArray): Integer;
 var
@@ -1253,6 +1364,7 @@ begin
       InitContestExchangeForParse(exch);
       InitADIFRecordTemps(temps);
       ApplyADIFFieldsToExchange(fields, exch, temps);
+      InterpretADIFRecord(temps, NeutralADIFImportSession, exch);
 
       SetLength(records, Result + 1);
       records[Result] := exch;

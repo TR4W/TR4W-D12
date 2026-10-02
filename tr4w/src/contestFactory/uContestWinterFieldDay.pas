@@ -93,6 +93,9 @@ type
 
       (* THE WORKED STATION'S ADIF FIELDS -- see the implementation. *)
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    end;
 
 implementation
@@ -214,6 +217,41 @@ end;
 function TContestWinterFieldDay.GetDisplayName: string;
 begin
    Result := 'Winter Field Day';
+end;
+
+(* THE SECTION, FROM ARRL_SECT -- BUT AN ABSENT TAG IS NOT AN EMPTY SECTION.
+   D7 writes ARRL_SECT for Sweepstakes and does not write it for Winter Field
+   Day -- that log carries the section in <QTH> alone. Assigning it
+   unconditionally ERASED a section the generic import had already read
+   correctly, on 1310 of the 1316 QSOs in the corpus's winter_fd set. So
+   ARRL_SECT wins when it is present, because it is the unambiguous field;
+   otherwise whatever <QTH> supplied stands, and the domestic multiplier is
+   taken from it.
+
+   N1MM WRITES THE CLASS IN APP_N1MM_EXCHANGE1 instead of the standard CLASS
+   tag. It is read HERE, after the whole record, so the order the two tags
+   arrive in no longer decides anything: the standard CLASS wins when the
+   record has it, and N1MM's tag fills in a record that has none. (Until M5a
+   whichever tag came LAST won, and the N1MM tag was read only when it came
+   after CONTEST_ID.) *)
+procedure TContestWinterFieldDay.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                             const aSession: TADIFImportSession;
+                                             var aExch: ContestExchange);
+begin
+   if aTemps.ARRL_Sect <> '' then
+      begin
+      aExch.DomesticQTH := ShortString(aTemps.ARRL_Sect);
+      aExch.QTHString   := ShortString(aTemps.ARRL_Sect);
+      end
+   else if aExch.QTHString <> '' then
+      begin
+      aExch.DomesticQTH := aExch.QTHString;
+      end;
+
+   if (aExch.ceClass = '') and (aTemps.N1MM_Exchange1 <> '') then
+      begin
+      aExch.ceClass := ShortString(UpperCase(aTemps.N1MM_Exchange1));
+      end;
 end;
 
 initialization

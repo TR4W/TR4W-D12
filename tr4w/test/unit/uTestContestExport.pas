@@ -31,11 +31,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE ROUND TRIP. For every class with an export rule of its own, one QSO is
   written through uADIF.EmitADIFRecord plus that class's STX_STRING and
   contest fields, read back through the generic importer
-  (uADIF.ApplyADIFFieldsToExchange), and the fields compared. Import is NOT the
-  class's yet (M5) -- this pins the class's export against TODAY's import, so
-  M5 inherits a stated contract. Two fields go out and do not come back, and
-  the test says so rather than skipping them: WAG's DOK and the RSGB IOTA's
-  IOTA have no import arm.
+  (uADIF.ApplyADIFFieldsToExchange) and then the contest's own interpretation
+  (uADIF.InterpretADIFRecord, M5a), and the fields compared. Since M5a the two
+  fields that used to go out and not come back are read by their classes: WAG's
+  DOK is its QTH and the RSGB IOTA's IOTA is its domestic QTH.
 
   The Cabrillo side has no round trip because TR4W has no Cabrillo importer
   (design 3.2); its lines are pinned as golden strings, which is what a robot
@@ -120,7 +119,7 @@ begin
 end;
 
 (* A CONTEST WITH NO EXPORT RULE GETS THE SHARED ARM FOR ITS SESSION'S
-   EXCHANGE -- the bytes uTestCabrilloExchange pins on the arm itself. CQ 160
+   EXCHANGE -- the bytes uTestCabrilloExchange pins on the arm itself. ARRL 10
    has no class at all; the KVP has one and no export rule. *)
 procedure TContestExportTests.Test_ClasslessContestGetsTheSharedArm;
 var
@@ -129,16 +128,16 @@ var
    c: TCabrilloQSOContext;
 begin
    BeginTest('Test_ClasslessContestGetsTheSharedArm');
-   qso := EmptyQso(CQ160CW);
+   qso := EmptyQso(ARRL10);
    qso.NumberSent := 12;
    qso.NumberReceived := 34;
    my := EmptyMy;
    my.MyState := 'FL';
    c := Ctx(QSONumberDomesticQTHExchange, '', 'GA');
-   CheckEquals('12   FL    ', Sent(CQ160CW, my, qso, c), 'classless: the shared sent column');
-   CheckEquals('0034 GA    ', Received(CQ160CW, my, qso, c), 'classless: the shared received column');
+   CheckEquals('12   FL    ', Sent(ARRL10, my, qso, c), 'classless: the shared sent column');
+   CheckEquals('0034 GA    ', Received(ARRL10, my, qso, c), 'classless: the shared received column');
    CheckEquals('12   FL    ', Sent(KVP, my, qso, c), 'a class with no export rule: the same');
-   CheckEquals(CabrilloQSOLineFormatDefault, ContestIdentity(CQ160CW).CabrilloQSOLineFormat,
+   CheckEquals(CabrilloQSOLineFormatDefault, ContestIdentity(ARRL10).CabrilloQSOLineFormat,
                'the one line layout');
 end;
 
@@ -196,7 +195,7 @@ begin
    CheckEquals('599 5678   ',
                ContestIdentity(FOCMARATHON).FormatADIFSentExchange(my, qso, RSTPowerExchange),
                'FOC STX_STRING: my FOC number');
-   CheckEquals('599 FL     ', Sent(CQ160CW, my, qso, c),
+   CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c),
                'the same exchange for any other contest sends the state');
 end;
 
@@ -260,7 +259,7 @@ begin
    qso.NumberReceived := 34;
    c := Ctx(RSTQSONumberAndPossibleDomesticQTHExchange, '599', 'GA');
    CheckEquals('599 0034  GA', Received(DARC10M, my, qso, c), 'DARC 10 m: a three-wide DOK');
-   CheckEquals('599 0034   GA', Received(CQ160CW, my, qso, c), 'the shared arm: four wide');
+   CheckEquals('599 0034   GA', Received(ARRL10, my, qso, c), 'the shared arm: four wide');
 end;
 
 procedure TContestExportTests.Test_PACCSendsItsSerial;
@@ -282,7 +281,7 @@ begin
    CheckEquals('599 7      ',
                ContestIdentity(PACC).FormatADIFSentExchange(my, qso, RSTDomesticQTHExchange),
                'PACC STX_STRING: the serial');
-   CheckEquals('599 FL     ', Sent(CQ160CW, my, qso, c), 'any other contest sends the state');
+   CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c), 'any other contest sends the state');
 end;
 
 procedure TContestExportTests.Test_PCCSendsItsSerialNeverItsState;
@@ -308,7 +307,7 @@ begin
 
    my.MyState := 'FL';
    CheckEquals('599  0007   ', Sent(PCC, my, qso, c), 'PCC MyEx: never the state');
-   CheckEquals('599 FL     ', Sent(CQ160CW, my, qso, c), 'any other contest sends the state');
+   CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c), 'any other contest sends the state');
 end;
 
 (* CALIFORNIA AND WW DIGI CHOOSE THEIR OWN RECEIVED QTH -- both were tests in
@@ -490,7 +489,7 @@ begin
    CheckEquals('<GRIDSQUARE:4>FN31 ', ContestIdentity(WWDIGI).EmitADIFContestFields(qso), 'WW Digi grid');
    CheckEquals('<GRIDSQUARE:4>FN31 ', ContestIdentity(BATAVIA_FT8).EmitADIFContestFields(qso), 'Batavia grid');
 
-   CheckEquals('', ContestIdentity(CQ160CW).EmitADIFContestFields(qso), 'a classless contest: nothing');
+   CheckEquals('', ContestIdentity(ARRL10).EmitADIFContestFields(qso), 'a classless contest: nothing');
    CheckEquals('', ContestIdentity(NASPRINTCW).EmitADIFContestFields(qso),
                'the NA Sprint: nothing -- D6''s no-op arm said the same');
 end;
@@ -500,10 +499,10 @@ begin
    BeginTest('Test_ADIFContestIdAndPowerTag');
    CheckFalse(ContestIdentity(GENERALQSO).WritesADIFContestId, 'General QSO writes no CONTEST_ID');
    CheckTrue(ContestIdentity(CQWWCW).WritesADIFContestId, 'CQ WW writes one');
-   CheckTrue(ContestIdentity(CQ160CW).WritesADIFContestId, 'a classless contest writes one');
+   CheckTrue(ContestIdentity(ARRL10).WritesADIFContestId, 'a classless contest writes one');
    CheckEquals('FOC_NUM', ContestIdentity(FOCMARATHON).ADIFPowerTag, 'FOC: the number is FOC_NUM');
    CheckEquals('RX_PWR', ContestIdentity(ARRLDXCW).ADIFPowerTag, 'ARRL DX: a power');
-   CheckEquals('RX_PWR', ContestIdentity(CQ160CW).ADIFPowerTag, 'classless: a power');
+   CheckEquals('RX_PWR', ContestIdentity(ARRL10).ADIFPowerTag, 'classless: a power');
 end;
 
 (* ---------------------------------------------------------------------------
@@ -574,6 +573,9 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
       InitContestExchangeForParse(back);
       InitADIFRecordTemps(temps);
       CheckTrue(ApplyADIFFieldsToExchange(fields, back, temps), what + ': the record maps');
+      (* THEN THE CONTEST NAMED BY CONTEST_ID READS WHAT THE MAPPING CAPTURED.
+         No session: nothing here is running a contest. *)
+      InterpretADIFRecord(temps, NeutralADIFImportSession, back);
 
       CheckEquals('K1ABC', string(back.Callsign), what + ': CALL');
       CheckEquals(Ord(Band20), Ord(back.Band), what + ': BAND');
@@ -620,15 +622,25 @@ procedure TContestExportTests.Test_RoundTripThroughTodaysImport;
          begin
          CheckEquals(aQTH, temps.GridSquare, what + ': GRIDSQUARE');
          end;
-      (* EXPORTED AND NOT IMPORTED -- the import arm is M5's. Pinned so the
-         day it exists this assertion is what changes. *)
+      if aContest = FOCMARATHON then
+         begin
+         CheckEquals('100', string(back.Power), what + ': the class reads FOC_NUM into Power');
+         end;
+      (* EXPORTED, AND NOW READ BACK BY THE CLASS THAT WROTE THEM (M5a). Both
+         assertions would fail on the generic mapping alone: WAG's SRX_STRING
+         is the received RST and the QTH tag is not what the class keeps; the
+         island is in no standard tag. *)
       if aContest = WAG then
          begin
          CheckTrue(Pos('<DOK:3>' + aQTH, text) > 0, what + ': DOK is exported');
+         CheckEquals(aQTH, temps.DOK, what + ': DOK is captured');
+         CheckEquals(aQTH, string(back.QTHString), what + ': DOK is the QTH again');
          end;
       if aContest = IOTA then
          begin
          CheckTrue(Pos('<IOTA:', text) > 0, what + ': IOTA is exported');
+         CheckEquals(aQTH, temps.IOTA, what + ': IOTA is captured');
+         CheckEquals(aQTH, string(back.DomesticQTH), what + ': the island is the domestic QTH again');
          end;
    end;
 
