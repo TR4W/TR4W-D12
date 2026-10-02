@@ -89,8 +89,10 @@ ROUTINES = {
    ("logedit.pas", "Add"): ("multipliers", "ZoneMultiplierType (existing trait) + " + new("ZoneMultRule")),
    ("uMults.pas", "MultsObject.FillVisibleBytes"): ("multipliers", "DXMultiplierType (existing trait) + " + new("DXMultiplierRule")),
    # ------------------------------------------------------------ ADIF import
-   ("MainUnit.pas", "ApplyContestSpecificADIFTail"): ("adif-import", new("ApplyADIFImport(const aTemps; var aQso)")),
-   ("MainUnit.pas", "ProcessImportedSRX_String"): ("adif-import", new("ApplyADIFImport (SRX_STRING)")),
+   # ApplyContestSpecificADIFTail and ProcessImportedSRX_String were deleted in M5a (1908626e).
+   # What is left: the two arms whose contests have no class yet (POTA: Q6; ARRL 160: its
+   # scoring needs a CTY lookup a class cannot be handed yet).
+   ("MainUnit.pas", "ApplyClasslessADIFImport"): ("adif-import", new("ApplyADIFImport -- needs a POTA / ARRL 160 class")),
    ("logstuff.pas", "ResolvePOTAParkFromADIF"): ("adif-import", new("ApplyADIFImport (SIG / SIG_INFO)")),
    ("uADIF.pas", "ApplyADIFFieldsToExchange"): ("adif-import", new("ApplyADIFImport (APP_N1MM_EXCHANGE1)")),
    # ------------------------------------------------------------ ADIF export
