@@ -321,7 +321,12 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # GetOblast into a Str2; the arms are DescribeSession now, which builds
 # native strings, and FCONTEST's one applier converts each memory once with
 # UTF8Encode -- not a narrowing. fcontest.pas is left with 2.
-$NARROW_CEILING = 1291
+# 1291 -> 1289, 2026-10-02: M7b batch 1, thirty-nine classless contests gained
+# a class. The two are LOGSTUFF's copy of InSameFederalOkrug, which put
+# GetOblast's native string into two string[2] locals; it was lifted to
+# uCallSignRoutines with native strings, and the classes were written with
+# explicit conversions, adding none.
+$NARROW_CEILING = 1289
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

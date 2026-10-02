@@ -2,7 +2,7 @@
 == identity
 contest.requested = 58 JIDXSSB
 contest.selected = 58 JIDXSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestJIDXSSB
 == setup
 active.qsopointmethod = JapanInternationalDXQSOPointMethod
 active.exchange = RSTPrefectureExchange
@@ -288,7 +288,7 @@ totals.cabrillo = CLAIMED-SCORE: 8
 == identity
 contest.requested = 58 JIDXSSB
 contest.selected = 58 JIDXSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestJIDXSSB
 == setup
 active.qsopointmethod = JapanInternationalDXQSOPointMethod
 active.exchange = RSTPrefectureExchange
@@ -574,7 +574,7 @@ totals.cabrillo = CLAIMED-SCORE: 8
 == identity
 contest.requested = 58 JIDXSSB
 contest.selected = 58 JIDXSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestJIDXSSB
 == setup
 active.qsopointmethod = JapanInternationalDXQSOPointMethod
 active.exchange = RSTPrefectureExchange

@@ -493,8 +493,9 @@ end;
    THE CLASSLESS DEFAULT, AND THE COMMON STEPS
    --------------------------------------------------------------------------- *)
 
-(* ARRL 10 has no class, so it is read by the base's default -- the `else` of
-  the old tail -- keyed on the SESSION. *)
+(* RSGB 1.8 MHz has no class (design Q33 holds it until M8), so it is read by
+  the base's default -- the `else` of the old tail -- keyed on the SESSION.
+  This test used ARRL 10 until that contest gained a class at M7b. *)
 procedure TContestImportTests.Test_ClasslessDefault;
 var
    x: ContestExchange;
@@ -502,7 +503,7 @@ var
    s: TADIFImportSession;
 begin
    BeginTest('Test_ClasslessDefault');
-   CheckTrue(ContestClassFor(ARRL10) = nil, 'the contest this test uses is still classless');
+   CheckTrue(ContestClassFor(RSGB18) = nil, 'the contest this test uses is still classless');
 
    t := NoTemps;
    t.GridSquare := 'FN31';
@@ -511,41 +512,41 @@ begin
    (* A grid exchange, by the session's multiplier kind or by its exchange. *)
    s := NeutralADIFImportSession;
    s.DomesticMult := GridSquares;
-   x := NewExch(ARRL10);
+   x := NewExch(RSGB18);
    x.RSTReceived := 59;
-   ContestIdentity(ARRL10).ApplyADIFImport(t, s, x);
+   ContestIdentity(RSGB18).ApplyADIFImport(t, s, x);
    CheckEquals('FN31', string(x.QTHString), 'grid multipliers: QTH');
    CheckEquals('FN31', string(x.DomesticQTH), 'grid multipliers: domestic QTH');
    CheckEquals('59 FN31', string(x.ExchString), 'grid multipliers: RST and grid');
 
    s := NeutralADIFImportSession;
    s.Exchange := Grid2Exchange;
-   x := NewExch(ARRL10);
+   x := NewExch(RSGB18);
    x.RSTReceived := 59;
-   ContestIdentity(ARRL10).ApplyADIFImport(t, s, x);
+   ContestIdentity(RSGB18).ApplyADIFImport(t, s, x);
    CheckEquals('59 FN31', string(x.ExchString), 'a grid exchange: RST and grid');
 
    (* Domestic multipliers: the QTH tag when the record has one, else the
       letters leading SRX_STRING. *)
    s := NeutralADIFImportSession;
    s.DoingDomesticMults := True;
-   x := NewExch(ARRL10);
+   x := NewExch(RSGB18);
    x.QTHString := 'MON';
-   ContestIdentity(ARRL10).ApplyADIFImport(t, s, x);
+   ContestIdentity(RSGB18).ApplyADIFImport(t, s, x);
    CheckEquals('MON', string(x.DomesticQTH), 'domestic multipliers: the QTH tag');
 
-   x := NewExch(ARRL10);
-   ContestIdentity(ARRL10).ApplyADIFImport(t, s, x);
+   x := NewExch(RSGB18);
+   ContestIdentity(RSGB18).ApplyADIFImport(t, s, x);
    CheckEquals('', string(x.DomesticQTH), 'a leading digit leaves no letters');
 
    t.SRX_String := 'MON12';
-   x := NewExch(ARRL10);
-   ContestIdentity(ARRL10).ApplyADIFImport(t, s, x);
+   x := NewExch(RSGB18);
+   ContestIdentity(RSGB18).ApplyADIFImport(t, s, x);
    CheckEquals('MON', string(x.DomesticQTH), 'domestic multipliers: the alpha prefix of SRX_STRING');
 
    (* Neither: the raw SRX_STRING is the exchange. *)
-   x := NewExch(ARRL10);
-   ContestIdentity(ARRL10).ApplyADIFImport(t, NeutralADIFImportSession, x);
+   x := NewExch(RSGB18);
+   ContestIdentity(RSGB18).ApplyADIFImport(t, NeutralADIFImportSession, x);
    CheckEquals('MON12', string(x.ExchString), 'no multipliers: SRX_STRING is the exchange');
 end;
 

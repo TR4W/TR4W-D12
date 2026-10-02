@@ -2,7 +2,7 @@
 == identity
 contest.requested = 3 ALLASIANSSB
 contest.selected = 3 ALLASIANSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestAllAsianSSB
 == setup
 active.qsopointmethod = AllAsianQSOPointMethod
 active.exchange = RSTAgeExchange
@@ -298,7 +298,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 3 ALLASIANSSB
 contest.selected = 3 ALLASIANSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestAllAsianSSB
 == setup
 active.qsopointmethod = AllAsianQSOPointMethod
 active.exchange = RSTAgeExchange
@@ -594,7 +594,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 3 ALLASIANSSB
 contest.selected = 3 ALLASIANSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestAllAsianSSB
 == setup
 active.qsopointmethod = AllAsianQSOPointMethod
 active.exchange = RSTAgeExchange

@@ -2,7 +2,7 @@
 == identity
 contest.requested = 47 GAGARINCUP
 contest.selected = 47 GAGARINCUP
-contest.class = (none -- the legacy engine)
+contest.class = TContestGagarinCup
 == setup
 active.qsopointmethod = GagarinCupQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -299,7 +299,7 @@ totals.cabrillo = CLAIMED-SCORE: 4825
 == identity
 contest.requested = 47 GAGARINCUP
 contest.selected = 47 GAGARINCUP
-contest.class = (none -- the legacy engine)
+contest.class = TContestGagarinCup
 == setup
 active.qsopointmethod = GagarinCupQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -596,7 +596,7 @@ totals.cabrillo = CLAIMED-SCORE: 5075
 == identity
 contest.requested = 47 GAGARINCUP
 contest.selected = 47 GAGARINCUP
-contest.class = (none -- the legacy engine)
+contest.class = TContestGagarinCup
 == setup
 active.qsopointmethod = GagarinCupQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH

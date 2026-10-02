@@ -140,6 +140,14 @@ type
       DXPhone: TQSOPointOverride;
    end;
 
+   (* IS THIS CALLSIGN IN ONE OF THE SESSION'S DOMESTIC COUNTRIES? -- a CTY.DAT
+      lookup of the call against the domestic-country list set-up built
+      (ZoneCont.DomesticCountryCall). A SERVICE the station context carries,
+      M7b (2026-10-02), the same shape M5b's parse session hands its engine
+      services in: the contest reads no global, and a test hands it a stub.
+      ARRL 160's scoring is the first rule that asks. *)
+   TDomesticCountryCallTest = function(const aCall: string): boolean;
+
    (* WHAT SCORING KNOWS ABOUT US.
 
       Contest rules are a function of two things: the QSO, and the station
@@ -278,6 +286,22 @@ type
          A rule that compares zones reads MyZone; one that SENDS the zone
          reads this. *)
       MyZoneText: string;
+
+      (* THE SESSION'S CONTEST NAME -- Settings.Contest.Name, as set-up and the
+         operator's CONTEST NAME line left it.
+
+         Added at M7b (2026-10-02) for the European VHF contest, whose legacy
+         arm measures to the QSO's whole QTH when the name is 'EURASIA' -- an
+         event with no ContestType of its own (inventory D7, design Q8).
+         Transcribed, not judged. *)
+      ContestName: string;
+
+      (* IS A CALL IN THE SESSION'S DOMESTIC COUNTRIES? -- a SERVICE, M7b.
+         See TDomesticCountryCallTest. uContestFactory.CurrentStation supplies
+         the engine's CTY lookup; the zero value (nil) is "no service", which a
+         rule must answer as the engine answers an empty list -- not
+         domestic. ARRL 160 is its first reader. *)
+      IsDomesticCountryCall: TDomesticCountryCallTest;
 
       (* THERE IS NO CLOCK HERE, AND THERE MUST NOT BE ONE.
 
@@ -588,10 +612,17 @@ type
       where a contest blanks or replaces it, and the domestic file. A member
       arrives with the first contest that states it -- the arms of the
       CLASSLESS contests set more (a zone multiplier, an initial exchange,
-      the R150S list) and those join when their contest gains a class. *)
+      the R150S list) and those join when their contest gains a class.
+
+      M7b (2026-10-02) brought the first of them: the initial exchange and
+      the zone multiplier (JIDX, JTDX, KCJ), the DX multiplier limit (NEQP,
+      7QP), the R150S list (CQ-M, Gagarin Cup, OZCHR teams), and JIDX's
+      refusal of the shared zone-exchange messages. *)
    TSessionValue = (
       svExchange, svDomesticMult, svDXMult, svPrefixMult,
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
+      svInitialExchange, svZoneMult, svDXMultLimit,
+      svR150SMode, svSuppressZoneExchangeMessages,
       svMultByBand, svQSOByMode, svQSOByBand,
       svWARCEnabled, svHFEnabled,
       svContestName, svMyState, svDomesticFile,
@@ -664,6 +695,9 @@ type
       FBand: BandType;
       FMode: ModeType;
       FDomesticMultByBand: TAdditionalMultByBand;
+      FInitialExchange: InitialExchangeType;
+      FZoneMult: ZoneMultType;
+      FDXMultLimit: integer;
       FMinitourDuration: TTourDuration;
       FContactsPerPage: TContactsPerPage;
       FFlags: array[TSessionValue] of boolean;
@@ -679,6 +713,9 @@ type
       procedure SetBand(aValue: BandType);
       procedure SetMode(aValue: ModeType);
       procedure SetDomesticMultByBand(aValue: TAdditionalMultByBand);
+      procedure SetInitialExchange(aValue: InitialExchangeType);
+      procedure SetZoneMult(aValue: ZoneMultType);
+      procedure SetDXMultLimit(aValue: integer);
       procedure SetMinitourDuration(aValue: TTourDuration);
       procedure SetContactsPerPage(aValue: TContactsPerPage);
       function GetFlag(aIndex: integer): boolean;
@@ -705,6 +742,23 @@ type
       property AllowDupeQSOs: boolean index Ord(svAllowDupeQSOs)
          read GetFlag write SetFlag;
 
+      (* ActiveInitialExchange, ActiveZoneMult and DXMultLimit -- M7b. *)
+      property InitialExchange: InitialExchangeType
+         read FInitialExchange write SetInitialExchange;
+      property ZoneMult: ZoneMultType read FZoneMult write SetZoneMult;
+      property DXMultLimit: integer read FDXMultLimit write SetDXMultLimit;
+
+      (* THE CLOSING EXCHANGE SET-UP WRITES NO ZONE-EXCHANGE MESSAGES -- M7b.
+
+         FoundContest ends by writing the CW messages and memories of the
+         session's exchange SHAPE (FCONTEST.SetUpRSTMyZoneExchange for the two
+         zone exchanges). The JIDX contests were excluded from it BY NAME
+         (`if not (Contest in [JIDXCW, JIDXSSB])`); stated True here, that
+         exclusion is theirs. Only the zone exchanges' messages are withheld,
+         exactly what the named test withheld. *)
+      property SuppressZoneExchangeMessages: boolean
+         index Ord(svSuppressZoneExchangeMessages) read GetFlag write SetFlag;
+
       (* THE SESSION'S SETTINGS -- each is the setting of the same name. *)
       property MultByBand: boolean index Ord(svMultByBand) read GetFlag write SetFlag;
       property QSOByMode: boolean index Ord(svQSOByMode) read GetFlag write SetFlag;
@@ -729,6 +783,7 @@ type
          read GetFlag write SetFlag;
       property QTCEnable: boolean index Ord(svQTCEnable) read GetFlag write SetFlag;
       property RfoblMode: boolean index Ord(svRfoblMode) read GetFlag write SetFlag;
+      property R150SMode: boolean index Ord(svR150SMode) read GetFlag write SetFlag;
       property AutoDupeEnableCQ: boolean index Ord(svAutoDupeEnableCQ)
          read GetFlag write SetFlag;
       property AutoDupeEnableSAndP: boolean index Ord(svAutoDupeEnableSAndP)
@@ -1396,6 +1451,15 @@ type
          contest it did not name. Each override was its contest's share of
          LogCfg's `case`, moved at M7a. *)
       function CQExchangeDefault(const aStation: TStationContext): string; virtual;
+
+      (* THE REPEAT S&P EXCHANGE A CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
+         M7b, 2026-10-02. CQExchangeDefault's sibling, asked by the same
+         routine at the same moment and used the same way: LogCfg puts it into
+         REPEAT S&P EXCHANGE only where that message is still empty.
+
+         THE BASE OFFERS NOTHING (''), which is what LogCfg gave every contest
+         but the four EU Sprints -- the arm that added this. *)
+      function RepeatSPExchangeDefault(const aStation: TStationContext): string; virtual;
 
       (* Hands the contest the station it is operating as.
 
@@ -2423,6 +2487,11 @@ begin
    Result := '';
 end;
 
+function TContestBase.RepeatSPExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := '';
+end;
+
 procedure TSessionDefaults.Stated(aValue: TSessionValue);
 begin
    Include(FStated, aValue);
@@ -2473,6 +2542,24 @@ procedure TSessionDefaults.SetDomesticMultByBand(aValue: TAdditionalMultByBand);
 begin
    FDomesticMultByBand := aValue;
    Stated(svDomesticMultByBand);
+end;
+
+procedure TSessionDefaults.SetInitialExchange(aValue: InitialExchangeType);
+begin
+   FInitialExchange := aValue;
+   Stated(svInitialExchange);
+end;
+
+procedure TSessionDefaults.SetZoneMult(aValue: ZoneMultType);
+begin
+   FZoneMult := aValue;
+   Stated(svZoneMult);
+end;
+
+procedure TSessionDefaults.SetDXMultLimit(aValue: integer);
+begin
+   FDXMultLimit := aValue;
+   Stated(svDXMultLimit);
 end;
 
 procedure TSessionDefaults.SetMinitourDuration(aValue: TTourDuration);

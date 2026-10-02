@@ -2,7 +2,7 @@
 == identity
 contest.requested = 61 KCJ
 contest.selected = 61 KCJ
-contest.class = (none -- the legacy engine)
+contest.class = TContestKCJ
 == setup
 active.qsopointmethod = KCJQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -286,7 +286,7 @@ totals.cabrillo = CLAIMED-SCORE: 144
 == identity
 contest.requested = 61 KCJ
 contest.selected = 61 KCJ
-contest.class = (none -- the legacy engine)
+contest.class = TContestKCJ
 == setup
 active.qsopointmethod = KCJQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH
@@ -570,7 +570,7 @@ totals.cabrillo = CLAIMED-SCORE: 144
 == identity
 contest.requested = 61 KCJ
 contest.selected = 61 KCJ
-contest.class = (none -- the legacy engine)
+contest.class = TContestKCJ
 == setup
 active.qsopointmethod = KCJQSOPointMethod
 active.exchange = RSTZoneOrDomesticQTH

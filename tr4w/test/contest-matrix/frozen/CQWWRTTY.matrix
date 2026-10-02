@@ -2,7 +2,7 @@
 == identity
 contest.requested = 158 CQWWRTTY
 contest.selected = 158 CQWWRTTY
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQWWRTTY
 == setup
 active.qsopointmethod = CQWWRTTYQSOPointMethod
 active.exchange = RSTZoneAndPossibleDomesticQTHExchange
@@ -299,7 +299,7 @@ totals.cabrillo = CLAIMED-SCORE: 1470
 == identity
 contest.requested = 158 CQWWRTTY
 contest.selected = 158 CQWWRTTY
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQWWRTTY
 == setup
 active.qsopointmethod = CQWWRTTYQSOPointMethod
 active.exchange = RSTZoneAndPossibleDomesticQTHExchange
@@ -596,7 +596,7 @@ totals.cabrillo = CLAIMED-SCORE: 1722
 == identity
 contest.requested = 158 CQWWRTTY
 contest.selected = 158 CQWWRTTY
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQWWRTTY
 == setup
 active.qsopointmethod = CQWWRTTYQSOPointMethod
 active.exchange = RSTZoneAndPossibleDomesticQTHExchange

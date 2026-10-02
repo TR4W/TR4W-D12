@@ -480,6 +480,18 @@ begin
      begin
      tAllowDupeQSOs := aSession.AllowDupeQSOs;
      end;
+  if aSession.IsStated(svInitialExchange) then
+     begin
+     ActiveInitialExchange := aSession.InitialExchange;
+     end;
+  if aSession.IsStated(svZoneMult) then
+     begin
+     ActiveZoneMult := aSession.ZoneMult;
+     end;
+  if aSession.IsStated(svDXMultLimit) then
+     begin
+     DXMultLimit := aSession.DXMultLimit;
+     end;
 
   if aSession.IsStated(svMultByBand) then
      begin
@@ -548,6 +560,10 @@ begin
   if aSession.IsStated(svRfoblMode) then
      begin
      Settings.Contest.RfoblMode := aSession.RfoblMode;
+     end;
+  if aSession.IsStated(svR150SMode) then
+     begin
+     Settings.Contest.R150SMode := aSession.R150SMode;
      end;
   if aSession.IsStated(svAutoDupeEnableCQ) then
      begin
@@ -703,20 +719,22 @@ function FoundContest(CMD: ShortString): boolean;
 
 var
 
-  (* The first two characters of MY STATE -- the New England QSO Party arm. *)
-  NewEnglandState: string;
-
   (* What this contest IS -- owned by uContestRegistry, never freed here. *)
   definition: TContestBase;
 
   (* What the contest wants its session to start from -- owned here. *)
   session: TSessionDefaults;
 
+  (* The contest said the closing set-up writes no zone-exchange messages
+     for it -- TSessionDefaults.SuppressZoneExchangeMessages (M7b). *)
+  zoneExchangeMessagesSuppressed: boolean;
+
   TempDomesticQTHDataFileName: string;
   // i,j                                   : integer;
   // k                                     : str10;
 begin
   CTY.ctyCountryMode := ARRLCountryMode;
+  zoneExchangeMessagesSuppressed := False;
 
   NoMultMarineMobile := False;
     {KK1L: 6.68 Added for WRTC 2002 as flag to not count /MM or /AM as mults or countries}
@@ -784,6 +802,7 @@ begin
      try
         definition.DescribeSession(CurrentStation, session);
         ApplySessionDefaults(session, TempDomesticQTHDataFileName);
+        zoneExchangeMessagesSuppressed := session.SuppressZoneExchangeMessages;
      finally
         session.Free;
         end;
@@ -804,26 +823,6 @@ begin
           end;;
       end;
     }
-    JIDXSSB, JIDXCW:
-      begin
-        if Settings.My.Country = 'JA' then
-           begin
-           ActiveDXMult := ARRLDXCC;
-           ActiveInitialExchange := ZoneInitialExchange;
-           ActiveExchange := RSTZoneExchange;
-           ActiveZoneMult := CQZones;
-           end
-        else
-           begin
-           ActiveDomesticMult := DomesticFile;
-           ActiveExchange := RSTPrefectureExchange;
-           TempDomesticQTHDataFileName := 'JIDX';
-           end;
-
-        //        Settings.Contest.Name := 'Japan International DX Test';
-        //        CountryTable.ZoneMode := CQZoneMode;
-      end;
-
     SOUTHAMERICANWW: //, SA-SSPRINT: // issue 177
       begin
         if MyContinent = SouthAmerica then
@@ -844,65 +843,10 @@ begin
         ActiveBand := Band160;
       end;
 
-    ALLASIANCW, ALLASIANSSB:
-      begin
-        if MyContinent = Asia then
-           begin
-           ActiveDXMult := ARRLDXCC
-           end
-        else
-           begin
-           ActivePrefixMult := Prefix;
-           end;
-      end;
-
     YOTA:
       begin
         ActiveBand := Band80;
         //        VHFBandsEnabled := True;
-      end;
-
-    ARCI:
-      begin
-        //        Settings.Contest.Name := 'ARCI QSO PARTY';
-        Add_KVEKH6KL;
-      end;
-
-    ARI_DX:
-      begin
-        //        Settings.Contest.Name := 'ARI International DX Contest';
-        AddDomesticCountry('I');
-        AddDomesticCountry('IS');
-        AddDomesticCountry('*IT9'); //WLI
-      end;
-
-    ARRL10:
-      begin
-        ActiveBand := Band10;
-        //        ActiveExchange := RSTDomesticOrDXQTHExchange;    4.106.6
-        ActiveDXMult := ARRLDXCCWithNoARRLSections;
-        //        Settings.Contest.Name := 'ARRL Ten Meter Contest';
-         //       Settings.Contest.ExchangeMemoryEnable := False;      // 4.106.4
-        Settings.Contest.MultipleBands := False;
-        Add_KVEKH6KL;
-        AddDomesticCountry('XE');
-      end;
-
-    ARRL160:
-      begin
-        if ARRLSectionCountry(Settings.My.Country) then
-           begin
-           ActiveExchange := RSTDomesticOrDXQTHExchange; {*}
-           ActiveDXMult := ARRLDXCCWithNoARRLSections;
-           end
-        else
-           begin
-           ActiveExchange := RSTDomesticQTHExchange; {*}
-           end;
-
-        //        Settings.Contest.Name := 'ARRL 160 Contest';
-        //        DomesticQTHDataFileName := 'ARRLSECT';
-        AddARRLSectionDomesticCountries;
       end;
 
     {
@@ -947,88 +891,6 @@ begin
         SetEXCaptionMemoryString(CW, F5, 'Cl+Ex');
       end;
 
-    ARRLVHFJUN, ARRLVHFSEP:
-      begin
-        ActiveBand := Band6;
-        Settings.Contest.Name := 'VHF QSO JUNE';
-        Settings.Bands.HfEnabled := False;
-        //        VHFBandsEnabled := True;
-         //         Settings.My.State := Settings.My.Grid; //Copy(Settings.My.Grid, 1, 4);
-      end;
-
-    BALTIC:
-      begin
-        ActiveBand := Band80;
-      end;
-
-    //    BWQP:
-    //    ActiveExchange := RSTPowerExchange;
-
-    CIS:
-      begin
-        AddRussianDomesticCountrys;
-
-        AddDomesticCountry('UR');
-        AddDomesticCountry('EU');
-        AddDomesticCountry('4J');
-        AddDomesticCountry('EK');
-        AddDomesticCountry('UN');
-        AddDomesticCountry('EX');
-        AddDomesticCountry('ER');
-        AddDomesticCountry('EY');
-        AddDomesticCountry('EZ');
-        AddDomesticCountry('UK');
-        AddDomesticCountry('4L');
-
-        //??????, ???????, ????????, ???????????, ???????, ?????????, ??????????, ???????, ???????????,
-        // ????????????, ?????????? ? ??????
-
-//        Settings.Contest.CountDomesticCountries := True;
-//        Settings.Contest.Name := 'CIS DX Contest';
-      end;
-
-    CQM:
-      begin
-        //        Settings.Contest.Name := 'CQ M Contest';
-        Settings.Contest.R150SMode := True;
-      end;
-
-    CQVHF:
-      begin
-        ActiveBand := Band2;
-        //        Settings.Contest.Name := 'CQ WORLD WIDE VHF Contest';
-        Settings.Bands.HfEnabled := False;
-        //        VHFBandsEnabled := True;
-      end;
-
-    {
-        CQWWRTTY:
-          begin
-            CountryTable.CountryMode := CQCountryMode;
-            CountryTable.ZoneMode := CQZoneMode;
-
-            ActiveDomesticMult := DomesticFile;
-            ActiveDXMult := CQDXCC;
-            ActiveExchange := RSTZoneAndPossibleDomesticQTHExchange;
-            ActiveInitialExchange := ZoneInitialExchange;
-    //        ActiveQSOPointMethod := CQWWRTTYQSOPointMethod;
-            ActiveZoneMult := CQZones;
-            Settings.Contest.Name := 'CQ WW RTTY CONTEST';
-            Settings.Contest.DigitalModeEnable := True;
-            //DomesticQTHDataFileName := 'S48P13';
-            //Settings.Mult.ByBand := True;
-            //Settings.Qso.ByBand := True;
-            Add_KVE;
-          end;
-    }
-
-    EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB,
-      EUSPRINT_SPRING_CW:
-      begin
-        ActiveBand := Band20;
-        //        ActiveInitialExchange := NameInitialExchange;
-      end;
-
     RADIOVHFFD:
       begin
         Settings.Bands.HfEnabled := False;
@@ -1038,19 +900,6 @@ begin
         Settings.Qso.ByMode := False;
         Settings.Qso.ByBand := True;
         Settings.Contest.QsoNumberByBand := True;
-      end;
-
-    EUROPEANVHF:
-      begin
-        ActiveBand := Band6;
-        //        Settings.Contest.Name := 'EUROPEAN VHF CONTEST';
-        Settings.Bands.HfEnabled := False;
-        //        VHFBandsEnabled := True;
-      end;
-
-    HADX:
-      begin
-        AddDomesticCountry('HA');
       end;
 
     IRTS: // 4.93.1
@@ -1068,45 +917,6 @@ begin
       begin
         //     AddDomesticCountry
 
-      end;
-
-    YUDX: // 4.57.5
-      begin
-        AddDomesticCountry('YU');
-        if Settings.My.Country = 'YU' then
-           begin
-           ActiveDomesticMult := NoDomesticMults; // 4.57.7
-           ActiveDXMult := ARRLDXCC;
-           end
-      end;
-
-    HELVETIA:
-      begin
-        if Settings.My.Country = 'HB' then
-           begin
-           ActiveDXMult := ARRLDXCC;
-           end;
-        //  else          // 4.56.3 issue 232
-        AddDomesticCountry('HB');
-      end;
-
-    OZCR_Z:
-      begin
-        Settings.Contest.Name := '????-??????? ????????? ?????? - ??????? ?????????';
-      end;
-
-    GagarinCup:
-      begin
-        Settings.Contest.R150SMode := True;
-        Settings.Contest.Name := 'Yuri Gagarin International DX Contest';
-        Settings.Qso.ByMode := TRUE;
-        Settings.Contest.InitialExchangeOverwrite := TRUE;
-      end;
-
-    KCJ:
-      begin
-        ActiveInitialExchange := ZoneInitialExchange; // 4.114.1
-        Settings.Contest.InitialExchangeOverwrite := True;
       end;
 
     {
@@ -1139,43 +949,6 @@ begin
         Add_KVE;
         Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + Settings.My.State);
         Settings.Messages.SpExchangeCw := UTF8Encode(Settings.My.Name + ' ' + Settings.My.State);
-      end;
-
-    NEWENGLANDQSO:
-      begin
-        (* A NEW ENGLAND STATION: MY STATE BEGINS WITH ONE OF THE SIX STATES.
-
-          A STRING COMPARISON OF THE FIRST TWO CHARACTERS -- 2026-10-01, M2,
-          inventory defect #3. This read PWORD(@Settings.My.State[1])^, which
-          was D7's way to take two AnsiChars at once. Here string is
-          UnicodeString, so the word held ONE character and could never equal
-          'ME' or any of the others -- no station was ever in New England --
-          and an EMPTY MY STATE gave PWORD the address of nothing: set-up
-          crashed for every DX station (the contest matrix's dx variant,
-          exit 217). The first-two-characters rule is D7's, kept as it was. *)
-        NewEnglandState := Copy(Settings.My.State, 1, 2);
-        if (NewEnglandState = 'ME') or
-           (NewEnglandState = 'NH') or
-           (NewEnglandState = 'VT') or
-           (NewEnglandState = 'MA') or
-           (NewEnglandState = 'CT') or
-           (NewEnglandState = 'RI') then
-           begin
-           TempDomesticQTHDataFileName := 'NEQSOW1';
-           ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-           ActiveExchange := RSTDomesticOrDXQTHExchange;
-           //          Settings.Contest.Name := 'New England QSO Party (within NE)';
-           end
-        else
-           begin
-           TempDomesticQTHDataFileName := 'NEQSO';
-           //          ActiveDXMult := NoCountDXMults;
-           ActiveExchange := RSTDomesticQTHExchange;
-           //          Settings.Contest.Name := 'New England QSO Party (outside NE)';
-           end;
-
-        DXMultLimit := 20;
-        Add_KVEKH6KL;
       end;
 
     OKOMSSB: // 4.80.1
@@ -1290,13 +1063,7 @@ begin
         Settings.Contest.MinitourDuration := 20;
       end;
 
-    OLDNEWYEAR:
-      begin
-        ActiveBand := Band80;
-        Settings.Contest.ExchangeMemoryEnable := True;
-      end;
-
-    CQWPXRTTY, WRTC:
+    WRTC:
       ActiveBand := Band80;
 
     RFASCHAMPIONSHIPCW {, RFASCHAMPIONSHIPSSB}:
@@ -1305,41 +1072,7 @@ begin
         //        if Contest = RFASCHAMPIONSHIPSSB then ActiveMode := Phone;
       end;
 
-    SEVENQP:
-      begin
-        //        if (pos('7', Settings.My.Call) > 0) or (pos('/7', Settings.My.Call) > 0) then
-        if FoundMyStateInDomFile then
-           begin
-           //          DomesticQTHDataFileName := '7QP-W7';
-           //          Settings.Contest.Name := '7th Area QSO Party Inside W7';
-           ActiveExchange := RSTDomesticOrDXQTHExchange;
-           ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-           DXMultLimit := 20;
-           //          Add_KVEKH6KL;
-           end
-        else
-           begin
-           //          DomesticQTHDataFileName := '7QP';
-           //          Settings.Contest.Name := '7th Area QSO Party Outside W7';
-           ActiveExchange := RSTDomesticQTHExchange;
-           end;
-        //        VHFBandsEnabled := True;
-
-      end;
-
-    OZCR_O:
-      begin
-        Settings.Contest.Name := '????-??????? ????????? ?????? - ????? ?????????';
-        Settings.Contest.R150SMode := True;
-      end;
-
     //    UA4N: Settings.Contest.MinitourDuration := 15;
-
-    JTDX: // 4.67.9
-      begin
-        ActiveInitialExchange := ZoneInitialExchange;
-        ActivePrefixMult := MongolianCallSignPrefix;
-      end;
 
     UNDX:
       begin
@@ -1416,8 +1149,11 @@ begin
          SetUpRSTMyStateExchange;
          end;
 
+    (* A CONTEST MAY REFUSE THESE MESSAGES -- the JIDX contests do, which was
+      a test of their names here until M7b (TSessionDefaults.
+      SuppressZoneExchangeMessages). *)
     RSTZoneAndPossibleDomesticQTHExchange, RSTZoneExchange:
-      if not (Contest in [JIDXCW, JIDXSSB]) then
+      if not zoneExchangeMessagesSuppressed then
          begin
          SetUpRSTMyZoneExchange;
          end;

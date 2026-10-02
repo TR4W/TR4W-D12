@@ -126,6 +126,29 @@ Three groups:
   station really not workable in SAC, or only not a multiplier?
   **Answer:**
 
+### Added after M7b batch 1
+
+- **Q40** Multi-state parties (7QP, NEQP, IN7QPNE): should they share a
+  multi-state party base? On a line between two states, whose county rule
+  applies? 7QP's sponsor allows up to 4 counties on a line -- enforce it? Nothing
+  enforces it today.
+  **Answer:**
+
+- **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
+  (the old code named both runnings), and January has never had any setup at
+  all -- no 6 m start, HF bands left on. Intended?
+  **Answer:**
+
+- **Q42** OZCHR: both session names are literal `?` characters; the Cyrillic was
+  lost before this tree (D7 too). Restore the Cyrillic, or use Latin names?
+  **Answer:**
+
+- **Q43** (Q7 made concrete) Which of these pairs are ONE contest under one rule
+  (a base with children) rather than separate contests: JIDX CW/SSB (identical
+  but for names), All Asian CW/SSB, Oceania CW/SSB, the four EU Sprints, the
+  three ARRL VHF runnings?
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -151,8 +174,8 @@ Three groups:
 
 - **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
   characters, so a malformed grid's score depends on leftover memory (identical
-  ALRS QSOs scored 43, 42, 42). Fixing it changes scores for malformed grids in
-  every grid contest. What should a malformed grid score? *Recommended: fix the
+  ALRS QSOs scored 43, 42, 42). Tesla and European VHF read short grids the same
+  way. Fixing it changes scores for malformed grids in every grid contest. What should a malformed grid score? *Recommended: fix the
   read; a grid that is not a grid scores as no distance.*
   **Answer:**
 

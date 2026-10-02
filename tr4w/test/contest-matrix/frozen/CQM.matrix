@@ -2,7 +2,7 @@
 == identity
 contest.requested = 26 CQM
 contest.selected = 26 CQM
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQM
 == setup
 active.qsopointmethod = CQMQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -300,7 +300,7 @@ totals.cabrillo = CLAIMED-SCORE: 595
 == identity
 contest.requested = 26 CQM
 contest.selected = 26 CQM
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQM
 == setup
 active.qsopointmethod = CQMQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -598,7 +598,7 @@ totals.cabrillo = CLAIMED-SCORE: 697
 == identity
 contest.requested = 26 CQM
 contest.selected = 26 CQM
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQM
 == setup
 active.qsopointmethod = CQMQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE

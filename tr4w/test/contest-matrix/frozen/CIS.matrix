@@ -2,7 +2,7 @@
 == identity
 contest.requested = 21 CIS
 contest.selected = 21 CIS
-contest.class = (none -- the legacy engine)
+contest.class = TContestCIS
 == setup
 active.qsopointmethod = CISQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -300,7 +300,7 @@ totals.cabrillo = CLAIMED-SCORE: 875
 == identity
 contest.requested = 21 CIS
 contest.selected = 21 CIS
-contest.class = (none -- the legacy engine)
+contest.class = TContestCIS
 == setup
 active.qsopointmethod = CISQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -598,7 +598,7 @@ totals.cabrillo = CLAIMED-SCORE: 1025
 == identity
 contest.requested = 21 CIS
 contest.selected = 21 CIS
-contest.class = (none -- the legacy engine)
+contest.class = TContestCIS
 == setup
 active.qsopointmethod = CISQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange

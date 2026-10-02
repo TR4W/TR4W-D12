@@ -2,7 +2,7 @@
 == identity
 contest.requested = 43 FISTS
 contest.selected = 43 FISTS
-contest.class = (none -- the legacy engine)
+contest.class = TContestFISTS
 == setup
 active.qsopointmethod = FistsQSOPointMethod
 active.exchange = RSTQTHNameAndFistsNumberOrPowerExchange
@@ -283,7 +283,7 @@ totals.cabrillo = CLAIMED-SCORE: 79
 == identity
 contest.requested = 43 FISTS
 contest.selected = 43 FISTS
-contest.class = (none -- the legacy engine)
+contest.class = TContestFISTS
 == setup
 active.qsopointmethod = FistsQSOPointMethod
 active.exchange = RSTQTHNameAndFistsNumberOrPowerExchange
@@ -564,7 +564,7 @@ totals.cabrillo = CLAIMED-SCORE: 79
 == identity
 contest.requested = 43 FISTS
 contest.selected = 43 FISTS
-contest.class = (none -- the legacy engine)
+contest.class = TContestFISTS
 == setup
 active.qsopointmethod = FistsQSOPointMethod
 active.exchange = RSTQTHNameAndFistsNumberOrPowerExchange

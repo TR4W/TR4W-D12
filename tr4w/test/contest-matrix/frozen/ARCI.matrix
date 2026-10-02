@@ -2,7 +2,7 @@
 == identity
 contest.requested = 6 ARCI
 contest.selected = 6 ARCI
-contest.class = (none -- the legacy engine)
+contest.class = TContestARCI
 == setup
 active.qsopointmethod = ARCIQSOPointMethod
 active.exchange = RSTPossibleDomesticQTHAndPower
@@ -293,7 +293,7 @@ totals.cabrillo = CLAIMED-SCORE: 1296
 == identity
 contest.requested = 6 ARCI
 contest.selected = 6 ARCI
-contest.class = (none -- the legacy engine)
+contest.class = TContestARCI
 == setup
 active.qsopointmethod = ARCIQSOPointMethod
 active.exchange = RSTPossibleDomesticQTHAndPower
@@ -584,7 +584,7 @@ totals.cabrillo = CLAIMED-SCORE: 1296
 == identity
 contest.requested = 6 ARCI
 contest.selected = 6 ARCI
-contest.class = (none -- the legacy engine)
+contest.class = TContestARCI
 == setup
 active.qsopointmethod = ARCIQSOPointMethod
 active.exchange = RSTPossibleDomesticQTHAndPower

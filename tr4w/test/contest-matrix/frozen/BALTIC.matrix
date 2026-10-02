@@ -2,7 +2,7 @@
 == identity
 contest.requested = 19 BALTIC
 contest.selected = 19 BALTIC
-contest.class = (none -- the legacy engine)
+contest.class = TContestBaltic
 == setup
 active.qsopointmethod = BalticQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -270,7 +270,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 19 BALTIC
 contest.selected = 19 BALTIC
-contest.class = (none -- the legacy engine)
+contest.class = TContestBaltic
 == setup
 active.qsopointmethod = BalticQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -538,7 +538,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 19 BALTIC
 contest.selected = 19 BALTIC
-contest.class = (none -- the legacy engine)
+contest.class = TContestBaltic
 == setup
 active.qsopointmethod = BalticQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE

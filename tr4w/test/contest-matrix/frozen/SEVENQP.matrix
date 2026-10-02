@@ -2,7 +2,7 @@
 == identity
 contest.requested = 1 SEVENQP
 contest.selected = 1 SEVENQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestSevenQP
 == setup
 active.qsopointmethod = TwoPhoneThreeCW
 active.exchange = RSTDomesticQTHExchange
@@ -291,7 +291,7 @@ totals.cabrillo = CLAIMED-SCORE: 328
 == identity
 contest.requested = 1 SEVENQP
 contest.selected = 1 SEVENQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestSevenQP
 == setup
 active.qsopointmethod = TwoPhoneThreeCW
 active.exchange = RSTDomesticOrDXQTHExchange
@@ -587,7 +587,7 @@ totals.cabrillo = CLAIMED-SCORE: 656
 == identity
 contest.requested = 1 SEVENQP
 contest.selected = 1 SEVENQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestSevenQP
 == setup
 active.qsopointmethod = TwoPhoneThreeCW
 active.exchange = RSTDomesticQTHExchange
@@ -876,7 +876,7 @@ totals.cabrillo = CLAIMED-SCORE: 328
 == identity
 contest.requested = 1 SEVENQP
 contest.selected = 1 SEVENQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestSevenQP
 == setup
 active.qsopointmethod = TwoPhoneThreeCW
 active.exchange = RSTDomesticQTHExchange

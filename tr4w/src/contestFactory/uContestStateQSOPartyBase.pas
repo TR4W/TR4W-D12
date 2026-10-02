@@ -75,6 +75,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   base becomes a family base with flags in it. A multi-state party should arrive
   and prove whether it fits.
 
+  M7b (2026-10-02): 7QP and NEQP ARRIVED, AND DID NOT FIT. Each is its own
+  class on TContestBase (uContestSevenQP, uContestNewEnglandQP): this base's
+  out-of-state refusal and county-line rule assume ONE host state, and neither
+  contest has ever been held to them. 7QP's row still makes set-up run the
+  party head for it (its IsUSQSOParty), which is what it always did. Whether
+  the multi-state parties want a base of their own is a design question in
+  docs/CONTEST_OWNERSHIP_DESIGN.md (Q40).
+
   ---------------------------------------------------------------------------
   WHAT WAS MEASURED, FLORIDA AGAINST MICHIGAN, BEFORE WRITING THIS
 

@@ -723,7 +723,8 @@ function ValidClass(sClass: Str10): boolean;
 //procedure WriteLogEntry(Entry: Str80);
 
 //function GetFederalOkrug(OblastDigit, OblastChar: Char): FederalOkrugs;
-function InSameFederalOkrug(HisCallsign: CallString): boolean;
+(* ~~InSameFederalOkrug~~ IS uCallSignRoutines.InSameFederalOkrug since M7b --
+   lifted so the CQ-M class and the CQMQSOPointMethod arm ask one function. *)
 
 (* IS THIS BAND IN PLAY FOR THIS CONTEST?
 
@@ -6784,7 +6785,7 @@ begin
                  RXData.QSOPoints := 3;
                  end;
               end
-           else if InSameFederalOkrug(RXData.Callsign) then
+           else if InSameFederalOkrug(UTF8Encode(Settings.My.Call), RXData.Callsign) then
               begin
               RXData.QSOPoints := 1
               end
@@ -9697,46 +9698,6 @@ begin
     string(BandStringsArrayWithOutSpaces[ActiveBand]));
 end;
 
-function InSameFederalOkrug(HisCallsign: CallString): boolean;
-var
-  MyOBlast, HisOblast: string[2];
-  o1, o2: OkrugType;
-begin
-  Result := True;
-  if StringHas(Settings.My.Call, '/') then
-     begin
-     Exit;
-     end;
-  MyOBlast := GetOblast(UTF8Encode(Settings.My.Call));
-  if MyOBlast = '' then
-     begin
-     Exit;
-     end;
-
-  if StringHas(HisCallsign, '/') then
-     begin
-     Exit;
-     end;
-  HisOblast := GetOblast(HisCallsign);
-  if HisOblast = '' then
-     begin
-     Exit;
-     end;
-
-  o1 := GetOkrugByOblast(GetRussiaOblastByTwoChars(Char(MyOBlast[1]), Char(MyOBlast[2])));
-  if o1 = foUnKnownOkrug then
-     begin
-     Exit;
-     end;
-
-  o2 := GetOkrugByOblast(GetRussiaOblastByTwoChars(Char(HisOblast[1]), Char(HisOblast[2])));
-  if o2 = foUnKnownOkrug then
-     begin
-     Exit;
-     end;
-
-  Result := o1 = o2;
-end;
 {
 }
 
@@ -10006,7 +9967,9 @@ begin
     the UA4W arm scores by ctyGetCQZone(MY CALL) -- a CTY.DAT lookup that
     swaps the global zone list while it runs, which no contest class can be
     handed. The same reason ARRL 160 kept its import and export arms at M4
-    and M5a. *)
+    and M5a -- until M7b handed its class the domestic-country lookup as a
+    station-context SERVICE (TStationContext.IsDomesticCountryCall), which
+    is the shape an answer for MY CALL's CQ zone would take (design Q28). *)
   if Result then
      begin
      if Contest = UA4WCHAMPIONSHIP then

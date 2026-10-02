@@ -2,7 +2,7 @@
 == identity
 contest.requested = 17 ARRLVHFSEP
 contest.selected = 17 ARRLVHFSEP
-contest.class = (none -- the legacy engine)
+contest.class = TContestARRLVHFSep
 == setup
 active.qsopointmethod = ARRLVHFJUNPointMethod
 active.exchange = RSTAndOrGridExchange
@@ -286,7 +286,7 @@ totals.cabrillo = CLAIMED-SCORE: 16
 == identity
 contest.requested = 17 ARRLVHFSEP
 contest.selected = 17 ARRLVHFSEP
-contest.class = (none -- the legacy engine)
+contest.class = TContestARRLVHFSep
 == setup
 active.qsopointmethod = ARRLVHFJUNPointMethod
 active.exchange = RSTAndOrGridExchange
@@ -570,7 +570,7 @@ totals.cabrillo = CLAIMED-SCORE: 16
 == identity
 contest.requested = 17 ARRLVHFSEP
 contest.selected = 17 ARRLVHFSEP
-contest.class = (none -- the legacy engine)
+contest.class = TContestARRLVHFSep
 == setup
 active.qsopointmethod = ARRLVHFJUNPointMethod
 active.exchange = RSTAndOrGridExchange

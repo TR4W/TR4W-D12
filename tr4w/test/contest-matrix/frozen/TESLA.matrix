@@ -2,7 +2,7 @@
 == identity
 contest.requested = 41 TESLA
 contest.selected = 41 TESLA
-contest.class = (none -- the legacy engine)
+contest.class = TContestTesla
 == setup
 active.qsopointmethod = TeslaQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -267,7 +267,7 @@ totals.cabrillo = CLAIMED-SCORE: 476
 == identity
 contest.requested = 41 TESLA
 contest.selected = 41 TESLA
-contest.class = (none -- the legacy engine)
+contest.class = TContestTesla
 == setup
 active.qsopointmethod = TeslaQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -532,7 +532,7 @@ totals.cabrillo = CLAIMED-SCORE: 408
 == identity
 contest.requested = 41 TESLA
 contest.selected = 41 TESLA
-contest.class = (none -- the legacy engine)
+contest.class = TContestTesla
 == setup
 active.qsopointmethod = TeslaQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange

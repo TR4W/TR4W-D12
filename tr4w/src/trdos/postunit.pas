@@ -2360,14 +2360,16 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // place (M4, 2026-10-01): EmitADIFContestFields, asked of every contest
   // through ContestIdentity -- the Field Days' ARRL_SECT/CLASS/STATE,
   // Sweepstakes' ARRL_SECT, IARU's APP_TR4W_HQ, the RSGB IOTA's IOTA, WAG's
-  // DOK, the digital contests' GRIDSQUARE.  The base writes nothing.
+  // DOK, the digital contests' GRIDSQUARE, ARRL 160's ARRL_SECT.  The base
+  // writes nothing.
   //
-  // TWO CONTESTS ARE STILL NAMED HERE, EACH FOR A STATED REASON (design
-  // 8.2e).  POTA has no class: whether it gets one is NY4I's open Q6, and its
-  // export leans on three TRDOS helpers a class may not call.  ARRL 160 has
-  // no class because its SCORING reads the domestic-country list through a
-  // CTY lookup (ZoneCont.DomesticCountryCall) that a contest cannot yet be
-  // handed.  The no-op arm that named the NA Sprints, the SSB Sprint, CQ 160
+  // ONE CONTEST IS STILL NAMED HERE, FOR A STATED REASON (design 8.2e).
+  // POTA has no class: whether it gets one is NY4I's open Q6, and its export
+  // leans on three TRDOS helpers a class may not call.  ARRL 160 was named
+  // here too until M7b (2026-10-02), when its class was handed the
+  // domestic-country CTY lookup its scoring needed (TStationContext.
+  // IsDomesticCountryCall); its arm is TContestARRL160.EmitADIFContestFields.
+  // The no-op arm that named the NA Sprints, the SSB Sprint, CQ 160
   // and the NAQP runnings, and the comment that said they "suppress any
   // location field", were deleted: the arm and the else did the same nothing
   // (inventory D6).
@@ -2383,12 +2385,6 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
      else
         begin
         case rec.ceContest of
-          ARRL160:
-            if ( rec.QTH.CountryID = 'K' ) or ( rec.QTH.CountryID = 'VE' ) then
-               begin
-               Result := Result + EmitADIFField( 'ARRL_SECT',
-                  string( rec.QTHString ) );
-               end;
           POTA:
             if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
                begin

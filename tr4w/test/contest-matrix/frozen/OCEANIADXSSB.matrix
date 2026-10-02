@@ -2,7 +2,7 @@
 == identity
 contest.requested = 86 OCEANIADXSSB
 contest.selected = 86 OCEANIADXSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestOceaniaDXSSB
 == setup
 active.qsopointmethod = VKZLQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -300,7 +300,7 @@ totals.cabrillo = CLAIMED-SCORE: 34
 == identity
 contest.requested = 86 OCEANIADXSSB
 contest.selected = 86 OCEANIADXSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestOceaniaDXSSB
 == setup
 active.qsopointmethod = VKZLQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE
@@ -598,7 +598,7 @@ totals.cabrillo = CLAIMED-SCORE: 34
 == identity
 contest.requested = 86 OCEANIADXSSB
 contest.selected = 86 OCEANIADXSSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestOceaniaDXSSB
 == setup
 active.qsopointmethod = VKZLQSOPointMethod
 active.exchange = RSTQSONUMBEREXCHANGE

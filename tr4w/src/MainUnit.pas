@@ -9935,24 +9935,23 @@ end;
 
 // GetADIFMode, GetADIFSubMode, GetADIFBand moved to uADIF.pas (Issue #887).
 
-(* THE CONTESTS WITH NO CLASS THAT STILL OWN AN ADIF IMPORT RULE -- M5a,
+(* THE CONTEST WITH NO CLASS THAT STILL OWNS AN ADIF IMPORT RULE -- M5a,
   2026-10-01.
 
   EVERY OTHER CONTEST'S RULE IS ITS CLASS'S (TContestBase.ApplyADIFImport, asked
   by uADIF.ApplyADIFContestImport once the whole record is read) and the
-  classless default is the base's. Two arms stay here, each for a reason that
-  is a missing class and not a missing seam:
+  classless default is the base's. One arm stays here, for a reason that is a
+  missing class and not a missing seam:
 
     POTA       has no class: whether it becomes one is design Q6, which is
                NY4I's and open. Its arm calls ResolvePOTAParkFromADIF and
                LooksLikeAState, TRDOS routines a contest class may not reach.
-    ARRL160    has no class because a class must score it, and its scoring arm
-               asks ZoneCont.DomesticCountryCall -- a CTY lookup against the
-               domestic-country list, which no contest can yet be handed (that
-               list becomes the contest's at M8, design 8.2e).
 
-  Each arm is deleted when its contest gains a class. True when the contest
-  was handled here; False leaves it to its class. *)
+  ARRL 160 stood here too until M7b (2026-10-02), when its class was handed the
+  domestic-country CTY lookup its scoring needs (TStationContext.
+  IsDomesticCountryCall); its arm is TContestARRL160.ApplyADIFImport. This
+  routine is deleted when POTA gains a class. True when the contest was
+  handled here; False leaves it to its class. *)
 function ApplyClasslessADIFImport(const temps: TADIFRecordTemps;
                                   var exch: ContestExchange): boolean;
 var
@@ -9961,9 +9960,6 @@ var
 begin
   Result := True;
   case exch.ceContest of
-    ARRL160:
-      exch.DomesticQTH := temps.SRX_String;
-
     POTA:
       begin
       parkRef := ResolvePOTAParkFromADIF(temps.POTARef, temps.SIG, temps.SIG_Info);

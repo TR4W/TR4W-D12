@@ -2,7 +2,7 @@
 == identity
 contest.requested = 50 HADX
 contest.selected = 50 HADX
-contest.class = (none -- the legacy engine)
+contest.class = TContestHADX
 == setup
 active.qsopointmethod = HADXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -300,7 +300,7 @@ totals.cabrillo = CLAIMED-SCORE: 1450
 == identity
 contest.requested = 50 HADX
 contest.selected = 50 HADX
-contest.class = (none -- the legacy engine)
+contest.class = TContestHADX
 == setup
 active.qsopointmethod = HADXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -598,7 +598,7 @@ totals.cabrillo = CLAIMED-SCORE: 1450
 == identity
 contest.requested = 50 HADX
 contest.selected = 50 HADX
-contest.class = (none -- the legacy engine)
+contest.class = TContestHADX
 == setup
 active.qsopointmethod = HADXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange

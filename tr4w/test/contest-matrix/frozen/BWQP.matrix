@@ -2,7 +2,7 @@
 == identity
 contest.requested = 20 BWQP
 contest.selected = 20 BWQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestBWQP
 == setup
 active.qsopointmethod = BWQPQSOPointMethod
 active.exchange = RSTNameAndQTHExchange
@@ -267,7 +267,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 20 BWQP
 contest.selected = 20 BWQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestBWQP
 == setup
 active.qsopointmethod = BWQPQSOPointMethod
 active.exchange = RSTNameAndQTHExchange
@@ -532,7 +532,7 @@ totals.cabrillo = CLAIMED-SCORE: 0
 == identity
 contest.requested = 20 BWQP
 contest.selected = 20 BWQP
-contest.class = (none -- the legacy engine)
+contest.class = TContestBWQP
 == setup
 active.qsopointmethod = BWQPQSOPointMethod
 active.exchange = RSTNameAndQTHExchange

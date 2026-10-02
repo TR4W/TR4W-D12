@@ -2,7 +2,7 @@
 == identity
 contest.requested = 27 CQVHF
 contest.selected = 27 CQVHF
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQVHF
 == setup
 active.qsopointmethod = CQVHFQSOPointMethod
 active.exchange = RSTAndOrGridExchange
@@ -286,7 +286,7 @@ totals.cabrillo = CLAIMED-SCORE: 24
 == identity
 contest.requested = 27 CQVHF
 contest.selected = 27 CQVHF
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQVHF
 == setup
 active.qsopointmethod = CQVHFQSOPointMethod
 active.exchange = RSTAndOrGridExchange
@@ -570,7 +570,7 @@ totals.cabrillo = CLAIMED-SCORE: 24
 == identity
 contest.requested = 27 CQVHF
 contest.selected = 27 CQVHF
-contest.class = (none -- the legacy engine)
+contest.class = TContestCQVHF
 == setup
 active.qsopointmethod = CQVHFQSOPointMethod
 active.exchange = RSTAndOrGridExchange

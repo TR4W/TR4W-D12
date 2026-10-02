@@ -2,7 +2,7 @@
 == identity
 contest.requested = 60 JTDX
 contest.selected = 60 JTDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestJTDX
 == setup
 active.qsopointmethod = JTDXQSOPointMethod
 active.exchange = RSTZoneExchange
@@ -299,7 +299,7 @@ totals.cabrillo = CLAIMED-SCORE: 595
 == identity
 contest.requested = 60 JTDX
 contest.selected = 60 JTDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestJTDX
 == setup
 active.qsopointmethod = JTDXQSOPointMethod
 active.exchange = RSTZoneExchange
@@ -596,7 +596,7 @@ totals.cabrillo = CLAIMED-SCORE: 697
 == identity
 contest.requested = 60 JTDX
 contest.selected = 60 JTDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestJTDX
 == setup
 active.qsopointmethod = JTDXQSOPointMethod
 active.exchange = RSTZoneExchange

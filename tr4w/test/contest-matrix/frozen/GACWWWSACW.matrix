@@ -2,7 +2,7 @@
 == identity
 contest.requested = 46 GACWWWSACW
 contest.selected = 46 GACWWWSACW
-contest.class = (none -- the legacy engine)
+contest.class = TContestGACWWWSACW
 == setup
 active.qsopointmethod = GACWWWSACWQSOPointMethod
 active.exchange = RSTZoneExchange
@@ -298,7 +298,7 @@ totals.cabrillo = CLAIMED-SCORE: 952
 == identity
 contest.requested = 46 GACWWWSACW
 contest.selected = 46 GACWWWSACW
-contest.class = (none -- the legacy engine)
+contest.class = TContestGACWWWSACW
 == setup
 active.qsopointmethod = GACWWWSACWQSOPointMethod
 active.exchange = RSTZoneExchange
@@ -594,7 +594,7 @@ totals.cabrillo = CLAIMED-SCORE: 1156
 == identity
 contest.requested = 46 GACWWWSACW
 contest.selected = 46 GACWWWSACW
-contest.class = (none -- the legacy engine)
+contest.class = TContestGACWWWSACW
 == setup
 active.qsopointmethod = GACWWWSACWQSOPointMethod
 active.exchange = RSTZoneExchange

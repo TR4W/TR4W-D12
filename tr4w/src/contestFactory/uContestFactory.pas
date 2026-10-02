@@ -114,7 +114,18 @@ uses
    uSettingsModel,
    (* StationInHostState -- set-up's in-state answer for a QSO party (M5b). *)
    FCONTEST,
+   (* DomesticCountryCall -- the engine's CTY lookup behind the station
+      context's IsDomesticCountryCall service (M7b). *)
+   ZoneCont,
    uContestRegistry;
+
+(* THE ENGINE'S DOMESTIC-COUNTRY TEST, AS THE STATION CONTEXT'S SERVICE -- see
+   TStationContext.IsDomesticCountryCall. A callsign is ASCII, so the
+   conversion to CallString is the one the engine's own callers make. *)
+function EngineDomesticCountryCall(const aCall: string): boolean;
+begin
+   Result := DomesticCountryCall(CallString(aCall));
+end;
 
 function CurrentQSOPointOverrides: TQSOPointOverrides;
 
@@ -158,6 +169,10 @@ begin
    Result.MyPrec := Settings.My.Prec;
    Result.MyCheck := Settings.My.Check;
    Result.MyZoneText := Settings.My.Zone;
+   (* The session's contest name -- see TStationContext.ContestName (M7b). *)
+   Result.ContestName := Settings.Contest.Name;
+   (* The engine's domestic-country CTY lookup, as a service (M7b). *)
+   Result.IsDomesticCountryCall := @EngineDomesticCountryCall;
 
    Val(Settings.My.Zone, Result.MyZone, code);
    Result.MyZoneValid := (code = 0) and (Settings.My.Zone <> '');

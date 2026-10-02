@@ -2,7 +2,7 @@
 == identity
 contest.requested = 89 OLDNEWYEAR
 contest.selected = 89 OLDNEWYEAR
-contest.class = (none -- the legacy engine)
+contest.class = TContestOldNewYear
 == setup
 active.qsopointmethod = OldNewYearQSOPointMethod
 active.exchange = RSTPowerExchange
@@ -271,7 +271,7 @@ totals.cabrillo = CLAIMED-SCORE: 1500
 == identity
 contest.requested = 89 OLDNEWYEAR
 contest.selected = 89 OLDNEWYEAR
-contest.class = (none -- the legacy engine)
+contest.class = TContestOldNewYear
 == setup
 active.qsopointmethod = OldNewYearQSOPointMethod
 active.exchange = RSTPowerExchange
@@ -540,7 +540,7 @@ totals.cabrillo = CLAIMED-SCORE: 1500
 == identity
 contest.requested = 89 OLDNEWYEAR
 contest.selected = 89 OLDNEWYEAR
-contest.class = (none -- the legacy engine)
+contest.class = TContestOldNewYear
 == setup
 active.qsopointmethod = OldNewYearQSOPointMethod
 active.exchange = RSTPowerExchange

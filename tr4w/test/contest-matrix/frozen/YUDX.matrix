@@ -2,7 +2,7 @@
 == identity
 contest.requested = 51 YUDX
 contest.selected = 51 YUDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestYUDX
 == setup
 active.qsopointmethod = YUDXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -300,7 +300,7 @@ totals.cabrillo = CLAIMED-SCORE: 1075
 == identity
 contest.requested = 51 YUDX
 contest.selected = 51 YUDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestYUDX
 == setup
 active.qsopointmethod = YUDXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -598,7 +598,7 @@ totals.cabrillo = CLAIMED-SCORE: 1225
 == identity
 contest.requested = 51 YUDX
 contest.selected = 51 YUDX
-contest.class = (none -- the legacy engine)
+contest.class = TContestYUDX
 == setup
 active.qsopointmethod = YUDXQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange

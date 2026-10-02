@@ -2,7 +2,7 @@
 == identity
 contest.requested = 10 ARRL160
 contest.selected = 10 ARRL160
-contest.class = (none -- the legacy engine)
+contest.class = TContestARRL160
 == setup
 active.qsopointmethod = ARRL160QSOPointMethod
 active.exchange = RSTDomesticOrDXQTHExchange
@@ -295,7 +295,7 @@ totals.cabrillo = CLAIMED-SCORE: 928
 == identity
 contest.requested = 10 ARRL160
 contest.selected = 10 ARRL160
-contest.class = (none -- the legacy engine)
+contest.class = TContestARRL160
 == setup
 active.qsopointmethod = ARRL160QSOPointMethod
 active.exchange = RSTDomesticOrDXQTHExchange
@@ -588,7 +588,7 @@ totals.cabrillo = CLAIMED-SCORE: 928
 == identity
 contest.requested = 10 ARRL160
 contest.selected = 10 ARRL160
-contest.class = (none -- the legacy engine)
+contest.class = TContestARRL160
 == setup
 active.qsopointmethod = ARRL160QSOPointMethod
 active.exchange = RSTDomesticQTHExchange

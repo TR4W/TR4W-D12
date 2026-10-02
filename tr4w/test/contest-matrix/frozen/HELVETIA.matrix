@@ -2,7 +2,7 @@
 == identity
 contest.requested = 53 HELVETIA
 contest.selected = 53 HELVETIA
-contest.class = (none -- the legacy engine)
+contest.class = TContestHelvetia
 == setup
 active.qsopointmethod = HelvetiaQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -292,7 +292,7 @@ totals.cabrillo = CLAIMED-SCORE: 264
 == identity
 contest.requested = 53 HELVETIA
 contest.selected = 53 HELVETIA
-contest.class = (none -- the legacy engine)
+contest.class = TContestHelvetia
 == setup
 active.qsopointmethod = HelvetiaQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange
@@ -582,7 +582,7 @@ totals.cabrillo = CLAIMED-SCORE: 264
 == identity
 contest.requested = 53 HELVETIA
 contest.selected = 53 HELVETIA
-contest.class = (none -- the legacy engine)
+contest.class = TContestHelvetia
 == setup
 active.qsopointmethod = HelvetiaQSOPointMethod
 active.exchange = RSTDomesticQTHOrQSONumberExchange

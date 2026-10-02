@@ -1,0 +1,233 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE EU SPRING SPRINT, SSB.
+
+  The ContestsArray row this class states, verbatim:
+
+   Email: '';  DF: '';  WA7BNM: 316;  QRZRUID: 216;
+   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NameInitialExchange;
+   DM: NoDomesticMults;  P: 0;  AE: QSONumberAndNameExchange;
+   XM: NoDXMults;  QP: EuropeanSprintQSOPointMethod;
+   ADIFName: '';  CABName: '';
+   FriendlyName: 'RSGB International Sprint Contest, SSB'
+
+  Blank CABName and ADIFName resolve to the enum's spelling, 'EU-SPRINT-SPRING-SSB'.
+
+  WHY IT HAS A CLASS. Milestone M7b (2026-10-02) gives every classless
+  contest one, and a registered class is the contest's scorer, set-up,
+  export, import, parse and final score from the moment it exists -- so the
+  whole contest is transcribed here, exactly: the row above as literals
+  (Test_MovedRowValuesStillMatchTheArray), and every legacy arm that named it.
+  The contest matrix is the proof: every line of its record but
+  `contest.class` is unchanged.
+
+  SCORING: EuropeanSprintQSOPointMethod -- a European station 1 for every
+  contact; anyone else 1 for a European contact, else 0.
+
+  SET-UP: 20 m. LogCfg's defaults: CQ exchange `DE \ #` and MY NAME, and
+  the repeat S&P exchange `@` and the same -- the one arm that set a repeat
+  S&P default, which is why RepeatSPExchangeDefault exists (M7b).
+
+  A SIBLING, NOT A FAMILY MEMBER (M7b, DECIDED on evidence). The four EU Sprint runnings
+  (spring and autumn, CW and SSB) share one arm today, but their rows already
+  differ (only the spring CW running has no friendly name).
+  Extending NY4I's NRAU-Baltic ruling to every two-mode pair is his open
+  Q7, so this class is a COPY of its sibling and owns it (design 1.4).
+  Never merge the two, and never extract a base for them. *)
+unit uContestEUSprintSpringSSB;
+
+{$I tr4w.inc}
+
+interface
+
+uses
+   VC, uContestBase;
+
+type
+   TContestEUSprintSpringSSB = class(TContestBase)
+   protected
+      (* PROTECTED, MATCHING THE BASE -- callers use the properties,
+         descendants override the getters. Every getter below states
+         the ContestsArray row quoted above. *)
+      function GetDisplayName: string; override;
+      function GetCabrilloName: string; override;
+      function GetADIFContestId: string; override;
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetFriendlyName: string; override;
+      function GetPrefixMultiplierType: PrefixMultType; override;
+      function GetZoneMultiplierType: ZoneMultType; override;
+      function GetDXMultiplierType: DXMultType; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetQSOPointMethod: QSOPointMethodType; override;
+      function GetIsUSQSOParty: boolean; override;
+      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
+         TContestBase: ScoreQSO is the one public scoring entry. *)
+      procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+      (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
+      (* LogCfg's default repeat S&P exchange -- see
+         TContestBase.RepeatSPExchangeDefault. *)
+      function RepeatSPExchangeDefault(const aStation: TStationContext): string; override;
+   end;
+
+implementation
+
+uses
+   uContestRegistry;
+
+procedure TContestEUSprintSpringSSB.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   if Station.MyContinent = Europe then
+      begin
+      aQso.QSOPoints := 1;
+      end
+   else if aQso.QTH.Continent = Europe then
+      begin
+      aQso.QSOPoints := 1;
+      end
+   else
+      begin
+      aQso.QSOPoints := 0;
+      end;
+end;
+
+function TContestEUSprintSpringSSB.GetDisplayName: string;
+begin
+   Result := 'EU-SPRINT-SPRING-SSB';
+end;
+
+function TContestEUSprintSpringSSB.GetCabrilloName: string;
+begin
+   (* The row's CABName is blank; this is the enum's spelling it resolves
+      to. *)
+   Result := 'EU-SPRINT-SPRING-SSB';
+end;
+
+function TContestEUSprintSpringSSB.GetADIFContestId: string;
+begin
+   (* The row's ADIFName is blank; export writes the enum's spelling, and
+      import matches it (M1). *)
+   Result := 'EU-SPRINT-SPRING-SSB';
+end;
+
+function TContestEUSprintSpringSSB.GetWA7BNMId: integer;
+begin
+   Result := 316;
+end;
+
+function TContestEUSprintSpringSSB.GetQRZRUId: integer;
+begin
+   Result := 216;
+end;
+
+function TContestEUSprintSpringSSB.GetSubmissionEmail: string;
+begin
+   Result := '';
+end;
+
+function TContestEUSprintSpringSSB.GetDomesticFileName: string;
+begin
+   Result := '';
+end;
+
+function TContestEUSprintSpringSSB.GetFriendlyName: string;
+begin
+   Result := 'RSGB International Sprint Contest, SSB';
+end;
+
+function TContestEUSprintSpringSSB.GetPrefixMultiplierType: PrefixMultType;
+begin
+   Result := NoPrefixMults;
+end;
+
+function TContestEUSprintSpringSSB.GetZoneMultiplierType: ZoneMultType;
+begin
+   Result := NoZoneMults;
+end;
+
+function TContestEUSprintSpringSSB.GetDXMultiplierType: DXMultType;
+begin
+   Result := NoDXMults;
+end;
+
+function TContestEUSprintSpringSSB.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := NoDomesticMults;
+end;
+
+function TContestEUSprintSpringSSB.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NameInitialExchange;
+end;
+
+function TContestEUSprintSpringSSB.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberAndNameExchange;
+end;
+
+function TContestEUSprintSpringSSB.GetQSOPointMethod: QSOPointMethodType;
+begin
+   Result := EuropeanSprintQSOPointMethod;
+end;
+
+function TContestEUSprintSpringSSB.GetIsUSQSOParty: boolean;
+begin
+   (* P: 0 -- not a US state QSO party. *)
+   Result := False;
+end;
+
+(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
+   it stood (M7b, 2026-10-02). See TContestBase.DescribeSession: this
+   writes no global and reads only aStation. *)
+procedure TContestEUSprintSpringSSB.DescribeSession(const aStation: TStationContext;
+                                                    aSession: TSessionDefaults);
+begin
+   aSession.Band := Band20;
+end;
+
+(* LogCfg.tSetupExchangeNumbers' arm for this contest, moved at M7b -- see
+   TContestBase.CQExchangeDefault. *)
+function TContestEUSprintSpringSSB.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' DE \ # ' + aStation.MyName;
+end;
+
+(* The same arm's repeat S&P exchange -- see
+   TContestBase.RepeatSPExchangeDefault. *)
+function TContestEUSprintSpringSSB.RepeatSPExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := '@' + CQExchangeDefault(aStation);
+end;
+
+initialization
+   RegisterContest(EUSPRINT_SPRING_SSB, TContestEUSprintSpringSSB);
+
+end.

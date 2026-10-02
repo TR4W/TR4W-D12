@@ -142,15 +142,24 @@ $CEILINGS = @{
    # YOTA) and logcfg 14 -> 10 (four of tSetupExchangeNumbers' arms went
    # whole into CQExchangeDefault; six more lost their registered labels and
    # stay for the classless contests beside them).
-   'mainunit.pas'          = 13
-   'trdos\fcontest.pas'    = 50
-   'trdos\logcfg.pas'      = 10
+   #
+   # M7b batch 1, 2026-10-02 -- thirty-nine classless contests gained a class:
+   # fcontest 50 -> 25 (24 FoundContest arms went into DescribeSession, and
+   # the closing `Contest in [JIDXCW, JIDXSSB]` test became the JIDX
+   # classes' SuppressZoneExchangeMessages; CQ WPX RTTY left the arm it shared
+   # with WRTC, which stays), logcfg 10 -> 6 (four CQ-exchange arms whole),
+   # mainunit 13 -> 12 and postunit 15 -> 14 (ARRL 160's import and export
+   # arms -- its class was handed the domestic-country lookup its scoring
+   # needed).
+   'mainunit.pas'          = 12
+   'trdos\fcontest.pas'    = 25
+   'trdos\logcfg.pas'      = 6
    'trdos\logdupe.pas'     = 5
    'trdos\logedit.pas'     = 11
    'trdos\logstuff.pas'    = 3
    'trdos\logsubs2.pas'    = 3
    'trdos\logwind.pas'     = 1
-   'trdos\postunit.pas'    = 15
+   'trdos\postunit.pas'    = 14
    'uadif.pas'             = 1
    'uexchangebuilder.pas'  = 11
    'unewcontest.pas'       = 92
@@ -163,7 +172,10 @@ $CEILINGS = @{
 # M7a, 2026-10-02: 228 -> 180. The total fell 281 -> 220 because 61 tests
 # genuinely moved into the contest classes (the ceilings above); 180 keeps
 # the floor at about the ratio to the count (81%) it had before.
-$TOTAL_FLOOR  = 180
+#
+# M7b batch 1, 2026-10-02: 180 -> 150. The total fell 220 -> 189 (31 tests
+# moved into the classes, ceilings above); 150 is again about 80% of it.
+$TOTAL_FLOOR  = 150
 $MEMBER_FLOOR = 150
 
 # --------------------------------------------------------------------------

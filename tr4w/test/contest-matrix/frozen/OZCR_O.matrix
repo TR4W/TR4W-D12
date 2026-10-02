@@ -2,7 +2,7 @@
 == identity
 contest.requested = 90 OZCR_O
 contest.selected = 90 OZCR_O
-contest.class = (none -- the legacy engine)
+contest.class = TContestOZCRO
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTZoneOrSocietyExchange
@@ -302,7 +302,7 @@ totals.cabrillo = CLAIMED-SCORE: 578
 == identity
 contest.requested = 90 OZCR_O
 contest.selected = 90 OZCR_O
-contest.class = (none -- the legacy engine)
+contest.class = TContestOZCRO
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTZoneOrSocietyExchange
@@ -602,7 +602,7 @@ totals.cabrillo = CLAIMED-SCORE: 578
 == identity
 contest.requested = 90 OZCR_O
 contest.selected = 90 OZCR_O
-contest.class = (none -- the legacy engine)
+contest.class = TContestOZCRO
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTZoneOrSocietyExchange

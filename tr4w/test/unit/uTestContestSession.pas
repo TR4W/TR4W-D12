@@ -62,6 +62,10 @@ type
       procedure Test_FieldDayExchangeComesFromTheStation;
       procedure Test_CanadaDayBlanksANonVEState;
       procedure Test_CQExchangeDefaultIsLogCfgsArm;
+      procedure Test_MultiStatePartiesDescribeBothSides;
+      procedure Test_JIDXDescribesBothSidesAndRefusesZoneMessages;
+      procedure Test_M7bStationChoicesAreStatedPerSide;
+      procedure Test_M7bCQExchangeDefaults;
    end;
 
 implementation
@@ -136,6 +140,19 @@ begin
       end;
 end;
 
+(* aContest's repeat S&P default -- M7b. *)
+function RepeatDefault(aContest: ContestType; const aStation: TStationContext): string;
+var
+   obj: TContestBase;
+begin
+   obj := Make(aContest);
+   try
+      Result := obj.RepeatSPExchangeDefault(aStation);
+   finally
+      obj.Free;
+      end;
+end;
+
 function StatesNothing(aSession: TSessionDefaults): boolean;
 var
    v: TSessionValue;
@@ -177,9 +194,13 @@ begin
          end;
       CheckEquals('', CQDefault(c, KansasStation),
                   ContestTypeSA[c] + ': the base offered a CQ exchange');
+      CheckEquals('', RepeatDefault(c, KansasStation),
+                  ContestTypeSA[c] + ': the base offered a repeat S&P exchange');
       end;
-   (* A FLOOR, so the loop cannot pass by finding nothing to check. *)
-   CheckTrue(classless > 50, 'fewer than 50 classless contests were checked');
+   (* A FLOOR, so the loop cannot pass by finding nothing to check. M7b
+      batch 1 left 45 classless (DUMMYCONTEST among them), down from 84;
+      the floor follows the work down, and goes when M7b ends. *)
+   CheckTrue(classless > 40, 'fewer than 40 classless contests were checked');
 end;
 
 (* EVERY VALUE HAS THREE STATES. A stated False, a stated empty text and a
@@ -466,6 +487,224 @@ begin
    CheckEquals(' 5NN # KS', CQDefault(NRAUBALTICSSB, KansasStation), 'NRAU-Baltic SSB');
 end;
 
+(* ---------------------------------------------------------------------------
+   M7b BATCH 1 (2026-10-02) -- the classless contests' arms, moved
+   --------------------------------------------------------------------------- *)
+
+(* THE TWO MULTI-STATE PARTIES DESCRIBE BOTH SIDES. 7QP chooses on
+   FoundContest's in-state answer (its row's P makes set-up run the party
+   head); NEQP on MY STATE's first two characters, D7's rule as M2 restored
+   it, which an EMPTY state must survive -- the defect #3 crash. Each side
+   states its own values, and the DX multiplier limit is NEQP's for every
+   station but 7QP's only in state. *)
+procedure TContestSessionTests.Test_MultiStatePartiesDescribeBothSides;
+var
+   inState, outOfState, maine, noState: TStationContext;
+   session: TSessionDefaults;
+begin
+   BeginTest('Test_MultiStatePartiesDescribeBothSides');
+   inState := KansasStation;
+   inState.InHostState := True;
+   outOfState := KansasStation;
+   outOfState.InHostState := False;
+
+   session := Describe(SEVENQP, inState);
+   try
+      CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, '7QP in state: county or DX');
+      CheckTrue(session.DXMult = ARRLDXCCWithNoUSACanadaKH6OrKL7, '7QP in state: DXCC');
+      CheckTrue(session.IsStated(svDXMultLimit) and (session.DXMultLimit = 20),
+                '7QP in state: at most 20 DX multipliers');
+   finally
+      session.Free;
+      end;
+   session := Describe(SEVENQP, outOfState);
+   try
+      CheckTrue(session.Exchange = RSTDomesticQTHExchange, '7QP out of state: a county');
+      CheckTrue(not session.IsStated(svDXMult), '7QP out of state states no DX mult');
+      CheckTrue(not session.IsStated(svDXMultLimit), '7QP out of state states no limit');
+   finally
+      session.Free;
+      end;
+
+   maine := KansasStation;
+   maine.MyState := 'ME';
+   session := Describe(NEWENGLANDQSO, maine);
+   try
+      CheckEquals('NEQSOW1', session.DomesticFile, 'NEQP inside New England: NEQSOW1');
+      CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, 'NEQP inside: county or DX');
+      CheckTrue(session.DXMult = ARRLDXCCWithNoUSACanadaKH6OrKL7, 'NEQP inside: DXCC');
+      CheckEquals(20, session.DXMultLimit, 'NEQP inside: limit 20');
+      CheckEquals(4, session.DomesticCountryCount, 'NEQP: K, VE, KH6, KL');
+   finally
+      session.Free;
+      end;
+   session := Describe(NEWENGLANDQSO, KansasStation);
+   try
+      CheckEquals('NEQSO', session.DomesticFile, 'NEQP outside New England: NEQSO');
+      CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'NEQP outside: a county');
+      CheckTrue(not session.IsStated(svDXMult), 'NEQP outside states no DX mult');
+      CheckEquals(20, session.DXMultLimit, 'NEQP outside: limit 20 too');
+   finally
+      session.Free;
+      end;
+   noState := KansasStation;
+   noState.MyState := '';
+   session := Describe(NEWENGLANDQSO, noState);
+   try
+      CheckEquals('NEQSO', session.DomesticFile,
+                  'NEQP with no MY STATE is outside -- and does not crash');
+   finally
+      session.Free;
+      end;
+end;
+
+(* JIDX: A JA STATION SENDS ITS ZONE, EVERYONE ELSE A PREFECTURE -- and the
+   closing set-up writes no zone-exchange messages either way, which was a
+   test of the contest's name in FoundContest until M7b. *)
+procedure TContestSessionTests.Test_JIDXDescribesBothSidesAndRefusesZoneMessages;
+const
+   RUNNINGS: array[0..1] of ContestType = (JIDXCW, JIDXSSB);
+var
+   ja: TStationContext;
+   session: TSessionDefaults;
+   name: string;
+   i: integer;
+begin
+   BeginTest('Test_JIDXDescribesBothSidesAndRefusesZoneMessages');
+   ja := KansasStation;
+   ja.MyCountry := 'JA';
+   ja.MyContinent := Asia;
+   for i := Low(RUNNINGS) to High(RUNNINGS) do
+      begin
+      name := ContestTypeSA[RUNNINGS[i]];
+      session := Describe(RUNNINGS[i], ja);
+      try
+         CheckTrue(session.Exchange = RSTZoneExchange, name + ' JA: zone');
+         CheckTrue(session.ZoneMult = CQZones, name + ' JA: CQ zones');
+         CheckTrue(session.InitialExchange = ZoneInitialExchange,
+                   name + ' JA: zone initial exchange');
+         CheckTrue(not session.IsStated(svDomesticFile), name + ' JA: no domestic file');
+         CheckTrue(session.SuppressZoneExchangeMessages,
+                   name + ' JA: no zone-exchange messages');
+      finally
+         session.Free;
+         end;
+      session := Describe(RUNNINGS[i], KansasStation);
+      try
+         CheckTrue(session.Exchange = RSTPrefectureExchange, name + ' W: prefecture');
+         CheckEquals('JIDX', session.DomesticFile, name + ' W: JIDX');
+         CheckTrue(not session.IsStated(svZoneMult), name + ' W: no zone mult');
+         CheckTrue(session.SuppressZoneExchangeMessages,
+                   name + ' W: no zone-exchange messages');
+      finally
+         session.Free;
+         end;
+      end;
+end;
+
+(* THE STATION-DEPENDENT ARMS STATE ONE SIDE EACH: All Asian on the
+   continent, ARRL 160 on the ARRL-section countries, YU DX on the station's
+   own country; and the Gagarin Cup's R150S list. *)
+procedure TContestSessionTests.Test_M7bStationChoicesAreStatedPerSide;
+var
+   asian, dx, yu: TStationContext;
+   session: TSessionDefaults;
+begin
+   BeginTest('Test_M7bStationChoicesAreStatedPerSide');
+   asian := KansasStation;
+   asian.MyCountry := 'JA';
+   asian.MyContinent := Asia;
+   dx := KansasStation;
+   dx.MyCountry := 'DL';
+   dx.MyContinent := Europe;
+   yu := dx;
+   yu.MyCountry := 'YU';
+
+   session := Describe(ALLASIANCW, asian);
+   try
+      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = ARRLDXCC), 'All Asian, Asia: DXCC');
+      CheckTrue(not session.IsStated(svPrefixMult), 'All Asian, Asia: no prefixes stated');
+   finally
+      session.Free;
+      end;
+   session := Describe(ALLASIANSSB, KansasStation);
+   try
+      CheckTrue(session.IsStated(svPrefixMult) and (session.PrefixMult = Prefix),
+                'All Asian, W: prefixes');
+      CheckTrue(not session.IsStated(svDXMult), 'All Asian, W: no DXCC stated');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(ARRL160, KansasStation);
+   try
+      CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, 'ARRL 160, W: section or DX');
+      CheckTrue(session.DXMult = ARRLDXCCWithNoARRLSections, 'ARRL 160, W: DXCC');
+      CheckEquals(20, session.DomesticCountryCount, 'ARRL 160: the ARRL-section countries');
+   finally
+      session.Free;
+      end;
+   session := Describe(ARRL160, dx);
+   try
+      CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'ARRL 160, DX: a section');
+      CheckTrue(not session.IsStated(svDXMult), 'ARRL 160, DX: no DX mult stated');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(YUDX, yu);
+   try
+      CheckTrue(session.DomesticMult = NoDomesticMults, 'YU DX, YU: no domestic mults');
+      CheckTrue(session.DXMult = ARRLDXCC, 'YU DX, YU: DXCC');
+   finally
+      session.Free;
+      end;
+   session := Describe(YUDX, dx);
+   try
+      CheckTrue(not session.IsStated(svDomesticMult), 'YU DX, DL: domestic mults as the trait');
+      CheckEquals(1, session.DomesticCountryCount, 'YU DX: YU is domestic');
+   finally
+      session.Free;
+      end;
+
+   session := Describe(GAGARINCUP, dx);
+   try
+      CheckTrue(session.IsStated(svR150SMode) and session.R150SMode, 'Gagarin Cup: R150S');
+      CheckEquals('Yuri Gagarin International DX Contest', session.ContestName,
+                  'Gagarin Cup: name');
+   finally
+      session.Free;
+      end;
+end;
+
+(* LogCfg's DEFAULTS FOR THE M7b CONTESTS, and the EU Sprints' repeat S&P
+   default -- the one contest family that set one. *)
+procedure TContestSessionTests.Test_M7bCQExchangeDefaults;
+var
+   noState: TStationContext;
+begin
+   BeginTest('Test_M7bCQExchangeDefaults');
+   noState := KansasStation;
+   noState.MyState := '';
+
+   CheckEquals(' 5NN KS', CQDefault(SEVENQP, KansasStation), '7QP');
+   CheckEquals(' 5NN KS', CQDefault(ALLASIANCW, KansasStation), 'All Asian CW');
+   CheckEquals(' 5NN KS', CQDefault(ALLASIANSSB, KansasStation), 'All Asian SSB');
+   CheckEquals(' 5NN KS', CQDefault(ARRL160, KansasStation), 'ARRL 160');
+   CheckEquals(' 5NN KS', CQDefault(OLDNEWYEAR, KansasStation), 'Old New Year');
+   CheckEquals(' 5NN KS', CQDefault(JIDXCW, KansasStation), 'JIDX CW with a state');
+   CheckEquals(' 5NN 04', CQDefault(JIDXSSB, noState), 'JIDX SSB sends the zone AS TEXT');
+   CheckEquals(' 5NN 04', CQDefault(OZCR_O, noState), 'OZCHR teams');
+   CheckEquals(' 5NN KS', CQDefault(OZCR_Z, KansasStation), 'OZCHR');
+   CheckEquals(' 5NN # KS', CQDefault(HELVETIA, KansasStation), 'Helvetia with a state');
+   CheckEquals(' 5NN #', CQDefault(HELVETIA, noState), 'Helvetia without');
+   CheckEquals(' DE \ # TOM', CQDefault(EUSPRINT_SPRING_CW, KansasStation), 'EU Sprint');
+   CheckEquals('@ DE \ # TOM', RepeatDefault(EUSPRINT_AUTUMN_SSB, KansasStation),
+               'EU Sprint repeat S&P');
+   CheckEquals('', CQDefault(ARRL10, KansasStation), 'ARRL 10 was never named');
+   CheckEquals('', RepeatDefault(ARRL160, KansasStation), 'only the EU Sprints offer a repeat');
+end;
+
 procedure TContestSessionTests.RunAllTests;
 begin
    Test_TheBaseStatesNothing;
@@ -476,6 +715,10 @@ begin
    Test_FieldDayExchangeComesFromTheStation;
    Test_CanadaDayBlanksANonVEState;
    Test_CQExchangeDefaultIsLogCfgsArm;
+   Test_MultiStatePartiesDescribeBothSides;
+   Test_JIDXDescribesBothSidesAndRefusesZoneMessages;
+   Test_M7bStationChoicesAreStatedPerSide;
+   Test_M7bCQExchangeDefaults;
 end;
 
 end.

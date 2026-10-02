@@ -289,7 +289,7 @@ today's behaviour exactly while that stays true.
 | Florida QSO Party | **2** | *"Florida stations on a county line (maximum of two counties) may be claimed as a separate QSO and multiplier from each county."* | `uContestFloridaQP` |
 | Michigan QSO Party | **0** | *"No station may claim simultaneous operation in more than one county, state, or province."* | `uContestMichiganQP` |
 | Indiana QSO Party | **2** | two counties at once (NY4I, 2026-09-29) | `uContestIndianaQP` |
-| 7QP | **4** | *"County-line contacts may be logged with one entry showing all counties or with separate entries for each county."* -- four being the intersection of four counties meeting at right angles | none yet; multi-state, see below |
+| 7QP | **4** | *"County-line contacts may be logged with one entry showing all counties or with separate entries for each county."* -- four being the intersection of four counties meeting at right angles | `uContestSevenQP` since M7b, on `TContestBase` -- multi-state, so NOT on the party base, and the maximum is NOT enforced (nothing enforced it before; design Q40) |
 | California QSO Party | **4** | a four-county junction is claimable -- NY4I, 2026-09-29: "4 since that is the intersection of 4 counties with common 90 degree angle borders" | `uContestCaliforniaQP` |
 | North Carolina QSO Party | **2** | *"A maximum of two counties may be worked simultaneously under this provision."* -- https://ncqsoparty.org/rules/ | `uContestNorthCarolinaQP` |
 | New York QSO Party | **2** | NY4I 2026-09-29: *"NY allows up to 2 counties on a county line."* | `uContestNewYorkQP` |
@@ -336,6 +336,8 @@ the wrongness.
 | `BonusPoints` | the declared `BonusStations` over the view, else 0 |
 | `BonusStations` / `CountsTowardBonus` / `CreditsBonusMode` | none / every contact / every mode |
 | `TalliesLiveQSO` | false -- a preserved Missouri defect (design Q32); do not override it |
+| `DescribeSession` | states nothing -- see "How a contest describes its session" (M7a) |
+| `CQExchangeDefault` / `RepeatSPExchangeDefault` | `''` -- LogCfg's default CQ and repeat S&P exchanges, used only where the operator has none (M7a; the repeat at M7b, for the EU Sprints) |
 
 ### How a contest formats its export (M4, 2026-10-01)
 
@@ -409,9 +411,11 @@ arm that read `exch.ceContest` as it went by is the bug that proved why
   `uTestContestExport.Test_RoundTripThroughTodaysImport` for anything you export
   that you must read back.
 
-Two contests with no class keep an arm in `MainUnit.ApplyClasslessADIFImport`
-for a stated reason each (POTA: design Q6 is open; ARRL 160: its scoring asks
-the domestic-country list). It is deleted when they gain a class.
+One contest with no class keeps an arm in `MainUnit.ApplyClasslessADIFImport`
+for a stated reason (POTA: design Q6 is open). It is deleted when POTA gains a
+class. ARRL 160's arm stood there too until M7b, when its class was handed the
+domestic-country lookup its scoring needs as a station-context service
+(`TStationContext.IsDomesticCountryCall`).
 
 ### How a contest parses and validates its received exchange (M5b, 2026-10-02)
 
@@ -542,7 +546,12 @@ reads `aStation` only: the identity object it is asked of carries no station.
     -- `AddDomesticCountries(DomesticCountriesKVE)`; the groups are
     `uContestBase` constants that FCONTEST's own helpers read too);
   - the domestic file (`DomesticFile`, no extension), MY STATE where your
-    contest blanks or replaces it, the contest name.
+    contest blanks or replaces it, the contest name;
+  - since M7b: the initial exchange and the zone multiplier
+    (`InitialExchange`, `ZoneMult`), the DX multiplier limit (`DXMultLimit`),
+    the R150S list (`R150SMode`), and `SuppressZoneExchangeMessages` -- the
+    JIDX contests' refusal of the zone-exchange messages FoundContest's
+    closing set-up would otherwise write (it named them there).
 - **A STATED VALUE IS STATED, EVEN WHEN IT IS FALSE OR EMPTY**, and an
   unstated one is left alone -- so state only what your contest sets, and
   never restate a trait "to be safe": a stated value overwrites a statement
@@ -555,7 +564,9 @@ reads `aStation` only: the identity object it is asked of carries no station.
   contest that needs it, and FCONTEST's applier gains its line -- the same
   growth rule as `TStationContext`.
 
-**THE DEFAULT CQ EXCHANGE IS A SIBLING, `CQExchangeDefault(aStation)`**, asked
+**THE DEFAULT CQ EXCHANGE IS A SIBLING, `CQExchangeDefault(aStation)`** -- and
+the default REPEAT S&P exchange its twin, `RepeatSPExchangeDefault` (M7b) --
+asked
 by `LogCfg.tSetupExchangeNumbers` once the whole configuration is read (a
 station line can follow CONTEST). It is a default in the strict sense -- LogCfg
 uses it only where CQ EXCHANGE is still empty -- and the base offers `''`.
@@ -582,7 +593,7 @@ would duplicate the part that cannot differ.
 | `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
 | `TContestNRAUBalticBase` | family | the NRAU-Baltic contest, CW and SSB -- NY4I's ruling (2026-10-01), built at M3. The base holds every shared row field and the points; each mode class states only its names and calendar id. **The template for any other two-mode pair, once Q7 says that pair is a family** |
 | ~~`TContestFixedPoints`~~ | ~~mechanism~~ | **retired at M3 (2026-10-01).** Its rule lives on as the helper `FixedModePoints`, called from a class's own `CalculateQSOPoints` (section 2, step 2) |
-| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP / IN7QPNE (multi-state, unresolved). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
+| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP / IN7QPNE (multi-state, unresolved -- 7QP and NEQP have their own classes on `TContestBase` since M7b, design Q40). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
 
 **THE DEFECT THAT MOVED IT, because the shape will look tempting again.** While
 the rule was on `TContestBase`, the inherited maximum read
@@ -601,6 +612,14 @@ rows and the two QCWA rows are siblings for the same kind of reason. **The SSB
 Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
 -- and is its own class, `uContestSprintSSB`, on `TContestBase`.
 
+**And the thirty-nine of M7b batch 1 are all on `TContestBase`** (design
+§8.2j): CQ WPX RTTY and CQ WW RTTY score by other arms than their CW/SSB
+families, so those bases would change them; 7QP and NEQP are MULTI-STATE
+parties, which the single-state base's rules do not fit (7QP's row still makes
+set-up treat it as a party -- `IsUSQSOParty`); the JIDX, All Asian and Oceania
+pairs, the EU Sprints and the ARRL VHF runnings are copies until Q7 says
+otherwise.
+
 ### `TStationContext` — what scoring knows about us
 
 `Station.MyCountry`, `.MyContinent`, `.MyZone`, `.MyZoneValid`, `.MyGrid`,
@@ -608,6 +627,10 @@ Sprint is not an NA Sprint at all** -- a different sponsor (NY4I, 2026-10-01)
 `.ContestTitle` (Batavia FT8), since M5b `.MyCall` and `.InHostState`,
 since M6 `.MyCategoryMode` (the Salmon Run's single-mode rule -- its zero
 value is CW, which is what an operator who never chooses one exports), and
+since M7b `.ContestName` (the European VHF contest's `'EURASIA'` test) and a
+SERVICE, `.IsDomesticCountryCall` (ARRL 160's CTY lookup against the session's
+domestic countries; nil means "not domestic", what the engine answers for an
+empty list -- so guard on `Assigned`), and
 since M7a `.MyName`, `.MyFDClass`, `.MySection`, `.MyPrec`, `.MyCheck` and
 `.MyZoneText` (MY ZONE as text -- what a message SENDS; compare zones with
 `.MyZone`). `uContestFactory.CurrentStation` fills it; set-up is handed the

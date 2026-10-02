@@ -873,13 +873,15 @@ var
 begin
 
 
-  tSPExchange := '';
-
   (* THE CONTEST'S OWN DEFAULT FIRST -- M7a, 2026-10-02. Every contest that
     has a class states its default as TContestBase.CQExchangeDefault (the
     base offers ''), and its label is gone from the `case` below, which now
     names only classless contests; a classless contest is asked too, through
-    the plain TContestBase that is its identity, and gets ''. *)
+    the plain TContestBase that is its identity, and gets ''. The repeat S&P
+    exchange is its sibling, RepeatSPExchangeDefault (M7b, the EU Sprints'
+    arm); the base offers '' there too, which is what this used to start
+    from. *)
+  tSPExchange := UTF8Encode(ContestIdentity(Contest).RepeatSPExchangeDefault(CurrentStation));
   tCQExchange := UTF8Encode(ContestIdentity(Contest).CQExchangeDefault(CurrentStation));
   Grid := UTF8Encode(Copy(Settings.My.Grid, 1, 4));
   case Contest of
@@ -895,8 +897,6 @@ begin
 
     R9W_UW9WK_MEMORIAL, RFASCHAMPIONSHIPCW: tCQExchange := UTF8Encode(' ' + Settings.My.State + '#');
 
-    OLDNEWYEAR, ALLASIANCW, ALLASIANSSB, SEVENQP, ARRL160: tCQExchange := UTF8Encode(' 5NN ' + Settings.My.State);
-
     UA4WCHAMPIONSHIP, RAEM: tCQExchange := UTF8Encode(' # ' + Settings.My.State);
 {
     ARI, SPDX, ARKTIKA_SPRING, PACC, WAG, CUPUA1DZ, RUSSIANDX, RDA, OKDX, UKRAINIAN, OLDNEWYEAR, ARRL10, HADX, YODX, RSGB18, DARCXMAS:
@@ -904,28 +904,8 @@ begin
         if Settings.My.State <> '' then tCQExchange := ' 5NN ' + Settings.My.State else tCQExchange := ' 5NN #';
       end;
 }
-    JIDXCW, JIDXSSB, OZCR_O, OZCR_Z:
-      begin
-        if Settings.My.State <> '' then
-           begin
-           tCQExchange := UTF8Encode(' 5NN ' + Settings.My.State)
-           end
-        else
-           begin
-           tCQExchange := UTF8Encode(' 5NN ' + Settings.My.Zone);
-           end;
-      end;
-
 //    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + Settings.My.Zone;
     {CZECH_ACTIVITY_VHF,}RADIOVHFFD: tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.Grid);
-
-   HELVETIA: if Settings.My.State <> '' then tCQExchange := UTF8Encode(' 5NN # ' + Settings.My.State) else tCQExchange := ' 5NN #';
-
-    EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW:
-      begin
-        tCQExchange := UTF8Encode(' DE \ # ' + Settings.My.Name);
-        tSPExchange := '@' + tCQExchange;
-      end;
 
     CWOPEN:
       begin

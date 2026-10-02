@@ -2,7 +2,7 @@
 == identity
 contest.requested = 40 EUROPEANVHF
 contest.selected = 40 EUROPEANVHF
-contest.class = (none -- the legacy engine)
+contest.class = TContestEuropeanVHF
 == setup
 active.qsopointmethod = EuropeanVHFQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -270,7 +270,7 @@ totals.cabrillo = CLAIMED-SCORE: 69088
 == identity
 contest.requested = 40 EUROPEANVHF
 contest.selected = 40 EUROPEANVHF
-contest.class = (none -- the legacy engine)
+contest.class = TContestEuropeanVHF
 == setup
 active.qsopointmethod = EuropeanVHFQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange
@@ -538,7 +538,7 @@ totals.cabrillo = CLAIMED-SCORE: 53108
 == identity
 contest.requested = 40 EUROPEANVHF
 contest.selected = 40 EUROPEANVHF
-contest.class = (none -- the legacy engine)
+contest.class = TContestEuropeanVHF
 == setup
 active.qsopointmethod = EuropeanVHFQSOPointMethod
 active.exchange = RSTQSONumberAndGridSquareExchange

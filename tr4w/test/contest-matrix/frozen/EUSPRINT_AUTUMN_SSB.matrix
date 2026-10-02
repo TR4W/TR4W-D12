@@ -2,7 +2,7 @@
 == identity
 contest.requested = 163 EUSPRINT_AUTUMN_SSB
 contest.selected = 163 EUSPRINT_AUTUMN_SSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestEUSprintAutumnSSB
 == setup
 active.qsopointmethod = EuropeanSprintQSOPointMethod
 active.exchange = QSONumberAndNameExchange
@@ -272,7 +272,7 @@ totals.cabrillo = CLAIMED-SCORE: 3
 == identity
 contest.requested = 163 EUSPRINT_AUTUMN_SSB
 contest.selected = 163 EUSPRINT_AUTUMN_SSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestEUSprintAutumnSSB
 == setup
 active.qsopointmethod = EuropeanSprintQSOPointMethod
 active.exchange = QSONumberAndNameExchange
@@ -542,7 +542,7 @@ totals.cabrillo = CLAIMED-SCORE: 3
 == identity
 contest.requested = 163 EUSPRINT_AUTUMN_SSB
 contest.selected = 163 EUSPRINT_AUTUMN_SSB
-contest.class = (none -- the legacy engine)
+contest.class = TContestEUSprintAutumnSSB
 == setup
 active.qsopointmethod = EuropeanSprintQSOPointMethod
 active.exchange = QSONumberAndNameExchange

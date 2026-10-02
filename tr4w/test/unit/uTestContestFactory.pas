@@ -40,7 +40,9 @@ uses
    uContestARRLDXBase, uContestARRLSSBase, uContestCQWWBase, uContestCQWPXBase,
    uContestNRAUBalticBase,
    (* M2's in-state detection: the shipped .dom path and the key reader. *)
-   Classes, uAppPaths, uDomFileKeys;
+   Classes, uAppPaths, uDomFileKeys,
+   (* InSameFederalOkrug -- the CQ-M rule lifted out of LOGSTUFF at M7b. *)
+   uCallSignRoutines;
 
 const
    (* THE TEN "RAREST OF NC" COUNTIES, TRANSCRIBED A SECOND TIME ON PURPOSE.
@@ -110,6 +112,9 @@ type
       procedure Test_JockWhiteScoresItsLegacyArm;
       procedure Test_CroatianDoublesByTheQSOsRecordedHour;
       procedure Test_UKEIDoublesByTheQSOsRecordedHour;
+      procedure Test_ARRL160AsksTheDomesticCountryService;
+      procedure Test_M7bContestsAreSiblingsOnTheBase;
+      procedure Test_CQMOkrugRuleIsTheLiftedHelper;
    public
       procedure RunAllTests; override;
    end;
@@ -222,6 +227,18 @@ begin
             CheckEquals(2, Length(obj.HostState),
                         string(ContestTypeSA[c]) + ' HostState is not a'
                         + ' two-letter code: ' + obj.HostState);
+            end
+         else if c = SEVENQP then
+            begin
+            (* THE ONE EXCEPTION, AND IT IS A MULTI-STATE PARTY (M7b,
+               2026-10-02). 7QP's row indexes QSOParties (P: 10), so set-up
+               has always run the party head for it -- the in-state test,
+               the in-state file, K/VE/KH6/KL -- and its class states that
+               to keep it. It is NOT on the single-state base, whose
+               out-of-state refusal and county-line rule assume one host
+               state; and it names none, because '7th area' is not one. *)
+            CheckTrue(obj.IsUSQSOParty, '7QP is a party to set-up, by its row');
+            CheckEquals('', obj.HostState, '7QP has no single host state');
             end
          else
             begin
@@ -1951,6 +1968,58 @@ begin
    CheckAgainstArray(DARCWAEDCSSB, 'WAE SSB');
    CheckAgainstArray(OZHCRVHF, 'OZHCR VHF');
    CheckAgainstArray(ALRS_UA1DZ_CUP, 'ALRS UA1DZ Cup');
+
+   (* M7b BATCH 1 (2026-10-02) -- thirty-nine classless contests gained a
+      class, each transcribing its row and every arm that named it. Traps in
+      these rows: most have a BLANK CABName and ADIFName, which resolve to the
+      enum's SPELLING, and several spellings look nothing like the
+      identifier -- JTDX is 'MONGOLIAN DX', OLDNEWYEAR 'RADIO-ONY', OZCR_O
+      'OZCHR-TEAMS', OZCR_Z 'OZCHR', NEWENGLANDQSO 'NEQP', TESLA 'HF-TESLA'
+      (which also STATES that CABName). Five STATE an ADIFName that is not
+      their spelling: the All Asian pair ('ALL-ASIAN-DX-CW' is the CW
+      spelling, 'ALL-ASIAN-DX-PHONE' is NOT the SSB one), HA DX ('HA-DX'),
+      and January and June VHF ('ARRL-VHF-JAN', '-JUN', each its spelling).
+      7QP's P is 10, so it is a QSO party BY THE ROW although it is not on
+      the state-party base. *)
+   CheckAgainstArray(SEVENQP, '7QP');
+   CheckAgainstArray(ALLASIANCW, 'All Asian CW');
+   CheckAgainstArray(ALLASIANSSB, 'All Asian SSB');
+   CheckAgainstArray(ARCI, 'ARCI');
+   CheckAgainstArray(ARI_DX, 'ARI DX');
+   CheckAgainstArray(ARRL10, 'ARRL 10 m');
+   CheckAgainstArray(ARRL160, 'ARRL 160 m');
+   CheckAgainstArray(ARRLVHFJAN, 'ARRL VHF January');
+   CheckAgainstArray(ARRLVHFJUN, 'ARRL VHF June');
+   CheckAgainstArray(ARRLVHFSEP, 'ARRL VHF September');
+   CheckAgainstArray(BALTIC, 'Baltic');
+   CheckAgainstArray(BWQP, 'BWQP');
+   CheckAgainstArray(CIS, 'CIS DX');
+   CheckAgainstArray(CQM, 'CQ-M');
+   CheckAgainstArray(CQVHF, 'CQ VHF');
+   CheckAgainstArray(CQWPXRTTY, 'CQ WPX RTTY');
+   CheckAgainstArray(CQWWRTTY, 'CQ WW RTTY');
+   CheckAgainstArray(EUSPRINT_SPRING_CW, 'EU Sprint spring CW');
+   CheckAgainstArray(EUSPRINT_SPRING_SSB, 'EU Sprint spring SSB');
+   CheckAgainstArray(EUSPRINT_AUTUMN_CW, 'EU Sprint autumn CW');
+   CheckAgainstArray(EUSPRINT_AUTUMN_SSB, 'EU Sprint autumn SSB');
+   CheckAgainstArray(EUROPEANVHF, 'European VHF');
+   CheckAgainstArray(TESLA, 'Tesla');
+   CheckAgainstArray(FISTS, 'FISTS');
+   CheckAgainstArray(GACWWWSACW, 'GACW WWSA');
+   CheckAgainstArray(GAGARINCUP, 'Gagarin Cup');
+   CheckAgainstArray(HADX, 'HA DX');
+   CheckAgainstArray(YUDX, 'YU DX');
+   CheckAgainstArray(HELVETIA, 'Helvetia');
+   CheckAgainstArray(JIDXCW, 'JIDX CW');
+   CheckAgainstArray(JIDXSSB, 'JIDX SSB');
+   CheckAgainstArray(JTDX, 'JT DX');
+   CheckAgainstArray(KCJ, 'KCJ');
+   CheckAgainstArray(NEWENGLANDQSO, 'New England QSO Party');
+   CheckAgainstArray(OCEANIADXCW, 'Oceania DX CW');
+   CheckAgainstArray(OCEANIADXSSB, 'Oceania DX SSB');
+   CheckAgainstArray(OLDNEWYEAR, 'Old New Year');
+   CheckAgainstArray(OZCR_O, 'OZCHR teams');
+   CheckAgainstArray(OZCR_Z, 'OZCHR');
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
@@ -2004,6 +2073,14 @@ begin
       at M3 (2026-10-01) and carries it now. *)
    CheckFinds('JW-FD', NZFIELDDAY);
    CheckFinds('NZ FIELD DAY', NZFIELDDAY);
+
+   (* THE ALL ASIAN PHONE RUNNING -- NY4I ruled ALL-ASIAN-DX-PHONE correct
+      on 2026-10-01 and the row was corrected then, while the contest had no
+      class to carry the spelling TR4W had exported until that day. Its class
+      arrived at M7b and carries it. *)
+   CheckFinds('ALL-ASIAN-DX-PHONE', ALLASIANSSB);
+   CheckFinds('AL-ASIAN-DX-PHONE', ALLASIANSSB);
+   CheckFinds('ALL-ASIAN-DX-CW', ALLASIANCW);
 
    (* Surrounding whitespace is not part of an id, on either side. *)
    CheckFinds('  ICWC-MST  ', MST);
@@ -3144,6 +3221,175 @@ begin
       end;
 end;
 
+(* ---------------------------------------------------------------------------
+   M7b BATCH 1 (2026-10-02)
+   --------------------------------------------------------------------------- *)
+
+(* A STUB FOR THE STATION CONTEXT'S DOMESTIC-COUNTRY SERVICE -- two US calls
+   are domestic, nothing else is. *)
+function StubDomesticCountryCall(const aCall: string): boolean;
+begin
+   Result := (aCall = 'W1AW') or (aCall = 'K0AAA');
+end;
+
+(* ARRL 160 SCORES BY THE SESSION'S DOMESTIC COUNTRIES, ASKED THROUGH A
+   SERVICE (M7b, DECIDED): the class reads no global, and with no service
+   nothing is domestic -- what the engine answers for an empty list. The four
+   branches of the arm, and the absent service. *)
+procedure TContestFactoryTests.Test_ARRL160AsksTheDomesticCountryService;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Score(const aCall: string): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := Band160;
+      qso.Mode := CW;
+      qso.Callsign := CallString(aCall);
+      qso.QSOPoints := 99;
+      obj.ScoreQSO(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_ARRL160AsksTheDomesticCountryService');
+   obj := MakeContest(ARRL160);
+   CheckTrue(obj <> nil, 'ARRL 160 has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyCall := 'K0AAA';
+      station.IsDomesticCountryCall := @StubDomesticCountryCall;
+      obj.SetStation(station);
+      CheckEquals(2, Score('W1AW'), 'a domestic station works a domestic one: 2');
+      CheckEquals(5, Score('DL1ABC'), 'a domestic station works DX: 5');
+
+      station.MyCall := 'DL1AAA';
+      obj.SetStation(station);
+      CheckEquals(2, Score('W1AW'), 'DX works a domestic station: 2');
+      CheckEquals(0, Score('DL1ABC'), 'DX works DX: 0');
+
+      station.MyCall := 'K0AAA';
+      station.IsDomesticCountryCall := nil;
+      obj.SetStation(station);
+      CheckEquals(0, Score('W1AW'), 'no service: nothing is domestic, so 0');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* THE THIRTY-NINE M7b CLASSES SIT ON TContestBase DIRECTLY -- DECIDED on
+   evidence (design 8.2j): no new family base, and none joins an existing
+   one. CQ WPX RTTY and CQ WW RTTY score by another arm than their CW/SSB
+   families, so a family base would change them; 7QP and NEQP are multi-state
+   parties, so they are NOT on the single-state party base; the CW/SSB pairs,
+   the EU Sprints, the ARRL VHF runnings and the Oceania pair are siblings
+   until NY4I answers Q7. *)
+procedure TContestFactoryTests.Test_M7bContestsAreSiblingsOnTheBase;
+const
+   M7B: array[0..38] of ContestType = (
+      SEVENQP, ALLASIANCW, ALLASIANSSB, ARCI, ARI_DX, ARRL10, ARRL160,
+      ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, BALTIC, BWQP, CIS, CQM, CQVHF,
+      CQWPXRTTY, CQWWRTTY, EUSPRINT_SPRING_CW, EUSPRINT_SPRING_SSB,
+      EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUROPEANVHF, TESLA, FISTS,
+      GACWWWSACW, GAGARINCUP, HADX, YUDX, HELVETIA, JIDXCW, JIDXSSB, JTDX,
+      KCJ, NEWENGLANDQSO, OCEANIADXCW, OCEANIADXSSB, OLDNEWYEAR, OZCR_O,
+      OZCR_Z);
+var
+   i: integer;
+   obj: TContestBase;
+begin
+   BeginTest('Test_M7bContestsAreSiblingsOnTheBase');
+   for i := Low(M7B) to High(M7B) do
+      begin
+      obj := MakeContest(M7B[i]);
+      CheckTrue(obj <> nil, string(ContestTypeSA[M7B[i]]) + ' has no registered class');
+      if obj = nil then
+         begin
+         Continue;
+         end;
+      try
+         CheckTrue(obj.ClassParent = TContestBase,
+                   string(ContestTypeSA[M7B[i]]) + ' sits on TContestBase directly');
+      finally
+         obj.Free;
+         end;
+      end;
+
+   (* 7QP IS A QSO PARTY BY ITS ROW -- set-up's in-state test reads that --
+      without the single-state base's rules. NEQP is neither. *)
+   obj := MakeContest(SEVENQP);
+   try
+      CheckTrue(obj.IsUSQSOParty, '7QP: the row''s P makes it a party to set-up');
+      CheckFalse(obj is TContestStateQSOPartyBase, '7QP is not a single-state party');
+   finally
+      obj.Free;
+      end;
+   obj := MakeContest(NEWENGLANDQSO);
+   try
+      CheckFalse(obj.IsUSQSOParty, 'NEQP: P 0');
+      CheckFalse(obj is TContestStateQSOPartyBase, 'NEQP is not a single-state party');
+   finally
+      obj.Free;
+      end;
+end;
+
+(* THE CQ-M OKRUG RULE, LIFTED FROM LOGSTUFF TO uCallSignRoutines at M7b.
+   Its answer is True whenever it cannot tell -- a portable call, or a call
+   with no oblast -- as the engine's copy answered; and the class's Russian
+   branch reads it: one point in our own okrug, two outside it. *)
+procedure TContestFactoryTests.Test_CQMOkrugRuleIsTheLiftedHelper;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Score(const aCall: string): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := Band20;
+      qso.Mode := CW;
+      qso.Callsign := CallString(aCall);
+      qso.QTH.CountryID := 'UA';
+      qso.QTH.Continent := Europe;
+      qso.QSOPoints := 99;
+      obj.ScoreQSO(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_CQMOkrugRuleIsTheLiftedHelper');
+   CheckTrue(InSameFederalOkrug('UA3AAA', 'UA3DBB'), '3A and 3D: both Central');
+   CheckFalse(InSameFederalOkrug('UA3AAA', 'UA1AAA'), '3A Central, 1A North-West');
+   CheckTrue(InSameFederalOkrug('UA3AAA/P', 'UA1AAA'), 'a portable call cannot tell');
+   CheckTrue(InSameFederalOkrug('UA3AAA', 'UA'), 'a call with no oblast cannot tell');
+
+   obj := MakeContest(CQM);
+   CheckTrue(obj <> nil, 'CQ-M has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyCall := 'UA3AAA';
+      station.MyCountry := 'UA';
+      station.MyContinent := Europe;
+      obj.SetStation(station);
+      CheckEquals(1, Score('UA3DBB'), 'a Russian station in our okrug: 1');
+      CheckEquals(2, Score('UA1AAA'), 'a Russian station in another okrug: 2');
+   finally
+      obj.Free;
+      end;
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -3195,6 +3441,9 @@ begin
    Test_JockWhiteScoresItsLegacyArm;
    Test_CroatianDoublesByTheQSOsRecordedHour;
    Test_UKEIDoublesByTheQSOsRecordedHour;
+   Test_ARRL160AsksTheDomesticCountryService;
+   Test_M7bContestsAreSiblingsOnTheBase;
+   Test_CQMOkrugRuleIsTheLiftedHelper;
 end;
 
 end.

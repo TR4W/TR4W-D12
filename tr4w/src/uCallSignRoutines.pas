@@ -69,6 +69,18 @@ function MarineOrAirMobileStation(Call: string): boolean;
 //function IsUA1AStation(Call: string): boolean;
 function StandardCallFormat(Call: string; Complete: boolean): string;
 function GetRussiaOblastID(Call: string): string; //
+
+(* ARE THE TWO CALLS IN THE SAME RUSSIAN FEDERAL OKRUG? -- the CQ-M contest's
+   one-point rule for a Russian station working another.
+
+   LIFTED FROM LOGSTUFF LINE FOR LINE AT M7b (2026-10-02), so the CQ-M class
+   and the engine's legacy arm ask one function: a contest class may not call
+   TRDOS (docs/CONTEST_OWNERSHIP_DESIGN.md 1.3). The station's own call was the
+   MY CALL global there; it is a parameter here, which is the whole change.
+
+   TRUE WHEN IT CANNOT TELL -- a portable call, a call with no oblast, or an
+   oblast with no okrug -- exactly as the engine's version answered. *)
+function InSameFederalOkrug(const aMyCall: string; const aHisCall: string): boolean;
 function CaliforniaCall(Call: string): boolean;
 function RootCall(Call: string): string;
 function RoverCall(Call: string): boolean;
@@ -767,5 +779,46 @@ end;
 function ValidCallCharacter(CallChar: Char): boolean;
 begin
   Result := CallChar in ['/', '0'..'9', 'A'..'Z'];
+end;
+
+function InSameFederalOkrug(const aMyCall: string; const aHisCall: string): boolean;
+var
+   myOblast, hisOblast: string;
+   o1, o2: OkrugType;
+begin
+   Result := True;
+   if StringHas(aMyCall, '/') then
+      begin
+      Exit;
+      end;
+   myOblast := GetOblast(aMyCall);
+   if myOblast = '' then
+      begin
+      Exit;
+      end;
+
+   if StringHas(aHisCall, '/') then
+      begin
+      Exit;
+      end;
+   hisOblast := GetOblast(aHisCall);
+   if hisOblast = '' then
+      begin
+      Exit;
+      end;
+
+   o1 := GetOkrugByOblast(GetRussiaOblastByTwoChars(myOblast[1], myOblast[2]));
+   if o1 = foUnKnownOkrug then
+      begin
+      Exit;
+      end;
+
+   o2 := GetOkrugByOblast(GetRussiaOblastByTwoChars(hisOblast[1], hisOblast[2]));
+   if o2 = foUnKnownOkrug then
+      begin
+      Exit;
+      end;
+
+   Result := o1 = o2;
 end;
 end.

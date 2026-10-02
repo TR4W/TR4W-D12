@@ -2,7 +2,7 @@
 == identity
 contest.requested = 7 ARI_DX
 contest.selected = 7 ARI_DX
-contest.class = (none -- the legacy engine)
+contest.class = TContestARIDX
 == setup
 active.qsopointmethod = ARIQSOPointMethod
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
@@ -300,7 +300,7 @@ totals.cabrillo = CLAIMED-SCORE: 650
 == identity
 contest.requested = 7 ARI_DX
 contest.selected = 7 ARI_DX
-contest.class = (none -- the legacy engine)
+contest.class = TContestARIDX
 == setup
 active.qsopointmethod = ARIQSOPointMethod
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
@@ -598,7 +598,7 @@ totals.cabrillo = CLAIMED-SCORE: 800
 == identity
 contest.requested = 7 ARI_DX
 contest.selected = 7 ARI_DX
-contest.class = (none -- the legacy engine)
+contest.class = TContestARIDX
 == setup
 active.qsopointmethod = ARIQSOPointMethod
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange

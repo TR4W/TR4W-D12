@@ -226,6 +226,21 @@ the target shape, the M-step migration order and the open questions.
   The matrix was 185 identical with no re-freeze; `uTestContestSession` pins
   the base stating nothing, the three-state values, and D8's four state lines.
   Design §8.2i; `ADDING_A_CONTEST.md` "How a contest describes its session".
+- **The classless contests gain classes** (M7b; batch 1, 2026-10-02 --
+  thirty-nine contests, design §8.2j). Each transcribes its row and EVERY arm
+  that named it, and the arm is deleted. **No new family base**: CQ WPX RTTY
+  and CQ WW RTTY score by other arms than their CW/SSB families; 7QP and NEQP
+  are multi-state parties on `TContestBase` (7QP stays a party to set-up by
+  its row, `IsUSQSOParty`; Q40); the JIDX/All Asian/Oceania pairs, EU Sprints
+  and ARRL VHF runnings are copies until Q7. New seams it added:
+  `TStationContext.IsDomesticCountryCall` (a SERVICE -- ARRL 160's CTY lookup;
+  nil means not domestic) and `.ContestName`; `TSessionDefaults.InitialExchange`,
+  `ZoneMult`, `DXMultLimit`, `R150SMode`, `SuppressZoneExchangeMessages` (the
+  JIDX name test in FoundContest's closing `case`); the sibling
+  `RepeatSPExchangeDefault` (the EU Sprints). The CQ-M okrug test was lifted to
+  `uCallSignRoutines.InSameFederalOkrug(aMyCall, aHisCall)`. Tesla's arm's
+  `DisplayTotalScore` repaint did not move (display, not a rule). Still
+  classless on purpose: POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE.
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog
@@ -253,8 +268,8 @@ the target shape, the M-step migration order and the open questions.
   twelve contests (design §8.2e). **Those arms name no contest and must not
   start to**: a contest's export rule is an override on its class, and one
   that only changes an input copies the context and calls `inherited`.
-  POTA and ARRL 160 are still named in PostUnit's tail, each for a recorded
-  reason; CUP RF's his-QTH, LABRE/EURASIA and the `'TRC'`/`'PGA'` tests too.
+  POTA is still named in PostUnit's tail, for a recorded reason (ARRL 160
+  left it at M7b); CUP RF's his-QTH, LABRE/EURASIA and the `'TRC'`/`'PGA'` tests too.
 - **A contest interprets its own ADIF import** (M5a, 2026-10-01).
   `TContestBase.ApplyADIFImport(aTemps, aSession, var aExch)` is the other
   half of `EmitADIFContestFields`: the generic importer captures, the contest
@@ -267,7 +282,8 @@ the target shape, the M-step migration order and the open questions.
   carry N1MM's class tag (standard `CLASS` wins, N1MM fills a gap). Thirteen
   contests gained classes for this: CQ 160 CW/SSB, UBA CW/SSB, the ARRL RTTY
   Roundup, CWOPS, NAQP CW/SSB/RTTY, the NCCC Sprint, Ukrainian DX, OK/OM DX and
-  LZ DX. POTA and ARRL 160 keep their arm in `MainUnit.ApplyClasslessADIFImport`.
+  LZ DX. POTA keeps its arm in `MainUnit.ApplyClasslessADIFImport` (ARRL
+  160's moved to its class at M7b).
 - **Creating a class to hold ONE rule means transcribing the whole contest**
   -- the row, AND its scoring arm, because a registered class is that
   contest's scorer from the moment it exists. M4 did that for eleven
