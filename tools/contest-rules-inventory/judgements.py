@@ -218,8 +218,8 @@ SHAPE3 = [
     "`Name = 'LOCUST'` / `Callsign = 'K6VVA'`"),
    ("tr4w/src/uCallSignRoutines.pas", r"^\s*if\s+Call\s*=\s*'RAEM'", 1, ["RAEM"],
     "`Call = 'RAEM'` accepted as a callsign"),
-   ("tr4w/src/trdos/logdupe.pas", r"\bCallsign\s*=\s*'W0MA'", 1, ["MOQSOPARTY"],
-    "bonus callsigns `'W0MA'` / `'K0GQ'`"),
+   # Missouri's W0MA / K0GQ bonus-call test moved onto its class as declared
+   # bonus stations in M6 (25e25461).
    ("tr4w/src/trdos/logedit.pas", r"RData\.Callsign\s*=\s*'RK1G'", 1, ["GAGARINCUP"],
     "six GC-station callsigns (`'RK1G'`..`'UN/RA3VM'`)"),
    ("tr4w/src/trdos/logstuff.pas", r"AnsiUpperCase\s*\(\s*aSIG\s*\)\s*=\s*'POTA'", 1, ["POTA"],
