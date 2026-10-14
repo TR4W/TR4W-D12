@@ -90,7 +90,13 @@ end;
 
 function NoStation: TStationContext;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   (* Default, NEVER FillChar: TStationContext holds managed strings. FPC
+     passes the caller's result temporary straight through, so a FillChar
+     here zeroed whatever strings that temporary still held without
+     releasing them -- a leak in every loop that reused it, and a reference
+     count corrupted badly enough to segfault in a reproduction (M11 S0b,
+     2026-10-14). Default(T) finalises and re-initialises properly. *)
+   Result := Default(TStationContext);
 end;
 
 end.

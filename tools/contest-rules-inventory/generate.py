@@ -84,8 +84,13 @@ class Inventory:
 
       self.sites, self.file_count = scan.scan_sites(dump, self.contests)
       self.fc_case_line, self.fc_arms, self.overrides = scan.found_contest_arms(dump, self.contests, self.registered)
-      eff = scan.effective_reach(self.contests, self.overrides)
+      # The session's two writers are the trait and DescribeSession (M11 S0a).
+      self.stated = scan.describe_session_statements(dump)
+      eff = scan.effective_reach(self.contests, self.overrides, self.stated, self.registry)
       self.proxies = scan.classify_proxies(self.sites, eff, self.registered)
+      if not any(p["class"] == "SHAPE" for p in self.proxies):
+         raise SystemExit("no shape-4 record sits in judgements.SHAPE_MACHINES -- the scan lost "
+                          "SetUpExchangeInformation, or the machines were renamed")
       self.candidates = scan.string_candidates(dump, self.contests)
       self.test_sites = analyses.test_sites(self.sites)
 
@@ -195,6 +200,9 @@ def main():
    print(f"   commit {inv.commit}{' + uncommitted changes under tr4w/' if inv.dirty else ''}")
    print(f"   {len(inv.rows)} rows, shapes 1-4: {shapes[1]}/{shapes[2]}/{shapes[3]}/{shapes[4]}"
          f", + {len(inv.fc_arms)} FoundContest arms")
+   classes = {k: sum(1 for p in inv.proxies if p["class"] == k) for k in ("PROXY", "SHARED", "SHAPE", "UNUSED")}
+   print(f"   shape-4 records: " + ", ".join(f"{k} {v}" for k, v in classes.items())
+         + f" -- reach from the trait and {sum(len(v) for v in inv.stated.values())} DescribeSession statements")
    print(f"   {len(inv.registered_with)} of {len(inv.registered)} registered contests have rules outside the factory")
    print(f"   shape-3 candidates: {inv.candidates['literals']} literals, {inv.candidates['name_tests']} name tests"
          " -- if these moved, re-read them against judgements.SHAPE3")

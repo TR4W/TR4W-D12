@@ -136,6 +136,27 @@ the target shape, the M-step migration order and the open questions.
   `ContestIdentity`. **M11 is next:** the six kind enums and their ~80 engine
   arms, all reading `ContestSession`, move into the classes, and the kind
   traits and enums are then deleted.
+- **M11 RUNS AS `docs/CONTEST_FACTORY_M11_PLAN.md` (S0-S10); S0a, S0b, S0d
+  DONE 2026-10-14.** Three durable facts from S0:
+  - **`uTestContestKindPin` freezes the six kinds every contest RUNS** (trait,
+    then `DescribeSession`, as FCONTEST resolves them) at every matrix
+    station, generated once and proved equal to all 580 frozen matrix
+    records first. Same rule as `uTestContestIdentityPin`: NEVER regenerate
+    it to clear a failure; a failure is a kind that changed. A stage that
+    deletes a kind's enum deletes that column; a new contest adds its row by
+    hand. Only the matrix's stations are pinned -- JA, OK, UA, YB and the
+    rest of the plan's roster are not.
+  - **The inventory's reach includes `DescribeSession`**
+    (`scan.describe_session_statements`, fail-closed), and the exchange-SHAPE
+    machines' arms are class SHAPE (`judgements.SHAPE_MACHINES`), counted,
+    never tabled. `tools/contest-factory-m11/kind-reach.py --inventory` is
+    the cross-check: every record must reclassify to its own class.
+  - **Headless runs are blind in two ways the matrix cannot report:** no
+    TRMASTER (`CD.MasterFileExists` is set at `uProgramMain` after the
+    `/MATRIX` and `/EXPORT` halts, plan F17), and no logged initial-exchange
+    history after the first `LoadinLog` (the `IntitialExLoaded` latch, F18).
+    And `Doing*` is derived ONCE at start-up while a peer's run-time
+    `CONTEST` re-runs `FoundContest` -- measured to diverge (F9).
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO

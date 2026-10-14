@@ -8,6 +8,8 @@ in one file:
                    factory seam they would move to
    SITE_OVERRIDES  the few sites that do not belong to their routine's category
    CATEGORIES      the section order of the tables
+   SHAPE_MACHINES  the routines keyed on the exchange SHAPE, whose arms are
+                   data formats rather than contest rules (M11 S0a)
    FAMILY_MAX      the reach threshold between "a contest rule in disguise" and
                    "shared behaviour"
    GENERIC         reach-2-3 values whose NAME is generic -- flagged, not dropped
@@ -152,6 +154,22 @@ SITE_OVERRIDES = [
     ("exchange", new("SessionExchangeState (previous QSO number)"))),
 ]
 
+# THE EXCHANGE-SHAPE MACHINES (M11 S0a, plan F1 and 0.1). Each is keyed on the
+# exchange SHAPE -- how an exchange is spelled -- and holds one arm per shape,
+# so a reach-1 arm there is a data format one contest uses, not a contest rule
+# in disguise. M11 keeps them on purpose (open question Q92); their arms are
+# judged SHAPE, counted and never tabled as PROXY. Keyed (file base, routine).
+# Only SetUpExchangeInformation is reached by the scan today (through
+# scan.KIND_PARAMETERS); the other three take the shape as a parameter the
+# scan does not follow, and are named so that widening the scan cannot table
+# their arms as contest rules.
+SHAPE_MACHINES = {
+   ("logdupe.pas", "SetUpExchangeInformation"),
+   ("logstuff.pas", "ParseExchangeShape"),
+   ("uADIFExchange.pas", "FormatADIFExchangeOfKind"),
+   ("uCabrilloExchange.pas", "SetHisEx"),
+}
+
 # Reach 1 is unambiguous. Reach 2-3 is kept as a proxy because it is almost
 # always a CW/SSB pair or one sponsor's family. 4 or more is shared behaviour.
 FAMILY_MAX = 3
@@ -232,3 +250,9 @@ def classify(file, routine, line_text):
 
 
 _ROUTINES_FOLDED = {(f.lower(), r.lower()): v for (f, r), v in ROUTINES.items()}
+_SHAPE_MACHINES_FOLDED = {(f.lower(), r.lower()) for f, r in SHAPE_MACHINES}
+
+
+def is_shape_machine(file, routine):
+   """True when a site sits in one of SHAPE_MACHINES."""
+   return (file.split("/")[-1].lower(), routine.lower()) in _SHAPE_MACHINES_FOLDED

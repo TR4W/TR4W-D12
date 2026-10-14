@@ -3573,6 +3573,24 @@ and the tables, not the kind enums.
 
 **S9f DONE 2026-10-14 -- M10 COMPLETE:** the session holds `Exchange` (was `LOGWIND.ActiveExchange`, 54 code-only occurrences outside the uncompiled `logddx.pas` -> 0; its zero is `UnknownExchange`, as the global's was), so all six kind globals are gone; `tree.LooksLikeAGrid`'s per-row read is one call and a field load, still ahead of any string work; ARRL DX pins the session -- trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`. M11 inherits the six kind enums and their ~80 engine arms, every one now reading `ContestSession` (plan S9f and its "M10 COMPLETE" summary).
 
+### 8.2t M11 -- the staged plan (2026-10-14)
+
+M11 runs as the staged plan in
+[`CONTEST_FACTORY_M11_PLAN.md`](CONTEST_FACTORY_M11_PLAN.md) (S0-S10), which
+carries the measurements, the commands (`tools/contest-factory-m11/`) and the
+open questions it raised (Q92-Q96, with Q50 as a blocker for S1 and S8).
+
+**S0a, S0b and S0d DONE 2026-10-14 (pins and instruments only; no `src/`
+change).** S0a: the inventory's reach unions every `DescribeSession` kind
+statement (plan F1), and the exchange-shape machines' arms are counted as
+SHAPE rather than tabled as contest rules. S0b: `uTestContestKindPin` freezes
+the six kinds every contest runs at every contest-matrix station, generated
+once and checked against all 580 frozen records first. S0d: `InitialExchangeEntry`
+runs headless, but the matrix opens no TRMASTER and cannot reach the logged
+history; and `Doing*` DOES diverge from the session on a run-time contest
+change, so S2's `Doing*` move is a behaviour change, not a no-op (plan S0d).
+S0c is open.
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

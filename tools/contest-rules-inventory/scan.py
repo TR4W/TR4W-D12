@@ -288,11 +288,60 @@ def _arm_tags(body):
 
 
 # ------------------------------------------------------------------ shape 4
-def effective_reach(contests, overrides):
+# THE SESSION'S SECOND WRITER (M11 S0a, plan F1). Since M10 S2 a session kind
+# has exactly two writers: the class's trait, then the class's DescribeSession
+# (fcontest.ApplyContestTraits, then ApplySessionDefaults). The reach below
+# read the trait and FoundContest's arms, and the arms are gone (M7a), so it
+# could not see DescribeSession at all -- and called twelve live records
+# UNUSED (WAEDC's CQEuropean, PACC, DOK, SAC, YBDX, JIDX's prefecture...).
+DESCRIBE_SESSION = "DESCRIBESESSION"
+DESCRIBE_SESSION_PARAMETER = "ASESSION"
+
+
+def describe_session_statements(dump):
+   """{CLASS: [(field, value)]} -- every `aSession.<Kind> := <value>` in a
+   factory class's DescribeSession, under ANY condition. Counting a value
+   stated on one branch as reached by the contest over-approximates, which is
+   the safe direction for "only one contest uses this".
+
+   FAILS CLOSED: a kind statement outside DescribeSession, or one whose value
+   is not a single identifier, means the session has a writer this reach does
+   not model; and finding none at all means the reader is blind."""
+   stated = {}
+   problems = []
+   found = 0
+   for rel in dump.factory():
+      fs = FileScan(dump, rel)
+      toks = fs.toks
+      for i, (t, ln) in enumerate(toks):
+         u = t.upper()
+         if u not in SESSION or i < 2 or i + 3 >= len(toks):
+            continue
+         if toks[i - 1][0] != "." or toks[i - 2][0].upper() != DESCRIBE_SESSION_PARAMETER or toks[i + 1][0] != ":=":
+            continue
+         routine = fs.routine.get(ln, "")
+         value = toks[i + 2][0]
+         if not routine.upper().endswith("." + DESCRIBE_SESSION):
+            problems.append(f"   {rel}:{ln} aSession.{t} is written in {routine}, not DescribeSession")
+            continue
+         if not pascal.is_ident(value) or toks[i + 3][0].upper() not in (";", "END", "ELSE"):
+            problems.append(f"   {rel}:{ln} aSession.{t} := is not a single identifier")
+            continue
+         stated.setdefault(routine.split(".")[0].upper(), []).append((SESSION[u], value))
+         found += 1
+   if problems:
+      raise SystemExit("DescribeSession kind statements this reach cannot model:\n" + "\n".join(problems))
+   if found == 0:
+      raise SystemExit("no `aSession.<Kind> :=` found in any DescribeSession -- the reader is blind, not the factory empty")
+   return stated
+
+
+def effective_reach(contests, overrides, stated=None, registry=None):
    """{field: {VALUE: {contests}}} -- each contest's class-stated value UNION
-   every FoundContest override. That over-approximates who uses a value, which
-   is the safe direction for "only one contest uses this". Values fold case,
-   because Pascal does."""
+   every FoundContest override UNION (when `stated` and `registry` are given)
+   every value its chain's DescribeSession states. That over-approximates who
+   uses a value, which is the safe direction for "only one contest uses
+   this". Values fold case, because Pascal does."""
    eff = {}
    for e in contests.enum:
       for f in ACTIVE.values():
@@ -302,12 +351,18 @@ def effective_reach(contests, overrides):
    for o in overrides:
       for c in o["contests"]:
          eff.setdefault(o["field"], {}).setdefault(o["value"].upper(), set()).add(c)
+   if stated is not None:
+      for c, info in registry.classes.items():
+         for cls in info["chain"]:
+            for f, v in stated.get(cls, ()):
+               eff.setdefault(f, {}).setdefault(v.upper(), set()).add(c)
    return eff
 
 
 def classify_proxies(sites, eff, registered):
    """One record per Active* comparison and per arm of a `case Active* of`:
-   PROXY (reach 1..FAMILY_MAX), SHARED (more), UNUSED (none by default)."""
+   SHAPE (inside one of judgements.SHAPE_MACHINES, whatever its reach),
+   PROXY (reach 1..FAMILY_MAX), SHARED (more), UNUSED (none)."""
    records = []
    for s in sites:
       if s["shape"] != 4:
@@ -320,7 +375,9 @@ def classify_proxies(sites, eff, registered):
          cs = set()
          for v in vals:
             cs |= eff.get(s["field"], {}).get(v.upper(), set())
-         if not cs:
+         if judgements.is_shape_machine(s["file"], s["routine"]):
+            cls = "SHAPE"
+         elif not cs:
             cls = "UNUSED"
          elif len(cs) <= judgements.FAMILY_MAX:
             cls = "PROXY"

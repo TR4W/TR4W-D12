@@ -1,10 +1,12 @@
 # M11 -- the kinds move into the classes: a staged, measured plan
 
-**Status: PLAN. Nothing in it is built.** Measured READ-ONLY at HEAD `f006acb2`
-(branch `contestFactory`, 2026-10-14, "M10 COMPLETE"). Nothing was built, run or
-edited to produce it. Re-measure before you act on a number. Every count below
-gives the command that produced it (section 1.0), and section 1.0 also says
-which scripts must be committed at S0 so the counts can be reproduced.
+**Status: PLAN, S0 under way. S0a, S0b and S0d are DONE (2026-10-14, at
+`95e127a5`); S0c is open; nothing from S1 on is built.** See section 4 S0 for
+what each did and the corrections it made to the figures below. The plan was
+measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
+"M10 COMPLETE"). Re-measure before you act on a number. Every count below
+gives the command that produced it (section 1.0); the script behind L2 and L9
+is committed at `tools/contest-factory-m11/kind-reach.py` since S0a.
 
 Owner: `contest-factory`. Engine side: `contest-scoring`. Also touched:
 `file-formats`, `lcl-ui`, `log-database`, `multi-op-network`,
@@ -290,7 +292,8 @@ are in compiled code:
 - Three of the four shape machines: `logstuff:6715`, `uADIFExchange:135` and
   `uCabrilloExchange:141`. Only `SetUpExchangeInformation` is scanned, through
   `KIND_PARAMETERS`, and it contributes 37 PROXY rows that are shape
-  descriptors, not contest rules.
+  descriptors, not contest rules. **Corrected at S0a: 25 rows, of 43
+  records** (section 4 S0a).
 - Kind tests on non-session operands: `uMults:211`, `uContestReadiness:221`.
 
 ### 1.5 What pins the arms today
@@ -494,19 +497,89 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
 
 ### S0 -- Instruments and pins (no behaviour change)
 
-- **S0a** -- Commit `tools/contest-factory-m11/kind-reach.py` (appendix A).
+- **S0a** -- **DONE 2026-10-14.** Commit `tools/contest-factory-m11/kind-reach.py` (appendix A).
   Fix the inventory: `scan.effective_reach` must union the `DescribeSession`
   literals (F1), and the four shape machines are judged `SHAPE` rather than
   PROXY. *Files:* `tools/contest-rules-inventory/scan.py`, `judgements.py`,
   the regenerated doc. *Expected:* rows move (12 UNUSED->PROXY; 37
   `SetUpExchangeInformation` rows->SHAPE). This is a measurement correction,
   stated as one.
-- **S0b** -- `uTestContestKindPin`. For every contest x a station roster (us
+  - **What was done.** `scan.describe_session_statements` reads every
+    `aSession.<Kind> := <value>` in a factory `DescribeSession`, on TOKENS
+    (89 statements in 41 classes, L5's figure), and fails closed on a kind
+    statement outside `DescribeSession`, a value that is not one identifier,
+    or none found. `effective_reach` unions them over each contest's class
+    chain. `judgements.SHAPE_MACHINES` names the four machines and
+    `classify_proxies` gives their arms the class SHAPE, which the summary
+    counts and no table lists; the generator fails if no record is SHAPE.
+    The frozen matrix is NOT read: since S2 the trait and `DescribeSession`
+    are the session's only writers, so the matrix can add nothing, and
+    `kind-reach.py --inventory` now proves it (below).
+  - **Inventory at `95e127a5`, before -> after:** 110 -> **94** table rows;
+    shapes 1/2/3/4 6/0/13/91 -> **6/0/13/75**; records PROXY 91 (39 reach-1,
+    52 reach-2-3) -> **75** (25, 50), SHARED 96 -> **85**, UNUSED 42 -> **26**,
+    SHAPE -> **43**; registered contests with rules outside the factory 74 ->
+    **66**. Every one of the 229 records accounted for: PROXY->PROXY 63,
+    **UNUSED->PROXY 12** (exactly 1.4's list, `logddx:313` among them),
+    **PROXY->SHARED 3** (`logddx:863`, `logdupe:681`, `logedit:2680` --
+    `DescribeSession` adds contests to those values), PROXY->SHAPE 25,
+    SHARED->SHAPE 14, UNUSED->SHAPE 4, and the rest unchanged. Rows: 110 - 25
+    - 3 + 12 = 94. Contests: 20 leave (their only rows were
+    `SetUpExchangeInformation` arms or the three that became SHARED -- ARCI,
+    ARRLDIGI, BATAVIA_FT8, CUPURAL, DELAWAREQSOPARTY, JALONGPREFECT, KIDSDAY,
+    MAKROTHEN, PAQSOPARTY, R9W, RADIOMEMORY, RADIOYOC, RAEM, RFASCHAMPIONSHIPCW,
+    RoPoCo x2, UKRAINECHAMPIONSHIP, WWDIGI, XMAS, YOUTHCHAMPIONSHIPRF) and 12
+    join (ALRS, ARRL160, DARC10M, WAEDC x2, JIDX x2, PACC, SAC x2, WAG, YBDX).
+  - **CORRECTION: 25 rows, not 37.** `SetUpExchangeInformation` contributed
+    **25** PROXY rows (14 reach-1, 9 reach-2, 2 reach-3) to the published
+    document, of **43** records (25 PROXY, 14 SHARED, 4 UNUSED). All 43 are
+    SHAPE now. F1 and 1.4 said 37; the tracked document says 25.
+  - **Still not scanned:** the other three machines (`ParseExchangeShape`,
+    `FormatADIFExchangeOfKind`, `SetHisEx`) take the shape as a parameter the
+    scan does not follow. They are named in `SHAPE_MACHINES` so that widening
+    the scan cannot table their arms as contest rules. See F16 for what that
+    blindness costs section 9.1 of the inventory.
+  - **`kind-reach.py` is committed with one change from appendix A:** its
+    `DescribeSession` half calls `scan.describe_session_statements` instead of
+    its own line regex -- one reader, so the script and the inventory cannot
+    disagree. Its CASE/TEST/MEMBER output is byte-identical to the appendix
+    version's. `--inventory` now reads the fixed reach and keeps SHAPE as
+    SHAPE, so it is a CROSS-CHECK: at `95e127a5` every one of the 229 records
+    reclassifies to its own class (SHARED 85, PROXY 75, UNUSED 26, SHAPE 43).
+- **S0b** -- **DONE 2026-10-14, at the MATRIX's stations, not this roster.**
+  `uTestContestKindPin`. For every contest x a station roster (us
   out-of-host, us-host, VE, DL, JA, OK, ON, SM, UA, YB, PY, 9A, HB, EI, YU,
   UR, an Asian and a South American entrant), assert the six kinds that
   `trait` + `DescribeSession` resolve to, as literals. Generate it ONCE and
   never regenerate it to clear a failure, the `uTestContestIdentityPin` rule.
   It pins every per-station branch without needing matrix variants.
+  - **What was built.** `tr4w/test/unit/uTestContestKindPin.pas`, registered
+    as suite `ContestKindPin`. `KIND_PINS: array[ContestType]` holds each
+    contest's six kinds at `us`, `ve` and `dx`; `HOST_KIND_PINS` holds the 22
+    parties' `us-host` station (call, country, MY STATE, section, grid) and
+    kinds. `Kinds` resolves them as FCONTEST does -- the trait, then each
+    stated value over it -- on `ContestIdentity`, as `FoundContest` asks.
+    Assertions: 187 x 3 x 6 = **3,366** plus 22 x 6 = **132**, every count
+    exact; a party with no host row, or a host row on a non-party, fails.
+  - **The stations are the matrix's** (`matrix-lib.sh` `matrix_run`), as the
+    task directed: us K0AAA/KS/EM17, ve VE3AAA/ON/FN03, dx DL1AAA/no
+    state/JO62, us-host per party from its frozen record's `### variant
+    us-host` line, plus what `CurrentStation` hands `DescribeSession` at that
+    point (CTY country and continent, MY STATE, `InHostState` = True only at
+    us-host). The zone, power, category mode and the three services are left
+    zero: no `DescribeSession` reads them (measured).
+  - **Proved before it was written down:** the generated kinds equal the
+    frozen matrix's `active.*` lines for all **580 records, 3,480 values, 0
+    differences**, so the literals are what the program runs. 7 contests vary
+    across us/ve/dx (ARRL160, ARRL DX x2, WAEDC x2, WAG, DARC10M) and 6
+    parties differ in the host state (AZ, CA, DE, Salmon Run, 7QP, TX); the
+    test asserts both counts.
+  - **NOT DONE -- the rest of this roster.** JA, OK, ON, SM, UA, YB, PY, 9A,
+    HB, EI, YU, UR, Asian and South American entrants are not pinned, so the
+    per-station branches only those stations reach (1.3) are still unpinned.
+    Adding them means new rows in the same unit, generated the same way and
+    checked by hand, because the matrix cannot cross-check a station it does
+    not run.
 - **S0c** -- Matrix instrument extension, a deliberate re-freeze with that
   reason:
   - QSOs that hit every live key arm: ON4, YB, JT, SM/LA/OH/OX, UA9 and UA0,
@@ -518,11 +591,66 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
     unchanged (diff with the added lines excluded). The `totals` section
     changes by construction, because there are more QSOs, so that section is
     re-frozen for that reason and nothing else.
-- **S0d** -- **Measure, do not change.**
+- **S0d** -- **Measure, do not change.** **DONE 2026-10-14.**
   - Can `InitialExchangeEntry` run headless in the matrix? If yes, add an
     `initialexchange` section (empty and logged history) at S0c's re-freeze.
   - Is `Doing*` (`LogCfg:433-436`, run once from `uProgramMain:2318`) re-derived
     when a contest changes without a restart (`uSettingsEffects:353`)? F9.
+  - **How it was measured.** A scratch build of the app (scratchpad only;
+    `tr4w.lpr` copied with absolute paths, and a patched COPY of
+    `uContestMatrix` adding the probes below) was driven by `matrix-lib.sh`'s
+    own `matrix_run`, pointed at the scratch binary and a scratch output
+    directory -- nothing compared, nothing frozen, the tree untouched. Its
+    records were byte-identical to the frozen ones outside the probe lines,
+    for all 12 contests run.
+  - **ANSWER 1: YES, it runs headless -- and the section S0c would add pins
+    less than it looks.** Over CQWWCW (Custom), CQWWSSB, IARU, OZCR_O and
+    RFCHAMPIONSHIPCW (Zone), NAQSOCW (Name), NASPRINTCW (NameQTH), ARRLDIGI
+    (Grid), ARRLSSCW (CheckSection), RUSSIANDX, RDA and ARRLDXCW (none), at
+    us/ve/dx, for the 11 matrix calls plus one unlogged call, before and
+    after `CaptureTotals`' reload: 864 lines, no exception, byte-identical on
+    a second run. Its UI calls (`CheckAndSetInitialExchangeCursorPos`) are
+    `ControlUsable`-guarded no-ops. The zone kinds answer from CTY (CQ WW SSB
+    gives CQ zones, IARU and OZCR ITU zones, the RF Championship its own
+    rule). But two things make the section weaker than S0c assumed:
+    - **The matrix opens no TRMASTER (F17).** `CD.MasterFileExists` is set at
+      `uProgramMain:2701`, AFTER the `/MATRIX` halt at `:2405`, so
+      `LoadInIndexArray` refuses: probed, `MasterFileExists=FALSE` with the
+      shipped `TRMASTER.DTA` as `ActiveFilename`, and `CD.GetEntry('W1AW')`
+      "not found" although the file holds W1AW (name HIRAM, read with
+      `tools/trmaster/trmaster_codec.py`). So the Name, NameQTH, CheckSection
+      and Grid arms, and Custom's TRMASTER commands, return blank for every
+      call. The section would pin only their no-TRMASTER branch. Opening it
+      in the harness would make every such record depend on the tracked
+      `TRMASTER.DTA`, which is refreshed, so each refresh would re-freeze.
+    - **The logged-history case is unreachable (F18).** `LoadinLog` adds a
+      QSO's initial exchange to `CallsignsList` only `if not
+      IntitialExLoaded`, and sets that latch at its end (`MainUnit:8031`).
+      Start-up's `LoadinLog` (empty log) sets it, so `CaptureTotals`' reload
+      adds nothing; the scoring section bypasses `logsubs2:1740`, the live
+      path that does add it. Measured: "empty" equals "logged" for every
+      line. Pinning history needs S0c to log through a path that calls
+      `AddIniitialExchange`, or the harness to clear the latch.
+  - **ANSWER 2: NO -- they DO diverge (F9).** `Doing*` has one writer,
+    `LogCfg:433-436`, one caller, start-up (`uProgramMain:2318`). `CONTEST` is
+    in `uCFG.SHARED_WITH_PEERS`, is registered with no restart or read-only
+    flag, and a peer's change arrives through `uNet`'s `NET_PARAMETER_ID` arm
+    -> `ApplyPeerCommand` -> the setting -> `uSettingsEffects:353` ->
+    `FoundContest`, which rewrites the six kinds. Measured on that exact path
+    (`ApplyPeerCommand('CONTEST', 'ARRL-SS-CW')` in a CQ WW CW session, all
+    three stations): the session became `DomesticFile NoDXMults NoPrefixMults
+    NoZoneMults` and `Doing*` stayed `FALSE TRUE FALSE TRUE`, CQ WW's. The
+    matrix cannot see this: it opens one contest per process.
+  - **So S2's `Doing*` bullet does not meet its own condition.** Moving the
+    derivation into FCONTEST's applier would re-derive it on every
+    `FoundContest`, which FIXES the run-time switch -- a behaviour change on
+    that path, not a no-op. **DECIDED 2026-10-14 (orchestrator, design
+    delegated): fix it at S2.** Stale `Doing*` after a contest change is an
+    engine-correctness defect, not a sponsor rule: the sheet and the totals
+    would count multiplier kinds the running contest does not have. S2
+    re-derives `Doing*` wherever the kinds are written, says so in its
+    commit, and pins the switch with a test. Whether an operator can switch contest
+    locally without a restart (Preferences) was not measured.
 - *Risk:* low, but S0c is a large re-freeze. *Specialists:* `contest-scoring`,
   `file-formats` (matrix exports), `build-release` (inventory tool).
 
@@ -563,7 +691,8 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
 - **One derivation of `Doing*`.** It moves to FCONTEST's applier, inside
   `ContestSession`, and every `ContestSession.<Kind> <> No*` sentinel (13
   lines) reads the flag -- **only if S0d proved the two cannot diverge
-  today.**
+  today.** **S0d proved they CAN** (F9): this move is a behaviour change on a
+  run-time contest switch -- DECIDED: a defect fix, done here (see S0d).
 - *Matrix:* identical. *Risk:* low-medium (the Doing* move).
 - *Specialists:* `contest-scoring`, `lcl-ui` (`MainUnit`, `uEditQSO`).
 
@@ -696,7 +825,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 
 | # | where | evidence |
 |---|---|---|
-| **F1** | `tools/contest-rules-inventory/scan.py` `effective_reach` | Reach is trait UNION FoundContest overrides, and those are 0 since M7a. `DescribeSession` is invisible, so 12 live records are classed UNUSED (1.4). The four shape machines are not scanned either, and one that is (`SetUpExchangeInformation`) is reported as 37 contest rules |
+| **F1** | `tools/contest-rules-inventory/scan.py` `effective_reach` | Reach is trait UNION FoundContest overrides, and those are 0 since M7a. `DescribeSession` is invisible, so 12 live records are classed UNUSED (1.4). The four shape machines are not scanned either, and one that is (`SetUpExchangeInformation`) is reported as 37 contest rules. **FIXED at S0a** -- and it was 25 rows (43 records), not 37 |
 | **F2** | `uContestARRL10:201`, `uContestARRLFieldDay:454`, `uContestKCJ:226`, `uContestYBDX:239-240` | Five trait values the session never runs (1.3) -- inventory D8's shape. `uTestContestSession` pins three of them as its evidence that "a reader may not ask the trait" |
 | **F3** | `zonecont.pas:103`; `logedit.pas:2571-2594`; `uTestContestParse:622-633` | `TContestRussianDX`/`TContestRU3AXMemorial.InitialExchangeFromCall` is reached only through `GetVEInitialExchange`, which only the Section and QTH initial-exchange arms call. No contest runs either of them since S2 (reach 0). The live Russian oblast rule is LOGEDIT's fallback (`logedit:2650`, `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]`), so one of Q50's three spellings is already dead and a unit test pins it |
 | **F4** | `MainUnit:934-936`, `:975-977`, `:2061`, `:5988`; `logsubs2:1611`; `TContestStateQSOPartyBase.SplitsRoverCallOnExport` | "Is a slash suffix a county?" is decided by exchange shape live (25 contests) and by the class on export (15). The two sets disagree. Split on export but not stripped live: CA, CO, MN, OH, PA. Stripped live but not split: ALRS, ARRL160, ARRLDX x2, AZ, BC, COUNTYHUNTER, IN7QPNE, LABRE, NEQP, NY, PACC, Salmon Run, 7QP, TOEC. Related to Q90 |
@@ -704,13 +833,16 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F6** | `logstuff.pas:7120-7131`, `:7143`; `logwind.pas:531` | `DomStringParse`'s DOK arm returns the local `TempMultiplier` uninitialised when the text has no letter. Its IOTA arm uses the unit global `LOGWIND.ContinentString` as scratch: it declares no local, and the global's only other writer is FCONTEST, with no reader. The whole routine is a drifted copy of `logdom.GetDomQTH:227-330` |
 | **F7** | `uMults.pas:264-275` versus `logdupe.pas:662-760` | The remaining-DX-countries filter knows 3 of the 14 DX-key rules. Two owners of "which countries count"; the UI effect was not measured |
 | **F8** | `uContestCQWWCW:122` versus `uContestCQWWSSB:122` | The CQ WW pair, which shares a family base, states different initial exchanges (Custom versus Zone). Sponsor intent unknown |
-| **F9** | `LogCfg:433-436` (once, `uProgramMain:2318`) versus `uSettingsEffects:353` | `Doing*` is derived once at start-up, while the kinds are rewritten by every FoundContest. Readers mix the two (`uScoreTotals:161-164` and `MainUnit:9542-9543` read the session; `logdupe`/`logsubs2` read `Doing*`). Whether they can diverge is unmeasured (S0d) |
+| **F9** | `LogCfg:433-436` (once, `uProgramMain:2318`) versus `uSettingsEffects:353` | `Doing*` is derived once at start-up, while the kinds are rewritten by every FoundContest. Readers mix the two (`uScoreTotals:161-164` and `MainUnit:9542-9543` read the session; `logdupe`/`logsubs2` read `Doing*`). **MEASURED at S0d: they diverge** on a peer's run-time `CONTEST` change (CQ WW CW -> ARRL SS CW leaves `Doing*` at CQ WW's values) |
 | **F10** | 1.1 | 26 members have been unreachable since S2 retired their only selector. This includes `User1`..`User5` and the VE/Section/QTH initial exchanges -- operator features that S2 removed without removing their arms |
 | **F11** | 11 factory `ParseReceivedExchange` guards (1.2) | Each class's session exchange is the same in every matrix variant, and none states one in `DescribeSession` (L5), so `aSession.Exchange = X` is always True in the program. Only the unit tests' stub sessions reach the other branch |
 | **F12** | `uContestBase.pas:2718` | A reach-1 rule (FISTS) sits in the base's non-virtual `CombineScore` |
 | **F13** | `VC.pas:3406` | `ActiveExchangeArray` survives for two log lines (`uADIFExchange:403/413`) |
 | **F14** | `Lint-ContestNameTests.ps1` `$TOTAL_FLOOR = 5`, 6 found | S8 removes 4. The floor must fall in the same commit, or the lint fails with "broken parser" |
 | **F15** | `MainUnit:9514-9516`; `logdupe:1709-1715` | The SS-shape test duplicates `ExchangeInformation.Precedence`/`.Check`. They are equal once S1 removes `CheckAndChapterOrQTH`, the only other arm that sets `Check` |
+| **F16** | inventory section 9.1; `analyses.dead_arms` | (S0a) The "export arms dead by default" table is EMPTY, and not because there are none: it reads `SetHisEx` / `FormatADIFExchangeOfKind` records, and those machines left the scan when their selector became a parameter (`aCtx.SessionExchange`, `aKind`). The same blindness as F1's three unscanned machines. Not fixed at S0a, which judges the machines SHAPE |
+| **F17** | `uProgramMain:2701` versus `:2405` | (S0d) `CD.MasterFileExists` is set after the `/MATRIX` halt (and `/EXPORT`'s), so headless runs never open TRMASTER: `CD.GetEntry('W1AW')` answers "not found" while the shipped file holds W1AW. Every TRMASTER-sourced initial exchange is blank in the matrix |
+| **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):
 
@@ -740,6 +872,13 @@ rows.
 ---
 
 ## Appendix A -- `kind-reach.py` (commit at S0a as `tools/contest-factory-m11/kind-reach.py`)
+
+**COMMITTED AT S0a, WITH ONE CHANGE** (section 4 S0a): the `DescribeSession`
+half of `session_reach` calls the inventory's `scan.describe_session_statements`
+rather than the line regex below, and `--inventory` reads the fixed reach, so
+it is now a cross-check that reclassifies every record to its own class. The
+listing below is the measuring version, kept as the record of how the plan's
+figures were made; the committed file is the one to run.
 
 Run L1 first. Every L2 and L9 figure above came from this script, re-run on
 `f006acb2` as a check. It reports 10 `CASE` sites, 96 distinct engine `TEST`

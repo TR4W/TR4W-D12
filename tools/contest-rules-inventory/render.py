@@ -156,7 +156,10 @@ class Renderer:
          f"| PROXY for DUMMYCONTEST | {dummy} | `NoQSOPointMethod`, the sentinel; dropped |",
          f"| SHARED | {pc['SHARED']} | reaches {judgements.FAMILY_MAX + 1}+ contests -- genuinely shared behaviour, "
          "**not a finding**, counted only |",
-         f"| UNUSED | {pc['UNUSED']} | reaches NO contest by default -- only an operator's `.cfg` setting can select it (section 1.4) |",
+         f"| SHAPE | {pc['SHAPE']} | an arm of an exchange-SHAPE machine (`judgements.SHAPE_MACHINES`): a data format, "
+         "kept on purpose by M11 (Q92), **not a finding**, counted only |",
+         f"| UNUSED | {pc['UNUSED']} | reaches NO contest: neither a class's trait nor its `DescribeSession` states the value "
+         "(the settings that could select one were retired at M10 S2) |",
          "",
          "### 1.2 By category (table rows; section 4 has every row)",
          "",
@@ -265,7 +268,10 @@ class Renderer:
          "The reach of a value is each contest's own statement of it -- the single",
          f"value its class's getter returns, else `TContestBase`'s ({len(i.contests.enum)} contests;",
          "`ContestsArray`, which held the same values, was deleted at M10 S8)",
-         f"UNION every `Active* :=` inside `FoundContest`'s arms ({len(i.overrides)} assignments).",
+         f"UNION every `Active* :=` inside `FoundContest`'s arms ({len(i.overrides)} assignments)",
+         f"UNION every `aSession.<Kind> :=` its chain's `DescribeSession` states, under any condition",
+         f"({sum(len(v) for v in i.stated.values())} statements in {len(i.stated)} classes; M11 S0a -- before it this",
+         "reach could not see `DescribeSession`, and called twelve live records UNUSED).",
          "That over-approximates who uses a value, which is the safe direction for",
          "deciding \"only one contest uses this\". Values are compared case-insensitively,",
          "because Pascal is: `TWOPOINTSPERQSO` and `TwoPointsPerQSO` are one identifier.",
