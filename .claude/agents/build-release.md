@@ -68,6 +68,28 @@ ratchet: `$LEAK_CEILING` in the script, printed every run, lower it when it drop
 - It exists because commit 0ec5d43d's crash (an instance-sized `FillChar` over an
   old-style object with virtuals; an unassigned managed result) was invisible in
   a normal build and deterministic here.
+- **heaptrc has a FALSE "freed again" (2026-10-14, found at M10 S2).** Under its
+  default `usecrc` a live block's `sig` is a CRC-32 of size + 16 return
+  addresses + tail, and "released" is the constant `$AAAAAAAA` in the SAME
+  field, tested FIRST. A live block whose CRC is `$AAAAAAAA` is reported
+  "Marked memory at ... released / freed again at" on its first free. The CRC
+  has no heap address in it, so the collision is **fixed per binary** and moves
+  with ANY code change (S2's two new tests triggered it in SettingsFreshInstall
+  before either ran; `-Lines` hid it). **Without `keepreleased` the "was
+  released at" lines are calls[9..16] of the ALLOCATION trace, not a release
+  trace** -- do not chase them.
+  - `HeaptrcReport.ps1` recomputes the signature from the printed size and
+    addresses and excuses a report ONLY if it is `$AAAAAAAA`; it self-checks
+    against the S2 block every run and fails closed.
+  - The checked run sets `HEAPTRC=nohalt`, because heaptrc's `haltonerror`
+    otherwise ENDS the run on the false positive (exit 1, later suites never
+    run, unfreed count drops). heaptrc then exits 203; the gate accepts 203
+    only with 0 failed tests and every report excused.
+  - **Never "fix" it with `usecrc := false`:** the tail-overrun check exists
+    only inside the CRC.
+  - Ruled out on the way, with instruments in a scratch memory-manager spy:
+    no overrun of any live block, no long-lived thread, no stale or double
+    free within a 400k-free quarantine.
 
 ## The ceilings, and the rule about them
 

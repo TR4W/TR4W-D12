@@ -52,6 +52,26 @@
 # Leaks are a RATCHET, not a failure: the count is printed on every run and may
 # only go down. When it drops, lower $LEAK_CEILING and commit it with the fix.
 #
+# ONE heaptrc REPORT IS EXCUSED, AND ONLY WHEN IT IS PROVEN FALSE (2026-10-14).
+# heaptrc stores a live block's CRC-32 and the "released" marker $AAAAAAAA in
+# the same header field and tests the marker first, so a live block whose CRC
+# is $AAAAAAAA is reported "Marked memory ... released / freed again" the first
+# time it is freed. The CRC covers only size, return addresses and tail, so
+# the collision is FIXED PER BINARY and moves with any code change -- M10 S2
+# hit it in SettingsFreshInstall, and -Lines (different addresses) did not.
+# HeaptrcReport.ps1 recomputes the signature from what heaptrc printed and
+# excuses the report only if it IS $AAAAAAAA; every other report still fails.
+# The verifier checks itself against that very block before every use, and a
+# failed self-check fails the run.
+#
+# AND THE RUN IS NOT ALLOWED TO HALT ON IT: HEAPTRC=nohalt is set for the
+# checked run. With heaptrc's default haltonerror the false positive ended the
+# run on the spot -- exit 1, the remaining suites never ran, and the unfreed
+# count fell to whatever had leaked so far -- which is a gate that stops
+# checking, not one that checks. A REAL error still fails it below, and
+# heaptrc then exits 203, which is accepted only when every report it made
+# was an excused collision and no test failed.
+#
 # -CR (object checks) IS DELIBERATELY LEFT OUT: it does not compile Log4D.pas
 # (a "Class Of ILogAppender" is not a TClass, line ~1728), and Log4D is
 # vendored, so the answer is not to edit it.
@@ -81,6 +101,7 @@ $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
 . (Join-Path $PSScriptRoot 'Get-SearchPaths.ps1')
+. (Join-Path $PSScriptRoot 'HeaptrcReport.ps1')   # the ReleaseSig collision check
 
 $TR4W_DIR = Split-Path $PSScriptRoot -Parent
 $REPO     = Split-Path $TR4W_DIR -Parent
@@ -230,11 +251,18 @@ if ($Run)
       # PowerShell turns the first stderr line of a native command into a
       # terminating error, so relax it for this one call.
       $ErrorActionPreference = 'Continue'
+      $savedHeaptrc = $env:HEAPTRC
+      if ($Checked)
+         {
+         # nohalt -- see the header: a heaptrc report must not end the run.
+         $env:HEAPTRC = (('' + $savedHeaptrc) + ' nohalt').Trim()
+         }
       $testOut = & $exe 2>&1
       $testRc  = $LASTEXITCODE
       }
    finally
       {
+      $env:HEAPTRC = $savedHeaptrc
       $ErrorActionPreference = 'Stop'
       Pop-Location
       }
@@ -244,7 +272,13 @@ if ($Run)
 
    $failed = $false
 
-   if ($testRc -ne 0)
+   # 203 IS heaptrc's "the heap had an error" exit, which it sets only when the
+   # program would otherwise have exited 0 -- so every test passed. Whether
+   # that error is real is decided by the corruption check below, not here.
+   $heapExitOnly = $Checked -and ($testRc -eq 203) -and
+                   ($null -ne $summary) -and ($summary.Line -match 'FAILED:\s*0\b')
+
+   if (($testRc -ne 0) -and (-not $heapExitOnly))
       {
       $testOut | Select-String '\[FAIL\]' | Select-Object -First 20 |
          ForEach-Object { Write-Host "  $($_.Line.Trim())" -ForegroundColor Red }
@@ -274,8 +308,75 @@ if ($Run)
          # CORRUPTION, as opposed to a leak. These are the strings heaptrc.pp
          # prints (checked against the 3.2.2 heaptrc.o).
          $corruptionPattern = 'Wrong size :|Wrong signature|Marked memory at .* invalid|freed again at|Error in heap memory list|error in linked list|does not point to valid memory block|points into invalid memory block|More memory blocks than expected'
-         $corrupt = @($text -split "`n" | Where-Object { $_ -match $corruptionPattern })
+         $allLines = @($text -split "`n" | ForEach-Object { $_.TrimEnd("`r") })
+
+         # THE ReleaseSig COLLISION, PROVEN OR NOT EXCUSED. See the header and
+         # HeaptrcReport.ps1. Fail closed if the verifier has drifted.
+         $pointerSize = 4
+         if ($Cpu -eq 'x86_64') { $pointerSize = 8 }
+         $excused = @{}
+         $collisions = 0
+         $collisionKinds = @{}
+         if (-not (Test-HeaptrcVerifier))
+            {
+            Write-Host "  CHECKED RUN FAILED: the heaptrc ReleaseSig verifier failed its own self-check -- HeaptrcReport.ps1 no longer matches heaptrc." -ForegroundColor Red
+            $failed = $true
+            }
+         elseif ((('' + $env:HEAPTRC) -match 'tail_size') -or (('' + $savedHeaptrc) -match 'tail_size'))
+            {
+            # The verifier assumes heaptrc's default tail. Do not guess.
+            Write-Host "  note: HEAPTRC sets tail_size -- no collision is excused this run" -ForegroundColor Yellow
+            }
+         else
+            {
+            for ($li = 0; $li -lt $allLines.Count; $li++)
+               {
+               if ($allLines[$li] -match '^\s*Marked memory at \$[0-9A-Fa-f]+ released')
+                  {
+                  $report = Read-HeaptrcReleasedReport -Lines $allLines -Index $li
+                  if (Test-HeaptrcReleaseSigCollision -Report $report -PointerSize $pointerSize)
+                     {
+                     $excused[$report.FreedAgain] = $true
+                     $collisions++
+                     # One line per distinct allocation site: the same
+                     # (size, stack) collides every time it is allocated.
+                     $kind = "size $($report.Size), allocated from `$" +
+                             ('{0:X8}' -f $report.Calls[0])
+                     if ($collisionKinds.ContainsKey($kind))
+                        {
+                        $collisionKinds[$kind]++
+                        }
+                     else
+                        {
+                        $collisionKinds[$kind] = 1
+                        }
+                     }
+                  }
+               }
+            foreach ($kind in $collisionKinds.Keys)
+               {
+               Write-Host ("  heaptrc ReleaseSig collision (NOT corruption), {0} report(s): {1} -- its CRC-32 signature is `$AAAAAAAA, heaptrc's 'released' marker" -f
+                           $collisionKinds[$kind], $kind) -ForegroundColor Yellow
+               }
+            }
+
+         $corrupt = @()
+         for ($li = 0; $li -lt $allLines.Count; $li++)
+            {
+            if (($allLines[$li] -match $corruptionPattern) -and (-not $excused.ContainsKey($li)))
+               {
+               $corrupt += $allLines[$li]
+               }
+            }
          Write-Host "  heaptrc corruption reports: $($corrupt.Count)"
+
+         # An error heaptrc counted that no pattern above names. 203 with
+         # nothing recognised is not a pass.
+         if ($heapExitOnly -and ($corrupt.Count -eq 0) -and ($collisions -eq 0))
+            {
+            Write-Host "  CHECKED RUN FAILED: heaptrc exited 203 (a heap error) and reported nothing this gate recognises. Full output: $checkedLog" -ForegroundColor Red
+            $failed = $true
+            }
          if ($corrupt.Count -gt 0)
             {
             $corrupt | Select-Object -First 20 | ForEach-Object { Write-Host "    $($_.Trim())" -ForegroundColor Red }
