@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `1f3299b6` (2026-10-14).
+directory). This copy was generated from commit `beee0c99` (2026-10-14).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -882,7 +882,7 @@ format their own exchange (19 classes).
 
 ### 9.2 Class traits the engine contradicts (D8)
 
-**513** trait overrides checked (`GetExchangeKind`,
+**541** trait overrides checked (`GetExchangeKind`,
 `GetDomesticMultiplierType`, `GetDXMultiplierType`), each against the value the
 ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
 `ContestsArray` row. **0** disagree or could not be read:
