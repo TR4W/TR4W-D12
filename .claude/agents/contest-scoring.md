@@ -260,9 +260,9 @@ F22:** `LOGSCP.BestTwoLetters` never assigns the slot of the `JA` pair it
 skips, so whether a call containing `JA` is FOUND in TRMASTER depends on stack
 residue from the previous lookup. An `ActiveContest` call between lookups
 overwrote it and moved three matrix records (Croatian, IRTS, WRTC
-`iex JA1ABC`). Until F22 is fixed (with a matrix re-freeze), do not add deep
-calls inside the call-history paths of `InitialExchangeEntry` and expect the
-matrix to stay identical. The choice is `uContestBase.InitialZoneFromCallHistory`. A multiplier KIND's arm that has NOT
+`iex JA1ABC`). **F22 IS FIXED (2026-10-14)**: the routine zeroes its array on
+entry, so the lookup no longer depends on the previous one; the TRMASTER
+initial-zone test may now ask `ActiveContest` like the other zone readers. The choice is `uContestBase.InitialZoneFromCallHistory`. A multiplier KIND's arm that has NOT
 moved (the remaining-mult lists, the domestic kind) stays keyed on the kind
 until its M11 stage. **`UsesBand` is asked at four places now** -- points,
 multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO

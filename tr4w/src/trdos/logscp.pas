@@ -1381,6 +1381,21 @@ begin
 
   MinimumBytes := AVeryBigNumber;
 
+  (* EVERY SLOT STARTS AT 0, the routine's own "illegal pair" value -- F22,
+    2026-10-14. NumberBytes is a local array, and the 'JA' pair below is
+    skipped with Continue WITHOUT writing its slot, and the second loop
+    compared whatever the previous call had left on the stack there
+    against the minimum. So whether TRMASTER found any call containing
+    "JA" depended on the call looked up before it (after DL1ABC, whose DL
+    bucket is the same size as JA1ABC's A1 bucket, JA1ABC was "not found"),
+    and with it the name, zone, QTH, section and Super Check Partial
+    candidates. The D7 tree has the same code. A zeroed slot can never
+    equal the minimum, so a skipped pair is never chosen. *)
+  for CharPos := Low(NumberBytes) to High(NumberBytes) do
+     begin
+     NumberBytes[CharPos] := 0;
+     end;
+
   for CharPos := 1 to length(Partial) - 1 do
      begin
      if Copy(Partial, CharPos, 2) = 'JA' then Continue;
