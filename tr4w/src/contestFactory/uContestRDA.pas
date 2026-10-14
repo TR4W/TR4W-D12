@@ -121,11 +121,26 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* THE NEED-MULTIPLIER HINT -- see
+         TContestBase.DomesticMultiplierHint (M11 S6). *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
+      (* see TContestBase.DomesticQTHIsNeverAGrid (M11 S6). *)
+      function DomesticQTHIsNeverAGrid: boolean; override;
    end;
 
 implementation
 
 uses
+   (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
+      domestic-QTH shapes (M11 S6). *)
+   uDomesticKey,
    uContestRegistry,
    uCallSignRoutines,
    uTR4WStrings;
@@ -323,6 +338,52 @@ begin
       begin
       Result := CQCountryMode;
       end;
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   RDADistrict arm (the trait): an RDA district is the multiplier and the
+   QTH; anything else is not found, and the domestic file is never
+   consulted. *)
+function TContestRDA.DomesticMultiplierFromQTH(const aText: Str20;
+                                               var aMultiplier: Str10;
+                                               var aQTH: Str10;
+                                               var aFound: boolean): TDomesticQTHAnswer;
+var
+   key: ShortString;
+begin
+   if RDADistrictKey(aText, key) then
+      begin
+      aMultiplier := key;
+      aQTH := key;
+      aFound := True;
+      end;
+   Result := dqaDecided;
+end;
+
+(* THE NEED-MULTIPLIER HINT -- M11 S6 part 1, moved from LOGSTUFF.
+   DomStringParse's RDADistrict arm: the district, or '' for a text that is
+   not one. *)
+function TContestRDA.DomesticMultiplierHint(const aText: Str14): string;
+var
+   key: ShortString;
+begin
+   if RDADistrictKey(aText, key) then
+      begin
+      Result := string(key);
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+(* AN RDA DISTRICT IS NOT A GRID, though it has a grid square's shape --
+   M11 S6 part 1, moved from POSTUNIT's `<> RDADistrict`. See
+   TContestBase.DomesticQTHIsNeverAGrid. *)
+function TContestRDA.DomesticQTHIsNeverAGrid: boolean;
+begin
+   Result := True;
 end;
 
 initialization

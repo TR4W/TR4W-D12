@@ -266,6 +266,29 @@ the target shape, the M-step migration order and the open questions.
   predicate the count asks (JIDX: `IsJapaneseEntrant`).
   `LOGEDIT.DoingZoneMults` is that answer for the active contest; there is
   no session flag for it.
+- **THE DOMESTIC QTH'S SHAPE IS THE CLASS'S (M11 S6 part 1, first half,
+  2026-10-14).** Six virtuals, each with a nil-safe `Contest...` free
+  function: `DomesticMultiplierFromQTH(aText, var aMultiplier, var aQTH,
+  var aFound): TDomesticQTHAnswer` (base `dqaLookUpDomesticFile`, writing
+  nothing -- every domestic-FILE contest states nothing), the hint's
+  `DomesticMultiplierHint(aText): string` (base: the text), and four
+  yes/no answers, base False: `HasGridSquareMultiplier` (the six VHF
+  contests), `HasGridFieldMultiplier` (five), `DomesticQTHReplacesDXMultiplier`
+  (the eleven WYSIWYG contests at the stations that run it) and
+  `DomesticQTHIsNeverAGrid` (RDA; the ALRS cup for an RDA entrant). 25
+  contests state them; shared shapes (RDA district, DOK, grid square, grid
+  field) are the leaf `uDomesticKey`, the IOTA reference is the RSGB IOTA's
+  own. **`dqaLookUpDomesticFile` WITH A KEY IS REAL** -- the RSGB IOTA's
+  valid reference falls through to the file lookup already found (plan F6,
+  transcribed). **The DOK hint reads an unassigned local** when the text has
+  no letter, in WAG and the DARC 10 m -- F6, transcribed on purpose; the fix
+  is `Result := ''` in both, in its own commit. A new contest with such a
+  shape overrides the answers and adds rows to `uTestDomesticMultiplier`
+  (`KEY_PINS`, `HINT_PINS`, its sets; the counts 25 and 16 change by hand).
+  The domestic-FILE answers (the mobile rewrite, readiness) and whether a
+  contest counts a domestic multiplier at all are NOT moved yet (S6 part
+  1b, part 2): they still read `ContestSession.DomesticMult` /
+  `.DoingDomesticMults`.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by

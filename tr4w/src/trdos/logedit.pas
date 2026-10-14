@@ -495,7 +495,12 @@ begin
      Exit;
      end;
 
-  if (ContestSession.DomesticMult = GridSquares) and RoverCall(Call) then
+  (* A ROVER IS NEVER A DUPE where the multiplier is the grid square --
+    the contest says so (TContestBase.HasGridSquareMultiplier, M11 S6 part
+    1); it asked `ContestSession.DomesticMult = GridSquares`. THE ROVER
+    TEST GOES FIRST: both are pure, and the rescore asks this for every QSO,
+    so the contest is fetched only for a rover's call. *)
+  if RoverCall(Call) and ContestHasGridSquareMultiplier(ActiveContest(Contest)) then
      begin
      Exit;
      end;

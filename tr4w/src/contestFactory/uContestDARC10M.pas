@@ -103,11 +103,26 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* THE NEED-MULTIPLIER HINT -- see
+         TContestBase.DomesticMultiplierHint (M11 S6). *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
+      (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
+      function DomesticQTHReplacesDXMultiplier: boolean; override;
    end;
 
 implementation
 
 uses
+   (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
+      domestic-QTH shapes (M11 S6). *)
+   uDomesticKey,
    SysUtils, uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
 
@@ -244,6 +259,80 @@ function TContestDARC10M.DXMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := aQso.QTH.CountryID;
    Result := True;
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH.
+   An entrant outside Germany counts DOKs (the DOKCodes arm, which
+   DescribeSession states for anyone but DL); the multiplier is the text's
+   first letter, found only if it has one, and the QTH is the text either
+   way. A German entrant takes the text as received (the WYSIWYGDomestic arm,
+   the trait). *)
+function TContestDARC10M.DomesticMultiplierFromQTH(const aText: Str20;
+                                                   var aMultiplier: Str10;
+                                                   var aQTH: Str10;
+                                                   var aFound: boolean): TDomesticQTHAnswer;
+var
+   key: ShortString;
+begin
+   if Station.MyCountry <> 'DL' then
+      begin
+      aFound := DOKKey(aText, key);
+      if aFound then
+         begin
+         aMultiplier := key;
+         end;
+      (* THE QTH IS THE TEXT EVEN WHEN NO DOK WAS FOUND -- the arm's order. *)
+      aQTH := aText;
+      Result := dqaDecided;
+      end
+   else
+      begin
+      aMultiplier := aText;
+      aQTH := aText;
+      aFound := True;
+      Result := dqaDecided;
+      end;
+end;
+
+(* THE NEED-MULTIPLIER HINT -- M11 S6 part 1, moved from LOGSTUFF.
+   DomStringParse's DOKCodes arm, for an entrant outside Germany: the DOK's
+   letter. A German entrant's session had no arm there: the text itself. *)
+function TContestDARC10M.DomesticMultiplierHint(const aText: Str14): string;
+var
+   key: ShortString;
+   unassigned: Str14;
+begin
+   if Station.MyCountry <> 'DL' then
+      begin
+      if DOKKey(aText, key) then
+         begin
+         Result := string(key);
+         end
+      else
+         begin
+         (* F6, TRANSCRIBED AND NOT FIXED (plan S6: this stage is
+            behaviour-identical). DomStringParse returned its local
+            TempMultiplier here without ever assigning it, so the hint for a
+            text with no letter was whatever the stack held. This reads an
+            unassigned local exactly as it did. The fix is `Result := ''`, in a
+            commit of its own; the copy in the other DOK contest's class must
+            change with it. *)
+         Result := string(unassigned);
+         end;
+      end
+   else
+      begin
+      Result := inherited DomesticMultiplierHint(aText);
+      end;
+end;
+
+(* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER -- M11 S6 part 1,
+   moved from LOGDUPE.GetDXQTH's `= WYSIWYGDomestic` guard, for a German entrant -- the WYSIWYG session. See
+   TContestBase.DomesticQTHReplacesDXMultiplier. *)
+function TContestDARC10M.DomesticQTHReplacesDXMultiplier: boolean;
+begin
+   Result := Station.MyCountry = 'DL';
 end;
 
 initialization

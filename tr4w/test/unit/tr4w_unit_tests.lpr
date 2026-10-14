@@ -262,6 +262,7 @@ uses
    uContestFixedPoints in '..\..\src\contestFactory\uContestFixedPoints.pas',
    uPrefixMultiplierKey in '..\..\src\contestFactory\uPrefixMultiplierKey.pas',
    uDXMultiplierKey     in '..\..\src\contestFactory\uDXMultiplierKey.pas',
+   uDomesticKey         in '..\..\src\contestFactory\uDomesticKey.pas',
    uContestARRLDXBase in '..\..\src\contestFactory\uContestARRLDXBase.pas',
    uContestARRLDXCW in '..\..\src\contestFactory\uContestARRLDXCW.pas',
    uContestARRLDXPhone in '..\..\src\contestFactory\uContestARRLDXPhone.pas',
@@ -615,6 +616,11 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       numbering, at stations the matrix does not run (a JA entrant), frozen
       against the old session-kind readers before the rule moved. *)
    uTestZoneMultiplier  in 'uTestZoneMultiplier.pas',
+   (* M11 S6 part 1: every contest's domestic QTH rule that is not the
+      domestic file, its hint and its four yes/no answers, at stations the
+      matrix does not run, frozen against the old GetDomQTH, DomStringParse
+      and session-kind tests before the rules moved. *)
+   uTestDomesticMultiplier in 'uTestDomesticMultiplier.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -704,6 +710,7 @@ begin
    RegisterSuite(TPrefixMultiplierKeyTests.Create('PrefixMultiplierKey'));
    RegisterSuite(TDXMultiplierKeyTests.Create('DXMultiplierKey'));
    RegisterSuite(TZoneMultiplierTests.Create('ZoneMultiplier'));
+   RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

@@ -25,6 +25,13 @@ function PrecedingString(LongString: string; Deliminator: string): string;
 
 function tPos(s: ShortString; c: AnsiChar): integer; //wli  boundary: byte-char search (legacy ShortString callers)
 
+(* A CONTINENT FROM ITS TWO-LETTER CODE -- NA, SA, EU, AF, AS, OC, AN, and the
+  NO and SO spellings; anything else is UnknownContinent. MOVED HERE FROM
+  ZoneCont, unchanged, at M11 S6 (2026-10-14): the RSGB IOTA class reads an
+  IOTA reference's continent, and a contest class cannot reach ZoneCont, which
+  pulls in MainUnit. *)
+function GetContinentFromString(Cont: ShortString): ContinentType;
+
 
 (* A FIXED AnsiChar BUFFER, WRITTEN AND READ THROUGH ITS OWN BOUNDS.
 
@@ -710,6 +717,49 @@ begin
       Result[(i * 2) + 1] := HexDigits[bytes[i] shr 4];
       Result[(i * 2) + 2] := HexDigits[bytes[i] and $0F];
       end;
+end;
+
+function GetContinentFromString(Cont: ShortString): ContinentType;
+begin
+  Result := UnknownContinent;
+  if Cont = 'NA' then
+     begin
+     Result := NorthAmerica;
+     end;
+  if Cont = 'NO' then
+     begin
+     Result := NorthAmerica;
+     end;
+
+  if Cont = 'SA' then
+     begin
+     Result := SouthAmerica;
+     end;
+  if Cont = 'SO' then
+     begin
+     Result := SouthAmerica;
+     end;
+
+  if Cont = 'EU' then
+     begin
+     Result := Europe;
+     end;
+  if Cont = 'AF' then
+     begin
+     Result := Africa;
+     end;
+  if Cont = 'AS' then
+     begin
+     Result := Asia;
+     end;
+  if Cont = 'OC' then
+     begin
+     Result := Oceania;
+     end;
+  if Cont = 'AN' then
+     begin
+     Result := Antartica;
+     end;
 end;
 
 end.

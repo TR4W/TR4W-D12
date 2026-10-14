@@ -111,9 +111,9 @@ uses
       asks one a question, such as uCabrilloExchange -- stay free of the display
       layer and testable without booting TR4W. *)
    LOGWIND,
-   (* ContestSession.DomesticMult -- IsNewMultiplierAnywhere's kind (M10
-      S9e). *)
-   uContestSession,
+   (* uContestSession STOOD HERE for ContestSession.DomesticMult, the kind
+      IsNewMultiplierAnywhere asked the sheet with (M10 S9e). Since M11 S6
+      part 1 the active contest answers it (HasGridFieldMultiplier). *)
    uSettingsModel,
    (* StationInHostState -- set-up's in-state answer for a QSO party (M5b). *)
    FCONTEST,
@@ -123,9 +123,10 @@ uses
    (* ctyGetCQZone -- the CTY lookup behind MyCQZone (2026-10-14). *)
    uCTYDAT,
    (* mo, the multiplier sheet -- read, never written, behind
-      IsNewMultiplierAnywhere (design 7.13, 2026-10-14). The domestic kind
-      it is asked with is the session's (uContestSession, above); LogDom
-      was used for that global alone and left with it at M10 S9e. *)
+      IsNewMultiplierAnywhere (design 7.13, 2026-10-14). Whether it keys the
+      domestic multiplier on the grid field is the active contest's answer
+      (M11 S6); LogDom was used for that global alone and left with it at
+      M10 S9e. *)
    uMults,
    uContestRegistry;
 
@@ -164,6 +165,13 @@ begin
       end;
 end;
 
+(* THE ACTIVE CONTEST OBJECT -- see ActiveContest. Declared here, ahead of the
+   station's services, because IsNewMultiplierAnywhere asks it (M11 S6). *)
+var
+   GActive: TContestBase = nil;
+   GActiveFor: ContestType;
+   GHaveActive: boolean = False;
+
 (* THE SHEET'S READ-ONLY "IS THIS NEW" ANSWER, AS A SERVICE -- design 7.13.
    See TNewMultiplierQuery: the all-band, both-mode row, as LOGSTUFF's
    RSGB160Method arm asked it. *)
@@ -173,7 +181,15 @@ begin
    case aKind of
       nmkDomestic:
          begin
-         Result := mo.IsDmMult(string(aQso.DomMultQTH), AllBands, Both, ContestSession.DomesticMult);
+         (* The sheet's grid-field key is the contest's answer (M11 S6 part
+            1); it was the session kind. The contest is GActive, NOT a fresh
+            ActiveContest: this service is reached only through a station
+            ActiveContest built, from inside that object's own scoring, and
+            ActiveContest would rewrite the station of the object whose
+            method is running. nil -- no active contest -- answers False, as
+            the classless session's NoDomesticMults did. *)
+         Result := mo.IsDmMult(string(aQso.DomMultQTH), AllBands, Both,
+                               ContestHasGridFieldMultiplier(GActive));
          end;
       nmkDX:
          begin
@@ -253,11 +269,6 @@ begin
       Result.MyZone := 0;
       end;
 end;
-
-var
-   GActive: TContestBase = nil;
-   GActiveFor: ContestType;
-   GHaveActive: boolean = False;
 
 function ActiveContest(aContest: ContestType): TContestBase;
 var

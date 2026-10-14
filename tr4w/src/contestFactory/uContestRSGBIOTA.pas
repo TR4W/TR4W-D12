@@ -102,11 +102,24 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* THE NEED-MULTIPLIER HINT -- see
+         TContestBase.DomesticMultiplierHint (M11 S6). *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
    end;
 
 implementation
 
 uses
+   (* GetContinentFromString, StringIsAllNumbers, UpperCase -- the IOTA
+      arm's own three (M11 S6). *)
+   utils_text,
    SysUtils, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
@@ -266,6 +279,100 @@ procedure TContestRSGBIOTA.DescribeNewContestPrompts(aPrompts: TNewContestPrompt
 begin
    aPrompts.OfferIAmInCaption(TC_ISLANDSTATION);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURIOTAREFERENCEDESIGNATOR, ncfMyState);
+end;
+
+(* AN IOTA REFERENCE AS RECEIVED -- three to five characters, a continent
+   and a number, written CC-NNN ('EU12' gives 'EU-012'). The test both of
+   the old arms made, once: GetDomQTH's and DomStringParse's IOTA arms
+   (plan F6) differed in what they did with the answer, not in this. Its
+   three outcomes are theirs: malformed (a length out of range, or a
+   number that is not all digits), a continent nobody knows, a reference. *)
+type
+   TIOTAReading = (irMalformed, irUnknownContinent, irReference);
+
+function ReadIOTAReference(const aText: ShortString; out aKey: ShortString): TIOTAReading;
+var
+   continent: ShortString;
+   number: ShortString;
+begin
+   aKey := '';
+   Result := irMalformed;
+   if (Length(aText) < 3) or (Length(aText) > 5) then
+      begin
+      Exit;
+      end;
+
+   continent := ShortString(utils_text.UpperCase(Copy(aText, 1, 2)));
+   if GetContinentFromString(continent) = UnknownContinent then
+      begin
+      Result := irUnknownContinent;
+      Exit;
+      end;
+
+   number := Copy(aText, 3, Length(aText) - 2);
+   if not StringIsAllNumbers(number) then
+      begin
+      Exit;
+      end;
+
+   while Length(number) < 3 do
+      begin
+      number := '0' + number;
+      end;
+
+   aKey := continent + '-' + number;
+   Result := irReference;
+end;
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   IOTADomestic arm (the trait), its flow kept exactly. A malformed text is
+   not found and ends the lookup. A valid reference is found -- and then,
+   because the arm had no Exit, the domestic file is consulted too, which
+   keeps the reference unless the file knows the text (plan F6). A text
+   with no known continent is not found and goes to the file the same
+   way. *)
+function TContestRSGBIOTA.DomesticMultiplierFromQTH(const aText: Str20;
+                                                    var aMultiplier: Str10;
+                                                    var aQTH: Str10;
+                                                    var aFound: boolean): TDomesticQTHAnswer;
+var
+   key: ShortString;
+begin
+   case ReadIOTAReference(aText, key) of
+      irMalformed:
+         begin
+         Result := dqaDecided;
+         end;
+      irUnknownContinent:
+         begin
+         Result := dqaLookUpDomesticFile;
+         end;
+   else
+      begin
+      aMultiplier := key;
+      aQTH := aMultiplier;
+      aFound := True;
+      Result := dqaLookUpDomesticFile;
+      end;
+   end;
+end;
+
+(* THE NEED-MULTIPLIER HINT -- M11 S6 part 1, moved from LOGSTUFF.
+   DomStringParse's IOTADomestic arm: the reference, or '' for anything
+   else. The arm used the unit global LOGWIND.ContinentString as scratch;
+   nothing read it (plan F6), so a local does the same. *)
+function TContestRSGBIOTA.DomesticMultiplierHint(const aText: Str14): string;
+var
+   key: ShortString;
+begin
+   if ReadIOTAReference(aText, key) = irReference then
+      begin
+      Result := string(key);
+      end
+   else
+      begin
+      Result := '';
+      end;
 end;
 
 initialization

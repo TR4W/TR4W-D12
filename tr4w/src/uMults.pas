@@ -67,7 +67,11 @@ type
     function IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
     function IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
     function IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
-    function IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
+    (* aKeyedOnGridField: the contest's domestic multiplier is the grid FIELD
+      (TContestBase.HasGridFieldMultiplier) -- the caller asks the contest,
+      M11 S6 part 1. It was the session's DomesticMultType, of which this
+      tested one member. *)
+    function IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; aKeyedOnGridField: boolean): boolean;
     (* WHICH CTY COUNTRIES THE REMAINING-MULTS WINDOW LISTS. aContest is the
       active contest (ActiveContest(Contest)), asked which countries its
       filter keeps -- TContestBase.ListsRemainingDXCountry, M11 S4; nil, the
@@ -203,7 +207,7 @@ begin
      end;
 end;
 
-function MultsObject.IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
+function MultsObject.IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; aKeyedOnGridField: boolean): boolean;
 var
   Index                                 : integer;
   InsertPos                             : integer;
@@ -216,7 +220,7 @@ begin
   // that any FN-prefixed grid in the store matches, regardless of whether the
   // stored key is the field ("FN", new format) or the full grid ("FN20", old
   // log records). GridSquares uses the full 4-char key and is unaffected.
-  if DomMultType = GridFields then
+  if aKeyedOnGridField then
      begin
      FieldKey := Copy(Dom, 1, 2);
      Result := not DomList.StringIsDupe(FieldKey, Band, Mode, Index);

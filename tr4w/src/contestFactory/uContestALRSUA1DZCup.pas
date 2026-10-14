@@ -106,11 +106,28 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* THE NEED-MULTIPLIER HINT -- see
+         TContestBase.DomesticMultiplierHint (M11 S6). *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
+      (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
+      function DomesticQTHReplacesDXMultiplier: boolean; override;
+      (* see TContestBase.DomesticQTHIsNeverAGrid (M11 S6). *)
+      function DomesticQTHIsNeverAGrid: boolean; override;
    end;
 
 implementation
 
 uses
+   (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
+      domestic-QTH shapes (M11 S6). *)
+   uDomesticKey,
    uContestRegistry,
    (* RussianID, GetOblast -- the leaves the arm asked. *)
    uCallSignRoutines,
@@ -360,6 +377,79 @@ begin
       aKey := aQso.QTH.CountryID;
       Result := True;
       end;
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH.
+   A Russian entrant outside St Petersburg and its oblast counts RDA
+   districts (the RDADistrict arm, which DescribeSession states for that
+   entrant -- CountsRDADistricts); everyone else takes the text as received
+   (the WYSIWYGDomestic arm, the trait). Neither consults the domestic
+   file. *)
+function TContestALRSUA1DZCup.DomesticMultiplierFromQTH(const aText: Str20;
+                                                        var aMultiplier: Str10;
+                                                        var aQTH: Str10;
+                                                        var aFound: boolean): TDomesticQTHAnswer;
+var
+   key: ShortString;
+begin
+   if CountsRDADistricts(Station) then
+      begin
+      if RDADistrictKey(aText, key) then
+         begin
+         aMultiplier := key;
+         aQTH := key;
+         aFound := True;
+         end;
+      Result := dqaDecided;
+      end
+   else
+      begin
+      aMultiplier := aText;
+      aQTH := aText;
+      aFound := True;
+      Result := dqaDecided;
+      end;
+end;
+
+(* THE NEED-MULTIPLIER HINT -- M11 S6 part 1, moved from LOGSTUFF.
+   DomStringParse: the district, or '', for an entrant who counts RDA
+   districts; the text itself for everyone else, as the WYSIWYG session had
+   no arm there. *)
+function TContestALRSUA1DZCup.DomesticMultiplierHint(const aText: Str14): string;
+var
+   key: ShortString;
+begin
+   if CountsRDADistricts(Station) then
+      begin
+      if RDADistrictKey(aText, key) then
+         begin
+         Result := string(key);
+         end
+      else
+         begin
+         Result := '';
+         end;
+      end
+   else
+      begin
+      Result := inherited DomesticMultiplierHint(aText);
+      end;
+end;
+
+(* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER for everyone but an
+   entrant who counts RDA districts -- M11 S6 part 1, moved from
+   LOGDUPE.GetDXQTH's `= WYSIWYGDomestic` guard. *)
+function TContestALRSUA1DZCup.DomesticQTHReplacesDXMultiplier: boolean;
+begin
+   Result := not CountsRDADistricts(Station);
+end;
+
+(* AN RDA DISTRICT IS NOT A GRID, for an entrant who counts them -- M11 S6
+   part 1, moved from POSTUNIT's `<> RDADistrict`. *)
+function TContestALRSUA1DZCup.DomesticQTHIsNeverAGrid: boolean;
+begin
+   Result := CountsRDADistricts(Station);
 end;
 
 initialization

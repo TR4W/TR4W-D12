@@ -194,8 +194,9 @@ uses
   , Tree // for LooksLikeAGrid
   , utils_text
   , LogK1EA // for Settings.Ptt.ViaCommands
-  , uContestSession // ContestSession.DomesticMult (M10 S9e; was LogDOM's global)
   , PostUnit
+  , uContestBase    // ContestHasGridFieldMultiplier (M11 S6)
+  , uContestFactory // ActiveContest
   , uCabrilloFormat // for tCabrilloFreqString (moved here from PostUnit,
                     // see uCabrilloFormat.pas)
   , IdStack // for GStack.AddMulticastMembership
@@ -354,7 +355,11 @@ begin
         end;
 
         VisibleLog.ShowQSOStatus(call);
-        if ContestSession.DomesticMult = GridFields then
+        (* THE GRID FIELD, where that is the contest's multiplier -- it says
+          so (TContestBase.HasGridFieldMultiplier, M11 S6 part 1); this asked
+          `ContestSession.DomesticMult = GridFields`. On the main thread: a
+          display job. *)
+        if ContestHasGridFieldMultiplier(ActiveContest(Contest)) then
            begin
            VisibleLog.ShowDomesticMultiplierStatus(AnsiLeftStr(grid, 2));
            end

@@ -6256,7 +6256,10 @@ var
 begin
   NumberGridSquaresInList := 0;
 
-  if (ContestSession.DomesticMult = GridSquares) {wli and RoverCall(Call)} then
+  (* THE CONTEST SAYS WHETHER ITS MULTIPLIER IS THE GRID SQUARE -- M11 S6
+    part 1 (TContestBase.HasGridSquareMultiplier). It asked
+    `ContestSession.DomesticMult = GridSquares`. *)
+  if ContestHasGridSquareMultiplier(ActiveContest(Contest)) (* wli: and RoverCall(Call) *) then
      begin
      CreateGridSquareList(Call, ActiveBand);
 
@@ -7093,118 +7096,20 @@ end;
 function DomStringParse(InputString: Str14): string;
 //Gav 4.44.8     Formats DOM from Initial Exchange to be used for Mult Needed display. Most DOM pass through untouched
 
-var
-  Index: integer;
-  TempMultiplier, NumberString: Str14;
+(* THE CONTEST'S RULE -- M11 S6 part 1, 2026-10-14. Five arms stood here,
+  `if ContestSession.DomesticMult = ...` -- RDA, DOK, IOTA, grid square, grid
+  field -- a drifted copy of LOGDOM.GetDomQTH's (plan F6). Each contest
+  states its own now (TContestBase.DomesticMultiplierHint, the shared shapes
+  in uDomesticKey); every other answers the text itself, as this did for
+  every other session. The IOTA arm's scratch use of LOGWIND.ContinentString
+  went with it -- nothing read that global -- and the DOK arm's unassigned
+  local is transcribed into the two DOK classes, not fixed (F6).
 
+  ONE ActiveContest per hint: its one caller (LOGEDIT's station
+  information) asks once per call shown, and holds no contest object. *)
 begin
-
   strU(InputString);
-
-  result := InputString;
-
-  if ContestSession.DomesticMult = RDADistrict then
-     begin
-     result := '';
-     if length(InputString) = 4 then
-       if InputString[1] in ['A'..'Z'] then
-         if InputString[2] in ['A'..'Z'] then
-           if InputString[3] in ['0'..'9'] then
-             if InputString[4] in ['0'..'9'] then
-                begin
-                result := InputString;
-                end;
-     Exit;
-     end;
-
-  if ContestSession.DomesticMult = DOKCodes then
-     begin
-     result := '';
-     for Index := 1 to length(InputString) do
-        begin
-        if InputString[Index] in ['A'..'Z'] then
-           begin
-           TempMultiplier := Copy(InputString, Index, 1);
-           Break;
-           end;
-        end;
-     result := TempMultiplier;
-     Exit;
-     end;
-
-  if ContestSession.DomesticMult = IOTADomestic then
-     begin
-     result := '';
-     if (length(InputString) < 3) or (length(InputString) > 5) then
-        begin
-        Exit;
-        end;
-
-     ContinentString := UpperCase(Copy(InputString, 1, 2));
-     if GetContinentFromString(ContinentString) <> UnknownContinent then
-        begin
-        NumberString := Copy(InputString, 3, length(InputString) - 2);
-
-        if not StringIsAllNumbers(NumberString) then
-           begin
-           Exit;
-           end;
-
-        while length(NumberString) < 3 do
-           begin
-           NumberString := '0' + NumberString;
-           end;
-
-        TempMultiplier := ContinentString + '-' + NumberString;
-        result := TempMultiplier;
-        end;
-     end;
-
-  if ContestSession.DomesticMult = GridSquares then
-     begin
-     result := '';
-     if (length(InputString) <> 4) and (length(InputString) <> 6) then
-        begin
-        Exit;
-        end;
-
-     if (InputString[1] < 'A') or (InputString[1] > 'R') or
-       (InputString[2] < 'A') or (InputString[2] > 'R') or
-       (InputString[3] > '9') or (InputString[3] < '0') or
-       (InputString[4] > '9') or (InputString[4] < '0') then
-        begin
-        Exit;
-        end;
-
-     if length(InputString) = 6 then
-       if (InputString[5] < 'A') or (InputString[5] > 'Z') or
-         (InputString[6] < 'A') or (InputString[6] > 'Z') then
-          begin
-          Exit;
-          end;
-
-     TempMultiplier := Copy(InputString, 1, 4);
-     result := TempMultiplier;
-     Exit;
-     end;
-
-  if ContestSession.DomesticMult = GridFields then
-     begin
-     result := '';
-     if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] >
-       'R') or
-       (InputString[2] < 'A') or (InputString[2] > 'R') or
-       (InputString[3] > '9') or (InputString[3] < '0') or
-       (InputString[4] > '9') or (InputString[4] < '0') then
-        begin
-        Exit;
-        end;
-
-     TempMultiplier := Copy(InputString, 1, 2);
-     result := TempMultiplier;
-     Exit;
-     end;
-
+  Result := ContestDomesticMultiplierHint(ActiveContest(Contest), InputString);
 end;
 
 function GetSentRSTFromExchangeString(var ExchangeString: OpenString {Str40}):

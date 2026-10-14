@@ -206,12 +206,15 @@ uses
   (* AddLoggedQSO -- the final score's view of the log, kept with the totals
      (M6). *)
   uScoreTotals,
-  (* ContestSession.DomesticMult -- the grid-square rover and QSO-party
-     mobile rules (M10 S9e). *)
+  (* ContestSession.DomesticMult -- the QSO-party mobile rule (M10 S9e). *)
   uContestSession,
   (* ContestIdentity -- the contest's own ADIF id and Cabrillo name for the
      two UDP broadcasts. *)
-  uContestRegistry;
+  uContestRegistry,
+  (* ActiveContest and ContestHasGridSquareMultiplier -- the grid-square
+     rover rules ask the contest (M11 S6). *)
+  uContestBase,
+  uContestFactory;
 procedure PutContactIntoLogFile(LogString: string {Str80});
 
 begin
@@ -1304,7 +1307,16 @@ var
 
 begin
 //  if not PartialCallMultsEnable then Exit;
-  if ActiveMainWindow <> awCallWindow then if ContestSession.DomesticMult <> GridSquares then Exit;          
+  (* OUTSIDE THE CALL WINDOW, ONLY WHERE THE MULTIPLIER IS THE GRID SQUARE --
+    the contest says so (TContestBase.HasGridSquareMultiplier, M11 S6 part
+    1); it asked `ContestSession.DomesticMult <> GridSquares`. *)
+  if ActiveMainWindow <> awCallWindow then
+     begin
+     if not ContestHasGridSquareMultiplier(ActiveContest(Contest)) then
+        begin
+        Exit;
+        end;
+     end;
   if length(WindowString) < 2 then Exit;
   if length(WindowString) < 3 then
      begin
@@ -1565,6 +1577,8 @@ var
 
   TempMode                              : ModeType;
   perfTimeStart, perfTimeStop: TDateTime;
+  (* Does the contest count grid squares? -- asked once, below. *)
+  countsGridSquares                     : boolean;
 begin
   logger.trace('>>>Entering LogContact');
 
@@ -1617,9 +1631,16 @@ begin
   // this flag so the dupe check below (and the matching one in
   // tUpdateLog(actRescore)) does NOT flag them as dupes.  See
   // MainUnit.DrainPendingMultiQSORefs for where the flag is set.
+  (* THE GRID-SQUARE ROVER -- the contest says whether its multiplier is the
+    grid square (TContestBase.HasGridSquareMultiplier, M11 S6 part 1); both
+    tests below asked `ContestSession.DomesticMult = GridSquares`. Asked
+    once per QSO, here, after the mobile rewrite above: no call between
+    this and either test changes the contest or the station. *)
+  countsGridSquares := ContestHasGridSquareMultiplier(ActiveContest(Contest));
+
   if (not RXData.ceClearDupeSheet) and
     (VisibleLog.CallIsADupe(RXData.Callsign, RXData.Band, RXData.Mode) or
-    ((ContestSession.DomesticMult = GridSquares) and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
+    (countsGridSquares and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
     (* THE CONTEST'S DUPE POLICY -- M3, 2026-10-01. This tested the global
        ActiveQSOPointMethod for AlwaysOnePointPerQSO ("ignores dupes"), so an
        operator's QSO POINT METHOD line switched dupe marking. The contest
@@ -1632,7 +1653,7 @@ begin
        //      if Trace then Write('#');
      RXData.ceDupe := True;
        //            RXData.tDupe := True;
-     if (ContestSession.DomesticMult = GridSquares) and RoverCall(RXData.Callsign) then
+     if countsGridSquares and RoverCall(RXData.Callsign) then
         begin
         if NumberGridSquaresInList > 0 then
            begin

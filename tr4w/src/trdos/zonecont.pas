@@ -67,7 +67,9 @@ function GetVEInitialExchange(Call: CallString): string;
 //procedure LocateCall(Call: VC.CallString; var QTH: VC.QTHRecord; UseStandardCallFormat: boolean);
 
 function GetContinentName(Cont: ContinentType): string;
-function GetContinentFromString(Cont: ShortString): ContinentType;
+(* GetContinentFromString MOVED to utils_text -- M11 S6, 2026-10-14: the
+  RSGB IOTA class parses a continent too, and a contest class cannot reach
+  this unit. Every caller already uses utils_text. *)
 
 implementation
 uses
@@ -317,49 +319,6 @@ begin
     Oceania: GetContinentName := 'OC';
   else GetContinentName := '';
   end;
-end;
-
-function GetContinentFromString(Cont: ShortString): ContinentType;
-begin
-  Result := UnknownContinent;
-  if Cont = 'NA' then
-     begin
-     Result := NorthAmerica;
-     end;
-  if Cont = 'NO' then
-     begin
-     Result := NorthAmerica;
-     end;
-
-  if Cont = 'SA' then
-     begin
-     Result := SouthAmerica;
-     end;
-  if Cont = 'SO' then
-     begin
-     Result := SouthAmerica;
-     end;
-
-  if Cont = 'EU' then
-     begin
-     Result := Europe;
-     end;
-  if Cont = 'AF' then
-     begin
-     Result := Africa;
-     end;
-  if Cont = 'AS' then
-     begin
-     Result := Asia;
-     end;
-  if Cont = 'OC' then
-     begin
-     Result := Oceania;
-     end;
-  if Cont = 'AN' then
-     begin
-     Result := Antartica;
-     end;
 end;
 
 //begin

@@ -274,9 +274,27 @@ stack residue from the previous lookup, and an `ActiveContest` call between
 lookups moved three matrix records (Croatian, IRTS, WRTC `iex JA1ABC`).
 **F22 IS FIXED (2026-10-14)**: the routine zeroes its array on entry, and
 the switch moved no matrix record. The choice is
-`uContestBase.InitialZoneFromCallHistory`. A multiplier KIND's arm that has NOT
-moved (the remaining-mult lists, the domestic kind) stays keyed on the kind
-until its M11 stage. **`UsesBand` is asked at four places now** -- points,
+`uContestBase.InitialZoneFromCallHistory`. **THE DOMESTIC QTH'S SHAPE IS
+THE CLASS'S (M11 S6 part 1, first half, 2026-10-14):** `LOGDOM.GetDomQTH`
+keeps its engine head (outputs zeroed, `strU`, the `DoingDomesticMults`
+exit) and the domestic-FILE lookup, and between them asks
+`ContestDomesticMultiplierFromQTH(ActiveContest(Contest), ...)` -- ONE fetch,
+after the exit, because its ~50 callers (the parse shapes) hold no contest.
+`dqaDecided` ends it; `dqaLookUpDomesticFile` runs the file lookup WITH
+whatever the rule wrote (the RSGB IOTA's fall-through, F6, kept exactly).
+`LOGSTUFF.DomStringParse` is `strU` + `ContestDomesticMultiplierHint`.
+`= GridSquares` (CallIsADupe -- ROVER TEST FIRST, the rescore asks it per
+QSO --, ShowPartialCallMults, LogContact once per QSO,
+DisplayGridSquareStatus), `= GridFields` (`uMults.IsDmMult`'s new
+`aKeyedOnGridField`, uWSJTX, the factory's sheet service -- which asks
+`GActive`, not `ActiveContest`, because it runs inside the active object's
+scoring), `= WYSIWYGDomestic` (GetDXQTH, on the object handed in) and
+`<> RDADistrict` (the ADIF tail, on its `contestRules`) are class answers.
+`GetContinentFromString` moved, unchanged, from ZoneCont to `utils_text`.
+A multiplier KIND's arm that has NOT moved (the remaining-mult lists, the
+domestic FILE kind -- the QSO-party mobile rewrite in LogContact, readiness,
+the ADIF import's session record) stays keyed on the kind until its M11
+stage. **`UsesBand` is asked at four places now** -- points,
 multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO
 marks no dupe bit and is never a dupe; the M3-found `AllBands` gap is FIXED),
 and the hint (`DetermineIfNewMult`, `uContestBase.CreditedBands`).

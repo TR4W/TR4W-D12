@@ -636,8 +636,11 @@ end;
 (* THE QSO'S DX QTH -- M11 S4, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4).
 
   THE HEAD IS THE ENGINE'S AND STAYS: COUNT DOMESTIC COUNTRIES is the
-  operator's setting, and a WYSIWYG domestic QTH or a domestic-country call
-  earns no DX QTH -- neither is a contest's rule.
+  operator's setting, and a domestic-country call earns no DX QTH. Under the
+  same setting, whether a QSO's domestic QTH takes the DX multiplier's place
+  is the contest's answer since M11 S6 part 1
+  (TContestBase.DomesticQTHReplacesDXMultiplier -- the WYSIWYG contests); it
+  was the session kind.
 
   THE REST IS THE CONTEST'S. This was `case ContestSession.DXMult of`, an
   enum choosing which countries count FOR the contest (fifteen arms and an
@@ -656,7 +659,11 @@ var
 begin
   if not Settings.Contest.CountDomesticCountries then
      begin
-     if (ContestSession.DomesticMult = WYSIWYGDomestic) and
+     (* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER where the contest
+       says so (TContestBase.DomesticQTHReplacesDXMultiplier, M11 S6 part 1),
+       asked of the contest handed in; it was `ContestSession.DomesticMult =
+       WYSIWYGDomestic`. *)
+     if ContestDomesticQTHReplacesDXMultiplier(aContest) and
         (RXData.DomesticQTH <> '') then
         begin
         Exit;
@@ -1177,7 +1184,10 @@ begin
   if (RXData.DomMultQTH <> '') and ContestSession.DoingDomesticMults and
      ContestCountsMultiplier(contestRules, RXData, rmDomestic) then
      begin
-     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ContestSession.DomesticMult);
+     (* The sheet's grid-field key -- the contest's answer (M11 S6 part 1),
+       on the object this routine already holds; it was the session kind. *)
+     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode,
+                                        ContestHasGridFieldMultiplier(contestRules));
      end;
 
   if (RXData.DXQTH <> '') and ContestHasDXMultiplier(contestRules) and

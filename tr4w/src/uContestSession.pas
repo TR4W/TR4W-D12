@@ -126,11 +126,15 @@ type
         NoInitialExchange, the zero the global it replaces started from. *)
       property InitialExchange: InitialExchangeType read FInitialExchange;
 
-      (* The domestic multiplier the session runs -- how LOGDOM reads a
-        domestic QTH, the sheet's domestic mult flags, the grid-square rover
-        rules, the exporters, uWSJTX's grid hint and the factory's
-        IsNewMultiplierAnywhere service. A fresh session holds
-        NoDomesticMults, the zero LOGDOM.ActiveDomesticMult started from. *)
+      (* The domestic multiplier the session runs. Since M11 S6 part 1
+        (2026-10-14) its readers are DoingDomesticMults (below), the
+        QSO-party mobile rewrite (LOGSUBS2.LogContact), the readiness check,
+        the ADIF import's session record and the matrix's
+        active.domesticmult line: how a domestic QTH reads, the grid-square
+        and grid-field rules, the WYSIWYG DX guard and the RDA grid test are
+        the contest's own answers (TContestBase.DomesticMultiplierFromQTH and
+        its neighbours). A fresh session holds NoDomesticMults, the zero
+        LOGDOM.ActiveDomesticMult started from. *)
       property DomesticMult: DomesticMultType read FDomesticMult;
 
       (* The received exchange the session parses -- ProcessExchange's shape,

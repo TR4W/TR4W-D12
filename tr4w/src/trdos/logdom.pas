@@ -96,7 +96,13 @@ uses
   ZoneCont,
   LogWind,
   MainUnit, LogSCP, {KK1L: DEBUG}
-  uContestSession; (* ContestSession.DomesticMult -- M10 S9e *)
+  uContestSession, (* ContestSession.DoingDomesticMults -- M10 S9e *)
+  (* Contest, the active contest's type -- asked of the factory below. *)
+  PostUnit,
+  (* ContestDomesticMultiplierFromQTH, TDomesticQTHAnswer -- GetDomQTH asks
+    the contest what a received QTH means (M11 S6). *)
+  uContestBase,
+  uContestFactory;
 
 procedure DomQTHTableObject.AddNewPrefixRecord(Prefix: Str20; DomQTH: Str20; Multiplier: Str20);
 
@@ -207,7 +213,7 @@ function DomQTHTableObject.GetDomQTH(InputString: Str20;
 var
   CurrentPrefixRecord                   : PrefixRecPtr;
   Index                                 : integer;
-  ContinentString, NumberString         : Str20;
+  found                                 : boolean;
 
 begin
 
@@ -224,110 +230,32 @@ begin
      Exit;
      end;
 
-  if ContestSession.DomesticMult = RDADistrict then
+  (* THE CONTEST'S RULE -- M11 S6 part 1, 2026-10-14. Six arms stood here,
+    `if ContestSession.DomesticMult = ...`, each a shape chosen FOR the
+    contest: an RDA district, the text as written, a DOK, an IOTA reference,
+    a grid square, a grid field. Each contest whose domestic QTH is one of
+    those states its own rule now (TContestBase.DomesticMultiplierFromQTH,
+    the shared shapes in uDomesticKey); every other answers that the file
+    below is consulted, as DomesticFile and NumericID fell through to it.
+
+    THE IOTA ARM'S FALL-THROUGH IS KEPT. It had no Exit, so a valid
+    reference reached the file lookup already found, and a text with no
+    known continent reached it not found (plan F6). The answer carries both:
+    dqaLookUpDomesticFile with whatever the rule wrote, which the file
+    lookup keeps unless it knows the text.
+
+    ONE ActiveContest, AFTER THE NO-DOMESTIC EXIT -- a contest with no
+    domestic multiplier pays nothing it did not pay before. The callers
+    (FoundDomesticQTH's, live entry and the parse shapes) hold no contest
+    object to hand down. *)
+  found := False;
+  if ContestDomesticMultiplierFromQTH(ActiveContest(Contest), InputString,
+                                      Multiplier, QTH, found) = dqaDecided then
      begin
-     if length(InputString) = 4 then
-       if InputString[1] in ['A'..'Z'] then
-         if InputString[2] in ['A'..'Z'] then
-           if InputString[3] in ['0'..'9'] then
-             if InputString[4] in ['0'..'9'] then
-                begin
-                Multiplier := InputString;
-                QTH := InputString;
-                GetDomQTH := True;
-                end;
+     GetDomQTH := found;
      Exit;
      end;
-
-  if ContestSession.DomesticMult = WYSIWYGDomestic then
-     begin
-     Multiplier := InputString;
-     QTH := InputString;
-     GetDomQTH := True;
-     Exit;
-     end;
-
-  if ContestSession.DomesticMult = DOKCodes then { for WAG contest }
-     begin
-     for Index := 1 to length(InputString) do
-        begin
-        if InputString[Index] in ['A'..'Z'] then
-           begin
-           Multiplier := Copy(InputString, Index, 1);
-           Break;
-           end;
-        end;
-
-     QTH := InputString;
-     GetDomQTH := Multiplier <> '';
-     Exit;
-     end;
-
-  if ContestSession.DomesticMult = IOTADomestic then
-     begin
-     if (length(InputString) < 3) or (length(InputString) > 5) then Exit;
-
-     ContinentString := UpperCase(Copy(InputString, 1, 2));
-     if GetContinentFromString(ContinentString) <> UnknownContinent then
-        begin
-        NumberString := Copy(InputString, 3, length(InputString) - 2);
-
-        if not StringIsAllNumbers(NumberString) then Exit;
-
-        while length(NumberString) < 3 do
-           begin
-           NumberString := '0' + NumberString;
-           end;
-
-        Multiplier := ContinentString + '-' + NumberString;
-        QTH := Multiplier;
-        GetDomQTH := True;
-        end;
-     end;
-
-  if ContestSession.DomesticMult = GridSquares then
-     begin
-     if (length(InputString) <> 4) and (length(InputString) <> 6) then
-        begin
-        Exit;
-        end;
-
-     if (InputString[1] < 'A') or (InputString[1] > 'R') or
-       (InputString[2] < 'A') or (InputString[2] > 'R') or
-       (InputString[3] > '9') or (InputString[3] < '0') or
-       (InputString[4] > '9') or (InputString[4] < '0') then
-        begin
-        Exit;
-        end;
-
-     if length(InputString) = 6 then
-       if (InputString[5] < 'A') or (InputString[5] > 'Z') or
-         (InputString[6] < 'A') or (InputString[6] > 'Z') then
-          begin
-          Exit;
-          end;
-
-     Multiplier := Copy(InputString, 1, 4);
-     QTH := InputString;
-     GetDomQTH := True;
-     Exit;
-     end;
-
-  if ContestSession.DomesticMult = GridFields then
-     begin
-     if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] > 'R') or
-       (InputString[2] < 'A') or (InputString[2] > 'R') or
-       (InputString[3] > '9') or (InputString[3] < '0') or
-       (InputString[4] > '9') or (InputString[4] < '0') then
-        begin
-        Exit;
-        end;
-
-     Multiplier := Copy(InputString, 1, 2);
-     QTH := InputString;
-     GetDomQTH := True;
-     Exit;
-     end;
+  GetDomQTH := found;
 
   Index := RecordPointerIndex(InputString[1]);
 

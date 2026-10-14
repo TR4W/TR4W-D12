@@ -86,11 +86,27 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* THE NEED-MULTIPLIER HINT -- see
+         TContestBase.DomesticMultiplierHint (M11 S6). *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
+      (* THE GRID FIELD -- see TContestBase.HasGridFieldMultiplier
+         (M11 S6). *)
+      function HasGridFieldMultiplier: boolean; override;
    end;
 
 implementation
 
 uses
+   (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
+      domestic-QTH shapes (M11 S6). *)
+   uDomesticKey,
    uContestRegistry,
    LOGGRID;
 
@@ -192,6 +208,50 @@ function TContestWWL.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   GridFields arm (the trait): a four-character grid square gives its key; the QTH is the text. Anything
+   else is not found, and the domestic file is never consulted. *)
+function TContestWWL.DomesticMultiplierFromQTH(const aText: Str20;
+                                               var aMultiplier: Str10;
+                                               var aQTH: Str10;
+                                               var aFound: boolean): TDomesticQTHAnswer;
+var
+   key: ShortString;
+begin
+   if GridFieldKey(aText, key) then
+      begin
+      aMultiplier := key;
+      aQTH := aText;
+      aFound := True;
+      end;
+   Result := dqaDecided;
+end;
+
+(* THE NEED-MULTIPLIER HINT -- M11 S6 part 1, moved from LOGSTUFF.
+   DomStringParse's GridFields arm: the key, or '' for a text that is not one. *)
+function TContestWWL.DomesticMultiplierHint(const aText: Str14): string;
+var
+   key: ShortString;
+begin
+   if GridFieldKey(aText, key) then
+      begin
+      Result := string(key);
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+(* THE DOMESTIC MULTIPLIER IS THE GRID FIELD -- M11 S6 part 1, moved from
+   uMults.IsDmMult's and uWSJTX's `= GridFields`. See
+   TContestBase.HasGridFieldMultiplier. *)
+function TContestWWL.HasGridFieldMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

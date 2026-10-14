@@ -109,6 +109,15 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- see
          TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
+      function DomesticQTHReplacesDXMultiplier: boolean; override;
    end;
 
 implementation
@@ -298,6 +307,29 @@ procedure TContestUA4WChampionship.DescribeNewContestPrompts(aPrompts: TNewConte
 begin
    aPrompts.AskFieldWithComment('Enter your RDA (for Russian stations) or four digit grid square:',
                                 ncfMyQTH);
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   WYSIWYGDomestic arm (the trait): the text as received is both the multiplier and
+   the QTH, cut to the field's ten characters, and it is always found. *)
+function TContestUA4WChampionship.DomesticMultiplierFromQTH(const aText: Str20;
+                                                            var aMultiplier: Str10;
+                                                            var aQTH: Str10;
+                                                            var aFound: boolean): TDomesticQTHAnswer;
+begin
+   aMultiplier := aText;
+   aQTH := aText;
+   aFound := True;
+   Result := dqaDecided;
+end;
+
+(* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER -- M11 S6 part 1,
+   moved from LOGDUPE.GetDXQTH's `= WYSIWYGDomestic` guard (the trait). See
+   TContestBase.DomesticQTHReplacesDXMultiplier. *)
+function TContestUA4WChampionship.DomesticQTHReplacesDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

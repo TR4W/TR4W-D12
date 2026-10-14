@@ -91,11 +91,27 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* THE NEED-MULTIPLIER HINT -- see
+         TContestBase.DomesticMultiplierHint (M11 S6). *)
+      function DomesticMultiplierHint(const aText: Str14): string; override;
+      (* THE GRID SQUARE -- see TContestBase.HasGridSquareMultiplier
+         (M11 S6). *)
+      function HasGridSquareMultiplier: boolean; override;
    end;
 
 implementation
 
 uses
+   (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
+      domestic-QTH shapes (M11 S6). *)
+   uDomesticKey,
    uContestRegistry,
    (* GetDistanceBetweenGrids -- the arm's own geodesic; see
       uContestARRLDigi for why it is the TRDOS unit. *)
@@ -234,6 +250,50 @@ end;
 procedure TContestOZHCRVHF.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURSIXDIGITGRIDSQUARE, ncfMyGrid);
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   GridSquares arm (the trait): a four- or six-character grid square gives its key; the QTH is the text. Anything
+   else is not found, and the domestic file is never consulted. *)
+function TContestOZHCRVHF.DomesticMultiplierFromQTH(const aText: Str20;
+                                                    var aMultiplier: Str10;
+                                                    var aQTH: Str10;
+                                                    var aFound: boolean): TDomesticQTHAnswer;
+var
+   key: ShortString;
+begin
+   if GridSquareKey(aText, key) then
+      begin
+      aMultiplier := key;
+      aQTH := aText;
+      aFound := True;
+      end;
+   Result := dqaDecided;
+end;
+
+(* THE NEED-MULTIPLIER HINT -- M11 S6 part 1, moved from LOGSTUFF.
+   DomStringParse's GridSquares arm: the key, or '' for a text that is not one. *)
+function TContestOZHCRVHF.DomesticMultiplierHint(const aText: Str14): string;
+var
+   key: ShortString;
+begin
+   if GridSquareKey(aText, key) then
+      begin
+      Result := string(key);
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+(* THE DOMESTIC MULTIPLIER IS THE GRID SQUARE, A ROVER WORKED AGAIN IN EVERY
+   SQUARE -- M11 S6 part 1, moved from the four `= GridSquares` engine
+   sites. See TContestBase.HasGridSquareMultiplier. *)
+function TContestOZHCRVHF.HasGridSquareMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

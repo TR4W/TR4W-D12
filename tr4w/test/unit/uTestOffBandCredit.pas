@@ -232,6 +232,11 @@ var
    ctyPath: string;
    needs: integer;
    call: CallString;
+   (* Ada in the domestic table, as idaho.dom has it -- see below. *)
+   tableIndex: integer;
+   savedFirst: PrefixRecPtr;
+   savedLast: PrefixRecPtr;
+   added: PrefixRecPtr;
 begin
    BeginTest('Test_OffBandShowsNoMultiplierNeeded');
 
@@ -248,6 +253,10 @@ begin
    savedDXCCByBand := DXCCMultByBand;
    savedDomesticByBand := DomesticMultByBand;
    savedActiveBand := ActiveBand;
+   tableIndex := DomQTHTable.RecordPointerIndex('A');
+   savedFirst := DomQTHTable.FirstPrefixRecord[tableIndex];
+   savedLast := DomQTHTable.LastPrefixRecord[tableIndex];
+   added := nil;
    try
       Contest := IDAHOQSOPARTY;
       Settings.Mult.ByBand := False;
@@ -271,8 +280,20 @@ begin
                  'and needed on no band Idaho does not use');
 
       (* THE DOMESTIC HINT, asked with the AllBands key as the not-per-band
-         strip asks it: the band it is for is the operator's. *)
-      ContestSession.WriteDomesticMult(WYSIWYGDomestic);
+         strip asks it: the band it is for is the operator's.
+
+         IDAHO'S OWN DOMESTIC RULE, NOT A BORROWED ONE -- M11 S6 part 1.
+         This wrote WYSIWYGDomestic, a kind Idaho never runs, so the session's
+         WYSIWYG arm in GetDomQTH would take 'ADA' without a domestic file.
+         How a QTH reads is the contest's rule now
+         (TContestBase.DomesticMultiplierFromQTH), and Idaho's is the domestic
+         file -- so the test gives it what that rule reads: its session's
+         kind, DomesticFile, and Ada in the domestic table, the one line of
+         idaho.dom this needs. Taken out again below; nothing else in the
+         table moves. *)
+      ContestSession.WriteDomesticMult(DomesticFile);
+      DomQTHTable.AddNewPrefixRecord('ADA', 'ADA', 'ADA');
+      added := DomQTHTable.LastPrefixRecord[tableIndex];
       ActiveBand := Band20;
       VisibleLog.DetermineIfNewDomesticMult('ADA', AllBands, CW, needs);
       CheckEquals(1, needs, 'on 20 m, Ada is a needed county (was never, before M8)');
@@ -282,6 +303,18 @@ begin
       VisibleLog.DetermineIfNewDomesticMult('ADA', Band30, CW, needs);
       CheckEquals(0, needs, 'and asked for 30 m itself, neither');
    finally
+      (* The table as it was: AddNewPrefixRecord appended after the old last
+         record, if there was one, so that record ends the chain again. *)
+      if added <> nil then
+         begin
+         if savedLast <> nil then
+            begin
+            savedLast^.NextRecord := nil;
+            end;
+         DomQTHTable.FirstPrefixRecord[tableIndex] := savedFirst;
+         DomQTHTable.LastPrefixRecord[tableIndex] := savedLast;
+         Dispose(added);
+         end;
       mo.ClearAllMults;
       ActiveBand := savedActiveBand;
       DomesticMultByBand := savedDomesticByBand;

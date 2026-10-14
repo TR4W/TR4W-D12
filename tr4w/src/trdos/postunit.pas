@@ -2445,7 +2445,12 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   if rec.QTHString <> '' then
      begin
      qthForGrid := rec.DomesticQTH;
-     if LooksLikeAGrid( qthForGrid ) and ( ContestSession.DomesticMult <> RDADistrict )
+     (* An RDA district has a grid's shape and is not one -- the contest
+       says so (TContestBase.DomesticQTHIsNeverAGrid, M11 S6 part 1), on
+       the object fetched once for this record; it was
+       `ContestSession.DomesticMult <> RDADistrict`. *)
+     if LooksLikeAGrid( qthForGrid ) and
+        ( not ContestDomesticQTHIsNeverAGrid( contestRules ) )
      then
         begin
         Result := Result + EmitADIFField( 'GRIDSQUARE',

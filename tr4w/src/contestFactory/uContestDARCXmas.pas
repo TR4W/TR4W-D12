@@ -113,6 +113,15 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC QTH -- see TContestBase.DomesticMultiplierFromQTH
+         (M11 S6). *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; override;
+      (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
+      function DomesticQTHReplacesDXMultiplier: boolean; override;
    end;
 
 implementation
@@ -240,6 +249,29 @@ function TContestDARCXmas.PrefixMultiplierKey(const aQso: ContestExchange;
                                               out aKey: PrefixMultiplierString): boolean;
 begin
    aKey := aQso.QTH.Prefix;
+   Result := True;
+end;
+
+
+(* THE DOMESTIC QTH -- M11 S6 part 1, 2026-10-14, moved from LOGDOM.GetDomQTH's
+   WYSIWYGDomestic arm (the trait): the text as received is both the multiplier and
+   the QTH, cut to the field's ten characters, and it is always found. *)
+function TContestDARCXmas.DomesticMultiplierFromQTH(const aText: Str20;
+                                                    var aMultiplier: Str10;
+                                                    var aQTH: Str10;
+                                                    var aFound: boolean): TDomesticQTHAnswer;
+begin
+   aMultiplier := aText;
+   aQTH := aText;
+   aFound := True;
+   Result := dqaDecided;
+end;
+
+(* A DOMESTIC QTH TAKES THE PLACE OF THE DX MULTIPLIER -- M11 S6 part 1,
+   moved from LOGDUPE.GetDXQTH's `= WYSIWYGDomestic` guard (the trait). See
+   TContestBase.DomesticQTHReplacesDXMultiplier. *)
+function TContestDARCXmas.DomesticQTHReplacesDXMultiplier: boolean;
+begin
    Result := True;
 end;
 

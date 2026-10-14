@@ -66,10 +66,13 @@ ROUTINES = {
    ("logstuff.pas", "ProcessRSTAndZoneExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    ("logstuff.pas", "ProcessRSTQSONumberAndPossibleDomesticQTHExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    ("logstuff.pas", "ValidClass"): ("exchange", "ValidateClass (existing) -- already answers first; see dead code"),
-   ("logstuff.pas", "DomStringParse"): ("exchange", new("ParseDomesticQTH")),
+   # DomStringParse's five domestic-kind arms left at M11 S6 part 1: the
+   # contest answers DomesticMultiplierHint. It reads no session kind.
    ("logstuff.pas", "LooksLikeACallSign"): ("exchange", new("IsAcceptableCallsign")),
    ("uCallSignRoutines.pas", "IsAGoodCall"): ("exchange", new("IsAcceptableCallsign")),
-   ("logdom.pas", "DomQTHTableObject.GetDomQTH"): ("exchange", new("ParseDomesticQTH")),
+   # GetDomQTH's six domestic-kind arms left at M11 S6 part 1: the contest
+   # answers DomesticMultiplierFromQTH (base: the domestic file). Only its
+   # DoingDomesticMults exit reads the session, a flag and not a kind.
    ("logdupe.pas", "SetUpExchangeInformation"): ("exchange", new("ReceivedExchangeFields (s6) (which fields the exchange carries)")),
    ("logdupe.pas", "ParseExchangeIntoContestExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    ("logdupe.pas", "GetInitialExchangeStringFromContestExchange"): ("exchange", new("InitialExchangeFromHistory")),
@@ -85,9 +88,9 @@ ROUTINES = {
    # ----------------------------------------------------------- multipliers
    ("logdupe.pas", "DupeAndMultSheet.SetMultFlags"): ("multipliers", new("MultiplierValue (s6)")),
    # GetDXQTH's `case` on the DX kind left at M11 S4 (part 1): the contest
-   # states its key (DXMultiplierKey). What is left here is the engine's head
-   # -- the WYSIWYG domestic test, a DOMESTIC kind read, S6's.
-   ("logdupe.pas", "GetDXQTH"): ("multipliers", "DXMultiplierKey (existing, M11 S4); the WYSIWYG domestic head moves at S6"),
+   # states its key (DXMultiplierKey). Its head's WYSIWYG domestic test left
+   # at M11 S6 part 1 (DomesticQTHReplacesDXMultiplier). It reads no session
+   # kind.
    # LOGDUPE.SetUpRemainingMultiplierArrays left at M11 S5: its `case` on the
    # zone kind at part 1 (the contest answers ZoneMultiplierCount), its
    # DoingZoneMults gate at part 2 (the contest answers HasZoneMultiplier).

@@ -606,6 +606,16 @@ type
       CW Open today (plan F5, open question Q95), and S5 transcribes that. *)
    TZoneMultiplierZones = (zmzNotCQOrITU, zmzCQZones, zmzITUZones);
 
+   (* WHAT A CONTEST SAYS ABOUT A RECEIVED DOMESTIC QTH -- M11 S6 part 1,
+      2026-10-14. See TContestBase.DomesticMultiplierFromQTH.
+
+      dqaDecided: the contest's own rule has answered, and the domestic file
+      is not consulted. dqaLookUpDomesticFile: the engine's domestic-file
+      lookup follows -- the base's answer, and what the old kind arms did for
+      DomesticFile, NumericID and, through a fall-through kept exactly, the
+      IOTA reference (plan F6). *)
+   TDomesticQTHAnswer = (dqaDecided, dqaLookUpDomesticFile);
+
 const
    (* THE TWO STANDARD ZONE LISTS' SIZES -- the counts LOGDUPE's
       `case ZoneMult of` gave CQZones and ITUZones until M11 S5. Eight and
@@ -1816,6 +1826,85 @@ type
          "zone" is the year licensed, 00 to 99. THE BASE ANSWERS FALSE. *)
       function NumbersZonesFromZero: boolean; virtual;
 
+      (* WHAT A RECEIVED DOMESTIC QTH MEANS IN THIS CONTEST -- M11 S6 part 1,
+         2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S6).
+
+         LOGDOM.GetDomQTH asks it, after its own engine head (the outputs
+         zeroed, the text upper-cased, and the no-domestic-multiplier exit,
+         which still asks the session) and before the domestic-file lookup,
+         which is the engine's table and stays there. The rule stood in
+         GetDomQTH as `if ContestSession.DomesticMult = ...`, six arms
+         choosing a shape FOR the contest -- an RDA district, the text as
+         written (WYSIWYG), a DOK, an IOTA reference, a grid square, a grid
+         field; each contest whose QTH is one of those states its own now,
+         calling uDomesticKey where a shape is shared.
+
+         aMultiplier, aQTH AND aFound ARE THE ENGINE'S, ZEROED; a rule writes
+         what it decides and leaves the rest. dqaDecided ends the lookup with
+         aFound as the answer. dqaLookUpDomesticFile hands on to the file
+         lookup WITH WHATEVER WAS WRITTEN -- the RSGB IOTA's valid reference
+         reaches the file already found, as GetDomQTH's IOTA arm, which had
+         no Exit, always did (plan F6, transcribed and not fixed).
+
+         A RULE THAT DEPENDS ON THE ENTRANT ASKS Station (the ALRS cup, WAG,
+         the DARC 10 m), testing exactly what its DescribeSession tests to
+         choose the session's domestic kind.
+
+         THE BASE ANSWERS dqaLookUpDomesticFile and writes nothing -- what
+         GetDomQTH did for every DomesticFile and NumericID session. *)
+      function DomesticMultiplierFromQTH(const aText: Str20;
+                                         var aMultiplier: Str10;
+                                         var aQTH: Str10;
+                                         var aFound: boolean): TDomesticQTHAnswer; virtual;
+
+      (* WHAT THE NEED-MULTIPLIER HINT SHOWS FOR A REMEMBERED EXCHANGE -- M11
+         S6 part 1. LOGSTUFF.DomStringParse asks it (behind LOGEDIT's station
+         information) with the initial exchange the log remembers for a call,
+         upper-cased. It was DomStringParse's copy of GetDomQTH's ladder (plan
+         F6), which never consulted the domestic file: a shape answers its
+         key, or '' when the text does not have the shape. A rule that
+         depends on the entrant asks Station, as DomesticMultiplierFromQTH
+         does. THE BASE ANSWERS THE TEXT ITSELF -- what DomStringParse did
+         for every other session. *)
+      function DomesticMultiplierHint(const aText: Str14): string; virtual;
+
+      (* IS THE DOMESTIC MULTIPLIER THE FOUR-CHARACTER GRID SQUARE, A ROVER
+         BEING WORKED AGAIN IN EVERY SQUARE? -- M11 S6 part 1. Four engine
+         sites asked `ContestSession.DomesticMult = GridSquares`: a rover is
+         never a dupe (LOGEDIT.CallIsADupe), a rover's squares worked before
+         zero its points (LOGSUBS2.LogContact), the partial-call mults are
+         shown from any window (LOGSUBS2.ShowPartialCallMults), and the grid
+         status (LOGSTUFF.DisplayGridSquareStatus). True for the ARRL VHF
+         contests, the CQ VHF, the OZHCR VHF and the RTC, each holding its
+         own copy (design 1.4). THE BASE ANSWERS FALSE. *)
+      function HasGridSquareMultiplier: boolean; virtual;
+
+      (* IS THE DOMESTIC MULTIPLIER THE TWO-LETTER GRID FIELD? -- M11 S6 part
+         1. The sheet keys such a multiplier on the field and reads an old
+         log's four-character keys too (uMults.IsDmMult), and WSJT-X's
+         station hint shows the field (uWSJTX); both asked
+         `ContestSession.DomesticMult = GridFields`. True for the Russian
+         Cups CW and SSB, TOEC, WW Digi and WWL. THE BASE ANSWERS FALSE. *)
+      function HasGridFieldMultiplier: boolean; virtual;
+
+      (* DOES A DOMESTIC QTH TAKE THE PLACE OF THE DX MULTIPLIER? -- M11 S6
+         part 1. LOGDUPE.GetDXQTH gives no DX QTH to a QSO that has a
+         domestic QTH (unless COUNT DOMESTIC COUNTRIES) in a contest whose
+         domestic multiplier is the text as written; it asked
+         `ContestSession.DomesticMult = WYSIWYGDomestic`. True for the eleven
+         WYSIWYG contests, at the stations that run it (the ALRS cup but for
+         a Russian entrant who counts RDA districts, the DARC 10 m for a
+         German entrant only). THE BASE ANSWERS FALSE. *)
+      function DomesticQTHReplacesDXMultiplier: boolean; virtual;
+
+      (* IS A DOMESTIC QTH THAT LOOKS LIKE A GRID NEVER ONE? -- M11 S6 part 1.
+         An RDA district ('MO12') has a grid square's shape; the ADIF tail
+         (POSTUNIT) writes such a QTH as GRIDSQUARE unless the contest says
+         no. It asked `ContestSession.DomesticMult <> RDADistrict`. True for
+         RDA, and for the ALRS cup at a Russian entrant who counts RDA
+         districts. THE BASE ANSWERS FALSE. *)
+      function DomesticQTHIsNeverAGrid: boolean; virtual;
+
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
 
@@ -2544,6 +2633,29 @@ function ContestZoneMultiplierZones(aContest: TContestBase): TZoneMultiplierZone
    TContestBase.NumbersZonesFromZero. nil answers False. *)
 function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
 
+(* WHAT A RECEIVED DOMESTIC QTH MEANS IN aContest -- see
+   TContestBase.DomesticMultiplierFromQTH. nil answers dqaLookUpDomesticFile
+   and writes nothing: the classless DUMMYCONTEST runs NoDomesticMults, which
+   GetDomQTH answers before it asks. *)
+function ContestDomesticMultiplierFromQTH(aContest: TContestBase;
+                                          const aText: Str20;
+                                          var aMultiplier: Str10;
+                                          var aQTH: Str10;
+                                          var aFound: boolean): TDomesticQTHAnswer;
+
+(* WHAT THE NEED-MULTIPLIER HINT SHOWS FOR aText IN aContest -- see
+   TContestBase.DomesticMultiplierHint. nil answers the text itself. *)
+function ContestDomesticMultiplierHint(aContest: TContestBase; const aText: Str14): string;
+
+(* THE FOUR YES/NO DOMESTIC ANSWERS OF aContest -- see TContestBase.
+   HasGridSquareMultiplier, HasGridFieldMultiplier,
+   DomesticQTHReplacesDXMultiplier and DomesticQTHIsNeverAGrid. nil answers
+   False to each. *)
+function ContestHasGridSquareMultiplier(aContest: TContestBase): boolean;
+function ContestHasGridFieldMultiplier(aContest: TContestBase): boolean;
+function ContestDomesticQTHReplacesDXMultiplier(aContest: TContestBase): boolean;
+function ContestDomesticQTHIsNeverAGrid(aContest: TContestBase): boolean;
+
 (* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
    M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
    once CD.GetEntry has found the call, with the zone list the contest's
@@ -2974,6 +3086,82 @@ begin
       end;
 end;
 
+function ContestDomesticMultiplierFromQTH(aContest: TContestBase;
+                                          const aText: Str20;
+                                          var aMultiplier: Str10;
+                                          var aQTH: Str10;
+                                          var aFound: boolean): TDomesticQTHAnswer;
+begin
+   if aContest = nil then
+      begin
+      Result := dqaLookUpDomesticFile;
+      end
+   else
+      begin
+      Result := aContest.DomesticMultiplierFromQTH(aText, aMultiplier, aQTH, aFound);
+      end;
+end;
+
+function ContestDomesticMultiplierHint(aContest: TContestBase; const aText: Str14): string;
+begin
+   if aContest = nil then
+      begin
+      Result := string(aText);
+      end
+   else
+      begin
+      Result := aContest.DomesticMultiplierHint(aText);
+      end;
+end;
+
+function ContestHasGridSquareMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.HasGridSquareMultiplier;
+      end;
+end;
+
+function ContestHasGridFieldMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.HasGridFieldMultiplier;
+      end;
+end;
+
+function ContestDomesticQTHReplacesDXMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.DomesticQTHReplacesDXMultiplier;
+      end;
+end;
+
+function ContestDomesticQTHIsNeverAGrid(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.DomesticQTHIsNeverAGrid;
+      end;
+end;
+
 function InitialZoneFromCallHistory(aZones: TZoneMultiplierZones;
                                     const aCQZone: ShortString;
                                     const aITUZone: ShortString;
@@ -3320,6 +3508,41 @@ begin
 end;
 
 function TContestBase.NumbersZonesFromZero: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.DomesticMultiplierFromQTH(const aText: Str20;
+                                                var aMultiplier: Str10;
+                                                var aQTH: Str10;
+                                                var aFound: boolean): TDomesticQTHAnswer;
+begin
+   (* The domestic file, writing nothing -- see the declaration. *)
+   Result := dqaLookUpDomesticFile;
+end;
+
+function TContestBase.DomesticMultiplierHint(const aText: Str14): string;
+begin
+   (* The text itself -- see the declaration. *)
+   Result := string(aText);
+end;
+
+function TContestBase.HasGridSquareMultiplier: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.HasGridFieldMultiplier: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.DomesticQTHReplacesDXMultiplier: boolean;
+begin
+   Result := False;
+end;
+
+function TContestBase.DomesticQTHIsNeverAGrid: boolean;
 begin
    Result := False;
 end;

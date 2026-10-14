@@ -367,7 +367,9 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # narrowings went; the classes cast the same truncation explicitly, and
 # ZoneCont's Str2 one moved with SACDistrict to uPrefixMultiplierKey.
 # Measured by a scratch -B compile with Build-App's arguments, per unit.
-$NARROW_CEILING = 1264
+# 1264 -> 1263, 2026-10-14: M11 S6 part 1a, measured by the full build
+# (the domestic-key move through the classes and uDomesticKey).
+$NARROW_CEILING = 1263
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

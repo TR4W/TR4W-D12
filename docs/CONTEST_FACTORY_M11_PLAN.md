@@ -7,7 +7,9 @@ wait (section 4 S2); S3 is DONE -- part 1 (the move) on `42a999c1`, part 2
 (the deletion) on `cbcba524`, both 2026-10-14; S4 is DONE -- part 1 (the
 move) on `3c8ce116`, part 2 (the deletion) on `6b874f1a`, both 2026-10-14;
 S5 is DONE -- part 1 (the move) on `f0c54f4c`, part 2 (the deletion)
-on `a8186905`, both 2026-10-14; S1 and S6 on are not built.** See section 4 S0 for
+on `a8186905`, both 2026-10-14; S6 part 1a (the move, every shape but the
+domestic file) is DONE on `45ca8855`, 2026-10-14, uncommitted at its
+hand-back; S1, S6 part 1b and part 2, and S7 on are not built.** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -1522,6 +1524,128 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
   own combined file (Q80). *Specialists:* `contest-scoring`, `lcl-ui`
   (`uWSJTX`, the need-mult hint), `file-formats` (`postunit:2402`),
   `log-database` (`DomMultQTH` is persisted).
+- **PART 1 IS SPLIT IN TWO, BY FAMILY -- the domestic file versus the rest.**
+  Done in one change, part 1 touches about 120 units: the 94 contests whose
+  domestic QTH is looked up in a file each need a STATED answer for the two
+  rules that ask `= DomesticFile` (the mobile rewrite, readiness), because
+  the kind cannot be derived from the file name (2.6). The key itself does
+  not: the domestic-file lookup is the base's answer. So part 1a moves
+  every rule that is NOT the domestic file (25 contests); part 1b states the
+  domestic-file answer for the 94; part 2 deletes the kind.
+- **PART 1a (THE MOVE, NOT THE DOMESTIC FILE) DONE 2026-10-14, on
+  `45ca8855` (uncommitted at hand-back).** Part 1b and part 2 are separate
+  and later.
+  - **The seams** (`TContestBase`, each with a nil-safe free function, nil
+    being the classless DUMMYCONTEST, which ran `NoDomesticMults`):
+    `DomesticMultiplierFromQTH(aText: Str20; var aMultiplier, aQTH: Str10;
+    var aFound): TDomesticQTHAnswer` -- `TDomesticQTHAnswer =
+    (dqaDecided, dqaLookUpDomesticFile)` is new in `uContestBase`; the base
+    answers `dqaLookUpDomesticFile` and writes nothing, which is what every
+    `DomesticFile` and `NumericID` session did. `DomesticMultiplierHint(aText:
+    Str14): string` (base: the text). Four yes/no answers, base False:
+    `HasGridSquareMultiplier`, `HasGridFieldMultiplier`,
+    `DomesticQTHReplacesDXMultiplier`, `DomesticQTHIsNeverAGrid`.
+  - **The 25 contests in 25 units.** WYSIWYG, the key and the DX guard:
+    Arktika, BSCI, DARC Xmas, Gagarin Cup, GridLoc, IARU, OZCR-Z, UA4W,
+    WRTC; the ALRS cup unless `CountsRDADistricts` (then RDA: key, hint,
+    never-a-grid); the DARC 10 m for a DL entrant (`Station.MyCountry =
+    'DL'`; else DOK). DOK, key and hint: WAG and the DARC 10 m for anyone
+    but DL -- the test both `DescribeSession`s state the kind under. RDA:
+    key, hint, never-a-grid. IOTA: the RSGB IOTA's key and hint, through
+    its own `ReadIOTAReference` (one contest, so no helper). Grid square
+    (key, hint, the flag): the ARRL VHF x3, CQ VHF, OZHCR VHF and RTC, as
+    copies. Grid field (key, hint, the flag): the Russian Cups CW and SSB,
+    TOEC, WW Digi, WWL.
+  - **The leaf `uDomesticKey`** holds the four shapes more than one contest
+    reads: `RDADistrictKey`, `DOKKey`, `GridSquareKey`, `GridFieldKey`,
+    each its arm's test as it stood (the two copies agreed on every one).
+    `GetContinentFromString` moved, unchanged, from ZoneCont to
+    `utils_text`, because the IOTA class reads it and cannot reach ZoneCont;
+    every caller already used `utils_text`.
+  - **F6 -- TRANSCRIBED, NOT UNIFIED, AND NOT FIXED.** The two copies
+    differed in control flow, not in the shape tests, so the shapes are
+    shared and each copy's flow is kept where its rule now lives:
+    GetDomQTH's IOTA arm (no Exit: a valid reference reaches the domestic
+    file already found, an unknown continent reaches it not found, a
+    malformed text ends the lookup) is the RSGB IOTA's
+    `DomesticMultiplierFromQTH`, returning `dqaLookUpDomesticFile` with the
+    key written; DomStringParse's DOK arm, which returned its local
+    `TempMultiplier` unassigned when the text had no letter, is WAG's and
+    the DARC 10 m's `DomesticMultiplierHint`, reading an unassigned local
+    the same way (FPC warns, once in each). The fix is `Result := ''` in
+    both, in a commit of its own. The IOTA hint's scratch use of
+    `LOGWIND.ContinentString` became a local: nothing read the global, so
+    that half of F6 changed no behaviour. `LOGWIND.ContinentString` now
+    has one writer (FCONTEST) and no reader -- S1's.
+  - **The engine readers.** `LOGDOM.GetDomQTH` keeps its head (outputs
+    zeroed, `strU`, the `DoingDomesticMults` exit) and the file lookup, and
+    asks `ContestDomesticMultiplierFromQTH(ActiveContest(Contest), ...)`
+    between them. `LOGSTUFF.DomStringParse` is `strU` and
+    `ContestDomesticMultiplierHint`. `= GridSquares`: `LOGEDIT.CallIsADupe`,
+    `LOGSUBS2.ShowPartialCallMults` and `LogContact` (both of its tests,
+    asked once), `LOGSTUFF.DisplayGridSquareStatus`. `= GridFields`:
+    `uMults.IsDmMult`, whose parameter is now `aKeyedOnGridField: boolean`,
+    `uWSJTX`'s station hint, and the factory's `IsNewMultiplierAnywhere`
+    service (asking `GActive`, NOT `ActiveContest`: the service runs inside
+    the active object's own scoring, and `ActiveContest` would rewrite its
+    station mid-call). `= WYSIWYGDomestic`: `LOGDUPE.GetDXQTH`, on the object
+    handed in. `<> RDADistrict`: the ADIF tail, on its `contestRules`.
+    `uWSJTX` and `uContestFactory` no longer use `uContestSession`.
+  - **What still reads the domestic kind (part 1b, part 2):**
+    `ContestSession.DoingDomesticMults` (every `Doing` reader, and
+    GetDomQTH's exit); `= DomesticFile` in `LOGSUBS2.LogContact`'s mobile
+    rewrite and `uContestReadiness` (via `uProgramMain`);
+    `TADIFImportSession.DomesticMult` (filled in MainUnit's ADIF import, read
+    by the base `ApplyADIFImport` as `= GridSquares` -- the operator's open
+    contest, so `HasGridSquareMultiplier` will answer it); the matrix's
+    `active.domesticmult` line; FCONTEST's writes.
+  - **Hot path.** GetDomQTH fetches the contest ONCE, after the no-domestic
+    exit, so a contest with no domestic multiplier pays nothing new; its
+    callers (the parse shapes, ~50) hold no object. The rescore does not
+    call GetDomQTH except through `ctyLocateCallStripRover` for a slash call
+    under a QP exchange (one fetch beside that routine's three Info lines).
+    It does call `CallIsADupe` for every QSO, so there the ROVER TEST GOES
+    FIRST and the contest is fetched only for a rover. `SetMultFlags` passes
+    the object it holds. `LogContact` fetches once per live QSO. Not timed
+    here.
+  - **Pins, written BEFORE the move and run green on the old code.**
+    `uTestDomesticMultiplier`, 11 entrants (us, ve, dx = DL, a New England
+    host, UA outside and UA1 inside St Petersburg, JA, OK, ON, UR, YU) and 16
+    texts chosen to read several ways (MO12 is an RDA district and a grid;
+    EU12 an IOTA reference, a district and a grid; EU-12, EUAB, EU1234 and
+    XX12 the IOTA arm's three other exits; 123 a DOK with no letter; an 18-
+    character text for the 10- and 14-character cuts): 139 literal key rows
+    and 137 literal hint rows over the 25 contests and seven domestic-file
+    contests; every ContestType at every entrant against literal sets for
+    the four flags, with literal per-station counts; and cross-checks of
+    every ContestType x entrant x text against the frozen old routines
+    (`LegacyDomesticKeyOfKind`, `LegacyHintOfKind`, `LegacyFlagOfKind`) under
+    the resolved session kind, which go with part 2. The DOK hint for a text
+    with no letter is not pinned -- there is no value to freeze. Old code
+    (the Program functions returning the frozen rules): the whole run
+    **217,934 passed, 0 failed**. After the move: ****217,933 passed, 1 failed** --
+    `uTestOffBandCredit.Test_OffBandShowsNoMultiplierNeeded`, which wrote
+    `WYSIWYGDomestic` into the session for Idaho (a kind Idaho never runs) so
+    that GetDomQTH would take 'ADA' without a domestic file. Idaho's rule
+    is the file now, so the test was corrected to give it its own session
+    kind (`DomesticFile`) and Ada in the domestic table, removed again after;
+    compiled, not re-run (the stage's two-run budget). The pins themselves
+    all passed after the move**.
+  - **Matrix: MEASURED IDENTICAL, all 186 records
+    byte-for-byte against `frozen/`** (a scratch run of the scratch `-B` build, not the
+    freeze script).
+  - **Narrowing 1264 -> 1263**, **range 3** (scratch `-B`; the
+    incremental build crashed FPC, as at S3-S5). The new code raises none
+    (checked per file); the one that went is most likely an old IOTA arm's
+    `UpperCase` into a ShortString -- not attributed against a HEAD build.
+    `Lint-ContestNameTests` 6, unchanged.
+  - **Inventory** (generated, then the tracked doc restored): rows 68 ->
+    **61**; shapes 6/0/12/50 -> **6/0/12/43**; shape-4 sites 87 -> **68**
+    (63 comparisons, 5 `case`s); records PROXY 50 -> **43**, SHARED 50 ->
+    **38**, SHAPE 43, UNUSED 10; contests with rules outside the factory 48
+    -> **44** (the ALRS cup, the DARC 10 m, the RSGB IOTA, WAG leave). The
+    `judgements.ROUTINES` rows for GetDomQTH, DomStringParse and GetDXQTH,
+    which no site matches now, are comments saying where the rules went.
 
 ### S7 -- Exchange RULES out of the compare sites (2.1)
 
@@ -1584,7 +1708,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F3** | `zonecont.pas:103`; `logedit.pas:2571-2594`; `uTestContestParse:622-633` | `TContestRussianDX`/`TContestRU3AXMemorial.InitialExchangeFromCall` is reached only through `GetVEInitialExchange`, which only the Section and QTH initial-exchange arms call. No contest runs either of them since S2 (reach 0). The live Russian oblast rule is LOGEDIT's fallback (`logedit:2650`, `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]`), so one of Q50's three spellings is already dead and a unit test pins it |
 | **F4** | `MainUnit:934-936`, `:975-977`, `:2061`, `:5988`; `logsubs2:1611`; `TContestStateQSOPartyBase.SplitsRoverCallOnExport` | "Is a slash suffix a county?" is decided by exchange shape live (25 contests) and by the class on export (15). The two sets disagree. Split on export but not stripped live: CA, CO, MN, OH, PA. Stripped live but not split: ALRS, ARRL160, ARRLDX x2, AZ, BC, COUNTYHUNTER, IN7QPNE, LABRE, NEQP, NY, PACC, Salmon Run, 7QP, TOEC. Related to Q90 |
 | **F5** | matrix `CROATIAN`/`CWOPEN` setup; `uContestCroatian:290` | CROATIAN has `zonemult = ITUZones` with `cty.zonemode = CQZoneMode`, and exports `<ITUZ:2>05` for W1AW, whose CQ zone is 5 (`qthzone=5`). CWOPEN has `CQZones` over `ITUZoneMode`. The zone multiplier's system and the CTY lookup's system disagree in one class |
-| **F6** | `logstuff.pas:7120-7131`, `:7143`; `logwind.pas:531` | `DomStringParse`'s DOK arm returns the local `TempMultiplier` uninitialised when the text has no letter. Its IOTA arm uses the unit global `LOGWIND.ContinentString` as scratch: it declares no local, and the global's only other writer is FCONTEST, with no reader. The whole routine is a drifted copy of `logdom.GetDomQTH:227-330` |
+| **F6** | `logstuff.pas:7120-7131`, `:7143`; `logwind.pas:531` | `DomStringParse`'s DOK arm returns the local `TempMultiplier` uninitialised when the text has no letter. Its IOTA arm uses the unit global `LOGWIND.ContinentString` as scratch: it declares no local, and the global's only other writer is FCONTEST, with no reader. The whole routine is a drifted copy of `logdom.GetDomQTH:227-330`. **S6 part 1a (2026-10-14): TRANSCRIBED, NOT FIXED.** The shape tests are shared (`uDomesticKey`); the IOTA fall-through is the RSGB IOTA's `DomesticMultiplierFromQTH`; the unassigned DOK hint is WAG's and the DARC 10 m's `DomesticMultiplierHint` (fix: `Result := ''` in both, its own commit); the scratch global became a local (no reader, so no change), and `LOGWIND.ContinentString` now has a writer and no reader |
 | **F7** | `uMults.pas:264-275` versus `logdupe.pas:662-760` | The remaining-DX-countries filter knows 3 of the 14 DX-key rules. Two owners of "which countries count"; the UI effect was not measured |
 | **F8** | `uContestCQWWCW:122` versus `uContestCQWWSSB:122` | The CQ WW pair, which shares a family base, states different initial exchanges (Custom versus Zone). Sponsor intent unknown |
 | **F9** | `LogCfg:433-436` (once, `uProgramMain:2318`) versus `uSettingsEffects:353` | `Doing*` is derived once at start-up, while the kinds are rewritten by every FoundContest. Readers mix the two (`uScoreTotals:161-164` and `MainUnit:9542-9543` read the session; `logdupe`/`logsubs2` read `Doing*`). **MEASURED at S0d: they diverge** on a peer's run-time `CONTEST` change (CQ WW CW -> ARRL SS CW leaves `Doing*` at CQ WW's values). **FIXED at S2** by construction: the four are `ContestSession` answers computed from the kinds, with no store of their own. What start-up derived FROM them is still once-only -- F19 |
@@ -1600,6 +1724,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F20** | `TContestBase.PrefixMultiplierKey` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX) versus `ContestSession.DoingPrefixMults` | (S3) The key now asks `Station`, which `ActiveContest` refreshes on every call; whether `SetPrefix` is called at all still asks the session kind, fixed at set-up. They agree unless the entrant's country or continent changes mid-session without a CONTEST change (FoundContest is not re-run for MY CALL): then e.g. a UBA log started outside Belgium and switched to an ON call keeps `DoingPrefixMults` but gets no key. YB DX already read the live `Settings.My.Country` before S3. The end state (part 2, §3) asks the class for both, so this closes then. Not measured on a bench. **CLOSED at S3 part 2 (2026-10-14):** both now read `Station` -- `DoingPrefixMults` is `TContestBase.HasPrefixMultiplier` through `ActiveContest`, and the station-dependent keys ask it. The mid-session change is still not bench-checked |
 | **F21** | `TContestBase.DXMultiplierKey` / `CountryMode` / `ListsRemainingDXCountry` (ARRL DX, ARRL 160, All Asian, JIDX, SAC, Helvetia, Croatian, WAG, UBA, WAE, PACC, RDA, ALRS, YU DX, the host-state parties) versus `ContestSession.DoingDXMults` | (S4 part 1) F20's shape, for the DX kind: the key and the remaining-mults filter ask `Station`, refreshed on every `ActiveContest` call, while whether `GetDXQTH` runs and whether the window lists DX countries at all still ask the session kind fixed at set-up. They agree unless the entrant's country, continent or host state changes mid-session without a CONTEST change. The country list is asked once, at set-up, so it cannot drift. Part 2 makes "does this contest count DX" a class answer, as S3 part 2 did for prefixes. Not measured on a bench. **CLOSED at S4 part 2 (2026-10-14):** all four read `Station` -- `DoingDXMults` is `TContestBase.HasDXMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), and each station-dependent class's key, country list and answer ask one private predicate. The mid-session change is still not bench-checked |
 | **F22** (**FIXED 2026-10-14**: `BestTwoLetters` zeroes `NumberBytes` on entry; 24 matrix records re-frozen, only `iex JA1ABC` moved, now showing its TRMASTER name/grid/zone) | `trdos/logscp.pas` `CallDatabase.BestTwoLetters` (also in D7, `C:\TR4W` logscp.pas:1196) | (S5 part 1, found by the matrix) **A call-history lookup of any call containing `JA` reads an uninitialised local.** The routine skips the `JA` pair with `Continue` and never assigns its `NumberBytes[CharPos]`, then returns the FIRST pair whose size equals the minimum -- so whatever the stack holds in that slot decides whether it picks the real smallest bucket or the `JA` bucket, which TRMASTER never fills (`trmaster_codec.bucket_pairs` excludes `JA`, as TR's own writer does), giving "not found". The residue is in practice the PREVIOUS lookup's `NumberBytes[1]`. Measured in the matrix fixture: DL1ABC's `DL` bucket is 23 bytes and JA1ABC's smallest real bucket (`A1`) is 23 bytes, so after a DL1ABC lookup JA1ABC is not found and the initial exchange falls through to CTY.DAT. In the frozen matrix JA1ABC's TRMASTER name is offered in ONE record (GRIDLOC, whose path leaves other residue), while DL1ABC's is offered in 22. S5 part 1's first build called `ActiveContest` between two lookups (InitialExchangeEntry's ITU test), which overwrote the slot, and JA1ABC was then FOUND in the Croatian, IRTS and WRTC (`trmaster=" 25"` -> `" 45"`, `" 45"` -> `" 25"`); proven by putting the old session test back beside an `ActiveContest` call, which moved the same lines. So the frozen JA1ABC `trmaster` value is the defect's, not a rule, and it holds only while nothing deep runs between lookups. Live effect: SCP partials (`LOGEDIT` :1812) and every TRMASTER field (name, zones, QTH, section, ...) for a JA-containing call depend on the call looked up before it. **Recommendation:** assign `NumberBytes[CharPos] := 0` before the `Continue` -- the routine's own convention ("we get zero if we had an illegal character"), so the `JA` pair is never chosen -- in its own commit with a deliberate matrix re-freeze (the JA1ABC `trmaster`/`logged`/`custom` columns move wherever TRMASTER contributes). After it, `InitialExchangeEntry` may ask `ActiveContest` like the other zone readers. **Held for S5:** that site asks `ContestIdentity` (shallow; its ITU answer is station-independent for every contest, pinned by `Test_TheITUQuestionDependsOnNoStation`), so S5 moves no output. **Done at S5 part 2:** it asks `ActiveContest`; the matrix moved nowhere. Related to Q95 only in that it surfaced on the zone question |
+| **F23** | `TContestALRSUA1DZCup`, `TContestWAG`, `TContestDARC10M` `DomesticMultiplierFromQTH` / `DomesticMultiplierHint` / `DomesticQTHReplacesDXMultiplier` / `DomesticQTHIsNeverAGrid` versus `ContestSession.DoingDomesticMults` | (S6 part 1a) F20's shape, for the domestic kind: the three station-dependent classes' answers ask `Station`, refreshed on every `ActiveContest` call, while whether GetDomQTH asks at all (`DoingDomesticMults`) still asks the session kind fixed at set-up. They agree unless the entrant's country changes mid-session without a CONTEST change (WAG begun at a DL call and switched away keeps no domestic multiplier; begun elsewhere and switched to DL, it looks a DOK up in a domestic file it has none of, where the kind kept reading DOKs). Part 2 makes "does this contest count a domestic multiplier" a class answer, as S3-S5 part 2 did. Not measured on a bench |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):
