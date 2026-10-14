@@ -160,8 +160,11 @@ function TContestSACSSB.ParseReceivedExchange(const aText: string;
                                             var aExch: ContestExchange;
                                             out aErrorMessage: string): boolean;
 begin
-   if (aSession.Exchange = RSTQSONumberExchange)    and
-      aSession.CallWindowHasCall                    and
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTQSONumberExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if aSession.CallWindowHasCall                    and
       ((aExch.QTH.CountryID = 'UA')  or
        (aExch.QTH.CountryID = 'EU')  or
        (aExch.QTH.CountryID = 'UA9') or

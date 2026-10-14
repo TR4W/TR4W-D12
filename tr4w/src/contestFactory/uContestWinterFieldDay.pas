@@ -457,11 +457,10 @@ begin
    aSession.SPExchangeCW := aStation.MyFDClass + ' ' + aStation.MySection;
    aSession.QSLCW := '73 \ WFD';
 
-   (* THE SAME VALUE AS THE TRAIT SINCE M7a -- see GetDXMultiplierType. It is
-      still stated here because the arm stated it, and so it still overwrites
-      a DX MULTIPLIER statement made before the CONTEST line, as it always
-      did. *)
-   aSession.DXMult := ARRLDXCCWithNoARRLSections;
+   (* THE DX MULTIPLIER IS THE TRAIT'S -- see GetDXMultiplierType. It was
+      restated here, to overwrite a DX MULTIPLIER line written before the
+      CONTEST line; that setting retired at M10 S2, so the restatement went
+      at M11 S2 (plan 1.3). *)
    aSession.AddDomesticCountries(DomesticCountriesARRLSections);
 end;
 

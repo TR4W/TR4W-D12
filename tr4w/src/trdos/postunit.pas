@@ -2427,7 +2427,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
              sysutils.Format( '%.2d', [ rec.Zone ] ) )
           end
        else
-         if ( ContestSession.ZoneMult = NoZoneMults ) and ExchangeInformation.Zone then
+         if (not ContestSession.DoingZoneMults) and ExchangeInformation.Zone then
             begin
             if CTY.ctyZoneMode = CQZoneMode then
                begin
@@ -2962,7 +2962,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
              ModeString := ContestIdentity( Contest ).CabrilloModeString(
                               TempRXData.Mode, TempRXData.ExtMode );
 
-             if DoingDomesticMults then
+             if ContestSession.DoingDomesticMults then
                 begin
                 if LiteralDomesticQTH then
                    begin

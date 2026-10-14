@@ -110,6 +110,8 @@ type
                            var aChecked: integer);
       procedure Test_EveryContestRunsItsPinnedKindsAtEveryMatrixStation;
       procedure Test_EveryPartyRunsItsPinnedKindsInItsHostState;
+      procedure CheckDoing(aDomestic, aDX, aPrefix, aZone: boolean; const aWho: string);
+      procedure Test_DoingFlagsFollowEveryContestSwitch;
    end;
 
 implementation
@@ -118,7 +120,10 @@ uses
    SysUtils,
    TypInfo,
    uContestBase,
-   uContestRegistry;
+   uContestRegistry,
+   (* ContestSession -- the switch test writes the session as FCONTEST does
+     and reads its Doing*Mults answers (M11 S2). *)
+   uContestSession;
 
 type
    (* One contest at the three stations every contest runs at. *)
@@ -1879,6 +1884,7 @@ procedure TContestKindPinTests.RunAllTests;
 begin
    Test_EveryContestRunsItsPinnedKindsAtEveryMatrixStation;
    Test_EveryPartyRunsItsPinnedKindsInItsHostState;
+   Test_DoingFlagsFollowEveryContestSwitch;
 end;
 
 procedure TContestKindPinTests.Test_EveryContestRunsItsPinnedKindsAtEveryMatrixStation;
@@ -1993,6 +1999,146 @@ begin
    (* IN THE HOST STATE THE KINDS DIFFER FROM THE us STATION'S for these
       parties at S0b -- ArizonaQsoParty, CALQSOPARTY, DELAWAREQSOPARTY, SALMONRUN, SEVENQP, TEXASQSOPARTY. *)
    CheckEquals(6, varying, 'parties whose kinds differ in the host state');
+end;
+
+(* The session's four "does it count this kind" answers, by name. *)
+procedure TContestKindPinTests.CheckDoing(aDomestic, aDX, aPrefix, aZone: boolean;
+                                          const aWho: string);
+begin
+   CheckTrue(aDomestic = ContestSession.DoingDomesticMults, aWho + ' doing domestic');
+   CheckTrue(aDX = ContestSession.DoingDXMults, aWho + ' doing DX');
+   CheckTrue(aPrefix = ContestSession.DoingPrefixMults, aWho + ' doing prefix');
+   CheckTrue(aZone = ContestSession.DoingZoneMults, aWho + ' doing zone');
+end;
+
+(* THE Doing*Mults FLAGS FOLLOW A CONTEST CHANGED WITHOUT A RESTART -- M11 S2,
+  2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md F9, S0d).
+
+  THE DEFECT. LOGDUPE held the four flags as globals, and LogCfg derived them
+  ONCE, at start-up, from the session's kinds. FoundContest rewrites the
+  kinds every time it runs, and it runs again when a multi-op peer sends a
+  CONTEST line (uNet -> ApplyPeerCommand -> uSettingsEffects ->
+  FoundContest). Measured at S0d on exactly that path, in the program: a CQ
+  WW CW session switched to ARRL SS CW ran DomesticFile and no DX, prefix or
+  zone multiplier, while the flags stayed at CQ WW's FALSE TRUE FALSE TRUE.
+
+  THE FIX IS STRUCTURAL. The flags are ContestSession's answers, computed
+  from the kinds on every read, so there is no second store to go stale. This
+  pins that in two halves:
+
+    * EVERY MEMBER of each multiplier kind, written through the session's
+      writer, is answered at once -- no write path can leave a flag behind;
+    * THE SWITCH, at each matrix station: the six kinds each contest
+      resolves to (Kinds, FCONTEST's two writes) written over the previous
+      contest's, contest after contest through the whole ContestType range,
+      and S0d's measured pair, CQ WW CW then ARRL SS CW, by literal.
+
+  WHAT THIS DOES NOT DRIVE: FoundContest itself. It writes Settings, the
+  domestic country list and the contest title, which this binary's other
+  suites read, so no unit test calls it; what it writes into the session is
+  Kinds, pinned row by row above. The peer path end to end is a bench check. *)
+procedure TContestKindPinTests.Test_DoingFlagsFollowEveryContestSwitch;
+const
+   CALLS: array[0..2] of string = ('K0AAA', 'VE3AAA', 'DL1AAA');
+   COUNTRIES: array[0..2] of string = ('K', 'VE', 'DL');
+   CONTINENTS: array[0..2] of ContinentType = (NorthAmerica, NorthAmerica, Europe);
+   STATES: array[0..2] of string = ('KS', 'ON', '');
+   SECTIONS: array[0..2] of string = ('KS', 'ON', 'DX');
+   GRIDS: array[0..2] of string = ('EM17', 'FN03', 'JO62');
+var
+   saved: TSessionKinds;
+   resolved: TSessionKinds;
+   d: DomesticMultType;
+   x: DXMultType;
+   p: PrefixMultType;
+   z: ZoneMultType;
+   c: ContestType;
+   s: integer;
+   who: string;
+   switches: integer;
+
+   (* What FoundContest leaves in the session: all six kinds, written over
+      whatever the previous contest left. *)
+   procedure WriteSession(const aKinds: TSessionKinds);
+   begin
+      ContestSession.WriteExchange(aKinds.Exchange);
+      ContestSession.WriteInitialExchange(aKinds.InitialExchange);
+      ContestSession.WriteDomesticMult(aKinds.DomesticMult);
+      ContestSession.WriteDXMult(aKinds.DXMult);
+      ContestSession.WriteZoneMult(aKinds.ZoneMult);
+      ContestSession.WritePrefixMult(aKinds.PrefixMult);
+   end;
+
+   function StationFor(aIndex: integer; aContest: ContestType): TStationContext;
+   begin
+      Result := MatrixStation(CALLS[aIndex], COUNTRIES[aIndex], CONTINENTS[aIndex],
+                              STATES[aIndex], SECTIONS[aIndex], GRIDS[aIndex],
+                              False, SessionContestName(aContest, False));
+   end;
+
+begin
+   BeginTest('Test_DoingFlagsFollowEveryContestSwitch');
+   saved.Exchange := ContestSession.Exchange;
+   saved.InitialExchange := ContestSession.InitialExchange;
+   saved.DomesticMult := ContestSession.DomesticMult;
+   saved.DXMult := ContestSession.DXMult;
+   saved.ZoneMult := ContestSession.ZoneMult;
+   saved.PrefixMult := ContestSession.PrefixMult;
+   try
+      (* EVERY MEMBER, ONE KIND AT A TIME. *)
+      for d := Low(DomesticMultType) to High(DomesticMultType) do
+         begin
+         ContestSession.WriteDomesticMult(d);
+         CheckTrue((d <> NoDomesticMults) = ContestSession.DoingDomesticMults,
+                   KindName(TypeInfo(DomesticMultType), Ord(d)));
+         end;
+      for x := Low(DXMultType) to High(DXMultType) do
+         begin
+         ContestSession.WriteDXMult(x);
+         CheckTrue((x <> NoDXMults) = ContestSession.DoingDXMults,
+                   KindName(TypeInfo(DXMultType), Ord(x)));
+         end;
+      for p := Low(PrefixMultType) to High(PrefixMultType) do
+         begin
+         ContestSession.WritePrefixMult(p);
+         CheckTrue((p <> NoPrefixMults) = ContestSession.DoingPrefixMults,
+                   KindName(TypeInfo(PrefixMultType), Ord(p)));
+         end;
+      for z := Low(ZoneMultType) to High(ZoneMultType) do
+         begin
+         ContestSession.WriteZoneMult(z);
+         CheckTrue((z <> NoZoneMults) = ContestSession.DoingZoneMults,
+                   KindName(TypeInfo(ZoneMultType), Ord(z)));
+         end;
+
+      switches := 0;
+      for s := Low(CALLS) to High(CALLS) do
+         begin
+         (* S0d's MEASURED CASE, by literal. *)
+         WriteSession(Kinds(CQWWCW, StationFor(s, CQWWCW)));
+         CheckDoing(False, True, False, True, 'CQ WW CW at ' + CALLS[s]);
+         WriteSession(Kinds(ARRLSSCW, StationFor(s, ARRLSSCW)));
+         CheckDoing(True, False, False, False,
+                    'CQ WW CW switched to ARRL SS CW at ' + CALLS[s]);
+
+         (* EVERY CONTEST, switched to from the one before it. *)
+         for c := Low(ContestType) to High(ContestType) do
+            begin
+            resolved := Kinds(c, StationFor(s, c));
+            WriteSession(resolved);
+            who := string(ContestTypeSA[c]) + ' at ' + CALLS[s];
+            CheckDoing(resolved.DomesticMult <> NoDomesticMults,
+                       resolved.DXMult <> NoDXMults,
+                       resolved.PrefixMult <> NoPrefixMults,
+                       resolved.ZoneMult <> NoZoneMults,
+                       who);
+            Inc(switches);
+            end;
+         end;
+      CheckEquals(187 * 3, switches, 'contest switches checked at us, ve and dx');
+   finally
+      WriteSession(saved);
+      end;
 end;
 
 end.

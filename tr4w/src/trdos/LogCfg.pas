@@ -430,10 +430,8 @@ begin
      Settings.Operating.IncrementTimeEnable := True;
      end;
 
-  DoingDomesticMults := ContestSession.DomesticMult <> NoDomesticMults;
-  DoingDXMults := ContestSession.DXMult <> NoDXMults;
-  DoingPrefixMults := ContestSession.PrefixMult <> NoPrefixMults;
-  DoingZoneMults := ContestSession.ZoneMult <> NoZoneMults;
+  (* The four Doing*Mults flags were derived here, once -- M11 S2 made them
+    ContestSession's own answers, computed from the kinds (plan F9). *)
 
   //  NumberDifferentMults := 0;
 
@@ -441,7 +439,7 @@ begin
   {IF (DoingDomesticMults)AND                                                          }
   {   ((DomesticQTHDataFileName <> '') OR (ActiveDomesticMult = WYSIWYGDomestic)) THEN }
 
-  if DoingDomesticMults then                              // Gav 4.44.8      Display remaining domestic Mults
+  if ContestSession.DoingDomesticMults then                              // Gav 4.44.8      Display remaining domestic Mults
      begin
      if RemainingMultDisplay = rmNoRemMultDisplay then
         begin
@@ -450,7 +448,7 @@ begin
      inc(NumberDifferentMults);
      end;
 
-  if DoingDXMults then
+  if ContestSession.DoingDXMults then
      begin
      inc(NumberDifferentMults);
      if RemainingMultDisplay = rmNoRemMultDisplay then
@@ -459,7 +457,7 @@ begin
         end;
      end;
 
-  if DoingZoneMults then
+  if ContestSession.DoingZoneMults then
      begin
      inc(NumberDifferentMults);
      if RemainingMultDisplay = rmNoRemMultDisplay then
@@ -468,7 +466,7 @@ begin
         end;
      end;
 
-  if DoingPrefixMults then
+  if ContestSession.DoingPrefixMults then
      begin
      inc(NumberDifferentMults);
      if RemainingMultDisplay = rmNoRemMultDisplay then

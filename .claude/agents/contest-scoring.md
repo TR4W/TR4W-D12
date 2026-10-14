@@ -247,12 +247,31 @@ from `ContestSession.DXMult` in the CONTEST setting's effect, straight after
 `FoundContest` returns** (plan F5) -- its only live caller, so the order is
 right; a new caller of `FoundContest` must run that derivation too.
 **Never repoint a kind reader to `ContestIdentity(Contest)`**: it is the
-SESSION's value, and 27 contests run with a kind their trait does not state
-(KCJ: trait `NoInitialExchange`, runs `ZoneInitialExchange`; YBDX: trait
-`NoPrefixMults`, runs `IndonesianDistricts`; ARRL 10: trait
-`ARRLDXCCWithNoUSACanadaKH6OrKL7`, runs `ARRLDXCCWithNoARRLSections`; OK/OM
-DX: trait `NoDomesticMults`, a W station runs `DomesticFile`; ARRL DX CW:
-trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`). **`ZoneSentForThisContest`
+SESSION's value, and 24 contests run a kind their trait does not state at a
+matrix station, 32 at some station (M11 S2) -- JIDX CW: trait
+`NoInitialExchange`, a JA station runs `ZoneInitialExchange`; WAEDC CW: trait
+`NoPrefixMults`, a DL station runs `CQNonEuropeanCountriesAndWAECallRegions`;
+ARRL 160: trait `NoDXMults`, a W station runs `ARRLDXCCWithNoARRLSections`;
+OK/OM DX: trait `NoDomesticMults`, a W station runs `DomesticFile`; ARRL DX
+CW: trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`.
+**One statement per kind per class (M11 S2):** a kind a class runs at EVERY
+station is its trait, never an unconditional `DescribeSession` restatement --
+KCJ, YBDX, ARRL 10 and Field Day were aligned that way, and 12 restatements
+deleted. `DescribeSession` states a kind only where the STATION decides it.
+**`Doing*Mults` ARE `ContestSession` ANSWERS (M11 S2, plan F9):**
+`ContestSession.DoingDomesticMults` / `DoingDXMults` / `DoingPrefixMults` /
+`DoingZoneMults` are computed from the kinds on every read; the LOGDUPE
+globals LogCfg set once at start-up are gone, because a peer's CONTEST line
+(`uSettingsEffects` -> `FoundContest`) left them describing the previous
+contest. Ask the property, and test `kind <> No*` through it, not by hand.
+Pinned by `uTestContestKindPin.Test_DoingFlagsFollowEveryContestSwitch`.
+**Still once-only after a run-time switch (F19):** what start-up derived
+FROM them -- `NumberDifferentMults`, `RemainingMultDisplay`,
+`Sheet.SheetInitAndLoad` (LogCfg) and `SetUpExchangeInformation` /
+`SetColumnsWidth` (`uProgramMain`). **A parse rule does not test
+`aSession.Exchange` for its own shape (M11 S2, F11):** a class's session
+shape is its own, so such a test is always true; test it only when the class
+does NOT always run that shape. **`ZoneSentForThisContest`
 asks the session too (S9c, plan F4)** -- the CQ-or-ITU zone sent and the
 ADIF CQZ/ITUZ tag now have one source. **`trdos/logddx.pas` is compiled by
 NOTHING** (it uses a `Country9` that never existed; plan F14): an edit

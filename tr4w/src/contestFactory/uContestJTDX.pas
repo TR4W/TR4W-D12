@@ -82,10 +82,11 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
-   public
-      (* SET-UP -- see TContestBase.DescribeSession. *)
-      procedure DescribeSession(const aStation: TStationContext;
-                                aSession: TSessionDefaults); override;
+
+      (* NO DescribeSession -- M11 S2, 2026-10-14 (plan 1.3). It stated the
+         zone initial exchange and the Mongolian prefix multiplier, both
+         already its traits, for every station; with those two gone it
+         stated nothing, and the base's says nothing. *)
    end;
 
 implementation
@@ -206,16 +207,6 @@ function TContestJTDX.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
-end;
-
-(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
-   it stood (M7b, 2026-10-02). See TContestBase.DescribeSession: this
-   writes no global and reads only aStation. *)
-procedure TContestJTDX.DescribeSession(const aStation: TStationContext;
-                                       aSession: TSessionDefaults);
-begin
-   aSession.InitialExchange := ZoneInitialExchange;
-   aSession.PrefixMult := MongolianCallSignPrefix;
 end;
 
 initialization

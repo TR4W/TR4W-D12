@@ -615,8 +615,8 @@ begin
    EmitField('active.zonemult', EnumText(TypeInfo(ZoneMultType), Ord(ContestSession.ZoneMult)));
    EmitField('active.prefixmult', EnumText(TypeInfo(PrefixMultType), Ord(ContestSession.PrefixMult)));
    EmitField('doing.domestic/dx/prefix/zone',
-             BoolText(DoingDomesticMults) + ' ' + BoolText(DoingDXMults) + ' ' +
-             BoolText(DoingPrefixMults) + ' ' + BoolText(DoingZoneMults));
+             BoolText(ContestSession.DoingDomesticMults) + ' ' + BoolText(ContestSession.DoingDXMults) + ' ' +
+             BoolText(ContestSession.DoingPrefixMults) + ' ' + BoolText(ContestSession.DoingZoneMults));
    EmitField('cty.countrymode', EnumText(TypeInfo(CountryModeType), Ord(CTY.ctyCountryMode)));
    EmitField('cty.zonemode', EnumText(TypeInfo(ZoneModeType), Ord(CTY.ctyZoneMode)));
    EmitField('my.continent', EnumText(TypeInfo(ContinentType), Ord(MyContinent)));
@@ -696,7 +696,7 @@ begin
 
    aRX.NumberReceived := 100 + aIndex;
    aRX.QTHString := ShortString(aSpec.QTH);
-   if DoingDomesticMults then
+   if ContestSession.DoingDomesticMults then
       begin
       aRX.DomesticQTH := ShortString(aSpec.QTH);
       aRX.DomMultQTH := ShortString(aSpec.QTH);

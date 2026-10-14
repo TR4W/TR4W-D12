@@ -82,6 +82,7 @@ type
       function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -137,13 +138,13 @@ type
          XM WAS WRONG and is NoDXMults in both the row and this class since
          2026-10-01 -- see GetDXMultiplierType.
 
-         NOTE DM IS COMMENTED OUT IN THE ARRAY. Its value therefore comes from
-         whatever the record initialises to, not from NoDomesticMults being
-         chosen -- so DomesticMultiplierType is deliberately NOT overridden
-         here. Stating a value would be inventing one, and Field Day's sections
-         ARE its domestic multipliers, so the right answer is not obviously
-         "none". Left reading the array until somebody establishes what it
-         should be. *)
+         NOTE DM IS COMMENTED OUT IN THE ARRAY. Its value therefore came from
+         whatever the record initialised to, not from NoDomesticMults being
+         chosen -- so DomesticMultiplierType was deliberately not overridden
+         here, and DescribeSession stated DomesticFile over it for every
+         station. At M11 S2 the trait became that value (plan 1.3): every
+         Field Day session has run DomesticFile since set-up moved into the
+         class, so the trait states what runs and nothing is invented. *)
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
@@ -327,7 +328,7 @@ end;
 
 function TContestARRLFieldDay.GetDomesticFileName: string;
 begin
-   (* domrrlsect.dom -- the ARRL/RAC section list, an INSTALLED RESOURCE.
+   (* dom\arrlsect.dom -- the ARRL/RAC section list, an INSTALLED RESOURCE.
       A <logstem>.DOM beside the log still overrides it; see LogCfg. *)
    Result := 'arrlsect';
 end;
@@ -359,6 +360,15 @@ begin
       made the class the source set-up reads, so Field Day's effective value
       did not move. *)
    Result := NoDXMults;
+end;
+
+function TContestARRLFieldDay.GetDomesticMultiplierType: DomesticMultType;
+begin
+   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
+      DomesticFile at every station: the trait said the base's NoDomesticMults and
+      DescribeSession stated it over it, unconditionally. The
+      trait now says what runs, and the statement is gone. *)
+   Result := DomesticFile;
 end;
 
 function TContestARRLFieldDay.GetInitialExchangeKind: InitialExchangeType;
@@ -451,11 +461,9 @@ end;
 procedure TContestARRLFieldDay.DescribeSession(const aStation: TStationContext;
                                                aSession: TSessionDefaults);
 begin
-   aSession.DomesticMult := DomesticFile;
-
-   (* The trait's value too (Q1, M2) -- stated because the arm stated it, so
-      it overwrites a pre-CONTEST statement as it always did. *)
-   aSession.DXMult := NoDXMults;
+   (* The domestic and DX multipliers are the traits' (M11 S2, plan 1.3):
+      both were stated here too, the DX one to overwrite a pre-CONTEST
+      statement -- a setting retired at M10 S2. *)
 
    (* WARC is not allowed during Field Day -- ny4i 4.45.3. *)
    aSession.WARCEnabled := False;

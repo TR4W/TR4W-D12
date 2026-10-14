@@ -380,7 +380,7 @@ begin
    FillChar(EditableQSORXData.QTH, SizeOf(EditableQSORXData.QTH), 0);
    ctyLocateCall(TempString, EditableQSORXData.QTH);
 
-   if DoingPrefixMults then
+   if ContestSession.DoingPrefixMults then
       begin
       FillChar(EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix), 0);
       SetPrefix(EditableQSORXData);
@@ -390,7 +390,7 @@ begin
    EditQSOSetText(FLD_COUNTRYNAME,
      ctyGetCountryName(ctyGetCountry(TempString)));
 
-   if ContestSession.DXMult <> NoDXMults then
+   if ContestSession.DoingDXMults then
       begin
       EditQSOSetText(FLD_DXQTH, string(EditableQSORXData.QTH.CountryID));
       end;
@@ -482,7 +482,7 @@ begin
      end;
 
   //  LocateCall(EditableQSORXData.Callsign, EditableQSORXData.QTH, true);
-  if ContestSession.DXMult <> NoDXMults then
+  if ContestSession.DoingDXMults then
      begin
      FillChar(EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH), 0);
      EditableQSORXData.DXQTH := EditableQSORXData.QTH.CountryID;
@@ -597,7 +597,7 @@ begin
   // The next line was commented out - so test this well ny4i Issue112
   FillChar(EditableQSORXData.QTHString, SizeOf(EditableQSORXData.QTHString), 0);
   EditableQSORXData.QTHString := EditQSOGetText(FLD_QTHSTRING);
-  if DoingDomesticMults then
+  if ContestSession.DoingDomesticMults then
      begin
      FoundDomesticQTH(EditableQSORXData);
        {then showwarning(TC_IMPROPERDOMESITCQTH)}

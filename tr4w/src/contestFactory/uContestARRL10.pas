@@ -162,7 +162,11 @@ end;
 
 function TContestARRL10.GetDXMultiplierType: DXMultType;
 begin
-   Result := ARRLDXCCWithNoUSACanadaKH6OrKL7;
+   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
+      ARRLDXCCWithNoARRLSections at every station: the trait said ARRLDXCCWithNoUSACanadaKH6OrKL7 and
+      DescribeSession stated it over it, unconditionally. The
+      trait now says what runs, and the statement is gone. *)
+   Result := ARRLDXCCWithNoARRLSections;
 end;
 
 function TContestARRL10.GetDomesticMultiplierType: DomesticMultType;
@@ -198,7 +202,6 @@ procedure TContestARRL10.DescribeSession(const aStation: TStationContext;
                                          aSession: TSessionDefaults);
 begin
    aSession.Band := Band10;
-   aSession.DXMult := ARRLDXCCWithNoARRLSections;
    aSession.MultipleBands := False;
    aSession.AddDomesticCountries(DomesticCountriesKVEKH6KL);
    aSession.AddDomesticCountry('XE');

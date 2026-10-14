@@ -582,10 +582,10 @@ begin
      RemainingMultDisplay := RemainingMultiplierType(Ord(RemainingMultDisplay) + 1);
      end;
   case RemainingMultDisplay of
-    rmDomestic: if not DoingDomesticMults then goto Next;
-    rmDX: if not DoingDXMults then goto Next;
-    rmZone: if not DoingZoneMults then goto Next;
-    rmPrefix: if not DoingPrefixMults then goto Next;
+    rmDomestic: if not ContestSession.DoingDomesticMults then goto Next;
+    rmDX: if not ContestSession.DoingDXMults then goto Next;
+    rmZone: if not ContestSession.DoingZoneMults then goto Next;
+    rmPrefix: if not ContestSession.DoingPrefixMults then goto Next;
   end;
 
   SetRemMultsColumnWidth;
@@ -1310,7 +1310,7 @@ begin
      begin
      DispalayNewMult(SW_HIDE);
      end;
-  if DoingDomesticMults then
+  if ContestSession.DoingDomesticMults then
      begin                                           // Gav 4.44.8      Uncommented this section
      TempString := WindowString;
      while TempString <> '' do
@@ -1772,7 +1772,7 @@ begin
        //      ShowStationInformation(RXData.Callsign);
              UpdateStationStatus(RXData.Callsign, -1);
        end;
-  if DoingDomesticMults and                                         // Gav 4.44.8   uncommented section
+  if ContestSession.DoingDomesticMults and                                         // Gav 4.44.8   uncommented section
     (Settings.Mult.ByBand or Settings.Mult.ByMode) and
     (RXData.DomesticQTH <> '') then
      begin

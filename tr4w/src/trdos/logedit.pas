@@ -964,7 +964,7 @@ begin
   Result := 0;
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
 
-  if DoingDXMults or DoingZoneMults or DoingPrefixMults then
+  if ContestSession.DoingDXMults or ContestSession.DoingZoneMults or ContestSession.DoingPrefixMults then
      begin
      FillChar(TempRXData, SizeOf(TempRXData), 0);
      ctyLocateCall(Call, TempRXData.QTH);
@@ -974,7 +974,7 @@ begin
         end;
      end;
 
-  if DoingDXMults then
+  if ContestSession.DoingDXMults then
      begin
      TempRXData.DXQTH := '';
      TempRXData.Callsign := Call;
@@ -995,7 +995,7 @@ begin
         end;
      end;
 
-  if DoingZoneMults then
+  if ContestSession.DoingZoneMults then
      begin
      if ContestSession.ZoneMult in [CQZones, ITUZones] then
         begin
@@ -1015,7 +1015,7 @@ begin
         end;
      end;
 
-  if DoingPrefixMults then
+  if ContestSession.DoingPrefixMults then
      begin
      TempRXData.Callsign := Call;
      SetPrefix(TempRXData);
@@ -1034,7 +1034,7 @@ begin
         end;
      end;
 
-  if DoingDomesticMults then
+  if ContestSession.DoingDomesticMults then
      begin
 
      TempDomMult := '';
@@ -1999,7 +1999,7 @@ begin
     (TContestBase.ShowsContestStatus, M9b). *)
   if ContestIdentity(Contest).ShowsContestStatus then
      begin
-     if DoingDomesticMults then
+     if ContestSession.DoingDomesticMults then
         begin
         TempString := Call;
         if TempString <> '' then
@@ -2783,7 +2783,7 @@ begin
 
        end;
 
-    if DoingDomesticMults then // Gav 4.44.8    Uncommented this section
+    if ContestSession.DoingDomesticMults then // Gav 4.44.8    Uncommented this section
       if not StringIsAllNumbersOrSpaces(TestString) then
          begin
          TempExchange.QTHString := TestString;

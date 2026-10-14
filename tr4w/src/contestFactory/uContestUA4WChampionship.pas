@@ -193,7 +193,11 @@ function TContestUA4WChampionship.ParseReceivedExchange(const aText: string;
                                                         out aErrorMessage: string): boolean;
 begin
    Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
-   if Result and (aSession.Exchange = RSTAndGridSquareOrRDAExchange) then
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTAndGridSquareOrRDAExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if Result then
       begin
       aExch.DomesticQTH := aExch.QTHString;
       end;

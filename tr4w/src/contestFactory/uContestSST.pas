@@ -203,7 +203,7 @@ procedure TContestSST.DescribeSession(const aStation: TStationContext;
                                       aSession: TSessionDefaults);
 begin
    aSession.ContestName := 'Slow Speed Test';
-   aSession.DomesticMult := DomesticFile;
+   (* DomesticFile is the trait's, which this restated until M11 S2. *)
    aSession.AddDomesticCountries(DomesticCountriesKVE);
    aSession.CQExchangeCW := ' ' + aStation.MyName + ' ' + aStation.MyState;
    aSession.SPExchangeCW := aStation.MyName + ' ' + aStation.MyState;

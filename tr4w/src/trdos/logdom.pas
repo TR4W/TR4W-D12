@@ -217,7 +217,7 @@ begin
 
   strU(InputString);
 
-  if ContestSession.DomesticMult = NoDomesticMults then
+  if not ContestSession.DoingDomesticMults then
      begin
      QTH := InputString;
      GetDomQTH := True;

@@ -151,10 +151,13 @@ function TContestIARU.ParseReceivedExchange(const aText: string;
 begin
    Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
 
-   if (aSession.Exchange = RSTZoneOrSocietyExchange) and
-      (not StringIsAllNumbersOrSpaces(aText))        and
-      IsSingleNonNumericToken(aText)                 and
-      (aExch.Zone = DUMMYZONE)                       then
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTZoneOrSocietyExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if (not StringIsAllNumbersOrSpaces(aText)) and
+      IsSingleNonNumericToken(aText)          and
+      (aExch.Zone = DUMMYZONE)                then
       begin
       aExch.Zone := aSession.ZoneOfCall(string(aExch.Callsign));
       end;

@@ -261,7 +261,7 @@ begin
           Continue;
           end;
 
-     if ContestSession.DXMult = NoDXMults then
+     if not ContestSession.DoingDXMults then
         begin
         goto 1;
         end;

@@ -315,7 +315,8 @@ end;
 procedure TContestBritishColumbiaQP.DescribeSession(const aStation: TStationContext;
                                                     aSession: TSessionDefaults);
 begin
-   aSession.DXMult := NoDXMults;
+   (* No DX multiplier: the trait's NoDXMults, which this restated until
+      M11 S2 (plan 1.3). *)
    if aStation.MyCountry = 'VE7' then
       begin
       aSession.AddDomesticCountry('VE7');

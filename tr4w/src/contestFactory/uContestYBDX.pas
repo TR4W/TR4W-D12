@@ -190,7 +190,11 @@ end;
 
 function TContestYBDX.GetPrefixMultiplierType: PrefixMultType;
 begin
-   Result := NoPrefixMults;
+   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
+      IndonesianDistricts at every station: the trait said NoPrefixMults and
+      DescribeSession stated it over it, unconditionally. The
+      trait now says what runs, and the statement is gone. *)
+   Result := IndonesianDistricts;
 end;
 
 function TContestYBDX.GetZoneMultiplierType: ZoneMultType;
@@ -200,7 +204,11 @@ end;
 
 function TContestYBDX.GetDXMultiplierType: DXMultType;
 begin
-   Result := NoDXMults;
+   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
+      ARRLDXCC at every station: the trait said NoDXMults and
+      DescribeSession stated it over it, unconditionally. The
+      trait now says what runs, and the statement is gone. *)
+   Result := ARRLDXCC;
 end;
 
 function TContestYBDX.GetDomesticMultiplierType: DomesticMultType;
@@ -236,8 +244,6 @@ procedure TContestYBDX.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
    aSession.Mode := Phone;
-   aSession.DXMult := ARRLDXCC;
-   aSession.PrefixMult := IndonesianDistricts;
 end;
 
 initialization

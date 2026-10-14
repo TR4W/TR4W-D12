@@ -133,8 +133,11 @@ function TContestCanadaDay.ParseReceivedExchange(const aText: string;
                                                 var aExch: ContestExchange;
                                                 out aErrorMessage: string): boolean;
 begin
-   if (aSession.Exchange = RSTAndQSONumberOrDomesticQTHExchange) and
-      (Copy(aExch.Callsign, 1, 3) = 'VE0')                       then
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTAndQSONumberOrDomesticQTHExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if Copy(aExch.Callsign, 1, 3) = 'VE0' then
       begin
       aErrorMessage := '';
       Result := aSession.ParseShape(RSTQSONumberExchange, aText, aExch);

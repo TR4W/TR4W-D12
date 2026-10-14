@@ -131,12 +131,10 @@ function TContestArktikaSpring.ParseReceivedExchange(const aText: string;
                                                     var aExch: ContestExchange;
                                                     out aErrorMessage: string): boolean;
 begin
-   if aSession.Exchange <> RSTAndQSONumberOrDomesticQTHExchange then
-      begin
-      Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
-      Exit;
-      end;
-
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTAndQSONumberOrDomesticQTHExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
    aErrorMessage := '';
    if StringIsAllNumbersOrSpaces(aText) then
       begin

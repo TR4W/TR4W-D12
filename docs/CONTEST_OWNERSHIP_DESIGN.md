@@ -3591,7 +3591,9 @@ once and checked against all 580 frozen records first. S0d: `InitialExchangeEntr
 runs headless, but the matrix opens no TRMASTER and cannot reach the logged
 history; and `Doing*` DOES diverge from the session on a run-time contest
 change, so S2's `Doing*` move is a behaviour change, not a no-op (plan S0d).
-S0c is open.
+S0c is DONE too (plan S0c; it was open when this paragraph was written).
+
+**S2 DONE 2026-10-14, three bullets of five (plan S2):** `Doing*Mults` are `ContestSession` answers computed from the kinds -- no second store, so a run-time contest switch can no longer leave them stale (F9 fixed; what start-up derived from them is still once-only, F19) -- and the 15 `No*` sentinels read them; each class states each kind once (five traits aligned, 12 restatements deleted, 89 -> 77 `DescribeSession` kind statements); the 11 always-true parse shape guards are deleted (F11). F15 waits for S1; `uDomesticKey` (F6) is its own behaviour-changing commit. Matrix identical by construction.
 
 ### 8.3 What "a contest has moved" means -- checkably
 

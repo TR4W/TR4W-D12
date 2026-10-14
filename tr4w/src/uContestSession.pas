@@ -29,11 +29,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   A kind here is what set-up RESOLVED, not what the contest's class states as
   its trait: FCONTEST.ApplyContestTraits writes the trait, then the contest's
   own DescribeSession may state another value for this station, and
-  FCONTEST.ApplySessionDefaults writes that over it. 27 contests run with a
-  session kind that differs from their trait in at least one station variant
-  (plan 1.4) -- KCJ, for one, has the trait NoInitialExchange and always runs
-  ZoneInitialExchange. So a reader that asked ContestIdentity(Contest) instead
-  of this object would silently change those contests.
+  FCONTEST.ApplySessionDefaults writes that over it. Contests whose session
+  kind differs from their trait at some station are many -- 24 at the
+  contest matrix's stations after M11 S2 (M11 plan 1.3) -- and JIDX, for one,
+  has the trait NoInitialExchange and runs ZoneInitialExchange at a JA
+  station. So a reader that asked ContestIdentity(Contest) instead of this
+  object would silently change those contests. (KCJ was the example here
+  until M11 S2 made its trait the value it always ran.)
 
   ---------------------------------------------------------------------------
   THE CONTRACT
@@ -85,7 +87,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   All six are here; no kind global is left. The kind ENUMS outlive M10: they
   are the engine's vocabulary until their arms move into the classes at M11
-  (design 8.2s). *)
+  (design 8.2s).
+
+    Doing*Mults        M11 S2  were the LOGDUPE globals LogCfg derived once
+                               at start-up; computed from the kinds now (F9)
+  *)
 unit uContestSession;
 
 {$I tr4w.inc}
@@ -104,6 +110,10 @@ type
       FDXMult: DXMultType;
       FDomesticMult: DomesticMultType;
       FExchange: ExchangeType;
+      function GetDoingDomesticMults: boolean;
+      function GetDoingDXMults: boolean;
+      function GetDoingPrefixMults: boolean;
+      function GetDoingZoneMults: boolean;
    public
       (* The initial exchange the call window pre-fills from -- the kind
         LOGEDIT.InitialExchangeEntry asks. A fresh session holds
@@ -111,7 +121,7 @@ type
       property InitialExchange: InitialExchangeType read FInitialExchange;
 
       (* The prefix multiplier the sheet keeps (LOGDUPE's mult flags, the log
-        grid's prefix column, LogCfg's DoingPrefixMults). A fresh session holds
+        grid's prefix column, DoingPrefixMults below). A fresh session holds
         NoPrefixMults, the zero LOGDUPE.ActivePrefixMult started from. *)
       property PrefixMult: PrefixMultType read FPrefixMult;
 
@@ -145,6 +155,29 @@ type
         (uLogRepository's open-without-a-contest note relies on that zero). *)
       property Exchange: ExchangeType read FExchange;
 
+      (* DOES THE SESSION COUNT THIS KIND OF MULTIPLIER AT ALL? -- M11 S2,
+        2026-10-14 (plan F9). Each is its kind compared with the kind's
+        "none", computed on every read and stored nowhere.
+
+        These were the four LOGDUPE globals DoingDomesticMults, DoingDXMults,
+        DoingPrefixMults and DoingZoneMults, derived ONCE at start-up
+        (LogCfg) while the kinds above are rewritten by every FoundContest.
+        So a contest changed without a restart -- a multi-op peer's CONTEST
+        line, uSettingsEffects -> FoundContest -- left them describing the
+        previous contest: measured at S0d, CQ WW CW -> ARRL SS CW kept CQ
+        WW's FALSE TRUE FALSE TRUE while the session ran DomesticFile and no
+        DX, prefix or zone multiplier, so the sheet and the totals counted
+        multiplier kinds the running contest does not have. A second store
+        can go stale; an answer computed from the one store cannot.
+
+        The cost is a call and a field compare, the same as the kind
+        properties above; the busiest reader is LOGDUPE.SetMultFlags, four
+        reads per QSO. *)
+      property DoingDomesticMults: boolean read GetDoingDomesticMults;
+      property DoingDXMults: boolean read GetDoingDXMults;
+      property DoingPrefixMults: boolean read GetDoingPrefixMults;
+      property DoingZoneMults: boolean read GetDoingZoneMults;
+
       (* THE WRITERS -- FCONTEST's set-up path, and tests. See the header. *)
       procedure WriteInitialExchange(aKind: InitialExchangeType);
       procedure WritePrefixMult(aKind: PrefixMultType);
@@ -162,6 +195,26 @@ implementation
 
 var
    TheSession: TContestSession = nil;
+
+function TContestSession.GetDoingDomesticMults: boolean;
+begin
+   Result := FDomesticMult <> NoDomesticMults;
+end;
+
+function TContestSession.GetDoingDXMults: boolean;
+begin
+   Result := FDXMult <> NoDXMults;
+end;
+
+function TContestSession.GetDoingPrefixMults: boolean;
+begin
+   Result := FPrefixMult <> NoPrefixMults;
+end;
+
+function TContestSession.GetDoingZoneMults: boolean;
+begin
+   Result := FZoneMult <> NoZoneMults;
+end;
 
 procedure TContestSession.WriteInitialExchange(aKind: InitialExchangeType);
 begin

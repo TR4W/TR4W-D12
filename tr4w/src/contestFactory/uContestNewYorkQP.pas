@@ -49,8 +49,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   the same routine and were left there too. It is the same in D7.
 
   FCONTEST's NYQP arm set ActiveDomesticMult := DomesticFile, which is what
-  the row already says; it is DescribeSession since M7a, still stated, so it
-  still overwrites a DOMESTIC MULTIPLIER line before CONTEST as it did.
+  the row already said. It was DescribeSession from M7a, stated so that it
+  overwrote a DOMESTIC MULTIPLIER line before CONTEST; that setting retired
+  at M10 S2, and the restatement -- the whole of DescribeSession -- went at
+  M11 S2 (plan 1.3). The trait is the one statement.
  *)
 unit uContestNewYorkQP;
 
@@ -112,10 +114,6 @@ type
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      (* SET-UP -- see TContestBase.DescribeSession. *)
-      procedure DescribeSession(const aStation: TStationContext;
-                                aSession: TSessionDefaults); override;
-
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
          this contest (4.116.5), moved here at M8 and transcribed exactly: a
          multiplier QTH of 'DX' earns no multiplier of any kind. *)
@@ -235,15 +233,6 @@ end;
 procedure TContestNewYorkQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
-end;
-
-(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
-   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
-   writes no global and reads only aStation. *)
-procedure TContestNewYorkQP.DescribeSession(const aStation: TStationContext;
-                                            aSession: TSessionDefaults);
-begin
-   aSession.DomesticMult := DomesticFile;
 end;
 
 initialization

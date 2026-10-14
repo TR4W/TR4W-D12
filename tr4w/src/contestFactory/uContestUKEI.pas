@@ -140,8 +140,11 @@ function TContestUKEI.ParseReceivedExchange(const aText: string;
 var
    firstWord, secondWord, thirdWord: Str10;
 begin
-   if (aSession.Exchange = RSTQSONumberAndPossibleDomesticQTHExchange) and
-      (aText <> '')                                                       then
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTQSONumberAndPossibleDomesticQTHExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if aText <> '' then
       begin
       (* The cast is a typed exchange returning to the width it was typed in. *)
       SplitExchangeInThree(ShortString(aText), firstWord, secondWord, thirdWord);

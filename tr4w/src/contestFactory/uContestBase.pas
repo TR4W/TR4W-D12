@@ -1706,11 +1706,14 @@ type
 
          AN OVERRIDE APPLIES ITS RULE UNDER THE SHAPE THAT CARRIED IT. Every
          rule that moved here was a branch inside one shape's parser, reached
-         only when the session ran that shape; the override tests
-         aSession.Exchange for it and otherwise defers. So with no
-         EXCHANGE RECEIVED statement nothing moved; with one, the contest's
-         branch no longer follows the operator into a shape it was never
-         written for. *)
+         only when the session ran that shape. Until M10 S2 an operator's
+         EXCHANGE RECEIVED line could run a contest under another shape, so
+         each override tested aSession.Exchange and otherwise deferred. That
+         setting is retired, a session's shape is now its class's own (the
+         trait, or what its DescribeSession states), and no class with a
+         parse rule states one, so every such test was always true: they
+         were deleted at M11 S2 (plan F11). A rule a class writes for a shape
+         it does not always run must still test aSession.Exchange. *)
       function ParseReceivedExchange(const aText: string;
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;

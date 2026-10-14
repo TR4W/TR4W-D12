@@ -20,8 +20,9 @@ unit uTestOffBandCredit;
   per band is exactly the one an off-band QSO could steal.
 
   THE GLOBALS SET-UP WOULD WRITE ARE SET BY HAND -- the contest, the mult by
-  band/mode flags, DoingDomesticMults and the domestic multiplier kind -- and
-  restored afterwards, so no other suite sees them. The domestic multiplier
+  band/mode flags and the session's four multiplier kinds, whose "none" or
+  not is what ContestSession.Doing*Mults answer (M11 S2) -- and restored
+  afterwards, so no other suite sees them. The domestic multiplier
   is used because its store (a sorted string list) needs no CTY.DAT, where
   the DX store refuses a country number until a country file is loaded.
 
@@ -224,10 +225,8 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedDoingDomestic: boolean;
-   savedDoingDX: boolean;
-   savedDoingPrefix: boolean;
-   savedDoingZone: boolean;
+   savedPrefixMult: PrefixMultType;
+   savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
    savedDXMult: DXMultType;
    savedDXCCByBand: TAdditionalMultByBand;
@@ -248,10 +247,8 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedDoingDomestic := DoingDomesticMults;
-   savedDoingDX := DoingDXMults;
-   savedDoingPrefix := DoingPrefixMults;
-   savedDoingZone := DoingZoneMults;
+   savedPrefixMult := ContestSession.PrefixMult;
+   savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
    savedDXMult := ContestSession.DXMult;
    savedDXCCByBand := DXCCMultByBand;
@@ -261,11 +258,10 @@ begin
       Contest := IDAHOQSOPARTY;
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
-      DoingDomesticMults := False;
-      DoingDXMults := True;
-      DoingPrefixMults := False;
-      DoingZoneMults := False;
+      ContestSession.WriteDomesticMult(NoDomesticMults);
       ContestSession.WriteDXMult(ARRLDXCCWithNoUSAOrCanada);
+      ContestSession.WritePrefixMult(NoPrefixMults);
+      ContestSession.WriteZoneMult(NoZoneMults);
       DXCCMultByBand := dmbbDefauld;
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
@@ -280,8 +276,7 @@ begin
 
       (* THE DOMESTIC HINT, asked with the AllBands key as the not-per-band
          strip asks it: the band it is for is the operator's. *)
-      DoingDXMults := False;
-      DoingDomesticMults := True;
+      ContestSession.WriteDXMult(NoDXMults);
       ContestSession.WriteDomesticMult(WYSIWYGDomestic);
       ActiveBand := Band20;
       VisibleLog.DetermineIfNewDomesticMult('ADA', AllBands, CW, needs);
@@ -298,10 +293,8 @@ begin
       DXCCMultByBand := savedDXCCByBand;
       ContestSession.WriteDXMult(savedDXMult);
       ContestSession.WriteDomesticMult(savedDomesticMult);
-      DoingZoneMults := savedDoingZone;
-      DoingPrefixMults := savedDoingPrefix;
-      DoingDXMults := savedDoingDX;
-      DoingDomesticMults := savedDoingDomestic;
+      ContestSession.WriteZoneMult(savedZoneMult);
+      ContestSession.WritePrefixMult(savedPrefixMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;
@@ -314,11 +307,10 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedDoingDomestic: boolean;
-   savedDoingDX: boolean;
-   savedDoingPrefix: boolean;
-   savedDoingZone: boolean;
+   savedPrefixMult: PrefixMultType;
+   savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
+   savedDXMult: DXMultType;
    savedDomesticByBand: TAdditionalMultByBand;
    savedRestart: RestartInfo;
 
@@ -348,22 +340,20 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedDoingDomestic := DoingDomesticMults;
-   savedDoingDX := DoingDXMults;
-   savedDoingPrefix := DoingPrefixMults;
-   savedDoingZone := DoingZoneMults;
+   savedPrefixMult := ContestSession.PrefixMult;
+   savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
+   savedDXMult := ContestSession.DXMult;
    savedDomesticByBand := DomesticMultByBand;
    savedRestart := tRestartInfo;
    try
       Contest := IDAHOQSOPARTY;
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
-      DoingDomesticMults := True;
-      DoingDXMults := False;
-      DoingPrefixMults := False;
-      DoingZoneMults := False;
       ContestSession.WriteDomesticMult(DomesticFile);
+      ContestSession.WriteDXMult(NoDXMults);
+      ContestSession.WritePrefixMult(NoPrefixMults);
+      ContestSession.WriteZoneMult(NoZoneMults);
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
 
@@ -390,11 +380,10 @@ begin
       mo.ClearAllMults;
       tRestartInfo := savedRestart;
       DomesticMultByBand := savedDomesticByBand;
+      ContestSession.WriteDXMult(savedDXMult);
       ContestSession.WriteDomesticMult(savedDomesticMult);
-      DoingZoneMults := savedDoingZone;
-      DoingPrefixMults := savedDoingPrefix;
-      DoingDXMults := savedDoingDX;
-      DoingDomesticMults := savedDoingDomestic;
+      ContestSession.WriteZoneMult(savedZoneMult);
+      ContestSession.WritePrefixMult(savedPrefixMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;

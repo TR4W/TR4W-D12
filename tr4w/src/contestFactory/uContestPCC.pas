@@ -103,8 +103,7 @@ type
          test of ActiveQSOPointMethod = PCCQSOPointMethod, ahead of that
          shape's own rule (a domestic station's QTH, anybody else's serial),
          so an operator's QSO POINT METHOD line reached it in any contest.
-         Stated here under that shape; with another shape the session's
-         parse decides. *)
+         Stated here under that shape, the only one PCC runs. *)
       function ParseReceivedExchange(const aText: string;
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
@@ -153,12 +152,10 @@ function TContestPCC.ParseReceivedExchange(const aText: string;
                                           var aExch: ContestExchange;
                                           out aErrorMessage: string): boolean;
 begin
-   if aSession.Exchange <> RSTAndQSONumberOrDomesticQTHExchange then
-      begin
-      Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
-      Exit;
-      end;
-
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTAndQSONumberOrDomesticQTHExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
    aErrorMessage := '';
    if not StringIsAllNumbers(aText) then
       begin

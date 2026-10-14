@@ -4014,7 +4014,7 @@ begin
      end;
 
   if DomesticCountryCall(CallWindowString) then
-    if DoingDomesticMults then
+    if ContestSession.DoingDomesticMults then
        begin
        TempString := ExchangeWindowString;
        while TempString <> '' do
@@ -7188,12 +7188,12 @@ begin
 
      // LocateCall(RData.Callsign, RData.QTH, True);
 
-     if DoingDXMults then
+     if ContestSession.DoingDXMults then
         begin
         GetDXQTH(RData);
         end;
 
-     if DoingPrefixMults then
+     if ContestSession.DoingPrefixMults then
         begin
         SetPrefix(RData);
         end;
@@ -7263,7 +7263,7 @@ begin
   // indicator).  RData.Callsign itself is preserved.
   ctyLocateCallStripRover(RData.Callsign, RData.QTH);
 
-  if DoingDXMults then
+  if ContestSession.DoingDXMults then
      begin
      GetDXQTH(RData);
      end;
@@ -7286,7 +7286,7 @@ begin
      (MainUnit.pas:5225). It is deleted rather than moved -- a rule that
      changes nothing is not a rule its class could state -- and what it was
      meant to do is design Q48. *)
-  if DoingPrefixMults or
+  if ContestSession.DoingPrefixMults or
      (ContestSession.PrefixMult in [BelgiumPrefixes, SACDistricts, IndonesianDistricts,
                            Prefix, SouthAmericanPrefixes, NonSouthAmericanPrefixes]) then
      begin
@@ -8386,7 +8386,7 @@ begin
   if ColumnsArray[logColQTH].Enable then
      begin
      elviCol := ColumnsArray[logColQTH].pos; //Ord(logColQTH);
-     if DoingDomesticMults then
+     if ContestSession.DoingDomesticMults then
         begin
         if Settings.Contest.LiteralDomesticQth then
            begin
@@ -8690,7 +8690,7 @@ end;
   order, which is the rescore loop's business). *)
 procedure RecomputeQSOScoring(var aRX: ContestExchange);
 begin
-  if DoingPrefixMults then
+  if ContestSession.DoingPrefixMults then
      begin
      FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
@@ -8702,7 +8702,7 @@ begin
      SetPrefix(aRX);
      end;
 
-  if DoingZoneMults or DoingDXMults then
+  if ContestSession.DoingZoneMults or ContestSession.DoingDXMults then
      begin
      FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
@@ -9539,8 +9539,8 @@ begin
   ColumnsArray[logColChapter].Enable := ExchangeInformation.Chapter;
 
   ColumnsArray[logColNumberReceive].Enable := ExchangeInformation.QSONumber;
-  ColumnsArray[logColPrefixMult].Enable := ContestSession.PrefixMult <> NoPrefixMults;
-  ColumnsArray[logColDXMult].Enable := ContestSession.DXMult <> NoDXMults;
+  ColumnsArray[logColPrefixMult].Enable := ContestSession.DoingPrefixMults;
+  ColumnsArray[logColDXMult].Enable := ContestSession.DoingDXMults;
   // ColumnsArray[logColPostCode].Enable := ExchangeInformation.PostalCode;
   ColumnsArray[logColKids].Enable := ExchangeInformation.Kids;
   i := -1;
@@ -9910,7 +9910,7 @@ begin
   // 4.71.2 attempt to allow longer column width for long DOM MULTS by setting SHOW DOMESTIC MULTIPLIER NAME to TRUE
   // FillChar(RemMultsColumnWidthArray, sizeof(RemMultsColumnWidthArray), 0);
 
-  if (Settings.RemainingMults.ShowDomesticName) or (DoingPrefixMults) then
+  if (Settings.RemainingMults.ShowDomesticName) or (ContestSession.DoingPrefixMults) then
      begin
      Width := PREFIXCOLUMNWIDTH
      end
@@ -9985,7 +9985,7 @@ begin
   session.Operator           := CurrentOperator;
   session.Exchange           := ContestSession.Exchange;
   session.DomesticMult       := ContestSession.DomesticMult;
-  session.DoingDomesticMults := DoingDomesticMults;
+  session.DoingDomesticMults := ContestSession.DoingDomesticMults;
 
   (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,
     through its class. ApplyClasslessADIFImport stood between these two for

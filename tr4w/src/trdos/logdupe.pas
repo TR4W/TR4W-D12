@@ -226,10 +226,11 @@ var
 
 //  CQP                                   : boolean;
 
-  DoingDomesticMults                    : boolean;
-  DoingDXMults                          : boolean;
-  DoingPrefixMults                      : boolean;
-  DoingZoneMults                        : boolean;
+  (* DoingDomesticMults, DoingDXMults, DoingPrefixMults and DoingZoneMults
+    MOVED -- M11 S2, 2026-10-14 (plan F9). They are ContestSession's,
+    computed from the session's kinds on every read: LogCfg derived these
+    once at start-up, so a contest changed without a restart left them
+    describing the previous one. *)
 
   ExchangeInformation                   : ExchangeInformationRecord;
 
@@ -1227,10 +1228,10 @@ begin
    logger.Trace('>>> Entering DupeAndMultSheet.SetMultFlags');
    if logger.IsDebugEnabled then
       begin
-      logger.debug('DoingDomesticMults = ' + BooleanToStr(DoingDomesticMults));
-      logger.debug('DoingDXMults       = ' + BooleanToStr(DoingDXMults));
-      logger.debug('DoingPrefixMults   = ' + BooleanToStr(DoingPrefixMults));
-      logger.debug('DoingZoneMults     = ' + BooleanToStr(DoingZoneMults));
+      logger.debug('DoingDomesticMults = ' + BooleanToStr(ContestSession.DoingDomesticMults));
+      logger.debug('DoingDXMults       = ' + BooleanToStr(ContestSession.DoingDXMults));
+      logger.debug('DoingPrefixMults   = ' + BooleanToStr(ContestSession.DoingPrefixMults));
+      logger.debug('DoingZoneMults     = ' + BooleanToStr(ContestSession.DoingZoneMults));
       end;
 
   if RXData.ceClearMultSheet then Exit;
@@ -1271,25 +1272,25 @@ begin
      York and Indiana QSO parties, the PCC's own-country prefix earns none,
      and the Jock White Field Day's own branch and branch 00 earn no zone.
      A false answer leaves the flag false, as each `exit` here did. *)
-  if (RXData.DomMultQTH <> '') and DoingDomesticMults and
+  if (RXData.DomMultQTH <> '') and ContestSession.DoingDomesticMults and
      ContestCountsMultiplier(contestRules, RXData, rmDomestic) then
      begin
      RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ContestSession.DomesticMult);
      end;
 
-  if (RXData.DXQTH <> '') and DoingDXMults and
+  if (RXData.DXQTH <> '') and ContestSession.DoingDXMults and
      ContestCountsMultiplier(contestRules, RXData, rmDX) then
      begin
      RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);
      end;
 
-  if (RXData.Prefix <> '') and DoingPrefixMults and
+  if (RXData.Prefix <> '') and ContestSession.DoingPrefixMults and
      ContestCountsMultiplier(contestRules, RXData, rmPrefix) then
      begin
      RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);
      end;
 
-  if (RXData.Zone <> DUMMYZONE) and DoingZoneMults and
+  if (RXData.Zone <> DUMMYZONE) and ContestSession.DoingZoneMults and
      ContestCountsMultiplier(contestRules, RXData, rmZone) then
      begin
      RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultBand, MultMode);
@@ -2237,7 +2238,7 @@ begin
         end;
   end;
 }
-  if DoingZoneMults then
+  if ContestSession.DoingZoneMults then
      begin
      case ContestSession.ZoneMult of
        CQZones: MaxNumberOfZones := 40;

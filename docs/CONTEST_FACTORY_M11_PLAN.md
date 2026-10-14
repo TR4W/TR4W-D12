@@ -2,7 +2,8 @@
 
 **Status: PLAN, S0 DONE. S0a, S0b and S0d are DONE (2026-10-14, at
 `95e127a5`); S0c is DONE (2026-10-14, on `3b4c0777`, its re-freeze NY4I's);
-nothing from S1 on is built.** See section 4 S0 for
+S2 is DONE (2026-10-14, on `c749f2c5`) except its F15 and F6 bullets, which
+wait (section 4 S2); S1 and S3 on are not built.** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -805,6 +806,86 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
   run-time contest switch -- DECIDED: a defect fix, done here (see S0d).
 - *Matrix:* identical. *Risk:* low-medium (the Doing* move).
 - *Specialists:* `contest-scoring`, `lcl-ui` (`MainUnit`, `uEditQSO`).
+- **DONE 2026-10-14 (on `c749f2c5`), three bullets of five.** Unit run:
+  86,396 passed, 1 failed (an SST assertion that pinned the deleted
+  restatement; corrected, compiled, not re-run). Inventory: 94 rows
+  unchanged; shape-4 sites 123 -> **108**, records 229 -> **214**, SHARED 85
+  -> **70** (the 15 sentinels), PROXY 75 / SHAPE 43 / UNUSED 26 unchanged;
+  `DescribeSession` kind statements 89 in 41 classes -> **77 in 32**.
+  - **`Doing*` -- DONE, and NOT as written: no derivation moved.** The four
+    LOGDUPE globals are gone. `ContestSession.DoingDomesticMults`,
+    `.DoingDXMults`, `.DoingPrefixMults` and `.DoingZoneMults` are read-only
+    properties COMPUTED from the kinds on every read (`kind <> No*`), so
+    there is no second store and nothing for any writer to forget -- the
+    run-time switch (F9) is fixed by construction, not by a second call in
+    FCONTEST. Cost: a call and a field compare, as for the kinds; the
+    busiest reader is `SetMultFlags`, four per QSO. **61 code reads
+    repointed** in 10 units (`MainUnit` 11, `logedit` 9, `logdupe` 9 -- four
+    of them its debug lines -- `uTotal` 8, `logsubs2` 6, `uWSJTX` 6,
+    `uContestMatrix` 5, `LogCfg` 4, `uEditQSO` 2, `postunit` 1;
+    the record fields `TADIFImportSession.DoingDomesticMults` and its
+    readers are untouched), and LogCfg's four start-up assignments deleted.
+    **CORRECTION: 15 sentinels, not 13** -- `logdom:220` (`GetDomQTH`'s
+    no-domestic exit) and `postunit:2430` (the ADIF CQZ test) were not on
+    the list; all 15 read the flag now (`uScoreTotals`' four by De Morgan,
+    `not (all = No*)` = any flag). Equality is by definition. **Evidence the
+    matrix stays identical:** the frozen `doing.*` line equals `kind <> No*`
+    of the same record's `active.*` lines in all **580 records, 0
+    mismatches** (scratch script), and the matrix opens one contest per
+    process, so the computed answer prints what the start-up copy printed.
+    **Pin:** `uTestContestKindPin.Test_DoingFlagsFollowEveryContestSwitch` --
+    every member of the four kinds written and answered at once; S0d's case
+    (CQ WW CW -> ARRL SS CW: FALSE TRUE FALSE TRUE -> TRUE FALSE FALSE FALSE)
+    by literal at us, ve and dx; and all 187 contests switched in sequence at
+    each station, flags = the resolved kinds. FoundContest itself is not
+    driven (it writes Settings and the domestic list other suites read); the
+    peer path end to end is a bench item. **F19 (new):** the flags are now
+    right after a switch, but LogCfg's other start-up derivations from them
+    (`NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`)
+    and `uProgramMain`'s `SetUpExchangeInformation` / `SetColumnsWidth` still
+    run once only, so a run-time switch remains incoherent elsewhere.
+  - **One statement per kind per class -- DONE.** 12 unconditional
+    statements found by script (each `DescribeSession` statement at the
+    routine's top level compared with the class's own getter): the 5 of 1.3
+    and the 7 restatements, exactly the plan's list. The five traits now
+    say what runs -- ARRL10 DX `ARRLDXCCWithNoARRLSections`, ARRLFIELDDAY
+    domestic `DomesticFile` (a NEW override; the base said
+    `NoDomesticMults`), KCJ initial exchange `ZoneInitialExchange`, YBDX DX
+    `ARRLDXCC` and prefix `IndonesianDistricts` -- and all 12 statements are
+    deleted; JTDX's and NYQP's `DescribeSession` were left empty and are
+    deleted (the base's is empty and neither parent overrides it). **Why it
+    is behaviour-preserving:** the traits' only reader is
+    `ApplyContestTraits` (L6, re-measured), each statement was unconditional,
+    none of the 9 classes has a subclass, and the operator statements a
+    restatement used to overwrite retired at M10 S2. **Oracle:** the kind
+    pin (3,498 resolved-kind assertions) passed unchanged. Re-pointed: KCJ ->
+    **JIDX CW at a JA station** (initial exchange), YBDX -> **WAEDC CW at a
+    DL station** (prefix), ARRL10 -> **ARRL 160 at a W station** (DX); each
+    also asserts the other station runs the trait. The Field Day DX test and
+    an SST assertion now assert NO restatement. After S2, 24 contests run a
+    kind their trait does not state at a matrix station (28 less ARRL10,
+    ARRLFIELDDAY, KCJ, YBDX), 32 at some station.
+  - **The 11 shape guards (F11) -- DONE.** Each class's session exchange is
+    its trait for every station, not only the matrix's: none of the 11
+    states `aSession.Exchange` in `DescribeSession` (L5, re-measured), all
+    sit on `TContestBase` (no inherited statement), Sweepstakes' two
+    runnings share the trait, and nothing calls `ParseReceivedExchange`
+    with another session but the tests (IN7QPNE delegates to its parties,
+    none of the 11). `uTestContestParse`'s six "another shape" cases (RAC,
+    PCC, UA4W, IARU, UK/EI, Sweepstakes) are deleted with them;
+    `uContestBase`'s contract comment says why, and that a rule written for
+    a shape a class does NOT always run must still test it.
+  - **NOT DONE -- the SS columns (F15).** Equality with
+    `ExchangeInformation.Precedence`/`.Check` holds only once S1 deletes
+    `CheckAndChapterOrQTH`; deferred to after S1, as directed.
+  - **NOT DONE -- `uDomesticKey` (F6).** Not behaviour-preserving, which S2
+    was told to be: besides F6's garbage paths, the two copies differ in
+    control flow -- `GetDomQTH`'s IOTA arm has no `Exit`, so a valid key AND
+    an unknown continent both fall through to the domestic-file lookup,
+    while an over-long text or a non-digit number exits False. One helper
+    either copies that flow into both callers or changes it. Its own
+    commit, with the S0c parse cases (`iota`, `iota.dash`, `iota.short`,
+    `dok`, `rda.short`, `grid.field`) as the oracle.
 
 ### S3 -- Prefix multipliers move into the classes (32 contests)
 
@@ -936,22 +1017,23 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | # | where | evidence |
 |---|---|---|
 | **F1** | `tools/contest-rules-inventory/scan.py` `effective_reach` | Reach is trait UNION FoundContest overrides, and those are 0 since M7a. `DescribeSession` is invisible, so 12 live records are classed UNUSED (1.4). The four shape machines are not scanned either, and one that is (`SetUpExchangeInformation`) is reported as 37 contest rules. **FIXED at S0a** -- and it was 25 rows (43 records), not 37 |
-| **F2** | `uContestARRL10:201`, `uContestARRLFieldDay:454`, `uContestKCJ:226`, `uContestYBDX:239-240` | Five trait values the session never runs (1.3) -- inventory D8's shape. `uTestContestSession` pins three of them as its evidence that "a reader may not ask the trait" |
+| **F2** | `uContestARRL10:201`, `uContestARRLFieldDay:454`, `uContestKCJ:226`, `uContestYBDX:239-240` | Five trait values the session never runs (1.3) -- inventory D8's shape. `uTestContestSession` pins three of them as its evidence that "a reader may not ask the trait". **FIXED at S2**: the five traits state what runs, the statements are gone, and the three tests ask JIDX, WAEDC and ARRL 160 |
 | **F3** | `zonecont.pas:103`; `logedit.pas:2571-2594`; `uTestContestParse:622-633` | `TContestRussianDX`/`TContestRU3AXMemorial.InitialExchangeFromCall` is reached only through `GetVEInitialExchange`, which only the Section and QTH initial-exchange arms call. No contest runs either of them since S2 (reach 0). The live Russian oblast rule is LOGEDIT's fallback (`logedit:2650`, `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]`), so one of Q50's three spellings is already dead and a unit test pins it |
 | **F4** | `MainUnit:934-936`, `:975-977`, `:2061`, `:5988`; `logsubs2:1611`; `TContestStateQSOPartyBase.SplitsRoverCallOnExport` | "Is a slash suffix a county?" is decided by exchange shape live (25 contests) and by the class on export (15). The two sets disagree. Split on export but not stripped live: CA, CO, MN, OH, PA. Stripped live but not split: ALRS, ARRL160, ARRLDX x2, AZ, BC, COUNTYHUNTER, IN7QPNE, LABRE, NEQP, NY, PACC, Salmon Run, 7QP, TOEC. Related to Q90 |
 | **F5** | matrix `CROATIAN`/`CWOPEN` setup; `uContestCroatian:290` | CROATIAN has `zonemult = ITUZones` with `cty.zonemode = CQZoneMode`, and exports `<ITUZ:2>05` for W1AW, whose CQ zone is 5 (`qthzone=5`). CWOPEN has `CQZones` over `ITUZoneMode`. The zone multiplier's system and the CTY lookup's system disagree in one class |
 | **F6** | `logstuff.pas:7120-7131`, `:7143`; `logwind.pas:531` | `DomStringParse`'s DOK arm returns the local `TempMultiplier` uninitialised when the text has no letter. Its IOTA arm uses the unit global `LOGWIND.ContinentString` as scratch: it declares no local, and the global's only other writer is FCONTEST, with no reader. The whole routine is a drifted copy of `logdom.GetDomQTH:227-330` |
 | **F7** | `uMults.pas:264-275` versus `logdupe.pas:662-760` | The remaining-DX-countries filter knows 3 of the 14 DX-key rules. Two owners of "which countries count"; the UI effect was not measured |
 | **F8** | `uContestCQWWCW:122` versus `uContestCQWWSSB:122` | The CQ WW pair, which shares a family base, states different initial exchanges (Custom versus Zone). Sponsor intent unknown |
-| **F9** | `LogCfg:433-436` (once, `uProgramMain:2318`) versus `uSettingsEffects:353` | `Doing*` is derived once at start-up, while the kinds are rewritten by every FoundContest. Readers mix the two (`uScoreTotals:161-164` and `MainUnit:9542-9543` read the session; `logdupe`/`logsubs2` read `Doing*`). **MEASURED at S0d: they diverge** on a peer's run-time `CONTEST` change (CQ WW CW -> ARRL SS CW leaves `Doing*` at CQ WW's values) |
+| **F9** | `LogCfg:433-436` (once, `uProgramMain:2318`) versus `uSettingsEffects:353` | `Doing*` is derived once at start-up, while the kinds are rewritten by every FoundContest. Readers mix the two (`uScoreTotals:161-164` and `MainUnit:9542-9543` read the session; `logdupe`/`logsubs2` read `Doing*`). **MEASURED at S0d: they diverge** on a peer's run-time `CONTEST` change (CQ WW CW -> ARRL SS CW leaves `Doing*` at CQ WW's values). **FIXED at S2** by construction: the four are `ContestSession` answers computed from the kinds, with no store of their own. What start-up derived FROM them is still once-only -- F19 |
 | **F10** | 1.1 | 26 members have been unreachable since S2 retired their only selector. This includes `User1`..`User5` and the VE/Section/QTH initial exchanges -- operator features that S2 removed without removing their arms |
-| **F11** | 11 factory `ParseReceivedExchange` guards (1.2) | Each class's session exchange is the same in every matrix variant, and none states one in `DescribeSession` (L5), so `aSession.Exchange = X` is always True in the program. Only the unit tests' stub sessions reach the other branch |
+| **F11** | 11 factory `ParseReceivedExchange` guards (1.2) | Each class's session exchange is the same in every matrix variant, and none states one in `DescribeSession` (L5), so `aSession.Exchange = X` is always True in the program. Only the unit tests' stub sessions reach the other branch. **FIXED at S2**: the 11 guards and the six test cases are deleted |
 | **F12** | `uContestBase.pas:2718` | A reach-1 rule (FISTS) sits in the base's non-virtual `CombineScore` |
 | **F13** | `VC.pas:3406` | `ActiveExchangeArray` survives for two log lines (`uADIFExchange:403/413`) |
 | **F14** | `Lint-ContestNameTests.ps1` `$TOTAL_FLOOR = 5`, 6 found | S8 removes 4. The floor must fall in the same commit, or the lint fails with "broken parser" |
 | **F15** | `MainUnit:9514-9516`; `logdupe:1709-1715` | The SS-shape test duplicates `ExchangeInformation.Precedence`/`.Check`. They are equal once S1 removes `CheckAndChapterOrQTH`, the only other arm that sets `Check` |
 | **F16** | inventory section 9.1; `analyses.dead_arms` | (S0a) The "export arms dead by default" table is EMPTY, and not because there are none: it reads `SetHisEx` / `FormatADIFExchangeOfKind` records, and those machines left the scan when their selector became a parameter (`aCtx.SessionExchange`, `aKind`). The same blindness as F1's three unscanned machines. Not fixed at S0a, which judges the machines SHAPE |
 | **F17** | `uProgramMain:2701` versus `:2405` | (S0d) `CD.MasterFileExists` is set after the `/MATRIX` halt (and `/EXPORT`'s), so headless runs never open TRMASTER: `CD.GetEntry('W1AW')` answers "not found" while the shipped file holds W1AW. Every TRMASTER-sourced initial exchange is blank in the matrix |
+| **F19** | `LogCfg` (once, `uProgramMain:2318`); `uProgramMain:2306-2307` versus `uSettingsEffects:353` | (S2) After F9's fix the `Doing*` answers follow a run-time contest switch, but what start-up DERIVED from them and from the exchange does not: `NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`, `SetUpExchangeInformation` and `SetColumnsWidth` run once. A peer's CONTEST line still leaves those describing the previous contest. Not measured on a bench |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

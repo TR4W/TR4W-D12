@@ -800,10 +800,10 @@ begin
                        // confusing "Checking if grid FN is a multiplier"
                        // lines that suggest TR4W is doing mult work it
                        // is not.  Cheap to skip cleanly.
-                       else if DoingDomesticMults or
-                               DoingDXMults       or
-                               DoingPrefixMults   or
-                               DoingZoneMults     then
+                       else if ContestSession.DoingDomesticMults or
+                               ContestSession.DoingDXMults       or
+                               ContestSession.DoingPrefixMults   or
+                               ContestSession.DoingZoneMults     then
                           begin
                           if VisibleLog.DetermineIfNewMult(call, TempBand,
                                                           TempMode) then
@@ -929,11 +929,11 @@ begin
                      CurrentOperator);
                    ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
 
-                   if DoingDXMults then
+                   if ContestSession.DoingDXMults then
                       begin
                       GetDXQTH(TempRXData);
                       end;
-                   if DoingPrefixMults then
+                   if ContestSession.DoingPrefixMults then
                       begin
                       SetPrefix(TempRXData);
                       end;

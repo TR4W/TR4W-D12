@@ -32,7 +32,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     * THE BASE parses the session's own shape and adds nothing.
     * EVERY RULE THAT MOVED -- RAC, the PCC, Arktika Spring, LABRE, IARU,
       UK/EI, SAC, the Russian DX initial exchange -- applies under the shape
-      it was written for and defers otherwise.
+      it was written for. Each tested that shape and deferred under another
+      until M11 S2 deleted the test (plan F11): the session's shape is the
+      class's own and never another, so the "another shape" cases went with
+      it. uTestContestKindPin holds each contest's shape at every station.
     * NY4I's RULINGS (design 7.10): Sweepstakes names a missing precedence; a
       state party's out-of-state station works only the host state.
     * THE LIFTED WORD CUTTING (uExchangeTokens) is pinned on the quirks it
@@ -248,12 +251,6 @@ begin
       Parse(c, RSTAndQSONumberOrDomesticQTHExchange, True, '59 ON', exch, msg);
       CheckEquals(Ord(RSTAndQSONumberOrDomesticQTHExchange), Ord(GShapeAsked),
                   string(ContestTypeSA[c]) + ': anybody else, the shape''s own rule');
-
-      ResetStub;
-      exch := NewExch('VE0ABC', 'VE');
-      Parse(c, RSTQSONumberAndDomesticQTHExchange, True, '599 123', exch, msg);
-      CheckEquals(Ord(RSTQSONumberAndDomesticQTHExchange), Ord(GShapeAsked),
-                  string(ContestTypeSA[c]) + ': under another shape the rule defers');
       end;
 end;
 
@@ -272,9 +269,6 @@ begin
    Parse(PCC, RSTAndQSONumberOrDomesticQTHExchange, True, '599 GR', exch, msg);
    CheckEquals(Ord(RSTDomesticQTHExchange), Ord(GShapeAsked), 'letters: a QTH');
 
-   ResetStub;
-   Parse(PCC, RSTDomesticQTHExchange, True, '123', exch, msg);
-   CheckEquals(Ord(RSTDomesticQTHExchange), Ord(GShapeAsked), 'another shape: the session''s');
 
    CheckFalse(ContestIdentity(PCC).MayBeACallsign('N/X'), 'PCC: N/X is not a call');
    CheckTrue(ContestIdentity(PCC).MayBeACallsign('PA3ABC'), 'PCC: a call is a call');
@@ -318,8 +312,8 @@ end;
 (* THE UA4W CHAMPIONSHIP'S QTH IS ITS DOMESTIC QTH -- LOGSTUFF's rule inside
    ProcessRSTAndGridSquareOrRDAExchange until 2026-10-14, the class's now
    (design Q28): under the shape it was written for, a parse that found a QTH
-   copies it; a failed parse, or another shape, leaves the domestic QTH as
-   the shape's parser left it. *)
+   copies it; a failed parse leaves the domestic QTH as the shape's parser
+   left it. *)
 procedure TContestParseTests.Test_UA4WQTHIsTheDomesticQTH;
 var
    exch: ContestExchange;
@@ -343,12 +337,6 @@ begin
    ok := Parse(UA4WCHAMPIONSHIP, RSTAndGridSquareOrRDAExchange, True, '599 UD45', exch, msg);
    CheckFalse(ok, 'a failed parse stays failed');
    CheckEquals('', string(exch.DomesticQTH), 'a failed parse: no domestic QTH');
-
-   ResetStub;
-   GShapeSetsQTH := 'UD45';
-   exch := NewExch('UA4WAA', 'UA');
-   Parse(UA4WCHAMPIONSHIP, RSTDomesticQTHExchange, True, '599 UD45', exch, msg);
-   CheckEquals('', string(exch.DomesticQTH), 'another shape: the rule does not apply');
 end;
 
 procedure TContestParseTests.Test_IARUSocietyGetsItsZone;
@@ -387,11 +375,6 @@ begin
 
    ResetStub;
    exch := NewExch('W1AW', 'K');
-   Parse(IARU, RSTDomesticQTHExchange, True, 'ARRL', exch, msg);
-   CheckEquals(Ord(DUMMYZONE), Ord(exch.Zone), 'another shape: no zone');
-
-   ResetStub;
-   exch := NewExch('W1AW', 'K');
    ContestIdentity(WRTC).ParseReceivedExchange('ARRL', Session(RSTZoneOrSocietyExchange, True),
                                                exch, msg);
    CheckEquals(Ord(DUMMYZONE), Ord(exch.Zone), 'WRTC runs the shape and not the rule');
@@ -420,11 +403,6 @@ begin
    exch := NewExch('DL1ABC', 'DL');
    ok := Parse(UKEI, RSTQSONumberAndPossibleDomesticQTHExchange, True, '123', exch, msg);
    CheckTrue(ok, 'a station outside the UK and Ireland: the shape decides');
-
-   ResetStub;
-   exch := NewExch('G3ABC', 'G');
-   ok := Parse(UKEI, RSTQSONumberExchange, True, '123', exch, msg);
-   CheckTrue(ok, 'another shape: the rule defers');
 end;
 
 procedure TContestParseTests.Test_SACAbandonsARussianLiveEntry;
@@ -496,11 +474,6 @@ begin
       ok := Parse(c, QSONumberPrecedenceCheckDomesticQTHExchange, True, '123 A 99 CT', exch, msg);
       CheckTrue(ok, string(ContestTypeSA[c]) + ': a whole exchange is accepted');
       CheckEquals('', msg, string(ContestTypeSA[c]) + ': with nothing to say');
-
-      ResetStub;
-      GShapeResult := False;
-      ok := Parse(c, RSTQSONumberExchange, True, '123', exch, msg);
-      CheckEquals('', msg, string(ContestTypeSA[c]) + ': another shape carries no precedence');
       end;
 end;
 

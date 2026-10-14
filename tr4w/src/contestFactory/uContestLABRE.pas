@@ -184,8 +184,11 @@ function TContestLABRE.ParseReceivedExchange(const aText: string;
                                             var aExch: ContestExchange;
                                             out aErrorMessage: string): boolean;
 begin
-   if (aSession.Exchange = RSTDomesticOrDXQTHExchange) and
-      (aExch.QTH.CountryID = 'PY')                    then
+   (* NO SHAPE TEST -- THIS CONTEST'S SESSION ALWAYS PARSES
+      RSTDomesticOrDXQTHExchange, its trait, and no DescribeSession
+      states another, so the test that stood here was always true.
+      Deleted at M11 S2 (plan F11). *)
+   if aExch.QTH.CountryID = 'PY' then
       begin
       aErrorMessage := '';
       Result := aSession.ParseShape(RSTDomesticQTHExchange, aText, aExch);

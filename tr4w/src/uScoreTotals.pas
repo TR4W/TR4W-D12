@@ -158,10 +158,10 @@ begin
       end;
 
    aTotals.ScoredBand := SingleBand;
-   aTotals.SessionCountsMultipliers := not ((ContestSession.DomesticMult = NoDomesticMults) and
-                                            (ContestSession.DXMult = NoDXMults)             and
-                                            (ContestSession.PrefixMult = NoPrefixMults) and
-                                            (ContestSession.ZoneMult = NoZoneMults));
+   aTotals.SessionCountsMultipliers := ContestSession.DoingDomesticMults or
+                                       ContestSession.DoingDXMults       or
+                                       ContestSession.DoingPrefixMults   or
+                                       ContestSession.DoingZoneMults;
    aTotals.SessionExchange := ContestSession.Exchange;
    aTotals.SessionDXMult := ContestSession.DXMult;
    aTotals.LiveSessionTally := LiveSessionTally;

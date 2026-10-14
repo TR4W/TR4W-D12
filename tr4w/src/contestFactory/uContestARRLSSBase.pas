@@ -105,11 +105,11 @@ uses
 
 (* THE ENGINE'S PARSE FIRST, then the refusal's reason.
 
-   ONLY WHEN THE SHAPE IS SWEEPSTAKES', the one that carries a precedence,
-   and only when the parse refused. The precedence is looked for with
-   uExchangeTokens.ScanSweepstakesExchange -- the same word reading the shape
-   parser applies -- so this says "no precedence" exactly when the parser
-   found none. An exchange refused for another reason (no check, a bad
+   ONLY WHEN THE PARSE REFUSED -- under Sweepstakes' shape, the one that
+   carries a precedence and the only one either running parses. The
+   precedence is looked for with uExchangeTokens.ScanSweepstakesExchange --
+   the same word reading the shape parser applies -- so this says "no
+   precedence" exactly when the parser found none. An exchange refused for another reason (no check, a bad
    section) keeps whatever the parser said. *)
 function TContestARRLSSBase.ParseReceivedExchange(const aText: string;
                                                   const aSession: TReceivedExchangeSession;
@@ -123,10 +123,11 @@ begin
       begin
       Exit;
       end;
-   if aSession.Exchange <> QSONumberPrecedenceCheckDomesticQTHExchange then
-      begin
-      Exit;
-      end;
+
+   (* NO SHAPE TEST -- BOTH SWEEPSTAKES SESSIONS ALWAYS PARSE
+      QSONumberPrecedenceCheckDomesticQTHExchange, the trait of each, and no
+      DescribeSession states another, so the test that stood here was always
+      true. Deleted at M11 S2 (plan F11). *)
 
    ScanSweepstakesExchange(aText, fields);
    if fields.Prec = Chr(0) then

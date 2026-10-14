@@ -61,7 +61,10 @@ uses
    (* ContestIdentity(Contest).TotalsDisplay -- what the contest shows
      differently (M9a). *)
    uContestBase,
-   uContestRegistry;
+   uContestRegistry,
+   (* ContestSession.Doing*Mults -- which multiplier kinds the session counts
+     (M11 S2; were LOGDUPE globals). *)
+   uContestSession;
 
 var
    // This unit's own reference to the program's log category, rather than
@@ -187,7 +190,7 @@ begin
 
   if Settings.Mult.ByMode then TempMode := ActiveMode else TempMode := Both;
 
-  if (DoingDomesticMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (ContestSession.DoingDomesticMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      {
     if Settings.Mult.ByMode then
@@ -198,7 +201,7 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmDomestic]);
      end;
 
-  if (DoingDXMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
+  if (ContestSession.DoingDXMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
      begin
      {
     if Settings.Mult.ByMode then
@@ -209,7 +212,7 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmDX]);
      end;
 
-  if (DoingPrefixMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (ContestSession.DoingPrefixMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      {
     if Settings.Mult.ByMode then
@@ -220,7 +223,7 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmPrefix]);
      end;
 
-  if (DoingZoneMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (ContestSession.DoingZoneMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      iTotalTextOut(mo.MTotals[Band, TempMode, rmZone]);
      end;
@@ -305,7 +308,7 @@ begin
      WriteLeftColumnText(TC_QSOS);
      end;
   skip:
-  if DoingDomesticMults then
+  if ContestSession.DoingDomesticMults then
      begin
      if Settings.Mult.ByMode then
         begin
@@ -324,7 +327,7 @@ begin
         end;
      end;
 
-  if DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
+  if ContestSession.DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
      begin
      if Settings.Mult.ByMode then
         begin
@@ -344,7 +347,7 @@ begin
 
      end;
 
-  if DoingPrefixMults then
+  if ContestSession.DoingPrefixMults then
      begin
      if Settings.Mult.ByMode then
         begin
@@ -363,7 +366,7 @@ begin
         end;
      end;
 
-  if DoingZoneMults then
+  if ContestSession.DoingZoneMults then
      begin
      if Settings.Mult.ByMode then
         begin

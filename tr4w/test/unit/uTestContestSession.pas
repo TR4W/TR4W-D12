@@ -70,10 +70,10 @@ type
       procedure Test_M7bBatch2MessagesMemoriesAndCaptions;
       procedure Test_M7bBatch2CQExchangeDefaults;
       procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
-      procedure Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
-      procedure Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState;
+      procedure Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
+      procedure Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState;
       procedure Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
-      procedure Test_ARRL10RunsADXMultiplierItsTraitDoesNotState;
+      procedure Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
       procedure Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
       procedure Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
    end;
@@ -380,7 +380,9 @@ end;
 (* THE TWO FIELD DAYS' DX MULTIPLIER: THE ROW, THE CLASS AND THE SESSION SAY
    ONE VALUE. Field Day's was made so at M2 (Q1, NoDXMults); Winter Field
    Day's at M7a, to ARRLDXCCWithNoARRLSections -- the value its arm always set
-   and so the value every session ran. *)
+   and so the value every session ran. Both DescribeSessions restated it until
+   M11 S2 (plan 1.3); the trait is the one statement now, so set-up states
+   none and the session runs the trait. *)
 procedure TContestSessionTests.Test_FieldDayDXMultipliersAreWhatTheSessionRuns;
 
    procedure Check(aContest: ContestType; aExpected: DXMultType);
@@ -393,8 +395,8 @@ procedure TContestSessionTests.Test_FieldDayDXMultipliersAreWhatTheSessionRuns;
                 ContestTypeSA[aContest] + ': the class');
       session := Describe(aContest, KansasStation);
       try
-         CheckTrue(session.IsStated(svDXMult) and (session.DXMult = aExpected),
-                   ContestTypeSA[aContest] + ': the session');
+         CheckFalse(session.IsStated(svDXMult),
+                    ContestTypeSA[aContest] + ': set-up restates no DX multiplier');
       finally
          session.Free;
          end;
@@ -841,7 +843,10 @@ begin
    try
       CheckEquals(' TOM KS', session.CQExchangeCW, 'SST: CQ exchange');
       CheckEquals('TOM KS', session.SPExchangeCW, 'SST: S&P exchange');
-      CheckTrue(session.DomesticMult = DomesticFile, 'SST: domestic mults from the file');
+      (* The trait states it; set-up restated it until M11 S2 (plan 1.3). *)
+      CheckFalse(session.IsStated(svDomesticMult), 'SST: set-up restates no domestic mult');
+      CheckTrue(ContestIdentity(SST).DomesticMultiplierType = DomesticFile,
+                'SST: domestic mults from the file');
       CheckEquals(2, session.DomesticCountryCount, 'SST: K and VE');
       CheckEquals('Slow Speed Test', session.ContestName, 'SST: name');
    finally
@@ -1091,86 +1096,130 @@ end;
 
 (* THE SESSION IS NOT THE TRAIT -- why no reader may ask ContestIdentity.
 
-  KCJ's class states the trait NoInitialExchange, and its DescribeSession
-  states ZoneInitialExchange for every station (plan 1.4 names KCJ among the
-  27 contests whose session kind differs from the trait). Set-up writes the
-  trait at the head (FCONTEST.ApplyContestTraits) and then what the contest
-  stated (FCONTEST.ApplySessionDefaults); this applies those two writes in
-  that order through the session's writer and checks the reader sees the
-  STATED value. FCONTEST's own path is pinned for every contest and station
-  by the contest matrix's active.initialexchange line, which reads this
-  object. *)
-procedure TContestSessionTests.Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
+  JIDX CW's class states the trait NoInitialExchange, and its DescribeSession
+  states ZoneInitialExchange for a JA station only. Set-up writes the trait
+  at the head (FCONTEST.ApplyContestTraits) and then what the contest stated
+  (FCONTEST.ApplySessionDefaults); this applies those two writes in that
+  order through the session's writer and checks the reader sees the STATED
+  value at a JA station and the trait elsewhere. FCONTEST's own path is
+  pinned for every contest at the matrix stations by uTestContestKindPin.
+
+  RE-POINTED AT M11 S2 (plan 1.3, F2): this pinned KCJ, whose
+  DescribeSession stated the same value for EVERY station over a trait that
+  said otherwise -- a second statement of one fact, not a session that
+  varies. S2 made that trait the value and deleted the statement, so KCJ no
+  longer differs from its trait anywhere. JIDX varies by STATION, which is the
+  case this pin exists for. *)
+procedure TContestSessionTests.Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
 var
+   ja: TStationContext;
    stated: TSessionDefaults;
    trait: InitialExchangeType;
    saved: InitialExchangeType;
 begin
-   BeginTest('Test_KCJRunsAnInitialExchangeItsTraitDoesNotState');
-   trait := ContestIdentity(KCJ).InitialExchangeKind;
-   CheckEquals(Ord(NoInitialExchange), Ord(trait), 'KCJ: the trait');
+   BeginTest('Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState');
+   trait := ContestIdentity(JIDXCW).InitialExchangeKind;
+   CheckEquals(Ord(NoInitialExchange), Ord(trait), 'JIDX: the trait');
+   ja := KansasStation;
+   ja.MyCountry := 'JA';
+   ja.MyContinent := Asia;
 
    saved := ContestSession.InitialExchange;
-   stated := Describe(KCJ, KansasStation);
    try
-      CheckTrue(stated.IsStated(svInitialExchange), 'KCJ states an initial exchange');
-      CheckEquals(Ord(ZoneInitialExchange), Ord(stated.InitialExchange),
-                  'KCJ: what it states');
+      stated := Describe(JIDXCW, ja);
+      try
+         CheckTrue(stated.IsStated(svInitialExchange), 'JIDX, JA: states an initial exchange');
+         CheckEquals(Ord(ZoneInitialExchange), Ord(stated.InitialExchange),
+                     'JIDX, JA: what it states');
 
-      ContestSession.WriteInitialExchange(trait);
-      if stated.IsStated(svInitialExchange) then
-         begin
-         ContestSession.WriteInitialExchange(stated.InitialExchange);
+         ContestSession.WriteInitialExchange(trait);
+         if stated.IsStated(svInitialExchange) then
+            begin
+            ContestSession.WriteInitialExchange(stated.InitialExchange);
+            end;
+
+         CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
+                     'JIDX, JA: the session runs what the contest stated');
+         CheckTrue(ContestSession.InitialExchange <> ContestIdentity(JIDXCW).InitialExchangeKind,
+                   'JIDX, JA: the session differs from the identity''s trait');
+      finally
+         stated.Free;
          end;
 
-      CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
-                  'KCJ: the session runs what the contest stated');
-      CheckTrue(ContestSession.InitialExchange <> ContestIdentity(KCJ).InitialExchangeKind,
-                'KCJ: the session differs from the identity''s trait');
+      stated := Describe(JIDXCW, KansasStation);
+      try
+         CheckFalse(stated.IsStated(svInitialExchange), 'JIDX, W: states no initial exchange');
+         ContestSession.WriteInitialExchange(trait);
+         CheckEquals(Ord(trait), Ord(ContestSession.InitialExchange), 'JIDX, W: the session runs the trait');
+      finally
+         stated.Free;
+         end;
    finally
-      stated.Free;
       ContestSession.WriteInitialExchange(saved);
       end;
 end;
 
 (* THE PREFIX KIND IS THE SESSION'S TOO (M10 S9b).
 
-  YBDX's class states the trait NoPrefixMults, and its DescribeSession states
-  IndonesianDistricts for every station -- the frozen matrix's
-  active.prefixmult line says IndonesianDistricts in every YBDX variant. The
-  two set-up writes, in FCONTEST's order, leave the session at the stated
-  value, unequal to the identity's trait: a reader that asked
-  ContestIdentity(Contest).PrefixMultiplierType would lose YBDX's prefix
-  multiplier column and its mult flags. *)
-procedure TContestSessionTests.Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState;
+  WAEDC CW's class states the trait NoPrefixMults, and its DescribeSession
+  states CQNonEuropeanCountriesAndWAECallRegions for a European station --
+  the frozen matrix's dx variant (DL1AAA) says so, its us and ve variants
+  NoPrefixMults. The two set-up writes, in FCONTEST's order, leave a European
+  session at the stated value, unequal to the identity's trait: a reader
+  that asked ContestIdentity(Contest).PrefixMultiplierType would lose the
+  WAE regions' prefix column and mult flags.
+
+  RE-POINTED AT M11 S2 (plan 1.3, F2): this pinned YBDX, whose
+  DescribeSession stated the same value for EVERY station over a trait that
+  said otherwise -- a second statement of one fact, not a session that
+  varies. S2 made that trait the value and deleted the statement, so YBDX no
+  longer differs from its trait anywhere. WAEDC varies by STATION, which is the
+  case this pin exists for. *)
+procedure TContestSessionTests.Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState;
 var
+   dl: TStationContext;
    stated: TSessionDefaults;
    trait: PrefixMultType;
    saved: PrefixMultType;
 begin
-   BeginTest('Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState');
-   trait := ContestIdentity(YBDX).PrefixMultiplierType;
-   CheckEquals(Ord(NoPrefixMults), Ord(trait), 'YBDX: the trait');
+   BeginTest('Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState');
+   trait := ContestIdentity(DARCWAEDCCW).PrefixMultiplierType;
+   CheckEquals(Ord(NoPrefixMults), Ord(trait), 'WAEDC: the trait');
+   dl := KansasStation;
+   dl.MyCall := 'DL1AAA';
+   dl.MyCountry := 'DL';
+   dl.MyContinent := Europe;
+   dl.MyState := '';
 
    saved := ContestSession.PrefixMult;
-   stated := Describe(YBDX, KansasStation);
    try
-      CheckTrue(stated.IsStated(svPrefixMult), 'YBDX states a prefix multiplier');
-      CheckEquals(Ord(IndonesianDistricts), Ord(stated.PrefixMult),
-                  'YBDX: what it states');
+      stated := Describe(DARCWAEDCCW, dl);
+      try
+         CheckTrue(stated.IsStated(svPrefixMult), 'WAEDC, DL: states a prefix multiplier');
+         CheckEquals(Ord(CQNonEuropeanCountriesAndWAECallRegions), Ord(stated.PrefixMult),
+                     'WAEDC, DL: what it states');
 
-      ContestSession.WritePrefixMult(trait);
-      if stated.IsStated(svPrefixMult) then
-         begin
-         ContestSession.WritePrefixMult(stated.PrefixMult);
+         ContestSession.WritePrefixMult(trait);
+         if stated.IsStated(svPrefixMult) then
+            begin
+            ContestSession.WritePrefixMult(stated.PrefixMult);
+            end;
+
+         CheckEquals(Ord(CQNonEuropeanCountriesAndWAECallRegions), Ord(ContestSession.PrefixMult),
+                     'WAEDC, DL: the session runs what the contest stated');
+         CheckTrue(ContestSession.PrefixMult <> ContestIdentity(DARCWAEDCCW).PrefixMultiplierType,
+                   'WAEDC, DL: the session differs from the identity''s trait');
+      finally
+         stated.Free;
          end;
 
-      CheckEquals(Ord(IndonesianDistricts), Ord(ContestSession.PrefixMult),
-                  'YBDX: the session runs what the contest stated');
-      CheckTrue(ContestSession.PrefixMult <> ContestIdentity(YBDX).PrefixMultiplierType,
-                'YBDX: the session differs from the identity''s trait');
+      stated := Describe(DARCWAEDCCW, KansasStation);
+      try
+         CheckFalse(stated.IsStated(svPrefixMult), 'WAEDC, W: states no prefix multiplier');
+      finally
+         stated.Free;
+         end;
    finally
-      stated.Free;
       ContestSession.WritePrefixMult(saved);
       end;
 end;
@@ -1247,42 +1296,66 @@ end;
 
 (* THE DX KIND IS THE SESSION'S (M10 S9d).
 
-  ARRL 10's class states the trait ARRLDXCCWithNoUSACanadaKH6OrKL7, and its
-  DescribeSession states ARRLDXCCWithNoARRLSections for every station -- the
-  frozen matrix's active.dxmult line says ARRLDXCCWithNoARRLSections in all
-  three ARRL10 variants. The two set-up writes, in FCONTEST's order, leave the
-  session at the stated value, unequal to the identity's trait: a reader that
-  asked ContestIdentity(Contest).DXMultiplierType would run ARRL 10 with a
-  DX kind it does not run. *)
-procedure TContestSessionTests.Test_ARRL10RunsADXMultiplierItsTraitDoesNotState;
+  ARRL 160's class states the trait NoDXMults, and its DescribeSession
+  states ARRLDXCCWithNoARRLSections for a station in an ARRL-section country
+  and nothing for anybody else -- the frozen matrix's active.dxmult line
+  says ARRLDXCCWithNoARRLSections at us and ve and NoDXMults at dx. The two
+  set-up writes, in FCONTEST's order, leave a W session at the stated value,
+  unequal to the identity's trait: a reader that asked
+  ContestIdentity(Contest).DXMultiplierType would run ARRL 160 with a DX
+  kind it does not run.
+
+  RE-POINTED AT M11 S2 (plan 1.3, F2): this pinned ARRL 10, whose
+  DescribeSession stated the same value for EVERY station over a trait that
+  said otherwise -- a second statement of one fact, not a session that
+  varies. S2 made that trait the value and deleted the statement, so ARRL 10 no
+  longer differs from its trait anywhere. ARRL 160 varies by STATION, which is the
+  case this pin exists for. *)
+procedure TContestSessionTests.Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
 var
+   dl: TStationContext;
    stated: TSessionDefaults;
    trait: DXMultType;
    saved: DXMultType;
 begin
-   BeginTest('Test_ARRL10RunsADXMultiplierItsTraitDoesNotState');
-   trait := ContestIdentity(ARRL10).DXMultiplierType;
-   CheckEquals(Ord(ARRLDXCCWithNoUSACanadaKH6OrKL7), Ord(trait), 'ARRL10: the trait');
+   BeginTest('Test_ARRL160RunsADXMultiplierItsTraitDoesNotState');
+   trait := ContestIdentity(ARRL160).DXMultiplierType;
+   CheckEquals(Ord(NoDXMults), Ord(trait), 'ARRL160: the trait');
 
    saved := ContestSession.DXMult;
-   stated := Describe(ARRL10, KansasStation);
    try
-      CheckTrue(stated.IsStated(svDXMult), 'ARRL10 states a DX multiplier');
-      CheckEquals(Ord(ARRLDXCCWithNoARRLSections), Ord(stated.DXMult),
-                  'ARRL10: what it states');
+      stated := Describe(ARRL160, KansasStation);
+      try
+         CheckTrue(stated.IsStated(svDXMult), 'ARRL160, W: states a DX multiplier');
+         CheckEquals(Ord(ARRLDXCCWithNoARRLSections), Ord(stated.DXMult),
+                     'ARRL160, W: what it states');
 
-      ContestSession.WriteDXMult(trait);
-      if stated.IsStated(svDXMult) then
-         begin
-         ContestSession.WriteDXMult(stated.DXMult);
+         ContestSession.WriteDXMult(trait);
+         if stated.IsStated(svDXMult) then
+            begin
+            ContestSession.WriteDXMult(stated.DXMult);
+            end;
+
+         CheckEquals(Ord(ARRLDXCCWithNoARRLSections), Ord(ContestSession.DXMult),
+                     'ARRL160, W: the session runs what the contest stated');
+         CheckTrue(ContestSession.DXMult <> ContestIdentity(ARRL160).DXMultiplierType,
+                   'ARRL160, W: the session differs from the identity''s trait');
+      finally
+         stated.Free;
          end;
 
-      CheckEquals(Ord(ARRLDXCCWithNoARRLSections), Ord(ContestSession.DXMult),
-                  'ARRL10: the session runs what the contest stated');
-      CheckTrue(ContestSession.DXMult <> ContestIdentity(ARRL10).DXMultiplierType,
-                'ARRL10: the session differs from the identity''s trait');
+      dl := KansasStation;
+      dl.MyCall := 'DL1AAA';
+      dl.MyCountry := 'DL';
+      dl.MyContinent := Europe;
+      dl.MyState := '';
+      stated := Describe(ARRL160, dl);
+      try
+         CheckFalse(stated.IsStated(svDXMult), 'ARRL160, DL: states no DX multiplier');
+      finally
+         stated.Free;
+         end;
    finally
-      stated.Free;
       ContestSession.WriteDXMult(saved);
       end;
 end;
@@ -1428,10 +1501,10 @@ begin
    Test_M7bBatch2MessagesMemoriesAndCaptions;
    Test_M7bBatch2CQExchangeDefaults;
    Test_TheRunningSessionIsOneObjectWithOneWriter;
-   Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
-   Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState;
+   Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
+   Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState;
    Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
-   Test_ARRL10RunsADXMultiplierItsTraitDoesNotState;
+   Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
    Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
    Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
 end;

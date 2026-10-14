@@ -195,7 +195,11 @@ end;
 
 function TContestKCJ.GetInitialExchangeKind: InitialExchangeType;
 begin
-   Result := NoInitialExchange;
+   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
+      ZoneInitialExchange at every station: the trait said NoInitialExchange and
+      DescribeSession stated it over it, unconditionally. The
+      trait now says what runs, and the statement is gone. *)
+   Result := ZoneInitialExchange;
 end;
 
 function TContestKCJ.GetExchangeKind: ExchangeType;
@@ -223,7 +227,6 @@ end;
 procedure TContestKCJ.DescribeSession(const aStation: TStationContext;
                                       aSession: TSessionDefaults);
 begin
-   aSession.InitialExchange := ZoneInitialExchange;
    aSession.InitialExchangeOverwrite := True;
 end;
 
