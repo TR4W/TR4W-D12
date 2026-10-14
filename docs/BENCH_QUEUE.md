@@ -23,6 +23,27 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-14 -- WSJT-X CQ DECODES ARE EVALUATED ON THE MAIN THREAD
+
+`uWSJTX` ran the dupe and new-multiplier test for a CQ decode on Indy's UDP
+listener thread, racing the main thread's sheet and `ActiveContest`. The
+evaluation and the `HighlightCall` reply now run on the main thread, queued by
+the listener. The unit tests pin the hand-off; only a live WSJT-X proves the
+colours still land. The server's destructor also runs now (it had been hidden
+from `Free` for as long as the unit existed), so the shutdown path is new.
+
+- [ ] **Run WSJT-X FT8 against TR4W in a digital contest with a few logged QSOs.**
+  A CQ decode from a station already worked on that band is coloured as a dupe
+  in the WSJT-X decode list; a new multiplier (call or grid) is coloured as a
+  mult; an ordinary station is not coloured.
+- [ ] **Log a QSO from WSJT-X while decodes are arriving** and confirm the next
+  decode of that station turns dupe-red. (The sheet is read after the QSO is
+  logged because both are now on the main thread's queue order.)
+- [ ] **Turn WSJT-X off and on in Preferences, then exit TR4W** with WSJT-X
+  still sending. No crash, nothing in `tr4w.log` from `[uWSJTX]` at Error level.
+- [ ] **Look for `EvaluateCQDecode called off the main thread` in `tr4w.log`.**
+  It should never appear.
+
 ## Added 2026-10-14 -- COUNTY-LINE IMPORT ASKS THE CLASS (M10 S7)
 
 `MainUnit`'s ADIF import clears the dupe flag on a repeat of (call, band, mode)

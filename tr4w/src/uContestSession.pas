@@ -60,8 +60,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       S9a for all six kinds runs on the main thread too: the call window,
       the sheet, the display, the exporters (headless /EXPORT runs on the
       main thread), uScoreTotals (gated by LOGEDIT.TotalScore's OnMainThread,
-      so the posting clients' worker threads never reach it), and uWSJTX
-      (QueueAsyncCall). So no lock is taken, as none was for the globals this
+      so the posting clients' worker threads never reach it), and uWSJTX's
+      CQ decode (handed to the main thread by QueueAsyncCall; until 2026-10-14
+      it was evaluated on Indy's listener thread, a race). The logged-ADIF
+      arm of that handler still runs on the listener and can read these kinds
+      -- a known exception, listed in uWSJTX's thread note. So no lock is taken, as none was for the globals this
       replaces. If a worker thread ever does read it, the guarantee is the
       global's: each kind is an enum held in its own field, read and written
       whole, so a reader sees the old value or the new one, never a torn one

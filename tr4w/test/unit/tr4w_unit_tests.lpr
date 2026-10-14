@@ -469,6 +469,9 @@ uses
      verified by rebuilding it in code is not verified at all -- so it reaches
      the LCL, which this binary already links. *)
    uTestStatusAndNotice in 'uTestStatusAndNotice.pas',
+   (* THE WSJT-X CQ DECODE'S THREAD HAND-OFF.  Links MainUnit, which already
+     brings uWSJTX in; no new dependency. *)
+   uTestWSJTXThreading in 'uTestWSJTXThreading.pas',
    // Pins the radio-status change detector.  LOGRADIO itself is not listed
    // here -- it arrives through the search path, the same way uTestIcomRegistry
    // reaches RadioParametersArray.
@@ -745,6 +748,7 @@ begin
    RegisterSuite(TOffBandCreditTests.Create('OffBandCredit'));
    RegisterSuite(TRadioLinkRetryTests.Create('RadioLinkRetry'));
    RegisterSuite(TStatusAndNoticeTests.Create('StatusAndNotice'));
+   RegisterSuite(TWSJTXThreadingTests.Create('WSJTXThreading'));
    RegisterSuite(TAcceleratorTests.Create('Accelerators'));
    RegisterSuite(TMenuShortcutTests.Create('MenuShortcuts'));
    RegisterSuite(TEditingKeysTests.Create('EditingKeys'));

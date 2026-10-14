@@ -28,6 +28,28 @@ The UDP thread **does not write the entry fields** — that separation was a fix
 not an accident. Highlighting had two separate defects before it worked reliably;
 dupe and new-multiplier colouring in the decode list is the visible contract.
 
+**The UDP handler runs on Indy's listener thread** (`ThreadedEvent := true`), so
+anything it does that reads the dupe sheet, the multiplier structures or
+`ActiveContest` is a data race with the main thread -- `ActiveContest` can free
+and rebuild the contest object on EVERY call. Fixed 2026-10-14 for the CQ decode:
+the listener parses and copies; `PostCQDecode` queues a job of VALUES through
+`Application.QueueAsyncCall` (FIFO, not `TThread.Queue`, which purges a thread's
+entries when it is destroyed), and `EvaluateCQDecode` -- which refuses off the
+main thread -- does the dupe/mult test and sends the `HighlightCall` reply.
+`Stop` detaches queued jobs from the server; a detached job is popped and dropped.
+`HighlightCall`'s `SendBuffer` is thread-neutral (the binding is fixed when the
+server goes Active), so the reply was never the problem.
+
+**Still on the listener, knowingly:** the STATUS arm (`GoToBand`,
+`PutCalltoCallWindow`, `ActiveRadioPtr`) and the LOGGED-ADIF arm (`ParseADIFRecord`,
+`ParametersOkay`, `LogContact`, the entry-field state). Same defect class; moving
+the logging arm changes how a QSO is logged and needs a live WSJT-X session.
+Do not add a main-thread read to `OnServerRead`; add it to the hand-off.
+
+**`destructor Destroy;` without `override` is a WARNING, not an error, and `Free`
+never reaches it.** `TWSJTXServer`'s did not, so `FreeAndNil(wsjtx)` leaked the
+sockets until 2026-10-14. Check the keyword on any destructor you add.
+
 ## MMTTY
 
 **MMTTY is out-of-process** — launched with `WinExec`, not loaded as a DLL. That

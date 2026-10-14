@@ -72,6 +72,7 @@ type
     processingCmdSetFreqMode: boolean;
     slCQMessage: TStringList;
     sCallSentToWindow: string;
+    FDecodesEvaluated: integer;
     procedure SetUDPPort(nPort: integer);
     procedure SetTCPPort(nPort: integer);
     function GetNextADIFField(var sBuffer: string; var fieldName: string; var
@@ -98,7 +99,20 @@ type
       // May want to add the port number to a constructor - for now use default
     procedure Stop;
     procedure JoinMulticastGroup(const AGroupIP: string);
-    destructor Destroy;
+    (* override: without it this destructor HIDES TObject.Destroy and Free never
+      reaches it -- FPC says so only as a warning. *)
+    destructor Destroy; override;
+    (* The UDP listener's hand-off for a CQ decode: copies the VALUES and queues
+      them for the main thread. Called on the main thread it evaluates at once. *)
+    procedure PostCQDecode(const aCall, aGrid, aId: string; aFrequency: Int64);
+    (* The dupe / multiplier evaluation and the HighlightCall reply. MAIN THREAD
+      ONLY: it reads the sheet and ActiveContest. Refuses, and says so in the
+      log, when called anywhere else. *)
+    procedure EvaluateCQDecode(const aCall, aGrid, aId: string;
+      aFrequency: Int64);
+    (* How many decodes have reached the evaluation -- what a test reads to
+      prove the listener thread did not evaluate. *)
+    property DecodesEvaluated: integer read FDecodesEvaluated;
     procedure HighlightCall(sCall: string; color: integer; sId: string);
     procedure ClearColors(sId: string);
     property connected: boolean read isConnected;
@@ -125,6 +139,9 @@ type
       FSendColorization;
 
   end;
+
+(* Decodes handed off by the listener and not yet evaluated. *)
+function PendingCQDecodeCount: integer;
 
 const
   KLUDGESECONDSV = 2;
@@ -157,6 +174,44 @@ uses
   , IdStack // for GStack.AddMulticastMembership
   , uConfigValues // for Settings.Ptt.ViaCommands
   ;
+
+(* WHICH THREAD RUNS WHAT -- read this before adding to OnServerRead.
+
+  ThreadedEvent is True, so OnServerRead runs on Indy's UDP LISTENER THREAD, not
+  the main thread. Everything the listener does is therefore one of two things:
+
+    * PARSING AND COPYING, which stays on the listener: unpacking the datagram,
+      finding the call and grid in a CQ message, the heartbeat / clear colour
+      reply (ClearColors reads nothing of the program's).
+    * A HAND-OFF to the main thread through Application.QueueAsyncCall, which is
+      FIFO: the display batch below, the clear-and-focus (uMainForm), and the
+      CQ DECODE (PostCQDecode -> EvaluateCQDecode).
+
+  THE CQ DECODE USED TO BE EVALUATED ON THE LISTENER. VisibleLog.CallIsADupe,
+  DetermineIfNewMult and DetermineIfNewDomesticMult read the dupe sheet and the
+  multiplier structures the main thread rewrites on every logged QSO, and
+  LOGEDIT.DoingAnyMults reaches ActiveContest, which can free and rebuild the
+  active contest object and rewrite its station on EVERY call. A data race, found
+  2026-10-14. uContestSession's THREADS contract said this unit read on the main
+  thread; for the decode it did not.
+
+  THE JOB CARRIES VALUES (call, grid, id, frequency) and a back-reference to the
+  server, never a pointer into the sheet or the contest. Stop and Destroy detach
+  every queued job from the server, so a job that outlives it is popped and
+  dropped. QueueAsyncCall rather than TThread.Queue, which purges a thread's
+  entries when the thread is destroyed.
+
+  THE REPLY (HighlightCall -> udpServ.SendBuffer) IS THREAD-NEUTRAL: SendBuffer
+  uses the binding TIdUDPServer fixed when it went Active (FCurrentBinding,
+  IdUDPServer.pas GetBinding) -- not the one the listener is reading with -- and
+  sendto on a UDP socket is safe from any thread. Moving it to the main thread
+  only makes the colour fields it reads single-threaded (the setters run there).
+
+  STILL ON THE LISTENER, DELIBERATELY NOT MOVED HERE: the STATUS arm (GoToBand,
+  PutCalltoCallWindow, ActiveRadioPtr reads) and the LOGGED-ADIF arm
+  (ParseADIFRecord, ParametersOkay, LogContact, the exchange-field state). Both
+  touch main-thread state; moving the second is a change to how a QSO is logged
+  and wants a live WSJT-X session. See docs/BENCH_QUEUE.md. *)
 
 { THE DISPLAY REFRESH THAT FOLLOWS A WSJT-X QSO, MOVED OFF THE SOCKET THREAD.
 
@@ -196,6 +251,18 @@ type
    TWSJTXUIWork = class(TObject)
    public
       procedure Run(Data: PtrInt);
+      procedure RunDecode(Data: PtrInt);
+   end;
+
+   (* One CQ decode, by value. Server is nil once the server has stopped or
+     been freed: the job is then popped and dropped. *)
+   TWSJTXDecodeJob = class(TObject)
+   public
+      Server: TWSJTXServer;
+      Call: string;
+      Grid: string;
+      Id: string;
+      Frequency: Int64;
    end;
 
 var
@@ -203,6 +270,8 @@ var
    GWSJTXUILock: TRTLCriticalSection;
    GStationCall: string = '';
    GStationGrid: string = '';
+   (* Pending decodes, oldest first. Guarded by GWSJTXUILock. *)
+   GDecodeJobs: TList = nil;
 
 procedure TWSJTXUIWork.Run(Data: PtrInt);
 var
@@ -246,12 +315,95 @@ begin
    end;
 end;
 
+(* The work object, created under the lock: the listener and the main thread
+  can both be the first to ask. *)
+function WSJTXUIWork: TWSJTXUIWork;
+begin
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      if GWSJTXUI = nil then
+         begin
+         GWSJTXUI := TWSJTXUIWork.Create;
+         end;
+      Result := GWSJTXUI;
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+end;
+
+(* One queued call pops one job, so the FIFO order of the queue is the order of
+  the decodes. A job whose server has gone is dropped unevaluated. Main thread. *)
+procedure TWSJTXUIWork.RunDecode(Data: PtrInt);
+var
+   job: TWSJTXDecodeJob;
+begin
+   job := nil;
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      if (GDecodeJobs <> nil) and (GDecodeJobs.Count > 0) then
+         begin
+         job := TWSJTXDecodeJob(GDecodeJobs[0]);
+         GDecodeJobs.Delete(0);
+         end;
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+
+   if job = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      if job.Server <> nil then
+         begin
+         job.Server.EvaluateCQDecode(job.Call, job.Grid, job.Id, job.Frequency);
+         end;
+   finally
+      job.Free;
+   end;
+end;
+
+(* Cut every queued decode loose from aServer. Called once the server's listener
+  is down, so nothing can be added behind it. *)
+procedure DetachCQDecodes(aServer: TWSJTXServer);
+var
+   i: integer;
+begin
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      if GDecodeJobs <> nil then
+         begin
+         for i := 0 to GDecodeJobs.Count - 1 do
+            begin
+            if TWSJTXDecodeJob(GDecodeJobs[i]).Server = aServer then
+               begin
+               TWSJTXDecodeJob(GDecodeJobs[i]).Server := nil;
+               end;
+            end;
+         end;
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+end;
+
+function PendingCQDecodeCount: integer;
+begin
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      Result := 0;
+      if GDecodeJobs <> nil then
+         begin
+         Result := GDecodeJobs.Count;
+         end;
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+end;
+
 procedure QueueWSJTXUI(const aJob: TWSJTXUIJob);
 begin
-   if GWSJTXUI = nil then
-      begin
-      GWSJTXUI := TWSJTXUIWork.Create;
-      end;
+   WSJTXUIWork;
 
    { Already there: do it now rather than at the next idle, so a main-thread
      caller keeps the synchronous behaviour it has always had. }
@@ -485,32 +637,39 @@ begin
     that finds nothing to stop must still leave the indicator correct. }
   WSJTXState.Connected := False;
 
-  if started then
-     begin
-     udpServ.Active := false;
-     if tcpServ <> nil then
+  try
+     if started then
         begin
-        tcpServ.IOHandler.Shutdown;
-        tcpServ.Active := false;
+        udpServ.Active := false;
+        if tcpServ <> nil then
+           begin
+           tcpServ.IOHandler.Shutdown;
+           tcpServ.Active := false;
+           end;
+        started := false;
         end;
-     started := false;
-     end;
+  finally
+     (* AFTER the listener is down, so nothing can queue behind this. A decode
+       already queued is then popped and dropped rather than evaluated against a
+       server that has stopped -- or been freed. *)
+     DetachCQDecodes(Self);
+  end;
 end;
 
 destructor TWSJTXServer.Destroy;
 begin
-  udpServ.Active := false;
+  Stop;
   FreeAndNil(udpServ);
 
   if tcpServ <> nil then
      begin
-     tcpServ.IOHandler.Shutdown;
-     tcpServ.Active := false;
+     (* Stop has deactivated it; freeing it needs no Shutdown, and IOHandler is
+       nil on a server that never went active. *)
      FreeAndNil(tcpServ);
      end;
 
   FreeAndNil(slCQMessage);
-
+  inherited Destroy;
 end;
 
 procedure TWSJTXServer.SetUDPPort(nPort: integer);
@@ -558,7 +717,6 @@ var
   TempBand: BandType;
   TempFreq: integer;
   grid: string;
-  nResult: integer;
   shortStr: shortString;
   //len: integer;
   newMessage: string;
@@ -737,6 +895,12 @@ begin
                       would have been sent to WSJT-X as a highlight. }
                     foundCall := False;
                     foundGrid := False;
+                    (* And the two strings they guard: both are locals of this
+                      handler, and a datagram that carried another message
+                      first would otherwise hand THAT message's call or grid
+                      to this decode. *)
+                    DXCall := '';
+                    grid := '';
 
                     if slCQMessage[0] = 'CQ' then
                        begin
@@ -778,85 +942,16 @@ begin
                     call := DXCall;
                     if call <> '' then
                        begin
-                       // Here we cheat a little bit on Frequency. The idea is that the status command is sent enough that it gives
-                       // us the frequency. So turn the frequency into the band.
-                       // We could also use the radio object to check
-                       GetBandMapBandModeFromFrequency(frequency, TempBand,
-                                                        TempMode);
-                       TempMode := Digital;
-                        // override TempMode since we know it is digital. Until a contest differentiates between FT8 and FT4 that is ok
-                       if VisibleLog.CallIsADupe(call, TempBand, TempMode) then
-                          begin
-                          logger.debug('[uWSJTX] %s is a DUPE', [DXCall]);
-                          HighLightCall(DXCall, 1, id);
-                          end
-                       // Issue #750-adjacent cleanup: gate the multiplier
-                       // checks on at least one multiplier dimension being
-                       // active for the current contest.  Contests like
-                       // ARRL-DIGI / CQ-WPX-DIGI score on QSO count only --
-                       // every Doing*Mults global is False -- so the
-                       // DetermineIfNewMult and DetermineIfNewDomesticMult
-                       // calls below always return False but still log
-                       // confusing "Checking if grid FN is a multiplier"
-                       // lines that suggest TR4W is doing mult work it
-                       // is not.  Cheap to skip cleanly.
-                       // (LOGEDIT.DoingAnyMults, M11 S4 part 2: the same
-                       // four answers, the contest fetched at most once.)
-                       else if DoingAnyMults(Contest) then
-                          begin
-                          if VisibleLog.DetermineIfNewMult(call, TempBand,
-                                                          TempMode) then
-                             begin
-                             logger.debug('[uWSJTX] %s is a MULT (from callsign',
-                                                                   [DXCall]);
-
-                             { THE CALLSIGN, NOT THE GRID.  WSJT-X message 13 is
-                               HighlightCallsign and matches on the CALLSIGN
-                               field, so a grid matches no decode and colours
-                               nothing -- silently.  NY4I spotted it in the log:
-                               "Highlighting call GK03 as a MULT", GK03 being a
-                               grid square.
-
-                               The line above already says "%s is a MULT (from
-                               callsign" and prints DXCall, so the routine
-                               disagreed with its own log.  The dupe branch
-                               above passes DXCall and works. }
-                             HighlightCall(DXCall, 2, id);
-                              // Pass back id as given to us but without ? or a1..a7, etc.
-                             end
-                          else if grid <> '' then
-                              // Even if gridFields (2 digit) grid, the DeterimeIfNewDomesticMult only checks left 2 bytes
-                             begin
-                             logger.debug('[uWSJTX] Checking if grid %s is a multiplier (call=%s)', [AnsiLeftStr(grid, 2), DXCall]);
-                             VisibleLog.DetermineIfNewDomesticMult(grid, TempBand,
-                                                                   TempMode, nResult);
-                             if nResult = 1 then
-                                begin
-                                logger.debug('[uWSJTX] %s is a domestic MULT',
-                                              [AnsiLeftStr(grid, 2)]);
-                                { The MULTIPLIER is the grid; the thing WSJT-X
-                                  can colour is the STATION.  Same message-13
-                                  callsign match as above. }
-                                HighLightCall(DXCall, 2, id);
-                                // Pass back id as given to us
-                                end
-                             else
-                                begin
-                                logger.debug('[uWSJTX] %s is NOT a domestic MULT',
-                                             [AnsiLeftStr(grid, 2)]);
-                                end;
-                             end;
-                          end;
-                       // else: no multiplier dimensions in this contest;
-                       // not a dupe -> no highlight (operator works
-                       // everyone by default; only the exceptions need a
-                       // color hint).
-                       end // if call <> ...
-                     else
-                        begin
-                        logger.warn('[uWSJTX] Call is blank for message = ' +
-                          message);
-                        end;
+                       (* HAND-OFF, NOT EVALUATION.  This handler runs on the
+                         UDP listener thread; the dupe and multiplier tests read
+                         main-thread state.  See WHICH THREAD RUNS WHAT. *)
+                       PostCQDecode(call, grid, id, frequency);
+                       end
+                    else
+                       begin
+                       logger.warn('[uWSJTX] Call is blank for message = ' +
+                         message);
+                       end;
                        end;
                     end;
                end;
@@ -1019,6 +1114,135 @@ begin
            end;
         end;
      end;
+end;
+
+procedure TWSJTXServer.PostCQDecode(const aCall, aGrid, aId: string;
+  aFrequency: Int64);
+var
+   job: TWSJTXDecodeJob;
+begin
+   if OnMainThread then
+      begin
+      EvaluateCQDecode(aCall, aGrid, aId, aFrequency);
+      Exit;
+      end;
+
+   (* QueueAsyncCall RAISES on a shut-down queue rather than returning False. *)
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+
+   job := TWSJTXDecodeJob.Create;
+   job.Server := Self;
+   job.Call := aCall;
+   job.Grid := aGrid;
+   job.Id := aId;
+   job.Frequency := aFrequency;
+
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      GDecodeJobs.Add(job);
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+
+   Application.QueueAsyncCall(WSJTXUIWork.RunDecode, 0);
+end;
+
+procedure TWSJTXServer.EvaluateCQDecode(const aCall, aGrid, aId: string;
+  aFrequency: Int64);
+var
+   TempMode: ModeType;
+   TempBand: BandType;
+   nResult: integer;
+   call: CallString;   (* CallIsADupe takes a var parameter *)
+begin
+   if not OnMainThread then
+      begin
+      logger.Error('[uWSJTX] EvaluateCQDecode called off the main thread for ' +
+        aCall + '; refused -- it reads the sheet and ActiveContest');
+      Exit;
+      end;
+
+   (* Stopped between the hand-off and now. HighlightCall would send through a
+     socket that is no longer bound. *)
+   if not started then
+      begin
+      Exit;
+      end;
+
+   Inc(FDecodesEvaluated);
+   call := CallString(aCall);
+
+   // Here we cheat a little bit on Frequency. The idea is that the status command is sent enough that it gives
+   // us the frequency. So turn the frequency into the band.
+   // We could also use the radio object to check
+   GetBandMapBandModeFromFrequency(aFrequency, TempBand, TempMode);
+   TempMode := Digital;
+    // override TempMode since we know it is digital. Until a contest differentiates between FT8 and FT4 that is ok
+   if VisibleLog.CallIsADupe(call, TempBand, TempMode) then
+      begin
+      logger.debug('[uWSJTX] %s is a DUPE', [aCall]);
+      HighLightCall(aCall, 1, aId);
+      end
+   // Issue #750-adjacent cleanup: gate the multiplier
+   // checks on at least one multiplier dimension being
+   // active for the current contest.  Contests like
+   // ARRL-DIGI / CQ-WPX-DIGI score on QSO count only --
+   // every Doing*Mults global is False -- so the
+   // DetermineIfNewMult and DetermineIfNewDomesticMult
+   // calls below always return False but still log
+   // confusing "Checking if grid FN is a multiplier"
+   // lines that suggest TR4W is doing mult work it
+   // is not.  Cheap to skip cleanly.
+   // (LOGEDIT.DoingAnyMults, M11 S4 part 2: the same
+   // four answers, the contest fetched at most once.)
+   else if DoingAnyMults(Contest) then
+      begin
+      if VisibleLog.DetermineIfNewMult(call, TempBand, TempMode) then
+         begin
+         logger.debug('[uWSJTX] %s is a MULT (from callsign', [aCall]);
+
+         (* THE CALLSIGN, NOT THE GRID.  WSJT-X message 13 is
+           HighlightCallsign and matches on the CALLSIGN
+           field, so a grid matches no decode and colours
+           nothing -- silently.  NY4I spotted it in the log:
+           "Highlighting call GK03 as a MULT", GK03 being a
+           grid square.
+
+           The line above already says "%s is a MULT (from
+           callsign" and prints the call, so the routine
+           disagreed with its own log.  The dupe branch
+           above passes the call and works. *)
+         HighlightCall(aCall, 2, aId);
+         // Pass back id as given to us but without ? or a1..a7, etc.
+         end
+      else if aGrid <> '' then
+         // Even if gridFields (2 digit) grid, the DeterimeIfNewDomesticMult only checks left 2 bytes
+         begin
+         logger.debug('[uWSJTX] Checking if grid %s is a multiplier (call=%s)', [AnsiLeftStr(aGrid, 2), aCall]);
+         VisibleLog.DetermineIfNewDomesticMult(aGrid, TempBand, TempMode,
+                                               nResult);
+         if nResult = 1 then
+            begin
+            logger.debug('[uWSJTX] %s is a domestic MULT', [AnsiLeftStr(aGrid, 2)]);
+            (* The MULTIPLIER is the grid; the thing WSJT-X
+              can colour is the STATION.  Same message-13
+              callsign match as above. *)
+            HighLightCall(aCall, 2, aId);
+            // Pass back id as given to us
+            end
+         else
+            begin
+            logger.debug('[uWSJTX] %s is NOT a domestic MULT', [AnsiLeftStr(aGrid, 2)]);
+            end;
+         end;
+      end;
+   // else: no multiplier dimensions in this contest;
+   // not a dupe -> no highlight (operator works
+   // everyone by default; only the exceptions need a
+   // color hint).
 end;
 
 {
@@ -1810,8 +2034,20 @@ end;
 
 initialization
    InitCriticalSection(GWSJTXUILock);
+   GDecodeJobs := TList.Create;
 
 finalization
+   (* Nothing queued may run against the work object freed below. *)
+   if (Application <> nil) and (GWSJTXUI <> nil) then
+      begin
+      Application.RemoveAsyncCalls(GWSJTXUI);
+      end;
+   while GDecodeJobs.Count > 0 do
+      begin
+      TWSJTXDecodeJob(GDecodeJobs[GDecodeJobs.Count - 1]).Free;
+      GDecodeJobs.Delete(GDecodeJobs.Count - 1);
+      end;
+   FreeAndNil(GDecodeJobs);
    GWSJTXUI.Free;
    GWSJTXUI := nil;
    DoneCriticalSection(GWSJTXUILock);
