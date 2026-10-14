@@ -1254,12 +1254,81 @@ All 26 corpus artifacts are byte-identical before and after. An A/B rescore of
 all 13 sets is also identical: ADIF, Cabrillo and every stored `qso` row match,
 apart from the exchange ids the rescore mints for rows that had none.
 
-**What is left is mostly per-Open, not per-field.** Each Open of a
-`QSO_COLUMNS` SELECT still creates 68 `TField` objects, and the rescore opens
-one per QSO. That cost grows with the column count: a micro-benchmark measured
-about 390 µs an Open at 45 columns and 715 µs at 91. Reading the whole log in one query and one
-transaction per rescore are the next steps (F1 and F4 of the investigation).
-They are not done here.
+**What was left was per-Open, not per-field.** Each Open of a `QSO_COLUMNS`
+SELECT creates 68 `TField` objects, and the rescore opened one per QSO. That
+cost grows with the column count: a micro-benchmark measured about 390 µs an
+Open at 45 columns and 715 µs at 91. F1 and F4 below remove it from the
+rescore.
+
+### F1 and F4 — the rescore reads once and writes once (2026-10-14)
+
+`MainUnit.tUpdateLog` (the rescore, and the dupe- and mult-sheet clears, which
+share its loop) fetched record N with `LogSourceReadAtIndex`: an `OFFSET` walk
+to find the row id (O(n)), then a 68-column Open to read it. Each changed
+record went back through `LogStoreUpdateQSOAtIndex`, which walked the `OFFSET`
+again and committed. Per QSO.
+
+- **F1, one read.** The sequential cursor now SELECTs `QSO_COLUMNS, id`, and
+  `ReadNextWithRowId` / `LogSourceNextWithRowId` yield each record with its
+  row id. The id is AFTER the QSO columns, so every QSO column keeps its
+  position; `OpenQsoReader(q, True)` checks the extra column by name as well.
+  `RowIdAtIndex` and its `OFFSET` are gone from the rescore. The export cursor
+  carries the extra column too, and an alternated 21-run measurement shows no
+  cost (median 499 ms before, 481 after).
+- **F4, one write.** Changed records are collected in a `TLogRowUpdates`
+  (row id + record) during the pass and written by
+  `LogStoreUpdateQSOsByRowId` once the cursor is closed:
+  `TLogRepository.WriteBatch` is `BeginBatchUpdate`, `UpdateQSOByRowId` per
+  row, `CommitBatch`, and `RollbackBatch` plus re-raise on any exception. The
+  store then disables itself and reports, as for every write failure, so
+  `/RESCORE` exits 2. **The log is never left half rescored.**
+
+**Why collect rather than write as the pass goes.** There is one connection and
+so one transaction. `TSQLTransaction.Commit` calls `CloseDataSets` first
+(`sqldb.pp:2412`), so committing with the cursor open closes it under the
+reader. UPDATEs issued while the SELECT is still stepping, with one commit at
+the end, would avoid that. But SQLite documents what a running statement sees
+of its own connection's changes as undefined. A second write transaction would
+need a second connection, and that is the two-connection shape `uLogStore`
+removed. Collected records cost 376 bytes each.
+
+**A sqldb fact this depends on, measured.** sqldb starts a transaction only
+when a statement *prepares* (`sqldb.pp:1296`). `FInsert` and `FUpdate` stay
+prepared, so once a commit has ended the implicit transaction they execute in
+SQLite **autocommit**, and each one is durable on its own. So
+`BeginBatchUpdate` commits whatever is pending and then calls
+`StartTransaction` explicitly. Mutation-tested: without the explicit start, a
+"rolled back" UPDATE stayed in the file. The importer is not affected, because
+nothing commits between its inserts.
+
+**The change report.** `[actRescore] … changed:` used to compare nine fields
+while the rescore also rewrites `dxcc_prefix`, `dxcc_code` and `cty_cq_zone`,
+so a row could be written with no line saying why. On winter_fd, 8 rows
+changed only their CQ zone or DXCC code. The line now names those three and
+whether an exchange id was minted. One summary line follows:
+`N of M records rewritten in one transaction: X itemised above, Y given an
+exchange id, Z changed only in fields the per-record line does not itemise`.
+A second rescore prints `0 of 1316`. What is written is unchanged, and the
+exchange-id minting (open question F6) is untouched.
+
+**Measured on `winter_fd_2025_w4ta`, base `f0c54f4c` against this change,
+alternated run by run, 9 runs each, warmed up, logging at Warn:**
+
+| | before | after |
+|---|---:|---:|
+| `/RESCORE` of the tracked log (no exchange ids, so every row is rewritten) | 2,168 ms (2,081–2,593) | 475 ms (428–878) |
+| `/RESCORE` of a log already rescored once (nothing to write) | 1,418 ms (1,359–1,743) | 397 ms (381–448) |
+| `/EXPORT` | 468 ms (442–524) | 507 ms (452–896)* |
+
+\* Within noise. An `/EXPORT`-only alternated run of 21 gave a median of
+499 ms before and 481 ms after.
+
+**Equivalence.** All 13 corpus sets went through `/RESCORE` then `/EXPORT` with
+both builds. ADIF, Cabrillo and a dump of every `qso` row are identical once
+the 1,772 exchange ids minted on both sides are masked (`exchange_id`, and
+`APP_TR4W_ID` in the ADIF). Rescoring twice leaves every set's rows unchanged.
+The golden corpus gives 24/0/2 with exit 0, and its 26 artifacts are
+byte-identical between the two builds.
 
 ---
 

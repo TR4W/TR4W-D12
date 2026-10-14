@@ -92,6 +92,14 @@ procedure LogSourceRewind;
   the previous record again. *)
 function LogSourceNext(out aQso: ContestExchange): boolean;
 
+(* LogSourceNext, and the ROW ID of what it read -- the handle
+  uLogStore.LogStoreUpdateQSOsByRowId writes by. For a pass that reads the
+  whole log and rewrites some of it: the rescore reached each row by index
+  (an O(n) OFFSET walk and a 68-column Open, per row) until 2026-10-14.
+  aRowId is 0 when this returns False. *)
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange): boolean;
+
 procedure LogSourceClose;
 
 (* HOW MANY QSO RECORDS THE LOG HOLDS.  -1 if it cannot be read.
@@ -271,6 +279,13 @@ end;
 function LogSourceNext(out aQso: ContestExchange): boolean;
 begin
    Result := (Repo <> nil) and Repo.ReadNext(aQso);
+end;
+
+function LogSourceNextWithRowId(out aRowId: Int64;
+                                out aQso: ContestExchange): boolean;
+begin
+   aRowId := 0;
+   Result := (Repo <> nil) and Repo.ReadNextWithRowId(aRowId, aQso);
 end;
 
 procedure LogSourceClose;

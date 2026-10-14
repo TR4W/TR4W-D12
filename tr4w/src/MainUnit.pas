@@ -8748,6 +8748,24 @@ var
   beforeZoneMult  : Boolean;
   beforeQSOPoints : Word;
   beforeDupe      : Boolean;
+  (* The country lookup's other outputs -- dxcc_prefix, dxcc_code and
+    cty_cq_zone in the row. A rescore rewrites them too, and the line used to
+    itemise none of them, so a row could be written with no line saying why. *)
+  beforeQTHPrefix : PrefixMultiplierString;
+  beforeQTHCountry: Word;
+  beforeQTHZone   : Byte;
+  (* The row being read, by its handle -- what the write goes back to. *)
+  RowId: Int64;
+  (* THE CHANGED ROWS, written in ONE transaction after the read pass.
+    Section 9c, F1 and F4; see uLogRepository.TLogRowUpdates for why they are
+    collected rather than written as the pass goes. *)
+  Pending: TLogRowUpdates;
+  (* What the write covers, for the closing summary line. *)
+  MintedId: Boolean;
+  Itemised: Boolean;
+  MintedCount: integer;
+  ItemisedCount: integer;
+  UnitemisedCount: integer;
 begin
 
   (* ROWS, NOT A MEMORY MAP -- step B5.
@@ -8766,155 +8784,237 @@ begin
     rescore did not touch was simply left alone in the file. CompareMem against
     a snapshot restores that property, and it matters -- a rescore of a
     thousand-QSO log would otherwise issue a thousand UPDATEs to write back
-    values that never changed. *)
+    values that never changed.
+
+    ONE READ, ONE WRITE -- section 9c, F1 and F4 (2026-10-14). The records
+    came from LogSourceReadAtIndex, which is an OFFSET walk to find the row
+    (O(n)) and a 68-column Open to read it, per record; each changed record
+    then went back through LogStoreUpdateQSOAtIndex, which walked the OFFSET
+    again and COMMITTED, per record. Now one cursor reads the log in order
+    and yields each row's id, the changed records are collected with it, and
+    LogStoreUpdateQSOsByRowId writes them in one transaction once the cursor
+    is closed. A failure rolls the whole pass back instead of leaving the log
+    half rewritten.
+
+    THE LOOP BODY IS STILL UNCHANGED: what is fetched, how it is fetched and
+    where it is stored changed, and nothing that decides WHAT is written.
+    Every UpdAction goes through this one loop, so all three that have
+    callers -- actRescore, actSetClearDupesheetBit, actClearMults -- read
+    and write this way; actResetClearDupesheetBit and actGetCRC32 have none. *)
   if not LogSourceOpen then
      begin
      Exit;
      end;
-  LogSize := LogSourceRecordCount;
-  if LogSize <= 0 then
-     begin
-     goto 2;
-     end;
-  QSOCounter := 0;
-
-  if UpdAction = actRescore then
-     begin
-     // LoadingInLogFile := True;
-     Sheet.DisposeOfMemoryAndZeroTotals;
-     end;
-  1:
-  if not LogSourceReadAtIndex(QSOCounter, RescoredRXData) then
-     begin
-     goto 4;
-     end;
-  RescoredBefore := RescoredRXData;
-
-  if RescoredRXData.ceRecordKind = rkQSO then
-     begin
-     if UpdAction = actSetClearDupesheetBit then
+  Pending := TLogRowUpdates.Create;
+  try
+     MintedCount := 0;
+     ItemisedCount := 0;
+     UnitemisedCount := 0;
+     (* Read by the summary line, which an empty log also reaches. *)
+     QSOCounter := 0;
+     LogSize := LogSourceRecordCount;
+     if LogSize <= 0 then
         begin
-        RescoredRXData.ceClearDupeSheet := True;
-        end;
-
-     if UpdAction = actResetClearDupesheetBit then
-        begin
-        RescoredRXData.ceClearDupeSheet := False;
+        goto 2;
         end;
 
      if UpdAction = actRescore then
-       // Issue #750: X-QSO records stay in the log (for NIL protection
-       // of the worked station) but are deliberately excluded from
-       // every scoring artifact -- the rescore rebuilds the dupe
-       // sheet, mult sheet, and totals from this loop, so skipping
-       // X-QSO from the main scoring path makes them invisible to
-       // dupe checking, mults, and totals.  We ALSO zero out the
-       // record's own QSOPoints and ceDupe fields so the editable log
-       // displays a consistent "0" in the Pts column for every
-       // X-QSO record (matches DXLog.net's convention -- N1MM keeps
-       // the historical points, but a consistent visual signal is
-       // more useful at a glance).  The contact still exports to
-       // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
-       if RescoredRXData.ceQSO_Deleted = False then
-         if RescoredRXData.ceQSO_Deleted = False then
-         if RescoredRXData.ceXQSO then
-            begin
-            RescoredRXData.QSOPoints := 0;
-            RescoredRXData.ceDupe    := False;
-            end
-         else
-            begin
-            // Snapshot before rescore so we can report what (if anything) changed.
-            beforeCountryID  := RescoredRXData.QTH.CountryID;
-            beforePrefix     := RescoredRXData.Prefix;
-            beforeDXQTH      := RescoredRXData.DXQTH;
-            beforeDomMult    := RescoredRXData.DomesticMult;
-            beforeDXMult     := RescoredRXData.DXMult;
-            beforePrefixMult := RescoredRXData.PrefixMult;
-            beforeZoneMult   := RescoredRXData.ZoneMult;
-            beforeQSOPoints  := RescoredRXData.QSOPoints;
-            beforeDupe       := RescoredRXData.ceDupe;
+        begin
+        // LoadingInLogFile := True;
+        Sheet.DisposeOfMemoryAndZeroTotals;
+        end;
+     LogSourceRewind;
+     1:
+     if not LogSourceNextWithRowId(RowId, RescoredRXData) then
+        begin
+        goto 4;
+        end;
+     RescoredBefore := RescoredRXData;
+     MintedId := False;
+     Itemised := False;
 
-            (* THE ID IS MINTED BEFORE THE SCORING, where it used to follow the
-              country lookups. Nothing in RecomputeQSOScoring reads it, so the
-              order is immaterial -- and keeping GetGUID out of that routine is
-              what lets the contest matrix call it and stay deterministic. *)
-            if RescoredRXData.id = '' then
-               begin
-               RescoredRXData.id := GetGUID;
-               end;
+     if RescoredRXData.ceRecordKind = rkQSO then
+        begin
+        if UpdAction = actSetClearDupesheetBit then
+           begin
+           RescoredRXData.ceClearDupeSheet := True;
+           end;
 
-            RecomputeQSOScoring(RescoredRXData);
-            if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
-              and (VisibleLog.CallIsADupe(RescoredRXData.Callsign,
-              RescoredRXData.Band, RescoredRXData.Mode)) then
+        if UpdAction = actResetClearDupesheetBit then
+           begin
+           RescoredRXData.ceClearDupeSheet := False;
+           end;
+
+        if UpdAction = actRescore then
+          // Issue #750: X-QSO records stay in the log (for NIL protection
+          // of the worked station) but are deliberately excluded from
+          // every scoring artifact -- the rescore rebuilds the dupe
+          // sheet, mult sheet, and totals from this loop, so skipping
+          // X-QSO from the main scoring path makes them invisible to
+          // dupe checking, mults, and totals.  We ALSO zero out the
+          // record's own QSOPoints and ceDupe fields so the editable log
+          // displays a consistent "0" in the Pts column for every
+          // X-QSO record (matches DXLog.net's convention -- N1MM keeps
+          // the historical points, but a consistent visual signal is
+          // more useful at a glance).  The contact still exports to
+          // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
+          if RescoredRXData.ceQSO_Deleted = False then
+            if RescoredRXData.ceQSO_Deleted = False then
+            if RescoredRXData.ceXQSO then
                begin
                RescoredRXData.QSOPoints := 0;
-               RescoredRXData.ceDupe := True;
+               RescoredRXData.ceDupe    := False;
                end
             else
                begin
-               RescoredRXData.ceDupe := False;
+               // Snapshot before rescore so we can report what (if anything) changed.
+               beforeCountryID  := RescoredRXData.QTH.CountryID;
+               beforePrefix     := RescoredRXData.Prefix;
+               beforeDXQTH      := RescoredRXData.DXQTH;
+               beforeDomMult    := RescoredRXData.DomesticMult;
+               beforeDXMult     := RescoredRXData.DXMult;
+               beforePrefixMult := RescoredRXData.PrefixMult;
+               beforeZoneMult   := RescoredRXData.ZoneMult;
+               beforeQSOPoints  := RescoredRXData.QSOPoints;
+               beforeDupe       := RescoredRXData.ceDupe;
+               beforeQTHPrefix  := RescoredRXData.QTH.Prefix;
+               beforeQTHCountry := RescoredRXData.QTH.Country;
+               beforeQTHZone    := RescoredRXData.QTH.Zone;
+
+               (* THE ID IS MINTED BEFORE THE SCORING, where it used to follow the
+                 country lookups. Nothing in RecomputeQSOScoring reads it, so the
+                 order is immaterial -- and keeping GetGUID out of that routine is
+                 what lets the contest matrix call it and stay deterministic. *)
+               if RescoredRXData.id = '' then
+                  begin
+                  RescoredRXData.id := GetGUID;
+                  MintedId := True;
+                  end;
+
+               RecomputeQSOScoring(RescoredRXData);
+               if (not tAllowDupeQSOs) and (RescoredRXData.ceClearDupeSheet = False)
+                 and (VisibleLog.CallIsADupe(RescoredRXData.Callsign,
+                 RescoredRXData.Band, RescoredRXData.Mode)) then
+                  begin
+                  RescoredRXData.QSOPoints := 0;
+                  RescoredRXData.ceDupe := True;
+                  end
+               else
+                  begin
+                  RescoredRXData.ceDupe := False;
+                  end;
+
+               // Report whenever actRescore actually mutated a record.  One line
+               // per changed record makes silent rescore-induced corruption
+               // (rover-call DX=G, mult-flag flip, points change, etc.) visible.
+               if (beforeCountryID  <> RescoredRXData.QTH.CountryID) or
+                  (beforePrefix     <> RescoredRXData.Prefix)        or
+                  (beforeDXQTH      <> RescoredRXData.DXQTH)         or
+                  (beforeDomMult    <> RescoredRXData.DomesticMult)  or
+                  (beforeDXMult     <> RescoredRXData.DXMult)        or
+                  (beforePrefixMult <> RescoredRXData.PrefixMult)    or
+                  (beforeZoneMult   <> RescoredRXData.ZoneMult)      or
+                  (beforeQSOPoints  <> RescoredRXData.QSOPoints)     or
+                  (beforeDupe       <> RescoredRXData.ceDupe)        or
+                  (beforeQTHPrefix  <> RescoredRXData.QTH.Prefix)    or
+                  (beforeQTHCountry <> RescoredRXData.QTH.Country)   or
+                  (beforeQTHZone    <> RescoredRXData.QTH.Zone) then
+                  begin
+                  Itemised := True;
+                  logger.Info('[actRescore] %s [%d] changed: ' +
+                     'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
+                     'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
+                     'QSOPoints %d->%d Dupe %s->%s ' +
+                     'DXCCPrefix [%s]->[%s] DXCC %d->%d CQZone %d->%d IdMinted %s',
+                     [string(RescoredRXData.Callsign), QSOCounter,
+                      string(beforeCountryID),  string(RescoredRXData.QTH.CountryID),
+                      string(beforePrefix),     string(RescoredRXData.Prefix),
+                      string(beforeDXQTH),      string(RescoredRXData.DXQTH),
+                      BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData.DomesticMult, True),
+                      BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData.DXMult,       True),
+                      BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData.PrefixMult,   True),
+                      BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData.ZoneMult,     True),
+                      beforeQSOPoints, RescoredRXData.QSOPoints,
+                      BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData.ceDupe, True),
+                      string(beforeQTHPrefix),  string(RescoredRXData.QTH.Prefix),
+                      beforeQTHCountry, RescoredRXData.QTH.Country,
+                      beforeQTHZone,    RescoredRXData.QTH.Zone,
+                      BoolToStr(MintedId, True)]);
+                  end;
+
+               Sheet.AddQSOToSheets(@RescoredRXData, False);
+               CallsignsList.AddCallsign(RescoredRXData.Callsign,
+                 RescoredRXData.Mode, RescoredRXData.Band,
+                 RescoredRXData.ceClearDupeSheet);
                end;
 
-            // Report whenever actRescore actually mutated a record.  One line
-            // per changed record makes silent rescore-induced corruption
-            // (rover-call DX=G, mult-flag flip, points change, etc.) visible.
-            if (beforeCountryID  <> RescoredRXData.QTH.CountryID) or
-               (beforePrefix     <> RescoredRXData.Prefix)        or
-               (beforeDXQTH      <> RescoredRXData.DXQTH)         or
-               (beforeDomMult    <> RescoredRXData.DomesticMult)  or
-               (beforeDXMult     <> RescoredRXData.DXMult)        or
-               (beforePrefixMult <> RescoredRXData.PrefixMult)    or
-               (beforeZoneMult   <> RescoredRXData.ZoneMult)      or
-               (beforeQSOPoints  <> RescoredRXData.QSOPoints)     or
-               (beforeDupe       <> RescoredRXData.ceDupe) then
-               begin
-               logger.Info('[actRescore] %s [%d] changed: ' +
-                  'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
-                  'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
-                  'QSOPoints %d->%d Dupe %s->%s',
-                  [string(RescoredRXData.Callsign), QSOCounter,
-                   string(beforeCountryID),  string(RescoredRXData.QTH.CountryID),
-                   string(beforePrefix),     string(RescoredRXData.Prefix),
-                   string(beforeDXQTH),      string(RescoredRXData.DXQTH),
-                   BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData.DomesticMult, True),
-                   BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData.DXMult,       True),
-                   BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData.PrefixMult,   True),
-                   BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData.ZoneMult,     True),
-                   beforeQSOPoints, RescoredRXData.QSOPoints,
-                   BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData.ceDupe, True)]);
-               end;
-
-            Sheet.AddQSOToSheets(@RescoredRXData, False);
-            CallsignsList.AddCallsign(RescoredRXData.Callsign,
-              RescoredRXData.Mode, RescoredRXData.Band,
-              RescoredRXData.ceClearDupeSheet);
-            end;
-
-     if UpdAction = actClearMults then
-        begin
-        RescoredRXData.ceClearMultSheet := True;
-        RescoredRXData.DomesticMult := False;
-        RescoredRXData.DXMult := False;
-        RescoredRXData.PrefixMult := False;
-        RescoredRXData.ZoneMult := False;
+        if UpdAction = actClearMults then
+           begin
+           RescoredRXData.ceClearMultSheet := True;
+           RescoredRXData.DomesticMult := False;
+           RescoredRXData.DXMult := False;
+           RescoredRXData.PrefixMult := False;
+           RescoredRXData.ZoneMult := False;
+           end;
         end;
-     end;
-  (* The mapping wrote back implicitly; this says so. *)
-  if not CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange)) then
-     begin
-     LogStoreUpdateQSOAtIndex(QSOCounter, RescoredRXData);
-     end;
+     (* The mapping wrote back implicitly; this says so. Collected here and
+       written below, once the cursor is closed. *)
+     if not CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange)) then
+        begin
+        Pending.Add(RowId, RescoredRXData);
+        if MintedId then
+           begin
+           Inc(MintedCount);
+           end;
+        if Itemised then
+           begin
+           Inc(ItemisedCount);
+           end;
+        if (not MintedId) and (not Itemised) then
+           begin
+           Inc(UnitemisedCount);
+           end;
+        end;
 
-  inc(QSOCounter);
-  if QSOCounter <> LogSize then
-     begin
-     goto 1;
-     end;
-  4:
-  2:
-  LogSourceClose;
+     inc(QSOCounter);
+     if QSOCounter <> LogSize then
+        begin
+        goto 1;
+        end;
+     4:
+     2:
+     (* CLOSED BEFORE THE WRITE: the batch's opening commit would close the
+       cursor anyway, and uLogRepository refuses to begin while it is open. *)
+     LogSourceClose;
+
+     if LogStoreUpdateQSOsByRowId(Pending) then
+        begin
+        (* WHAT WAS WRITTEN, IN ONE LINE. The per-record line above itemises
+          what scoring and the country lookup changed; a row can also be
+          rewritten because it was given an exchange id, or for a difference
+          outside those fields, and without this nothing said so. Logged when
+          nothing was rewritten too: "0 of N" is how an idempotent second
+          rescore shows that it was one. *)
+        if UpdAction = actRescore then
+           begin
+           logger.Info('[actRescore] %d of %d records rewritten in one ' +
+              'transaction: %d itemised above, %d given an exchange id, ' +
+              '%d changed only in fields the per-record line does not itemise',
+              [Pending.Count, QSOCounter, ItemisedCount, MintedCount,
+               UnitemisedCount]);
+           end
+        else
+           begin
+           logger.Info('[tUpdateLog] action %d: %d of %d records rewritten in ' +
+              'one transaction', [Ord(UpdAction), Pending.Count, QSOCounter]);
+           end;
+        end;
+  finally
+     (* Again on the way out of an exception, which skipped the close above.
+       Closing twice is harmless: the second finds no cursor. *)
+     LogSourceClose;
+     Pending.Free;
+  end;
 
   if UpdAction = actRescore then
      begin

@@ -42,6 +42,11 @@ type
       procedure TestTheColumnTableAgreesWithQSO_COLUMNS;
       procedure TestAReaderWhoseColumnsDriftedFailsLoudly;
       procedure TestEveryReaderReturnsTheSameRecord;
+      procedure TestTheCursorYieldsEachRowsId;
+      procedure TestARowIdReaderNeedsTheIdLast;
+      procedure TestABatchCommitsByRowId;
+      procedure TestAFailedBatchRollsBackWhole;
+      procedure TestABatchRefusesWhatWouldBreakIt;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
@@ -1431,6 +1436,409 @@ begin
    Scrub(fn);
 end;
 
+(* THE CURSOR'S ROW ID IS THE ROW IT READ. The rescore writes back by that id,
+  so a cursor that paired a record with the wrong id -- or with 0 -- would
+  rewrite the wrong QSO, or none. Three rows, so a constant answer cannot
+  pass; and ReadNext, which now reads through the same routine, still returns
+  the same records without the id. *)
+procedure TLogRepositoryTests.TestTheCursorYieldsEachRowsId;
+const
+   ROWS = 3;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   written: array[0..ROWS - 1] of ContestExchange;
+   rowIds: array[0..ROWS - 1] of Int64;
+   back: ContestExchange;
+   rowId: Int64;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('the sequential cursor yields each record with its own row id');
+   fn := TempLogName('cursorids.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         for i := 0 to ROWS - 1 do
+            begin
+            MakeDistinctQSO(written[i], i);
+            rowIds[i] := repo.SaveQSO(written[i]);
+            end;
+         repo.Commit;
+         CheckTrue((rowIds[0] <> rowIds[1]) and (rowIds[1] <> rowIds[2]),
+                   'three distinct row ids to tell apart');
+
+         repo.OpenSequentialRead;
+         try
+            for i := 0 to ROWS - 1 do
+               begin
+               CheckTrue(repo.ReadNextWithRowId(rowId, back),
+                         'ReadNextWithRowId reads row ' + IntToStr(i));
+               CheckEquals(integer(rowIds[i]), integer(rowId),
+                           'and names the row it read, #' + IntToStr(i));
+               CompareQSO(written[i], back, 'ReadNextWithRowId #' + IntToStr(i));
+               end;
+            CheckFalse(repo.ReadNextWithRowId(rowId, back), 'then the end');
+            CheckEquals(0, integer(rowId), 'with no row id at the end');
+         finally
+            repo.CloseSequentialRead;
+         end;
+
+         repo.OpenSequentialRead;
+         try
+            for i := 0 to ROWS - 1 do
+               begin
+               CheckTrue(repo.ReadNext(back), 'ReadNext reads row ' + IntToStr(i));
+               CompareQSO(written[i], back, 'ReadNext beside the id #' + IntToStr(i));
+               end;
+         finally
+            repo.CloseSequentialRead;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A READER THAT ALSO SELECTS THE ROW ID takes it AFTER QSO_COLUMNS, and the
+  guard checks that position by name too. Without the trailing id, with
+  another column there, or with the id moved to the front, it refuses. *)
+procedure TLogRepositoryTests.TestARowIdReaderNeedsTheIdLast;
+var
+   db: TLogDatabase;
+   fn: string;
+   list: AnsiString;
+
+   function Verdict(const aColumns: AnsiString): string;
+   var
+      q: TSQLQuery;
+   begin
+      Result := '';
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.SQL.Text := 'SELECT ' + aColumns + ' FROM qso';
+         q.Open;
+         try
+            try
+               VerifyQsoColumns(q, True);
+            except
+               on e: ELogRepositoryError do
+                  begin
+                  Result := e.Message;
+                  if Result = '' then
+                     begin
+                     Result := '(raised with no message)';
+                     end;
+                  end;
+            end;
+         finally
+            q.Close;
+         end;
+      finally
+         q.Free;
+      end;
+   end;
+
+begin
+   BeginTest('a reader that selects the row id must have it after QSO_COLUMNS');
+   fn := TempLogName('rowidcolumns.db');
+   Scrub(fn);
+   list := QsoColumnList;
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      CheckEquals('', Verdict(list + ', id'), 'QSO_COLUMNS then id is accepted');
+      CheckTrue(Verdict(list) <> '', 'without the id it is refused');
+      CheckTrue(Pos('row id', Verdict(list + ', guid')) > 0,
+                'another column in its place is refused, naming the row id: ' +
+                Verdict(list + ', guid'));
+      CheckTrue(Verdict('id, ' + list) <> '',
+                'the id in front, which shifts every column, is refused');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A BATCH WRITES BY ROW ID AND COMMITS -- durably. Two of three rows are
+  rewritten through WriteBatch, then the database is CLOSED AND REOPENED, so
+  what is checked is what reached the file and not what one connection can
+  see of its own transaction. The third row, not in the batch, is unchanged. *)
+procedure TLogRepositoryTests.TestABatchCommitsByRowId;
+const
+   ROWS = 3;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   updates: TLogRowUpdates;
+   written: array[0..ROWS - 1] of ContestExchange;
+   edited: array[0..ROWS - 1] of ContestExchange;
+   rowIds: array[0..ROWS - 1] of Int64;
+   back: ContestExchange;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('a batch rewrites rows by row id and commits them');
+   fn := TempLogName('batchcommit.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         for i := 0 to ROWS - 1 do
+            begin
+            MakeDistinctQSO(written[i], i);
+            rowIds[i] := repo.SaveQSO(written[i]);
+            edited[i] := written[i];
+            end;
+         repo.Commit;
+
+         (* Rows 0 and 2, LAST FIRST, so a write that went by position in the
+           list rather than by row id would land on the wrong row. *)
+         edited[0].QSOPoints := 77;
+         edited[0].id := 'minted0';
+         edited[2].QSOPoints := 99;
+         edited[2].ceDupe := not written[2].ceDupe;
+
+         updates := TLogRowUpdates.Create;
+         try
+            updates.Add(rowIds[2], edited[2]);
+            updates.Add(rowIds[0], edited[0]);
+            CheckEquals(2, updates.Count, 'two rows collected');
+            CheckEquals(integer(rowIds[2]), integer(updates.RowId(0)),
+                        'held in the order added');
+            repo.WriteBatch(updates);
+         finally
+            updates.Free;
+         end;
+         CheckFalse(repo.InBatch, 'the batch is closed after it commits');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckTrue(repo.LoadQSO(rowIds[0], back), 'row 0 reads back after reopening');
+         CompareQSO(edited[0], back, 'batched row 0');
+         CheckTrue(repo.LoadQSO(rowIds[1], back), 'row 1 reads back');
+         CompareQSO(written[1], back, 'row 1, not in the batch, unchanged');
+         CheckTrue(repo.LoadQSO(rowIds[2], back), 'row 2 reads back');
+         CompareQSO(edited[2], back, 'batched row 2');
+         CheckEquals(ROWS, integer(repo.RecordCount), 'and no row was added');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A BATCH THAT FAILS PART-WAY LEAVES NOTHING OF ITSELF.
+
+  The fault is injected the way it would arrive: the second row of the batch
+  does not exist. The first row's UPDATE has already run by then, inside the
+  transaction, so this is the case the rollback exists for. Checked after a
+  reopen, so it is the FILE that is unchanged.
+
+  It also pins the boundary: a write left UNCOMMITTED before the batch began
+  is committed BY BeginBatchUpdate, so it survives the rollback -- the
+  rollback undoes the batch and nothing before it.
+
+  THAT WRITE IS A SESSION VALUE, NOT A QSO, AND IT HAS TO BE. sqldb starts a
+  transaction only when a statement PREPARES (sqldb.pp:1296). SaveQSO runs
+  FInsert, which stays prepared, so after a commit it executes in SQLite's
+  autocommit and is durable at once -- measured: a QSO "saved and not
+  committed" here survived a ROLLBACK of the adopted transaction, and this
+  pin passed with the commit-first line removed. SaveSessionValue prepares
+  a fresh statement, which BEGINs, so its write genuinely waits. *)
+procedure TLogRepositoryTests.TestAFailedBatchRollsBackWhole;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   updates: TLogRowUpdates;
+   first, edited, back: ContestExchange;
+   firstId: Int64;
+   raised: boolean;
+   fn: string;
+begin
+   BeginTest('a batch that fails part-way is rolled back whole');
+   fn := TempLogName('batchrollback.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(first, 1);
+         firstId := repo.SaveQSO(first);
+         repo.Commit;
+
+         (* Written and deliberately NOT committed. *)
+         repo.SaveSessionValue('pinBeforeBatch', 'kept');
+         CheckTrue(db.Transaction.Active,
+                   'the session write is waiting in an open transaction');
+
+         edited := first;
+         edited.QSOPoints := 55;
+         edited.Callsign := 'CHANGED';
+
+         updates := TLogRowUpdates.Create;
+         try
+            updates.Add(firstId, edited);
+            updates.Add(firstId + 1000, edited);
+            raised := False;
+            try
+               repo.WriteBatch(updates);
+            except
+               on e: ELogRepositoryError do
+                  begin
+                  raised := True;
+                  CheckTrue(Pos('no qso row', e.Message) > 0,
+                            'it names the missing row: ' + e.Message);
+                  end;
+            end;
+            CheckTrue(raised, 'a batch naming a missing row raises');
+         finally
+            updates.Free;
+         end;
+         CheckFalse(repo.InBatch, 'and the batch is closed by the rollback');
+
+         CheckTrue(repo.LoadQSO(firstId, back), 'the first row still reads');
+         CompareQSO(first, back, 'the first row, as seen by the same connection');
+
+         (* AND THE NEXT BATCH WORKS: a failed one does not wedge the
+           repository. *)
+         updates := TLogRowUpdates.Create;
+         try
+            edited.Callsign := 'LATER';
+            updates.Add(firstId, edited);
+            repo.WriteBatch(updates);
+         finally
+            updates.Free;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckEquals('kept', string(repo.SessionValue('pinBeforeBatch', 'lost')),
+                     'the write made before the batch survived its rollback');
+         CheckTrue(repo.LoadQSO(firstId, back), 'the first row reads after reopening');
+         CheckEquals('LATER', string(back.Callsign),
+                     'carrying the later batch and not the failed one');
+         CheckEquals(55, integer(back.QSOPoints),
+                     'whose points the later batch also wrote');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* THE THREE MISUSES THAT WOULD BREAK A BATCH ARE REFUSED, LOUDLY:
+  beginning while the sequential cursor is open (the commit would close it
+  under its reader), beginning a second batch inside the first, and writing
+  a batch row with no batch open. *)
+procedure TLogRepositoryTests.TestABatchRefusesWhatWouldBreakIt;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   rowId: Int64;
+   fn: string;
+
+   function Raises(aStep: integer): boolean;
+   begin
+      Result := False;
+      try
+         case aStep of
+            0:
+               begin
+               repo.BeginBatchUpdate;
+               end;
+            1:
+               begin
+               repo.UpdateQSOByRowId(rowId, qso);
+               end;
+         end;
+      except
+         on ELogRepositoryError do
+            begin
+            Result := True;
+            end;
+      end;
+   end;
+
+begin
+   BeginTest('a batch refuses to begin over a cursor, to nest, or to run unopened');
+   fn := TempLogName('batchmisuse.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(qso, 0);
+         rowId := repo.SaveQSO(qso);
+         repo.Commit;
+
+         CheckTrue(Raises(1), 'a batch row with no batch open is refused');
+
+         repo.OpenSequentialRead;
+         try
+            CheckTrue(Raises(0), 'beginning while the cursor is open is refused');
+            CheckFalse(repo.InBatch, 'and no batch was begun');
+            CheckTrue(repo.ReadNext(qso), 'and the cursor still reads');
+         finally
+            repo.CloseSequentialRead;
+         end;
+
+         repo.BeginBatchUpdate;
+         try
+            CheckTrue(Raises(0), 'a second batch inside the first is refused');
+            CheckTrue(repo.InBatch, 'and the first is still open');
+         finally
+            repo.RollbackBatch;
+         end;
+         CheckFalse(repo.InBatch, 'until it is rolled back');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
    (* FIRST, AND ON EVERY PLATFORM: these need no D7 fixture, and they pin
@@ -1438,6 +1846,11 @@ begin
    TestTheColumnTableAgreesWithQSO_COLUMNS;
    TestAReaderWhoseColumnsDriftedFailsLoudly;
    TestEveryReaderReturnsTheSameRecord;
+   TestTheCursorYieldsEachRowsId;
+   TestARowIdReaderNeedsTheIdLast;
+   TestABatchCommitsByRowId;
+   TestAFailedBatchRollsBackWhole;
+   TestABatchRefusesWhatWouldBreakIt;
 
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is

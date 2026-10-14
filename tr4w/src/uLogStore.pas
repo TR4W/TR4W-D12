@@ -98,6 +98,26 @@ procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);
   QSO editor does with a byte offset.  Never raises. *)
 procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
 
+type
+   (* Re-exported so a caller can collect rows for LogStoreUpdateQSOsByRowId
+     without using uLogRepository itself -- and taking on every name it
+     declares into a uses clause where order decides which one wins. *)
+   TLogRowUpdates = uLogRepository.TLogRowUpdates;
+
+(* REWRITES MANY ROWS, BY ROW ID, IN ONE TRANSACTION -- ALL OR NONE.
+
+  What a whole-log pass wants: the rescore and the dupe- and mult-sheet
+  clears read every row through uLogSource.LogSourceNextWithRowId, collect
+  the ones they changed, and hand them here. Section 9c, F4: one commit
+  instead of one per row, and no OFFSET walk to find each row again.
+
+  True when every row was written and the transaction committed (also for an
+  empty list). On failure the batch is ROLLED BACK -- the log holds exactly
+  what it held before -- and the failure is reported and the store disabled,
+  the same rule as every other write here: LogStoreIsUsable then says so,
+  which is what /RESCORE's exit code reads. Never raises. *)
+function LogStoreUpdateQSOsByRowId(aUpdates: TLogRowUpdates): boolean;
+
 (* Rewrites the row the multi-op network identifies by (ceQSOID1, ceQSOID2).
   Does nothing when that pair is unset.  Never raises. *)
 (* True when a QSO with that network key was found and rewritten.
@@ -1378,6 +1398,49 @@ begin
       on E: Exception do
          begin
          Disable('rewriting a QSO by position', E);
+         end;
+   end;
+end;
+
+function LogStoreUpdateQSOsByRowId(aUpdates: TLogRowUpdates): boolean;
+begin
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   (* NOT EnsureOpen. The row ids came from a read of THIS open log; a log
+     opened or rebuilt now would be a different set of rows, and writing
+     these ids into it would be wrong rather than late. *)
+   if GRepository = nil then
+      begin
+      if logger <> nil then
+         begin
+         logger.Error('[LogStore] %d rewritten QSOs were not saved: the log ' +
+                      'is not open.', [aUpdates.Count]);
+         end;
+      Exit;
+      end;
+
+   if aUpdates.Count = 0 then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   try
+      (* WriteBatch has rolled back before anything reaches the handler. *)
+      GRepository.WriteBatch(aUpdates);
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         (* string(): the RTL's IntToStr returns AnsiString, and Disable takes
+           a string. Stated, so the widening is not a build warning. *)
+         Disable('rewriting ' + string(IntToStr(aUpdates.Count)) + ' QSOs in one ' +
+                 'transaction -- ROLLED BACK, so the log is as it was ' +
+                 'before this pass', E);
          end;
    end;
 end;

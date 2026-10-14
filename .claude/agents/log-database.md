@@ -97,6 +97,31 @@ measures the same, but only as a side effect, so it was not chosen. A statement
 called per row is prepared once and kept, like `FRowIdAtIndex`. Do not create it
 per call. Numbers: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §9c.
 
+**A WHOLE-LOG PASS READS ONCE AND WRITES ONCE (F1/F4, 2026-10-14).**
+`tUpdateLog` runs the rescore and the dupe- and mult-sheet clears. It reads
+through `LogSourceNextWithRowId`, collects the changed records in a
+`TLogRowUpdates` (row id + record), closes the cursor, and writes them with
+`LogStoreUpdateQSOsByRowId`, which is all or none: `TLogRepository.WriteBatch`
+rolls back and re-raises, then the store disables itself.
+- **Do not go back to `LogSourceReadAtIndex` in a loop.** It is an `OFFSET` walk
+  plus a 68-column Open per row. winter_fd's `/RESCORE` went from 2.17 s to
+  0.48 s without it.
+- **The sequential cursor is `QSO_COLUMNS, id`.** The id comes after the QSO
+  columns, at position `QSO_COLUMN_COUNT`, and is checked by name
+  (`OpenQsoReader(q, True)`).
+- **Never begin a batch with the cursor open.** `Commit` closes every dataset on
+  the transaction (`sqldb.pp:2412`). `BeginBatchUpdate` refuses, which is why
+  the pass collects its rows instead of writing as it goes.
+
+**sqldb STARTS A TRANSACTION ONLY WHEN A STATEMENT PREPARES** (`sqldb.pp:1296`,
+measured 2026-10-14). `FInsert` and `FUpdate` stay prepared, so after any
+`Commit` they run in SQLite AUTOCOMMIT, and each is durable on its own until
+some other statement prepares and BEGINs. Calling them in a row is therefore
+NOT one transaction. `BeginBatchUpdate` calls `StartTransaction` explicitly
+for that reason, and a mutation test proves the rollback depends on it. The
+importer is unaffected, because nothing commits between its inserts. Read any
+other multi-write "one transaction" claim with this in mind.
+
 **`SysUtils.RenameFile` differs by platform:** `MoveFileW` on Windows refuses an
 existing target; `rename(2)` on Unix replaces it. A directory at the target
 fails on both, which is the portable way to make a publish rename fail in a test.

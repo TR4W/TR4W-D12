@@ -116,6 +116,40 @@ type
       Email: AnsiString;
    end;
 
+   (* ROWS TO REWRITE, BY ROW ID -- collected during a whole-log pass and
+      written afterwards in ONE transaction by TLogRepository.WriteBatch.
+      Section 9c, F1 and F4.
+
+      WHY COLLECT RATHER THAN WRITE AS THE PASS GOES. The pass reads through
+      the sequential cursor, and the connection has ONE transaction: sqldb's
+      TSQLTransaction.Commit calls CloseDataSets first (sqldb.pp:2412), so a
+      commit made while the cursor is open closes it under the reader. Writing
+      inline and committing once at the end would avoid that, but it means
+      UPDATEs to the table a live SELECT is stepping through, which SQLite
+      documents as undefined for what the SELECT then sees. A second write
+      transaction is not available either: on SQLite a transaction belongs to
+      the CONNECTION, so it would need a second connection -- the two-connection
+      shape uLogStore removed because a reader pinned a stale WAL snapshot.
+
+      So the pass collects, the cursor closes, and the writes follow. A record
+      is 376 bytes; a 10,000-row log rewritten in full is under 4 MB, for the
+      length of one rescore.
+
+      Owns copies of the records, not references: the caller's local is
+      overwritten by the next row. *)
+   TLogRowUpdates = class(TObject)
+   private
+      FRowIds: array of Int64;
+      FRows: array of ContestExchange;
+      FCount: integer;
+      procedure CheckIndex(aIndex: integer);
+   public
+      procedure Add(aRowId: Int64; const aQso: ContestExchange);
+      function Count: integer;
+      function RowId(aIndex: integer): Int64;
+      function Row(aIndex: integer): ContestExchange;
+   end;
+
    (* Reads and writes QSOs.  Owns its prepared statements and nothing else --
      the connection belongs to the TLogDatabase handed in. *)
    TLogRepository = class(TObject)
@@ -163,9 +197,14 @@ type
         before and 47 after. *)
       FRowIdAtIndex: TSQLQuery;
 
+      (* True between BeginBatchUpdate and a CommitBatch or RollbackBatch that
+         completed. Stays True if a rollback itself fails, so BeginBatchUpdate
+         refuses rather than committing what that rollback left behind. *)
+      FInBatch: boolean;
+
       procedure InvalidateRecordCount;
       function NewReadQuery: TSQLQuery;
-      procedure OpenQsoReader(aQuery: TSQLQuery);
+      procedure OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
       procedure PrepareStatements;
       procedure LoadContest;
       function LastInsertedRowId: Int64;
@@ -439,7 +478,53 @@ type
          correction. *)
       procedure OpenSequentialRead;
       function ReadNext(out aQso: ContestExchange): boolean;
+
+      (* ReadNext, and the ROW ID of the record it read -- the handle
+         UpdateQSOByRowId takes. The cursor SELECTs it after QSO_COLUMNS, so
+         a whole-log pass can rewrite a row without asking where it is: the
+         rescore used RowIdAtIndex, an OFFSET walk, once per row and twice per
+         changed row. 0 at the end. *)
+      function ReadNextWithRowId(out aRowId: Int64;
+                                 out aQso: ContestExchange): boolean;
       procedure CloseSequentialRead;
+
+      (* ONE TRANSACTION FOR MANY ROWS -- section 9c, F4.
+
+         Every other write here commits per call, which is right for a QSO
+         being logged: the commit IS the contact. A whole-log rewrite is the
+         opposite case. Per row it cost a WAL commit apiece (754 ms of a
+         1,316-row rescore, measured 2026-10-14), and a failure part-way
+         left the log half rescored.
+
+         BeginBatchUpdate COMMITS whatever the connection's implicit
+         transaction holds and then begins a fresh one, so the batch's
+         boundary is exact and RollbackBatch undoes the batch and nothing
+         before it. Every caller of a write here commits its own work, so
+         what that first commit ends is normally a read. It REFUSES while
+         the sequential cursor is open, because that commit would close the
+         cursor (sqldb.pp:2412), and it refuses a second batch.
+
+         THE EXPLICIT START IS LOAD-BEARING, and the reason is a measured
+         sqldb fact: it begins a transaction only when a statement PREPARES
+         (sqldb.pp:1296). FUpdate and FInsert stay prepared, so once a commit
+         has ended the implicit transaction they execute in SQLite's
+         AUTOCOMMIT -- each UPDATE durable on its own. Inside the BEGIN this
+         issues they are part of the batch, which is what makes the rollback
+         real (pinned by TestAFailedBatchRollsBackWhole).
+
+         UpdateQSOByRowId RAISES when the row does not exist. UpdateQSO
+         answers False there, which suits an edit; inside a batch a missing
+         row means the batch is not what its caller read, and it must not be
+         half applied.
+
+         WriteBatch is the usual way in: begin, every row, commit, and on ANY
+         exception roll back and re-raise. *)
+      procedure BeginBatchUpdate;
+      procedure UpdateQSOByRowId(aRowId: Int64; const aQso: ContestExchange);
+      procedure CommitBatch;
+      procedure RollbackBatch;
+      procedure WriteBatch(aUpdates: TLogRowUpdates);
+      property InBatch: boolean read FInBatch;
 
       function LoadQSO(aRowId: Int64; out aQso: ContestExchange): boolean;
 
@@ -511,8 +596,11 @@ function QsoColumnTableProblem: AnsiString;
 (* RAISES ELogRepositoryError unless aQuery's fields are QSO_COLUMNS, by name,
   position for position. ReadRecord reads a column by its POSITION, so a reader
   whose SELECT drifted would put one column's value in another field without a
-  single error -- this is what turns that into a loud failure at Open instead. *)
-procedure VerifyQsoColumns(aQuery: TSQLQuery);
+  single error -- this is what turns that into a loud failure at Open instead.
+
+  aTrailingRowId: the reader also SELECTs the row id, AFTER QSO_COLUMNS, so
+  exactly one more column, named id, is required at that position. *)
+procedure VerifyQsoColumns(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
 
 implementation
 
@@ -1060,6 +1148,12 @@ const
    QC_PREFIX: AnsiString = 'qc_';
    QSO_COLUMN_COUNT = Ord(High(TQsoColumn)) + 1;
 
+   (* The row id, which is NOT in QSO_COLUMNS -- it is the table's own key,
+     never bound by a writer. The sequential cursor selects it AFTER them, at
+     position QSO_COLUMN_COUNT. A `string` constant because it is only ever
+     compared with a FieldName and put in a message, both `string`. *)
+   ROW_ID_COLUMN = 'id';
+
 var
    (* FILLED ONCE, by BuildQsoColumnTable from the initialization section, and
      read-only after that -- so readers on any thread see the same table. *)
@@ -1111,23 +1205,44 @@ end;
 (* ONCE PER OPEN, NOT PER ROW: sixty-eight name comparisons against a
   table built at start-up, a few microseconds, so the guard costs nothing a
   reader would notice and is never skipped. *)
-procedure VerifyQsoColumns(aQuery: TSQLQuery);
+procedure VerifyQsoColumns(aQuery: TSQLQuery; aTrailingRowId: boolean);
 var
    column: TQsoColumn;
    actual: AnsiString;
+   expected: integer;
 begin
    if Length(GQsoColumnTableProblem) > 0 then
       begin
       raise ELogRepositoryError.Create(GQsoColumnTableProblem);
       end;
 
-   if aQuery.Fields.Count <> QSO_COLUMN_COUNT then
+   expected := QSO_COLUMN_COUNT;
+   if aTrailingRowId then
+      begin
+      Inc(expected);
+      end;
+
+   if aQuery.Fields.Count <> expected then
       begin
       raise ELogRepositoryError.Create(SysUtils.Format(
-         'A qso reader returned %d columns where QSO_COLUMNS names %d. ' +
+         'A qso reader returned %d columns where QSO_COLUMNS names %d%s. ' +
          'Its fields are read by POSITION, so it refuses rather than read ' +
          'one column into another field.',
-         [aQuery.Fields.Count, QSO_COLUMN_COUNT]));
+         [aQuery.Fields.Count, QSO_COLUMN_COUNT,
+          BoolToStr(aTrailingRowId, ' and the row id follows them', '')]));
+      end;
+
+   (* The FieldName is compared as the string it is -- copying it into an
+     AnsiString first would be a narrowing conversion for no reason. *)
+   if aTrailingRowId and
+      (not SameText(aQuery.Fields[QSO_COLUMN_COUNT].FieldName, ROW_ID_COLUMN)) then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         'A qso reader returned "%s" as column %d where the row id "%s" ' +
+         'belongs. It is read by POSITION, so it refuses rather than take ' +
+         'another column for the row id.',
+         [aQuery.Fields[QSO_COLUMN_COUNT].FieldName, QSO_COLUMN_COUNT,
+          ROW_ID_COLUMN]));
       end;
 
    for column := Low(TQsoColumn) to High(TQsoColumn) do
@@ -1209,11 +1324,11 @@ end;
 
 (* EVERY qso READER OPENS HERE, and is checked before a row is read. A reader
   that opened some other way would bypass the guard ReadRecord depends on. *)
-procedure TLogRepository.OpenQsoReader(aQuery: TSQLQuery);
+procedure TLogRepository.OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean);
 begin
    aQuery.Open;
    try
-      VerifyQsoColumns(aQuery);
+      VerifyQsoColumns(aQuery, aTrailingRowId);
    except
       aQuery.Close;
       raise;
@@ -2350,9 +2465,13 @@ begin
    (* THE SAME QSO_COLUMNS the writer binds and ReadRecord reads. One column
       list, so a column added to the schema cannot reach the writer and miss
       the exporter. *)
-   FCursor.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso ORDER BY id';
+   (* AND THE ROW ID AFTER THEM, for ReadNextWithRowId. After, not before,
+      so every QSO column keeps the position ReadRecord reads it at; one
+      extra field per Open costs an export nothing measurable. *)
+   FCursor.SQL.Text := 'SELECT ' + QSO_COLUMNS + ', ' + ROW_ID_COLUMN +
+                       ' FROM qso ORDER BY id';
    try
-      OpenQsoReader(FCursor);
+      OpenQsoReader(FCursor, True);
    except
       FreeAndNil(FCursor);
       raise;
@@ -2360,17 +2479,167 @@ begin
 end;
 
 function TLogRepository.ReadNext(out aQso: ContestExchange): boolean;
+var
+   ignored: Int64;
 begin
+   Result := ReadNextWithRowId(ignored, aQso);
+end;
+
+function TLogRepository.ReadNextWithRowId(out aRowId: Int64;
+                                          out aQso: ContestExchange): boolean;
+begin
+   aRowId := 0;
    Result := (FCursor <> nil) and (not FCursor.EOF);
    if Result then
       begin
       ReadRecord(FCursor, aQso);
+      aRowId := FCursor.Fields[QSO_COLUMN_COUNT].AsLargeInt;
       FCursor.Next;
       end
    else
       begin
+      (* ContestExchange holds ShortStrings and scalars only, so clearing it
+        whole is safe. *)
       FillChar(aQso, SizeOf(aQso), 0);
       end;
+end;
+
+(* --------------------------------------------------------------------------- *)
+(* one transaction for many rows -- section 9c, F4                             *)
+(* --------------------------------------------------------------------------- *)
+
+procedure TLogRepository.BeginBatchUpdate;
+begin
+   if FInBatch then
+      begin
+      raise ELogRepositoryError.Create(
+         'A batch update is already open on this log. One must be committed ' +
+         'or rolled back before the next begins.');
+      end;
+   if FCursor <> nil then
+      begin
+      raise ELogRepositoryError.Create(
+         'A batch update cannot begin while the sequential read is open: the ' +
+         'commit that starts it would close that cursor under its reader. ' +
+         'Close the read first.');
+      end;
+
+   (* THE IMPLICIT TRANSACTION ENDS HERE, AND OURS STARTS. sqldb starts one on the
+     first statement and leaves it open, so one is usually active here,
+     holding the reads that came before. Starting on top of it is refused
+     (StartTransaction raises when Active), and simply adopting it would make
+     RollbackBatch undo more than the batch. *)
+   if FDatabase.Transaction.Active then
+      begin
+      FDatabase.Transaction.Commit;
+      end;
+   FDatabase.Transaction.StartTransaction;
+   FInBatch := True;
+end;
+
+procedure TLogRepository.UpdateQSOByRowId(aRowId: Int64;
+                                          const aQso: ContestExchange);
+begin
+   if not FInBatch then
+      begin
+      raise ELogRepositoryError.Create(
+         'UpdateQSOByRowId is for a batch: call BeginBatchUpdate first, or ' +
+         'use UpdateQSO for a single edit.');
+      end;
+   if not UpdateQSO(aRowId, aQso) then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         'There is no qso row %d to rewrite. A batch is written from rows its ' +
+         'caller has just read, so a missing one means the batch does not ' +
+         'match the log; it is refused rather than half applied.', [aRowId]));
+      end;
+end;
+
+procedure TLogRepository.CommitBatch;
+begin
+   if not FInBatch then
+      begin
+      raise ELogRepositoryError.Create('CommitBatch with no batch open.');
+      end;
+   (* If the COMMIT itself fails, FInBatch stays True and the transaction is
+     still the batch's, so the caller's RollbackBatch undoes it. *)
+   FDatabase.Transaction.Commit;
+   FInBatch := False;
+end;
+
+procedure TLogRepository.RollbackBatch;
+begin
+   if FDatabase.Transaction.Active then
+      begin
+      FDatabase.Transaction.Rollback;
+      end;
+   (* ONLY AFTER A ROLLBACK THAT RETURNED. Cleared first, a rollback that
+     raised would leave a half-written transaction open with nothing marking
+     it -- and the next BeginBatchUpdate would COMMIT it. *)
+   FInBatch := False;
+end;
+
+procedure TLogRepository.WriteBatch(aUpdates: TLogRowUpdates);
+var
+   i: integer;
+begin
+   BeginBatchUpdate;
+   try
+      for i := 0 to aUpdates.Count - 1 do
+         begin
+         UpdateQSOByRowId(aUpdates.FRowIds[i], aUpdates.FRows[i]);
+         end;
+      CommitBatch;
+   except
+      (* ANY exception -- a missing row, a constraint, a full disk, a failed
+        COMMIT. The log is left exactly as it was before the batch. *)
+      RollbackBatch;
+      raise;
+   end;
+end;
+
+(* --------------------------------------------------------------------------- *)
+(* TLogRowUpdates                                                               *)
+(* --------------------------------------------------------------------------- *)
+
+procedure TLogRowUpdates.CheckIndex(aIndex: integer);
+begin
+   if (aIndex < 0) or (aIndex >= FCount) then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         'TLogRowUpdates: index %d is outside 0..%d.', [aIndex, FCount - 1]));
+      end;
+end;
+
+procedure TLogRowUpdates.Add(aRowId: Int64; const aQso: ContestExchange);
+begin
+   if FCount = Length(FRowIds) then
+      begin
+      (* Doubling, so a whole-log rewrite reallocates a handful of times
+        rather than once per row. *)
+      SetLength(FRowIds, (FCount * 2) + 64);
+      SetLength(FRows, Length(FRowIds));
+      end;
+   FRowIds[FCount] := aRowId;
+   FRows[FCount] := aQso;
+   Inc(FCount);
+end;
+
+function TLogRowUpdates.Count: integer;
+begin
+   Result := FCount;
+end;
+
+function TLogRowUpdates.RowId(aIndex: integer): Int64;
+begin
+   CheckIndex(aIndex);
+   Result := FRowIds[aIndex];
+end;
+
+function TLogRowUpdates.Row(aIndex: integer): ContestExchange;
+begin
+   CheckIndex(aIndex);
+   Result := FRows[aIndex];
 end;
 
 procedure TLogRepository.CloseSequentialRead;
