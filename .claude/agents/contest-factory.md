@@ -183,7 +183,23 @@ the target shape, the M-step migration order and the open questions.
   Russian DX, both RF Championships, Ural Cup, RDA and YO DX override it.
   `uTestContestMultipliers` holds both, with every other contest as a
   ratchet. **No dupe-key virtual** -- no contest's own dupe rule exists to
-  move. A multiplier KIND's arm stays in the sheet until Q4.
+  move. A multiplier KIND's arm stays in the sheet until Q4 -- except the
+  PREFIX kind's, below.
+- **THE PREFIX MULTIPLIER KEY IS THE CLASS'S (M11 S3 part 1, 2026-10-14).**
+  `PrefixMultiplierKey(aQso, out aKey: PrefixMultiplierString): boolean`
+  (base False) is stated by the 32 prefix contests; `LOGEDIT.SetPrefix`
+  asks `ContestPrefixMultiplierKey(ActiveContest(Contest), ...)` once per
+  QSO and its `case` on the kind is gone. **False is "leave the prefix as
+  it was", True with `''` is "the key is empty"** -- the rescore runs over a
+  stored record, so the two are not interchangeable. A rule that depends on
+  the entrant asks `Station` exactly as its `DescribeSession` asks
+  `aStation` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX); keep
+  the two in step until part 2 deletes the kind (plan F20). Shared
+  computation lives in the leaf `uPrefixMultiplierKey` (WAE call regions,
+  SAC and YB districts); a one-field rule is written in the class. A NEW
+  prefix contest overrides `PrefixMultiplierKey` AND states the kind until
+  part 2, and adds a row to `uTestPrefixMultiplierKey`, whose
+  `Test_EveryContestAgreesWithItsSessionKind` fails if the two disagree.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by

@@ -94,6 +94,11 @@ type
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -222,6 +227,17 @@ end;
 function TContestCWOpen.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := IntToStr(aQso.NumberReceived) + ' ' + Trim(string(aQso.Name));
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The worked callsign itself, cut to the field's six characters --
+   SetPrefix's `CallSignPrefix` arm. *)
+function TContestCWOpen.PrefixMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.Callsign;
+   Result := True;
 end;
 
 initialization

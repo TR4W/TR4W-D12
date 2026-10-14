@@ -7285,10 +7285,15 @@ begin
      sets the very value the line before had just set. It was the same in D7
      (MainUnit.pas:5225). It is deleted rather than moved -- a rule that
      changes nothing is not a rule its class could state -- and what it was
-     meant to do is design Q48. *)
-  if ContestSession.DoingPrefixMults or
-     (ContestSession.PrefixMult in [BelgiumPrefixes, SACDistricts, IndonesianDistricts,
-                           Prefix, SouthAmericanPrefixes, NonSouthAmericanPrefixes]) then
+     meant to do is design Q48.
+
+     ITS SECOND HALF IS GONE -- M11 S3, 2026-10-14. The test also read
+     `PrefixMult in [the six kinds above]`, kept for the operator's PREFIX
+     MULTIPLIER line. That command retired at M10 S2, and since M11 S2
+     DoingPrefixMults IS `PrefixMult <> NoPrefixMults`, so the six-kind set
+     was a subset of the first half and could never add a call. The key
+     itself is the contest's (TContestBase.PrefixMultiplierKey). *)
+  if ContestSession.DoingPrefixMults then
      begin
      SetPrefix(RData);
      end;

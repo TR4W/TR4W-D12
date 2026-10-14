@@ -222,8 +222,9 @@ SHAPE3 = [
     "`Call = 'RAEM'` accepted as a callsign"),
    # Missouri's W0MA / K0GQ bonus-call test moved onto its class as declared
    # bonus stations in M6 (25e25461).
-   ("tr4w/src/trdos/logedit.pas", r"RData\.Callsign\s*=\s*'RK1G'", 1, ["GAGARINCUP"],
-    "six GC-station callsigns (`'RK1G'`..`'UN/RA3VM'`)"),
+   # GAGARINCUP's six GC-station callsigns left LOGEDIT.SetPrefix for
+   # TContestGagarinCup.PrefixMultiplierKey at M11 S3 (2026-10-14): the rule
+   # is its class's own, so it is no longer a row.
    # Lifted from logstuff with ResolvePOTAParkFromADIF to the leaf uPOTAReference
    # when POTA gained its class (2026-10-13), and AnsiUpperCase became UpperCase.
    ("tr4w/src/uPOTAReference.pas", r"UpperCase\s*\(\s*aSIG\s*\)\s*=\s*'POTA'", 1, ["POTA"],

@@ -97,6 +97,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -256,6 +261,16 @@ end;
 procedure TContestBataviaFT8.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The CTY prefix of every QSO -- SetPrefix's `Prefix` arm. *)
+function TContestBataviaFT8.PrefixMultiplierKey(const aQso: ContestExchange;
+                                                out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.Prefix;
+   Result := True;
 end;
 
 initialization

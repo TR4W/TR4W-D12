@@ -91,11 +91,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
+   uPrefixMultiplierKey,
    uContestRegistry,
    uCallSignRoutines;
 
@@ -244,6 +250,18 @@ procedure TContestYBDX.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
    aSession.Mode := Phone;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The WPX prefix when either end is Indonesian, else an EMPTY key (still
+   assigned) -- SetPrefix's `IndonesianDistricts` arm. The entrant's country
+   is Station's; the arm read Settings.My.Country, the same setting. *)
+function TContestYBDX.PrefixMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := PrefixMultiplierString(IndonesianDistrict(aQso.QTH, string(Station.MyCountry)));
+   Result := True;
 end;
 
 initialization

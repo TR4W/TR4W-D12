@@ -87,6 +87,11 @@ type
          zone initial exchange and the Mongolian prefix multiplier, both
          already its traits, for every station; with those two gone it
          stated nothing, and the base's says nothing. *)
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -207,6 +212,22 @@ function TContestJTDX.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   A Mongolian station's callsign, and no key for anyone else -- SetPrefix's
+   `MongolianCallSignPrefix` arm. *)
+function TContestJTDX.PrefixMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if aQso.QTH.CountryID = 'JT' then
+      begin
+      aKey := aQso.Callsign;
+      Result := True;
+      end;
 end;
 
 initialization

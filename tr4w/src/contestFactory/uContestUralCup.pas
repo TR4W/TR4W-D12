@@ -118,6 +118,11 @@ type
    protected
       (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
       function GetReportsRunningScore: boolean; override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -285,6 +290,17 @@ end;
 function TContestUralCup.GetReportsRunningScore: boolean;
 begin
    Result := False;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The worked callsign itself, cut to the field's six characters --
+   SetPrefix's `CallSignPrefix` arm. *)
+function TContestUralCup.PrefixMultiplierKey(const aQso: ContestExchange;
+                                             out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.Callsign;
+   Result := True;
 end;
 
 initialization

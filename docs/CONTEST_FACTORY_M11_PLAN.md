@@ -3,7 +3,8 @@
 **Status: PLAN, S0 DONE. S0a, S0b and S0d are DONE (2026-10-14, at
 `95e127a5`); S0c is DONE (2026-10-14, on `3b4c0777`, its re-freeze NY4I's);
 S2 is DONE (2026-10-14, on `c749f2c5`) except its F15 and F6 bullets, which
-wait (section 4 S2); S1 and S3 on are not built.** See section 4 S0 for
+wait (section 4 S2); S3 part 1 (the move) is DONE (2026-10-14, on
+`42a999c1`), its part 2 (the deletion) is not; S1 and S4 on are not built.** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -903,6 +904,77 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
 - *Risk:* low-medium. *Specialists:* `contest-scoring`, `log-database` (the
   `Prefix` key is persisted: the keys must be byte-identical, which the
   13-log rescore checks), `multi-op-network` (the key is in the packet).
+- **PART 1 (THE MOVE) DONE 2026-10-14, on `42a999c1`.** Part 2 is separate
+  and later; nothing in part 1 needs it.
+  - **The seam.** `TContestBase.PrefixMultiplierKey(const aQso; out aKey:
+    PrefixMultiplierString): boolean`, base False; the free
+    `ContestPrefixMultiplierKey(aContest, ...)` answers False for nil
+    (DUMMYCONTEST). **Not the `string` the plan sketched, on purpose:**
+    six live arms (of nine) assigned only on a match and LEFT the QSO's prefix
+    otherwise, and the rescore (`RecomputeQSOScoring`) runs over a stored
+    record, so "no key" (False) and "an empty key" (True, `''`) must stay
+    distinct; and the key is the field's own type, so nothing converts
+    between the rule and the record. `LOGEDIT.SetPrefix` fetches
+    `ActiveContest(Contest)` once per QSO and asks it; its `case` is gone,
+    with the three dead arms (`NorthAmerican`, `Asian`, `Russian`).
+  - **Helpers** (`contestFactory/uPrefixMultiplierKey.pas`, a leaf on VC and
+    `uCallSignRoutines`): ZoneCont's `EuropeanCountriesAndWAECallRegions`,
+    `SACDistrict` and `IndonesianDistrict`, moved as they stood (ZoneCont's
+    copies deleted; each name they call resolved to `uCallSignRoutines`
+    there and does here). `IndonesianDistrict` read `Settings.My.Country`;
+    it takes the entrant's country, and YB DX passes `Station.MyCountry`.
+    The plan's other helpers (WPX prefix, call-as-key, continent filters)
+    were NOT made: each is one field read, and a helper would hold nothing
+    but the contest's choice (design 1.3).
+  - **The 32, by rule.** CTY prefix: APSPRINT, BATAVIA_FT8, CQ WPX CW+SSB
+    (once, on `TContestCQWPXBase`), CQ WPX RTTY, DARCXMAS, OCEANIA DX x2, PCC,
+    UCG. Callsign: CWOPEN, CWOPS, MINI40, MINI80, MINITEST, MST, CUPURAL.
+    JT callsign: JTDX. Six memorial calls: GAGARINCUP (its shape-3 row is
+    gone). South America: SASPRINT. YB: YBDX. Station-dependent, each
+    asking `Station` as its `DescribeSession` does: UBA x2 (none at ON),
+    CQ MM (the Americas from SA, else SA), SAWW (non-SA from SA, else SA),
+    All Asian x2 (none in Asia, else CTY prefix), OK DX (CTY prefix at
+    OK/OM only), WAEDC x2 (call regions in Europe, else none), SAC x2
+    (district outside Scandinavia, else none). 31 units.
+  - **`MainUnit:7290`** -- the `PrefixMult in [six kinds]` half is deleted,
+    not replaced: since S2 `DoingPrefixMults` IS `PrefixMult <>
+    NoPrefixMults`, so the set was a subset of the first half. The test is
+    `DoingPrefixMults` alone, which is "the session has a prefix rule" until
+    part 2 makes it a class answer.
+  - **Pins, written BEFORE the move and run green on the old code.**
+    `uTestPrefixMultiplierKey`: 79 literal (contest, entrant, QSO) -> key
+    rows covering all 32 and every station branch -- including the PY
+    entrant S0c could not reach for CQ MM and SAWW, and ON, SM, JA, OK and
+    YB -- plus a count of 32. The old run went through the program's own
+    case, lifted verbatim into the leaf for that run and selected by
+    `uTestContestKindPin.Kinds` (exported for it): 86,398 -> **86,478**
+    passed, 0 failed. After the move the same rows ask the classes, and
+    `Test_EveryContestAgreesWithItsSessionKind` compares every ContestType
+    x 9 entrants x 11 QSOs (18,513) with the old case, frozen in the test,
+    under the resolved session kind -- no prefix contest lost a branch and
+    no other gained a key; exactly 32 give one: **104,993 passed, 0
+    failed**. That cross-check and its frozen case go with part 2.
+    **PACC needs nothing here** -- it states no prefix kind; its PA branch
+    is a DX rule (S4).
+  - **Matrix: predicted IDENTICAL** (not run). At us/ve/dx each class
+    answers exactly what the session's arm did -- the cross-check proves it
+    for those three entrants' countries and continents among its nine -- so every `pfx=` line, the
+    `== keys` section and every flag follow unchanged. One difference no
+    oracle sees: F20.
+  - **Narrowing 1267 -> 1264** (`$NARROW_CEILING` lowered): SetPrefix's
+    three implicit narrowings went; the classes cast the same truncation
+    explicitly. Measured by a scratch `-B` compile (the incremental build
+    crashed FPC). `Lint-ContestNameTests` 6, unchanged.
+  - **Inventory** (generated, then the tracked doc restored): rows 94 ->
+    **84**; shapes 6/0/13/75 -> **6/0/12/66**; shape-4 sites 108 -> **106**
+    (one `case`, one compare); records 214 -> **199** -- PROXY 75 -> **66**
+    (reach-1 25 -> 20, reach-2-3 50 -> 46), SHARED 70 -> **67**, UNUSED 26 ->
+    **23**, SHAPE 43; contests with rules outside the factory 66 -> **61**
+    (CQMM, GAGARINCUP, SASPRINT, SOUTHAMERICANWW, YBDX leave).
+    `judgements.SHAPE3` lost the GAGARINCUP row in the same change (the
+    generator fails closed on it). Outside the factory `PrefixMultType` is
+    now read only by FCONTEST's two writers, `ContestSession` and the
+    matrix's `active.prefixmult` line -- part 2's list.
 
 ### S4 -- DX multipliers move into the classes (78 contests)
 
@@ -1034,6 +1106,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F16** | inventory section 9.1; `analyses.dead_arms` | (S0a) The "export arms dead by default" table is EMPTY, and not because there are none: it reads `SetHisEx` / `FormatADIFExchangeOfKind` records, and those machines left the scan when their selector became a parameter (`aCtx.SessionExchange`, `aKind`). The same blindness as F1's three unscanned machines. Not fixed at S0a, which judges the machines SHAPE |
 | **F17** | `uProgramMain:2701` versus `:2405` | (S0d) `CD.MasterFileExists` is set after the `/MATRIX` halt (and `/EXPORT`'s), so headless runs never open TRMASTER: `CD.GetEntry('W1AW')` answers "not found" while the shipped file holds W1AW. Every TRMASTER-sourced initial exchange is blank in the matrix |
 | **F19** | `LogCfg` (once, `uProgramMain:2318`); `uProgramMain:2306-2307` versus `uSettingsEffects:353` | (S2) After F9's fix the `Doing*` answers follow a run-time contest switch, but what start-up DERIVED from them and from the exchange does not: `NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`, `SetUpExchangeInformation` and `SetColumnsWidth` run once. A peer's CONTEST line still leaves those describing the previous contest. Not measured on a bench |
+| **F20** | `TContestBase.PrefixMultiplierKey` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX) versus `ContestSession.DoingPrefixMults` | (S3) The key now asks `Station`, which `ActiveContest` refreshes on every call; whether `SetPrefix` is called at all still asks the session kind, fixed at set-up. They agree unless the entrant's country or continent changes mid-session without a CONTEST change (FoundContest is not re-run for MY CALL): then e.g. a UBA log started outside Belgium and switched to an ON call keeps `DoingPrefixMults` but gets no key. YB DX already read the live `Settings.My.Country` before S3. The end state (part 2, §3) asks the class for both, so this closes then. Not measured on a bench |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

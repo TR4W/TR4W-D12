@@ -104,6 +104,11 @@ type
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -328,6 +333,24 @@ end;
 function TContestAllAsianCW.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.Age);
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The CTY prefix for an entrant outside Asia (`Prefix`, which
+   DescribeSession chose there); none for an Asian entrant, whose session ran
+   the trait's NoPrefixMults. *)
+function TContestAllAsianCW.PrefixMultiplierKey(const aQso: ContestExchange;
+                                                out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyContinent = Asia then
+      begin
+      Exit;
+      end;
+   aKey := aQso.QTH.Prefix;
+   Result := True;
 end;
 
 initialization

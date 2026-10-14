@@ -74,7 +74,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   WHAT IS NOT HERE. Stations the matrix does not run -- a JA, OK/OM, ON,
   Scandinavian, Russian, YB, PY, 9A, HB, EI, YU or UR entrant, an Asian or a
   South American one -- whose DescribeSession branches the plan's S0b roster
-  named. They are not pinned by this unit.
+  named. They are not pinned by this unit. (For the PREFIX kind, M11 S3's
+  uTestPrefixMultiplierKey pins the KEY at a PY, ON, SM, JA, OK and YB
+  entrant as well, which is the branch these stations would have chosen.)
 
   THE MAIN TABLE IS INDEXED BY ContestType, so the compiler refuses a table
   with a row missing or extra, and each row carries its ContestTypeSA
@@ -87,6 +89,8 @@ interface
 
 uses
    VC,
+   (* TStationContext -- MatrixStation and Kinds are interface now. *)
+   uContestBase,
    uTR4WTestFramework;
 
 type
@@ -114,12 +118,24 @@ type
       procedure Test_DoingFlagsFollowEveryContestSwitch;
    end;
 
+(* SHARED WITH uTestPrefixMultiplierKey (M11 S3), so the two pins resolve a
+   station and a session exactly one way. See each body. *)
+function MatrixStation(const aCall: string;
+                       const aCountry: string;
+                       aContinent: ContinentType;
+                       const aState: string;
+                       const aSection: string;
+                       const aGrid: string;
+                       aInHostState: boolean;
+                       const aContestName: string): TStationContext;
+function SessionContestName(aContest: ContestType; aInHostState: boolean): string;
+function Kinds(aContest: ContestType; const aStation: TStationContext): TSessionKinds;
+
 implementation
 
 uses
    SysUtils,
    TypInfo,
-   uContestBase,
    uContestRegistry,
    (* ContestSession -- the switch test writes the session as FCONTEST does
      and reads its Doing*Mults answers (M11 S2). *)

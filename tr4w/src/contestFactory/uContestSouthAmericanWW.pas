@@ -88,6 +88,11 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -221,6 +226,35 @@ begin
    else
       begin
       aSession.PrefixMult := SouthAmericanPrefixes;
+      end;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   From inside South America, everyone else's CTY prefix
+   (`NonSouthAmericanPrefixes`); from anywhere else, South America's
+   (`SouthAmericanPrefixes`) -- the two kinds DescribeSession chose between,
+   by its own station test. *)
+function TContestSouthAmericanWW.PrefixMultiplierKey(const aQso: ContestExchange;
+                                                     out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyContinent = SouthAmerica then
+      begin
+      if aQso.QTH.Continent <> SouthAmerica then
+         begin
+         aKey := aQso.QTH.Prefix;
+         Result := True;
+         end;
+      end
+   else
+      begin
+      if aQso.QTH.Continent = SouthAmerica then
+         begin
+         aKey := aQso.QTH.Prefix;
+         Result := True;
+         end;
       end;
 end;
 

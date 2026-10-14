@@ -97,6 +97,11 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -206,6 +211,22 @@ end;
 function TContestSASprint.GetIsActive: boolean;
 begin
    Result := False;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   A South American station's CTY prefix, and no key for anyone else --
+   SetPrefix's `SouthAmericanPrefixes` arm. *)
+function TContestSASprint.PrefixMultiplierKey(const aQso: ContestExchange;
+                                              out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if aQso.QTH.Continent = SouthAmerica then
+      begin
+      aKey := aQso.QTH.Prefix;
+      Result := True;
+      end;
 end;
 
 initialization

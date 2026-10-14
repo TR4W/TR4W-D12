@@ -202,8 +202,14 @@ RXData, kind)` per kind -- the class's `CountsAsMultiplier` (BC/NY/Indiana
 -- and only then the sheet whether the multiplier is NEW. The need-multiplier
 hint's call-to-domestic-multiplier (`LogEdit.GetMultArray`) is the class's
 `DomesticMultiplierFromCall`, handed the engine's lookups. **Do not put a
-contest test back in the sheet.** A multiplier KIND's arm (`GetDXQTH`,
-`SetPrefix`, the remaining-mult lists) stays keyed on the kind even when one
+contest test back in the sheet.** **`SetPrefix` IS NO LONGER A KIND ARM
+(M11 S3 part 1, 2026-10-14):** it asks the class's `PrefixMultiplierKey`
+through `ContestPrefixMultiplierKey(ActiveContest(Contest), ...)`, once per
+QSO, and assigns only on True (False leaves a stored prefix alone -- the
+rescore depends on it). ZoneCont's three prefix computations are the leaf
+`uPrefixMultiplierKey` now. Whether `SetPrefix` runs still asks the session
+(`DoingPrefixMults`) until part 2; the key follows the live `Station` (plan
+F20). A multiplier KIND's arm (`GetDXQTH`, the remaining-mult lists) stays keyed on the kind even when one
 contest uses it: the four multiplier commands let an operator state any kind
 for any contest, so the arm is that statement's meaning (it moves when Q4
 retires the commands). **`UsesBand` is asked at four places now** -- points,

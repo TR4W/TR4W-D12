@@ -68,9 +68,6 @@ function GetVEInitialExchange(Call: CallString): string;
 
 function GetContinentName(Cont: ContinentType): string;
 function GetContinentFromString(Cont: ShortString): ContinentType;
-function SACDistrict(QTH: QTHRecord): string;
-function IndonesianDistrict(QTH: QTHRecord): string;
-function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
 
 implementation
 uses
@@ -79,7 +76,6 @@ uses
      PostUnit,         // Contest -- the contest asked for its initial exchange (M5b)
      uContestRegistry, // ContestIdentity
      LogWind,
-     uSettingsModel,   // Settings.My.Country
      MainUnit;   // the logger global
 
 function GetVEInitialExchange(Call: CallString): string;
@@ -278,57 +274,6 @@ begin
      end;
   FirstDomesticCountryRecord := nil;
   GEmptyDomesticListReported := False;
-end;
-
-function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
-var
-  NumberChar                            : AnsiChar;
-begin
-  Result := '';
-  if QTH.Continent = Europe then Exit;
-  Result := QTH.CountryID;
-//W, VE, VK, ZL, ZS, JA, PY, ? ????? RA8/RA9 ? RA0
-  if (QTH.CountryID = 'K') or
-    (QTH.CountryID = 'VE') or
-    (QTH.CountryID = 'VK') or
-    (QTH.CountryID = 'ZL') or
-    (QTH.CountryID = 'ZS') or
-    (QTH.CountryID = 'JA') or
-    (QTH.CountryID = 'PY') or
-    (QTH.CountryID = 'UA9') then
-     begin
-     NumberChar := AnsiChar(GetNumber(QTH.StandardCall));
-     Result := QTH.CountryID + NumberChar;
-     end;
-
-end;
-
-function SACDistrict(QTH: QTHRecord): string;
-var
-  Oblast                                : Str2;
-begin
-  SACDistrict := '';
-  if ScandinavianCountry(QTH.CountryID) then
-     begin
-     Oblast := GetOblast(QTH.StandardCall);
-     if length(Oblast) = 0 then
-        begin
-        Oblast := '0';
-        end;
-     SACDistrict := QTH.CountryID + Oblast[1];
-     if (QTH.CountryID = 'OH0') or (QTH.CountryID = 'OJ0') then
-        begin
-        SACDistrict := QTH.CountryID;
-        end;
-     end;
-end;
-
-function IndonesianDistrict(QTH: QTHRecord): string;        // 4.64.1
-
-begin
-  IndonesianDistrict := '';
-  if (IndonesianCountry(QTH.CountryID) or (IndonesianCountry(Settings.My.Country))) then
-    IndonesianDistrict := GetPrefix(QTH.StandardCall); ;
 end;
 
 function ClubCall(Call: CallString): boolean;

@@ -260,6 +260,7 @@ uses
    uContestSession in '..\..\src\uContestSession.pas',
    uContestStateQSOPartyBase in '..\..\src\contestFactory\uContestStateQSOPartyBase.pas',
    uContestFixedPoints in '..\..\src\contestFactory\uContestFixedPoints.pas',
+   uPrefixMultiplierKey in '..\..\src\contestFactory\uPrefixMultiplierKey.pas',
    uContestARRLDXBase in '..\..\src\contestFactory\uContestARRLDXBase.pas',
    uContestARRLDXCW in '..\..\src\contestFactory\uContestARRLDXCW.pas',
    uContestARRLDXPhone in '..\..\src\contestFactory\uContestARRLDXPhone.pas',
@@ -599,6 +600,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* M11 S0b: every contest's six session kinds at every matrix station,
       frozen as literals before the kinds move into the classes. *)
    uTestContestKindPin  in 'uTestContestKindPin.pas',
+   (* M11 S3: every prefix contest's key, at stations the matrix does not
+      run, frozen against the old SetPrefix before the rule moved. *)
+   uTestPrefixMultiplierKey in 'uTestPrefixMultiplierKey.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -685,6 +689,7 @@ begin
    RegisterSuite(TContestUITests.Create('ContestUI'));
    RegisterSuite(TContestIdentityPinTests.Create('ContestIdentityPin'));
    RegisterSuite(TContestKindPinTests.Create('ContestKindPin'));
+   RegisterSuite(TPrefixMultiplierKeyTests.Create('PrefixMultiplierKey'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

@@ -96,6 +96,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -284,6 +289,23 @@ procedure TContestOKDX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_CZECHREPUBLICORINSLOVAKIA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURDISTRICTABBREVIATION, ncfMyState);
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The CTY prefix for a Czech or Slovak entrant (`Prefix`, which
+   DescribeSession chose there); none for anyone else, whose session ran the
+   trait's NoPrefixMults. *)
+function TContestOKDX.PrefixMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if OKOMStation(string(Station.MyCountry)) then
+      begin
+      aKey := aQso.QTH.Prefix;
+      Result := True;
+      end;
 end;
 
 initialization

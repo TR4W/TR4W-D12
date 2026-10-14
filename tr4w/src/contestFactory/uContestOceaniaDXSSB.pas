@@ -85,6 +85,11 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -213,6 +218,16 @@ function TContestOceaniaDXSSB.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The CTY prefix of every QSO -- SetPrefix's `Prefix` arm. *)
+function TContestOceaniaDXSSB.PrefixMultiplierKey(const aQso: ContestExchange;
+                                                  out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.Prefix;
+   Result := True;
 end;
 
 initialization

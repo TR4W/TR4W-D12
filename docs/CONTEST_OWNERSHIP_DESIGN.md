@@ -3595,6 +3595,8 @@ S0c is DONE too (plan S0c; it was open when this paragraph was written).
 
 **S2 DONE 2026-10-14, three bullets of five (plan S2):** `Doing*Mults` are `ContestSession` answers computed from the kinds -- no second store, so a run-time contest switch can no longer leave them stale (F9 fixed; what start-up derived from them is still once-only, F19) -- and the 15 `No*` sentinels read them; each class states each kind once (five traits aligned, 12 restatements deleted, 89 -> 77 `DescribeSession` kind statements); the 11 always-true parse shape guards are deleted (F11). F15 waits for S1; `uDomesticKey` (F6) is its own behaviour-changing commit. Matrix identical by construction.
 
+**S3 part 1 DONE 2026-10-14 (plan S3): the prefix multiplier is each class's own rule.** `TContestBase.PrefixMultiplierKey` (base: no key) is stated by the 32 prefix contests -- the station-dependent ones ask `Station` exactly as their `DescribeSession` did -- calling the leaf `uPrefixMultiplierKey` only for the three real computations (WAE call regions, SAC districts, YB districts); `LOGEDIT.SetPrefix`'s `case` on the kind is gone, as §1.3 requires, and GAGARINCUP's callsign list is its class's. Pinned before the move against the old code (`uTestPrefixMultiplierKey`, including the PY/ON/SM/JA/OK/YB entrants the matrix lacks); part 2 deletes `PrefixMultType`. Live-station versus set-up-session divergence: plan F20.
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

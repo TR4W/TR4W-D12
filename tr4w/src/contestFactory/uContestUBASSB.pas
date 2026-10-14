@@ -98,6 +98,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -282,6 +287,27 @@ procedure TContestUBASSB.DescribeNewContestPrompts(aPrompts: TNewContestPrompts)
 begin
    aPrompts.OfferIAmIn(TC_BELGIUM);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   Belgian prefixes for an entrant outside Belgium -- SetPrefix's
+   `BelgiumPrefixes` arm; none for a Belgian entrant, whose session
+   DescribeSession gave NoPrefixMults. The station test is DescribeSession's. *)
+function TContestUBASSB.PrefixMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyCountry = 'ON' then
+      begin
+      Exit;
+      end;
+   if aQso.QTH.CountryID = 'ON' then
+      begin
+      aKey := aQso.QTH.Prefix;
+      Result := True;
+      end;
 end;
 
 initialization

@@ -210,6 +210,8 @@ uses
   (* THE FINAL SCORE -- M6: the totals and the contest that combines them,
      and OnMainThread for the worker threads that read the score. *)
   uContestBase,
+  (* ActiveContest -- SetPrefix asks the contest its prefix key (M11 S3). *)
+  uContestFactory,
   (* ContestIdentity -- the multiplier hint asks the session's contest which
      domestic multiplier a call implies, and which bands it uses (M8). *)
   uContestRegistry,
@@ -2900,62 +2902,24 @@ begin
   LastMainThreadTotalScore := Result;
 end;
 
+(* THE PREFIX MULTIPLIER KEY IS THE CONTEST'S -- M11 S3, 2026-10-14.
+  This was `case ContestSession.PrefixMult of`, an enum choosing the
+  computation for the contest. Each prefix contest states its own rule in
+  TContestBase.PrefixMultiplierKey now (the shared computations are
+  uPrefixMultiplierKey), and the arms are gone; the GAGARINCUP callsign
+  list went to its class with them.
+
+  ONE ActiveContest PER QSO: it rebuilds the station on every call, so it
+  is fetched here once and never per helper. A False answer leaves the
+  QSO's prefix as it was, exactly as an arm that did not match did. *)
 procedure SetPrefix(var RData: ContestExchange {Ptr});
+var
+  key: PrefixMultiplierString;
 begin
-  case ContestSession.PrefixMult of
-    CQNonEuropeanCountriesAndWAECallRegions: RData.Prefix :=
-      EuropeanCountriesAndWAECallRegions(RData.QTH);
-    BelgiumPrefixes: if RData.QTH.CountryID = 'ON' then
-                        begin
-                        RData.Prefix := RData.QTH.Prefix;
-                        end;
-    SACDistricts: RData.Prefix := SACDistrict(RData.QTH);
-    IndonesianDistricts: RData.Prefix := IndonesianDistrict(RData.QTH); // 4.64.1
-    Prefix: RData.Prefix := RData.QTH.Prefix;
-    SouthAmericanPrefixes: if RData.QTH.Continent = SouthAmerica then
-                              begin
-                              RData.Prefix := RData.QTH.Prefix;
-                              end;
-    NorthAmericanPrefixes: if RData.QTH.Continent = NorthAmerica then
-                              begin
-                              RData.Prefix := RData.QTH.Prefix;
-                              end;
-    AsianPrefixes: if RData.QTH.Continent = Asia then
-                      begin
-                      RData.Prefix := RData.QTH.Prefix;
-                      end;
-    SouthAndNorthAmericanPrefixes: if RData.QTH.Continent in [NorthAmerica,
-      SouthAmerica] then
-                                      begin
-                                      RData.Prefix := RData.QTH.Prefix;
-                                      end;
-    NonSouthAmericanPrefixes: if RData.QTH.Continent <> SouthAmerica then
-                                 begin
-                                 RData.Prefix := RData.QTH.Prefix;
-                                 end;
-    CallSignPrefix: RData.Prefix := RData.Callsign;
-    MongolianCallSignPrefix: if RData.QTH.CountryID = 'JT' then
-                                begin
-                                RData.Prefix := RData.Callsign;
-                                end;
-    RussianPrefixes: if Rdata.QTH.CountryID = 'UA' then
-                        begin
-                        RData.Prefix := RData.Callsign;
-                        end;
-    // CzechRepublicCallsignPrefix: if RData.QTH.CountryID = 'OK' then
-    //      RDATA.Prefix := RDATA.Callsign;
-    GCStation:
-      begin
-        if (RData.Callsign = 'RK1G') or (RData.Callsign = 'R3K') or
-          (RData.Callsign = 'RS3A')
-          or (RData.Callsign = 'RT3F') or (RData.Callsign = 'UP7Z') or
-            (RData.Callsign = 'UN/RA3VM') then
-           begin
-           RData.Prefix := RData.Callsign;
-           end;
-      end;
-  end;
-  //  RData^.Prefix := RData^.Prefix;
+  if ContestPrefixMultiplierKey(ActiveContest(Contest), RData, key) then
+     begin
+     RData.Prefix := key;
+     end;
 end;
 
 end.

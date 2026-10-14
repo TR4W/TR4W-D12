@@ -90,6 +90,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -248,6 +253,25 @@ procedure TContestGagarinCup.DescribeNewContestPrompts(aPrompts: TNewContestProm
 begin
    aPrompts.OfferIAmIn(TC_GC);
    aPrompts.AskFieldWithCommentWhenInside(TC_GAGARIN, ncfMyState);
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The six memorial stations' callsigns, and no key for anyone else --
+   SetPrefix's `GCStation` arm, whose list is this contest's own (it was the
+   inventory's shape-3 row at logedit:2949). *)
+function TContestGagarinCup.PrefixMultiplierKey(const aQso: ContestExchange;
+                                                out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if (aQso.Callsign = 'RK1G') or (aQso.Callsign = 'R3K')  or
+      (aQso.Callsign = 'RS3A') or (aQso.Callsign = 'RT3F') or
+      (aQso.Callsign = 'UP7Z') or (aQso.Callsign = 'UN/RA3VM') then
+      begin
+      aKey := aQso.Callsign;
+      Result := True;
+      end;
 end;
 
 initialization

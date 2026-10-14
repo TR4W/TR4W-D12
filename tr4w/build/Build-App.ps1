@@ -362,7 +362,12 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1271 -> 1267, 2026-10-14: M10 S3 deleted LOGSTUFF's legacy scoring case
 # (about 3,270 lines reached only by DUMMYCONTEST); its four implicit
 # narrowings went with it. Measured by the full build, not estimated.
-$NARROW_CEILING = 1267
+# 1267 -> 1264, 2026-10-14: M11 S3 moved LOGEDIT.SetPrefix's case into the
+# prefix contests' classes. Its three implicit string -> PrefixMultiplierString
+# narrowings went; the classes cast the same truncation explicitly, and
+# ZoneCont's Str2 one moved with SACDistrict to uPrefixMultiplierKey.
+# Measured by a scratch -B compile with Build-App's arguments, per unit.
+$NARROW_CEILING = 1264
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

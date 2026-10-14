@@ -1617,6 +1617,35 @@ type
       function DomesticMultiplierFromCall(const aCall: string;
                                           const aLookups: TMultiplierHintLookups): string; virtual;
 
+      (* THE PREFIX MULTIPLIER KEY A QSO EARNS IN THIS CONTEST -- M11 S3,
+         2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S3).
+
+         LOGEDIT.SetPrefix asks it, fetching the contest once per QSO; it is
+         the only place a prefix KEY is computed (the QSO editor, the log
+         read and the binary-log import copy a stored one). The rule stood in
+         SetPrefix as `case ContestSession.PrefixMult of`, an enum choosing a
+         computation FOR the contest; each prefix contest states its own now,
+         calling uPrefixMultiplierKey where the computation is shared.
+
+         TRUE WITH aKey MEANS "THE QSO'S PREFIX IS aKey" -- possibly empty.
+         FALSE MEANS "LEAVE THE QSO'S PREFIX AS IT WAS", which is not the
+         same thing: several old arms assigned only on a match and the
+         rescore runs over a stored record, so the distinction is kept
+         exactly. aKey is the field's own type, so no conversion stands
+         between the rule and the record.
+
+         A RULE THAT DEPENDS ON THE ENTRANT ASKS Station -- what
+         DescribeSession asked to choose the kind (UBA, SAC, WAE, the
+         All Asian, OK DX, CQ MM, the South American WW, YB DX). Station is
+         refreshed on every ActiveContest call, so the rule follows MY CALL
+         live, where the session kind is fixed at set-up; the two differ only
+         after a mid-session change of the entrant's country.
+
+         THE BASE ANSWERS FALSE -- what SetPrefix did for every
+         NoPrefixMults session. *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; virtual;
+
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
 
@@ -2292,6 +2321,12 @@ function CreditedBands(aContest: TContestBase; aBandMask: Cardinal): Cardinal;
 function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExchange;
                                  aKind: RemainingMultiplierType): boolean;
 
+(* THE PREFIX MULTIPLIER KEY aQso EARNS IN aContest -- see
+   TContestBase.PrefixMultiplierKey. nil answers False, leaving the prefix as
+   it was: the classless DUMMYCONTEST runs NoPrefixMults. *)
+function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean;
+
 (* THE FOUR `QSO POINTS ...` OVERRIDES, APPLIED -- the one statement of their
    rule. True, with aQso.QSOPoints set, when one of them matches this QSO;
    False, with aQso untouched, when none does.
@@ -2593,6 +2628,20 @@ begin
       end;
 end;
 
+function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean;
+begin
+   if aContest = nil then
+      begin
+      aKey := '';
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.PrefixMultiplierKey(aQso, aKey);
+      end;
+end;
+
 function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
                                var aQso: ContestExchange): boolean;
 
@@ -2856,6 +2905,14 @@ function TContestBase.DomesticMultiplierFromCall(const aCall: string;
 begin
    (* No opinion, as GetMultArray had for every contest it did not name. *)
    Result := '';
+end;
+
+function TContestBase.PrefixMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: PrefixMultiplierString): boolean;
+begin
+   (* No prefix multiplier -- see the declaration. *)
+   aKey := '';
+   Result := False;
 end;
 
 function TContestBase.RunsInMode(aMode: ModeType): boolean;

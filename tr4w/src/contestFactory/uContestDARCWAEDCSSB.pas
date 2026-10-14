@@ -103,11 +103,17 @@ type
    protected
       (* THE QTC MENU -- see TContestBase.OffersQTCs (M9a). *)
       function GetOffersQTCs: boolean; override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
+   uPrefixMultiplierKey,
    uContestRegistry;
 
 (* WAEQSOPointMethod, transcribed. A European station scores 1 for a QSO
@@ -273,6 +279,25 @@ end;
    (2026-10-02). Each WAE running holds its own copy (design 1.4). *)
 function TContestDARCWAEDCSSB.GetOffersQTCs: boolean;
 begin
+   Result := True;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   A European entrant keys the rest of the world by country and call region,
+   a European QSO by an EMPTY key (still assigned) --
+   `CQNonEuropeanCountriesAndWAECallRegions`, which DescribeSession chose in
+   Europe; none outside Europe, whose session ran the trait's NoPrefixMults. *)
+function TContestDARCWAEDCSSB.PrefixMultiplierKey(const aQso: ContestExchange;
+                                                  out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyContinent <> Europe then
+      begin
+      Exit;
+      end;
+   aKey := PrefixMultiplierString(EuropeanCountriesAndWAECallRegions(aQso.QTH));
    Result := True;
 end;
 

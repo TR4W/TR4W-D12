@@ -92,6 +92,11 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -220,6 +225,16 @@ procedure TContestCQWPXRTTY.DescribeSession(const aStation: TStationContext;
                                             aSession: TSessionDefaults);
 begin
    aSession.Band := Band80;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The CTY prefix of every QSO -- SetPrefix's `Prefix` arm. *)
+function TContestCQWPXRTTY.PrefixMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.Prefix;
+   Result := True;
 end;
 
 initialization

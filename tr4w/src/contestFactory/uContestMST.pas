@@ -101,6 +101,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -215,6 +220,17 @@ end;
 procedure TContestMST.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURNAME, ncfMyName);
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The worked callsign itself, cut to the field's six characters --
+   SetPrefix's `CallSignPrefix` arm. *)
+function TContestMST.PrefixMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := aQso.Callsign;
+   Result := True;
 end;
 
 initialization

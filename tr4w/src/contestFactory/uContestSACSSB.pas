@@ -99,11 +99,17 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
+   uPrefixMultiplierKey,
    uContestRegistry,
    (* ScandinavianCountry -- the leaf the arm asks. *)
    uCallSignRoutines;
@@ -278,6 +284,25 @@ begin
       begin
       aSession.PrefixMult := SACDistricts;
       end;
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   The Scandinavian call district for an entrant outside Scandinavia, an
+   EMPTY key (still assigned) for a non-Scandinavian QSO -- `SACDistricts`,
+   which DescribeSession chose there; none for a Scandinavian entrant, whose
+   session ran the trait's NoPrefixMults. *)
+function TContestSACSSB.PrefixMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if ScandinavianCountry(string(Station.MyCountry)) then
+      begin
+      Exit;
+      end;
+   aKey := PrefixMultiplierString(SACDistrict(aQso.QTH));
+   Result := True;
 end;
 
 initialization

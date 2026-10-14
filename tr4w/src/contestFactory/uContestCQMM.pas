@@ -97,6 +97,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
+         (M11 S3). *)
+      function PrefixMultiplierKey(const aQso: ContestExchange;
+                                   out aKey: PrefixMultiplierString): boolean; override;
    end;
 
 implementation
@@ -248,6 +253,35 @@ end;
 procedure TContestCQMM.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURCONTINENT, ncfMyState);
+end;
+
+(* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
+   LOGEDIT.SetPrefix.
+   From inside South America, the Americas' CTY prefixes
+   (`SouthAndNorthAmericanPrefixes`, which DescribeSession chose there); from
+   anywhere else, South America's (`SouthAmericanPrefixes`, the trait). The
+   station test is DescribeSession's. *)
+function TContestCQMM.PrefixMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: PrefixMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyContinent = SouthAmerica then
+      begin
+      if aQso.QTH.Continent in [NorthAmerica, SouthAmerica] then
+         begin
+         aKey := aQso.QTH.Prefix;
+         Result := True;
+         end;
+      end
+   else
+      begin
+      if aQso.QTH.Continent = SouthAmerica then
+         begin
+         aKey := aQso.QTH.Prefix;
+         Result := True;
+         end;
+      end;
 end;
 
 initialization
