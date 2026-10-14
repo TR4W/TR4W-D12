@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `b8bb9018` (2026-10-14).
+directory). This copy was generated from commit `640f4e22` (2026-10-14).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -153,7 +153,7 @@ The first version treated `repeat` as flat and mis-read two arms of
 | `generate.py` | the entry point: dumps, scans, renders, writes this file CRLF |
 | `dump-code-only.ps1` | the two code-only copies, through `PascalSource.psm1` |
 | `pascal.py` | tokens, the enclosing routine, operands, the ONE `case` walker |
-| `model.py` | `VC.pas` (`ContestType`, `ContestsArray`, `ContestTypeSA`) and the factory registry |
+| `model.py` | `VC.pas` (`ContestType`, `ContestTypeSA`), the factory registry, and each contest's row values as its class states them |
 | `scan.py` | shapes 1-5 |
 | `analyses.py` | the measurements behind sections 7 and 8 (section 9) |
 | `judgements.py` | **the only opinions**: categories, seams, thresholds, the curated shape-3 list |
@@ -191,8 +191,9 @@ shape 2.
 
 ### 2.3 Shape 4 -- who reaches an `Active*` value
 
-The reach of a value is each contest's `ContestsArray` row
-(187 enum values against 187 rows, matched by position)
+The reach of a value is each contest's own statement of it -- the single
+value its class's getter returns, else `TContestBase`'s (187 contests;
+`ContestsArray`, which held the same values, was deleted at M10 S8)
 UNION every `Active* :=` inside `FoundContest`'s arms (0 assignments).
 That over-approximates who uses a value, which is the safe direction for
 deciding "only one contest uses this". Values are compared case-insensitively,
@@ -207,8 +208,8 @@ tables rather than silently reclassified.
 ### 2.4 Shape 3 -- what was kept and what was not
 
 `scan.string_candidates` matches every string literal against every contest
-identity string (the `ContestTypeSA` spelling, and the row's Name, ADIFName,
-CABName, DF and FriendlyName): **37** hits today, and lists **20** lines
+identity string (the `ContestTypeSA` spelling, and the class's DisplayName, ADIFContestId,
+CabrilloName, DomesticFileName and FriendlyName): **37** hits today, and lists **20** lines
 using a contest-name expression. Those are CANDIDATES; `judgements.SHAPE3` is
 what was read and kept. The translation tables (`TC_UKRAINE = 'Ukraine'`
 matching a DF name), `FoundContest` ASSIGNING a name, and emitting `'POTA'`
@@ -880,29 +881,17 @@ format their own exchange (19 classes).
 | arm | routine | value | reached by |
 |---|---|---|---|
 
-### 9.2 Class traits the engine contradicts (D8)
+### 9.2 Class traits the engine contradicts (D8) -- retired
 
-**541** trait overrides checked (`GetExchangeKind`,
-`GetDomesticMultiplierType`, `GetDXMultiplierType`), each against the value the
-ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
-`ContestsArray` row. **0** disagree or could not be read:
+Retired at M10 S8 (2026-10-14). It compared each class's trait getters with
+the `ContestsArray` row and `FoundContest`'s arms; the arms are gone (M7a)
+and the row is deleted, so the class's getter is the only statement left.
 
-| contest | getter | class says | engine uses | row | FoundContest arms |
-|---|---|---|---|---|---|
+### 9.3 Contest identity: what the class says, what the exporters emit (D9) -- retired
 
-### 9.3 Contest identity: what the class says, what the exporters emit (D9)
-
-- **139** contests have a blank `ContestsArray` `ADIFName` (excluding
-  GENERALQSO, POTA, which write no `CONTEST_ID`), so their exported id is the
-  `ContestTypeSA` spelling and import cannot resolve it; **139** of them are
-  registered: ALLJA, ARCI, ARI_DX, ARRL10, ARRLDIGI, ARRL160, ARRLDXCW, ARRLDXSSB, ARRLSSCW, ARRLSSSSB, ARRLVHFSEP, BALTIC, BWQP, CIS, COUNTYHUNTER, CQ160CW, CQ160SSB, CQM, CQVHF, CQWPXCW, CQWPXSSB, CQWPXRTTY, CQWWCW, CQWWSSB, CROATIAN, CUPRFCW, CUPRFSSB, CUPRFDIG, CUPURAL, EUSPRINT_SPRING_CW, EUROPEANVHF, TESLA, FISTS, FOCMARATHON, GACWWWSACW, GAGARINCUP, GRIDLOC, YUDX, UKEI, HELVETIA, IARU, INTERNETSPRINT, IOTA, JIDXCW, JIDXSSB, JALONGPREFECT, JTDX, KCJ, KIDSDAY, KVP, LABRE, LZDX, MARCONIMEMORIAL, MINITEST, NAQSOCW, NAQSOSSB, NAQSORTTY, NASPRINTCW, NASPRINTRTTY, NCCCSPRINT, NEWENGLANDQSO, NRAUBALTICCW, NRAUBALTICSSB, OCEANIADXCW, OCEANIADXSSB, OKDX, OLDNEWYEAR, OZCR_O, OZCR_Z, PACC, QCWA, QCWAGOLDEN, CANADA_WINTER, RADIOVHFFD, RAEM, RDA, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW, REGION1FIELDDAY_RCC_SSB, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB, RFASCHAMPIONSHIPCW, RSGB18, RUSSIANDX, SACCW, YBDX, SACSSB, SOUTHAMERICANWW, SPDX, TENTEN, TOEC, UA4WCHAMPIONSHIP, UBACW, UBASSB, UCG, UKRAINECHAMPIONSHIP, UKRAINIAN, DARCWAEDCCW, DARCWAEDCSSB, DARCXMAS, WAG, WWL, WWPMC, XMAS, YODX, YOUTHCHAMPIONSHIPRF, RU3AXMEMORIAL, LQP, ARKTIKA_SPRING, UNDX, KINGOFSPAINCW, KINGOFSPAINSSB, WRTC, R9W_UW9WK_MEMORIAL, PCC, RADIOMEMORY, DARC10M, REFCW, REFSSB, BSCI, CQMM, SASPRINT, OZHCRVHF, CANADA_DAY, CQWWRTTY, MAKROTHEN, EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, CQIR, WWIH, ALRS_UA1DZ_CUP, RADIOYOC, OKOMSSB, BATAVIA_FT8, WWDIGI, MWC, IRTS, EUDX.
-- 372 literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were
-  compared with what the exporters emit; **2** differ:
-
-| contest | format | class says | exporter emits |
-|---|---|---|---|
-| GENERALQSO | ADIF | `GENERAL QSO` | `` |
-| POTA | ADIF | `POTA` | `` |
+Retired at M10 S8. The exporters read the row's names until M1 and the class
+since; the row is deleted, so there is nothing left to compare the class with.
+`Test_EveryContestResolvesItsOwnADIFId` holds every id to its contest.
 
 ### 9.4 Shape 1 against shapes 1 + 2, per file (section 8.2)
 
