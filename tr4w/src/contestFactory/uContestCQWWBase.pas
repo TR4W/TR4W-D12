@@ -86,6 +86,11 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
    end;
 
 implementation
@@ -210,6 +215,21 @@ function TContestCQWWBase.DXMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := aQso.QTH.CountryID;
    Result := True;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the CQ zones, at every
+   station. What the trait's CQZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. CQ WW CW and SSB both run it, so it is stated once, on their
+   family base. *)
+function TContestCQWWBase.ZoneMultiplierCount: integer;
+begin
+   Result := CQ_ZONE_MULTIPLIERS;
+end;
+
+function TContestCQWWBase.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzCQZones;
 end;
 
 end.

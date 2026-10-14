@@ -1038,8 +1038,10 @@ end;
   JIDX CW and SSB state the trait NoZoneMults, and their DescribeSession
   states CQZones for a JA station only -- the one pair of contests whose
   session zone kind differs from the trait. POSTUNIT.ZoneSentForThisContest
-  asked the class until S9c and the ADIF CQZ/ITUZ block the session; both ask
-  the session now. The move changed no output because the export's question
+  asked the class until S9c and the ADIF CQZ/ITUZ block the session; both
+  asked the session from S9c, and since M11 S5 both ask the contest's
+  ZoneMultiplierZones (pinned at a JA entrant by uTestZoneMultiplier). The
+  S9c move changed no output because the export's question
   is "ITUZones or not", and neither side of JIDX is ITUZones -- pinned here,
   so the reasoning in the plan stays true of the code. A non-JA station
   states no zone kind and runs the trait. *)

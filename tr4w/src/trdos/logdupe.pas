@@ -2142,16 +2142,12 @@ begin
 }
   if ContestSession.DoingZoneMults then
      begin
-     case ContestSession.ZoneMult of
-       CQZones: MaxNumberOfZones := 40;
-       EUHFCYear: MaxNumberOfZones := 100;
-       ITUZones: MaxNumberOfZones := 75;
-       JAPrefectures: MaxNumberOfZones := 50;
-       BranchZones: MaxNumberOfZones := 99;
-       RFChampionchipZones: MaxNumberOfZones := 7;
-     else MaxNumberOfZones := 0;
-     end;
-
+     (* THE CONTEST SAYS HOW MANY ZONES -- M11 S5, 2026-10-14. This was
+       `case ContestSession.ZoneMult of` (CQ 40, the year licensed 100, ITU
+       75, the NZART branch 99, the RF Championship 7, and a JA-prefecture
+       arm, 50, that ran for no contest). Once per set-up of the remaining
+       mults, so one ActiveContest. *)
+     MaxNumberOfZones := ContestZoneMultiplierCount(ActiveContest(Contest));
      end;
 
 

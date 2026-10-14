@@ -42,10 +42,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   carries a CQ-exchange line naming this contest, and it is COMMENTED
   OUT; nothing is read from it. FCONTEST has no arm for it.
 
-  THE ZONE MULTIPLIER EUHFCYear is read by LOGSTUFF, LOGDUPE and LOGEDIT
-  from the session's zone kind (ContestSession.ZoneMult since M10 S9c),
-  which FCONTEST sets from this class's ZoneMultiplierType; that behaviour
-  is keyed on the multiplier type, which KVP shares.
+  THE ZONE MULTIPLIER (the trait EUHFCYear, which KVP shares) is this
+  class's own since M11 S5: ZoneMultiplierCount (100) and
+  NumbersZonesFromZero (True), which LOGDUPE and LOGEDIT read from the
+  session's zone kind until then. LOGSTUFF's EUHFCYear range test in the
+  zone parse was vacuous -- two digits are always 0..99, and the CQ-zone
+  limit it skipped never applies in this contest's ITU zone mode -- so it
+  was deleted rather than moved; the matrix's "599 45" pins the parse.
 
   THE ADIF ID WAS BLANK UNTIL 2026-09-29 AND IS NOW 'EU-HF', the ADIF 3.1.7
   Contest_ID enumeration's spelling (EU HF Championship), on NY4I's ruling.
@@ -106,6 +109,12 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         NumbersZonesFromZero (M11 S5). Its zones are not CQ or ITU zones, so
+         ZoneMultiplierZones is the base's. *)
+      function ZoneMultiplierCount: integer; override;
+      function NumbersZonesFromZero: boolean; override;
    end;
 
 implementation
@@ -210,6 +219,20 @@ end;
 procedure TContestEuropeanHFC.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone);
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the year licensed, 00 to 99 --
+   a hundred zones, numbered from zero. What the trait's EUHFCYear gave
+   LOGDUPE's zone count and LOGEDIT's remaining-mults list through the
+   session kind until S5. *)
+function TContestEuropeanHFC.ZoneMultiplierCount: integer;
+begin
+   Result := 100;
+end;
+
+function TContestEuropeanHFC.NumbersZonesFromZero: boolean;
+begin
+   Result := True;
 end;
 
 initialization

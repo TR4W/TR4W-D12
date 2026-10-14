@@ -591,6 +591,29 @@ type
       GridOfCall: TCallTextLookup;
    end;
 
+   (* WHICH ZONE LIST A CONTEST'S ZONE MULTIPLIER COUNTS -- M11 S5,
+      2026-10-14. See TContestBase.ZoneMultiplierZones.
+
+      zmzNotCQOrITU covers TWO cases on purpose, because every reader treats
+      them alike: no zone multiplier at all, and one the contest numbers
+      itself (the European HF Championship's year licensed, the NZART
+      branch, the RF Championship's seven zones). Whether a contest counts a
+      zone multiplier at all is ContestSession.DoingZoneMults until S5 part 2.
+
+      THIS IS NOT THE CTY ZONE MODE. ZoneModeType (TContestBase.ZoneMode, from
+      cfCQZoneMode) says which zone CTY.DAT gives a logged call; this says
+      which list the multiplier counts. They disagree for the Croatian and
+      CW Open today (plan F5, open question Q95), and S5 transcribes that. *)
+   TZoneMultiplierZones = (zmzNotCQOrITU, zmzCQZones, zmzITUZones);
+
+const
+   (* THE TWO STANDARD ZONE LISTS' SIZES -- the counts LOGDUPE's
+      `case ZoneMult of` gave CQZones and ITUZones until M11 S5. Eight and
+      seven contests count them, so each is stated once. *)
+   CQ_ZONE_MULTIPLIERS = 40;
+   ITU_ZONE_MULTIPLIERS = 75;
+
+type
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
    TContestIdList = array of string;
 
@@ -1744,6 +1767,36 @@ type
       function ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
                                        aContinent: ContinentType): boolean; virtual;
 
+      (* HOW MANY ZONES THIS CONTEST'S ZONE MULTIPLIER HAS -- M11 S5,
+         2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S5).
+
+         LOGDUPE.SetUpRemainingMultiplierArrays asks it, where the session
+         counts zone multipliers, for MaxNumberOfZones -- the zones the
+         remaining-mults window walks. It stood there as `case
+         ContestSession.ZoneMult of` (CQ 40, ITU 75, the year licensed 100,
+         the NZART branch 99, the RF Championship 7; the JA-prefecture arm,
+         50, ran for no contest and is gone). A rule that depends on the
+         entrant asks Station, testing exactly what its DescribeSession tests
+         to state the zone kind (JIDX: a Japanese entrant counts CQ zones).
+         THE BASE ANSWERS 0. *)
+      function ZoneMultiplierCount: integer; virtual;
+
+      (* WHICH ZONE LIST THE ZONE MULTIPLIER COUNTS -- M11 S5. The one
+         question five sites asked of the session kind: the need-multiplier
+         hint (CQ or ITU zone of a call), the ITU initial zone, POSTUNIT's
+         ZoneSentForThisContest and the ADIF CQZ/ITUZ tag. NOT the CTY zone
+         mode -- see TZoneMultiplierZones. A rule that depends on the entrant
+         asks Station, as ZoneMultiplierCount does. THE BASE ANSWERS
+         zmzNotCQOrITU. *)
+      function ZoneMultiplierZones: TZoneMultiplierZones; virtual;
+
+      (* DOES THE ZONE MULTIPLIER NUMBER ITS ZONES FROM ZERO? -- M11 S5. The
+         remaining-mults window lists zone i as i - 1 when it does. It stood
+         in LOGEDIT.ShowRemMultsInWindow as `ContestSession.ZoneMult =
+         EUHFCYear`: True for the European HF Championship and KVP, whose
+         "zone" is the year licensed, 00 to 99. THE BASE ANSWERS FALSE. *)
+      function NumbersZonesFromZero: boolean; virtual;
+
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
 
@@ -2453,6 +2506,36 @@ function ContestListsRemainingDXCountry(aContest: TContestBase;
                                         const aCountryID: DXMultiplierString;
                                         aContinent: ContinentType): boolean;
 
+(* HOW MANY ZONES aContest's ZONE MULTIPLIER HAS -- see
+   TContestBase.ZoneMultiplierCount. nil answers 0: the classless
+   DUMMYCONTEST ran NoZoneMults. *)
+function ContestZoneMultiplierCount(aContest: TContestBase): integer;
+
+(* WHICH ZONE LIST aContest's ZONE MULTIPLIER COUNTS -- see
+   TContestBase.ZoneMultiplierZones. nil answers zmzNotCQOrITU. *)
+function ContestZoneMultiplierZones(aContest: TContestBase): TZoneMultiplierZones;
+
+(* DOES aContest NUMBER ITS ZONES FROM ZERO? -- see
+   TContestBase.NumbersZonesFromZero. nil answers False. *)
+function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
+
+(* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
+   M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
+   once CD.GetEntry has found the call, with the zone list the contest's
+   multiplier counts and the entry's two zone fields.
+
+   THE OLD RULE, EXACTLY (it read `ContestSession.ZoneMult = ITUZones`): a
+   contest counting ITU zones offers the entry's ITU zone, and when the entry
+   has none offers NOTHING from it -- no fall back to the CQ field; the arm
+   goes on to CTY.DAT's zone, in the CTY zone mode. Every other contest
+   offers the entry's CQ zone when it has one. True with aZone set when the
+   entry decides; False, aZone empty, when CTY.DAT does. Pinned in
+   uTestZoneMultiplier. *)
+function InitialZoneFromCallHistory(aZones: TZoneMultiplierZones;
+                                    const aCQZone: ShortString;
+                                    const aITUZone: ShortString;
+                                    out aZone: ShortString): boolean;
+
 (* THE FOUR `QSO POINTS ...` OVERRIDES, APPLIED -- the one statement of their
    rule. True, with aQso.QSOPoints set, when one of them matches this QSO;
    False, with aQso untouched, when none does.
@@ -2822,6 +2905,64 @@ begin
       end;
 end;
 
+function ContestZoneMultiplierCount(aContest: TContestBase): integer;
+begin
+   if aContest = nil then
+      begin
+      Result := 0;
+      end
+   else
+      begin
+      Result := aContest.ZoneMultiplierCount;
+      end;
+end;
+
+function ContestZoneMultiplierZones(aContest: TContestBase): TZoneMultiplierZones;
+begin
+   if aContest = nil then
+      begin
+      Result := zmzNotCQOrITU;
+      end
+   else
+      begin
+      Result := aContest.ZoneMultiplierZones;
+      end;
+end;
+
+function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.NumbersZonesFromZero;
+      end;
+end;
+
+function InitialZoneFromCallHistory(aZones: TZoneMultiplierZones;
+                                    const aCQZone: ShortString;
+                                    const aITUZone: ShortString;
+                                    out aZone: ShortString): boolean;
+begin
+   aZone := '';
+   Result := False;
+   if aZones = zmzITUZones then
+      begin
+      if aITUZone <> '' then
+         begin
+         aZone := aITUZone;
+         Result := True;
+         end;
+      end
+   else if aCQZone <> '' then
+      begin
+      aZone := aCQZone;
+      Result := True;
+      end;
+end;
+
 function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
                                var aQso: ContestExchange): boolean;
 
@@ -3126,6 +3267,22 @@ function TContestBase.ListsRemainingDXCountry(const aCountryID: DXMultiplierStri
 begin
    (* No filter -- see the declaration. *)
    Result := True;
+end;
+
+function TContestBase.ZoneMultiplierCount: integer;
+begin
+   (* No zone multiplier -- see the declaration. *)
+   Result := 0;
+end;
+
+function TContestBase.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzNotCQOrITU;
+end;
+
+function TContestBase.NumbersZonesFromZero: boolean;
+begin
+   Result := False;
 end;
 
 function TContestBase.RunsInMode(aMode: ModeType): boolean;

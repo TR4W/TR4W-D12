@@ -103,11 +103,13 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    private
-      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
-         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
-         HasDXMultiplier, the key and the country list ask it, so the answers
-         cannot disagree (M11 S4). *)
-      function CountsDXMultiplier: boolean;
+      (* IS THE ENTRANT IN JAPAN? -- DescribeSession's station test, asked of
+         Station. It chose the DX kind (deleted at M11 S4 part 2) and still
+         chooses the zone kind DescribeSession states; HasDXMultiplier, the
+         DX key, the country list and both zone answers ask it, so the
+         answers cannot disagree (M11 S4; renamed from CountsDXMultiplier at
+         M11 S5, when the zone answers became its second use). *)
+      function IsJapaneseEntrant: boolean;
    public
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
@@ -117,6 +119,11 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
    end;
 
 implementation
@@ -304,7 +311,7 @@ begin
 end;
 
 (* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
-function TContestJIDXCW.CountsDXMultiplier: boolean;
+function TContestJIDXCW.IsJapaneseEntrant: boolean;
 begin
    Result := Station.MyCountry = 'JA';
 end;
@@ -316,7 +323,7 @@ end;
    country list ask the same predicate, so the answers cannot disagree. *)
 function TContestJIDXCW.HasDXMultiplier: boolean;
 begin
-   Result := CountsDXMultiplier;
+   Result := IsJapaneseEntrant;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
@@ -327,7 +334,7 @@ function TContestJIDXCW.DXMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := '';
    Result := False;
-   if CountsDXMultiplier then
+   if IsJapaneseEntrant then
       begin
       aKey := aQso.QTH.CountryID;
       Result := True;
@@ -339,13 +346,42 @@ end;
    counts no DX multiplier. *)
 function TContestJIDXCW.CountryMode: CountryModeType;
 begin
-   if CountsDXMultiplier then
+   if IsJapaneseEntrant then
       begin
       Result := ARRLCountryMode;
       end
    else
       begin
       Result := CQCountryMode;
+      end;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the CQ zones, for a Japanese
+   entrant only; none for anyone else, whose multiplier is the prefecture.
+   DescribeSession states CQZones for a JA station over the trait's
+   NoZoneMults, and LOGDUPE's zone count and the zone-list readers took it
+   from the session kind until S5; these ask the same station test. *)
+function TContestJIDXCW.ZoneMultiplierCount: integer;
+begin
+   if IsJapaneseEntrant then
+      begin
+      Result := CQ_ZONE_MULTIPLIERS;
+      end
+   else
+      begin
+      Result := 0;
+      end;
+end;
+
+function TContestJIDXCW.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   if IsJapaneseEntrant then
+      begin
+      Result := zmzCQZones;
+      end
+   else
+      begin
+      Result := zmzNotCQOrITU;
       end;
 end;
 

@@ -5,8 +5,9 @@
 S2 is DONE (2026-10-14, on `c749f2c5`) except its F15 and F6 bullets, which
 wait (section 4 S2); S3 is DONE -- part 1 (the move) on `42a999c1`, part 2
 (the deletion) on `cbcba524`, both 2026-10-14; S4 is DONE -- part 1 (the
-move) on `3c8ce116`, part 2 (the deletion) on `6b874f1a`, both 2026-10-14; S1
-and S5 on are not built.** See section 4 S0 for
+move) on `3c8ce116`, part 2 (the deletion) on `6b874f1a`, both 2026-10-14;
+S5 part 1 (the move) is DONE on `f0c54f4c`, 2026-10-14; S1, S5 part 2 and
+S6 on are not built.** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -1298,6 +1299,104 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
 2. **Delete.** `ZoneMultType` and its trait (349).
 - *Risk:* medium (ADIF output). *Specialists:* `contest-scoring`,
   `file-formats` (CQZ/ITUZ).
+- **PART 1 (THE MOVE) DONE 2026-10-14, on `f0c54f4c`.** Part 2 (the deletion)
+  is separate and later; nothing in part 1 needs it.
+  - **The seams** (`TContestBase`, each with a nil-safe free function, nil
+    being the classless DUMMYCONTEST, which ran `NoZoneMults`):
+    `ZoneMultiplierCount: integer` (base 0; `ContestZoneMultiplierCount`),
+    `ZoneMultiplierZones: TZoneMultiplierZones` (base `zmzNotCQOrITU`;
+    `ContestZoneMultiplierZones`) and `NumbersZonesFromZero: boolean` (base
+    False; `ContestNumbersZonesFromZero`). `TZoneMultiplierZones =
+    (zmzNotCQOrITU, zmzCQZones, zmzITUZones)` is new in `uContestBase`, and
+    is deliberately NOT `ZoneModeType`: it is the list the MULTIPLIER counts,
+    while `ZoneMode` (`cfCQZoneMode`) is which zone CTY.DAT gives a call.
+    `CQ_ZONE_MULTIPLIERS` (40) and `ITU_ZONE_MULTIPLIERS` (75) are named
+    once there; there is no shared computation, so there is no leaf.
+  - **The 20 contests in 19 units.** CQ zones, 40: CQ WW CW and SSB (once,
+    on `TContestCQWWBase`), CQ WW RTTY, CW Open, GACW WWSA, WWIH, and JIDX CW
+    and SSB for a Japanese entrant only (its private `IsJapaneseEntrant`,
+    which is `CountsDXMultiplier` renamed -- the DX answers ask it too, and
+    it is the test `DescribeSession` states `CQZones` under). ITU zones, 75:
+    BSCI, the Croatian, Gagarin Cup, IARU, LZ DX, OZCR-O and OZCR-Z. The
+    year licensed, 100, numbered from zero: the European HFC and KVP. The
+    NZART branch, 99: Jock White (NZFIELDDAY). The RF Championship's 7 zones:
+    CW and SSB. Own-numbered contests state only the count; their list is
+    the base's.
+  - **The engine readers.** `LOGDUPE.SetUpRemainingMultiplierArrays`' `case`
+    is one call (its JAPrefectures arm, 50, ran for no contest); LOGEDIT's
+    hint (`GetMultArray`) asks the contest it already holds;
+    `ShowRemMultsInWindow` asks zero-based numbering ONCE before its zone
+    walk (it was inside the loop); `InitialExchangeEntry`'s ITU initial zone
+    and `POSTUNIT.ZoneSentForThisContest(aContest)` and the ADIF CQZ/ITUZ
+    block ask the same `ZoneMultiplierZones` -- ONE source, as S9c made it
+    (F4). `ContestSession.ZoneMult` keeps only `DoingZoneMults` and the
+    matrix's `active.zonemult` as readers (and the uncompiled `logddx`).
+  - **THE EUHFC RANGE DID NOT MOVE -- IT WAS VACUOUS.** `LOGSTUFF.
+    ProcessRSTAndZoneExchange`'s `ZoneMult = EUHFCYear` arm accepted two
+    digits as 0..99 and skipped the CQ-zone limit. Two digits are always
+    0..99, and that limit applies only in CQ zone mode, which neither the
+    European HFC nor KVP ever runs (their own flags: ITU, the only mode
+    FCONTEST sets for them). The arm and the fall-through answered alike
+    for every input, so it was deleted rather than moved into their parse;
+    the matrix's `parse age "599 45"` (accepted, zone 45) pins both. The
+    two JAPrefectures arms beside it (plan 2.4, "goes at S1") read a kind no
+    contest runs and went with it.
+  - **F5 / Q95 TRANSCRIBED, NOT FIXED.** The Croatian answers `zmzITUZones`
+    over a CQ `ZoneMode` (W1AW exports `<ITUZ:2>05`); CW Open answers
+    `zmzCQZones` over an ITU one. Both classes say so beside the answer, and
+    `uTestZoneMultiplier.Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart`
+    pins the two facts side by side, so Q95's decision is a deliberate edit
+    there. The matrix pins both contests' ADIF zone tags at us/ve/dx.
+  - **THE PER-QSO PATH IS UNCHANGED.** `SetMultFlags`' zone test still asks
+    `DoingZoneMults` and nothing else; the rescore's per-QSO work has no new
+    lookup. New `ActiveContest` calls, each once: per remaining-mults set-up
+    (load, rescore), per zone-window refresh, per ADIF record exported (the
+    tail emitter fetches once and
+    passes it to the zone sent, STX_STRING and the tag -- the new
+    `POSTUNIT.MyExchangeForExport(aContest)`), per QSO the external logger
+    sends (`GetMyExchangeForExport`, now a wrapper), and once per Cabrillo
+    export (held for the whole log). The hint fetches none: it already held
+    the contest. **The TRMASTER initial zone asks `ContestIdentity`, not
+    `ActiveContest` (F22):** the first build fetched the active contest there
+    and moved three matrix records, through a pre-existing uninitialised
+    read in `LOGSCP.BestTwoLetters`; the choice itself is now the pure
+    `uContestBase.InitialZoneFromCallHistory` (the old rule exactly: ITU
+    list -> the entry's ITU zone or nothing, else its CQ zone or nothing).
+  - **Pins, written BEFORE the move and run green on the old code.**
+    `uTestZoneMultiplier`: 36 literal (contest, station) -> (count, list,
+    zero-based) rows covering all 20 and JIDX on both sides of its test,
+    over 7 entrants (us, ve, dx, a New England host, JA, 9A, UA); every
+    ContestType at every entrant against literal sets (exactly 20 count
+    zones somewhere); a cross-check of every ContestType x 7 entrants
+    against the frozen old rules under the resolved session kind; and the
+    F5 pair. Old code (the Program functions returning the frozen rules):
+    **148,128 passed, 0 failed**. After the move, the same tables ask the
+    classes: **148,128 passed, 0 failed**. Added with the F22 fix (no
+    old-code run -- the helper did not exist; its rows are the old arm's
+    branches by hand): `Test_CallHistoryOffersTheZoneOfTheContestsList` (12
+    rows -- the Croatian, IARU, IRTS, WRTC, CQ WW, CW Open, JIDX and the
+    classless contest, with the fixture's JA1ABC zones and the half-empty
+    entries) and `Test_TheITUQuestionDependsOnNoStation` (every ContestType
+    at every roster entrant). The cross-check and the frozen
+    rules go with part 2; the literals stay.
+  - **Matrix: MEASURED IDENTICAL, all 186 records byte-for-byte against
+    `frozen/`** (a scratch run of the final build, not the freeze script).
+    The first build's prediction ("identical; the ITU initial zone is not
+    reached, F17") was WRONG on its reason -- S0c's fixture reaches that
+    branch -- and wrong in result: the Croatian, IRTS and WRTC moved one
+    `iex JA1ABC` line per station. The cause is F22, not the zone rule; see
+    above and the F22 row. `zones.max` (40, 75, 100, 99, 7), every ADIF
+    `CQZ`/`ITUZ` tag, the parse section, the initialexchange section and
+    `active.zonemult` are unchanged.
+  - **Narrowing 1264 and range 3, unchanged** (scratch `-B`; the
+    incremental build crashed FPC, as at S3 and S4). `Lint-ContestNameTests`
+    6, unchanged.
+  - **Inventory** (generated, then the tracked doc restored): rows 73 ->
+    **68**; shapes 6/0/12/55 -> **6/0/12/50**; records PROXY 55 -> **50**,
+    SHARED 58 -> **50**, UNUSED 15 -> **12**, SHAPE 43; contests with rules
+    outside the factory 51 -> **48** (EUROPEANHFC, KVP, NZFIELDDAY leave).
+    `judgements.ROUTINES` names the new seams for
+    `SetUpRemainingMultiplierArrays` and the zone window.
 
 ### S6 -- Domestic multipliers move into the classes (119 contests)
 
@@ -1394,6 +1493,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F19** | `LogCfg` (once, `uProgramMain:2318`); `uProgramMain:2306-2307` versus `uSettingsEffects:353` | (S2) After F9's fix the `Doing*` answers follow a run-time contest switch, but what start-up DERIVED from them and from the exchange does not: `NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`, `SetUpExchangeInformation` and `SetColumnsWidth` run once. A peer's CONTEST line still leaves those describing the previous contest. Not measured on a bench |
 | **F20** | `TContestBase.PrefixMultiplierKey` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX) versus `ContestSession.DoingPrefixMults` | (S3) The key now asks `Station`, which `ActiveContest` refreshes on every call; whether `SetPrefix` is called at all still asks the session kind, fixed at set-up. They agree unless the entrant's country or continent changes mid-session without a CONTEST change (FoundContest is not re-run for MY CALL): then e.g. a UBA log started outside Belgium and switched to an ON call keeps `DoingPrefixMults` but gets no key. YB DX already read the live `Settings.My.Country` before S3. The end state (part 2, §3) asks the class for both, so this closes then. Not measured on a bench. **CLOSED at S3 part 2 (2026-10-14):** both now read `Station` -- `DoingPrefixMults` is `TContestBase.HasPrefixMultiplier` through `ActiveContest`, and the station-dependent keys ask it. The mid-session change is still not bench-checked |
 | **F21** | `TContestBase.DXMultiplierKey` / `CountryMode` / `ListsRemainingDXCountry` (ARRL DX, ARRL 160, All Asian, JIDX, SAC, Helvetia, Croatian, WAG, UBA, WAE, PACC, RDA, ALRS, YU DX, the host-state parties) versus `ContestSession.DoingDXMults` | (S4 part 1) F20's shape, for the DX kind: the key and the remaining-mults filter ask `Station`, refreshed on every `ActiveContest` call, while whether `GetDXQTH` runs and whether the window lists DX countries at all still ask the session kind fixed at set-up. They agree unless the entrant's country, continent or host state changes mid-session without a CONTEST change. The country list is asked once, at set-up, so it cannot drift. Part 2 makes "does this contest count DX" a class answer, as S3 part 2 did for prefixes. Not measured on a bench. **CLOSED at S4 part 2 (2026-10-14):** all four read `Station` -- `DoingDXMults` is `TContestBase.HasDXMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), and each station-dependent class's key, country list and answer ask one private predicate. The mid-session change is still not bench-checked |
+| **F22** | `trdos/logscp.pas` `CallDatabase.BestTwoLetters` (also in D7, `C:\TR4W` logscp.pas:1196) | (S5 part 1, found by the matrix) **A call-history lookup of any call containing `JA` reads an uninitialised local.** The routine skips the `JA` pair with `Continue` and never assigns its `NumberBytes[CharPos]`, then returns the FIRST pair whose size equals the minimum -- so whatever the stack holds in that slot decides whether it picks the real smallest bucket or the `JA` bucket, which TRMASTER never fills (`trmaster_codec.bucket_pairs` excludes `JA`, as TR's own writer does), giving "not found". The residue is in practice the PREVIOUS lookup's `NumberBytes[1]`. Measured in the matrix fixture: DL1ABC's `DL` bucket is 23 bytes and JA1ABC's smallest real bucket (`A1`) is 23 bytes, so after a DL1ABC lookup JA1ABC is not found and the initial exchange falls through to CTY.DAT. In the frozen matrix JA1ABC's TRMASTER name is offered in ONE record (GRIDLOC, whose path leaves other residue), while DL1ABC's is offered in 22. S5 part 1's first build called `ActiveContest` between two lookups (InitialExchangeEntry's ITU test), which overwrote the slot, and JA1ABC was then FOUND in the Croatian, IRTS and WRTC (`trmaster=" 25"` -> `" 45"`, `" 45"` -> `" 25"`); proven by putting the old session test back beside an `ActiveContest` call, which moved the same lines. So the frozen JA1ABC `trmaster` value is the defect's, not a rule, and it holds only while nothing deep runs between lookups. Live effect: SCP partials (`LOGEDIT` :1812) and every TRMASTER field (name, zones, QTH, section, ...) for a JA-containing call depend on the call looked up before it. **Recommendation:** assign `NumberBytes[CharPos] := 0` before the `Continue` -- the routine's own convention ("we get zero if we had an illegal character"), so the `JA` pair is never chosen -- in its own commit with a deliberate matrix re-freeze (the JA1ABC `trmaster`/`logged`/`custom` columns move wherever TRMASTER contributes). After it, `InitialExchangeEntry` may ask `ActiveContest` like the other zone readers. **Held for S5:** that site asks `ContestIdentity` (shallow; its ITU answer is station-independent for every contest, pinned by `Test_TheITUQuestionDependsOnNoStation`), so S5 moves no output. Related to Q95 only in that it surfaced on the zone question |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

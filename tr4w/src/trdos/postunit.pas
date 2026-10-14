@@ -437,8 +437,9 @@ uses
   (* SentMyState -- the state SENT in this contest, design 7.11 (M9a). *)
   FCONTEST,
   uCFG,
-  (* ContestSession -- the zone kind set-up resolved: the ADIF CQZ/ITUZ
-     choice and ZoneSentForThisContest (M10 S9c). *)
+  (* ContestSession -- the session's exchange and DoingZoneMults. The ADIF
+     CQZ/ITUZ choice and ZoneSentForThisContest asked its zone kind from M10
+     S9c until M11 S5; they ask the contest now. *)
   uContestSession,
   uLogNote;   (* NoteText -- MakeNotesList *)
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
@@ -457,10 +458,15 @@ uses
   contest.
 
   THE RULE IS THE CONTEST'S, NOT A LIST OF CONTEST NAMES. The contest states
-  which zone it is about, as the zone multiplier kind its session runs
-  (ContestSession.ZoneMult), and that is the fact being asked for.
+  which zone list its zone multiplier counts (TContestBase.ZoneMultiplierZones,
+  M11 S5), and that is the fact being asked for.
 
-  IT ASKS THE SESSION, AS THE ADIF CQZ/ITUZ BLOCK BELOW DOES -- M10 S9c,
+  IT ASKS THE CONTEST, AS THE ADIF CQZ/ITUZ BLOCK BELOW DOES -- ONE SOURCE,
+  M11 S5, 2026-10-14. aContest is the active contest, holding the station:
+  JIDX's answer depends on it. The history below is why the two readers
+  must keep one source.
+
+  IT ASKED THE SESSION, AS THE ADIF CQZ/ITUZ BLOCK BELOW DID -- M10 S9c,
   2026-10-14, closing plan F4. It read ContestsArray's ZnM until M10 S6 and
   the class's ZoneMultiplierType after it: two answers to one question, since
   the ADIF block asked the session. The session is what the contest RUNS (the sheet
@@ -484,11 +490,11 @@ makes the fix work for the ordinary operator who never heard of the setting
 -- and it is what makes the corpus reference reproduce.
 
 the CQ zone, if neither is available, which is exactly today's behaviour. *)
-function ZoneSentForThisContest: string;
+function ZoneSentForThisContest(aContest: TContestBase): string;
    var
       ituFromCty: Byte;
    begin
-   if ContestSession.ZoneMult = ITUZones then
+   if ContestZoneMultiplierZones(aContest) = zmzITUZones then
       begin
       if Settings.My.ResolvedItuZone > 0 then
          begin
@@ -2289,7 +2295,7 @@ procedure ExportToEDIByBand( Band: BandType );
   Cabrillo copy never set MyPark. Nothing in Cabrillo reads it, so no file
   changes; the third reader, POTA's ADIF activation fields, is why it is one
   function now. *)
-function CurrentMyStationExchange: TMyStationExchange;
+function CurrentMyStationExchange(aContest: TContestBase): TMyStationExchange;
 begin
    (* The state SENT in this contest, NOT MY STATE -- design 7.11 (M9a). A
      contest that sends nothing there, or the grid, says so for the session;
@@ -2297,7 +2303,7 @@ begin
    Result.MyState      := SentMyState;
    Result.MyGrid       := Settings.My.ResolvedGrid;
    Result.MyName       := Settings.My.ResolvedName;
-   Result.MyZone       := ZoneSentForThisContest;
+   Result.MyZone       := ZoneSentForThisContest(aContest);
    Result.MyFDClass    := Settings.My.ResolvedFdClass;
    Result.MySection    := Settings.My.ResolvedSection;
    Result.MyCheck      := Settings.My.ResolvedCheck;
@@ -2307,11 +2313,45 @@ begin
    Result.MyPark       := Settings.My.ResolvedPark;
 end;
 
+(* THE STX_STRING FOR TempRXData, FOR THE CONTEST aContest -- the body of
+  GetMyExchangeForExport, taking the active contest its caller already holds
+  (M11 S5): the ADIF tail emitter asks it once per record beside the zone
+  tag, and GetMyExchangeForExport fetches the contest for its other caller.
+
+  THE EXCHANGE IS THE CONTEST'S -- M4, 2026-10-01. What is left here is the
+  part that needs PostUnit's globals: filling the record, and deciding the
+  QSO is a good one. The format is asked through ContestIdentity, so a
+  classless contest answers with TContestBase's default -- the shared arm for
+  the session's exchange, in uADIFExchange. *)
+function MyExchangeForExport(aContest: TContestBase): string;
+  var
+    my: TMyStationExchange;
+  begin
+  my := CurrentMyStationExchange(aContest);
+
+  Result := ADIFMyExchangeErrorMarker;
+  if not GoodLookingQSO then
+     begin
+     Exit;
+     end;
+
+  (* A FORMAT THAT RAISES LEAVES THE MARKER, as it always did -- the
+    exchange was built inside a try/except that kept the initial value.
+    One contest's formatter raising must not take the whole export
+    down. *)
+  try
+     Result := ContestIdentity( Contest ).FormatADIFSentExchange( my,
+        TempRXData, ContestSession.Exchange );
+  except
+     Result := ADIFMyExchangeErrorMarker;
+  end;
+  end;
+
 // ---------------------------------------------------------------------------
 // Tail emitter callback for uADIF.ExportADIFToString.
 // Emits the contest-specific fields that uADIF.EmitADIFRecord skips because
 // they need access to MainUnit/trdos globals (Settings.My.Call, MyFDClass, MySection,
-// MyPark, mo.DomList, ContestSession.ZoneMult, etc.) or are gated on contest-specific
+// MyPark, mo.DomList, the active contest's zone list, etc.) or are gated on contest-specific
 // reinterpretation of QTHString.  Called once per record.
 // ---------------------------------------------------------------------------
 function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
@@ -2320,8 +2360,14 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
     cntyIdx: integer;
     stateCode: string;
     qthForGrid: ShortString;
+    (* THE ACTIVE CONTEST, FETCHED ONCE PER RECORD -- M11 S5. The zone sent
+      (STX_STRING and the contest's exchange fields) and the CQZ/ITUZ tag ask
+      it; ActiveContest rebuilds the station on every call. *)
+    contestRules: TContestBase;
+    zoneList: TZoneMultiplierZones;
   begin
   Result := '';
+  contestRules := ActiveContest( Contest );
 
   // The legacy MY-exchange builder (GetMyExchangeForExport) and its
   // GoodLookingQSO guard read the global TempRXData, NOT `rec`.  ExportToADIF
@@ -2339,7 +2385,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // round-trip tests rely on it being present without a tail emitter.
 
   // ----- STX_STRING (always, from MY side) -----
-  stxString := GetMyExchangeForExport;
+  stxString := MyExchangeForExport( contestRules );
   Result    := Result + EmitADIFField( 'STX_STRING',
      Trim( DeleteRepeatedSpaces( stxString ) ) );
 
@@ -2361,7 +2407,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // and a hunter's state or grid after it; those were two `ceContest = POTA`
   // tests here until POTA gained its class (design Q6).
   Result := Result + ContestIdentity( rec.ceContest ).EmitADIFExchangeFields(
-     CurrentMyStationExchange, rec, ContestSession.Exchange, ExchangeInformation.RST );
+     CurrentMyStationExchange( contestRules ), rec, ContestSession.Exchange, ExchangeInformation.RST );
 
   // ----- CNTY (state QP with FAltName loaded from <state>_cty.dom) -----
   stateCode := GetStateForContest( rec.ceContest );
@@ -2413,15 +2459,20 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
      end;
 
   // ----- CQZ / ITUZ (zone) -----
+  (* The contest's zone list, not the CTY zone mode -- M11 S5; it was
+    ContestSession.ZoneMult. The Croatian counts ITU zones over a CQ zone
+    mode and so writes a CQ zone as ITUZ; CW Open is the inverse (plan F5,
+    open question Q95). Transcribed, not fixed. *)
+  zoneList := ContestZoneMultiplierZones( contestRules );
   if rec.Zone <> DUMMYZONE then
      begin
-     if ContestSession.ZoneMult = CQZones then
+     if zoneList = zmzCQZones then
         begin
         Result := Result + EmitADIFField( 'CQZ', sysutils.Format( '%.2d',
            [ rec.Zone ] ) )
         end
      else
-       if ContestSession.ZoneMult = ITUZones then
+       if zoneList = zmzITUZones then
           begin
           Result := Result + EmitADIFField( 'ITUZ',
              sysutils.Format( '%.2d', [ rec.Zone ] ) )
@@ -2831,6 +2882,12 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           contest for the two columns -- see TCabrilloQSOContext. *)
         qsoContext: TCabrilloQSOContext;
         exportContest: TContestBase;
+        (* THE ACTIVE CONTEST, HOLDING THE STATION -- M11 S5: the zone sent
+          (CurrentMyStationExchange) asks its zone list, which for JIDX
+          depends on the entrant. Fetched once for the whole log, beside
+          exportContest; nothing in the loop switches the contest, so the
+          object ActiveContest returned stays the active one. *)
+        stationContest: TContestBase;
         cRandomCharsReceived: string;
         cKids: string;
         (* THE PREVIOUS GOOD QSO'S RECEIVED NUMBER, mod 1000 -- what Radio YOC
@@ -2855,6 +2912,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       PreviousQTHString := '';
       contacts := 0;
       exportContest := ContestIdentity( Contest );
+      stationContest := ActiveContest( Contest );
       Result   := False;
 
       logger.Info( 'In tGenerateLogPortionOfCabrilloFile' );
@@ -3036,7 +3094,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 (* THE TWO EXCHANGE COLUMNS, ASKED OF THE CONTEST -- M4. This
                   routine fills the My-station record and the per-QSO inputs
                   it has decided; the contest arranges them. *)
-                myStationEx := CurrentMyStationExchange;
+                myStationEx := CurrentMyStationExchange( stationContest );
                 qsoContext.SessionExchange        := ContestSession.Exchange;
                 qsoContext.RSTSent                := RSTSent;
                 qsoContext.RSTReceived            := RSTReceived;
@@ -3663,33 +3721,11 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
   (* ---------------------------------------------------------------------------- *)
 
     function GetMyExchangeForExport: string;
-      var
-        my: TMyStationExchange;
       begin
-      (* THE EXCHANGE IS THE CONTEST'S -- M4, 2026-10-01. What is left here
-        is the part that needs PostUnit's globals: filling the record, and
-        deciding the QSO is a good one. The contest is asked through
-        ContestIdentity, so a classless contest answers with TContestBase's
-        default -- the shared arm for the session's exchange, in
-        uADIFExchange. *)
-      my := CurrentMyStationExchange;
-
-      Result := ADIFMyExchangeErrorMarker;
-      if not GoodLookingQSO then
-         begin
-         Exit;
-         end;
-
-      (* A FORMAT THAT RAISES LEAVES THE MARKER, as it always did -- the
-        exchange was built inside a try/except that kept the initial value.
-        One contest's formatter raising must not take the whole export
-        down. *)
-      try
-         Result := ContestIdentity( Contest ).FormatADIFSentExchange( my,
-            TempRXData, ContestSession.Exchange );
-      except
-         Result := ADIFMyExchangeErrorMarker;
-      end;
+      (* The external logger's entry (one call per QSO it sends): it holds no
+        contest, so the active one is fetched here. See MyExchangeForExport,
+        which the ADIF export calls with the contest it already holds. *)
+      Result := MyExchangeForExport( ActiveContest( Contest ) );
       end;
   (* ---------------------------------------------------------------------------- *)
     function GetOperatorsFromLog: string;

@@ -48,10 +48,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   HF Championship's "year licensed" multiplier -- while FCONTEST's
   commented-out line names BranchZones. Which one KVP's rules actually
   want has not been checked against the sponsor; the row's value is
-  transcribed exactly. LOGSTUFF, LOGDUPE and LOGEDIT read EUHFCYear from
-  the session's zone kind (ContestSession.ZoneMult since M10 S9c), which
-  FCONTEST sets from this class's ZoneMultiplierType, so that behaviour is
-  keyed on the multiplier type.
+  transcribed exactly. Since M11 S5 the rule is this class's own --
+  ZoneMultiplierCount (100) and NumbersZonesFromZero (True), which LOGDUPE
+  and LOGEDIT read from the session's zone kind until then; LOGSTUFF's
+  EUHFCYear range test was vacuous here (ITU zone mode) and was deleted.
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
   sits on TContestBase directly and states its own points, calling
@@ -108,6 +108,12 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         NumbersZonesFromZero (M11 S5). Its zones are not CQ or ITU zones, so
+         ZoneMultiplierZones is the base's. *)
+      function ZoneMultiplierCount: integer; override;
+      function NumbersZonesFromZero: boolean; override;
    end;
 
 implementation
@@ -222,6 +228,20 @@ end;
 procedure TContestKVP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, ncfMyZone);
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the year licensed, 00 to 99 --
+   a hundred zones, numbered from zero. What the trait's EUHFCYear gave
+   LOGDUPE's zone count and LOGEDIT's remaining-mults list through the
+   session kind until S5. *)
+function TContestKVP.ZoneMultiplierCount: integer;
+begin
+   Result := 100;
+end;
+
+function TContestKVP.NumbersZonesFromZero: boolean;
+begin
+   Result := True;
 end;
 
 initialization

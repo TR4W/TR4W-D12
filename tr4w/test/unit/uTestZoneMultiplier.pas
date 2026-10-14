@@ -1,0 +1,642 @@
+(*
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+ *)
+
+(* THE ZONE MULTIPLIER EVERY CONTEST STATES -- HOW MANY ZONES, WHICH ZONE
+  LIST, AND WHETHER IT NUMBERS THEM FROM ZERO -- AT STATIONS THE CONTEST
+  MATRIX DOES NOT RUN. M11 S5, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md
+  S5).
+
+  WHY IT EXISTS. S5 moves the readers of the session's ZONE KIND that choose
+  a RULE into the classes:
+     LOGDUPE.SetUpRemainingMultiplierArrays' `case ZoneMult of` -- the zone
+        count (MaxNumberOfZones);
+     LOGEDIT.GetMultArray's `ZoneMult in [CQZones, ITUZones]`, LOGEDIT's ITU
+        initial zone, POSTUNIT.ZoneSentForThisContest and the ADIF CQZ/ITUZ
+        block -- which zone list the multiplier counts;
+     LOGEDIT.ShowRemMultsInWindow's `ZoneMult = EUHFCYear` -- zero-based
+        numbering.
+  The matrix pins the count (zones.max: 40, 75, 100, 99 and 7) and the ADIF
+  tag at us, ve and dx. It cannot see a JAPANESE entrant, whose JIDX session
+  runs CQ zones (DescribeSession) where every other entrant's runs none. So
+  this unit freezes, as LITERALS, what each contest answers at a fixed
+  roster of stations, JA included.
+
+  HOW THE LITERALS WERE MADE. Written by hand from the old code, then RUN
+  GREEN AGAINST THE OLD CODE before anything moved: the Program* functions
+  below returned the frozen legacy rule (Legacy...OfKind) selected by the
+  session kind uTestContestKindPin.Kinds resolves -- the trait, then
+  DescribeSession -- exactly what the engine selected. Then the move, and
+  the same tables green against the classes.
+
+  AND A CROSS-CHECK FOR EVERY CONTEST. Test_EveryContestAgreesWithItsSession
+  Kind asks every ContestType at every roster station and compares the
+  class's three answers with the frozen legacy rules under the kind the
+  session resolves to. It holds only while the session still carries the
+  zone kind; S5 part 2 deletes that kind, and the cross-check and the frozen
+  rules go with it, leaving the literals.
+
+  CROATIAN AND CW OPEN ARE PINNED ON PURPOSE (plan F5, open question Q95).
+  The zone MULTIPLIER's list and the CTY lookup's ZONE MODE are two facts,
+  and for these two contests they disagree today: the Croatian counts ITU
+  zones over a CQ zone mode (so a W1AW contact, CQ zone 5, exports
+  <ITUZ:2>05), and CW Open counts CQ zones over an ITU zone mode. S5
+  transcribes that exactly; Test_CroatianAndCWOpenKeepTheirTwoZoneSystems
+  Apart pins both facts for both contests, so whatever Q95 decides is a
+  deliberate, visible change to this file and not a side effect of folding
+  one fact into the other.
+
+  THE TRMASTER INITIAL ZONE (plan F22). Which zone a call-history entry
+  offers is pinned on its own -- uContestBase.InitialZoneFromCallHistory, as
+  LOGEDIT asks it, through ContestIdentity -- because the matrix's JA1ABC
+  line in those contests shows F22's lookup miss rather than this rule. And
+  Test_TheITUQuestionDependsOnNoStation holds the reason ContestIdentity is
+  enough there.
+
+  NEVER REGENERATE IT TO CLEAR A FAILURE -- the uTestContestKindPin rule. A
+  failure means a contest's zone rule changed. *)
+unit uTestZoneMultiplier;
+
+{$I ..\..\src\tr4w.inc}
+
+interface
+
+uses
+   uTR4WTestFramework;
+
+type
+   TZoneMultiplierTests = class(TTestCase)
+   public
+      procedure RunAllTests; override;
+   private
+      procedure Test_EveryZoneContestGivesItsPinnedAnswers;
+      procedure Test_EveryContestHasItsPinnedZoneMultiplier;
+      procedure Test_EveryContestAgreesWithItsSessionKind;
+      procedure Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
+      procedure Test_CallHistoryOffersTheZoneOfTheContestsList;
+      procedure Test_TheITUQuestionDependsOnNoStation;
+   end;
+
+implementation
+
+uses
+   SysUtils,
+   VC,
+   uContestBase,
+   uContestRegistry,
+   uTestContestKindPin;
+
+type
+   (* The entrants. us, ve and dx are the matrix's; host is a New England
+      station inside its state party's host state; JA takes JIDX's
+      DescribeSession branch, which the matrix never reaches; 9A and UA are
+      the home stations of the Croatian and the Russian zone contests. *)
+   TPinStation = (psUS, psVE, psDX, psHost, psJA, ps9A, psUA);
+
+   TStationRow = record
+      Call: string;
+      Country: string;
+      Continent: ContinentType;
+      State: string;
+      InHostState: boolean;
+   end;
+
+   (* One contest at one station: its zone count, its zone list -- 'CQ',
+      'ITU', or 'none' for a contest with no zone multiplier or one it
+      numbers itself -- and whether it numbers its zones from zero. *)
+   TZonePin = record
+      Contest: ContestType;
+      Station: TPinStation;
+      Count: integer;
+      Zones: string;
+      FromZero: boolean;
+   end;
+
+   (* A call-history entry's two zone fields, and the zone the contest is
+      offered from them -- see HISTORY_PINS. *)
+   THistoryPin = record
+      Contest: ContestType;
+      CQZone: string;
+      ITUZone: string;
+      Offers: boolean;
+      Offered: string;
+   end;
+
+const
+   STATIONS: array[TPinStation] of TStationRow = (
+      (Call: 'K0AAA';  Country: 'K';  Continent: NorthAmerica; State: 'KS'; InHostState: False),
+      (Call: 'VE3AAA'; Country: 'VE'; Continent: NorthAmerica; State: 'ON'; InHostState: False),
+      (Call: 'DL1AAA'; Country: 'DL'; Continent: Europe;       State: '';   InHostState: False),
+      (Call: 'K1AAA';  Country: 'K';  Continent: NorthAmerica; State: 'MA'; InHostState: True),
+      (Call: 'JA1AAA'; Country: 'JA'; Continent: Asia;         State: '';   InHostState: False),
+      (Call: '9A2AAA'; Country: '9A'; Continent: Europe;       State: '';   InHostState: False),
+      (Call: 'UA3AAA'; Country: 'UA'; Continent: Europe;       State: '';   InHostState: False)
+   );
+
+   (* WRITTEN BY HAND FROM THE OLD CODE AND RUN GREEN AGAINST IT -- see the
+      unit header. Every one of the 20 zone contests has a row, and JIDX has
+      one on each side of its station test. *)
+   ZONE_PINS: array[0..35] of TZonePin = (
+      (* CQ ZONES, 40, AT EVERY STATION. *)
+      (Contest: CQWWCW;            Station: psUS;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: CQWWCW;            Station: psJA;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: CQWWSSB;           Station: psVE;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: CQWWRTTY;          Station: psDX;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: CWOPEN;            Station: psUS;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: GACWWWSACW;        Station: psDX;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: WWIH;              Station: psHost; Count: 40;  Zones: 'CQ';   FromZero: False),
+
+      (* CQ ZONES FOR A JAPANESE ENTRANT ONLY -- JIDX's DescribeSession. *)
+      (Contest: JIDXCW;            Station: psJA;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: JIDXCW;            Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: JIDXCW;            Station: psDX;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: JIDXSSB;           Station: psJA;   Count: 40;  Zones: 'CQ';   FromZero: False),
+      (Contest: JIDXSSB;           Station: psVE;   Count: 0;   Zones: 'none'; FromZero: False),
+
+      (* ITU ZONES, 75, AT EVERY STATION. *)
+      (Contest: BSCI;              Station: psDX;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: CROATIAN;          Station: ps9A;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: CROATIAN;          Station: psUS;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: GAGARINCUP;        Station: psUA;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: IARU;              Station: psUS;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: IARU;              Station: psJA;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: LZDX;              Station: psDX;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: OZCR_O;            Station: psUA;   Count: 75;  Zones: 'ITU';  FromZero: False),
+      (Contest: OZCR_Z;            Station: psVE;   Count: 75;  Zones: 'ITU';  FromZero: False),
+
+      (* THE YEAR LICENSED, 00 TO 99: a hundred zones, numbered from zero. *)
+      (Contest: EUROPEANHFC;       Station: psDX;   Count: 100; Zones: 'none'; FromZero: True),
+      (Contest: EUROPEANHFC;       Station: psUS;   Count: 100; Zones: 'none'; FromZero: True),
+      (Contest: KVP;               Station: psDX;   Count: 100; Zones: 'none'; FromZero: True),
+
+      (* THE NZART BRANCH, 1 TO 99. *)
+      (Contest: NZFIELDDAY;        Station: psUS;   Count: 99;  Zones: 'none'; FromZero: False),
+      (Contest: NZFIELDDAY;        Station: psDX;   Count: 99;  Zones: 'none'; FromZero: False),
+
+      (* THE RF CHAMPIONSHIP'S SEVEN ZONES. *)
+      (Contest: RFCHAMPIONSHIPCW;  Station: psUA;   Count: 7;   Zones: 'none'; FromZero: False),
+      (Contest: RFCHAMPIONSHIPSSB; Station: psDX;   Count: 7;   Zones: 'none'; FromZero: False),
+
+      (* NO ZONE MULTIPLIER -- contests the move must not give one, the All
+         Asian at a Japanese station, a party in its host state, and the
+         classless DUMMYCONTEST. *)
+      (Contest: CQWPXCW;           Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: ARRLDXCW;          Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: ARRLSSCW;          Station: psVE;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: ALLASIANCW;        Station: psJA;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: CQ160CW;           Station: psDX;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: NEWENGLANDQSO;     Station: psHost; Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: RUSSIANDX;         Station: psUA;   Count: 0;   Zones: 'none'; FromZero: False),
+      (Contest: DUMMYCONTEST;      Station: psUS;   Count: 0;   Zones: 'none'; FromZero: False)
+   );
+
+   (* THE CALL-HISTORY INITIAL ZONE -- LOGEDIT.InitialExchangeEntry's
+      ZoneInitialExchange arm once CD.GetEntry has found the call, asked
+      through InitialZoneFromCallHistory with the list ContestIdentity's
+      contest counts (as LOGEDIT asks it; see plan F22 for why not
+      ActiveContest). The entry is the matrix fixture's JA1ABC, CQ zone 25 and
+      ITU zone 45, and the two half-empty variants of it. Offered '' with
+      Offers False means "CTY.DAT decides" -- the arm goes on to ctyGetZone in
+      the CTY zone mode. *)
+   HISTORY_PINS: array[0..11] of THistoryPin = (
+      (* ITU-zone contests offer the ITU zone -- the Croatian whatever its CQ
+         CTY zone mode (F5). *)
+      (Contest: CROATIAN; CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '45'),
+      (Contest: IARU;     CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '45'),
+      (* ... and NOTHING when the entry has no ITU zone: no CQ fall-back. *)
+      (Contest: CROATIAN; CQZone: '25'; ITUZone: '';   Offers: False; Offered: ''),
+      (Contest: IARU;     CQZone: '25'; ITUZone: '';   Offers: False; Offered: ''),
+      (* Every other contest offers the CQ zone -- IRTS and WRTC count no
+         zone multiplier and run ITU CTY zone mode, and still take the CQ
+         field; CQ WW and CW Open count CQ zones. *)
+      (Contest: IRTS;     CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
+      (Contest: WRTC;     CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
+      (Contest: CQWWCW;   CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
+      (Contest: CWOPEN;   CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
+      (Contest: JIDXCW;   CQZone: '25'; ITUZone: '45'; Offers: True;  Offered: '25'),
+      (* ... and nothing when the entry has no CQ zone: no ITU fall-back. *)
+      (Contest: IRTS;     CQZone: '';   ITUZone: '45'; Offers: False; Offered: ''),
+      (Contest: CQWWCW;   CQZone: '';   ITUZone: '45'; Offers: False; Offered: ''),
+      (* The classless DUMMYCONTEST is not an ITU contest. *)
+      (Contest: DUMMYCONTEST; CQZone: '25'; ITUZone: '45'; Offers: True; Offered: '25')
+   );
+
+   (* THE ZONE CONTESTS, AS SETS -- for every ContestType at every roster
+      station. JIDX is in CQ_FOR_JA_ONLY and counts nothing elsewhere. Read
+      from the frozen kind pin's ZoneMult column (us, ve, dx and us-host,
+      the program's own S0b output) and JIDX's DescribeSession test. *)
+   CQ_EVERYWHERE: set of ContestType = [CQWWCW, CQWWSSB, CQWWRTTY, CWOPEN,
+                                        GACWWWSACW, WWIH];
+   CQ_FOR_JA_ONLY: set of ContestType = [JIDXCW, JIDXSSB];
+   ITU_EVERYWHERE: set of ContestType = [BSCI, CROATIAN, GAGARINCUP, IARU,
+                                         LZDX, OZCR_O, OZCR_Z];
+   YEAR_EVERYWHERE: set of ContestType = [EUROPEANHFC, KVP];
+   BRANCH_EVERYWHERE: set of ContestType = [NZFIELDDAY];
+   RF_EVERYWHERE: set of ContestType = [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB];
+
+function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
+begin
+   Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
+                           STATIONS[aStation].Continent, STATIONS[aStation].State,
+                           'DX', '', STATIONS[aStation].InHostState,
+                           SessionContestName(aContest, STATIONS[aStation].InHostState));
+end;
+
+(* THE OLD ZONE COUNT, FROZEN -- LOGDUPE.SetUpRemainingMultiplierArrays'
+   `case ContestSession.ZoneMult of` as it stood at f0c54f4c, verbatim. The
+   engine asked it only when the session counted zone multipliers, so
+   NoZoneMults reached the case's `else` never; 0 is what that else gave.
+   JAPrefectures (50) is a dead arm -- no contest states it -- kept as it
+   stood. It goes when S5 part 2 deletes ZoneMultType. *)
+function LegacyZoneCountOfKind(aKind: ZoneMultType): integer;
+begin
+   case aKind of
+      CQZones:
+         begin
+         Result := 40;
+         end;
+      EUHFCYear:
+         begin
+         Result := 100;
+         end;
+      ITUZones:
+         begin
+         Result := 75;
+         end;
+      JAPrefectures:
+         begin
+         Result := 50;
+         end;
+      BranchZones:
+         begin
+         Result := 99;
+         end;
+      RFChampionchipZones:
+         begin
+         Result := 7;
+         end;
+   else
+      begin
+      Result := 0;
+      end;
+   end;
+end;
+
+(* THE OLD ZONE-LIST TEST, FROZEN -- the one question five sites asked of the
+   session kind at f0c54f4c: LOGEDIT.GetMultArray (`in [CQZones, ITUZones]`,
+   then `= CQZones`), LOGEDIT.InitialExchangeEntry (`= ITUZones`),
+   POSTUNIT.ZoneSentForThisContest (`= ITUZones`) and the ADIF block
+   (`= CQZones`, else `= ITUZones`). *)
+function LegacyZonesOfKind(aKind: ZoneMultType): string;
+begin
+   if aKind = CQZones then
+      begin
+      Result := 'CQ';
+      end
+   else if aKind = ITUZones then
+      begin
+      Result := 'ITU';
+      end
+   else
+      begin
+      Result := 'none';
+      end;
+end;
+
+(* THE OLD ZERO-BASED TEST, FROZEN -- LOGEDIT.ShowRemMultsInWindow's
+   `ContestSession.ZoneMult = EUHFCYear` at f0c54f4c. *)
+function LegacyFromZeroOfKind(aKind: ZoneMultType): boolean;
+begin
+   Result := aKind = EUHFCYear;
+end;
+
+(* A contest object holding the station, as ActiveContest hands it; nil for
+   the classless DUMMYCONTEST. The caller frees it. *)
+function MakeContest(aContest: ContestType; const aStation: TStationContext): TContestBase;
+var
+   cls: TContestClass;
+begin
+   Result := nil;
+   cls := ContestClassFor(aContest);
+   if cls <> nil then
+      begin
+      Result := cls.Create(aContest);
+      Result.SetStation(aStation);
+      end;
+end;
+
+(* The zone list as the literals spell it. *)
+function ZonesText(aZones: TZoneMultiplierZones): string;
+begin
+   case aZones of
+      zmzCQZones:
+         begin
+         Result := 'CQ';
+         end;
+      zmzITUZones:
+         begin
+         Result := 'ITU';
+         end;
+   else
+      begin
+      Result := 'none';
+      end;
+   end;
+end;
+
+(* WHAT THE PROGRAM GIVES -- what LOGDUPE, LOGEDIT and POSTUNIT ask since
+   the move: the contest's own answer, on a contest object holding the
+   station, as ActiveContest hands it. nil (the classless DUMMYCONTEST)
+   answers as the Contest... wrappers answer nil. BEFORE THE MOVE each of
+   these returned the frozen legacy rule above, selected by
+   Kinds(aContest, aStation).ZoneMult -- the run that made the literals. *)
+function ProgramCount(aContest: ContestType; const aStation: TStationContext): integer;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContest(aContest, aStation);
+   try
+      Result := ContestZoneMultiplierCount(obj);
+   finally
+      obj.Free;
+      end;
+end;
+
+function ProgramZones(aContest: ContestType; const aStation: TStationContext): string;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContest(aContest, aStation);
+   try
+      Result := ZonesText(ContestZoneMultiplierZones(obj));
+   finally
+      obj.Free;
+      end;
+end;
+
+function ProgramFromZero(aContest: ContestType; const aStation: TStationContext): boolean;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContest(aContest, aStation);
+   try
+      Result := ContestNumbersZonesFromZero(obj);
+   finally
+      obj.Free;
+      end;
+end;
+
+function Who(aContest: ContestType; aStation: TPinStation): string;
+begin
+   Result := string(ContestTypeSA[aContest]) + ' at ' + STATIONS[aStation].Call;
+end;
+
+procedure TZoneMultiplierTests.RunAllTests;
+begin
+   Test_EveryZoneContestGivesItsPinnedAnswers;
+   Test_EveryContestHasItsPinnedZoneMultiplier;
+   Test_EveryContestAgreesWithItsSessionKind;
+   Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
+   Test_CallHistoryOffersTheZoneOfTheContestsList;
+   Test_TheITUQuestionDependsOnNoStation;
+end;
+
+procedure TZoneMultiplierTests.Test_EveryZoneContestGivesItsPinnedAnswers;
+var
+   i: integer;
+   pin: TZonePin;
+   station: TStationContext;
+   named: set of ContestType;
+   count: integer;
+   c: ContestType;
+begin
+   BeginTest('Test_EveryZoneContestGivesItsPinnedAnswers');
+   named := [];
+   for i := Low(ZONE_PINS) to High(ZONE_PINS) do
+      begin
+      pin := ZONE_PINS[i];
+      station := PinStation(pin.Station, pin.Contest);
+      CheckEquals(pin.Count, ProgramCount(pin.Contest, station),
+                  Who(pin.Contest, pin.Station) + ' zone count');
+      CheckEquals(pin.Zones, ProgramZones(pin.Contest, station),
+                  Who(pin.Contest, pin.Station) + ' zone list');
+      CheckEquals(BoolToStr(pin.FromZero, True),
+                  BoolToStr(ProgramFromZero(pin.Contest, station), True),
+                  Who(pin.Contest, pin.Station) + ' numbered from zero');
+      if pin.Count > 0 then
+         begin
+         Include(named, pin.Contest);
+         end;
+      end;
+
+   (* EVERY ZONE CONTEST HAS A ROW THAT COUNTS ZONES -- 20, plan S5. *)
+   count := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if c in named then
+         begin
+         Inc(count);
+         end;
+      end;
+   CheckEquals(20, count, 'contests with a pinned zone multiplier');
+end;
+
+procedure TZoneMultiplierTests.Test_EveryContestHasItsPinnedZoneMultiplier;
+var
+   c: ContestType;
+   s: TPinStation;
+   station: TStationContext;
+   wantCount: integer;
+   wantZones: string;
+   counted: set of ContestType;
+   checked: integer;
+   count: integer;
+begin
+   BeginTest('Test_EveryContestHasItsPinnedZoneMultiplier');
+   counted := [];
+   checked := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         station := PinStation(s, c);
+         wantCount := 0;
+         wantZones := 'none';
+         if (c in CQ_EVERYWHERE) or
+            ((c in CQ_FOR_JA_ONLY) and (s = psJA)) then
+            begin
+            wantCount := 40;
+            wantZones := 'CQ';
+            end
+         else if c in ITU_EVERYWHERE then
+            begin
+            wantCount := 75;
+            wantZones := 'ITU';
+            end
+         else if c in YEAR_EVERYWHERE then
+            begin
+            wantCount := 100;
+            end
+         else if c in BRANCH_EVERYWHERE then
+            begin
+            wantCount := 99;
+            end
+         else if c in RF_EVERYWHERE then
+            begin
+            wantCount := 7;
+            end;
+
+         CheckEquals(wantCount, ProgramCount(c, station), Who(c, s) + ' zone count');
+         CheckEquals(wantZones, ProgramZones(c, station), Who(c, s) + ' zone list');
+         CheckEquals(BoolToStr(c in YEAR_EVERYWHERE, True),
+                     BoolToStr(ProgramFromZero(c, station), True),
+                     Who(c, s) + ' numbered from zero');
+         if ProgramCount(c, station) > 0 then
+            begin
+            Include(counted, c);
+            end;
+         Inc(checked);
+         end;
+      end;
+
+   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
+               'contest x station zone answers compared');
+
+   (* EXACTLY 20 CONTESTS COUNT ZONES ANYWHERE ON THE ROSTER. *)
+   count := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if c in counted then
+         begin
+         Inc(count);
+         end;
+      end;
+   CheckEquals(20, count, 'contests that count zones at some roster station');
+end;
+
+procedure TZoneMultiplierTests.Test_EveryContestAgreesWithItsSessionKind;
+var
+   c: ContestType;
+   s: TPinStation;
+   station: TStationContext;
+   kind: ZoneMultType;
+   checked: integer;
+begin
+   BeginTest('Test_EveryContestAgreesWithItsSessionKind');
+   checked := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         station := PinStation(s, c);
+         kind := Kinds(c, station).ZoneMult;
+         CheckEquals(LegacyZoneCountOfKind(kind), ProgramCount(c, station),
+                     Who(c, s) + ' zone count');
+         CheckEquals(LegacyZonesOfKind(kind), ProgramZones(c, station),
+                     Who(c, s) + ' zone list');
+         CheckEquals(BoolToStr(LegacyFromZeroOfKind(kind), True),
+                     BoolToStr(ProgramFromZero(c, station), True),
+                     Who(c, s) + ' numbered from zero');
+         Inc(checked);
+         end;
+      end;
+
+   (* EXACT: every contest at every roster station. *)
+   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
+               'contest x station kinds compared');
+end;
+
+(* PLAN F5, OPEN QUESTION Q95 -- see the unit header. Two facts per contest,
+   pinned side by side: the zone list the MULTIPLIER counts (the class's
+   answer, which the sheet, the hint, the initial zone, the zone sent and the
+   ADIF CQZ/ITUZ tag ask) and the CTY lookup's ZONE MODE (ZoneMode, from
+   cfCQZoneMode, which decides which zone CTY.DAT gives a logged call). They
+   disagree for these two contests and NOTHING here may reconcile them: a
+   change to either line is the Q95 decision, made deliberately. *)
+procedure TZoneMultiplierTests.Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
+var
+   station: TStationContext;
+begin
+   BeginTest('Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart');
+
+   station := PinStation(psUS, CROATIAN);
+   CheckEquals('ITU', ProgramZones(CROATIAN, station),
+               'CROATIAN counts ITU zones (exports a CQ zone as ITUZ)');
+   CheckEquals(Ord(CQZoneMode), Ord(ContestIdentity(CROATIAN).ZoneMode),
+               'CROATIAN looks zones up in CQ zone mode');
+
+   station := PinStation(psUS, CWOPEN);
+   CheckEquals('CQ', ProgramZones(CWOPEN, station),
+               'CWOPEN counts CQ zones (exports an ITU zone as CQZ)');
+   CheckEquals(Ord(ITUZoneMode), Ord(ContestIdentity(CWOPEN).ZoneMode),
+               'CWOPEN looks zones up in ITU zone mode');
+end;
+
+(* THE CALL-HISTORY INITIAL ZONE, PINNED OUTSIDE THE MATRIX -- see
+   HISTORY_PINS. The matrix's initialexchange section reaches this branch
+   (S0c's fixture), but its JA1ABC line in these contests shows plan F22's
+   miss, not this rule, so the rule is pinned here on its own. *)
+procedure TZoneMultiplierTests.Test_CallHistoryOffersTheZoneOfTheContestsList;
+var
+   i: integer;
+   offered: ShortString;
+   offers: boolean;
+begin
+   BeginTest('Test_CallHistoryOffersTheZoneOfTheContestsList');
+   for i := Low(HISTORY_PINS) to High(HISTORY_PINS) do
+      begin
+      offers := InitialZoneFromCallHistory(
+                   ContestZoneMultiplierZones(ContestIdentity(HISTORY_PINS[i].Contest)),
+                   ShortString(HISTORY_PINS[i].CQZone),
+                   ShortString(HISTORY_PINS[i].ITUZone),
+                   offered);
+      CheckEquals(BoolToStr(HISTORY_PINS[i].Offers, True), BoolToStr(offers, True),
+                  string(ContestTypeSA[HISTORY_PINS[i].Contest]) + ' offers a zone');
+      CheckEquals(HISTORY_PINS[i].Offered, string(offered),
+                  string(ContestTypeSA[HISTORY_PINS[i].Contest]) + ' offered zone');
+      end;
+end;
+
+(* LOGEDIT ASKS THE IDENTITY, NOT THE ACTIVE CONTEST, WHETHER THE LIST IS ITU
+   (plan F22). That is only right while no contest's ITU answer depends on
+   the entrant -- checked here for every contest at every roster station
+   against the station-holding object. A future contest whose ITU answer
+   does depend on the entrant fails this, and LOGEDIT must then ask it with
+   the station (after F22 is fixed). *)
+procedure TZoneMultiplierTests.Test_TheITUQuestionDependsOnNoStation;
+var
+   c: ContestType;
+   s: TPinStation;
+   identityITU: boolean;
+begin
+   BeginTest('Test_TheITUQuestionDependsOnNoStation');
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      identityITU := ContestZoneMultiplierZones(ContestIdentity(c)) = zmzITUZones;
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         CheckEquals(BoolToStr(identityITU, True),
+                     BoolToStr(ProgramZones(c, PinStation(s, c)) = 'ITU', True),
+                     Who(c, s) + ' ITU zone list, identity versus station');
+         end;
+      end;
+end;
+
+end.

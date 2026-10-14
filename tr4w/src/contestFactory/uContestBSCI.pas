@@ -92,6 +92,11 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
    end;
 
 implementation
@@ -239,6 +244,20 @@ begin
       aKey := aQso.QTH.CountryID;
       Result := True;
       end;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the ITU zones, at every
+   station. What the trait's ITUZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. *)
+function TContestBSCI.ZoneMultiplierCount: integer;
+begin
+   Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+function TContestBSCI.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzITUZones;
 end;
 
 initialization

@@ -5586,31 +5586,31 @@ begin
       begin
         RXData.Zone := StrToIntDef(Exchange, 0);
 
-        if ContestSession.ZoneMult = EUHFCYear then
+        (* THREE ZONE-KIND ARMS STOOD HERE, AND NONE IS A RULE ANY CONTEST
+          RUNS -- M11 S5, 2026-10-14.
+
+          `ZoneMult = EUHFCYear` accepted the two digits as 0..99 and exited
+          before the CQ-zone limit below. Two digits are always 0..99, and
+          the limit applies only in CQ zone mode, while the European HF
+          Championship and KVP -- the only EUHFCYear contests -- both run
+          ITU zone mode (their own GetFlags, no cfCQZoneMode), which is the
+          only mode their session ever sets. So the arm and the fall-through
+          gave the same answer for every input; the matrix's "599 45"
+          (accepted, zone 45) pins it for both. Nothing moved into their
+          parse because there was no rule to move.
+
+          `ZoneMult <> JAPrefectures` and `= JAPrefectures` (a prefecture-number limit)
+          read a kind no contest's trait or DescribeSession states: dead
+          since M11 S2 (plan 2.4), so the first test was always true and
+          the second never. *)
+        if CTY.ctyZoneMode = CQZoneMode then
            begin
-           if not (RXData.Zone in [0..99]) then
+           if (Exchange[1] > '5')                          or
+              ((Exchange[1] = '4') and (Exchange[2] >= '1')) then
               begin
               Exit;
               end;
-           ProcessRSTAndZoneExchange := True;
-           ExchangeErrorMessage := '';
-           Exit;
            end;
-
-        if (CTY.ctyZoneMode = CQZoneMode) and (ContestSession.ZoneMult <> JAPrefectures)
-          then
-          if (Exchange[1] > '5') or ((Exchange[1] = '4') and (Exchange[2] >=
-            '1')) then
-             begin
-             Exit;
-             end;
-
-        if ContestSession.ZoneMult = JAPrefectures then
-          if (Exchange[1] > '6') or ((Exchange[1] = '5') and (Exchange[2] >=
-            '1')) then
-             begin
-             Exit;
-             end;
 
         ProcessRSTAndZoneExchange := True;
         ExchangeErrorMessage := '';

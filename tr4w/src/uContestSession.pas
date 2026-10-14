@@ -124,10 +124,14 @@ type
         NoInitialExchange, the zero the global it replaces started from. *)
       property InitialExchange: InitialExchangeType read FInitialExchange;
 
-      (* The zone multiplier the session runs -- the sheet, the parsers, the
-        ADIF CQZ/ITUZ choice and POSTUNIT.ZoneSentForThisContest (which zone
-        the station sends, CQ or ITU). A fresh session holds NoZoneMults, the
-        zero LOGWIND.ActiveZoneMult started from. *)
+      (* The zone multiplier the session runs. Since M11 S5 it is read only
+        through DoingZoneMults (and the contest matrix's active.zonemult):
+        the zone count, the zone list (the hint, the initial zone, the ADIF
+        CQZ/ITUZ choice, POSTUNIT.ZoneSentForThisContest) and zero-based
+        numbering are the contest's own answers (TContestBase.
+        ZoneMultiplierCount, ZoneMultiplierZones, NumbersZonesFromZero). S5
+        part 2 deletes it. A fresh session holds NoZoneMults, the zero
+        LOGWIND.ActiveZoneMult started from. *)
       property ZoneMult: ZoneMultType read FZoneMult;
 
       (* The domestic multiplier the session runs -- how LOGDOM reads a

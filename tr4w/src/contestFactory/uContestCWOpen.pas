@@ -100,6 +100,11 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
    end;
 
 implementation
@@ -236,6 +241,26 @@ function TContestCWOpen.PrefixMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := aQso.Callsign;
    Result := True;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the CQ zones, at every
+   station. What the trait's CQZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5.
+
+   PLAN F5 / OPEN QUESTION Q95, TRANSCRIBED, NOT FIXED: this contest counts
+   CQ zones while its CTY zone mode (GetFlags, no cfCQZoneMode) is ITU, so a
+   logged zone is an ITU zone and ADIF export writes it as CQZ. The two
+   facts are kept apart here and pinned side by side in uTestZoneMultiplier;
+   reconciling them is NY4I's call. *)
+function TContestCWOpen.ZoneMultiplierCount: integer;
+begin
+   Result := CQ_ZONE_MULTIPLIERS;
+end;
+
+function TContestCWOpen.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzCQZones;
 end;
 
 initialization

@@ -128,6 +128,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount (M11 S5).
+         Its zones are not CQ or ITU zones, so ZoneMultiplierZones is the
+         base's. *)
+      function ZoneMultiplierCount: integer; override;
    end;
 
 implementation
@@ -261,6 +266,14 @@ end;
 procedure TContestJockWhiteFieldDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURBRANCHNUMBER, ncfMyZone);
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the NZART branches, 1 to 99.
+   What the trait's BranchZones gave LOGDUPE's zone count through the
+   session kind until S5. *)
+function TContestJockWhiteFieldDay.ZoneMultiplierCount: integer;
+begin
+   Result := 99;
 end;
 
 initialization

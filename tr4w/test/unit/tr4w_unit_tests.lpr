@@ -611,6 +611,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       filter, at stations the matrix does not run, frozen against the old
       GetDXQTH / country-mode set / FillVisibleBytes before the rule moved. *)
    uTestDXMultiplierKey in 'uTestDXMultiplierKey.pas',
+   (* M11 S5: every zone contest's zone count, zone list and zero-based
+      numbering, at stations the matrix does not run (a JA entrant), frozen
+      against the old session-kind readers before the rule moved. *)
+   uTestZoneMultiplier  in 'uTestZoneMultiplier.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -699,6 +703,7 @@ begin
    RegisterSuite(TContestKindPinTests.Create('ContestKindPin'));
    RegisterSuite(TPrefixMultiplierKeyTests.Create('PrefixMultiplierKey'));
    RegisterSuite(TDXMultiplierKeyTests.Create('DXMultiplierKey'));
+   RegisterSuite(TZoneMultiplierTests.Create('ZoneMultiplier'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

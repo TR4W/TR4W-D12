@@ -96,6 +96,11 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
    end;
 
 implementation
@@ -270,6 +275,20 @@ begin
       aKey := aQso.Callsign;
       Result := True;
       end;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the ITU zones, at every
+   station. What the trait's ITUZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. *)
+function TContestGagarinCup.ZoneMultiplierCount: integer;
+begin
+   Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+function TContestGagarinCup.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzITUZones;
 end;
 
 initialization

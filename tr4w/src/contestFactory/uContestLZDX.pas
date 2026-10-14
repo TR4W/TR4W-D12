@@ -94,6 +94,11 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
+         ZoneMultiplierZones (M11 S5). *)
+      function ZoneMultiplierCount: integer; override;
+      function ZoneMultiplierZones: TZoneMultiplierZones; override;
    end;
 
 implementation
@@ -257,6 +262,20 @@ procedure TContestLZDX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_BULGARIA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURDISTRICTABBREVIATION, ncfMyState);
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the ITU zones, at every
+   station. What the trait's ITUZones gave LOGDUPE's zone count and the
+   zone-list readers (LOGEDIT, POSTUNIT) through the session kind until
+   S5. *)
+function TContestLZDX.ZoneMultiplierCount: integer;
+begin
+   Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+function TContestLZDX.ZoneMultiplierZones: TZoneMultiplierZones;
+begin
+   Result := zmzITUZones;
 end;
 
 initialization

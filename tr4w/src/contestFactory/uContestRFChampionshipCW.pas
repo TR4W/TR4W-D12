@@ -110,6 +110,11 @@ type
    protected
       (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
       function GetReportsRunningScore: boolean; override;
+   public
+      (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount (M11 S5).
+         Its zones are not CQ or ITU zones, so ZoneMultiplierZones is the
+         base's. *)
+      function ZoneMultiplierCount: integer; override;
    end;
 
 implementation
@@ -281,6 +286,14 @@ end;
 function TContestRFChampionshipCW.GetReportsRunningScore: boolean;
 begin
    Result := False;
+end;
+
+(* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the championship's seven
+   zones. What the trait's RFChampionchipZones gave LOGDUPE's zone count
+   through the session kind until S5. *)
+function TContestRFChampionshipCW.ZoneMultiplierCount: integer;
+begin
+   Result := 7;
 end;
 
 initialization

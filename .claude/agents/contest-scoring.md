@@ -244,8 +244,26 @@ key and the list ask. "Counts any multiplier" is ONE function,
 gate), fetching the contest at most once. Do not bring back a stored "doing
 DX" flag. `LOGDUPE.GetNumber` went with the PACC arm, to
 `uContestPACC.PACCCallAreaDigit` -- not the same routine as
-`uCallSignRoutines.GetNumber`. A multiplier KIND's arm that has NOT moved (the
-remaining-mult lists, the zone and domestic kinds) stays keyed on the kind
+`uCallSignRoutines.GetNumber`. **THE ZONE KIND'S RULES ARE THE CLASS'S TOO
+(M11 S5 part 1, 2026-10-14):** the zone count (LOGDUPE), the zone list (the
+hint, the ITU initial zone, `ZoneSentForThisContest(aContest)`, the ADIF
+CQZ/ITUZ tag) and zero-based numbering (the zone window) ask
+`ContestZoneMultiplierCount` / `ContestZoneMultiplierZones` /
+`ContestNumbersZonesFromZero` -- the per-QSO site passing the object it
+holds; `SetMultFlags` still asks only `DoingZoneMults`. **Never answer the
+zone LIST from `ZoneMode` or the reverse** -- the Croatian counts ITU zones
+over a CQ zone mode, CW Open the inverse (F5, Q95 open, pinned in
+`uTestZoneMultiplier`). LOGSTUFF's EUHFC range arm was vacuous and is gone;
+so are its dead JAPrefectures arms. **The TRMASTER initial zone
+(`InitialExchangeEntry`) asks `ContestIdentity`, NOT `ActiveContest` -- plan
+F22:** `LOGSCP.BestTwoLetters` never assigns the slot of the `JA` pair it
+skips, so whether a call containing `JA` is FOUND in TRMASTER depends on stack
+residue from the previous lookup. An `ActiveContest` call between lookups
+overwrote it and moved three matrix records (Croatian, IRTS, WRTC
+`iex JA1ABC`). Until F22 is fixed (with a matrix re-freeze), do not add deep
+calls inside the call-history paths of `InitialExchangeEntry` and expect the
+matrix to stay identical. The choice is `uContestBase.InitialZoneFromCallHistory`. A multiplier KIND's arm that has NOT
+moved (the remaining-mult lists, the domestic kind) stays keyed on the kind
 until its M11 stage. **`UsesBand` is asked at four places now** -- points,
 multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO
 marks no dupe bit and is never a dupe; the M3-found `AllBands` gap is FIXED),
@@ -316,8 +334,8 @@ FROM them -- `NumberDifferentMults`, `RemainingMultDisplay`,
 `aSession.Exchange` for its own shape (M11 S2, F11):** a class's session
 shape is its own, so such a test is always true; test it only when the class
 does NOT always run that shape. **`ZoneSentForThisContest`
-asks the session too (S9c, plan F4)** -- the CQ-or-ITU zone sent and the
-ADIF CQZ/ITUZ tag now have one source. **`trdos/logddx.pas` is compiled by
+and the ADIF CQZ/ITUZ tag have ONE source** -- the session since S9c (plan
+F4), the contest's `ZoneMultiplierZones` since M11 S5; keep them on one. **`trdos/logddx.pas` is compiled by
 NOTHING** (it uses a `Country9` that never existed; plan F14): an edit
 there passes every build, so do not count a repoint in it as verified -- it
 still names `ActiveExchange` 26 times, untouched by NY4I's decision (Q91). `logdupe.SetUpExchangeInformation`'s parameter is

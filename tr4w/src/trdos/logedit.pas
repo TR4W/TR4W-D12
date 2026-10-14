@@ -985,6 +985,8 @@ var
   contestRules: TContestBase;
   (* Asked once: a station test can allocate (ALRS's oblast). M11 S4 part 2. *)
   countsDX: boolean;
+  (* The zone list the contest's zone multiplier counts -- M11 S5. *)
+  zoneList: TZoneMultiplierZones;
 begin
   Result := 0;
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
@@ -1025,10 +1027,14 @@ begin
 
   if ContestSession.DoingZoneMults then
      begin
-     if ContestSession.ZoneMult in [CQZones, ITUZones] then
+     (* WHICH ZONE LIST, ASKED OF THE CONTEST ALREADY IN HAND -- M11 S5. It
+       was `ContestSession.ZoneMult in [CQZones, ITUZones]`; a contest that
+       numbers its own zones gives no hint here, as before. *)
+     zoneList := ContestZoneMultiplierZones(contestRules);
+     if zoneList in [zmzCQZones, zmzITUZones] then
         begin
 
-        if ContestSession.ZoneMult = CQZones then
+        if zoneList = zmzCQZones then
            begin
            Zone := ctyGetCQZone(Call)
            end
@@ -1434,6 +1440,7 @@ var
   frm: TfrmRemMults;
   TempMultBand: BandType;
   HiLighting: boolean;
+  zonesFromZero: boolean;
 
   procedure Add(const aIndex: integer);
   begin
@@ -1520,13 +1527,17 @@ begin
       begin
         if MaxNumberOfZones <> 0 then
            begin
+           (* Asked once, before the walk: the contest says whether it
+             numbers its zones from zero (the European HF Championship and
+             KVP, whose zone is the year licensed). It was
+             `ContestSession.ZoneMult = EUHFCYear`, inside the loop -- M11 S5. *)
+           zonesFromZero := ContestNumbersZonesFromZero(ActiveContest(Contest));
            for i := 1 to MaxNumberOfZones do
               begin
               if HiLighting                            or
                  mo.IsZnMult(i, MultBand, MultMode)    then
                  begin
-                 // EUHFC numbers its zones from zero; everything else from one.
-                 if ContestSession.ZoneMult = EUHFCYear then
+                 if zonesFromZero then
                     begin
                     Add(i - 1);
                     end
@@ -2256,6 +2267,8 @@ var
   data: DataBaseEntryRecord;
   TempZone: Byte;
   heading : Integer;
+  (* The zone a call-history entry offers -- InitialZoneFromCallHistory. *)
+  historyZone: ShortString;
 begin
   {TR6.74 - Removed any manipulation of IntialExchangePutUp from this
    routine.  It is up to whomever calls it to decide if they want to
@@ -2497,24 +2510,29 @@ begin
 
            if CD.GetEntry(Call, data) then
               begin
-              if ContestSession.ZoneMult = ITUZones then
+              (* WHICH ZONE THE ENTRY OFFERS -- M11 S5: the contest's zone
+                list, through InitialZoneFromCallHistory (the old rule, exactly
+                -- it read `ContestSession.ZoneMult = ITUZones`). The ' ' in
+                front is KK1L's (6.73, "K9PG forgets to add it").
+
+                ContestIdentity, NOT ActiveContest, AND THAT IS DELIBERATE
+                (plan F22). The question asked of the list is only "ITU or
+                not", and no contest's answer to it depends on the entrant
+                (JIDX, the one station-dependent zone class, is CQ or nothing)
+                -- pinned for every contest at every roster station in
+                uTestZoneMultiplier. And ActiveContest rebuilds the station
+                here, between one call-history lookup and the next, which
+                overwrote the stack residue LOGSCP.BestTwoLetters reads for a
+                call containing 'JA' (F22) and so changed whether the NEXT
+                lookup found its call: the matrix's JA1ABC moved in the
+                Croatian, IRTS and WRTC. That residue is a defect, not a rule,
+                and it is F22's to fix; this site keeps to a lookup that does
+                not disturb it, so S5 moves no output. *)
+              if InitialZoneFromCallHistory(
+                    ContestZoneMultiplierZones(ContestIdentity(Contest)),
+                    data.CQZone, data.ITUZone, historyZone) then
                  begin
-                 if data.ITUZone <> '' then
-                    begin
-                    InitialExchangeEntry := ' ' + data.ITUZone;
-                      {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
-
-                    { InitialExchangePutUp := True; }
-
-                    Exit;
-                    end;
-                 end
-              else if data.CQZone <> '' then
-                 begin
-                 InitialExchangeEntry := ' ' + data.CQZone;
-                   {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
-
-                 { InitialExchangePutUp := True; }
+                 InitialExchangeEntry := ' ' + historyZone;
                  Exit;
                  end;
               end;

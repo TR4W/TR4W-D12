@@ -240,6 +240,23 @@ the target shape, the M-step migration order and the open questions.
   on a key given where `HasDXMultiplier` is False. `LOGEDIT.DoingDXMults`
   is that answer for the active contest -- live, so F21 is closed; there is
   no session flag for it.
+- **THE ZONE MULTIPLIER IS THE CLASS'S (M11 S5 part 1, 2026-10-14).** Three
+  virtuals, each with a nil-safe `Contest...` free function:
+  `ZoneMultiplierCount: integer` (base 0), `ZoneMultiplierZones:
+  TZoneMultiplierZones` (base `zmzNotCQOrITU` -- also the answer for a
+  contest that numbers its own zones) and `NumbersZonesFromZero: boolean`
+  (base False; the European HFC and KVP). **`TZoneMultiplierZones` IS NOT
+  `ZoneModeType`**: it is the list the multiplier counts, `ZoneMode`
+  (`cfCQZoneMode`) is which zone CTY.DAT gives a call, and they disagree for
+  the Croatian and CW Open today (plan F5, Q95 open) -- never derive one
+  from the other. 20 contests in 19 units state it (CQ WW on its family
+  base; JIDX for a Japanese entrant only, through `IsJapaneseEntrant`, the
+  renamed `CountsDXMultiplier` its DX answers also ask). A NEW zone contest
+  overrides `ZoneMultiplierCount` (and `ZoneMultiplierZones` for CQ or ITU
+  zones, `NumbersZonesFromZero` if zero-based), adds rows to
+  `uTestZoneMultiplier`'s `ZONE_PINS` and itself to its sets; the count of
+  20 then changes by hand, with the reason. Until S5 part 2 it still states
+  the `ZoneMultiplierType` trait too, which `DoingZoneMults` reads.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by
