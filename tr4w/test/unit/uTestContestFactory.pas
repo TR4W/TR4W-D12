@@ -73,7 +73,7 @@ type
       procedure Test_CountyLineAllowedIsDerivedEverywhere;
       procedure Test_HostStateDerivationIsTheOneTable;
       procedure Test_FloridaIsAStatePartyWithATwoCountyLimit;
-      procedure Test_MichiganForbidsCountyLineAgainstTheArray;
+      procedure Test_MichiganForbidsCountyLine;
       procedure Test_BothPartiesScoreOnePhoneTwoCW;
       procedure Test_CountyCountValidationByContest;
       procedure Test_CountyCountIsInertWhereNoLimitIsKnown;
@@ -95,8 +95,8 @@ type
       procedure Test_IdahoQRPScoresFiveOnEveryMode;
       procedure Test_EveryOtherContestStillCreditsEveryBand;
       procedure Test_FixedPointContestsTranscribeTheirArms;
-      procedure Test_MovedRowValuesStillMatchTheArray;
-      procedure Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix;
+      procedure Test_FifteenPartiesSplitARoverCallOnExport;
+      procedure Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
       procedure Test_DummyContestScoresOnlyTheOverrides;
       procedure Test_ADIFIdsResolveOldAndNew;
       procedure Test_NoADIFIdIsClaimedTwice;
@@ -244,7 +244,7 @@ begin
          else if c = SEVENQP then
             begin
             (* THE ONE EXCEPTION, AND IT IS A MULTI-STATE PARTY (M7b,
-               2026-10-02). 7QP's row indexes QSOParties (P: 10), so set-up
+               2026-10-02). 7QP's row indexed QSOParties (P: 10), so set-up
                has always run the party head for it -- the in-state test,
                the in-state file, K/VE/KH6/KL -- and its class states that
                to keep it. It is NOT on the single-state base, whose
@@ -256,7 +256,7 @@ begin
          else if c = IN7QPNE then
             begin
             (* THE SECOND, 2026-10-14: the composite of four parties (design
-               7.14, 8.2r). Its row indexes QSOParties (P: 18), so set-up runs
+               7.14, 8.2r). Its row indexed QSOParties (P: 18), so set-up runs
                the party head for it, as it always did; it spans fourteen
                states and names none. *)
             CheckTrue(obj.IsUSQSOParty, 'IN7QPNE is a party to set-up, by its row');
@@ -395,22 +395,24 @@ end;
 (* THE FIRST DEFECT THE FACTORY CAUGHT, PINNED IN BOTH DIRECTIONS.
 
    Michigan's rules: "No station may claim simultaneous operation in more than
-   one county, state, or province." ContestsArray says CountyLineAllowed: True,
-   which is wrong -- and the flag is not inert, because ADIF import uses it to
-   suppress dupe flagging when a call reappears on the same band and mode with
-   a different QTH.
+   one county, state, or province." ContestsArray said CountyLineAllowed: True,
+   which was wrong -- and the flag was not inert, because ADIF import used it
+   to suppress dupe flagging when a call reappears on the same band and mode
+   with a different QTH. Import asks the class since M10 S7.
 
-   BOTH VALUES ARE ASSERTED ON PURPOSE. The array's True is pinned so that
-   anybody who later corrects VC.pas is told this override became redundant,
-   rather than leaving a contradiction nobody remembers making. *)
-procedure TContestFactoryTests.Test_MichiganForbidsCountyLineAgainstTheArray;
+   BOTH VALUES ARE ASSERTED ON PURPOSE. The row is deleted (M10 S8), and the
+   one thing its True still decides is the rover split on ADIF EXPORT, which
+   the class now states as SplitsRoverCallOnExport (open question Q90). So
+   Michigan forbids a county line and still splits a rover's call -- pinned
+   here so that answering Q90 is a decision somebody sees, not a drift. *)
+procedure TContestFactoryTests.Test_MichiganForbidsCountyLine;
 var
    obj: TContestBase;
 begin
-   BeginTest('Test_MichiganForbidsCountyLineAgainstTheArray');
-   CheckTrue(ContestsArray[MICHQSOPARTY].CountyLineAllowed,
-             'ContestsArray no longer says True for Michigan -- if that was '
-             + 'deliberate, the override in TContestMichiganQP is now redundant');
+   BeginTest('Test_MichiganForbidsCountyLine');
+   CheckTrue(ContestSplitsRoverCallOnExport(MICHQSOPARTY),
+             'Michigan still splits a rover''s call on export -- the deleted '
+             + 'row''s True, until NY4I answers Q90');
 
    obj := MakeContest(MICHQSOPARTY);
    CheckTrue(obj <> nil, 'Michigan QSO Party has no registered class');
@@ -795,23 +797,6 @@ end;
    THE ROW, MOVED INTO THE CLASS
    ------------------------------------------------------------------------ *)
 
-(* A TRANSCRIPTION GUARD, AND IT IS NOT A TAUTOLOGY.
-
-   NY4I, 2026-09-29: "all the info in [the ContestsArray row] should go into the
-   contest class."  A class that states its row as literals has copied fourteen
-   values by hand, and a mistyped one is a legal value in the right type --
-   CLAUDE.md note 9 exactly. Nothing else in this tree would notice: no gate
-   reads WA7BNMId, SubmissionEmail or InitialExchangeKind.
-
-   SO THE EXPECTED SIDE IS A PLAIN TContestBase ON THE SAME ContestType, which
-   still reads the array. It compares the literal against the value it was
-   copied from, through the same accessor, including the two-step Cabrillo
-   fallback -- so it also pins that a blank CABName still yields the enum's
-   spelling rather than a blank CONTEST: line.
-
-   IT STOPS BEING USEFUL THE DAY ContestsArray GOES, and that is correct: at
-   that point the class IS the definition and there is nothing left to compare
-   against. Delete it then, not before. *)
 (* ---------------------------------------------------------------------------
    THE TEN STATE QSO PARTIES MOVED ON 2026-09-29
    ------------------------------------------------------------------------ *)
@@ -1478,8 +1463,8 @@ begin
       obj.Free;
       end;
 
-   (* THE CLASS'S STATE IS WHAT EXPORT WRITES. That the row's P index reaches
-      the same entry is Test_MovedRowValuesStillMatchTheArray's to hold. *)
+   (* THE CLASS'S STATE IS WHAT EXPORT WRITES -- the class is the only source
+      since M10 S8 deleted the QSOParties table its row indexed. *)
    CheckEquals('ID', ContestIdentity(IDAHOQSOPARTY).HostState,
                'Idaho states ID');
    CheckEquals('ID', GetStateForContest(IDAHOQSOPARTY),
@@ -1797,506 +1782,75 @@ begin
    CheckFixed(GENERALQSO, 'General QSO', 1, 1, 1);
 end;
 
-(* EVERY ROW VALUE THE TABLES HOLD, AGAINST WHAT THE CLASS ANSWERS -- widened
-   for M10 S0 (2026-10-14, docs/CONTEST_FACTORY_M10_PLAN.md S0, finding F10).
+(* THE FIFTEEN PARTIES WHOSE ADIF EXPORT SPLITS A ROVER'S CALL -- M10 S8.
 
-   THE EXPECTED SIDE IS THE TABLE ITSELF, READ HERE, AND NEVER A TContestBase.
-   Until S0 it was `TContestBase.Create(aContest)` -- the base's getters, which
-   read the same table. For a class that inherits a value that compared the row
-   with itself, and it would have gone on agreeing once M10 S6 turned the
-   base's getters into neutral constants: both sides would become neutral
-   together and a value S5 forgot to transcribe would pass. Reading
-   ContestsArray, ContestsBooleanArray and QSOParties directly is what keeps
-   the expected side fixed while the base changes under the actual side. The
-   two-step name rule (the row's field, else the enum's spelling) is restated
-   here for the same reason.
+   uADIF.ResolveRoverCall writes KG1S/MON, whose suffix is the QSO's county,
+   as the bare call plus APP_TR4W_ROVERCALL. It did that for the parties whose
+   ContestsArray row said CountyLineAllowed: True; S8 deleted the row and each
+   of those parties now states SplitsRoverCallOnExport.
 
-   SO IT PASSES TRIVIALLY FOR AN INHERITED VALUE, ON PURPOSE. Its job is to
-   fail at S5/S6. At S0, 17 contests inherited 100 non-neutral row values (plan
-   1.3) and every contest inherited the nine flag bits; since S5 (2026-10-14)
-   every class states them -- the flags as one set, GetFlags -- and this
-   proves each statement equal to its row, the party's QSOPartyArea included.
+   THE LIST BELOW WAS TAKEN FROM THE TABLE WHILE IT EXISTED, two ways that
+   agree: a program linking VC printed every ContestType whose row said True,
+   and a text count of "CountyLineAllowed: True" in VC.pas at 9dc93f67 gave
+   15. Before the table was deleted, a program linking every registered class
+   compared ContestSplitsRoverCallOnExport with the row for EVERY ContestType:
+   186 registered, 15 True, 0 disagreements. So this literal IS the row's
+   answer, and the property is held to it for every contest.
 
-   EVERY CONTEST, NOT A LIST. The named calls below are kept because their
-   comments record each row's traps; the loop at the end covers every
-   ContestType, including DUMMYCONTEST, which has no class and is answered by
-   a plain TContestBase -- what ContestIdentity gives it, and the neutral row
-   S6's constants must reproduce (plan section 3).
+   NOT A RULE ANYONE HAS RULED ON. Arizona, British Columbia, Virginia, the
+   Salmon Run and New York are state parties and do NOT split -- whether they
+   should is open question Q90. Change this set only with his answer. *)
+const
+   ROVER_SPLIT_PARTIES: set of ContestType = [
+      CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY, FLORIDAQSOPARTY,
+      IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY, MOQSOPARTY,
+      NCQSOPARTY, OHIOQSOPARTY, PAQSOPARTY, TENNESSEEQSOPARTY,
+      TEXASQSOPARTY, WISCONSINQSOPARTY];
 
-   EVERY BIT OF THE FLAG WORD: the seven set-up flags, ERMAK and RTC (which
-   the contest matrix records no line for), and that no bit above RTC's is
-   set, so a stray bit cannot hide.
-
-   ONE KNOWN DISAGREEMENT, BY NAME: British Columbia's HostState. Its row's P
-   indexes the QSOParties entry 'VE7', which is not two letters, so the table
-   derives no host state; the class states 'BC'. That is the class owning a
-   fact the table never held, not a transcription error.
-
-   Deleted at plan S8 with the tables it compares against. *)
-procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
-
-   function NameOrSpelling(const aField: string; aContest: ContestType): string;
-   begin
-      if Length(aField) = 0 then
-         begin
-         Result := string(ContestTypeSA[aContest]);
-         end
-      else
-         begin
-         Result := aField;
-         end;
-   end;
-
-   function TableFlag(aContest: ContestType; aBit: integer): boolean;
-   begin
-      Result := (ContestsBooleanArray[aContest] and (1 shl aBit)) <> 0;
-   end;
-
-   procedure CheckFlag(aContest: ContestType; aBit: integer; aActual: boolean;
-                       const aWhat: string);
-   begin
-      CheckTrue(TableFlag(aContest, aBit) = aActual, aWhat);
-   end;
-
-   procedure CheckAgainstArray(aContest: ContestType; const aWhat: string);
-   var
-      cls: TContestBase;
-      row: TContestInfo;
-      partyIndex: integer;
-      expectedHost: string;
-      expectedInState: string;
-      expectedArea: string;
-      expectedZoneMode: ZoneModeType;
-   begin
-      if aContest = DUMMYCONTEST then
-         begin
-         cls := TContestBase.Create(aContest);
-         end
-      else
-         begin
-         cls := MakeContest(aContest);
-         end;
-      CheckTrue(cls <> nil, aWhat + ' has no registered class');
-      if cls = nil then
-         begin
-         Exit;
-         end;
-      row := ContestsArray[aContest];
-      try
-         CheckEquals(NameOrSpelling(row.CABName, aContest), cls.CabrilloName,
-                     aWhat + ' CabrilloName');
-         CheckEquals(NameOrSpelling(row.ADIFName, aContest), cls.ADIFContestId,
-                     aWhat + ' ADIFContestId');
-         CheckEquals(NameOrSpelling(row.FriendlyName, aContest), cls.FriendlyName,
-                     aWhat + ' FriendlyName');
-         CheckEquals(integer(row.WA7BNM), cls.WA7BNMId, aWhat + ' WA7BNMId');
-         CheckEquals(integer(row.QRZRUID), cls.QRZRUId, aWhat + ' QRZRUId');
-         CheckEquals(row.Email, cls.SubmissionEmail, aWhat + ' SubmissionEmail');
-         CheckEquals(row.DF, cls.DomesticFileName, aWhat + ' DomesticFileName');
-         CheckEquals(Ord(row.PxM), Ord(cls.PrefixMultiplierType),
-                     aWhat + ' PrefixMultiplierType');
-         CheckEquals(Ord(row.ZnM), Ord(cls.ZoneMultiplierType),
-                     aWhat + ' ZoneMultiplierType');
-         CheckEquals(Ord(row.XM), Ord(cls.DXMultiplierType),
-                     aWhat + ' DXMultiplierType');
-         CheckEquals(Ord(row.DM), Ord(cls.DomesticMultiplierType),
-                     aWhat + ' DomesticMultiplierType');
-         CheckEquals(Ord(row.AIE), Ord(cls.InitialExchangeKind),
-                     aWhat + ' InitialExchangeKind');
-         CheckEquals(Ord(row.AE), Ord(cls.ExchangeKind),
-                     aWhat + ' ExchangeKind');
-         (* NO QSOPointMethod AND NO MarksDupes COMPARISON since M10 S4
-            (2026-10-14): the point method was deleted as a concept, the
-            row's QP column with it, and MarksDupes no longer derives from
-            any row value -- Test_EveryContestMarksDupesButTheTwoThatIgnoreThem
-            holds it. *)
-
-         (* THE PARTY INDEX P, and the three answers derived from it. *)
-         CheckTrue((row.P <> 0) = cls.IsUSQSOParty, aWhat + ' IsUSQSOParty');
-         partyIndex := row.P;
-         expectedHost := '';
-         expectedInState := '';
-         expectedArea := '';
-         if (partyIndex >= 1) and (partyIndex <= QSOPartiesCount) then
-            begin
-            expectedInState := QSOParties[partyIndex].InsideStateDOMFile;
-            expectedArea := QSOParties[partyIndex].StateName;
-            if Length(QSOParties[partyIndex].StateName) = 2 then
-               begin
-               expectedHost := QSOParties[partyIndex].StateName;
-               end;
-            end;
-         CheckEquals(expectedInState, cls.InStateDomesticFileName,
-                     aWhat + ' InStateDomesticFileName');
-         (* The area the New Contest prompt names -- a class property since
-            M10 S5, so it is pinned here with the rest of the party data. *)
-         CheckEquals(expectedArea, cls.QSOPartyArea, aWhat + ' QSOPartyArea');
-         if aContest = BCQP then
-            begin
-            CheckEquals('', expectedHost, aWhat + ' table host state (VE7 is not a state)');
-            CheckEquals('BC', cls.HostState, aWhat + ' HostState, stated by the class');
-            end
-         else
-            begin
-            CheckEquals(expectedHost, cls.HostState, aWhat + ' HostState');
-            end;
-
-         (* EVERY BIT OF THE FLAG WORD. *)
-         CheckFlag(aContest, QSO_BY_BAND_BIT, cls.QSOByBand, aWhat + ' QSOByBand');
-         CheckFlag(aContest, QSO_BY_MODE_BIT, cls.QSOByMode, aWhat + ' QSOByMode');
-         CheckFlag(aContest, MULT_BY_BAND_BIT, cls.MultByBand, aWhat + ' MultByBand');
-         CheckFlag(aContest, MULT_BY_MODE_BIT, cls.MultByMode, aWhat + ' MultByMode');
-         CheckFlag(aContest, ERMAK_BIT, cls.ErmakSpecification,
-                   aWhat + ' ErmakSpecification');
-         CheckFlag(aContest, VHF_BAND_ENABLE_BIT, cls.VHFBandsEnabled,
-                   aWhat + ' VHFBandsEnabled');
-         CheckFlag(aContest, CDC_BIT, cls.CountsDomesticCountries,
-                   aWhat + ' CountsDomesticCountries');
-         CheckFlag(aContest, RTC_CAPABLE_BIT, cls.RTCCapable, aWhat + ' RTCCapable');
-         if TableFlag(aContest, CQ_ZONE_MODE_BIT) then
-            begin
-            expectedZoneMode := CQZoneMode;
-            end
-         else
-            begin
-            expectedZoneMode := ITUZoneMode;
-            end;
-         CheckEquals(Ord(expectedZoneMode), Ord(cls.ZoneMode), aWhat + ' ZoneMode');
-         CheckEquals(0, integer(ContestsBooleanArray[aContest] and $FE00),
-                     aWhat + ' sets a flag bit above RTC_CAPABLE_BIT, which nothing reads');
-      finally
-         cls.Free;
-         end;
-   end;
-
+procedure TContestFactoryTests.Test_FifteenPartiesSplitARoverCallOnExport;
 var
    c: ContestType;
+   splitting: integer;
 begin
-   BeginTest('Test_MovedRowValuesStillMatchTheArray');
-   CheckAgainstArray(ARKTIKA_SPRING, 'Arktika Spring');
-   CheckAgainstArray(ARRLDIGI, 'ARRL Digital');
-
-   (* THE TEN STATE QSO PARTIES MOVED ON 2026-09-29. Each states its whole row
-      as literals, and each is an independent chance to have mistyped one -- in
-      particular the two-step fallbacks, which is why this compares against a
-      plain TContestBase rather than against the record field. California and
-      Texas both have a BLANK CABName in the array and neither means the empty
-      string; Ohio's ADIFName is blank and that one does. *)
-   CheckAgainstArray(CALQSOPARTY, 'California QSO Party');
-   CheckAgainstArray(INQSOPARTY, 'Indiana QSO Party');
-   CheckAgainstArray(COLORADOQSOPARTY, 'Colorado QSO Party');
-   CheckAgainstArray(MINNQSOPARTY, 'Minnesota QSO Party');
-   CheckAgainstArray(MOQSOPARTY, 'Missouri QSO Party');
-   CheckAgainstArray(OHIOQSOPARTY, 'Ohio QSO Party');
-   CheckAgainstArray(WISCONSINQSOPARTY, 'Wisconsin QSO Party');
-   CheckAgainstArray(TENNESSEEQSOPARTY, 'Tennessee QSO Party');
-   CheckAgainstArray(TEXASQSOPARTY, 'Texas QSO Party');
-   CheckAgainstArray(ArizonaQsoParty, 'Arizona QSO Party');
-
-   (* POTA, 2026-10-13 (design Q6): blank ADIFName and CABName, both the enum's
-      spelling; the friendly name is its display name. *)
-   CheckAgainstArray(POTA, 'POTA');
-
-   (* THE UA4W CHAMPIONSHIP AND RSGB 1.8 MHz, 2026-10-14 (design Q28, Q33):
-      blank ADIFName, CABName and FriendlyName, each the enum's spelling --
-      'R4W-CHAMP' and 'RSGB-160', not the identifier. UA4W states an Email,
-      RSGB 1.8 a DF ('rsgb'). *)
-   CheckAgainstArray(UA4WCHAMPIONSHIP, 'UA4W Championship');
-   CheckAgainstArray(RSGB18, 'RSGB 1.8 MHz');
-
-   (* IN7QPNE, 2026-10-14 (design 7.14, 8.2r): the composite states its own
-      row; its parties' rules are its components'. *)
-   CheckAgainstArray(IN7QPNE, 'IN7QPNE');
-
-   (* THE FOUR BESPOKE-SCORING PARTIES MOVED ON 2026-09-29. Two of their rows
-      hold a trap the others do not. British Columbia has a BLANK CABName, so
-      its Cabrillo name is the enum's own spelling BCQP and not the empty
-      string -- and a blank ADIFName, which IS the empty string.
-
-      NORTH CAROLINA'S ADIFName WAS A SENTENCE AND THE ARRAY WAS CORRECTED ON
-      2026-09-29. It held 'North Carolina QSO Party' where every other contest
-      uses an upper-case token; NY4I confirmed the real name is 'NC-QSO-PARTY'
-      and approved changing VC.pas. This assertion compares the class against
-      the array, so it holds either way -- what it cannot see is whether the
-      value is the RIGHT one, which is why the correction needed him. *)
-   CheckAgainstArray(BCQP, 'British Columbia QSO Party');
-   CheckAgainstArray(NCQSOPARTY, 'North Carolina QSO Party');
-   CheckAgainstArray(PAQSOPARTY, 'Pennsylvania QSO Party');
-   CheckAgainstArray(VAQP, 'Virginia QSO Party');
-
-   (* NEW YORK AND THE SALMON RUN, MOVED 2026-09-29. New York has a BLANK
-      CABName, which resolves to the enum's spelling, 'NY-QSO-PARTY'. The
-      Salmon Run's names were blank too until NY4I ruled them the same day --
-      'WA-QSO-PARTY' and 'WA-SALMON-RUN' -- and this is the assertion that the
-      class and the row were changed together. *)
-   CheckAgainstArray(NYQP, 'New York QSO Party');
-   CheckAgainstArray(SALMONRUN, 'Washington State Salmon Run');
-
-   (* IDAHO, ADDED 2026-10-01 -- a new ContestType, so its row was written for
-      the class rather than transcribed from it. Its CABName and FriendlyName
-      are stated, not blank. *)
-   CheckAgainstArray(IDAHOQSOPARTY, 'Idaho QSO Party');
-
-   (* DELAWARE, ADDED 2026-10-14 -- a new ContestType like Idaho, its row
-      written for the class. *)
-   CheckAgainstArray(DELAWAREQSOPARTY, 'Delaware QSO Party');
-
-   (* THE FIRST FIXED-POINT SLICE, MOVED 2026-09-29. Most of these rows have a
-      BLANK CABName and FriendlyName, both of which resolve to the enum's
-      spelling -- 'QCWA GOLDEN', 'GRID LOC', 'SA-SPRINT' -- and a blank
-      ADIFName, which IS the empty string. The two Mini-Test rows' names ended
-      in a SPACE ('MINITEST-40 ') until NY4I ruled it a typo on 2026-09-29;
-      row and class were corrected together, and this is the assertion that
-      would notice them disagree. *)
-   CheckAgainstArray(QCWA, 'QCWA QSO Party');
-   CheckAgainstArray(QCWAGOLDEN, 'QCWA Golden');
-   CheckAgainstArray(COUNTYHUNTER, 'County Hunter');
-   CheckAgainstArray(GRIDLOC, 'Grid Loc');
-   CheckAgainstArray(MARCONIMEMORIAL, 'Marconi Memorial');
-   CheckAgainstArray(SASPRINT, 'SA Sprint');
-   CheckAgainstArray(XMAS, 'XMAS');
-   CheckAgainstArray(INTERNETSPRINT, 'Internet Sprint');
-   CheckAgainstArray(ALLJA, 'All JA');
-   CheckAgainstArray(APSPRINT, 'AP Sprint');
-   CheckAgainstArray(JALONGPREFECT, 'JA Long Prefect');
-   CheckAgainstArray(KIDSDAY, 'Kids Day');
-   CheckAgainstArray(MINI40, 'Mini-Test 40');
-   CheckAgainstArray(MINI80, 'Mini-Test 80');
-   CheckAgainstArray(MINITEST, 'Minitest');
-
-   (* THE SECOND FIXED-POINT SLICE, MOVED 2026-09-29. Two traps in these rows.
-      YOUTHCHAMPIONSHIPRF's blank CABName and FriendlyName resolve to its enum
-      SPELLING, 'SRR-JR', which looks nothing like the identifier. And CQIR's
-      row has NO AIE FIELD AT ALL, so its class deliberately does not state
-      one; the InitialExchangeKind comparison is what proves that leaving it
-      to the array still gives the array's answer. *)
-   CheckAgainstArray(KVP, 'KVP');
-   CheckAgainstArray(MST, 'ICWC MST');
-   CheckAgainstArray(YOUTHCHAMPIONSHIPRF, 'SRR-JR');
-   CheckAgainstArray(EUROPEANHFC, 'European HF Championship');
-   CheckAgainstArray(CQIR, 'CQIR - Ireland Calling');
-   CheckAgainstArray(DARCXMAS, 'DARC Christmas Contest');
-
-   (* THE CONTESTS HELD FROM EARLIER SLICES, MOVED AT M3 (2026-10-01). The
-      NRAU-Baltic pair states its shared fields on the family base and its
-      names per mode, so this is what proves the split lost nothing. Sprint
-      SSB's ADIF and Cabrillo names are STATED in its row and are not its enum
-      spelling (SSB-SPRINT); Locust's are blank and ARE its spelling; the Jock
-      White Field Day's DomesticFileName is blank and means the empty string. *)
-   CheckAgainstArray(NRAUBALTICCW, 'NRAU-Baltic CW');
-   CheckAgainstArray(NRAUBALTICSSB, 'NRAU-Baltic SSB');
-   CheckAgainstArray(SPRINTSSB, 'Sprint SSB');
-   CheckAgainstArray(LQP, 'Locust QSO Party');
-   CheckAgainstArray(NZFIELDDAY, 'Jock White Memorial Field Day');
-
-   (* THE CONTESTS THAT GAINED A CLASS AT M4 (2026-10-01), each because an
-      exporter named it. Most rows have a BLANK CABName and ADIFName, which
-      resolve to the enum's spelling -- 'URAL-CUP', 'RSGB-IOTA', 'DARC-10M'.
-      Two traps: WWDIGI and BATAVIA_FT8 STATE a CABName ('WW-DIGI',
-      'BATAVIA') that is not their spelling while their ADIF id is; and
-      PACC's row says RSTAndQSONumberOrDomesticQTHExchange although every
-      PACC session runs RSTDomesticQTHExchange (FCONTEST's arm) -- the class
-      transcribes the row, and the export rule follows the session. *)
-   CheckAgainstArray(FOCMARATHON, 'FOC Marathon');
-   CheckAgainstArray(UKRAINECHAMPIONSHIP, 'Ukraine Championship');
-   CheckAgainstArray(CUPURAL, 'Ural Cup');
-   CheckAgainstArray(UKEI, 'UK/EI DX');
-   CheckAgainstArray(IOTA, 'RSGB IOTA');
-   CheckAgainstArray(DARC10M, 'DARC 10 m');
-   CheckAgainstArray(PACC, 'PACC');
-   CheckAgainstArray(PCC, 'PCC');
-   CheckAgainstArray(WAG, 'WAG');
-   CheckAgainstArray(WWDIGI, 'WW Digi');
-   CheckAgainstArray(BATAVIA_FT8, 'Batavia FT8');
-
-   (* CROATIAN GAINED A CLASS WHEN ITS NIGHT DOUBLING MOVED OFF THE CLOCK
-      (design Q21, 2026-10-01). Blank CABName and ADIFName resolve to the
-      enum's spelling, 'CROATIAN'. *)
-   CheckAgainstArray(CROATIAN, 'Croatian DX');
-
-   (* THE THIRTEEN THAT GAINED A CLASS AT M5a (2026-10-01), each because its
-      ADIF import rule was an arm of a `case` in the main unit. Most rows have a
-      BLANK CABName and ADIFName, which resolve to the enum's spelling. Two
-      traps: the ARRL RTTY Roundup's row has NO AIE FIELD, so its class does not
-      state one and the InitialExchangeKind comparison is what proves the array
-      still answers; and CWOPS states an ADIFName ('CWOPS-CWT') that is not its
-      spelling. *)
-   CheckAgainstArray(CQ160CW, 'CQ 160 CW');
-   CheckAgainstArray(CQ160SSB, 'CQ 160 SSB');
-   CheckAgainstArray(UBACW, 'UBA CW');
-   CheckAgainstArray(UBASSB, 'UBA SSB');
-   CheckAgainstArray(ARRL_RTTY_ROUNDUP, 'ARRL RTTY Roundup');
-   CheckAgainstArray(CWOPS, 'CWOPS CWT');
-   CheckAgainstArray(NAQSOCW, 'NAQP CW');
-   CheckAgainstArray(NAQSOSSB, 'NAQP SSB');
-   CheckAgainstArray(NAQSORTTY, 'NAQP RTTY');
-   CheckAgainstArray(NCCCSPRINT, 'NCCC Sprint');
-   CheckAgainstArray(UKRAINIAN, 'Ukrainian DX');
-   CheckAgainstArray(OKDX, 'OK/OM DX');
-   CheckAgainstArray(LZDX, 'LZ DX');
-
-   (* THE SEVEN THAT GAINED A CLASS AT M5b (2026-10-02), each because a rule
-      of its exchange parsing (RAC, SAC, LABRE) or of its initial exchange
-      (the two Russian DX contests) was a test of the contest or of
-      ActiveQSOPointMethod inside a shared routine. Blank CABName and
-      ADIFName resolve to the enum's spelling -- 'CANADA DAY', 'SAC-CW',
-      'RDXC', 'RU3AX MEMORIAL'. One trap: LABRE STATES a CABName ('LABRE-DX')
-      that is not its spelling while its ADIF id is ('LABRE'). *)
-   CheckAgainstArray(CANADA_DAY, 'RAC Canada Day');
-   CheckAgainstArray(CANADA_WINTER, 'RAC Winter');
-   CheckAgainstArray(SACCW, 'SAC CW');
-   CheckAgainstArray(SACSSB, 'SAC SSB');
-   CheckAgainstArray(LABRE, 'LABRE DX');
-   CheckAgainstArray(RUSSIANDX, 'Russian DX');
-   CheckAgainstArray(RU3AXMEMORIAL, 'RU3AX Memorial');
-
-   (* THE NINE THAT GAINED A CLASS AT M6 (2026-10-02), each because its final
-      score was a test of ActiveQSOPointMethod inside LogEdit.TotalScore. Two
-      traps: the RF Cup CW and SSB rows carry their DF commented out, so it is
-      blank where the digital running's says 'grids'; and the WAE rows state
-      a FriendlyName while their Cabrillo and ADIF names are the spelling. *)
-   CheckAgainstArray(CUPRFCW, 'RF Cup CW');
-   CheckAgainstArray(CUPRFSSB, 'RF Cup SSB');
-   CheckAgainstArray(CUPRFDIG, 'RF Cup digital');
-   CheckAgainstArray(RFCHAMPIONSHIPCW, 'RF Championship CW');
-   CheckAgainstArray(RFCHAMPIONSHIPSSB, 'RF Championship SSB');
-   CheckAgainstArray(DARCWAEDCCW, 'WAE CW');
-   CheckAgainstArray(DARCWAEDCSSB, 'WAE SSB');
-   CheckAgainstArray(OZHCRVHF, 'OZHCR VHF');
-   CheckAgainstArray(ALRS_UA1DZ_CUP, 'ALRS UA1DZ Cup');
-
-   (* M7b BATCH 1 (2026-10-02) -- thirty-nine classless contests gained a
-      class, each transcribing its row and every arm that named it. Traps in
-      these rows: most have a BLANK CABName and ADIFName, which resolve to the
-      enum's SPELLING, and several spellings look nothing like the
-      identifier -- JTDX is 'MONGOLIAN DX', OLDNEWYEAR 'RADIO-ONY', OZCR_O
-      'OZCHR-TEAMS', OZCR_Z 'OZCHR', NEWENGLANDQSO 'NEQP', TESLA 'HF-TESLA'
-      (which also STATES that CABName). Five STATE an ADIFName that is not
-      their spelling: the All Asian pair ('ALL-ASIAN-DX-CW' is the CW
-      spelling, 'ALL-ASIAN-DX-PHONE' is NOT the SSB one), HA DX ('HA-DX'),
-      and January and June VHF ('ARRL-VHF-JAN', '-JUN', each its spelling).
-      7QP's P is 10, so it is a QSO party BY THE ROW although it is not on
-      the state-party base. *)
-   CheckAgainstArray(SEVENQP, '7QP');
-   CheckAgainstArray(ALLASIANCW, 'All Asian CW');
-   CheckAgainstArray(ALLASIANSSB, 'All Asian SSB');
-   CheckAgainstArray(ARCI, 'ARCI');
-   CheckAgainstArray(ARI_DX, 'ARI DX');
-   CheckAgainstArray(ARRL10, 'ARRL 10 m');
-   CheckAgainstArray(ARRL160, 'ARRL 160 m');
-   CheckAgainstArray(ARRLVHFJAN, 'ARRL VHF January');
-   CheckAgainstArray(ARRLVHFJUN, 'ARRL VHF June');
-   CheckAgainstArray(ARRLVHFSEP, 'ARRL VHF September');
-   CheckAgainstArray(BALTIC, 'Baltic');
-   CheckAgainstArray(BWQP, 'BWQP');
-   CheckAgainstArray(CIS, 'CIS DX');
-   CheckAgainstArray(CQM, 'CQ-M');
-   CheckAgainstArray(CQVHF, 'CQ VHF');
-   CheckAgainstArray(CQWPXRTTY, 'CQ WPX RTTY');
-   CheckAgainstArray(CQWWRTTY, 'CQ WW RTTY');
-   CheckAgainstArray(EUSPRINT_SPRING_CW, 'EU Sprint spring CW');
-   CheckAgainstArray(EUSPRINT_SPRING_SSB, 'EU Sprint spring SSB');
-   CheckAgainstArray(EUSPRINT_AUTUMN_CW, 'EU Sprint autumn CW');
-   CheckAgainstArray(EUSPRINT_AUTUMN_SSB, 'EU Sprint autumn SSB');
-   CheckAgainstArray(EUROPEANVHF, 'European VHF');
-   CheckAgainstArray(TESLA, 'Tesla');
-   CheckAgainstArray(FISTS, 'FISTS');
-   CheckAgainstArray(GACWWWSACW, 'GACW WWSA');
-   CheckAgainstArray(GAGARINCUP, 'Gagarin Cup');
-   CheckAgainstArray(HADX, 'HA DX');
-   CheckAgainstArray(YUDX, 'YU DX');
-   CheckAgainstArray(HELVETIA, 'Helvetia');
-   CheckAgainstArray(JIDXCW, 'JIDX CW');
-   CheckAgainstArray(JIDXSSB, 'JIDX SSB');
-   CheckAgainstArray(JTDX, 'JT DX');
-   CheckAgainstArray(KCJ, 'KCJ');
-   CheckAgainstArray(NEWENGLANDQSO, 'New England QSO Party');
-   CheckAgainstArray(OCEANIADXCW, 'Oceania DX CW');
-   CheckAgainstArray(OCEANIADXSSB, 'Oceania DX SSB');
-   CheckAgainstArray(OLDNEWYEAR, 'Old New Year');
-   CheckAgainstArray(OZCR_O, 'OZCHR teams');
-   CheckAgainstArray(OZCR_Z, 'OZCHR');
-
-   (* M7b BATCH 2 (2026-10-02) -- forty more classless contests gained a
-      class. Traps in these rows: most have a BLANK CABName and ADIFName,
-      which resolve to the enum's SPELLING, and several spellings are not the
-      identifier -- RDA is 'RDAC', RFASCHAMPIONSHIPCW 'AS-CHAMP', YODX
-      'YO-DX-HF', BSCI 'BLACK SEA CUP', MAKROTHEN 'MAKROTHEN-RTTY', OKOMSSB
-      'OK-OM DX SSB'. Seven STATE an ADIFName: the RoPoCo pair share
-      'RSGB-ROLO' (and a CABName), Stew Perry, CW Open ('CWOPS-CW-OPEN'), YOTA,
-      SST ('K1USN-SST', CABName 'K1USNSST') and RTC. WA7BNM '0000' is 0. *)
-   CheckAgainstArray(RADIOVHFFD, 'Radio VHF Field Day');
-   CheckAgainstArray(RAEM, 'RAEM');
-   CheckAgainstArray(RDA, 'RDA');
-   CheckAgainstArray(REGION1FIELDDAY, 'Region 1 Field Day');
-   CheckAgainstArray(REGION1FIELDDAY_RCC_CW, 'Region 1 Field Day RCC CW');
-   CheckAgainstArray(REGION1FIELDDAY_RCC_SSB, 'Region 1 Field Day RCC SSB');
-   CheckAgainstArray(RFASCHAMPIONSHIPCW, 'RF AS Championship CW');
-   CheckAgainstArray(RSGB_ROPOCO_CW, 'RSGB RoPoCo CW');
-   CheckAgainstArray(RSGB_ROPOCO_SSB, 'RSGB RoPoCo SSB');
-   CheckAgainstArray(YBDX, 'YB DX');
-   CheckAgainstArray(SOUTHAMERICANWW, 'South American WW');
-   CheckAgainstArray(SPDX, 'SP DX');
-   CheckAgainstArray(STEWPERRY, 'Stew Perry');
-   CheckAgainstArray(TENTEN, 'Ten-Ten');
-   CheckAgainstArray(TOEC, 'TOEC');
-   CheckAgainstArray(UCG, 'UCG');
-   CheckAgainstArray(WWL, 'WWL');
-   CheckAgainstArray(WWPMC, 'WW PMC');
-   CheckAgainstArray(YODX, 'YO DX');
-   CheckAgainstArray(UNDX, 'UN DX');
-   CheckAgainstArray(KINGOFSPAINCW, 'King of Spain CW');
-   CheckAgainstArray(KINGOFSPAINSSB, 'King of Spain SSB');
-   CheckAgainstArray(WRTC, 'WRTC');
-   CheckAgainstArray(R9W_UW9WK_MEMORIAL, 'R9W UW9WK Memorial');
-   CheckAgainstArray(RADIOMEMORY, 'Radio Memory');
-   CheckAgainstArray(REFCW, 'REF CW');
-   CheckAgainstArray(REFSSB, 'REF SSB');
-   CheckAgainstArray(BSCI, 'Black Sea Cup');
-   CheckAgainstArray(CQMM, 'CQMM');
-   CheckAgainstArray(CWOPEN, 'CW Open');
-   CheckAgainstArray(MAKROTHEN, 'Makrothen');
-   CheckAgainstArray(WWIH, 'WWIH');
-   CheckAgainstArray(RADIOYOC, 'Radio YOC');
-   CheckAgainstArray(OKOMSSB, 'OK/OM SSB');
-   CheckAgainstArray(MWC, 'MWC');
-   CheckAgainstArray(IRTS, 'IRTS');
-   CheckAgainstArray(EUDX, 'EUDX');
-   CheckAgainstArray(YOTA, 'YOTA');
-   CheckAgainstArray(SST, 'SST');
-   CheckAgainstArray(RTC, 'RTC');
-
-   (* AND EVERY ContestType, M10 S0. The sixteen M1-M4-era contests no named
-      call above covered -- ARRL DX, ARRL SS, CQ WPX, CQ WW (each pair), ARRL
-      and Winter Field Day, Florida, Michigan, General QSO, IARU and both NA
-      Sprints -- are among the seventeen that inherit row values, so they are
-      the ones S5 is most likely to get wrong. *)
+   BeginTest('Test_FifteenPartiesSplitARoverCallOnExport');
+   splitting := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
-      CheckAgainstArray(c, string(ContestTypeSA[c]));
+      CheckTrue(ContestSplitsRoverCallOnExport(c) = (c in ROVER_SPLIT_PARTIES),
+                string(ContestTypeSA[c]) + ': splits a rover''s call on export');
+      if ContestSplitsRoverCallOnExport(c) then
+         begin
+         Inc(splitting);
+         end;
       end;
+   CheckEquals(15, splitting, 'parties that split a rover''s call on export');
+
+   (* One party each way, by name: Florida splits, Arizona does not. *)
+   CheckTrue(ContestSplitsRoverCallOnExport(FLORIDAQSOPARTY), 'Florida splits');
+   CheckFalse(ContestSplitsRoverCallOnExport(ArizonaQsoParty),
+              'Arizona does not (Q90)');
 end;
 
-(* THE COUNTY-LINE RULE HAS TWO OWNERS TODAY, AND THEY DISAGREE FOR SIX
-   CONTESTS -- M10 S0 (plan finding F3, design 8.2s).
+(* THE ROVER SPLIT AND THE COUNTY LINE DISAGREE FOR SIX CONTESTS -- M10 S0
+   (plan finding F3, design 8.2s); restated at S8.
 
-   ContestsArray[c].CountyLineAllowed is what uADIF.ResolveRoverCall still
-   reads on EXPORT (plan S7 left it there -- open question Q90); the
-   state-party class's CountyLineAllowed (a county-line maximum above zero)
-   is what live entry obeys AND, since S7 (DECIDED 2026-10-14), what the
-   importer asks through ContestAllowsCountyLineOnImport. THIS pins the six
-   places the row and the class differ, and that the import follows the class
-   in every one of them:
+   The rover split on EXPORT is the deleted row's CountyLineAllowed, stated by
+   the class as SplitsRoverCallOnExport (open question Q90); the state-party
+   class's CountyLineAllowed (a county-line maximum above zero) is what live
+   entry obeys AND, since S7 (DECIDED 2026-10-14), what the importer asks
+   through ContestAllowsCountyLineOnImport. THIS pins the six places the two
+   differ, and that the import follows the county line in every one of them:
 
-     Michigan             row True,  class False (its sponsor allows none)
+     Michigan             splits a rover, no county line (its sponsor allows none)
      Arizona, BC, VA,
-     Salmon Run, NY       row False, class True
+     Salmon Run, NY       no rover split, county line allowed
 
    Every other contest agrees, and a contest that is not on the state-party
-   base has no county line at all. Michigan therefore STOPPED clearing the
-   dupe flag on an imported county-line repeat, and the other five STARTED.
-   When S8 deletes the row, the row half of this test goes with it. *)
-procedure TContestFactoryTests.Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix;
+   base has neither. Michigan therefore STOPPED clearing the dupe flag on an
+   imported county-line repeat at S7, and the other five STARTED. Until S8
+   the first column read the row; the row's answer for every contest is now
+   ROVER_SPLIT_PARTIES, which the test above holds the class to. *)
+procedure TContestFactoryTests.Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
 var
    c: ContestType;
    obj: TContestBase;
@@ -2304,7 +1858,7 @@ var
    classAllows: boolean;
    disagreements: integer;
 begin
-   BeginTest('Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix');
+   BeginTest('Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix');
    disagreements := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -2319,7 +1873,7 @@ begin
          Continue;
          end;
       try
-         rowAllows := ContestsArray[c].CountyLineAllowed;
+         rowAllows := c in ROVER_SPLIT_PARTIES;
          classAllows := (obj is TContestStateQSOPartyBase) and
                         TContestStateQSOPartyBase(obj).CountyLineAllowed;
          if rowAllows <> classAllows then
@@ -2331,14 +1885,14 @@ begin
          case c of
             MICHQSOPARTY:
                begin
-               CheckTrue(rowAllows, 'Michigan: the row allows a county line');
+               CheckTrue(rowAllows, 'Michigan: splits a rover''s call (the old row)');
                CheckFalse(classAllows, 'Michigan: the class allows none');
                CheckFalse(ContestAllowsCountyLineOnImport(c),
                           'Michigan: an imported county-line repeat is a dupe again');
                end;
             ArizonaQsoParty, BCQP, VAQP, SALMONRUN, NYQP:
                begin
-               CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': the row allows no county line');
+               CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': no rover split (the old row)');
                CheckTrue(classAllows, string(ContestTypeSA[c]) + ': the class allows one');
                CheckTrue(ContestAllowsCountyLineOnImport(c),
                          string(ContestTypeSA[c]) + ': an imported county-line repeat now clears the dupe flag');
@@ -2346,14 +1900,14 @@ begin
          else
             begin
             CheckTrue(rowAllows = classAllows,
-                      string(ContestTypeSA[c]) + ': row and class disagree on the county line');
+                      string(ContestTypeSA[c]) + ': rover split and county line disagree');
             end;
          end;
       finally
          obj.Free;
          end;
       end;
-   CheckEquals(6, disagreements, 'exactly six contests where row and class disagree');
+   CheckEquals(6, disagreements, 'exactly six contests where rover split and county line disagree');
 end;
 
 (* DUMMYCONTEST -- "no contest" -- SCORES ONLY THE OVERRIDES, THEN ZERO.
@@ -2605,8 +2159,8 @@ end;
    These were asked of a plain TContestBase -- the ROW -- until M10 S6, when
    the base stopped reading the table. All three gained a class at M3
    (2026-10-01), and the class is what every reader asks, so the class is
-   what is pinned here; Test_MovedRowValuesStillMatchTheArray holds each
-   class to its row until plan S8 deletes the rows. *)
+   what is pinned here. The rows are deleted (M10 S8), so these literals are
+   now the only record of what those rows held. *)
 procedure TContestFactoryTests.Test_NRAUAndJockWhiteRowsAreNotShifted;
 
    procedure CheckRow(aContest: ContestType; const aFriendly: string;
@@ -2650,25 +2204,26 @@ end;
    calendar ids straight off the row. They all ask
    uContestRegistry.ContestIdentity now.
 
-   THE SCORE-POSTING IDS HAVE NO OTHER ORACLE. The contest matrix and the
-   golden corpus see the Cabrillo CONTEST: line and the ADIF records; nothing
-   captures what uGetScores, uHamScore or the UDP broadcasts send. So this pins
-   the getters, over EVERY ContestType, to what those copies produced -- each
-   expectation below is the old copy's rule, written once more here as the
-   frozen reference. A contest whose identity deliberately changes updates
-   its row, and this follows.
+   THE ROW HALF IS GONE (M10 S8). Until then this compared every contest's
+   getters with the ContestsArray row the exporters read before M1 -- the
+   same comparison as the S0 pin, which S8 deleted with the table: the class
+   is now the only source, and there is nothing left to compare it with.
+   The Cabrillo CONTEST: line and the ADIF CONTEST_ID stay pinned where they
+   are seen (the contest matrix records both for every contest, and
+   Test_EveryContestResolvesItsOwnADIFId holds each id to its contest). The
+   score-posting ids (WA7BNM, QRZ.RU), the e-mail and the friendly, display
+   and domestic file names are held to literals by uTestContestIdentityPin,
+   generated once at S8 from classes proven equal to the table.
 
-   AND THE ACCESSOR ITSELF: never nil, one instance per contest however often
-   it is asked, and the registered class where there is one -- a plain
-   TContestBase only where there is not. *)
+   WHAT REMAINS IS THE ACCESSOR ITSELF: never nil, one instance per contest
+   however often it is asked, and the registered class where there is one --
+   a plain TContestBase only where there is not, which answers the enum's
+   spelling for all three names. *)
 procedure TContestFactoryTests.Test_IdentityIsWhatTheExportersWroteBeforeM1;
 var
    c: ContestType;
    obj: TContestBase;
    who: string;
-   expectADIF: string;
-   expectCabrillo: string;
-   expectFriendly: string;
    checked: integer;
 begin
    BeginTest('Test_IdentityIsWhatTheExportersWroteBeforeM1');
@@ -2695,31 +2250,14 @@ begin
          begin
          CheckTrue(obj.ClassType = TContestBase,
                    who + ' has no class but is answered by ' + obj.ClassName);
+         (* DUMMYCONTEST, the one contest with no class: its row was blank,
+            and the base's names are the enum's spelling (M10 S6). *)
+         CheckEquals(who, obj.ADIFContestId, who + ' ADIF CONTEST_ID');
+         CheckEquals(who, obj.CabrilloName, who + ' Cabrillo CONTEST:');
+         CheckEquals(who, obj.FriendlyName, who + ' friendly name');
+         CheckEquals(0, obj.WA7BNMId, who + ' WA7BNM calendar id');
+         CheckEquals(0, obj.QRZRUId, who + ' QRZ.RU calendar id');
          end;
-
-      expectADIF := ContestsArray[c].ADIFName;
-      if expectADIF = '' then
-         begin
-         expectADIF := who;
-         end;
-      expectCabrillo := ContestsArray[c].CABName;
-      if expectCabrillo = '' then
-         begin
-         expectCabrillo := who;
-         end;
-      expectFriendly := ContestsArray[c].FriendlyName;
-      if expectFriendly = '' then
-         begin
-         expectFriendly := who;
-         end;
-
-      CheckEquals(expectADIF, obj.ADIFContestId, who + ' ADIF CONTEST_ID');
-      CheckEquals(expectCabrillo, obj.CabrilloName, who + ' Cabrillo CONTEST:');
-      CheckEquals(expectFriendly, obj.FriendlyName, who + ' friendly name');
-      CheckEquals(integer(ContestsArray[c].WA7BNM), obj.WA7BNMId,
-                  who + ' WA7BNM calendar id');
-      CheckEquals(integer(ContestsArray[c].QRZRUID), obj.QRZRUId,
-                  who + ' QRZ.RU calendar id');
       inc(checked);
       end;
 
@@ -2822,8 +2360,20 @@ end;
    through the accessor set-up reads, that the answer is a real member and
    that it is the array legend's rule: the bit set is CQ, clear is ITU -- which
    is what D7 did. Then four contests by name, whose zones are their
-   exchange. *)
+   exchange.
+
+   THE BIT IS A LITERAL SINCE M10 S8, which deleted ContestsBooleanArray.
+   CQ_ZONE_CONTESTS is every ContestType whose word had CQ_ZONE_MODE_BIT set,
+   printed from the table by a program linking VC before it was deleted (25;
+   a text count of ciCQZoneMode1 in VC.pas at 9dc93f67 gave 26, the
+   constant's own declaration included). *)
 procedure TContestFactoryTests.Test_ZoneModeIsCQOrITUForEveryContest;
+const
+   CQ_ZONE_CONTESTS: set of ContestType = [
+      CQ160CW, CQ160SSB, CQWPXCW, CQWPXSSB, CQWPXRTTY, CQWWCW, CQWWSSB,
+      CROATIAN, GACWWWSACW, JIDXCW, JIDXSSB, JTDX, KCJ, OKDX, UCG,
+      DARCWAEDCCW, DARCWAEDCSSB, DARCXMAS, WAG, WWPMC, CQWWRTTY,
+      ARRL_RTTY_ROUNDUP, WWIH, OKOMSSB, MWC];
 var
    c: ContestType;
    mode: ZoneModeType;
@@ -2838,7 +2388,7 @@ begin
       CheckTrue(Ord(mode) <= Ord(High(ZoneModeType)),
                 string(ContestTypeSA[c]) + ' zone mode is out of range: ' +
                 IntToStr(Ord(mode)));
-      cqBit := (ContestsBooleanArray[c] and (1 shl CQ_ZONE_MODE_BIT)) <> 0;
+      cqBit := c in CQ_ZONE_CONTESTS;
       CheckTrue((mode = CQZoneMode) = cqBit,
                 string(ContestTypeSA[c]) + ' zone mode follows the CQ bit');
       if mode = CQZoneMode then
@@ -2847,8 +2397,9 @@ begin
          end;
       end;
 
-   (* A FLOOR, so a table that lost every CQ bit cannot pass as "consistent". *)
-   CheckTrue(cqCount >= 10, 'only ' + IntToStr(cqCount) + ' contests use CQ zones');
+   (* EXACT, now that the expected side is a literal: a class that gained or
+      lost a CQ zone mode fails above, and this says how many. *)
+   CheckEquals(25, cqCount, 'contests that use CQ zones');
 
    CheckTrue(ContestIdentity(CQWWCW).ZoneMode = CQZoneMode, 'CQ WW CW uses CQ zones');
    CheckTrue(ContestIdentity(CQWWSSB).ZoneMode = CQZoneMode, 'CQ WW SSB uses CQ zones');
@@ -2865,11 +2416,8 @@ begin
    BeginTest('Test_FieldDayHasNoDXMultiplier');
    CheckTrue(ContestIdentity(ARRLFIELDDAY).DXMultiplierType = NoDXMults,
              'the Field Day class states no DX multiplier');
-   (* THE ROW ITSELF, read directly: a plain TContestBase stopped reading the
-      table at M10 S6 and would answer the neutral NoDXMults whatever the
-      row said. Plan S8 deletes the row and this line with it. *)
-   CheckTrue(ContestsArray[ARRLFIELDDAY].XM = NoDXMults,
-             'and the row agrees with it');
+   (* The row's half of this went with the row (M10 S8); the class is the
+      only statement left, and it is the literal above. *)
 end;
 
 (* M2 -- DEFECT #5 AND THE SHAPE SET-UP RELIES ON.
@@ -4357,7 +3905,7 @@ begin
    Test_CountyLineAllowedIsDerivedEverywhere;
    Test_HostStateDerivationIsTheOneTable;
    Test_FloridaIsAStatePartyWithATwoCountyLimit;
-   Test_MichiganForbidsCountyLineAgainstTheArray;
+   Test_MichiganForbidsCountyLine;
    Test_BothPartiesScoreOnePhoneTwoCW;
    Test_CountyCountValidationByContest;
    Test_CountyCountIsInertWhereNoLimitIsKnown;
@@ -4379,8 +3927,8 @@ begin
    Test_IdahoQRPScoresFiveOnEveryMode;
    Test_EveryOtherContestStillCreditsEveryBand;
    Test_FixedPointContestsTranscribeTheirArms;
-   Test_MovedRowValuesStillMatchTheArray;
-   Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix;
+   Test_FifteenPartiesSplitARoverCallOnExport;
+   Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
    Test_DummyContestScoresOnlyTheOverrides;
    Test_ADIFIdsResolveOldAndNew;
    Test_NoADIFIdIsClaimedTwice;

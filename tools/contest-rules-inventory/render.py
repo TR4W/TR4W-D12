@@ -11,7 +11,6 @@ import re
 from collections import Counter, defaultdict
 
 import judgements
-from analyses import NO_CONTEST_ID
 
 HAND_BLOCKS = ["headline-facts", "setup-seam", "registered-first-reads", "findings", "lint-proposal"]
 HAND_BEGIN = "<!-- BEGIN HAND-MAINTAINED: {} -->"
@@ -223,7 +222,7 @@ class Renderer:
          "| `generate.py` | the entry point: dumps, scans, renders, writes this file CRLF |",
          "| `dump-code-only.ps1` | the two code-only copies, through `PascalSource.psm1` |",
          "| `pascal.py` | tokens, the enclosing routine, operands, the ONE `case` walker |",
-         "| `model.py` | `VC.pas` (`ContestType`, `ContestsArray`, `ContestTypeSA`) and the factory registry |",
+         "| `model.py` | `VC.pas` (`ContestType`, `ContestTypeSA`), the factory registry, and each contest's row values as its class states them |",
          "| `scan.py` | shapes 1-5 |",
          "| `analyses.py` | the measurements behind sections 7 and 8 (section 9) |",
          "| `judgements.py` | **the only opinions**: categories, seams, thresholds, the curated shape-3 list |",
@@ -259,12 +258,13 @@ class Renderer:
          f"`RegisterContest(<enum>, <class>)` in `src/contestFactory/`: **{len(self.reg)}**",
          "(`model.Registry`, which also walks each class's ancestry). "
          + (f"All {len(self.reg)} score through their own chain -- none falls through to `TContestBase`'s zero."
-            if all_score else "**Not all of them score through their own chain** -- see section 9.2."),
+            if all_score else "**Not all of them score through their own chain.**"),
          "",
          "### 2.3 Shape 4 -- who reaches an `Active*` value",
          "",
-         "The reach of a value is each contest's `ContestsArray` row",
-         f"({len(i.contests.enum)} enum values against {len(i.contests.enum)} rows, matched by position)",
+         "The reach of a value is each contest's own statement of it -- the single",
+         f"value its class's getter returns, else `TContestBase`'s ({len(i.contests.enum)} contests;",
+         "`ContestsArray`, which held the same values, was deleted at M10 S8)",
          f"UNION every `Active* :=` inside `FoundContest`'s arms ({len(i.overrides)} assignments).",
          "That over-approximates who uses a value, which is the safe direction for",
          "deciding \"only one contest uses this\". Values are compared case-insensitively,",
@@ -279,8 +279,8 @@ class Renderer:
          "### 2.4 Shape 3 -- what was kept and what was not",
          "",
          "`scan.string_candidates` matches every string literal against every contest",
-         "identity string (the `ContestTypeSA` spelling, and the row's Name, ADIFName,",
-         f"CABName, DF and FriendlyName): **{cand['literals']}** hits today, and lists **{cand['name_tests']}** lines",
+         "identity string (the `ContestTypeSA` spelling, and the class's DisplayName, ADIFContestId,",
+         f"CabrilloName, DomesticFileName and FriendlyName): **{cand['literals']}** hits today, and lists **{cand['name_tests']}** lines",
          "using a contest-name expression. Those are CANDIDATES; `judgements.SHAPE3` is",
          "what was read and kept. The translation tables (`TC_UKRAINE = 'Ukraine'`",
          "matching a DF name), `FoundContest` ASSIGNING a name, and emitting `'POTA'`",
@@ -444,8 +444,6 @@ class Renderer:
    def measurements(self):
       i = self.inv
       dead = i.dead_arms
-      traits = i.traits
-      ident = i.identity
       today, widened = i.lint_widening
       out = [
          "## 9. Measurements behind sections 7 and 8 (generated)",
@@ -470,36 +468,18 @@ class Renderer:
                     f"| {', '.join(r['contests'])} |")
       out += [
          "",
-         "### 9.2 Class traits the engine contradicts (D8)",
+         "### 9.2 Class traits the engine contradicts (D8) -- retired",
          "",
-         f"**{traits['checked']}** trait overrides checked (`GetExchangeKind`,",
-         "`GetDomesticMultiplierType`, `GetDXMultiplierType`), each against the value the",
-         "ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its",
-         f"`ContestsArray` row. **{len(traits['rows'])}** disagree or could not be read:",
+         "Retired at M10 S8 (2026-10-14). It compared each class's trait getters with",
+         "the `ContestsArray` row and `FoundContest`'s arms; the arms are gone (M7a)",
+         "and the row is deleted, so the class's getter is the only statement left.",
          "",
-         "| contest | getter | class says | engine uses | row | FoundContest arms |",
-         "|---|---|---|---|---|---|",
+         "### 9.3 Contest identity: what the class says, what the exporters emit (D9) -- retired",
+         "",
+         "Retired at M10 S8. The exporters read the row's names until M1 and the class",
+         "since; the row is deleted, so there is nothing left to compare the class with.",
+         "`Test_EveryContestResolvesItsOwnADIFId` holds every id to its contest.",
       ]
-      for r in traits["rows"]:
-         out.append(f"| {r['contest']} | {r['getter']} | `{r['class']}` | `{r['engine']}` | `{r['row']}` "
-                    f"| {', '.join(f'`{a}`' for a in r['arms']) or '-'} |")
-      blank = ident["blank_adif"]
-      out += [
-         "",
-         "### 9.3 Contest identity: what the class says, what the exporters emit (D9)",
-         "",
-         f"- **{len(blank)}** contests have a blank `ContestsArray` `ADIFName` (excluding",
-         f"  {', '.join(sorted(NO_CONTEST_ID))}, which write no `CONTEST_ID`), so their exported id is the",
-         f"  `ContestTypeSA` spelling and import cannot resolve it; **{len(ident['blank_adif_registered'])}** of them are",
-         "  registered: " + ", ".join(ident["blank_adif_registered"]) + ".",
-         f"- {ident['compared']} literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were",
-         f"  compared with what the exporters emit; **{len(ident['rows'])}** differ"
-         + (":" if ident["rows"] else "."),
-      ]
-      if ident["rows"]:
-         out += ["", "| contest | format | class says | exporter emits |", "|---|---|---|---|"]
-         for r in ident["rows"]:
-            out.append(f"| {r['contest']} | {r['format']} | `{r['class']}` | `{r['exported']}` |")
       files = sorted(set(today) | set(widened), key=lambda f: short(f))
       out += [
          "",

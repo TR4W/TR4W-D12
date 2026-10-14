@@ -592,6 +592,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uContestChoices      in '..\..\src\uContestChoices.pas',
    uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
    uTestContestUI       in 'uTestContestUI.pas',
+   (* M10 S8: every contest's identity values, frozen as literals when the
+      tables were deleted. *)
+   uTestContestIdentityPin in 'uTestContestIdentityPin.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -676,6 +679,7 @@ begin
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
    RegisterSuite(TContestUITests.Create('ContestUI'));
+   RegisterSuite(TContestIdentityPinTests.Create('ContestIdentityPin'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

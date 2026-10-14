@@ -54,10 +54,19 @@ $lints = @(
    # Bans a hand-typed table indexed by a radio enum. Two of them drifted from
    # VC.pas and four Kenwoods selected the wrong driver -- see the script.
    @{ Name = 'Lint-NoRadioTables'; Arg = $src;     NeedsFpc = $false }
-   # The same ban for ContestType, with the tables M10 has not deleted yet
-   # named in an allow-list that must shrink as they go (a stale entry fails).
-   # docs/CONTEST_FACTORY_M10_PLAN.md, S0.
+   # The same ban for ContestType. Its allow-list is ContestTypeSA alone since
+   # M10 S8 deleted the other two tables (a stale entry fails).
+   # docs/CONTEST_FACTORY_M10_PLAN.md, S0 and S8.
    @{ Name = 'Lint-NoContestTables'; Arg = $src;   NeedsFpc = $false }
+   # EVERY STATE QSO PARTY SHIPS BOTH ITS .dom FILES. Each party class's
+   # InStateDomesticFileName names <base>.dom and <base>_cty.dom; both must be
+   # in target\dom and named in full.nsi (PA, AZ and MO once shipped without
+   # theirs). It gated FullBuild's installer path from 2026-08-13 and was LOST,
+   # not dropped, when FullBuild was rewritten for FPC that night (724d53d0
+   # kept it only in the D12 script, deleted with the Delphi files); nothing
+   # ran it again until M10 S8 put it here (2026-10-14). No -SourceDir: it
+   # takes the repository, and reads the classes, full.nsi and target\dom.
+   @{ Name = 'Lint-DomCoverage';     Arg = $null;  NeedsFpc = $false; Extra = @('-Repo', $repoRoot) }
    # The SAME defect one layer down. A config spelling table is bounded by its
    # enum, so its LENGTH is enforced and its CONTENTS are not -- and a repeated
    # word means GetValueFromArray hands back the FIRST ordinal and the second

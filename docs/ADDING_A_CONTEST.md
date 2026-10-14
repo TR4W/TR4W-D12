@@ -90,9 +90,16 @@ in `UsesBand`. Tests call `ScoreQSO`, never the rule directly.
 
 ## 2. How to add a contest
 
-### Step 1 — read the contest's row in `ContestsArray` (`VC.pas`)
+### Step 1 — read what TR4W knew about the contest
 
-Everything TR4W currently knows about a contest is one row. ARRL Field Day's:
+**There is no row any more.** `ContestsArray`, `ContestsBooleanArray` and
+`QSOParties` were deleted at M10 S8 (2026-10-14): every contest's class states
+what its row held, and a NEW contest has no row to read -- it adds its
+`ContestType` member and its `ContestTypeSA` spelling (appended, both) and
+writes its class from the sponsor's rules. To see what an EXISTING contest's
+row said, read it in git history (before S8) or in the class's own header,
+which quotes it. `ADDING_A_NEW_CONTEST.md` section 2 maps each old field to
+the getter that states it now. ARRL Field Day's row was:
 
 ```pascal
 Email: 'fieldday@arrl.org';  DF: 'arrlsect';  WA7BNM: 57;  QRZRUID: 0;
@@ -114,7 +121,8 @@ the enum, `TContestBase.QSOPointMethod` and `ActiveQSOPointMethod` at M10 S4
 written from the sponsor's rules; to see what TR4W used to do, read the arm in
 git history (before M10 S3) or the D7 tree.
 
-The field that is still the thread to pull:
+The field that is still the thread to pull -- the class's `GetExchangeKind`
+now, the row's `AE:` before S8:
 
 | field | leads to |
 |---|---|
@@ -197,10 +205,10 @@ or either of the two newest,
 and [`uContestARRLDigi.pas`](../tr4w/src/contestFactory/uContestARRLDigi.pas):
 each quotes its array row verbatim in a comment and then states every field.
 
-**DO NOT delete the array row yet.** No program code reads it for a contest's
-identity any more (M10 S6), but `Test_MovedRowValuesStillMatchTheArray` compares
-your class with it until plan S8 deletes the tables, and a new contest still
-needs its row (the compiler demands one per enum member) until then.
+**THERE IS NO ARRAY ROW TO ADD OR DELETE** (M10 S8, 2026-10-14). The tables
+are gone; a new contest adds its enum member and its `ContestTypeSA` spelling,
+and nothing else in `VC.pas`. `Lint-NoContestTables` fails the build if a new
+hand-typed `array[ContestType]` table appears.
 
 **THREE FIELDS ARE BLANK IN THE ARRAY AND BLANK IS NOT THE ANSWER.** `CABName`,
 `FriendlyName` and `ADIFName` all mean *"use `ContestTypeSA[ct]`"* when empty —
@@ -212,14 +220,19 @@ wrote the enum's spelling anyway — so import, which matches the class's
 `ADIFContestId`, could never resolve TR4W's own export for 139 contests
 (inventory D9). The id is now what export writes, by construction.
 
-`uTestContestFactory.Test_MovedRowValuesStillMatchTheArray` is the guard. It
-compares each class's literals against the row ITSELF, read from the tables
-(since M10 S0 -- before that it compared against a plain `TContestBase`, which
-read the same row and so agreed with any value a class inherited), with the
-two-step name fallback restated -- and it caught exactly that `FriendlyName`
-mistake while Arktika Spring was written.
-Add your contest to it, and delete the whole test when `ContestsArray` goes,
-because at that point there is nothing left to compare against.
+~~`uTestContestFactory.Test_MovedRowValuesStillMatchTheArray` is the guard.~~
+**It was deleted with the tables at M10 S8**, as it always said it would be:
+it compared each class's literals with the row, and the class is now the only
+statement left. It caught exactly that `FriendlyName` mistake while Arktika
+Spring was written. **`uTestContestIdentityPin` replaced it** (M10 S8): a
+literal row per `ContestType` -- WA7BNM and QRZ.RU ids, submission e-mail,
+friendly, display and domestic file names -- generated once from classes
+proven equal to the table, and **never regenerated to clear a failure**. A
+NEW contest adds its row there by hand (the array is indexed by
+`ContestType`, so the compiler insists), from the sponsor's published values;
+a changed identity value changes its one row in the same commit, on purpose.
+The contest matrix's records hold every contest's Cabrillo `CONTEST:` line
+and ADIF `CONTEST_ID`.
 
 **EVERY CLASS STATES ITS DISPLAY NAME, CABRILLO NAME AND ADIF ID ITSELF** (NY4I's
 ruling, enforced since M9a, 2026-10-02): override `GetDisplayName`,
@@ -284,7 +297,7 @@ shared files a contest touches; the search path already covers
 | `Flags` (`GetFlags: TContestFlags`) | `ContestsBooleanArray`'s word, as a set. **STATE IT -- every registered contest does since M10 S5** (in the leaf; the CW/SSB pair families on their base), e.g. `Result := [cfQSOByBand, cfMultByBand];`, `[]` when none applies. The base answers `[]` (M10 S6). The nine properties below answer from it and are no longer virtual |
 | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries`, `ErmakSpecification`, `RTCCapable` | the member of `Flags` of the same name. **Set-up reads the first six** (M2); MainUnit's ERMAK menu and uHamScore's contact upload read the last two (M10 S6) |
 | `ZoneMode` | `CQZoneMode` when `Flags` holds `cfCQZoneMode` (the array's CQ bit), else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
-| `InStateDomesticFileName` | a QSO party's in-state file, which every party states; the base answers `''` (M10 S6 -- it read the `QSOParties` entry the row's `P` indexed). `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads |
+| `InStateDomesticFileName` | a QSO party's in-state file, which every party states; the base answers `''` (M10 S6 -- it read the `QSOParties` entry the row's `P` indexed). `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads. **State it as ONE literal** (`Result := 'idaho';`): `Lint-DomCoverage` reads every party's statement to check that `<base>.dom` and `<base>_cty.dom` ship, and fails on one it cannot read (since M10 S8, when it stopped reading `QSOParties`) |
 | `QSOPartyArea` | the area the New Contest prompt names (M10 S5; `''` on the base since S6). The base's `DescribeNewContestPrompts`, ADIF export's STATE (`uADIF.GetStateForContest`, two-letter areas only) and the matrix's contest list ask it. A state party answers its `HostState` (`TContestStateQSOPartyBase`); 7QP, IN7QPNE and British Columbia state theirs. A new party states its `InStateDomesticFileName` itself |
 | `MarksDupes` | the dupe policy: **True** (since M10 S4; until then "unless the row's `QP` is `AlwaysOnePointPerQSO`", the same answer for every contest, because the only two such rows were the two classes that say False). A contest that ignores dupes overrides it. **`logsubs2` reads it** through `ContestIdentity` when a QSO is logged (M3) -- an operator's `QSO POINT METHOD` no longer reaches it. Internet Sprint and SRR-JR state False |
 
@@ -316,7 +329,7 @@ The defaults were the strangler's: the array answered until a contest stated its
 own. Every registered contest now states its row (M10 S5), so the base answers
 NEUTRAL constants -- exactly DUMMYCONTEST's row, the one contest with no class --
 and reads no table. A value a class does not state is the neutral one, not its
-row. Plan S8 deletes the tables.
+row. **The tables are deleted (M10 S8, 2026-10-14).**
 
 #### The county-line worksheet -- numbers established from sponsor rules
 
@@ -738,7 +751,7 @@ would duplicate the part that cannot differ.
 | `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
 | `TContestNRAUBalticBase` | family | the NRAU-Baltic contest, CW and SSB -- NY4I's ruling (2026-10-01), built at M3. The base holds every shared row field and the points; each mode class states only its names and calendar id. **The template for any other two-mode pair, once Q7 says that pair is a family** |
 | ~~`TContestFixedPoints`~~ | ~~mechanism~~ | **retired at M3 (2026-10-01).** Its rule lives on as the helper `FixedModePoints`, called from a class's own `CalculateQSOPoints` (section 2, step 2) |
-| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP (multi-state, unresolved -- each has its own class on `TContestBase` since M7b, design Q40) and IN7QPNE (a composite on `TContestBase` that delegates each QSO to its party's class, design 8.2r). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
+| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. **`SplitsRoverCallOnExport`** (M10 S8, virtual, default False) is a different rule: whether ADIF export writes a rover's `CALL/<county>` as the bare call plus `APP_TR4W_ROVERCALL` -- the deleted row's `CountyLineAllowed`, which the fifteen parties it was True for state as True (`Test_FifteenPartiesSplitARoverCallOnExport`). A rover is not a county line, so it is not derived from `CountyLineAllowed`; whether every party should split is open question Q90. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP (multi-state, unresolved -- each has its own class on `TContestBase` since M7b, design Q40) and IN7QPNE (a composite on `TContestBase` that delegates each QSO to its party's class, design 8.2r). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
 
 **THE DEFECT THAT MOVED IT, because the shape will look tempting again.** While
 the rule was on `TContestBase`, the inherited maximum read
@@ -956,8 +969,8 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 | what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`); the classless DUMMYCONTEST scores the four `QSO POINTS ...` overrides, then 0 (the legacy case is deleted, M10 S3) |
 | what does its session start from | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its class's `DescribeSession` applied by `FCONTEST.ApplySessionDefaults` (M7a); no classless arm remains (2026-10-14). LogCfg's default CQ exchange is `CQExchangeDefault` |
 | what is its final score | its class's `FinalScore` (asked by `LOGEDIT.TotalScore`, which every score reader reads), else the base's general formula through its identity -- section 3, M6 |
-| what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after its `DescribeSession`) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
-| its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` answering the neutral row (only DUMMYCONTEST has no class). Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not read `ContestsArray` or spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of |
+| what is its exchange | its class's `ExchangeKind` (the SESSION's exchange, after its `DescribeSession`; the row's `AE` until M10 S8) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
+| its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` answering the neutral row (only DUMMYCONTEST has no class). Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of (`ContestsArray`, the other source, is deleted -- M10 S8) |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
 | how TR4QT decomposes a contest | `C:\projects\tr4qt\docs\CONTEST_DEVELOPMENT.md` and `src/contests/` |
 

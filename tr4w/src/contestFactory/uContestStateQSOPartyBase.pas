@@ -47,10 +47,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ---------------------------------------------------------------------------
   WHO BELONGS HERE
 
-  THE SINGLE-STATE PARTIES WITH COUNTY MULTIPLIERS. Thirteen carry
-  CountyLineAllowed: True in ContestsArray today, and a handful more are
-  single-state with no flag set at all (Arizona, British Columbia, New York,
-  Virginia) -- whose correct value is simply unknown rather than False.
+  THE SINGLE-STATE PARTIES WITH COUNTY MULTIPLIERS. Thirteen carried
+  CountyLineAllowed: True in ContestsArray when this was written (fifteen by
+  M10 S8, which deleted the table and kept that set as
+  SplitsRoverCallOnExport), and a handful more are single-state with no flag
+  set at all (Arizona, British Columbia, New York, Virginia) -- whose correct
+  value is simply unknown rather than False.
 
   NOT THE LOCUST QSO PARTY, which this list named until M3 (2026-10-01). It is
   a QSO party by name only: K6VVA's event, P 0 in its row, no host state and no
@@ -160,9 +162,10 @@ type
    protected
       (* IT IS ONE, AND THE CLASS SAYS SO RATHER THAN THE TABLE SAYING SO.
 
-         The inherited answer reads ContestsArray[c].P <> 0, and P is an INDEX
-         into QSOParties -- so "is this a QSO party" is currently answered by a
-         file-name lookup table being non-empty. A class in this hierarchy IS
+         The inherited answer read ContestsArray[c].P <> 0 until M10 S6, and P
+         was an INDEX into QSOParties -- so "is this a QSO party" was answered
+         by a file-name lookup table being non-empty (both tables are deleted,
+         M10 S8; the base answers False). A class in this hierarchy IS
          one by construction, which is the whole point of there being a
          hierarchy. *)
       function GetIsUSQSOParty: boolean; override;
@@ -222,9 +225,31 @@ type
          merely discouraged -- so this is a decision, not a missing keyword. *)
       function GetCountyLineCountiesMax: integer; virtual;
       function GetCountyLineAllowed: boolean;
+
+      (* DOES ADIF EXPORT SPLIT A ROVER'S CALL? -- M10 S8, 2026-10-14.
+
+         uADIF.ResolveRoverCall writes a call such as KG1S/MON, whose suffix
+         equals the QSO's county, as the bare call plus APP_TR4W_ROVERCALL.
+         It did that for the parties whose ContestsArray row said
+         CountyLineAllowed: True, and the row is deleted (plan S8), so the
+         class states it now.
+
+         A ROVER IS NOT A COUNTY LINE (plan S7), so this is NOT derived from
+         CountyLineAllowed: the two disagree for six parties, and deriving
+         one from the other would change the export of all six. Whether every
+         state party should split a rover's call is open question Q90 for
+         NY4I; until it is answered this states exactly the old row, which
+         was True for fifteen parties -- California, Colorado, Delaware,
+         Florida, Idaho, Indiana, Michigan, Minnesota, Missouri, North
+         Carolina, Ohio, Pennsylvania, Tennessee, Texas and Wisconsin -- and
+         those fifteen override this. Default False: Arizona, British
+         Columbia, Virginia, the Salmon Run and New York. Pinned by
+         Test_FifteenPartiesSplitARoverCallOnExport. *)
+      function GetSplitsRoverCallOnExport: boolean; virtual;
    public
       property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
       property CountyLineAllowed: boolean read GetCountyLineAllowed;
+      property SplitsRoverCallOnExport: boolean read GetSplitsRoverCallOnExport;
 
       (* THE ONLY OVERRIDE OF THE BASE'S VALIDATOR IN THIS TREE.
 
@@ -340,6 +365,12 @@ end;
 function TContestStateQSOPartyBase.GetCountyLineAllowed: boolean;
 begin
    Result := GetCountyLineCountiesMax > 0;
+end;
+
+function TContestStateQSOPartyBase.GetSplitsRoverCallOnExport: boolean;
+begin
+   (* False unless the party states otherwise -- see the declaration. *)
+   Result := False;
 end;
 
 function TContestStateQSOPartyBase.ValidateQTHCount(aCount: integer;

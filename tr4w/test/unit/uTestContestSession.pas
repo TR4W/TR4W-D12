@@ -377,9 +377,8 @@ procedure TContestSessionTests.Test_FieldDayDXMultipliersAreWhatTheSessionRuns;
    var
       session: TSessionDefaults;
    begin
-      (* THE ROW ITSELF, read directly: a plain TContestBase stopped reading
-         the table at M10 S6. Plan S8 deletes the row and this line. *)
-      CheckTrue(ContestsArray[aContest].XM = aExpected, ContestTypeSA[aContest] + ': the row');
+      (* The row's line went with the row (M10 S8): the class and the session
+         are each held to the literal, which is what the row said. *)
       CheckTrue(ContestIdentity(aContest).DXMultiplierType = aExpected,
                 ContestTypeSA[aContest] + ': the class');
       session := Describe(aContest, KansasStation);

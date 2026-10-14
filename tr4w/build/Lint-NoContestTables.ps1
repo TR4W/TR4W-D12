@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
    Fail the build if production code declares a hand-typed table indexed by
-   ContestType -- except the tables M10 has not deleted yet, which are named.
+   ContestType -- except ContestTypeSA, the enum's own spelling, which stays.
 
 .DESCRIPTION
    WHY THIS EXISTS. It is Lint-NoRadioTables one enum over, for the same
@@ -13,15 +13,16 @@
 
    The contest factory is the answer: a contest states its own data in its own
    class, and uContestRegistry answers questions about it. M10
-   (docs/CONTEST_FACTORY_M10_PLAN.md) deletes the last of the tables; this
-   lint stops a new one arriving while that happens.
+   (docs/CONTEST_FACTORY_M10_PLAN.md) deleted the last of them at S8
+   (ContestsArray and ContestsBooleanArray, 2026-10-14); this lint stops a
+   new one arriving.
 
-   THE ALLOW-LIST SHRINKS, AND THE LINT FORCES IT TO. Each entry names the
-   stage that removes it. An entry whose table is no longer found FAILS the
-   lint as stale -- so the commit that deletes a table must delete its entry,
-   and the list cannot quietly outlive what it describes. The same check is
-   the lint's floor: today it must find all three, so a parse that finds
-   nothing cannot pass.
+   THE ALLOW-LIST ONLY SHRINKS, AND THE LINT FORCES IT TO. An entry whose
+   table is no longer found FAILS the lint as stale -- so the commit that
+   deletes a table must delete its entry, and the list cannot quietly outlive
+   what it describes. The same check is the lint's floor: since S8 it holds
+   one table, ContestTypeSA, and must find it, so a parse that finds nothing
+   cannot pass.
 
    WHAT IS FLAGGED: a declaration whose type is `array[...]` indexed by
    ContestType -- `array[ContestType]`, `array[Low(ContestType)..High(...)]`,
@@ -61,16 +62,11 @@ Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 . (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
 
 # --------------------------------------------------------------------------
-# THE ALLOW-LIST -- the tables M10 has not deleted yet, all in VC.pas. Shrink
-# it in the commit that deletes a table; never grow it.
+# THE ALLOW-LIST -- in VC.pas. Never grow it. ContestsArray and
+# ContestsBooleanArray left it at M10 S8 (2026-10-14), deleted with their
+# tables: every contest states those values in its class.
 # --------------------------------------------------------------------------
 $ALLOWED = [ordered]@{
-   # The row per contest. Plan S5 transcribes what classes still inherit,
-   # S6 stops the base reading it, S8 deletes it.
-   'ContestsArray'        = 'plan S8 deletes it'
-   # The flag word per contest (QSO/mult by band/mode, ERMAK, VHF, zone mode,
-   # domestic countries, RTC). Same route as ContestsArray.
-   'ContestsBooleanArray' = 'plan S8 deletes it'
    # The enum's own spelling. It stays after M10: the base's name getters fall
    # back to it, and it is what a .cfg's CONTEST = line is matched against.
    'ContestTypeSA'        = 'stays after M10 -- the enum''s spelling'

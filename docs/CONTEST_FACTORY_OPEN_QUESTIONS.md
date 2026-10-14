@@ -498,6 +498,11 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   (a change to those five parties' ADIF), and may the class state it as its
   own property so the row can be deleted at S8?
   *Recommended: yes, every state party, as a class property.*
+  **M10 S8 (2026-10-14) did the second half without changing behaviour:** the
+  row is deleted and the class states it -- `SplitsRoverCallOnExport` on
+  the state-party base, True for exactly those fifteen. What is left is the
+  first half: should Arizona, BC, Virginia, the Salmon Run and New York
+  split too (one override each, and a change to their ADIF)?
   **Answer:**
 
 ---

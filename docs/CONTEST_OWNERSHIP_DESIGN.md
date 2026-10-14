@@ -3559,6 +3559,8 @@ and the tables, not the kind enums.
 
 **S7 DONE 2026-10-14:** `ContestAllowsCountyLineOnImport` asks the state-party class (Michigan stops clearing the dupe flag on an imported county-line repeat; Arizona, BC, Virginia, Salmon Run and New York start); the rover export (`uADIF.ResolveRoverCall`) deliberately stays on the row because a rover is not a county line -- open question Q90 (plan S7).
 
+**S8 DONE 2026-10-14:** the tables are deleted -- `ContestsArray`, `ContestsBooleanArray`, `QSOParties`, `TContestInfo` and the flag constants (`ContestTypeSA` stays); the rover split on ADIF export, the row's last reader, is `TContestStateQSOPartyBase.SplitsRoverCallOnExport`, True for exactly the fifteen parties the row named (proved equal for every contest before the deletion; Q90 still open); every test that read a table reads its literal, and the S0 pin is gone with what it compared against (plan S8).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

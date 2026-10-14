@@ -1570,8 +1570,9 @@ var
 begin
    bareCall := string(rec.Callsign);
    roverFullCall := '';
-   // Only relevant for state-QP exchanges.
-   if not ContestsArray[rec.ceContest].CountyLineAllowed then
+   (* Only the parties that say so -- the class's statement since M10 S8,
+      the deleted row's CountyLineAllowed before it (open question Q90). *)
+   if not ContestSplitsRoverCallOnExport(rec.ceContest) then
       begin
       Exit;
       end;

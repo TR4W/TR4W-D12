@@ -25,7 +25,9 @@ IT FAILS CLOSED, and each failure means a human has to look:
    - a contest-test site in a routine judgements.ROUTINES does not cover
    - a judgements.SHAPE3 pattern whose match count moved
    - a judgements.SITE_OVERRIDES entry that no longer matches a site
-   - VC.pas whose enum, ContestsArray and ContestTypeSA disagree in length
+   - VC.pas with no ContestType enum
+   - a TContestBase getter model.FIELD_GETTERS names that the base no longer has,
+     or class getters read for fewer than half the contests (model.py)
 
 Intermediates go to <root>/build-out/contest-rules-inventory/ (gitignored).
 Needs Windows PowerShell or pwsh, for tr4w/build/PascalSource.psm1 -- the same
@@ -76,6 +78,8 @@ class Inventory:
       dump = Dump(dump_dir)
       self.contests = Contests(dump)
       self.registry = Registry(dump, self.contests)
+      # THE ROW VALUES ARE THE CLASSES' since M10 S8 deleted ContestsArray.
+      self.contests.adopt_class_facts(self.registry)
       self.registered = self.registry.registered()
 
       self.sites, self.file_count = scan.scan_sites(dump, self.contests)
@@ -89,8 +93,6 @@ class Inventory:
       self._index()
 
       self.dead_arms = analyses.dead_arms(self.proxies, self.registry)
-      self.traits = analyses.trait_disagreements(self.registry, self.contests, self.overrides)
-      self.identity = analyses.identity_gaps(self.registry, self.contests)
       self.enum_collisions = analyses.enum_collisions(dump, self.contests)
       self.lint_widening = analyses.lint_widening(self.sites)
       self.case_arms = analyses.contest_case_arms(self.sites)
@@ -196,6 +198,10 @@ def main():
    print(f"   {len(inv.registered_with)} of {len(inv.registered)} registered contests have rules outside the factory")
    print(f"   shape-3 candidates: {inv.candidates['literals']} literals, {inv.candidates['name_tests']} name tests"
          " -- if these moved, re-read them against judgements.SHAPE3")
+   if inv.contests.unreadable:
+      print(f"   {len(inv.contests.unreadable)} class getter(s) are not one `Result := X;` and were read as no value:")
+      for member, field, rel in inv.contests.unreadable:
+         print(f"      {member} {field} ({rel})")
 
 
 if __name__ == "__main__":

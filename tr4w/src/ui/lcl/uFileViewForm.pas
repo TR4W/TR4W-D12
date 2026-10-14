@@ -101,7 +101,7 @@ implementation
 uses
    Graphics,
    LCLType,               { VK_ESCAPE }
-   VC,                    { Contest, ContestsArray }
+   VC,                    (* Contest *)
    PostUnit,              { PreviewFileNameAddress, PreviewFileIsCabrillo }
    uFileView,             { SendMail -- the MAPI half, which is not a window }
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
@@ -155,8 +155,9 @@ begin
      And there is no easy cross-platform equivalent: a `mailto:` URL is the
      portable way to reach the local mail client, but it cannot ATTACH a file,
      which is the entire point of sending a log. Sponsors take web uploads now.
-     The address column in ContestsArray is left alone -- it is data, and
-     deleting it is a separate question. *)
+     The address is data, and deleting it is a separate question; it is the
+     contest class's SubmissionEmail since ContestsArray was deleted (M10
+     S8, 2026-10-14). *)
 end;
 
 procedure TfrmFileView.LoadPreviewFile;

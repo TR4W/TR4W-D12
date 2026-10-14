@@ -132,18 +132,108 @@ begin
    end;
 end;
 
-(* THE QSO-PARTY HEAD AS THE DIALOG COMPUTED IT: the row's P indexes the
-  QSOParties table, and British Columbia was named out of it. *)
+(* THE QSO-PARTY HEAD AS THE DIALOG COMPUTED IT: the row's P indexed the
+  QSOParties table, and British Columbia was named out of it.
+
+  A LITERAL SINCE M10 S8, which deleted both tables. Each area below is the
+  StateName of the QSOParties entry the contest's row indexed, printed from
+  the tables by a program linking VC before they were deleted: the 22 rows
+  with P <> 0, less British Columbia, which this has always left out. *)
 function ExpectedHead(aContest: ContestType): string;
 var
    state: string;
 begin
    Result := '';
-   if (ContestsArray[aContest].P = 0) or (aContest = BCQP) then
+   case aContest of
+      SEVENQP:
+         begin
+         state := '7th area';
+         end;
+      ArizonaQsoParty:
+         begin
+         state := 'AZ';
+         end;
+      CALQSOPARTY:
+         begin
+         state := 'CA';
+         end;
+      FLORIDAQSOPARTY:
+         begin
+         state := 'FL';
+         end;
+      MICHQSOPARTY:
+         begin
+         state := 'MI';
+         end;
+      MINNQSOPARTY:
+         begin
+         state := 'MN';
+         end;
+      MOQSOPARTY:
+         begin
+         state := 'MO';
+         end;
+      NCQSOPARTY:
+         begin
+         state := 'NC';
+         end;
+      OHIOQSOPARTY:
+         begin
+         state := 'OH';
+         end;
+      SALMONRUN:
+         begin
+         state := 'WA';
+         end;
+      TEXASQSOPARTY:
+         begin
+         state := 'TX';
+         end;
+      WISCONSINQSOPARTY:
+         begin
+         state := 'WI';
+         end;
+      NYQP:
+         begin
+         state := 'NY';
+         end;
+      TENNESSEEQSOPARTY:
+         begin
+         state := 'TN';
+         end;
+      COLORADOQSOPARTY:
+         begin
+         state := 'CO';
+         end;
+      PAQSOPARTY:
+         begin
+         state := 'PA';
+         end;
+      INQSOPARTY:
+         begin
+         state := 'IN';
+         end;
+      VAQP:
+         begin
+         state := 'VA';
+         end;
+      IN7QPNE:
+         begin
+         state := 'IN7QPNE';
+         end;
+      IDAHOQSOPARTY:
+         begin
+         state := 'ID';
+         end;
+      DELAWAREQSOPARTY:
+         begin
+         state := 'DE';
+         end;
+   else
       begin
       Exit;
       end;
-   state := QSOParties[ContestsArray[aContest].P].StateName;
+   end;
    Result := StepComment(Format(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX, [state, state]),
                          ncfMyState);
 end;

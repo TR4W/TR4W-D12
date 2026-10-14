@@ -3,8 +3,6 @@ and 8 of the document) rest on, recomputed every run so a reader can see
 whether a finding still holds without re-deriving it.
 
    dead_arms             legacy arms only registered contests reach (D3, D4)
-   trait_disagreements   class traits the engine contradicts (D8)
-   identity_gaps         exported contest ids import cannot resolve (D9)
    enum_collisions       ContestType members that are another enum's too
    lint_widening         shape 1 vs shapes 1+2, per file (section 8.2)
    contest_case_arms     contest-naming arms per case (section 8.3)
@@ -39,73 +37,11 @@ def dead_arms(proxies, registry):
    return {"scoring": scoring, "export": export, "formats": sorted(formats)}
 
 
-# GetQSOPointMethod LEFT THIS LIST AT M10 S4 (2026-10-14): the point method
-# was deleted as a concept, the getter and the row's QP column with it.
-TRAIT_GETTERS = {"GETEXCHANGEKIND": "AE",
-                 "GETDOMESTICMULTIPLIERTYPE": "DM", "GETDXMULTIPLIERTYPE": "XM"}
-
-
-def trait_disagreements(registry, contests, overrides):
-   """For every registered class that overrides a trait getter, the value it
-   returns against what the ENGINE uses: the ContestsArray row, or the last
-   FoundContest arm assignment for that contest. A getter body that is not a
-   single `Result := IDENT;` is reported as complex."""
-   checked = 0
-   rows = []
-   for member in sorted(registry.classes):
-      for getter, field in TRAIT_GETTERS.items():
-         found = registry.body(member, getter)
-         if found is None:
-            continue
-         checked += 1
-         rel, body = found
-         row = contests.field(member, field) or "?"
-         arms = [o["value"] for o in overrides if o["field"] == field and member in o["contests"]]
-         values = re.findall(r"Result\s*:=\s*(\w+)\s*;", body)
-         if len(values) != 1:
-            rows.append({"contest": member, "getter": getter, "class": "(complex)", "engine": arms[-1] if arms else row,
-                         "row": row, "arms": arms, "file": rel})
-            continue
-         engine = arms[-1] if arms else row
-         if values[0].upper() != engine.upper():
-            rows.append({"contest": member, "getter": getter, "class": values[0], "engine": engine,
-                         "row": row, "arms": arms, "file": rel})
-   return {"checked": checked, "rows": rows}
-
-
-# Contests whose ADIF export writes no CONTEST_ID at all (uADIF.EmitADIFRecord
-# asks WritesADIFContestId: General QSO since M4, POTA since its class,
-# 2026-10-13).
-NO_CONTEST_ID = {"POTA", "GENERALQSO"}
-
-
-def identity_gaps(registry, contests):
-   """The contest id the EXPORTERS emit (they read ContestsArray: CABName or
-   ADIFName, else the ContestTypeSA spelling) against what the CLASS states,
-   and how many contests export an ADIF id that import cannot resolve (import
-   matches only the class's ADIFContestId, whose default is the row's ADIFName,
-   and its FormerADIFContestIds)."""
-   compared = 0
-   rows = []
-   for member in sorted(registry.classes):
-      row = contests.table[member]
-      cab = row.get("CABName", "").strip() or contests.sa[member].strip()
-      adif = "" if member in NO_CONTEST_ID else (row.get("ADIFName", "").strip() or contests.sa[member].strip())
-      for getter, exported, label in (("GetCabrilloName", cab, "Cabrillo"), ("GetADIFContestId", adif, "ADIF")):
-         found = registry.body(member, getter)
-         if found is None:
-            continue
-         lits = re.findall(r"Result\s*:=\s*'((?:[^']|'')*)'\s*;", found[1])
-         if len(lits) != 1:
-            continue
-         compared += 1
-         if lits[0].strip().upper() != exported.upper():
-            rows.append({"contest": member, "format": label, "class": lits[0], "exported": exported})
-   blank = [e for e in contests.real()
-            if e not in NO_CONTEST_ID and not contests.field(e, "ADIFName").strip()]
-   reg = registry.registered()
-   return {"compared": compared, "rows": rows, "blank_adif": blank,
-           "blank_adif_registered": [e for e in blank if e in reg]}
+# trait_disagreements AND identity_gaps ARE GONE -- M10 S8, 2026-10-14.
+# Each compared a class's getter with the ContestsArray row (the engine's
+# value, the exporters' id). The row is deleted and the class's getter is
+# now the only statement of either, so both would compare a value with
+# itself. Sections 9.2 and 9.3 of the document say so.
 
 
 ENUM_RX = re.compile(r"\b(\w+)\s*=\s*\(([^()]*?)\)\s*;", re.S)

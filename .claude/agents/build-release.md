@@ -113,6 +113,20 @@ set (one per test), or as a label of a **`case` arm (one per arm)** — all outs
 file's count drops, lower its
 ceiling — the script names the files that are below theirs.
 
+**`Lint-NoContestTables` allows ONE table since M10 S8 (2026-10-14):
+`ContestTypeSA`.** `ContestsArray` and `ContestsBooleanArray` left its
+allow-list with their deletion; an allow-listed table not found fails it, so
+the list cannot outlive what it names. **`Lint-DomCoverage` reads the party
+classes now** (each `GetInStateDomesticFileName` literal, floor 22, fails on a
+statement it cannot read) instead of `VC.pas`'s deleted `QSOParties`, and **it
+is in `Run-Lints.ps1` since M10 S8**. It gated FullBuild's installer path from
+2026-08-13 and was LOST, not dropped, when FullBuild was rewritten for FPC the
+same night (`724d53d0` kept it only in the D12 script, deleted later with the
+Delphi files) -- so for two months nothing ran it. That is the general
+lesson: **a rewrite of a build script must carry every gate across, and the
+place to put one is the `Run-Lints.ps1` array**, never a step inline in a
+build script, where it can be lost with the script.
+
 **`Lint-PascalBeginEnd` and `Lint-ChangedPascal` do NOT gate the build.** The
 first runs as a warn-only `PostToolUse` hook; the second is run by hand.
 

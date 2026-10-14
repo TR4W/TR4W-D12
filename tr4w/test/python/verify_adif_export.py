@@ -248,21 +248,24 @@ def cross_check(log_records, adif_records):
 
     for i, (log, adif) in enumerate(zip(log_records, adif_records)):
         # ---- CALL + APP_TR4W_ROVERCALL ----
-        # For state-QP rover ('CALL/<county>' where county matches
-        # QTHString AND the contest's CountyLineAllowed flag is set),
-        # uADIF.ResolveRoverCall decomposes into bare CALL in <CALL>
-        # plus the full form in <APP_TR4W_ROVERCALL>.
+        # For a state-QP rover ('CALL/<county>' where county matches
+        # QTHString), uADIF.ResolveRoverCall decomposes into bare CALL in
+        # <CALL> plus the full form in <APP_TR4W_ROVERCALL> -- for the
+        # parties whose class says SplitsRoverCallOnExport.
+        #
+        # WHICH parties split is the contest's rule (M10 S8: the class, no
+        # longer the deleted ContestsArray row that logdump used to
+        # surface), pinned by the unit tests. What is checked here is that
+        # a split, where the ADIF shows one, is the RIGHT split: only a
+        # call whose suffix is the QSO's county, and the halves correct.
         log_call = log["Call"]
         adif_call = adif.get("CALL", "")
         is_rover_decomposed = False
-        if (
-            "/" in log_call
-            and log.get("CountyLineAllowed")
-            and log["QTHString"]
-        ):
-            suffix = log_call.split("/", 1)[1]
-            if suffix.upper() == log["QTHString"].upper():
-                is_rover_decomposed = True
+        if adif.get("APP_TR4W_ROVERCALL"):
+            suffix = log_call.split("/", 1)[1] if "/" in log_call else ""
+            chk.expect(i, "rover suffix is the QSO's county",
+                       log["QTHString"].upper(), suffix.upper())
+            is_rover_decomposed = True
         if is_rover_decomposed:
             bare = log_call.split("/", 1)[0]
             chk.expect(i, "CALL (rover bare)", bare, adif_call)
@@ -319,14 +322,12 @@ def cross_check(log_records, adif_records):
             chk.expect(i, "SUBMODE", expected_submode, adif.get("SUBMODE"))
 
         # ---- CONTEST_ID ----
-        # uADIF emits CONTEST_ID = ContestsArray[ceContest].ADIFName
-        # for every record except POTA and GENERALQSO.  When ADIFName
-        # is empty (legacy contest with no ADIF mapping) the field is
-        # also skipped because EmitADIFField returns '' for empty values.
-        # We replicate by simply: if the log surfaces a non-empty
-        # Contest string, expect it in CONTEST_ID; otherwise skip.
-        if log.get("Contest"):
-            chk.expect(i, "CONTEST_ID", log["Contest"], adif.get("CONTEST_ID"))
+        # NOT CHECKED SINCE M10 S8. uADIF emits the contest class's
+        # ADIFContestId (every contest but POTA and GENERALQSO), and the
+        # class is not linked into logdump -- the ContestsArray row it used
+        # to read is deleted. The id is pinned by the unit tests
+        # (Test_EveryContestResolvesItsOwnADIFId) and by the contest
+        # matrix, which records every contest's CONTEST_ID.
 
         # ---- FREQ ----
         # uADIF.FormatADIFFreq: freqHz / 1_000_000, '.'-separated, no

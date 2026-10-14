@@ -188,7 +188,7 @@ def found_contest_arms(dump, contests, registered):
    Returns (case line, arms, overrides): each arm has start/end lines, its
    contests, the registered ones, and tags for what it assigns; overrides are
    the `Active* := value` assignments inside an arm, which is how FoundContest
-   replaces a ContestsArray row value."""
+   replaced a row value (FoundContest's case is gone since M7a)."""
    fs = FileScan(dump, FOUNDCONTEST_FILE)
    toks = fs.toks
    found = [i for i, (t, ln) in enumerate(toks)
@@ -244,7 +244,7 @@ def _arm_tags(body):
 
 # ------------------------------------------------------------------ shape 4
 def effective_reach(contests, overrides):
-   """{field: {VALUE: {contests}}} -- each contest's ContestsArray row UNION
+   """{field: {VALUE: {contests}}} -- each contest's class-stated value UNION
    every FoundContest override. That over-approximates who uses a value, which
    is the safe direction for "only one contest uses this". Values fold case,
    because Pascal does."""
@@ -300,8 +300,8 @@ def string_candidates(dump, contests):
    list wants another look.
 
      literals    string literals equal to a contest identity string (the
-                 ContestTypeSA spelling, or the row's Name, ADIFName, CABName,
-                 DF or FriendlyName)
+                 ContestTypeSA spelling, or the class's DisplayName, ADIFContestId,
+                 CabrilloName, DomesticFileName or FriendlyName)
      name_tests  lines testing a contest-name expression"""
    ident = set()
    for e in contests.enum:

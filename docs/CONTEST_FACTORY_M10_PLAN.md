@@ -810,6 +810,116 @@ the export question decided on its own evidence:
 
 ### S8 -- Delete the tables
 
+**DONE 2026-10-14** (on top of `9dc93f67`). Re-measured first
+(`count-ids.ps1 -Lines -Ids @('ContestsArray','ContestsBooleanArray','QSOParties','TContestInfo','CountyLineAllowed')`
+plus `rg -i` over all of `tr4w/` and `tools/`): code readers were `VC.pas`
+(the declarations), `uADIF.ResolveRoverCall`, `test/logdump/logdump.lpr`
+(three), and the tests `uTestADIFFixtures`, `uTestContestDisplay` (two),
+`uTestContestFactory` (twelve) and `uTestContestSession`; tooling
+`Lint-DomCoverage.ps1`, `tools/contest-rules-inventory/model.py` and the
+one-shot `tools/gen_friendly_names.py`. As planned, with these decisions:
+
+* **Deleted:** `ContestsArray`, `TContestInfo`, `ContestsBooleanArray`, the
+  `ci*` / `*_BIT` constants, `QSOParties`, `TUSQSOPartyRecord`,
+  `QSOPartiesCount` -- 532 lines of `VC.pas`. `ContestTypeSA` stays. No
+  `FLAG_BIT` table was left to delete (S6 made the base's `GetFlags` `[]`).
+* **The rover split has a home, and its output is unchanged.**
+  `TContestStateQSOPartyBase.SplitsRoverCallOnExport` (protected virtual
+  `GetSplitsRoverCallOnExport`, default False), stated True in the fifteen
+  leaves whose row said `CountyLineAllowed: True` -- California, Colorado,
+  Delaware, Florida, Idaho, Indiana, Michigan, Minnesota, Missouri, North
+  Carolina, Ohio, Pennsylvania, Tennessee, Texas, Wisconsin -- and asked
+  through `uContestRegistry.ContestSplitsRoverCallOnExport` (False for any
+  contest not on the party base, as the row was). On the party base because
+  only a party had the flag, and the base already argues a county concept off
+  the root. NOT derived from `CountyLineAllowed` (they differ for six; Q90
+  stays open). **Proved before the table went:** the list was printed from the
+  table by a scratch program linking VC, matched a text count of
+  `CountyLineAllowed: True` (15), and a scratch program linking every
+  registered class compared the property with the row for every ContestType:
+  186 registered, 15 True, **0 disagreements**. Then hardcoded in
+  `Test_FifteenPartiesSplitARoverCallOnExport`.
+* **Tests, each table read replaced by its literal:** the S0 pin
+  `Test_MovedRowValuesStillMatchTheArray` is DELETED (with the orphaned
+  transcription-guard header that said to delete it now); the row half of
+  `Test_IdentityIsWhatTheExportersWroteBeforeM1` went with it -- the same
+  comparison -- keeping the accessor checks and pinning DUMMYCONTEST's
+  neutral names. `Test_ZoneModeIsCQOrITUForEveryContest`: the CQ bit is a
+  literal set of 25 and the floor (`>= 10`) became exact (25). The county-line
+  disagreement test is `Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix`,
+  its row column the literal fifteen. `Test_MichiganForbidsCountyLine` (was
+  `...AgainstTheArray`) asserts the rover split in place of the row's True.
+  The two Field Day row lines are gone (class and session are held to the
+  literal). `uTestContestDisplay.ExpectedHead` is a literal `case` of the 21
+  areas (BC excluded, as before). `uTestADIFFixtures`' IN7QPNE check asks
+  both seams the row fed (`ContestAllowsCountyLineOnImport`,
+  `ContestSplitsRoverCallOnExport`) and pins the fixture's contest.
+  **Unit run: 77760 passed, 0 failed** -- about 10,700 fewer assertions than
+  S7, which is the S0 pin (171 named calls plus the 187-contest loop, ~30
+  checks each) and the identity loop's 935.
+* **The loss the S0 pin left is closed: `uTestContestIdentityPin`.**
+  `Test_EveryContestStatesItsIdentityLiterally` holds every `ContestType`
+  (DUMMYCONTEST included, exact count 187) to a literal row of WA7BNM id,
+  QRZ.RU id, submission e-mail, friendly name, display name and domestic file
+  name, each row carrying its `ContestTypeSA` spelling so a shifted row fails
+  by name; the array is `array[ContestType]`, so the compiler refuses a
+  missing row. Generated ONCE by a scratch program linking every class, and
+  cross-checked against `ContestsArray` at `9dc93f67` (WA7BNM, QRZRUID, Email,
+  DF, FriendlyName, ADIF and Cabrillo names: 0 differences in 187); its
+  header says it is NEVER regenerated to clear a failure. The ADIF id and
+  Cabrillo name are left to the matrix (`CONTEST_ID`, `CONTEST:`) except for
+  the three it cannot see that way -- DUMMYCONTEST, GENERALQSO, POTA --
+  pinned by `Test_MatrixBlindContestsStateTheirIds`. 1504 assertions (187 x 8, two counts, six ids).
+* **`logdump.lpr`** (ungated) no longer reads a contest rule. It emits the
+  contest's `ContestTypeSA` spelling (`ContestToken`) and ordinal
+  (`ContestOrdinal`) instead of the row's ADIF name and `CountyLineAllowed`:
+  asking the class would link the factory -- and the LCL, measured: the
+  scratch program linking every class needed `Interfaces` -- into a program
+  that links VC and `uLogBinaryFile` only. The old `Contest` field was already
+  wrong for every contest with a blank row `ADIFName` (`CONTEST_<n>`, where
+  export has written the spelling since M1). `verify_adif_export.py` stops
+  checking `CONTEST_ID` (pinned by the unit tests and the matrix) and checks a
+  rover split it finds in the ADIF for consistency rather than deciding which
+  contests split. Built with `BuildLogDump.ps1` (BUILD OK) and run against
+  the Arktika binary-log fixture (exit 0). Its `-Run` smoke test points at a
+  corpus `log.trw` deleted on 2026-09-24, so it skips -- not fixed here.
+* **Tooling.** `Lint-DomCoverage` reads each party class's
+  `GetInStateDomesticFileName` literal (comments stripped through
+  `PascalSource.psm1`), floor 22, and FAILS on an empty factory directory, a
+  computed name, a commented-out override (21 < 22) and a missing `.dom` --
+  each checked. **It is in `Run-Lints.ps1` now.** It had gated FullBuild's
+  installer path since 2026-08-13 and was lost, not dropped, when FullBuild
+  was rewritten for FPC that night (`724d53d0` kept it only in the D12
+  script, later deleted) -- no reason to leave it out was found; it is fast
+  and reads only the tree. `Run-Lints.ps1`, run once: **44 lint(s) passed**,
+  exit 0.
+  `Lint-NoContestTables` allows `ContestTypeSA` alone (stale-entry rule
+  unchanged). `Lint-ContestNameTests`' fixture named `ContestsArray` as an
+  index example; it names `ContestTypeSA`. `Lint-SpellingTables` never read
+  these tables. The inventory's `model.Contests` reads the enum and
+  `ContestTypeSA` from `VC.pas` and each contest's row values from its class
+  (`adopt_class_facts`: the single value the chain's getter returns, else the
+  base's; fails closed on a renamed base getter or fewer than half the
+  contests read). Against the HEAD table, 187 contests x 10 fields: 3
+  differences, all a row that omitted a field whose class states the neutral
+  value (Field Day `DM`, the RTTY Roundup's and CQIR's `AIE`). The generated
+  document's rows are identical (110, shapes 6/0/13/91, 74 of 186, 37/20
+  candidates); `trait_disagreements` and `identity_gaps` are deleted -- each
+  compared a class with the row -- and sections 9.2/9.3 say "retired".
+  `tools/gen_friendly_names.py`, which wrote `FriendlyName` INTO
+  `ContestsArray`, is deleted.
+* **Docs, same change:** `ADDING_A_NEW_CONTEST.md` (no row; where each field
+  went), `ADDING_A_CONTEST.md`, CLAUDE.md's "Add a contest" and its map row,
+  the contest-factory and build-release agents, design 8.2s.
+* **Not done:** the matrix, corpus, factory check, round-trip, `Run-Lints` and
+  a full build (the gated run). The incremental app compile stopped at the
+  known "Internal error 200306067" (`MainUnit.pas(491,1)`); the unit-test
+  build (VC, every factory unit, uADIF) is clean, and no app unit outside it
+  named a deleted identifier (`count-ids.ps1`). Regenerate the contest-rules
+  inventory after the commit.
+
+As planned:
+
 * **Files:** `VC.pas` `ContestsArray`, `TContestInfo`, `ContestsBooleanArray`,
   the `ci*`/`*_BIT` constants (`VC.pas:4250-4292`), `QSOParties` if S5 moved
   its data; `test/logdump/logdump.lpr` (not gated -- fix by hand);

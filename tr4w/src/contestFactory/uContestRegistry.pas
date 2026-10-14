@@ -66,7 +66,8 @@ function RegisteredContestCount: integer;
 
 (* THE OBJECT THAT SAYS WHAT aContest IS -- its names and ids, and the rest of
   its row. NEVER nil: a contest with a class answers from its class, one
-  without is answered by a plain TContestBase reading ContestsArray. So every
+  without is answered by a plain TContestBase, whose answers are neutral (the
+  contest tables it once read are deleted -- M10 S6, S8). So every
   identity question -- the Cabrillo CONTEST: name, the ADIF CONTEST_ID, the
   friendly name, the WA7BNM and QRZ.RU ids -- has one answer per contest, and
   every consumer asks it here (M1, 2026-10-01). Contest SET-UP asks it too
@@ -153,11 +154,22 @@ function ContestOfADIFRecordMode(aContest: ContestType;
   allows none); Arizona, BC, Virginia, the Salmon Run and New York STARTED.
   A contest that is not a state party answers False, as its row did.
 
-  NOT the export side. uADIF.ResolveRoverCall still reads the row's flag, to
-  compose a rover's call on EXPORT; that is a different question (is this a
-  QSO party where a /COUNTY suffix names a rover) and S7 decided it stays on
-  the row -- plan S7 notes, open question Q90. *)
+  NOT the export side. uADIF.ResolveRoverCall composes a rover's call on
+  EXPORT; that is a different question (is this a QSO party where a /COUNTY
+  suffix names a rover) and S7 left it on the row -- plan S7 notes, open
+  question Q90. It is ContestSplitsRoverCallOnExport, below, since S8. *)
 function ContestAllowsCountyLineOnImport(aContest: ContestType): boolean;
+
+(* DOES ADIF EXPORT WRITE A ROVER'S CALL AS THE BARE CALL PLUS
+  APP_TR4W_ROVERCALL? -- M10 S8, 2026-10-14.
+
+  The state-party class's SplitsRoverCallOnExport; any other contest answers
+  False. It replaced the deleted row's CountyLineAllowed, which
+  uADIF.ResolveRoverCall read, and it states exactly that row's fifteen
+  parties: a rover is not a county line (plan S7), so it is deliberately NOT
+  ContestAllowsCountyLineOnImport. Whether every state party should split a
+  rover's call is open question Q90. *)
+function ContestSplitsRoverCallOnExport(aContest: ContestType): boolean;
 
 implementation
 
@@ -314,6 +326,15 @@ begin
    obj := ContestIdentity(aContest);
    Result := (obj is TContestStateQSOPartyBase) and
              TContestStateQSOPartyBase(obj).CountyLineAllowed;
+end;
+
+function ContestSplitsRoverCallOnExport(aContest: ContestType): boolean;
+var
+   obj: TContestBase;
+begin
+   obj := ContestIdentity(aContest);
+   Result := (obj is TContestStateQSOPartyBase) and
+             TContestStateQSOPartyBase(obj).SplitsRoverCallOnExport;
 end;
 
 function ContestOfADIFRecordMode(aContest: ContestType;
