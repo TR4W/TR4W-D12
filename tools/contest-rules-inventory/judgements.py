@@ -188,7 +188,9 @@ SHAPE3 = [
     "`csQTHString = 'TRC'`"),
    ("tr4w/src/uADIFExchange.pas", r"\bcMyState\s*=\s*'TRC'", 1, [],
     "`cMyState = 'TRC'`"),
-   # MY STATE became the resolved MY STATE with design 7.12 (c3986877).
+   # The logstuff entries here (TRC, DL-DX-RTTY, EURASIA, YBDXDI-FT8 and the
+   # G4FOC/N4T/RAEM/LOCUST bonus calls) went with the legacy scoring case at
+   # M10 S3 (2026-10-14); the classes own those rules.
    ("tr4w/src/trdos/logddx.pas", r"Settings\.Contest\.Name\s*=\s*'Scandinavian Contest'", 1,
     ["SACCW", "SACSSB"],
     "`Settings.Contest.Name = 'Scandinavian Contest'` -- see dead code"),
