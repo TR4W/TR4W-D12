@@ -975,6 +975,52 @@ of the sent exchange asks it, and MY STATE is never written by set-up --
 the seven contests that state one, and nowhere else. A transient MY ZONE write
 in one shared set-up routine is Q57.
 
+### 7.12 RULED (NY4I, 2026-10-13): station facts are a DEFAULT a contest may override (Q28)
+
+*"Add my CQ zone to the station context. But it can be overridden. Case in point: I take my
+laptop to CQ zone 3 in Utah for a contest, so just that contest is CQ zone 3. So just as with
+things like state and section, we use station config as a default but allow the override at
+contest selection time."* So MY CQ ZONE, MY STATE and MY SECTION (and the like) resolve as: the
+contest's override if the contest has one, else the station configuration. The override is
+chosen at contest selection (New Contest dialog), stored with the CONTEST (its log), and never
+written to `tr4w.json`. This is also where 7.11's SentState belongs. UA4W reads MY CQ ZONE from
+the station context through this resolver.
+
+### 7.13 RULED (NY4I, 2026-10-13): per-QSO scoring may ask the sheet read-only (Q33)
+
+*"All multipliers are based on what was worked before ... when I work KP4N in a WPX contest
+where prefix is a multiplier, the prior QSOs are always relevant."* 7.7's "stage 1 is a pure
+function of the QSO and the station" is CORRECTED: a contest whose points depend on multiplier
+status (RSGB 1.8 MHz: 7 for a new multiplier) is handed a READ-ONLY "is this a new multiplier"
+answer from the shared sheet. A scoring rule still never writes the sheet or reads the log.
+
+### 7.14 RULED (NY4I, 2026-10-13): IN7QPNE is a composite; Delaware gets its own contest
+
+- IN7QPNE is a logging convenience for FOUR same-weekend parties: Indiana, 7th call area (7QP),
+  New England (NEQP) and Delaware. *"When I work a New England station, the rules for the New
+  England QSO party apply even though I'm working underneath the combined IN7QPNE."* Each QSO
+  is judged by the rules of the party the WORKED station is in; the class delegates per QSO to
+  that party's class. Today's code is one rule set, so this is new behaviour, not a
+  transcription.
+- ONE combined Cabrillo under the IN7QPNE name; the same log goes to all four sponsors, each
+  extracts its own QSOs. An IN7QPNE entrant uses the IN7QPNE name, not a component's.
+- NOT posted to HamScore or the contest scoreboard. Score display is not required (nice-to-have:
+  show the score of the party just worked).
+- **Delaware QSO Party becomes its own contest** (type + class), from
+  https://www.fsarc.org/qsoparty/rules-2024.html and .../cabrillo.htm: all HF except WARC plus
+  6 m and up; DE works everyone, non-DE works DE only; exchange RST + county (DE) or RST +
+  state/province/DX; points by ENTRANT location (inside DE 1/2/2 phone/digital/CW, outside
+  10/20/20); multipliers once per band (DE: states, provinces, DXCC; non-DE: NDE, KDE, SDE);
+  dupes per band per mode; county line = two QSOs; a DE mobile changing county is a new
+  station; score = points x mults x power (>100 W x1, <=100 W x2, <=5 W x3) + 50 electronic
+  bonus (decided: always applies); Cabrillo needs ARRL-SECTION:/LOCATION:, modes CW/PH/RY;
+  ADIF and Cabrillo id DE-QSO-PARTY (ADIF 3.1.7).
+
+### 7.15 RULED (NY4I, 2026-10-13): legacy arms only QSO POINT METHOD reaches are deleted (Q11)
+
+They, and the three point kinds with no arm (SouthAmerican, IN, NYQPQP), go with the setting at
+M10.
+
 ### 8.1 Which oracle sees what
 
 | oracle | sees | blind to |

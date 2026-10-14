@@ -132,7 +132,7 @@ Three groups:
   multi-state party base? On a line between two states, whose county rule
   applies? 7QP's sponsor allows up to 4 counties on a line -- enforce it? Nothing
   enforces it today.
-  **Answer:**
+  **Answer:** **IN7QPNE RULED 2026-10-13: a composite of four parties (IN, 7QP, NE, DE), per-QSO rules of the worked station's party; one Cabrillo; no score posting -- design 7.14. 7QP/NEQP multi-state rules otherwise still open.**
 
 - **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
   (the old code named both runnings), and January has never had any setup at
@@ -283,7 +283,7 @@ Three groups:
 
 - **Q28** UA4W: may the station context carry MY CALL's CQ zone, so UA4W can get a
   class? *Recommended: yes* (the same service shape ARRL 160 is getting).
-  **Answer:**
+  **Answer:** **RULED 2026-10-13: yes, and station facts (CQ zone, state, section) are a station default a contest may override at selection time -- design 7.12.**
 
 - **Q33** RSGB 1.8 MHz scores 7 for a contact that is a new multiplier. May a class
   be handed the multiplier sheet's "is this a new multiplier?" answer, so it can
@@ -295,7 +295,7 @@ Three groups:
   read-only query handed in with the station (is domestic key X / DX country
   N unworked over ALL bands and BOTH modes -- the arm ignores the session's
   by-band and by-mode keys and whether DX multipliers are on at all).
-  **Answer:**
+  **Answer:** **RULED 2026-10-13: yes, a read-only new-multiplier answer -- design 7.13.**
 
 - **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
   characters, so a malformed grid's score depends on leftover memory (identical
@@ -326,7 +326,7 @@ Three groups:
 - **Q11** Legacy scoring arms reachable only through an operator's `QSO POINT
   METHOD`, and three point kinds with no arm (`SouthAmerican`, `IN`, `NYQPQP`):
   delete them together when the setting retires. *Recommended: yes.*
-  **Answer:**
+  **Answer:** **RULED 2026-10-13: yes, delete them at M10 -- design 7.15.**
 
 - **Q13** Oregon QSO Party scores by the radio's current mode, not the QSO's, so a
   rescore follows the radio. Fix when OQP gets its class? *Recommended: yes* (the
@@ -400,6 +400,10 @@ Three groups:
 |---|---|---|
 | Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
 | Q6 | POTA becomes a contest class, treated like General QSO | `TContestPOTA`, 2026-10-13 (design 8.2o) |
+| Q11 | Delete the QSO-POINT-METHOD-only arms at M10 | M10 |
+| Q28 | Station facts default from station config, overridable per contest | design 7.12 |
+| Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13 |
+| -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14 |
 | Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
 | Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
 | Q3 | The log stores only what the operator stated | M2a (decided under delegation) |
