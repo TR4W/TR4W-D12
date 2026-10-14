@@ -96,7 +96,9 @@ function GetRandomDomesticQTH(Call: CallString): string;
 implementation
 
 uses
-   uSettingsModel;   // Settings.My.Call
+   uSettingsModel,   // Settings.My.Call
+   (* ContestSession -- the zone kind set-up resolved (M10 S9c). *)
+   uContestSession;
 
 
 function RandomRST: Str20;
@@ -238,7 +240,7 @@ begin
     RSTQSONumberExchange,
       RSTZoneExchange:
       begin
-        if ActiveZoneMult = JAPrefectures then
+        if ContestSession.ZoneMult = JAPrefectures then
            begin
            repeat
              Call := CD.GetRandomCall
@@ -1167,7 +1169,7 @@ begin
       RSTZoneOrSocietyExchange,
       RSTZoneAndPossibleDomesticQTHExchange:
       begin
-        if ActiveZoneMult = JAPrefectures then
+        if ContestSession.ZoneMult = JAPrefectures then
            begin
            TempString := NumberPartOfString(SendingStation);
            Number := TempString[1];

@@ -95,7 +95,9 @@ uses
    LogDom,
    uMults,
    uContestFactory,
-   uContestRegistry;
+   uContestRegistry,
+   (* ContestSession -- the prefix and zone kinds (M10 S9b, S9c). *)
+   uContestSession;
 
 var
    (* Created on first use, freed at finalization. The contest only ever sees
@@ -158,8 +160,8 @@ begin
    aTotals.ScoredBand := SingleBand;
    aTotals.SessionCountsMultipliers := not ((ActiveDomesticMult = NoDomesticMults) and
                                             (ActiveDXMult = NoDXMults)             and
-                                            (ActivePrefixMult = NoPrefixMults)     and
-                                            (ActiveZoneMult = NoZoneMults));
+                                            (ContestSession.PrefixMult = NoPrefixMults) and
+                                            (ContestSession.ZoneMult = NoZoneMults));
    aTotals.SessionExchange := ActiveExchange;
    aTotals.SessionDXMult := ActiveDXMult;
    aTotals.LiveSessionTally := LiveSessionTally;

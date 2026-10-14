@@ -755,6 +755,8 @@ uses uNet,
    (* ContestIdentity -- the contest a classless session parses and validates
      an exchange through (M5b). *)
    uContestRegistry,
+   (* ContestSession -- the zone kind set-up resolved (M10 S9c). *)
+   uContestSession,
   PostUnit,
   MainUnit,
   uRotatorControl,   // RotorControl delegates here -- see its body
@@ -5584,7 +5586,7 @@ begin
       begin
         RXData.Zone := StrToIntDef(Exchange, 0);
 
-        if ActiveZoneMult = EUHFCYear then
+        if ContestSession.ZoneMult = EUHFCYear then
            begin
            if not (RXData.Zone in [0..99]) then
               begin
@@ -5595,7 +5597,7 @@ begin
            Exit;
            end;
 
-        if (CTY.ctyZoneMode = CQZoneMode) and (ActiveZoneMult <> JAPrefectures)
+        if (CTY.ctyZoneMode = CQZoneMode) and (ContestSession.ZoneMult <> JAPrefectures)
           then
           if (Exchange[1] > '5') or ((Exchange[1] = '4') and (Exchange[2] >=
             '1')) then
@@ -5603,7 +5605,7 @@ begin
              Exit;
              end;
 
-        if ActiveZoneMult = JAPrefectures then
+        if ContestSession.ZoneMult = JAPrefectures then
           if (Exchange[1] > '6') or ((Exchange[1] = '5') and (Exchange[2] >=
             '1')) then
              begin

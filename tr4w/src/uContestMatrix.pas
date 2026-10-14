@@ -588,8 +588,8 @@ begin
    EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ContestSession.InitialExchange)));
    EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ActiveDomesticMult)));
    EmitField('active.dxmult', EnumText(TypeInfo(DXMultType), Ord(ActiveDXMult)));
-   EmitField('active.zonemult', EnumText(TypeInfo(ZoneMultType), Ord(ActiveZoneMult)));
-   EmitField('active.prefixmult', EnumText(TypeInfo(PrefixMultType), Ord(ActivePrefixMult)));
+   EmitField('active.zonemult', EnumText(TypeInfo(ZoneMultType), Ord(ContestSession.ZoneMult)));
+   EmitField('active.prefixmult', EnumText(TypeInfo(PrefixMultType), Ord(ContestSession.PrefixMult)));
    EmitField('doing.domestic/dx/prefix/zone',
              BoolText(DoingDomesticMults) + ' ' + BoolText(DoingDXMults) + ' ' +
              BoolText(DoingPrefixMults) + ' ' + BoolText(DoingZoneMults));

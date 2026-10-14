@@ -229,13 +229,18 @@ created once in that leaf unit's initialization, never replaced, read-only
 properties, written ONLY by FCONTEST's set-up path (`ApplyContestTraits`,
 then `ApplySessionDefaults`) through `Write*` methods -- not `Set*`, which
 `TSessionDefaults` already uses for what a contest STATES. Main thread only,
-as the globals were. **It holds `InitialExchange`** (was
-`ActiveInitialExchange`); `ActivePrefixMult`, `ActiveZoneMult`,
-`ActiveDXMult`, `ActiveDomesticMult` and `ActiveExchange` are still globals
-and move in that order (plan S9b-f). **Never repoint a kind reader to
-`ContestIdentity(Contest)`**: it is the SESSION's value, and 27 contests run
-with a kind their trait does not state (KCJ: trait `NoInitialExchange`, runs
-`ZoneInitialExchange`). `logdupe.SetUpExchangeInformation`'s parameter is
+as the globals were. **It holds `InitialExchange`, `PrefixMult` and
+`ZoneMult`** (were `ActiveInitialExchange`, `ActivePrefixMult`,
+`ActiveZoneMult`; S9a-c); `ActiveDXMult`, `ActiveDomesticMult` and
+`ActiveExchange` are still globals and move in that order (plan S9d-f).
+**Never repoint a kind reader to `ContestIdentity(Contest)`**: it is the
+SESSION's value, and 27 contests run with a kind their trait does not state
+(KCJ: trait `NoInitialExchange`, runs `ZoneInitialExchange`; YBDX: trait
+`NoPrefixMults`, runs `IndonesianDistricts`). **`ZoneSentForThisContest`
+asks the session too (S9c, plan F4)** -- the CQ-or-ITU zone sent and the
+ADIF CQZ/ITUZ tag now have one source. **`trdos/logddx.pas` is compiled by
+NOTHING** (it uses a `Country9` that never existed; plan F14): an edit
+there passes every build, so do not count a repoint in it as verified. `logdupe.SetUpExchangeInformation`'s parameter is
 `aExchangeKind` now -- it was named `ActiveExchange` and shadowed the global.
 **Moving a kind? Add it to `tools/contest-rules-inventory/scan.py`'s
 `SESSION` map in the same commit**, or its shape-4 rows vanish from the

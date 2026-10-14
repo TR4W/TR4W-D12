@@ -118,7 +118,10 @@ uses
    (* ContestIdentity(Contest).CQExchangeDefault and the station it is
       handed -- tSetupExchangeNumbers (M7a). *)
    uContestRegistry,
-   uContestFactory;
+   uContestFactory,
+   (* ContestSession -- the prefix and zone kinds set-up resolved
+      (M10 S9b, S9c). *)
+   uContestSession;
 
 var
   logger: TLogLogger;
@@ -429,8 +432,8 @@ begin
 
   DoingDomesticMults := ActiveDomesticMult <> NoDomesticMults;
   DoingDXMults := ActiveDXMult <> NoDXMults;
-  DoingPrefixMults := ActivePrefixMult <> NoPrefixMults;
-  DoingZoneMults := ActiveZoneMult <> NoZoneMults;
+  DoingPrefixMults := ContestSession.PrefixMult <> NoPrefixMults;
+  DoingZoneMults := ContestSession.ZoneMult <> NoZoneMults;
 
   //  NumberDifferentMults := 0;
 

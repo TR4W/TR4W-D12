@@ -285,7 +285,7 @@ function EmitADIFHeader(const programVersion: string): string;
 //
 // Excludes fields that need MainUnit/trdos globals (STATION_CALLSIGN,
 // STX_STRING via GetMyExchangeForExport, CNTY via mo.DomList,
-// CQZ/ITUZ via ActiveZoneMult, POTA MY_* fields via MY PARK, ARRL-FD
+// CQZ/ITUZ via ContestSession.ZoneMult, POTA MY_* fields via MY PARK, ARRL-FD
 // CLASS via MyFDClass etc.).  PostUnit.ExportToADIF provides those
 // via the TContestTailEmitter callback.
 function EmitADIFRecord(const rec: ContestExchange): string;

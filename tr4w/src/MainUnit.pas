@@ -690,6 +690,8 @@ uses
      uses this unit back, which is legal: both edges are
      implementation-section. *)
   uLogSource,
+  (* ContestSession -- the prefix kind set-up resolved (M10 S9b). *)
+  uContestSession,
 {$IF tDebugMode}
   // uDocumentation,
 {$IFEND}
@@ -7285,7 +7287,7 @@ begin
      changes nothing is not a rule its class could state -- and what it was
      meant to do is design Q48. *)
   if DoingPrefixMults or
-     (ActivePrefixMult in [BelgiumPrefixes, SACDistricts, IndonesianDistricts,
+     (ContestSession.PrefixMult in [BelgiumPrefixes, SACDistricts, IndonesianDistricts,
                            Prefix, SouthAmericanPrefixes, NonSouthAmericanPrefixes]) then
      begin
      SetPrefix(RData);
@@ -9537,7 +9539,7 @@ begin
   ColumnsArray[logColChapter].Enable := ExchangeInformation.Chapter;
 
   ColumnsArray[logColNumberReceive].Enable := ExchangeInformation.QSONumber;
-  ColumnsArray[logColPrefixMult].Enable := ActivePrefixMult <> NoPrefixMults;
+  ColumnsArray[logColPrefixMult].Enable := ContestSession.PrefixMult <> NoPrefixMults;
   ColumnsArray[logColDXMult].Enable := ActiveDXMult <> NoDXMults;
   // ColumnsArray[logColPostCode].Enable := ExchangeInformation.PostalCode;
   ColumnsArray[logColKids].Enable := ExchangeInformation.Kids;

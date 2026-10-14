@@ -43,9 +43,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   OUT; nothing is read from it. FCONTEST has no arm for it.
 
   THE ZONE MULTIPLIER EUHFCYear is read by LOGSTUFF, LOGDUPE and LOGEDIT
-  from the GLOBAL ActiveZoneMult, which FCONTEST still sets from the row;
-  that behaviour is keyed on the multiplier type, which KVP shares, and is
-  unaffected by this class.
+  from the session's zone kind (ContestSession.ZoneMult since M10 S9c),
+  which FCONTEST sets from this class's ZoneMultiplierType; that behaviour
+  is keyed on the multiplier type, which KVP shares.
 
   THE ADIF ID WAS BLANK UNTIL 2026-09-29 AND IS NOW 'EU-HF', the ADIF 3.1.7
   Contest_ID enumeration's spelling (EU HF Championship), on NY4I's ruling.

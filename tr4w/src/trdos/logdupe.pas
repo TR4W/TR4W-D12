@@ -217,7 +217,9 @@ var
   tAllowDupeQSOs                        : boolean = False;
   // Issue #1034: ActiveDXMult moved to VC.pas (light home) so uMults can read it
   // without depending on LogDupe. All users resolve it via VC (universally used).
-  ActivePrefixMult                      : PrefixMultType {= NoPrefixMults};
+  (* ActivePrefixMult MOVED -- M10 S9b, 2026-10-14. It is
+    uContestSession.ContestSession.PrefixMult, written only by FCONTEST's
+    set-up path. *)
 
 
 //  CQP                                   : boolean;
@@ -377,6 +379,8 @@ uses
     whether an off-band QSO earns a multiplier. *)
   uContestBase,
   uContestFactory,
+  (* ContestSession -- the zone kind set-up resolved (M10 S9c). *)
+  uContestSession,
   (* ResetLoggedQSOs -- the final score's view of the log is emptied with
     the totals it is kept beside (M6). *)
   uScoreTotals,
@@ -2233,7 +2237,7 @@ begin
 }
   if DoingZoneMults then
      begin
-     case ActiveZoneMult of
+     case ContestSession.ZoneMult of
        CQZones: MaxNumberOfZones := 40;
        EUHFCYear: MaxNumberOfZones := 100;
        ITUZones: MaxNumberOfZones := 75;

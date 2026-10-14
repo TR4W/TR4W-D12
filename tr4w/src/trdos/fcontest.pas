@@ -539,7 +539,7 @@ begin
      end;
   if aSession.IsStated(svPrefixMult) then
      begin
-     ActivePrefixMult := aSession.PrefixMult;
+     ContestSession.WritePrefixMult(aSession.PrefixMult);
      end;
   if aSession.IsStated(svBand) then
      begin
@@ -563,7 +563,7 @@ begin
      end;
   if aSession.IsStated(svZoneMult) then
      begin
-     ActiveZoneMult := aSession.ZoneMult;
+     ContestSession.WriteZoneMult(aSession.ZoneMult);
      end;
   if aSession.IsStated(svDXMultLimit) then
      begin
@@ -813,8 +813,8 @@ begin
   ContestSession.WriteInitialExchange(aContest.InitialExchangeKind);
   ActiveDomesticMult := aContest.DomesticMultiplierType;
   ActiveDXMult := aContest.DXMultiplierType;
-  ActiveZoneMult := aContest.ZoneMultiplierType;
-  ActivePrefixMult := aContest.PrefixMultiplierType;
+  ContestSession.WriteZoneMult(aContest.ZoneMultiplierType);
+  ContestSession.WritePrefixMult(aContest.PrefixMultiplierType);
 end;
 
 function FoundContest(CMD: ShortString): boolean;

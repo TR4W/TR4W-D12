@@ -3563,6 +3563,10 @@ and the tables, not the kind enums.
 
 **S9a DONE 2026-10-14:** the session object exists -- `uContestSession.ContestSession`, a `TContestSession` created once in the unit's initialization and never replaced, written only by FCONTEST's set-up path through `Write*` methods (main thread; read-only properties) -- and holds its first kind, `InitialExchange` (was `LOGWIND.ActiveInitialExchange`, 6 code-only occurrences, 3 readers); `logdupe.SetUpExchangeInformation`'s parameter that shadowed `ActiveExchange` is renamed `aExchangeKind` ahead of S9f (plan S9a).
 
+**S9b DONE 2026-10-14:** the session holds `PrefixMult` (was `LOGDUPE.ActivePrefixMult`, 9 code-only occurrences -> 0, written by `WritePrefixMult` from FCONTEST's two set-up writes); YBDX pins why a reader may not ask the class -- trait `NoPrefixMults`, runs `IndonesianDistricts` (plan S9b).
+
+**S9c DONE 2026-10-14:** the session holds `ZoneMult` (was `LOGWIND.ActiveZoneMult`, 19 -> 0), and **F4 is decided for the session**: `postunit.ZoneSentForThisContest` asks `ContestSession.ZoneMult`, as the ADIF CQZ/ITUZ block does -- no output changes, because the only zone kind a contest states over its trait (JIDX, JA station: `CQZones` over `NoZoneMults`) never reaches its ITUZones test; `logddx.pas` is found to be compiled by nothing (F14) (plan S9b/S9c).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

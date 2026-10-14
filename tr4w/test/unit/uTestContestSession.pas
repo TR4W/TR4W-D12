@@ -71,6 +71,8 @@ type
       procedure Test_M7bBatch2CQExchangeDefaults;
       procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
       procedure Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
+      procedure Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState;
+      procedure Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
    end;
 
 implementation
@@ -78,7 +80,7 @@ implementation
 uses
    SysUtils,
    VC, uContestBase, uContestRegistry,
-   (* ContestSession -- the kinds set-up resolved (M10 S9a). *)
+   (* ContestSession -- the kinds set-up resolved (M10 S9a-c). *)
    uContestSession,
    (* Make and NoStation -- lifted there at M8. *)
    uTestContestObjects;
@@ -896,18 +898,25 @@ end;
 (* ONE OBJECT, NEVER REPLACED, AND WHAT IS WRITTEN IS WHAT IS READ.
 
   A reader may hold ContestSession across a set-up: the object must be the
-  same one afterwards, or that reference dangles. A fresh object holds
-  NoInitialExchange, the zero the LOGWIND global it replaces started from.
-  Every member of the kind is written and read back through the one writer
-  FCONTEST uses. The program's own value is restored, because this is the
-  process-wide session and other suites run after this one. *)
+  same one afterwards, or that reference dangles. A fresh object holds each
+  kind's zero -- NoInitialExchange, NoPrefixMults, NoZoneMults -- the values
+  the globals it replaces started from. Every member of every kind is written
+  and read back through the writer FCONTEST uses, and writing one kind leaves
+  the others as they were (each is its own field, M10 S9b, S9c). The
+  program's own values are restored, because this is the process-wide
+  session and other suites run after this one. *)
 procedure TContestSessionTests.Test_TheRunningSessionIsOneObjectWithOneWriter;
 var
    before: TContestSession;
    fresh: TContestSession;
-   saved: InitialExchangeType;
-   kind: InitialExchangeType;
+   savedInitial: InitialExchangeType;
+   savedPrefix: PrefixMultType;
+   savedZone: ZoneMultType;
+   initialKind: InitialExchangeType;
+   prefixKind: PrefixMultType;
+   zoneKind: ZoneMultType;
 begin
+   BeginTest('Test_TheRunningSessionIsOneObjectWithOneWriter');
    before := ContestSession;
    CheckTrue(before <> nil, 'the session exists once the unit is initialised');
 
@@ -915,22 +924,71 @@ begin
    try
       CheckEquals(Ord(NoInitialExchange), Ord(fresh.InitialExchange),
                   'a fresh session starts from NoInitialExchange');
+      CheckEquals(Ord(NoPrefixMults), Ord(fresh.PrefixMult),
+                  'a fresh session starts from NoPrefixMults');
+      CheckEquals(Ord(NoZoneMults), Ord(fresh.ZoneMult),
+                  'a fresh session starts from NoZoneMults');
    finally
       fresh.Free;
       end;
 
-   saved := ContestSession.InitialExchange;
+   savedInitial := ContestSession.InitialExchange;
+   savedPrefix := ContestSession.PrefixMult;
+   savedZone := ContestSession.ZoneMult;
    try
-      for kind := Low(InitialExchangeType) to High(InitialExchangeType) do
+      for initialKind := Low(InitialExchangeType) to High(InitialExchangeType) do
          begin
-         ContestSession.WriteInitialExchange(kind);
-         CheckEquals(Ord(kind), Ord(ContestSession.InitialExchange),
-                     'the reader sees what the writer wrote, kind ' + IntToStr(Ord(kind)));
+         ContestSession.WriteInitialExchange(initialKind);
+         CheckEquals(Ord(initialKind), Ord(ContestSession.InitialExchange),
+                     'the reader sees what the writer wrote, initial exchange '
+                     + IntToStr(Ord(initialKind)));
          CheckTrue(ContestSession = before,
-                   'writing never replaces the object, kind ' + IntToStr(Ord(kind)));
+                   'writing never replaces the object, initial exchange '
+                   + IntToStr(Ord(initialKind)));
+         end;
+
+      (* Each kind is its own field: pin the other two, write every member
+        of one, and check the pinned two did not move. *)
+      ContestSession.WriteInitialExchange(ZoneInitialExchange);
+      ContestSession.WriteZoneMult(ITUZones);
+      for prefixKind := Low(PrefixMultType) to High(PrefixMultType) do
+         begin
+         ContestSession.WritePrefixMult(prefixKind);
+         CheckEquals(Ord(prefixKind), Ord(ContestSession.PrefixMult),
+                     'the reader sees what the writer wrote, prefix kind '
+                     + IntToStr(Ord(prefixKind)));
+         CheckTrue(ContestSession = before,
+                   'writing never replaces the object, prefix kind '
+                   + IntToStr(Ord(prefixKind)));
+         CheckEquals(Ord(ITUZones), Ord(ContestSession.ZoneMult),
+                     'a prefix write leaves the zone kind, prefix kind '
+                     + IntToStr(Ord(prefixKind)));
+         CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
+                     'a prefix write leaves the initial exchange, prefix kind '
+                     + IntToStr(Ord(prefixKind)));
+         end;
+
+      ContestSession.WritePrefixMult(SACDistricts);
+      for zoneKind := Low(ZoneMultType) to High(ZoneMultType) do
+         begin
+         ContestSession.WriteZoneMult(zoneKind);
+         CheckEquals(Ord(zoneKind), Ord(ContestSession.ZoneMult),
+                     'the reader sees what the writer wrote, zone kind '
+                     + IntToStr(Ord(zoneKind)));
+         CheckTrue(ContestSession = before,
+                   'writing never replaces the object, zone kind '
+                   + IntToStr(Ord(zoneKind)));
+         CheckEquals(Ord(SACDistricts), Ord(ContestSession.PrefixMult),
+                     'a zone write leaves the prefix kind, zone kind '
+                     + IntToStr(Ord(zoneKind)));
+         CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
+                     'a zone write leaves the initial exchange, zone kind '
+                     + IntToStr(Ord(zoneKind)));
          end;
    finally
-      ContestSession.WriteInitialExchange(saved);
+      ContestSession.WriteInitialExchange(savedInitial);
+      ContestSession.WritePrefixMult(savedPrefix);
+      ContestSession.WriteZoneMult(savedZone);
       end;
 end;
 
@@ -951,6 +1009,7 @@ var
    trait: InitialExchangeType;
    saved: InitialExchangeType;
 begin
+   BeginTest('Test_KCJRunsAnInitialExchangeItsTraitDoesNotState');
    trait := ContestIdentity(KCJ).InitialExchangeKind;
    CheckEquals(Ord(NoInitialExchange), Ord(trait), 'KCJ: the trait');
 
@@ -977,6 +1036,118 @@ begin
       end;
 end;
 
+(* THE PREFIX KIND IS THE SESSION'S TOO (M10 S9b).
+
+  YBDX's class states the trait NoPrefixMults, and its DescribeSession states
+  IndonesianDistricts for every station -- the frozen matrix's
+  active.prefixmult line says IndonesianDistricts in every YBDX variant. The
+  two set-up writes, in FCONTEST's order, leave the session at the stated
+  value, unequal to the identity's trait: a reader that asked
+  ContestIdentity(Contest).PrefixMultiplierType would lose YBDX's prefix
+  multiplier column and its mult flags. *)
+procedure TContestSessionTests.Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState;
+var
+   stated: TSessionDefaults;
+   trait: PrefixMultType;
+   saved: PrefixMultType;
+begin
+   BeginTest('Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState');
+   trait := ContestIdentity(YBDX).PrefixMultiplierType;
+   CheckEquals(Ord(NoPrefixMults), Ord(trait), 'YBDX: the trait');
+
+   saved := ContestSession.PrefixMult;
+   stated := Describe(YBDX, KansasStation);
+   try
+      CheckTrue(stated.IsStated(svPrefixMult), 'YBDX states a prefix multiplier');
+      CheckEquals(Ord(IndonesianDistricts), Ord(stated.PrefixMult),
+                  'YBDX: what it states');
+
+      ContestSession.WritePrefixMult(trait);
+      if stated.IsStated(svPrefixMult) then
+         begin
+         ContestSession.WritePrefixMult(stated.PrefixMult);
+         end;
+
+      CheckEquals(Ord(IndonesianDistricts), Ord(ContestSession.PrefixMult),
+                  'YBDX: the session runs what the contest stated');
+      CheckTrue(ContestSession.PrefixMult <> ContestIdentity(YBDX).PrefixMultiplierType,
+                'YBDX: the session differs from the identity''s trait');
+   finally
+      stated.Free;
+      ContestSession.WritePrefixMult(saved);
+      end;
+end;
+
+(* THE ZONE KIND IS THE SESSION'S, AND IT IS WHAT THE EXPORT ASKS (M10 S9c,
+  plan F4).
+
+  JIDX CW and SSB state the trait NoZoneMults, and their DescribeSession
+  states CQZones for a JA station only -- the one pair of contests whose
+  session zone kind differs from the trait. POSTUNIT.ZoneSentForThisContest
+  asked the class until S9c and the ADIF CQZ/ITUZ block the session; both ask
+  the session now. The move changed no output because the export's question
+  is "ITUZones or not", and neither side of JIDX is ITUZones -- pinned here,
+  so the reasoning in the plan stays true of the code. A non-JA station
+  states no zone kind and runs the trait. *)
+procedure TContestSessionTests.Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
+const
+   RUNNINGS: array[0..1] of ContestType = (JIDXCW, JIDXSSB);
+var
+   ja: TStationContext;
+   stated: TSessionDefaults;
+   trait: ZoneMultType;
+   saved: ZoneMultType;
+   name: string;
+   i: integer;
+begin
+   BeginTest('Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState');
+   ja := KansasStation;
+   ja.MyCountry := 'JA';
+   ja.MyContinent := Asia;
+
+   saved := ContestSession.ZoneMult;
+   try
+      for i := Low(RUNNINGS) to High(RUNNINGS) do
+         begin
+         name := ContestTypeSA[RUNNINGS[i]];
+         trait := ContestIdentity(RUNNINGS[i]).ZoneMultiplierType;
+         CheckEquals(Ord(NoZoneMults), Ord(trait), name + ': the trait');
+
+         stated := Describe(RUNNINGS[i], ja);
+         try
+            ContestSession.WriteZoneMult(trait);
+            if stated.IsStated(svZoneMult) then
+               begin
+               ContestSession.WriteZoneMult(stated.ZoneMult);
+               end;
+            CheckEquals(Ord(CQZones), Ord(ContestSession.ZoneMult),
+                        name + ' JA: the session runs CQ zones');
+            CheckTrue(ContestSession.ZoneMult <> trait,
+                      name + ' JA: the session differs from the identity''s trait');
+            CheckTrue((ContestSession.ZoneMult = ITUZones) = (trait = ITUZones),
+                      name + ' JA: session and trait agree on ITU zones');
+         finally
+            stated.Free;
+            end;
+
+         stated := Describe(RUNNINGS[i], KansasStation);
+         try
+            ContestSession.WriteZoneMult(trait);
+            if stated.IsStated(svZoneMult) then
+               begin
+               ContestSession.WriteZoneMult(stated.ZoneMult);
+               end;
+            CheckEquals(Ord(trait), Ord(ContestSession.ZoneMult),
+                        name + ' W: the session runs the trait');
+         finally
+            stated.Free;
+            end;
+         end;
+   finally
+      ContestSession.WriteZoneMult(saved);
+      end;
+end;
+
 procedure TContestSessionTests.RunAllTests;
 begin
    Test_TheBaseStatesNothing;
@@ -996,6 +1167,8 @@ begin
    Test_M7bBatch2CQExchangeDefaults;
    Test_TheRunningSessionIsOneObjectWithOneWriter;
    Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
+   Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState;
+   Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
 end;
 
 end.

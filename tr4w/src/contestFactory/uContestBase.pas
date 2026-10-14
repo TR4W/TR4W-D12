@@ -826,8 +826,8 @@ type
       function IsStated(aValue: TSessionValue): boolean;
 
       (* THE ENGINE'S CHOICES -- ActiveExchange, ActiveDomesticMult,
-         ActiveDXMult, ActivePrefixMult, ActiveBand, ActiveMode,
-         DomesticMultByBand and tAllowDupeQSOs. *)
+         ActiveDXMult, the session's PrefixMult (uContestSession, M10 S9b),
+         ActiveBand, ActiveMode, DomesticMultByBand and tAllowDupeQSOs. *)
       property Exchange: ExchangeType read FExchange write SetExchange;
       property DomesticMult: DomesticMultType read FDomesticMult write SetDomesticMult;
       property DXMult: DXMultType read FDXMult write SetDXMult;
@@ -839,7 +839,8 @@ type
       property AllowDupeQSOs: boolean index Ord(svAllowDupeQSOs)
          read GetFlag write SetFlag;
 
-      (* ActiveInitialExchange, ActiveZoneMult and DXMultLimit -- M7b. *)
+      (* The session's InitialExchange and ZoneMult (uContestSession, M10
+         S9a, S9c) and DXMultLimit -- M7b. *)
       property InitialExchange: InitialExchangeType
          read FInitialExchange write SetInitialExchange;
       property ZoneMult: ZoneMultType read FZoneMult write SetZoneMult;

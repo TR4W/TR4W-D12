@@ -997,10 +997,10 @@ begin
 
   if DoingZoneMults then
      begin
-     if ActiveZoneMult in [CQZones, ITUZones] then
+     if ContestSession.ZoneMult in [CQZones, ITUZones] then
         begin
 
-        if ActiveZoneMult = CQZones then
+        if ContestSession.ZoneMult = CQZones then
            begin
            Zone := ctyGetCQZone(Call)
            end
@@ -1498,7 +1498,7 @@ begin
                  mo.IsZnMult(i, MultBand, MultMode)    then
                  begin
                  // EUHFC numbers its zones from zero; everything else from one.
-                 if ActiveZoneMult = EUHFCYear then
+                 if ContestSession.ZoneMult = EUHFCYear then
                     begin
                     Add(i - 1);
                     end
@@ -2469,7 +2469,7 @@ begin
 
            if CD.GetEntry(Call, data) then
               begin
-              if ActiveZoneMult = ITUZones then
+              if ContestSession.ZoneMult = ITUZones then
                  begin
                  if data.ITUZone <> '' then
                     begin
@@ -2902,7 +2902,7 @@ end;
 
 procedure SetPrefix(var RData: ContestExchange {Ptr});
 begin
-  case ActivePrefixMult of
+  case ContestSession.PrefixMult of
     CQNonEuropeanCountriesAndWAECallRegions: RData.Prefix :=
       EuropeanCountriesAndWAECallRegions(RData.QTH);
     BelgiumPrefixes: if RData.QTH.CountryID = 'ON' then

@@ -999,16 +999,92 @@ As planned, with these corrections and decisions:
   on their own and pass. `tr4wserver` links none of the touched units (`VC` is
   its only engine unit; `uContestSession` is not in its graph).
 
+**S9b and S9c DONE 2026-10-14** (on top of `442a4828`). Re-measured first
+(`count-ids.ps1 -Lines -Ids @('ActivePrefixMult','ActiveZoneMult')`: 9 and
+19, as S9a's table says). As planned, with these corrections and decisions:
+
+* **Moved: `ActivePrefixMult`, 9 -> 0** -- the declaration (`logdupe`), two
+  writers (`fcontest` ApplySessionDefaults and ApplyContestTraits, order
+  unchanged, now `WritePrefixMult`) and six readers (`MainUnit`
+  `ParametersOkay` and the log grid's prefix column, `LogCfg`
+  `DoingPrefixMults`, `logedit`'s `case`, `uContestMatrix`'s
+  `active.prefixmult`, `uScoreTotals`' `SessionCountsMultipliers`).
+* **Moved: `ActiveZoneMult`, 19 -> 0** -- the declaration (`logwind`), two
+  writers (`WriteZoneMult`, same two places) and sixteen readers (`LogCfg` 1,
+  `logddx` 2, `logdupe` 1, `logedit` 4, `logstuff` 3, `postunit` 3 -- the ADIF
+  CQZ/ITUZ block -- `uContestMatrix` 1, `uScoreTotals` 1). `WritePrefixMult`
+  and `WriteZoneMult` have exactly two callers each outside the unit, both in
+  `fcontest.pas`. The matrix lines' text is unchanged.
+* **F4 DECIDED: `postunit.ZoneSentForThisContest` asks the SESSION**
+  (`ContestSession.ZoneMult = ITUZones`), as the ADIF CQZ/ITUZ block does --
+  one answer to one question. **No behaviour change, proved two ways:**
+  (1) by the code -- since S2 the session's zone kind has exactly two writers,
+  the class's trait and then `DescribeSession`, and the only classes stating
+  `ZoneMult` in `DescribeSession` are JIDX CW/SSB, for a JA station only,
+  `CQZones` over a trait of `NoZoneMults`
+  (`rg -n -i "aSession\.ZoneMult\s*:=" tr4w/src/contestFactory`). The
+  routine asks only "ITUZones or not", and neither side of JIDX is ITUZones,
+  so the answer is the same for every contest and station. (2) by the frozen
+  matrix -- `active.zonemult = ITUZones` appears in exactly seven contests
+  (BSCI, CROATIAN, GAGARINCUP, IARU, LZDX, OZCR_O, OZCR_Z), in all three
+  variants of each, and those are exactly the seven classes whose
+  `GetZoneMultiplierType` returns ITUZones. The matrix has no JA station for
+  JIDX, so the one place the two sources differ is not in it at all. The
+  session is the right source because it is what the contest RUNS: the
+  sheet, the parsers and the ADIF zone tag all ask it. Recorded in the
+  routine's header and in `known-divergences.txt`'s IARU note.
+* **CORRECTION -- `logddx.pas` IS COMPILED BY NOTHING (F14).** Its two
+  `ActiveZoneMult` reads were repointed as text, and no compiler saw them:
+  it uses a `Country9` unit that was never in the repository, and every
+  `uses LOGDDX` in the tree is commented out (`MainUnit:223`, `LogCfg:54`,
+  `logsubs2:60`). `count-ids.ps1` counts it because it reads every file.
+  S9d (1), S9e (1) and S9f (**26**) also touch it -- a green compile proves
+  nothing about those lines.
+* **CORRECTION -- `scan.py`'s `SESSION` comment said to drop a kind's
+  `ACTIVE` entry once its global is gone.** That would be wrong:
+  `effective_reach` reads `ACTIVE.values()` as the list of kind FIELDS, so
+  dropping one would empty that field's reach and lose its rows. The entries
+  stay; the comment says why. `PREFIXMULT` and `ZONEMULT` added to `SESSION`.
+* **Two S9a slips fixed in passing (F15):** `uContestSession`'s header held a
+  literal backspace byte (0x08) inside its `rg` example -- a Python `"\b"`
+  -- and S9a's two tests called no `BeginTest`, so a failure in them would
+  have been reported under the previous test's name.
+* **Tests:** `uTestContestSession`. `Test_TheRunningSessionIsOneObjectWithOneWriter`
+  now covers all three kinds: a fresh session holds each kind's zero, every
+  member of each kind is written and read back, and writing one kind leaves
+  the other two where they were. `Test_YBDXRunsAPrefixMultiplierItsTraitDoesNotState`
+  (trait `NoPrefixMults`, states `IndonesianDistricts` for every station --
+  the frozen matrix agrees). `Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState`
+  (both JIDXs: a JA station runs `CQZones` over the `NoZoneMults` trait,
+  agreeing with the trait on "ITUZones or not" -- the F4 argument pinned; a
+  non-JA station runs the trait). **Unit run: 79406 passed, 0 failed** (+105,
+  exactly the new checks).
+* **Inventory:** regenerated as a check and restored -- **110 rows, 6/0/13/91,
+  74 of 186**, identical but for line numbers. Shape-4 SITES rose 122 -> 123
+  (records 228 -> 229): the new site is `ZoneSentForThisContest`'s session
+  read, whose value reaches seven contests, so it is classified and makes no
+  row.
+* **Not done:** the full build, `Run-Lints`, the matrix, corpus, factory check
+  and round-trip (the gated run). The incremental app compile died inside FPC
+  (an unhandled exception, the known incremental artifact); `uProgramMain`
+  and `uContestMatrix` (whole cones, `-B`) and `uContestKVP` /
+  `uContestEuropeanHFC` were compiled clean with the App search paths into a
+  scratch directory, and the unit-test build is clean.
+  `Lint-ContestNameTests` (6 in 3, no rise), `Lint-UnitFileNames`,
+  `Lint-BraceComments`, `Lint-LineEndings` pass on their own.
+* **Matrix prediction: identical.** Every moved read returns the value the
+  global held, and F4 changes no answer.
+
 **Recommended order for S9b-f, measured after S9a** (code-only occurrences,
 declaration and writers included):
 
 | stage | kind | occ. | notes |
 |---|---|---|---|
-| S9b | `ActivePrefixMult` | 9 | declared `logdupe`; 6 readers |
-| S9c | `ActiveZoneMult` | 19 | F4: `postunit.ZoneSentForThisContest` asks the CLASS, the ADIF CQZ/ITUZ block the session -- decide then |
-| S9d | `ActiveDXMult` | 20 | declared `VC` (move the declaration, not just the reads); + F5 country mode (`uSettingsEffects` CONTEST arm); `uTestOffBandCredit` writes it |
-| S9e | `ActiveDomesticMult` | 39 | + delete `logdom.DomQTHInit` (F8); `uTestOffBandCredit` writes it |
-| S9f | `ActiveExchange` | 80 | `tree.pas` per-row repaint read; the F9 parameter is already renamed |
+| S9b | `ActivePrefixMult` | 9 | **DONE** (above) |
+| S9c | `ActiveZoneMult` | 19 | **DONE** (above); F4 decided -- the session |
+| S9d | `ActiveDXMult` | 20 | declared `VC` (move the declaration, not just the reads); + F5 country mode (`uSettingsEffects` CONTEST arm); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
+| S9e | `ActiveDomesticMult` | 39 | + delete `logdom.DomQTHInit` (F8); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
+| S9f | `ActiveExchange` | 80 | `tree.pas` per-row repaint read; the F9 parameter is already renamed; **26** reads in uncompiled `logddx` (F14) |
 
 Each stage adds its kind to `scan.py`'s `SESSION` map in the same commit.
 
@@ -1058,6 +1134,9 @@ The first commit adds `uContestSession` and the writer.
   (`postunit.pas:2404-2416`) reads. Two answers to one question.
   **S6 repointed it to the CLASS's `ZoneMultiplierType` (equal to the row),
   not to the session -- the inconsistency is unchanged and is S9's.**
+  **CLOSED at S9c: it asks the session, with no output change -- the only
+  session/trait difference in zone kind (JIDX, JA station: CQZones over
+  NoZoneMults) never reaches its ITUZones test. Evidence under S9b/S9c.**
 * **F5.** `uSettingsEffects.pas:365-377`: the contest's CTY country mode is
   derived from `ActiveDXMult` in the CONTEST *setting's* arm, after
   `FoundContest` set it to ARRL at its head (`fcontest.pas:840`). A set-up
@@ -1082,3 +1161,13 @@ The first commit adds `uContestSession` and the writer.
   31 -> 24, each named; the lint resolves 25.**
 * **F13.** `QSOPointMethodType` member `INQSOPoinRMethod` is misspelt; a search
   for `INQSOPointMethod` finds nothing. **Moot: the enum is deleted (S4).**
+* **F14 (found at S9c).** `src/trdos/logddx.pas` is compiled by nothing: it
+  uses `Country9`, which was never in the repository, and every
+  `uses LOGDDX` is commented out (`MainUnit`, `LogCfg`, `logsubs2`). Text
+  edits there pass every build. `count-ids.ps1` and the inventory count its
+  sites (it is where 1.1's "logddx 26" and the inventory's `logddx` rows come
+  from). Either delete it or bring it back into the build -- a decision, not
+  an S9 side effect; until then, an S9 repoint there is unverified.
+* **F15 (found at S9b).** S9a left a backspace byte (0x08) in
+  `uContestSession`'s header and two tests without `BeginTest`. **Fixed at
+  S9b.**

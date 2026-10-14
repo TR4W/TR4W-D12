@@ -74,7 +74,7 @@ globals (not the log record):
 
 - `STX_STRING` (built from `MyCall`/`MyFDClass`/`MySection`/`MyPark`)
 - `CNTY` (from `mo.DomList[].FAltName`)
-- `CQZ` / `ITUZ` (from `ActiveZoneMult`)
+- `CQZ` / `ITUZ` (from `ContestSession.ZoneMult`)
 - `MY_POTA_REF`, `MY_SIG`, `MY_SIG_INFO`
 - `STATION_CALLSIGN`, `CLASS`
 - `ARRL_SECT`, `GRIDSQUARE`, `IOTA`, `DOK`, `APP_TR4W_HQ`

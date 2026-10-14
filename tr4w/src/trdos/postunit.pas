@@ -437,6 +437,9 @@ uses
   (* SentMyState -- the state SENT in this contest, design 7.11 (M9a). *)
   FCONTEST,
   uCFG,
+  (* ContestSession -- the zone kind set-up resolved: the ADIF CQZ/ITUZ
+     choice and ZoneSentForThisContest (M10 S9c). *)
+  uContestSession,
   uLogNote;   (* NoteText -- MakeNotesList *)
 // mo.DomList (ADIF CNTY long-name lookup) is reachable via the
 // interface-section 'uses uMults' clause above.
@@ -454,16 +457,19 @@ uses
   contest.
 
   THE RULE IS THE CONTEST'S, NOT A LIST OF CONTEST NAMES. The contest states
-  which zone it is about, as its ZoneMultiplierType (ContestsArray's ZnM until
-  M10 S6, which repointed this to the class -- the class's value equals the
-  row's for every contest, pinned by Test_MovedRowValuesStillMatchTheArray),
-  and that is the fact being asked for.
+  which zone it is about, as the zone multiplier kind its session runs
+  (ContestSession.ZoneMult), and that is the fact being asked for.
 
-  IT IS THE CONTEST'S ZONE KIND, NOT THE SESSION'S, AND THAT DISAGREES WITH
-  THE ADIF CQZ/ITUZ BLOCK, which asks the session's ActiveZoneMult. Two
-  answers to one question (M10 plan F4). Left as it was at S6 on purpose --
-  switching to the session would be a behaviour change -- and recorded for S9,
-  which re-homes the session kinds. Keying off the exchange SHAPE instead would have been wrong
+  IT ASKS THE SESSION, AS THE ADIF CQZ/ITUZ BLOCK BELOW DOES -- M10 S9c,
+  2026-10-14, closing plan F4. It read ContestsArray's ZnM until M10 S6 and
+  the class's ZoneMultiplierType after it: two answers to one question, since
+  the ADIF block asked the session. The session is what the contest RUNS (the sheet
+  and the parsers ask it), and its zone kind is the class's trait unless the
+  contest's DescribeSession states another. Only JIDX CW/SSB do, and only for
+  a JA station: CQZones over a trait of NoZoneMults. Neither is ITUZones, so
+  the test below answers the same for every contest and station and the move
+  changes no output; the ITUZones sessions in the frozen matrix are exactly
+  the seven classes whose trait is ITUZones. Keying off the exchange SHAPE instead would have been wrong
   in both directions: CROATIAN and GAGARIN-CUP use RSTZoneOrDomesticQTH -- the
   same arm as CQ-160 -- and both are ITUZones contests, while CQ-160 is not. The
   shape and the zone kind cut across each other.
@@ -482,7 +488,7 @@ function ZoneSentForThisContest: string;
    var
       ituFromCty: Byte;
    begin
-   if ContestIdentity( Contest ).ZoneMultiplierType = ITUZones then
+   if ContestSession.ZoneMult = ITUZones then
       begin
       if Settings.My.ResolvedItuZone > 0 then
          begin
@@ -2305,7 +2311,7 @@ end;
 // Tail emitter callback for uADIF.ExportADIFToString.
 // Emits the contest-specific fields that uADIF.EmitADIFRecord skips because
 // they need access to MainUnit/trdos globals (Settings.My.Call, MyFDClass, MySection,
-// MyPark, mo.DomList, ActiveZoneMult, etc.) or are gated on contest-specific
+// MyPark, mo.DomList, ContestSession.ZoneMult, etc.) or are gated on contest-specific
 // reinterpretation of QTHString.  Called once per record.
 // ---------------------------------------------------------------------------
 function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
@@ -2409,19 +2415,19 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // ----- CQZ / ITUZ (zone) -----
   if rec.Zone <> DUMMYZONE then
      begin
-     if ActiveZoneMult = CQZones then
+     if ContestSession.ZoneMult = CQZones then
         begin
         Result := Result + EmitADIFField( 'CQZ', sysutils.Format( '%.2d',
            [ rec.Zone ] ) )
         end
      else
-       if ActiveZoneMult = ITUZones then
+       if ContestSession.ZoneMult = ITUZones then
           begin
           Result := Result + EmitADIFField( 'ITUZ',
              sysutils.Format( '%.2d', [ rec.Zone ] ) )
           end
        else
-         if ( ActiveZoneMult = NoZoneMults ) and ExchangeInformation.Zone then
+         if ( ContestSession.ZoneMult = NoZoneMults ) and ExchangeInformation.Zone then
             begin
             if CTY.ctyZoneMode = CQZoneMode then
                begin

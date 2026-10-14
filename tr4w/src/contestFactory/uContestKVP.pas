@@ -49,9 +49,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   commented-out line names BranchZones. Which one KVP's rules actually
   want has not been checked against the sponsor; the row's value is
   transcribed exactly. LOGSTUFF, LOGDUPE and LOGEDIT read EUHFCYear from
-  the GLOBAL ActiveZoneMult, which FCONTEST still sets from the row, so
-  that behaviour is keyed on the multiplier type and is unaffected by
-  this class.
+  the session's zone kind (ContestSession.ZoneMult since M10 S9c), which
+  FCONTEST sets from this class's ZoneMultiplierType, so that behaviour is
+  keyed on the multiplier type.
 
   NOT A STATE QSO PARTY: P is 0 and it has no other family, so it
   sits on TContestBase directly and states its own points, calling

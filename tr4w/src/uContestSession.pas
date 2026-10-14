@@ -48,10 +48,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       methods.
       Tests use the same methods. No reader writes, and the properties are
       read-only so a stray `:=` does not compile. Nothing enforces the writer
-      beyond that: count the Write* callers (rg -i "\.Write(InitialExchange)")
+      beyond that: count the Write* callers
+      (rg -i "\.Write(InitialExchange|PrefixMult|ZoneMult)")
       -- FCONTEST and the tests are the only legitimate ones. Named Write*,
       not Set*, because TSessionDefaults (what a contest STATES) already has
-      a SetInitialExchange, and "who writes the session" must be one search.
+      a SetInitialExchange (and SetPrefixMult, SetZoneMult), and "who writes
+      the session" must be one search.
     * THREADS. The writer runs on the main thread. Every reader measured at
       S9a for all six kinds runs on the main thread too: the call window,
       the sheet, the display, the exporters (headless /EXPORT runs on the
@@ -73,10 +75,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Moved one kind per commit, the fewest readers first (plan S9a-f):
 
     InitialExchange    S9a   was LOGWIND.ActiveInitialExchange
+    PrefixMult         S9b   was LOGDUPE.ActivePrefixMult
+    ZoneMult           S9c   was LOGWIND.ActiveZoneMult
 
-  Still globals until their stage: ActivePrefixMult (LOGDUPE), ActiveZoneMult
-  (LOGWIND), ActiveDXMult (VC), ActiveDomesticMult (LOGDOM), ActiveExchange
-  (LOGWIND). The kind ENUMS outlive M10: they are the engine's vocabulary
+  Still globals until their stage: ActiveDXMult (VC), ActiveDomesticMult
+  (LOGDOM), ActiveExchange (LOGWIND). The kind ENUMS outlive M10: they are the engine's vocabulary
   until their arms move into the classes at M11 (design 8.2s). *)
 unit uContestSession;
 
@@ -91,14 +94,29 @@ type
    TContestSession = class
    private
       FInitialExchange: InitialExchangeType;
+      FPrefixMult: PrefixMultType;
+      FZoneMult: ZoneMultType;
    public
       (* The initial exchange the call window pre-fills from -- the kind
         LOGEDIT.InitialExchangeEntry asks. A fresh session holds
         NoInitialExchange, the zero the global it replaces started from. *)
       property InitialExchange: InitialExchangeType read FInitialExchange;
 
-      (* THE WRITER -- FCONTEST's set-up path, and tests. See the header. *)
+      (* The prefix multiplier the sheet keeps (LOGDUPE's mult flags, the log
+        grid's prefix column, LogCfg's DoingPrefixMults). A fresh session holds
+        NoPrefixMults, the zero LOGDUPE.ActivePrefixMult started from. *)
+      property PrefixMult: PrefixMultType read FPrefixMult;
+
+      (* The zone multiplier the session runs -- the sheet, the parsers, the
+        ADIF CQZ/ITUZ choice and POSTUNIT.ZoneSentForThisContest (which zone
+        the station sends, CQ or ITU). A fresh session holds NoZoneMults, the
+        zero LOGWIND.ActiveZoneMult started from. *)
+      property ZoneMult: ZoneMultType read FZoneMult;
+
+      (* THE WRITERS -- FCONTEST's set-up path, and tests. See the header. *)
       procedure WriteInitialExchange(aKind: InitialExchangeType);
+      procedure WritePrefixMult(aKind: PrefixMultType);
+      procedure WriteZoneMult(aKind: ZoneMultType);
    end;
 
 (* The one session. Never nil between this unit's initialization and its
@@ -113,6 +131,16 @@ var
 procedure TContestSession.WriteInitialExchange(aKind: InitialExchangeType);
 begin
    FInitialExchange := aKind;
+end;
+
+procedure TContestSession.WritePrefixMult(aKind: PrefixMultType);
+begin
+   FPrefixMult := aKind;
+end;
+
+procedure TContestSession.WriteZoneMult(aKind: ZoneMultType);
+begin
+   FZoneMult := aKind;
 end;
 
 function ContestSession: TContestSession;

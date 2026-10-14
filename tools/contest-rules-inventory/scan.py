@@ -32,11 +32,14 @@ ACTIVE = {
 # read as `ContestSession.<Kind>` -- the same field, so the same shape-4 site.
 # Without this the bare-name match above skips it (a token after `.` is a
 # record field, not the global) and the site drops out of the inventory in
-# silence. Add a kind here in the commit that moves it, and drop its ACTIVE
-# entry when the global is gone.
+# silence. Add a kind here in the commit that moves it. KEEP its ACTIVE
+# entry: effective_reach reads ACTIVE.values() as the list of kind fields,
+# so dropping one would empty that field's reach (M10 S9b, a correction).
 SESSION_OBJECT = "CONTESTSESSION"
 SESSION = {
    "INITIALEXCHANGE": "AIE",
+   "PREFIXMULT": "Pxm",
+   "ZONEMULT": "ZnM",
 }
 
 # A PARAMETER THAT CARRIES A SESSION KIND, keyed (file, ROUTINE, NAME).
