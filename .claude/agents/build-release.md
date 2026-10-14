@@ -27,6 +27,7 @@ only, cannot build a Win32 target).
 .\build\Build-App.ps1            # full rebuild (-B), the safe default
 .\build\Build-App.ps1 -Incremental
 .\build\Build-Tests.ps1 -Run
+.\build\Build-Tests.ps1 -Checked -Run   # -gt -gh; FullBuild.ps1 runs it too
 .\build\Build-Server.ps1
 .\build\Run-Lints.ps1
 ```
@@ -47,6 +48,26 @@ sh tr4w/build/build-unix.sh      # Linux and macOS; build-linux.sh / build-mac.s
   `FullBuild.ps1` — its summary is a ranked worklist.
 - **The lints and the Edit-QSO round-trip are PowerShell and do not run on Unix.**
   Report them as **not-run**, never as passed.
+
+## The CHECKED unit-test build
+
+`Build-Tests.ps1 -Checked` compiles the same suite with `-gt` (trash locals) and
+`-gh` (heaptrc) into `build-out/tests-checked-<cpu>-<os>/` and
+`test/unit/tr4w_unit_tests_checked.exe` -- never the normal build's paths. It
+fails on a test failure or crash, on heaptrc **corruption** lines ("Wrong
+signature", "Marked memory at ... invalid", "Wrong size", "freed again at"...),
+and on a **missing heaptrc summary** (fail closed). Unfreed blocks are a
+ratchet: `$LEAK_CEILING` in the script, printed every run, lower it when it drops.
+
+- **Do not add `-gl` to the default run.** heaptrc symbolises every unfreed block
+  at exit; with ~13,500 of them that is 9+ minutes under DWARF and effectively
+  forever under stabs. `-Lines` exists to diagnose a corruption report.
+- **Do not add `HEAPTRC=keepreleased=1`.** The suite allocates ~1 GB cumulatively;
+  a 32-bit process never reuses it and dies, and the heap-growth test fails.
+- **`-CR` stays out:** it does not compile vendored `Log4D.pas`.
+- It exists because commit 0ec5d43d's crash (an instance-sized `FillChar` over an
+  old-style object with virtuals; an unassigned managed result) was invisible in
+  a normal build and deterministic here.
 
 ## The ceilings, and the rule about them
 

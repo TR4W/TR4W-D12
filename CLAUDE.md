@@ -663,6 +663,21 @@ Yaesu ASCII/binary, Elecraft IF, Flex, HamLib IDs, registry taxonomy, capability
 It links only leaf `src` units, so **the TRDOS contest engine is not unit-covered** —
 `ProcessExchange`, scoring and dupe need the app's globals booted.
 
+**1b. Checked unit tests: `-gt` + heaptrc** (2026-10-14). The same suite, compiled so undefined
+behaviour is wrong *every* run instead of right by luck:
+
+```powershell
+.\tr4w\build\Build-Tests.ps1 -Checked -Run    # ~2 min; -Lines adds source lines, to DIAGNOSE only
+```
+
+`-gt` fills every local with garbage on entry (an unassigned managed function result is NOT `''`
+in FPC); `-gh` reports overwritten, double-freed and wrong-size blocks at exit. It fails on a
+non-zero exit, on **any** heaptrc corruption line, on a missing heaptrc summary, and on unfreed
+blocks above `$LEAK_CEILING` in the script, which **ratchets down only**. `FullBuild.ps1` runs it
+after the normal suite. It exists because an intermittent `0xC0000005` in the unit tests was a
+`FillChar(x, SizeOf(x))` on an old-style object with virtuals — `SizeOf` of an instance goes
+through the VMT, so **always write `SizeOf(TYPE)`** — and a plain run only crashed sometimes.
+
 **2. Golden-master corpus** — the regression oracle for the contest engine.
 `bash tr4w/test/corpus/export-d12-corpus.sh` runs the app's headless export mode
 (`tr4w.exe "<contest>.db" /EXPORT`, `src/uProgramMain.pas`) over 13 real contest logs and

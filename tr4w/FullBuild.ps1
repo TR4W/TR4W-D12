@@ -257,6 +257,21 @@ else
          ForEach-Object { Write-Host "  $($_.Line.Trim())" -ForegroundColor Red }
       Fail 'unit tests failed -- app build aborted'
       }
+
+   # -----------------------------------------------------------------------
+   # The CHECKED unit tests: the same suite compiled with -gt (trash locals)
+   # and -gh (heaptrc). Fails on a test failure/crash, on heap corruption, on
+   # a missing heaptrc summary (fail closed), and on the unfreed-block count
+   # rising above its ratchet. About 80 s, build included. See the header of
+   # Build-Tests.ps1 for what each flag buys and why -CR is not used.
+   #
+   # It has its own binary (test\unit\tr4w_unit_tests_checked.exe) and its own
+   # output directory, so it cannot disturb the normal test build above.
+   # -----------------------------------------------------------------------
+   Phase 'Unit tests (checked: -gt -gh)'
+
+   & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Checked -Run -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
+   if ($LASTEXITCODE -ne 0) { Fail 'checked unit tests failed -- app build aborted' }
    }
 
 # ---------------------------------------------------------------------------

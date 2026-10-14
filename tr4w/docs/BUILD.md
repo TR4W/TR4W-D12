@@ -167,6 +167,7 @@ The version comes from `tr4w\src\Version.pas`; the script *fails* rather than de
 .\tr4w\build\Build-App.ps1                 # full rebuild (-B), the safe default
 .\tr4w\build\Build-App.ps1 -Incremental    # seconds instead of minutes
 .\tr4w\build\Build-Tests.ps1 -Run          # build the suite, then run it
+.\tr4w\build\Build-Tests.ps1 -Checked -Run # the same suite under -gt -gh (trashed locals + heaptrc); ~80 s
 .\tr4w\build\Build-Server.ps1              # tr4wserver
 ```
 
@@ -256,6 +257,7 @@ Clones `HEAD` to a temp directory, builds with **no arguments**, asserts the art
 | Everything + installer | `.\tr4w\FullBuild.ps1 -BuildInstaller`            | `tr4w_setup_<version>.exe`                |
 | Iterate                | `.\tr4w\build\Build-App.ps1 -Incremental`         | `BUILD OK`                                |
 | Unit tests             | `.\tr4w\build\Build-Tests.ps1 -Run`               | `FAILED: 0` -- the passed count grows     |
+| Unit tests, checked    | `.\tr4w\build\Build-Tests.ps1 -Checked -Run`      | `corruption reports: 0`, unfreed <= ceiling |
 | Lints only             | `.\tr4w\build\Run-Lints.ps1`                      | `N lint(s) passed`, and N grows           |
 | Corpus oracle          | `bash tr4w/test/corpus/export-d12-corpus.sh`      | `0 failed`, and every export exits 0      |
 | All three platforms    | `gh workflow run release.yml`                     | the run is green; no release is created   |

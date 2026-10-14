@@ -24,6 +24,7 @@ graphify-out/
 tr4w/test/unit/tr4w_unit_tests_linux
 tr4w/test/unit/tr4w_unit_tests_darwin
 tr4w/test/unit/tr4w_unit_tests_fpc
+tr4w/test/unit/tr4w_unit_tests_checked
 *.exe
 *.dll
 *.bpl
