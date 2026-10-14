@@ -1432,8 +1432,17 @@ end;
 
 function ctyGetCountryIdByIndex(Country: Word): string;
 begin
-  // Result is '' by default (native string); no ZeroMemory buffer-clear needed.
-  if Country = UNKNOWN_COUNTRY then Exit;
+  (* RESULT IS ASSIGNED ON EVERY PATH. The note that stood here -- "Result is ''
+    by default (native string)" -- is not true in FPC: a managed function
+    result is the CALLER's variable, passed in, and can arrive holding that
+    variable's previous value. Built with -gt (trash locals) the unknown-
+    country path returned FPC's "uninitialized function result" marker, and
+    uTestCTYDAT.Test_UnknownCountryIndex failed (found 2026-10-14). *)
+  Result := '';
+  if Country = UNKNOWN_COUNTRY then
+     begin
+     Exit;
+     end;
   Result := CTY.ctyTable[Country].ID;
 end;
 

@@ -84,10 +84,25 @@ uses
    PostUnit;
 
 (* A LIST OF THE TEST'S OWN -- zeroed first, because a local object's fields
-   are not, and Init grows from the capacity it finds. *)
+   are not, and Init grows from the capacity it finds.
+
+   SizeOf(TCallsignsList), THE TYPE, NEVER SizeOf(aList), THE INSTANCE. This
+   is an old-style `object` WITH VIRTUAL METHODS, so FPC computes the size of
+   an INSTANCE at run time by reading it out of the instance's VMT pointer --
+   and an uninitialised local's VMT pointer is whatever the stack held. The
+   generated code was `mov eax,[aList+12]; mov edx,[eax]`: a read through
+   garbage, then a FillChar of a garbage length over the stack.
+
+   That was the intermittent unit-test crash of 2026-10-13/14 (exit
+   0xC0000005, nothing on stderr, no PASSED line -- the stack was smashed
+   before the framework's handler could run). It depended on what earlier
+   suites had left in that stack slot, which is why an unrelated change made
+   it appear. Building with -gt (trash locals) makes it fail EVERY time, at
+   this line, on the commit before that change too. The type's size is a
+   compile-time constant. *)
 procedure InitList(var aList: TCallsignsList);
 begin
-   FillChar(aList, SizeOf(aList), 0);
+   FillChar(aList, SizeOf(TCallsignsList), 0);
    aList.Init;
 end;
 
