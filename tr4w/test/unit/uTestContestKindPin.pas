@@ -21,9 +21,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* EVERY CONTEST'S SESSION KINDS, AT EVERY MATRIX STATION, FROZEN AS
   LITERALS -- M11 S0b, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md). Six
-  kinds at S0b; five since M11 S3 part 2 deleted the prefix kind, whose
-  column left this unit in that commit (a column removed, not a table
-  regenerated -- see below).
+  kinds at S0b; five since M11 S3 part 2 deleted the prefix kind, and four
+  since M11 S4 part 2 deleted the DX kind -- each column left this unit in
+  its deleting commit (a column removed, not a table regenerated -- see
+  below).
 
   WHY IT EXISTS. M11 moves the six kind enums' engine arms into the classes
   and then deletes five of the enums. A kind is a SESSION fact: since M10 S2
@@ -79,7 +80,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   South American one -- whose DescribeSession branches the plan's S0b roster
   named. They are not pinned by this unit. (For the PREFIX kind, M11 S3's
   uTestPrefixMultiplierKey pins the KEY at a PY, ON, SM, JA, OK and YB
-  entrant as well, which is the branch these stations would have chosen.)
+  entrant as well, which is the branch these stations would have chosen;
+  for the DX kind, M11 S4's uTestDXMultiplierKey pins the key and whether
+  there is a DX multiplier at fourteen entrants.)
 
   THE MAIN TABLE IS INDEXED BY ContestType, so the compiler refuses a table
   with a row missing or extra, and each row carries its ContestTypeSA
@@ -97,13 +100,13 @@ uses
    uTR4WTestFramework;
 
 type
-   (* The kinds one session runs -- a literal row of test data. Five since
-      M11 S3 part 2 deleted the prefix kind; its column left with it. *)
+   (* The kinds one session runs -- a literal row of test data. Four since
+      M11 S3 and S4 part 2 deleted the prefix and DX kinds; each column left
+      with its kind. *)
    TSessionKinds = record
       Exchange: ExchangeType;
       InitialExchange: InitialExchangeType;
       DomesticMult: DomesticMultType;
-      DXMult: DXMultType;
       ZoneMult: ZoneMultType;
    end;
 
@@ -117,14 +120,14 @@ type
                            var aChecked: integer);
       procedure Test_EveryContestRunsItsPinnedKindsAtEveryMatrixStation;
       procedure Test_EveryPartyRunsItsPinnedKindsInItsHostState;
-      procedure CheckDoing(aDomestic, aDX, aZone: boolean; const aWho: string);
+      procedure CheckDoing(aDomestic, aZone: boolean; const aWho: string);
       procedure Test_DoingFlagsFollowEveryContestSwitch;
    end;
 
-(* SHARED WITH uTestPrefixMultiplierKey (M11 S3), so the two pins resolve a
-   station and a session exactly one way. See each body. (Since M11 S3 part 2
-   it asks only MatrixStation and SessionContestName: the prefix kind Kinds
-   resolved is deleted.) *)
+(* SHARED WITH uTestPrefixMultiplierKey (M11 S3) and uTestDXMultiplierKey
+   (M11 S4), so the pins resolve a station and a session exactly one way.
+   See each body. (Since each kind's part 2 they ask only MatrixStation and
+   SessionContestName: the prefix and DX kinds Kinds resolved are deleted.) *)
 function MatrixStation(const aCall: string;
                        const aCountry: string;
                        aContinent: ContinentType;
@@ -173,1499 +176,1499 @@ const
       (* DUMMYCONTEST *)
       (Token: 'DUMMY CONTEST';
        AtUS: (Exchange: UnknownExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: UnknownExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: UnknownExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* SEVENQP *)
       (Token: '7QP';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ALLASIANCW *)
       (Token: 'ALL-ASIAN-DX-CW';
        AtUS: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* ALLASIANSSB *)
       (Token: 'ALL-ASIAN-DX-SSB';
        AtUS: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* ALLJA *)
       (Token: 'ALL JA';
        AtUS: (Exchange: RSTALLJAPrefectureAndPrecedenceExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTALLJAPrefectureAndPrecedenceExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTALLJAPrefectureAndPrecedenceExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* APSPRINT *)
       (Token: 'AP-SPRINT';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* ARCI *)
       (Token: 'ARCI';
        AtUS: (Exchange: RSTPossibleDomesticQTHAndPower; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSACanadaKH6OrKL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTPossibleDomesticQTHAndPower; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSACanadaKH6OrKL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTPossibleDomesticQTHAndPower; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSACanadaKH6OrKL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARI_DX *)
       (Token: 'ARI-DX';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoIOrIS0; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoIOrIS0; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoIOrIS0; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARRL10 *)
       (Token: 'ARRL-10';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARRLDIGI *)
       (Token: 'ARRL-DIGI';
        AtUS: (Exchange: Grid2Exchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: Grid2Exchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: Grid2Exchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* ARRL160 *)
       (Token: 'ARRL-160';
        AtUS: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARRLDXCW *)
       (Token: 'ARRL-DX-CW';
        AtUS: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARRLDXSSB *)
       (Token: 'ARRL-DX-SSB';
        AtUS: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARRLSSCW *)
       (Token: 'ARRL-SS-CW';
        AtUS: (Exchange: QSONumberPrecedenceCheckDomesticQTHExchange; InitialExchange: CheckSectionInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberPrecedenceCheckDomesticQTHExchange; InitialExchange: CheckSectionInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberPrecedenceCheckDomesticQTHExchange; InitialExchange: CheckSectionInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARRLSSSSB *)
       (Token: 'ARRL-SS-SSB';
        AtUS: (Exchange: QSONumberPrecedenceCheckDomesticQTHExchange; InitialExchange: CheckSectionInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberPrecedenceCheckDomesticQTHExchange; InitialExchange: CheckSectionInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberPrecedenceCheckDomesticQTHExchange; InitialExchange: CheckSectionInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARRLVHFJAN *)
       (Token: 'ARRL-VHF-JAN';
        AtUS: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults)),
       (* ARRLVHFJUN *)
       (Token: 'ARRL-VHF-JUN';
        AtUS: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults)),
       (* ARRLVHFSEP *)
       (Token: 'ARRL-VHF-SEP';
        AtUS: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults)),
       (* ArizonaQsoParty *)
       (Token: 'ARIZONA QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* BALTIC *)
       (Token: 'BALTIC';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* BWQP *)
       (Token: 'BWQP';
        AtUS: (Exchange: RSTNameAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTNameAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTNameAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CIS *)
       (Token: 'CIS';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* CALQSOPARTY *)
       (Token: 'CALIFORNIA QSO PARTY';
        AtUS: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* COUNTYHUNTER *)
       (Token: 'COUNTY HUNTER';
        AtUS: (Exchange: RSTQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CQ160CW *)
       (Token: 'CQ-160-CW';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* CQ160SSB *)
       (Token: 'CQ-160-SSB';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* CQM *)
       (Token: 'CQ-M';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CQVHF *)
       (Token: 'CQ-VHF';
        AtUS: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults)),
       (* CQWPXCW *)
       (Token: 'CQ-WPX-CW';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CQWPXSSB *)
       (Token: 'CQ-WPX-SSB';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CQWPXRTTY *)
       (Token: 'CQ-WPX-RTTY';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CQWWCW *)
       (Token: 'CQ-WW-CW';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: CustomInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtVE: (Exchange: RSTZoneExchange; InitialExchange: CustomInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtDX: (Exchange: RSTZoneExchange; InitialExchange: CustomInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones)),
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones)),
       (* CQWWSSB *)
       (Token: 'CQ-WW-SSB';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtVE: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtDX: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones)),
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones)),
       (* CROATIAN *)
       (Token: 'CROATIAN';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: DomesticFile; ZoneMult: ITUZones);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: DomesticFile; ZoneMult: ITUZones);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: ITUZones)),
+              DomesticMult: DomesticFile; ZoneMult: ITUZones)),
       (* CUPRFCW *)
       (Token: 'RF-CUP-CW';
        AtUS: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridFields; ZoneMult: NoZoneMults)),
       (* CUPRFSSB *)
       (Token: 'RF-CUP-SSB';
        AtUS: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridFields; ZoneMult: NoZoneMults)),
       (* CUPRFDIG *)
       (Token: 'RF-CUP-DIG';
        AtUS: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndGridSquare; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* CUPURAL *)
       (Token: 'URAL-CUP';
        AtUS: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* EUSPRINT_SPRING_CW *)
       (Token: 'EU-SPRINT-SPRING-CW';
        AtUS: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* EUROPEANHFC *)
       (Token: 'EUROPEAN HFC';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: EUHFCYear);
+              DomesticMult: NoDomesticMults; ZoneMult: EUHFCYear);
        AtVE: (Exchange: RSTZoneExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: EUHFCYear);
+              DomesticMult: NoDomesticMults; ZoneMult: EUHFCYear);
        AtDX: (Exchange: RSTZoneExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: EUHFCYear)),
+              DomesticMult: NoDomesticMults; ZoneMult: EUHFCYear)),
       (* EUROPEANVHF *)
       (Token: 'EUROPEAN VHF';
        AtUS: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* TESLA *)
       (Token: 'HF-TESLA';
        AtUS: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* ARRLFIELDDAY *)
       (Token: 'ARRL-FD';
        AtUS: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* FISTS *)
       (Token: 'FISTS';
        AtUS: (Exchange: RSTQTHNameAndFistsNumberOrPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQTHNameAndFistsNumberOrPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQTHNameAndFistsNumberOrPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* FOCMARATHON *)
       (Token: 'FOC MARATHON';
        AtUS: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* FLORIDAQSOPARTY *)
       (Token: 'FLORIDA QSO PARTY';
        AtUS: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* GACWWWSACW *)
       (Token: 'GACW-WWSA-CW';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtVE: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtDX: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones)),
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones)),
       (* GAGARINCUP *)
       (Token: 'GAGARIN-CUP';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones)),
       (* GENERALQSO *)
       (Token: 'GENERAL QSO';
        AtUS: (Exchange: RSTNameAndQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTNameAndQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTNameAndQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* GRIDLOC *)
       (Token: 'GRID LOC';
        AtUS: (Exchange: NameAndPossibleGridSquareExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndPossibleGridSquareExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndPossibleGridSquareExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults)),
       (* HADX *)
       (Token: 'HA DX';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* YUDX *)
       (Token: 'YUDX';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* UKEI *)
       (Token: 'UKEI';
        AtUS: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* HELVETIA *)
       (Token: 'HELVETIA';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* IARU *)
       (Token: 'IARU-HF';
        AtUS: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtVE: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtDX: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones)),
       (* INTERNETSPRINT *)
       (Token: 'INTERNET SPRINT';
        AtUS: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* IOTA *)
       (Token: 'RSGB-IOTA';
        AtUS: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: IOTADomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: IOTADomestic; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: IOTADomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: IOTADomestic; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: IOTADomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: IOTADomestic; ZoneMult: NoZoneMults)),
       (* JIDXCW *)
       (Token: 'JIDX-CW';
        AtUS: (Exchange: RSTPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* JIDXSSB *)
       (Token: 'JIDX-SSB';
        AtUS: (Exchange: RSTPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* JALONGPREFECT *)
       (Token: 'JA LONG PREFECT';
        AtUS: (Exchange: RSTLongJAPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTLongJAPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTLongJAPrefectureExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* JTDX *)
       (Token: 'MONGOLIAN DX';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCCWithNoJT; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCCWithNoJT; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCCWithNoJT; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* KCJ *)
       (Token: 'KCJ';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* KIDSDAY *)
       (Token: 'KIDS DAY';
        AtUS: (Exchange: KidsDayExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: KidsDayExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: KidsDayExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* KVP *)
       (Token: 'KVP';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: EUHFCYear);
+              DomesticMult: NoDomesticMults; ZoneMult: EUHFCYear);
        AtVE: (Exchange: RSTZoneExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: EUHFCYear);
+              DomesticMult: NoDomesticMults; ZoneMult: EUHFCYear);
        AtDX: (Exchange: RSTZoneExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: EUHFCYear)),
+              DomesticMult: NoDomesticMults; ZoneMult: EUHFCYear)),
       (* LABRE *)
       (Token: 'LABRE';
        AtUS: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* LZDX *)
       (Token: 'LZ DX';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: DomesticFile; ZoneMult: ITUZones);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: DomesticFile; ZoneMult: ITUZones);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: ITUZones)),
+              DomesticMult: DomesticFile; ZoneMult: ITUZones)),
       (* MARCONIMEMORIAL *)
       (Token: 'MARCONI MEMORIAL';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* MINITEST *)
       (Token: 'MINITEST';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* MINI80 *)
       (Token: 'MINI80';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* MINI40 *)
       (Token: 'MINI40';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* MICHQSOPARTY *)
       (Token: 'MICHIGAN QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* MINNQSOPARTY *)
       (Token: 'MINNESOTA QSO PARTY';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* MOQSOPARTY *)
       (Token: 'MISSOURI QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NAQSOCW *)
       (Token: 'NAQP-CW';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NAQSOSSB *)
       (Token: 'NAQP-SSB';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NAQSORTTY *)
       (Token: 'NAQP-RTTY';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NASPRINTCW *)
       (Token: 'NA-SPRINT-CW';
        AtUS: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* SPRINTSSB *)
       (Token: 'SSB-SPRINT';
        AtUS: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NASPRINTRTTY *)
       (Token: 'NA-SPRINT-RTTY';
        AtUS: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NCCCSPRINT *)
       (Token: 'NCCC-SPRINT';
        AtUS: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberNameDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NEWENGLANDQSO *)
       (Token: 'NEQP';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NCQSOPARTY *)
       (Token: 'NC QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NRAUBALTICCW *)
       (Token: 'NRAU-BALTIC-CW';
        AtUS: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NRAUBALTICSSB *)
       (Token: 'NRAU-BALTIC-SSB';
        AtUS: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NZFIELDDAY *)
       (Token: 'NZ FIELD DAY';
        AtUS: (Exchange: NZFieldDayExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: BranchZones);
+              DomesticMult: NoDomesticMults; ZoneMult: BranchZones);
        AtVE: (Exchange: NZFieldDayExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: BranchZones);
+              DomesticMult: NoDomesticMults; ZoneMult: BranchZones);
        AtDX: (Exchange: NZFieldDayExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: BranchZones)),
+              DomesticMult: NoDomesticMults; ZoneMult: BranchZones)),
       (* OCEANIADXCW *)
       (Token: 'OCEANIA-DX-CW';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* OCEANIADXSSB *)
       (Token: 'OCEANIA-DX-SSB';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* OHIOQSOPARTY *)
       (Token: 'OHIO QSO PARTY';
        AtUS: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* OKDX *)
       (Token: 'OK-OM DX CW';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* OLDNEWYEAR *)
       (Token: 'RADIO-ONY';
        AtUS: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTPowerExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* OZCR_O *)
       (Token: 'OZCHR-TEAMS';
        AtUS: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: ITUZones);
+              DomesticMult: NoDomesticMults; ZoneMult: ITUZones);
        AtVE: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: ITUZones);
+              DomesticMult: NoDomesticMults; ZoneMult: ITUZones);
        AtDX: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: ITUZones)),
+              DomesticMult: NoDomesticMults; ZoneMult: ITUZones)),
       (* OZCR_Z *)
       (Token: 'OZCHR';
        AtUS: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtVE: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtDX: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: ITUZones)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones)),
       (* PACC *)
       (Token: 'PACC';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* POTA *)
       (Token: 'POTA';
        AtUS: (Exchange: RSTAndPOTAPark; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndPOTAPark; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndPOTAPark; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* QCWA *)
       (Token: 'QCWA';
        AtUS: (Exchange: QSONumberNameChapterAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberNameChapterAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberNameChapterAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* QCWAGOLDEN *)
       (Token: 'QCWA GOLDEN';
        AtUS: (Exchange: QSONumberNameChapterAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberNameChapterAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberNameChapterAndQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CANADA_WINTER *)
       (Token: 'CANADA WINTER';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* RADIOVHFFD *)
       (Token: 'RF-VHF-FD';
        AtUS: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* RAEM *)
       (Token: 'RAEM';
        AtUS: (Exchange: QSONumberAndGeoCoordinates; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndGeoCoordinates; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndGeoCoordinates; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* RDA *)
       (Token: 'RDAC';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: RDADistrict; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: RDADistrict; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: RDADistrict; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: RDADistrict; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: RDADistrict; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: RDADistrict; ZoneMult: NoZoneMults)),
       (* REGION1FIELDDAY *)
       (Token: 'REGION 1 FIELD DAY';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* REGION1FIELDDAY_RCC_CW *)
       (Token: 'REGION 1 FIELD DAY-RCC-CW';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* REGION1FIELDDAY_RCC_SSB *)
       (Token: 'REGION 1 FIELD DAY-RCC-SSB';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* RFCHAMPIONSHIPCW *)
       (Token: 'RF-CHAMP-CW';
        AtUS: (Exchange: QSONumberAndZone; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: RFChampionchipZones);
+              DomesticMult: DomesticFile; ZoneMult: RFChampionchipZones);
        AtVE: (Exchange: QSONumberAndZone; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: RFChampionchipZones);
+              DomesticMult: DomesticFile; ZoneMult: RFChampionchipZones);
        AtDX: (Exchange: QSONumberAndZone; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: RFChampionchipZones)),
+              DomesticMult: DomesticFile; ZoneMult: RFChampionchipZones)),
       (* RFCHAMPIONSHIPSSB *)
       (Token: 'RF-CHAMP-SSB';
        AtUS: (Exchange: QSONumberAndZone; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: RFChampionchipZones);
+              DomesticMult: DomesticFile; ZoneMult: RFChampionchipZones);
        AtVE: (Exchange: QSONumberAndZone; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: RFChampionchipZones);
+              DomesticMult: DomesticFile; ZoneMult: RFChampionchipZones);
        AtDX: (Exchange: QSONumberAndZone; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: RFChampionchipZones)),
+              DomesticMult: DomesticFile; ZoneMult: RFChampionchipZones)),
       (* RFASCHAMPIONSHIPCW *)
       (Token: 'AS-CHAMP';
        AtUS: (Exchange: QSONumberAndCoordinatesSum; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndCoordinatesSum; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndCoordinatesSum; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* RSGB_ROPOCO_CW *)
       (Token: 'RSGB-ROPOCO-CW';
        AtUS: (Exchange: RSTAndPostalCodeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndPostalCodeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndPostalCodeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* RSGB_ROPOCO_SSB *)
       (Token: 'RSGB-ROPOCO-SSB';
        AtUS: (Exchange: RSTAndPostalCodeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndPostalCodeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndPostalCodeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* RSGB18 *)
       (Token: 'RSGB-160';
        AtUS: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* RUSSIANDX *)
       (Token: 'RDXC';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* SACCW *)
       (Token: 'SAC-CW';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* YBDX *)
       (Token: 'YBDX';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* SACSSB *)
       (Token: 'SAC-SSB';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* SALMONRUN *)
       (Token: 'SALMON RUN';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* SOUTHAMERICANWW *)
       (Token: 'SOUTH AMERICAN WW';
        AtUS: (Exchange: RSTAndContinentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndContinentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndContinentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* SPDX *)
       (Token: 'SP DX';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* STEWPERRY *)
       (Token: 'STEW-PERRY';
        AtUS: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* TENTEN *)
       (Token: 'TEN TEN';
        AtUS: (Exchange: NameQTHAndPossibleTenTenNumber; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameQTHAndPossibleTenTenNumber; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameQTHAndPossibleTenTenNumber; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* TEXASQSOPARTY *)
       (Token: 'TEXAS QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* TOEC *)
       (Token: 'TOEC';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridFields; ZoneMult: NoZoneMults)),
       (* UA4WCHAMPIONSHIP *)
       (Token: 'R4W-CHAMP';
        AtUS: (Exchange: RSTAndGridSquareOrRDAExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndGridSquareOrRDAExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndGridSquareOrRDAExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults)),
       (* UBACW *)
       (Token: 'UBA-DX-CW';
        AtUS: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQUBAEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQUBAEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQUBAEuropeanCountries; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* UBASSB *)
       (Token: 'UBA-DX-SSB';
        AtUS: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQUBAEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQUBAEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQUBAEuropeanCountries; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* UCG *)
       (Token: 'UCG';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* UKRAINECHAMPIONSHIP *)
       (Token: 'UKRAINE CHAMPIONSHIP';
        AtUS: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* UKRAINIAN *)
       (Token: 'UKRAINIAN';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* DARCWAEDCCW *)
       (Token: 'DARC-WAEDC-CW';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* DARCWAEDCSSB *)
       (Token: 'DARC-WAEDC-SSB';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQEuropeanCountries; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* DARCXMAS *)
       (Token: 'DARC-XMAS';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults)),
       (* WAG *)
       (Token: 'WAG';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DOKCodes; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DOKCodes; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DOKCodes; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DOKCodes; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* WISCONSINQSOPARTY *)
       (Token: 'WISCONSIN QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* WWL *)
       (Token: 'WWL';
        AtUS: (Exchange: RSTAndGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndGridExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridFields; ZoneMult: NoZoneMults)),
       (* WWPMC *)
       (Token: 'WW PMC';
        AtUS: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* XMAS *)
       (Token: 'XMAS';
        AtUS: (Exchange: RSTQSONumberAndRandomCharactersExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndRandomCharactersExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndRandomCharactersExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* YODX *)
       (Token: 'YO-DX-HF';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* YOUTHCHAMPIONSHIPRF *)
       (Token: 'SRR-JR';
        AtUS: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* RU3AXMEMORIAL *)
       (Token: 'RU3AX MEMORIAL';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* LQP *)
       (Token: 'LOCUST QSO PARTY';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* ARKTIKA_SPRING *)
       (Token: 'ARKTIKA-SPRING';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults)),
       (* UNDX *)
       (Token: 'UN DX';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* NYQP *)
       (Token: 'NY-QSO-PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* KINGOFSPAINCW *)
       (Token: 'KING-OF-SPAIN-CW';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* KINGOFSPAINSSB *)
       (Token: 'KING-OF-SPAIN-SSB';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* WRTC *)
       (Token: 'WRTC';
        AtUS: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults)),
       (* TENNESSEEQSOPARTY *)
       (Token: 'TENNESSEE QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* COLORADOQSOPARTY *)
       (Token: 'COLORADO QSO PARTY';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* R9W_UW9WK_MEMORIAL *)
       (Token: 'R9W-UW9WK-MEMORIAL';
        AtUS: (Exchange: QSONumberAndZone; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndZone; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndZone; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* PCC *)
       (Token: 'PCC';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* RADIOMEMORY *)
       (Token: 'RADIO-MEMORY';
        AtUS: (Exchange: RSTAgeAndPossibleSK; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAgeAndPossibleSK; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAgeAndPossibleSK; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* DARC10M *)
       (Token: 'DARC-10M';
        AtUS: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DOKCodes; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DOKCodes; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DOKCodes; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DOKCodes; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults)),
       (* REFCW *)
       (Token: 'REF-CW';
        AtUS: (Exchange: RSTAndQSONumberOrFrenchDepartmentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrFrenchDepartmentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrFrenchDepartmentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* REFSSB *)
       (Token: 'REF-SSB';
        AtUS: (Exchange: RSTAndQSONumberOrFrenchDepartmentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrFrenchDepartmentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrFrenchDepartmentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* BSCI *)
       (Token: 'BLACK SEA CUP';
        AtUS: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: BlackSeaCountries; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtVE: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: BlackSeaCountries; ZoneMult: ITUZones);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones);
        AtDX: (Exchange: RSTZoneOrSocietyExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: BlackSeaCountries; ZoneMult: ITUZones)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: ITUZones)),
       (* CQMM *)
       (Token: 'CQMM';
        AtUS: (Exchange: RSTAndContinentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndContinentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndContinentExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* SASPRINT *)
       (Token: 'SA-SPRINT';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* CWOPS *)
       (Token: 'CWOPS';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* OZHCRVHF *)
       (Token: 'OZHCR-VHF';
        AtUS: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults)),
       (* CANADA_DAY *)
       (Token: 'CANADA DAY';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* CQWWRTTY *)
       (Token: 'CQ-WW-RTTY';
        AtUS: (Exchange: RSTZoneAndPossibleDomesticQTHExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: DomesticFile; ZoneMult: CQZones);
        AtVE: (Exchange: RSTZoneAndPossibleDomesticQTHExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: DomesticFile; ZoneMult: CQZones);
        AtDX: (Exchange: RSTZoneAndPossibleDomesticQTHExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: CQZones)),
+              DomesticMult: DomesticFile; ZoneMult: CQZones)),
       (* CWOPEN *)
       (Token: 'CWOPEN';
        AtUS: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtVE: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtDX: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: CQZones)),
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones)),
       (* MAKROTHEN *)
       (Token: 'MAKROTHEN-RTTY';
        AtUS: (Exchange: GridExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: GridExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: GridExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* EUSPRINT_SPRING_SSB *)
       (Token: 'EU-SPRINT-SPRING-SSB';
        AtUS: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* EUSPRINT_AUTUMN_CW *)
       (Token: 'EU-SPRINT-AUTUMN-CW';
        AtUS: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* EUSPRINT_AUTUMN_SSB *)
       (Token: 'EU-SPRINT-AUTUMN-SSB';
        AtUS: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndNameExchange; InitialExchange: NameInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* ARRL_RTTY_ROUNDUP *)
       (Token: 'ARRL-RTTY';
        AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* CQIR *)
       (Token: 'CQIR';
        AtUS: (Exchange: QSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndPossibleDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* WWIH *)
       (Token: 'WWIH';
        AtUS: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtVE: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones);
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones);
        AtDX: (Exchange: RSTZoneExchange; InitialExchange: ZoneInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: CQZones)),
+              DomesticMult: NoDomesticMults; ZoneMult: CQZones)),
       (* ALRS_UA1DZ_CUP *)
       (Token: 'ALRS-UA1DZ-CUP';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: WYSIWYGDomestic; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: WYSIWYGDomestic; ZoneMult: NoZoneMults)),
       (* WINTERFIELDDAY *)
       (Token: 'WINTER FIELD DAY';
        AtUS: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: ClassDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoARRLSections; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* RADIOYOC *)
       (Token: 'RADIO-YOC';
        AtUS: (Exchange: QSONumberAndPreviousQSONumber; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndPreviousQSONumber; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndPreviousQSONumber; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: ARRLDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* PAQSOPARTY *)
       (Token: 'PA QSO PARTY';
        AtUS: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* INQSOPARTY *)
       (Token: 'IN QSO PARTY';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* OKOMSSB *)
       (Token: 'OK-OM DX SSB';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* BATAVIA_FT8 *)
       (Token: 'BATAVIA-FT8';
        AtUS: (Exchange: GridExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: GridExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: GridExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* WWDIGI *)
       (Token: 'WWDIGI';
        AtUS: (Exchange: Grid2Exchange; InitialExchange: GridInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtVE: (Exchange: Grid2Exchange; InitialExchange: GridInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridFields; ZoneMult: NoZoneMults);
        AtDX: (Exchange: Grid2Exchange; InitialExchange: GridInitialExchange;
-              DomesticMult: GridFields; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridFields; ZoneMult: NoZoneMults)),
       (* MWC *)
       (Token: 'MWC';
        AtUS: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* IRTS *)
       (Token: 'IRTS';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: ZoneInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* EUDX *)
       (Token: 'EUDX';
        AtUS: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTZoneOrDomesticQTH; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: CQDXCC; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* BCQP *)
       (Token: 'BCQP';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* VAQP *)
       (Token: 'VAQP';
        AtUS: (Exchange: QSONumberDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* YOTA *)
       (Token: 'YOTA';
        AtUS: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTAgeExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* IN7QPNE *)
       (Token: 'IN7QPNE';
        AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* MST *)
       (Token: 'MST';
        AtUS: (Exchange: QSONumberAndNameExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtVE: (Exchange: QSONumberAndNameExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults);
        AtDX: (Exchange: QSONumberAndNameExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: NoDomesticMults; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: NoDomesticMults; ZoneMult: NoZoneMults)),
       (* SST *)
       (Token: 'SST';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* RTC *)
       (Token: 'RTC';
        AtUS: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTQSONumberAndGridSquareExchange; InitialExchange: GridInitialExchange;
-              DomesticMult: GridSquares; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+              DomesticMult: GridSquares; ZoneMult: NoZoneMults)),
       (* IDAHOQSOPARTY *)
       (Token: 'IDAHO QSO PARTY';
        AtUS: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (* DELAWAREQSOPARTY *)
       (Token: 'DELAWARE QSO PARTY';
        AtUS: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtVE: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults);
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults);
        AtDX: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-              DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults))
+              DomesticMult: DomesticFile; ZoneMult: NoZoneMults))
    );
 
    (* GENERATED ONCE AT M11 S0b, with the table above. One row per party
@@ -1674,91 +1677,91 @@ const
       (Contest: ArizonaQsoParty; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'APH';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: BCQP; MyCall: 'VE7AAA'; MyCountry: 'VE'; MyState: 'ABF';
        MySection: 'BC'; MyGrid: 'CN89';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: CALQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Alam';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: QSONumberDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: COLORADOQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ada';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: DELAWAREQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'NDE';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSACanadaKH6OrKL7; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: FLORIDAQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Alc';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: IDAHOQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'ADA';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: IN7QPNE; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Azaph';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: INQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'INADA';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: MICHQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Alco';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: MINNQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ait';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: MOQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'ADR';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: NCQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'ALA';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: NYQP; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Alb';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: OHIOQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Adam';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: PAQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'ADA';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: SALMONRUN; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ada';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSAOrCanada; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: SEVENQP; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Azaph';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSACanadaKH6OrKL7; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: TENNESSEEQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ande';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: TEXASQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ande';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: ARRLDXCCWithNoUSACanadaKH6OrKL7; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: VAQP; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'ACC';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: QSONumberDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults)),
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults)),
       (Contest: WISCONSINQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ada';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange;
-               DomesticMult: DomesticFile; DXMult: NoDXMults; ZoneMult: NoZoneMults))
+               DomesticMult: DomesticFile; ZoneMult: NoZoneMults))
    );
 
 (* A matrix station -- see the unit header for where each field comes from. *)
@@ -1823,7 +1826,6 @@ begin
    Result.Exchange := definition.ExchangeKind;
    Result.InitialExchange := definition.InitialExchangeKind;
    Result.DomesticMult := definition.DomesticMultiplierType;
-   Result.DXMult := definition.DXMultiplierType;
    Result.ZoneMult := definition.ZoneMultiplierType;
    stated := TSessionDefaults.Create;
    try
@@ -1840,10 +1842,6 @@ begin
          begin
          Result.DomesticMult := stated.DomesticMult;
          end;
-      if stated.IsStated(svDXMult) then
-         begin
-         Result.DXMult := stated.DXMult;
-         end;
       if stated.IsStated(svZoneMult) then
          begin
          Result.ZoneMult := stated.ZoneMult;
@@ -1858,7 +1856,6 @@ begin
    Result := (a.Exchange = b.Exchange)               and
              (a.InitialExchange = b.InitialExchange) and
              (a.DomesticMult = b.DomesticMult)       and
-             (a.DXMult = b.DXMult)                   and
              (a.ZoneMult = b.ZoneMult);
 end;
 
@@ -1868,7 +1865,7 @@ begin
    Result := string(GetEnumName(aInfo, aOrdinal));
 end;
 
-(* Five assertions, by name, so a failure reads as the kind that moved. *)
+(* Four assertions, by name, so a failure reads as the kind that moved. *)
 procedure TContestKindPinTests.CheckKinds(const aExpected: TSessionKinds;
                                           const aActual: TSessionKinds;
                                           const aWho: string;
@@ -1883,13 +1880,10 @@ begin
    CheckEquals(KindName(TypeInfo(DomesticMultType), Ord(aExpected.DomesticMult)),
                KindName(TypeInfo(DomesticMultType), Ord(aActual.DomesticMult)),
                aWho + ' domestic multiplier');
-   CheckEquals(KindName(TypeInfo(DXMultType), Ord(aExpected.DXMult)),
-               KindName(TypeInfo(DXMultType), Ord(aActual.DXMult)),
-               aWho + ' DX multiplier');
    CheckEquals(KindName(TypeInfo(ZoneMultType), Ord(aExpected.ZoneMult)),
                KindName(TypeInfo(ZoneMultType), Ord(aActual.ZoneMult)),
                aWho + ' zone multiplier');
-   Inc(aChecked, 5);
+   Inc(aChecked, 4);
 end;
 
 procedure TContestKindPinTests.RunAllTests;
@@ -1938,17 +1932,19 @@ begin
       Inc(contests);
       end;
 
-   (* EXACT: every ContestType, DUMMYCONTEST included, five kinds at three
-      stations (six until M11 S3 part 2). *)
+   (* EXACT: every ContestType, DUMMYCONTEST included, four kinds at three
+      stations (six until M11 S3 part 2, five until S4 part 2). *)
    CheckEquals(187, contests, 'contests whose kinds were checked');
    CheckEquals(187, Ord(High(ContestType)) + 1,
                'ContestType members -- a new contest adds its row here, by hand');
-   CheckEquals(187 * 3 * 5, checked, 'kind assertions at us, ve and dx');
+   CheckEquals(187 * 3 * 4, checked, 'kind assertions at us, ve and dx');
    (* THE STATION REACHES THE KINDS: at S0b these contests run another kind
-      at one of us, ve and dx than at another -- ARRL160, ARRLDXCW, ARRLDXSSB, DARCWAEDCCW, DARCWAEDCSSB, WAG, DARC10M.
-      The rows determine this count, so it cannot move while they are
-      green; it is stated so a reader sees the station reach the kinds. *)
-   CheckEquals(7, varying, 'contests whose kinds vary across us, ve and dx');
+      at one of us, ve and dx than at another -- ARRL160, ARRLDXCW,
+      ARRLDXSSB, WAG, DARC10M. The rows determine this count, so it cannot
+      move while they are green; it is stated so a reader sees the station
+      reach the kinds. It was 7 until M11 S4 part 2 removed the DX column:
+      DARCWAEDCCW and DARCWAEDCSSB varied in their DX kind only. *)
+   CheckEquals(5, varying, 'contests whose kinds vary across us, ve and dx');
 end;
 
 procedure TContestKindPinTests.Test_EveryPartyRunsItsPinnedKindsInItsHostState;
@@ -2007,21 +2003,23 @@ begin
       end;
 
    CheckEquals(22, parties, 'parties -- a new party adds its us-host row here, by hand');
-   CheckEquals(22 * 5, checked, 'kind assertions at us-host');
+   CheckEquals(22 * 4, checked, 'kind assertions at us-host');
    (* IN THE HOST STATE THE KINDS DIFFER FROM THE us STATION'S for these
-      parties at S0b -- ArizonaQsoParty, CALQSOPARTY, DELAWAREQSOPARTY, SALMONRUN, SEVENQP, TEXASQSOPARTY. *)
-   CheckEquals(6, varying, 'parties whose kinds differ in the host state');
+      parties at S0b -- ArizonaQsoParty, CALQSOPARTY, SALMONRUN, SEVENQP,
+      TEXASQSOPARTY. It was 6 until M11 S4 part 2 removed the DX column:
+      DELAWAREQSOPARTY differed in its DX kind only. *)
+   CheckEquals(5, varying, 'parties whose kinds differ in the host state');
 end;
 
-(* The session's three "does it count this kind" answers, by name. The
-   fourth, prefix, left the session at M11 S3 part 2 with the prefix kind:
-   the contest answers it (TContestBase.HasPrefixMultiplier, pinned by
-   uTestPrefixMultiplierKey), and an answer with no store cannot go stale. *)
-procedure TContestKindPinTests.CheckDoing(aDomestic, aDX, aZone: boolean;
+(* The session's two "does it count this kind" answers, by name. Prefix and
+   DX left the session at M11 S3 and S4 part 2 with their kinds: the contest
+   answers them (TContestBase.HasPrefixMultiplier and HasDXMultiplier, pinned
+   by uTestPrefixMultiplierKey and uTestDXMultiplierKey), and an answer with
+   no store cannot go stale. *)
+procedure TContestKindPinTests.CheckDoing(aDomestic, aZone: boolean;
                                           const aWho: string);
 begin
    CheckTrue(aDomestic = ContestSession.DoingDomesticMults, aWho + ' doing domestic');
-   CheckTrue(aDX = ContestSession.DoingDXMults, aWho + ' doing DX');
    CheckTrue(aZone = ContestSession.DoingZoneMults, aWho + ' doing zone');
 end;
 
@@ -2042,7 +2040,7 @@ end;
 
     * EVERY MEMBER of each multiplier kind, written through the session's
       writer, is answered at once -- no write path can leave a flag behind;
-    * THE SWITCH, at each matrix station: the five kinds each contest
+    * THE SWITCH, at each matrix station: the four kinds each contest
       resolves to (Kinds, FCONTEST's two writes) written over the previous
       contest's, contest after contest through the whole ContestType range,
       and S0d's measured pair, CQ WW CW then ARRL SS CW, by literal.
@@ -2063,21 +2061,19 @@ var
    saved: TSessionKinds;
    resolved: TSessionKinds;
    d: DomesticMultType;
-   x: DXMultType;
    z: ZoneMultType;
    c: ContestType;
    s: integer;
    who: string;
    switches: integer;
 
-   (* What FoundContest leaves in the session: all five kinds, written over
+   (* What FoundContest leaves in the session: all four kinds, written over
       whatever the previous contest left. *)
    procedure WriteSession(const aKinds: TSessionKinds);
    begin
       ContestSession.WriteExchange(aKinds.Exchange);
       ContestSession.WriteInitialExchange(aKinds.InitialExchange);
       ContestSession.WriteDomesticMult(aKinds.DomesticMult);
-      ContestSession.WriteDXMult(aKinds.DXMult);
       ContestSession.WriteZoneMult(aKinds.ZoneMult);
    end;
 
@@ -2093,7 +2089,6 @@ begin
    saved.Exchange := ContestSession.Exchange;
    saved.InitialExchange := ContestSession.InitialExchange;
    saved.DomesticMult := ContestSession.DomesticMult;
-   saved.DXMult := ContestSession.DXMult;
    saved.ZoneMult := ContestSession.ZoneMult;
    try
       (* EVERY MEMBER, ONE KIND AT A TIME. *)
@@ -2102,12 +2097,6 @@ begin
          ContestSession.WriteDomesticMult(d);
          CheckTrue((d <> NoDomesticMults) = ContestSession.DoingDomesticMults,
                    KindName(TypeInfo(DomesticMultType), Ord(d)));
-         end;
-      for x := Low(DXMultType) to High(DXMultType) do
-         begin
-         ContestSession.WriteDXMult(x);
-         CheckTrue((x <> NoDXMults) = ContestSession.DoingDXMults,
-                   KindName(TypeInfo(DXMultType), Ord(x)));
          end;
       for z := Low(ZoneMultType) to High(ZoneMultType) do
          begin
@@ -2121,9 +2110,9 @@ begin
          begin
          (* S0d's MEASURED CASE, by literal. *)
          WriteSession(Kinds(CQWWCW, StationFor(s, CQWWCW)));
-         CheckDoing(False, True, True, 'CQ WW CW at ' + CALLS[s]);
+         CheckDoing(False, True, 'CQ WW CW at ' + CALLS[s]);
          WriteSession(Kinds(ARRLSSCW, StationFor(s, ARRLSSCW)));
-         CheckDoing(True, False, False,
+         CheckDoing(True, False,
                     'CQ WW CW switched to ARRL SS CW at ' + CALLS[s]);
 
          (* EVERY CONTEST, switched to from the one before it. *)
@@ -2133,7 +2122,6 @@ begin
             WriteSession(resolved);
             who := string(ContestTypeSA[c]) + ' at ' + CALLS[s];
             CheckDoing(resolved.DomesticMult <> NoDomesticMults,
-                       resolved.DXMult <> NoDXMults,
                        resolved.ZoneMult <> NoZoneMults,
                        who);
             Inc(switches);

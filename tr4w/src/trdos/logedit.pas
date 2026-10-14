@@ -189,12 +189,16 @@ procedure SetPrefix(var RData: ContestExchange); overload;
   caller that asks it something else for the same QSO (M11 S4). *)
 procedure SetPrefix(aContest: TContestBase; var RData: ContestExchange); overload;
 (* THE QSO'S DX QTH AND PREFIX, FROM ONE CONTEST LOOKUP -- M11 S4. What the
-  QSO entry paths did as two steps (GetDXQTH when the session counts DX
-  multipliers, SetPrefix when the contest counts prefixes), each step
-  fetching the contest for itself. *)
+  QSO entry paths did as two steps (GetDXQTH when the contest counts DX
+  multipliers, SetPrefix when it counts prefixes), each step fetching the
+  contest for itself. *)
 procedure SetDXQTHAndPrefix(var RData: ContestExchange);
 (* Does the active contest have a prefix multiplier at this station? M11 S3. *)
 function DoingPrefixMults: boolean;
+(* Does the active contest have a DX multiplier at this station? M11 S4. *)
+function DoingDXMults: boolean;
+(* Does aContest count any multiplier at all at this station? M11 S4. *)
+function DoingAnyMults(aContest: ContestType): boolean;
 {KK1L: 6.64 Added to keep BM up to date with changes made while logging}
 procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
   ModeType; MakeDupe: boolean);
@@ -979,12 +983,15 @@ var
     on every call; this routine asked it twice through DoingPrefixMults and
     again through SetPrefix, and GetDXQTH now needs it too. *)
   contestRules: TContestBase;
+  (* Asked once: a station test can allocate (ALRS's oblast). M11 S4 part 2. *)
+  countsDX: boolean;
 begin
   Result := 0;
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
   contestRules := ActiveContest(Contest);
+  countsDX := ContestHasDXMultiplier(contestRules);
 
-  if ContestSession.DoingDXMults or ContestSession.DoingZoneMults or
+  if countsDX or ContestSession.DoingZoneMults or
      ContestHasPrefixMultiplier(contestRules) then
      begin
      FillChar(TempRXData, SizeOf(TempRXData), 0);
@@ -995,7 +1002,7 @@ begin
         end;
      end;
 
-  if ContestSession.DoingDXMults then
+  if countsDX then
      begin
      TempRXData.DXQTH := '';
      TempRXData.Callsign := Call;
@@ -2951,15 +2958,15 @@ end;
   path), unchanged in order and in their tests, with the contest fetched
   ONCE: GetDXQTH now asks the contest for the DX key, and asking
   ActiveContest a second time for the prefix would rebuild the station
-  twice per QSO. Whether to take the DX step is still the session's DX
-  kind (DoingDXMults) until M11 S4 part 2 makes it the contest's answer. *)
+  twice per QSO. Whether to take the DX step is the contest's answer
+  (HasDXMultiplier) since M11 S4 part 2, asked of the same object. *)
 procedure SetDXQTHAndPrefix(var RData: ContestExchange);
 var
   contestRules: TContestBase;
 begin
   contestRules := ActiveContest(Contest);
 
-  if ContestSession.DoingDXMults then
+  if ContestHasDXMultiplier(contestRules) then
      begin
      GetDXQTH(contestRules, RData);
      end;
@@ -2987,6 +2994,46 @@ end;
 function DoingPrefixMults: boolean;
 begin
    Result := ContestHasPrefixMultiplier(ActiveContest(Contest));
+end;
+
+(* DOES THE ACTIVE CONTEST HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4
+  part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4, F21).
+
+  This was ContestSession.DoingDXMults, `DXMult <> NoDXMults` over the kind
+  FoundContest resolved once at set-up. The kind is deleted; the contest
+  answers (TContestBase.HasDXMultiplier), against the station ActiveContest
+  hands it on every call -- the station GetDXQTH's key reads, so whether a
+  DX QTH is set and what it is set to follow the same MY CALL (F21, closed).
+
+  For a reader with no contest object in hand, as DoingPrefixMults is. A
+  reader that already holds ActiveContest's object (SetMultFlags, the
+  rescore, SetDXQTHAndPrefix, GetMultArray, FillVisibleBytes) asks
+  ContestHasDXMultiplier on it instead of fetching it again. *)
+function DoingDXMults: boolean;
+begin
+   Result := ContestHasDXMultiplier(ActiveContest(Contest));
+end;
+
+(* DOES aContest COUNT ANY MULTIPLIER AT ALL AT THIS STATION? -- M11 S4 part
+  2, 2026-10-14. The four Doing* answers OR-ed: the session's domestic and
+  zone kinds, then the contest's DX and prefix answers.
+
+  ONE STATEMENT FOR TWO READERS that had each spelled it: the final score's
+  "counts multipliers" (uScoreTotals.GatherScoreTotals) and the WSJT-X decode
+  gate (uWSJTX). The session's two kinds are field reads and come first; the
+  contest is fetched only when both are False, and then ONCE for its two
+  answers -- ActiveContest rebuilds the station on every call. *)
+function DoingAnyMults(aContest: ContestType): boolean;
+var
+   contestRules: TContestBase;
+begin
+   Result := ContestSession.DoingDomesticMults or ContestSession.DoingZoneMults;
+   if not Result then
+      begin
+      contestRules := ActiveContest(aContest);
+      Result := ContestHasDXMultiplier(contestRules) or
+                ContestHasPrefixMultiplier(contestRules);
+      end;
 end;
 
 end.

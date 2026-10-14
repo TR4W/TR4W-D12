@@ -533,10 +533,6 @@ begin
      begin
      ContestSession.WriteDomesticMult(aSession.DomesticMult);
      end;
-  if aSession.IsStated(svDXMult) then
-     begin
-     ContestSession.WriteDXMult(aSession.DXMult);
-     end;
   if aSession.IsStated(svBand) then
      begin
      ActiveBand := aSession.Band;
@@ -808,7 +804,6 @@ begin
   ContestSession.WriteExchange(aContest.ExchangeKind);
   ContestSession.WriteInitialExchange(aContest.InitialExchangeKind);
   ContestSession.WriteDomesticMult(aContest.DomesticMultiplierType);
-  ContestSession.WriteDXMult(aContest.DXMultiplierType);
   ContestSession.WriteZoneMult(aContest.ZoneMultiplierType);
 end;
 

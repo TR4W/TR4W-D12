@@ -19,12 +19,12 @@ from model import SENTINEL
 
 # ActiveQSOPointMethod LEFT THIS MAP AT M10 S4 (2026-10-14), deleted with
 # the point method; ActivePrefixMult (Pxm) left it, and SESSION below, at M11
-# S3 part 2 (2026-10-14), deleted with PrefixMultType.
+# S3 part 2 (2026-10-14), deleted with PrefixMultType; ActiveDXMult (XM) at
+# M11 S4 part 2 (2026-10-14), deleted with DXMultType.
 ACTIVE = {
    "ACTIVEEXCHANGE": "AE",
    "ACTIVEINITIALEXCHANGE": "AIE",
    "ACTIVEDOMESTICMULT": "DM",
-   "ACTIVEDXMULT": "XM",
    "ACTIVEZONEMULT": "ZnM",
 }
 
@@ -39,7 +39,6 @@ SESSION_OBJECT = "CONTESTSESSION"
 SESSION = {
    "INITIALEXCHANGE": "AIE",
    "ZONEMULT": "ZnM",
-   "DXMULT": "XM",
    "DOMESTICMULT": "DM",
    "EXCHANGE": "AE",
 }

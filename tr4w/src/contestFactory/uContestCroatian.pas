@@ -91,7 +91,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -103,10 +102,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      (* SET-UP -- see TContestBase.DescribeSession. *)
-      procedure DescribeSession(const aStation: TStationContext;
-                                aSession: TSessionDefaults); override;
-   public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -259,11 +257,6 @@ begin
    Result := ITUZones;
 end;
 
-function TContestCroatian.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
-end;
-
 function TContestCroatian.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -294,28 +287,26 @@ begin
    Result := False;
 end;
 
-(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
-   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
-   writes no global and reads only aStation. *)
-procedure TContestCroatian.DescribeSession(const aStation: TStationContext;
-                                           aSession: TSessionDefaults);
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for a Croatian entrant; none for anyone else. This is the
+   station test the session's DX kind was chosen by (the trait, then
+   DescribeSession) until that kind was deleted; DXMultiplierKey asks it, so
+   the two cannot disagree. *)
+function TContestCroatian.HasDXMultiplier: boolean;
 begin
-   if aStation.MyCountry = '9A' then
-      begin
-      aSession.DXMult := CQDXCC;
-      end;
+   Result := Station.MyCountry = '9A';
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country, for a Croatian entrant (CQDXCC, which DescribeSession
-   states for 9A); none for anyone else, whose session runs the trait's
+   states for 9A); none for anyone else, whose session ran the trait's
    NoDXMults. *)
 function TContestCroatian.DXMultiplierKey(const aQso: ContestExchange;
                                           out aKey: DXMultiplierString): boolean;
 begin
    aKey := '';
    Result := False;
-   if Station.MyCountry = '9A' then
+   if HasDXMultiplier then
       begin
       aKey := aQso.QTH.CountryID;
       Result := True;

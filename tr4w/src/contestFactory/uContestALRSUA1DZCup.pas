@@ -71,7 +71,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -97,10 +96,14 @@ type
    private
       (* DOES THIS ENTRANT COUNT RDA DISTRICTS? -- a Russian station outside
          St Petersburg and its oblast does, with no DX multiplier and no
-         domestic file. DescribeSession states the session under it and the
-         DX key asks it, so the two cannot disagree (M11 S4). *)
+         domestic file. DescribeSession states the session under it, and
+         HasDXMultiplier and the DX key ask it, so they cannot disagree
+         (M11 S4). *)
       class function CountsRDADistricts(const aStation: TStationContext): boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -250,11 +253,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestALRSUA1DZCup.GetDXMultiplierType: DXMultType;
-begin
-   Result := CQDXCC;
-end;
-
 function TContestALRSUA1DZCup.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := WYSIWYGDomestic;
@@ -313,11 +311,10 @@ procedure TContestALRSUA1DZCup.DescribeSession(const aStation: TStationContext;
 begin
    aSession.LiteralDomesticQTH := True;
    (* A RUSSIAN STATION OUTSIDE ST PETERSBURG AND ITS OBLAST counts RDA
-      districts, with no DX multiplier and no domestic file -- see
-      CountsRDADistricts. *)
+      districts, with no domestic file -- see CountsRDADistricts -- and no
+      DX multiplier, which HasDXMultiplier says (M11 S4 part 2). *)
    if CountsRDADistricts(aStation) then
       begin
-      aSession.DXMult := NoDXMults;
       aSession.DomesticMult := RDADistrict;
       aSession.DomesticFile := '';
       aSession.MultByBand := False;
@@ -343,10 +340,21 @@ begin
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURRDAIDORGRID, ncfMyState);
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes, except for a Russian entrant outside St Petersburg and
+   its oblast, who counts RDA districts instead (CountsRDADistricts). This is
+   the station test the session's DX kind was chosen by (the trait, then
+   DescribeSession) until that kind was deleted; DXMultiplierKey and the
+   country list ask the same predicate, so the answers cannot disagree. *)
+function TContestALRSUA1DZCup.HasDXMultiplier: boolean;
+begin
+   Result := not CountsRDADistricts(Station);
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country (the trait's CQDXCC), except for a Russian entrant
    outside St Petersburg and its oblast, who counts RDA districts and no DX
-   multiplier -- the station test DescribeSession states that under, which
+   multiplier -- the station test DescribeSession stated that under, which
    both now ask (CountsRDADistricts). *)
 function TContestALRSUA1DZCup.DXMultiplierKey(const aQso: ContestExchange;
                                               out aKey: DXMultiplierString): boolean;

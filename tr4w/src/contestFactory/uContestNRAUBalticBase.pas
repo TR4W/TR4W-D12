@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -130,11 +129,6 @@ end;
 function TContestNRAUBalticBase.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
-end;
-
-function TContestNRAUBalticBase.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
 end;
 
 function TContestNRAUBalticBase.GetDomesticMultiplierType: DomesticMultType;

@@ -74,7 +74,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -107,6 +106,9 @@ type
       (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
       function GetReportsRunningScore: boolean; override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -225,11 +227,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestRU3AXMemorial.GetDXMultiplierType: DXMultType;
-begin
-   Result := ARRLDXCC;
-end;
-
 function TContestRU3AXMemorial.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -315,6 +312,13 @@ end;
 function TContestRU3AXMemorial.GetReportsRunningScore: boolean;
 begin
    Result := False;
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`ARRLDXCC`) until the kind was deleted. *)
+function TContestRU3AXMemorial.HasDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.

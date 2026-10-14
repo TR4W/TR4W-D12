@@ -150,7 +150,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -179,10 +178,6 @@ type
       (* All HF but WARC, and 6 m up -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
 
-      (* SET-UP: an out-of-state entrant counts no DX multiplier. *)
-      procedure DescribeSession(const aStation: TStationContext;
-                                aSession: TSessionDefaults); override;
-
       (* ' 5NN ' and the state or county this station sends. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
 
@@ -195,10 +190,14 @@ type
                            aView: TLoggedQSOView): longint; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
-         DescribeSession states the session's DX kind under; the key and the
-         country list ask it, so the two cannot disagree (M11 S4). *)
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
       function CountsDXMultiplier: boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -296,13 +295,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestDelawareQP.GetDXMultiplierType: DXMultType;
-begin
-   (* An in-state entrant's DXCC entities, outside the states and provinces
-      its domestic file already counts -- Alaska and Hawaii among them. *)
-   Result := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-end;
-
 function TContestDelawareQP.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -398,19 +390,6 @@ begin
                        BandLight];
 end;
 
-(* BOTH SIDES OF THE STATE LINE, STATED (inventory D8). In state the row's
-   DX multiplier stands; out of state there is none, because such an
-   entrant works only Delaware stations. Nothing else is stated: the row's
-   exchange serves both sides (see the header). *)
-procedure TContestDelawareQP.DescribeSession(const aStation: TStationContext;
-                                             aSession: TSessionDefaults);
-begin
-   if not aStation.InHostState then
-      begin
-      aSession.DXMult := NoDXMults;
-      end;
-end;
-
 function TContestDelawareQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    (* aStation.MyState is the state the session SENDS (design 7.11/7.12): a
@@ -443,10 +422,21 @@ begin
    Result := Station.InHostState;
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for an entrant inside Delaware; none outside, because such
+   an entrant works only Delaware stations. This is the station test the
+   session's DX kind was chosen by (the trait, then DescribeSession) until
+   that kind was deleted; DXMultiplierKey and the country list ask the same
+   predicate, so the answers cannot disagree. *)
+function TContestDelawareQP.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country but the USA, Canada, Hawaii and Alaska, for an entrant inside Delaware (the trait's
    ARRLDXCCWithNoUSACanadaKH6OrKL7); none for anyone else, whose
-   DescribeSession states NoDXMults. *)
+   DescribeSession stated NoDXMults. *)
 function TContestDelawareQP.DXMultiplierKey(const aQso: ContestExchange;
                                             out aKey: DXMultiplierString): boolean;
 begin

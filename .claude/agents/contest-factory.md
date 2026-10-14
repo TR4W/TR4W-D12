@@ -135,8 +135,8 @@ the target shape, the M-step migration order and the open questions.
   `docs/CONTEST_FACTORY_M10_PLAN.md`).** The six `Active*` KIND globals are
   gone: the session's kinds are read-only properties of
   `uContestSession.ContestSession` (`Exchange`, `InitialExchange`,
-  `ZoneMult`, `DXMult`, `DomesticMult`; `PrefixMult` was deleted at M11
-  S3), written only by
+  `ZoneMult`, `DomesticMult`; `PrefixMult` was deleted at M11 S3 and
+  `DXMult` at M11 S4), written only by
   FCONTEST's set-up through `Write*`. They are SESSION facts -- 27 contests
   run a kind their trait does not state -- so never answer one from
   `ContestIdentity`. **M11 is next:** the six kind enums and their ~80 engine
@@ -144,7 +144,7 @@ the target shape, the M-step migration order and the open questions.
   traits and enums are then deleted.
 - **M11 RUNS AS `docs/CONTEST_FACTORY_M11_PLAN.md` (S0-S10); S0a, S0b, S0d
   DONE 2026-10-14.** Three durable facts from S0:
-  - **`uTestContestKindPin` freezes the kinds every contest RUNS** (six; five since M11 S3 removed the prefix column) (trait,
+  - **`uTestContestKindPin` freezes the kinds every contest RUNS** (six; four since M11 S3 and S4 removed the prefix and DX columns) (trait,
     then `DescribeSession`, as FCONTEST resolves them) at every matrix
     station, generated once and proved equal to all 580 frozen matrix
     records first. Same rule as `uTestContestIdentityPin`: NEVER regenerate
@@ -207,8 +207,11 @@ the target shape, the M-step migration order and the open questions.
   fails on a missing answer and on a key given where `HasPrefixMultiplier`
   is False. `LOGEDIT.DoingPrefixMults` is that answer for the active
   contest; there is no session flag for it.
-- **THE DX MULTIPLIER IS THE CLASS'S (M11 S4 part 1, 2026-10-14).** Three
+- **THE DX MULTIPLIER IS THE CLASS'S (M11 S4, 2026-10-14).** Four
   virtuals, each with a nil-safe `Contest...` free function:
+  `HasDXMultiplier: boolean` (base False -- part 2, which DELETED
+  `DXMultType`, the `DXMultiplierType` trait, the session's `DXMult` and
+  every `DescribeSession` DX statement; there is no DX kind to state),
   `DXMultiplierKey(aQso, out aKey: DXMultiplierString): boolean` (base
   False; False = "leave the DX QTH as it was", as for the prefix),
   `CountryMode: CountryModeType` (base CQ -- the North American kind was
@@ -224,13 +227,19 @@ the target shape, the M-step migration order and the open questions.
   `uDXMultiplierKey` (K/VE; K/VE/KH6/KL; the ARRL section countries; North
   America but K/VE/KL); every-country, a continent, one excluded country and
   PACC's split are written in the class. WAE's `CombineWithMultipliers`
-  asks its station, not `TScoreTotals.SessionDXMult` (unread now; part 2
-  deletes it with `DXMultType`). A NEW DX contest overrides
-  `DXMultiplierKey` (and `CountryMode` if it counts DXCC only) and adds rows
-  to `uTestDXMultiplierKey`'s `KEY_PINS` (and `MODE_PINS`), whose counts
-  (78 keyed, 36 ARRL) then change by hand, with the reason. Until part 2,
-  whether the engine asks the key at all is still `DoingDXMults`, the
-  session kind fixed at set-up (plan F21).
+  asks its station (`TScoreTotals.SessionDXMult` is deleted). Where the
+  entrant decides, `HasDXMultiplier` returns the SAME private predicate the
+  key and the list ask (the Croatian, WAG and PACC hold the test in
+  `HasDXMultiplier` and their keys ask it), so the answers cannot disagree.
+  A NEW DX contest overrides `HasDXMultiplier` AND `DXMultiplierKey` (and
+  `CountryMode` if it counts DXCC only), adds rows to
+  `uTestDXMultiplierKey`'s `KEY_PINS` (and `MODE_PINS`) and adds itself to
+  its `HAS_DX` sets: the counts (78 keyed and True somewhere, 36 ARRL, the
+  per-station `HAS_DX_COUNT`) then change by hand, with the reason.
+  `Test_EveryContestHasItsPinnedDXMultiplier` fails on a missing answer and
+  on a key given where `HasDXMultiplier` is False. `LOGEDIT.DoingDXMults`
+  is that answer for the active contest -- live, so F21 is closed; there is
+  no session flag for it.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by
@@ -312,7 +321,7 @@ the target shape, the M-step migration order and the open questions.
   and holds the enum-spelled display names as a ratchet (design Q53).
 - **Set-up reads the contest** (M2, 2026-10-01). `FCONTEST.ApplyContestTraits`
   is the ONE writer (with `ApplySessionDefaults` after it) of the session's
-  kinds (five since M11 S3) -- `ContestSession`, the `Active*` globals until M10 S9 -- the QSO/mult by band/mode
+  kinds (four since M11 S3 and S4) -- `ContestSession`, the `Active*` globals until M10 S9 -- the QSO/mult by band/mode
   flags, VHF, count-domestic-countries, the CTY zone list and (in the head)
   the domestic file: **the operator's statement (`CommandIsStated`), else
   `ContestIdentity(Contest)`** -- the tables it once could read are deleted

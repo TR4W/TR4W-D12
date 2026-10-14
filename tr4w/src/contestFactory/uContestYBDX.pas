@@ -75,7 +75,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -99,6 +98,9 @@ type
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -207,15 +209,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestYBDX.GetDXMultiplierType: DXMultType;
-begin
-   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
-      ARRLDXCC at every station: the trait said NoDXMults and
-      DescribeSession stated it over it, unconditionally. The
-      trait now says what runs, and the statement is gone. *)
-   Result := ARRLDXCC;
-end;
-
 function TContestYBDX.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -267,6 +260,13 @@ function TContestYBDX.PrefixMultiplierKey(const aQso: ContestExchange;
                                           out aKey: PrefixMultiplierString): boolean;
 begin
    aKey := PrefixMultiplierString(IndonesianDistrict(aQso.QTH, string(Station.MyCountry)));
+   Result := True;
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`ARRLDXCC`) until the kind was deleted. *)
+function TContestYBDX.HasDXMultiplier: boolean;
+begin
    Result := True;
 end;
 

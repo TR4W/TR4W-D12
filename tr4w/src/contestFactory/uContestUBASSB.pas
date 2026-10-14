@@ -72,7 +72,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -112,6 +111,9 @@ type
          remaining-mults filter ask it (M11 S4). *)
       function CountsUBACountries: boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -222,11 +224,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestUBASSB.GetDXMultiplierType: DXMultType;
-begin
-   Result := CQUBAEuropeanCountries;
-end;
-
 function TContestUBASSB.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -264,7 +261,6 @@ begin
    aSession.LiteralDomesticQTH := True;
    if aStation.MyCountry = 'ON' then
       begin
-      aSession.DXMult := CQDXCC;
       aSession.DomesticMult := NoDomesticMults;
       aSession.Band := Band80;
       end
@@ -344,10 +340,19 @@ begin
    Result := not CountsUBACountries or UBACountry(aCountryID);
 end;
 
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`CQUBAEuropeanCountries`) and, for a Belgian entrant,
+   the kind its DescribeSession stated (`CQDXCC`) -- a DX multiplier either
+   way -- until the kind was deleted. *)
+function TContestUBASSB.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    UBA's European countries (uCallSignRoutines.UBACountry) for an entrant
    outside Belgium -- the trait's CQUBAEuropeanCountries; every country for a
-   Belgian, whose DescribeSession states CQDXCC. *)
+   Belgian, whose DescribeSession stated CQDXCC. *)
 function TContestUBASSB.DXMultiplierKey(const aQso: ContestExchange;
                                         out aKey: DXMultiplierString): boolean;
 begin

@@ -28,7 +28,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   WHY THE UNIT IS A CONTEST AND NOT A STRATEGY ENUM. TR4W decomposed a
   contest into strategy enums -- QSOPointMethodType (deleted at M10 S4),
-  ExchangeType, DXMultType, PrefixMultType (deleted at M11 S3), ZoneMultType --
+  ExchangeType, DXMultType (deleted at M11 S4), PrefixMultType (deleted at
+  M11 S3), ZoneMultType --
   each dispatched by
   its own `case`, and it would have been less work to turn each enum into a
   class. That is the wrong object model for this program:
@@ -637,9 +638,10 @@ type
          Active* multiplier kinds are all None. *)
       SessionCountsMultipliers: boolean;
 
-      (* The session's exchange and DX multiplier kind. *)
+      (* The session's exchange. (Its DX multiplier kind stood beside it until
+         M11 S4 part 2 deleted the kind; WAE, its last reader, asks its own
+         station since S4 part 1.) *)
       SessionExchange: ExchangeType;
-      SessionDXMult: DXMultType;
 
       (* A COUNT KEPT WHILE THE PROGRAM RUNS, NOT FROM THE LOG -- see
          TContestBase.TalliesLiveQSO, which says why it exists and that it is
@@ -712,7 +714,7 @@ type
       last two the arms wrote: the initial-exchange cursor at the start (IRTS,
       RAEM) and the DXCC multiplier by band (CQMM). *)
    TSessionValue = (
-      svExchange, svDomesticMult, svDXMult,
+      svExchange, svDomesticMult,
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
       svInitialExchange, svZoneMult, svDXMultLimit,
       svInitialExchangeCursorAtStart, svDXCCMultByBand,
@@ -786,7 +788,6 @@ type
       FStated: TSessionValues;
       FExchange: ExchangeType;
       FDomesticMult: DomesticMultType;
-      FDXMult: DXMultType;
       FBand: BandType;
       FMode: ModeType;
       FDomesticMultByBand: TAdditionalMultByBand;
@@ -804,7 +805,6 @@ type
       procedure Stated(aValue: TSessionValue);
       procedure SetExchange(aValue: ExchangeType);
       procedure SetDomesticMult(aValue: DomesticMultType);
-      procedure SetDXMult(aValue: DXMultType);
       procedure SetBand(aValue: BandType);
       procedure SetMode(aValue: ModeType);
       procedure SetDomesticMultByBand(aValue: TAdditionalMultByBand);
@@ -824,12 +824,12 @@ type
       (* DID THE CONTEST STATE THIS VALUE? The applier writes nothing else. *)
       function IsStated(aValue: TSessionValue): boolean;
 
-      (* THE ENGINE'S CHOICES -- ActiveExchange, the session's DomesticMult,
-         and DXMult (uContestSession, M10 S9d/S9e),
-         ActiveBand, ActiveMode, DomesticMultByBand and tAllowDupeQSOs. *)
+      (* THE ENGINE'S CHOICES -- ActiveExchange, the session's DomesticMult
+         (uContestSession, M10 S9e), ActiveBand, ActiveMode,
+         DomesticMultByBand and tAllowDupeQSOs. (DXMult went with the DX kind
+         at M11 S4 part 2: the contest answers HasDXMultiplier.) *)
       property Exchange: ExchangeType read FExchange write SetExchange;
       property DomesticMult: DomesticMultType read FDomesticMult write SetDomesticMult;
-      property DXMult: DXMultType read FDXMult write SetDXMult;
       property Band: BandType read FBand write SetBand;
       property Mode: ModeType read FMode write SetMode;
       property DomesticMultByBand: TAdditionalMultByBand
@@ -1157,7 +1157,6 @@ type
       function GetFriendlyName: string; virtual;
       function GetQRZRUId: integer; virtual;
       function GetZoneMultiplierType: ZoneMultType; virtual;
-      function GetDXMultiplierType: DXMultType; virtual;
       function GetDomesticMultiplierType: DomesticMultType; virtual;
       function GetInitialExchangeKind: InitialExchangeType; virtual;
       function GetExchangeKind: ExchangeType; virtual;
@@ -1389,7 +1388,6 @@ type
       property FriendlyName: string read GetFriendlyName;
       property QRZRUId: integer read GetQRZRUId;
       property ZoneMultiplierType: ZoneMultType read GetZoneMultiplierType;
-      property DXMultiplierType: DXMultType read GetDXMultiplierType;
       property DomesticMultiplierType: DomesticMultType read GetDomesticMultiplierType;
       property InitialExchangeKind: InitialExchangeType read GetInitialExchangeKind;
       property ExchangeKind: ExchangeType read GetExchangeKind;
@@ -1684,21 +1682,49 @@ type
          A RULE THAT DEPENDS ON THE ENTRANT ASKS Station (ARRL DX, ARRL 160,
          the All Asian, JIDX, SAC, Helvetia, the Croatian, WAG, UBA, WAE,
          PACC, RDA, the ALRS cup, YU DX's list, and the parties' host-state
-         rules), testing exactly what its DescribeSession tests to choose the
+         rules), testing exactly what its DescribeSession tested to choose the
          session's DX kind. Station is refreshed on every ActiveContest call,
-         so the rule follows MY CALL live; whether GetDXQTH runs at all still
-         follows the session kind fixed at set-up (plan F21) until S4 part 2.
+         so the rule follows MY CALL live -- and since M11 S4 part 2 so does
+         whether GetDXQTH runs at all (HasDXMultiplier, below; F21 closed).
 
          THE BASE ANSWERS FALSE -- what GetDXQTH did for every NoDXMults
          session. *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; virtual;
 
+      (* DOES THIS CONTEST HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4
+         part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4, F21).
+
+         It replaces the session's DX KIND, deleted with DXMultType: the
+         engine asked `kind <> NoDXMults` (ContestSession's DoingDXMults)
+         whether to run GetDXQTH at all, flag a DX multiplier, show the DX
+         column, list the remaining countries and total them. That question
+         has no QSO in hand, so it cannot be "does the key assign", and it is
+         answered here, per contest, against Station.
+
+         LIVE, NOT FIXED AT SET-UP. The kind was resolved once, by
+         FoundContest, while the key, the country list and the remaining-
+         countries filter read Station on every call; a mid-session change of
+         the entrant's country, continent or host state left them disagreeing
+         (plan F21). All read Station now. A contest whose answer depends on
+         the entrant tests exactly what its DescribeSession tested to choose
+         the kind, through the private predicate its key and country list
+         already ask (ARRL DX, ARRL 160, the All Asian, JIDX, SAC, Helvetia,
+         the Croatian, WAG, WAE, PACC, RDA, the ALRS cup and the host-state
+         parties); every other DX contest answers True.
+
+         INVARIANT: DXMultiplierKey assigns only where this is True -- pinned
+         for every contest at every roster station by uTestDXMultiplierKey.
+         THE BASE ANSWERS FALSE. *)
+      function HasDXMultiplier: boolean; virtual;
+
       (* WHICH CTY COUNTRY LIST THIS CONTEST COUNTS -- M11 S4, 2026-10-14.
          ARRLCountryMode is DXCC only; CQCountryMode is DXCC plus the WAE
          countries. The CONTEST setting's effect (uSettingsEffects) asks it
          once, straight after FoundContest, and tells CTY.DAT; it stood there
-         as `ContestSession.DXMult in [the six ARRL kinds]`.
+         as `ContestSession.DXMult in [the six ARRL kinds]`. This is DATA, the
+         list CTY.DAT resolves calls against, so CountryModeType outlives the
+         DX kind (M11 S4 part 2).
 
          CQ IS THE ANSWER FOR NO DX MULTIPLIER TOO -- a station that runs
          none gets the CQ list, and so does the North American kind, its
@@ -1709,7 +1735,7 @@ type
 
       (* DOES THE REMAINING-MULTS WINDOW LIST THIS COUNTRY? -- M11 S4,
          2026-10-14. uMults.FillVisibleBytes asks it per CTY country, only
-         where the session counts DX multipliers. It reproduces the window's
+         where the contest has a DX multiplier (HasDXMultiplier). It reproduces the window's
          filters exactly (WAE's European countries for an entrant outside
          Europe, UBA's list for an entrant outside Belgium; the third, the
          non-European countries, ran for no contest) -- NOT the whole DX
@@ -2411,6 +2437,12 @@ function ContestHasPrefixMultiplier(aContest: TContestBase): boolean;
 function ContestDXMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
                                 out aKey: DXMultiplierString): boolean;
 
+(* DOES aContest HAVE A DX MULTIPLIER AT ITS STATION? -- see
+   TContestBase.HasDXMultiplier. nil answers False: the classless
+   DUMMYCONTEST ran NoDXMults. LOGEDIT.DoingDXMults asks it of the active
+   contest; a caller already holding the object asks it here. *)
+function ContestHasDXMultiplier(aContest: TContestBase): boolean;
+
 (* THE CTY COUNTRY LIST aContest COUNTS -- see TContestBase.CountryMode. nil
    answers CQCountryMode, as NoDXMults did. *)
 function ContestCountryMode(aContest: TContestBase): CountryModeType;
@@ -2562,11 +2594,6 @@ end;
 function TContestBase.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
-end;
-
-function TContestBase.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
 end;
 
 function TContestBase.GetDomesticMultiplierType: DomesticMultType;
@@ -2754,6 +2781,18 @@ begin
    else
       begin
       Result := aContest.DXMultiplierKey(aQso, aKey);
+      end;
+end;
+
+function ContestHasDXMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.HasDXMultiplier;
       end;
 end;
 
@@ -3067,6 +3106,12 @@ function TContestBase.DXMultiplierKey(const aQso: ContestExchange;
 begin
    (* No DX multiplier -- see the declaration. *)
    aKey := '';
+   Result := False;
+end;
+
+function TContestBase.HasDXMultiplier: boolean;
+begin
+   (* No DX multiplier -- see the declaration. *)
    Result := False;
 end;
 
@@ -3615,12 +3660,6 @@ procedure TSessionDefaults.SetDomesticMult(aValue: DomesticMultType);
 begin
    FDomesticMult := aValue;
    Stated(svDomesticMult);
-end;
-
-procedure TSessionDefaults.SetDXMult(aValue: DXMultType);
-begin
-   FDXMult := aValue;
-   Stated(svDXMult);
 end;
 
 procedure TSessionDefaults.SetBand(aValue: BandType);

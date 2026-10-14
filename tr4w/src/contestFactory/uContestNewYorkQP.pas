@@ -98,7 +98,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -184,11 +183,6 @@ end;
 function TContestNewYorkQP.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
-end;
-
-function TContestNewYorkQP.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
 end;
 
 function TContestNewYorkQP.GetDomesticMultiplierType: DomesticMultType;

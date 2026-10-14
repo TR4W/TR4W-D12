@@ -78,7 +78,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -198,11 +197,6 @@ end;
 function TContestUCG.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
-end;
-
-function TContestUCG.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
 end;
 
 function TContestUCG.GetDomesticMultiplierType: DomesticMultType;

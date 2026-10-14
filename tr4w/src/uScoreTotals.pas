@@ -69,8 +69,8 @@ uses
    VC, uContestBase;
 
 (* THE TOTALS AS THE PROGRAM HOLDS THEM NOW -- see TScoreTotals. aContest is
-   the session's contest: whether it has a prefix multiplier is its answer
-   (M11 S3), not the session's. *)
+   the session's contest: whether it has a prefix or a DX multiplier is its
+   answer (M11 S3, S4), not the session's. *)
 procedure GatherScoreTotals(aContest: ContestType; out aTotals: TScoreTotals);
 
 (* THE VIEW, KEPT WITH THE TOTALS -- see the header. Reset empties it; Add
@@ -98,9 +98,11 @@ uses
    uMults,
    uContestFactory,
    uContestRegistry,
-   (* ContestSession -- the session's kinds and Doing*Mults answers (M10 S9,
-      M11 S2). *)
-   uContestSession;
+   (* ContestSession -- the session's exchange (M10 S9f). *)
+   uContestSession,
+   (* DoingAnyMults -- "counts multipliers", one statement shared with the
+      WSJT-X decode gate (M11 S4 part 2). *)
+   LogEdit;
 
 var
    (* Created on first use, freed at finalization. The contest only ever sees
@@ -161,14 +163,8 @@ begin
       end;
 
    aTotals.ScoredBand := SingleBand;
-   (* The prefix answer last: it is the contest's, and asking costs an
-      ActiveContest (a station rebuild) the three session reads do not. *)
-   aTotals.SessionCountsMultipliers := ContestSession.DoingDomesticMults or
-                                       ContestSession.DoingDXMults       or
-                                       ContestSession.DoingZoneMults     or
-                                       ContestHasPrefixMultiplier(ActiveContest(aContest));
+   aTotals.SessionCountsMultipliers := DoingAnyMults(aContest);
    aTotals.SessionExchange := ContestSession.Exchange;
-   aTotals.SessionDXMult := ContestSession.DXMult;
    aTotals.LiveSessionTally := LiveSessionTally;
 end;
 

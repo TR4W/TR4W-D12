@@ -229,8 +229,20 @@ fetches it again: `ActiveContest` rebuilds the station each time. The CTY
 country list is the class's `CountryMode` (asked by `uSettingsEffects`
 straight after FoundContest) and the remaining-mults window's filter its
 `ListsRemainingDXCountry` (`mo.FillVisibleBytes(aContest)`), which reproduces
-the window's old filters ONLY (F7). Neither reads the DX kind now; part 2
-deletes `DXMultType`. `LOGDUPE.GetNumber` went with the PACC arm, to
+the window's old filters ONLY (F7). **`DXMultType` IS DELETED (M11 S4
+part 2, 2026-10-14)** -- enum, trait, session field, `WriteDXMult`,
+`TSessionDefaults.DXMult`, `TScoreTotals.SessionDXMult`, the
+`DescribeSession` statements and the matrix's `active.dxmult` line.
+`CountryModeType` stays: the ARRL/CQ list is data. Whether a contest has a
+DX multiplier at all is the class's `HasDXMultiplier` (base False), asked
+as `LOGEDIT.DoingDXMults` or, where the object is in hand (`SetMultFlags`,
+the rescore, `SetDXQTHAndPrefix`, `GetMultArray`, `FillVisibleBytes`),
+`ContestHasDXMultiplier(obj)`: live against `Station`, like the key, so F21
+is closed. Where the entrant decides, it is the SAME private predicate the
+key and the list ask. "Counts any multiplier" is ONE function,
+`LOGEDIT.DoingAnyMults(aContest)` (the score's totals and the WSJT-X decode
+gate), fetching the contest at most once. Do not bring back a stored "doing
+DX" flag. `LOGDUPE.GetNumber` went with the PACC arm, to
 `uContestPACC.PACCCallAreaDigit` -- not the same routine as
 `uCallSignRoutines.GetNumber`. A multiplier KIND's arm that has NOT moved (the
 remaining-mult lists, the zone and domestic kinds) stays keyed on the kind
@@ -258,9 +270,9 @@ created once in that leaf unit's initialization, never replaced, read-only
 properties, written ONLY by FCONTEST's set-up path (`ApplyContestTraits`,
 then `ApplySessionDefaults`) through `Write*` methods -- not `Set*`, which
 `TSessionDefaults` already uses for what a contest STATES. Main thread only,
-as the globals were. **It holds five kinds -- `Exchange`,
-`InitialExchange`, `ZoneMult`, `DXMult` and `DomesticMult`** (the sixth,
-`PrefixMult`, was deleted at M11 S3 part 2)
+as the globals were. **It holds four kinds -- `Exchange`,
+`InitialExchange`, `ZoneMult` and `DomesticMult`** (`PrefixMult` was
+deleted at M11 S3 part 2, `DXMult` at M11 S4 part 2)
 (were `LOGWIND.ActiveExchange`, `ActiveInitialExchange`,
 `ActivePrefixMult`, `ActiveZoneMult`, `VC.ActiveDXMult`,
 `LOGDOM.ActiveDomesticMult`; S9a-f). **No `Active*` kind global is left --
@@ -269,8 +281,8 @@ M10 IS COMPLETE (2026-10-14).** Do not add one back: a new reader asks
 zero is `UnknownExchange` (the global's `= NoExchangeReceived` initializer
 was commented out). `tree.LooksLikeAGrid` reads it once per log row per
 repaint -- one call and a field load, ahead of any string work; keep it
-first. **What M11 inherits:** the six kind ENUMS (five since M11 S3; the DX
-kind's readers moved at S4 part 1 and the enum goes at its part 2) and their ~80 engine arms
+first. **What M11 inherits:** the six kind ENUMS (four since M11 S3 and S4
+deleted the prefix and DX kinds) and their ~80 engine arms
 (shape parsers, sheet, display, exporters), every one reading
 `ContestSession`. **The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
@@ -280,10 +292,9 @@ live caller, so the order is right; a new caller of `FoundContest` must set
 it too.
 **Never repoint a kind reader to `ContestIdentity(Contest)`**: it is the
 SESSION's value, and 24 contests run a kind their trait does not state at a
-matrix station, 32 at some station (M11 S2) -- JIDX CW: trait
-`NoInitialExchange`, a JA station runs `ZoneInitialExchange`; WAEDC CW: trait
-`NoDXMults`, a W station runs `CQEuropeanCountries`;
-ARRL 160: trait `NoDXMults`, a W station runs `ARRLDXCCWithNoARRLSections`;
+matrix station, 32 at some station (M11 S2; counted with the prefix and
+DX kinds, both since deleted) -- JIDX CW: trait
+`NoInitialExchange`, a JA station runs `ZoneInitialExchange`;
 OK/OM DX: trait `NoDomesticMults`, a W station runs `DomesticFile`; ARRL DX
 CW: trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`.
 **One statement per kind per class (M11 S2):** a kind a class runs at EVERY
@@ -291,9 +302,9 @@ station is its trait, never an unconditional `DescribeSession` restatement --
 KCJ, YBDX, ARRL 10 and Field Day were aligned that way, and 12 restatements
 deleted. `DescribeSession` states a kind only where the STATION decides it.
 **`Doing*Mults` ARE `ContestSession` ANSWERS (M11 S2, plan F9):**
-`ContestSession.DoingDomesticMults` / `DoingDXMults` / `DoingZoneMults` are
-computed from the kinds on every read (`DoingPrefixMults` is the
-contest's own answer since M11 S3, above); the LOGDUPE
+`ContestSession.DoingDomesticMults` / `DoingZoneMults` are computed from
+the kinds on every read (`DoingPrefixMults` and `DoingDXMults` are the
+contest's own answers since M11 S3 and S4, above); the LOGDUPE
 globals LogCfg set once at start-up are gone, because a peer's CONTEST line
 (`uSettingsEffects` -> `FoundContest`) left them describing the previous
 contest. Ask the property, and test `kind <> No*` through it, not by hand.

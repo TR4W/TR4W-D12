@@ -448,7 +448,7 @@ begin
      inc(NumberDifferentMults);
      end;
 
-  if ContestSession.DoingDXMults then
+  if DoingDXMults then
      begin
      inc(NumberDifferentMults);
      if RemainingMultDisplay = rmNoRemMultDisplay then

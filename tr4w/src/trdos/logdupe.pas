@@ -1131,7 +1131,7 @@ begin
    if logger.IsDebugEnabled then
       begin
       logger.debug('DoingDomesticMults = ' + BooleanToStr(ContestSession.DoingDomesticMults));
-      logger.debug('DoingDXMults       = ' + BooleanToStr(ContestSession.DoingDXMults));
+      logger.debug('DoingDXMults       = ' + BooleanToStr(ContestHasDXMultiplier(ActiveContest(Contest))));
       logger.debug('DoingPrefixMults   = ' + BooleanToStr(ContestHasPrefixMultiplier(ActiveContest(Contest))));
       logger.debug('DoingZoneMults     = ' + BooleanToStr(ContestSession.DoingZoneMults));
       end;
@@ -1180,7 +1180,7 @@ begin
      RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ContestSession.DomesticMult);
      end;
 
-  if (RXData.DXQTH <> '') and ContestSession.DoingDXMults and
+  if (RXData.DXQTH <> '') and ContestHasDXMultiplier(contestRules) and
      ContestCountsMultiplier(contestRules, RXData, rmDX) then
      begin
      RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);

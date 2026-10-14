@@ -92,7 +92,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -113,10 +112,14 @@ type
                                 aSession: TSessionDefaults); override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
-         DescribeSession states the session's DX kind under; the key and the
-         country list ask it, so the two cannot disagree (M11 S4). *)
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
       function CountsDXMultiplier: boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -181,11 +184,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestTexasQP.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
-end;
-
 function TContestTexasQP.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -230,12 +228,10 @@ end;
 procedure TContestTexasQP.DescribeSession(const aStation: TStationContext;
                                           aSession: TSessionDefaults);
 begin
-   (* BOTH SIDES OF THE STATE LINE, STATED (inventory D8). *)
-   if aStation.InHostState then
-      begin
-      aSession.DXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-      end
-   else
+   (* BOTH SIDES OF THE STATE LINE, STATED (inventory D8). In state, the
+      DX multiplier is HasDXMultiplier's (M11 S4 part 2); outside, the
+      exchange is the domestic QTH. *)
+   if not aStation.InHostState then
       begin
       aSession.Exchange := RSTDomesticQTHExchange;
       end;
@@ -247,9 +243,19 @@ begin
    Result := Station.InHostState;
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for an entrant inside Texas; none outside. This is the
+   station test the session's DX kind was chosen by (the trait, then
+   DescribeSession) until that kind was deleted; DXMultiplierKey and the
+   country list ask the same predicate, so the answers cannot disagree. *)
+function TContestTexasQP.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country but the USA, Canada, Hawaii and Alaska, for an entrant inside Texas (ARRLDXCCWithNoUSACanadaKH6OrKL7, which
-   DescribeSession states in state); none for anyone else. *)
+   DescribeSession stated in state); none for anyone else. *)
 function TContestTexasQP.DXMultiplierKey(const aQso: ContestExchange;
                                          out aKey: DXMultiplierString): boolean;
 begin

@@ -105,10 +105,14 @@ type
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
-         DescribeSession states the session's DX kind under; the key and the
-         country list ask it, so the two cannot disagree (M11 S4). *)
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
       function CountsDXMultiplier: boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -213,7 +217,6 @@ begin
    if (aStation.MyCountry = 'K') or (aStation.MyCountry = 'VE') then
       begin
       aSession.Exchange := RSTPowerExchange;
-      aSession.DXMult := ARRLDXCCWithNoUSAOrCanada;
       end
    else
       begin
@@ -250,6 +253,18 @@ end;
 function TContestARRLDXBase.CountsDXMultiplier: boolean;
 begin
    Result := IsUSAOrCanadaCountry(Station.MyCountry);
+end;
+
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for a W or VE entrant; none for anyone else, whose
+   multiplier is the state or province. Once, on the family base, as the key
+   is. This is the station test the session's DX kind was chosen by (the
+   trait, then DescribeSession) until that kind was deleted; DXMultiplierKey
+   and the country list ask the same predicate, so the answers cannot
+   disagree. *)
+function TContestARRLDXBase.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.

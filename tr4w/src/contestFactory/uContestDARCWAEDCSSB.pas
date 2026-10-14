@@ -82,7 +82,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -113,10 +112,14 @@ type
    private
       (* DOES THIS ENTRANT COUNT THE EUROPEAN COUNTRIES? -- an entrant outside
          Europe does; a European counts the WAE prefix instead. The station
-         test DescribeSession states the DX kind under; the key, the
-         remaining-mults filter and the final score ask it (M11 S4). *)
+         test DescribeSession stated the DX kind under (deleted at M11 S4
+         part 2); HasDXMultiplier, the key, the remaining-mults filter and
+         the final score ask it (M11 S4). *)
       function CountsEuropeanCountries: boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -237,11 +240,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestDARCWAEDCSSB.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
-end;
-
 function TContestDARCWAEDCSSB.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -276,10 +274,6 @@ end;
 procedure TContestDARCWAEDCSSB.DescribeSession(const aStation: TStationContext;
                                                aSession: TSessionDefaults);
 begin
-   if aStation.MyContinent <> Europe then
-      begin
-      aSession.DXMult := CQEuropeanCountries;
-      end;
    aSession.Band := Band80;
    aSession.ContactsPerPage := 40;
    aSession.QTCEnable := True;
@@ -338,9 +332,20 @@ begin
    Result := not CountsEuropeanCountries or (aContinent = Europe);
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes (the European countries) for an entrant outside Europe;
+   none in it. This is the station test the session's DX kind was chosen by
+   (the trait, then DescribeSession) until that kind was deleted;
+   DXMultiplierKey and the country list ask the same predicate, so the
+   answers cannot disagree. *)
+function TContestDARCWAEDCSSB.HasDXMultiplier: boolean;
+begin
+   Result := CountsEuropeanCountries;
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    The European countries, for an entrant outside Europe
-   (CQEuropeanCountries, which DescribeSession states there); none for a
+   (CQEuropeanCountries, which DescribeSession stated there); none for a
    European, whose multiplier is the WAE prefix (PrefixMultiplierKey). *)
 function TContestDARCWAEDCSSB.DXMultiplierKey(const aQso: ContestExchange;
                                               out aKey: DXMultiplierString): boolean;

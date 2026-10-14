@@ -8691,7 +8691,8 @@ procedure RecomputeQSOScoring(var aRX: ContestExchange);
 var
   (* ONE ActiveContest FOR THE PREFIX AND THE DX QTH -- M11 S4. It rebuilds
     the station on every call; this asked it through DoingPrefixMults and
-    again through SetPrefix, and GetDXQTH now needs it too. SetMultFlags and
+    again through SetPrefix, and GetDXQTH now needs it too -- as does
+    whether to run it (HasDXMultiplier, M11 S4 part 2). SetMultFlags and
     CalculateQSOPoints fetch their own, as before. *)
   contestRules: TContestBase;
 begin
@@ -8709,7 +8710,7 @@ begin
      SetPrefix(contestRules, aRX);
      end;
 
-  if ContestSession.DoingZoneMults or ContestSession.DoingDXMults then
+  if ContestSession.DoingZoneMults or ContestHasDXMultiplier(contestRules) then
      begin
      FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
@@ -9547,7 +9548,7 @@ begin
 
   ColumnsArray[logColNumberReceive].Enable := ExchangeInformation.QSONumber;
   ColumnsArray[logColPrefixMult].Enable := DoingPrefixMults;
-  ColumnsArray[logColDXMult].Enable := ContestSession.DoingDXMults;
+  ColumnsArray[logColDXMult].Enable := DoingDXMults;
   // ColumnsArray[logColPostCode].Enable := ExchangeInformation.PostalCode;
   ColumnsArray[logColKids].Enable := ExchangeInformation.Kids;
   i := -1;

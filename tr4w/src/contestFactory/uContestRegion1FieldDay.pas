@@ -83,7 +83,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -95,6 +94,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -307,11 +309,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestRegion1FieldDay.GetDXMultiplierType: DXMultType;
-begin
-   Result := CQDXCC;
-end;
-
 function TContestRegion1FieldDay.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -336,6 +333,13 @@ function TContestRegion1FieldDay.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`CQDXCC`) until the kind was deleted. *)
+function TContestRegion1FieldDay.HasDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.

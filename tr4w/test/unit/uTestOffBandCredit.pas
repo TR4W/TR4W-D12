@@ -227,7 +227,6 @@ var
    savedByMode: boolean;
    savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
-   savedDXMult: DXMultType;
    savedDXCCByBand: TAdditionalMultByBand;
    savedDomesticByBand: TAdditionalMultByBand;
    savedActiveBand: BandType;
@@ -248,7 +247,6 @@ begin
    savedByMode := Settings.Mult.ByMode;
    savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
-   savedDXMult := ContestSession.DXMult;
    savedDXCCByBand := DXCCMultByBand;
    savedDomesticByBand := DomesticMultByBand;
    savedActiveBand := ActiveBand;
@@ -257,7 +255,6 @@ begin
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
       ContestSession.WriteDomesticMult(NoDomesticMults);
-      ContestSession.WriteDXMult(ARRLDXCCWithNoUSAOrCanada);
       ContestSession.WriteZoneMult(NoZoneMults);
       DXCCMultByBand := dmbbDefauld;
       DomesticMultByBand := dmbbDefauld;
@@ -265,7 +262,9 @@ begin
       call := 'DL1ABC';
 
       (* THE DX HINT -- DetermineIfNewMult, behind the band map, the spots
-         and the call window. *)
+         and the call window. Idaho has a DX multiplier at every station
+         (its class's HasDXMultiplier, M11 S4 part 2); the session's DX
+         kind this wrote is deleted. *)
       CheckTrue(VisibleLog.DetermineIfNewMult(call, Band20, CW),
                 'Germany is a needed multiplier on 20 m (the control)');
       CheckFalse(VisibleLog.DetermineIfNewMult(call, Band30, CW),
@@ -273,7 +272,6 @@ begin
 
       (* THE DOMESTIC HINT, asked with the AllBands key as the not-per-band
          strip asks it: the band it is for is the operator's. *)
-      ContestSession.WriteDXMult(NoDXMults);
       ContestSession.WriteDomesticMult(WYSIWYGDomestic);
       ActiveBand := Band20;
       VisibleLog.DetermineIfNewDomesticMult('ADA', AllBands, CW, needs);
@@ -288,7 +286,6 @@ begin
       ActiveBand := savedActiveBand;
       DomesticMultByBand := savedDomesticByBand;
       DXCCMultByBand := savedDXCCByBand;
-      ContestSession.WriteDXMult(savedDXMult);
       ContestSession.WriteDomesticMult(savedDomesticMult);
       ContestSession.WriteZoneMult(savedZoneMult);
       Settings.Mult.ByMode := savedByMode;
@@ -305,7 +302,6 @@ var
    savedByMode: boolean;
    savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
-   savedDXMult: DXMultType;
    savedDomesticByBand: TAdditionalMultByBand;
    savedRestart: RestartInfo;
 
@@ -337,7 +333,6 @@ begin
    savedByMode := Settings.Mult.ByMode;
    savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
-   savedDXMult := ContestSession.DXMult;
    savedDomesticByBand := DomesticMultByBand;
    savedRestart := tRestartInfo;
    try
@@ -345,7 +340,6 @@ begin
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
       ContestSession.WriteDomesticMult(DomesticFile);
-      ContestSession.WriteDXMult(NoDXMults);
       ContestSession.WriteZoneMult(NoZoneMults);
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
@@ -373,7 +367,6 @@ begin
       mo.ClearAllMults;
       tRestartInfo := savedRestart;
       DomesticMultByBand := savedDomesticByBand;
-      ContestSession.WriteDXMult(savedDXMult);
       ContestSession.WriteDomesticMult(savedDomesticMult);
       ContestSession.WriteZoneMult(savedZoneMult);
       Settings.Mult.ByMode := savedByMode;

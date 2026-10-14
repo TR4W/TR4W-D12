@@ -55,7 +55,6 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
    public
@@ -110,11 +109,6 @@ end;
 function TContestCQWWCW.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := CQZones;
-end;
-
-function TContestCQWWCW.GetDXMultiplierType: DXMultType;
-begin
-   Result := CQDXCC;
 end;
 
 function TContestCQWWCW.GetInitialExchangeKind: InitialExchangeType;

@@ -72,7 +72,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -101,6 +100,9 @@ type
          body. *)
       function CallEntryFrequencyWarning(aFreqKHz: integer): string; override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -198,11 +200,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestWAG.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
-end;
-
 function TContestWAG.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -254,11 +251,7 @@ begin
    (* A German station counts countries, everyone else counts DOKs. For the
       WAG, German stations count Germany as a country multiplier by hand after
       the contest. *)
-   if aStation.MyCountry = 'DL' then
-      begin
-      aSession.DXMult := CQDXCC;
-      end
-   else
+   if aStation.MyCountry <> 'DL' then
       begin
       aSession.DomesticMult := DOKCodes;
       end;
@@ -310,6 +303,16 @@ begin
       end;
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for a German entrant; none for anyone else, whose
+   multiplier is the DOK. This is the station test the session's DX kind was
+   chosen by (the trait, then DescribeSession) until that kind was deleted;
+   DXMultiplierKey asks it, so the two cannot disagree. *)
+function TContestWAG.HasDXMultiplier: boolean;
+begin
+   Result := Station.MyCountry = 'DL';
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country, for a German entrant (CQDXCC, which DescribeSession
    states for DL); none for anyone else, whose multiplier is the DOK. *)
@@ -318,7 +321,7 @@ function TContestWAG.DXMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := '';
    Result := False;
-   if Station.MyCountry = 'DL' then
+   if HasDXMultiplier then
       begin
       aKey := aQso.QTH.CountryID;
       Result := True;

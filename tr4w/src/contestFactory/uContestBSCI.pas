@@ -71,7 +71,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -87,6 +86,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -177,11 +179,6 @@ begin
    Result := ITUZones;
 end;
 
-function TContestBSCI.GetDXMultiplierType: DXMultType;
-begin
-   Result := BlackSeaCountries;
-end;
-
 function TContestBSCI.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := WYSIWYGDomestic;
@@ -221,6 +218,13 @@ procedure TContestBSCI.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_HQ_OR_MEMBER);
    aPrompts.AskFieldWithCommentWhenInside('', ncfMyState);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`BlackSeaCountries`) until the kind was deleted. *)
+function TContestBSCI.HasDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.

@@ -80,7 +80,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -107,6 +106,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -189,11 +191,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestPACC.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
-end;
-
 function TContestPACC.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -228,7 +225,6 @@ procedure TContestPACC.DescribeSession(const aStation: TStationContext;
 begin
    if aStation.MyCountry = 'PA' then
       begin
-      aSession.DXMult := PACCCountriesAndPrefixes;
       aSession.Exchange := RSTAndQSONumberOrDomesticQTHExchange;
       aSession.AddDomesticCountry('PA');
       aSession.DomesticFile := 'PACCPA';
@@ -289,18 +285,28 @@ begin
    PACCCallAreaDigit := NumberString[1];
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for a Dutch entrant; none for anyone else. This is the
+   station test the session's DX kind was chosen by (the trait, then
+   DescribeSession) until that kind was deleted; DXMultiplierKey asks it, so
+   the two cannot disagree. *)
+function TContestPACC.HasDXMultiplier: boolean;
+begin
+   Result := Station.MyCountry = 'PA';
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    For a Dutch entrant only (PACCCountriesAndPrefixes, which DescribeSession
    states for PA) -- the arm as it stood: Asiatic Russia split UA9/UA0 by
    whether the call holds a 9; nine countries keyed with their call area's
    digit; every other country by itself. Always assigned for a Dutch entrant;
-   nothing for anyone else, whose session runs the trait's NoDXMults. *)
+   nothing for anyone else, whose session ran the trait's NoDXMults. *)
 function TContestPACC.DXMultiplierKey(const aQso: ContestExchange;
                                       out aKey: DXMultiplierString): boolean;
 begin
    aKey := '';
    Result := False;
-   if Station.MyCountry <> 'PA' then
+   if not HasDXMultiplier then
       begin
       Exit;
       end;

@@ -3236,34 +3236,11 @@ var
 
 type
 
-  DXMultType =
-    (
-//    NoCountDXMults,
-    NoDXMults,
-
-    {DXCC ONLY}
-    ARRLDXCCWithNoUSAOrCanada,
-    ARRLDXCCWithNoARRLSections,
-    ARRLDXCCWithNoUSACanadaKH6OrKL7,
-    ARRLDXCCWithNoIOrIS0,
-    ARRLDXCCWithNoJT,
-    ARRLDXCC,
-
-    {DXCC+WAE}
-    CQDXCC,
-    CQDXCCWithNoUSAOrCanada,
-    CQDXCCWithNoHB9,
-    CQDXCCWithNoOK,
-    CQEuropeanCountries,
-    CQUBAEuropeanCountries,
-    CQNonEuropeanCountries,
-
-    NorthAmericanARRLDXCCWithNoUSACanadaOrkL7,
-    NonSouthAmericanCountries,
-    PACCCountriesAndPrefixes,
-//    CQNonEuropeanCountriesAndWAECallRegions,
-    BlackSeaCountries
-    );
+(* DXMultType IS GONE -- M11 S4 part 2, 2026-10-14. It named which DX
+  multiplier a session ran, and LOGDUPE.GetDXQTH cased on it. Each DX
+  contest states its own key (TContestBase.DXMultiplierKey), its CTY
+  country list (CountryMode -- CountryModeType, which is data, stays) and
+  whether it has a DX multiplier at all (HasDXMultiplier). *)
 
 (* PrefixMultType IS GONE -- M11 S3 part 2, 2026-10-14. It named which prefix
   multiplier a session ran, and LOGEDIT.SetPrefix cased on it. Each prefix
@@ -3697,10 +3674,10 @@ const
 
   var
     tr4wBrushArray                      : array[tr4wColors] of HBRUSH;
-    (* ActiveDXMult MOVED -- M10 S9d, 2026-10-14. It is
-      uContestSession.ContestSession.DXMult, a leaf over this unit, so a
-      light unit (uMults, Issue #1034's reason for hosting it here) still
-      reads it without LogDupe's cone. *)
+    (* ActiveDXMult MOVED -- M10 S9d, 2026-10-14, to
+      uContestSession.ContestSession.DXMult -- and is GONE since M11 S4 part
+      2: the contest states its DX key and whether it has one
+      (TContestBase.DXMultiplierKey, HasDXMultiplier). *)
 
   { Fills the string tables that cannot be initialised where they are declared.
     uProgramMain calls this after the translation loads and before the main

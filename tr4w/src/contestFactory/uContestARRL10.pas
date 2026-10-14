@@ -68,7 +68,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -91,6 +90,9 @@ type
       (* THE CABRILLO HEADER -- M9a. *)
       function GetRequiresCabrilloLocation: boolean; override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -161,15 +163,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestARRL10.GetDXMultiplierType: DXMultType;
-begin
-   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
-      ARRLDXCCWithNoARRLSections at every station: the trait said ARRLDXCCWithNoUSACanadaKH6OrKL7 and
-      DescribeSession stated it over it, unconditionally. The
-      trait now says what runs, and the statement is gone. *)
-   Result := ARRLDXCCWithNoARRLSections;
-end;
-
 function TContestARRL10.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -229,6 +222,14 @@ end;
    which named this contest and Winter Field Day, moved here at M9a
    (2026-10-02). Each holds its own copy (design 1.4). *)
 function TContestARRL10.GetRequiresCabrilloLocation: boolean;
+begin
+   Result := True;
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`ARRLDXCCWithNoARRLSections`) until the kind was
+   deleted. *)
+function TContestARRL10.HasDXMultiplier: boolean;
 begin
    Result := True;
 end;

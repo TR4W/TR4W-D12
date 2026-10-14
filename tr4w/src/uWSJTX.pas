@@ -800,10 +800,9 @@ begin
                        // confusing "Checking if grid FN is a multiplier"
                        // lines that suggest TR4W is doing mult work it
                        // is not.  Cheap to skip cleanly.
-                       else if ContestSession.DoingDomesticMults or
-                               ContestSession.DoingDXMults       or
-                               DoingPrefixMults   or
-                               ContestSession.DoingZoneMults     then
+                       // (LOGEDIT.DoingAnyMults, M11 S4 part 2: the same
+                       // four answers, the contest fetched at most once.)
+                       else if DoingAnyMults(Contest) then
                           begin
                           if VisibleLog.DetermineIfNewMult(call, TempBand,
                                                           TempMode) then

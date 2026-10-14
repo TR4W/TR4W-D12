@@ -69,7 +69,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -89,6 +88,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -178,11 +180,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestYUDX.GetDXMultiplierType: DXMultType;
-begin
-   Result := CQDXCC;
-end;
-
 function TContestYUDX.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -219,7 +216,6 @@ begin
    if aStation.MyCountry = 'YU' then
       begin
       aSession.DomesticMult := NoDomesticMults;
-      aSession.DXMult := ARRLDXCC;
       end;
 end;
 
@@ -237,6 +233,15 @@ begin
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURCOUNTYCODE, ncfMyState);
 end;
 
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`CQDXCC`) and, for a Serbian entrant, the kind its
+   DescribeSession stated (`ARRLDXCC`) -- a DX multiplier either way -- until
+   the kind was deleted. *)
+function TContestYUDX.HasDXMultiplier: boolean;
+begin
+   Result := True;
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country counts: the key is the CTY country -- GetDXQTH's `else`
    arm, for the session's CQDXCC, and for a YU entrant ARRLDXCC (DescribeSession) --
@@ -249,8 +254,8 @@ begin
 end;
 
 (* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
-   DXCC only for a YU entrant, whose DescribeSession states ARRLDXCC; the
-   CQ list for everyone else, whose session runs the trait's CQDXCC. *)
+   DXCC only for a YU entrant, whose DescribeSession stated ARRLDXCC; the
+   CQ list for everyone else, whose session ran the trait's CQDXCC. *)
 function TContestYUDX.CountryMode: CountryModeType;
 begin
    if Station.MyCountry = 'YU' then

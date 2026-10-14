@@ -67,7 +67,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ---------------------------------------------------------------------------
 
     identity   requested vs selected ContestType, the class (or none)
-    setup      the six Active* kinds, the CTY modes, every engine global
+    setup      the session's kinds (six Active* at M0; four since M11 S3
+               and S4 deleted the prefix and DX kinds), the doing.* flags,
+               the CTY modes, every engine global
                FoundContest writes, the domestic country list, the county-line
                answer, the CW memories it writes, and EVERY SETTING WHOSE VALUE
                DIFFERS FROM A FRESHLY CONSTRUCTED SETTINGS OBJECT -- so a
@@ -611,13 +613,15 @@ begin
    EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ContestSession.Exchange)));
    EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ContestSession.InitialExchange)));
    EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ContestSession.DomesticMult)));
-   EmitField('active.dxmult', EnumText(TypeInfo(DXMultType), Ord(ContestSession.DXMult)));
+   (* NO active.dxmult LINE since M11 S4 part 2 (2026-10-14): the DX kind is
+     deleted. Whether the contest has a DX multiplier is still the second
+     doing.* flag, now the contest's own answer (LOGEDIT.DoingDXMults). *)
    EmitField('active.zonemult', EnumText(TypeInfo(ZoneMultType), Ord(ContestSession.ZoneMult)));
    (* NO active.prefixmult LINE since M11 S3 part 2 (2026-10-14): the prefix
      kind is deleted. Whether the contest has a prefix multiplier is still the
      third doing.* flag, now the contest's own answer (LOGEDIT.DoingPrefixMults). *)
    EmitField('doing.domestic/dx/prefix/zone',
-             BoolText(ContestSession.DoingDomesticMults) + ' ' + BoolText(ContestSession.DoingDXMults) + ' ' +
+             BoolText(ContestSession.DoingDomesticMults) + ' ' + BoolText(DoingDXMults) + ' ' +
              BoolText(DoingPrefixMults) + ' ' + BoolText(ContestSession.DoingZoneMults));
    EmitField('cty.countrymode', EnumText(TypeInfo(CountryModeType), Ord(CTY.ctyCountryMode)));
    EmitField('cty.zonemode', EnumText(TypeInfo(ZoneModeType), Ord(CTY.ctyZoneMode)));

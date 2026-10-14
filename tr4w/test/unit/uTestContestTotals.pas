@@ -97,7 +97,6 @@ begin
    Result.ScoredBand := AllBands;
    Result.SessionCountsMultipliers := True;
    Result.SessionExchange := RSTQSONumberExchange;
-   Result.SessionDXMult := ARRLDXCC;
 end;
 
 
@@ -262,8 +261,9 @@ begin
 
    (* THE ENTRANT DECIDES WHICH MULTIPLIER IS WEIGHTED -- M11 S4. Until then
       the class read the session's DX kind (SessionDXMult =
-      CQEuropeanCountries, which DescribeSession states for an entrant
-      outside Europe); it asks its station now. *)
+      CQEuropeanCountries, which DescribeSession stated for an entrant
+      outside Europe); it asks its station now. The kind, and the totals'
+      field that carried it, went at M11 S4 part 2. *)
    european := NoStation;
    european.MyContinent := Europe;
    elsewhere := NoStation;
@@ -278,7 +278,6 @@ begin
    t.Mults[AllBands, Both, rmPrefix] := 5;
    t.Mults[Band80, Both, rmDX] := 2;
    t.Mults[AllBands, Both, rmDX] := 2;
-   t.SessionDXMult := ARRLDXCC;
    (* A EUROPEAN ENTRANT: 4 + 3 + 2 + 2 + 2 = 13 prefixes' worth. *)
    CheckEquals(130, Combine(DARCWAEDCCW, european, t), 'WAE prefixes, weighted by band');
    CheckEquals(130, Combine(DARCWAEDCSSB, european, t), 'the SSB running, the same');
@@ -286,11 +285,6 @@ begin
    (* AN ENTRANT OUTSIDE EUROPE counts European countries. *)
    CheckEquals(10 * 8, Combine(DARCWAEDCCW, elsewhere, t), 'European countries, four on 80 m');
    CheckEquals(10 * 8, Combine(DARCWAEDCSSB, elsewhere, t), 'the SSB running, the same');
-
-   (* THE SESSION KIND IS NOT READ: a European entrant counts prefixes
-      whatever the session says. *)
-   t.SessionDXMult := CQEuropeanCountries;
-   CheckEquals(130, Combine(DARCWAEDCCW, european, t), 'the station, not the session kind');
 
    (* A single-band entry: the general case on its band. *)
    t.ScoredBand := Band80;

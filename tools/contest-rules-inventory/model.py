@@ -71,9 +71,9 @@ FIELD_GETTERS = {
    "AE": "GETEXCHANGEKIND",
    "AIE": "GETINITIALEXCHANGEKIND",
    "DM": "GETDOMESTICMULTIPLIERTYPE",
-   "XM": "GETDXMULTIPLIERTYPE",
    "ZnM": "GETZONEMULTIPLIERTYPE",
-   # "Pxm" (GETPREFIXMULTIPLIERTYPE) left at M11 S3 part 2 with the getter.
+   # "Pxm" (GETPREFIXMULTIPLIERTYPE) left at M11 S3 part 2 with the getter,
+   # "XM" (GETDXMULTIPLIERTYPE) at M11 S4 part 2 with its getter.
 }
 
 _RESULT_RX = re.compile(r"\bResult\s*:=\s*('(?:[^']|'')*'|\w+)\s*;", re.I)

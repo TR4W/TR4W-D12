@@ -76,7 +76,6 @@ type
          flags: see TContestBase.GetFlags. *)
       function GetWA7BNMId: integer; override;
       function GetDomesticFileName: string; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetInStateDomesticFileName: string; override;
@@ -99,6 +98,9 @@ type
                                       const aQso: ContestExchange;
                                       aSessionExchange: ExchangeType): string; override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -172,11 +174,6 @@ end;
 function TContestFloridaQP.GetDomesticFileName: string;
 begin
    Result := 'florida_cty';
-end;
-
-function TContestFloridaQP.GetDXMultiplierType: DXMultType;
-begin
-   Result := ARRLDXCCWithNoUSAOrCanada;
 end;
 
 function TContestFloridaQP.GetDomesticMultiplierType: DomesticMultType;
@@ -274,6 +271,14 @@ function TContestFloridaQP.FormatADIFSentExchange(const aMy: TMyStationExchange;
                                                   aSessionExchange: ExchangeType): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`ARRLDXCCWithNoUSAOrCanada`) until the kind was
+   deleted. *)
+function TContestFloridaQP.HasDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.

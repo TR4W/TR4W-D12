@@ -201,7 +201,7 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmDomestic]);
      end;
 
-  if (ContestSession.DoingDXMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
+  if (DoingDXMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
      begin
      {
     if Settings.Mult.ByMode then
@@ -327,7 +327,7 @@ begin
         end;
      end;
 
-  if ContestSession.DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
+  if DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
      begin
      if Settings.Mult.ByMode then
         begin

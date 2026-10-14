@@ -65,7 +65,6 @@ type
       function GetWA7BNMId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -89,6 +88,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -145,11 +147,6 @@ end;
 function TContestNASprintCW.GetDomesticFileName: string;
 begin
    Result := 'naqp';
-end;
-
-function TContestNASprintCW.GetDXMultiplierType: DXMultType;
-begin
-   Result := NorthAmericanARRLDXCCWithNoUSACanadaOrkL7;
 end;
 
 function TContestNASprintCW.GetDomesticMultiplierType: DomesticMultType;
@@ -284,6 +281,14 @@ procedure TContestNASprintCW.DescribeNewContestPrompts(aPrompts: TNewContestProm
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURQTHANDTHENAME, ncfMyState);
    aPrompts.AskField(ncfMyName);
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`NorthAmericanARRLDXCCWithNoUSACanadaOrkL7`) until the
+   kind was deleted. *)
+function TContestNASprintCW.HasDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.

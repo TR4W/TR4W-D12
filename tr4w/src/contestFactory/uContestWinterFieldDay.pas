@@ -91,7 +91,6 @@ type
       function GetExchangeKind: ExchangeType; override;
       function GetFlags: TContestFlags; override;
       (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
-      function GetDXMultiplierType: DXMultType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
       (* THE FINAL SCORE -- Issue 301 (NY4I): the points times the band-mode
@@ -149,6 +148,9 @@ type
       function CabrilloModeString(aMode: ModeType;
                                   aExtMode: ExtendedModeType): string; override;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -179,11 +181,6 @@ uses
    sponsor rule is not being changed: the multiplier every Winter Field Day
    session has counted is now also what the contest SAYS it counts.
    Test_WinterFieldDayDXMultiplierIsWhatTheSessionRuns pins the three. *)
-function TContestWinterFieldDay.GetDXMultiplierType: DXMultType;
-begin
-   Result := ARRLDXCCWithNoARRLSections;
-end;
-
 procedure TContestWinterFieldDay.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    if aQso.Mode in [Phone, FM] then
@@ -464,7 +461,8 @@ begin
    aSession.SPExchangeCW := aStation.MyFDClass + ' ' + aStation.MySection;
    aSession.QSLCW := '73 \ WFD';
 
-   (* THE DX MULTIPLIER IS THE TRAIT'S -- see GetDXMultiplierType. It was
+   (* THE DX MULTIPLIER IS THE CLASS'S -- see HasDXMultiplier and
+      DXMultiplierKey (the DX kind is deleted, M11 S4 part 2). It was
       restated here, to overwrite a DX MULTIPLIER line written before the
       CONTEST line; that setting retired at M10 S2, so the restatement went
       at M11 S2 (plan 1.3). *)
@@ -533,6 +531,14 @@ end;
 function TContestWinterFieldDay.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := Trim(string(aQso.ceClass)) + ' ' + Trim(string(aQso.QTHString));
+end;
+
+(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
+   this class stated (`ARRLDXCCWithNoARRLSections`) until the kind was
+   deleted. *)
+function TContestWinterFieldDay.HasDXMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.

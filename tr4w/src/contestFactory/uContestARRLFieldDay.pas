@@ -80,7 +80,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -134,8 +133,10 @@ type
            QP: ARRLFieldDayQSOPointMethod;  ADIFName: 'ARRL-FIELD-DAY';
            CABName: 'ARRL-FD';  FriendlyName: 'ARRL Field Day'
 
-         XM WAS WRONG and is NoDXMults in both the row and this class since
-         2026-10-01 -- see GetDXMultiplierType.
+         XM WAS WRONG and was NoDXMults in both the row and this class from
+         2026-10-01 (Q1: no multipliers at all). The DX kind is deleted (M11
+         S4 part 2); the class has no DX multiplier (the base's
+         HasDXMultiplier, False).
 
          NOTE DM IS COMMENTED OUT IN THE ARRAY. Its value therefore came from
          whatever the record initialised to, not from NoDomesticMults being
@@ -340,20 +341,6 @@ end;
 function TContestARRLFieldDay.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
-end;
-
-function TContestARRLFieldDay.GetDXMultiplierType: DXMultType;
-begin
-   (* NONE. RULED BY NY4I, 2026-10-01 (design Q1): ARRL Field Day has no
-      multipliers at all. A DX station may be worked -- it sends a class and
-      DX -- but it is not a multiplier.
-
-      THIS USED TO SAY ARRLDXCC, transcribed from the row, while FCONTEST's
-      Field Day arm set NoDXMults; the class lost silently because nothing
-      read it (inventory D8). Corrected, together with the row, BEFORE M2
-      made the class the source set-up reads, so Field Day's effective value
-      did not move. *)
-   Result := NoDXMults;
 end;
 
 function TContestARRLFieldDay.GetDomesticMultiplierType: DomesticMultType;

@@ -39,18 +39,29 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   HOW THE LITERALS WERE MADE. Written by hand from the old code, then RUN
   GREEN AGAINST THE OLD CODE before anything moved: the program's own case
-  and set and filters, frozen below (Legacy...OfKind), selected by the
-  session kind uTestContestKindPin.Kinds resolves (the trait, then
+  and set and filters, frozen here (Legacy...OfKind, deleted at part 2),
+  selected by the session kind uTestContestKindPin.Kinds resolved (the trait, then
   DescribeSession) -- exactly what the engine selected. Then the move, and
   the same tables green against the classes.
 
-  AND A CROSS-CHECK FOR EVERY CONTEST, NOT ONLY THE 78. The *AgreesWith*
-  tests ask every ContestType at every roster station, and compare the
-  class's answer with the frozen legacy rule under the kind the session
-  resolves to. So the move is pinned in both directions: no DX contest lost a
-  branch, and no other contest gained a key. It holds only while the session
-  still carries DXMult; S4 part 2 deletes that kind, and these cross-checks
-  and the frozen rules go with it, leaving the literals.
+  AND A CROSS-CHECK FOR EVERY CONTEST, NOT ONLY THE 78 -- part 1's, GONE.
+  Until M11 S4 part 2, three *AgreesWith* tests asked every ContestType at
+  every roster station and compared the class's answer with the frozen
+  legacy rule under the kind the session resolved to: no DX contest lost a
+  branch, and no other contest gained a key. Part 2 deleted that kind, and
+  the cross-checks and their frozen rules went with it (git history at
+  6b874f1a holds both). The literals stay: they are the permanent oracle.
+
+  WHETHER A CONTEST HAS A DX MULTIPLIER AT ALL -- part 2's question, which
+  replaced the kind (TContestBase.HasDXMultiplier). Pinned by
+  Test_EveryContestHasItsPinnedDXMultiplier, for every ContestType at every
+  roster station, against HAS_DX below. Its us, ve and dx sets are the
+  frozen kind pin's DX column read as "not NoDXMults" (uTestContestKindPin,
+  made from the program at S0b), taken before that column was deleted; the
+  other eleven stations' sets are each station-dependent contest's
+  DescribeSession test as it stood at 6b874f1a, by hand. And THE INVARIANT
+  the engine relies on: no contest gives a key where it says it has no DX
+  multiplier -- checked for every contest, station and QSO.
 
   "NONE" IS NOT ''. Every arm of the old case assigned only on a match and
   otherwise LEFT THE QSO'S DX QTH AS IT WAS; PACC always assigned. The
@@ -75,11 +86,9 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_EveryDXContestGivesItsPinnedKey;
-      procedure Test_EveryContestKeyAgreesWithItsSessionKind;
+      procedure Test_EveryContestHasItsPinnedDXMultiplier;
       procedure Test_EveryContestGivesItsPinnedCountryMode;
-      procedure Test_EveryContestCountryModeAgreesWithItsSessionKind;
       procedure Test_RemainingCountriesFilterGivesItsPinnedAnswer;
-      procedure Test_RemainingCountriesFilterAgreesWithItsSessionKind;
    end;
 
 implementation
@@ -87,8 +96,6 @@ implementation
 uses
    SysUtils,
    VC,
-   uCallSignRoutines,
-   utils_text,
    uContestBase,
    uContestRegistry,
    uTestContestKindPin;
@@ -439,8 +446,8 @@ const
 
    (* WHICH COUNTRIES THE REMAINING-MULTS WINDOW LISTS -- today's three
       filters exactly, and not the whole DX rule (plan F7). Asked only where
-      the session counts DX multipliers: FillVisibleBytes hides everything
-      before the filters otherwise. *)
+      the contest has a DX multiplier (HasDXMultiplier, since M11 S4 part 2):
+      FillVisibleBytes hides everything before the filters otherwise. *)
    LIST_PINS: array[0..12] of TListPin = (
       (Contest: DARCWAEDCCW;   Station: psUS; Qso: pqON4;  Listed: True),
       (Contest: DARCWAEDCCW;   Station: psUS; Qso: pqW1AW; Listed: False),
@@ -457,6 +464,59 @@ const
       (Contest: PACC;          Station: psPA; Qso: pqUA9;  Listed: True)
    );
 
+type
+   TContestSet = set of ContestType;
+
+const
+   (* A DX MULTIPLIER AT EVERY STATION: the 56 contests whose session ran a
+      DX kind wherever it ran. *)
+   DX_EVERYWHERE = [ARCI, ARI_DX, ARRL10, ARRL_RTTY_ROUNDUP, ArizonaQsoParty,
+                    BATAVIA_FT8, BSCI, CIS, CQ160CW, CQ160SSB, CQM, CQMM,
+                    CQWWCW, CQWWRTTY, CQWWSSB, DARC10M, EUDX, FLORIDAQSOPARTY,
+                    FOCMARATHON, GACWWWSACW, HADX, IDAHOQSOPARTY,
+                    INTERNETSPRINT, JTDX, KINGOFSPAINCW, KINGOFSPAINSSB, LABRE,
+                    MARCONIMEMORIAL, NAQSOCW, NAQSORTTY, NAQSOSSB, NASPRINTCW,
+                    NASPRINTRTTY, OKDX, OKOMSSB, OZCR_O, RADIOYOC,
+                    REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
+                    REGION1FIELDDAY_RCC_SSB, RSGB18, RU3AXMEMORIAL, RUSSIANDX,
+                    SST, UBACW, UBASSB, UKEI, UKRAINIAN, UNDX, WINTERFIELDDAY,
+                    WRTC, WWIH, YBDX, YODX, YOUTHCHAMPIONSHIPRF, YUDX];
+
+   (* WHO HAS A DX MULTIPLIER AT EACH ROSTER STATION -- see the unit header
+      for where each set comes from. The other 22 DX contests decide by the
+      entrant: the ALRS cup (not a Russian outside St Petersburg), ARRL 160
+      (an ARRL section country), ARRL DX x2 (W/VE), WAE x2 (outside Europe),
+      WAG (DL), the All Asian x2 (Asia), JIDX x2 (JA), SAC x2 (Scandinavia),
+      Helvetia (HB), the Croatian (9A), PACC (PA), RDA (Russia), NEQP (New
+      England), and Delaware, 7QP, Texas and the Salmon Run (in the host
+      state). NEVER REGENERATE A SET TO CLEAR A FAILURE. *)
+   HAS_DX: array[TPinStation] of TContestSet = (
+      (* psUS K0AAA *)   DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
+                                          DARCWAEDCCW, DARCWAEDCSSB],
+      (* psVE VE3AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
+                                          DARCWAEDCCW, DARCWAEDCSSB],
+      (* psDX DL1AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, WAG],
+      (* psHost K1AAA *) DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
+                                          DARCWAEDCCW, DARCWAEDCSSB, DELAWAREQSOPARTY,
+                                          NEWENGLANDQSO, SALMONRUN, SEVENQP, TEXASQSOPARTY],
+      (* psPA PA3AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, PACC],
+      (* psJA JA1AAA *)  DX_EVERYWHERE + [ALLASIANCW, ALLASIANSSB, ALRS_UA1DZ_CUP,
+                                          DARCWAEDCCW, DARCWAEDCSSB, JIDXCW, JIDXSSB],
+      (* psSM SM5AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, SACCW, SACSSB],
+      (* psHB HB9AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, HELVETIA],
+      (* ps9A 9A2AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, CROATIAN],
+      (* psYU YU1AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP],
+      (* psON ON4AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP],
+      (* psUA UA3AAA *)  DX_EVERYWHERE + [RDA],
+      (* psUA1 UA1AAA *) DX_EVERYWHERE + [ALRS_UA1DZ_CUP, RDA],
+      (* psEI EI2AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP]
+   );
+
+   (* How many contests each set holds -- stated so a set edited by mistake
+      fails by count as well as by name. *)
+   HAS_DX_COUNT: array[TPinStation] of integer =
+      (62, 62, 58, 67, 58, 63, 59, 58, 58, 57, 57, 57, 58, 57);
+
 function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
 begin
    Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
@@ -472,249 +532,6 @@ begin
    Result.QTH.CountryID := DXMultiplierString(QSOS[aQso].CountryID);
    Result.QTH.Continent := QSOS[aQso].Continent;
    Result.QTH.StandardCall := CallString(QSOS[aQso].Call);
-end;
-
-(* LOGDUPE.GetNumber AS IT STOOD AT 3c8ce116, verbatim -- PACC's arm called
-   it. A different routine from uCallSignRoutines.GetNumber: the last digit
-   run of the PREFIX, defaulting to '0'. Frozen here with the case below. *)
-function LegacyGetNumber(Call: CallString): AnsiChar;
-var
-   TempString, NumberString: CallString;
-begin
-   LegacyGetNumber := '0';
-
-   if (Call = '') or not StringHasNumber(Call) then
-      begin
-      Exit;
-      end;
-
-   TempString := GetPrefix(Call);
-
-   NumberString := '';
-
-   while (TempString <> '') and
-         (Copy(TempString, length(TempString), 1) >= '0') and
-         (Copy(TempString, length(TempString), 1) <= '9') do
-      begin
-      NumberString := Copy(TempString, length(TempString), 1) + NumberString;
-      Delete(TempString, length(TempString), 1);
-      end;
-
-   LegacyGetNumber := NumberString[1];
-end;
-
-(* THE OLD CASE, FROZEN -- LOGDUPE.GetDXQTH's `case ContestSession.DXMult of`
-   as it stood at 3c8ce116, verbatim but for the out-parameter (an arm that
-   assigned answers True; one that did not, False). Its head -- COUNT
-   DOMESTIC COUNTRIES, the WYSIWYG domestic QTH and the domestic-country
-   call -- is the engine's and stays in GetDXQTH, so it is not here. The
-   dead arms (CQ DXCC without HB9 or OK, the non-European and non-South
-   American countries -- reach 0 since M11 S2) are kept, as they stood. It
-   goes when S4 part 2 deletes DXMultType. *)
-function LegacyDXKeyOfKind(aKind: DXMultType;
-                           const RXData: ContestExchange;
-                           out aKey: DXMultiplierString): boolean;
-begin
-   aKey := '';
-   Result := False;
-   case aKind of
-      NoDXMults:
-         begin
-         end;
-      ARRLDXCCWithNoUSAOrCanada, CQDXCCWithNoUSAOrCanada:
-         begin
-         if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      ARRLDXCCWithNoARRLSections:
-         begin
-         if pos(' ' + RXData.QTH.CountryID + ' ', ARRLSectionCountryString) = 0 then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      ARRLDXCCWithNoUSACanadaKH6OrKL7:
-         begin
-         if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') and
-            (RXData.QTH.CountryID <> 'KH6') and (RXData.QTH.CountryID <> 'KL') then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      ARRLDXCCWithNoIOrIS0:
-         begin
-         if RXData.QTH.CountryID[1] <> 'I' then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      CQDXCCWithNoHB9:
-         begin
-         if RXData.QTH.CountryID <> 'HB' then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      CQDXCCWithNoOK:
-         begin
-         if RXData.QTH.CountryID <> 'OK' then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      ARRLDXCCWithNoJT:
-         begin
-         if RXData.QTH.CountryID <> 'JT' then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      NorthAmericanARRLDXCCWithNoUSACanadaOrkL7:
-         begin
-         if RXData.QTH.Continent = NorthAmerica then
-            begin
-            if (RXData.QTH.CountryID <> 'K') and
-               (RXData.QTH.CountryID <> 'VE') and
-               (RXData.QTH.CountryID <> 'KL') then
-               begin
-               aKey := RXData.QTH.CountryID;
-               Result := True;
-               end;
-            end;
-         end;
-      CQEuropeanCountries:
-         begin
-         if RXData.QTH.Continent = Europe then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      CQUBAEuropeanCountries:
-         begin
-         if UBACountry(RXData.QTH.CountryID) then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      CQNonEuropeanCountries:
-         begin
-         if RXData.QTH.Continent <> Europe then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      NonSouthAmericanCountries:
-         begin
-         if RXData.QTH.Continent <> SouthAmerica then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      BlackSeaCountries:
-         begin
-         if BlackSeaRegionCountry(RXData.QTH.CountryID) then
-            begin
-            aKey := RXData.QTH.CountryID;
-            Result := True;
-            end;
-         end;
-      PACCCountriesAndPrefixes:
-         begin
-         Result := True;
-         if RXData.QTH.CountryID = 'UA9' then
-            begin
-            if StringHas(RXData.Callsign, '9') then
-               begin
-               aKey := 'UA9';
-               end
-            else
-               begin
-               aKey := 'UA0';
-               end;
-            Exit;
-            end;
-
-         if (RXData.QTH.CountryID = 'CE') or
-            (RXData.QTH.CountryID = 'JA') or (RXData.QTH.CountryID = 'LU') or
-            (RXData.QTH.CountryID = 'PY') or (RXData.QTH.CountryID = 'VE') or
-            (RXData.QTH.CountryID = 'K') or (RXData.QTH.CountryID = 'VK') or
-            (RXData.QTH.CountryID = 'ZS') or (RXData.QTH.CountryID = 'ZL') then
-            begin
-            aKey := RXData.QTH.CountryID + AnsiChar(LegacyGetNumber(RXData.Callsign));
-            Exit;
-            end;
-
-         aKey := RXData.QTH.CountryID;
-         end;
-   else
-      begin
-      aKey := RXData.QTH.CountryID;
-      Result := True;
-      end;
-   end;
-end;
-
-(* THE OLD COUNTRY-MODE RULE, FROZEN -- uSettingsEffects' CONTEST arm as it
-   stood at 3c8ce116, verbatim. *)
-function LegacyCountryModeOfKind(aKind: DXMultType): CountryModeType;
-begin
-   if aKind in [ARRLDXCCWithNoUSAOrCanada,
-                ARRLDXCCWithNoARRLSections,
-                ARRLDXCCWithNoUSACanadaKH6OrKL7,
-                ARRLDXCCWithNoIOrIS0,
-                ARRLDXCCWithNoJT,
-                ARRLDXCC] then
-      begin
-      Result := ARRLCountryMode;
-      end
-   else
-      begin
-      Result := CQCountryMode;
-      end;
-end;
-
-(* THE OLD REMAINING-COUNTRIES FILTERS, FROZEN -- uMults.FillVisibleBytes'
-   three `Continue`s as they stood at 3c8ce116: True means the country is
-   listed (not skipped). *)
-function LegacyListsCountryOfKind(aKind: DXMultType;
-                                  const aCountryID: DXMultiplierString;
-                                  aContinent: ContinentType): boolean;
-begin
-   Result := True;
-   if aKind = CQNonEuropeanCountries then
-      begin
-      if aContinent = Europe then
-         begin
-         Result := False;
-         end;
-      end;
-   if aKind = CQEuropeanCountries then
-      begin
-      if aContinent <> Europe then
-         begin
-         Result := False;
-         end;
-      end;
-   if aKind = CQUBAEuropeanCountries then
-      begin
-      if not UBACountry(aCountryID) then
-         begin
-         Result := False;
-         end;
-      end;
 end;
 
 (* A contest object holding the station, as ActiveContest hands it; nil for
@@ -736,9 +553,10 @@ end;
    uMults.FillVisibleBytes ask since the move: the contest's own rule, on a
    contest object holding the station, as ActiveContest hands it. nil (the
    classless DUMMYCONTEST) answers as the Contest... wrappers answer nil.
-   BEFORE THE MOVE each of these returned the frozen legacy rule above,
-   selected by Kinds(aContest, aStation).DXMult -- the run that made the
-   literals (green on the old code but for one hand count, corrected). *)
+   BEFORE THE MOVE each of these returned the frozen legacy rule (deleted at
+   M11 S4 part 2), selected by Kinds(aContest, aStation).DXMult -- the run
+   that made the literals (green on the old code but for one hand count,
+   corrected). *)
 function ProgramKey(aContest: ContestType;
                     const aStation: TStationContext;
                     const aQso: ContestExchange;
@@ -781,6 +599,21 @@ begin
       end;
 end;
 
+(* WHETHER THE PROGRAM SAYS THE CONTEST HAS A DX MULTIPLIER -- what
+   LOGEDIT.DoingDXMults and every reader holding the object ask since M11 S4
+   part 2, on an object holding the station, as ActiveContest hands it. *)
+function ProgramHas(aContest: ContestType; const aStation: TStationContext): boolean;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContest(aContest, aStation);
+   try
+      Result := ContestHasDXMultiplier(obj);
+   finally
+      obj.Free;
+      end;
+end;
+
 (* "none", or the key in brackets -- so '' and "no key" differ on the page. *)
 function Answer(aAssigns: boolean; const aKey: string): string;
 begin
@@ -814,11 +647,9 @@ end;
 procedure TDXMultiplierKeyTests.RunAllTests;
 begin
    Test_EveryDXContestGivesItsPinnedKey;
-   Test_EveryContestKeyAgreesWithItsSessionKind;
+   Test_EveryContestHasItsPinnedDXMultiplier;
    Test_EveryContestGivesItsPinnedCountryMode;
-   Test_EveryContestCountryModeAgreesWithItsSessionKind;
    Test_RemainingCountriesFilterGivesItsPinnedAnswer;
-   Test_RemainingCountriesFilterAgreesWithItsSessionKind;
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryDXContestGivesItsPinnedKey;
@@ -858,67 +689,80 @@ begin
    CheckEquals(78, count, 'contests with a pinned DX key');
 end;
 
-procedure TDXMultiplierKeyTests.Test_EveryContestKeyAgreesWithItsSessionKind;
+procedure TDXMultiplierKeyTests.Test_EveryContestHasItsPinnedDXMultiplier;
 var
    c: ContestType;
    s: TPinStation;
    q: TPinQso;
    station: TStationContext;
-   kind: DXMultType;
-   qso: ContestExchange;
-   oldKey: DXMultiplierString;
-   newKey: DXMultiplierString;
-   oldAssigns: boolean;
-   newAssigns: boolean;
+   key: DXMultiplierString;
+   has: boolean;
    checked: integer;
-   keyed: set of ContestType;
+   counted: integer;
+   anywhere: TContestSet;
    count: integer;
 begin
-   BeginTest('Test_EveryContestKeyAgreesWithItsSessionKind');
+   BeginTest('Test_EveryContestHasItsPinnedDXMultiplier');
    checked := 0;
-   keyed := [];
-   for c := Low(ContestType) to High(ContestType) do
+   anywhere := [];
+   for s := Low(TPinStation) to High(TPinStation) do
       begin
-      for s := Low(TPinStation) to High(TPinStation) do
+      counted := 0;
+      for c := Low(ContestType) to High(ContestType) do
+         begin
+         if c in HAS_DX[s] then
+            begin
+            Inc(counted);
+            end;
+         end;
+      CheckEquals(HAS_DX_COUNT[s], counted, 'contests in the set for ' + STATIONS[s].Call);
+
+      for c := Low(ContestType) to High(ContestType) do
          begin
          station := PinStation(s, c);
-         kind := Kinds(c, station).DXMult;
-         for q := Low(TPinQso) to High(TPinQso) do
+         has := ProgramHas(c, station);
+         CheckTrue(has = (c in HAS_DX[s]), Who(c, s) + ' has a DX multiplier');
+         if has then
             begin
-            qso := PinQso(q);
-            oldAssigns := LegacyDXKeyOfKind(kind, qso, oldKey);
-            newAssigns := ProgramKey(c, station, qso, newKey);
-            CheckEquals(Answer(oldAssigns, string(oldKey)), Answer(newAssigns, string(newKey)),
-                        Who(c, s) + ' working ' + QSOS[q].Call);
-            if newAssigns then
+            Include(anywhere, c);
+            end
+         else
+            begin
+            (* THE INVARIANT: a key only where there is a DX multiplier. *)
+            for q := Low(TPinQso) to High(TPinQso) do
                begin
-               Include(keyed, c);
+               CheckFalse(ProgramKey(c, station, PinQso(q), key),
+                          Who(c, s) + ' gives no key working ' + QSOS[q].Call);
                end;
-            Inc(checked);
             end;
+         Inc(checked);
          end;
       end;
 
-   (* EXACT: every contest, every roster station, every QSO. *)
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1) *
-               (Ord(High(TPinQso)) + 1), checked, 'contest x station x QSO keys compared');
+   (* EXACT: every contest at every roster station. *)
+   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
+               'contest x station answers compared');
 
-   (* THE 78 DX CONTESTS, AND NO OTHER, GIVE A KEY ANYWHERE ON THE ROSTER. *)
+   (* THE 78 DX CONTESTS, AND NO OTHER, HAVE ONE SOMEWHERE ON THE ROSTER. *)
    count := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
-      if c in keyed then
+      if c in anywhere then
          begin
          Inc(count);
          end;
       end;
-   CheckEquals(78, count, 'contests that give a DX key at some roster station');
+   CheckEquals(78, count, 'contests with a DX multiplier at some roster station');
 end;
 
 procedure TDXMultiplierKeyTests.Test_EveryContestGivesItsPinnedCountryMode;
 var
    i: integer;
    pin: TModePin;
+   c: ContestType;
+   s: TPinStation;
+   arrl: TContestSet;
+   count: integer;
 begin
    BeginTest('Test_EveryContestGivesItsPinnedCountryMode');
    for i := Low(MODE_PINS) to High(MODE_PINS) do
@@ -928,40 +772,23 @@ begin
                   ModeName(ProgramCountryMode(pin.Contest, PinStation(pin.Station, pin.Contest))),
                   Who(pin.Contest, pin.Station));
       end;
-end;
 
-procedure TDXMultiplierKeyTests.Test_EveryContestCountryModeAgreesWithItsSessionKind;
-var
-   c: ContestType;
-   s: TPinStation;
-   station: TStationContext;
-   checked: integer;
-   arrl: set of ContestType;
-   count: integer;
-begin
-   BeginTest('Test_EveryContestCountryModeAgreesWithItsSessionKind');
-   checked := 0;
+   (* 36 contests choose the ARRL list at some roster station: the 21 whose
+      trait was an ARRL kind and the 15 whose DescribeSession stated one for
+      some entrant. Measured on the old code at S4 part 1 (the hand count said
+      35); kept as a literal count when the cross-check that measured it went
+      with the kind (M11 S4 part 2). *)
    arrl := [];
    for c := Low(ContestType) to High(ContestType) do
       begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
-         station := PinStation(s, c);
-         CheckEquals(ModeName(LegacyCountryModeOfKind(Kinds(c, station).DXMult)),
-                     ModeName(ProgramCountryMode(c, station)), Who(c, s));
-         if ProgramCountryMode(c, station) = ARRLCountryMode then
+         if ProgramCountryMode(c, PinStation(s, c)) = ARRLCountryMode then
             begin
             Include(arrl, c);
             end;
-         Inc(checked);
          end;
       end;
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
-               'contest x station country modes compared');
-
-   (* 36 contests choose the ARRL list at some roster station: the 21 whose
-      trait is an ARRL kind and the 15 whose DescribeSession states one for
-      some entrant. Measured on the old code (run 1); the hand count said 35. *)
    count := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -987,44 +814,6 @@ begin
                                                 PinQso(pin.Qso)), True),
                   Who(pin.Contest, pin.Station) + ' listing ' + QSOS[pin.Qso].CountryID);
       end;
-end;
-
-procedure TDXMultiplierKeyTests.Test_RemainingCountriesFilterAgreesWithItsSessionKind;
-var
-   c: ContestType;
-   s: TPinStation;
-   q: TPinQso;
-   station: TStationContext;
-   kind: DXMultType;
-   qso: ContestExchange;
-   checked: integer;
-begin
-   BeginTest('Test_RemainingCountriesFilterAgreesWithItsSessionKind');
-   checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      for s := Low(TPinStation) to High(TPinStation) do
-         begin
-         station := PinStation(s, c);
-         kind := Kinds(c, station).DXMult;
-         (* FillVisibleBytes hides every country before the filters when the
-            session counts no DX multiplier, so nothing is asked there. *)
-         if kind = NoDXMults then
-            begin
-            Continue;
-            end;
-         for q := Low(TPinQso) to High(TPinQso) do
-            begin
-            qso := PinQso(q);
-            CheckEquals(BoolToStr(LegacyListsCountryOfKind(kind, qso.QTH.CountryID,
-                                                           qso.QTH.Continent), True),
-                        BoolToStr(ProgramListsCountry(c, station, qso), True),
-                        Who(c, s) + ' listing ' + QSOS[q].CountryID);
-            Inc(checked);
-            end;
-         end;
-      end;
-   CheckTrue(checked > 0, 'remaining-countries answers compared');
 end;
 
 end.

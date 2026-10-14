@@ -1455,8 +1455,7 @@ begin
       CheckEquals('idaho_cty', obj.DomesticFileName, 'Idaho county file');
       CheckEquals(Ord(DomesticFile), Ord(obj.DomesticMultiplierType),
                   'Idaho domestic multiplier is the dom file');
-      CheckEquals(Ord(ARRLDXCCWithNoUSAOrCanada), Ord(obj.DXMultiplierType),
-                  'Idaho stations count DXCC countries');
+      CheckTrue(obj.HasDXMultiplier, 'Idaho stations count DXCC countries');
       CheckEquals(Ord(RSTDomesticOrDXQTHExchange), Ord(obj.ExchangeKind),
                   'Idaho exchange is RST and a domestic or DX QTH');
    finally
@@ -2410,12 +2409,14 @@ end;
 (* M2 -- Q1, RULED BY NY4I 2026-10-01: ARRL FIELD DAY HAS NO MULTIPLIERS.
    The class said ARRLDXCC, transcribed from the row, while FCONTEST's arm set
    NoDXMults. Class and row were both corrected before set-up began reading
-   the class, so the value set-up starts from is the value it ends with. *)
+   the class, so the value set-up starts from is the value it ends with.
+   Since M11 S4 part 2 deleted the DX kind, the question is the class's
+   HasDXMultiplier, and Field Day leaves it at the base's False. *)
 procedure TContestFactoryTests.Test_FieldDayHasNoDXMultiplier;
 begin
    BeginTest('Test_FieldDayHasNoDXMultiplier');
-   CheckTrue(ContestIdentity(ARRLFIELDDAY).DXMultiplierType = NoDXMults,
-             'the Field Day class states no DX multiplier');
+   CheckFalse(ContestIdentity(ARRLFIELDDAY).HasDXMultiplier,
+              'the Field Day class has no DX multiplier');
    (* The row's half of this went with the row (M10 S8); the class is the
       only statement left, and it is the literal above. *)
 end;

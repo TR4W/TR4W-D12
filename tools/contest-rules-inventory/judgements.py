@@ -94,9 +94,9 @@ ROUTINES = {
    # the contest states its key (PrefixMultiplierKey) and whether it has one
    # (HasPrefixMultiplier); PrefixMultiplierType is deleted (part 2).
    ("logedit.pas", "Add"): ("multipliers", "ZoneMultiplierType (existing trait) + " + new("ZoneMultRule")),
-   # Its three DX-kind filters left at M11 S4 (part 1): the contest answers
-   # ListsRemainingDXCountry.
-   ("uMults.pas", "MultsObject.FillVisibleBytes"): ("multipliers", "ListsRemainingDXCountry (existing, M11 S4)"),
+   # uMults.FillVisibleBytes left at M11 S4: its three DX-kind filters at part 1
+   # (the contest answers ListsRemainingDXCountry), its DoingDXMults gate at
+   # part 2 (the contest answers HasDXMultiplier). It reads no session kind.
    # ------------------------------------------------------------ ADIF import
    # ApplyContestSpecificADIFTail and ProcessImportedSRX_String were deleted in M5a (1908626e).
    # ApplyClasslessADIFImport went when its last contest gained a class -- ARRL 160 at M7b,

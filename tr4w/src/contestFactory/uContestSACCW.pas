@@ -75,7 +75,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -95,10 +94,6 @@ type
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
    public
-      (* SET-UP -- see TContestBase.DescribeSession. *)
-      procedure DescribeSession(const aStation: TStationContext;
-                                aSession: TSessionDefaults); override;
-   public
       (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
       function HasPrefixMultiplier: boolean; override;
@@ -108,10 +103,14 @@ type
                                    out aKey: PrefixMultiplierString): boolean; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
-         DescribeSession states the session's DX kind under; the key and the
-         country list ask it, so the two cannot disagree (M11 S4). *)
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
       function CountsDXMultiplier: boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -245,11 +244,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestSACCW.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
-end;
-
 function TContestSACCW.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -274,20 +268,6 @@ function TContestSACCW.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
-end;
-
-(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
-   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
-   writes no global and reads only aStation.
-   The arm named SACCW, SACSSB; each of them holds its own
-   copy (design 1.4), so a sponsor changing one changes one. *)
-procedure TContestSACCW.DescribeSession(const aStation: TStationContext;
-                                        aSession: TSessionDefaults);
-begin
-   if ScandinavianCountry(string(aStation.MyCountry)) then
-      begin
-      aSession.DXMult := ARRLDXCC;
-      end;
 end;
 
 (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,
@@ -325,8 +305,18 @@ begin
    Result := ScandinavianCountry(string(Station.MyCountry));
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for a Scandinavian entrant; none for anyone else. This is
+   the station test the session's DX kind was chosen by (the trait, then
+   DescribeSession) until that kind was deleted; DXMultiplierKey and the
+   country list ask the same predicate, so the answers cannot disagree. *)
+function TContestSACCW.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
-   Every country, for a Scandinavian entrant (ARRLDXCC, which DescribeSession states);
+   Every country, for a Scandinavian entrant (ARRLDXCC, which DescribeSession stated);
    none for anyone else, whose multiplier is the Scandinavian district. *)
 function TContestSACCW.DXMultiplierKey(const aQso: ContestExchange;
                                        out aKey: DXMultiplierString): boolean;

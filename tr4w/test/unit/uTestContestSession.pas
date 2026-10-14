@@ -72,7 +72,6 @@ type
       procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
       procedure Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
       procedure Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
-      procedure Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
       procedure Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
       procedure Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
    end;
@@ -304,23 +303,18 @@ begin
    session := Describe(SALMONRUN, inState);
    try
       CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, 'Salmon Run in state: exchange');
-      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = ARRLDXCCWithNoUSAOrCanada),
-                'Salmon Run in state: DXCC without W/VE');
    finally
       session.Free;
       end;
    session := Describe(SALMONRUN, outOfState);
    try
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'Salmon Run out of state: exchange');
-      CheckTrue(not session.IsStated(svDXMult), 'Salmon Run out of state states no DX mult');
    finally
       session.Free;
       end;
 
    session := Describe(TEXASQSOPARTY, inState);
    try
-      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = ARRLDXCCWithNoUSACanadaKH6OrKL7),
-                'Texas in state: DXCC without W/VE/KH6/KL7');
       CheckTrue(not session.IsStated(svExchange), 'Texas in state keeps the trait''s exchange');
    finally
       session.Free;
@@ -328,7 +322,6 @@ begin
    session := Describe(TEXASQSOPARTY, outOfState);
    try
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'Texas out of state: exchange');
-      CheckTrue(not session.IsStated(svDXMult), 'Texas out of state states no DX mult');
    finally
       session.Free;
       end;
@@ -356,7 +349,6 @@ begin
       session := Describe(c, KansasStation);
       try
          CheckTrue(session.Exchange = RSTPowerExchange, ContestTypeSA[c] + ' W: power');
-         CheckTrue(session.DXMult = ARRLDXCCWithNoUSAOrCanada, ContestTypeSA[c] + ' W: DXCC');
          CheckTrue(not session.IsStated(svDomesticFile), ContestTypeSA[c] + ' W: no domestic file');
          CheckEquals('ARRL DX Test', session.ContestName, ContestTypeSA[c] + ' name');
          CheckEquals(2, session.DomesticCountryCount, ContestTypeSA[c] + ' K and VE');
@@ -369,42 +361,33 @@ begin
          CheckTrue(session.Exchange = RSTDomesticQTHExchange, ContestTypeSA[c] + ' DX: a state');
          CheckTrue(session.DomesticMult = DomesticFile, ContestTypeSA[c] + ' DX: domestic mults');
          CheckEquals('S48P14DC', session.DomesticFile, ContestTypeSA[c] + ' DX: S48P14DC');
-         CheckTrue(not session.IsStated(svDXMult), ContestTypeSA[c] + ' DX: no DX mult stated');
       finally
          session.Free;
          end;
       end;
 end;
 
-(* THE TWO FIELD DAYS' DX MULTIPLIER: THE ROW, THE CLASS AND THE SESSION SAY
+(* THE TWO FIELD DAYS' DX MULTIPLIER: THE ROW, THE CLASS AND THE SESSION SAID
    ONE VALUE. Field Day's was made so at M2 (Q1, NoDXMults); Winter Field
    Day's at M7a, to ARRLDXCCWithNoARRLSections -- the value its arm always set
    and so the value every session ran. Both DescribeSessions restated it until
-   M11 S2 (plan 1.3); the trait is the one statement now, so set-up states
-   none and the session runs the trait. *)
+   M11 S2 (plan 1.3). M11 S4 part 2 deleted the DX kind: the question is the
+   class's HasDXMultiplier, False for Field Day (the base's) and True for
+   Winter Field Day at every station. *)
 procedure TContestSessionTests.Test_FieldDayDXMultipliersAreWhatTheSessionRuns;
 
-   procedure Check(aContest: ContestType; aExpected: DXMultType);
-   var
-      session: TSessionDefaults;
+   procedure Check(aContest: ContestType; aExpected: boolean);
    begin
-      (* The row's line went with the row (M10 S8): the class and the session
-         are each held to the literal, which is what the row said. *)
-      CheckTrue(ContestIdentity(aContest).DXMultiplierType = aExpected,
+      (* The row's line went with the row (M10 S8): the class is held to the
+         literal, which is what the row said. *)
+      CheckTrue(ContestIdentity(aContest).HasDXMultiplier = aExpected,
                 ContestTypeSA[aContest] + ': the class');
-      session := Describe(aContest, KansasStation);
-      try
-         CheckFalse(session.IsStated(svDXMult),
-                    ContestTypeSA[aContest] + ': set-up restates no DX multiplier');
-      finally
-         session.Free;
-         end;
    end;
 
 begin
    BeginTest('Test_FieldDayDXMultipliersAreWhatTheSessionRuns');
-   Check(ARRLFIELDDAY, NoDXMults);
-   Check(WINTERFIELDDAY, ARRLDXCCWithNoARRLSections);
+   Check(ARRLFIELDDAY, False);
+   Check(WINTERFIELDDAY, True);
 end;
 
 (* FIELD DAY'S MESSAGES ARE BUILT FROM THE STATION IT IS HANDED, and its
@@ -518,7 +501,6 @@ begin
    session := Describe(SEVENQP, inState);
    try
       CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, '7QP in state: county or DX');
-      CheckTrue(session.DXMult = ARRLDXCCWithNoUSACanadaKH6OrKL7, '7QP in state: DXCC');
       CheckTrue(session.IsStated(svDXMultLimit) and (session.DXMultLimit = 20),
                 '7QP in state: at most 20 DX multipliers');
    finally
@@ -527,7 +509,6 @@ begin
    session := Describe(SEVENQP, outOfState);
    try
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, '7QP out of state: a county');
-      CheckTrue(not session.IsStated(svDXMult), '7QP out of state states no DX mult');
       CheckTrue(not session.IsStated(svDXMultLimit), '7QP out of state states no limit');
    finally
       session.Free;
@@ -539,7 +520,6 @@ begin
    try
       CheckEquals('NEQSOW1', session.DomesticFile, 'NEQP inside New England: NEQSOW1');
       CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, 'NEQP inside: county or DX');
-      CheckTrue(session.DXMult = ARRLDXCCWithNoUSACanadaKH6OrKL7, 'NEQP inside: DXCC');
       CheckEquals(20, session.DXMultLimit, 'NEQP inside: limit 20');
       CheckEquals(4, session.DomesticCountryCount, 'NEQP: K, VE, KH6, KL');
    finally
@@ -549,7 +529,6 @@ begin
    try
       CheckEquals('NEQSO', session.DomesticFile, 'NEQP outside New England: NEQSO');
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'NEQP outside: a county');
-      CheckTrue(not session.IsStated(svDXMult), 'NEQP outside states no DX mult');
       CheckEquals(20, session.DXMultLimit, 'NEQP outside: limit 20 too');
    finally
       session.Free;
@@ -609,41 +588,25 @@ begin
       end;
 end;
 
-(* THE STATION-DEPENDENT ARMS STATE ONE SIDE EACH: All Asian on the
-   continent, ARRL 160 on the ARRL-section countries, YU DX on the station's
-   own country; and the Gagarin Cup's R150S list. *)
+(* THE STATION-DEPENDENT ARMS STATE ONE SIDE EACH: ARRL 160 on the
+   ARRL-section countries, YU DX on the station's own country; and the
+   Gagarin Cup's R150S list. (All Asian stated only its DX kind, and left
+   with it at M11 S4 part 2: uTestDXMultiplierKey.HAS_DX pins its answer.) *)
 procedure TContestSessionTests.Test_M7bStationChoicesAreStatedPerSide;
 var
-   asian, dx, yu: TStationContext;
+   dx, yu: TStationContext;
    session: TSessionDefaults;
 begin
    BeginTest('Test_M7bStationChoicesAreStatedPerSide');
-   asian := KansasStation;
-   asian.MyCountry := 'JA';
-   asian.MyContinent := Asia;
    dx := KansasStation;
    dx.MyCountry := 'DL';
    dx.MyContinent := Europe;
    yu := dx;
    yu.MyCountry := 'YU';
 
-   session := Describe(ALLASIANCW, asian);
-   try
-      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = ARRLDXCC), 'All Asian, Asia: DXCC');
-   finally
-      session.Free;
-      end;
-   session := Describe(ALLASIANSSB, KansasStation);
-   try
-      CheckTrue(not session.IsStated(svDXMult), 'All Asian, W: no DXCC stated');
-   finally
-      session.Free;
-      end;
-
    session := Describe(ARRL160, KansasStation);
    try
       CheckTrue(session.Exchange = RSTDomesticOrDXQTHExchange, 'ARRL 160, W: section or DX');
-      CheckTrue(session.DXMult = ARRLDXCCWithNoARRLSections, 'ARRL 160, W: DXCC');
       CheckEquals(20, session.DomesticCountryCount, 'ARRL 160: the ARRL-section countries');
    finally
       session.Free;
@@ -651,7 +614,6 @@ begin
    session := Describe(ARRL160, dx);
    try
       CheckTrue(session.Exchange = RSTDomesticQTHExchange, 'ARRL 160, DX: a section');
-      CheckTrue(not session.IsStated(svDXMult), 'ARRL 160, DX: no DX mult stated');
    finally
       session.Free;
       end;
@@ -659,7 +621,6 @@ begin
    session := Describe(YUDX, yu);
    try
       CheckTrue(session.DomesticMult = NoDomesticMults, 'YU DX, YU: no domestic mults');
-      CheckTrue(session.DXMult = ARRLDXCC, 'YU DX, YU: DXCC');
    finally
       session.Free;
       end;
@@ -733,7 +694,6 @@ begin
 
    session := Describe(IRTS, ireland);
    try
-      CheckTrue(not session.IsStated(svDXMult), 'IRTS, EI: the DX multiplier is the head''s');
       CheckTrue(session.IsStated(svInitialExchangeCursorAtStart) and
                 session.InitialExchangeCursorAtStart, 'IRTS: the cursor at the start');
       CheckTrue(session.Band = Band80, 'IRTS: 80 m');
@@ -742,30 +702,13 @@ begin
    finally
       session.Free;
       end;
-   session := Describe(IRTS, dl);
-   try
-      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = NoDXMults),
-                'IRTS, DL: no DX multiplier');
-   finally
-      session.Free;
-      end;
-
    session := Describe(RDA, russia);
    try
-      CheckTrue(not session.IsStated(svDXMult), 'RDA, UA: the DX multiplier is the head''s');
       CheckEquals(5, session.DomesticCountryCount, 'RDA: the Russian countries');
       CheckTrue(session.DomesticMultByBand = dmbbAllBand, 'RDA: domestic mults over all bands');
    finally
       session.Free;
       end;
-   session := Describe(RDA, dl);
-   try
-      CheckTrue(session.IsStated(svDXMult) and (session.DXMult = NoDXMults),
-                'RDA, DL: no DX multiplier');
-   finally
-      session.Free;
-      end;
-
    session := Describe(CQMM, brazil);
    try
       CheckTrue(session.IsStated(svDXCCMultByBand) and (session.DXCCMultByBand = dmbbAllBand),
@@ -883,13 +826,14 @@ end;
 
   A reader may hold ContestSession across a set-up: the object must be the
   same one afterwards, or that reference dangles. A fresh object holds each
-  kind's zero -- NoInitialExchange, NoZoneMults, NoDXMults,
+  kind's zero -- NoInitialExchange, NoZoneMults,
   NoDomesticMults, UnknownExchange -- the values the globals it replaces
   started from (ActiveExchange's `= NoExchangeReceived` initializer was
   commented out, so its zero was UnknownExchange). Every member of every kind
   is written and read back through the writer FCONTEST uses, and writing one
-  kind leaves the other four as they were pinned (each is its own field, M10
-  S9b-S9f; the prefix kind, S9b's, was deleted at M11 S3). The program's own
+  kind leaves the other three as they were pinned (each is its own field, M10
+  S9b-S9f; the prefix kind, S9b's, was deleted at M11 S3, and the DX kind,
+  S9d's, at M11 S4). The program's own
   values are restored,
   because this is the process-wide session and other suites run after this
   one. *)
@@ -897,7 +841,6 @@ procedure TContestSessionTests.Test_TheRunningSessionIsOneObjectWithOneWriter;
 const
    KIND_INITIAL = 0;
    KIND_ZONE = 2;
-   KIND_DX = 3;
    KIND_DOMESTIC = 4;
    KIND_EXCHANGE = 5;
 var
@@ -905,12 +848,10 @@ var
    fresh: TContestSession;
    savedInitial: InitialExchangeType;
    savedZone: ZoneMultType;
-   savedDX: DXMultType;
    savedDomestic: DomesticMultType;
    savedExchange: ExchangeType;
    initialKind: InitialExchangeType;
    zoneKind: ZoneMultType;
-   dxKind: DXMultType;
    domesticKind: DomesticMultType;
    exchangeKind: ExchangeType;
 
@@ -920,7 +861,6 @@ var
    begin
       ContestSession.WriteInitialExchange(ZoneInitialExchange);
       ContestSession.WriteZoneMult(ITUZones);
-      ContestSession.WriteDXMult(CQEuropeanCountries);
       ContestSession.WriteDomesticMult(DOKCodes);
       ContestSession.WriteExchange(RSTPowerExchange);
    end;
@@ -937,11 +877,6 @@ var
          begin
          CheckEquals(Ord(ITUZones), Ord(ContestSession.ZoneMult),
                      aWhat + ' leaves the zone kind');
-         end;
-      if aWritten <> KIND_DX then
-         begin
-         CheckEquals(Ord(CQEuropeanCountries), Ord(ContestSession.DXMult),
-                     aWhat + ' leaves the DX kind');
          end;
       if aWritten <> KIND_DOMESTIC then
          begin
@@ -968,8 +903,6 @@ begin
                   'a fresh session starts from NoInitialExchange');
       CheckEquals(Ord(NoZoneMults), Ord(fresh.ZoneMult),
                   'a fresh session starts from NoZoneMults');
-      CheckEquals(Ord(NoDXMults), Ord(fresh.DXMult),
-                  'a fresh session starts from NoDXMults');
       CheckEquals(Ord(NoDomesticMults), Ord(fresh.DomesticMult),
                   'a fresh session starts from NoDomesticMults');
       CheckEquals(Ord(UnknownExchange), Ord(fresh.Exchange),
@@ -980,7 +913,6 @@ begin
 
    savedInitial := ContestSession.InitialExchange;
    savedZone := ContestSession.ZoneMult;
-   savedDX := ContestSession.DXMult;
    savedDomestic := ContestSession.DomesticMult;
    savedExchange := ContestSession.Exchange;
    try
@@ -1007,17 +939,6 @@ begin
          end;
 
       PinAll;
-      for dxKind := Low(DXMultType) to High(DXMultType) do
-         begin
-         ContestSession.WriteDXMult(dxKind);
-         CheckEquals(Ord(dxKind), Ord(ContestSession.DXMult),
-                     'the reader sees what the writer wrote, DX kind '
-                     + IntToStr(Ord(dxKind)));
-         CheckOthersPinned(KIND_DX,
-                           'DX kind ' + IntToStr(Ord(dxKind)));
-         end;
-
-      PinAll;
       for domesticKind := Low(DomesticMultType) to High(DomesticMultType) do
          begin
          ContestSession.WriteDomesticMult(domesticKind);
@@ -1041,7 +962,6 @@ begin
    finally
       ContestSession.WriteInitialExchange(savedInitial);
       ContestSession.WriteZoneMult(savedZone);
-      ContestSession.WriteDXMult(savedDX);
       ContestSession.WriteDomesticMult(savedDomestic);
       ContestSession.WriteExchange(savedExchange);
       end;
@@ -1179,72 +1099,6 @@ begin
          end;
    finally
       ContestSession.WriteZoneMult(saved);
-      end;
-end;
-
-(* THE DX KIND IS THE SESSION'S (M10 S9d).
-
-  ARRL 160's class states the trait NoDXMults, and its DescribeSession
-  states ARRLDXCCWithNoARRLSections for a station in an ARRL-section country
-  and nothing for anybody else -- the frozen matrix's active.dxmult line
-  says ARRLDXCCWithNoARRLSections at us and ve and NoDXMults at dx. The two
-  set-up writes, in FCONTEST's order, leave a W session at the stated value,
-  unequal to the identity's trait: a reader that asked
-  ContestIdentity(Contest).DXMultiplierType would run ARRL 160 with a DX
-  kind it does not run.
-
-  RE-POINTED AT M11 S2 (plan 1.3, F2): this pinned ARRL 10, whose
-  DescribeSession stated the same value for EVERY station over a trait that
-  said otherwise -- a second statement of one fact, not a session that
-  varies. S2 made that trait the value and deleted the statement, so ARRL 10 no
-  longer differs from its trait anywhere. ARRL 160 varies by STATION, which is the
-  case this pin exists for. *)
-procedure TContestSessionTests.Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
-var
-   dl: TStationContext;
-   stated: TSessionDefaults;
-   trait: DXMultType;
-   saved: DXMultType;
-begin
-   BeginTest('Test_ARRL160RunsADXMultiplierItsTraitDoesNotState');
-   trait := ContestIdentity(ARRL160).DXMultiplierType;
-   CheckEquals(Ord(NoDXMults), Ord(trait), 'ARRL160: the trait');
-
-   saved := ContestSession.DXMult;
-   try
-      stated := Describe(ARRL160, KansasStation);
-      try
-         CheckTrue(stated.IsStated(svDXMult), 'ARRL160, W: states a DX multiplier');
-         CheckEquals(Ord(ARRLDXCCWithNoARRLSections), Ord(stated.DXMult),
-                     'ARRL160, W: what it states');
-
-         ContestSession.WriteDXMult(trait);
-         if stated.IsStated(svDXMult) then
-            begin
-            ContestSession.WriteDXMult(stated.DXMult);
-            end;
-
-         CheckEquals(Ord(ARRLDXCCWithNoARRLSections), Ord(ContestSession.DXMult),
-                     'ARRL160, W: the session runs what the contest stated');
-         CheckTrue(ContestSession.DXMult <> ContestIdentity(ARRL160).DXMultiplierType,
-                   'ARRL160, W: the session differs from the identity''s trait');
-      finally
-         stated.Free;
-         end;
-
-      dl := KansasStation;
-      dl.MyCall := 'DL1AAA';
-      dl.MyCountry := 'DL';
-      dl.MyContinent := Europe;
-      dl.MyState := '';
-      stated := Describe(ARRL160, dl);
-      try
-         CheckFalse(stated.IsStated(svDXMult), 'ARRL160, DL: states no DX multiplier');
-      finally
-         stated.Free;
-         end;
-   finally
-      ContestSession.WriteDXMult(saved);
       end;
 end;
 
@@ -1391,7 +1245,6 @@ begin
    Test_TheRunningSessionIsOneObjectWithOneWriter;
    Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
    Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
-   Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
    Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
    Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
 end;

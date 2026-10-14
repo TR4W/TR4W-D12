@@ -49,8 +49,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   belongs to FCONTEST until the setup migration; a contest class that read it
   could not be constructed in a test. Nothing outside the factory reads these
   accessors today -- setup reads ContestsArray and then FCONTEST adjusts -- so
-  stating the row here changes nothing. It does mean GetExchangeKind and
-  GetDXMultiplierType describe the ROW, not an in-state operator's contest.
+  stating the row here changes nothing. It does mean GetExchangeKind
+  describes the ROW, not an in-state operator's contest. (The DX kind it
+  paired with is deleted, M11 S4 part 2: HasDXMultiplier answers for the
+  station, in state only.)
 
   ---------------------------------------------------------------------------
   ===========================================================================
@@ -176,7 +178,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -204,10 +205,14 @@ type
       function CQExchangeDefault(const aStation: TStationContext): string; override;
    private
       (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
-         DescribeSession states the session's DX kind under; the key and the
-         country list ask it, so the two cannot disagree (M11 S4). *)
+         DescribeSession stated the DX kind under (deleted at M11 S4 part 2);
+         HasDXMultiplier, the key and the country list ask it, so the answers
+         cannot disagree (M11 S4). *)
       function CountsDXMultiplier: boolean;
    public
+      (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDXMultiplier (M11 S4 part 2). *)
+      function HasDXMultiplier: boolean; override;
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
@@ -276,13 +281,6 @@ end;
 function TContestWashingtonSalmonRun.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
-end;
-
-function TContestWashingtonSalmonRun.GetDXMultiplierType: DXMultType;
-begin
-   (* The ROW's value. An in-state operator runs with ARRLDXCCWithNoUSAOrCanada,
-      set by FCONTEST at setup -- see the unit header. *)
-   Result := NoDXMults;
 end;
 
 function TContestWashingtonSalmonRun.GetDomesticMultiplierType: DomesticMultType;
@@ -393,7 +391,6 @@ begin
    if aStation.InHostState then
       begin
       aSession.Exchange := RSTDomesticOrDXQTHExchange;
-      aSession.DXMult := ARRLDXCCWithNoUSAOrCanada;
       end
    else
       begin
@@ -415,9 +412,19 @@ begin
    Result := Station.InHostState;
 end;
 
+(* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- M11 S4 part 2,
+   2026-10-14. Yes for an entrant inside Washington; none outside. This is
+   the station test the session's DX kind was chosen by (the trait, then
+   DescribeSession) until that kind was deleted; DXMultiplierKey and the
+   country list ask the same predicate, so the answers cannot disagree. *)
+function TContestWashingtonSalmonRun.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
    Every country but the USA and Canada, for an entrant inside Washington (ARRLDXCCWithNoUSAOrCanada, which
-   DescribeSession states in state); none for anyone else. *)
+   DescribeSession stated in state); none for anyone else. *)
 function TContestWashingtonSalmonRun.DXMultiplierKey(const aQso: ContestExchange;
                                                      out aKey: DXMultiplierString): boolean;
 begin

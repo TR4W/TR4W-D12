@@ -86,7 +86,6 @@ type
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
       function GetZoneMultiplierType: ZoneMultType; override;
-      function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -217,11 +216,6 @@ begin
    Result := NoZoneMults;
 end;
 
-function TContestIRTS.GetDXMultiplierType: DXMultType;
-begin
-   Result := NoDXMults;
-end;
-
 function TContestIRTS.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -257,10 +251,6 @@ begin
    aSession.Band := Band80;
    aSession.DigitalModeEnable := False;
    aSession.InitialExchangeCursorAtStart := True;
-   if (aStation.MyCountry <> 'EI') and (aStation.MyCountry <> 'GI') then
-      begin
-      aSession.DXMult := NoDXMults;
-      end;
 end;
 
 (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two

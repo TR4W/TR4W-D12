@@ -269,7 +269,9 @@ end;
 (* "Multipliers are counted once PER BAND" and "Dupes: once per band per
    mode" -- the set-up traits the head applies (ContestsBooleanArray, read
    through the class). A DE entrant counts DXCC entities; an outside entrant
-   counts only the counties, so its session states no DX multiplier. *)
+   counts only the counties, so it has no DX multiplier -- the class's
+   HasDXMultiplier since M11 S4 part 2, which deleted the DX kind its
+   set-up stated. Set-up now states nothing on either side. *)
 procedure TContestDelawareQPTests.Test_DelawareMultsPerBandDupesPerBandAndMode;
 var
    contestObject: TContestBase;
@@ -286,8 +288,10 @@ begin
       CheckTrue(contestObject.VHFBandsEnabled, '6 m and up are on');
       CheckEquals(Ord(DomesticFile), Ord(contestObject.DomesticMultiplierType),
                   'states, provinces or counties from the domestic file');
-      CheckEquals(Ord(ARRLDXCCWithNoUSACanadaKH6OrKL7), Ord(contestObject.DXMultiplierType),
-                  'DXCC entities beyond the states and provinces');
+      contestObject.SetStation(StationAt(True));
+      CheckTrue(contestObject.HasDXMultiplier, 'in DE: DXCC entities beyond the states and provinces');
+      contestObject.SetStation(StationAt(False));
+      CheckFalse(contestObject.HasDXMultiplier, 'outside DE: no DX multiplier');
       CheckEquals(Ord(RSTDomesticOrDXQTHExchange), Ord(contestObject.ExchangeKind),
                   'RST and a county, state, province or DX');
    finally
@@ -308,9 +312,10 @@ begin
    session := TSessionDefaults.Create;
    try
       ContestIdentity(DELAWAREQSOPARTY).DescribeSession(StationAt(False), session);
-      CheckTrue(session.IsStated(svDXMult), 'outside DE, set-up states the DX multiplier');
-      CheckEquals(Ord(NoDXMults), Ord(session.DXMult), 'and it is none');
-      CheckFalse(session.IsStated(svExchange), 'the exchange serves both sides');
+      for v := Low(TSessionValue) to High(TSessionValue) do
+         begin
+         CheckFalse(session.IsStated(v), 'outside DE, set-up states nothing: ' + IntToStr(Ord(v)));
+         end;
    finally
       session.Free;
    end;

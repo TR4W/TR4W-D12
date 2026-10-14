@@ -80,11 +80,10 @@ var
   
 implementation
 
-uses
-  uContestSession; (* ContestSession.DoingDXMults -- M10 S9d / M11 S2; a leaf
-                     over VC, so this unit stays light (Issue #1034). The
-                     DX KIND itself is no longer read here since M11 S4:
-                     the contest's filter is ListsRemainingDXCountry. *)
+(* uContestSession WAS USED HERE for ContestSession.DoingDXMults (M10 S9d /
+  M11 S2). Since M11 S4 part 2 the contest answers whether it has a DX
+  multiplier (HasDXMultiplier) and its filter (ListsRemainingDXCountry), both
+  through uContestBase, so this unit reads no session kind at all. *)
 
 // Issue #1034: own Log4D logger (initialized below), replacing the former
 // MainUnit.logger borrow. MainUnit + LogDupe were otherwise unused here, so
@@ -259,7 +258,10 @@ label
   1;
 var
   i                                     : integer;
+  (* Asked once, not per country: a station test can allocate. *)
+  countsDX                              : boolean;
 begin
+  countsDX := ContestHasDXMultiplier(aContest);
   for i := 0 to MaxCountries - 1 do
      begin
      if CTY.ctyCountryMode = ARRLCountryMode then
@@ -270,7 +272,7 @@ begin
           Continue;
           end;
 
-     if not ContestSession.DoingDXMults then
+     if not countsDX then
         begin
         goto 1;
         end;
