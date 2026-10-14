@@ -1215,7 +1215,8 @@ Each is behaviour-preserving unless marked.
 | **M9b** | **DONE 2026-10-02 (§8.2n).** **The UI itself.** The New Contest drop-down shows `DisplayName`, active contests first and inactive ones marked (`IsActive`; SA Sprint and Locust); CATEGORY-POWER is one value and a change rescores (7.6); General QSO's display rules, the FOC log columns and WAG's call-window warning are the contest's. The off-time minimum stays named -- its two readers disagree (Q60) | `uTestContestUI`; the matrix and corpus unchanged; `BENCH_QUEUE.md` (no automated gate sees the UI) |
 | **Q6 / POTA** | **DONE 2026-10-13 (§8.2o).** POTA gains its class on NY4I's ruling: its FoundContest arm, its ADIF import, its three ADIF tail tests, uADIF's CONTEST_ID test, the New Contest prompts and the park menu rows move; `ApplyClasslessADIFImport` is deleted; three TRDOS helpers are lifted as leaves. Four contests are classless on purpose now | the matrix (only `contest.class =` moves); corpus; `uTestContestPOTA`; `BENCH_QUEUE.md` |
 | **Q28 / Q33** | **DONE 2026-10-14 (§8.2p).** The UA4W Championship and RSGB 1.8 MHz gain classes on NY4I's rulings (7.12, 7.13): two read-only station-context SERVICES, `MyCQZone` and `IsNewMultiplierAnywhere`; FoundContest's and LogCfg's last `case Contest of` deleted, LOGSTUFF's UA4W parse rule, LOGEDIT's "times one" and uNewContest's `ClasslessPrompts` moved. Only IN7QPNE (7.14) and DUMMYCONTEST stay classless -- IN7QPNE's composite class followed the same day (§8.2r), leaving DUMMYCONTEST | the matrix (only `contest.class =` expected to move); `uTestContestFactory`, `uTestContestTotals`, `uTestContestParse` |
-| **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
+| **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray`. **Runs as the staged plan S0-S9 (§8.2s, `CONTEST_FACTORY_M10_PLAN.md`)**; the KIND enums go at M11 | corpus; factory gate; full unit run; the matrix per stage |
+| **M11** | **The kinds move into the classes.** The multiplier and exchange KIND arms that survive M10 (about 80, on the session object S9 builds) move into the classes that use them, and the six kind enums are deleted (§8.2s) | the matrix; corpus; unit run |
 
 **Export comes before import and parse** because export is the only half the
 corpus can see byte for byte. Once a class's export is pinned, its round-trip
@@ -3509,6 +3510,42 @@ contest. `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated from
 `git ls-files`: regenerate after the commit.
 
 **Questions this raised -- NY4I's:** Q77-Q84 (§9).
+
+### 8.2s M10 -- the adopted plan, and two decisions (2026-10-14)
+
+M10 is too wide for one commit, so it runs as the staged plan in
+[`CONTEST_FACTORY_M10_PLAN.md`](CONTEST_FACTORY_M10_PLAN.md) (S0-S9), one
+gated commit per stage. That plan carries the measurements and the commands
+behind them (`tools/contest-factory-m10/`).
+
+**The decisive question, answered twice.** Does any class still reach the
+legacy scoring case? **No.** `LOGSTUFF.CalculateQSOPoints` calls
+`ActiveContest(Contest).ScoreQSO` and exits, and `ActiveContest` is nil only
+for a contest with no registered class -- DUMMYCONTEST alone (186
+registrations, 187 members). A second, different check found no class calling
+back into it: the factory units name `LOGSTUFF.CalculateQSOPoints` in comments
+only ("transcribed from its arm"). So deleting the case changes no registered
+contest's score; DUMMYCONTEST gets a guard (the four `QSO POINTS ...`
+overrides, then 0), not a class.
+
+**DECIDED -- county-line import asks the class (plan S7).** The import path's
+"clear the dupe flag on a county-line repeat" reads the `ContestsArray` row,
+while the class owns the county-line rule; they disagree for six parties
+(Michigan's row says yes and its class says no, and its header already calls
+the row wrong; Arizona, BC, Virginia, Salmon Run and New York the other way).
+Two owners of one rule is the shape this migration removes, and the class is
+the owner the operator's live entry already obeys. A behaviour change on
+import for those six, re-frozen with that reason.
+
+**DECIDED -- the six KIND enums outlive M10: M11.** The multiplier and
+exchange kinds (`ActiveExchange`, the four multiplier kinds, the initial
+exchange) are SESSION facts -- 27 contests run with a session kind that is not
+their trait (plan §1.4), so a reader cannot simply ask `ContestIdentity` -- and
+about 80 surviving engine arms run on them. M10 turns the six globals into one
+session object with one writer (plan S9). Moving the kinds' arms into the
+classes, and then deleting the enums, is **M11**, a step of its own. The M10
+row's promise to delete "the traits" therefore means the point-method trait
+and the tables, not the kind enums.
 
 ### 8.3 What "a contest has moved" means -- checkably
 
