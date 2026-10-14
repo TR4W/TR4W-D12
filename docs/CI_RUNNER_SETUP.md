@@ -65,6 +65,17 @@ cd C:\actions-runner-d12
              --name windows11-ci-d12 --labels win-ci --work _work --runasservice
 ```
 
+**Then run the service as LocalSystem**, as the box's other runners do:
+
+```powershell
+sc.exe config actions.runner.TR4W-TR4W-D12.windows11-ci-d12 obj= LocalSystem
+Restart-Service actions.runner.TR4W-TR4W-D12.windows11-ci-d12
+```
+
+`--runasservice` installs it as **NETWORK SERVICE**, and a runner running as
+NETWORK SERVICE **cannot update itself** -- see the third trap below. It keeps
+showing *online* while GitHub quietly stops giving it jobs.
+
 One runner directory serves one repository. A box can host several — `win-ci` already runs separate
 services for `n4af/TR4W`, `ny4i/TR4QT` and `ny4i/QK4` — so give each its own directory, its own
 `--name`, and its own service.
@@ -118,10 +129,13 @@ Python 3.14, and several unpacked runner packages (2.322 → 2.336) under `C:\ac
 there: 10 lints, 3978/0, `tr4w_setup_5.0.0.exe` in **160 s** — against ~142 s on the development
 workstation, so the VM is not a meaningful bottleneck.
 
-**Not yet done: no runner is registered for `TR4W/TR4W-D12`.** The three configured runners serve
-other repositories. That registration, and the token it needs, is the remaining step.
+~~Not yet done: no runner is registered for `TR4W/TR4W-D12`.~~ **Registered since
+2026-08-30**: `windows11-ci-d12`, in `C:\actions-runner-v334`, running as LocalSystem
+since 2026-10-14. The box's runners are `actions-runner` (`ny4i/TR4QT`),
+`actions-runner-n4af-tr4w` (`n4af/TR4W`), `actions-runner-qk4` (`ny4i/QK4`) and
+`actions-runner-v334` (this repo); `actions-runner-fresh*` are unconfigured.
 
-## Two traps this setup surfaced
+## Three traps this setup surfaced
 
 Both are fixed in the build scripts now, but they are worth knowing because they are the shape of
 failure a runner produces:
@@ -132,6 +146,18 @@ failure a runner produces:
   printing anything, because `libhamlib-4.dll` is a *load-time* import and the DLLs ship in
   `target\` while the exe must live in `test\unit\`. It worked on the development machine only
   because an unrelated HamLib checkout sat on `PATH`.
+
+- **A runner stuck at an old version is ONLINE AND GETS NO JOBS** (2026-10-14). The D12
+  runner's service ran as NETWORK SERVICE, and every daily self-update to 2.337.0 failed
+  writing its marker into the service's working directory:
+  `Access to the path 'C:\WINDOWS\system32\update.finished' is denied`. GitHub stopped
+  dispatching to it while it still reported online and idle, so release runs sat
+  *queued* for over an hour with every runner "up". Diagnosis: the job's `runner_name`
+  stays empty although its labels match, and `_diag\Runner_*.log` shows the session
+  listening with no job message and `SelfUpdater` failing. Fix: stop the service, swap
+  in the already-unpacked `bin.<new>` / `externals.<new>` folders (keep the old ones as
+  `bin.<old>`), start it -- the queued job was taken within four seconds -- then run
+  the service as LocalSystem so the next update succeeds on its own.
 
 The general lesson: **a fresh clone is not a fresh machine.** `Test-FreshClone.ps1` re-clones and
 rebuilds on the same PC, so anything the developer's environment supplies by accident stays hidden.

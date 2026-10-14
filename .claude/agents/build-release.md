@@ -226,6 +226,17 @@ something has gone wrong.
 (`mac-ci`). **One Windows runner, so queue time looks like slow runs** — a job
 reported at 19m57s ran in ~18s. Check queue time before diagnosing a hang.
 
+**But a job QUEUED while a matching runner shows online and IDLE is not queue
+time** (2026-10-14). The job's `runner_name` stays empty and the runner's
+`_diag/Runner_*.log` shows it listening with no job message. Look for
+`SelfUpdater` failures there: GitHub stops dispatching to a runner that cannot
+update itself, without marking it offline. On win-ci the D12 service ran as
+NETWORK SERVICE and could not write its update marker into system32; it runs
+as LocalSystem now. Recipe in `docs/CI_RUNNER_SETUP.md`, third trap.
+**Keeping the runners working is part of the job** (NY4I, 2026-10-14:
+*"Maintaining the runners is an integral task"*) -- diagnose and fix, then
+document here and in that file, not on the runner.
+
 Apple secrets are **per-repository**. Do not copy credentials from another repo's
 runner.
 
