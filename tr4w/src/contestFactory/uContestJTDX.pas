@@ -94,6 +94,12 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -232,6 +238,27 @@ begin
       aKey := aQso.Callsign;
       Result := True;
       end;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but Mongolia -- the ARRLDXCCWithNoJT arm. *)
+function TContestJTDX.DXMultiplierKey(const aQso: ContestExchange;
+                                      out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if aQso.QTH.CountryID <> 'JT' then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestJTDX.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

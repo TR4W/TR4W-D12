@@ -48,7 +48,10 @@ utils_text,
   LogRadio,
   LogSCP
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  (* TContestBase -- GetDXQTH's parameter (M11 S4). An interface leaf over
+    VC and uSettingsModel; it was in the implementation uses until then. *)
+  uContestBase;
 
 const
   MaxGridSquaresInList                  = 40;
@@ -326,7 +329,11 @@ procedure DupeInit;
 //function FindProperPartialCallAddress(Call: CallString): integer;
 function FoundDomesticQTH(var RXData: ContestExchange): boolean;
 
-procedure GetDXQTH(var RXData: ContestExchange);
+(* THE QSO'S DX QTH -- the engine's head, then the contest's own rule
+  (TContestBase.DXMultiplierKey, M11 S4). aContest is ActiveContest(Contest),
+  fetched ONCE by the caller and shared with whatever else it asks of the
+  contest for the same QSO; nil is the classless DUMMYCONTEST. *)
+procedure GetDXQTH(aContest: TContestBase; var RXData: ContestExchange);
 //function GetInitialExchange(Call: CallString): CallString;
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
 procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
@@ -381,9 +388,9 @@ uses
   TypInfo,          // enum names, so an inserted band cannot shift a value
   uNet,
   uGetScores,
-  (* ContestCreditsBand / ActiveContest -- SetMultFlags asks the contest
-    whether an off-band QSO earns a multiplier. *)
-  uContestBase,
+  (* ActiveContest -- SetMultFlags asks the contest whether an off-band QSO
+    earns a multiplier (ContestCreditsBand, uContestBase -- now in the
+    interface uses, for GetDXQTH's parameter). *)
   uContestFactory,
   (* ContestSession -- the zone kind set-up resolved (M10 S9c). *)
   uContestSession,
@@ -622,157 +629,49 @@ begin
   Exchange.ceContest := Contest;
 end;
 
-function GetNumber(Call: CallString): AnsiChar;
+(* GetNumber IS GONE -- M11 S4, 2026-10-14. Its only caller was GetDXQTH's
+  PACC arm, and it moved with that arm, verbatim, into TContestPACC as
+  PACCCallAreaDigit. *)
 
+(* THE QSO'S DX QTH -- M11 S4, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4).
+
+  THE HEAD IS THE ENGINE'S AND STAYS: COUNT DOMESTIC COUNTRIES is the
+  operator's setting, and a WYSIWYG domestic QTH or a domestic-country call
+  earns no DX QTH -- neither is a contest's rule.
+
+  THE REST IS THE CONTEST'S. This was `case ContestSession.DXMult of`, an
+  enum choosing which countries count FOR the contest (fifteen arms and an
+  `else`). Each DX contest states its own rule in
+  TContestBase.DXMultiplierKey now (shared country lists in
+  uDXMultiplierKey), and the arms are gone -- with them the four dead since
+  M11 S2 (no HB9, no OK, non-European, non-South American). A False answer
+  leaves the DX QTH as it was, exactly as an arm that did not match did.
+
+  THE CONTEST IS HANDED IN, NOT FETCHED: ActiveContest rebuilds the station
+  on every call, and every caller already asks the contest something else
+  for the same QSO, so it fetches once and passes it here. *)
+procedure GetDXQTH(aContest: TContestBase; var RXData: ContestExchange);
 var
-  TempString, NumberString              : CallString;
-
-begin
-  GetNumber := '0';
-
-  if (Call = '') or not StringHasNumber(Call) then Exit;
-
-  TempString := GetPrefix(Call);
-
-  NumberString := '';
-
-  while (TempString <> '') and
-    (Copy(TempString, length(TempString), 1) >= '0') and
-    (Copy(TempString, length(TempString), 1) <= '9') do
-     begin
-     NumberString := Copy(TempString, length(TempString), 1) + NumberString;
-     Delete(TempString, length(TempString), 1);
-     end;
-
-  GetNumber := NumberString[1];
-end;
-
-procedure GetDXQTH(var RXData: ContestExchange);
-
-//var
-  //ID                                    : string[6];
-  //NumberChar                            : Char; {KK1L: 6.70}
-
+  key                                   : DXMultiplierString;
 begin
   if not Settings.Contest.CountDomesticCountries then
      begin
-     if ContestSession.DomesticMult = WYSIWYGDomestic then
-       if RXData.DomesticQTH <> '' then Exit;
+     if (ContestSession.DomesticMult = WYSIWYGDomestic) and
+        (RXData.DomesticQTH <> '') then
+        begin
+        Exit;
+        end;
 
-     if DomesticCountryCall(RXData.Callsign) then Exit;
+     if DomesticCountryCall(RXData.Callsign) then
+        begin
+        Exit;
+        end;
      end;
 
-//R3DSS/E9
-  case ContestSession.DXMult of
-
-//    NoCountDXMults:      RXData.DXQTH := RXData.QTH.CountryID; { 6.60 }
-
-    NoDXMults:
-      {RXData.DXQTH := RXData.QTH.CountryID}; { 6.30 }
-
-    ARRLDXCCWithNoUSAOrCanada, CQDXCCWithNoUSAOrCanada:
-      if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    ARRLDXCCWithNoARRLSections:
-      if pos(' ' + RXData.QTH.CountryID + ' ', ARRLSectionCountryString) = 0 then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    ARRLDXCCWithNoUSACanadaKH6OrKL7:
-      if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') and
-        (RXData.QTH.CountryID <> 'KH6') and (RXData.QTH.CountryID <> 'KL') then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    ARRLDXCCWithNoIOrIS0:
-//      if (RXData.QTH.CountryID <> 'I') and (RXData.QTH.CountryID <> 'IS') and (RXData.QTH.CountryID <> 'IT9') then
-      if RXData.QTH.CountryID[1] <> 'I' then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    CQDXCCWithNoHB9: if RXData.QTH.CountryID <> 'HB' then RXData.DXQTH := RXData.QTH.CountryID;
-    CQDXCCWithNoOK: if RXData.QTH.CountryID <> 'OK' then RXData.DXQTH := RXData.QTH.CountryID;
-    ARRLDXCCWithNoJT: if RXData.QTH.CountryID <> 'JT' then RXData.DXQTH := RXData.QTH.CountryID;
-
-    NorthAmericanARRLDXCCWithNoUSACanadaOrkL7:
-      if (RXData.QTH.Continent = NorthAmerica) then
-        if (RXData.QTH.CountryID <> 'K') and
-          (RXData.QTH.CountryID <> 'VE') and
-          (RXData.QTH.CountryID <> 'KL') then
-           begin
-           RXData.DXQTH := RXData.QTH.CountryID;
-           end;
-
-    CQEuropeanCountries:
-      if (RXData.QTH.Continent = Europe) then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    CQUBAEuropeanCountries:
-      if UBACountry(RXData.QTH.CountryID) then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    CQNonEuropeanCountries:
-      if (RXData.QTH.Continent <> Europe) then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    NonSouthAmericanCountries:
-      if RXData.QTH.Continent <> SouthAmerica then
-         begin
-         RXData.DXQTH := RXData.QTH.CountryID;
-         end;
-
-    BlackSeaCountries:
-      begin
-        if BlackSeaRegionCountry(RXData.QTH.CountryID) then
-           begin
-           RXData.DXQTH := RXData.QTH.CountryID;
-           end;
-      end;
-
-    PACCCountriesAndPrefixes:
-      begin
-        if RXData.QTH.CountryID = 'UA9' then
-           begin
-           if StringHas(RXData.Callsign, '9') then
-              begin
-              RXData.DXQTH := 'UA9'
-              end
-           else
-              begin
-              RXData.DXQTH := 'UA0';
-              end;
-
-           Exit;
-           end;
-
-        if (RXData.QTH.CountryID = 'CE') or
-          (RXData.QTH.CountryID = 'JA') or (RXData.QTH.CountryID = 'LU') or
-          (RXData.QTH.CountryID = 'PY') or (RXData.QTH.CountryID = 'VE') or
-          (RXData.QTH.CountryID = 'K') or (RXData.QTH.CountryID = 'VK') or
-          (RXData.QTH.CountryID = 'ZS') or (RXData.QTH.CountryID = 'ZL') then
-           begin
-           RXData.DXQTH := RXData.QTH.CountryID + AnsiChar(GetNumber(RXData.Callsign));
-           Exit;
-           end;
-
-        RXData.DXQTH := RXData.QTH.CountryID;
-      end;
-
-  else
-    RXData.DXQTH := RXData.QTH.CountryID;
-  end;
+  if ContestDXMultiplierKey(aContest, RXData, key) then
+     begin
+     RXData.DXQTH := key;
+     end;
 end;
 
 procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);

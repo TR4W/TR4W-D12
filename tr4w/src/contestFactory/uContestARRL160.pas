@@ -117,11 +117,23 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession states the session's DX kind under; the key and the
+         country list ask it, so the two cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    uContestRegistry,
    (* ARRLSectionCountry -- the leaf the set-up arm asked. *)
    uCallSignRoutines,
@@ -298,6 +310,45 @@ procedure TContestARRL160.DescribeNewContestPrompts(aPrompts: TNewContestPrompts
 begin
    aPrompts.OfferIAmIn(TC_NORTHAMERICA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
+end;
+
+(* THE STATION TEST -- DescribeSession's (an ARRL section country), asked of
+   Station through the same list. See the declaration. *)
+function TContestARRL160.CountsDXMultiplier: boolean;
+begin
+   Result := IsARRLSectionCountry(Station.MyCountry);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the ARRL section countries, for an entrant IN one
+   (ARRLDXCCWithNoARRLSections, which DescribeSession states there); none
+   for anyone else. *)
+function TContestARRL160.DXMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier and
+      not IsARRLSectionCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only for an entrant in an ARRL section country; the CQ list for
+   anyone else, who counts no DX multiplier. *)
+function TContestARRL160.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 initialization

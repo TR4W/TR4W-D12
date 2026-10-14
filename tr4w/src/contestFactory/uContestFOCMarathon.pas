@@ -114,6 +114,10 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -292,6 +296,16 @@ end;
    4.32.5) moved here at M9b, 2026-10-02. *)
 function TContestFOCMarathon.GetPowerFieldIsFOCNumber: boolean;
 begin
+   Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC. *)
+function TContestFOCMarathon.DXMultiplierKey(const aQso: ContestExchange;
+                                             out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
    Result := True;
 end;
 

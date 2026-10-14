@@ -106,6 +106,10 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -299,6 +303,22 @@ begin
    if aStation.MyCountry = '9A' then
       begin
       aSession.DXMult := CQDXCC;
+      end;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country, for a Croatian entrant (CQDXCC, which DescribeSession
+   states for 9A); none for anyone else, whose session runs the trait's
+   NoDXMults. *)
+function TContestCroatian.DXMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyCountry = '9A' then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
       end;
 end;
 

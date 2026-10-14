@@ -148,11 +148,18 @@ type
                                             const aStation: TStationContext): string; override;
       function CabrilloModeString(aMode: ModeType;
                                   aExtMode: ExtendedModeType): string; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    SysUtils, uTR4WStrings, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
@@ -526,6 +533,28 @@ end;
 function TContestWinterFieldDay.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := Trim(string(aQso.ceClass)) + ' ' + Trim(string(aQso.QTHString));
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the ARRL section countries -- the
+   ARRLDXCCWithNoARRLSections arm. *)
+function TContestWinterFieldDay.DXMultiplierKey(const aQso: ContestExchange;
+                                                out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not IsARRLSectionCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestWinterFieldDay.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

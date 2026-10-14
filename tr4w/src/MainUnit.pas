@@ -752,6 +752,7 @@ uses
   uPanadapterForm,   // it is not a tw_ window, so it saves its own row
   uContestRegistry,  // ContestIdentity -- the contest's calendar ids, M1
   uContestBase,      // QSOCountsTowardTotals -- which records the loader counts, M6
+  uContestFactory,   // ActiveContest -- the rescore's one lookup per QSO, M11 S4
   uScoreTotals;      // AddLoggedQSO -- the bonus view, kept with the totals, M6
 
 
@@ -7188,15 +7189,8 @@ begin
 
      // LocateCall(RData.Callsign, RData.QTH, True);
 
-     if ContestSession.DoingDXMults then
-        begin
-        GetDXQTH(RData);
-        end;
-
-     if DoingPrefixMults then
-        begin
-        SetPrefix(RData);
-        end;
+     (* The DX QTH, then the prefix, from one contest lookup -- M11 S4. *)
+     SetDXQTHAndPrefix(RData);
 
      GetRidOfPrecedingSpaces(ExchangeString);
      GetRidOfPostcedingSpaces(ExchangeString);
@@ -7263,12 +7257,13 @@ begin
   // indicator).  RData.Callsign itself is preserved.
   ctyLocateCallStripRover(RData.Callsign, RData.QTH);
 
-  if ContestSession.DoingDXMults then
-     begin
-     GetDXQTH(RData);
-     end;
+  (* THE DX QTH, THEN THE PREFIX, FROM ONE CONTEST LOOKUP -- M11 S4. The two
+     steps that stood here (GetDXQTH when the session counts DX multipliers,
+     SetPrefix when the contest counts prefixes) are LOGEDIT.SetDXQTHAndPrefix,
+     in the same order: GetDXQTH asks the contest for the DX key now, and two
+     ActiveContest calls per QSO would rebuild the station twice.
 
-  (* THE PREFIX MULTIPLIER, SET BY LOGEDIT.SetPrefix AND BY NOTHING ELSE -- M8.
+     THE PREFIX MULTIPLIER, SET BY LOGEDIT.SetPrefix AND BY NOTHING ELSE -- M8.
 
      A `case ActivePrefixMult of` stood after this call and was a COPY of six
      of SetPrefix's arms (Belgium, SAC, Indonesian districts, Prefix, South
@@ -7295,10 +7290,7 @@ begin
      itself is the contest's (TContestBase.PrefixMultiplierKey), and since
      M11 S3 part 2 so is DoingPrefixMults (LOGEDIT, asking
      TContestBase.HasPrefixMultiplier): the prefix kind is deleted. *)
-  if DoingPrefixMults then
-     begin
-     SetPrefix(RData);
-     end;
+  SetDXQTHAndPrefix(RData);
 
   GetRidOfPrecedingSpaces(ExchangeString);
   GetRidOfPostcedingSpaces(ExchangeString);
@@ -8696,8 +8688,16 @@ end;
   number, so the caller owns it), or mark dupes (that needs the log walked in
   order, which is the rescore loop's business). *)
 procedure RecomputeQSOScoring(var aRX: ContestExchange);
+var
+  (* ONE ActiveContest FOR THE PREFIX AND THE DX QTH -- M11 S4. It rebuilds
+    the station on every call; this asked it through DoingPrefixMults and
+    again through SetPrefix, and GetDXQTH now needs it too. SetMultFlags and
+    CalculateQSOPoints fetch their own, as before. *)
+  contestRules: TContestBase;
 begin
-  if DoingPrefixMults then
+  contestRules := ActiveContest(Contest);
+
+  if ContestHasPrefixMultiplier(contestRules) then
      begin
      FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
@@ -8706,7 +8706,7 @@ begin
      // rescore wipes the correct USA lookup done at log-time and
      // restamps the record as DX=G.
      ctyLocateCallStripRover(aRX.Callsign, aRX.QTH);
-     SetPrefix(aRX);
+     SetPrefix(contestRules, aRX);
      end;
 
   if ContestSession.DoingZoneMults or ContestSession.DoingDXMults then
@@ -8715,7 +8715,7 @@ begin
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
      // The same rover strip as above, for the same reason.
      ctyLocateCallStripRover(aRX.Callsign, aRX.QTH);
-     GetDXQTH(aRX);
+     GetDXQTH(contestRules, aRX);
      end;
 
   Sheet.SetMultFlags(aRX);

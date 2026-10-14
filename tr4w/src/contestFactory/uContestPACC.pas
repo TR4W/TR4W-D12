@@ -106,11 +106,17 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
+   uCallSignRoutines,
+   utils_text,
    SysUtils, uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
 
@@ -248,6 +254,82 @@ procedure TContestPACC.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_NETHERLANDS);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* THE CALL AREA DIGIT OF A CALL'S PREFIX, '0' FOR A CALL WITH NO DIGIT --
+   LOGDUPE.GetNumber, moved here verbatim at M11 S4 (2026-10-14) with its only
+   caller, GetDXQTH's PACC arm. It is NOT uCallSignRoutines.GetNumber (which
+   answers #0 and reads the call, not its prefix), so it was not merged with
+   that one. Quirk kept: a prefix whose last character is not a digit leaves
+   NumberString empty, and NumberString[1] is then whatever byte the local
+   held -- as in LOGDUPE. *)
+function PACCCallAreaDigit(Call: CallString): AnsiChar;
+var
+   TempString, NumberString: CallString;
+begin
+   PACCCallAreaDigit := '0';
+
+   if (Call = '') or not StringHasNumber(Call) then
+      begin
+      Exit;
+      end;
+
+   TempString := GetPrefix(Call);
+
+   NumberString := '';
+
+   while (TempString <> '') and
+         (Copy(TempString, length(TempString), 1) >= '0') and
+         (Copy(TempString, length(TempString), 1) <= '9') do
+      begin
+      NumberString := Copy(TempString, length(TempString), 1) + NumberString;
+      Delete(TempString, length(TempString), 1);
+      end;
+
+   PACCCallAreaDigit := NumberString[1];
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   For a Dutch entrant only (PACCCountriesAndPrefixes, which DescribeSession
+   states for PA) -- the arm as it stood: Asiatic Russia split UA9/UA0 by
+   whether the call holds a 9; nine countries keyed with their call area's
+   digit; every other country by itself. Always assigned for a Dutch entrant;
+   nothing for anyone else, whose session runs the trait's NoDXMults. *)
+function TContestPACC.DXMultiplierKey(const aQso: ContestExchange;
+                                      out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyCountry <> 'PA' then
+      begin
+      Exit;
+      end;
+
+   Result := True;
+   if aQso.QTH.CountryID = 'UA9' then
+      begin
+      if StringHas(aQso.Callsign, '9') then
+         begin
+         aKey := 'UA9';
+         end
+      else
+         begin
+         aKey := 'UA0';
+         end;
+      Exit;
+      end;
+
+   if (aQso.QTH.CountryID = 'CE') or
+      (aQso.QTH.CountryID = 'JA') or (aQso.QTH.CountryID = 'LU') or
+      (aQso.QTH.CountryID = 'PY') or (aQso.QTH.CountryID = 'VE') or
+      (aQso.QTH.CountryID = 'K') or (aQso.QTH.CountryID = 'VK') or
+      (aQso.QTH.CountryID = 'ZS') or (aQso.QTH.CountryID = 'ZL') then
+      begin
+      aKey := aQso.QTH.CountryID + AnsiChar(PACCCallAreaDigit(aQso.Callsign));
+      Exit;
+      end;
+
+   aKey := aQso.QTH.CountryID;
 end;
 
 initialization

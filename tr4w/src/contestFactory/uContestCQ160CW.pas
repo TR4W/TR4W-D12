@@ -99,11 +99,16 @@ type
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    SysUtils, uContestRegistry,
    uTR4WStrings,
    uCanonicalExchange;
@@ -265,6 +270,20 @@ end;
 function TContestCQ160CW.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := RSTReceivedText(aQso) + ' ' + Trim(string(aQso.QTHString));
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA and Canada -- the CQDXCCWithNoUSAOrCanada arm. *)
+function TContestCQ160CW.DXMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
 end;
 
 initialization

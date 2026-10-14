@@ -105,6 +105,20 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   private
+      (* DOES THIS ENTRANT COUNT UBA'S EUROPEAN COUNTRIES? -- an entrant
+         outside Belgium does (CQUBAEuropeanCountries, the trait); a Belgian
+         counts every country (DescribeSession's CQDXCC). The key and the
+         remaining-mults filter ask it (M11 S4). *)
+      function CountsUBACountries: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE REMAINING-MULTS FILTER -- see
+         TContestBase.ListsRemainingDXCountry (M11 S4). *)
+      function ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                       aContinent: ContinentType): boolean; override;
    end;
 
 implementation
@@ -311,6 +325,38 @@ begin
    if aQso.QTH.CountryID = 'ON' then
       begin
       aKey := aQso.QTH.Prefix;
+      Result := True;
+      end;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestUBACW.CountsUBACountries: boolean;
+begin
+   Result := Station.MyCountry <> 'ON';
+end;
+
+(* THE REMAINING-MULTS FILTER -- M11 S4, 2026-10-14, moved from
+   uMults.FillVisibleBytes. UBA's list for an entrant outside Belgium, as the
+   window's CQUBAEuropeanCountries filter did; no filter for a Belgian. *)
+function TContestUBACW.ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                               aContinent: ContinentType): boolean;
+begin
+   Result := not CountsUBACountries or UBACountry(aCountryID);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   UBA's European countries (uCallSignRoutines.UBACountry) for an entrant
+   outside Belgium -- the trait's CQUBAEuropeanCountries; every country for a
+   Belgian, whose DescribeSession states CQDXCC. *)
+function TContestUBACW.DXMultiplierKey(const aQso: ContestExchange;
+                                       out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not CountsUBACountries or
+      UBACountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
       Result := True;
       end;
 end;

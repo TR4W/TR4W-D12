@@ -56,7 +56,10 @@ uses
     the compiler, not by grepping: wsprintfBuffer LOOKS Win32 and is TR4W s
     own buffer. *)
   LCLType,
-  uTR4WStrings;
+  uTR4WStrings,
+  (* TContestBase -- SetPrefix's contest parameter (M11 S4). An interface
+    leaf over VC and uSettingsModel; it was in the implementation uses. *)
+  uContestBase;
 
 const
   MULT_DX = 1;
@@ -181,7 +184,15 @@ procedure UpdateMaxSerialSent(Band: BandType; SerialNum: integer);  { Issue #954
 function TotalCWContacts: integer;
 function TotalPhoneContacts: integer;
 function TotalScore: LONGINT;
-procedure SetPrefix(var RData: ContestExchange {Ptr});
+procedure SetPrefix(var RData: ContestExchange); overload;
+(* The same, asking aContest -- ActiveContest(Contest), already fetched by a
+  caller that asks it something else for the same QSO (M11 S4). *)
+procedure SetPrefix(aContest: TContestBase; var RData: ContestExchange); overload;
+(* THE QSO'S DX QTH AND PREFIX, FROM ONE CONTEST LOOKUP -- M11 S4. What the
+  QSO entry paths did as two steps (GetDXQTH when the session counts DX
+  multipliers, SetPrefix when the contest counts prefixes), each step
+  fetching the contest for itself. *)
+procedure SetDXQTHAndPrefix(var RData: ContestExchange);
 (* Does the active contest have a prefix multiplier at this station? M11 S3. *)
 function DoingPrefixMults: boolean;
 {KK1L: 6.64 Added to keep BM up to date with changes made while logging}
@@ -209,9 +220,9 @@ uses
   uRemMults,
   uRemMultsForm,   { the five multiplier windows are forms -- wh[] conversion }
   uBandmap,
-  (* THE FINAL SCORE -- M6: the totals and the contest that combines them,
-     and OnMainThread for the worker threads that read the score. *)
-  uContestBase,
+  (* THE FINAL SCORE -- M6: the totals and the contest that combines them
+     (uContestBase, in the interface uses since M11 S4), and OnMainThread for
+     the worker threads that read the score. *)
   (* ActiveContest -- SetPrefix asks the contest its prefix key (M11 S3). *)
   uContestFactory,
   (* ContestIdentity -- the multiplier hint asks the session's contest which
@@ -964,11 +975,17 @@ var
   TempDomMult: Str10;
   hintLookups: TMultiplierHintLookups;
   Zone: Byte;
+  (* ONE ActiveContest FOR THE WHOLE HINT -- M11 S4. It rebuilds the station
+    on every call; this routine asked it twice through DoingPrefixMults and
+    again through SetPrefix, and GetDXQTH now needs it too. *)
+  contestRules: TContestBase;
 begin
   Result := 0;
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
+  contestRules := ActiveContest(Contest);
 
-  if ContestSession.DoingDXMults or ContestSession.DoingZoneMults or DoingPrefixMults then
+  if ContestSession.DoingDXMults or ContestSession.DoingZoneMults or
+     ContestHasPrefixMultiplier(contestRules) then
      begin
      FillChar(TempRXData, SizeOf(TempRXData), 0);
      ctyLocateCall(Call, TempRXData.QTH);
@@ -982,7 +999,7 @@ begin
      begin
      TempRXData.DXQTH := '';
      TempRXData.Callsign := Call;
-     GetDXQTH(TempRXData);
+     GetDXQTH(contestRules, TempRXData);
      if TempRXData.DXQTH <> '' then
         begin
 
@@ -1019,10 +1036,10 @@ begin
         end;
      end;
 
-  if DoingPrefixMults then
+  if ContestHasPrefixMultiplier(contestRules) then
      begin
      TempRXData.Callsign := Call;
-     SetPrefix(TempRXData);
+     SetPrefix(contestRules, TempRXData);
      if TempRXData.Prefix <> '' then
         begin
         if mo.PrfList.FindMult(TempRXData.Prefix, Index) then
@@ -2914,13 +2931,42 @@ end;
   ONE ActiveContest PER QSO: it rebuilds the station on every call, so it
   is fetched here once and never per helper. A False answer leaves the
   QSO's prefix as it was, exactly as an arm that did not match did. *)
-procedure SetPrefix(var RData: ContestExchange {Ptr});
+procedure SetPrefix(var RData: ContestExchange);
+begin
+  SetPrefix(ActiveContest(Contest), RData);
+end;
+
+procedure SetPrefix(aContest: TContestBase; var RData: ContestExchange);
 var
   key: PrefixMultiplierString;
 begin
-  if ContestPrefixMultiplierKey(ActiveContest(Contest), RData, key) then
+  if ContestPrefixMultiplierKey(aContest, RData, key) then
      begin
      RData.Prefix := key;
+     end;
+end;
+
+(* THE QSO'S DX QTH AND PREFIX -- M11 S4, 2026-10-14. The two steps every
+  QSO entry path took (ParametersOkay's two exits, the WSJT-X logged-ADIF
+  path), unchanged in order and in their tests, with the contest fetched
+  ONCE: GetDXQTH now asks the contest for the DX key, and asking
+  ActiveContest a second time for the prefix would rebuild the station
+  twice per QSO. Whether to take the DX step is still the session's DX
+  kind (DoingDXMults) until M11 S4 part 2 makes it the contest's answer. *)
+procedure SetDXQTHAndPrefix(var RData: ContestExchange);
+var
+  contestRules: TContestBase;
+begin
+  contestRules := ActiveContest(Contest);
+
+  if ContestSession.DoingDXMults then
+     begin
+     GetDXQTH(contestRules, RData);
+     end;
+
+  if ContestHasPrefixMultiplier(contestRules) then
+     begin
+     SetPrefix(contestRules, RData);
      end;
 end;
 

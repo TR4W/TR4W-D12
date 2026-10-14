@@ -215,10 +215,26 @@ Whether a contest has a prefix multiplier at all is the class's
 (`ContestHasPrefixMultiplier(ActiveContest(Contest))`) or, where the
 object is in hand, `ContestHasPrefixMultiplier(obj)`: live against
 `Station`, like the key, so F20 is closed. Do not bring back a stored
-"doing prefix" flag. A multiplier KIND's arm (`GetDXQTH`, the remaining-mult lists) stays keyed on the kind even when one
-contest uses it: the four multiplier commands let an operator state any kind
-for any contest, so the arm is that statement's meaning (it moves when Q4
-retires the commands). **`UsesBand` is asked at four places now** -- points,
+"doing prefix" flag. **`GetDXQTH` IS NO LONGER A KIND ARM EITHER (M11 S4
+part 1, 2026-10-14):** `GetDXQTH(aContest, var RXData)` keeps its ENGINE head
+(COUNT DOMESTIC COUNTRIES, the WYSIWYG domestic QTH, the domestic-country
+call) and then asks the class's `DXMultiplierKey` through
+`ContestDXMultiplierKey`, assigning only on True. **It takes the contest
+OBJECT, never fetches it:** every caller already asks the contest something
+else for the same QSO, so it fetches `ActiveContest(Contest)` ONCE and passes
+it -- `LOGEDIT.SetDXQTHAndPrefix` (the entry paths: `ParametersOkay`'s two
+exits, WSJT-X), `SetPrefix(aContest, ...)`, the rescore
+(`RecomputeQSOScoring`) and the hint (`GetMultArray`). Do not add a call that
+fetches it again: `ActiveContest` rebuilds the station each time. The CTY
+country list is the class's `CountryMode` (asked by `uSettingsEffects`
+straight after FoundContest) and the remaining-mults window's filter its
+`ListsRemainingDXCountry` (`mo.FillVisibleBytes(aContest)`), which reproduces
+the window's old filters ONLY (F7). Neither reads the DX kind now; part 2
+deletes `DXMultType`. `LOGDUPE.GetNumber` went with the PACC arm, to
+`uContestPACC.PACCCallAreaDigit` -- not the same routine as
+`uCallSignRoutines.GetNumber`. A multiplier KIND's arm that has NOT moved (the
+remaining-mult lists, the zone and domestic kinds) stays keyed on the kind
+until its M11 stage. **`UsesBand` is asked at four places now** -- points,
 multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO
 marks no dupe bit and is never a dupe; the M3-found `AllBands` gap is FIXED),
 and the hint (`DetermineIfNewMult`, `uContestBase.CreditedBands`).
@@ -253,12 +269,15 @@ M10 IS COMPLETE (2026-10-14).** Do not add one back: a new reader asks
 zero is `UnknownExchange` (the global's `= NoExchangeReceived` initializer
 was commented out). `tree.LooksLikeAGrid` reads it once per log row per
 repaint -- one call and a field load, ahead of any string work; keep it
-first. **What M11 inherits:** the six kind ENUMS (five since M11 S3) and their ~80 engine arms
+first. **What M11 inherits:** the six kind ENUMS (five since M11 S3; the DX
+kind's readers moved at S4 part 1 and the enum goes at its part 2) and their ~80 engine arms
 (shape parsers, sheet, display, exporters), every one reading
-`ContestSession`. **The CTY country list (`ctyCountryMode`) is derived
-from `ContestSession.DXMult` in the CONTEST setting's effect, straight after
-`FoundContest` returns** (plan F5) -- its only live caller, so the order is
-right; a new caller of `FoundContest` must run that derivation too.
+`ContestSession`. **The CTY country list (`ctyCountryMode`) is set in the
+CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
+-- from the contest's `CountryMode` (`ContestCountryMode(ActiveContest(
+Contest))`) since M11 S4, from `ContestSession.DXMult` before -- its only
+live caller, so the order is right; a new caller of `FoundContest` must set
+it too.
 **Never repoint a kind reader to `ContestIdentity(Contest)`**: it is the
 SESSION's value, and 24 contests run a kind their trait does not state at a
 matrix station, 32 at some station (M11 S2) -- JIDX CW: trait

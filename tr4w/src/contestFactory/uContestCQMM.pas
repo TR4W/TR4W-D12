@@ -104,6 +104,10 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -282,6 +286,16 @@ begin
          Result := True;
          end;
       end;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC. *)
+function TContestCQMM.DXMultiplierKey(const aQso: ContestExchange;
+                                      out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
 end;
 
 initialization

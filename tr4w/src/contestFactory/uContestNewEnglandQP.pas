@@ -103,11 +103,23 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession states the session's DX kind under; the key and the
+         country list ask it, so the two cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    uContestRegistry,
    (* FixedModePoints -- the helper for a number per mode. *)
    uContestFixedPoints,
@@ -242,6 +254,43 @@ procedure TContestNewEnglandQP.DescribeNewContestPrompts(aPrompts: TNewContestPr
 begin
    aPrompts.OfferIAmIn(TC_NEWENGLAND);
    aPrompts.AskFieldWithCommentWhenInside(TC_NEWENGLANDSTATEABREVIATION, ncfMyState);
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestNewEnglandQP.CountsDXMultiplier: boolean;
+begin
+   Result := IsNewEnglandState(Station.MyState);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA, Canada, Hawaii and Alaska, for an entrant in New England (ARRLDXCCWithNoUSACanadaKH6OrKL7, which
+   DescribeSession states there); none for anyone else. *)
+function TContestNewEnglandQP.DXMultiplierKey(const aQso: ContestExchange;
+                                              out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier and
+      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only where the entrant counts the DX multiplier; the CQ list
+   for anyone else, who counts none. *)
+function TContestNewEnglandQP.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 initialization

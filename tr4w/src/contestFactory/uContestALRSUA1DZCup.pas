@@ -94,6 +94,16 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   private
+      (* DOES THIS ENTRANT COUNT RDA DISTRICTS? -- a Russian station outside
+         St Petersburg and its oblast does, with no DX multiplier and no
+         domestic file. DescribeSession states the session under it and the
+         DX key asks it, so the two cannot disagree (M11 S4). *)
+      class function CountsRDADistricts(const aStation: TStationContext): boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -274,29 +284,43 @@ end;
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
    it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
    writes no global and reads only aStation. *)
-procedure TContestALRSUA1DZCup.DescribeSession(const aStation: TStationContext;
-                                               aSession: TSessionDefaults);
+(* A RUSSIAN STATION OUTSIDE ST PETERSBURG AND ITS OBLAST counts RDA
+   districts. The oblast is read from MY CALL, as ScoreQSO reads it. A call
+   with no oblast reads two zeros, as ScoreQSO's does; the arm's Str2 was
+   never initialised, so that case read whatever the stack held.
+
+   LIFTED OUT OF DescribeSession AT M11 S4 (2026-10-14), line for line, when
+   the DX key moved here and needed the same test: one statement of it, not
+   two. *)
+class function TContestALRSUA1DZCup.CountsRDADistricts(const aStation: TStationContext): boolean;
 var
    oblast: string[2];
 begin
-   aSession.LiteralDomesticQTH := True;
-
-   (* A RUSSIAN STATION OUTSIDE ST PETERSBURG AND ITS OBLAST counts RDA
-      districts, with no DX multiplier and no domestic file. The oblast is read
-      from MY CALL, as ScoreQSO reads it. A call with no oblast reads two
-      zeros, as ScoreQSO's does; the arm's Str2 was never initialised, so
-      that case read whatever the stack held. *)
+   Result := False;
    FillChar(oblast, SizeOf(oblast), 0);
    if RussianID(string(aStation.MyCountry)) then
       begin
       oblast := ShortString(GetOblast(aStation.MyCall));
       if not (GetRussiaOblastByTwoChars(Char(oblast[1]), Char(oblast[2])) in [rtUA1A, rtUA1C]) then
          begin
-         aSession.DXMult := NoDXMults;
-         aSession.DomesticMult := RDADistrict;
-         aSession.DomesticFile := '';
-         aSession.MultByBand := False;
+         Result := True;
          end;
+      end;
+end;
+
+procedure TContestALRSUA1DZCup.DescribeSession(const aStation: TStationContext;
+                                               aSession: TSessionDefaults);
+begin
+   aSession.LiteralDomesticQTH := True;
+   (* A RUSSIAN STATION OUTSIDE ST PETERSBURG AND ITS OBLAST counts RDA
+      districts, with no DX multiplier and no domestic file -- see
+      CountsRDADistricts. *)
+   if CountsRDADistricts(aStation) then
+      begin
+      aSession.DXMult := NoDXMults;
+      aSession.DomesticMult := RDADistrict;
+      aSession.DomesticFile := '';
+      aSession.MultByBand := False;
       end;
 end;
 
@@ -317,6 +341,23 @@ procedure TContestALRSUA1DZCup.DescribeNewContestPrompts(aPrompts: TNewContestPr
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURRDAIDORGRID, ncfMyState);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURRDAIDORGRID, ncfMyState);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country (the trait's CQDXCC), except for a Russian entrant
+   outside St Petersburg and its oblast, who counts RDA districts and no DX
+   multiplier -- the station test DescribeSession states that under, which
+   both now ask (CountsRDADistricts). *)
+function TContestALRSUA1DZCup.DXMultiplierKey(const aQso: ContestExchange;
+                                              out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not CountsRDADistricts(Station) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
 end;
 
 initialization

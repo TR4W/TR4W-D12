@@ -109,6 +109,12 @@ type
    protected
       (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
       function GetTotalsDisplay: TTotalsDisplay; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -301,6 +307,23 @@ function TContestRussianDX.GetTotalsDisplay: TTotalsDisplay;
 begin
    Result := inherited GetTotalsDisplay;
    Result.DomesticMultsCaption := TC_OBLASTS;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's ARRLDXCC. *)
+function TContestRussianDX.DXMultiplierKey(const aQso: ContestExchange;
+                                           out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station -- the ARRLDXCC kind was in the ARRL set. *)
+function TContestRussianDX.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

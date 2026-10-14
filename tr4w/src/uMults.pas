@@ -32,7 +32,10 @@ uses
   uCallSignRoutines,
   uCTYDAT,
   //Country9,
-  Log4D;   // Issue #1034: dropped uCallsigns (unused here)
+  Log4D,
+  (* TContestBase -- FillVisibleBytes' parameter (M11 S4). A leaf over VC
+    and uSettingsModel, already linked by the unit tests. *)
+  uContestBase;   // Issue #1034: dropped uCallsigns (unused here)
 
 
 const
@@ -65,7 +68,11 @@ type
     function IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
     function IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
     function IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
-    procedure FillVisibleBytes;
+    (* WHICH CTY COUNTRIES THE REMAINING-MULTS WINDOW LISTS. aContest is the
+      active contest (ActiveContest(Contest)), asked which countries its
+      filter keeps -- TContestBase.ListsRemainingDXCountry, M11 S4; nil, the
+      classless DUMMYCONTEST, keeps them all. *)
+    procedure FillVisibleBytes(aContest: TContestBase);
   end;
 
 var
@@ -74,8 +81,10 @@ var
 implementation
 
 uses
-  uContestSession; (* ContestSession.DXMult -- M10 S9d; a leaf over VC, so
-                     this unit stays light (Issue #1034) *)
+  uContestSession; (* ContestSession.DoingDXMults -- M10 S9d / M11 S2; a leaf
+                     over VC, so this unit stays light (Issue #1034). The
+                     DX KIND itself is no longer read here since M11 S4:
+                     the contest's filter is ListsRemainingDXCountry. *)
 
 // Issue #1034: own Log4D logger (initialized below), replacing the former
 // MainUnit.logger borrow. MainUnit + LogDupe were otherwise unused here, so
@@ -245,7 +254,7 @@ begin
 
 end;
 
-procedure MultsObject.FillVisibleBytes;
+procedure MultsObject.FillVisibleBytes(aContest: TContestBase);
 label
   1;
 var
@@ -266,14 +275,17 @@ begin
         goto 1;
         end;
 
-     if ContestSession.DXMult = CQNonEuropeanCountries then
-       if CTY.ctyTable[i].DefaultContinent = Europe then Continue;
-
-     if ContestSession.DXMult = CQEuropeanCountries then
-       if CTY.ctyTable[i].DefaultContinent <> Europe then Continue;
-
-     if ContestSession.DXMult = CQUBAEuropeanCountries then
-       if not UBACountry(CTY.ctyTable[i].ID) then Continue;
+     (* THE CONTEST'S FILTER -- M11 S4, 2026-10-14. Three tests on the
+       session's DX kind stood here: CQNonEuropeanCountries (no contest ran
+       it since M11 S2), CQEuropeanCountries (WAE, for an entrant outside
+       Europe) and CQUBAEuropeanCountries (UBA, outside Belgium). The contest
+       answers now, reproducing exactly those -- not its whole DX rule, which
+       this window never knew (plan F7). *)
+     if not ContestListsRemainingDXCountry(aContest, CTY.ctyTable[i].ID,
+                                           CTY.ctyTable[i].DefaultContinent) then
+        begin
+        Continue;
+        end;
 
      if CTY.ctyCustomRemainingCountryListFound then Continue;
 

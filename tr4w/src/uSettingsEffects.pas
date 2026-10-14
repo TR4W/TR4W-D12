@@ -113,8 +113,9 @@ uses
    VC,             (* the token spelling tables -- the contest engine
                      owns these, the settings hold the token, and this is
                      where one becomes the other *)
-   uContestSession, (* ContestSession.DXMult -- the CONTEST arm's country
-                     list (plan F5, M10 S9d) *)
+   uContestBase,   (* ContestCountryMode -- the CONTEST arm's country
+                     list, the contest's answer since M11 S4 *)
+   uContestFactory, (* ActiveContest -- the same *)
    LogDupe,        // SingleBand
    uCTYDAT,        (* CTY.ctyCountryMode -- which country list CTY.DAT
                      resolves against, set by the CONTEST arm *)
@@ -361,24 +362,15 @@ begin
         contest SET-UP rule -- the class's DX multiplier, as FoundContest just
         resolved it into the session, chooses the country list (plan F5).
 
-        IT READS THE SESSION AFTER SET-UP HAS WRITTEN IT (M10 S9d, checked):
-        FoundContest's only live caller is the line above -- LOGMENU's
-        call is in a unit nothing links -- and both of its DX writes
-        (ApplyContestTraits, then ApplySessionDefaults) are inside it. So
-        this sees the resolved kind, as it saw the global before. *)
-      if ContestSession.DXMult in [ARRLDXCCWithNoUSAOrCanada,
-                                   ARRLDXCCWithNoARRLSections,
-                                   ARRLDXCCWithNoUSACanadaKH6OrKL7,
-                                   ARRLDXCCWithNoIOrIS0,
-                                   ARRLDXCCWithNoJT,
-                                   ARRLDXCC] then
-         begin
-         CTY.ctyCountryMode := ARRLCountryMode;
-         end
-      else
-         begin
-         CTY.ctyCountryMode := CQCountryMode;
-         end;
+        THE CONTEST ANSWERS IT (M11 S4, 2026-10-14). This was
+        `ContestSession.DXMult in [the six ARRL kinds]`, the session's DX
+        kind read after FoundContest had resolved it; it is the class's
+        TContestBase.CountryMode now, which asks the station the same
+        CurrentStation snapshot FoundContest handed DescribeSession (MY CALL's
+        country was derived at FoundContest's head, before either). Still
+        here, straight after FoundContest -- its only live caller -- so the
+        order is unchanged. *)
+      CTY.ctyCountryMode := ContestCountryMode(ActiveContest(Contest));
       end;
 
    if UnicodeSameText(aPath, INITIAL_EXCHANGE_CURSOR_POS) then

@@ -929,14 +929,9 @@ begin
                      CurrentOperator);
                    ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
 
-                   if ContestSession.DoingDXMults then
-                      begin
-                      GetDXQTH(TempRXData);
-                      end;
-                   if DoingPrefixMults then
-                      begin
-                      SetPrefix(TempRXData);
-                      end;
+                   (* The DX QTH, then the prefix, from one contest lookup
+                      -- M11 S4 (LOGEDIT.SetDXQTHAndPrefix). *)
+                   SetDXQTHAndPrefix(TempRXData);
 
                    //CalculateQSOPoints(TempRXData);
                    logger.debug('[uWSJTX] TotalContacts right before update of NumberSent in uWSJTX ADIF UDP message = %d', [TotalContacts]);

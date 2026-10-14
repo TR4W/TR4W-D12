@@ -85,6 +85,12 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -181,6 +187,23 @@ function TContestRadioYOC.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's ARRLDXCC. *)
+function TContestRadioYOC.DXMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station -- the ARRLDXCC kind was in the ARRL set. *)
+function TContestRadioYOC.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

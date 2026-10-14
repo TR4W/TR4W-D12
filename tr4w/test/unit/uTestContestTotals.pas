@@ -255,8 +255,19 @@ end;
 procedure TContestTotalsTests.Test_WAEWeightsItsMultipliers;
 var
    t: TScoreTotals;
+   european: TStationContext;
+   elsewhere: TStationContext;
 begin
    BeginTest('Test_WAEWeightsItsMultipliers');
+
+   (* THE ENTRANT DECIDES WHICH MULTIPLIER IS WEIGHTED -- M11 S4. Until then
+      the class read the session's DX kind (SessionDXMult =
+      CQEuropeanCountries, which DescribeSession states for an entrant
+      outside Europe); it asks its station now. *)
+   european := NoStation;
+   european.MyContinent := Europe;
+   elsewhere := NoStation;
+   elsewhere.MyContinent := NorthAmerica;
 
    t := Totals(10);
    t.Mults[Band80, Both, rmPrefix] := 1;
@@ -268,17 +279,22 @@ begin
    t.Mults[Band80, Both, rmDX] := 2;
    t.Mults[AllBands, Both, rmDX] := 2;
    t.SessionDXMult := ARRLDXCC;
-   (* 4 + 3 + 2 + 2 + 2 = 13 prefixes' worth. *)
-   CheckEquals(130, Combine(DARCWAEDCCW, NoStation, t), 'WAE prefixes, weighted by band');
-   CheckEquals(130, Combine(DARCWAEDCSSB, NoStation, t), 'the SSB running, the same');
+   (* A EUROPEAN ENTRANT: 4 + 3 + 2 + 2 + 2 = 13 prefixes' worth. *)
+   CheckEquals(130, Combine(DARCWAEDCCW, european, t), 'WAE prefixes, weighted by band');
+   CheckEquals(130, Combine(DARCWAEDCSSB, european, t), 'the SSB running, the same');
 
-   (* A NON-EUROPEAN STATION'S SESSION counts European countries. *)
+   (* AN ENTRANT OUTSIDE EUROPE counts European countries. *)
+   CheckEquals(10 * 8, Combine(DARCWAEDCCW, elsewhere, t), 'European countries, four on 80 m');
+   CheckEquals(10 * 8, Combine(DARCWAEDCSSB, elsewhere, t), 'the SSB running, the same');
+
+   (* THE SESSION KIND IS NOT READ: a European entrant counts prefixes
+      whatever the session says. *)
    t.SessionDXMult := CQEuropeanCountries;
-   CheckEquals(10 * 8, Combine(DARCWAEDCCW, NoStation, t), 'European countries, four on 80 m');
+   CheckEquals(130, Combine(DARCWAEDCCW, european, t), 'the station, not the session kind');
 
    (* A single-band entry: the general case on its band. *)
    t.ScoredBand := Band80;
-   CheckEquals(10 * 3, Combine(DARCWAEDCCW, NoStation, t), 'a single-band entry is not weighted');
+   CheckEquals(10 * 3, Combine(DARCWAEDCCW, elsewhere, t), 'a single-band entry is not weighted');
 end;
 
 procedure TContestTotalsTests.Test_RussianCupsAddPerMultiplier;

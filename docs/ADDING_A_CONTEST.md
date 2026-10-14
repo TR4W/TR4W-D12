@@ -292,6 +292,7 @@ shared files a contest touches; the search path already covers
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | **neutral since M10 S6**: 0, 0, `''`, `''`, the enum's spelling. They read the array row before |
 | `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | **neutral since M10 S6**: `NoZoneMults`, `NoDXMults`, `NoDomesticMults` |
 | `HasPrefixMultiplier`, `PrefixMultiplierKey` | **False / no key.** The prefix multiplier is not a kind since M11 S3: a prefix contest overrides both, the first against `Station` where the entrant decides it, and pins both in `uTestPrefixMultiplierKey` |
+| `DXMultiplierKey`, `CountryMode`, `ListsRemainingDXCountry` | **no key / the CQ list / list every country.** Since M11 S4 part 1 the DX KEY, the CTY country list and the remaining-mults filter are the class's; the `DXMultiplierType` trait still says WHETHER the session counts DX (`DoingDXMults`) until part 2. **A DX contest states BOTH the kind and the key** -- a kind with no key counts no DX multiplier at all -- and `CountryMode` if it counts DXCC only; pin them in `uTestDXMultiplierKey` |
 | `InitialExchangeKind`, `ExchangeKind` | **neutral since M10 S6**: `NoInitialExchange`, `UnknownExchange`. (`QSOPointMethod` is gone -- M10 S4) |
 | `IsUSQSOParty` | False since M10 S6 (it was the row's `P <> 0`). A party states True |
 | `ADIFPowerTag` | `RX_PWR` -- the ADIF tag the QSO's `Power` field goes to. FOC Marathon says `FOC_NUM`, because its parser puts the membership number there (M4) |
@@ -661,6 +662,7 @@ virtuals the sheet asks:
 |---|---|---|
 | the multiplier kinds | the three traits (`DomesticMultiplierType`, `DXMultiplierType`, `ZoneMultiplierType`), or per station in `DescribeSession` | set-up writes them to the session; the sheet keys every multiplier on them |
 | the prefix multiplier | `HasPrefixMultiplier` and `PrefixMultiplierKey` (M11 S3; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingPrefixMults` and `SetPrefix` ask them, live against `Station` |
+| the DX multiplier key, country list and window filter | `DXMultiplierKey`, `CountryMode`, `ListsRemainingDXCountry` (M11 S4 part 1) | `LOGDUPE.GetDXQTH`, `uSettingsEffects` and `mo.FillVisibleBytes` ask them, live against `Station`; whether `GetDXQTH` runs is still the DX kind until part 2 |
 | per band / per mode | `MultByBand`, `MultByMode`, `QSOByBand`, `QSOByMode` (and `DomesticMultByBand`, `DXCCMultByBand` in `DescribeSession`) | the sheet's band and mode keys |
 | the bands at all | `UsesBand` | points, multipliers, dupes and the hint all ask it (§7.4) |
 | a QSO that earns no multiplier of a kind | `CountsAsMultiplier(aQso, aKind)` | `SetMultFlags`, before the sheet's "is it new" |

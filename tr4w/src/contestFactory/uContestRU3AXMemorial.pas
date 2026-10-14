@@ -106,6 +106,12 @@ type
    protected
       (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
       function GetReportsRunningScore: boolean; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -309,6 +315,23 @@ end;
 function TContestRU3AXMemorial.GetReportsRunningScore: boolean;
 begin
    Result := False;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's ARRLDXCC. *)
+function TContestRU3AXMemorial.DXMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station -- the ARRLDXCC kind was in the ARRL set. *)
+function TContestRU3AXMemorial.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

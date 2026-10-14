@@ -90,11 +90,18 @@ type
    protected
       (* THE CABRILLO HEADER -- M9a. *)
       function GetRequiresCabrilloLocation: boolean; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    uContestRegistry,
    (* FixedModePoints -- the helper for a number per mode. *)
    uContestFixedPoints,
@@ -224,6 +231,28 @@ end;
 function TContestARRL10.GetRequiresCabrilloLocation: boolean;
 begin
    Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the ARRL section countries -- the
+   ARRLDXCCWithNoARRLSections arm. *)
+function TContestARRL10.DXMultiplierKey(const aQso: ContestExchange;
+                                        out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not IsARRLSectionCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestARRL10.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

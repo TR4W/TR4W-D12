@@ -71,11 +71,16 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    uContestRegistry, uContestFixedPoints,
    uTR4WStrings;
 
@@ -204,6 +209,22 @@ procedure TContestNASprintRTTY.DescribeNewContestPrompts(aPrompts: TNewContestPr
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURQTHANDTHENAME, ncfMyState);
    aPrompts.AskField(ncfMyName);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   North American countries other than the USA, Canada and Alaska -- the
+   NorthAmericanARRLDXCCWithNoUSACanadaOrkL7 arm. The CQ list, whatever the
+   kind's name: the country-mode set never held it. *)
+function TContestNASprintRTTY.DXMultiplierKey(const aQso: ContestExchange;
+                                              out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if IsNorthAmericanDXCountry(aQso.QTH.CountryID, aQso.QTH.Continent) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
 end;
 
 initialization

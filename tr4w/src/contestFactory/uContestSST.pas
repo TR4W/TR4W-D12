@@ -95,11 +95,16 @@ type
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    uContestRegistry,
    uContestFixedPoints,
    uTR4WStrings,
@@ -227,6 +232,22 @@ end;
 function TContestSST.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := Trim(string(aQso.Name)) + ' ' + Trim(string(aQso.QTHString));
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   North American countries other than the USA, Canada and Alaska -- the
+   NorthAmericanARRLDXCCWithNoUSACanadaOrkL7 arm. The CQ list, whatever the
+   kind's name: the country-mode set never held it. *)
+function TContestSST.DXMultiplierKey(const aQso: ContestExchange;
+                                     out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if IsNorthAmericanDXCountry(aQso.QTH.CountryID, aQso.QTH.Continent) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
 end;
 
 initialization

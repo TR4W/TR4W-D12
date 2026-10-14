@@ -91,6 +91,17 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession states the session's DX kind under; the key and the
+         country list ask it, so the two cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -243,6 +254,42 @@ procedure TContestHelvetia.DescribeNewContestPrompts(aPrompts: TNewContestPrompt
 begin
    aPrompts.OfferIAmIn(TC_SWITZERLAND);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestHelvetia.CountsDXMultiplier: boolean;
+begin
+   Result := Station.MyCountry = 'HB';
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country, for a Swiss entrant (ARRLDXCC, which DescribeSession states for HB);
+   none for anyone else, whose session runs the trait's NoDXMults. *)
+function TContestHelvetia.DXMultiplierKey(const aQso: ContestExchange;
+                                          out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only for a Swiss entrant; the CQ list for anyone else, who counts
+   no DX multiplier. *)
+function TContestHelvetia.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 initialization

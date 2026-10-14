@@ -221,11 +221,18 @@ type
       (* THE DORMANT-COUNTY BONUS -- see the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    SysUtils, uContestRegistry;
 
 type
@@ -466,6 +473,27 @@ begin
       begin
       Result := Result + countyBonus;
       end;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA and Canada -- the ARRLDXCCWithNoUSAOrCanada arm. *)
+function TContestIdahoQP.DXMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestIdahoQP.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

@@ -108,6 +108,17 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession states the session's DX kind under; the key and the
+         country list ask it, so the two cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -278,6 +289,42 @@ procedure TContestRDA.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_RUSSIA);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURRDAID, ncfMyState);
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestRDA.CountsDXMultiplier: boolean;
+begin
+   Result := RussianID(string(Station.MyCountry));
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country, for a Russian entrant (ARRLDXCC, the trait); none for anyone else, whose
+   DescribeSession states NoDXMults. *)
+function TContestRDA.DXMultiplierKey(const aQso: ContestExchange;
+                                     out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only for a Russian entrant; the CQ list for anyone else, who
+   counts no DX multiplier. *)
+function TContestRDA.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 initialization

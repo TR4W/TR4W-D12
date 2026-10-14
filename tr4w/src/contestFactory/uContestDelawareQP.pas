@@ -193,6 +193,17 @@ type
       (* THE ELECTRONIC-LOG BONUS, 50, always -- the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession states the session's DX kind under; the key and the
+         country list ask it, so the two cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 const
@@ -206,6 +217,7 @@ function DelawarePowerMultiplier(aPower: tCategoryPower): longint;
 implementation
 
 uses
+   uDXMultiplierKey,
    uCabrilloFormat,   (* FormatCabrilloMode *)
    uContestRegistry;
 
@@ -423,6 +435,44 @@ function TContestDelawareQP.BonusPoints(const aTotals: TScoreTotals;
                                         aView: TLoggedQSOView): longint;
 begin
    Result := inherited BonusPoints(aTotals, aView) + DelawareElectronicLogBonus;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestDelawareQP.CountsDXMultiplier: boolean;
+begin
+   Result := Station.InHostState;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA, Canada, Hawaii and Alaska, for an entrant inside Delaware (the trait's
+   ARRLDXCCWithNoUSACanadaKH6OrKL7); none for anyone else, whose
+   DescribeSession states NoDXMults. *)
+function TContestDelawareQP.DXMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier and
+      not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only where the entrant counts the DX multiplier; the CQ list
+   for anyone else, who counts none. *)
+function TContestDelawareQP.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 initialization

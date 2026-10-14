@@ -98,6 +98,12 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -262,6 +268,23 @@ function TContestYBDX.PrefixMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := PrefixMultiplierString(IndonesianDistrict(aQso.QTH, string(Station.MyCountry)));
    Result := True;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's ARRLDXCC. *)
+function TContestYBDX.DXMultiplierKey(const aQso: ContestExchange;
+                                      out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station -- the ARRLDXCC kind was in the ARRL set. *)
+function TContestYBDX.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

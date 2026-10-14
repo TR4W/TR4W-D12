@@ -86,6 +86,10 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -217,6 +221,20 @@ procedure TContestBSCI.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_HQ_OR_MEMBER);
    aPrompts.AskFieldWithCommentWhenInside('', ncfMyState);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   The Black Sea region's countries -- the BlackSeaCountries arm. *)
+function TContestBSCI.DXMultiplierKey(const aQso: ContestExchange;
+                                      out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if BlackSeaRegionCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
 end;
 
 initialization

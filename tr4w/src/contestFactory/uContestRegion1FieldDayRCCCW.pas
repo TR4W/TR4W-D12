@@ -91,6 +91,10 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -204,6 +208,16 @@ function TContestRegion1FieldDayRCCCW.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC. *)
+function TContestRegion1FieldDayRCCCW.DXMultiplierKey(const aQso: ContestExchange;
+                                                      out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
 end;
 
 initialization

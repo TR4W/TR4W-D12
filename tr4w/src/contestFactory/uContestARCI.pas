@@ -83,11 +83,18 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
 
 uses
+   uDXMultiplierKey,
    uContestRegistry,
    (* StringIsAllNumbers -- the leaf the arm asked. *)
    utils_text;
@@ -197,6 +204,28 @@ procedure TContestARCI.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
    aSession.AddDomesticCountries(DomesticCountriesKVEKH6KL);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but the USA, Canada, Hawaii and Alaska -- the
+   ARRLDXCCWithNoUSACanadaKH6OrKL7 arm. *)
+function TContestARCI.DXMultiplierKey(const aQso: ContestExchange;
+                                      out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestARCI.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

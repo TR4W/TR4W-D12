@@ -100,6 +100,10 @@ type
       (* WHERE ON THE BAND THE SPONSOR WANTS NO WAG QSO -- M9b. See the
          body. *)
       function CallEntryFrequencyWarning(aFreqKHz: integer): string; override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -303,6 +307,21 @@ begin
          Result := TC_WAGWarn;
          Exit;
          end;
+      end;
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country, for a German entrant (CQDXCC, which DescribeSession
+   states for DL); none for anyone else, whose multiplier is the DOK. *)
+function TContestWAG.DXMultiplierKey(const aQso: ContestExchange;
+                                     out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if Station.MyCountry = 'DL' then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
       end;
 end;
 

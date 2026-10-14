@@ -207,6 +207,30 @@ the target shape, the M-step migration order and the open questions.
   fails on a missing answer and on a key given where `HasPrefixMultiplier`
   is False. `LOGEDIT.DoingPrefixMults` is that answer for the active
   contest; there is no session flag for it.
+- **THE DX MULTIPLIER IS THE CLASS'S (M11 S4 part 1, 2026-10-14).** Three
+  virtuals, each with a nil-safe `Contest...` free function:
+  `DXMultiplierKey(aQso, out aKey: DXMultiplierString): boolean` (base
+  False; False = "leave the DX QTH as it was", as for the prefix),
+  `CountryMode: CountryModeType` (base CQ -- the North American kind was
+  never ARRL) and `ListsRemainingDXCountry(aCountryID, aContinent)` (base
+  True; WAE and UBA only -- the window's old filters, not the DX rule, F7).
+  78 contests in 76 classes state a key (CQ WW and ARRL DX once, on their
+  family bases); 35 classes answer ARRL for some entrant. A rule that
+  depends on the entrant asks `Station` as its `DescribeSession` asks
+  `aStation`; where the key and the list both ask, ONE private predicate
+  holds the test (`CountsDXMultiplier`, WAE's `CountsEuropeanCountries`,
+  UBA's `CountsUBACountries`, ALRS's `CountsRDADistricts`, which
+  `DescribeSession` calls too). Shared country lists are the leaf
+  `uDXMultiplierKey` (K/VE; K/VE/KH6/KL; the ARRL section countries; North
+  America but K/VE/KL); every-country, a continent, one excluded country and
+  PACC's split are written in the class. WAE's `CombineWithMultipliers`
+  asks its station, not `TScoreTotals.SessionDXMult` (unread now; part 2
+  deletes it with `DXMultType`). A NEW DX contest overrides
+  `DXMultiplierKey` (and `CountryMode` if it counts DXCC only) and adds rows
+  to `uTestDXMultiplierKey`'s `KEY_PINS` (and `MODE_PINS`), whose counts
+  (78 keyed, 36 ARRL) then change by hand, with the reason. Until part 2,
+  whether the engine asks the key at all is still `DoingDXMults`, the
+  session kind fixed at set-up (plan F21).
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by

@@ -232,7 +232,9 @@ uses
   uLogDatabase,   // LogDatabaseFileName -- the contest database path
   uContestMatrix, // /MATRIX and /MATRIXLIST -- the legacy-fixture harness
   (* ~~uContestFactory -- phase F~~ was here for ContestFactoryEnabled alone,
-     and went with it on 2026-09-29. This unit references nothing else in it. *)
+     and went with it on 2026-09-29. It is back for ActiveContest (M11 S4,
+     2026-10-14): the remaining-countries filter asks the active contest. *)
+  uContestFactory,
   uCFG,
   uCRC32,
   uAltP,
@@ -2240,7 +2242,8 @@ begin
   scpLoadInDateBase('trmaster.dta');
 {$IFEND}
 
-  mo.FillVisibleBytes;
+  (* The contest's remaining-countries filter -- M11 S4. *)
+  mo.FillVisibleBytes(ActiveContest(Contest));
   ws := ws + 12;
 
   tSetupExchangeNumbers;

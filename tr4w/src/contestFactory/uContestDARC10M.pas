@@ -98,6 +98,10 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
    end;
 
 implementation
@@ -233,6 +237,17 @@ procedure TContestDARC10M.DescribeNewContestPrompts(aPrompts: TNewContestPrompts
 begin
    aPrompts.OfferIAmIn(TC_GERMANY);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURDOK, ncfMyState);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country counts: the key is the CTY country -- GetDXQTH's `else`
+   arm, for the session's CQDXCC. A DL entrant's DescribeSession restates CQDXCC, so the
+   key does not depend on the station. *)
+function TContestDARC10M.DXMultiplierKey(const aQso: ContestExchange;
+                                         out aKey: DXMultiplierString): boolean;
+begin
+   aKey := aQso.QTH.CountryID;
+   Result := True;
 end;
 
 initialization

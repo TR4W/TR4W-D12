@@ -84,14 +84,19 @@ ROUTINES = {
    ("logedit.pas", "EditableLog.CallIsADupe"): ("dupe", new("DupeRule")),
    # ----------------------------------------------------------- multipliers
    ("logdupe.pas", "DupeAndMultSheet.SetMultFlags"): ("multipliers", new("MultiplierValue (s6)")),
-   ("logdupe.pas", "GetDXQTH"): ("multipliers", "DXMultiplierType (existing trait) + " + new("DXMultiplierRule")),
+   # GetDXQTH's `case` on the DX kind left at M11 S4 (part 1): the contest
+   # states its key (DXMultiplierKey). What is left here is the engine's head
+   # -- the WYSIWYG domestic test, a DOMESTIC kind read, S6's.
+   ("logdupe.pas", "GetDXQTH"): ("multipliers", "DXMultiplierKey (existing, M11 S4); the WYSIWYG domestic head moves at S6"),
    ("logdupe.pas", "DupeAndMultSheet.SetUpRemainingMultiplierArrays"): ("multipliers", "ZoneMultiplierType (existing trait) + " + new("RemainingMultList")),
    ("logedit.pas", "EditableLog.GetMultArray"): ("multipliers", new("DomesticMultFromQTH")),
    # logedit.SetPrefix left at M11 S3: it names no contest and reads no kind --
    # the contest states its key (PrefixMultiplierKey) and whether it has one
    # (HasPrefixMultiplier); PrefixMultiplierType is deleted (part 2).
    ("logedit.pas", "Add"): ("multipliers", "ZoneMultiplierType (existing trait) + " + new("ZoneMultRule")),
-   ("uMults.pas", "MultsObject.FillVisibleBytes"): ("multipliers", "DXMultiplierType (existing trait) + " + new("DXMultiplierRule")),
+   # Its three DX-kind filters left at M11 S4 (part 1): the contest answers
+   # ListsRemainingDXCountry.
+   ("uMults.pas", "MultsObject.FillVisibleBytes"): ("multipliers", "ListsRemainingDXCountry (existing, M11 S4)"),
    # ------------------------------------------------------------ ADIF import
    # ApplyContestSpecificADIFTail and ProcessImportedSRX_String were deleted in M5a (1908626e).
    # ApplyClasslessADIFImport went when its last contest gained a class -- ARRL 160 at M7b,

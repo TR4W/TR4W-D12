@@ -1665,6 +1665,59 @@ type
          uTestPrefixMultiplierKey. THE BASE ANSWERS FALSE. *)
       function HasPrefixMultiplier: boolean; virtual;
 
+      (* THE DX MULTIPLIER KEY A QSO EARNS IN THIS CONTEST -- M11 S4,
+         2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S4).
+
+         LOGDUPE.GetDXQTH asks it, after its own engine head (COUNT DOMESTIC
+         COUNTRIES, the WYSIWYG domestic QTH, the domestic-country call),
+         which is not a contest rule and stays there. The rule stood in
+         GetDXQTH as `case ContestSession.DXMult of`, an enum choosing which
+         countries count FOR the contest; each DX contest states its own now,
+         calling uDXMultiplierKey where a country list is shared.
+
+         TRUE WITH aKey MEANS "THE QSO'S DX QTH IS aKey" -- possibly empty
+         (ARI's first-letter test on an empty country). FALSE MEANS "LEAVE
+         THE QSO'S DX QTH AS IT WAS": every arm of the old case assigned only
+         on a match, and the rescore runs over a stored record. aKey is the
+         field's own type, so no conversion stands between rule and record.
+
+         A RULE THAT DEPENDS ON THE ENTRANT ASKS Station (ARRL DX, ARRL 160,
+         the All Asian, JIDX, SAC, Helvetia, the Croatian, WAG, UBA, WAE,
+         PACC, RDA, the ALRS cup, YU DX's list, and the parties' host-state
+         rules), testing exactly what its DescribeSession tests to choose the
+         session's DX kind. Station is refreshed on every ActiveContest call,
+         so the rule follows MY CALL live; whether GetDXQTH runs at all still
+         follows the session kind fixed at set-up (plan F21) until S4 part 2.
+
+         THE BASE ANSWERS FALSE -- what GetDXQTH did for every NoDXMults
+         session. *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; virtual;
+
+      (* WHICH CTY COUNTRY LIST THIS CONTEST COUNTS -- M11 S4, 2026-10-14.
+         ARRLCountryMode is DXCC only; CQCountryMode is DXCC plus the WAE
+         countries. The CONTEST setting's effect (uSettingsEffects) asks it
+         once, straight after FoundContest, and tells CTY.DAT; it stood there
+         as `ContestSession.DXMult in [the six ARRL kinds]`.
+
+         CQ IS THE ANSWER FOR NO DX MULTIPLIER TOO -- a station that runs
+         none gets the CQ list, and so does the North American kind, its
+         ARRL-sounding name notwithstanding: the set never held it. A rule
+         that depends on the entrant asks Station, as DXMultiplierKey does.
+         THE BASE ANSWERS CQCountryMode. *)
+      function CountryMode: CountryModeType; virtual;
+
+      (* DOES THE REMAINING-MULTS WINDOW LIST THIS COUNTRY? -- M11 S4,
+         2026-10-14. uMults.FillVisibleBytes asks it per CTY country, only
+         where the session counts DX multipliers. It reproduces the window's
+         filters exactly (WAE's European countries for an entrant outside
+         Europe, UBA's list for an entrant outside Belgium; the third, the
+         non-European countries, ran for no contest) -- NOT the whole DX
+         rule, which the window never knew (plan F7). THE BASE ANSWERS
+         TRUE. *)
+      function ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                       aContinent: ContinentType): boolean; virtual;
+
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
 
@@ -2352,6 +2405,22 @@ function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestE
    active contest. *)
 function ContestHasPrefixMultiplier(aContest: TContestBase): boolean;
 
+(* THE DX MULTIPLIER KEY aQso EARNS IN aContest -- see
+   TContestBase.DXMultiplierKey. nil answers False, leaving the DX QTH as it
+   was: the classless DUMMYCONTEST runs NoDXMults. *)
+function ContestDXMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
+                                out aKey: DXMultiplierString): boolean;
+
+(* THE CTY COUNTRY LIST aContest COUNTS -- see TContestBase.CountryMode. nil
+   answers CQCountryMode, as NoDXMults did. *)
+function ContestCountryMode(aContest: TContestBase): CountryModeType;
+
+(* DOES THE REMAINING-MULTS WINDOW LIST THIS COUNTRY FOR aContest? -- see
+   TContestBase.ListsRemainingDXCountry. nil answers True: no filter. *)
+function ContestListsRemainingDXCountry(aContest: TContestBase;
+                                        const aCountryID: DXMultiplierString;
+                                        aContinent: ContinentType): boolean;
+
 (* THE FOUR `QSO POINTS ...` OVERRIDES, APPLIED -- the one statement of their
    rule. True, with aQso.QSOPoints set, when one of them matches this QSO;
    False, with aQso untouched, when none does.
@@ -2674,6 +2743,46 @@ begin
       end;
 end;
 
+function ContestDXMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
+                                out aKey: DXMultiplierString): boolean;
+begin
+   if aContest = nil then
+      begin
+      aKey := '';
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.DXMultiplierKey(aQso, aKey);
+      end;
+end;
+
+function ContestCountryMode(aContest: TContestBase): CountryModeType;
+begin
+   if aContest = nil then
+      begin
+      Result := CQCountryMode;
+      end
+   else
+      begin
+      Result := aContest.CountryMode;
+      end;
+end;
+
+function ContestListsRemainingDXCountry(aContest: TContestBase;
+                                        const aCountryID: DXMultiplierString;
+                                        aContinent: ContinentType): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := True;
+      end
+   else
+      begin
+      Result := aContest.ListsRemainingDXCountry(aCountryID, aContinent);
+      end;
+end;
+
 function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
                                var aQso: ContestExchange): boolean;
 
@@ -2951,6 +3060,27 @@ function TContestBase.HasPrefixMultiplier: boolean;
 begin
    (* No prefix multiplier -- see the declaration. *)
    Result := False;
+end;
+
+function TContestBase.DXMultiplierKey(const aQso: ContestExchange;
+                                      out aKey: DXMultiplierString): boolean;
+begin
+   (* No DX multiplier -- see the declaration. *)
+   aKey := '';
+   Result := False;
+end;
+
+function TContestBase.CountryMode: CountryModeType;
+begin
+   (* The CQ list -- see the declaration. *)
+   Result := CQCountryMode;
+end;
+
+function TContestBase.ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                              aContinent: ContinentType): boolean;
+begin
+   (* No filter -- see the declaration. *)
+   Result := True;
 end;
 
 function TContestBase.RunsInMode(aMode: ModeType): boolean;

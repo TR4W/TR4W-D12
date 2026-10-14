@@ -87,6 +87,12 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -225,6 +231,30 @@ procedure TContestARIDX.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_ITALY);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country but Italy -- the ARRLDXCCWithNoIOrIS0 arm, which tests the
+   FIRST LETTER of the country, transcribed: an empty country (byte 1 of an
+   empty field, which the record's zero fill leaves #0) still counts, with an
+   EMPTY key. *)
+function TContestARIDX.DXMultiplierKey(const aQso: ContestExchange;
+                                       out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if aQso.QTH.CountryID[1] <> 'I' then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only, at every station. *)
+function TContestARIDX.CountryMode: CountryModeType;
+begin
+   Result := ARRLCountryMode;
 end;
 
 initialization

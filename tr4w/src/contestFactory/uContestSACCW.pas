@@ -106,6 +106,17 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession states the session's DX kind under; the key and the
+         country list ask it, so the two cannot disagree (M11 S4). *)
+      function CountsDXMultiplier: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
+      function CountryMode: CountryModeType; override;
    end;
 
 implementation
@@ -306,6 +317,42 @@ begin
       end;
    aKey := PrefixMultiplierString(SACDistrict(aQso.QTH));
    Result := True;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestSACCW.CountsDXMultiplier: boolean;
+begin
+   Result := ScandinavianCountry(string(Station.MyCountry));
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   Every country, for a Scandinavian entrant (ARRLDXCC, which DescribeSession states);
+   none for anyone else, whose multiplier is the Scandinavian district. *)
+function TContestSACCW.DXMultiplierKey(const aQso: ContestExchange;
+                                       out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsDXMultiplier then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
+end;
+
+(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
+   DXCC only for a Scandinavian entrant; the CQ list for anyone else, who
+   counts no DX multiplier. *)
+function TContestSACCW.CountryMode: CountryModeType;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := ARRLCountryMode;
+      end
+   else
+      begin
+      Result := CQCountryMode;
+      end;
 end;
 
 initialization

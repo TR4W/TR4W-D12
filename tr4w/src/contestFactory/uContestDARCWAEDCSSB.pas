@@ -110,6 +110,20 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   private
+      (* DOES THIS ENTRANT COUNT THE EUROPEAN COUNTRIES? -- an entrant outside
+         Europe does; a European counts the WAE prefix instead. The station
+         test DescribeSession states the DX kind under; the key, the
+         remaining-mults filter and the final score ask it (M11 S4). *)
+      function CountsEuropeanCountries: boolean;
+   public
+      (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      (* THE REMAINING-MULTS FILTER -- see
+         TContestBase.ListsRemainingDXCountry (M11 S4). *)
+      function ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                       aContinent: ContinentType): boolean; override;
    end;
 
 implementation
@@ -155,7 +169,11 @@ begin
       Exit;
       end;
 
-   if aTotals.SessionDXMult = CQEuropeanCountries then
+   (* THE ENTRANT, NOT THE SESSION (M11 S4, 2026-10-14). This read
+      aTotals.SessionDXMult = CQEuropeanCountries, the kind DescribeSession
+      states for an entrant outside Europe; it asks that station test now,
+      which is the same answer and needs no DX kind. *)
+   if CountsEuropeanCountries then
       begin
       kind := rmDX;
       end
@@ -302,6 +320,39 @@ begin
       end;
    aKey := PrefixMultiplierString(EuropeanCountriesAndWAECallRegions(aQso.QTH));
    Result := True;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)
+function TContestDARCWAEDCSSB.CountsEuropeanCountries: boolean;
+begin
+   Result := Station.MyContinent <> Europe;
+end;
+
+(* THE REMAINING-MULTS FILTER -- M11 S4, 2026-10-14, moved from
+   uMults.FillVisibleBytes. The European countries for an entrant outside
+   Europe, as the window's CQEuropeanCountries filter did; no filter for a
+   European, whose session counts no DX multiplier and is never asked. *)
+function TContestDARCWAEDCSSB.ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
+                                                      aContinent: ContinentType): boolean;
+begin
+   Result := not CountsEuropeanCountries or (aContinent = Europe);
+end;
+
+(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
+   The European countries, for an entrant outside Europe
+   (CQEuropeanCountries, which DescribeSession states there); none for a
+   European, whose multiplier is the WAE prefix (PrefixMultiplierKey). *)
+function TContestDARCWAEDCSSB.DXMultiplierKey(const aQso: ContestExchange;
+                                              out aKey: DXMultiplierString): boolean;
+begin
+   aKey := '';
+   Result := False;
+   if CountsEuropeanCountries and
+      (aQso.QTH.Continent = Europe) then
+      begin
+      aKey := aQso.QTH.CountryID;
+      Result := True;
+      end;
 end;
 
 initialization

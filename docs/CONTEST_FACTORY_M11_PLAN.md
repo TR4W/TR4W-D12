@@ -4,7 +4,9 @@
 `95e127a5`); S0c is DONE (2026-10-14, on `3b4c0777`, its re-freeze NY4I's);
 S2 is DONE (2026-10-14, on `c749f2c5`) except its F15 and F6 bullets, which
 wait (section 4 S2); S3 is DONE -- part 1 (the move) on `42a999c1`, part 2
-(the deletion) on `cbcba524`, both 2026-10-14; S1 and S4 on are not built.** See section 4 S0 for
+(the deletion) on `cbcba524`, both 2026-10-14; S4 part 1 (the move) is DONE
+on `3c8ce116` (2026-10-14), its part 2 (the deletion) not built; S1 and S5 on
+are not built.** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -1068,6 +1070,126 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
 - *Specialists:* `contest-scoring`, `settings-config` (`uSettingsEffects`),
   `lcl-ui` (the remaining-mults window), `log-database` and
   `multi-op-network` (the `DXQTH` key).
+- **PART 1 (THE MOVE) DONE 2026-10-14, on `3c8ce116`.** Part 2 (the deletion)
+  is separate and later; nothing in part 1 needs it.
+  - **The seams** (`TContestBase`, each with a nil-safe free function, nil
+    being the classless DUMMYCONTEST):
+    - `DXMultiplierKey(const aQso; out aKey: DXMultiplierString): boolean`,
+      base False (`ContestDXMultiplierKey`). **Not the `string` the plan
+      sketched, for S3's reason:** every arm assigned only on a match and LEFT
+      the QSO's DX QTH otherwise, and the rescore runs over a stored record,
+      so "no key" (False) and "an empty key" (True, `''` -- ARI's
+      first-letter test on an empty country) stay distinct; the key is the
+      field's own type.
+    - `CountryMode: CountryModeType`, base `CQCountryMode`
+      (`ContestCountryMode`) -- **parameterless, reading `Station`**, as
+      `HasPrefixMultiplier` does, not `CountryMode(aStation)`: the one caller
+      holds `ActiveContest`'s object, whose station is the `CurrentStation`
+      snapshot FoundContest handed `DescribeSession`.
+    - `ListsRemainingDXCountry(aCountryID, aContinent): boolean`, base True
+      (`ContestListsRemainingDXCountry`) -- today's filters EXACTLY, not the
+      DX rule (F7 stays open, unchanged).
+  - **`LOGDUPE.GetDXQTH(aContest, var RXData)`.** Its head (COUNT DOMESTIC
+    COUNTRIES, the WYSIWYG domestic QTH, the domestic-country call) is the
+    engine's and stays; the `case ContestSession.DXMult of` is gone, with its
+    four dead arms (no HB9, no OK, non-European, non-South American).
+    `LOGDUPE.GetNumber`, whose only caller was the PACC arm, moved verbatim
+    into `uContestPACC` as `PACCCallAreaDigit` -- it is NOT
+    `uCallSignRoutines.GetNumber` (that one answers #0 and reads the call,
+    not its prefix), so it was not merged.
+  - **Helpers** (`contestFactory/uDXMultiplierKey.pas`, a leaf on VC and
+    `uCallSignRoutines`): `IsUSAOrCanadaCountry` (K, VE),
+    `IsUSACanadaHawaiiOrAlaskaCountry` (K, VE, KH6, KL), `IsARRLSectionCountry`
+    (the same `ARRLSectionCountryString` the arm read) and
+    `IsNorthAmericanDXCountry` -- each its arm's test, inverted, on a
+    ShortString so no comparison allocates. NOT helpers (design 1.3): every
+    country (the key is the CTY country), WAE's continent filter, the
+    one-country exclusions (JT, ARI's first letter), UBA's and the Black Sea
+    lists (`uCallSignRoutines` already holds them, one contest each), PACC.
+  - **The 78, in 76 classes, by rule.** Every country, CQ list: BATAVIA_FT8,
+    CQM, CQMM, CQ WW CW+SSB (once, on `TContestCQWWBase`), CQWWRTTY, DARC10M,
+    EUDX, FOCMARATHON, GACWWWSACW, HADX, King of Spain x2, MARCONIMEMORIAL,
+    OKDX, OKOMSSB, OZCR_O, Region 1 FD x3, RSGB18, UKEI, UKRAINIAN, WWIH.
+    Every country, ARRL list: ARRL RTTY RU, CIS, LABRE, RADIOYOC, RU3AX,
+    RUSSIANDX, UNDX, WRTC, YBDX, YODX, YOUTHCHAMPIONSHIPRF; YUDX (key
+    constant, ARRL list for a YU entrant). Every country for some entrants:
+    RDA (Russian), Helvetia (HB), JIDX x2 (JA), SAC x2 (Scandinavian), All
+    Asian x2 (Asia) -- ARRL list there, CQ elsewhere; WAG (DL), Croatian (9A),
+    ALRS (not a Russian outside UA1A/UA1C). Not the ARRL section countries:
+    ARRL10, WFD; ARRL 160 (for an entrant in one). Not K/VE: CQ160 x2, AZ, FL,
+    ID; ARRL DX (W/VE entrant, once on `TContestARRLDXBase`), Salmon Run (in
+    state). Not K/VE/KH6/KL: ARCI; Delaware, 7QP, Texas (in state), NEQP (New
+    England). ARI (not I), JTDX (not JT), BSCI (Black Sea), NAQP x3, NA
+    Sprint x2, Internet Sprint, SST (North America but K/VE/KL), UBA x2 (its
+    list outside ON, every country at ON), WAEDC x2 (Europe, for an entrant
+    outside it), PACC (PA entrant). A class whose answer depends on the
+    entrant tests exactly what its `DescribeSession` tests; where the key and
+    the country list both ask, one private `CountsDXMultiplier` (WAE:
+    `CountsEuropeanCountries`, UBA: `CountsUBACountries`) holds it. ALRS's
+    oblast test was LIFTED out of `DescribeSession` into
+    `CountsRDADistricts`, which both now call (one statement, not two).
+  - **The country list** (`uSettingsEffects`' CONTEST arm):
+    `CTY.ctyCountryMode := ContestCountryMode(ActiveContest(Contest))`, still
+    straight after FoundContest. **36 contests choose the ARRL list at some
+    roster station** (the 21 whose trait is an ARRL kind, the 15 whose
+    `DescribeSession` states one), in 35 classes; the North American kind
+    was never in the ARRL set and its seven contests keep the CQ list.
+  - **The remaining-mults filter**: `mo.FillVisibleBytes(aContest)`, asked
+    from `uProgramMain` with `ActiveContest(Contest)`; WAEDC x2 and UBA x2
+    override it. `uMults` no longer reads the DX kind.
+  - **WAEDC's final score** reads its station (`CountsEuropeanCountries`)
+    instead of `TScoreTotals.SessionDXMult`, which now has no reader and goes
+    with the enum in part 2. `uTestContestTotals.Test_WAEWeightsItsMultipliers`
+    hands it European and North American stations, and pins that the session
+    kind is not read.
+  - **THE PER-QSO PATH -- ONE ActiveContest, NEVER MORE THAN BEFORE.**
+    `GetDXQTH` takes the contest object; no caller fetches it twice. LOGEDIT
+    gained `SetPrefix(aContest, var RData)` (the one-argument form delegates)
+    and `SetDXQTHAndPrefix(var RData)`, the two steps the entry paths took, in
+    order, from one lookup. Lookups per QSO, before -> after: the rescore
+    (`MainUnit.RecomputeQSOScoring`) 1-2 -> 1 (`DoingPrefixMults`, then
+    `SetPrefix` for a prefix contest; now one fetched at the top; its
+    `SetMultFlags` and `CalculateQSOPoints` fetch their own, unchanged);
+    `ParametersOkay`'s two exits 1-2 -> 1 each; the WSJT-X logged-ADIF path
+    1-2 -> 1; the need-multiplier hint (`EditableLog.GetMultArray`, per spot
+    in the band map) 1-3 -> 1. The keys allocate no string the old arms did
+    not, except a station test that already allocated in its
+    `DescribeSession` (`ScandinavianCountry`, `RussianID`, ALRS's
+    `GetOblast`) -- SAC's prefix key made the same call per QSO since S3.
+  - **Pins, written BEFORE the move and run green on the old code.**
+    `uTestDXMultiplierKey`: 161 literal (contest, entrant, QSO) -> key rows
+    covering all 78 and every station branch, over 14 entrants (us, ve, dx,
+    a New England host, PA, JA, SM, HB, 9A, YU, ON, UA, UA1, EI) and 20 QSOs
+    (including an empty country); 42 country-mode rows; 13
+    remaining-filter rows; each with its count. The old run went through
+    the program's case, set and filters, frozen in the test and selected by
+    `uTestContestKindPin.Kinds`: **174,206 passed, 1 failed** -- the hand
+    count of ARRL-list contests (35; measured 36, Delaware missed in the
+    tally), corrected to the measured value. After the move the same rows
+    ask the classes, and three cross-checks compare every ContestType x 14
+    entrants (x 20 QSOs for the key: 52,360 keys, 2,618 modes, and every
+    filter answer where the session counts DX) with the frozen rules under
+    the resolved session kind: **174,209 passed, 0 failed**. The
+    cross-checks and the frozen rules go with part 2; the literals stay.
+  - **Matrix: predicted IDENTICAL** (not run). At us/ve/dx/us-host each
+    class answers exactly what the session's arm did -- the cross-check
+    proves it for those entrants among its fourteen -- so every `dxqth=`
+    line, `cty.countrymode` and every flag follow unchanged. The window's
+    filter and the WSJT-X path are not in the matrix.
+  - **Narrowing 1264 and range 3, unchanged** (scratch `-B`; the incremental
+    build crashed FPC, as at S3). `Lint-ContestNameTests`: no ContestType
+    member was added outside the factory.
+  - **Inventory** (generated, then the tracked doc restored): rows 84 ->
+    **75**; shapes 6/0/12/66 -> **6/0/12/57**; shape-4 sites 106 -> **101**
+    (GetDXQTH's `case`, `uMults`' three compares, `uSettingsEffects`' one);
+    records PROXY 66 -> **57**, SHARED 67 -> **62**, UNUSED 23 -> **18**,
+    SHAPE 43; contests with rules outside the factory 61 -> **54** (ARRL10,
+    ARRL160, BSCI, JTDX, PACC, UBA x2 leave). `judgements.ROUTINES` names
+    the new seams for `GetDXQTH` (whose remaining site is the WYSIWYG
+    domestic head, S6's) and `FillVisibleBytes`.
+  - **F21 recorded** -- the key, the list and the filter follow the live
+    station while whether `GetDXQTH` runs still follows the set-up kind
+    (`DoingDXMults`); part 2 closes it, as S3's did F20.
 
 ### S5 -- Zone multipliers become class answers (20 contests)
 
@@ -1178,6 +1300,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F17** | `uProgramMain:2701` versus `:2405` | (S0d) `CD.MasterFileExists` is set after the `/MATRIX` halt (and `/EXPORT`'s), so headless runs never open TRMASTER: `CD.GetEntry('W1AW')` answers "not found" while the shipped file holds W1AW. Every TRMASTER-sourced initial exchange is blank in the matrix |
 | **F19** | `LogCfg` (once, `uProgramMain:2318`); `uProgramMain:2306-2307` versus `uSettingsEffects:353` | (S2) After F9's fix the `Doing*` answers follow a run-time contest switch, but what start-up DERIVED from them and from the exchange does not: `NumberDifferentMults`, `RemainingMultDisplay`, `Sheet.SheetInitAndLoad`, `SetUpExchangeInformation` and `SetColumnsWidth` run once. A peer's CONTEST line still leaves those describing the previous contest. Not measured on a bench |
 | **F20** | `TContestBase.PrefixMultiplierKey` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX) versus `ContestSession.DoingPrefixMults` | (S3) The key now asks `Station`, which `ActiveContest` refreshes on every call; whether `SetPrefix` is called at all still asks the session kind, fixed at set-up. They agree unless the entrant's country or continent changes mid-session without a CONTEST change (FoundContest is not re-run for MY CALL): then e.g. a UBA log started outside Belgium and switched to an ON call keeps `DoingPrefixMults` but gets no key. YB DX already read the live `Settings.My.Country` before S3. The end state (part 2, §3) asks the class for both, so this closes then. Not measured on a bench. **CLOSED at S3 part 2 (2026-10-14):** both now read `Station` -- `DoingPrefixMults` is `TContestBase.HasPrefixMultiplier` through `ActiveContest`, and the station-dependent keys ask it. The mid-session change is still not bench-checked |
+| **F21** | `TContestBase.DXMultiplierKey` / `CountryMode` / `ListsRemainingDXCountry` (ARRL DX, ARRL 160, All Asian, JIDX, SAC, Helvetia, Croatian, WAG, UBA, WAE, PACC, RDA, ALRS, YU DX, the host-state parties) versus `ContestSession.DoingDXMults` | (S4 part 1) F20's shape, for the DX kind: the key and the remaining-mults filter ask `Station`, refreshed on every `ActiveContest` call, while whether `GetDXQTH` runs and whether the window lists DX countries at all still ask the session kind fixed at set-up. They agree unless the entrant's country, continent or host state changes mid-session without a CONTEST change. The country list is asked once, at set-up, so it cannot drift. Part 2 makes "does this contest count DX" a class answer, as S3 part 2 did for prefixes. Not measured on a bench |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):
