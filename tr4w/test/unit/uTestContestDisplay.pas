@@ -1016,14 +1016,24 @@ begin
       begin
       obj := Make(c);
       try
-         CheckEquals(Ord(c in [ARRL10, WINTERFIELDDAY]), Ord(obj.RequiresCabrilloLocation),
+         CheckEquals(Ord(c in [ARRL10, WINTERFIELDDAY, DELAWAREQSOPARTY]),
+                     Ord(obj.RequiresCabrilloLocation),
                      string(ContestTypeSA[c]) + ': needs a LOCATION');
          if c <> WINTERFIELDDAY then
             begin
             CheckEquals('', obj.CabrilloHeaderLinesBeforeTag('LOCATION', 'FL', station),
                         string(ContestTypeSA[c]) + ': no lines before LOCATION');
+            end;
+         (* FM AS PHONE AND EVERY DIGITAL MODE AS RY: Winter Field Day the
+            first, the Delaware QSO Party both (uTestContestDelawareQP). *)
+         if not (c in [WINTERFIELDDAY, DELAWAREQSOPARTY]) then
+            begin
             CheckEquals('FM', obj.CabrilloModeString(FM, eFM),
                         string(ContestTypeSA[c]) + ': FM is FM');
+            end;
+         if c <> DELAWAREQSOPARTY then
+            begin
+            CheckEquals('DG', obj.CabrilloModeString(Digital, eFT8), string(ContestTypeSA[c]) + ' FT8');
             end;
          if c <> GENERALQSO then
             begin
@@ -1033,7 +1043,6 @@ begin
          (* The base column, every contest: digital RY or DG, CW, phone. *)
          CheckEquals('RY', obj.CabrilloModeString(Digital, eRTTY), string(ContestTypeSA[c]) + ' RTTY');
          CheckEquals('RY', obj.CabrilloModeString(Digital, eNoMode), string(ContestTypeSA[c]) + ' digital');
-         CheckEquals('DG', obj.CabrilloModeString(Digital, eFT8), string(ContestTypeSA[c]) + ' FT8');
          CheckEquals('CW', obj.CabrilloModeString(CW, eCW), string(ContestTypeSA[c]) + ' CW');
          CheckEquals('PH', obj.CabrilloModeString(Phone, eUSB), string(ContestTypeSA[c]) + ' phone');
       finally

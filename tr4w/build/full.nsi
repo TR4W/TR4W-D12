@@ -334,6 +334,7 @@ Section "Domestic multiplier files" Secdom
    File ..\target\dom\colorado_cty.dom
    File ..\target\dom\croat.dom
     File ..\target\dom\dc.dom
+   File ..\target\dom\delaware.dom
    File ..\target\dom\delaware_cty.dom
    File ..\target\dom\ea.dom
    File ..\target\dom\eudx.dom

@@ -23,6 +23,26 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-14 -- THE DELAWARE QSO PARTY IS A NEW CONTEST
+
+`DELAWAREQSOPARTY` is a new contest type with its own class
+(`uContestDelawareQP`, design 8.2q). Unit tests pin the class; **nothing
+automated types a Delaware exchange or loads its `.dom` files**, and the
+contest matrix shows it unfrozen. To exercise, from `Delaware QSO Party.cfg`:
+
+- **In-state** (`MY STATE` a county: NDE, KDE or SDE): states, provinces and
+  DX countries are multipliers **per band**; working another DE county counts
+  the ONE multiplier "Delaware". Points CW 2, digital 2, phone 1.
+- **Out-of-state** (`MY STATE` e.g. PA): NDE, KDE and SDE are the only
+  multipliers, per band; a non-DE station is refused with "Out of state: work
+  DE stations only". Points CW 20, digital 20, phone 10.
+- **Bands**: a QSO on 30, 17 or 12 m is logged and scores 0; 6 m and 2 m score.
+- **Score**: CATEGORY-POWER LOW doubles, QRP triples, and 50 is added.
+- **Cabrillo**: `CONTEST: DE-QSO-PARTY`, an FT8 QSO's mode is `RY`, and the
+  file is refused until the summary window has a LOCATION.
+
+---
+
 ## Added 2026-10-13 -- A STATION FACT CHOSEN AT NEW CONTEST IS THAT CONTEST'S ONLY (design 7.12)
 
 What the New Contest dialog asks for, such as MY ZONE, MY STATE, MY SECTION

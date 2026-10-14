@@ -336,6 +336,48 @@ Three groups:
   *Recommended: 160 m only; use the translated string with your wording.*
   **Answer:**
 
+### Added with the Delaware QSO Party's class (2026-10-14)
+
+- **Q72** Delaware's bands: "all HF bands except WARC, plus 6 m and up".
+  The class counts 160 m and light as well as 80-10 m (no WARC) and 6 m up.
+  Both are my reading of the summary, not of the sponsor's page. Are they
+  in? A QSO on a band that is out scores 0 and earns no multiplier.
+  *Checked against the sponsor's 2024 page (2026-10-14):* it says "All HF
+  bands excluding WARC bands" and "6 meters and up", so **light is in**.
+  160 m is not named either way, and the page's suggested frequencies do
+  not list it. 1.8 MHz is strictly MF, not HF. So only 160 m is open.
+  *Recommended: keep 160 m in unless you know the sponsor excludes it.*
+  **Answer:**
+
+- **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
+  check uses the call, band and mode, and no contest can change that today.
+  So a mobile's second county shows as a dupe unless worked as a county
+  line. The sponsor's page confirms the rule: "Delaware Mobiles that change
+  counties are considered new stations, and can be worked for both
+  multiplier and QSO Point credit."
+  Add a way for a QSO party to put the county into the dupe check, or
+  leave it to the operator? *Recommended: add it, as its own step, for every
+  state party with mobiles.*
+  **Answer:**
+
+- **Q74** Delaware's Cabrillo header must have `ARRL-SECTION:` or
+  `LOCATION:` (DE, your state or section, or DX). TR4W now refuses to write
+  the file without a LOCATION, and you type it. Should TR4W fill it in from
+  where you are? *Recommended: yes -- DE in state, else your state, else DX.*
+  **Answer:**
+
+- **Q75** What are the Delaware QSO Party's WA7BNM calendar id and log
+  submission address? Both are blank, so its calendar menu item is greyed.
+  **Answer:**
+
+- **Q76** In every single-state party, an in-state station's ADIF export
+  labels every QSO with the HOST state: a DE station working a PA station
+  exports `STATE:DE` beside `QTH:PA`. Should `STATE` be the host state only
+  for a host county, and the worked state otherwise? This changes the
+  ADIF of every in-state party log, so it would be its own step.
+  *Recommended: yes, separately.*
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)

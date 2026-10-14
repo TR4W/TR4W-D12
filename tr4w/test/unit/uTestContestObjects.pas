@@ -49,10 +49,23 @@ function Make(aContest: ContestType): TContestBase; overload;
 (* A station with every field zero -- what an object holds before SetStation. *)
 function NoStation: TStationContext;
 
+(* THE SHIPPED dom DIRECTORY, from the test binary -- ParamStr(0), never the
+   working directory, as the CTY.DAT tests do. Ends in a separator.
+
+   LIFTED 2026-10-14: uTestContestFactory and uTestContestParse each held a
+   copy, and the Delaware tests were the third. *)
+function ShippedDomDir: string;
+
 implementation
 
 uses
-   uContestRegistry;
+   SysUtils, uContestRegistry;
+
+function ShippedDomDir: string;
+begin
+   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim +
+             'target' + PathDelim + 'dom' + PathDelim;
+end;
 
 function Make(aContest: ContestType; const aStation: TStationContext): TContestBase;
 var

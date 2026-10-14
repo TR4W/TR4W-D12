@@ -1160,6 +1160,9 @@ SERVICE (the shape of `IsDomesticCountryCall`), and RSGB 1.8 MHz's class reads i
   bonus (decided: always applies); Cabrillo needs ARRL-SECTION:/LOCATION:, modes CW/PH/RY;
   ADIF and Cabrillo id DE-QSO-PARTY (ADIF 3.1.7).
 
+**Delaware LANDED 2026-10-14 (§8.2q)**: `DELAWAREQSOPARTY`, `TContestDelawareQP`.
+The IN7QPNE composite is not built; Delaware is the component it will delegate to.
+
 ### 7.15 RULED (NY4I, 2026-10-13): legacy arms only QSO POINT METHOD reaches are deleted (Q11)
 
 They, and the three point kinds with no arm (SouthAmerican, IN, NYQPQP), go with the setting at
@@ -3249,6 +3252,109 @@ contest-rules inventory's scanner accepts a `FoundContest` with no
 
 **Questions this raised -- NY4I's:** Q69-Q71 (§9).
 
+### 8.2q The Delaware QSO Party -- what it covered (2026-10-14; 7.14)
+
+A NEW contest, not a moved one -- the second after Idaho (8.2d). NY4I ruled it
+into existence on 2026-10-13 (7.14). `TContestDelawareQP`
+(`uContestDelawareQP`) sits on `TContestStateQSOPartyBase`: one host state,
+county multipliers for everyone outside it, and "non-DE stations work DE
+stations only", which is the base's 7.10 refusal unchanged. It knows nothing
+of IN7QPNE; the composite, when it is built, delegates to it per QSO.
+
+**THE ENUM IS APPENDED** after `IDAHOQSOPARTY`, never inserted. Checked, not
+assumed: the ordinal is written as `Ord(RxData.ceContest)` into HamScore's
+`<contestnr>` (`logsubs2`), and `ceContest` is a one-byte field of the
+`ContestExchange` records the binary log and the multi-op packet carry
+(`VC.pas`); the SQLite log stores `ContestTypeSA`'s spelling
+(`uLogRepository`). `Test_DelawareIsAnAppendedStateParty` pins
+`Ord(DELAWAREQSOPARTY) = Ord(IDAHOQSOPARTY) + 1`.
+
+**WHAT WAS ADDED.**
+
+| piece | where |
+|---|---|
+| the member, `ContestTypeSA` `'DELAWARE QSO PARTY'`, the row, the flag word (QB1 QM1 MB1 MM0 VHF1) | `VC.pas` |
+| `QSOParties` entry 22, `delaware` / `DE` | `VC.pas` (`QSOPartiesCount` 21 -> 22) |
+| the class, one `RegisterContest` | `uContestDelawareQP`; both `.lpr` files |
+| `delaware.dom` (NEW, in state): the county file FIRST, then `S50`, `P13` | `target/dom`, `full.nsi` (`Lint-DomCoverage`) |
+| `delaware_cty.dom` (rewritten): `NDE > De = NDE,^New Castle` etc. | it said `NDE = NDE,...`, so an in-state include would have made each county its own multiplier; the `>` form maps all three to `De` in state and keeps each county out of state (`MultipliersIsCounties`), as Idaho's file does |
+| a template `.cfg`, `CONTEST = DELAWARE QSO PARTY`, overriding nothing | `target/dom/Delaware QSO Party.cfg` -- **`*.CFG` is gitignored; it needs `git add -f`, as Idaho's did** |
+
+**THE RULES AND WHERE EACH LANDED** (the class header carries them in full):
+
+| rule | seam |
+|---|---|
+| HF but WARC, 6 m and up | `UsesBand`: 160-10 m without 30/17/12, and 6 m through light. 60 m has no `BandType` |
+| points by the ENTRANT's location: in DE 1/2/2 phone/digital/CW, outside 10/20/20; FM is phone | `CalculateQSOPoints` on `Station.InHostState` (set-up's in-state answer, from MY STATE resolved, 7.12) |
+| multipliers once per band; DE counts states, provinces, DXCC; others the three counties | row `MB1 MM0`; `delaware.dom` / `delaware_cty.dom`; DX `ARRLDXCCWithNoUSACanadaKH6OrKL7` (Texas's value: Alaska and Hawaii are states here); `DescribeSession` states `NoDXMults` for an out-of-state entrant |
+| dupes once per band per mode | row `QB1 QM1` |
+| a county-line station is two QSOs | `GetCountyLineCountiesMax` = 2 |
+| non-DE x non-DE refused with an error | the family base's `ParseReceivedExchange` (7.10), no override |
+| exchange RST + county / state / province / DX | `RSTDomesticOrDXQTHExchange` for both sides; the shared Cabrillo and ADIF arms |
+| score = points x mults x power + 50 | `CombineWithMultipliers` (`inherited` x `DelawarePowerMultiplier`), `BonusPoints` (`inherited` + 50) |
+| Cabrillo `DE-QSO-PARTY`, modes CW/PH/RY, `LOCATION:` required | identity getters; `CabrilloModeString` (every digital mode RY, FM PH); `RequiresCabrilloLocation` |
+| ADIF `DE-QSO-PARTY` | `GetADIFContestId`; import resolves it back |
+| CQ exchange | `CQExchangeDefault` = `' 5NN '` + the sent state (a DE station's county) |
+
+**DECISIONS TAKEN (delegated):**
+
+- **CATEGORY-POWER maps to the sponsor's three power multipliers as HIGH x1,
+  LOW x2, QRP x3** -- the one store (7.6), `Station.MyPower`. The sponsor's
+  boundaries are "over 100 W", "100 W or less" and "5 W or less"; TR4W's LOW
+  and QRP categories are the Cabrillo ones, and an entrant whose LOW was over
+  100 W would be misdeclaring the Cabrillo category too.
+- **The 50-point electronic bonus always applies** (NY4I, given with the
+  brief): TR4W submits electronically. It is added after the formula, to an
+  empty log as well.
+- **One exchange for both sides of the state line.** Arizona and Texas narrow
+  an out-of-state session to `RSTDomesticQTHExchange`; that refuses the same
+  exchanges with the shape's improper-county message, where the base's
+  refusal says "Out of state: work DE stations only". Not copied.
+- **The QSO line is the shared arm's**, which is the sponsor's column order;
+  no override.
+- **`QSO POINT METHOD` reads `ARRLFieldDayQSOPointMethod`**, Idaho's value
+  and reason: a description in the legacy vocabulary that nothing scores by.
+
+**NOT IN THE CLASS, AND WHY:** a DE mobile that changes county is a new
+station -- a dupe-KEY rule, with no seam (8.2l); and the LOCATION header's
+value, which the operator types (the class only refuses a file without one).
+Both are questions below.
+
+**TESTS.** `uTestContestDelawareQP` (new) pins every rule above: the appended
+ordinal and the family base; points for both locations and every mode; the
+band list through `UsesBand` and `ContestCreditsBand`, WARC scoring 0 for both
+locations; the set-up traits and `DescribeSession` both ways; both county files
+(exactly NDE/KDE/SDE, each mapped to `De`, no `INCLUDE`; the in-state file's
+three includes in order and no line the reader would take as an entry); the
+county line (2 accepted, 3 refused); the refusal both ways; the score at each
+power with the bonus, a single-band entry and an empty log; Cabrillo; the ADIF
+id round trip; the CQ exchange. Ratchets edited in the same change:
+`Test_EveryOtherContestStillCreditsEveryBand` (Delaware states its bands),
+`Test_MovedRowValuesStillMatchTheArray`, `Test_ADIFIdsResolveOldAndNew`, and
+`Test_CabrilloHeaderAndMode` (a LOCATION required; FM as PH and FT8 as RY).
+`ShippedDomDir` -- a third copy was due -- is lifted to `uTestContestObjects`
+and the two copies in `uTestContestFactory` and `uTestContestParse` are
+deleted.
+
+**EXPECTED MATRIX EFFECT** (stated before any gate ran; the caller runs them):
+one NEW record, `DELAWAREQSOPARTY`, reported **unfrozen**; every other record
+byte-identical (no shared code changed behaviour -- the edits outside the
+factory are the enum, the three `VC.pas` rows and the `QSOParties` entry, all
+appended). Freezing it is a deliberate act with that reason. Golden corpus,
+factory check and round trip: unchanged (no corpus set is Delaware).
+`Lint-ContestNameTests` stays at 7: no contest is named outside the factory.
+`docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated from `git ls-files` --
+regenerate after the commit.
+
+**FINDING, NOT CHANGED: an in-state entrant's ADIF STATE is the host state for
+every QSO with a QTH.** `uADIF.EmitADIFRecord` writes
+`STATE = GetStateForContest(rec.ceContest)` whenever `QTHString` is set, so a
+DE station working Pennsylvania exports `STATE:DE` beside `QTH:PA`. That is
+every single-state party's behaviour today (Florida, Idaho, ...), not
+Delaware's; Q76 asks it.
+
+**Questions this raised -- NY4I's:** Q72-Q76 (§9).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -3574,6 +3680,31 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     no catalogue translates and that differs from `TC_ENTERYOURRDAIDORGRID`
     ("for UA1A stations" against "for Russian stations"); which wording, and
     should it become a translatable string?
+
+- **Q72-Q76** (the Delaware QSO Party's class, §8.2q):
+  - **Q72** Bands. The class credits 160, 80, 40, 20, 15 and 10 m and every
+    band from 6 m up, light included, from "all HF bands except WARC, plus
+    6 m and up". 160 m is MF and light is not "m"; both are a reading of the
+    summary, not of the sponsor's page. Confirm both (an off-band QSO scores 0
+    and earns no multiplier, 7.4).
+  - **Q73** "A DE mobile that changes county is a new station." TR4W's dupe
+    sheet keys on the call, band and mode, and there is no dupe-key seam
+    (8.2l), so a mobile's second county is a dupe unless the operator works
+    it as a county line. Build a contest dupe-key seam (the QSO's received
+    county joins the key for a state party), or leave it to the operator?
+  - **Q74** The Cabrillo header must carry `ARRL-SECTION:` or `LOCATION:` --
+    DE for a DE station, the state or section otherwise, DX for DX. The class
+    makes the writer refuse a file with no LOCATION; the operator types it.
+    Should the class supply it (DE when in state, else the sent state, else
+    DX), as Winter Field Day writes its `ARRL-SECTION:` line?
+  - **Q75** No WA7BNM calendar id or submission address is recorded for the
+    Delaware QSO Party: the class states 0 and '', so its calendar menu item
+    is disabled. What are they?
+  - **Q76** For every single-state party, an IN-STATE entrant's ADIF export
+    writes `STATE` as the HOST state for every QSO with a QTH
+    (`uADIF.EmitADIFRecord`): a DE station working Pennsylvania exports
+    `STATE:DE` beside `QTH:PA`. Should `STATE` be the host state only when
+    the QTH is a host county (a contest seam), and the worked state otherwise?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

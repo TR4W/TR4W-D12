@@ -54,6 +54,12 @@ record, the multi-op packet, HamScore's `<contestnr>`) -- plus a class. Idaho
 (`uContestIdahoQP`) is the worked example: enum, the three `VC.pas` rows, a
 `QSOParties` entry for a state party (and both `.dom` files in `full.nsi`, which
 `Lint-DomCoverage` demands), the class, and a `.cfg` that overrides nothing.
+Delaware (`uContestDelawareQP`, design 8.2q) is the second, and adds two traps:
+**`*.CFG` is gitignored**, so the template `.cfg` needs `git add -f`; and **a
+`.dom` line holding `=` is an ENTRY, comments included** (`logdom.EnumDOMFILE`
+has no comment syntax), so a header must not contain one. A county file an
+in-state file INCLUDEs maps each county with `KEY > Mult = ...` (Idaho's and
+Delaware's), or each county becomes its own in-state multiplier.
 `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated from `git ls-files`, so it
 cannot see a new unit until it is committed -- regenerate after the commit.
 

@@ -1303,7 +1303,9 @@ type
     // the binary .TRW record's ceContest byte (import), the multi-op packet's
     // ContestExchange, and HamScore's <contestnr>. The SQLite log stores the
     // ContestTypeSA spelling instead. See uContestIdahoQP.
-    IDAHOQSOPARTY
+    IDAHOQSOPARTY,
+    (* APPENDED for the same reason, 2026-10-14. See uContestDelawareQP. *)
+    DELAWAREQSOPARTY
     );
 
     { NOTE: pls ensure VC INTERFACEDRADIOTYPE and LOGRADIO INTEFACEDRADIOTYPE ARE IN THE SAME ORDER }
@@ -3769,7 +3771,7 @@ type
   end;
 
 const
-QSOPartiesCount = 21;
+QSOPartiesCount = 22;
 
   QSOParties                         : array[1..QSOPartiesCount] of TUSQSOPartyRecord =
   (
@@ -3794,7 +3796,8 @@ QSOPartiesCount = 21;
   (InsideStateDOMFile:'in7qpne';    {OutsideStateDOMFile:'IN7QPNE';    }StateName:'IN7QPNE'),
   (InsideStateDOMFile:'arizona';    {OutsideStateDOMFile:'ARIZONA';    }StateName:'AZ'),
   (InsideStateDOMFile:'missouri';   {OutsideStateDOMFile:'MISSOURI';   }StateName:'MO'),
-  (InsideStateDOMFile:'idaho';                                         StateName:'ID')     // P = 21, IDAHOQSOPARTY
+  (InsideStateDOMFile:'idaho';                                         StateName:'ID'),    // P = 21, IDAHOQSOPARTY
+  (InsideStateDOMFile:'delaware';                                      StateName:'DE')     // P = 22, DELAWAREQSOPARTY
   );
 {*)}
 
@@ -4041,7 +4044,9 @@ QSOPartiesCount = 21;
  ({Name: 'SST';                        }Email: 'k1usn.radioclub.sst@gmail.com';   DF: 'naqp';              WA7BNM:  681; {SK3BG: 'naqp';       } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NameQTHInitialExchange; DM: DomesticFile;    P: 0; AE: NameAndDomesticOrDXQTHExchange;              XM:NorthAmericanARRLDXCCWithNoUSACanadaOrkL7; QP:OnePointPerQSO; ADIFName:'K1USN-SST';   CABName:'K1USNSST'; FriendlyName: 'K1USN Slow Speed Test'),
  ({Name: 'RTC';                        }Email: '';                       DF: '';                  WA7BNM:  782; {SK3BG: nil;          } QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: GridInitialExchange; DM: GridSquares;     P: 0; AE: RSTQSONumberAndGridSquareExchange;          XM:NoDXMults; QP:RTCQSOPointMethod; ADIFName:'RTC';   CABName:'RTC'; FriendlyName: 'Real Time Contest'),   // Issue #902 Real-Time Contest (COS)
  (* Name: 'IDAHO QSO PARTY'. Stated in full by uContestIdahoQP, which owns it; the rules and their sources are in that unit's header. *)
- (Email: '';                       DF: 'idaho_cty';         WA7BNM:  305; QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 21; AE: RSTDomesticOrDXQTHExchange;                  XM:ARRLDXCCWithNoUSAOrCanada;  QP:ARRLFieldDayQSOPointMethod; ADIFName:'ID-QSO-PARTY';   CABName:'ID-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Idaho QSO Party')
+ (Email: '';                       DF: 'idaho_cty';         WA7BNM:  305; QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 21; AE: RSTDomesticOrDXQTHExchange;                  XM:ARRLDXCCWithNoUSAOrCanada;  QP:ARRLFieldDayQSOPointMethod; ADIFName:'ID-QSO-PARTY';   CABName:'ID-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Idaho QSO Party'),
+ (* Name: 'DELAWARE QSO PARTY'. Stated in full by uContestDelawareQP, which owns it; the rules and their sources are in that unit's header. *)
+ (Email: '';                       DF: 'delaware_cty';      WA7BNM:    0; QRZRUID: 0   ; Pxm: NoPrefixMults; ZnM: NoZoneMults; AIE: NoInitialExchange; DM: DomesticFile;    P: 22; AE: RSTDomesticOrDXQTHExchange;                  XM:ARRLDXCCWithNoUSACanadaKH6OrKL7;  QP:ARRLFieldDayQSOPointMethod; ADIFName:'DE-QSO-PARTY';   CABName:'DE-QSO-PARTY'; CountyLineAllowed: True; FriendlyName: 'Delaware QSO Party')
  );
 
 
@@ -4236,7 +4241,8 @@ QSOPartiesCount = 21;
       'MST',           // 4.110.5
       'SST',
       'RTC',           // Issue #902
-      'IDAHO QSO PARTY'
+      'IDAHO QSO PARTY',
+      'DELAWARE QSO PARTY'
      );
 
   const
@@ -4475,7 +4481,11 @@ QSOPartiesCount = 21;
       (* IDAHO QSO PARTY -- "Stations may be worked once per mode, per band" (QB1 QM1);
          a multiplier "is counted once per mode, regardless of the number of bands" (MB0 MM1);
          160-10 m only (VHF0). https://www.idahoqsoparty.org/rules.htm *)
-      (ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1)
+      (ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 + ciQB1 + ciQM1 + ciMB0 + ciMM1),
+      (* DELAWARE QSO PARTY -- dupes once per band per mode (QB1 QM1); multipliers
+         once per band (MB1 MM0); "all HF bands except WARC, plus 6 m and up" (VHF1).
+         See uContestDelawareQP. *)
+      (ciCDC0 + ciCQZoneMode0 + ciVHFEnabled1 + ciErmak0 + ciQB1 + ciQM1 + ciMB1 + ciMM0)
 
         );
 

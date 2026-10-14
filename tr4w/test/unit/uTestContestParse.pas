@@ -80,7 +80,9 @@ implementation
 uses
    Classes, SysUtils, VC, uContestBase, uContestRegistry,
    uContestStateQSOPartyBase, uExchangeTokens, uCallSignRoutines,
-   uDomFileKeys, uAppStrings, uTR4WStrings;
+   uDomFileKeys, uAppStrings, uTR4WStrings,
+   (* ShippedDomDir -- the test binary's view of target\dom. *)
+   uTestContestObjects;
 
 (* ---------------------------------------------------------------------------
    THE STUBBED ENGINE -- what each service was asked, and what it answers
@@ -729,12 +731,6 @@ begin
       ContestIdentity(fd).ApplyADIFImport(temps, session, exch);
       CheckEquals('WCF', string(exch.DomesticQTH), string(ContestTypeSA[fd]) + ': a section is a section');
       end;
-end;
-
-function ShippedDomDir: string;
-begin
-   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim +
-             'target' + PathDelim + 'dom' + PathDelim;
 end;
 
 (* EVERY KEY A DOM FILE DECLARES, upper case, in file order -- the reading

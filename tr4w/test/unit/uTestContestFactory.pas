@@ -41,6 +41,8 @@ uses
    uContestNRAUBalticBase,
    (* M2's in-state detection: the shipped .dom path and the key reader. *)
    Classes, uAppPaths, uDomFileKeys,
+   (* ShippedDomDir -- the test binary's view of target\dom. *)
+   uTestContestObjects,
    (* InSameFederalOkrug -- the CQ-M rule lifted out of LOGSTUFF at M7b. *)
    uCallSignRoutines;
 
@@ -1594,7 +1596,9 @@ begin
 
    for c := Low(ContestType) to High(ContestType) do
       begin
-      if c = IDAHOQSOPARTY then
+      (* THE CONTESTS THAT STATE THEIR BANDS: Idaho, and Delaware (2026-10-14,
+         uTestContestDelawareQP pins its list). *)
+      if c in [IDAHOQSOPARTY, DELAWAREQSOPARTY] then
          begin
          Continue;
          end;
@@ -1861,6 +1865,10 @@ begin
       the class rather than transcribed from it. Its CABName and FriendlyName
       are stated, not blank. *)
    CheckAgainstArray(IDAHOQSOPARTY, 'Idaho QSO Party');
+
+   (* DELAWARE, ADDED 2026-10-14 -- a new ContestType like Idaho, its row
+      written for the class. *)
+   CheckAgainstArray(DELAWAREQSOPARTY, 'Delaware QSO Party');
 
    (* THE FIRST FIXED-POINT SLICE, MOVED 2026-09-29. Most of these rows have a
       BLANK CABName and FriendlyName, both of which resolve to the enum's
@@ -2133,6 +2141,7 @@ begin
    CheckFinds('BCQP', BCQP);
    CheckFinds('NY-QSO-PARTY', NYQP);
    CheckFinds('ID-QSO-PARTY', IDAHOQSOPARTY);
+   CheckFinds('DE-QSO-PARTY', DELAWAREQSOPARTY);
 
    (* THE JOCK WHITE FIELD DAY, renamed 2026-09-29 while it had NO class, so
       its old export spelling could not be carried then. It gained its class
@@ -2525,14 +2534,6 @@ begin
    finally
       row.Free;
       end;
-end;
-
-(* The shipped dom directory, from the test binary -- ParamStr(0), never the
-   working directory, as the CTY.DAT tests do. *)
-function ShippedDomDir: string;
-begin
-   Result := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim +
-             'target' + PathDelim + 'dom' + PathDelim;
 end;
 
 (* M2 -- DEFECT #5 AND THE SHAPE SET-UP RELIES ON.

@@ -296,6 +296,7 @@ uses
    uContestNewYorkQP in '..\..\src\contestFactory\uContestNewYorkQP.pas',
    uContestWashingtonSalmonRun in '..\..\src\contestFactory\uContestWashingtonSalmonRun.pas',
    uContestIdahoQP in '..\..\src\contestFactory\uContestIdahoQP.pas',
+   uContestDelawareQP in '..\..\src\contestFactory\uContestDelawareQP.pas',
    uContestQCWA in '..\..\src\contestFactory\uContestQCWA.pas',
    uContestQCWAGolden in '..\..\src\contestFactory\uContestQCWAGolden.pas',
    uContestCountyHunter in '..\..\src\contestFactory\uContestCountyHunter.pas',
@@ -592,6 +593,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestUI       in 'uTestContestUI.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
+   (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
+   uTestContestDelawareQP in 'uTestContestDelawareQP.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
    uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
    uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
@@ -671,6 +674,7 @@ begin
    RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
    RegisterSuite(TContestUITests.Create('ContestUI'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
+   RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

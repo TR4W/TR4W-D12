@@ -1,0 +1,11 @@
+Entries for the Delaware QSO Party used by in-state stations
+50 states + 13 Canadian provinces and territories; the three Delaware counties count as De
+(delaware_cty.dom maps each county to De). DXCC entities are the DX multiplier.
+The county file comes FIRST, so the S48.DOM line for De is read after it and the
+multiplier keeps the name Delaware rather than the last county name.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+https://www.fsarc.org/qsoparty/rules-2024.html
+
+INCLUDE FILE delaware_cty.dom
+INCLUDE FILE S50.DOM
+INCLUDE FILE P13.DOM
