@@ -41,7 +41,7 @@ implementation
 uses
   (* LogCW went with the CQ exchange template, 2026-09-12: that global was
     the only symbol this unit took from it. *)
-  uSettingsModel,      // the CQ exchange template, and Settings.My.Grid
+  uSettingsModel,      // the CQ exchange template, and Settings.My.ResolvedGrid
   uContestBase,        // TCanonicalExchangeContext
   uContestRegistry,    // ContestIdentity -- the QSO's contest
   uCanonicalExchange;  // CollapseWhitespace
@@ -54,7 +54,7 @@ begin
       template is CQ EXCHANGE CW as it stands; the RTC builds from MY GRID
       instead, with no RST (its HamScore organizer, 2026-05). *)
    ctx.CQExchangeTemplate := string(Settings.Messages.CqExchangeCw);
-   ctx.MyGrid := Settings.My.Grid;
+   ctx.MyGrid := Settings.My.ResolvedGrid;
    Result := ContestIdentity(RXData.ceContest).CanonicalSentExchange(RXData, ctx);
 end;
 

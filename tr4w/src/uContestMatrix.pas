@@ -530,9 +530,18 @@ begin
             begin
             Continue;
             end;
-         if not Settings.TryGetByCommand(names[i], live) then
+         (* A STATION FACT IS RECORDED AS THIS CONTEST HAS IT -- design 7.12.
+           The .cfg's MY STATE / MY GRID / ... lines are this contest's
+           overrides now and never reach the station's property, so the
+           property alone would no longer show them. The override, when one
+           was stated, is the value that was in force -- exactly what this
+           line recorded when the .cfg wrote the station's setting. *)
+         if not Settings.TryGetContestOverride(names[i], live) then
             begin
-            Continue;
+            if not Settings.TryGetByCommand(names[i], live) then
+               begin
+               Continue;
+               end;
             end;
          if not fresh.TryGetByCommand(names[i], compiledDefault) then
             begin

@@ -267,6 +267,46 @@ Three groups:
   line stay "POTA"?
   **Answer:**
 
+### Added with 7.12 (station facts a contest may override, 2026-10-13)
+
+- **Q65** MY CALL has the problem 7.12 just fixed for MY STATE and MY ZONE.
+  When a contest is run under a club call (W4TA), the call is written into
+  the station's MY CALL. The next settings save in the session, such as a
+  Preferences edit, writes W4TA into `tr4w.json` as the station's own call.
+  It was left out on purpose: about 120 places read MY CALL, and your
+  country, continent and zone are derived from it. Should MY CALL become an
+  overridable station fact too, as its own step? MY COUNTRY would then be
+  derived from the call this contest uses. *Recommended: yes, separately.*
+  **Answer:**
+
+- **Q66** Preferences shows and edits the station's value. If this contest
+  overrides that field (zone 3 in Utah), an edit there changes the station
+  but not this contest, and nothing on the page says so. Should the Station
+  page show the contest's value beside the field, with a way to clear it?
+  *Recommended: yes, a hint that names the contest's value.* This is
+  `lcl-ui` work.
+  **Answer:**
+
+- **Q67** The New Contest dialog's rows start empty, and every row has to be
+  filled before OK is enabled. So every contest that asks for MY ZONE
+  states a zone override, even when you type your station's own zone. That
+  contest then ignores a later Preferences change to the zone. Should the
+  rows start with your station's values (read from the file, because the
+  dialog runs before the settings load)? And should a row you leave
+  unchanged count as "use the station's value" rather than as an override?
+  *Recommended: yes to both.*
+  **Answer:**
+
+- **Q68** Reopening a log with no `.cfg` sets up the contest before the
+  log's own rows are applied. The in-state test and the exchange messages
+  are built then, so they use the station's state and zone rather than this
+  contest's override. Before 7.12 this was the same, with the contest's
+  value written into the station after set-up. MY CALL is already applied
+  first for the same reason. Should the station-fact rows be applied first
+  too? *Recommended: yes.* That would change set-up on reopen for a log
+  whose override differs from the station.
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -390,6 +430,10 @@ Three groups:
   it no longer follows MY CALL. Build the messages without touching MY ZONE?
   *Recommended: yes* (the messages are identical; only a later MY CALL change
   behaves differently).
+  **Implemented with 7.12 (2026-10-13), by necessity:** with the readers on the
+  resolver, the transient write would have dropped the state whenever a zone
+  override was stated. The messages are built from a local; MY ZONE is never
+  written. Please confirm.
   **Answer:**
 
 ---
@@ -401,7 +445,7 @@ Three groups:
 | Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
 | Q6 | POTA becomes a contest class, treated like General QSO | `TContestPOTA`, 2026-10-13 (design 8.2o) |
 | Q11 | Delete the QSO-POINT-METHOD-only arms at M10 | M10 |
-| Q28 | Station facts default from station config, overridable per contest | design 7.12 |
+| Q28 | Station facts default from station config, overridable per contest | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`; UA4W's class still to build) |
 | Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13 |
 | -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14 |
 | Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |

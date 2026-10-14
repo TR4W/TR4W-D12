@@ -582,6 +582,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
+   (* Design 7.12: a station fact is a default a contest may override. *)
+   uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
    (* M9b: the New Contest drop-down's list, and a CATEGORY-POWER change. *)
    uContestChoices      in '..\..\src\uContestChoices.pas',
    uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
@@ -736,6 +738,7 @@ begin
    RegisterSuite(TLogDatabaseTests.Create('LogDatabase'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
+   RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));
    RegisterSuite(TLegacyConversionCheckTests.Create('LegacyConversionCheck'));
    RegisterSuite(TUILanguageTests.Create('UILanguage'));

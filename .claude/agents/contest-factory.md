@@ -251,7 +251,11 @@ the target shape, the M-step migration order and the open questions.
   sent columns, uGetScores, the readiness check, `CurrentStation.MyState`)
   asks `SentMyState`; the in-state test, uTelnet's `MY_STATE` token and
   Preferences read the station's. `Test_SetUpNeverWritesMyState` pins it for
-  every contest.
+  every contest. **Since 7.12 `SentMyState` falls back to the RESOLVED MY
+  STATE**, and the in-state test and the telnet token read `ResolvedState`.
+  The operator's override says where the station is; SentState says what
+  the rule sends. They are two layers, and SentState is never stored.
+  `SetUpRSTMyZoneExchange` no longer writes MY ZONE (Q57).
 - **The classless contests gain classes** (M7b; batch 1, 2026-10-02 --
   thirty-nine contests, design §8.2j). Each transcribes its row and EVERY arm
   that named it, and the arm is deleted. **No new family base**: CQ WPX RTTY
@@ -325,7 +329,13 @@ the target shape, the M-step migration order and the open questions.
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog
   and (since M9b) the Cabrillo summary window write that setting. A field is added when the first contest needs it
-  (M4 added `MyState` and `ContestTitle`). **It carries NO clock**:
+  (M4 added `MyState` and `ContestTitle`). **Every station fact in it is
+  RESOLVED** (design 7.12, 2026-10-13): the contest's override, stated at New
+  Contest, in its `.cfg` or in its log, else the station's value
+  (`Settings.My.Resolved<X>`). **`MyZone` / `MyZoneValid` / `MyZoneText` are MY
+  CQ ZONE resolved**, and that is what UA4W reads; there is no second CQ-zone
+  field. A class never reads `Settings` or CTY.DAT for a station fact.
+  **It carries NO clock**:
   ~~`LogClockUTCHour`~~ is deleted (design Q21).
 - **A time-of-day rule reads the QSO's recorded time, never the clock**
   (NY4I, 2026-10-01: *"the event source is the wall clock recorded in the

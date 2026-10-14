@@ -96,7 +96,15 @@ section 7.8.
 - **The mark is how a stated `NONE` survives.** Without it, an operator who
   chose the default on purpose would be indistinguishable from the old
   sentinel.
-- **Station rows are unchanged.**
+- **Station rows are unchanged -- except the station FACTS** (design 7.12,
+  2026-10-13). MY STATE, MY ZONE, MY GRID and the rest of
+  `uSettingsModel.TStationFact` are written by
+  `CaptureStationFactRows`: the contest's override as `contest` while it is
+  stated, else the station's value as `station`. On reopen such a row
+  becomes the override again through `uCFG.ApplyContestStatement`, BEFORE
+  the no-op skip. The skip compares against the station's value and would
+  otherwise demote an override equal to it. A log written before 7.12 holds
+  the same `contest` rows and reads as it did.
 
 `/EXPORT` never captures, so the tracked fixtures keep their sentinels for
 good. The reader handles them; do not rewrite the fixtures to "clean" them.

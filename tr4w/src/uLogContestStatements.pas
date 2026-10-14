@@ -56,8 +56,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   program; these rules need tests, and need nothing but the settings object
   and the repository. uLogStore calls in.
 
-  STATION-SCOPED ROWS ARE NOT THIS UNIT'S BUSINESS. CaptureConfiguration still
-  writes them as it always did. *)
+  STATION-SCOPED ROWS ARE NOT THIS UNIT'S BUSINESS -- WITH ONE EXCEPTION.
+  CaptureConfiguration still writes them as it always did, except the station
+  FACTS a contest may override (design 7.12, 2026-10-13): MY STATE, MY ZONE,
+  MY GRID and the rest are written by CaptureStationFactRows, the contest's
+  override as 'contest' while it stated one, else the station's value as
+  'station'. Same rule as above, applied to a station fact: a 'contest' row
+  is a statement, and absence means the station decides. *)
 unit uLogContestStatements;
 
 {$I tr4w.inc}
@@ -85,6 +90,28 @@ function LogHoldsStatementsOnly(aRepository: TLogRepository): boolean;
   config row's (see CaptureConfiguration). *)
 function CaptureContestStatements(aSettings: TR4WSettings;
                                   aRepository: TLogRepository): integer;
+
+(* THE STATION FACTS A CONTEST MAY OVERRIDE -- design 7.12. For every command
+  naming one (MY STATE and its alias MY QTH, MY ZONE, MY GRID...): the open
+  contest's override, as source 'contest', while it stated one; otherwise the
+  STATION'S value, as source 'station' -- the record of the station config
+  every station row has always been, which nothing applies.
+
+  THAT IS 7.8's SHAPE FOR A STATION FACT: a 'contest' row is a statement and
+  is applied on reopen (as the override again, never into the station); its
+  absence means the station decides. A withdrawn override's row is not
+  deleted but rewritten as 'station', because the station row is a record the
+  log has always kept.
+
+  Returns how many rows were written. Does not commit. *)
+function CaptureStationFactRows(aSettings: TR4WSettings;
+                                aRepository: TLogRepository): integer;
+
+(* WHAT CaptureStationFactRows WRITES FOR ONE COMMAND -- the value and the
+  source -- or False for a command that is not an overridable station fact.
+  Separate so a test can ask what the log will hold without a database. *)
+function StationFactRow(aSettings: TR4WSettings; const aCommand: string;
+                        out aValue, aSource: string): boolean;
 
 (* REMOVE FROM aRows (name=value pairs, as LoadContestConfig returns them) EVERY
   ROW THAT IS NOT AN OPERATOR STATEMENT, and add each removed command to
@@ -155,6 +182,67 @@ begin
    end;
 
    aRepository.SaveSessionValue(AnsiString(STATEMENTS_ONLY_KEY), '1');
+end;
+
+function StationFactRow(aSettings: TR4WSettings; const aCommand: string;
+                        out aValue, aSource: string): boolean;
+begin
+   aValue := '';
+   aSource := '';
+   Result := (aSettings <> nil) and
+             aSettings.CommandIsContestOverridable(aCommand);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   if aSettings.TryGetContestOverride(aCommand, aValue) then
+      begin
+      aSource := 'contest';
+      end
+   else
+      begin
+      (* The station's value, through the same renderer every station row
+        uses. A fact is always renderable -- all are strings but MY ITU ZONE,
+        an integer. *)
+      if not aSettings.TryGetByCommand(aCommand, aValue) then
+         begin
+         aValue := '';
+         end;
+      aSource := 'station';
+      end;
+end;
+
+function CaptureStationFactRows(aSettings: TR4WSettings;
+                                aRepository: TLogRepository): integer;
+var
+   names: TStringList;
+   i: integer;
+   cmd: string;
+   value: string;
+   source: string;
+begin
+   Result := 0;
+   if (aSettings = nil) or (aRepository = nil) then
+      begin
+      Exit;
+      end;
+
+   names := aSettings.CommandNames;
+   try
+      for i := 0 to names.Count - 1 do
+         begin
+         cmd := string(names[i]);
+         if StationFactRow(aSettings, cmd, value, source) then
+            begin
+            aRepository.SaveConfigValue(AnsiString(cmd), AnsiString(value),
+                                        AnsiString(source));
+            Inc(Result);
+            end;
+         end;
+   finally
+      names.Free;
+   end;
 end;
 
 procedure KeepOnlyStatements(aRows: TStrings; aStatementsOnly: boolean;

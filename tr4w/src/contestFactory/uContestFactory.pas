@@ -151,7 +151,9 @@ begin
    Result.PointOverrides := CurrentQSOPointOverrides;
    Result.MyCountry := UTF8Encode(Settings.My.Country);
    Result.MyContinent := MyContinent;
-   Result.MyGrid := Settings.My.Grid;
+   (* THE STATION'S FACTS AS THIS CONTEST HAS THEM -- design 7.12: the
+      contest's override if it stated one, else the station's value. *)
+   Result.MyGrid := Settings.My.ResolvedGrid;
    (* THE STATE SENT IN THIS SESSION, NOT MY STATE -- design 7.11 (M9a).
       Until then set-up wrote a contest's sent state into MY STATE and this
       read it back; it reads the session's value now, so every contest sees
@@ -168,19 +170,21 @@ begin
    (* CATEGORY-MODE, the same way -- see TStationContext.MyCategoryMode. *)
    Result.MyCategoryMode := Settings.Contest.CategoryMode;
    (* The rest of MY exchange, for set-up -- see TStationContext.MyName. *)
-   Result.MyName := Settings.My.Name;
-   Result.MyFDClass := Settings.My.FdClass;
-   Result.MySection := Settings.My.Section;
-   Result.MyPrec := Settings.My.Prec;
-   Result.MyCheck := Settings.My.Check;
-   Result.MyZoneText := Settings.My.Zone;
+   Result.MyName := Settings.My.ResolvedName;
+   Result.MyFDClass := Settings.My.ResolvedFdClass;
+   Result.MySection := Settings.My.ResolvedSection;
+   Result.MyPrec := Settings.My.ResolvedPrec;
+   Result.MyCheck := Settings.My.ResolvedCheck;
+   Result.MyZoneText := Settings.My.ResolvedZone;
    (* The session's contest name -- see TStationContext.ContestName (M7b). *)
    Result.ContestName := Settings.Contest.Name;
    (* The engine's domestic-country CTY lookup, as a service (M7b). *)
    Result.IsDomesticCountryCall := @EngineDomesticCountryCall;
 
-   Val(Settings.My.Zone, Result.MyZone, code);
-   Result.MyZoneValid := (code = 0) and (Settings.My.Zone <> '');
+   (* MY CQ ZONE, RESOLVED -- design 7.12 (NY4I: "Add my CQ zone to the
+      station context. But it can be overridden"). *)
+   Val(Settings.My.ResolvedZone, Result.MyZone, code);
+   Result.MyZoneValid := (code = 0) and (Settings.My.ResolvedZone <> '');
    if not Result.MyZoneValid then
       begin
       Result.MyZone := 0;

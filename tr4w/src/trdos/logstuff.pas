@@ -5279,7 +5279,7 @@ begin
      // Try to interpret the token as a park reference.
      // NormalizePOTAPark returns the original token unchanged when it is not
      // a park reference (e.g. an RST value like "57" or "599").
-     Normalized := NormalizePOTAPark(Token, Settings.My.Park);
+     Normalized := NormalizePOTAPark(Token, Settings.My.ResolvedPark);
 
      if IsValidPOTAPark(Normalized) then
         begin
@@ -6392,13 +6392,13 @@ begin
            begin
            RXData.QSOPoints := 2;
            end;
-        if RXData.QTHString = Settings.My.Grid then
+        if RXData.QTHString = Settings.My.ResolvedGrid then
            begin
            points := 0
            end
         else
            begin
-           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString);
+           Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.QTHString);
            Points := Floor(Distance / 1000);
            if Points = 0 then
               begin
@@ -6541,15 +6541,15 @@ begin
         end;} // Removed this restriction at it continues for 2022 and perhaps beyond. // Issue 575
       end;
     ARRLDIGIQSOPointMethod: // Issue 577
-      if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
+      if (Settings.My.ResolvedGrid <> '') and (RXData.DomesticQTH <> '') then
          begin
-         if Settings.My.Grid = string(RXData.QTHString) then
+         if Settings.My.ResolvedGrid = string(RXData.QTHString) then
             begin
             RXData.QSOPoints := 2;
             end
          else
             begin
-            Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString);
+            Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.QTHString);
             RXData.QSOPoints := Ceil((Distance / 500)) + 1;
             end;
          end;
@@ -6652,7 +6652,7 @@ begin
            end
         else
            begin
-           Grid1 := UTF8Encode(Settings.My.State);
+           Grid1 := UTF8Encode(Settings.My.ResolvedState);
            end;
 
         if (russianRegion2 in [rtUA1A, rtUA1C]) then
@@ -7317,10 +7317,10 @@ begin
 
     RadioVHFFDQSOPointMethod {, ChampionshipRFVHFQSOPointMethod}:
       begin
-        if Settings.My.Grid <> '' then
+        if Settings.My.ResolvedGrid <> '' then
            begin
            Points := GetDistanceBetweenGrids
-             {GetEuropeanDistanceBetweenGrids}(Settings.My.Grid,
+             {GetEuropeanDistanceBetweenGrids}(Settings.My.ResolvedGrid,
              RXData.DomesticQTH);
            if RXData.Band = Band2 then
               begin
@@ -7349,15 +7349,15 @@ begin
 
     MakrothenQSOPointMethod:
       begin
-        if Settings.My.Grid <> '' then
+        if Settings.My.ResolvedGrid <> '' then
            begin
-           if Copy(Settings.My.Grid, 1, 4) = Copy(RXData.DomesticQTH, 1, 4) then
+           if Copy(Settings.My.ResolvedGrid, 1, 4) = Copy(RXData.DomesticQTH, 1, 4) then
               begin
               RXData.QSOPoints := 100
               end
            else
               begin
-              RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.Grid,
+              RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.ResolvedGrid,
                 RXData.DomesticQTH);
               if RXData.Band = Band40 then
                  begin
@@ -7451,9 +7451,9 @@ begin
 
     RCCVHFQP:
       begin
-        if Settings.My.Grid <> '' then
+        if Settings.My.ResolvedGrid <> '' then
            begin
-           Points := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
+           Points := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.DomesticQTH);
            if RXData.Band = Band2 then
               begin
               RXData.QSOPoints := Points
@@ -7474,9 +7474,9 @@ begin
       end;
 
     OZHCRVHFQSOPointMethod:
-      if Settings.My.Grid <> '' then
+      if Settings.My.ResolvedGrid <> '' then
          begin
-         Points := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
+         Points := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.DomesticQTH);
          if RXData.Band = Band2 then
             begin
             RXData.QSOPoints := Points;
@@ -7496,18 +7496,18 @@ begin
          end;
 
     EuropeanVHFQSOPointMethod:
-      //      if Settings.My.Grid <> '' then
+      //      if Settings.My.ResolvedGrid <> '' then
       //        if RXData.DomesticQTH <> '' then
       begin
-        //    RXData.QSOPoints := GetEuropeanDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
+        //    RXData.QSOPoints := GetEuropeanDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.DomesticQTH);
         if Settings.Contest.Name = 'EURASIA' then // 4.96.3
            begin
-           RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString)
+           RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.QTHString)
            end
             // domestic truncated to 2 bytes. need this 6bytes
         else
            begin
-           RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.Grid,
+           RXData.QSOPoints := GetDistanceBetweenGrids(Settings.My.ResolvedGrid,
              RXData.DomesticQTH);
            end;
         //n4af 4.36.11
@@ -7537,10 +7537,10 @@ begin
       end;
 
     TeslaQSOPointMethod: // 4.79.1
-      //      if Settings.My.Grid <> '' then
+      //      if Settings.My.ResolvedGrid <> '' then
       //        if RXData.DomesticQTH <> '' then
       begin
-        Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
+        Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.DomesticQTH);
         case distance of
           0..600: RXData.QSOPoints := 10;
           601..1200: RXData.QSOPoints := 13;
@@ -7579,7 +7579,7 @@ begin
        above 8401 km = 45 points
 
           //n4af 4.36.11
-         if RXData.DomesticQTH = Settings.My.Grid then
+         if RXData.DomesticQTH = Settings.My.ResolvedGrid then
            RXData.QSOPoints := 90; }
         DisplayTotalScore;
       end;
@@ -7627,7 +7627,7 @@ begin
            begin
            RXData.QSOPoints := 1;
            end;
-        if (Settings.My.State = 'TRC') and (RXData.DomesticQTH = 'TRC') then
+        if (Settings.My.ResolvedState = 'TRC') and (RXData.DomesticQTH = 'TRC') then
           // throw away above & use one point -if- fellow TRC
            begin
            RXData.QSOPoints := 1;
@@ -7771,7 +7771,7 @@ begin
 
     BSCIQSOPointMethod:
       begin
-        Val(Settings.My.Zone, MyZoneValue, Result);
+        Val(Settings.My.ResolvedZone, MyZoneValue, Result);
         if RXData.Zone = MyZoneValue then
            begin
            RXData.QSOPoints := 1
@@ -7795,7 +7795,7 @@ begin
     SRRQSOPointMethod: // 4.90.4
       if RXData.DomesticQTH = '' then
          begin
-         Val(Settings.My.Zone, MyZoneValue, Result);
+         Val(Settings.My.ResolvedZone, MyZoneValue, Result);
 
          if RXData.Zone = MyZoneValue then
             begin
@@ -7815,7 +7815,7 @@ begin
       if RXData.DomesticQTH = '' then
          begin
          //        Val(RXData.Zone, RXDataZoneValue, RESULT);
-         Val(Settings.My.Zone, MyZoneValue, Result);
+         Val(Settings.My.ResolvedZone, MyZoneValue, Result);
 
          if RXData.Zone = MyZoneValue then
             begin
@@ -7838,7 +7838,7 @@ begin
       if RXData.DomesticQTH = '' then
       begin
         Val(RXData.Zone, RXDataZoneValue, RESULT);
-        Val(Settings.My.Zone, MyZoneValue, RESULT);
+        Val(Settings.My.ResolvedZone, MyZoneValue, RESULT);
 
         if RXDataZoneValue = MyZoneValue then
           RXData.QSOPoints := 1
@@ -7893,7 +7893,7 @@ begin
 
     IOTAQSOPointMethod: // 4.102.6
       begin
-        if Settings.My.State = '' then // 4.61.3 change points
+        if Settings.My.ResolvedState = '' then // 4.61.3 change points
            begin
            if RXData.domesticQTH <> '' then
               begin
@@ -7906,8 +7906,8 @@ begin
            exit;
            end;
         IOTASTATE := RXDATA.DomesticQTH;
-        if pos('-', Settings.My.State) > 0 then
-          if (Settings.My.State = IOTAState) or (RXData.DomesticQTH = '') then
+        if pos('-', Settings.My.ResolvedState) > 0 then
+          if (Settings.My.ResolvedState = IOTAState) or (RXData.DomesticQTH = '') then
              begin
              RXData.QSOPoints := 5
              end
@@ -7916,7 +7916,7 @@ begin
              RXData.QSOPoints := 15;
              end;
 
-        if (RXData.DomesticQTH <> '') and (Settings.My.State <> RXData.DomesticQTH) then
+        if (RXData.DomesticQTH <> '') and (Settings.My.ResolvedState <> RXData.DomesticQTH) then
            begin
            RXData.QSOPoints := 15
            end
@@ -8051,7 +8051,7 @@ begin
            RXData.QSOPoints := 10;
            end;
 
-        if RXData.Zone = StrToIntDef(UTF8Encode(Settings.My.Zone), 0) then
+        if RXData.Zone = StrToIntDef(UTF8Encode(Settings.My.ResolvedZone), 0) then
            begin
            RXData.ZoneMult := False;
            end;
@@ -8146,7 +8146,7 @@ begin
     RAEMQSOPointMethod:
       begin
 
-        if LooksLikeAGeoCoordinates(UTF8Encode(Settings.My.State), la1, lo1) then
+        if LooksLikeAGeoCoordinates(UTF8Encode(Settings.My.ResolvedState), la1, lo1) then
           if LooksLikeAGeoCoordinates(RXData.QTHString, la2, lo2) then
              begin
              Distance := Abs(lo1 - lo2);
@@ -8475,9 +8475,9 @@ begin
 
     StewPerryQSOPointMethod:
       begin
-        if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
+        if (Settings.My.ResolvedGrid <> '') and (RXData.DomesticQTH <> '') then
            begin
-           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
+           Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.DomesticQTH);
            RXData.QSOPoints := (Distance div 500) + 1;
            if Settings.Contest.CategoryPower = cpQRP then
               begin
@@ -8495,9 +8495,9 @@ begin
       end;
 
     WWDigiQP: // 4.90.8
-      if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
+      if (Settings.My.ResolvedGrid <> '') and (RXData.DomesticQTH <> '') then
          begin
-         Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString);
+         Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.QTHString);
          RXData.QSOPoints := (Distance div 3000) + 1;
          end;
 
@@ -8516,9 +8516,9 @@ begin
          RXData.QSOPoints := 0;
          RXData.InhibitMults := True;
          end
-      else if (Settings.My.Grid <> '') and (RXData.QTHString <> '') then
+      else if (Settings.My.ResolvedGrid <> '') and (RXData.QTHString <> '') then
          begin
-         RTCDistKm := RTCGridDistance(Settings.My.Grid, RXData.QTHString);
+         RTCDistKm := RTCGridDistance(Settings.My.ResolvedGrid, RXData.QTHString);
          if RTCDistKm < 2000.0 then
             begin
             RXData.QSOPoints := 1;
@@ -8707,9 +8707,9 @@ begin
 
     WWLQSOPointMethod:
       begin
-        if (Settings.My.Grid <> '') and (RXData.DomesticQTH <> '') then
+        if (Settings.My.ResolvedGrid <> '') and (RXData.DomesticQTH <> '') then
            begin
-           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.DomesticQTH);
+           Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.DomesticQTH);
            RXData.QSOPoints := (Distance div 500) + 1;
 
            if (RXData.Band = Band80) or (RXData.Band = Band160) then
@@ -8821,9 +8821,9 @@ begin
     CupRFMethod:
       begin
 
-        if (Settings.My.Grid <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
+        if (Settings.My.ResolvedGrid <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
            begin
-           Distance := GetDistanceBetweenGrids(Settings.My.Grid, RXData.QTHString
+           Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, RXData.QTHString
              {DomesticQTH});
 
            if Distance > 7000 then
@@ -8868,14 +8868,14 @@ begin
 
         if GetOblast(Settings.My.Call) = '4W' then
            begin
-           if RXData.DomesticQTH <> Settings.My.State then
+           if RXData.DomesticQTH <> Settings.My.ResolvedState then
               begin
               RXData.QSOPoints := 4;
               end;
            Exit;
            end;
 
-        if RXData.DomesticQTH <> Settings.My.State then
+        if RXData.DomesticQTH <> Settings.My.ResolvedState then
            begin
            if RXData.Band = Band80 then
               begin
@@ -8918,11 +8918,11 @@ begin
         if RussianID(RXCty) then
            begin
            RXData.DomMultQTH := GetRussiaOblastID(RXData.Callsign);
-           if Settings.My.State = '' then
+           if Settings.My.ResolvedState = '' then
               begin
               Exit;
               end;
-           if not (Settings.My.State[1] in ['1'..'7']) then
+           if not (Settings.My.ResolvedState[1] in ['1'..'7']) then
               begin
               Exit;
               end;
@@ -8930,7 +8930,7 @@ begin
               begin
               Exit;
               end;
-           RXData.QSOPoints := RFChampionshipPoints[Ord(Settings.My.State[1]) - 48 +
+           RXData.QSOPoints := RFChampionshipPoints[Ord(Settings.My.ResolvedState[1]) - 48 +
              (RXData.Zone - 1) * 7];
            end;
       end;
@@ -8948,7 +8948,7 @@ begin
     WWPMCQSOPointMethod:
       begin
         RXData.QSOPoints := 5;
-        if Settings.My.State = '' then
+        if Settings.My.ResolvedState = '' then
            begin
            if RXData.QTHString <> '' then
               begin
@@ -8958,7 +8958,7 @@ begin
         else
            begin
            if RXData.QTHString <> '' then
-             if Settings.My.State <> RXData.QTHString then
+             if Settings.My.ResolvedState <> RXData.QTHString then
                 begin
                 RXData.QSOPoints := 10;
                 end;
@@ -9040,7 +9040,7 @@ begin
           end;
          end;
      end;
-//     if Settings.My.State = '' then
+//     if Settings.My.ResolvedState = '' then
 
      
 
@@ -9098,14 +9098,14 @@ begin
          RXData.QSOPoints:= 3;  }
 
     ChampionshipRFASMethod:
-      if (Settings.My.State <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
-        if StringIsAllNumbers(Settings.My.State) then
+      if (Settings.My.ResolvedState <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
+        if StringIsAllNumbers(Settings.My.ResolvedState) then
            begin
            la1 := StrToIntDef(RXData.QTHString[1], 0);
            lo1 := StrToIntDef(Copy(RXData.QTHString, 2, 2), 0);
 
-           la2 := StrToIntDef(UTF8Encode(Settings.My.State[1]), 0);
-           lo2 := StrToIntDef(UTF8Encode(Copy(Settings.My.State, 2, 2)), 0);
+           la2 := StrToIntDef(UTF8Encode(Settings.My.ResolvedState[1]), 0);
+           lo2 := StrToIntDef(UTF8Encode(Copy(Settings.My.ResolvedState, 2, 2)), 0);
            RXData.QSOPoints := Abs(la1 - la2) + Abs(lo1 - lo2) + 5;
            if RXData.Mode = CW then
               begin
@@ -9243,13 +9243,13 @@ begin
            RXData.QSOPoints := 1;
            end;
 
-        if (RXData.QTHString[result] = 'M') and (StringIsAllNumbers(Settings.My.State))
+        if (RXData.QTHString[result] = 'M') and (StringIsAllNumbers(Settings.My.ResolvedState))
           then
            begin
            inc(RXData.QSOPoints, 6)
            end
         else if (RXData.QTHString[result] = 'M') and (not
-          StringIsAllNumbers(Settings.My.State)) then
+          StringIsAllNumbers(Settings.My.ResolvedState)) then
            begin
            inc(RXData.QSOPoints, 2);
            end;
@@ -9370,11 +9370,11 @@ begin
            if RXData.DomMultQTH[1] in ['A'..'Z'] then
               begin
               if RXData.DomMultQTH[2] in ['0'..'9'] then
-                if length(Settings.My.State) >= 2 then
+                if length(Settings.My.ResolvedState) >= 2 then
                    begin
-                   la1 := Abs(Ord(UpCase(RXData.DomMultQTH[1])) - Ord(Settings.My.State[1]))
+                   la1 := Abs(Ord(UpCase(RXData.DomMultQTH[1])) - Ord(Settings.My.ResolvedState[1]))
                      + 1;
-                   la2 := Abs(Ord(UpCase(RXData.DomMultQTH[2])) - Ord(Settings.My.State[2]))
+                   la2 := Abs(Ord(UpCase(RXData.DomMultQTH[2])) - Ord(Settings.My.ResolvedState[2]))
                      + 1;
                    if la1 >= la2 then
                       begin
@@ -9468,19 +9468,19 @@ begin
            Str1 := Copy(RXData.DomesticQTH, 1, 2);
            str2 := Copy(RXData.DomesticQTH, 3, 2);
            end;
-        if length(Settings.My.State) < 3 then
+        if length(Settings.My.ResolvedState) < 3 then
            begin
            exit;
            end;
-        if length(Settings.My.State) = 3 then
+        if length(Settings.My.ResolvedState) = 3 then
            begin
-           Str3 := UTF8Encode('0' + Copy(Settings.My.State, 1, 1));
-           Str4 := UTF8Encode(Copy(Settings.My.State, 2, 2));
+           Str3 := UTF8Encode('0' + Copy(Settings.My.ResolvedState, 1, 1));
+           Str4 := UTF8Encode(Copy(Settings.My.ResolvedState, 2, 2));
            end
         else
            begin
-           Str3 := UTF8Encode(Copy(Settings.My.State, 1, 2));
-           Str4 := UTF8Encode(Copy(Settings.My.State, 3, 2));
+           Str3 := UTF8Encode(Copy(Settings.My.ResolvedState, 1, 2));
+           Str4 := UTF8Encode(Copy(Settings.My.ResolvedState, 3, 2));
            end;
         if Str1 = Str3 then
            begin
@@ -9581,7 +9581,7 @@ begin
  QSO with another continent � 5 points.
      }
       begin
-        if length(Settings.My.State) = 4 then // i am in EU region
+        if length(Settings.My.ResolvedState) = 4 then // i am in EU region
            begin
            if (RXData.DomMultQTH[4] <> '') then // he is in EU
               begin

@@ -476,9 +476,9 @@ function ZoneSentForThisContest: string;
    begin
    if ContestsArray[ Contest ].ZnM = ITUZones then
       begin
-      if Settings.My.ItuZone > 0 then
+      if Settings.My.ResolvedItuZone > 0 then
          begin
-         Result := IntToStr( Settings.My.ItuZone );
+         Result := IntToStr( Settings.My.ResolvedItuZone );
          Exit;
          end;
       ituFromCty := ctyGetITUZone( string( Settings.My.Call ) );
@@ -488,7 +488,7 @@ function ZoneSentForThisContest: string;
          Exit;
          end;
       end;
-   Result := Settings.My.Zone;
+   Result := Settings.My.ResolvedZone;
    end;
 
 
@@ -969,7 +969,7 @@ procedure WriteTitleBlockToSummarySheet;
      ContestFriendlyParens + #13#10 + '            START DATE: ' +
      tGetDateFormat( ContestDates[ 0 ] ) + #13#10 +
      '         CALLSIGN USED: ' + string( Settings.My.Call ) + #13#10 +
-     '               LOCATOR: ' + Settings.My.Grid + #13#10#13#10 );
+     '               LOCATOR: ' + Settings.My.ResolvedGrid + #13#10#13#10 );
 
   // for i := 147 to 167 - 2 + 2 do
   for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
@@ -2200,7 +2200,7 @@ procedure ExportToEDIByBand( Band: BandType );
      + 'PWWLo=%s'#13#10 + 'PBand=%s'#13#10 + 'RName=%s'#13#10 + 'PAdr1=%s'#13#10
      + 'PSect=%s'#13#10 + '[QSORecords;%u]'#13#10,
      [ string(Settings.Contest.Name),
-     string(Settings.My.Call), Settings.My.Grid,
+     string(Settings.My.Call), Settings.My.ResolvedGrid,
      string( EDIFBANDSTRINGSARRAY[ Band ] ),
      CabrilloTagText( ctName ),
      AddressLine,
@@ -2281,16 +2281,16 @@ begin
      contest that sends nothing there, or the grid, says so for the session;
      the operator's MY STATE is untouched. *)
    Result.MyState      := SentMyState;
-   Result.MyGrid       := Settings.My.Grid;
-   Result.MyName       := Settings.My.Name;
+   Result.MyGrid       := Settings.My.ResolvedGrid;
+   Result.MyName       := Settings.My.ResolvedName;
    Result.MyZone       := ZoneSentForThisContest;
-   Result.MyFDClass    := Settings.My.FdClass;
-   Result.MySection    := Settings.My.Section;
-   Result.MyCheck      := Settings.My.Check;
-   Result.MyPrec       := Settings.My.Prec;
-   Result.MyFOCNumber  := Settings.My.FocNumber;
-   Result.MyPostalCode := Settings.My.PostalCode;
-   Result.MyPark       := Settings.My.Park;
+   Result.MyFDClass    := Settings.My.ResolvedFdClass;
+   Result.MySection    := Settings.My.ResolvedSection;
+   Result.MyCheck      := Settings.My.ResolvedCheck;
+   Result.MyPrec       := Settings.My.ResolvedPrec;
+   Result.MyFOCNumber  := Settings.My.ResolvedFocNumber;
+   Result.MyPostalCode := Settings.My.ResolvedPostalCode;
+   Result.MyPark       := Settings.My.ResolvedPark;
 end;
 
 // ---------------------------------------------------------------------------
@@ -2700,10 +2700,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             [ tagName, CharBufferText( TempBuffer2 ) ] ) );
          end;
 
-      if Settings.My.Grid <> '' then
+      if Settings.My.ResolvedGrid <> '' then
          begin
          sWriteFileFromString( tReportFileWrite,
-            UTF8Encode( 'GRID-LOCATOR: ' + Settings.My.Grid + #13#10 ) );
+            UTF8Encode( 'GRID-LOCATOR: ' + Settings.My.ResolvedGrid + #13#10 ) );
          end;
 
       (*

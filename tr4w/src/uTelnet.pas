@@ -154,7 +154,7 @@ uses
   Forms,             // Application.QueueAsyncCall -- the event transport
   ExtCtrls,          // TTimer -- the retry and login timers, off the dialog's WM_TIMER
   uTelnetForm,       // the window itself, a designed form since 2026-08-25
-  uSettingsModel,      // Settings.My.PostalCode
+  uSettingsModel,      // Settings.My.ResolvedPostalCode
   uRadioConfigStore,   // the cluster library -- what the drop-down now lists
   uKeyerConfigStore,   // LoadConfig fills both libraries from the one file
   uUDPBroadcastConfig, // TUDPBroadcastConfig -- LoadConfig fills it too
@@ -363,6 +363,13 @@ var
 //
 // Result is False for an unrecognised token so the parser can leave it
 // verbatim.  This is the single source of truth for the token vocabulary.
+//
+// THE MY_ TOKENS ARE THE STATION'S FACTS AS THIS CONTEST HAS THEM -- the
+// Resolved* values, design 7.12: an operator who took the laptop to Utah and
+// stated zone 3 and grid DN40 for this contest tells the cluster where he IS.
+// Still NOT the contest's SENT state (FCONTEST.SentMyState): a contest rule
+// that sends a blank or a grid in the state's place says nothing about where
+// the station is (design 8.2m).
 function TelnetClusterTokenValue(const Token: string; out Value: string): boolean;
 var
    RealFreq: Real;
@@ -377,43 +384,43 @@ begin
       end
    else if Token = 'MY_STATE' then
       begin
-      Value := Settings.My.State
+      Value := Settings.My.ResolvedState
       end
    else if Token = 'MY_SECTION' then
       begin
-      Value := Settings.My.Section
+      Value := Settings.My.ResolvedSection
       end
    else if Token = 'MY_NAME' then
       begin
-      Value := Settings.My.Name
+      Value := Settings.My.ResolvedName
       end
    else if Token = 'MY_GRID' then
       begin
-      Value := Settings.My.Grid
+      Value := Settings.My.ResolvedGrid
       end
    else if Token = 'MY_ZONE' then
       begin
-      Value := Settings.My.Zone
+      Value := Settings.My.ResolvedZone
       end
    else if Token = 'MY_CHECK' then
       begin
-      Value := Settings.My.Check
+      Value := Settings.My.ResolvedCheck
       end
    else if Token = 'MY_PREC' then
       begin
-      Value := Settings.My.Prec
+      Value := Settings.My.ResolvedPrec
       end
    else if Token = 'MY_CLASS' then
       begin
-      Value := Settings.My.FdClass
+      Value := Settings.My.ResolvedFdClass
       end
    else if Token = 'MY_PARK' then
       begin
-      Value := Settings.My.Park
+      Value := Settings.My.ResolvedPark
       end
    else if Token = 'MY_POSTALCODE' then
       begin
-      Value := Settings.My.PostalCode
+      Value := Settings.My.ResolvedPostalCode
       end
    else if Token = 'CALL' then
       begin

@@ -23,6 +23,43 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-13 -- A STATION FACT CHOSEN AT NEW CONTEST IS THAT CONTEST'S ONLY (design 7.12)
+
+What the New Contest dialog asks for, such as MY ZONE, MY STATE, MY SECTION
+and MY FD CLASS, is now **this contest's override**. It is stored in the
+log. It is **never** written into the station's settings. Before this
+change, the next settings save carried it into `settings\tr4w.json`. A save
+happens on any Preferences edit or on the insert-mode toggle. Unit tests pin
+the rule; only a run shows the dialog and the windows agree.
+
+Before you start, note the station's **MY ZONE** and **MY STATE** in
+Preferences > Station (zone 5 and FL here).
+
+- [ ] **New Contest > European HFC.** Its row is labelled `MY ZONE`, because
+      that contest sends the year licensed in the zone's place. Enter `3`.
+      OK. The CQ message (F1/F3) sends `599 3`.
+- [ ] **During that contest, Preferences > Station > MY ZONE still shows the
+      station's zone (5).** Change something harmless on another page and
+      save, or toggle INSERT. Close TR4W. Open `settings\tr4w.json`:
+      `"Zone"` is still `"5"`.
+- [ ] **Log one QSO, close, and reopen the European HFC log.** Export
+      Cabrillo. The sent column carries `3`, because the log carries the
+      override. Also look at what F1/F3 send after the reopen. The contest
+      is set up before the log's rows are applied (Q68), so a message built
+      at set-up may show the station's 5. Note which one you see.
+- [ ] **New Contest > CQ WW (any mode).** Its exchange sends the
+      **station's** zone (5), not 3. That is NY4I's case: zone 3 was
+      for that one contest.
+- [ ] **New Contest > CQ WW RTTY.** Its row is MY STATE; enter `UT`. The CQ
+      exchange is `599 5 UT`, the same text it always built. In Preferences,
+      MY STATE is still `FL`.
+- [ ] **During the European HFC contest, change MY ZONE in Preferences to
+      4.** The contest still sends `599 3`, because its override wins for
+      that contest. Preferences does not say so; that is Q66. A later new CQ
+      WW contest sends 4.
+
+---
+
 ## Added 2026-10-13 -- POTA IS A CONTEST CLASS. LOG AN ACTIVATION.
 
 NY4I ruled design Q6; `TContestPOTA` now owns everything POTA did through

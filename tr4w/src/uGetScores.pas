@@ -90,7 +90,7 @@ uses
   MainUnit,
   uPostScoresForm,   // PostScoresShowStatus -- the window is an LCL form
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json
-  uSettingsModel,    // Settings.My.ItuZone
+  uSettingsModel,    // Settings.My.ResolvedItuZone
   uContestRegistry,  // ContestIdentity -- the contest's ADIF id
   FCONTEST;          // SentMyState -- the state sent, design 7.11 (M9a)
 
@@ -366,7 +366,7 @@ begin
      sDXCC := ctyGetCountryID(UTF8Encode(Settings.My.Call));
      end;
 
-  sSection := Trim(Settings.My.Section);
+  sSection := Trim(Settings.My.ResolvedSection);
   if sSection = '' then
      begin
      sSection := ReadCabrilloSummaryField('_LOCATION');
@@ -391,7 +391,7 @@ begin
   // (uNewContest.pas:419), so 4 chars is the common case; a 6-char value
   // appears when the user manually set MY GRID in tr4w.ini or used a
   // contest dialog that prompts for the full grid.
-  sGrid4 := Trim(Settings.My.Grid);
+  sGrid4 := Trim(Settings.My.ResolvedGrid);
 
   qth := '';
   if sDXCC <> '' then
@@ -402,9 +402,9 @@ begin
      begin
      qth := qth + '<cqzone>' + XmlEscape(sZone) + '</cqzone>';
      end;
-  if Settings.My.ItuZone > 0 then
+  if Settings.My.ResolvedItuZone > 0 then
      begin
-     qth := qth + '<iaruzone>' + IntToStr(Settings.My.ItuZone) + '</iaruzone>'
+     qth := qth + '<iaruzone>' + IntToStr(Settings.My.ResolvedItuZone) + '</iaruzone>'
      end
   else if Settings.My.Call <> '' then
      begin

@@ -295,6 +295,20 @@ var
      file. What it no longer has is a table to scan. *)
 function CheckCommand(const Command: ShortString; CustomCMD: ShortString;
                       const aApplyJSONOwned: boolean = False): boolean;
+
+(* ONE COMMAND THAT THE CONTEST STATED -- a contest .cfg line, a New Contest
+  choice, or a row of the contest's own log on reopen.
+
+  A STATION FACT (MY STATE, MY ZONE, MY GRID...; see uSettingsModel.
+  TStationFact) BECOMES THIS CONTEST'S OVERRIDE and the station's value is not
+  touched -- design 7.12. It used to be written INTO the station's settings,
+  and the next SaveSettings of the session carried the contest's value into
+  settings\tr4w.json. Every other command is CheckCommand with
+  aApplyJSONOwned = True, exactly what these three channels already did.
+
+  THE ONE ROUTE FOR ALL THREE CHANNELS, so the rule cannot be applied by one
+  and forgotten by another. A refused value is reported here. *)
+function ApplyContestStatement(const aCommand, aValue: string): boolean;
 (* ~~CommandIsSingleValued~~ -- DELETED 2026-09-19 WITH THE INI READ.
 
   Its one caller was LogCfg's duplicate-key report, which fired for
@@ -349,6 +363,12 @@ var
 procedure ClearContestCFGCommands;
 begin
    SetLength(gContestCFGCommands, 0);
+   (* AND THE CONTEST'S STATION-FACT OVERRIDES WITH IT -- design 7.12. Both
+     record what THIS contest stated, and both are reset at the same two
+     moments: before a contest .cfg is read and before the New Contest
+     dialog's choices are applied. Two resets kept in step by hand would
+     drift; one call cannot. *)
+   Settings.My.ClearContestOverrides;
 end;
 
 procedure NoteCommandFromContestCFG(const aCommand: string);
@@ -1422,6 +1442,37 @@ begin
          end;
       Result := True;
       end;
+end;
+
+function ApplyContestStatement(const aCommand, aValue: string): boolean;
+var
+   key, val: ShortString;
+begin
+   if Settings.CommandIsContestOverridable(aCommand) then
+      begin
+      Result := Settings.TryOverrideForContest(aCommand, aValue);
+      if logger <> nil then
+         begin
+         if Result then
+            begin
+            logger.Info('[Config] %s = %s for this contest -- the station''s ' +
+                        'value is the default and is not changed',
+                        [aCommand, aValue]);
+            end
+         else
+            begin
+            logger.Warn('[Config] %s = %s for this contest was refused -- the ' +
+                        'station''s value stays in force', [aCommand, aValue]);
+            end;
+         end;
+      Exit;
+      end;
+
+   (* Plain assignment: the same conversion as a ShortString() cast, see
+     test/unit/uTestShortStringConversion.pas. *)
+   key := AnsiString(aCommand);
+   val := AnsiString(aValue);
+   Result := CheckCommand(key, val, True);
 end;
 
 

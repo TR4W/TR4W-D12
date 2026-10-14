@@ -2082,6 +2082,33 @@ type
       property RateCutoff: TSayHiRateCutoff read FRateCutoff write FRateCutoff;
    end;
 
+   (* THE STATION FACTS A CONTEST MAY OVERRIDE -- design 7.12 (NY4I,
+     2026-10-13): "we use station config as a default but allow the override
+     at contest selection time."
+
+     ONE MEMBER PER TMySettings PROPERTY THAT THE NEW CONTEST DIALOG CAN ASK
+     FOR (uContestBase.TNewContestField: MY STATE / MY QTH, MY SECTION, MY
+     ZONE, MY GRID, MY NAME, MY FD CLASS, MY CHECK, MY PREC, MY PARK, MY IOTA,
+     MY POSTAL CODE, MY FOC NUMBER), PLUS MY ITU ZONE, which the dialog does
+     not ask for but which is the same kind of fact as the CQ zone: where the
+     station IS for this contest. Measured 2026-10-13: every one of the
+     dialog's fields was applied INTO this group, as the contest's, and the
+     next SaveSettings of the session -- a Preferences edit, the insert-mode
+     toggle -- wrote the contest's value into settings\tr4w.json as the
+     station's.
+
+     NOT HERE, ON PURPOSE: MY CALL (the club-call case predates this and has
+     its own capture rule, and everything derived from it -- country,
+     continent, zone -- would move with it), MY COUNTRY and MAIN CALLSIGN.
+     See docs/CONTEST_FACTORY_OPEN_QUESTIONS.md Q65.
+
+     STATION_FACT_PROPERTY names each member's property in TMySettings;
+     uTestStationFactOverrides checks every name is a published property, so
+     the two cannot drift apart unnoticed. *)
+   TStationFact = (sfState, sfSection, sfZone, sfItuZone, sfGrid, sfName,
+                   sfFdClass, sfCheck, sfPrec, sfPark, sfIota, sfPostalCode,
+                   sfFocNumber);
+
    (*
      THE STATION'S OWN FACTS -- the seventeen MY ... commands.
 
@@ -2132,11 +2159,69 @@ type
       FMainCallsign: string;
       FState: string;
       FItuZone: TMyItuZone;
+      (* THE OPEN CONTEST'S OVERRIDES -- design 7.12. NOT published, so they
+        are never streamed into settings\tr4w.json: they are stored with the
+        contest, in its log (uLogContestStatements). *)
+      FContestValue: array[TStationFact] of string;
+      FContestStated: array[TStationFact] of boolean;
       procedure SetCall(const aValue: string);
       procedure SetCountry(const aValue: string);
       procedure SetZone(const aValue: string);
+      function StationValue(aFact: TStationFact): string;
+      function GetResolvedText(aIndex: integer): string;
+      function GetResolvedItuZone: integer;
    public
       constructor Create;
+
+      (* ---------------------------------------------------------------
+        A STATION FACT IS A DEFAULT A CONTEST MAY OVERRIDE -- design 7.12.
+
+        THE PUBLISHED PROPERTIES BELOW ARE THE STATION'S CONFIGURATION:
+        what Preferences edits and settings\tr4w.json stores. A contest
+        never writes them. What a contest states for itself -- at New
+        Contest, in its .cfg, or from its own log on reopen -- is held here,
+        beside them, and Resolved answers "this contest's value if it stated
+        one, else the station's".
+
+        EVERY READER THAT SERVES THE CONTEST READS Resolved* -- the sent
+        exchange, the station context a contest class is handed, Cabrillo
+        and ADIF, the CW macros, the readiness check. Only the station's own
+        editors (Preferences, the converter, the startup load) read the
+        published property.
+
+        SO A PREFERENCES EDIT DURING A CONTEST CHANGES THE STATION, AND THE
+        CONTEST'S OVERRIDE STILL WINS FOR THAT CONTEST. A contest that
+        stated nothing follows the edit at once. *)
+      procedure SetContestOverride(aFact: TStationFact; const aValue: string);
+      (* Withdraw one override: the station's value is in force again for
+        this contest, and the next capture writes the station's row. *)
+      procedure ClearContestOverride(aFact: TStationFact);
+      (* Withdraw every override -- a contest's configuration is starting
+        afresh (uCFG.ClearContestCFGCommands). *)
+      procedure ClearContestOverrides;
+      function HasContestOverride(aFact: TStationFact): boolean;
+      function ContestOverride(aFact: TStationFact): string;
+      (* THE ONE RESOLVER. The contest's override if stated, else the
+        station's value, as text (MY ITU ZONE as its number). *)
+      function Resolved(aFact: TStationFact): string;
+
+      (* The resolver, by name, for the readers. ResolvedZone is MY CQ ZONE,
+        as text -- see Zone below for why it is text. *)
+      property ResolvedState: string index Ord(sfState) read GetResolvedText;
+      property ResolvedSection: string index Ord(sfSection) read GetResolvedText;
+      property ResolvedZone: string index Ord(sfZone) read GetResolvedText;
+      property ResolvedGrid: string index Ord(sfGrid) read GetResolvedText;
+      property ResolvedName: string index Ord(sfName) read GetResolvedText;
+      property ResolvedFdClass: string index Ord(sfFdClass) read GetResolvedText;
+      property ResolvedCheck: string index Ord(sfCheck) read GetResolvedText;
+      property ResolvedPrec: string index Ord(sfPrec) read GetResolvedText;
+      property ResolvedPark: string index Ord(sfPark) read GetResolvedText;
+      property ResolvedIota: string index Ord(sfIota) read GetResolvedText;
+      property ResolvedPostalCode: string index Ord(sfPostalCode) read GetResolvedText;
+      property ResolvedFocNumber: string index Ord(sfFocNumber) read GetResolvedText;
+      (* MY ITU ZONE resolved; 0 still means "use CTY.DAT". *)
+      property ResolvedItuZone: integer read GetResolvedItuZone;
+
       (* DID THE OPERATOR STATE A ZONE, or is it ours to derive?
 
         NOT published, so it is not streamed and has no command name: it is
@@ -3665,6 +3750,34 @@ type
         can ask about any command. See TSettingsGroup.IsStationOnly. *)
       function CommandIsStationOnly(const aCommand: string): boolean;
 
+      (* ---------------------------------------------------------------
+        A STATION FACT, STATED BY THE CONTEST -- design 7.12.
+
+        The command names are the station's own -- MY STATE, MY QTH, MY
+        ZONE, MY GRID... -- because that is what a .cfg, the New Contest
+        dialog and the log's config table have always said. What differs
+        is WHO IS SPEAKING, so it is the CHANNEL that chooses: the contest
+        channels (uCFG.ApplyContestStatement -- the .cfg, the New Contest
+        queue, the log's own rows on reopen) call TryOverrideForContest,
+        and every station channel (Preferences, a peer, the startup load)
+        goes on calling TrySetByCommand, which writes the station's value.
+
+        StationFactOfCommand answers which fact a name is, through the
+        same name map every other lookup uses, so MY QTH is MY STATE. *)
+      function StationFactOfCommand(const aCommand: string;
+                                    out aFact: TStationFact): boolean;
+      function CommandIsContestOverridable(const aCommand: string): boolean;
+      (* RECORD aValue AS THE OPEN CONTEST'S OWN VALUE OF THIS FACT. False for
+        a name that is not an overridable fact, and for a value the station's
+        property would refuse (its registered check, or MY ITU ZONE's
+        0..90) -- in which case nothing changes. Never touches the station's
+        value and never saves. *)
+      function TryOverrideForContest(const aCommand, aValue: string): boolean;
+      (* The override the open contest stated for this fact; False when it
+        stated none (or the name is not an overridable fact). *)
+      function TryGetContestOverride(const aCommand: string;
+                                     out aValue: string): boolean;
+
       (* SET A SETTING BY ITS COMMAND NAME -- AND, FOR A CONTEST-SCOPED ONE,
         RECORD THAT THE OPERATOR STATED IT.
 
@@ -3957,6 +4070,16 @@ procedure FreeSettings;
   aInto is added to, not cleared, so a caller can layer two sources. *)
 procedure FlattenLegacyCommands(const aCommands: TJSONObject;
                                 const aInto: TStrings);
+
+const
+   (* Each TStationFact's published property in TMySettings, so its path is
+     'My.' + this. Declared after the type section because a constant
+     between the forward declaration of TR4WSettings and its body would end
+     that type section early. *)
+   STATION_FACT_PROPERTY: array[TStationFact] of string = (
+      'State', 'Section', 'Zone', 'ItuZone', 'Grid', 'Name',
+      'FdClass', 'Check', 'Prec', 'Park', 'Iota', 'PostalCode',
+      'FocNumber');
 
 implementation
 
@@ -4816,6 +4939,7 @@ begin
    FCountryWasSet := False;
    FState         := '';
    FItuZone    := 0;
+   ClearContestOverrides;
 end;
 
 procedure TMySettings.SetCall(const aValue: string);
@@ -4851,6 +4975,131 @@ end;
 procedure TMySettings.DeriveZone(const aValue: string);
 begin
    SetStr(FZone, aValue, 'Zone');
+end;
+
+(* THE STATION'S OWN VALUE OF ONE FACT, as text -- the published property.
+  A case rather than RTTI so the compiler sees every member named. *)
+function TMySettings.StationValue(aFact: TStationFact): string;
+begin
+   Result := '';
+   case aFact of
+      sfState:
+         begin
+         Result := FState;
+         end;
+      sfSection:
+         begin
+         Result := FSection;
+         end;
+      sfZone:
+         begin
+         Result := FZone;
+         end;
+      sfItuZone:
+         begin
+         Result := IntToStr(FItuZone);
+         end;
+      sfGrid:
+         begin
+         Result := FGrid;
+         end;
+      sfName:
+         begin
+         Result := FName;
+         end;
+      sfFdClass:
+         begin
+         Result := FFdClass;
+         end;
+      sfCheck:
+         begin
+         Result := FCheck;
+         end;
+      sfPrec:
+         begin
+         Result := FPrec;
+         end;
+      sfPark:
+         begin
+         Result := FPark;
+         end;
+      sfIota:
+         begin
+         Result := FIota;
+         end;
+      sfPostalCode:
+         begin
+         Result := FPostalCode;
+         end;
+      sfFocNumber:
+         begin
+         Result := FFocNumber;
+         end;
+   end;
+end;
+
+procedure TMySettings.SetContestOverride(aFact: TStationFact; const aValue: string);
+begin
+   FContestValue[aFact] := aValue;
+   FContestStated[aFact] := True;
+end;
+
+procedure TMySettings.ClearContestOverride(aFact: TStationFact);
+begin
+   FContestValue[aFact] := '';
+   FContestStated[aFact] := False;
+end;
+
+procedure TMySettings.ClearContestOverrides;
+var
+   fact: TStationFact;
+begin
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      ClearContestOverride(fact);
+      end;
+end;
+
+function TMySettings.HasContestOverride(aFact: TStationFact): boolean;
+begin
+   Result := FContestStated[aFact];
+end;
+
+function TMySettings.ContestOverride(aFact: TStationFact): string;
+begin
+   Result := FContestValue[aFact];
+end;
+
+function TMySettings.Resolved(aFact: TStationFact): string;
+begin
+   if FContestStated[aFact] then
+      begin
+      Result := FContestValue[aFact];
+      end
+   else
+      begin
+      Result := StationValue(aFact);
+      end;
+end;
+
+function TMySettings.GetResolvedText(aIndex: integer): string;
+begin
+   Result := Resolved(TStationFact(aIndex));
+end;
+
+function TMySettings.GetResolvedItuZone: integer;
+var
+   code: integer;
+begin
+   (* An override was checked against TMyItuZone when it was stated (see
+     TR4WSettings.TryOverrideForContest), so this cannot leave the range.
+     Val, not StrToIntDef: the RTL's StrToIntDef takes an AnsiString here and
+     the conversion would be counted as a narrowing one. *)
+   Val(Resolved(sfItuZone), Result, code);
+   if code <> 0 then
+      begin
+      Result := 0;
+      end;
 end;
 
 constructor TSayHiSettings.Create;
@@ -6026,6 +6275,90 @@ begin
       end;
 
    Result := (owner is TSettingsGroup) and TSettingsGroup(owner).IsStationOnly;
+end;
+
+function TR4WSettings.StationFactOfCommand(const aCommand: string;
+                                          out aFact: TStationFact): boolean;
+var
+   path: string;
+   fact: TStationFact;
+begin
+   Result := False;
+   aFact := Low(TStationFact);
+   path := PathForCommand(aCommand);
+   if path = '' then
+      begin
+      Exit;
+      end;
+   for fact := Low(TStationFact) to High(TStationFact) do
+      begin
+      if UnicodeSameText(path, 'My.' + STATION_FACT_PROPERTY[fact]) then
+         begin
+         aFact := fact;
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+function TR4WSettings.CommandIsContestOverridable(const aCommand: string): boolean;
+var
+   fact: TStationFact;
+begin
+   Result := StationFactOfCommand(aCommand, fact);
+end;
+
+function TR4WSettings.TryOverrideForContest(const aCommand, aValue: string): boolean;
+var
+   fact: TStationFact;
+   n: integer;
+   code: integer;
+   value: string;
+begin
+   Result := False;
+   if not StationFactOfCommand(aCommand, fact) then
+      begin
+      Exit;
+      end;
+
+   (* THE STATION'S PROPERTY'S OWN RULES, so a value the station could not
+     hold is not one the contest can hold either: its registered check, and
+     for the one integer fact its subrange. A string fact is taken as given,
+     untrimmed, exactly as AssignByCommand's string arm takes it. *)
+   if not ValueIsAcceptable('My.' + STATION_FACT_PROPERTY[fact], Trim(aValue)) then
+      begin
+      Exit;
+      end;
+
+   value := aValue;
+   if fact = sfItuZone then
+      begin
+      Val(Trim(aValue), n, code);
+      if (code <> 0) or
+         (n < Low(TMyItuZone)) or
+         (n > High(TMyItuZone)) then
+         begin
+         Exit;
+         end;
+      value := IntToStr(n);
+      end;
+
+   FMy.SetContestOverride(fact, value);
+   Result := True;
+end;
+
+function TR4WSettings.TryGetContestOverride(const aCommand: string;
+                                            out aValue: string): boolean;
+var
+   fact: TStationFact;
+begin
+   aValue := '';
+   Result := StationFactOfCommand(aCommand, fact) and
+             FMy.HasContestOverride(fact);
+   if Result then
+      begin
+      aValue := FMy.ContestOverride(fact);
+      end;
 end;
 
 function TR4WSettings.ContestScopedPath(const aCommand: string): string;

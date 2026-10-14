@@ -83,7 +83,7 @@ uses
    Classes,
    SysUtils,
    MainUnit,         // logger
-   uCFG,             // CheckCommand, NoteCommandFromContestCFG, ClearContestCFGCommands
+   uCFG,             // ApplyContestStatement, NoteCommandFromContestCFG, ClearContestCFGCommands
    uSettingsModel,   // Settings.My.MainCallsign
    uTR4WConfigFile;  // SaveSettings
 
@@ -136,28 +136,17 @@ end;
 
   Two halves and both are load-bearing. NoteCommandFromContestCFG records that
   THIS CONTEST asked for it, which is what makes uLogStore capture it with
-  source = 'contest' and apply it back on the next open. CheckCommand with
-  aApplyJSONOwned = True applies it: the settings object owns every one of
-  these names, and the default refuses a stored setting from an untrusted
-  caller. *)
+  source = 'contest' and apply it back on the next open. ApplyContestStatement
+  applies it: a STATION FACT the dialog asked for (MY STATE, MY ZONE, MY
+  SECTION...) becomes this contest's override and never reaches the station's
+  settings (design 7.12); anything else is CheckCommand with aApplyJSONOwned =
+  True, because the settings object owns these names and the default refuses
+  a stored setting from an untrusted caller. *)
 function ApplyOne(const aCommand, aValue: string): boolean;
-var
-   key, val: ShortString;
 begin
    NoteCommandFromContestCFG(aCommand);
 
-   (* PLAIN ASSIGNMENT, and it is a STYLE choice, not a correctness one.
-
-     This used to claim a ShortString() cast "reinterprets the pointer rather
-     than converting". That is false -- measured 2026-09-24, the cast and the
-     assignment emit the same conversion; see
-     test/unit/uTestShortStringConversion.pas. The assignment is kept because
-     it is the plainer of two equivalent spellings, not because the other one
-     is broken. *)
-   key := AnsiString(aCommand);
-   val := AnsiString(aValue);
-
-   Result := CheckCommand(key, val, True);
+   Result := ApplyContestStatement(aCommand, aValue);
    if (not Result) and (logger <> nil) then
       begin
       logger.Warn('[NewContest] %s = %s was refused and is not set.',

@@ -176,7 +176,16 @@ type
          reads is a 0 that looks like zone 0.
 
          MyZoneValid says whether the conversion worked, so a contest can tell
-         "zone 0" from "no zone set" instead of scoring against a silent 0. *)
+         "zone 0" from "no zone set" instead of scoring against a silent 0.
+
+         THIS IS MY CQ ZONE, RESOLVED -- design 7.12 (NY4I, 2026-10-13: "Add
+         my CQ zone to the station context. But it can be overridden ... I
+         take my laptop to CQ zone 3 in Utah for a contest, so just that
+         contest is CQ zone 3"). The contest's override if it stated one
+         (New Contest, its .cfg, its log), else the station's MY ZONE --
+         which is itself the operator's stated zone, or the CQ zone CTY.DAT
+         gives MY CALL. A class reads it here; it never asks CTY.DAT itself.
+         Every station fact in this record is resolved the same way. *)
       MyZone: integer;
       MyZoneValid: boolean;
 

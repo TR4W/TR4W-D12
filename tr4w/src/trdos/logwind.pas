@@ -1203,7 +1203,7 @@ var
   TempString                            : Str40;
 
 begin
-  if Settings.My.Grid <> '' then
+  if Settings.My.ResolvedGrid <> '' then
      begin
 
      if Grid <> '' then
@@ -1223,7 +1223,7 @@ begin
      DispalyGrid(HisGrid);
      if Call = Settings.My.Call then
         begin
-        GetLatLon(Settings.My.Grid, Lat, Lon)
+        GetLatLon(Settings.My.ResolvedGrid, Lat, Lon)
         end
      else
         begin
@@ -1234,7 +1234,7 @@ begin
 
      if HisGrid <> '' then
         begin
-        Heading := round(GetBeamHeading(Settings.My.Grid, HisGrid));
+        Heading := round(GetBeamHeading(Settings.My.ResolvedGrid, HisGrid));
 
         LastHeadingShown := Heading;
 
@@ -1245,7 +1245,7 @@ begin
 
         if Settings.Log.DistanceMode <> NoDistanceDisplay then
            begin
-           Distance := GetDistanceBetweenGrids(Settings.My.Grid, HisGrid);
+           Distance := GetDistanceBetweenGrids(Settings.My.ResolvedGrid, HisGrid);
 
            if Settings.Log.DistanceMode = DistanceMiles then
               begin
@@ -3079,10 +3079,10 @@ begin
          begin
          InfoString := data.Grid;
 
-         if (Settings.My.Grid <> '') and LooksLikeAGrid(data.Grid) then
+         if (Settings.My.ResolvedGrid <> '') and LooksLikeAGrid(data.Grid) then
             begin
             //          SaveSetAndClearActiveWindow(BeamHeadingWindow);
-        Heading := round(GetBeamHeading(Settings.My.Grid, data.Grid));
+        Heading := round(GetBeamHeading(Settings.My.ResolvedGrid, data.Grid));
             //          Write(data.Grid, ' at ', Heading, '?');
                                  //          RestorePreviousWindow;
             end;
@@ -3278,10 +3278,10 @@ begin
                 begin
                 InfoString := InfoString + data.Grid + ' ';
 
-                    //              if (Settings.My.Grid <> '') and LooksLikeAGrid(data.Grid) then
+                    //              if (Settings.My.ResolvedGrid <> '') and LooksLikeAGrid(data.Grid) then
                     //              begin
                     //                SaveSetAndClearActiveWindow(BeamHeadingWindow);
-                    //                Heading := round(GetBeamHeading(Settings.My.Grid, data.Grid));
+                    //                Heading := round(GetBeamHeading(Settings.My.ResolvedGrid, data.Grid));
                     //                Write(data.Grid, ' at ', Heading, '?');
                     //    SetTR4WWindowText(BeamHeadingWindowHandle, data.Grid+ ' at '+ inttostr(Heading)+ '*');
                     //                RestorePreviousWindow;

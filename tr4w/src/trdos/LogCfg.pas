@@ -1051,9 +1051,13 @@ var
      NoteCommandFromContestCFG(string(ID));
      end;
 
+  (* ApplyContestStatement, NOT CheckCommand: a station fact such as MY STATE
+    or MY ZONE in a contest .cfg is THIS CONTEST'S override and is never
+    written into the station's settings (design 7.12). Every other command is
+    the CheckCommand(.., True) this always was. *)
   if (CurrentConfigFile = cfgCFG) and CommandIsJSONOwned(string(ID)) then
      begin
-     if CheckCommand(ID, CMD, True) then
+     if ApplyContestStatement(string(ID), string(CMD)) then
         begin
         logger.Info('[Config] %s = %s from the contest .cfg -- overrides the stored value for this contest',
                     [ID, CMD]);

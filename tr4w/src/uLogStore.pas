@@ -375,7 +375,7 @@ begin
      POTA reference are both ASCII, so nothing changes in the bytes -- what
      changes is that the build can still count what it is counting. *)
    Result.MyCall := UTF8Encode(Settings.My.Call);
-   Result.MyPark := UTF8Encode(Settings.My.Park);
+   Result.MyPark := UTF8Encode(Settings.My.ResolvedPark);
 
    Result.CategoryOperator    := AnsiString(CabrilloTagText(ctCategoryOperator));
    Result.CategoryAssisted    := AnsiString(CabrilloTagText(ctCategoryAssisted));
@@ -518,6 +518,15 @@ begin
             Continue;
             end;
 
+         (* A STATION FACT A CONTEST MAY OVERRIDE (MY STATE, MY ZONE, MY GRID
+           ...) IS CAPTURED BELOW TOO -- design 7.12. Its row is the contest's
+           override, as 'contest', while one is stated, and otherwise the
+           station's value as 'station'. See CaptureStationFactRows. *)
+         if Settings.CommandIsContestOverridable(cmd) then
+            begin
+            Continue;
+            end;
+
          (* A CONTEST-SCOPED SETTING NEVER REACHES HERE -- it is skipped above
            and captured by CaptureContestStatements, always as 'contest' and
            only while stated. The 'or contest-scoped' arm that stood in this
@@ -570,6 +579,10 @@ begin
    (* THE CONTEST-SCOPED SETTINGS: written while stated, deleted otherwise,
      and the log marked as holding statements only. *)
    saved := saved + CaptureContestStatements(Settings, GRepository);
+
+   (* THE STATION FACTS: the contest's override while stated, else the
+     station's value as a record. *)
+   saved := saved + CaptureStationFactRows(Settings, GRepository);
 
    (* THE EDITABLE-LOG COLUMN WIDTHS.
 
@@ -1783,6 +1796,28 @@ begin
                a property setter is idempotent by construction. Naming it
                says what the test is for, where a hook index only said where
                the answer was stored. *)
+            (* A STATION FACT IS THIS CONTEST'S OVERRIDE -- design 7.12 -- and
+              is routed BEFORE the no-op skip below. That skip compares with
+              the STATION'S value; a stored MY STATE equal to it would be
+              skipped, never become the override, and the next capture would
+              rewrite the row as 'station' -- after which a Preferences edit
+              of the station would silently change this contest. Recording an
+              override assigns nothing and runs no setter, so it is safe
+              unconditionally.
+
+              A log written before 7.12 holds the same rows (source 'contest',
+              from a .cfg or the New Contest dialog), so it reads exactly as
+              it did: the contest's value in force. A log with no such row
+              resolves to the station's value, as it always did. *)
+            if Settings.CommandIsContestOverridable(cmd) then
+               begin
+               if ApplyContestStatement(cmd, val) then
+                  begin
+                  inc(Result);
+                  end;
+               Continue;
+               end;
+
             if (CFGCommandValueAsString(cmd) = val) and
                (not UnicodeSameText(cmd, 'CONTEST')) then
                begin

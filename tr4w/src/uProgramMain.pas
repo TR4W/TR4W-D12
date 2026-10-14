@@ -2523,7 +2523,7 @@ begin
   // SetCommand routes it to Preferences with the Station page open and the grid
   // field focused, because Ctrl-J never listed MY GRID -- see SetCommand for
   // the full story.  The row itself has since left CFGCA for
-  // Settings.My.Grid, which is what this now reads.
+  // Settings.My.ResolvedGrid, which is what this now reads.
   //
   // Placed here deliberately: config is loaded (so the grid is the operator's
   // real value, not the default) and the main window exists, but the
@@ -2539,7 +2539,7 @@ begin
   // they open TR4W, and one who does can set it in Preferences > Station --
   // where it is now also findable by search.  The flag is recorded whatever the
   // answer, because being asked and saying no IS an answer.
-  if (not tSilentExport) and (Trim(Settings.My.Grid) = '') then
+  if (not tSilentExport) and (Trim(Settings.My.ResolvedGrid) = '') then
      begin
      if GridPromptAlreadyShown then
         begin
@@ -2587,8 +2587,8 @@ begin
                                 Settings.My.Country,
                                 (* The state SENT -- design 7.11 (M9a). *)
                                 SentMyState,
-                                Settings.My.Zone,
-                                Settings.My.Grid,
+                                Settings.My.ResolvedZone,
+                                Settings.My.ResolvedGrid,
                                 Settings.Contest.DomesticFilename,
                                 readinessGaps);
 

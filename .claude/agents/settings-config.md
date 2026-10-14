@@ -254,6 +254,45 @@ station setting.
   `MyContinentIsSet` / `ZoneWasSet` / `CountryWasSet`; those three predate it
   and are NOT folded in.
 
+## A station fact is a DEFAULT a contest may override (2026-10-13)
+
+NY4I, design 7.12: *"we use station config as a default but allow the
+override at contest selection time."* His case: a laptop taken to CQ zone 3
+in Utah for one contest.
+
+- **The facts are `uSettingsModel.TStationFact`.** They are the `TMySettings`
+  properties the New Contest dialog can ask for, plus MY ITU ZONE: state
+  (with its alias MY QTH), section, CQ zone, ITU zone, grid, name, FD class,
+  check, prec, park, IOTA, postal code and FOC number. MY CALL, MY COUNTRY
+  and MAIN CALLSIGN are deliberately NOT facts; MY CALL is Q65.
+- **The published property is the STATION's value.** Preferences, the
+  startup load, a peer and the converter write it, and `tr4w.json` stores
+  it. A contest never writes it.
+- **The contest's value is an override beside the property** in
+  `TMySettings`, and it is not published. `uCFG.ApplyContestStatement` is
+  the one route for the `.cfg`, the New Contest queue and the log's rows.
+  It sends a fact to `TR4WSettings.TryOverrideForContest`, which applies the
+  property's own value check and MY ITU ZONE's 0..90. Everything else goes
+  to `CheckCommand(.., True)`. `ClearContestCFGCommands` clears the
+  overrides along with the provenance tracker.
+- **Readers that serve the contest read `Settings.My.Resolved<X>`** --
+  the override if stated, else the station's value. Only the station's own
+  editors read the plain property. **When you add a reader of a fact,
+  choose the right one.** The station context's `MyZone` is MY CQ ZONE,
+  resolved.
+- **In the log:** `uLogContestStatements.CaptureStationFactRows` writes the
+  override as `contest`, else the station's value as `station`. On reopen,
+  a fact row is routed before the no-op skip, so **a fact is never
+  demoted** (see Open).
+- **It is not 7.11's SentState.** `FCONTEST.SentMyState` is the contest's
+  SentState when set-up states one, else `ResolvedState`. The override is
+  where the station IS; SentState is what the contest's rule SENDS. Never
+  route set-up through `TryOverrideForContest`.
+- **Before this,** every dialog field was written into `TMySettings`. A
+  Preferences save or the insert-mode toggle then put the contest's value
+  into `tr4w.json`. European HFC's year licensed, which uses the MY ZONE
+  row, became the station's CQ zone that way.
+
 ## `NeedsRestart` is a flag with no consumer
 
 `TSettingBase.NeedsRestart` exists and **nothing reads it** (measured
@@ -290,7 +329,10 @@ on first start. What remains:
     (`uLogStore.CaptureConfiguration`), as stated rows only.
   - **Open (Q-M2a in the design doc):** whether to retire this section or
     convert it is NY4I's call.
-- **A STATION-scoped row a `.cfg` stated can be DEMOTED.**
+- **A STATION-scoped row a `.cfg` stated can be DEMOTED** -- *except a
+  station fact, which since 2026-10-13 records its override where the
+  statement is made and is routed before the no-op skip on reopen (design
+  7.12). What is left is the station-scoped commands that are not facts.*
   `CaptureConfiguration` gives it source `contest` only while
   `CommandCameFromContestCFG` says so. A reopen that applies it from the log
   does not note it, so with the `.cfg` gone the next clean close rewrites it

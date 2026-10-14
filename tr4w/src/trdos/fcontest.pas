@@ -79,6 +79,14 @@ var
   Day and Winter, the Russian DX contests) or the grid instead (the Russian
   cups) -- TSessionDefaults.SentState.
 
+  "MY STATE" HERE IS THE RESOLVED ONE -- design 7.12: the state the OPERATOR
+  stated for this contest (New Contest, its .cfg, its log), else the
+  station's. Two layers, deliberately not one: the operator's override says
+  where the station IS for this contest, and the in-state test reads it too;
+  the contest's SentState says what its RULES send, is never a statement, is
+  never stored, and the in-state test must not see it (Canada Day's blank is
+  not a location).
+
   EVERY READER OF THE SENT EXCHANGE ASKS THIS, never MY STATE: the exchange
   messages set-up builds, LogCfg's CQ exchange, the CW '&' macro, the Cabrillo
   and ADIF sent columns, score posting, the readiness check and the contests'
@@ -346,7 +354,7 @@ begin
      end
   else
      begin
-     Result := Settings.My.State;
+     Result := Settings.My.ResolvedState;
      end;
 end;
 
@@ -365,41 +373,46 @@ begin
   GContestSentStateStated := False;
 end;
 
+(* THE ZONE EXCHANGE'S MESSAGES, BUILT FROM A LOCAL -- design 7.12, and Q57.
+
+  This used to write "zone state" INTO MY ZONE, build the messages from it,
+  and put MY ZONE back. That was a contest writing a station setting (7.11),
+  and the write latched ZoneWasSet, so MY ZONE stopped following MY CALL (Q57).
+  It also cannot work once readers ask the RESOLVER: with a CQ zone stated
+  for this contest, the station's MY ZONE is not what is sent, so the
+  transient write would have been ignored and the state dropped.
+
+  So the text is a local, made from the zone THIS CONTEST sends -- the
+  resolved MY ZONE -- and the messages are byte-for-byte what they were. *)
 procedure SetUpRSTMyZoneExchange;
 var
-  OldMyZone: string;
+  zoneText: string;
 const
   Code599 = '599';
 begin
-  OldMyZone := '';
+  zoneText := Settings.My.ResolvedZone;
 
   if (SentMyState <> '') and
      (ActiveExchange = RSTZoneAndPossibleDomesticQTHExchange) then
      begin
-     OldMyZone := Settings.My.Zone;
-     Settings.My.Zone := Settings.My.Zone + ' ' + SentMyState;
+     zoneText := zoneText + ' ' + SentMyState;
      end;
 
-  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
-  SetCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone));
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Code599 + ' ' + zoneText);
+  SetCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + zoneText));
   SetEXMemoryString(CW, F3, Code599);
-  SetEXMemoryString(CW, F4, UTF8Encode(Settings.My.Zone));
-  SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + Settings.My.Zone));
+  SetEXMemoryString(CW, F4, UTF8Encode(zoneText));
+  SetEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + zoneText));
   SetEXMemoryString(CW, AltF3, 'RST?');
   SetEXMemoryString(CW, AltF4, 'NR?');
   Settings.Messages.RepeatSpExchangeCw :=
-     UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone + ' ' + Settings.My.Zone);
-  Settings.Messages.SpExchangeCw := UTF8Encode(' ' + Code599 + ' ' + Settings.My.Zone);
-
-  if OldMyZone <> '' then
-     begin
-     Settings.My.Zone := OldMyZone;
-     end;
+     UTF8Encode(' ' + Code599 + ' ' + zoneText + ' ' + zoneText);
+  Settings.Messages.SpExchangeCw := UTF8Encode(' ' + Code599 + ' ' + zoneText);
 end;
 
 procedure SetUpNameAndStateExchange;
 begin
-  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.Name + ' ' + SentMyState);
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.ResolvedName + ' ' + SentMyState);
   Settings.Messages.RepeatSpExchangeCw := Settings.Messages.CqExchangeCw;
   Settings.Messages.SpExchangeCw := Settings.Messages.CqExchangeCw;
 end;
@@ -1198,9 +1211,11 @@ begin
      Exit;
      end;
 
+  (* WHERE THE STATION IS FOR THIS CONTEST -- the resolved MY STATE (design
+    7.12), so a laptop taken into the host state for one party is in it. *)
   Result := DomFileOnDiskDeclaresKey(
                ShippedDomFilePath(countyFile + string(DOM_EXTENSION)),
-               Settings.My.State);
+               Settings.My.ResolvedState);
 end;
 
 end.

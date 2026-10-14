@@ -986,6 +986,138 @@ chosen at contest selection (New Contest dialog), stored with the CONTEST (its l
 written to `tr4w.json`. This is also where 7.11's SentState belongs. UA4W reads MY CQ ZONE from
 the station context through this resolver.
 
+**LANDED 2026-10-13.** No contest gained a class. UA4W is not built here.
+
+**Measured first.** Every station fact the New Contest dialog can ask for
+(`TNewContestField`) was a `TMySettings` property. `TMySettings` is not
+contest-scoped, so it is streamed into `settings/tr4w.json`. The dialog's
+values, a contest `.cfg`'s and the log's own rows on reopen all reached
+those properties through `CheckCommand(.., True)` and `TrySetByCommand`.
+Any later `SaveSettings` in the session wrote the contest's value into the
+station's file. Those saves are a Preferences edit (`TModelSetting.TrySetText`),
+the insert-mode toggle (`MainUnit`), and a changed value through
+`ApplyAndStoreCommand`. So this was a 7.11-class defect for all twelve
+dialog fields, not only MY STATE. MY ZONE had one more effect: setting it by
+name latched `ZoneWasSet`, so the station's zone stopped following MY CALL
+for good.
+
+| fact | command(s) | dialog field | today's readers |
+|---|---|---|---|
+| state | MY STATE, MY QTH | yes | legacy scoring arms, in-state test, sent state fallback, cluster token |
+| section | MY SECTION | yes | station context, Cabrillo/ADIF, score posting, cluster token |
+| CQ zone | MY ZONE | yes | station context, legacy scoring, zone messages, Cabrillo zone, readiness, cluster token |
+| ITU zone | MY ITU ZONE | no (a `.cfg` can state it) | IARU's sent zone, score posting |
+| grid | MY GRID | yes | distance scoring, beam headings, Cabrillo/ADIF/EDI, readiness, cluster token |
+| name, FD class, check, prec | MY NAME, MY FD CLASS, MY CHECK, MY PREC | yes | station context, Cabrillo/ADIF, CW macros, cluster tokens |
+| park, IOTA, postal code, FOC number | MY PARK, MY IOTA, MY POSTAL CODE, MY FOC NUMBER | yes | POTA normalising and export, CW macro, Cabrillo/ADIF |
+
+**The mechanism.**
+
+- **Storage in the program.** `TMySettings` holds an override per
+  `TStationFact` beside each published property. The overrides are not
+  published, so they are never streamed. The published property stays the
+  station's value. Preferences and `tr4w.json` see only that value.
+- **The resolver.** `TMySettings.Resolved(aFact)` returns the override if
+  the contest stated one, else the station's value. The readers use it
+  through `ResolvedState`, `ResolvedZone`, `ResolvedItuZone` and so on.
+- **The channels.** `uCFG.ApplyContestStatement` is the one route for the
+  three contest channels: `LogCfg` (the `.cfg`), `uNewContestCommands`
+  (the dialog's queue), and `LogStoreApplyContestConfig` (the log's rows).
+  A station fact becomes `TryOverrideForContest`. Anything else is the
+  `CheckCommand(.., True)` it always was. Every station channel is unchanged:
+  Preferences, a peer, the startup load and the converter still write the
+  property. `ClearContestCFGCommands` clears the overrides with the
+  provenance tracker, so both reset at the same two moments.
+- **Storage in the log.** This reuses 7.8's shape. A `contest` row is a
+  statement and absence means the station decides.
+  `uLogContestStatements.CaptureStationFactRows` writes the override as
+  `contest` while it is stated. Otherwise it writes the station's value as
+  `station`, the record every station row has always been. On reopen, a
+  `contest` row is routed to the override before the no-op skip. The skip
+  compares against the station's value, so without that order an override
+  equal to the station would have been demoted to `station` at the next
+  close. **The demotion `settings-config` records as open for station rows
+  therefore cannot happen to a station fact.**
+- **A log written before this** holds the same rows. A `.cfg` or dialog
+  value was captured as `contest`, so it reads exactly as it was in force
+  before. A log with no such row resolves to the station's value, which is
+  also today's behaviour.
+
+**Readers repointed** (every `Settings.My.<fact>` outside the station's own
+editors and the settings unit):
+
+- `uContestFactory.CurrentStation`. This is the station context, so every
+  class sees the resolved values.
+- `FCONTEST`: the `SentMyState` fallback, `FoundMyStateInDomFile`, and the
+  name and zone messages.
+- `PostUnit`: `CurrentMyStationExchange`, which Cabrillo and ADIF use;
+  `ZoneSentForThisContest`; and the EDI and Cabrillo locator lines.
+- `LOGSTUFF`'s scoring arms (68 sites, mostly grid distance and the
+  classless state rules).
+- `LOGEDIT`'s and `LOGWIND`'s beam heading and distance.
+- `LogSend`'s CW name and postal-code macros.
+- `uExchangeBuilder`; `uGetScores` (section, grid, ITU zone).
+- `uTelnet`'s `MY_*` tokens.
+- `MainUnit`'s and `uLogStore`'s park.
+- `uProgramMain`'s grid prompt and readiness check.
+- `uContestMatrix` records a fact as the contest has it, so the matrix
+  still shows the `.cfg`'s station lines.
+
+**MY CQ ZONE in the station context.** `TStationContext.MyZone`,
+`MyZoneValid` and `MyZoneText` already existed and were read from MY ZONE,
+which is the CQ zone. They now read `ResolvedZone`, and their declaration
+says they are MY CQ ZONE, resolved. A second field would have been a second
+copy of one fact. UA4W can read `aStation.MyZone`.
+
+**DECIDED: 7.11's SentState is NOT folded into the override. It is layered
+on top of it.** `SentMyState` is the contest's `SentState` when set-up
+stated one, else the resolved MY STATE. There are two reasons:
+
+1. The override is the OPERATOR's statement of where the station is. The
+   in-state test (`FoundMyStateInDomFile`) reads it, and so do the cluster
+   tokens. `SentState` is the contest's RULE about what to send, and it is
+   computed again at each set-up. Canada Day's blank is not a location, and
+   the in-state test must not see it.
+2. Routing set-up's value into the override would make it a stored
+   statement in the log. That is the exact mistake 7.8 forbids:
+   *never route contest set-up through `TrySetByCommand`*.
+
+**Q57 was implemented with this, by necessity.** `SetUpRSTMyZoneExchange`
+used to write "zone state" into MY ZONE and put it back. With the readers
+on the resolver, that transient station write would have been ignored
+whenever a zone override was stated, and the state would have been dropped
+from CQ WW RTTY's messages. It now builds the text in a local variable. The
+messages are byte-identical, MY ZONE is never written, and `ZoneWasSet` is
+no longer latched. One old edge also goes: with an empty MY ZONE, the old
+code left "` FL`" in MY ZONE for good.
+
+**A Preferences edit during a contest** changes the station's value. A
+contest that overrode that fact keeps its override for that contest. A
+contest that did not override it follows the edit at once. Preferences
+shows the station's value and says nothing about the override (Q66).
+
+**Tests:** `uTestStationFactOverrides` (new) covers:
+
+- every member is a published property reached by a command;
+- the default;
+- an override wins and leaves the station, `ZoneWasSet` and the JSON alone;
+- MY QTH is MY STATE;
+- a cleared override;
+- a Preferences edit mid-contest;
+- refused values and names that are not facts;
+- the capture's rows;
+- a reopen, including no demotion at the second capture;
+- a pre-7.12 log, both with a `contest` row and without one;
+- `CurrentStation` carrying zone 3 and grid DN40;
+- `SentMyState` falling back to the resolved state;
+- `ClearContestCFGCommands` clearing the overrides.
+
+`uTestNewContestCommands` now asserts that the dialog's class and section
+are overrides and that the station's values are untouched. It also checks
+that a save mid-contest keeps the station's class and section on disk.
+
+**Questions this raised:** Q65-Q68 (§9).
+
 ### 7.13 RULED (NY4I, 2026-10-13): per-QSO scoring may ask the sheet read-only (Q33)
 
 *"All multipliers are based on what was worked before ... when I work KP4N in a WPX contest

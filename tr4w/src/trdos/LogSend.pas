@@ -453,9 +453,9 @@ begin
         '(':
           if TotalContacts = 0 then
              begin
-             if Settings.My.Name <> '' then
+             if Settings.My.ResolvedName <> '' then
                 begin
-                AddStringToBuffer(UTF8Encode(Settings.My.Name), Config.CWTone)
+                AddStringToBuffer(UTF8Encode(Settings.My.ResolvedName), Config.CWTone)
                 end
              else
                 begin
@@ -465,7 +465,7 @@ begin
                   build counts, while an AnsiString-family value assigned to
                   a ShortString is not one. A postal code is ASCII, so the
                   bytes are the same either way. *)
-                AddStringToBuffer(UTF8Encode(Settings.My.PostalCode),
+                AddStringToBuffer(UTF8Encode(Settings.My.ResolvedPostalCode),
                                   Config.CWTone);
                 end;
              end

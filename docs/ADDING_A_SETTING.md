@@ -142,6 +142,36 @@ by name. The one rule this puts on you is about where contest set-up writes:
 
 When nothing is stated, the log has no row and the contest decides.
 
+### A station fact a contest may override (design 7.12, 2026-10-13)
+
+Some station settings are a station default that one contest may change.
+NY4I's example: *"I take my laptop to CQ zone 3 in Utah for a contest, so just
+that contest is CQ zone 3."* These are the `TMySettings` properties in
+`uSettingsModel.TStationFact`: MY STATE (and its alias MY QTH), MY SECTION,
+MY ZONE (the CQ zone), MY ITU ZONE, MY GRID, MY NAME, MY FD CLASS, MY CHECK,
+MY PREC, MY PARK, MY IOTA, MY POSTAL CODE and MY FOC NUMBER. That is every
+field the New Contest dialog can ask for, plus MY ITU ZONE.
+
+- **The published property is the station's value.** Preferences edits it
+  and `settings/tr4w.json` stores it. A contest never writes it.
+- **The contest's value is an override held beside it**
+  (`TMySettings.SetContestOverride`, not published, so never streamed).
+  The three contest channels set it through `uCFG.ApplyContestStatement`:
+  the contest `.cfg`, the New Contest queue, and the log's own rows on
+  reopen. It is stored in the log as a `contest` row. It is cleared with
+  `ClearContestCFGCommands`.
+- **A reader that serves the contest reads `Settings.My.Resolved<X>`** --
+  the override if stated, else the station's value. This covers the sent
+  exchange, `TStationContext` (`uContestFactory.CurrentStation`), Cabrillo,
+  ADIF, the CW macros, cluster tokens, the readiness check and the legacy
+  scoring arms. Only the station's own editors read the plain property.
+
+**To make another station setting overridable:** add a `TStationFact`
+member, its name in `STATION_FACT_PROPERTY`, an arm in
+`TMySettings.StationValue`, and a `Resolved<X>` property. Then repoint every
+reader that serves the contest. `uTestStationFactOverrides` fails if a
+member names a property that is not published.
+
 `tr4w.ini` is **the converter's input and nothing else**: startup has not read
 it since 2026-09-19 (NY4I -- `ReadInConfigFile(cfgINI)` removed, and `cfgINI`
 removed from `TCFGType` with it, so there is no longer a value to pass in).
