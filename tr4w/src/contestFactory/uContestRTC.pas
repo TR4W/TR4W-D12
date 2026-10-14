@@ -78,7 +78,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -196,11 +195,6 @@ end;
 function TContestRTC.GetFriendlyName: string;
 begin
    Result := 'Real Time Contest';
-end;
-
-function TContestRTC.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestRTC.GetZoneMultiplierType: ZoneMultType;

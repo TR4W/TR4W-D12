@@ -67,7 +67,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -164,11 +163,6 @@ end;
 function TContestARIDX.GetFriendlyName: string;
 begin
    Result := 'ARI International DX Contest';
-end;
-
-function TContestARIDX.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestARIDX.GetZoneMultiplierType: ZoneMultType;

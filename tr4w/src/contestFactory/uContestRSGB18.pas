@@ -78,7 +78,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -183,11 +182,6 @@ begin
    (* The row's FriendlyName is blank; this is the enum's spelling it
       resolves to. *)
    Result := 'RSGB-160';
-end;
-
-function TContestRSGB18.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestRSGB18.GetZoneMultiplierType: ZoneMultType;

@@ -537,10 +537,6 @@ begin
      begin
      ContestSession.WriteDXMult(aSession.DXMult);
      end;
-  if aSession.IsStated(svPrefixMult) then
-     begin
-     ContestSession.WritePrefixMult(aSession.PrefixMult);
-     end;
   if aSession.IsStated(svBand) then
      begin
      ActiveBand := aSession.Band;
@@ -814,7 +810,6 @@ begin
   ContestSession.WriteDomesticMult(aContest.DomesticMultiplierType);
   ContestSession.WriteDXMult(aContest.DXMultiplierType);
   ContestSession.WriteZoneMult(aContest.ZoneMultiplierType);
-  ContestSession.WritePrefixMult(aContest.PrefixMultiplierType);
 end;
 
 function FoundContest(CMD: ShortString): boolean;

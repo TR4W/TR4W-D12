@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -91,6 +90,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -188,11 +190,6 @@ begin
    Result := 'Yuri Gagarin International DX Contest';
 end;
 
-function TContestGagarinCup.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := GCStation;
-end;
-
 function TContestGagarinCup.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := ITUZones;
@@ -253,6 +250,13 @@ procedure TContestGagarinCup.DescribeNewContestPrompts(aPrompts: TNewContestProm
 begin
    aPrompts.OfferIAmIn(TC_GC);
    aPrompts.AskFieldWithCommentWhenInside(TC_GAGARIN, ncfMyState);
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`GCStation`) until the kind was deleted. *)
+function TContestGagarinCup.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

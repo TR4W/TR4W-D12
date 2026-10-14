@@ -802,7 +802,7 @@ begin
                        // is not.  Cheap to skip cleanly.
                        else if ContestSession.DoingDomesticMults or
                                ContestSession.DoingDXMults       or
-                               ContestSession.DoingPrefixMults   or
+                               DoingPrefixMults   or
                                ContestSession.DoingZoneMults     then
                           begin
                           if VisibleLog.DetermineIfNewMult(call, TempBand,
@@ -933,7 +933,7 @@ begin
                       begin
                       GetDXQTH(TempRXData);
                       end;
-                   if ContestSession.DoingPrefixMults then
+                   if DoingPrefixMults then
                       begin
                       SetPrefix(TempRXData);
                       end;

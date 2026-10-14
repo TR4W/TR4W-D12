@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -153,11 +152,6 @@ end;
 function TContestSST.GetFriendlyName: string;
 begin
    Result := 'K1USN Slow Speed Test';
-end;
-
-function TContestSST.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestSST.GetZoneMultiplierType: ZoneMultType;

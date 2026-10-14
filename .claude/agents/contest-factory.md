@@ -135,7 +135,8 @@ the target shape, the M-step migration order and the open questions.
   `docs/CONTEST_FACTORY_M10_PLAN.md`).** The six `Active*` KIND globals are
   gone: the session's kinds are read-only properties of
   `uContestSession.ContestSession` (`Exchange`, `InitialExchange`,
-  `PrefixMult`, `ZoneMult`, `DXMult`, `DomesticMult`), written only by
+  `ZoneMult`, `DXMult`, `DomesticMult`; `PrefixMult` was deleted at M11
+  S3), written only by
   FCONTEST's set-up through `Write*`. They are SESSION facts -- 27 contests
   run a kind their trait does not state -- so never answer one from
   `ContestIdentity`. **M11 is next:** the six kind enums and their ~80 engine
@@ -143,7 +144,7 @@ the target shape, the M-step migration order and the open questions.
   traits and enums are then deleted.
 - **M11 RUNS AS `docs/CONTEST_FACTORY_M11_PLAN.md` (S0-S10); S0a, S0b, S0d
   DONE 2026-10-14.** Three durable facts from S0:
-  - **`uTestContestKindPin` freezes the six kinds every contest RUNS** (trait,
+  - **`uTestContestKindPin` freezes the kinds every contest RUNS** (six; five since M11 S3 removed the prefix column) (trait,
     then `DescribeSession`, as FCONTEST resolves them) at every matrix
     station, generated once and proved equal to all 580 frozen matrix
     records first. Same rule as `uTestContestIdentityPin`: NEVER regenerate
@@ -194,12 +195,18 @@ the target shape, the M-step migration order and the open questions.
   stored record, so the two are not interchangeable. A rule that depends on
   the entrant asks `Station` exactly as its `DescribeSession` asks
   `aStation` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX); keep
-  the two in step until part 2 deletes the kind (plan F20). Shared
+  a station-dependent class's `PrefixMultiplierKey` asks its own
+  `HasPrefixMultiplier` for that test (M11 S3 part 2, which deleted the
+  kind and closed F20). Shared
   computation lives in the leaf `uPrefixMultiplierKey` (WAE call regions,
   SAC and YB districts); a one-field rule is written in the class. A NEW
-  prefix contest overrides `PrefixMultiplierKey` AND states the kind until
-  part 2, and adds a row to `uTestPrefixMultiplierKey`, whose
-  `Test_EveryContestAgreesWithItsSessionKind` fails if the two disagree.
+  prefix contest overrides `PrefixMultiplierKey` AND `HasPrefixMultiplier`
+  (base False -- there is no prefix kind to state any more), adds rows to
+  `uTestPrefixMultiplierKey`'s `KEY_PINS` and adds itself to its
+  `HAS_PREFIX` sets (and counts): `Test_EveryContestHasItsPinnedPrefixMultiplier`
+  fails on a missing answer and on a key given where `HasPrefixMultiplier`
+  is False. `LOGEDIT.DoingPrefixMults` is that answer for the active
+  contest; there is no session flag for it.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by
@@ -281,13 +288,13 @@ the target shape, the M-step migration order and the open questions.
   and holds the enum-spelled display names as a ratchet (design Q53).
 - **Set-up reads the contest** (M2, 2026-10-01). `FCONTEST.ApplyContestTraits`
   is the ONE writer (with `ApplySessionDefaults` after it) of the session's
-  six kinds -- `ContestSession`, the `Active*` globals until M10 S9 -- the QSO/mult by band/mode
+  kinds (five since M11 S3) -- `ContestSession`, the `Active*` globals until M10 S9 -- the QSO/mult by band/mode
   flags, VHF, count-domestic-countries, the CTY zone list and (in the head)
   the domestic file: **the operator's statement (`CommandIsStated`), else
   `ContestIdentity(Contest)`** -- the tables it once could read are deleted
   (M10 S8). ~~The seven tokens are replayed through
   `uSettingsEffects.ReplayContestStatements`~~ -- gone at M10 S2 with the
-  seven settings; the six kinds are written from the contest
+  seven settings; the kinds are written from the contest
   unconditionally. So **a trait override changes set-up now** -- the matrix sees it. What a
   contest states in `DescribeSession` runs after and wins (M7a, below); a
   classless contest's `FoundContest` arm still does. New traits:

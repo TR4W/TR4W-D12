@@ -72,7 +72,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -157,11 +156,6 @@ end;
 function TContestWWIH.GetFriendlyName: string;
 begin
    Result := 'World Wide Iron Ham Contest';
-end;
-
-function TContestWWIH.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestWWIH.GetZoneMultiplierType: ZoneMultType;

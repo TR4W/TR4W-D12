@@ -3265,25 +3265,10 @@ type
     BlackSeaCountries
     );
 
-  PrefixMultType =          // 4.67.9 (its spelling table went at M10 S2)
-    (
-    NoPrefixMults,
-    AsianPrefixes,
-    BelgiumPrefixes,
-    CallSignPrefix,
-    IndonesianDistricts,       // 4.64.1
-    MongolianCallSignPrefix,
-    NonSouthAmericanPrefixes,
-    NorthAmericanPrefixes,
-    Prefix,
-    SACDistricts,
-    SouthAmericanPrefixes,
-    SouthAndNorthAmericanPrefixes,
-    GCStation,
-    CQNonEuropeanCountriesAndWAECallRegions,
-    RussianPrefixes
-
-    );
+(* PrefixMultType IS GONE -- M11 S3 part 2, 2026-10-14. It named which prefix
+  multiplier a session ran, and LOGEDIT.SetPrefix cased on it. Each prefix
+  contest states its own key (TContestBase.PrefixMultiplierKey) and whether
+  it has a prefix multiplier at all (TContestBase.HasPrefixMultiplier). *)
 
   ZoneMultType =
     (

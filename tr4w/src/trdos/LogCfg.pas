@@ -466,7 +466,7 @@ begin
         end;
      end;
 
-  if ContestSession.DoingPrefixMults then
+  if DoingPrefixMults then
      begin
      inc(NumberDifferentMults);
      if RemainingMultDisplay = rmNoRemMultDisplay then

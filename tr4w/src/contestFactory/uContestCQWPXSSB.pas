@@ -54,7 +54,6 @@ type
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetExchangeKind: ExchangeType; override;
    public
    end;
@@ -103,11 +102,6 @@ end;
 function TContestCQWPXSSB.GetSubmissionEmail: string;
 begin
    Result := 'ssb@cqwpx.com';
-end;
-
-function TContestCQWPXSSB.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := Prefix;
 end;
 
 function TContestCQWPXSSB.GetExchangeKind: ExchangeType;

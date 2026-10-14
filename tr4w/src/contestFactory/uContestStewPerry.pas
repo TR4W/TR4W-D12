@@ -79,7 +79,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -176,11 +175,6 @@ end;
 function TContestStewPerry.GetFriendlyName: string;
 begin
    Result := 'Stew Perry Topband Challenge';
-end;
-
-function TContestStewPerry.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestStewPerry.GetZoneMultiplierType: ZoneMultType;

@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -98,6 +97,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -190,11 +192,6 @@ begin
    Result := 'CQMM DX Contest';
 end;
 
-function TContestCQMM.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := SouthAmericanPrefixes;
-end;
-
 function TContestCQMM.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -237,10 +234,6 @@ end;
 procedure TContestCQMM.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
-   if aStation.MyContinent = SouthAmerica then
-      begin
-      aSession.PrefixMult := SouthAndNorthAmericanPrefixes;
-      end;
    aSession.DXCCMultByBand := dmbbAllBand;
    aSession.Band := Band80;
 end;
@@ -255,12 +248,19 @@ begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURCONTINENT, ncfMyState);
 end;
 
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`SouthAmericanPrefixes`) until the kind was deleted. *)
+function TContestCQMM.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
+end;
+
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
    LOGEDIT.SetPrefix.
    From inside South America, the Americas' CTY prefixes
    (`SouthAndNorthAmericanPrefixes`, which DescribeSession chose there); from
    anywhere else, South America's (`SouthAmericanPrefixes`, the trait). The
-   station test is DescribeSession's. *)
+   station test was DescribeSession's until M11 S3 part 2. *)
 function TContestCQMM.PrefixMultiplierKey(const aQso: ContestExchange;
                                           out aKey: PrefixMultiplierString): boolean;
 begin

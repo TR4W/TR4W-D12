@@ -68,8 +68,10 @@ interface
 uses
    VC, uContestBase;
 
-(* THE TOTALS AS THE PROGRAM HOLDS THEM NOW -- see TScoreTotals. *)
-procedure GatherScoreTotals(out aTotals: TScoreTotals);
+(* THE TOTALS AS THE PROGRAM HOLDS THEM NOW -- see TScoreTotals. aContest is
+   the session's contest: whether it has a prefix multiplier is its answer
+   (M11 S3), not the session's. *)
+procedure GatherScoreTotals(aContest: ContestType; out aTotals: TScoreTotals);
 
 (* THE VIEW, KEPT WITH THE TOTALS -- see the header. Reset empties it; Add
    keeps aQso when QSOCountsTowardTotals accepts it. *)
@@ -96,7 +98,8 @@ uses
    uMults,
    uContestFactory,
    uContestRegistry,
-   (* ContestSession -- the prefix and zone kinds (M10 S9b, S9c). *)
+   (* ContestSession -- the session's kinds and Doing*Mults answers (M10 S9,
+      M11 S2). *)
    uContestSession;
 
 var
@@ -131,7 +134,7 @@ begin
       end;
 end;
 
-procedure GatherScoreTotals(out aTotals: TScoreTotals);
+procedure GatherScoreTotals(aContest: ContestType; out aTotals: TScoreTotals);
 var
    b: BandType;
    m: ModeType;
@@ -158,10 +161,12 @@ begin
       end;
 
    aTotals.ScoredBand := SingleBand;
+   (* The prefix answer last: it is the contest's, and asking costs an
+      ActiveContest (a station rebuild) the three session reads do not. *)
    aTotals.SessionCountsMultipliers := ContestSession.DoingDomesticMults or
                                        ContestSession.DoingDXMults       or
-                                       ContestSession.DoingPrefixMults   or
-                                       ContestSession.DoingZoneMults;
+                                       ContestSession.DoingZoneMults     or
+                                       ContestHasPrefixMultiplier(ActiveContest(aContest));
    aTotals.SessionExchange := ContestSession.Exchange;
    aTotals.SessionDXMult := ContestSession.DXMult;
    aTotals.LiveSessionTally := LiveSessionTally;

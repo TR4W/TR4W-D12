@@ -91,7 +91,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -168,11 +167,6 @@ end;
 function TContestEuropeanHFC.GetFriendlyName: string;
 begin
    Result := 'European HF Championship';
-end;
-
-function TContestEuropeanHFC.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestEuropeanHFC.GetZoneMultiplierType: ZoneMultType;

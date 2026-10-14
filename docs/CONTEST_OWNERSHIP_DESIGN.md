@@ -3597,6 +3597,8 @@ S0c is DONE too (plan S0c; it was open when this paragraph was written).
 
 **S3 part 1 DONE 2026-10-14 (plan S3): the prefix multiplier is each class's own rule.** `TContestBase.PrefixMultiplierKey` (base: no key) is stated by the 32 prefix contests -- the station-dependent ones ask `Station` exactly as their `DescribeSession` did -- calling the leaf `uPrefixMultiplierKey` only for the three real computations (WAE call regions, SAC districts, YB districts); `LOGEDIT.SetPrefix`'s `case` on the kind is gone, as §1.3 requires, and GAGARINCUP's callsign list is its class's. Pinned before the move against the old code (`uTestPrefixMultiplierKey`, including the PY/ON/SM/JA/OK/YB entrants the matrix lacks); part 2 deletes `PrefixMultType`. Live-station versus set-up-session divergence: plan F20.
 
+**S3 part 2 DONE 2026-10-14 (plan S3): `PrefixMultType` is deleted** -- the enum, the trait (`PrefixMultiplierType`, 172 overrides), the session field and `WritePrefixMult`, FCONTEST's two writes, the 14 `DescribeSession` statements and the matrix's `active.prefixmult` line; "does this contest have a prefix multiplier" is the class's `HasPrefixMultiplier` (base False; True for 23, a station test for UBA, the All Asian, OK DX, WAE and SAC, which their keys now ask too), read live against `Station` through `LOGEDIT.DoingPrefixMults`, so whether a prefix is set and which follow the same MY CALL (F20 closed).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

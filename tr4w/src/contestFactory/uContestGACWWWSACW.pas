@@ -65,7 +65,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -152,11 +151,6 @@ end;
 function TContestGACWWWSACW.GetFriendlyName: string;
 begin
    Result := 'GACW WWSA CW DX Contest';
-end;
-
-function TContestGACWWWSACW.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestGACWWWSACW.GetZoneMultiplierType: ZoneMultType;

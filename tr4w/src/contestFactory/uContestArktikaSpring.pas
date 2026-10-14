@@ -56,7 +56,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -229,11 +228,6 @@ begin
       NEITHER of them means the empty string. DisplayName above is the
       factory's own readable name and is a separate question. *)
    Result := 'ARKTIKA-SPRING';
-end;
-
-function TContestArktikaSpring.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestArktikaSpring.GetZoneMultiplierType: ZoneMultType;

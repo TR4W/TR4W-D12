@@ -290,7 +290,8 @@ shared files a contest touches; the search path already covers
 | `ADIFContestId` | the enum's spelling (since M10 S6; the row's `ADIFName`, or the spelling when blank, before). Every class states its own. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (each says so through `WritesADIFContestId` -- POTA since its class, 2026-10-13, design Q6) |
 | `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | **neutral since M10 S6**: 0, 0, `''`, `''`, the enum's spelling. They read the array row before |
-| `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | **neutral since M10 S6**: `NoPrefixMults`, `NoZoneMults`, `NoDXMults`, `NoDomesticMults` |
+| `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | **neutral since M10 S6**: `NoZoneMults`, `NoDXMults`, `NoDomesticMults` |
+| `HasPrefixMultiplier`, `PrefixMultiplierKey` | **False / no key.** The prefix multiplier is not a kind since M11 S3: a prefix contest overrides both, the first against `Station` where the entrant decides it, and pins both in `uTestPrefixMultiplierKey` |
 | `InitialExchangeKind`, `ExchangeKind` | **neutral since M10 S6**: `NoInitialExchange`, `UnknownExchange`. (`QSOPointMethod` is gone -- M10 S4) |
 | `IsUSQSOParty` | False since M10 S6 (it was the row's `P <> 0`). A party states True |
 | `ADIFPowerTag` | `RX_PWR` -- the ADIF tag the QSO's `Power` field goes to. FOC Marathon says `FOC_NUM`, because its parser puts the membership number there (M4) |
@@ -658,7 +659,8 @@ virtuals the sheet asks:
 
 | you declare | with | the sheet asks it |
 |---|---|---|
-| the multiplier kinds | the four traits (`DomesticMultiplierType`, `DXMultiplierType`, `ZoneMultiplierType`, `PrefixMultiplierType`), or per station in `DescribeSession` | set-up writes them to the session; the sheet keys every multiplier on them |
+| the multiplier kinds | the three traits (`DomesticMultiplierType`, `DXMultiplierType`, `ZoneMultiplierType`), or per station in `DescribeSession` | set-up writes them to the session; the sheet keys every multiplier on them |
+| the prefix multiplier | `HasPrefixMultiplier` and `PrefixMultiplierKey` (M11 S3; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingPrefixMults` and `SetPrefix` ask them, live against `Station` |
 | per band / per mode | `MultByBand`, `MultByMode`, `QSOByBand`, `QSOByMode` (and `DomesticMultByBand`, `DXCCMultByBand` in `DescribeSession`) | the sheet's band and mode keys |
 | the bands at all | `UsesBand` | points, multipliers, dupes and the hint all ask it (§7.4) |
 | a QSO that earns no multiplier of a kind | `CountsAsMultiplier(aQso, aKind)` | `SetMultFlags`, before the sheet's "is it new" |

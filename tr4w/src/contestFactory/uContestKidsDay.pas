@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -149,11 +148,6 @@ end;
 function TContestKidsDay.GetFriendlyName: string;
 begin
    Result := 'ARRL Kids Day';
-end;
-
-function TContestKidsDay.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestKidsDay.GetZoneMultiplierType: ZoneMultType;

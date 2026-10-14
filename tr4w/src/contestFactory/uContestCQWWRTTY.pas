@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -164,11 +163,6 @@ end;
 function TContestCQWWRTTY.GetFriendlyName: string;
 begin
    Result := 'CQ Worldwide DX Contest, RTTY';
-end;
-
-function TContestCQWWRTTY.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestCQWWRTTY.GetZoneMultiplierType: ZoneMultType;

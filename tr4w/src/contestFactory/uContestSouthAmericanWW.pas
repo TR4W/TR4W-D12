@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -85,10 +84,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      (* SET-UP -- see TContestBase.DescribeSession. *)
-      procedure DescribeSession(const aStation: TStationContext;
-                                aSession: TSessionDefaults); override;
-   public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -172,11 +170,6 @@ begin
    Result := 'SOUTH AMERICAN WW';
 end;
 
-function TContestSouthAmericanWW.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
-end;
-
 function TContestSouthAmericanWW.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -213,20 +206,12 @@ begin
    Result := False;
 end;
 
-(* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
-   it stood (M7b batch 2, 2026-10-02). See TContestBase.DescribeSession: this
-   writes no global and reads only aStation. *)
-procedure TContestSouthAmericanWW.DescribeSession(const aStation: TStationContext;
-                                                  aSession: TSessionDefaults);
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14. Its
+   DescribeSession stated one of two prefix kinds at every station, and
+   stated nothing else; it went with the kind. *)
+function TContestSouthAmericanWW.HasPrefixMultiplier: boolean;
 begin
-   if aStation.MyContinent = SouthAmerica then
-      begin
-      aSession.PrefixMult := NonSouthAmericanPrefixes;
-      end
-   else
-      begin
-      aSession.PrefixMult := SouthAmericanPrefixes;
-      end;
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

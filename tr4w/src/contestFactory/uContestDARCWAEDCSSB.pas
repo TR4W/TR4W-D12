@@ -81,7 +81,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -104,6 +103,9 @@ type
       (* THE QTC MENU -- see TContestBase.OffersQTCs (M9a). *)
       function GetOffersQTCs: boolean; override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -212,11 +214,6 @@ begin
    Result := 'WAE DX Contest, SSB';
 end;
 
-function TContestDARCWAEDCSSB.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
-end;
-
 function TContestDARCWAEDCSSB.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -264,10 +261,6 @@ begin
    if aStation.MyContinent <> Europe then
       begin
       aSession.DXMult := CQEuropeanCountries;
-      end
-   else
-      begin
-      aSession.PrefixMult := CQNonEuropeanCountriesAndWAECallRegions;
       end;
    aSession.Band := Band80;
    aSession.ContactsPerPage := 40;
@@ -282,6 +275,16 @@ begin
    Result := True;
 end;
 
+(* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,
+   2026-10-14. Yes for a European entrant; none outside Europe. This is the
+   station test DescribeSession chose the session's prefix kind by, until
+   that kind was deleted; PrefixMultiplierKey asks it, so the two cannot
+   disagree. *)
+function TContestDARCWAEDCSSB.HasPrefixMultiplier: boolean;
+begin
+   Result := Station.MyContinent = Europe;
+end;
+
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
    LOGEDIT.SetPrefix.
    A European entrant keys the rest of the world by country and call region,
@@ -293,7 +296,7 @@ function TContestDARCWAEDCSSB.PrefixMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := '';
    Result := False;
-   if Station.MyContinent <> Europe then
+   if not HasPrefixMultiplier then
       begin
       Exit;
       end;

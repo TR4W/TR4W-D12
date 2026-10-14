@@ -85,7 +85,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -200,11 +199,6 @@ end;
 function TContestARRL160.GetFriendlyName: string;
 begin
    Result := 'ARRL 160-Meter Contest';
-end;
-
-function TContestARRL160.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestARRL160.GetZoneMultiplierType: ZoneMultType;

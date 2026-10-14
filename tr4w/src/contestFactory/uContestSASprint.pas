@@ -82,7 +82,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -98,6 +97,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -164,11 +166,6 @@ begin
    Result := 'SA-SPRINT';
 end;
 
-function TContestSASprint.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := SouthAmericanPrefixes;
-end;
-
 function TContestSASprint.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -211,6 +208,13 @@ end;
 function TContestSASprint.GetIsActive: boolean;
 begin
    Result := False;
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`SouthAmericanPrefixes`) until the kind was deleted. *)
+function TContestSASprint.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

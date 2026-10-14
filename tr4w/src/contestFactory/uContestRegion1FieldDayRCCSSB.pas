@@ -79,7 +79,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -169,11 +168,6 @@ begin
    (* The row's FriendlyName is blank; this is the enum's spelling it
       resolves to. *)
    Result := 'REGION 1 FIELD DAY-RCC-SSB';
-end;
-
-function TContestRegion1FieldDayRCCSSB.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestRegion1FieldDayRCCSSB.GetZoneMultiplierType: ZoneMultType;

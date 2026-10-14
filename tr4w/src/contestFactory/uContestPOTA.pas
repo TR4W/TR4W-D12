@@ -88,7 +88,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -190,11 +189,6 @@ end;
 function TContestPOTA.GetFriendlyName: string;
 begin
    Result := 'Parks on the Air(r) Logging';
-end;
-
-function TContestPOTA.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestPOTA.GetZoneMultiplierType: ZoneMultType;

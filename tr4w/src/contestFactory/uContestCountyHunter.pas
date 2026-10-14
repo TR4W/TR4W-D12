@@ -80,7 +80,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -151,11 +150,6 @@ end;
 function TContestCountyHunter.GetFriendlyName: string;
 begin
    Result := 'General County Hunting Log';
-end;
-
-function TContestCountyHunter.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestCountyHunter.GetZoneMultiplierType: ZoneMultType;

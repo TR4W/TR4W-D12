@@ -28,7 +28,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   WHY THE UNIT IS A CONTEST AND NOT A STRATEGY ENUM. TR4W decomposed a
   contest into strategy enums -- QSOPointMethodType (deleted at M10 S4),
-  ExchangeType, DXMultType, PrefixMultType, ZoneMultType -- each dispatched by
+  ExchangeType, DXMultType, PrefixMultType (deleted at M11 S3), ZoneMultType --
+  each dispatched by
   its own `case`, and it would have been less work to turn each enum into a
   class. That is the wrong object model for this program:
 
@@ -711,7 +712,7 @@ type
       last two the arms wrote: the initial-exchange cursor at the start (IRTS,
       RAEM) and the DXCC multiplier by band (CQMM). *)
    TSessionValue = (
-      svExchange, svDomesticMult, svDXMult, svPrefixMult,
+      svExchange, svDomesticMult, svDXMult,
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
       svInitialExchange, svZoneMult, svDXMultLimit,
       svInitialExchangeCursorAtStart, svDXCCMultByBand,
@@ -786,7 +787,6 @@ type
       FExchange: ExchangeType;
       FDomesticMult: DomesticMultType;
       FDXMult: DXMultType;
-      FPrefixMult: PrefixMultType;
       FBand: BandType;
       FMode: ModeType;
       FDomesticMultByBand: TAdditionalMultByBand;
@@ -805,7 +805,6 @@ type
       procedure SetExchange(aValue: ExchangeType);
       procedure SetDomesticMult(aValue: DomesticMultType);
       procedure SetDXMult(aValue: DXMultType);
-      procedure SetPrefixMult(aValue: PrefixMultType);
       procedure SetBand(aValue: BandType);
       procedure SetMode(aValue: ModeType);
       procedure SetDomesticMultByBand(aValue: TAdditionalMultByBand);
@@ -826,12 +825,11 @@ type
       function IsStated(aValue: TSessionValue): boolean;
 
       (* THE ENGINE'S CHOICES -- ActiveExchange, the session's DomesticMult,
-         DXMult and PrefixMult (uContestSession, M10 S9b/S9d/S9e),
+         and DXMult (uContestSession, M10 S9d/S9e),
          ActiveBand, ActiveMode, DomesticMultByBand and tAllowDupeQSOs. *)
       property Exchange: ExchangeType read FExchange write SetExchange;
       property DomesticMult: DomesticMultType read FDomesticMult write SetDomesticMult;
       property DXMult: DXMultType read FDXMult write SetDXMult;
-      property PrefixMult: PrefixMultType read FPrefixMult write SetPrefixMult;
       property Band: BandType read FBand write SetBand;
       property Mode: ModeType read FMode write SetMode;
       property DomesticMultByBand: TAdditionalMultByBand
@@ -1158,7 +1156,6 @@ type
       function GetDomesticFileName: string; virtual;
       function GetFriendlyName: string; virtual;
       function GetQRZRUId: integer; virtual;
-      function GetPrefixMultiplierType: PrefixMultType; virtual;
       function GetZoneMultiplierType: ZoneMultType; virtual;
       function GetDXMultiplierType: DXMultType; virtual;
       function GetDomesticMultiplierType: DomesticMultType; virtual;
@@ -1391,7 +1388,6 @@ type
       property DomesticFileName: string read GetDomesticFileName;
       property FriendlyName: string read GetFriendlyName;
       property QRZRUId: integer read GetQRZRUId;
-      property PrefixMultiplierType: PrefixMultType read GetPrefixMultiplierType;
       property ZoneMultiplierType: ZoneMultType read GetZoneMultiplierType;
       property DXMultiplierType: DXMultType read GetDXMultiplierType;
       property DomesticMultiplierType: DomesticMultType read GetDomesticMultiplierType;
@@ -1634,17 +1630,40 @@ type
          exactly. aKey is the field's own type, so no conversion stands
          between the rule and the record.
 
-         A RULE THAT DEPENDS ON THE ENTRANT ASKS Station -- what
-         DescribeSession asked to choose the kind (UBA, SAC, WAE, the
+         A RULE THAT DEPENDS ON THE ENTRANT ASKS Station (UBA, SAC, WAE, the
          All Asian, OK DX, CQ MM, the South American WW, YB DX). Station is
          refreshed on every ActiveContest call, so the rule follows MY CALL
-         live, where the session kind is fixed at set-up; the two differ only
-         after a mid-session change of the entrant's country.
+         live. Where the entrant decides whether there is a prefix
+         multiplier at all, the key asks HasPrefixMultiplier, so the two
+         answers cannot disagree.
 
          THE BASE ANSWERS FALSE -- what SetPrefix did for every
          NoPrefixMults session. *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; virtual;
+
+      (* DOES THIS CONTEST HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3
+         part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S3, F20).
+
+         It replaces the session's prefix KIND, deleted with PrefixMultType:
+         the engine asked `kind <> NoPrefixMults` (ContestSession's
+         DoingPrefixMults) whether to set a prefix at all, size the prefix
+         column, count the remaining prefixes and total them. That question
+         has no QSO in hand, so it cannot be "does the key assign", and it is
+         answered here, per contest, against Station.
+
+         LIVE, NOT FIXED AT SET-UP. The kind was resolved once, by
+         FoundContest, while the key read Station on every call; a
+         mid-session change of the entrant's country left them disagreeing
+         (plan F20). Both read Station now. A contest whose answer depends on
+         the entrant tests exactly what its DescribeSession tested to choose
+         the kind (UBA, the All Asian, OK DX, WAE, SAC); every other prefix
+         contest answers True.
+
+         INVARIANT: PrefixMultiplierKey assigns only where this is True --
+         pinned for every contest at every roster station by
+         uTestPrefixMultiplierKey. THE BASE ANSWERS FALSE. *)
+      function HasPrefixMultiplier: boolean; virtual;
 
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
@@ -2327,6 +2346,12 @@ function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExch
 function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean;
 
+(* DOES aContest HAVE A PREFIX MULTIPLIER AT ITS STATION? -- see
+   TContestBase.HasPrefixMultiplier. nil answers False: the classless
+   DUMMYCONTEST ran NoPrefixMults. LOGEDIT.DoingPrefixMults asks it of the
+   active contest. *)
+function ContestHasPrefixMultiplier(aContest: TContestBase): boolean;
+
 (* THE FOUR `QSO POINTS ...` OVERRIDES, APPLIED -- the one statement of their
    rule. True, with aQso.QSOPoints set, when one of them matches this QSO;
    False, with aQso untouched, when none does.
@@ -2409,7 +2434,7 @@ end;
    No getter below reads ContestsArray, ContestsBooleanArray or QSOParties.
    Each answers a constant, and the constants ARE DUMMYCONTEST's row: blank
    names (so the enum's spelling, which is what the old two-step gave for a
-   blank field), no calendar ids, no e-mail, no domestic file, NoPrefixMults,
+   blank field), no calendar ids, no e-mail, no domestic file,
    NoZoneMults, NoInitialExchange, NoDomesticMults, P 0, UnknownExchange,
    NoDXMults, a flag word of 0. DUMMYCONTEST -- the one contest with no class
    -- therefore answers exactly what it did, and every registered contest
@@ -2463,11 +2488,6 @@ end;
 function TContestBase.GetQRZRUId: integer;
 begin
    Result := 0;
-end;
-
-function TContestBase.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestBase.GetZoneMultiplierType: ZoneMultType;
@@ -2639,6 +2659,18 @@ begin
    else
       begin
       Result := aContest.PrefixMultiplierKey(aQso, aKey);
+      end;
+end;
+
+function ContestHasPrefixMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.HasPrefixMultiplier;
       end;
 end;
 
@@ -2912,6 +2944,12 @@ function TContestBase.PrefixMultiplierKey(const aQso: ContestExchange;
 begin
    (* No prefix multiplier -- see the declaration. *)
    aKey := '';
+   Result := False;
+end;
+
+function TContestBase.HasPrefixMultiplier: boolean;
+begin
+   (* No prefix multiplier -- see the declaration. *)
    Result := False;
 end;
 
@@ -3453,12 +3491,6 @@ procedure TSessionDefaults.SetDXMult(aValue: DXMultType);
 begin
    FDXMult := aValue;
    Stated(svDXMult);
-end;
-
-procedure TSessionDefaults.SetPrefixMult(aValue: PrefixMultType);
-begin
-   FPrefixMult := aValue;
-   Stated(svPrefixMult);
 end;
 
 procedure TSessionDefaults.SetBand(aValue: BandType);

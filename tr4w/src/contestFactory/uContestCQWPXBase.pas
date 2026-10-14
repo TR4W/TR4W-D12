@@ -76,6 +76,9 @@ type
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -176,6 +179,14 @@ end;
 function TContestCQWPXBase.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.NumberReceived);
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14: the
+   trait CQ WPX CW and SSB each stated (`Prefix`) until the kind was
+   deleted. Once, here, as the key is. *)
+function TContestCQWPXBase.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

@@ -87,7 +87,9 @@ ROUTINES = {
    ("logdupe.pas", "GetDXQTH"): ("multipliers", "DXMultiplierType (existing trait) + " + new("DXMultiplierRule")),
    ("logdupe.pas", "DupeAndMultSheet.SetUpRemainingMultiplierArrays"): ("multipliers", "ZoneMultiplierType (existing trait) + " + new("RemainingMultList")),
    ("logedit.pas", "EditableLog.GetMultArray"): ("multipliers", new("DomesticMultFromQTH")),
-   ("logedit.pas", "SetPrefix"): ("multipliers", "PrefixMultiplierType (existing trait) + " + new("PrefixMultRule")),
+   # logedit.SetPrefix left at M11 S3: it names no contest and reads no kind --
+   # the contest states its key (PrefixMultiplierKey) and whether it has one
+   # (HasPrefixMultiplier); PrefixMultiplierType is deleted (part 2).
    ("logedit.pas", "Add"): ("multipliers", "ZoneMultiplierType (existing trait) + " + new("ZoneMultRule")),
    ("uMults.pas", "MultsObject.FillVisibleBytes"): ("multipliers", "DXMultiplierType (existing trait) + " + new("DXMultiplierRule")),
    # ------------------------------------------------------------ ADIF import

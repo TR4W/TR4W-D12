@@ -70,7 +70,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -95,6 +94,9 @@ type
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -156,11 +158,6 @@ end;
 function TContestCWOpen.GetFriendlyName: string;
 begin
    Result := 'CWOps CW Open';
-end;
-
-function TContestCWOpen.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := CallSignPrefix;
 end;
 
 function TContestCWOpen.GetZoneMultiplierType: ZoneMultType;
@@ -227,6 +224,13 @@ end;
 function TContestCWOpen.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := IntToStr(aQso.NumberReceived) + ' ' + Trim(string(aQso.Name));
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`CallSignPrefix`) until the kind was deleted. *)
+function TContestCWOpen.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

@@ -70,7 +70,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -234,11 +233,6 @@ function TContestALRSUA1DZCup.GetFriendlyName: string;
 begin
    (* The row's FriendlyName is blank, which means the enum's spelling. *)
    Result := 'ALRS-UA1DZ-CUP';
-end;
-
-function TContestALRSUA1DZCup.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestALRSUA1DZCup.GetZoneMultiplierType: ZoneMultType;

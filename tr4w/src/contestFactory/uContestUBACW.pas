@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -99,6 +98,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -201,11 +203,6 @@ begin
    Result := 'UBA DX Contest, CW';
 end;
 
-function TContestUBACW.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := BelgiumPrefixes;
-end;
-
 function TContestUBACW.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -256,11 +253,9 @@ begin
       aSession.DXMult := CQDXCC;
       aSession.DomesticMult := NoDomesticMults;
       aSession.Band := Band80;
-      aSession.PrefixMult := NoPrefixMults;
       end
    else
       begin
-      aSession.PrefixMult := BelgiumPrefixes;
       aSession.DomesticMult := DomesticFile;
       end;
 end;
@@ -289,17 +284,27 @@ begin
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPROVINCEID, ncfMyState);
 end;
 
+(* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,
+   2026-10-14. Yes for an entrant outside Belgium; none for a Belgian one.
+   This is the station test DescribeSession chose the session's prefix kind
+   by, until that kind was deleted; PrefixMultiplierKey asks it, so the two
+   cannot disagree. *)
+function TContestUBACW.HasPrefixMultiplier: boolean;
+begin
+   Result := Station.MyCountry <> 'ON';
+end;
+
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
    LOGEDIT.SetPrefix.
    Belgian prefixes for an entrant outside Belgium -- SetPrefix's
    `BelgiumPrefixes` arm; none for a Belgian entrant, whose session
-   DescribeSession gave NoPrefixMults. The station test is DescribeSession's. *)
+   DescribeSession gave NoPrefixMults. The station test is HasPrefixMultiplier's. *)
 function TContestUBACW.PrefixMultiplierKey(const aQso: ContestExchange;
                                            out aKey: PrefixMultiplierString): boolean;
 begin
    aKey := '';
    Result := False;
-   if Station.MyCountry = 'ON' then
+   if not HasPrefixMultiplier then
       begin
       Exit;
       end;

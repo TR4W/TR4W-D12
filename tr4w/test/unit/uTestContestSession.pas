@@ -71,7 +71,6 @@ type
       procedure Test_M7bBatch2CQExchangeDefaults;
       procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
       procedure Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
-      procedure Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState;
       procedure Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
       procedure Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
       procedure Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
@@ -631,14 +630,11 @@ begin
    session := Describe(ALLASIANCW, asian);
    try
       CheckTrue(session.IsStated(svDXMult) and (session.DXMult = ARRLDXCC), 'All Asian, Asia: DXCC');
-      CheckTrue(not session.IsStated(svPrefixMult), 'All Asian, Asia: no prefixes stated');
    finally
       session.Free;
       end;
    session := Describe(ALLASIANSSB, KansasStation);
    try
-      CheckTrue(session.IsStated(svPrefixMult) and (session.PrefixMult = Prefix),
-                'All Asian, W: prefixes');
       CheckTrue(not session.IsStated(svDXMult), 'All Asian, W: no DXCC stated');
    finally
       session.Free;
@@ -735,19 +731,6 @@ begin
    dl.MyCountry := 'DL';
    dl.MyContinent := Europe;
 
-   session := Describe(SOUTHAMERICANWW, brazil);
-   try
-      CheckTrue(session.PrefixMult = NonSouthAmericanPrefixes, 'SA WW, PY: non-SA prefixes');
-   finally
-      session.Free;
-      end;
-   session := Describe(SOUTHAMERICANWW, KansasStation);
-   try
-      CheckTrue(session.PrefixMult = SouthAmericanPrefixes, 'SA WW, W: SA prefixes');
-   finally
-      session.Free;
-      end;
-
    session := Describe(IRTS, ireland);
    try
       CheckTrue(not session.IsStated(svDXMult), 'IRTS, EI: the DX multiplier is the head''s');
@@ -785,16 +768,9 @@ begin
 
    session := Describe(CQMM, brazil);
    try
-      CheckTrue(session.PrefixMult = SouthAndNorthAmericanPrefixes, 'CQMM, PY: S and N American prefixes');
       CheckTrue(session.IsStated(svDXCCMultByBand) and (session.DXCCMultByBand = dmbbAllBand),
                 'CQMM: DXCC by band over all bands');
       CheckTrue(session.Band = Band80, 'CQMM: 80 m');
-   finally
-      session.Free;
-      end;
-   session := Describe(CQMM, KansasStation);
-   try
-      CheckTrue(not session.IsStated(svPrefixMult), 'CQMM, W: the prefix multiplier is the head''s');
    finally
       session.Free;
       end;
@@ -907,19 +883,19 @@ end;
 
   A reader may hold ContestSession across a set-up: the object must be the
   same one afterwards, or that reference dangles. A fresh object holds each
-  kind's zero -- NoInitialExchange, NoPrefixMults, NoZoneMults, NoDXMults,
+  kind's zero -- NoInitialExchange, NoZoneMults, NoDXMults,
   NoDomesticMults, UnknownExchange -- the values the globals it replaces
   started from (ActiveExchange's `= NoExchangeReceived` initializer was
   commented out, so its zero was UnknownExchange). Every member of every kind
   is written and read back through the writer FCONTEST uses, and writing one
-  kind leaves the other five as they were pinned (each is its own field, M10
-  S9b-S9f). The program's own values are restored,
+  kind leaves the other four as they were pinned (each is its own field, M10
+  S9b-S9f; the prefix kind, S9b's, was deleted at M11 S3). The program's own
+  values are restored,
   because this is the process-wide session and other suites run after this
   one. *)
 procedure TContestSessionTests.Test_TheRunningSessionIsOneObjectWithOneWriter;
 const
    KIND_INITIAL = 0;
-   KIND_PREFIX = 1;
    KIND_ZONE = 2;
    KIND_DX = 3;
    KIND_DOMESTIC = 4;
@@ -928,13 +904,11 @@ var
    before: TContestSession;
    fresh: TContestSession;
    savedInitial: InitialExchangeType;
-   savedPrefix: PrefixMultType;
    savedZone: ZoneMultType;
    savedDX: DXMultType;
    savedDomestic: DomesticMultType;
    savedExchange: ExchangeType;
    initialKind: InitialExchangeType;
-   prefixKind: PrefixMultType;
    zoneKind: ZoneMultType;
    dxKind: DXMultType;
    domesticKind: DomesticMultType;
@@ -945,7 +919,6 @@ var
    procedure PinAll;
    begin
       ContestSession.WriteInitialExchange(ZoneInitialExchange);
-      ContestSession.WritePrefixMult(SACDistricts);
       ContestSession.WriteZoneMult(ITUZones);
       ContestSession.WriteDXMult(CQEuropeanCountries);
       ContestSession.WriteDomesticMult(DOKCodes);
@@ -959,11 +932,6 @@ var
          begin
          CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
                      aWhat + ' leaves the initial exchange');
-         end;
-      if aWritten <> KIND_PREFIX then
-         begin
-         CheckEquals(Ord(SACDistricts), Ord(ContestSession.PrefixMult),
-                     aWhat + ' leaves the prefix kind');
          end;
       if aWritten <> KIND_ZONE then
          begin
@@ -998,8 +966,6 @@ begin
    try
       CheckEquals(Ord(NoInitialExchange), Ord(fresh.InitialExchange),
                   'a fresh session starts from NoInitialExchange');
-      CheckEquals(Ord(NoPrefixMults), Ord(fresh.PrefixMult),
-                  'a fresh session starts from NoPrefixMults');
       CheckEquals(Ord(NoZoneMults), Ord(fresh.ZoneMult),
                   'a fresh session starts from NoZoneMults');
       CheckEquals(Ord(NoDXMults), Ord(fresh.DXMult),
@@ -1013,7 +979,6 @@ begin
       end;
 
    savedInitial := ContestSession.InitialExchange;
-   savedPrefix := ContestSession.PrefixMult;
    savedZone := ContestSession.ZoneMult;
    savedDX := ContestSession.DXMult;
    savedDomestic := ContestSession.DomesticMult;
@@ -1028,17 +993,6 @@ begin
                      + IntToStr(Ord(initialKind)));
          CheckOthersPinned(KIND_INITIAL,
                            'initial exchange ' + IntToStr(Ord(initialKind)));
-         end;
-
-      PinAll;
-      for prefixKind := Low(PrefixMultType) to High(PrefixMultType) do
-         begin
-         ContestSession.WritePrefixMult(prefixKind);
-         CheckEquals(Ord(prefixKind), Ord(ContestSession.PrefixMult),
-                     'the reader sees what the writer wrote, prefix kind '
-                     + IntToStr(Ord(prefixKind)));
-         CheckOthersPinned(KIND_PREFIX,
-                           'prefix kind ' + IntToStr(Ord(prefixKind)));
          end;
 
       PinAll;
@@ -1086,7 +1040,6 @@ begin
          end;
    finally
       ContestSession.WriteInitialExchange(savedInitial);
-      ContestSession.WritePrefixMult(savedPrefix);
       ContestSession.WriteZoneMult(savedZone);
       ContestSession.WriteDXMult(savedDX);
       ContestSession.WriteDomesticMult(savedDomestic);
@@ -1156,71 +1109,6 @@ begin
          end;
    finally
       ContestSession.WriteInitialExchange(saved);
-      end;
-end;
-
-(* THE PREFIX KIND IS THE SESSION'S TOO (M10 S9b).
-
-  WAEDC CW's class states the trait NoPrefixMults, and its DescribeSession
-  states CQNonEuropeanCountriesAndWAECallRegions for a European station --
-  the frozen matrix's dx variant (DL1AAA) says so, its us and ve variants
-  NoPrefixMults. The two set-up writes, in FCONTEST's order, leave a European
-  session at the stated value, unequal to the identity's trait: a reader
-  that asked ContestIdentity(Contest).PrefixMultiplierType would lose the
-  WAE regions' prefix column and mult flags.
-
-  RE-POINTED AT M11 S2 (plan 1.3, F2): this pinned YBDX, whose
-  DescribeSession stated the same value for EVERY station over a trait that
-  said otherwise -- a second statement of one fact, not a session that
-  varies. S2 made that trait the value and deleted the statement, so YBDX no
-  longer differs from its trait anywhere. WAEDC varies by STATION, which is the
-  case this pin exists for. *)
-procedure TContestSessionTests.Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState;
-var
-   dl: TStationContext;
-   stated: TSessionDefaults;
-   trait: PrefixMultType;
-   saved: PrefixMultType;
-begin
-   BeginTest('Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState');
-   trait := ContestIdentity(DARCWAEDCCW).PrefixMultiplierType;
-   CheckEquals(Ord(NoPrefixMults), Ord(trait), 'WAEDC: the trait');
-   dl := KansasStation;
-   dl.MyCall := 'DL1AAA';
-   dl.MyCountry := 'DL';
-   dl.MyContinent := Europe;
-   dl.MyState := '';
-
-   saved := ContestSession.PrefixMult;
-   try
-      stated := Describe(DARCWAEDCCW, dl);
-      try
-         CheckTrue(stated.IsStated(svPrefixMult), 'WAEDC, DL: states a prefix multiplier');
-         CheckEquals(Ord(CQNonEuropeanCountriesAndWAECallRegions), Ord(stated.PrefixMult),
-                     'WAEDC, DL: what it states');
-
-         ContestSession.WritePrefixMult(trait);
-         if stated.IsStated(svPrefixMult) then
-            begin
-            ContestSession.WritePrefixMult(stated.PrefixMult);
-            end;
-
-         CheckEquals(Ord(CQNonEuropeanCountriesAndWAECallRegions), Ord(ContestSession.PrefixMult),
-                     'WAEDC, DL: the session runs what the contest stated');
-         CheckTrue(ContestSession.PrefixMult <> ContestIdentity(DARCWAEDCCW).PrefixMultiplierType,
-                   'WAEDC, DL: the session differs from the identity''s trait');
-      finally
-         stated.Free;
-         end;
-
-      stated := Describe(DARCWAEDCCW, KansasStation);
-      try
-         CheckFalse(stated.IsStated(svPrefixMult), 'WAEDC, W: states no prefix multiplier');
-      finally
-         stated.Free;
-         end;
-   finally
-      ContestSession.WritePrefixMult(saved);
       end;
 end;
 
@@ -1502,7 +1390,6 @@ begin
    Test_M7bBatch2CQExchangeDefaults;
    Test_TheRunningSessionIsOneObjectWithOneWriter;
    Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
-   Test_WAEDCRunsAPrefixMultiplierItsTraitDoesNotState;
    Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
    Test_ARRL160RunsADXMultiplierItsTraitDoesNotState;
    Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;

@@ -68,7 +68,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -171,11 +170,6 @@ end;
 function TContestKCJ.GetFriendlyName: string;
 begin
    Result := 'Keymans Club of Japan Contest';
-end;
-
-function TContestKCJ.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestKCJ.GetZoneMultiplierType: ZoneMultType;

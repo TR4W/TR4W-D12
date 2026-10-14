@@ -219,9 +219,10 @@ var
     could read it without LogDupe's cone; M10 S9d (2026-10-14) took it to
     uContestSession.ContestSession.DXMult, as light (a leaf over VC),
     written only by FCONTEST's set-up path. *)
-  (* ActivePrefixMult MOVED -- M10 S9b, 2026-10-14. It is
-    uContestSession.ContestSession.PrefixMult, written only by FCONTEST's
-    set-up path. *)
+  (* ActivePrefixMult MOVED -- M10 S9b, 2026-10-14, to
+    uContestSession.ContestSession.PrefixMult -- and is GONE since M11 S3
+    part 2: the contest states its prefix key and whether it has one
+    (TContestBase.PrefixMultiplierKey, HasPrefixMultiplier). *)
 
 
 //  CQP                                   : boolean;
@@ -230,7 +231,9 @@ var
     MOVED -- M11 S2, 2026-10-14 (plan F9). They are ContestSession's,
     computed from the session's kinds on every read: LogCfg derived these
     once at start-up, so a contest changed without a restart left them
-    describing the previous one. *)
+    describing the previous one. DoingPrefixMults left the session at M11
+    S3 with the prefix kind: the contest answers it (LOGEDIT.DoingPrefixMults,
+    TContestBase.HasPrefixMultiplier). *)
 
   ExchangeInformation                   : ExchangeInformationRecord;
 
@@ -1230,7 +1233,7 @@ begin
       begin
       logger.debug('DoingDomesticMults = ' + BooleanToStr(ContestSession.DoingDomesticMults));
       logger.debug('DoingDXMults       = ' + BooleanToStr(ContestSession.DoingDXMults));
-      logger.debug('DoingPrefixMults   = ' + BooleanToStr(ContestSession.DoingPrefixMults));
+      logger.debug('DoingPrefixMults   = ' + BooleanToStr(ContestHasPrefixMultiplier(ActiveContest(Contest))));
       logger.debug('DoingZoneMults     = ' + BooleanToStr(ContestSession.DoingZoneMults));
       end;
 
@@ -1284,7 +1287,7 @@ begin
      RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);
      end;
 
-  if (RXData.Prefix <> '') and ContestSession.DoingPrefixMults and
+  if (RXData.Prefix <> '') and ContestHasPrefixMultiplier(contestRules) and
      ContestCountsMultiplier(contestRules, RXData, rmPrefix) then
      begin
      RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);

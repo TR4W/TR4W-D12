@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -175,11 +174,6 @@ end;
 function TContestKingOfSpainSSB.GetFriendlyName: string;
 begin
    Result := 'His Maj. King of Spain Contest, SSB';
-end;
-
-function TContestKingOfSpainSSB.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestKingOfSpainSSB.GetZoneMultiplierType: ZoneMultType;

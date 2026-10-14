@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -172,11 +171,6 @@ end;
 function TContestCQ160SSB.GetFriendlyName: string;
 begin
    Result := 'CQ 160-Meter Contest, SSB';
-end;
-
-function TContestCQ160SSB.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestCQ160SSB.GetZoneMultiplierType: ZoneMultType;

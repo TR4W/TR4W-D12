@@ -380,7 +380,7 @@ begin
    FillChar(EditableQSORXData.QTH, SizeOf(EditableQSORXData.QTH), 0);
    ctyLocateCall(TempString, EditableQSORXData.QTH);
 
-   if ContestSession.DoingPrefixMults then
+   if DoingPrefixMults then
       begin
       FillChar(EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix), 0);
       SetPrefix(EditableQSORXData);

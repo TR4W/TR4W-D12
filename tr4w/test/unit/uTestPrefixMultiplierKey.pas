@@ -40,15 +40,24 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   exactly what LOGEDIT.SetPrefix selected. Then the move, and the same table
   green against the classes.
 
-  AND A CROSS-CHECK FOR EVERY CONTEST, NOT ONLY THE 32.
-  Test_EveryContestAgreesWithItsSessionKind asks every ContestType at every
-  roster station for every QSO, and compares the class's answer with
-  LegacyPrefixKeyOfKind below -- the old case, FROZEN HERE, selected by the
-  kind the session resolves to. So the move is pinned in both directions:
-  no prefix contest lost a branch, and no other contest gained a key. It
-  holds only while the session still carries PrefixMult; S3 part 2 deletes
-  that kind, and this test and the frozen case go with it, leaving the
-  literals.
+  AND A CROSS-CHECK FOR EVERY CONTEST, NOT ONLY THE 32 -- part 1's, GONE.
+  Until M11 S3 part 2, Test_EveryContestAgreesWithItsSessionKind compared
+  every ContestType at every roster station for every QSO with the old case,
+  frozen here, selected by the session's prefix kind. Part 2 deleted that
+  kind, and the cross-check and its frozen case went with it (git history at
+  cbcba524 holds both). The literals stay: they are the permanent oracle.
+
+  WHETHER A CONTEST HAS A PREFIX MULTIPLIER AT ALL -- part 2's question,
+  which replaced the kind (TContestBase.HasPrefixMultiplier). Pinned by
+  Test_EveryContestHasItsPinnedPrefixMultiplier, for every ContestType at
+  every roster station, against HAS_PREFIX below. Its us, ve and dx sets
+  are the frozen kind pin's prefix column read as "not NoPrefixMults"
+  (uTestContestKindPin, made from the program at S0b), taken before that
+  column was deleted; the other six stations' sets are each station-
+  dependent contest's DescribeSession test as it stood at cbcba524, by hand.
+  And THE INVARIANT the engine relies on: no contest gives a key where it
+  says it has no prefix multiplier -- checked for every contest, station
+  and QSO.
 
   "NONE" IS NOT ''. Several arms assign only on a match (Belgium, the
   continent filters, Mongolia, the Gagarin stations) and otherwise LEAVE THE
@@ -74,7 +83,7 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_EveryPrefixContestGivesItsPinnedKey;
-      procedure Test_EveryContestAgreesWithItsSessionKind;
+      procedure Test_EveryContestHasItsPinnedPrefixMultiplier;
    end;
 
 implementation
@@ -84,7 +93,6 @@ uses
    VC,
    uContestBase,
    uContestRegistry,
-   uPrefixMultiplierKey,
    uTestContestKindPin;
 
 type
@@ -262,6 +270,42 @@ const
       (Contest: RDA;            Station: psDX; Qso: pqRK1G; Assigns: False; Key: '')
    );
 
+type
+   TContestSet = set of ContestType;
+
+const
+   (* A PREFIX MULTIPLIER AT EVERY STATION: the 23 contests whose session ran
+      a prefix kind wherever it ran. *)
+   PREFIX_EVERYWHERE = [APSPRINT, BATAVIA_FT8, CQWPXCW, CQWPXSSB, CQWPXRTTY,
+                        DARCXMAS, OCEANIADXCW, OCEANIADXSSB, PCC, UCG,
+                        CWOPEN, CWOPS, MINI40, MINI80, MINITEST, MST, CUPURAL,
+                        JTDX, GAGARINCUP, SASPRINT, YBDX, CQMM, SOUTHAMERICANWW];
+
+   (* WHO HAS A PREFIX MULTIPLIER AT EACH ROSTER STATION -- see the unit
+      header for where each set comes from. The other nine prefix contests
+      decide by the entrant: UBA (not in Belgium), the All Asian (not in
+      Asia), OK DX (in OK/OM only), WAE (in Europe only), SAC (not in
+      Scandinavia). NEVER REGENERATE A SET TO CLEAR A FAILURE. *)
+   HAS_PREFIX: array[TPinStation] of TContestSet = (
+      (* psUS K0AAA *)  PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, SACCW, SACSSB],
+      (* psVE VE3AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, SACCW, SACSSB],
+      (* psDX DL1AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, DARCWAEDCCW,
+                                             DARCWAEDCSSB, SACCW, SACSSB],
+      (* psPY PY1AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, SACCW, SACSSB],
+      (* psON ON4AAA *) PREFIX_EVERYWHERE + [ALLASIANCW, ALLASIANSSB, DARCWAEDCCW, DARCWAEDCSSB,
+                                             SACCW, SACSSB],
+      (* psSM SM5AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, DARCWAEDCCW,
+                                             DARCWAEDCSSB],
+      (* psJA JA1AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, SACCW, SACSSB],
+      (* psOK OK1AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, OKDX,
+                                             DARCWAEDCCW, DARCWAEDCSSB, SACCW, SACSSB],
+      (* psYB YB1AAA *) PREFIX_EVERYWHERE + [UBACW, UBASSB, ALLASIANCW, ALLASIANSSB, SACCW, SACSSB]
+   );
+
+   (* How many contests each set holds -- stated so a set edited by mistake
+      fails by count as well as by name. *)
+   HAS_PREFIX_COUNT: array[TPinStation] of integer = (29, 29, 31, 29, 29, 29, 27, 32, 29);
+
 function PinStation(aStation: TPinStation; aContest: ContestType): TStationContext;
 begin
    Result := MatrixStation(STATIONS[aStation].Call, STATIONS[aStation].Country,
@@ -279,131 +323,13 @@ begin
    Result.QTH.StandardCall := CallString(QSOS[aQso].Call);
 end;
 
-(* THE OLD CASE, FROZEN -- LOGEDIT.SetPrefix's `case ContestSession.PrefixMult
-   of` as it stood at 42a999c1, verbatim but for the out-parameter (an arm
-   that assigned answers True; one that did not, False) and the entrant's
-   country as a parameter (the arm read Settings.My.Country). The pins above
-   ran green through the program's own copy of it before the move. It exists
-   only as the reference for Test_EveryContestAgreesWithItsSessionKind, and
-   goes when S3 part 2 deletes PrefixMultType. The dead arms (North
-   American, Asian, Russian -- reach 0 since M11 S2) are kept, as they
-   stood. *)
-function LegacyPrefixKeyOfKind(aKind: PrefixMultType;
-                               const RData: ContestExchange;
-                               const aMyCountry: string;
-                               out aKey: PrefixMultiplierString): boolean;
-begin
-   aKey := '';
-   Result := False;
-   case aKind of
-      CQNonEuropeanCountriesAndWAECallRegions:
-         begin
-         aKey := EuropeanCountriesAndWAECallRegions(RData.QTH);
-         Result := True;
-         end;
-      BelgiumPrefixes:
-         begin
-         if RData.QTH.CountryID = 'ON' then
-            begin
-            aKey := RData.QTH.Prefix;
-            Result := True;
-            end;
-         end;
-      SACDistricts:
-         begin
-         aKey := SACDistrict(RData.QTH);
-         Result := True;
-         end;
-      IndonesianDistricts:
-         begin
-         aKey := IndonesianDistrict(RData.QTH, aMyCountry);
-         Result := True;
-         end;
-      Prefix:
-         begin
-         aKey := RData.QTH.Prefix;
-         Result := True;
-         end;
-      SouthAmericanPrefixes:
-         begin
-         if RData.QTH.Continent = SouthAmerica then
-            begin
-            aKey := RData.QTH.Prefix;
-            Result := True;
-            end;
-         end;
-      NorthAmericanPrefixes:
-         begin
-         if RData.QTH.Continent = NorthAmerica then
-            begin
-            aKey := RData.QTH.Prefix;
-            Result := True;
-            end;
-         end;
-      AsianPrefixes:
-         begin
-         if RData.QTH.Continent = Asia then
-            begin
-            aKey := RData.QTH.Prefix;
-            Result := True;
-            end;
-         end;
-      SouthAndNorthAmericanPrefixes:
-         begin
-         if RData.QTH.Continent in [NorthAmerica, SouthAmerica] then
-            begin
-            aKey := RData.QTH.Prefix;
-            Result := True;
-            end;
-         end;
-      NonSouthAmericanPrefixes:
-         begin
-         if RData.QTH.Continent <> SouthAmerica then
-            begin
-            aKey := RData.QTH.Prefix;
-            Result := True;
-            end;
-         end;
-      CallSignPrefix:
-         begin
-         aKey := RData.Callsign;
-         Result := True;
-         end;
-      MongolianCallSignPrefix:
-         begin
-         if RData.QTH.CountryID = 'JT' then
-            begin
-            aKey := RData.Callsign;
-            Result := True;
-            end;
-         end;
-      RussianPrefixes:
-         begin
-         if RData.QTH.CountryID = 'UA' then
-            begin
-            aKey := RData.Callsign;
-            Result := True;
-            end;
-         end;
-      GCStation:
-         begin
-         if (RData.Callsign = 'RK1G') or (RData.Callsign = 'R3K')  or
-            (RData.Callsign = 'RS3A') or (RData.Callsign = 'RT3F') or
-            (RData.Callsign = 'UP7Z') or (RData.Callsign = 'UN/RA3VM') then
-            begin
-            aKey := RData.Callsign;
-            Result := True;
-            end;
-         end;
-   end;
-end;
-
 (* THE KEY THE PROGRAM GIVES -- what LOGEDIT.SetPrefix asks since the move:
    the contest's own rule, on a contest object holding the station, as
    ActiveContest hands it. nil (the classless DUMMYCONTEST) answers as
    ContestPrefixMultiplierKey answers nil. Before the move this function
    returned LegacyPrefixKeyOfKind(Kinds(...).PrefixMult, ...) through the
-   program's own copy of the case -- the run that made the literals. *)
+   program's own copy of the case -- the run that made the literals; the
+   case is deleted (M11 S3 part 2). *)
 function ProgramKey(aContest: ContestType;
                     const aStation: TStationContext;
                     const aQso: ContestExchange;
@@ -429,6 +355,31 @@ begin
       end;
 end;
 
+(* WHETHER THE PROGRAM SAYS THE CONTEST HAS A PREFIX MULTIPLIER -- what
+   LOGEDIT.DoingPrefixMults asks since M11 S3 part 2, on an object holding
+   the station, as ActiveContest hands it. *)
+function ProgramHas(aContest: ContestType; const aStation: TStationContext): boolean;
+var
+   cls: TContestClass;
+   obj: TContestBase;
+begin
+   obj := nil;
+   cls := ContestClassFor(aContest);
+   if cls <> nil then
+      begin
+      obj := cls.Create(aContest);
+      end;
+   try
+      if obj <> nil then
+         begin
+         obj.SetStation(aStation);
+         end;
+      Result := ContestHasPrefixMultiplier(obj);
+   finally
+      obj.Free;
+      end;
+end;
+
 (* "none", or the key in brackets -- so '' and "no key" differ on the page. *)
 function Answer(aAssigns: boolean; const aKey: string): string;
 begin
@@ -445,7 +396,7 @@ end;
 procedure TPrefixMultiplierKeyTests.RunAllTests;
 begin
    Test_EveryPrefixContestGivesItsPinnedKey;
-   Test_EveryContestAgreesWithItsSessionKind;
+   Test_EveryContestHasItsPinnedPrefixMultiplier;
 end;
 
 procedure TPrefixMultiplierKeyTests.Test_EveryPrefixContestGivesItsPinnedKey;
@@ -487,63 +438,73 @@ begin
    CheckEquals(32, count, 'contests with a pinned key');
 end;
 
-procedure TPrefixMultiplierKeyTests.Test_EveryContestAgreesWithItsSessionKind;
+procedure TPrefixMultiplierKeyTests.Test_EveryContestHasItsPinnedPrefixMultiplier;
 var
    c: ContestType;
    s: TPinStation;
    q: TPinQso;
    station: TStationContext;
-   kind: PrefixMultType;
-   qso: ContestExchange;
-   oldKey: PrefixMultiplierString;
-   newKey: PrefixMultiplierString;
-   oldAssigns: boolean;
-   newAssigns: boolean;
+   key: PrefixMultiplierString;
+   has: boolean;
    checked: integer;
-   keyed: set of ContestType;
+   counted: integer;
+   anywhere: TContestSet;
    count: integer;
+   who: string;
 begin
-   BeginTest('Test_EveryContestAgreesWithItsSessionKind');
+   BeginTest('Test_EveryContestHasItsPinnedPrefixMultiplier');
    checked := 0;
-   keyed := [];
-   for c := Low(ContestType) to High(ContestType) do
+   anywhere := [];
+   for s := Low(TPinStation) to High(TPinStation) do
       begin
-      for s := Low(TPinStation) to High(TPinStation) do
+      counted := 0;
+      for c := Low(ContestType) to High(ContestType) do
+         begin
+         if c in HAS_PREFIX[s] then
+            begin
+            Inc(counted);
+            end;
+         end;
+      CheckEquals(HAS_PREFIX_COUNT[s], counted, 'contests in the set for ' + STATIONS[s].Call);
+
+      for c := Low(ContestType) to High(ContestType) do
          begin
          station := PinStation(s, c);
-         kind := Kinds(c, station).PrefixMult;
-         for q := Low(TPinQso) to High(TPinQso) do
+         who := string(ContestTypeSA[c]) + ' at ' + STATIONS[s].Call;
+         has := ProgramHas(c, station);
+         CheckTrue(has = (c in HAS_PREFIX[s]), who + ' has a prefix multiplier');
+         if has then
             begin
-            qso := PinQso(q);
-            oldAssigns := LegacyPrefixKeyOfKind(kind, qso, string(station.MyCountry), oldKey);
-            newAssigns := ProgramKey(c, station, qso, newKey);
-            CheckEquals(Answer(oldAssigns, string(oldKey)), Answer(newAssigns, string(newKey)),
-                        string(ContestTypeSA[c]) + ' at ' + STATIONS[s].Call +
-                        ' working ' + QSOS[q].Call);
-            if newAssigns then
+            Include(anywhere, c);
+            end
+         else
+            begin
+            (* THE INVARIANT: a key only where there is a prefix multiplier. *)
+            for q := Low(TPinQso) to High(TPinQso) do
                begin
-               Include(keyed, c);
+               CheckFalse(ProgramKey(c, station, PinQso(q), key),
+                          who + ' gives no key working ' + QSOS[q].Call);
                end;
-            Inc(checked);
             end;
+         Inc(checked);
          end;
       end;
 
-   (* EXACT: every contest, every roster station, every QSO. *)
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1) *
-               (Ord(High(TPinQso)) + 1), checked, 'contest x station x QSO answers compared');
+   (* EXACT: every contest at every roster station. *)
+   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
+               'contest x station answers compared');
 
-   (* THE 32 PREFIX CONTESTS, AND NO OTHER, GIVE A KEY ANYWHERE ON THE
-      ROSTER -- plan 1.1. *)
+   (* THE 32 PREFIX CONTESTS, AND NO OTHER, HAVE ONE SOMEWHERE ON THE ROSTER
+      -- plan 1.1. *)
    count := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
-      if c in keyed then
+      if c in anywhere then
          begin
          Inc(count);
          end;
       end;
-   CheckEquals(32, count, 'contests that give a prefix key at some roster station');
+   CheckEquals(32, count, 'contests with a prefix multiplier at some roster station');
 end;
 
 end.

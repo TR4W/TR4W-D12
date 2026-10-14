@@ -7193,7 +7193,7 @@ begin
         GetDXQTH(RData);
         end;
 
-     if ContestSession.DoingPrefixMults then
+     if DoingPrefixMults then
         begin
         SetPrefix(RData);
         end;
@@ -7292,8 +7292,10 @@ begin
      MULTIPLIER line. That command retired at M10 S2, and since M11 S2
      DoingPrefixMults IS `PrefixMult <> NoPrefixMults`, so the six-kind set
      was a subset of the first half and could never add a call. The key
-     itself is the contest's (TContestBase.PrefixMultiplierKey). *)
-  if ContestSession.DoingPrefixMults then
+     itself is the contest's (TContestBase.PrefixMultiplierKey), and since
+     M11 S3 part 2 so is DoingPrefixMults (LOGEDIT, asking
+     TContestBase.HasPrefixMultiplier): the prefix kind is deleted. *)
+  if DoingPrefixMults then
      begin
      SetPrefix(RData);
      end;
@@ -8695,7 +8697,7 @@ end;
   order, which is the rescore loop's business). *)
 procedure RecomputeQSOScoring(var aRX: ContestExchange);
 begin
-  if ContestSession.DoingPrefixMults then
+  if DoingPrefixMults then
      begin
      FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
@@ -9544,7 +9546,7 @@ begin
   ColumnsArray[logColChapter].Enable := ExchangeInformation.Chapter;
 
   ColumnsArray[logColNumberReceive].Enable := ExchangeInformation.QSONumber;
-  ColumnsArray[logColPrefixMult].Enable := ContestSession.DoingPrefixMults;
+  ColumnsArray[logColPrefixMult].Enable := DoingPrefixMults;
   ColumnsArray[logColDXMult].Enable := ContestSession.DoingDXMults;
   // ColumnsArray[logColPostCode].Enable := ExchangeInformation.PostalCode;
   ColumnsArray[logColKids].Enable := ExchangeInformation.Kids;
@@ -9915,7 +9917,7 @@ begin
   // 4.71.2 attempt to allow longer column width for long DOM MULTS by setting SHOW DOMESTIC MULTIPLIER NAME to TRUE
   // FillChar(RemMultsColumnWidthArray, sizeof(RemMultsColumnWidthArray), 0);
 
-  if (Settings.RemainingMults.ShowDomesticName) or (ContestSession.DoingPrefixMults) then
+  if (Settings.RemainingMults.ShowDomesticName) or (DoingPrefixMults) then
      begin
      Width := PREFIXCOLUMNWIDTH
      end

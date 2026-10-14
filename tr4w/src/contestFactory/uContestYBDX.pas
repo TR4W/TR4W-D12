@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -92,6 +91,9 @@ type
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -194,15 +196,6 @@ begin
    Result := 'YB ORARI DX Contest';
 end;
 
-function TContestYBDX.GetPrefixMultiplierType: PrefixMultType;
-begin
-   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
-      IndonesianDistricts at every station: the trait said NoPrefixMults and
-      DescribeSession stated it over it, unconditionally. The
-      trait now says what runs, and the statement is gone. *)
-   Result := IndonesianDistricts;
-end;
-
 function TContestYBDX.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -250,6 +243,13 @@ procedure TContestYBDX.DescribeSession(const aStation: TStationContext;
                                        aSession: TSessionDefaults);
 begin
    aSession.Mode := Phone;
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`IndonesianDistricts`) until the kind was deleted. *)
+function TContestYBDX.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

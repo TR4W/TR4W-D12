@@ -82,7 +82,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -166,11 +165,6 @@ end;
 function TContestIndianaQP.GetFriendlyName: string;
 begin
    Result := 'Indiana QSO Party';
-end;
-
-function TContestIndianaQP.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestIndianaQP.GetZoneMultiplierType: ZoneMultType;

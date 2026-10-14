@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -181,11 +180,6 @@ function TContestOZHCRVHF.GetFriendlyName: string;
 begin
    (* The row's FriendlyName is blank, which means the enum's spelling. *)
    Result := 'OZHCR-VHF';
-end;
-
-function TContestOZHCRVHF.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestOZHCRVHF.GetZoneMultiplierType: ZoneMultType;

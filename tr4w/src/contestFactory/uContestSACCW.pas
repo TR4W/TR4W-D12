@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -100,6 +99,9 @@ type
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -227,11 +229,6 @@ begin
    Result := 'Scandinavian Activity Contest, CW';
 end;
 
-function TContestSACCW.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
-end;
-
 function TContestSACCW.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -279,11 +276,17 @@ begin
    if ScandinavianCountry(string(aStation.MyCountry)) then
       begin
       aSession.DXMult := ARRLDXCC;
-      end
-   else
-      begin
-      aSession.PrefixMult := SACDistricts;
       end;
+end;
+
+(* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,
+   2026-10-14. Yes for an entrant outside Scandinavia; none inside it. This
+   is the station test DescribeSession chose the session's prefix kind by,
+   until that kind was deleted; PrefixMultiplierKey asks it, so the two
+   cannot disagree. *)
+function TContestSACCW.HasPrefixMultiplier: boolean;
+begin
+   Result := not ScandinavianCountry(string(Station.MyCountry));
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
@@ -297,7 +300,7 @@ function TContestSACCW.PrefixMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := '';
    Result := False;
-   if ScandinavianCountry(string(Station.MyCountry)) then
+   if not HasPrefixMultiplier then
       begin
       Exit;
       end;

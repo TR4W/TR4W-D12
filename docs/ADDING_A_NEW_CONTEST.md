@@ -45,7 +45,7 @@ the deleted `ContestsArray` row is a `TContestBase` getter the class states:
 | `ADIFName` / `CABName` | `GetADIFContestId`, `GetCabrilloName` |
 | `Email` / `DF` | `GetSubmissionEmail`, `GetDomesticFileName` |
 | `WA7BNM` / `QRZRUID` | `GetWA7BNMId`, `GetQRZRUId` |
-| `PxM` `ZnM` `XM` `DM` | `GetPrefixMultiplierType`, `GetZoneMultiplierType`, `GetDXMultiplierType`, `GetDomesticMultiplierType` |
+| `PxM` `ZnM` `XM` `DM` | `HasPrefixMultiplier` and `PrefixMultiplierKey` (the prefix KIND and `GetPrefixMultiplierType` were deleted at M11 S3), `GetZoneMultiplierType`, `GetDXMultiplierType`, `GetDomesticMultiplierType` |
 | `AIE` / `AE` | `GetInitialExchangeKind`, `GetExchangeKind` |
 | `P` (the `QSOParties` index) | `GetIsUSQSOParty`, `GetHostState`, `GetInStateDomesticFileName`, `GetQSOPartyArea` |
 | `CountyLineAllowed` | the import's county line is `TContestStateQSOPartyBase.CountyLineAllowed` (S7); the rover split on ADIF export is `GetSplitsRoverCallOnExport` (S8, open question Q90) |

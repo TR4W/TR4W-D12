@@ -225,7 +225,6 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedPrefixMult: PrefixMultType;
    savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
    savedDXMult: DXMultType;
@@ -247,7 +246,6 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedPrefixMult := ContestSession.PrefixMult;
    savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
    savedDXMult := ContestSession.DXMult;
@@ -260,7 +258,6 @@ begin
       Settings.Mult.ByMode := True;
       ContestSession.WriteDomesticMult(NoDomesticMults);
       ContestSession.WriteDXMult(ARRLDXCCWithNoUSAOrCanada);
-      ContestSession.WritePrefixMult(NoPrefixMults);
       ContestSession.WriteZoneMult(NoZoneMults);
       DXCCMultByBand := dmbbDefauld;
       DomesticMultByBand := dmbbDefauld;
@@ -294,7 +291,6 @@ begin
       ContestSession.WriteDXMult(savedDXMult);
       ContestSession.WriteDomesticMult(savedDomesticMult);
       ContestSession.WriteZoneMult(savedZoneMult);
-      ContestSession.WritePrefixMult(savedPrefixMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;
@@ -307,7 +303,6 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedPrefixMult: PrefixMultType;
    savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
    savedDXMult: DXMultType;
@@ -340,7 +335,6 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedPrefixMult := ContestSession.PrefixMult;
    savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
    savedDXMult := ContestSession.DXMult;
@@ -352,7 +346,6 @@ begin
       Settings.Mult.ByMode := True;
       ContestSession.WriteDomesticMult(DomesticFile);
       ContestSession.WriteDXMult(NoDXMults);
-      ContestSession.WritePrefixMult(NoPrefixMults);
       ContestSession.WriteZoneMult(NoZoneMults);
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
@@ -383,7 +376,6 @@ begin
       ContestSession.WriteDXMult(savedDXMult);
       ContestSession.WriteDomesticMult(savedDomesticMult);
       ContestSession.WriteZoneMult(savedZoneMult);
-      ContestSession.WritePrefixMult(savedPrefixMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;

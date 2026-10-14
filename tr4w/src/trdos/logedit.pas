@@ -182,6 +182,8 @@ function TotalCWContacts: integer;
 function TotalPhoneContacts: integer;
 function TotalScore: LONGINT;
 procedure SetPrefix(var RData: ContestExchange {Ptr});
+(* Does the active contest have a prefix multiplier at this station? M11 S3. *)
+function DoingPrefixMults: boolean;
 {KK1L: 6.64 Added to keep BM up to date with changes made while logging}
 procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
   ModeType; MakeDupe: boolean);
@@ -966,7 +968,7 @@ begin
   Result := 0;
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
 
-  if ContestSession.DoingDXMults or ContestSession.DoingZoneMults or ContestSession.DoingPrefixMults then
+  if ContestSession.DoingDXMults or ContestSession.DoingZoneMults or DoingPrefixMults then
      begin
      FillChar(TempRXData, SizeOf(TempRXData), 0);
      ctyLocateCall(Call, TempRXData.QTH);
@@ -1017,7 +1019,7 @@ begin
         end;
      end;
 
-  if ContestSession.DoingPrefixMults then
+  if DoingPrefixMults then
      begin
      TempRXData.Callsign := Call;
      SetPrefix(TempRXData);
@@ -2896,7 +2898,7 @@ begin
      Exit;
      end;
 
-  GatherScoreTotals(totals);
+  GatherScoreTotals(Contest, totals);
   Result := ContestFinalScore(Contest, totals);
 
   LastMainThreadTotalScore := Result;
@@ -2920,6 +2922,25 @@ begin
      begin
      RData.Prefix := key;
      end;
+end;
+
+(* DOES THE ACTIVE CONTEST HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3
+  part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S3, F20).
+
+  This was ContestSession.DoingPrefixMults, `PrefixMult <> NoPrefixMults`
+  over the kind FoundContest resolved once at set-up. The kind is deleted;
+  the contest answers (TContestBase.HasPrefixMultiplier), against the
+  station ActiveContest hands it on every call -- the station SetPrefix's
+  key reads, so whether a prefix is set and what it is set to follow the
+  same MY CALL (F20, closed).
+
+  Every reader that asks with no contest object in hand asks here, so the
+  question has one spelling outside the factory. A reader that already
+  holds ActiveContest's object (LOGDUPE.SetMultFlags) asks
+  ContestHasPrefixMultiplier on it instead of fetching it twice. *)
+function DoingPrefixMults: boolean;
+begin
+   Result := ContestHasPrefixMultiplier(ActiveContest(Contest));
 end;
 
 end.

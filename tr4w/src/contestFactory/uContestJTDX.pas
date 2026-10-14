@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -88,6 +87,9 @@ type
          already its traits, for every station; with those two gone it
          stated nothing, and the base's says nothing. *)
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -173,11 +175,6 @@ begin
    Result := 'MONGOLIAN DX';
 end;
 
-function TContestJTDX.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := MongolianCallSignPrefix;
-end;
-
 function TContestJTDX.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -212,6 +209,13 @@ function TContestJTDX.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`MongolianCallSignPrefix`) until the kind was deleted. *)
+function TContestJTDX.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

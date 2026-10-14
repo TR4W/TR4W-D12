@@ -81,7 +81,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -203,11 +202,6 @@ end;
 function TContestJIDXSSB.GetFriendlyName: string;
 begin
    Result := 'JIDX Phone Contest';
-end;
-
-function TContestJIDXSSB.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestJIDXSSB.GetZoneMultiplierType: ZoneMultType;

@@ -86,7 +86,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -104,6 +103,9 @@ type
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -160,11 +162,6 @@ begin
    Result := 'Mini-Test 80';
 end;
 
-function TContestMini80.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := CallSignPrefix;
-end;
-
 function TContestMini80.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -213,6 +210,13 @@ begin
    aSession.MultipleBands := False;
    aSession.MultipleModes := False;
    aSession.MinitourDuration := 10;
+end;
+
+(* A PREFIX MULTIPLIER AT EVERY STATION -- M11 S3 part 2, 2026-10-14:
+   the trait this class stated (`CallSignPrefix`) until the kind was deleted. *)
+function TContestMini80.HasPrefixMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from

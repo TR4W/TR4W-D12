@@ -80,7 +80,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -188,11 +187,6 @@ end;
 function TContestWWDigi.GetFriendlyName: string;
 begin
    Result := 'World Wide Digi DX Contest';
-end;
-
-function TContestWWDigi.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
 end;
 
 function TContestWWDigi.GetZoneMultiplierType: ZoneMultType;

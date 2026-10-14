@@ -84,7 +84,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetPrefixMultiplierType: PrefixMultType; override;
       function GetZoneMultiplierType: ZoneMultType; override;
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
@@ -112,6 +111,9 @@ type
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    public
+      (* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasPrefixMultiplier (M11 S3 part 2). *)
+      function HasPrefixMultiplier: boolean; override;
       (* THE PREFIX MULTIPLIER -- see TContestBase.PrefixMultiplierKey
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
@@ -261,11 +263,6 @@ begin
    Result := 'All Asian DX Contest, Phone';
 end;
 
-function TContestAllAsianSSB.GetPrefixMultiplierType: PrefixMultType;
-begin
-   Result := NoPrefixMults;
-end;
-
 function TContestAllAsianSSB.GetZoneMultiplierType: ZoneMultType;
 begin
    Result := NoZoneMults;
@@ -311,10 +308,6 @@ begin
    if aStation.MyContinent = Asia then
       begin
       aSession.DXMult := ARRLDXCC;
-      end
-   else
-      begin
-      aSession.PrefixMult := Prefix;
       end;
 end;
 
@@ -349,6 +342,16 @@ begin
    Result := RSTReceivedText(aQso) + ' ' + IntToStr(aQso.Age);
 end;
 
+(* DOES IT HAVE A PREFIX MULTIPLIER AT THIS STATION? -- M11 S3 part 2,
+   2026-10-14. Yes for an entrant outside Asia; none for an Asian one. This
+   is the station test DescribeSession chose the session's prefix kind by,
+   until that kind was deleted; PrefixMultiplierKey asks it, so the two
+   cannot disagree. *)
+function TContestAllAsianSSB.HasPrefixMultiplier: boolean;
+begin
+   Result := Station.MyContinent <> Asia;
+end;
+
 (* THE PREFIX MULTIPLIER KEY -- M11 S3, 2026-10-14, moved from
    LOGEDIT.SetPrefix.
    The CTY prefix for an entrant outside Asia (`Prefix`, which
@@ -359,7 +362,7 @@ function TContestAllAsianSSB.PrefixMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := '';
    Result := False;
-   if Station.MyContinent = Asia then
+   if not HasPrefixMultiplier then
       begin
       Exit;
       end;
