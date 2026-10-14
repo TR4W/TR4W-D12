@@ -6256,7 +6256,7 @@ var
 begin
   NumberGridSquaresInList := 0;
 
-  if (ActiveDomesticMult = GridSquares) {wli and RoverCall(Call)} then
+  if (ContestSession.DomesticMult = GridSquares) {wli and RoverCall(Call)} then
      begin
      CreateGridSquareList(Call, ActiveBand);
 
@@ -7103,7 +7103,7 @@ begin
 
   result := InputString;
 
-  if ActiveDomesticMult = RDADistrict then
+  if ContestSession.DomesticMult = RDADistrict then
      begin
      result := '';
      if length(InputString) = 4 then
@@ -7117,7 +7117,7 @@ begin
      Exit;
      end;
 
-  if ActiveDomesticMult = DOKCodes then
+  if ContestSession.DomesticMult = DOKCodes then
      begin
      result := '';
      for Index := 1 to length(InputString) do
@@ -7132,7 +7132,7 @@ begin
      Exit;
      end;
 
-  if ActiveDomesticMult = IOTADomestic then
+  if ContestSession.DomesticMult = IOTADomestic then
      begin
      result := '';
      if (length(InputString) < 3) or (length(InputString) > 5) then
@@ -7160,7 +7160,7 @@ begin
         end;
      end;
 
-  if ActiveDomesticMult = GridSquares then
+  if ContestSession.DomesticMult = GridSquares then
      begin
      result := '';
      if (length(InputString) <> 4) and (length(InputString) <> 6) then
@@ -7188,7 +7188,7 @@ begin
      Exit;
      end;
 
-  if ActiveDomesticMult = GridFields then
+  if ContestSession.DomesticMult = GridFields then
      begin
      result := '';
      if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] >

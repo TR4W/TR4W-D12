@@ -83,7 +83,9 @@ procedure EnumDOMFILE(FileString: PShortString);
 //  ExternalLogTypeSA                     : array[ExternalLogType] of PChar( = ('None', 'DXKeeper', 'ACLog', 'HRD');
 
 var
-  ActiveDomesticMult                    : DomesticMultType {= NoDomesticMults};
+  (* ActiveDomesticMult MOVED -- M10 S9e, 2026-10-14. It is
+    uContestSession.ContestSession.DomesticMult, written only by FCONTEST's
+    set-up path. *)
   DomQTHTable                           : DomQTHTableObject;
   LiteralDomesticQTH                    : boolean; //QTHString (if true) or DomesticQTH {if false}
   MultipliersIsCounties                 : boolean;
@@ -93,7 +95,8 @@ uses
   uAppPaths,     // ShippedDomFilePath -- shipped data, whatever case
   ZoneCont,
   LogWind,
-  MainUnit, LogSCP; {KK1L: DEBUG}
+  MainUnit, LogSCP, {KK1L: DEBUG}
+  uContestSession; (* ContestSession.DomesticMult -- M10 S9e *)
 
 procedure DomQTHTableObject.AddNewPrefixRecord(Prefix: Str20; DomQTH: Str20; Multiplier: Str20);
 
@@ -214,14 +217,14 @@ begin
 
   strU(InputString);
 
-  if ActiveDomesticMult = NoDomesticMults then
+  if ContestSession.DomesticMult = NoDomesticMults then
      begin
      QTH := InputString;
      GetDomQTH := True;
      Exit;
      end;
 
-  if ActiveDomesticMult = RDADistrict then
+  if ContestSession.DomesticMult = RDADistrict then
      begin
      if length(InputString) = 4 then
        if InputString[1] in ['A'..'Z'] then
@@ -236,7 +239,7 @@ begin
      Exit;
      end;
 
-  if ActiveDomesticMult = WYSIWYGDomestic then
+  if ContestSession.DomesticMult = WYSIWYGDomestic then
      begin
      Multiplier := InputString;
      QTH := InputString;
@@ -244,7 +247,7 @@ begin
      Exit;
      end;
 
-  if ActiveDomesticMult = DOKCodes then { for WAG contest }
+  if ContestSession.DomesticMult = DOKCodes then { for WAG contest }
      begin
      for Index := 1 to length(InputString) do
         begin
@@ -260,7 +263,7 @@ begin
      Exit;
      end;
 
-  if ActiveDomesticMult = IOTADomestic then
+  if ContestSession.DomesticMult = IOTADomestic then
      begin
      if (length(InputString) < 3) or (length(InputString) > 5) then Exit;
 
@@ -282,7 +285,7 @@ begin
         end;
      end;
 
-  if ActiveDomesticMult = GridSquares then
+  if ContestSession.DomesticMult = GridSquares then
      begin
      if (length(InputString) <> 4) and (length(InputString) <> 6) then
         begin
@@ -310,7 +313,7 @@ begin
      Exit;
      end;
 
-  if ActiveDomesticMult = GridFields then
+  if ContestSession.DomesticMult = GridFields then
      begin
      if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] > 'R') or
        (InputString[2] < 'A') or (InputString[2] > 'R') or
@@ -489,38 +492,6 @@ begin
   ReadDomQTHFile := True;
 end;
 
-procedure DomQTHInit;
-
-var
-  RecordPointer                         : integer;
-  CurrentRecord, NextRecord             : PrefixRecPtr;
-
-begin
-  ActiveDomesticMult := NoDomesticMults;
-//  DomQTHTable.ActiveDomQTHFile := '';
-
-  for RecordPointer := 1 to 36 do {KK1L: 6.72 36 from 26. Allows for numbers in DOM file.}
-     begin
-     if DomQTHTable.FirstPrefixRecord[RecordPointer] <> nil then
-        begin
-        CurrentRecord := DomQTHTable.FirstPrefixRecord[RecordPointer];
-        NextRecord := DomQTHTable.FirstPrefixRecord[RecordPointer]^.NextRecord;
-
-        while CurrentRecord <> nil do
-           begin
-           CurrentRecord := nil;
-           CurrentRecord := NextRecord;
-           NextRecord := CurrentRecord^.NextRecord;
-           end;
-        end;
-
-     DomQTHTable.FirstPrefixRecord[RecordPointer] := nil;
-     DomQTHTable.LastPrefixRecord[RecordPointer] := nil;
-     end;
-
-//  DomQTHTable.RemainingDomMults := nil;
-end;
-
 procedure EnumDOMFILE(FileString: PShortString);
 const incfile                           = 'INCLUDE FILE';
 label
@@ -656,6 +627,4 @@ begin
 
 end;
 
-//begin
-  //  DomQTHInit;//����� �������� ��� �����
 end.

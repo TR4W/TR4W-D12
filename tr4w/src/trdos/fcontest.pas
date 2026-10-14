@@ -531,11 +531,11 @@ begin
      end;
   if aSession.IsStated(svDomesticMult) then
      begin
-     ActiveDomesticMult := aSession.DomesticMult;
+     ContestSession.WriteDomesticMult(aSession.DomesticMult);
      end;
   if aSession.IsStated(svDXMult) then
      begin
-     ActiveDXMult := aSession.DXMult;
+     ContestSession.WriteDXMult(aSession.DXMult);
      end;
   if aSession.IsStated(svPrefixMult) then
      begin
@@ -811,8 +811,8 @@ begin
 
   ActiveExchange := aContest.ExchangeKind;
   ContestSession.WriteInitialExchange(aContest.InitialExchangeKind);
-  ActiveDomesticMult := aContest.DomesticMultiplierType;
-  ActiveDXMult := aContest.DXMultiplierType;
+  ContestSession.WriteDomesticMult(aContest.DomesticMultiplierType);
+  ContestSession.WriteDXMult(aContest.DXMultiplierType);
   ContestSession.WriteZoneMult(aContest.ZoneMultiplierType);
   ContestSession.WritePrefixMult(aContest.PrefixMultiplierType);
 end;

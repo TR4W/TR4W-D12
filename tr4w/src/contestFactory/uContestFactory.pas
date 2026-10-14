@@ -111,6 +111,9 @@ uses
       asks one a question, such as uCabrilloExchange -- stay free of the display
       layer and testable without booting TR4W. *)
    LOGWIND,
+   (* ContestSession.DomesticMult -- IsNewMultiplierAnywhere's kind (M10
+      S9e). *)
+   uContestSession,
    uSettingsModel,
    (* StationInHostState -- set-up's in-state answer for a QSO party (M5b). *)
    FCONTEST,
@@ -119,10 +122,11 @@ uses
    ZoneCont,
    (* ctyGetCQZone -- the CTY lookup behind MyCQZone (2026-10-14). *)
    uCTYDAT,
-   (* mo, the multiplier sheet, and ActiveDomesticMult -- read, never
-      written, behind IsNewMultiplierAnywhere (design 7.13, 2026-10-14). *)
+   (* mo, the multiplier sheet -- read, never written, behind
+      IsNewMultiplierAnywhere (design 7.13, 2026-10-14). The domestic kind
+      it is asked with is the session's (uContestSession, above); LogDom
+      was used for that global alone and left with it at M10 S9e. *)
    uMults,
-   LogDom,
    uContestRegistry;
 
 (* THE ENGINE'S DOMESTIC-COUNTRY TEST, AS THE STATION CONTEXT'S SERVICE -- see
@@ -169,7 +173,7 @@ begin
    case aKind of
       nmkDomestic:
          begin
-         Result := mo.IsDmMult(string(aQso.DomMultQTH), AllBands, Both, ActiveDomesticMult);
+         Result := mo.IsDmMult(string(aQso.DomMultQTH), AllBands, Both, ContestSession.DomesticMult);
          end;
       nmkDX:
          begin

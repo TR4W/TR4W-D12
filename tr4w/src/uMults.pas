@@ -73,6 +73,10 @@ var
   
 implementation
 
+uses
+  uContestSession; (* ContestSession.DXMult -- M10 S9d; a leaf over VC, so
+                     this unit stays light (Issue #1034) *)
+
 // Issue #1034: own Log4D logger (initialized below), replacing the former
 // MainUnit.logger borrow. MainUnit + LogDupe were otherwise unused here, so
 // dropping them removes uMults's direct MainUnit -> LogStuff coupling and lets
@@ -257,18 +261,18 @@ begin
           Continue;
           end;
 
-     if ActiveDXMult = NoDXMults then
+     if ContestSession.DXMult = NoDXMults then
         begin
         goto 1;
         end;
 
-     if ActiveDXMult = CQNonEuropeanCountries then
+     if ContestSession.DXMult = CQNonEuropeanCountries then
        if CTY.ctyTable[i].DefaultContinent = Europe then Continue;
 
-     if ActiveDXMult = CQEuropeanCountries then
+     if ContestSession.DXMult = CQEuropeanCountries then
        if CTY.ctyTable[i].DefaultContinent <> Europe then Continue;
 
-     if ActiveDXMult = CQUBAEuropeanCountries then
+     if ContestSession.DXMult = CQUBAEuropeanCountries then
        if not UBACountry(CTY.ctyTable[i].ID) then Continue;
 
      if CTY.ctyCustomRemainingCountryListFound then Continue;

@@ -150,7 +150,7 @@ uses
   , Tree // for LooksLikeAGrid
   , utils_text
   , LogK1EA // for Settings.Ptt.ViaCommands
-  , LogDOM // for ActiveDomesticMult
+  , uContestSession // ContestSession.DomesticMult (M10 S9e; was LogDOM's global)
   , PostUnit
   , uCabrilloFormat // for tCabrilloFreqString (moved here from PostUnit,
                     // see uCabrilloFormat.pas)
@@ -228,7 +228,7 @@ begin
         end;
 
         VisibleLog.ShowQSOStatus(call);
-        if ActiveDomesticMult = GridFields then
+        if ContestSession.DomesticMult = GridFields then
            begin
            VisibleLog.ShowDomesticMultiplierStatus(AnsiLeftStr(grid, 2));
            end

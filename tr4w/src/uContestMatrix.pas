@@ -586,8 +586,8 @@ begin
      Dropped in a re-freeze of its own, before anything moves. *)
    EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ActiveExchange)));
    EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ContestSession.InitialExchange)));
-   EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ActiveDomesticMult)));
-   EmitField('active.dxmult', EnumText(TypeInfo(DXMultType), Ord(ActiveDXMult)));
+   EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ContestSession.DomesticMult)));
+   EmitField('active.dxmult', EnumText(TypeInfo(DXMultType), Ord(ContestSession.DXMult)));
    EmitField('active.zonemult', EnumText(TypeInfo(ZoneMultType), Ord(ContestSession.ZoneMult)));
    EmitField('active.prefixmult', EnumText(TypeInfo(PrefixMultType), Ord(ContestSession.PrefixMult)));
    EmitField('doing.domestic/dx/prefix/zone',

@@ -9540,7 +9540,7 @@ begin
 
   ColumnsArray[logColNumberReceive].Enable := ExchangeInformation.QSONumber;
   ColumnsArray[logColPrefixMult].Enable := ContestSession.PrefixMult <> NoPrefixMults;
-  ColumnsArray[logColDXMult].Enable := ActiveDXMult <> NoDXMults;
+  ColumnsArray[logColDXMult].Enable := ContestSession.DXMult <> NoDXMults;
   // ColumnsArray[logColPostCode].Enable := ExchangeInformation.PostalCode;
   ColumnsArray[logColKids].Enable := ExchangeInformation.Kids;
   i := -1;
@@ -9984,7 +9984,7 @@ begin
     record is the one it NAMES, and never reads a global itself. *)
   session.Operator           := CurrentOperator;
   session.Exchange           := ActiveExchange;
-  session.DomesticMult       := ActiveDomesticMult;
+  session.DomesticMult       := ContestSession.DomesticMult;
   session.DoingDomesticMults := DoingDomesticMults;
 
   (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,

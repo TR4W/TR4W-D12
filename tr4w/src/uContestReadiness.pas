@@ -33,10 +33,11 @@ unit uContestReadiness;
   that caused it.
 
   DERIVED FROM THE CONTEST'S OWN CONFIGURATION, NEVER FROM A TABLE INDEXED BY
-  CONTEST. FoundContest has just chosen ActiveExchange, ActiveDomesticMult and
-  the rest; those ARE the statement of what this contest asks the operator to
-  send. A hand-typed list of "ARRL DX needs MY COUNTRY" would be a second
-  definition of every contest, free to drift from FCONTEST -- which is the
+  CONTEST. FoundContest has just chosen ActiveExchange, the session's
+  DomesticMult (uContestSession) and the rest; those ARE the statement of
+  what this contest asks the operator to send. A hand-typed list of "ARRL
+  DX needs MY COUNTRY" would be a second definition of every contest, free
+  to drift from FCONTEST -- which is the
   shape this tree has spent a year deleting (CLAUDE.md: the radio tables, the
   config array). Every rule below reads the live configuration.
 

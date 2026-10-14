@@ -496,7 +496,12 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   as reference? I tried to delete it and the session's safety check
   refused an irreversible delete without you, so it is untouched; the
   remaining S9 stages leave it alone.
-  *Recommended: delete it.*
+  **Same question for `tr4w/src/trdos/logmenu.pas`** (found at S9d): every
+  `uses LOGMENU` is commented out (`MainUnit`, `LogCfg`, `logedit`,
+  `logsubs1`, `logsubs2`) and `tr4w.lpr` does not list it, yet it holds a
+  second textual caller of `FoundContest` -- which made the country-mode
+  ordering check (F5) look riskier than it is.
+  *Recommended: delete both.*
   **Answer:**
 
 - **Q90** Rover calls on ADIF export. TR4W writes a state party's rover

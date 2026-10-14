@@ -3712,11 +3712,10 @@ const
 
   var
     tr4wBrushArray                      : array[tr4wColors] of HBRUSH;
-    // Issue #1034: relocated here from LogDupe so light units (uMults and the
-    // pre-migration test EXE) can read the active DX-multiplier mode without
-    // pulling LogDupe's monolith cone. DXMultType is defined above in this unit;
-    // zero-initialized to NoDXMults (its first value), matching the old default.
-    ActiveDXMult                        : DXMultType;
+    (* ActiveDXMult MOVED -- M10 S9d, 2026-10-14. It is
+      uContestSession.ContestSession.DXMult, a leaf over this unit, so a
+      light unit (uMults, Issue #1034's reason for hosting it here) still
+      reads it without LogDupe's cone. *)
 
   { Fills the string tables that cannot be initialised where they are declared.
     uProgramMain calls this after the translation loads and before the main

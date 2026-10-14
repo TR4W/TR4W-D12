@@ -430,8 +430,8 @@ begin
      Settings.Operating.IncrementTimeEnable := True;
      end;
 
-  DoingDomesticMults := ActiveDomesticMult <> NoDomesticMults;
-  DoingDXMults := ActiveDXMult <> NoDXMults;
+  DoingDomesticMults := ContestSession.DomesticMult <> NoDomesticMults;
+  DoingDXMults := ContestSession.DXMult <> NoDXMults;
   DoingPrefixMults := ContestSession.PrefixMult <> NoPrefixMults;
   DoingZoneMults := ContestSession.ZoneMult <> NoZoneMults;
 

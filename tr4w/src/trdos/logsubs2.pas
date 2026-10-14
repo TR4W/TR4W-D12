@@ -206,6 +206,9 @@ uses
   (* AddLoggedQSO -- the final score's view of the log, kept with the totals
      (M6). *)
   uScoreTotals,
+  (* ContestSession.DomesticMult -- the grid-square rover and QSO-party
+     mobile rules (M10 S9e). *)
+  uContestSession,
   (* ContestIdentity -- the contest's own ADIF id and Cabrillo name for the
      two UDP broadcasts. *)
   uContestRegistry;
@@ -1301,7 +1304,7 @@ var
 
 begin
 //  if not PartialCallMultsEnable then Exit;
-  if ActiveMainWindow <> awCallWindow then if ActiveDomesticMult <> GridSquares then Exit;          
+  if ActiveMainWindow <> awCallWindow then if ContestSession.DomesticMult <> GridSquares then Exit;          
   if length(WindowString) < 2 then Exit;
   if length(WindowString) < 3 then
      begin
@@ -1605,7 +1608,7 @@ begin
   //  if not DDX(VerifyContact) then RXData.QSOPoints := 0;
      //  if not TailEnding then RemoveWindow(PossibleCallWindow);
   //  if Trace then Write('@');
-  if MobileCall(RXData.Callsign) and (ActiveDomesticMult = DomesticFile) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
+  if MobileCall(RXData.Callsign) and (ContestSession.DomesticMult = DomesticFile) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
      begin
      RXData.Callsign := PrecedingString(RXData.Callsign,'/')  + '/' + RXData.DomesticQTH;  // n4af 4.41.7
      end;
@@ -1616,7 +1619,7 @@ begin
   // MainUnit.DrainPendingMultiQSORefs for where the flag is set.
   if (not RXData.ceClearDupeSheet) and
     (VisibleLog.CallIsADupe(RXData.Callsign, RXData.Band, RXData.Mode) or
-    ((ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
+    ((ContestSession.DomesticMult = GridSquares) and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
     (* THE CONTEST'S DUPE POLICY -- M3, 2026-10-01. This tested the global
        ActiveQSOPointMethod for AlwaysOnePointPerQSO ("ignores dupes"), so an
        operator's QSO POINT METHOD line switched dupe marking. The contest
@@ -1629,7 +1632,7 @@ begin
        //      if Trace then Write('#');
      RXData.ceDupe := True;
        //            RXData.tDupe := True;
-     if (ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) then
+     if (ContestSession.DomesticMult = GridSquares) and RoverCall(RXData.Callsign) then
         begin
         if NumberGridSquaresInList > 0 then
            begin

@@ -473,7 +473,9 @@ uses
   uStrSearch,
   NetworkMessageUtils,
   uTR4WStrings,
-   uContestFileKind;   (* what kind of file did the operator pick as a contest *)
+   uContestFileKind,   (* what kind of file did the operator pick as a contest *)
+  uContestSession;    (* ContestSession.DomesticMult -- the settings-gap
+                         check after set-up (M10 S9e) *)
 
 (* A resourcestring, NOT a TC_ constant in the language tables.
 
@@ -2582,7 +2584,7 @@ begin
   try
      CollectContestSettingsGaps(Contest <> DUMMYCONTEST,
                                 ActiveExchange,
-                                ActiveDomesticMult,
+                                ContestSession.DomesticMult,
                                 Settings.My.Call,
                                 Settings.My.Country,
                                 (* The state SENT -- design 7.11 (M9a). *)

@@ -1075,6 +1075,98 @@ As planned, with these corrections and decisions:
 * **Matrix prediction: identical.** Every moved read returns the value the
   global held, and F4 changes no answer.
 
+**S9d and S9e DONE 2026-10-14** (on top of `19e3b48e`). Re-measured first
+(`count-ids.ps1 -Lines -Ids @('ActiveDXMult','ActiveDomesticMult')`: 20 and
+39, as S9c's note says; **19 and 38 without `logddx.pas`**, which is compiled
+by nothing (F14), was NOT edited, and is excluded from every count below --
+its one read of each global now names a global that does not exist, which no
+build sees). As planned, with these corrections and decisions:
+
+* **Moved: `ActiveDXMult`, 19 -> 0** -- the DECLARATION is deleted from `VC`
+  (its Issue #1034 comment said it lived there so `uMults` could read it
+  without `LogDupe`'s cone; `uContestSession` is a leaf over `VC`, so that
+  reason holds for the session too, and `uMults` uses it from its
+  implementation section), two writers (`fcontest` ApplySessionDefaults and
+  ApplyContestTraits, order unchanged, now `WriteDXMult`) and sixteen
+  occurrences in readers (`MainUnit` 1, `LogCfg` 1, `logdupe` 1,
+  `uContestMatrix` 1, `uEditQSO` 2, `uMults` 4, `uScoreTotals` 2,
+  `uSettingsEffects` 1 -- F5 -- and the test 1 read + 2 writes).
+* **F5 -- REPOINTED, SAME BEHAVIOUR, AND THE ORDER IS RIGHT.** The CONTEST
+  setting's effect (`uSettingsEffects`) calls `FoundContest` and then derives
+  `CTY.ctyCountryMode` from the DX kind; it now reads
+  `ContestSession.DXMult`. The question was whether the derivation could ever
+  read a stale value. **It cannot, measured:** `FoundContest` has two textual
+  callers, the effect and `logmenu.pas:107`, and `LOGMENU` is linked by
+  nothing (every `uses LOGMENU` is commented out -- `MainUnit`, `LogCfg`,
+  `logedit`, `logsubs1`, `logsubs2` -- and `tr4w.lpr` does not list it). Both
+  DX writes are inside `FoundContest` (`ApplyContestTraits` at its head,
+  `ApplySessionDefaults` later), and the DX MULTIPLIER setting that used to
+  write the global retired at S2, so the derivation always reads the kind
+  set-up has just resolved. No pre-existing ordering defect; nothing was
+  reordered. The plan's 2.2 idea of a session `CountryMode` set in
+  FoundContest's tail is NOT done: it would move the rule, and S9d moves
+  only the kind.
+* **Moved: `ActiveDomesticMult`, 38 -> 0** -- the declaration (`logdom`), two
+  writers (`WriteDomesticMult`, same two places), the dead writer in
+  `DomQTHInit` (F8, below) and the readers (`logdom` 7, `logstuff` 6,
+  `logsubs2` 4, `logdupe` 2, `LogCfg` 1, `logedit` 1, `postunit` 1,
+  `MainUnit` 1, `uProgramMain` 1, `uScoreTotals` 1, `uWSJTX` 1,
+  `uContestFactory` 1, `uContestMatrix` 1, the test 2 reads + 4 writes).
+  `WriteDXMult` and `WriteDomesticMult` have exactly two callers each outside
+  the unit and the tests, both in `fcontest.pas`.
+* **F8 CLOSED -- `logdom.DomQTHInit` DELETED.** Proof of no caller:
+  `rg -n -i -w DomQTHInit` over all of `tr4w/` (every `.pas`, `.lpr`, test
+  and `backup/` copy) found its definition (`logdom.pas:492`,
+  implementation-only, no interface declaration) and one commented call --
+  the D7 unit's initialization, `//begin` / `//  DomQTHInit;` at the foot of
+  the unit -- and nothing else. Both went. (Its loop would also have
+  dereferenced nil on the last record of any chain longer than one: dead
+  and broken.)
+* **Two `LogDom` links dropped.** `uContestFactory` and `uWSJTX` used `LogDom`
+  for this global alone (searched for every other symbol `LogDom` exports);
+  they use `uContestSession` instead. `LogDom` has no initialization section,
+  so no start-up order moved.
+* **Threading re-checked:** `uWSJTX`'s reader is `TWSJTXUIWork.Run`, reached
+  only through `QueueWSJTXUI`, which runs it directly when `OnMainThread` and
+  otherwise by `QueueAsyncCall`. `uContestFactory.EngineIsNewMultiplierAnywhere`
+  is the station context's `IsNewMultiplierAnywhere` service, called only by
+  `TContestRSGB18.CalculateQSOPoints` -- the engine's scoring path, main
+  thread. Both main-thread readers, as the session's contract requires.
+* **Tests:** `uTestContestSession`.
+  `Test_TheRunningSessionIsOneObjectWithOneWriter` now covers all five kinds:
+  a fresh session holds each kind's zero; every member of each kind is
+  written and read back; and before each kind's sweep ALL five are pinned at
+  a non-zero value, so a write to one is checked to leave the other FOUR
+  (S9b/S9c checked two). `Test_ARRL10RunsADXMultiplierItsTraitDoesNotState`
+  (trait `ARRLDXCCWithNoUSACanadaKH6OrKL7`, states
+  `ARRLDXCCWithNoARRLSections` for every station -- the frozen matrix says so
+  in all three variants). `Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState`
+  (trait `NoDomesticMults`; a W station runs `DomesticFile`, as the frozen
+  matrix's three non-OK/OM variants do; an OK station states nothing and
+  runs the trait). `uTestOffBandCredit` writes through `WriteDXMult` /
+  `WriteDomesticMult` and restores the program's values in its `finally`, as
+  before. **Unit run: 79685 passed, 0 failed** (+279: the one-object test
+  goes from 122 checks to 390 -- 6 per member of the five kinds, 15+15+7+18+9,
+  plus 6 -- and the two new tests add 11).
+* **`scan.py`:** `DXMULT` and `DOMESTICMULT` added to `SESSION`; their
+  `ACTIVE` entries KEPT (S9c's correction). Regenerated as a check and
+  restored: **110 rows, 6/0/13/91, 74 of 186; 123 shape-4 sites, 229
+  records** -- identical to HEAD but for line numbers (the only non-digit
+  difference is the header's "plus uncommitted changes" line).
+* **Not done:** the full build, `Run-Lints`, the matrix, corpus, factory check
+  and round-trip (the gated run). The incremental app compile died inside FPC
+  (an unhandled exception, the known incremental artifact); `uProgramMain`'s
+  whole cone was compiled clean with `-B` and the App search paths into a
+  scratch directory, and every touched unit is in it (`uContestMatrix`,
+  `uEditQSO`, `uWSJTX`, `uMults`, `uSettingsEffects`, `uContestFactory`,
+  `uContestReadiness`, `uContestBase`, `logdom`, `logsubs2` and the rest).
+  The unit-test build is clean. `tr4wserver` links `VC` (touched: a variable
+  deleted) and none of the other touched units; `Build-Server.ps1` is clean.
+  `Lint-ContestNameTests` (6 in 3, no rise), `Lint-UnitFileNames`,
+  `Lint-BraceComments`, `Lint-LineEndings` pass on their own.
+* **Matrix prediction: identical.** Every moved read returns the value the
+  global held, F5 reads at the same point, and `DomQTHInit` never ran.
+
 **Recommended order for S9b-f, measured after S9a** (code-only occurrences,
 declaration and writers included):
 
@@ -1082,8 +1174,8 @@ declaration and writers included):
 |---|---|---|---|
 | S9b | `ActivePrefixMult` | 9 | **DONE** (above) |
 | S9c | `ActiveZoneMult` | 19 | **DONE** (above); F4 decided -- the session |
-| S9d | `ActiveDXMult` | 20 | declared `VC` (move the declaration, not just the reads); + F5 country mode (`uSettingsEffects` CONTEST arm); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
-| S9e | `ActiveDomesticMult` | 39 | + delete `logdom.DomQTHInit` (F8); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
+| S9d | `ActiveDXMult` | 20 | **DONE** (above); F5 order checked -- right. Was: declared `VC` (move the declaration, not just the reads); + F5 country mode (`uSettingsEffects` CONTEST arm); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
+| S9e | `ActiveDomesticMult` | 39 | **DONE** (above); F8 closed. Was: + delete `logdom.DomQTHInit` (F8); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
 | S9f | `ActiveExchange` | 80 | `tree.pas` per-row repaint read; the F9 parameter is already renamed; **26** reads in uncompiled `logddx` (F14) |
 
 Each stage adds its kind to `scan.py`'s `SESSION` map in the same commit.
@@ -1141,6 +1233,9 @@ The first commit adds `uContestSession` and the writer.
   derived from `ActiveDXMult` in the CONTEST *setting's* arm, after
   `FoundContest` set it to ARRL at its head (`fcontest.pas:840`). A set-up
   rule living in a settings effect; it must survive S2 and move to the session.
+  **DONE at S9d: it reads `ContestSession.DXMult`, at the same point -- after
+  `FoundContest`, its only live caller, has written the kind. Order checked,
+  no defect (evidence under S9d/S9e).**
 * **F6.** The legacy case is reachable only for DUMMYCONTEST and reads a
   point method `FoundContest` never resets there. Removed by S3.
 * **F7 (CLAUDE.md / agent).** "`RETIRED_COMMANDS`: accepted, **logged once**" --
@@ -1148,7 +1243,7 @@ The first commit adds `uContestSession` and the writer.
   **FIXED at S2:** the code now matches the claim (`RetiredCommandFirstSighting`).
 * **F8.** `logdom.pas:492` `DomQTHInit` has no caller (`rg -n -i -w DomQTHInit`,
   only its declaration and a commented call `:660`) and is a runtime writer of
-  `ActiveDomesticMult`. Delete at S9e.
+  `ActiveDomesticMult`. Delete at S9e. **DELETED at S9e (proof under S9d/S9e).**
 * **F9.** The `ActiveExchange` parameter shadow in `logdupe` (above).
 * **F10.** `Test_MovedRowValuesStillMatchTheArray` compares an inheriting
   class's row with itself, so it proves nothing for the 17 contests that most

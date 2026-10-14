@@ -78,6 +78,8 @@ uses
    uContestRegistry,
    LogDupe,
    LogDom,
+   (* ContestSession -- the DX and domestic kinds (M10 S9d, S9e). *)
+   uContestSession,
    LogEdit,
    LogWind,
    LogStuff,
@@ -250,8 +252,8 @@ begin
    savedDoingDX := DoingDXMults;
    savedDoingPrefix := DoingPrefixMults;
    savedDoingZone := DoingZoneMults;
-   savedDomesticMult := ActiveDomesticMult;
-   savedDXMult := ActiveDXMult;
+   savedDomesticMult := ContestSession.DomesticMult;
+   savedDXMult := ContestSession.DXMult;
    savedDXCCByBand := DXCCMultByBand;
    savedDomesticByBand := DomesticMultByBand;
    savedActiveBand := ActiveBand;
@@ -263,7 +265,7 @@ begin
       DoingDXMults := True;
       DoingPrefixMults := False;
       DoingZoneMults := False;
-      ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
+      ContestSession.WriteDXMult(ARRLDXCCWithNoUSAOrCanada);
       DXCCMultByBand := dmbbDefauld;
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
@@ -280,7 +282,7 @@ begin
          strip asks it: the band it is for is the operator's. *)
       DoingDXMults := False;
       DoingDomesticMults := True;
-      ActiveDomesticMult := WYSIWYGDomestic;
+      ContestSession.WriteDomesticMult(WYSIWYGDomestic);
       ActiveBand := Band20;
       VisibleLog.DetermineIfNewDomesticMult('ADA', AllBands, CW, needs);
       CheckEquals(1, needs, 'on 20 m, Ada is a needed county (was never, before M8)');
@@ -294,8 +296,8 @@ begin
       ActiveBand := savedActiveBand;
       DomesticMultByBand := savedDomesticByBand;
       DXCCMultByBand := savedDXCCByBand;
-      ActiveDXMult := savedDXMult;
-      ActiveDomesticMult := savedDomesticMult;
+      ContestSession.WriteDXMult(savedDXMult);
+      ContestSession.WriteDomesticMult(savedDomesticMult);
       DoingZoneMults := savedDoingZone;
       DoingPrefixMults := savedDoingPrefix;
       DoingDXMults := savedDoingDX;
@@ -350,7 +352,7 @@ begin
    savedDoingDX := DoingDXMults;
    savedDoingPrefix := DoingPrefixMults;
    savedDoingZone := DoingZoneMults;
-   savedDomesticMult := ActiveDomesticMult;
+   savedDomesticMult := ContestSession.DomesticMult;
    savedDomesticByBand := DomesticMultByBand;
    savedRestart := tRestartInfo;
    try
@@ -361,7 +363,7 @@ begin
       DoingDXMults := False;
       DoingPrefixMults := False;
       DoingZoneMults := False;
-      ActiveDomesticMult := DomesticFile;
+      ContestSession.WriteDomesticMult(DomesticFile);
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
 
@@ -388,7 +390,7 @@ begin
       mo.ClearAllMults;
       tRestartInfo := savedRestart;
       DomesticMultByBand := savedDomesticByBand;
-      ActiveDomesticMult := savedDomesticMult;
+      ContestSession.WriteDomesticMult(savedDomesticMult);
       DoingZoneMults := savedDoingZone;
       DoingPrefixMults := savedDoingPrefix;
       DoingDXMults := savedDoingDX;

@@ -229,14 +229,20 @@ created once in that leaf unit's initialization, never replaced, read-only
 properties, written ONLY by FCONTEST's set-up path (`ApplyContestTraits`,
 then `ApplySessionDefaults`) through `Write*` methods -- not `Set*`, which
 `TSessionDefaults` already uses for what a contest STATES. Main thread only,
-as the globals were. **It holds `InitialExchange`, `PrefixMult` and
-`ZoneMult`** (were `ActiveInitialExchange`, `ActivePrefixMult`,
-`ActiveZoneMult`; S9a-c); `ActiveDXMult`, `ActiveDomesticMult` and
-`ActiveExchange` are still globals and move in that order (plan S9d-f).
+as the globals were. **It holds `InitialExchange`, `PrefixMult`,
+`ZoneMult`, `DXMult` and `DomesticMult`** (were `ActiveInitialExchange`,
+`ActivePrefixMult`, `ActiveZoneMult`, `VC.ActiveDXMult`,
+`LOGDOM.ActiveDomesticMult`; S9a-e); `ActiveExchange` is still a global and
+moves last (plan S9f). **The CTY country list (`ctyCountryMode`) is derived
+from `ContestSession.DXMult` in the CONTEST setting's effect, straight after
+`FoundContest` returns** (plan F5) -- its only live caller, so the order is
+right; a new caller of `FoundContest` must run that derivation too.
 **Never repoint a kind reader to `ContestIdentity(Contest)`**: it is the
 SESSION's value, and 27 contests run with a kind their trait does not state
 (KCJ: trait `NoInitialExchange`, runs `ZoneInitialExchange`; YBDX: trait
-`NoPrefixMults`, runs `IndonesianDistricts`). **`ZoneSentForThisContest`
+`NoPrefixMults`, runs `IndonesianDistricts`; ARRL 10: trait
+`ARRLDXCCWithNoUSACanadaKH6OrKL7`, runs `ARRLDXCCWithNoARRLSections`; OK/OM
+DX: trait `NoDomesticMults`, a W station runs `DomesticFile`). **`ZoneSentForThisContest`
 asks the session too (S9c, plan F4)** -- the CQ-or-ITU zone sent and the
 ADIF CQZ/ITUZ tag now have one source. **`trdos/logddx.pas` is compiled by
 NOTHING** (it uses a `Country9` that never existed; plan F14): an edit

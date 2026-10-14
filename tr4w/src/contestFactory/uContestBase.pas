@@ -825,8 +825,8 @@ type
       (* DID THE CONTEST STATE THIS VALUE? The applier writes nothing else. *)
       function IsStated(aValue: TSessionValue): boolean;
 
-      (* THE ENGINE'S CHOICES -- ActiveExchange, ActiveDomesticMult,
-         ActiveDXMult, the session's PrefixMult (uContestSession, M10 S9b),
+      (* THE ENGINE'S CHOICES -- ActiveExchange, the session's DomesticMult,
+         DXMult and PrefixMult (uContestSession, M10 S9b/S9d/S9e),
          ActiveBand, ActiveMode, DomesticMultByBand and tAllowDupeQSOs. *)
       property Exchange: ExchangeType read FExchange write SetExchange;
       property DomesticMult: DomesticMultType read FDomesticMult write SetDomesticMult;

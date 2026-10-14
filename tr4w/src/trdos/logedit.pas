@@ -474,7 +474,7 @@ begin
      Exit;
      end;
 
-  if (ActiveDomesticMult = GridSquares) and RoverCall(Call) then
+  if (ContestSession.DomesticMult = GridSquares) and RoverCall(Call) then
      begin
      Exit;
      end;

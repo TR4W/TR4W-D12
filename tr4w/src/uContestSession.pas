@@ -49,10 +49,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       Tests use the same methods. No reader writes, and the properties are
       read-only so a stray `:=` does not compile. Nothing enforces the writer
       beyond that: count the Write* callers
-      (rg -i "\.Write(InitialExchange|PrefixMult|ZoneMult)")
+      (rg -i "\.Write(InitialExchange|PrefixMult|ZoneMult|DXMult|DomesticMult)")
       -- FCONTEST and the tests are the only legitimate ones. Named Write*,
       not Set*, because TSessionDefaults (what a contest STATES) already has
-      a SetInitialExchange (and SetPrefixMult, SetZoneMult), and "who writes
+      a SetInitialExchange (and SetPrefixMult, SetZoneMult, SetDXMult,
+      SetDomesticMult), and "who writes
       the session" must be one search.
     * THREADS. The writer runs on the main thread. Every reader measured at
       S9a for all six kinds runs on the main thread too: the call window,
@@ -77,10 +78,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     InitialExchange    S9a   was LOGWIND.ActiveInitialExchange
     PrefixMult         S9b   was LOGDUPE.ActivePrefixMult
     ZoneMult           S9c   was LOGWIND.ActiveZoneMult
+    DXMult             S9d   was VC.ActiveDXMult
+    DomesticMult       S9e   was LOGDOM.ActiveDomesticMult
 
-  Still globals until their stage: ActiveDXMult (VC), ActiveDomesticMult
-  (LOGDOM), ActiveExchange (LOGWIND). The kind ENUMS outlive M10: they are the engine's vocabulary
-  until their arms move into the classes at M11 (design 8.2s). *)
+  Still a global until its stage: ActiveExchange (LOGWIND). The kind ENUMS
+  outlive M10: they are the engine's vocabulary until their arms move into
+  the classes at M11 (design 8.2s). *)
 unit uContestSession;
 
 {$I tr4w.inc}
@@ -96,6 +99,8 @@ type
       FInitialExchange: InitialExchangeType;
       FPrefixMult: PrefixMultType;
       FZoneMult: ZoneMultType;
+      FDXMult: DXMultType;
+      FDomesticMult: DomesticMultType;
    public
       (* The initial exchange the call window pre-fills from -- the kind
         LOGEDIT.InitialExchangeEntry asks. A fresh session holds
@@ -113,10 +118,27 @@ type
         zero LOGWIND.ActiveZoneMult started from. *)
       property ZoneMult: ZoneMultType read FZoneMult;
 
+      (* The DX multiplier the session runs -- the sheet's DX mult flags, the
+        remaining-countries list (uMults), the log grid's and Edit QSO's DX
+        column, the score's "counts multipliers", and the CTY country list
+        the CONTEST setting's effect derives from it (uSettingsEffects, plan
+        F5). A fresh session holds NoDXMults, the zero VC.ActiveDXMult
+        started from. *)
+      property DXMult: DXMultType read FDXMult;
+
+      (* The domestic multiplier the session runs -- how LOGDOM reads a
+        domestic QTH, the sheet's domestic mult flags, the grid-square rover
+        rules, the exporters, uWSJTX's grid hint and the factory's
+        IsNewMultiplierAnywhere service. A fresh session holds
+        NoDomesticMults, the zero LOGDOM.ActiveDomesticMult started from. *)
+      property DomesticMult: DomesticMultType read FDomesticMult;
+
       (* THE WRITERS -- FCONTEST's set-up path, and tests. See the header. *)
       procedure WriteInitialExchange(aKind: InitialExchangeType);
       procedure WritePrefixMult(aKind: PrefixMultType);
       procedure WriteZoneMult(aKind: ZoneMultType);
+      procedure WriteDXMult(aKind: DXMultType);
+      procedure WriteDomesticMult(aKind: DomesticMultType);
    end;
 
 (* The one session. Never nil between this unit's initialization and its
@@ -141,6 +163,16 @@ end;
 procedure TContestSession.WriteZoneMult(aKind: ZoneMultType);
 begin
    FZoneMult := aKind;
+end;
+
+procedure TContestSession.WriteDXMult(aKind: DXMultType);
+begin
+   FDXMult := aKind;
+end;
+
+procedure TContestSession.WriteDomesticMult(aKind: DomesticMultType);
+begin
+   FDomesticMult := aKind;
 end;
 
 function ContestSession: TContestSession;

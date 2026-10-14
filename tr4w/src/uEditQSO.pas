@@ -138,6 +138,7 @@ uses
   SysUtils,         // SystemTimeToDateTime / DateTimeToSystemTime
   MainUnit,
   uEditQSOForm,     // the LCL form, and the id-to-control accessors
+  uContestSession,  // ContestSession.DXMult -- M10 S9d
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
   uLogNote,         // NoteText -- the note's text
   uConfigValues;
@@ -389,7 +390,7 @@ begin
    EditQSOSetText(FLD_COUNTRYNAME,
      ctyGetCountryName(ctyGetCountry(TempString)));
 
-   if ActiveDXMult <> NoDXMults then
+   if ContestSession.DXMult <> NoDXMults then
       begin
       EditQSOSetText(FLD_DXQTH, string(EditableQSORXData.QTH.CountryID));
       end;
@@ -481,7 +482,7 @@ begin
      end;
 
   //  LocateCall(EditableQSORXData.Callsign, EditableQSORXData.QTH, true);
-  if ActiveDXMult <> NoDXMults then
+  if ContestSession.DXMult <> NoDXMults then
      begin
      FillChar(EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH), 0);
      EditableQSORXData.DXQTH := EditableQSORXData.QTH.CountryID;

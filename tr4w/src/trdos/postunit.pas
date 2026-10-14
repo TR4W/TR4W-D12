@@ -2399,7 +2399,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   if rec.QTHString <> '' then
      begin
      qthForGrid := rec.DomesticQTH;
-     if LooksLikeAGrid( qthForGrid ) and ( ActiveDomesticMult <> RDADistrict )
+     if LooksLikeAGrid( qthForGrid ) and ( ContestSession.DomesticMult <> RDADistrict )
      then
         begin
         Result := Result + EmitADIFField( 'GRIDSQUARE',

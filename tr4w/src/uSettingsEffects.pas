@@ -110,9 +110,11 @@ uses
    SysUtils,
    uSettingsModel,
    FContest,       // RecalculateMyCountryContinentAndZoneNew
-   VC,             (* the token spelling tables and ActiveDXMult --
-                     the contest engine owns these, the settings hold the
-                     token, and this is where one becomes the other *)
+   VC,             (* the token spelling tables -- the contest engine
+                     owns these, the settings hold the token, and this is
+                     where one becomes the other *)
+   uContestSession, (* ContestSession.DXMult -- the CONTEST arm's country
+                     list (plan F5, M10 S9d) *)
    LogDupe,        // SingleBand
    uCTYDAT,        (* CTY.ctyCountryMode -- which country list CTY.DAT
                      resolves against, set by the CONTEST arm *)
@@ -357,14 +359,19 @@ begin
         THE ONLY COPY NOW, AND IT MUST STAY (M10 S2). The DX MULTIPLIER arm
         that repeated these lines retired with the setting; this one is a
         contest SET-UP rule -- the class's DX multiplier, as FoundContest just
-        resolved it into ActiveDXMult, chooses the country list -- and it
-        moves into the session object at M10 S9 (plan F5). *)
-      if ActiveDXMult in [ARRLDXCCWithNoUSAOrCanada,
-                          ARRLDXCCWithNoARRLSections,
-                          ARRLDXCCWithNoUSACanadaKH6OrKL7,
-                          ARRLDXCCWithNoIOrIS0,
-                          ARRLDXCCWithNoJT,
-                          ARRLDXCC] then
+        resolved it into the session, chooses the country list (plan F5).
+
+        IT READS THE SESSION AFTER SET-UP HAS WRITTEN IT (M10 S9d, checked):
+        FoundContest's only live caller is the line above -- LOGMENU's
+        call is in a unit nothing links -- and both of its DX writes
+        (ApplyContestTraits, then ApplySessionDefaults) are inside it. So
+        this sees the resolved kind, as it saw the global before. *)
+      if ContestSession.DXMult in [ARRLDXCCWithNoUSAOrCanada,
+                                   ARRLDXCCWithNoARRLSections,
+                                   ARRLDXCCWithNoUSACanadaKH6OrKL7,
+                                   ARRLDXCCWithNoIOrIS0,
+                                   ARRLDXCCWithNoJT,
+                                   ARRLDXCC] then
          begin
          CTY.ctyCountryMode := ARRLCountryMode;
          end

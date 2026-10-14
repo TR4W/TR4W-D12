@@ -3567,6 +3567,10 @@ and the tables, not the kind enums.
 
 **S9c DONE 2026-10-14:** the session holds `ZoneMult` (was `LOGWIND.ActiveZoneMult`, 19 -> 0), and **F4 is decided for the session**: `postunit.ZoneSentForThisContest` asks `ContestSession.ZoneMult`, as the ADIF CQZ/ITUZ block does -- no output changes, because the only zone kind a contest states over its trait (JIDX, JA station: `CQZones` over `NoZoneMults`) never reaches its ITUZones test; `logddx.pas` is found to be compiled by nothing (F14) (plan S9b/S9c).
 
+**S9d DONE 2026-10-14:** the session holds `DXMult` (was `VC.ActiveDXMult`, 19 code-only occurrences outside the uncompiled `logddx.pas` -> 0; the declaration itself is deleted from `VC`). **F5 is kept, repointed and checked for order:** the CONTEST setting's effect derives `CTY.ctyCountryMode` from `ContestSession.DXMult` straight after `FoundContest` returns -- its only live caller, since `LOGMENU`'s is in a unit nothing links -- so it reads the kind set-up just resolved, as it read the global; no pre-existing ordering defect. ARRL 10 pins why a reader may not ask the class -- trait `ARRLDXCCWithNoUSACanadaKH6OrKL7`, runs `ARRLDXCCWithNoARRLSections` (plan S9d).
+
+**S9e DONE 2026-10-14:** the session holds `DomesticMult` (was `LOGDOM.ActiveDomesticMult`, 38 -> 0 outside `logddx.pas`); **F8 closed** -- `logdom.DomQTHInit`, a runtime writer of the global with no caller anywhere in `tr4w/`, is deleted with the D7 initialization block that once called it. `uContestFactory` and `uWSJTX` no longer link `LogDom`, which they used for that global alone. OK/OM DX pins the session -- trait `NoDomesticMults`, a W station runs `DomesticFile` (plan S9e).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

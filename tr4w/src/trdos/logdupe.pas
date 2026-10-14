@@ -215,8 +215,10 @@ var
   InitialExDupes                        : integer;
 
   tAllowDupeQSOs                        : boolean = False;
-  // Issue #1034: ActiveDXMult moved to VC.pas (light home) so uMults can read it
-  // without depending on LogDupe. All users resolve it via VC (universally used).
+  (* ActiveDXMult MOVED -- Issue #1034 took it from here to VC so uMults
+    could read it without LogDupe's cone; M10 S9d (2026-10-14) took it to
+    uContestSession.ContestSession.DXMult, as light (a leaf over VC),
+    written only by FCONTEST's set-up path. *)
   (* ActivePrefixMult MOVED -- M10 S9b, 2026-10-14. It is
     uContestSession.ContestSession.PrefixMult, written only by FCONTEST's
     set-up path. *)
@@ -650,14 +652,14 @@ procedure GetDXQTH(var RXData: ContestExchange);
 begin
   if not Settings.Contest.CountDomesticCountries then
      begin
-     if ActiveDomesticMult = WYSIWYGDomestic then
+     if ContestSession.DomesticMult = WYSIWYGDomestic then
        if RXData.DomesticQTH <> '' then Exit;
 
      if DomesticCountryCall(RXData.Callsign) then Exit;
      end;
 
 //R3DSS/E9
-  case ActiveDXMult of
+  case ContestSession.DXMult of
 
 //    NoCountDXMults:      RXData.DXQTH := RXData.QTH.CountryID; { 6.60 }
 
@@ -1272,7 +1274,7 @@ begin
   if (RXData.DomMultQTH <> '') and DoingDomesticMults and
      ContestCountsMultiplier(contestRules, RXData, rmDomestic) then
      begin
-     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ActiveDomesticMult);
+     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ContestSession.DomesticMult);
      end;
 
   if (RXData.DXQTH <> '') and DoingDXMults and
