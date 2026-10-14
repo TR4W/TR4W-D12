@@ -193,8 +193,13 @@ def found_contest_arms(dump, contests, registered):
    found = [i for i, (t, ln) in enumerate(toks)
             if t.upper() == "CASE" and fs.routine.get(ln, "").upper() == "FOUNDCONTEST"
             and i + 2 < len(toks) and toks[i + 1][0].upper() == "CONTEST" and toks[i + 2][0].upper() == "OF"]
+   # NONE IS THE END STATE: the last arm (the UA4W Championship's) became its
+   # class's DescribeSession on 2026-10-14 and the `case` was deleted. More
+   # than one would mean somebody has started a second, which is an error.
+   if len(found) == 0:
+      return None, [], []
    if len(found) != 1:
-      raise SystemExit(f"{FOUNDCONTEST_FILE}: expected ONE `case Contest of` in FoundContest, found {len(found)}")
+      raise SystemExit(f"{FOUNDCONTEST_FILE}: expected at most ONE `case Contest of` in FoundContest, found {len(found)}")
    start = found[0]
    case_line = toks[start][1]
    case = pascal.walk_case(toks, start)

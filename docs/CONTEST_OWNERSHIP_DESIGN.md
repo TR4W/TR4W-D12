@@ -69,14 +69,14 @@ lives in a helper or in the format's own unit.
 | the bands it uses (an off-band QSO is logged, scores 0, earns no multiplier) | the class; base says every band | `UsesBand` (**existing**, §7.4) |
 | identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity`. An ADIF id two contests share (RSGB-ROLO) is told apart by the record's MODE once the record is read (M7b batch 2, §8.2k) | existing properties (**existing**); `RunsInMode` (M7b batch 2) |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
-| exchange parsing and validation | **the class, for every contest** (M5b, done 2026-10-02): `logstuff.ProcessExchange` asks it after the contest-blind gate; the base parses the session's shape through the engine's `ParseExchangeShape`, handed in as data. The UA4W Championship's rule stays named in LOGSTUFF (§8.2g) | `ParseReceivedExchange`, `MayBeACallsign`, `InitialExchangeFromCall` (**existing**), plus the validators |
+| exchange parsing and validation | **the class, for every contest** (M5b, done 2026-10-02): `logstuff.ProcessExchange` asks it after the contest-blind gate; the base parses the session's shape through the engine's `ParseExchangeShape`, handed in as data. The UA4W Championship's rule, held in LOGSTUFF at M5b (§8.2g), is its class's since 2026-10-14 (§8.2p) | `ParseReceivedExchange`, `MayBeACallsign`, `InitialExchangeFromCall` (**existing**), plus the validators |
 | ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. ARRL 160 left PostUnit's tail at M7b (§8.2j) and POTA, the last contest named there, when it gained its class (§8.2o) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `EmitADIFExchangeFields` (POTA, §8.2o), `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
 | ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. ARRL 160's arm moved to its class at M7b (§8.2j) and POTA's at §8.2o, which deleted `MainUnit.ApplyClasslessADIFImport` | `ApplyADIFImport` (**existing**, §3.2) |
 | Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; the contest-specific header lines and the mode column: **the class** (M9a, §8.2m); the general header: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloContestName`, `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag`, `CabrilloModeString` (**existing**, M9a) |
-| session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` keeps only the UA4W Championship's arm, classless on purpose (POTA's became its `DescribeSession`, §8.2o) | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
-| total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
-| multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz still reads the sheet in its scoring (Q33) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); the multiplier KEY at M10 |
-| summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest keeps the arms of RSGB 1.8 and the UA4W Championship (POTA's moved, §8.2o); POTA's park menu rows are `OffersParkTools` | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
+| session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` is gone: POTA's arm became its `DescribeSession` (§8.2o) and the UA4W Championship's, the last, its own (§8.2p) | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
+| total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`, and names no contest: RSGB 1.8 MHz's "times one", held there at M6 (§8.2h), is its `CombineWithMultipliers` (§8.2p) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
+| multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz's scoring ASKS the sheet, read-only, through the station context (7.13, §8.2p) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); `TStationContext.IsNewMultiplierAnywhere` (**existing**, §8.2p); the multiplier KEY at M10 |
+| summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest names no contest (POTA's arms moved at §8.2o, RSGB 1.8's and the UA4W Championship's at §8.2p, and `ClasslessPrompts` is deleted); POTA's park menu rows are `OffersParkTools` | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
 | the New Contest drop-down's name and place, call entry's contest status, the ten-date warning, WARC band stepping, the FOC# log column, a frequency warning | **the class, as data the UI renders** (M9b, done 2026-10-02, §8.2n); the off-time minimum stays named (Q60) | `DisplayName`, `IsActive`, `ShowsContestStatus`, `MaximumContestDates`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber`, `CallEntryFrequencyWarning` (**existing**, M9b) |
 
 The seam names on the right are the generator's
@@ -431,7 +431,7 @@ final score = contest.FinalScore(totals, view)
 |---|---|
 | ARRL Field Day (points only); Winter Field Day (band-mode mults x points x power factor) | `CombineWithMultipliers` of each |
 | WAE weighted mults; Cup RF / ALRS / RF Championship / Ukraine Championship / OZHCR `points + N x mults`; Ural Cup | `CombineWithMultipliers` of each. **Nine of these contests had no class** and gained one (§8.2h) |
-| RSGB 1.8 MHz "times one" | **stays named in `TotalScore`, with its reason** (Q33): its per-QSO arm reads the multiplier sheet, which no class can be handed |
+| RSGB 1.8 MHz "times one" | ~~stays named in `TotalScore`~~ -- `CombineWithMultipliers` of RSGB 1.8, since 2026-10-14 (Q33 ruled; §8.2p) |
 | FISTS "mults don't work" short-circuit | **the template** -- it keys on the session's EXCHANGE, not on a contest |
 | Missouri W0MA/K0GQ +100 each | `BonusStations` of Missouri, counted over the whole log |
 | Missouri peak hour | `TalliesLiveQSO` + Missouri's `BonusPoints` -- **unchanged, including its defect** (Q32) |
@@ -752,7 +752,9 @@ display question answered from stage 3's view, not a reason to move the bonus.
 If a contest ever genuinely needs history in one QSO's points, widen stage 1 then;
 ~~none does today~~ -- **one does, measured at M6**: RSGB 1.8 MHz's arm pays 7
 for a contact that is a new multiplier on the sheet (`mo.isdmmult` /
-`mo.isdxmult`). It is the reason that contest has no class yet (Q33, §8.2h).
+`mo.isdxmult`). ~~It is the reason that contest has no class yet~~ -- NY4I ruled
+(7.13) that stage 1 may ASK the sheet read-only, and the class was built on
+2026-10-14 (§8.2p).
 
 **Stage 3 LANDED at M6 (2026-10-02)** -- `FinalScore` = `CombineScore` +
 `BonusPoints`, the contest handed a `TScoreTotals` and a read-only
@@ -986,7 +988,8 @@ chosen at contest selection (New Contest dialog), stored with the CONTEST (its l
 written to `tr4w.json`. This is also where 7.11's SentState belongs. UA4W reads MY CQ ZONE from
 the station context through this resolver.
 
-**LANDED 2026-10-13.** No contest gained a class. UA4W is not built here.
+**LANDED 2026-10-13.** No contest gained a class. UA4W is not built here --
+it was built on 2026-10-14 (§8.2p).
 
 **Measured first.** Every station fact the New Contest dialog can ask for
 (`TNewContestField`) was a `TMySettings` property. `TMySettings` is not
@@ -1067,7 +1070,13 @@ editors and the settings unit):
 `MyZoneValid` and `MyZoneText` already existed and were read from MY ZONE,
 which is the CQ zone. They now read `ResolvedZone`, and their declaration
 says they are MY CQ ZONE, resolved. A second field would have been a second
-copy of one fact. UA4W can read `aStation.MyZone`.
+copy of one fact. ~~UA4W can read `aStation.MyZone`.~~ **WRONG, measured
+2026-10-14 (§8.2p):** an UNSTATED MY ZONE is derived in the CONTEST'S zone
+mode, so in an ITU-zone contest -- the UA4W Championship is one -- `MyZone` is
+the ITU zone (the matrix's K0AAA, VE3AAA and DL1AAA carry 7, 4 and 28 there),
+and IARU relies on exactly that. UA4W reads the `MyCQZone` service instead:
+the stated zone, else MY CALL's CQ zone. Q69 asks whether MY ZONE should
+always be the CQ zone.
 
 **DECIDED: 7.11's SentState is NOT folded into the override. It is layered
 on top of it.** `SentMyState` is the contest's `SentState` when set-up
@@ -1125,6 +1134,9 @@ where prefix is a multiplier, the prior QSOs are always relevant."* 7.7's "stage
 function of the QSO and the station" is CORRECTED: a contest whose points depend on multiplier
 status (RSGB 1.8 MHz: 7 for a new multiplier) is handed a READ-ONLY "is this a new multiplier"
 answer from the shared sheet. A scoring rule still never writes the sheet or reads the log.
+
+**LANDED 2026-10-14 (§8.2p):** `TStationContext.IsNewMultiplierAnywhere`, a read-only
+SERVICE (the shape of `IsDomesticCountryCall`), and RSGB 1.8 MHz's class reads it.
 
 ### 7.14 RULED (NY4I, 2026-10-13): IN7QPNE is a composite; Delaware gets its own contest
 
@@ -1190,11 +1202,12 @@ Each is behaviour-preserving unless marked.
 | **M5b** | **DONE 2026-10-02 (§8.2g).** **Exchange parse.** `ParseReceivedExchange` per contest, the base reaching the engine's shape parsers through the session as data; the matrix gained a `parse` section first. Seven contests gained classes; D1/D2 deleted; NY4I's 7.10 refusals; Field Day DX export and import (Q20, Q25); `nc_cty.dom` to the sponsor's counties (Q14). UA4W stays named in LOGSTUFF, with its reason | the matrix's `parse` section; `uTestContestParse`; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **DONE 2026-10-02 (§8.2h).** **Total score.** The matrix gained a `totals` section first. `TScoreTotals`, the read-only view, `FinalScore` = `CombineScore` + `BonusPoints`; `TotalScore`'s arms deleted but RSGB 1.8's (Q33); nine contests gained classes; Missouri moved with its live tally preserved (Q32); the NC sweep, the Salmon Run W7DX bonus (Q5) and Idaho's dormant county implemented | corpus `CLAIMED-SCORE`; the matrix's `totals` section; `uTestContestTotals` |
 | **M7a** | **DONE 2026-10-02 (§8.2i).** **Session arms of the registered contests.** `DescribeSession` filling a `TSessionDefaults`, one applier (`FCONTEST.ApplySessionDefaults`); all 55 arms naming a registered contest moved and were deleted; LogCfg's CQ-exchange defaults became `CQExchangeDefault`; D8 resolved by stating both branches; Winter Field Day's DX multiplier row and class made the effective value. No contest gained a class | the matrix (185 identical, no re-freeze); corpus; `uTestContestSession` |
-| **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6 -- ruled a class 2026-10-13, §8.2o), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE (NY4I) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
+| **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6 -- ruled a class 2026-10-13, §8.2o), UA4W (Q28) and RSGB 1.8 (Q33) -- both ruled and built 2026-10-14, §8.2p -- and IN7QPNE (NY4I; a composite, 7.14) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
 | **M8** | **DONE 2026-10-02 (§8.2l).** **Multipliers and dupes**, as contest-declared rules over the shared sheet (§7.7 stage 2). `CountsAsMultiplier` and `DomesticMultiplierFromCall`; the five `SetMultFlags` rules and the four hint arms moved; YB DX's no-op deleted with ParametersOkay's copy of `SetPrefix`; the off-band dupe gap and need-multiplier hint fixed (§7.4). Multiplier-KIND arms stay in the sheet until Q4; RSGB 1.8 still classless (Q33) | corpus `CLAIMED-SCORE`; the matrix; `uTestContestMultipliers`, `uTestOffBandCredit` |
 | **M9a** | **DONE 2026-10-02 (§8.2m).** **What the display and the reports show**, as data the UI asks for: the New Contest prompts, the totals window, the summary sheet, the hour report, the Cabrillo header lines and mode column, HamScore's canonical exchanges, the score-posting labels, WRTC's operating aids and the QTC menu; design 7.11 (MY STATE never written by set-up); every class states its display name, Cabrillo name and ADIF id | the matrix (only the 7.11 setting lines move); corpus; `uTestContestDisplay`; `BENCH_QUEUE.md` |
 | **M9b** | **DONE 2026-10-02 (§8.2n).** **The UI itself.** The New Contest drop-down shows `DisplayName`, active contests first and inactive ones marked (`IsActive`; SA Sprint and Locust); CATEGORY-POWER is one value and a change rescores (7.6); General QSO's display rules, the FOC log columns and WAG's call-window warning are the contest's. The off-time minimum stays named -- its two readers disagree (Q60) | `uTestContestUI`; the matrix and corpus unchanged; `BENCH_QUEUE.md` (no automated gate sees the UI) |
 | **Q6 / POTA** | **DONE 2026-10-13 (§8.2o).** POTA gains its class on NY4I's ruling: its FoundContest arm, its ADIF import, its three ADIF tail tests, uADIF's CONTEST_ID test, the New Contest prompts and the park menu rows move; `ApplyClasslessADIFImport` is deleted; three TRDOS helpers are lifted as leaves. Four contests are classless on purpose now | the matrix (only `contest.class =` moves); corpus; `uTestContestPOTA`; `BENCH_QUEUE.md` |
+| **Q28 / Q33** | **DONE 2026-10-14 (§8.2p).** The UA4W Championship and RSGB 1.8 MHz gain classes on NY4I's rulings (7.12, 7.13): two read-only station-context SERVICES, `MyCQZone` and `IsNewMultiplierAnywhere`; FoundContest's and LogCfg's last `case Contest of` deleted, LOGSTUFF's UA4W parse rule, LOGEDIT's "times one" and uNewContest's `ClasslessPrompts` moved. Only IN7QPNE (7.14) and DUMMYCONTEST stay classless | the matrix (only `contest.class =` expected to move); `uTestContestFactory`, `uTestContestTotals`, `uTestContestParse` |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
 
 **Export comes before import and parse** because export is the only half the
@@ -1914,7 +1927,8 @@ but a class is the contest's scorer too, and the UA4W arm scores by
 `ctyGetCQZone(MY CALL)` -- a CTY lookup that swaps the global zone list while
 it runs, which no class can be handed. The same reason ARRL 160 kept its arms
 at M4 and M5a. It moves with a station-context answer for the CQ zone of MY
-CALL (Q28).
+CALL (Q28). **Moved 2026-10-14 (§8.2p)**, with that answer as the
+`TStationContext.MyCQZone` service.
 
 **NY4I's RULINGS (7.10), and the evidence they rest on:**
 
@@ -3142,6 +3156,99 @@ showed *"POTA"* (Q64).
 
 **Questions this raised -- NY4I's:** Q62-Q64 (§9).
 
+### 8.2p The UA4W Championship and RSGB 1.8 MHz -- what it covered (2026-10-14; Q28, Q33)
+
+The last two contests held classless on purpose gained classes, each on
+`TContestBase` like the M7b siblings: `TContestUA4WChampionship`
+(`uContestUA4WChampionship`) and `TContestRSGB18` (`uContestRSGB18`). Each
+states its whole row as literals (`Test_MovedRowValuesStillMatchTheArray`) and
+its identity in the leaf (`Test_EveryClassStatesItsIdentity`; both display
+names are the enum's spelling, `R4W-CHAMP` and `RSGB-160`, and joined that
+ratchet). **Classless now: IN7QPNE (a composite, 7.14 -- the next step) and
+DUMMYCONTEST.**
+
+**EVERY SITE, MEASURED FIRST** (`rg -i -w` for both enum members over
+`tr4w/src`) and classified:
+
+| site | contest | kind | where it went |
+|---|---|---|---|
+| LOGSTUFF's `UA4WMethod` arm | UA4W | rule (scoring) | `CalculateQSOPoints`, transcribed but for the zone's SOURCE (below). The arm stays for `QSO POINT METHOD` until M10 (7.15) |
+| `FCONTEST.FoundContest`'s `UA4WCHAMPIONSHIP:` arm | UA4W | rule (set-up) | `DescribeSession` -- 15-minute minitours. **The `case` is deleted**: it was the last arm |
+| `LogCfg.tSetupExchangeNumbers`'s `UA4WCHAMPIONSHIP:` | UA4W | rule (set-up) | `CQExchangeDefault` -- `' # '` + the state sent. **The `case` is deleted**: it was the last label |
+| `LOGSTUFF.ProcessRSTAndGridSquareOrRDAExchange`'s `Contest = UA4WCHAMPIONSHIP` | UA4W | rule (parse) | `ParseReceivedExchange`: the base's parse, then, under the shape it was written for, a found QTH is the domestic QTH |
+| uNewContest's `ClasslessPrompts`, `UA4WCHAMPIONSHIP:` | UA4W | rule (UI as data) | `DescribeNewContestPrompts` -- the RDA-or-grid comment on MY QTH, the literal as it stood |
+| LOGSTUFF's `RSGB160Method` arm | RSGB 1.8 | rule (scoring) | `CalculateQSOPoints`, asking the sheet through `IsNewMultiplierAnywhere`. The arm stays for `QSO POINT METHOD` until M10 |
+| `LOGEDIT.TotalScore`'s `Contest = RSGB18` | RSGB 1.8 | rule (final score) | `CombineWithMultipliers` = the points. `TotalScore` names no contest now |
+| uNewContest's `ClasslessPrompts`, both `RSGB18:` arms | RSGB 1.8 | rule (UI as data) | `DescribeNewContestPrompts` -- the UK box, then the district. **`ClasslessPrompts` is deleted** |
+| `MainUnit`'s `ERMAK_BIT` read of `ContestsBooleanArray` | UA4W (the only ERMAK row) | trait, not a name test | **STAYS** -- a row flag read by the Cabrillo menu, no seam yet |
+
+**THE ZONE: `MyZone` IS NOT THE CQ ZONE IN AN ITU-ZONE CONTEST -- MEASURED.**
+The legacy arm asked `ctyGetCQZone(MY CALL)`; 7.12 said a class could read
+`TStationContext.MyZone` instead. It cannot, here. An UNSTATED MY ZONE is
+derived by `FCONTEST.RecalculateMyCountryContinentAndZoneNew` AFTER
+`ApplyContestTraits` has set CTY's zone mode from the contest's row, and the UA4W
+Championship's row is ITU (`ciCQZoneMode0`). The frozen matrix shows it: K0AAA,
+VE3AAA and DL1AAA carry MY ZONE **7, 4 and 28** -- their ITU zones -- where their
+CQ zones are 4, 4 and 14. The rule's 18 and 19 are CQ zones (Siberia), so a
+class reading `MyZone` would never pay the bonus to an unstated Siberian
+station. `MyZone` cannot simply become the CQ zone either: IARU compares it with
+the worked ITU zone.
+
+**DECIDED (end state per 7.12): a SERVICE, `TStationContext.MyCQZone`** --
+the STATED zone (the contest's override, or the station's typed MY ZONE,
+`ZoneWasSet`), else the CQ zone CTY.DAT gives MY CALL. Supplied by
+`uContestFactory.EngineMyCQZone`; asked only on the one branch that needs it, as
+the arm did, so the CTY swap is no more frequent than before. **One deliberate
+difference from the arm:** a STATED zone now wins (NY4I's laptop in CQ zone 3);
+the arm ignored it. With nothing stated the two agree exactly. Q69 asks whether
+MY ZONE itself should always be the CQ zone; Q70 asks NY4I to confirm the
+difference.
+
+**THE SHEET: `TStationContext.IsNewMultiplierAnywhere`** (7.13) -- a read-only
+SERVICE, the shape of `IsDomesticCountryCall`. `nmkDomestic` asks
+`mo.IsDmMult(DomMultQTH, AllBands, Both, ActiveDomesticMult)`, `nmkDX` asks
+`mo.IsDXMult(QTH.Country, AllBands, Both)` -- the arm's own calls, transcribed
+exactly: the sheet's all-band, both-mode row, ignoring the session's
+by-band/by-mode keys. The class keeps the arm's order and its empty-QTH test.
+`nil` is "no sheet": nothing is new, 2 points.
+
+**THE FINAL SCORE.** `CombineScore` is a non-virtual template, so the
+"times one" is `CombineWithMultipliers` = `ContestPoints`. Its two earlier
+branches (no multipliers counted; the FISTS exchange) also return
+`ContestPoints`, and RSGB 1.8 declares no bonus station, so `FinalScore` equals
+the old arm in every case.
+
+**EXPECTED MATRIX EFFECT** (stated before the gates were run; the caller runs
+them): **only `contest.class =` moves**, in all three variants of each record.
+UA4W: none of the 17 synthetic QSOs has a `4W` call and no variant's MY CALL is
+in `4W`, so the zone branch is never reached; the CQ exchange, minitours,
+prompts and parse are value-for-value. RSGB 1.8: every QSO is scored against
+the same sheet through the same entry point and still pays 7; the totals are the
+points either way. A re-freeze for those two contests carries that reason.
+
+**TESTS.** `uTestContestFactory`: `Test_UA4WAsksForMyCQZone` (every branch;
+`MyZone` set to 18 with the service answering 16 pays no bonus; the service is
+asked only on its branch; no service is zone 0) and
+`Test_RSGB18AsksTheSheetReadOnly` (domestic first, then DX; no domestic QTH
+skips the domestic question; a QSO that is NOT a new multiplier scores 2; no
+service scores 2); the classless ratchet is now DUMMYCONTEST and IN7QPNE.
+`uTestContestTotals.Test_RSGB18ScoresItsPointsAlone`;
+`uTestContestParse.Test_UA4WQTHIsTheDomesticQTH`; `uTestContestDisplay`
+gained both contests' prompts and both enum-spelled names;
+`uTestContestImport.Test_ClasslessDefault` asks a plain `TContestBase` now (it
+borrowed RSGB 1.8 while that was classless). `EngineMyCQZone` and
+`EngineIsNewMultiplierAnywhere` read the program's globals, so they are
+reachable from the matrix only, not from the unit tests.
+
+**RATCHETS.** `Lint-ContestNameTests` 14 -> 7: fcontest 1 -> 0, logcfg 1 -> 0,
+unewcontest 3 -> 0 (all unlisted), logstuff 2 -> 1, logedit 5 -> 4; floor
+11 -> 5. Narrowing 1271 and range 4 on a full build, both unchanged. The
+contest-rules inventory's scanner accepts a `FoundContest` with no
+`case Contest of` (the end state) and its SHAPE3 `'TRC'` pattern follows 7.12's
+`ResolvedState` (it had stopped matching at c3986877).
+
+**Questions this raised -- NY4I's:** Q69-Q71 (§9).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -3446,6 +3553,27 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     `DisplayName` is its human name -- where the classless identity showed
     "POTA". Keep it, or should POTA be the exception whose drop-down line is
     its short name?
+
+- **Q69-Q71** (the UA4W Championship's and RSGB 1.8's classes, §8.2p):
+  - **Q69** MY ZONE, when nobody states it, is derived in the CONTEST'S zone
+    mode, so in an ITU-zone contest it is the ITU zone (K0AAA carries 7, not
+    4, in the UA4W Championship). 7.12 calls it MY CQ ZONE, and IARU relies on
+    the ITU reading. Should MY ZONE always be the CQ zone, with ITU-zone
+    contests reading MY ITU ZONE? That changes IARU's set-up and messages for
+    an unstated zone, so it would be its own step. Until then the UA4W class
+    asks `TStationContext.MyCQZone`.
+  - **Q70** The UA4W Championship's 18-19 bonus now uses a STATED zone first
+    (your 7.12 ruling), where the legacy arm always used MY CALL's CQ zone.
+    With no zone stated the two agree. A zone typed for this contest is taken
+    as a CQ zone, as MY ZONE's command says. Confirm?
+  - **Q71** RSGB 1.8 MHz is a 160 m contest, but its row and class credit every
+    band (`UsesBand` is the base's), and its new-multiplier question looks
+    across all bands and both modes, as the legacy arm did. Should the class
+    state `UsesBand` = 160 m only (an off-band QSO would then score 0 and earn
+    no multiplier, 7.4)? And the UA4W Championship's prompt is a literal that
+    no catalogue translates and that differs from `TC_ENTERYOURRDAIDORGRID`
+    ("for UA1A stations" against "for Russian stations"); which wording, and
+    should it become a translatable string?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

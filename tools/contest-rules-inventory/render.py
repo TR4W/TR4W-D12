@@ -347,8 +347,12 @@ class Renderer:
       contests = {c for a in arms for c in a["labels"]}
       outside = sorted([r for r in i.rows if r["routine"].upper() == "FOUNDCONTEST" and r["shape"] == 1
                         and not r["note"].startswith("arm of")], key=lambda r: r["line"])
+      if i.fc_case_line is None:
+         where_case = "deleted 2026-10-14, when its last arm moved"
+      else:
+         where_case = f"`fcontest.pas:{i.fc_case_line}`"
       out = [
-         f"## 5. Setup -- `FoundContest`'s `case Contest of` (`fcontest.pas:{i.fc_case_line}`)",
+         f"## 5. Setup -- `FoundContest`'s `case Contest of` ({where_case})",
          "",
          f"**{len(arms)} arms naming {len(contests)} contests; {len(contests & self.reg)} of those contests have a class**",
          "(`scan.found_contest_arms`). The arm is where a",

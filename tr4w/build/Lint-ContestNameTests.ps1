@@ -199,13 +199,18 @@ $CEILINGS = @{
    # EmitADIFExchangeFields and EmitADIFContestFields), uadif 1 -> 0 (the
    # CONTEST_ID test is WritesADIFContestId; unlisted now) and unewcontest
    # 5 -> 3 (DescribeNewContestPrompts).
+   #
+   # UA4W AND RSGB 1.8, 2026-10-14 -- both gain classes (design Q28, Q33):
+   # fcontest 1 -> 0 (FoundContest's last arm is the UA4W class's
+   # DescribeSession, and the `case` is gone), logcfg 1 -> 0 (its CQ exchange
+   # is CQExchangeDefault), logstuff 2 -> 1 (the RDA-or-grid parse rule is its
+   # ParseReceivedExchange), logedit 5 -> 4 (RSGB 1.8's "points times one" is
+   # its CombineWithMultipliers) and unewcontest 3 -> 0 (ClasslessPrompts is
+   # deleted; both contests' DescribeNewContestPrompts). All three unlisted.
    'mainunit.pas'          = 1
-   'trdos\fcontest.pas'    = 1
-   'trdos\logcfg.pas'      = 1
-   'trdos\logedit.pas'     = 5
-   'trdos\logstuff.pas'    = 2
+   'trdos\logedit.pas'     = 4
+   'trdos\logstuff.pas'    = 1
    'trdos\postunit.pas'    = 1
-   'unewcontest.pas'       = 3
 }
 
 # Roughly two thirds of the count at the time of writing, and far above what a
@@ -234,7 +239,11 @@ $CEILINGS = @{
 #
 # POTA, 2026-10-13: 18 -> 11. The total fell 23 -> 14 (9 tests moved into
 # TContestPOTA, ceilings above); 11 is again about 80% of it.
-$TOTAL_FLOOR  = 11
+#
+# UA4W and RSGB 1.8, 2026-10-14: 11 -> 5. The total fell 14 -> 7 (7 tests
+# moved into the two classes, ceilings above); 5 is about 80% of it, rounded
+# down.
+$TOTAL_FLOOR  = 5
 $MEMBER_FLOOR = 130
 
 # --------------------------------------------------------------------------

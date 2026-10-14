@@ -151,11 +151,10 @@ var
   TContestBase.DescribeNewContestPrompts, and this unit RENDERS what the
   contest says (docs/CONTEST_OWNERSHIP_DESIGN.md section 8.2m).
 
-  WHAT IS LEFT NAMING A CONTEST is the arms of the two contests that are
-  classless on purpose -- RSGB 1.8 MHz (Q33) and the UA4W Championship
-  (Q28) -- in ClasslessPrompts below; each goes when its contest gains a
-  class. POTA's two went to TContestPOTA when it gained one (2026-10-13,
-  design Q6). *)
+  NOTHING HERE NAMES A CONTEST. The last arms were the classless contests',
+  in a ClasslessPrompts that is deleted: POTA's went to TContestPOTA
+  (2026-10-13, design Q6), RSGB 1.8 MHz's and the UA4W Championship's to
+  their classes (2026-10-14, design Q33 and Q28). *)
 
 (* ONE STEP OF A CONTEST'S PROMPTS, ON THE FORM -- the five presentation
   helpers this unit always had, chosen by the step's kind. *)
@@ -181,39 +180,9 @@ begin
    end;
 end;
 
-(* THE CLASSLESS CONTESTS' ARMS -- see the note above. aTicked says which of
-  the two moments is asking: the "I am in" box ticked, or the contest chosen.
-  A classless contest's identity (a plain TContestBase) has already been
-  asked, so a classless state party has its county-or-state head. *)
-procedure ClasslessPrompts(aTicked: boolean);
-begin
-   if aTicked then
-      begin
-      case SelectedContest of
-         RSGB18:
-            begin
-            SetCommentAndEnableEditControl(TC_ENTERYOURDISTRICTABBREVIATION, ncfMyState);
-            end;
-      end;
-      end
-   else
-      begin
-      case SelectedContest of
-         RSGB18:
-            begin
-            DisplayCheckBox(TC_UK);
-            end;
-         UA4WCHAMPIONSHIP:
-            begin
-            SetCommentAndEnableEditControl('Enter your RDA (for Russian stations) or four digit grid square:', ncfMyQTH);
-            end;
-      end;
-      end;
-end;
-
 (* WHAT THE CHOSEN CONTEST ASKS FOR AT ONE OF THE TWO MOMENTS -- the
-  contest's own steps, in its order, then a classless contest's arm. The
-  prompts object is the contest's answer; it is freed here. *)
+  contest's own steps, in its order. The prompts object is the contest's
+  answer; it is freed here. *)
 procedure ShowContestPrompts(aTicked: boolean);
 var
    prompts: TNewContestPrompts;
@@ -239,7 +208,6 @@ begin
    finally
       prompts.Free;
    end;
-   ClasslessPrompts(aTicked);
 end;
 
 (* The 'I am in <state>' box was ticked or cleared. *)

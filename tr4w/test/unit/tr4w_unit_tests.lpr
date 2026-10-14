@@ -446,6 +446,8 @@ uses
    uContestSST in '..\..\src\contestFactory\uContestSST.pas',
    uContestRTC in '..\..\src\contestFactory\uContestRTC.pas',
    uContestPOTA in '..\..\src\contestFactory\uContestPOTA.pas',
+   uContestUA4WChampionship in '..\..\src\contestFactory\uContestUA4WChampionship.pas',
+   uContestRSGB18 in '..\..\src\contestFactory\uContestRSGB18.pas',
    uRFChampionshipPoints in '..\..\src\uRFChampionshipPoints.pas',
    uExchangeTokens in '..\..\src\uExchangeTokens.pas',
    uTestContestFactory in 'uTestContestFactory.pas',

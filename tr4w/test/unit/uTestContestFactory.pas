@@ -119,6 +119,8 @@ type
       procedure Test_PortableStationIsTheLiftedHelper;
       procedure Test_RoPoCoRunningsAreToldApartByMode;
       procedure Test_M7bBatch2ScoringEdges;
+      procedure Test_UA4WAsksForMyCQZone;
+      procedure Test_RSGB18AsksTheSheetReadOnly;
    public
       procedure RunAllTests; override;
    end;
@@ -1824,6 +1826,13 @@ begin
       spelling; the friendly name is its display name. *)
    CheckAgainstArray(POTA, 'POTA');
 
+   (* THE UA4W CHAMPIONSHIP AND RSGB 1.8 MHz, 2026-10-14 (design Q28, Q33):
+      blank ADIFName, CABName and FriendlyName, each the enum's spelling --
+      'R4W-CHAMP' and 'RSGB-160', not the identifier. UA4W states an Email,
+      RSGB 1.8 a DF ('rsgb'). *)
+   CheckAgainstArray(UA4WCHAMPIONSHIP, 'UA4W Championship');
+   CheckAgainstArray(RSGB18, 'RSGB 1.8 MHz');
+
    (* THE FOUR BESPOKE-SCORING PARTIES MOVED ON 2026-09-29. Two of their rows
       hold a trap the others do not. British Columbia has a BLANK CABName, so
       its Cabrillo name is the enum's own spelling BCQP and not the empty
@@ -3466,12 +3475,17 @@ const
       MAKROTHEN, WWIH, RADIOYOC, OKOMSSB, MWC, IRTS, EUDX, YOTA, SST, RTC);
 
    (* M7b ENDED WITH FIVE STILL CLASSLESS, each for a recorded reason. POTA
-      (Q6) left the list on 2026-10-13, when NY4I ruled it a class -- it sits
-      on TContestBase like the forty above, and is checked with them below.
-      Four remain: the UA4W Championship (Q28), RSGB 1.8 MHz (Q33), IN7QPNE
-      (deferred by NY4I) and DUMMYCONTEST, which is "no contest". *)
-   STILL_CLASSLESS: array[0..3] of ContestType = (
-      DUMMYCONTEST, UA4WCHAMPIONSHIP, RSGB18, IN7QPNE);
+      (Q6) left the list on 2026-10-13, when NY4I ruled it a class; the UA4W
+      Championship (Q28) and RSGB 1.8 MHz (Q33) left it on 2026-10-14. Each
+      sits on TContestBase like the forty above, and is checked below. Two
+      remain: IN7QPNE, a composite of four parties (design 7.14, the next
+      step), and DUMMYCONTEST, which is "no contest". *)
+   STILL_CLASSLESS: array[0..1] of ContestType = (
+      DUMMYCONTEST, IN7QPNE);
+
+   (* THE CONTESTS THAT LEFT THAT LIST, each on TContestBase directly. *)
+   LEFT_CLASSLESS: array[0..2] of ContestType = (
+      POTA, UA4WCHAMPIONSHIP, RSGB18);
 var
    i: integer;
    c: ContestType;
@@ -3513,17 +3527,24 @@ begin
          inc(classless);
          end;
       end;
-   CheckEquals(Length(STILL_CLASSLESS), classless, 'the classless contests are exactly those four');
+   CheckEquals(Length(STILL_CLASSLESS), classless, 'the classless contests are exactly those two');
 
-   (* POTA, ON THE BASE LIKE GENERAL QSO -- design section 6: no TActivityBase
-      until a second activity shows what is shared. *)
-   obj := MakeContest(POTA);
-   CheckTrue(obj <> nil, 'POTA has a registered class');
-   if obj <> nil then
+   (* POTA ON THE BASE LIKE GENERAL QSO -- design section 6: no TActivityBase
+      until a second activity shows what is shared. The UA4W Championship
+      and RSGB 1.8 MHz on the base too: neither is a family member. *)
+   for i := Low(LEFT_CLASSLESS) to High(LEFT_CLASSLESS) do
       begin
+      obj := MakeContest(LEFT_CLASSLESS[i]);
+      CheckTrue(obj <> nil, string(ContestTypeSA[LEFT_CLASSLESS[i]]) + ' has a registered class');
+      if obj = nil then
+         begin
+         Continue;
+         end;
       try
-         CheckTrue(obj.ClassParent = TContestBase, 'POTA sits on TContestBase directly');
-         CheckFalse(obj.IsUSQSOParty, 'POTA: P 0, not a US QSO party');
+         CheckTrue(obj.ClassParent = TContestBase,
+                   string(ContestTypeSA[LEFT_CLASSLESS[i]]) + ' sits on TContestBase directly');
+         CheckFalse(obj.IsUSQSOParty,
+                    string(ContestTypeSA[LEFT_CLASSLESS[i]]) + ': P 0, not a US QSO party');
       finally
          obj.Free;
          end;
@@ -3795,6 +3816,193 @@ begin
       end;
 end;
 
+(* ---------------------------------------------------------------------------
+   THE UA4W CHAMPIONSHIP AND RSGB 1.8 MHz (2026-10-14; design Q28, Q33)
+   --------------------------------------------------------------------------- *)
+
+var
+   GStubCQZone: integer;
+   GCQZoneAsked: integer;
+
+(* A STUB FOR MY CQ ZONE -- counts the questions, so a test can see the
+   service is asked only on the branch that needs it. *)
+function StubMyCQZone: integer;
+begin
+   inc(GCQZoneAsked);
+   Result := GStubCQZone;
+end;
+
+(* THE UA4W CHAMPIONSHIP SCORES BY MY CQ ZONE, ASKED THROUGH A SERVICE --
+   design 7.12. Its legacy arm asked CTY.DAT for MY CALL's CQ zone; the class
+   asks TStationContext.MyCQZone, and NEVER reads MyZone: in this ITU-zone
+   contest an unstated MY ZONE is the ITU zone. So MyZone is set to 18 here
+   with the service answering 16, and the bonus must NOT be paid. *)
+procedure TContestFactoryTests.Test_UA4WAsksForMyCQZone;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Score(const aCall: string; aBand: BandType; const aQTH: string): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := aBand;
+      qso.Mode := CW;
+      qso.Callsign := CallString(aCall);
+      qso.DomesticQTH := ShortString(aQTH);
+      qso.QSOPoints := 99;
+      obj.ScoreQSO(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_UA4WAsksForMyCQZone');
+   obj := MakeContest(UA4WCHAMPIONSHIP);
+   CheckTrue(obj <> nil, 'the UA4W Championship has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      (* A SIBERIAN STATION, CQ zone 18, working a 4W station. *)
+      FillChar(station, SizeOf(station), 0);
+      station.MyCall := 'UA9AAA';
+      station.MyState := 'NS';
+      station.MyCQZone := @StubMyCQZone;
+      GStubCQZone := 18;
+      GCQZoneAsked := 0;
+      obj.SetStation(station);
+      CheckEquals(10, Score('UA4WAA', Band80, 'UD'), 'CQ zone 18, a 4W station on 80: 10');
+      CheckEquals(20, Score('UA4WAA', Band160, 'UD'), 'CQ zone 18, a 4W station on 160: 20');
+      GStubCQZone := 19;
+      CheckEquals(20, Score('UA4WAA', Band160, 'UD'), 'CQ zone 19 too: 20');
+      CheckEquals(2, Score('UA4WAA', Band20, 'UD'), 'a 4W station on 20: 2');
+
+      (* NOT CQ zone 18 or 19 -- the service decides, not MyZone. *)
+      GStubCQZone := 16;
+      station.MyZone := 18;
+      station.MyZoneValid := True;
+      obj.SetStation(station);
+      CheckEquals(5, Score('UA4WAA', Band80, 'UD'), 'CQ zone 16 (MyZone 18 ignored), 4W on 80: 5');
+      CheckEquals(10, Score('UA4WAA', Band160, 'UD'), 'CQ zone 16, 4W on 160: 10');
+
+      (* THE SERVICE IS ASKED ONLY ON THE BRANCH THAT NEEDS IT. *)
+      GCQZoneAsked := 0;
+      CheckEquals(3, Score('UA3AAA', Band80, 'MO'), 'not 4W, another QTH, on 80: 3');
+      CheckEquals(5, Score('UA3AAA', Band160, 'MO'), 'not 4W, another QTH, on 160: 5');
+      CheckEquals(2, Score('UA4WAA', Band80, 'NS'), 'our own QTH: 2, whoever it is');
+      CheckEquals(0, GCQZoneAsked, 'no 4W station in another QTH: the zone is never asked');
+
+      (* NO SERVICE: zone 0, so no bonus. *)
+      station.MyCQZone := nil;
+      obj.SetStation(station);
+      CheckEquals(10, Score('UA4WAA', Band160, 'UD'), 'no service: zone 0, 4W on 160: 10');
+
+      (* A 4W STATION: 4 for another QTH on any band, 2 for its own. *)
+      station.MyCall := 'UA4WBB';
+      station.MyState := 'UD';
+      station.MyCQZone := @StubMyCQZone;
+      GStubCQZone := 18;
+      obj.SetStation(station);
+      CheckEquals(4, Score('UA3AAA', Band20, 'MO'), 'a 4W station, another QTH: 4');
+      CheckEquals(4, Score('UA4WAA', Band160, 'NS'), 'a 4W station, another QTH on 160: 4, not 20');
+      CheckEquals(2, Score('UA4WAA', Band160, 'UD'), 'a 4W station, its own QTH: 2');
+   finally
+      obj.Free;
+      end;
+end;
+
+var
+   GNewDomestic: string;
+   GNewDXCountry: integer;
+   GNewAsked: string;
+
+(* A STUB FOR THE SHEET'S READ-ONLY QUESTION -- one domestic QTH and one
+   country are unworked; everything else has been worked. Records the order
+   of the questions. *)
+function StubIsNewMultiplier(const aQso: ContestExchange;
+                             aKind: TNewMultiplierKind): boolean;
+begin
+   case aKind of
+      nmkDomestic:
+         begin
+         GNewAsked := GNewAsked + 'D';
+         Result := string(aQso.DomMultQTH) = GNewDomestic;
+         end;
+      nmkDX:
+         begin
+         GNewAsked := GNewAsked + 'X';
+         Result := aQso.QTH.Country = GNewDXCountry;
+         end;
+   else
+      begin
+      Result := False;
+      end;
+   end;
+end;
+
+(* RSGB 1.8 MHz PAYS 7 FOR A NEW MULTIPLIER AND 2 OTHERWISE -- design 7.13:
+   the sheet asked read-only, through TStationContext.IsNewMultiplierAnywhere.
+   A domestic multiplier is asked only when the QSO carries one; a QSO that is
+   NOT a new multiplier scores 2; no service scores 2. *)
+procedure TContestFactoryTests.Test_RSGB18AsksTheSheetReadOnly;
+var
+   obj: TContestBase;
+   station: TStationContext;
+
+   function Score(const aDomestic: string; aCountry: integer): integer;
+   var
+      qso: ContestExchange;
+   begin
+      FillChar(qso, SizeOf(qso), 0);
+      qso.Band := Band160;
+      qso.Mode := CW;
+      qso.Callsign := 'G3ABC';
+      qso.DomMultQTH := ShortString(aDomestic);
+      qso.QTH.Country := aCountry;
+      qso.QSOPoints := 99;
+      GNewAsked := '';
+      obj.ScoreQSO(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_RSGB18AsksTheSheetReadOnly');
+   obj := MakeContest(RSGB18);
+   CheckTrue(obj <> nil, 'RSGB 1.8 has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      FillChar(station, SizeOf(station), 0);
+      station.MyCall := 'G4AAA';
+      station.IsNewMultiplierAnywhere := @StubIsNewMultiplier;
+      obj.SetStation(station);
+      GNewDomestic := 'NE';
+      GNewDXCountry := 42;
+
+      CheckEquals(7, Score('NE', 1), 'a new domestic multiplier: 7');
+      CheckEquals('D', GNewAsked, 'a new domestic multiplier: the DX sheet is not asked');
+      CheckEquals(7, Score('SW', 42), 'a worked district but a new country: 7');
+      CheckEquals('DX', GNewAsked, 'domestic first, then DX');
+      CheckEquals(7, Score('', 42), 'no district, a new country: 7');
+      CheckEquals('X', GNewAsked, 'no district: the domestic sheet is not asked');
+
+      (* NOT A NEW MULTIPLIER: 2. *)
+      CheckEquals(2, Score('SW', 1), 'a worked district and a worked country: 2');
+      CheckEquals(2, Score('', 1), 'no district and a worked country: 2');
+
+      (* NO SHEET: nothing is new. *)
+      station.IsNewMultiplierAnywhere := nil;
+      obj.SetStation(station);
+      CheckEquals(2, Score('NE', 42), 'no service: 2');
+   finally
+      obj.Free;
+      end;
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -3853,6 +4061,8 @@ begin
    Test_PortableStationIsTheLiftedHelper;
    Test_RoPoCoRunningsAreToldApartByMode;
    Test_M7bBatch2ScoringEdges;
+   Test_UA4WAsksForMyCQZone;
+   Test_RSGB18AsksTheSheetReadOnly;
 end;
 
 end.

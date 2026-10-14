@@ -902,10 +902,10 @@ begin
        TContestBase, which states nothing -- and it is asked HERE, where the
        per-contest arms ran, so everything a contest states lands in the
        order it always did: after the head's traits and the operator's
-       statements, before the closing exchange set-up below. The arms of
-       every contest that has a class are gone into its DescribeSession;
-       the `case` below holds only the classless contests' arms, each of
-       which goes when its contest gains a class. *)
+       statements, before the closing exchange set-up below. Every arm is
+       gone into its contest's DescribeSession; the `case` that held the
+       classless contests' arms went with its last, the UA4W Championship's
+       (2026-10-14). *)
      session := TSessionDefaults.Create;
      try
         definition.DescribeSession(CurrentStation, session);
@@ -915,76 +915,6 @@ begin
         session.Free;
         end;
      end;
-
-  case Contest of
-
-    { RSGBDX:
-      begin
-       if (Settings.My.Country[1] = 'G') or (Settings.My.Country[1] = 'M') then
-        begin
-         ActiveDXMult :=  CQDXCC;
-         ActivePrefixMult := CQNonEuropeanCountriesAndWAECallRegions;
-        end
-         else
-          begin
-           ActiveDXMult := NoDXMults;
-          end;;
-      end;
-    }
-    {
-        ARRLRTTYROUNDUP:
-          begin
-            CountryTable.CountryMode := CQCountryMode;
-            CountryTable.ZoneMode := CQZoneMode;
-            ActiveDomesticMult := DomesticFile;
-            ActiveDXMult := ARRLDXCC;
-    //        ActiveExchange := RSTDomesticQTHOrQSONumberExchange;
-    //        ActiveQSOPointMethod := OnePointPerQSO;
-            Settings.Contest.Name := 'ARRL RTTY ROUNDUP';
-            Settings.Contest.DigitalModeEnable := True;
-            //DomesticQTHDataFileName := 'S48P14DC'; //KK1L: 6.72 Used DC file instead per rules
-            //Settings.Qso.ByBand := True;
-            Add_KVE;
-          end;
-    }
-    {
-        MICHQSOPARTY:
-          begin
-            if FoundMyStateInDomFile then
-            begin
-              DomesticQTHDataFileName := 'MIQP';
-    //          ActiveExchange := QSONumberDomesticQTHExchange; //KK1L: 6.73
-            end
-            else
-            begin
-              DomesticQTHDataFileName := 'MICHCTY';
-    //          ActiveExchange := QSONumberDomesticQTHExchange; //KK1L: 6.73
-            end;
-            Add_KVEKH6KL;
-          end;
-    }
-    {
-        ,QSOPARTY:
-          begin
-            ActiveDomesticMult := DomesticFile;
-            if (PWORD(@Settings.My.State[1])^ = $4957) //WI
-            then
-              DomesticQTHDataFileName := 'WIQSOWI'
-            else
-              DomesticQTHDataFileName := 'WIQSO';
-
-            Add_KVEKH6KL;
-          end;
-    }
-
-    UA4WCHAMPIONSHIP:
-      begin
-        Settings.Contest.MinitourDuration := 15;
-      end;
-
-    //    UA4N: Settings.Contest.MinitourDuration := 15;
-
-  end;
 
   if TempDomesticQTHDataFileName <> '' then
      begin

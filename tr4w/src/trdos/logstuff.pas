@@ -9966,24 +9966,8 @@ begin
 
   Result := RXData.QTHString <> '';
 
-  (* THE UA4W CHAMPIONSHIP'S RULE STAYS NAMED HERE, WITH ITS REASON -- M5b.
-
-    It is that contest's (the QTH is the domestic QTH), and it would move to
-    the contest's ParseReceivedExchange the day the contest has a class. It
-    has none, because a registered class is the contest's SCORER too, and
-    the UA4W arm scores by ctyGetCQZone(MY CALL) -- a CTY.DAT lookup that
-    swaps the global zone list while it runs, which no contest class can be
-    handed. The same reason ARRL 160 kept its import and export arms at M4
-    and M5a -- until M7b handed its class the domestic-country lookup as a
-    station-context SERVICE (TStationContext.IsDomesticCountryCall), which
-    is the shape an answer for MY CALL's CQ zone would take (design Q28). *)
-  if Result then
-     begin
-     if Contest = UA4WCHAMPIONSHIP then
-        begin
-        RXData.DomesticQTH := RXData.QTHString;
-        end;
-     end;
+  (* The UA4W Championship's rule -- the QTH is the domestic QTH -- is its
+    class's ParseReceivedExchange since 2026-10-14 (design Q28). *)
 
   (* `if Contest = ALRS_UA1DZ_CUP` worked out an oblast-based domestic QTH. It
     was DEAD BY DEFAULT and is deleted, not moved: the ALRS-UA1DZ Cup runs

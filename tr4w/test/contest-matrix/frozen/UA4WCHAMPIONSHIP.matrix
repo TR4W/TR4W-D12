@@ -2,7 +2,7 @@
 == identity
 contest.requested = 120 UA4WCHAMPIONSHIP
 contest.selected = 120 UA4WCHAMPIONSHIP
-contest.class = (none -- the legacy engine)
+contest.class = TContestUA4WChampionship
 == setup
 active.qsopointmethod = UA4WMethod
 active.exchange = RSTAndGridSquareOrRDAExchange
@@ -287,7 +287,7 @@ totals.cabrillo = CLAIMED-SCORE: 304
 == identity
 contest.requested = 120 UA4WCHAMPIONSHIP
 contest.selected = 120 UA4WCHAMPIONSHIP
-contest.class = (none -- the legacy engine)
+contest.class = TContestUA4WChampionship
 == setup
 active.qsopointmethod = UA4WMethod
 active.exchange = RSTAndGridSquareOrRDAExchange
@@ -572,7 +572,7 @@ totals.cabrillo = CLAIMED-SCORE: 304
 == identity
 contest.requested = 120 UA4WCHAMPIONSHIP
 contest.selected = 120 UA4WCHAMPIONSHIP
-contest.class = (none -- the legacy engine)
+contest.class = TContestUA4WChampionship
 == setup
 active.qsopointmethod = UA4WMethod
 active.exchange = RSTAndGridSquareOrRDAExchange

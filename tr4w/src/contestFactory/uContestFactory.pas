@@ -117,6 +117,12 @@ uses
    (* DomesticCountryCall -- the engine's CTY lookup behind the station
       context's IsDomesticCountryCall service (M7b). *)
    ZoneCont,
+   (* ctyGetCQZone -- the CTY lookup behind MyCQZone (2026-10-14). *)
+   uCTYDAT,
+   (* mo, the multiplier sheet, and ActiveDomesticMult -- read, never
+      written, behind IsNewMultiplierAnywhere (design 7.13, 2026-10-14). *)
+   uMults,
+   LogDom,
    uContestRegistry;
 
 (* THE ENGINE'S DOMESTIC-COUNTRY TEST, AS THE STATION CONTEXT'S SERVICE -- see
@@ -125,6 +131,55 @@ uses
 function EngineDomesticCountryCall(const aCall: string): boolean;
 begin
    Result := DomesticCountryCall(CallString(aCall));
+end;
+
+(* MY CQ ZONE, RESOLVED, AS THE STATION CONTEXT'S SERVICE -- see
+   TStationContext.MyCQZone and TMyCQZoneQuery.
+
+   A STATED ZONE WINS: the contest's override, or the station's MY ZONE when
+   the operator typed one (ZoneWasSet). Only an UNSTATED zone is derived, and
+   it is derived as a CQ zone whatever the contest's zone mode -- which is
+   what the stored MY ZONE is not, in an ITU-zone contest (see TMyCQZoneQuery).
+   ctyGetCQZone swaps CTY's zone mode while it looks, exactly as the UA4W
+   arm that called it did; it is asked on the main thread, from scoring. *)
+function EngineMyCQZone: integer;
+var
+   code: integer;
+begin
+   if Settings.My.HasContestOverride(sfZone) or Settings.My.ZoneWasSet then
+      begin
+      Val(Settings.My.ResolvedZone, Result, code);
+      if code <> 0 then
+         begin
+         Result := 0;
+         end;
+      end
+   else
+      begin
+      Result := ctyGetCQZone(Settings.My.Call);
+      end;
+end;
+
+(* THE SHEET'S READ-ONLY "IS THIS NEW" ANSWER, AS A SERVICE -- design 7.13.
+   See TNewMultiplierQuery: the all-band, both-mode row, as LOGSTUFF's
+   RSGB160Method arm asked it. *)
+function EngineIsNewMultiplierAnywhere(const aQso: ContestExchange;
+                                       aKind: TNewMultiplierKind): boolean;
+begin
+   case aKind of
+      nmkDomestic:
+         begin
+         Result := mo.IsDmMult(string(aQso.DomMultQTH), AllBands, Both, ActiveDomesticMult);
+         end;
+      nmkDX:
+         begin
+         Result := mo.IsDXMult(aQso.QTH.Country, AllBands, Both);
+         end;
+   else
+      begin
+      Result := False;
+      end;
+   end;
 end;
 
 function CurrentQSOPointOverrides: TQSOPointOverrides;
@@ -180,9 +235,13 @@ begin
    Result.ContestName := Settings.Contest.Name;
    (* The engine's domestic-country CTY lookup, as a service (M7b). *)
    Result.IsDomesticCountryCall := @EngineDomesticCountryCall;
+   (* MY CQ ZONE and the sheet's new-multiplier answer, as services
+      (2026-10-14) -- see TStationContext. *)
+   Result.MyCQZone := @EngineMyCQZone;
+   Result.IsNewMultiplierAnywhere := @EngineIsNewMultiplierAnywhere;
 
-   (* MY CQ ZONE, RESOLVED -- design 7.12 (NY4I: "Add my CQ zone to the
-      station context. But it can be overridden"). *)
+   (* MY ZONE, RESOLVED -- design 7.12. In the contest's zone mode when
+      unstated; see TStationContext.MyZone. *)
    Val(Settings.My.ResolvedZone, Result.MyZone, code);
    Result.MyZoneValid := (code = 0) and (Settings.My.ResolvedZone <> '');
    if not Result.MyZoneValid then

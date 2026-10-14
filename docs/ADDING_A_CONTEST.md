@@ -278,7 +278,8 @@ statement beats your value** whatever the line order. So a trait override is
 no longer inert: **changing one changes the contest's set-up**, and the
 contest matrix will show it. What your class states in `DescribeSession`
 (below) runs after the head and wins where it assigns, exactly as the arms it
-replaced did; a classless contest's FoundContest arm still does the same.
+replaced did. (FoundContest's `case Contest of` for classless contests is gone:
+its last arm, the UA4W Championship's, moved to its class on 2026-10-14.)
 Design §7.9, §8.2i.
 | `HostState` | **`USQSOPartyStateName`** -- derived from the array's `P` index, which is the one place a QSO party's state is written down. `''` for every contest that has no host state, which is a real answer |
 
@@ -752,9 +753,10 @@ pairs and the two Region 1 Field Day RCC runnings are siblings until Q7; IRTS
 and EUDX share a scoring arm by their rows and nothing else, so they are
 copies too. M7b ended with five contests classless on purpose; POTA left the
 list on 2026-10-13 (NY4I ruled it a class, design Q6 and 8.2o -- `TContestPOTA`,
-on the base like General QSO). Four remain -- the UA4W Championship, RSGB 1.8
-MHz, IN7QPNE and DUMMYCONTEST -- and `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
-fails if a fifth appears.
+on the base like General QSO), and the UA4W Championship and RSGB 1.8 MHz on
+2026-10-14 (design Q28, Q33 and 8.2p -- both on the base too). Two remain --
+IN7QPNE (a composite, design 7.14) and DUMMYCONTEST -- and
+`Test_M7bBatch2ContestsAreSiblingsOnTheBase` fails if a third appears.
 
 ### `TStationContext` — what scoring knows about us
 
@@ -768,7 +770,8 @@ value is CW, which is what an operator who never chooses one exports), and
 since M7b `.ContestName` (the European VHF contest's `'EURASIA'` test) and a
 SERVICE, `.IsDomesticCountryCall` (ARRL 160's CTY lookup against the session's
 domestic countries; nil means "not domestic", what the engine answers for an
-empty list -- so guard on `Assigned`), and
+empty list -- so guard on `Assigned`), since 2026-10-14 two more SERVICES,
+`.MyCQZone` and `.IsNewMultiplierAnywhere` (below), and
 since M7a `.MyName`, `.MyFDClass`, `.MySection`, `.MyPrec`, `.MyCheck` and
 `.MyZoneText` (MY ZONE as text -- what a message SENDS; compare zones with
 `.MyZone`). `uContestFactory.CurrentStation` fills it; set-up is handed the
@@ -801,6 +804,25 @@ TR4W.**
 
 `MyZoneValid` exists so a contest can tell "zone 0" from "no zone set". The
 legacy arms `Val(MyZone, ...)` per QSO and ignore the error code.
+
+**`.MyZone` IS MY ZONE IN THE CONTEST'S ZONE MODE, NOT ALWAYS THE CQ ZONE.**
+An unstated MY ZONE is derived from MY CALL after set-up has put CTY.DAT in the
+contest's zone mode, so in an ITU-zone contest (most of them) it is the ITU
+zone -- and IARU compares it with the worked ITU zone. A rule that needs the CQ
+zone asks **`.MyCQZone()`**: the stated zone (the contest's override, or the
+station's typed MY ZONE), else the CQ zone CTY.DAT gives MY CALL; nil answers 0.
+The UA4W Championship is its reader (design 8.2p, Q69).
+
+**A RULE MAY ASK THE MULTIPLIER SHEET, READ-ONLY -- `.IsNewMultiplierAnywhere(aQso,
+aKind)`** (design 7.13, NY4I: *"All multipliers are based on what was worked
+before"*). `nmkDomestic` asks of `aQso.DomMultQTH`, `nmkDX` of
+`aQso.QTH.Country`, and "anywhere" is the sheet's all-band, both-mode row --
+not the session's by-band or by-mode key. An empty domestic QTH counts as new
+to the sheet, so test for it first. nil is "no sheet": nothing is new. It is a
+question, never a write: a scoring rule still never changes the sheet and
+never reads the log. RSGB 1.8 MHz is its reader (7 for a new multiplier).
+Both services are supplied by `uContestFactory.CurrentStation`; a test hands
+in stubs (`Test_UA4WAsksForMyCQZone`, `Test_RSGB18AsksTheSheetReadOnly`).
 
 ---
 
@@ -900,9 +922,9 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 | question | answer |
 |---|---|
 | what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`), else that routine's legacy case |
-| what does its session start from | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its class's `DescribeSession` applied by `FCONTEST.ApplySessionDefaults` (M7a); a classless contest's `FoundContest` arm. LogCfg's default CQ exchange is `CQExchangeDefault` |
+| what does its session start from | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its class's `DescribeSession` applied by `FCONTEST.ApplySessionDefaults` (M7a); no classless arm remains (2026-10-14). LogCfg's default CQ exchange is `CQExchangeDefault` |
 | what is its final score | its class's `FinalScore` (asked by `LOGEDIT.TotalScore`, which every score reader reads), else the base's general formula through its identity -- section 3, M6 |
-| what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after its `DescribeSession` -- or a classless contest's `FoundContest` arm) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
+| what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after its `DescribeSession`) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |
 | its Cabrillo / ADIF name, friendly name, calendar ids | **`uContestRegistry.ContestIdentity(c)`** — its class, else a plain `TContestBase` reading the row. Never nil, owned by the registry, and every consumer outside the factory asks it (M1). Do not read `ContestsArray` or spell `ContestTypeSA` as a fallback for one of these: that is the copy M1 removed seven of |
 | what D7 did | the D7 tree at `C:\TR4W` — read it, never mirror a fix back into it |
 | how TR4QT decomposes a contest | `C:\projects\tr4qt\docs\CONTEST_DEVELOPMENT.md` and `src/contests/` |

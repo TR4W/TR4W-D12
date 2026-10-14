@@ -59,6 +59,7 @@ type
       procedure Test_PCCLettersAreAQTH;
       procedure Test_ArktikaDigitsAreASerial;
       procedure Test_LABREPYSendsAState;
+      procedure Test_UA4WQTHIsTheDomesticQTH;
       procedure Test_IARUSocietyGetsItsZone;
       procedure Test_UKEIStationMustSendTwoWords;
       procedure Test_SACAbandonsARussianLiveEntry;
@@ -310,6 +311,42 @@ begin
    exch := NewExch('DL1ABC', 'DL');
    Parse(LABRE, RSTDomesticOrDXQTHExchange, True, '599 DL', exch, msg);
    CheckEquals(Ord(RSTDomesticOrDXQTHExchange), Ord(GShapeAsked), 'anybody else: the shape''s');
+end;
+
+(* THE UA4W CHAMPIONSHIP'S QTH IS ITS DOMESTIC QTH -- LOGSTUFF's rule inside
+   ProcessRSTAndGridSquareOrRDAExchange until 2026-10-14, the class's now
+   (design Q28): under the shape it was written for, a parse that found a QTH
+   copies it; a failed parse, or another shape, leaves the domestic QTH as
+   the shape's parser left it. *)
+procedure TContestParseTests.Test_UA4WQTHIsTheDomesticQTH;
+var
+   exch: ContestExchange;
+   msg: string;
+   ok: boolean;
+begin
+   BeginTest('Test_UA4WQTHIsTheDomesticQTH');
+   ResetStub;
+   GShapeSetsQTH := 'UD45';
+   exch := NewExch('UA4WAA', 'UA');
+   ok := Parse(UA4WCHAMPIONSHIP, RSTAndGridSquareOrRDAExchange, True, '599 UD45', exch, msg);
+   CheckTrue(ok, 'the shape''s answer');
+   CheckEquals(Ord(RSTAndGridSquareOrRDAExchange), Ord(GShapeAsked), 'the session''s shape is parsed');
+   CheckEquals('UD45', string(exch.DomesticQTH), 'the QTH is the domestic QTH');
+   CheckEquals('', msg, 'no refusal');
+
+   ResetStub;
+   GShapeSetsQTH := 'UD45';
+   GShapeResult := False;
+   exch := NewExch('UA4WAA', 'UA');
+   ok := Parse(UA4WCHAMPIONSHIP, RSTAndGridSquareOrRDAExchange, True, '599 UD45', exch, msg);
+   CheckFalse(ok, 'a failed parse stays failed');
+   CheckEquals('', string(exch.DomesticQTH), 'a failed parse: no domestic QTH');
+
+   ResetStub;
+   GShapeSetsQTH := 'UD45';
+   exch := NewExch('UA4WAA', 'UA');
+   Parse(UA4WCHAMPIONSHIP, RSTDomesticQTHExchange, True, '599 UD45', exch, msg);
+   CheckEquals('', string(exch.DomesticQTH), 'another shape: the rule does not apply');
 end;
 
 procedure TContestParseTests.Test_IARUSocietyGetsItsZone;
@@ -813,6 +850,7 @@ begin
    Test_PCCLettersAreAQTH;
    Test_ArktikaDigitsAreASerial;
    Test_LABREPYSendsAState;
+   Test_UA4WQTHIsTheDomesticQTH;
    Test_IARUSocietyGetsItsZone;
    Test_UKEIStationMustSendTwoWords;
    Test_SACAbandonsARussianLiveEntry;

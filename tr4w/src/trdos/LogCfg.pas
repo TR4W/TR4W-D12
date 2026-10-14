@@ -872,29 +872,16 @@ var
 begin
 
 
-  (* THE CONTEST'S OWN DEFAULT FIRST -- M7a, 2026-10-02. Every contest that
-    has a class states its default as TContestBase.CQExchangeDefault (the
-    base offers ''), and its label is gone from the `case` below, which now
-    names only classless contests; a classless contest is asked too, through
-    the plain TContestBase that is its identity, and gets ''. The repeat S&P
-    exchange is its sibling, RepeatSPExchangeDefault (M7b, the EU Sprints'
-    arm); the base offers '' there too, which is what this used to start
-    from. *)
+  (* THE CONTEST'S OWN DEFAULT -- M7a, 2026-10-02. Every contest that has a
+    class states its default as TContestBase.CQExchangeDefault (the base
+    offers ''); a classless contest is asked too, through the plain
+    TContestBase that is its identity, and gets ''. The `case` that named the
+    classless contests went with its last, the UA4W Championship's
+    (2026-10-14). The repeat S&P exchange is its sibling,
+    RepeatSPExchangeDefault (M7b, the EU Sprints' arm); the base offers ''
+    there too. *)
   tSPExchange := UTF8Encode(ContestIdentity(Contest).RepeatSPExchangeDefault(CurrentStation));
   tCQExchange := UTF8Encode(ContestIdentity(Contest).CQExchangeDefault(CurrentStation));
-  case Contest of
-
-    (* The state SENT -- design 7.11 (M9a). *)
-    UA4WCHAMPIONSHIP: tCQExchange := UTF8Encode(' # ' + SentMyState);
-{
-    ARI, SPDX, ARKTIKA_SPRING, PACC, WAG, CUPUA1DZ, RUSSIANDX, RDA, OKDX, UKRAINIAN, OLDNEWYEAR, ARRL10, HADX, YODX, RSGB18, DARCXMAS:
-      begin
-        if Settings.My.State <> '' then tCQExchange := ' 5NN ' + Settings.My.State else tCQExchange := ' 5NN #';
-      end;
-}
-//    EUROPEANHFC, CQWWCW, CQWWSSB, GACWWWSACW, GAGARINCUP: tCQExchange := ' 5NN ' + Settings.My.Zone;
-
-  end;
 
 {
   case Contest of

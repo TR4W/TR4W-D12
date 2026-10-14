@@ -148,6 +148,45 @@ type
       ARRL 160's scoring is the first rule that asks. *)
    TDomesticCountryCallTest = function(const aCall: string): boolean;
 
+   (* MY CQ ZONE, RESOLVED -- design 7.12 -- as a SERVICE, 2026-10-14.
+
+      THE STATED ZONE IF THERE IS ONE, ELSE THE CQ ZONE CTY.DAT GIVES MY
+      CALL. "Stated" is the contest's override (New Contest, its .cfg, its
+      log) or the station's own MY ZONE when the operator typed one. 0 when
+      neither can answer.
+
+      WHY IT IS NOT TStationContext.MyZone. That field is MY ZONE resolved,
+      and when nobody stated a zone FCONTEST derives it from MY CALL in the
+      CONTEST'S zone mode -- so in an ITU-zone contest it is the ITU zone
+      (measured in the contest matrix: K0AAA, VE3AAA and DL1AAA carry MY ZONE
+      7, 4 and 28 in the UA4W Championship, where their CQ zones are 4, 4 and
+      14). IARU relies on exactly that. A rule that needs the CQ zone in an
+      ITU-mode contest cannot read MyZone.
+
+      A SERVICE, NOT A VALUE, because the station context is rebuilt on every
+      ActiveContest request and the CTY lookup is needed by one rule of one
+      contest, on one branch. The UA4W Championship is its first reader. *)
+   TMyCQZoneQuery = function: integer;
+
+   (* WHICH SHEET A "NEW MULTIPLIER" QUESTION IS ASKED OF. *)
+   TNewMultiplierKind = (nmkDomestic, nmkDX);
+
+   (* IS THIS QSO'S MULTIPLIER STILL UNWORKED ANYWHERE? -- design 7.13 (NY4I,
+      2026-10-13: "All multipliers are based on what was worked before").
+
+      READ-ONLY. The engine answers from the shared multiplier sheet; the
+      contest never writes the sheet and never reads the log.
+
+      ANYWHERE MEANS THE SHEET'S ALL-BAND, BOTH-MODE ROW -- not the session's
+      by-band or by-mode key. That is RSGB 1.8 MHz's legacy reading, which
+      asked mo.IsDmMult / mo.IsDXMult with AllBands and Both, and it is
+      transcribed exactly. nmkDomestic asks of aQso.DomMultQTH (with the
+      session's domestic multiplier kind), nmkDX of aQso.QTH.Country. An empty
+      domestic QTH is "new" to the sheet -- the rule must test for it first,
+      as the legacy arm did. *)
+   TNewMultiplierQuery = function(const aQso: ContestExchange;
+                                  aKind: TNewMultiplierKind): boolean;
+
    (* WHAT SCORING KNOWS ABOUT US.
 
       Contest rules are a function of two things: the QSO, and the station
@@ -178,14 +217,14 @@ type
          MyZoneValid says whether the conversion worked, so a contest can tell
          "zone 0" from "no zone set" instead of scoring against a silent 0.
 
-         THIS IS MY CQ ZONE, RESOLVED -- design 7.12 (NY4I, 2026-10-13: "Add
-         my CQ zone to the station context. But it can be overridden ... I
-         take my laptop to CQ zone 3 in Utah for a contest, so just that
-         contest is CQ zone 3"). The contest's override if it stated one
-         (New Contest, its .cfg, its log), else the station's MY ZONE --
-         which is itself the operator's stated zone, or the CQ zone CTY.DAT
-         gives MY CALL. A class reads it here; it never asks CTY.DAT itself.
-         Every station fact in this record is resolved the same way. *)
+         THIS IS MY ZONE, RESOLVED -- design 7.12: the contest's override if
+         it stated one (New Contest, its .cfg, its log), else the station's
+         MY ZONE -- which is the operator's stated zone, or the zone CTY.DAT
+         gives MY CALL IN THE CONTEST'S ZONE MODE. So in an ITU-zone contest
+         an unstated zone is the ITU zone, and IARU compares it with the
+         worked ITU zone. It is NOT always the CQ zone, whatever 7.12 first
+         said: a rule that needs MY CQ ZONE asks MyCQZone below (2026-10-14,
+         the UA4W Championship). A class never asks CTY.DAT itself. *)
       MyZone: integer;
       MyZoneValid: boolean;
 
@@ -249,9 +288,9 @@ type
 
       (* THE STATION'S OWN CALLSIGN -- MY CALL.
 
-         Added at M5b (2026-10-02), when the UA4W Championship gained a class:
-         its scoring asks which Russian oblast the station's own call is in.
-         Same growth rule as every field here. *)
+         Added at M5b (2026-10-02) for the UA4W Championship, whose scoring
+         asks which Russian oblast the station's own call is in; that class
+         was built on 2026-10-14. Same growth rule as every field here. *)
       MyCall: string;
 
       (* IS THE STATION IN THE QSO PARTY'S HOST STATE? -- M5b.
@@ -320,6 +359,18 @@ type
          rule must answer as the engine answers an empty list -- not
          domestic. ARRL 160 is its first reader. *)
       IsDomesticCountryCall: TDomesticCountryCallTest;
+
+      (* MY CQ ZONE, RESOLVED -- a SERVICE, 2026-10-14. See TMyCQZoneQuery.
+         uContestFactory.CurrentStation supplies the engine's answer; the
+         zero value (nil) is "no service", which a rule answers as zone 0 --
+         what CTY.DAT gives a call it cannot place. *)
+      MyCQZone: TMyCQZoneQuery;
+
+      (* IS THIS QSO A NEW MULTIPLIER ON THE SHEET? -- a READ-ONLY SERVICE,
+         design 7.13 (2026-10-14). See TNewMultiplierQuery. The zero value
+         (nil) is "no sheet": nothing is new. RSGB 1.8 MHz is its first
+         reader. *)
+      IsNewMultiplierAnywhere: TNewMultiplierQuery;
 
       (* THERE IS NO CLOCK HERE, AND THERE MUST NOT BE ONE.
 

@@ -2,7 +2,7 @@
 == identity
 contest.requested = 108 RSGB18
 contest.selected = 108 RSGB18
-contest.class = (none -- the legacy engine)
+contest.class = TContestRSGB18
 == setup
 active.qsopointmethod = RSGB160Method
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
@@ -294,7 +294,7 @@ totals.cabrillo = CLAIMED-SCORE: 119
 == identity
 contest.requested = 108 RSGB18
 contest.selected = 108 RSGB18
-contest.class = (none -- the legacy engine)
+contest.class = TContestRSGB18
 == setup
 active.qsopointmethod = RSGB160Method
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
@@ -586,7 +586,7 @@ totals.cabrillo = CLAIMED-SCORE: 119
 == identity
 contest.requested = 108 RSGB18
 contest.selected = 108 RSGB18
-contest.class = (none -- the legacy engine)
+contest.class = TContestRSGB18
 == setup
 active.qsopointmethod = RSGB160Method
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange

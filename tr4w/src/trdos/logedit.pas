@@ -2869,14 +2869,8 @@ end;
   any contest), the Ukraine Championship, the Ural Cup and Missouri's
   bonuses. Each is its contest's class now.
 
-  ONE CONTEST IS STILL NAMED, WITH ITS REASON. The RSGB 1.8 MHz contest scores
-  its points alone -- its multipliers are already in them: its per-QSO arm
-  (LOGSTUFF, RSGB160Method) pays 7 for a contact that is a new multiplier on
-  the sheet and 2 otherwise. A class would have to score that, and a class
-  cannot be handed the multiplier sheet (design 7.7: stage 1 sees the QSO and
-  the station only). So it has none yet, and its "times one" stays here,
-  where it always was, until M8 gives the sheet's question a seam (design
-  Q33).
+  NO CONTEST IS NAMED HERE. The last was RSGB 1.8 MHz's "points times one",
+  which is its class's formula since 2026-10-14 (design 7.13, Q33).
 
   OFF THE MAIN THREAD, THE LAST SCORE THE MAIN THREAD COMPUTED. The
   score-posting clients build their reports on worker threads. The final
@@ -2899,16 +2893,7 @@ begin
      end;
 
   GatherScoreTotals(totals);
-
-  if Contest = RSGB18 then
-     begin
-     (* Points times one -- see above. *)
-     Result := totals.QSOPoints + totals.QTCPoints;
-     end
-  else
-     begin
-     Result := ContestFinalScore(Contest, totals);
-     end;
+  Result := ContestFinalScore(Contest, totals);
 
   LastMainThreadTotalScore := Result;
 end;

@@ -149,10 +149,10 @@ begin
 end;
 
 (* GENERATED from the dialog's two `case` statements at 69828f2a -- see the
-  unit header. The two classless contests (RSGB 1.8, the UA4W Championship)
-  are absent: their arms are still the dialog's. POTA's two arms were added by
-  hand when it gained its class (2026-10-13), copied from ClasslessPrompts as
-  it stood. *)
+  unit header. POTA's two arms were added by hand when it gained its class
+  (2026-10-13), and RSGB 1.8's and the UA4W Championship's when they gained
+  theirs (2026-10-14), each copied from ClasslessPrompts as it stood before
+  that routine was deleted. *)
 function ExpectedOnChoice(aContest: ContestType): string;
 begin
    Result := '';
@@ -525,6 +525,10 @@ begin
          begin
          Result := StepComment(TC_ENTERYOURZONE, ncfMyState);
          end;
+      RSGB18:
+         begin
+         Result := StepBox(TC_UK);
+         end;
       RSGB_ROPOCO_CW:
          begin
          Result := StepComment(TC_ENTERYOURPOSTCODE, ncfMyPostalCode);
@@ -564,6 +568,11 @@ begin
       TESLA:
          begin
          Result := StepComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
+         end;
+      UA4WCHAMPIONSHIP:
+         begin
+         Result := StepComment('Enter your RDA (for Russian stations) or four digit grid square:',
+                               ncfMyQTH);
          end;
       UBACW:
          begin
@@ -779,6 +788,10 @@ begin
       REFSSB:
          begin
          Result := StepComment(TC_DEPARTMENT, ncfMyState);
+         end;
+      RSGB18:
+         begin
+         Result := StepComment(TC_ENTERYOURDISTRICTABBREVIATION, ncfMyState);
          end;
       RU3AXMEMORIAL:
          begin
@@ -1379,15 +1392,18 @@ end;
   contest given a human name leaves this list, and a new contest may not join
   it. Design Q57 asks NY4I for the names. *)
 const
-   ENUM_SPELLED_DISPLAY_NAMES: array[0..46] of ContestType = (
+   (* RSGB18 ('RSGB-160') and UA4WCHAMPIONSHIP ('R4W-CHAMP') joined on
+      2026-10-14, when they gained classes: neither row has a friendly
+      name. *)
+   ENUM_SPELLED_DISPLAY_NAMES: array[0..48] of ContestType = (
       ALLJA, ALRS_UA1DZ_CUP, APSPRINT, ARCI, BWQP, CUPRFCW, CUPRFDIG, CUPRFSSB,
       CUPURAL, EUDX, EUROPEANVHF, EUSPRINT_SPRING_CW, FOCMARATHON, GRIDLOC,
       INTERNETSPRINT, IRTS, JALONGPREFECT, JTDX, KVP, MINITEST, MWC, OLDNEWYEAR,
       OZCR_O, OZCR_Z, OZHCRVHF, PCC, QCWAGOLDEN, R9W_UW9WK_MEMORIAL, RADIOMEMORY,
       RADIOVHFFD, RADIOYOC, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW,
       REGION1FIELDDAY_RCC_SSB, RFASCHAMPIONSHIPCW, RFCHAMPIONSHIPCW,
-      RFCHAMPIONSHIPSSB, SASPRINT, SOUTHAMERICANWW, TOEC, UCG, UKEI,
-      UKRAINECHAMPIONSHIP, WWL, XMAS, YOUTHCHAMPIONSHIPRF, YUDX);
+      RFCHAMPIONSHIPSSB, RSGB18, SASPRINT, SOUTHAMERICANWW, TOEC, UA4WCHAMPIONSHIP,
+      UCG, UKEI, UKRAINECHAMPIONSHIP, WWL, XMAS, YOUTHCHAMPIONSHIPRF, YUDX);
 
 function IsEnumSpelledDisplayName(aContest: ContestType): boolean;
 var

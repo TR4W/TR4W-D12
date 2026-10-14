@@ -61,6 +61,7 @@ type
       procedure Test_WAEWeightsItsMultipliers;
       procedure Test_RussianCupsAddPerMultiplier;
       procedure Test_UralCupPaysPrefixesAsPoints;
+      procedure Test_RSGB18ScoresItsPointsAlone;
       procedure Test_FinalScoreIsFormulaPlusBonus;
       procedure Test_MissouriBonusStations;
       procedure Test_MissouriLiveTally;
@@ -298,6 +299,45 @@ begin
    CheckEquals(11 + 50 * 3, Combine(RFCHAMPIONSHIPSSB, NoStation, t), 'RF Championship SSB');
    CheckEquals(11 + 10 * 3, Combine(UKRAINECHAMPIONSHIP, NoStation, t), 'Ukraine Championship: + 10');
    CheckEquals(11 + 1000 * 3, Combine(OZHCRVHF, NoStation, t), 'OZHCR VHF: + 1000');
+end;
+
+(* RSGB 1.8 MHz's "POINTS TIMES ONE" -- LOGEDIT.TotalScore's arm until
+   2026-10-14, its class's formula since (design Q33). The 7 a new
+   multiplier earns is already in the points, so the final score is the
+   points and the QTCs, whatever the sheet counts and whichever band a
+   single-band entry scores. *)
+procedure TContestTotalsTests.Test_RSGB18ScoresItsPointsAlone;
+var
+   t: TScoreTotals;
+   view: TLoggedQSOList;
+begin
+   BeginTest('Test_RSGB18ScoresItsPointsAlone');
+
+   t := Totals(41);
+   t.QTCPoints := 2;
+   t.Mults[AllBands, Both, rmDomestic] := 5;
+   t.Mults[AllBands, Both, rmDX] := 7;
+   CheckEquals(43, Combine(RSGB18, NoStation, t), 'the points and QTCs, not times the multipliers');
+
+   t.ScoredBand := Band160;
+   t.Mults[Band160, Both, rmDX] := 3;
+   CheckEquals(43, Combine(RSGB18, NoStation, t), 'a single-band entry: the points too');
+
+   t := Totals(41);
+   t.Mults[AllBands, Both, rmDX] := 7;
+   t.SessionCountsMultipliers := False;
+   CheckEquals(41, Combine(RSGB18, NoStation, t), 'a session counting no multiplier: the points');
+
+   (* THE FINAL SCORE ADDS NO BONUS -- it declares no bonus station. *)
+   view := TLoggedQSOList.Create;
+   try
+      view.Add(LoggedQSO('G3ABC', Band160, CW));
+      t := Totals(41);
+      t.Mults[AllBands, Both, rmDX] := 7;
+      CheckEquals(41, Final(RSGB18, NoStation, t, view), 'the final score is the points');
+   finally
+      view.Free;
+   end;
 end;
 
 procedure TContestTotalsTests.Test_UralCupPaysPrefixesAsPoints;
@@ -755,6 +795,7 @@ begin
    Test_WAEWeightsItsMultipliers;
    Test_RussianCupsAddPerMultiplier;
    Test_UralCupPaysPrefixesAsPoints;
+   Test_RSGB18ScoresItsPointsAlone;
    Test_FinalScoreIsFormulaPlusBonus;
    Test_MissouriBonusStations;
    Test_MissouriLiveTally;

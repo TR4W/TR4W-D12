@@ -158,8 +158,8 @@ the target shape, the M-step migration order and the open questions.
   `FormatADIFReceivedExchange` (the SRX_STRING; Field Day DX writes `1D DX`).
   Word cutting is `uExchangeTokens`, lifted from LOGSTUFF line for line. The
   matrix's `parse` section (66 typed exchanges per contest and variant, no
-  points) gates it. UA4W stays named in LOGSTUFF: its class would have to
-  score with a CTY lookup of MY CALL, which no class can be handed yet.
+  points) gates it. UA4W's parse rule, held in LOGSTUFF at M5b, is its
+  class's `ParseReceivedExchange` since 2026-10-14 (design 8.2p).
 - **A contest owns its final score and its bonuses** (M6, 2026-10-02).
   `LOGEDIT.TotalScore` -- what every score reader reads -- gathers a
   `TScoreTotals` (a record: the interface-parameter exemption) and asks
@@ -232,8 +232,9 @@ the target shape, the M-step migration order and the open questions.
   `uContestFactory.CurrentStation` is exported and passed in. Memory keys are
   named (`TSessionMemoryKey`), never Tree's codes; the domestic-country groups
   are `uContestBase` constants FCONTEST's own `Add_KVE`-style helpers read too.
-  **All 55 arms naming a registered contest are gone**; FoundContest's `case`
-  holds only the UA4W Championship's arm since POTA's class (2026-10-13). LogCfg's per-contest
+  **All 55 arms naming a registered contest are gone**, and FoundContest's
+  `case` with them: POTA's arm left 2026-10-13, the UA4W Championship's -- the
+  last -- 2026-10-14, and LogCfg's `case` went too. LogCfg's per-contest
   CQ-exchange defaults are the sibling `CQExchangeDefault(aStation)` -- asked
   later, once the whole config is read -- and the ARRL DX one is on the CW
   class only (LogCfg never named the phone running). **D8 is resolved by
@@ -280,10 +281,11 @@ the target shape, the M-step migration order and the open questions.
   `RSGB-ROLO`, and `uContestRegistry.ContestOfADIFRecordMode` picks the one
   that runs in the record's mode once the record is read (the matrix moves
   only their phone import lines). Ten-Ten's arm always scored 2 (a Word
-  against -1, Q46): the class says 2. **M7b is done, and exactly four
-  contests are classless on purpose** -- UA4W (Q28), RSGB 1.8 (Q33),
-  IN7QPNE and DUMMYCONTEST; `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
-  fails if a fifth appears. POTA was the fifth until NY4I ruled Q6 (below). Sites still naming a batch-2 contest were seams
+  against -1, Q46): the class says 2. **M7b is done, and exactly two
+  contests are classless on purpose** -- IN7QPNE (a composite, design 7.14,
+  the next step) and DUMMYCONTEST; `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
+  fails if a third appears. POTA (Q6, 2026-10-13), the UA4W Championship
+  (Q28) and RSGB 1.8 (Q33, both 2026-10-14, design 8.2p) left the list. Sites still naming a batch-2 contest were seams
   not built -- ~~M9 display/HamScore: WRTC, SST, CW Open, RTC~~ done at
   M9a (§8.2m); Radio YOC's loader stays (engine state) -- listed in §8.2k. ~~M8 multipliers: YB DX, RDA, YO DX~~ -- done
   at M8: RDA's and YO DX's hint arms are their classes', YB DX's was a no-op
@@ -307,8 +309,8 @@ the target shape, the M-step migration order and the open questions.
   `PermittedOperatingAids` (WRTC: no SCP, cluster or score posting --
   `MainUnit.OperatingAidOfWindow` is the UI's window-to-aid wiring);
   `OffersQTCs` (the WAE QTC menu); `OffersParkTools` (POTA's two menu
-  rows, since its class). **uNewContest still names RSGB 1.8 and the UA4W
-  Championship** (`ClasslessPrompts`). `uTestContestDisplay`
+  rows, since its class). **uNewContest names no contest**: `ClasslessPrompts`
+  was deleted with RSGB 1.8's and UA4W's classes (2026-10-14). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.
 - **The UI itself asks the contest** (M9b, 2026-10-02, design §8.2n).
@@ -332,9 +334,17 @@ the target shape, the M-step migration order and the open questions.
   (M4 added `MyState` and `ContestTitle`). **Every station fact in it is
   RESOLVED** (design 7.12, 2026-10-13): the contest's override, stated at New
   Contest, in its `.cfg` or in its log, else the station's value
-  (`Settings.My.Resolved<X>`). **`MyZone` / `MyZoneValid` / `MyZoneText` are MY
-  CQ ZONE resolved**, and that is what UA4W reads; there is no second CQ-zone
-  field. A class never reads `Settings` or CTY.DAT for a station fact.
+  (`Settings.My.Resolved<X>`). **`MyZone` / `MyZoneValid` / `MyZoneText` are
+  MY ZONE resolved -- and an UNSTATED MY ZONE is derived in the CONTEST'S zone
+  mode**, so in an ITU-zone contest it is the ITU zone (measured 2026-10-14:
+  K0AAA carries 7 in the UA4W Championship; IARU relies on it). 7.12 said
+  "MY CQ ZONE" and was wrong for those contests. **A rule that needs the CQ
+  zone asks the SERVICE `MyCQZone()`** -- the stated zone, else MY CALL's CQ
+  zone; UA4W is its reader (Q69 asks whether MY ZONE should always be CQ).
+  **A rule may ASK the multiplier sheet read-only: `IsNewMultiplierAnywhere(aQso,
+  nmkDomestic | nmkDX)`** (design 7.13) -- the sheet's all-band, both-mode row;
+  RSGB 1.8 is its reader (7 for a new multiplier). Never a write, never the
+  log. A class never reads `Settings` or CTY.DAT for a station fact.
   **It carries NO clock**:
   ~~`LogClockUTCHour`~~ is deleted (design Q21).
 - **A time-of-day rule reads the QSO's recorded time, never the clock**

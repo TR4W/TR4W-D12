@@ -58,7 +58,7 @@ ROUTINES = {
    # ------------------------------------------------- exchange parsing/validation
    ("logstuff.pas", "ProcessExchange"): ("exchange", new("ParseReceivedExchange (s6), keyed today by the ExchangeKind trait")),
    ("logstuff.pas", "ProcessRSTAndDomesticQTHExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
-   ("logstuff.pas", "ProcessRSTAndGridSquareOrRDAExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
+   # ProcessRSTAndGridSquareOrRDAExchange named the UA4W Championship until its class (2026-10-14).
    ("logstuff.pas", "ProcessRSTAndQSONumberExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    ("logstuff.pas", "ProcessRSTAndQSONumberOrDomesticQTHExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    ("logstuff.pas", "ProcessRSTAndZoneExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
@@ -108,7 +108,7 @@ ROUTINES = {
    ("uCabrilloExchange.pas", "SetHisEx"): ("cabrillo-export", "FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default)"),
    ("uCabrilloExchange.pas", "FormatCabrilloExchangeOfKind"): ("cabrillo-export", "FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default)"),
    # ---------------------------------------------------- score/summary/totals
-   ("logedit.pas", "TotalScore"): ("score-summary", new("CalculateTotalScore (s6)")),
+   # logedit.TotalScore named RSGB 1.8 MHz until its class (2026-10-14); it names no contest now.
    ("postunit.pas", "WriteScoreInformationToSummarySheet"): ("score-summary", "SummarySheet (existing, M9a)"),
    ("postunit.pas", "PrintHourTotals"): ("score-summary", "ReportsRunningScore (existing, M9a)"),
    ("uTotal.pas", "UpdateTotals2"): ("score-summary", "TotalsDisplay (existing, M9a)"),
@@ -126,12 +126,12 @@ ROUTINES = {
    ("logwind.pas", "SetUpBandMapEntry"): ("ui", new("ShowsMultiplierStatus")),
    ("logsubs2.pas", "OperateContest"): ("ui", new("ShowsMultiplierStatus")),
    ("logstuff.pas", "BandChange"): ("ui", new("AllowsWARCBands")),
-   ("uNewContest.pas", "ClasslessPrompts"): ("ui", "DescribeNewContestPrompts (existing, M9a) -- needs an RSGB 1.8 / UA4W class"),
+   # uNewContest.ClasslessPrompts was deleted when its last contests gained classes (RSGB 1.8, UA4W; 2026-10-14).
    ("uNewContest.pas", "ApplyContestChoice"): ("ui", "DescribeNewContestPrompts (existing, M9a)"),
    # ------------------------------------------------------------------ setup
    ("fcontest.pas", "FoundContest"): ("setup", new("ConfigureSession (the FoundContest arm)")),
    ("fcontest.pas", "SetUpRSTMyZoneExchange"): ("setup", new("ConfigureSession")),
-   ("LogCfg.pas", "tSetupExchangeNumbers"): ("setup", new("SentExchangeFields / FormatSentExchange (s6)")),
+   # LogCfg.tSetupExchangeNumbers named the UA4W Championship until its class (2026-10-14); CQExchangeDefault now.
    # -------------------------------------------------------------- networking
    ("logsubs2.pas", "SendScoreToUDP"): ("networking", "ScorePostingMultiplierType (existing, M9a)"),
    ("uExchangeBuilder.pas", "BuildSentExchangeText"): ("networking", "CanonicalSentExchange (existing, M9a)"),
@@ -190,8 +190,9 @@ SHAPE3 = [
     "`cMyState = 'TRC'`"),
    ("tr4w/src/trdos/logstuff.pas", r"^\s*if\s+rxdata\.domesticqth\s*=\s*'TRC'", 1, [],
     "`DomesticQTH = 'TRC'` in the TRCDIGITAL arm"),
-   ("tr4w/src/trdos/logstuff.pas", r"Settings\.My\.State\s*=\s*'TRC'", 1, [],
-    "`Settings.My.State = 'TRC'`"),
+   # MY STATE became the resolved MY STATE with design 7.12 (c3986877).
+   ("tr4w/src/trdos/logstuff.pas", r"Settings\.My\.ResolvedState\s*=\s*'TRC'", 1, [],
+    "`Settings.My.ResolvedState = 'TRC'`"),
    ("tr4w/src/trdos/logddx.pas", r"Settings\.Contest\.Name\s*=\s*'Scandinavian Contest'", 1,
     ["SACCW", "SACSSB"],
     "`Settings.Contest.Name = 'Scandinavian Contest'` -- see dead code"),

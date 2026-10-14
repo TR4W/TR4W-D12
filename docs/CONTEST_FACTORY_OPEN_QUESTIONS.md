@@ -307,6 +307,35 @@ Three groups:
   whose override differs from the station.
   **Answer:**
 
+### Added with the UA4W Championship's and RSGB 1.8's classes (2026-10-14)
+
+- **Q69** MY ZONE, when nobody states it, is worked out from your call in
+  the contest's own zone system. Most contests use ITU zones, so there it
+  is the ITU zone: K0AAA gets 7, not CQ zone 4, in the UA4W Championship.
+  7.12 calls MY ZONE your CQ zone, and IARU relies on the ITU answer. Should
+  MY ZONE always be the CQ zone, with ITU-zone contests reading MY ITU ZONE?
+  That would change IARU's set-up and messages when no zone is stated, so it
+  would be its own step. *Recommended: yes, separately.* Until then the UA4W
+  class asks a separate service for your CQ zone (design 8.2p).
+  **Answer:**
+
+- **Q70** The UA4W Championship pays 10/20 on 80/160 m when your CQ zone is
+  18 or 19. It now uses a zone you stated first (your 7.12 ruling); the old
+  code always used your call's CQ zone. With no zone stated, the two agree.
+  A zone typed for this contest is taken as a CQ zone, as MY ZONE's command
+  says. *Recommended: confirm.*
+  **Answer:**
+
+- **Q71** RSGB 1.8 MHz is a 160 m contest, but its class credits every band,
+  as its row always did. Should it credit 160 m only? An off-band QSO would
+  then score 0 and earn no multiplier (7.4). Separately, the UA4W
+  Championship's New Contest prompt is a fixed English text that no
+  catalogue translates. It also differs from the translated
+  `TC_ENTERYOURRDAIDORGRID` ("for UA1A stations" against "for Russian
+  stations"). Which wording, and should it be translatable?
+  *Recommended: 160 m only; use the translated string with your wording.*
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -323,7 +352,7 @@ Three groups:
 
 - **Q28** UA4W: may the station context carry MY CALL's CQ zone, so UA4W can get a
   class? *Recommended: yes* (the same service shape ARRL 160 is getting).
-  **Answer:** **RULED 2026-10-13: yes, and station facts (CQ zone, state, section) are a station default a contest may override at selection time -- design 7.12.**
+  **Answer:** **RULED 2026-10-13: yes, and station facts (CQ zone, state, section) are a station default a contest may override at selection time -- design 7.12.** **Built 2026-10-14: `TContestUA4WChampionship`, reading the `MyCQZone` service (design 8.2p; Q69, Q70).**
 
 - **Q33** RSGB 1.8 MHz scores 7 for a contact that is a new multiplier. May a class
   be handed the multiplier sheet's "is this a new multiplier?" answer, so it can
@@ -335,7 +364,7 @@ Three groups:
   read-only query handed in with the station (is domestic key X / DX country
   N unworked over ALL bands and BOTH modes -- the arm ignores the session's
   by-band and by-mode keys and whether DX multipliers are on at all).
-  **Answer:** **RULED 2026-10-13: yes, a read-only new-multiplier answer -- design 7.13.**
+  **Answer:** **RULED 2026-10-13: yes, a read-only new-multiplier answer -- design 7.13.** **Built 2026-10-14: `TContestRSGB18`, reading the `IsNewMultiplierAnywhere` service (design 8.2p; Q71).**
 
 - **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
   characters, so a malformed grid's score depends on leftover memory (identical
@@ -445,8 +474,8 @@ Three groups:
 | Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
 | Q6 | POTA becomes a contest class, treated like General QSO | `TContestPOTA`, 2026-10-13 (design 8.2o) |
 | Q11 | Delete the QSO-POINT-METHOD-only arms at M10 | M10 |
-| Q28 | Station facts default from station config, overridable per contest | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`; UA4W's class still to build) |
-| Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13 |
+| Q28 | Station facts default from station config, overridable per contest | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`); UA4W's class 2026-10-14 (design 8.2p) |
+| Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13; its class 2026-10-14 (design 8.2p) |
 | -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14 |
 | Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
 | Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
