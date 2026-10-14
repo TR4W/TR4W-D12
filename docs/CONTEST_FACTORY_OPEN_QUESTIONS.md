@@ -504,6 +504,60 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   *Recommended: delete both.*
   **Answer:**
 
+### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
+
+M10 is complete. M11 moves the multiplier and exchange "kind" rules into
+the classes. These decide how far it goes. M11's early stages (pins,
+dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
+
+- **Q92 -- THE DESIGN QUESTION.** Keep `ExchangeType` as a vocabulary of
+  exchange SHAPES that a class selects? The design says the kind enums
+  "die with the engine" and that a helper is "never selected ... by an
+  enum". Measured: 162 of `ExchangeType`'s 168 `case` arms are four
+  contest-blind machines keyed on the shape -- the parser (56 arms), the
+  field list (43), ADIF (32) and Cabrillo (31). Deleting the enum means
+  every one of 186 classes overrides all four and keeps them agreeing, or
+  a per-shape object, which is a strategy and is forbidden. It is not
+  stored and does not cross the network, so the whole price is code. The
+  other five kinds (initial exchange, domestic/DX/prefix/zone
+  multipliers) ARE rules and M11 deletes them either way.
+  *Recommended: keep it, documented as shapes -- like CountryModeType
+  and ZoneModeType, it describes data, not a rule.*
+  **Answer:**
+
+- **Q93** If Q92 is yes: should the 20 shapes that exactly one contest uses
+  still move into their contest (about 80 arms, one contest per commit)?
+  It buys a smaller vocabulary, not ownership.
+  *Recommended: no, unless you want the vocabulary small.*
+  **Answer:**
+
+- **Q94** (with Q90) "Is a slash suffix a county?" is answered two ways
+  that disagree: by exchange shape on the live path (25 contests) and by
+  the class on export (15). Split on export but not stripped live: CA,
+  CO, MN, OH, PA. Stripped live but not split on export: ALRS, ARRL 160,
+  ARRL DX x2, AZ, BC, County Hunter, IN7QPNE, LABRE, NEQP, NY, PACC,
+  Salmon Run, 7QP, TOEC. Which contests really have /county rovers? M11
+  will transcribe today's two sets exactly until you say.
+  **Answer:**
+
+- **Q95** Croatian counts ITU zones but looks zones up with CQ zones, so it
+  exports `<ITUZ:2>05` for W1AW (whose CQ zone is 5; its ITU zone is 8).
+  CW Open is the reverse (CQ zones over an ITU lookup). Defects? Which
+  system does each sponsor want?
+  *Recommended: Croatian ITU throughout; check CW Open's rules.*
+  **Answer:**
+
+- **Q96** CQ WW CW starts the exchange field with a Custom initial exchange,
+  CQ WW SSB with the zone -- one family, two answers. Intended?
+  *Recommended: both Zone, unless the CW Custom was deliberate.*
+  **Answer:**
+
+- **Q50 is now an M11 blocker.** The Russian DX / RU3AX "initial exchange
+  from a call" has not run since M10 S2 -- the only arms that reach it are
+  used by no contest -- while LOGEDIT's fallback is the live rule, and a
+  unit test pins the dead one. M11's S1 (dead members) and S8 (initial
+  exchange) wait on Q50.
+
 - **Q90** Rover calls on ADIF export. TR4W writes a state party's rover
   (`KG1S/MON`, suffix = the QSO's county) as the bare call plus
   `APP_TR4W_ROVERCALL`, but only for the 15 parties whose old table row said
