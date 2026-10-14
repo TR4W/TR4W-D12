@@ -73,6 +73,30 @@ verifier uses it, so a published backup is now byte-identical to the snapshot
 old code left nothing behind. The exposure was only a crash mid-check, and a
 read-only connection to a rollback-journal file creates no WAL at all.
 
+**NEVER `FieldByName` IN A PER-ROW READ.** In FPC 3.2.2 `TFields.FindField` is
+a linear scan that upper-cases both names on every comparison. `ReadRecord` paid
+about 190 µs a row for it, on every read path (measured 2026-10-14), and that
+was most of the cost of an `/EXPORT`. It now reads `Fields[Ord(qc_x)]`.
+`TQsoColumn` is in `QSO_COLUMNS` order, and each identifier is `qc_` + the column
+name, which `BuildQsoColumnTable` checks through RTTI.
+
+- **Add or move a column in BOTH `QSO_COLUMNS` and `TQsoColumn`, or no
+  repository can be created.** `TLogRepository.Create` raises the mismatch.
+- **Open every qso reader through `OpenQsoReader`.** It checks the fields by
+  name, once per Open, and raises on any drift. A reader opened any other way
+  bypasses the guard that position-reading depends on.
+- **Do not "fix" a raise by falling back to name lookup.** The pins are in
+  `uTestLogRepository`: the table, a drifted SELECT, and every reader
+  round-tripping a record.
+
+**Make every SELECT with `NewReadQuery`.** It sets `UsePrimaryKeyAsKey :=
+False`. With sqldb's default, every Open of a single-table SELECT first runs
+three PRAGMAs (`UpdateServerIndexDefs`, `sqldb.pp:3121`) for key metadata that
+nothing here uses: about 935 against 715 µs an Open. `ParseSQL := False`
+measures the same, but only as a side effect, so it was not chosen. A statement
+called per row is prepared once and kept, like `FRowIdAtIndex`. Do not create it
+per call. Numbers: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §9c.
+
 **`SysUtils.RenameFile` differs by platform:** `MoveFileW` on Windows refuses an
 existing target; `rename(2)` on Unix replaces it. A directory at the target
 fails on both, which is the portable way to make a publish rename fail in a test.

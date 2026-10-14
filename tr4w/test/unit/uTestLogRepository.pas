@@ -37,7 +37,11 @@ type
       (* A METHOD, not a free function: CheckEquals is protected on TTestCase,
         which is the framework saying assertions belong to a test. *)
       procedure CompareQSO(const a, b: ContestExchange; const where: string);
+      procedure MakeDistinctQSO(out aQso: ContestExchange; aSeed: integer);
    protected
+      procedure TestTheColumnTableAgreesWithQSO_COLUMNS;
+      procedure TestAReaderWhoseColumnsDriftedFailsLoudly;
+      procedure TestEveryReaderReturnsTheSameRecord;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
@@ -66,6 +70,7 @@ uses
      never reach the log.  It was Windows; LCLType declares both and is what
      the rest of the tree now uses for them. *)
    LCLType, SysUtils, Classes, uLogDatabase, uLogSchema, uLogBinaryFile,
+   sqldb,   (* TSQLQuery -- a reader built by hand to drift on purpose *)
    uLogRepository,
    utils_text,   (* CharBufferBytes -- the mapper's own read of ceOperator *)
    uLogNote;   (* NoteText / SetNoteText -- a note's text *)
@@ -1171,12 +1176,277 @@ begin
    Scrub(fn);
 end;
 
+(* ===========================================================================
+  THE READERS READ BY POSITION NOW -- 2026-10-14. These three pin what makes
+  that safe.
+
+  ReadRecord takes column c from Fields[Ord(c)] instead of looking it up by
+  name, because the name lookup was most of the cost of every read. A position
+  is only right while the SELECT matches QSO_COLUMNS, so the repository checks
+  that BY NAME each time a reader opens, and refuses on a mismatch. *)
+
+(* The ordinal table and QSO_COLUMNS are the same list. If this fails, the
+  enum in uLogRepository and the column string have drifted -- and no
+  repository can be created until they agree. *)
+procedure TLogRepositoryTests.TestTheColumnTableAgreesWithQSO_COLUMNS;
+begin
+   BeginTest('the column table ReadRecord reads by agrees with QSO_COLUMNS');
+   CheckEquals('', string(QsoColumnTableProblem),
+               'TQsoColumn and QSO_COLUMNS name the same columns in order');
+end;
+
+(* THE GUARD FIRES. A reader whose SELECT is QSO_COLUMNS passes; one with two
+  columns swapped, one column short or one column extra RAISES -- and says
+  which position, so the message points at the drift rather than at a wrong
+  value three screens later. *)
+procedure TLogRepositoryTests.TestAReaderWhoseColumnsDriftedFailsLoudly;
+var
+   db: TLogDatabase;
+   fn: string;
+   list: AnsiString;
+   swapped: AnsiString;
+   short: AnsiString;
+
+   (* '' when VerifyQsoColumns accepts the SELECT, else what it raised. *)
+   function Verdict(const aColumns: AnsiString): string;
+   var
+      q: TSQLQuery;
+   begin
+      Result := '';
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.SQL.Text := 'SELECT ' + aColumns + ' FROM qso';
+         q.Open;
+         try
+            try
+               VerifyQsoColumns(q);
+            except
+               on e: ELogRepositoryError do
+                  begin
+                  Result := e.Message;
+                  if Result = '' then
+                     begin
+                     Result := '(raised with no message)';
+                     end;
+                  end;
+            end;
+         finally
+            q.Close;
+         end;
+      finally
+         q.Free;
+      end;
+   end;
+
+begin
+   BeginTest('a qso reader whose columns drifted from QSO_COLUMNS fails loudly');
+   fn := TempLogName('columns.db');
+   Scrub(fn);
+
+   list := QsoColumnList;
+   CheckTrue(Pos(AnsiString('guid, exchange_id, '), list) = 1,
+             'the swap below assumes QSO_COLUMNS starts guid, exchange_id');
+   swapped := StringReplace(list, 'guid, exchange_id, ', 'exchange_id, guid, ', []);
+   short := Copy(list, 1, LastDelimiter(',', list) - 1);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+
+      CheckEquals('', Verdict(list), 'QSO_COLUMNS itself is accepted');
+
+      CheckTrue(Pos('column 0', Verdict(swapped)) > 0,
+                'two columns swapped is refused, naming position 0: ' +
+                Verdict(swapped));
+      CheckTrue(Verdict(short) <> '',
+                'one column short is refused');
+      CheckTrue(Verdict(list + ', id') <> '',
+                'one column extra is refused');
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* A QSO WITH A DIFFERENT VALUE IN AS MANY COLUMNS AS THE RECORD ALLOWS -- so a
+  column read from the wrong position shows up as a wrong field, not as two
+  zeros that happen to agree. The flags alternate with the seed for the same
+  reason: corpus data is almost all False, and two False flags swapped look
+  correct. *)
+procedure TLogRepositoryTests.MakeDistinctQSO(out aQso: ContestExchange;
+                                              aSeed: integer);
+begin
+   (* ContestExchange holds ShortStrings and scalars only, so clearing it
+     whole is safe; the reader does the same. *)
+   FillChar(aQso, SizeOf(aQso), 0);
+   aQso.ceRecordKind := rkQSO;
+   aQso.ceContest := DUMMYCONTEST;
+   aQso.id := 'exchange' + IntToStr(aSeed);
+   aQso.ceQSOID1 := 1000 + aSeed;
+   aQso.ceQSOID2 := 2000 + aSeed;
+   aQso.ceComputerID := 'B';
+   aQso.ceOperatorID := 7 + aSeed;
+
+   aQso.tSysTime.qtYear := 26;
+   aQso.tSysTime.qtMonth := 6;
+   aQso.tSysTime.qtDay := 1 + aSeed;
+   aQso.tSysTime.qtHour := 12;
+   aQso.tSysTime.qtMinute := 30 + aSeed;
+   aQso.tSysTime.qtSecond := 15 + aSeed;
+   aQso.Callsign := 'K' + IntToStr(aSeed) + 'ABC';
+   aQso.QTH.StandardCall := 'K' + IntToStr(aSeed) + 'ABC';
+   aQso.Frequency := 14025000 + aSeed;
+   aQso.Band := Band20;
+   aQso.Mode := CW;
+   aQso.ExtMode := eCW;
+   aQso.ExchString := '599 0' + IntToStr(aSeed);
+
+   aQso.RSTSent := 599;
+   aQso.RSTReceived := 579;
+   aQso.NumberSent := 11 + aSeed;
+   aQso.NumberReceived := 22 + aSeed;
+   aQso.Zone := 5;
+   aQso.Name := 'TOM';
+   aQso.Age := 42;
+   aQso.Check := 72;
+   aQso.Precedence := 'A';
+   aQso.ceClass := '2A';
+   aQso.Power := '100';
+   aQso.Chapter := '12';
+   aQso.Prefecture := 13;
+   aQso.TenTenNum := 1234;
+   aQso.QTHString := 'FN42';
+   aQso.RandomCharsReceived := 'XYZ';
+   aQso.RandomCharsSent := 'ABC';
+   aQso.Kids := 'KID';
+   aQso.DomesticQTH := 'FL';
+
+   aQso.QTH.Prefix := 'K';
+   aQso.QTH.CountryID := 'K';
+   aQso.QTH.Country := 291;
+   aQso.QTH.Zone := 4;
+   aQso.QTH.Continent := NorthAmerica;
+
+   aQso.Prefix := 'K4';
+   aQso.DXQTH := 'W';
+   aQso.DomMultQTH := 'GA';
+   aQso.DomesticMult := Odd(aSeed);
+   aQso.DXMult := not Odd(aSeed);
+   aQso.PrefixMult := Odd(aSeed);
+   aQso.ZoneMult := not Odd(aSeed);
+   aQso.InhibitMults := Odd(aSeed);
+
+   aQso.QSOPoints := 3 + aSeed;
+   aQso.ceDupe := not Odd(aSeed);
+   aQso.ceSearchAndPounce := Odd(aSeed);
+   aQso.ceXQSO := not Odd(aSeed);
+   aQso.ceWasSendInQTC := Odd(aSeed);
+   aQso.NameSent := not Odd(aSeed);
+   aQso.MP3Record := Odd(aSeed);
+   aQso.ceClearDupeSheet := not Odd(aSeed);
+   aQso.ceClearMultSheet := Odd(aSeed);
+   aQso.ceRadio := RadioTwo;
+   AnsiToCharArray(aQso.ceOperator, 'NY4I');
+   aQso.ceQSO_Deleted := not Odd(aSeed);
+   aQso.ceSendToServer := Odd(aSeed);
+   aQso.ceNeedSendToServerAE := not Odd(aSeed);
+end;
+
+(* EVERY READER, THE SAME RECORD. There are four ways to read a qso row --
+  by id, by guid, a range, and the sequential cursor -- and each one opens
+  through the column check. So each must come back field-for-field equal to
+  what was written; a reader that drifted would raise first. *)
+procedure TLogRepositoryTests.TestEveryReaderReturnsTheSameRecord;
+const
+   ROWS = 2;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   written: array[0..ROWS - 1] of ContestExchange;
+   back: ContestExchange;
+   ranged: array[0..ROWS - 1] of ContestExchange;
+   rowIds: array[0..ROWS - 1] of Int64;
+   guids: array[0..ROWS - 1] of AnsiString;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('every qso reader returns the record that was written');
+   fn := TempLogName('readers.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         for i := 0 to ROWS - 1 do
+            begin
+            MakeDistinctQSO(written[i], i);
+            rowIds[i] := repo.SaveQSO(written[i]);
+            guids[i] := repo.LastGuid;
+            end;
+         repo.Commit;
+
+         for i := 0 to ROWS - 1 do
+            begin
+            CheckTrue(repo.LoadQSO(rowIds[i], back), 'LoadQSO reads row ' + IntToStr(i));
+            CompareQSO(written[i], back, 'LoadQSO #' + IntToStr(i));
+
+            CheckTrue(repo.LoadQSOByGuid(guids[i], back),
+                      'LoadQSOByGuid reads row ' + IntToStr(i));
+            CompareQSO(written[i], back, 'LoadQSOByGuid #' + IntToStr(i));
+            end;
+
+         CheckEquals(ROWS, repo.ReadRange(0, ranged), 'ReadRange reads every row');
+         for i := 0 to ROWS - 1 do
+            begin
+            CompareQSO(written[i], ranged[i], 'ReadRange #' + IntToStr(i));
+            end;
+
+         repo.OpenSequentialRead;
+         try
+            for i := 0 to ROWS - 1 do
+               begin
+               CheckTrue(repo.ReadNext(back), 'ReadNext reads row ' + IntToStr(i));
+               CompareQSO(written[i], back, 'ReadNext #' + IntToStr(i));
+               end;
+            CheckFalse(repo.ReadNext(back), 'and then the cursor is at the end');
+         finally
+            repo.CloseSequentialRead;
+         end;
+
+         (* RowIdAtIndex holds ONE prepared statement now, re-opened per call.
+           Asked twice and out of order, it still answers each index. *)
+         CheckEquals(integer(rowIds[1]), integer(repo.RowIdAtIndex(1)), 'index 1');
+         CheckEquals(integer(rowIds[0]), integer(repo.RowIdAtIndex(0)), 'index 0');
+         CheckEquals(integer(rowIds[1]), integer(repo.RowIdAtIndex(1)), 'index 1 again');
+         CheckEquals(0, integer(repo.RowIdAtIndex(ROWS)), 'past the end');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
+   (* FIRST, AND ON EVERY PLATFORM: these need no D7 fixture, and they pin
+     the column order every reader depends on. *)
+   TestTheColumnTableAgreesWithQSO_COLUMNS;
+   TestAReaderWhoseColumnsDriftedFailsLoudly;
+   TestEveryReaderReturnsTheSameRecord;
+
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is
      indistinguishable from one that passed. *)
-   WriteLn('  SKIPPED: reads a D7 binary log, which is a Windows migration path.');
+   WriteLn('  SKIPPED (the rest): reads a D7 binary log, which is a Windows migration path.');
+   if (FDir <> '') and DirectoryExists(FDir) then
+      begin
+      RemoveDir(FDir);
+      end;
    Exit;
 {$ENDIF}
    TestOneQSORoundTrips;

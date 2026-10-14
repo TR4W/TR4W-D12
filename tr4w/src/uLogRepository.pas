@@ -157,7 +157,15 @@ type
          a read transaction open with it. *)
       FCursor: TSQLQuery;
 
+      (* RowIdAtIndex's statement, prepared ONCE like the others. It was
+        created, prepared, opened and freed on every call, and a rescore calls
+        it once per QSO: the 2026-10-14 prototype measured 150 us a call
+        before and 47 after. *)
+      FRowIdAtIndex: TSQLQuery;
+
       procedure InvalidateRecordCount;
+      function NewReadQuery: TSQLQuery;
+      procedure OpenQsoReader(aQuery: TSQLQuery);
       procedure PrepareStatements;
       procedure LoadContest;
       function LastInsertedRowId: Int64;
@@ -492,9 +500,29 @@ function NewRowGuid(const aQso: ContestExchange): AnsiString;
   bytes and NUL-pads the tail. *)
 procedure AnsiToCharArray(var aBuffer: array of AnsiChar; const aValue: AnsiString);
 
+(* THE COLUMN LIST EVERY qso READER SELECTS, in the order ReadRecord reads it.
+  Exported for the pin tests and for nothing else. *)
+function QsoColumnList: AnsiString;
+
+(* '' when the ordinal table ReadRecord reads by agrees with QSO_COLUMNS, else
+  what disagrees. Computed once, when the unit initializes. *)
+function QsoColumnTableProblem: AnsiString;
+
+(* RAISES ELogRepositoryError unless aQuery's fields are QSO_COLUMNS, by name,
+  position for position. ReadRecord reads a column by its POSITION, so a reader
+  whose SELECT drifted would put one column's value in another field without a
+  single error -- this is what turns that into a loud failure at Open instead. *)
+procedure VerifyQsoColumns(aQuery: TSQLQuery);
+
 implementation
 
 uses
+   (* TypInfo is here for GetEnumName only -- the proof that TQsoColumn
+     matches QSO_COLUMNS. FIRST in this list, so the units below still win
+     any name it shares with them. It does follow the interface units; no
+     identifier in this unit is one TypInfo also declares (checked
+     2026-10-14). *)
+   TypInfo,
    uADIF, uLogBinaryFile, ZONECONT, TF,
    utils_text,   (* CharBufferBytes -- a fixed char field read back *)
    uLogNote,   (* NoteText / SetNoteText -- where a note's text lives *)
@@ -916,9 +944,21 @@ const
    UPDATE_HEAD: AnsiString = 'UPDATE qso SET ';
    UPDATE_TAIL: AnsiString = ' WHERE id = :row_id';
 
-function AssignmentsFor(const aColumns: AnsiString): AnsiString;
+type
+   TAnsiStringArray = array of AnsiString;
+
+(* 'a, b, c' -> ['a', 'b', 'c']. ONE splitter for a column list: AssignmentsFor
+  and the ordinal table below both read QSO_COLUMNS through it, so they cannot
+  disagree about what a column name is.
+
+  Split by hand rather than with StrUtils' WordCount/ExtractWord: those take
+  UnicodeString here, so every column name would round-trip through a
+  narrowing conversion for no reason. The separator is one character and the
+  input is our own constant. *)
+function SplitColumnList(const aColumns: AnsiString): TAnsiStringArray;
 var
    i: integer;
+   n: integer;
    name: AnsiString;
 
    procedure Emit;
@@ -927,20 +967,15 @@ var
          begin
          Exit;
          end;
-      if Result <> '' then
-         begin
-         Result := Result + COMMA_SEP;
-         end;
-      Result := Result + name + EQUALS_BIND + name;
+      SetLength(Result, n + 1);
+      Result[n] := name;
+      Inc(n);
       name := '';
    end;
 
 begin
-   (* Split by hand rather than with StrUtils' WordCount/ExtractWord: those take
-     UnicodeString here, so every column name would round-trip through a
-     narrowing conversion for no reason. The separator is one character and the
-     input is our own constant. *)
-   Result := '';
+   SetLength(Result, 0);
+   n := 0;
    name := '';
    for i := 1 to Length(aColumns) do
       begin
@@ -956,6 +991,159 @@ begin
    Emit;
 end;
 
+function AssignmentsFor(const aColumns: AnsiString): AnsiString;
+var
+   names: TAnsiStringArray;
+   i: integer;
+begin
+   names := SplitColumnList(aColumns);
+   Result := '';
+   for i := 0 to High(names) do
+      begin
+      if i > 0 then
+         begin
+         Result := Result + COMMA_SEP;
+         end;
+      Result := Result + names[i] + EQUALS_BIND + names[i];
+      end;
+end;
+
+(* --------------------------------------------------------------------------- *)
+(* the ordinal table -- how ReadRecord finds a column                          *)
+(* --------------------------------------------------------------------------- *)
+
+(* EVERY COLUMN OF QSO_COLUMNS, BY POSITION. ReadRecord reads
+  aQuery.Fields[Ord(qc_x)] instead of aQuery.FieldByName('x').
+
+  WHY. In FPC 3.2.2 TFields.FindField is a LINEAR scan that upper-cases both
+  names on every comparison. ReadRecord resolved about a hundred fields per row
+  that way -- 190 us a row, measured 2026-10-14 -- on every read path the
+  program has: LoadinLog at startup, four full reads per /EXPORT, the rescore
+  and the grid. By position it is about 10 us a row.
+
+  THE RULE THAT MAKES POSITION SAFE: every reader SELECTs QSO_COLUMNS and
+  nothing else, and VerifyQsoColumns checks it BY NAME, position for position,
+  every time a reader opens -- a mismatch RAISES; there is no fallback to a
+  name lookup, because a fallback is how a shifted read would go unnoticed.
+
+  THE IDENTIFIER IS qc_ PLUS THE COLUMN NAME, EXACTLY. That is not a style
+  choice: BuildQsoColumnTable compares each identifier's RTTI name against
+  QSO_COLUMNS, so an element added, dropped or moved on one side and not the
+  other is reported, and the table refuses to be used. *)
+type
+   TQsoColumn = (
+      qc_guid, qc_exchange_id, qc_qso_set_id, qc_session_id, qc_session_seq,
+      qc_computer_id, qc_operator_id, qc_record_kind,
+      qc_qso_at, qc_callsign, qc_standard_call, qc_freq_tx_hz, qc_freq_rx_hz,
+      qc_is_split,
+      qc_band, qc_mode, qc_submode,
+      qc_exchange_sent, qc_exchange_received,
+      qc_rst_sent, qc_rst_received, qc_serial_sent, qc_serial_received,
+      qc_rcvd_zone, qc_rcvd_name, qc_rcvd_age, qc_rcvd_check,
+      qc_rcvd_precedence, qc_rcvd_class,
+      qc_rcvd_power, qc_rcvd_chapter, qc_rcvd_prefecture, qc_rcvd_member_no,
+      qc_rcvd_qth,
+      qc_rcvd_random, qc_random_sent, qc_rcvd_kids, qc_qtc_call,
+      qc_domestic_qth,
+      qc_dxcc_prefix, qc_dxcc_entity, qc_dxcc_code, qc_cty_cq_zone,
+      qc_cty_continent,
+      qc_prefix_mult, qc_dx_mult, qc_domestic_mult,
+      qc_mult_domestic, qc_mult_dx, qc_mult_prefix, qc_mult_zone,
+      qc_inhibit_mults,
+      qc_qso_points, qc_is_dupe, qc_is_run, qc_is_xqso, qc_is_skipped,
+      qc_sent_in_qtc,
+      qc_name_sent, qc_mp3_recorded, qc_clear_dupe_sheet, qc_clear_mult_sheet,
+      qc_radio_nr, qc_operator_call, qc_deleted, qc_sent_to_server,
+      qc_server_dirty, qc_notes);
+
+const
+   QC_PREFIX: AnsiString = 'qc_';
+   QSO_COLUMN_COUNT = Ord(High(TQsoColumn)) + 1;
+
+var
+   (* FILLED ONCE, by BuildQsoColumnTable from the initialization section, and
+     read-only after that -- so readers on any thread see the same table. *)
+   GQsoColumnName: array[TQsoColumn] of AnsiString;
+   GQsoColumnTableProblem: AnsiString;
+
+procedure BuildQsoColumnTable;
+var
+   names: TAnsiStringArray;
+   column: TQsoColumn;
+   declared: AnsiString;
+begin
+   GQsoColumnTableProblem := '';
+   names := SplitColumnList(QSO_COLUMNS);
+   if Length(names) <> QSO_COLUMN_COUNT then
+      begin
+      GQsoColumnTableProblem := SysUtils.Format(
+         'uLogRepository: QSO_COLUMNS names %d columns and TQsoColumn ' +
+         'declares %d. They must be the same list in the same order.',
+         [Length(names), QSO_COLUMN_COUNT]);
+      Exit;
+      end;
+
+   for column := Low(TQsoColumn) to High(TQsoColumn) do
+      begin
+      GQsoColumnName[column] := names[Ord(column)];
+      declared := GetEnumName(TypeInfo(TQsoColumn), Ord(column));
+      if not SameText(declared, QC_PREFIX + names[Ord(column)]) then
+         begin
+         GQsoColumnTableProblem := SysUtils.Format(
+            'uLogRepository: column %d of QSO_COLUMNS is "%s" but TQsoColumn ' +
+            'declares %s there. They must be the same list in the same order.',
+            [Ord(column), names[Ord(column)], declared]);
+         Exit;
+         end;
+      end;
+end;
+
+function QsoColumnList: AnsiString;
+begin
+   Result := QSO_COLUMNS;
+end;
+
+function QsoColumnTableProblem: AnsiString;
+begin
+   Result := GQsoColumnTableProblem;
+end;
+
+(* ONCE PER OPEN, NOT PER ROW: sixty-eight name comparisons against a
+  table built at start-up, a few microseconds, so the guard costs nothing a
+  reader would notice and is never skipped. *)
+procedure VerifyQsoColumns(aQuery: TSQLQuery);
+var
+   column: TQsoColumn;
+   actual: AnsiString;
+begin
+   if Length(GQsoColumnTableProblem) > 0 then
+      begin
+      raise ELogRepositoryError.Create(GQsoColumnTableProblem);
+      end;
+
+   if aQuery.Fields.Count <> QSO_COLUMN_COUNT then
+      begin
+      raise ELogRepositoryError.Create(SysUtils.Format(
+         'A qso reader returned %d columns where QSO_COLUMNS names %d. ' +
+         'Its fields are read by POSITION, so it refuses rather than read ' +
+         'one column into another field.',
+         [aQuery.Fields.Count, QSO_COLUMN_COUNT]));
+      end;
+
+   for column := Low(TQsoColumn) to High(TQsoColumn) do
+      begin
+      actual := aQuery.Fields[Ord(column)].FieldName;
+      if not SameText(actual, GQsoColumnName[column]) then
+         begin
+         raise ELogRepositoryError.Create(SysUtils.Format(
+            'A qso reader returned "%s" as column %d where QSO_COLUMNS has ' +
+            '"%s". Its fields are read by POSITION, so it refuses rather ' +
+            'than read one column into another field.',
+            [actual, Ord(column), GQsoColumnName[column]]));
+         end;
+      end;
+end;
+
 constructor TLogRepository.Create(aDatabase: TLogDatabase);
 begin
    inherited Create;
@@ -963,6 +1151,13 @@ begin
       begin
       raise ELogRepositoryError.Create(
          'A log repository needs an open contest log.');
+      end;
+   (* AT CONSTRUCTION, not at the first read: a column table that disagrees
+     with QSO_COLUMNS is a build defect, and the earliest point it can be
+     reported is the moment anything asks for a repository. *)
+   if Length(GQsoColumnTableProblem) > 0 then
+      begin
+      raise ELogRepositoryError.Create(GQsoColumnTableProblem);
       end;
    FDatabase := aDatabase;
    FContest := DUMMYCONTEST;
@@ -980,8 +1175,49 @@ begin
    FSelect.Free;
    FSelectById.Free;
    FSelectRange.Free;
+   FRowIdAtIndex.Free;
    FUpdate.Free;
    inherited Destroy;
+end;
+
+(* A QUERY THAT ONLY READS. Every SELECT in this unit is made here.
+
+  UsePrimaryKeyAsKey := False is the point of it. sqldb's default is True, and
+  then EVERY Open of a single-table SELECT first runs UpdateServerIndexDefs
+  (sqldb.pp:3121) -- PRAGMA table_info, index_list and index_info -- to learn
+  which fields are the key, so that edits made through the dataset can be
+  written back. Nothing here edits through a dataset: writes are INSERT and
+  UPDATE statements of their own. Measured 2026-10-14 on winter_fd's log, a
+  prepared SELECT by id re-opened for each of its 1,316 rows: about 935 us an
+  Open with the default, about 715 with this off.
+
+  ParseSQL := False would skip the same metadata -- sqldb's own comment calls
+  that a "practical side effect" -- and measured the same (about 755 us). It is
+  not used because it is a side effect: UsePrimaryKeyAsKey names exactly the
+  work being declined. *)
+function TLogRepository.NewReadQuery: TSQLQuery;
+begin
+   Result := TSQLQuery.Create(nil);
+   try
+      Result.DataBase := FDatabase.Connection;
+      Result.UsePrimaryKeyAsKey := False;
+   except
+      Result.Free;
+      raise;
+   end;
+end;
+
+(* EVERY qso READER OPENS HERE, and is checked before a row is read. A reader
+  that opened some other way would bypass the guard ReadRecord depends on. *)
+procedure TLogRepository.OpenQsoReader(aQuery: TSQLQuery);
+begin
+   aQuery.Open;
+   try
+      VerifyQsoColumns(aQuery);
+   except
+      aQuery.Close;
+      raise;
+   end;
 end;
 
 (* PREPARED ONCE, RE-EXECUTED WITH PARAMETERS -- section 9b. Re-assigning
@@ -995,21 +1231,22 @@ begin
                        QSO_PARAMS + ')';
    FInsert.Prepare;
 
-   FSelect := TSQLQuery.Create(nil);
-   FSelect.DataBase := FDatabase.Connection;
+   FSelect := NewReadQuery;
    FSelect.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso WHERE guid = :guid';
    FSelect.Prepare;
 
-   FSelectById := TSQLQuery.Create(nil);
-   FSelectById.DataBase := FDatabase.Connection;
+   FSelectById := NewReadQuery;
    FSelectById.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso WHERE id = :row_id';
    FSelectById.Prepare;
 
-   FSelectRange := TSQLQuery.Create(nil);
-   FSelectRange.DataBase := FDatabase.Connection;
+   FSelectRange := NewReadQuery;
    FSelectRange.SQL.Text := 'SELECT ' + QSO_COLUMNS +
                             ' FROM qso ORDER BY id LIMIT :n OFFSET :m';
    FSelectRange.Prepare;
+
+   FRowIdAtIndex := NewReadQuery;
+   FRowIdAtIndex.SQL.Text := 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET :n';
+   FRowIdAtIndex.Prepare;
 
    (* guid is NOT in the SET clause: a row's identity does not change when its
      contents do, and rewriting it would break anything holding the old one. *)
@@ -1271,25 +1508,34 @@ begin
    BindInto(FUpdate, aQso, '', False);
 end;
 
+(* PRECONDITION: aQuery was opened by OpenQsoReader, so its fields are
+  QSO_COLUMNS in order and Fields[Ord(c)] IS column c. That is checked once per
+  Open rather than here, once per row.
+
+  NEVER aQuery.FieldByName IN HERE. See TQsoColumn: a linear, case-folding
+  scan per field per row was nineteen-twentieths of this routine's cost. *)
 procedure TLogRepository.ReadRecord(aQuery: TSQLQuery; out aQso: ContestExchange);
 var
    continentToken: Str20;
    token: AnsiString;
 
-   function F(const aName: AnsiString): TField;
+   function F(aColumn: TQsoColumn): TField;
    begin
-      Result := aQuery.FieldByName(aName);
+      Result := aQuery.Fields[Ord(aColumn)];
    end;
 
-   function S(const aName: AnsiString): AnsiString;
+   function S(aColumn: TQsoColumn): AnsiString;
+   var
+      field: TField;
    begin
-      if F(aName).IsNull then
+      field := F(aColumn);
+      if field.IsNull then
          begin
          Result := '';
          end
       else
          begin
-         Result := AnsiString(F(aName).AsString);
+         Result := AnsiString(field.AsString);
          end;
    end;
 
@@ -1310,116 +1556,116 @@ begin
    aQso.QTH.Country := UNKNOWN_COUNTRY;
    aQso.TenTenNum := MAXWORD;
 
-   aQso.id := S('exchange_id');
-   aQso.ceQSOID1 := Cardinal(F('session_id').AsLargeInt);
-   aQso.ceQSOID2 := Cardinal(F('session_seq').AsLargeInt);
+   aQso.id := S(qc_exchange_id);
+   aQso.ceQSOID1 := Cardinal(F(qc_session_id).AsLargeInt);
+   aQso.ceQSOID2 := Cardinal(F(qc_session_seq).AsLargeInt);
    (* A single character out of a text column. Indexing a managed string is
      ordinary Pascal -- what this tree is removing is taking its ADDRESS. Read
      once into a local so the guard and the use cannot disagree. *)
-   token := S('computer_id');
+   token := S(qc_computer_id);
    if token <> '' then
       begin
       aQso.ceComputerID := token[1];
       end;
-   aQso.ceOperatorID := byte(F('operator_id').AsInteger);
-   aQso.ceRecordKind := TokenToRecordKind(S('record_kind'));
+   aQso.ceOperatorID := byte(F(qc_operator_id).AsInteger);
+   aQso.ceRecordKind := TokenToRecordKind(S(qc_record_kind));
 
    (* FROM THE CONTEST ROW, not from the QSO row -- see SetContest. Without this
      every loaded QSO reports DUMMYCONTEST and exports as the wrong contest. *)
    aQso.ceContest := FContest;
 
-   aQso.tSysTime := UnixUTCToQSOTime(F('qso_at').AsLargeInt);
-   aQso.Callsign := S('callsign');
-   aQso.QTH.StandardCall := S('standard_call');
-   aQso.Frequency := F('freq_tx_hz').AsLargeInt;
+   aQso.tSysTime := UnixUTCToQSOTime(F(qc_qso_at).AsLargeInt);
+   aQso.Callsign := S(qc_callsign);
+   aQso.QTH.StandardCall := S(qc_standard_call);
+   aQso.Frequency := F(qc_freq_tx_hz).AsLargeInt;
 
    (* GetADIFBand IS the inverse of ADIFBANDSTRINGSARRAY -- it scans that very
      array -- so it is the right routine and there is no second table. *)
-   aQso.Band := GetADIFBand(string(S('band')));
-   aQso.Mode := TokenToMode(S('mode'));
-   aQso.ExtMode := TokenToExtMode(S('submode'));
+   aQso.Band := GetADIFBand(string(S(qc_band)));
+   aQso.Mode := TokenToMode(S(qc_mode));
+   aQso.ExtMode := TokenToExtMode(S(qc_submode));
 
-   aQso.ExchString := S('exchange_received');
+   aQso.ExchString := S(qc_exchange_received);
 
-   aQso.RSTSent := F('rst_sent').AsInteger;
-   aQso.RSTReceived := F('rst_received').AsInteger;
-   aQso.NumberSent := FieldSerial(F('serial_sent'));
-   aQso.NumberReceived := FieldSerial(F('serial_received'));
+   aQso.RSTSent := F(qc_rst_sent).AsInteger;
+   aQso.RSTReceived := F(qc_rst_received).AsInteger;
+   aQso.NumberSent := FieldSerial(F(qc_serial_sent));
+   aQso.NumberReceived := FieldSerial(F(qc_serial_received));
 
-   aQso.Zone := FieldByte(F('rcvd_zone'), DUMMYZONE);
-   aQso.Name := S('rcvd_name');
-   aQso.Age := byte(F('rcvd_age').AsInteger);
-   aQso.Check := byte(F('rcvd_check').AsInteger);
-   token := S('rcvd_precedence');
+   aQso.Zone := FieldByte(F(qc_rcvd_zone), DUMMYZONE);
+   aQso.Name := S(qc_rcvd_name);
+   aQso.Age := byte(F(qc_rcvd_age).AsInteger);
+   aQso.Check := byte(F(qc_rcvd_check).AsInteger);
+   token := S(qc_rcvd_precedence);
    if token <> '' then
       begin
       aQso.Precedence := token[1];
       end;
-   aQso.ceClass := S('rcvd_class');
-   aQso.Power := S('rcvd_power');
-   aQso.Chapter := S('rcvd_chapter');
-   aQso.Prefecture := FieldByte(F('rcvd_prefecture'), MAXBYTE);
-   aQso.TenTenNum := FieldWord(F('rcvd_member_no'), MAXWORD);
-   aQso.QTHString := S('rcvd_qth');
-   aQso.RandomCharsReceived := S('rcvd_random');
-   aQso.RandomCharsSent := S('random_sent');
+   aQso.ceClass := S(qc_rcvd_class);
+   aQso.Power := S(qc_rcvd_power);
+   aQso.Chapter := S(qc_rcvd_chapter);
+   aQso.Prefecture := FieldByte(F(qc_rcvd_prefecture), MAXBYTE);
+   aQso.TenTenNum := FieldWord(F(qc_rcvd_member_no), MAXWORD);
+   aQso.QTHString := S(qc_rcvd_qth);
+   aQso.RandomCharsReceived := S(qc_rcvd_random);
+   aQso.RandomCharsSent := S(qc_random_sent);
 
    if aQso.ceRecordKind in [rkQTCR, rkQTCS] then
       begin
-      aQso.Kids := S('qtc_call');
+      aQso.Kids := S(qc_qtc_call);
       end
    else
       begin
-      aQso.Kids := S('rcvd_kids');
+      aQso.Kids := S(qc_rcvd_kids);
       end;
 
-   aQso.DomesticQTH := S('domestic_qth');
+   aQso.DomesticQTH := S(qc_domestic_qth);
 
-   aQso.QTH.Prefix := S('dxcc_prefix');
-   aQso.QTH.CountryID := S('dxcc_entity');
-   aQso.QTH.Country := FieldWord(F('dxcc_code'), UNKNOWN_COUNTRY);
-   aQso.QTH.Zone := FieldByte(F('cty_cq_zone'), DUMMYZONE);
-   if S('cty_continent') <> '' then
+   aQso.QTH.Prefix := S(qc_dxcc_prefix);
+   aQso.QTH.CountryID := S(qc_dxcc_entity);
+   aQso.QTH.Country := FieldWord(F(qc_dxcc_code), UNKNOWN_COUNTRY);
+   aQso.QTH.Zone := FieldByte(F(qc_cty_cq_zone), DUMMYZONE);
+   if S(qc_cty_continent) <> '' then
       begin
       begin
-      continentToken := S('cty_continent');
+      continentToken := S(qc_cty_continent);
       aQso.QTH.Continent := GetContinentFromString(continentToken);
       end;
       end;
 
-   aQso.Prefix := S('prefix_mult');
-   aQso.DXQTH := S('dx_mult');
-   aQso.DomMultQTH := S('domestic_mult');
-   aQso.DomesticMult := FieldBool(F('mult_domestic'));
-   aQso.DXMult := FieldBool(F('mult_dx'));
-   aQso.PrefixMult := FieldBool(F('mult_prefix'));
-   aQso.ZoneMult := FieldBool(F('mult_zone'));
-   aQso.InhibitMults := FieldBool(F('inhibit_mults'));
+   aQso.Prefix := S(qc_prefix_mult);
+   aQso.DXQTH := S(qc_dx_mult);
+   aQso.DomMultQTH := S(qc_domestic_mult);
+   aQso.DomesticMult := FieldBool(F(qc_mult_domestic));
+   aQso.DXMult := FieldBool(F(qc_mult_dx));
+   aQso.PrefixMult := FieldBool(F(qc_mult_prefix));
+   aQso.ZoneMult := FieldBool(F(qc_mult_zone));
+   aQso.InhibitMults := FieldBool(F(qc_inhibit_mults));
 
-   aQso.QSOPoints := word(F('qso_points').AsInteger);
-   aQso.ceDupe := FieldBool(F('is_dupe'));
-   aQso.ceSearchAndPounce := not FieldBool(F('is_run'));
-   aQso.ceXQSO := FieldBool(F('is_xqso'));
+   aQso.QSOPoints := word(F(qc_qso_points).AsInteger);
+   aQso.ceDupe := FieldBool(F(qc_is_dupe));
+   aQso.ceSearchAndPounce := not FieldBool(F(qc_is_run));
+   aQso.ceXQSO := FieldBool(F(qc_is_xqso));
    (* NEVER POPULATED FROM THE DATABASE. What this column meant is folded
      into ceQSO_Deleted below -- see ceQSO_Skiped in VC.pas. *)
    aQso.ceQSO_Skiped := False;
-   aQso.ceWasSendInQTC := FieldBool(F('sent_in_qtc'));
-   aQso.NameSent := FieldBool(F('name_sent'));
-   aQso.MP3Record := FieldBool(F('mp3_recorded'));
-   aQso.ceClearDupeSheet := FieldBool(F('clear_dupe_sheet'));
-   aQso.ceClearMultSheet := FieldBool(F('clear_mult_sheet'));
+   aQso.ceWasSendInQTC := FieldBool(F(qc_sent_in_qtc));
+   aQso.NameSent := FieldBool(F(qc_name_sent));
+   aQso.MP3Record := FieldBool(F(qc_mp3_recorded));
+   aQso.ceClearDupeSheet := FieldBool(F(qc_clear_dupe_sheet));
+   aQso.ceClearMultSheet := FieldBool(F(qc_clear_mult_sheet));
 
-   aQso.ceRadio := RadioType(F('radio_nr').AsInteger);
-   AnsiToCharArray(aQso.ceOperator, S('operator_call'));
+   aQso.ceRadio := RadioType(F(qc_radio_nr).AsInteger);
+   AnsiToCharArray(aQso.ceOperator, S(qc_operator_call));
    (* THE LEGACY FOLD, AND IT HAS TO BE HERE RATHER THAN WHERE is_skipped IS
      READ, thirteen lines above: `deleted` is not in aQso yet at that point, so
      an OR there would be against a stale value and this line would then
      overwrite it. A database written before the unification can carry
      is_skipped = 1 on a row whose deleted is 0 -- those QSOs would come back
      UNDELETED without this. *)
-   aQso.ceQSO_Deleted := FieldBool(F('deleted')) or FieldBool(F('is_skipped'));
-   aQso.ceSendToServer := FieldBool(F('sent_to_server'));
-   aQso.ceNeedSendToServerAE := FieldBool(F('server_dirty'));
+   aQso.ceQSO_Deleted := FieldBool(F(qc_deleted)) or FieldBool(F(qc_is_skipped));
+   aQso.ceSendToServer := FieldBool(F(qc_sent_to_server));
+   aQso.ceNeedSendToServerAE := FieldBool(F(qc_server_dirty));
 
    (* A NOTE'S TEXT GOES BACK INTO THE LAYOUT IT WAS WRITTEN IN. Every field
      above was read by its type, and for a note those fields were bound
@@ -1428,7 +1674,7 @@ begin
      saw. *)
    if aQso.ceRecordKind = rkNote then
       begin
-      SetNoteText(aQso, S('notes'));
+      SetNoteText(aQso, S(qc_notes));
       end;
 end;
 
@@ -1467,9 +1713,8 @@ var
    token: ShortString;
 begin
    FContest := DUMMYCONTEST;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT contest_type FROM contest WHERE id = 1';
       q.Open;
       if not q.EOF then
@@ -1607,9 +1852,8 @@ var
    q: TSQLQuery;
 begin
    Result := aDefault;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT value FROM session_state WHERE key = :key';
       q.ParamByName('key').AsString := aKey;
       q.Open;
@@ -1660,9 +1904,8 @@ var
    q: TSQLQuery;
 begin
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := aSQL;
       q.Open;
       if not q.EOF then
@@ -1685,9 +1928,8 @@ begin
       end;
    aInto.Clear;
 
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT command, value FROM config ' +
                     (* OR command = 'CONTEST', because a log written before
                        2026-09-03 stored it as a STATION setting -- the capture
@@ -1788,9 +2030,8 @@ var
    q: TSQLQuery;
 begin
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT MAX(id) FROM qso';
       q.Open;
       if (not q.EOF) and (not q.Fields[0].IsNull) then
@@ -1810,9 +2051,8 @@ var
    q: TSQLQuery;
 begin
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT last_insert_rowid()';
       q.Open;
       if not q.EOF then
@@ -1840,7 +2080,7 @@ begin
    FSelectRange.Close;
    FSelectRange.ParamByName('n').AsInteger := want;
    FSelectRange.ParamByName('m').AsLargeInt := aFirstIndex;
-   FSelectRange.Open;
+   OpenQsoReader(FSelectRange);
    try
       while (not FSelectRange.EOF) and (Result < want) do
          begin
@@ -1854,8 +2094,6 @@ begin
 end;
 
 function TLogRepository.RowIdAtIndex(aIndex: Int64): Int64;
-var
-   q: TSQLQuery;
 begin
    Result := 0;
    if aIndex < 0 then
@@ -1863,19 +2101,18 @@ begin
       Exit;
       end;
 
-   q := TSQLQuery.Create(nil);
+   FRowIdAtIndex.Close;
+   FRowIdAtIndex.ParamByName('n').AsLargeInt := aIndex;
+   FRowIdAtIndex.Open;
    try
-      q.DataBase := FDatabase.Connection;
-      q.SQL.Text := 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET :n';
-      q.ParamByName('n').AsLargeInt := aIndex;
-      q.Open;
-      if not q.EOF then
+      if not FRowIdAtIndex.EOF then
          begin
-         Result := q.Fields[0].AsLargeInt;
+         Result := FRowIdAtIndex.Fields[0].AsLargeInt;
          end;
-      q.Close;
    finally
-      q.Free;
+      (* Closed at once, as the per-call query was freed: an open result set
+        would hold a read transaction for as long as the repository lives. *)
+      FRowIdAtIndex.Close;
    end;
 end;
 
@@ -1896,9 +2133,8 @@ begin
       end;
 
    rowId := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT id FROM qso WHERE session_id = :sid ' +
                     'AND session_seq = :sseq ORDER BY id DESC LIMIT 1';
       q.ParamByName('sid').AsLargeInt := aSessionId;
@@ -1939,9 +2175,8 @@ begin
       end;
 
    Result := 0;
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT COUNT(*) FROM qso';
       q.Open;
       Result := q.Fields[0].AsLargeInt;
@@ -1994,9 +2229,8 @@ begin
    if thisId <> '' then
       begin
       existing := '';
-      q := TSQLQuery.Create(nil);
+      q := NewReadQuery;
       try
-         q.DataBase := FDatabase.Connection;
          q.SQL.Text := 'SELECT qso_set_id FROM qso WHERE exchange_id = :x ' +
                        'ORDER BY id DESC LIMIT 1';
          q.ParamByName('x').AsString := thisId;
@@ -2037,9 +2271,8 @@ begin
    SetLength(Result, 0);
    n := 0;
 
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       (* The set is read from the row itself rather than passed in, so a caller
         holding only a row id can ask. *)
       q.SQL.Text := 'SELECT id FROM qso WHERE qso_set_id = ' +
@@ -2080,9 +2313,8 @@ begin
       Exit;
       end;
 
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT id FROM qso WHERE guid = :guid';
       q.ParamByName('guid').AsString := aGuid;
       q.Open;
@@ -2114,13 +2346,17 @@ end;
 procedure TLogRepository.OpenSequentialRead;
 begin
    CloseSequentialRead;
-   FCursor := TSQLQuery.Create(nil);
-   FCursor.DataBase := FDatabase.Connection;
+   FCursor := NewReadQuery;
    (* THE SAME QSO_COLUMNS the writer binds and ReadRecord reads. One column
       list, so a column added to the schema cannot reach the writer and miss
       the exporter. *)
    FCursor.SQL.Text := 'SELECT ' + QSO_COLUMNS + ' FROM qso ORDER BY id';
-   FCursor.Open;
+   try
+      OpenQsoReader(FCursor);
+   except
+      FreeAndNil(FCursor);
+      raise;
+   end;
 end;
 
 function TLogRepository.ReadNext(out aQso: ContestExchange): boolean;
@@ -2151,7 +2387,7 @@ function TLogRepository.LoadQSO(aRowId: Int64;
 begin
    FSelectById.Close;
    FSelectById.ParamByName('row_id').AsLargeInt := aRowId;
-   FSelectById.Open;
+   OpenQsoReader(FSelectById);
    Result := not FSelectById.EOF;
    if Result then
       begin
@@ -2169,7 +2405,7 @@ function TLogRepository.LoadQSOByGuid(const aGuid: AnsiString;
 begin
    FSelect.Close;
    FSelect.ParamByName('guid').AsString := aGuid;
-   FSelect.Open;
+   OpenQsoReader(FSelect);
    Result := not FSelect.EOF;
    if Result then
       begin
@@ -2186,9 +2422,8 @@ function TLogRepository.QSOCount: integer;
 var
    q: TSQLQuery;
 begin
-   q := TSQLQuery.Create(nil);
+   q := NewReadQuery;
    try
-      q.DataBase := FDatabase.Connection;
       q.SQL.Text := 'SELECT COUNT(*) FROM qso WHERE deleted = 0';
       q.Open;
       Result := q.Fields[0].AsInteger;
@@ -2222,5 +2457,8 @@ end;
 
 initialization
    Randomize;
+   (* Before any repository can exist, and once. It never raises: a problem is
+     recorded, and TLogRepository.Create and VerifyQsoColumns report it. *)
+   BuildQsoColumnTable;
 
 end.

@@ -1213,6 +1213,53 @@ Three consequences worth writing down:
 - **The chooser (§11b) is the exception** and opens many databases briefly. Those
   are separate, short-lived, read-only connections and are not this connection.
 
+---
+
+## 9c. Reading a row — by position, and without key metadata (2026-10-14)
+
+A profile of a 1,316-QSO `/RESCORE` (3.3 s) and `/EXPORT` (1.4 s) found scoring
+under 1% of the time. The rest was sqldb row handling, and two of its causes are
+fixed in `uLogRepository`:
+
+- **`FieldByName` per field per row.** In FPC 3.2.2 `TFields.FindField` is a
+  linear scan that upper-cases both names on every comparison. `ReadRecord`
+  resolved about a hundred fields per row that way, about 190 µs a row, on
+  every read path: startup, the four full reads of an export, the rescore and
+  the grid. It now reads `Fields[Ord(c)]`, where `TQsoColumn` is an enum in
+  `QSO_COLUMNS` order.
+  - **Position is only safe while the SELECT matches**, so `OpenQsoReader`
+    checks every reader's fields against `QSO_COLUMNS` by name, once per Open.
+    A mismatch raises `ELogRepositoryError`; there is no fallback to name
+    lookup.
+  - `TQsoColumn` itself is checked against `QSO_COLUMNS` once, at unit
+    initialization. Each identifier is `qc_` + the column name, compared through
+    RTTI. A disagreement makes `TLogRepository.Create` raise.
+- **`UsePrimaryKeyAsKey` left at its default.** With it True, every Open of a
+  single-table SELECT runs `UpdateServerIndexDefs` (`sqldb.pp:3121`): three
+  PRAGMA queries for key metadata that nothing here uses. `NewReadQuery` turns
+  it off for every SELECT. `ParseSQL := False` skips the same work, as a side
+  effect, and measured the same. It was not chosen for that reason.
+  `RowIdAtIndex` also keeps one prepared statement instead of building one per
+  call.
+
+**Measured on `winter_fd_2025_w4ta`, median of 5 runs, warmed up, logging at
+Warn:**
+
+| | before | after |
+|---|---:|---:|
+| `/EXPORT` | 1,306–1,399 ms | 472–474 ms |
+| `/RESCORE` | 2,973–3,275 ms | 2,140–2,237 ms |
+
+All 26 corpus artifacts are byte-identical before and after. An A/B rescore of
+all 13 sets is also identical: ADIF, Cabrillo and every stored `qso` row match,
+apart from the exchange ids the rescore mints for rows that had none.
+
+**What is left is mostly per-Open, not per-field.** Each Open of a
+`QSO_COLUMNS` SELECT still creates 68 `TField` objects, and the rescore opens
+one per QSO. That cost grows with the column count: a micro-benchmark measured
+about 390 µs an Open at 45 columns and 715 µs at 91. Reading the whole log in one query and one
+transaction per rescore are the next steps (F1 and F4 of the investigation).
+They are not done here.
 
 ---
 
