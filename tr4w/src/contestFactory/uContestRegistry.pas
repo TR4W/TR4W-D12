@@ -146,24 +146,25 @@ function ContestOfADIFRecordMode(aContest: ContestType;
   ceClearDupeSheet on such a repeat) and the contest matrix's
   `countyline.import.allowed` line ask, so that both move together.
 
-  TODAY IT ANSWERS THE ROW -- ContestsArray[c].CountyLineAllowed, exactly what
-  the importer read before -- so this commit changes no behaviour. Plan S7
-  (DECIDED 2026-10-14, design 8.2s) repoints this body, and only this body,
-  to the state-party class's CountyLineAllowed: the class owns the county-line
-  rule, and the two disagree for six parties (Michigan one way; Arizona, BC,
-  Virginia, the Salmon Run and New York the other --
-  uTestContestFactory.Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix).
+  IT ANSWERS THE STATE-PARTY CLASS'S CountyLineAllowed (a county-line maximum
+  above zero), since M10 S7 (DECIDED 2026-10-14, design 8.2s): the class owns
+  the county-line rule, and the row it replaces disagreed with it for six
+  parties. Michigan STOPPED clearing the dupe flag on import (its sponsor
+  allows none); Arizona, BC, Virginia, the Salmon Run and New York STARTED.
+  A contest that is not a state party answers False, as its row did.
 
-  NOT the export side. uADIF.ResolveRoverCall also reads the row's flag, to
-  compose a rover's call on EXPORT; that is a different question and is left
-  reading the row, for S7 to decide on its own evidence. *)
+  NOT the export side. uADIF.ResolveRoverCall still reads the row's flag, to
+  compose a rover's call on EXPORT; that is a different question (is this a
+  QSO party where a /COUNTY suffix names a rover) and S7 decided it stays on
+  the row -- plan S7 notes, open question Q90. *)
 function ContestAllowsCountyLineOnImport(aContest: ContestType): boolean;
 
 implementation
 
 uses
    SysUtils,
-   SyncObjs;
+   SyncObjs,
+   uContestStateQSOPartyBase;
 
 var
    GRegistry: array[ContestType] of TContestClass;
@@ -304,9 +305,15 @@ begin
 end;
 
 function ContestAllowsCountyLineOnImport(aContest: ContestType): boolean;
+var
+   obj: TContestBase;
 begin
-   (* The row, until plan S7 -- see the declaration. *)
-   Result := ContestsArray[aContest].CountyLineAllowed;
+   (* THE CLASS'S, SINCE M10 S7. Only a state QSO party has a county-line rule
+      at all, so any other contest answers False -- which is what the row said
+      for every contest that is not a party. *)
+   obj := ContestIdentity(aContest);
+   Result := (obj is TContestStateQSOPartyBase) and
+             TContestStateQSOPartyBase(obj).CountyLineAllowed;
 end;
 
 function ContestOfADIFRecordMode(aContest: ContestType;

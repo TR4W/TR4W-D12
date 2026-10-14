@@ -301,8 +301,8 @@ type
 
         IT MUST STILL BE RESTORED ON READ. It is not decoration: PostUnit
         asks the QSO's own contest (ContestIdentity(rec.ceContest)) for its
-        ADIF fields while EXPORTING -- POTA's park tags among them -- MainUnit reads
-        ContestsArray[..].CountyLineAllowed from it during ADIF import, and
+        ADIF fields while EXPORTING -- POTA's park tags among them -- MainUnit asks
+        the contest's class about a county line from it during ADIF import, and
         HamScore emits it as <contestnr>. A QSO loaded with ceContest left at
         DUMMYCONTEST would export as the wrong contest, silently. *)
       procedure SetContest(aContest: ContestType);

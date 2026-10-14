@@ -143,7 +143,12 @@ multipliers, CTY.DAT, band lookup and CRC32.
   `postunit.ZoneSentForThisContest` asks the contest's `ZoneMultiplierType`
   while the ADIF CQZ/ITUZ block asks the SESSION's `ActiveZoneMult` -- two
   answers to one question, kept as-is and left for M10 S9 (plan F4).
-  `uADIF.ResolveRoverCall` still reads the row's `CountyLineAllowed` (S7).
+  The county-line IMPORT asks the class since S7 (`ContestAllowsCountyLineOnImport`:
+  Michigan stopped clearing the dupe flag; Arizona, BC, Virginia, Salmon Run
+  and New York started). `uADIF.ResolveRoverCall` (rover call on EXPORT) still
+  reads the row's `CountyLineAllowed` ON PURPOSE: a rover is not a county line,
+  the class has no property for it, and S8 cannot delete the field until NY4I
+  answers Q90.
 - **THE ADIF IMPORT IS GENERIC FIRST, THEN THE CONTEST'S (M5a, 2026-10-01).**
   `uADIF.ApplyADIFFieldsToExchange` is contest-blind: it maps the standard tags
   and captures every tag whose meaning is the contest's into

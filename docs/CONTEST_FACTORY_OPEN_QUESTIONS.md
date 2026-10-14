@@ -486,6 +486,20 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   *Recommended: yes, export BC.*
   **Answer:**
 
+- **Q90** Rover calls on ADIF export. TR4W writes a state party's rover
+  (`KG1S/MON`, suffix = the QSO's county) as the bare call plus
+  `APP_TR4W_ROVERCALL`, but only for the 15 parties whose old table row said
+  `CountyLineAllowed: True`. Arizona, BC, Virginia, the Salmon Run and New
+  York have no such flag, so their rovers export as plain `KG1S/MON` calls;
+  and the import reads `APP_TR4W_ROVERCALL` for every contest. A rover is not
+  a county line, the flag was only a stand-in for "is a state QSO party", and
+  M10 S7 (which moved the county-line IMPORT to the class) left this export
+  rule on the old row. Should every state party split a rover call on export
+  (a change to those five parties' ADIF), and may the class state it as its
+  own property so the row can be deleted at S8?
+  *Recommended: yes, every state party, as a class property.*
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)

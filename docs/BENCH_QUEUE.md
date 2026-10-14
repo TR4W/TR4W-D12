@@ -23,6 +23,20 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-14 -- COUNTY-LINE IMPORT ASKS THE CLASS (M10 S7)
+
+`MainUnit`'s ADIF import clears the dupe flag on a repeat of (call, band, mode)
+with a different QTH when the contest's CLASS allows a county line. That
+changed for six parties, and `ceClearDupeSheet` is set inside the import
+routine, which no unit test reaches:
+
+- [ ] **Import a real Michigan QSO Party ADIF that holds a true duplicate** (same
+  call, band and mode, different county). It is now FLAGGED as a dupe; it used
+  to be accepted.
+- [ ] **Import a county-line ADIF for one of Arizona, BC, Virginia, the Salmon
+  Run or New York** (same call/band/mode, two counties). The second contact is
+  now NOT flagged as a dupe; it used to be.
+
 ## Added 2026-10-14 -- SEVEN CONTEST SETTINGS RETIRED (M10 S2, NY4I's Q4)
 
 `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL EXCHANGE`, `DOMESTIC
@@ -4087,12 +4101,9 @@ ANSWERS; they cannot press a key.
 
 ## Decisions owed from NY4I -- contest factory
 
-- **`ContestsArray` says `CountyLineAllowed: True` for MICHQSOPARTY and the
-  sponsor's rules say otherwise.** `TContestMichiganQP` overrides the accessor,
-  but `MainUnit`'s ADIF import and `uADIF.ResolveRoverCall` still read the ARRAY
-  directly -- so a genuine duplicate in an imported Michigan log is still
-  accepted rather than flagged. Fixing the array, or repointing those two sites
-  at the factory, is a separate change with its own evidence.
+- **Michigan's county-line import rule was repointed at the class (M10 S7,
+  2026-10-14).** A genuine duplicate in an imported Michigan log is flagged
+  now; `uADIF.ResolveRoverCall` still reads the array (open question Q90).
 
 - **Eleven flagged parties have no established county limit** and are left
   unlimited (today's behaviour). 7QP is known to be 4 on NY4I's geometric

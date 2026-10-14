@@ -3557,6 +3557,8 @@ and the tables, not the kind enums.
 
 **S6 DONE 2026-10-14:** the base reads no table -- its row getters answer DUMMYCONTEST's neutral row (`GetFlags` `[]`; `QSOPartyAreaName` and `VC.USQSOPartyStateName` deleted) -- and the outside readers ask the class: MainUnit's ERMAK menu, uHamScore's RTC upload, `postunit.ZoneSentForThisContest` (the CONTEST's zone kind, still not the session's -- F4, for S9), the matrix's contest list, and `uADIF.GetStateForContest`, which asks `QSOPartyArea` with the old two-letter test rather than `HostState` so British Columbia still writes no STATE (whether it should is an open question for NY4I, recorded in plan S6).
 
+**S7 DONE 2026-10-14:** `ContestAllowsCountyLineOnImport` asks the state-party class (Michigan stops clearing the dupe flag on an imported county-line repeat; Arizona, BC, Virginia, Salmon Run and New York start); the rover export (`uADIF.ResolveRoverCall`) deliberately stays on the row because a rover is not a county line -- open question Q90 (plan S7).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

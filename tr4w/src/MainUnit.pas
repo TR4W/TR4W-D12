@@ -10018,8 +10018,8 @@ var
   // we set ceClearDupeSheet on the later record so the post-import
   // rescore (tUpdateLog(actRescore)) does NOT flag it as a dupe.
   // The contest is asked through uContestRegistry.ContestAllowsCountyLineOnImport
-  // (M10 S1), which reads the ContestsArray row until plan S7 points it at
-  // the contest's class.
+  // (M10 S1), which answers the contest's class since S7 (the row is no
+  // longer read here).
   seenCallBandMode    : TStringList;
   cbmKey              : string;
   cbmKeyIdx           : Integer;

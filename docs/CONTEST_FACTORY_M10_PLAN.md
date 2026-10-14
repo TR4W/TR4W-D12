@@ -746,6 +746,48 @@ As planned:
 
 ### S7 -- County-line import asks the class (BEHAVIOUR CHANGE -- DECIDED 2026-10-14, see the header)
 
+**DONE 2026-10-14** (on top of `c3c70be5`). As planned for the import, with
+the export question decided on its own evidence:
+
+* **The import.** `uContestRegistry.ContestAllowsCountyLineOnImport` now answers
+  `ContestIdentity(c) is TContestStateQSOPartyBase` and that class's
+  `CountyLineAllowed`; any other contest answers False (the row said False for
+  every non-party). `MainUnit.pas` (the `ceClearDupeSheet` site) is its ONLY
+  production caller besides the matrix line -- re-checked with
+  `rg -i ContestAllowsCountyLineOnImport tr4w`. Michigan stops; Arizona, BC,
+  Virginia, Salmon Run and New York start.
+* **The rover export is NOT repointed, and the reason is evidence.**
+  `uADIF.ResolveRoverCall` asks a different question than a county line: its
+  own comment says "only relevant for state-QP exchanges", and it splits a
+  call such as `KG1S/MON` when the suffix equals the QSO's QTH, writing
+  `APP_TR4W_ROVERCALL`. A ROVER and a COUNTY-LINE contact are different things
+  (a rover moves between counties; a county line is one transmission claimed
+  by two counties), and the row's boolean was only ever a stand-in for "is a
+  state party". The import's rover strip (`MainUnit.ctyLocateCallStripRover`)
+  and the import's reading of `APP_TR4W_ROVERCALL` do not consult the flag at
+  all, so repointing export at the class would make Michigan's rovers import as
+  rovers and export as plain `W8XYZ/KENT` calls: a lossy round trip for a
+  party whose sponsor DOES allow rovers (Michigan's header only disclaims the
+  county line). The class has no property answering "does a /COUNTY suffix name
+  a rover", and the row's answer (15 parties) is not any class property the
+  other way round either (the class set is all 20). **So export is unchanged
+  and the row's reader stays, recorded as the only remaining production reader
+  of `ContestsArray[..].CountyLineAllowed`; S8 cannot delete the field until
+  NY4I answers Q90** (new, in `CONTEST_FACTORY_OPEN_QUESTIONS.md`). The corpus
+  is unaffected either way (only the Florida set has a rover call).
+* **Tests.** `Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix` keeps its
+  six-disagreement pin and now ALSO asserts, for every contest, that
+  `ContestAllowsCountyLineOnImport` equals the class's answer, with explicit
+  Michigan (False) and Arizona/BC/Virginia/Salmon Run/New York (True) checks.
+  `ceClearDupeSheet` itself is set inside `MainUnit`'s import routine, which no
+  unit test reaches; the seam it asks is what is pinned. S0's table pin is
+  untouched and green. Unit run: 88499 passed, 0 failed.
+* **Matrix prediction:** `countyline.import.allowed` moves for exactly six
+  contests and nothing else: `MICHQSOPARTY` true -> false; `ArizonaQsoParty`,
+  `BCQP`, `VAQP`, `SALMONRUN`, `NYQP` false -> true. Export lines do not move
+  (export still reads the row).
+* **`test/logdump/logdump.lpr:225` is unchanged** (S8's, by hand).
+
 * **Files:** `ContestAllowsCountyLineOnImport` -> `TContestStateQSOPartyBase(..).CountyLineAllowed`.
 * **Effect, measured:** row True for 15 parties (`rg -n -i "CountyLineAllowed: True" VC.pas`);
   class True for 19 of 20 party classes (`GetCountyLineCountiesMax` overrides:

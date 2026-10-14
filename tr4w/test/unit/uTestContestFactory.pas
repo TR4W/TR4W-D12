@@ -2280,20 +2280,22 @@ end;
 (* THE COUNTY-LINE RULE HAS TWO OWNERS TODAY, AND THEY DISAGREE FOR SIX
    CONTESTS -- M10 S0 (plan finding F3, design 8.2s).
 
-   ContestsArray[c].CountyLineAllowed is what the ADIF importer and MainUnit's
-   import read; the state-party class's CountyLineAllowed (a county-line
-   maximum above zero) is what live entry obeys. Plan S7 makes the importer
-   ask the class -- DECIDED 2026-10-14 -- and THIS is the measurement of what
-   that changes, pinned so that nothing else moves with it:
+   ContestsArray[c].CountyLineAllowed is what uADIF.ResolveRoverCall still
+   reads on EXPORT (plan S7 left it there -- open question Q90); the
+   state-party class's CountyLineAllowed (a county-line maximum above zero)
+   is what live entry obeys AND, since S7 (DECIDED 2026-10-14), what the
+   importer asks through ContestAllowsCountyLineOnImport. THIS pins the six
+   places the row and the class differ, and that the import follows the class
+   in every one of them:
 
      Michigan             row True,  class False (its sponsor allows none)
      Arizona, BC, VA,
      Salmon Run, NY       row False, class True
 
    Every other contest agrees, and a contest that is not on the state-party
-   base has no county line at all. When S7 lands, the import side of this
-   becomes the class's and the six stop being exceptions; when S8 deletes the
-   row, the test goes with it. *)
+   base has no county line at all. Michigan therefore STOPPED clearing the
+   dupe flag on an imported county-line repeat, and the other five STARTED.
+   When S8 deletes the row, the row half of this test goes with it. *)
 procedure TContestFactoryTests.Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix;
 var
    c: ContestType;
@@ -2324,16 +2326,22 @@ begin
             begin
             Inc(disagreements);
             end;
+         CheckTrue(ContestAllowsCountyLineOnImport(c) = classAllows,
+                   string(ContestTypeSA[c]) + ': the import follows the class, not the row');
          case c of
             MICHQSOPARTY:
                begin
                CheckTrue(rowAllows, 'Michigan: the row allows a county line');
                CheckFalse(classAllows, 'Michigan: the class allows none');
+               CheckFalse(ContestAllowsCountyLineOnImport(c),
+                          'Michigan: an imported county-line repeat is a dupe again');
                end;
             ArizonaQsoParty, BCQP, VAQP, SALMONRUN, NYQP:
                begin
                CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': the row allows no county line');
                CheckTrue(classAllows, string(ContestTypeSA[c]) + ': the class allows one');
+               CheckTrue(ContestAllowsCountyLineOnImport(c),
+                         string(ContestTypeSA[c]) + ': an imported county-line repeat now clears the dupe flag');
                end;
          else
             begin

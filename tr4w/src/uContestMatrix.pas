@@ -484,9 +484,9 @@ begin
    (* WHAT EACH READER ASKS TODAY. The ADIF importer asks
      ContestAllowsCountyLineOnImport, and this line asks the SAME function, so
      it names what the importer does rather than where the answer lives --
-     it was `countyline.row.allowed` until M10 S1 (2026-10-14), and plan S7
-     repoints that function from the row to the class, moving this line for
-     exactly the six contests the two disagree on. ValidateQTHCount asks a
+     it was `countyline.row.allowed` until M10 S1 (2026-10-14), and S7 (the
+     same day) repointed that function from the row to the class, moving this
+     line for exactly the six contests the two disagreed on. ValidateQTHCount asks a
      state-party class for its maximum. *)
    EmitField('countyline.import.allowed', BoolText(ContestAllowsCountyLineOnImport(Contest)));
    klass := ActiveContest(Contest);
