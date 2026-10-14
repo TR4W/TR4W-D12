@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `beee0c99` (2026-10-14).
+directory). This copy was generated from commit `9fd338c9` (2026-10-14).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -260,8 +260,8 @@ None found.
 | `MainUnit.pas:974` | DetectRoverSlashInCall | 4 | **COUNTYHUNTER** | all | new seam needed: RoverCallRules | reach 1: `AE` = RSTQTHExchange |
 | `MainUnit.pas:2059` | ReturnInSAPOpMode | 4 | **COUNTYHUNTER** | all | new seam needed: RoverCallRules | reach 1: `AE` = RSTQTHEXCHANGE |
 | `MainUnit.pas:4052` | ExchangeWindowChange | 4 | **POTA** | all | new seam needed: ReceivedExchangeFields (s6) | reach 1 GENERIC-NAMED: `AE` = RSTAndPOTAPark |
-| `MainUnit.pas:7118` | ParametersOkay | 4 | **BWQP**, **GENERALQSO**, **POTA** | all | new seam needed: ValidateExchange | reach 3 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange, RSTAndPOTAPark |
-| `MainUnit.pas:8042` | LoadinLog | 1 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
+| `MainUnit.pas:7119` | ParametersOkay | 4 | **BWQP**, **GENERALQSO**, **POTA** | all | new seam needed: ValidateExchange | reach 3 GENERIC-NAMED: `AE` = RSTNameAndQTHExchange, RSTAndPOTAPark |
+| `MainUnit.pas:8043` | LoadinLog | 1 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
 | `trdos/logdom.pas:224` | DomQTHTableObject.GetDomQTH | 4 | **RDA** | all | new seam needed: ParseDomesticQTH | reach 1: `DM` = RDADistrict |
 | `trdos/logdom.pas:263` | DomQTHTableObject.GetDomQTH | 4 | **IOTA** | all | new seam needed: ParseDomesticQTH | reach 1: `DM` = IOTADomestic |
 | `trdos/logdupe.pas:1608` | SetUpExchangeInformation | 4 | **ARRLFIELDDAY**, **WINTERFIELDDAY** | all | new seam needed: ReceivedExchangeFields (s6) (which fields the exchange carries) | reach 2: `AE` = ClassDomesticOrDXQTHExchange (arm of case @1600) |
@@ -345,16 +345,16 @@ None found.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `trdos/postunit.pas:2388` | EmitContestSpecificTailForExport | 4 | **RDA** | all | EmitADIFContestFields (existing) | reach 1: `DM` = RDADistrict |
+| `trdos/postunit.pas:2396` | EmitContestSpecificTailForExport | 4 | **RDA** | all | EmitADIFContestFields (existing) | reach 1: `DM` = RDADistrict |
 | `uADIFExchange.pas:271` | FormatADIFExchangeOfKind | 3 | (none by default) | - | FormatADIFSentExchange (existing; this is the base's default) | `cMyState = 'TRC'` |
 
 ### Cabrillo export (7 rows)
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `trdos/postunit.pas:2962` | tGenerateLogPortionOfCabrilloFile | 3 | **LABRE** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'LABRE'` |
-| `trdos/postunit.pas:2976` | tGenerateLogPortionOfCabrilloFile | 1 | **CUPRFCW**, **CUPRFSSB** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Contest` in |
-| `trdos/postunit.pas:2981` | tGenerateLogPortionOfCabrilloFile | 3 | (none by default) | - | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'EURASIA'` -- see dead code |
+| `trdos/postunit.pas:2970` | tGenerateLogPortionOfCabrilloFile | 3 | **LABRE** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'LABRE'` |
+| `trdos/postunit.pas:2984` | tGenerateLogPortionOfCabrilloFile | 1 | **CUPRFCW**, **CUPRFSSB** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Contest` in |
+| `trdos/postunit.pas:2989` | tGenerateLogPortionOfCabrilloFile | 3 | (none by default) | - | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'EURASIA'` -- see dead code |
 | `uCabrilloExchange.pas:299` | SetHisEx | 3 | (none by default) | - | FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default) | `cMyState = 'TRC'` -- TRC Digital, no ContestType |
 | `uCabrilloExchange.pas:303` | SetHisEx | 3 | (none by default) | - | FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
 | `uCabrilloExchange.pas:314` | SetHisEx | 3 | (none by default) | - | FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
@@ -364,15 +364,15 @@ None found.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `trdos/postunit.pas:1168` | CalculateTotals | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB** | all | new seam needed: OffTimeMinimumMinutes | `Pos('CQ-WW', Settings.Contest.Name)` -- 60-minute off-time |
+| `trdos/postunit.pas:1176` | CalculateTotals | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB** | all | new seam needed: OffTimeMinimumMinutes | `Pos('CQ-WW', Settings.Contest.Name)` -- 60-minute off-time |
 
 ### UI, display and the new-contest dialog (3 rows)
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
 | `MainUnit.pas:4440` | CreateMainWindow | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB**, **IARU** | all | PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + new seam needed: UIFeatures (off-time) | `Pos('CQ-WW'` / `'IARU-HF'` in `ContestTypeSA[Contest]` -- 60-minute off-time |
-| `MainUnit.pas:9510` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
-| `MainUnit.pas:9512` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
+| `MainUnit.pas:9511` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
+| `MainUnit.pas:9513` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
 
 ### Setup (FoundContest / LogCfg) (1 rows)
 
@@ -481,19 +481,19 @@ Worth reading first, because they are the ones the brief named:
 
 | contest | sites outside the factory, by category |
 |---|---|
-| ARRLSSCW | **exchange** `trdos/logdupe.pas:1697`, `trdos/logedit.pas:2553`, `trdos/logedit.pas:2701`; **ui** `MainUnit.pas:9510`, `MainUnit.pas:9512`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
-| ARRLSSSSB | **exchange** `trdos/logdupe.pas:1697`, `trdos/logedit.pas:2553`, `trdos/logedit.pas:2701`; **ui** `MainUnit.pas:9510`, `MainUnit.pas:9512`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
+| ARRLSSCW | **exchange** `trdos/logdupe.pas:1697`, `trdos/logedit.pas:2553`, `trdos/logedit.pas:2701`; **ui** `MainUnit.pas:9511`, `MainUnit.pas:9513`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
+| ARRLSSSSB | **exchange** `trdos/logdupe.pas:1697`, `trdos/logedit.pas:2553`, `trdos/logedit.pas:2701`; **ui** `MainUnit.pas:9511`, `MainUnit.pas:9513`; **other** `trdos/logddx.pas:605`, `trdos/logddx.pas:631`, `trdos/logddx.pas:652`, `trdos/logddx.pas:673`, `trdos/logddx.pas:704`, `trdos/logddx.pas:731`, `trdos/logddx.pas:752`, `trdos/logddx.pas:864`, `trdos/logddx.pas:1009` |
 | WINTERFIELDDAY | **exchange** `trdos/logdupe.pas:1608`; **multipliers** `trdos/logdupe.pas:669`; **other** `trdos/logddx.pas:606`, `trdos/logddx.pas:632`, `trdos/logddx.pas:653`, `trdos/logddx.pas:674`, `trdos/logddx.pas:705`, `trdos/logddx.pas:732`, `trdos/logddx.pas:753`, `trdos/logddx.pas:856`, `trdos/logddx.pas:907` |
 | ARRLFIELDDAY | **exchange** `trdos/logdupe.pas:1608`; **other** `trdos/logddx.pas:606`, `trdos/logddx.pas:632`, `trdos/logddx.pas:653`, `trdos/logddx.pas:674`, `trdos/logddx.pas:705`, `trdos/logddx.pas:732`, `trdos/logddx.pas:753`, `trdos/logddx.pas:856`, `trdos/logddx.pas:907` |
-| POTA | **exchange** `MainUnit.pas:4052`, `MainUnit.pas:7118`, `trdos/logdupe.pas:1716`, `trdos/logstuff.pas:7010`; **adif-import** `uPOTAReference.pas:163` |
-| CQWWRTTY | **exchange** `trdos/logdupe.pas:1858`; **score-summary** `trdos/postunit.pas:1168`; **ui** `MainUnit.pas:4440`; **setup** `trdos/fcontest.pas:394` |
-| RDA | **exchange** `trdos/logdom.pas:224`, `trdos/logedit.pas:2648`, `trdos/logstuff.pas:7104`; **adif-export** `trdos/postunit.pas:2388` |
-| BWQP | **exchange** `MainUnit.pas:7118`, `trdos/logdupe.pas:1799`, `trdos/logstuff.pas:7010` |
+| POTA | **exchange** `MainUnit.pas:4052`, `MainUnit.pas:7119`, `trdos/logdupe.pas:1716`, `trdos/logstuff.pas:7010`; **adif-import** `uPOTAReference.pas:163` |
+| CQWWRTTY | **exchange** `trdos/logdupe.pas:1858`; **score-summary** `trdos/postunit.pas:1176`; **ui** `MainUnit.pas:4440`; **setup** `trdos/fcontest.pas:394` |
+| RDA | **exchange** `trdos/logdom.pas:224`, `trdos/logedit.pas:2648`, `trdos/logstuff.pas:7104`; **adif-export** `trdos/postunit.pas:2396` |
+| BWQP | **exchange** `MainUnit.pas:7119`, `trdos/logdupe.pas:1799`, `trdos/logstuff.pas:7010` |
 | COUNTYHUNTER | **exchange** `MainUnit.pas:933`, `MainUnit.pas:974`, `MainUnit.pas:2059` |
-| CQWWCW | **exchange** `trdos/logedit.pas:2271`; **score-summary** `trdos/postunit.pas:1168`; **ui** `MainUnit.pas:4440` |
+| CQWWCW | **exchange** `trdos/logedit.pas:2271`; **score-summary** `trdos/postunit.pas:1176`; **ui** `MainUnit.pas:4440` |
 | EUROPEANHFC | **exchange** `trdos/logstuff.pas:5587`; **multipliers** `trdos/logdupe.pas:2232`, `trdos/logedit.pas:1499` |
 | FISTS | **exchange** `trdos/logdupe.pas:1842`, `trdos/logdupe.pas:1937`, `trdos/logdupe.pas:2073` |
-| GENERALQSO | **exchange** `MainUnit.pas:7118`, `trdos/logdupe.pas:1799`, `trdos/logstuff.pas:7010` |
+| GENERALQSO | **exchange** `MainUnit.pas:7119`, `trdos/logdupe.pas:1799`, `trdos/logstuff.pas:7010` |
 | KVP | **exchange** `trdos/logstuff.pas:5587`; **multipliers** `trdos/logdupe.pas:2232`, `trdos/logedit.pas:1499` |
 | RFCHAMPIONSHIPCW | **exchange** `trdos/logdupe.pas:1663`, `trdos/logedit.pas:2436`; **multipliers** `trdos/logdupe.pas:2236` |
 | RFCHAMPIONSHIPSSB | **exchange** `trdos/logdupe.pas:1663`, `trdos/logedit.pas:2436`; **multipliers** `trdos/logdupe.pas:2236` |
@@ -506,9 +506,9 @@ Worth reading first, because they are the ones the brief named:
 | ARI_DX | **multipliers** `trdos/logdupe.pas:682`; **other** `trdos/logddx.pas:296` |
 | CALQSOPARTY | **exchange** `trdos/logedit.pas:2676`; **other** `trdos/logddx.pas:860` |
 | CQMM | **exchange** `trdos/logdupe.pas:1619`; **multipliers** `trdos/logedit.pas:2913` |
-| CQWWSSB | **score-summary** `trdos/postunit.pas:1168`; **ui** `MainUnit.pas:4440` |
-| CUPRFCW | **exchange** `trdos/logedit.pas:2679`; **cabrillo-export** `trdos/postunit.pas:2976` |
-| CUPRFSSB | **exchange** `trdos/logedit.pas:2679`; **cabrillo-export** `trdos/postunit.pas:2976` |
+| CQWWSSB | **score-summary** `trdos/postunit.pas:1176`; **ui** `MainUnit.pas:4440` |
+| CUPRFCW | **exchange** `trdos/logedit.pas:2679`; **cabrillo-export** `trdos/postunit.pas:2984` |
+| CUPRFSSB | **exchange** `trdos/logedit.pas:2679`; **cabrillo-export** `trdos/postunit.pas:2984` |
 | CUPURAL | **exchange** `trdos/logedit.pas:2678`; **other** `trdos/logddx.pas:861` |
 | GAGARINCUP | **multipliers** `trdos/logedit.pas:2945`, `trdos/logedit.pas:2947` |
 | GRIDLOC | **exchange** `trdos/logdupe.pas:1638`; **other** `trdos/logddx.pas:859` |
@@ -519,7 +519,7 @@ Worth reading first, because they are the ones the brief named:
 | PAQSOPARTY | **exchange** `trdos/logedit.pas:2678`; **other** `trdos/logddx.pas:861` |
 | QCWA | **exchange** `trdos/logdupe.pas:1682`; **other** `trdos/logddx.pas:862` |
 | QCWAGOLDEN | **exchange** `trdos/logdupe.pas:1682`; **other** `trdos/logddx.pas:862` |
-| RADIOYOC | **exchange** `MainUnit.pas:8042`, `trdos/logdupe.pas:1657` |
+| RADIOYOC | **exchange** `MainUnit.pas:8043`, `trdos/logdupe.pas:1657` |
 | RAEM | **exchange** `trdos/logdupe.pas:1651`, `uCallSignRoutines.pas:699` |
 | TENTEN | **exchange** `trdos/logdupe.pas:1625`; **other** `trdos/logddx.pas:858` |
 | UKRAINECHAMPIONSHIP | **exchange** `trdos/logedit.pas:2678`; **other** `trdos/logddx.pas:861` |
@@ -534,7 +534,7 @@ Worth reading first, because they are the ones the brief named:
 | DELAWAREQSOPARTY | **multipliers** `trdos/logdupe.pas:675` |
 | JALONGPREFECT | **exchange** `trdos/logdupe.pas:1878` |
 | KIDSDAY | **exchange** `trdos/logdupe.pas:1614` |
-| LABRE | **cabrillo-export** `trdos/postunit.pas:2962` |
+| LABRE | **cabrillo-export** `trdos/postunit.pas:2970` |
 | MAKROTHEN | **exchange** `trdos/logdupe.pas:1759` |
 | NRAUBALTICCW | **exchange** `trdos/logedit.pas:2684` |
 | NRAUBALTICSSB | **exchange** `trdos/logedit.pas:2684` |
