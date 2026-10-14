@@ -80,7 +80,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -98,6 +97,9 @@ type
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
@@ -178,11 +180,6 @@ begin
    Result := 'OZCHR';
 end;
 
-function TContestOZCRZ.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := ITUZones;
-end;
-
 function TContestOZCRZ.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := WYSIWYGDomestic;
@@ -239,6 +236,14 @@ end;
 function TContestOZCRZ.ZoneMultiplierCount: integer;
 begin
    Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestOZCRZ.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 function TContestOZCRZ.ZoneMultiplierZones: TZoneMultiplierZones;

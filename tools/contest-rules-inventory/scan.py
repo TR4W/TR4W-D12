@@ -20,12 +20,12 @@ from model import SENTINEL
 # ActiveQSOPointMethod LEFT THIS MAP AT M10 S4 (2026-10-14), deleted with
 # the point method; ActivePrefixMult (Pxm) left it, and SESSION below, at M11
 # S3 part 2 (2026-10-14), deleted with PrefixMultType; ActiveDXMult (XM) at
-# M11 S4 part 2 (2026-10-14), deleted with DXMultType.
+# M11 S4 part 2 (2026-10-14), deleted with DXMultType; ActiveZoneMult (ZnM)
+# at M11 S5 part 2 (2026-10-14), deleted with ZoneMultType.
 ACTIVE = {
    "ACTIVEEXCHANGE": "AE",
    "ACTIVEINITIALEXCHANGE": "AIE",
    "ACTIVEDOMESTICMULT": "DM",
-   "ACTIVEZONEMULT": "ZnM",
 }
 
 # A KIND THAT MOVED INTO THE SESSION OBJECT (M10 S9a-f, uContestSession) is
@@ -38,7 +38,6 @@ ACTIVE = {
 SESSION_OBJECT = "CONTESTSESSION"
 SESSION = {
    "INITIALEXCHANGE": "AIE",
-   "ZONEMULT": "ZnM",
    "DOMESTICMULT": "DM",
    "EXCHANGE": "AE",
 }

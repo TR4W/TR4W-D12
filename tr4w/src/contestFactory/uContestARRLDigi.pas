@@ -62,7 +62,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -211,11 +210,6 @@ begin
       contest-selection UI shows today, so expanding it here would change what
       an operator sees -- and that is a decision, not a transcription. *)
    Result := 'ARRL Inter. Digital Contest';
-end;
-
-function TContestARRLDigi.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestARRLDigi.GetDomesticMultiplierType: DomesticMultType;

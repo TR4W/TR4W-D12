@@ -140,9 +140,12 @@ multipliers, CTY.DAT, band lookup and CRC32.
   `QSOPartyArea` when it is two letters -- deliberately NOT `HostState`:
   British Columbia states 'BC' but its area is 'VE7', and asking HostState
   would start writing STATE/CNTY on every BCQP QSO (open for NY4I).
-  `postunit.ZoneSentForThisContest` asks the contest's `ZoneMultiplierType`
-  while the ADIF CQZ/ITUZ block asks the SESSION's `ActiveZoneMult` -- two
-  answers to one question, kept as-is and left for M10 S9 (plan F4).
+  `postunit.ZoneSentForThisContest(aContest)` and the ADIF CQZ/ITUZ block
+  ask ONE source, the contest's `ZoneMultiplierZones` (M11 S5; plan F4,
+  which once had them on two), and the block's CTY-zone-mode fallback asks
+  `ContestHasZoneMultiplier` on the same object (S5 part 2: the zone kind
+  and `ZoneMultiplierType` are deleted). The Croatian writes a CQ zone as
+  ITUZ and CW Open the inverse -- transcribed, F5/Q95 open.
   The county-line IMPORT asks the class since S7 (`ContestAllowsCountyLineOnImport`:
   Michigan stopped clearing the dupe flag; Arizona, BC, Virginia, Salmon Run
   and New York started). `uADIF.ResolveRoverCall` (rover call on EXPORT) still

@@ -177,7 +177,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -276,11 +275,6 @@ end;
 function TContestWashingtonSalmonRun.GetFriendlyName: string;
 begin
    Result := 'Washington State Salmon Run';
-end;
-
-function TContestWashingtonSalmonRun.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestWashingtonSalmonRun.GetDomesticMultiplierType: DomesticMultType;

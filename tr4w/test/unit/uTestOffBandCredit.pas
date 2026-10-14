@@ -225,7 +225,6 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
    savedDXCCByBand: TAdditionalMultByBand;
    savedDomesticByBand: TAdditionalMultByBand;
@@ -245,7 +244,6 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
    savedDXCCByBand := DXCCMultByBand;
    savedDomesticByBand := DomesticMultByBand;
@@ -255,7 +253,9 @@ begin
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
       ContestSession.WriteDomesticMult(NoDomesticMults);
-      ContestSession.WriteZoneMult(NoZoneMults);
+      (* No zone multiplier: Idaho's class answers HasZoneMultiplier False
+         at every station; the session's zone kind this wrote is deleted
+         (M11 S5 part 2). *)
       DXCCMultByBand := dmbbDefauld;
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
@@ -287,7 +287,6 @@ begin
       DomesticMultByBand := savedDomesticByBand;
       DXCCMultByBand := savedDXCCByBand;
       ContestSession.WriteDomesticMult(savedDomesticMult);
-      ContestSession.WriteZoneMult(savedZoneMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;
@@ -300,7 +299,6 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedZoneMult: ZoneMultType;
    savedDomesticMult: DomesticMultType;
    savedDomesticByBand: TAdditionalMultByBand;
    savedRestart: RestartInfo;
@@ -331,7 +329,6 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedZoneMult := ContestSession.ZoneMult;
    savedDomesticMult := ContestSession.DomesticMult;
    savedDomesticByBand := DomesticMultByBand;
    savedRestart := tRestartInfo;
@@ -340,7 +337,6 @@ begin
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
       ContestSession.WriteDomesticMult(DomesticFile);
-      ContestSession.WriteZoneMult(NoZoneMults);
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
 
@@ -368,7 +364,6 @@ begin
       tRestartInfo := savedRestart;
       DomesticMultByBand := savedDomesticByBand;
       ContestSession.WriteDomesticMult(savedDomesticMult);
-      ContestSession.WriteZoneMult(savedZoneMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;

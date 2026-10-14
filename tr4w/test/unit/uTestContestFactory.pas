@@ -3014,7 +3014,10 @@ begin
          end;
       CheckEquals('Jock White Memorial Field Day', obj.FriendlyName, 'friendly name');
       CheckEquals(0, obj.WA7BNMId, 'not on the calendar: 0 disables the menu item');
-      CheckEquals(Ord(BranchZones), Ord(obj.ZoneMultiplierType), 'branch multipliers');
+      (* The row's BranchZones kind went with ZoneMultType (M11 S5 part 2):
+         the class has a zone multiplier, the 99 NZART branches. *)
+      CheckTrue(obj.HasZoneMultiplier, 'branch multipliers');
+      CheckEquals(99, obj.ZoneMultiplierCount, 'the NZART branches, 1 to 99');
    finally
       obj.Free;
       end;

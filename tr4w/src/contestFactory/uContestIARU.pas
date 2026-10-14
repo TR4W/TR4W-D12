@@ -76,7 +76,6 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -130,6 +129,9 @@ type
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
@@ -235,11 +237,6 @@ end;
 function TContestIARU.GetDomesticFileName: string;
 begin
    Result := 'iaruhq';
-end;
-
-function TContestIARU.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := ITUZones;
 end;
 
 function TContestIARU.GetDomesticMultiplierType: DomesticMultType;
@@ -415,6 +412,14 @@ end;
 function TContestIARU.ZoneMultiplierCount: integer;
 begin
    Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestIARU.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 function TContestIARU.ZoneMultiplierZones: TZoneMultiplierZones;

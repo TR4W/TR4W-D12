@@ -72,7 +72,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -91,6 +90,9 @@ type
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
@@ -169,11 +171,6 @@ begin
    Result := 'World Wide Iron Ham Contest';
 end;
 
-function TContestWWIH.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := CQZones;
-end;
-
 function TContestWWIH.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -224,6 +221,14 @@ end;
 function TContestWWIH.ZoneMultiplierCount: integer;
 begin
    Result := CQ_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestWWIH.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 function TContestWWIH.ZoneMultiplierZones: TZoneMultiplierZones;

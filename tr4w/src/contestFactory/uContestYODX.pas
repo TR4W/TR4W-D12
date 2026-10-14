@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -200,11 +199,6 @@ end;
 function TContestYODX.GetFriendlyName: string;
 begin
    Result := 'YO DX HF Contest';
-end;
-
-function TContestYODX.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestYODX.GetDomesticMultiplierType: DomesticMultType;

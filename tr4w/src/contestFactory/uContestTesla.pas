@@ -75,7 +75,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -190,11 +189,6 @@ end;
 function TContestTesla.GetFriendlyName: string;
 begin
    Result := 'TESLA Memorial HF CW Contest';
-end;
-
-function TContestTesla.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestTesla.GetDomesticMultiplierType: DomesticMultType;

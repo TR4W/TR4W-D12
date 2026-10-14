@@ -29,7 +29,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   WHY THE UNIT IS A CONTEST AND NOT A STRATEGY ENUM. TR4W decomposed a
   contest into strategy enums -- QSOPointMethodType (deleted at M10 S4),
   ExchangeType, DXMultType (deleted at M11 S4), PrefixMultType (deleted at
-  M11 S3), ZoneMultType --
+  M11 S3), ZoneMultType (deleted at M11 S5) --
   each dispatched by
   its own `case`, and it would have been less work to turn each enum into a
   class. That is the wrong object model for this program:
@@ -598,7 +598,7 @@ type
       them alike: no zone multiplier at all, and one the contest numbers
       itself (the European HF Championship's year licensed, the NZART
       branch, the RF Championship's seven zones). Whether a contest counts a
-      zone multiplier at all is ContestSession.DoingZoneMults until S5 part 2.
+      zone multiplier at all is TContestBase.HasZoneMultiplier (S5 part 2).
 
       THIS IS NOT THE CTY ZONE MODE. ZoneModeType (TContestBase.ZoneMode, from
       cfCQZoneMode) says which zone CTY.DAT gives a logged call; this says
@@ -739,7 +739,7 @@ type
    TSessionValue = (
       svExchange, svDomesticMult,
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
-      svInitialExchange, svZoneMult, svDXMultLimit,
+      svInitialExchange, svDXMultLimit,
       svInitialExchangeCursorAtStart, svDXCCMultByBand,
       svR150SMode, svSuppressZoneExchangeMessages,
       svMultByBand, svQSOByMode, svQSOByBand,
@@ -815,7 +815,6 @@ type
       FMode: ModeType;
       FDomesticMultByBand: TAdditionalMultByBand;
       FInitialExchange: InitialExchangeType;
-      FZoneMult: ZoneMultType;
       FDXMultLimit: integer;
       FDXCCMultByBand: TAdditionalMultByBand;
       FMinitourDuration: TTourDuration;
@@ -832,7 +831,6 @@ type
       procedure SetMode(aValue: ModeType);
       procedure SetDomesticMultByBand(aValue: TAdditionalMultByBand);
       procedure SetInitialExchange(aValue: InitialExchangeType);
-      procedure SetZoneMult(aValue: ZoneMultType);
       procedure SetDXMultLimit(aValue: integer);
       procedure SetDXCCMultByBand(aValue: TAdditionalMultByBand);
       procedure SetMinitourDuration(aValue: TTourDuration);
@@ -860,11 +858,11 @@ type
       property AllowDupeQSOs: boolean index Ord(svAllowDupeQSOs)
          read GetFlag write SetFlag;
 
-      (* The session's InitialExchange and ZoneMult (uContestSession, M10
-         S9a, S9c) and DXMultLimit -- M7b. *)
+      (* The session's InitialExchange (uContestSession, M10 S9a) and
+         DXMultLimit -- M7b. (ZoneMult went with the zone kind at M11 S5
+         part 2: the contest answers HasZoneMultiplier.) *)
       property InitialExchange: InitialExchangeType
          read FInitialExchange write SetInitialExchange;
-      property ZoneMult: ZoneMultType read FZoneMult write SetZoneMult;
       property DXMultLimit: integer read FDXMultLimit write SetDXMultLimit;
 
       (* THE INITIAL EXCHANGE'S CURSOR AT THE START OF THE WINDOW -- M7b
@@ -1179,7 +1177,6 @@ type
       function GetDomesticFileName: string; virtual;
       function GetFriendlyName: string; virtual;
       function GetQRZRUId: integer; virtual;
-      function GetZoneMultiplierType: ZoneMultType; virtual;
       function GetDomesticMultiplierType: DomesticMultType; virtual;
       function GetInitialExchangeKind: InitialExchangeType; virtual;
       function GetExchangeKind: ExchangeType; virtual;
@@ -1410,7 +1407,6 @@ type
       property DomesticFileName: string read GetDomesticFileName;
       property FriendlyName: string read GetFriendlyName;
       property QRZRUId: integer read GetQRZRUId;
-      property ZoneMultiplierType: ZoneMultType read GetZoneMultiplierType;
       property DomesticMultiplierType: DomesticMultType read GetDomesticMultiplierType;
       property InitialExchangeKind: InitialExchangeType read GetInitialExchangeKind;
       property ExchangeKind: ExchangeType read GetExchangeKind;
@@ -1767,16 +1763,39 @@ type
       function ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
                                        aContinent: ContinentType): boolean; virtual;
 
+      (* DOES THIS CONTEST HAVE A ZONE MULTIPLIER AT THIS STATION? -- M11 S5
+         part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S5).
+
+         It replaces the session's ZONE KIND, deleted with ZoneMultType: the
+         engine asked `kind <> NoZoneMults` (ContestSession's DoingZoneMults)
+         whether to flag a zone multiplier, set up and list the remaining
+         zones, show the zone totals, add the zone to the hint and blank the
+         zone column. That question has no QSO in hand, and it is answered
+         here, per contest, against Station -- LIVE, as HasDXMultiplier and
+         HasPrefixMultiplier are, so a mid-session change of MY CALL without
+         a CONTEST change is followed (the kind was resolved once, by
+         FoundContest).
+
+         Eighteen contests answer True at every station; JIDX CW and SSB answer
+         True for a Japanese entrant only, through the private predicate
+         their zone count, zone list and DX answers already ask -- the test
+         DescribeSession stated the zone kind under.
+
+         INVARIANT: True exactly where ZoneMultiplierCount is above 0 --
+         pinned for every contest at every roster station by
+         uTestZoneMultiplier. THE BASE ANSWERS FALSE. *)
+      function HasZoneMultiplier: boolean; virtual;
+
       (* HOW MANY ZONES THIS CONTEST'S ZONE MULTIPLIER HAS -- M11 S5,
          2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S5).
 
-         LOGDUPE.SetUpRemainingMultiplierArrays asks it, where the session
-         counts zone multipliers, for MaxNumberOfZones -- the zones the
-         remaining-mults window walks. It stood there as `case
+         LOGDUPE.SetUpRemainingMultiplierArrays asks it, where the contest
+         has a zone multiplier (HasZoneMultiplier), for MaxNumberOfZones --
+         the zones the remaining-mults window walks. It stood there as `case
          ContestSession.ZoneMult of` (CQ 40, ITU 75, the year licensed 100,
          the NZART branch 99, the RF Championship 7; the JA-prefecture arm,
          50, ran for no contest and is gone). A rule that depends on the
-         entrant asks Station, testing exactly what its DescribeSession tests
+         entrant asks Station, testing exactly what its DescribeSession tested
          to state the zone kind (JIDX: a Japanese entrant counts CQ zones).
          THE BASE ANSWERS 0. *)
       function ZoneMultiplierCount: integer; virtual;
@@ -2506,6 +2525,12 @@ function ContestListsRemainingDXCountry(aContest: TContestBase;
                                         const aCountryID: DXMultiplierString;
                                         aContinent: ContinentType): boolean;
 
+(* DOES aContest HAVE A ZONE MULTIPLIER AT ITS STATION? -- see
+   TContestBase.HasZoneMultiplier. nil answers False: the classless
+   DUMMYCONTEST ran NoZoneMults. LOGEDIT.DoingZoneMults asks it of the
+   active contest; a caller already holding the object asks it here. *)
+function ContestHasZoneMultiplier(aContest: TContestBase): boolean;
+
 (* HOW MANY ZONES aContest's ZONE MULTIPLIER HAS -- see
    TContestBase.ZoneMultiplierCount. nil answers 0: the classless
    DUMMYCONTEST ran NoZoneMults. *)
@@ -2619,8 +2644,9 @@ end;
    Each answers a constant, and the constants ARE DUMMYCONTEST's row: blank
    names (so the enum's spelling, which is what the old two-step gave for a
    blank field), no calendar ids, no e-mail, no domestic file,
-   NoZoneMults, NoInitialExchange, NoDomesticMults, P 0, UnknownExchange,
-   NoDXMults, a flag word of 0. DUMMYCONTEST -- the one contest with no class
+   NoInitialExchange, NoDomesticMults, P 0, UnknownExchange, a flag word
+   of 0 (the row's NoDXMults and NoZoneMults went with their kinds at
+   M11 S4 and S5). DUMMYCONTEST -- the one contest with no class
    -- therefore answers exactly what it did, and every registered contest
    states its own values (M10 S5); Test_MovedRowValuesStillMatchTheArray
    holds each class to its row until plan S8 deletes the tables. *)
@@ -2672,11 +2698,6 @@ end;
 function TContestBase.GetQRZRUId: integer;
 begin
    Result := 0;
-end;
-
-function TContestBase.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestBase.GetDomesticMultiplierType: DomesticMultType;
@@ -2902,6 +2923,18 @@ begin
    else
       begin
       Result := aContest.ListsRemainingDXCountry(aCountryID, aContinent);
+      end;
+end;
+
+function ContestHasZoneMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.HasZoneMultiplier;
       end;
 end;
 
@@ -3267,6 +3300,12 @@ function TContestBase.ListsRemainingDXCountry(const aCountryID: DXMultiplierStri
 begin
    (* No filter -- see the declaration. *)
    Result := True;
+end;
+
+function TContestBase.HasZoneMultiplier: boolean;
+begin
+   (* No zone multiplier -- see the declaration. *)
+   Result := False;
 end;
 
 function TContestBase.ZoneMultiplierCount: integer;
@@ -3841,12 +3880,6 @@ procedure TSessionDefaults.SetInitialExchange(aValue: InitialExchangeType);
 begin
    FInitialExchange := aValue;
    Stated(svInitialExchange);
-end;
-
-procedure TSessionDefaults.SetZoneMult(aValue: ZoneMultType);
-begin
-   FZoneMult := aValue;
-   Stated(svZoneMult);
 end;
 
 procedure TSessionDefaults.SetDXMultLimit(aValue: integer);

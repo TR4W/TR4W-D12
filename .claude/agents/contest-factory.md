@@ -135,8 +135,8 @@ the target shape, the M-step migration order and the open questions.
   `docs/CONTEST_FACTORY_M10_PLAN.md`).** The six `Active*` KIND globals are
   gone: the session's kinds are read-only properties of
   `uContestSession.ContestSession` (`Exchange`, `InitialExchange`,
-  `ZoneMult`, `DomesticMult`; `PrefixMult` was deleted at M11 S3 and
-  `DXMult` at M11 S4), written only by
+  `DomesticMult`; `PrefixMult` was deleted at M11 S3, `DXMult` at M11
+  S4 and `ZoneMult` at M11 S5), written only by
   FCONTEST's set-up through `Write*`. They are SESSION facts -- 27 contests
   run a kind their trait does not state -- so never answer one from
   `ContestIdentity`. **M11 is next:** the six kind enums and their ~80 engine
@@ -240,9 +240,12 @@ the target shape, the M-step migration order and the open questions.
   on a key given where `HasDXMultiplier` is False. `LOGEDIT.DoingDXMults`
   is that answer for the active contest -- live, so F21 is closed; there is
   no session flag for it.
-- **THE ZONE MULTIPLIER IS THE CLASS'S (M11 S5 part 1, 2026-10-14).** Three
+- **THE ZONE MULTIPLIER IS THE CLASS'S (M11 S5, 2026-10-14).** Four
   virtuals, each with a nil-safe `Contest...` free function:
-  `ZoneMultiplierCount: integer` (base 0), `ZoneMultiplierZones:
+  `HasZoneMultiplier: boolean` (base False -- part 2, which DELETED
+  `ZoneMultType`, the `ZoneMultiplierType` trait, the session's
+  `ZoneMult` and JIDX's two `DescribeSession` zone statements; there is
+  no zone kind to state), `ZoneMultiplierCount: integer` (base 0), `ZoneMultiplierZones:
   TZoneMultiplierZones` (base `zmzNotCQOrITU` -- also the answer for a
   contest that numbers its own zones) and `NumbersZonesFromZero: boolean`
   (base False; the European HFC and KVP). **`TZoneMultiplierZones` IS NOT
@@ -255,8 +258,14 @@ the target shape, the M-step migration order and the open questions.
   overrides `ZoneMultiplierCount` (and `ZoneMultiplierZones` for CQ or ITU
   zones, `NumbersZonesFromZero` if zero-based), adds rows to
   `uTestZoneMultiplier`'s `ZONE_PINS` and itself to its sets; the count of
-  20 then changes by hand, with the reason. Until S5 part 2 it still states
-  the `ZoneMultiplierType` trait too, which `DoingZoneMults` reads.
+  20 then changes by hand, with the reason. It overrides
+  `HasZoneMultiplier` too -- True exactly where the count is above 0, an
+  invariant `Test_EveryContestHasItsPinnedZoneMultiplier` asserts for every
+  contest at every station, with literal per-station totals (18; 20 at
+  JA) that change by hand. Where the entrant decides, it returns the SAME
+  predicate the count asks (JIDX: `IsJapaneseEntrant`).
+  `LOGEDIT.DoingZoneMults` is that answer for the active contest; there is
+  no session flag for it.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by

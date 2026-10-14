@@ -88,16 +88,18 @@ ROUTINES = {
    # states its key (DXMultiplierKey). What is left here is the engine's head
    # -- the WYSIWYG domestic test, a DOMESTIC kind read, S6's.
    ("logdupe.pas", "GetDXQTH"): ("multipliers", "DXMultiplierKey (existing, M11 S4); the WYSIWYG domestic head moves at S6"),
-   # Its `case` on the zone kind left at M11 S5 (part 1): the contest states its
-   # zone count (ZoneMultiplierCount).
-   ("logdupe.pas", "DupeAndMultSheet.SetUpRemainingMultiplierArrays"): ("multipliers", "ZoneMultiplierCount (existing, M11 S5)"),
+   # LOGDUPE.SetUpRemainingMultiplierArrays left at M11 S5: its `case` on the
+   # zone kind at part 1 (the contest answers ZoneMultiplierCount), its
+   # DoingZoneMults gate at part 2 (the contest answers HasZoneMultiplier).
+   # It reads no session kind.
    ("logedit.pas", "EditableLog.GetMultArray"): ("multipliers", new("DomesticMultFromQTH")),
    # logedit.SetPrefix left at M11 S3: it names no contest and reads no kind --
    # the contest states its key (PrefixMultiplierKey) and whether it has one
    # (HasPrefixMultiplier); PrefixMultiplierType is deleted (part 2).
-   # The EUHFCYear zero-based test left ShowRemMultsInWindow at M11 S5 (part 1):
-   # the contest answers NumbersZonesFromZero.
-   ("logedit.pas", "Add"): ("multipliers", "NumbersZonesFromZero (existing, M11 S5)"),
+   # The EUHFCYear zero-based test left ShowRemMultsInWindow (its nested Add)
+   # at M11 S5 part 1: the contest answers NumbersZonesFromZero. The row
+   # went at part 2, when ZoneMultType was deleted; nothing there reads a
+   # session kind.
    # uMults.FillVisibleBytes left at M11 S4: its three DX-kind filters at part 1
    # (the contest answers ListsRemainingDXCountry), its DoingDXMults gate at
    # part 2 (the contest answers HasDXMultiplier). It reads no session kind.

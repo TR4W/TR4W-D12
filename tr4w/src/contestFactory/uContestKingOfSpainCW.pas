@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -180,11 +179,6 @@ end;
 function TContestKingOfSpainCW.GetFriendlyName: string;
 begin
    Result := 'His Maj. King of Spain Contest, CW';
-end;
-
-function TContestKingOfSpainCW.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestKingOfSpainCW.GetDomesticMultiplierType: DomesticMultType;

@@ -86,7 +86,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -165,11 +164,6 @@ end;
 function TContestCQIR.GetFriendlyName: string;
 begin
    Result := 'CQIR - Ireland Calling';
-end;
-
-function TContestCQIR.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestCQIR.GetDomesticMultiplierType: DomesticMultType;

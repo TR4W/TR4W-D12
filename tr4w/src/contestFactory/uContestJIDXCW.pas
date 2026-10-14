@@ -81,7 +81,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -104,9 +103,9 @@ type
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    private
       (* IS THE ENTRANT IN JAPAN? -- DescribeSession's station test, asked of
-         Station. It chose the DX kind (deleted at M11 S4 part 2) and still
-         chooses the zone kind DescribeSession states; HasDXMultiplier, the
-         DX key, the country list and both zone answers ask it, so the
+         Station. It chose the DX kind and the zone kind, both deleted
+         (M11 S4 and S5 part 2); HasDXMultiplier, the DX key, the country
+         list, HasZoneMultiplier and both zone answers ask it, so the
          answers cannot disagree (M11 S4; renamed from CountsDXMultiplier at
          M11 S5, when the zone answers became its second use). *)
       function IsJapaneseEntrant: boolean;
@@ -120,6 +119,9 @@ type
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
@@ -225,11 +227,6 @@ begin
    Result := 'JIDX CW Contest';
 end;
 
-function TContestJIDXCW.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
-end;
-
 function TContestJIDXCW.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -266,7 +263,6 @@ begin
       begin
       aSession.InitialExchange := ZoneInitialExchange;
       aSession.Exchange := RSTZoneExchange;
-      aSession.ZoneMult := CQZones;
       end
    else
       begin
@@ -356,9 +352,20 @@ begin
       end;
 end;
 
+(* DOES IT HAVE A ZONE MULTIPLIER AT THIS STATION? -- M11 S5 part 2,
+   2026-10-14. Yes for a Japanese entrant; none for anyone else. This is
+   the station test the session's zone kind was chosen by (DescribeSession
+   stated CQZones for JA over the trait's NoZoneMults) until that kind was
+   deleted; the zone count and list ask the same predicate, so the
+   answers cannot disagree. *)
+function TContestJIDXCW.HasZoneMultiplier: boolean;
+begin
+   Result := IsJapaneseEntrant;
+end;
+
 (* THE ZONE MULTIPLIER -- M11 S5, 2026-10-14: the CQ zones, for a Japanese
    entrant only; none for anyone else, whose multiplier is the prefecture.
-   DescribeSession states CQZones for a JA station over the trait's
+   DescribeSession stated CQZones for a JA station over the trait's
    NoZoneMults, and LOGDUPE's zone count and the zone-list readers took it
    from the session kind until S5; these ask the same station test. *)
 function TContestJIDXCW.ZoneMultiplierCount: integer;

@@ -3247,21 +3247,18 @@ type
   contest states its own key (TContestBase.PrefixMultiplierKey) and whether
   it has a prefix multiplier at all (TContestBase.HasPrefixMultiplier). *)
 
-  ZoneMultType =
-    (
-    NoZoneMults,
-    CQZones,
-    ITUZones,
-    JAPrefectures,
-    BranchZones,
-    EUHFCYear,
-    RFChampionchipZones
-    );
+(* ZoneMultType IS GONE -- M11 S5 part 2, 2026-10-14. It named which zone
+  multiplier a session ran. Each zone contest states its zone count
+  (TContestBase.ZoneMultiplierCount), the list it counts
+  (ZoneMultiplierZones), whether it numbers from zero
+  (NumbersZonesFromZero) and whether it has a zone multiplier at all
+  (HasZoneMultiplier). ZoneModeType, the CTY zone system, is data and
+  stays: it is not the multiplier's list (plan F5, Q95). *)
+
 (* PrefixMultStringArray IS GONE -- M10 S2, 2026-10-14. It spelled PREFIX
   MULTIPLIER's values for the config parser, and that command is retired
   (uCFG.RETIRED_COMMANDS, NY4I's Q4): the contest's class decides the prefix
   multiplier. Nothing else read it. *)
-type
   DomesticMultType =
     (
     NoDomesticMults,

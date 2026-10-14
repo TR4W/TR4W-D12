@@ -75,7 +75,6 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -124,11 +123,6 @@ end;
 function TContestNRAUBalticBase.GetDomesticFileName: string;
 begin
    Result := 'nrau';
-end;
-
-function TContestNRAUBalticBase.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestNRAUBalticBase.GetDomesticMultiplierType: DomesticMultType;

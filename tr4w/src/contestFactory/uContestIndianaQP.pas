@@ -82,7 +82,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -164,11 +163,6 @@ end;
 function TContestIndianaQP.GetFriendlyName: string;
 begin
    Result := 'Indiana QSO Party';
-end;
-
-function TContestIndianaQP.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestIndianaQP.GetDomesticMultiplierType: DomesticMultType;

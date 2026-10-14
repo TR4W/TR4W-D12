@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -163,11 +162,6 @@ end;
 function TContestREFCW.GetFriendlyName: string;
 begin
    Result := 'REF Contest, CW';
-end;
-
-function TContestREFCW.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestREFCW.GetDomesticMultiplierType: DomesticMultType;

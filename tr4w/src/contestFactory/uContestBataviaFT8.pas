@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -202,11 +201,6 @@ end;
 function TContestBataviaFT8.GetFriendlyName: string;
 begin
    Result := 'Batavia FT8 Contest';
-end;
-
-function TContestBataviaFT8.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestBataviaFT8.GetDomesticMultiplierType: DomesticMultType;

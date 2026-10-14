@@ -94,7 +94,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -110,6 +109,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          NumbersZonesFromZero (M11 S5). Its zones are not CQ or ITU zones, so
          ZoneMultiplierZones is the base's. *)
@@ -177,11 +179,6 @@ begin
    Result := 'European HF Championship';
 end;
 
-function TContestEuropeanHFC.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := EUHFCYear;
-end;
-
 function TContestEuropeanHFC.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -228,6 +225,14 @@ end;
 function TContestEuropeanHFC.ZoneMultiplierCount: integer;
 begin
    Result := 100;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestEuropeanHFC.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 function TContestEuropeanHFC.NumbersZonesFromZero: boolean;

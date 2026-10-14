@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -166,11 +165,6 @@ end;
 function TContestDARC10M.GetFriendlyName: string;
 begin
    Result := 'DARC 10-Meter Contest';
-end;
-
-function TContestDARC10M.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestDARC10M.GetDomesticMultiplierType: DomesticMultType;

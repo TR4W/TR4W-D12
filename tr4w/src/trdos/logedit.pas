@@ -197,6 +197,8 @@ procedure SetDXQTHAndPrefix(var RData: ContestExchange);
 function DoingPrefixMults: boolean;
 (* Does the active contest have a DX multiplier at this station? M11 S4. *)
 function DoingDXMults: boolean;
+(* Does the active contest have a zone multiplier at this station? M11 S5. *)
+function DoingZoneMults: boolean;
 (* Does aContest count any multiplier at all at this station? M11 S4. *)
 function DoingAnyMults(aContest: ContestType): boolean;
 {KK1L: 6.64 Added to keep BM up to date with changes made while logging}
@@ -985,6 +987,8 @@ var
   contestRules: TContestBase;
   (* Asked once: a station test can allocate (ALRS's oblast). M11 S4 part 2. *)
   countsDX: boolean;
+  (* Asked once of the contest in hand, as countsDX is -- M11 S5 part 2. *)
+  countsZones: boolean;
   (* The zone list the contest's zone multiplier counts -- M11 S5. *)
   zoneList: TZoneMultiplierZones;
 begin
@@ -992,8 +996,9 @@ begin
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
   contestRules := ActiveContest(Contest);
   countsDX := ContestHasDXMultiplier(contestRules);
+  countsZones := ContestHasZoneMultiplier(contestRules);
 
-  if countsDX or ContestSession.DoingZoneMults or
+  if countsDX or countsZones or
      ContestHasPrefixMultiplier(contestRules) then
      begin
      FillChar(TempRXData, SizeOf(TempRXData), 0);
@@ -1025,7 +1030,7 @@ begin
         end;
      end;
 
-  if ContestSession.DoingZoneMults then
+  if countsZones then
      begin
      (* WHICH ZONE LIST, ASKED OF THE CONTEST ALREADY IN HAND -- M11 S5. It
        was `ContestSession.ZoneMult in [CQZones, ITUZones]`; a contest that
@@ -2515,21 +2520,19 @@ begin
                 -- it read `ContestSession.ZoneMult = ITUZones`). The ' ' in
                 front is KK1L's (6.73, "K9PG forgets to add it").
 
-                ContestIdentity, NOT ActiveContest, AND THAT IS DELIBERATE
-                (plan F22). The question asked of the list is only "ITU or
-                not", and no contest's answer to it depends on the entrant
-                (JIDX, the one station-dependent zone class, is CQ or nothing)
-                -- pinned for every contest at every roster station in
-                uTestZoneMultiplier. And ActiveContest rebuilds the station
-                here, between one call-history lookup and the next, which
-                overwrote the stack residue LOGSCP.BestTwoLetters reads for a
-                call containing 'JA' (F22) and so changed whether the NEXT
-                lookup found its call: the matrix's JA1ABC moved in the
-                Croatian, IRTS and WRTC. That residue is a defect, not a rule,
-                and it is F22's to fix; this site keeps to a lookup that does
-                not disturb it, so S5 moves no output. *)
+                The ACTIVE contest, like every other zone reader (M11 S5 part
+                2). Part 1 asked ContestIdentity here because an
+                ActiveContest call between two call-history lookups moved
+                the stack residue LOGSCP.BestTwoLetters read for a call
+                containing 'JA' (plan F22); BestTwoLetters zeroes its array
+                since a8186905, so nothing here depends on what ran between
+                lookups. The answer is the same either way -- "ITU or not"
+                depends on no entrant for any contest, pinned in
+                uTestZoneMultiplier.Test_TheITUQuestionDependsOnNoStation.
+                Once per initial exchange that TRMASTER answers, not per
+                row. *)
               if InitialZoneFromCallHistory(
-                    ContestZoneMultiplierZones(ContestIdentity(Contest)),
+                    ContestZoneMultiplierZones(ActiveContest(Contest)),
                     data.CQZone, data.ITUZone, historyZone) then
                  begin
                  InitialExchangeEntry := ' ' + historyZone;
@@ -3032,25 +3035,45 @@ begin
    Result := ContestHasDXMultiplier(ActiveContest(Contest));
 end;
 
+(* DOES THE ACTIVE CONTEST HAVE A ZONE MULTIPLIER AT THIS STATION? -- M11 S5
+  part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S5).
+
+  This was ContestSession.DoingZoneMults, `ZoneMult <> NoZoneMults` over the
+  kind FoundContest resolved once at set-up. The kind is deleted; the
+  contest answers (TContestBase.HasZoneMultiplier), against the station
+  ActiveContest hands it on every call -- the station its zone count and
+  zone list read, so all three follow the same MY CALL.
+
+  For a reader with no contest object in hand, as DoingDXMults is. A reader
+  that already holds ActiveContest's object (SetMultFlags, the rescore,
+  GetMultArray, SetUpRemainingMultiplierArrays) asks
+  ContestHasZoneMultiplier on it instead of fetching it again. *)
+function DoingZoneMults: boolean;
+begin
+   Result := ContestHasZoneMultiplier(ActiveContest(Contest));
+end;
+
 (* DOES aContest COUNT ANY MULTIPLIER AT ALL AT THIS STATION? -- M11 S4 part
-  2, 2026-10-14. The four Doing* answers OR-ed: the session's domestic and
-  zone kinds, then the contest's DX and prefix answers.
+  2, 2026-10-14. The four Doing* answers OR-ed: the session's domestic kind,
+  then the contest's DX, prefix and zone answers (the zone one since M11 S5
+  part 2, when the zone kind was deleted).
 
   ONE STATEMENT FOR TWO READERS that had each spelled it: the final score's
   "counts multipliers" (uScoreTotals.GatherScoreTotals) and the WSJT-X decode
-  gate (uWSJTX). The session's two kinds are field reads and come first; the
-  contest is fetched only when both are False, and then ONCE for its two
+  gate (uWSJTX). The session's kind is a field read and comes first; the
+  contest is fetched only when it is False, and then ONCE for its three
   answers -- ActiveContest rebuilds the station on every call. *)
 function DoingAnyMults(aContest: ContestType): boolean;
 var
    contestRules: TContestBase;
 begin
-   Result := ContestSession.DoingDomesticMults or ContestSession.DoingZoneMults;
+   Result := ContestSession.DoingDomesticMults;
    if not Result then
       begin
       contestRules := ActiveContest(aContest);
       Result := ContestHasDXMultiplier(contestRules) or
-                ContestHasPrefixMultiplier(contestRules);
+                ContestHasPrefixMultiplier(contestRules) or
+                ContestHasZoneMultiplier(contestRules);
       end;
 end;
 

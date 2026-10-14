@@ -51,11 +51,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       Tests use the same methods. No reader writes, and the properties are
       read-only so a stray `:=` does not compile. Nothing enforces the writer
       beyond that: count the Write* callers
-      (rg -i "\.Write(InitialExchange|ZoneMult|DomesticMult|Exchange)")
+      (rg -i "\.Write(InitialExchange|DomesticMult|Exchange)")
       -- FCONTEST and the tests are the only legitimate ones. Named Write*,
       not Set*, because TSessionDefaults (what a contest STATES) already has
-      a SetInitialExchange (and SetZoneMult, SetDomesticMult, SetExchange),
-      and "who writes the session" must be one search.
+      a SetInitialExchange (and SetDomesticMult, SetExchange), and "who
+      writes the session" must be one search.
     * THREADS. The writer runs on the main thread. Every reader measured at
       S9a for all six kinds runs on the main thread too: the call window,
       the sheet, the display, the exporters (headless /EXPORT runs on the
@@ -81,13 +81,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
     InitialExchange    S9a   was LOGWIND.ActiveInitialExchange
     PrefixMult         S9b   was LOGDUPE.ActivePrefixMult; DELETED at M11 S3
-    ZoneMult           S9c   was LOGWIND.ActiveZoneMult
+    ZoneMult           S9c   was LOGWIND.ActiveZoneMult; DELETED at M11 S5
     DXMult             S9d   was VC.ActiveDXMult; DELETED at M11 S4
     DomesticMult       S9e   was LOGDOM.ActiveDomesticMult
     Exchange           S9f   was LOGWIND.ActiveExchange
 
-  All six came here, and four remain -- the prefix kind left at M11 S3 and
-  the DX kind at M11 S4; no kind global is left. The kind ENUMS outlive M10: they
+  All six came here, and three remain -- the prefix kind left at M11 S3,
+  the DX kind at M11 S4 and the zone kind at M11 S5; no kind global is
+  left. The kind ENUMS outlive M10: they
   are the engine's vocabulary until their arms move into the classes at M11
   (design 8.2s).
 
@@ -99,6 +100,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     DoingDXMults       M11 S4  LEFT with the DX kind: the contest answers it
                                (LOGEDIT.DoingDXMults, asking
                                TContestBase.HasDXMultiplier)
+    DoingZoneMults     M11 S5  LEFT with the zone kind: the contest answers
+                               it (LOGEDIT.DoingZoneMults, asking
+                               TContestBase.HasZoneMultiplier)
   *)
 unit uContestSession;
 
@@ -113,26 +117,14 @@ type
    TContestSession = class
    private
       FInitialExchange: InitialExchangeType;
-      FZoneMult: ZoneMultType;
       FDomesticMult: DomesticMultType;
       FExchange: ExchangeType;
       function GetDoingDomesticMults: boolean;
-      function GetDoingZoneMults: boolean;
    public
       (* The initial exchange the call window pre-fills from -- the kind
         LOGEDIT.InitialExchangeEntry asks. A fresh session holds
         NoInitialExchange, the zero the global it replaces started from. *)
       property InitialExchange: InitialExchangeType read FInitialExchange;
-
-      (* The zone multiplier the session runs. Since M11 S5 it is read only
-        through DoingZoneMults (and the contest matrix's active.zonemult):
-        the zone count, the zone list (the hint, the initial zone, the ADIF
-        CQZ/ITUZ choice, POSTUNIT.ZoneSentForThisContest) and zero-based
-        numbering are the contest's own answers (TContestBase.
-        ZoneMultiplierCount, ZoneMultiplierZones, NumbersZonesFromZero). S5
-        part 2 deletes it. A fresh session holds NoZoneMults, the zero
-        LOGWIND.ActiveZoneMult started from. *)
-      property ZoneMult: ZoneMultType read FZoneMult;
 
       (* The domestic multiplier the session runs -- how LOGDOM reads a
         domestic QTH, the sheet's domestic mult flags, the grid-square rover
@@ -155,9 +147,9 @@ type
         "none", computed on every read and stored nowhere.
 
         These were LOGDUPE globals -- DoingDomesticMults, DoingZoneMults,
-        DoingPrefixMults and DoingDXMults (the last two are the contest's own
-        answers since M11 S3 and S4, LOGEDIT.DoingPrefixMults and
-        DoingDXMults) -- derived ONCE at start-up
+        DoingPrefixMults and DoingDXMults (the last three are the contest's
+        own answers since M11 S3, S4 and S5, LOGEDIT.DoingPrefixMults,
+        DoingDXMults and DoingZoneMults) -- derived ONCE at start-up
         (LogCfg) while the kinds above are rewritten by every FoundContest.
         So a contest changed without a restart -- a multi-op peer's CONTEST
         line, uSettingsEffects -> FoundContest -- left them describing the
@@ -168,14 +160,12 @@ type
         can go stale; an answer computed from the one store cannot.
 
         The cost is a call and a field compare, the same as the kind
-        properties above; the busiest reader is LOGDUPE.SetMultFlags, two
-        reads per QSO. *)
+        properties above; the busiest reader is LOGDUPE.SetMultFlags, one
+        read per QSO. *)
       property DoingDomesticMults: boolean read GetDoingDomesticMults;
-      property DoingZoneMults: boolean read GetDoingZoneMults;
 
       (* THE WRITERS -- FCONTEST's set-up path, and tests. See the header. *)
       procedure WriteInitialExchange(aKind: InitialExchangeType);
-      procedure WriteZoneMult(aKind: ZoneMultType);
       procedure WriteDomesticMult(aKind: DomesticMultType);
       procedure WriteExchange(aKind: ExchangeType);
    end;
@@ -194,19 +184,9 @@ begin
    Result := FDomesticMult <> NoDomesticMults;
 end;
 
-function TContestSession.GetDoingZoneMults: boolean;
-begin
-   Result := FZoneMult <> NoZoneMults;
-end;
-
 procedure TContestSession.WriteInitialExchange(aKind: InitialExchangeType);
 begin
    FInitialExchange := aKind;
-end;
-
-procedure TContestSession.WriteZoneMult(aKind: ZoneMultType);
-begin
-   FZoneMult := aKind;
 end;
 
 procedure TContestSession.WriteDomesticMult(aKind: DomesticMultType);

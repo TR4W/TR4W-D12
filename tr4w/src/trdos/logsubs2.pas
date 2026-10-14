@@ -584,7 +584,7 @@ begin
   case RemainingMultDisplay of
     rmDomestic: if not ContestSession.DoingDomesticMults then goto Next;
     rmDX: if not DoingDXMults then goto Next;
-    rmZone: if not ContestSession.DoingZoneMults then goto Next;
+    rmZone: if not DoingZoneMults then goto Next;
     rmPrefix: if not DoingPrefixMults then goto Next;
   end;
 

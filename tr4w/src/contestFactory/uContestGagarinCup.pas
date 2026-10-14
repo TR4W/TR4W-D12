@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -97,6 +96,9 @@ type
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
@@ -194,11 +196,6 @@ begin
    Result := 'Yuri Gagarin International DX Contest';
 end;
 
-function TContestGagarinCup.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := ITUZones;
-end;
-
 function TContestGagarinCup.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := WYSIWYGDomestic;
@@ -284,6 +281,14 @@ end;
 function TContestGagarinCup.ZoneMultiplierCount: integer;
 begin
    Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestGagarinCup.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 function TContestGagarinCup.ZoneMultiplierZones: TZoneMultiplierZones;

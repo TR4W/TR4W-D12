@@ -87,6 +87,9 @@ type
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
@@ -225,6 +228,14 @@ end;
 function TContestCQWWBase.ZoneMultiplierCount: integer;
 begin
    Result := CQ_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestCQWWBase.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 function TContestCQWWBase.ZoneMultiplierZones: TZoneMultiplierZones;

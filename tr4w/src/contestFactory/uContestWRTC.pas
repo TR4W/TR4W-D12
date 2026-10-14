@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -174,11 +173,6 @@ end;
 function TContestWRTC.GetFriendlyName: string;
 begin
    Result := 'IARU HF World Championship';
-end;
-
-function TContestWRTC.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestWRTC.GetDomesticMultiplierType: DomesticMultType;

@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -201,11 +200,6 @@ function TContestCupRFDIG.GetFriendlyName: string;
 begin
    (* The row's FriendlyName is blank, which means the enum's spelling. *)
    Result := 'RF-CUP-DIG';
-end;
-
-function TContestCupRFDIG.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestCupRFDIG.GetDomesticMultiplierType: DomesticMultType;

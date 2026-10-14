@@ -54,7 +54,6 @@ type
       function GetWA7BNMId: integer; override;
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
    public
@@ -104,11 +103,6 @@ end;
 function TContestCQWWSSB.GetSubmissionEmail: string;
 begin
    Result := 'ssb@cqww.com';
-end;
-
-function TContestCQWWSSB.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := CQZones;
 end;
 
 function TContestCQWWSSB.GetInitialExchangeKind: InitialExchangeType;

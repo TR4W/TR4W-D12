@@ -616,13 +616,15 @@ begin
    (* NO active.dxmult LINE since M11 S4 part 2 (2026-10-14): the DX kind is
      deleted. Whether the contest has a DX multiplier is still the second
      doing.* flag, now the contest's own answer (LOGEDIT.DoingDXMults). *)
-   EmitField('active.zonemult', EnumText(TypeInfo(ZoneMultType), Ord(ContestSession.ZoneMult)));
+   (* NO active.zonemult LINE since M11 S5 part 2 (2026-10-14): the zone
+     kind is deleted. Whether the contest has a zone multiplier is still the
+     fourth doing.* flag, now the contest's own answer (LOGEDIT.DoingZoneMults). *)
    (* NO active.prefixmult LINE since M11 S3 part 2 (2026-10-14): the prefix
      kind is deleted. Whether the contest has a prefix multiplier is still the
      third doing.* flag, now the contest's own answer (LOGEDIT.DoingPrefixMults). *)
    EmitField('doing.domestic/dx/prefix/zone',
              BoolText(ContestSession.DoingDomesticMults) + ' ' + BoolText(DoingDXMults) + ' ' +
-             BoolText(DoingPrefixMults) + ' ' + BoolText(ContestSession.DoingZoneMults));
+             BoolText(DoingPrefixMults) + ' ' + BoolText(DoingZoneMults));
    EmitField('cty.countrymode', EnumText(TypeInfo(CountryModeType), Ord(CTY.ctyCountryMode)));
    EmitField('cty.zonemode', EnumText(TypeInfo(ZoneModeType), Ord(CTY.ctyZoneMode)));
    EmitField('my.continent', EnumText(TypeInfo(ContinentType), Ord(MyContinent)));

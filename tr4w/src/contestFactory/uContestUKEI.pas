@@ -85,7 +85,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -283,11 +282,6 @@ begin
    (* The row's FriendlyName is blank; it resolves to the enum's
       spelling. *)
    Result := 'UKEI';
-end;
-
-function TContestUKEI.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestUKEI.GetDomesticMultiplierType: DomesticMultType;

@@ -467,9 +467,10 @@ var
     comments describing the code the factory replaced. *)
   //  ActiveRTTYPort                        : PortType;
   ActiveWindow                          : WindowType;
-  (* ActiveZoneMult MOVED -- M10 S9c, 2026-10-14. It is
-    uContestSession.ContestSession.ZoneMult, written only by FCONTEST's
-    set-up path. *)
+  (* ActiveZoneMult MOVED -- M10 S9c, 2026-10-14, to
+    uContestSession.ContestSession.ZoneMult -- and is GONE since M11 S5
+    part 2: the contest states its zone multiplier and whether it has one
+    (TContestBase.ZoneMultiplierCount, HasZoneMultiplier). *)
   AlarmSet                              : boolean;
   AlarmMinute                           : integer;
   AlarmHour                             : integer;

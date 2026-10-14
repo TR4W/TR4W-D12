@@ -82,7 +82,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -163,11 +162,6 @@ begin
    (* The row's FriendlyName is blank; this is the enum's
       spelling it resolves to. *)
    Result := 'SA-SPRINT';
-end;
-
-function TContestSASprint.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestSASprint.GetDomesticMultiplierType: DomesticMultType;

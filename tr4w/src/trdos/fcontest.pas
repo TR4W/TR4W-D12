@@ -553,10 +553,6 @@ begin
      begin
      ContestSession.WriteInitialExchange(aSession.InitialExchange);
      end;
-  if aSession.IsStated(svZoneMult) then
-     begin
-     ContestSession.WriteZoneMult(aSession.ZoneMult);
-     end;
   if aSession.IsStated(svDXMultLimit) then
      begin
      DXMultLimit := aSession.DXMultLimit;
@@ -804,7 +800,6 @@ begin
   ContestSession.WriteExchange(aContest.ExchangeKind);
   ContestSession.WriteInitialExchange(aContest.InitialExchangeKind);
   ContestSession.WriteDomesticMult(aContest.DomesticMultiplierType);
-  ContestSession.WriteZoneMult(aContest.ZoneMultiplierType);
 end;
 
 function FoundContest(CMD: ShortString): boolean;

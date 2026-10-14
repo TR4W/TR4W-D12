@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -183,11 +182,6 @@ end;
 function TContestRAEM.GetFriendlyName: string;
 begin
    Result := 'RAEM Contest';
-end;
-
-function TContestRAEM.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestRAEM.GetDomesticMultiplierType: DomesticMultType;

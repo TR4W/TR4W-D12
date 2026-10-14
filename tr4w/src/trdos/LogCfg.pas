@@ -457,7 +457,7 @@ begin
         end;
      end;
 
-  if ContestSession.DoingZoneMults then
+  if DoingZoneMults then
      begin
      inc(NumberDifferentMults);
      if RemainingMultDisplay = rmNoRemMultDisplay then

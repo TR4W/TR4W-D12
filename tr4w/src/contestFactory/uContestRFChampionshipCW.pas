@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -111,6 +110,9 @@ type
       (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
       function GetReportsRunningScore: boolean; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount (M11 S5).
          Its zones are not CQ or ITU zones, so ZoneMultiplierZones is the
          base's. *)
@@ -215,11 +217,6 @@ begin
    Result := 'RF-CHAMP-CW';
 end;
 
-function TContestRFChampionshipCW.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := RFChampionchipZones;
-end;
-
 function TContestRFChampionshipCW.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -294,6 +291,14 @@ end;
 function TContestRFChampionshipCW.ZoneMultiplierCount: integer;
 begin
    Result := 7;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestRFChampionshipCW.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

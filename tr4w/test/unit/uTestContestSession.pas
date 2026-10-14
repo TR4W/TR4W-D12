@@ -71,7 +71,6 @@ type
       procedure Test_M7bBatch2CQExchangeDefaults;
       procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
       procedure Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
-      procedure Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
       procedure Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
       procedure Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
    end;
@@ -546,7 +545,9 @@ end;
 
 (* JIDX: A JA STATION SENDS ITS ZONE, EVERYONE ELSE A PREFECTURE -- and the
    closing set-up writes no zone-exchange messages either way, which was a
-   test of the contest's name in FoundContest until M7b. *)
+   test of the contest's name in FoundContest until M7b. (Its zone kind,
+   CQ zones for JA, left with the kind at M11 S5 part 2:
+   uTestZoneMultiplier pins HasZoneMultiplier on both sides.) *)
 procedure TContestSessionTests.Test_JIDXDescribesBothSidesAndRefusesZoneMessages;
 const
    RUNNINGS: array[0..1] of ContestType = (JIDXCW, JIDXSSB);
@@ -566,7 +567,6 @@ begin
       session := Describe(RUNNINGS[i], ja);
       try
          CheckTrue(session.Exchange = RSTZoneExchange, name + ' JA: zone');
-         CheckTrue(session.ZoneMult = CQZones, name + ' JA: CQ zones');
          CheckTrue(session.InitialExchange = ZoneInitialExchange,
                    name + ' JA: zone initial exchange');
          CheckTrue(not session.IsStated(svDomesticFile), name + ' JA: no domestic file');
@@ -579,7 +579,6 @@ begin
       try
          CheckTrue(session.Exchange = RSTPrefectureExchange, name + ' W: prefecture');
          CheckEquals('JIDX', session.DomesticFile, name + ' W: JIDX');
-         CheckTrue(not session.IsStated(svZoneMult), name + ' W: no zone mult');
          CheckTrue(session.SuppressZoneExchangeMessages,
                    name + ' W: no zone-exchange messages');
       finally
@@ -826,32 +825,29 @@ end;
 
   A reader may hold ContestSession across a set-up: the object must be the
   same one afterwards, or that reference dangles. A fresh object holds each
-  kind's zero -- NoInitialExchange, NoZoneMults,
+  kind's zero -- NoInitialExchange,
   NoDomesticMults, UnknownExchange -- the values the globals it replaces
   started from (ActiveExchange's `= NoExchangeReceived` initializer was
   commented out, so its zero was UnknownExchange). Every member of every kind
   is written and read back through the writer FCONTEST uses, and writing one
-  kind leaves the other three as they were pinned (each is its own field, M10
-  S9b-S9f; the prefix kind, S9b's, was deleted at M11 S3, and the DX kind,
-  S9d's, at M11 S4). The program's own
+  kind leaves the other two as they were pinned (each is its own field, M10
+  S9b-S9f; the prefix kind, S9b's, was deleted at M11 S3, the DX kind,
+  S9d's, at M11 S4, and the zone kind, S9c's, at M11 S5). The program's own
   values are restored,
   because this is the process-wide session and other suites run after this
   one. *)
 procedure TContestSessionTests.Test_TheRunningSessionIsOneObjectWithOneWriter;
 const
    KIND_INITIAL = 0;
-   KIND_ZONE = 2;
    KIND_DOMESTIC = 4;
    KIND_EXCHANGE = 5;
 var
    before: TContestSession;
    fresh: TContestSession;
    savedInitial: InitialExchangeType;
-   savedZone: ZoneMultType;
    savedDomestic: DomesticMultType;
    savedExchange: ExchangeType;
    initialKind: InitialExchangeType;
-   zoneKind: ZoneMultType;
    domesticKind: DomesticMultType;
    exchangeKind: ExchangeType;
 
@@ -860,7 +856,6 @@ var
    procedure PinAll;
    begin
       ContestSession.WriteInitialExchange(ZoneInitialExchange);
-      ContestSession.WriteZoneMult(ITUZones);
       ContestSession.WriteDomesticMult(DOKCodes);
       ContestSession.WriteExchange(RSTPowerExchange);
    end;
@@ -872,11 +867,6 @@ var
          begin
          CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
                      aWhat + ' leaves the initial exchange');
-         end;
-      if aWritten <> KIND_ZONE then
-         begin
-         CheckEquals(Ord(ITUZones), Ord(ContestSession.ZoneMult),
-                     aWhat + ' leaves the zone kind');
          end;
       if aWritten <> KIND_DOMESTIC then
          begin
@@ -901,8 +891,6 @@ begin
    try
       CheckEquals(Ord(NoInitialExchange), Ord(fresh.InitialExchange),
                   'a fresh session starts from NoInitialExchange');
-      CheckEquals(Ord(NoZoneMults), Ord(fresh.ZoneMult),
-                  'a fresh session starts from NoZoneMults');
       CheckEquals(Ord(NoDomesticMults), Ord(fresh.DomesticMult),
                   'a fresh session starts from NoDomesticMults');
       CheckEquals(Ord(UnknownExchange), Ord(fresh.Exchange),
@@ -912,7 +900,6 @@ begin
       end;
 
    savedInitial := ContestSession.InitialExchange;
-   savedZone := ContestSession.ZoneMult;
    savedDomestic := ContestSession.DomesticMult;
    savedExchange := ContestSession.Exchange;
    try
@@ -925,17 +912,6 @@ begin
                      + IntToStr(Ord(initialKind)));
          CheckOthersPinned(KIND_INITIAL,
                            'initial exchange ' + IntToStr(Ord(initialKind)));
-         end;
-
-      PinAll;
-      for zoneKind := Low(ZoneMultType) to High(ZoneMultType) do
-         begin
-         ContestSession.WriteZoneMult(zoneKind);
-         CheckEquals(Ord(zoneKind), Ord(ContestSession.ZoneMult),
-                     'the reader sees what the writer wrote, zone kind '
-                     + IntToStr(Ord(zoneKind)));
-         CheckOthersPinned(KIND_ZONE,
-                           'zone kind ' + IntToStr(Ord(zoneKind)));
          end;
 
       PinAll;
@@ -961,7 +937,6 @@ begin
          end;
    finally
       ContestSession.WriteInitialExchange(savedInitial);
-      ContestSession.WriteZoneMult(savedZone);
       ContestSession.WriteDomesticMult(savedDomestic);
       ContestSession.WriteExchange(savedExchange);
       end;
@@ -1029,78 +1004,6 @@ begin
          end;
    finally
       ContestSession.WriteInitialExchange(saved);
-      end;
-end;
-
-(* THE ZONE KIND IS THE SESSION'S, AND IT IS WHAT THE EXPORT ASKS (M10 S9c,
-  plan F4).
-
-  JIDX CW and SSB state the trait NoZoneMults, and their DescribeSession
-  states CQZones for a JA station only -- the one pair of contests whose
-  session zone kind differs from the trait. POSTUNIT.ZoneSentForThisContest
-  asked the class until S9c and the ADIF CQZ/ITUZ block the session; both
-  asked the session from S9c, and since M11 S5 both ask the contest's
-  ZoneMultiplierZones (pinned at a JA entrant by uTestZoneMultiplier). The
-  S9c move changed no output because the export's question
-  is "ITUZones or not", and neither side of JIDX is ITUZones -- pinned here,
-  so the reasoning in the plan stays true of the code. A non-JA station
-  states no zone kind and runs the trait. *)
-procedure TContestSessionTests.Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
-const
-   RUNNINGS: array[0..1] of ContestType = (JIDXCW, JIDXSSB);
-var
-   ja: TStationContext;
-   stated: TSessionDefaults;
-   trait: ZoneMultType;
-   saved: ZoneMultType;
-   name: string;
-   i: integer;
-begin
-   BeginTest('Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState');
-   ja := KansasStation;
-   ja.MyCountry := 'JA';
-   ja.MyContinent := Asia;
-
-   saved := ContestSession.ZoneMult;
-   try
-      for i := Low(RUNNINGS) to High(RUNNINGS) do
-         begin
-         name := ContestTypeSA[RUNNINGS[i]];
-         trait := ContestIdentity(RUNNINGS[i]).ZoneMultiplierType;
-         CheckEquals(Ord(NoZoneMults), Ord(trait), name + ': the trait');
-
-         stated := Describe(RUNNINGS[i], ja);
-         try
-            ContestSession.WriteZoneMult(trait);
-            if stated.IsStated(svZoneMult) then
-               begin
-               ContestSession.WriteZoneMult(stated.ZoneMult);
-               end;
-            CheckEquals(Ord(CQZones), Ord(ContestSession.ZoneMult),
-                        name + ' JA: the session runs CQ zones');
-            CheckTrue(ContestSession.ZoneMult <> trait,
-                      name + ' JA: the session differs from the identity''s trait');
-            CheckTrue((ContestSession.ZoneMult = ITUZones) = (trait = ITUZones),
-                      name + ' JA: session and trait agree on ITU zones');
-         finally
-            stated.Free;
-            end;
-
-         stated := Describe(RUNNINGS[i], KansasStation);
-         try
-            ContestSession.WriteZoneMult(trait);
-            if stated.IsStated(svZoneMult) then
-               begin
-               ContestSession.WriteZoneMult(stated.ZoneMult);
-               end;
-            CheckEquals(Ord(trait), Ord(ContestSession.ZoneMult),
-                        name + ' W: the session runs the trait');
-         finally
-            stated.Free;
-            end;
-         end;
-   finally
-      ContestSession.WriteZoneMult(saved);
       end;
 end;
 
@@ -1246,7 +1149,6 @@ begin
    Test_M7bBatch2CQExchangeDefaults;
    Test_TheRunningSessionIsOneObjectWithOneWriter;
    Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
-   Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
    Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
    Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
 end;

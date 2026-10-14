@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -166,11 +165,6 @@ end;
 function TContestEUSprintAutumnSSB.GetFriendlyName: string;
 begin
    Result := 'Eu Autumn Sprint, SSB';
-end;
-
-function TContestEUSprintAutumnSSB.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := NoZoneMults;
 end;
 
 function TContestEUSprintAutumnSSB.GetDomesticMultiplierType: DomesticMultType;

@@ -26,12 +26,11 @@ import pascal   # noqa: E402
 import scan     # noqa: E402
 from model import Dump, Contests, Registry   # noqa: E402
 
-# enum -> (row field, matrix line key). PrefixMultType left at M11 S3 part 2
-# and DXMultType at M11 S4 part 2 (both 2026-10-14), each deleted with its
-# trait and its matrix line.
+# enum -> (row field, matrix line key). PrefixMultType left at M11 S3 part 2,
+# DXMultType at M11 S4 part 2 and ZoneMultType at M11 S5 part 2 (all
+# 2026-10-14), each deleted with its trait and its matrix line.
 ENUMS = {"ExchangeType": ("AE", "exchange"),
          "InitialExchangeType": ("AIE", "initialexchange"),
-         "ZoneMultType": ("ZnM", "zonemult"),
          "DomesticMultType": ("DM", "domesticmult")}
 
 

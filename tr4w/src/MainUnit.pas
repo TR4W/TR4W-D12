@@ -8710,7 +8710,7 @@ begin
      SetPrefix(contestRules, aRX);
      end;
 
-  if ContestSession.DoingZoneMults or ContestHasDXMultiplier(contestRules) then
+  if ContestHasZoneMultiplier(contestRules) or ContestHasDXMultiplier(contestRules) then
      begin
      FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);

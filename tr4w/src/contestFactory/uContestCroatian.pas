@@ -90,7 +90,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -109,6 +108,9 @@ type
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount and
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
@@ -257,11 +259,6 @@ begin
    Result := 'Croatian DX Contest';
 end;
 
-function TContestCroatian.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := ITUZones;
-end;
-
 function TContestCroatian.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := DomesticFile;
@@ -331,6 +328,14 @@ end;
 function TContestCroatian.ZoneMultiplierCount: integer;
 begin
    Result := ITU_ZONE_MULTIPLIERS;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestCroatian.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 function TContestCroatian.ZoneMultiplierZones: TZoneMultiplierZones;

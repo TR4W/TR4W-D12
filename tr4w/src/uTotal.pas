@@ -223,7 +223,7 @@ begin
          iTotalTextOut(mo.MTotals[Band, TempMode, rmPrefix]);
      end;
 
-  if (ContestSession.DoingZoneMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (DoingZoneMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      iTotalTextOut(mo.MTotals[Band, TempMode, rmZone]);
      end;
@@ -366,7 +366,7 @@ begin
         end;
      end;
 
-  if ContestSession.DoingZoneMults then
+  if DoingZoneMults then
      begin
      if Settings.Mult.ByMode then
         begin

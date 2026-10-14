@@ -2478,7 +2478,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
              sysutils.Format( '%.2d', [ rec.Zone ] ) )
           end
        else
-         if (not ContestSession.DoingZoneMults) and ExchangeInformation.Zone then
+         if (not ContestHasZoneMultiplier( contestRules )) and ExchangeInformation.Zone then
             begin
             if CTY.ctyZoneMode = CQZoneMode then
                begin

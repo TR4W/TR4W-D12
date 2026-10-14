@@ -104,7 +104,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetZoneMultiplierType: ZoneMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -129,6 +128,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
+      (* DOES IT HAVE A ZONE MULTIPLIER? -- see
+         TContestBase.HasZoneMultiplier (M11 S5 part 2). *)
+      function HasZoneMultiplier: boolean; override;
       (* THE ZONE MULTIPLIER -- see TContestBase.ZoneMultiplierCount (M11 S5).
          Its zones are not CQ or ITU zones, so ZoneMultiplierZones is the
          base's. *)
@@ -219,11 +221,6 @@ begin
    Result := 'Jock White Memorial Field Day';
 end;
 
-function TContestJockWhiteFieldDay.GetZoneMultiplierType: ZoneMultType;
-begin
-   Result := BranchZones;
-end;
-
 function TContestJockWhiteFieldDay.GetDomesticMultiplierType: DomesticMultType;
 begin
    Result := NoDomesticMults;
@@ -274,6 +271,14 @@ end;
 function TContestJockWhiteFieldDay.ZoneMultiplierCount: integer;
 begin
    Result := 99;
+end;
+
+(* IT HAS A ZONE MULTIPLIER, AT EVERY STATION -- M11 S5 part 2,
+   2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
+   before the kind was deleted. *)
+function TContestJockWhiteFieldDay.HasZoneMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

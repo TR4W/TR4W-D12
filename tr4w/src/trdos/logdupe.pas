@@ -1133,7 +1133,7 @@ begin
       logger.debug('DoingDomesticMults = ' + BooleanToStr(ContestSession.DoingDomesticMults));
       logger.debug('DoingDXMults       = ' + BooleanToStr(ContestHasDXMultiplier(ActiveContest(Contest))));
       logger.debug('DoingPrefixMults   = ' + BooleanToStr(ContestHasPrefixMultiplier(ActiveContest(Contest))));
-      logger.debug('DoingZoneMults     = ' + BooleanToStr(ContestSession.DoingZoneMults));
+      logger.debug('DoingZoneMults     = ' + BooleanToStr(ContestHasZoneMultiplier(ActiveContest(Contest))));
       end;
 
   if RXData.ceClearMultSheet then Exit;
@@ -1192,7 +1192,7 @@ begin
      RXData.PrefixMult := mo.IsPxMult(RXData.Prefix, MultBand, MultMode);
      end;
 
-  if (RXData.Zone <> DUMMYZONE) and ContestSession.DoingZoneMults and
+  if (RXData.Zone <> DUMMYZONE) and ContestHasZoneMultiplier(contestRules) and
      ContestCountsMultiplier(contestRules, RXData, rmZone) then
      begin
      RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultBand, MultMode);
@@ -2097,6 +2097,9 @@ var
   StartMode, FinishMode{, Mode}           : ModeType;
   //TempString                            : Str20;
  // Address                               : integer;
+  (* The active contest, fetched once for the zone questions -- M11 S5
+    part 2. *)
+  zoneRules                               : TContestBase;
 
 begin
   if Settings.Mult.ByBand then
@@ -2140,14 +2143,16 @@ begin
         end;
   end;
 }
-  if ContestSession.DoingZoneMults then
+  zoneRules := ActiveContest(Contest);
+  if ContestHasZoneMultiplier(zoneRules) then
      begin
      (* THE CONTEST SAYS HOW MANY ZONES -- M11 S5, 2026-10-14. This was
        `case ContestSession.ZoneMult of` (CQ 40, the year licensed 100, ITU
        75, the NZART branch 99, the RF Championship 7, and a JA-prefecture
        arm, 50, that ran for no contest). Once per set-up of the remaining
-       mults, so one ActiveContest. *)
-     MaxNumberOfZones := ContestZoneMultiplierCount(ActiveContest(Contest));
+       mults, so one ActiveContest, which also answers whether there is a
+       zone multiplier at all (M11 S5 part 2). *)
+     MaxNumberOfZones := ContestZoneMultiplierCount(zoneRules);
      end;
 
 

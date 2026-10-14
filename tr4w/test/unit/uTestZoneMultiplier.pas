@@ -19,10 +19,10 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* THE ZONE MULTIPLIER EVERY CONTEST STATES -- HOW MANY ZONES, WHICH ZONE
-  LIST, AND WHETHER IT NUMBERS THEM FROM ZERO -- AT STATIONS THE CONTEST
-  MATRIX DOES NOT RUN. M11 S5, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md
-  S5).
+(* THE ZONE MULTIPLIER EVERY CONTEST STATES -- WHETHER IT HAS ONE, HOW MANY
+  ZONES, WHICH ZONE LIST, AND WHETHER IT NUMBERS THEM FROM ZERO -- AT
+  STATIONS THE CONTEST MATRIX DOES NOT RUN. M11 S5, 2026-10-14
+  (docs/CONTEST_FACTORY_M11_PLAN.md S5); whether it has one since S5 part 2.
 
   WHY IT EXISTS. S5 moves the readers of the session's ZONE KIND that choose
   a RULE into the classes:
@@ -46,12 +46,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DescribeSession -- exactly what the engine selected. Then the move, and
   the same tables green against the classes.
 
-  AND A CROSS-CHECK FOR EVERY CONTEST. Test_EveryContestAgreesWithItsSession
-  Kind asks every ContestType at every roster station and compares the
-  class's three answers with the frozen legacy rules under the kind the
-  session resolves to. It holds only while the session still carries the
-  zone kind; S5 part 2 deletes that kind, and the cross-check and the frozen
-  rules go with it, leaving the literals.
+  THE CROSS-CHECK IS GONE WITH THE KIND (S5 part 2). Before it,
+  Test_EveryContestAgreesWithItsSessionKind compared every ContestType at
+  every roster station with the frozen legacy rules (Legacy...OfKind) under
+  the session kind; ZoneMultType is deleted, and the cross-check and the
+  frozen rules went with it. The literals stay.
+
+  WHETHER A CONTEST HAS A ZONE MULTIPLIER AT ALL (S5 part 2). The engine
+  asked `kind <> NoZoneMults`; the contest answers HasZoneMultiplier now.
+  Its expected value is the literal sets below -- the us/ve/dx members are
+  the frozen kind pin's ZoneMult column before that column was removed
+  (18 contests, the program's own S0b output), JIDX's JA row is its
+  DescribeSession test -- and the INVARIANT that it is True exactly where
+  the zone count is above 0 is asserted for every contest at every station.
 
   CROATIAN AND CW OPEN ARE PINNED ON PURPOSE (plan F5, open question Q95).
   The zone MULTIPLIER's list and the CTY lookup's ZONE MODE are two facts,
@@ -63,12 +70,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   deliberate, visible change to this file and not a side effect of folding
   one fact into the other.
 
-  THE TRMASTER INITIAL ZONE (plan F22). Which zone a call-history entry
-  offers is pinned on its own -- uContestBase.InitialZoneFromCallHistory, as
-  LOGEDIT asks it, through ContestIdentity -- because the matrix's JA1ABC
-  line in those contests shows F22's lookup miss rather than this rule. And
-  Test_TheITUQuestionDependsOnNoStation holds the reason ContestIdentity is
-  enough there.
+  THE TRMASTER INITIAL ZONE. Which zone a call-history entry offers is
+  pinned on its own -- uContestBase.InitialZoneFromCallHistory -- with the
+  list ContestIdentity's contest counts. LOGEDIT asks the ACTIVE contest
+  since S5 part 2 (plan F22 is fixed); Test_TheITUQuestionDependsOnNoStation
+  holds that the two give the same answer, so these pins are LOGEDIT's.
 
   NEVER REGENERATE IT TO CLEAR A FAILURE -- the uTestContestKindPin rule. A
   failure means a contest's zone rule changed. *)
@@ -88,7 +94,6 @@ type
    private
       procedure Test_EveryZoneContestGivesItsPinnedAnswers;
       procedure Test_EveryContestHasItsPinnedZoneMultiplier;
-      procedure Test_EveryContestAgreesWithItsSessionKind;
       procedure Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
       procedure Test_CallHistoryOffersTheZoneOfTheContestsList;
       procedure Test_TheITUQuestionDependsOnNoStation;
@@ -210,8 +215,9 @@ const
    (* THE CALL-HISTORY INITIAL ZONE -- LOGEDIT.InitialExchangeEntry's
       ZoneInitialExchange arm once CD.GetEntry has found the call, asked
       through InitialZoneFromCallHistory with the list ContestIdentity's
-      contest counts (as LOGEDIT asks it; see plan F22 for why not
-      ActiveContest). The entry is the matrix fixture's JA1ABC, CQ zone 25 and
+      contest counts (LOGEDIT asks the active contest; the answer is the
+      same -- Test_TheITUQuestionDependsOnNoStation). The entry is the
+      matrix fixture's JA1ABC, CQ zone 25 and
       ITU zone 45, and the two half-empty variants of it. Offered '' with
       Offers False means "CTY.DAT decides" -- the arm goes on to ctyGetZone in
       the CTY zone mode. *)
@@ -259,74 +265,6 @@ begin
                            SessionContestName(aContest, STATIONS[aStation].InHostState));
 end;
 
-(* THE OLD ZONE COUNT, FROZEN -- LOGDUPE.SetUpRemainingMultiplierArrays'
-   `case ContestSession.ZoneMult of` as it stood at f0c54f4c, verbatim. The
-   engine asked it only when the session counted zone multipliers, so
-   NoZoneMults reached the case's `else` never; 0 is what that else gave.
-   JAPrefectures (50) is a dead arm -- no contest states it -- kept as it
-   stood. It goes when S5 part 2 deletes ZoneMultType. *)
-function LegacyZoneCountOfKind(aKind: ZoneMultType): integer;
-begin
-   case aKind of
-      CQZones:
-         begin
-         Result := 40;
-         end;
-      EUHFCYear:
-         begin
-         Result := 100;
-         end;
-      ITUZones:
-         begin
-         Result := 75;
-         end;
-      JAPrefectures:
-         begin
-         Result := 50;
-         end;
-      BranchZones:
-         begin
-         Result := 99;
-         end;
-      RFChampionchipZones:
-         begin
-         Result := 7;
-         end;
-   else
-      begin
-      Result := 0;
-      end;
-   end;
-end;
-
-(* THE OLD ZONE-LIST TEST, FROZEN -- the one question five sites asked of the
-   session kind at f0c54f4c: LOGEDIT.GetMultArray (`in [CQZones, ITUZones]`,
-   then `= CQZones`), LOGEDIT.InitialExchangeEntry (`= ITUZones`),
-   POSTUNIT.ZoneSentForThisContest (`= ITUZones`) and the ADIF block
-   (`= CQZones`, else `= ITUZones`). *)
-function LegacyZonesOfKind(aKind: ZoneMultType): string;
-begin
-   if aKind = CQZones then
-      begin
-      Result := 'CQ';
-      end
-   else if aKind = ITUZones then
-      begin
-      Result := 'ITU';
-      end
-   else
-      begin
-      Result := 'none';
-      end;
-end;
-
-(* THE OLD ZERO-BASED TEST, FROZEN -- LOGEDIT.ShowRemMultsInWindow's
-   `ContestSession.ZoneMult = EUHFCYear` at f0c54f4c. *)
-function LegacyFromZeroOfKind(aKind: ZoneMultType): boolean;
-begin
-   Result := aKind = EUHFCYear;
-end;
-
 (* A contest object holding the station, as ActiveContest hands it; nil for
    the classless DUMMYCONTEST. The caller frees it. *)
 function MakeContest(aContest: ContestType; const aStation: TStationContext): TContestBase;
@@ -365,8 +303,21 @@ end;
    the move: the contest's own answer, on a contest object holding the
    station, as ActiveContest hands it. nil (the classless DUMMYCONTEST)
    answers as the Contest... wrappers answer nil. BEFORE THE MOVE each of
-   these returned the frozen legacy rule above, selected by
-   Kinds(aContest, aStation).ZoneMult -- the run that made the literals. *)
+   these returned a frozen legacy rule selected by the session's zone
+   kind -- the run that made the literals (deleted with the kind at S5
+   part 2). *)
+function ProgramHas(aContest: ContestType; const aStation: TStationContext): boolean;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContest(aContest, aStation);
+   try
+      Result := ContestHasZoneMultiplier(obj);
+   finally
+      obj.Free;
+      end;
+end;
+
 function ProgramCount(aContest: ContestType; const aStation: TStationContext): integer;
 var
    obj: TContestBase;
@@ -412,7 +363,6 @@ procedure TZoneMultiplierTests.RunAllTests;
 begin
    Test_EveryZoneContestGivesItsPinnedAnswers;
    Test_EveryContestHasItsPinnedZoneMultiplier;
-   Test_EveryContestAgreesWithItsSessionKind;
    Test_CroatianAndCWOpenKeepTheirTwoZoneSystemsApart;
    Test_CallHistoryOffersTheZoneOfTheContestsList;
    Test_TheITUQuestionDependsOnNoStation;
@@ -440,6 +390,10 @@ begin
       CheckEquals(BoolToStr(pin.FromZero, True),
                   BoolToStr(ProgramFromZero(pin.Contest, station), True),
                   Who(pin.Contest, pin.Station) + ' numbered from zero');
+      (* A ROW WITH ZONES HAS A ZONE MULTIPLIER; A ROW WITH NONE HAS NOT. *)
+      CheckEquals(BoolToStr(pin.Count > 0, True),
+                  BoolToStr(ProgramHas(pin.Contest, station), True),
+                  Who(pin.Contest, pin.Station) + ' has a zone multiplier');
       if pin.Count > 0 then
          begin
          Include(named, pin.Contest);
@@ -465,13 +419,19 @@ var
    station: TStationContext;
    wantCount: integer;
    wantZones: string;
+   has: boolean;
    counted: set of ContestType;
    checked: integer;
    count: integer;
+   hasAt: array[TPinStation] of integer;
 begin
    BeginTest('Test_EveryContestHasItsPinnedZoneMultiplier');
    counted := [];
    checked := 0;
+   for s := Low(TPinStation) to High(TPinStation) do
+      begin
+      hasAt[s] := 0;
+      end;
    for c := Low(ContestType) to High(ContestType) do
       begin
       for s := Low(TPinStation) to High(TPinStation) do
@@ -508,6 +468,20 @@ begin
          CheckEquals(BoolToStr(c in YEAR_EVERYWHERE, True),
                      BoolToStr(ProgramFromZero(c, station), True),
                      Who(c, s) + ' numbered from zero');
+
+         (* WHETHER IT HAS ONE AT ALL -- S5 part 2: the literal sets say so,
+            and the INVARIANT ties the answer to the count, so the two
+            statements a class makes cannot drift apart. *)
+         has := ProgramHas(c, station);
+         CheckEquals(BoolToStr(wantCount > 0, True), BoolToStr(has, True),
+                     Who(c, s) + ' has a zone multiplier');
+         CheckEquals(BoolToStr(ProgramCount(c, station) > 0, True), BoolToStr(has, True),
+                     Who(c, s) + ' has a zone multiplier exactly where it counts zones');
+         if has then
+            begin
+            Inc(hasAt[s]);
+            end;
+
          if ProgramCount(c, station) > 0 then
             begin
             Include(counted, c);
@@ -515,6 +489,17 @@ begin
          Inc(checked);
          end;
       end;
+
+   (* HOW MANY CONTESTS HAVE A ZONE MULTIPLIER AT EACH STATION -- literal:
+      18 everywhere (the kind pin's us/ve/dx column), 20 at the JA station,
+      where JIDX CW and SSB join. *)
+   CheckEquals(18, hasAt[psUS], 'contests with a zone multiplier at us');
+   CheckEquals(18, hasAt[psVE], 'contests with a zone multiplier at ve');
+   CheckEquals(18, hasAt[psDX], 'contests with a zone multiplier at dx');
+   CheckEquals(18, hasAt[psHost], 'contests with a zone multiplier at host');
+   CheckEquals(20, hasAt[psJA], 'contests with a zone multiplier at JA');
+   CheckEquals(18, hasAt[ps9A], 'contests with a zone multiplier at 9A');
+   CheckEquals(18, hasAt[psUA], 'contests with a zone multiplier at UA');
 
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
                'contest x station zone answers compared');
@@ -529,38 +514,6 @@ begin
          end;
       end;
    CheckEquals(20, count, 'contests that count zones at some roster station');
-end;
-
-procedure TZoneMultiplierTests.Test_EveryContestAgreesWithItsSessionKind;
-var
-   c: ContestType;
-   s: TPinStation;
-   station: TStationContext;
-   kind: ZoneMultType;
-   checked: integer;
-begin
-   BeginTest('Test_EveryContestAgreesWithItsSessionKind');
-   checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      for s := Low(TPinStation) to High(TPinStation) do
-         begin
-         station := PinStation(s, c);
-         kind := Kinds(c, station).ZoneMult;
-         CheckEquals(LegacyZoneCountOfKind(kind), ProgramCount(c, station),
-                     Who(c, s) + ' zone count');
-         CheckEquals(LegacyZonesOfKind(kind), ProgramZones(c, station),
-                     Who(c, s) + ' zone list');
-         CheckEquals(BoolToStr(LegacyFromZeroOfKind(kind), True),
-                     BoolToStr(ProgramFromZero(c, station), True),
-                     Who(c, s) + ' numbered from zero');
-         Inc(checked);
-         end;
-      end;
-
-   (* EXACT: every contest at every roster station. *)
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
-               'contest x station kinds compared');
 end;
 
 (* PLAN F5, OPEN QUESTION Q95 -- see the unit header. Two facts per contest,
@@ -591,8 +544,9 @@ end;
 
 (* THE CALL-HISTORY INITIAL ZONE, PINNED OUTSIDE THE MATRIX -- see
    HISTORY_PINS. The matrix's initialexchange section reaches this branch
-   (S0c's fixture), but its JA1ABC line in these contests shows plan F22's
-   miss, not this rule, so the rule is pinned here on its own. *)
+   (S0c's fixture), and since the F22 fix its JA1ABC line shows this rule
+   in the ITU-zone contests; the rule is pinned here on its own as well,
+   with the half-empty entries the fixture does not hold. *)
 procedure TZoneMultiplierTests.Test_CallHistoryOffersTheZoneOfTheContestsList;
 var
    i: integer;
@@ -614,12 +568,13 @@ begin
       end;
 end;
 
-(* LOGEDIT ASKS THE IDENTITY, NOT THE ACTIVE CONTEST, WHETHER THE LIST IS ITU
-   (plan F22). That is only right while no contest's ITU answer depends on
-   the entrant -- checked here for every contest at every roster station
-   against the station-holding object. A future contest whose ITU answer
-   does depend on the entrant fails this, and LOGEDIT must then ask it with
-   the station (after F22 is fixed). *)
+(* THE ITU QUESTION DEPENDS ON NO ENTRANT -- checked for every contest at
+   every roster station against the station-holding object. Until S5 part 2
+   this was why LOGEDIT could ask ContestIdentity rather than the active
+   contest (plan F22); LOGEDIT asks the active contest now that F22 is
+   fixed, and this is why HISTORY_PINS, which ask ContestIdentity, still
+   pin what LOGEDIT offers. A future contest whose ITU answer depends on
+   the entrant fails this, and HISTORY_PINS must then name a station. *)
 procedure TZoneMultiplierTests.Test_TheITUQuestionDependsOnNoStation;
 var
    c: ContestType;

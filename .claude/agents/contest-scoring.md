@@ -250,19 +250,31 @@ hint, the ITU initial zone, `ZoneSentForThisContest(aContest)`, the ADIF
 CQZ/ITUZ tag) and zero-based numbering (the zone window) ask
 `ContestZoneMultiplierCount` / `ContestZoneMultiplierZones` /
 `ContestNumbersZonesFromZero` -- the per-QSO site passing the object it
-holds; `SetMultFlags` still asks only `DoingZoneMults`. **Never answer the
+holds. **`ZoneMultType` IS DELETED (M11 S5 part 2, 2026-10-14)** -- enum,
+trait, session field, `WriteZoneMult`, `svZoneMult`, JIDX's two
+`DescribeSession` statements and the matrix's `active.zonemult` line.
+Whether a contest has a zone multiplier at all is the class's
+`HasZoneMultiplier` (base False; True exactly where `ZoneMultiplierCount`
+is above 0 -- pinned), asked as `LOGEDIT.DoingZoneMults` or, where the
+object is in hand (`SetMultFlags`, the rescore, `GetMultArray`, the ADIF
+tail, `SetUpRemainingMultiplierArrays`), `ContestHasZoneMultiplier(obj)`:
+live against `Station`. JIDX asks `IsJapaneseEntrant`, the predicate its
+zone and DX answers ask. Do not bring back a stored "doing zone" flag.
+`ZoneModeType` / `cfCQZoneMode` STAY -- the CTY lookup's zone system.
+**Never answer the
 zone LIST from `ZoneMode` or the reverse** -- the Croatian counts ITU zones
 over a CQ zone mode, CW Open the inverse (F5, Q95 open, pinned in
 `uTestZoneMultiplier`). LOGSTUFF's EUHFC range arm was vacuous and is gone;
 so are its dead JAPrefectures arms. **The TRMASTER initial zone
-(`InitialExchangeEntry`) asks `ContestIdentity`, NOT `ActiveContest` -- plan
-F22:** `LOGSCP.BestTwoLetters` never assigns the slot of the `JA` pair it
-skips, so whether a call containing `JA` is FOUND in TRMASTER depends on stack
-residue from the previous lookup. An `ActiveContest` call between lookups
-overwrote it and moved three matrix records (Croatian, IRTS, WRTC
-`iex JA1ABC`). **F22 IS FIXED (2026-10-14)**: the routine zeroes its array on
-entry, so the lookup no longer depends on the previous one; the TRMASTER
-initial-zone test may now ask `ActiveContest` like the other zone readers. The choice is `uContestBase.InitialZoneFromCallHistory`. A multiplier KIND's arm that has NOT
+(`InitialExchangeEntry`) asks `ActiveContest` like every other zone reader
+(M11 S5 part 2).** It asked `ContestIdentity` at part 1 because of plan
+F22: `LOGSCP.BestTwoLetters` never assigned the slot of the `JA` pair it
+skips, so whether a call containing `JA` was FOUND in TRMASTER depended on
+stack residue from the previous lookup, and an `ActiveContest` call between
+lookups moved three matrix records (Croatian, IRTS, WRTC `iex JA1ABC`).
+**F22 IS FIXED (2026-10-14)**: the routine zeroes its array on entry, and
+the switch moved no matrix record. The choice is
+`uContestBase.InitialZoneFromCallHistory`. A multiplier KIND's arm that has NOT
 moved (the remaining-mult lists, the domestic kind) stays keyed on the kind
 until its M11 stage. **`UsesBand` is asked at four places now** -- points,
 multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO
@@ -288,9 +300,9 @@ created once in that leaf unit's initialization, never replaced, read-only
 properties, written ONLY by FCONTEST's set-up path (`ApplyContestTraits`,
 then `ApplySessionDefaults`) through `Write*` methods -- not `Set*`, which
 `TSessionDefaults` already uses for what a contest STATES. Main thread only,
-as the globals were. **It holds four kinds -- `Exchange`,
-`InitialExchange`, `ZoneMult` and `DomesticMult`** (`PrefixMult` was
-deleted at M11 S3 part 2, `DXMult` at M11 S4 part 2)
+as the globals were. **It holds three kinds -- `Exchange`,
+`InitialExchange` and `DomesticMult`** (`PrefixMult` was deleted at M11
+S3 part 2, `DXMult` at M11 S4 part 2, `ZoneMult` at M11 S5 part 2)
 (were `LOGWIND.ActiveExchange`, `ActiveInitialExchange`,
 `ActivePrefixMult`, `ActiveZoneMult`, `VC.ActiveDXMult`,
 `LOGDOM.ActiveDomesticMult`; S9a-f). **No `Active*` kind global is left --
@@ -299,8 +311,8 @@ M10 IS COMPLETE (2026-10-14).** Do not add one back: a new reader asks
 zero is `UnknownExchange` (the global's `= NoExchangeReceived` initializer
 was commented out). `tree.LooksLikeAGrid` reads it once per log row per
 repaint -- one call and a field load, ahead of any string work; keep it
-first. **What M11 inherits:** the six kind ENUMS (four since M11 S3 and S4
-deleted the prefix and DX kinds) and their ~80 engine arms
+first. **What M11 inherits:** the six kind ENUMS (three since M11 S3, S4
+and S5 deleted the prefix, DX and zone kinds) and their ~80 engine arms
 (shape parsers, sheet, display, exporters), every one reading
 `ContestSession`. **The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
@@ -310,8 +322,8 @@ live caller, so the order is right; a new caller of `FoundContest` must set
 it too.
 **Never repoint a kind reader to `ContestIdentity(Contest)`**: it is the
 SESSION's value, and 24 contests run a kind their trait does not state at a
-matrix station, 32 at some station (M11 S2; counted with the prefix and
-DX kinds, both since deleted) -- JIDX CW: trait
+matrix station, 32 at some station (M11 S2; counted with the prefix, DX
+and zone kinds, all since deleted) -- JIDX CW: trait
 `NoInitialExchange`, a JA station runs `ZoneInitialExchange`;
 OK/OM DX: trait `NoDomesticMults`, a W station runs `DomesticFile`; ARRL DX
 CW: trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`.
@@ -319,10 +331,10 @@ CW: trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`.
 station is its trait, never an unconditional `DescribeSession` restatement --
 KCJ, YBDX, ARRL 10 and Field Day were aligned that way, and 12 restatements
 deleted. `DescribeSession` states a kind only where the STATION decides it.
-**`Doing*Mults` ARE `ContestSession` ANSWERS (M11 S2, plan F9):**
-`ContestSession.DoingDomesticMults` / `DoingZoneMults` are computed from
-the kinds on every read (`DoingPrefixMults` and `DoingDXMults` are the
-contest's own answers since M11 S3 and S4, above); the LOGDUPE
+**`DoingDomesticMults` IS A `ContestSession` ANSWER (M11 S2, plan F9):**
+`ContestSession.DoingDomesticMults` is computed from the kind on every
+read (`DoingPrefixMults`, `DoingDXMults` and `DoingZoneMults` are the
+contest's own answers since M11 S3, S4 and S5, above); the LOGDUPE
 globals LogCfg set once at start-up are gone, because a peer's CONTEST line
 (`uSettingsEffects` -> `FoundContest`) left them describing the previous
 contest. Ask the property, and test `kind <> No*` through it, not by hand.
@@ -335,7 +347,9 @@ FROM them -- `NumberDifferentMults`, `RemainingMultDisplay`,
 shape is its own, so such a test is always true; test it only when the class
 does NOT always run that shape. **`ZoneSentForThisContest`
 and the ADIF CQZ/ITUZ tag have ONE source** -- the session since S9c (plan
-F4), the contest's `ZoneMultiplierZones` since M11 S5; keep them on one. **`trdos/logddx.pas` is compiled by
+F4), the contest's `ZoneMultiplierZones` since M11 S5 (and whether it
+has a zone multiplier at all, `ContestHasZoneMultiplier`, on the same
+object); keep them on one. **`trdos/logddx.pas` is compiled by
 NOTHING** (it uses a `Country9` that never existed; plan F14): an edit
 there passes every build, so do not count a repoint in it as verified -- it
 still names `ActiveExchange` 26 times, untouched by NY4I's decision (Q91). `logdupe.SetUpExchangeInformation`'s parameter is
