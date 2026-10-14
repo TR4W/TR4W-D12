@@ -29,7 +29,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    XM: NoDXMults;  QP: OnePhoneTwoCW;  ADIFName: '';  CABName: '';
    FriendlyName: ''
 
-  SCORING IS OnePhoneTwoCW, one arm of LOGSTUFF.CalculateQSOPoints:
+  SCORING IS OnePhoneTwoCW, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree):
 
       if RXData.Mode = CW then 2 else 1
 

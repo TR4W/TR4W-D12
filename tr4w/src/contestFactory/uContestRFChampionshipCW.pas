@@ -52,7 +52,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING, transcribed from ChampionshipRFMethod: a Russian station's oblast
   is the domestic multiplier, and the points are the Championship's table
   (uRFChampionshipPoints, lifted out of LOGSTUFF so this class and the arm
-  read one table) by the two zones; anybody else scores 0. *)
+  read one table; the arm was deleted at M10 S3) by the two zones; anybody else scores 0. *)
 unit uContestRFChampionshipCW;
 
 {$I tr4w.inc}

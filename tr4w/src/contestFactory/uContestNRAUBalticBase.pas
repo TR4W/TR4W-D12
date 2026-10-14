@@ -44,7 +44,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE SHARED FIELDS ARE STATED HERE; the four that differ (display, Cabrillo
   and ADIF names, WA7BNM id, friendly name) are stated by each mode class.
 
-  SCORING IS TwoPointsPerQSO, one arm of LOGSTUFF.CalculateQSOPoints:
+  SCORING IS TwoPointsPerQSO, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree):
 
       TwoPointsPerQSO: RXData.QSOPoints := 2;
 

@@ -87,8 +87,9 @@ uses
    uContestRegistry,
    utils_text;
 
-(* TOECQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
-   contest's point method, moved here as it stood (M7b batch 2). *)
+(* TOECQSOPointMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestTOEC.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    if aQso.QTH.Continent <> Station.MyContinent then

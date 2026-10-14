@@ -109,7 +109,7 @@ Two fields are the thread to pull:
 
 | field | leads to |
 |---|---|
-| `QP:` | the arm of `case ActiveQSOPointMethod of` in `LOGSTUFF.CalculateQSOPoints` |
+| `QP:` | the arm of `case ActiveQSOPointMethod of` in `LOGSTUFF.CalculateQSOPoints` -- **deleted at M10 S3** (2026-10-14); read the arm in git history or the D7 tree, and the class that now owns it |
 | `AE:` | the arm of `case ActiveExchange of` in `LOGSTUFF.ProcessExchange`, which names a `Process...Exchange` function — the exchange parsing |
 
 `AE:` is also what the contest's EXPORT looks like by default -- through the
@@ -933,7 +933,7 @@ our CTY.DAT is not the one D7 used. That is unexplored and recorded in
 
 | question | answer |
 |---|---|
-| what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`), else that routine's legacy case |
+| what does this contest score | its class's `ScoreQSO` (asked by `LOGSTUFF.CalculateQSOPoints`); the classless DUMMYCONTEST scores the four `QSO POINTS ...` overrides, then 0 (the legacy case is deleted, M10 S3) |
 | what does its session start from | its traits (`FCONTEST.ApplyContestTraits`), the operator's statements, then its class's `DescribeSession` applied by `FCONTEST.ApplySessionDefaults` (M7a); no classless arm remains (2026-10-14). LogCfg's default CQ exchange is `CQExchangeDefault` |
 | what is its final score | its class's `FinalScore` (asked by `LOGEDIT.TotalScore`, which every score reader reads), else the base's general formula through its identity -- section 3, M6 |
 | what is its exchange | its `AE` in `ContestsArray` (the SESSION's exchange, after its `DescribeSession`) → `LOGSTUFF.ProcessExchange` → its class's `ParseReceivedExchange` (M5b), whose base parses that shape with `LOGSTUFF.ParseExchangeShape` |

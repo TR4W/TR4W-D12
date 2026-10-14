@@ -96,8 +96,9 @@ uses
    SysUtils,
    uTR4WStrings;
 
-(* YOTAQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
-   contest's point method, moved here as it stood (M7b batch 2). *)
+(* YOTAQSOPointMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestYOTA.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.DomMultQTH := IntToStr(aQso.Age);

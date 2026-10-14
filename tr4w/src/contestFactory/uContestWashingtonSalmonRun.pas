@@ -58,8 +58,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   the Salmon Run scores on the sponsor's CURRENT rules,
   https://salmonrun.wwdxc.org/rules/, and no longer on the legacy arm.
 
-  WHAT THE LEGACY ARM DID, identical in D7 and still in LOGSTUFF, where this
-  class shadows it (SalmonRunQSOPointMethod):
+  WHAT THE LEGACY ARM DID, identical in D7 and in LOGSTUFF until M10 S3
+  deleted the legacy scoring case (SalmonRunQSOPointMethod):
       if Mode = CW then 4 else 2
   so CW scored FOUR, and every other mode -- digital included -- scored two.
 

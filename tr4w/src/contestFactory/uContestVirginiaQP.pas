@@ -30,8 +30,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    CABName: 'VA-QSO-PARTY';  FriendlyName: 'Virginia QSO Party'
 
   THE ENUM IS MIXED CASE AND THE LEGACY ARM IS NOT. VC.pas declares
-  VAQSOPointMethod; LOGSTUFF spells the same identifier VAQSOPOINTMETHOD at its
-  case arm. Pascal identifiers are case-insensitive so both are the one value,
+  VAQSOPointMethod; LOGSTUFF spelled the same identifier VAQSOPOINTMETHOD at
+  its case arm (deleted at M10 S3; the D7 tree still has it). Pascal identifiers are case-insensitive so both are the one value,
   but a case-sensitive search for the enum's spelling finds no arm and invites
   the conclusion that the contest is unscored. Search case-insensitively.
 

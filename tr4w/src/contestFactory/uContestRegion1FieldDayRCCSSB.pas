@@ -97,8 +97,9 @@ implementation
 uses
    uContestRegistry;
 
-(* RegionOneFieldDayRCCQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
-   contest's point method, moved here as it stood (M7b batch 2). *)
+(* RegionOneFieldDayRCCQSOPointMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestRegion1FieldDayRCCSSB.CalculateQSOPoints(var aQso: ContestExchange);
 var
    suffixAt: integer;

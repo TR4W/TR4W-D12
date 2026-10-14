@@ -40,7 +40,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Sprint" -- transcribed unchanged; whether they should is a question for
   NY4I, recorded with M3 in the design doc.
 
-  SCORING IS OnePointPerQSO, one arm of LOGSTUFF.CalculateQSOPoints:
+  SCORING IS OnePointPerQSO, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree):
 
       OnePointPerQSO: RXData.QSOPoints := 1;
 

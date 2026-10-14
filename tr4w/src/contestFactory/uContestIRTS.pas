@@ -52,8 +52,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Q45.
 
   NOT IRTSQSOPointMethod: the row names EUDXQSOPointMethod, and that is what
-  this contest has always scored by. The IRTS arm in LOGSTUFF is reached
-  only through an operator's QSO POINT METHOD line (inventory D3).
+  this contest has always scored by. The IRTS arm in LOGSTUFF was reached
+  only through an operator's QSO POINT METHOD line (inventory D3), and was
+  deleted with the legacy scoring case at M10 S3.
 
   SET-UP: 80 m, digital off, the initial exchange's cursor at the start,
   and -- for a station outside EI and GI only -- no DX multiplier.
@@ -111,8 +112,9 @@ uses
    uContestRegistry,
    uTR4WStrings;
 
-(* EUDXQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
-   contest's point method, moved here as it stood (M7b batch 2). *)
+(* EUDXQSOPointMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestIRTS.CalculateQSOPoints(var aQso: ContestExchange);
 var
    rxCty: CallString;

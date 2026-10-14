@@ -39,7 +39,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   Blank ADIFName and CABName are the enum's spelling, 'LOCUST QSO PARTY'.
 
-  SCORING IS LQPQSOPointMethod, one arm of LOGSTUFF.CalculateQSOPoints,
+  SCORING IS LQPQSOPointMethod, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree),
   transcribed exactly:
 
       RXData.QSOPoints := 1000;

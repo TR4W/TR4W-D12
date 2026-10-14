@@ -207,9 +207,12 @@ $CEILINGS = @{
    # ParseReceivedExchange), logedit 5 -> 4 (RSGB 1.8's "points times one" is
    # its CombineWithMultipliers) and unewcontest 3 -> 0 (ClasslessPrompts is
    # deleted; both contests' DescribeNewContestPrompts). All three unlisted.
+   #
+   # M10 S3, 2026-10-14 -- the legacy scoring case is deleted: logstuff 1 -> 0
+   # (the RU3AX doubling in its RussianDX arm, the last D3 arm named above).
+   # Unlisted now, so any contest test in logstuff fails.
    'mainunit.pas'          = 1
    'trdos\logedit.pas'     = 4
-   'trdos\logstuff.pas'    = 1
    'trdos\postunit.pas'    = 1
 }
 
@@ -243,6 +246,10 @@ $CEILINGS = @{
 # UA4W and RSGB 1.8, 2026-10-14: 11 -> 5. The total fell 14 -> 7 (7 tests
 # moved into the two classes, ceilings above); 5 is about 80% of it, rounded
 # down.
+#
+# M10 S3, 2026-10-14: unchanged at 5. The total fell 7 -> 6 (the legacy
+# scoring case's RU3AX test, deleted with the case); 5 is still below it, and
+# still far above what a parser that read nothing would find.
 $TOTAL_FLOOR  = 5
 $MEMBER_FLOOR = 130
 

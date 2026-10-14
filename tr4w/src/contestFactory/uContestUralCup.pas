@@ -42,7 +42,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   but `contest.class` is unchanged, which is the proof. EXCHANGE PARSING
   (M5b) and set-up (M7a) have moved since.
 
-  SCORING IS OnePointPerQSO, one arm of LOGSTUFF.CalculateQSOPoints, stated
+  SCORING IS OnePointPerQSO, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree), stated
   through the FixedModePoints helper:
 
       OnePointPerQSO: RXData.QSOPoints := 1;

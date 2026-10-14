@@ -114,8 +114,9 @@ uses
    uContestFixedPoints,
    uTR4WStrings;
 
-(* TenPointsPerQSO -- LOGSTUFF.CalculateQSOPoints's arm for this
-   contest's point method, moved here as it stood (M7b batch 2). *)
+(* TenPointsPerQSO -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestRSGBRoPoCoCW.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 10, 10, 10);

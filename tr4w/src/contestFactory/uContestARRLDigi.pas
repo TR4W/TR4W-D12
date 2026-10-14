@@ -127,8 +127,9 @@ uses
       is that Calc_GeoDist reads Settings.GridMap.RadiusOfEarth and is shared
       with the bearing display. Extracting it into uGridDistance beside
       GridHaversineKm is the right end state and is its own change with its own
-      gate -- eleven other scoring arms in LOGSTUFF call the same function, so
-      it is not this contest's to do alone. *)
+      gate -- the other contests whose scoring was transcribed from the
+      legacy LOGSTUFF arms (deleted at M10 S3) call the same function, so it
+      is not this contest's to do alone. *)
    LogGrid,
    uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)

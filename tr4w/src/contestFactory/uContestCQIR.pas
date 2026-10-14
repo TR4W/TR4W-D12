@@ -29,7 +29,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    QP: TwoPhoneThreeCW;  ADIFName: '';  CABName: '';
    FriendlyName: 'CQIR - Ireland Calling'
 
-  SCORING IS TwoPhoneThreeCW, one arm of LOGSTUFF.CalculateQSOPoints:
+  SCORING IS TwoPhoneThreeCW, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree):
 
       if RXData.Mode = CW then 3 else 2
 

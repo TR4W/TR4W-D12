@@ -3180,12 +3180,12 @@ DUMMYCONTEST.**
 
 | site | contest | kind | where it went |
 |---|---|---|---|
-| LOGSTUFF's `UA4WMethod` arm | UA4W | rule (scoring) | `CalculateQSOPoints`, transcribed but for the zone's SOURCE (below). The arm stays for `QSO POINT METHOD` until M10 (7.15) |
+| LOGSTUFF's `UA4WMethod` arm | UA4W | rule (scoring) | `CalculateQSOPoints`, transcribed but for the zone's SOURCE (below). The arm stayed for `QSO POINT METHOD` until it was deleted at M10 S3 (7.15) |
 | `FCONTEST.FoundContest`'s `UA4WCHAMPIONSHIP:` arm | UA4W | rule (set-up) | `DescribeSession` -- 15-minute minitours. **The `case` is deleted**: it was the last arm |
 | `LogCfg.tSetupExchangeNumbers`'s `UA4WCHAMPIONSHIP:` | UA4W | rule (set-up) | `CQExchangeDefault` -- `' # '` + the state sent. **The `case` is deleted**: it was the last label |
 | `LOGSTUFF.ProcessRSTAndGridSquareOrRDAExchange`'s `Contest = UA4WCHAMPIONSHIP` | UA4W | rule (parse) | `ParseReceivedExchange`: the base's parse, then, under the shape it was written for, a found QTH is the domestic QTH |
 | uNewContest's `ClasslessPrompts`, `UA4WCHAMPIONSHIP:` | UA4W | rule (UI as data) | `DescribeNewContestPrompts` -- the RDA-or-grid comment on MY QTH, the literal as it stood |
-| LOGSTUFF's `RSGB160Method` arm | RSGB 1.8 | rule (scoring) | `CalculateQSOPoints`, asking the sheet through `IsNewMultiplierAnywhere`. The arm stays for `QSO POINT METHOD` until M10 |
+| LOGSTUFF's `RSGB160Method` arm | RSGB 1.8 | rule (scoring) | `CalculateQSOPoints`, asking the sheet through `IsNewMultiplierAnywhere`. The arm stayed for `QSO POINT METHOD` until it was deleted at M10 S3 |
 | `LOGEDIT.TotalScore`'s `Contest = RSGB18` | RSGB 1.8 | rule (final score) | `CombineWithMultipliers` = the points. `TotalScore` names no contest now |
 | uNewContest's `ClasslessPrompts`, both `RSGB18:` arms | RSGB 1.8 | rule (UI as data) | `DescribeNewContestPrompts` -- the UK box, then the district. **`ClasslessPrompts` is deleted** |
 | `MainUnit`'s `ERMAK_BIT` read of `ContestsBooleanArray` | UA4W (the only ERMAK row) | trait, not a name test | **STAYS** -- a row flag read by the Cabrillo menu, no seam yet |
@@ -3548,6 +3548,8 @@ row's promise to delete "the traits" therefore means the point-method trait
 and the tables, not the kind enums.
 
 **S2 DONE 2026-10-14 (Q4):** the seven shared-set settings are names in `uCFG.RETIRED_COMMANDS` -- gone from the model, Preferences, the peers' list and `ReplayContestStatements`; stored log rows are set aside on read and deleted at the next capture; the four `QSO POINTS ...` overrides stay (plan S2).
+
+**S3 DONE 2026-10-14 (7.15, Q11):** the legacy `case ActiveQSOPointMethod of` is deleted; `logstuff.CalculateQSOPoints` hands a classed contest to `ScoreQSO`, and the classless DUMMYCONTEST gets the four `QSO POINTS ...` overrides, then 0 (plan S3).
 
 ### 8.3 What "a contest has moved" means -- checkably
 

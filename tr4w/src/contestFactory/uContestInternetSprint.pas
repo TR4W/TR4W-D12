@@ -30,7 +30,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    QP: AlwaysOnePointPerQSO;  ADIFName: '';  CABName: '';
    FriendlyName: ''
 
-  SCORING IS AlwaysOnePointPerQSO, one arm of LOGSTUFF.CalculateQSOPoints:
+  SCORING IS AlwaysOnePointPerQSO, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree):
 
       RXData.QSOPoints := 1;
 

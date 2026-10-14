@@ -2223,8 +2223,8 @@ function ContestCountsMultiplier(aContest: TContestBase; const aQso: ContestExch
    False, with aQso untouched, when none does.
 
    TWO CALLERS, ONE RULE: TContestBase.ScoreQSO for a contest with a class, and
-   LOGSTUFF.CalculateQSOPoints for a classless contest until M10 deletes the
-   legacy case. Before M3 the rule was written once, in LOGSTUFF; moving it into
+   LOGSTUFF.CalculateQSOPoints for the classless DUMMYCONTEST, which since M10
+   S3 scores the overrides and then 0 (the legacy case is deleted). Before M3 the rule was written once, in LOGSTUFF; moving it into
    ScoreQSO as a copy would have been two definitions free to drift.
 
    First match wins, in the engine's order: domestic CW, DX CW, domestic phone,

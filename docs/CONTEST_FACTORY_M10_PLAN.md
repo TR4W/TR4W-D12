@@ -448,6 +448,43 @@ As planned:
 
 ### S3 -- Delete the legacy scoring case (7.15, Q11)
 
+**DONE 2026-10-14** (on top of `f0716521`). Re-measured first: the case was
+still `logstuff.pas:6382-9650`, the routine `:6332-9652`. As planned, with
+these corrections:
+
+* **The guard** is section 3's: `RXData.QSOPoints := 0`, the class's
+  `ScoreQSO` and `Exit` when `ActiveContest(Contest) <> nil`, else
+  `ApplyQSOPointOverride(CurrentQSOPointOverrides, RXData)` and nothing more.
+  Every local of the routine went (none is read by the guard).
+* **Correction to 1.7 -- three UNITS became dead with it, not only locals.**
+  `orphans.ps1` lists routines, and every routine the case named does have a
+  caller outside it (re-checked case-insensitively over `tr4w/`, tests and
+  `.lpr` included: `MarineOrAirMobileStation`, `RTCGridDistance`,
+  `IsDmMult`, `LooksLikeAGeoCoordinates`, `GetRussiaOblastByTwoChars` and the
+  rest are all called by classes or other engine code). But three entries of
+  logstuff's `uses` were used ONLY by the case and are removed: `Math`
+  (`Floor`, `Ceil`, `ln` -- every identifier in `math.pp`'s interface was
+  checked against the rest of the unit), `uRussiaOblasts`
+  (`GetRussiaOblastByTwoChars`, `RussianRegionType`) and
+  `uRFChampionshipPoints` (`RFChampionshipPoints`). The units themselves
+  stay: classes use them.
+* **Provenance comments reworded**, not deleted: 66 comments in factory
+  units cited "LOGSTUFF.CalculateQSOPoints's arm" (or "one arm of"), and 18
+  more sites (units, tests, `uRFChampionshipPoints`) said an arm "is
+  reached", "stays" or "is written"; each now says the arm was
+  deleted at M10 S3 and points at git history / the D7 tree.
+* **`Lint-ContestNameTests`:** logstuff 1 -> 0 (unlisted), total 7 -> 6 in 3
+  files, floor kept at 5.
+* **Build ceilings NOT lowered here** -- left for the full build to measure.
+  Expected to go: the range warning at HEAD `logstuff.pas:8542`
+  (`RXData.TenTenNum <> -1`, design 8.2k), so `$WARN_CEILING` 4 -> 3, and
+  every implicit narrowing inside the deleted lines.
+* **`ActiveQSOPointMethod` is now read NOWHERE** (`count-ids.ps1`: one write,
+  `fcontest.pas` ApplyContestTraits; the other hit is its declaration in
+  `logwind`). S4 deletes it with the trait.
+* **Behaviour:** for a DUMMYCONTEST session a stale point-method read became
+  "the overrides, then 0" -- decided (section 3, F6).
+
 * **Files:** `trdos/logstuff.pas` only: the case `:6382-9650`, unused locals,
   classless path = overrides then 0 (section 3).
 * **Matrix:** identical (DUMMYCONTEST is not in the matrix; every matrix

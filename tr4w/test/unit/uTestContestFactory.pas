@@ -798,11 +798,12 @@ end;
 
 (* EVERY ONE OF THEM IS PINNED IN DIGITAL, AND THAT IS THE POINT OF THE TEST.
 
-   All four point methods these ten use are written in LOGSTUFF as either a
+   All four point methods these ten use were written in LOGSTUFF as either a
    bare assignment or `if Mode = CW then X else Y`. The two-branch shape gives
    DIGITAL the PHONE value -- checked arm by arm in logstuff.pas, because some
-   arms elsewhere in that case are written `if Mode = PHONE then X else Y` and
-   hand digital the CW value instead. Nothing distinguishes the two by
+   arms elsewhere in that case were written `if Mode = PHONE then X else Y` and
+   hand digital the CW value instead. (The case was deleted at M10 S3; see git
+   history or the D7 tree.) Nothing distinguishes the two by
    inspection of the class, so the digital case is asserted for all ten rather
    than for the ones that look interesting.
 
@@ -2319,10 +2320,10 @@ end;
    M10 S0 (plan section 3).
 
    It is the one ContestType with no class, so it is the one that reaches
-   LOGSTUFF.CalculateQSOPoints' classless path, which today applies the four
-   QSO POINTS ... overrides and then reads ActiveQSOPointMethod -- a value
-   FoundContest never resets for it (plan F6). Plan S3 deletes that read and
-   leaves "the overrides, then 0", which is exactly what TContestBase.ScoreQSO
+   LOGSTUFF.CalculateQSOPoints' classless path. That path applied the four
+   QSO POINTS ... overrides and then read ActiveQSOPointMethod -- a value
+   FoundContest never resets for it (plan F6). M10 S3 deleted that read and
+   left "the overrides, then 0", which is exactly what TContestBase.ScoreQSO
    does. This pins that answer on the object ContestIdentity hands out for
    DUMMYCONTEST, so S3's guard has a definition to be held to. The engine path
    itself is not linked into this binary; the matrix does not run
@@ -3951,7 +3952,8 @@ begin
 end;
 
 (* THE EDGES OF THE BATCH 2 ARMS THAT A WRONG TRANSCRIPTION WOULD MOVE, each
-   against its LOGSTUFF arm. The matrix scores seventeen QSOs per variant; these
+   against the LOGSTUFF arm it was transcribed from (deleted at M10 S3). The
+   matrix scores seventeen QSOs per variant; these
    are the branches it does not reach. *)
 procedure TContestFactoryTests.Test_M7bBatch2ScoringEdges;
 var

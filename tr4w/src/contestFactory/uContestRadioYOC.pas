@@ -92,8 +92,9 @@ uses
    uContestRegistry,
    uContestFixedPoints;
 
-(* ThreePointsPerQSO -- LOGSTUFF.CalculateQSOPoints's arm for this
-   contest's point method, moved here as it stood (M7b batch 2). *)
+(* ThreePointsPerQSO -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestRadioYOC.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 3, 3);

@@ -103,8 +103,8 @@ uses
    uContestRegistry,
    uTR4WStrings;
 
-(* RSGB160Method -- LOGSTUFF.CalculateQSOPoints's arm for this contest's
-   point method, moved here as it stood (2026-10-14), the sheet asked through
+(* RSGB160Method -- the legacy LOGSTUFF arm for this contest's point
+   method (deleted at M10 S3), moved here as it stood (2026-10-14), the sheet asked through
    the station context's read-only service. No service is no sheet: nothing
    is new, so 2. *)
 procedure TContestRSGB18.CalculateQSOPoints(var aQso: ContestExchange);

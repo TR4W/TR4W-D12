@@ -134,7 +134,8 @@ begin
       end;
 end;
 
-(* LOGSTUFF's OnePointPerQSO arm: `RXData.QSOPoints := 1`, whatever the mode. *)
+(* The legacy LOGSTUFF OnePointPerQSO arm (deleted at M10 S3):
+   `RXData.QSOPoints := 1`, whatever the mode. *)
 procedure TContestPOTATests.Test_POTAScoresOnePointEveryMode;
 var
    obj: TContestBase;

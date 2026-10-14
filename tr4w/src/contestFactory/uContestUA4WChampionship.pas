@@ -122,8 +122,9 @@ const
    (* Udmurtia, the sponsor's oblast, as GetOblast spells it. *)
    UA4W_OBLAST = '4W';
 
-(* UA4WMethod -- LOGSTUFF.CalculateQSOPoints's arm for this contest's point
-   method, moved here as it stood but for the zone's source (see the header). *)
+(* UA4WMethod -- the legacy LOGSTUFF arm for this contest's point method
+   (deleted at M10 S3), moved here as it stood but for the zone's source (see
+   the header). *)
 procedure TContestUA4WChampionship.CalculateQSOPoints(var aQso: ContestExchange);
 var
    myCQZone: integer;

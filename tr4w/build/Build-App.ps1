@@ -177,7 +177,9 @@ $countsCaveat = if ($Incremental) { 'INCREMENTAL build -- only recompiled units 
                 elseif ($rc -ne 0) { 'build FAILED -- units after the error were never compiled' }
                 else { '' }
 
-$WARN_CEILING = 4
+# 4 -> 3, 2026-10-14: M10 S3 deleted LOGSTUFF's legacy scoring case, and
+# with it the Ten-Ten arm's `if RXData.TenTenNum <> -1` range warning.
+$WARN_CEILING = 3
 
 $warnLines = $output | Select-String -Pattern 'Comparison might be always (false|true)'
 Write-Host "range warnings: $($warnLines.Count) (ceiling $WARN_CEILING)"
@@ -357,7 +359,10 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # class casts them explicitly), Tree's two Str20 := UpperCase(...) in the
 # grid tests (the shape is uGridShape's, on a native string), and
 # ResolvePOTAParkFromADIF's AnsiUpperCase (UpperCase in its new leaf).
-$NARROW_CEILING = 1271
+# 1271 -> 1267, 2026-10-14: M10 S3 deleted LOGSTUFF's legacy scoring case
+# (about 3,270 lines reached only by DUMMYCONTEST); its four implicit
+# narrowings went with it. Measured by the full build, not estimated.
+$NARROW_CEILING = 1267
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

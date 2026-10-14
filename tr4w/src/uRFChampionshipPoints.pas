@@ -29,10 +29,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   WHY A UNIT OF ITS OWN. The CW and SSB runnings of the Championship gained
   classes at M6 -- siblings, as the SAC pair are (design 1.5, Q7) -- and both
-  score by this table; so does LOGSTUFF's ChampionshipRFMethod arm, which
-  stays reachable through an operator's QSO POINT METHOD until M10. A class
-  may not use the TRDOS engine (design 1.3), so the table moved to a leaf all
-  three read, as uExchangeTokens was lifted at M5b. One table, copied
+  score by this table; so did LOGSTUFF's ChampionshipRFMethod arm, until
+  M10 S3 deleted the legacy scoring case. A class may not use the TRDOS
+  engine (design 1.3), so the table moved to a leaf all three read, as
+  uExchangeTokens was lifted at M5b; the two classes are its readers now. One table, copied
   nowhere: the sponsor's numbers are one fact. *)
 unit uRFChampionshipPoints;
 

@@ -132,9 +132,12 @@ shared point-method, exchange or multiplier strategies.
 **For a contest WITH a class, `logstuff.CalculateQSOPoints` hands over FIRST**
 to the class's `ScoreQSO` (M3, 2026-10-01), which runs the band check and the
 four `QSO POINTS ...` overrides itself. Below that line the routine is the
-classless path only: the same `uContestBase.ApplyQSOPointOverride`, then the
-`case ActiveQSOPointMethod`. Do not add a band check or an override there for
-a classed contest -- it would never run. **`QSO POINT METHOD` is retired
+classless path only -- DUMMYCONTEST, the one `ContestType` without a class:
+the same `uContestBase.ApplyQSOPointOverride`, then 0. **The legacy
+`case ActiveQSOPointMethod` is DELETED (M10 S3, 2026-10-14)**, with every
+locally-unused unit it pulled in; its arms live on in their classes, in git
+history and in the D7 tree. Do not add a band check, an override or a rule
+there for a classed contest -- it would never run. **`QSO POINT METHOD` is retired
 (M10 S2, 2026-10-14)** -- a name in `uCFG.RETIRED_COMMANDS`, no effect -- so
 nothing an operator says reaches `ActiveQSOPointMethod` any more.
 
@@ -144,7 +147,8 @@ nothing an operator says reaches `ActiveQSOPointMethod` any more.
 exchange are their classes' own now. **Nor does the final score (M6,
 2026-10-02)**: `logedit.TotalScore`'s five point-method formulas are their
 contests' `CombineWithMultipliers` -- nine of those contests gained classes for
-it. No reader of `ActiveQSOPointMethod` is left outside the classless `case`.
+it. **No reader of `ActiveQSOPointMethod` is left at all** since M10 S3 --
+FCONTEST still writes it, and S4 deletes it with the trait.
 
 **`TotalScore` IS ONE FUNCTION AND ASKS THE CONTEST (M6).** It gathers a
 `TScoreTotals` (`uScoreTotals.GatherScoreTotals`: stored points, QTCs, the

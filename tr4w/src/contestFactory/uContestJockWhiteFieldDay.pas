@@ -52,7 +52,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   class to carry it; it has one now, so it carries it (NY4I, 2026-09-29: "Yes
   support old spellings"). Export never writes it.
 
-  SCORING IS NZFieldDayQSOPointMethod, one arm of LOGSTUFF.CalculateQSOPoints,
+  SCORING IS NZFieldDayQSOPointMethod, an arm of the legacy LOGSTUFF scoring
+  case (deleted at M10 S3; see git history or the D7 tree),
   transcribed exactly:
 
       if RXCty = 'ZL' then             (RXCty is RXData.QTH.CountryID)

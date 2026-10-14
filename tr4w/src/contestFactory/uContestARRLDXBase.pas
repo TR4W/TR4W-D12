@@ -47,7 +47,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   of virtuals TContestBase grows into -- so there is somewhere for it to go
   when the decision is made.
 
-  The rules below are LOGSTUFF's ARRLDXQSOPointMethod arm, moved verbatim.
+  The rules below are LOGSTUFF's ARRLDXQSOPointMethod arm, moved verbatim
+  (the arm was deleted at M10 S3; see git history or the D7 tree).
 
   CHOSEN AS THE FIRST FAMILY BECAUSE IT IS PROVABLE, not because it is easy.
   arrl_dx_cw_2025_ny4i is a 66-QSO golden-corpus set with a D7-written

@@ -48,7 +48,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     uADIF's `ceContest <> POTA`       WritesADIFContestId
     uNewContest.ClasslessPrompts, x2  DescribeNewContestPrompts
     MainUnit's menu test              OffersParkTools
-    LOGSTUFF's OnePointPerQSO arm     CalculateQSOPoints
+    LOGSTUFF's OnePointPerQSO arm     CalculateQSOPoints (the arm was
+                                      deleted at M10 S3)
 
   The three TRDOS helpers those sites called are leaves now --
   uPOTAReference (IsValidPOTAPark, ResolvePOTAParkFromADIF, LooksLikeAState)
@@ -135,8 +136,9 @@ uses
    (* TC_ENTERYOURPARKREFERENCEDESIGNATOR. *)
    uTR4WStrings;
 
-(* ONE POINT A CONTACT, whatever the mode -- LOGSTUFF's OnePointPerQSO arm,
-   `RXData.QSOPoints := 1`, through the FixedModePoints helper. *)
+(* ONE POINT A CONTACT, whatever the mode -- the legacy LOGSTUFF
+   OnePointPerQSO arm (deleted at M10 S3), `RXData.QSOPoints := 1`, through
+   the FixedModePoints helper. *)
 procedure TContestPOTA.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);

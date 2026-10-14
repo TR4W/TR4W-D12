@@ -93,8 +93,9 @@ implementation
 uses
    uContestRegistry;
 
-(* SouthAmericanWWQSOPointMethod -- LOGSTUFF.CalculateQSOPoints's arm for this
-   contest's point method, moved here as it stood (M7b batch 2). *)
+(* SouthAmericanWWQSOPointMethod -- the legacy LOGSTUFF arm for this
+   contest's point method, moved here as it stood (M7b batch 2). The arm
+   was deleted at M10 S3; see git history or the D7 tree. *)
 procedure TContestSouthAmericanWW.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    if Station.MyContinent = SouthAmerica then
