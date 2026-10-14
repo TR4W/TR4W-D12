@@ -288,7 +288,7 @@ Three groups:
 - **Q4** Retire `EXCHANGE RECEIVED`, the four multiplier commands and `INITIAL
   EXCHANGE` along with `QSO POINT METHOD` at the end? They select from shared sets
   the same way. *Recommended: yes.*
-  **Answer:**
+  **Answer:** **RULED 2026-10-13 (NY4I): YES, all seven retire.** "Since we will be able to enter contests faster, we can retire the user entering their own contests. That is a desired feature by the user community but we can revisit another way to do it."
 
 - **Q8** Events with no `ContestType` that the code still identifies by name:
   `'TRC'`, `'PGA'`, `'EURASIA'`, `'DL-DX-RTTY'`. Give each a type and class, or
@@ -379,6 +379,7 @@ Three groups:
 
 | Q | Answer | Where it landed |
 |---|---|---|
+| Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
 | Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
 | Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
 | Q3 | The log stores only what the operator stated | M2a (decided under delegation) |

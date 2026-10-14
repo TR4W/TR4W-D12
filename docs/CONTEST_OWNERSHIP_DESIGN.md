@@ -2931,6 +2931,7 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
 - **Q3** (C1 + old Q1, Finding 2). Every corpus log stores the seven settings as
   `NONE` / `UNKNOWN`. Establish which code writes them and why they are not
   applied, before M2. Should a stored sentinel then read as "not stated"?
+- **Q4** **RULED 2026-10-13 (NY4I): YES -- `QSO POINT METHOD`, `EXCHANGE RECEIVED`, the four multiplier commands and `INITIAL EXCHANGE` all retire at M10** (`RETIRED_COMMANDS`: accepted, logged once, no effect). NY4I: *"Since we will be able to enter contests faster, we can retire the user entering their own contests. That is a desired feature by the user community but we can revisit another way to do it."* So **user-defined contests are a FUTURE FEATURE**, to be designed separately (not by bending an existing contest through these settings). Original question follows.
 - **Q4** (new; the residue of C5). Do `EXCHANGE RECEIVED`, the four multiplier
   commands and `INITIAL EXCHANGE` retire with `QSO POINT METHOD` at the
   endpoint? **Recommended yes**, since they select from shared sets in the same
