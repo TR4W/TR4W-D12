@@ -67,7 +67,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ---------------------------------------------------------------------------
 
     identity   requested vs selected ContestType, the class (or none)
-    setup      the seven Active* values, the CTY modes, every engine global
+    setup      the six Active* kinds, the CTY modes, every engine global
                FoundContest writes, the domestic country list, the county-line
                answer, the CW memories it writes, and EVERY SETTING WHOSE VALUE
                DIFFERS FROM A FRESHLY CONSTRUCTED SETTINGS OBJECT -- so a
@@ -467,10 +467,14 @@ procedure CaptureCountyLine;
 var
    klass: TContestBase;
 begin
-   (* WHAT EACH READER ASKS TODAY. The ADIF importer reads the array's flag;
-     ValidateQTHCount asks a state-party class for its maximum. Both are
-     recorded because M2 and M5 move them. *)
-   EmitField('countyline.row.allowed', BoolText(ContestsArray[Contest].CountyLineAllowed));
+   (* WHAT EACH READER ASKS TODAY. The ADIF importer asks
+     ContestAllowsCountyLineOnImport, and this line asks the SAME function, so
+     it names what the importer does rather than where the answer lives --
+     it was `countyline.row.allowed` until M10 S1 (2026-10-14), and plan S7
+     repoints that function from the row to the class, moving this line for
+     exactly the six contests the two disagree on. ValidateQTHCount asks a
+     state-party class for its maximum. *)
+   EmitField('countyline.import.allowed', BoolText(ContestAllowsCountyLineOnImport(Contest)));
    klass := ActiveContest(Contest);
    if (klass <> nil) and (klass is TContestStateQSOPartyBase) then
       begin
@@ -561,7 +565,10 @@ end;
 procedure CaptureSetup;
 begin
    Emit('== setup');
-   EmitField('active.qsopointmethod', EnumText(TypeInfo(QSOPointMethodType), Ord(ActiveQSOPointMethod)));
+   (* NO active.qsopointmethod LINE since M10 S1 (2026-10-14): every contest
+     the matrix runs is scored by its class, which never reads
+     ActiveQSOPointMethod, and plan S4 deletes the point method as a concept.
+     Dropped in a re-freeze of its own, before anything moves. *)
    EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ActiveExchange)));
    EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ActiveInitialExchange)));
    EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ActiveDomesticMult)));

@@ -220,6 +220,37 @@ function Get-TR4WPascalFiles
                            $_.Name -notmatch $skipFile })
 }
 
+# THE MEMBERS OF AN ENUMERATED TYPE, read from the source that declares it --
+# never typed into a script, so a member added to the enum is seen the day it
+# is added. Comments are stripped first (Get-PascalCodeOnlyText), so a member
+# commented out of the declaration is not a member. Returns a case-insensitive
+# HashSet holding EVERY member, in no order; an empty set when the type is not
+# found, which a caller must treat as a failure (give it a floor).
+#
+# Lifted out of Lint-ContestNameTests on 2026-10-14, when Lint-NoContestTables
+# became its second reader of the ContestType enum.
+function Get-PascalEnumMembers
+{
+   param(
+      [Parameter(Mandatory = $true)][string] $Path,
+      [Parameter(Mandatory = $true)][string] $TypeName
+   )
+
+   $text = Get-PascalCodeOnlyText -Path $Path -BlankStrings
+   $rx   = '(?<![\w.])' + [regex]::Escape($TypeName) + '\s*=\s*\((?<body>[^)]*)\)'
+   $m    = [regex]::Match($text, $rx, 'IgnoreCase')
+   $set  = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+   if ($m.Success)
+   {
+      foreach ($item in $m.Groups['body'].Value.Split(','))
+      {
+         $im = [regex]::Match($item, '^\s*([A-Za-z_]\w*)')
+         if ($im.Success) { [void]$set.Add($im.Groups[1].Value) }
+      }
+   }
+   return ,$set
+}
+
 # Fixtures for the parser itself. Exported so every consumer's -SelfTest can run
 # them: the reader is shared now, so its tests should be too rather than each
 # lint testing it separately (or, as happened, none of them testing it at all).
@@ -308,4 +339,4 @@ function Invoke-PascalSourceSelfTest
 
 Export-ModuleMember -Function Get-PascalCodeOnlyLine, Get-PascalCodeOnlyLines,
                               Get-PascalCodeOnlyText, Get-TR4WPascalFiles,
-                              Invoke-PascalSourceSelfTest
+                              Get-PascalEnumMembers, Invoke-PascalSourceSelfTest

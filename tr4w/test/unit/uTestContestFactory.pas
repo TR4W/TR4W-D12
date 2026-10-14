@@ -93,6 +93,8 @@ type
       procedure Test_EveryOtherContestStillCreditsEveryBand;
       procedure Test_FixedPointContestsTranscribeTheirArms;
       procedure Test_MovedRowValuesStillMatchTheArray;
+      procedure Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix;
+      procedure Test_DummyContestScoresOnlyTheOverrides;
       procedure Test_ADIFIdsResolveOldAndNew;
       procedure Test_NoADIFIdIsClaimedTwice;
       procedure Test_NRAUAndJockWhiteRowsAreNotShifted;
@@ -1771,48 +1773,171 @@ begin
    CheckFixed(GENERALQSO, 'General QSO', 1, 1, 1);
 end;
 
+(* EVERY ROW VALUE THE TABLES HOLD, AGAINST WHAT THE CLASS ANSWERS -- widened
+   for M10 S0 (2026-10-14, docs/CONTEST_FACTORY_M10_PLAN.md S0, finding F10).
+
+   THE EXPECTED SIDE IS THE TABLE ITSELF, READ HERE, AND NEVER A TContestBase.
+   Until S0 it was `TContestBase.Create(aContest)` -- the base's getters, which
+   read the same table. For a class that inherits a value that compared the row
+   with itself, and it would have gone on agreeing after plan S6 turns the
+   base's getters into neutral constants: both sides would become neutral
+   together and a value S5 forgot to transcribe would pass. Reading
+   ContestsArray, ContestsBooleanArray and QSOParties directly is what keeps
+   the expected side fixed while the base changes under the actual side. The
+   two-step name rule (the row's field, else the enum's spelling) is restated
+   here for the same reason.
+
+   SO TODAY THIS PASSES TRIVIALLY FOR AN INHERITED VALUE, ON PURPOSE. Its job is
+   to fail at S5/S6, not now. 17 contests inherit 100 non-neutral row values
+   (plan 1.3) and every contest inherits the nine flag bits.
+
+   EVERY CONTEST, NOT A LIST. The named calls below are kept because their
+   comments record each row's traps; the loop at the end covers every
+   ContestType, including DUMMYCONTEST, which has no class and is answered by
+   a plain TContestBase -- what ContestIdentity gives it, and the neutral row
+   S6's constants must reproduce (plan section 3).
+
+   EVERY BIT OF THE FLAG WORD: the seven set-up flags, ERMAK and RTC (which
+   the contest matrix records no line for), and that no bit above RTC's is
+   set, so a stray bit cannot hide.
+
+   ONE KNOWN DISAGREEMENT, BY NAME: British Columbia's HostState. Its row's P
+   indexes the QSOParties entry 'VE7', which is not two letters, so the table
+   derives no host state; the class states 'BC'. That is the class owning a
+   fact the table never held, not a transcription error.
+
+   Deleted at plan S8 with the tables it compares against. *)
 procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
+
+   function NameOrSpelling(const aField: string; aContest: ContestType): string;
+   begin
+      if Length(aField) = 0 then
+         begin
+         Result := string(ContestTypeSA[aContest]);
+         end
+      else
+         begin
+         Result := aField;
+         end;
+   end;
+
+   function TableFlag(aContest: ContestType; aBit: integer): boolean;
+   begin
+      Result := (ContestsBooleanArray[aContest] and (1 shl aBit)) <> 0;
+   end;
+
+   procedure CheckFlag(aContest: ContestType; aBit: integer; aActual: boolean;
+                       const aWhat: string);
+   begin
+      CheckTrue(TableFlag(aContest, aBit) = aActual, aWhat);
+   end;
 
    procedure CheckAgainstArray(aContest: ContestType; const aWhat: string);
    var
-      cls, row: TContestBase;
+      cls: TContestBase;
+      row: TContestInfo;
+      partyIndex: integer;
+      expectedHost: string;
+      expectedInState: string;
+      expectedZoneMode: ZoneModeType;
    begin
-      cls := MakeContest(aContest);
+      if aContest = DUMMYCONTEST then
+         begin
+         cls := TContestBase.Create(aContest);
+         end
+      else
+         begin
+         cls := MakeContest(aContest);
+         end;
       CheckTrue(cls <> nil, aWhat + ' has no registered class');
       if cls = nil then
          begin
          Exit;
          end;
-      row := TContestBase.Create(aContest);
+      row := ContestsArray[aContest];
       try
-         CheckEquals(row.CabrilloName, cls.CabrilloName, aWhat + ' CabrilloName');
-         CheckEquals(row.ADIFContestId, cls.ADIFContestId, aWhat + ' ADIFContestId');
-         CheckEquals(row.WA7BNMId, cls.WA7BNMId, aWhat + ' WA7BNMId');
-         CheckEquals(row.QRZRUId, cls.QRZRUId, aWhat + ' QRZRUId');
-         CheckEquals(row.SubmissionEmail, cls.SubmissionEmail, aWhat + ' SubmissionEmail');
-         CheckEquals(row.DomesticFileName, cls.DomesticFileName, aWhat + ' DomesticFileName');
-         CheckEquals(row.FriendlyName, cls.FriendlyName, aWhat + ' FriendlyName');
-         CheckEquals(Ord(row.PrefixMultiplierType), Ord(cls.PrefixMultiplierType),
+         CheckEquals(NameOrSpelling(row.CABName, aContest), cls.CabrilloName,
+                     aWhat + ' CabrilloName');
+         CheckEquals(NameOrSpelling(row.ADIFName, aContest), cls.ADIFContestId,
+                     aWhat + ' ADIFContestId');
+         CheckEquals(NameOrSpelling(row.FriendlyName, aContest), cls.FriendlyName,
+                     aWhat + ' FriendlyName');
+         CheckEquals(integer(row.WA7BNM), cls.WA7BNMId, aWhat + ' WA7BNMId');
+         CheckEquals(integer(row.QRZRUID), cls.QRZRUId, aWhat + ' QRZRUId');
+         CheckEquals(row.Email, cls.SubmissionEmail, aWhat + ' SubmissionEmail');
+         CheckEquals(row.DF, cls.DomesticFileName, aWhat + ' DomesticFileName');
+         CheckEquals(Ord(row.PxM), Ord(cls.PrefixMultiplierType),
                      aWhat + ' PrefixMultiplierType');
-         CheckEquals(Ord(row.ZoneMultiplierType), Ord(cls.ZoneMultiplierType),
+         CheckEquals(Ord(row.ZnM), Ord(cls.ZoneMultiplierType),
                      aWhat + ' ZoneMultiplierType');
-         CheckEquals(Ord(row.DXMultiplierType), Ord(cls.DXMultiplierType),
+         CheckEquals(Ord(row.XM), Ord(cls.DXMultiplierType),
                      aWhat + ' DXMultiplierType');
-         CheckEquals(Ord(row.DomesticMultiplierType), Ord(cls.DomesticMultiplierType),
+         CheckEquals(Ord(row.DM), Ord(cls.DomesticMultiplierType),
                      aWhat + ' DomesticMultiplierType');
-         CheckEquals(Ord(row.InitialExchangeKind), Ord(cls.InitialExchangeKind),
+         CheckEquals(Ord(row.AIE), Ord(cls.InitialExchangeKind),
                      aWhat + ' InitialExchangeKind');
-         CheckEquals(Ord(row.ExchangeKind), Ord(cls.ExchangeKind),
+         CheckEquals(Ord(row.AE), Ord(cls.ExchangeKind),
                      aWhat + ' ExchangeKind');
-         CheckEquals(Ord(row.QSOPointMethod), Ord(cls.QSOPointMethod),
+         CheckEquals(Ord(row.QP), Ord(cls.QSOPointMethod),
                      aWhat + ' QSOPointMethod');
-         CheckTrue(row.IsUSQSOParty = cls.IsUSQSOParty, aWhat + ' IsUSQSOParty');
+         CheckTrue((row.QP <> AlwaysOnePointPerQSO) = cls.MarksDupes,
+                   aWhat + ' MarksDupes');
+
+         (* THE PARTY INDEX P, and the three answers derived from it. *)
+         CheckTrue((row.P <> 0) = cls.IsUSQSOParty, aWhat + ' IsUSQSOParty');
+         partyIndex := row.P;
+         expectedHost := '';
+         expectedInState := '';
+         if (partyIndex >= 1) and (partyIndex <= QSOPartiesCount) then
+            begin
+            expectedInState := QSOParties[partyIndex].InsideStateDOMFile;
+            if Length(QSOParties[partyIndex].StateName) = 2 then
+               begin
+               expectedHost := QSOParties[partyIndex].StateName;
+               end;
+            end;
+         CheckEquals(expectedInState, cls.InStateDomesticFileName,
+                     aWhat + ' InStateDomesticFileName');
+         if aContest = BCQP then
+            begin
+            CheckEquals('', expectedHost, aWhat + ' table host state (VE7 is not a state)');
+            CheckEquals('BC', cls.HostState, aWhat + ' HostState, stated by the class');
+            end
+         else
+            begin
+            CheckEquals(expectedHost, cls.HostState, aWhat + ' HostState');
+            end;
+
+         (* EVERY BIT OF THE FLAG WORD. *)
+         CheckFlag(aContest, QSO_BY_BAND_BIT, cls.QSOByBand, aWhat + ' QSOByBand');
+         CheckFlag(aContest, QSO_BY_MODE_BIT, cls.QSOByMode, aWhat + ' QSOByMode');
+         CheckFlag(aContest, MULT_BY_BAND_BIT, cls.MultByBand, aWhat + ' MultByBand');
+         CheckFlag(aContest, MULT_BY_MODE_BIT, cls.MultByMode, aWhat + ' MultByMode');
+         CheckFlag(aContest, ERMAK_BIT, cls.ErmakSpecification,
+                   aWhat + ' ErmakSpecification');
+         CheckFlag(aContest, VHF_BAND_ENABLE_BIT, cls.VHFBandsEnabled,
+                   aWhat + ' VHFBandsEnabled');
+         CheckFlag(aContest, CDC_BIT, cls.CountsDomesticCountries,
+                   aWhat + ' CountsDomesticCountries');
+         CheckFlag(aContest, RTC_CAPABLE_BIT, cls.RTCCapable, aWhat + ' RTCCapable');
+         if TableFlag(aContest, CQ_ZONE_MODE_BIT) then
+            begin
+            expectedZoneMode := CQZoneMode;
+            end
+         else
+            begin
+            expectedZoneMode := ITUZoneMode;
+            end;
+         CheckEquals(Ord(expectedZoneMode), Ord(cls.ZoneMode), aWhat + ' ZoneMode');
+         CheckEquals(0, integer(ContestsBooleanArray[aContest] and $FE00),
+                     aWhat + ' sets a flag bit above RTC_CAPABLE_BIT, which nothing reads');
       finally
-         row.Free;
          cls.Free;
          end;
    end;
 
+var
+   c: ContestType;
 begin
    BeginTest('Test_MovedRowValuesStillMatchTheArray');
    CheckAgainstArray(ARKTIKA_SPRING, 'Arktika Spring');
@@ -2107,6 +2232,160 @@ begin
    CheckAgainstArray(YOTA, 'YOTA');
    CheckAgainstArray(SST, 'SST');
    CheckAgainstArray(RTC, 'RTC');
+
+   (* AND EVERY ContestType, M10 S0. The sixteen M1-M4-era contests no named
+      call above covered -- ARRL DX, ARRL SS, CQ WPX, CQ WW (each pair), ARRL
+      and Winter Field Day, Florida, Michigan, General QSO, IARU and both NA
+      Sprints -- are among the seventeen that inherit row values, so they are
+      the ones S5 is most likely to get wrong. *)
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      CheckAgainstArray(c, string(ContestTypeSA[c]));
+      end;
+end;
+
+(* THE COUNTY-LINE RULE HAS TWO OWNERS TODAY, AND THEY DISAGREE FOR SIX
+   CONTESTS -- M10 S0 (plan finding F3, design 8.2s).
+
+   ContestsArray[c].CountyLineAllowed is what the ADIF importer and MainUnit's
+   import read; the state-party class's CountyLineAllowed (a county-line
+   maximum above zero) is what live entry obeys. Plan S7 makes the importer
+   ask the class -- DECIDED 2026-10-14 -- and THIS is the measurement of what
+   that changes, pinned so that nothing else moves with it:
+
+     Michigan             row True,  class False (its sponsor allows none)
+     Arizona, BC, VA,
+     Salmon Run, NY       row False, class True
+
+   Every other contest agrees, and a contest that is not on the state-party
+   base has no county line at all. When S7 lands, the import side of this
+   becomes the class's and the six stop being exceptions; when S8 deletes the
+   row, the test goes with it. *)
+procedure TContestFactoryTests.Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix;
+var
+   c: ContestType;
+   obj: TContestBase;
+   rowAllows: boolean;
+   classAllows: boolean;
+   disagreements: integer;
+begin
+   BeginTest('Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix');
+   disagreements := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if c = DUMMYCONTEST then
+         begin
+         Continue;
+         end;
+      obj := MakeContest(c);
+      CheckTrue(obj <> nil, string(ContestTypeSA[c]) + ' has no registered class');
+      if obj = nil then
+         begin
+         Continue;
+         end;
+      try
+         rowAllows := ContestsArray[c].CountyLineAllowed;
+         classAllows := (obj is TContestStateQSOPartyBase) and
+                        TContestStateQSOPartyBase(obj).CountyLineAllowed;
+         if rowAllows <> classAllows then
+            begin
+            Inc(disagreements);
+            end;
+         case c of
+            MICHQSOPARTY:
+               begin
+               CheckTrue(rowAllows, 'Michigan: the row allows a county line');
+               CheckFalse(classAllows, 'Michigan: the class allows none');
+               end;
+            ArizonaQsoParty, BCQP, VAQP, SALMONRUN, NYQP:
+               begin
+               CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': the row allows no county line');
+               CheckTrue(classAllows, string(ContestTypeSA[c]) + ': the class allows one');
+               end;
+         else
+            begin
+            CheckTrue(rowAllows = classAllows,
+                      string(ContestTypeSA[c]) + ': row and class disagree on the county line');
+            end;
+         end;
+      finally
+         obj.Free;
+         end;
+      end;
+   CheckEquals(6, disagreements, 'exactly six contests where row and class disagree');
+end;
+
+(* DUMMYCONTEST -- "no contest" -- SCORES ONLY THE OVERRIDES, THEN ZERO.
+   M10 S0 (plan section 3).
+
+   It is the one ContestType with no class, so it is the one that reaches
+   LOGSTUFF.CalculateQSOPoints' classless path, which today applies the four
+   QSO POINTS ... overrides and then reads ActiveQSOPointMethod -- a value
+   FoundContest never resets for it (plan F6). Plan S3 deletes that read and
+   leaves "the overrides, then 0", which is exactly what TContestBase.ScoreQSO
+   does. This pins that answer on the object ContestIdentity hands out for
+   DUMMYCONTEST, so S3's guard has a definition to be held to. The engine path
+   itself is not linked into this binary; the matrix does not run
+   DUMMYCONTEST. *)
+procedure TContestFactoryTests.Test_DummyContestScoresOnlyTheOverrides;
+var
+   obj: TContestBase;
+   station: TStationContext;
+   band: BandType;
+
+   function Score(aBand: BandType; aMode: ModeType;
+                  const aDomesticQTH: string): integer;
+   var
+      rx: ContestExchange;
+   begin
+      FillChar(rx, SizeOf(rx), 0);
+      rx.Band := aBand;
+      rx.Mode := aMode;
+      rx.DomesticQTH := ShortString(aDomesticQTH);
+      rx.QSOPoints := 99;
+      obj.ScoreQSO(rx);
+      Result := rx.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_DummyContestScoresOnlyTheOverrides');
+   CheckTrue(ContestClassFor(DUMMYCONTEST) = nil, 'DUMMYCONTEST has a registered class');
+   CheckTrue(ContestIdentity(DUMMYCONTEST).ClassType = TContestBase,
+             'DUMMYCONTEST''s identity is not a plain TContestBase');
+
+   obj := TContestBase.Create(DUMMYCONTEST);
+   try
+      (* No override: zero, on every band and in every mode. *)
+      FillChar(station, SizeOf(station), 0);
+      obj.SetStation(station);
+      for band := Low(BandType) to High(BandType) do
+         begin
+         CheckEquals(0, Score(band, CW, ''), 'no override: a CW QSO scores 0');
+         CheckEquals(0, Score(band, Phone, 'ADA'), 'no override: a phone QSO scores 0');
+         CheckEquals(0, Score(band, Digital, ''), 'no override: a digital QSO scores 0');
+         end;
+
+      (* Each of the four overrides scores what it states. *)
+      station.PointOverrides.DomesticCW.Stated := True;
+      station.PointOverrides.DomesticCW.Points := 7;
+      station.PointOverrides.DXCW.Stated := True;
+      station.PointOverrides.DXCW.Points := 9;
+      station.PointOverrides.DomesticPhone.Stated := True;
+      station.PointOverrides.DomesticPhone.Points := 4;
+      station.PointOverrides.DXPhone.Stated := True;
+      station.PointOverrides.DXPhone.Points := 6;
+      obj.SetStation(station);
+      CheckEquals(7, Score(Band20, CW, 'ADA'), 'domestic CW override');
+      CheckEquals(9, Score(Band20, CW, ''), 'DX CW override');
+      CheckEquals(4, Score(Band20, Phone, 'ADA'), 'domestic phone override');
+      CheckEquals(6, Score(Band20, Phone, ''), 'DX phone override');
+
+      (* A QSO no override matches falls through to zero -- never to a
+         point method. *)
+      CheckEquals(0, Score(Band20, Digital, 'ADA'), 'digital matches no override: 0');
+   finally
+      obj.Free;
+      end;
 end;
 
 (* WHICH CONTEST ANSWERS TO AN ADIF CONTEST_ID -- the rule itself, asked
@@ -4049,6 +4328,8 @@ begin
    Test_EveryOtherContestStillCreditsEveryBand;
    Test_FixedPointContestsTranscribeTheirArms;
    Test_MovedRowValuesStillMatchTheArray;
+   Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix;
+   Test_DummyContestScoresOnlyTheOverrides;
    Test_ADIFIdsResolveOldAndNew;
    Test_NoADIFIdIsClaimedTwice;
    Test_NRAUAndJockWhiteRowsAreNotShifted;

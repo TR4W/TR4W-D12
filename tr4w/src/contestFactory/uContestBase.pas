@@ -1196,6 +1196,22 @@ type
          where it is written down today. *)
       function GetInStateDomesticFileName: string; virtual;
 
+      (* THE LAST TWO BITS OF THE ROW'S FLAG WORD -- M10 S0, 2026-10-14.
+
+         ErmakSpecification: the contest offers the ERMAK Cabrillo
+         specification to a Russian station (MainUnit's set-up, ERMAK_BIT).
+         RTCCapable: the contest takes HamScore's real-time contact upload
+         (uHamScore, RTC_CAPABLE_BIT).
+
+         Both default to the array like the seven above. NOTHING ASKS THEM YET:
+         MainUnit and uHamScore still read ContestsBooleanArray, and plan S6
+         repoints them here. They exist now so that
+         Test_MovedRowValuesStillMatchTheArray can pin the class's answer
+         against the table for every contest BEFORE S5 transcribes the bits --
+         the matrix records neither. *)
+      function GetErmakSpecification: boolean; virtual;
+      function GetRTCCapable: boolean; virtual;
+
       (* DOES THIS CONTEST MARK A REPEATED CONTACT AS A DUPE? -- M3, 2026-10-01.
 
          A SPONSOR'S DUPE POLICY, AND IT WAS SPELLED AS A POINT METHOD.
@@ -1336,6 +1352,8 @@ type
       property CountsDomesticCountries: boolean read GetCountsDomesticCountries;
       property ZoneMode: ZoneModeType read GetZoneMode;
       property InStateDomesticFileName: string read GetInStateDomesticFileName;
+      property ErmakSpecification: boolean read GetErmakSpecification;
+      property RTCCapable: boolean read GetRTCCapable;
 
       (* The dupe policy -- see the getter. LOGSUBS2 asks it through
          uContestRegistry.ContestIdentity when a QSO is logged. *)
@@ -2446,6 +2464,16 @@ begin
       begin
       Result := ITUZoneMode;
       end;
+end;
+
+function TContestBase.GetErmakSpecification: boolean;
+begin
+   Result := RowFlag(ERMAK_BIT);
+end;
+
+function TContestBase.GetRTCCapable: boolean;
+begin
+   Result := RowFlag(RTC_CAPABLE_BIT);
 end;
 
 function TContestBase.GetInStateDomesticFileName: string;

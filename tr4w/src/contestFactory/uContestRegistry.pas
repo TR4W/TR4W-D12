@@ -139,6 +139,26 @@ function FindContestByADIFContestId(const aId: string;
 function ContestOfADIFRecordMode(aContest: ContestType;
                                  aMode: ModeType): ContestType;
 
+(* MAY AN IMPORTED REPEAT OF (call, band, mode) WITH A DIFFERENT QTH BE A
+  COUNTY-LINE CONTACT RATHER THAN A DUPE? -- M10 S1, 2026-10-14.
+
+  THE ONE QUESTION the log importer (MainUnit's ADIF import, which sets
+  ceClearDupeSheet on such a repeat) and the contest matrix's
+  `countyline.import.allowed` line ask, so that both move together.
+
+  TODAY IT ANSWERS THE ROW -- ContestsArray[c].CountyLineAllowed, exactly what
+  the importer read before -- so this commit changes no behaviour. Plan S7
+  (DECIDED 2026-10-14, design 8.2s) repoints this body, and only this body,
+  to the state-party class's CountyLineAllowed: the class owns the county-line
+  rule, and the two disagree for six parties (Michigan one way; Arizona, BC,
+  Virginia, the Salmon Run and New York the other --
+  uTestContestFactory.Test_CountyLineRowAndClassDisagreeOnlyForTheKnownSix).
+
+  NOT the export side. uADIF.ResolveRoverCall also reads the row's flag, to
+  compose a rover's call on EXPORT; that is a different question and is left
+  reading the row, for S7 to decide on its own evidence. *)
+function ContestAllowsCountyLineOnImport(aContest: ContestType): boolean;
+
 implementation
 
 uses
@@ -281,6 +301,12 @@ begin
       aContest := formerContest;
       Result := True;
       end;
+end;
+
+function ContestAllowsCountyLineOnImport(aContest: ContestType): boolean;
+begin
+   (* The row, until plan S7 -- see the declaration. *)
+   Result := ContestsArray[aContest].CountyLineAllowed;
 end;
 
 function ContestOfADIFRecordMode(aContest: ContestType;

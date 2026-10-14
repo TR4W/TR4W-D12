@@ -54,6 +54,10 @@ $lints = @(
    # Bans a hand-typed table indexed by a radio enum. Two of them drifted from
    # VC.pas and four Kenwoods selected the wrong driver -- see the script.
    @{ Name = 'Lint-NoRadioTables'; Arg = $src;     NeedsFpc = $false }
+   # The same ban for ContestType, with the tables M10 has not deleted yet
+   # named in an allow-list that must shrink as they go (a stale entry fails).
+   # docs/CONTEST_FACTORY_M10_PLAN.md, S0.
+   @{ Name = 'Lint-NoContestTables'; Arg = $src;   NeedsFpc = $false }
    # The SAME defect one layer down. A config spelling table is bounded by its
    # enum, so its LENGTH is enforced and its CONTENTS are not -- and a repeated
    # word means GetValueFromArray hands back the FIRST ordinal and the second

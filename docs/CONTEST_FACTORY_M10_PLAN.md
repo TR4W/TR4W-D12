@@ -460,6 +460,13 @@ widest change (the session re-home), when every other pin exists**.
 * **Matrix:** exactly those six contests' `countyline.import.allowed` lines
   move; re-freeze those records only, reason "S7, county-line import asks the
   class". Unit pin on the import's `ceClearDupeSheet` for one contest each way.
+* **CORRECTION (S0/S1, 2026-10-14): `uADIF:1556` is NOT an import site.** It
+  is `ResolveRoverCall`, called from `EmitADIFRecord` -- it builds a rover's
+  callsign on EXPORT. Repointing it through `ContestAllowsCountyLineOnImport`
+  would make S7 change the ADIF EXPORT of the six contests. S1 left it reading
+  the row; S7 decides it on its own evidence. `test/logdump/logdump.lpr:225`
+  also still reads the row: it links only `VC` and `uLogBinaryFile`, and no
+  gate builds it -- S8 must fix it by hand.
 * **Risk:** medium (silent dupe acceptance/refusal on import).
   **Route:** contest-factory, file-formats, log-database (import).
   Can run any time after S1; must precede S8.

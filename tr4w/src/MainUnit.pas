@@ -10013,13 +10013,12 @@ var
   // County-line detection during import.  Within a single ImportFromADIF
   // pass we remember the first QTHString seen for each (call|band|mode)
   // tuple.  When a later record reuses the same (call|band|mode) with a
-  // different QTHString AND the contest's CountyLineAllowed flag is True,
+  // different QTHString AND the contest allows a county line on import,
   // we set ceClearDupeSheet on the later record so the post-import
   // rescore (tUpdateLog(actRescore)) does NOT flag it as a dupe.
-  // ContestsArray[ceContest].CountyLineAllowed is set to True only for
-  // the 13 single-state QSO parties (VC.pas).  Multi-state QPs (7QP /
-  // NEQP / etc.) are deliberately not flagged -- they need their own
-  // per-state county-line handling, tracked separately.
+  // The contest is asked through uContestRegistry.ContestAllowsCountyLineOnImport
+  // (M10 S1), which reads the ContestsArray row until plan S7 points it at
+  // the contest's class.
   seenCallBandMode    : TStringList;
   cbmKey              : string;
   cbmKeyIdx           : Integer;
@@ -10169,7 +10168,7 @@ begin
 
              // County-line follow-up detection.  If the imported record
              // reuses (call|band|mode) with a different QTHString AND the
-             // contest's CountyLineAllowed flag is True (see VC.pas), set
+             // contest allows it (uContestRegistry.ContestAllowsCountyLineOnImport), set
              // ceClearDupeSheet so the post-import rescore does not
              // dupe-flag this record.  Otherwise leave the flag alone --
              // the standard dupe check stays in effect.
@@ -10181,7 +10180,7 @@ begin
                 begin
                 priorQTHForKey := seenCallBandMode.ValueFromIndex[cbmKeyIdx];
                 if (priorQTHForKey <> string(TempRXData.QTHString)) and
-                   ContestsArray[TempRXData.ceContest].CountyLineAllowed then
+                   ContestAllowsCountyLineOnImport(TempRXData.ceContest) then
                    begin
                    TempRXData.ceClearDupeSheet := True;
                    end;

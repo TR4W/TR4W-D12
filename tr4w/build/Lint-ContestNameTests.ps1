@@ -254,17 +254,8 @@ function Get-ContestTypeMembers
 {
    param([Parameter(Mandatory = $true)][string] $VcPath)
 
-   $text = Get-PascalCodeOnlyText -Path $VcPath -BlankStrings   # comments stripped
-   $m = [regex]::Match($text, '(?<![\w.])ContestType\s*=\s*\((?<body>[^)]*)\)', 'IgnoreCase')
-   $set = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
-   if ($m.Success)
-   {
-      foreach ($item in $m.Groups['body'].Value.Split(','))
-      {
-         $im = [regex]::Match($item, '^\s*([A-Za-z_]\w*)')
-         if ($im.Success) { [void]$set.Add($im.Groups[1].Value) }
-      }
-   }
+   # the shared reader -- PascalSource.psm1, which Lint-NoContestTables also uses
+   $set = Get-PascalEnumMembers -Path $VcPath -TypeName 'ContestType'   # comments stripped
    [void]$set.Remove('DUMMYCONTEST')   # the sentinel asks "is a contest loaded", not which
    return ,$set
 }
