@@ -1330,6 +1330,129 @@ the 1,772 exchange ids minted on both sides are masked (`exchange_id`, and
 The golden corpus gives 24/0/2 with exit 0, and its 26 artifacts are
 byte-identical between the two builds.
 
+### The "one transaction" audit — every multi-write path, tested (2026-10-14)
+
+F4's finding meant any code that believed several writes were one transaction
+might be wrong. Every write path in the log layer and its callers was listed,
+and each claim was checked by injecting a failure part-way and reopening the
+file. Reading the code was not accepted as the answer.
+
+**THE RULE: a sequence of writes is atomic only inside an explicit or implicit
+transaction that the caller ends with `Commit`.** Before this audit, the
+repository did not honour that rule for its own two kept statements.
+
+**Finding 1: a kept write ran in autocommit. FIXED.** sqldb begins a
+transaction only when a statement prepares. A statement made per call
+(`SaveConfigValue`, `DeleteConfigValue`, `SaveSessionValue`, `SaveMessage`,
+`SetContest`, `SetEntryDeclaration`, and every `NewReadQuery`) prepares every
+time, so it always began one. `FInsert` and `FUpdate` are prepared once and
+kept. After any `Commit`, `SaveQSO`, `UpdateQSO` and `ImportQSOByGuid` with no
+guid were therefore durable the moment they ran, which contradicts SaveQSO's
+own contract: "Does NOT commit; the caller decides".
+
+`TestEveryWriteWaitsForItsCommit` runs 15 write paths after a commit, closes
+without committing and reopens. Before the fix, 5 failed:
+
+- `SaveQSO`, `UpdateQSO` and `ImportQSOByGuid('')` each survived on their own.
+- *Two SaveQSOs*: the first survived and the second did not.
+- *UpdateQSO then SaveConfigValue*: the update survived and the config row did
+  not.
+
+The last two are half-applied writes by a caller that believed it held one
+transaction.
+
+The fix is `TLogRepository.ExecuteKeptWrite`, which every execution of `FInsert`
+or `FUpdate` now goes through. It begins the transaction a prepare would have
+begun. The caller's `Commit` ends it, or, on a failure, the rollback at close.
+The fsync cost does not change: autocommit paid one per statement, and a
+caller's `Commit` pays one per transaction.
+
+**Finding 2: SQLite can end a transaction without telling sqldb. FIXED for
+rollback and close.** On SQLITE_FULL, IOERR, NOMEM or BUSY, SQLite may roll the
+transaction back by itself. sqldb then still holds its transaction `Active`, and
+its `ROLLBACK` fails with "cannot rollback - no transaction is active".
+
+This was measured with a `RAISE(ROLLBACK)` trigger on the second row of a
+batch. The log itself stayed atomic, because SQLite had undone row 1. Every
+layer above it went wrong:
+
+- `WriteBatch` reported the rollback error instead of the real one.
+- `InBatch` stayed True for good, so every later batch was refused.
+- `Close` raised as well. In `uLogStore.Disable` that close runs inside the
+  handler that reports the original failure, so the second exception escapes
+  it.
+
+`TLogDatabase.Rollback` fixes this. When sqldb's ROLLBACK fails, it issues a
+raw `BEGIN`, which succeeds only if SQLite holds no transaction. If the BEGIN
+succeeds, sqldb's ROLLBACK is repeated and the two agree again. If it fails, the
+original error is raised. No message text is matched. `RollbackBatch` and
+`Close` both use it.
+
+| path | atomic before (by test) | should be | outcome |
+|---|---|---|---|
+| `WriteBatch` (rescore, clear dupes and mults) | yes, F4 | yes | unchanged. Its rollback now survives a SQLite-side rollback (finding 2) |
+| `SaveQSO` / `UpdateQSO` / `ImportQSOByGuid('')` after a commit | **no**, durable alone | yes, per the contract | **fixed** (finding 1) |
+| `uLogStore.LogStoreAppendQSO`: optional `SetContest`, insert, `Commit` | yes when `SetContest` ran first (it BEGINs). Otherwise the insert was durable before the acknowledging `Commit` | yes | **fixed** (finding 1): a failure before the `Commit` no longer leaves an unacknowledged QSO in the log |
+| `CaptureContestStatements` / `CaptureStationFactRows`, inside `CaptureConfiguration` (one `Commit`) | yes. Pinned by injecting a failure through `aIsRetired` | yes | pinned: `Test_ACaptureThatFailsPartWayLeavesNothingOfItself` |
+| `logdupe.SaveRestartFile` (N session rows, one `Commit`) | yes: fresh statements, matrix row `SaveSessionValue` | yes | covered by the matrix. `logdupe` is not linkable |
+| `ImportBinaryLog` (one transaction for the whole import) | yes for rows. The transaction opens when the repository is constructed | yes | pinned: `TestAFreshRepositoryHoldsItsWritesUntilCommit` (the import's shape; the routine has no fault seam). Two file-level gaps are **open**, below |
+| `LogStoreUpdateNewestQSO` / `UpdateQSOAtIndex` / `UpdateQSOBySessionIds`, `LogStoreClearAllQSOs` | single statement | — | nothing to make atomic |
+| `EnsureOpen` on a new log: declaration and capture, `Commit`, then `SetContest`, `Commit` | two transactions | acceptable | left. A crash between them leaves a log with no contest row, which the "carried no contest" arm in `LogStoreApplyContestConfig` repairs on the next open |
+| `ApplySchema` (`CreateNew`) | tables in one transaction. The identity stamp follows it | — | left. A failure deletes the file; a crash between the commit and the stamp is a window of microseconds |
+| `MigrateSchema` | `CREATE ... IF NOT EXISTS`, then the version stamp | — | left on purpose: idempotent, and the version is stamped last |
+| ADIF import (`MainUnit.ImportFromADIF`, one `LogStoreAppendQSO` per record) | **no**, one commit per record | a decision | **left: deliberately per record** ("COUNTED ONLY IF IT COMMITTED"). Measured cost below |
+| a county-line contact (one `LogStoreAppendQSO` per county) | **no**, one commit per QSO | a decision | **left: deliberately per QSO** (section 9b: "the commit is the contact") |
+
+**Pins and mutations.** Five pins:
+
+- `TestEveryWriteWaitsForItsCommit`
+- `TestAFreshRepositoryHoldsItsWritesUntilCommit`
+- `TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable`
+- `TestALogSQLiteRolledBackClosesCleanly`
+- `Test_ACaptureThatFailsPartWayLeavesNothingOfItself`
+
+Nine mutations were tried, and eight were caught. These were caught:
+
+- no `BEGIN` in `ExecuteKeptWrite`
+- `SaveQSO` bypasses it
+- `UpdateQSO` bypasses it
+- `Rollback` without the resync
+- `RollbackBatch` back on sqldb's rollback
+- `Close` back on sqldb's rollback
+- a `Commit` part-way through the capture
+- `BeginBatchUpdate` adopting the pending transaction
+
+**`ImportQSOByGuid`'s new-guid insert bypassing `ExecuteKeptWrite` SURVIVES**,
+and that is expected. Its guid lookup is a fresh prepare, which has already
+begun the transaction. The call is kept so the rule has no exception.
+
+**Timings** (unit-test harness, synchronous = FULL, median of 3):
+
+| shape | before | after |
+|---|---:|---:|
+| 500 × (`SaveQSO`, `Commit`): the live append | 329 ms | 329 ms |
+| 500 × (`UpdateQSO`, `Commit`): an edit | 266 ms | 250 ms |
+
+Both are unchanged, as expected: one fsync per QSO either way. For the ADIF
+import's shape, 1,316 grouped inserts take **about 920 ms with a commit per
+record and about 109 ms in one transaction (8×)**. That is the cost of the
+per-record design above, and it is the number to weigh if the import is made
+all-or-none.
+
+**Open, not fixed: the migration import's file is not atomic.**
+
+1. `CreateNew` commits the empty file before the import's transaction begins,
+   and `EnsureOpen` adopts any existing file as the log. So a crash mid-import
+   leaves an EMPTY log, and the next start opens it rather than migrating the
+   `.TRW` again. The likely fix is to import into a staged name and rename on
+   success, which is the backup's stage-then-publish shape. It needs a decision
+   on staging and `-wal` handling.
+2. `ImportBinaryLog` catches each record's exception and carries on. If SQLite
+   rolled the transaction back itself (finding 2), the records after it run in
+   autocommit and the final `Commit` raises out of a routine documented never
+   to raise. This is reasoned from the batch measurement. The routine has no
+   seam for injecting a fault, so it was not injected there.
+
 ---
 
 ## 10. Constraints that must hold

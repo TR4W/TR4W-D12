@@ -139,7 +139,25 @@ begin
               and turn a second into minutes. The per-QSO commit that section 9b
               argues for is about LOGGING, where losing the contact in progress
               is the thing being prevented; an import that fails half way should
-              leave no log at all, which is what one transaction gives. *)
+              leave no log at all.
+
+              ONE TRANSACTION GIVES NO QSOs, NOT "NO LOG" -- section 9c,
+              2026-10-14. The transaction is open from the repository's
+              construction (pinned by TestAFreshRepositoryHoldsItsWritesUntilCommit)
+              and nothing below commits, so a crash before the Commit leaves no
+              row. But CreateNew has already made and committed the FILE, and
+              uLogStore.EnsureOpen adopts an existing file as the log without
+              looking at the .TRW again: after such a crash the next start
+              opens an empty log. Open, and recorded in 9c.
+
+              AND THE PER-RECORD HANDLER BELOW ASSUMES THE TRANSACTION OUTLIVES
+              A FAILED RECORD. SQLite may roll the whole transaction back by
+              itself on SQLITE_FULL, IOERR, NOMEM or BUSY, and sqldb is not
+              told (measured on a batch: TestABatchSQLiteRollsBackItself...).
+              Here that would put the records after it in AUTOCOMMIT and make
+              the final Commit raise -- reasoned from that measurement, not
+              injected into this routine, which has no seam for a fault. Also
+              open in 9c. *)
             while reader.ReadNext(rec) do
                begin
                Inc(Result.RecordsRead);

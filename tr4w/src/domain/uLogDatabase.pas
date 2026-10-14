@@ -218,6 +218,26 @@ type
       procedure Close;
       function IsOpen: boolean;
 
+      (* ROLL BACK THE OPEN TRANSACTION -- INCLUDING ONE SQLITE HAS ALREADY
+        ENDED. A no-op when sqldb holds none.
+
+        SQLite may roll a transaction back BY ITSELF on SQLITE_FULL, IOERR,
+        NOMEM or BUSY ("may or may not", sqlite.org/lang_transaction.html).
+        sqldb is not told: it still holds its transaction Active, so its
+        ROLLBACK then fails with "cannot rollback - no transaction is active"
+        and it STAYS Active. Measured 2026-10-14 with a RAISE(ROLLBACK)
+        trigger: the error a batch reported was that one instead of the real
+        failure, the repository stayed "in a batch" for good, and the close
+        raised as well -- which, inside uLogStore.Disable, escapes the very
+        handler that reports the failure.
+
+        So when sqldb's ROLLBACK fails, ask SQLite whether it still has a
+        transaction: a raw BEGIN succeeds only if it does NOT. If it
+        succeeds, sqldb's ROLLBACK is repeated and now ends both, and the
+        state agrees again. If BEGIN fails, the transaction was real and the
+        original failure is raised. No message text is matched. *)
+      procedure Rollback;
+
       (* PRAGMA user_version.  0 means "no schema", which is what an empty file
         reports -- so it is also how a caller detects a database that is not
         one of ours. *)
@@ -1349,18 +1369,57 @@ procedure TLogDatabase.Close;
 begin
    if FConnection.Connected then
       begin
-      if FTransaction.Active then
-         begin
-         (* Anything uncommitted at close is by definition not wanted -- a
-           committed QSO is committed at the moment it is logged (plan 9b). *)
-         FTransaction.Rollback;
-         end;
+      (* Anything uncommitted at close is by definition not wanted -- a
+        committed QSO is committed at the moment it is logged (plan 9b).
+        Rollback, not FTransaction.Rollback: see Rollback. *)
+      Rollback;
       FConnection.Close;
       end;
    FFileName := '';
    FJournalMode := '';
    FForeignKeysEnforced := False;
    FReadOnly := False;
+end;
+
+procedure TLogDatabase.Rollback;
+var
+   sqliteHadOne: boolean;
+begin
+   if not FTransaction.Active then
+      begin
+      Exit;
+      end;
+
+   try
+      FTransaction.Rollback;
+   except
+      on EDatabaseError do
+         begin
+         (* WHICH SIDE IS WRONG? A raw BEGIN -- execsql, the path sqldb's own
+           BEGIN takes, beneath its bookkeeping -- succeeds only when SQLite
+           holds NO transaction. *)
+         sqliteHadOne := False;
+         try
+            FConnection.ExecutePragma('BEGIN');
+         except
+            on EDatabaseError do
+               begin
+               sqliteHadOne := True;
+               end;
+         end;
+
+         if sqliteHadOne then
+            begin
+            (* The transaction is real and its ROLLBACK failed: that failure
+              is the one to report. *)
+            raise;
+            end;
+
+         (* SQLite had ended it, and now holds the empty one just begun, so
+           sqldb's ROLLBACK has something to end and the two agree again. *)
+         FTransaction.Rollback;
+         end;
+   end;
 end;
 
 function TLogDatabase.SchemaVersion: integer;

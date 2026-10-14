@@ -72,6 +72,7 @@ type
       procedure Test_ContestSetUpAsksRealContestScopedNames;
       procedure Test_RetiredRowsAreSetAsideInEitherEra;
       procedure Test_CaptureDeletesRetiredRowsOnce;
+      procedure Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
    public
       procedure RunAllTests; override;
    end;
@@ -839,6 +840,109 @@ begin
    Scrub(fn);
 end;
 
+type
+   EInjectedCaptureFailure = class(Exception);
+
+(* A TCommandTest THAT FAILS. CaptureContestStatements calls aIsRetired only
+  after its main walk has written and deleted rows, so raising here is a
+  failure injected part-way through a capture. *)
+function FailMidCapture(const aCommand: string): boolean;
+begin
+   raise EInjectedCaptureFailure.Create('injected part-way through the capture');
+end;
+
+(* A CAPTURE IS ONE TRANSACTION, AND ONE THAT FAILS PART-WAY LEAVES NOTHING.
+
+  "Does not commit -- the caller's capture is one transaction" is this
+  unit's contract, and uLogStore's two callers rely on it: CaptureConfiguration
+  commits once at the end, and on a failure nothing commits -- Disable, or
+  LogStoreClose after the close-time handler reports it, frees the database,
+  and the close rolls back. That only holds if every write the capture made
+  is still uncommitted when it fails.
+
+  So a capture is made to fail after it has written one row and deleted
+  another, the database is freed with no commit, and the reopened log must
+  be exactly what was committed before it. *)
+procedure TLogContestStatementsTests.Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   s: TR4WSettings;
+   fn: string;
+   found: boolean;
+   raised: boolean;
+   v: string;
+   i: integer;
+begin
+   BeginTest('a capture that fails part-way leaves nothing of itself');
+   fn := TempLogName('failedcapture.db');
+   Scrub(fn);
+   s := TR4WSettings.Create;
+   try
+      db := TLogDatabase.Create;
+      try
+         db.CreateNew(fn);
+         repo := TLogRepository.Create(db);
+         try
+            WriteRetiredSentinels(repo);
+            repo.SaveConfigValue(AnsiString(QSL_MODE), AnsiString(A_QSL_MODE),
+                                 'contest');
+            repo.Commit;
+
+            (* Stated: the capture writes it. QSL MODE is NOT stated in s, so
+              the capture deletes its row. Then aIsRetired raises. *)
+            CheckTrue(s.TrySetByCommand(CURSOR_POS, A_CURSOR_POS), 'the operator states it');
+            raised := False;
+            try
+               CaptureContestStatements(s, repo, FailMidCapture);
+            except
+               on EInjectedCaptureFailure do
+                  begin
+                  raised := True;
+                  end;
+            end;
+            CheckTrue(raised, 'the capture failed part-way');
+
+            StoredValue(repo, CURSOR_POS, found);
+            CheckTrue(found, 'before the failure it wrote the stated row');
+            StoredValue(repo, QSL_MODE, found);
+            CheckFalse(found, 'and deleted the unstated one');
+            (* NO COMMIT: the caller does not commit a failed capture. *)
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+
+      db := TLogDatabase.Create;
+      try
+         db.Open(fn);
+         repo := TLogRepository.Create(db);
+         try
+            StoredValue(repo, CURSOR_POS, found);
+            CheckFalse(found, 'the row it wrote did not survive');
+            v := StoredValue(repo, QSL_MODE, found);
+            CheckTrue(found, 'the row it deleted is back');
+            CheckEquals(A_QSL_MODE, v, 'with its committed value');
+            for i := Low(RETIRED_SEVEN) to High(RETIRED_SEVEN) do
+               begin
+               StoredValue(repo, RETIRED_SEVEN[i], found);
+               CheckTrue(found, RETIRED_SEVEN[i] + ' is as it was');
+               end;
+            CheckFalse(LogHoldsStatementsOnly(repo), 'and the log was not marked');
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+   finally
+      s.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogContestStatementsTests.RunAllTests;
 begin
    Test_ByNameIsAStatement_UnstatedIsNot;
@@ -856,6 +960,7 @@ begin
    Test_ContestSetUpAsksRealContestScopedNames;
    Test_RetiredRowsAreSetAsideInEitherEra;
    Test_CaptureDeletesRetiredRowsOnce;
+   Test_ACaptureThatFailsPartWayLeavesNothingOfItself;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

@@ -47,6 +47,10 @@ type
       procedure TestABatchCommitsByRowId;
       procedure TestAFailedBatchRollsBackWhole;
       procedure TestABatchRefusesWhatWouldBreakIt;
+      procedure TestEveryWriteWaitsForItsCommit;
+      procedure TestAFreshRepositoryHoldsItsWritesUntilCommit;
+      procedure TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable;
+      procedure TestALogSQLiteRolledBackClosesCleanly;
       procedure TestOneQSORoundTrips;
       procedure Test_LegacySkippedIsReadAsDeleted;
       procedure TestSentinelsBecomeNullAndComeBack;
@@ -1662,13 +1666,14 @@ end;
   is committed BY BeginBatchUpdate, so it survives the rollback -- the
   rollback undoes the batch and nothing before it.
 
-  THAT WRITE IS A SESSION VALUE, NOT A QSO, AND IT HAS TO BE. sqldb starts a
-  transaction only when a statement PREPARES (sqldb.pp:1296). SaveQSO runs
-  FInsert, which stays prepared, so after a commit it executes in SQLite's
-  autocommit and is durable at once -- measured: a QSO "saved and not
-  committed" here survived a ROLLBACK of the adopted transaction, and this
-  pin passed with the commit-first line removed. SaveSessionValue prepares
-  a fresh statement, which BEGINs, so its write genuinely waits. *)
+  THAT WRITE IS A SESSION VALUE, NOT A QSO, and when this was written it had
+  to be. sqldb starts a transaction only when a statement PREPARES
+  (sqldb.pp:1296), and SaveQSO's FInsert stays prepared, so after a commit it
+  executed in SQLite's autocommit and was durable at once -- measured: a QSO
+  "saved and not committed" here survived a ROLLBACK of the adopted
+  transaction. Section 9c's audit fixed that for every kept write
+  (ExecuteKeptWrite, pinned by TestEveryWriteWaitsForItsCommit); the session
+  value stays, since it was always a fair test of the boundary. *)
 procedure TLogRepositoryTests.TestAFailedBatchRollsBackWhole;
 var
    db: TLogDatabase;
@@ -1839,6 +1844,489 @@ begin
    Scrub(fn);
 end;
 
+(* WHAT THE FILE HOLDS, AS ONE STRING -- every table a write path touches:
+  the QSOs (callsign and points, in id order), the contest row, the config
+  rows, the session rows and the messages.
+
+  Read through the connection handed in, which sees its own uncommitted
+  writes. That is how a test proves a write HAPPENED before it proves the
+  write did not survive -- a pin that cannot tell "rolled back" from "never
+  written" proves nothing. *)
+function DatabaseFingerprint(aDatabase: TLogDatabase): string;
+var
+   q: TSQLQuery;
+   i: integer;
+begin
+   Result := '';
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := aDatabase.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text :=
+         'SELECT (SELECT COUNT(*) FROM qso), ' +
+         '(SELECT group_concat(c, '','') FROM (SELECT callsign || '':'' || ' +
+         'IFNULL(qso_points, '''') AS c FROM qso ORDER BY id)), ' +
+         '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
+         '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
+         'value AS c FROM config ORDER BY command)), ' +
+         '(SELECT group_concat(c, '','') FROM (SELECT key || ''='' || value ' +
+         'AS c FROM session_state ORDER BY key)), ' +
+         '(SELECT group_concat(text, '','') FROM (SELECT text FROM message ' +
+         'ORDER BY kind, mode, key_id))';
+      q.Open;
+      for i := 0 to q.FieldCount - 1 do
+         begin
+         Result := Result + '|' + q.Fields[i].AsString;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+(* EVERY WRITE THE REPOSITORY OFFERS WAITS FOR ITS CALLER'S COMMIT.
+
+  The contract is stated on SaveQSO -- "Does NOT commit; the caller decides
+  the batch" -- and every caller is written to it: a write, then Commit, and
+  on failure no Commit, so the close rolls the write back. For that to be
+  true the write has to be INSIDE a transaction when it runs.
+
+  sqldb begins one only when a statement PREPARES (sqldb.pp:1296). The
+  statements made per call (config, session, messages, the contest row)
+  prepare every time, so they always begin one. FInsert and FUpdate are
+  prepared ONCE and kept, so after any Commit they ran in SQLite's
+  AUTOCOMMIT: each one durable the moment it executed, whatever the caller
+  then did. Measured 2026-10-14 by this test before the fix: SaveQSO,
+  UpdateQSO, ImportQSOByGuid with no guid, and both sequences below survived
+  a close with no commit.
+
+  EACH STEP: a seeded log is committed, so no transaction is open; one write
+  path runs; the fingerprint proves it changed something; the repository
+  and database are freed WITHOUT a commit -- Close rolls back what is open,
+  which is what SQLite does at the next open with a transaction a crash left
+  in the -wal -- and the reopened file must match the seed exactly. *)
+procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
+const
+   STEPS = 15;
+   NAMES: array[0..STEPS - 1] of string = (
+      'SaveQSO',
+      'UpdateQSO',
+      'ImportQSOByGuid with no guid',
+      'ImportQSOByGuid with a new guid',
+      'ImportQSOByGuid with an existing guid',
+      'UpdateQSOBySessionIds',
+      'SetContest',
+      'SetEntryDeclaration',
+      'SaveConfigValue',
+      'DeleteConfigValue',
+      'SaveSessionValue',
+      'SaveMessage',
+      'DeleteAllQSOs',
+      'two SaveQSOs in a row',
+      'UpdateQSO and then SaveConfigValue');
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   seed, other, changed: ContestExchange;
+   seedId: Int64;
+   seedGuid: AnsiString;
+   seedPrint, written: string;
+   decl: TLogEntryDeclaration;
+   wasNew: boolean;
+   fn: string;
+   step: integer;
+begin
+   BeginTest('every repository write waits for its caller''s commit');
+   for step := 0 to STEPS - 1 do
+      begin
+      fn := TempLogName('waits' + IntToStr(step) + '.db');
+      Scrub(fn);
+
+      db := TLogDatabase.Create;
+      try
+         db.CreateNew(fn);
+         repo := TLogRepository.Create(db);
+         try
+            MakeDistinctQSO(seed, 0);
+            seedId := repo.SaveQSO(seed);
+            seedGuid := repo.LastGuid;
+            repo.SetContest(CQWWCW);
+            repo.SaveConfigValue('SEED COMMAND', 'seed', 'contest');
+            repo.SaveSessionValue('seed', 'seed');
+            repo.SaveMessage('CQ', 'CW', 'F1', 'seed', '');
+            repo.Commit;
+            seedPrint := DatabaseFingerprint(db);
+
+            (* The fingerprint's own read began a transaction. Ended, so the
+              write below starts exactly where a caller's Commit leaves it. *)
+            repo.Commit;
+            CheckFalse(db.Transaction.Active,
+                       NAMES[step] + ': no transaction is open before the write');
+
+            MakeDistinctQSO(other, 1);
+            changed := seed;
+            changed.Callsign := 'CHANGED';
+            changed.QSOPoints := 42;
+
+            case step of
+               0:
+                  begin
+                  repo.SaveQSO(other);
+                  end;
+               1:
+                  begin
+                  repo.UpdateQSO(seedId, changed);
+                  end;
+               2:
+                  begin
+                  repo.ImportQSOByGuid('', other, wasNew);
+                  end;
+               3:
+                  begin
+                  repo.ImportQSOByGuid('018f3a2b7c1d7abc8def0000000000aa', other,
+                                       wasNew);
+                  end;
+               4:
+                  begin
+                  repo.ImportQSOByGuid(seedGuid, changed, wasNew);
+                  end;
+               5:
+                  begin
+                  repo.UpdateQSOBySessionIds(seed.ceQSOID1, seed.ceQSOID2,
+                                             changed);
+                  end;
+               6:
+                  begin
+                  repo.SetContest(CQWWSSB);
+                  end;
+               7:
+                  begin
+                  decl.MyCall := 'CHANGED';
+                  repo.SetEntryDeclaration(decl);
+                  end;
+               8:
+                  begin
+                  repo.SaveConfigValue('SEED COMMAND', 'changed', 'contest');
+                  end;
+               9:
+                  begin
+                  repo.DeleteConfigValue('SEED COMMAND');
+                  end;
+               10:
+                  begin
+                  repo.SaveSessionValue('seed', 'changed');
+                  end;
+               11:
+                  begin
+                  repo.SaveMessage('CQ', 'CW', 'F1', 'changed', '');
+                  end;
+               12:
+                  begin
+                  repo.DeleteAllQSOs;
+                  end;
+               13:
+                  begin
+                  repo.SaveQSO(other);
+                  MakeDistinctQSO(other, 2);
+                  repo.SaveQSO(other);
+                  end;
+               14:
+                  begin
+                  repo.UpdateQSO(seedId, changed);
+                  repo.SaveConfigValue('SEED COMMAND', 'changed', 'contest');
+                  end;
+            end;
+
+            written := DatabaseFingerprint(db);
+            CheckTrue(written <> seedPrint,
+                      NAMES[step] + ': the write happened, as this connection sees it');
+            (* NO COMMIT. *)
+         finally
+            repo.Free;
+         end;
+      finally
+         db.Free;
+      end;
+
+      db := TLogDatabase.Create;
+      try
+         db.Open(fn);
+         CheckEquals(seedPrint, DatabaseFingerprint(db),
+                     NAMES[step] + ': nothing of it survives a close with no commit');
+      finally
+         db.Free;
+      end;
+      Scrub(fn);
+      end;
+end;
+
+(* A NEW LOG'S FIRST TRANSACTION IS OPEN FROM THE MOMENT ITS REPOSITORY
+  EXISTS -- the shape ImportBinaryLog relies on for "one transaction for the
+  whole import": CreateNew, a repository, SetContest from the first record,
+  every record saved grouped, and ONE Commit at the end.
+
+  So a migration that dies before that Commit leaves no QSO and no contest
+  row. It does still leave the FILE, which CreateNew made and committed; see
+  docs/SQLITE_LOG_SCHEMA_PLAN.md section 9c for why that matters. *)
+procedure TLogRepositoryTests.TestAFreshRepositoryHoldsItsWritesUntilCommit;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   qso: ContestExchange;
+   fn: string;
+   i: integer;
+begin
+   BeginTest('a new log holds an import''s writes until the one commit');
+   fn := TempLogName('importshape.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         repo.SetContest(CQWWCW);
+         for i := 0 to 2 do
+            begin
+            MakeDistinctQSO(qso, i);
+            repo.SaveQSOGroupingByExchangeId(qso);
+            end;
+         CheckEquals(3, integer(repo.RecordCount),
+                     'three rows, as the importing connection sees them');
+         (* NO COMMIT: the import died here. *)
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckEquals(0, integer(repo.RecordCount), 'no QSO survives');
+         CheckTrue(repo.LogContest = DUMMYCONTEST, 'and no contest row');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* SQLITE CAN END A TRANSACTION BY ITSELF, AND A BATCH MUST SURVIVE IT.
+
+  On SQLITE_FULL, SQLITE_IOERR, SQLITE_NOMEM or SQLITE_BUSY "the transaction
+  may or may not be rolled back automatically" (sqlite.org/lang_transaction).
+  When it is, sqldb does not know: it still holds its transaction Active, and
+  the ROLLBACK RollbackBatch then issues fails with "no transaction is
+  active".
+
+  The fault is injected with a trigger whose RAISE(ROLLBACK) does exactly
+  that to the second row of a batch, after the first row's UPDATE ran. The
+  log must be unchanged after a reopen, the repository must not be left
+  believing a batch is open, and the next batch must commit durably. *)
+procedure TLogRepositoryTests.TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   updates: TLogRowUpdates;
+   a, b, edited, back: ContestExchange;
+   idA, idB: Int64;
+   raised: boolean;
+   fn: string;
+begin
+   BeginTest('a batch SQLite rolls back by itself leaves the log and repository whole');
+   fn := TempLogName('autorollback.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(a, 1);
+         MakeDistinctQSO(b, 2);
+         idA := repo.SaveQSO(a);
+         idB := repo.SaveQSO(b);
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER inject_rollback AFTER UPDATE ON qso ' +
+            'WHEN NEW.callsign = ''BOOM'' ' +
+            'BEGIN SELECT RAISE(ROLLBACK, ''injected failure''); END');
+         repo.Commit;
+
+         (* A NEW REPOSITORY, so its statements are prepared against the
+           schema WITH the trigger. The one prepared before it answers
+           "database schema has changed", which is a different failure. *)
+         repo.Free;
+         repo := TLogRepository.Create(db);
+
+         updates := TLogRowUpdates.Create;
+         try
+            edited := a;
+            edited.Callsign := 'CHANGED';
+            updates.Add(idA, edited);
+            edited := b;
+            edited.Callsign := 'BOOM';
+            updates.Add(idB, edited);
+            raised := False;
+            try
+               repo.WriteBatch(updates);
+            except
+               on e: Exception do
+                  begin
+                  raised := True;
+                  CheckTrue(Pos('injected failure', e.Message) > 0,
+                            'the failure reported is the one that happened: ' +
+                            e.Message);
+                  end;
+            end;
+            CheckTrue(raised, 'the batch raises');
+         finally
+            updates.Free;
+         end;
+         CheckFalse(repo.InBatch, 'and the repository is not left inside a batch');
+         CheckFalse(db.Transaction.Active,
+                    'nor is sqldb left holding a transaction SQLite has ended');
+
+         updates := TLogRowUpdates.Create;
+         try
+            edited := a;
+            edited.Callsign := 'LATER';
+            updates.Add(idA, edited);
+            raised := False;
+            try
+               repo.WriteBatch(updates);
+            except
+               on e: Exception do
+                  begin
+                  raised := True;
+                  CheckTrue(False, 'the next batch raised: ' + e.Message);
+                  end;
+            end;
+            CheckFalse(raised, 'the next batch commits');
+         finally
+            updates.Free;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      (* Close rolls back what is open; with sqldb out of step that ROLLBACK
+        raises too, and must not take the suite down with it. *)
+      try
+         db.Free;
+      except
+         on e: Exception do
+            begin
+            CheckTrue(False, 'closing the log raised: ' + e.Message);
+            end;
+      end;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckTrue(repo.LoadQSO(idA, back), 'row A reads after reopening');
+         CheckEquals('LATER', string(back.Callsign),
+                     'carrying the later batch, durably');
+         CheckTrue(repo.LoadQSO(idB, back), 'row B reads after reopening');
+         CheckEquals(string(b.Callsign), string(back.Callsign),
+                     'and row B is as it was');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
+(* AND OUTSIDE A BATCH, THE CLOSE MUST STILL WORK. This is the QSO append's
+  shape: one SaveQSO that SQLite answers by rolling the transaction back
+  itself, then the store disabling -- which frees the database. That close
+  rolled back through sqldb, whose ROLLBACK failed with "no transaction is
+  active" and raised out of the handler meant to report the first failure. *)
+procedure TLogRepositoryTests.TestALogSQLiteRolledBackClosesCleanly;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   a, b: ContestExchange;
+   raised: boolean;
+   fn: string;
+begin
+   BeginTest('a log whose transaction SQLite rolled back still closes cleanly');
+   fn := TempLogName('autorollbackclose.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(a, 1);
+         repo.SaveQSO(a);
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER inject_rollback AFTER INSERT ON qso ' +
+            'WHEN NEW.callsign = ''BOOM'' ' +
+            'BEGIN SELECT RAISE(ROLLBACK, ''injected failure''); END');
+         repo.Commit;
+         (* Prepared again, against the schema with the trigger. *)
+         repo.Free;
+         repo := TLogRepository.Create(db);
+
+         MakeDistinctQSO(b, 2);
+         b.Callsign := 'BOOM';
+         raised := False;
+         try
+            repo.SaveQSO(b);
+         except
+            on e: Exception do
+               begin
+               raised := True;
+               CheckTrue(Pos('injected failure', e.Message) > 0,
+                         'the append reports what happened: ' + e.Message);
+               end;
+         end;
+         CheckTrue(raised, 'the append raises');
+      finally
+         repo.Free;
+      end;
+   finally
+      raised := False;
+      try
+         db.Free;
+      except
+         on e: Exception do
+            begin
+            raised := True;
+            CheckTrue(False, 'closing the log raised: ' + e.Message);
+            end;
+      end;
+      CheckFalse(raised, 'the log closes without raising');
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         CheckEquals(1, integer(repo.RecordCount),
+                     'the committed QSO is there and the failed one is not');
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Scrub(fn);
+end;
+
 procedure TLogRepositoryTests.RunAllTests;
 begin
    (* FIRST, AND ON EVERY PLATFORM: these need no D7 fixture, and they pin
@@ -1851,6 +2339,10 @@ begin
    TestABatchCommitsByRowId;
    TestAFailedBatchRollsBackWhole;
    TestABatchRefusesWhatWouldBreakIt;
+   TestEveryWriteWaitsForItsCommit;
+   TestAFreshRepositoryHoldsItsWritesUntilCommit;
+   TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable;
+   TestALogSQLiteRolledBackClosesCleanly;
 
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is

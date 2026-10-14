@@ -204,6 +204,7 @@ type
 
       procedure InvalidateRecordCount;
       function NewReadQuery: TSQLQuery;
+      procedure ExecuteKeptWrite(aStatement: TSQLQuery);
       procedure OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
       procedure PrepareStatements;
       procedure LoadContest;
@@ -504,13 +505,22 @@ type
          the sequential cursor is open, because that commit would close the
          cursor (sqldb.pp:2412), and it refuses a second batch.
 
-         THE EXPLICIT START IS LOAD-BEARING, and the reason is a measured
-         sqldb fact: it begins a transaction only when a statement PREPARES
-         (sqldb.pp:1296). FUpdate and FInsert stay prepared, so once a commit
-         has ended the implicit transaction they execute in SQLite's
-         AUTOCOMMIT -- each UPDATE durable on its own. Inside the BEGIN this
-         issues they are part of the batch, which is what makes the rollback
-         real (pinned by TestAFailedBatchRollsBackWhole).
+         THE EXPLICIT START MARKS THE BOUNDARY. sqldb begins a transaction
+         only when a statement PREPARES (sqldb.pp:1296), and FUpdate and
+         FInsert stay prepared, so they used to execute in SQLite's
+         AUTOCOMMIT after any commit -- each UPDATE durable on its own. F4
+         found that here; section 9c's audit found it was true of EVERY
+         kept write, and ExecuteKeptWrite now begins the transaction for all
+         of them (pinned by TestEveryWriteWaitsForItsCommit). The batch still
+         starts its own, so its boundary is BeginBatchUpdate and not its
+         first row (pinned by TestAFailedBatchRollsBackWhole).
+
+         ROLLBACK GOES THROUGH TLogDatabase.Rollback, which survives SQLite
+         having ended the transaction by itself -- on SQLITE_FULL, IOERR,
+         NOMEM or BUSY it may. sqldb does not notice that; its own ROLLBACK
+         then fails with "no transaction is active", which hid the real
+         error, left InBatch True for good and made the close raise too
+         (pinned by TestABatchSQLiteRollsBackItselfLeavesTheRepositoryUsable).
 
          UpdateQSOByRowId RAISES when the row does not exist. UpdateQSO
          answers False there, which suits an edit; inside a batch a missing
@@ -1322,6 +1332,35 @@ begin
    end;
 end;
 
+(* EVERY EXECUTION OF FInsert OR FUpdate GOES THROUGH HERE, AND IT IS WHAT
+  MAKES "Does NOT commit; the caller decides" TRUE OF THEM -- section 9c.
+
+  sqldb begins a transaction only when a statement PREPARES (sqldb.pp:1296).
+  A statement made per call -- config, session, messages, the contest row --
+  prepares every time and so always runs inside one. FInsert and FUpdate are
+  prepared ONCE, at construction, and kept; so after ANY Commit they ran in
+  SQLite's AUTOCOMMIT, each one durable the moment it executed. Measured
+  2026-10-14 (TestEveryWriteWaitsForItsCommit, before this existed): a SaveQSO
+  or an UpdateQSO survived a close with no commit, and of "two SaveQSOs" or
+  "UpdateQSO then SaveConfigValue" the FIRST write survived and the second
+  did not -- half applied, by a caller that believed it held one
+  transaction.
+
+  So a kept write begins the transaction a prepare would have begun, and
+  the caller's Commit -- or the rollback at close when it never comes -- ends
+  it. One fsync either way: the autocommit paid one per statement, and a
+  caller's Commit pays one per transaction.
+
+  A NEW KEPT WRITE STATEMENT MUST EXECUTE THROUGH HERE TOO. *)
+procedure TLogRepository.ExecuteKeptWrite(aStatement: TSQLQuery);
+begin
+   if not FDatabase.Transaction.Active then
+      begin
+      FDatabase.Transaction.StartTransaction;
+      end;
+   aStatement.ExecSQL;
+end;
+
 (* EVERY qso READER OPENS HERE, and is checked before a row is read. A reader
   that opened some other way would bypass the guard ReadRecord depends on. *)
 procedure TLogRepository.OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean);
@@ -1808,7 +1847,7 @@ begin
       end;
 
    BindRecord(aQso, FLastGuid);
-   FInsert.ExecSQL;
+   ExecuteKeptWrite(FInsert);
    InvalidateRecordCount;
 
    (* CLEARED IMMEDIATELY, BOTH OF THEM. A sticky set id would quietly pull the next
@@ -2308,7 +2347,7 @@ function TLogRepository.UpdateQSO(aRowId: Int64;
 begin
    BindUpdate(aQso);
    FUpdate.ParamByName('row_id').AsLargeInt := aRowId;
-   FUpdate.ExecSQL;
+   ExecuteKeptWrite(FUpdate);
 
    (* RowsAffected distinguishes "changed it" from "there was no such row", which
      is the difference between an edit and a silent no-op. The file-based code
@@ -2453,7 +2492,7 @@ begin
    aWasNew := True;
    FLastGuid := aGuid;
    BindRecord(aQso, aGuid);
-   FInsert.ExecSQL;
+   ExecuteKeptWrite(FInsert);
    InvalidateRecordCount;
    Result := LastInsertedRowId;
 end;
@@ -2569,10 +2608,9 @@ end;
 
 procedure TLogRepository.RollbackBatch;
 begin
-   if FDatabase.Transaction.Active then
-      begin
-      FDatabase.Transaction.Rollback;
-      end;
+   (* TLogDatabase.Rollback, not the transaction's own: it also ends a
+     transaction SQLite has already rolled back by itself. *)
+   FDatabase.Rollback;
    (* ONLY AFTER A ROLLBACK THAT RETURNED. Cleared first, a rollback that
      raised would leave a half-written transaction open with nothing marking
      it -- and the next BeginBatchUpdate would COMMIT it. *)

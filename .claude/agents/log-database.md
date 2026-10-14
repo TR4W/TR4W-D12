@@ -113,14 +113,43 @@ rolls back and re-raises, then the store disables itself.
   the transaction (`sqldb.pp:2412`). `BeginBatchUpdate` refuses, which is why
   the pass collects its rows instead of writing as it goes.
 
-**sqldb STARTS A TRANSACTION ONLY WHEN A STATEMENT PREPARES** (`sqldb.pp:1296`,
-measured 2026-10-14). `FInsert` and `FUpdate` stay prepared, so after any
-`Commit` they run in SQLite AUTOCOMMIT, and each is durable on its own until
-some other statement prepares and BEGINs. Calling them in a row is therefore
-NOT one transaction. `BeginBatchUpdate` calls `StartTransaction` explicitly
-for that reason, and a mutation test proves the rollback depends on it. The
-importer is unaffected, because nothing commits between its inserts. Read any
-other multi-write "one transaction" claim with this in mind.
+**A SEQUENCE OF WRITES IS ATOMIC ONLY INSIDE A TRANSACTION THAT ITS CALLER
+ENDS WITH `Commit`** (the audit is in `docs/SQLITE_LOG_SCHEMA_PLAN.md` §9c,
+2026-10-14). A comment that claims "one transaction" is not evidence; a test
+is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
+
+- **sqldb starts a transaction only when a statement PREPARES**
+  (`sqldb.pp:1296`). `FInsert` and `FUpdate` are prepared once and kept, so
+  after any `Commit` they used to run in SQLite AUTOCOMMIT. Measured before
+  the fix: of "two SaveQSOs" the first survived a crash and the second did
+  not. **Every execution of a kept write statement goes through
+  `TLogRepository.ExecuteKeptWrite`**, which begins the transaction. A new
+  kept write statement must do the same. Pinned by
+  `TestEveryWriteWaitsForItsCommit` (15 write paths).
+- **SQLite can end a transaction itself** (on FULL, IOERR, NOMEM or BUSY), and
+  sqldb is not told. Its `ROLLBACK` then raises "no transaction is active" and
+  it stays `Active`. **Roll back through `TLogDatabase.Rollback`**, never
+  `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
+  message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
+  `TestALogSQLiteRolledBackClosesCleanly`.
+- **`BeginBatchUpdate` still commits what is pending and then starts its own
+  transaction**, so a batch's rollback undoes the batch and nothing before it.
+- **How to test a "one transaction" claim:**
+  1. Commit a seed.
+  2. Run the path, and inject a failure part-way. A raising callback works
+     (`aIsRetired`), and so does a `RAISE(ROLLBACK)` / `RAISE(FAIL)` trigger.
+     Create the trigger, then create a NEW repository: statements prepared
+     before it fail with "schema has changed".
+  3. Prove through the same connection that the write happened.
+  4. Free the repository and database WITHOUT a commit. That is what a crash
+     leaves.
+  5. Reopen and compare with the seed.
+  6. Mutation-test the pin.
+- **Open (§9c):** the migration import's FILE is not atomic. A crash leaves an
+  empty log that `EnsureOpen` adopts. Its per-record catch also assumes the
+  transaction outlives a failed record. The ADIF import and a county-line
+  contact commit per QSO **on purpose**. A batched ADIF import measured 8×
+  faster: 109 ms against 920 ms for 1,316 QSOs.
 
 **`SysUtils.RenameFile` differs by platform:** `MoveFileW` on Windows refuses an
 existing target; `rename(2)` on Unix replaces it. A directory at the target
@@ -202,7 +231,10 @@ stops before publishing when it fails, keeps the verified `.new` and names all
 three files. Do not re-report either as open.
 
 Still open: `uLogStore` itself is not linkable by the test program, and the
-fault-injection tests for the QSO acknowledgement contract are owed.
+fault-injection tests for the QSO acknowledgement contract are owed. The
+repository half of that contract is pinned as of 2026-10-14
+(`TestEveryWriteWaitsForItsCommit`): a QSO the store did not commit is no
+longer durable. The store-level test still needs `uLogStore` to be linkable.
 
 ## Coordinate with
 
