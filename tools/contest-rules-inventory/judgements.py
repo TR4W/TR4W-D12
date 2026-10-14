@@ -90,10 +90,9 @@ ROUTINES = {
    ("uMults.pas", "MultsObject.FillVisibleBytes"): ("multipliers", "DXMultiplierType (existing trait) + " + new("DXMultiplierRule")),
    # ------------------------------------------------------------ ADIF import
    # ApplyContestSpecificADIFTail and ProcessImportedSRX_String were deleted in M5a (1908626e).
-   # What is left: the two arms whose contests have no class yet (POTA: Q6; ARRL 160: its
-   # scoring needs a CTY lookup a class cannot be handed yet).
-   ("MainUnit.pas", "ApplyClasslessADIFImport"): ("adif-import", new("ApplyADIFImport -- needs a POTA / ARRL 160 class")),
-   ("logstuff.pas", "ResolvePOTAParkFromADIF"): ("adif-import", new("ApplyADIFImport (SIG / SIG_INFO)")),
+   # ApplyClasslessADIFImport went when its last contest gained a class -- ARRL 160 at M7b,
+   # POTA on 2026-10-13 (Q6); ResolvePOTAParkFromADIF is the leaf uPOTAReference's now.
+   ("uPOTAReference.pas", "ResolvePOTAParkFromADIF"): ("adif-import", "ApplyADIFImport (existing; TContestPOTA's helper, a leaf)"),
    ("uADIF.pas", "ApplyADIFFieldsToExchange"): ("adif-import", new("ApplyADIFImport (APP_N1MM_EXCHANGE1)")),
    # ------------------------------------------------------------ ADIF export
    # M4 (2026-10-01): every contest is asked through ContestIdentity, and
@@ -116,7 +115,7 @@ ROUTINES = {
    ("postunit.pas", "CheckForNewContestDate"): ("score-summary", new("MaxContestDates")),
    ("postunit.pas", "CalculateTotals"): ("score-summary", new("OffTimeMinimumMinutes")),
    # ------------------------------------------------- UI / display / dialogs
-   ("MainUnit.pas", "CreateMainWindow"): ("ui", "PermittedOperatingAids / OffersQTCs (existing, M9a) + " + new("UIFeatures (off-time, POTA menus)")),
+   ("MainUnit.pas", "CreateMainWindow"): ("ui", "PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + " + new("UIFeatures (off-time)")),
    ("MainUnit.pas", "OpenTR4WWindow"): ("ui", "PermittedOperatingAids (existing, M9a)"),
    ("MainUnit.pas", "BuildLogRow"): ("ui", new("LogColumns")),
    ("MainUnit.pas", "SetColumnsWidth"): ("ui", new("LogColumns")),
@@ -127,7 +126,7 @@ ROUTINES = {
    ("logwind.pas", "SetUpBandMapEntry"): ("ui", new("ShowsMultiplierStatus")),
    ("logsubs2.pas", "OperateContest"): ("ui", new("ShowsMultiplierStatus")),
    ("logstuff.pas", "BandChange"): ("ui", new("AllowsWARCBands")),
-   ("uNewContest.pas", "ClasslessPrompts"): ("ui", "DescribeNewContestPrompts (existing, M9a) -- needs a POTA / RSGB 1.8 / UA4W class"),
+   ("uNewContest.pas", "ClasslessPrompts"): ("ui", "DescribeNewContestPrompts (existing, M9a) -- needs an RSGB 1.8 / UA4W class"),
    ("uNewContest.pas", "ApplyContestChoice"): ("ui", "DescribeNewContestPrompts (existing, M9a)"),
    # ------------------------------------------------------------------ setup
    ("fcontest.pas", "FoundContest"): ("setup", new("ConfigureSession (the FoundContest arm)")),
@@ -222,8 +221,10 @@ SHAPE3 = [
    # bonus stations in M6 (25e25461).
    ("tr4w/src/trdos/logedit.pas", r"RData\.Callsign\s*=\s*'RK1G'", 1, ["GAGARINCUP"],
     "six GC-station callsigns (`'RK1G'`..`'UN/RA3VM'`)"),
-   ("tr4w/src/trdos/logstuff.pas", r"AnsiUpperCase\s*\(\s*aSIG\s*\)\s*=\s*'POTA'", 1, ["POTA"],
-    "ADIF `SIG = 'POTA'` -- the park from `SIG_INFO` (D5, fixed in `3f9e3f28`)"),
+   # Lifted from logstuff with ResolvePOTAParkFromADIF to the leaf uPOTAReference
+   # when POTA gained its class (2026-10-13), and AnsiUpperCase became UpperCase.
+   ("tr4w/src/uPOTAReference.pas", r"UpperCase\s*\(\s*aSIG\s*\)\s*=\s*'POTA'", 1, ["POTA"],
+    "ADIF `SIG = 'POTA'` -- the park from `SIG_INFO` (D5, fixed in `3f9e3f28`); TContestPOTA's leaf"),
 ]
 
 # Contests that exist only as an operator-configured name, with no ContestType.

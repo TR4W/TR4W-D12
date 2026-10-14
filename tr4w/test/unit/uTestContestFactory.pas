@@ -1820,6 +1820,10 @@ begin
    CheckAgainstArray(TEXASQSOPARTY, 'Texas QSO Party');
    CheckAgainstArray(ArizonaQsoParty, 'Arizona QSO Party');
 
+   (* POTA, 2026-10-13 (design Q6): blank ADIFName and CABName, both the enum's
+      spelling; the friendly name is its display name. *)
+   CheckAgainstArray(POTA, 'POTA');
+
    (* THE FOUR BESPOKE-SCORING PARTIES MOVED ON 2026-09-29. Two of their rows
       hold a trap the others do not. British Columbia has a BLANK CABName, so
       its Cabrillo name is the enum's own spelling BCQP and not the empty
@@ -3461,11 +3465,13 @@ const
       R9W_UW9WK_MEMORIAL, RADIOMEMORY, REFCW, REFSSB, BSCI, CQMM, CWOPEN,
       MAKROTHEN, WWIH, RADIOYOC, OKOMSSB, MWC, IRTS, EUDX, YOTA, SST, RTC);
 
-   (* M7b ENDS WITH THESE FIVE STILL CLASSLESS, each for a recorded reason:
-      POTA (Q6), the UA4W Championship (Q28), RSGB 1.8 MHz (Q33), IN7QPNE
+   (* M7b ENDED WITH FIVE STILL CLASSLESS, each for a recorded reason. POTA
+      (Q6) left the list on 2026-10-13, when NY4I ruled it a class -- it sits
+      on TContestBase like the forty above, and is checked with them below.
+      Four remain: the UA4W Championship (Q28), RSGB 1.8 MHz (Q33), IN7QPNE
       (deferred by NY4I) and DUMMYCONTEST, which is "no contest". *)
-   STILL_CLASSLESS: array[0..4] of ContestType = (
-      DUMMYCONTEST, POTA, UA4WCHAMPIONSHIP, RSGB18, IN7QPNE);
+   STILL_CLASSLESS: array[0..3] of ContestType = (
+      DUMMYCONTEST, UA4WCHAMPIONSHIP, RSGB18, IN7QPNE);
 var
    i: integer;
    c: ContestType;
@@ -3507,7 +3513,21 @@ begin
          inc(classless);
          end;
       end;
-   CheckEquals(Length(STILL_CLASSLESS), classless, 'the classless contests are exactly those five');
+   CheckEquals(Length(STILL_CLASSLESS), classless, 'the classless contests are exactly those four');
+
+   (* POTA, ON THE BASE LIKE GENERAL QSO -- design section 6: no TActivityBase
+      until a second activity shows what is shared. *)
+   obj := MakeContest(POTA);
+   CheckTrue(obj <> nil, 'POTA has a registered class');
+   if obj <> nil then
+      begin
+      try
+         CheckTrue(obj.ClassParent = TContestBase, 'POTA sits on TContestBase directly');
+         CheckFalse(obj.IsUSQSOParty, 'POTA: P 0, not a US QSO party');
+      finally
+         obj.Free;
+         end;
+      end;
 end;
 
 (* PORTABLE, LIFTED FROM TREE AT M7b BATCH 2 -- the Region 1 Field Day class and

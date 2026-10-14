@@ -190,14 +190,22 @@ $CEILINGS = @{
    # 1 -> 0 (ShowsContestStatus; both unlisted now), postunit 5 -> 4 (the
    # ten-date warning is MaximumContestDates) and logstuff 3 -> 2 (WARC band
    # stepping is BandStepIncludesWARC). Design 8.2n.
-   'mainunit.pas'          = 3
-   'trdos\fcontest.pas'    = 2
+   #
+   # POTA, 2026-10-13 -- POTA gains its class (design Q6, NY4I): mainunit
+   # 3 -> 1 (the park menu rows are OffersParkTools, and
+   # ApplyClasslessADIFImport is deleted -- its arm is TContestPOTA's
+   # ApplyADIFImport), fcontest 2 -> 1 (the FoundContest arm is
+   # DescribeSession), postunit 4 -> 1 (the ADIF tail's three tests are
+   # EmitADIFExchangeFields and EmitADIFContestFields), uadif 1 -> 0 (the
+   # CONTEST_ID test is WritesADIFContestId; unlisted now) and unewcontest
+   # 5 -> 3 (DescribeNewContestPrompts).
+   'mainunit.pas'          = 1
+   'trdos\fcontest.pas'    = 1
    'trdos\logcfg.pas'      = 1
    'trdos\logedit.pas'     = 5
    'trdos\logstuff.pas'    = 2
-   'trdos\postunit.pas'    = 4
-   'uadif.pas'             = 1
-   'unewcontest.pas'       = 5
+   'trdos\postunit.pas'    = 1
+   'unewcontest.pas'       = 3
 }
 
 # Roughly two thirds of the count at the time of writing, and far above what a
@@ -223,7 +231,10 @@ $CEILINGS = @{
 #
 # M9b, 2026-10-02: 27 -> 18. The total fell 34 -> 23 (11 tests moved into the
 # classes, ceilings above); 18 is again about 80% of it.
-$TOTAL_FLOOR  = 18
+#
+# POTA, 2026-10-13: 18 -> 11. The total fell 23 -> 14 (9 tests moved into
+# TContestPOTA, ceilings above); 11 is again about 80% of it.
+$TOTAL_FLOOR  = 11
 $MEMBER_FLOOR = 130
 
 # --------------------------------------------------------------------------

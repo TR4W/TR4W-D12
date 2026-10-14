@@ -2,8 +2,9 @@ unit uTestRegexValidators;
 {$I ..\..\src\tr4w.inc}
 
 {
-  Pins the two regular-expression validators left in LOGSTUFF: GUID and POTA
-  park.
+  Pins the two former regular-expression validators: GUID (LOGSTUFF) and POTA
+  park (uPOTAReference since 2026-10-13, with ResolvePOTAParkFromADIF, when
+  POTA gained its contest class).
 
   THERE WERE FIVE. The three CALLSIGN patterns -- RX_CALLSIGN, RX_US_PREFIX and
   RX_US_CALLSIGN -- were retired on 2026-08-21 in favour of hand-written tests in
@@ -57,7 +58,11 @@ type
 implementation
 
 uses
-   LOGSTUFF;
+   (* IsValidGUID. *)
+   LOGSTUFF,
+   (* IsValidPOTAPark and ResolvePOTAParkFromADIF -- a leaf since POTA gained
+      its class (2026-10-13). *)
+   uPOTAReference;
 
 procedure TRegexValidatorTests.RunAllTests;
 begin

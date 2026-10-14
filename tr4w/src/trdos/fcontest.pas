@@ -503,8 +503,9 @@ end;
   THE ORDER: the engine's choices, the settings, the state sent, the domestic
   file, the domestic countries (in the contest's order), the shared
   RST-and-serial memories when asked for, the contest's own memories (in
-  its order), then the messages. No value here reads another, and no arm
-  wrote one value twice except a memory, whose order the list keeps. *)
+  its order), the messages, then the operator name set when asked for. No
+  value here reads another, and no arm wrote one value twice except a
+  memory, whose order the list keeps. *)
 procedure ApplySessionDefaults(aSession: TSessionDefaults;
                                var aDomesticFileName: string);
 var
@@ -719,6 +720,13 @@ begin
   if aSession.IsStated(svCallOkNowCW) then
      begin
      Settings.Messages.CallOkNowCw := aSession.CallOkNowCW;
+     end;
+
+  (* LAST, AS POTA's ARM CALLED IT LAST: it reads TRMASTER.DTA from the file
+    name set-up has already chosen. See TSessionDefaults.UseOperatorNameSet. *)
+  if aSession.IsStated(svOperatorNameSet) then
+     begin
+     InitOperatorNameSet;
      end;
 end;
 
@@ -942,22 +950,6 @@ begin
             Add_KVEKH6KL;
           end;
     }
-    POTA:
-      begin
-        tAllowDupeQSOs := TRUE;
-        Settings.AutoDupe.EnableCq := False;
-        Settings.AutoDupe.EnableSAndP := False;
-        Settings.Contest.Name := 'POTA';
-        Settings.Bands.WarcEnabled := True;
-        SetCQMemoryString(CW, F1, 'CQ^POTA \ \ ');
-        SetCQMemoryString(CW, F2, 'CQ^POTA CQ^POTA \ \ FD');
-        //Settings.Messages.CqExchangeCw := ' ' + MyFDClass + ' ' + MySection;
-        //Settings.Messages.SpExchangeCw := MyFDClass + ' ' + MySection;
-        Settings.Messages.QslCw := '73 \ EE';
-        { Build operator name set from TRMASTER.DTA (lazy — no-op if already done) }
-        InitOperatorNameSet;
-      end;
-
     {
         ,QSOPARTY:
           begin

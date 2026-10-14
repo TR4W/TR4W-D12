@@ -233,7 +233,7 @@ the target shape, the M-step migration order and the open questions.
   named (`TSessionMemoryKey`), never Tree's codes; the domestic-country groups
   are `uContestBase` constants FCONTEST's own `Add_KVE`-style helpers read too.
   **All 55 arms naming a registered contest are gone**; FoundContest's `case`
-  holds only POTA's and the UA4W Championship's arms since M7b batch 2. LogCfg's per-contest
+  holds only the UA4W Championship's arm since POTA's class (2026-10-13). LogCfg's per-contest
   CQ-exchange defaults are the sibling `CQExchangeDefault(aStation)` -- asked
   later, once the whole config is read -- and the ARRL DX one is on the CW
   class only (LogCfg never named the phone running). **D8 is resolved by
@@ -276,10 +276,10 @@ the target shape, the M-step migration order and the open questions.
   `RSGB-ROLO`, and `uContestRegistry.ContestOfADIFRecordMode` picks the one
   that runs in the record's mode once the record is read (the matrix moves
   only their phone import lines). Ten-Ten's arm always scored 2 (a Word
-  against -1, Q46): the class says 2. **M7b is done: exactly five contests
-  are classless on purpose** -- POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33),
+  against -1, Q46): the class says 2. **M7b is done, and exactly four
+  contests are classless on purpose** -- UA4W (Q28), RSGB 1.8 (Q33),
   IN7QPNE and DUMMYCONTEST; `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
-  fails if a sixth appears. Sites still naming a batch-2 contest were seams
+  fails if a fifth appears. POTA was the fifth until NY4I ruled Q6 (below). Sites still naming a batch-2 contest were seams
   not built -- ~~M9 display/HamScore: WRTC, SST, CW Open, RTC~~ done at
   M9a (§8.2m); Radio YOC's loader stays (engine state) -- listed in §8.2k. ~~M8 multipliers: YB DX, RDA, YO DX~~ -- done
   at M8: RDA's and YO DX's hint arms are their classes', YB DX's was a no-op
@@ -302,8 +302,9 @@ the target shape, the M-step migration order and the open questions.
   `uCanonicalExchange`); `ScorePostingMultiplierType` (LOGSUBS2's XML);
   `PermittedOperatingAids` (WRTC: no SCP, cluster or score posting --
   `MainUnit.OperatingAidOfWindow` is the UI's window-to-aid wiring);
-  `OffersQTCs` (the WAE QTC menu). **uNewContest still names POTA, RSGB 1.8
-  and the UA4W Championship** (`ClasslessPrompts`). `uTestContestDisplay`
+  `OffersQTCs` (the WAE QTC menu); `OffersParkTools` (POTA's two menu
+  rows, since its class). **uNewContest still names RSGB 1.8 and the UA4W
+  Championship** (`ClasslessPrompts`). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.
 - **The UI itself asks the contest** (M9b, 2026-10-02, design §8.2n).
@@ -347,8 +348,11 @@ the target shape, the M-step migration order and the open questions.
   twelve contests (design §8.2e). **Those arms name no contest and must not
   start to**: a contest's export rule is an override on its class, and one
   that only changes an input copies the context and calls `inherited`.
-  POTA is still named in PostUnit's tail, for a recorded reason (ARRL 160
-  left it at M7b); CUP RF's his-QTH, LABRE/EURASIA and the `'TRC'`/`'PGA'` tests too.
+  No contest is named in PostUnit's ADIF tail any more (ARRL 160 left at
+  M7b, POTA with its class); CUP RF's his-QTH, LABRE/EURASIA and the
+  `'TRC'`/`'PGA'` tests stay in the Cabrillo writer. **`EmitADIFExchangeFields`**
+  (POTA's class) is the tail's exchange block -- base: the `SRX_STRING` from
+  `FormatADIFReceivedExchange`; override it only to write tags BESIDE it.
 - **A contest interprets its own ADIF import** (M5a, 2026-10-01).
   `TContestBase.ApplyADIFImport(aTemps, aSession, var aExch)` is the other
   half of `EmitADIFContestFields`: the generic importer captures, the contest
@@ -361,8 +365,23 @@ the target shape, the M-step migration order and the open questions.
   carry N1MM's class tag (standard `CLASS` wins, N1MM fills a gap). Thirteen
   contests gained classes for this: CQ 160 CW/SSB, UBA CW/SSB, the ARRL RTTY
   Roundup, CWOPS, NAQP CW/SSB/RTTY, the NCCC Sprint, Ukrainian DX, OK/OM DX and
-  LZ DX. POTA keeps its arm in `MainUnit.ApplyClasslessADIFImport` (ARRL
-  160's moved to its class at M7b).
+  LZ DX. `MainUnit.ApplyClasslessADIFImport` is DELETED: ARRL 160's arm
+  moved at M7b and POTA's, its last, with POTA's class (2026-10-13).
+- **POTA is a class** (NY4I, 2026-10-13, design Q6 and §8.2o: *"while it is
+  not a contest per se, just like with GENERAL QSO, we treat it that way"*).
+  `TContestPOTA` sits on `TContestBase`, writes no CONTEST_ID, and owns its
+  set-up, import, export, prompts and park menu rows. Its three TRDOS helpers
+  are LEAVES now -- `uPOTAReference` (`IsValidPOTAPark`,
+  `ResolvePOTAParkFromADIF`, `LooksLikeAState`) and `uGridShape`
+  (`GRID_CARRYING_EXCHANGES`, `LooksLikeGridSquare`; Tree's `LooksLikeAGrid`
+  asks both). **The exchange SHAPE `RSTAndPOTAPark` and its parser stay
+  LOGSTUFF's** until M10 (Q4): the base's `ParseReceivedExchange` hands the
+  shape to it, and the n-fer -- one contact, one row per park in one QSO set,
+  like a county line -- is the engine's queue and `TryLogContact`'s drain.
+  The set-up's `InitOperatorNameSet` is a REQUEST,
+  `TSessionDefaults.UseOperatorNameSet`, built last by the applier.
+  `uTestContestPOTA` pins every branch the matrix's park-less QSOs cannot
+  reach.
 - **Creating a class to hold ONE rule means transcribing the whole contest**
   -- the row, AND its scoring arm, because a registered class is that
   contest's scorer from the moment it exists. M4 did that for eleven

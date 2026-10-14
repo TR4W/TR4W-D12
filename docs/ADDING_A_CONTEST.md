@@ -257,14 +257,14 @@ shared files a contest touches; the search path already covers
 | `DisplayName` | the enum's spelling. **The New Contest drop-down shows it** (M9b), sorted by it -- every class states its own (see Step 3b) |
 | `IsActive` | True. **SA Sprint and Locust say False** (NY4I) -- the drop-down lists an inactive contest last, marked `(inactive)`; it still opens and scores an old log (M9b) |
 | `CabrilloName` | `CABName`, or the enum's spelling when blank |
-| `ADIFContestId` | `ADIFName`, or the enum's spelling when blank. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (`WritesADIFContestId` for General QSO; POTA by name in `uADIF`, pending a POTA class — design Q6) |
+| `ADIFContestId` | `ADIFName`, or the enum's spelling when blank. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (each says so through `WritesADIFContestId` -- POTA since its class, 2026-10-13, design Q6) |
 | `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | the array row |
 | `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | the array row |
 | `InitialExchangeKind`, `ExchangeKind`, `QSOPointMethod` | the array row |
 | `IsUSQSOParty` | the array row (`P <> 0`) |
 | `ADIFPowerTag` | `RX_PWR` -- the ADIF tag the QSO's `Power` field goes to. FOC Marathon says `FOC_NUM`, because its parser puts the membership number there (M4) |
-| `WritesADIFContestId` | True. General QSO says False -- an operating mode, not a contest (M4). POTA is still excluded by name in `uADIF` until it has a class (design Q6) |
+| `WritesADIFContestId` | True. General QSO says False -- an operating mode, not a contest (M4) -- and so does POTA, an activation (2026-10-13, design Q6) |
 | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries` | `ContestsBooleanArray`'s bits. **Set-up reads these** (M2) |
 | `ZoneMode` | `CQZoneMode` when the array's CQ bit is set, else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
 | `InStateDomesticFileName` | a QSO party's in-state file -- the `QSOParties` entry the row's `P` indexes; `''` otherwise. `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads |
@@ -347,7 +347,8 @@ the wrongness.
 | `ParseReceivedExchange` | the engine's shared parse for the SESSION's exchange shape, `aSession.ParseShape(aSession.Exchange, ...)` -- see "How a contest parses and validates" below (M5b) |
 | `MayBeACallsign` | every word may be a call (the PCC says `N/X` is not) |
 | `InitialExchangeFromCall` | no answer (the Russian DX contests give a Russian station's oblast) |
-| `FormatADIFReceivedExchange` | the ADIF `SRX_STRING`: the received RST in front of the typed exchange when the session's exchange carries an RST, else the typed exchange (the Field Days write a DX station's `1D DX`) |
+| `FormatADIFReceivedExchange` | the ADIF `SRX_STRING`: the received RST in front of the typed exchange when the session's exchange carries an RST, else the typed exchange (the Field Days write a DX station's `1D DX`; POTA the park worked, else the typed exchange) |
+| `EmitADIFExchangeFields` | the ADIF exchange block PostUnit's tail writes after `STX_STRING`: the `SRX_STRING` alone, from `FormatADIFReceivedExchange`. Override it only to write tags BESIDE the SRX_STRING -- POTA writes its activation (`MY_SIG`/`MY_SIG_INFO`/`MY_POTA_REF`, from `TMyStationExchange.MyPark`) before it and a hunter's `STATE` or `GRIDSQUARE` after it. To change only the SRX_STRING, override `FormatADIFReceivedExchange` (2026-10-13) |
 | `ValidateClass` | accepts anything. Since M5b every contest is asked, a classless one through its identity -- `LOGSTUFF.ValidClass`'s own letter loop is deleted (inventory D1) |
 | `ValidateDXQTH` | accepts nothing. Asked of every contest the same way; the fallback copy in LOGSTUFF is deleted (inventory D2) |
 | `ValidateQTHCount` | **always True, and that is behaviour-preserving by construction.** TR4W has never counted QTHs for any contest, so "no opinion" states what the program does rather than being a permissive placeholder. Takes a COUNT and never a list: the application tokenised the exchange and already has the number, so handing the contest the QTHs would be the first step toward handing it the log. **Virtual**, and `TContestStateQSOPartyBase` is its only overrider |
@@ -436,11 +437,12 @@ arm that read `exch.ceContest` as it went by is the bug that proved why
   `uTestContestExport.Test_RoundTripThroughTodaysImport` for anything you export
   that you must read back.
 
-One contest with no class keeps an arm in `MainUnit.ApplyClasslessADIFImport`
-for a stated reason (POTA: design Q6 is open). It is deleted when POTA gains a
-class. ARRL 160's arm stood there too until M7b, when its class was handed the
-domestic-country lookup its scoring needs as a station-context service
-(`TStationContext.IsDomesticCountryCall`).
+**No contest keeps an import arm outside its class any more.**
+`MainUnit.ApplyClasslessADIFImport` held the arms of the contests that had no
+class; ARRL 160's left at M7b, when its class was handed the domestic-country
+lookup its scoring needs as a station-context service
+(`TStationContext.IsDomesticCountryCall`), and POTA's on 2026-10-13, when it
+gained its class (design Q6) -- and the routine was deleted with it.
 
 ### How a contest parses and validates its received exchange (M5b, 2026-10-02)
 
@@ -582,7 +584,11 @@ reads `aStation` only: the identity object it is asked of carries no station.
     (`InitialExchangeCursorAtStart` -- IRTS, RAEM), the DXCC multiplier by
     band (`DXCCMultByBand` -- CQMM), and an exchange memory's CAPTION
     (`SetExchangeCaptionMemory` -- the RTC's `NR` and `Cl+Ex`), which goes in
-    the same ordered list as the memories.
+    the same ordered list as the memories;
+  - REQUESTS rather than values, for engine work a contest asks for and
+    cannot undo: `UseRSTQSONumberExchangeMemories` (UK/EI) and, since POTA's
+    class, `UseOperatorNameSet` -- TRMASTER.DTA's operator names indexed for
+    the session, which the applier builds last, where POTA's arm did.
 - **A STATED VALUE IS STATED, EVEN WHEN IT IS FALSE OR EMPTY**, and an
   unstated one is left alone -- so state only what your contest sets, and
   never restate a trait "to be safe": a stated value overwrites a statement
@@ -680,6 +686,7 @@ every other does. All are asked of `ContestIdentity` (no station) except
 | the score-posting XML's multiplier labels | `ScorePostingMultiplierType` ('' posts none) | `LOGSUBS2`'s dynamic results |
 | the operating aids it forbids | `GetPermittedOperatingAids` (`TOperatingAid`) | the menus, `OpenTR4WWindow`, `LOGEDIT`'s Super Check Partial |
 | whether it has QTCs | `GetOffersQTCs` | the QTC menu |
+| whether it offers the park tools | `GetOffersParkTools` (POTA) | Download POTA Parks and Repeat POTA Parks (2nd Op), hidden otherwise |
 
 **WHAT YOU SEND WHERE MY STATE GOES IS `TSessionDefaults.SentState`** (was
 `MyState` until M9a). It is the SESSION's (`FCONTEST.SentMyState`) and never
@@ -743,9 +750,11 @@ both have always exported through the shared arms -- so each COPIES the arm
 rather than joining its owner. The King of Spain, REF and RSGB RoPoCo CW/SSB
 pairs and the two Region 1 Field Day RCC runnings are siblings until Q7; IRTS
 and EUDX share a scoring arm by their rows and nothing else, so they are
-copies too. M7b ends with five contests classless on purpose -- POTA, the UA4W
-Championship, RSGB 1.8 MHz, IN7QPNE and DUMMYCONTEST --
-and `Test_M7bBatch2ContestsAreSiblingsOnTheBase` fails if a sixth appears.
+copies too. M7b ended with five contests classless on purpose; POTA left the
+list on 2026-10-13 (NY4I ruled it a class, design Q6 and 8.2o -- `TContestPOTA`,
+on the base like General QSO). Four remain -- the UA4W Championship, RSGB 1.8
+MHz, IN7QPNE and DUMMYCONTEST -- and `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
+fails if a fifth appears.
 
 ### `TStationContext` — what scoring knows about us
 

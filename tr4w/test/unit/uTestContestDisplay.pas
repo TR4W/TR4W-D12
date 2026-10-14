@@ -149,8 +149,10 @@ begin
 end;
 
 (* GENERATED from the dialog's two `case` statements at 69828f2a -- see the
-  unit header. The three classless contests (POTA, RSGB 1.8, the UA4W
-  Championship) are absent: their arms are still the dialog's. *)
+  unit header. The two classless contests (RSGB 1.8, the UA4W Championship)
+  are absent: their arms are still the dialog's. POTA's two arms were added by
+  hand when it gained its class (2026-10-13), copied from ClasslessPrompts as
+  it stood. *)
 function ExpectedOnChoice(aContest: ContestType): string;
 begin
    Result := '';
@@ -479,6 +481,10 @@ begin
          begin
          Result := StepBox(TC_ARKTIKACLUB);
          end;
+      POTA:
+         begin
+         Result := StepCaption('Activator');
+         end;
       R9W_UW9WK_MEMORIAL:
          begin
          Result := StepComment(TC_STATIONCLASS, ncfMyState);
@@ -757,6 +763,10 @@ begin
       PCC:
          begin
          Result := StepComment(TC_ENTERYOURMEMBERSHIPNUMBER, ncfMyState);
+         end;
+      POTA:
+         begin
+         Result := StepComment(TC_ENTERYOURPARKREFERENCEDESIGNATOR, ncfMyPark);
          end;
       RDA:
          begin

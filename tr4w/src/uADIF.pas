@@ -285,7 +285,7 @@ function EmitADIFHeader(const programVersion: string): string;
 //
 // Excludes fields that need MainUnit/trdos globals (STATION_CALLSIGN,
 // STX_STRING via GetMyExchangeForExport, CNTY via mo.DomList,
-// CQZ/ITUZ via ActiveZoneMult, POTA MY_* fields via myPark, ARRL-FD
+// CQZ/ITUZ via ActiveZoneMult, POTA MY_* fields via MY PARK, ARRL-FD
 // CLASS via MyFDClass etc.).  PostUnit.ExportToADIF provides those
 // via the TContestTailEmitter callback.
 function EmitADIFRecord(const rec: ContestExchange): string;
@@ -1679,9 +1679,9 @@ begin
       Result := Result + EmitADIFField('APP_TR4W_ROVERCALL', roverFullCall);
       end;
 
-   (* CONTEST_ID, unless the contest says it writes none (General QSO, an
-      operating mode, since M4), or it is POTA -- which has no class to say
-      so until NY4I answers design Q6.
+   (* CONTEST_ID, unless the contest says it writes none -- General QSO, an
+      operating mode, since M4, and POTA, an activation, since it gained its
+      class (2026-10-13, design Q6; it was a `ceContest <> POTA` test here).
 
       THE CONTEST'S OWN ID, ASKED OF THE CONTEST (M1, 2026-10-01). This used to
       spell out "ADIFName, else the enum's spelling" here, one of four copies
@@ -1689,8 +1689,7 @@ begin
       (uContestRegistry.FindContestByADIFContestId) matches the same getter,
       so what is written here always reads back to the contest that wrote
       it -- inventory D9, which this closes. *)
-   if (rec.ceContest <> POTA)                                and
-      ContestIdentity(rec.ceContest).WritesADIFContestId then
+   if ContestIdentity(rec.ceContest).WritesADIFContestId then
       begin
       Result := Result + EmitADIFField('CONTEST_ID',
          ContestIdentity(rec.ceContest).ADIFContestId);

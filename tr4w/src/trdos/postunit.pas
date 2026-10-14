@@ -2267,6 +2267,32 @@ procedure ExportToEDIByBand( Band: BandType );
   FilePreview;
   end;
 
+(* THE MY-STATION HALF OF AN EXCHANGE, AS THIS SESSION SENDS IT -- what every
+  exporter hands a contest (TMyStationExchange).
+
+  ONE BUILDER, 2026-10-13. It was filled field by field in two places -- the
+  Cabrillo writer and GetMyExchangeForExport -- and they had drifted: the
+  Cabrillo copy never set MyPark. Nothing in Cabrillo reads it, so no file
+  changes; the third reader, POTA's ADIF activation fields, is why it is one
+  function now. *)
+function CurrentMyStationExchange: TMyStationExchange;
+begin
+   (* The state SENT in this contest, NOT MY STATE -- design 7.11 (M9a). A
+     contest that sends nothing there, or the grid, says so for the session;
+     the operator's MY STATE is untouched. *)
+   Result.MyState      := SentMyState;
+   Result.MyGrid       := Settings.My.Grid;
+   Result.MyName       := Settings.My.Name;
+   Result.MyZone       := ZoneSentForThisContest;
+   Result.MyFDClass    := Settings.My.FdClass;
+   Result.MySection    := Settings.My.Section;
+   Result.MyCheck      := Settings.My.Check;
+   Result.MyPrec       := Settings.My.Prec;
+   Result.MyFOCNumber  := Settings.My.FocNumber;
+   Result.MyPostalCode := Settings.My.PostalCode;
+   Result.MyPark       := Settings.My.Park;
+end;
+
 // ---------------------------------------------------------------------------
 // Tail emitter callback for uADIF.ExportADIFToString.
 // Emits the contest-specific fields that uADIF.EmitADIFRecord skips because
@@ -2280,7 +2306,6 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
     cntyIdx: integer;
     stateCode: string;
     qthForGrid: ShortString;
-    exchForGrid: ShortString;
   begin
   Result := '';
 
@@ -2304,58 +2329,25 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   Result    := Result + EmitADIFField( 'STX_STRING',
      Trim( DeleteRepeatedSpaces( stxString ) ) );
 
-  // ----- SRX_STRING (Issue #898) -----
+  // ----- SRX_STRING (Issue #898), and what a contest writes beside it -----
   // uADIF.EmitADIFRecord deliberately does NOT emit SRX_STRING because
   // its shape is contest-specific:
-  // POTA          -> park-ref shape (handled below in the POTA branch)
   // RST-implied   -> "RST + ExchString"  (ResolveSRXString normalizes)
   // no RST        -> ExchString as-is    (FD, SS, Winter FD, etc.)
   // The "is RST part of this contest's exchange?" knowledge lives in
   // ExchangeInformation.RST (trdos/logdupe.pas), which uADIF cannot
-  // see without taking a trdos dependency.  POTA's own SRX_STRING is
-  // emitted further down -- this branch handles every other contest.
+  // see without taking a trdos dependency.
   //
   // M5b (2026-10-02): the QSO's CONTEST writes it -- FormatADIFReceivedExchange,
   // whose base is exactly the RST-or-not choice that stood here. The Field
   // Days write a DX station's class and 'DX' (NY4I, design 7.10).
-  if rec.ceContest <> POTA then
-     begin
-     Result := Result + EmitADIFField( 'SRX_STRING',
-        ContestIdentity( rec.ceContest ).FormatADIFReceivedExchange( rec,
-           ExchangeInformation.RST ) );
-     end;
-
-  // ----- POTA-specific (uADIF skips SRX_STRING for POTA) -----
-  if rec.ceContest = POTA then
-     begin
-     Result := Result + EmitADIFField( 'MY_SIG', 'POTA' );
-     Result := Result + EmitADIFField( 'MY_SIG_INFO', Settings.My.Park );
-     Result := Result + EmitADIFField( 'MY_POTA_REF', Settings.My.Park );
-     if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
-        begin
-        Result := Result + EmitADIFField( 'SRX_STRING', string( rec.QTHString ) )
-        end
-     else
-        begin
-        Result := Result + EmitADIFField( 'SRX_STRING',
-           string( rec.ExchString ) );
-        if LooksLikeAState( string( rec.ExchString ) ) then
-           begin
-           Result := Result + EmitADIFField( 'DXCC', '291' );
-           // Yes, hard-coded to US country ARRL code
-           Result := Result + EmitADIFField( 'STATE', string( rec.ExchString ) );
-           end
-        else
-           begin
-           exchForGrid := rec.ExchString;
-           if LooksLikeAGrid( exchForGrid ) then
-              begin
-              Result := Result + EmitADIFField( 'GRIDSQUARE',
-                 string( rec.ExchString ) );
-              end;
-           end;
-        end;
-     end;
+  //
+  // 2026-10-13: the whole block is the contest's -- EmitADIFExchangeFields,
+  // whose base is that SRX_STRING alone. POTA writes its activation before it
+  // and a hunter's state or grid after it; those were two `ceContest = POTA`
+  // tests here until POTA gained its class (design Q6).
+  Result := Result + ContestIdentity( rec.ceContest ).EmitADIFExchangeFields(
+     CurrentMyStationExchange, rec, ActiveExchange, ExchangeInformation.RST );
 
   // ----- CNTY (state QP with FAltName loaded from <state>_cty.dom) -----
   stateCode := GetStateForContest( rec.ceContest );
@@ -2380,12 +2372,12 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // DOK, the digital contests' GRIDSQUARE, ARRL 160's ARRL_SECT.  The base
   // writes nothing.
   //
-  // ONE CONTEST IS STILL NAMED HERE, FOR A STATED REASON (design 8.2e).
-  // POTA has no class: whether it gets one is NY4I's open Q6, and its export
-  // leans on three TRDOS helpers a class may not call.  ARRL 160 was named
-  // here too until M7b (2026-10-02), when its class was handed the
-  // domestic-country CTY lookup its scoring needed (TStationContext.
-  // IsDomesticCountryCall); its arm is TContestARRL160.EmitADIFContestFields.
+  // NO CONTEST IS NAMED HERE ANY MORE.  ARRL 160 was until M7b (2026-10-02),
+  // when its class was handed the domestic-country CTY lookup its scoring
+  // needed (TStationContext.IsDomesticCountryCall); its arm is
+  // TContestARRL160.EmitADIFContestFields.  POTA was until it gained its
+  // class (2026-10-13, design Q6); its SIG / SIG_INFO / POTA_REF arm is
+  // TContestPOTA.EmitADIFContestFields.
   // The no-op arm that named the NA Sprints, the SSB Sprint, CQ 160
   // and the NAQP runnings, and the comment that said they "suppress any
   // location field", were deleted: the arm and the else did the same nothing
@@ -2401,22 +2393,8 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
         end
      else
         begin
-        case rec.ceContest of
-          POTA:
-            if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
-               begin
-               Result := Result + EmitADIFField( 'SIG', 'POTA' );
-               Result := Result + EmitADIFField( 'SIG_INFO',
-                  string( rec.QTHString ) );
-               Result := Result + EmitADIFField( 'POTA_REF',
-                  string( rec.QTHString ) );
-               end;
-          else
-            begin
-            Result := Result
-               + ContestIdentity( rec.ceContest ).EmitADIFContestFields( rec );
-            end;
-        end;
+        Result := Result
+           + ContestIdentity( rec.ceContest ).EmitADIFContestFields( rec );
         end;
      end;
 
@@ -3044,19 +3022,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 (* THE TWO EXCHANGE COLUMNS, ASKED OF THE CONTEST -- M4. This
                   routine fills the My-station record and the per-QSO inputs
                   it has decided; the contest arranges them. *)
-                (* THE STATE SENT IN THIS CONTEST, NOT MY STATE -- design 7.11
-                  (M9a). A contest that sends nothing there, or the grid, says
-                  so for the session; the operator's MY STATE is untouched. *)
-                myStationEx.MyState      := SentMyState;
-                myStationEx.MyGrid       := Settings.My.Grid;
-                myStationEx.MyName       := Settings.My.Name;
-                myStationEx.MyZone       := ZoneSentForThisContest;
-                myStationEx.MyFDClass    := Settings.My.FdClass;
-                myStationEx.MySection    := Settings.My.Section;
-                myStationEx.MyCheck      := Settings.My.Check;
-                myStationEx.MyPrec       := Settings.My.Prec;
-                myStationEx.MyFOCNumber  := Settings.My.FocNumber;
-                myStationEx.MyPostalCode := Settings.My.PostalCode;
+                myStationEx := CurrentMyStationExchange;
                 qsoContext.SessionExchange        := ActiveExchange;
                 qsoContext.RSTSent                := RSTSent;
                 qsoContext.RSTReceived            := RSTReceived;
@@ -3692,18 +3658,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         ContestIdentity, so a classless contest answers with TContestBase's
         default -- the shared arm for the session's exchange, in
         uADIFExchange. *)
-      (* The state SENT in this contest -- design 7.11 (M9a). *)
-      my.MyState      := SentMyState;
-      my.MyGrid       := Settings.My.Grid;
-      my.MyName       := Settings.My.Name;
-      my.MyZone       := ZoneSentForThisContest;
-      my.MyFDClass    := Settings.My.FdClass;
-      my.MySection    := Settings.My.Section;
-      my.MyCheck      := Settings.My.Check;
-      my.MyPrec       := Settings.My.Prec;
-      my.MyFOCNumber  := Settings.My.FocNumber;
-      my.MyPostalCode := Settings.My.PostalCode;
-      my.MyPark       := Settings.My.Park;
+      my := CurrentMyStationExchange;
 
       Result := ADIFMyExchangeErrorMarker;
       if not GoodLookingQSO then

@@ -108,6 +108,8 @@ uses
    uCabrilloExchange    in '..\..\src\uCabrilloExchange.pas',
    uADIFExchange        in '..\..\src\uADIFExchange.pas',
    uARRLSections        in '..\..\src\uARRLSections.pas',
+   uPOTAReference       in '..\..\src\uPOTAReference.pas',
+   uGridShape           in '..\..\src\uGridShape.pas',
    uTestADIFExchange    in 'uTestADIFExchange.pas',
    uTestCabrilloExchange in 'uTestCabrilloExchange.pas',
    uCRC32               in '..\..\src\uCRC32.pas',
@@ -443,6 +445,7 @@ uses
    uContestYOTA in '..\..\src\contestFactory\uContestYOTA.pas',
    uContestSST in '..\..\src\contestFactory\uContestSST.pas',
    uContestRTC in '..\..\src\contestFactory\uContestRTC.pas',
+   uContestPOTA in '..\..\src\contestFactory\uContestPOTA.pas',
    uRFChampionshipPoints in '..\..\src\uRFChampionshipPoints.pas',
    uExchangeTokens in '..\..\src\uExchangeTokens.pas',
    uTestContestFactory in 'uTestContestFactory.pas',
@@ -583,6 +586,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uContestChoices      in '..\..\src\uContestChoices.pas',
    uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
    uTestContestUI       in 'uTestContestUI.pas',
+   (* POTA as a contest class (design Q6, 2026-10-13). *)
+   uTestContestPOTA     in 'uTestContestPOTA.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
    uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
    uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
@@ -661,6 +666,7 @@ begin
    RegisterSuite(TContestSessionTests.Create('ContestSession'));
    RegisterSuite(TContestDisplayTests.Create('ContestDisplay'));
    RegisterSuite(TContestUITests.Create('ContestUI'));
+   RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TCRC32Tests.Create('CRC32'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TIcomScopeTests.Create('IcomScope'));

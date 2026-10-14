@@ -4488,15 +4488,16 @@ begin
      SetMenuEnabled(menu_ctrl_qtcfunctions, False);
      end;
 
-  (* HIDE the POTA-specific rows outside a POTA contest -- invisible rather
+  (* HIDE the park rows unless the contest offers them -- invisible rather
     than greyed, because they are irrelevant there and would only clutter the
-    menu.
+    menu. THE CONTEST SAYS WHETHER (OffersParkTools); this was a
+    `Contest <> POTA` test until POTA gained its class (2026-10-13).
 
     Visible := False, NOT a Free. DeleteMenu removed the row from the menu
     handle; freeing the TMenuItem would leave the id index holding a dangling
     pointer, and nothing needs the row back -- as the original note says, they
     were never re-added if the operator switched contests mid-session. *)
-  if Contest <> POTA then
+  if not ContestIdentity(Contest).OffersParkTools then
      begin
      if MenuItemById(menu_download_pota_parks) <> nil then
         begin
@@ -9963,53 +9964,6 @@ end;
 
 // GetADIFMode, GetADIFSubMode, GetADIFBand moved to uADIF.pas (Issue #887).
 
-(* THE CONTEST WITH NO CLASS THAT STILL OWNS AN ADIF IMPORT RULE -- M5a,
-  2026-10-01.
-
-  EVERY OTHER CONTEST'S RULE IS ITS CLASS'S (TContestBase.ApplyADIFImport, asked
-  by uADIF.ApplyADIFContestImport once the whole record is read) and the
-  classless default is the base's. One arm stays here, for a reason that is a
-  missing class and not a missing seam:
-
-    POTA       has no class: whether it becomes one is design Q6, which is
-               NY4I's and open. Its arm calls ResolvePOTAParkFromADIF and
-               LooksLikeAState, TRDOS routines a contest class may not reach.
-
-  ARRL 160 stood here too until M7b (2026-10-02), when its class was handed the
-  domestic-country CTY lookup its scoring needs (TStationContext.
-  IsDomesticCountryCall); its arm is TContestARRL160.ApplyADIFImport. This
-  routine is deleted when POTA gains a class. True when the contest was
-  handled here; False leaves it to its class. *)
-function ApplyClasslessADIFImport(const temps: TADIFRecordTemps;
-                                  var exch: ContestExchange): boolean;
-var
-  (* The POTA park the record names, or '' -- see ResolvePOTAParkFromADIF. *)
-  parkRef : string;
-begin
-  Result := True;
-  case exch.ceContest of
-    POTA:
-      begin
-      parkRef := ResolvePOTAParkFromADIF(temps.POTARef, temps.SIG, temps.SIG_Info);
-      if parkRef <> '' then
-         begin
-         exch.QTHString := parkRef;
-         end
-      else
-         begin
-         if LooksLikeAState(temps.State) then
-            begin
-            exch.QTHString   := temps.State;
-            exch.DomesticQTH := temps.State;
-            end;
-         end;
-      end;
-
-  else
-    Result := False;
-  end;
-end;
-
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
 var
   fields  : TADIFFieldList;
@@ -10030,11 +9984,12 @@ begin
   session.DomesticMult       := ActiveDomesticMult;
   session.DoingDomesticMults := DoingDomesticMults;
 
+  (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,
+    through its class. ApplyClasslessADIFImport stood between these two for
+    the contests that had no class to do it (M5a), and was deleted when the
+    last of them, POTA, gained one (2026-10-13). *)
   ApplyADIFCommonImport(temps, session, exch);
-  if not ApplyClasslessADIFImport(temps, exch) then
-     begin
-     ApplyADIFContestImport(temps, session, exch);
-     end;
+  ApplyADIFContestImport(temps, session, exch);
   // State-QP rover (KG1S/MON): strip suffix for country lookup so /M
   // doesn't get misread as a GB prefix indicator.  Done here (rather
   // than inside uADIF) because the strip uses MainUnit-scope state

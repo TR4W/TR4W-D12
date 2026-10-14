@@ -352,7 +352,12 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # now holds UTF8Encode'd display names and a typed ContestType per line, and
 # no new unit adds one (uContestChoices and uCategoryPowerChange compare with
 # UnicodeSameText / UnicodeCompareText, not SysUtils' AnsiString names).
-$NARROW_CEILING = 1277
+# 1277 -> 1271, 2026-10-13: POTA gained its contest class (design Q6). Six
+# go: MainUnit.ApplyClasslessADIFImport's three ShortString writes (the
+# class casts them explicitly), Tree's two Str20 := UpperCase(...) in the
+# grid tests (the shape is uGridShape's, on a native string), and
+# ResolvePOTAParkFromADIF's AnsiUpperCase (UpperCase in its new leaf).
+$NARROW_CEILING = 1271
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

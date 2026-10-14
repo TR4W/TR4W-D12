@@ -2,7 +2,7 @@
 == identity
 contest.requested = 93 POTA
 contest.selected = 93 POTA
-contest.class = (none -- the legacy engine)
+contest.class = TContestPOTA
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTAndPOTAPark
@@ -271,7 +271,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 93 POTA
 contest.selected = 93 POTA
-contest.class = (none -- the legacy engine)
+contest.class = TContestPOTA
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTAndPOTAPark
@@ -540,7 +540,7 @@ totals.cabrillo = CLAIMED-SCORE: 17
 == identity
 contest.requested = 93 POTA
 contest.selected = 93 POTA
-contest.class = (none -- the legacy engine)
+contest.class = TContestPOTA
 == setup
 active.qsopointmethod = OnePointPerQSO
 active.exchange = RSTAndPOTAPark

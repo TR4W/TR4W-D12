@@ -23,6 +23,46 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-13 -- POTA IS A CONTEST CLASS. LOG AN ACTIVATION.
+
+NY4I ruled design Q6; `TContestPOTA` now owns everything POTA did through
+shared code (`CONTEST_OWNERSHIP_DESIGN.md` §8.2o). **Nothing below should look
+different** except the one line marked. The contest matrix proved set-up,
+scoring and export unchanged -- but its QSOs carry **no park**, so the park,
+n-fer and state/grid branches are proven only by `uTestContestPOTA`, which
+cannot press a key. One live activation covers all of it.
+
+- [ ] **New Contest**: the drop-down line now reads *"Parks on the Air(r)
+      Logging"* -- **a deliberate change** (it said *"POTA"*; design Q64). Choose
+      it: the box reads *"Activator"*; tick it -- the MY PARK row with the
+      comment *"Enter your POTA Park Reference Designator (WITH DASH e.g.
+      K-1234)"*; enter `US-0663`, OK. The log opens as POTA.
+- [ ] **Set-up**: CW F1 is `CQ^POTA \ \ `, F2 `CQ^POTA CQ^POTA \ \ FD`, the
+      QSL message `73 \ EE`; WARC bands step; working the same call twice is
+      allowed (no dupe warning). The **Download POTA Parks** and **Repeat POTA
+      Parks (2nd Op)** menu rows are **visible**; open any other contest and
+      both are **hidden**.
+- [ ] **Park entry**: type a call and `57 US-1234`; the park's NAME shows as
+      you type (with the park list loaded) and the QSO logs with QTH
+      `US-1234`. Abbreviations still normalise -- `1274` becomes `US-1274`
+      from MY PARK.
+- [ ] **The n-fer**: `57 US-1234 US-5678 US-9012` logs **three** rows, one per
+      park, as one contact (one QSO set, like a county line). Then **Repeat
+      POTA Parks (2nd Op)** pre-fills the three parks for a new call.
+- [ ] **A hunter not in a park**: `57 PA` logs with the state; `57 FN31` with
+      the grid; a bare call with an empty exchange still logs.
+- [ ] **ADIF export** (File > Export ADIF): every record has `<MY_SIG:4>POTA`,
+      `MY_SIG_INFO` and `MY_POTA_REF` = MY PARK, and **no `CONTEST_ID`**. A park
+      QSO: `SRX_STRING`, `SIG`, `SIG_INFO` and `POTA_REF` = the park, one
+      record per park of an n-fer. A state QSO: `SRX_STRING` = `PA`,
+      `<DXCC:3>291`, `<STATE:2>PA`. A grid QSO: `<GRIDSQUARE:4>FN31`. (A
+      Canadian province also writes DXCC 291 -- known, design Q62.)
+- [ ] **ADIF import**: re-import that file into a new POTA log; the parks come
+      back as each QSO's QTH, and a record carrying only `SIG=POTA` and
+      `SIG_INFO` (as another logger writes it) reads its park from there.
+
+---
+
 ## Added 2026-10-02 -- THE NEW CONTEST DROP-DOWN SHOWS DISPLAY NAMES, AND CATEGORY-POWER IS ONE VALUE (M9b)
 
 The UI itself (`CONTEST_OWNERSHIP_DESIGN.md` §8.2n). `uTestContestUI` pins the
@@ -115,7 +155,8 @@ One deliberate change is listed last.
   - **IOTA**: the box reads *"Island station"* (its own caption, not "I am in");
     **WW PMC**: *"I am in PMC"*;
   - the three still named in the dialog: **POTA** (box *"Activator"*, tick for
-    MY PARK), **RSGB 1.8 MHz** (*"I am in UK"*, tick for the district), the
+    MY PARK -- its class's since 2026-10-13, checked in the POTA item above),
+    **RSGB 1.8 MHz** (*"I am in UK"*, tick for the district), the
     **UA4W Championship** (MY QTH, the RDA/grid comment);
   - **IN7QPNE** (classless): the county-or-state comment naming *IN7QPNE*.
   OK must still enable only when every offered row is filled.

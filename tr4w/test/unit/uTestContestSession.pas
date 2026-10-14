@@ -182,11 +182,12 @@ begin
       end;
    (* A FLOOR, so the loop cannot pass by finding nothing to check. M7b
       batch 1 left 45 classless (DUMMYCONTEST among them), down from 84;
-      batch 2 left the five that stay classless on purpose -- DUMMYCONTEST,
-      POTA, the UA4W Championship, RSGB 1.8 MHz and IN7QPNE
+      batch 2 left five classless on purpose, and POTA gained its class on
+      2026-10-13 (Q6), leaving four -- DUMMYCONTEST, the UA4W Championship,
+      RSGB 1.8 MHz and IN7QPNE
       (uTestContestFactory.Test_M7bBatch2ContestsAreSiblingsOnTheBase holds
       the list). *)
-   CheckTrue(classless >= 5, 'fewer than five classless contests were checked');
+   CheckTrue(classless >= 4, 'fewer than four classless contests were checked');
 end;
 
 (* EVERY VALUE HAS THREE STATES. A stated False, a stated empty text and a

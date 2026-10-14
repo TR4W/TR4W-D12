@@ -845,8 +845,9 @@ function LineInput(Prompt: Str160;
 function LowerCase(const s: string): string;
 function LooksLikeAGrid(var GridString: OpenString): boolean;
 function LooksLikeAGridIgnoreAE(var GridString: OpenString): boolean;
-function LooksLikeAPOTAPark(park: string): boolean;
-function LooksLikeAState(state: string): boolean; // NY4I
+(* LooksLikeAPOTAPark and LooksLikeAState went to the leaf uPOTAReference on
+  2026-10-13, when POTA gained its class -- the alias as IsValidPOTAPark, which
+  it only called. Every caller of either was a POTA site. *)
 function LooksLikeASection(section: string): boolean;
 function Lpt1BaseAddress: Word;
 function Lpt2BaseAddress: Word;
@@ -1001,7 +1002,10 @@ uses
   LogK1EA
   ,
   uFreqTimeFormat   // Issue #997: golden-tested time formatter
-  , uConfigValues;
+  , uConfigValues
+  (* GRID_CARRYING_EXCHANGES and LooksLikeGridSquare -- the two halves of
+    LooksLikeAGrid, lifted to a leaf when POTA gained its class. *)
+  , uGridShape;
 
 //{WLI}FUNCTION  BYTADDR  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): INTEGER; EXTERNAL;
 //{WLI}FUNCTION  BYTDUPE  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): BOOLEAN; EXTERNAL;
@@ -2462,20 +2466,30 @@ begin
 end;
 
 
-function LooksLikeAPOTAPark(park: string): boolean;
+(* THE GRID'S FIRST TWO LETTERS IN UPPER CASE, written back through the var
+  parameter -- what both grid tests below did on a match. Their comment says
+  "lower case so it looks like a domestic QTH", and the code has always done
+  the opposite; the code is what is kept. *)
+procedure UpperCaseGridLetters(var GridString: OpenString);
+var
+  i: integer;
 begin
-   Result := IsValidPOTAPark(park);
+  for i := 1 to 2 do
+     begin
+     if GridString[i] > 'Z' then
+        begin
+        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
+        end;
+     end;
 end;
 
+(* DOES THIS LOOK LIKE A GRID, IN A SESSION WHOSE EXCHANGE CAN CARRY ONE?
+
+  THE SHAPE IS uGridShape's SINCE 2026-10-13, and so is the set of exchanges
+  that carry a grid -- lifted when POTA gained its class, so that its ADIF
+  export could ask the same two questions without a global. This keeps the
+  order that matters here, below. *)
 function LooksLikeAGrid(var GridString: OpenString): boolean;
-
-{ If it does look like a grid, it will make the first two letters lower
-  case so it looks like a domestic QTH. }
-
-var
-  TestString                            : Str20;
-  i                                     : integer;
- // p                                  : pchar;
 begin
 
   LooksLikeAGrid := False;
@@ -2489,20 +2503,8 @@ begin
     millisecond on 2026-09-11.
 
     Comparing an enum is free; allocating a string is not. Asking the cheap
-    question first is the whole fix.
-
-    A SET, NOT NINE ORs -- and the rewrite found a duplicate: GridExchange was
-    tested TWICE in the old chain. A set cannot express that mistake. *)
-  if not (ActiveExchange in [RSTAndOrGridExchange,        // 4.118.1
-                             Grid2Exchange,
-                             RSTAndGrid3Exchange,
-                             GridExchange,
-                             RSTQSONumberAndGridSquareExchange,
-                             // ny4i -- GeneralQSO, to find a grid in the exchange
-                             RSTNameAndQTHExchange,
-                             // ny4i -- so the free-form POTA exchange can find a grid
-                             RSTAndPOTAPark,
-                             RSTAndGridExchange]) then
+    question first is the whole fix. *)
+  if not (ActiveExchange in GRID_CARRYING_EXCHANGES) then
      begin
      (* NO LOG LINE HERE. "This contest has no grid" is the ordinary answer
        for most contests, not an anomaly, and it was being written once per
@@ -2511,87 +2513,27 @@ begin
      Exit;
      end;
 
-  TestString := UpperCase(GridString);
-  if (length(TestString) <> 4) and (length(TestString) <> 6) then
+  if not LooksLikeGridSquare(string(GridString)) then
      begin
      Exit;
      end;
-  //   if (TestString[1] < 'A') or (TestString[1] > 'R') then Exit;
-  //   if (TestString[2] < 'A') or (TestString[2] > 'R') then Exit;
-  for i := 1 to 2 do
-     begin
-     if (TestString[i] < 'A') or (TestString[i] > 'R') then
-        begin
-        Exit;
-        end;
-     end;
-  //if (TestString[3] < '0') or (TestString[3] > '9') then Exit;
-  //if (TestString[4] < '0') or (TestString[4] > '9') then Exit;
-  for i := 3 to 4 do
-     begin
-     if (TestString[i] < '0') or (TestString[i] > '9') then
-        begin
-        Exit;
-        end;
-     end;
-  //   if GridString[1] > 'Z' then GridString[1] := CHR(Ord(GridString[1]) - Ord('a') + Ord('A'));
-  //   if GridString[2] > 'Z' then GridString[2] := CHR(Ord(GridString[2]) - Ord('a') + Ord('A'));
-  for i := 1 to 2 do
-     begin
-     if GridString[i] > 'Z' then
-        begin
-        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
-        end;
-     end;
+
+  UpperCaseGridLetters(GridString);
   LooksLikeAGrid := True;
 end;
 
-
+(* The same shape test, whatever the session's exchange -- WSJT-X's decodes. *)
 function LooksLikeAGridIgnoreAE(var GridString: OpenString): boolean;
-
-{ If it does look like a grid, it will make the first two letters lower
-  case so it looks like a domestic QTH. }
-
-var
-  TestString                            : Str20;
-  i                                     : integer;
-  //p                                  : pchar;
 begin
-
   LooksLikeAGridIgnoreAE := False;
 
-  TestString := UpperCase(GridString);
-  if (length(TestString) <> 4) and (length(TestString) <> 6) then
+  if not LooksLikeGridSquare(string(GridString)) then
      begin
      Exit;
      end;
 
-  for i := 1 to 2 do
-     begin
-     if (TestString[i] < 'A') or (TestString[i] > 'R') then
-        begin
-        Exit;
-        end;
-     end;
-
-  for i := 3 to 4 do
-     begin
-     if (TestString[i] < '0') or (TestString[i] > '9') then
-        begin
-        Exit;
-        end;
-     end;
-
-  for i := 1 to 2 do
-     begin
-     if GridString[i] > 'Z' then
-        begin
-        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
-        end;
-     end;
-
+  UpperCaseGridLetters(GridString);
   LooksLikeAGridIgnoreAE := True;
-
 end;
 
 
@@ -3702,37 +3644,6 @@ begin
      end;
 
   CallSortValue := round(Total - 2147483648.0);
-end;
-
-function LooksLikeAState(state: string): boolean;
-
-begin
-  Result := false;
-  if (state = 'CA') or (state = 'TX') or (state = 'NY') or (state = 'FL') or
-     (state = 'TX') or (state = 'PA') or (state = 'MA') or (state = 'NJ') or
-     (state = 'WA') or (state = 'MD') or (state = 'DC') or
-     (state = 'AK') or (state = 'AL') or (state = 'AR') or
-     (state = 'AZ') or (state = 'CO') or (state = 'CT') or
-     (state = 'DE') or (state = 'GA') or (state = 'IA') or
-     (state = 'ID') or (state = 'IN') or (state = 'IL') or
-     (state = 'KS') or (state = 'KY') or (state = 'LA') or
-     (state = 'ME') or (state = 'MI') or (state = 'MN') or
-     (state = 'MO') or (state = 'MS') or (state = 'MT') or
-     (state = 'NC') or (state = 'ND') or (state = 'NE') or
-     (state = 'NH') or (state = 'NM') or (state = 'NV') or
-     (state = 'OH') or (state = 'OK') or (state = 'OR') or
-     (state = 'RI') or (state = 'SD') or (state = 'TN') or
-     (state = 'UT') or (state = 'VA') or (state = 'VT') or
-     (state = 'WI') or (state = 'WV') or (state = 'WY') or
-     (state = 'SC') or (state = 'HI') or
-     (state = 'NS') or (state = 'QC') or (state = 'ON') or (state = 'MB') or
-     (state = 'SK') or (state = 'AB') or (state = 'BC') or (state = 'NT') or
-     (state = 'NB') or (state = 'NL') or (state = 'YT') or (state = 'PE') or (state = 'NU') then
-     begin
-     Result := true;
-     end;
-
-
 end;
 
 function LooksLikeASection(section: string): boolean;

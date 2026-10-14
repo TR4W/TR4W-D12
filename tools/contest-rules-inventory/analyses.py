@@ -71,8 +71,9 @@ def trait_disagreements(registry, contests, overrides):
    return {"checked": checked, "rows": rows}
 
 
-# Contests whose ADIF export writes no CONTEST_ID at all (uADIF.EmitADIFRecord:
-# POTA by name until it has a class, General QSO through WritesADIFContestId).
+# Contests whose ADIF export writes no CONTEST_ID at all (uADIF.EmitADIFRecord
+# asks WritesADIFContestId: General QSO since M4, POTA since its class,
+# 2026-10-13).
 NO_CONTEST_ID = {"POTA", "GENERALQSO"}
 
 

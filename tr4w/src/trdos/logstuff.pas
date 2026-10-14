@@ -604,8 +604,8 @@ function GetSentRSTFromExchangeString(var ExchangeString: OpenString {Str40}):
   smallInt {Word};
 
 procedure IncrementQTCCount(Call: CallString);
-function IsValidPOTAPark(const park: string): boolean;
-function ResolvePOTAParkFromADIF(const aPOTARef, aSIG, aSIGInfo: string): string;
+(* IsValidPOTAPark and ResolvePOTAParkFromADIF went to the leaf uPOTAReference
+  on 2026-10-13, when POTA gained its class -- see that unit. *)
 function IsValidGUID(const guid: string): boolean;
 function KeyRecentlyPressed(Key: Char; MaxElaspedSec100: LONGINT): boolean;
 procedure KeyStamp(Key: Char);
@@ -761,6 +761,9 @@ uses uNet,
   MainUnit,
   uRotatorControl,   // RotorControl delegates here -- see its body
   uPOTAParks,
+  (* IsValidPOTAPark and LooksLikeAState -- the POTA exchange shape's two
+    recognisers, in a leaf since POTA gained its class (2026-10-13). *)
+  uPOTAReference,
   uPendingCounties,
   (* ExchangeModeAttribution -- which SETTING put this contest in
     domestic-QTH mode. See the rejections below. *)
@@ -10768,6 +10771,11 @@ end;
   each -- the POTA reference and SIG_Info on entry, logstuff, tree -- and the
   ADIF import path for the GUID.
 
+  IsValidPOTAPark IS IN uPOTAReference SINCE 2026-10-13, with the two
+  character tests only it used, and ResolvePOTAParkFromADIF beside it: POTA's
+  class reads both, and a class reads no TRDOS unit. This note stays with
+  IsValidGUID, the validator left here.
+
   FIDELITY IS THE RULE HERE, NOT TIDINESS. These accept exactly what the
   patterns accepted, including their looseness: every hyphen in a GUID is
   INDEPENDENTLY optional, and so is each brace, so '{6B29...' with no closing
@@ -10785,17 +10793,6 @@ begin
    Result := ((aCh >= '0') and (aCh <= '9')) or
              ((aCh >= 'A') and (aCh <= 'F')) or
              ((aCh >= 'a') and (aCh <= 'f'));
-end;
-
-function IsAsciiDigit(aCh: Char): boolean;
-begin
-   Result := (aCh >= '0') and (aCh <= '9');
-end;
-
-function IsAsciiLetter(aCh: Char): boolean;
-begin
-   Result := ((aCh >= 'A') and (aCh <= 'Z')) or
-             ((aCh >= 'a') and (aCh <= 'z'));
 end;
 
 function IsValidGUID(const guid: string): boolean;
@@ -10884,72 +10881,6 @@ begin
    if Result then
       begin
       logger.debug('%s is a valid GUID', [guid]);
-      end;
-end;
-
-function IsValidPOTAPark(const park: string): boolean;
-var
-   i: integer;
-begin
-   logger.debug('Checking if %s is a valid park', [park]);
-
-   Result := False;
-
-   (* Two letters, a hyphen, then four or five digits and nothing else.
-     Length first, so the character tests below need no bounds checks: 7 is
-     the four-digit form and 8 the five-digit one.
-
-     The tightness is deliberate and the test says why -- a park reference
-     and an RST report arrive in the same exchange field, so '59' and '599'
-     must not look like parks. *)
-   if (Length(park) <> 7) and (Length(park) <> 8) then
-      begin
-      Exit;
-      end;
-
-   if not (IsAsciiLetter(park[1]) and IsAsciiLetter(park[2])) then
-      begin
-      Exit;
-      end;
-
-   if park[3] <> '-' then
-      begin
-      Exit;
-      end;
-
-   for i := 4 to Length(park) do
-      begin
-      if not IsAsciiDigit(park[i]) then
-         begin
-         Exit;
-         end;
-      end;
-
-   Result := True;
-   logger.debug('%s is a valid park', [park]);
-end;
-
-(* The park an imported ADIF record names, or '' when it names none.
-
-  POTA_REF wins when it is a valid park.  Failing that, a record written by
-  a logger that only knows the generic SIG / SIG_INFO pair carries the park
-  there, and it counts only when SIG says POTA -- a WWFF or SOTA reference
-  in SIG_INFO is not a park.  The caller falls back to the state otherwise. *)
-function ResolvePOTAParkFromADIF(const aPOTARef, aSIG, aSIGInfo: string): string;
-begin
-   Result := '';
-
-   if IsValidPOTAPark(aPOTARef) then
-      begin
-      Result := aPOTARef;
-      end
-   else
-      begin
-      if (AnsiUpperCase(aSIG) = 'POTA') and
-         (IsValidPOTAPark(aSIGInfo))    then
-         begin
-         Result := aSIGInfo;
-         end;
       end;
 end;
 

@@ -70,13 +70,13 @@ lives in a helper or in the format's own unit.
 | identity: enum, display/friendly/Cabrillo name, ADIF id and former ids, WA7BNM, QRZ.RU, e-mail | **the class, and every consumer asks it** (M1, done 2026-10-01) through `uContestRegistry.ContestIdentity`. An ADIF id two contests share (RSGB-ROLO) is told apart by the record's MODE once the record is read (M7b batch 2, §8.2k) | existing properties (**existing**); `RunsInMode` (M7b batch 2) |
 | sponsor parameters: county-line max, legal classes, host state, mult by band/mode, WARC allowed, dupe policy, off-time minimum, max contest dates | split across the class, `ContestsBooleanArray`, `FoundContest` arms and `postunit` | one property per fact |
 | exchange parsing and validation | **the class, for every contest** (M5b, done 2026-10-02): `logstuff.ProcessExchange` asks it after the contest-blind gate; the base parses the session's shape through the engine's `ParseExchangeShape`, handed in as data. The UA4W Championship's rule stays named in LOGSTUFF (§8.2g) | `ParseReceivedExchange`, `MayBeACallsign`, `InitialExchangeFromCall` (**existing**), plus the validators |
-| ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. POTA still named in PostUnit's tail (§8.2e); ARRL 160 left it at M7b (§8.2j) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
-| ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. POTA still keeps an arm in `MainUnit.ApplyClasslessADIFImport` (§8.2f); ARRL 160's moved to its class at M7b (§8.2j) | `ApplyADIFImport` (**existing**, §3.2) |
+| ADIF export: sent exchange and contest fields | **the class, for every contest** (M4, done 2026-10-01): PostUnit and uADIF ask `ContestIdentity`; the base's default is uADIFExchange's shared arm for the session's exchange. ARRL 160 left PostUnit's tail at M7b (§8.2j) and POTA, the last contest named there, when it gained its class (§8.2o) | `FormatADIFSentExchange`, `EmitADIFContestFields`, `EmitADIFExchangeFields` (POTA, §8.2o), `ADIFPowerTag`, `WritesADIFContestId` (**existing**) |
+| ADIF import interpretation | **the class, for every contest** (M5a, 2026-10-01): `uADIF.ApplyADIFContestImport` asks `ContestIdentity` after the whole record is read; the base's default is the old classless `else`. ARRL 160's arm moved to its class at M7b (§8.2j) and POTA's at §8.2o, which deleted `MainUnit.ApplyClasslessADIFImport` | `ApplyADIFImport` (**existing**, §3.2) |
 | Cabrillo: QSO columns, line layout, headers, mode string | columns and line layout: **the class, for every contest** (M4), the base's default being uCabrilloExchange's shared arm; the contest-specific header lines and the mode column: **the class** (M9a, §8.2m); the general header: `postunit` | `FormatCabrillo...Exchange`, `CabrilloQSOLineFormat` (existing); `CabrilloContestName`, `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag`, `CabrilloModeString` (**existing**, M9a) |
-| session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` keeps only the arms of POTA and the UA4W Championship, classless on purpose | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
+| session setup: memories, settings defaults, domestic file and countries, band/mode | **the class, for every contest that has one** (M7a, done 2026-10-02): `FoundContest` asks `DescribeSession` and `FCONTEST.ApplySessionDefaults` writes it; LogCfg's CQ-exchange default is `CQExchangeDefault`. M7b gave the classless contests classes (batch 1, thirty-nine, §8.2j; batch 2, forty, §8.2k); `FoundContest`'s `case` keeps only the UA4W Championship's arm, classless on purpose (POTA's became its `DescribeSession`, §8.2o) | `DescribeSession`, `CQExchangeDefault` (**existing**, §4, §8.2i) |
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`. RSGB 1.8 MHz is still named there, with its reason (§8.2h) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz still reads the sheet in its scoring (Q33) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); the multiplier KEY at M10 |
-| summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest keeps the arms of POTA, RSGB 1.8 and the UA4W Championship | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
+| summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest keeps the arms of RSGB 1.8 and the UA4W Championship (POTA's moved, §8.2o); POTA's park menu rows are `OffersParkTools` | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
 | the New Contest drop-down's name and place, call entry's contest status, the ten-date warning, WARC band stepping, the FOC# log column, a frequency warning | **the class, as data the UI renders** (M9b, done 2026-10-02, §8.2n); the off-time minimum stays named (Q60) | `DisplayName`, `IsActive`, `ShowsContestStatus`, `MaximumContestDates`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber`, `CallEntryFrequencyWarning` (**existing**, M9b) |
 
 The seam names on the right are the generator's
@@ -161,7 +161,7 @@ TContestBase
 +-- TContestNASprintCW, TContestNASprintRTTY      SIBLINGS, no base (DECIDED at M3, §8.2d; Q7)
 +-- TContestARRLFieldDay, TContestWinterFieldDay    no shared base -- NY4I's ruling
 +-- TContestSprintSSB                     its own contest, NOT an NA Sprint -- NY4I's ruling; built at M3
-+-- TContestPOTA, TContestGeneralQSO      section 6 (POTA not built)
++-- TContestPOTA, TContestGeneralQSO      section 6 (POTA built 2026-10-13, §8.2o)
 +-- the M7b classes -- CQ WPX RTTY, CQ WW RTTY, 7QP, NEQP, the JIDX, All
 |   Asian and Oceania pairs, the EU Sprints, the ARRL VHF runnings and the
 |   rest -- each directly: no family, DECIDED on evidence (§8.2j); batch 2's
@@ -318,8 +318,8 @@ fixed in place. It is done here, the right way (M5).
 | `ApplyContestSpecificADIFTail` arms | `ApplyADIFImport` of each contest the arm names |
 | its `else` (grid kinds, then the domestic QTH, then raw SRX) | the classless fallback while migrating; each contest that moves takes its own share |
 | `ProcessImportedSRX_String` (Field Day) | ~~the Field Day classes' `ApplyADIFImport` calling their own `ParseReceivedExchange` on the SRX text~~ -- **deleted at M5a, it had no caller** (§8.2f); M5b made the import stop calling DX a section instead (Q25, §8.2g) |
-| `logstuff.ResolvePOTAParkFromADIF` (D5's fix, `3f9e3f28`) | POTA's `ApplyADIFImport` |
-| `EmitContestSpecificTailForExport` arms | `EmitADIFContestFields` of each contest named. The no-op arm (D6) is deleted. **DONE at M4** but for POTA and ARRL 160 (§8.2e); ARRL 160's moved at M7b (§8.2j) |
+| `logstuff.ResolvePOTAParkFromADIF` (D5's fix, `3f9e3f28`) | POTA's `ApplyADIFImport` -- **DONE** 2026-10-13; the helper is the leaf `uPOTAReference` (§8.2o) |
+| `EmitContestSpecificTailForExport` arms | `EmitADIFContestFields` of each contest named. The no-op arm (D6) is deleted. **DONE at M4** but for POTA and ARRL 160 (§8.2e); ARRL 160's moved at M7b (§8.2j), POTA's on 2026-10-13 (§8.2o) |
 | the `Contest` tests inside the `uCabrilloExchange` / `uADIFExchange` arms (FOC, JIDX, PACC/SPDX, CQVHF, PCC, ...) | that contest's own formatter. **DONE at M4**; JIDX's, CQ VHF's and SP DX's were dead and were deleted |
 | `FormatsExchange` | ~~stays as the per-contest opt-in while migrating~~. **DELETED at M4**: every contest is asked, and the base's answer is the shared arm |
 | `logddx` per-contest sample exchanges | the contest's `SampleExchange`, so the simulator exercises its parser |
@@ -482,7 +482,17 @@ demonstrated. POTA's rules map onto the seams above:
 Introduce a `TActivityBase` only when a second activity (SOTA, WWFF) arrives and
 shows what is genuinely shared.
 
-**NOT BUILT AT M4, on evidence (DECIDED, §8.2e).** M4 offered POTA a class for
+**BUILT 2026-10-13 (§8.2o)** on NY4I's ruling of Q6: *"yes, make POTA a
+contest class. while it is not a contest per se, just like with GENERAL QSO,
+we treat it that way."* `TContestPOTA` sits on `TContestBase`. Of the four
+bullets above, the first two are built as written; the n-fer stayed the
+engine's (its queue is the `RSTAndPOTAPark` exchange shape's, which is
+LOGSTUFF's until M10, Q4) and no limit was added, because none existed to
+transcribe; dupes allowed is its `DescribeSession` (`AllowDupeQSOs`), as the
+arm wrote it. The three helpers were lifted as leaves -- `uPOTAReference` and
+`uGridShape` -- rather than handed in as services: each is pure.
+
+*History, kept for the reasoning:* **NOT BUILT AT M4, on evidence (DECIDED, §8.2e).** M4 offered POTA a class for
 its export alone. It was declined: Q6 is NY4I's and still open; POTA's export
 leans on three TRDOS helpers a class may not call (`logstuff.IsValidPOTAPark`,
 and `Tree.LooksLikeAState` and `Tree.LooksLikeAGrid`, the last of which reads
@@ -1002,10 +1012,11 @@ Each is behaviour-preserving unless marked.
 | **M5b** | **DONE 2026-10-02 (§8.2g).** **Exchange parse.** `ParseReceivedExchange` per contest, the base reaching the engine's shape parsers through the session as data; the matrix gained a `parse` section first. Seven contests gained classes; D1/D2 deleted; NY4I's 7.10 refusals; Field Day DX export and import (Q20, Q25); `nc_cty.dom` to the sponsor's counties (Q14). UA4W stays named in LOGSTUFF, with its reason | the matrix's `parse` section; `uTestContestParse`; `BENCH_QUEUE.md` for typed entry |
 | **M6** | **DONE 2026-10-02 (§8.2h).** **Total score.** The matrix gained a `totals` section first. `TScoreTotals`, the read-only view, `FinalScore` = `CombineScore` + `BonusPoints`; `TotalScore`'s arms deleted but RSGB 1.8's (Q33); nine contests gained classes; Missouri moved with its live tally preserved (Q32); the NC sweep, the Salmon Run W7DX bonus (Q5) and Idaho's dormant county implemented | corpus `CLAIMED-SCORE`; the matrix's `totals` section; `uTestContestTotals` |
 | **M7a** | **DONE 2026-10-02 (§8.2i).** **Session arms of the registered contests.** `DescribeSession` filling a `TSessionDefaults`, one applier (`FCONTEST.ApplySessionDefaults`); all 55 arms naming a registered contest moved and were deleted; LogCfg's CQ-exchange defaults became `CQExchangeDefault`; D8 resolved by stating both branches; Winter Field Day's DX multiplier row and class made the effective value. No contest gained a class | the matrix (185 identical, no re-freeze); corpus; `uTestContestSession` |
-| **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE (NY4I) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
+| **M7b** | **The classless contests.** Each gains a class -- a family member, or a copy of the nearest class (§1.4) -- and its `FoundContest` and LogCfg arms become its `DescribeSession` and `CQExchangeDefault`. **Batch 1 DONE 2026-10-02 (§8.2j)**: thirty-nine contests, no new family; ARRL 160 handed the domestic-country lookup as a station-context service, so its import and export arms left MainUnit and PostUnit; the All Asian's former ADIF id `AL-ASIAN-DX-PHONE` went in with `ALLASIANSSB`'s class. **Batch 2 DONE 2026-10-02 (§8.2k)**: the other forty, no new family; two session values and the caption memories joined `TSessionDefaults`; `PortableStation` lifted from Tree; the RoPoCo runnings told apart on import by MODE (`RunsInMode`, a decided change). Classless on purpose: POTA (Q6 -- ruled a class 2026-10-13, §8.2o), UA4W (Q28), RSGB 1.8 (Q33), IN7QPNE (NY4I) | the matrix (only `contest.class =` moves; RoPoCo's phone import lines, by decision); the arm count ratchets to 0 |
 | **M8** | **DONE 2026-10-02 (§8.2l).** **Multipliers and dupes**, as contest-declared rules over the shared sheet (§7.7 stage 2). `CountsAsMultiplier` and `DomesticMultiplierFromCall`; the five `SetMultFlags` rules and the four hint arms moved; YB DX's no-op deleted with ParametersOkay's copy of `SetPrefix`; the off-band dupe gap and need-multiplier hint fixed (§7.4). Multiplier-KIND arms stay in the sheet until Q4; RSGB 1.8 still classless (Q33) | corpus `CLAIMED-SCORE`; the matrix; `uTestContestMultipliers`, `uTestOffBandCredit` |
 | **M9a** | **DONE 2026-10-02 (§8.2m).** **What the display and the reports show**, as data the UI asks for: the New Contest prompts, the totals window, the summary sheet, the hour report, the Cabrillo header lines and mode column, HamScore's canonical exchanges, the score-posting labels, WRTC's operating aids and the QTC menu; design 7.11 (MY STATE never written by set-up); every class states its display name, Cabrillo name and ADIF id | the matrix (only the 7.11 setting lines move); corpus; `uTestContestDisplay`; `BENCH_QUEUE.md` |
 | **M9b** | **DONE 2026-10-02 (§8.2n).** **The UI itself.** The New Contest drop-down shows `DisplayName`, active contests first and inactive ones marked (`IsActive`; SA Sprint and Locust); CATEGORY-POWER is one value and a change rescores (7.6); General QSO's display rules, the FOC log columns and WAG's call-window warning are the contest's. The off-time minimum stays named -- its two readers disagree (Q60) | `uTestContestUI`; the matrix and corpus unchanged; `BENCH_QUEUE.md` (no automated gate sees the UI) |
+| **Q6 / POTA** | **DONE 2026-10-13 (§8.2o).** POTA gains its class on NY4I's ruling: its FoundContest arm, its ADIF import, its three ADIF tail tests, uADIF's CONTEST_ID test, the New Contest prompts and the park menu rows move; `ApplyClasslessADIFImport` is deleted; three TRDOS helpers are lifted as leaves. Four contests are classless on purpose now | the matrix (only `contest.class =` moves); corpus; `uTestContestPOTA`; `BENCH_QUEUE.md` |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
 
 **Export comes before import and parse** because export is the only half the
@@ -1373,6 +1384,7 @@ spread that side effect to every contest. **`LogClockUTCHour` WAS DELETED THE
 SAME DAY** when Q21 was decided: the rule reads the QSO's recorded time, and
 the station context carries no clock.
 
+*(Superseded for both: ARRL 160 left at M7b, §8.2j; POTA on 2026-10-13, §8.2o.)*
 **DECIDED: POTA and ARRL 160 stay named in PostUnit's ADIF tail.** POTA: see
 §6 -- Q6 is open and its export needs three TRDOS helpers lifted first. ARRL
 160: its only export rule is one `ARRL_SECT` arm, but a class must also score
@@ -1543,6 +1555,7 @@ has no `AIE` field, so its class states none and the array still answers.
 **The matrix proves them: the thirteen records differ in `contest.class =`
 only** -- every set-up, scoring and export line is byte-identical.
 
+*(Superseded for both: ARRL 160's arm moved at M7b, §8.2j; POTA's on 2026-10-13, §8.2o, which deleted the routine.)*
 **DECIDED: POTA AND ARRL 160 KEEP THEIR ARM IN `MainUnit`.** POTA has no class
 (Q6, NY4I's and open), and its arm calls `logstuff.ResolvePOTAParkFromADIF` and
 `Tree.LooksLikeAState`, which a class may not reach. ARRL 160's class would
@@ -2722,7 +2735,7 @@ tests still in shared code):
 - the FOC Marathon's log columns (MainUnit x3) -- a `LogColumns` seam; WAG's
   call-window frequency warning (MainUnit); the CQ WW / IARU off-time minimum,
   a string test on the name (MainUnit, PostUnit) -- M9b;
-- the classless arms: POTA (MainUnit x2, PostUnit x3, uADIF, FCONTEST,
+- the classless arms: ~~POTA~~ (done 2026-10-13, §8.2o) (MainUnit x2, PostUnit x3, uADIF, FCONTEST,
   uNewContest x2; Q6), the UA4W Championship (FCONTEST, LogCfg, LOGSTUFF,
   uNewContest; Q28), RSGB 1.8 (LOGEDIT, uNewContest x2; Q33);
 - LOGEDIT's initial-exchange rules (OZCHR, RF Championship, Russian DX, IARU;
@@ -2888,6 +2901,69 @@ the diff adds lines only.
 
 **Questions this raised -- NY4I's:** Q58-Q61 (§9).
 
+### 8.2o POTA -- what it covered (2026-10-13; Q6)
+
+NY4I ruled Q6 the same day: *"yes, make POTA a contest class. while it is not
+a contest per se, just like with GENERAL QSO, we treat it that way."*
+`TContestPOTA` (`uContestPOTA`) sits on `TContestBase`, beside General QSO, and
+transcribes **exactly** what the program did for POTA. No family base (§6:
+none until a second activity arrives).
+
+**EVERY SITE, MEASURED FIRST** (`rg -i -w POTA tr4w/src`, the lint's `-List`,
+and the identifiers the arms called) and classified:
+
+| site | kind | where it went |
+|---|---|---|
+| `FCONTEST.FoundContest`'s `POTA:` arm | rule (set-up) | `DescribeSession` -- dupes allowed, auto-dupe off both ways, contest name `POTA`, WARC on, CW F1/F2, the QSL message. Its last line, `InitOperatorNameSet`, is engine work: a REQUEST, `TSessionDefaults.UseOperatorNameSet`, which the applier runs last, where the arm did |
+| `MainUnit.ApplyClasslessADIFImport` | rule (import) | `ApplyADIFImport`, without `inherited` -- the arm replaced the base's default. **The routine is deleted**: POTA was its last contest |
+| PostUnit's tail, `<> POTA` / `= POTA` around the SRX_STRING | rule (export) | the new seam `EmitADIFExchangeFields` (base: the `SRX_STRING` alone) and `FormatADIFReceivedExchange` (the park, else the typed exchange) |
+| PostUnit's location `case`, `POTA:` arm | rule (export) | `EmitADIFContestFields` -- `SIG`, `SIG_INFO`, `POTA_REF` for a park |
+| uADIF's `rec.ceContest <> POTA` | rule (export) | `WritesADIFContestId` False |
+| uNewContest's two `POTA:` arms | rule (UI as data) | `DescribeNewContestPrompts` -- `OfferIAmInCaption('Activator')`, MY PARK when ticked |
+| MainUnit's `Contest <> POTA` menu test | UI | the new trait `OffersParkTools` (base False), as `OffersQTCs` |
+| LOGSTUFF's `OnePointPerQSO` arm | rule (scoring) | `CalculateQSOPoints`, `FixedModePoints(1, 1, 1)` |
+| `logstuff.IsValidPOTAPark`, `ResolvePOTAParkFromADIF`; `Tree.LooksLikeAState` | TRDOS helpers | LIFTED to the leaf `uPOTAReference`, originals deleted; LOGSTUFF's POTA shape parser calls them there |
+| `Tree.LooksLikeAPOTAPark` | TRDOS alias | DELETED -- one line calling `IsValidPOTAPark`; PostUnit's POTA tests were its only callers |
+| `Tree.LooksLikeAGrid` (reads `ActiveExchange`) | TRDOS helper | its two halves LIFTED to the leaf `uGridShape` -- `GRID_CARRYING_EXCHANGES` and `LooksLikeGridSquare`; Tree's two grid tests ask both (one copy of the shape where there were two); the class is handed the session's exchange as data |
+| the `RSTAndPOTAPark` exchange SHAPE: LOGSTUFF's parser (`ProcessRSTAndPOTAPark`), `ExchangeInformation`, ParametersOkay's blank-exchange test, the park-name display | engine (shape) | **STAYS** -- shapes name no contest and retire with the shared sets at M10 (Q4). The base's `ParseReceivedExchange` already hands the session's shape to it |
+| the n-fer queue (`uPOTAParks`), `TryLogContact`'s drain, Repeat POTA Parks | engine | **STAYS**, untouched -- one contact, one row per park in one QSO set, exactly as before |
+| the park list, its download, the schema's `my_park`/`rcvd_park` | POTA DATA | **STAYS** |
+
+**WHY LEAVES, NOT SERVICES.** All three helpers are pure functions of their
+text (the grid test once its global is a parameter), so a station-context
+service would have been a function pointer to code the class can simply call.
+`IsValidPOTAPark` lost its two debug lines per call -- a leaf does not reach the
+program's logger. `ResolvePOTAParkFromADIF`'s `AnsiUpperCase` became
+`UpperCase`: no non-ASCII letter upper-cases to P, O, T or A, so the answer is
+the same, without narrowing the tag through an AnsiString.
+
+**ONE BUILDER FOR `TMyStationExchange`.** POTA's activation fields read MY PARK,
+which PostUnit filled in two drifted copies (the Cabrillo writer never set
+`MyPark`); a third reader made it `PostUnit.CurrentMyStationExchange`. No
+Cabrillo formatter reads `MyPark`, so no file moved.
+
+**THE PROOF.** The contest matrix: **184 identical, 1 differing (POTA)**, and
+POTA's record compared by script with the `contest.class =` line excluded is
+**byte-identical** (805 lines; the three variants' class lines are the only
+difference). Its synthetic QSOs carry no park, so `uTestContestPOTA` pins the
+branches it cannot reach: the activation block for a park, a state, a grid (in a
+session that carries one and one that does not) and nothing; the park tags; the
+import for `POTA_REF`, `SIG`/`SIG_INFO`, a state and neither; the set-up value
+for value; one point every mode; the park tools on POTA alone; the base's
+exchange block for every other contest; both leaves. The New Contest table in
+`uTestContestDisplay` gained POTA's two arms by hand. Golden corpus **24
+passed, 0 failed, 2 known-divergence, 13 sets exported, exit 0**;
+`test-adif-roundtrip.sh` **13 passed**; unit tests **0 failed** (78,757
+passed). `Lint-ContestNameTests` 23 -> 14: mainunit 3 -> 1, fcontest 2 -> 1,
+postunit 4 -> 1, uadif 1 -> 0, unewcontest 5 -> 3; floor 18 -> 11. Narrowing
+1277 -> 1271, range 4 -> 4.
+
+**ONE VISIBLE CHANGE, BY THE M9a RULE:** the New Contest drop-down lists POTA by
+its display name, *"Parks on the Air(r) Logging"*, where the classless identity
+showed *"POTA"* (Q64).
+
+**Questions this raised -- NY4I's:** Q62-Q64 (§9).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -2943,7 +3019,7 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   recorded as missing? The bonuses-as-data shape (§5) is recommended.
   **CLOSED: IMPLEMENTED at M6** (§8.2h) on the sponsor's current rules -- 500
   once per mode, CW and phone, a single-mode entry once.
-- **Q6** **RULED 2026-10-13 (NY4I): YES -- POTA becomes a contest class.** "While it is not a contest per se, just like with GENERAL QSO, we treat it that way." Original question follows.
+- **Q6** **RULED 2026-10-13 (NY4I): YES -- POTA becomes a contest class.** "While it is not a contest per se, just like with GENERAL QSO, we treat it that way." **LANDED the same day (§8.2o): `TContestPOTA`.** Original question follows.
 - **Q6** (C7). POTA as a contest class (recommended, §6), keeping the root name
   `TContestBase`, with "contest" meaning "an operating event with rules" as
   `ContestType` already does?
@@ -3177,6 +3253,21 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     nowhere, so headless /EXPORT reads a stale or absent copy (`uLogStore`'s
     entry declaration says so). One value each, as 7.6 did for power (no
     rescore -- no contest scores by them)?
+
+- **Q62-Q64** (POTA's class, §8.2o):
+  - **Q62** A POTA hunter who sends a Canadian province exports `DXCC 291`
+    (the USA) beside `STATE ON`: the tail hard-coded 291 for anything
+    `LooksLikeAState` accepts, and that list holds the provinces. Moved
+    exactly. Write 1 (Canada) for a province, or leave DXCC to the CTY
+    lookup of the call as every other contest does?
+  - **Q63** The New Contest dialog's POTA box is captioned with the literal
+    `'Activator'`, not a `TC_` string, so no catalogue can translate it.
+    Moved as it stood. Give it a resourcestring?
+  - **Q64** The New Contest drop-down now shows POTA as "Parks on the Air(r)
+    Logging" -- its friendly name, by the M9a rule that a class's
+    `DisplayName` is its human name -- where the classless identity showed
+    "POTA". Keep it, or should POTA be the exception whose drop-down line is
+    its short name?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

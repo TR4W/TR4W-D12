@@ -666,7 +666,7 @@ type
       svAutoDupeEnableCQ, svAutoDupeEnableSAndP,
       svCQExchangeCW, svSPExchangeCW, svRepeatSPExchangeCW, svQSLCW,
       svQuickQSLCW1, svQSOBeforeCW, svCallOkNowCW,
-      svRSTQSONumberExchangeMemories);
+      svRSTQSONumberExchangeMemories, svOperatorNameSet);
    TSessionValues = set of TSessionValue;
 
    (* A FUNCTION-KEY MEMORY A CONTEST'S SET-UP FILLS.
@@ -879,6 +879,15 @@ type
          set-up writes for every RST-and-serial contest. *)
       procedure UseRSTQSONumberExchangeMemories;
 
+      (* THE OPERATORS' NAMES FROM TRMASTER.DTA, INDEXED FOR THE SESSION --
+         asked for, not stated: FCONTEST's applier builds LOGSCP's operator
+         name set (InitOperatorNameSet), which the POTA exchange shape reads to
+         tell a name from a park or a state. It is built once per run and
+         never unbuilt, so there is nothing to state False. POTA's FoundContest
+         arm called it last; the applier calls it last. (2026-10-13, design
+         Q6.) *)
+      procedure UseOperatorNameSet;
+
       (* DOMESTIC COUNTRIES, in the order AddDomesticCountry is to see them. *)
       procedure AddDomesticCountry(const aID: string);
       procedure AddDomesticCountries(const aIDs: array of string);
@@ -1077,10 +1086,11 @@ type
       (* DOES ADIF EXPORT WRITE A CONTEST_ID FOR THIS CONTEST? -- M4.
 
          True for every contest, except an operating mode that is not a contest
-         at all: General QSO says False. uADIF.EmitADIFRecord asks; it used to
-         test `ceContest in [POTA, GENERALQSO]`. POTA still has its own test
-         there until it has a class (design Q6, which is NY4I's and open). The
-         id itself is still answered -- the score-posting clients send it. *)
+         at all: General QSO and POTA say False. uADIF.EmitADIFRecord asks; it
+         used to test `ceContest in [POTA, GENERALQSO]`, and POTA kept a test
+         of its own there until it gained its class (2026-10-13, design Q6).
+         The id itself is still answered -- the score-posting clients send
+         it. *)
       function GetWritesADIFContestId: boolean; virtual;
 
       (* WHAT CONTEST SET-UP READS BESIDES THE ROW -- M2, 2026-10-01.
@@ -1184,6 +1194,7 @@ type
       function GetReportsRunningScore: boolean; virtual;
       function GetPermittedOperatingAids: TOperatingAids; virtual;
       function GetOffersQTCs: boolean; virtual;
+      function GetOffersParkTools: boolean; virtual;
 
       (* WHAT THE UI ITSELF ASKS -- M9b. See the properties. *)
       function GetIsActive: boolean; virtual;
@@ -1322,10 +1333,10 @@ type
          WHAT EXPORT WRITES, by construction: one getter, read by both.
 
          ONE EXCEPTION, AND IT IS NOT HERE: POTA and GENERALQSO write no
-         CONTEST_ID at all. General QSO says so through WritesADIFContestId
-         (M4); POTA, which has no class, is still a `ceContest <> POTA` test
-         in uADIF.EmitADIFRecord until design Q6 is answered. Their ids still
-         answer here, because the score-posting clients send them. *)
+         CONTEST_ID at all. Each says so through WritesADIFContestId -- General
+         QSO since M4, POTA since it gained its class (2026-10-13, design Q6).
+         Their ids still answer here, because the score-posting clients send
+         them. *)
                   
       (* THE REST OF THE ContestsArray ROW.
 
@@ -1590,6 +1601,27 @@ type
       function FormatADIFReceivedExchange(const aQso: ContestExchange;
                                           aExchangeCarriesRST: boolean): string; virtual;
 
+      (* THE ADIF EXCHANGE BLOCK -- the SRX_STRING, and whatever a contest
+         writes beside it, as ADIF text. Asked by PostUnit's tail emitter
+         right after STX_STRING, for every QSO. 2026-10-13, when POTA gained
+         its class (design Q6).
+
+         THE BASE IS THE SRX_STRING ALONE: FormatADIFReceivedExchange's
+         value, in the tag, which is what the tail wrote for every contest it
+         did not name. POTA writes its activation (MY_SIG, MY_SIG_INFO and
+         MY_POTA_REF, from aMy.MyPark) before it, and a hunter's state or grid
+         after it -- the tail's two `ceContest = POTA` tests, moved in the
+         order they wrote. A contest that only changes the SRX_STRING
+         overrides FormatADIFReceivedExchange instead.
+
+         aSessionExchange is the session's exchange, for the reason
+         TCabrilloQSOContext records; aExchangeCarriesRST is
+         FormatADIFReceivedExchange's. *)
+      function EmitADIFExchangeFields(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      aSessionExchange: ExchangeType;
+                                      aExchangeCarriesRST: boolean): string; virtual;
+
       (* THE CONTEST FORMATS ITS OWN EXPORT -- M4, 2026-10-01.
 
          EVERY CONTEST IS ASKED. PostUnit and uADIF ask
@@ -1825,6 +1857,12 @@ type
       (* DOES THIS CONTEST EXCHANGE QTCs? The QTC functions menu is offered
          only then -- the two WAE runnings. The base does not. *)
       property OffersQTCs: boolean read GetOffersQTCs;
+
+      (* DOES THIS CONTEST OFFER THE PARK TOOLS? -- Download POTA Parks and
+         Repeat POTA Parks (2nd Op) on the menus. MainUnit hides both rows
+         otherwise; it tested `Contest <> POTA` until POTA gained its class
+         (2026-10-13). The base does not. *)
+      property OffersParkTools: boolean read GetOffersParkTools;
 
       (* IS THIS CONTEST STILL RUN? -- M9b. An inactive contest stays in the
          factory so an old log still opens and scores (NY4I, 2026-10-01), and
@@ -2821,6 +2859,16 @@ begin
       end;
 end;
 
+function TContestBase.EmitADIFExchangeFields(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange;
+                                             aSessionExchange: ExchangeType;
+                                             aExchangeCarriesRST: boolean): string;
+begin
+   (* PostUnit's SRX_STRING line, moved -- see the declaration. *)
+   Result := EmitADIFField('SRX_STRING',
+      FormatADIFReceivedExchange(aQso, aExchangeCarriesRST));
+end;
+
 function TContestBase.GetADIFPowerTag: string;
 begin
    Result := 'RX_PWR';
@@ -3086,6 +3134,11 @@ begin
    Result := False;
 end;
 
+function TContestBase.GetOffersParkTools: boolean;
+begin
+   Result := False;
+end;
+
 function TContestBase.GetIsActive: boolean;
 begin
    Result := True;
@@ -3296,6 +3349,11 @@ end;
 procedure TSessionDefaults.UseRSTQSONumberExchangeMemories;
 begin
    Stated(svRSTQSONumberExchangeMemories);
+end;
+
+procedure TSessionDefaults.UseOperatorNameSet;
+begin
+   Stated(svOperatorNameSet);
 end;
 
 procedure TSessionDefaults.AddDomesticCountry(const aID: string);

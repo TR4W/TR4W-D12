@@ -151,10 +151,11 @@ var
   TContestBase.DescribeNewContestPrompts, and this unit RENDERS what the
   contest says (docs/CONTEST_OWNERSHIP_DESIGN.md section 8.2m).
 
-  WHAT IS LEFT NAMING A CONTEST is the arms of the three contests that are
-  classless on purpose -- POTA (design Q6), RSGB 1.8 MHz (Q33) and the UA4W
-  Championship (Q28) -- in ClasslessPrompts below; each goes when its contest
-  gains a class. *)
+  WHAT IS LEFT NAMING A CONTEST is the arms of the two contests that are
+  classless on purpose -- RSGB 1.8 MHz (Q33) and the UA4W Championship
+  (Q28) -- in ClasslessPrompts below; each goes when its contest gains a
+  class. POTA's two went to TContestPOTA when it gained one (2026-10-13,
+  design Q6). *)
 
 (* ONE STEP OF A CONTEST'S PROMPTS, ON THE FORM -- the five presentation
   helpers this unit always had, chosen by the step's kind. *)
@@ -189,10 +190,6 @@ begin
    if aTicked then
       begin
       case SelectedContest of
-         POTA:
-            begin
-            SetCommentAndEnableEditControl(TC_ENTERYOURPARKREFERENCEDESIGNATOR, ncfMyPark);
-            end;
          RSGB18:
             begin
             SetCommentAndEnableEditControl(TC_ENTERYOURDISTRICTABBREVIATION, ncfMyState);
@@ -205,10 +202,6 @@ begin
          RSGB18:
             begin
             DisplayCheckBox(TC_UK);
-            end;
-         POTA:
-            begin
-            frmNewContest.ShowIAmIn('Activator');
             end;
          UA4WCHAMPIONSHIP:
             begin
