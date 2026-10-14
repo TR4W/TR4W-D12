@@ -445,7 +445,9 @@ var
   ActiveBackground                      : Byte;
   ActiveBand                            : BandType {= Band160};
   ActiveColor                           : Byte;
-  ActiveExchange                        : ExchangeType {= NoExchangeReceived};
+  (* ActiveExchange MOVED -- M10 S9f, 2026-10-14, the last of the six kind
+    globals. It is uContestSession.ContestSession.Exchange, written only by
+    FCONTEST's set-up path. *)
   (* ActiveInitialExchange MOVED -- M10 S9a, 2026-10-14. It is
     uContestSession.ContestSession.InitialExchange, written only by FCONTEST's
     set-up path; see that unit's header for why it is the SESSION's value and

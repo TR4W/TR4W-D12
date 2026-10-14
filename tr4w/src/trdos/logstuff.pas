@@ -3908,14 +3908,14 @@ begin
         logger.Error('[ProcessRSTAndDomesticQTHExchange] Improper domestic ' +
                      'QTH - Exchange = (%s). %s',
                      [Exchange,
-                      ExchangeModeAttribution(ActiveExchange,
+                      ExchangeModeAttribution(ContestSession.Exchange,
                                               Settings.My.Country, False)]);
         (* THE BRIEF FORM ON SCREEN. QuickDisplayError writes into a
           main-window element, not a dialog, so what goes there has to be a
           few words -- '(MY COUNTRY is empty)' rather than the sentence the
           log gets. *)
         ExchangeErrorMessage := TC_IMPROPERDOMESITCQTH +
-           ExchangeModeAttribution(ActiveExchange, Settings.My.Country, True);
+           ExchangeModeAttribution(ContestSession.Exchange, Settings.My.Country, True);
         end;
      (* IARU's ZONE FROM THE CALL, for a member society's single-word exchange,
        stood here as `if Contest = IARU` (NY4I 2026JUL07). It is the IARU
@@ -7009,12 +7009,12 @@ var
 begin
   Result := False;
   if (not ParseArray(ExchangeString))                                  and
-     (not (ActiveExchange in [RSTNameAndQTHExchange, RSTAndPOTAPark])) then
+     (not (ContestSession.Exchange in [RSTNameAndQTHExchange, RSTAndPOTAPark])) then
      begin
      Exit;
      end;
 
-  session.Exchange := ActiveExchange;
+  session.Exchange := ContestSession.Exchange;
   session.ParseShape := @ParseExchangeShape;
   session.ZoneOfCall := @ParseSessionZoneOfCall;
   session.IsDomesticQTH := @ParseSessionIsDomesticQTH;

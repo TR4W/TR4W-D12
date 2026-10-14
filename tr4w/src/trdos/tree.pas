@@ -1005,7 +1005,10 @@ uses
   , uConfigValues
   (* GRID_CARRYING_EXCHANGES and LooksLikeGridSquare -- the two halves of
     LooksLikeAGrid, lifted to a leaf when POTA gained its class. *)
-  , uGridShape;
+  , uGridShape
+  (* ContestSession -- the exchange kind set-up resolved, LooksLikeAGrid's
+    first question (M10 S9f). A leaf over VC, so no cycle. *)
+  , uContestSession;
 
 //{WLI}FUNCTION  BYTADDR  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): INTEGER; EXTERNAL;
 //{WLI}FUNCTION  BYTDUPE  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): BOOLEAN; EXTERNAL;
@@ -2504,7 +2507,7 @@ begin
 
     Comparing an enum is free; allocating a string is not. Asking the cheap
     question first is the whole fix. *)
-  if not (ActiveExchange in GRID_CARRYING_EXCHANGES) then
+  if not (ContestSession.Exchange in GRID_CARRYING_EXCHANGES) then
      begin
      (* NO LOG LINE HERE. "This contest has no grid" is the ordinary answer
        for most contests, not an anomaly, and it was being written once per

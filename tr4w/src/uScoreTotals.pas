@@ -162,7 +162,7 @@ begin
                                             (ContestSession.DXMult = NoDXMults)             and
                                             (ContestSession.PrefixMult = NoPrefixMults) and
                                             (ContestSession.ZoneMult = NoZoneMults));
-   aTotals.SessionExchange := ActiveExchange;
+   aTotals.SessionExchange := ContestSession.Exchange;
    aTotals.SessionDXMult := ContestSession.DXMult;
    aTotals.LiveSessionTally := LiveSessionTally;
 end;

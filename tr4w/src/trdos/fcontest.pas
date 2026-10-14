@@ -393,7 +393,7 @@ begin
   zoneText := Settings.My.ResolvedZone;
 
   if (SentMyState <> '') and
-     (ActiveExchange = RSTZoneAndPossibleDomesticQTHExchange) then
+     (ContestSession.Exchange = RSTZoneAndPossibleDomesticQTHExchange) then
      begin
      zoneText := zoneText + ' ' + SentMyState;
      end;
@@ -527,7 +527,7 @@ var
 begin
   if aSession.IsStated(svExchange) then
      begin
-     ActiveExchange := aSession.Exchange;
+     ContestSession.WriteExchange(aSession.Exchange);
      end;
   if aSession.IsStated(svDomesticMult) then
      begin
@@ -809,7 +809,7 @@ begin
     at all, so CTY.DAT answered every zone 0. See TContestBase.GetZoneMode. *)
   CTY.ctyZoneMode := aContest.ZoneMode;
 
-  ActiveExchange := aContest.ExchangeKind;
+  ContestSession.WriteExchange(aContest.ExchangeKind);
   ContestSession.WriteInitialExchange(aContest.InitialExchangeKind);
   ContestSession.WriteDomesticMult(aContest.DomesticMultiplierType);
   ContestSession.WriteDXMult(aContest.DXMultiplierType);
@@ -940,7 +940,7 @@ begin
         TempDomesticQTHDataFileName + string(DOM_EXTENSION);
      end;
 
-  case ActiveExchange of
+  case ContestSession.Exchange of
     NameAndDomesticOrDXQTHExchange: SetUpNameAndStateExchange;
 
     RSTQSONumberExchange: SetUpRSTQSONumberExchange;

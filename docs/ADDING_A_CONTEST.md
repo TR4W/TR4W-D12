@@ -126,11 +126,12 @@ now, the row's `AE:` before S8:
 
 | field | leads to |
 |---|---|
-| `AE:` | the arm of `case ActiveExchange of` in `LOGSTUFF.ProcessExchange`, which names a `Process...Exchange` function — the exchange parsing |
+| `GetExchangeKind` (the row's `AE:` before S8) | the arm for that shape in `LOGSTUFF.ParseExchangeShape` (ProcessExchange's old `case ActiveExchange of`, keyed since M5b on the shape it is handed), which names a `Process...Exchange` function -- the exchange parsing |
 
-`AE:` is also what the contest's EXPORT looks like by default -- through the
-SESSION's exchange, which is `AE:` unless FCONTEST's arm or the operator
-changes it: `TContestBase` formats the Cabrillo columns and the ADIF
+The exchange kind is also what the contest's EXPORT looks like by default -- through the
+SESSION's exchange (`ContestSession.Exchange`, since M10 S9f), which is the
+class's kind unless its `DescribeSession` states another -- the operator's
+EXCHANGE RECEIVED was retired at M10 S2: `TContestBase` formats the Cabrillo columns and the ADIF
 `STX_STRING` with the shared arm for that exchange
 (`uCabrilloExchange.FormatCabrilloExchangeOfKind`,
 `uADIFExchange.FormatADIFExchangeOfKind`). Those arms name no contest; a rule

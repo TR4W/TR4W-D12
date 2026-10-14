@@ -49,11 +49,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       Tests use the same methods. No reader writes, and the properties are
       read-only so a stray `:=` does not compile. Nothing enforces the writer
       beyond that: count the Write* callers
-      (rg -i "\.Write(InitialExchange|PrefixMult|ZoneMult|DXMult|DomesticMult)")
+      (rg -i "\.Write(InitialExchange|PrefixMult|ZoneMult|DXMult|DomesticMult|Exchange)")
       -- FCONTEST and the tests are the only legitimate ones. Named Write*,
       not Set*, because TSessionDefaults (what a contest STATES) already has
       a SetInitialExchange (and SetPrefixMult, SetZoneMult, SetDXMult,
-      SetDomesticMult), and "who writes
+      SetDomesticMult, SetExchange), and "who writes
       the session" must be one search.
     * THREADS. The writer runs on the main thread. Every reader measured at
       S9a for all six kinds runs on the main thread too: the call window,
@@ -68,7 +68,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       reader that needs them coherent must run on the main thread.
     * A LEAF. It uses VC alone, so every TRDOS unit can use it without a cycle.
       No virtual, no allocation: a read is a function call and a field read,
-      cheap enough for the per-row repaint ActiveExchange will bring (S9f).
+      cheap enough for the per-row repaint read of Exchange
+      (TREE.LooksLikeAGrid, S9f).
 
   ---------------------------------------------------------------------------
   WHAT IS HERE, AND WHAT IS STILL A GLOBAL
@@ -80,10 +81,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     ZoneMult           S9c   was LOGWIND.ActiveZoneMult
     DXMult             S9d   was VC.ActiveDXMult
     DomesticMult       S9e   was LOGDOM.ActiveDomesticMult
+    Exchange           S9f   was LOGWIND.ActiveExchange
 
-  Still a global until its stage: ActiveExchange (LOGWIND). The kind ENUMS
-  outlive M10: they are the engine's vocabulary until their arms move into
-  the classes at M11 (design 8.2s). *)
+  All six are here; no kind global is left. The kind ENUMS outlive M10: they
+  are the engine's vocabulary until their arms move into the classes at M11
+  (design 8.2s). *)
 unit uContestSession;
 
 {$I tr4w.inc}
@@ -101,6 +103,7 @@ type
       FZoneMult: ZoneMultType;
       FDXMult: DXMultType;
       FDomesticMult: DomesticMultType;
+      FExchange: ExchangeType;
    public
       (* The initial exchange the call window pre-fills from -- the kind
         LOGEDIT.InitialExchangeEntry asks. A fresh session holds
@@ -133,12 +136,22 @@ type
         NoDomesticMults, the zero LOGDOM.ActiveDomesticMult started from. *)
       property DomesticMult: DomesticMultType read FDomesticMult;
 
+      (* The received exchange the session parses -- ProcessExchange's shape,
+        the call window, the log grid's columns, the exporters, the sheet's
+        exchange information and TREE.LooksLikeAGrid (once per log row per
+        repaint). A fresh session holds UnknownExchange, the ordinal zero
+        LOGWIND.ActiveExchange started from -- its `= NoExchangeReceived`
+        initializer was commented out, so NoExchangeReceived it never was
+        (uLogRepository's open-without-a-contest note relies on that zero). *)
+      property Exchange: ExchangeType read FExchange;
+
       (* THE WRITERS -- FCONTEST's set-up path, and tests. See the header. *)
       procedure WriteInitialExchange(aKind: InitialExchangeType);
       procedure WritePrefixMult(aKind: PrefixMultType);
       procedure WriteZoneMult(aKind: ZoneMultType);
       procedure WriteDXMult(aKind: DXMultType);
       procedure WriteDomesticMult(aKind: DomesticMultType);
+      procedure WriteExchange(aKind: ExchangeType);
    end;
 
 (* The one session. Never nil between this unit's initialization and its
@@ -173,6 +186,11 @@ end;
 procedure TContestSession.WriteDomesticMult(aKind: DomesticMultType);
 begin
    FDomesticMult := aKind;
+end;
+
+procedure TContestSession.WriteExchange(aKind: ExchangeType);
+begin
+   FExchange := aKind;
 end;
 
 function ContestSession: TContestSession;

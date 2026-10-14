@@ -165,7 +165,7 @@ If the operator changes `MyGrid` mid-contest, function-key memories don't update
 
 ### Reuse the helper procedures
 
-`fcontest.pas` has helpers like `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`, `SetUpNameAndStateExchange`. They're called from the exchange dispatch (`case ActiveExchange of` around line 1618). If your exchange type matches an existing helper, inheritance is automatic — you may not need to set memories at all.
+`fcontest.pas` has helpers like `SetUpRSTQSONumberExchange`, `SetUpRSTMyStateExchange`, `SetUpRSTMyZoneExchange`, `SetUpNameAndStateExchange`. They're called from the exchange dispatch in `FoundContest` (`case ContestSession.Exchange of` -- the session's resolved exchange kind, `ActiveExchange` until M10 S9f; grep for it rather than trust a line number). If your exchange type matches an existing helper, inheritance is automatic — you may not need to set memories at all.
 
 ---
 

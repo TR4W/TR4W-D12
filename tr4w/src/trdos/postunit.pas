@@ -2361,7 +2361,7 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // and a hunter's state or grid after it; those were two `ceContest = POTA`
   // tests here until POTA gained its class (design Q6).
   Result := Result + ContestIdentity( rec.ceContest ).EmitADIFExchangeFields(
-     CurrentMyStationExchange, rec, ActiveExchange, ExchangeInformation.RST );
+     CurrentMyStationExchange, rec, ContestSession.Exchange, ExchangeInformation.RST );
 
   // ----- CNTY (state QP with FAltName loaded from <state>_cty.dom) -----
   stateCode := GetStateForContest( rec.ceContest );
@@ -3037,7 +3037,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                   routine fills the My-station record and the per-QSO inputs
                   it has decided; the contest arranges them. *)
                 myStationEx := CurrentMyStationExchange;
-                qsoContext.SessionExchange        := ActiveExchange;
+                qsoContext.SessionExchange        := ContestSession.Exchange;
                 qsoContext.RSTSent                := RSTSent;
                 qsoContext.RSTReceived            := RSTReceived;
                 qsoContext.HisQTH                 := csQTHString;
@@ -3686,7 +3686,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         down. *)
       try
          Result := ContestIdentity( Contest ).FormatADIFSentExchange( my,
-            TempRXData, ActiveExchange );
+            TempRXData, ContestSession.Exchange );
       except
          Result := ADIFMyExchangeErrorMarker;
       end;

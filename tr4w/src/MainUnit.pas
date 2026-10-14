@@ -831,7 +831,7 @@ end;
 // the station actually sent.
 function PerQSOExchString(const RXData: ContestExchange): string;
 begin
-  case ActiveExchange of
+  case ContestSession.Exchange of
     QSONumberDomesticQTHExchange,
     QSONumberDomesticOrDXQTHExchange:
        begin
@@ -930,10 +930,10 @@ var
 begin
   LookupCall := Call;
   logger.Info('[ctyLocateCallStripRover] ENTER Call=[%s] ActiveExchange=%d',
-              [string(Call), Ord(ActiveExchange)]);
-  if ((ActiveExchange = RSTDomesticQTHExchange) or
-      (ActiveExchange = RSTQTHExchange) or
-      (ActiveExchange = RSTDomesticOrDXQTHExchange)) then
+              [string(Call), Ord(ContestSession.Exchange)]);
+  if ((ContestSession.Exchange = RSTDomesticQTHExchange) or
+      (ContestSession.Exchange = RSTQTHExchange) or
+      (ContestSession.Exchange = RSTDomesticOrDXQTHExchange)) then
      begin
      SlashPos := Pos('/', string(LookupCall));
      logger.Info('[ctyLocateCallStripRover] QP exchange, SlashPos=%d', [SlashPos]);
@@ -972,9 +972,9 @@ begin
   Result := False;
   RoverCounty := '';
 
-  if not ((ActiveExchange = RSTDomesticQTHExchange) or
-          (ActiveExchange = RSTQTHExchange) or
-          (ActiveExchange = RSTDomesticOrDXQTHExchange)) then
+  if not ((ContestSession.Exchange = RSTDomesticQTHExchange) or
+          (ContestSession.Exchange = RSTQTHExchange) or
+          (ContestSession.Exchange = RSTDomesticOrDXQTHExchange)) then
      begin
      Exit;
      end;
@@ -2058,7 +2058,7 @@ begin
            end;
         end;
      end;
-  if (ActiveExchange = RSTDomesticQTHExchange) or (ActiveExchange =
+  if (ContestSession.Exchange = RSTDomesticQTHExchange) or (ContestSession.Exchange =
     RSTQTHEXCHANGE) then
      begin
      if (IsAlpha(S2)) and (S2 <> '') then
@@ -4051,7 +4051,7 @@ begin
        end;
 
   // POTA: look up park name from exchange as typed and show via QuickDisplay.
-  if (ActiveExchange = RSTAndPOTAPark) and POTAParksLoaded then
+  if (ContestSession.Exchange = RSTAndPOTAPark) and POTAParksLoaded then
      begin
      TempString := ExchangeWindowString;
      while TempString <> '' do
@@ -5985,7 +5985,7 @@ begin
      begin
      tPTTVIACAT(false);
      end;
-  if (ActiveExchange = RSTDomesticQTHExchange) then
+  if (ContestSession.Exchange = RSTDomesticQTHExchange) then
     if (CallWindowString <> '') and (ExchangeWindowString <> '') then
        begin
        ParseFourFields(ExchangeWindowString, s1, s2, s3, s4);
@@ -7118,7 +7118,7 @@ begin
      live scoring too. *)
   tGetQSOSystemTime(RData.tSysTime);
   RData.Callsign := Call;
-  if (ExchangeString = '') and not (ActiveExchange in [RSTNameAndQTHExchange,
+  if (ExchangeString = '') and not (ContestSession.Exchange in [RSTNameAndQTHExchange,
     RSTAndPOTAPark]) then // These two exchanges allow blank exchanges
      begin
      logger.debug('Exiting ParametersOkay early: ExchangeString=<%s>',
@@ -9510,9 +9510,9 @@ var
   i: integer;
   TempColumn: LogColumnsType;
 begin
-  ColumnsArray[logColPrecedence].Enable := ActiveExchange =
+  ColumnsArray[logColPrecedence].Enable := ContestSession.Exchange =
     QSONumberPrecedenceCheckDomesticQTHExchange;
-  ColumnsArray[logColCheck].Enable := ActiveExchange =
+  ColumnsArray[logColCheck].Enable := ContestSession.Exchange =
     QSONumberPrecedenceCheckDomesticQTHExchange;
   ColumnsArray[logColQTC].Enable := Settings.Qtc.Enable;
   ColumnsArray[logColAge].Enable := ExchangeInformation.Age;
@@ -9983,7 +9983,7 @@ begin
   (* WHAT THE OPEN CONTEST KNOWS, handed in as data: the contest that reads the
     record is the one it NAMES, and never reads a global itself. *)
   session.Operator           := CurrentOperator;
-  session.Exchange           := ActiveExchange;
+  session.Exchange           := ContestSession.Exchange;
   session.DomesticMult       := ContestSession.DomesticMult;
   session.DoingDomesticMults := DoingDomesticMults;
 

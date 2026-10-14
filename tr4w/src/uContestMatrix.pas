@@ -584,7 +584,7 @@ begin
      the matrix runs is scored by its class, which never reads
      ActiveQSOPointMethod, and M10 S4 deleted the point method as a concept.
      Dropped in a re-freeze of its own, before anything moves. *)
-   EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ActiveExchange)));
+   EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ContestSession.Exchange)));
    EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ContestSession.InitialExchange)));
    EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ContestSession.DomesticMult)));
    EmitField('active.dxmult', EnumText(TypeInfo(DXMultType), Ord(ContestSession.DXMult)));

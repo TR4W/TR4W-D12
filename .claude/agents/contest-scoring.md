@@ -71,8 +71,9 @@ permanently blocks re-derivation — that is the defect `DeriveCountry` exists t
 fix (a latched derivation once exported `59 15` against zone 5).
 
 **`FoundContest`'s HEAD READS THE CONTEST CLASS, NOT THE ARRAYS (M2,
-2026-10-01).** One resolver, `ApplyContestTraits`, writes the `Active*`
-globals, the by-band/mode flags and the CTY zone list: the operator's
+2026-10-01).** One resolver, `ApplyContestTraits`, writes the session's
+kinds (`ContestSession`, below -- the `Active*` globals until M10 S9), the
+by-band/mode flags and the CTY zone list: the operator's
 statement, else `ContestIdentity(Contest)`. A statement made BEFORE the
 `CONTEST` line now stands (it used to be overwritten); what a contest states
 in its `DescribeSession` (M7a -- every contest that has a class; a classless
@@ -229,11 +230,19 @@ created once in that leaf unit's initialization, never replaced, read-only
 properties, written ONLY by FCONTEST's set-up path (`ApplyContestTraits`,
 then `ApplySessionDefaults`) through `Write*` methods -- not `Set*`, which
 `TSessionDefaults` already uses for what a contest STATES. Main thread only,
-as the globals were. **It holds `InitialExchange`, `PrefixMult`,
-`ZoneMult`, `DXMult` and `DomesticMult`** (were `ActiveInitialExchange`,
+as the globals were. **It holds all six kinds -- `Exchange`,
+`InitialExchange`, `PrefixMult`, `ZoneMult`, `DXMult` and `DomesticMult`**
+(were `LOGWIND.ActiveExchange`, `ActiveInitialExchange`,
 `ActivePrefixMult`, `ActiveZoneMult`, `VC.ActiveDXMult`,
-`LOGDOM.ActiveDomesticMult`; S9a-e); `ActiveExchange` is still a global and
-moves last (plan S9f). **The CTY country list (`ctyCountryMode`) is derived
+`LOGDOM.ActiveDomesticMult`; S9a-f). **No `Active*` kind global is left --
+M10 IS COMPLETE (2026-10-14).** Do not add one back: a new reader asks
+`ContestSession`, a new writer does not exist. `ContestSession.Exchange`'s
+zero is `UnknownExchange` (the global's `= NoExchangeReceived` initializer
+was commented out). `tree.LooksLikeAGrid` reads it once per log row per
+repaint -- one call and a field load, ahead of any string work; keep it
+first. **What M11 inherits:** the six kind ENUMS and their ~80 engine arms
+(shape parsers, sheet, display, exporters), every one reading
+`ContestSession`. **The CTY country list (`ctyCountryMode`) is derived
 from `ContestSession.DXMult` in the CONTEST setting's effect, straight after
 `FoundContest` returns** (plan F5) -- its only live caller, so the order is
 right; a new caller of `FoundContest` must run that derivation too.
@@ -242,11 +251,13 @@ SESSION's value, and 27 contests run with a kind their trait does not state
 (KCJ: trait `NoInitialExchange`, runs `ZoneInitialExchange`; YBDX: trait
 `NoPrefixMults`, runs `IndonesianDistricts`; ARRL 10: trait
 `ARRLDXCCWithNoUSACanadaKH6OrKL7`, runs `ARRLDXCCWithNoARRLSections`; OK/OM
-DX: trait `NoDomesticMults`, a W station runs `DomesticFile`). **`ZoneSentForThisContest`
+DX: trait `NoDomesticMults`, a W station runs `DomesticFile`; ARRL DX CW:
+trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`). **`ZoneSentForThisContest`
 asks the session too (S9c, plan F4)** -- the CQ-or-ITU zone sent and the
 ADIF CQZ/ITUZ tag now have one source. **`trdos/logddx.pas` is compiled by
 NOTHING** (it uses a `Country9` that never existed; plan F14): an edit
-there passes every build, so do not count a repoint in it as verified. `logdupe.SetUpExchangeInformation`'s parameter is
+there passes every build, so do not count a repoint in it as verified -- it
+still names `ActiveExchange` 26 times, untouched by NY4I's decision (Q91). `logdupe.SetUpExchangeInformation`'s parameter is
 `aExchangeKind` now -- it was named `ActiveExchange` and shadowed the global.
 **Moving a kind? Add it to `tools/contest-rules-inventory/scan.py`'s
 `SESSION` map in the same commit**, or its shape-4 rows vanish from the

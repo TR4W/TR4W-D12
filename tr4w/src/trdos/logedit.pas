@@ -2428,7 +2428,7 @@ begin
                      end;
               end;
 
-           if ActiveExchange = RSTZoneOrDomesticQTH then
+           if ContestSession.Exchange = RSTZoneOrDomesticQTH then
              if DomesticCountryCall(Call) then
                 begin
                 Result := '';
@@ -2675,17 +2675,17 @@ begin
      GetRidOfPrecedingSpaces(TempString); //n4af 4.31.7
      GetRidOfPostcedingSpaces(TempString);
 
-     if (ActiveExchange = QSONumberDomesticOrDXQTHExchange) or
-       (ActiveExchange = RSTAndFOCNumberExchange) or
-       (ActiveExchange = QSONumberDomesticQTHExchange) or
-       (ActiveExchange = QSONumberAndGridSquare) or
-       (ActiveExchange = RSTAndQSONumberOrDomesticQTHExchange) or
-       (ActiveExchange = RSTDomesticOrDXQTHExchange) or
-       (ActiveExchange = RSTDomesticQTHExchange) or
-       (ActiveExchange = RSTDomesticQTHOrQSONumberExchange) or
-       (ActiveExchange = RSTQSONumberAndDomesticQTHExchange) or
-       (ActiveExchange = QSONumberAndPossibleDomesticQTHExchange) or {KK1L: 6.73}
-     (ActiveExchange = RSTQSONumberAndPossibleDomesticQTHExchange) then
+     if (ContestSession.Exchange = QSONumberDomesticOrDXQTHExchange) or
+       (ContestSession.Exchange = RSTAndFOCNumberExchange) or
+       (ContestSession.Exchange = QSONumberDomesticQTHExchange) or
+       (ContestSession.Exchange = QSONumberAndGridSquare) or
+       (ContestSession.Exchange = RSTAndQSONumberOrDomesticQTHExchange) or
+       (ContestSession.Exchange = RSTDomesticOrDXQTHExchange) or
+       (ContestSession.Exchange = RSTDomesticQTHExchange) or
+       (ContestSession.Exchange = RSTDomesticQTHOrQSONumberExchange) or
+       (ContestSession.Exchange = RSTQSONumberAndDomesticQTHExchange) or
+       (ContestSession.Exchange = QSONumberAndPossibleDomesticQTHExchange) or {KK1L: 6.73}
+     (ContestSession.Exchange = RSTQSONumberAndPossibleDomesticQTHExchange) then
         begin
         for CharPosition := 1 to length(TempString) do
           if Copy(TempString, CharPosition, 1) = ' ' then
@@ -2695,12 +2695,12 @@ begin
         end;
 
      {ua4wli 3.01}
-     if ActiveExchange = RSTZoneOrDomesticQTH then
+     if ContestSession.Exchange = RSTZoneOrDomesticQTH then
        if DomesticCountryCall(Call) then
           begin
           TempString := RemoveLastString(TempString);
           end;
-     if ActiveExchange = QSONumberPrecedenceCheckDomesticQTHEXchange then
+     if ContestSession.Exchange = QSONumberPrecedenceCheckDomesticQTHEXchange then
        // n4af 4.43.2
        if length(GetFirstString(TempString)) = 1 then // 4.43.2
          if StringIsAllNumbers(GetFirstString(TempString)) then // 4.43.2
@@ -2794,7 +2794,7 @@ begin
             Exit;
             end;
          end
-      else if ActiveExchange = RSTPrefectureExchange then
+      else if ContestSession.Exchange = RSTPrefectureExchange then
          begin
          TempExchange.QTHString := 'p' + RemoveFirstString(TempString);
          logger.debug('Calling FoundDomesticQTH from InitialExchangeEntry');

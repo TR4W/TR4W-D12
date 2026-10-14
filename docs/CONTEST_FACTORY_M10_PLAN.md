@@ -1,5 +1,62 @@
 # M10 -- the contest-factory endpoint: a staged, measured plan
 
+## M10 COMPLETE (2026-10-14, S9f on top of `144cfe44`)
+
+Every stage S0-S9f is done; each has its DONE note below, and the body of
+this plan is the record of how, not a to-do list.
+
+**Deleted:**
+
+* **The legacy scoring `case`** (S3). A classed contest scores itself through
+  `ScoreQSO`; DUMMYCONTEST, the one classless `ContestType`, gets the four
+  `QSO POINTS ...` overrides, then 0.
+* **The point method as a concept** (S4) -- `QSOPointMethodType`, the trait
+  and its 167 overrides, `ActiveQSOPointMethod`.
+* **The seven shared-set settings** (S2) -- now names in
+  `uCFG.RETIRED_COMMANDS` -- with their six spelling tables.
+* **The tables** (S8) -- `ContestsArray`, `ContestsBooleanArray`,
+  `QSOParties`, `TContestInfo` and the flag constants. The base reads no table
+  (S6); every class states what it used to inherit (S5); the county-line
+  import asks the class (S7).
+* **All six `Active*` KIND globals** (S9a-f) -- `ActiveInitialExchange`,
+  `ActivePrefixMult`, `ActiveZoneMult`, `ActiveDXMult`,
+  `ActiveDomesticMult`, `ActiveExchange`. Each is a read-only property of
+  `uContestSession.ContestSession`, written only by FCONTEST's set-up path
+  (`ApplyContestTraits`, then `ApplySessionDefaults`) through `Write*`, and
+  read on the main thread.
+
+**What remains, on purpose:**
+
+* `ContestTypeSA` (the enum's spellings).
+* `ActiveBand` / `ActiveMode`, which are operating state, not contest kinds
+  (1.1).
+* DUMMYCONTEST, classless.
+* The six kind TRAITS on `TContestBase` (`ExchangeKind`,
+  `InitialExchangeKind`, the four multiplier types), read only by
+  `ApplyContestTraits` -- the session's starting value before
+  `DescribeSession` speaks.
+* Open questions Q90 (the rover split vs the county line) and S6's BC
+  STATE question.
+
+**Still naming the deleted globals:** `trdos/logddx.pas`, compiled by nothing
+(F14, Q91 -- NY4I's decision, left untouched): 26 `ActiveExchange` code
+reads, plus `ActiveDXMult` once and `ActiveDomesticMult` twice by text
+(`rg -i -w`; its two zone reads were repointed as text at S9c). No build sees
+any of it.
+
+**What M11 inherits:** the six kind ENUMS -- `ExchangeType`,
+`InitialExchangeType`, `DomesticMultType`, `DXMultType`, `ZoneMultType`,
+`PrefixMultType` -- and the engine arms keyed on them, about 80 (the shape
+parsers, the sheet, the display, the exporters). Every one of them now reads
+`ContestSession`, so "who runs on a kind" is one search
+(`rg -i "ContestSession\.(Exchange|InitialExchange|PrefixMult|ZoneMult|DXMult|DomesticMult)\b"`),
+and the inventory's shape-4 rows are the work list
+(`tools/contest-rules-inventory`, 110 rows, 74 of 186 contests at S9f). M11
+moves each arm into the class(es) that use it and then deletes the enums with
+the traits (design 8.2s).
+
+---
+
 Repo `c:\tr4w-d12`, branch `contestFactory`, measured at HEAD `de62e724`
 (2026-10-14). READ-ONLY: nothing was built, run or edited. Every number has
 the command that produced it. The two helper scripts are in
@@ -1167,6 +1224,81 @@ build sees). As planned, with these corrections and decisions:
 * **Matrix prediction: identical.** Every moved read returns the value the
   global held, F5 reads at the same point, and `DomQTHInit` never ran.
 
+**S9f DONE 2026-10-14** (on top of `144cfe44`) -- **the last stage; M10 is
+complete** (summary at the top). Re-measured first
+(`count-ids.ps1 -Lines -Ids @('ActiveExchange','aExchangeKind')`): 80, of
+which **26 are `logddx.pas`** (F14, Q91 -- not edited, excluded below) and
+**54 elsewhere**; `aExchangeKind` 3, all in `logdupe.SetUpExchangeInformation`
+(declaration, implementation, the one `case`). So after F9 no parameter, local
+or field named `ActiveExchange` was left: every one of the 54 was the global.
+`rg -i -w ActiveExchange` over `tr4w/` found the rest in comments only (two
+commented-out D7 blocks in `postunit` and `logdupe`, history in
+`uContestBase`, `uLogStore`, `uLogRepository` and others) -- left as
+history. As planned, with these decisions:
+
+* **Moved: `ActiveExchange`, 54 -> 0** -- the declaration (`logwind`, now a
+  MOVED comment), two writers (`fcontest` ApplySessionDefaults and
+  ApplyContestTraits, order unchanged, now `WriteExchange`) and 51 reads
+  (`MainUnit` 15, `logedit` 15, `logdupe` 6, `logstuff` 4, `postunit` 3,
+  `fcontest` 2 -- `SetUpRSTMyZoneExchange`'s zone-and-state test and
+  FoundContest's `case` choosing the CQ-exchange set-up -- `uProgramMain` 2, `tree` 1, `uContestMatrix` 1, `uScoreTotals`
+  1). The repoint was line-scoped and word-bounded (`\bActiveExchange\b`,
+  case-insensitive, only on the measured code lines), 54 substitutions,
+  which equals the count. `WriteExchange` has exactly two callers outside the
+  unit and the tests, both in `fcontest.pas`.
+* **`TContestSession.Exchange`'s zero is `UnknownExchange`, not
+  `NoExchangeReceived`.** The global's `= NoExchangeReceived` initializer
+  was commented out, so it started at ordinal 0, which is `UnknownExchange`
+  (`VC.pas`); a fresh session holds the same. `uLogRepository`'s note about
+  a log reopening with `ActiveExchange = UnknownExchange` describes exactly
+  that zero.
+* **`tree.LooksLikeAGrid` -- the per-row, per-repaint read -- costs what the
+  global did, near enough.** `ContestSession` is a plain non-virtual function
+  returning a unit variable; `Exchange` is a property reading a field
+  directly (no getter). So the read is one call and two loads: no
+  allocation, no lock, no virtual dispatch, no string work -- and it is
+  still the FIRST thing the routine does, ahead of the `UpperCase` it exists
+  to avoid. `LooksLikeAGrid` is itself called once per row and has no loop
+  inside it, so there was no "outside the loop" to hoist to, and the paint
+  was not touched. `tree` gained `uContestSession` in its implementation
+  `uses` (a leaf over `VC`: no cycle).
+* **Threading:** S9a checked every reader of all six kinds; the
+  `ActiveExchange` readers are among them (the call window, `ProcessExchange`,
+  the grid's columns, the exporters including headless `/EXPORT`,
+  `uScoreTotals` behind `TotalScore`'s `OnMainThread` gate). Main thread.
+* **Tests:** `uTestContestSession`.
+  `Test_TheRunningSessionIsOneObjectWithOneWriter` now covers all six kinds:
+  a fresh session holds each kind's zero (`UnknownExchange` for the
+  exchange); every member of each kind is written and read back; and before
+  each kind's sweep ALL six are pinned at a non-zero value
+  (`RSTPowerExchange` for the exchange), so a write to one is checked to
+  leave the other FIVE. `Test_ARRLDXRunsAnExchangeItsTraitDoesNotState`
+  (plan 1.4 lists ARRL DX): trait `RSTPowerExchange`; a DL station states
+  `RSTDomesticQTHExchange` -- the frozen matrix's `DL1AAA` variant says so --
+  and the session runs it, unequal to the trait; a W station runs the
+  trait's value. **Unit run: 80182 passed, 0 failed** (+497, exactly: each
+  of the 64 earlier members gains one "others pinned" check, the 61
+  `ExchangeType` members add 7 checks each, plus the fresh-zero check and
+  the new test's 5).
+* **`scan.py`:** `EXCHANGE` added to `SESSION`; the `ACTIVEEXCHANGE` entry
+  KEPT (S9c's correction). Regenerated as a check and restored: **110 rows,
+  6/0/13/91, 74 of 186; 123 shape-4 sites, 229 records** -- the only line
+  that differed was the header's commit line.
+* **Not done:** the full build, `Run-Lints`, the matrix, corpus, factory check
+  and round-trip (the gated run). The incremental app compile died inside FPC
+  (an unhandled exception, the known incremental artifact); `uProgramMain`'s
+  and `uContestMatrix`'s whole cones were compiled clean with `-B` and the App
+  search paths into a scratch directory, and every touched unit is in them
+  (`MainUnit`, `fcontest`, `logdupe`, `logedit`, `logstuff`, `logwind`,
+  `postunit`, `tree`, `uContestSession`, `uScoreTotals`). The unit-test build
+  is clean. `tr4wserver` links `VC` only of the engine, and `VC` was not
+  touched, so the server was not rebuilt. `Lint-ContestNameTests` (6 in 3, no
+  rise), `Lint-UnitFileNames`, `Lint-BraceComments`, `Lint-LineEndings` pass
+  on their own.
+* **Matrix prediction: identical.** Every moved read returns the value the
+  global held, and the matrix's `active.exchange` line reads the session with
+  unchanged text.
+
 **Recommended order for S9b-f, measured after S9a** (code-only occurrences,
 declaration and writers included):
 
@@ -1176,7 +1308,7 @@ declaration and writers included):
 | S9c | `ActiveZoneMult` | 19 | **DONE** (above); F4 decided -- the session |
 | S9d | `ActiveDXMult` | 20 | **DONE** (above); F5 order checked -- right. Was: declared `VC` (move the declaration, not just the reads); + F5 country mode (`uSettingsEffects` CONTEST arm); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
 | S9e | `ActiveDomesticMult` | 39 | **DONE** (above); F8 closed. Was: + delete `logdom.DomQTHInit` (F8); `uTestOffBandCredit` writes it; 1 read in uncompiled `logddx` (F14) |
-| S9f | `ActiveExchange` | 80 | `tree.pas` per-row repaint read; the F9 parameter is already renamed; **26** reads in uncompiled `logddx` (F14) |
+| S9f | `ActiveExchange` | 80 | **DONE** (above); 54 -> 0 outside `logddx`. Was: `tree.pas` per-row repaint read; the F9 parameter is already renamed; **26** reads in uncompiled `logddx` (F14) |
 
 Each stage adds its kind to `scan.py`'s `SESSION` map in the same commit.
 

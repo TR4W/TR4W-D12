@@ -1946,7 +1946,7 @@ begin
      end;
 
 
-  if (ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange) then {KK1L: 6.70 for FISTS funny exchange}
+  if (ContestSession.Exchange = RSTQTHNameAndFistsNumberOrPowerExchange) then {KK1L: 6.70 for FISTS funny exchange}
      begin
 
      RXData.QTHString := RemoveFirstString(ExchangeString);
@@ -2059,13 +2059,13 @@ begin
   with RData do
      begin
 
-     if ActiveExchange = RSTALLJAPrefectureAndPrecedenceExchange then
+     if ContestSession.Exchange = RSTALLJAPrefectureAndPrecedenceExchange then
         begin
         GetInitialExchangeStringFromContestExchange := Precedence + ' ' + QTHString;
         Exit;
         end;
 
-     if ActiveExchange = RSTDomesticQTHOrQSONumberExchange then
+     if ContestSession.Exchange = RSTDomesticQTHOrQSONumberExchange then
         begin
         QString := QTHString;
 
@@ -2082,13 +2082,13 @@ begin
         Exit;
         end;
 
-     if ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
+     if ContestSession.Exchange = RSTQTHNameAndFistsNumberOrPowerExchange then
         begin
         GetInitialExchangeStringFromContestExchange := QTHString + ' ' + Name + ' ' + Power;
         Exit;
         end;
 
-     if ActiveExchange = RSTZoneOrSocietyExchange then
+     if ContestSession.Exchange = RSTZoneOrSocietyExchange then
         begin
         if QTHString <> '' then
            begin
@@ -2097,7 +2097,7 @@ begin
            end;
         end;
 
-      if ActiveExchange = RSTZoneOrDomesticQTH then           // 4.95.6
+      if ContestSession.Exchange = RSTZoneOrDomesticQTH then           // 4.95.6
          begin
          if QTHString <> '' then
             begin

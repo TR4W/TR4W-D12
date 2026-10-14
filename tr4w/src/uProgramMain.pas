@@ -2303,7 +2303,7 @@ begin
     a row. *)
   InstallSettingsEffects;
 
-  SetUpExchangeInformation(ActiveExchange, ExchangeInformation);
+  SetUpExchangeInformation(ContestSession.Exchange, ExchangeInformation);
   SetColumnsWidth;
   CreateMainWindow;
 
@@ -2583,7 +2583,7 @@ begin
   readinessGaps := TStringList.Create;
   try
      CollectContestSettingsGaps(Contest <> DUMMYCONTEST,
-                                ActiveExchange,
+                                ContestSession.Exchange,
                                 ContestSession.DomesticMult,
                                 Settings.My.Call,
                                 Settings.My.Country,

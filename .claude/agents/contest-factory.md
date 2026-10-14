@@ -126,6 +126,16 @@ the target shape, the M-step migration order and the open questions.
   / `GetQSOPointMethod` (and every class's override) and `ActiveQSOPointMethod`
   are deleted. A class scores in `CalculateQSOPoints` and states nothing
   else about points. Do not reintroduce a point-method trait.
+- **M10 IS COMPLETE (2026-10-14, plan S9f; "M10 COMPLETE" at the top of
+  `docs/CONTEST_FACTORY_M10_PLAN.md`).** The six `Active*` KIND globals are
+  gone: the session's kinds are read-only properties of
+  `uContestSession.ContestSession` (`Exchange`, `InitialExchange`,
+  `PrefixMult`, `ZoneMult`, `DXMult`, `DomesticMult`), written only by
+  FCONTEST's set-up through `Write*`. They are SESSION facts -- 27 contests
+  run a kind their trait does not state -- so never answer one from
+  `ContestIdentity`. **M11 is next:** the six kind enums and their ~80 engine
+  arms, all reading `ContestSession`, move into the classes, and the kind
+  traits and enums are then deleted.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO
@@ -228,13 +238,14 @@ the target shape, the M-step migration order and the open questions.
   getter with the parent class's (a negative control proves it can fail)
   and holds the enum-spelled display names as a ratchet (design Q53).
 - **Set-up reads the contest** (M2, 2026-10-01). `FCONTEST.ApplyContestTraits`
-  is the ONE writer of the six `Active*` globals (seven until M10 S4), the QSO/mult by band/mode
+  is the ONE writer (with `ApplySessionDefaults` after it) of the session's
+  six kinds -- `ContestSession`, the `Active*` globals until M10 S9 -- the QSO/mult by band/mode
   flags, VHF, count-domestic-countries, the CTY zone list and (in the head)
   the domestic file: **the operator's statement (`CommandIsStated`), else
   `ContestIdentity(Contest)`** -- the tables it once could read are deleted
   (M10 S8). ~~The seven tokens are replayed through
   `uSettingsEffects.ReplayContestStatements`~~ -- gone at M10 S2 with the
-  seven settings; the six `Active*` kinds are assigned from the contest
+  seven settings; the six kinds are written from the contest
   unconditionally. So **a trait override changes set-up now** -- the matrix sees it. What a
   contest states in `DescribeSession` runs after and wins (M7a, below); a
   classless contest's `FoundContest` arm still does. New traits:
@@ -278,7 +289,7 @@ the target shape, the M-step migration order and the open questions.
   CurrentStation, aSession)` after the head (traits, the operator's
   statements, the in-state decision) and `FCONTEST.ApplySessionDefaults` --
   the ONE writer -- applies it, where the arms used to run, before the closing
-  `case ActiveExchange`. **`TSessionDefaults` is a class** because every value
+  `case ContestSession.Exchange` (was `case ActiveExchange`). **`TSessionDefaults` is a class** because every value
   has a third state, NOT STATED: the applier writes only what was stated, and
   a stated value overwrites unconditionally (today's precedence: it beats a
   pre-`CONTEST` statement, loses to a later line). The class writes no global

@@ -42,13 +42,15 @@ SESSION = {
    "ZONEMULT": "ZnM",
    "DXMULT": "XM",
    "DOMESTICMULT": "DM",
+   "EXCHANGE": "AE",
 }
 
 # A PARAMETER THAT CARRIES A SESSION KIND, keyed (file, ROUTINE, NAME).
 # logdupe.SetUpExchangeInformation's parameter was named ActiveExchange and
 # shadowed the global, and this scanner read its `case` AS the global -- right
 # only because the one caller (uProgramMain) passes ActiveExchange. Renamed
-# at M10 S9a (plan F9); listed here so the rename does not drop its arms.
+# at M10 S9a (plan F9); listed here so the rename does not drop its arms. The
+# caller passes ContestSession.Exchange since S9f.
 KIND_PARAMETERS = {
    ("tr4w/src/trdos/logdupe.pas", "SETUPEXCHANGEINFORMATION", "AEXCHANGEKIND"): "AE",
 }

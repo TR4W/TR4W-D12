@@ -75,6 +75,7 @@ type
       procedure Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
       procedure Test_ARRL10RunsADXMultiplierItsTraitDoesNotState;
       procedure Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
+      procedure Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
    end;
 
 implementation
@@ -82,7 +83,7 @@ implementation
 uses
    SysUtils,
    VC, uContestBase, uContestRegistry,
-   (* ContestSession -- the kinds set-up resolved (M10 S9a-e). *)
+   (* ContestSession -- the kinds set-up resolved (M10 S9a-f). *)
    uContestSession,
    (* Make and NoStation -- lifted there at M8. *)
    uTestContestObjects;
@@ -902,10 +903,12 @@ end;
   A reader may hold ContestSession across a set-up: the object must be the
   same one afterwards, or that reference dangles. A fresh object holds each
   kind's zero -- NoInitialExchange, NoPrefixMults, NoZoneMults, NoDXMults,
-  NoDomesticMults -- the values the globals it replaces started from. Every
-  member of every kind is written and read back through the writer FCONTEST
-  uses, and writing one kind leaves the other four as they were pinned (each
-  is its own field, M10 S9b-S9e). The program's own values are restored,
+  NoDomesticMults, UnknownExchange -- the values the globals it replaces
+  started from (ActiveExchange's `= NoExchangeReceived` initializer was
+  commented out, so its zero was UnknownExchange). Every member of every kind
+  is written and read back through the writer FCONTEST uses, and writing one
+  kind leaves the other five as they were pinned (each is its own field, M10
+  S9b-S9f). The program's own values are restored,
   because this is the process-wide session and other suites run after this
   one. *)
 procedure TContestSessionTests.Test_TheRunningSessionIsOneObjectWithOneWriter;
@@ -915,6 +918,7 @@ const
    KIND_ZONE = 2;
    KIND_DX = 3;
    KIND_DOMESTIC = 4;
+   KIND_EXCHANGE = 5;
 var
    before: TContestSession;
    fresh: TContestSession;
@@ -923,11 +927,13 @@ var
    savedZone: ZoneMultType;
    savedDX: DXMultType;
    savedDomestic: DomesticMultType;
+   savedExchange: ExchangeType;
    initialKind: InitialExchangeType;
    prefixKind: PrefixMultType;
    zoneKind: ZoneMultType;
    dxKind: DXMultType;
    domesticKind: DomesticMultType;
+   exchangeKind: ExchangeType;
 
    (* Every kind at a value that is not its zero, so a write that leaked
      into another field would show. *)
@@ -938,6 +944,7 @@ var
       ContestSession.WriteZoneMult(ITUZones);
       ContestSession.WriteDXMult(CQEuropeanCountries);
       ContestSession.WriteDomesticMult(DOKCodes);
+      ContestSession.WriteExchange(RSTPowerExchange);
    end;
 
    (* Each kind but the one just written is still where PinAll put it. *)
@@ -968,6 +975,11 @@ var
          CheckEquals(Ord(DOKCodes), Ord(ContestSession.DomesticMult),
                      aWhat + ' leaves the domestic kind');
          end;
+      if aWritten <> KIND_EXCHANGE then
+         begin
+         CheckEquals(Ord(RSTPowerExchange), Ord(ContestSession.Exchange),
+                     aWhat + ' leaves the exchange kind');
+         end;
       CheckTrue(ContestSession = before,
                 aWhat + ' never replaces the object');
    end;
@@ -989,6 +1001,8 @@ begin
                   'a fresh session starts from NoDXMults');
       CheckEquals(Ord(NoDomesticMults), Ord(fresh.DomesticMult),
                   'a fresh session starts from NoDomesticMults');
+      CheckEquals(Ord(UnknownExchange), Ord(fresh.Exchange),
+                  'a fresh session starts from UnknownExchange');
    finally
       fresh.Free;
       end;
@@ -998,6 +1012,7 @@ begin
    savedZone := ContestSession.ZoneMult;
    savedDX := ContestSession.DXMult;
    savedDomestic := ContestSession.DomesticMult;
+   savedExchange := ContestSession.Exchange;
    try
       PinAll;
       for initialKind := Low(InitialExchangeType) to High(InitialExchangeType) do
@@ -1053,12 +1068,24 @@ begin
          CheckOthersPinned(KIND_DOMESTIC,
                            'domestic kind ' + IntToStr(Ord(domesticKind)));
          end;
+
+      PinAll;
+      for exchangeKind := Low(ExchangeType) to High(ExchangeType) do
+         begin
+         ContestSession.WriteExchange(exchangeKind);
+         CheckEquals(Ord(exchangeKind), Ord(ContestSession.Exchange),
+                     'the reader sees what the writer wrote, exchange kind '
+                     + IntToStr(Ord(exchangeKind)));
+         CheckOthersPinned(KIND_EXCHANGE,
+                           'exchange kind ' + IntToStr(Ord(exchangeKind)));
+         end;
    finally
       ContestSession.WriteInitialExchange(savedInitial);
       ContestSession.WritePrefixMult(savedPrefix);
       ContestSession.WriteZoneMult(savedZone);
       ContestSession.WriteDXMult(savedDX);
       ContestSession.WriteDomesticMult(savedDomestic);
+      ContestSession.WriteExchange(savedExchange);
       end;
 end;
 
@@ -1322,6 +1349,67 @@ begin
       end;
 end;
 
+(* THE EXCHANGE KIND IS THE SESSION'S (M10 S9f).
+
+  ARRL DX CW's class states the trait RSTPowerExchange -- what a W/VE station
+  receives. Its DescribeSession states RSTDomesticQTHExchange for a station
+  outside W/VE, which receives a state or province; the frozen matrix's
+  active.exchange line says RSTDomesticQTHExchange for the DL1AAA variant and
+  RSTPowerExchange for K0AAA and VE3AAA. A reader that asked
+  ContestIdentity(Contest).ExchangeKind would parse a DX station's received
+  exchange as a power. A W station states the trait's own value. *)
+procedure TContestSessionTests.Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
+var
+   dl: TStationContext;
+   stated: TSessionDefaults;
+   trait: ExchangeType;
+   saved: ExchangeType;
+begin
+   BeginTest('Test_ARRLDXRunsAnExchangeItsTraitDoesNotState');
+   trait := ContestIdentity(ARRLDXCW).ExchangeKind;
+   CheckEquals(Ord(RSTPowerExchange), Ord(trait), 'ARRLDXCW: the trait');
+
+   dl := KansasStation;
+   dl.MyCall := 'DL1AAA';
+   dl.MyCountry := 'DL';
+   dl.MyContinent := Europe;
+
+   saved := ContestSession.Exchange;
+   try
+      stated := Describe(ARRLDXCW, dl);
+      try
+         CheckTrue(stated.IsStated(svExchange),
+                   'ARRLDXCW states an exchange for a DL station');
+         ContestSession.WriteExchange(trait);
+         if stated.IsStated(svExchange) then
+            begin
+            ContestSession.WriteExchange(stated.Exchange);
+            end;
+         CheckEquals(Ord(RSTDomesticQTHExchange), Ord(ContestSession.Exchange),
+                     'ARRLDXCW DL: the session runs what the contest stated');
+         CheckTrue(ContestSession.Exchange <> ContestIdentity(ARRLDXCW).ExchangeKind,
+                   'ARRLDXCW DL: the session differs from the identity''s trait');
+      finally
+         stated.Free;
+         end;
+
+      stated := Describe(ARRLDXCW, KansasStation);
+      try
+         ContestSession.WriteExchange(trait);
+         if stated.IsStated(svExchange) then
+            begin
+            ContestSession.WriteExchange(stated.Exchange);
+            end;
+         CheckEquals(Ord(trait), Ord(ContestSession.Exchange),
+                     'ARRLDXCW W: the session runs the trait''s value');
+      finally
+         stated.Free;
+         end;
+   finally
+      ContestSession.WriteExchange(saved);
+      end;
+end;
+
 procedure TContestSessionTests.RunAllTests;
 begin
    Test_TheBaseStatesNothing;
@@ -1345,6 +1433,7 @@ begin
    Test_JIDXRunsAZoneMultiplierItsTraitDoesNotState;
    Test_ARRL10RunsADXMultiplierItsTraitDoesNotState;
    Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
+   Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
 end;
 
 end.
