@@ -513,9 +513,10 @@ begin
       t.GridSquare := 'FN31';
       t.SRX_String := '59 MON12';
 
-      (* A grid exchange, by the session's multiplier kind or by its exchange. *)
+      (* A grid exchange, by the open contest's grid-square answer or by its
+         exchange. *)
       s := NeutralADIFImportSession;
-      s.DomesticMult := GridSquares;
+      s.CountsGridSquares := True;
       x := NewExch(RSGB18);
       x.RSTReceived := 59;
       base.ApplyADIFImport(t, s, x);

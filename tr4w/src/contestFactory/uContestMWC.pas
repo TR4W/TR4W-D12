@@ -87,6 +87,9 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -198,6 +201,15 @@ procedure TContestMWC.DescribeSession(const aStation: TStationContext;
 begin
    aSession.Band := Band80;
    aSession.AddDomesticCountry('MWC');
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestMWC.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 initialization

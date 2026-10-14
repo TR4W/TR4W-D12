@@ -317,7 +317,7 @@ begin
    try
       (* aContestActive False is DUMMYCONTEST: nothing is set up, so there is
         nothing to be ready for. Everything else here is missing on purpose. *)
-      CollectContestSettingsGaps(False, RSTDomesticQTHExchange, DomesticFile,
+      CollectContestSettingsGaps(False, RSTDomesticQTHExchange, True,
                                  '', '', '', '', '', '', gaps);
       CheckEquals(0, gaps.Count, 'no contest, nothing reported');
    finally
@@ -334,7 +334,7 @@ begin
    try
       (* NY4I's session: ARRL DX SSB on the DX arm -- RSTDomesticQTHExchange
         with the S48P14DC file -- and an empty MY COUNTRY. *)
-      CollectContestSettingsGaps(True, RSTDomesticQTHExchange, DomesticFile,
+      CollectContestSettingsGaps(True, RSTDomesticQTHExchange, True,
                                  'NY4I', '', 'FL', '5', 'EL88',
                                  's48p14dc.dom', gaps);
       CheckTrue(gaps.Count > 0, 'an empty MY COUNTRY is reported');
@@ -354,7 +354,7 @@ begin
    try
       (* THE SAME CONTEST, CONFIGURED. It must not nag: this is the state
         every correctly set up station is in. *)
-      CollectContestSettingsGaps(True, RSTPowerExchange, NoDomesticMults,
+      CollectContestSettingsGaps(True, RSTPowerExchange, False,
                                  'NY4I', 'K', 'FL', '5', 'EL88', '', gaps);
       CheckEquals(0, gaps.Count, 'nothing to report: ' + gaps.Text);
    finally
@@ -371,7 +371,7 @@ begin
    try
       (* A serial-number contest with no state, no zone and no grid. The
         rules are derived from the EXCHANGE, so none of them fires. *)
-      CollectContestSettingsGaps(True, RSTQSONUMBEREXCHANGE, NoDomesticMults,
+      CollectContestSettingsGaps(True, RSTQSONUMBEREXCHANGE, False,
                                  'NY4I', 'K', '', '', '', '', gaps);
       CheckEquals(0, gaps.Count,
                   'a serial-number contest asks for none of it: ' + gaps.Text);
@@ -387,7 +387,7 @@ begin
    BeginTest('Test_Readiness_DomesticFileContestWithNoFile');
    gaps := TStringList.Create;
    try
-      CollectContestSettingsGaps(True, RSTQSONUMBEREXCHANGE, DomesticFile,
+      CollectContestSettingsGaps(True, RSTQSONUMBEREXCHANGE, True,
                                  'NY4I', 'K', 'FL', '5', 'EL88', '', gaps);
       CheckEquals(1, gaps.Count, 'exactly the domestic-file gap');
       CheckTrue(Pos('.DOM', gaps.Text) > 0, 'and it says which file');
@@ -403,13 +403,13 @@ begin
    BeginTest('Test_Readiness_ZoneAndGrid');
    gaps := TStringList.Create;
    try
-      CollectContestSettingsGaps(True, RSTZoneExchange, NoDomesticMults,
+      CollectContestSettingsGaps(True, RSTZoneExchange, False,
                                  'NY4I', 'K', '', '', '', '', gaps);
       CheckEquals(1, gaps.Count, 'a zone contest with no zone');
       CheckTrue(Pos('MY ZONE', gaps.Text) > 0, 'names MY ZONE');
 
       gaps.Clear;
-      CollectContestSettingsGaps(True, GridExchange, NoDomesticMults,
+      CollectContestSettingsGaps(True, GridExchange, False,
                                  'NY4I', 'K', '', '', '', '', gaps);
       CheckEquals(1, gaps.Count, 'a grid contest with no grid');
       CheckTrue(Pos('MY GRID', gaps.Text) > 0, 'names MY GRID');

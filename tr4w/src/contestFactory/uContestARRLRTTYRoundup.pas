@@ -106,6 +106,9 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -245,6 +248,15 @@ end;
 function TContestARRLRTTYRoundup.CountryMode: CountryModeType;
 begin
    Result := ARRLCountryMode;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestARRLRTTYRoundup.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 initialization

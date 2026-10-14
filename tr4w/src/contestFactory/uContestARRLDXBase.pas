@@ -118,6 +118,9 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -297,6 +300,16 @@ begin
       begin
       Result := CQCountryMode;
       end;
+end;
+
+
+(* AN ENTRANT OUTSIDE THE USA AND CANADA LOOKS THE STATE OR PROVINCE UP IN
+   S48P14DC -- M11 S6 part 1b, 2026-10-14. The station test
+   DescribeSession states DomesticFile under: the negation of the one
+   CountsDXMultiplier asks. See TContestBase.UsesDomesticFile. *)
+function TContestARRLDXBase.UsesDomesticFile: boolean;
+begin
+   Result := not CountsDXMultiplier;
 end;
 
 end.

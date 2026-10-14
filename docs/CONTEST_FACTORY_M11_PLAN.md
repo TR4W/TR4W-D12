@@ -8,8 +8,9 @@ wait (section 4 S2); S3 is DONE -- part 1 (the move) on `42a999c1`, part 2
 move) on `3c8ce116`, part 2 (the deletion) on `6b874f1a`, both 2026-10-14;
 S5 is DONE -- part 1 (the move) on `f0c54f4c`, part 2 (the deletion)
 on `a8186905`, both 2026-10-14; S6 part 1a (the move, every shape but the
-domestic file) is DONE on `45ca8855`, 2026-10-14, uncommitted at its
-hand-back; S1, S6 part 1b and part 2, and S7 on are not built.** See section 4 S0 for
+domestic file) is DONE on `ef8241fa` and part 1b (the domestic file) on
+`25d2bf25`, uncommitted at its hand-back, both 2026-10-14; S1, S6 part 2,
+and S7 on are not built.** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -1646,6 +1647,72 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
     -> **44** (the ALRS cup, the DARC 10 m, the RSGB IOTA, WAG leave). The
     `judgements.ROUTINES` rows for GetDomQTH, DomStringParse and GetDXQTH,
     which no site matches now, are comments saying where the rules went.
+
+- **PART 1b (THE DOMESTIC FILE) DONE 2026-10-14, on `25d2bf25`
+  (uncommitted at hand-back).** Part 2 (the deletion) is separate and later.
+  - **The seam.** `TContestBase.UsesDomesticFile: boolean` (base False),
+    with the nil-safe `ContestUsesDomesticFile`: is the domestic QTH looked
+    up in the contest's domestic file. STATED, not derived from the file
+    name (2.6).
+  - **How it is stated for 94 contests -- the least duplicative statement
+    that still lets each contest own its rule.** Once per family where the
+    rule genuinely is the family's: `TContestStateQSOPartyBase` (all 20
+    parties -- each counts its .dom's counties and states; every trait said
+    DomesticFile), `TContestARRLSSBase` (Sweepstakes CW and SSB) and
+    `TContestNRAUBalticBase` (whose trait already sat there). Per class for
+    the other 61, which share no family (`Result := True`). Where the
+    entrant decides, the class's own station test, the one its
+    `DescribeSession` states DomesticFile under: ARRL DX (`not
+    CountsDXMultiplier`, on its family base), JIDX CW and SSB (`not
+    IsJapaneseEntrant`), OK DX (`not OKOMStation`), UBA CW and SSB (`<>
+    'ON'`), the Ukrainian DX (`<> 'UR'`), YU DX (`<> 'YU'`). 72 class units.
+    **Why not a derived base:** the answer cannot come from the file name
+    (2.6) and must not come from the trait, which part 2 deletes. **Why this
+    shape pays at part 2:** "does this contest count a domestic
+    multiplier" can then be `UsesDomesticFile` OR the shape answers the 25
+    already state, so the 94 state ONE fact, once -- not a second
+    `HasDomesticMultiplier` beside this one.
+  - **The readers.** `LOGSUBS2.LogContact`'s mobile call/QTH rewrite asks
+    `ContestUsesDomesticFile` of the contest it now fetches ONCE per QSO, at
+    the rewrite, and shares with the two grid-square rover tests (which
+    fetched it themselves at 1a) -- no new fetch.
+    `uContestReadiness.CollectContestSettingsGaps` takes
+    `aUsesDomesticFile: boolean` (was the `DomesticMultType`); uProgramMain
+    asks the active contest once at start-up (`uContestBase` joins its uses
+    just ahead of `uContestFactory`; of its interface it names only that
+    function). The ADIF import: `TADIFImportSession.DomesticMult` is
+    `CountsGridSquares: boolean`, filled by `MainUnit.ParseADIFRecord` from
+    the open contest's `HasGridSquareMultiplier` (one `ActiveContest` per
+    record: the import holds no object), read by the base `ApplyADIFImport`,
+    its one reader; `NeutralADIFImportSession` answers False.
+  - **What still reads the domestic kind (part 2):**
+    `ContestSession.DoingDomesticMults` (every `Doing` reader and
+    GetDomQTH's exit), the matrix's `active.domesticmult` line, the kind pin
+    and the cross-checks, FCONTEST's writes, the trait and the
+    `DescribeSession` statements.
+  - **Pins, written BEFORE the move and run green on the old code**
+    (`uTestDomesticMultiplier`, three tests added): every ContestType at the
+    11 entrants against the literal set of 85 that use the file everywhere
+    plus the nine station rules, with literal per-station counts (92 us,
+    92 ve, 94 DL, 92 host, 94 UA, 94 UA1, 92 JA, 93 OK, 92 ON, 93 UR, 93 YU;
+    94 at some station); a cross-check of every ContestType x entrant
+    against the frozen old test (`kind = DomesticFile` under the resolved
+    session kind), which goes with part 2; and the invariant that a contest
+    using the file states no shape (its key hands every text to the file,
+    writing nothing, and none of the four flags is set). Old code: **242,562
+    passed, 0 failed**. After the move: **242,562 passed, 0 failed**.
+    `uTestContestReadiness`'s seven calls and `uTestContestImport`'s
+    grid-square session were rewritten to the new parameters, asserting
+    the same results.
+  - **Matrix: MEASURED IDENTICAL, all 186 records byte-for-byte against `frozen/`** (a scratch run of the scratch `-B`
+    build, not the freeze script).
+  - **Narrowing 1263, range 3, unchanged** (scratch `-B`).
+    `Lint-ContestNameTests` 6, unchanged.
+  - **Inventory** (generated, then the tracked doc restored): rows **61**,
+    shapes **6/0/12/43**, contests outside the factory **44**, unchanged;
+    shape-4 sites 68 -> **67** (the mobile rewrite; readiness and the import
+    read a parameter, which the scan does not count); records SHARED 38 ->
+    **37**, PROXY 43, SHAPE 43, UNUSED 10.
 
 ### S7 -- Exchange RULES out of the compare sites (2.1)
 

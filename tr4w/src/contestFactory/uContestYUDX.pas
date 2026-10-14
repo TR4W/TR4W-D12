@@ -95,6 +95,9 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -260,6 +263,15 @@ begin
       begin
       Result := CQCountryMode;
       end;
+end;
+
+
+(* AN ENTRANT OUTSIDE SERBIA LOOKS THE DISTRICT UP IN THE DOMESTIC FILE -- M11
+   S6 part 1b, 2026-10-14. The trait said DomesticFile and DescribeSession
+   states none for a YU entrant. See TContestBase.UsesDomesticFile. *)
+function TContestYUDX.UsesDomesticFile: boolean;
+begin
+   Result := Station.MyCountry <> 'YU';
 end;
 
 initialization

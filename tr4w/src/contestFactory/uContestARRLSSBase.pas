@@ -90,6 +90,9 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -325,6 +328,15 @@ begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURPRECEDENCECHECKSECTION, ncfMyPrec);
    aPrompts.AskField(ncfMyCheck);
    aPrompts.AskField(ncfMySection);
+end;
+
+
+(* SWEEPSTAKES LOOKS ITS SECTION UP IN ITS DOMESTIC FILE, in both modes -- M11
+   S6 part 1b, 2026-10-14. Once, on the family base, as both runnings'
+   traits said DomesticFile. See TContestBase.UsesDomesticFile. *)
+function TContestARRLSSBase.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 end.

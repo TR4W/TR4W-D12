@@ -170,6 +170,9 @@ type
       (* THE CANONICAL RECEIVED EXCHANGE -- see
          TContestBase.CanonicalReceivedExchange (M9a). *)
       function CanonicalReceivedExchange(const aQso: ContestExchange): string; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -483,6 +486,15 @@ end;
 function TContestARRLFieldDay.CanonicalReceivedExchange(const aQso: ContestExchange): string;
 begin
    Result := Trim(string(aQso.ceClass)) + ' ' + Trim(string(aQso.QTHString));
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestARRLFieldDay.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 initialization

@@ -123,6 +123,9 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -292,6 +295,15 @@ function TContestUralCup.PrefixMultiplierKey(const aQso: ContestExchange;
                                              out aKey: PrefixMultiplierString): boolean;
 begin
    aKey := aQso.Callsign;
+   Result := True;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestUralCup.UsesDomesticFile: boolean;
+begin
    Result := True;
 end;
 

@@ -97,6 +97,9 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -193,6 +196,15 @@ end;
 procedure TContestNRAUBalticBase.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURPROVINCEID, ncfMyState);
+end;
+
+
+(* THE NRAU-BALTIC LOOKS ITS DOMESTIC QTH UP IN ITS DOMESTIC FILE, in both
+   modes -- M11 S6 part 1b, 2026-10-14. Once, on the family base, where
+   the trait already was. See TContestBase.UsesDomesticFile. *)
+function TContestNRAUBalticBase.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 end.

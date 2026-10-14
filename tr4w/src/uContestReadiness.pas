@@ -57,7 +57,7 @@ interface
 
 uses
    Classes,
-   VC;   // ExchangeType, DomesticMultType
+   VC;   // ExchangeType
 
 (* EVERY EXCHANGE THAT SENDS THE OPERATOR'S OWN DOMESTIC QTH.
 
@@ -117,7 +117,7 @@ const
   is nothing to be ready for and nothing is reported. *)
 procedure CollectContestSettingsGaps(const aContestActive: boolean;
                                      const aExchange: ExchangeType;
-                                     const aDomesticMult: DomesticMultType;
+                                     const aUsesDomesticFile: boolean;
                                      const aCall: string;
                                      const aCountry: string;
                                      const aState: string;
@@ -157,7 +157,7 @@ uses
 
 procedure CollectContestSettingsGaps(const aContestActive: boolean;
                                      const aExchange: ExchangeType;
-                                     const aDomesticMult: DomesticMultType;
+                                     const aUsesDomesticFile: boolean;
                                      const aCall: string;
                                      const aCountry: string;
                                      const aState: string;
@@ -216,9 +216,11 @@ begin
       aGaps.Add(SReadinessMyGridMissing);
       end;
 
-   (* A DOMESTIC-FILE CONTEST WITH NO FILE NAMED. DomesticFile is the one
-     DomesticMultType that reads a .DOM, so this is the whole of the rule. *)
-   if (aDomesticMult = DomesticFile) and (Trim(aDomesticFile) = '') then
+   (* A DOMESTIC-FILE CONTEST WITH NO FILE NAMED. aUsesDomesticFile is the
+     contest's own answer (TContestBase.UsesDomesticFile, M11 S6 part 1b) --
+     the caller asks the contest; it was the session's DomesticMultType
+     compared with DomesticFile, the one kind that reads a .DOM. *)
+   if aUsesDomesticFile and (Trim(aDomesticFile) = '') then
       begin
       aGaps.Add(SReadinessDomesticFileMissing);
       end;

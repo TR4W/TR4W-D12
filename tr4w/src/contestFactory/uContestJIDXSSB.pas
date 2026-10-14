@@ -126,6 +126,9 @@ type
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
       function ZoneMultiplierZones: TZoneMultiplierZones; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -390,6 +393,16 @@ begin
       begin
       Result := zmzNotCQOrITU;
       end;
+end;
+
+
+(* AN ENTRANT OUTSIDE JAPAN LOOKS THE PREFECTURE UP IN THE JIDX FILE -- M11
+   S6 part 1b, 2026-10-14. The station test DescribeSession states
+   DomesticFile under, through the predicate the zone and DX answers
+   ask. See TContestBase.UsesDomesticFile. *)
+function TContestJIDXSSB.UsesDomesticFile: boolean;
+begin
+   Result := not IsJapaneseEntrant;
 end;
 
 initialization

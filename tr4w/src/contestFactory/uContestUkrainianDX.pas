@@ -98,6 +98,9 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -267,6 +270,15 @@ function TContestUkrainianDX.DXMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := aQso.QTH.CountryID;
    Result := True;
+end;
+
+
+(* AN ENTRANT OUTSIDE UKRAINE LOOKS THE OBLAST UP IN THE DOMESTIC FILE -- M11
+   S6 part 1b, 2026-10-14. The trait said DomesticFile and DescribeSession
+   states none for a UR entrant. See TContestBase.UsesDomesticFile. *)
+function TContestUkrainianDX.UsesDomesticFile: boolean;
+begin
+   Result := Station.MyCountry <> 'UR';
 end;
 
 initialization

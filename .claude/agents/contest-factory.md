@@ -285,10 +285,20 @@ the target shape, the M-step migration order and the open questions.
   is `Result := ''` in both, in its own commit. A new contest with such a
   shape overrides the answers and adds rows to `uTestDomesticMultiplier`
   (`KEY_PINS`, `HINT_PINS`, its sets; the counts 25 and 16 change by hand).
-  The domestic-FILE answers (the mobile rewrite, readiness) and whether a
-  contest counts a domestic multiplier at all are NOT moved yet (S6 part
-  1b, part 2): they still read `ContestSession.DomesticMult` /
-  `.DoingDomesticMults`.
+- **THE DOMESTIC FILE IS THE CLASS'S ANSWER TOO (M11 S6 part 1b,
+  2026-10-14).** `UsesDomesticFile: boolean` (base False; nil-safe
+  `ContestUsesDomesticFile`) is True for the 94 contests whose domestic QTH
+  is looked up in their `.dom` -- stated ONCE on `TContestStateQSOPartyBase`
+  (every state party), `TContestARRLSSBase` and `TContestNRAUBalticBase`,
+  per class for 61 more, and by the station test its `DescribeSession`
+  uses for ARRL DX, JIDX, OK DX, UBA, the Ukrainian DX and YU DX. A new
+  domestic-file contest overrides it (or inherits it from its family) and
+  joins `uTestDomesticMultiplier`'s `DOMESTIC_FILE_EVERYWHERE` or
+  `PinnedUsesFile`; the per-station counts and the 94 change by hand. A
+  contest that answers True must state NO shape -- pinned. It CANNOT be
+  derived from the domestic file name (plan 2.6). Whether a contest counts
+  a domestic multiplier at all is NOT moved yet (part 2): it still reads
+  `ContestSession.DoingDomesticMults`.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by

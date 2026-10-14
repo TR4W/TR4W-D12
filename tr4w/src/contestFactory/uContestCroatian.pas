@@ -115,6 +115,9 @@ type
          ZoneMultiplierZones (M11 S5). *)
       function ZoneMultiplierCount: integer; override;
       function ZoneMultiplierZones: TZoneMultiplierZones; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -341,6 +344,15 @@ end;
 function TContestCroatian.ZoneMultiplierZones: TZoneMultiplierZones;
 begin
    Result := zmzITUZones;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestCroatian.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 initialization

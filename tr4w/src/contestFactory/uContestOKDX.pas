@@ -108,6 +108,9 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -320,6 +323,15 @@ function TContestOKDX.DXMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := aQso.QTH.CountryID;
    Result := True;
+end;
+
+
+(* AN ENTRANT OUTSIDE OK/OM LOOKS THE DISTRICT UP IN THE OKOM FILE -- M11 S6
+   part 1b, 2026-10-14. The station test DescribeSession states
+   DomesticFile under. See TContestBase.UsesDomesticFile. *)
+function TContestOKDX.UsesDomesticFile: boolean;
+begin
+   Result := not OKOMStation(string(Station.MyCountry));
 end;
 
 initialization

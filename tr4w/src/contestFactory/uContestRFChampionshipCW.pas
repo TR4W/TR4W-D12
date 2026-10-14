@@ -117,6 +117,9 @@ type
          Its zones are not CQ or ITU zones, so ZoneMultiplierZones is the
          base's. *)
       function ZoneMultiplierCount: integer; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -297,6 +300,15 @@ end;
    2026-10-14: the answer the session kind gave (`kind <> NoZoneMults`)
    before the kind was deleted. *)
 function TContestRFChampionshipCW.HasZoneMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestRFChampionshipCW.UsesDomesticFile: boolean;
 begin
    Result := True;
 end;

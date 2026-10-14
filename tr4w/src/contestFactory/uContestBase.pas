@@ -521,7 +521,10 @@ type
    TADIFImportSession = record
       Operator: OperatorType;
       Exchange: ExchangeType;
-      DomesticMult: DomesticMultType;
+      (* The open contest's HasGridSquareMultiplier -- M11 S6 part 1b. It was
+         the session's DomesticMult, of which the one reader (the base's
+         ApplyADIFImport) tested one member, GridSquares. *)
+      CountsGridSquares: boolean;
       DoingDomesticMults: boolean;
    end;
 
@@ -1905,6 +1908,32 @@ type
          districts. THE BASE ANSWERS FALSE. *)
       function DomesticQTHIsNeverAGrid: boolean; virtual;
 
+      (* IS THE DOMESTIC QTH LOOKED UP IN THIS CONTEST'S DOMESTIC FILE? -- M11
+         S6 part 1b, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S6).
+
+         Two engine sites asked `ContestSession.DomesticMult = DomesticFile`:
+         LOGSUBS2.LogContact rewrites a mobile's call to call/QTH in such a
+         contest (a QSO party's rover), and uContestReadiness reports such a
+         contest with no file named. It is STATED, not derived: the
+         contest's domestic file NAME says nothing about it (plan 2.6 -- eight
+         contests disagree).
+
+         A CONTEST THAT ANSWERS TRUE STATES NO SHAPE: its
+         DomesticMultiplierFromQTH is the base's (consult the file) and none
+         of the four flags above is set -- pinned for every contest at every
+         roster station by uTestDomesticMultiplier.
+
+         STATED ONCE PER FAMILY WHERE THE RULE IS THE FAMILY'S -- the state
+         QSO parties (each counts the counties and states of its .dom),
+         Sweepstakes' two modes and the NRAU-Baltic's -- and per class
+         otherwise. A rule that depends on the entrant asks Station, testing
+         exactly what its DescribeSession tests to state DomesticFile (ARRL
+         DX, JIDX, OK DX, UBA, the Ukrainian DX, YU DX).
+
+         THE BASE ANSWERS FALSE -- every contest whose session ran another
+         domestic kind, or none. *)
+      function UsesDomesticFile: boolean; virtual;
+
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
 
@@ -2656,6 +2685,11 @@ function ContestHasGridFieldMultiplier(aContest: TContestBase): boolean;
 function ContestDomesticQTHReplacesDXMultiplier(aContest: TContestBase): boolean;
 function ContestDomesticQTHIsNeverAGrid(aContest: TContestBase): boolean;
 
+(* IS aContest's DOMESTIC QTH LOOKED UP IN ITS DOMESTIC FILE? -- see
+   TContestBase.UsesDomesticFile. nil answers False: the classless
+   DUMMYCONTEST ran NoDomesticMults. *)
+function ContestUsesDomesticFile(aContest: TContestBase): boolean;
+
 (* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
    M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
    once CD.GetEntry has found the call, with the zone list the contest's
@@ -3162,6 +3196,18 @@ begin
       end;
 end;
 
+function ContestUsesDomesticFile(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.UsesDomesticFile;
+      end;
+end;
+
 function InitialZoneFromCallHistory(aZones: TZoneMultiplierZones;
                                     const aCQZone: ShortString;
                                     const aITUZone: ShortString;
@@ -3547,6 +3593,12 @@ begin
    Result := False;
 end;
 
+function TContestBase.UsesDomesticFile: boolean;
+begin
+   (* No domestic file -- see the declaration. *)
+   Result := False;
+end;
+
 function TContestBase.RunsInMode(aMode: ModeType): boolean;
 begin
    (* Every mode -- see the declaration. *)
@@ -3610,10 +3662,11 @@ var
    j: integer;
 begin
    (* THE CLASSLESS FALLBACK, transcribed from the `else` of
-      MainUnit.ApplyContestSpecificADIFTail. The first test is a list of
-      session kinds and the last two are the session's multiplier flag, so
-      none of it names a contest. *)
-   if (aSession.DomesticMult = GridSquares)                 or
+      MainUnit.ApplyContestSpecificADIFTail. The first test is the open
+      contest's grid-square answer and the session's exchange kinds (it was
+      the session's domestic kind until M11 S6 part 1b), and the last two
+      are the session's multiplier flag, so none of it names a contest. *)
+   if aSession.CountsGridSquares                            or
       (aSession.Exchange = RSTAndOrGridExchange)            or
       (aSession.Exchange = Grid2Exchange)                   or
       (aSession.Exchange = RSTAndGrid3Exchange)             or

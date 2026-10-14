@@ -306,6 +306,9 @@ type
                                      const aSession: TReceivedExchangeSession;
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -393,6 +396,18 @@ begin
       begin
       aErrorMessage := Format(TC_TOOMANYCOUNTIES, [maxCounties]);
       end;
+end;
+
+
+(* EVERY STATE QSO PARTY LOOKS ITS DOMESTIC QTH UP IN ITS DOMESTIC FILE -- the
+   host's counties, or the states and provinces outside it -- M11 S6 part
+   1b, 2026-10-14. Stated ONCE, here, because it is this family's rule:
+   all twenty parties' traits said DomesticFile at every station. A party
+   whose sponsor changes that overrides it. See
+   TContestBase.UsesDomesticFile. *)
+function TContestStateQSOPartyBase.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 end.

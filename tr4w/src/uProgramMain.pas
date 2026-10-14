@@ -234,6 +234,11 @@ uses
   (* ~~uContestFactory -- phase F~~ was here for ContestFactoryEnabled alone,
      and went with it on 2026-09-29. It is back for ActiveContest (M11 S4,
      2026-10-14): the remaining-countries filter asks the active contest. *)
+  (* ContestUsesDomesticFile -- the settings-gap check asks the active
+     contest whether it reads a domestic file (M11 S6 part 1b). Placed just
+     ahead of uContestFactory so it shadows nothing a later unit supplies;
+     of its interface, this unit names only that function. *)
+  uContestBase,
   uContestFactory,
   uCFG,
   uCRC32,
@@ -476,8 +481,9 @@ uses
   NetworkMessageUtils,
   uTR4WStrings,
    uContestFileKind,   (* what kind of file did the operator pick as a contest *)
-  uContestSession;    (* ContestSession.DomesticMult -- the settings-gap
-                         check after set-up (M10 S9e) *)
+  uContestSession;    (* ContestSession.Exchange -- the settings-gap check
+                         after set-up (M10 S9e); its domestic kind is the
+                         contest's answer since M11 S6 part 1b *)
 
 (* A resourcestring, NOT a TC_ constant in the language tables.
 
@@ -2585,9 +2591,11 @@ begin
     modal in a batch run is a hang, and this tree has already paid for one. *)
   readinessGaps := TStringList.Create;
   try
+     (* Whether the contest reads a domestic file is its own answer (M11 S6
+       part 1b); this read the session's domestic kind. *)
      CollectContestSettingsGaps(Contest <> DUMMYCONTEST,
                                 ContestSession.Exchange,
-                                ContestSession.DomesticMult,
+                                ContestUsesDomesticFile(ActiveContest(Contest)),
                                 Settings.My.Call,
                                 Settings.My.Country,
                                 (* The state SENT -- design 7.11 (M9a). *)

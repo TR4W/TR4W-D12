@@ -291,10 +291,16 @@ DisplayGridSquareStatus), `= GridFields` (`uMults.IsDmMult`'s new
 scoring), `= WYSIWYGDomestic` (GetDXQTH, on the object handed in) and
 `<> RDADistrict` (the ADIF tail, on its `contestRules`) are class answers.
 `GetContinentFromString` moved, unchanged, from ZoneCont to `utils_text`.
-A multiplier KIND's arm that has NOT moved (the remaining-mult lists, the
-domestic FILE kind -- the QSO-party mobile rewrite in LogContact, readiness,
-the ADIF import's session record) stays keyed on the kind until its M11
-stage. **`UsesBand` is asked at four places now** -- points,
+**THE DOMESTIC FILE IS THE CLASS'S ANSWER (M11 S6 part 1b):**
+`LogContact`'s mobile call/QTH rewrite asks `ContestUsesDomesticFile` of the
+contest it fetches once per QSO (shared with the grid-square rover tests);
+`uContestReadiness.CollectContestSettingsGaps` takes `aUsesDomesticFile`;
+`TADIFImportSession.DomesticMult` is `CountsGridSquares`, filled by
+`ParseADIFRecord` from the open contest's `HasGridSquareMultiplier`. The
+session's domestic kind is now read only as `DoingDomesticMults` (and by the
+matrix and the pins) -- part 2 replaces that with a class answer. A
+multiplier KIND's arm that has NOT moved (the remaining-mult lists) stays
+keyed on the kind until its M11 stage. **`UsesBand` is asked at four places now** -- points,
 multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO
 marks no dupe bit and is never a dupe; the M3-found `AllBands` gap is FIXED),
 and the hint (`DetermineIfNewMult`, `uContestBase.CreditedBands`).

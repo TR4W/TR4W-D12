@@ -120,6 +120,9 @@ type
          TContestBase.ListsRemainingDXCountry (M11 S4). *)
       function ListsRemainingDXCountry(const aCountryID: DXMultiplierString;
                                        aContinent: ContinentType): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -358,6 +361,15 @@ begin
       aKey := aQso.QTH.CountryID;
       Result := True;
       end;
+end;
+
+
+(* AN ENTRANT OUTSIDE BELGIUM LOOKS THE PROVINCE UP IN THE DOMESTIC FILE -- M11
+   S6 part 1b, 2026-10-14. The trait said DomesticFile and DescribeSession
+   states none for an ON entrant. See TContestBase.UsesDomesticFile. *)
+function TContestUBACW.UsesDomesticFile: boolean;
+begin
+   Result := Station.MyCountry <> 'ON';
 end;
 
 initialization

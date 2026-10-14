@@ -10092,7 +10092,11 @@ begin
     record is the one it NAMES, and never reads a global itself. *)
   session.Operator           := CurrentOperator;
   session.Exchange           := ContestSession.Exchange;
-  session.DomesticMult       := ContestSession.DomesticMult;
+  (* The open contest's grid-square answer (M11 S6 part 1b) -- the base
+    ApplyADIFImport's one domestic-kind test, `= GridSquares`; this handed
+    it the session's whole domestic kind. One ActiveContest per record:
+    the import holds no contest object. *)
+  session.CountsGridSquares  := ContestHasGridSquareMultiplier(ActiveContest(Contest));
   session.DoingDomesticMults := ContestSession.DoingDomesticMults;
 
   (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,

@@ -108,6 +108,9 @@ type
    protected
       (* THE HOUR-BY-HOUR REPORT -- see TContestBase.ReportsRunningScore (M9a). *)
       function GetReportsRunningScore: boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -242,6 +245,15 @@ end;
 function TContestUkraineChampionship.GetReportsRunningScore: boolean;
 begin
    Result := False;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestUkraineChampionship.UsesDomesticFile: boolean;
+begin
+   Result := True;
 end;
 
 initialization

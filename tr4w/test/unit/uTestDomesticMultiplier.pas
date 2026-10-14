@@ -91,6 +91,9 @@ type
       procedure Test_EveryContestStatesItsPinnedDomesticAnswers;
       procedure Test_EveryContestDomesticAnswerAgreesWithItsSessionKind;
       procedure Test_ADOKTextWithNoLetterHintsNothing;
+      procedure Test_EveryContestStatesItsPinnedDomesticFileAnswer;
+      procedure Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind;
+      procedure Test_ADomesticFileContestStatesNoShape;
    end;
 
 implementation
@@ -175,6 +178,27 @@ const
    GRID_FIELD_CONTESTS = [CUPRFCW, CUPRFSSB, TOEC, WWDIGI, WWL];
    WYSIWYG_EVERYWHERE = [ARKTIKA_SPRING, BSCI, DARCXMAS, GAGARINCUP, GRIDLOC,
                          IARU, OZCR_Z, UA4WCHAMPIONSHIP, WRTC];
+
+   (* THE CONTESTS WHOSE DOMESTIC QTH IS LOOKED UP IN THEIR DOMESTIC FILE AT
+      EVERY STATION -- M11 S6 part 1b. 85 of the 94 that do at some station;
+      the other nine depend on the entrant (FILE_STATION_PINS). Written from
+      each class's trait and DescribeSession and run green against the
+      session kind before the answer moved. *)
+   DOMESTIC_FILE_EVERYWHERE = [
+      ALLJA, ARCI, ARI_DX, ARRL10, ARRL160, ARRLFIELDDAY, ARRLSSCW,
+      ARRLSSSSB, ARRL_RTTY_ROUNDUP, ArizonaQsoParty, BCQP, CALQSOPARTY,
+      CANADA_DAY, CANADA_WINTER, CIS, COLORADOQSOPARTY, CQ160CW, CQ160SSB,
+      CQIR, CQWWRTTY, CROATIAN, CUPRFDIG, CUPURAL, DELAWAREQSOPARTY, EUDX,
+      FISTS, FLORIDAQSOPARTY, FOCMARATHON, HADX, HELVETIA, IDAHOQSOPARTY,
+      IN7QPNE, INQSOPARTY, INTERNETSPRINT, IRTS, JALONGPREFECT, KCJ,
+      KINGOFSPAINCW, KINGOFSPAINSSB, LABRE, LQP, LZDX, MICHQSOPARTY,
+      MINNQSOPARTY, MOQSOPARTY, MWC, NAQSOCW, NAQSORTTY, NAQSOSSB, NASPRINTCW,
+      NASPRINTRTTY, NCCCSPRINT, NCQSOPARTY, NEWENGLANDQSO, NRAUBALTICCW,
+      NRAUBALTICSSB, NYQP, OHIOQSOPARTY, OKOMSSB, PACC, PAQSOPARTY, REFCW,
+      REFSSB, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB, RSGB18, RU3AXMEMORIAL,
+      RUSSIANDX, SALMONRUN, SEVENQP, SPDX, SPRINTSSB, SST, TENNESSEEQSOPARTY,
+      TEXASQSOPARTY, UKEI, UKRAINECHAMPIONSHIP, UNDX, VAQP, WINTERFIELDDAY,
+      WISCONSINQSOPARTY, WWPMC, YODX, YOTA, YOUTHCHAMPIONSHIPRF];
 
    (* WRITTEN FROM THE OLD ROUTINES AND RUN GREEN AGAINST THEM -- see the
       unit header. Every one of the 25 contests has rows for every branch
@@ -914,6 +938,183 @@ begin
    end;
 end;
 
+(* WHAT THE PROGRAM GIVES FOR "IS THE DOMESTIC QTH LOOKED UP IN THE FILE" --
+   what LOGSUBS2.LogContact's mobile rewrite and the readiness check ask
+   (TContestBase.UsesDomesticFile, M11 S6 part 1b), on a contest object
+   holding the station. BEFORE THE MOVE it returned the frozen old test,
+   `kind = DomesticFile`, under the kind Kinds(aContest, aStation)
+   resolves -- the run that made the literals. *)
+function ProgramUsesFile(aContest: ContestType; const aStation: TStationContext): boolean;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContest(aContest, aStation);
+   try
+      Result := ContestUsesDomesticFile(obj);
+   finally
+      obj.Free;
+      end;
+end;
+
+(* THE PINNED ANSWER: the set above, and the nine whose entrant decides --
+   each the test its DescribeSession states DomesticFile under. *)
+function PinnedUsesFile(aContest: ContestType; aStation: TPinStation): boolean;
+begin
+   case aContest of
+      ARRLDXCW, ARRLDXSSB:
+         begin
+         (* Not a W or VE entrant: a state or province out of S48P14DC. *)
+         Result := not (aStation in [psUS, psVE, psHost]);
+         end;
+      JIDXCW, JIDXSSB:
+         begin
+         Result := aStation <> psJA;
+         end;
+      OKDX:
+         begin
+         (* Not an OK or OM entrant. *)
+         Result := aStation <> psOK;
+         end;
+      UBACW, UBASSB:
+         begin
+         Result := aStation <> psON;
+         end;
+      UKRAINIAN:
+         begin
+         Result := aStation <> psUR;
+         end;
+      YUDX:
+         begin
+         Result := aStation <> psYU;
+         end;
+   else
+      begin
+      Result := aContest in DOMESTIC_FILE_EVERYWHERE;
+      end;
+   end;
+end;
+
+procedure TDomesticMultiplierTests.Test_EveryContestStatesItsPinnedDomesticFileAnswer;
+const
+   (* HOW MANY CONTESTS LOOK THEIR DOMESTIC QTH UP IN A FILE AT EACH STATION,
+      counted by hand: the 85, plus each station-dependent one whose
+      entrant test passes there. The matrix agrees at us, ve and dx (92, 92,
+      94 DomesticFile records). *)
+   COUNTS: array[TPinStation] of integer = (
+      92,    (* us -- not ARRL DX *)
+      92,    (* ve *)
+      94,    (* dx (DL) -- all nine *)
+      92,    (* host (K) *)
+      94,    (* UA *)
+      94,    (* UA1 *)
+      92,    (* JA -- not JIDX *)
+      93,    (* OK -- not OK DX *)
+      92,    (* ON -- not the two UBA *)
+      93,    (* UR -- not the Ukrainian DX *)
+      93     (* YU -- not YU DX *)
+   );
+var
+   c: ContestType;
+   s: TPinStation;
+   answer: boolean;
+   count: integer;
+   anywhere: set of ContestType;
+   total: integer;
+begin
+   BeginTest('Test_EveryContestStatesItsPinnedDomesticFileAnswer');
+   anywhere := [];
+   for s := Low(TPinStation) to High(TPinStation) do
+      begin
+      count := 0;
+      for c := Low(ContestType) to High(ContestType) do
+         begin
+         answer := ProgramUsesFile(c, PinStation(s, c));
+         CheckEquals(BoolToStr(PinnedUsesFile(c, s), True), BoolToStr(answer, True),
+                     Who(c, s) + ' uses its domestic file');
+         if answer then
+            begin
+            Inc(count);
+            Include(anywhere, c);
+            end;
+         end;
+      CheckEquals(COUNTS[s], count, 'contests using a domestic file at ' + STATIONS[s].Call);
+      end;
+
+   (* 94 AT SOME STATION -- plan 2.6. *)
+   total := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      if c in anywhere then
+         begin
+         Inc(total);
+         end;
+      end;
+   CheckEquals(94, total, 'contests using a domestic file at some roster station');
+end;
+
+procedure TDomesticMultiplierTests.Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind;
+var
+   c: ContestType;
+   s: TPinStation;
+   station: TStationContext;
+   checked: integer;
+begin
+   BeginTest('Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind');
+   checked := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         station := PinStation(s, c);
+         CheckEquals(BoolToStr(Kinds(c, station).DomesticMult = DomesticFile, True),
+                     BoolToStr(ProgramUsesFile(c, station), True),
+                     Who(c, s) + ' uses its domestic file');
+         Inc(checked);
+         end;
+      end;
+   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
+               'contest x station domestic-file answers compared');
+end;
+
+(* A CONTEST THAT LOOKS ITS QTH UP IN THE FILE STATES NO SHAPE -- the two
+   answers are one rule seen twice: DomesticMultiplierFromQTH hands every
+   text to the file (the base's answer, writing nothing), and none of the
+   four shape flags is set. *)
+procedure TDomesticMultiplierTests.Test_ADomesticFileContestStatesNoShape;
+var
+   c: ContestType;
+   s: TPinStation;
+   t: TPinText;
+   f: TPinFlag;
+   station: TStationContext;
+   checked: integer;
+begin
+   BeginTest('Test_ADomesticFileContestStatesNoShape');
+   checked := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         station := PinStation(s, c);
+         if not ProgramUsesFile(c, station) then
+            begin
+            Continue;
+            end;
+         for t := Low(TPinText) to High(TPinText) do
+            begin
+            CheckEquals('file F [] []', ProgramKey(c, station, Str20(TEXTS[t])),
+                        Who(c, s) + ' receiving ' + TEXTS[t]);
+            end;
+         for f := Low(TPinFlag) to High(TPinFlag) do
+            begin
+            CheckFalse(ProgramFlag(c, station, f), Who(c, s) + ' ' + FLAG_NAMES[f]);
+            end;
+         Inc(checked);
+         end;
+      end;
+   CheckTrue(checked > 0, 'domestic-file contests checked');
+end;
+
 procedure TDomesticMultiplierTests.RunAllTests;
 begin
    Test_EveryContestGivesItsPinnedDomesticKey;
@@ -923,6 +1124,9 @@ begin
    Test_EveryContestStatesItsPinnedDomesticAnswers;
    Test_EveryContestDomesticAnswerAgreesWithItsSessionKind;
    Test_ADOKTextWithNoLetterHintsNothing;
+   Test_EveryContestStatesItsPinnedDomesticFileAnswer;
+   Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind;
+   Test_ADomesticFileContestStatesNoShape;
 end;
 
 procedure TDomesticMultiplierTests.Test_EveryContestGivesItsPinnedDomesticKey;

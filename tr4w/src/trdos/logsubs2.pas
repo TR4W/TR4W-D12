@@ -206,13 +206,15 @@ uses
   (* AddLoggedQSO -- the final score's view of the log, kept with the totals
      (M6). *)
   uScoreTotals,
-  (* ContestSession.DomesticMult -- the QSO-party mobile rule (M10 S9e). *)
+  (* ContestSession.DoingDomesticMults -- the domestic-mult status (M10
+     S9e). *)
   uContestSession,
   (* ContestIdentity -- the contest's own ADIF id and Cabrillo name for the
      two UDP broadcasts. *)
   uContestRegistry,
-  (* ActiveContest and ContestHasGridSquareMultiplier -- the grid-square
-     rover rules ask the contest (M11 S6). *)
+  (* ActiveContest, ContestHasGridSquareMultiplier and
+     ContestUsesDomesticFile -- the grid-square rover and QSO-party mobile
+     rules ask the contest (M11 S6). *)
   uContestBase,
   uContestFactory;
 procedure PutContactIntoLogFile(LogString: string {Str80});
@@ -1577,7 +1579,9 @@ var
 
   TempMode                              : ModeType;
   perfTimeStart, perfTimeStop: TDateTime;
-  (* Does the contest count grid squares? -- asked once, below. *)
+  (* The active contest, and whether it counts grid squares -- each asked
+    once, below. *)
+  contestRules                          : TContestBase;
   countsGridSquares                     : boolean;
 begin
   logger.trace('>>>Entering LogContact');
@@ -1622,7 +1626,12 @@ begin
   //  if not DDX(VerifyContact) then RXData.QSOPoints := 0;
      //  if not TailEnding then RemoveWindow(PossibleCallWindow);
   //  if Trace then Write('@');
-  if MobileCall(RXData.Callsign) and (ContestSession.DomesticMult = DomesticFile) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
+  (* THE CONTEST, FETCHED ONCE PER QSO for the mobile rewrite and the two
+    grid-square rover tests below -- M11 S6. The rewrite asked
+    `ContestSession.DomesticMult = DomesticFile`; the contest states it now
+    (TContestBase.UsesDomesticFile, part 1b). *)
+  contestRules := ActiveContest(Contest);
+  if MobileCall(RXData.Callsign) and ContestUsesDomesticFile(contestRules) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
      begin
      RXData.Callsign := PrecedingString(RXData.Callsign,'/')  + '/' + RXData.DomesticQTH;  // n4af 4.41.7
      end;
@@ -1634,9 +1643,9 @@ begin
   (* THE GRID-SQUARE ROVER -- the contest says whether its multiplier is the
     grid square (TContestBase.HasGridSquareMultiplier, M11 S6 part 1); both
     tests below asked `ContestSession.DomesticMult = GridSquares`. Asked
-    once per QSO, here, after the mobile rewrite above: no call between
-    this and either test changes the contest or the station. *)
-  countsGridSquares := ContestHasGridSquareMultiplier(ActiveContest(Contest));
+    once per QSO, of the contest fetched above: no call between that and
+    either test changes the contest or the station. *)
+  countsGridSquares := ContestHasGridSquareMultiplier(contestRules);
 
   if (not RXData.ceClearDupeSheet) and
     (VisibleLog.CallIsADupe(RXData.Callsign, RXData.Band, RXData.Mode) or

@@ -125,6 +125,9 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey (M11 S4). *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
+      function UsesDomesticFile: boolean; override;
    end;
 
 implementation
@@ -357,6 +360,15 @@ function TContestUKEI.DXMultiplierKey(const aQso: ContestExchange;
                                       out aKey: DXMultiplierString): boolean;
 begin
    aKey := aQso.QTH.CountryID;
+   Result := True;
+end;
+
+
+(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
+   station -- M11 S6 part 1b, 2026-10-14. It was the session's
+   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
+function TContestUKEI.UsesDomesticFile: boolean;
+begin
    Result := True;
 end;
 
