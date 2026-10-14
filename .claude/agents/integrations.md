@@ -40,11 +40,25 @@ main thread -- does the dupe/mult test and sends the `HighlightCall` reply.
 `HighlightCall`'s `SendBuffer` is thread-neutral (the binding is fixed when the
 server goes Active), so the reply was never the problem.
 
-**Still on the listener, knowingly:** the STATUS arm (`GoToBand`,
-`PutCalltoCallWindow`, `ActiveRadioPtr`) and the LOGGED-ADIF arm (`ParseADIFRecord`,
-`ParametersOkay`, `LogContact`, the entry-field state). Same defect class; moving
-the logging arm changes how a QSO is logged and needs a live WSJT-X session.
-Do not add a main-thread read to `OnServerRead`; add it to the hand-off.
+**All four UDP messages that touch program state are handed off now** (same day):
+CQ decode, STATUS, CLEAR and LOGGED ADIF -- `PostCQDecode` / `PostStatus` /
+`PostClear` / `PostLoggedADIF` copy values into ONE FIFO, and the matching
+`Evaluate*` runs on the main thread and refuses elsewhere (`OffMainThread`).
+`EvaluateLoggedADIF` is the one that LOGS A QSO. Do not add a second queue:
+the one order is what keeps a QSO's LOGGED message beside the STATUS and decodes
+around it, and the entry-field work an evaluation starts is queued behind it.
+**A logged QSO is never dropped:** `Stop` (main thread, listener already down)
+evaluates every pending LOGGED job in FIFO order before it detaches; pending
+STATUS/CLEAR/CQ jobs are dropped as transient. `tr4w_ShutDown` calls
+`wsjtx.Stop` before `LogStoreClose`, so the log is still open. A `LOST QSO` ERROR
+with the ADIF text is the last resort only (a LOGGED job surviving to
+finalization, a Stop off the main thread, or a failure while logging). The heartbeat and close arms only set
+`WSJTXState`, which is what a network thread is for.
+
+**The TCP command handler is still off the main thread, on purpose.** It is
+request/response against WSJT-X's ~1 s deadline and CmdTX/CmdRX are PTT, so
+queuing is wrong for it; it reads the radio status record unsynchronised and
+writes `Settings.Ptt.ViaCommands`. That belongs to the radio-status snapshot work.
 
 **`destructor Destroy;` without `override` is a WARNING, not an error, and `Free`
 never reaches it.** `TWSJTXServer`'s did not, so `FreeAndNil(wsjtx)` leaked the

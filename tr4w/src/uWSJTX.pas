@@ -41,6 +41,12 @@ type
     B: byte;
   end;
 type
+  (* A TEST SEAM. When assigned, EvaluateLoggedADIF hands the record to this
+    instead of parsing and logging it -- everything around that (the main-thread
+    guard, the evaluation count, the drain in Stop) stays real. Nil in the
+    program. *)
+  TWSJTXLoggedADIFHook = procedure(const aAdif: string) of object;
+
   TWSJTXServer = class(TObject)
   private
     udpServ: TIdUDPServer;
@@ -72,7 +78,8 @@ type
     processingCmdSetFreqMode: boolean;
     slCQMessage: TStringList;
     sCallSentToWindow: string;
-    FDecodesEvaluated: integer;
+    FMessagesEvaluated: integer;
+    FLoggedADIFHook: TWSJTXLoggedADIFHook;
     procedure SetUDPPort(nPort: integer);
     procedure SetTCPPort(nPort: integer);
     function GetNextADIFField(var sBuffer: string; var fieldName: string; var
@@ -110,9 +117,25 @@ type
       log, when called anywhere else. *)
     procedure EvaluateCQDecode(const aCall, aGrid, aId: string;
       aFrequency: Int64);
-    (* How many decodes have reached the evaluation -- what a test reads to
-      prove the listener thread did not evaluate. *)
-    property DecodesEvaluated: integer read FDecodesEvaluated;
+    (* The same hand-off for the other three messages the listener forwards.
+      Each copies VALUES and queues one job in the SAME FIFO as PostCQDecode, so
+      a QSO's LOGGED message and the STATUS / decode messages around it are
+      evaluated in the order they arrived. *)
+    procedure PostStatus(aFrequency: Int64; const aDXCall, aDXGrid: string;
+      aTransmitting: boolean);
+    procedure PostClear;
+    procedure PostLoggedADIF(const aAdif: string);
+    (* Main thread only, like EvaluateCQDecode: each refuses and logs anywhere
+      else. EvaluateLoggedADIF is the one that LOGS A QSO. *)
+    procedure EvaluateStatus(aFrequency: Int64; const aDXCall, aDXGrid: string;
+      aTransmitting: boolean);
+    procedure EvaluateClear;
+    procedure EvaluateLoggedADIF(const adif: string);
+    (* How many messages (of any kind) have reached an evaluation -- what a test
+      reads to prove the listener thread did not evaluate. *)
+    property MessagesEvaluated: integer read FMessagesEvaluated;
+    property LoggedADIFHook: TWSJTXLoggedADIFHook read FLoggedADIFHook
+      write FLoggedADIFHook;
     procedure HighlightCall(sCall: string; color: integer; sId: string);
     procedure ClearColors(sId: string);
     property connected: boolean read isConnected;
@@ -140,8 +163,12 @@ type
 
   end;
 
-(* Decodes handed off by the listener and not yet evaluated. *)
-function PendingCQDecodeCount: integer;
+(* Messages handed off by the listener and not yet evaluated. *)
+function PendingMessageCount: integer;
+(* One letter per pending message, oldest first: C CQ decode, S status, X clear,
+  L logged ADIF. What a test reads to show the kinds share ONE queue and keep
+  arrival order. *)
+function PendingMessageOrder: string;
 
 const
   KLUDGESECONDSV = 2;
@@ -185,7 +212,9 @@ uses
       reply (ClearColors reads nothing of the program's).
     * A HAND-OFF to the main thread through Application.QueueAsyncCall, which is
       FIFO: the display batch below, the clear-and-focus (uMainForm), and the
-      CQ DECODE (PostCQDecode -> EvaluateCQDecode).
+      FOUR MESSAGES that touch program state -- CQ decode, status, clear and
+      logged ADIF (PostCQDecode / PostStatus / PostClear / PostLoggedADIF, each
+      evaluated by the matching Evaluate* method).
 
   THE CQ DECODE USED TO BE EVALUATED ON THE LISTENER. VisibleLog.CallIsADupe,
   DetermineIfNewMult and DetermineIfNewDomesticMult read the dupe sheet and the
@@ -207,11 +236,32 @@ uses
   sendto on a UDP socket is safe from any thread. Moving it to the main thread
   only makes the colour fields it reads single-threaded (the setters run there).
 
-  STILL ON THE LISTENER, DELIBERATELY NOT MOVED HERE: the STATUS arm (GoToBand,
-  PutCalltoCallWindow, ActiveRadioPtr reads) and the LOGGED-ADIF arm
-  (ParseADIFRecord, ParametersOkay, LogContact, the exchange-field state). Both
-  touch main-thread state; moving the second is a change to how a QSO is logged
-  and wants a live WSJT-X session. See docs/BENCH_QUEUE.md. *)
+  ONE QUEUE, ONE ORDER. All four kinds ride the same list (GMessageJobs) and the
+  same Application queue, so a QSO's LOGGED message, the STATUS messages around
+  it and the decodes are evaluated in the order they ARRIVED -- and, being on
+  the main thread, in a well-defined order against the operator's own typed
+  QSOs. The entry-field work those evaluations start (PutCalltoCallWindow,
+  QueueClearCallAndFocus) is queued behind the job that asked for it, so a
+  clear raised by one QSO cannot land after the next QSO's call.
+
+  A LOGGED QSO IS NEVER DROPPED.  Stop runs on the main thread and, once the
+  listener is down, EVALUATES every pending LOGGED job for the server in FIFO
+  order before it detaches anything -- so disabling WSJT-X, or quitting, right
+  after a QSO still logs it.  The pending STATUS, CLEAR and CQ jobs are DROPPED
+  instead, including ones that arrived before a LOGGED: they only paint
+  transient state (a call into the call window that the LOGGED's own
+  ReadyForNextQSO clears a moment later; a highlight sent through a socket that
+  has just been closed), so applying them buys nothing and a drop is harmless.
+  tr4w_ShutDown calls wsjtx.Stop BEFORE LogStoreClose and before the radios are
+  freed, so the log is still open.  The ERROR-with-the-ADIF line is the last
+  resort only: a LOGGED job that survives to finalization, is popped after its
+  server is gone, fails while being logged, or meets a Stop off the main thread.
+
+  STILL OFF THE MAIN THREAD, KNOWINGLY: the TCP command handler
+  (IdTCPServer1Execute). It is request/response -- WSJT-X expects the reply on
+  the same connection within about a second -- so it cannot simply be queued; see
+  the assessment at that procedure. The heartbeat and close arms set
+  WSJTXState, which is the one thing a network thread is meant to do. *)
 
 { THE DISPLAY REFRESH THAT FOLLOWS A WSJT-X QSO, MOVED OFF THE SOCKET THREAD.
 
@@ -251,18 +301,25 @@ type
    TWSJTXUIWork = class(TObject)
    public
       procedure Run(Data: PtrInt);
-      procedure RunDecode(Data: PtrInt);
+      procedure RunMessage(Data: PtrInt);
    end;
 
-   (* One CQ decode, by value. Server is nil once the server has stopped or
-     been freed: the job is then popped and dropped. *)
-   TWSJTXDecodeJob = class(TObject)
+   TWSJTXMessageKind = (wmCQDecode, wmStatus, wmClear, wmLoggedADIF);
+
+   (* One forwarded message, by value. Server is nil once the server has stopped
+     or been freed: the job is then popped and dropped (a LOGGED one reports
+     that it is dropping a QSO). Call, Grid and Frequency serve the decode and
+     the status; Id the decode; Adif the logged record. *)
+   TWSJTXMessageJob = class(TObject)
    public
+      Kind: TWSJTXMessageKind;
       Server: TWSJTXServer;
       Call: string;
       Grid: string;
       Id: string;
+      Adif: string;
       Frequency: Int64;
+      Transmitting: boolean;
    end;
 
 var
@@ -271,7 +328,7 @@ var
    GStationCall: string = '';
    GStationGrid: string = '';
    (* Pending decodes, oldest first. Guarded by GWSJTXUILock. *)
-   GDecodeJobs: TList = nil;
+   GMessageJobs: TList = nil;
 
 procedure TWSJTXUIWork.Run(Data: PtrInt);
 var
@@ -331,19 +388,74 @@ begin
    end;
 end;
 
+(* Says so, and returns True, when it is NOT the main thread. Every Evaluate*
+  starts with this: they read the sheet, ActiveContest, the entry fields and the
+  log store, none of which tolerate a second thread. *)
+function OffMainThread(const aWhat: string): boolean;
+begin
+   Result := not OnMainThread;
+   if Result then
+      begin
+      logger.Error('[uWSJTX] ' + aWhat + ' called off the main thread; ' +
+        'refused -- it reads main-thread state');
+      end;
+end;
+
+(* Run one job against its server. Main thread. *)
+procedure EvaluateMessageJob(aJob: TWSJTXMessageJob);
+begin
+   if aJob.Server = nil then
+      begin
+      if aJob.Kind = wmLoggedADIF then
+         begin
+         (* LAST RESORT -- Stop drains LOGGED jobs, so reaching this means
+           something queued one behind it.  Loud, to the operator as well as
+           the log: this is a lost contact. *)
+         logger.Error('[uWSJTX] LOST QSO: a WSJT-X logged record was popped ' +
+           'after its server was gone and was NOT logged: ' + aJob.Adif);
+         QuickDisplayError('WSJT-X QSO NOT LOGGED -- see tr4w.log');
+         end;
+      Exit;
+      end;
+
+   case aJob.Kind of
+     wmCQDecode:
+        begin
+        aJob.Server.EvaluateCQDecode(aJob.Call, aJob.Grid, aJob.Id,
+                                     aJob.Frequency);
+        end;
+
+     wmStatus:
+        begin
+        aJob.Server.EvaluateStatus(aJob.Frequency, aJob.Call, aJob.Grid,
+                                   aJob.Transmitting);
+        end;
+
+     wmClear:
+        begin
+        aJob.Server.EvaluateClear;
+        end;
+
+     wmLoggedADIF:
+        begin
+        aJob.Server.EvaluateLoggedADIF(aJob.Adif);
+        end;
+   end;
+end;
+
 (* One queued call pops one job, so the FIFO order of the queue is the order of
-  the decodes. A job whose server has gone is dropped unevaluated. Main thread. *)
-procedure TWSJTXUIWork.RunDecode(Data: PtrInt);
+  the messages. Main thread. *)
+procedure TWSJTXUIWork.RunMessage(Data: PtrInt);
 var
-   job: TWSJTXDecodeJob;
+   job: TWSJTXMessageJob;
 begin
    job := nil;
    EnterCriticalSection(GWSJTXUILock);
    try
-      if (GDecodeJobs <> nil) and (GDecodeJobs.Count > 0) then
+      if (GMessageJobs <> nil) and (GMessageJobs.Count > 0) then
          begin
-         job := TWSJTXDecodeJob(GDecodeJobs[0]);
-         GDecodeJobs.Delete(0);
+         job := TWSJTXMessageJob(GMessageJobs[0]);
+         GMessageJobs.Delete(0);
          end;
    finally
       LeaveCriticalSection(GWSJTXUILock);
@@ -355,30 +467,144 @@ begin
       end;
 
    try
-      if job.Server <> nil then
-         begin
-         job.Server.EvaluateCQDecode(job.Call, job.Grid, job.Id, job.Frequency);
-         end;
+      EvaluateMessageJob(job);
    finally
       job.Free;
    end;
 end;
 
+(* The listener's side of every Post*: takes ownership of aJob. On the main
+  thread it evaluates at once; anywhere else it joins the one FIFO. *)
+procedure HandOffMessage(aJob: TWSJTXMessageJob);
+var
+   idx: integer;
+begin
+   if OnMainThread then
+      begin
+      try
+         EvaluateMessageJob(aJob);
+      finally
+         aJob.Free;
+      end;
+      Exit;
+      end;
+
+   (* QueueAsyncCall RAISES on a shut-down queue rather than returning False. *)
+   if (Application = nil) or Application.Terminated then
+      begin
+      aJob.Free;
+      Exit;
+      end;
+
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      GMessageJobs.Add(aJob);
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+
+   try
+      Application.QueueAsyncCall(WSJTXUIWork.RunMessage, 0);
+   except
+      on E: Exception do
+         begin
+         (* Not queued, so take it back out rather than leave a job that no
+           call will pop. *)
+         EnterCriticalSection(GWSJTXUILock);
+         try
+            idx := GMessageJobs.IndexOf(aJob);
+            if idx >= 0 then
+               begin
+               GMessageJobs.Delete(idx);
+               aJob.Free;
+               end;
+         finally
+            LeaveCriticalSection(GWSJTXUILock);
+         end;
+         logger.Error('[uWSJTX] could not queue a WSJT-X message: ' + E.Message);
+         end;
+   end;
+end;
+
+(* STOP'S DRAIN: log every LOGGED job still queued for aServer, oldest first.
+  The jobs are taken out of the list under the lock and evaluated outside it,
+  because logging a QSO can queue more work. Called once the listener is down,
+  so nothing can be added behind it.  Each failure is reported with the ADIF
+  text and does not stop the rest. *)
+procedure FlushLoggedMessages(aServer: TWSJTXServer);
+var
+   taken: TList;
+   job: TWSJTXMessageJob;
+   i: integer;
+begin
+   taken := TList.Create;
+   try
+      EnterCriticalSection(GWSJTXUILock);
+      try
+         i := 0;
+         while (GMessageJobs <> nil) and (i < GMessageJobs.Count) do
+            begin
+            job := TWSJTXMessageJob(GMessageJobs[i]);
+            if (job.Server = aServer) and (job.Kind = wmLoggedADIF) then
+               begin
+               taken.Add(job);
+               GMessageJobs.Delete(i);
+               end
+            else
+               begin
+               Inc(i);
+               end;
+            end;
+      finally
+         LeaveCriticalSection(GWSJTXUILock);
+      end;
+
+      for i := 0 to taken.Count - 1 do
+         begin
+         job := TWSJTXMessageJob(taken[i]);
+         try
+            if OnMainThread then
+               begin
+               try
+                  aServer.EvaluateLoggedADIF(job.Adif);
+               except
+                  on E: Exception do
+                     begin
+                     logger.Error('[uWSJTX] LOST QSO: logging a WSJT-X record ' +
+                       'at Stop failed (' + E.Message + '): ' + job.Adif);
+                     end;
+                  end;
+               end
+            else
+               begin
+               logger.Error('[uWSJTX] LOST QSO: Stop was called off the main ' +
+                 'thread, so a pending WSJT-X record could not be logged: ' +
+                 job.Adif);
+               end;
+         finally
+            job.Free;
+         end;
+         end;
+   finally
+      taken.Free;
+   end;
+end;
+
 (* Cut every queued decode loose from aServer. Called once the server's listener
   is down, so nothing can be added behind it. *)
-procedure DetachCQDecodes(aServer: TWSJTXServer);
+procedure DetachMessages(aServer: TWSJTXServer);
 var
    i: integer;
 begin
    EnterCriticalSection(GWSJTXUILock);
    try
-      if GDecodeJobs <> nil then
+      if GMessageJobs <> nil then
          begin
-         for i := 0 to GDecodeJobs.Count - 1 do
+         for i := 0 to GMessageJobs.Count - 1 do
             begin
-            if TWSJTXDecodeJob(GDecodeJobs[i]).Server = aServer then
+            if TWSJTXMessageJob(GMessageJobs[i]).Server = aServer then
                begin
-               TWSJTXDecodeJob(GDecodeJobs[i]).Server := nil;
+               TWSJTXMessageJob(GMessageJobs[i]).Server := nil;
                end;
             end;
          end;
@@ -387,14 +613,35 @@ begin
    end;
 end;
 
-function PendingCQDecodeCount: integer;
+function PendingMessageOrder: string;
+const
+   KIND_LETTER: array[TWSJTXMessageKind] of char = ('C', 'S', 'X', 'L');
+var
+   i: integer;
+begin
+   Result := '';
+   EnterCriticalSection(GWSJTXUILock);
+   try
+      if GMessageJobs <> nil then
+         begin
+         for i := 0 to GMessageJobs.Count - 1 do
+            begin
+            Result := Result + KIND_LETTER[TWSJTXMessageJob(GMessageJobs[i]).Kind];
+            end;
+         end;
+   finally
+      LeaveCriticalSection(GWSJTXUILock);
+   end;
+end;
+
+function PendingMessageCount: integer;
 begin
    EnterCriticalSection(GWSJTXUILock);
    try
       Result := 0;
-      if GDecodeJobs <> nil then
+      if GMessageJobs <> nil then
          begin
-         Result := GDecodeJobs.Count;
+         Result := GMessageJobs.Count;
          end;
    finally
       LeaveCriticalSection(GWSJTXUILock);
@@ -652,7 +899,8 @@ begin
      (* AFTER the listener is down, so nothing can queue behind this. A decode
        already queued is then popped and dropped rather than evaluated against a
        server that has stopped -- or been freed. *)
-     DetachCQDecodes(Self);
+     FlushLoggedMessages(Self);
+     DetachMessages(Self);
   end;
 end;
 
@@ -712,10 +960,6 @@ var
   DF: Cardinal;
   date: TDateTime;
   RXDF, TXDF: integer;
-  TempRXData: ContestExchange;
-  TempMode: ModeType;
-  TempBand: BandType;
-  TempFreq: integer;
   grid: string;
   shortStr: shortString;
   //len: integer;
@@ -787,23 +1031,6 @@ begin
                  Unpack(AData, index, DEGrid);
                  Unpack(AData, index, DXGrid);
 
-                 // Issue #978: with no radio defined, follow the WSJT-X dial
-                 // frequency to set the active band (band only, and only on an
-                 // actual change).  GoToBand applies the same multi-band gate
-                 // and display refresh as an Alt-B band change.
-                 if (ActiveRadioPtr.RadioModel = NoInterfacedRadio) and
-                    (ActiveRadioPtr.tFactoryObject = nil) then
-                    begin
-                    GetBandMapBandModeFromFrequency(frequency, TempBand, TempMode);
-                    if (TempBand <> NoBand) and (TempBand <> ActiveBand) then
-                       begin
-                       logger.debug('[uWSJTX] No radio defined; following WSJT-X to band '
-                         + string(BandStringsArray[TempBand]) + ' (' + IntToStr(frequency)
-                         + ' Hz)');
-                       GoToBand(TempBand);
-                       end;
-                    end;
-
                  if logger.IsTraceEnabled then
                     begin
                     logger.trace('[uWSJTX] WSJTX Status>>> Frequency: ' +
@@ -816,30 +1043,10 @@ begin
                         ' DECall: ' + DECall + ' DEGrid: ' + DEGrid
                       + ' DXGrid: ' + DXGrid);
                     end;
-                 if transmitting then
-                    begin
-                    logger.debug('[uWSJTX] Calling station %s, TotalContacts = %d',
-                      [DXCall, TotalContacts]);
-                    if DXCall <> sCallSentToWindow then
-                       begin
-                       sCallSentToWindow := DXCall;
-                       //ShowStationInformation(@DXCall);
-                       PutCalltoCallWindow(DXCall);
-                       { Was six display calls made straight from this UDP
-                         listener; the grid-vs-2-character choice moved with
-                         them because it belongs beside the drawing it
-                         qualifies. }
-                       QueueStationDisplay(DXCall, DXGrid);
-                       end
-                    else
-                       begin
-                       logger.debug('DXCall (%s) was not equal to sCallSentToWindow (%s)', [DXCall, sCallSentToWindow]);
-                       end;
-                    end
-                 else
-                    begin
-                    logger.debug('[uWSJTX]Status message received for %s, but Transmitting is false in WSJT-X UDP Message', [DXCall])
-                    end;
+                 (* THE REST OF THIS ARM -- following the dial frequency to a band,
+                   putting the station in the call window, the display batch --
+                   reads and writes main-thread state.  Hand it over. *)
+                 PostStatus(frequency, DXCall, DXGrid, transmitting);
                  end;
 
              WSJTX_MESSAGETYPE_DECODEV:
@@ -959,7 +1166,7 @@ begin
              WSJTX_MESSAGETYPE_CLEARV:
                 begin
                 logger.trace('[uWSJTX] WSJTX_MESSAGETYPE_CLEARV message received');
-                Self.HandleMessage_Clear;
+                PostClear;
                 end;
 
              WSJTX_MESSAGETYPE_QSOV:
@@ -1010,100 +1217,9 @@ begin
                     end;
                  Unpack(AData, index, adif);
                  logger.Trace('[uWSJTX] >>> ADIF Record to log: ' + adif);
-                 ClearContestExchange(TempRXData);
-
-                 if ParseADIFRecord(adif, TempRXData) then
-                   // processed a record if true
-                    begin
-                    logger.Debug('[uWSJTX] QTHString is %s',[TempRXData.QTHString]);
-                   // Flag a WSJT-X/TR4W operator mismatch (non-modal).  Done
-                   // here, before the ParametersOkay gate, so it runs for
-                   // every parsed record regardless of whether the QSO logs.
-                   WarnIfWSJTXOperatorMismatch(TempRXData.ceOperator,
-                     CurrentOperator);
-                   ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
-
-                   (* The DX QTH, then the prefix, from one contest lookup
-                      -- M11 S4 (LOGEDIT.SetDXQTHAndPrefix). *)
-                   SetDXQTHAndPrefix(TempRXData);
-
-                   //CalculateQSOPoints(TempRXData);
-                   logger.debug('[uWSJTX] TotalContacts right before update of NumberSent in uWSJTX ADIF UDP message = %d', [TotalContacts]);
-
-                   //TempRXData.NumberSent := TotalContacts;
-                   //LogContact(TempRXData, true);
-
-                   // ParseADIFRecord populates QTHString (state/grid/zone) for most
-                   // contests but does not always copy it into ExchString.
-                   // ParametersOkay requires a non-empty ExchString to call
-                   // ProcessExchange — fall back to QTHString when ExchString is empty.
-                   if TempRXData.ExchString = '' then
-                      begin
-                      TempRXData.ExchString := TempRXData.QTHString;
-                      end;
-                   if TempRXData.Band <> NoBand then
-                      begin
-                      tempBand := TempRXData.Band;
-                      end
-                   else
-                      begin
-                      tempBand := ActiveBand;
-                      end;
-
-                   if TempRXData.Frequency <> 0 then
-                      begin
-                      tempFreq := TempRXData.Frequency;
-                      end
-                   else
-                      begin
-                      if ActiveRadioPtr.LastDisplayedFreq = 0 then // No connected radio so use default for band
-                         begin
-                         (* AnsiString: SysUtils' StrToIntDef takes 8-bit strings, and the band
-                           default is an ASCII token, so the conversion is lossless. *)
-                         tempFreq := StrToIntDef(AnsiString(tCabrilloFreqString[TempRXData.Band]), 0) * 1000; //14000 in array but needs to be 14000000
-                         end
-                      else
-                         begin
-                         tempFreq := ActiveRadioPtr.LastDisplayedFreq;
-                         end;
-                      end;
-
-                   if ParametersOkay(TempRXData.Callsign,
-                     {TempRXData.QTHString}TempRXData.ExchString, tempBand,
-                     Digital, tempFreq
-                     {LastDisplayedFreq[ActiveRadio]}, TempRXData) then
-                      begin
-                      TempRXData.DomesticQTH := TempRXData.QTHString;
-                      // Set these on the record actually being logged
-                      // (TempRXData), not ReceivedData -- otherwise the
-                      // WSJT-X QSO logs with a blank Computer ID and an
-                      // unset S&P flag.
-                      TempRXData.ceSearchAndPounce := OpMode =
-                        SearchAndPounceOpMode;
-                      TempRXData.ceComputerID := Settings.Computer.Id;
-                      LogContact(TempRXData, True);
-                      (* GetTickCount64, and LCLIntf declares it -- as it did
-                        GetTickCount, so this was already portable. The point
-                        is the WIDTH: MainUnit writes the same variable with
-                        GetTickCount64, and one 32-bit writer is what makes a
-                        shared stamp disagree with itself. *)
-                      tElapsedTimeFromLastQSO := GetTickCount64;
-                      QueueWSJTXUI(wjPostQSO);
-                      //ShowStationInformation(@TempRXData.Callsign);
-                      ClearContestExchange(TempRXData);
-                      CallAlreadySent := False;
-                      ExchangeHasBeenSent := False;
-                      EditingCallsignSent := False;
-                      SeventyThreeMessageSent := False;
-                      EscapeDeletedCallEntry := CallWindowString;
-                      ReadyForNextQSO;
-                      end;
-
-                   //tCleareCallWindow;
-
-                   //ShowStationInformation(@TempRXData.Callsign);
-                   //UpdateWindows;
-                    end;
+                 (* HAND-OFF: parse, locate, ParametersOkay and LogContact all run on
+                   the main thread, in arrival order -- see EvaluateLoggedADIF. *)
+                 PostLoggedADIF(adif);
                end;
            else
              begin
@@ -1119,35 +1235,238 @@ end;
 procedure TWSJTXServer.PostCQDecode(const aCall, aGrid, aId: string;
   aFrequency: Int64);
 var
-   job: TWSJTXDecodeJob;
+   job: TWSJTXMessageJob;
 begin
-   if OnMainThread then
-      begin
-      EvaluateCQDecode(aCall, aGrid, aId, aFrequency);
-      Exit;
-      end;
-
-   (* QueueAsyncCall RAISES on a shut-down queue rather than returning False. *)
-   if (Application = nil) or Application.Terminated then
-      begin
-      Exit;
-      end;
-
-   job := TWSJTXDecodeJob.Create;
+   job := TWSJTXMessageJob.Create;
+   job.Kind := wmCQDecode;
    job.Server := Self;
    job.Call := aCall;
    job.Grid := aGrid;
    job.Id := aId;
    job.Frequency := aFrequency;
+   HandOffMessage(job);
+end;
 
-   EnterCriticalSection(GWSJTXUILock);
-   try
-      GDecodeJobs.Add(job);
-   finally
-      LeaveCriticalSection(GWSJTXUILock);
-   end;
+procedure TWSJTXServer.PostStatus(aFrequency: Int64; const aDXCall,
+  aDXGrid: string; aTransmitting: boolean);
+var
+   job: TWSJTXMessageJob;
+begin
+   job := TWSJTXMessageJob.Create;
+   job.Kind := wmStatus;
+   job.Server := Self;
+   job.Call := aDXCall;
+   job.Grid := aDXGrid;
+   job.Frequency := aFrequency;
+   job.Transmitting := aTransmitting;
+   HandOffMessage(job);
+end;
 
-   Application.QueueAsyncCall(WSJTXUIWork.RunDecode, 0);
+procedure TWSJTXServer.PostClear;
+var
+   job: TWSJTXMessageJob;
+begin
+   job := TWSJTXMessageJob.Create;
+   job.Kind := wmClear;
+   job.Server := Self;
+   HandOffMessage(job);
+end;
+
+procedure TWSJTXServer.PostLoggedADIF(const aAdif: string);
+var
+   job: TWSJTXMessageJob;
+begin
+   job := TWSJTXMessageJob.Create;
+   job.Kind := wmLoggedADIF;
+   job.Server := Self;
+   job.Adif := aAdif;
+   HandOffMessage(job);
+end;
+
+(* The STATUS message's effects: follow the dial to a band when no radio is
+  defined, and put the station WSJT-X is calling in the call window. Main
+  thread. sCallSentToWindow is therefore main-thread-only, with
+  ReadyForNextQSO's reset. *)
+procedure TWSJTXServer.EvaluateStatus(aFrequency: Int64; const aDXCall,
+  aDXGrid: string; aTransmitting: boolean);
+var
+   TempBand: BandType;
+   TempMode: ModeType;
+begin
+   if OffMainThread('EvaluateStatus') then
+      begin
+      Exit;
+      end;
+   Inc(FMessagesEvaluated);
+
+   // Issue #978: with no radio defined, follow the WSJT-X dial
+   // frequency to set the active band (band only, and only on an
+   // actual change).  GoToBand applies the same multi-band gate
+   // and display refresh as an Alt-B band change.
+   if (ActiveRadioPtr.RadioModel = NoInterfacedRadio) and
+      (ActiveRadioPtr.tFactoryObject = nil) then
+      begin
+      GetBandMapBandModeFromFrequency(aFrequency, TempBand, TempMode);
+      if (TempBand <> NoBand) and (TempBand <> ActiveBand) then
+         begin
+         logger.debug('[uWSJTX] No radio defined; following WSJT-X to band '
+           + string(BandStringsArray[TempBand]) + ' (' + IntToStr(aFrequency)
+           + ' Hz)');
+         GoToBand(TempBand);
+         end;
+      end;
+
+   if aTransmitting then
+      begin
+      logger.debug('[uWSJTX] Calling station %s, TotalContacts = %d',
+        [aDXCall, TotalContacts]);
+      if aDXCall <> sCallSentToWindow then
+         begin
+         sCallSentToWindow := aDXCall;
+         //ShowStationInformation(@DXCall);
+         PutCalltoCallWindow(aDXCall);
+         (* Was six display calls made straight from the UDP listener; the
+           grid-vs-2-character choice moved with them because it belongs
+           beside the drawing it qualifies. *)
+         QueueStationDisplay(aDXCall, aDXGrid);
+         end
+      else
+         begin
+         logger.debug('DXCall (%s) was not equal to sCallSentToWindow (%s)', [aDXCall, sCallSentToWindow]);
+         end;
+      end
+   else
+      begin
+      logger.debug('[uWSJTX]Status message received for %s, but Transmitting is false in WSJT-X UDP Message', [aDXCall]);
+      end;
+end;
+
+procedure TWSJTXServer.EvaluateClear;
+begin
+   if OffMainThread('EvaluateClear') then
+      begin
+      Exit;
+      end;
+   Inc(FMessagesEvaluated);
+   HandleMessage_Clear;
+end;
+
+(* A QSO WSJT-X logged: parse it, locate the call, check it and LOG IT.  Main
+  thread, as typed entry is -- LogContact writes the log store and the sheet,
+  ParametersOkay reads the entry state, and the flags below are the entry
+  fields' own. *)
+procedure TWSJTXServer.EvaluateLoggedADIF(const adif: string);
+var
+   TempRXData: ContestExchange;
+   tempBand: BandType;
+   tempFreq: integer;
+begin
+   if OffMainThread('EvaluateLoggedADIF') then
+      begin
+      Exit;
+      end;
+   Inc(FMessagesEvaluated);
+
+   if Assigned(FLoggedADIFHook) then
+      begin
+      FLoggedADIFHook(adif);
+      Exit;
+      end;
+
+   ClearContestExchange(TempRXData);
+
+   if ParseADIFRecord(adif, TempRXData) then
+     // processed a record if true
+      begin
+      logger.Debug('[uWSJTX] QTHString is %s',[TempRXData.QTHString]);
+      // Flag a WSJT-X/TR4W operator mismatch (non-modal).  Done
+      // here, before the ParametersOkay gate, so it runs for
+      // every parsed record regardless of whether the QSO logs.
+      WarnIfWSJTXOperatorMismatch(TempRXData.ceOperator,
+        CurrentOperator);
+      ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
+
+      (* The DX QTH, then the prefix, from one contest lookup
+         -- M11 S4 (LOGEDIT.SetDXQTHAndPrefix). *)
+      SetDXQTHAndPrefix(TempRXData);
+
+      //CalculateQSOPoints(TempRXData);
+      logger.debug('[uWSJTX] TotalContacts right before update of NumberSent in uWSJTX ADIF UDP message = %d', [TotalContacts]);
+
+      //TempRXData.NumberSent := TotalContacts;
+      //LogContact(TempRXData, true);
+
+      // ParseADIFRecord populates QTHString (state/grid/zone) for most
+      // contests but does not always copy it into ExchString.
+      // ParametersOkay requires a non-empty ExchString to call
+      // ProcessExchange — fall back to QTHString when ExchString is empty.
+      if TempRXData.ExchString = '' then
+         begin
+         TempRXData.ExchString := TempRXData.QTHString;
+         end;
+      if TempRXData.Band <> NoBand then
+         begin
+         tempBand := TempRXData.Band;
+         end
+      else
+         begin
+         tempBand := ActiveBand;
+         end;
+
+      if TempRXData.Frequency <> 0 then
+         begin
+         tempFreq := TempRXData.Frequency;
+         end
+      else
+         begin
+         if ActiveRadioPtr.LastDisplayedFreq = 0 then // No connected radio so use default for band
+            begin
+            (* AnsiString: SysUtils' StrToIntDef takes 8-bit strings, and the band
+              default is an ASCII token, so the conversion is lossless. *)
+            tempFreq := StrToIntDef(AnsiString(tCabrilloFreqString[TempRXData.Band]), 0) * 1000; //14000 in array but needs to be 14000000
+            end
+         else
+            begin
+            tempFreq := ActiveRadioPtr.LastDisplayedFreq;
+            end;
+         end;
+
+      if ParametersOkay(TempRXData.Callsign,
+        {TempRXData.QTHString}TempRXData.ExchString, tempBand,
+        Digital, tempFreq
+        {LastDisplayedFreq[ActiveRadio]}, TempRXData) then
+         begin
+         TempRXData.DomesticQTH := TempRXData.QTHString;
+         // Set these on the record actually being logged
+         // (TempRXData), not ReceivedData -- otherwise the
+         // WSJT-X QSO logs with a blank Computer ID and an
+         // unset S&P flag.
+         TempRXData.ceSearchAndPounce := OpMode =
+           SearchAndPounceOpMode;
+         TempRXData.ceComputerID := Settings.Computer.Id;
+         LogContact(TempRXData, True);
+         (* GetTickCount64, and LCLIntf declares it -- as it did
+           GetTickCount, so this was already portable. The point
+           is the WIDTH: MainUnit writes the same variable with
+           GetTickCount64, and one 32-bit writer is what makes a
+           shared stamp disagree with itself. *)
+         tElapsedTimeFromLastQSO := GetTickCount64;
+         QueueWSJTXUI(wjPostQSO);
+         //ShowStationInformation(@TempRXData.Callsign);
+         ClearContestExchange(TempRXData);
+         CallAlreadySent := False;
+         ExchangeHasBeenSent := False;
+         EditingCallsignSent := False;
+         SeventyThreeMessageSent := False;
+         EscapeDeletedCallEntry := CallWindowString;
+         ReadyForNextQSO;
+         end;
+
+      //tCleareCallWindow;
+
+      //ShowStationInformation(@TempRXData.Callsign);
+      //UpdateWindows;
+      end;
 end;
 
 procedure TWSJTXServer.EvaluateCQDecode(const aCall, aGrid, aId: string;
@@ -1158,10 +1477,8 @@ var
    nResult: integer;
    call: CallString;   (* CallIsADupe takes a var parameter *)
 begin
-   if not OnMainThread then
+   if OffMainThread('EvaluateCQDecode') then
       begin
-      logger.Error('[uWSJTX] EvaluateCQDecode called off the main thread for ' +
-        aCall + '; refused -- it reads the sheet and ActiveContest');
       Exit;
       end;
 
@@ -1172,7 +1489,7 @@ begin
       Exit;
       end;
 
-   Inc(FDecodesEvaluated);
+   Inc(FMessagesEvaluated);
    call := CallString(aCall);
 
    // Here we cheat a little bit on Frequency. The idea is that the status command is sent enough that it gives
@@ -1476,6 +1793,31 @@ begin
   Self.colorsMultFore.B := GetBValue(rgb);
 end;
 
+(* THREAD ASSESSMENT, 2026-10-14 -- this runs on Indy's TCP connection thread
+  and is deliberately NOT handed to the main thread like the UDP messages.
+
+  WHAT IT TOUCHES: radio1 / ActiveRadioPtr .CurrentStatus (VFO frequencies,
+  Split, TXOn, ExtendedMode) -- records the radio polling thread rewrites;
+  SetRadioFreq, PutRadioIntoSplit, PutRadioOutOfSplit and tPTTVIACAT, which
+  command the radio; Settings.Ptt.ViaCommands, READ AND WRITTEN; and QuickDisplay
+  (its panel write defers off the main thread by itself).
+
+  WHY THE UDP PATTERN DOES NOT APPLY:
+    * It is REQUEST / RESPONSE. CmdGetFreq, CmdGetTXFreq, CmdSendMode,
+      CmdSendTx and CmdSendSplit answer on this connection, and WSJT-X gives up
+      on a connection that does not answer within about a second (the TX / RX
+      kludge below exists for exactly that). A queued job cannot answer; the
+      thread would have to WAIT for the main thread, which adds latency
+      whenever the UI is busy and can deadlock with Stop -- the main thread
+      sits in tcpServ.Active := False waiting for this thread to finish.
+    * CmdTX / CmdRX are PTT. Adding main-thread latency to keying is a worse
+      defect than the one it would fix.
+  WHAT IS WRONG TODAY: the status reads are unsynchronised snapshots of a record
+  another thread is writing (the RadioStatusDiffers / seqlock observation in
+  CLAUDE.md, Threading), and Settings.Ptt.ViaCommands is written from here.
+  Both belong to the radio-status snapshot work and to a settings setter that
+  marshals itself, not to this unit. Left as is, and recorded in
+  docs/BENCH_QUEUE.md. *)
 procedure TWSJTXServer.IdTCPServer1Execute(AContext: TIdContext);
 var
 
@@ -2034,7 +2376,7 @@ end;
 
 initialization
    InitCriticalSection(GWSJTXUILock);
-   GDecodeJobs := TList.Create;
+   GMessageJobs := TList.Create;
 
 finalization
    (* Nothing queued may run against the work object freed below. *)
@@ -2042,12 +2384,19 @@ finalization
       begin
       Application.RemoveAsyncCalls(GWSJTXUI);
       end;
-   while GDecodeJobs.Count > 0 do
+   while GMessageJobs.Count > 0 do
       begin
-      TWSJTXDecodeJob(GDecodeJobs[GDecodeJobs.Count - 1]).Free;
-      GDecodeJobs.Delete(GDecodeJobs.Count - 1);
+      if (TWSJTXMessageJob(GMessageJobs[GMessageJobs.Count - 1]).Kind = wmLoggedADIF) and
+         Assigned(logger) then
+         begin
+         logger.Error('[uWSJTX] LOST QSO: a WSJT-X logged record survived to ' +
+           'finalization and was NOT logged: ' +
+           TWSJTXMessageJob(GMessageJobs[GMessageJobs.Count - 1]).Adif);
+         end;
+      TWSJTXMessageJob(GMessageJobs[GMessageJobs.Count - 1]).Free;
+      GMessageJobs.Delete(GMessageJobs.Count - 1);
       end;
-   FreeAndNil(GDecodeJobs);
+   FreeAndNil(GMessageJobs);
    GWSJTXUI.Free;
    GWSJTXUI := nil;
    DoneCriticalSection(GWSJTXUILock);

@@ -19,23 +19,33 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  *)
 
-(* THE WSJT-X CQ DECODE IS EVALUATED ON THE MAIN THREAD -- 2026-10-14.
+(* WHAT THE WSJT-X UDP LISTENER MAY DO ITSELF -- 2026-10-14.
 
   uWSJTX sets ThreadedEvent, so its read handler runs on Indy's listener thread.
-  The CQ-decode branch used to call VisibleLog.CallIsADupe, DetermineIfNewMult
-  and LOGEDIT.DoingAnyMults (which reaches ActiveContest, and that can free and
-  rebuild the contest object) right there. These tests pin the hand-off:
+  It used to evaluate CQ decodes, status messages, clears and LOGGED QSOs right
+  there: the dupe sheet, ActiveContest, the entry fields and the log store all
+  touched from a thread that is not the main one. Each of the four is now a job
+  (PostCQDecode and its siblings) that the main thread evaluates
+  (EvaluateCQDecode and its siblings). These tests pin that for
+  ALL FOUR kinds, named by the letter PendingMessageOrder uses:
 
-    * A decode posted from another thread is QUEUED, not evaluated.
-    * The evaluation itself refuses to run on any thread but the main one, so
-      a future caller that bypasses the hand-off is stopped and logged.
-    * A queued decode never evaluates after its server has stopped -- the
-      lifetime half. The queue is drained with ProcessMessages, which runs the
-      detached job and finds nothing to evaluate; nothing here frees a server
-      with a decode still queued and then drains for the crash.
+    C  CQ decode      S  status      X  clear      L  logged ADIF
 
-  WHAT THIS CANNOT SHOW: that the colourisation still works. That needs a live
-  WSJT-X session -- docs/BENCH_QUEUE.md. *)
+    * A message posted from another thread is QUEUED, not evaluated.
+    * The evaluation refuses to run on any thread but the main one.
+    * The four kinds share ONE queue and keep arrival order -- a QSO's L and
+      the S / C messages around it must not be reordered.
+    * A queued message never evaluates after its server has stopped or been
+      freed -- EXCEPT a LOGGED one, which Stop evaluates (a logged QSO is never
+      dropped; the status, clear and decode messages around it are). The queue
+      is drained with ProcessMessages, which pops the detached jobs and finds
+      nothing to run; nothing here frees a server with a message queued and
+      then drains for the crash.
+
+  WHAT THIS CANNOT SHOW, and says so rather than pretending: that a WSJT-X QSO
+  is LOGGED correctly. LogContact needs a booted contest -- the sheet, the log
+  store, the entry fields -- and this binary does not boot one. That, and the
+  colourisation, need a live WSJT-X session: docs/BENCH_QUEUE.md. *)
 unit uTestWSJTXThreading;
 
 {$I ..\..\src\tr4w.inc}
@@ -48,10 +58,14 @@ uses
 type
    TWSJTXThreadingTests = class(TTestCase)
    private
+      FSeen: string;       (* the ADIF the seam received, '|' between *)
       procedure Drain;
-      procedure Test_AListenerThreadDecodeIsQueuedNotEvaluated;
+      procedure RecordADIF(const aAdif: string);
+      procedure Test_EveryListenerMessageIsQueuedNotEvaluated;
       procedure Test_EvaluationRefusesAnyThreadButTheMainOne;
-      procedure Test_AQueuedDecodeIsDroppedOnceTheServerStops;
+      procedure Test_TheKindsShareOneQueueInArrivalOrder;
+      procedure Test_AQueuedMessageIsDroppedOnceTheServerIsFreed;
+      procedure Test_StopLogsAQueuedQSOInsteadOfDroppingIt;
    public
       procedure RunAllTests; override;
    end;
@@ -59,54 +73,122 @@ type
 implementation
 
 uses
-   Classes, Forms,
+   SysUtils, Classes, Forms,
    uCrashLog,   (* InstallCrashLog -- records the MAIN THREAD, without which
                   OnMainThread is False everywhere *)
    uWSJTX;
 
 type
-   (* What the UDP listener does with a CQ decode, from a thread of our own. *)
-   TDecodePosterThread = class(TThread)
+   (* Does, from a thread of its own, what the UDP listener does: one Post* per
+     letter of the script, in order -- or, with aEvaluate, calls the matching
+     Evaluate* directly the way a caller that bypassed the hand-off would. *)
+   TListenerThread = class(TThread)
    private
       FServer: TWSJTXServer;
+      FScript: string;
+      FEvaluate: boolean;
    protected
       procedure Execute; override;
    public
-      constructor Create(aServer: TWSJTXServer);
+      constructor Create(aServer: TWSJTXServer; const aScript: string;
+                         aEvaluate: boolean);
    end;
 
-   (* A caller that bypasses the hand-off and evaluates directly. *)
-   TDirectEvaluatorThread = class(TThread)
-   private
-      FServer: TWSJTXServer;
-   protected
-      procedure Execute; override;
-   public
-      constructor Create(aServer: TWSJTXServer);
-   end;
-
-constructor TDecodePosterThread.Create(aServer: TWSJTXServer);
+constructor TListenerThread.Create(aServer: TWSJTXServer;
+                                   const aScript: string;
+                                   aEvaluate: boolean);
 begin
    FServer := aServer;
+   FScript := aScript;
+   FEvaluate := aEvaluate;
    FreeOnTerminate := False;
    inherited Create(False);
 end;
 
-procedure TDecodePosterThread.Execute;
+procedure TListenerThread.Execute;
+var
+   i: integer;
 begin
-   FServer.PostCQDecode('K1ABC', 'FN42', 'WSJT-X', 14074000);
+   for i := 1 to Length(FScript) do
+      begin
+      case FScript[i] of
+        'C':
+           begin
+           if FEvaluate then
+              begin
+              FServer.EvaluateCQDecode('K1ABC', 'FN42', 'WSJT-X', 14074000);
+              end
+           else
+              begin
+              FServer.PostCQDecode('K1ABC', 'FN42', 'WSJT-X', 14074000);
+              end;
+           end;
+
+        'S':
+           begin
+           if FEvaluate then
+              begin
+              FServer.EvaluateStatus(14074000, 'K1ABC', 'FN42', True);
+              end
+           else
+              begin
+              FServer.PostStatus(14074000, 'K1ABC', 'FN42', True);
+              end;
+           end;
+
+        'X':
+           begin
+           if FEvaluate then
+              begin
+              FServer.EvaluateClear;
+              end
+           else
+              begin
+              FServer.PostClear;
+              end;
+           end;
+
+        'L':
+           begin
+           if FEvaluate then
+              begin
+              FServer.EvaluateLoggedADIF('<call:5>K1ABC<eor>');
+              end
+           else
+              begin
+              FServer.PostLoggedADIF('<call:5>K1ABC<eor>');
+              end;
+           end;
+
+        (* A second, different logged record, so order among LOGGED is visible. *)
+        'M':
+           begin
+           FServer.PostLoggedADIF('<call:5>K2XYZ<eor>');
+           end;
+      end;
+      end;
 end;
 
-constructor TDirectEvaluatorThread.Create(aServer: TWSJTXServer);
+procedure RunListener(aServer: TWSJTXServer; const aScript: string;
+                      aEvaluate: boolean);
+var
+   th: TListenerThread;
 begin
-   FServer := aServer;
-   FreeOnTerminate := False;
-   inherited Create(False);
+   th := TListenerThread.Create(aServer, aScript, aEvaluate);
+   try
+      th.WaitFor;
+   finally
+      th.Free;
+   end;
 end;
 
-procedure TDirectEvaluatorThread.Execute;
+procedure TWSJTXThreadingTests.RecordADIF(const aAdif: string);
 begin
-   FServer.EvaluateCQDecode('K1ABC', 'FN42', 'WSJT-X', 14074000);
+   if FSeen <> '' then
+      begin
+      FSeen := FSeen + '|';
+      end;
+   FSeen := FSeen + aAdif;
 end;
 
 procedure TWSJTXThreadingTests.Drain;
@@ -117,82 +199,153 @@ begin
       end;
 end;
 
-procedure TWSJTXThreadingTests.Test_AListenerThreadDecodeIsQueuedNotEvaluated;
+procedure TWSJTXThreadingTests.Test_EveryListenerMessageIsQueuedNotEvaluated;
+const
+   KINDS = 'CSXL';
 var
    server: TWSJTXServer;
-   poster: TDecodePosterThread;
+   k: integer;
 begin
    InstallCrashLog;
-   server := TWSJTXServer.Create;
-   try
-      poster := TDecodePosterThread.Create(server);
+   FSeen := '';
+   for k := 1 to Length(KINDS) do
+      begin
+      server := TWSJTXServer.Create;
+      server.LoggedADIFHook := RecordADIF;
       try
-         poster.WaitFor;
+         RunListener(server, KINDS[k], False);
+
+         CheckEquals(1, PendingMessageCount,
+                     KINDS[k] + ': the message is waiting for the main thread');
+         CheckEquals(string(KINDS[k]), PendingMessageOrder,
+                     KINDS[k] + ': and it is the kind that was posted');
+         CheckEquals(0, server.MessagesEvaluated,
+                     KINDS[k] + ': the listener thread did NOT evaluate it -- '
+                     + 'the sheet, ActiveContest, the entry fields and the log '
+                     + 'store are the main thread''s');
+
+         server.Stop;
+         Drain;
+         CheckEquals(0, PendingMessageCount,
+                     KINDS[k] + ': the queue is empty again');
+         if KINDS[k] = 'L' then
+            begin
+            CheckEquals(1, server.MessagesEvaluated,
+                        'L: Stop LOGS a queued QSO rather than dropping it');
+            end
+         else
+            begin
+            CheckEquals(0, server.MessagesEvaluated,
+                        KINDS[k] + ': Stop drops a transient message unevaluated');
+            end;
       finally
-         poster.Free;
+         server.Free;
       end;
-
-      CheckEquals(1, PendingCQDecodeCount,
-                  'the decode is waiting for the main thread');
-      CheckEquals(0, server.DecodesEvaluated,
-                  'and the listener thread did NOT evaluate it -- the dupe '
-                  + 'sheet and ActiveContest are the main thread''s');
-
-      server.Stop;     (* detaches it, so the drain below evaluates nothing *)
-      Drain;
-      CheckEquals(0, PendingCQDecodeCount, 'the queue is empty again');
-   finally
-      server.Free;
-   end;
+      end;
 end;
 
 procedure TWSJTXThreadingTests.Test_EvaluationRefusesAnyThreadButTheMainOne;
+const
+   KINDS = 'CSXL';
 var
    server: TWSJTXServer;
-   evaluator: TDirectEvaluatorThread;
+   k: integer;
 begin
    InstallCrashLog;
    server := TWSJTXServer.Create;
    try
-      evaluator := TDirectEvaluatorThread.Create(server);
-      try
-         evaluator.WaitFor;
-      finally
-         evaluator.Free;
-      end;
-
-      CheckEquals(0, server.DecodesEvaluated,
-                  'EvaluateCQDecode refuses to run off the main thread');
+      for k := 1 to Length(KINDS) do
+         begin
+         RunListener(server, KINDS[k], True);
+         CheckEquals(0, server.MessagesEvaluated,
+                     KINDS[k] + ': Evaluate* refuses to run off the main '
+                     + 'thread -- EvaluateLoggedADIF is the one that logs a QSO');
+         end;
    finally
       server.Free;
    end;
 end;
 
-procedure TWSJTXThreadingTests.Test_AQueuedDecodeIsDroppedOnceTheServerStops;
+procedure TWSJTXThreadingTests.Test_TheKindsShareOneQueueInArrivalOrder;
 var
    server: TWSJTXServer;
-   poster: TDecodePosterThread;
 begin
    InstallCrashLog;
    server := TWSJTXServer.Create;
    try
-      poster := TDecodePosterThread.Create(server);
-      try
-         poster.WaitFor;
-      finally
-         poster.Free;
-      end;
-      CheckEquals(1, PendingCQDecodeCount, 'queued');
+      (* A status, the QSO's logged message, WSJT-X's clear, a decode, and the
+        next QSO's status. *)
+      RunListener(server, 'SLXCS', False);
 
-      (* Destroy stops the server, which detaches the job. The server is then
-        gone and the queue is drained: the job is popped and DROPPED, not run
+      CheckEquals('SLXCS', PendingMessageOrder,
+                  'one FIFO for all four kinds: nothing is reordered, and the '
+                  + 'logged message sits between the messages around it');
+      CheckEquals(0, server.MessagesEvaluated,
+                  'none evaluated off the main thread');
+
+      server.Stop;
+      Drain;
+      CheckEquals('', PendingMessageOrder, 'and the queue empties');
+   finally
+      server.Free;
+   end;
+end;
+
+procedure TWSJTXThreadingTests.Test_AQueuedMessageIsDroppedOnceTheServerIsFreed;
+var
+   server: TWSJTXServer;
+begin
+   InstallCrashLog;
+   FSeen := '';
+   server := TWSJTXServer.Create;
+   server.LoggedADIFHook := RecordADIF;
+   try
+      RunListener(server, 'CSXL', False);
+      CheckEquals(4, PendingMessageCount, 'queued');
+
+      (* Destroy stops the server, which detaches every job. The server is then
+        gone and the queue is drained: the jobs are popped and DROPPED, not run
         against freed memory. *)
       server.Free;
       server := nil;
       Drain;
 
-      CheckEquals(0, PendingCQDecodeCount,
-                  'the orphaned decode was popped and discarded');
+      CheckEquals(0, PendingMessageCount,
+                  'the orphaned messages were popped and discarded');
+      CheckEquals('<call:5>K1ABC<eor>', FSeen,
+                  'and the logged one was LOGGED by the destructor''s Stop');
+   finally
+      server.Free;
+   end;
+end;
+
+procedure TWSJTXThreadingTests.Test_StopLogsAQueuedQSOInsteadOfDroppingIt;
+var
+   server: TWSJTXServer;
+begin
+   InstallCrashLog;
+   FSeen := '';
+   server := TWSJTXServer.Create;
+   server.LoggedADIFHook := RecordADIF;
+   try
+      (* status, QSO 1, clear, QSO 2, decode -- two LOGGED among transient ones *)
+      RunListener(server, 'SLXMC', False);
+      CheckEquals('SLXLC', PendingMessageOrder, 'queued in arrival order');
+      CheckEquals(0, server.MessagesEvaluated, 'nothing evaluated off the main thread');
+
+      server.Stop;
+
+      CheckEquals(2, server.MessagesEvaluated,
+                  'Stop evaluated both LOGGED jobs and nothing else: the '
+                  + 'status, clear and decode are transient and were dropped');
+      CheckEquals('<call:5>K2XYZ<eor>', Copy(FSeen, Pos('|', FSeen) + 1, MaxInt),
+                  'the second QSO was logged second');
+      CheckEquals('<call:5>K1ABC<eor>', Copy(FSeen, 1, Pos('|', FSeen) - 1),
+                  'FIFO: the first QSO was logged first');
+
+      Drain;
+      CheckEquals(0, PendingMessageCount, 'the rest was detached and dropped');
+      CheckEquals(2, server.MessagesEvaluated, 'and the drain evaluated nothing more');
    finally
       server.Free;
    end;
@@ -205,9 +358,11 @@ begin
       Application.Initialize;
       end;
 
-   Test_AListenerThreadDecodeIsQueuedNotEvaluated;
+   Test_EveryListenerMessageIsQueuedNotEvaluated;
    Test_EvaluationRefusesAnyThreadButTheMainOne;
-   Test_AQueuedDecodeIsDroppedOnceTheServerStops;
+   Test_TheKindsShareOneQueueInArrivalOrder;
+   Test_AQueuedMessageIsDroppedOnceTheServerIsFreed;
+   Test_StopLogsAQueuedQSOInsteadOfDroppingIt;
 end;
 
 end.

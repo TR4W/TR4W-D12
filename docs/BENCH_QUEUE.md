@@ -23,7 +23,7 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
-## Added 2026-10-14 -- WSJT-X CQ DECODES ARE EVALUATED ON THE MAIN THREAD
+## Added 2026-10-14 -- WSJT-X MESSAGES ARE EVALUATED ON THE MAIN THREAD
 
 `uWSJTX` ran the dupe and new-multiplier test for a CQ decode on Indy's UDP
 listener thread, racing the main thread's sheet and `ActiveContest`. The
@@ -41,8 +41,38 @@ from `Free` for as long as the unit existed), so the shutdown path is new.
   logged because both are now on the main thread's queue order.)
 - [ ] **Turn WSJT-X off and on in Preferences, then exit TR4W** with WSJT-X
   still sending. No crash, nothing in `tr4w.log` from `[uWSJTX]` at Error level.
-- [ ] **Look for `EvaluateCQDecode called off the main thread` in `tr4w.log`.**
+- [ ] **Look for `called off the main thread` from `[uWSJTX]` in `tr4w.log`.**
   It should never appear.
+
+The STATUS, CLEAR and LOGGED-ADIF messages followed (same day), so a QSO WSJT-X
+logs is now parsed, checked and LOGGED on the main thread, in arrival order with
+everything else WSJT-X sent. The unit tests pin the marshalling for all four
+kinds and cannot log a QSO (no booted contest):
+
+- [ ] **Log a QSO in WSJT-X (FT8, a contest that accepts it).** TR4W logs it
+  EXACTLY ONCE, with the right call, band, mode, and exchange (grid or state as
+  the contest wants), and the log window, score and rate update.
+- [ ] **Work two stations back to back while decodes are scrolling.** Each QSO
+  is logged once and in order; the call window does not show the previous
+  station's call or lose the next one (the clear after QSO 1 must land BEFORE
+  QSO 2's call is placed).
+- [ ] **While WSJT-X is calling a station,** that call appears in the call
+  window and its grid in the station display; stepping the dial with no radio
+  defined still follows the band.
+- [ ] **Log a QSO from WSJT-X and, at the same moment, type one yourself.** Both
+  are logged, neither is lost or doubled.
+- [ ] **Disable WSJT-X in Preferences right after WSJT-X logs a QSO, and the QSO
+  must be in the log.** Stop logs any QSO still queued, in order, before it lets
+  go. Do the same by quitting TR4W immediately after a WSJT-X QSO (the exit path
+  stops the server before the log store closes). A line in `tr4w.log` reading
+  `LOST QSO` is a failure of this fix: report it with the ADIF text it carries.
+
+NOT CHANGED, AND RECORDED: the WSJT-X TCP command handler
+(`IdTCPServer1Execute`) still runs on Indy's TCP thread. It reads the radio
+status record unsynchronised and writes `Settings.Ptt.ViaCommands`. It is
+request/response against a roughly one-second WSJT-X deadline, and CmdTX / CmdRX
+are PTT, so queuing it to the main thread is the wrong fix; the assessment is in
+a comment above the procedure. It belongs with the radio-status snapshot work.
 
 ## Added 2026-10-14 -- COUNTY-LINE IMPORT ASKS THE CLASS (M10 S7)
 
