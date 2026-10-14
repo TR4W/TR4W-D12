@@ -39,7 +39,9 @@ def dead_arms(proxies, registry):
    return {"scoring": scoring, "export": export, "formats": sorted(formats)}
 
 
-TRAIT_GETTERS = {"GETQSOPOINTMETHOD": "QP", "GETEXCHANGEKIND": "AE",
+# GetQSOPointMethod LEFT THIS LIST AT M10 S4 (2026-10-14): the point method
+# was deleted as a concept, the getter and the row's QP column with it.
+TRAIT_GETTERS = {"GETEXCHANGEKIND": "AE",
                  "GETDOMESTICMULTIPLIERTYPE": "DM", "GETDXMULTIPLIERTYPE": "XM"}
 
 

@@ -567,7 +567,7 @@ begin
    Emit('== setup');
    (* NO active.qsopointmethod LINE since M10 S1 (2026-10-14): every contest
      the matrix runs is scored by its class, which never reads
-     ActiveQSOPointMethod, and plan S4 deletes the point method as a concept.
+     ActiveQSOPointMethod, and M10 S4 deleted the point method as a concept.
      Dropped in a re-freeze of its own, before anything moves. *)
    EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ActiveExchange)));
    EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ActiveInitialExchange)));

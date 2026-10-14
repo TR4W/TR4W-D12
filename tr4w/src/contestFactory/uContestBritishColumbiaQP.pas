@@ -140,7 +140,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
@@ -264,11 +263,6 @@ end;
 function TContestBritishColumbiaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
-end;
-
-function TContestBritishColumbiaQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := BCQPQSOPointMethod;
 end;
 
 (* BCQPQSOPointMethod -- `if Mode = PHONE then 2 else 4`.

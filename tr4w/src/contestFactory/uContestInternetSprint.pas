@@ -49,8 +49,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   GetMarksDupes answers False, and LOGSUBS2 asks MarksDupes through
   ContestIdentity rather than testing the global ActiveQSOPointMethod. So an
   operator's QSO POINT METHOD line no longer switches dupe marking for this
-  contest, in either direction. GetQSOPointMethod still states the row's
-  value, for the legacy engine's vocabulary.
+  contest, in either direction. The point method itself was deleted as a
+  concept at M10 S4 (2026-10-14); this class's GetMarksDupes is now the only
+  place the rule is stated.
 
   BLANK CABName, FriendlyName AND ADIFName ALL MEAN "THE ENUM'S SPELLING";
   the getters below state the value each resolves to, never the empty
@@ -90,7 +91,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       function GetMarksDupes: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
@@ -190,11 +190,6 @@ end;
 function TContestInternetSprint.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberNameDomesticOrDXQTHExchange;
-end;
-
-function TContestInternetSprint.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := AlwaysOnePointPerQSO;
 end;
 
 function TContestInternetSprint.GetIsUSQSOParty: boolean;

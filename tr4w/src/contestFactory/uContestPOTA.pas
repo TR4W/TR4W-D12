@@ -94,7 +94,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       function GetWritesADIFContestId: boolean; override;
       function GetOffersParkTools: boolean; override;
@@ -218,11 +217,6 @@ end;
 function TContestPOTA.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndPOTAPark;
-end;
-
-function TContestPOTA.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := OnePointPerQSO;
 end;
 
 function TContestPOTA.GetIsUSQSOParty: boolean;

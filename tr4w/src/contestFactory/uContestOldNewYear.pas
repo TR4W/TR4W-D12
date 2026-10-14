@@ -74,7 +74,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -178,11 +177,6 @@ end;
 function TContestOldNewYear.GetExchangeKind: ExchangeType;
 begin
    Result := RSTPowerExchange;
-end;
-
-function TContestOldNewYear.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := OldNewYearQSOPointMethod;
 end;
 
 function TContestOldNewYear.GetIsUSQSOParty: boolean;

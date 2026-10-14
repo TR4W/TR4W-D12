@@ -100,7 +100,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
@@ -198,11 +197,6 @@ end;
 function TContestVirginiaQP.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberDomesticOrDXQTHExchange;
-end;
-
-function TContestVirginiaQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := VAQSOPointMethod;
 end;
 
 (* VAQSOPointMethod -- phone one, an air-mobile or maritime-mobile station

@@ -1243,7 +1243,8 @@ begin
 
   (* NO MULTIPLIER CREDIT FOR A QSO ON A BAND THE CONTEST DOES NOT USE -- NY4I,
      2026-10-01: "correct, no multiplier credit for off-band QSOs". The points
-     half is in LOGSTUFF.CalculateQSOPoints and asks the same question.
+     half is TContestBase.ScoreQSO (since M3), which asks the same question
+     before the class ever sees the QSO.
 
      HERE, AFTER THE FOUR FLAGS ARE CLEARED, because every flag the program
      keeps is set in this routine: live entry, the rescore, the editable log

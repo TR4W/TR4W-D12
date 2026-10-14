@@ -472,7 +472,7 @@ class Renderer:
          "",
          "### 9.2 Class traits the engine contradicts (D8)",
          "",
-         f"**{traits['checked']}** trait overrides checked (`GetQSOPointMethod`, `GetExchangeKind`,",
+         f"**{traits['checked']}** trait overrides checked (`GetExchangeKind`,",
          "`GetDomesticMultiplierType`, `GetDXMultiplierType`), each against the value the",
          "ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its",
          f"`ContestsArray` row. **{len(traits['rows'])}** disagree or could not be read:",

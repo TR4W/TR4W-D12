@@ -98,18 +98,26 @@ Everything TR4W currently knows about a contest is one row. ARRL Field Day's:
 Email: 'fieldday@arrl.org';  DF: 'arrlsect';  WA7BNM: 57;  QRZRUID: 0;
 Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;
 {DM: NoDomesticMults;}  P: 0;  AE: ClassDomesticOrDXQTHExchange;
-XM: NoDXMults;  QP: ARRLFieldDayQSOPointMethod;
+XM: NoDXMults;
 ADIFName: 'ARRL-FIELD-DAY';  CABName: 'ARRL-FD';  FriendlyName: 'ARRL Field Day'
 ```
 
 (`XM` said `ARRLDXCC` until 2026-10-01. NY4I ruled that Field Day has no
 multipliers, and the row and the class were corrected together.)
 
-Two fields are the thread to pull:
+**There is no point method to set.** The row had a `QP:` column -- the
+contest's `QSOPointMethodType`, Field Day's was `ARRLFieldDayQSOPointMethod`
+-- and it led to an arm of `case ActiveQSOPointMethod of` in
+`LOGSTUFF.CalculateQSOPoints`. The case was deleted at M10 S3 and the column,
+the enum, `TContestBase.QSOPointMethod` and `ActiveQSOPointMethod` at M10 S4
+(2026-10-14). A contest's scoring is its class's `CalculateQSOPoints`,
+written from the sponsor's rules; to see what TR4W used to do, read the arm in
+git history (before M10 S3) or the D7 tree.
+
+The field that is still the thread to pull:
 
 | field | leads to |
 |---|---|
-| `QP:` | the arm of `case ActiveQSOPointMethod of` in `LOGSTUFF.CalculateQSOPoints` -- **deleted at M10 S3** (2026-10-14); read the arm in git history or the D7 tree, and the class that now owns it |
 | `AE:` | the arm of `case ActiveExchange of` in `LOGSTUFF.ProcessExchange`, which names a `Process...Exchange` function — the exchange parsing |
 
 `AE:` is also what the contest's EXPORT looks like by default -- through the
@@ -126,7 +134,7 @@ domestic-multiplier value comes from whatever the record initialises to rather
 than from anyone choosing it. Do **not** override such a field with a guess:
 leave it reading the array and say why.
 
-### Step 2 — decide whether the `QP` or `AE` is worth sharing
+### Step 2 — decide whether the scoring rule (once the `QP`) or `AE` is worth sharing
 
 NY4I, 2026-09-02:
 
@@ -261,17 +269,18 @@ shared files a contest touches; the search path already covers
 | `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | the array row |
 | `PrefixMultiplierType`, `ZoneMultiplierType`, `DXMultiplierType`, `DomesticMultiplierType` | the array row |
-| `InitialExchangeKind`, `ExchangeKind`, `QSOPointMethod` | the array row |
+| `InitialExchangeKind`, `ExchangeKind` | the array row. (`QSOPointMethod` is gone -- M10 S4) |
 | `IsUSQSOParty` | the array row (`P <> 0`) |
 | `ADIFPowerTag` | `RX_PWR` -- the ADIF tag the QSO's `Power` field goes to. FOC Marathon says `FOC_NUM`, because its parser puts the membership number there (M4) |
 | `WritesADIFContestId` | True. General QSO says False -- an operating mode, not a contest (M4) -- and so does POTA, an activation (2026-10-13, design Q6) |
 | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries` | `ContestsBooleanArray`'s bits. **Set-up reads these** (M2) |
 | `ZoneMode` | `CQZoneMode` when the array's CQ bit is set, else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
 | `InStateDomesticFileName` | a QSO party's in-state file -- the `QSOParties` entry the row's `P` indexes; `''` otherwise. `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads |
-| `MarksDupes` | the dupe policy: True unless the row's `QP` is `AlwaysOnePointPerQSO` ("ignores dupes"). **`logsubs2` reads it** through `ContestIdentity` when a QSO is logged (M3) -- an operator's `QSO POINT METHOD` no longer reaches it. Internet Sprint and SRR-JR state False |
+| `MarksDupes` | the dupe policy: **True** (since M10 S4; until then "unless the row's `QP` is `AlwaysOnePointPerQSO`", the same answer for every contest, because the only two such rows were the two classes that say False). A contest that ignores dupes overrides it. **`logsubs2` reads it** through `ContestIdentity` when a QSO is logged (M3) -- an operator's `QSO POINT METHOD` no longer reaches it. Internet Sprint and SRR-JR state False |
 
 **SET-UP ASKS THE CONTEST, SINCE M2 (2026-10-01).** `FCONTEST.FoundContest`'s
-head writes the seven `Active*` globals, the flags above, the zone list and the
+head writes the six `Active*` globals (seven until M10 S4 deleted
+`ActiveQSOPointMethod`), the flags above, the zone list and the
 domestic file from `uContestRegistry.ContestIdentity(Contest)` -- your class --
 through one resolver, `FCONTEST.ApplyContestTraits`, and an **operator's
 statement beats your value** whatever the line order. So a trait override is
@@ -341,7 +350,7 @@ the wrongness.
 | method | base behaviour |
 |---|---|
 | `ScoreQSO` | **not virtual** -- the one public scoring entry point: zero, band check, the four overrides, then `CalculateQSOPoints` (section 1) |
-| `CalculateQSOPoints` | **protected**. Scores 0 (`NoQSOPointMethod` is a real value). Asked only by `ScoreQSO`, so never about a QSO on a band the contest does not use, nor one an override already scored |
+| `CalculateQSOPoints` | **protected**. Scores 0 (the legacy `NoQSOPointMethod` meant exactly this). Asked only by `ScoreQSO`, so never about a QSO on a band the contest does not use, nor one an override already scored |
 | `UsesBand` | **every band**, which is today's behaviour. A contest that states its bands overrides it, and a QSO on any other band is then logged, scores 0 (even under a `QSO POINTS ...` override) and earns no multiplier. Asked through `ContestCreditsBand` by `ScoreQSO` and `logdupe.SetMultFlags` -- and since M8 by the dupe sheet (`TCallsignsList.AddCallsign` marks no dupe bit for it, `CallsignIsDupe` calls none a dupe) and the need-multiplier hint (`LogEdit`, through `CreditedBands`). Idaho is the first overrider (`CONTEST_OWNERSHIP_DESIGN.md` §7.4) |
 | `CountsAsMultiplier` | **True for every QSO and kind** -- whether a QSO earns a multiplier of a kind AT ALL, asked by `logdupe.SetMultFlags` (through `ContestCountsMultiplier`) before the sheet says whether it is new. The BC, New York and Indiana parties (a `DX` QTH), the PCC (its own country's prefix) and the Jock White Field Day (its own branch, and branch 00) override it (M8, below) |
 | `DomesticMultiplierFromCall` | `''` -- the domestic multiplier a CALL implies before any exchange is typed, for the need-multiplier hint (`LogEdit.GetMultArray`). The Russian DX contest and the RF Championships (a Russian call's oblast), the Ural Cup (CTY.DAT's grid), RDA and YO DX (the remembered exchange) override it (M8, below) |
@@ -869,7 +878,7 @@ and the typed-entry check belongs in `BENCH_QUEUE.md`.
 | section | what | the milestone it gates |
 |---|---|---|
 | `identity` | requested vs selected `ContestType`, the class or none | M1 |
-| `setup` | the seven `Active*`, the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7a (185 identical, no re-freeze), M7b |
+| `setup` | the six `Active*` (seven before M10 S4; the point method's line left at S1), the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7a (185 identical, no re-freeze), M7b |
 | `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body | M3, M8 |
 | `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
 | `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a |

@@ -91,7 +91,6 @@ type
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -190,11 +189,6 @@ end;
 function TContestCQIR.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberAndPossibleDomesticQTHExchange;
-end;
-
-function TContestCQIR.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := TwoPhoneThreeCW;
 end;
 
 function TContestCQIR.GetIsUSQSOParty: boolean;

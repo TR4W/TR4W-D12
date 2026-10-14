@@ -181,7 +181,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
 
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -290,11 +289,6 @@ begin
       RSTDomesticQTHExchange, set by FCONTEST at setup -- see the unit
       header. *)
    Result := RSTDomesticOrDXQTHExchange;
-end;
-
-function TContestWashingtonSalmonRun.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := SalmonRunQSOPointMethod;
 end;
 
 function TContestWashingtonSalmonRun.GetCountyLineCountiesMax: integer;

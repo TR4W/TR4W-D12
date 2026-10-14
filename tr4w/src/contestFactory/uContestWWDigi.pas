@@ -86,7 +86,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -216,11 +215,6 @@ end;
 function TContestWWDigi.GetExchangeKind: ExchangeType;
 begin
    Result := Grid2Exchange;
-end;
-
-function TContestWWDigi.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := WWDIGIQP;
 end;
 
 function TContestWWDigi.GetIsUSQSOParty: boolean;

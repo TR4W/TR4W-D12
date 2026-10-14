@@ -199,7 +199,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
 
       (* Two -- NY4I and the sponsor, quoted in the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -343,18 +342,6 @@ end;
 function TContestIdahoQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
-end;
-
-function TContestIdahoQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   (* A DESCRIPTION IN THE LEGACY ENGINE'S VOCABULARY, NOT A CHOICE OF RULE.
-      Nothing scores Idaho through it -- logstuff.CalculateQSOPoints hands a
-      registered contest to its class and exits. It is the one existing value
-      whose arm says the same thing as this class: phone and FM one, every
-      other mode two. OnePhoneTwoCW would describe digital as one point, which
-      is wrong for this contest. None of the ActiveQSOPointMethod readers
-      outside that case tests for this value. It retires with the setting. *)
-   Result := ARRLFieldDayQSOPointMethod;
 end;
 
 function TContestIdahoQP.GetCountyLineCountiesMax: integer;

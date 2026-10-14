@@ -73,7 +73,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -181,11 +180,6 @@ end;
 function TContestARCI.GetExchangeKind: ExchangeType;
 begin
    Result := RSTPossibleDomesticQTHAndPower;
-end;
-
-function TContestARCI.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := ARCIQSOPointMethod;
 end;
 
 function TContestARCI.GetIsUSQSOParty: boolean;

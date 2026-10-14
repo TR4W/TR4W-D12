@@ -1620,8 +1620,10 @@ begin
     (* THE CONTEST'S DUPE POLICY -- M3, 2026-10-01. This tested the global
        ActiveQSOPointMethod for AlwaysOnePointPerQSO ("ignores dupes"), so an
        operator's QSO POINT METHOD line switched dupe marking. The contest
-       states it now (TContestBase.MarksDupes); a classless contest answers
-       from its row, as the global did with no override stated. *)
+       states it now (TContestBase.MarksDupes): True, unless the contest
+       says otherwise -- Internet Sprint and the Youth Championship of
+       Russia, the two whose rows held AlwaysOnePointPerQSO. The point
+       method itself was deleted as a concept at M10 S4 (2026-10-14). *)
     if ContestIdentity(Contest).MarksDupes then
        begin
        //      if Trace then Write('#');

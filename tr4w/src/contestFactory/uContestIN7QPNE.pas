@@ -174,7 +174,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       function GetHostState: string; override;
 
@@ -473,15 +472,6 @@ end;
 function TContestIN7QPNE.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
-end;
-
-function TContestIN7QPNE.GetQSOPointMethod: QSOPointMethodType;
-begin
-   (* THE ROW'S VALUE, A DESCRIPTION IN THE LEGACY VOCABULARY. Nothing scores
-      IN7QPNE through it any more -- a registered contest is scored by its
-      class -- and no single value could describe four parties' rules. It
-      retires with QSO POINT METHOD (design 7.15). *)
-   Result := PAQSOPointMethod;
 end;
 
 function TContestIN7QPNE.GetIsUSQSOParty: boolean;

@@ -88,7 +88,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* NO LONGER RUN -- M9b. See the body. *)
       function GetIsActive: boolean; override;
@@ -185,11 +184,6 @@ end;
 function TContestSASprint.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberExchange;
-end;
-
-function TContestSASprint.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := OnePointPerQSO;
 end;
 
 function TContestSASprint.GetIsUSQSOParty: boolean;

@@ -106,7 +106,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
@@ -193,11 +192,6 @@ end;
 function TContestColoradoQP.GetExchangeKind: ExchangeType;
 begin
    Result := NameAndDomesticOrDXQTHExchange;
-end;
-
-function TContestColoradoQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := TwoPointsPerQSO;
 end;
 
 (* TwoPointsPerQSO -- `RXData.QSOPoints := 2`, a flat two whatever the mode.

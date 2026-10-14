@@ -23,12 +23,10 @@ Eight `VC.pas` arrays (indexed by `ContestType`) must each get a new entry, in t
 | `ContestTypeSA` | ~3560+ | Short display name (`PChar`), shown in UI |
 | `ContestsBooleanArray` | ~3790+ | Bitfield of `ciCDC0`/`ciCQZoneMode0`/`ciVHFEnabled0`/`ciErmak0`/`ciQB?`/`ciQM?`/`ciMB?`/`ciMM?` |
 
-If your contest introduces a brand-new QSO-points formula, you also touch:
-
-| Array / type | Approx line | Notes |
-|---|---|---|
-| `QSOPointMethodType` enum | ~2820+ | New enum entry (e.g. `RTCQSOPointMethod`) |
-| `QSOPointMethodSA` | ~3030+ | `PChar` name array for the QP enum |
+**A new QSO-points formula touches no shared table.** `QSOPointMethodType`, its
+spelling table and the row's `QP:` column are gone (M10 S2-S4, 2026-10-14): a
+contest's scoring is its class's `CalculateQSOPoints` -- see
+[`ADDING_A_CONTEST.md`](ADDING_A_CONTEST.md). There is no point method to set.
 
 **Adding to the end of each enum is the safe move** — appending keeps existing on-disk binary log files and config files compatible. Reordering the enum will break those files.
 
@@ -49,7 +47,7 @@ Field-by-field, using a real RTC row:
  P: 0;                             // points-table index (legacy)
  AE: RSTQSONumberAndGridSquareExchange;  // exchange type
  XM: NoDXMults;                    // DX-multiplier type
- QP: RTCQSOPointMethod;            // scoring method
+                                   // (QP:, the scoring method, was deleted at M10 S4)
  ADIFName: 'RTC';                  // ADIF CONTEST_ID
  CABName: 'RTC')                   // Cabrillo CONTEST: header value
 ```
@@ -99,13 +97,14 @@ Each exchange type already has:
 
 **If you find an existing exchange type that matches, you write zero new parsing/serialization code.**
 
-### QSO-point methods (`VC.pas:2940+`)
+### QSO points -- the contest's class, not an enum
 
-There are ~80 scoring methods. Distance-based, country-based, zone-based, multiplier-conditional — most patterns exist. Check `logstuff.pas:CalculateQSOPoints` (case statement starting around line 5796) before writing a new one. Add yours by:
-
-1. Adding the enum value
-2. Adding the `PChar` name
-3. Adding a `case` branch in `CalculateQSOPoints`
+Until 2026-10-14 a contest named one of ~130 `QSOPointMethodType` values and
+`logstuff.pas:CalculateQSOPoints` had a `case` arm per value. The arm moved into
+each contest's class (M3 onward), the `case` was deleted at M10 S3 and the
+enum at M10 S4. Score your contest in its class's `CalculateQSOPoints`
+(`ADDING_A_CONTEST.md`); a computation genuinely shared by several contests is
+a helper the class calls (`FixedModePoints`, `LOGGRID.GetDistanceBetweenGrids`).
 
 ### Domestic multiplier types (`DomesticMultStringArray`, ~`VC.pas:2989`)
 
@@ -252,10 +251,7 @@ Working through a new contest, in dependency order:
 
 - [ ] Identify the contest's exchange shape — find a matching existing `ExchangeType` (`VC.pas:3144+`)
 - [ ] Identify the multiplier type — find a matching `DomesticMultType` / `XMType` / etc.
-- [ ] Identify or write the QSO-points method
-  - [ ] If new: add `XxxQSOPointMethod` to `QSOPointMethodType` enum
-  - [ ] Add `'Xxx'` to `QSOPointMethodSA`
-  - [ ] Add `XxxQSOPointMethod:` case branch in `logstuff.pas:CalculateQSOPoints`
+- [ ] Write the QSO-points rule in the contest's class (`CalculateQSOPoints`, `ADDING_A_CONTEST.md`) -- there is no point-method enum since M10 S4
   - [ ] If distance-based, sanity-check against rules' published fixture
 - [ ] Add the contest itself to `VC.pas`:
   - [ ] `ContestType` enum (append at end)
@@ -284,7 +280,7 @@ For reference, the full RTC change set covered:
 |---|---|
 | `VC.pas` | 6 array entries (enum + 5 arrays) |
 | `loggrid.pas` | new `RTCGridDistance` Haversine helper (40 lines) |
-| `logstuff.pas` | new `RTCQSOPointMethod:` case branch + 1 new local var |
+| `logstuff.pas` | new `RTCQSOPointMethod:` case branch + 1 new local var (historical: the case and the enum are gone since M10 S3/S4; it is `uContestRTC` now) |
 | `fcontest.pas` | `RTC:` case with `WARCBandsEnabled` and CW function-key defaults |
 | `uNewContest.pas` | 1-word edit: add `RTC` to the 4-char-grid prompt |
 | `postunit.pas` | (bug fix surfaced by RTC, not strictly RTC) `cMyGrid` null-terminator |

@@ -450,7 +450,9 @@ var
   ActiveMode                            : ModeType = Digital;
 
   //  ActiveModemPort: PortType;
-  ActiveQSOPointMethod                  : QSOPointMethodType {= NoQSOPointMethod};
+  (* ActiveQSOPointMethod DELETED -- M10 S4, 2026-10-14, with QSOPointMethodType.
+    It was written once, by FCONTEST.ApplyContestTraits, and read nowhere once
+    LOGSTUFF's scoring case went at S3: every contest's class scores itself. *)
   (* ActiveRotatorPort DELETED 2026-09-13 -- it was a PortType ordinal whose
     only reader was the rotator library's legacy seed, and a rotator's port is
     an OS device name now: Settings.Rotator.Port. *)

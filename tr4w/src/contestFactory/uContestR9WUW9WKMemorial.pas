@@ -76,7 +76,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -194,11 +193,6 @@ end;
 function TContestR9WUW9WKMemorial.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberAndZone;
-end;
-
-function TContestR9WUW9WKMemorial.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := R9WUW9WKMemorialQSOPointMethod;
 end;
 
 function TContestR9WUW9WKMemorial.GetIsUSQSOParty: boolean;

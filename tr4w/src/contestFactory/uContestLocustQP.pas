@@ -90,7 +90,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* NO LONGER RUN -- M9b. See the body. *)
       function GetIsActive: boolean; override;
@@ -204,11 +203,6 @@ end;
 function TContestLocustQP.GetExchangeKind: ExchangeType;
 begin
    Result := NameAndDomesticOrDXQTHExchange;
-end;
-
-function TContestLocustQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := LQPQSOPointMethod;
 end;
 
 function TContestLocustQP.GetIsUSQSOParty: boolean;

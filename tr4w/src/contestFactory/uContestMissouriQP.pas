@@ -127,7 +127,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
       (* W0MA and K0GQ, 100 each, once -- see the header. *)
@@ -220,11 +219,6 @@ end;
 function TContestMissouriQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
-end;
-
-function TContestMissouriQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := OnePhoneTwoCW;
 end;
 
 (* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the

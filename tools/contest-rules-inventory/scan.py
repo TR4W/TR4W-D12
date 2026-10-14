@@ -17,8 +17,9 @@ import judgements
 import pascal
 from model import SENTINEL
 
+# ActiveQSOPointMethod LEFT THIS MAP AT M10 S4 (2026-10-14), deleted with
+# the point method.
 ACTIVE = {
-   "ACTIVEQSOPOINTMETHOD": "QP",
    "ACTIVEEXCHANGE": "AE",
    "ACTIVEINITIALEXCHANGE": "AIE",
    "ACTIVEDOMESTICMULT": "DM",

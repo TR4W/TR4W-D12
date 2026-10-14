@@ -114,6 +114,11 @@ the target shape, the M-step migration order and the open questions.
   RECEIVED`, `INITIAL EXCHANGE` and the four multiplier commands -- names in
   `uCFG.RETIRED_COMMANDS`, no effect. The class decides all seven. The four
   `QSO POINTS ...` overrides stay and run before the class.
+- **THE POINT METHOD IS GONE AS A CONCEPT (M10 S4, 2026-10-14).**
+  `QSOPointMethodType`, the row's `QP` column, `TContestBase.QSOPointMethod`
+  / `GetQSOPointMethod` (and every class's override) and `ActiveQSOPointMethod`
+  are deleted. A class scores in `CalculateQSOPoints` and states nothing
+  else about points. Do not reintroduce a point-method trait.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
   2026-10-01). It is asked through `ContestCreditsBand` at every place a QSO
@@ -145,7 +150,9 @@ the target shape, the M-step migration order and the open questions.
   override of it `protected`, never `public`. Tests call `ScoreQSO`. Design
   doc §7.7, §8.2d.
 - **The dupe policy is `MarksDupes`** (M3): `logsubs2` asks
-  `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. Exchange
+  `ContestIdentity(Contest).MarksDupes`, not `ActiveQSOPointMethod`. Since
+  M10 S4 the base answers True; Internet Sprint and the Youth Championship
+  of Russia (the only two `AlwaysOnePointPerQSO` rows) say False. Exchange
   parsing (RAC, PCC, Arktika) and RussianDX's initial exchange moved at M5b
   (below); `logedit.TotalScore`'s five formulas moved at M6 (below).
 - **A contest parses and validates its own received exchange** (M5b,
@@ -215,13 +222,13 @@ the target shape, the M-step migration order and the open questions.
   getter with the parent class's (a negative control proves it can fail)
   and holds the enum-spelled display names as a ratchet (design Q53).
 - **Set-up reads the contest** (M2, 2026-10-01). `FCONTEST.ApplyContestTraits`
-  is the ONE writer of the seven `Active*` globals, the QSO/mult by band/mode
+  is the ONE writer of the six `Active*` globals (seven until M10 S4), the QSO/mult by band/mode
   flags, VHF, count-domestic-countries, the CTY zone list and (in the head)
   the domestic file: **the operator's statement (`CommandIsStated`), else
   `ContestIdentity(Contest)`** -- never `ContestsArray` /
   `ContestsBooleanArray` directly. ~~The seven tokens are replayed through
   `uSettingsEffects.ReplayContestStatements`~~ -- gone at M10 S2 with the
-  seven settings; the seven `Active*` kinds are assigned from the contest
+  seven settings; the six `Active*` kinds are assigned from the contest
   unconditionally. So **a trait override changes set-up now** -- the matrix sees it. What a
   contest states in `DescribeSession` runs after and wins (M7a, below); a
   classless contest's `FoundContest` arm still does. New traits:

@@ -86,7 +86,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
 
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -185,11 +184,6 @@ end;
 function TContestIndianaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
-end;
-
-function TContestIndianaQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := TwoPointsPerQSO;
 end;
 
 function TContestIndianaQP.GetCountyLineCountiesMax: integer;

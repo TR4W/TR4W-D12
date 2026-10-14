@@ -95,7 +95,6 @@ begin
     ActiveMode := CW;        // 4.51.3
   //  ActivePaddlePort := NoPort;
   //  ActivePrefixMult := NoPrefixMults;
-  //  ActiveQSOPointMethod := NoQSOPointMethod;
   //  ActiveRadio := RadioOne;
   //  ActiveRotatorType := NoRotator;
   //  ActiveStereoPort := NoPort;

@@ -97,7 +97,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
@@ -184,11 +183,6 @@ end;
 function TContestTexasQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
-end;
-
-function TContestTexasQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := TwoPhoneThreeCW;
 end;
 
 (* TwoPhoneThreeCW -- `if Mode = CW then 3 else 2`, so DIGITAL scores the

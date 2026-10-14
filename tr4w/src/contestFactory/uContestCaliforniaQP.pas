@@ -95,7 +95,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
 
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -235,11 +234,6 @@ end;
 function TContestCaliforniaQP.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberDomesticOrDXQTHExchange;
-end;
-
-function TContestCaliforniaQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := ThreePointsPerQSO;
 end;
 
 function TContestCaliforniaQP.GetCountyLineCountiesMax: integer;

@@ -108,7 +108,7 @@ type
       procedure Test_DomFileKeysAreEnumDOM2sRule;
       procedure Test_AnInStateStationIsFoundInItsCountyFile;
       procedure Test_ScoreQSORunsBandThenOverridesThenTheRule;
-      procedure Test_MarksDupesIsTheRowsDupePolicy;
+      procedure Test_EveryContestMarksDupesButTheTwoThatIgnoreThem;
       procedure Test_EveryClassSitsOnTheBaseOrAFamily;
       procedure Test_NRAUBalticIsOneContestInTwoModes;
       procedure Test_SprintSSBIsItsOwnContest;
@@ -1731,8 +1731,9 @@ begin
    (* TwoPointsPerQSO. *)
    CheckFixed(XMAS, 'XMAS', 2, 2, 2);
 
-   (* AlwaysOnePointPerQSO -- scores as one point; its "ignores dupes" meaning
-      is LOGSUBS2's, read from the global, and not the class's. *)
+   (* The row said AlwaysOnePointPerQSO -- scored as one point; its "ignores
+      dupes" meaning is the class's MarksDupes (see
+      Test_EveryContestMarksDupesButTheTwoThatIgnoreThem). *)
    CheckFixed(INTERNETSPRINT, 'Internet Sprint', 1, 1, 1);
 
    (* OnePointPerQSO. *)
@@ -1758,7 +1759,7 @@ begin
       transposed. *)
    CheckFixed(CQIR, 'CQIR', 3, 2, 2);
 
-   (* AlwaysOnePointPerQSO, as Internet Sprint above. *)
+   (* The row said AlwaysOnePointPerQSO, as Internet Sprint above. *)
    CheckFixed(YOUTHCHAMPIONSHIPRF, 'SRR-JR', 1, 1, 1);
 
    (* OnePointPerQSO. *)
@@ -1879,10 +1880,11 @@ procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
                      aWhat + ' InitialExchangeKind');
          CheckEquals(Ord(row.AE), Ord(cls.ExchangeKind),
                      aWhat + ' ExchangeKind');
-         CheckEquals(Ord(row.QP), Ord(cls.QSOPointMethod),
-                     aWhat + ' QSOPointMethod');
-         CheckTrue((row.QP <> AlwaysOnePointPerQSO) = cls.MarksDupes,
-                   aWhat + ' MarksDupes');
+         (* NO QSOPointMethod AND NO MarksDupes COMPARISON since M10 S4
+            (2026-10-14): the point method was deleted as a concept, the
+            row's QP column with it, and MarksDupes no longer derives from
+            any row value -- Test_EveryContestMarksDupesButTheTwoThatIgnoreThem
+            holds it. *)
 
          (* THE PARTY INDEX P, and the three answers derived from it. *)
          CheckTrue((row.P <> 0) = cls.IsUSQSOParty, aWhat + ' IsUSQSOParty');
@@ -3063,31 +3065,40 @@ begin
    CheckEquals(99, qso.QSOPoints, 'and leaves the points alone');
 end;
 
-(* THE DUPE POLICY IS THE CONTEST'S -- M3, 2026-10-01.
+(* THE DUPE POLICY IS THE CONTEST'S -- M3, 2026-10-01; restated at M10 S4.
 
    LOGSUBS2 used to skip the dupe flag when the GLOBAL point method was
    AlwaysOnePointPerQSO ("ignores dupes"). It asks
-   ContestIdentity(Contest).MarksDupes now. With no QSO POINT METHOD stated
-   the global was the row's QP, so the class answer must equal
-   "row QP <> AlwaysOnePointPerQSO" for EVERY ContestType -- class or not --
-   or this move changed a default. The two that ignore dupes are named, so a
-   row edit that drops one is caught here and not in a contest. *)
-procedure TContestFactoryTests.Test_MarksDupesIsTheRowsDupePolicy;
+   ContestIdentity(Contest).MarksDupes now. Until M10 S4 this test held the
+   answer to "row QP <> AlwaysOnePointPerQSO" for every ContestType. S4
+   deleted the point method as a concept, and the base's MarksDupes became
+   the constant True -- equal to that row answer everywhere, because exactly
+   two rows held AlwaysOnePointPerQSO (INTERNET SPRINT and SRR-JR) and they
+   are exactly the two classes that override MarksDupes to say False.
+
+   SO THE RULE IS NOW STATED HERE BY NAME, for EVERY ContestType -- class or
+   not, DUMMYCONTEST included: those two ignore dupes and nothing else does.
+   A third contest that starts ignoring dupes, or either of the two that
+   stops, fails here rather than in a contest. *)
+procedure TContestFactoryTests.Test_EveryContestMarksDupesButTheTwoThatIgnoreThem;
 var
    c: ContestType;
+   ignoresDupes: boolean;
 begin
-   BeginTest('Test_MarksDupesIsTheRowsDupePolicy');
+   BeginTest('Test_EveryContestMarksDupesButTheTwoThatIgnoreThem');
    for c := Low(ContestType) to High(ContestType) do
       begin
-      CheckTrue(ContestIdentity(c).MarksDupes =
-                   (ContestsArray[c].QP <> AlwaysOnePointPerQSO),
-                string(ContestTypeSA[c]) + ' MarksDupes is its row''s policy');
+      ignoresDupes := (c = INTERNETSPRINT) or (c = YOUTHCHAMPIONSHIPRF);
+      CheckTrue(ContestIdentity(c).MarksDupes = not ignoresDupes,
+                string(ContestTypeSA[c]) + ' MarksDupes');
       end;
    CheckFalse(ContestIdentity(INTERNETSPRINT).MarksDupes,
               'Internet Sprint ignores dupes');
    CheckFalse(ContestIdentity(YOUTHCHAMPIONSHIPRF).MarksDupes,
               'the Youth Championship of Russia ignores dupes');
    CheckTrue(ContestIdentity(CQWWCW).MarksDupes, 'CQ WW CW marks dupes');
+   CheckTrue(ContestIdentity(DUMMYCONTEST).MarksDupes,
+             'DUMMYCONTEST marks dupes -- the base''s answer');
 end;
 
 (* M3 -- A BASE CLASS IS A FAMILY, AND THE FAMILIES ARE A CLOSED LIST.
@@ -3217,8 +3228,6 @@ procedure TContestFactoryTests.Test_NRAUBalticIsOneContestInTwoModes;
          CheckEquals('nrau', obj.DomesticFileName, aWhat + ' domestic file');
          CheckEquals(Ord(RSTQSONumberAndDomesticQTHExchange), Ord(obj.ExchangeKind),
                      aWhat + ' exchange');
-         CheckEquals(Ord(TwoPointsPerQSO), Ord(obj.QSOPointMethod),
-                     aWhat + ' point method');
          CheckFalse(obj.IsUSQSOParty, aWhat + ' is not a US QSO party');
       finally
          obj.Free;
@@ -4345,7 +4354,7 @@ begin
    Test_DomFileKeysAreEnumDOM2sRule;
    Test_AnInStateStationIsFoundInItsCountyFile;
    Test_ScoreQSORunsBandThenOverridesThenTheRule;
-   Test_MarksDupesIsTheRowsDupePolicy;
+   Test_EveryContestMarksDupesButTheTwoThatIgnoreThem;
    Test_EveryClassSitsOnTheBaseOrAFamily;
    Test_NRAUBalticIsOneContestInTwoModes;
    Test_SprintSSBIsItsOwnContest;

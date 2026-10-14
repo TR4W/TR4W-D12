@@ -26,20 +26,20 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   and from CLAUDE.md: "we want to do this once. Refactoring is not as important
   a factor as getting the object model correct."
 
-  WHY THE UNIT IS A CONTEST AND NOT A STRATEGY ENUM. TR4W already decomposes a
-  contest into strategy enums -- QSOPointMethodType, ExchangeType, DXMultType,
-  PrefixMultType, ZoneMultType -- each dispatched by its own `case`, and it
-  would be less work to turn each enum into a class. That is the wrong object
-  model for this program:
+  WHY THE UNIT IS A CONTEST AND NOT A STRATEGY ENUM. TR4W decomposed a
+  contest into strategy enums -- QSOPointMethodType (deleted at M10 S4),
+  ExchangeType, DXMultType, PrefixMultType, ZoneMultType -- each dispatched by
+  its own `case`, and it would have been less work to turn each enum into a
+  class. That is the wrong object model for this program:
 
     A CONTEST IS THE THING THAT EXISTS. An operator selects ARRL-DX-CW, not a
     point method. ContestsArray is already a row per contest; the enums are how
     that row is currently SPELLED, not what it is.
 
-    THE ENUMS DO NOT COMPOSE CLEANLY. CalculateQSOPoints branches on the point
-    method and then, inside several arms, on Contest anyway -- because scoring
-    depends on things the enum does not carry. Splitting by enum keeps that
-    second branch; splitting by contest removes it.
+    THE ENUMS DO NOT COMPOSE CLEANLY. The legacy CalculateQSOPoints branched
+    on the point method and then, inside several arms, on Contest anyway --
+    because scoring depends on things the enum does not carry. Splitting by
+    enum keeps that second branch; splitting by contest removes it.
 
     A NEW CONTEST WOULD STILL TOUCH SHARED FILES. Adding a radio touches its own
     unit, tr4w.lpr and the test .lpr -- verified when TCI was added. That is the
@@ -1129,7 +1129,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; virtual;
       function GetInitialExchangeKind: InitialExchangeType; virtual;
       function GetExchangeKind: ExchangeType; virtual;
-      function GetQSOPointMethod: QSOPointMethodType; virtual;
       function GetIsUSQSOParty: boolean; virtual;
       function GetHostState: string; virtual;
 
@@ -1222,10 +1221,13 @@ type
          operator's QSO POINT METHOD line reached it too, although it is a
          statement about points.
 
-         THE BASE READS THE ROW, the same answer the global gave with no
-         override stated: True unless the row's point method is
-         AlwaysOnePointPerQSO. A contest with a class states it (Internet
-         Sprint and the Youth Championship of Russia say False). *)
+         THE BASE SAYS TRUE (M10 S4, 2026-10-14). It read the row -- True
+         unless the row's point method was AlwaysOnePointPerQSO -- until the
+         point method was deleted as a concept. Exactly two rows held that
+         value, INTERNETSPRINT and YOUTHCHAMPIONSHIPRF, and they are exactly
+         the two classes that override this to say False; so the constant is
+         the row's answer for every contest, DUMMYCONTEST included. A contest
+         that ignores dupes states it here. *)
       function GetMarksDupes: boolean; virtual;
 
       (* ~~GetCountyLineCountiesMax~~ AND ~~GetCountyLineAllowed~~ ARE NOT HERE.
@@ -1336,7 +1338,6 @@ type
       property DomesticMultiplierType: DomesticMultType read GetDomesticMultiplierType;
       property InitialExchangeKind: InitialExchangeType read GetInitialExchangeKind;
       property ExchangeKind: ExchangeType read GetExchangeKind;
-      property QSOPointMethod: QSOPointMethodType read GetQSOPointMethod;
       property IsUSQSOParty: boolean read GetIsUSQSOParty;
 
       (* ADIF facts -- see the getters. *)
@@ -2116,8 +2117,9 @@ type
          reopen the bypass.
 
          The base scores nothing. That is deliberate rather than a placeholder:
-         NoQSOPointMethod is a real value in QSOPointMethodType and it means
-         exactly this, so a contest that does not score is not a special case. *)
+         the legacy NoQSOPointMethod (the point method, deleted as a concept
+         at M10 S4) meant exactly this, so a contest that does not score is
+         not a special case. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); virtual;
 
       (* THE SPONSOR'S FORMULA WHEN THE SESSION COUNTS MULTIPLIERS -- step 2
@@ -2392,11 +2394,6 @@ end;
 function TContestBase.GetExchangeKind: ExchangeType;
 begin
    Result := ContestsArray[FContest].AE;
-end;
-
-function TContestBase.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := ContestsArray[FContest].QP;
 end;
 
 function TContestBase.GetIsUSQSOParty: boolean;
@@ -2776,8 +2773,9 @@ end;
 
 function TContestBase.GetMarksDupes: boolean;
 begin
-   (* The row, as the global read it -- see the declaration. *)
-   Result := ContestsArray[FContest].QP <> AlwaysOnePointPerQSO;
+   (* Every contest marks dupes unless it says otherwise -- see the
+      declaration. *)
+   Result := True;
 end;
 
 function TContestBase.UsesBand(aBand: BandType): boolean;

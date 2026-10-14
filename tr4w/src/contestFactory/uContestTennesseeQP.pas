@@ -91,7 +91,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
@@ -177,11 +176,6 @@ end;
 function TContestTennesseeQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
-end;
-
-function TContestTennesseeQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := TwoPhoneThreeCW;
 end;
 
 (* TwoPhoneThreeCW -- `if Mode = CW then 3 else 2`, so DIGITAL scores the

@@ -81,7 +81,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -236,11 +235,6 @@ end;
 function TContestCupRFSSB.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberAndGridSquare;
-end;
-
-function TContestCupRFSSB.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := CupRFMethod;
 end;
 
 function TContestCupRFSSB.GetIsUSQSOParty: boolean;

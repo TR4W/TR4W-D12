@@ -101,7 +101,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
 
       (* The county-line maximum, from NY4I's ruling -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -207,11 +206,6 @@ end;
 function TContestNewYorkQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
-end;
-
-function TContestNewYorkQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := OnePhoneTwoCW;
 end;
 
 (* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the PHONE

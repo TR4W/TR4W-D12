@@ -138,8 +138,10 @@ the same `uContestBase.ApplyQSOPointOverride`, then 0. **The legacy
 locally-unused unit it pulled in; its arms live on in their classes, in git
 history and in the D7 tree. Do not add a band check, an override or a rule
 there for a classed contest -- it would never run. **`QSO POINT METHOD` is retired
-(M10 S2, 2026-10-14)** -- a name in `uCFG.RETIRED_COMMANDS`, no effect -- so
-nothing an operator says reaches `ActiveQSOPointMethod` any more.
+(M10 S2, 2026-10-14)** -- a name in `uCFG.RETIRED_COMMANDS`, no effect -- and
+**the point method is gone as a concept (M10 S4, 2026-10-14)**:
+`QSOPointMethodType`, the row's `QP` column, the class trait and
+`ActiveQSOPointMethod` are deleted.
 
 **Dupe marking no longer reads the point method** -- `logsubs2` asks
 `ContestIdentity(Contest).MarksDupes`. **Nor does exchange parsing (M5b,
@@ -147,8 +149,8 @@ nothing an operator says reaches `ActiveQSOPointMethod` any more.
 exchange are their classes' own now. **Nor does the final score (M6,
 2026-10-02)**: `logedit.TotalScore`'s five point-method formulas are their
 contests' `CombineWithMultipliers` -- nine of those contests gained classes for
-it. **No reader of `ActiveQSOPointMethod` is left at all** since M10 S3 --
-FCONTEST still writes it, and S4 deletes it with the trait.
+it. **`ActiveQSOPointMethod` itself is DELETED** (M10 S4) -- it had no reader
+left after S3.
 
 **`TotalScore` IS ONE FUNCTION AND ASKS THE CONTEST (M6).** It gathers a
 `TScoreTotals` (`uScoreTotals.GatherScoreTotals`: stored points, QTCs, the

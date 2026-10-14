@@ -496,6 +496,57 @@ these corrections:
 
 ### S4 -- Delete QSOPointMethod as a concept
 
+**DONE 2026-10-14** (on top of `bf25d7dd`). Re-measured first
+(`count-ids.ps1`): `ActiveQSOPointMethod` one write (`fcontest`
+ApplyContestTraits) and its declaration (`logwind`), no reader;
+`.QSOPointMethod` read only there and in two tests; every
+`QSOPointMethodType` member named only in `VC.pas`, the getter bodies and
+`uTestContestFactory` (a scan of all 133 members). As planned, with these
+corrections:
+
+* **Deleted:** `GetQSOPointMethod` in 167 leaf units and the base (declaration
+  and body, 168 of each -- the compiler would have refused a survivor), the
+  `QSOPointMethod` property, `ActiveQSOPointMethod` and its one writer, the
+  enum (133 members), the `QP` field of `TContestInfo` and **its column in all
+  187 rows** -- done now rather than left to S8, because removing one field
+  from a typed constant is a per-row regex. **Trap:** two rows, Idaho and
+  Delaware, start `(Email:` with no `{Name: ...}` comment, so a match keyed on
+  the name comment misses them; the compiler would have said so.
+* **`MarksDupes` -> `True` in the base, proved equal for every contest.** At
+  `bf25d7dd` the base answered `row.QP <> AlwaysOnePointPerQSO`. Exactly two
+  rows held `AlwaysOnePointPerQSO` -- `VC.pas:3751` INTERNETSPRINT (ordinal
+  55) and `:3831` SRR-JR = YOUTHCHAMPIONSHIPRF (ordinal 135; one commented-out
+  WWDIGI row sits in between, and the enum's ordinals were checked against
+  it). `GetMarksDupes` has exactly two overriders, those two classes, both
+  returning the constant False; nothing else overrides it (the IN7QPNE
+  composite and its components inherit). So every other contest, DUMMYCONTEST
+  (`NoQSOPointMethod`) included, answered True, and the two answer False
+  before and after.
+* **Tests:** `Test_MovedRowValuesStillMatchTheArray` drops the QP and the
+  MarksDupes comparisons (no row value derives either now) and keeps the
+  rest. `Test_MarksDupesIsTheRowsDupePolicy` is
+  `Test_EveryContestMarksDupesButTheTwoThatIgnoreThem`: every ContestType,
+  the two named, DUMMYCONTEST asserted True. NRAU-Baltic's
+  `Ord(TwoPointsPerQSO)` check is deleted -- its four `PointsFor` checks
+  already pin 2 points per mode.
+* **Tooling:** the inventory's `TRAIT_GETTERS` and `ACTIVE` maps lose their
+  QP entries and the render text its getter name; the generator runs and
+  changes only line numbers (logdupe +1). `Lint-SpellingTables` (25 tables)
+  and `uContestMatrix` named the enum in comments only. `settings_inventory*`
+  never named it.
+* **Comments:** `logdupe`'s off-band note pointed at
+  `LOGSTUFF.CalculateQSOPoints` for the points half -- it has been
+  `TContestBase.ScoreQSO` since M3. Base, two class headers, `logsubs2`,
+  `fcontest` and `uContestMatrix` reworded to the past tense. The row
+  transcriptions in each unit's header (`QP: ...` inside a comment) stay as
+  history of the row the class was transcribed from.
+* **Not done:** the matrix, corpus, factory check and full build are left
+  to the gated run. The incremental app compile died with the known
+  "Internal error 200306067" at `MainUnit.pas(45,1)`; the unit-test build
+  (every factory unit, VC and the touched engine units) is clean.
+
+As planned:
+
 * **Files:** `GetQSOPointMethod` in the 167 overriding units and the base,
   the `QSOPointMethod` property, `ActiveQSOPointMethod` (`logwind:477`,
   `fcontest:811`), `QSOPointMethodType` (`VC.pas:3335`) and `QSOPointMethodArray`
@@ -642,4 +693,4 @@ The first commit adds `uContestSession` and the writer.
   with each removed table named -- its header demands that. **Done at S2:
   31 -> 24, each named; the lint resolves 25.**
 * **F13.** `QSOPointMethodType` member `INQSOPoinRMethod` is misspelt; a search
-  for `INQSOPointMethod` finds nothing. Moot after S4.
+  for `INQSOPointMethod` finds nothing. **Moot: the enum is deleted (S4).**

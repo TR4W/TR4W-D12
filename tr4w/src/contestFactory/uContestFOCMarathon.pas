@@ -84,7 +84,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
       function GetIsUSQSOParty: boolean; override;
       function GetADIFPowerTag: string; override;
       (* THE LOG'S FOC# COLUMN -- M9b. See the body. *)
@@ -236,11 +235,6 @@ end;
 function TContestFOCMarathon.GetExchangeKind: ExchangeType;
 begin
    Result := RSTPowerExchange;
-end;
-
-function TContestFOCMarathon.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := FOCMarathonQSOPointMethod;
 end;
 
 function TContestFOCMarathon.GetIsUSQSOParty: boolean;

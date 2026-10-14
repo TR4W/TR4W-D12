@@ -765,13 +765,15 @@ end;
   class) still runs AFTER this and still overwrites what the arm always
   overwrote -- see ApplySessionDefaults.
 
-  THE SEVEN Active* KINDS HAVE NO OPERATOR LAYER ANY MORE (M10 S2,
+  THE SIX Active* KINDS HAVE NO OPERATOR LAYER ANY MORE (M10 S2,
   2026-10-14). QSO POINT METHOD, EXCHANGE RECEIVED, INITIAL EXCHANGE and the
   four multiplier commands are in uCFG.RETIRED_COMMANDS (NY4I, Q4): the
   contest's class decides them, and what it states in DescribeSession still
   runs after this. So they are assigned unconditionally, and the replay that
   used to re-apply a stated token here is gone with the settings. The other
-  values ARE their property, so a stated one is simply not assigned. *)
+  values ARE their property, so a stated one is simply not assigned.
+  The seventh, ActiveQSOPointMethod, is deleted with the point method
+  (M10 S4): it was read nowhere once LOGSTUFF's scoring case went. *)
 procedure ApplyContestTraits(aContest: TContestBase);
 begin
   if not Settings.CommandIsStated('QSO BY MODE') then
@@ -804,7 +806,6 @@ begin
     at all, so CTY.DAT answered every zone 0. See TContestBase.GetZoneMode. *)
   CTY.ctyZoneMode := aContest.ZoneMode;
 
-  ActiveQSOPointMethod := aContest.QSOPointMethod;
   ActiveExchange := aContest.ExchangeKind;
   ActiveInitialExchange := aContest.InitialExchangeKind;
   ActiveDomesticMult := aContest.DomesticMultiplierType;

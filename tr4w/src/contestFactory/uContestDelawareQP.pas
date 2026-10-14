@@ -155,7 +155,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
 
       (* A county-line station is two QSOs -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -301,18 +300,6 @@ end;
 function TContestDelawareQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
-end;
-
-function TContestDelawareQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   (* A DESCRIPTION IN THE LEGACY ENGINE'S VOCABULARY, NOT A CHOICE OF RULE --
-      the value Idaho states, for the same reason. Nothing scores Delaware
-      through it: logstuff.CalculateQSOPoints hands a registered contest to
-      its class. It is the one existing value whose arm reads like the
-      in-state rule (phone and FM one, every other mode two); no value
-      describes the out-of-state ten and twenty. It retires with the setting
-      (design 7.1). *)
-   Result := ARRLFieldDayQSOPointMethod;
 end;
 
 function TContestDelawareQP.GetCountyLineCountiesMax: integer;

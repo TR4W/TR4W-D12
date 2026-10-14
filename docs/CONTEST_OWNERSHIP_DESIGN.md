@@ -3551,6 +3551,8 @@ and the tables, not the kind enums.
 
 **S3 DONE 2026-10-14 (7.15, Q11):** the legacy `case ActiveQSOPointMethod of` is deleted; `logstuff.CalculateQSOPoints` hands a classed contest to `ScoreQSO`, and the classless DUMMYCONTEST gets the four `QSO POINTS ...` overrides, then 0 (plan S3).
 
+**S4 DONE 2026-10-14:** the point method is deleted as a concept -- `QSOPointMethodType`, the row's `QP` column, `TContestBase.QSOPointMethod` with its 167 overrides, and `ActiveQSOPointMethod`; `MarksDupes` is the constant True in the base, equal to the old row answer for every contest because the only two `AlwaysOnePointPerQSO` rows are its two False overriders (plan S4).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

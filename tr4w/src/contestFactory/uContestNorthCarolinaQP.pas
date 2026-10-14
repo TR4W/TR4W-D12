@@ -145,7 +145,6 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
-      function GetQSOPointMethod: QSOPointMethodType; override;
 
       (* Two counties, from the sponsor's rules -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -283,11 +282,6 @@ end;
 function TContestNorthCarolinaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
-end;
-
-function TContestNorthCarolinaQP.GetQSOPointMethod: QSOPointMethodType;
-begin
-   Result := NCQSOPointMethod;
 end;
 
 function TContestNorthCarolinaQP.GetCountyLineCountiesMax: integer;
