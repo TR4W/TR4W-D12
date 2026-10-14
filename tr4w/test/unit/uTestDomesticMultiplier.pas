@@ -62,10 +62,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   through to the file lookup with the key already set (plan F6) -- a
   quirk kept exactly.
 
-  ONE ANSWER IS NOT PINNED: the hint for a DOK contest when the text has no
-  letter. DomStringParse returned a local it never assigned (plan F6); what
-  it held was whatever the stack did, so there is no value to freeze. The
-  class transcribes the read as it stood.
+  THE DOK HINT FOR A TEXT WITH NO LETTER is pinned on its own, by
+  Test_ADOKTextWithNoLetterHintsNothing: DomStringParse returned a local it
+  never assigned (plan F6), so the old value was undefined and the
+  cross-check below still skips it; since the F6 fix (2026-10-14) both DOK
+  classes answer an empty hint.
 
   NEVER REGENERATE IT TO CLEAR A FAILURE -- the uTestContestKindPin rule. A
   failure means a contest's domestic rule changed. *)
@@ -89,6 +90,7 @@ type
       procedure Test_EveryContestHintAgreesWithItsSessionKind;
       procedure Test_EveryContestStatesItsPinnedDomesticAnswers;
       procedure Test_EveryContestDomesticAnswerAgreesWithItsSessionKind;
+      procedure Test_ADOKTextWithNoLetterHintsNothing;
    end;
 
 implementation
@@ -920,6 +922,7 @@ begin
    Test_EveryContestHintAgreesWithItsSessionKind;
    Test_EveryContestStatesItsPinnedDomesticAnswers;
    Test_EveryContestDomesticAnswerAgreesWithItsSessionKind;
+   Test_ADOKTextWithNoLetterHintsNothing;
 end;
 
 procedure TDomesticMultiplierTests.Test_EveryContestGivesItsPinnedDomesticKey;
@@ -1160,6 +1163,30 @@ begin
    (* EXACT: every contest, every roster station, every flag. *)
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1) *
                (Ord(High(TPinFlag)) + 1), checked, 'contest x station x flag answers compared');
+end;
+
+(* NO LETTER, NO HINT -- plan F6, fixed 2026-10-14. WAG and DARC 10 m
+   returned an unassigned local here (whatever the stack held); both now
+   answer ''. Asked at stations outside DL, where the DOK rule applies. *)
+procedure TDomesticMultiplierTests.Test_ADOKTextWithNoLetterHintsNothing;
+const
+   DOK_CONTESTS: array[0..1] of ContestType = (WAG, DARC10M);
+   NON_DL_STATIONS: array[0..1] of TPinStation = (psUS, psJA);
+var
+   i, j: integer;
+begin
+   BeginTest('Test_ADOKTextWithNoLetterHintsNothing');
+   for i := Low(DOK_CONTESTS) to High(DOK_CONTESTS) do
+      begin
+      for j := Low(NON_DL_STATIONS) to High(NON_DL_STATIONS) do
+         begin
+         CheckEquals('',
+                     ProgramHint(DOK_CONTESTS[i],
+                                 PinStation(NON_DL_STATIONS[j], DOK_CONTESTS[i]),
+                                 Str14(TEXTS[ptDigits])),
+                     Who(DOK_CONTESTS[i], NON_DL_STATIONS[j]) + ' hinting ' + TEXTS[ptDigits]);
+         end;
+      end;
 end;
 
 end.

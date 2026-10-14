@@ -301,7 +301,6 @@ end;
 function TContestDARC10M.DomesticMultiplierHint(const aText: Str14): string;
 var
    key: ShortString;
-   unassigned: Str14;
 begin
    if Station.MyCountry <> 'DL' then
       begin
@@ -311,14 +310,13 @@ begin
          end
       else
          begin
-         (* F6, TRANSCRIBED AND NOT FIXED (plan S6: this stage is
-            behaviour-identical). DomStringParse returned its local
-            TempMultiplier here without ever assigning it, so the hint for a
-            text with no letter was whatever the stack held. This reads an
-            unassigned local exactly as it did. The fix is `Result := ''`, in a
-            commit of its own; the copy in the other DOK contest's class must
-            change with it. *)
-         Result := string(unassigned);
+         (* NO LETTER, NO HINT -- an empty hint, F6 fixed 2026-10-14.
+            DomStringParse returned its local TempMultiplier here without
+            ever assigning it, so the hint was whatever the stack held; the
+            S6 move transcribed that read on purpose and this commit ends it.
+            The other DOK contest's class holds the same copy and changed
+            with it. *)
+         Result := '';
          end;
       end
    else
