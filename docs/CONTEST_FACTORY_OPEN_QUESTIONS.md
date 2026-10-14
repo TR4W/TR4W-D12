@@ -486,6 +486,19 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   *Recommended: yes, export BC.*
   **Answer:**
 
+- **Q91** `tr4w/src/trdos/logddx.pas` (TR's DX simulator, "DDX") is compiled
+  by nothing, and was not compiled in D7 either: every `uses LOGDDX` is
+  commented out in both trees (`MainUnit`, `LogCfg`, `logsubs2`), and it
+  uses a `Country9` unit that exists in neither. Its 26+ references to
+  the `Active*` globals therefore go stale as M10 S9 deletes them, with no
+  compiler to notice. Delete it (git history keeps it, and design §2's
+  `SampleExchange` row is the end-state plan for a simulator), or keep it
+  as reference? I tried to delete it and the session's safety check
+  refused an irreversible delete without you, so it is untouched; the
+  remaining S9 stages leave it alone.
+  *Recommended: delete it.*
+  **Answer:**
+
 - **Q90** Rover calls on ADIF export. TR4W writes a state party's rover
   (`KG1S/MON`, suffix = the QSO's county) as the bare call plus
   `APP_TR4W_ROVERCALL`, but only for the 15 parties whose old table row said
