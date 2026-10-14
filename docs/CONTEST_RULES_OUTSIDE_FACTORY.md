@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `b767e354` (2026-10-14).
+directory). This copy was generated from commit `9d29aa9d` (2026-10-14).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -80,7 +80,7 @@ into 361 comparison-or-arm records --
 
 ### 1.4 The headline facts
 
-1. **147 of the 185 registered contests still have rules outside the factory.**
+1. **148 of the 186 registered contests still have rules outside the factory.**
    With none: `APSPRINT`, `ARRL_RTTY_ROUNDUP`, `ArizonaQsoParty`, `COLORADOQSOPARTY`, `CWOPEN`, `CWOPS`, `DARC10M`, `DARCXMAS`, `EUSPRINT_AUTUMN_CW`, `EUSPRINT_AUTUMN_SSB`, `EUSPRINT_SPRING_CW`, `EUSPRINT_SPRING_SSB`, `FLORIDAQSOPARTY`, `IDAHOQSOPARTY`, `INQSOPARTY`, `MARCONIMEMORIAL`, `MICHQSOPARTY`, `MINI40`, `MINI80`, `MINITEST`, `MINNQSOPARTY`, `MOQSOPARTY`, `MST`, `NAQSOCW`, `NAQSORTTY`, `NAQSOSSB`, `NASPRINTCW`, `NASPRINTRTTY`, `NCCCSPRINT`, `NEWENGLANDQSO`, `NYQP`, `PACC`, `SEVENQP`, `SPRINTSSB`, `SST`, `TENNESSEEQSOPARTY`, `TEXASQSOPARTY`, `WISCONSINQSOPARTY`. The per-contest index (section 6)
    lists every site, registered contests first.
 
@@ -186,8 +186,8 @@ shape 2.
 
 ### 2.2 Which contests have a class
 
-`RegisterContest(<enum>, <class>)` in `src/contestFactory/`: **185**
-(`model.Registry`, which also walks each class's ancestry). All 185 score through their own chain -- none falls through to `TContestBase`'s zero.
+`RegisterContest(<enum>, <class>)` in `src/contestFactory/`: **186**
+(`model.Registry`, which also walks each class's ancestry). All 186 score through their own chain -- none falls through to `TContestBase`'s zero.
 
 ### 2.3 Shape 4 -- who reaches an `Active*` value
 
@@ -281,7 +281,7 @@ is used and marked `(s6)`.
 | `trdos/logstuff.pas:7376` | CalculateQSOPoints | 4 | **NCQSOPARTY** | all | CalculateQSOPoints (existing) | reach 1: `QP` = NCQSOPointMethod (arm of case @6382) |
 | `trdos/logstuff.pas:7391` | CalculateQSOPoints | 3 | **NCQSOPARTY** | all | CalculateQSOPoints (existing) | seven bonus callsigns `'N4T'`..`'N4L'` -- arm is dead, see dead code |
 | `trdos/logstuff.pas:7425` | CalculateQSOPoints | 4 | **BCQP** | all | CalculateQSOPoints (existing) | reach 1: `QP` = BCQPQSOPointMethod (arm of case @6382) |
-| `trdos/logstuff.pas:7439` | CalculateQSOPoints | 4 | IN7QPNE, **PAQSOPARTY** | some: PAQSOPARTY | CalculateQSOPoints (existing) | reach 2: `QP` = PAQSOPointMethod (arm of case @6382) |
+| `trdos/logstuff.pas:7439` | CalculateQSOPoints | 4 | **IN7QPNE**, **PAQSOPARTY** | all | CalculateQSOPoints (existing) | reach 2: `QP` = PAQSOPointMethod (arm of case @6382) |
 | `trdos/logstuff.pas:7476` | CalculateQSOPoints | 4 | **OZHCRVHF** | all | CalculateQSOPoints (existing) | reach 1: `QP` = OZHCRVHFQSOPointMethod (arm of case @6382) |
 | `trdos/logstuff.pas:7498` | CalculateQSOPoints | 4 | **EUROPEANVHF** | all | CalculateQSOPoints (existing) | reach 1: `QP` = EuropeanVHFQSOPointMethod (arm of case @6382) |
 | `trdos/logstuff.pas:7503` | CalculateQSOPoints | 3 | (none by default) | - | CalculateQSOPoints (existing) | `Settings.Contest.Name = 'EURASIA'` in the EuropeanVHF arm -- see dead code |
@@ -565,7 +565,7 @@ every contest the tested value reaches (reach 1-3).
 
 ### 6.1 Registered contests -- rules that should already have moved
 
-**147 of 185.** Sorted by number of sites. Registered contests with
+**148 of 186.** Sorted by number of sites. Registered contests with
 **no** site outside the factory: `APSPRINT`, `ARRL_RTTY_ROUNDUP`, `ArizonaQsoParty`, `COLORADOQSOPARTY`, `CWOPEN`, `CWOPS`, `DARC10M`, `DARCXMAS`, `EUSPRINT_AUTUMN_CW`, `EUSPRINT_AUTUMN_SSB`, `EUSPRINT_SPRING_CW`, `EUSPRINT_SPRING_SSB`, `FLORIDAQSOPARTY`, `IDAHOQSOPARTY`, `INQSOPARTY`, `MARCONIMEMORIAL`, `MICHQSOPARTY`, `MINI40`, `MINI80`, `MINITEST`, `MINNQSOPARTY`, `MOQSOPARTY`, `MST`, `NAQSOCW`, `NAQSORTTY`, `NAQSOSSB`, `NASPRINTCW`, `NASPRINTRTTY`, `NCCCSPRINT`, `NEWENGLANDQSO`, `NYQP`, `PACC`, `SEVENQP`, `SPRINTSSB`, `SST`, `TENNESSEEQSOPARTY`, `TEXASQSOPARTY`, `WISCONSINQSOPARTY`.
 
 *Hand-maintained below -- judgement, not measurement. The generator preserves it verbatim and does not re-check it; its line numbers are as of when it was written.*
@@ -684,6 +684,7 @@ Worth reading first, because they are the ones the brief named:
 | GACWWWSACW | **scoring** `trdos/logstuff.pas:9155` |
 | HADX | **scoring** `trdos/logstuff.pas:7597` |
 | HELVETIA | **scoring** `trdos/logstuff.pas:7758` |
+| IN7QPNE | **scoring** `trdos/logstuff.pas:7439` |
 | INTERNETSPRINT | **scoring** `trdos/logstuff.pas:8753` |
 | IRTS | **scoring** `trdos/logstuff.pas:9570` |
 | JALONGPREFECT | **exchange** `trdos/logdupe.pas:1903` |
@@ -737,14 +738,13 @@ Worth reading first, because they are the ones the brief named:
 
 ### 6.2 Contests with no class
 
-**1** -- every contest without a class (186 non-sentinel enum values minus
-185) appears at least once in section 4 or section 5.
+**0** -- every contest without a class (186 non-sentinel enum values minus
+186) appears at least once in section 4 or section 5.
 Contests that exist only as an operator-configured name, with no
 `ContestType` at all, appear only in the shape-3 rows: **TRC Digital** (`cMyState = 'TRC'`, 5 sites) and **PGA** (`ContestTitle = 'PGA'`, 2 sites).
 
 | contest | sites outside the factory, by category |
 |---|---|
-| IN7QPNE | **scoring** `trdos/logstuff.pas:7439` |
 
 ---
 
@@ -1087,6 +1087,7 @@ format their own exchange (19 classes).
 | `trdos/logstuff.pas:7350` | CalculateQSOPoints | `MakrothenQSOPointMethod` | MAKROTHEN |
 | `trdos/logstuff.pas:7376` | CalculateQSOPoints | `NCQSOPointMethod` | NCQSOPARTY |
 | `trdos/logstuff.pas:7425` | CalculateQSOPoints | `BCQPQSOPointMethod` | BCQP |
+| `trdos/logstuff.pas:7439` | CalculateQSOPoints | `PAQSOPointMethod` | IN7QPNE, PAQSOPARTY |
 | `trdos/logstuff.pas:7476` | CalculateQSOPoints | `OZHCRVHFQSOPointMethod` | OZHCRVHF |
 | `trdos/logstuff.pas:7498` | CalculateQSOPoints | `EuropeanVHFQSOPointMethod` | EUROPEANVHF |
 | `trdos/logstuff.pas:7539` | CalculateQSOPoints | `TeslaQSOPointMethod` | TESLA |
@@ -1162,7 +1163,7 @@ format their own exchange (19 classes).
 
 ### 9.2 Class traits the engine contradicts (D8)
 
-**677** trait overrides checked (`GetQSOPointMethod`, `GetExchangeKind`,
+**681** trait overrides checked (`GetQSOPointMethod`, `GetExchangeKind`,
 `GetDomesticMultiplierType`, `GetDXMultiplierType`), each against the value the
 ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
 `ContestsArray` row. **0** disagree or could not be read:
@@ -1176,7 +1177,7 @@ ENGINE uses -- the last `FoundContest` arm assignment for the contest, else its
   GENERALQSO, POTA, which write no `CONTEST_ID`), so their exported id is the
   `ContestTypeSA` spelling and import cannot resolve it; **139** of them are
   registered: ALLJA, ARCI, ARI_DX, ARRL10, ARRLDIGI, ARRL160, ARRLDXCW, ARRLDXSSB, ARRLSSCW, ARRLSSSSB, ARRLVHFSEP, BALTIC, BWQP, CIS, COUNTYHUNTER, CQ160CW, CQ160SSB, CQM, CQVHF, CQWPXCW, CQWPXSSB, CQWPXRTTY, CQWWCW, CQWWSSB, CROATIAN, CUPRFCW, CUPRFSSB, CUPRFDIG, CUPURAL, EUSPRINT_SPRING_CW, EUROPEANVHF, TESLA, FISTS, FOCMARATHON, GACWWWSACW, GAGARINCUP, GRIDLOC, YUDX, UKEI, HELVETIA, IARU, INTERNETSPRINT, IOTA, JIDXCW, JIDXSSB, JALONGPREFECT, JTDX, KCJ, KIDSDAY, KVP, LABRE, LZDX, MARCONIMEMORIAL, MINITEST, NAQSOCW, NAQSOSSB, NAQSORTTY, NASPRINTCW, NASPRINTRTTY, NCCCSPRINT, NEWENGLANDQSO, NRAUBALTICCW, NRAUBALTICSSB, OCEANIADXCW, OCEANIADXSSB, OKDX, OLDNEWYEAR, OZCR_O, OZCR_Z, PACC, QCWA, QCWAGOLDEN, CANADA_WINTER, RADIOVHFFD, RAEM, RDA, REGION1FIELDDAY, REGION1FIELDDAY_RCC_CW, REGION1FIELDDAY_RCC_SSB, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB, RFASCHAMPIONSHIPCW, RSGB18, RUSSIANDX, SACCW, YBDX, SACSSB, SOUTHAMERICANWW, SPDX, TENTEN, TOEC, UA4WCHAMPIONSHIP, UBACW, UBASSB, UCG, UKRAINECHAMPIONSHIP, UKRAINIAN, DARCWAEDCCW, DARCWAEDCSSB, DARCXMAS, WAG, WWL, WWPMC, XMAS, YODX, YOUTHCHAMPIONSHIPRF, RU3AXMEMORIAL, LQP, ARKTIKA_SPRING, UNDX, KINGOFSPAINCW, KINGOFSPAINSSB, WRTC, R9W_UW9WK_MEMORIAL, PCC, RADIOMEMORY, DARC10M, REFCW, REFSSB, BSCI, CQMM, SASPRINT, OZHCRVHF, CANADA_DAY, CQWWRTTY, MAKROTHEN, EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, CQIR, WWIH, ALRS_UA1DZ_CUP, RADIOYOC, OKOMSSB, BATAVIA_FT8, WWDIGI, MWC, IRTS, EUDX.
-- 370 literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were
+- 372 literal identity getters (`GetCabrilloName`, `GetADIFContestId`) were
   compared with what the exporters emit; **2** differ:
 
 | contest | format | class says | exporter emits |
