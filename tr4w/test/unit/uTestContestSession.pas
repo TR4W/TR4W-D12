@@ -69,12 +69,17 @@ type
       procedure Test_M7bBatch2StationChoicesAreStatedPerSide;
       procedure Test_M7bBatch2MessagesMemoriesAndCaptions;
       procedure Test_M7bBatch2CQExchangeDefaults;
+      procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
+      procedure Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
    end;
 
 implementation
 
 uses
+   SysUtils,
    VC, uContestBase, uContestRegistry,
+   (* ContestSession -- the kinds set-up resolved (M10 S9a). *)
+   uContestSession,
    (* Make and NoStation -- lifted there at M8. *)
    uTestContestObjects;
 
@@ -884,6 +889,94 @@ begin
    CheckEquals('', CQDefault(SST, KansasStation), 'SST was never named');
 end;
 
+(* ------------------------------------------------------------------------ *)
+(* THE RUNNING SESSION -- uContestSession (M10 S9a)                           *)
+(* ------------------------------------------------------------------------ *)
+
+(* ONE OBJECT, NEVER REPLACED, AND WHAT IS WRITTEN IS WHAT IS READ.
+
+  A reader may hold ContestSession across a set-up: the object must be the
+  same one afterwards, or that reference dangles. A fresh object holds
+  NoInitialExchange, the zero the LOGWIND global it replaces started from.
+  Every member of the kind is written and read back through the one writer
+  FCONTEST uses. The program's own value is restored, because this is the
+  process-wide session and other suites run after this one. *)
+procedure TContestSessionTests.Test_TheRunningSessionIsOneObjectWithOneWriter;
+var
+   before: TContestSession;
+   fresh: TContestSession;
+   saved: InitialExchangeType;
+   kind: InitialExchangeType;
+begin
+   before := ContestSession;
+   CheckTrue(before <> nil, 'the session exists once the unit is initialised');
+
+   fresh := TContestSession.Create;
+   try
+      CheckEquals(Ord(NoInitialExchange), Ord(fresh.InitialExchange),
+                  'a fresh session starts from NoInitialExchange');
+   finally
+      fresh.Free;
+      end;
+
+   saved := ContestSession.InitialExchange;
+   try
+      for kind := Low(InitialExchangeType) to High(InitialExchangeType) do
+         begin
+         ContestSession.WriteInitialExchange(kind);
+         CheckEquals(Ord(kind), Ord(ContestSession.InitialExchange),
+                     'the reader sees what the writer wrote, kind ' + IntToStr(Ord(kind)));
+         CheckTrue(ContestSession = before,
+                   'writing never replaces the object, kind ' + IntToStr(Ord(kind)));
+         end;
+   finally
+      ContestSession.WriteInitialExchange(saved);
+      end;
+end;
+
+(* THE SESSION IS NOT THE TRAIT -- why no reader may ask ContestIdentity.
+
+  KCJ's class states the trait NoInitialExchange, and its DescribeSession
+  states ZoneInitialExchange for every station (plan 1.4 names KCJ among the
+  27 contests whose session kind differs from the trait). Set-up writes the
+  trait at the head (FCONTEST.ApplyContestTraits) and then what the contest
+  stated (FCONTEST.ApplySessionDefaults); this applies those two writes in
+  that order through the session's writer and checks the reader sees the
+  STATED value. FCONTEST's own path is pinned for every contest and station
+  by the contest matrix's active.initialexchange line, which reads this
+  object. *)
+procedure TContestSessionTests.Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
+var
+   stated: TSessionDefaults;
+   trait: InitialExchangeType;
+   saved: InitialExchangeType;
+begin
+   trait := ContestIdentity(KCJ).InitialExchangeKind;
+   CheckEquals(Ord(NoInitialExchange), Ord(trait), 'KCJ: the trait');
+
+   saved := ContestSession.InitialExchange;
+   stated := Describe(KCJ, KansasStation);
+   try
+      CheckTrue(stated.IsStated(svInitialExchange), 'KCJ states an initial exchange');
+      CheckEquals(Ord(ZoneInitialExchange), Ord(stated.InitialExchange),
+                  'KCJ: what it states');
+
+      ContestSession.WriteInitialExchange(trait);
+      if stated.IsStated(svInitialExchange) then
+         begin
+         ContestSession.WriteInitialExchange(stated.InitialExchange);
+         end;
+
+      CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
+                  'KCJ: the session runs what the contest stated');
+      CheckTrue(ContestSession.InitialExchange <> ContestIdentity(KCJ).InitialExchangeKind,
+                'KCJ: the session differs from the identity''s trait');
+   finally
+      stated.Free;
+      ContestSession.WriteInitialExchange(saved);
+      end;
+end;
+
 procedure TContestSessionTests.RunAllTests;
 begin
    Test_TheBaseStatesNothing;
@@ -901,6 +994,8 @@ begin
    Test_M7bBatch2StationChoicesAreStatedPerSide;
    Test_M7bBatch2MessagesMemoriesAndCaptions;
    Test_M7bBatch2CQExchangeDefaults;
+   Test_TheRunningSessionIsOneObjectWithOneWriter;
+   Test_KCJRunsAnInitialExchangeItsTraitDoesNotState;
 end;
 
 end.

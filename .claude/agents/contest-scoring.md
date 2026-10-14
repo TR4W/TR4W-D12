@@ -223,6 +223,24 @@ setting. The one shipped `.cfg` it reached,
 `.cfg` borrows another contest's type** -- an event is a `ContestType` and a
 class.
 
+**THE SESSION'S KINDS LIVE IN ONE OBJECT, ONE AT A TIME (M10 S9a,
+2026-10-14).** `uContestSession.ContestSession` -- a `TContestSession`
+created once in that leaf unit's initialization, never replaced, read-only
+properties, written ONLY by FCONTEST's set-up path (`ApplyContestTraits`,
+then `ApplySessionDefaults`) through `Write*` methods -- not `Set*`, which
+`TSessionDefaults` already uses for what a contest STATES. Main thread only,
+as the globals were. **It holds `InitialExchange`** (was
+`ActiveInitialExchange`); `ActivePrefixMult`, `ActiveZoneMult`,
+`ActiveDXMult`, `ActiveDomesticMult` and `ActiveExchange` are still globals
+and move in that order (plan S9b-f). **Never repoint a kind reader to
+`ContestIdentity(Contest)`**: it is the SESSION's value, and 27 contests run
+with a kind their trait does not state (KCJ: trait `NoInitialExchange`, runs
+`ZoneInitialExchange`). `logdupe.SetUpExchangeInformation`'s parameter is
+`aExchangeKind` now -- it was named `ActiveExchange` and shadowed the global.
+**Moving a kind? Add it to `tools/contest-rules-inventory/scan.py`'s
+`SESSION` map in the same commit**, or its shape-4 rows vanish from the
+inventory in silence.
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

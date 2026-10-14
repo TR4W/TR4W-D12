@@ -257,6 +257,7 @@ uses
    uCanonicalExchange in '..\..\src\uCanonicalExchange.pas',
    uContestBase in '..\..\src\contestFactory\uContestBase.pas',
    uContestRegistry in '..\..\src\contestFactory\uContestRegistry.pas',
+   uContestSession in '..\..\src\uContestSession.pas',
    uContestStateQSOPartyBase in '..\..\src\contestFactory\uContestStateQSOPartyBase.pas',
    uContestFixedPoints in '..\..\src\contestFactory\uContestFixedPoints.pas',
    uContestARRLDXBase in '..\..\src\contestFactory\uContestARRLDXBase.pas',

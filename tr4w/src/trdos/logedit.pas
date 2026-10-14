@@ -214,6 +214,8 @@ uses
      domestic multiplier a call implies, and which bands it uses (M8). *)
   uContestRegistry,
   uScoreTotals,
+  (* ContestSession -- the initial exchange set-up resolved (M10 S9a). *)
+  uContestSession,
   uCrashLog,
   MainUnit; {KK1L: 6.71 attempt to get POST to compile. Moved here from INTERFACE section. Was not there in original}
 
@@ -2266,7 +2268,7 @@ begin
      begin
      StandardCall := StandardCallFormat(Call, True);
 
-     case ActiveInitialExchange of
+     case ContestSession.InitialExchange of
 
        CustomInitialExchange:
          begin
@@ -2710,7 +2712,7 @@ begin
      {           Both the zone and country are log entries, but only the zone is in the}
      {           exchange. This confused the parser. Only the first string (zone) is needed.}
 
-     if (ActiveInitialExchange = ZoneInitialExchange) or (Contest = IARU) then
+     if (ContestSession.InitialExchange = ZoneInitialExchange) or (Contest = IARU) then
        {KK1L: 6.71 The init exchange bug came back when I changed the Initital exchange default}
        {           for IARU and WRTC!! Added the second line above.}
         begin

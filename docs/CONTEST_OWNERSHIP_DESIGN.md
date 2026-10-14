@@ -3561,6 +3561,8 @@ and the tables, not the kind enums.
 
 **S8 DONE 2026-10-14:** the tables are deleted -- `ContestsArray`, `ContestsBooleanArray`, `QSOParties`, `TContestInfo` and the flag constants (`ContestTypeSA` stays); the rover split on ADIF export, the row's last reader, is `TContestStateQSOPartyBase.SplitsRoverCallOnExport`, True for exactly the fifteen parties the row named (proved equal for every contest before the deletion; Q90 still open); every test that read a table reads its literal, and the S0 pin is gone with what it compared against (plan S8).
 
+**S9a DONE 2026-10-14:** the session object exists -- `uContestSession.ContestSession`, a `TContestSession` created once in the unit's initialization and never replaced, written only by FCONTEST's set-up path through `Write*` methods (main thread; read-only properties) -- and holds its first kind, `InitialExchange` (was `LOGWIND.ActiveInitialExchange`, 6 code-only occurrences, 3 readers); `logdupe.SetUpExchangeInformation`'s parameter that shadowed `ActiveExchange` is renamed `aExchangeKind` ahead of S9f (plan S9a).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

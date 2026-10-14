@@ -28,6 +28,39 @@ ACTIVE = {
    "ACTIVEPREFIXMULT": "Pxm",
 }
 
+# A KIND THAT MOVED INTO THE SESSION OBJECT (M10 S9a-f, uContestSession) is
+# read as `ContestSession.<Kind>` -- the same field, so the same shape-4 site.
+# Without this the bare-name match above skips it (a token after `.` is a
+# record field, not the global) and the site drops out of the inventory in
+# silence. Add a kind here in the commit that moves it, and drop its ACTIVE
+# entry when the global is gone.
+SESSION_OBJECT = "CONTESTSESSION"
+SESSION = {
+   "INITIALEXCHANGE": "AIE",
+}
+
+# A PARAMETER THAT CARRIES A SESSION KIND, keyed (file, ROUTINE, NAME).
+# logdupe.SetUpExchangeInformation's parameter was named ActiveExchange and
+# shadowed the global, and this scanner read its `case` AS the global -- right
+# only because the one caller (uProgramMain) passes ActiveExchange. Renamed
+# at M10 S9a (plan F9); listed here so the rename does not drop its arms.
+KIND_PARAMETERS = {
+   ("tr4w/src/trdos/logdupe.pas", "SETUPEXCHANGEINFORMATION", "AEXCHANGEKIND"): "AE",
+}
+
+
+def _kind_field(toks, i):
+   """(field, first token of the designator) when toks[i] reads a kind --
+   the old global `ActiveX`, or `ContestSession.X` -- else (None, i)."""
+   u = toks[i][0].upper()
+   if u in ACTIVE and not (i > 0 and toks[i - 1][0] == "."):
+      return ACTIVE[u], i
+   after_dot = i > 1 and toks[i - 1][0] == "."
+   if u in SESSION and after_dot and toks[i - 2][0].upper() == SESSION_OBJECT:
+      if not (i > 2 and toks[i - 3][0] == "."):
+         return SESSION[u], i - 2
+   return None, i
+
 
 class FileScan:
    """Tokens and the routine map of one dumped file, made once."""
@@ -79,7 +112,11 @@ def scan_sites(dump, contests):
                "arms": contest_arms, "arm_count": len(case.labelled_arms()),
             })
             continue
-         for key, field in ACTIVE.items():
+         selectors = [(key, field) for key, field in ACTIVE.items()]
+         selectors += [(SESSION_OBJECT + r"\." + key, field) for key, field in SESSION.items()]
+         selectors += [(name, field) for (f, routine, name), field in KIND_PARAMETERS.items()
+                       if f == rel and routine == at(ln).upper()]
+         for key, field in selectors:
             if re.search(r"(?<![\w.])" + key + r"$", sel_u):
                sites.append({
                   "file": rel, "line": ln, "routine": at(ln), "shape": 4,
@@ -124,21 +161,22 @@ def scan_sites(dump, contests):
 
       # --- Active* comparisons --------------------------------------------
       for i, (t, ln) in enumerate(toks):
-         u = t.upper()
-         if u not in ACTIVE or (i > 0 and toks[i - 1][0] == "."):
+         field, s = _kind_field(toks, i)
+         if field is None:
             continue
-         prev = toks[i - 1][0] if i > 0 else ""
+         prev = toks[s - 1][0] if s > 0 else ""
          nxt = toks[i + 1][0] if i + 1 < len(toks) else ""
          if nxt in ("=", "<>"):
             vals = [pascal.operand_after(toks, i + 1)]
-         elif prev in ("=", "<>") and not (i > 1 and toks[i - 2][0] == ":"):
-            vals = [pascal.operand_before(toks, i - 1)]
+         elif prev in ("=", "<>") and not (s > 1 and toks[s - 2][0] == ":"):
+            vals = [pascal.operand_before(toks, s - 1)]
          elif nxt.upper() == "IN" and i + 2 < len(toks) and toks[i + 2][0] == "[":
             vals = pascal.set_members(toks, i + 2)
          else:
             continue
+         operand = "".join(x[0] for x in toks[s:i + 1])
          sites.append({"file": rel, "line": ln, "routine": at(ln), "shape": 4,
-                       "kind": "compare", "operand": t, "field": ACTIVE[u], "values": vals})
+                       "kind": "compare", "operand": operand, "field": field, "values": vals})
 
    return _merge_sets(sites), len(files)
 

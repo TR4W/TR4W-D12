@@ -446,7 +446,10 @@ var
   ActiveBand                            : BandType {= Band160};
   ActiveColor                           : Byte;
   ActiveExchange                        : ExchangeType {= NoExchangeReceived};
-  ActiveInitialExchange                 : InitialExchangeType {= NoInitialExchange};
+  (* ActiveInitialExchange MOVED -- M10 S9a, 2026-10-14. It is
+    uContestSession.ContestSession.InitialExchange, written only by FCONTEST's
+    set-up path; see that unit's header for why it is the SESSION's value and
+    not the contest class's trait. *)
   ActiveMode                            : ModeType = Digital;
 
   //  ActiveModemPort: PortType;

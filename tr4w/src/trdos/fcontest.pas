@@ -132,6 +132,8 @@ uses
    uContestRegistry,
    (* CurrentStation -- the station DescribeSession is handed (M7a). *)
    uContestFactory,
+   (* ContestSession -- the one writer of the session's kinds (M10 S9a). *)
+   uContestSession,
    uDomFileKeys,       // FoundMyStateInDomFile's reading rule
    SysUtils,      // ExtractFilePath/ExtractFileName -- see SetUpFileNames
    uConfigValues, LogGrid,
@@ -557,7 +559,7 @@ begin
      end;
   if aSession.IsStated(svInitialExchange) then
      begin
-     ActiveInitialExchange := aSession.InitialExchange;
+     ContestSession.WriteInitialExchange(aSession.InitialExchange);
      end;
   if aSession.IsStated(svZoneMult) then
      begin
@@ -808,7 +810,7 @@ begin
   CTY.ctyZoneMode := aContest.ZoneMode;
 
   ActiveExchange := aContest.ExchangeKind;
-  ActiveInitialExchange := aContest.InitialExchangeKind;
+  ContestSession.WriteInitialExchange(aContest.InitialExchangeKind);
   ActiveDomesticMult := aContest.DomesticMultiplierType;
   ActiveDXMult := aContest.DXMultiplierType;
   ActiveZoneMult := aContest.ZoneMultiplierType;

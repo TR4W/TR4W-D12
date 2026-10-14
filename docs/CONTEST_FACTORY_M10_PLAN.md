@@ -936,6 +936,84 @@ As planned:
 
 ### S9a-f -- The six kind globals become the session object (widest; last)
 
+**S9a DONE 2026-10-14** (on top of `152b4ef9`). Re-measured first
+(`count-ids.ps1 -Lines -Ids @('ActiveExchange','ActiveInitialExchange','ActiveDomesticMult','ActiveDXMult','ActivePrefixMult','ActiveZoneMult')`).
+As planned, with these corrections and decisions:
+
+* **The session object:** `tr4w/src/uContestSession.pas`, a leaf (`uses VC`
+  only). `TContestSession`, a class; `function ContestSession:
+  TContestSession` returns the one instance, created in the unit's
+  `initialization`, freed in its `finalization`, never replaced -- a new
+  contest re-writes its fields. Read-only properties; the writer is
+  `WriteInitialExchange`. **Named `Write*`, not `Set*`**: `TSessionDefaults`
+  (what a contest STATES) already has a `SetInitialExchange` (`uContestBase`),
+  and "who writes the session" must be one search. Registered in `tr4w.lpr`
+  and the unit-test `.lpr`.
+* **Threading, re-checked for all six kinds:** every reader is on the main
+  thread (the call window, the sheet, display, the exporters including headless
+  `/EXPORT`, `uScoreTotals` behind `LOGEDIT.TotalScore`'s `OnMainThread` gate,
+  `uWSJTX` via `QueueAsyncCall`), so no lock, as the globals had none. The unit
+  header states the off-thread guarantee (a whole-field enum read, never torn,
+  but not coherent across kinds during a set-up) so a future worker-thread
+  reader knows what it gets.
+* **One writer is a convention, not enforced.** `count-ids.ps1 -Ids
+  @('WriteInitialExchange')`: `fcontest.pas` twice (ApplySessionDefaults,
+  ApplyContestTraits) plus the unit and the tests. A lint could gate it; not
+  written.
+* **Moved: `ActiveInitialExchange`, 6 code-only occurrences** (the plan said
+  9; S2 took the three `uSettingsEffects` writers): the declaration
+  (`logwind`), two writers (`fcontest` ApplySessionDefaults and
+  ApplyContestTraits, order unchanged) and three readers (`logedit`
+  `InitialExchangeEntry` twice, `uContestMatrix`'s `active.initialexchange`
+  line). After: 0. The matrix line's text is unchanged, so the matrix should be
+  identical.
+* **F9 done ahead of S9f, in its own edit:** `logdupe.SetUpExchangeInformation`'s
+  parameter is `aExchangeKind` (declaration, implementation, the one `case`);
+  its one caller (`uProgramMain`) passes `ActiveExchange` positionally and is
+  unchanged. `ActiveExchange` fell 83 -> 80, exactly those three.
+* **CORRECTION -- the inventory read the F9 shadow as the global, and both moves
+  would have dropped rows SILENTLY.** `tools/contest-rules-inventory/scan.py`
+  matched the bare global name and skips a token after `.`, so (a)
+  `ContestSession.InitialExchange` would vanish from shape 4, and (b) the
+  renamed parameter took **25 rows** with it (110 -> 85). The scanner now
+  knows the session spelling (`SESSION`, add each kind in the commit that moves
+  it) and the one kind-carrying parameter (`KIND_PARAMETERS`). Regenerated as
+  a check and restored: **110 rows, 6/0/13/91, 74 of 186 -- identical to HEAD
+  but for line numbers.**
+* **Test:** `uTestContestSession`, two new cases.
+  `Test_TheRunningSessionIsOneObjectWithOneWriter` (same object before and
+  after every write; a fresh one starts `NoInitialExchange`, the global's zero;
+  every `InitialExchangeType` member written and read back; the program's value
+  restored). `Test_KCJRunsAnInitialExchangeItsTraitDoesNotState`: KCJ's trait
+  is `NoInitialExchange` and its `DescribeSession` states `ZoneInitialExchange`;
+  the two writes in set-up's order leave the session at Zone, unequal to
+  `ContestIdentity(KCJ).InitialExchangeKind`. FCONTEST's own path is not
+  callable from a unit test without its side effects; the matrix's
+  `active.initialexchange` line pins it for every contest.
+* **Not done:** the full build, `Run-Lints`, the matrix, corpus, factory check
+  and round-trip (the gated run). The incremental app compile stopped at the
+  known "Internal error 200306067"; `uContestMatrix`'s whole cone and
+  `uProgramMain` were compiled clean with the App search paths into a scratch
+  directory, and the unit-test build is clean. `Lint-ContestNameTests` (6 in 3,
+  no rise), `Lint-UnitFileNames`, `Lint-BraceComments`, `Lint-LineEndings` run
+  on their own and pass. `tr4wserver` links none of the touched units (`VC` is
+  its only engine unit; `uContestSession` is not in its graph).
+
+**Recommended order for S9b-f, measured after S9a** (code-only occurrences,
+declaration and writers included):
+
+| stage | kind | occ. | notes |
+|---|---|---|---|
+| S9b | `ActivePrefixMult` | 9 | declared `logdupe`; 6 readers |
+| S9c | `ActiveZoneMult` | 19 | F4: `postunit.ZoneSentForThisContest` asks the CLASS, the ADIF CQZ/ITUZ block the session -- decide then |
+| S9d | `ActiveDXMult` | 20 | declared `VC` (move the declaration, not just the reads); + F5 country mode (`uSettingsEffects` CONTEST arm); `uTestOffBandCredit` writes it |
+| S9e | `ActiveDomesticMult` | 39 | + delete `logdom.DomQTHInit` (F8); `uTestOffBandCredit` writes it |
+| S9f | `ActiveExchange` | 80 | `tree.pas` per-row repaint read; the F9 parameter is already renamed |
+
+Each stage adds its kind to `scan.py`'s `SESSION` map in the same commit.
+
+As planned:
+
 One kind per commit, smallest first so the pattern is proven cheaply:
 S9a `ActiveInitialExchange` (9 occ.), S9b `ActivePrefixMult` (10), S9c
 `ActiveZoneMult` (22), S9d `ActiveDXMult` (22, + F5 country mode), S9e

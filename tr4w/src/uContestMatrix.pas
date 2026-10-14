@@ -156,6 +156,7 @@ uses
    uContestFactory,
    uContestRegistry,
    uContestStateQSOPartyBase,
+   uContestSession,   (* the session's resolved kinds (M10 S9a) *)
    uLogStore,
    uCrashLog,     (* EarlyTrace -- /MATRIXLIST runs before tr4w.log is configured *)
    (* THE parse SECTION (M5b): the call-window text, the error a refusal
@@ -584,7 +585,7 @@ begin
      ActiveQSOPointMethod, and M10 S4 deleted the point method as a concept.
      Dropped in a re-freeze of its own, before anything moves. *)
    EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ActiveExchange)));
-   EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ActiveInitialExchange)));
+   EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ContestSession.InitialExchange)));
    EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ActiveDomesticMult)));
    EmitField('active.dxmult', EnumText(TypeInfo(DXMultType), Ord(ActiveDXMult)));
    EmitField('active.zonemult', EnumText(TypeInfo(ZoneMultType), Ord(ActiveZoneMult)));

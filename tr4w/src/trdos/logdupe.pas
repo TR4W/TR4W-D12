@@ -333,7 +333,7 @@ function ParseExchangeIntoContestExchange(LogEntry: string;
 function PointsToBigCall(Entry: FourBytes): boolean;
 
 
-procedure SetUpExchangeInformation(ActiveExchange: ExchangeType;
+procedure SetUpExchangeInformation(aExchangeKind: ExchangeType;
   var ExchangeInformation: ExchangeInformationRecord
   );
 
@@ -1573,7 +1573,13 @@ begin
   LoadinLog;
 end;
 
-procedure SetUpExchangeInformation(ActiveExchange: ExchangeType; var ExchangeInformation: ExchangeInformationRecord);
+(* THE PARAMETER WAS NAMED ActiveExchange, LIKE THE GLOBAL IT IS PASSED -- M10
+  S9a, 2026-10-14 (docs/CONTEST_FACTORY_M10_PLAN.md F9). It shadowed the
+  global inside this routine, so the S9f re-home of ActiveExchange done as a
+  text replace would have turned this case into a read of the session and
+  compiled -- wrong whenever a caller passes another kind. Renamed first, on
+  its own; the one caller (uProgramMain) is unchanged. *)
+procedure SetUpExchangeInformation(aExchangeKind: ExchangeType; var ExchangeInformation: ExchangeInformationRecord);
 
 begin
   //FillChar(ExchangeInformation, sizeof(ExchangeInformation), 0);
@@ -1597,7 +1603,7 @@ begin
      ZoneOrSociety := False;
      end;
 
-  case ActiveExchange of
+  case aExchangeKind of
     CheckAndChapterOrQTHExchange:
       begin
         ExchangeInformation.Chapter := True;
