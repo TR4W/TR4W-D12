@@ -273,9 +273,11 @@ shared files a contest touches; the search path already covers
 | `IsUSQSOParty` | the array row (`P <> 0`) |
 | `ADIFPowerTag` | `RX_PWR` -- the ADIF tag the QSO's `Power` field goes to. FOC Marathon says `FOC_NUM`, because its parser puts the membership number there (M4) |
 | `WritesADIFContestId` | True. General QSO says False -- an operating mode, not a contest (M4) -- and so does POTA, an activation (2026-10-13, design Q6) |
-| `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries` | `ContestsBooleanArray`'s bits. **Set-up reads these** (M2) |
-| `ZoneMode` | `CQZoneMode` when the array's CQ bit is set, else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
+| `Flags` (`GetFlags: TContestFlags`) | `ContestsBooleanArray`'s word, as a set. **STATE IT -- every registered contest does since M10 S5** (in the leaf; the CW/SSB pair families on their base), e.g. `Result := [cfQSOByBand, cfMultByBand];`, `[]` when none applies. Plan S6 makes the base answer `[]`. The nine properties below answer from it and are no longer virtual |
+| `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries`, `ErmakSpecification`, `RTCCapable` | the member of `Flags` of the same name. **Set-up reads the first six** (M2); MainUnit and uHamScore still read the table for the last two until plan S6 |
+| `ZoneMode` | `CQZoneMode` when `Flags` holds `cfCQZoneMode` (the array's CQ bit), else `ITUZoneMode` -- D7's rule, stated rather than cast (the cast gave 255, design §8.2a #2). **Set-up reads it** |
 | `InStateDomesticFileName` | a QSO party's in-state file -- the `QSOParties` entry the row's `P` indexes; `''` otherwise. `DomesticFileName` is the party's county file, which every other station loads and which the in-state test reads |
+| `QSOPartyArea` | the area the New Contest prompt names: the `QSOParties` entry's `StateName` (M10 S5). A state party answers its `HostState` (`TContestStateQSOPartyBase`); 7QP, IN7QPNE and British Columbia state theirs. A new party states its `InStateDomesticFileName` itself |
 | `MarksDupes` | the dupe policy: **True** (since M10 S4; until then "unless the row's `QP` is `AlwaysOnePointPerQSO`", the same answer for every contest, because the only two such rows were the two classes that say False). A contest that ignores dupes overrides it. **`logsubs2` reads it** through `ContestIdentity` when a QSO is logged (M3) -- an operator's `QSO POINT METHOD` no longer reaches it. Internet Sprint and SRR-JR state False |
 
 **SET-UP ASKS THE CONTEST, SINCE M2 (2026-10-01).** `FCONTEST.FoundContest`'s

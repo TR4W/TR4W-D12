@@ -81,6 +81,11 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -151,6 +156,11 @@ end;
 function TContestNRAUBalticBase.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberAndDomesticQTHExchange;
+end;
+
+function TContestNRAUBalticBase.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand];
 end;
 
 function TContestNRAUBalticBase.GetIsUSQSOParty: boolean;

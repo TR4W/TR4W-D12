@@ -84,6 +84,9 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       function GetADIFPowerTag: string; override;
       (* THE LOG'S FOC# COLUMN -- M9b. See the body. *)
@@ -235,6 +238,11 @@ end;
 function TContestFOCMarathon.GetExchangeKind: ExchangeType;
 begin
    Result := RSTPowerExchange;
+end;
+
+function TContestFOCMarathon.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand];
 end;
 
 function TContestFOCMarathon.GetIsUSQSOParty: boolean;

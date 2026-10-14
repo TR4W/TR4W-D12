@@ -55,6 +55,11 @@ type
    TContestCQWPXBase = class(TContestBase)
    protected
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
    public
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -151,6 +156,11 @@ begin
             end;
          end;
       end;
+end;
+
+function TContestCQWPXBase.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfCQZoneMode];
 end;
 
 (* THE CANONICAL RECEIVED EXCHANGE -- uExchangeBuilder's arm for this

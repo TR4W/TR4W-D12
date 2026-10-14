@@ -89,6 +89,13 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetQSOPartyArea: string; override;
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -183,6 +190,21 @@ end;
 function TContestSevenQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestSevenQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'seven';
+end;
+
+function TContestSevenQP.GetQSOPartyArea: string;
+begin
+   Result := '7th area';
+end;
+
+function TContestSevenQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
 end;
 
 function TContestSevenQP.GetIsUSQSOParty: boolean;

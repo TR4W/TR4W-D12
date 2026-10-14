@@ -453,6 +453,29 @@ Three groups:
   *Recommended: check the 7QP rules page and tell me which bands.*
   **Answer:**
 
+### Found while the classes took over the table's values (M10 S5, 2026-10-14)
+
+These were copied into the classes exactly as the old table had them, so
+nothing changed. Each looks wrong; none was fixed without your answer.
+
+- **Q86** The Minnesota QSO Party is the only state party whose table row
+  marks it "RTC capable" (live score posting through the RTC uploader).
+  No other party has it. Intended, or a typo in the row?
+  *Recommended: remove it unless Minnesota is posted to a scoreboard.*
+  **Answer:**
+
+- **Q87** IN7QPNE's New Contest prompt names its "area" as `IN7QPNE` -- a
+  token, not a place -- and the prompt shows it twice. Should it read
+  something like "Indiana, 7th area, New England or Delaware"?
+  *Recommended: yes; the composite class can state its own prompt.*
+  **Answer:**
+
+- **Q88** The NA Sprint CW and RTTY rows name different domestic files:
+  CW uses `naqp`, RTTY uses `s49p8`. Both are the same sprint exchange
+  (states, provinces, NA). Is one of them wrong, and which file should
+  both use?
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)

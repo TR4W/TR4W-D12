@@ -57,7 +57,9 @@ unit uContestPennsylvaniaQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC,
+   uContestBase,   (* TContestFlags (M10 S5) *)
+   uContestStateQSOPartyBase;
 
 type
    TContestPennsylvaniaQP = class(TContestStateQSOPartyBase)
@@ -100,6 +102,12 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    end;
 
@@ -182,6 +190,16 @@ end;
 function TContestPennsylvaniaQP.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberDomesticQTHExchange;
+end;
+
+function TContestPennsylvaniaQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'pa';
+end;
+
+function TContestPennsylvaniaQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 (* PAQSOPointMethod -- `if Mode = PHONE then 1 else 2`.

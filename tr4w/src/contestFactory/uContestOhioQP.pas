@@ -102,6 +102,12 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
@@ -203,6 +209,16 @@ end;
 function TContestOhioQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTQSONumberAndDomesticQTHExchange;
+end;
+
+function TContestOhioQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'ohio';
+end;
+
+function TContestOhioQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
 end;
 
 (* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the

@@ -91,6 +91,9 @@ type
       function GetDXMultiplierType: DXMultType; override;
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -189,6 +192,11 @@ end;
 function TContestCQIR.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberAndPossibleDomesticQTHExchange;
+end;
+
+function TContestCQIR.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfMultByMode];
 end;
 
 function TContestCQIR.GetIsUSQSOParty: boolean;

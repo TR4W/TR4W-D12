@@ -62,6 +62,9 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
 
       (* THE NARROWER CABRILLO QSO LINE -- taken over from PostUnit, where it
@@ -262,6 +265,11 @@ end;
 function TContestArktikaSpring.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndQSONumberOrDomesticQTHExchange;
+end;
+
+function TContestArktikaSpring.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfErmakSpecification];
 end;
 
 function TContestArktikaSpring.GetIsUSQSOParty: boolean;

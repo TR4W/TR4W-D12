@@ -58,6 +58,18 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetDXMultiplierType: DXMultType; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetFlags: TContestFlags; override;
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
@@ -113,6 +125,46 @@ end;
 function TContestNASprintCW.GetFriendlyName: string;
 begin
    Result := 'North American Sprint, CW';
+end;
+
+function TContestNASprintCW.GetWA7BNMId: integer;
+begin
+   Result := 253;
+end;
+
+function TContestNASprintCW.GetSubmissionEmail: string;
+begin
+   Result := 'cwsprint@ncjweb.com';
+end;
+
+function TContestNASprintCW.GetDomesticFileName: string;
+begin
+   Result := 'naqp';
+end;
+
+function TContestNASprintCW.GetDXMultiplierType: DXMultType;
+begin
+   Result := NorthAmericanARRLDXCCWithNoUSACanadaOrkL7;
+end;
+
+function TContestNASprintCW.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := DomesticFile;
+end;
+
+function TContestNASprintCW.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NameQTHInitialExchange;
+end;
+
+function TContestNASprintCW.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberNameDomesticOrDXQTHExchange;
+end;
+
+function TContestNASprintCW.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfRTCCapable];
 end;
 
 (* THE EXCHANGE IS SERIAL, NAME AND STATE-OR-DX.

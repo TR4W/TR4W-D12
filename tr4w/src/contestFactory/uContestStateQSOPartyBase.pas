@@ -181,6 +181,14 @@ type
          does not override this cannot be instantiated. *)
       function GetHostState: string; override; abstract;
 
+      (* THE AREA THE NEW CONTEST PROMPT NAMES IS THE HOST STATE -- M10 S5.
+
+         A FAMILY RULE, not a coincidence: a single-state party's area is its
+         state by definition, so stating it a second time in each class would
+         be two statements of one fact, free to disagree. British Columbia,
+         whose host is not a two-letter state, states its own. *)
+      function GetQSOPartyArea: string; override;
+
       (* THE COUNTY-LINE RULE, AS A COUNT -- AND THE BOOLEAN DERIVED FROM IT.
 
          IT MOVED HERE FROM TContestBase ON 2026-09-29. NY4I: "Arktika Spring
@@ -303,6 +311,11 @@ end;
 function TContestStateQSOPartyBase.GetIsUSQSOParty: boolean;
 begin
    Result := True;
+end;
+
+function TContestStateQSOPartyBase.GetQSOPartyArea: string;
+begin
+   Result := HostState;
 end;
 
 function TContestStateQSOPartyBase.GetCountyLineCountiesMax: integer;

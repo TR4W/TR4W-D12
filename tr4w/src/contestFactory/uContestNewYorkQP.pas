@@ -102,6 +102,12 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
+
       (* The county-line maximum, from NY4I's ruling -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -206,6 +212,16 @@ end;
 function TContestNewYorkQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
+end;
+
+function TContestNewYorkQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'newyork';
+end;
+
+function TContestNewYorkQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfMultByMode];
 end;
 
 (* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the PHONE

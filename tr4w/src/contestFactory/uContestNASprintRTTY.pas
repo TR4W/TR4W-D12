@@ -48,6 +48,18 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetDXMultiplierType: DXMultType; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetFlags: TContestFlags; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -96,6 +108,46 @@ end;
 function TContestNASprintRTTY.GetFriendlyName: string;
 begin
    Result := 'North American Sprint, RTTY';
+end;
+
+function TContestNASprintRTTY.GetWA7BNMId: integer;
+begin
+   Result := 155;
+end;
+
+function TContestNASprintRTTY.GetSubmissionEmail: string;
+begin
+   Result := 'rttysprint@ncjweb.com';
+end;
+
+function TContestNASprintRTTY.GetDomesticFileName: string;
+begin
+   Result := 's49p8';
+end;
+
+function TContestNASprintRTTY.GetDXMultiplierType: DXMultType;
+begin
+   Result := NorthAmericanARRLDXCCWithNoUSACanadaOrkL7;
+end;
+
+function TContestNASprintRTTY.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := DomesticFile;
+end;
+
+function TContestNASprintRTTY.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NameQTHInitialExchange;
+end;
+
+function TContestNASprintRTTY.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberNameDomesticOrDXQTHExchange;
+end;
+
+function TContestNASprintRTTY.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfRTCCapable];
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as

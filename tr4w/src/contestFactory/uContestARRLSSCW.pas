@@ -29,6 +29,8 @@ unit uContestARRLSSCW;
 interface
 
 uses
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC,
    uContestARRLSSBase;
 
 type
@@ -46,13 +48,22 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
    public
    end;
 
 implementation
 
 uses
-   VC, uContestRegistry;
+   uContestRegistry;
 
 function TContestARRLSSCW.GetDisplayName: string;
 begin
@@ -78,6 +89,36 @@ end;
 function TContestARRLSSCW.GetFriendlyName: string;
 begin
    Result := 'ARRL Sweepstakes Contest, CW';
+end;
+
+function TContestARRLSSCW.GetWA7BNMId: integer;
+begin
+   Result := 177;
+end;
+
+function TContestARRLSSCW.GetSubmissionEmail: string;
+begin
+   Result := 'SSCW@arrl.org';
+end;
+
+function TContestARRLSSCW.GetDomesticFileName: string;
+begin
+   Result := 'arrlsect';
+end;
+
+function TContestARRLSSCW.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := DomesticFile;
+end;
+
+function TContestARRLSSCW.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := CheckSectionInitialExchange;
+end;
+
+function TContestARRLSSCW.GetExchangeKind: ExchangeType;
+begin
+   Result := QSONumberPrecedenceCheckDomesticQTHExchange;
 end;
 
 initialization

@@ -44,7 +44,9 @@ unit uContestIndianaQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC,
+   uContestBase,   (* TContestFlags (M10 S5) *)
+   uContestStateQSOPartyBase;
 
 type
    TContestIndianaQP = class(TContestStateQSOPartyBase)
@@ -86,6 +88,12 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
 
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
@@ -184,6 +192,16 @@ end;
 function TContestIndianaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
+end;
+
+function TContestIndianaQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'in';
+end;
+
+function TContestIndianaQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestIndianaQP.GetCountyLineCountiesMax: integer;

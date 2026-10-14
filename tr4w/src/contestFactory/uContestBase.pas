@@ -1089,14 +1089,47 @@ type
       MyGrid: string;
    end;
 
+   (* THE CONTEST'S YES/NO FACTS, AS ONE SET -- M10 S5, 2026-10-14.
+
+      These were the nine bits of the contest's ContestsBooleanArray word,
+      and the members are declared IN BIT ORDER (cfQSOByBand is bit 0,
+      cfRTCCapable bit 8) so the base's reading of the word stays a plain
+      loop until plan S6 deletes it. Each member answers the property of the
+      same name on TContestBase:
+
+        cfQSOByBand, cfQSOByMode       a station may be worked once per
+                                       band / per mode
+        cfMultByBand, cfMultByMode     a multiplier counts per band / mode
+        cfErmakSpecification           the ERMAK Cabrillo specification is
+                                       offered to a Russian station
+        cfVHFBandsEnabled              the VHF bands are on
+        cfCQZoneMode                   CTY.DAT answers CQ zones; absent
+                                       means ITU zones (ZoneMode)
+        cfCountsDomesticCountries      a domestic country counts as one
+        cfRTCCapable                   HamScore's real-time contact upload
+
+      A SET, NOT NINE VIRTUALS, on the radio factory's model
+      (TRadioCapabilitySet): a contest states ONE line that a reader can
+      take in at a glance, the members cannot be stated twice or disagree,
+      and a fact added later is a member, not a getter in 186 classes. The
+      nine properties are still asked by name and are answered from it. *)
+   TContestFlag = (
+      cfQSOByBand,
+      cfQSOByMode,
+      cfMultByBand,
+      cfMultByMode,
+      cfErmakSpecification,
+      cfVHFBandsEnabled,
+      cfCQZoneMode,
+      cfCountsDomesticCountries,
+      cfRTCCapable
+      );
+   TContestFlags = set of TContestFlag;
+
    TContestBase = class
    private
       FContest: ContestType;
       FStation: TStationContext;
-
-      (* One bit of this contest's ContestsBooleanArray word -- the defaults of
-         the set-up getters below, read in one place. *)
-      function RowFlag(aBit: integer): boolean;
    protected
       (* THE GETTERS BEHIND THE PROPERTIES BELOW.
 
@@ -1162,15 +1195,24 @@ type
          domestic country counts as a country -- so the contest states them,
          and set-up asks the contest (FCONTEST.ApplyContestTraits).
 
-         EVERY ONE DEFAULTS TO THE ARRAY, as the row accessors above default
-         to ContestsArray. A contest states one when it moves; until then the
-         answer is the one the head always read. *)
-      function GetQSOByBand: boolean; virtual;
-      function GetQSOByMode: boolean; virtual;
-      function GetMultByBand: boolean; virtual;
-      function GetMultByMode: boolean; virtual;
-      function GetVHFBandsEnabled: boolean; virtual;
-      function GetCountsDomesticCountries: boolean; virtual;
+         A CONTEST STATES THEM ALL AT ONCE, in GetFlags (M10 S5, 2026-10-14):
+         every registered contest states its set, in its leaf or -- for the
+         CW/SSB pairs, whose set is their family's rule -- on its family base.
+         The getters below are NOT virtual any more; each answers from the
+         set, so there is one statement per contest and nothing to disagree
+         with it.
+
+         THE BASE STILL READS THE ARRAY in S5, so a class that stated nothing
+         would answer as before; Test_MovedRowValuesStillMatchTheArray proves
+         every stated set equal to its row, bit by bit. Plan S6 makes the base
+         answer the empty set. *)
+      function GetFlags: TContestFlags; virtual;
+      function GetQSOByBand: boolean;
+      function GetQSOByMode: boolean;
+      function GetMultByBand: boolean;
+      function GetMultByMode: boolean;
+      function GetVHFBandsEnabled: boolean;
+      function GetCountsDomesticCountries: boolean;
 
       (* CQ ZONES OR ITU ZONES -- which list CTY.DAT answers a zone from.
 
@@ -1185,15 +1227,31 @@ type
 
          The array's own legend states the rule this restores: ciCQZoneMode0
          is "ITU ZONE MODE", ciCQZoneMode1 is "CQ ZONE MODE". The bit is
-         identical in D7's VC.pas for every contest (compared 2026-10-01). *)
-      function GetZoneMode: ZoneModeType; virtual;
+         identical in D7's VC.pas for every contest (compared 2026-10-01).
+         Since M10 S5 it is the set's cfCQZoneMode, mapped here. *)
+      function GetZoneMode: ZoneModeType;
 
       (* A QSO PARTY'S OTHER DOMESTIC FILE -- the one an IN-STATE station
          loads. DomesticFileName is the file every other station loads: for a
          state party, the host's counties. '' for a contest that is not a QSO
          party. Default: the QSOParties entry the row's P indexes, which is
-         where it is written down today. *)
+         where it was written down; since M10 S5 every one of the 22 contests
+         with an entry states its own file, and plan S6 makes this ''. *)
       function GetInStateDomesticFileName: string; virtual;
+
+      (* THE AREA A QSO PARTY'S NEW CONTEST PROMPT NAMES -- M10 S5.
+
+         The QSOParties entry's StateName: a two-letter state for a
+         single-state party, and for the others what the dialog showed --
+         the 7QP's '7th area', 'IN7QPNE', British Columbia's 'VE7'. NOT
+         HostState, which is two letters only (see the implementation's
+         QSOPartyAreaName).
+         '' for a contest that is not a QSO party. Default: that entry, read
+         through QSOPartyAreaName; TContestStateQSOPartyBase answers its
+         HostState, and the three that are not a two-letter state state their
+         own. NOTHING ASKS THIS YET: the base's DescribeNewContestPrompts still
+         calls QSOPartyAreaName, and plan S6 repoints it here. *)
+      function GetQSOPartyArea: string; virtual;
 
       (* THE LAST TWO BITS OF THE ROW'S FLAG WORD -- M10 S0, 2026-10-14.
 
@@ -1202,14 +1260,13 @@ type
          RTCCapable: the contest takes HamScore's real-time contact upload
          (uHamScore, RTC_CAPABLE_BIT).
 
-         Both default to the array like the seven above. NOTHING ASKS THEM YET:
-         MainUnit and uHamScore still read ContestsBooleanArray, and plan S6
-         repoints them here. They exist now so that
-         Test_MovedRowValuesStillMatchTheArray can pin the class's answer
-         against the table for every contest BEFORE S5 transcribes the bits --
-         the matrix records neither. *)
-      function GetErmakSpecification: boolean; virtual;
-      function GetRTCCapable: boolean; virtual;
+         Both are members of the set like the seven above. NOTHING ASKS THEM
+         YET: MainUnit and uHamScore still read ContestsBooleanArray, and plan
+         S6 repoints them here. They exist so that
+         Test_MovedRowValuesStillMatchTheArray pins the class's answer
+         against the table for every contest -- the matrix records neither. *)
+      function GetErmakSpecification: boolean;
+      function GetRTCCapable: boolean;
 
       (* DOES THIS CONTEST MARK A REPEATED CONTACT AS A DUPE? -- M3, 2026-10-01.
 
@@ -1344,7 +1401,9 @@ type
       property ADIFPowerTag: string read GetADIFPowerTag;
       property WritesADIFContestId: boolean read GetWritesADIFContestId;
 
-      (* Set-up's facts -- see the getters. *)
+      (* Set-up's facts -- see the getters. Flags is the contest's whole set;
+         each property below answers one member of it. *)
+      property Flags: TContestFlags read GetFlags;
       property QSOByBand: boolean read GetQSOByBand;
       property QSOByMode: boolean read GetQSOByMode;
       property MultByBand: boolean read GetMultByBand;
@@ -1353,6 +1412,7 @@ type
       property CountsDomesticCountries: boolean read GetCountsDomesticCountries;
       property ZoneMode: ZoneModeType read GetZoneMode;
       property InStateDomesticFileName: string read GetInStateDomesticFileName;
+      property QSOPartyArea: string read GetQSOPartyArea;
       property ErmakSpecification: boolean read GetErmakSpecification;
       property RTCCapable: boolean read GetRTCCapable;
 
@@ -1437,7 +1497,13 @@ type
 
          SubmissionEmail and DomesticFileName are PAnsiChar in the array, which
          is why they arrive as string here: a contest class should not be handing
-         out pointers into a const table. *)
+         out pointers into a const table.
+
+         SINCE M10 S5 (2026-10-14) NO REGISTERED CLASS INHERITS A NON-NEUTRAL
+         VALUE from these defaults: the 15 that did (ARRL DX and SS, CQ WPX and
+         WW, Florida, Michigan, General QSO, IARU, the NA Sprints, Winter Field
+         Day) state them in the leaf. The defaults still read the array until
+         plan S6 turns them into DUMMYCONTEST's neutral row. *)
                                                                               
       (* SCORING -- THE ONE PUBLIC ENTRY POINT (M3, 2026-10-01; design 7.7).
 
@@ -2415,45 +2481,71 @@ begin
    Result := CabrilloQSOLineFormatDefault;
 end;
 
-function TContestBase.RowFlag(aBit: integer): boolean;
+function TContestBase.GetFlags: TContestFlags;
+const
+   (* Each member's bit in the row's word, by name rather than by the
+      members' bit-order declaration -- so a reordered enum cannot shift
+      a flag onto its neighbour's bit. *)
+   FLAG_BIT: array[TContestFlag] of integer = (
+      QSO_BY_BAND_BIT,
+      QSO_BY_MODE_BIT,
+      MULT_BY_BAND_BIT,
+      MULT_BY_MODE_BIT,
+      ERMAK_BIT,
+      VHF_BAND_ENABLE_BIT,
+      CQ_ZONE_MODE_BIT,
+      CDC_BIT,
+      RTC_CAPABLE_BIT
+      );
+var
+   flag: TContestFlag;
 begin
-   Result := (ContestsBooleanArray[FContest] and (1 shl aBit)) <> 0;
+   (* THE ROW'S WORD, until plan S6 makes this the empty set. Every
+      registered contest overrides it (M10 S5); DUMMYCONTEST's word is 0. *)
+   Result := [];
+   for flag := Low(TContestFlag) to High(TContestFlag) do
+      begin
+      if (ContestsBooleanArray[FContest] and (1 shl FLAG_BIT[flag])) <> 0 then
+         begin
+         Include(Result, flag);
+         end;
+      end;
 end;
 
 function TContestBase.GetQSOByBand: boolean;
 begin
-   Result := RowFlag(QSO_BY_BAND_BIT);
+   Result := cfQSOByBand in Flags;
 end;
 
 function TContestBase.GetQSOByMode: boolean;
 begin
-   Result := RowFlag(QSO_BY_MODE_BIT);
+   Result := cfQSOByMode in Flags;
 end;
 
 function TContestBase.GetMultByBand: boolean;
 begin
-   Result := RowFlag(MULT_BY_BAND_BIT);
+   Result := cfMultByBand in Flags;
 end;
 
 function TContestBase.GetMultByMode: boolean;
 begin
-   Result := RowFlag(MULT_BY_MODE_BIT);
+   Result := cfMultByMode in Flags;
 end;
 
 function TContestBase.GetVHFBandsEnabled: boolean;
 begin
-   Result := RowFlag(VHF_BAND_ENABLE_BIT);
+   Result := cfVHFBandsEnabled in Flags;
 end;
 
 function TContestBase.GetCountsDomesticCountries: boolean;
 begin
-   Result := RowFlag(CDC_BIT);
+   Result := cfCountsDomesticCountries in Flags;
 end;
 
 function TContestBase.GetZoneMode: ZoneModeType;
 begin
-   (* See the declaration: the bit set means CQ zones, clear means ITU. *)
-   if RowFlag(CQ_ZONE_MODE_BIT) then
+   (* See the declaration: the member present means CQ zones, absent ITU. *)
+   if cfCQZoneMode in Flags then
       begin
       Result := CQZoneMode;
       end
@@ -2465,12 +2557,12 @@ end;
 
 function TContestBase.GetErmakSpecification: boolean;
 begin
-   Result := RowFlag(ERMAK_BIT);
+   Result := cfErmakSpecification in Flags;
 end;
 
 function TContestBase.GetRTCCapable: boolean;
 begin
-   Result := RowFlag(RTC_CAPABLE_BIT);
+   Result := cfRTCCapable in Flags;
 end;
 
 function TContestBase.GetInStateDomesticFileName: string;
@@ -3125,6 +3217,13 @@ begin
       begin
       Result := QSOParties[partyIndex].StateName;
       end;
+end;
+
+function TContestBase.GetQSOPartyArea: string;
+begin
+   (* The table's answer until plan S6 makes this ''. Every one of the 22
+      contests with an entry answers for itself (M10 S5). *)
+   Result := QSOPartyAreaName(FContest);
 end;
 
 procedure TContestBase.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);

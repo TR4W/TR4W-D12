@@ -146,6 +146,12 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
+
       (* Two counties, from the sponsor's rules -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -282,6 +288,16 @@ end;
 function TContestNorthCarolinaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
+end;
+
+function TContestNorthCarolinaQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'nc';
+end;
+
+function TContestNorthCarolinaQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestNorthCarolinaQP.GetCountyLineCountiesMax: integer;

@@ -84,6 +84,9 @@ type
       function GetDXMultiplierType: DXMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
@@ -366,6 +369,11 @@ end;
 function TContestARRLFieldDay.GetExchangeKind: ExchangeType;
 begin
    Result := ClassDomesticOrDXQTHExchange;
+end;
+
+function TContestARRLFieldDay.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
 end;
 
 function TContestARRLFieldDay.GetIsUSQSOParty: boolean;

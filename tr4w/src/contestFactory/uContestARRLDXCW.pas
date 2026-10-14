@@ -41,7 +41,9 @@ interface
 uses
    (* TStationContext -- CQExchangeDefault's parameter (M7a). *)
    uContestBase,
-   uContestARRLDXBase;
+   uContestARRLDXBase,
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC;
 
 type
    TContestARRLDXCW = class(TContestARRLDXBase)
@@ -58,6 +60,13 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetExchangeKind: ExchangeType; override;
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
@@ -70,7 +79,7 @@ type
 implementation
 
 uses
-   VC, uContestRegistry,
+   uContestRegistry,
    uTR4WStrings;
 
 function TContestARRLDXCW.GetDisplayName: string;
@@ -97,6 +106,26 @@ end;
 function TContestARRLDXCW.GetFriendlyName: string;
 begin
    Result := 'ARRL Inter. DX Contest, CW';
+end;
+
+function TContestARRLDXCW.GetWA7BNMId: integer;
+begin
+   Result := 256;
+end;
+
+function TContestARRLDXCW.GetQRZRUId: integer;
+begin
+   Result := 335;
+end;
+
+function TContestARRLDXCW.GetSubmissionEmail: string;
+begin
+   Result := 'DXCW@arrl.org';
+end;
+
+function TContestARRLDXCW.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTPowerExchange;
 end;
 
 (* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --

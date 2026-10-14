@@ -77,6 +77,9 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -192,6 +195,11 @@ end;
 function TContestSouthAmericanWW.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndContinentExchange;
+end;
+
+function TContestSouthAmericanWW.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
 end;
 
 function TContestSouthAmericanWW.GetIsUSQSOParty: boolean;

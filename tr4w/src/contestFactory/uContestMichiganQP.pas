@@ -52,7 +52,9 @@ unit uContestMichiganQP;
 interface
 
 uses
-   VC, uContestStateQSOPartyBase;
+   VC,
+   uContestBase,   (* TContestFlags (M10 S5) *)
+   uContestStateQSOPartyBase;
 
 type
    TContestMichiganQP = class(TContestStateQSOPartyBase)
@@ -65,6 +67,16 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetDomesticFileName: string; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
       function GetHostState: string; override;
 
       (* NO COUNTY LINE AT ALL -- AND ContestsArray SAYS OTHERWISE.
@@ -126,6 +138,36 @@ end;
 function TContestMichiganQP.GetFriendlyName: string;
 begin
    Result := 'Michigan QSO Party';
+end;
+
+function TContestMichiganQP.GetWA7BNMId: integer;
+begin
+   Result := 323;
+end;
+
+function TContestMichiganQP.GetDomesticFileName: string;
+begin
+   Result := 'michigan_cty';
+end;
+
+function TContestMichiganQP.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := DomesticFile;
+end;
+
+function TContestMichiganQP.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTDomesticQTHExchange;
+end;
+
+function TContestMichiganQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'michigan';
+end;
+
+function TContestMichiganQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
 end;
 
 function TContestMichiganQP.GetHostState: string;

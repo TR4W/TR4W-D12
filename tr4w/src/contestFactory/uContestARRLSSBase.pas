@@ -50,6 +50,11 @@ type
    protected
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
+
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
@@ -133,6 +138,11 @@ end;
 procedure TContestARRLSSBase.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 2, 2);
+end;
+
+function TContestARRLSSBase.GetFlags: TContestFlags;
+begin
+   Result := [];
 end;
 
 (* THE SWEEPSTAKES EXCHANGE: SERIAL, PRECEDENCE, CHECK, SECTION.

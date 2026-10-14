@@ -1789,9 +1789,11 @@ end;
    two-step name rule (the row's field, else the enum's spelling) is restated
    here for the same reason.
 
-   SO TODAY THIS PASSES TRIVIALLY FOR AN INHERITED VALUE, ON PURPOSE. Its job is
-   to fail at S5/S6, not now. 17 contests inherit 100 non-neutral row values
-   (plan 1.3) and every contest inherits the nine flag bits.
+   SO IT PASSES TRIVIALLY FOR AN INHERITED VALUE, ON PURPOSE. Its job is to
+   fail at S5/S6. At S0, 17 contests inherited 100 non-neutral row values (plan
+   1.3) and every contest inherited the nine flag bits; since S5 (2026-10-14)
+   every class states them -- the flags as one set, GetFlags -- and this
+   proves each statement equal to its row, the party's QSOPartyArea included.
 
    EVERY CONTEST, NOT A LIST. The named calls below are kept because their
    comments record each row's traps; the loop at the end covers every
@@ -1841,6 +1843,7 @@ procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
       partyIndex: integer;
       expectedHost: string;
       expectedInState: string;
+      expectedArea: string;
       expectedZoneMode: ZoneModeType;
    begin
       if aContest = DUMMYCONTEST then
@@ -1891,9 +1894,11 @@ procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
          partyIndex := row.P;
          expectedHost := '';
          expectedInState := '';
+         expectedArea := '';
          if (partyIndex >= 1) and (partyIndex <= QSOPartiesCount) then
             begin
             expectedInState := QSOParties[partyIndex].InsideStateDOMFile;
+            expectedArea := QSOParties[partyIndex].StateName;
             if Length(QSOParties[partyIndex].StateName) = 2 then
                begin
                expectedHost := QSOParties[partyIndex].StateName;
@@ -1901,6 +1906,9 @@ procedure TContestFactoryTests.Test_MovedRowValuesStillMatchTheArray;
             end;
          CheckEquals(expectedInState, cls.InStateDomesticFileName,
                      aWhat + ' InStateDomesticFileName');
+         (* The area the New Contest prompt names -- a class property since
+            M10 S5, so it is pinned here with the rest of the party data. *)
+         CheckEquals(expectedArea, cls.QSOPartyArea, aWhat + ' QSOPartyArea');
          if aContest = BCQP then
             begin
             CheckEquals('', expectedHost, aWhat + ' table host state (VE7 is not a state)');

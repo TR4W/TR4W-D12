@@ -156,6 +156,12 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
+
       (* A county-line station is two QSOs -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
 
@@ -300,6 +306,16 @@ end;
 function TContestDelawareQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestDelawareQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'delaware';
+end;
+
+function TContestDelawareQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfVHFBandsEnabled];
 end;
 
 function TContestDelawareQP.GetCountyLineCountiesMax: integer;

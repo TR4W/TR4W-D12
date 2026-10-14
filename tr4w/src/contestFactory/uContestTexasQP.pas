@@ -97,6 +97,12 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
@@ -183,6 +189,16 @@ end;
 function TContestTexasQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestTexasQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'texas';
+end;
+
+function TContestTexasQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 (* TwoPhoneThreeCW -- `if Mode = CW then 3 else 2`, so DIGITAL scores the

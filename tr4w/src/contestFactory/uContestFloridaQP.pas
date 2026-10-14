@@ -70,6 +70,17 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetDomesticFileName: string; override;
+      function GetDXMultiplierType: DXMultType; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       constructor Create(aContest: ContestType); override;
@@ -140,6 +151,41 @@ end;
 function TContestFloridaQP.GetFriendlyName: string;
 begin
    Result := 'Florida QSO Party';
+end;
+
+function TContestFloridaQP.GetWA7BNMId: integer;
+begin
+   Result := 325;
+end;
+
+function TContestFloridaQP.GetDomesticFileName: string;
+begin
+   Result := 'florida_cty';
+end;
+
+function TContestFloridaQP.GetDXMultiplierType: DXMultType;
+begin
+   Result := ARRLDXCCWithNoUSAOrCanada;
+end;
+
+function TContestFloridaQP.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := DomesticFile;
+end;
+
+function TContestFloridaQP.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestFloridaQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'florida';
+end;
+
+function TContestFloridaQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
 end;
 
 function TContestFloridaQP.GetHostState: string;

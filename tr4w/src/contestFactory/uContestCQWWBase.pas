@@ -56,6 +56,11 @@ type
    TContestCQWWBase = class(TContestBase)
    protected
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
    public
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -147,6 +152,11 @@ begin
       begin
       aQso.QSOPoints := 0;
       end;
+end;
+
+function TContestCQWWBase.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand, cfCQZoneMode];
 end;
 
 (* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST and the

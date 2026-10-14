@@ -79,6 +79,11 @@ type
    TContestARRLDXBase = class(TContestBase)
    protected
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
+         of rules, so it is stated once, here (M10 S5). See
+         TContestBase.GetFlags. *)
+      function GetFlags: TContestFlags; override;
    public
 
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -171,6 +176,11 @@ begin
       aQso.QSOPoints := 0;
       aQso.InhibitMults := True;
       end;
+end;
+
+function TContestARRLDXBase.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfMultByBand];
 end;
 
 (* NOTHING IS REGISTERED HERE. A family base is not a contest an operator can

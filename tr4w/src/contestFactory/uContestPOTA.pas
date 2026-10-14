@@ -94,6 +94,9 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       function GetWritesADIFContestId: boolean; override;
       function GetOffersParkTools: boolean; override;
@@ -217,6 +220,11 @@ end;
 function TContestPOTA.GetExchangeKind: ExchangeType;
 begin
    Result := RSTAndPOTAPark;
+end;
+
+function TContestPOTA.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestPOTA.GetIsUSQSOParty: boolean;

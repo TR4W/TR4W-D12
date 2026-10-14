@@ -96,6 +96,12 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
+
       (* The county-line maximum, from the sponsor -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -234,6 +240,16 @@ end;
 function TContestCaliforniaQP.GetExchangeKind: ExchangeType;
 begin
    Result := QSONumberDomesticOrDXQTHExchange;
+end;
+
+function TContestCaliforniaQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'california';
+end;
+
+function TContestCaliforniaQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestCaliforniaQP.GetCountyLineCountiesMax: integer;

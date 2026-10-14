@@ -80,6 +80,16 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetFlags: TContestFlags; override;
       (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
       function GetDXMultiplierType: DXMultType; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -341,6 +351,36 @@ end;
 function TContestWinterFieldDay.GetFriendlyName: string;
 begin
    Result := 'Winter Field Day';
+end;
+
+function TContestWinterFieldDay.GetWA7BNMId: integer;
+begin
+   Result := 421;
+end;
+
+function TContestWinterFieldDay.GetSubmissionEmail: string;
+begin
+   Result := 'wfda@winterfieldday.com';
+end;
+
+function TContestWinterFieldDay.GetDomesticFileName: string;
+begin
+   Result := 'arrlsect';
+end;
+
+function TContestWinterFieldDay.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := DomesticFile;
+end;
+
+function TContestWinterFieldDay.GetExchangeKind: ExchangeType;
+begin
+   Result := ClassDomesticOrDXQTHExchange;
+end;
+
+function TContestWinterFieldDay.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
 end;
 
 (* THE SECTION, FROM ARRL_SECT -- BUT AN ABSENT TAG IS NOT AN EMPTY SECTION.

@@ -140,6 +140,13 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetQSOPartyArea: string; override;
+      function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
@@ -263,6 +270,21 @@ end;
 function TContestBritishColumbiaQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
+end;
+
+function TContestBritishColumbiaQP.GetInStateDomesticFileName: string;
+begin
+   Result := 've7';
+end;
+
+function TContestBritishColumbiaQP.GetQSOPartyArea: string;
+begin
+   Result := 'VE7';
+end;
+
+function TContestBritishColumbiaQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfMultByMode];
 end;
 
 (* BCQPQSOPointMethod -- `if Mode = PHONE then 2 else 4`.

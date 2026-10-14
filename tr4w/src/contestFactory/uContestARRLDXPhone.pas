@@ -41,7 +41,9 @@ interface
 uses
    (* TNewContestPrompts -- the New Contest dialog's prompts (M9a). *)
    uContestBase,
-   uContestARRLDXBase;
+   uContestARRLDXBase,
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC;
 
 type
    TContestARRLDXPhone = class(TContestARRLDXBase)
@@ -58,6 +60,13 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetExchangeKind: ExchangeType; override;
    public
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
@@ -68,7 +77,7 @@ type
 implementation
 
 uses
-   VC, uContestRegistry,
+   uContestRegistry,
    uTR4WStrings;
 
 function TContestARRLDXPhone.GetDisplayName: string;
@@ -95,6 +104,26 @@ end;
 function TContestARRLDXPhone.GetFriendlyName: string;
 begin
    Result := 'ARRL Inter. DX Contest, SSB';
+end;
+
+function TContestARRLDXPhone.GetWA7BNMId: integer;
+begin
+   Result := 289;
+end;
+
+function TContestARRLDXPhone.GetQRZRUId: integer;
+begin
+   Result := 334;
+end;
+
+function TContestARRLDXPhone.GetSubmissionEmail: string;
+begin
+   Result := 'DXPhone@arrl.org';
+end;
+
+function TContestARRLDXPhone.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTPowerExchange;
 end;
 
 (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two

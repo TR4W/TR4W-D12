@@ -200,6 +200,12 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetFlags: TContestFlags; override;
+
       (* Two -- NY4I and the sponsor, quoted in the header. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -342,6 +348,16 @@ end;
 function TContestIdahoQP.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticOrDXQTHExchange;
+end;
+
+function TContestIdahoQP.GetInStateDomesticFileName: string;
+begin
+   Result := 'idaho';
+end;
+
+function TContestIdahoQP.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
 end;
 
 function TContestIdahoQP.GetCountyLineCountiesMax: integer;

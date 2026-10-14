@@ -174,6 +174,13 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInStateDomesticFileName: string; override;
+      function GetQSOPartyArea: string; override;
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       function GetHostState: string; override;
 
@@ -472,6 +479,21 @@ end;
 function TContestIN7QPNE.GetExchangeKind: ExchangeType;
 begin
    Result := RSTDomesticQTHExchange;
+end;
+
+function TContestIN7QPNE.GetInStateDomesticFileName: string;
+begin
+   Result := 'in7qpne';
+end;
+
+function TContestIN7QPNE.GetQSOPartyArea: string;
+begin
+   Result := 'IN7QPNE';
+end;
+
+function TContestIN7QPNE.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestIN7QPNE.GetIsUSQSOParty: boolean;

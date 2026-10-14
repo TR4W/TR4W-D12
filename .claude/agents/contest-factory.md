@@ -234,7 +234,13 @@ the target shape, the M-step migration order and the open questions.
   classless contest's `FoundContest` arm still does. New traits:
   `ZoneMode` (stated, never a Boolean cast -- that gave 255),
   `QSOByBand/Mode`, `MultByBand/Mode`, `VHFBandsEnabled`,
-  `CountsDomesticCountries`, `InStateDomesticFileName`. A QSO party's
+  `CountsDomesticCountries`, `InStateDomesticFileName`. **Since M10 S5 the
+  nine flag properties (with ERMAK and RTC) are ONE set every class states,
+  `GetFlags: TContestFlags`** (`cf...` members in bit order; the five CW/SSB
+  pair families state it on their base); the per-flag getters are not
+  virtual. Every party states `InStateDomesticFileName`, and
+  `QSOPartyArea` (the prompt's area) is its HostState on the state-party
+  base. A QSO party's
   `DomesticFileName` is its COUNTY file (out-of-state load, in-state test);
   `Test_EveryQSOPartyNamesBothDomesticFiles` holds the two names together.
   In-state detection reads it through `uAppPaths.ShippedDomFilePath` and

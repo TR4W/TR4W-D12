@@ -68,6 +68,19 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetDomesticFileName: string; override;
+      function GetZoneMultiplierType: ZoneMultType; override;
+      function GetDomesticMultiplierType: DomesticMultType; override;
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
 
@@ -194,6 +207,51 @@ end;
 function TContestIARU.GetFriendlyName: string;
 begin
    Result := 'IARU HF World Championship';
+end;
+
+function TContestIARU.GetWA7BNMId: integer;
+begin
+   Result := 67;
+end;
+
+function TContestIARU.GetQRZRUId: integer;
+begin
+   Result := 33;
+end;
+
+function TContestIARU.GetSubmissionEmail: string;
+begin
+   Result := 'iaruhf@iaru.org';
+end;
+
+function TContestIARU.GetDomesticFileName: string;
+begin
+   Result := 'iaruhq';
+end;
+
+function TContestIARU.GetZoneMultiplierType: ZoneMultType;
+begin
+   Result := ITUZones;
+end;
+
+function TContestIARU.GetDomesticMultiplierType: DomesticMultType;
+begin
+   Result := WYSIWYGDomestic;
+end;
+
+function TContestIARU.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := ZoneInitialExchange;
+end;
+
+function TContestIARU.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTZoneOrSocietyExchange;
+end;
+
+function TContestIARU.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
 end;
 
 (* THE EXCHANGE IS RST AND EITHER A SOCIETY ABBREVIATION OR AN ITU ZONE.

@@ -68,6 +68,9 @@ type
       function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
+
+      (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
+      function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
@@ -249,6 +252,11 @@ end;
 function TContestARRLDigi.GetExchangeKind: ExchangeType;
 begin
    Result := Grid2Exchange;
+end;
+
+function TContestARRLDigi.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand];
 end;
 
 function TContestARRLDigi.GetIsUSQSOParty: boolean;

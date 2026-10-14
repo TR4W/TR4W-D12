@@ -29,6 +29,8 @@ unit uContestCQWPXSSB;
 interface
 
 uses
+   (* VC: the kind enums the transcribed row getters return (M10 S5). *)
+   VC,
    uContestCQWPXBase;
 
 type
@@ -46,13 +48,21 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the ContestsArray row the base
+         read until then. The flag set is the family's -- see the base. *)
+      function GetWA7BNMId: integer; override;
+      function GetQRZRUId: integer; override;
+      function GetSubmissionEmail: string; override;
+      function GetPrefixMultiplierType: PrefixMultType; override;
+      function GetExchangeKind: ExchangeType; override;
    public
    end;
 
 implementation
 
 uses
-   VC, uContestRegistry;
+   uContestRegistry;
 
 function TContestCQWPXSSB.GetDisplayName: string;
 begin
@@ -78,6 +88,31 @@ end;
 function TContestCQWPXSSB.GetFriendlyName: string;
 begin
    Result := 'CQ WW WPX Contest, SSB';
+end;
+
+function TContestCQWPXSSB.GetWA7BNMId: integer;
+begin
+   Result := 291;
+end;
+
+function TContestCQWPXSSB.GetQRZRUId: integer;
+begin
+   Result := 6;
+end;
+
+function TContestCQWPXSSB.GetSubmissionEmail: string;
+begin
+   Result := 'ssb@cqwpx.com';
+end;
+
+function TContestCQWPXSSB.GetPrefixMultiplierType: PrefixMultType;
+begin
+   Result := Prefix;
+end;
+
+function TContestCQWPXSSB.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTQSONumberExchange;
 end;
 
 initialization

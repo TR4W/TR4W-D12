@@ -52,6 +52,13 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+
+      (* STATED AT M10 S5, transcribed from the rows the base read until
+         then (ContestsArray, QSOParties, ContestsBooleanArray). The
+         flags: see TContestBase.GetFlags. *)
+      function GetInitialExchangeKind: InitialExchangeType; override;
+      function GetExchangeKind: ExchangeType; override;
+      function GetFlags: TContestFlags; override;
    public
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
@@ -116,6 +123,21 @@ end;
 function TContestGeneralQSO.GetFriendlyName: string;
 begin
    Result := 'General QSO/DX Logging';
+end;
+
+function TContestGeneralQSO.GetInitialExchangeKind: InitialExchangeType;
+begin
+   Result := NameQTHInitialExchange;
+end;
+
+function TContestGeneralQSO.GetExchangeKind: ExchangeType;
+begin
+   Result := RSTNameAndQTHExchange;
+end;
+
+function TContestGeneralQSO.GetFlags: TContestFlags;
+begin
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 (* THE EXCHANGE IS RST, A NAME AND A QTH -- the plain ragchew-style log.

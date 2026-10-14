@@ -561,6 +561,79 @@ As planned:
 
 ### S5 -- Every class states what it still inherits (transcription)
 
+**DONE 2026-10-14** (on top of `8668cf0f`). Re-measured first with the
+inventory's own reader (`tools/contest-rules-inventory/model.py` over a fresh
+`dump-code-only.ps1` dump: each registered class's chain, which ancestor
+implements which getter, every row compared with the neutral DUMMYCONTEST
+row). After S4 the inherited non-neutral values were **82 row values in 15
+contests** (the plan's 100 in 17 less the 17 QP values, and less Michigan's
+"(DX)", which is neutral; ARKTIKA_SPRING, ARRLDIGI and ARRL Field Day had
+inherited only QP) **plus 22 `InStateDomesticFileName`s** -- 104 -- and every
+class's nine flag bits. **No class inherited `IsUSQSOParty` or `HostState`**:
+all 22 contests with a `P` already stated both. After the edit the same scan
+reports **0** inherited non-neutral values, every contest's chain implements
+`GetFlags`, and every party's chain implements `GetQSOPartyArea`.
+
+* **The flags API (DECIDED):** `TContestFlag = (cfQSOByBand, cfQSOByMode,
+  cfMultByBand, cfMultByMode, cfErmakSpecification, cfVHFBandsEnabled,
+  cfCQZoneMode, cfCountsDomesticCountries, cfRTCCapable)` -- declared in bit
+  order -- and `TContestFlags = set of TContestFlag`, stated through ONE
+  protected virtual `GetFlags: TContestFlags`, published as the read-only
+  property `Flags`. Named `Flags`, not `SetUpFlags`, because two members
+  (ERMAK, RTC) are not set-up facts. The nine per-flag getters and
+  `GetZoneMode` are now **non-virtual** and answer from the set (none was
+  ever overridden), so a contest cannot state a flag twice or contradict
+  itself; every reader and every property name is unchanged. The base's
+  `GetFlags` reads the row's word through a named bit table (`FLAG_BIT`), not
+  the members' ordinals, until S6 makes it `[]`; the private `RowFlag` is
+  deleted. The radio factory's `TRadioCapabilitySet` is the model.
+* **Where the values went.** The 82 row values: **in the leaf**, as this
+  stage specified (the M9a rule). The flag sets: in the leaf for 176
+  contests, and **once on the family base for the five CW/SSB pair families**
+  (ARRL DX, ARRL SS, CQ WPX, CQ WW, NRAU-Baltic) -- both members' words were
+  equal, and the set is the contest's rule run in two modes, which is what
+  those families are for. The state-party family states per leaf (its
+  members' words differ). Four leaves and the ARRL SS base state `[]`
+  (ARRL 160, County Hunter, QCWA Golden, Stew Perry).
+* **Party data (DECIDED): the classes state strings; the `QSOParties` index
+  is not carried into the classes.** Each of the 22 states its
+  `InStateDomesticFileName` in its leaf. The area the New Contest prompt
+  names became a class property, `QSOPartyArea` (`GetQSOPartyArea`; base:
+  the table, through `QSOPartyAreaName`). On `TContestStateQSOPartyBase` it
+  is `HostState` -- a family rule (a single-state party's area IS its state),
+  so 19 classes do not restate a fact they already state; British Columbia
+  (`'VE7'`), 7QP (`'7th area'`) and IN7QPNE (`'IN7QPNE'`) state theirs.
+  Named `QSOPartyArea` because the implementation-only free function
+  `QSOPartyAreaName(aContest)` still exists and a property of that name
+  would hide it inside the class; S6 repoints `DescribeNewContestPrompts` to
+  the property and deletes the function. With every party stating `IsUSQSOParty`,
+  `HostState`, its in-state file and its area, S8 can delete `QSOParties`.
+* **The pin.** `Test_MovedRowValuesStillMatchTheArray` gained ONE comparison
+  -- `cls.QSOPartyArea` against the entry's `StateName` -- because the new
+  property would otherwise be unpinned; no expectation changed and BCQP's
+  `HostState` is still its one named mismatch. **Unit run: 88297 passed,
+  0 failed.**
+* **Uses clauses.** Eight pair leaves (ARRL DX x2, ARRL SS x2, CQ WPX x2,
+  CQ WW x2) now name kind enums in their interface, so `VC` moved from their
+  implementation `uses` to their interface `uses`; Indiana, Michigan and
+  Pennsylvania gained `uContestBase` in theirs (`TContestFlags`).
+* **Row values that look odd, transcribed as-is (questions, not changes):**
+  Minnesota is the only party whose word sets `RTC_CAPABLE_BIT` (291);
+  IN7QPNE's prompt "area" is the token `'IN7QPNE'`, not a place, so the New
+  Contest prompt names it twice; the NA Sprint CW and RTTY rows name
+  different domestic files (`naqp` vs `s49p8`).
+* **Docs, same change:** `ADDING_A_CONTEST.md`'s trait table (a new class
+  states `GetFlags`; `QSOPartyArea`), the contest-factory agent, the base's
+  comments.
+* **Not done:** the matrix, corpus, factory check, lints and a full build
+  (the gated run). The incremental app compile stopped at the known
+  "Internal error 200306067" (`MainUnit.pas(60,1)`); the unit-test build
+  (every factory unit) is clean. The contest-rules inventory needs no
+  regeneration for a missing seam, but its line numbers moved -- regenerate
+  after the commit.
+
+As planned:
+
 * **Files:** the 17 contests of 1.3 state their 100 values IN THE LEAF (the
   M9a rule for identity, applied to every row value -- not on family bases);
   the seven set-up flags plus ERMAK and RTC for all 186, **recommended as ONE
