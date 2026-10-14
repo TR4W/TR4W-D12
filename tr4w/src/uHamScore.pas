@@ -201,6 +201,9 @@ const
 implementation
 
 uses
+   (* oaScorePosting, the contest's permitted aids. FIRST, so every unit after
+      it keeps the meaning it had for any name the two share. *)
+   uContestBase,
    uSettingsModel,   // Settings.My.Call
   StrUtils, IdAuthentication,
   LogWind,           // the contest globals this reports
@@ -227,6 +230,21 @@ begin
      ModuleLogger := TLogLogger.GetLogger('TR4WDebugLog.HamScore');
      end;
   Result := ModuleLogger;
+end;
+
+(* DOES THE OPEN CONTEST ALLOW ITS SCORE TO BE POSTED? -- 2026-10-14.
+
+  THE CONTEST SAYS, AS DATA: TContestBase.PermittedOperatingAids, the same
+  answer that greys the post-scores window and its menu row. Until this, the
+  RTC uploader asked nothing, so a contest that forbids live score posting
+  (WRTC's rule, and IN7QPNE's by NY4I's ruling, design 7.14) was still posted
+  here whenever HAMSCORE ENABLE was on. Asked per QSO event and per cycle,
+  not once at start-up, because the contest can change while the uploader
+  runs. The worker thread asks it too: ContestIdentity is safe from any
+  thread, and the cycle already reads the contest globals it reports. *)
+function ContestPermitsScorePosting: Boolean;
+begin
+  Result := oaScorePosting in ContestIdentity(Contest).PermittedOperatingAids;
 end;
 
 // ===========================================================================
@@ -753,6 +771,15 @@ var
   description:  string;
   hadQSOs:      Boolean;
 begin
+  (* A CONTEST THAT FORBIDS SCORE POSTING POSTS NOTHING -- not even the
+     <dynamicresults> score every cycle carries. Whatever is pending stays
+     pending; nothing is queued while such a contest is open. *)
+  if not ContestPermitsScorePosting then
+     begin
+     SetCycleStatus('Score posting is not permitted for this contest');
+     Exit;
+     end;
+
   snapshot := TakePendingSnapshot;
   try
     payload := BuildPayload(snapshot, hadQSOs);
@@ -928,6 +955,12 @@ end;
 // <dynamicresults> score posts remain unaffected (handled elsewhere).
 function ContactInfoUploadAllowed(const RXData: ContestExchange): Boolean;
    begin
+   (* NOTHING IS QUEUED FOR A CONTEST THAT FORBIDS SCORE POSTING. *)
+   if not ContestPermitsScorePosting then
+      begin
+      Result := False;
+      Exit;
+      end;
    if not Settings.Hamscore.SendContactInfo then
       begin
       Result := False;
@@ -973,6 +1006,10 @@ begin
   // re-uploads every QSO lives in LOGSUBS2.SendFullLogToHamScore, which is
   // called by the Tools-menu handler in MainUnit immediately after this.
   if Uploader = nil then Exit;
+  if not ContestPermitsScorePosting then
+     begin
+     Exit;
+     end;
   Uploader.Enqueue(TRTCContact.Create(rckDeleteLog, '', RenderDeleteLogBody));
 end;
 

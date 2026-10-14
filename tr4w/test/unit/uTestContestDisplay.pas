@@ -1103,6 +1103,14 @@ begin
             CheckEquals('', obj.ScorePostingMultiplierType(rmZone, True), 'WRTC: no zone');
             CheckEquals('', obj.ScorePostingMultiplierType(rmPrefix, True), 'WRTC: no prefix');
             end
+         else if c = IN7QPNE then
+            begin
+            (* NOT POSTED ANYWHERE (design 7.14, 2026-10-14): Super Check
+               Partial and the cluster stay, score posting goes. Nothing is
+               posted, so its labels are never asked. *)
+            CheckTrue(obj.PermittedOperatingAids = [oaSuperCheckPartial, oaDXCluster],
+                      'IN7QPNE allows every aid but score posting');
+            end
          else
             begin
             CheckTrue(obj.PermittedOperatingAids = [oaSuperCheckPartial, oaDXCluster, oaScorePosting],

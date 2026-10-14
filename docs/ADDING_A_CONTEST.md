@@ -718,7 +718,7 @@ would duplicate the part that cannot differ.
 | `TContestARRLDXBase`, `TContestARRLSSBase`, `TContestCQWWBase`, `TContestCQWPXBase` | family | two runnings of one contest |
 | `TContestNRAUBalticBase` | family | the NRAU-Baltic contest, CW and SSB -- NY4I's ruling (2026-10-01), built at M3. The base holds every shared row field and the points; each mode class states only its names and calendar id. **The template for any other two-mode pair, once Q7 says that pair is a family** |
 | ~~`TContestFixedPoints`~~ | ~~mechanism~~ | **retired at M3 (2026-10-01).** Its rule lives on as the helper `FixedModePoints`, called from a class's own `CalculateQSOPoints` (section 2, step 2) |
-| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP / IN7QPNE (multi-state, unresolved -- 7QP and NEQP have their own classes on `TContestBase` since M7b, design Q40). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
+| `TContestStateQSOPartyBase` | mechanism | the single-state QSO parties. `IsUSQSOParty` is stated rather than read from the `P` index; `GetHostState` is **abstract**, so a state party that forgets its state cannot be instantiated; and **the whole county-line rule lives here** — `CountyLineCountiesMax` (virtual, defaulting to `CountyLineCountiesUnlimited` **unconditionally**, never read from the array's boolean), `CountyLineAllowed` (derived, **not** virtual, so it cannot contradict the count), the `CountyLineCountiesUnlimited` constant, and the `ValidateQTHCount` override that enforces the maximum. Deliberately NOT here: NAQP and the Locust QSO Party (QSO parties by name only -- Locust is `uContestLocustQP` on `TContestBase`), and 7QP / NEQP (multi-state, unresolved -- each has its own class on `TContestBase` since M7b, design Q40) and IN7QPNE (a composite on `TContestBase` that delegates each QSO to its party's class, design 8.2r). Its members are whatever descends from it -- `grep -l TContestStateQSOPartyBase tr4w/src/contestFactory/*.pas` -- and only the ones whose sponsor rule has been read state a county-line maximum, each quoting it |
 
 **THE DEFECT THAT MOVED IT, because the shape will look tempting again.** While
 the rule was on `TContestBase`, the inherited maximum read
@@ -754,9 +754,21 @@ and EUDX share a scoring arm by their rows and nothing else, so they are
 copies too. M7b ended with five contests classless on purpose; POTA left the
 list on 2026-10-13 (NY4I ruled it a class, design Q6 and 8.2o -- `TContestPOTA`,
 on the base like General QSO), and the UA4W Championship and RSGB 1.8 MHz on
-2026-10-14 (design Q28, Q33 and 8.2p -- both on the base too). Two remain --
-IN7QPNE (a composite, design 7.14) and DUMMYCONTEST -- and
-`Test_M7bBatch2ContestsAreSiblingsOnTheBase` fails if a third appears.
+2026-10-14 (design Q28, Q33 and 8.2p -- both on the base too). IN7QPNE
+followed the same day as a COMPOSITE (design 7.14 and 8.2r --
+`TContestIN7QPNE` owns one instance of each of its four party classes and
+hands each QSO to the party of the worked station's county). One remains --
+DUMMYCONTEST, "no contest" -- and `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
+fails if a second appears.
+
+**A COMPOSITE IS NOT A FAMILY BASE AND NOT A STRATEGY.** It holds whole
+contests and forwards per-QSO questions to them -- `ScoreQSO`,
+`CountsAsMultiplier` (with the party's bands, through `ContestCreditsBand`),
+`ParseReceivedExchange` -- and answers everything session-wide or file-wide
+itself. A seam asked without a QSO (`UsesBand`, `ValidateQTHCount`, the set-up
+traits) cannot route, and the composite says so rather than inventing a union
+rule. It OWNS its components (never `ContestIdentity`'s shared instances,
+which carry no station) and pushes its station into them per delegation.
 
 ### `TStationContext` — what scoring knows about us
 

@@ -378,6 +378,81 @@ Three groups:
   *Recommended: yes, separately.*
   **Answer:**
 
+### Added with the IN7QPNE composite (2026-10-14)
+
+- **Q77** IN7QPNE's score. You said a combined score is not needed, and it
+  would be nice to see the score of the party just worked. Nothing on screen
+  can show more than one score today, so the window, the summary sheet and
+  the Cabrillo `CLAIMED-SCORE` show points x multipliers over the whole
+  combined log -- a number that is no sponsor's score. Should TR4W get a way
+  to show one score per party, or should the Cabrillo claim nothing?
+  *Recommended: a per-party score, as its own step; until then leave it.*
+  **Answer:**
+
+- **Q78** An Indiana, 7QP, NE or DE entrant who works a station in ANOTHER of
+  the four parties: TR4W scores it by the worked party's rules only, as you
+  ruled. The entrant's own sponsor may count it too (an Indiana station
+  working Arizona earns an Arizona multiplier in the Indiana QSO Party).
+  Each sponsor scores the shared log itself, so their results are not
+  affected; only TR4W's points show one party's view. Is that right?
+  **Answer:**
+
+- **Q79** Some settings hold one value for the whole session, so IN7QPNE
+  keeps its own old values where the parties differ:
+  multipliers once per contest (Delaware counts per band); no VHF (7QP and
+  Delaware use 6 m and up); DX is one `dx` multiplier (7QP, NEQP and
+  Delaware in-state count DXCC entities); no Cabrillo LOCATION required and
+  FT8 written `DG` (Delaware: LOCATION required, every digital mode `RY`);
+  no power multiplier and no +50 bonus (Delaware has both). Which of these
+  should IN7QPNE take? *Recommended: turn VHF on (a QSO still scores only
+  where its party allows); keep the rest.*
+  **Answer:**
+
+- **Q80** In IN7QPNE every county is its own multiplier for everyone, and an
+  in-area entrant also counts states, provinces and one `dx`. The parties'
+  own files differ: in 7QP, an in-state entrant's 7th-area counties count
+  as their STATE. Making that per party needs a new piece (the contest
+  naming the multiplier, Q4). Wanted? *Recommended: yes, when Q4 is done.*
+  **Answer:**
+
+- **Q81** New England county abbreviations: IN7QPNE's file spells them
+  state first (`MEAND`) and uses Connecticut's new planning regions
+  (`CTCAP`); NEQP's own file spells them county first (`ANDME`) with the
+  eight old CT counties. Which does the NEQP sponsor use now? IN7QPNE works
+  out the party from its own file's spelling, so it is right either way;
+  this is about the two files agreeing.
+  **Answer:**
+
+- **Q82** County lines in IN7QPNE: Indiana and Delaware allow two counties,
+  7QP four. TR4W checks the COUNT before it knows the counties, so IN7QPNE
+  allows any number, as it always did. Teach the check which party the
+  counties are in, or leave it? *Recommended: leave it until a line between
+  two parties is real.*
+  **Answer:**
+
+- **Q83** HamScore now asks the contest whether its score may be posted.
+  Until now only the post-scores window asked, so WRTC (no live score
+  posting) still went to HamScore when HAMSCORE ENABLE was on. With this
+  change neither WRTC nor IN7QPNE is posted. Is that right for WRTC?
+  *Recommended: yes.*
+  **Answer:**
+
+- **Q84** Indiana's rule is "a DX station is not a multiplier", and it looks
+  for `DX` in capitals. Indiana's own file says `DX = DX`, but IN7QPNE's
+  file says `dx = dx`, so in IN7QPNE an Indiana entrant's DX contact still
+  earns the one `dx` multiplier. Change IN7QPNE's file to `DX`, or make the
+  rule ignore case? *Recommended: change the file.*
+  **Answer:**
+
+- **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
+  at 3 points (frozen matrix, `SEVENQP.matrix` QSO 09), and IN7QPNE now
+  inherits that for every 7QP-judged QSO. Delaware excludes WARC by its
+  sponsor's rules; nothing in TR4W says whether 7QP does. If it does not,
+  the 7QP class should declare its bands the way Delaware's does, and
+  WARC QSOs then score 0 (logged, never refused).
+  *Recommended: check the 7QP rules page and tell me which bands.*
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)
@@ -518,7 +593,7 @@ Three groups:
 | Q11 | Delete the QSO-POINT-METHOD-only arms at M10 | M10 |
 | Q28 | Station facts default from station config, overridable per contest | design 7.12; LANDED 2026-10-13 (`TMySettings.Resolved*`); UA4W's class 2026-10-14 (design 8.2p) |
 | Q33 | RSGB 1.8 gets a read-only new-multiplier answer | design 7.13; its class 2026-10-14 (design 8.2p) |
-| -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14 |
+| -- | IN7QPNE is a composite of IN/7QP/NE/DE; Delaware becomes a contest | design 7.14; Delaware 2026-10-14 (8.2q); the composite `TContestIN7QPNE` 2026-10-14 (8.2r; Q77-Q84) |
 | Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
 | Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
 | Q3 | The log stores only what the operator stated | M2a (decided under delegation) |

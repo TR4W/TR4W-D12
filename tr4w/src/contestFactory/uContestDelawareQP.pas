@@ -25,10 +25,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   A NEW ContestType, NOT A MOVED ONE (2026-10-14). NY4I ruled it into
   existence on 2026-10-13 (CONTEST_OWNERSHIP_DESIGN.md 7.14). Before that,
   Delaware existed in TR4W only as the fourth party folded into IN7QPNE, which
-  scores every QSO by one rule set. IN7QPNE is to become a COMPOSITE that
-  judges each QSO by the worked station's party; this class is the Delaware
-  component it will delegate to. It is built as an ordinary, self-contained
-  contest -- nothing in it knows a composite exists.
+  scored every QSO by one rule set. IN7QPNE is now a COMPOSITE
+  (uContestIN7QPNE, design 8.2r) that judges each QSO by the worked
+  station's party, and this class is the Delaware component it delegates to.
+  It is an ordinary, self-contained contest -- nothing in it knows a
+  composite exists.
 
   ON THE STATE-PARTY BASE, BECAUSE IT IS ONE: one host state, county
   multipliers for everyone outside it, and "non-DE stations work DE stations

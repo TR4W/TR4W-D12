@@ -248,6 +248,15 @@ begin
             CheckTrue(obj.IsUSQSOParty, '7QP is a party to set-up, by its row');
             CheckEquals('', obj.HostState, '7QP has no single host state');
             end
+         else if c = IN7QPNE then
+            begin
+            (* THE SECOND, 2026-10-14: the composite of four parties (design
+               7.14, 8.2r). Its row indexes QSOParties (P: 18), so set-up runs
+               the party head for it, as it always did; it spans fourteen
+               states and names none. *)
+            CheckTrue(obj.IsUSQSOParty, 'IN7QPNE is a party to set-up, by its row');
+            CheckEquals('', obj.HostState, 'IN7QPNE has no single host state');
+            end
          else
             begin
             CheckFalse(obj.IsUSQSOParty,
@@ -1836,6 +1845,10 @@ begin
       RSGB 1.8 a DF ('rsgb'). *)
    CheckAgainstArray(UA4WCHAMPIONSHIP, 'UA4W Championship');
    CheckAgainstArray(RSGB18, 'RSGB 1.8 MHz');
+
+   (* IN7QPNE, 2026-10-14 (design 7.14, 8.2r): the composite states its own
+      row; its parties' rules are its components'. *)
+   CheckAgainstArray(IN7QPNE, 'IN7QPNE');
 
    (* THE FOUR BESPOKE-SCORING PARTIES MOVED ON 2026-09-29. Two of their rows
       hold a trap the others do not. British Columbia has a BLANK CABName, so
@@ -3478,11 +3491,13 @@ const
    (* M7b ENDED WITH FIVE STILL CLASSLESS, each for a recorded reason. POTA
       (Q6) left the list on 2026-10-13, when NY4I ruled it a class; the UA4W
       Championship (Q28) and RSGB 1.8 MHz (Q33) left it on 2026-10-14. Each
-      sits on TContestBase like the forty above, and is checked below. Two
-      remain: IN7QPNE, a composite of four parties (design 7.14, the next
-      step), and DUMMYCONTEST, which is "no contest". *)
-   STILL_CLASSLESS: array[0..1] of ContestType = (
-      DUMMYCONTEST, IN7QPNE);
+      sits on TContestBase like the forty above, and is checked below.
+      IN7QPNE left it on 2026-10-14 as a composite of four parties (design
+      7.14, 8.2r) -- on TContestBase too, but a US party to set-up by its
+      row, so uTestContestIN7QPNE checks it rather than the loop below. One
+      remains: DUMMYCONTEST, which is "no contest". *)
+   STILL_CLASSLESS: array[0..0] of ContestType = (
+      DUMMYCONTEST);
 
    (* THE CONTESTS THAT LEFT THAT LIST, each on TContestBase directly. *)
    LEFT_CLASSLESS: array[0..2] of ContestType = (
@@ -3528,7 +3543,7 @@ begin
          inc(classless);
          end;
       end;
-   CheckEquals(Length(STILL_CLASSLESS), classless, 'the classless contests are exactly those two');
+   CheckEquals(Length(STILL_CLASSLESS), classless, 'the classless contests are exactly those listed');
 
    (* POTA ON THE BASE LIKE GENERAL QSO -- design section 6: no TActivityBase
       until a second activity shows what is shared. The UA4W Championship

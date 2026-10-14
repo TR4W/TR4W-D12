@@ -181,10 +181,12 @@ TContestBase
   NRAU-Baltic, and none of the pairs listed has a class. The one existing
   pair it would have reached, the NA Sprint CW/RTTY, was left as siblings on
   evidence (§8.2d).
-- **The multi-state parties (7QP, NEQP, IN7QPNE) stay open**, for the reason
+- **The multi-state parties (7QP, NEQP) stay open**, for the reason
   `uContestStateQSOPartyBase`'s header gives. Since M7b 7QP and NEQP each
   have a class on `TContestBase`, keeping exactly today's behaviour; whether
-  they share a base is Q40 (§8.2j).
+  they share a base is Q40 (§8.2j). IN7QPNE is not a family member either:
+  it is a COMPOSITE that holds the four party contests and delegates each
+  QSO (7.14, §8.2r).
 
 **`TContestFixedPoints` and `FixedModePoints` -- recommendation (Q12).
 DONE at M3, 2026-10-01 (§8.2d):** the base is deleted, the helper kept in
@@ -1161,7 +1163,9 @@ SERVICE (the shape of `IsDomesticCountryCall`), and RSGB 1.8 MHz's class reads i
   ADIF and Cabrillo id DE-QSO-PARTY (ADIF 3.1.7).
 
 **Delaware LANDED 2026-10-14 (§8.2q)**: `DELAWAREQSOPARTY`, `TContestDelawareQP`.
-The IN7QPNE composite is not built; Delaware is the component it will delegate to.
+**The IN7QPNE composite LANDED 2026-10-14 (§8.2r)**: `TContestIN7QPNE` routes each
+QSO to its party's class; the routing rule, the seam-by-seam table and the
+superseded "transcribe today" instruction are there.
 
 ### 7.15 RULED (NY4I, 2026-10-13): legacy arms only QSO POINT METHOD reaches are deleted (Q11)
 
@@ -1210,7 +1214,7 @@ Each is behaviour-preserving unless marked.
 | **M9a** | **DONE 2026-10-02 (§8.2m).** **What the display and the reports show**, as data the UI asks for: the New Contest prompts, the totals window, the summary sheet, the hour report, the Cabrillo header lines and mode column, HamScore's canonical exchanges, the score-posting labels, WRTC's operating aids and the QTC menu; design 7.11 (MY STATE never written by set-up); every class states its display name, Cabrillo name and ADIF id | the matrix (only the 7.11 setting lines move); corpus; `uTestContestDisplay`; `BENCH_QUEUE.md` |
 | **M9b** | **DONE 2026-10-02 (§8.2n).** **The UI itself.** The New Contest drop-down shows `DisplayName`, active contests first and inactive ones marked (`IsActive`; SA Sprint and Locust); CATEGORY-POWER is one value and a change rescores (7.6); General QSO's display rules, the FOC log columns and WAG's call-window warning are the contest's. The off-time minimum stays named -- its two readers disagree (Q60) | `uTestContestUI`; the matrix and corpus unchanged; `BENCH_QUEUE.md` (no automated gate sees the UI) |
 | **Q6 / POTA** | **DONE 2026-10-13 (§8.2o).** POTA gains its class on NY4I's ruling: its FoundContest arm, its ADIF import, its three ADIF tail tests, uADIF's CONTEST_ID test, the New Contest prompts and the park menu rows move; `ApplyClasslessADIFImport` is deleted; three TRDOS helpers are lifted as leaves. Four contests are classless on purpose now | the matrix (only `contest.class =` moves); corpus; `uTestContestPOTA`; `BENCH_QUEUE.md` |
-| **Q28 / Q33** | **DONE 2026-10-14 (§8.2p).** The UA4W Championship and RSGB 1.8 MHz gain classes on NY4I's rulings (7.12, 7.13): two read-only station-context SERVICES, `MyCQZone` and `IsNewMultiplierAnywhere`; FoundContest's and LogCfg's last `case Contest of` deleted, LOGSTUFF's UA4W parse rule, LOGEDIT's "times one" and uNewContest's `ClasslessPrompts` moved. Only IN7QPNE (7.14) and DUMMYCONTEST stay classless | the matrix (only `contest.class =` expected to move); `uTestContestFactory`, `uTestContestTotals`, `uTestContestParse` |
+| **Q28 / Q33** | **DONE 2026-10-14 (§8.2p).** The UA4W Championship and RSGB 1.8 MHz gain classes on NY4I's rulings (7.12, 7.13): two read-only station-context SERVICES, `MyCQZone` and `IsNewMultiplierAnywhere`; FoundContest's and LogCfg's last `case Contest of` deleted, LOGSTUFF's UA4W parse rule, LOGEDIT's "times one" and uNewContest's `ClasslessPrompts` moved. Only IN7QPNE (7.14) and DUMMYCONTEST stay classless -- IN7QPNE's composite class followed the same day (§8.2r), leaving DUMMYCONTEST | the matrix (only `contest.class =` expected to move); `uTestContestFactory`, `uTestContestTotals`, `uTestContestParse` |
 | **M10** | **Endpoint.** Every `ContestType` registered (Q10). `QSO POINT METHOD` (and per Q4 its siblings) into `RETIRED_COMMANDS`. The legacy case, `ContestsArray`, `ContestsBooleanArray`, the traits and the `Active*` globals are deleted, along with `QSOPointMethodArray`, `FormatsExchange` and `Test_MovedRowValuesStillMatchTheArray` | corpus; factory gate; full unit run |
 
 **Export comes before import and parse** because export is the only half the
@@ -3355,6 +3359,157 @@ Delaware's; Q76 asks it.
 
 **Questions this raised -- NY4I's:** Q72-Q76 (§9).
 
+### 8.2r IN7QPNE, the composite -- what it covered (2026-10-14; 7.14)
+
+The last real contest without a class. `TContestIN7QPNE` (`uContestIN7QPNE`)
+sits on `TContestBase` and holds the four component CONTESTS -- Indiana
+(`INQSOPARTY`), 7QP (`SEVENQP`), NEQP (`NEWENGLANDQSO`) and Delaware
+(`DELAWAREQSOPARTY`, §8.2q) -- and hands each QSO to the one it belongs to.
+That is composition of whole contests, which 7.14 asks for; it is not a
+strategy and not a registry of rules. **NEW BEHAVIOUR, BY RULING**: until
+now IN7QPNE was classless and scored every QSO by one merged rule (its own
+files, `PAQSOPointMethod`: phone 1, else 2).
+
+**SUPERSEDED.** The commission for this step cites an earlier instruction,
+"Q11 option (a): transcribe IN7QPNE exactly as it is today". That wording is
+not written in this document or in `CONTEST_FACTORY_OPEN_QUESTIONS.md` (this
+document's Q11 is the `QSO POINT METHOD`-only arms, ruled at 7.15). It is
+recorded here as superseded by 7.14 so nobody rebuilds the merged rule from
+it.
+
+**THE ROUTING RULE.** A QSO is judged by the party of the worked station's
+county, as the session's domestic table resolved it (`DomesticQTH`). The
+session loads IN7QPNE's own files, and every county key in
+`in7qpne_cty.dom` names its party by its spelling:
+
+| party | key | example |
+|---|---|---|
+| Indiana | `IN` + three letters | `INADA` |
+| 7QP | `AZ ID MT NV OR UT WA WY` + three | `Azaph` |
+| New England | `CT MA ME NH RI VT` + three | `MEAnd`, `CTCap` |
+| Delaware | `NDE`, `KDE`, `SDE` | `NDE` |
+
+Measured: every key of `in7qpne_cty.dom` routes to exactly one party (three
+to Delaware), and no key the in-area file adds -- the states and provinces
+of `S50`/`P14`, all two letters, and `dx` -- routes to any. Indiana's,
+7QP's and Delaware's OWN county files route to their party too.
+`uTestContestIN7QPNE` reads the shipped files and holds all of it.
+
+**WHY THE COMBINED FILE'S SPELLING, NOT THE COMPONENTS' FILES.** They do not
+agree for New England: `neqso.dom` spells a county county-first (`AndME`),
+`in7qpne_cty.dom` state-first (`MEAnd`), and the combined file carries
+Connecticut's planning regions (`CTCap`) where NEQP's carries eight
+counties. The session can only hold the combined file's keys, so the
+routing reads its convention. Which file is right for NEQP is sponsor data
+(Q81).
+
+**NO PARTY, AND OVERLAP.** A QSO whose QTH is in no party -- a state, a
+province, DX, or nothing -- is judged by the ENTRANT's own party when the
+entrant is in one (an in-state station works everyone in all four parties).
+The entrant's party is MY STATE (resolved, 7.12) routed by the same rule,
+when set-up found it in state. When the entrant is in none, the QSO is in
+no party: refused when typed, with the out-of-state reason every
+single-state party gives (7.10) naming the four areas; a logged one scores 0
+and earns no multiplier. **Overlap cannot happen**: the four areas share no
+state, and the spellings above are disjoint.
+
+**EACH PARTY'S REFUSAL COMPOSES BY CONSTRUCTION.** Indiana's and Delaware's
+out-of-state rule (the family base, 7.10) refuses a QTH outside the host's
+counties. A QSO routed to a party is either that party's county, which the
+rule accepts, or a no-party QTH with the entrant IN that party, where the
+rule does not apply. 7QP and NEQP have no refusal. The component's own
+`ParseReceivedExchange` still runs, so a rule a component gains later
+applies here unchanged.
+
+**THE COMPONENTS ARE OWNED, NOT `ContestIdentity`.** One set per composite
+instance, made through `ContestClassFor` and freed with it. The identity
+instances are shared, read from worker threads, and carry no station by
+contract -- but a component must be handed one to score (Delaware's points
+read `InHostState`). So the composite pushes its own station into its own
+components per delegation, with `InHostState` saying whether the entrant is
+in THAT party. A missing component class raises at construction rather than
+scoring a party 0 in silence.
+
+**THE SEAMS, ONE BY ONE.**
+
+| seam | answer |
+|---|---|
+| `ScoreQSO` / `CalculateQSOPoints` | **per QSO** -- the judging party's whole `ScoreQSO` (its band check first, so Delaware's WARC scores 0); 0 for no party |
+| `CountsAsMultiplier` | **per QSO** -- the judging party's answer on the judging party's bands (`ContestCreditsBand(component, ...)` -- the composite's own `UsesBand` cannot route, so this is the only place a party's bands reach the multipliers); False for no party |
+| `ParseReceivedExchange` | **per QSO** -- the session's shape parses (that finds the county); no party refuses; otherwise the judging party parses from the record as it arrived. The shape runs twice on success, safe because every shape clears the county-line queue first |
+| `UsesBand` (dupe sheet, need-multiplier hint) | **cannot delegate** -- asked with a band and no QSO. The composite credits every band; a Delaware WARC QSO is on the dupe sheet and the hint (harmless: dupes are per call, band and mode) |
+| `ValidateQTHCount` (county lines) | **cannot delegate** -- asked with a count and no QTH. The composite allows any number (IN and DE say 2, 7QP 4, unenforced before too) -- Q82 |
+| `MarksDupes`, the dupe key | composite's own; all four parties mark dupes per band per mode, as the row does, so the one session rule IS each party's |
+| `MultByBand`, `MultByMode`, `VHFBandsEnabled`, zone mode, domestic countries | **cannot delegate** -- one session value. The row's kept: multipliers once per contest, no VHF. Delaware differs (per band, VHF on) -- Q79 |
+| which multiplier a QTH counts AS | **cannot delegate** -- the session's one domestic table names it. Each county is its own multiplier; an in-area entrant's states, provinces and one `dx` count too. The parties' own files differ (7QP in state maps its counties to their state) -- Q80; the multiplier KEY is Q4/M10 |
+| `DomesticMultiplierFromCall` | composite's own (base `''`); every component says `''` too |
+| `DescribeSession`, `CQExchangeDefault`, `DescribeNewContestPrompts` | composite's own, unchanged: states nothing, offers no CQ exchange, the base's QSO-party prompt naming IN7QPNE. The components' per-station choices (7QP's, NEQP's and Delaware's DX multipliers for an in-state entrant) are session values -- Q79 |
+| identity, `CabrilloContestName` | composite's own: `IN7QPNE-QSO-PARTY`, never a component's name (7.14) |
+| Cabrillo columns, mode column, QSO line, `RequiresCabrilloLocation` | composite's own -- ONE log in one layout. Delaware's RY-for-every-digital-mode and its LOCATION requirement are not applied -- Q79 |
+| ADIF export and import (`Format*`, `Emit*`, `ApplyADIFImport`) | composite's own (the base's), id `IN7QPNE-QSO-PARTY`, kept. `HostState` is stated `''`, so no host `STATE` is written |
+| `FinalScore` (`CombineWithMultipliers`, `BonusPoints`) | composite's own: the base formula over the combined totals -- a number that is no party's score. Delaware's power multiplier and +50 are not applied. The ruling requires no combined score; no display seam carries a per-party one -- Q77 |
+| `PermittedOperatingAids` | composite's own: Super Check Partial and the cluster, **no score posting** (7.14) |
+
+**DECISIONS TAKEN (delegated):**
+
+- **The HamScore uploader now asks the contest.** `PermittedOperatingAids`
+  greyed only the post-scores window and its menu row; `uHamScore` asked
+  nothing, so WRTC's "no score posting" never reached HamScore and IN7QPNE
+  would have been posted whenever `HAMSCORE ENABLE` was on.
+  `uHamScore.ContestPermitsScorePosting` now gates the per-QSO queue, the
+  resync's `<deletelog>` and every cycle (which posts `<dynamicresults>` even
+  with no QSOs). It names no contest. **This changes WRTC too** -- Q83.
+- **The refusal reuses `SExchangeOutOfStateWorksHostOnly`** with the four
+  areas ("Out of state: work IN, 7th area, NE or DE stations only"); no new
+  resourcestring.
+- **The row's `QSO POINT METHOD` value stays `PAQSOPointMethod`**: a
+  description nothing scores by, retiring with the setting (7.15).
+- **Nothing classless was left to delete.** No `case` arm, test or `if`
+  outside `VC.pas` named IN7QPNE. LOGSTUFF's `PAQSOPointMethod` arm stays: the
+  Pennsylvania value's legacy arm, reached now only by an operator's
+  `QSO POINT METHOD` (7.15, M10).
+
+**TESTS.** `uTestContestIN7QPNE` (new): the class and its components; routing
+for each party, case and blanks ignored, and the non-counties; the shipped
+files' keys (above); one points case per party, each equal to that party's
+own class and to the number its rule gives; the entrant's party for a
+no-party QSO and no party for an entrant outside; multipliers per party
+(Indiana's DX rule, Delaware's bands, nothing for no party); the dupe traits
+of all four against the session's, and Delaware's two divergent traits
+pinned as findings; the parse (a party's county, Delaware's own refusal
+proving the component parsed, the out-of-area refusal, an in-area entrant
+working Florida, a shape refusal standing); Cabrillo and ADIF names and the
+round trip; no score posting. Ratchets edited in the same change:
+`Test_M7bBatch2ContestsAreSiblingsOnTheBase` (one classless contest left),
+`Test_TheBaseStatesNothing`'s floor, `Test_EveryStatePartyNamesItsState`
+(IN7QPNE beside 7QP), `Test_MovedRowValuesStillMatchTheArray`,
+`Test_EveryOtherContestCountsEveryMultiplier`,
+`Test_OperatingAidsAndScorePosting`.
+
+**EXPECTED MATRIX EFFECT** (stated before any gate ran). Only `IN7QPNE.matrix`
+moves, and in it only:
+
+- `contest.class =` in all four variants;
+- **scoring, the three variants outside the four areas** (`us`, `ve`, `dx`):
+  every synthetic QSO's QTH is a state, a province, DX or nothing, so every
+  QSO is in no party -- `pts=0` for all seventeen, and the `mult.dom` flag
+  `TRUE` -> `FALSE` on the eight QSOs that had it;
+- **scoring, `us-host`** (MY STATE `Azaph`, a 7QP entrant): every QSO is
+  judged by 7QP -- CW 2 -> 3, phone 1 -> 2, FM and digital 2 unchanged, 30 m
+  scored like any band; multiplier flags unchanged;
+- **totals**: outside, the points, every multiplier line, the total score and
+  `CLAIMED-SCORE` go to 0; in `us-host`, points 27 -> 41 and the score
+  216 -> 328 with the multipliers unchanged (if the reload rescores, which
+  the frozen 27 = the scoring section's sum says it does).
+
+Unchanged: identity's other lines, set-up, both exports, import and parse.
+Golden corpus, factory check and round trip: unchanged (no corpus set is
+IN7QPNE). `Lint-ContestNameTests` stays at 7 -- `uHamScore` names no
+contest. `docs/CONTEST_RULES_OUTSIDE_FACTORY.md` is generated from
+`git ls-files`: regenerate after the commit.
+
+**Questions this raised -- NY4I's:** Q77-Q84 (§9).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
@@ -3705,6 +3860,48 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
     (`uADIF.EmitADIFRecord`): a DE station working Pennsylvania exports
     `STATE:DE` beside `QTH:PA`. Should `STATE` be the host state only when
     the QTH is a host county (a contest seam), and the worked state otherwise?
+
+- **Q77-Q84** (IN7QPNE, the composite, §8.2r):
+  - **Q77** The score. The ruling needs no combined score and would like the
+    score of the party just worked. No display seam carries more than one
+    score, so the window, the summary and `CLAIMED-SCORE` show the base
+    formula over the combined log -- a number that is no sponsor's score.
+    Build a per-party score seam (the contest names its parties' scores
+    from the totals and the view), or claim nothing in Cabrillo?
+  - **Q78** An in-area entrant working another party's station is judged by
+    the WORKED party only, per the ruling. Its own sponsor may count that
+    QSO too (an Indiana station working Arizona has an Arizona multiplier in
+    the Indiana QSO Party). The same log goes to every sponsor, so their
+    scoring is unaffected; TR4W's points show only the worked party's.
+    Confirm.
+  - **Q79** Session values that differ by party, kept at IN7QPNE's row:
+    multipliers once per contest (Delaware: per band), no VHF (7QP and
+    Delaware: on), one `dx` domestic multiplier for DX (7QP, NEQP and
+    Delaware in state: DXCC entities), no Cabrillo LOCATION required and
+    `DG` for FT8 (Delaware: required, `RY`), and no power multiplier or
+    +50 bonus. Which should the combined session adopt?
+  - **Q80** Which multiplier a QTH counts as is the session's one domestic
+    table: every county is its own multiplier, and an in-area entrant's
+    states, provinces and `dx`. The parties' own files differ (7QP in state
+    maps its counties to their state). A per-party multiplier key needs a
+    seam (Q4/M10). Wanted?
+  - **Q81** New England's county spellings: `in7qpne_cty.dom` spells them
+    state-first (`MEAnd`) and has Connecticut's planning regions (`CTCap`);
+    NEQP's own `neqso.dom` spells them county-first (`AndME`) with eight CT
+    counties. Which is current for NEQP? IN7QPNE's routing reads the
+    combined file's convention.
+  - **Q82** County lines: Indiana and Delaware allow two, 7QP four. The
+    county-line check is asked with a count and no county, so the composite
+    cannot route it and allows any number (as before). Pass the counties'
+    party to the check, or leave it?
+  - **Q83** The HamScore uploader now asks the contest whether it may post,
+    so WRTC stops posting to HamScore too (its rule already said no live
+    score posting; only the post-scores window obeyed it). Confirm WRTC.
+  - **Q84** Indiana's "DX is no multiplier" rule compares `DX` in capitals.
+    Indiana's own `in.dom` says `DX = DX`; IN7QPNE's in-area file says
+    `dx = dx`, so an Indiana entrant's DX QSO in IN7QPNE earns its one `dx`
+    multiplier. Spell the combined file's line `DX`, or make the rule
+    ignore case (BC's is spelled `dx`)?
 
 - **Q19-Q23** (M4, export): Sweepstakes' empty precedence, a Field Day DX
   station's class in ADIF, the two scoring rules that read the logging clock

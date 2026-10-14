@@ -287,16 +287,34 @@ the target shape, the M-step migration order and the open questions.
   `RSGB-ROLO`, and `uContestRegistry.ContestOfADIFRecordMode` picks the one
   that runs in the record's mode once the record is read (the matrix moves
   only their phone import lines). Ten-Ten's arm always scored 2 (a Word
-  against -1, Q46): the class says 2. **M7b is done, and exactly two
-  contests are classless on purpose** -- IN7QPNE (a composite, design 7.14,
-  the next step) and DUMMYCONTEST; `Test_M7bBatch2ContestsAreSiblingsOnTheBase`
-  fails if a third appears. POTA (Q6, 2026-10-13), the UA4W Championship
-  (Q28) and RSGB 1.8 (Q33, both 2026-10-14, design 8.2p) left the list. Sites still naming a batch-2 contest were seams
+  against -1, Q46): the class says 2. **M7b is done, and exactly ONE
+  contest is classless on purpose** -- DUMMYCONTEST, "no contest";
+  `Test_M7bBatch2ContestsAreSiblingsOnTheBase` fails if a second appears.
+  POTA (Q6, 2026-10-13), the UA4W Championship (Q28), RSGB 1.8 (Q33, both
+  2026-10-14, design 8.2p) and IN7QPNE (2026-10-14, design 8.2r) left the
+  list. Sites still naming a batch-2 contest were seams
   not built -- ~~M9 display/HamScore: WRTC, SST, CW Open, RTC~~ done at
   M9a (§8.2m); Radio YOC's loader stays (engine state) -- listed in §8.2k. ~~M8 multipliers: YB DX, RDA, YO DX~~ -- done
   at M8: RDA's and YO DX's hint arms are their classes', YB DX's was a no-op
   and is deleted (§8.2l). RDA's initial-exchange fallback in LOGEDIT is an
   EXCHANGE rule and stays (Q50).
+- **IN7QPNE is a COMPOSITE** (NY4I 7.14; built 2026-10-14, design 8.2r).
+  `TContestIN7QPNE` owns one instance each of the Indiana, 7QP, NEQP and
+  Delaware classes (made via `ContestClassFor`, NOT `ContestIdentity` --
+  those are shared and station-less) and judges each QSO by the party of
+  the worked station's county: `DomesticQTH`, routed by the spelling of
+  `in7qpne_cty.dom`'s keys (`IN`+3, the 7QP states+3, the NE states+3,
+  `NDE/KDE/SDE`; `IN7QPNEPartyOfQTH`). No party -> the entrant's own party
+  (MY STATE routed, when in state); neither -> 0 points, no multiplier,
+  refused when typed. It delegates `ScoreQSO`, `CountsAsMultiplier` (with
+  the party's bands) and `ParseReceivedExchange`; everything asked without
+  a QSO (`UsesBand`, `ValidateQTHCount`, set-up traits, which multiplier a
+  QTH counts as) stays the composite's, recorded as findings (Q79-Q82).
+  The NE spellings of `in7qpne_cty.dom` and `neqso.dom` DISAGREE (Q81) --
+  route on the combined file's keys, never the components' files. No score
+  posting: `PermittedOperatingAids`, and since 8.2r `uHamScore` asks it too
+  (`ContestPermitsScorePosting` -- it asked nothing before, so WRTC's rule
+  never reached HamScore; Q83).
 - **A contest tells the display and the reports what to show, as DATA the
   UI renders** (M9a, 2026-10-02, design §8.2m; `ADDING_A_CONTEST.md` "How a
   contest tells the display and the reports"). No class touches a form, a

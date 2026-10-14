@@ -188,8 +188,10 @@ end;
 procedure TContestMultipliersTests.Test_EveryOtherContestCountsEveryMultiplier;
 const
    (* The contests whose CountsAsMultiplier says no to something. A contest
-      that gains a multiplier rule joins this list in the same commit. *)
-   STATED: array[0..4] of ContestType = (BCQP, NYQP, INQSOPARTY, PCC, NZFIELDDAY);
+      that gains a multiplier rule joins this list in the same commit.
+      IN7QPNE (2026-10-14) answers with the judging party's rule, and no for
+      a QSO in no party -- uTestContestIN7QPNE pins it. *)
+   STATED: array[0..5] of ContestType = (BCQP, NYQP, INQSOPARTY, PCC, NZFIELDDAY, IN7QPNE);
 var
    ct: ContestType;
    i: integer;

@@ -23,6 +23,34 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-14 -- IN7QPNE JUDGES EACH QSO BY ITS PARTY (design 7.14, 8.2r)
+
+IN7QPNE is no longer one merged rule: `uContestIN7QPNE` hands each QSO to the
+Indiana, 7QP, NEQP or Delaware class, by the worked station's county. Unit
+tests pin the routing and each party's points; **no real IN7QPNE session has
+been logged with it**, and the contest matrix record changes by design. To
+exercise, log a short session from an IN7QPNE `.cfg`:
+
+- **Outside all four areas** (`MY STATE` e.g. KS): an Indiana county scores
+  2 on any mode; a 7QP county 3 CW / 2 phone; a New England county 2 CW /
+  1 phone; a Delaware county 20 CW / 10 phone, and **0 on 30, 17 or 12 m**.
+  A station sending a state or DX is refused with "Out of state: work IN,
+  7th area, NE or DE stations only" (only if the exchange lets you type one).
+- **Inside one** (`MY STATE` a county, e.g. `INADA` or `KDE`): a station in
+  another party scores by THAT party's rules (a DE entrant working an
+  Arizona county: 7QP's 3 on CW); a state, province or DX station scores by
+  your own party's (a DE entrant: 2 CW, 1 phone).
+- **Multipliers**: a Delaware county worked on 30 m earns none; an Indiana
+  entrant's DX contact -- see Q84.
+- **The score shown** is points x multipliers over the whole log: no
+  sponsor's score (Q77). Check it is not mistaken for one party's.
+- **Cabrillo**: `CONTEST: IN7QPNE-QSO-PARTY`, one file for all four sponsors.
+- **No score posting**: Post Scores is greyed; with `HAMSCORE ENABLE` on, the
+  HamScore window's status reads "Score posting is not permitted for this
+  contest" and nothing is sent. (WRTC now behaves the same -- Q83.)
+
+---
+
 ## Added 2026-10-14 -- THE DELAWARE QSO PARTY IS A NEW CONTEST
 
 `DELAWAREQSOPARTY` is a new contest type with its own class
@@ -215,7 +243,7 @@ One deliberate change is listed last.
     MY PARK -- its class's since 2026-10-13, checked in the POTA item above),
     **RSGB 1.8 MHz** (*"I am in UK"*, tick for the district), the
     **UA4W Championship** (MY QTH, the RDA/grid comment);
-  - **IN7QPNE** (classless): the county-or-state comment naming *IN7QPNE*.
+  - **IN7QPNE** (its composite class since 2026-10-14; the base's prompt): the county-or-state comment naming *IN7QPNE*.
   OK must still enable only when every offered row is filled.
 - **The totals window** (`uTotal` reads `TotalsDisplay`): **IARU** labels the
   domestic row *HQ Mults* (by mode: *CW HQ* / *Ph HQ*); **Russian DX** and

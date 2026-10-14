@@ -30,13 +30,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    CABName: 'PA-QSO-PARTY';  CountyLineAllowed: True;
    FriendlyName: 'Pennsylvania QSO Party'
 
-  ITS POINT METHOD IS SHARED WITH ANOTHER CONTEST AND THAT IS WORTH KNOWING.
-  PAQSOPointMethod is also the QP of IN7QPNE, the combined Indiana / 7th call
-  area / New England / Delaware entry, which has no class. The legacy arm
-  therefore still runs for that contest and must not be deleted; this class
-  replaces the arm for Pennsylvania only, which is exactly what the strangler
-  seam in LOGSTUFF.CalculateQSOPoints does -- a contest with a class scores
-  itself and returns, one without falls through untouched.
+  ITS POINT METHOD WAS SHARED WITH ANOTHER CONTEST. PAQSOPointMethod is also
+  the QP in IN7QPNE's row, the combined Indiana / 7th call area / New England
+  / Delaware entry -- which scored every QSO through the legacy arm until it
+  gained its composite class on 2026-10-14 (design 8.2r) and now scores each
+  QSO by its party's class. The arm stays only for an operator's QSO POINT
+  METHOD, and goes with that setting (design 7.15).
 
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
   TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- exactly what TR4W

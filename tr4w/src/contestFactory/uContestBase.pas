@@ -1841,8 +1841,8 @@ type
          in the words that name the party's area (the QSOParties entry, so the
          7QP's '7th area' too), and asks nothing of any other contest -- the
          head uNewContest ran before its `case`, keyed then on the row's P and
-         now on the IsUSQSOParty trait. A classless party (IN7QPNE) is asked
-         through its plain TContestBase. An override calls inherited when its
+         now on the IsUSQSOParty trait. IN7QPNE's composite class does not
+         override it, so it keeps this head. An override calls inherited when its
          contest kept that head (Colorado, Minnesota) and does not when it did
          not (British Columbia, which the dialog named out of it). *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); virtual;
