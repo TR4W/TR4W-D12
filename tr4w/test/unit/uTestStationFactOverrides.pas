@@ -196,7 +196,7 @@ begin
       CheckFalse(s.CommandIsContestOverridable('MY CALL'), 'MY CALL is not one (Q65)');
       CheckFalse(s.CommandIsContestOverridable('MY COUNTRY'), 'nor MY COUNTRY');
       CheckFalse(s.CommandIsContestOverridable('MAIN CALLSIGN'), 'nor MAIN CALLSIGN');
-      CheckFalse(s.CommandIsContestOverridable('QSO POINT METHOD'), 'nor a contest setting');
+      CheckFalse(s.CommandIsContestOverridable('QSL MODE'), 'nor a contest setting');
    finally
       names.Free;
       s.Free;
@@ -346,7 +346,7 @@ begin
 
       CheckFalse(s.TryOverrideForContest('MY CALL', 'W4TA'), 'MY CALL is not overridden here');
       CheckEquals('', s.My.Call, 'and is not written either');
-      CheckFalse(s.TryOverrideForContest('QSO POINT METHOD', 'ONE POINT PER QSO'),
+      CheckFalse(s.TryOverrideForContest('QSL MODE', 'STANDARD'),
                  'a contest-scoped setting is not a station fact');
       CheckFalse(s.TryOverrideForContest('NO SUCH COMMAND', 'X'), 'nor is an unknown name');
    finally

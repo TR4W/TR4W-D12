@@ -23,6 +23,28 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-14 -- SEVEN CONTEST SETTINGS RETIRED (M10 S2, NY4I's Q4)
+
+`QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL EXCHANGE`, `DOMESTIC
+MULTIPLIER`, `DX MULTIPLIER`, `PREFIX MULTIPLIER` and `ZONE MULTIPLIER` are
+names in `uCFG.RETIRED_COMMANDS` now: accepted, reported once per name per
+session, no effect. They are gone from Preferences. Unit tests pin the read,
+the capture and the no-modal path; the corpus never captures, so **an
+interactive open and close of an old log is what no gate runs**:
+
+- [ ] **Open a contest log written before 2026-10-01** (any corpus `log.db`
+  copied somewhere writable will do). `tr4w.log` carries ONE line
+  `[LogStore] 7 stored contest setting(s) are retired commands -- ...`
+  naming each with its value, and **no** "invalid statement" dialog. Close
+  it cleanly, reopen it: that line is gone, because the close deleted the
+  seven rows.
+- [ ] **A contest `.cfg` that still says `QSO POINT METHOD = ...`** (or any of
+  the seven) loads with no dialog and one
+  `[Config] QSO POINT METHOD = ... is a withdrawn command` line, once, however
+  many times the file is read in the session. The contest scores by its class.
+- [ ] **Preferences, Contest page:** the seven rows are gone, and nothing else
+  on the page moved or lost its caption.
+
 ## Added 2026-10-14 -- IN7QPNE JUDGES EACH QSO BY ITS PARTY (design 7.14, 8.2r)
 
 IN7QPNE is no longer one merged rule: `uContestIN7QPNE` hands each QSO to the
@@ -1949,7 +1971,9 @@ written and never read back. That was the whole of the
 
 **Two defects found while doing this, NEITHER fixed -- they need a decision:**
 
-1. **`QSOPointMethodArray` has two identical `'ONY'` entries** (`VC.pas:3264`
+1. **MOOT since M10 S2 (2026-10-14): `QSO POINT METHOD` is retired and
+   `QSOPointMethodArray` is deleted.** As found:
+   **`QSOPointMethodArray` has two identical `'ONY'` entries** (`VC.pas:3264`
    and `:3319`). Only the first is reachable by name, so one QSO-point method
    cannot be selected by spelling and shows the wrong label. Aligning the array
    to the enum did not reconcile (133 members vs 136 entries), so which value is

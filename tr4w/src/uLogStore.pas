@@ -578,7 +578,8 @@ begin
 
    (* THE CONTEST-SCOPED SETTINGS: written while stated, deleted otherwise,
      and the log marked as holding statements only. *)
-   saved := saved + CaptureContestStatements(Settings, GRepository);
+   saved := saved + CaptureContestStatements(Settings, GRepository,
+                                             CommandIsRetired);
 
    (* THE STATION FACTS: the contest's override while stated, else the
      station's value as a record. *)
@@ -1418,6 +1419,8 @@ var
    rows: TStringList;
    (* Stored contest rows that are not statements -- reported, not applied. *)
    dropped: TStringList;
+   (* Stored rows naming a RETIRED command (M10 S2) -- reported, not applied. *)
+   retired: TStringList;
    i: integer;
    cmd, val: string;
    renderable: boolean;
@@ -1443,6 +1446,7 @@ begin
 
       rows := TStringList.Create;
       dropped := TStringList.Create;
+      retired := TStringList.Create;
       try
          GRepository.LoadContestConfig(rows);
 
@@ -1458,7 +1462,15 @@ begin
            capture; a non-default row in that era was a real value from a
            .cfg or the New Contest dialog, so it is kept and applied as a
            statement. A log captured under the rule holds statements only. *)
-         KeepOnlyStatements(rows, LogHoldsStatementsOnly(GRepository), dropped);
+         (* AND A RETIRED SETTING'S ROW IS SET ASIDE IN EITHER ERA -- M10 S2,
+           2026-10-14. The seven contest-rule settings (QSO POINT METHOD,
+           EXCHANGE RECEIVED, INITIAL EXCHANGE, the four multipliers) are in
+           uCFG.RETIRED_COMMANDS: the class decides. Set aside here, so they
+           never reach CheckCommand, said ONCE per open with their values,
+           and deleted by the next capture -- so a log reports them at most
+           until its first clean close. *)
+         KeepOnlyStatements(rows, LogHoldsStatementsOnly(GRepository), dropped,
+                            CommandIsRetired, retired);
          if (dropped.Count > 0) and (logger <> nil) then
             begin
             logger.Info('[LogStore] %d stored contest setting(s) hold the ' +
@@ -1466,6 +1478,13 @@ begin
                         'stored only what the operator stated -- not applied, ' +
                         'the contest decides: %s',
                         [dropped.Count, dropped.CommaText]);
+            end;
+         if (retired.Count > 0) and (logger <> nil) then
+            begin
+            logger.Info('[LogStore] %d stored contest setting(s) are retired ' +
+                        'commands -- not applied, the contest''s class ' +
+                        'decides; deleted from the log at its next capture: %s',
+                        [retired.Count, retired.CommaText]);
             end;
 
          (* THE CALLSIGN BEFORE THE CONTEST -- 2026-09-20.
@@ -1874,6 +1893,7 @@ begin
                end;
             end;
       finally
+         retired.Free;
          dropped.Free;
          rows.Free;
       end;

@@ -239,15 +239,34 @@ station setting.
 - **`SetCommandStated(cmd, False)`** withdraws a statement. No control offers
   it yet.
 - **`PathIsStated(path)`** asks the same by property path
-  (`'Contest.QsoPointMethod'`). `CommandIsStated` resolves the name and calls
+  (`'Contest.QslMode'`). `CommandIsStated` resolves the name and calls
   it. Since M2 (2026-10-01) **contest set-up reads the flag**:
-  `FCONTEST.ApplyContestTraits` leaves a stated flag setting alone and
-  `uSettingsEffects.ReplayContestStatements` replays the seven stated
-  contest tokens through `ApplyTokenSetting` -- the token half of
-  `SettingChanged`, lifted so the replay and a `.cfg` line run one arm. So a
-  statement made before the `CONTEST` line now survives set-up.
-  `Test_ContestSetUpAsksRealContestScopedNames` pins every name and path
-  set-up asks; a misspelled one would read "not stated" and silently lose.
+  `FCONTEST.ApplyContestTraits` leaves a stated flag setting alone.
+  `Test_ContestSetUpAsksRealContestScopedNames` pins every name set-up
+  asks; a misspelled one would read "not stated" and silently lose.
+- **THE SEVEN CONTEST-RULE SETTINGS ARE RETIRED (M10 S2, 2026-10-14, NY4I's
+  Q4).** `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL EXCHANGE`,
+  `DOMESTIC MULTIPLIER`, `DX MULTIPLIER`, `PREFIX MULTIPLIER`, `ZONE
+  MULTIPLIER` are names in `RETIRED_COMMANDS`; the property, registration,
+  caption, vocabulary, `SHARED_WITH_PEERS` and `MIGRATED_COMMANDS` entries,
+  the token arms and `ReplayContestStatements` are all gone, and six of the
+  seven spelling tables with them (`ActiveExchangeArray` stays for one log
+  line until M11). The contest's class decides. **The four `QSO POINTS ...`
+  overrides are NOT retired.** User-defined contests are a future feature, to
+  be designed another way -- do not revive these for it.
+  - **The CONTEST arm's country-mode derivation survives** in
+    `uSettingsEffects.ApplyTokenSetting` (plan F5); the DX arm's copy went.
+  - **Stored log rows** of the seven: `KeepOnlyStatements` sets them aside in
+    either era (passed `uCFG.CommandIsRetired` -- the leaf cannot link
+    uCFG), `uLogStore` logs them once per open with values, and
+    `CaptureContestStatements` deletes them. `uTestLogContestStatements`
+    pins all three, including that a second capture is a no-op.
+  - **A peer still sending one** is routed by `ApplyPeerCommand`'s withdrawn
+    arm to `CheckCommand`, not to the "applied but not persisted" Warn.
+- **`RETIRED_COMMANDS` IS LOGGED ONCE PER NAME PER SESSION -- really, since
+  M10 S2.** Before that `CheckCommand` logged every occurrence, though this
+  file and CLAUDE.md said "once". `RetiredCommandFirstSighting` is the latch;
+  `ForgetRetiredCommandSightings` is for tests.
 - Before this, the log captured every contest-scoped value, which put the
   constructor's `NONE`/`UNKNOWN` into every log. A stored sentinel then
   overwrote a `.cfg` line on reopen (D2). The flag generalises

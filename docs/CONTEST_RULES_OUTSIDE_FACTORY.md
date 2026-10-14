@@ -117,14 +117,14 @@ into 361 comparison-or-arm records --
    `logsubs2` (lines 2720, 2988), `uGetScores:301`, `uHamScore:403`. Only ADIF
    IMPORT asks the class (`uContestRegistry.FindContestByADIFContestId`). The
    two disagree for 29 registered contests (section 7, D9).
-5. **An `Active*` value is a DEFAULT, not a fact.** The operator's `.cfg` can
-   set `EXCHANGE RECEIVED`, `QSO POINT METHOD` and the four multiplier commands
-   (`uSettingsEffects.ApplyMultiplierToken`). The one shipped contest config
-   that did (`target/dom/Idaho QSO Party.cfg`, borrowing NEQP) no longer does:
-   Idaho is `IDAHOQSOPARTY` with a class since 2026-10-01. So "reach" in
-   this document means "the contests that reach this value with no operator
-   override". That is the right basis for deciding where a rule belongs; it is
-   not a proof that an arm is dead.
+5. ~~**An `Active*` value is a DEFAULT, not a fact.**~~ **NO OPERATOR
+   OVERRIDE IS LEFT (M10 S2, 2026-10-14).** The operator's `.cfg` could set
+   `EXCHANGE RECEIVED`, `QSO POINT METHOD`, `INITIAL EXCHANGE` and the four
+   multiplier commands; all seven are now names in `uCFG.RETIRED_COMMANDS`
+   (NY4I, Q4) -- accepted, reported once, no effect. So an `Active*` value is
+   the contest's: its trait, then what its class states in `DescribeSession`.
+   "Reach" in this document is therefore exact for the seven, not "with no
+   operator override". It is still not a proof that an arm is dead.
 <!-- END HAND-MAINTAINED: headline-facts -->
 
 ---

@@ -380,24 +380,22 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..248] of string =
+   (* SEVEN LEFT AT M10 S2 (2026-10-14) -- QSO POINT METHOD, EXCHANGE
+     RECEIVED, INITIAL EXCHANGE and the four multipliers, now in
+     uCFG.RETIRED_COMMANDS. Seeding a retired name would put a value into the
+     bucket that nothing applies. *)
+   MIGRATED_COMMANDS: array[0..241] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
       'CONTEST NAME',
       'CONTEST',
-      'DOMESTIC MULTIPLIER',
-      'DX MULTIPLIER',
-      'EXCHANGE RECEIVED',
       'PADDLE PORT',
-      'PREFIX MULTIPLIER',
-      'QSO POINT METHOD',
       'QUICK QSL CW MESSAGE',
       'QUICK QSL CW MESSAGE1',
       'QUICK QSL MESSAGE 1',
       'QUICK QSL MESSAGE 2',
       'QUICK QSL SSB MESSAGE',
-      'ZONE MULTIPLIER',
       'BAND MAP SPLIT MODE',
       'CATEGORY-ASSISTED',
       'CATEGORY-BAND',
@@ -409,7 +407,6 @@ const
       'DISTANCE MODE',
       'DUPE CHECK SOUND',
       'HOUR DISPLAY',
-      'INITIAL EXCHANGE',
       'INITIAL EXCHANGE CURSOR POS',
       'MODE',
       'MP3 RECORDER DURATION',
@@ -1462,6 +1459,24 @@ begin
                      + 'one.', [aCommand]);
          end;
       Result := True;
+      Exit;
+      end;
+
+   (* A WITHDRAWN COMMAND FROM AN OLDER PEER -- accepted and ignored, M10 S2
+     (2026-10-14).
+
+     The seven contest-rule settings retired then (QSO POINT METHOD,
+     EXCHANGE RECEIVED, INITIAL EXCHANGE, the four multipliers) were all in
+     SHARED_WITH_PEERS, so a position running an older build goes on sending
+     them. Without this arm such a name fell to the un-migrated branch below:
+     CheckCommand accepted it as withdrawn, and the branch then warned
+     "applied but not persisted" on every sync -- a warning about a value
+     that was never applied. CheckCommand is still the one place that
+     reports a withdrawn name, once per name per session; nothing is stored. *)
+   if CommandIsRetired(aCommand) then
+      begin
+      Result := CheckCommand(ShortString(AnsiString(aCommand)),
+                             ShortString(AnsiString(aValue)), True);
       Exit;
       end;
 

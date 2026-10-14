@@ -785,9 +785,9 @@ begin
      //
      // Widening cannot reject anything that used to be accepted.  Checked
      // across all 40 spelling arrays: folding case creates NO new ambiguity.
-     // (QSOPointMethodArray does contain two identical 'ONY' entries, so its
-     // second one is unreachable by name -- but that is true today and is not
-     // made worse here.)
+     // (QSOPointMethodArray did contain two identical 'ONY' entries, so its
+     // second one was unreachable by name -- not made worse here. The table
+     // was deleted at M10 S2 with QSO POINT METHOD.)
      (* SameTextAscii, not SysUtils.SameText: the latter takes AnsiString,
        so calling it from here narrowed BOTH arguments at the call -- a
        conversion that had been hiding inside the PAnsiChar until the table

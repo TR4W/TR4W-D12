@@ -134,8 +134,9 @@ to the class's `ScoreQSO` (M3, 2026-10-01), which runs the band check and the
 four `QSO POINTS ...` overrides itself. Below that line the routine is the
 classless path only: the same `uContestBase.ApplyQSOPointOverride`, then the
 `case ActiveQSOPointMethod`. Do not add a band check or an override there for
-a classed contest -- it would never run. **`QSO POINT METHOD` is retired at
-the end of the migration.**
+a classed contest -- it would never run. **`QSO POINT METHOD` is retired
+(M10 S2, 2026-10-14)** -- a name in `uCFG.RETIRED_COMMANDS`, no effect -- so
+nothing an operator says reaches `ActiveQSOPointMethod` any more.
 
 **Dupe marking no longer reads the point method** -- `logsubs2` asks
 `ContestIdentity(Contest).MarksDupes`. **Nor does exchange parsing (M5b,
@@ -208,8 +209,9 @@ of what `CallsignIsDupe` does, which hid the real band from the question.
 (it had said "not needed" for every Idaho county). RSGB 1.8 MHz is still
 classless: its points read the sheet (`mo.isdmmult`), Q33.
 
-**Its spelling table is rotated:** `QSOPointMethodArray` selects the wrong
-method for 46 spellings, a D7 defect. The one shipped `.cfg` it reached,
+**Its spelling table WAS rotated** -- `QSOPointMethodArray` selected the wrong
+method for 46 spellings, a D7 defect -- **and is DELETED at M10 S2** with the
+setting. The one shipped `.cfg` it reached,
 `target/dom/Idaho QSO Party.cfg`, no longer names a point method: Idaho is
 `IDAHOQSOPARTY` with its own class since 2026-10-01 (ownership doc §7.2). **No
 `.cfg` borrows another contest's type** -- an event is a `ContestType` and a

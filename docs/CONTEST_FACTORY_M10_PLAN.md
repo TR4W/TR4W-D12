@@ -369,6 +369,57 @@ widest change (the session re-home), when every other pin exists**.
 
 ### S2 -- Retire the seven settings (decided behaviour change, Q4)
 
+**DONE 2026-10-14** (on top of `4af8742d`). As planned, with these
+corrections and decisions, each measured:
+
+* **The seven:** `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL EXCHANGE`,
+  `DOMESTIC MULTIPLIER`, `DX MULTIPLIER`, `PREFIX MULTIPLIER`,
+  `ZONE MULTIPLIER`. `RETIRED_COMMANDS` `[0..87]`->`[0..94]`;
+  `SHARED_WITH_PEERS` `[0..44]`->`[0..37]`; `MIGRATED_COMMANDS`
+  `[0..248]`->`[0..241]`; the model's command count 298 -> 291.
+* **Lint floor: 31 -> 24, as planned -- but the lint RESOLVED 32 at
+  `4af8742d`, not 31.** It resolves 25 now, so the one table of slack
+  predates S2 and is kept; the floor fell by exactly the seven named tables.
+* **Spelling tables:** six deleted (`QSOPointMethodArray`,
+  `DomesticMultStringArray`, `PrefixMultStringArray` in VC;
+  `ZoneMultTypeSA`, `InitialExchangeTypeStringArray` in logwind;
+  `DXMultTypenameArray` in logdupe). **`ActiveExchangeArray` KEPT**,
+  unregistered: its one reader names an exchange kind in a `uADIFExchange`
+  log line, and it goes with the kind enums at M11. `'ONY'` baseline removed.
+* **Stored rows -- DELETED at the capture, not left inert.**
+  `KeepOnlyStatements` sets a retired row aside in BOTH eras (a marked log can
+  hold a real pre-ruling statement) and hands it back with its value;
+  `uLogStore` logs one Info line per open; `CaptureContestStatements` deletes
+  every `source = 'contest'` row a retired name holds, found through
+  `LoadContestConfig` because the model's names no longer reach it. The leaf
+  is passed `uCFG.CommandIsRetired` rather than linking uCFG. Pinned by
+  `uTestLogContestStatements` (`Test_RetiredRowsAreSetAsideInEitherEra`,
+  `Test_CaptureDeletesRetiredRowsOnce` -- a second capture is a no-op).
+* **F7 fixed: once per name per session.** `CheckCommand` logged every
+  occurrence; `uCFG.RetiredCommandFirstSighting` latches it, with the value.
+* **Found and fixed: an old PEER's retired command produced a false Warn.**
+  `ApplyPeerCommand` sent a name the model does not own to its un-migrated
+  branch, which warned "applied but not persisted" for a value never applied.
+  It now routes a retired name to `CheckCommand` and stops.
+* **The checked gate failed on S2 with a heaptrc FALSE POSITIVE, not a heap
+  defect.** S2's code changes moved the return addresses so that the
+  `IndexOfName` temp in `BuildCommandMap` (size 34) got the CRC-32 signature
+  `$AAAAAAAA`, which is heaptrc's own "released" marker. That gave a
+  "freed again" on a live block and a halted run. Verified arithmetically
+  from the report. `Build-Tests.ps1` now runs `HEAPTRC=nohalt` and excuses
+  ONLY a report whose recomputed signature is `$AAAAAAAA`
+  (`build/HeaptrcReport.ps1`, self-checked against this block).
+* **NOT done:** the help `.ini` sections (`target/commands_help_*.ini`, all
+  seven languages carry the seven) are left -- they are an i18n catalogue
+  `ini2po` harvests, and an unreachable section is inert; and the `.po`
+  entries of the seven deleted `RS_CONTEST_*` captions are orphaned and left
+  for the catalogue tooling (a note in `uSettingsCaptions` says so; `pas2po`
+  never). `tr4wconvert` needs no change: it walks
+  the model's names, so a retired ini key is never reported or carried
+  forward.
+
+As planned:
+
 * **Files:** `uSettingsModel` (7 properties, 7 aliases), `uSettingsDeclarations`
   (7), `uSettingsCaptions` (7), `uCFG` (7 vocabularies; `SHARED_WITH_PEERS`
   -7, bound `[0..44]`->`[0..37]`; `RETIRED_COMMANDS` +7, `[0..87]`->`[0..94]`),
@@ -539,6 +590,7 @@ The first commit adds `uContestSession` and the writer.
   point method `FoundContest` never resets there. Removed by S3.
 * **F7 (CLAUDE.md / agent).** "`RETIRED_COMMANDS`: accepted, **logged once**" --
   `uCFG.pas:1419-1426` logs on every occurrence; there is no once-guard.
+  **FIXED at S2:** the code now matches the claim (`RetiredCommandFirstSighting`).
 * **F8.** `logdom.pas:492` `DomQTHInit` has no caller (`rg -n -i -w DomQTHInit`,
   only its declaration and a commented call `:660`) and is a runtime writer of
   `ActiveDomesticMult`. Delete at S9e.
@@ -550,6 +602,7 @@ The first commit adds `uContestSession` and the writer.
   `ContestsArray` and are built by no gate; S8 breaks them silently unless
   fixed by hand.
 * **F12.** `Lint-SpellingTables` `$minimumTables = 31` fails S2 unless lowered
-  with each removed table named -- its header demands that.
+  with each removed table named -- its header demands that. **Done at S2:
+  31 -> 24, each named; the lint resolves 25.**
 * **F13.** `QSOPointMethodType` member `INQSOPoinRMethod` is misspelt; a search
   for `INQSOPointMethod` finds nothing. Moot after S4.

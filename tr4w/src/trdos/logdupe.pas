@@ -207,34 +207,8 @@ type
     procedure SheetInitAndLoad;
   end;
 
-const
-
-(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
-    CFGCA and nothing reads this through a pointer any more. *)
-    DXMultTypenameArray                   : array[DXMultType] of string =
-    (
-//    'NO COUNT', //    NoCountDXMults,
-    'NONE', //    NoDXMults,
-    'ARRL DXCC WITH NO USA OR CANADA', //    ARRLDXCCWithNoUSAOrCanada,
-    'ARRL DXCC WITH NO ARRL SECTIONS', //    ARRLDXCCWithNoARRLSections,
-    'ARRL DXCC WITH NO USA CANADA KH6 OR KL7', //    ARRLDXCCWithNoUSACanadaKH6OrKL7,
-    'ARRL DXCC WITH NO I OR IS0', //    ARRLDXCCWithNoIOrIS0,
-    'ARRL DXCC WITH NO JT',
-    'ARRL DXCC', //    ARRLDXCC,
-    'CQ DXCC', //    CQDXCC,
-    'CQ DXCC WITH NO USA OR CANADA', //    CQDXCCWithNoUSAOrCanada,
-    'CQ DXCC WITH NO HB9', //    CQDXCCWithNoHB9,
-
-    'CQ DXCC WITH NO OK',
-    'CQ EUROPEAN COUNTRIES', //    CQEuropeanCountries,
-    'CQ UBA EUROPEAN COUNTRIES', //    CQUBAEuropeanCountries,
-    'CQ NON EUROPEAN COUNTRIES', //    CQNonEuropeanCountries,
-    'NORTH AMERICAN ARRL DXCC WITH NO USA CANADA OR KL7', //    NorthAmericanARRLDXCCWithNoUSACanadaOrkL7,
-    'NON SOUTH AMERICAN COUNTRIES', //    NonSouthAmericanCountries,
-    'PACC COUNTRIES AND PREFIXES', //    PACCCountriesAndPrefixes,
- //   'CQ NON EUROPEAN COUNTRIES AND WAE', //    CQNonEuropeanCountriesAndWAECallRegions
-    'BLACK SEA COUNTRIES'
-    );
+(* DXMultTypenameArray IS GONE -- M10 S2, 2026-10-14, with DX MULTIPLIER
+  (uCFG.RETIRED_COMMANDS, NY4I's Q4). Nothing else read it. *)
 var
 
   InitialExCallsigns                    : integer;

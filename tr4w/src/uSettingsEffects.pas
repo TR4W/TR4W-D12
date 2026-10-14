@@ -98,15 +98,11 @@ procedure InstallTokenEffects;
   yet. *)
 procedure InstallSettingsEffects;
 
-(* REPLAY EVERY CONTEST TOKEN THE OPERATOR HAS STATED -- QSO POINT METHOD,
-  EXCHANGE RECEIVED, the four multipliers and INITIAL EXCHANGE -- through the
-  same arm a .cfg line runs, side effects included.
-
-  Called by contest set-up (FCONTEST.ApplyContestTraits) after it has written
-  the contest's own values, so a statement beats the contest by construction
-  and not only when its line happened to come after CONTEST. An unstated
-  setting is left alone: the contest's value stands. *)
-procedure ReplayContestStatements;
+(* ReplayContestStatements IS GONE (M10 S2, 2026-10-14). It replayed the
+  seven contest tokens an operator had stated -- QSO POINT METHOD, EXCHANGE
+  RECEIVED, the four multipliers and INITIAL EXCHANGE -- after set-up. Those
+  settings are retired (uCFG.RETIRED_COMMANDS, NY4I's Q4 ruling): the
+  contest's class decides them, so there is nothing left to replay. *)
 
 implementation
 
@@ -114,13 +110,12 @@ uses
    SysUtils,
    uSettingsModel,
    FContest,       // RecalculateMyCountryContinentAndZoneNew
-   VC,             (* the multiplier spelling tables and ActiveDXMult --
+   VC,             (* the token spelling tables and ActiveDXMult --
                      the contest engine owns these, the settings hold the
                      token, and this is where one becomes the other *)
-   LogDupe,        // DXMultTypenameArray, ActivePrefixMult
-   LogDom,         // DomesticMultStringArray, ActiveDomesticMult
-   uCTYDAT,        (* CTY.ctyCountryMode / ctyZoneMode -- which lists CTY.DAT
-                     resolves against, set by the two multiplier hooks *)
+   LogDupe,        // SingleBand
+   uCTYDAT,        (* CTY.ctyCountryMode -- which country list CTY.DAT
+                     resolves against, set by the CONTEST arm *)
    PostUnit,       // Contest -- the active ContestType
    LogWind,        (* Settings.My.Call -- the callsign the derivation starts
                      from; DispalayLogGridLines; DisplayInsertMode *)
@@ -186,19 +181,12 @@ const
    CONTEST_NAME            = 'Contest.Name';
    BAND                    = 'Contest.Band';
    CONTEST_TOKEN           = 'Contest.ContestToken';
-   EXCHANGE_RECEIVED       = 'Contest.ExchangeReceived';
-   INITIAL_EXCHANGE        = 'Contest.InitialExchange';
    INITIAL_EXCHANGE_CURSOR_POS = 'Contest.InitialExchangeCursorPos';
    MODE                    = 'Contest.Mode';
    MY_CONTINENT            = 'Contest.MyContinent';
    QSL_MODE                = 'Contest.QslMode';
-   QSO_POINT_METHOD        = 'Contest.QsoPointMethod';
    SINGLE_BAND_SCORE       = 'Contest.SingleBandScore';
    ALERT_COLOR             = 'MainWindow.AlertColor';
-   DOMESTIC_MULTIPLIER     = 'Contest.DomesticMultiplier';
-   DX_MULTIPLIER           = 'Contest.DxMultiplier';
-   PREFIX_MULTIPLIER       = 'Contest.PrefixMultiplier';
-   ZONE_MULTIPLIER         = 'Contest.ZoneMultiplier';
    SHOW_DOMESTIC_NAME      = 'RemainingMults.ShowDomesticName';
    REMAINING_MULT_DISPLAY  = 'RemainingMults.DisplayMode';
    (* INSERT OR OVERWRITE, shown on a panel of the main window. crP: 8,
@@ -282,9 +270,11 @@ var
    GEffectsLive: boolean = False;
 (* ONE TOKEN, ONE TABLE, ONE INDEX -- the ckList arm of CheckCommand, lifted.
 
-  The four multiplier modes are separate enums with separate spelling tables,
+  It was written for the four multiplier modes, which retired at M10 S2; the
+  token arms that remain are separate enums with separate spelling tables,
   so the only thing they share is the RULE: find the token in the table and
-  assign its index. Writing it four times would be four chances to differ.
+  assign its index. Writing it once per arm would be that many chances to
+  differ.
 
   STRINGS THROUGHOUT, NOT A Pointer AND A LENGTH. The first version of this
   took `aTable: Pointer` and called TF.GetValueFromArray, because the tables
@@ -327,10 +317,11 @@ end;
 (* THE TOKEN ARMS -- the half of SettingChanged that turns a token into the
   ordinal the engine reads, and that must run during a config load.
 
-  ITS OWN PROCEDURE SINCE M2 (2026-10-01) so that contest set-up can replay a
-  stated contest token through exactly this code -- see
-  ReplayContestStatements. A second copy of any arm would be a second rule for
-  what a statement does, free to drift from the first. *)
+  ITS OWN PROCEDURE SINCE M2 (2026-10-01), when contest set-up replayed a
+  stated contest token through exactly this code. That replay went with the
+  seven retired contest settings at M10 S2; the split is kept because it
+  still separates the arms that must run during a config load from the
+  repaints gated on GEffectsLive. *)
 procedure ApplyTokenSetting(const aPath: string);
 var
    i: tr4wColors;   // the ALERT COLOR token search, below
@@ -361,7 +352,13 @@ begin
 
       (* F_CONTEST called F_DX_MULTIPLIER straight after, because choosing a
         contest chooses a DX multiplier mode and CTY.DAT has to be told which
-        country list that means. Same two lines as the DX arm below. *)
+        country list that means.
+
+        THE ONLY COPY NOW, AND IT MUST STAY (M10 S2). The DX MULTIPLIER arm
+        that repeated these lines retired with the setting; this one is a
+        contest SET-UP rule -- the class's DX multiplier, as FoundContest just
+        resolved it into ActiveDXMult, chooses the country list -- and it
+        moves into the session object at M10 S9 (plan F5). *)
       if ActiveDXMult in [ARRLDXCCWithNoUSAOrCanada,
                           ARRLDXCCWithNoARRLSections,
                           ARRLDXCCWithNoUSACanadaKH6OrKL7,
@@ -375,18 +372,6 @@ begin
          begin
          CTY.ctyCountryMode := CQCountryMode;
          end;
-      end;
-
-   if UnicodeSameText(aPath, EXCHANGE_RECEIVED) then
-      begin
-      ApplyMultiplierToken(Settings.Contest.ExchangeReceived, ActiveExchangeArray,
-                           @ActiveExchange);
-      end;
-
-   if UnicodeSameText(aPath, INITIAL_EXCHANGE) then
-      begin
-      ApplyMultiplierToken(Settings.Contest.InitialExchange, InitialExchangeTypeStringArray,
-                           @ActiveInitialExchange);
       end;
 
    if UnicodeSameText(aPath, INITIAL_EXCHANGE_CURSOR_POS) then
@@ -418,31 +403,13 @@ begin
                            @ParameterOkayMode);
       end;
 
-   if UnicodeSameText(aPath, QSO_POINT_METHOD) then
-      begin
-      ApplyMultiplierToken(Settings.Contest.QsoPointMethod, QSOPointMethodArray,
-                           @ActiveQSOPointMethod);
-      end;
-
    if UnicodeSameText(aPath, SINGLE_BAND_SCORE) then
       begin
       ApplyMultiplierToken(Settings.Contest.SingleBandScore, BandStringsArrayWithOutSpaces,
                            @SingleBand);
       end;
 
-   (* A MULTIPLIER TOKEN BECOMES THE LIVE MODE.
-
-     The setting is a string -- the spelling an operator's config file has
-     always used -- and the contest engine reads an enum. This is the whole of
-     what the four ckList rows did: match the token against the subsystem's
-     own table and assign the ordinal.
-
-     UNKNOWN LEAVES THE VALUE ALONE. GetValueFromArray answers UNKNOWNTYPE for
-     a spelling it does not have, and a refusal that corrected the mode to
-     something else would silently rescore the contest. The registered
-     vocabulary means CheckCommand refuses such a value before it ever gets
-     here; this is the second guard, not the first. *)
-   (* THE ALERT COLOUR, token -> ordinal. Same shape as the multiplier modes
+   (* THE ALERT COLOUR, token -> ordinal. Same shape as the token arms
      above: the setting holds the operator-facing spelling, VC keeps the enum,
      and this is the one place that joins them. Sits with the token arms, ABOVE
      the GEffectsLive gate, because it must apply during a config read -- the
@@ -456,85 +423,6 @@ begin
             AlertColor := i;
             Break;
             end;
-         end;
-      end;
-
-   if UnicodeSameText(aPath, DOMESTIC_MULTIPLIER) then
-      begin
-      ApplyMultiplierToken(Settings.Contest.DomesticMultiplier, DomesticMultStringArray,
-                           @ActiveDomesticMult);
-      end;
-
-   if UnicodeSameText(aPath, DX_MULTIPLIER) then
-      begin
-      ApplyMultiplierToken(Settings.Contest.DxMultiplier, DXMultTypenameArray,
-                           @ActiveDXMult);
-      (* WHICH COUNTRY LIST CTY.DAT RESOLVES AGAINST. This was the row's
-        crA: 20 hook, F_DX_MULTIPLIER, and it was dropped with the row --
-        restored here. The ARRL DXCC family means ARRL country mode; anything
-        else means CQ. *)
-      if ActiveDXMult in [ARRLDXCCWithNoUSAOrCanada,
-                          ARRLDXCCWithNoARRLSections,
-                          ARRLDXCCWithNoUSACanadaKH6OrKL7,
-                          ARRLDXCCWithNoIOrIS0,
-                          ARRLDXCCWithNoJT,
-                          ARRLDXCC] then
-         begin
-         CTY.ctyCountryMode := ARRLCountryMode;
-         end
-      else
-         begin
-         CTY.ctyCountryMode := CQCountryMode;
-         end;
-      end;
-
-   if UnicodeSameText(aPath, PREFIX_MULTIPLIER) then
-      begin
-      ApplyMultiplierToken(Settings.Contest.PrefixMultiplier, PrefixMultStringArray,
-                           @ActivePrefixMult);
-      end;
-
-   if UnicodeSameText(aPath, ZONE_MULTIPLIER) then
-      begin
-      ApplyMultiplierToken(Settings.Contest.ZoneMultiplier, ZoneMultTypeSA,
-                           @ActiveZoneMult);
-      (* THE ZONE MODE AND THE ZONE INITIAL EXCHANGE. This was the row's
-        crA: 2 hook, F_ZONE_MULTIPLIER, dropped with the row and restored
-        here. Neither corpus set exercises it, which is why a green run did
-        not notice. *)
-      if ActiveZoneMult = CQZones then
-         begin
-         ActiveInitialExchange := ZoneInitialExchange;
-         CTY.ctyZoneMode := CQZoneMode;
-         end;
-      if ActiveZoneMult = ITUZones then
-         begin
-         ActiveInitialExchange := ZoneInitialExchange;
-         CTY.ctyZoneMode := ITUZoneMode;
-         end;
-      end;
-end;
-
-(* THE CONTEST'S SETTINGS THE OPERATOR HAS STATED, IN THE ORDER THEY ARE
-  REPLAYED. See ReplayContestStatements.
-
-  INITIAL EXCHANGE IS LAST, AFTER ZONE MULTIPLIER, because the zone arm sets
-  the initial exchange as a side effect: a stated INITIAL EXCHANGE must win
-  over that, whichever order the two lines had in the file. *)
-const
-   CONTEST_STATEMENT_PATHS: array[0..6] of string =
-      (QSO_POINT_METHOD, EXCHANGE_RECEIVED, DX_MULTIPLIER, DOMESTIC_MULTIPLIER,
-       PREFIX_MULTIPLIER, ZONE_MULTIPLIER, INITIAL_EXCHANGE);
-
-procedure ReplayContestStatements;
-var
-   i: integer;
-begin
-   for i := Low(CONTEST_STATEMENT_PATHS) to High(CONTEST_STATEMENT_PATHS) do
-      begin
-      if Settings.PathIsStated(CONTEST_STATEMENT_PATHS[i]) then
-         begin
-         ApplyTokenSetting(CONTEST_STATEMENT_PATHS[i]);
          end;
       end;
 end;

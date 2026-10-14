@@ -3265,7 +3265,7 @@ type
     BlackSeaCountries
     );
 
-  PrefixMultType =          // NOTE: ORDER MUST MATCH PREFIXMULTSTRING ARRAY BELOW 4.67.9
+  PrefixMultType =          // 4.67.9 (its spelling table went at M10 S2)
     (
     NoPrefixMults,
     AsianPrefixes,
@@ -3295,29 +3295,10 @@ type
     EUHFCYear,
     RFChampionchipZones
     );
-   // 4.67.9 NOTE: ORDER MUST MATCH PREFIXMULTTYPE (ABOVE)
-const
-
-(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
-    CFGCA and nothing reads this through a pointer any more. *)
-    PrefixMultStringArray                 : array[PrefixMultType] of string =
-    (
-    'NONE',
-    'ASIAN PREFIXES',
-    'BELGIUM PREFIXES',
-    'CALLSIGN',
-    'Indonesian Districts',     // 4.64.1
-    'MONGOLIAN CALLSIGN PREFIX',
-    'NON SOUTH AMERICAN PREFIXES',
-    'NORTH AMERICAN PREFIXES',
-    'PREFIX',
-    'SAC DISTRICTS',
-    'SOUTH AMERICAN PREFIXES',
-    'SOUTH AND NORTH AMERICAN PREFIXES',
-    'GC STATION',
-    'CQ NON EUROPEAN COUNTRIES AND WAE',
-    'RUSSIAN PREFIXES'
-       );
+(* PrefixMultStringArray IS GONE -- M10 S2, 2026-10-14. It spelled PREFIX
+  MULTIPLIER's values for the config parser, and that command is retired
+  (uCFG.RETIRED_COMMANDS, NY4I's Q4): the contest's class decides the prefix
+  multiplier. Nothing else read it. *)
 type
   DomesticMultType =
     (
@@ -3470,162 +3451,12 @@ type
     RTCQSOPointMethod  // Haversine grid-center distance, tier 1/2/3/4 @ 2000/4000/8000 km
     );
 
-const
-
-
-(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
-    CFGCA and nothing reads this through a pointer any more. *)
-    DomesticMultStringArray               : array[DomesticMultType] of string =
-    (
-    'NONE',
-    'WYSIWYG',
-    'IOTA',
-    'GRID SQUARES',
-    'GRID FIELDS',
-    'DOK CODES',
-    'DOMESTIC FILE',
-    'RDA DISTRICT',
-    'NUMERIC ID'
-    );
-
-  QSOPointMethodArray                   : array[QSOPointMethodType] of string =
-    (
-    'NONE', //    NoQSOPointMethod, { Score = 0 }
-    'ALL ASIAN', //    AllAsianQSOPointMethod,
-    'ARCI', //    ARCIQSOPointMethod,
-    'ARI DX', //    ARIQSOPointMethod,
-    'ARRL FD', //    ARRLFieldDayQSOPointMethod,
-    'ARRL DIGI', // ARRLDIGIQSOPointMethod
-    'ARRL 160', //    ARRL160QSOPointMethod,
-    'ARRL 10', //    ARRL10QSOPointMethod,
-    'ARRL DX', //    ARRLDXQSOPointMethod,
-    'ARRL VHF JUN', //    ARRLVHFQSOPointMethod,
-    'ARRL VHF SS', //    ARRLVHFSSPointMethod,
-    'BALTIC', //    BalticQSOPointMethod,
-    'BWQP', // BWQPQSOPointMethod,
-    'CIS', //    CISQSOPointMethod,
-    'CQ 160', //    CQ160QSOPointMethod,
-    'CQ M', //    CQMQSOPointMethod,
-    'CQ VHF', //    CQVHFQSOPointMethod,
-    'CQ WW', //    CQWWQSOPointMethod,
-    'CQ WW RTTY', //    CQWWRTTYQSOPointMethod,
-    'CQ WPX', //    CQWPXQSOPointMethod,
-    'CQ WPX RTTY', //    CQWPXRTTYQSOPointMethod,
-    'CROATIAN', //    CroatianQSOPointMethod,
-    'EUROPEAN FIELD DAY', //    EuropeanFieldDayQSOPointMethod,
-    'EUROPEAN SPRINT', //    EuropeanSprintQSOPointMethod,
-    'EUROPEAN VHF', //    EuropeanVHFQSOPointMethod,
-    'HF-TESLA', //    TeslaQSOPointMethod,
-    'FISTS', //    FistsQSOPointMethod,
-    'FOC MARATHON' , // FOCMarathonPointMethod,
-    'HA DX', //    HADXQSOPointMethod,
-    'ONY',
-    'YUDX', //     YUDXQSOPointMethod,        // 4.57.5
-    'UKEI', //    UK-EIQSOPointMethod,       // 4.58.2
-    'HELVETIA', //    HelvetiaQSOPointMethod,
-    'IARU', //    IARUQSOPointMethod,
-//    'IN',
-    'INTERNET SIX', //    InternetSixQSOPointMethod,
-    'IOTA', //    IOTAQSOPointMethod,
-    'JA INTERNATIONAL DX', //    JapanInternationalDXQSOPointMethod,
-    'KCJ', //    KCJQSOPointMethod,
-    'LQP',//    'MQP', //    MQPQSOPointMethod,
-    'MARCONI MEMORIAL', // MMCQsoPointMethod,      //n4af
-    'NZ FIELD DAY', //    NZFieldDayQSOPointMethod,
-    'OK DX', //    OKDXQSOPointMethod,
-    'RAEM', //    RAEMQSOPointMethod,
-    'CANADA WINTER', //    RACQSOPointMethod,
-    'YOK', // Youth of Kazakstan
-    'RSGB', //    RSGBQSOPointMethod,
-    'RSGB 160', // rsgb160method,
-    'RUSSIAN DX', //    RussianDXQSOPointMethod,
-    'RDA', //    RDAQSOPointMethod,
-    'SALMON RUN', //    SalmonRunQSOPointMethod,
-    'SCANDINAVIAN', //    ScandinavianQSOPointMethod,
-    'INDONESIAN', // IndonesianQSOPointMethod,        // 4.64.1
-    'SOUTH AMERICAN', //    SouthAmericanQSOPointMethod,
-    'SOUTH AMERICAN WW', //    SouthAmericanWWQSOPointMethod,
-    'SL FIVE POINT', //    SLFivePointQSOMethod,
-    'STEW PERRY', //    StewPerryQSOPointMethod,
-    'TEN TEN', //    TenTenQSOPointMethod,
-    'TOEC', //    TOECQSOPointMethod,
-    'UBA', //    UBAQSOPointMethod,
-    'UKRAINIAN', //    UkrainianQSOPointMethod,
-    'VK ZL', //    VKZLQSOPointMethod,
-    'WAE', //    WAEQSOPointMethod,
-    'WAG', //    WAGQSOPointMethod,
-    'WWL', //    WWLQSOPointMethod,
-    'YL_ARCK_YL',
-    'YO DX', //    YODXQSOPointMethod,
-    'ALWAYS ONE', //    AlwaysOnePointPerQSO, { Ignores dupes }
-    'ONE POINT PER QSO', //    OnePointPerQSO,
-    'TWO POINTS PER QSO', //    TwoPointsPerQSO,
-    'THREE POINTS PER QSO', //    ThreePointsPerQSO,
-    'TWO PHONE FOUR CW', //    TwoPhoneFourCW,
-    'ONE PHONE TWO CW', //    OnePhoneTwoCW,
-    'THREE PHONE FIVE CW', //    ThreePhoneFiveCW,
-    'TWO PHONE THREE CW', //    TwoPhoneThreeCW,
-    'TEN POINTS PER QSO', //    TenPointsPerQSO,
-    'ONE EUROPE TWO OTHER', //    OneEuropeTwoOther,
-    'RF CUP', //    CupRFMethod,
-    'R4W', //    UA4WMethod,
-    'RF CHAMP', //    ChampionshipRFMethod,
-    'UKR CHAMP', //    ChampionshipUkrMethod,
-    'RADIO VHF FD', //    RadioVHFFDQSOPointMethod,
-    'LABRE', //labreqsopointmethod,
-    'LZ', //    LZDXQSOPointMethod,
-    'ONY', //    OldNewYearQSOPointMethod,
-    'RF AS CHAMP', //    ChampionshipRFASMethod,
-    'SRR JR', //    YouthChampionshipRFMethod,
-    'REG 1 RCC', //    RegionOneFieldDayRCCQSOPointMethod,
-    'GACWWWSA', //    GACWWWSACWQSOPointMethod,
-    'WW PMC', //    WWPMCQSOPointMethod,
-    'JT', //    JTDXQSOPointMethod
-    'RADIO 160',
-    'ARKTIKA-SPRING',
-    'GAGARIN-CUP',
-    'UN DX',
-    'KING OF SPAIN',
-    'WRTC',
-    'R9W-UW9WK-MEMORIAL',
-    'PCC',
-    'REF',
-    'RADIO-MEMORY',
-    'BSCI',
-    'CQMM',
-   // 'SASPRINT',
-    'OZHCR-VHF',
-    'MAKROTHEN',
-    'NC QSO Party',
-    'ALRS-UA1DZ-CUP',
-     'HOLYLAND',       // 4.69.1
-     'OQPQSOPOINTMETHOD',             // 4.70.4
-     'PORTUGALDAY',     // 4.71.4
-     'RPX' ,            // 4.72.2
-     'DL-RTTY',         // 4.72.5
-     'JAKARTA-RTTY',     // 4.74.2
-     'TRC-DIGITAL',      // 4.75.2
-     'PA QSO PARTY',      // 4.74.3
-     'IN QSO PARTY',      // 4.88.2
-     'XE RTTY',           // 4.77.5
-     'OKOM SSB',          // 4.80.1
-     'UQRQCPM',           // 4.82.3
-     'OKOMRTTY',           // 4.83.4
-     'SRRQSOPOINTMETHOD',  // 4.90.4
-     'YBFT8QP',               // 4.90.7
-     'WWDIGIQP',              // 4.90.8
-     'IRTS',   //  IRTSQSOPointMethod    // 4.93.1
-     'EUDX',    // 4.95.6
-     'MWCQP',
-     'BC QSO PARTY',      // 4.97.6
-     'VA QSO PARTY',
-     'YOTA',
-     'HAMSPIRIT', // 4.115.5
-      'NYQPQP',
-      'RCCVHFQP',
-      'CFOQP',
-      'RTC'                // Issue #902
-    );
+(* DomesticMultStringArray AND QSOPointMethodArray ARE GONE -- M10 S2,
+  2026-10-14. They spelled DOMESTIC MULTIPLIER's and QSO POINT METHOD's values
+  for the config parser, and both commands are retired (uCFG.RETIRED_COMMANDS,
+  NY4I's Q4): the contest's class decides them. Nothing else read either.
+  QSOPointMethodArray was the ROTATED table (ownership design 7.2, the 'ONY' pair) --
+  with no reader left, that finding has nothing left to act on. *)
 
 { When adding a new ExchangeType, please add a handler in the case statement in GetMyExchangeForExport
   in PostUnit for the ADIF export as well as in tGenerateLogPortionOfCabrilloFile in PostUnit for the Cabrillo file.
@@ -3697,6 +3528,10 @@ type
     ); //WLI
 
 const
+  (* NO LONGER A CONFIG VOCABULARY -- M10 S2, 2026-10-14. EXCHANGE RECEIVED is
+    retired (uCFG.RETIRED_COMMANDS, NY4I's Q4), so nothing registers this as
+    an allow-list any more. KEPT because uADIFExchange names an exchange kind
+    with it in a log line; it goes with the kind enums at M11. *)
   ActiveExchangeArray                   : array[ExchangeType] of string =
     (
      'UNKNOWN',

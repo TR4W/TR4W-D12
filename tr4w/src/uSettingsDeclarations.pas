@@ -415,7 +415,7 @@ begin
      indexed alongside the caption, so a reworded caption costs nothing. }
    { ===================================================================== }
 
-   // --- Contest (68) ----------------------------------
+   // --- Contest (60) ----------------------------------
    RegisterModelSetting( 'contest.autoQslInterval',     'AUTO QSL INTERVAL',
                           RS_CONTEST_AUTOQSLINTERVAL);
    RegisterModelSetting( 'contest.autoCQDelayTime',           'AUTO-CQ DELAY TIME',
@@ -449,18 +449,10 @@ begin
                           RS_CONTEST_COUNTDOMESTICCOUNTRIES);
    RegisterModelSetting( 'contest.customInitialExchangeString','CUSTOM INITIAL EXCHANGE STRING',
                           RS_CONTEST_CUSTOMINITIALEXCHANGESTRING);
-   RegisterModelSetting( 'contest.domesticMultiplier',  'DOMESTIC MULTIPLIER',
-                          RS_CONTEST_DOMESTICMULTIPLIER);
-   RegisterModelSetting( 'contest.dxMultiplier',        'DX MULTIPLIER',
-                          RS_CONTEST_DXMULTIPLIER);
    RegisterModelSetting( 'contest.exchangeMemoryEnable','EXCHANGE MEMORY ENABLE',
                           RS_CONTEST_EXCHANGEMEMORYENABLE);
-   RegisterModelSetting( 'contest.exchangeReceived',    'EXCHANGE RECEIVED',
-                          RS_CONTEST_EXCHANGERECEIVED);
    RegisterModelSetting('contest.gridMapCenter',       'GRID MAP CENTER',
                           RS_CONTEST_GRIDMAPCENTER);
-   RegisterModelSetting( 'contest.initialExchange',     'INITIAL EXCHANGE',
-                          RS_CONTEST_INITIALEXCHANGE);
    RegisterModelSetting( 'contest.initialExchangeCursorPos','INITIAL EXCHANGE CURSOR POS',
                           RS_CONTEST_INITIALEXCHANGECURSORPOS);
    RegisterModelSetting('contest.initialExchangeOverwrite','INITIAL EXCHANGE OVERWRITE',
@@ -501,14 +493,10 @@ begin
      them, so it belongs before its first use. *)
    RegisterModelSetting( 'contest.multReportMinimumBands','MULT REPORT MINIMUM BANDS',
                           RS_CONTEST_MULTREPORTMINIMUMBANDS);
-   RegisterModelSetting( 'contest.prefixMultiplier',    'PREFIX MULTIPLIER',
-                          RS_CONTEST_PREFIXMULTIPLIER);
    RegisterModelSetting( 'contest.qslMode',             'QSL MODE',
                           RS_CONTEST_QSLMODE);
    RegisterModelSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
                           RS_CONTEST_QSONUMBERBYBAND);
-   RegisterModelSetting( 'contest.qsoPointMethod',      'QSO POINT METHOD',
-                          RS_CONTEST_QSOPOINTMETHOD);
    (* GRADUATED OFF CFGCA (2026-09-09) -- AND THE TABLE IS WHY.
 
      These four hold -1 when the contest sets no fixed point value; the scoring
@@ -652,8 +640,6 @@ begin
                           RS_CONTEST_SPRINTQSYRULE);
    RegisterModelSetting( 'contest.tenMinuteRule',       'TEN MINUTE RULE',
                           RS_CONTEST_TENMINUTERULE);
-   RegisterModelSetting( 'contest.zoneMultiplier',      'ZONE MULTIPLIER',
-                          RS_CONTEST_ZONEMULTIPLIER);
 
    // --- Operating (34) --------------------------------
    RegisterModelSetting( 'operating.ctrlj.askForFrequencies', 'ASK FOR FREQUENCIES',

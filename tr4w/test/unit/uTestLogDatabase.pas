@@ -488,15 +488,17 @@ begin
    try
       db.CreateNew(fn);
 
-      (* The commands a real contest .cfg carries. All five of these are crC: 0
-        in CFGCA -- SaveNewContest does not write them -- and all five appear in
-        the shipped "Idaho QSO Party.cfg". That is why config is key/value over
-        the whole command namespace and not 29 columns. *)
+      (* The commands a real contest .cfg carries. That is why config is
+        key/value over the whole command namespace and not 29 columns.
+
+        RE-POINTED AT M10 S2 (2026-10-14): this used EXCHANGE RECEIVED,
+        DOMESTIC MULTIPLIER and QSO POINT METHOD, which are retired. The table
+        stores any name; these three are live contest-scoped commands. *)
       db.Connection.ExecuteDirect(
          'INSERT INTO config (command, value, source) VALUES ' +
-         '(''EXCHANGE RECEIVED'', ''RST DOMESTIC OR DX QTH'', ''contest''),' +
-         '(''DOMESTIC MULTIPLIER'', ''DOMESTIC FILE'', ''contest''),' +
-         '(''QSO POINT METHOD'', ''ONE PHONE TWO CW'', ''contest''),' +
+         '(''QSL MODE'', ''STANDARD'', ''contest''),' +
+         '(''DOMESTIC FILENAME'', ''idaho.dom'', ''contest''),' +
+         '(''SINGLE BAND SCORE'', ''20'', ''contest''),' +
          '(''MULT BY BAND'', ''FALSE'', ''contest''),' +
          '(''LEADING ZEROS'', ''TRUE'', ''contest'')');
       db.Transaction.Commit;
@@ -505,7 +507,7 @@ begin
       try
          q.DataBase := db.Connection;
          q.SQL.Text := 'SELECT value, source FROM config WHERE command = :c';
-         q.ParamByName('c').AsString := 'QSO POINT METHOD';
+         q.ParamByName('c').AsString := 'QSL MODE';
          q.Open;
          value := q.Fields[0].AsString;
          source := q.Fields[1].AsString;
@@ -517,7 +519,7 @@ begin
       db.Free;
    end;
 
-   CheckEquals('ONE PHONE TWO CW', value,
+   CheckEquals('STANDARD', value,
                'a contest command round-trips through config');
    (* The precedence signal. With no .cfg file left there is nothing else to tell
      a contest setting from a station default. *)

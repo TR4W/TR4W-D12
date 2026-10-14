@@ -128,12 +128,10 @@ implementation
 
 uses
    uSettingsModel,     // Settings.Bands -- HF / VHF / WARC enables
-   (* ContestIdentity -- the contest object set-up reads -- and
-      ReplayContestStatements, the operator's half of ApplyContestTraits. *)
+   (* ContestIdentity -- the contest object set-up reads. *)
    uContestRegistry,
    (* CurrentStation -- the station DescribeSession is handed (M7a). *)
    uContestFactory,
-   uSettingsEffects,
    uDomFileKeys,       // FoundMyStateInDomFile's reading rule
    SysUtils,      // ExtractFilePath/ExtractFileName -- see SetUpFileNames
    uConfigValues, LogGrid,
@@ -767,14 +765,13 @@ end;
   class) still runs AFTER this and still overwrites what the arm always
   overwrote -- see ApplySessionDefaults.
 
-  THE SEVEN Active* TOKENS ARE REPLAYED, NOT LEFT ALONE. Their statement lives
-  in a settings property, but the engine reads a global, and the global can
-  disagree with the property: the log's reapply records a statement that
-  equals the value in force without assigning anything, so no setter ran.
-  uSettingsEffects.ReplayContestStatements runs the very arm a .cfg line runs,
-  side effects included (ZONE MULTIPLIER also sets the initial exchange and
-  the zone list). The other values ARE their property, so a stated one is
-  simply not assigned. *)
+  THE SEVEN Active* KINDS HAVE NO OPERATOR LAYER ANY MORE (M10 S2,
+  2026-10-14). QSO POINT METHOD, EXCHANGE RECEIVED, INITIAL EXCHANGE and the
+  four multiplier commands are in uCFG.RETIRED_COMMANDS (NY4I, Q4): the
+  contest's class decides them, and what it states in DescribeSession still
+  runs after this. So they are assigned unconditionally, and the replay that
+  used to re-apply a stated token here is gone with the settings. The other
+  values ARE their property, so a stated one is simply not assigned. *)
 procedure ApplyContestTraits(aContest: TContestBase);
 begin
   if not Settings.CommandIsStated('QSO BY MODE') then
@@ -804,8 +801,7 @@ begin
 
   (* CQ OR ITU ZONES, AS THE CONTEST STATES IT. This was a Boolean cast to
     ZoneModeType, which FPC evaluated to 255 for most contests -- no member
-    at all, so CTY.DAT answered every zone 0. See TContestBase.GetZoneMode.
-    A stated ZONE MULTIPLIER of CQ or ITU zones still overrides it below. *)
+    at all, so CTY.DAT answered every zone 0. See TContestBase.GetZoneMode. *)
   CTY.ctyZoneMode := aContest.ZoneMode;
 
   ActiveQSOPointMethod := aContest.QSOPointMethod;
@@ -815,8 +811,6 @@ begin
   ActiveDXMult := aContest.DXMultiplierType;
   ActiveZoneMult := aContest.ZoneMultiplierType;
   ActivePrefixMult := aContest.PrefixMultiplierType;
-
-  ReplayContestStatements;
 end;
 
 function FoundContest(CMD: ShortString): boolean;

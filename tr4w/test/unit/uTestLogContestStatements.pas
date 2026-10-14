@@ -20,14 +20,28 @@ unit uTestLogContestStatements;
                   operator who stated the default on purpose;
 
     D2            a contest .cfg statement is NOT overridden by a stored
-                  sentinel when the log is reopened.
+                  sentinel when the log is reopened;
+
+    retired       a row naming one of the seven contest-rule settings
+                  retired at M10 S2 (QSO POINT METHOD, EXCHANGE RECEIVED,
+                  INITIAL EXCHANGE, the four multipliers) is set aside in
+                  EITHER era, never applied, and deleted by the next capture
+                  -- once, so a second capture finds nothing to do.
+
+  RE-POINTED AT M10 S2 (2026-10-14). These tests used the seven as their
+  examples, because they were the settings whose sentinels every old log
+  carries. With those retired, the same rules are pinned on contest-scoped
+  token settings that are still live -- INITIAL EXCHANGE CURSOR POS, QSL
+  MODE, SINGLE BAND SCORE and MODE -- whose constructor defaults are the
+  sentinels a pre-rule log stores for them.
 
   THE APPLY IS MODELLED, NOT CALLED. uLogStore.LogStoreApplyContestConfig
   links MainUnit and cannot be linked here; it filters with
-  KeepOnlyStatements and applies each remaining row through CheckCommand,
-  which for a settings-owned name IS TrySetByCommand. ApplyRows below does
-  exactly that pair, so what is tested is the code the program runs, minus
-  the logging around it. *)
+  KeepOnlyStatements -- passing uCFG.CommandIsRetired, as ApplyRows does
+  here -- and applies each remaining row through CheckCommand, which for a
+  settings-owned name IS TrySetByCommand. ApplyRows below does exactly that
+  pair, so what is tested is the code the program runs, minus the logging
+  around it. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -56,6 +70,8 @@ type
       procedure Test_MarkedLogKeepsAStatedDefault;
       procedure Test_D2_CfgStatementBeatsAStoredSentinel;
       procedure Test_ContestSetUpAsksRealContestScopedNames;
+      procedure Test_RetiredRowsAreSetAsideInEitherEra;
+      procedure Test_CaptureDeletesRetiredRowsOnce;
    public
       procedure RunAllTests; override;
    end;
@@ -68,6 +84,8 @@ uses
    uSettingsModel,
    uLogDatabase,
    uLogRepository,
+   uCFG,   (* CommandIsRetired -- the one list of withdrawn names, which the
+             program passes into the leaf, so the tests pass it too *)
    uLogContestStatements;
 
 const
@@ -75,11 +93,30 @@ const
      The vocabularies ARE registered here -- uCFG is linked through
      uTestSettingsModel, and its initialization registers them -- so a value
      outside a setting's vocabulary is refused exactly as in the program. *)
-   POINT_METHOD = 'QSO POINT METHOD';
-   A_METHOD     = 'ONE POINT PER QSO';
-   INITIAL_EX   = 'INITIAL EXCHANGE';
-   DX_MULT      = 'DX MULTIPLIER';
-   EX_RECEIVED  = 'EXCHANGE RECEIVED';
+   (* Constructor default 'AT END'; a statement says the other value. *)
+   CURSOR_POS   = 'INITIAL EXCHANGE CURSOR POS';
+   A_CURSOR_POS = 'AT START';
+   (* Constructor default 'NONE'. *)
+   QSL_MODE     = 'QSL MODE';
+   A_QSL_MODE   = 'STANDARD';
+   (* Constructor default '160'. *)
+   BAND_SCORE   = 'SINGLE BAND SCORE';
+   (* Constructor default 'CW'. *)
+   MODE_CMD     = 'MODE';
+
+   (* THE SEVEN RETIRED AT M10 S2, as an old log stores them. *)
+   RETIRED_SEVEN: array[0..6] of string = (
+      'QSO POINT METHOD',
+      'EXCHANGE RECEIVED',
+      'INITIAL EXCHANGE',
+      'DOMESTIC MULTIPLIER',
+      'DX MULTIPLIER',
+      'PREFIX MULTIPLIER',
+      'ZONE MULTIPLIER');
+   (* The constructor sentinels the pre-rule capture wrote for them, in the
+     same order. *)
+   RETIRED_SENTINELS: array[0..6] of string = (
+      'NONE', 'UNKNOWN', 'NONE', 'NONE', 'NONE', 'NONE', 'NONE');
 
 function TLogContestStatementsTests.TempLogName(const aLeaf: string): string;
 begin
@@ -141,7 +178,8 @@ begin
    rows := TStringList.Create;
    try
       aRepository.LoadContestConfig(rows);
-      KeepOnlyStatements(rows, LogHoldsStatementsOnly(aRepository), nil);
+      KeepOnlyStatements(rows, LogHoldsStatementsOnly(aRepository), nil,
+                         CommandIsRetired, nil);
       for i := 0 to rows.Count - 1 do
          begin
          aSettings.TrySetByCommand(string(rows.Names[i]),
@@ -156,10 +194,23 @@ end;
   value, as the old capture wrote them -- exactly what the corpus logs hold. *)
 procedure WritePreFlagSentinels(aRepository: TLogRepository);
 begin
-   aRepository.SaveConfigValue(AnsiString(POINT_METHOD), 'NONE', 'contest');
-   aRepository.SaveConfigValue(AnsiString(INITIAL_EX),   'NONE', 'contest');
-   aRepository.SaveConfigValue(AnsiString(DX_MULT),      'NONE', 'contest');
-   aRepository.SaveConfigValue(AnsiString(EX_RECEIVED),  'UNKNOWN', 'contest');
+   aRepository.SaveConfigValue(AnsiString(CURSOR_POS), 'AT END', 'contest');
+   aRepository.SaveConfigValue(AnsiString(QSL_MODE),   'NONE',   'contest');
+   aRepository.SaveConfigValue(AnsiString(BAND_SCORE), '160',    'contest');
+   aRepository.SaveConfigValue(AnsiString(MODE_CMD),   'CW',     'contest');
+end;
+
+(* THE SEVEN RETIRED SETTINGS' ROWS, as every log written before 2026-10-01
+  stores them -- the corpus fixtures included. *)
+procedure WriteRetiredSentinels(aRepository: TLogRepository);
+var
+   i: integer;
+begin
+   for i := Low(RETIRED_SEVEN) to High(RETIRED_SEVEN) do
+      begin
+      aRepository.SaveConfigValue(AnsiString(RETIRED_SEVEN[i]),
+                                  AnsiString(RETIRED_SENTINELS[i]), 'contest');
+      end;
 end;
 
 procedure TLogContestStatementsTests.Test_ByNameIsAStatement_UnstatedIsNot;
@@ -170,28 +221,28 @@ begin
    BeginTest('a value set by name is stated; a station-bucket value is not');
    s := TR4WSettings.Create;
    try
-      CheckFalse(s.CommandIsStated(POINT_METHOD),
+      CheckFalse(s.CommandIsStated(CURSOR_POS),
                  'nothing is stated by construction');
 
-      CheckTrue(s.TrySetUnstated(INITIAL_EX, 'ZONE'), 'the bucket value applies');
-      CheckTrue(s.TryGetByCommand(INITIAL_EX, v), 'it reads back');
-      CheckEquals('ZONE', v, 'and it is in force');
-      CheckFalse(s.CommandIsStated(INITIAL_EX),
+      CheckTrue(s.TrySetUnstated(QSL_MODE, A_QSL_MODE), 'the bucket value applies');
+      CheckTrue(s.TryGetByCommand(QSL_MODE, v), 'it reads back');
+      CheckEquals(A_QSL_MODE, v, 'and it is in force');
+      CheckFalse(s.CommandIsStated(QSL_MODE),
                  'but it is not the operator''s statement for this contest');
 
-      CheckTrue(s.TrySetByCommand(POINT_METHOD, A_METHOD), 'a .cfg line applies');
-      CheckTrue(s.CommandIsStated(POINT_METHOD), 'and is a statement');
+      CheckTrue(s.TrySetByCommand(CURSOR_POS, A_CURSOR_POS), 'a .cfg line applies');
+      CheckTrue(s.CommandIsStated(CURSOR_POS), 'and is a statement');
 
       (* THE ApplyStoredCommands RULE: it skips a stated setting, so a station
         value never displaces a statement. What it would have asked: *)
-      CheckTrue(s.CommandIsContestScoped(POINT_METHOD) and
-                s.CommandIsStated(POINT_METHOD),
+      CheckTrue(s.CommandIsContestScoped(CURSOR_POS) and
+                s.CommandIsStated(CURSOR_POS),
                 'a stated contest setting is what the bucket must not override');
 
-      s.SetCommandStated(POINT_METHOD, False);
-      CheckFalse(s.CommandIsStated(POINT_METHOD), 'a statement can be withdrawn');
-      CheckTrue(s.TryGetByCommand(POINT_METHOD, v), 'withdrawing it...');
-      CheckEquals(A_METHOD, v, '...does not change the value in force');
+      s.SetCommandStated(CURSOR_POS, False);
+      CheckFalse(s.CommandIsStated(CURSOR_POS), 'a statement can be withdrawn');
+      CheckTrue(s.TryGetByCommand(CURSOR_POS, v), 'withdrawing it...');
+      CheckEquals(A_CURSOR_POS, v, '...does not change the value in force');
 
       CheckFalse(s.TrySetByCommand('NO SUCH COMMAND', 'X'), 'an unknown name is refused');
       CheckFalse(s.CommandIsStated('NO SUCH COMMAND'), 'and states nothing');
@@ -253,10 +304,10 @@ begin
          CheckEquals(0, CaptureContestStatements(s, repo), 'nothing is stated, nothing written');
          repo.Commit;
 
-         StoredValue(repo, POINT_METHOD, found);
-         CheckFalse(found, 'no QSO POINT METHOD row -- the contest decides');
-         StoredValue(repo, EX_RECEIVED, found);
-         CheckFalse(found, 'no EXCHANGE RECEIVED row either');
+         StoredValue(repo, CURSOR_POS, found);
+         CheckFalse(found, 'no INITIAL EXCHANGE CURSOR POS row -- the contest decides');
+         StoredValue(repo, MODE_CMD, found);
+         CheckFalse(found, 'no MODE row either');
          CheckEquals(0, repo.ConfigCount, 'no contest-scoped row at all');
          CheckTrue(LogHoldsStatementsOnly(repo), 'and the log is marked');
       finally
@@ -287,14 +338,14 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         CheckTrue(s.TrySetByCommand(POINT_METHOD, A_METHOD), 'the operator states it');
+         CheckTrue(s.TrySetByCommand(CURSOR_POS, A_CURSOR_POS), 'the operator states it');
          CheckTrue(CaptureContestStatements(s, repo) >= 1, 'a row is written');
          repo.Commit;
 
-         v := StoredValue(repo, POINT_METHOD, found);
+         v := StoredValue(repo, CURSOR_POS, found);
          CheckTrue(found, 'the statement is in the log');
-         CheckEquals(A_METHOD, v, 'with the value stated');
-         StoredValue(repo, DX_MULT, found);
+         CheckEquals(A_CURSOR_POS, v, 'with the value stated');
+         StoredValue(repo, BAND_SCORE, found);
          CheckFalse(found, 'and an unstated sibling is not');
       finally
          repo.Free;
@@ -323,16 +374,16 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         s.TrySetByCommand(POINT_METHOD, A_METHOD);
+         s.TrySetByCommand(CURSOR_POS, A_CURSOR_POS);
          CaptureContestStatements(s, repo);
          repo.Commit;
-         StoredValue(repo, POINT_METHOD, found);
+         StoredValue(repo, CURSOR_POS, found);
          CheckTrue(found, 'stated: the row exists');
 
-         s.SetCommandStated(POINT_METHOD, False);
+         s.SetCommandStated(CURSOR_POS, False);
          CaptureContestStatements(s, repo);
          repo.Commit;
-         StoredValue(repo, POINT_METHOD, found);
+         StoredValue(repo, CURSOR_POS, found);
          CheckFalse(found, 'withdrawn: the row is gone, the contest decides');
       finally
          repo.Free;
@@ -493,25 +544,25 @@ begin
       repo := TLogRepository.Create(db);
       try
          WritePreFlagSentinels(repo);
-         repo.SaveConfigValue(AnsiString(INITIAL_EX), 'ZONE', 'contest');
+         repo.SaveConfigValue(AnsiString(QSL_MODE), AnsiString(A_QSL_MODE), 'contest');
          repo.Commit;
 
          ApplyRows(s, repo);
-         CheckTrue(s.TryGetByCommand(INITIAL_EX, v), 'it reads back');
-         CheckEquals('ZONE', v, 'the non-default value is applied');
-         CheckTrue(s.CommandIsStated(INITIAL_EX), 'and recorded as a statement');
-         CheckFalse(s.CommandIsStated(POINT_METHOD), 'a sentinel is not');
+         CheckTrue(s.TryGetByCommand(QSL_MODE, v), 'it reads back');
+         CheckEquals(A_QSL_MODE, v, 'the non-default value is applied');
+         CheckTrue(s.CommandIsStated(QSL_MODE), 'and recorded as a statement');
+         CheckFalse(s.CommandIsStated(CURSOR_POS), 'a sentinel is not');
 
          (* THE NEXT CAPTURE converts the log: the statement is rewritten, the
            sentinels deleted, the log marked. *)
          CaptureContestStatements(s, repo);
          repo.Commit;
-         v := StoredValue(repo, INITIAL_EX, found);
-         CheckTrue(found and (v = 'ZONE'), 'the statement survives the capture');
-         StoredValue(repo, POINT_METHOD, found);
-         CheckFalse(found, 'the QSO POINT METHOD sentinel is deleted');
-         StoredValue(repo, EX_RECEIVED, found);
-         CheckFalse(found, 'the EXCHANGE RECEIVED sentinel is deleted');
+         v := StoredValue(repo, QSL_MODE, found);
+         CheckTrue(found and (v = A_QSL_MODE), 'the statement survives the capture');
+         StoredValue(repo, CURSOR_POS, found);
+         CheckFalse(found, 'the INITIAL EXCHANGE CURSOR POS sentinel is deleted');
+         StoredValue(repo, MODE_CMD, found);
+         CheckFalse(found, 'the MODE sentinel is deleted');
          CheckTrue(LogHoldsStatementsOnly(repo), 'the log is now marked');
       finally
          repo.Free;
@@ -531,7 +582,7 @@ var
    fn: string;
    found: boolean;
 begin
-   BeginTest('in a marked log a stated default is still a statement (Field Day: no mults)');
+   BeginTest('in a marked log a stated default is still a statement');
    fn := TempLogName('stateddefault.db');
    Scrub(fn);
    s := TR4WSettings.Create;
@@ -541,17 +592,18 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         (* 'NONE' IS THE CONSTRUCTOR DEFAULT and the operator said it on
+         (* '160' IS THE CONSTRUCTOR DEFAULT and the operator said it on
            purpose. The pre-rule reading would discard it; the mark is what
-           keeps it. *)
-         CheckTrue(s.TrySetByCommand(DX_MULT, 'NONE'), 'the operator states NONE');
+           keeps it. (This used Field Day's stated DX MULTIPLIER = NONE until
+           that setting retired at M10 S2; the rule is the same.) *)
+         CheckTrue(s.TrySetByCommand(BAND_SCORE, '160'), 'the operator states 160');
          CaptureContestStatements(s, repo);
          repo.Commit;
-         StoredValue(repo, DX_MULT, found);
+         StoredValue(repo, BAND_SCORE, found);
          CheckTrue(found, 'it is stored');
 
          ApplyRows(reopened, repo);
-         CheckTrue(reopened.CommandIsStated(DX_MULT),
+         CheckTrue(reopened.CommandIsStated(BAND_SCORE),
                    'on reopen it is still the operator''s statement');
       finally
          repo.Free;
@@ -582,27 +634,27 @@ begin
       db.CreateNew(fn);
       repo := TLogRepository.Create(db);
       try
-         (* AN EXISTING LOG, written before the rule: QSO POINT METHOD = NONE,
-           the constructor's sentinel. *)
+         (* AN EXISTING LOG, written before the rule: INITIAL EXCHANGE
+           CURSOR POS = AT END, the constructor's sentinel. *)
          WritePreFlagSentinels(repo);
          repo.Commit;
 
          (* THE OPERATOR ADDS THE LINE TO THE CONTEST .cfg. Startup reads the
            .cfg first and the log after it, which is the order this models. *)
-         CheckTrue(s.TrySetByCommand(POINT_METHOD, A_METHOD), 'the .cfg line applies');
+         CheckTrue(s.TrySetByCommand(CURSOR_POS, A_CURSOR_POS), 'the .cfg line applies');
 
          ApplyRows(s, repo);
-         CheckTrue(s.TryGetByCommand(POINT_METHOD, v), 'it reads back');
-         CheckEquals(A_METHOD, v,
-                     'the stored NONE did NOT overwrite the .cfg statement');
-         CheckTrue(s.CommandIsStated(POINT_METHOD), 'and it is still a statement');
+         CheckTrue(s.TryGetByCommand(CURSOR_POS, v), 'it reads back');
+         CheckEquals(A_CURSOR_POS, v,
+                     'the stored AT END did NOT overwrite the .cfg statement');
+         CheckTrue(s.CommandIsStated(CURSOR_POS), 'and it is still a statement');
 
          (* AND THE LOG LEARNS IT, so the .cfg is not needed next time. *)
          CaptureContestStatements(s, repo);
          repo.Commit;
-         v := StoredValue(repo, POINT_METHOD, found);
+         v := StoredValue(repo, CURSOR_POS, found);
          CheckTrue(found, 'the statement is captured');
-         CheckEquals(A_METHOD, v, 'with the .cfg''s value, not the sentinel');
+         CheckEquals(A_CURSOR_POS, v, 'with the .cfg''s value, not the sentinel');
       finally
          repo.Free;
       end;
@@ -615,17 +667,16 @@ end;
 
 (* M2 -- CONTEST SET-UP ASKS THESE NAMES, AND A MISSPELLING WOULD BE SILENT.
 
-  FCONTEST.ApplyContestTraits asks CommandIsStated for each value it writes,
-  and uSettingsEffects.ReplayContestStatements asks PathIsStated for the seven
-  contest tokens by PROPERTY PATH. A name or path that does not resolve
-  answers False -- "not stated" -- so the contest's value would quietly beat
-  the operator's statement, which is the exact defect the precedence exists to
-  prevent. So every name and path set-up uses is checked here to be a real,
-  contest-scoped setting that records a statement.
+  FCONTEST.ApplyContestTraits asks CommandIsStated for each value it writes.
+  A name that does not resolve answers False -- "not stated" -- so the
+  contest's value would quietly beat the operator's statement, which is the
+  exact defect the precedence exists to prevent. So every name set-up uses is
+  checked here to be a real, contest-scoped setting that records a statement.
 
-  THE PATHS ARE TYPED A SECOND TIME, from uSettingsEffects' constants, because
-  that unit cannot be linked here. The list is case-sensitive, as the
-  statement list is. *)
+  THE SEVEN TOKEN PATHS uSettingsEffects.ReplayContestStatements asked are
+  GONE with their settings (M10 S2, 2026-10-14); set-up no longer asks them.
+  One live token is still checked BY PATH, because CommandIsStated resolves a
+  name and then asks PathIsStated -- the lookup has to keep working. *)
 procedure TLogContestStatementsTests.Test_ContestSetUpAsksRealContestScopedNames;
 
    procedure CheckToken(s: TR4WSettings; const aCommand, aValue, aPath: string);
@@ -650,13 +701,7 @@ begin
    BeginTest('every name and path contest set-up asks is a real statement');
    s := TR4WSettings.Create;
    try
-      CheckToken(s, POINT_METHOD,          A_METHOD,  'Contest.QsoPointMethod');
-      CheckToken(s, EX_RECEIVED,           'UNKNOWN', 'Contest.ExchangeReceived');
-      CheckToken(s, DX_MULT,               'NONE',    'Contest.DxMultiplier');
-      CheckToken(s, 'DOMESTIC MULTIPLIER', 'NONE',    'Contest.DomesticMultiplier');
-      CheckToken(s, 'PREFIX MULTIPLIER',   'NONE',    'Contest.PrefixMultiplier');
-      CheckToken(s, 'ZONE MULTIPLIER',     'NONE',    'Contest.ZoneMultiplier');
-      CheckToken(s, INITIAL_EX,            'ZONE',    'Contest.InitialExchange');
+      CheckToken(s, CURSOR_POS, A_CURSOR_POS, 'Contest.InitialExchangeCursorPos');
 
       CheckValue(s, 'QSO BY MODE',              'TRUE');
       CheckValue(s, 'QSO BY BAND',              'TRUE');
@@ -670,6 +715,128 @@ begin
    finally
       s.Free;
    end;
+end;
+
+(* M10 S2 -- A RETIRED SETTING'S STORED ROW IS NEVER APPLIED, IN EITHER ERA.
+
+  Every log written before 2026-10-01 stores the seven as sentinels, and a
+  statements-only log can hold a real statement made before the ruling. Both
+  are set aside by the read -- never reaching the apply, so there is nothing
+  to refuse, nothing to warn about and no modal -- and handed back with their
+  values so the caller can say what it set aside. A retired row is NOT
+  reported as "held the default": a real statement need not have. *)
+procedure TLogContestStatementsTests.Test_RetiredRowsAreSetAsideInEitherEra;
+
+   procedure CheckEra(aStatementsOnly: boolean; const aEra: string);
+   var
+      rows, dropped, retired: TStringList;
+      i: integer;
+   begin
+      rows := TStringList.Create;
+      dropped := TStringList.Create;
+      retired := TStringList.Create;
+      try
+         for i := Low(RETIRED_SEVEN) to High(RETIRED_SEVEN) do
+            begin
+            rows.Add(AnsiString(RETIRED_SEVEN[i] + '=' + RETIRED_SENTINELS[i]));
+            end;
+         (* A REAL STATEMENT of a retired setting, as a marked log could hold
+           one -- not a sentinel. *)
+         rows.Values['DX MULTIPLIER'] := 'ARRL DXCC';
+         (* And a live contest statement beside them, which must survive. *)
+         rows.Add(AnsiString(CURSOR_POS + '=' + A_CURSOR_POS));
+
+         KeepOnlyStatements(rows, aStatementsOnly, dropped,
+                            CommandIsRetired, retired);
+
+         CheckEquals(7, retired.Count, aEra + ': all seven are set aside');
+         CheckEquals('ARRL DXCC', string(retired.Values['DX MULTIPLIER']),
+                     aEra + ': with the value, so a real statement shows');
+         CheckEquals(0, dropped.Count,
+                     aEra + ': none is reported as a built-in default');
+         CheckEquals(1, rows.Count, aEra + ': only the live statement is left');
+         CheckEquals(AnsiString(CURSOR_POS), rows.Names[0],
+                     aEra + ': and it is the live one');
+      finally
+         retired.Free;
+         dropped.Free;
+         rows.Free;
+      end;
+   end;
+
+begin
+   BeginTest('a retired setting''s stored row is set aside, in either era');
+   CheckEra(False, 'a log written before the rule');
+   CheckEra(True,  'a statements-only log');
+end;
+
+(* M10 S2 -- THE CAPTURE DELETES THE RETIRED ROWS, AND THEN HAS NOTHING TO DO.
+
+  The decision, with its evidence, is in uLogContestStatements' header:
+  deleted rather than left inert, because nothing can read them again and a
+  row left in place would be set aside and reported on every open for ever.
+  The second capture is the "no loop" half: it finds nothing, writes nothing
+  back, and the log reads clean. A 'station' row of a retired name is a
+  record nothing applies and is left alone, like every station row. *)
+procedure TLogContestStatementsTests.Test_CaptureDeletesRetiredRowsOnce;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   s: TR4WSettings;
+   fn: string;
+   i: integer;
+   found: boolean;
+   rows, retired: TStringList;
+   before: integer;
+begin
+   BeginTest('the capture deletes every retired row, once');
+   fn := TempLogName('retired.db');
+   Scrub(fn);
+   s := TR4WSettings.Create;
+   db := TLogDatabase.Create;
+   rows := TStringList.Create;
+   retired := TStringList.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         WriteRetiredSentinels(repo);
+         repo.SaveConfigValue('ZONE MULTIPLIER', 'CQ ZONES', 'contest');
+         repo.SaveConfigValue('MY CALL', 'NY4I', 'contest');
+         repo.Commit;
+
+         CaptureContestStatements(s, repo, CommandIsRetired);
+         repo.Commit;
+         for i := Low(RETIRED_SEVEN) to High(RETIRED_SEVEN) do
+            begin
+            StoredValue(repo, RETIRED_SEVEN[i], found);
+            CheckFalse(found, RETIRED_SEVEN[i] + ' is deleted by the capture');
+            end;
+         StoredValue(repo, 'MY CALL', found);
+         CheckTrue(found, 'a live row beside them is untouched');
+         CheckTrue(LogHoldsStatementsOnly(repo), 'and the log is marked');
+
+         (* THE NEXT OPEN READS CLEAN: nothing is set aside. *)
+         repo.LoadContestConfig(rows);
+         KeepOnlyStatements(rows, LogHoldsStatementsOnly(repo), nil,
+                            CommandIsRetired, retired);
+         CheckEquals(0, retired.Count, 'the reopen has nothing to set aside');
+
+         (* AND A SECOND CAPTURE CHANGES NOTHING -- no loop. *)
+         before := repo.ConfigCount;
+         CaptureContestStatements(s, repo, CommandIsRetired);
+         repo.Commit;
+         CheckEquals(before, repo.ConfigCount, 'a second capture is a no-op');
+      finally
+         repo.Free;
+      end;
+   finally
+      retired.Free;
+      rows.Free;
+      db.Free;
+      s.Free;
+   end;
+   Scrub(fn);
 end;
 
 procedure TLogContestStatementsTests.RunAllTests;
@@ -687,6 +854,8 @@ begin
    Test_MarkedLogKeepsAStatedDefault;
    Test_D2_CfgStatementBeatsAStoredSentinel;
    Test_ContestSetUpAsksRealContestScopedNames;
+   Test_RetiredRowsAreSetAsideInEitherEra;
+   Test_CaptureDeletesRetiredRowsOnce;
 
    if (FDir <> '') and DirectoryExists(FDir) then
       begin

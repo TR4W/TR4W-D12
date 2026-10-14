@@ -2954,37 +2954,23 @@ type
       FCategoryOverlay: string;
       FBand: string;
       FContestToken: string;
-      FExchangeReceived: string;
-      FInitialExchange: string;
       FInitialExchangeCursorPos: string;
       FMode: string;
       FMyContinent: string;
       FQslMode: string;
-      FQsoPointMethod: string;
       FSingleBandScore: string;
       FMultReportMinimumBands: integer;
-      FDomesticMultiplier: string;
-      FDxMultiplier: string;
-      FPrefixMultiplier: string;
-      FZoneMultiplier: string;
       FHamscoreEnable: boolean;
       FR150SMode: boolean;
       FRfoblMode: boolean;
       procedure SetBand(const aValue: string);
       procedure SetDomesticFilename(const aValue: string);
       procedure SetContestToken(const aValue: string);
-      procedure SetExchangeReceived(const aValue: string);
-      procedure SetInitialExchange(const aValue: string);
       procedure SetInitialExchangeCursorPos(const aValue: string);
       procedure SetMode(const aValue: string);
       procedure SetMyContinent(const aValue: string);
       procedure SetQslMode(const aValue: string);
-      procedure SetQsoPointMethod(const aValue: string);
       procedure SetSingleBandScore(const aValue: string);
-      procedure SetDomesticMultiplier(const aValue: string);
-      procedure SetDxMultiplier(const aValue: string);
-      procedure SetPrefixMultiplier(const aValue: string);
-      procedure SetZoneMultiplier(const aValue: string);
       procedure SetName(const aValue: string);
    public
       constructor Create;
@@ -3137,7 +3123,7 @@ type
         is no enum to move. *)
       property CategoryOverlay: string
          read FCategoryOverlay write FCategoryOverlay;
-      (* TEN MORE TOKENS, on the same pattern as the four multipliers below.
+      (* MORE TOKENS, on the pattern the four (retired) multiplier modes set.
 
         EACH ENUM STAYS WITH THE SUBSYSTEM THAT OWNS IT -- ContestType with
         the contest table, BandType with the band plan, ContinentType with
@@ -3150,10 +3136,6 @@ type
       (* CONTEST, whose property cannot be called Contest: the group already
         is. The command name is aliased. *)
       property ContestToken: string read FContestToken write SetContestToken;
-      property ExchangeReceived: string
-         read FExchangeReceived write SetExchangeReceived;
-      property InitialExchange: string
-         read FInitialExchange write SetInitialExchange;
       property InitialExchangeCursorPos: string
          read FInitialExchangeCursorPos write SetInitialExchangeCursorPos;
       property Mode: string read FMode write SetMode;
@@ -3165,8 +3147,6 @@ type
         still arrives, from the same table, at the same point. *)
       property MyContinent: string read FMyContinent write SetMyContinent;
       property QslMode: string read FQslMode write SetQslMode;
-      property QsoPointMethod: string
-         read FQsoPointMethod write SetQsoPointMethod;
       property SingleBandScore: string
          read FSingleBandScore write SetSingleBandScore;
 
@@ -3181,32 +3161,12 @@ type
       property MultReportMinimumBands: integer
          read FMultReportMinimumBands write FMultReportMinimumBands;
 
-      (* THE FOUR MULTIPLIER MODES, AS TOKENS.
-
-        THE ENUM STAYS WITH THE SUBSYSTEM, which is NY4I's rule for the radio,
-        the external logger and the rotator, and it applies with more force
-        here: DXMultType and its three siblings are the CONTEST ENGINE's
-        vocabulary -- sixty-odd values whose order is load-bearing (
-        PrefixMultType's own comment says "ORDER MUST MATCH PREFIXMULTSTRING
-        ARRAY BELOW"), read at 149 sites in logdom, logdupe, logstuff and
-        uMults. Moving them here would buy nothing and cost all of that.
-
-        THE TOKEN IS WHAT A CONFIG FILE ALREADY WRITES -- 'DOMESTIC FILE',
-        'ARRL DXCC', 'CQ ZONES' -- and uCFG registers the vocabulary from the
-        very tables CheckCommand matched against, so there is still exactly
-        one statement of what each may say.
-
-        THE SETTERS ARE THE APPLY. Each raises Changed(), and uSettingsEffects
-        turns the token back into the live global the engine reads. That is
-        what the ckList row did, minus the row. *)
-      property DomesticMultiplier: string
-         read FDomesticMultiplier write SetDomesticMultiplier;
-      property DxMultiplier: string
-         read FDxMultiplier write SetDxMultiplier;
-      property PrefixMultiplier: string
-         read FPrefixMultiplier write SetPrefixMultiplier;
-      property ZoneMultiplier: string
-         read FZoneMultiplier write SetZoneMultiplier;
+      (* THE FOUR MULTIPLIER MODES, QSO POINT METHOD, EXCHANGE RECEIVED AND
+        INITIAL EXCHANGE STOOD HERE AS TOKENS until M10 S2 (2026-10-14). They
+        are retired -- uCFG.RETIRED_COMMANDS, NY4I's Q4 ruling: the contest's
+        class decides them, and user-defined contests are a future feature to
+        be designed another way. A stored row or a .cfg line naming one is
+        accepted, logged and ignored. *)
       (*
         POST LIVE SCORES FOR THIS CONTEST.
 
@@ -3826,11 +3786,11 @@ type
         other meaning there. *)
       function CommandIsStated(const aCommand: string): boolean;
 
-      (* THE SAME QUESTION ASKED BY PROPERTY PATH -- 'Contest.QsoPointMethod'.
+      (* THE SAME QUESTION ASKED BY PROPERTY PATH -- 'Contest.QslMode'.
 
-        For the code that already holds the path rather than a command name:
-        uSettingsEffects, whose token arms are keyed by path, replays the
-        stated ones when a contest is set up. The statements are recorded BY
+        For the code that already holds the path rather than a command name.
+        (uSettingsEffects replayed the stated contest tokens by path until
+        those seven settings retired at M10 S2.) The statements are recorded BY
         PATH, so this is the lookup CommandIsStated makes after resolving the
         name. Only contest-scoped paths are ever recorded, so any other path
         answers False. *)
@@ -4795,16 +4755,6 @@ begin
    SetStr(FContestToken, aValue, 'ContestToken');
 end;
 
-procedure TContestSettings.SetExchangeReceived(const aValue: string);
-begin
-   SetStr(FExchangeReceived, aValue, 'ExchangeReceived');
-end;
-
-procedure TContestSettings.SetInitialExchange(const aValue: string);
-begin
-   SetStr(FInitialExchange, aValue, 'InitialExchange');
-end;
-
 procedure TContestSettings.SetInitialExchangeCursorPos(const aValue: string);
 begin
    SetStr(FInitialExchangeCursorPos, aValue, 'InitialExchangeCursorPos');
@@ -4825,34 +4775,9 @@ begin
    SetStr(FQslMode, aValue, 'QslMode');
 end;
 
-procedure TContestSettings.SetQsoPointMethod(const aValue: string);
-begin
-   SetStr(FQsoPointMethod, aValue, 'QsoPointMethod');
-end;
-
 procedure TContestSettings.SetSingleBandScore(const aValue: string);
 begin
    SetStr(FSingleBandScore, aValue, 'SingleBandScore');
-end;
-
-procedure TContestSettings.SetDomesticMultiplier(const aValue: string);
-begin
-   SetStr(FDomesticMultiplier, aValue, 'DomesticMultiplier');
-end;
-
-procedure TContestSettings.SetDxMultiplier(const aValue: string);
-begin
-   SetStr(FDxMultiplier, aValue, 'DxMultiplier');
-end;
-
-procedure TContestSettings.SetPrefixMultiplier(const aValue: string);
-begin
-   SetStr(FPrefixMultiplier, aValue, 'PrefixMultiplier');
-end;
-
-procedure TContestSettings.SetZoneMultiplier(const aValue: string);
-begin
-   SetStr(FZoneMultiplier, aValue, 'ZoneMultiplier');
 end;
 
 procedure TContestSettings.SetName(const aValue: string);
@@ -5382,30 +5307,19 @@ begin
      buffer this replaces.  A bare name, resolved under the log and then the
      program directory by EnumerateLinesInFile. *)
    FInitialExchangeFilename := 'INITIAL.EX';
-   (* 'NONE' IS THE FIRST SPELLING IN ALL FOUR TABLES, and it is the value the
-     enums carry at zero -- NoDomesticMults, NoDXMults, NoPrefixMults,
-     NoZoneMults. Empty would not be in the allow-list, which a test says
-     plainly: a setting with a vocabulary has to hold one of its own values. *)
    (* EACH DEFAULT IS THE SPELLING OF THE VALUE ITS GLOBAL ALREADY CARRIED,
      so a station with no settings file behaves exactly as before -- and so
      that each holds one of its own allowed values, which a test requires and
      an empty string would fail. *)
    FBand                     := '160';          // BandType zero
    FContestToken             := 'DUMMY CONTEST';
-   FExchangeReceived         := 'UNKNOWN';
-   FInitialExchange          := 'NONE';
    FInitialExchangeCursorPos := 'AT END';
    FMode                     := 'CW';
    FMyContinent              := 'NONE';
    FQslMode                  := 'NONE';
-   FQsoPointMethod           := 'NONE';
    FSingleBandScore          := '160';
    (* 4, the value logstuff's declaration carried. *)
    FMultReportMinimumBands := 4;
-   FDomesticMultiplier := 'NONE';
-   FDxMultiplier       := 'NONE';
-   FPrefixMultiplier   := 'NONE';
-   FZoneMultiplier     := 'NONE';
    FDomesticFilename       := '';
    FExchangeMemoryEnable   := True;
    FMultipleBands          := True;
@@ -6005,13 +5919,10 @@ begin
    Alias('EXTERNAL LOGGER', 'ExternalLogger.LoggerType');
    Alias('BAND',                       'Contest.Band');
    Alias('CONTEST',                    'Contest.ContestToken');
-   Alias('EXCHANGE RECEIVED',          'Contest.ExchangeReceived');
-   Alias('INITIAL EXCHANGE',           'Contest.InitialExchange');
    Alias('INITIAL EXCHANGE CURSOR POS','Contest.InitialExchangeCursorPos');
    Alias('MODE',                       'Contest.Mode');
    Alias('MY CONTINENT',               'Contest.MyContinent');
    Alias('QSL MODE',                   'Contest.QslMode');
-   Alias('QSO POINT METHOD',           'Contest.QsoPointMethod');
    Alias('SINGLE BAND SCORE',          'Contest.SingleBandScore');
    Alias('CW ENABLE',            'Cw.Enable');
    Alias('CW TONE',              'Cw.Tone');
@@ -6022,10 +5933,6 @@ begin
    Alias('STEREO PIN HIGH',      'Cw.StereoPinHigh');
    Alias('ALERT COLOR',          'MainWindow.AlertColor');
    Alias('MULT REPORT MINIMUM BANDS', 'Contest.MultReportMinimumBands');
-   Alias('DOMESTIC MULTIPLIER',  'Contest.DomesticMultiplier');
-   Alias('DX MULTIPLIER',        'Contest.DxMultiplier');
-   Alias('PREFIX MULTIPLIER',    'Contest.PrefixMultiplier');
-   Alias('ZONE MULTIPLIER',      'Contest.ZoneMultiplier');
    Alias('CATEGORY-ASSISTED',    'Contest.CategoryAssisted');
    Alias('CATEGORY-BAND',        'Contest.CategoryBand');
    Alias('CATEGORY-MODE',        'Contest.CategoryMode');

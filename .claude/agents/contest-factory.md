@@ -110,7 +110,9 @@ the target shape, the M-step migration order and the open questions.
 - **Helpers only for genuinely shared computation**, called by the class's own
   code. `uContestARRLDigi` calling `LOGGRID.GetDistanceBetweenGrids` is the
   worked example.
-- **`QSO POINT METHOD` retires when the migration ends.** The four
+- **`QSO POINT METHOD` IS RETIRED (M10 S2, 2026-10-14)**, with `EXCHANGE
+  RECEIVED`, `INITIAL EXCHANGE` and the four multiplier commands -- names in
+  `uCFG.RETIRED_COMMANDS`, no effect. The class decides all seven. The four
   `QSO POINTS ...` overrides stay and run before the class.
 - **A contest owns its bands: `TContestBase.UsesBand`** (base: every band).
   An off-band QSO is logged normally, scores 0 and earns no multiplier (NY4I,
@@ -217,9 +219,10 @@ the target shape, the M-step migration order and the open questions.
   flags, VHF, count-domestic-countries, the CTY zone list and (in the head)
   the domestic file: **the operator's statement (`CommandIsStated`), else
   `ContestIdentity(Contest)`** -- never `ContestsArray` /
-  `ContestsBooleanArray` directly. The seven tokens are replayed through
-  `uSettingsEffects.ReplayContestStatements`, the same arm a `.cfg` line runs.
-  So **a trait override changes set-up now** -- the matrix sees it. What a
+  `ContestsBooleanArray` directly. ~~The seven tokens are replayed through
+  `uSettingsEffects.ReplayContestStatements`~~ -- gone at M10 S2 with the
+  seven settings; the seven `Active*` kinds are assigned from the contest
+  unconditionally. So **a trait override changes set-up now** -- the matrix sees it. What a
   contest states in `DescribeSession` runs after and wins (M7a, below); a
   classless contest's `FoundContest` arm still does. New traits:
   `ZoneMode` (stated, never a Boolean cast -- that gave 255),

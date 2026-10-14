@@ -1057,8 +1057,13 @@ invites a re-measurement and a reason invites agreement.*
 
 **`csRem` IS GONE ENTIRELY** (2026-09-11). Every one of its rows was deleted.
 A withdrawn command is a NAME in `uCFG.RETIRED_COMMANDS` now -- accepted,
-logged once, and ignored -- rather than a twenty-field `CFGRecord` whose every
-field `CheckCommand` skipped. The name list exists for one reason worth
+logged once per name per session, and ignored -- rather than a twenty-field
+`CFGRecord` whose every field `CheckCommand` skipped. (**"Once" was not true
+until M10 S2, 2026-10-14**: the code logged every occurrence. It is a latch in
+`uCFG` now, `RetiredCommandFirstSighting`. That stage also retired the seven
+contest-rule settings -- `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `INITIAL
+EXCHANGE` and the four multipliers -- onto this list; the contest's class
+decides them.) The name list exists for one reason worth
 knowing: `src/trdos/LogCfg.pas` shows a **modal** *"invalid statement in config
 file"* (`TC_INVALIDSTATEMENTINCONFIGFILE`) for a line `CheckCommand` refuses,
 so an old `tr4w.ini` naming a

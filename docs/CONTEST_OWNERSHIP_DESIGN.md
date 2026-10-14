@@ -3547,6 +3547,8 @@ classes, and then deleting the enums, is **M11**, a step of its own. The M10
 row's promise to delete "the traits" therefore means the point-method trait
 and the tables, not the kind enums.
 
+**S2 DONE 2026-10-14 (Q4):** the seven shared-set settings are names in `uCFG.RETIRED_COMMANDS` -- gone from the model, Preferences, the peers' list and `ReplayContestStatements`; stored log rows are set aside on read and deleted at the next capture; the four `QSO POINTS ...` overrides stay (plan S2).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:

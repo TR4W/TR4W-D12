@@ -248,8 +248,8 @@ var
 (* THE COMPILER'S OWN NAME FOR AN ENUMERATED VALUE.
 
   NOT THE PROGRAM'S SPELLING TABLES, and the reason is a measured defect:
-  QSOPointMethodArray is out of step with QSOPointMethodType from position 38
-  onward (docs/CONTEST_OWNERSHIP_DESIGN.md section 7.2), so spelling a point
+  QSOPointMethodArray was out of step with QSOPointMethodType from position 38
+  onward (it was deleted at M10 S2) (docs/CONTEST_OWNERSHIP_DESIGN.md section 7.2), so spelling a point
   method through it would print the WRONG NAME for 46 of them. RTTI cannot
   disagree with the enum, because it is the enum. *)
 function EnumText(aInfo: PTypeInfo; aOrdinal: integer): string;

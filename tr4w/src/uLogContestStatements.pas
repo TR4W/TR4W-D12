@@ -56,6 +56,25 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   program; these rules need tests, and need nothing but the settings object
   and the repository. uLogStore calls in.
 
+  A RETIRED SETTING'S ROW IS NOT A STATEMENT, IN EITHER ERA -- M10 S2,
+  2026-10-14. QSO POINT METHOD, EXCHANGE RECEIVED, INITIAL EXCHANGE and the
+  four multiplier commands are in uCFG.RETIRED_COMMANDS (NY4I, Q4): the
+  contest's class decides them. Every log written before 2026-10-01 stores a
+  row for each (the sentinels above), and a statements-only log may hold a
+  real one an operator made before the ruling. The read sets every such row
+  aside -- not applied, and handed back so the caller can say what it set
+  aside -- and the capture DELETES it. Deleted rather than left inert
+  because (1) nothing can ever read it again, (2) left in place it would be
+  set aside and reported on every open of that log for ever, and (3) an
+  older build opening the log afterwards finds no row, which already meant
+  "the contest decides" there. /EXPORT never captures, so the corpus
+  fixtures keep theirs and keep exercising the read.
+
+  THIS UNIT DOES NOT KNOW WHICH NAMES ARE RETIRED. uCFG owns that list and
+  is far too heavy for a leaf to link, so the caller passes the question in
+  as a TCommandTest -- uLogStore passes uCFG.CommandIsRetired, the tests pass
+  their own. One list, asked from one place.
+
   STATION-SCOPED ROWS ARE NOT THIS UNIT'S BUSINESS -- WITH ONE EXCEPTION.
   CaptureConfiguration still writes them as it always did, except the station
   FACTS a contest may override (design 7.12, 2026-10-13): MY STATE, MY ZONE,
@@ -79,6 +98,11 @@ const
      only. Its value is '1'. A log without it predates the rule. *)
    STATEMENTS_ONLY_KEY = 'configHoldsStatementsOnly';
 
+type
+   (* "Is this command withdrawn?" -- uCFG.CommandIsRetired, passed in. See
+     the header for why the leaf does not ask uCFG itself. *)
+   TCommandTest = function(const aCommand: string): boolean;
+
 (* Was this log's config table captured under the statements-only rule? *)
 function LogHoldsStatementsOnly(aRepository: TLogRepository): boolean;
 
@@ -86,10 +110,15 @@ function LogHoldsStatementsOnly(aRepository: TLogRepository): boolean;
   LOG. Returns how many rows were written. Does not commit -- the caller's
   capture is one transaction.
 
+  AND DELETE EVERY CONTEST ROW NAMING A RETIRED COMMAND, when aIsRetired is
+  given -- rows the model no longer names, so the walk over the model's
+  commands can never reach them. See the header (M10 S2).
+
   CONTEST IS NEITHER WRITTEN NOR DELETED: it is the contest table's, never a
   config row's (see CaptureConfiguration). *)
 function CaptureContestStatements(aSettings: TR4WSettings;
-                                  aRepository: TLogRepository): integer;
+                                  aRepository: TLogRepository;
+                                  aIsRetired: TCommandTest = nil): integer;
 
 (* THE STATION FACTS A CONTEST MAY OVERRIDE -- design 7.12. For every command
   naming one (MY STATE and its alias MY QTH, MY ZONE, MY GRID...): the open
@@ -120,9 +149,18 @@ function StationFactRow(aSettings: TR4WSettings; const aCommand: string;
   For a statements-only log every row is kept. For a log written before the
   rule, a contest-scoped row whose value equals the TR4WSettings constructor
   default is removed. A row that is not contest-scoped is always kept -- it is
-  not this rule's to judge. *)
+  not this rule's to judge.
+
+  EXCEPT A RETIRED COMMAND'S ROW, which is removed IN BOTH ERAS when
+  aIsRetired is given, and added as name=value to aRetired when that is not
+  nil -- the value included, so a real statement being set aside is visible
+  and not only a placeholder (M10 S2). It goes to aRetired and NOT to
+  aDropped: aDropped means "held the built-in default", which a retired
+  statement need not. *)
 procedure KeepOnlyStatements(aRows: TStrings; aStatementsOnly: boolean;
-                             aDropped: TStrings);
+                             aDropped: TStrings;
+                             aIsRetired: TCommandTest = nil;
+                             aRetired: TStrings = nil);
 
 implementation
 
@@ -136,9 +174,11 @@ begin
 end;
 
 function CaptureContestStatements(aSettings: TR4WSettings;
-                                  aRepository: TLogRepository): integer;
+                                  aRepository: TLogRepository;
+                                  aIsRetired: TCommandTest = nil): integer;
 var
    names: TStringList;
+   stored: TStringList;
    i: integer;
    cmd: string;
    value: string;
@@ -180,6 +220,30 @@ begin
    finally
       names.Free;
    end;
+
+   (* THE RETIRED ROWS. Found from what the log HOLDS, because the model's
+     command list above no longer names them. LoadContestConfig is the read
+     the reopen makes, so what is deleted here is exactly what that read
+     would otherwise set aside on every open. A 'station' row of a retired
+     name is a record nothing applies, and is left alone like every other
+     station row. *)
+   if Assigned(aIsRetired) then
+      begin
+      stored := TStringList.Create;
+      try
+         aRepository.LoadContestConfig(stored);
+         for i := 0 to stored.Count - 1 do
+            begin
+            cmd := string(stored.Names[i]);
+            if (cmd <> '') and aIsRetired(cmd) then
+               begin
+               aRepository.DeleteConfigValue(AnsiString(cmd));
+               end;
+            end;
+      finally
+         stored.Free;
+      end;
+      end;
 
    aRepository.SaveSessionValue(AnsiString(STATEMENTS_ONLY_KEY), '1');
 end;
@@ -246,7 +310,9 @@ begin
 end;
 
 procedure KeepOnlyStatements(aRows: TStrings; aStatementsOnly: boolean;
-                             aDropped: TStrings);
+                             aDropped: TStrings;
+                             aIsRetired: TCommandTest = nil;
+                             aRetired: TStrings = nil);
 var
    defaults: TR4WSettings;
    i: integer;
@@ -254,7 +320,31 @@ var
    stored: string;
    defaultValue: string;
 begin
-   if (aRows = nil) or aStatementsOnly then
+   if aRows = nil then
+      begin
+      Exit;
+      end;
+
+   (* RETIRED FIRST, AND WHATEVER THE LOG'S ERA: a statements-only log can
+     hold a real statement of a setting that has since retired, and it is no
+     more applicable than a sentinel. *)
+   if Assigned(aIsRetired) then
+      begin
+      for i := aRows.Count - 1 downto 0 do
+         begin
+         cmd := string(aRows.Names[i]);
+         if (cmd <> '') and aIsRetired(cmd) then
+            begin
+            if aRetired <> nil then
+               begin
+               aRetired.Add(aRows[i]);
+               end;
+            aRows.Delete(i);
+            end;
+         end;
+      end;
+
+   if aStatementsOnly then
       begin
       Exit;
       end;

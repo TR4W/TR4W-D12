@@ -422,18 +422,8 @@ type
 
 const
 
-(* PLAIN STRINGS, NOT PAnsiChar, since 2026-09-13.  Its ckList row left
-    CFGCA and nothing reads this through a pointer any more. *)
-    ZoneMultTypeSA                        : array[ZoneMultType] of string =
-    (
-    'NONE',
-    'CQ ZONES',
-    'ITU ZONES',
-    'JA PREFECTURES',
-    'BRANCH ZONES',
-    'EU HFC YEAR',
-    'RF CHAMP ZONES'
-    );
+(* ZoneMultTypeSA IS GONE -- M10 S2, 2026-10-14, with ZONE MULTIPLIER
+    (uCFG.RETIRED_COMMANDS, NY4I's Q4). Nothing else read it. *)
 
 
   // RotatorTypeSA moved with its type -- see uRotatorRegistry.
@@ -443,24 +433,10 @@ const
     error and applied to nothing. Nothing else ever read the table. *)
   IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of string = ('AT END', 'AT START');
 
-  InitialExchangeTypeStringArray        : array[InitialExchangeType] of string =
-    (
-    'NONE',
-    'NAME',
-    'NAME QTH',
-    'CHECK SECTION',
-    'SECTION',
-    'QTH',
-    'FOC NUMBER',
-    'GRID',
-    'ZONE',
-    'USER 1',
-    'USER 2',
-    'USER 3',
-    'USER 4',
-    'USER 5',
-    'CUSTOM'
-    );
+
+  (* InitialExchangeTypeStringArray IS GONE -- M10 S2, 2026-10-14, with
+    INITIAL EXCHANGE (uCFG.RETIRED_COMMANDS, NY4I's Q4). Nothing else read
+    it. *)
 var
 
   k                                     : integer;
