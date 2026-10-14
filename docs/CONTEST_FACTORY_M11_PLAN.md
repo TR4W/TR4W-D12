@@ -1,7 +1,8 @@
 # M11 -- the kinds move into the classes: a staged, measured plan
 
-**Status: PLAN, S0 under way. S0a, S0b and S0d are DONE (2026-10-14, at
-`95e127a5`); S0c is open; nothing from S1 on is built.** See section 4 S0 for
+**Status: PLAN, S0 DONE. S0a, S0b and S0d are DONE (2026-10-14, at
+`95e127a5`); S0c is DONE (2026-10-14, on `3b4c0777`, its re-freeze NY4I's);
+nothing from S1 on is built.** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -50,7 +51,7 @@ measurements in section 1 split them like this:
    a separate, optional decision (S10). Reach decides how many classes a member
    touches, not whether it is a rule.
 
-**THIS CONTRADICTS THE DESIGN'S TEXT, SO IT NEEDS NY4I (Q92).** §0.2 says the
+**ANSWERED 2026-10-14 (Q92): NOT AS PROPOSED HERE -- NY4I CHOSE OPTION 2.** The shape machines become plain named helpers that each class CALLS explicitly from its own overrides (family bases where a family shares one); the enum selects nothing. S9 is re-planned on that basis; S10 is moot. The original text follows. **THIS CONTRADICTS THE DESIGN'S TEXT, SO IT NEEDS NY4I (Q92).** §0.2 says the
 kind enums "have no job in a factory, so they die with the engine". §1.3 says a
 helper is "never selected, registered or named by an enum". Keeping
 `ExchangeType` means the four machines are still selected by an enum. The
@@ -591,6 +592,115 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
     unchanged (diff with the added lines excluded). The `totals` section
     changes by construction, because there are more QSOs, so that section is
     re-frozen for that reason and nothing else.
+  - **DONE 2026-10-14 -- and STRICTLY APPEND-ONLY: `totals` does NOT change.**
+    The new QSOs are scored but never logged, so export, import and totals
+    describe exactly the log they described before. Every new line is in one
+    of two NEW sections of each variant, and removing those two sections
+    from a new record gives the frozen record byte for byte:
+    - **`== keys`**, between `parse` and `totals`: `exchange.fields = ...`
+      (the fields `SetUpExchangeInformation` set, by name) and `zones.max = N`
+      (`MaxNumberOfZones`) -- in this section, not in `setup`, so the
+      append-only rule is "whole new sections" and nothing else; then
+      **19 QSOs numbered 18-36** (ON4ABC, YB1ABC, JT1ABC, SM5ABC, LA1ABC,
+      OH2ABC, OH0ABC, OX3ABC, UA9ABC, UA0ABC, RK1G, I1ABC, IS0ABC, LZ1ABC,
+      UR5ABC, 9A2ABC, KL7ABC, HB9ABC, OK1ABC) through `RecomputeQSOScoring`,
+      the scoring section's own line format; then **8 typed exchanges**
+      through the parse path (`iota` `599 123 EU005`, `iota.dash`
+      `599 123 EU-005`, `iota.short` `599 EU5`, `dok` `599 A01`, `serial.dok`
+      `599 123 A01`, `grid6` `599 FN31PR`, `grid.field` `599 FN`, `rda.short`
+      `599 MO1`), the parse section's own line format.
+    - **`== initialexchange`**, LAST: `InitialExchangeEntry` for 33 calls
+      (the 11 logged, the 19 above, UA3ABC, R35AB, K9ABC), one `iex` line
+      each with four columns -- `none` (no call-history file, no history),
+      `trmaster` (the matrix's OWN file), `logged` (that plus the logged
+      history), `custom` (that plus a CUSTOM INITIAL EXCHANGE STRING naming
+      all fifteen of the Custom arm's commands) -- and three lines saying
+      what the program left open (`initialexchange.trmaster.program`,
+      `.indexopen`) and whether the fixture was opened (`.fixture`).
+  - **F17 is worked around IN THE HARNESS, deterministically -- production
+    is unchanged.** `tr4w/test/contest-matrix/MATRIX-TRMASTER.DTA` is a
+    tracked 9-call file written from `trmaster-fixture.txt` by
+    `make-trmaster-fixture.py` through `tr4w/tools/trmaster/trmaster_codec.py`
+    (the shipped file's own writer; read back and compared). `matrix-lib.sh`
+    copies it into each run directory under THAT name -- never as
+    `TRMASTER.DTA`, so `FCONTEST.SetUpFileNames` cannot find it and no section
+    before `initialexchange` sees it -- and `uContestMatrix` points
+    `CD.ActiveFilename` at it and sets `MasterFileExists`, the assignment
+    `uProgramMain:2701` makes after the halt. The shipped `TRMASTER.DTA` is
+    never opened by the new section, so a monthly refresh moves nothing.
+    `uProgramMain`'s order is NOT changed: that is production start-up.
+  - **F18 is worked around the same way.** The `logged` pass clears
+    `IntitialExLoaded` and calls `LoadinLog` again -- what opening a
+    non-empty log does at start-up -- after `totals`, so `totals` is
+    untouched. Measured: history now differs from `none` (NAQSOCW K4ABC
+    `" Bob "` -> `" JOE FL "`; ARRL SS W1AW `" 14CT "` -> `" 00 "`). Whether
+    a live in-session reload loses history (F18's open half) is still not
+    measured -- that is production behaviour, recorded, not changed.
+  - **Arms now executed on a call or text they act on**, at the matrix's
+    stations (dev runs over 50 contests, below):
+    - `SetPrefix` -- `BelgiumPrefixes` (ON4), `SACDistricts` (SM, LA, OH,
+      OX, and OH0's own branch), `IndonesianDistricts` (YB1),
+      `MongolianCallSignPrefix` (JT1), `GCStation` (RK1G), the WAE regions
+      (UA9 -> `UA99`, UA0 -> `UA90`, KL7, JT); `Prefix`, `CallSignPrefix`,
+      `SouthAmericanPrefixes` were already.
+    - `GetDXQTH` -- `ARRLDXCCWithNoIOrIS0` (I, IS0 excluded; 9A counted),
+      `ARRLDXCCWithNoJT`, `BlackSeaCountries` (LZ, UR, RK1G's UA in; SM,
+      LA, OH, UA9 out), `CQUBAEuropeanCountries` (SM, OH, OH0, I, IS, LZ,
+      9A, OK in; ON, LA, UR, HB9, OX out -- ON is not on the list. FINDING:
+      `UBAEuroCountryString` exists TWICE and the copies disagree --
+      `uCallSignRoutines:49` (what `UBACountry` reads) has 9A and no G,
+      `uCTYDAT:168` has G/GD/GI/GJ/GM/GU/GW and no 9A; the matrix pins the
+      first),
+      `ARRLDXCCWithNoUSACanadaKH6OrKL7` and the North American list (KL7);
+      the rest were already.
+    - zone count -- all five live values recorded (`CQZones` 40, `ITUZones`
+      75, `EUHFCYear` 100, `BranchZones` 99, `RFChampionchipZones` 7).
+    - `GetDomQTH` (through the parse path) -- `IOTADomestic` accepted
+      (`EU005`, `EU5` -> `EU-005`) and refused (`EU-005`); `DOKCodes` on a
+      real DOK; `RDADistrict` refused (`MO1`, "Improper domestic QTH!!");
+      `GridFields` refused (`FN`). `GridSquares` 4-character, `WYSIWYG` and
+      `RDADistrict` accepted were already.
+    - `InitialExchangeEntry` -- `Custom` with every command and its CTY zone
+      fallbacks (and a pinned defect: `USER1` adds no trailing space, so
+      `U1U2`); `Zone` from the file's CQ and ITU zones, from CTY, the OZ-CR
+      `R3n` exit (R35AB) and the RF Championship's oblast branches `1`,
+      `2`, `9`, `0`; `Name`, `NameQTH`, `CheckSection` (both fields, and one
+      missing), `Grid`; the Russian oblast fallback; and the HISTORY branch
+      (the `/` rewrite, the zone/IARU first-word drop, the SS leading `0`).
+  - **NOT covered, and why:**
+    - **`PACCCountriesAndPrefixes`** (and so UA9/UA0's PACC split), and
+      **`SouthAndNorthAmericanPrefixes`** / **`NonSouthAmericanPrefixes`** --
+      `DescribeSession` selects them only for a PA (`uContestPACC:229`) or
+      South American (`uContestCQMM:234`, `uContestSouthAmericanWW:217`)
+      entrant, and the matrix runs neither. This plan names no station for
+      S0c, and a new variant is a process per contest; pin these in
+      `uTestContestKindPin`'s roster (S0b's NOT DONE) or unit-test them at
+      S3/S4, or add a `pa`/`py` variant -- NY4I's call.
+    - **`GridSquares`' six-character branch** -- not reachable by a typed
+      exchange: MEASURED, `599 FN31PR` is taken as a CALL CORRECTION
+      (`call=FN31PR`, `cty=F/27/Europe`), so the grid never reaches
+      `GetDomQTH`. Pinned as found -- a finding for `contest-scoring`.
+    - **`InitialExchangeEntry`'s rover branch** (`RoverCall`) -- no logged
+      call is a rover; and `Settings.InitialExchange.Reverse`, which nothing
+      the matrix runs states.
+    - **POTA's record** -- its set-up builds the operator-name set
+      (`InitOperatorNameSet`), which sets `MasterFileExists` on the SHIPPED
+      file, and by the `initialexchange` section the shipped index is OPEN
+      (`.indexopen = TRUE`), so the fixture cannot be swapped in
+      (`.fixture = FALSE`). POTA states no initial exchange, so no `iex`
+      value reads the file; but POTA's EARLIER sections may read the shipped
+      `TRMASTER.DTA` -- a refresh could move them. Not measured further.
+    - The dead arms (1.1) -- deleted at S1, so pinned by nothing on purpose.
+  - **The append-only proof.** A scratch script (`check_append_only.py`,
+    not committed) removes, per variant, every line from a `== keys` or
+    `== initialexchange` header up to the next `== ` or `### variant` line,
+    and byte-compares the rest with the frozen record; it also FAILS a
+    variant that has `== totals` but lacks either new section or has one
+    empty. Dev runs (single-contest `matrix_run`, scratch output, the tree's
+    `frozen/` never touched): 50 contests, all OK, +201 lines per
+    three-variant record (+268 with `us-host`); two consecutive runs
+    byte-identical. ALRS's empty-QTH points (Q37) are stable across runs
+    for the new QSOs as for the old.
 - **S0d** -- **Measure, do not change.** **DONE 2026-10-14.**
   - Can `InitialExchangeEntry` run headless in the matrix? If yes, add an
     `initialexchange` section (empty and logged history) at S0c's re-freeze.

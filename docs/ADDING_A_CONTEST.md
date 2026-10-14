@@ -904,11 +904,24 @@ and the typed-entry check belongs in `BENCH_QUEUE.md`.
 |---|---|---|
 | `identity` | requested vs selected `ContestType`, the class or none | M1 |
 | `setup` | the six `Active*` (seven before M10 S4; the point method's line left at S1), the CTY modes, every engine global `FoundContest` writes, the domestic countries, the county-line answer, the CW memories, **every setting that differs from a fresh settings object** | M2, M7a (185 identical, no re-freeze), M7b |
-| `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body | M3, M8 |
+| `scoring` | per synthetic QSO (17: CW, phone, FM, RTTY, FT8; 160 to 2 m incl. 30 m and 6 m; every continent; a sparse exchange), every field `/RESCORE` writes -- through `MainUnit.RecomputeQSOScoring`, the rescore's own body. The `keys` section below scores 19 more the same way | M3, M8 |
 | `export.adif` / `export.cabrillo` | those QSOs appended to a scratch log, then the **real** `ExportToADIF` and `CreateCabrilloFile`: every ADIF record, and the Cabrillo `CONTEST:` and `QSO:` lines | M1, M4 |
 | `import` (M5a) | the records the export just wrote, read back through the real import path (`MainUnit.ParseADIFRecord`, what `ImportFromADIF` and the WSJT-X reader call), **plus 38 synthetic foreign-logger records** carrying the contest-dependent tags (SRX_STRING with and without an RST, STATE, ARRL_SECT, VE_PROV, CNTY, GRIDSQUARE, SIG/SIG_INFO/POTA_REF, FOC_NUM, CQZ/ITUZ, DOK, IOTA, N1MM's tag BEFORE and AFTER `CONTEST_ID` ...). Each line lists every `ContestExchange` field the import moved off a cleared record | M5a |
 | `totals` (M6) | the log the scoring section wrote, **reloaded** through `MainUnit.LoadinLog` (what `/EXPORT`'s start runs), then the QSO points, QTCs, QSO and multiplier counts by band and mode, `LogEdit.TotalScore` and the `CLAIMED-SCORE:` line of a Cabrillo file written after the reload. Appended LAST and frozen before the first total-score rule moved | M6 |
 | `parse` (M5b) | **66 typed exchanges** through `MainUnit.ParametersOkay` -- the routine live entry's Enter calls -- with the call in the call window and the band and mode in force: every exchange SHAPE well-formed (serials, states, zones, names, powers, ages, grids, classes and sections, Sweepstakes' four fields, counties and a county line from the contest's own domestic file, prefectures, oblasts, departments, parks) and then the malformed and edge cases (missing and extra fields, the wrong order, a bad section or county, DX, a serial with letters, Sweepstakes without a precedence, an out-of-state station's own state). Each line: accepted or refused, the message and token a refusal shows, the counties a county line queued, and every field the parse set -- **not the points**, which are the scoring section's, and not the QSO's time and GUID, which come from the clock | M5b |
+| `keys` (M11 S0c) | between `parse` and `totals`: `exchange.fields` (what `SetUpExchangeInformation` set) and `zones.max` (`MaxNumberOfZones`); **19 more QSOs, numbered 18-36**, chosen so every live arm of `SetPrefix` and `GetDXQTH` meets a call it acts on (ON, YB, JT, SM/LA/OH/OH0/OX, UA9/UA0, RK1G, I/IS0, LZ/UR, 9A, KL7, HB9, OK), in the scoring section's line format -- **scored but NOT logged**, so export, import and totals never see them; and **8 more typed exchanges** carrying the QTH texts `GetDomQTH`'s arms read (IOTA three ways, a DOK, a six-character grid, a grid field, a short RDA), in the parse section's format | M11 S3-S6 |
+| `initialexchange` (M11 S0c) | LAST: `InitialExchangeEntry` for 33 calls, one `iex` line each, four columns -- `none`, `trmaster` (the matrix's OWN call-history file), `logged` (plus the logged history, by a second `LoadinLog` with the history latch cleared), `custom` (plus a CUSTOM INITIAL EXCHANGE STRING naming every command). See plan findings F17/F18 | M11 S8 |
+
+**THE MATRIX'S CALL-HISTORY FILE IS ITS OWN** (M11 S0c):
+`tr4w/test/contest-matrix/MATRIX-TRMASTER.DTA`, written from
+`trmaster-fixture.txt` by `make-trmaster-fixture.py`. `matrix-lib.sh` copies it
+into each run directory under that name -- never as `TRMASTER.DTA`, so the
+program's own resolution cannot find it -- and only the `initialexchange`
+section opens it. The shipped `TRMASTER.DTA` is refreshed monthly and would
+move every record that read it. (POTA's set-up opens the shipped file itself,
+through `InitOperatorNameSet`; its record says so in
+`initialexchange.trmaster.indexopen`.) Change the fixture only with a reason:
+it is a re-freeze like any other.
 
 One process per contest and variant, because `FoundContest` is not idempotent --
 see the unit header. About five minutes for the whole matrix.

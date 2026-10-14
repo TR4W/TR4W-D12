@@ -105,6 +105,28 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                of a Cabrillo file written after the reload. Appended LAST and
                frozen before the first total-score rule moved.
 
+    keys       (M11 S0c) BETWEEN parse AND totals: the exchange fields
+               SetUpExchangeInformation chose and the zone count
+               (MaxNumberOfZones), then MORE SYNTHETIC QSOs -- calls chosen so
+               every live arm of SetPrefix and GetDXQTH meets a call it acts
+               on (ON, YB, JT, Scandinavia, UA9/UA0, a Gagarin Cup station,
+               I/IS0, the Black Sea, 9A, KL7, HB9, OK) -- scored exactly as
+               the scoring section scores, and then more typed exchanges
+               through the parse path, carrying the QTH texts GetDomQTH's
+               arms read (IOTA, DOK, a six-character grid, a grid field, a
+               short RDA). THESE QSOs ARE SCORED BUT NOT LOGGED, so the
+               export, import and totals sections do not see them and kept
+               every byte.
+
+    initialexchange
+               (M11 S0c) LAST, after totals: InitialExchangeEntry for a fixed
+               list of calls, four times -- with no call-history file, with
+               the matrix's own (MATRIX-TRMASTER.DTA, never the shipped one),
+               with that file AND the logged history a reload puts in the
+               callsigns list, and with all that AND a custom initial
+               exchange string. See CaptureInitialExchange for why each pass
+               needs what it does (plan findings F17 and F18).
+
   NOT CAPTURED, deliberately: Cabrillo header lines other than CONTEST: and,
   since M6, CLAIMED-SCORE: (the rest carry the build version or the
   operator's categories, which belong to M9), and the other identity readers
@@ -170,6 +192,8 @@ uses
      function every display and export reads. *)
    uMults,
    LogEdit,
+   (* THE initialexchange SECTION (M11 S0c): the call-history database. *)
+   LogSCP,
    MainUnit;
 
 type
@@ -1391,6 +1415,157 @@ begin
 end;
 
 (* ------------------------------------------------------------------------ *)
+(* /MATRIX -- keys (M11 S0c)                                                *)
+(* ------------------------------------------------------------------------ *)
+
+const
+   (* THE KEY QSOs -- calls the 17 above never reach. M11 moves the bodies of
+     SetPrefix and GetDXQTH into the classes (plan stages S3 and S4), and an
+     arm that never meets a call it acts on is pinned only on its "not mine"
+     branch. Each of these is one of those calls:
+
+       ON4ABC                 Belgium -- UBA's prefixes and its European list
+       YB1ABC                 Indonesia -- the YB DX districts
+       JT1ABC                 Mongolia -- JT DX's prefixes and its no-JT list
+       SM5ABC LA1ABC OH2ABC   Scandinavia -- the SAC districts; OH0 is the
+       OH0ABC OX3ABC          one that district rule treats apart
+       UA9ABC UA0ABC          Asiatic Russia -- WAE's call regions, and the
+                              PACC split (reachable only from a PA entrant,
+                              which the matrix does not run)
+       RK1G                   on the Gagarin Cup's own station list
+       I1ABC IS0ABC           Italy and Sardinia -- ARI's no-I list
+       LZ1ABC UR5ABC          the Black Sea countries
+       9A2ABC                 Croatia
+       KL7ABC                 Alaska -- the two lists that exclude KL7
+       HB9ABC OK1ABC          Switzerland and the Czech Republic
+
+     Every call resolves through the shipped CTY.DAT, and BuildQSO gives it
+     the same lookup and fields it gives the 17 above. The record numbers them
+     on from the last of those (18, 19, ...).
+
+     CHANGING THIS LIST CHANGES EVERY keys SECTION. A re-freeze with a
+     reason, like any other. *)
+   MATRIX_KEY_QSOS: array[1..19] of TMatrixQSO =
+      (
+      (Call: 'ON4ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 14; Sparse: False),
+      (Call: 'YB1ABC'; Band: Band15;  Mode: CW;      Ext: eCW;   FreqHz: 21025000;  QTH: '';   Zone: 28; Sparse: False),
+      (Call: 'JT1ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 23; Sparse: False),
+      (Call: 'SM5ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 14; Sparse: False),
+      (Call: 'LA1ABC'; Band: Band40;  Mode: CW;      Ext: eCW;   FreqHz: 7025000;   QTH: '';   Zone: 14; Sparse: False),
+      (Call: 'OH2ABC'; Band: Band20;  Mode: Phone;   Ext: eUSB;  FreqHz: 14250000;  QTH: '';   Zone: 15; Sparse: False),
+      (Call: 'OH0ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 15; Sparse: False),
+      (Call: 'OX3ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 40; Sparse: False),
+      (Call: 'UA9ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 17; Sparse: False),
+      (Call: 'UA0ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 18; Sparse: False),
+      (Call: 'RK1G';   Band: Band40;  Mode: CW;      Ext: eCW;   FreqHz: 7025000;   QTH: '';   Zone: 16; Sparse: False),
+      (Call: 'I1ABC';  Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 15; Sparse: False),
+      (Call: 'IS0ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 15; Sparse: False),
+      (Call: 'LZ1ABC'; Band: Band40;  Mode: CW;      Ext: eCW;   FreqHz: 7025000;   QTH: '';   Zone: 20; Sparse: False),
+      (Call: 'UR5ABC'; Band: Band40;  Mode: CW;      Ext: eCW;   FreqHz: 7025000;   QTH: '';   Zone: 16; Sparse: False),
+      (Call: '9A2ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 15; Sparse: False),
+      (Call: 'KL7ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 1;  Sparse: False),
+      (Call: 'HB9ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 14; Sparse: False),
+      (Call: 'OK1ABC'; Band: Band20;  Mode: CW;      Ext: eCW;   FreqHz: 14025000;  QTH: '';   Zone: 15; Sparse: False)
+      );
+
+   (* THE KEY EXCHANGES -- QTH texts GetDomQTH's arms read that the 66 above
+     do not carry: an IOTA reference three ways (the arm takes two letters
+     and up to three digits, so the dashed form is the one it refuses), a DOK
+     alone and after a serial, a six-character grid square (the square arm's
+     second length), a two-letter grid field (which the field arm refuses --
+     it reads four characters), and an RDA district one digit short.
+
+     CHANGING THIS LIST CHANGES EVERY keys SECTION. *)
+   MATRIX_KEY_PARSE_CASES: array[1..8] of TMatrixParseCase =
+      (
+      (Name: 'iota';              Call: 'G3ABC';  Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123 EU005'),
+      (Name: 'iota.dash';         Call: 'G3ABC';  Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 123 EU-005'),
+      (Name: 'iota.short';        Call: 'G3ABC';  Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 EU5'),
+      (Name: 'dok';               Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '599 A01'),
+      (Name: 'serial.dok';        Call: 'DL1ABC'; Band: Band40; Mode: CW;    FreqHz: 7025000;  Exch: '599 123 A01'),
+      (Name: 'grid6';             Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 FN31PR'),
+      (Name: 'grid.field';        Call: 'W1AW';   Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 FN'),
+      (Name: 'rda.short';         Call: 'UA3ABC'; Band: Band20; Mode: CW;    FreqHz: 14025000; Exch: '599 MO1')
+      );
+
+(* THE FIELDS SetUpExchangeInformation MARKED, by name, in the record's own
+  order. Start-up runs it once on the session's exchange shape
+  (uProgramMain); LOGSTUFF and the history renders read the result. *)
+function ExchangeFieldsText: string;
+
+   procedure Add(aSet: boolean; const aName: string);
+   begin
+      if aSet then
+         begin
+         Result := Result + ' ' + aName;
+         end;
+   end;
+
+begin
+   Result := '';
+   Add(ExchangeInformation.Age, 'Age');
+   Add(ExchangeInformation.Chapter, 'Chapter');
+   Add(ExchangeInformation.Check, 'Check');
+   Add(ExchangeInformation.ClassEI, 'ClassEI');
+   Add(ExchangeInformation.FOCNumber, 'FOCNumber');
+   Add(ExchangeInformation.Kids, 'Kids');
+   Add(ExchangeInformation.Name, 'Name');
+   Add(ExchangeInformation.Power, 'Power');
+   Add(ExchangeInformation.Precedence, 'Precedence');
+   Add(ExchangeInformation.QSONumber, 'QSONumber');
+   Add(ExchangeInformation.QTH, 'QTH');
+   Add(ExchangeInformation.RandomChars, 'RandomChars');
+   Add(ExchangeInformation.RST, 'RST');
+   Add(ExchangeInformation.TenTenNum, 'TenTenNum');
+   Add(ExchangeInformation.Zone, 'Zone');
+   Add(ExchangeInformation.ZoneOrSociety, 'ZoneOrSociety');
+   Result := Trim(Result);
+end;
+
+(* THE KEY FUNCTIONS' INPUTS AND OUTPUTS, appended for M11 (plan S0c).
+
+  BETWEEN parse AND totals, and NOTHING HERE IS LOGGED: the QSOs are scored
+  through RecomputeQSOScoring -- SetPrefix, GetDXQTH, the sheet's flags and
+  the class's points, as the scoring section scores -- and never appended to
+  the log, so the export, the import read-back and the totals reload describe
+  exactly the log they described before this section existed. Each is scored
+  against the same untouched sheet the scoring section used. *)
+procedure CaptureKeys;
+var
+   i: integer;
+   n: integer;
+   rx: ContestExchange;
+   first, second: string;
+begin
+   Emit('== keys');
+   EmitField('exchange.fields', ExchangeFieldsText);
+   (* SET WHEN THE SESSION COUNTS ZONES (SetUpRemainingMultiplierArrays,
+     which LoadinLog runs); otherwise the global's start-up value. *)
+   EmitField('zones.max', IntToStr(MaxNumberOfZones));
+
+   for i := Low(MATRIX_KEY_QSOS) to High(MATRIX_KEY_QSOS) do
+      begin
+      n := High(MATRIX_QSOS) + i;
+      try
+         BuildQSO(n, MATRIX_KEY_QSOS[i], rx);
+         RecomputeQSOScoring(rx);
+         Emit(ScoreLine(n, MATRIX_KEY_QSOS[i], rx));
+      except
+         on E: Exception do
+            begin
+            EmitRaised(Format('qso %.2d', [n]), E);
+            end;
+      end;
+      end;
+
+   DomesticFileKeys(first, second);
+   for i := Low(MATRIX_KEY_PARSE_CASES) to High(MATRIX_KEY_PARSE_CASES) do
+      begin
+      ParseOne(MATRIX_KEY_PARSE_CASES[i], first, second);
+      end;
+end;
+
+(* ------------------------------------------------------------------------ *)
 (* /MATRIX -- totals (M6)                                                   *)
 (* ------------------------------------------------------------------------ *)
 
@@ -1495,6 +1670,176 @@ begin
    EmitField('totals.cabrillo', CabrilloClaimedScoreLine(cabrilloFile));
 end;
 
+(* ------------------------------------------------------------------------ *)
+(* /MATRIX -- initialexchange (M11 S0c)                                     *)
+(* ------------------------------------------------------------------------ *)
+
+const
+   (* THE MATRIX'S OWN CALL-HISTORY FILE, as matrix-lib.sh copies it into the
+     run directory. Not named TRMASTER.DTA, so FCONTEST's own resolution
+     never finds it. *)
+   MATRIX_TRMASTER_FILE = 'MATRIX-TRMASTER.DTA';
+
+   (* CALLS ASKED ABOUT WHICH NEITHER QSO TABLE CARRIES: a Russian call
+     (the oblast rules), an R3 special-event call (the OZ-CR exception), and
+     a call the matrix's call-history file knows that no QSO logs. *)
+   MATRIX_EXTRA_PROBE_CALLS: array[1..3] of string = ('UA3ABC', 'R35AB', 'K9ABC');
+
+   (* EVERY COMMAND THE CUSTOM ARM READS, in its own order. Nothing the
+     matrix runs states a CUSTOM INITIAL EXCHANGE STRING, so without this the
+     Custom arm meets only an empty one. *)
+   MATRIX_CUSTOM_INITIAL_EXCHANGE =
+      'CQZONE ITUZONE NAME QTH SECTION USER1 USER2 USER3 USER4 USER5 GRID FOC CHECK OLDCALL TENTEN';
+
+(* ONE InitialExchangeEntry, text or what it raised. The value is quoted
+  in the record, spaces included: a leading space is how the routine tells
+  the window where the cursor goes. *)
+function ProbeInitialExchange(const aCall: string): string;
+begin
+   try
+      Result := string(InitialExchangeEntry(ShortString(aCall)));
+   except
+      on E: Exception do
+         begin
+         Result := '<RAISED ' + E.ClassName + '>';
+         LogCaughtException('[Matrix] initialexchange ' + aCall, E);
+         end;
+   end;
+end;
+
+(* WHAT THE ENTRY WINDOW WOULD BE OFFERED FOR A CALL -- InitialExchangeEntry,
+  the routine typing a call runs (LOGEDIT), under three conditions:
+
+    none      no call-history file and no logged history. THE PROGRAM ALONE
+              CANNOT GIVE MORE THAN THIS HEADLESS: CD.MasterFileExists is set
+              in uProgramMain AFTER the /MATRIX halt (plan F17), so the
+              shipped TRMASTER.DTA is never opened. The one exception is a
+              contest whose set-up builds the operator-name set
+              (InitOperatorNameSet sets the flag itself); the flag is
+              recorded as the program left it, then cleared for this pass.
+    trmaster  the matrix's OWN call-history file (MATRIX-TRMASTER.DTA, see
+              make-trmaster-fixture.py), opened here and only here -- the
+              assignment uProgramMain makes, aimed at a file that changes
+              only when someone means it to. Never the shipped file, which
+              is refreshed monthly and would move every record.
+    logged    that file AND the logged QSOs' history. LoadinLog adds a QSO's
+              initial exchange to the callsigns list only while
+              IntitialExLoaded is False, and start-up's load of the empty
+              log latched it (plan F18), so the totals reload added none.
+              The latch is cleared and the log loaded again -- what opening
+              a non-empty log does at start-up.
+    custom    all of that AND a CUSTOM INITIAL EXCHANGE STRING naming every
+              command the Custom arm reads (restored afterwards). Only a
+              session whose initial exchange is Custom reads the string; for
+              every other this column repeats the one before it.
+
+  LAST, after totals, because each pass changes what the next one sees and
+  none may reach a section before it. The calls are the scoring section's
+  (each once, in order), the keys section's, then three more. *)
+procedure CaptureInitialExchange;
+var
+   calls: TStringList;
+   none, trm, logged, custom: TStringList;
+   i: integer;
+   fixture: string;
+   fixtureOpened: boolean;
+   savedCustom: string;
+
+   procedure AddCall(const aCall: string);
+   begin
+      if calls.IndexOf(AnsiString(aCall)) < 0 then
+         begin
+         calls.Add(AnsiString(aCall));
+         end;
+   end;
+
+   procedure Probe(aInto: TStringList);
+   var
+      j: integer;
+   begin
+      for j := 0 to calls.Count - 1 do
+         begin
+         aInto.Add(AnsiString(ProbeInitialExchange(string(calls[j]))));
+         end;
+   end;
+
+begin
+   Emit('== initialexchange');
+
+   calls := TStringList.Create;
+   none := TStringList.Create;
+   trm := TStringList.Create;
+   logged := TStringList.Create;
+   custom := TStringList.Create;
+   try
+      for i := Low(MATRIX_QSOS) to High(MATRIX_QSOS) do
+         begin
+         AddCall(MATRIX_QSOS[i].Call);
+         end;
+      for i := Low(MATRIX_KEY_QSOS) to High(MATRIX_KEY_QSOS) do
+         begin
+         AddCall(MATRIX_KEY_QSOS[i].Call);
+         end;
+      for i := Low(MATRIX_EXTRA_PROBE_CALLS) to High(MATRIX_EXTRA_PROBE_CALLS) do
+         begin
+         AddCall(MATRIX_EXTRA_PROBE_CALLS[i]);
+         end;
+
+      EmitField('initialexchange.trmaster.program', BoolText(CD.MasterFileExists));
+      (* AN INDEX ALREADY READ CANNOT BE SWAPPED: LoadInIndexArray answers
+        from it for ever after. Nothing the matrix runs reads one before this
+        point; if something ever does, the record says so rather than
+        describing a file it did not read. *)
+      EmitField('initialexchange.trmaster.indexopen', BoolText(CD.TRMasterFileOpen));
+
+      CD.MasterFileExists := False;
+      Probe(none);
+
+      fixture := IncludeTrailingPathDelimiter(GLogDir) + MATRIX_TRMASTER_FILE;
+      fixtureOpened := (not CD.TRMasterFileOpen) and FileExists(fixture);
+      if fixtureOpened then
+         begin
+         SetCharBuffer(CD.ActiveFilename, fixture);
+         CD.MasterFileExists := True;
+         CD.ClearDataEntry(CD.LastCallRecord);
+         end;
+      EmitField('initialexchange.trmaster.fixture', BoolText(fixtureOpened));
+      Probe(trm);
+
+      try
+         IntitialExLoaded := False;
+         LoadinLog;
+      except
+         on E: Exception do
+            begin
+            EmitRaised('initialexchange LoadinLog', E);
+            end;
+      end;
+      Probe(logged);
+
+      savedCustom := Settings.Contest.CustomInitialExchangeString;
+      try
+         Settings.Contest.CustomInitialExchangeString := MATRIX_CUSTOM_INITIAL_EXCHANGE;
+         Probe(custom);
+      finally
+         Settings.Contest.CustomInitialExchangeString := savedCustom;
+      end;
+
+      for i := 0 to calls.Count - 1 do
+         begin
+         Emit(Format('iex %s | none="%s" trmaster="%s" logged="%s" custom="%s"',
+                     [string(calls[i]), string(none[i]), string(trm[i]),
+                      string(logged[i]), string(custom[i])]));
+         end;
+   finally
+      calls.Free;
+      none.Free;
+      trm.Free;
+      logged.Free;
+      custom.Free;
+   end;
+end;
+
 function RunContestMatrix(const aOutFile: string;
                           const aRequested: string): integer;
 var
@@ -1559,15 +1904,38 @@ begin
             end;
       end;
 
-      (* LAST, for the same reason: M6's freeze appended it, and every section
-        above it kept its bytes. It reloads the log, so nothing may follow it
-        that expects the session as the sections above left it. *)
+      (* M11 S0c: AFTER parse and BEFORE totals. It logs nothing, so totals
+        reloads the same log and keeps its bytes; every section above it is
+        untouched. *)
+      try
+         CaptureKeys;
+      except
+         on E: Exception do
+            begin
+            EmitRaised('keys', E);
+            end;
+      end;
+
+      (* M6's freeze appended it, and every section above it kept its bytes.
+        It reloads the log, so nothing may follow it that expects the session
+        as the sections above left it. *)
       try
          CaptureTotals;
       except
          on E: Exception do
             begin
             EmitRaised('totals', E);
+            end;
+      end;
+
+      (* M11 S0c: LAST of all. It opens a call-history file and reloads the
+        log with history, both of which would reach any section after it. *)
+      try
+         CaptureInitialExchange;
+      except
+         on E: Exception do
+            begin
+            EmitRaised('initialexchange', E);
             end;
       end;
 

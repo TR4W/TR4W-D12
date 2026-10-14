@@ -24,7 +24,10 @@
 #                           ADIF records the real exporters produce, and
 #                           what the ADIF import makes of those records and of
 #                           synthetic foreign-logger ones, and what live
-#                           entry makes of 66 typed exchanges
+#                           entry makes of 66 typed exchanges; and (M11 S0c)
+#                           the key functions on 19 more QSOs and 8 more
+#                           exchanges, and the initial exchange offered for
+#                           33 calls, from the matrix's OWN call-history file
 #
 # It sees ADIF IMPORT (M5a): the records the export wrote, plus synthetic
 # foreign-logger records, read back through the real import path.  And it sees

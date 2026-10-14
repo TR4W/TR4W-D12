@@ -233,6 +233,36 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Improper zone number!
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/16/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="Improper zone number!!" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/11/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=FALSE err="Improper zone number!!" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=75 cty=F/14/Europe/F5 dxqth=F
+== keys
+exchange.fields = RST Zone
+zones.max = 40
+qso 18 ON4ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=ON qthzone=14 cont=Europe qthpfx=ON4 pfx= dxqth=ON dommultqth= domqth= zone=14
+qso 19 YB1ABC Band15 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=YB qthzone=28 cont=Oceania qthpfx=YB1 pfx= dxqth=YB dommultqth= domqth= zone=28
+qso 20 JT1ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=JT qthzone=23 cont=Asia qthpfx=JT1 pfx= dxqth=JT dommultqth= domqth= zone=23
+qso 21 SM5ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=SM qthzone=14 cont=Europe qthpfx=SM5 pfx= dxqth=SM dommultqth= domqth= zone=14
+qso 22 LA1ABC Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=LA qthzone=14 cont=Europe qthpfx=LA1 pfx= dxqth=LA dommultqth= domqth= zone=14
+qso 23 OH2ABC Band20 Phone/eUSB full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OH qthzone=15 cont=Europe qthpfx=OH2 pfx= dxqth=OH dommultqth= domqth= zone=15
+qso 24 OH0ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OH0 qthzone=15 cont=Europe qthpfx=OH0 pfx= dxqth=OH0 dommultqth= domqth= zone=15
+qso 25 OX3ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OX qthzone=40 cont=NorthAmerica qthpfx=OX3 pfx= dxqth=OX dommultqth= domqth= zone=40
+qso 26 UA9ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA9 qthzone=17 cont=Asia qthpfx=UA9 pfx= dxqth=UA9 dommultqth= domqth= zone=17
+qso 27 UA0ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA9 qthzone=17 cont=Asia qthpfx=UA0 pfx= dxqth=UA9 dommultqth= domqth= zone=18
+qso 28 RK1G Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA qthzone=16 cont=Europe qthpfx=RK1 pfx= dxqth=UA dommultqth= domqth= zone=16
+qso 29 I1ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=I qthzone=15 cont=Europe qthpfx=I1 pfx= dxqth=I dommultqth= domqth= zone=15
+qso 30 IS0ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=IS qthzone=15 cont=Europe qthpfx=IS0 pfx= dxqth=IS dommultqth= domqth= zone=15
+qso 31 LZ1ABC Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=LZ qthzone=20 cont=Europe qthpfx=LZ1 pfx= dxqth=LZ dommultqth= domqth= zone=20
+qso 32 UR5ABC Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UR qthzone=16 cont=Europe qthpfx=UR5 pfx= dxqth=UR dommultqth= domqth= zone=16
+qso 33 9A2ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=9A qthzone=15 cont=Europe qthpfx=9A2 pfx= dxqth=9A dommultqth= domqth= zone=15
+qso 34 KL7ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth=KL dommultqth= domqth= zone=1
+qso 35 HB9ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=HB qthzone=14 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
+qso 36 OK1ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OK qthzone=15 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
+parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse iota.short G3ABC Band20/CW "599 EU5" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse dok DL1ABC Band40/CW "599 A01" | ok=FALSE err="Improper zone number!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/14/Europe/DL1 dxqth=DL
+parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=FALSE err="Improper zone number!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/14/Europe/DL1 dxqth=DL
+parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper zone number!!" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=F/14/Europe/FN31 dxqth=F
+parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper zone number!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/5/NorthAmerica/W1 dxqth=K
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/16/Europe/UA3 dxqth=UA
 == totals
 totals.qsopoints = 28
 totals.qtcs = 0
@@ -293,6 +323,43 @@ totals.mults AllBands Phone = dom=0 dx=8 zone=8 pfx=0
 totals.mults AllBands Both = dom=0 dx=17 zone=17 pfx=0
 totals.totalscore = 952
 totals.cabrillo = CLAIMED-SCORE: 952
+== initialexchange
+initialexchange.trmaster.program = FALSE
+initialexchange.trmaster.indexopen = FALSE
+initialexchange.trmaster.fixture = TRUE
+iex W1AW | none=" 5" trmaster=" 5" logged=" 0 " custom=" 0 "
+iex K4ABC | none=" 5" trmaster=" 5" logged=" 5 " custom=" 5 "
+iex VE3ABC | none=" 4" trmaster=" 4" logged=" 4 " custom=" 4 "
+iex XE1ABC | none=" 6" trmaster=" 6" logged=" 6 " custom=" 6 "
+iex G3ABC | none=" 14" trmaster=" 14" logged=" 0 " custom=" 0 "
+iex DL1ABC | none=" 14" trmaster=" 14" logged=" 14 " custom=" 14 "
+iex JA1ABC | none=" 25" trmaster=" 25" logged=" 25 " custom=" 25 "
+iex PY2ABC | none=" 11" trmaster=" 11" logged=" 11 " custom=" 11 "
+iex VK2ABC | none=" 30" trmaster=" 30" logged=" 30 " custom=" 30 "
+iex ZS6ABC | none=" 38" trmaster=" 38" logged=" 38 " custom=" 38 "
+iex KH6ABC | none=" 31" trmaster=" 31" logged=" 31 " custom=" 31 "
+iex ON4ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex YB1ABC | none=" 28" trmaster=" 28" logged=" 28" custom=" 28"
+iex JT1ABC | none=" 23" trmaster=" 23" logged=" 23" custom=" 23"
+iex SM5ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex LA1ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex OH2ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex OH0ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex OX3ABC | none=" 40" trmaster=" 40" logged=" 40" custom=" 40"
+iex UA9ABC | none=" 17" trmaster=" 18" logged=" 18" custom=" 18"
+iex UA0ABC | none=" 18" trmaster=" 18" logged=" 18" custom=" 18"
+iex RK1G | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex I1ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex IS0ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex LZ1ABC | none=" 20" trmaster=" 20" logged=" 20" custom=" 20"
+iex UR5ABC | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex 9A2ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex KL7ABC | none=" 1" trmaster=" 1" logged=" 1" custom=" 1"
+iex HB9ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex OK1ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex UA3ABC | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex R35AB | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex K9ABC | none=" 4" trmaster=" 4" logged=" 4" custom=" 4"
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
 contest.requested = 46 GACWWWSACW
@@ -528,6 +595,36 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Improper zone number!
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/16/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="Improper zone number!!" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/11/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=FALSE err="Improper zone number!!" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=75 cty=F/14/Europe/F5 dxqth=F
+== keys
+exchange.fields = RST Zone
+zones.max = 40
+qso 18 ON4ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=ON qthzone=14 cont=Europe qthpfx=ON4 pfx= dxqth=ON dommultqth= domqth= zone=14
+qso 19 YB1ABC Band15 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=YB qthzone=28 cont=Oceania qthpfx=YB1 pfx= dxqth=YB dommultqth= domqth= zone=28
+qso 20 JT1ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=JT qthzone=23 cont=Asia qthpfx=JT1 pfx= dxqth=JT dommultqth= domqth= zone=23
+qso 21 SM5ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=SM qthzone=14 cont=Europe qthpfx=SM5 pfx= dxqth=SM dommultqth= domqth= zone=14
+qso 22 LA1ABC Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=LA qthzone=14 cont=Europe qthpfx=LA1 pfx= dxqth=LA dommultqth= domqth= zone=14
+qso 23 OH2ABC Band20 Phone/eUSB full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OH qthzone=15 cont=Europe qthpfx=OH2 pfx= dxqth=OH dommultqth= domqth= zone=15
+qso 24 OH0ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OH0 qthzone=15 cont=Europe qthpfx=OH0 pfx= dxqth=OH0 dommultqth= domqth= zone=15
+qso 25 OX3ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OX qthzone=40 cont=NorthAmerica qthpfx=OX3 pfx= dxqth=OX dommultqth= domqth= zone=40
+qso 26 UA9ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA9 qthzone=17 cont=Asia qthpfx=UA9 pfx= dxqth=UA9 dommultqth= domqth= zone=17
+qso 27 UA0ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA9 qthzone=17 cont=Asia qthpfx=UA0 pfx= dxqth=UA9 dommultqth= domqth= zone=18
+qso 28 RK1G Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA qthzone=16 cont=Europe qthpfx=RK1 pfx= dxqth=UA dommultqth= domqth= zone=16
+qso 29 I1ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=I qthzone=15 cont=Europe qthpfx=I1 pfx= dxqth=I dommultqth= domqth= zone=15
+qso 30 IS0ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=IS qthzone=15 cont=Europe qthpfx=IS0 pfx= dxqth=IS dommultqth= domqth= zone=15
+qso 31 LZ1ABC Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=LZ qthzone=20 cont=Europe qthpfx=LZ1 pfx= dxqth=LZ dommultqth= domqth= zone=20
+qso 32 UR5ABC Band40 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UR qthzone=16 cont=Europe qthpfx=UR5 pfx= dxqth=UR dommultqth= domqth= zone=16
+qso 33 9A2ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=9A qthzone=15 cont=Europe qthpfx=9A2 pfx= dxqth=9A dommultqth= domqth= zone=15
+qso 34 KL7ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth=KL dommultqth= domqth= zone=1
+qso 35 HB9ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=HB qthzone=14 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
+qso 36 OK1ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OK qthzone=15 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
+parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse iota.short G3ABC Band20/CW "599 EU5" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse dok DL1ABC Band40/CW "599 A01" | ok=FALSE err="Improper zone number!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/14/Europe/DL1 dxqth=DL
+parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=FALSE err="Improper zone number!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/14/Europe/DL1 dxqth=DL
+parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper zone number!!" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=F/14/Europe/FN31 dxqth=F
+parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper zone number!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/5/NorthAmerica/W1 dxqth=K
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/16/Europe/UA3 dxqth=UA
 == totals
 totals.qsopoints = 34
 totals.qtcs = 0
@@ -588,6 +685,43 @@ totals.mults AllBands Phone = dom=0 dx=8 zone=8 pfx=0
 totals.mults AllBands Both = dom=0 dx=17 zone=17 pfx=0
 totals.totalscore = 1156
 totals.cabrillo = CLAIMED-SCORE: 1156
+== initialexchange
+initialexchange.trmaster.program = FALSE
+initialexchange.trmaster.indexopen = FALSE
+initialexchange.trmaster.fixture = TRUE
+iex W1AW | none=" 5" trmaster=" 5" logged=" 0 " custom=" 0 "
+iex K4ABC | none=" 5" trmaster=" 5" logged=" 5 " custom=" 5 "
+iex VE3ABC | none=" 4" trmaster=" 4" logged=" 4 " custom=" 4 "
+iex XE1ABC | none=" 6" trmaster=" 6" logged=" 6 " custom=" 6 "
+iex G3ABC | none=" 14" trmaster=" 14" logged=" 0 " custom=" 0 "
+iex DL1ABC | none=" 14" trmaster=" 14" logged=" 14 " custom=" 14 "
+iex JA1ABC | none=" 25" trmaster=" 25" logged=" 25 " custom=" 25 "
+iex PY2ABC | none=" 11" trmaster=" 11" logged=" 11 " custom=" 11 "
+iex VK2ABC | none=" 30" trmaster=" 30" logged=" 30 " custom=" 30 "
+iex ZS6ABC | none=" 38" trmaster=" 38" logged=" 38 " custom=" 38 "
+iex KH6ABC | none=" 31" trmaster=" 31" logged=" 31 " custom=" 31 "
+iex ON4ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex YB1ABC | none=" 28" trmaster=" 28" logged=" 28" custom=" 28"
+iex JT1ABC | none=" 23" trmaster=" 23" logged=" 23" custom=" 23"
+iex SM5ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex LA1ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex OH2ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex OH0ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex OX3ABC | none=" 40" trmaster=" 40" logged=" 40" custom=" 40"
+iex UA9ABC | none=" 17" trmaster=" 18" logged=" 18" custom=" 18"
+iex UA0ABC | none=" 18" trmaster=" 18" logged=" 18" custom=" 18"
+iex RK1G | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex I1ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex IS0ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex LZ1ABC | none=" 20" trmaster=" 20" logged=" 20" custom=" 20"
+iex UR5ABC | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex 9A2ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex KL7ABC | none=" 1" trmaster=" 1" logged=" 1" custom=" 1"
+iex HB9ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex OK1ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex UA3ABC | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex R35AB | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex K9ABC | none=" 4" trmaster=" 4" logged=" 4" custom=" 4"
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
 contest.requested = 46 GACWWWSACW
@@ -821,6 +955,36 @@ parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Improper zone number!
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/16/Europe/UA3 dxqth=UA
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="Improper zone number!!" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/11/SouthAmerica/PY2 dxqth=PY
 parse f.department F5ABC Band20/CW "599 75" | ok=FALSE err="Improper zone number!!" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=75 cty=F/14/Europe/F5 dxqth=F
+== keys
+exchange.fields = RST Zone
+zones.max = 40
+qso 18 ON4ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=ON qthzone=14 cont=Europe qthpfx=ON4 pfx= dxqth=ON dommultqth= domqth= zone=14
+qso 19 YB1ABC Band15 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=YB qthzone=28 cont=Oceania qthpfx=YB1 pfx= dxqth=YB dommultqth= domqth= zone=28
+qso 20 JT1ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=JT qthzone=23 cont=Asia qthpfx=JT1 pfx= dxqth=JT dommultqth= domqth= zone=23
+qso 21 SM5ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=SM qthzone=14 cont=Europe qthpfx=SM5 pfx= dxqth=SM dommultqth= domqth= zone=14
+qso 22 LA1ABC Band40 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=LA qthzone=14 cont=Europe qthpfx=LA1 pfx= dxqth=LA dommultqth= domqth= zone=14
+qso 23 OH2ABC Band20 Phone/eUSB full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OH qthzone=15 cont=Europe qthpfx=OH2 pfx= dxqth=OH dommultqth= domqth= zone=15
+qso 24 OH0ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OH0 qthzone=15 cont=Europe qthpfx=OH0 pfx= dxqth=OH0 dommultqth= domqth= zone=15
+qso 25 OX3ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OX qthzone=40 cont=NorthAmerica qthpfx=OX3 pfx= dxqth=OX dommultqth= domqth= zone=40
+qso 26 UA9ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA9 qthzone=17 cont=Asia qthpfx=UA9 pfx= dxqth=UA9 dommultqth= domqth= zone=17
+qso 27 UA0ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA9 qthzone=17 cont=Asia qthpfx=UA0 pfx= dxqth=UA9 dommultqth= domqth= zone=18
+qso 28 RK1G Band40 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UA qthzone=16 cont=Europe qthpfx=RK1 pfx= dxqth=UA dommultqth= domqth= zone=16
+qso 29 I1ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=I qthzone=15 cont=Europe qthpfx=I1 pfx= dxqth=I dommultqth= domqth= zone=15
+qso 30 IS0ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=IS qthzone=15 cont=Europe qthpfx=IS0 pfx= dxqth=IS dommultqth= domqth= zone=15
+qso 31 LZ1ABC Band40 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=LZ qthzone=20 cont=Europe qthpfx=LZ1 pfx= dxqth=LZ dommultqth= domqth= zone=20
+qso 32 UR5ABC Band40 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=UR qthzone=16 cont=Europe qthpfx=UR5 pfx= dxqth=UR dommultqth= domqth= zone=16
+qso 33 9A2ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=9A qthzone=15 cont=Europe qthpfx=9A2 pfx= dxqth=9A dommultqth= domqth= zone=15
+qso 34 KL7ABC Band20 CW/eCW full | pts=3 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth=KL dommultqth= domqth= zone=1
+qso 35 HB9ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=HB qthzone=14 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
+qso 36 OK1ABC Band20 CW/eCW full | pts=1 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/TRUE cty=OK qthzone=15 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
+parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse iota.short G3ABC Band20/CW "599 EU5" | ok=FALSE err="Improper zone number!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/14/Europe/G3 dxqth=G
+parse dok DL1ABC Band40/CW "599 A01" | ok=FALSE err="Improper zone number!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/14/Europe/DL1 dxqth=DL
+parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=FALSE err="Improper zone number!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/14/Europe/DL1 dxqth=DL
+parse grid6 W1AW Band20/CW "599 FN31PR" | ok=FALSE err="Improper zone number!!" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=F/14/Europe/FN31 dxqth=F
+parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper zone number!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/5/NorthAmerica/W1 dxqth=K
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="Improper zone number!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/16/Europe/UA3 dxqth=UA
 == totals
 totals.qsopoints = 46
 totals.qtcs = 0
@@ -881,3 +1045,40 @@ totals.mults AllBands Phone = dom=0 dx=8 zone=8 pfx=0
 totals.mults AllBands Both = dom=0 dx=17 zone=17 pfx=0
 totals.totalscore = 1564
 totals.cabrillo = CLAIMED-SCORE: 1564
+== initialexchange
+initialexchange.trmaster.program = FALSE
+initialexchange.trmaster.indexopen = FALSE
+initialexchange.trmaster.fixture = TRUE
+iex W1AW | none=" 5" trmaster=" 5" logged=" 0 " custom=" 0 "
+iex K4ABC | none=" 5" trmaster=" 5" logged=" 5 " custom=" 5 "
+iex VE3ABC | none=" 4" trmaster=" 4" logged=" 4 " custom=" 4 "
+iex XE1ABC | none=" 6" trmaster=" 6" logged=" 6 " custom=" 6 "
+iex G3ABC | none=" 14" trmaster=" 14" logged=" 0 " custom=" 0 "
+iex DL1ABC | none=" 14" trmaster=" 14" logged=" 14 " custom=" 14 "
+iex JA1ABC | none=" 25" trmaster=" 25" logged=" 25 " custom=" 25 "
+iex PY2ABC | none=" 11" trmaster=" 11" logged=" 11 " custom=" 11 "
+iex VK2ABC | none=" 30" trmaster=" 30" logged=" 30 " custom=" 30 "
+iex ZS6ABC | none=" 38" trmaster=" 38" logged=" 38 " custom=" 38 "
+iex KH6ABC | none=" 31" trmaster=" 31" logged=" 31 " custom=" 31 "
+iex ON4ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex YB1ABC | none=" 28" trmaster=" 28" logged=" 28" custom=" 28"
+iex JT1ABC | none=" 23" trmaster=" 23" logged=" 23" custom=" 23"
+iex SM5ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex LA1ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex OH2ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex OH0ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex OX3ABC | none=" 40" trmaster=" 40" logged=" 40" custom=" 40"
+iex UA9ABC | none=" 17" trmaster=" 18" logged=" 18" custom=" 18"
+iex UA0ABC | none=" 18" trmaster=" 18" logged=" 18" custom=" 18"
+iex RK1G | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex I1ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex IS0ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex LZ1ABC | none=" 20" trmaster=" 20" logged=" 20" custom=" 20"
+iex UR5ABC | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex 9A2ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex KL7ABC | none=" 1" trmaster=" 1" logged=" 1" custom=" 1"
+iex HB9ABC | none=" 14" trmaster=" 14" logged=" 14" custom=" 14"
+iex OK1ABC | none=" 15" trmaster=" 15" logged=" 15" custom=" 15"
+iex UA3ABC | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex R35AB | none=" 16" trmaster=" 16" logged=" 16" custom=" 16"
+iex K9ABC | none=" 4" trmaster=" 4" logged=" 4" custom=" 4"

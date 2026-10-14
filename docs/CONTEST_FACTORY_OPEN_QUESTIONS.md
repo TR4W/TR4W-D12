@@ -523,9 +523,18 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   multipliers) ARE rules and M11 deletes them either way.
   *Recommended: keep it, documented as shapes -- like CountryModeType
   and ZoneModeType, it describes data, not a rule.*
-  **Answer:**
+  **Answer (NY4I, 2026-10-14): OPTION 2 -- the CLASS chooses, explicitly.** Not
+  the recommendation above. The four shape `case`s become plain named
+  helper functions (e.g. `ADIFRstAndState(rst, state)`), and each class's
+  `FormatADIF*` / `FormatCabrillo*` / parse / field-list override CALLS the
+  helper it wants -- once on a family base where a family shares one.
+  The enum stops selecting anything, which is what design §1.3 already
+  says ("a helper is never selected ... by an enum"). Shared formats stay
+  in one place, so there are no copies. Asked by NY4I while reading
+  `uADIFExchange.pas:357`: "Shouldn't the ADIF process call the contest
+  class and ask it to build the exchange for ADIF and Cabrillo?"
 
-- **Q93** If Q92 is yes: should the 20 shapes that exactly one contest uses
+- **Q93** (MOOT under Q92's option 2 -- every shape becomes a helper a class calls, so a single-contest shape is simply a helper with one caller; nothing extra moves.) Originally: if Q92 is yes: should the 20 shapes that exactly one contest uses
   still move into their contest (about 80 arms, one contest per commit)?
   It buys a smaller vocabulary, not ownership.
   *Recommended: no, unless you want the vocabulary small.*

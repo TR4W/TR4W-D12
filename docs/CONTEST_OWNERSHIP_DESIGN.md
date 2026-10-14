@@ -3575,6 +3575,8 @@ and the tables, not the kind enums.
 
 ### 8.2t M11 -- the staged plan (2026-10-14)
 
+**Q92 RULED (NY4I, 2026-10-14): the class chooses its exchange format explicitly.** The four exchange-shape `case`s (parser, field list, ADIF, Cabrillo) become plain named helper functions, and each class's own overrides call the helper it wants -- once on a family base where a whole family shares one. No enum selects a helper, as §1.3 already requires; shared formats stay in one place, so nothing is copied. This is M11's S9 (re-planned), and S10 is moot.
+
 M11 runs as the staged plan in
 [`CONTEST_FACTORY_M11_PLAN.md`](CONTEST_FACTORY_M11_PLAN.md) (S0-S10), which
 carries the measurements, the commands (`tools/contest-factory-m11/`) and the

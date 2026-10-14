@@ -33,7 +33,12 @@ artifacts; a contest class that computes points wrongly can pass all 24
 comparisons. `tr4w/test/corpus/test-contest-factory.sh` sees scoring over the 13
 corpus logs, and **the contest matrix** (`tr4w/test/contest-matrix/run-contest-matrix.sh`,
 M0, 2026-10-01) sees set-up, scoring, export, ADIF import (M5a) and typed-exchange
-parsing (M5b) for **every** `ContestType` on synthetic QSOs. Run them, and say which ones you ran. **Never re-freeze the matrix
+parsing (M5b) for **every** `ContestType` on synthetic QSOs -- and since M11 S0c
+its `keys` section (19 more QSOs and 8 more exchanges, scored and parsed but NOT
+logged, so export/import/totals are untouched) and its `initialexchange` section
+(`InitialExchangeEntry` with no file, with the matrix's OWN
+`MATRIX-TRMASTER.DTA` -- never the shipped one -- with logged history, and with a
+custom string). Run them, and say which ones you ran. **Never re-freeze the matrix
 to clear a red run** -- `freeze-contest-matrix.sh` demands a written reason.
 
 This is mid-flight work. The engine (`src/trdos/`) still owns most behaviour —

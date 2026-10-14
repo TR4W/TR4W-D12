@@ -49,6 +49,12 @@
 #     memories, so its presence there refuses the run.
 #   * Times are fixed in the QSO table; the one clock-derived setting (CONTEST
 #     TITLE) is left out; machine paths are replaced in the program.
+#   * THE CALL-HISTORY FILE IS THE MATRIX'S OWN (M11 S0c): MATRIX-TRMASTER.DTA,
+#     built from trmaster-fixture.txt by make-trmaster-fixture.py, copied into
+#     each run directory under that name -- NOT as TRMASTER.DTA, so the
+#     program's own file resolution never finds it. Only the record's
+#     initialexchange section opens it (uContestMatrix), so no record depends
+#     on the shipped TRMASTER.DTA, which is refreshed monthly.
 #   Two consecutive runs are byte-identical -- that was checked when the
 #   matrix was first frozen, and the compare would expose any drift since.
 set -u
@@ -57,6 +63,7 @@ MATRIX_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 MATRIX_DIR="$MATRIX_REPO_ROOT/tr4w/test/contest-matrix"
 MATRIX_FROZEN="$MATRIX_DIR/frozen"
 MATRIX_SETTINGS="$MATRIX_DIR/settings/tr4w.json"
+MATRIX_TRMASTER="$MATRIX_DIR/MATRIX-TRMASTER.DTA"
 MATRIX_TARGET="$MATRIX_REPO_ROOT/tr4w/target"
 MATRIX_EXE_SRC="$MATRIX_REPO_ROOT/build-out/app-i386-win32/tr4w_fpc.exe"
 MATRIX_EXE="matrix-run.exe"
@@ -93,6 +100,11 @@ matrix_preflight(){
    if [ ! -f "$MATRIX_SETTINGS" ]; then
       echo "contest-matrix: the settings fixture $MATRIX_SETTINGS is missing" >&2
       echo "                -- it is tracked, so the checkout is incomplete." >&2
+      return 1
+   fi
+   if [ ! -f "$MATRIX_TRMASTER" ]; then
+      echo "contest-matrix: the call-history fixture $MATRIX_TRMASTER is missing" >&2
+      echo "                -- it is tracked (make-trmaster-fixture.py writes it)." >&2
       return 1
    fi
    if ls "$MATRIX_TARGET"/[Cc][Oo][Mm][Mm][Oo][Nn][Mm][Ee][Ss][Ss][Aa][Gg][Ee][Ss].[Ii][Nn][Ii] >/dev/null 2>&1; then
@@ -150,6 +162,7 @@ matrix_run_one(){
    mkdir -p "$run" || return 1
    matrix_write_cfg "$run/MATRIX.CFG" "$call" "$state" "$section" "$grid" "$spelling"
    cp "$MATRIX_SETTINGS" "$run/tr4w.json" || return 1
+   cp "$MATRIX_TRMASTER" "$run/MATRIX-TRMASTER.DTA" || return 1
 
    ( cd "$MATRIX_TARGET" && MSYS_NO_PATHCONV=1 timeout 60 "./$MATRIX_EXE" \
         "$(cygpath -w "$run/MATRIX.CFG")" /MATRIX "$(cygpath -w "$run/out.matrix")" \
