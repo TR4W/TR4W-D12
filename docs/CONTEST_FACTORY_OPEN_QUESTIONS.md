@@ -254,7 +254,7 @@ Three groups:
 
 - **Q6** POTA as a contest class, following the General QSO precedent. Its park
   "n-fer" is stored the same way as a county line. *Recommended: yes.*
-  **Answer:**
+  **Answer:** **RULED 2026-10-13 (NY4I): YES -- POTA becomes a contest class.** "While it is not a contest per se, just like with GENERAL QSO, we treat it that way."
 
 - **Q7** Apply the NRAU pattern (a base + CW/SSB children) to every two-mode pair?
   So far only NRAU-Baltic has it; NA Sprint CW/RTTY and the other pairs are
@@ -380,6 +380,7 @@ Three groups:
 | Q | Answer | Where it landed |
 |---|---|---|
 | Q4 | Retire all seven shared-set settings at the endpoint; user-defined contests to be revisited another way | M10 |
+| Q6 | POTA becomes a contest class, treated like General QSO | M10 prerequisite |
 | Q1 | Field Day has no multipliers; DX is never an ARRL section | M2 |
 | Q2 | No interim fix for the rotated point-method spellings | design 7.2 |
 | Q3 | The log stores only what the operator stated | M2a (decided under delegation) |

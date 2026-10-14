@@ -2943,6 +2943,7 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   recorded as missing? The bonuses-as-data shape (§5) is recommended.
   **CLOSED: IMPLEMENTED at M6** (§8.2h) on the sponsor's current rules -- 500
   once per mode, CW and phone, a single-mode entry once.
+- **Q6** **RULED 2026-10-13 (NY4I): YES -- POTA becomes a contest class.** "While it is not a contest per se, just like with GENERAL QSO, we treat it that way." Original question follows.
 - **Q6** (C7). POTA as a contest class (recommended, §6), keeping the root name
   `TContestBase`, with "contest" meaning "an operating event with rules" as
   `ContestType` already does?
