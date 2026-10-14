@@ -1431,10 +1431,28 @@ end;
 
    THE FUNCTION IS KEPT RATHER THAN THE CALL SITES REPOINTED, because the name
    is what documents the intent at the two places that use it and it is named
-   in the ADIF verifier's README. It is a wrapper now, not a table. *)
+   in the ADIF verifier's README.
+
+   IT ASKS THE CONTEST SINCE M10 S6, and asks its QSOPartyArea, NOT its
+   HostState. VC.USQSOPartyStateName -- the table read this replaced, now
+   deleted -- answered the QSOParties entry's StateName when that was two
+   letters, else ''. QSOPartyArea IS that StateName for every contest
+   (Test_MovedRowValuesStillMatchTheArray), so the same two-letter test on
+   it gives byte-identical export. HostState would NOT: British Columbia
+   states 'BC' while its area is 'VE7', so asking HostState would start
+   writing STATE and CNTY on every BCQP QSO. That may well be right -- ADIF's
+   STATE holds a Canadian province -- but it is a behaviour change, and it
+   is an open question for NY4I, not a side effect of removing a table. *)
 function GetStateForContest(c: ContestType): string;
+var
+   area: string;
 begin
-   Result := USQSOPartyStateName(c);
+   Result := '';
+   area := ContestIdentity(c).QSOPartyArea;
+   if Length(area) = 2 then
+      begin
+      Result := area;
+      end;
 end;
 
 function EmitADIFField(const name, value: string): string;

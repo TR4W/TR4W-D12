@@ -750,10 +750,11 @@ end;
        statements);
     2. otherwise what the CONTEST says -- aContest, which is
        uContestRegistry.ContestIdentity: the registered class, or a plain
-       TContestBase reading the row for a contest that has none.
+       TContestBase for the one contest that has none (DUMMYCONTEST).
   Never ContestsArray or ContestsBooleanArray directly: the class is the
-  single source, and its getters default to the arrays until it states its
-  own.
+  single source. Every class states its own values (M10 S5), and since
+  M10 S6 the base's getters read no table -- they answer DUMMYCONTEST's
+  neutral row.
 
   WHAT CHANGED, AND WHAT DID NOT. Before M2 the head copied the arrays and an
   operator's statement won only because it was APPLIED LATER -- a .cfg line

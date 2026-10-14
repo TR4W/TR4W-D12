@@ -195,7 +195,7 @@ begin
    BeginTest('Test_DelawareIsAnAppendedStateParty');
    CheckEquals(Ord(IDAHOQSOPARTY) + 1, Ord(DELAWAREQSOPARTY), 'appended right after Idaho');
    CheckEquals('DELAWARE QSO PARTY', string(ContestTypeSA[DELAWAREQSOPARTY]), 'the config spelling');
-   CheckEquals('DE', USQSOPartyStateName(DELAWAREQSOPARTY), 'its QSOParties entry names DE');
+   CheckEquals('DE', ContestIdentity(DELAWAREQSOPARTY).HostState, 'it states DE');
 
    CheckTrue(ContestClassFor(DELAWAREQSOPARTY) = TContestDelawareQP, 'registered');
    contestObject := Make(DELAWAREQSOPARTY);

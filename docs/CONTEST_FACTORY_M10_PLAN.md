@@ -649,6 +649,89 @@ As planned:
 
 ### S6 -- The base stops reading the tables; every outside reader asks the class
 
+**DONE 2026-10-14** (on top of `337656c3`). Re-measured first
+(`count-ids.ps1 -Lines -Ids @('ContestsArray','ContestsBooleanArray','QSOParties','QSOPartyAreaName','USQSOPartyStateName')`
+over all of `tr4w/`, tests, `.lpr` and tools included). As planned, with these
+corrections and decisions:
+
+* **The neutral constants, field by field against DUMMYCONTEST's row**
+  (`VC.pas` `ContestsArray[DUMMYCONTEST]` and `ContestsBooleanArray[DUMMYCONTEST]`):
+  `CABName ''`/`ADIFName ''`/`FriendlyName ''` -> the base answers the
+  enum's spelling, which is what the two-step gave for a blank; `WA7BNM 0000`
+  -> 0; `QRZRUID 0` -> 0; `Email ''`, `DF ''` -> `''`; `PxM NoPrefixMults`,
+  `ZnM NoZoneMults`, `XM NoDXMults`, `DM NoDomesticMults`,
+  `AIE NoInitialExchange`, `AE UnknownExchange` -> those members by name;
+  `P 0` -> `IsUSQSOParty` False, `HostState`, `InStateDomesticFileName` and
+  `QSOPartyArea` `''` (each of the three table readers answered `''` for
+  `P = 0`); the word `ciCDC0 + ciCQZoneMode0 + ciVHFEnabled0 + ciErmak0 +
+  ciQB0 + ciQM0 + ciMB0 + ciMM0` (every `ci*0` is `= 0`, no RTC term) -> `Flags`
+  `[]`, so `ZoneMode` stays `ITUZoneMode`. `CountyLineAllowed` is omitted from
+  the row (False) and is not a base getter (S7). `uContestBase` now reads no
+  table; `ContestTypeSA` stays.
+* **`USQSOPartyStateName` and `QSOPartyAreaName` are DELETED** (VC and the base).
+  `DescribeNewContestPrompts` asks `QSOPartyArea`.
+* **CORRECTION -- `uADIF:1437` must NOT become `HostState`.** It would change
+  British Columbia's export: the class states `HostState` `'BC'` (S5's named
+  pin mismatch) while its area -- the table's `StateName` -- is `'VE7'`, so
+  `GetStateForContest` would start writing `<STATE:2>BC` (and `CNTY`) on every
+  BCQP QSO, and the frozen `BCQP.matrix` has none. It asks the class's
+  `QSOPartyArea` with the SAME two-letter test the deleted function applied --
+  equal to the table read for every contest, because the S0 pin holds
+  `QSOPartyArea` = `StateName`. **Open for NY4I:** ADIF's STATE carries a
+  Canadian province, so `BC` is probably right; it is a decision, not a side
+  effect of S6. `uContestBritishColumbiaQP`'s header says the same.
+* **CORRECTION -- `postunit:477` is repointed to the CLASS, not the session.**
+  This section said "the session's zone kind (F4)". The class's value equals
+  the row's (S0 pin), so `ContestIdentity(Contest).ZoneMultiplierType` changes
+  nothing; the session would be a behaviour change folded into a table
+  removal. **F4 stands, for S9:** `ZoneSentForThisContest` asks the
+  contest's zone kind and the ADIF CQZ/ITUZ block (`postunit` `ActiveZoneMult`)
+  the session's -- two answers to one question. Recorded in the routine's
+  header and in `known-divergences.txt`'s IARU note.
+* **The matrix's contest list changed in one field, its records in none.**
+  Field 4 was the row's party index `P`; the class carries no index, so it is
+  `1`/`0` from `IsUSQSOParty`. `matrix-lib.sh` only ever tests it `!= "0"`
+  and `IsUSQSOParty = (P <> 0)` for every contest (S0 pin), so the same
+  variants run. `DF` -> `DomesticFileName`, host -> `QSOPartyArea` (both
+  pinned equal). The list is a scratch file, not a frozen record.
+* **Outside readers repointed:** `MainUnit` ERMAK menu ->
+  `ContestIdentity(Contest).ErmakSpecification`; `uHamScore.ContactInfoUploadAllowed`
+  -> `ContestIdentity(RXData.ceContest).RTCCapable` (after the `oaScorePosting`
+  gate, untouched); `postunit.ZoneSentForThisContest`; `uContestMatrix`'s
+  `/MATRIXLIST`; `uADIF.GetStateForContest`.
+* **Tests that asked a plain `TContestBase` for a ROW value** -- found by
+  reading every `TContestBase.Create(` in the tests, because after S6 the base
+  answers neutral and such a check would either fail or pass vacuously:
+  `Test_FieldDayHasNoDXMultiplier` and `uTestContestSession`'s Field Day check
+  read `ContestsArray[..].XM` directly (S8 deletes those lines);
+  `Test_NRAUAndJockWhiteRowsAreNotShifted` asks the registered class.
+  `Test_HostStateDerivationIsTheOneTable`, Idaho's and Delaware's checks
+  repointed from `USQSOPartyStateName` to `HostState` and
+  `GetStateForContest` -- including BCQP: HostState `'BC'`, export `''`.
+* **No class was relying on the base's table read**: the S0 pin is green with
+  the base neutral. **Unit run: 88307 passed, 0 failed.**
+* **Table readers left after S6** (code-only): `VC.pas` (the three
+  declarations); `uContestRegistry.ContestAllowsCountyLineOnImport` (S7);
+  `uADIF.ResolveRoverCall` `.CountyLineAllowed` (S7 decides); tests --
+  `Test_MovedRowValuesStillMatchTheArray` (the S0 pin), the county-line pins
+  (`Test_MichiganForbidsCountyLineAgainstTheArray`, the class-vs-row
+  county-line test), `Test_IdentityIsWhatTheExportersWroteBeforeM1`,
+  `Test_ZoneModeIsCQOrITUForEveryContest`, `Test_FieldDayHasNoDXMultiplier`,
+  `uTestContestSession`'s Field Day check, `uTestContestDisplay.ExpectedHead`,
+  `uTestADIFFixtures`; `test/logdump/logdump.lpr` (S8, ungated). Tooling:
+  `Lint-DomCoverage.ps1` and `tools/contest-rules-inventory/model.py` PARSE
+  `VC.pas`'s tables -- S8 must give them another source.
+* **Not done:** the matrix, corpus, factory check, `Run-Lints` and a full build
+  (the gated run). The incremental app compile stopped at the known
+  "Internal error 200306067" (`MainUnit.pas(491,1)`), so `uContestMatrix` and
+  its whole cone (MainUnit, postunit, uHamScore) were compiled separately
+  with the App search paths into a scratch directory: 0 errors.
+  `Lint-NoContestTables` (3 of 3 allow-listed tables found) and
+  `Lint-ContestNameTests` (6 in 3 files, no rise) were run on their own.
+  Regenerate the contest-rules inventory after the commit.
+
+As planned:
+
 * **Files:** `uContestBase` getters -> neutral constants (DUMMYCONTEST's row;
   name getters -> `ContestTypeSA` spelling); `MainUnit:4512` ->
   `ContestIdentity(Contest)` ERMAK flag; `uHamScore:969` -> RTC flag;
@@ -743,6 +826,8 @@ The first commit adds `uContestSession` and the writer.
 * **F4.** `postunit.pas:477` `ZoneSentForThisContest` reads the ROW's `ZnM`,
   not the session's `ActiveZoneMult` that the ADIF CQZ/ITUZ block
   (`postunit.pas:2404-2416`) reads. Two answers to one question.
+  **S6 repointed it to the CLASS's `ZoneMultiplierType` (equal to the row),
+  not to the session -- the inconsistency is unchanged and is S9's.**
 * **F5.** `uSettingsEffects.pas:365-377`: the contest's CTY country mode is
   derived from `ActiveDXMult` in the CONTEST *setting's* arm, after
   `FoundContest` set it to ARRL at its head (`fcontest.pas:840`). A set-up

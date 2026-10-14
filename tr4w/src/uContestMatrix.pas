@@ -353,7 +353,9 @@ function RunContestMatrixList(const aOutFile: string): integer;
 var
    list: TStringList;
    c: ContestType;
+   identity: TContestBase;
    hostState: string;
+   partyFlag: string;
 begin
    if aOutFile = '' then
       begin
@@ -372,10 +374,22 @@ begin
         skipping it by position keeps this unit free of any contest name. *)
       for c := Succ(Low(ContestType)) to High(ContestType) do
          begin
-         hostState := '';
-         if ContestsArray[c].P <> 0 then
+         (* EVERY FIELD IS ASKED OF THE CONTEST (M10 S6). The fourth field
+           was the row's party index P and is now 1 or 0 -- whether the
+           contest is a QSO party. matrix-lib.sh only ever tested it against
+           "0", and IsUSQSOParty is P <> 0 for every contest
+           (Test_MovedRowValuesStillMatchTheArray), so the variants run and
+           the records they produce are unchanged. The sixth is the party's
+           area, which is the QSOParties StateName this read. *)
+         identity := ContestIdentity(c);
+         hostState := identity.QSOPartyArea;
+         if identity.IsUSQSOParty then
             begin
-            hostState := QSOParties[ContestsArray[c].P].StateName;
+            partyFlag := '1';
+            end
+         else
+            begin
+            partyFlag := '0';
             end;
          (* '|', NOT A TAB. A shell reading with IFS=tab collapses two
            adjacent tabs into one, so an EMPTY field -- Colorado's DF -- moved
@@ -384,8 +398,8 @@ begin
          list.Add(AnsiString(IntToStr(Ord(c)) + '|' +
                   EnumText(TypeInfo(ContestType), Ord(c)) + '|' +
                   ContestTypeSA[c] + '|' +
-                  IntToStr(ContestsArray[c].P) + '|' +
-                  ContestsArray[c].DF + '|' +
+                  partyFlag + '|' +
+                  identity.DomesticFileName + '|' +
                   hostState));
          end;
 

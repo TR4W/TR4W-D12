@@ -24,7 +24,7 @@
 #
 # THE STATION VARIANTS, AND WHY THESE FOUR
 #   us       K0AAA, Kansas.  A US station that is the host of no state party.
-#   us-host  ONLY for a contest with a host state (ContestsArray P <> 0).
+#   us-host  ONLY for a QSO party (the list's fourth field, IsUSQSOParty, is 1).
 #            MY STATE is the FIRST KEY of the contest's domestic file -- what
 #            FoundMyStateInDomFile tests MY STATE against -- or, when the row
 #            names no file, the host state itself.  The call is VE7AAA (grid

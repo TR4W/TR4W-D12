@@ -951,7 +951,7 @@ end;
 
 // Issue #931 -- gate per-QSO contact-info uploads on:
 //   1. The CFG override (HAMSCORE SEND CONTACT INFO, default TRUE)
-//   2. The contest being marked RTC-capable in ContestsBooleanArray
+//   2. The contest stating itself RTC-capable (its class's RTCCapable)
 // <dynamicresults> score posts remain unaffected (handled elsewhere).
 function ContactInfoUploadAllowed(const RXData: ContestExchange): Boolean;
    begin
@@ -966,7 +966,10 @@ function ContactInfoUploadAllowed(const RXData: ContestExchange): Boolean;
       Result := False;
       Exit;
       end;
-   Result := (ContestsBooleanArray[RXData.ceContest] and (1 shl RTC_CAPABLE_BIT)) <> 0;
+   (* THE QSO'S CONTEST SAYS WHETHER IT TAKES THE UPLOAD (M10 S6) -- it read
+      ContestsBooleanArray's RTC_CAPABLE_BIT, which the class's flag set
+      states. *)
+   Result := ContestIdentity(RXData.ceContest).RTCCapable;
    end;
 
 procedure HamScoreOnLog(const RXData: ContestExchange);

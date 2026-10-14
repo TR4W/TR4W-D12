@@ -476,6 +476,16 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   both use?
   **Answer:**
 
+- **Q89** British Columbia QSO Party ADIF export: TR4W writes NO `STATE`
+  (and no `CNTY`) for a BCQP QSO, because the old table named BC's area
+  `VE7` -- not two letters -- and the export only writes a two-letter
+  state. The BC class itself says its host is `BC`, and ADIF's `STATE`
+  field does carry Canadian provinces. Should BCQP export `STATE:BC` (and
+  the county) like the US parties do? M10 S6 deliberately kept today's
+  output; this would change BCQP's ADIF, so it waits for you.
+  *Recommended: yes, export BC.*
+  **Answer:**
+
 ---
 
 ## 2. Design (recommendation given; "accept" is enough)

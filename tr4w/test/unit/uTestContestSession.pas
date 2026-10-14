@@ -375,15 +375,11 @@ procedure TContestSessionTests.Test_FieldDayDXMultipliersAreWhatTheSessionRuns;
 
    procedure Check(aContest: ContestType; aExpected: DXMultType);
    var
-      row: TContestBase;
       session: TSessionDefaults;
    begin
-      row := TContestBase.Create(aContest);
-      try
-         CheckTrue(row.DXMultiplierType = aExpected, ContestTypeSA[aContest] + ': the row');
-      finally
-         row.Free;
-         end;
+      (* THE ROW ITSELF, read directly: a plain TContestBase stopped reading
+         the table at M10 S6. Plan S8 deletes the row and this line. *)
+      CheckTrue(ContestsArray[aContest].XM = aExpected, ContestTypeSA[aContest] + ': the row');
       CheckTrue(ContestIdentity(aContest).DXMultiplierType = aExpected,
                 ContestTypeSA[aContest] + ': the class');
       session := Describe(aContest, KansasStation);

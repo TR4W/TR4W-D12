@@ -134,6 +134,16 @@ multipliers, CTY.DAT, band lookup and CRC32.
   `uTestContestExport.Test_RoundTripThroughTodaysImport` pins export against
   import, WAG's DOK and the RSGB IOTA's IOTA included (M5a: both are read
   back by their classes).
+- **A QSO party's ADIF `STATE`/`CNTY` and the Cabrillo sent zone ask the
+  CONTEST, not a table (M10 S6, 2026-10-14).** `uADIF.GetStateForContest`
+  (read by `EmitADIFRecord` and PostUnit's CNTY) is the class's
+  `QSOPartyArea` when it is two letters -- deliberately NOT `HostState`:
+  British Columbia states 'BC' but its area is 'VE7', and asking HostState
+  would start writing STATE/CNTY on every BCQP QSO (open for NY4I).
+  `postunit.ZoneSentForThisContest` asks the contest's `ZoneMultiplierType`
+  while the ADIF CQZ/ITUZ block asks the SESSION's `ActiveZoneMult` -- two
+  answers to one question, kept as-is and left for M10 S9 (plan F4).
+  `uADIF.ResolveRoverCall` still reads the row's `CountyLineAllowed` (S7).
 - **THE ADIF IMPORT IS GENERIC FIRST, THEN THE CONTEST'S (M5a, 2026-10-01).**
   `uADIF.ApplyADIFFieldsToExchange` is contest-blind: it maps the standard tags
   and captures every tag whose meaning is the contest's into

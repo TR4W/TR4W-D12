@@ -204,15 +204,14 @@ the target shape, the M-step migration order and the open questions.
   it moved under the class while the formula did not; see design §8.2h.
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(c)` answers for EVERY `ContestType` --
-  the class, else a plain `TContestBase` reading the row; never nil, owned by
+  the class, else a plain `TContestBase` (only DUMMYCONTEST); never nil, owned by
   the registry, thread-safe, and carrying no station (ask it what a contest
   IS, never to score). The Cabrillo `CONTEST:` line, ADIF `CONTEST_ID`, both
   UDP broadcasts, both score-posting clients, the external logger, the
   summary sheet, the log database's friendly name and the calendar menus all
-  ask it. `CabrilloName`, `ADIFContestId` and `FriendlyName` are each "the
-  row's field, else the enum's spelling", stated ONCE in the base -- do not
-  restate that fallback at a call site, and do not transcribe a blank as `''`
-  in a class. `ADIFContestId` is what export writes AND what import matches,
+  ask it. `CabrilloName`, `ADIFContestId` and `FriendlyName` default to the
+  enum's spelling, stated ONCE in the base -- do not restate that fallback at
+  a call site, and do not transcribe a blank as `''` in a class. `ADIFContestId` is what export writes AND what import matches,
   which closed inventory D9. Use `ActiveContest` (nil for a classless
   contest) only for behaviour. **Since M9a every class STATES
   `DisplayName`, `CabrilloName` and `ADIFContestId` itself** (NY4I's ruling)
@@ -240,7 +239,16 @@ the target shape, the M-step migration order and the open questions.
   pair families state it on their base); the per-flag getters are not
   virtual. Every party states `InStateDomesticFileName`, and
   `QSOPartyArea` (the prompt's area) is its HostState on the state-party
-  base. A QSO party's
+  base. **Since M10 S6 THE BASE READS NO TABLE**: its row getters answer
+  DUMMYCONTEST's neutral row (`[]`, `No*Mults`, `UnknownExchange`, `''`, 0,
+  the enum's spelling), so a value a class does not state is NEUTRAL, not its
+  row; `VC.USQSOPartyStateName` and `QSOPartyAreaName` are deleted, and the
+  outside readers (MainUnit ERMAK, uHamScore RTC, `postunit.ZoneSentForThisContest`,
+  `/MATRIXLIST`, `uADIF.GetStateForContest`) ask the class. ADIF STATE asks
+  `QSOPartyArea` with a two-letter test, NOT `HostState` -- BCQP states 'BC'
+  but its area is 'VE7', and HostState would add STATE to its export (an open
+  question for NY4I, plan S6). Left reading the row: county-line import (S7)
+  and `uADIF.ResolveRoverCall`. A QSO party's
   `DomesticFileName` is its COUNTY file (out-of-state load, in-state test);
   `Test_EveryQSOPartyNamesBothDomesticFiles` holds the two names together.
   In-state detection reads it through `uAppPaths.ShippedDomFilePath` and
@@ -341,8 +349,7 @@ the target shape, the M-step migration order and the open questions.
   canvas or a global. Seams: `DescribeNewContestPrompts(TNewContestPrompts)`
   -- the New Contest dialog's two `case`s, ordered steps (rows go out in the
   order asked, the last comment wins), the QSO-party head on the base from
-  the QSOParties AREA (not `HostState`, which is two letters only: 7QP's
-  '7th area'); `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
+  `QSOPartyArea` (not `HostState`: 7QP's area is '7th area'); `TotalsDisplay` (uTotal); `SummarySheet` (PostUnit);
   `ReportsRunningScore` (hour totals); `CabrilloContestName`,
   `RequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` (keyed on the
   Cabrillo tag NAME -- `CabrilloTags` is a UI unit's),

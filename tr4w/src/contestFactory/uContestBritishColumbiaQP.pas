@@ -63,18 +63,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ---------------------------------------------------------------------------
   ITS HOST STATE IS STATED AS 'BC' AND THE DERIVATION WOULD SAY NOTHING AT ALL.
 
-  VC.USQSOPartyStateName returns a StateName only when it is TWO characters, to
-  keep the multi-state and non-US rows ('7th area', 'IN7QPNE', 'VE7') out of an
-  ADIF STATE field. This party's StateName is the three-letter 'VE7', so the
-  derivation answers '' -- and TContestStateQSOPartyBase makes GetHostState
-  abstract precisely so a party cannot inherit a blank.
+  VC.USQSOPartyStateName (deleted at M10 S6) returned a StateName only when it
+  was TWO characters, to keep the multi-state and non-US rows ('7th area',
+  'IN7QPNE', 'VE7') out of an ADIF STATE field. This party's StateName is the
+  three-letter 'VE7', so the derivation answered '' -- and
+  TContestStateQSOPartyBase makes GetHostState abstract precisely so a party
+  cannot inherit a blank.
 
   'BC' is the province's postal code, which is what ADIF's STATE field carries
-  for a Canadian station. IT CHANGES NOTHING TODAY: uADIF calls
-  USQSOPartyStateName(c) directly and does not go through this class, so the
-  exporter still emits no STATE for a BCQP log. If that call site is ever
-  repointed at the contest object, this contest starts emitting STATE=BC --
-  which is probably right and is NY4I's to confirm.
+  for a Canadian station. IT CHANGES NOTHING TODAY: since M10 S6
+  uADIF.GetStateForContest asks this class's QSOPartyArea ('VE7') with the
+  same two-letter test, not its HostState, so the exporter still emits no
+  STATE for a BCQP log. Asking HostState there would start emitting STATE=BC
+  (and CNTY) -- which is probably right and is NY4I's to confirm.
 
   ---------------------------------------------------------------------------
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits

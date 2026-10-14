@@ -4508,9 +4508,10 @@ begin
         MenuItemById(menu_repeat_pota_parks).Visible := False;
         end;
      end;
-  // if ContestsArray[Contest].e <> 0 then
-  ErmakSpecification := ((ContestsBooleanArray[Contest] and (1 shl ERMAK_BIT))
-    <> 0) and (RussianID(Settings.My.Call));
+  (* THE CONTEST SAYS WHETHER IT OFFERS THE ERMAK SPECIFICATION (M10 S6); this
+     read ContestsBooleanArray's ERMAK_BIT, which the class's flag set states. *)
+  ErmakSpecification := ContestIdentity(Contest).ErmakSpecification and
+                        RussianID(Settings.My.Call);
 
   if ErmakSpecification then
      begin

@@ -26,6 +26,9 @@ interface
 
 uses
    SysUtils,
+   (* GetStateForContest -- the ADIF STATE a QSO party writes, asked of the
+      class since M10 S6. FIRST, so every later unit wins a shared name. *)
+   uADIF,
    (* Ceil and GetDistanceBetweenGrids -- the ARRL Digital distance rule is
       checked against the same geodesic the class uses, so the assertion pins
       the RULE rather than the geodesic's constants. *)
@@ -324,22 +327,39 @@ end;
 
 (* PROVES THE DRIFT FIX. PostUnit and uADIF each carried a hand-typed 13-arm
    case mapping a QSO party to its state, and New York was in neither -- so its
-   ADIF export emitted no STATE at all. The derivation reads ContestsArray's P
-   index, so NYQP answers whether or not anyone remembered it. *)
+   ADIF export emitted no STATE at all. The derivation read ContestsArray's P
+   index (VC.USQSOPartyStateName) until M10 S6; since then each party states
+   its HostState, and uADIF.GetStateForContest -- what export writes -- asks
+   the class's QSOPartyArea and keeps it only when it is two letters, which is
+   exactly what the table read answered.
+
+   BRITISH COLUMBIA IS THE ONE PLACE THE TWO DIFFER, AND THE EXPORT KEEPS ITS
+   OLD ANSWER. The class states HostState 'BC'; its area, and the table's
+   StateName, is 'VE7'. Export writes no STATE for BCQP, as it always has --
+   whether it should is NY4I's question, not a side effect of S6. *)
 procedure TContestFactoryTests.Test_HostStateDerivationIsTheOneTable;
 begin
    BeginTest('Test_HostStateDerivationIsTheOneTable');
-   CheckEquals('FL', USQSOPartyStateName(FLORIDAQSOPARTY), 'Florida');
-   CheckEquals('MI', USQSOPartyStateName(MICHQSOPARTY), 'Michigan');
-   CheckEquals('CA', USQSOPartyStateName(CALQSOPARTY), 'California');
+   CheckEquals('FL', ContestIdentity(FLORIDAQSOPARTY).HostState, 'Florida');
+   CheckEquals('MI', ContestIdentity(MICHQSOPARTY).HostState, 'Michigan');
+   CheckEquals('CA', ContestIdentity(CALQSOPARTY).HostState, 'California');
 
    (* Present in QSOParties, absent from BOTH hand-typed copies. *)
-   CheckEquals('NY', USQSOPartyStateName(NYQP),
+   CheckEquals('NY', ContestIdentity(NYQP).HostState,
                'New York -- the omission the derivation fixes');
 
-   (* Not a state QSO party at all: P is zero. *)
-   CheckEquals('', USQSOPartyStateName(CQWWCW), 'CQ WW CW has no host state');
-   CheckEquals('', USQSOPartyStateName(ARRLFIELDDAY), 'Field Day has none');
+   (* Not a state QSO party at all. *)
+   CheckEquals('', ContestIdentity(CQWWCW).HostState, 'CQ WW CW has no host state');
+   CheckEquals('', ContestIdentity(ARRLFIELDDAY).HostState, 'Field Day has none');
+
+   (* WHAT ADIF EXPORT WRITES. *)
+   CheckEquals('FL', GetStateForContest(FLORIDAQSOPARTY), 'export: Florida');
+   CheckEquals('NY', GetStateForContest(NYQP), 'export: New York');
+   CheckEquals('', GetStateForContest(CQWWCW), 'export: CQ WW CW writes no STATE');
+   CheckEquals('', GetStateForContest(SEVENQP), 'export: the 7QP''s area is not a state');
+   CheckEquals('BC', ContestIdentity(BCQP).HostState, 'British Columbia states BC');
+   CheckEquals('', GetStateForContest(BCQP),
+               'export: BCQP writes no STATE, as before M10 S6 (its area is VE7)');
 end;
 
 procedure TContestFactoryTests.Test_FloridaIsAStatePartyWithATwoCountyLimit;
@@ -1458,10 +1478,12 @@ begin
       obj.Free;
       end;
 
-   (* THE P INDEX REACHES THE SAME STATE, so the legacy reader and the class
-      agree -- and the row's ordinal place in QSOParties is right. *)
-   CheckEquals('ID', USQSOPartyStateName(IDAHOQSOPARTY),
-               'Idaho QSOParties entry names ID');
+   (* THE CLASS'S STATE IS WHAT EXPORT WRITES. That the row's P index reaches
+      the same entry is Test_MovedRowValuesStillMatchTheArray's to hold. *)
+   CheckEquals('ID', ContestIdentity(IDAHOQSOPARTY).HostState,
+               'Idaho states ID');
+   CheckEquals('ID', GetStateForContest(IDAHOQSOPARTY),
+               'Idaho''s ADIF STATE is ID');
    CheckEquals('IDAHO QSO PARTY', string(ContestTypeSA[IDAHOQSOPARTY]),
                'the spelling a .cfg names');
 
@@ -1781,7 +1803,7 @@ end;
    THE EXPECTED SIDE IS THE TABLE ITSELF, READ HERE, AND NEVER A TContestBase.
    Until S0 it was `TContestBase.Create(aContest)` -- the base's getters, which
    read the same table. For a class that inherits a value that compared the row
-   with itself, and it would have gone on agreeing after plan S6 turns the
+   with itself, and it would have gone on agreeing once M10 S6 turned the
    base's getters into neutral constants: both sides would become neutral
    together and a value S5 forgot to transcribe would pass. Reading
    ContestsArray, ContestsBooleanArray and QSOParties directly is what keeps
@@ -2572,9 +2594,11 @@ end;
    Field Day (https://www.nzart.org.nz/activities/contests/jwfd), ADIF and
    Cabrillo id JW-FD.
 
-   These are asked of a plain TContestBase -- the ROW. All three gained a
-   class at M3 (2026-10-01); Test_MovedRowValuesStillMatchTheArray holds each
-   class to this row, so the row is what is pinned here. *)
+   These were asked of a plain TContestBase -- the ROW -- until M10 S6, when
+   the base stopped reading the table. All three gained a class at M3
+   (2026-10-01), and the class is what every reader asks, so the class is
+   what is pinned here; Test_MovedRowValuesStillMatchTheArray holds each
+   class to its row until plan S8 deletes the rows. *)
 procedure TContestFactoryTests.Test_NRAUAndJockWhiteRowsAreNotShifted;
 
    procedure CheckRow(aContest: ContestType; const aFriendly: string;
@@ -2584,7 +2608,12 @@ procedure TContestFactoryTests.Test_NRAUAndJockWhiteRowsAreNotShifted;
       who: string;
    begin
       who := string(ContestTypeSA[aContest]);
-      row := TContestBase.Create(aContest);
+      row := MakeContest(aContest);
+      CheckTrue(row <> nil, who + ' has no registered class');
+      if row = nil then
+         begin
+         Exit;
+         end;
       try
          CheckEquals(aFriendly, row.FriendlyName, who + ' friendly name');
          CheckEquals(aWA7BNM, row.WA7BNMId, who + ' WA7BNM id');
@@ -2824,19 +2853,15 @@ end;
    NoDXMults. Class and row were both corrected before set-up began reading
    the class, so the value set-up starts from is the value it ends with. *)
 procedure TContestFactoryTests.Test_FieldDayHasNoDXMultiplier;
-var
-   row: TContestBase;
 begin
    BeginTest('Test_FieldDayHasNoDXMultiplier');
    CheckTrue(ContestIdentity(ARRLFIELDDAY).DXMultiplierType = NoDXMults,
              'the Field Day class states no DX multiplier');
-   row := TContestBase.Create(ARRLFIELDDAY);
-   try
-      CheckTrue(row.DXMultiplierType = NoDXMults,
-                'and the row agrees with it');
-   finally
-      row.Free;
-      end;
+   (* THE ROW ITSELF, read directly: a plain TContestBase stopped reading the
+      table at M10 S6 and would answer the neutral NoDXMults whatever the
+      row said. Plan S8 deletes the row and this line with it. *)
+   CheckTrue(ContestsArray[ARRLFIELDDAY].XM = NoDXMults,
+             'and the row agrees with it');
 end;
 
 (* M2 -- DEFECT #5 AND THE SHAPE SET-UP RELIES ON.

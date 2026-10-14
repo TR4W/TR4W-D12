@@ -1093,8 +1093,9 @@ type
 
       These were the nine bits of the contest's ContestsBooleanArray word,
       and the members are declared IN BIT ORDER (cfQSOByBand is bit 0,
-      cfRTCCapable bit 8) so the base's reading of the word stays a plain
-      loop until plan S6 deletes it. Each member answers the property of the
+      cfRTCCapable bit 8), so a set compares bit for bit with the word while
+      the word exists (plan S8 deletes it; the base stopped reading it at
+      M10 S6 and answers []). Each member answers the property of the
       same name on TContestBase:
 
         cfQSOByBand, cfQSOByMode       a station may be worked once per
@@ -1202,10 +1203,10 @@ type
          set, so there is one statement per contest and nothing to disagree
          with it.
 
-         THE BASE STILL READS THE ARRAY in S5, so a class that stated nothing
-         would answer as before; Test_MovedRowValuesStillMatchTheArray proves
-         every stated set equal to its row, bit by bit. Plan S6 makes the base
-         answer the empty set. *)
+         THE BASE ANSWERS THE EMPTY SET (M10 S6) -- DUMMYCONTEST's word, 0 --
+         and reads no table; Test_MovedRowValuesStillMatchTheArray proves
+         every stated set equal to its row, bit by bit, until plan S8 deletes
+         the row. *)
       function GetFlags: TContestFlags; virtual;
       function GetQSOByBand: boolean;
       function GetQSOByMode: boolean;
@@ -1234,9 +1235,9 @@ type
       (* A QSO PARTY'S OTHER DOMESTIC FILE -- the one an IN-STATE station
          loads. DomesticFileName is the file every other station loads: for a
          state party, the host's counties. '' for a contest that is not a QSO
-         party. Default: the QSOParties entry the row's P indexes, which is
-         where it was written down; since M10 S5 every one of the 22 contests
-         with an entry states its own file, and plan S6 makes this ''. *)
+         party. Default '' (M10 S6); it used to be the QSOParties entry the
+         row's P indexed, and since M10 S5 every one of the 22 contests with
+         an entry states its own file. *)
       function GetInStateDomesticFileName: string; virtual;
 
       (* THE AREA A QSO PARTY'S NEW CONTEST PROMPT NAMES -- M10 S5.
@@ -1244,13 +1245,13 @@ type
          The QSOParties entry's StateName: a two-letter state for a
          single-state party, and for the others what the dialog showed --
          the 7QP's '7th area', 'IN7QPNE', British Columbia's 'VE7'. NOT
-         HostState, which is two letters only (see the implementation's
-         QSOPartyAreaName).
-         '' for a contest that is not a QSO party. Default: that entry, read
-         through QSOPartyAreaName; TContestStateQSOPartyBase answers its
-         HostState, and the three that are not a two-letter state state their
-         own. NOTHING ASKS THIS YET: the base's DescribeNewContestPrompts still
-         calls QSOPartyAreaName, and plan S6 repoints it here. *)
+         HostState, which was two letters only when it was derived from the
+         table (VC.USQSOPartyStateName, deleted at M10 S6).
+         Default '' -- not a QSO party (M10 S6). TContestStateQSOPartyBase
+         answers its HostState, and the three that are not a two-letter state
+         state their own. ASKED BY: the base's DescribeNewContestPrompts,
+         uADIF.GetStateForContest (the two-letter ones only) and the
+         matrix's contest list -- all since M10 S6. *)
       function GetQSOPartyArea: string; virtual;
 
       (* THE LAST TWO BITS OF THE ROW'S FLAG WORD -- M10 S0, 2026-10-14.
@@ -1260,11 +1261,11 @@ type
          RTCCapable: the contest takes HamScore's real-time contact upload
          (uHamScore, RTC_CAPABLE_BIT).
 
-         Both are members of the set like the seven above. NOTHING ASKS THEM
-         YET: MainUnit and uHamScore still read ContestsBooleanArray, and plan
-         S6 repoints them here. They exist so that
-         Test_MovedRowValuesStillMatchTheArray pins the class's answer
-         against the table for every contest -- the matrix records neither. *)
+         Both are members of the set like the seven above. MainUnit's ERMAK
+         menu and uHamScore's contact upload ask them since M10 S6 (they read
+         ContestsBooleanArray before). Test_MovedRowValuesStillMatchTheArray
+         pins the class's answer against the table for every contest -- the
+         matrix records neither. *)
       function GetErmakSpecification: boolean;
       function GetRTCCapable: boolean;
 
@@ -1441,13 +1442,12 @@ type
          NY4I: "We also need something in the classes where we set the cabrillo
          name and adif name in the factory."
 
-         THEY DEFAULT TO ContestsArray, WHICH IS WHERE THEY LIVE TODAY -- so
-         moving a contest into the factory does not oblige it to restate three
-         things that are already correct, and a contest with no class still
-         answers. A class overrides when the table is wrong or empty for it.
-         That is the strangler again: the table is the current answer, the class
-         is the eventual one, and they can disagree only where somebody has
-         deliberately made them.
+         THEY DEFAULTED TO ContestsArray until M10 S6 -- the strangler: the
+         table was the current answer, the class the eventual one. Since M9a
+         every class states all three, and since M10 S6 the base answers the
+         enum's spelling and reads no table (DUMMYCONTEST, the one contest
+         with no class, has blank fields, so the spelling is what it always
+         answered).
 
          THESE GETTERS ARE THE ONLY ANSWER, SINCE M1 (2026-10-01). Every
          consumer outside the factory -- the Cabrillo header, ADIF export, the
@@ -1484,7 +1484,7 @@ type
          in the contest class."
 
          So every field of the row gets an accessor, not only the three
-         identifiers, and every one DEFAULTS TO THE ARRAY. That is what makes the
+         identifiers, and every one DEFAULTED TO THE ARRAY. That is what made the
          move incremental: a contest states what it wants to own and inherits the
          rest, and a contest with no class is unaffected because nothing reads
          these unless a class exists.
@@ -1502,8 +1502,10 @@ type
          SINCE M10 S5 (2026-10-14) NO REGISTERED CLASS INHERITS A NON-NEUTRAL
          VALUE from these defaults: the 15 that did (ARRL DX and SS, CQ WPX and
          WW, Florida, Michigan, General QSO, IARU, the NA Sprints, Winter Field
-         Day) state them in the leaf. The defaults still read the array until
-         plan S6 turns them into DUMMYCONTEST's neutral row. *)
+         Day) state them in the leaf. SINCE M10 S6 THE DEFAULTS READ NO TABLE:
+         each is a constant, and the constants are DUMMYCONTEST's neutral row
+         (see the implementation). The paragraphs above describe how the
+         accessors began. *)
                                                                               
       (* SCORING -- THE ONE PUBLIC ENTRY POINT (M3, 2026-10-01; design 7.7).
 
@@ -1923,8 +1925,8 @@ type
          `case SelectedContest of`, one arm per contest, moved line for line.
 
          THE BASE ASKS A US STATE QSO PARTY'S STATION FOR ITS COUNTY OR STATE,
-         in the words that name the party's area (the QSOParties entry, so the
-         7QP's '7th area' too), and asks nothing of any other contest -- the
+         in the words that name the party's area (QSOPartyArea since M10 S6,
+         so the 7QP's '7th area' too), and asks nothing of any other contest -- the
          head uNewContest ran before its `case`, keyed then on the row's P and
          now on the IsUSQSOParty trait. IN7QPNE's composite class does not
          override it, so it keeps this head. An override calls inherited when its
@@ -2363,31 +2365,29 @@ begin
    Result := string(ContestTypeSA[FContest]);
 end;
 
+(* THE NEUTRAL DEFAULTS -- M10 S6, 2026-10-14.
+
+   No getter below reads ContestsArray, ContestsBooleanArray or QSOParties.
+   Each answers a constant, and the constants ARE DUMMYCONTEST's row: blank
+   names (so the enum's spelling, which is what the old two-step gave for a
+   blank field), no calendar ids, no e-mail, no domestic file, NoPrefixMults,
+   NoZoneMults, NoInitialExchange, NoDomesticMults, P 0, UnknownExchange,
+   NoDXMults, a flag word of 0. DUMMYCONTEST -- the one contest with no class
+   -- therefore answers exactly what it did, and every registered contest
+   states its own values (M10 S5); Test_MovedRowValuesStillMatchTheArray
+   holds each class to its row until plan S8 deletes the tables. *)
+
 function TContestBase.GetCabrilloName: string;
 begin
-   (* PostUnit's rule, not just the field -- see the note on the declaration. *)
-   if Length(ContestsArray[FContest].CABName) = 0 then
-      begin
-      Result := string(ContestTypeSA[FContest]);
-      end
-   else
-      begin
-      Result := ContestsArray[FContest].CABName;
-      end;
+   (* The enum's spelling -- what PostUnit wrote for a blank CABName, and
+      DUMMYCONTEST's is blank. See the note on the declaration. *)
+   Result := string(ContestTypeSA[FContest]);
 end;
 
 function TContestBase.GetADIFContestId: string;
 begin
-   (* THE SAME TWO-STEP AS CabrilloName, and the ONE copy of it -- see the
-      note on the declaration. *)
-   if Length(ContestsArray[FContest].ADIFName) = 0 then
-      begin
-      Result := string(ContestTypeSA[FContest]);
-      end
-   else
-      begin
-      Result := ContestsArray[FContest].ADIFName;
-      end;
+   (* The same default as CabrilloName -- see the note on the declaration. *)
+   Result := string(ContestTypeSA[FContest]);
 end;
 
 function TContestBase.GetFormerADIFContestIds: TContestIdList;
@@ -2400,80 +2400,72 @@ end;
 
 function TContestBase.GetWA7BNMId: integer;
 begin
-   Result := ContestsArray[FContest].WA7BNM;
+   (* No calendar entry: 0 disables the calendar menu item. *)
+   Result := 0;
 end;
 
 function TContestBase.GetSubmissionEmail: string;
 begin
-   Result := ContestsArray[FContest].Email;
+   Result := '';
 end;
 
 function TContestBase.GetDomesticFileName: string;
 begin
-   Result := ContestsArray[FContest].DF;
+   Result := '';
 end;
 
 function TContestBase.GetFriendlyName: string;
 begin
-   (* Same two-step as CabrilloName: the array's own note says "If blank, use
+   (* Same default as CabrilloName: the array's own note said "If blank, use
       ContestTypeSA[ct]". *)
-   if Length(ContestsArray[FContest].FriendlyName) = 0 then
-      begin
-      Result := string(ContestTypeSA[FContest]);
-      end
-   else
-      begin
-      Result := ContestsArray[FContest].FriendlyName;
-      end;
+   Result := string(ContestTypeSA[FContest]);
 end;
 
 function TContestBase.GetQRZRUId: integer;
 begin
-   Result := ContestsArray[FContest].QRZRUID;
+   Result := 0;
 end;
 
 function TContestBase.GetPrefixMultiplierType: PrefixMultType;
 begin
-   Result := ContestsArray[FContest].PxM;
+   Result := NoPrefixMults;
 end;
 
 function TContestBase.GetZoneMultiplierType: ZoneMultType;
 begin
-   Result := ContestsArray[FContest].ZnM;
+   Result := NoZoneMults;
 end;
 
 function TContestBase.GetDXMultiplierType: DXMultType;
 begin
-   Result := ContestsArray[FContest].XM;
+   Result := NoDXMults;
 end;
 
 function TContestBase.GetDomesticMultiplierType: DomesticMultType;
 begin
-   Result := ContestsArray[FContest].DM;
+   Result := NoDomesticMults;
 end;
 
 function TContestBase.GetInitialExchangeKind: InitialExchangeType;
 begin
-   Result := ContestsArray[FContest].AIE;
+   Result := NoInitialExchange;
 end;
 
 function TContestBase.GetExchangeKind: ExchangeType;
 begin
-   Result := ContestsArray[FContest].AE;
+   Result := UnknownExchange;
 end;
 
 function TContestBase.GetIsUSQSOParty: boolean;
 begin
-   (* The array calls this P and comments it "US QSO Party"; it is a Byte used
-      as a flag. *)
-   Result := ContestsArray[FContest].P <> 0;
+   (* The row's P was 0: not a QSO party. *)
+   Result := False;
 end;
 
 function TContestBase.GetHostState: string;
 begin
-   (* Derived from ContestsArray's P index, which is the one place this is
-      written down -- see VC.USQSOPartyStateName. *)
-   Result := USQSOPartyStateName(FContest);
+   (* No host: every party states its own (M10 S5). *)
+   Result := '';
 end;
 
 function TContestBase.GetCabrilloQSOLineFormat: string;
@@ -2482,34 +2474,10 @@ begin
 end;
 
 function TContestBase.GetFlags: TContestFlags;
-const
-   (* Each member's bit in the row's word, by name rather than by the
-      members' bit-order declaration -- so a reordered enum cannot shift
-      a flag onto its neighbour's bit. *)
-   FLAG_BIT: array[TContestFlag] of integer = (
-      QSO_BY_BAND_BIT,
-      QSO_BY_MODE_BIT,
-      MULT_BY_BAND_BIT,
-      MULT_BY_MODE_BIT,
-      ERMAK_BIT,
-      VHF_BAND_ENABLE_BIT,
-      CQ_ZONE_MODE_BIT,
-      CDC_BIT,
-      RTC_CAPABLE_BIT
-      );
-var
-   flag: TContestFlag;
 begin
-   (* THE ROW'S WORD, until plan S6 makes this the empty set. Every
-      registered contest overrides it (M10 S5); DUMMYCONTEST's word is 0. *)
+   (* The empty set -- DUMMYCONTEST's word is 0. Every registered contest
+      states its own set (M10 S5). *)
    Result := [];
-   for flag := Low(TContestFlag) to High(TContestFlag) do
-      begin
-      if (ContestsBooleanArray[FContest] and (1 shl FLAG_BIT[flag])) <> 0 then
-         begin
-         Include(Result, flag);
-         end;
-      end;
 end;
 
 function TContestBase.GetQSOByBand: boolean;
@@ -2566,16 +2534,9 @@ begin
 end;
 
 function TContestBase.GetInStateDomesticFileName: string;
-var
-   partyIndex: integer;
 begin
-   (* The same index USQSOPartyStateName reads, bounded the same way. *)
+   (* Not a QSO party: no in-state file. Every party states its own. *)
    Result := '';
-   partyIndex := ContestsArray[FContest].P;
-   if (partyIndex >= 1) and (partyIndex <= QSOPartiesCount) then
-      begin
-      Result := QSOParties[partyIndex].InsideStateDOMFile;
-      end;
 end;
 
 function TContestBase.ValidateQTHCount(aCount: integer;
@@ -3202,28 +3163,12 @@ end;
 (* THE DISPLAY AND THE REPORTS -- M9a                                        *)
 (* ------------------------------------------------------------------------ *)
 
-(* THE AREA A QSO PARTY'S PROMPT NAMES -- the QSOParties entry the row's P
-   indexes, as uNewContest read it. NOT HostState: that answers only a
-   two-letter state (VC.USQSOPartyStateName), and the table names areas that
-   are not one -- the 7QP's '7th area', IN7QPNE -- which the dialog showed.
-   uTestContestDisplay caught the difference. '' for a contest with no entry. *)
-function QSOPartyAreaName(aContest: ContestType): string;
-var
-   partyIndex: byte;
-begin
-   Result := '';
-   partyIndex := ContestsArray[aContest].P;
-   if (partyIndex >= 1) and (partyIndex <= QSOPartiesCount) then
-      begin
-      Result := QSOParties[partyIndex].StateName;
-      end;
-end;
-
 function TContestBase.GetQSOPartyArea: string;
 begin
-   (* The table's answer until plan S6 makes this ''. Every one of the 22
-      contests with an entry answers for itself (M10 S5). *)
-   Result := QSOPartyAreaName(FContest);
+   (* Not a QSO party: no area. Every one of the 22 parties answers for
+      itself (M10 S5). The free function QSOPartyAreaName that read the
+      QSOParties entry is deleted (M10 S6). *)
+   Result := '';
 end;
 
 procedure TContestBase.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
@@ -3235,7 +3180,7 @@ begin
       declaration. *)
    if IsUSQSOParty then
       begin
-      area := QSOPartyAreaName(FContest);
+      area := QSOPartyArea;
       aPrompts.AskFieldWithComment(Format(TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX,
                                           [area, area]),
                                    ncfMyState);

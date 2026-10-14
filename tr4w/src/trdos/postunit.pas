@@ -453,9 +453,17 @@ uses
   wrong zone on every QSO -- not a corpus artifact, a scoring error in a real
   contest.
 
-  THE RULE IS THE CONTEST TABLE, NOT A LIST OF CONTEST NAMES. ContestsArray
-  already records which zone a contest is about, in ZnM, and that is the fact
-  being asked for. Keying off the exchange SHAPE instead would have been wrong
+  THE RULE IS THE CONTEST'S, NOT A LIST OF CONTEST NAMES. The contest states
+  which zone it is about, as its ZoneMultiplierType (ContestsArray's ZnM until
+  M10 S6, which repointed this to the class -- the class's value equals the
+  row's for every contest, pinned by Test_MovedRowValuesStillMatchTheArray),
+  and that is the fact being asked for.
+
+  IT IS THE CONTEST'S ZONE KIND, NOT THE SESSION'S, AND THAT DISAGREES WITH
+  THE ADIF CQZ/ITUZ BLOCK, which asks the session's ActiveZoneMult. Two
+  answers to one question (M10 plan F4). Left as it was at S6 on purpose --
+  switching to the session would be a behaviour change -- and recorded for S9,
+  which re-homes the session kinds. Keying off the exchange SHAPE instead would have been wrong
   in both directions: CROATIAN and GAGARIN-CUP use RSTZoneOrDomesticQTH -- the
   same arm as CQ-160 -- and both are ITUZones contests, while CQ-160 is not. The
   shape and the zone kind cut across each other.
@@ -474,7 +482,7 @@ function ZoneSentForThisContest: string;
    var
       ituFromCty: Byte;
    begin
-   if ContestsArray[ Contest ].ZnM = ITUZones then
+   if ContestIdentity( Contest ).ZoneMultiplierType = ITUZones then
       begin
       if Settings.My.ResolvedItuZone > 0 then
          begin

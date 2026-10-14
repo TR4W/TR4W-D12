@@ -42,8 +42,9 @@
 # path read it.  An IARU entrant submitted the wrong zone on every QSO of a real
 # contest, and the corpus had this filed as a headless-export artifact.
 #
-# PostUnit.ZoneSentForThisContest decides from ContestsArray[Contest].ZnM, which
-# is the table that already records which zone a contest is about, and falls back
+# PostUnit.ZoneSentForThisContest decides from the contest's ZoneMultiplierType
+# (ContestsArray[Contest].ZnM until M10 S6, the same value), which records which
+# zone a contest is about, and falls back
 # to CTY.DAT's ITU zone for our own call when MY ITU ZONE is unset -- which is
 # what makes it right for an operator who never heard of the setting, and what
 # makes this reference reproduce: ctyGetITUZone('NY4I') = 8, exactly what D7 sent.

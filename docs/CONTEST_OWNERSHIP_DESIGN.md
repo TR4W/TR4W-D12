@@ -3555,6 +3555,8 @@ and the tables, not the kind enums.
 
 **S5 DONE 2026-10-14:** every registered class states what it inherited -- the 82 non-neutral row values of 15 contests in their leaves, the 22 parties' in-state files, and the nine flag bits as ONE set, `GetFlags: TContestFlags` (the per-flag getters answer from it and are no longer virtual; the five CW/SSB pair families state it on their base); a party's prompt area is the class property `QSOPartyArea`, the HostState on the state-party base. The base still reads the tables, so nothing changed; S6 makes it neutral (plan S5).
 
+**S6 DONE 2026-10-14:** the base reads no table -- its row getters answer DUMMYCONTEST's neutral row (`GetFlags` `[]`; `QSOPartyAreaName` and `VC.USQSOPartyStateName` deleted) -- and the outside readers ask the class: MainUnit's ERMAK menu, uHamScore's RTC upload, `postunit.ZoneSentForThisContest` (the CONTEST's zone kind, still not the session's -- F4, for S9), the matrix's contest list, and `uADIF.GetStateForContest`, which asks `QSOPartyArea` with the old two-letter test rather than `HostState` so British Columbia still writes no STATE (whether it should is an open question for NY4I, recorded in plan S6).
+
 ### 8.3 What "a contest has moved" means -- checkably
 
 A contest has moved when **all** of these hold:
