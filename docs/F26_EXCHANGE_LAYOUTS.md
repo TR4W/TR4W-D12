@@ -73,6 +73,10 @@ DXLog. Old to new:
   file at all, and if so is its name `GRID-LOC`?
   - **NZFIELDDAY** keeps `JW-FD` (NY4I's own choice of 2026-09-29), and the
     remaining names are those of the CONTEST: table.
+- **Q2, ARCI event names -- APPROVED (NY4I, 2026-10-15):** `ARCI-SPRING` (WA7BNM
+  315), `ARCI-FALL` (168), `ARCI-HOOTOWL` (31), `ARCI-SUMMER-HB` (69),
+  `ARCI-TOPBAND` (193), `ARCI-HOLIDAY-HB` (198). Each is its own contest and is also
+  its Cabrillo CONTEST: value.
 - **Earlier, kept for the record:** COUNTYHUNTER is the MARAC contest, and missing
   station facts get distinct station fields (both NY4I, 2026-10-15; see the
   COUNTYHUNTER section and [decision 2](#decisions-owed)).
@@ -96,8 +100,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
 
 **ARCI**
 
-- **[Q2] Event names.** Approve `ARCI-SPRING`, `ARCI-FALL`, `ARCI-HOOTOWL`,
-  `ARCI-SUMMER-HB`, `ARCI-TOPBAND`, `ARCI-HOLIDAY-HB`, or give others.
 - **[Q3] Log format.** Does the qrpcontest.com upload take a Cabrillo file?
 
 **County Hunter (MARAC)** -- you called it inactive, so the first question decides
