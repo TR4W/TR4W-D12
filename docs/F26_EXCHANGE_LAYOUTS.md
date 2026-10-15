@@ -77,94 +77,88 @@ DXLog. Old to new:
   station facts get distinct station fields (both NY4I, 2026-10-15; see the
   COUNTYHUNTER section and [decision 2](#decisions-owed)).
 
-### Open
+### Open -- what NY4I still has to answer
 
-**Reviewed 2026-10-15** (after NY4I's Q20 and Q9 answers). The numbers are kept as
-they were, because they have been cited; an answered item is struck through and
-points to [Answered](#answered). Still open: 1-5, 6 (part), 7, 8, 9a, 10, 11 (part),
-12 (part), 13-19. Two notes apply across the list:
+**Only unanswered questions are here** (cleaned 2026-10-15). Anything answered,
+in whole or in part, is under [Answered](#answered); an item below carries only
+the part still owed. The `[Qn]` tag is the number the question has been cited by.
 
-- **COUNTYHUNTER (4-7):** NY4I calls the MARAC contest **inactive** (2026-10-15),
-  and both WA7BNM refs are Inactive. So the first question is whether TR4W
-  implements MARAC's scoring at all, or keeps today's one-point general county
-  log under the `MARAC` name. If it keeps today's log, 4, 5 and 7 fall away.
-- **Retire-or-keep (8, 11, 12, 16):** Grid Loc (9) was kept for a feature the
-  generic mode lacks. The same test applies to these four: is there something an
-  operator gets from the class that General QSO does not give?
+**ALL JA and ACAG**
 
-1. **JARL log format (ALL JA and ACAG).** Both rules ask for a JARL e-log (summary
-   sheet + log sheet); ACAG's rules do not mention Cabrillo `[contestclock jarl-acag
-   -> jarl.org acag_rules]`. Does JARL accept a Cabrillo log body inside its e-log,
-   or must TR4W write the JARL log-sheet format? And should the power letter be its
-   own column (`599 10 H`, as DXLog writes it `[DXLog ALLJA.txt]`) or joined to the
-   number (`599 10H`, as JARL's example shows)?
-2. **ARCI event names.** Approve the six enumeration names proposed in the ARCI
-   section (`ARCI-SPRING`, `ARCI-FALL`, `ARCI-HOOTOWL`, `ARCI-SUMMER-HB`,
-   `ARCI-TOPBAND`, `ARCI-HOLIDAY-HB`), or give others. No D7 row exists for them, so
-   under the Q1 rule the enumeration name IS the CONTEST: value.
-3. **ARCI log format.** Does the qrpcontest.com upload take a Cabrillo file? The
-   WA7BNM-referred pages for all six events say only "upload log at
-   qrpcontest.com"; the two qrpcontest.com rule pages WA7BNM links (Topband,
-   Holiday) carry only the date. DXLog has no ARCI definition.
-4. **COUNTYHUNTER:** which MARAC event is the target: the US Counties QSO Party
-   (ref 3, last held July 2025) or the SSB QSO Party (ref 20, last held 2010)? Both
-   are Inactive. DXLog has no MARAC definition.
-5. **COUNTYHUNTER:** from MARAC's current rules: (a) points for working a
-   **portable**; (b) what a **DX** entrant scores; (c) does a county-line mobile
-   score and count once per county; (d) is the multiplier US counties once per mode
-   (ref 3) or once per contest (ref 20), and do states or DX count; (e) bonus points.
-6. **COUNTYHUNTER:** is the log Cabrillo? WA7BNM gives only contest-logs@marac.org.
-   ~~And with what CONTEST: value?~~ **Answered (Q20): `MARAC`.**
-7. **COUNTYHUNTER:** dupe rule: once per band per mode (ref 3), or once per county
-   per band (ref 20)?
-8. **FISTS:** retire the class? WA7BNM ref 251 is Inactive, last held 8 Feb 2020,
-   and the sponsor page says the sprints will not continue in 2026. (DXLog still
-   ships a FISTS Sprint definition, updated 2025-12-28 `[DXLog FISTSSPR.txt]`; that
-   is a logger keeping a file, not evidence the event runs.)
-9. ~~**GRIDLOC:** retire the class?~~ **Answered: KEEP** (see [Answered](#answered)).
-   - **9a, still open:** does Grid Loc write a Cabrillo file at all (it has no
-     sponsor to send one to), or none, like POTA and Kids Day (decision 1)? If it
-     does, is the name `GRID-LOC`?
-10. **NZFIELDDAY (JW-FD):** from NZART's rules: (a) RS(T) + serial from 001 +
-    branch number, a home station sending `00`? (b) 5 points for a ZL CW QSO, 3 for
-    ZL phone, 10 for non-ZL? (c) multiplier is branches; does our own branch count?
-    (d) is Cabrillo accepted, and one log per band? Not on WA7BNM, not in DXLog.
-11. **QCWA:** retire, or re-model the exchange? WA7BNM ref 332 is Inactive since
-    March 2021. Not in DXLog. (Its name is answered: `QCWA`, Q20.)
-12. **QCWAGOLDEN:** what event is it? On neither WA7BNM nor DXLog. Retire? (If kept,
-    its name is answered: `QCWA`, the same as QCWA's, Q20.)
-13. **TENTEN -- by the same principle as ARCI, confirm:** split the class into the
-    four WA7BNM events, Winter SSB (ref 237), Summer SSB (81), 10-10 Day Sprint (156)
-    and Fall Digital (464), each its own contest with its own ref and its WA7BNM
-    Cabrillo name (`10-10-WINTER-PHONE` etc.)? Note that NY4I's Q20 answer for the
-    class as it stands is `TEN-TEN`; a split needs one name per event.
-14. **TENTEN:** does 10-10 accept a Cabrillo file (by email to
-    tentencontest@ten-ten.org)? The WA7BNM-referred rules name no electronic format.
-    DXLog writes one, in the order name, number, QTH `[DXLog TENTENQP.txt]`.
-15. **UA4WCHAMPIONSHIP:** DXLog gives one two-hour window, 1600-1800 UTC, with
-    15-minute periods and a dupe rule of once per period per band `[DXLog
-    R4W-CHAMP.txt]`. The earlier pass had two tours to 19:59, SSB then CW. Which is
-    right, and is r4w@narod.ru still the address?
-16. **WWL:** what event is it? Not on WA7BNM. None of DXLog's 80 distance-scored
-    definitions has TR4W's rule (1 point per 500 km, x2 on 80 m, x4 on 160 m).
-    Retire?
-17. **XMAS:** is the class the **SSA Jultest**? DXLog's `SSA_JT.txt` matches its
-    exchange (RST + serial + five-letter group, 2 points, 80/40 m). If it is, note
-    that the Jultest group is **the group received in the previous QSO**, with only
-    the first one chosen by the operator `[DXLog SSA_JT.txt]`, while TR4W generates
-    a fresh random group per QSO with Ctrl-R. Which is right?
-18. **XMAS CONTEST: value.** Under the Q1 rule it is `XMAS`, which is the DARC
-    Christmas Contest's registered Cabrillo name (WA7BNM ref 210; also `[DXLog
-    DARC_XMAS.txt]`). If the class is the Jultest, use `SSA-JULTEST` (DXLog's name)
-    instead, as an exception to the Q1 rule?
-19. **Station fields for a sent QTH:** under [decision 2](#decisions-owed), does
-    sending the JA prefecture number (ALL JA), the ACAG city/gun/ku number and the
-    Udmurtia RDA district through `MY STATE` count as reuse? If it does, they need
-    `MY JA PREFECTURE`, `MY JA CITY CODE` and `MY RDA`. (DXLog shows only Udmurtia
-    stations send an RDA; everyone else sends a grid, `MY GRID`.)
-20. ~~**Which "name in the enumeration"?**~~ **Answered per contest** (see
-    [Answered](#answered)): MARAC, ALL-JA, ACAG, KIDS-DAY, TEN-TEN, QCWA, and
-    NZFIELDDAY keeps JW-FD. Grid Loc's name waits on 9a; XMAS's on 17-18; ARCI's on 2.
+- **[Q1] Log format.** Does JARL accept a Cabrillo body inside its e-log, or must
+  TR4W write the JARL log-sheet format? And is the power letter its own column
+  (`599 10 H`, as DXLog writes it) or joined to the number (`599 10H`, as JARL's
+  example shows)?
+- **[Q19] Sent QTH field.** Does sending the JA prefecture number (ALL JA) or the
+  ACAG city/gun/ku code through `MY STATE` count as reuse under the distinct-fields
+  ruling? If it does, they get `MY JA PREFECTURE` and `MY JA CITY CODE`. (Same
+  question for UA4W's RDA, below.)
+
+**ARCI**
+
+- **[Q2] Event names.** Approve `ARCI-SPRING`, `ARCI-FALL`, `ARCI-HOOTOWL`,
+  `ARCI-SUMMER-HB`, `ARCI-TOPBAND`, `ARCI-HOLIDAY-HB`, or give others.
+- **[Q3] Log format.** Does the qrpcontest.com upload take a Cabrillo file?
+
+**County Hunter (MARAC)** -- you called it inactive, so the first question decides
+whether the rest matter:
+
+- **[Q4] Score it as MARAC, or not?** Keep today's one-point county log under the
+  `MARAC` name (then Q5-Q7 fall away), or implement MARAC's scoring? If MARAC: the
+  US Counties QSO Party (ref 3, last 2025) or the SSB QSO Party (ref 20, last 2010)?
+- **[Q5] If MARAC:** (a) points for working a portable; (b) what a DX entrant
+  scores; (c) does a county-line mobile count once per county; (d) multiplier per
+  mode or per contest, and do states or DX count; (e) bonus points.
+- **[Q6] If MARAC:** is the log Cabrillo?
+- **[Q7] If MARAC:** the dupe rule -- once per band per mode, or once per county per
+  band?
+
+**Grid Loc**
+
+- **[Q9a] Cabrillo or none?** It has no sponsor to send a log to. Write no Cabrillo
+  file (like POTA and Kids Day), or write one named `GRID-LOC`?
+
+**NZ Field Day (JW-FD)**
+
+- **[Q10] Rules:** (a) RS(T) + serial + branch, a home station sending `00`?
+  (b) 5 points ZL CW, 3 ZL phone, 10 non-ZL? (c) branches as multipliers -- does our
+  own count? (d) Cabrillo accepted, and one log per band?
+
+**TEN-TEN**
+
+- **[Q13] Split it?** Into the four WA7BNM events -- Winter SSB (237), Summer SSB (81),
+  10-10 Day Sprint (156), Fall Digital (464) -- each its own contest, as ARCI? If yes,
+  each event needs a name (WA7BNM's are `10-10-WINTER-PHONE` and so on).
+- **[Q14] Log format.** Does 10-10 accept a Cabrillo file?
+
+**UA4W**
+
+- **[Q15] Schedule.** One 2-hour window, 1600-1800 UTC, with 15-minute periods
+  (DXLog), or two tours ending 19:59 (earlier pass)? Is r4w@narod.ru still the
+  address?
+- **[Q19] Sent QTH field** -- the RDA district: same question as ALL JA/ACAG above
+  (`MY RDA`?). Only Udmurtia stations send one; everyone else sends `MY GRID`.
+
+**Xmas**
+
+- **[Q17] Which contest is it?** Is it the SSA Jultest (DXLog's `SSA_JT.txt` matches
+  its exchange)? If so, the group sent is the one RECEIVED in the previous QSO, not a
+  fresh random one -- which does TR4W do?
+- **[Q18] Its name.** If it is the Jultest, `SSA-JULTEST` (DXLog's name), since `XMAS`
+  is the DARC Christmas Contest's registered name?
+
+**Retire or keep** -- the Grid Loc test: does the class give an operator something
+General QSO does not?
+
+- **[Q8] FISTS:** inactive since 2020; the sponsor says the sprints will not return
+  in 2026.
+- **[Q11] QCWA:** inactive since 2021. Retire, or re-model to the 2021 exchange (year
+  licensed + name + chapter)?
+- **[Q12] QCWA Golden:** no source names this event at all. What is it?
+- **[Q16] WWL:** no source names it, and no DXLog file has its scoring rule.
+
+**Also owed, from elsewhere in this document:** decision 1 (a way for a contest to
+say "no Cabrillo file" -- POTA, Kids Day, and Grid Loc if 9a says so).
 
 ## Sources, and how each fact is marked
 
