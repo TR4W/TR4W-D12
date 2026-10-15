@@ -27,13 +27,6 @@ moves to section 4 in the commit that records it.
   Does any of them let out-of-state stations work each other?
   **Answer:**
 
-- **Q32** Missouri: a "peak-hour" bonus (+1 per 80/40 m QSO logged 1400-1959 UTC,
-  up to 250) is counted in live entry only and lost when the log is reopened.
-  WA7BNM's rule summary has no such bonus (only W0MA and K0GQ +100 each, and +100
-  for an electronic log). Real rule? If yes it is computed from the whole log; if
-  no it is deleted.
-  **Answer:**
-
 - **Q34** Idaho rovers earn the dormant-county bonus per county they activate, but
   no QSO records the county it was sent from. Add a per-QSO "my county" (log
   field, entry, ADIF `MY_CNTY`), or keep scoring a rover as a fixed station in its
@@ -616,8 +609,28 @@ closes it; anything else reopens it.
 | Q30 | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does | already so; no change |
 | Q31 | `Missing precedence (Q A B U M S)` is acceptable wording | already so |
 | Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | not built |
+| Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q32** Missouri: a "peak-hour" bonus (+1 per 80/40 m QSO logged 1400-1959 UTC,
+  up to 250) is counted in live entry only and lost when the log is reopened.
+  WA7BNM's rule summary has no such bonus (only W0MA and K0GQ +100 each, and +100
+  for an electronic log). Real rule? If yes it is computed from the whole log; if
+  no it is deleted.
+  **Answer:** (NY4I, 2026-10-15) *"The wall clock logged into the log record
+  determines this."* **The bonus is real** -- the sponsor's 2026 rules
+  (https://www.w0ma.org/mo_qso_party/results/thisyear/moqp-2026-rules-
+  final.pdf, Points, rule 7): *"Any valid contacts made between the hours of
+  1400 UTC Saturday to 2000 UTC Saturday and 1400 UTC Sunday to 2000 UTC
+  Sunday on the 40 and 80 meter bands will count as an additional point each.
+  Up to 250-point bonus can be added to the total score."* WA7BNM's summary
+  omitted it. So it is computed over the WHOLE LOG from each QSO's own logged
+  time and band (Q13: never the clock now), counting valid QSOs only (no dupe,
+  no 0-point off-band QSO), capped at 250 -- and it survives reopening the
+  log. The same page confirms the W0MA and K0GQ +100 each (rules 4-5); the
+  +100 for an electronic Cabrillo log (rule 6) is the sponsor's to award. Not
+  built: today the tally is counted at live entry only and is lost on reopen.
 
 - **Q38** Winter Field Day's score is points x band-modes x power factor, with no
   DX multiplier, yet its session counts DXCC multipliers
