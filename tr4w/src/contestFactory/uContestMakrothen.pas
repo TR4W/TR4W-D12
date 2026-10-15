@@ -82,6 +82,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetReceivesGridSquareExchange: boolean; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
@@ -103,6 +109,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
    LOGGRID,
@@ -199,6 +206,20 @@ function TContestMakrothen.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange): string;
 begin
    Result := ADIFSentGrid(aMy, aQso);
+end;
+
+function TContestMakrothen.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentGrid(aMy, aQso, aCtx);
+end;
+
+function TContestMakrothen.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedGrid(aMy, aQso, aCtx);
 end;
 
 function TContestMakrothen.GetReceivesGridSquareExchange: boolean;

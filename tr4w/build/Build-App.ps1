@@ -373,7 +373,9 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # It was a ShowMessage of 'literal' + the file name, which narrowed; it goes
 # through the import's one failure report now. Measured by a full build with
 # Build-App's arguments; the all-or-nothing import itself added none.
-$NARROW_CEILING = 1262
+# 1262 -> 1260, 2026-10-15: M11 S9c, the Cabrillo columns as named helpers.
+# Measured by the full build.
+$NARROW_CEILING = 1260
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

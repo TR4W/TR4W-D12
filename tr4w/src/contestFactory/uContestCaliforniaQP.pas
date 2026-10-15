@@ -94,6 +94,9 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -106,9 +109,9 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* The received column -- see the implementation. *)
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -121,6 +124,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestFixedPoints,   (* FixedModePoints *)
    uContestRegistry;
@@ -131,15 +135,15 @@ uses
    whatever his-QTH the exporter had chosen, California's column took the
    QSO's QTHString, and 'DX' when the QSO earned no domestic multiplier
    (DomMultQTH empty) -- an out-of-state or DX station. That is California's
-   rule about its own column, so it is stated here and the shared arm for the
-   session's exchange still lays out the line.
+   rule about its own column, so it is stated here and the shared helper
+   (uCabrilloExchange) still lays out the line.
 
    The writer also set the record's DomMultQTH to 'DX' while doing it. Nothing
    downstream read that -- the arm reads only the his-QTH, and the next record
    replaces the whole exchange -- so the copy is not made. *)
-function TContestCaliforniaQP.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                             const aQso: ContestExchange;
-                                                             const aCtx: TCabrilloQSOContext): string;
+function TContestCaliforniaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                          const aQso: ContestExchange;
+                                                          const aCtx: TCabrilloQSOContext): string;
 var
    ctx: TCabrilloQSOContext;
 begin
@@ -149,7 +153,7 @@ begin
       begin
       ctx.HisQTH := 'DX';
       end;
-   Result := inherited FormatCabrilloReceivedExchange(aMy, aQso, ctx);
+   Result := CabrilloReceivedQSONumberQTH(aMy, aQso, ctx);
 end;
 
 function TContestCaliforniaQP.GetDisplayName: string;
@@ -236,6 +240,13 @@ function TContestCaliforniaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                   const aQso: ContestExchange): string;
 begin
    Result := ADIFSentStateThenQSONumber(aMy, aQso);
+end;
+
+function TContestCaliforniaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentQSONumberState(aMy, aQso, aCtx);
 end;
 
 function TContestCaliforniaQP.GetInStateDomesticFileName: string;

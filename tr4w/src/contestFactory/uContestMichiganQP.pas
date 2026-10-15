@@ -77,6 +77,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       function GetHostState: string; override;
@@ -118,6 +124,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestFixedPoints, uContestRegistry;
 
@@ -171,6 +178,20 @@ function TContestMichiganQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                 const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTState(aMy, aQso);
+end;
+
+function TContestMichiganQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+end;
+
+function TContestMichiganQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
 end;
 
 function TContestMichiganQP.GetInStateDomesticFileName: string;

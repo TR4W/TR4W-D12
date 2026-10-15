@@ -82,6 +82,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -123,6 +129,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
    uTR4WStrings;
@@ -197,6 +204,20 @@ function TContestOZCRO.GetADIFSentExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTZoneOrState(aMy, aQso);
+end;
+
+function TContestOZCRO.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                               const aQso: ContestExchange;
+                                               const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTStateOrZone(aMy, aQso, aCtx);
+end;
+
+function TContestOZCRO.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrZone(aMy, aQso, aCtx);
 end;
 
 function TContestOZCRO.GetFlags: TContestFlags;

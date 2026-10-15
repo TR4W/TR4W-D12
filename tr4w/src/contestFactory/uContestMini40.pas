@@ -60,9 +60,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   was always exported as the enum's spelling, and the id is now what
   export writes, so import matches it.
 
-  EXCHANGE PARSING IS NOT MOVED (M5). EXPORT IS THE BASE'S DEFAULT (M4):
-  the contest has no export rule of its own, so TContestBase formats it
-  through the shared arm for its exchange. *)
+  EXCHANGE PARSING IS NOT MOVED (M5). EXPORT IS THE CLASS'S, THROUGH HELPERS
+  (M11 S9b, S9c): the contest has no export rule of its own, so it states its
+  ADIF STX_STRING and its two Cabrillo columns by calling the named helpers
+  its exchange uses (uADIFExchange, uCabrilloExchange). *)
 unit uContestMini40;
 
 {$I tr4w.inc}
@@ -91,6 +92,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -116,6 +123,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry, uContestFixedPoints;
 
@@ -183,6 +191,20 @@ function TContestMini40.GetADIFSentExchange(const aMy: TMyStationExchange;
                                             const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTQSONumber(aMy, aQso);
+end;
+
+function TContestMini40.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                const aQso: ContestExchange;
+                                                const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestMini40.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQSONumber(aMy, aQso, aCtx);
 end;
 
 function TContestMini40.GetFlags: TContestFlags;

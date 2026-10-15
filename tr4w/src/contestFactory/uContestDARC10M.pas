@@ -79,6 +79,9 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -87,9 +90,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -127,6 +130,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
       domestic-QTH shapes (M11 S6). *)
@@ -139,9 +143,9 @@ begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 1, 1, 1);
 end;
 
-function TContestDARC10M.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                        const aQso: ContestExchange;
-                                                        const aCtx: TCabrilloQSOContext): string;
+function TContestDARC10M.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %4.4d %3s', [aCtx.RSTReceived, aQso.NumberReceived, aCtx.HisQTH]);
 end;
@@ -209,6 +213,13 @@ function TContestDARC10M.GetADIFSentExchange(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTQSONumberState(aMy, aQso);
+end;
+
+function TContestDARC10M.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumberState(aMy, aQso, aCtx);
 end;
 
 function TContestDARC10M.GetFlags: TContestFlags;

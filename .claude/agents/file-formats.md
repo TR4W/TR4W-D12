@@ -119,10 +119,21 @@ multipliers, CTY.DAT, band lookup and CRC32.
   send the bare enum spelling. A contest that gains an id still lists its old
   enum spelling as a former one.
 - **THE EXCHANGE COLUMNS AND CONTEST FIELDS ARE THE CONTEST'S (M4,
-  2026-10-01).** `uCabrilloExchange` is TContestBase's default for the
-  Cabrillo columns -- one arm per exchange SHAPE, naming no contest, keyed on
-  the session's exchange (`TCabrilloQSOContext.SessionExchange`; S9c moves it
-  the way S9b moved the ADIF half). **THE ADIF `STX_STRING` IS THE CLASSES'
+  2026-10-01).** **THE CABRILLO COLUMNS ARE THE CLASSES' SINCE M11 S9c
+  (2026-10-14):** `uCabrilloExchange` holds 56 named helpers (27 sent, 29
+  received -- `CabrilloSentRSTState`, `CabrilloReceivedRSTQTH` ... one per
+  distinct column, same `(aMy, aQso, aCtx)` signature) and every contest class
+  states `GetCabrilloSentExchange` / `GetCabrilloReceivedExchange` by calling
+  them -- no enum selects one, `FormatCabrilloExchangeOfKind` and
+  `TCabrilloQSOContext.SessionExchange` are deleted, the base writes
+  `CabrilloExchangeErrorMarker` in both columns, and the public non-virtual
+  `FormatCabrilloSentExchange` logs the Error naming the contest. **PostUnit
+  asks `ActiveContest` (the object holding the station), not `ContestIdentity`,
+  when the contest has a class** -- nine contests' columns move with the
+  entrant (ARRL 160, 7QP, Arizona, NEQP, Texas, Salmon Run, JIDX, PACC), and
+  `ContestIdentity` has no station. Fifteen contests write the marker today
+  (plan F26). Pinned by `uTestCabrilloColumns` (every ContestType x 7 stations
+  x 8 inputs, literals made by the old machine). **THE ADIF `STX_STRING` IS THE CLASSES'
   SINCE M11 S9b (2026-10-14):** `uADIFExchange` holds 24 named helpers
   (`ADIFSentRSTState`, `ADIFSentRSTQSONumber` ... one per distinct OUTPUT,
   same `(aMy, aQso)` signature), and every contest class states

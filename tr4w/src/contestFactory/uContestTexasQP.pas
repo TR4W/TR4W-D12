@@ -96,6 +96,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -130,6 +136,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uDXMultiplierKey,
    uContestFixedPoints,   (* FixedModePoints *)
@@ -211,6 +218,34 @@ function TContestTexasQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTState(aMy, aQso);
+end;
+
+function TContestTexasQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := CabrilloSentRSTState(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+      end;
+end;
+
+function TContestTexasQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
+begin
+   if CountsDXMultiplier then
+      begin
+      Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+      end;
 end;
 
 function TContestTexasQP.GetInStateDomesticFileName: string;

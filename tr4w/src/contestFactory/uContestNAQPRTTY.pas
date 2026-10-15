@@ -74,6 +74,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -113,6 +119,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uDXMultiplierKey,
    SysUtils, uContestRegistry, uContestFixedPoints,
@@ -194,6 +201,20 @@ function TContestNAQPRTTY.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
    Result := ADIFSentNameState(aMy, aQso);
+end;
+
+function TContestNAQPRTTY.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentNameState(aMy, aQso, aCtx);
+end;
+
+function TContestNAQPRTTY.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedNameQTH(aMy, aQso, aCtx);
 end;
 
 function TContestNAQPRTTY.GetFlags: TContestFlags;

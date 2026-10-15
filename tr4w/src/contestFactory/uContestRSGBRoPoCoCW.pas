@@ -88,6 +88,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -112,6 +118,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
    uContestFixedPoints,
@@ -184,6 +191,20 @@ function TContestRSGBRoPoCoCW.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                   const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTPostalCode(aMy, aQso);
+end;
+
+function TContestRSGBRoPoCoCW.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTPostalCode(aMy, aQso, aCtx);
+end;
+
+function TContestRSGBRoPoCoCW.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                          const aQso: ContestExchange;
+                                                          const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTPostalCode(aMy, aQso, aCtx);
 end;
 
 function TContestRSGBRoPoCoCW.GetFlags: TContestFlags;

@@ -63,12 +63,12 @@ type
       function GetFlags: TContestFlags; override;
    public
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
@@ -98,6 +98,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uADIF,
    SysUtils,
    uCanonicalExchange;
@@ -124,18 +125,18 @@ uses
    AnsiString() EXPLICITLY: StrToIntDef resolves to the AnsiString overload, so a
    bare call narrows implicitly. A zone is ASCII digits, so the conversion is
    safe; saying so is the point. *)
-function TContestCQWWBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                     const aQso: ContestExchange;
-                                                     const aCtx: TCabrilloQSOContext): string;
+function TContestCQWWBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7.2d', [aCtx.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
+   Result := CabrilloSentRSTZone(aMy, aQso, aCtx);
 end;
 
-function TContestCQWWBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                         const aQso: ContestExchange;
-                                                         const aCtx: TCabrilloQSOContext): string;
+function TContestCQWWBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7.2d', [aCtx.RSTReceived, aQso.Zone]);
+   Result := CabrilloReceivedRSTZone(aMy, aQso, aCtx);
 end;
 
 function TContestCQWWBase.GetADIFSentExchange(const aMy: TMyStationExchange;

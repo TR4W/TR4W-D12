@@ -635,6 +635,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       frozen against the old FormatADIFExchangeOfKind before it moved into
       the classes. *)
    uTestADIFSentExchange in 'uTestADIFSentExchange.pas',
+   (* M11 S9c: every contest's two Cabrillo exchange columns at every roster
+      station, frozen against the old FormatCabrilloExchangeOfKind before it
+      moved into the classes. *)
+   uTestCabrilloColumns in 'uTestCabrilloColumns.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -728,6 +732,7 @@ begin
    RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
    RegisterSuite(TExchangeFieldsTests.Create('ExchangeFields'));
    RegisterSuite(TADIFSentExchangeTests.Create('ADIFSentExchange'));
+   RegisterSuite(TCabrilloColumnsTests.Create('CabrilloColumns'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

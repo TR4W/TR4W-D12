@@ -80,6 +80,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* THE FLAG SET IS THE FAMILY'S RULE -- both modes run under one set
          of rules, so it is stated once, here (M10 S5). See
@@ -108,6 +114,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestFixedPoints,
    uTR4WStrings;
@@ -151,6 +158,20 @@ function TContestNRAUBalticBase.GetADIFSentExchange(const aMy: TMyStationExchang
                                                     const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTQSONumberState(aMy, aQso);
+end;
+
+function TContestNRAUBalticBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumberState(aMy, aQso, aCtx);
+end;
+
+function TContestNRAUBalticBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                            const aQso: ContestExchange;
+                                                            const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQSONumberQTH(aMy, aQso, aCtx);
 end;
 
 function TContestNRAUBalticBase.GetFlags: TContestFlags;

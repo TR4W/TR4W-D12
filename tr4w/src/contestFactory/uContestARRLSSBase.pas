@@ -56,12 +56,12 @@ type
       function GetFlags: TContestFlags; override;
 
    public
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
@@ -97,6 +97,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    SysUtils, uContestFixedPoints,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
    uADIF,
@@ -167,10 +168,10 @@ end;
    THE SHARED ARM IS GONE (M4, 2026-10-01; inventory D4). Only Sweepstakes
    runs QSONumberPrecedenceCheckDomesticQTHExchange, and it formats its own;
    QSONumberAndNameExchange, which an older note here said fell into that arm,
-   has an arm of its own in both exporters. *)
-function TContestARRLSSBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                       const aQso: ContestExchange;
-                                                       const aCtx: TCabrilloQSOContext): string;
+   has helpers of its own in both exporters. *)
+function TContestARRLSSBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-4d %s %s %-3s ',
                     [aQso.NumberSent, aMy.MyPrec, aMy.MyCheck, aMy.MySection]);
@@ -206,9 +207,9 @@ begin
       end;
 end;
 
-function TContestARRLSSBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                           const aQso: ContestExchange;
-                                                           const aCtx: TCabrilloQSOContext): string;
+function TContestARRLSSBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
 begin
    (* THE SECTION COMES FROM aCtx.HisQTH, which is what the exporter resolved for
       this QSO -- the legacy arm formats csQTHString here, not rx.QTHString. *)

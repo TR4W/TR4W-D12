@@ -62,12 +62,12 @@ type
       function GetFlags: TContestFlags; override;
    public
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
    public
@@ -87,6 +87,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    SysUtils,
    uCanonicalExchange;
 
@@ -100,18 +101,18 @@ uses
 
    The ADIF side uses a plain '%03d' because ADIF is not column-aligned and the
    legacy arm never applied the sign rule there. *)
-function TContestCQWPXBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                      const aQso: ContestExchange;
-                                                      const aCtx: TCabrilloQSOContext): string;
+function TContestCQWPXBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %.*d ', [aCtx.RSTSent, 3 - Ord(aQso.NumberSent < 0), aQso.NumberSent]);
+   Result := CabrilloSentRSTQSONumber(aMy, aQso, aCtx);
 end;
 
-function TContestCQWPXBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                          const aQso: ContestExchange;
-                                                          const aCtx: TCabrilloQSOContext): string;
+function TContestCQWPXBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-3.3u', [aCtx.RSTReceived, aQso.NumberReceived]);
+   Result := CabrilloReceivedRSTQSONumber(aMy, aQso, aCtx);
 end;
 
 function TContestCQWPXBase.GetADIFSentExchange(const aMy: TMyStationExchange;

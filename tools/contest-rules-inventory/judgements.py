@@ -129,10 +129,15 @@ ROUTINES = {
    # -------------------------------------------------------- Cabrillo export
    ("postunit.pas", "GetCabrilloTagText"): ("cabrillo-export", "CabrilloContestName / RequiresCabrilloLocation / CabrilloHeaderLinesBeforeTag (existing, M9a)"),
    ("postunit.pas", "tGenerateLogPortionOfCabrilloFile"): ("cabrillo-export", "FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a)"),
-   # The arms sit after the nested SetMyEx/SetHisEx helpers, so the routine
-   # the walker attributes them to is SetHisEx; both names are listed.
-   ("uCabrilloExchange.pas", "SetHisEx"): ("cabrillo-export", "FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default)"),
-   ("uCabrilloExchange.pas", "FormatCabrilloExchangeOfKind"): ("cabrillo-export", "FormatCabrilloSentExchange / FormatCabrilloReceivedExchange (existing; this is the base's default)"),
+   # uCabrilloExchange.FormatCabrilloExchangeOfKind (and the nested SetHisEx
+   # the walker attributed its arms to) was DELETED (M11 S9c, 2026-10-14):
+   # each class states TContestBase.GetCabrilloSentExchange and
+   # GetCabrilloReceivedExchange, calling a uCabrilloExchange helper; the file
+   # holds named helpers and no routine keyed on a kind. The contest tests left
+   # in those helpers are the TRC Digital state and the PGA title, which have
+   # no ContestType (SHAPE3 below): a class of their own when they are contests.
+   ("uCabrilloExchange.pas", "CabrilloSentRSTQSONumberState"): ("cabrillo-export", "GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType)"),
+   ("uCabrilloExchange.pas", "CabrilloReceivedRSTQSONumberQTH"): ("cabrillo-export", "GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType)"),
    # ---------------------------------------------------- score/summary/totals
    # logedit.TotalScore named RSGB 1.8 MHz until its class (2026-10-14); it names no contest now.
    ("postunit.pas", "WriteScoreInformationToSummarySheet"): ("score-summary", "SummarySheet (existing, M9a)"),
@@ -182,18 +187,20 @@ SITE_OVERRIDES = [
 # so a reach-1 arm there is a data format one contest uses, not a contest rule
 # in disguise. Q92 (NY4I, option 2) turns each into named helpers the classes
 # call, one machine per stage; until a machine goes its arms are judged SHAPE,
-# counted and never tabled as PROXY. Keyed (file base, routine). The two
-# left take the shape as a parameter the scan does not follow, and are named
-# so that widening the scan cannot table their arms as contest rules.
+# counted and never tabled as PROXY. Keyed (file base, routine). The one
+# left takes the shape as a parameter the scan does not follow, and is named
+# so that widening the scan cannot table its arms as contest rules.
 # ~~("logdupe.pas", "SetUpExchangeInformation")~~ was the one the scan reached
 # (through scan.KIND_PARAMETERS); it is DELETED (M11 S9a, 2026-10-14) -- each
 # class states TContestBase.ReceivedExchangeFields, calling uExchangeFields.
 # ~~("uADIFExchange.pas", "FormatADIFExchangeOfKind")~~ is DELETED too (M11
 # S9b, 2026-10-14) -- each class states TContestBase.GetADIFSentExchange,
 # calling a uADIFExchange helper.
+# ~~("uCabrilloExchange.pas", "SetHisEx")~~ is DELETED too (M11 S9c,
+# 2026-10-14) -- each class states TContestBase.GetCabrilloSentExchange and
+# GetCabrilloReceivedExchange, calling uCabrilloExchange helpers.
 SHAPE_MACHINES = {
    ("logstuff.pas", "ParseExchangeShape"),
-   ("uCabrilloExchange.pas", "SetHisEx"),
 }
 
 # Reach 1 is unambiguous. Reach 2-3 is kept as a proxy because it is almost
@@ -226,10 +233,10 @@ SHAPE3 = [
     "`Pos('CQ-WW', Settings.Contest.Name)` -- 60-minute off-time"),
    ("tr4w/src/uCabrilloExchange.pas", r"\bContestTitle\s*=\s*'PGA'", 2, [],
     "`ContestTitle = 'PGA'` -- no ContestType; operator-titled"),
-   ("tr4w/src/uCabrilloExchange.pas", r"\bcMyState\s*=\s*'TRC'", 1, [],
-    "`cMyState = 'TRC'` -- TRC Digital, no ContestType"),
-   ("tr4w/src/uCabrilloExchange.pas", r"\bcsQTHString\s*=\s*'TRC'", 1, [],
-    "`csQTHString = 'TRC'`"),
+   ("tr4w/src/uCabrilloExchange.pas", r"\baMy\.MyState\s*=\s*'TRC'", 1, [],
+    "`aMy.MyState = 'TRC'` -- TRC Digital, no ContestType (was `cMyState = 'TRC'` until M11 S9c)"),
+   ("tr4w/src/uCabrilloExchange.pas", r"\baCtx\.HisQTH\s*=\s*'TRC'", 1, [],
+    "`aCtx.HisQTH = 'TRC'` (was `csQTHString = 'TRC'` until M11 S9c)"),
    ("tr4w/src/uADIFExchange.pas", r"\bClippedState\s*\(\s*aMy\s*\)\s*=\s*'TRC'", 1, [],
     "`ClippedState(aMy) = 'TRC'` (was `cMyState = 'TRC'` until M11 S9b)"),
    # The logstuff entries here (TRC, DL-DX-RTTY, EURASIA, YBDXDI-FT8 and the

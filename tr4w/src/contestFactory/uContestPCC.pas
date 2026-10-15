@@ -51,8 +51,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   RSTAndQSONumberOrDomesticQTHExchange arm, `(MyState <> '') and (Contest <>
   PCC)` sent the state for everyone else; the PCC always sends its serial,
   with '/M' after it when MY STATE is all digits. That branch is this class's
-  now, in both exporters, and the shared arm keeps only the state-or-serial
-  answer. The received column is the arm's. *)
+  now, in both exporters, and the shared helper keeps only the
+  state-or-serial answer. The received column is that helper's. *)
 unit uContestPCC;
 
 {$I tr4w.inc}
@@ -87,11 +87,14 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* LETTERS ARE A QTH, DIGITS A SERIAL -- M5b, 2026-10-02 (4.83.2).
 
@@ -140,6 +143,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uExchangeFields,
    SysUtils, uContestRegistry,
    (* StringIsAllNumbers -- the test the arm asks of MY STATE. *)
@@ -207,9 +211,9 @@ begin
       end;
 end;
 
-function TContestPCC.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                const aQso: ContestExchange;
-                                                const aCtx: TCabrilloQSOContext): string;
+function TContestPCC.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                             const aQso: ContestExchange;
+                                             const aCtx: TCabrilloQSOContext): string;
 begin
    if StringIsAllNumbers(aMy.MyState) then
       begin
@@ -232,6 +236,13 @@ begin
       begin
       Result := Format('%-4d %03u   ', [aQso.RSTSent, aQso.NumberSent]);
       end;
+end;
+
+function TContestPCC.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
 end;
 
 function TContestPCC.GetDisplayName: string;

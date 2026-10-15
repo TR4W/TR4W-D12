@@ -82,6 +82,9 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -90,9 +93,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
@@ -124,6 +127,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    (* GetContinentFromString, StringIsAllNumbers, UpperCase -- the IOTA
       arm's own three (M11 S6). *)
@@ -159,9 +163,9 @@ begin
       end;
 end;
 
-function TContestRSGBIOTA.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                         const aQso: ContestExchange;
-                                                         const aCtx: TCabrilloQSOContext): string;
+function TContestRSGBIOTA.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
 var
    ctx: TCabrilloQSOContext;
 begin
@@ -170,7 +174,7 @@ begin
       begin
       ctx.HisQTH := '------';
       end;
-   Result := inherited FormatCabrilloReceivedExchange(aMy, aQso, ctx);
+   Result := CabrilloReceivedRSTQSONumberQTH(aMy, aQso, ctx);
 end;
 
 (* THE WORKED ISLAND, as its corrected reference. *)
@@ -242,6 +246,13 @@ function TContestRSGBIOTA.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTQSONumberState(aMy, aQso);
+end;
+
+function TContestRSGBIOTA.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumberState(aMy, aQso, aCtx);
 end;
 
 function TContestRSGBIOTA.GetFlags: TContestFlags;

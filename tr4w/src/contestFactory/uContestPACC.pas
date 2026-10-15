@@ -50,7 +50,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   RSTDomesticQTHExchange for every station (the contest matrix shows nothing
   else), and inside that shared arm `if Contest in [SPDX, PACC]` put OUR
   SERIAL in the state column. That is this class's sent side now, Cabrillo
-  and ADIF alike; the received column is the shared arm's. (SP DX's half of
+  and ADIF alike; the received column is a shared helper's, chosen by the
+  station as DescribeSession chooses (M11 S9c). (SP DX's half of
   that test was dead -- SP DX never runs that exchange -- and went with it.)
   The row's own AE is transcribed unchanged. M7a moved the arm into
   DescribeSession as it stood: a PA station runs the row's exchange and
@@ -90,11 +91,14 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -120,6 +124,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uExchangeFields,
    uCallSignRoutines,
    utils_text,
@@ -132,9 +137,9 @@ begin
 end;
 
 (* RST AND OUR SERIAL, in RSTDomesticQTHExchange's state column. *)
-function TContestPACC.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                 const aQso: ContestExchange;
-                                                 const aCtx: TCabrilloQSOContext): string;
+function TContestPACC.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s', [aCtx.RSTSent, IntToStr(aQso.NumberSent)]);
 end;
@@ -143,6 +148,20 @@ function TContestPACC.GetADIFSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange): string;
 begin
    Result := Format('%-3d %-7s', [aQso.RSTSent, IntToStr(aQso.NumberSent)]);
+end;
+
+function TContestPACC.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   if HasDXMultiplier then
+      begin
+      Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+      end;
 end;
 
 function TContestPACC.GetDisplayName: string;

@@ -3103,7 +3103,6 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                   routine fills the My-station record and the per-QSO inputs
                   it has decided; the contest arranges them. *)
                 myStationEx := CurrentMyStationExchange( stationContest );
-                qsoContext.SessionExchange        := ContestSession.Exchange;
                 qsoContext.RSTSent                := RSTSent;
                 qsoContext.RSTReceived            := RSTReceived;
                 qsoContext.HisQTH                 := csQTHString;
@@ -3111,10 +3110,25 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 qsoContext.PreviousNumberReceived := previousqsonr;
                 qsoContext.RecordNumber           := contacts;
                 qsoContext.ContestTitle           := Settings.Contest.Title;
-                CABRILLO_MYEX  := exportContest.FormatCabrilloSentExchange(
-                   myStationEx, TempRXData, qsoContext );
-                CABRILLO_HISEX := exportContest.FormatCabrilloReceivedExchange(
-                   myStationEx, TempRXData, qsoContext );
+                (* THE OBJECT THAT HOLDS THE STATION, when the contest has a
+                  class: the nine contests whose columns move with the
+                  entrant (JIDX, PACC, ARRL 160, ...) test it. exportContest
+                  has none. A classless contest has no ActiveContest, and
+                  exportContest is then the plain base. *)
+                if stationContest <> nil then
+                   begin
+                   CABRILLO_MYEX  := stationContest.FormatCabrilloSentExchange(
+                      myStationEx, TempRXData, qsoContext );
+                   CABRILLO_HISEX := stationContest.FormatCabrilloReceivedExchange(
+                      myStationEx, TempRXData, qsoContext );
+                   end
+                else
+                   begin
+                   CABRILLO_MYEX  := exportContest.FormatCabrilloSentExchange(
+                      myStationEx, TempRXData, qsoContext );
+                   CABRILLO_HISEX := exportContest.FormatCabrilloReceivedExchange(
+                      myStationEx, TempRXData, qsoContext );
+                   end;
 
                 // Issue #998: StrUpper (ASCII a-z only) on the old PChar buffer -> UpperCase
                 // on the string (also ASCII a-z; Cabrillo exchanges are ASCII so identical).

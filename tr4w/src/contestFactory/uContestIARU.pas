@@ -83,12 +83,12 @@ type
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
@@ -149,6 +149,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uExchangeFields,
    SysUtils, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
@@ -287,37 +288,20 @@ end;
    spellings are kept so a future reader diffing against the legacy sees no
    difference at all.
 
-   THE SHARED ARM STAYS: RSTZoneOrDomesticQTH sits on the same body and is
-   TContestBase's default for the contests that run it. *)
-function TContestIARU.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                 const aQso: ContestExchange;
-                                                 const aCtx: TCabrilloQSOContext): string;
+   BOTH COLUMNS ARE HELPERS (M11 S9c): the state-or-zone layout is
+   uCabrilloExchange's, which the other RST-and-zone contests call too. *)
+function TContestIARU.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aCtx: TCabrilloQSOContext): string;
 begin
-   if aMy.MyState <> '' then
-      begin
-      Result := Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
-      end
-   else
-      begin
-      Result := Format('%-3s %-7d', [aCtx.RSTSent, StrToIntDef(AnsiString(aMy.MyZone), 0)]);
-      end;
+   Result := CabrilloSentRSTStateOrZone(aMy, aQso, aCtx);
 end;
 
-function TContestIARU.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                     const aQso: ContestExchange;
-                                                     const aCtx: TCabrilloQSOContext): string;
+function TContestIARU.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
 begin
-   (* aQso.QTHString, not aCtx.HisQTH: the legacy arm TESTS rx.QTHString, and
-      formats csQTHString, which the exporter set from it. The test and the
-      value are the same source. *)
-   if aQso.QTHString <> '' then
-      begin
-      Result := Format('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
-      end
-   else
-      begin
-      Result := Format('%-3s %-7u', [aCtx.RSTReceived, aQso.Zone]);
-      end;
+   Result := CabrilloReceivedRSTQTHOrZone(aMy, aQso, aCtx);
 end;
 
 function TContestIARU.GetADIFSentExchange(const aMy: TMyStationExchange;

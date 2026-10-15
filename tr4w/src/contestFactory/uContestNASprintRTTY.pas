@@ -60,6 +60,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetFlags: TContestFlags; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -88,6 +94,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uDXMultiplierKey,
    uContestRegistry, uContestFixedPoints,
@@ -158,6 +165,20 @@ function TContestNASprintRTTY.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                   const aQso: ContestExchange): string;
 begin
    Result := ADIFSentQSONumberNameState(aMy, aQso);
+end;
+
+function TContestNASprintRTTY.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentQSONumberNameStateDX(aMy, aQso, aCtx);
+end;
+
+function TContestNASprintRTTY.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                          const aQso: ContestExchange;
+                                                          const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedQSONumberNameQTHDX(aMy, aQso, aCtx);
 end;
 
 function TContestNASprintRTTY.GetFlags: TContestFlags;

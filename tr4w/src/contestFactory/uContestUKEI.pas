@@ -61,7 +61,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE RECEIVED QTH IS '--' WHEN THE QSO CARRIES NONE. The legacy arm wrote
   that as `if Contest = UKEI` inside the shared
   RSTQSONumberAndPossibleDomesticQTHExchange arm; this class sets it and the
-  shared arm still lays out the line. *)
+  shared helper (uCabrilloExchange) still lays out the line. *)
 unit uContestUKEI;
 
 {$I tr4w.inc}
@@ -90,6 +90,9 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -98,9 +101,9 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* A UK OR IRISH STATION MUST SEND MORE THAN ONE WORD -- its district
          as well as its serial. M5b, 2026-10-02: the rule stood in
@@ -136,6 +139,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    SysUtils, uContestRegistry,
    (* UKEIStation -- the UK/EI test the arm asks, already a leaf. *)
@@ -231,9 +235,9 @@ begin
       end;
 end;
 
-function TContestUKEI.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                     const aQso: ContestExchange;
-                                                     const aCtx: TCabrilloQSOContext): string;
+function TContestUKEI.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
 var
    ctx: TCabrilloQSOContext;
 begin
@@ -242,7 +246,7 @@ begin
       begin
       ctx.HisQTH := '--';
       end;
-   Result := inherited FormatCabrilloReceivedExchange(aMy, aQso, ctx);
+   Result := CabrilloReceivedRSTQSONumberQTH(aMy, aQso, ctx);
 end;
 
 function TContestUKEI.GetDisplayName: string;
@@ -310,6 +314,13 @@ function TContestUKEI.GetADIFSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTQSONumberState(aMy, aQso);
+end;
+
+function TContestUKEI.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTQSONumberState(aMy, aQso, aCtx);
 end;
 
 function TContestUKEI.GetFlags: TContestFlags;

@@ -92,8 +92,8 @@ class Inventory:
       # guard asserted the scan still reached SetUpExchangeInformation, the one
       # machine it followed. That routine is DELETED (M11 S9a, 2026-10-14), so
       # SHAPE is 0 by construction now and the guard would fail every run. The
-      # three machines left take the shape as a parameter the scan does not
-      # follow (judgements.SHAPE_MACHINES).
+      # machine left (ParseExchangeShape) takes the shape as a parameter the
+      # scan does not follow (judgements.SHAPE_MACHINES).
       self.candidates = scan.string_candidates(dump, self.contests)
       self.test_sites = analyses.test_sites(self.sites)
 

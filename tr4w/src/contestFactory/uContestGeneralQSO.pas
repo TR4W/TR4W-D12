@@ -61,12 +61,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetFlags: TContestFlags; override;
    public
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
@@ -94,6 +94,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uExchangeFields,
    SysUtils, uContestRegistry, uContestFixedPoints;
 
@@ -154,24 +155,24 @@ end;
    same three widths, because General QSO has no rule about who sends what. It
    is the fallback contest, so there is nothing contest-specific to encode.
 
-   THE SHARED ARM STAYS: RSTNameAndQTHExchange is TContestBase's default for
-   every other contest that runs it.
+   BOTH COLUMNS ARE HELPERS (M11 S9c): the RST-name-and-QTH layout is
+   uCabrilloExchange's, which the BWQP calls too.
 
    NO CONTEST_ID IN ADIF (WritesADIFContestId False): General QSO is an
    operating mode, not a contest, and uADIF.EmitADIFRecord has never written
    one for it. It tested `ceContest in [POTA, GENERALQSO]` until M4. *)
-function TContestGeneralQSO.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                       const aQso: ContestExchange;
-                                                       const aCtx: TCabrilloQSOContext): string;
+function TContestGeneralQSO.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-5s %-7s', [aCtx.RSTSent, aMy.MyName, aMy.MyState]);
+   Result := CabrilloSentRSTNameState(aMy, aQso, aCtx);
 end;
 
-function TContestGeneralQSO.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                           const aQso: ContestExchange;
-                                                           const aCtx: TCabrilloQSOContext): string;
+function TContestGeneralQSO.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-5s %-7s', [aCtx.RSTReceived, string(aQso.Name), aCtx.HisQTH]);
+   Result := CabrilloReceivedRSTNameQTH(aMy, aQso, aCtx);
 end;
 
 function TContestGeneralQSO.GetADIFSentExchange(const aMy: TMyStationExchange;

@@ -99,12 +99,12 @@ type
                              out aResolved: string;
                              out aErrorMessage: string): boolean; override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
 
@@ -177,6 +177,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uExchangeFields,
    SysUtils, uTR4WStrings, uContestRegistry,
    (* EmitADIFField -- the tag spellings are ADIF's. *)
@@ -236,16 +237,16 @@ end;
    DELETED 2026-09-29, and at M4 (2026-10-01) the shared
    ClassDomesticOrDXQTHExchange arm went too: only the two Field Days run this
    exchange, and both format their own (inventory D4). *)
-function TContestARRLFieldDay.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                         const aQso: ContestExchange;
-                                                         const aCtx: TCabrilloQSOContext): string;
+function TContestARRLFieldDay.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s ', [aMy.MyFDClass, aMy.MySection]);
 end;
 
-function TContestARRLFieldDay.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                             const aQso: ContestExchange;
-                                                             const aCtx: TCabrilloQSOContext): string;
+function TContestARRLFieldDay.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                          const aQso: ContestExchange;
+                                                          const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s', [string(aQso.ceClass), string(aQso.QTHString)]);
 end;

@@ -83,6 +83,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetReceivesGridSquareExchange: boolean; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
@@ -118,6 +124,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    (* RDADistrictKey, DOKKey, GridSquareKey, GridFieldKey -- the shared
       domestic-QTH shapes (M11 S6). *)
@@ -246,6 +253,20 @@ function TContestARRLVHFSep.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                 const aQso: ContestExchange): string;
 begin
    Result := ADIFSentRSTGrid(aMy, aQso);
+end;
+
+function TContestARRLVHFSep.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentRSTGrid(aMy, aQso, aCtx);
+end;
+
+function TContestARRLVHFSep.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedRSTQTH(aMy, aQso, aCtx);
 end;
 
 function TContestARRLVHFSep.GetReceivesGridSquareExchange: boolean;

@@ -49,12 +49,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       RXData.QSOPoints := 2;
 
   THE QTH COMES FIRST ON ITS CABRILLO LINE. This contest runs
-  QSONumberDomesticQTHExchange, whose shared arm writes the serial first and
-  the QTH second; the legacy arm tested `(Contest = UKRAINECHAMPIONSHIP) or
-  (Contest = CUPURAL)` and swapped them, with a zero-padded serial. That swap
-  is this class's own Cabrillo pair now. Its ADIF STX_STRING was never
-  swapped, so it is the base's default. The Ukraine Championship and the
-  Ural Cup carry the same pair as two copies (design 1.4): two sponsors. *)
+  QSONumberDomesticQTHExchange, whose shared layout writes the serial first
+  and the QTH second; the legacy arm tested `(Contest = UKRAINECHAMPIONSHIP)
+  or (Contest = CUPURAL)` and swapped them, with a zero-padded serial. That
+  swap is this class's own Cabrillo pair now, stated through the two
+  swapped-order helpers in uCabrilloExchange (M11 S9c). Its ADIF STX_STRING
+  was never swapped. The Ukraine Championship and the Ural Cup call the same
+  pair: two sponsors. *)
 unit uContestUkraineChampionship;
 
 {$I tr4w.inc}
@@ -94,12 +95,12 @@ type
       (* THE FINAL SCORE -- see the implementation. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
@@ -119,6 +120,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    SysUtils, uContestRegistry,
    uTR4WStrings;
@@ -139,18 +141,18 @@ begin
    Result := ContestPoints(aTotals) + 10 * SummedMultipliers(aTotals);
 end;
 
-function TContestUkraineChampionship.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                                const aQso: ContestExchange;
-                                                                const aCtx: TCabrilloQSOContext): string;
+function TContestUkraineChampionship.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                             const aQso: ContestExchange;
+                                                             const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-4s %-6.4d', [aMy.MyState, aQso.NumberSent]);
+   Result := CabrilloSentStateQSONumber(aMy, aQso, aCtx);
 end;
 
-function TContestUkraineChampionship.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                                    const aQso: ContestExchange;
-                                                                    const aCtx: TCabrilloQSOContext): string;
+function TContestUkraineChampionship.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                                 const aQso: ContestExchange;
+                                                                 const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-4s %-6.4u', [aCtx.HisQTH, aQso.NumberReceived]);
+   Result := CabrilloReceivedQTHQSONumber(aMy, aQso, aCtx);
 end;
 
 function TContestUkraineChampionship.GetDisplayName: string;

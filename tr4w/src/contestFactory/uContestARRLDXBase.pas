@@ -92,12 +92,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
    public
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
    public
@@ -133,6 +133,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uDXMultiplierKey,
    uExchangeFields,
    SysUtils,
@@ -151,20 +152,18 @@ uses
    membership number. That is FOC Marathon's rule, not ARRL DX's, and since M4
    it is TContestFOCMarathon's own -- copying it here would have put one
    contest's rule in another contest's file. *)
-function TContestARRLDXBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                       const aQso: ContestExchange;
-                                                       const aCtx: TCabrilloQSOContext): string;
+function TContestARRLDXBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
+   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
 end;
 
-function TContestARRLDXBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                           const aQso: ContestExchange;
-                                                           const aCtx: TCabrilloQSOContext): string;
+function TContestARRLDXBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   (* The QSO's OWN Power, not the his-QTH the exporter selected -- the legacy
-      arm reads rx.Power here and ignores csQTHString. *)
-   Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.Power)]);
+   Result := CabrilloReceivedRSTPower(aMy, aQso, aCtx);
 end;
 
 function TContestARRLDXBase.GetADIFSentExchange(const aMy: TMyStationExchange;

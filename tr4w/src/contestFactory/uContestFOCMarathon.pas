@@ -53,8 +53,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   uCabrilloExchange and uADIFExchange swapped MY FOC NUMBER in for MY STATE
   on the sent side, and uADIF wrote the received number as FOC_NUM instead
   of RX_PWR. All three are this class's now (the Cabrillo received column
-  is the shared arm's answer, and is stated here so the exchange is read in
-  one file). *)
+  is the shared RST-and-Power helper's answer, and is stated here so the
+  exchange is read in one file). *)
 unit uContestFOCMarathon;
 
 {$I tr4w.inc}
@@ -92,12 +92,12 @@ type
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
@@ -127,6 +127,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    SysUtils, uContestRegistry,
    uTR4WStrings;
 
@@ -143,19 +144,19 @@ begin
 end;
 
 (* RST AND OUR MEMBERSHIP NUMBER, in the RSTPowerExchange widths. *)
-function TContestFOCMarathon.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                        const aQso: ContestExchange;
-                                                        const aCtx: TCabrilloQSOContext): string;
+function TContestFOCMarathon.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
 begin
    Result := Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyFOCNumber]);
 end;
 
 (* RST AND HIS MEMBERSHIP NUMBER, which the parser put in Power. *)
-function TContestFOCMarathon.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                            const aQso: ContestExchange;
-                                                            const aCtx: TCabrilloQSOContext): string;
+function TContestFOCMarathon.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                         const aQso: ContestExchange;
+                                                         const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.Power)]);
+   Result := CabrilloReceivedRSTPower(aMy, aQso, aCtx);
 end;
 
 function TContestFOCMarathon.GetADIFSentExchange(const aMy: TMyStationExchange;

@@ -67,6 +67,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetReceivesGridSquareExchange: boolean; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
@@ -115,6 +121,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    Math,       (* Ceil -- the rule is "per 500 km BEGUN" *)
    (* THE GEODESIC, AND WHY IT IS THIS ONE.
@@ -246,6 +253,20 @@ function TContestARRLDigi.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
    Result := ADIFSentGrid(aMy, aQso);
+end;
+
+function TContestARRLDigi.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentGrid(aMy, aQso, aCtx);
+end;
+
+function TContestARRLDigi.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedGrid(aMy, aQso, aCtx);
 end;
 
 function TContestARRLDigi.GetReceivesGridSquareExchange: boolean;

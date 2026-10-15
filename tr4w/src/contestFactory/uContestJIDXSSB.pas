@@ -86,6 +86,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -137,6 +143,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
    uTR4WStrings;
@@ -273,6 +280,34 @@ begin
    else
       begin
       Result := ADIFSentRSTPrefecture(aMy, aQso);
+      end;
+end;
+
+function TContestJIDXSSB.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                 const aQso: ContestExchange;
+                                                 const aCtx: TCabrilloQSOContext): string;
+begin
+   if IsJapaneseEntrant then
+      begin
+      Result := CabrilloSentRSTZone(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloSentRSTZoneNumber(aMy, aQso, aCtx);
+      end;
+end;
+
+function TContestJIDXSSB.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                     const aQso: ContestExchange;
+                                                     const aCtx: TCabrilloQSOContext): string;
+begin
+   if IsJapaneseEntrant then
+      begin
+      Result := CabrilloReceivedRSTZone(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloReceivedRSTQTH(aMy, aQso, aCtx);
       end;
 end;
 

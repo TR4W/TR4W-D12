@@ -84,12 +84,12 @@ type
    public
       constructor Create(aContest: ContestType); override;
 
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
    public
@@ -106,6 +106,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uExchangeFields,
    uDXMultiplierKey,
    SysUtils, uContestFixedPoints, uContestRegistry;
@@ -215,23 +216,20 @@ end;
    written where the contest's name has to be asked for. It is expressed here as
    behaviour instead.
 
-   THE LEGACY FLORIDA-NAMED TESTS WERE DELETED ON 2026-09-29. They were kept
-   while /NOFACTORY still let Florida reach RSTDomesticOrDXQTHExchange; when that
-   switch went, this class's override became the only route, so a branch
-   testing for Florida BY NAME could only ever be reached by Florida -- i.e.
-   never. The SHARED ARM (RSTDomesticOrDXQTHExchange) is TContestBase's default
-   for every other contest that runs it; only the two `Contest =
-   FLORIDAQSOPARTY` tests inside it are gone. *)
-function TContestFloridaQP.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                      const aQso: ContestExchange;
-                                                      const aCtx: TCabrilloQSOContext): string;
+   THE LEGACY FLORIDA-NAMED TESTS WERE DELETED ON 2026-09-29: this class's
+   override is the only route, so a branch testing for Florida BY NAME could
+   only ever be reached by Florida. The SENT column is the plain RST-and-state
+   helper (M11 S9c); the received one is Florida's own. *)
+function TContestFloridaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                   const aQso: ContestExchange;
+                                                   const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := Format('%-3s %-7s', [aCtx.RSTSent, aMy.MyState]);
+   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
 end;
 
-function TContestFloridaQP.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                          const aQso: ContestExchange;
-                                                          const aCtx: TCabrilloQSOContext): string;
+function TContestFloridaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                       const aQso: ContestExchange;
+                                                       const aCtx: TCabrilloQSOContext): string;
 begin
    (* Reproduces the legacy decision tree exactly.  aCtx.HisQTH is what the
       exporter resolved from rx.QTHString, so the '' and 'DX' cases below are

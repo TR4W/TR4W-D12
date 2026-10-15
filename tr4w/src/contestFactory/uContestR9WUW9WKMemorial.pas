@@ -75,6 +75,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -98,6 +104,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
    uTR4WStrings;
@@ -188,6 +195,20 @@ function TContestR9WUW9WKMemorial.GetADIFSentExchange(const aMy: TMyStationExcha
                                                       const aQso: ContestExchange): string;
 begin
    Result := ADIFSentIndentedStateAndQSONumber(aMy, aQso);
+end;
+
+function TContestR9WUW9WKMemorial.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                          const aQso: ContestExchange;
+                                                          const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentStateZoneQSONumber(aMy, aQso, aCtx);
+end;
+
+function TContestR9WUW9WKMemorial.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                              const aQso: ContestExchange;
+                                                              const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedZoneQSONumber(aMy, aQso, aCtx);
 end;
 
 function TContestR9WUW9WKMemorial.GetFlags: TContestFlags;

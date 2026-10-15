@@ -19,11 +19,12 @@ def dead_arms(proxies, registry):
      scoring  logstuff.CalculateQSOPoints hands the QSO to the class and Exits
               when one is registered, so a `case ActiveQSOPointMethod of` arm
               reached only by registered contests is dead by default.
-     export   the shared arms in uCabrilloExchange / uADIFExchange are
-              TContestBase's default (M4), so an arm reached only by classes
-              that override FormatCabrilloSentExchange is dead by default."""
+     export   EMPTY since M11 S9c: both shared export machines (Cabrillo and
+              ADIF) are deleted, and every class states its own columns
+              through TContestBase.GetCabrilloSentExchange. Kept so a machine
+              added back is measured, not missed."""
    reg = registry.registered()
-   formats = registry.implementers("FormatCabrilloSentExchange")
+   formats = registry.implementers("GetCabrilloSentExchange")
    scoring, export = [], []
    for r in sorted(proxies, key=lambda r: (r["file"], r["line"])):
       cs = set(r["contests"])

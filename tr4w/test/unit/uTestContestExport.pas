@@ -53,7 +53,7 @@ type
    public
       procedure RunAllTests; override;
    private
-      procedure Test_ClasslessContestGetsTheSharedArm;
+      procedure Test_AContestWithNoRuleOfItsOwnCallsAHelper;
       procedure Test_EveryContestFormatsItsOwnExchange;
       procedure Test_FOCMarathonSendsItsMembershipNumber;
       procedure Test_UkraineAndUralPutTheQTHFirst;
@@ -76,7 +76,7 @@ implementation
 
 uses
    SysUtils, VC, uContestBase, uContestRegistry, uADIF,
-   uARRLSections;
+   uARRLSections, uCabrilloExchange;
 
 function EmptyQso(aContest: ContestType): ContestExchange;
 begin
@@ -94,9 +94,8 @@ begin
 end;
 
 (* The context the Cabrillo writer hands a contest, for one QSO. *)
-function Ctx(aKind: ExchangeType; const aRST, aHisQTH: string): TCabrilloQSOContext;
+function Ctx(const aRST, aHisQTH: string): TCabrilloQSOContext;
 begin
-   Result.SessionExchange := aKind;
    Result.RSTSent := aRST;
    Result.RSTReceived := aRST;
    Result.HisQTH := aHisQTH;
@@ -118,26 +117,32 @@ begin
    Result := ContestIdentity(aContest).FormatCabrilloReceivedExchange(aMy, aQso, aCtx);
 end;
 
-(* A CONTEST WITH NO EXPORT RULE GETS THE SHARED ARM FOR ITS SESSION'S
-   EXCHANGE -- the bytes uTestCabrilloExchange pins on the arm itself. ARRL 10
-   has no class at all; the KVP has one and no export rule. *)
-procedure TContestExportTests.Test_ClasslessContestGetsTheSharedArm;
+(* A CONTEST WITH NO EXPORT RULE OF ITS OWN CALLS A SHARED HELPER -- the bytes
+   uTestCabrilloExchange pins on the helper itself, and uTestCabrilloColumns on
+   every contest. The Pennsylvania QP and the Virginia QP each state the
+   serial-and-state layout and nothing else; the classless DUMMYCONTEST states
+   nothing, so it writes the marker. *)
+procedure TContestExportTests.Test_AContestWithNoRuleOfItsOwnCallsAHelper;
 var
    qso: ContestExchange;
    my: TMyStationExchange;
    c: TCabrilloQSOContext;
 begin
-   BeginTest('Test_ClasslessContestGetsTheSharedArm');
-   qso := EmptyQso(ARRL10);
+   BeginTest('Test_AContestWithNoRuleOfItsOwnCallsAHelper');
+   qso := EmptyQso(PAQSOPARTY);
    qso.NumberSent := 12;
    qso.NumberReceived := 34;
    my := EmptyMy;
    my.MyState := 'FL';
-   c := Ctx(QSONumberDomesticQTHExchange, '', 'GA');
-   CheckEquals('12   FL    ', Sent(ARRL10, my, qso, c), 'classless: the shared sent column');
-   CheckEquals('0034 GA    ', Received(ARRL10, my, qso, c), 'classless: the shared received column');
-   CheckEquals('12   FL    ', Sent(KVP, my, qso, c), 'a class with no export rule: the same');
-   CheckEquals(CabrilloQSOLineFormatDefault, ContestIdentity(ARRL10).CabrilloQSOLineFormat,
+   c := Ctx('', 'GA');
+   CheckEquals('12   FL    ', Sent(PAQSOPARTY, my, qso, c), 'a class with no export rule: the sent column');
+   CheckEquals('0034 GA    ', Received(PAQSOPARTY, my, qso, c), 'a class with no export rule: the received column');
+   CheckEquals('12   FL    ', Sent(VAQP, my, qso, c), 'another class stating the same helper');
+   CheckEquals(CabrilloExchangeErrorMarker, Sent(DUMMYCONTEST, my, qso, c),
+               'a classless contest: the marker, sent');
+   CheckEquals(CabrilloExchangeErrorMarker, Received(DUMMYCONTEST, my, qso, c),
+               'a classless contest: the marker, received');
+   CheckEquals(CabrilloQSOLineFormatDefault, ContestIdentity(PAQSOPARTY).CabrilloQSOLineFormat,
                'the one line layout');
 end;
 
@@ -161,7 +166,7 @@ begin
       begin
       contest := ContestIdentity(c);
       qso := EmptyQso(c);
-      context := Ctx(contest.ExchangeKind, '599', 'GA');
+      context := Ctx('599', 'GA');
       try
          line := contest.FormatCabrilloSentExchange(my, qso, context)
                  + contest.FormatCabrilloReceivedExchange(my, qso, context);
@@ -189,13 +194,13 @@ begin
    my := EmptyMy;
    my.MyFOCNumber := '5678';
    my.MyState := 'FL';
-   c := Ctx(RSTPowerExchange, '599', '');
+   c := Ctx('599', '');
    CheckEquals('599 5678   ', Sent(FOCMARATHON, my, qso, c), 'FOC MyEx: my FOC number');
    CheckEquals('599 1234   ', Received(FOCMARATHON, my, qso, c), 'FOC HisEx: his number, from Power');
    CheckEquals('599 5678   ',
                ContestIdentity(FOCMARATHON).FormatADIFSentExchange(my, qso),
                'FOC STX_STRING: my FOC number');
-   CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c),
+   CheckEquals('599 FL     ', Sent(OLDNEWYEAR, my, qso, c),
                'the same exchange for any other contest sends the state');
 end;
 
@@ -208,7 +213,7 @@ begin
    BeginTest('Test_UkraineAndUralPutTheQTHFirst');
    my := EmptyMy;
    my.MyState := 'FL';
-   c := Ctx(QSONumberDomesticQTHExchange, '', 'GA');
+   c := Ctx('', 'GA');
 
    qso := EmptyQso(UKRAINECHAMPIONSHIP);
    qso.NumberSent := 12;
@@ -230,7 +235,7 @@ begin
    BeginTest('Test_UKEIAndIOTAFillAnEmptyQTH');
    my := EmptyMy;
    my.MyState := 'FL';
-   c := Ctx(RSTQSONumberAndPossibleDomesticQTHExchange, '599', '');
+   c := Ctx('599', '');
 
    qso := EmptyQso(UKEI);
    qso.NumberSent := 12;
@@ -243,7 +248,7 @@ begin
 
    qso.ceContest := UKEI;
    qso.QTHString := 'EU';
-   c := Ctx(RSTQSONumberAndPossibleDomesticQTHExchange, '599', 'EU');
+   c := Ctx('599', 'EU');
    CheckEquals('599 0034   EU', Received(UKEI, my, qso, c), 'UK/EI: a QTH is itself');
 end;
 
@@ -257,9 +262,9 @@ begin
    my := EmptyMy;
    qso := EmptyQso(DARC10M);
    qso.NumberReceived := 34;
-   c := Ctx(RSTQSONumberAndPossibleDomesticQTHExchange, '599', 'GA');
+   c := Ctx('599', 'GA');
    CheckEquals('599 0034  GA', Received(DARC10M, my, qso, c), 'DARC 10 m: a three-wide DOK');
-   CheckEquals('599 0034   GA', Received(ARRL10, my, qso, c), 'the shared arm: four wide');
+   CheckEquals('599 0034   GA', Received(UBACW, my, qso, c), 'the shared helper: four wide');
 end;
 
 procedure TContestExportTests.Test_PACCSendsItsSerial;
@@ -275,13 +280,13 @@ begin
    qso.NumberSent := 7;
    qso.RSTSent := 599;
    qso.QTHString := 'NH';
-   c := Ctx(RSTDomesticQTHExchange, '599', 'NH');
+   c := Ctx('599', 'NH');
    CheckEquals('599 7      ', Sent(PACC, my, qso, c), 'PACC MyEx: the serial in the state column');
    CheckEquals('599 NH     ', Received(PACC, my, qso, c), 'PACC HisEx: the shared arm');
    CheckEquals('599 7      ',
                ContestIdentity(PACC).FormatADIFSentExchange(my, qso),
                'PACC STX_STRING: the serial');
-   CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c), 'any other contest sends the state');
+   CheckEquals('599 FL     ', Sent(OLDNEWYEAR, my, qso, c), 'any other contest sends the state');
 end;
 
 procedure TContestExportTests.Test_PCCSendsItsSerialNeverItsState;
@@ -296,7 +301,7 @@ begin
    qso.NumberReceived := 31;
    qso.RSTSent := 599;
    my := EmptyMy;
-   c := Ctx(RSTAndQSONumberOrDomesticQTHExchange, '599', '');
+   c := Ctx('599', '');
 
    my.MyState := '014';
    CheckEquals('599  0007/M   ', Sent(PCC, my, qso, c), 'PCC MyEx: an all-digit MY STATE adds /M');
@@ -307,7 +312,7 @@ begin
 
    my.MyState := 'FL';
    CheckEquals('599  0007   ', Sent(PCC, my, qso, c), 'PCC MyEx: never the state');
-   CheckEquals('599 FL     ', Sent(ARRL10, my, qso, c), 'any other contest sends the state');
+   CheckEquals('599 FL     ', Sent(OLDNEWYEAR, my, qso, c), 'any other contest sends the state');
 end;
 
 (* CALIFORNIA AND WW DIGI CHOOSE THEIR OWN RECEIVED QTH -- both were tests in
@@ -324,7 +329,7 @@ begin
    qso.NumberReceived := 34;
    qso.QTHString := 'LAX';
    qso.DomMultQTH := 'LAX';
-   c := Ctx(QSONumberDomesticOrDXQTHExchange, '', 'XYZ');
+   c := Ctx('', 'XYZ');
    CheckEquals('0034 LAX   ', Received(CALQSOPARTY, my, qso, c),
                'California: the QSO''s QTHString, not the exporter''s choice');
    qso.DomMultQTH := '';
@@ -334,7 +339,7 @@ begin
    qso := EmptyQso(WWDIGI);
    qso.QTHString := 'FN31';
    qso.DomesticQTH := 'fn31';
-   c := Ctx(Grid2Exchange, '', 'fn31');
+   c := Ctx('', 'fn31');
    CheckEquals('FN31       ', Received(WWDIGI, my, qso, c), 'WW Digi: the QSO''s QTHString');
 end;
 
@@ -354,7 +359,7 @@ begin
    my.MyPrec := 'B';
    my.MyCheck := '59';
    my.MySection := 'GA';
-   c := Ctx(QSONumberPrecedenceCheckDomesticQTHExchange, '', 'SC');
+   c := Ctx('', 'SC');
    CheckEquals('12   B 59 GA  ', Sent(ARRLSSCW, my, qso, c), 'SS MyEx');
    CheckEquals('34   A 72 SC ', Received(ARRLSSCW, my, qso, c), 'SS HisEx');
    CheckEquals('34   A 72 SC ', Received(ARRLSSSSB, my, qso, c), 'SS SSB: the family');
@@ -374,7 +379,7 @@ begin
    qso := EmptyQso(ARRLSSCW);
    qso.NumberReceived := -1;
    my := EmptyMy;
-   c := Ctx(QSONumberPrecedenceCheckDomesticQTHExchange, '', '');
+   c := Ctx('', '');
    line := Received(ARRLSSCW, my, qso, c);
    CheckEquals(0, Pos(#0, line), 'no NUL in a Cabrillo line');
    CheckEquals('0      00    ', line, 'the precedence column is one blank');
@@ -393,7 +398,7 @@ begin
    my := EmptyMy;
    my.MyFDClass := '3A';
    my.MySection := 'GA';
-   c := Ctx(ClassDomesticOrDXQTHExchange, '', 'SC');
+   c := Ctx('', 'SC');
    CheckEquals('3A  GA      ', Sent(ARRLFIELDDAY, my, qso, c), 'FD MyEx');
    CheckEquals('2A  SC     ', Received(ARRLFIELDDAY, my, qso, c), 'FD HisEx');
    CheckEquals('3A  GA      ',
@@ -426,7 +431,7 @@ begin
       qso.ceClass := '1D';
       qso.QTHString := 'DX';
       qso.QTH.CountryID := 'G';
-      c := Ctx(ClassDomesticOrDXQTHExchange, '', 'DX');
+      c := Ctx('', 'DX');
       CheckEquals('1D  DX     ', Received(fd, my, qso, c),
                   string(ContestTypeSA[fd]) + ': DX in the section position of the line');
       CheckEquals('<CLASS:2>1D ', ContestIdentity(fd).EmitADIFContestFields(qso),
@@ -703,7 +708,7 @@ end;
 
 procedure TContestExportTests.RunAllTests;
 begin
-   Test_ClasslessContestGetsTheSharedArm;
+   Test_AContestWithNoRuleOfItsOwnCallsAHelper;
    Test_EveryContestFormatsItsOwnExchange;
    Test_FOCMarathonSendsItsMembershipNumber;
    Test_UkraineAndUralPutTheQTHFirst;

@@ -57,8 +57,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     - No multipliers: the row has DM: DomesticFile on 'naqp', so TR4W
       counts states/provinces as domestic multipliers.
 
-  EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE BASE'S DEFAULT (M4), the
-  shared arm for its exchange. FCONTEST's and LOGCFG's set-up are this
+  EXCHANGE PARSING IS NOT MOVED (M5); EXPORT IS THE CLASS'S, THROUGH HELPERS
+  (M11 S9b, S9c), the two columns of its exchange. FCONTEST's and LOGCFG's set-up are this
   class's DescribeSession and CQExchangeDefault since M7a; uNewContest
   still names it (M9). *)
 unit uContestLocustQP;
@@ -89,6 +89,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -117,6 +123,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
    uTR4WStrings;
@@ -201,6 +208,20 @@ function TContestLocustQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
    Result := ADIFSentNameState(aMy, aQso);
+end;
+
+function TContestLocustQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentNameState(aMy, aQso, aCtx);
+end;
+
+function TContestLocustQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                      const aQso: ContestExchange;
+                                                      const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedNameQTH(aMy, aQso, aCtx);
 end;
 
 function TContestLocustQP.GetFlags: TContestFlags;

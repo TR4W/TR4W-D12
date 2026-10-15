@@ -109,6 +109,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -143,6 +149,7 @@ implementation
 
 uses
    uExchangeFields,
+   uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
    uTR4WStrings;
@@ -244,6 +251,20 @@ function TContestJockWhiteFieldDay.GetADIFSentExchange(const aMy: TMyStationExch
                                                        const aQso: ContestExchange): string;
 begin
    Result := ADIFSentNotImplemented(aMy, aQso);
+end;
+
+function TContestJockWhiteFieldDay.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                           const aQso: ContestExchange;
+                                                           const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloSentNotHandled(aMy, aQso, aCtx);
+end;
+
+function TContestJockWhiteFieldDay.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                               const aQso: ContestExchange;
+                                                               const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedNotHandled(aMy, aQso, aCtx);
 end;
 
 function TContestJockWhiteFieldDay.GetFlags: TContestFlags;

@@ -2298,6 +2298,144 @@ ADIF record -- plus the two other ADIF paths that read a kind.
   (`FormatCabrilloExchangeOfKind`, S9c) and the parser (S9d) still read the
   session's exchange; `TCabrilloQSOContext.SessionExchange` stays.
 
+#### S9c DONE (2026-10-14, on `c54e0143`, uncommitted at hand-back): THE CABRILLO EXPORT MACHINE
+
+The fourth machine: `uCabrilloExchange.FormatCabrilloExchangeOfKind`, the
+`case` over the session's exchange shape that built the sent and received
+exchange columns of a `QSO:` line.
+
+- **Measured first.**
+  - **Its arms: 31 shape arms and an `else`, carrying 38 labels** of
+    `ExchangeType`'s 61 members. The `else` (the loud marker, Issue #1043)
+    took the other 23.
+  - **Reach** (the frozen matrix's `active.exchange` lines plus the
+    stations' `DescribeSession` values, confirmed by running the OLD machine
+    for every ContestType at seven stations): registered contests run **52
+    shapes**. **35 of the 38 labels are reached; 3 arms are not**:
+    `RSTAndGrid3Exchange`, `QSONumberAndAgeExchange` and the n4af
+    `RSTQSONumberOrDomesticQTHExchange` arm. They went with the machine; the
+    enum members stay for the deletion stage. **17 reached shapes have no
+    arm** and land in the marker: `ClassDomesticOrDXQTH` and
+    `QSONumberPrecedenceCheckDomesticQTH` (the Field Days' and Sweepstakes',
+    whose classes format their own), `UnknownExchange` (the classless
+    DUMMYCONTEST) and **14 more shapes that 15 registered contests run** (F26).
+  - **By output.** The 28 working arms print **25 distinct sent layouts and
+    27 distinct received layouts** (the RST and the state, `'%-3s %-7s'`,
+    serves five arms on the sent side; the same RST-and-QTH layout serves two
+    on the received side) -- the sent and received halves of an arm are
+    independent, and the same received layout is paired with up to three
+    different sent ones. The helper set adds the Ukraine Championship's and
+    the Ural Cup's swapped-order pair (two copies of one body until now) and
+    the marker: 27 sent + 29 received. 43 groups of contests share one pair of
+    columns at every station.
+  - **Station-dependent: 9 contests.** ARRL 160, the 7QP, Arizona, NEQP,
+    Texas, the Salmon Run (a station in the host state / an ARRL-section
+    country writes `RSTDomesticOrDXQTH`'s columns, anyone else
+    `RSTDomesticQTH`'s -- the 'DX' fill in the sent state and the received
+    QTH), JIDX CW and SSB (a Japanese entrant `RSTZone`'s, anyone else
+    `RSTPrefecture`'s) and the PACC (a Dutch entrant `RSTAndQSONumberOr
+    DomesticQTH`'s received column, anyone else `RSTDomesticQTH`'s). California
+    and ARRL DX choose between shapes that print alike.
+  - **Callers: ONE** -- `PostUnit.tGenerateLogPortionOfCabrilloFile`, once
+    per QSO line, asking `exportContest.FormatCabrillo{Sent,Received}Exchange`.
+    **Overrides before the stage: 20 classes** (4 family bases: ARRL DX, ARRL
+    SS, CQ WW, CQ WPX; 16 leaves) -- **none used the kind it was handed**, and
+    four (California, the RSGB IOTA, UK/EI, WW Digi) adjusted an input and
+    called `inherited`, i.e. the machine. 33 method bodies in all.
+  - **Other Cabrillo code that dispatched on a kind: none.** PostUnit's
+    `qsoContext.SessionExchange := ContestSession.Exchange` was the one
+    writer, the machine the one reader. (`ActiveExchange` has no reader left
+    outside the engine's own parser; F13 stands.)
+- **The seam.** `TContestBase.GetCabrilloSentExchange(aMy, aQso, aCtx)` and
+  `GetCabrilloReceivedExchange` (protected virtual) behind the public,
+  **non-virtual** `FormatCabrilloSentExchange` / `FormatCabrilloReceivedExchange`
+  -- S9b's shape. **`TCabrilloQSOContext.SessionExchange` is deleted**: the
+  kind no longer travels to the contest. **The base answers
+  `CabrilloExchangeErrorMarker`** (both columns): what the machine's `else`
+  gave the classless DUMMYCONTEST, and the loud answer for a new contest that
+  forgets. The Error the machine logged (Issue #1043, sent half only, naming
+  the contest) moved into the public sent caller, which knows the contest's
+  name and logs when the column IS the marker -- whoever produced it, base or
+  helper.
+  - **PostUnit asks the object that holds the station.** `exportContest` is
+    `ContestIdentity(Contest)`, whose station is never set; the old machine got
+    the entrant through `ContestSession.Exchange`. The nine station-dependent
+    classes test `Station`, so the two columns are asked of `stationContest`
+    (`ActiveContest`) when the contest has a class, and of `exportContest`
+    (the plain base) when it has none.
+- **The helpers: `uCabrilloExchange`, 56 -- one per distinct COLUMN** (27 sent,
+  `CabrilloSentRSTState`, ...; 29 received, `CabrilloReceivedRSTQTH`, ...),
+  same `(aMy, aQso, aCtx)` signature, named for what they print. Two are not
+  layouts: `CabrilloSentNotHandled` / `CabrilloReceivedNotHandled` (the
+  marker). They read the strings the machine read (no ShortString clip, unlike
+  S9b: the machine took its inputs as `string`) and keep the 'TRC' and 'PGA'
+  tests, which name no contest (they have no ContestType; plan section 6).
+- **The overrides: 364 method bodies in 182 classes' worth of seam** -- the 181
+  classes that state `GetADIFSentExchange` plus the base. **329 are new**
+  (161 classes x 2, and 7 methods added to classes that overrode only one
+  column) and **33 are the machine-era overrides renamed** from
+  `FormatCabrillo...Exchange` to `GetCabrillo...Exchange`. Of the 33: 18 now
+  call a helper (ARRL DX, CQ WPX, CQ WW, the General QSO, IARU, NA Sprint CW,
+  the Ukraine Championship and the Ural Cup both columns; FOC Marathon's
+  received, Florida's sent), 4 adjust an input and call the helper where they
+  called `inherited` (California, the RSGB IOTA, UK/EI, WW Digi) and **11 keep
+  their own body** (both Field Days, Sweepstakes, DARC 10 m's received, FOC's
+  sent, Florida's received, the PACC's sent, the PCC's sent). The nine
+  station-dependent classes test `CountsDXMultiplier`, `Station.InHostState`,
+  `IsJapaneseEntrant` or `HasDXMultiplier` -- the predicates S9a used for the
+  field list -- 17 methods in all. **15 classes state the marker by name**
+  (`CabrilloSentNotHandled`): ALL JA, ARCI, County Hunter, FISTS, Grid Loc,
+  JA Long Prefecture, Kids Day, NZ Field Day, POTA, QCWA, QCWA Golden,
+  TEN-TEN, the UA4W Championship, WWL, Xmas.
+- **The repoint.** `PostUnit` drops the `SessionExchange` assignment and asks
+  `stationContest`. `FormatCabrilloExchangeOfKind` is DELETED, and with it the
+  nested `SetMyEx` / `SetHisEx` the inventory attributed the arms to.
+- **Unreachable branches deleted with the machine** (none changes an output
+  a registered contest produces): the three arms above, with their three unit
+  tests; `uTestCabrilloExchange`'s `Test_D4ExchangesAreUnhandled` (the Field
+  Days and Sweepstakes have classes that format their own; an operator can no
+  longer state an exchange for a contest that does not run it).
+- **Pin: `uTestCabrilloColumns` (new).** Every ContestType (187) at the seven
+  roster stations (`uTestExchangeFields.TPinStation`) with **eight inputs** --
+  a full exchange; an empty one; over-long values (and a first record); a
+  state of TRC; a contest title of PGA; negative serials and an all-digit
+  state; no his-QTH selected with a QTH on the QSO; a DX QTH with none on the
+  QSO -- against **literals made by running the OLD machine**
+  (`FormatCabrillo{Sent,Received}Exchange` with
+  `ctx.SessionExchange := uTestContestKindPin.Kinds(c, station).Exchange`,
+  dumped to a file and laid out grouped by output: 43 groups, four of them
+  station-dependent), a check of every one of the 56 helpers against the
+  literals of a contest that calls it, and the base's marker. **OLD code (a
+  worktree of `c54e0143` with the pin calling the old seam and the helper
+  test cut): 220,882 passed, 0 failed -- 199,921 baseline + 20,944 column
+  pairs (187 x 7 x 8 x 2) + 1 count + 16 base. NEW code: the same 20,961
+  unchanged, plus the helper test (448) -- 221,322 passed, 0 failed** after
+  `uTestCabrilloExchange` lost its three arm tests and the D4 test (-10) and
+  `uTestContestExport` gained the DUMMYCONTEST's two marker checks (+2).
+  `uTestContestExport`'s context helper lost its kind argument (and its tests
+  now name a contest that really runs the layout: the Pennsylvania QP, the Old
+  New Year, the UBA).
+- **Build:** narrowing **1260** (ceiling 1262 -- two conversions fewer: the
+  CQ WW and IARU `StrToIntDef(AnsiString(...))` calls left their classes),
+  range **3**, full `-B`. Matrix, corpus and lints NOT run here. **The
+  matrix should be IDENTICAL** (it prints Cabrillo for every contest); **the
+  corpus byte-diffs 13 contests' columns -- IDENTICAL.**
+- **Inventory** (generated to check the tool, then the tracked doc restored):
+  rows 29, contests 30 -- unchanged; shape-4 PROXY 12, SHARED 22, SHAPE 0,
+  UNUSED 10 unchanged. `judgements.SHAPE_MACHINES` lost the routine (one left,
+  `ParseExchangeShape`); its two `ROUTINES` rows are replaced by rows for the
+  two helpers that still hold a TRC / PGA test, and the three `SHAPE3` rows
+  follow the code (`aMy.MyState`, `aCtx.HisQTH`); `analyses.dead_arms` asks
+  `GetCabrilloSentExchange`, and section 9.1 says its export half is empty. The
+  tracked document needs a regeneration after the commit: four `uCabrilloExchange`
+  rows and the `postunit` line numbers move.
+- **Not done here, on purpose.** The parser (`ParseExchangeShape`, S9d) still
+  reads the session's exchange; `ContestSession.Exchange`, `GetExchangeKind`
+  and `ExchangeType` stay for it and for the deletion stage. The 11 own-body
+  overrides were not folded into helpers where their output differs (both
+  Field Days, Sweepstakes, DARC 10 m, FOC's sent column, Florida's received,
+  PACC's and PCC's sent).
+
 ### S10 -- (optional, Q93) Reach-1 shapes become their contest's own
 
 - For each of the 20 members in 1.1, lift its parser out of LOGSTUFF and
@@ -2341,6 +2479,8 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F23** | `TContestALRSUA1DZCup`, `TContestWAG`, `TContestDARC10M` `DomesticMultiplierFromQTH` / `DomesticMultiplierHint` / `DomesticQTHReplacesDXMultiplier` / `DomesticQTHIsNeverAGrid` versus `ContestSession.DoingDomesticMults` | (S6 part 1a) F20's shape, for the domestic kind: the three station-dependent classes' answers ask `Station`, refreshed on every `ActiveContest` call, while whether GetDomQTH asks at all (`DoingDomesticMults`) still asks the session kind fixed at set-up. They agree unless the entrant's country changes mid-session without a CONTEST change (WAG begun at a DL call and switched away keeps no domestic multiplier; begun elsewhere and switched to DL, it looks a DOK up in a domestic file it has none of, where the kind kept reading DOKs). Part 2 makes "does this contest count a domestic multiplier" a class answer, as S3-S5 part 2 did. Not measured on a bench **CLOSED at S6 part 2 (2026-10-14):** `DoingDomesticMults` is `TContestBase.HasDomesticMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), composed from the answers these classes already state and overridden by WAG and the DARC 10 m with the same station test, so the gate and the rules read the same `Station`. The mid-session change is still not bench-checked |
 | **F24** | `TContestUA4WChampionship.GetReceivedExchangeFields`; the deleted `LOGDUPE.SetUpExchangeInformation` | (S9a) **The UA4W Championship's received exchange marks no field.** Its shape, `RSTAndGridSquareOrRDAExchange`, had no arm in the machine, so start-up left `ExchangeInformation` all False for it: the log-string parses take no RST or QTH from a logged line, and the ADIF export's RST test (POSTUNIT) is False. Transcribed into its class as `ExchangeFieldsNone`, not fixed; the likely fix is `ExchangeFieldsRSTQTH` (it is an RST-and-grid-or-RDA exchange) -- a behaviour change for its own commit, with a matrix re-freeze. Three latent oddities of the machine, none observable: it cleared 13 of the record's 16 fields and left `Kids`, `TenTenNum` and `FOCNumber` (harmless -- it ran once over a zero-initialized global; every helper now clears all 16); its unreached `RSTAndGrid3Exchange` arm marked the QTH alone, no RST; and no arm ever marked `FOCNumber` or `ZoneOrSociety` (the FOC Marathon runs `RSTPower`, whose number lands in `Power`) |
 | **F25** | `TContestCupRFCW/SSB/DIG`, `TContestCQWWRTTY`, `TContestYouthChampionshipRF`; `uADIFExchange.ADIFSentNotBuilt` | (S9b) **Five contests export `Error generating my exchange` as the ADIF `STX_STRING` of every QSO** (and the classless DUMMYCONTEST). The old machine's format for three shapes raised, and its own `try`/`except` swallowed it: `QSONumberAndGridSquare` (the Cup RF's three runnings; `'%-3s %-7s'` of the serial, a number), `RSTZoneAndPossibleDomesticQTHExchange` (CQ WW RTTY; `'%-3d %02u %-4s'` of the zone as a `ShortString`) and `AgeAndQSONumberExchange` (the Youth Championship RF; three specifiers, two arguments -- pinned as a defect since the arm was extracted). Not fixed: it needs the sponsors' exchange layout. `ADIFSentNotBuilt` is that answer by name; each class calls it. Fourteen further contests print `None` (`ADIFSentNotImplemented`, an Error logged per QSO): ALL JA, ARCI, County Hunter, FISTS, Grid Loc, JA Long Prefecture, Kids Day, NZ Field Day, QCWA and QCWA Golden, TEN-TEN, UA4W Championship, WWL, Xmas (13 shapes). The Cabrillo export does not share the defect -- its own machine is S9c's |
+| **F26** | `TContestARCI`, `TContestAllJA`, `TContestCountyHunter`, `TContestFISTS`, `TContestGridLoc`, `TContestJALongPrefect`, `TContestKidsDay`, `TContestJockWhiteFieldDay`, `TContestPOTA`, `TContestQCWA`, `TContestQCWAGolden`, `TContestTenTen`, `TContestUA4WChampionship`, `TContestWWL`, `TContestXmas`; `uCabrilloExchange.CabrilloSentNotHandled` | (S9c) **Fifteen registered contests write `ERROR EXCHANGE NOT HANDLED` in BOTH exchange columns of every `QSO:` line.** The old machine had no arm for 14 of their shapes (`KidsDay`, `NZFieldDay`, `NameAndPossibleGridSquare`, `NameQTHAndPossibleTenTenNumber`, `QSONumberNameChapterAndQTH`, `RSTALLJAPrefectureAndPrecedence`, `RSTAndGrid`, `RSTAndGridSquareOrRDA`, `RSTAndPOTAPark`, `RSTLongJAPrefecture`, `RSTPossibleDomesticQTHAndPower`, `RSTQSONumberAndRandomCharacters`, `RSTQTH`, `RSTQTHNameAndFistsNumberOrPower`) and its `else` wrote the marker (Issue #1043, deliberately loud). The same 14 shapes are the ADIF `None` list (F25). Transcribed, not fixed: each class states `CabrilloSentNotHandled` / `CabrilloReceivedNotHandled`, which is that answer by name; a fix needs each sponsor's column layout (POTA has no Cabrillo at all, so its answer may be right). The classless DUMMYCONTEST gets it from the base |
+| **F27** | `PostUnit.MyExchangeForExport:2344`, `TContestJIDXCW`/`TContestJIDXSSB.GetADIFSentExchange` | (S9c, found while reading how PostUnit reaches the station) **S9b's ADIF `STX_STRING` for the JIDX asks an object that has no station.** `MyExchangeForExport(aContest)` builds `my` from the active contest it is handed but then calls `ContestIdentity(Contest).FormatADIFSentExchange`, and the identity object is never given a station (`SetStation` runs only on `ActiveContest`'s object), so `IsJapaneseEntrant` is False at every entrant: a Japanese JIDX station exports the prefecture layout (`'%-3d %-7d'`) where the old machine, keyed on the session's exchange, exported the zone layout (`'%-3d %-7.2d'`). The other eight station-dependent contests print the same ADIF text at both shapes, so only JIDX moves. Neither the corpus (no JIDX set) nor the matrix (no STX_STRING) nor `uTestADIFSentExchange` (it builds the object WITH the station) sees it. **NOT FIXED here (it is S9b's, and an ADIF change): the fix is to call `aContest.FormatADIFSentExchange` when `aContest` is not nil**, as S9c does for the Cabrillo columns |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

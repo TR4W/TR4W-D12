@@ -70,12 +70,12 @@ type
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
       function GetFlags: TContestFlags; override;
    public
-      function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                          const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; override;
-      function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                              const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; override;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
    public
@@ -101,6 +101,7 @@ type
 implementation
 
 uses
+   uCabrilloExchange,
    uExchangeFields,
    uDXMultiplierKey,
    SysUtils, uContestRegistry, uContestFixedPoints,
@@ -183,37 +184,21 @@ end;
    marker in the legacy source, so they were set to those numbers together and
    on purpose.
 
-   THE SHARED ARM STAYS: the SSB Sprint and the NA Sprint RTTY run the same
-   exchange with no rule of their own, so TContestBase formats them through
-   QSONumberNameDomesticOrDXQTHExchange -- the arm this class copies. *)
-function TContestNASprintCW.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
-                                                       const aQso: ContestExchange;
-                                                       const aCtx: TCabrilloQSOContext): string;
+   BOTH COLUMNS ARE HELPERS (M11 S9c): the SSB Sprint and the NA Sprint RTTY
+   run the same exchange with no rule of their own, and call the same two
+   helpers in uCabrilloExchange. *)
+function TContestNASprintCW.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange;
+                                                    const aCtx: TCabrilloQSOContext): string;
 begin
-   if aMy.MyState = '' then
-      begin
-      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, 'DX']);
-      end
-   else
-      begin
-      Result := Format('%-4d %-7s %-8s', [aQso.NumberSent, aMy.MyName, aMy.MyState]);
-      end;
+   Result := CabrilloSentQSONumberNameStateDX(aMy, aQso, aCtx);
 end;
 
-function TContestNASprintCW.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
-                                                           const aQso: ContestExchange;
-                                                           const aCtx: TCabrilloQSOContext): string;
+function TContestNASprintCW.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                        const aQso: ContestExchange;
+                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   (* Tested on aQso.QTHString and formatted from aCtx.HisQTH, matching the
-      legacy arm exactly. *)
-   if aQso.QTHString = '' then
-      begin
-      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), 'DX']);
-      end
-   else
-      begin
-      Result := Format('%-4u %-5s %-4s', [aQso.NumberReceived, string(aQso.Name), aCtx.HisQTH]);
-      end;
+   Result := CabrilloReceivedQSONumberNameQTHDX(aMy, aQso, aCtx);
 end;
 
 function TContestNASprintCW.GetADIFSentExchange(const aMy: TMyStationExchange;

@@ -423,21 +423,14 @@ type
       grants: it is the argument list of three virtuals, and a class here would
       need constructing and freeing per QSO for no gain.
 
-      SessionExchange IS THE EXCHANGE THE SESSION RESOLVED, NOT THE CONTEST'S
-      ExchangeKind TRAIT, AND THAT IS MEASURED, NOT CHOSEN. Export has always
-      keyed on the ActiveExchange global, and set-up chooses it per STATION
-      after the head writes the trait -- a contest's DescribeSession since M7a,
-      a classless contest's FoundContest arm otherwise: in the contest matrix
-      twelve contests' ActiveExchange differs from their row in some variant
-      (ARRL DX and ARRL 160, the 7QP, Arizona, NEQP, Texas, California and
-      Salmon Run parties, JIDX, PACC), and an operator's EXCHANGE RECEIVED
-      line moves it too. Keying the base's default on the trait would have
-      changed those contests' Cabrillo. So the session's answer is the
-      global, and the exporter hands it in as data -- the contest still reads
-      no global. A single trait value cannot carry an answer that varies per
-      station (inventory D8), which is why this stays the session's. *)
+      THERE IS NO SESSION EXCHANGE IN IT any more (M11 S9c, 2026-10-14). The
+      exporter used to hand in the exchange shape the session had resolved,
+      and a `case` over it chose the layout. Nine contests' shape moved with
+      the STATION (ARRL 160, the 7QP, Arizona, NEQP, Texas, the Salmon Run,
+      JIDX, PACC; California's two shapes print alike); those classes now test
+      the station themselves, through the object PostUnit asks
+      (ActiveContest, which holds it), as DescribeSession does. *)
    TCabrilloQSOContext = record
-      SessionExchange: ExchangeType;
       RSTSent: string;
       RSTReceived: string;
       HisQTH: string;
@@ -455,7 +448,7 @@ type
          RSGB RoPoCo's first QSO sends its own postcode. *)
       RecordNumber: integer;
 
-      (* Settings.Contest.Title -- read by the shared arms' 'PGA' test, an
+      (* Settings.Contest.Title -- read by the shared helpers' 'PGA' test, an
          operator-titled event with no ContestType (inventory D7, design Q8). *)
       ContestTitle: string;
    end;
@@ -1237,6 +1230,33 @@ type
          family base. *)
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; virtual;
+
+      (* THE TWO CABRILLO EXCHANGE COLUMNS -- M11 S9c, 2026-10-14
+         (docs/CONTEST_FACTORY_M11_PLAN.md S9c). The getters behind
+         FormatCabrilloSentExchange and FormatCabrilloReceivedExchange: each
+         contest states the column it writes by calling a named helper in
+         uCabrilloExchange (NY4I's ruling on Q92: no enum selects one), or
+         builds its own. They were a `case` over the session's exchange shape,
+         uCabrilloExchange.FormatCabrilloExchangeOfKind, which this base
+         called for every contest without an override.
+
+         The worked QSO carries the serials; aCtx what the exporter decided
+         about it (the formatted RSTs, the his-QTH it selected, the previous
+         record's values). A contest whose exchange depends on the station
+         tests the station here as DescribeSession does (Station is
+         ActiveContest's -- PostUnit asks that object).
+
+         THE BASE PRINTS THE ERROR MARKER IN BOTH COLUMNS -- what the machine
+         gave the classless DUMMYCONTEST (UnknownExchange had no arm), and the
+         loud answer for a contest that forgets to state its columns (Issue
+         #1043). Every registered contest states both, on its class or its
+         family base. *)
+      function GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange;
+                                       const aCtx: TCabrilloQSOContext): string; virtual;
+      function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                           const aQso: ContestExchange;
+                                           const aCtx: TCabrilloQSOContext): string; virtual;
 
       (* DOES THE RECEIVED EXCHANGE CARRY A GRID SQUARE? -- M11 S9b. The
          generic ADIF import reads GRIDSQUARE into the exchange of a contest
@@ -2245,32 +2265,27 @@ type
          contest formats its export: it always does, and FormatsExchange --
          the opt-in that stood here from phase F -- is gone.
 
-         THE CABRILLO BASE'S ANSWER IS THE SHARED ARM FOR THE SESSION'S
-         EXCHANGE, and only that. uCabrilloExchange.FormatCabrilloExchangeOfKind
-         holds one arm per exchange SHAPE -- what an RST-and-serial or a
-         name-and-QTH line looks like -- and NOTHING that names a contest:
-         every `if Contest = ...` that stood inside those arms is an override
-         on that contest's class now. A base that asked which contest it is
-         would be the defect this factory exists to remove. The kind is
-         TCabrilloQSOContext.SessionExchange -- see that record for why it is
-         the session's and not the trait. (THE ADIF HALF IS THE CLASSES' since
-         M11 S9b: GetADIFSentExchange, above, names a helper and no kind.)
+         THE COLUMNS ARE THE CLASSES' since M11 S9c: GetCabrilloSentExchange
+         and GetCabrilloReceivedExchange, above, name a helper in
+         uCabrilloExchange (what an RST-and-serial or a name-and-QTH line
+         looks like) and no exchange kind -- as GetADIFSentExchange has since
+         S9b. These two are the public, NON-VIRTUAL callers; the sent one
+         logs the Error when a contest's column is the marker (Issue #1043),
+         because only it knows the contest's name.
 
-         A CONTEST WITH ITS OWN RULE OVERRIDES, and owns the result whatever
-         the session's exchange says -- as the classes that formatted their
-         own columns before M4 always did. One that only adjusts an input
-         (UK/EI's '--' for an absent QTH) changes the context and calls
-         inherited, so the shared arm still lays out the line.
+         A CONTEST WITH ITS OWN RULE states it in its override, and owns the
+         result. One that only adjusts an input (UK/EI's '--' for an absent
+         QTH) changes the context and calls the helper itself.
 
          THE WIDTHS ARE THE CONTRACT. Cabrillo is a column format and these
          strings are what a robot scorer reads, so an override reproduces its
          arm's widths exactly, trailing spaces included. *)
       function FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                           const aQso: ContestExchange;
-                                          const aCtx: TCabrilloQSOContext): string; virtual;
+                                          const aCtx: TCabrilloQSOContext): string;
       function FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange;
-                                              const aCtx: TCabrilloQSOContext): string; virtual;
+                                              const aCtx: TCabrilloQSOContext): string;
 
       (* THE ADIF STX_STRING -- our side of the exchange; GetADIFSentExchange
          is what a contest states. The caller has already decided the QSO is
@@ -2924,6 +2939,8 @@ uses
       name no contest, and depend on VC, SysUtils and Log4D only. *)
    uCabrilloExchange,
    uADIFExchange,
+   (* The Error a contest with no Cabrillo layout logs (Issue #1043). *)
+   Log4D,
    (* FormatCabrilloMode -- the base's Cabrillo mode column (M9a). A leaf: VC
       and SysUtils only. *)
    uCabrilloFormat,
@@ -2937,6 +2954,9 @@ uses
       the base's FormatADIFReceivedExchange writes (M5b). The Field Day
       classes already reach uADIF the same way, from their implementation. *)
    uADIF;
+
+var
+   logger: TLogLogger;
 
 function ContestIdList(const aIds: array of string): TContestIdList;
 var
@@ -3904,31 +3924,44 @@ begin
    Result := True;
 end;
 
-(* THE SHARED ARM FOR THE SESSION'S EXCHANGE -- see the declaration.
+(* THE CONTEST'S TWO CABRILLO COLUMNS -- see the declarations.
 
-   ONE CALL COMPUTES BOTH COLUMNS and each method keeps its half. The arms
-   were written as pairs, and splitting forty of them in two to save a Format
-   per QSO would be forty chances to change a byte. Only the sent half reports
-   an exchange with no arm, so an unhandled kind is logged once per QSO line,
-   not twice. *)
+   Only the sent half reports a column with no layout, so it is logged once
+   per QSO line, not twice -- as the machine did (Issue #1043). *)
 function TContestBase.FormatCabrilloSentExchange(const aMy: TMyStationExchange;
                                                  const aQso: ContestExchange;
                                                  const aCtx: TCabrilloQSOContext): string;
-var
-   received: string;
 begin
-   FormatCabrilloExchangeOfKind(aCtx, aQso, aMy, string(ContestTypeSA[FContest]),
-                                True, Result, received);
+   Result := GetCabrilloSentExchange(aMy, aQso, aCtx);
+   if Result = CabrilloExchangeErrorMarker then
+      begin
+      logger.Error(Format(
+        'FormatCabrilloSentExchange: contest "%s" states no Cabrillo exchange layout -- ' +
+        'wrote ERROR marker to the Cabrillo line. See Issue #1043.',
+        [string(ContestTypeSA[FContest])]));
+      end;
 end;
 
 function TContestBase.FormatCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                      const aQso: ContestExchange;
                                                      const aCtx: TCabrilloQSOContext): string;
-var
-   sent: string;
 begin
-   FormatCabrilloExchangeOfKind(aCtx, aQso, aMy, string(ContestTypeSA[FContest]),
-                                False, sent, Result);
+   Result := GetCabrilloReceivedExchange(aMy, aQso, aCtx);
+end;
+
+function TContestBase.GetCabrilloSentExchange(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              const aCtx: TCabrilloQSOContext): string;
+begin
+   (* Nothing it could be wrong about -- see the declaration. *)
+   Result := CabrilloSentNotHandled(aMy, aQso, aCtx);
+end;
+
+function TContestBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+   Result := CabrilloReceivedNotHandled(aMy, aQso, aCtx);
 end;
 
 function TContestBase.FormatADIFSentExchange(const aMy: TMyStationExchange;
@@ -4575,5 +4608,8 @@ function TSessionDefaults.Memory(aIndex: integer): TSessionMemory;
 begin
    Result := FMemories[aIndex];
 end;
+
+initialization
+   logger := TLogLogger.GetLogger('uContestBase');
 
 end.

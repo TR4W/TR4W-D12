@@ -626,14 +626,15 @@ the target shape, the M-step migration order and the open questions.
   gone.** Seams: `FormatCabrilloSentExchange` / `...Received...` (with a
   `TCabrilloQSOContext`), `FormatADIFSentExchange` (the class states `GetADIFSentExchange` -- a
   `uADIFExchange` helper since M11 S9b), `EmitADIFContestFields`,
-  `ADIFPowerTag`, `WritesADIFContestId`, `CabrilloQSOLineFormat`. **The base's
-  Cabrillo default is the shared arm for the SESSION's exchange**
-  (`uCabrilloExchange.FormatCabrilloExchangeOfKind`; the ADIF half is the
-  classes' since S9b) -- the session's, not the
-  `ExchangeKind` trait, because FCONTEST's arms change it per station for
-  twelve contests (design §8.2e). **Those arms name no contest and must not
-  start to**: a contest's export rule is an override on its class, and one
-  that only changes an input copies the context and calls `inherited`.
+  `ADIFPowerTag`, `WritesADIFContestId`, `CabrilloQSOLineFormat`. **Both exports are the
+  classes' own since M11 S9b/S9c**: a class states `GetADIFSentExchange` and
+  `GetCabrilloSentExchange` / `GetCabrilloReceivedExchange` by calling a named
+  helper (`uADIFExchange`, `uCabrilloExchange`); the base prints the error
+  marker. A contest whose columns move with the entrant (nine) tests the
+  station itself, as `DescribeSession` does. **The helpers name no contest and
+  must not start to**: a contest's export rule is an override on its class, and
+  one that only changes an input copies the context and calls the helper
+  itself (there is no `inherited` to call).
   No contest is named in PostUnit's ADIF tail any more (ARRL 160 left at
   M7b, POTA with its class); CUP RF's his-QTH, LABRE/EURASIA and the
   `'TRC'`/`'PGA'` tests stay in the Cabrillo writer. **`EmitADIFExchangeFields`**
