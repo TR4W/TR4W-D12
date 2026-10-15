@@ -76,6 +76,9 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* A BLANK EXCHANGE -- see TContestBase.AcceptsBlankExchange (M11 S7). *)
+      function AcceptsBlankExchange: boolean; override;
    end;
 
 implementation
@@ -162,6 +165,14 @@ function TContestBWQP.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- not a US state QSO party. *)
    Result := False;
+end;
+
+(* THE RECEIVED EXCHANGE MAY BE BLANK, at every station -- M11 S7,
+   2026-10-14. It was the session's RSTNameAndQTH shape; see
+   TContestBase.AcceptsBlankExchange. *)
+function TContestBWQP.AcceptsBlankExchange: boolean;
+begin
+   Result := True;
 end;
 
 initialization

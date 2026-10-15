@@ -351,7 +351,23 @@ first. **What M11 inherits:** the two EXCHANGE kind enums
 (`ExchangeType`, `InitialExchangeType`; S3-S6 deleted the four multiplier
 kinds) and their engine arms -- the four exchange-shape machines (parser,
 field list, ADIF, Cabrillo), the compare sites (S7) and the initial
-exchange (S8, Q50) -- every one reading `ContestSession`. **The CTY country list (`ctyCountryMode`) is set in the
+exchange (S8, Q50) -- every one reading `ContestSession`. **S7 IS DONE
+(2026-10-14): the compare sites that decided a RULE ask the contest** --
+the rover county (`StripsRoverCountyFromCall`, both MainUnit routines; the
+rescore and the ADIF parse pass the object they hold), several QTHs in one
+S&P entry (`LogsSeveralQTHsFromOneEntry`), a blank exchange
+(`AcceptsBlankExchange`, ParametersOkay and ProcessExchange -- one
+`ExchangeContest` fetch, after `ParseArray` as before), the park lookup
+(`OffersParkTools`), CQ WW RTTY's state after the zone
+(`SendsStateAfterZone`, handed to `SetUpRSTMyZoneExchange` by FoundContest)
+and FISTS's points-alone (its own `CombineWithMultipliers`;
+`TScoreTotals.SessionExchange` is deleted). `ProcessReturn`'s split into
+the `s1..s4` globals was deleted: its only reader re-splits first. **Still
+reading the shape: the four machines, the history renders (LOGEDIT,
+LOGDUPE), FCONTEST's sent-message `case`, `PerQSOExchString`,
+`LooksLikeAGrid` and the data hand-offs -- S9's -- and `SetColumnsWidth`'s
+SS columns (F15, blocked on S1/Q50).** Do not add a new rule test of
+`ContestSession.Exchange`; add a class answer. **The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
 -- from the contest's `CountryMode` (`ContestCountryMode(ActiveContest(
 Contest))`) since M11 S4, from `ContestSession.DXMult` before -- its only

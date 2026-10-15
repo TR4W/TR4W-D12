@@ -159,6 +159,10 @@ type
       (* THE RAREST-OF-NC SWEEP -- see the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -377,6 +381,22 @@ begin
       begin
       Result := Result + NCSweepBonus;
       end;
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
+   shape; see TContestBase.StripsRoverCountyFromCall. *)
+function TContestNorthCarolinaQP.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
+   M11 S7, 2026-10-14. It was the session's RSTDomesticQTH shape; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestNorthCarolinaQP.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := True;
 end;
 
 initialization

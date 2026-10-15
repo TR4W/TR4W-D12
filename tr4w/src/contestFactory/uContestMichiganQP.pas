@@ -110,6 +110,11 @@ type
          read the array -- so the golden corpus cannot move. *)
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -190,6 +195,22 @@ end;
 procedure TContestMichiganQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
+   shape; see TContestBase.StripsRoverCountyFromCall. *)
+function TContestMichiganQP.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
+   M11 S7, 2026-10-14. It was the session's RSTDomesticQTH shape; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestMichiganQP.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := True;
 end;
 
 initialization

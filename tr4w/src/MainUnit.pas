@@ -921,7 +921,19 @@ end;
 //
 // Used by ParametersOkay (live entry) and ParseADIFRecord at EOR (import).
 
-function ctyLocateCallStripRover(const Call: CallString; var QTH: QTHRecord): Boolean;
+(* THE ROVER STRIP, ON A CONTEST THE CALLER ALREADY HOLDS -- M11 S7,
+  2026-10-14. Whether a /suffix may be a rover's county is the contest's
+  answer (TContestBase.StripsRoverCountyFromCall); it was a test of the
+  session's exchange shape (RSTDomesticQTH, RSTQTH, RSTDomesticOrDXQTH).
+
+  THE SLASH IS TESTED FIRST, and aContest is asked only for a call that has
+  one, so a caller with no contest in hand fetches one only for such a call
+  (ctyLocateCallStripRover). nil is the classless DUMMYCONTEST, which
+  strips nothing. The rescore and the ADIF record parse pass the contest
+  they fetched for the same QSO. *)
+function LocateCallStrippingRoverCounty(aContest: TContestBase;
+                                        const Call: CallString;
+                                        var QTH: QTHRecord): Boolean;
 var
   LookupCall  : CallString;
   SlashPos    : Integer;
@@ -930,38 +942,47 @@ var
   ProbeSuffix : string;
 begin
   LookupCall := Call;
-  logger.Info('[ctyLocateCallStripRover] ENTER Call=[%s] ActiveExchange=%d',
-              [string(Call), Ord(ContestSession.Exchange)]);
-  if ((ContestSession.Exchange = RSTDomesticQTHExchange) or
-      (ContestSession.Exchange = RSTQTHExchange) or
-      (ContestSession.Exchange = RSTDomesticOrDXQTHExchange)) then
+  SlashPos := Pos('/', string(LookupCall));
+  logger.Info('[ctyLocateCallStripRover] ENTER Call=[%s] SlashPos=%d',
+              [string(Call), SlashPos]);
+  if (SlashPos > 0) and ContestStripsRoverCountyFromCall(aContest) then
      begin
-     SlashPos := Pos('/', string(LookupCall));
-     logger.Info('[ctyLocateCallStripRover] QP exchange, SlashPos=%d', [SlashPos]);
-     if SlashPos > 0 then
+     FillChar(ProbeRX, SizeOf(ProbeRX), 0);
+     ProbeSuffix := UpperCase(
+        Copy(string(LookupCall), SlashPos + 1,
+             Length(string(LookupCall)) - SlashPos));
+     ProbeRX.QTHString := ProbeSuffix;
+     FoundQTH := FoundDomesticQTH(ProbeRX);
+     logger.Info('[ctyLocateCallStripRover] suffix=[%s] FoundDomesticQTH=%s',
+                 [ProbeSuffix, BoolToStr(FoundQTH, True)]);
+     if FoundQTH then
         begin
-        FillChar(ProbeRX, SizeOf(ProbeRX), 0);
-        ProbeSuffix := UpperCase(
-           Copy(string(LookupCall), SlashPos + 1,
-                Length(string(LookupCall)) - SlashPos));
-        ProbeRX.QTHString := ProbeSuffix;
-        FoundQTH := FoundDomesticQTH(ProbeRX);
-        logger.Info('[ctyLocateCallStripRover] suffix=[%s] FoundDomesticQTH=%s',
-                    [ProbeSuffix, BoolToStr(FoundQTH, True)]);
-        if FoundQTH then
-           begin
-           LookupCall := Copy(string(LookupCall), 1, SlashPos - 1);
-           end;
+        LookupCall := Copy(string(LookupCall), 1, SlashPos - 1);
         end;
      end
   else
      begin
-     logger.Info('[ctyLocateCallStripRover] NOT a QP exchange, skipping strip', []);
+     logger.Info('[ctyLocateCallStripRover] no slash, or no rover county in this contest: skipping strip', []);
      end;
   Result := ctyLocateCall(LookupCall, QTH);
   logger.Info('[ctyLocateCallStripRover] EXIT LookupCall=[%s] Result=%s CountryID=[%s] Prefix=[%s]',
               [string(LookupCall), BoolToStr(Result, True),
                string(QTH.CountryID), string(QTH.Prefix)]);
+end;
+
+(* THE ROVER STRIP FOR A CALLER WITH NO CONTEST IN HAND -- live entry, the
+  ADIF import loop and the contest matrix. The open contest is fetched only
+  for a call with a '/'; without one nothing asks it. *)
+function ctyLocateCallStripRover(const Call: CallString; var QTH: QTHRecord): Boolean;
+var
+  contestRules: TContestBase;
+begin
+  contestRules := nil;
+  if Pos('/', string(Call)) > 0 then
+     begin
+     contestRules := ActiveContest(Contest);
+     end;
+  Result := LocateCallStrippingRoverCounty(contestRules, Call, QTH);
 end;
 
 function DetectRoverSlashInCall(out RoverCounty: string): Boolean;
@@ -973,16 +994,17 @@ begin
   Result := False;
   RoverCounty := '';
 
-  if not ((ContestSession.Exchange = RSTDomesticQTHExchange) or
-          (ContestSession.Exchange = RSTQTHExchange) or
-          (ContestSession.Exchange = RSTDomesticOrDXQTHExchange)) then
+  CallStr := string(CallWindowString);
+  SlashPos := Pos('/', CallStr);
+  if SlashPos = 0 then
      begin
      Exit;
      end;
 
-  CallStr := string(CallWindowString);
-  SlashPos := Pos('/', CallStr);
-  if SlashPos = 0 then
+  (* THE CONTEST SAYS WHETHER A /SUFFIX MAY BE A ROVER'S COUNTY -- M11 S7
+    (TContestBase.StripsRoverCountyFromCall); it was a test of the session's
+    exchange shape, ahead of the slash. Asked only for a call with a '/'. *)
+  if not ContestStripsRoverCountyFromCall(ActiveContest(Contest)) then
      begin
      Exit;
      end;
@@ -2059,8 +2081,10 @@ begin
            end;
         end;
      end;
-  if (ContestSession.Exchange = RSTDomesticQTHExchange) or (ContestSession.Exchange =
-    RSTQTHEXCHANGE) then
+  (* SEVERAL QTHs FROM ONE ENTRY IS THE CONTEST'S ANSWER -- M11 S7
+    (TContestBase.LogsSeveralQTHsFromOneEntry); it was a test of the
+    session's exchange shape (RSTDomesticQTH, RSTQTH). *)
+  if ContestLogsSeveralQTHsFromOneEntry(ActiveContest(Contest)) then
      begin
      if (IsAlpha(S2)) and (S2 <> '') then
         begin
@@ -4052,7 +4076,11 @@ begin
        end;
 
   // POTA: look up park name from exchange as typed and show via QuickDisplay.
-  if (ContestSession.Exchange = RSTAndPOTAPark) and POTAParksLoaded then
+  (* THE CONTEST SAYS WHETHER IT HAS PARKS -- OffersParkTools, the answer the
+    Tools menu asks (True for POTA alone); this was a test of the session's
+    exchange shape, RSTAndPOTAPark, which POTA alone runs (M11 S7). Its
+    identity: the answer depends on no station. *)
+  if ContestIdentity(Contest).OffersParkTools and POTAParksLoaded then
      begin
      TempString := ExchangeWindowString;
      while TempString <> '' do
@@ -5986,16 +6014,11 @@ begin
      begin
      tPTTVIACAT(false);
      end;
-  if (ContestSession.Exchange = RSTDomesticQTHExchange) then
-    if (CallWindowString <> '') and (ExchangeWindowString <> '') then
-       begin
-       ParseFourFields(ExchangeWindowString, s1, s2, s3, s4);
-       end;
-  {    if S3 <> '' then
-       begin
-        ExchangeWindowString := S3
-
-      }
+  (* A SPLIT OF THE EXCHANGE INTO s1..s4 STOOD HERE, for the
+    RSTDomesticQTH shape, and was DELETED at M11 S7 (2026-10-14) as having
+    no effect: those four globals are read in one place,
+    ReturnInSAPOpMode, which splits the exchange into them itself before
+    any read. *)
   if OpMode = CQOpMode then
      begin
      ctyGetCountryID(callwindowstring);
@@ -7119,8 +7142,11 @@ begin
      live scoring too. *)
   tGetQSOSystemTime(RData.tSysTime);
   RData.Callsign := Call;
-  if (ExchangeString = '') and not (ContestSession.Exchange in [RSTNameAndQTHExchange,
-    RSTAndPOTAPark]) then // These two exchanges allow blank exchanges
+  (* A BLANK EXCHANGE IS THE CONTEST'S ANSWER -- M11 S7
+    (TContestBase.AcceptsBlankExchange: BWQP, the General QSO, POTA); it was
+    a test of the session's exchange shape (RSTNameAndQTH, RSTAndPOTAPark),
+    and it is asked only of a blank exchange. *)
+  if (ExchangeString = '') and not ContestAcceptsBlankExchange(ActiveContest(Contest)) then
      begin
      logger.debug('Exiting ParametersOkay early: ExchangeString=<%s>',
        [ExchangeString]);
@@ -8692,7 +8718,8 @@ var
   (* ONE ActiveContest FOR THE PREFIX AND THE DX QTH -- M11 S4. It rebuilds
     the station on every call; this asked it through DoingPrefixMults and
     again through SetPrefix, and GetDXQTH now needs it too -- as does
-    whether to run it (HasDXMultiplier, M11 S4 part 2). SetMultFlags and
+    whether to run it (HasDXMultiplier, M11 S4 part 2), and the rover strip
+    asks it whether a /suffix may be a county (M11 S7). SetMultFlags and
     CalculateQSOPoints fetch their own, as before. *)
   contestRules: TContestBase;
 begin
@@ -8706,7 +8733,7 @@ begin
      // /M doesn't get misread as a GB prefix.  Without this the
      // rescore wipes the correct USA lookup done at log-time and
      // restamps the record as DX=G.
-     ctyLocateCallStripRover(aRX.Callsign, aRX.QTH);
+     LocateCallStrippingRoverCounty(contestRules, aRX.Callsign, aRX.QTH);
      SetPrefix(contestRules, aRX);
      end;
 
@@ -8715,7 +8742,7 @@ begin
      FillChar(aRX.QTH, SizeOf(aRX.QTH), 0);
      FillChar(aRX.DXQTH, SizeOf(aRX.DXQTH), 0);
      // The same rover strip as above, for the same reason.
-     ctyLocateCallStripRover(aRX.Callsign, aRX.QTH);
+     LocateCallStrippingRoverCounty(contestRules, aRX.Callsign, aRX.QTH);
      GetDXQTH(contestRules, aRX);
      end;
 
@@ -10112,8 +10139,9 @@ begin
   // State-QP rover (KG1S/MON): strip suffix for country lookup so /M
   // doesn't get misread as a GB prefix indicator.  Done here (rather
   // than inside uADIF) because the strip uses MainUnit-scope state
-  // (DomQTHTable, ActiveExchange).
-  ctyLocateCallStripRover(exch.Callsign, exch.QTH);
+  // (DomQTHTable). Whether the contest has rover counties is its own
+  // answer, asked of the contest this record already fetched (M11 S7).
+  LocateCallStrippingRoverCounty(importContest, exch.Callsign, exch.QTH);
 end; // of ParseADIFRecord
 (*----------------------------------------------------------------------------*)
 

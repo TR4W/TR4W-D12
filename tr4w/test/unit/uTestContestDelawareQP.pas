@@ -159,7 +159,6 @@ begin
    Result.QSOPoints := aPoints;
    Result.ScoredBand := AllBands;
    Result.SessionCountsMultipliers := True;
-   Result.SessionExchange := RSTDomesticOrDXQTHExchange;
    Result.Mults[AllBands, Both, rmDomestic] := aMults;
 end;
 

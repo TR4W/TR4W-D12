@@ -98,8 +98,6 @@ uses
    uMults,
    uContestFactory,
    uContestRegistry,
-   (* ContestSession -- the session's exchange (M10 S9f). *)
-   uContestSession,
    (* DoingAnyMults -- "counts multipliers", one statement shared with the
       WSJT-X decode gate (M11 S4 part 2). *)
    LogEdit;
@@ -164,7 +162,6 @@ begin
 
    aTotals.ScoredBand := SingleBand;
    aTotals.SessionCountsMultipliers := DoingAnyMults(aContest);
-   aTotals.SessionExchange := ContestSession.Exchange;
    aTotals.LiveSessionTally := LiveSessionTally;
 end;
 

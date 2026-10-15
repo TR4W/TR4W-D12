@@ -119,6 +119,8 @@ type
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* A BLANK EXCHANGE -- see TContestBase.AcceptsBlankExchange (M11 S7). *)
+      function AcceptsBlankExchange: boolean; override;
    end;
 
 implementation
@@ -350,6 +352,14 @@ procedure TContestPOTA.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmInCaption('Activator');
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOURPARKREFERENCEDESIGNATOR, ncfMyPark);
+end;
+
+(* THE RECEIVED EXCHANGE MAY BE BLANK, at every station -- M11 S7,
+   2026-10-14. It was the session's RSTAndPOTAPark shape; see
+   TContestBase.AcceptsBlankExchange. *)
+function TContestPOTA.AcceptsBlankExchange: boolean;
+begin
+   Result := True;
 end;
 
 initialization

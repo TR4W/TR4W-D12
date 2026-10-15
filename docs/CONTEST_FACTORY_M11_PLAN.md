@@ -10,8 +10,10 @@ S5 is DONE -- part 1 (the move) on `f0c54f4c`, part 2 (the deletion)
 on `a8186905`, both 2026-10-14; S6 is DONE -- part 1a (the move, every
 shape but the domestic file) on `ef8241fa`, part 1b (the domestic file) on
 `69a2740a`, part 2 (the deletion) on `a37c3100`, uncommitted at its
-hand-back, all 2026-10-14 -- so ALL FOUR MULTIPLIER KINDS ARE GONE; S1
-and S7 on are not built (see "WHAT S7, S8 AND S9 INHERIT" after S6).** See section 4 S0 for
+hand-back, all 2026-10-14 -- so ALL FOUR MULTIPLIER KINDS ARE GONE; S7 is
+DONE (2026-10-14, on `17902292`, uncommitted at its hand-back) except the
+SS columns (F15, blocked on S1); S1, S8 and on are not built (see "WHAT S7,
+S8 AND S9 INHERIT" after S6).** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -1876,6 +1878,115 @@ kinds now.
   `MainUnit` paths are UI, so the class answers get unit pins and the bench
   gets one item (`docs/BENCH_QUEUE.md`).
 - *Risk:* medium. *Specialists:* `lcl-ui`, `contest-scoring`.
+- **DONE 2026-10-14, on `17902292` (uncommitted at hand-back), in one
+  change, except the SS columns (F15).**
+  - **The reads, classified.** `ContestSession.Exchange`, code only, logddx
+    excluded: **51 reads in 10 files** (the "50" above counted MainUnit's
+    two-on-one-line compare once). RULE, moved: **15** -- the rover 6 (and
+    the rover routine's log line), several QTHs 2 and `ProcessReturn`'s 1,
+    the park 1, a blank exchange 2 (MainUnit, LOGSTUFF), CQ WW RTTY 1
+    (FCONTEST), and `uScoreTotals`' copy into
+    `TScoreTotals.SessionExchange`, whose one reader was `CombineScore`'s
+    FISTS test. RULE, BLOCKED: **2** -- `SetColumnsWidth`'s SS columns (F15
+    waits for S1, which waits for Q50). SHAPE, left for S9: **24** --
+    `PerQSOExchString`'s `case`, FCONTEST's sent-message `case`, LOGDUPE's
+    FISTS field placement and history renders (6), LOGEDIT's history branch
+    (15), `TREE.LooksLikeAGrid`. DATA handed on, left for S9: **10** -- the
+    matrix line, the ADIF import session, POSTUNIT's three exporter
+    hand-offs, LOGSTUFF's two `ExchangeModeAttribution`s and the parse
+    session, uProgramMain's field list and readiness check. Rule or shape
+    was judged by the plan's 2.1 table and by reading each site: a RULE is
+    a sponsor's decision that happened to be keyed on how the exchange is
+    spelled; a SHAPE reads the format itself. After: **36 reads** (MainUnit
+    16 -> 4, LOGSTUFF 4 -> 3, FCONTEST 2 -> 1, uScoreTotals 1 -> 0).
+    `kind-reach.py`'s compare records 44 -> **28**. Inside the factory,
+    `CombineScore`'s test went; the Cabrillo context's `SessionExchange`,
+    `ApplyADIFImport`'s grid shapes and POTA's are shapes (S9).
+  - **The API** (`TContestBase`, base False, public; nil-safe
+    `ContestStripsRoverCountyFromCall`, `ContestLogsSeveralQTHsFromOneEntry`,
+    `ContestAcceptsBlankExchange`): `StripsRoverCountyFromCall`,
+    `LogsSeveralQTHsFromOneEntry`, `AcceptsBlankExchange`,
+    `SendsStateAfterZone`. The park lookup asks the existing
+    `OffersParkTools` (True for POTA alone, pinned), of the contest's
+    identity as the Tools menu does -- no station enters it. FISTS overrides
+    `CombineWithMultipliers` (points alone; F12 closed), and
+    `TScoreTotals.SessionExchange` is DELETED with its reader.
+  - **Per contest, stated per class** (28 units). No family base: five
+    parties on the state-party base (CA, CO, MN, OH, PA) never stripped, so
+    the rover rule is not the family's (F4).
+    - Rover AND several QTHs at every station (12): County Hunter (RSTQTH),
+      Michigan, Missouri, North Carolina, TOEC, Wisconsin, New York,
+      Tennessee, the ALRS cup, Indiana, BC, IN7QPNE (RSTDomesticQTH).
+    - Rover at every station, never several (4): Florida, LABRE, Idaho,
+      Delaware (RSTDomesticOrDXQTH).
+    - Rover at every station, several only where DescribeSession states
+      RSTDomesticQTH (6): the 7QP, the Salmon Run, Texas (`not
+      CountsDXMultiplier`, out of the host state), Arizona (`not
+      Station.InHostState`), NEQP (`not CountsDXMultiplier`, outside New
+      England), ARRL 160 (`not CountsDXMultiplier`, outside an ARRL section
+      country).
+    - Both only where the entrant decides (3): the ARRL DX CW and SSB, on
+      their base (`not CountsDXMultiplier`, not W or VE), the PACC (`not
+      HasDXMultiplier`, not Dutch).
+    - A blank exchange: BWQP, the General QSO, POTA. The state after the
+      zone: CQ WW RTTY.
+  - **The rover rules are unchanged -- evidence.** Both of today's sets,
+    transcribed exactly (Q94 and Q90 open): 25 contests strip at some
+    station, 21 take several QTHs, and the export's
+    `SplitsRoverCallOnExport` (15) is untouched. Pinned literally for every
+    ContestType at six entrants -- us, ve, dx (DL), a host-state MA station,
+    a Dutch station (PA) and a KH6 station (an ARRL section country that is
+    neither W nor VE, where ARRL 160 and the ARRL DX part company) -- with
+    per-station counts (rover 23, 23, 25, 23, 24, 25; several 18, 18, 21,
+    13, 20, 20) and the 25 and 21 at some station; RUN GREEN ON THE OLD
+    CODE, where the program's answer was the old compare on the session
+    shape `Kinds` resolves. A cross-check of every ContestType x entrant x
+    rule against that frozen compare (`LegacyAnswer`) STAYS until S9 deletes
+    the shape. The matrix's stations agree (a scratch script over `frozen/`:
+    25 rover, 21 several, 3 blank). Inside the rover routines the order
+    changed only between pure tests: the slash first, then the contest.
+  - **One site deleted, not moved.** `ProcessReturn`'s split of the
+    exchange into the `s1..s4` globals (for RSTDomesticQTH) had no
+    observable effect: the four are read in one place, `ReturnInSAPOpMode`,
+    which splits into them itself, unconditionally, first; no other unit
+    reads them (a code-only search of every unit naming MainUnit).
+  - **Per-QSO sites pass the object they hold:** the rescore
+    (`RecomputeQSOScoring`'s `contestRules`) and the ADIF record parse
+    (`ParseADIFRecord`'s `importContest`) call
+    `LocateCallStrippingRoverCounty(aContest, ...)`; `ProcessExchange`
+    fetches `ExchangeContest` ONCE for the blank gate and the parse (after
+    `ParseArray`, as before); FoundContest asks `definition`. Live entry,
+    the import loop and the matrix keep `ctyLocateCallStripRover`, which
+    fetches `ActiveContest` only for a call with a '/'. ParametersOkay's
+    blank test fetches only for a blank exchange, `ReturnInSAPOpMode` once
+    per S&P Enter that reaches the test, and the park lookup asks the
+    identity per keystroke. Not timed here.
+  - **Pins:** `uTestExchangeRules` (new). Old code: **192,772 passed, 0
+    failed** (181,504 and 11,268 more, which is 60 x 187 ContestTypes + 48
+    -- every new check ran). After the move: **192,772 passed, 0 failed**.
+    `uTestContestTotals`' FISTS case now asks FISTS (it handed CQ WW CW a
+    FISTS session shape, a pairing the program never runs);
+    `uTestContestDelawareQP`'s totals lost the deleted field.
+  - **Matrix: MEASURED IDENTICAL, 186 of 186 byte-for-byte against
+    `frozen/`** (a scratch run of the scratch `-B` build, not the freeze
+    script). It covers CQ WW RTTY's messages and the FISTS totals; the rest
+    is UI -- one bench item (`BENCH_QUEUE.md`).
+  - **Narrowing 1263, range 3, unchanged** (scratch `-B`; the incremental
+    build crashed FPC, as at S3-S6). `Lint-ContestNameTests` 6, unchanged.
+    VC untouched, so `tr4wserver` was not rebuilt.
+  - **Inventory** (generated, then the tracked doc restored): rows 61 ->
+    **54**; shapes 6/0/12/43 -> **6/0/12/36**; shape-4 sites 66 -> **53**
+    (48 comparisons, 5 `case`s); records PROXY 43 -> **36** (reach 1: 12 ->
+    7), SHARED 36 -> **30**, SHAPE 43, UNUSED 10; contests with rules
+    outside the factory 44 -> **41** (County Hunter, BWQP and the General
+    QSO leave). The `judgements.ROUTINES` rows for ProcessExchange,
+    ParametersOkay, ExchangeWindowChange, the two rover routines,
+    ReturnInSAPOpMode and SetUpRSTMyZoneExchange, which no site matches
+    now, are comments saying where the rules went.
+  - **Not done -- the SS columns (F15).** `SetColumnsWidth` still tests
+    `= QSONumberPrecedenceCheckDomesticQTHExchange`; it equals
+    `ExchangeInformation.Precedence`/`.Check` only once S1 deletes
+    `CheckAndChapterOrQTHExchange`, and S1 waits on Q50.
 
 ### S8 -- Initial exchange moves into the classes (46 contests) -- the least pinned
 
@@ -1931,7 +2042,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F9** | `LogCfg:433-436` (once, `uProgramMain:2318`) versus `uSettingsEffects:353` | `Doing*` is derived once at start-up, while the kinds are rewritten by every FoundContest. Readers mix the two (`uScoreTotals:161-164` and `MainUnit:9542-9543` read the session; `logdupe`/`logsubs2` read `Doing*`). **MEASURED at S0d: they diverge** on a peer's run-time `CONTEST` change (CQ WW CW -> ARRL SS CW leaves `Doing*` at CQ WW's values). **FIXED at S2** by construction: the four are `ContestSession` answers computed from the kinds, with no store of their own. What start-up derived FROM them is still once-only -- F19 |
 | **F10** | 1.1 | 26 members have been unreachable since S2 retired their only selector. This includes `User1`..`User5` and the VE/Section/QTH initial exchanges -- operator features that S2 removed without removing their arms |
 | **F11** | 11 factory `ParseReceivedExchange` guards (1.2) | Each class's session exchange is the same in every matrix variant, and none states one in `DescribeSession` (L5), so `aSession.Exchange = X` is always True in the program. Only the unit tests' stub sessions reach the other branch. **FIXED at S2**: the 11 guards and the six test cases are deleted |
-| **F12** | `uContestBase.pas:2718` | A reach-1 rule (FISTS) sits in the base's non-virtual `CombineScore` |
+| **F12** | `uContestBase.pas:2718` | A reach-1 rule (FISTS) sits in the base's non-virtual `CombineScore`. **CLOSED at S7 (2026-10-14):** it is `TContestFISTS.CombineWithMultipliers`, and `TScoreTotals.SessionExchange` went with it |
 | **F13** | `VC.pas:3406` | `ActiveExchangeArray` survives for two log lines (`uADIFExchange:403/413`) |
 | **F14** | `Lint-ContestNameTests.ps1` `$TOTAL_FLOOR = 5`, 6 found | S8 removes 4. The floor must fall in the same commit, or the lint fails with "broken parser" |
 | **F15** | `MainUnit:9514-9516`; `logdupe:1709-1715` | The SS-shape test duplicates `ExchangeInformation.Precedence`/`.Check`. They are equal once S1 removes `CheckAndChapterOrQTH`, the only other arm that sets `Check` |

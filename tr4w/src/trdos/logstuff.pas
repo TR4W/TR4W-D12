@@ -6998,7 +6998,10 @@ end;
 (* THE CONTEST PARSES AND VALIDATES ITS RECEIVED EXCHANGE -- M5b, 2026-10-02.
 
   The tokenising gate stays here, contest-blind: an exchange ParseArray cannot
-  cut is refused for every shape but the two that allow a blank exchange.
+  cut is refused unless the contest accepts a blank exchange
+  (TContestBase.AcceptsBlankExchange, M11 S7 -- it was a test of the
+  session's shape, RSTNameAndQTH or RSTAndPOTAPark). ONE contest is fetched
+  for that and the parse, after ParseArray as before.
   Then the CONTEST is asked (TContestBase.ParseReceivedExchange), handed the
   session -- its exchange, the shape parser above and two engine services --
   as data. A refusal it names goes where every exchange error goes,
@@ -7009,10 +7012,13 @@ function ProcessExchange(ExchangeString: Str80; var RData: ContestExchange):
 var
   session: TReceivedExchangeSession;
   refusal: string;
+  cut: boolean;
+  contestRules: TContestBase;
 begin
   Result := False;
-  if (not ParseArray(ExchangeString))                                  and
-     (not (ContestSession.Exchange in [RSTNameAndQTHExchange, RSTAndPOTAPark])) then
+  cut := ParseArray(ExchangeString);
+  contestRules := ExchangeContest;
+  if (not cut) and (not contestRules.AcceptsBlankExchange) then
      begin
      Exit;
      end;
@@ -7024,8 +7030,8 @@ begin
   session.CallWindowHasCall := CallWindowString <> '';
   session.AbandonEntry := @ParseSessionAbandonEntry;
 
-  Result := ExchangeContest.ParseReceivedExchange(string(ExchangeString),
-                                                  session, RData, refusal);
+  Result := contestRules.ParseReceivedExchange(string(ExchangeString),
+                                               session, RData, refusal);
   if refusal <> '' then
      begin
      ExchangeErrorMessage := refusal;

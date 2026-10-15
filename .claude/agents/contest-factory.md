@@ -314,6 +314,25 @@ the target shape, the M-step migration order and the open questions.
   `Station` (F23 closed): `LOGEDIT.DoingDomesticMults`, or
   `ContestHasDomesticMultiplier` on an object in hand. All four multiplier
   KINDS are gone; only `ExchangeType` and `InitialExchangeType` remain.
+- **THE EXCHANGE RULES ARE THE CLASS'S (M11 S7, 2026-10-14)** -- what the
+  engine decided by testing `ContestSession.Exchange` outside the four shape
+  machines. `TContestBase` (base False, nil-safe `Contest...` functions):
+  `StripsRoverCountyFromCall` (MainUnit's two rover routines; 25 contests),
+  `LogsSeveralQTHsFromOneEntry` (`ReturnInSAPOpMode`; 21),
+  `AcceptsBlankExchange` (`ParametersOkay`, `LOGSTUFF.ProcessExchange`;
+  BWQP, General QSO, POTA) and `SendsStateAfterZone` (FCONTEST's zone
+  messages; CQ WW RTTY). The park lookup asks the existing
+  `OffersParkTools`; FISTS overrides `CombineWithMultipliers`. STATED PER
+  CLASS -- the state-party base does NOT hold the rover answer, because five
+  of its parties (CA, CO, MN, OH, PA) never stripped (F4, Q94 open) -- and
+  where the entrant decides the shape, through the station test its
+  `DescribeSession` uses (ARRL DX, PACC, ARRL 160, NEQP, 7QP, Arizona, the
+  Salmon Run, Texas). A new contest with a rover or a blank exchange
+  overrides them and joins `uTestExchangeRules`' literal sets; the
+  per-station counts change by hand. The rover strip takes the contest the
+  rescore and the ADIF record parse already hold
+  (`MainUnit.LocateCallStrippingRoverCounty`); a caller with none fetches it
+  only for a call with a '/'.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by
@@ -357,8 +376,9 @@ the target shape, the M-step migration order and the open questions.
   `TScoreTotals` (a record: the interface-parameter exemption) and asks
   `FinalScore(aTotals, aView)` = `CombineScore` + `BonusPoints`; both public
   entries are NOT virtual, `CombineScore` being a template (a session with no
-  multiplier, or the FISTS exchange, scores its points) over the protected
-  `CombineWithMultipliers`. **The view is read-only** (`TLoggedQSOView`, an
+  multiplier scores its points) over the protected
+  `CombineWithMultipliers` -- FISTS's points-alone is ITS OWN override since
+  M11 S7 (`TScoreTotals.SessionExchange` went with it). **The view is read-only** (`TLoggedQSOView`, an
   abstract class; `TLoggedQSOList` for tests) and the application keeps it in
   memory beside the totals (`uScoreTotals`), because reading the database per
   score was measured at ~130 us a row. Bonuses: **declared data**

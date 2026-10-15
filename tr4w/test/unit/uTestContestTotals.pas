@@ -30,9 +30,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   logs.
 
     * THE BASE: points times the sum of the multipliers, on the scored band;
-      the points alone for a session with no multiplier or the FISTS
-      exchange -- a template no contest can skip; a bonus only from declared
-      stations.
+      the points alone for a session with no multiplier -- a template no
+      contest can skip (FISTS's points alone are its own formula since M11
+      S7); a bonus only from declared stations.
     * THE FORMULAS THAT MOVED out of LogEdit.TotalScore, each with numbers
       that tell it apart from the general case.
     * EVERY BONUS AT ITS EDGES: Missouri's stations and capped tally, North
@@ -96,7 +96,6 @@ begin
    Result.QSOPoints := aPoints;
    Result.ScoredBand := AllBands;
    Result.SessionCountsMultipliers := True;
-   Result.SessionExchange := RSTQSONumberExchange;
 end;
 
 
@@ -214,9 +213,10 @@ begin
    station.MyPower := cpQRP;
    CheckEquals(11, Combine(WINTERFIELDDAY, station, t), 'no contest skips the template');
 
+   (* FISTS SCORES ITS POINTS ALONE -- its own CombineWithMultipliers since
+      M11 S7; CombineScore tested the session's FISTS exchange shape. *)
    t.SessionCountsMultipliers := True;
-   t.SessionExchange := RSTQTHNameAndFistsNumberOrPowerExchange;
-   CheckEquals(11, Combine(CQWWCW, NoStation, t), 'the FISTS exchange scores its points');
+   CheckEquals(11, Combine(FISTS, NoStation, t), 'FISTS scores its points');
 end;
 
 (* ---------------------------------------------------------------------------

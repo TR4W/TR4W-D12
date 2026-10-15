@@ -122,7 +122,7 @@ function FoundMyStateInDomFile: boolean;
 procedure SetUpNameAndStateExchange;
 procedure SetUpRSTQSONumberExchange;
 procedure SetUpRSTMyStateExchange;
-procedure SetUpRSTMyZoneExchange;
+procedure SetUpRSTMyZoneExchange(aSendsStateAfterZone: boolean);
 
 implementation
 
@@ -383,8 +383,13 @@ end;
   transient write would have been ignored and the state dropped.
 
   So the text is a local, made from the zone THIS CONTEST sends -- the
-  resolved MY ZONE -- and the messages are byte-for-byte what they were. *)
-procedure SetUpRSTMyZoneExchange;
+  resolved MY ZONE -- and the messages are byte-for-byte what they were.
+
+  WHETHER THE SENT STATE FOLLOWS THE ZONE IS THE CONTEST'S ANSWER -- M11 S7,
+  2026-10-14 (TContestBase.SendsStateAfterZone, CQ WW RTTY's), handed in by
+  FoundContest. It was a test of the session's exchange shape,
+  RSTZoneAndPossibleDomesticQTH, which CQ WW RTTY alone runs. *)
+procedure SetUpRSTMyZoneExchange(aSendsStateAfterZone: boolean);
 var
   zoneText: string;
 const
@@ -392,8 +397,7 @@ const
 begin
   zoneText := Settings.My.ResolvedZone;
 
-  if (SentMyState <> '') and
-     (ContestSession.Exchange = RSTZoneAndPossibleDomesticQTHExchange) then
+  if (SentMyState <> '') and aSendsStateAfterZone then
      begin
      zoneText := zoneText + ' ' + SentMyState;
      end;
@@ -813,12 +817,17 @@ var
      for it -- TSessionDefaults.SuppressZoneExchangeMessages (M7b). *)
   zoneExchangeMessagesSuppressed: boolean;
 
+  (* The contest's zone exchange carries the state it sends --
+     TContestBase.SendsStateAfterZone (M11 S7). *)
+  zoneExchangeSendsState: boolean;
+
   TempDomesticQTHDataFileName: string;
   // i,j                                   : integer;
   // k                                     : str10;
 begin
   CTY.ctyCountryMode := ARRLCountryMode;
   zoneExchangeMessagesSuppressed := False;
+  zoneExchangeSendsState := False;
 
   NoMultMarineMobile := False;
     {KK1L: 6.68 Added for WRTC 2002 as flag to not count /MM or /AM as mults or countries}
@@ -834,6 +843,7 @@ begin
      begin
      definition := ContestIdentity(Contest);
      ApplyContestTraits(definition);
+     zoneExchangeSendsState := definition.SendsStateAfterZone;
 
      RecalculateMyCountryContinentAndZoneNew(UTF8Encode(Settings.My.Call));
 
@@ -948,13 +958,13 @@ begin
     RSTZoneAndPossibleDomesticQTHExchange, RSTZoneExchange:
       if not zoneExchangeMessagesSuppressed then
          begin
-         SetUpRSTMyZoneExchange;
+         SetUpRSTMyZoneExchange(zoneExchangeSendsState);
          end;
 
     RSTZoneOrSocietyExchange:
       if SentMyState = '' then
          begin
-         SetUpRSTMyZoneExchange
+         SetUpRSTMyZoneExchange(zoneExchangeSendsState)
          end
       else
          begin

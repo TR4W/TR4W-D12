@@ -123,6 +123,10 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -270,6 +274,24 @@ begin
       begin
       Result := CQCountryMode;
       end;
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's
+   RSTDomesticOrDXQTH (in state) or RSTDomesticQTH shape; see
+   TContestBase.StripsRoverCountyFromCall. *)
+function TContestTexasQP.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* OUT OF THE HOST STATE ONE ENTRY MAY CARRY SEVERAL QTHs (RSTDomesticQTH);
+   in it, not (RSTDomesticOrDXQTH) -- M11 S7, 2026-10-14. It was the
+   session's shape, and this is the station test DescribeSession chooses the
+   shape by; see TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestTexasQP.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := not CountsDXMultiplier;
 end;
 
 initialization

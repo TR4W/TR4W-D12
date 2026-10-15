@@ -89,6 +89,11 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+   public
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -168,6 +173,22 @@ function TContestCountyHunter.GetIsUSQSOParty: boolean;
 begin
    (* P: 0 -- this is not a US state QSO party. *)
    Result := False;
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's RSTQTH shape;
+   see TContestBase.StripsRoverCountyFromCall. *)
+function TContestCountyHunter.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
+   M11 S7, 2026-10-14. It was the session's RSTQTH shape; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestCountyHunter.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := True;
 end;
 
 initialization

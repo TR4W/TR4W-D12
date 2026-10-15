@@ -101,6 +101,10 @@ type
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -193,6 +197,22 @@ end;
 function TContestWisconsinQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' ' + aStation.MyState;
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
+   shape; see TContestBase.StripsRoverCountyFromCall. *)
+function TContestWisconsinQP.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
+   M11 S7, 2026-10-14. It was the session's RSTDomesticQTH shape; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestWisconsinQP.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := True;
 end;
 
 initialization

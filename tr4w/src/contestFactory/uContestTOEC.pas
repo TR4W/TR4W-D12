@@ -90,6 +90,10 @@ type
       (* THE GRID FIELD -- see TContestBase.HasGridFieldMultiplier
          (M11 S6). *)
       function HasGridFieldMultiplier: boolean; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -227,6 +231,22 @@ end;
    uMults.IsDmMult's and uWSJTX's `= GridFields`. See
    TContestBase.HasGridFieldMultiplier. *)
 function TContestTOEC.HasGridFieldMultiplier: boolean;
+begin
+   Result := True;
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
+   shape; see TContestBase.StripsRoverCountyFromCall. *)
+function TContestTOEC.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
+   M11 S7, 2026-10-14. It was the session's RSTDomesticQTH shape; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestTOEC.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := True;
 end;

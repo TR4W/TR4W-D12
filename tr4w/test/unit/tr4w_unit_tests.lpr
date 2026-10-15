@@ -621,6 +621,11 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       matrix does not run, frozen against the old GetDomQTH, DomStringParse
       and session-kind tests before the rules moved. *)
    uTestDomesticMultiplier in 'uTestDomesticMultiplier.pas',
+   (* M11 S7: the exchange RULES the engine decided by the session shape
+      -- the rover county, several QTHs, a blank exchange, CQ WW RTTY's
+      state, the park lookup, the FISTS score -- frozen against the old
+      compares before they moved. *)
+   uTestExchangeRules   in 'uTestExchangeRules.pas',
    (* POTA as a contest class (design Q6, 2026-10-13). *)
    uTestContestPOTA     in 'uTestContestPOTA.pas',
    (* The Delaware QSO Party, a new contest (design 7.14, 8.2q). *)
@@ -711,6 +716,7 @@ begin
    RegisterSuite(TDXMultiplierKeyTests.Create('DXMultiplierKey'));
    RegisterSuite(TZoneMultiplierTests.Create('ZoneMultiplier'));
    RegisterSuite(TDomesticMultiplierTests.Create('DomesticMultiplier'));
+   RegisterSuite(TExchangeRuleTests.Create('ExchangeRules'));
    RegisterSuite(TContestPOTATests.Create('ContestPOTA'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestIN7QPNETests.Create('ContestIN7QPNE'));

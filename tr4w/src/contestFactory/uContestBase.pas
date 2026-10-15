@@ -676,10 +676,9 @@ type
          Active* multiplier kinds are all None. *)
       SessionCountsMultipliers: boolean;
 
-      (* The session's exchange. (Its DX multiplier kind stood beside it until
-         M11 S4 part 2 deleted the kind; WAE, its last reader, asks its own
-         station since S4 part 1.) *)
-      SessionExchange: ExchangeType;
+      (* The session's exchange stood here until M11 S7 (2026-10-14): its one
+         reader, CombineScore's FISTS test, is FISTS's own formula now. (Its
+         DX multiplier kind stood beside it until M11 S4 part 2.) *)
 
       (* A COUNT KEPT WHILE THE PROGRAM RUNS, NOT FROM THE LOG -- see
          TContestBase.TalliesLiveQSO, which says why it exists and that it is
@@ -1962,6 +1961,48 @@ type
          CONTEST THAT STATES NONE OF THEM. *)
       function HasDomesticMultiplier: boolean; virtual;
 
+      (* THE EXCHANGE RULES THE ENGINE DECIDED BY THE SESSION'S SHAPE -- M11
+         S7, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S7).
+
+         Each was a test of ContestSession.Exchange outside the four shape
+         machines: a sponsor's decision written as "the exchange is spelled
+         this way". Each is now the contest's own answer, STATED PER CLASS
+         FOR EXACTLY THE CONTESTS WHOSE SESSION RAN THE TESTED SHAPES, and
+         where the entrant decides that shape, asking Station through the
+         test its DescribeSession chooses the shape by. Pinned for every
+         contest at every roster station by uTestExchangeRules, with a
+         cross-check against the old compares until S9 deletes the shape.
+
+         THE BASE ANSWERS FALSE TO EACH.
+
+         IS A CALL'S /SUFFIX A ROVER'S COUNTY? MainUnit's two rover routines
+         strip a /suffix the domestic table knows before the country lookup,
+         and offer it as the exchange. It asked for the RSTDomesticQTH,
+         RSTQTH and RSTDomesticOrDXQTH shapes: 25 contests. The export's
+         SplitsRoverCallOnExport is a DIFFERENT set (15 parties) -- plan F4,
+         Q94 and Q90 open; this is today's live set, unchanged. *)
+      function StripsRoverCountyFromCall: boolean; virtual;
+
+      (* DOES ONE SEARCH-AND-POUNCE ENTRY CARRY SEVERAL QTHs? --
+         MainUnit.ReturnInSAPOpMode, after logging, re-enters the first QTH of
+         an exchange whose second field is a word. It asked for the
+         RSTDomesticQTH and RSTQTH shapes: 21 contests, a subset of the
+         rover's (plan F4). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; virtual;
+
+      (* MAY THE RECEIVED EXCHANGE BE BLANK? -- ParametersOkay logs a QSO
+         with an empty exchange, and LOGSTUFF.ProcessExchange hands one that
+         ParseArray cannot cut to the contest, only where this says so. It
+         asked for the RSTNameAndQTH and RSTAndPOTAPark shapes: BWQP, the
+         General QSO and POTA. *)
+      function AcceptsBlankExchange: boolean; virtual;
+
+      (* DOES THE ZONE EXCHANGE CARRY THE STATE SENT? -- FCONTEST's zone
+         messages append the state this contest sends (SentMyState, when
+         there is one) after the zone. It asked for the
+         RSTZoneAndPossibleDomesticQTH shape: CQ WW RTTY. *)
+      function SendsStateAfterZone: boolean; virtual;
+
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
 
@@ -2476,13 +2517,17 @@ type
 
       (* THE SPONSOR'S FORMULA, AS A TEMPLATE -- not virtual.
 
-         A SESSION THAT COUNTS NO MULTIPLIER SCORES ITS POINTS, and so does a
-         session whose exchange is the FISTS one (a D7 note: "Ugly fix for
-         FISTS because mults don't work ... too long an exchange"). Both were
-         the first two tests of LogEdit.TotalScore, ahead of every contest's
-         own rule, and they name no contest -- they are the session's answer --
-         so they are stated here, once, and no override can skip them.
-         Otherwise the contest's CombineWithMultipliers. *)
+         A SESSION THAT COUNTS NO MULTIPLIER SCORES ITS POINTS. That was the
+         first test of LogEdit.TotalScore, ahead of every contest's own rule,
+         and it names no contest -- it is the session's answer -- so it is
+         stated here, once, and no override can skip it. Otherwise the
+         contest's CombineWithMultipliers.
+
+         THE SECOND TEST IS FISTS's OWN SINCE M11 S7 (2026-10-14): "a session
+         whose exchange is the FISTS one scores its points" (a D7 note: "Ugly
+         fix for FISTS because mults don't work ... too long an exchange")
+         named one contest through its exchange shape, and is
+         TContestFISTS.CombineWithMultipliers now (plan F12). *)
       function CombineScore(const aTotals: TScoreTotals): longint;
 
       (* THE BONUSES, ADDED ONCE AFTER THE FORMULA -- never per QSO.
@@ -2723,6 +2768,15 @@ function ContestUsesDomesticFile(aContest: TContestBase): boolean;
    DUMMYCONTEST ran NoDomesticMults. LOGEDIT.DoingDomesticMults asks it of
    the active contest; a caller already holding the object asks it here. *)
 function ContestHasDomesticMultiplier(aContest: TContestBase): boolean;
+
+(* THREE OF THE EXCHANGE RULES OF aContest -- see TContestBase.
+   StripsRoverCountyFromCall, LogsSeveralQTHsFromOneEntry and
+   AcceptsBlankExchange (M11 S7). nil answers False to each: the classless
+   DUMMYCONTEST ran UnknownExchange, which none of the old compares named.
+   MainUnit and LOGSTUFF ask them of the open contest. *)
+function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;
+function ContestLogsSeveralQTHsFromOneEntry(aContest: TContestBase): boolean;
+function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
 
 (* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
    M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
@@ -3249,6 +3303,42 @@ begin
       end;
 end;
 
+function ContestStripsRoverCountyFromCall(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.StripsRoverCountyFromCall;
+      end;
+end;
+
+function ContestLogsSeveralQTHsFromOneEntry(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.LogsSeveralQTHsFromOneEntry;
+      end;
+end;
+
+function ContestAcceptsBlankExchange(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.AcceptsBlankExchange;
+      end;
+end;
+
 function InitialZoneFromCallHistory(aZones: TZoneMultiplierZones;
                                     const aCQZone: ShortString;
                                     const aITUZone: ShortString;
@@ -3388,15 +3478,9 @@ end;
 
 function TContestBase.CombineScore(const aTotals: TScoreTotals): longint;
 begin
-   (* LogEdit.TotalScore's first two tests, in their order -- see the
-      declaration. *)
+   (* LogEdit.TotalScore's first test -- see the declaration. Its second
+      is FISTS's own CombineWithMultipliers since M11 S7. *)
    if not aTotals.SessionCountsMultipliers then
-      begin
-      Result := ContestPoints(aTotals);
-      Exit;
-      end;
-
-   if aTotals.SessionExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
       begin
       Result := ContestPoints(aTotals);
       Exit;
@@ -3648,6 +3732,30 @@ begin
              HasGridFieldMultiplier          or
              DomesticQTHReplacesDXMultiplier or
              DomesticQTHIsNeverAGrid;
+end;
+
+function TContestBase.StripsRoverCountyFromCall: boolean;
+begin
+   (* No rover county -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   (* One QTH an entry -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.AcceptsBlankExchange: boolean;
+begin
+   (* An exchange is required -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.SendsStateAfterZone: boolean;
+begin
+   (* The zone alone -- see the declaration. *)
+   Result := False;
 end;
 
 function TContestBase.RunsInMode(aMode: ModeType): boolean;

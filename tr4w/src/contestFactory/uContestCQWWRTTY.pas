@@ -108,6 +108,8 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+      (* THE STATE AFTER THE ZONE -- see TContestBase.SendsStateAfterZone (M11 S7). *)
+      function SendsStateAfterZone: boolean; override;
    end;
 
 implementation
@@ -261,6 +263,14 @@ end;
    station -- M11 S6 part 1b, 2026-10-14. It was the session's
    `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
 function TContestCQWWRTTY.UsesDomesticFile: boolean;
+begin
+   Result := True;
+end;
+
+(* THE ZONE EXCHANGE CARRIES THE STATE SENT, at every station -- M11 S7,
+   2026-10-14. It was the session's RSTZoneAndPossibleDomesticQTH shape; see
+   TContestBase.SendsStateAfterZone. *)
+function TContestCQWWRTTY.SendsStateAfterZone: boolean;
 begin
    Result := True;
 end;

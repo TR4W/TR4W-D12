@@ -119,6 +119,10 @@ type
       function DomesticQTHReplacesDXMultiplier: boolean; override;
       (* see TContestBase.DomesticQTHIsNeverAGrid (M11 S6). *)
       function DomesticQTHIsNeverAGrid: boolean; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -443,6 +447,22 @@ end;
 function TContestALRSUA1DZCup.DomesticQTHIsNeverAGrid: boolean;
 begin
    Result := CountsRDADistricts(Station);
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
+   shape; see TContestBase.StripsRoverCountyFromCall. *)
+function TContestALRSUA1DZCup.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
+   M11 S7, 2026-10-14. It was the session's RSTDomesticQTH shape; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestALRSUA1DZCup.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := True;
 end;
 
 initialization

@@ -43,9 +43,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCORING: FistsQSOPointMethod -- a member (a FISTS number received) 5,
   else 2.
 
-  ITS FINAL SCORE is the points alone, and that is not this class's rule:
-  TContestBase.CombineScore scores the FISTS exchange's points for every
-  contest whose session runs it (M6). *)
+  ITS FINAL SCORE is the points alone, multipliers or not -- its own
+  CombineWithMultipliers since M11 S7 (2026-10-14). TContestBase.CombineScore
+  scored the points of any session running the FISTS exchange (M6), and
+  FISTS is the one contest that runs it (plan F12). *)
 unit uContestFISTS;
 
 {$I tr4w.inc}
@@ -78,6 +79,9 @@ type
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      (* THE FINAL SCORE -- see the header and
+         TContestBase.CombineWithMultipliers. *)
+      function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -98,6 +102,15 @@ begin
       begin
       aQso.QSOPoints := 2;
       end;
+end;
+
+(* THE POINTS ALONE -- M11 S7, 2026-10-14. CombineScore's test of the
+   FISTS exchange, a D7 note: "Ugly fix for FISTS because mults don't
+   work ... too long an exchange". A session that counts no multiplier
+   never reaches here; the answer is the same. *)
+function TContestFISTS.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals);
 end;
 
 function TContestFISTS.GetDisplayName: string;

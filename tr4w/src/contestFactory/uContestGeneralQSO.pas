@@ -87,6 +87,8 @@ type
       (* THE CABRILLO CONTEST: NAME -- M9a. *)
       function CabrilloContestName(const aContestTitle: string;
                                    const aSessionName: string): string; override;
+      (* A BLANK EXCHANGE -- see TContestBase.AcceptsBlankExchange (M11 S7). *)
+      function AcceptsBlankExchange: boolean; override;
    end;
 
 implementation
@@ -248,6 +250,14 @@ end;
 (* LOGSTUFF's band stepping skipped a WARC band when `CONTEST <> GeneralQSO`
    (n4af 4.37.11), so General QSO alone steps onto WARC -- M9b. *)
 function TContestGeneralQSO.GetBandStepIncludesWARC: boolean;
+begin
+   Result := True;
+end;
+
+(* THE RECEIVED EXCHANGE MAY BE BLANK, at every station -- M11 S7,
+   2026-10-14. It was the session's RSTNameAndQTH shape; see
+   TContestBase.AcceptsBlankExchange. *)
+function TContestGeneralQSO.AcceptsBlankExchange: boolean;
 begin
    Result := True;
 end;

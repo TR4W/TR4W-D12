@@ -201,6 +201,8 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
    end;
 
 const
@@ -451,6 +453,14 @@ begin
       begin
       Result := CQCountryMode;
       end;
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's
+   RSTDomesticOrDXQTH shape; see TContestBase.StripsRoverCountyFromCall. *)
+function TContestDelawareQP.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
 end;
 
 initialization

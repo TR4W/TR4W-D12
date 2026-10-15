@@ -120,6 +120,10 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -288,6 +292,24 @@ end;
 function TContestSevenQP.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
+   every station -- M11 S7, 2026-10-14. It was the session's
+   RSTDomesticOrDXQTH (in state) or RSTDomesticQTH shape; see
+   TContestBase.StripsRoverCountyFromCall. *)
+function TContestSevenQP.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+(* OUT OF THE HOST STATE ONE ENTRY MAY CARRY SEVERAL QTHs (RSTDomesticQTH);
+   in it, not (RSTDomesticOrDXQTH) -- M11 S7, 2026-10-14. It was the
+   session's shape, and this is the station test DescribeSession chooses the
+   shape by; see TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestSevenQP.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := not CountsDXMultiplier;
 end;
 
 initialization

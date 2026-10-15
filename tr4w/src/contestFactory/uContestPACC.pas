@@ -113,6 +113,10 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      function StripsRoverCountyFromCall: boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
 
 implementation
@@ -336,6 +340,25 @@ end;
 function TContestPACC.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+(* A ROVER'S /COUNTY IS STRIPPED FOR A NON-DUTCH ENTRANT (RSTDomesticQTH); a
+   Dutch entrant receives a serial or a province -- M11 S7, 2026-10-14. It
+   was the session's shape, and this is the station test DescribeSession
+   chooses the shape by; see TContestBase.StripsRoverCountyFromCall. *)
+function TContestPACC.StripsRoverCountyFromCall: boolean;
+begin
+   Result := not HasDXMultiplier;
+end;
+
+(* ONE ENTRY MAY CARRY SEVERAL QTHs FOR A NON-DUTCH ENTRANT
+   (RSTDomesticQTH); a Dutch entrant receives a serial or a province -- M11
+   S7, 2026-10-14. It was the session's shape, and this is the station test
+   DescribeSession chooses the shape by; see
+   TContestBase.LogsSeveralQTHsFromOneEntry. *)
+function TContestPACC.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := not HasDXMultiplier;
 end;
 
 initialization

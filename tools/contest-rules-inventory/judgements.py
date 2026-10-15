@@ -58,7 +58,8 @@ ROUTINES = {
    ("MainUnit.pas", "LoadinLog"): ("scoring", new("CalculateTotalScore (s6)")),
    ("logsubs2.pas", "LogContact"): ("scoring", new("CalculateTotalScore (s6)")),
    # ------------------------------------------------- exchange parsing/validation
-   ("logstuff.pas", "ProcessExchange"): ("exchange", new("ParseReceivedExchange (s6), keyed today by the ExchangeKind trait")),
+   # ProcessExchange's blank-exchange gate left at M11 S7: the contest answers
+   # AcceptsBlankExchange. It reads no session kind (it hands the shape on).
    ("logstuff.pas", "ProcessRSTAndDomesticQTHExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    # ProcessRSTAndGridSquareOrRDAExchange named the UA4W Championship until its class (2026-10-14).
    ("logstuff.pas", "ProcessRSTAndQSONumberExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
@@ -79,11 +80,11 @@ ROUTINES = {
    ("logdupe.pas", "GetInitialExchangeStringFromContestExchange"): ("exchange", new("InitialExchangeFromHistory")),
    ("logedit.pas", "InitialExchangeEntry"): ("exchange", new("InitialExchangeFromHistory (InitialExchangeKind is the existing trait)")),
    ("zonecont.pas", "GetVEInitialExchange"): ("exchange", new("InitialExchangeFromHistory")),
-   ("MainUnit.pas", "ParametersOkay"): ("exchange", new("ValidateExchange")),
-   ("MainUnit.pas", "ExchangeWindowChange"): ("exchange", new("ReceivedExchangeFields (s6)")),
-   ("MainUnit.pas", "ctyLocateCallStripRover"): ("exchange", new("RoverCallRules")),
-   ("MainUnit.pas", "DetectRoverSlashInCall"): ("exchange", new("RoverCallRules")),
-   ("MainUnit.pas", "ReturnInSAPOpMode"): ("exchange", new("RoverCallRules")),
+   # MainUnit's exchange-shape rules left at M11 S7, each now the contest's
+   # answer: ParametersOkay's blank exchange (AcceptsBlankExchange),
+   # ExchangeWindowChange's park lookup (OffersParkTools), the two rover
+   # routines (StripsRoverCountyFromCall) and ReturnInSAPOpMode's several
+   # QTHs (LogsSeveralQTHsFromOneEntry). ProcessReturn's split was deleted.
    # ------------------------------------------------------------------ dupe
    ("logedit.pas", "EditableLog.CallIsADupe"): ("dupe", new("DupeRule")),
    # ----------------------------------------------------------- multipliers
@@ -149,7 +150,8 @@ ROUTINES = {
    ("uNewContest.pas", "ApplyContestChoice"): ("ui", "DescribeNewContestPrompts (existing, M9a)"),
    # ------------------------------------------------------------------ setup
    ("fcontest.pas", "FoundContest"): ("setup", new("ConfigureSession (the FoundContest arm)")),
-   ("fcontest.pas", "SetUpRSTMyZoneExchange"): ("setup", new("ConfigureSession")),
+   # SetUpRSTMyZoneExchange's CQ WW RTTY state left at M11 S7: the contest
+   # answers SendsStateAfterZone, handed in by FoundContest.
    # LogCfg.tSetupExchangeNumbers named the UA4W Championship until its class (2026-10-14); CQExchangeDefault now.
    # -------------------------------------------------------------- networking
    ("logsubs2.pas", "SendScoreToUDP"): ("networking", "ScorePostingMultiplierType (existing, M9a)"),

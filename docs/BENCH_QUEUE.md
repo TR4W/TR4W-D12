@@ -23,6 +23,27 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-14 -- THE EXCHANGE RULES ASK THE CONTEST (M11 S7)
+
+Five rules the engine decided by testing the session's exchange shape are now
+each contest's own answer. The answers are unit-pinned for every contest at
+six stations, but the sites that USE them are entry-window paths no gate runs.
+Nothing should look different:
+
+- [ ] **Rover call, Michigan QSO Party** (out of state): type `KG1S/MON` and
+  Enter with the exchange empty. The county `MON` is copied into the exchange
+  and the QSO logs as a USA contact (not country G).
+- [ ] **Rover call, ARRL DX CW from a non-W/VE call** (e.g. `MY CALL` DL1xx):
+  the same `/county` strip happens; from a W or VE call it does NOT (the
+  exchange there is power).
+- [ ] **Two QTHs in one S&P entry** (Michigan, out of state): `MON WAY` logs
+  exactly as it did before this change (`ReturnInSAPOpMode`'s re-entry).
+- [ ] **A blank exchange** logs in BWQP, General QSO and POTA, and is refused
+  (nothing logged) in, say, CQ WW CW.
+- [ ] **POTA**: typing a park reference in the exchange shows its name.
+- [ ] **CQ WW RTTY** with `MY STATE` set: the F3 exchange memory is
+  `599 <zone> <state>`; CQ WW CW's has no state.
+
 ## Added 2026-10-14 -- WSJT-X MESSAGES ARE EVALUATED ON THE MAIN THREAD
 
 `uWSJTX` ran the dupe and new-multiplier test for a CQ decode on Indy's UDP
