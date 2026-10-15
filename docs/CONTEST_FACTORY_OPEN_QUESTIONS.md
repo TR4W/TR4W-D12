@@ -448,14 +448,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   rest.*
   **Answer:**
 
-- **Q44** Three contests keep their band rule inside their scoring, not as the
-  contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off
-  CW/SSB), and CQMM and WRTC (0 points off 80-10 m, but the multiplier still
-  counts). Your off-band ruling is 0 points and no multiplier. State each one's
-  bands the standard way? *Recommended: yes* -- RTC changes nothing visible; CQMM
-  and WRTC stop crediting a multiplier from an off-band QSO.
-  **Answer:**
-
 - **Q47** Three harmless read-past-the-end shapes were kept exactly: MWC (a call
   longer than ten characters, or ending in `/`), the Region 1 Field Day (no MY
   COUNTRY), and the Region 1 RCC runnings (a one-character call scores 4). Bound
@@ -625,8 +617,24 @@ closes it; anything else reopens it.
 | Q9 | An edited CQ memory survives re-selecting the contest | not built |
 | Q37 | A malformed grid is refused at entry (and import); the read made safe | not built |
 | Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit in progress |
+| Q44 | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q44** Three contests keep their band rule inside their scoring, not as the
+  contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off
+  CW/SSB), and CQMM and WRTC (0 points off 80-10 m, but the multiplier still
+  counts). Your off-band ruling is 0 points and no multiplier. State each one's
+  bands the standard way? *Recommended: yes* -- RTC changes nothing visible; CQMM
+  and WRTC stop crediting a multiplier from an off-band QSO.
+  **Answer:** (NY4I, 2026-10-15) *Accept.* RTC, CQMM and WRTC state their
+  bands (and RTC its modes) the standard way. NY4I added: *"off-band (or off-
+  mode) are not added to the score since they are zero. They are likewise not
+  added to the qso counts sent to hamscore. But it is ok to increase the qso
+  number we sent."* So an off-band or off-mode QSO is logged, scores 0, earns
+  no multiplier, is left out of the QSO counts posted to HamScore, and still
+  advances the sent serial number. Not built; what HamScore's counts include
+  today is to be measured first.
 
 - **Q13** Oregon QSO Party scores by the radio's current mode, not the QSO's, so a
   rescore follows the radio. Fix when OQP gets its class? *Recommended: yes* (the
