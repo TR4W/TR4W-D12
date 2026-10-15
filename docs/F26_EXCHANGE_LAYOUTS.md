@@ -47,6 +47,27 @@ DXLog. Old to new:
   comments out its `CABRILLO_LINE`, and writes the activation as ADIF
   `MY_SIG`/`MY_SIG_INFO`/`SIG`/`SIG_INFO` `[DXLog POTA.txt]`. That is a second
   logger agreeing with TR4W's reading, not the sponsor.
+- **Q20, the CONTEST: and ADIF names -- ANSWERED (NY4I, 2026-10-15), per contest
+  rather than by one spelling rule:**
+  - **COUNTYHUNTER:** *"As this is an inactive contest, just use MARAC for the county
+    hunter cab and adif name."* Cabrillo CONTEST: `MARAC`; ADIF CONTEST_ID `MARAC`.
+  - **ALLJA:** *"I thought we answered the all-ja with the dxlog files."* So `ALL-JA`,
+    DXLog's `CABRILLO_CONTEST_NAME` `[DXLog ALLJA.txt]`.
+  - **JALONGPREFECT:** *"may be answered like dxlog.net"*. **DXLog has no ACAG file**
+    (its JARL files are ALLJA, JIDXC, KCJ, KCJ_TOPBAND and JARLWWR; checked
+    2026-10-15), so there is no DXLog name to take. The ALL JA pattern gives
+    **`ACAG`** (JARL's own name for the event) -- proposed, for NY4I to confirm.
+  - **KIDSDAY:** *"Use KIDS-DAY for kids day."* `KIDS-DAY` (and no Cabrillo file
+    is produced; see decision 1).
+  - **TENTEN:** *"Use TEN-TEN."* `TEN-TEN`. Whether the four events are split
+    (Q13) is still open; if they are, each event's name is still to be set.
+  - **QCWA and QCWAGOLDEN:** *"Use QCWA."* `QCWA` for both. (Whether QCWA GOLDEN is
+    kept at all is still Q12.)
+  - **GRIDLOC:** NY4I: *"I need more info on grid loc as that does not sound like a
+    contest (more like general qso)."* See [the GRIDLOC section](#gridloc-grid-loc);
+    the information he asked for is there, and the choice is now Q9.
+  - **NZFIELDDAY** keeps `JW-FD` (NY4I's own choice of 2026-09-29), and the
+    remaining names are those of the CONTEST: table.
 - **Earlier, kept for the record:** COUNTYHUNTER is the MARAC contest, and missing
   station facts get distinct station fields (both NY4I, 2026-10-15; see the
   COUNTYHUNTER section and [decision 2](#decisions-owed)).
@@ -118,7 +139,8 @@ DXLog. Old to new:
     Udmurtia RDA district through `MY STATE` count as reuse? If it does, they need
     `MY JA PREFECTURE`, `MY JA CITY CODE` and `MY RDA`. (DXLog shows only Udmurtia
     stations send an RDA; everyone else sends a grid, `MY GRID`.)
-20. **Which "name in the enumeration"?** D7's own fallback for a blank `CABName`
+20. **ANSWERED 2026-10-15, per contest -- see [Answered](#answered).** (Kept for the
+    record.) **Which "name in the enumeration"?** D7's own fallback for a blank `CABName`
     was the **`ContestTypeSA` spelling** (C:\TR4W `PostUnit.PAS` and `LOGSUBS2.PAS`,
     `T3 := ContestTypeSA[Contest]`), and today's classes return that spelling. Seven
     of those break the Cabrillo character rule (A-Z, 0-9, hyphen): `ALL JA`,
@@ -586,6 +608,32 @@ Score with a bonus is `(QSO points x mults x power mult) + bonus points` (refs 3
   - **STX_STRING:** the sent text.
 - **Confidence:** low.
 - **Decision owed:** Q9 -- retire the class.
+- **MORE INFORMATION, for NY4I (2026-10-15: "that does not sound like a contest (more
+  like general qso)"):**
+  - **Where it came from:** N6TR's original TR-Log DOS contest list. D7's
+    `LOGPROM.PAS` has `Contests[27] := 'GRID LOC'`, between `GENERAL QSO` (26) and
+    `HA DX` (28). It arrived in this tree with the DOS engine, not as a sponsor's
+    contest.
+  - **D7's row** (`VC.pas:3471`) gives it no email, no WA7BNM id, no QRZ.ru id, no
+    ADIF or Cabrillo name and no friendly name, which is the shape of a generic mode,
+    not a sponsored event. GENERAL QSO's row is the same.
+  - **What TR4W does with it today:**
+    - **exchange:** a name, and possibly a grid square;
+    - **initial exchange:** the name;
+    - **points:** one per QSO;
+    - **multiplier:** every distinct grid square typed counts as a multiplier, per
+      band (`WYSIWYGDomestic`, so the grid is taken as typed);
+    - **dupes:** per band and per mode.
+  - **So you are right: it is General QSO plus grid squares as multipliers**, a
+    "grid-chasing log". The 1996 International HF Grid Location Contest the earlier
+    pass named is not supported by any accepted source.
+  - **The choice (Q9):**
+    - (a) **retire it** (General QSO already logs name and grid);
+    - (b) **fold it into General QSO** as an option that counts grids;
+    - (c) **keep it** as a named generic mode that writes no Cabrillo file, like
+      POTA and Kids Day (decision 1).
+
+    Recommended: (a), unless an operator is known to use it.
 
 ### JALONGPREFECT: JARL All Cities All Guns (ACAG)
 
