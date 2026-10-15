@@ -557,15 +557,19 @@ begin
    // the row. Its two readers each ask the class now: the import
    // dupe-bypass (ContestAllowsCountyLineOnImport, since S7) and the rover
    // split on export (ContestSplitsRoverCallOnExport, S8). The row said
-   // False for IN7QPNE, and both must still say so.
+   // False for IN7QPNE. The dupe bypass still does (#894).
+   //
+   // THE ROVER SPLIT DOES NOT, since NY4I's ruling on Q90 with Q94
+   // (2026-10-14): "yes QSO parties allow it". A rover is not a county
+   // line; every QSO party, multi-state included, splits a rover's
+   // /county call on export, and IN7QPNE states it on its class.
    CheckEquals(Ord(IN7QPNE), Ord(records[0].ceContest),
                'the fixture imports as IN7QPNE');
    CheckFalse(ContestAllowsCountyLineOnImport(records[0].ceContest),
               'IN7QPNE-style multi-state QP must NOT bypass the import '
               + 'dupe check until issue #894 lands');
-   CheckFalse(ContestSplitsRoverCallOnExport(records[0].ceContest),
-              'IN7QPNE-style multi-state QP must NOT split a rover call '
-              + 'on export (the old row''s False)');
+   CheckTrue(ContestSplitsRoverCallOnExport(records[0].ceContest),
+             'IN7QPNE, a QSO party, splits a rover call on export (Q90)');
 end;
 
 // ---------------------------------------------------------------------------

@@ -163,12 +163,13 @@ function ContestAllowsCountyLineOnImport(aContest: ContestType): boolean;
 (* DOES ADIF EXPORT WRITE A ROVER'S CALL AS THE BARE CALL PLUS
   APP_TR4W_ROVERCALL? -- M10 S8, 2026-10-14.
 
-  The state-party class's SplitsRoverCallOnExport; any other contest answers
-  False. It replaced the deleted row's CountyLineAllowed, which
-  uADIF.ResolveRoverCall read, and it states exactly that row's fifteen
-  parties: a rover is not a county line (plan S7), so it is deliberately NOT
-  ContestAllowsCountyLineOnImport. Whether every state party should split a
-  rover's call is open question Q90. *)
+  The contest's own TContestBase.SplitsRoverCallOnExport. It replaced the
+  deleted row's CountyLineAllowed, which uADIF.ResolveRoverCall read; a rover
+  is not a county line (plan S7), so it is deliberately NOT
+  ContestAllowsCountyLineOnImport. Since NY4I's ruling on Q90 with Q94
+  (2026-10-14) every QSO party answers True -- the state parties on their
+  base, 7QP, NEQP and IN7QPNE on their classes -- and every other contest
+  False: there the slash call is the call. *)
 function ContestSplitsRoverCallOnExport(aContest: ContestType): boolean;
 
 implementation
@@ -329,12 +330,10 @@ begin
 end;
 
 function ContestSplitsRoverCallOnExport(aContest: ContestType): boolean;
-var
-   obj: TContestBase;
 begin
-   obj := ContestIdentity(aContest);
-   Result := (obj is TContestStateQSOPartyBase) and
-             TContestStateQSOPartyBase(obj).SplitsRoverCallOnExport;
+   (* ContestIdentity is never nil; DUMMYCONTEST's plain TContestBase
+      answers the base's False. *)
+   Result := ContestIdentity(aContest).SplitsRoverCallOnExport;
 end;
 
 function ContestOfADIFRecordMode(aContest: ContestType;

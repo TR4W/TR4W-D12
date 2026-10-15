@@ -132,8 +132,6 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
-      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
-      function StripsRoverCountyFromCall: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
@@ -359,15 +357,6 @@ end;
    station -- M11 S6 part 1b, 2026-10-14. It was the session's
    `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
 function TContestARRL160.UsesDomesticFile: boolean;
-begin
-   Result := True;
-end;
-
-(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
-   every station -- M11 S7, 2026-10-14. It was the session's
-   RSTDomesticOrDXQTH (in a section country) or RSTDomesticQTH shape; see
-   TContestBase.StripsRoverCountyFromCall. *)
-function TContestARRL160.StripsRoverCountyFromCall: boolean;
 begin
    Result := True;
 end;

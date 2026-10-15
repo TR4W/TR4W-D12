@@ -103,10 +103,6 @@ type
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
       function GetInStateDomesticFileName: string; override;
-      (* THE OLD ROW'S CountyLineAllowed: True, which ADIF export read to split
-         a rover's call -- M10 S8; open question Q90. See
-         TContestStateQSOPartyBase.GetSplitsRoverCallOnExport. *)
-      function GetSplitsRoverCallOnExport: boolean; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
@@ -194,11 +190,6 @@ end;
 function TContestOhioQP.GetInStateDomesticFileName: string;
 begin
    Result := 'ohio';
-end;
-
-function TContestOhioQP.GetSplitsRoverCallOnExport: boolean;
-begin
-   Result := True;
 end;
 
 function TContestOhioQP.GetFlags: TContestFlags;

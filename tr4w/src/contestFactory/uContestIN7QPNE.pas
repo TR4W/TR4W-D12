@@ -212,8 +212,10 @@ type
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
-      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
+      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7)
+         and SplitsRoverCallOnExport (Q90/Q94). *)
       function StripsRoverCountyFromCall: boolean; override;
+      function SplitsRoverCallOnExport: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
@@ -519,9 +521,19 @@ begin
 end;
 
 (* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
-   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
-   shape; see TContestBase.StripsRoverCountyFromCall. *)
+   every station, stripped live AND split on ADIF export. M11 S7 transcribed
+   the strip from the session's RSTDomesticQTH shape; NY4I's ruling on Q94
+   with Q90 (2026-10-14) made both every QSO party's answer: "yes QSO parties
+   allow it". Every component party answers True to both, so the composite
+   does too; it is asked without a QSO (the export asks the record's
+   contest), which is why it states them itself rather than delegating. The
+   county-line import bypass is a different rule and stays False (#894). *)
 function TContestIN7QPNE.StripsRoverCountyFromCall: boolean;
+begin
+   Result := True;
+end;
+
+function TContestIN7QPNE.SplitsRoverCallOnExport: boolean;
 begin
    Result := True;
 end;

@@ -1988,6 +1988,53 @@ kinds now.
     `ExchangeInformation.Precedence`/`.Check` only once S1 deletes
     `CheckAndChapterOrQTHExchange`, and S1 waits on Q50.
 
+#### S7 follow-up DONE (2026-10-14): Q94 with Q90 -- the rover is a QSO party's
+
+NY4I: *"yes QSO parties allow it but in any contest NY4I/7 or VP9/NY4I is a
+valid call."* A `/suffix` is a county rover only in a QSO party, and there it
+is BOTH stripped live and split on ADIF export. F4 is closed: the two sets
+now agree, but for County Hunter.
+
+- **Where it lives.** `SplitsRoverCallOnExport` moved from
+  `TContestStateQSOPartyBase` (a getter and property) to a `TContestBase`
+  virtual (base False) so a multi-state party can state it;
+  `uContestRegistry.ContestSplitsRoverCallOnExport` asks
+  `ContestIdentity(c)` directly. `TContestStateQSOPartyBase` answers True to
+  BOTH, once; the 15 per-party split overrides and 14 per-party strip
+  overrides are deleted. 7QP, NEQP and IN7QPNE (on `TContestBase`) state
+  both on their classes. County Hunter keeps its strip and does not split (a
+  recorded decision, not the ruling). The ARRL DX (both, on their base), ARRL
+  160, PACC, LABRE, TOEC and the ALRS UA1DZ Cup lost their strip overrides.
+  `LogsSeveralQTHsFromOneEntry` is a separate rule and is untouched.
+- **Strip, 25 -> 24, at every station.** Gained: California, Colorado,
+  Minnesota, Ohio, Pennsylvania, **Virginia** (in neither old set, so Q94's
+  list did not name it; it is a state party). Lost: ARRL DX CW and SSB (were
+  station-dependent), ARRL 160, PACC (station-dependent), LABRE, TOEC, ALRS.
+- **Split, 15 -> 23.** Gained: Arizona, British Columbia, Virginia, the
+  Salmon Run, New York, **7QP, NEQP, IN7QPNE** (QSO parties under the same
+  ruling; the export only splits when the suffix equals the QSO's own QTH,
+  so it is contest-agnostic). IN7QPNE's county-line import bypass stays
+  False (#894) -- a rover is not a county line.
+- **Pins.** `uTestExchangeRules`: the rover set is the ruling's 24 at every
+  station (counts 24 x 6, 24 anywhere); its cross-check against the session
+  shape now skips the rover rule, which disagrees with the shape on purpose
+  for 13 contests. `uTestContestFactory`:
+  `Test_FifteenPartiesSplitARoverCallOnExport` is
+  `Test_EveryQSOPartySplitsARoverCallOnExport` (23, every state-party object,
+  and strip = split for every contest but County Hunter); the old row's
+  fifteen survive as `OLD_ROW_COUNTY_LINE_ALLOWED` for the county-line test.
+  `uTestADIFFixtures`: IN7QPNE now splits. Old code **192,772 passed**; new
+  code **191,859 passed, 0 failed** (-1,122 rover cross-checks, +209 split
+  pins).
+- **Narrowing 1263, range 3, unchanged** (a scratch `-B` build).
+- **What the oracles should see** (not run here): the matrix's export never
+  writes a `/county` call, so the split is invisible to it; its `imp rover`
+  line (`KG1S/MON`) changes `cty=` where the strip changes AND the session's
+  table knows `MON` -- ALRS and ARRL 160 stop stripping (K -> G), Virginia
+  and Colorado start (`va_cty.dom`, `colorado_cty.dom` hold `MON`). No corpus
+  set is a changed contest except the ARRL DX CW, whose W entrant never
+  stripped.
+
 ### S8 -- Initial exchange moves into the classes (46 contests) -- the least pinned
 
 - `InitialExchangeFromCall` becomes the live seam. The 46 contests call
@@ -2034,7 +2081,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F1** | `tools/contest-rules-inventory/scan.py` `effective_reach` | Reach is trait UNION FoundContest overrides, and those are 0 since M7a. `DescribeSession` is invisible, so 12 live records are classed UNUSED (1.4). The four shape machines are not scanned either, and one that is (`SetUpExchangeInformation`) is reported as 37 contest rules. **FIXED at S0a** -- and it was 25 rows (43 records), not 37 |
 | **F2** | `uContestARRL10:201`, `uContestARRLFieldDay:454`, `uContestKCJ:226`, `uContestYBDX:239-240` | Five trait values the session never runs (1.3) -- inventory D8's shape. `uTestContestSession` pins three of them as its evidence that "a reader may not ask the trait". **FIXED at S2**: the five traits state what runs, the statements are gone, and the three tests ask JIDX, WAEDC and ARRL 160 |
 | **F3** | `zonecont.pas:103`; `logedit.pas:2571-2594`; `uTestContestParse:622-633` | `TContestRussianDX`/`TContestRU3AXMemorial.InitialExchangeFromCall` is reached only through `GetVEInitialExchange`, which only the Section and QTH initial-exchange arms call. No contest runs either of them since S2 (reach 0). The live Russian oblast rule is LOGEDIT's fallback (`logedit:2650`, `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]`), so one of Q50's three spellings is already dead and a unit test pins it |
-| **F4** | `MainUnit:934-936`, `:975-977`, `:2061`, `:5988`; `logsubs2:1611`; `TContestStateQSOPartyBase.SplitsRoverCallOnExport` | "Is a slash suffix a county?" is decided by exchange shape live (25 contests) and by the class on export (15). The two sets disagree. Split on export but not stripped live: CA, CO, MN, OH, PA. Stripped live but not split: ALRS, ARRL160, ARRLDX x2, AZ, BC, COUNTYHUNTER, IN7QPNE, LABRE, NEQP, NY, PACC, Salmon Run, 7QP, TOEC. Related to Q90 |
+| **F4** | `MainUnit:934-936`, `:975-977`, `:2061`, `:5988`; `logsubs2:1611`; `TContestStateQSOPartyBase.SplitsRoverCallOnExport` | "Is a slash suffix a county?" is decided by exchange shape live (25 contests) and by the class on export (15). The two sets disagree. Split on export but not stripped live: CA, CO, MN, OH, PA. Stripped live but not split: ALRS, ARRL160, ARRLDX x2, AZ, BC, COUNTYHUNTER, IN7QPNE, LABRE, NEQP, NY, PACC, Salmon Run, 7QP, TOEC. Related to Q90. **CLOSED 2026-10-14** by NY4I's ruling on Q94/Q90: every QSO party strips AND splits (state parties on their base; 7QP, NEQP, IN7QPNE on their classes), County Hunter strips only, nothing else does either -- see "S7 follow-up DONE" |
 | **F5** | matrix `CROATIAN`/`CWOPEN` setup; `uContestCroatian:290` | CROATIAN has `zonemult = ITUZones` with `cty.zonemode = CQZoneMode`, and exports `<ITUZ:2>05` for W1AW, whose CQ zone is 5 (`qthzone=5`). CWOPEN has `CQZones` over `ITUZoneMode`. The zone multiplier's system and the CTY lookup's system disagree in one class |
 | **F6** | `logstuff.pas:7120-7131`, `:7143`; `logwind.pas:531` | `DomStringParse`'s DOK arm returns the local `TempMultiplier` uninitialised when the text has no letter. Its IOTA arm uses the unit global `LOGWIND.ContinentString` as scratch: it declares no local, and the global's only other writer is FCONTEST, with no reader. The whole routine is a drifted copy of `logdom.GetDomQTH:227-330`. **S6 part 1a (2026-10-14): TRANSCRIBED, NOT FIXED.** The shape tests are shared (`uDomesticKey`); the IOTA fall-through is the RSGB IOTA's `DomesticMultiplierFromQTH`; the unassigned DOK hint is WAG's and the DARC 10 m's `DomesticMultiplierHint` (fix: `Result := ''` in both, its own commit); the scratch global became a local (no reader, so no change), and `LOGWIND.ContinentString` now has a writer and no reader |
 | **F7** | `uMults.pas:264-275` versus `logdupe.pas:662-760` | The remaining-DX-countries filter knows 3 of the 14 DX-key rules. Two owners of "which countries count"; the UI effect was not measured |

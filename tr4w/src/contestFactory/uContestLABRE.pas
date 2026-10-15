@@ -103,8 +103,6 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
-      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
-      function StripsRoverCountyFromCall: boolean; override;
    end;
 
 implementation
@@ -322,14 +320,6 @@ end;
    station -- M11 S6 part 1b, 2026-10-14. It was the session's
    `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
 function TContestLABRE.UsesDomesticFile: boolean;
-begin
-   Result := True;
-end;
-
-(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
-   every station -- M11 S7, 2026-10-14. It was the session's
-   RSTDomesticOrDXQTH shape; see TContestBase.StripsRoverCountyFromCall. *)
-function TContestLABRE.StripsRoverCountyFromCall: boolean;
 begin
    Result := True;
 end;

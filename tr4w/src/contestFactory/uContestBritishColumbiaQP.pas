@@ -162,8 +162,6 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
-      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
-      function StripsRoverCountyFromCall: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
@@ -311,14 +309,6 @@ end;
 procedure TContestBritishColumbiaQP.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURISTRICTIFINVE7, ncfMyState);
-end;
-
-(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
-   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
-   shape; see TContestBase.StripsRoverCountyFromCall. *)
-function TContestBritishColumbiaQP.StripsRoverCountyFromCall: boolean;
-begin
-   Result := True;
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --

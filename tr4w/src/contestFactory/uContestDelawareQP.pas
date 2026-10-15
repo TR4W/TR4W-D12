@@ -156,10 +156,6 @@ type
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
       function GetInStateDomesticFileName: string; override;
-      (* THE OLD ROW'S CountyLineAllowed: True, which ADIF export read to split
-         a rover's call -- M10 S8; open question Q90. See
-         TContestStateQSOPartyBase.GetSplitsRoverCallOnExport. *)
-      function GetSplitsRoverCallOnExport: boolean; override;
       function GetFlags: TContestFlags; override;
 
       (* A county-line station is two QSOs -- see the header. *)
@@ -201,8 +197,6 @@ type
                                out aKey: DXMultiplierString): boolean; override;
       (* THE CTY COUNTRY LIST -- see TContestBase.CountryMode (M11 S4). *)
       function CountryMode: CountryModeType; override;
-      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
-      function StripsRoverCountyFromCall: boolean; override;
    end;
 
 const
@@ -303,11 +297,6 @@ end;
 function TContestDelawareQP.GetInStateDomesticFileName: string;
 begin
    Result := 'delaware';
-end;
-
-function TContestDelawareQP.GetSplitsRoverCallOnExport: boolean;
-begin
-   Result := True;
 end;
 
 function TContestDelawareQP.GetFlags: TContestFlags;
@@ -453,14 +442,6 @@ begin
       begin
       Result := CQCountryMode;
       end;
-end;
-
-(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
-   every station -- M11 S7, 2026-10-14. It was the session's
-   RSTDomesticOrDXQTH shape; see TContestBase.StripsRoverCountyFromCall. *)
-function TContestDelawareQP.StripsRoverCountyFromCall: boolean;
-begin
-   Result := True;
 end;
 
 initialization

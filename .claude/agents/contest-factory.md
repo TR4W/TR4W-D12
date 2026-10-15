@@ -317,17 +317,23 @@ the target shape, the M-step migration order and the open questions.
 - **THE EXCHANGE RULES ARE THE CLASS'S (M11 S7, 2026-10-14)** -- what the
   engine decided by testing `ContestSession.Exchange` outside the four shape
   machines. `TContestBase` (base False, nil-safe `Contest...` functions):
-  `StripsRoverCountyFromCall` (MainUnit's two rover routines; 25 contests),
+  `StripsRoverCountyFromCall` (MainUnit's two rover routines),
   `LogsSeveralQTHsFromOneEntry` (`ReturnInSAPOpMode`; 21),
   `AcceptsBlankExchange` (`ParametersOkay`, `LOGSTUFF.ProcessExchange`;
   BWQP, General QSO, POTA) and `SendsStateAfterZone` (FCONTEST's zone
   messages; CQ WW RTTY). The park lookup asks the existing
   `OffersParkTools`; FISTS overrides `CombineWithMultipliers`. STATED PER
-  CLASS -- the state-party base does NOT hold the rover answer, because five
-  of its parties (CA, CO, MN, OH, PA) never stripped (F4, Q94 open) -- and
-  where the entrant decides the shape, through the station test its
-  `DescribeSession` uses (ARRL DX, PACC, ARRL 160, NEQP, 7QP, Arizona, the
-  Salmon Run, Texas). A new contest with a rover or a blank exchange
+  CLASS, and where the entrant decides the shape, through the station test
+  its `DescribeSession` uses (NEQP, 7QP, Arizona, the Salmon Run, Texas for
+  the several-QTH rule). **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
+  2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
+  VP9/NY4I is a valid call")**: `StripsRoverCountyFromCall` and the export's
+  `SplitsRoverCallOnExport` (a `TContestBase` virtual since then) are True
+  for every state party ONCE on `TContestStateQSOPartyBase`, and on the 7QP,
+  NEQP and IN7QPNE classes; County Hunter strips and does not split (a
+  recorded decision, not the ruling); nothing else does either -- 24 strip,
+  23 split, at every station. A new QSO party inherits both or states both;
+  never add a strip to a contest that is not a QSO party. A new contest with a rover or a blank exchange
   overrides them and joins `uTestExchangeRules`' literal sets; the
   per-station counts change by hand. The rover strip takes the contest the
   rescore and the ADIF record parse already hold
@@ -445,11 +451,12 @@ the target shape, the M-step migration order and the open questions.
   2026-10-14)** -- `ContestsArray`, `ContestsBooleanArray`, `QSOParties`,
   `TContestInfo` and the `ci*`/`*_BIT` constants; `ContestTypeSA` stays. The
   county-line import asks the party class (S7); the rover split on ADIF
-  export asks `TContestStateQSOPartyBase.SplitsRoverCallOnExport` through
-  `uContestRegistry.ContestSplitsRoverCallOnExport` -- True for exactly the
-  fifteen parties whose row said `CountyLineAllowed: True`
-  (`Test_FifteenPartiesSplitARoverCallOnExport`), NOT derived from the
-  county line (they disagree for six; open question Q90). The S0 pin went
+  export asks `TContestBase.SplitsRoverCallOnExport` through
+  `uContestRegistry.ContestSplitsRoverCallOnExport` -- True for every QSO
+  party since NY4I's ruling on Q90/Q94 (2026-10-14;
+  `Test_EveryQSOPartySplitsARoverCallOnExport`, 23), NOT derived from the
+  county line (a rover is not a county line; the old row's fifteen and the
+  class's county line still disagree for six, which the import pin holds). The S0 pin went
   with the tables; **`uTestContestIdentityPin` replaced it** -- every
   contest's WA7BNM / QRZ.RU ids, e-mail, friendly, display and domestic file
   name as literals, generated ONCE at S8 from classes proven equal to the

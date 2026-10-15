@@ -52,7 +52,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   M10 S8, which deleted the table and kept that set as
   SplitsRoverCallOnExport), and a handful more are single-state with no flag
   set at all (Arizona, British Columbia, New York, Virginia) -- whose correct
-  value is simply unknown rather than False.
+  value is simply unknown rather than False. (The rover split is no longer
+  that set: since Q90/Q94, 2026-10-14, every party here splits and strips.)
 
   NOT THE LOCUST QSO PARTY, which this list named until M3 (2026-10-01). It is
   a QSO party by name only: K6VVA's event, P 0 in its row, no host state and no
@@ -225,31 +226,29 @@ type
          merely discouraged -- so this is a decision, not a missing keyword. *)
       function GetCountyLineCountiesMax: integer; virtual;
       function GetCountyLineAllowed: boolean;
-
-      (* DOES ADIF EXPORT SPLIT A ROVER'S CALL? -- M10 S8, 2026-10-14.
-
-         uADIF.ResolveRoverCall writes a call such as KG1S/MON, whose suffix
-         equals the QSO's county, as the bare call plus APP_TR4W_ROVERCALL.
-         It did that for the parties whose ContestsArray row said
-         CountyLineAllowed: True, and the row is deleted (plan S8), so the
-         class states it now.
-
-         A ROVER IS NOT A COUNTY LINE (plan S7), so this is NOT derived from
-         CountyLineAllowed: the two disagree for six parties, and deriving
-         one from the other would change the export of all six. Whether every
-         state party should split a rover's call is open question Q90 for
-         NY4I; until it is answered this states exactly the old row, which
-         was True for fifteen parties -- California, Colorado, Delaware,
-         Florida, Idaho, Indiana, Michigan, Minnesota, Missouri, North
-         Carolina, Ohio, Pennsylvania, Tennessee, Texas and Wisconsin -- and
-         those fifteen override this. Default False: Arizona, British
-         Columbia, Virginia, the Salmon Run and New York. Pinned by
-         Test_FifteenPartiesSplitARoverCallOnExport. *)
-      function GetSplitsRoverCallOnExport: boolean; virtual;
    public
       property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
       property CountyLineAllowed: boolean read GetCountyLineAllowed;
-      property SplitsRoverCallOnExport: boolean read GetSplitsRoverCallOnExport;
+
+      (* A /SUFFIX IS A ROVER'S COUNTY IN EVERY STATE PARTY -- stripped live
+         AND split on ADIF export. NY4I's ruling on Q94 with Q90,
+         2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
+         VP9/NY4I is a valid call." See TContestBase.StripsRoverCountyFromCall
+         and SplitsRoverCallOnExport.
+
+         STATED ONCE, HERE, because the ruling is about what a state QSO
+         party IS, not about one sponsor's rules. Before it the two answers
+         were per-class transcriptions that disagreed: California, Colorado,
+         Minnesota, Ohio and Pennsylvania split but did not strip; Arizona,
+         British Columbia, the Salmon Run and New York stripped but did not
+         split; Virginia did neither. Every party now does both.
+
+         A ROVER IS STILL NOT A COUNTY LINE (plan S7): CountyLineAllowed,
+         which the import's dupe bypass asks, is unchanged and derives from
+         nothing here. Pinned by uTestExchangeRules and
+         Test_EveryQSOPartySplitsARoverCallOnExport. *)
+      function StripsRoverCountyFromCall: boolean; override;
+      function SplitsRoverCallOnExport: boolean; override;
 
       (* THE ONLY OVERRIDE OF THE BASE'S VALIDATOR IN THIS TREE.
 
@@ -370,10 +369,16 @@ begin
    Result := GetCountyLineCountiesMax > 0;
 end;
 
-function TContestStateQSOPartyBase.GetSplitsRoverCallOnExport: boolean;
+function TContestStateQSOPartyBase.StripsRoverCountyFromCall: boolean;
 begin
-   (* False unless the party states otherwise -- see the declaration. *)
-   Result := False;
+   (* Every state party -- see the declaration (Q94, 2026-10-14). *)
+   Result := True;
+end;
+
+function TContestStateQSOPartyBase.SplitsRoverCallOnExport: boolean;
+begin
+   (* Every state party -- see the declaration (Q90, 2026-10-14). *)
+   Result := True;
 end;
 
 function TContestStateQSOPartyBase.ValidateQTHCount(aCount: integer;

@@ -95,7 +95,7 @@ type
       procedure Test_IdahoQRPScoresFiveOnEveryMode;
       procedure Test_EveryOtherContestStillCreditsEveryBand;
       procedure Test_FixedPointContestsTranscribeTheirArms;
-      procedure Test_FifteenPartiesSplitARoverCallOnExport;
+      procedure Test_EveryQSOPartySplitsARoverCallOnExport;
       procedure Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
       procedure Test_DummyContestScoresOnlyTheOverrides;
       procedure Test_ADIFIdsResolveOldAndNew;
@@ -400,19 +400,18 @@ end;
    to suppress dupe flagging when a call reappears on the same band and mode
    with a different QTH. Import asks the class since M10 S7.
 
-   BOTH VALUES ARE ASSERTED ON PURPOSE. The row is deleted (M10 S8), and the
-   one thing its True still decides is the rover split on ADIF EXPORT, which
-   the class now states as SplitsRoverCallOnExport (open question Q90). So
-   Michigan forbids a county line and still splits a rover's call -- pinned
-   here so that answering Q90 is a decision somebody sees, not a drift. *)
+   BOTH VALUES ARE ASSERTED ON PURPOSE. Michigan forbids a county line and
+   still splits a rover's call on ADIF export: a rover is not a county line.
+   The split was the deleted row's True until NY4I answered Q90 (2026-10-14);
+   it is every QSO party's answer now, on TContestStateQSOPartyBase. *)
 procedure TContestFactoryTests.Test_MichiganForbidsCountyLine;
 var
    obj: TContestBase;
 begin
    BeginTest('Test_MichiganForbidsCountyLine');
    CheckTrue(ContestSplitsRoverCallOnExport(MICHQSOPARTY),
-             'Michigan still splits a rover''s call on export -- the deleted '
-             + 'row''s True, until NY4I answers Q90');
+             'Michigan splits a rover''s call on export -- every QSO party '
+             + 'does since Q90');
 
    obj := MakeContest(MICHQSOPARTY);
    CheckTrue(obj <> nil, 'Michigan QSO Party has no registered class');
@@ -1781,37 +1780,55 @@ begin
    CheckFixed(GENERALQSO, 'General QSO', 1, 1, 1);
 end;
 
-(* THE FIFTEEN PARTIES WHOSE ADIF EXPORT SPLITS A ROVER'S CALL -- M10 S8.
+(* THE DELETED ROW'S CountyLineAllowed: True -- fifteen parties. HISTORY,
+   NOT A RULE.
 
-   uADIF.ResolveRoverCall writes KG1S/MON, whose suffix is the QSO's county,
-   as the bare call plus APP_TR4W_ROVERCALL. It did that for the parties whose
-   ContestsArray row said CountyLineAllowed: True; S8 deleted the row and each
-   of those parties now states SplitsRoverCallOnExport.
-
-   THE LIST BELOW WAS TAKEN FROM THE TABLE WHILE IT EXISTED, two ways that
-   agree: a program linking VC printed every ContestType whose row said True,
-   and a text count of "CountyLineAllowed: True" in VC.pas at 9dc93f67 gave
-   15. Before the table was deleted, a program linking every registered class
-   compared ContestSplitsRoverCallOnExport with the row for EVERY ContestType:
-   186 registered, 15 True, 0 disagreements. So this literal IS the row's
-   answer, and the property is held to it for every contest.
-
-   NOT A RULE ANYONE HAS RULED ON. Arizona, British Columbia, Virginia, the
-   Salmon Run and New York are state parties and do NOT split -- whether they
-   should is open question Q90. Change this set only with his answer. *)
+   uADIF.ResolveRoverCall split a rover's call for exactly these until NY4I
+   answered Q90 (2026-10-14), and M10 S8 transcribed them into the classes.
+   THE LIST WAS TAKEN FROM THE TABLE WHILE IT EXISTED, two ways that agree: a
+   program linking VC printed every ContestType whose row said True, and a
+   text count of "CountyLineAllowed: True" in VC.pas at 9dc93f67 gave 15.
+   Kept because the test below it pins how the class's county line departed
+   from that row at S7. *)
 const
-   ROVER_SPLIT_PARTIES: set of ContestType = [
+   OLD_ROW_COUNTY_LINE_ALLOWED: set of ContestType = [
       CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY, FLORIDAQSOPARTY,
       IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY, MOQSOPARTY,
       NCQSOPARTY, OHIOQSOPARTY, PAQSOPARTY, TENNESSEEQSOPARTY,
       TEXASQSOPARTY, WISCONSINQSOPARTY];
 
-procedure TContestFactoryTests.Test_FifteenPartiesSplitARoverCallOnExport;
+(* EVERY QSO PARTY SPLITS A ROVER'S CALL ON EXPORT, AND NOTHING ELSE DOES --
+   NY4I's ruling on Q90 with Q94, 2026-10-14: "yes QSO parties allow it but
+   in any contest NY4I/7 or VP9/NY4I is a valid call."
+
+   uADIF.ResolveRoverCall writes KG1S/MON, whose suffix is the QSO's county,
+   as the bare call plus APP_TR4W_ROVERCALL. Until the ruling it did that
+   for OLD_ROW_COUNTY_LINE_ALLOWED; Arizona, British Columbia, Virginia, the
+   Salmon Run and New York (state parties) and 7QP, NEQP and IN7QPNE
+   (multi-state parties) STARTED. Twenty state parties on
+   TContestStateQSOPartyBase, which states it once, and the three
+   multi-state parties on their own classes.
+
+   AND THE STRIP IS THE SAME SET, with one exception: County Hunter strips a
+   /county live and does NOT split it on export (a recorded decision on Q94,
+   not the ruling). Asserted for every contest, so the two answers cannot
+   drift apart again the way S7 found them. *)
+const
+   ROVER_SPLIT_PARTIES: set of ContestType = [
+      ArizonaQsoParty, BCQP, CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY,
+      FLORIDAQSOPARTY, IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY,
+      MOQSOPARTY, NCQSOPARTY, NYQP, OHIOQSOPARTY, PAQSOPARTY,
+      TENNESSEEQSOPARTY, TEXASQSOPARTY, VAQP, WISCONSINQSOPARTY, SALMONRUN,
+      SEVENQP, NEWENGLANDQSO, IN7QPNE];
+
+procedure TContestFactoryTests.Test_EveryQSOPartySplitsARoverCallOnExport;
 var
    c: ContestType;
    splitting: integer;
+   obj: TContestBase;
+   strips: boolean;
 begin
-   BeginTest('Test_FifteenPartiesSplitARoverCallOnExport');
+   BeginTest('Test_EveryQSOPartySplitsARoverCallOnExport');
    splitting := 0;
    for c := Low(ContestType) to High(ContestType) do
       begin
@@ -1821,34 +1838,60 @@ begin
          begin
          Inc(splitting);
          end;
-      end;
-   CheckEquals(15, splitting, 'parties that split a rover''s call on export');
 
-   (* One party each way, by name: Florida splits, Arizona does not. *)
-   CheckTrue(ContestSplitsRoverCallOnExport(FLORIDAQSOPARTY), 'Florida splits');
-   CheckFalse(ContestSplitsRoverCallOnExport(ArizonaQsoParty),
-              'Arizona does not (Q90)');
+      (* The live strip agrees, but for County Hunter. Neither answer reads
+         the station, so the identity object is enough. *)
+      obj := ContestIdentity(c);
+      strips := ContestStripsRoverCountyFromCall(obj);
+      if c = COUNTYHUNTER then
+         begin
+         CheckTrue(strips, 'County Hunter strips a rover''s county live');
+         CheckFalse(ContestSplitsRoverCallOnExport(c),
+                    'County Hunter does not split on export -- not a QSO party');
+         end
+      else
+         begin
+         CheckTrue(strips = ContestSplitsRoverCallOnExport(c),
+                   string(ContestTypeSA[c]) + ': strips live exactly where it splits on export');
+         end;
+
+      (* Every state party, by its base, whatever the literal says. *)
+      if obj is TContestStateQSOPartyBase then
+         begin
+         CheckTrue(ContestSplitsRoverCallOnExport(c),
+                   string(ContestTypeSA[c]) + ': a state party splits');
+         end;
+      end;
+   CheckEquals(23, splitting, 'QSO parties that split a rover''s call on export');
+
+   (* By name: Arizona started (Q90), and a slash call is the call in the
+      ARRL DX. *)
+   CheckTrue(ContestSplitsRoverCallOnExport(ArizonaQsoParty), 'Arizona splits (Q90)');
+   CheckFalse(ContestSplitsRoverCallOnExport(ARRLDXCW), 'the ARRL DX does not');
+   CheckFalse(ContestStripsRoverCountyFromCall(ContestIdentity(ARRLDXCW)),
+              'the ARRL DX does not strip either (Q94)');
 end;
 
-(* THE ROVER SPLIT AND THE COUNTY LINE DISAGREE FOR SIX CONTESTS -- M10 S0
-   (plan finding F3, design 8.2s); restated at S8.
+(* THE DELETED ROW AND THE CLASS'S COUNTY LINE DISAGREE FOR SIX CONTESTS --
+   M10 S0 (plan finding F3, design 8.2s); restated at S8 and at Q90/Q94.
 
-   The rover split on EXPORT is the deleted row's CountyLineAllowed, stated by
-   the class as SplitsRoverCallOnExport (open question Q90); the state-party
-   class's CountyLineAllowed (a county-line maximum above zero) is what live
-   entry obeys AND, since S7 (DECIDED 2026-10-14), what the importer asks
-   through ContestAllowsCountyLineOnImport. THIS pins the six places the two
-   differ, and that the import follows the county line in every one of them:
+   The deleted row's CountyLineAllowed (OLD_ROW_COUNTY_LINE_ALLOWED) once
+   decided both the rover split on export and the import's dupe bypass; the
+   state-party class's CountyLineAllowed (a county-line maximum above zero)
+   is what live entry obeys AND, since S7 (DECIDED 2026-10-14), what the
+   importer asks through ContestAllowsCountyLineOnImport. THIS pins the six
+   places the row and the class differ, and that the import follows the
+   class in every one of them:
 
-     Michigan             splits a rover, no county line (its sponsor allows none)
+     Michigan             the row said True, no county line (its sponsor allows none)
      Arizona, BC, VA,
-     Salmon Run, NY       no rover split, county line allowed
+     Salmon Run, NY       the row said False, county line allowed
 
    Every other contest agrees, and a contest that is not on the state-party
    base has neither. Michigan therefore STOPPED clearing the dupe flag on an
-   imported county-line repeat at S7, and the other five STARTED. Until S8
-   the first column read the row; the row's answer for every contest is now
-   ROVER_SPLIT_PARTIES, which the test above holds the class to. *)
+   imported county-line repeat at S7, and the other five STARTED. The rover
+   split no longer follows the row at all since Q90 (2026-10-14) -- every QSO
+   party splits; Test_EveryQSOPartySplitsARoverCallOnExport holds it. *)
 procedure TContestFactoryTests.Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
 var
    c: ContestType;
@@ -1872,7 +1915,7 @@ begin
          Continue;
          end;
       try
-         rowAllows := c in ROVER_SPLIT_PARTIES;
+         rowAllows := c in OLD_ROW_COUNTY_LINE_ALLOWED;
          classAllows := (obj is TContestStateQSOPartyBase) and
                         TContestStateQSOPartyBase(obj).CountyLineAllowed;
          if rowAllows <> classAllows then
@@ -1884,14 +1927,14 @@ begin
          case c of
             MICHQSOPARTY:
                begin
-               CheckTrue(rowAllows, 'Michigan: splits a rover''s call (the old row)');
+               CheckTrue(rowAllows, 'Michigan: the old row said CountyLineAllowed');
                CheckFalse(classAllows, 'Michigan: the class allows none');
                CheckFalse(ContestAllowsCountyLineOnImport(c),
                           'Michigan: an imported county-line repeat is a dupe again');
                end;
             ArizonaQsoParty, BCQP, VAQP, SALMONRUN, NYQP:
                begin
-               CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': no rover split (the old row)');
+               CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': the old row said no county line');
                CheckTrue(classAllows, string(ContestTypeSA[c]) + ': the class allows one');
                CheckTrue(ContestAllowsCountyLineOnImport(c),
                          string(ContestTypeSA[c]) + ': an imported county-line repeat now clears the dupe flag');
@@ -1899,14 +1942,14 @@ begin
          else
             begin
             CheckTrue(rowAllows = classAllows,
-                      string(ContestTypeSA[c]) + ': rover split and county line disagree');
+                      string(ContestTypeSA[c]) + ': the old row and the county line disagree');
             end;
          end;
       finally
          obj.Free;
          end;
       end;
-   CheckEquals(6, disagreements, 'exactly six contests where rover split and county line disagree');
+   CheckEquals(6, disagreements, 'exactly six contests where the old row and the county line disagree');
 end;
 
 (* DUMMYCONTEST -- "no contest" -- SCORES ONLY THE OVERRIDES, THEN ZERO.
@@ -3931,7 +3974,7 @@ begin
    Test_IdahoQRPScoresFiveOnEveryMode;
    Test_EveryOtherContestStillCreditsEveryBand;
    Test_FixedPointContestsTranscribeTheirArms;
-   Test_FifteenPartiesSplitARoverCallOnExport;
+   Test_EveryQSOPartySplitsARoverCallOnExport;
    Test_RoverSplitAndCountyLineDisagreeOnlyForTheKnownSix;
    Test_DummyContestScoresOnlyTheOverrides;
    Test_ADIFIdsResolveOldAndNew;

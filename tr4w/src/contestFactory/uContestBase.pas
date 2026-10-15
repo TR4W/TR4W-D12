@@ -1977,11 +1977,31 @@ type
 
          IS A CALL'S /SUFFIX A ROVER'S COUNTY? MainUnit's two rover routines
          strip a /suffix the domestic table knows before the country lookup,
-         and offer it as the exchange. It asked for the RSTDomesticQTH,
-         RSTQTH and RSTDomesticOrDXQTH shapes: 25 contests. The export's
-         SplitsRoverCallOnExport is a DIFFERENT set (15 parties) -- plan F4,
-         Q94 and Q90 open; this is today's live set, unchanged. *)
+         and offer it as the exchange. S7 transcribed it from the
+         RSTDomesticQTH, RSTQTH and RSTDomesticOrDXQTH shapes (25 contests).
+
+         NY4I RULED ON Q94 WITH Q90 (2026-10-14): "yes QSO parties allow it
+         but in any contest NY4I/7 or VP9/NY4I is a valid call." A /suffix
+         is a county rover ONLY IN A QSO PARTY, and there it is BOTH
+         stripped here AND split on export (SplitsRoverCallOnExport, below).
+         So every state party answers True on TContestStateQSOPartyBase;
+         the multi-state parties (7QP, NEQP, IN7QPNE) state it on their own
+         classes; County Hunter keeps its strip (a decision recorded in
+         docs/CONTEST_FACTORY_OPEN_QUESTIONS.md Q94, not NY4I's). Every
+         other contest leaves the slash call alone -- the ARRL DX, ARRL
+         160, PACC, LABRE, TOEC and ALRS stopped stripping. *)
       function StripsRoverCountyFromCall: boolean; virtual;
+
+      (* DOES ADIF EXPORT WRITE A ROVER'S CALL AS THE BARE CALL PLUS
+         APP_TR4W_ROVERCALL? -- uADIF.ResolveRoverCall, through
+         uContestRegistry.ContestSplitsRoverCallOnExport, and only where the
+         /suffix is the QSO's own QTH. M10 S8 put it on the state-party base
+         for the fifteen parties whose deleted row said CountyLineAllowed;
+         Q90/Q94 (2026-10-14, above) made it every QSO party's answer, and
+         it moved here so a multi-state party, which is not on that base,
+         can state it. True exactly where StripsRoverCountyFromCall is,
+         except County Hunter, which strips and does not split. *)
+      function SplitsRoverCallOnExport: boolean; virtual;
 
       (* DOES ONE SEARCH-AND-POUNCE ENTRY CARRY SEVERAL QTHs? --
          MainUnit.ReturnInSAPOpMode, after logging, re-enters the first QTH of
@@ -3737,6 +3757,12 @@ end;
 function TContestBase.StripsRoverCountyFromCall: boolean;
 begin
    (* No rover county -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.SplitsRoverCallOnExport: boolean;
+begin
+   (* Not a QSO party: the slash call is the call -- see the declaration. *)
    Result := False;
 end;
 

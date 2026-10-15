@@ -121,8 +121,6 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
-      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
-      function StripsRoverCountyFromCall: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
@@ -311,15 +309,6 @@ end;
    DescribeSession states DomesticFile under: the negation of the one
    CountsDXMultiplier asks. See TContestBase.UsesDomesticFile. *)
 function TContestARRLDXBase.UsesDomesticFile: boolean;
-begin
-   Result := not CountsDXMultiplier;
-end;
-
-(* A ROVER'S /COUNTY IS STRIPPED FOR AN ENTRANT OUTSIDE THE USA AND CANADA
-   (RSTDomesticQTH); a W or VE entrant sends power -- M11 S7, 2026-10-14. It
-   was the session's shape, and this is the station test DescribeSession
-   chooses the shape by; see TContestBase.StripsRoverCountyFromCall. *)
-function TContestARRLDXBase.StripsRoverCountyFromCall: boolean;
 begin
    Result := not CountsDXMultiplier;
 end;

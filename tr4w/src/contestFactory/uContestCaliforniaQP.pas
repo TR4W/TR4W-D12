@@ -96,10 +96,6 @@ type
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
       function GetInStateDomesticFileName: string; override;
-      (* THE OLD ROW'S CountyLineAllowed: True, which ADIF export read to split
-         a rover's call -- M10 S8; open question Q90. See
-         TContestStateQSOPartyBase.GetSplitsRoverCallOnExport. *)
-      function GetSplitsRoverCallOnExport: boolean; override;
       function GetFlags: TContestFlags; override;
 
       (* The county-line maximum, from the sponsor -- see the header. *)
@@ -225,11 +221,6 @@ end;
 function TContestCaliforniaQP.GetInStateDomesticFileName: string;
 begin
    Result := 'california';
-end;
-
-function TContestCaliforniaQP.GetSplitsRoverCallOnExport: boolean;
-begin
-   Result := True;
 end;
 
 function TContestCaliforniaQP.GetFlags: TContestFlags;

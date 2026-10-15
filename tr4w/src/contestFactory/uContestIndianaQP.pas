@@ -89,10 +89,6 @@ type
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
       function GetInStateDomesticFileName: string; override;
-      (* THE OLD ROW'S CountyLineAllowed: True, which ADIF export read to split
-         a rover's call -- M10 S8; open question Q90. See
-         TContestStateQSOPartyBase.GetSplitsRoverCallOnExport. *)
-      function GetSplitsRoverCallOnExport: boolean; override;
       function GetFlags: TContestFlags; override;
 
       (* The county-line maximum, from the sponsor -- see the header. *)
@@ -104,8 +100,6 @@ type
          multiplier QTH of 'DX' earns no multiplier of any kind. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
-      (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
-      function StripsRoverCountyFromCall: boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    end;
@@ -183,11 +177,6 @@ begin
    Result := 'in';
 end;
 
-function TContestIndianaQP.GetSplitsRoverCallOnExport: boolean;
-begin
-   Result := True;
-end;
-
 function TContestIndianaQP.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByBand, cfQSOByMode];
@@ -204,14 +193,6 @@ end;
 procedure TContestIndianaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 2, 2);
-end;
-
-(* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
-   every station -- M11 S7, 2026-10-14. It was the session's RSTDomesticQTH
-   shape; see TContestBase.StripsRoverCountyFromCall. *)
-function TContestIndianaQP.StripsRoverCountyFromCall: boolean;
-begin
-   Result := True;
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --

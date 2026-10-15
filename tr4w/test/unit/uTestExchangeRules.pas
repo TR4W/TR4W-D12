@@ -48,12 +48,22 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   and the same tables green against the classes.
 
   THE CROSS-CHECK STAYS UNTIL S9 DELETES THE SHAPE: every ContestType at
-  every roster station, the class's answer against the frozen compare.
+  every roster station, the class's answer against the frozen compare --
+  for every rule BUT THE ROVER, which no longer follows the shape (below).
 
   NEVER REGENERATE IT TO CLEAR A FAILURE -- the uTestContestKindPin rule. A
-  failure means a contest's exchange rule changed; Q94 (with Q90) is open on
-  which contests really have /county rovers, and until NY4I answers it the
-  rover sets are TODAY's, exactly. *)
+  failure means a contest's exchange rule changed.
+
+  THE ROVER SET CHANGED ON PURPOSE -- NY4I's ruling on Q94 with Q90,
+  2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
+  VP9/NY4I is a valid call." A /suffix is a county rover only in a QSO
+  party. So every state party strips (California, Colorado, Minnesota, Ohio,
+  Pennsylvania and Virginia STARTED), 7QP, NEQP and IN7QPNE keep it, County
+  Hunter keeps it (a recorded decision, not his ruling), and the ARRL DX x2,
+  ARRL 160, PACC, LABRE, TOEC and ALRS UA1DZ Cup STOPPED. The literals
+  below were S7's transcription (25, with station branches for the ARRL DX
+  and PACC) until then; they are the ruling's set now (24, at every
+  station). *)
 unit uTestExchangeRules;
 
 {$I ..\..\src\tr4w.inc}
@@ -120,11 +130,17 @@ const
 
    (* THE CONTESTS THAT ANSWER EACH RULE AT EVERY STATION. The station
       branches are PinnedAnswer's. *)
+   (* THE ROVER: every QSO party, and County Hunter -- Q94 with Q90,
+      2026-10-14 (see the header). The twenty state parties on
+      TContestStateQSOPartyBase, the three multi-state parties, County
+      Hunter. *)
    ROVER_EVERYWHERE = [
-      SEVENQP, ARRL160, ArizonaQsoParty, COUNTYHUNTER, FLORIDAQSOPARTY, LABRE,
-      IDAHOQSOPARTY, DELAWAREQSOPARTY, MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY,
-      TOEC, WISCONSINQSOPARTY, NYQP, TENNESSEEQSOPARTY, ALRS_UA1DZ_CUP,
-      INQSOPARTY, BCQP, IN7QPNE, NEWENGLANDQSO, SALMONRUN, TEXASQSOPARTY];
+      ArizonaQsoParty, BCQP, CALQSOPARTY, COLORADOQSOPARTY, DELAWAREQSOPARTY,
+      FLORIDAQSOPARTY, IDAHOQSOPARTY, INQSOPARTY, MICHQSOPARTY, MINNQSOPARTY,
+      MOQSOPARTY, NCQSOPARTY, NYQP, OHIOQSOPARTY, PAQSOPARTY,
+      TENNESSEEQSOPARTY, TEXASQSOPARTY, VAQP, WISCONSINQSOPARTY, SALMONRUN,
+      SEVENQP, NEWENGLANDQSO, IN7QPNE,
+      COUNTYHUNTER];
 
    SEVERAL_QTHS_EVERYWHERE = [
       COUNTYHUNTER, MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC,
@@ -251,9 +267,9 @@ begin
    case aRule of
       erRoverCounty:
          begin
-         Result := (aContest in ROVER_EVERYWHERE)                           or
-                   ((aContest in [ARRLDXCW, ARRLDXSSB]) and notWOrVE)       or
-                   ((aContest = PACC) and (aStation <> psPA));
+         (* No station branch since Q94: the ARRL DX and PACC branches went
+            with their strips. *)
+         Result := aContest in ROVER_EVERYWHERE;
          end;
       erSeveralQTHs:
          begin
@@ -283,20 +299,22 @@ end;
 procedure TExchangeRuleTests.Test_EveryContestStatesItsPinnedExchangeRules;
 const
    (* HOW MANY CONTESTS ANSWER EACH RULE AT EACH STATION, counted by hand
-      from the sets and branches above. The rover: 22 everywhere, the PACC
-      but at PA, the two ARRL DX but at a W or VE. Several QTHs: 12
+      from the sets and branches above. The rover: 24 everywhere (Q94,
+      2026-10-14; it was 22 everywhere, the PACC but at PA and the two ARRL
+      DX but at a W or VE -- 23/23/25/23/24/25, 25 anywhere). Several QTHs: 12
       everywhere; 7QP, Arizona, the Salmon Run and Texas out of their host
       state; ARRL 160 outside a section country; the ARRL DX at a non-W/VE;
       NEQP outside New England; the PACC but at PA. *)
    COUNTS: array[TExchangeRule, TPinStation] of integer = (
-      (23, 23, 25, 23, 24, 25),
+      (24, 24, 24, 24, 24, 24),
       (18, 18, 21, 13, 20, 20),
       (3, 3, 3, 3, 3, 3),
       (1, 1, 1, 1, 1, 1),
       (1, 1, 1, 1, 1, 1)
    );
-   (* At some roster station -- plan 2.1's 25 and 21. *)
-   COUNT_ANYWHERE: array[TExchangeRule] of integer = (25, 21, 3, 1, 1);
+   (* At some roster station -- plan 2.1's 21 for several QTHs; the rover's
+      25 is 24 since Q94. *)
+   COUNT_ANYWHERE: array[TExchangeRule] of integer = (24, 21, 3, 1, 1);
 var
    r: TExchangeRule;
    s: TPinStation;
@@ -340,7 +358,14 @@ begin
 end;
 
 (* THE CROSS-CHECK: the program's answer against the frozen old compare, for
-   every ContestType at every roster station. Until S9 deletes the shape. *)
+   every ContestType at every roster station. Until S9 deletes the shape.
+
+   NOT THE ROVER (erRoverCounty, the first rule), since Q94 with Q90
+   (2026-10-14): NY4I ruled it by what the contest IS -- a QSO party -- not
+   by how its exchange is spelled, so it disagrees with the shape on
+   purpose for thirteen contests (six parties gained it, seven non-parties
+   lost it). Test_EveryContestStatesItsPinnedExchangeRules
+   holds it instead. *)
 procedure TExchangeRuleTests.Test_ExchangeRulesAgreeWithTheSessionShape;
 var
    r: TExchangeRule;
@@ -356,7 +381,7 @@ begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          station := PinStation(s, c);
-         for r := Low(TExchangeRule) to High(TExchangeRule) do
+         for r := Succ(erRoverCounty) to High(TExchangeRule) do
             begin
             CheckEquals(BoolToStr(LegacyAnswer(r, Kinds(c, station).Exchange), True),
                         BoolToStr(ProgramAnswer(r, c, station), True),
@@ -366,7 +391,7 @@ begin
          end;
       end;
    CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1) *
-               (Ord(High(TExchangeRule)) + 1), checked,
+               Ord(High(TExchangeRule)), checked,
                'contest x station x rule answers compared');
 end;
 

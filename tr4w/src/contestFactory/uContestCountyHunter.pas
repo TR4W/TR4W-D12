@@ -177,7 +177,15 @@ end;
 
 (* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at
    every station -- M11 S7, 2026-10-14. It was the session's RSTQTH shape;
-   see TContestBase.StripsRoverCountyFromCall. *)
+   see TContestBase.StripsRoverCountyFromCall.
+
+   KEPT AFTER Q94 (2026-10-14), the one contest that is not a QSO party and
+   still strips. NY4I's ruling makes a /suffix a county rover only in a QSO
+   party; County Hunter's whole exchange is the county, and a mobile's /county
+   is the thing being hunted, so the strip stays. That is a recorded decision
+   in docs/CONTEST_FACTORY_OPEN_QUESTIONS.md Q94, not NY4I's ruling. It does
+   NOT split on export (TContestBase.SplitsRoverCallOnExport, False): it is
+   not a QSO party, and its export is unchanged. *)
 function TContestCountyHunter.StripsRoverCountyFromCall: boolean;
 begin
    Result := True;

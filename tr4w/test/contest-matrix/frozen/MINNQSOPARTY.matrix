@@ -511,7 +511,7 @@ imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 12
 imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=CT operator=K0XYZ cty=K/8/NorthAmerica/W1
 imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=K0AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
 imp wsjtx | parsed=TRUE call=DL1ABC band=Band20 mode=Digital/eFT8 time=260115 121800 rst.sent=5 rst.rcvd=-5 operator=K0AAA cty=DL/28/Europe/DL1
-imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=K0AAA cty=G/27/Europe/MON0
+imp rover | parsed=TRUE call=KG1S/MON band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=MON domqth=MON exch=59 MON operator=K0AAA cty=K/8/NorthAmerica/KG1
 == parse
 parse.keys = AIT ANO
 parse empty W1AW Band20/CW "" | ok=FALSE err="" token="" pending="" call=W1AW
