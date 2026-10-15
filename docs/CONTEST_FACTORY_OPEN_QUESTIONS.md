@@ -206,16 +206,6 @@ moves to section 4 in the commit that records it.
 
 ### Added with 7.12 (station facts a contest may override, 2026-10-13)
 
-- **Q65** MY CALL has the problem 7.12 just fixed for MY STATE and MY ZONE.
-  When a contest is run under a club call (W4TA), the call is written into
-  the station's MY CALL. The next settings save in the session, such as a
-  Preferences edit, writes W4TA into `tr4w.json` as the station's own call.
-  It was left out on purpose: about 120 places read MY CALL, and your
-  country, continent and zone are derived from it. Should MY CALL become an
-  overridable station fact too, as its own step? MY COUNTRY would then be
-  derived from the call this contest uses. *Recommended: yes, separately.*
-  **Answer:**
-
 - **Q66** Preferences shows and edits the station's value. If this contest
   overrides that field (zone 3 in Utah), an edit there changes the station
   but not this contest, and nothing on the page says so. Should the Station
@@ -606,8 +596,29 @@ closes it; anything else reopens it.
 | Q17 | Moot: Locust is retired | -- |
 | Q36 | Moot: Locust is retired | -- |
 | Q24 | FOC reads N1MM's APP_N1MM_EXCHANGE1 only when the record's CONTEST_ID is FOC's | not built; needs N1MM's id spelling |
+| Q65 | MY CALL is a station fact a contest may override; the contest's call lives in its database | not built (own stage) |
 
 ### Answered since the table was last updated (full text)
+
+- **Q65** MY CALL has the problem 7.12 just fixed for MY STATE and MY ZONE.
+  When a contest is run under a club call (W4TA), the call is written into
+  the station's MY CALL. The next settings save in the session, such as a
+  Preferences edit, writes W4TA into `tr4w.json` as the station's own call.
+  It was left out on purpose: about 120 places read MY CALL, and your
+  country, continent and zone are derived from it. Should MY CALL become an
+  overridable station fact too, as its own step? MY COUNTRY would then be
+  derived from the call this contest uses. *Recommended: yes, separately.*
+  **Answer:** (NY4I, 2026-10-15) *"conceptually there is my station call and
+  the call I want to use as the contest. Just like in the case where I go to a
+  different state from FL (which is in my station state), we can use these as
+  the seed in a new contest definition/selection, but if I enter W4TA, then
+  that goes into the contest database file."* YES, as its own step: MY CALL
+  becomes a station fact a contest may override, exactly as 7.12 did for MY
+  STATE and MY ZONE. The station's call (`tr4w.json`) seeds the New Contest
+  dialog; a call typed there is the CONTEST's and is stored in that contest's
+  database, never written back to the station. MY COUNTRY, continent and zone
+  derive from the call the contest uses. Not built; about 120 readers of MY
+  CALL to route through the resolver, so it is planned as its own stage.
 
 - **Q24** FOC Marathon now reads N1MM's `APP_N1MM_EXCHANGE1` as the membership
   number when the record has no `FOC_NUM` (what the old code intended but never
