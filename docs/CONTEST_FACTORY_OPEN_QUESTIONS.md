@@ -468,7 +468,8 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   token, not a place -- and the prompt shows it twice. Should it read
   something like "Indiana, 7th area, New England or Delaware"?
   *Recommended: yes; the composite class can state its own prompt.*
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-14) *"Your recommendation."* The composite
+  class states its own prompt naming the four areas, shown once.
 
 - **Q88** The NA Sprint CW and RTTY rows name different domestic files:
   CW uses `naqp`, RTTY uses `s49p8`. Both are the same sprint exchange
@@ -502,7 +503,7 @@ nothing changed. Each looks wrong; none was fixed without your answer.
   second textual caller of `FoundContest` -- which made the country-mode
   ordering check (F5) look riskier than it is.
   *Recommended: delete both.*
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-14) *"delete both."*
 
 ### Raised by the M11 plan (2026-10-14; `docs/CONTEST_FACTORY_M11_PLAN.md`)
 
@@ -559,7 +560,14 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 - **Q96** CQ WW CW starts the exchange field with a Custom initial exchange,
   CQ WW SSB with the zone -- one family, two answers. Intended?
   *Recommended: both Zone, unless the CW Custom was deliberate.*
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-14) *"Yes both should fill zone if that option
+  is set for initial exchange."* CQ WW CW becomes `ZoneInitialExchange`, as
+  SSB and RTTY already are. Note for the record: the CW `Custom` came from D7
+  (`VC.pas` row 4.105.17), and with the default empty CUSTOM INITIAL EXCHANGE
+  STRING it filled nothing. No setting gates the zone fill itself -- the
+  per-contest INITIAL EXCHANGE command retired at M10 S2 -- so "that option"
+  is the contest's own initial-exchange kind; REVERSE INITIAL EX still
+  prefers the callsigns list where it is set.
 
 - **Q50 is now an M11 blocker.** The Russian DX / RU3AX "initial exchange
   from a call" has not run since M10 S2 -- the only arms that reach it are
@@ -584,7 +592,16 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
   the state-party base, True for exactly those fifteen. What is left is the
   first half: should Arizona, BC, Virginia, the Salmon Run and New York
   split too (one override each, and a change to their ADIF)?
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-14) *"yes QSO parties allow it but in any
+  contest NY4I/7 or VP9/NY4I is a valid call."* Read as one rule, which also
+  answers Q94: **a slash suffix is a county rover only in a state QSO
+  party**, and there it is both stripped live and split on export -- so
+  Arizona, BC, Virginia, the Salmon Run and New York split too, and CA, CO,
+  MN, OH and PA strip live too. **Everywhere else the slash call is the
+  call**: ALRS, ARRL 160, ARRL DX (CW and SSB), LABRE, PACC and TOEC stop
+  stripping it. County Hunter keeps its strip (my call, not NY4I's: its
+  exchange IS a county and its mobiles run county lines) -- flag it if that
+  is wrong.
 
 ---
 

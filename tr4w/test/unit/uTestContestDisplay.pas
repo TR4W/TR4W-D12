@@ -77,6 +77,7 @@ uses
    uContestBase,
    uContestRegistry,
    uTR4WStrings,
+   uAppStrings,      (* SNewContestIN7QPNECountyOrState -- Q87 *)
    uSettingsModel,
    (* SentMyState, ApplyContestSentState, ClearContestSentState -- 7.11. *)
    FCONTEST,
@@ -219,7 +220,9 @@ begin
          end;
       IN7QPNE:
          begin
-         state := 'IN7QPNE';
+         (* Its own words since Q87 (2026-10-14), not the area twice. *)
+         Result := StepComment(SNewContestIN7QPNECountyOrState, ncfMyState);
+         Exit;
          end;
       IDAHOQSOPARTY:
          begin

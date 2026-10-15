@@ -207,6 +207,9 @@ type
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
    public
+      (* THE NEW CONTEST DIALOG'S PROMPT, IN ITS OWN WORDS -- Q87. See the
+         implementation. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
       (* THE ROVER COUNTY -- see TContestBase.StripsRoverCountyFromCall (M11 S7). *)
@@ -219,7 +222,7 @@ implementation
 
 uses
    SysUtils,
-   uAppStrings,      (* SExchangeOutOfStateWorksHostOnly *)
+   uAppStrings,      (* SExchangeOutOfStateWorksHostOnly, SNewContestIN7QPNECountyOrState *)
    uContestRegistry;
 
 (* True when aWord is one of the blank-separated words of aList. *)
@@ -467,6 +470,14 @@ end;
 function TContestIN7QPNE.GetInStateDomesticFileName: string;
 begin
    Result := 'in7qpne';
+end;
+
+(* THE BASE'S PROMPT NAMES THE AREA TWICE, and this party's area is four
+   areas, so it read "in IN7QPNE state ... outside of IN7QPNE". Q87, NY4I
+   2026-10-14: the composite class states its own prompt. Same field. *)
+procedure TContestIN7QPNE.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AskFieldWithComment(SNewContestIN7QPNECountyOrState, ncfMyState);
 end;
 
 function TContestIN7QPNE.GetQSOPartyArea: string;

@@ -333,6 +333,14 @@ resourcestring
      error like we would with an invalid county".  %s is the host state. *)
    SExchangeOutOfStateWorksHostOnly = 'Out of state: work %s stations only';
 
+   (* THE COMBINED IN7QPNE PARTY'S NEW CONTEST PROMPT -- Q87, NY4I
+     2026-10-14. The shared prompt names the party's area twice, and this
+     party's area is four areas, so it printed the token 'IN7QPNE' twice. *)
+   SNewContestIN7QPNECountyOrState =
+      'Enter your county if you are in Indiana, the 7th call area, New ' +
+      'England or Delaware. Enter your state, Canadian Province or "DX" ' +
+      'if outside all four:';
+
    (* --------------------------------------------- the contest UI (M9b) - *)
 
    (* AN INACTIVE CONTEST'S LINE IN THE NEW CONTEST DROP-DOWN. NY4I,
