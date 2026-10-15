@@ -238,7 +238,14 @@ Three groups:
   `CONTEST NAME` changes it). Same in D7. The IARU HF rules have no off-time
   rule that I know of. Which is right for IARU -- 60 or 30? Once you say, it
   becomes one value on the contest and both places use it.
-  **Answer:**
+  **Answer:** (NY4I, 2026-10-15, from DXLog.net's contest definitions.) CQ WW is
+  **60** -- `CQWW.txt` has `MIN_OFF_TIME=60`, which NY4I called confirmation. IARU HF
+  is **not** 60: `IARUHF.txt` sets no `MIN_OFF_TIME` at all (33 of DXLog's 543 files
+  set one, and IARU's own are its VHF/UHF and field-day events, at 120). So IARU HF
+  takes the default 30, and the main window's IARU arm (n4af, 4.115.4) is the one that
+  is wrong. Implementation: the off-time becomes one value the contest states, which
+  both the main window and the summary sheet read, so the summary sheet no longer
+  derives it from the contest NAME.
 
 - **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
   categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
