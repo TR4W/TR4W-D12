@@ -20,10 +20,6 @@ moves to section 4 in the commit that records it.
 
 ### Field Day
 
-- **Q30** Winter Field Day accepts `MX` as a QTH. It still exports as `ARRL_SECT`
-  and imports as a section. Is `MX` "DX" under the "DX is never a section" rule?
-  **Answer:**
-
 - **Q38** Winter Field Day's score is points x band-modes x power factor, with no
   DX multiplier, yet its session counts DXCC multipliers
   (`ARRLDXCCWithNoARRLSections`). Like Field Day (no multipliers at all), should it
@@ -31,10 +27,6 @@ moves to section 4 in the commit that records it.
   **Answer:**
 
 ### Sweepstakes
-
-- **Q31** Any refused exchange with no precedence in it (e.g. `599` alone) now
-  says `Missing precedence (Q A B U M S)`. Is that wording acceptable?
-  **Answer:**
 
 ### QSO parties
 
@@ -631,8 +623,25 @@ closes it; anything else reopens it.
 | Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit in progress |
 | Q44 | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial | not built |
 | FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | not built |
+| Q30 | Winter FD: `MX` is a section (Cabrillo, SRX_STRING, ARRL_SECT), as D7 does | already so; no change |
+| Q31 | `Missing precedence (Q A B U M S)` is acceptable wording | already so |
 
 ### Answered since the table was last updated (full text)
+
+- **Q30** Winter Field Day accepts `MX` as a QTH. It still exports as `ARRL_SECT`
+  and imports as a section. Is `MX` "DX" under the "DX is never a section" rule?
+  **Answer:** (NY4I, 2026-10-15) *"The section is MX in cabrillo and
+  srx_string. The current D7 implementation of winter fd is the right guide."*
+  So `MX` is a section, not DX. Checked against D7: entry accepts `MX`
+  (`LOGSTUFF.PAS:1364`), ADIF writes `ARRL_SECT` and `CLASS` for any QTH but
+  `DX` (`PostUnit.PAS:1958`), Cabrillo writes the QTH in the section position
+  (`uCabrilloExchange.pas:377`), and import reads `ARRL_SECT` back as the
+  section (`MainUnit.pas:7814`). `TContestWinterFieldDay` already does all
+  four. No change.
+
+- **Q31** Any refused exchange with no precedence in it (e.g. `599` alone) now
+  says `Missing precedence (Q A B U M S)`. Is that wording acceptable?
+  **Answer:** (NY4I, 2026-10-15) *Yes* -- the wording stands. No change.
 
 - **FD-DX** You wrote "or with a bad ARRL section or DX on field day" next to the
   refusal ruling. Earlier you said a DX station *can* be worked (`1D DX`). Did you
