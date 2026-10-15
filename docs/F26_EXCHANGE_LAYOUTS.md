@@ -166,8 +166,16 @@ This shortage is the main decision NY4I owes. See [Decisions owed](#decisions-ow
   - **Width:** the 7-wide QTH field truncates county lines (`FL ORA/SEM`). A 12-wide
     variant may be wanted.
 - **Confidence:** low. The sponsor publishes no Cabrillo layout.
+- **ANSWERED (NY4I, 2026-10-15): "County hunter is marac."** The class is the
+  MARAC County Hunter contest. It is KEPT (not a retirement candidate), and its
+  header's "general logging mode" wording is to be corrected.
+  **But TR4W has never scored the MARAC contest.** D7's row named it *"General County
+  Hunting Log"*, with `OnePointPerQSO`, no multipliers and no WA7BNM id (C:\TR4W
+  `VC.pas:3444`), and the class carries that over: `FixedModePoints(Mode, 1, 1, 1)`.
+  MARAC scores 1 / 15 / 5 (fixed / mobile / DX). So making the class the MARAC contest
+  is NEW SCORING (points, plus whatever multipliers MARAC counts), its own piece of
+  work, with the matrix re-frozen for it. It is not an export fix.
 - **Decisions owed:**
-  - Is this class the MARAC contest, or a county-hunting log?
   - Does the county go in `MY STATE`, or does it need its own station fact?
   - Is a Cabrillo file wanted at all?
 
@@ -456,7 +464,7 @@ This shortage is the main decision NY4I owes. See [Decisions owed](#decisions-ow
 
    (c) works today for ALL JA and QCWA. Only (a) or (b) solves 10-10 and ARCI.
 3. **Retire or keep the defunct and unidentified contests:** FISTS, GRIDLOC, QCWA,
-   QCWAGOLDEN, WWL, and possibly COUNTYHUNTER.
+   QCWAGOLDEN and WWL. (COUNTYHUNTER is the MARAC contest and is kept -- NY4I, 2026-10-15.)
 4. **Contests whose parser must change before a layout means anything:**
    - **UA4W:** the serial is not stored, and the RST is no longer sent;
    - **JALONGPREFECT:** the power letter is not read;
