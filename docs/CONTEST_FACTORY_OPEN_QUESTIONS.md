@@ -448,21 +448,6 @@ closes it; anything else reopens it.
   DOK has an EMPTY QTH -- an RST is not a DOK.
   **Answer:**
 
-- **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
-  (the old code named both runnings), and January has never had any setup at
-  all -- no 6 m start, HF bands left on. Intended?
-  **Proposed answer (checked 2026-10-15 against ARRL's public logs,
-  tools/public-logs/fetch_arrl_public_logs.py):** the Cabrillo `CONTEST:`
-  lines are already right -- the 2026 January and June and 2025 September logs
-  say `ARRL-VHF-JAN`, `ARRL-VHF-JUN` and `ARRL-VHF-SEP`, which the three
-  classes write. The defect is the set-up: September's `'VHF QSO JUNE'` is not
-  cosmetic, it heads the summary sheet (`postunit.pas:992-993`: "VHF QSO JUNE
-  SUMMARY SHEET", "CONTEST: VHF QSO JUNE"); and January has none. Every
-  January public log sampled starts on 6 m. So: all three runnings get June's
-  set-up (start on 6 m, HF bands off), each with its own name -- `VHF QSO
-  JANUARY`, `VHF QSO JUNE`, `VHF QSO SEPTEMBER`.
-  **Answer:**
-
 - **Q10** May a `ContestType` nobody runs be deleted instead of given a class?
   *Recommended: yes, with the list shown to you first.*
   **Proposed answer (NY4I asked 2026-10-15: "could we have a hybrid to refer
@@ -626,8 +611,29 @@ closes it; anything else reopens it.
 | Q77 | IN7QPNE per-party score: deferred | issue #86 |
 | Q78 | IN7QPNE cross-party scoring view: deferred with Q77 | issue #86 |
 | Q98 | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band) | not built |
+| Q41 | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
+  (the old code named both runnings), and January has never had any setup at
+  all -- no 6 m start, HF bands left on. Intended?
+  **Proposed answer (checked 2026-10-15 against ARRL's public logs,
+  tools/public-logs/fetch_arrl_public_logs.py):** the Cabrillo `CONTEST:`
+  lines are already right -- the 2026 January and June and 2025 September logs
+  say `ARRL-VHF-JAN`, `ARRL-VHF-JUN` and `ARRL-VHF-SEP`, which the three
+  classes write. The defect is the set-up: September's `'VHF QSO JUNE'` is not
+  cosmetic, it heads the summary sheet (`postunit.pas:992-993`: "VHF QSO JUNE
+  SUMMARY SHEET", "CONTEST: VHF QSO JUNE"); and January has none. Every
+  January public log sampled starts on 6 m. So: all three runnings get June's
+  set-up (start on 6 m, HF bands off), each with its own name -- `VHF QSO
+  JANUARY`, `VHF QSO JUNE`, `VHF QSO SEPTEMBER`.
+  **Answer:** (NY4I, 2026-10-15) *"each one gets its own name so ARRL-VHF-JUN,
+  ARRL-VHF-SEP, etc."* So the session's contest name -- what heads the summary
+  sheet -- is `ARRL-VHF-JAN`, `ARRL-VHF-JUN` and `ARRL-VHF-SEP`, the same
+  spelling as each running's Cabrillo name (not the `VHF QSO ...` names
+  proposed). All three get June's set-up (start on 6 m, HF bands off); January
+  gains one. Not built.
 
 - **Q98** (raised by Q51's wording, 2026-10-15) Off-band crediting is
   enforced for 2 of 186 contests. `UsesBand` (and, for Q44's RTC, a mode
