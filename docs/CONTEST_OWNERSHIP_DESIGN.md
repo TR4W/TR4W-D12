@@ -943,10 +943,12 @@ evidence given with it.
 - **Field Day DX export** (Q20): `CLASS` is whatever was logged (usually `1D`);
   `ARRL_SECT` is never written for DX (*"class and section are different"*);
   `SRX_STRING` is the full received exchange, `1D DX`.
-- **OPEN:** NY4I also wrote *"or DX on field day"* alongside the bad-section
+- ~~**OPEN:** NY4I also wrote *"or DX on field day"* alongside the bad-section
   example; asked whether that is an existing-error example or a ruling to refuse
-  DX in Field Day (which would contradict 7.1). Until answered, Field Day keeps
-  accepting `DX`.
+  DX in Field Day (which would contradict 7.1).~~ **ANSWERED 2026-10-15 (FD-DX):**
+  an existing-error example -- *"A W should never be logged with DX as that would
+  be an invalid domestic qth."* `DX` from a station whose country has ARRL/RAC
+  sections is refused at entry; a DX station is still `1D DX`. Not built yet.
 
 ~~Lands in M5b (parsing and validation move onto the classes).~~ **LANDED at
 M5b, 2026-10-02 (§8.2g)**, but for the OPEN item, which is unchanged: Field Day

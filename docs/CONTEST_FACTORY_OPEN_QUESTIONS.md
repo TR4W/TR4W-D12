@@ -20,13 +20,6 @@ moves to section 4 in the commit that records it.
 
 ### Field Day
 
-- **FD-DX** You wrote "or with a bad ARRL section or DX on field day" next to the
-  refusal ruling. Earlier you said a DX station *can* be worked (`1D DX`). Did you
-  mean (a) an example of an existing error, e.g. a W station sending `DX` as its
-  section, or (b) that a DX contact should be refused in Field Day?
-  Today: Field Day accepts DX.
-  **Answer:**
-
 - **Q30** Winter Field Day accepts `MX` as a QTH. It still exports as `ARRL_SECT`
   and imports as a section. Is `MX` "DX" under the "DX is never a section" rule?
   **Answer:**
@@ -637,8 +630,22 @@ closes it; anything else reopens it.
 | Q37 | A malformed grid is refused at entry (and import); the read made safe | not built |
 | Q13 | A logged QSO is scored from its record, never from live state (radio mode, operator) | rule; audit in progress |
 | Q44 | RTC, CQMM, WRTC state their bands; off-band/off-mode QSOs score 0, are not in HamScore's QSO counts, but advance the serial | not built |
+| FD-DX | `DX` from a W (or other sectioned) station is refused; a DX station is still `1D DX` | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **FD-DX** You wrote "or with a bad ARRL section or DX on field day" next to the
+  refusal ruling. Earlier you said a DX station *can* be worked (`1D DX`). Did you
+  mean (a) an example of an existing error, e.g. a W station sending `DX` as its
+  section, or (b) that a DX contact should be refused in Field Day?
+  Today: Field Day accepts DX.
+  **Answer:** (NY4I, 2026-10-15) *"A W should never be logged with DX as that
+  would be an invalid domestic qth."* Reading (a): an example of an existing
+  error, not a ban on DX. A DX station is still worked as `1D DX` (7.1); `DX`
+  from a station whose country has ARRL/RAC sections is an invalid section and
+  is REFUSED at entry with an error (7.10). Not built: today Field Day accepts
+  `DX` from anyone (`ParseClassDomesticOrDXQTH`). How an ADIF import holding
+  such a record behaves is to be proposed with the change.
 
 - **Q44** Three contests keep their band rule inside their scoring, not as the
   contest's bands: RTC (0 points and no multiplier off 40/20/15/10 m or off
