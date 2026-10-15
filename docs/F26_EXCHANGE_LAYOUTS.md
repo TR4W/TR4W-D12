@@ -80,6 +80,10 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **[Q3] ARCI's log format -- ANSWERED (NY4I, 2026-10-15): "No to cabrillo."** The six
+  ARCI events write **no Cabrillo file** (qrpcontest.com takes its own upload); they
+  join the no-Cabrillo group under decision 1. Their names (Q2) still serve as each
+  event's identity and ADIF contest name.
 - **[Q14] TEN-TEN's log format -- ANSWERED (NY4I, 2026-10-15):** *"As ten-ten is
   inactive, no cabrillo acceptance."* TEN-TEN writes **no Cabrillo file**; it joins
   POTA, Kids Day and Grid Loc under decision 1. Its ADIF keeps the name `TEN-TEN`
@@ -144,10 +148,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   ruling? If it does, they get `MY JA PREFECTURE` and `MY JA CITY CODE`. (Same
   question for UA4W's RDA, below.)
 
-**ARCI**
-
-- **[Q3] Log format.** Does the qrpcontest.com upload take a Cabrillo file?
-
 **NZ Field Day (JW-FD)**
 
 - **[Q10] Rules:** (a) RS(T) + serial + branch, a home station sending `00`?
@@ -171,8 +171,8 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   is the DARC Christmas Contest's registered name?
 
 (Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
-POTA, Kids Day, Grid Loc and TEN-TEN all writing none, it is decided -- a `TContestBase`
-answer, False by default, that those four state; the Cabrillo writer then refuses
+POTA, Kids Day, Grid Loc, TEN-TEN and the six ARCI events all writing none, it is
+decided -- a `TContestBase` answer, False by default, that those contests state; the Cabrillo writer then refuses
 with a message instead of writing error-marker lines. A design call under the
 delegation, not a sponsor rule.)
 
