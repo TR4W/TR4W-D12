@@ -80,6 +80,11 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **[Q17, Q18] XMAS -- ANSWERED (NY4I, 2026-10-15): RETIRE.** Its identity (SSA
+  Jultest or not) and its name no longer need settling. Retired as the others are: off
+  the New Contest list, but its enum member, spelling and class stay, so an existing
+  log naming it still opens. **The DARC Christmas Contest (`DARCXMAS`) is a different
+  class and is NOT affected.**
 - **[Q3] ARCI's log format -- ANSWERED (NY4I, 2026-10-15): "No to cabrillo."** The six
   ARCI events write **no Cabrillo file** (qrpcontest.com takes its own upload); they
   join the no-Cabrillo group under decision 1. Their names (Q2) still serve as each
@@ -161,14 +166,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   r4w@narod.ru is valid.)
 - **[Q19] Sent QTH field** -- the RDA district: same question as ALL JA/ACAG above
   (`MY RDA`?). Only Udmurtia stations send one; everyone else sends `MY GRID`.
-
-**Xmas**
-
-- **[Q17] Which contest is it?** Is it the SSA Jultest (DXLog's `SSA_JT.txt` matches
-  its exchange)? If so, the group sent is the one RECEIVED in the previous QSO, not a
-  fresh random one -- which does TR4W do?
-- **[Q18] Its name.** If it is the Jultest, `SSA-JULTEST` (DXLog's name), since `XMAS`
-  is the DARC Christmas Contest's registered name?
 
 (Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
 POTA, Kids Day, Grid Loc, TEN-TEN and the six ARCI events all writing none, it is
