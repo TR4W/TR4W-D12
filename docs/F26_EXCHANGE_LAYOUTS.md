@@ -80,6 +80,10 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **[Q14] TEN-TEN's log format -- ANSWERED (NY4I, 2026-10-15):** *"As ten-ten is
+  inactive, no cabrillo acceptance."* TEN-TEN writes **no Cabrillo file**; it joins
+  POTA, Kids Day and Grid Loc under decision 1. Its ADIF keeps the name `TEN-TEN`
+  and the sent exchange name + 10-10 number + QTH.
 - **Retire or keep -- ANSWERED (NY4I, 2026-10-15):**
   - **[Q8] FISTS: RETIRE.** *"FISTS is inactive so retire."*
   - **[Q11] QCWA: KEEP, re-modelled to the 2021 exchange** -- year licensed + name +
@@ -150,10 +154,6 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   (b) 5 points ZL CW, 3 ZL phone, 10 non-ZL? (c) branches as multipliers -- does our
   own count? (d) Cabrillo accepted, and one log per band?
 
-**TEN-TEN**
-
-- **[Q14] Log format.** Does 10-10 accept a Cabrillo file?
-
 **UA4W**
 
 - **[Q15] Schedule.** One 2-hour window, 1600-1800 UTC, with 15-minute periods
@@ -171,8 +171,8 @@ the part still owed. The `[Qn]` tag is the number the question has been cited by
   is the DARC Christmas Contest's registered name?
 
 (Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
-POTA, Kids Day and Grid Loc all writing none, it is decided -- a `TContestBase`
-answer, False by default, that those three state; the Cabrillo writer then refuses
+POTA, Kids Day, Grid Loc and TEN-TEN all writing none, it is decided -- a `TContestBase`
+answer, False by default, that those four state; the Cabrillo writer then refuses
 with a message instead of writing error-marker lines. A design call under the
 delegation, not a sponsor rule.)
 
