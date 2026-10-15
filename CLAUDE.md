@@ -660,8 +660,13 @@ their data from `ParamStr(0)`, not the working directory.
 Covers ADIF, Cabrillo, callsign routines, multipliers, CTY.DAT, band lookup, CRC32, grid/distance,
 text/file/math utils, DX-spot parsing, CW framing/keyer, and the radio factory (Icom CI-V, Kenwood,
 Yaesu ASCII/binary, Elecraft IF, Flex, HamLib IDs, registry taxonomy, capability pinning).
-It links only leaf `src` units, so **the TRDOS contest engine is not unit-covered** —
-`ProcessExchange`, scoring and dupe need the app's globals booted.
+~~It links only leaf `src` units, so the TRDOS contest engine is not unit-covered~~ — **stale
+by 2026-10-15 (M11 F35):** the test `.lpr` uses `MainUnit`, and the contest pins link
+`FCONTEST`, `LOGSTUFF`, `PostUnit` and `LogEdit` (count the test units naming them with
+`rg -l -i -w`, not from here). Every contest's parse dispatch, export columns, field list and
+exchange rules are pinned per contest and station. What is still NOT unit-covered is the
+engine run end to end — `ProcessExchange`, scoring and dupe over a booted session — which is
+the contest matrix's and the corpus's job.
 
 **1b. Checked unit tests: `-gt` + heaptrc** (2026-10-14). The same suite, compiled so undefined
 behaviour is wrong *every* run instead of right by luck:
