@@ -61,6 +61,10 @@ type
          of rules, so it is stated once, here (M10 S5). See
          TContestBase.GetFlags. *)
       function GetFlags: TContestFlags; override;
+
+      (* A BREAK IS 60 MINUTES -- the family's rule, both modes (Q60). See
+         TContestBase.MinimumOffTimeMinutes. *)
+      function GetMinimumOffTimeMinutes: integer; override;
    public
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -171,6 +175,13 @@ end;
 function TContestCQWWBase.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByBand, cfMultByBand, cfCQZoneMode];
+end;
+
+(* 60 MINUTES -- DXLog.net's CQWW.txt states MIN_OFF_TIME=60, which NY4I
+   took as confirmation (Q60, 2026-10-15). *)
+function TContestCQWWBase.GetMinimumOffTimeMinutes: integer;
+begin
+   Result := 60;
 end;
 
 (* THE RST COMES OFF FIRST. SRX_STRING is '59 8' -- the received RST and the

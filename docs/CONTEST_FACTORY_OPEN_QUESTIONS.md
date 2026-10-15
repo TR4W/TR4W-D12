@@ -246,6 +246,20 @@ Three groups:
   is wrong. Implementation: the off-time becomes one value the contest states, which
   both the main window and the summary sheet read, so the summary sheet no longer
   derives it from the contest NAME.
+  **IMPLEMENTED 2026-10-15.** `TContestBase.MinimumOffTimeMinutes` (base 30);
+  `TContestCQWWBase` (CW and SSB) and its sibling `TContestCQWWRTTY` say 60 --
+  the three tokens `Pos('CQ-WW', ...)` matched. `PostUnit.CalculateTotals`
+  (the summary sheet's OPERATING TIME and the CT1BOH window's per-band times)
+  asks `ContestIdentity(Contest)`, and its rule is `GapIsOperatingTime`. Its
+  `CONTEST NAME` test is deleted: a stated name no longer changes the break.
+  **THE MAIN WINDOW'S COPY WAS DEAD, NOT WRONG IN EFFECT**: it wrote
+  `MainUnit.T1`, and nothing read it -- LOGWIND's reader sat inside a `{ }`
+  comment in D7 as well. It is deleted, not pointed at the contest, so the
+  on-screen times do not change for IARU or any contest (the on-air counter
+  has no break rule). Pinned by `uTestContestUI`
+  (`Test_OnlyCQWWHasASixtyMinuteBreak`, `Test_AGapCountsUpToTheBreak`).
+  Still open: whether CQ WW RTTY's own rules set a different off time --
+  the answer quotes `CQWW.txt` only, so RTTY keeps the 60 it always had.
 
 - **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
   categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR

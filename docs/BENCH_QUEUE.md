@@ -23,6 +23,28 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-10-15 -- THE MINIMUM OFF TIME IS THE CONTEST'S (Q60)
+
+NY4I's answer: a break is 60 minutes in CQ WW and 30 in every other contest,
+IARU HF included. `TContestBase.MinimumOffTimeMinutes` states it and
+`PostUnit.CalculateTotals` reads it; the summary sheet no longer reads it from
+the contest NAME. The values and the gap rule are unit-pinned
+(`uTestContestUI`); the summary sheet is in no oracle.
+
+**The main window's on-screen times are NOT affected.** Its 60-for-IARU copy
+wrote a variable nothing read (the reader was inside a comment in D7 too), and
+is deleted. The on-air counter is wall time since the first entry, with no
+break rule at all -- so there is nothing to see change there.
+
+- [ ] **IARU HF**: log two QSOs 45 minutes apart (edit the second QSO's time)
+  and write the summary sheet. `OPERATING TIME` does NOT include the 45
+  minutes. Before this change it did not either, unless a stated `CONTEST
+  NAME` held `CQ-WW`.
+- [ ] **CQ WW CW**: the same two QSOs -- `OPERATING TIME` DOES include the
+  45 minutes. The CT1BOH window's per-band times agree with it.
+- [ ] **CQ WW CW with `CONTEST NAME = MY TEST`** in the `.cfg`: still 60
+  minutes (before this change, 30).
+
 ## Added 2026-10-14 -- THE EXCHANGE RULES ASK THE CONTEST (M11 S7)
 
 Five rules the engine decided by testing the session's exchange shape are now

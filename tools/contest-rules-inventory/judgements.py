@@ -146,9 +146,12 @@ ROUTINES = {
    ("postunit.pas", "PrintHourTotals"): ("score-summary", "ReportsRunningScore (existing, M9a)"),
    ("uTotal.pas", "UpdateTotals2"): ("score-summary", "TotalsDisplay (existing, M9a)"),
    ("postunit.pas", "CheckForNewContestDate"): ("score-summary", new("MaxContestDates")),
-   ("postunit.pas", "CalculateTotals"): ("score-summary", new("OffTimeMinimumMinutes")),
+   # postunit.CalculateTotals' `Pos('CQ-WW', Settings.Contest.Name)` left at
+   # Q60 (2026-10-15): the contest answers MinimumOffTimeMinutes.
    # ------------------------------------------------- UI / display / dialogs
-   ("MainUnit.pas", "CreateMainWindow"): ("ui", "PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + " + new("UIFeatures (off-time)")),
+   ("MainUnit.pas", "CreateMainWindow"): ("ui", "PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13)"),
+   # CreateMainWindow's off-time test (CQ WW and IARU HF -> 60) was a dead
+   # store, deleted at Q60 (2026-10-15); the break is MinimumOffTimeMinutes.
    ("MainUnit.pas", "OpenTR4WWindow"): ("ui", "PermittedOperatingAids (existing, M9a)"),
    ("MainUnit.pas", "BuildLogRow"): ("ui", new("LogColumns")),
    # SetColumnsWidth's Sweepstakes columns left at M11 S9e part 1 (F15/F15a):
@@ -236,12 +239,10 @@ GENERIC = {x.upper() for x in [
 # (file, regex over the code-only line with strings kept, expected matches,
 #  contests, note). Each match becomes one row.
 SHAPE3 = [
-   ("tr4w/src/MainUnit.pas", r"pos\s*\(\s*'CQ-WW'\s*,\s*ContestTypeSA\s*\[\s*Contest\s*\]", 1,
-    ["CQWWCW", "CQWWSSB", "CQWWRTTY", "IARU"],
-    "`Pos('CQ-WW'` / `'IARU-HF'` in `ContestTypeSA[Contest]` -- 60-minute off-time"),
-   ("tr4w/src/trdos/postunit.pas", r"pos\s*\(\s*'CQ-WW'\s*,\s*Settings\.Contest\.Name\s*\)", 1,
-    ["CQWWCW", "CQWWSSB", "CQWWRTTY"],
-    "`Pos('CQ-WW', Settings.Contest.Name)` -- 60-minute off-time"),
+   # The two 60-minute off-time tests -- MainUnit's `Pos('CQ-WW'` /
+   # `'IARU-HF'` in `ContestTypeSA[Contest]` and postunit's
+   # `Pos('CQ-WW', Settings.Contest.Name)` -- left at Q60 (2026-10-15):
+   # TContestBase.MinimumOffTimeMinutes (the MainUnit one was a dead store).
    ("tr4w/src/uCabrilloExchange.pas", r"\bContestTitle\s*=\s*'PGA'", 2, [],
     "`ContestTitle = 'PGA'` -- no ContestType; operator-titled"),
    ("tr4w/src/uCabrilloExchange.pas", r"\baMy\.MyState\s*=\s*'TRC'", 1, [],

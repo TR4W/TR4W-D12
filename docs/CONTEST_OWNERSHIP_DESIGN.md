@@ -77,7 +77,7 @@ lives in a helper or in the format's own unit.
 | total score and bonuses | **the class, for every contest** (M6, done 2026-10-02): `logedit.TotalScore` gathers the totals and asks `FinalScore`, and names no contest: RSGB 1.8 MHz's "times one", held there at M6 (§8.2h), is its `CombineWithMultipliers` (§8.2p) | `FinalScore` = `CombineScore` + `BonusPoints`; `CombineWithMultipliers`, `BonusStations` (**existing**, §5) |
 | multipliers and dupes | **the sheet keeps the state; the class declares the rules** (M8, done 2026-10-02, §8.2l): the kinds and by-band/by-mode traits, `UsesBand` (now asked by the dupe sheet and the need-multiplier hint too), `CountsAsMultiplier` (asked by `logdupe.SetMultFlags`), `MarksDupes`, and the hint's `DomesticMultiplierFromCall`. A multiplier KIND's arm stays in the sheet until the multiplier commands retire (Q4). RSGB 1.8 MHz's scoring ASKS the sheet, read-only, through the station context (7.13, §8.2p) | `CountsAsMultiplier`, `DomesticMultiplierFromCall` (**existing**, M8); `MarksDupes`, `UsesBand` (**existing**); `TStationContext.IsNewMultiplierAnywhere` (**existing**, §8.2p); the multiplier KEY at M10 |
 | summary sheet, totals window, new-contest prompts, hour report, HamScore's canonical exchanges, score-posting labels, operating aids, the QTC menu | **the class, as data the UI renders** (M9a, done 2026-10-02, §8.2m); uNewContest names no contest (POTA's arms moved at §8.2o, RSGB 1.8's and the UA4W Championship's at §8.2p, and `ClasslessPrompts` is deleted); POTA's park menu rows are `OffersParkTools` | `SummarySheet`, `TotalsDisplay`, `DescribeNewContestPrompts`, `ReportsRunningScore`, `CanonicalReceived/SentExchange`, `ScorePostingMultiplierType`, `PermittedOperatingAids`, `OffersQTCs` (**existing**, M9a) |
-| the New Contest drop-down's name and place, call entry's contest status, the ten-date warning, WARC band stepping, the FOC# log column, a frequency warning | **the class, as data the UI renders** (M9b, done 2026-10-02, §8.2n); the off-time minimum stays named (Q60) | `DisplayName`, `IsActive`, `ShowsContestStatus`, `MaximumContestDates`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber`, `CallEntryFrequencyWarning` (**existing**, M9b) |
+| the New Contest drop-down's name and place, call entry's contest status, the ten-date warning, WARC band stepping, the FOC# log column, a frequency warning | **the class, as data the UI renders** (M9b, done 2026-10-02, §8.2n); the off-time minimum since Q60 (2026-10-15) | `DisplayName`, `IsActive`, `ShowsContestStatus`, `MaximumContestDates`, `BandStepIncludesWARC`, `PowerFieldIsFOCNumber`, `CallEntryFrequencyWarning` (**existing**, M9b) |
 
 The seam names on the right are the generator's
 (`tools/contest-rules-inventory/judgements.py`), with two deliberate
@@ -2980,7 +2980,7 @@ one value with the last touch winning (7.6).
 | `MainUnit` log columns -- `Contest = / <> FOCMARATHON` x3 | FOC Marathon | `PowerFieldIsFOCNumber` | 3 |
 | `MainUnit.CallWindowChange` -- `if Contest = WAG then WagCheck` | WAG | `CallEntryFrequencyWarning(aFreqKHz)`; `WagCheck` is `ShowCallEntryFrequencyWarning` | 1 |
 | the Cabrillo summary's `_CATEGORY-POWER` header-store copy; PostUnit's 3830 report reading it | all | one value, `Settings.Contest.CategoryPower` (7.6) | -- |
-| `MainUnit` / `PostUnit` off-time minimum -- `pos('CQ-WW', ...)` / `'IARU-HF'` | CQ WW x3, IARU | **NOT MOVED** -- Q60 | -- |
+| `MainUnit` / `PostUnit` off-time minimum -- `pos('CQ-WW', ...)` / `'IARU-HF'` | CQ WW x3, IARU | ~~NOT MOVED -- Q60~~ **MOVED 2026-10-15** (Q60: IARU is 30; MainUnit's copy was dead and is deleted) | `MinimumOffTimeMinutes` |
 
 **DECIDED: THE DROP-DOWN HOLDS A `ContestType` PER LINE, AND THE TOKEN IS
 STILL WHAT IS WRITTEN.** `TfrmNewContest.FContests[i]` is line i's contest,
@@ -3085,6 +3085,10 @@ rule and the seam would be one integer -- but its two readers disagree:
 `PostUnit.CalculateTotals` 60 for CQ WW only, keyed on `Settings.Contest.Name`
 (so a stated `CONTEST NAME` changes it). The same in D7. One value would change
 one reader's output for IARU -- a sponsor question, not a UI move.
+**MOVED 2026-10-15 (Q60 answered: CQ WW 60, everything else 30).**
+`TContestBase.MinimumOffTimeMinutes`; `PostUnit.CalculateTotals` asks it.
+MainUnit's copy was a dead store (its reader was commented out in D7 as well)
+and is deleted rather than pointed at the contest.
 
 **Gates, run 2026-10-02 on a full build.** The contest matrix **185
 identical, 0 differing** -- no re-freeze. Golden corpus **24
@@ -3898,7 +3902,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   - **Q60** The off-time minimum: `MainUnit` uses 60 minutes for CQ WW and
     IARU HF, `PostUnit`'s operating time 60 for CQ WW only (by contest NAME).
     Which is right for IARU HF? Once ruled, one `MinimumOffTimeMinutes` on the
-    class and both readers ask it.
+    class and both readers ask it. **ANSWERED AND IMPLEMENTED 2026-10-15**:
+    30 for IARU HF; see `CONTEST_FACTORY_OPEN_QUESTIONS.md` Q60.
   - **Q61** CATEGORY-ASSISTED, -BAND, -MODE and -OPERATOR have the same
     two-store shape CATEGORY-POWER had: the summary window starts from the
     setting, but writes MODE to its header-store copy and the other three

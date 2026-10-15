@@ -35,7 +35,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       contest's base answer as a ratchet: General QSO's three, the FOC
       Marathon's power column, WAG's frequency windows to the kHz.
     * A CATEGORY-POWER CHANGE (uCategoryPowerChange): when it sets, when it
-      rescores, and that re-saving the same value does neither. *)
+      rescores, and that re-saving the same value does neither.
+    * THE MINIMUM OFF TIME (Q60): 60 for the CQ WW family, 30 for every other
+      contest, and PostUnit's gap rule at its edge. No oracle sees it -- the
+      summary sheet is not in the matrix or the corpus. *)
 unit uTestContestUI;
 
 {$I ..\..\src\tr4w.inc}
@@ -59,6 +62,8 @@ type
       procedure Test_FOCMarathonPowerColumn;
       procedure Test_WAGFrequencyWarning;
       procedure Test_CategoryPowerChange;
+      procedure Test_OnlyCQWWHasASixtyMinuteBreak;
+      procedure Test_AGapCountsUpToTheBreak;
    end;
 
 implementation
@@ -73,6 +78,7 @@ uses
    uSettingsModel,
    uAppStrings,
    uTR4WStrings,
+   PostUnit,
    uTestContestObjects;
 
 const
@@ -449,6 +455,69 @@ begin
    CheckTrue((change = cpcUnchanged) and (got = cpLOW), 'a value that is no power changes nothing');
 end;
 
+(* ------------------------------------------------------------------------ *)
+(* THE MINIMUM OFF TIME -- Q60, NY4I 2026-10-15                              *)
+(* ------------------------------------------------------------------------ *)
+
+(* 60 MINUTES FOR EXACTLY THE CQ WW FAMILY -- CW, SSB and RTTY, the three
+  tokens `Pos('CQ-WW', ...)` matched -- and the base 30 for every other
+  contest, IARU HF and WRTC included. A RATCHET: a contest that states another
+  break fails here and joins the list on a rule's evidence. *)
+procedure TContestUITests.Test_OnlyCQWWHasASixtyMinuteBreak;
+var
+   c: ContestType;
+   obj: TContestBase;
+   expected, sixty: integer;
+begin
+   BeginTest('Test_OnlyCQWWHasASixtyMinuteBreak');
+   sixty := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      obj := Make(c);
+      try
+         expected := 30;
+         if c in [CQWWCW, CQWWSSB, CQWWRTTY] then
+            begin
+            expected := 60;
+            end;
+         CheckEquals(expected, obj.MinimumOffTimeMinutes,
+                     string(ContestTypeSA[c]) + ': the minimum off time');
+         CheckEquals(obj.MinimumOffTimeMinutes,
+                     ContestIdentity(c).MinimumOffTimeMinutes,
+                     string(ContestTypeSA[c]) + ': the identity gives the same break');
+         if obj.MinimumOffTimeMinutes = 60 then
+            begin
+            inc(sixty);
+            end;
+      finally
+         obj.Free;
+      end;
+      end;
+   CheckEquals(3, sixty, 'exactly three contests break at 60 minutes');
+   CheckEquals(30, ContestIdentity(IARU).MinimumOffTimeMinutes,
+               'IARU HF takes the default 30 (DXLog IARUHF.txt states none)');
+end;
+
+(* POSTUNIT.CALCULATETOTALS' RULE, AT ITS EDGE: a gap of exactly the break is
+  operating time (`<=`, as it always was), one second more is off time. *)
+procedure TContestUITests.Test_AGapCountsUpToTheBreak;
+begin
+   BeginTest('Test_AGapCountsUpToTheBreak');
+   CheckTrue(GapIsOperatingTime(0, 30), 'no gap counts');
+   CheckTrue(GapIsOperatingTime(30 * 60, 30), '30:00 counts at a 30-minute break');
+   CheckFalse(GapIsOperatingTime(30 * 60 + 1, 30), '30:01 is off time at a 30-minute break');
+   CheckTrue(GapIsOperatingTime(45 * 60, 60), '45:00 counts at a 60-minute break');
+   CheckTrue(GapIsOperatingTime(60 * 60, 60), '60:00 counts at a 60-minute break');
+   CheckFalse(GapIsOperatingTime(60 * 60 + 1, 60), '60:01 is off time at a 60-minute break');
+
+   (* THE TWO ANSWERS, through the contest -- a 45-minute gap is operating
+      time in CQ WW and off time in IARU HF. *)
+   CheckTrue(GapIsOperatingTime(45 * 60, ContestIdentity(CQWWCW).MinimumOffTimeMinutes),
+             'CQ WW CW: a 45-minute gap is operating time');
+   CheckFalse(GapIsOperatingTime(45 * 60, ContestIdentity(IARU).MinimumOffTimeMinutes),
+              'IARU HF: a 45-minute gap is off time');
+end;
+
 procedure TContestUITests.RunAllTests;
 begin
    Test_ChoicesListEveryContestOnce;
@@ -460,6 +529,8 @@ begin
    Test_FOCMarathonPowerColumn;
    Test_WAGFrequencyWarning;
    Test_CategoryPowerChange;
+   Test_OnlyCQWWHasASixtyMinuteBreak;
+   Test_AGapCountsUpToTheBreak;
 end;
 
 end.

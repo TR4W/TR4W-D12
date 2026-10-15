@@ -4486,15 +4486,12 @@ begin
                  SysUtils.Format(TC_RULESONQRZRU, [string(ContestTypeSA[Contest])]));
   SetMenuCaption(menu_WA7BNM_calendar,
                  SysUtils.Format(TC_RULESONSM3CER, [string(ContestTypeSA[Contest])]));
-  if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
-    ContestTypeSA[Contest]) <> 0) then //n4af 4.35.5 // 4.115.4
-     begin
-     T1 := 3600000 // 60 min break criteria
-     end
-  else
-     begin
-     T1 := 1800000; // normal 30min break
-     end;
+  (* THE 60/30-MINUTE BREAK THAT STOOD HERE IS DELETED (Q60, 2026-10-15). It
+    wrote T1 -- 60 minutes for CQ WW and IARU HF (n4af 4.35.5, 4.115.4) -- and
+    NOTHING READ IT: LOGWIND's on-air-time reader sat inside a comment in D7
+    too, and the only live T1 is the debug stopwatch in the log load. The
+    break is the contest's, TContestBase.MinimumOffTimeMinutes, which
+    PostUnit.CalculateTotals reads. *)
   (* The calendar ids, asked of the contest -- M1. 0 means "not listed". *)
   if ContestIdentity(Contest).QRZRUId = 0 then
      begin

@@ -617,8 +617,14 @@ the target shape, the M-step migration order and the open questions.
   **CATEGORY-POWER is ONE value** (design 7.6): the summary window writes
   `Settings.Contest.CategoryPower`, so `TStationContext.MyPower` is what the
   Cabrillo header declares, and a change with QSOs logged rescores. **The
-  off-time minimum stays named** in MainUnit and PostUnit: its two readers
-  disagree about IARU (Q60).
+  off-time minimum is the contest's** (Q60, 2026-10-15):
+  `MinimumOffTimeMinutes`, base 30, 60 on `TContestCQWWBase` and
+  `TContestCQWWRTTY` (IARU HF is 30). `PostUnit.CalculateTotals` -- the
+  summary sheet's OPERATING TIME, the CT1BOH window's band times -- asks it
+  through `GapIsOperatingTime`; it no longer reads `CONTEST NAME`. MainUnit's
+  60-for-IARU copy was a dead store (its reader commented out since D7) and
+  is deleted; the on-air counter has no break rule. `uTestContestUI` pins
+  it; no oracle sees the summary sheet.
 - **The station's facts arrive in `TStationContext`**, filled by
   `uContestFactory.CurrentStation`. The entrant's `CATEGORY-POWER` is
   `MyPower`, read from `Settings.Contest.CategoryPower`; the New Contest dialog

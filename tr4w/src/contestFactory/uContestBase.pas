@@ -1595,6 +1595,7 @@ type
       function GetIsActive: boolean; virtual;
       function GetShowsContestStatus: boolean; virtual;
       function GetMaximumContestDates: integer; virtual;
+      function GetMinimumOffTimeMinutes: integer; virtual;
       function GetBandStepIncludesWARC: boolean; virtual;
       function GetPowerFieldIsFOCNumber: boolean; virtual;
 
@@ -2750,6 +2751,20 @@ type
          base is ten; General QSO, a log kept for as long as the station
          operates, is 0. (PostUnit.CheckForNewContestDate renders it.) *)
       property MaximumContestDates: integer read GetMaximumContestDates;
+
+      (* THE SHORTEST GAP BETWEEN QSOs THAT COUNTS AS A BREAK, IN MINUTES --
+         Q60, NY4I 2026-10-15. A gap of at most this many minutes is operating
+         time; a longer one is off time. The base is 30, the default DXLog.net
+         uses for every contest that states no MIN_OFF_TIME; the CQ WW family
+         says 60 (CQWW.txt: MIN_OFF_TIME=60). IARU HF states none, so it is 30.
+         (PostUnit.CalculateTotals renders it: the summary sheet's OPERATING
+         TIME and the per-band times the CT1BOH window shows.)
+
+         It was read from the CONTEST NAME (`Pos('CQ-WW',
+         Settings.Contest.Name)`), so a stated CONTEST NAME changed it; and
+         MainUnit kept a second copy, 60 for CQ WW AND IARU HF, in a variable
+         nothing has read since D7 (the reader was inside a comment). *)
+      property MinimumOffTimeMinutes: integer read GetMinimumOffTimeMinutes;
 
       (* DOES BAND UP/DOWN STEP ONTO 30, 17 AND 12 M? -- M9b. No contest is
          held there, so the base skips them; General QSO steps through them.
@@ -4777,6 +4792,11 @@ end;
 function TContestBase.GetMaximumContestDates: integer;
 begin
    Result := 10;
+end;
+
+function TContestBase.GetMinimumOffTimeMinutes: integer;
+begin
+   Result := 30;
 end;
 
 function TContestBase.GetBandStepIncludesWARC: boolean;

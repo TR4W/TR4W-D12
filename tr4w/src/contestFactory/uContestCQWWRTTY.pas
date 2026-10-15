@@ -96,6 +96,9 @@ type
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
+      (* A BREAK IS 60 MINUTES -- see TContestBase.MinimumOffTimeMinutes
+         (Q60). *)
+      function GetMinimumOffTimeMinutes: integer; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -267,6 +270,17 @@ end;
 function TContestCQWWRTTY.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByBand, cfMultByBand, cfCQZoneMode];
+end;
+
+(* 60 MINUTES, AS THE SUMMARY SHEET ALWAYS GAVE IT -- its token 'CQ-WW-RTTY'
+   matched `Pos('CQ-WW', ...)`, so the RTTY running took CQ WW's break with
+   the CW and SSB ones (Q60). Stated here, not inherited: this class is a
+   sibling of the CW/SSB family, not under it. Whether the RTTY rules set an
+   off time of their own is not settled by Q60's answer, which quotes
+   DXLog's CQWW.txt only. *)
+function TContestCQWWRTTY.GetMinimumOffTimeMinutes: integer;
+begin
+   Result := 60;
 end;
 
 function TContestCQWWRTTY.GetIsUSQSOParty: boolean;

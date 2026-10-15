@@ -138,6 +138,11 @@ function GenerateAllTotalsPerHour: boolean;
 procedure ScoreByHour;
 // function DetermineNumberOfQTCs: integer;
 function CalculateTotals: boolean;
+(* DOES A GAP BETWEEN TWO QSOs COUNT AS OPERATING TIME? -- CalculateTotals'
+   rule, exported for its pin (uTestContestUI). At most the contest's
+   MinimumOffTimeMinutes counts; a longer gap is off time. *)
+function GapIsOperatingTime( aGapSeconds: integer;
+                             aMinimumOffTimeMinutes: integer ): boolean;
 procedure SummarySheet;
 procedure CreateCabrilloFile;
 procedure CheckForNewContestDate( Date: TQSOTime );
@@ -1169,6 +1174,12 @@ procedure WriteScoreInformationToSummarySheet;
      end;
   end;
 
+function GapIsOperatingTime( aGapSeconds: integer;
+                             aMinimumOffTimeMinutes: integer ): boolean;
+begin
+   Result := aGapSeconds <= aMinimumOffTimeMinutes * 60;
+end;
+
 function CalculateTotals: boolean;
 
   { Returns TRUE if successful }
@@ -1182,17 +1193,13 @@ function CalculateTotals: boolean;
     TempMode: ModeType;
     TimeDifference: integer;
     PreviousQSOTime: TQSOTime;
-    Min: integer;
+    MinimumOffTime: integer;
   begin
 
-  if pos( 'CQ-WW', Settings.Contest.Name ) <> 0 then // n4af 4.35.3
-     begin
-     Min := 60
-     end
-  else
-     begin
-     Min       := 30;
-     end;
+  (* THE BREAK IS THE CONTEST'S (Q60, NY4I 2026-10-15). This was
+     `Pos('CQ-WW', Settings.Contest.Name)` (n4af 4.35.3) -- the session's
+     NAME, so a stated CONTEST NAME changed it. *)
+  MinimumOffTime := ContestIdentity( Contest ).MinimumOffTimeMinutes;
   NumberDates := 0;
   // OperatingTime := 0;
   CalculateTotals := False;
@@ -1249,7 +1256,7 @@ function CalculateTotals: boolean;
              begin
              TimeDifference := QSOTimeToSeconds( TempRXData.tSysTime ) -
                 QSOTimeToSeconds( PreviousQSOTime );
-             if TimeDifference <= Min { min } * 60 then // n4af 4.35.3
+             if GapIsOperatingTime( TimeDifference, MinimumOffTime ) then
                // OperatingTime := OperatingTime + TimeDifference;
                 begin
                 if PreviousBand = TempRXData.Band then
