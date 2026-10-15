@@ -277,13 +277,6 @@ moves to section 4 in the commit that records it.
   naming the multiplier, Q4). Wanted? *Recommended: yes, when Q4 is done.*
   **Answer:**
 
-- **Q82** County lines in IN7QPNE: Indiana and Delaware allow two counties,
-  7QP four. TR4W checks the COUNT before it knows the counties, so IN7QPNE
-  allows any number, as it always did. Teach the check which party the
-  counties are in, or leave it? *Recommended: leave it until a line between
-  two parties is real.*
-  **Answer:**
-
 - **Q83** HamScore now asks the contest whether its score may be posted.
   Until now only the post-scores window asked, so WRTC (no live score
   posting) still went to HamScore when HAMSCORE ENABLE was on. With this
@@ -622,8 +615,19 @@ closes it; anything else reopens it.
 | Q74 | Cabrillo LOCATION is seeded from the station at New Contest time and stored in the contest | not built |
 | Q68 | On reopen, the station-fact rows are applied before the contest row | not built |
 | Q76 | ADIF `STATE` is the worked station's state, `MY_STATE` ours -- fix the host-state export | not built |
+| Q82 | IN7QPNE county-line count left as is; future fix | issue #85 |
 
 ### Answered since the table was last updated (full text)
+
+- **Q82** County lines in IN7QPNE: Indiana and Delaware allow two counties,
+  7QP four. TR4W checks the COUNT before it knows the counties, so IN7QPNE
+  allows any number, as it always did. Teach the check which party the
+  counties are in, or leave it? *Recommended: leave it until a line between
+  two parties is real.*
+  **Answer:** (NY4I, 2026-10-15) *"leave it but note it as a future item to
+  fix (an issue is fine too for these future items)."* Left as it is; tracked
+  as issue #85 (https://github.com/TR4W/TR4W-D12/issues/85). From now on, a
+  "future item" answer gets an issue, linked here.
 
 - **Q76** **A DEFECT IN TODAY'S EXPORT:** in every single-state party, an
   in-state station's ADIF labels every QSO with the HOST state -- a DE
