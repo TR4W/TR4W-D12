@@ -394,24 +394,6 @@ closes it; anything else reopens it.
   like the US parties.
   **Answer:**
 
-- **Q62** POTA ADIF export: WHOSE DXCC. We are the activator, in our park; our
-  park goes out as `MY_SIG_INFO` / `MY_POTA_REF` and is right. The defect is
-  about the OTHER station: a hunter at home who sends us a Canadian province
-  (`ON`) is exported with `DXCC:291` -- the USA -- and `STATE:ON`, because the
-  export writes 291 for anything that looks like a state, and that list
-  includes the provinces (`uContestPOTA.pas:329`). (A hunter who sends a park,
-  park-to-park, gets no DXCC written at all.)
-  *Reworded 2026-10-15 -- NY4I read the 291 as OUR station: "why would a pota
-  hunter operating in canada be considered a US station? When they setup and
-  select their park, it would indicate VE-0001 and we should see they are in
-  canada."* It is the worked station's DXCC, not ours. His point adds a second
-  item: OUR `MY_DXCC` (and `MY_STATE`) could come from our park reference
-  (`VE-0001` is Canada) -- today neither is written.
-  **Proposed answer:** the worked station's DXCC comes from its CALLSIGN's
-  country (VE3ABC -> 1, Canada), as in every other contest, never from the
-  shape of what it sent; `STATE` stays what the hunter sent. Separately, write
-  our `MY_DXCC` and `MY_STATE` from our park reference.
-  **Answer:**
 - **Q61** CATEGORY-POWER is now one value (design 7.6). Four other Cabrillo
   categories have the same two-store shape: ASSISTED, BAND, MODE and OPERATOR
   start from the setting the New Contest dialog wrote, but the summary window
@@ -612,8 +594,28 @@ closes it; anything else reopens it.
 | Q78 | IN7QPNE cross-party scoring view: deferred with Q77 | issue #86 |
 | Q98 | Every contest states its bands and modes; an off-band/off-mode QSO is logged, scores nothing, and is an automatic X-QSO in the log and the export (flag OR off-band) | not built |
 | Q41 | ARRL VHF runnings named ARRL-VHF-JAN/JUN/SEP; all three get June's set-up | not built |
+| Q62 | POTA: the worked station's DXCC from its callsign; our MY_DXCC and MY_STATE from our park | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q62** POTA ADIF export: WHOSE DXCC. We are the activator, in our park; our
+  park goes out as `MY_SIG_INFO` / `MY_POTA_REF` and is right. The defect is
+  about the OTHER station: a hunter at home who sends us a Canadian province
+  (`ON`) is exported with `DXCC:291` -- the USA -- and `STATE:ON`, because the
+  export writes 291 for anything that looks like a state, and that list
+  includes the provinces (`uContestPOTA.pas:329`). (A hunter who sends a park,
+  park-to-park, gets no DXCC written at all.)
+  *Reworded 2026-10-15 -- NY4I read the 291 as OUR station: "why would a pota
+  hunter operating in canada be considered a US station? When they setup and
+  select their park, it would indicate VE-0001 and we should see they are in
+  canada."* It is the worked station's DXCC, not ours. His point adds a second
+  item: OUR `MY_DXCC` (and `MY_STATE`) could come from our park reference
+  (`VE-0001` is Canada) -- today neither is written.
+  **Proposed answer:** the worked station's DXCC comes from its CALLSIGN's
+  country (VE3ABC -> 1, Canada), as in every other contest, never from the
+  shape of what it sent; `STATE` stays what the hunter sent. Separately, write
+  our `MY_DXCC` and `MY_STATE` from our park reference.
+  **Answer:** (NY4I, 2026-10-15) *Yes* -- both halves. Not built.
 
 - **Q41** ARRL VHF: September is set up with the contest name `'VHF QSO JUNE'`
   (the old code named both runnings), and January has never had any setup at
