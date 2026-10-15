@@ -53,11 +53,6 @@ moves to section 4 in the commit that records it.
   runnings but not for CUP RF DIGITAL. Intended?
   **Answer:**
 
-- **Q24** FOC Marathon now reads N1MM's `APP_N1MM_EXCHANGE1` as the membership
-  number when the record has no `FOC_NUM` (what the old code intended but never
-  did). Confirm.
-  **Answer:**
-
 - **Q26** WAG: an imported record with no `DOK` keeps its received RST (`599`) as
   the QTH. Should it be empty?
   **Answer:**
@@ -590,8 +585,25 @@ closes it; anything else reopens it.
 | Idaho-cfg | No `.cfg` in `target/dom` -- the Idaho and Delaware templates deleted | done 2026-10-15 |
 | Q17 | Moot: Locust is retired | -- |
 | Q36 | Moot: Locust is retired | -- |
+| Q24 | FOC reads N1MM's APP_N1MM_EXCHANGE1 only when the record's CONTEST_ID is FOC's | not built; needs N1MM's id spelling |
 
 ### Answered since the table was last updated (full text)
+
+- **Q24** FOC Marathon now reads N1MM's `APP_N1MM_EXCHANGE1` as the membership
+  number when the record has no `FOC_NUM` (what the old code intended but never
+  did). Confirm.
+  **Answer:** (NY4I, 2026-10-15) *"Yes if we can get the import from N1MM
+  (only when the cabrillo contest ID is ok, that is fine to use)."* So
+  `APP_N1MM_EXCHANGE1` is read as the membership number only when the record's
+  own `CONTEST_ID` names the FOC Marathon. **Not so today:**
+  `TContestFOCMarathon.ApplyADIFImport` also runs for a record with NO
+  `CONTEST_ID` imported into an FOC log, and uses the tag there too. **And the
+  id must be matchable:** `FindContestByADIFContestId` takes an exact id or a
+  listed former id; FOC's is `FOC MARATHON` (space), DXLog's
+  `FOC_MARATHON.TXT` writes `FOC-MARATHON` (hyphen), and N1MM's spelling is
+  not yet known. To build: gate the tag on the record's CONTEST_ID, and add
+  N1MM's spelling to FOC's accepted ids -- **NY4I: what CONTEST_ID does N1MM
+  write for the FOC Marathon? A sample N1MM ADIF settles it.**
 
 - **Q17** Locust (inactive): the calendar says CW only, 80 and 40 m, no
   multipliers. TR4W scores every band and mode and counts domestic multipliers.
