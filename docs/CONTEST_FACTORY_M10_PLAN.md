@@ -38,7 +38,9 @@ this plan is the record of how, not a to-do list.
 * Open questions Q90 (the rover split vs the county line) and S6's BC
   STATE question.
 
-**Still naming the deleted globals:** `trdos/logddx.pas`, compiled by nothing
+**~~Still naming the deleted globals~~ -- DELETED 2026-10-14 (Q91, NY4I:
+"delete both", with `logmenu.pas`; commit `32bcadb9`).** What stood here:
+`trdos/logddx.pas`, compiled by nothing
 (F14, Q91 -- NY4I's decision, left untouched): 26 `ActiveExchange` code
 reads, plus `ActiveDXMult` once and `ActiveDomesticMult` twice by text
 (`rg -i -w`; its two zone reads were repointed as text at S9c). No build sees
