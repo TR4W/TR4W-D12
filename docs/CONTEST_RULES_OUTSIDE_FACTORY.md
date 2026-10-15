@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `50e91eb7` (2026-10-15).
+directory). This copy was generated from commit `21ac4c73` (2026-10-15).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -31,18 +31,18 @@ rest on, so a finding whose number has moved shows up there first.
 | 1 | the global `Contest` compared, `in`-tested or cased | **6** in 3 files | 6 | `scan.py` (section 2.1). Rows > sites because a `case` is one site and one row per arm |
 | 2 | a contest-typed FIELD or VARIABLE tested: `exch.ceContest`, `rec.ceContest`, `RXData.ceContest`, `SelectedContest` | **0** in 0 files | 0 | `scan.py` |
 | 3 | a contest identified by a STRING: contest name/title, a station state, a sponsor or bonus callsign | **11** | 11 | `judgements.SHAPE3`, curated from `scan.string_candidates` (section 2.4) |
-| 4 | an `Active*` proxy whose tested value reaches only 1-3 contests by default | **12** of 43 classified | 12 | `scan.classify_proxies` |
+| 4 | an `Active*` proxy whose tested value reaches only 1-3 contests by default | **9** of 35 classified | 9 | `scan.classify_proxies` |
 | 5 | `FoundContest`'s setup `case Contest of` | 1 case, **0 arms**, 0 contests | 0 | `scan.found_contest_arms` -- its own table, section 5 |
 
-Shape 4 in full: the 26 `Active*` sites (24 comparisons, 2 `case`s) break
-into 43 comparison-or-arm records --
+Shape 4 in full: the 22 `Active*` sites (21 comparisons, 1 `case`s) break
+into 35 comparison-or-arm records --
 
 | class | records | meaning |
 |---|---:|---|
-| PROXY, reach 1 | 4 | the tested value reaches exactly ONE contest by default -- a contest rule wearing a disguise |
-| PROXY, reach 2-3 | 8 | mostly a CW/SSB pair or a family (ARRL SS, the Field Days, UBA, SAC, REF); **2** of them test a value whose NAME is generic (`ThreePointsPerQSO`, `GridExchange`, `RSTAgeExchange`, ...) and are flagged `GENERIC-NAMED` in the tables -- judge those individually. 0 reach-1 rows carry the same flag |
+| PROXY, reach 1 | 3 | the tested value reaches exactly ONE contest by default -- a contest rule wearing a disguise |
+| PROXY, reach 2-3 | 6 | mostly a CW/SSB pair or a family (ARRL SS, the Field Days, UBA, SAC, REF); **2** of them test a value whose NAME is generic (`ThreePointsPerQSO`, `GridExchange`, `RSTAgeExchange`, ...) and are flagged `GENERIC-NAMED` in the tables -- judge those individually. 0 reach-1 rows carry the same flag |
 | PROXY for DUMMYCONTEST | 0 | `NoQSOPointMethod`, the sentinel; dropped |
-| SHARED | 21 | reaches 4+ contests -- genuinely shared behaviour, **not a finding**, counted only |
+| SHARED | 16 | reaches 4+ contests -- genuinely shared behaviour, **not a finding**, counted only |
 | SHAPE | 0 | an arm of an exchange-SHAPE machine (`judgements.SHAPE_MACHINES`): a data format, kept on purpose by M11 (Q92), **not a finding**, counted only |
 | UNUSED | 10 | reaches NO contest: neither a class's trait nor its `DescribeSession` states the value (the settings that could select one were retired at M10 S2) |
 
@@ -51,28 +51,28 @@ into 43 comparison-or-arm records --
 | category | s1 | s2 | s3 | s4 | total |
 |---|---:|---:|---:|---:|---:|
 | Scoring | 0 | 0 | 0 | 0 | 0 |
-| Exchange parsing and validation | 5 | 0 | 1 | 10 | 16 |
+| Exchange parsing and validation | 5 | 0 | 1 | 9 | 15 |
 | Dupe | 0 | 0 | 0 | 0 | 0 |
 | Multipliers | 0 | 0 | 0 | 0 | 0 |
 | ADIF import | 0 | 0 | 1 | 0 | 1 |
 | ADIF export | 0 | 0 | 1 | 0 | 1 |
 | Cabrillo export | 1 | 0 | 6 | 0 | 7 |
 | Score, summary and totals | 0 | 0 | 1 | 0 | 1 |
-| UI, display and the new-contest dialog | 0 | 0 | 1 | 2 | 3 |
+| UI, display and the new-contest dialog | 0 | 0 | 1 | 0 | 1 |
 | Setup (FoundContest / LogCfg) | 0 | 0 | 0 | 0 | 0 (+ 0 FoundContest arms, section 5) |
 | Networking and score reporting | 0 | 0 | 0 | 0 | 0 |
 | Other | 0 | 0 | 0 | 0 | 0 |
-| **total** | **6** | **0** | **11** | **12** | **29** (+0) |
+| **total** | **6** | **0** | **11** | **9** | **26** (+0) |
 
 ### 1.3 Top files (table rows, plus FoundContest's arms)
 
 | file | rows |
 |---|---:|
 | `trdos/logedit.pas` | 11 |
-| `MainUnit.pas` | 4 |
 | `trdos/postunit.pas` | 4 |
 | `uCabrilloExchange.pas` | 4 |
-| `trdos/logdupe.pas` | 3 |
+| `MainUnit.pas` | 2 |
+| `trdos/logdupe.pas` | 2 |
 | `uADIFExchange.pas` | 1 |
 | `uCallSignRoutines.pas` | 1 |
 | `uPOTAReference.pas` | 1 |
@@ -256,14 +256,13 @@ is used and marked `(s6)`.
 
 None found.
 
-### Exchange parsing and validation (16 rows)
+### Exchange parsing and validation (15 rows)
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `MainUnit.pas:8085` | LoadinLog | 1 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
-| `trdos/logdupe.pas:1540` | ParseExchangeIntoContestExchange | 4 | **FISTS** | all | new seam needed: ParseReceivedExchange (s6) | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
-| `trdos/logdupe.pas:1653` | GetInitialExchangeStringFromContestExchange | 4 | **ALLJA** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange |
-| `trdos/logdupe.pas:1676` | GetInitialExchangeStringFromContestExchange | 4 | **FISTS** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
+| `MainUnit.pas:8088` | LoadinLog | 1 | **RADIOYOC** | all | new seam needed: SessionExchangeState (previous QSO number) | `contest` compare |
+| `trdos/logdupe.pas:1525` | GetInitialExchangeStringFromContestExchange | 4 | **ALLJA** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTALLJAPrefectureAndPrecedenceExchange |
+| `trdos/logdupe.pas:1548` | GetInitialExchangeStringFromContestExchange | 4 | **FISTS** | all | new seam needed: InitialExchangeFromHistory | reach 1: `AE` = RSTQTHNameAndFistsNumberOrPowerExchange |
 | `trdos/logedit.pas:2475` | InitialExchangeEntry | 1 | **OZCR_O**, **OZCR_Z** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `Contest` in |
 | `trdos/logedit.pas:2493` | InitialExchangeEntry | 1 | **RFCHAMPIONSHIPCW**, **RFCHAMPIONSHIPSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | `Contest` in |
 | `trdos/logedit.pas:2613` | InitialExchangeEntry | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: InitialExchangeFromHistory (InitialExchangeKind is the existing trait) | reach 2: `AIE` = CheckSectionInitialExchange (arm of case @2326) |
@@ -315,13 +314,11 @@ None found.
 |---|---|---|---|---|---|---|
 | `trdos/postunit.pas:1188` | CalculateTotals | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB** | all | new seam needed: OffTimeMinimumMinutes | `Pos('CQ-WW', Settings.Contest.Name)` -- 60-minute off-time |
 
-### UI, display and the new-contest dialog (3 rows)
+### UI, display and the new-contest dialog (1 rows)
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `MainUnit.pas:4486` | CreateMainWindow | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB**, **IARU** | all | PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + new seam needed: UIFeatures (off-time) | `Pos('CQ-WW'` / `'IARU-HF'` in `ContestTypeSA[Contest]` -- 60-minute off-time |
-| `MainUnit.pas:9653` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
-| `MainUnit.pas:9655` | SetColumnsWidth | 4 | **ARRLSSCW**, **ARRLSSSSB** | all | new seam needed: LogColumns | reach 2: `AE` = QSONumberPrecedenceCheckDomesticQTHExchange |
+| `MainUnit.pas:4489` | CreateMainWindow | 3 | **CQWWCW**, **CQWWRTTY**, **CQWWSSB**, **IARU** | all | PermittedOperatingAids / OffersQTCs (existing, M9a) / OffersParkTools (existing, POTA 2026-10-13) + new seam needed: UIFeatures (off-time) | `Pos('CQ-WW'` / `'IARU-HF'` in `ContestTypeSA[Contest]` -- 60-minute off-time |
 
 ### Setup (FoundContest / LogCfg) (0 rows)
 
@@ -401,19 +398,19 @@ Worth reading first, because they are the ones the brief named:
 
 | contest | sites outside the factory, by category |
 |---|---|
-| ARRLSSCW | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761`; **ui** `MainUnit.pas:9653`, `MainUnit.pas:9655` |
-| ARRLSSSSB | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761`; **ui** `MainUnit.pas:9653`, `MainUnit.pas:9655` |
-| CQWWCW | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4486` |
-| CQWWRTTY | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4486` |
-| CQWWSSB | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4486` |
+| ARRLSSCW | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761` |
+| ARRLSSSSB | **exchange** `trdos/logedit.pas:2613`, `trdos/logedit.pas:2761` |
+| CQWWCW | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4489` |
+| CQWWRTTY | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4489` |
+| CQWWSSB | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4489` |
 | CUPRFCW | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3135` |
 | CUPRFSSB | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3135` |
-| FISTS | **exchange** `trdos/logdupe.pas:1540`, `trdos/logdupe.pas:1676` |
-| IARU | **exchange** `trdos/logedit.pas:2773`; **ui** `MainUnit.pas:4486` |
-| ALLJA | **exchange** `trdos/logdupe.pas:1653` |
+| IARU | **exchange** `trdos/logedit.pas:2773`; **ui** `MainUnit.pas:4489` |
+| ALLJA | **exchange** `trdos/logdupe.pas:1525` |
 | CALQSOPARTY | **exchange** `trdos/logedit.pas:2736` |
 | CQIR | **exchange** `trdos/logedit.pas:2745` |
 | CUPRFDIG | **exchange** `trdos/logedit.pas:2739` |
+| FISTS | **exchange** `trdos/logdupe.pas:1548` |
 | JIDXCW | **exchange** `trdos/logedit.pas:2855` |
 | JIDXSSB | **exchange** `trdos/logedit.pas:2855` |
 | LABRE | **cabrillo-export** `trdos/postunit.pas:3121` |
@@ -423,7 +420,7 @@ Worth reading first, because they are the ones the brief named:
 | OZCR_O | **exchange** `trdos/logedit.pas:2475` |
 | OZCR_Z | **exchange** `trdos/logedit.pas:2475` |
 | POTA | **adif-import** `uPOTAReference.pas:163` |
-| RADIOYOC | **exchange** `MainUnit.pas:8085` |
+| RADIOYOC | **exchange** `MainUnit.pas:8088` |
 | RAEM | **exchange** `uCallSignRoutines.pas:699` |
 | RDA | **exchange** `trdos/logedit.pas:2708` |
 | RFCHAMPIONSHIPCW | **exchange** `trdos/logedit.pas:2493` |
