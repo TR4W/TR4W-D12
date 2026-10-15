@@ -545,6 +545,10 @@ closes it; anything else reopens it.
   counts the 50 states, DC and 14 Canadian provinces and territories. `naqp`
   has 12 provinces and `s49p8` has 49 + 8, so **both are wrong**: one
   corrected file, used by both.
+  *Check before saying yes (dom cross-check, 2026-10-15):* DXLog's NAQP and
+  NA Sprint files count **13** VE multipliers (NL/LB/NF as one; NT, NU, YT
+  separate), not 14, and no TR4W file accepts a typed `NT` at all. See
+  `docs/DOM_CROSSCHECK_FINDINGS.md`.
   **Answer:**
 
 - **Q95** Croatian counts ITU zones but looks zones up with CQ zones, so it
