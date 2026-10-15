@@ -70,10 +70,10 @@ FIELD_GETTERS = {
    "DF": "GETDOMESTICFILENAME",
    "AE": "GETEXCHANGEKIND",
    "AIE": "GETINITIALEXCHANGEKIND",
-   "DM": "GETDOMESTICMULTIPLIERTYPE",
    # "Pxm" (GETPREFIXMULTIPLIERTYPE) left at M11 S3 part 2 with the getter,
-   # "XM" (GETDXMULTIPLIERTYPE) at M11 S4 part 2 and "ZnM"
-   # (GETZONEMULTIPLIERTYPE) at M11 S5 part 2, each with its getter.
+   # "XM" (GETDXMULTIPLIERTYPE) at M11 S4 part 2, "ZnM"
+   # (GETZONEMULTIPLIERTYPE) at M11 S5 part 2 and "DM"
+   # (GETDOMESTICMULTIPLIERTYPE) at M11 S6 part 2, each with its getter.
 }
 
 _RESULT_RX = re.compile(r"\bResult\s*:=\s*('(?:[^']|'')*'|\w+)\s*;", re.I)

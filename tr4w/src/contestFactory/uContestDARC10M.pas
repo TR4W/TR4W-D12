@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -115,6 +114,10 @@ type
       function DomesticMultiplierHint(const aText: Str14): string; override;
       (* see TContestBase.DomesticQTHReplacesDXMultiplier (M11 S6). *)
       function DomesticQTHReplacesDXMultiplier: boolean; override;
+   public
+      (* DOES IT HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDomesticMultiplier (M11 S6 part 2). *)
+      function HasDomesticMultiplier: boolean; override;
    end;
 
 implementation
@@ -182,11 +185,6 @@ begin
    Result := 'DARC 10-Meter Contest';
 end;
 
-function TContestDARC10M.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := WYSIWYGDomestic;
-end;
-
 function TContestDARC10M.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
@@ -217,10 +215,9 @@ begin
    aSession.Band := Band10;
    aSession.AddDomesticCountry('DL');
    aSession.QSOByMode := True;
-   if aStation.MyCountry <> 'DL' then
-      begin
-      aSession.DomesticMult := DOKCodes;
-      end;
+   (* The DOKs an entrant outside Germany counts are the class's own rule
+      (DomesticMultiplierFromQTH, HasDomesticMultiplier); the statement here
+      went with the domestic kind, M11 S6 part 2. *)
    aSession.LiteralDomesticQTH := True;
    (* DL A SECOND TIME, AS THE ARM ADDED IT -- transcribed, not tidied. *)
    aSession.AddDomesticCountry('DL');
@@ -331,6 +328,16 @@ end;
 function TContestDARC10M.DomesticQTHReplacesDXMultiplier: boolean;
 begin
    Result := Station.MyCountry = 'DL';
+end;
+
+
+(* A DOMESTIC MULTIPLIER AT EVERY STATION -- a DOK outside Germany, the QTH as
+   received for a German entrant -- M11 S6 part 2, 2026-10-14. Its own
+   answer, because a DOK has no shape flag for the base to compose (the
+   German entrant's WYSIWYG one alone would answer only for DL). *)
+function TContestDARC10M.HasDomesticMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

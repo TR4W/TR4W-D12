@@ -612,7 +612,6 @@ begin
      Dropped in a re-freeze of its own, before anything moves. *)
    EmitField('active.exchange', EnumText(TypeInfo(ExchangeType), Ord(ContestSession.Exchange)));
    EmitField('active.initialexchange', EnumText(TypeInfo(InitialExchangeType), Ord(ContestSession.InitialExchange)));
-   EmitField('active.domesticmult', EnumText(TypeInfo(DomesticMultType), Ord(ContestSession.DomesticMult)));
    (* NO active.dxmult LINE since M11 S4 part 2 (2026-10-14): the DX kind is
      deleted. Whether the contest has a DX multiplier is still the second
      doing.* flag, now the contest's own answer (LOGEDIT.DoingDXMults). *)
@@ -623,7 +622,7 @@ begin
      kind is deleted. Whether the contest has a prefix multiplier is still the
      third doing.* flag, now the contest's own answer (LOGEDIT.DoingPrefixMults). *)
    EmitField('doing.domestic/dx/prefix/zone',
-             BoolText(ContestSession.DoingDomesticMults) + ' ' + BoolText(DoingDXMults) + ' ' +
+             BoolText(DoingDomesticMults) + ' ' + BoolText(DoingDXMults) + ' ' +
              BoolText(DoingPrefixMults) + ' ' + BoolText(DoingZoneMults));
    EmitField('cty.countrymode', EnumText(TypeInfo(CountryModeType), Ord(CTY.ctyCountryMode)));
    EmitField('cty.zonemode', EnumText(TypeInfo(ZoneModeType), Ord(CTY.ctyZoneMode)));
@@ -704,7 +703,7 @@ begin
 
    aRX.NumberReceived := 100 + aIndex;
    aRX.QTHString := ShortString(aSpec.QTH);
-   if ContestSession.DoingDomesticMults then
+   if DoingDomesticMults then
       begin
       aRX.DomesticQTH := ShortString(aSpec.QTH);
       aRX.DomMultQTH := ShortString(aSpec.QTH);

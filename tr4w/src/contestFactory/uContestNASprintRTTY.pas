@@ -55,7 +55,6 @@ type
       function GetWA7BNMId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetFlags: TContestFlags; override;
@@ -133,11 +132,6 @@ end;
 function TContestNASprintRTTY.GetDomesticFileName: string;
 begin
    Result := 's49p8';
-end;
-
-function TContestNASprintRTTY.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestNASprintRTTY.GetInitialExchangeKind: InitialExchangeType;

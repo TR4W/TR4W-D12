@@ -6,7 +6,6 @@ contest.class = TContestWAG
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DOKCodes
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -356,7 +355,6 @@ contest.class = TContestWAG
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DOKCodes
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -706,7 +704,6 @@ contest.class = TContestWAG
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode

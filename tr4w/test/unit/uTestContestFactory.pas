@@ -1453,8 +1453,8 @@ begin
                   'Idaho claims no former ADIF id -- its old logs say NEQP');
       CheckEquals(305, obj.WA7BNMId, 'Idaho WA7BNM calendar id');
       CheckEquals('idaho_cty', obj.DomesticFileName, 'Idaho county file');
-      CheckEquals(Ord(DomesticFile), Ord(obj.DomesticMultiplierType),
-                  'Idaho domestic multiplier is the dom file');
+      CheckTrue(obj.UsesDomesticFile, 'Idaho domestic multiplier is the dom file');
+      CheckTrue(obj.HasDomesticMultiplier, 'Idaho has a domestic multiplier');
       CheckTrue(obj.HasDXMultiplier, 'Idaho stations count DXCC countries');
       CheckEquals(Ord(RSTDomesticOrDXQTHExchange), Ord(obj.ExchangeKind),
                   'Idaho exchange is RST and a domestic or DX QTH');

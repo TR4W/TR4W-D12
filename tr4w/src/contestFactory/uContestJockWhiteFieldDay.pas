@@ -104,7 +104,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -219,11 +218,6 @@ end;
 function TContestJockWhiteFieldDay.GetFriendlyName: string;
 begin
    Result := 'Jock White Memorial Field Day';
-end;
-
-function TContestJockWhiteFieldDay.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestJockWhiteFieldDay.GetInitialExchangeKind: InitialExchangeType;

@@ -6,7 +6,6 @@ contest.class = TContestIRTS
 == setup
 active.exchange = RSTZoneOrDomesticQTH
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -353,7 +352,6 @@ contest.class = TContestIRTS
 == setup
 active.exchange = RSTZoneOrDomesticQTH
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -700,7 +698,6 @@ contest.class = TContestIRTS
 == setup
 active.exchange = RSTZoneOrDomesticQTH
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

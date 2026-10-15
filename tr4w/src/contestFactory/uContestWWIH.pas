@@ -72,7 +72,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -169,11 +168,6 @@ end;
 function TContestWWIH.GetFriendlyName: string;
 begin
    Result := 'World Wide Iron Ham Contest';
-end;
-
-function TContestWWIH.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestWWIH.GetInitialExchangeKind: InitialExchangeType;

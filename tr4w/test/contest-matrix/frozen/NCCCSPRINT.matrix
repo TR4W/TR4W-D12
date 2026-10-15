@@ -6,7 +6,6 @@ contest.class = TContestNCCCSprint
 == setup
 active.exchange = QSONumberNameDomesticOrDXQTHExchange
 active.initialexchange = NameQTHInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -357,7 +356,6 @@ contest.class = TContestNCCCSprint
 == setup
 active.exchange = QSONumberNameDomesticOrDXQTHExchange
 active.initialexchange = NameQTHInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -708,7 +706,6 @@ contest.class = TContestNCCCSprint
 == setup
 active.exchange = QSONumberNameDomesticOrDXQTHExchange
 active.initialexchange = NameQTHInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

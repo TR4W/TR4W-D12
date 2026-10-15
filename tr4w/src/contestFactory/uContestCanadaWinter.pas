@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -187,11 +186,6 @@ end;
 function TContestCanadaWinter.GetFriendlyName: string;
 begin
    Result := 'RAC Winter Contest';
-end;
-
-function TContestCanadaWinter.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestCanadaWinter.GetInitialExchangeKind: InitialExchangeType;

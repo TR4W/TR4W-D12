@@ -286,8 +286,8 @@ begin
       CheckTrue(contestObject.QSOByBand, 'a station may be worked once per band');
       CheckTrue(contestObject.QSOByMode, 'and once per mode');
       CheckTrue(contestObject.VHFBandsEnabled, '6 m and up are on');
-      CheckEquals(Ord(DomesticFile), Ord(contestObject.DomesticMultiplierType),
-                  'states, provinces or counties from the domestic file');
+      CheckTrue(contestObject.UsesDomesticFile,
+                'states, provinces or counties from the domestic file');
       contestObject.SetStation(StationAt(True));
       CheckTrue(contestObject.HasDXMultiplier, 'in DE: DXCC entities beyond the states and provinces');
       contestObject.SetStation(StationAt(False));

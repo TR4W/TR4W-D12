@@ -6,7 +6,6 @@ contest.class = TContestBataviaFT8
 == setup
 active.exchange = GridExchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -360,7 +359,6 @@ contest.class = TContestBataviaFT8
 == setup
 active.exchange = GridExchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -714,7 +712,6 @@ contest.class = TContestBataviaFT8
 == setup
 active.exchange = GridExchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

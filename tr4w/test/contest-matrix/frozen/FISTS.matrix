@@ -6,7 +6,6 @@ contest.class = TContestFISTS
 == setup
 active.exchange = RSTQTHNameAndFistsNumberOrPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -350,7 +349,6 @@ contest.class = TContestFISTS
 == setup
 active.exchange = RSTQTHNameAndFistsNumberOrPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -694,7 +692,6 @@ contest.class = TContestFISTS
 == setup
 active.exchange = RSTQTHNameAndFistsNumberOrPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

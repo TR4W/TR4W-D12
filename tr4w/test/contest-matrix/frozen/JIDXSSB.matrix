@@ -6,7 +6,6 @@ contest.class = TContestJIDXSSB
 == setup
 active.exchange = RSTPrefectureExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -355,7 +354,6 @@ contest.class = TContestJIDXSSB
 == setup
 active.exchange = RSTPrefectureExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -704,7 +702,6 @@ contest.class = TContestJIDXSSB
 == setup
 active.exchange = RSTPrefectureExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode

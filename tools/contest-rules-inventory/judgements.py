@@ -71,8 +71,9 @@ ROUTINES = {
    ("logstuff.pas", "LooksLikeACallSign"): ("exchange", new("IsAcceptableCallsign")),
    ("uCallSignRoutines.pas", "IsAGoodCall"): ("exchange", new("IsAcceptableCallsign")),
    # GetDomQTH's six domestic-kind arms left at M11 S6 part 1: the contest
-   # answers DomesticMultiplierFromQTH (base: the domestic file). Only its
-   # DoingDomesticMults exit reads the session, a flag and not a kind.
+   # answers DomesticMultiplierFromQTH (base: the domestic file); its
+   # no-domestic exit asks HasDomesticMultiplier since M11 S6 part 2. It reads
+   # no session kind.
    ("logdupe.pas", "SetUpExchangeInformation"): ("exchange", new("ReceivedExchangeFields (s6) (which fields the exchange carries)")),
    ("logdupe.pas", "ParseExchangeIntoContestExchange"): ("exchange", new("ParseReceivedExchange (s6)")),
    ("logdupe.pas", "GetInitialExchangeStringFromContestExchange"): ("exchange", new("InitialExchangeFromHistory")),

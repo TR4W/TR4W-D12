@@ -6,7 +6,6 @@ contest.class = TContestVirginiaQP
 == setup
 active.exchange = QSONumberDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -351,7 +350,6 @@ contest.class = TContestVirginiaQP
 == setup
 active.exchange = QSONumberDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -696,7 +694,6 @@ contest.class = TContestVirginiaQP
 == setup
 active.exchange = QSONumberDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -1041,7 +1038,6 @@ contest.class = TContestVirginiaQP
 == setup
 active.exchange = QSONumberDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

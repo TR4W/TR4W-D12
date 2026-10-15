@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -173,11 +172,6 @@ end;
 function TContestMakrothen.GetFriendlyName: string;
 begin
    Result := 'Makrothen RTTY Contest';
-end;
-
-function TContestMakrothen.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestMakrothen.GetInitialExchangeKind: InitialExchangeType;

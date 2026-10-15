@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -146,11 +145,6 @@ end;
 function TContestKidsDay.GetFriendlyName: string;
 begin
    Result := 'ARRL Kids Day';
-end;
-
-function TContestKidsDay.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestKidsDay.GetInitialExchangeKind: InitialExchangeType;

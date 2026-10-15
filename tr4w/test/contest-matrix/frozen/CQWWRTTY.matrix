@@ -6,7 +6,6 @@ contest.class = TContestCQWWRTTY
 == setup
 active.exchange = RSTZoneAndPossibleDomesticQTHExchange
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -366,7 +365,6 @@ contest.class = TContestCQWWRTTY
 == setup
 active.exchange = RSTZoneAndPossibleDomesticQTHExchange
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -726,7 +724,6 @@ contest.class = TContestCQWWRTTY
 == setup
 active.exchange = RSTZoneAndPossibleDomesticQTHExchange
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode

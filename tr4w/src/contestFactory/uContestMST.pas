@@ -84,7 +84,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -165,11 +164,6 @@ end;
 function TContestMST.GetFriendlyName: string;
 begin
    Result := 'ICWC Medium Speed Test';
-end;
-
-function TContestMST.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestMST.GetInitialExchangeKind: InitialExchangeType;

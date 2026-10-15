@@ -76,7 +76,6 @@ type
          flags: see TContestBase.GetFlags. *)
       function GetWA7BNMId: integer; override;
       function GetDomesticFileName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetInStateDomesticFileName: string; override;
       (* THE OLD ROW'S CountyLineAllowed: True, which ADIF export read to split
@@ -174,11 +173,6 @@ end;
 function TContestFloridaQP.GetDomesticFileName: string;
 begin
    Result := 'florida_cty';
-end;
-
-function TContestFloridaQP.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestFloridaQP.GetExchangeKind: ExchangeType;

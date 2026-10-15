@@ -6,7 +6,6 @@ contest.class = TContestCountyHunter
 == setup
 active.exchange = RSTQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -332,7 +331,6 @@ contest.class = TContestCountyHunter
 == setup
 active.exchange = RSTQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -658,7 +656,6 @@ contest.class = TContestCountyHunter
 == setup
 active.exchange = RSTQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

@@ -6,7 +6,6 @@ contest.class = TContestOldNewYear
 == setup
 active.exchange = RSTPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -338,7 +337,6 @@ contest.class = TContestOldNewYear
 == setup
 active.exchange = RSTPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -670,7 +668,6 @@ contest.class = TContestOldNewYear
 == setup
 active.exchange = RSTPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

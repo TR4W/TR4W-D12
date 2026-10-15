@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -182,11 +181,6 @@ begin
    (* The row's FriendlyName is blank; this is the enum's spelling it
       resolves to. *)
    Result := 'WWL';
-end;
-
-function TContestWWL.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := GridFields;
 end;
 
 function TContestWWL.GetInitialExchangeKind: InitialExchangeType;

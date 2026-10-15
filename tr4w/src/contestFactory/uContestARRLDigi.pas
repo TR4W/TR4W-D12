@@ -62,7 +62,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -212,17 +211,13 @@ begin
    Result := 'ARRL Inter. Digital Contest';
 end;
 
-function TContestARRLDigi.GetDomesticMultiplierType: DomesticMultType;
-begin
-   (* NoDomesticMults, WHICH IS THE VALUE THE ARRAY CHOOSES AND NOT OBVIOUSLY
-      THE RIGHT ONE. The row reads `DM: NoDomesticMults {GridFields}` -- the
-      alternative is written beside it, commented out, and grid FIELDS are in
-      fact what this contest multiplies on. Moving the row means moving the
-      value it actually holds; changing it is a scoring decision and would show
-      up in the rescore gate as a divergence, which is exactly what that gate
-      is for. *)
-   Result := NoDomesticMults;
-end;
+(* NO DOMESTIC MULTIPLIER, WHICH IS THE VALUE THE ARRAY CHOSE AND NOT OBVIOUSLY
+   THE RIGHT ONE -- kept as a note when the trait went (M11 S6 part 2). The
+   row reads `DM: NoDomesticMults {GridFields}` -- the alternative is written
+   beside it, commented out, and grid FIELDS are in fact what this contest
+   multiplies on. The class states no domestic answer, so it has none
+   (TContestBase.HasDomesticMultiplier); changing that is a scoring decision
+   and would show up in the rescore gate as a divergence. *)
 
 function TContestARRLDigi.GetInitialExchangeKind: InitialExchangeType;
 begin

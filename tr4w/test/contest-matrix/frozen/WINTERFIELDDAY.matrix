@@ -6,7 +6,6 @@ contest.class = TContestWinterFieldDay
 == setup
 active.exchange = ClassDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -365,7 +364,6 @@ contest.class = TContestWinterFieldDay
 == setup
 active.exchange = ClassDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -724,7 +722,6 @@ contest.class = TContestWinterFieldDay
 == setup
 active.exchange = ClassDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode

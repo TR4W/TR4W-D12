@@ -206,9 +206,8 @@ uses
   (* AddLoggedQSO -- the final score's view of the log, kept with the totals
      (M6). *)
   uScoreTotals,
-  (* ContestSession.DoingDomesticMults -- the domestic-mult status (M10
-     S9e). *)
-  uContestSession,
+  (* uContestSession STOOD HERE for the session's domestic kind and its
+     DoingDomesticMults; both are the contest's answers since M11 S6. *)
   (* ContestIdentity -- the contest's own ADIF id and Cabrillo name for the
      two UDP broadcasts. *)
   uContestRegistry,
@@ -587,7 +586,7 @@ begin
      RemainingMultDisplay := RemainingMultiplierType(Ord(RemainingMultDisplay) + 1);
      end;
   case RemainingMultDisplay of
-    rmDomestic: if not ContestSession.DoingDomesticMults then goto Next;
+    rmDomestic: if not DoingDomesticMults then goto Next;
     rmDX: if not DoingDXMults then goto Next;
     rmZone: if not DoingZoneMults then goto Next;
     rmPrefix: if not DoingPrefixMults then goto Next;
@@ -1324,7 +1323,7 @@ begin
      begin
      DispalayNewMult(SW_HIDE);
      end;
-  if ContestSession.DoingDomesticMults then
+  if DoingDomesticMults then
      begin                                           // Gav 4.44.8      Uncommented this section
      TempString := WindowString;
      while TempString <> '' do
@@ -1802,7 +1801,7 @@ begin
        //      ShowStationInformation(RXData.Callsign);
              UpdateStationStatus(RXData.Callsign, -1);
        end;
-  if ContestSession.DoingDomesticMults and                                         // Gav 4.44.8   uncommented section
+  if ContestHasDomesticMultiplier(contestRules) and                               // Gav 4.44.8   uncommented section
     (Settings.Mult.ByBand or Settings.Mult.ByMode) and
     (RXData.DomesticQTH <> '') then
      begin

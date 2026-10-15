@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -143,11 +142,6 @@ end;
 function TContestFISTS.GetFriendlyName: string;
 begin
    Result := 'FISTS Winter Unlimited Sprint';
-end;
-
-function TContestFISTS.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestFISTS.GetInitialExchangeKind: InitialExchangeType;

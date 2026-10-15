@@ -6,7 +6,6 @@ contest.class = TContestDARCXmas
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -368,7 +367,6 @@ contest.class = TContestDARCXmas
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -730,7 +728,6 @@ contest.class = TContestDARCXmas
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode

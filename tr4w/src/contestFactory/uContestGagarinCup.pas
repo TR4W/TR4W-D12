@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -203,11 +202,6 @@ end;
 function TContestGagarinCup.GetFriendlyName: string;
 begin
    Result := 'Yuri Gagarin International DX Contest';
-end;
-
-function TContestGagarinCup.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := WYSIWYGDomestic;
 end;
 
 function TContestGagarinCup.GetInitialExchangeKind: InitialExchangeType;

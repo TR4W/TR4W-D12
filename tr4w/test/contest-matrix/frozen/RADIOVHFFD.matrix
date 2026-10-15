@@ -6,7 +6,6 @@ contest.class = TContestRadioVHFFD
 == setup
 active.exchange = RSTQSONumberAndGridSquareExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -342,7 +341,6 @@ contest.class = TContestRadioVHFFD
 == setup
 active.exchange = RSTQSONumberAndGridSquareExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -678,7 +676,6 @@ contest.class = TContestRadioVHFFD
 == setup
 active.exchange = RSTQSONumberAndGridSquareExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

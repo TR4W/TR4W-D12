@@ -6,7 +6,6 @@ contest.class = TContestDARC10M
 == setup
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DOKCodes
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -361,7 +360,6 @@ contest.class = TContestDARC10M
 == setup
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DOKCodes
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -716,7 +714,6 @@ contest.class = TContestDARC10M
 == setup
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

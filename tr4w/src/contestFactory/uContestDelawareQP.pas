@@ -149,7 +149,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -287,11 +286,6 @@ end;
 function TContestDelawareQP.GetFriendlyName: string;
 begin
    Result := 'Delaware QSO Party';
-end;
-
-function TContestDelawareQP.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestDelawareQP.GetInitialExchangeKind: InitialExchangeType;

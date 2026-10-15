@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -182,11 +181,6 @@ end;
 function TContestWRTC.GetFriendlyName: string;
 begin
    Result := 'IARU HF World Championship';
-end;
-
-function TContestWRTC.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := WYSIWYGDomestic;
 end;
 
 function TContestWRTC.GetInitialExchangeKind: InitialExchangeType;

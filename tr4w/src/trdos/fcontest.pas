@@ -529,10 +529,6 @@ begin
      begin
      ContestSession.WriteExchange(aSession.Exchange);
      end;
-  if aSession.IsStated(svDomesticMult) then
-     begin
-     ContestSession.WriteDomesticMult(aSession.DomesticMult);
-     end;
   if aSession.IsStated(svBand) then
      begin
      ActiveBand := aSession.Band;
@@ -799,7 +795,8 @@ begin
 
   ContestSession.WriteExchange(aContest.ExchangeKind);
   ContestSession.WriteInitialExchange(aContest.InitialExchangeKind);
-  ContestSession.WriteDomesticMult(aContest.DomesticMultiplierType);
+  (* The domestic kind's write went with the kind (M11 S6 part 2): the
+    contest answers HasDomesticMultiplier and its domestic rules itself. *)
 end;
 
 function FoundContest(CMD: ShortString): boolean;

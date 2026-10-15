@@ -290,7 +290,7 @@ shared files a contest touches; the search path already covers
 | `ADIFContestId` | the enum's spelling (since M10 S6; the row's `ADIFName`, or the spelling when blank, before). Every class states its own. **It is what ADIF export writes AND what import matches** (M1) — one getter, so a file TR4W exported always reads back to its contest. POTA and GENERALQSO still answer, though export writes no `CONTEST_ID` for them (each says so through `WritesADIFContestId` -- POTA since its class, 2026-10-13, design Q6) |
 | `FormerADIFContestIds` | **empty.** Every CONTEST_ID the contest was exported under before a rename — import accepts them, export never writes them (NY4I, 2026-09-29: *"Yes support old spellings"*). **When you rename an ADIF id, put the old one here in the same change.** That includes the enum spelling when the id used to be BLANK, because export fell back to `ContestTypeSA` then. Whitespace-only differences need no entry: `uContestRegistry.FindContestByADIFContestId` trims its input, tries every contest's current id first and former ids second, and never matches a blank. A contest with **no class** cannot carry one — which is why NZ Field Day's former export spelling `NZ FIELD DAY` did not resolve until its class (`uContestJockWhiteFieldDay`, M3) arrived to carry it |
 | `WA7BNMId`, `QRZRUId`, `SubmissionEmail`, `DomesticFileName`, `FriendlyName` | **neutral since M10 S6**: 0, 0, `''`, `''`, the enum's spelling. They read the array row before |
-| `DomesticMultiplierType` | **neutral since M10 S6**: `NoDomesticMults` |
+| `HasDomesticMultiplier`, `UsesDomesticFile`, `DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, `HasGridSquareMultiplier`, `HasGridFieldMultiplier`, `DomesticQTHReplacesDXMultiplier`, `DomesticQTHIsNeverAGrid` | **the composition / False / hand the text to the file / the text / False / False / False / False.** The domestic multiplier is not a kind since M11 S6 (`DomesticMultType` and the `DomesticMultiplierType` trait were deleted at part 2). **A domestic-file contest states `UsesDomesticFile`** (or inherits it -- every state party does); a contest whose QTH is a grid, a field, the text as typed or an RDA district states its shape answers, calling `uDomesticKey`; `HasDomesticMultiplier` is the base's composition of them, and only a shape with no flag of its own (the RSGB IOTA's reference, WAG's and the DARC 10 m's DOK) overrides it. Where the entrant decides, ask the same predicate against `Station` that its other answers ask. Pin them in `uTestDomesticMultiplier` (the invariant there: `HasDomesticMultiplier` is True exactly where a domestic QTH is read) |
 | `HasZoneMultiplier`, `ZoneMultiplierCount`, `ZoneMultiplierZones`, `NumbersZonesFromZero` | **False / 0 / `zmzNotCQOrITU` / False.** The zone multiplier is not a kind since M11 S5 (`ZoneMultType` and the `ZoneMultiplierType` trait were deleted at part 2): whether the contest has one, how many zones, which list (CQ, ITU, or its own numbering) and zero-based numbering are all the class's. **A zone contest states BOTH `HasZoneMultiplier` and the count** (True exactly where the count is above 0 -- `uTestZoneMultiplier` asserts it for every contest at every station), the list if it is CQ or ITU, and -- where the entrant decides -- asks ONE private predicate against `Station` (JIDX: `IsJapaneseEntrant`). The list is NOT the CTY zone mode (`cfCQZoneMode`; plan F5, Q95). Pin them in `uTestZoneMultiplier` |
 | `HasPrefixMultiplier`, `PrefixMultiplierKey` | **False / no key.** The prefix multiplier is not a kind since M11 S3: a prefix contest overrides both, the first against `Station` where the entrant decides it, and pins both in `uTestPrefixMultiplierKey` |
 | `HasDXMultiplier`, `DXMultiplierKey`, `CountryMode`, `ListsRemainingDXCountry` | **False / no key / the CQ list / list every country.** The DX multiplier is not a kind since M11 S4 (`DXMultType` and the `DXMultiplierType` trait were deleted at part 2): whether the contest has one, its key, the CTY country list and the remaining-mults filter are all the class's. **A DX contest states BOTH `HasDXMultiplier` and the key** -- where the entrant decides, through ONE private predicate both ask, against `Station` -- and `CountryMode` if it counts DXCC only; pin them in `uTestDXMultiplierKey` (`HAS_DX` and the key rows) |
@@ -465,9 +465,9 @@ arm that read `exch.ceContest` as it went by is the bug that proved why
   order MUST match), and a `temps.X := fieldValue` arm in `uADIF`. WAG's `DOK`
   and the RSGB IOTA's `IOTA` were added this way, so the two contests read back
   what they write.
-- **The session arrives as data** (`TADIFImportSession`: the session's exchange
-  and domestic-multiplier kind, whether it counts domestic multipliers, the
-  operator) -- your class reads no global, so a unit test constructs it and
+- **The session arrives as data** (`TADIFImportSession`: the session's exchange,
+  the open contest's grid-square and domestic-multiplier answers --
+  `CountsGridSquares` and `DoingDomesticMults`, M11 S6 -- and the operator) -- your class reads no global, so a unit test constructs it and
   asks. **THE SESSION IS THE OPEN CONTEST'S, NOT NECESSARILY YOURS**: an operator
   can import another contest's log, and the base's default has always read the
   session for whatever contest the record names.
@@ -597,9 +597,10 @@ reads `aStation` only: the identity object it is asked of carries no station.
 - **Do nothing** and nothing is stated: the session is exactly what the head
   made of your traits. That is what most contests want.
 - **State what your contest sets** on `aSession` (a `TSessionDefaults`):
-  - the engine choices that vary by station -- `Exchange`, `DomesticMult`,
-    `DXMult`, `PrefixMult`, `Band`, `Mode`, `DomesticMultByBand`,
-    `AllowDupeQSOs`;
+  - the engine choices that vary by station -- `Exchange`, `Band`, `Mode`,
+    `DomesticMultByBand`, `AllowDupeQSOs` (`DXMult`, `PrefixMult` and
+    `DomesticMult` went with their kinds at M11 S3-S6: the class answers
+    them);
   - the session's settings -- `WARCEnabled`, `QSOByMode`, `MultByBand`,
     `LiteralDomesticQTH`, `SprintQSYRule`, `MinitourDuration`, ... each the
     setting of the same name;
@@ -661,7 +662,7 @@ virtuals the sheet asks:
 
 | you declare | with | the sheet asks it |
 |---|---|---|
-| the domestic multiplier kind | the trait (`DomesticMultiplierType`), or per station in `DescribeSession` | set-up writes it to the session; the sheet keys the domestic multiplier on it |
+| the domestic multiplier, its shape and its file | `UsesDomesticFile`, `DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, the four shape answers, and `HasDomesticMultiplier` where the base's composition cannot see the shape (M11 S6; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingDomesticMults` (or `ContestHasDomesticMultiplier` where the object is in hand -- `SetMultFlags`, `GetDomQTH`, `LogContact`, the hint, the Cabrillo writer, the ADIF import), `LOGDOM.GetDomQTH`, `DomStringParse` and the grid, WYSIWYG and RDA sites ask them, live against `Station` |
 | the zone multiplier, its count, list and numbering | `HasZoneMultiplier`, `ZoneMultiplierCount`, `ZoneMultiplierZones`, `NumbersZonesFromZero` (M11 S5; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingZoneMults` (or `ContestHasZoneMultiplier` where the object is in hand -- `SetMultFlags`, the rescore, the hint, the ADIF export), `LOGDUPE.SetUpRemainingMultiplierArrays`, the zone window and the initial zone ask them, live against `Station` |
 | the prefix multiplier | `HasPrefixMultiplier` and `PrefixMultiplierKey` (M11 S3; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingPrefixMults` and `SetPrefix` ask them, live against `Station` |
 | the DX multiplier, its key, country list and window filter | `HasDXMultiplier`, `DXMultiplierKey`, `CountryMode`, `ListsRemainingDXCountry` (M11 S4; no kind, no `DescribeSession` statement) | `LOGEDIT.DoingDXMults` (or `ContestHasDXMultiplier` where the object is in hand), `LOGDUPE.GetDXQTH`, `uSettingsEffects` and `mo.FillVisibleBytes` ask them, live against `Station` |

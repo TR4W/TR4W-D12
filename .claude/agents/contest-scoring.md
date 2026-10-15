@@ -296,11 +296,22 @@ scoring), `= WYSIWYGDomestic` (GetDXQTH, on the object handed in) and
 contest it fetches once per QSO (shared with the grid-square rover tests);
 `uContestReadiness.CollectContestSettingsGaps` takes `aUsesDomesticFile`;
 `TADIFImportSession.DomesticMult` is `CountsGridSquares`, filled by
-`ParseADIFRecord` from the open contest's `HasGridSquareMultiplier`. The
-session's domestic kind is now read only as `DoingDomesticMults` (and by the
-matrix and the pins) -- part 2 replaces that with a class answer. A
-multiplier KIND's arm that has NOT moved (the remaining-mult lists) stays
-keyed on the kind until its M11 stage. **`UsesBand` is asked at four places now** -- points,
+`ParseADIFRecord` from the open contest's `HasGridSquareMultiplier`.
+**`DomesticMultType` IS DELETED (M11 S6 part 2, 2026-10-14)**, and with it
+the LAST multiplier kind: "does it count a domestic multiplier" is
+`TContestBase.HasDomesticMultiplier`, composed in the base from
+`UsesDomesticFile` and the four shape answers (the RSGB IOTA, WAG and the
+DARC 10 m override it), asked as `LOGEDIT.DoingDomesticMults` or, where the
+object is in hand, `ContestHasDomesticMultiplier(obj)` -- `SetMultFlags`,
+`LogContact`, the hint (`GetMultArray`), the Cabrillo writer
+(`stationContest`) and the ADIF import (one fetch per record for both its
+answers). **`GetDomQTH` fetches the contest ONCE, at its head, for the
+no-domestic exit and the rule** -- a contest with no domestic multiplier
+pays one `ActiveContest` per domestic-QTH lookup where the session field
+cost nothing; the rescore reaches it only for a slash call under a QSO-party
+exchange. `LOGEDIT.DoingAnyMults` fetches once for all four answers.
+`BuildLogRow`'s QTH column and the exchange window ask
+`DoingDomesticMults` (a fetch per row built / per keystroke). **`UsesBand` is asked at four places now** -- points,
 multipliers, `TCallsignsList.AddCallsign`/`CallsignIsDupe` (an off-band QSO
 marks no dupe bit and is never a dupe; the M3-found `AllBands` gap is FIXED),
 and the hint (`DetermineIfNewMult`, `uContestBase.CreditedBands`).
@@ -324,9 +335,10 @@ created once in that leaf unit's initialization, never replaced, read-only
 properties, written ONLY by FCONTEST's set-up path (`ApplyContestTraits`,
 then `ApplySessionDefaults`) through `Write*` methods -- not `Set*`, which
 `TSessionDefaults` already uses for what a contest STATES. Main thread only,
-as the globals were. **It holds three kinds -- `Exchange`,
-`InitialExchange` and `DomesticMult`** (`PrefixMult` was deleted at M11
-S3 part 2, `DXMult` at M11 S4 part 2, `ZoneMult` at M11 S5 part 2)
+as the globals were. **It holds two kinds -- `Exchange` and
+`InitialExchange`** (`PrefixMult` was deleted at M11 S3 part 2, `DXMult`
+at M11 S4 part 2, `ZoneMult` at M11 S5 part 2, `DomesticMult` at M11 S6
+part 2 -- no multiplier kind is left)
 (were `LOGWIND.ActiveExchange`, `ActiveInitialExchange`,
 `ActivePrefixMult`, `ActiveZoneMult`, `VC.ActiveDXMult`,
 `LOGDOM.ActiveDomesticMult`; S9a-f). **No `Active*` kind global is left --
@@ -335,10 +347,11 @@ M10 IS COMPLETE (2026-10-14).** Do not add one back: a new reader asks
 zero is `UnknownExchange` (the global's `= NoExchangeReceived` initializer
 was commented out). `tree.LooksLikeAGrid` reads it once per log row per
 repaint -- one call and a field load, ahead of any string work; keep it
-first. **What M11 inherits:** the six kind ENUMS (three since M11 S3, S4
-and S5 deleted the prefix, DX and zone kinds) and their ~80 engine arms
-(shape parsers, sheet, display, exporters), every one reading
-`ContestSession`. **The CTY country list (`ctyCountryMode`) is set in the
+first. **What M11 inherits:** the two EXCHANGE kind enums
+(`ExchangeType`, `InitialExchangeType`; S3-S6 deleted the four multiplier
+kinds) and their engine arms -- the four exchange-shape machines (parser,
+field list, ADIF, Cabrillo), the compare sites (S7) and the initial
+exchange (S8, Q50) -- every one reading `ContestSession`. **The CTY country list (`ctyCountryMode`) is set in the
 CONTEST setting's effect, straight after `FoundContest` returns** (plan F5)
 -- from the contest's `CountryMode` (`ContestCountryMode(ActiveContest(
 Contest))`) since M11 S4, from `ContestSession.DXMult` before -- its only
@@ -349,20 +362,22 @@ SESSION's value, and 24 contests run a kind their trait does not state at a
 matrix station, 32 at some station (M11 S2; counted with the prefix, DX
 and zone kinds, all since deleted) -- JIDX CW: trait
 `NoInitialExchange`, a JA station runs `ZoneInitialExchange`;
-OK/OM DX: trait `NoDomesticMults`, a W station runs `DomesticFile`; ARRL DX
-CW: trait `RSTPowerExchange`, a DL station runs `RSTDomesticQTHExchange`.
+ARRL DX CW: trait `RSTPowerExchange`, a DL station runs
+`RSTDomesticQTHExchange`. (OK/OM DX's domestic kind was the third example;
+it is the class's `UsesDomesticFile` since M11 S6.)
 **One statement per kind per class (M11 S2):** a kind a class runs at EVERY
 station is its trait, never an unconditional `DescribeSession` restatement --
 KCJ, YBDX, ARRL 10 and Field Day were aligned that way, and 12 restatements
 deleted. `DescribeSession` states a kind only where the STATION decides it.
-**`DoingDomesticMults` IS A `ContestSession` ANSWER (M11 S2, plan F9):**
-`ContestSession.DoingDomesticMults` is computed from the kind on every
-read (`DoingPrefixMults`, `DoingDXMults` and `DoingZoneMults` are the
-contest's own answers since M11 S3, S4 and S5, above); the LOGDUPE
-globals LogCfg set once at start-up are gone, because a peer's CONTEST line
-(`uSettingsEffects` -> `FoundContest`) left them describing the previous
-contest. Ask the property, and test `kind <> No*` through it, not by hand.
-Pinned by `uTestContestKindPin.Test_DoingFlagsFollowEveryContestSwitch`.
+**ALL FOUR `Doing*Mults` ARE THE CONTEST'S ANSWERS (M11 S2-S6, plan F9):**
+the LOGDUPE globals LogCfg set once at start-up are gone, because a peer's
+CONTEST line (`uSettingsEffects` -> `FoundContest`) left them describing the
+previous contest; M11 S2 made them session answers computed from the
+kinds, and S3-S6 part 2 made each the contest's own (`LOGEDIT.Doing*Mults`,
+`TContestBase.Has*Multiplier`), live against the station -- no store
+anywhere to go stale. Do not bring one back. Pinned by
+`uTestContestKindPin.Test_DoingFlagsFollowEveryContestSwitch` (S0d's CQ WW
+-> ARRL SS pair) and the four `uTest*Multiplier*` units.
 **Still once-only after a run-time switch (F19):** what start-up derived
 FROM them -- `NumberDifferentMults`, `RemainingMultDisplay`,
 `Sheet.SheetInitAndLoad` (LogCfg) and `SetUpExchangeInformation` /

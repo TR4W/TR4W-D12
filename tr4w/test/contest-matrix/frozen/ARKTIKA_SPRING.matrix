@@ -6,7 +6,6 @@ contest.class = TContestArktikaSpring
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -355,7 +354,6 @@ contest.class = TContestArktikaSpring
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -704,7 +702,6 @@ contest.class = TContestArktikaSpring
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

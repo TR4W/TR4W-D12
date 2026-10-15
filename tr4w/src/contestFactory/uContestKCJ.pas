@@ -68,7 +68,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -171,11 +170,6 @@ end;
 function TContestKCJ.GetFriendlyName: string;
 begin
    Result := 'Keymans Club of Japan Contest';
-end;
-
-function TContestKCJ.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestKCJ.GetInitialExchangeKind: InitialExchangeType;

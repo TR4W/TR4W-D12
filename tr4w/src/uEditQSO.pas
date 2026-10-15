@@ -138,7 +138,6 @@ uses
   SysUtils,         // SystemTimeToDateTime / DateTimeToSystemTime
   MainUnit,
   uEditQSOForm,     // the LCL form, and the id-to-control accessors
-  uContestSession,  // ContestSession -- M10 S9
   uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
   uLogNote,         // NoteText -- the note's text
   uConfigValues;
@@ -597,7 +596,7 @@ begin
   // The next line was commented out - so test this well ny4i Issue112
   FillChar(EditableQSORXData.QTHString, SizeOf(EditableQSORXData.QTHString), 0);
   EditableQSORXData.QTHString := EditQSOGetText(FLD_QTHSTRING);
-  if ContestSession.DoingDomesticMults then
+  if DoingDomesticMults then
      begin
      FoundDomesticQTH(EditableQSORXData);
        {then showwarning(TC_IMPROPERDOMESITCQTH)}

@@ -118,10 +118,10 @@ uses
    (* ContestIdentity(Contest).CQExchangeDefault and the station it is
       handed -- tSetupExchangeNumbers (M7a). *)
    uContestRegistry,
-   uContestFactory,
-   (* ContestSession -- the prefix and zone kinds set-up resolved
-      (M10 S9b, S9c). *)
-   uContestSession;
+   uContestFactory;
+   (* uContestSession STOOD HERE for the session's kinds; the last one this
+      unit read, the domestic kind's DoingDomesticMults, is the contest's
+      answer since M11 S6 part 2 (LOGEDIT.DoingDomesticMults). *)
 
 var
   logger: TLogLogger;
@@ -439,7 +439,7 @@ begin
   {IF (DoingDomesticMults)AND                                                          }
   {   ((DomesticQTHDataFileName <> '') OR (ActiveDomesticMult = WYSIWYGDomestic)) THEN }
 
-  if ContestSession.DoingDomesticMults then                              // Gav 4.44.8      Display remaining domestic Mults
+  if DoingDomesticMults then                              // Gav 4.44.8      Display remaining domestic Mults
      begin
      if RemainingMultDisplay = rmNoRemMultDisplay then
         begin

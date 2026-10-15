@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -164,11 +163,6 @@ end;
 function TContestREFSSB.GetFriendlyName: string;
 begin
    Result := 'REF Contest, SSB';
-end;
-
-function TContestREFSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestREFSSB.GetInitialExchangeKind: InitialExchangeType;

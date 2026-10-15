@@ -70,7 +70,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -188,11 +187,6 @@ end;
 function TContestBSCI.GetFriendlyName: string;
 begin
    Result := 'Black Sea Cup International';
-end;
-
-function TContestBSCI.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := WYSIWYGDomestic;
 end;
 
 function TContestBSCI.GetInitialExchangeKind: InitialExchangeType;

@@ -87,7 +87,6 @@ type
       function GetWA7BNMId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetFlags: TContestFlags; override;
       (* ARRL DXCC WITHOUT THE ARRL SECTIONS -- see the implementation. *)
@@ -373,11 +372,6 @@ end;
 function TContestWinterFieldDay.GetDomesticFileName: string;
 begin
    Result := 'arrlsect';
-end;
-
-function TContestWinterFieldDay.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestWinterFieldDay.GetExchangeKind: ExchangeType;

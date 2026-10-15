@@ -67,7 +67,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -246,11 +245,6 @@ end;
 function TContestLABRE.GetFriendlyName: string;
 begin
    Result := 'LABRE DX Contest';
-end;
-
-function TContestLABRE.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestLABRE.GetInitialExchangeKind: InitialExchangeType;

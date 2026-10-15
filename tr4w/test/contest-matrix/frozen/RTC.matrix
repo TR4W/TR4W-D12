@@ -6,7 +6,6 @@ contest.class = TContestRTC
 == setup
 active.exchange = RSTQSONumberAndGridSquareExchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = GridSquares
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -354,7 +353,6 @@ contest.class = TContestRTC
 == setup
 active.exchange = RSTQSONumberAndGridSquareExchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = GridSquares
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -702,7 +700,6 @@ contest.class = TContestRTC
 == setup
 active.exchange = RSTQSONumberAndGridSquareExchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = GridSquares
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

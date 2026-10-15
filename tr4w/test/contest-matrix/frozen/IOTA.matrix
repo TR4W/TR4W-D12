@@ -6,7 +6,6 @@ contest.class = TContestRSGBIOTA
 == setup
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = IOTADomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -356,7 +355,6 @@ contest.class = TContestRSGBIOTA
 == setup
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = IOTADomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -706,7 +704,6 @@ contest.class = TContestRSGBIOTA
 == setup
 active.exchange = RSTQSONumberAndPossibleDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = IOTADomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

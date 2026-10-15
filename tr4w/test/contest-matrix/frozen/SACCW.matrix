@@ -6,7 +6,6 @@ contest.class = TContestSACCW
 == setup
 active.exchange = RSTQSONUMBEREXCHANGE
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -338,7 +337,6 @@ contest.class = TContestSACCW
 == setup
 active.exchange = RSTQSONUMBEREXCHANGE
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -670,7 +668,6 @@ contest.class = TContestSACCW
 == setup
 active.exchange = RSTQSONUMBEREXCHANGE
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

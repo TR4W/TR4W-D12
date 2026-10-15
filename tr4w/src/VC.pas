@@ -3234,8 +3234,6 @@ var
   TelnetPassword                        : string = '';
 //  RICHED32DLLHANDLE                     : Cardinal;
 
-type
-
 (* DXMultType IS GONE -- M11 S4 part 2, 2026-10-14. It named which DX
   multiplier a session ran, and LOGDUPE.GetDXQTH cased on it. Each DX
   contest states its own key (TContestBase.DXMultiplierKey), its CTY
@@ -3259,18 +3257,14 @@ type
   MULTIPLIER's values for the config parser, and that command is retired
   (uCFG.RETIRED_COMMANDS, NY4I's Q4): the contest's class decides the prefix
   multiplier. Nothing else read it. *)
-  DomesticMultType =
-    (
-    NoDomesticMults,
-    WYSIWYGDomestic,
-    IOTADomestic,
-    GridSquares,
-    GridFields,
-    DOKCodes,
-    DomesticFile,
-    RDADistrict,
-    NumericID
-    );
+
+(* DomesticMultType IS GONE -- M11 S6 part 2, 2026-10-14
+  (docs/CONTEST_FACTORY_M11_PLAN.md S6). Each contest states its own domestic
+  rule: what a received QTH means (TContestBase.DomesticMultiplierFromQTH and
+  its hint), whether it is looked up in the domestic file (UsesDomesticFile),
+  the grid-square, grid-field, WYSIWYG and RDA answers, and whether it has a
+  domestic multiplier at all (HasDomesticMultiplier). NumericID ran for no
+  contest. *)
 
 (* DomesticMultStringArray AND QSOPointMethodArray ARE GONE -- M10 S2,
   2026-10-14. They spelled DOMESTIC MULTIPLIER's and QSO POINT METHOD's values

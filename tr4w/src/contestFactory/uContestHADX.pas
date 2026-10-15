@@ -67,7 +67,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -161,11 +160,6 @@ end;
 function TContestHADX.GetFriendlyName: string;
 begin
    Result := 'Hungarian DX Contest';
-end;
-
-function TContestHADX.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestHADX.GetInitialExchangeKind: InitialExchangeType;

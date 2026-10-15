@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -201,11 +200,6 @@ end;
 function TContestYBDX.GetFriendlyName: string;
 begin
    Result := 'YB ORARI DX Contest';
-end;
-
-function TContestYBDX.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestYBDX.GetInitialExchangeKind: InitialExchangeType;

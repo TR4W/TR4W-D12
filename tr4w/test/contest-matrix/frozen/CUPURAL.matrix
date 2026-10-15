@@ -6,7 +6,6 @@ contest.class = TContestUralCup
 == setup
 active.exchange = QSONumberDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -367,7 +366,6 @@ contest.class = TContestUralCup
 == setup
 active.exchange = QSONumberDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -728,7 +726,6 @@ contest.class = TContestUralCup
 == setup
 active.exchange = QSONumberDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

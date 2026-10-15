@@ -6,7 +6,6 @@ contest.class = TContestOZCRZ
 == setup
 active.exchange = RSTZoneOrSocietyExchange
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -368,7 +367,6 @@ contest.class = TContestOZCRZ
 == setup
 active.exchange = RSTZoneOrSocietyExchange
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -730,7 +728,6 @@ contest.class = TContestOZCRZ
 == setup
 active.exchange = RSTZoneOrSocietyExchange
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

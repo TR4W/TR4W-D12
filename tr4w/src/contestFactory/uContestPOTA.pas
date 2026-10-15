@@ -88,7 +88,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -187,11 +186,6 @@ end;
 function TContestPOTA.GetFriendlyName: string;
 begin
    Result := 'Parks on the Air(r) Logging';
-end;
-
-function TContestPOTA.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestPOTA.GetInitialExchangeKind: InitialExchangeType;

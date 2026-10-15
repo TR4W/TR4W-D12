@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -194,11 +193,6 @@ function TContestOZHCRVHF.GetFriendlyName: string;
 begin
    (* The row's FriendlyName is blank, which means the enum's spelling. *)
    Result := 'OZHCR-VHF';
-end;
-
-function TContestOZHCRVHF.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := GridSquares;
 end;
 
 function TContestOZHCRVHF.GetInitialExchangeKind: InitialExchangeType;

@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -177,11 +176,6 @@ end;
 function TContestHelvetia.GetFriendlyName: string;
 begin
    Result := 'Helvetia Contest';
-end;
-
-function TContestHelvetia.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestHelvetia.GetInitialExchangeKind: InitialExchangeType;

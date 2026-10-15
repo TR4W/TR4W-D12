@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -112,6 +111,10 @@ type
       (* THE NEED-MULTIPLIER HINT -- see
          TContestBase.DomesticMultiplierHint (M11 S6). *)
       function DomesticMultiplierHint(const aText: Str14): string; override;
+   public
+      (* DOES IT HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDomesticMultiplier (M11 S6 part 2). *)
+      function HasDomesticMultiplier: boolean; override;
    end;
 
 implementation
@@ -213,11 +216,6 @@ end;
 function TContestRSGBIOTA.GetFriendlyName: string;
 begin
    Result := 'RSGB IOTA Contest';
-end;
-
-function TContestRSGBIOTA.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := IOTADomestic;
 end;
 
 function TContestRSGBIOTA.GetInitialExchangeKind: InitialExchangeType;
@@ -373,6 +371,16 @@ begin
       begin
       Result := '';
       end;
+end;
+
+
+(* AN IOTA REFERENCE IS THE DOMESTIC MULTIPLIER, at every station -- M11 S6
+   part 2, 2026-10-14. Its own answer, because the IOTA reference has no
+   shape flag for the base to compose (TContestBase.HasDomesticMultiplier);
+   the trait said IOTADomestic. *)
+function TContestRSGBIOTA.HasDomesticMultiplier: boolean;
+begin
+   Result := True;
 end;
 
 initialization

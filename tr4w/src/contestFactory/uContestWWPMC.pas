@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -161,11 +160,6 @@ end;
 function TContestWWPMC.GetFriendlyName: string;
 begin
    Result := 'WW PMC Contest';
-end;
-
-function TContestWWPMC.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestWWPMC.GetInitialExchangeKind: InitialExchangeType;

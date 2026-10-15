@@ -6,7 +6,6 @@ contest.class = TContestMST
 == setup
 active.exchange = QSONumberAndNameExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -360,7 +359,6 @@ contest.class = TContestMST
 == setup
 active.exchange = QSONumberAndNameExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -714,7 +712,6 @@ contest.class = TContestMST
 == setup
 active.exchange = QSONumberAndNameExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE TRUE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

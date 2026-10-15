@@ -6,7 +6,6 @@ contest.class = TContestARRLVHFSep
 == setup
 active.exchange = RSTAndOrGridExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = GridSquares
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -353,7 +352,6 @@ contest.class = TContestARRLVHFSep
 == setup
 active.exchange = RSTAndOrGridExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = GridSquares
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -700,7 +698,6 @@ contest.class = TContestARRLVHFSep
 == setup
 active.exchange = RSTAndOrGridExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = GridSquares
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

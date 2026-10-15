@@ -6,7 +6,6 @@ contest.class = TContestRFChampionshipSSB
 == setup
 active.exchange = QSONumberAndZone
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -367,7 +366,6 @@ contest.class = TContestRFChampionshipSSB
 == setup
 active.exchange = QSONumberAndZone
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -728,7 +726,6 @@ contest.class = TContestRFChampionshipSSB
 == setup
 active.exchange = QSONumberAndZone
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

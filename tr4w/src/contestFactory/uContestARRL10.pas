@@ -67,7 +67,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -158,11 +157,6 @@ end;
 function TContestARRL10.GetFriendlyName: string;
 begin
    Result := 'ARRL 10-Meter Contest';
-end;
-
-function TContestARRL10.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestARRL10.GetInitialExchangeKind: InitialExchangeType;

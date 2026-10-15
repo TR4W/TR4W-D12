@@ -86,7 +86,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -158,11 +157,6 @@ end;
 function TContestMini40.GetFriendlyName: string;
 begin
    Result := 'Mini-Test 40';
-end;
-
-function TContestMini40.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestMini40.GetInitialExchangeKind: InitialExchangeType;

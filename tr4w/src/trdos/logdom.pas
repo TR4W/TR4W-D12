@@ -83,9 +83,10 @@ procedure EnumDOMFILE(FileString: PShortString);
 //  ExternalLogTypeSA                     : array[ExternalLogType] of PChar( = ('None', 'DXKeeper', 'ACLog', 'HRD');
 
 var
-  (* ActiveDomesticMult MOVED -- M10 S9e, 2026-10-14. It is
-    uContestSession.ContestSession.DomesticMult, written only by FCONTEST's
-    set-up path. *)
+  (* ActiveDomesticMult MOVED -- M10 S9e, 2026-10-14, to
+    uContestSession.ContestSession.DomesticMult, and was DELETED with the
+    domestic kind at M11 S6 part 2: each contest states its domestic rules
+    (TContestBase.DomesticMultiplierFromQTH, HasDomesticMultiplier). *)
   DomQTHTable                           : DomQTHTableObject;
   LiteralDomesticQTH                    : boolean; //QTHString (if true) or DomesticQTH {if false}
   MultipliersIsCounties                 : boolean;
@@ -96,7 +97,6 @@ uses
   ZoneCont,
   LogWind,
   MainUnit, LogSCP, {KK1L: DEBUG}
-  uContestSession, (* ContestSession.DoingDomesticMults -- M10 S9e *)
   (* Contest, the active contest's type -- asked of the factory below. *)
   PostUnit,
   (* ContestDomesticMultiplierFromQTH, TDomesticQTHAnswer -- GetDomQTH asks
@@ -214,6 +214,7 @@ var
   CurrentPrefixRecord                   : PrefixRecPtr;
   Index                                 : integer;
   found                                 : boolean;
+  contestRules                          : TContestBase;
 
 begin
 
@@ -223,7 +224,18 @@ begin
 
   strU(InputString);
 
-  if not ContestSession.DoingDomesticMults then
+  (* ONE ActiveContest FOR THE WHOLE LOOKUP -- M11 S6 part 2. The
+    no-domestic exit asks the contest (HasDomesticMultiplier; it was the
+    session's DoingDomesticMults, a field read) and so does the rule below,
+    on the same object. A domestic contest makes the one fetch it made
+    since part 1, moved up to here; a contest with no domestic multiplier
+    now makes one where the field read cost nothing -- per domestic-QTH
+    lookup in live entry, not per rescored QSO (the rescore reaches this
+    only for a slash call under a QSO-party exchange). The callers
+    (FoundDomesticQTH's, live entry and the parse shapes) hold no contest
+    object to hand down. *)
+  contestRules := ActiveContest(Contest);
+  if not ContestHasDomesticMultiplier(contestRules) then
      begin
      QTH := InputString;
      GetDomQTH := True;
@@ -242,14 +254,9 @@ begin
     reference reached the file lookup already found, and a text with no
     known continent reached it not found (plan F6). The answer carries both:
     dqaLookUpDomesticFile with whatever the rule wrote, which the file
-    lookup keeps unless it knows the text.
-
-    ONE ActiveContest, AFTER THE NO-DOMESTIC EXIT -- a contest with no
-    domestic multiplier pays nothing it did not pay before. The callers
-    (FoundDomesticQTH's, live entry and the parse shapes) hold no contest
-    object to hand down. *)
+    lookup keeps unless it knows the text. *)
   found := False;
-  if ContestDomesticMultiplierFromQTH(ActiveContest(Contest), InputString,
+  if ContestDomesticMultiplierFromQTH(contestRules, InputString,
                                       Multiplier, QTH, found) = dqaDecided then
      begin
      GetDomQTH := found;

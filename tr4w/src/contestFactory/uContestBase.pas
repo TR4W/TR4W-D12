@@ -525,6 +525,8 @@ type
          the session's DomesticMult, of which the one reader (the base's
          ApplyADIFImport) tested one member, GridSquares. *)
       CountsGridSquares: boolean;
+      (* The open contest's HasDomesticMultiplier -- M11 S6 part 2; it was
+         the session's DoingDomesticMults, the kind's "not none". *)
       DoingDomesticMults: boolean;
    end;
 
@@ -750,7 +752,7 @@ type
       last two the arms wrote: the initial-exchange cursor at the start (IRTS,
       RAEM) and the DXCC multiplier by band (CQMM). *)
    TSessionValue = (
-      svExchange, svDomesticMult,
+      svExchange,
       svBand, svMode, svDomesticMultByBand, svAllowDupeQSOs,
       svInitialExchange, svDXMultLimit,
       svInitialExchangeCursorAtStart, svDXCCMultByBand,
@@ -823,7 +825,6 @@ type
    private
       FStated: TSessionValues;
       FExchange: ExchangeType;
-      FDomesticMult: DomesticMultType;
       FBand: BandType;
       FMode: ModeType;
       FDomesticMultByBand: TAdditionalMultByBand;
@@ -839,7 +840,6 @@ type
 
       procedure Stated(aValue: TSessionValue);
       procedure SetExchange(aValue: ExchangeType);
-      procedure SetDomesticMult(aValue: DomesticMultType);
       procedure SetBand(aValue: BandType);
       procedure SetMode(aValue: ModeType);
       procedure SetDomesticMultByBand(aValue: TAdditionalMultByBand);
@@ -858,12 +858,11 @@ type
       (* DID THE CONTEST STATE THIS VALUE? The applier writes nothing else. *)
       function IsStated(aValue: TSessionValue): boolean;
 
-      (* THE ENGINE'S CHOICES -- ActiveExchange, the session's DomesticMult
-         (uContestSession, M10 S9e), ActiveBand, ActiveMode,
+      (* THE ENGINE'S CHOICES -- ActiveExchange, ActiveBand, ActiveMode,
          DomesticMultByBand and tAllowDupeQSOs. (DXMult went with the DX kind
-         at M11 S4 part 2: the contest answers HasDXMultiplier.) *)
+         at M11 S4 part 2, DomesticMult with the domestic kind at M11 S6 part
+         2: the contest answers HasDXMultiplier and HasDomesticMultiplier.) *)
       property Exchange: ExchangeType read FExchange write SetExchange;
-      property DomesticMult: DomesticMultType read FDomesticMult write SetDomesticMult;
       property Band: BandType read FBand write SetBand;
       property Mode: ModeType read FMode write SetMode;
       property DomesticMultByBand: TAdditionalMultByBand
@@ -1190,7 +1189,6 @@ type
       function GetDomesticFileName: string; virtual;
       function GetFriendlyName: string; virtual;
       function GetQRZRUId: integer; virtual;
-      function GetDomesticMultiplierType: DomesticMultType; virtual;
       function GetInitialExchangeKind: InitialExchangeType; virtual;
       function GetExchangeKind: ExchangeType; virtual;
       function GetIsUSQSOParty: boolean; virtual;
@@ -1420,7 +1418,6 @@ type
       property DomesticFileName: string read GetDomesticFileName;
       property FriendlyName: string read GetFriendlyName;
       property QRZRUId: integer read GetQRZRUId;
-      property DomesticMultiplierType: DomesticMultType read GetDomesticMultiplierType;
       property InitialExchangeKind: InitialExchangeType read GetInitialExchangeKind;
       property ExchangeKind: ExchangeType read GetExchangeKind;
       property IsUSQSOParty: boolean read GetIsUSQSOParty;
@@ -1933,6 +1930,37 @@ type
          THE BASE ANSWERS FALSE -- every contest whose session ran another
          domestic kind, or none. *)
       function UsesDomesticFile: boolean; virtual;
+
+      (* DOES THIS CONTEST HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- M11
+         S6 part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S6, F23).
+
+         It replaces the session's DOMESTIC KIND, deleted with
+         DomesticMultType: the engine asked `kind <> NoDomesticMults`
+         (ContestSession's DoingDomesticMults) whether to read a domestic QTH
+         at all, flag a domestic multiplier, show the domestic column, list
+         the remaining domestic multipliers and total them. That question has
+         no QSO in hand, and it is answered here, against Station -- LIVE, as
+         HasDXMultiplier, HasPrefixMultiplier and HasZoneMultiplier are, so a
+         mid-session change of MY CALL without a CONTEST change is followed
+         (F23 closed: the kind was resolved once, by FoundContest, while the
+         rules read Station).
+
+         COMPOSED ONCE, HERE, FROM WHAT EACH CONTEST ALREADY STATES: a
+         contest looks its domestic QTH up in its file (UsesDomesticFile), or
+         states one of the shapes whose answers the engine asks
+         (HasGridSquareMultiplier, HasGridFieldMultiplier, the WYSIWYG
+         DomesticQTHReplacesDXMultiplier, the RDA DomesticQTHIsNeverAGrid).
+         So the 94 domestic-file contests and the 22 with such a shape state
+         nothing more. THE THREE WHOSE SHAPE HAS NO SUCH ANSWER OVERRIDE IT:
+         the RSGB IOTA (an IOTA reference) and WAG and the DARC 10 m (a DOK,
+         outside Germany).
+
+         INVARIANT: True exactly where the contest reads a domestic QTH --
+         looks it up in its file, or decides at least one text itself --
+         pinned for every contest at every roster station by
+         uTestDomesticMultiplier. THE BASE'S COMPOSITION IS FALSE FOR A
+         CONTEST THAT STATES NONE OF THEM. *)
+      function HasDomesticMultiplier: boolean; virtual;
 
       (* IS THIS CONTEST RUN IN THIS MODE? -- an IDENTITY question, asked of
          an ADIF record, and of nothing else (M7b batch 2, 2026-10-02).
@@ -2690,6 +2718,12 @@ function ContestDomesticQTHIsNeverAGrid(aContest: TContestBase): boolean;
    DUMMYCONTEST ran NoDomesticMults. *)
 function ContestUsesDomesticFile(aContest: TContestBase): boolean;
 
+(* DOES aContest HAVE A DOMESTIC MULTIPLIER AT ITS STATION? -- see
+   TContestBase.HasDomesticMultiplier. nil answers False: the classless
+   DUMMYCONTEST ran NoDomesticMults. LOGEDIT.DoingDomesticMults asks it of
+   the active contest; a caller already holding the object asks it here. *)
+function ContestHasDomesticMultiplier(aContest: TContestBase): boolean;
+
 (* THE ZONE A CALL-HISTORY (TRMASTER) ENTRY OFFERS AS THE INITIAL EXCHANGE --
    M11 S5. LOGEDIT.InitialExchangeEntry's ZoneInitialExchange arm asks it
    once CD.GetEntry has found the call, with the zone list the contest's
@@ -2844,11 +2878,6 @@ end;
 function TContestBase.GetQRZRUId: integer;
 begin
    Result := 0;
-end;
-
-function TContestBase.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestBase.GetInitialExchangeKind: InitialExchangeType;
@@ -3205,6 +3234,18 @@ begin
    else
       begin
       Result := aContest.UsesDomesticFile;
+      end;
+end;
+
+function ContestHasDomesticMultiplier(aContest: TContestBase): boolean;
+begin
+   if aContest = nil then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := aContest.HasDomesticMultiplier;
       end;
 end;
 
@@ -3597,6 +3638,16 @@ function TContestBase.UsesDomesticFile: boolean;
 begin
    (* No domestic file -- see the declaration. *)
    Result := False;
+end;
+
+function TContestBase.HasDomesticMultiplier: boolean;
+begin
+   (* The contest's own statements, composed -- see the declaration. *)
+   Result := UsesDomesticFile                or
+             HasGridSquareMultiplier         or
+             HasGridFieldMultiplier          or
+             DomesticQTHReplacesDXMultiplier or
+             DomesticQTHIsNeverAGrid;
 end;
 
 function TContestBase.RunsInMode(aMode: ModeType): boolean;
@@ -4126,12 +4177,6 @@ procedure TSessionDefaults.SetExchange(aValue: ExchangeType);
 begin
    FExchange := aValue;
    Stated(svExchange);
-end;
-
-procedure TSessionDefaults.SetDomesticMult(aValue: DomesticMultType);
-begin
-   FDomesticMult := aValue;
-   Stated(svDomesticMult);
 end;
 
 procedure TSessionDefaults.SetBand(aValue: BandType);

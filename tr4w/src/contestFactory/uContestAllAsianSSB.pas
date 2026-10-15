@@ -84,7 +84,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -271,11 +270,6 @@ end;
 function TContestAllAsianSSB.GetFriendlyName: string;
 begin
    Result := 'All Asian DX Contest, Phone';
-end;
-
-function TContestAllAsianSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestAllAsianSSB.GetInitialExchangeKind: InitialExchangeType;

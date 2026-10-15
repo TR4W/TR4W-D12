@@ -67,7 +67,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -173,11 +172,6 @@ end;
 function TContestARIDX.GetFriendlyName: string;
 begin
    Result := 'ARI International DX Contest';
-end;
-
-function TContestARIDX.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestARIDX.GetInitialExchangeKind: InitialExchangeType;

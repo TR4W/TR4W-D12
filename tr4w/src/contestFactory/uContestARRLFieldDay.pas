@@ -79,7 +79,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -338,15 +337,6 @@ end;
 function TContestARRLFieldDay.GetFriendlyName: string;
 begin
    Result := 'ARRL Field Day';
-end;
-
-function TContestARRLFieldDay.GetDomesticMultiplierType: DomesticMultType;
-begin
-   (* ONE STATEMENT -- M11 S2, 2026-10-14 (plan 1.3, F2). The session ran
-      DomesticFile at every station: the trait said the base's NoDomesticMults and
-      DescribeSession stated it over it, unconditionally. The
-      trait now says what runs, and the statement is gone. *)
-   Result := DomesticFile;
 end;
 
 function TContestARRLFieldDay.GetInitialExchangeKind: InitialExchangeType;

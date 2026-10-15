@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -167,11 +166,6 @@ begin
    (* The row's FriendlyName is blank; this is the enum's spelling it
       resolves to. *)
    Result := 'EU-SPRINT-SPRING-CW';
-end;
-
-function TContestEUSprintSpringCW.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestEUSprintSpringCW.GetInitialExchangeKind: InitialExchangeType;

@@ -83,7 +83,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -159,11 +158,6 @@ end;
 function TContestRSGBRoPoCoCW.GetFriendlyName: string;
 begin
    Result := 'RSGB RoLo CW';
-end;
-
-function TContestRSGBRoPoCoCW.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestRSGBRoPoCoCW.GetInitialExchangeKind: InitialExchangeType;

@@ -81,7 +81,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -232,11 +231,6 @@ end;
 function TContestDARCWAEDCSSB.GetFriendlyName: string;
 begin
    Result := 'WAE DX Contest, SSB';
-end;
-
-function TContestDARCWAEDCSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestDARCWAEDCSSB.GetInitialExchangeKind: InitialExchangeType;

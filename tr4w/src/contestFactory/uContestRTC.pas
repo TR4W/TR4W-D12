@@ -78,7 +78,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -209,11 +208,6 @@ end;
 function TContestRTC.GetFriendlyName: string;
 begin
    Result := 'Real Time Contest';
-end;
-
-function TContestRTC.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := GridSquares;
 end;
 
 function TContestRTC.GetInitialExchangeKind: InitialExchangeType;

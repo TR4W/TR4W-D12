@@ -80,7 +80,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -201,11 +200,6 @@ end;
 function TContestWWDigi.GetFriendlyName: string;
 begin
    Result := 'World Wide Digi DX Contest';
-end;
-
-function TContestWWDigi.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := GridFields;
 end;
 
 function TContestWWDigi.GetInitialExchangeKind: InitialExchangeType;

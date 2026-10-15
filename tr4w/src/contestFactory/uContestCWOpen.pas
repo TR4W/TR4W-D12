@@ -70,7 +70,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -164,11 +163,6 @@ end;
 function TContestCWOpen.GetFriendlyName: string;
 begin
    Result := 'CWOps CW Open';
-end;
-
-function TContestCWOpen.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestCWOpen.GetInitialExchangeKind: InitialExchangeType;

@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -198,11 +197,6 @@ begin
    Result := 'Ukrainian DX Contest';
 end;
 
-function TContestUkrainianDX.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
-end;
-
 function TContestUkrainianDX.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
@@ -234,10 +228,8 @@ procedure TContestUkrainianDX.DescribeSession(const aStation: TStationContext;
                                               aSession: TSessionDefaults);
 begin
    aSession.AddDomesticCountry('UR');
-   if aStation.MyCountry = 'UR' then
-      begin
-      aSession.DomesticMult := NoDomesticMults;
-      end;
+   (* A UR entrant counts no domestic multiplier -- the class's own answer
+      (UsesDomesticFile), since the domestic kind went (M11 S6 part 2). *)
 end;
 
 (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two

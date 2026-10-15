@@ -6,7 +6,6 @@ contest.class = TContestALRSUA1DZCup
 == setup
 active.exchange = RSTDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -370,7 +369,6 @@ contest.class = TContestALRSUA1DZCup
 == setup
 active.exchange = RSTDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -734,7 +732,6 @@ contest.class = TContestALRSUA1DZCup
 == setup
 active.exchange = RSTDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = WYSIWYGDomestic
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

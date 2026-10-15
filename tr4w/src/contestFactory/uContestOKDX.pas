@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -225,11 +224,6 @@ begin
    Result := 'OK/OM DX Contest, CW';
 end;
 
-function TContestOKDX.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
-end;
-
 function TContestOKDX.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
@@ -261,7 +255,6 @@ begin
    aSession.AddDomesticCountry('OM');
    if not OKOMStation(string(aStation.MyCountry)) then
       begin
-      aSession.DomesticMult := DomesticFile;
       aSession.DomesticFile := 'OKOM';
       end;
 end;

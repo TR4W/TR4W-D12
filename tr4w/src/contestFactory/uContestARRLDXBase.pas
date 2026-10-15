@@ -223,7 +223,6 @@ begin
       end
    else
       begin
-      aSession.DomesticMult := DomesticFile;
       aSession.DomesticFile := 'S48P14DC';
       aSession.Exchange := RSTDomesticQTHExchange;
       end;

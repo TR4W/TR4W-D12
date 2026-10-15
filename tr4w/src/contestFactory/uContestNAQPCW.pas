@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -169,11 +168,6 @@ end;
 function TContestNAQPCW.GetFriendlyName: string;
 begin
    Result := 'North American QSO Party, CW';
-end;
-
-function TContestNAQPCW.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestNAQPCW.GetInitialExchangeKind: InitialExchangeType;

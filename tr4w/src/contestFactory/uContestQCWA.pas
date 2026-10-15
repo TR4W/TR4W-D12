@@ -86,7 +86,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -158,11 +157,6 @@ end;
 function TContestQCWA.GetFriendlyName: string;
 begin
    Result := 'QCWA QSO Party';
-end;
-
-function TContestQCWA.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestQCWA.GetInitialExchangeKind: InitialExchangeType;

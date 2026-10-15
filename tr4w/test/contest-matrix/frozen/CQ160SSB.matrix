@@ -6,7 +6,6 @@ contest.class = TContestCQ160SSB
 == setup
 active.exchange = RSTZoneOrDomesticQTH
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -363,7 +362,6 @@ contest.class = TContestCQ160SSB
 == setup
 active.exchange = RSTZoneOrDomesticQTH
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode
@@ -720,7 +718,6 @@ contest.class = TContestCQ160SSB
 == setup
 active.exchange = RSTZoneOrDomesticQTH
 active.initialexchange = ZoneInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = CQZoneMode

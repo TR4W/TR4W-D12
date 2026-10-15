@@ -134,9 +134,10 @@ the target shape, the M-step migration order and the open questions.
 - **M10 IS COMPLETE (2026-10-14, plan S9f; "M10 COMPLETE" at the top of
   `docs/CONTEST_FACTORY_M10_PLAN.md`).** The six `Active*` KIND globals are
   gone: the session's kinds are read-only properties of
-  `uContestSession.ContestSession` (`Exchange`, `InitialExchange`,
-  `DomesticMult`; `PrefixMult` was deleted at M11 S3, `DXMult` at M11
-  S4 and `ZoneMult` at M11 S5), written only by
+  `uContestSession.ContestSession` (`Exchange`, `InitialExchange`;
+  `PrefixMult` was deleted at M11 S3, `DXMult` at M11 S4, `ZoneMult` at
+  M11 S5 and `DomesticMult` at M11 S6 -- NO MULTIPLIER KIND IS LEFT),
+  written only by
   FCONTEST's set-up through `Write*`. They are SESSION facts -- 27 contests
   run a kind their trait does not state -- so never answer one from
   `ContestIdentity`. **M11 is next:** the six kind enums and their ~80 engine
@@ -296,9 +297,23 @@ the target shape, the M-step migration order and the open questions.
   joins `uTestDomesticMultiplier`'s `DOMESTIC_FILE_EVERYWHERE` or
   `PinnedUsesFile`; the per-station counts and the 94 change by hand. A
   contest that answers True must state NO shape -- pinned. It CANNOT be
-  derived from the domestic file name (plan 2.6). Whether a contest counts
-  a domestic multiplier at all is NOT moved yet (part 2): it still reads
-  `ContestSession.DoingDomesticMults`.
+  derived from the domestic file name (plan 2.6).
+- **"DOES IT COUNT A DOMESTIC MULTIPLIER" IS THE CLASS'S (M11 S6 part 2,
+  2026-10-14), and `DomesticMultType` IS DELETED** -- the enum, the
+  `DomesticMultiplierType` trait and its 178 overrides, `TSessionDefaults`'
+  `DomesticMult`/`svDomesticMult`, the session's field, `DoingDomesticMults`
+  and `WriteDomesticMult`, FCONTEST's two writes, the 13 `DescribeSession`
+  statements and the matrix's `active.domesticmult` line. The answer is
+  `HasDomesticMultiplier` (nil-safe `ContestHasDomesticMultiplier`),
+  COMPOSED ONCE IN THE BASE: `UsesDomesticFile` or one of the four shape
+  answers. A contest states nothing more -- unless its shape has no flag of
+  its own: the RSGB IOTA (True), WAG (`MyCountry <> 'DL'`) and the DARC 10 m
+  (True) override it. A new shape contest with no flag overrides it too,
+  and `uTestDomesticMultiplier.Test_ADomesticMultiplierIsWhereAQTHIsRead`
+  fails if it does not (True exactly where a QTH is read). Read live against
+  `Station` (F23 closed): `LOGEDIT.DoingDomesticMults`, or
+  `ContestHasDomesticMultiplier` on an object in hand. All four multiplier
+  KINDS are gone; only `ExchangeType` and `InitialExchangeType` remain.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the four `QSO POINTS ...`
   overrides (`TStationContext.PointOverrides`, filled by

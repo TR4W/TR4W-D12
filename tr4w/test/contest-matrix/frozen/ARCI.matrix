@@ -6,7 +6,6 @@ contest.class = TContestARCI
 == setup
 active.exchange = RSTPossibleDomesticQTHAndPower
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -360,7 +359,6 @@ contest.class = TContestARCI
 == setup
 active.exchange = RSTPossibleDomesticQTHAndPower
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -714,7 +712,6 @@ contest.class = TContestARCI
 == setup
 active.exchange = RSTPossibleDomesticQTHAndPower
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode

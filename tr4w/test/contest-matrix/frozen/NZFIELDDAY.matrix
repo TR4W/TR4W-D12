@@ -6,7 +6,6 @@ contest.class = TContestJockWhiteFieldDay
 == setup
 active.exchange = NZFieldDayExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -365,7 +364,6 @@ contest.class = TContestJockWhiteFieldDay
 == setup
 active.exchange = NZFieldDayExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -723,7 +721,6 @@ contest.class = TContestJockWhiteFieldDay
 == setup
 active.exchange = NZFieldDayExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE TRUE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

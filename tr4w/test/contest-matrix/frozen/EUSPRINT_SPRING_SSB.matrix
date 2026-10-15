@@ -6,7 +6,6 @@ contest.class = TContestEUSprintSpringSSB
 == setup
 active.exchange = QSONumberAndNameExchange
 active.initialexchange = NameInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -339,7 +338,6 @@ contest.class = TContestEUSprintSpringSSB
 == setup
 active.exchange = QSONumberAndNameExchange
 active.initialexchange = NameInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -672,7 +670,6 @@ contest.class = TContestEUSprintSpringSSB
 == setup
 active.exchange = QSONumberAndNameExchange
 active.initialexchange = NameInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

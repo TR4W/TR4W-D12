@@ -51,10 +51,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       Tests use the same methods. No reader writes, and the properties are
       read-only so a stray `:=` does not compile. Nothing enforces the writer
       beyond that: count the Write* callers
-      (rg -i "\.Write(InitialExchange|DomesticMult|Exchange)")
+      (rg -i "\.Write(InitialExchange|Exchange)")
       -- FCONTEST and the tests are the only legitimate ones. Named Write*,
       not Set*, because TSessionDefaults (what a contest STATES) already has
-      a SetInitialExchange (and SetDomesticMult, SetExchange), and "who
+      a SetInitialExchange (and SetExchange), and "who
       writes the session" must be one search.
     * THREADS. The writer runs on the main thread. Every reader measured at
       S9a for all six kinds runs on the main thread too: the call window,
@@ -83,12 +83,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     PrefixMult         S9b   was LOGDUPE.ActivePrefixMult; DELETED at M11 S3
     ZoneMult           S9c   was LOGWIND.ActiveZoneMult; DELETED at M11 S5
     DXMult             S9d   was VC.ActiveDXMult; DELETED at M11 S4
-    DomesticMult       S9e   was LOGDOM.ActiveDomesticMult
+    DomesticMult       S9e   was LOGDOM.ActiveDomesticMult; DELETED at M11 S6
     Exchange           S9f   was LOGWIND.ActiveExchange
 
-  All six came here, and three remain -- the prefix kind left at M11 S3,
-  the DX kind at M11 S4 and the zone kind at M11 S5; no kind global is
-  left. The kind ENUMS outlive M10: they
+  All six came here, and two remain -- the prefix kind left at M11 S3,
+  the DX kind at M11 S4, the zone kind at M11 S5 and the domestic kind at M11
+  S6; no kind global is left, and no MULTIPLIER kind at all. The kind ENUMS outlive M10: they
   are the engine's vocabulary until their arms move into the classes at M11
   (design 8.2s).
 
@@ -103,6 +103,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     DoingZoneMults     M11 S5  LEFT with the zone kind: the contest answers
                                it (LOGEDIT.DoingZoneMults, asking
                                TContestBase.HasZoneMultiplier)
+    DoingDomesticMults M11 S6  LEFT with the domestic kind: the contest
+                               answers it (LOGEDIT.DoingDomesticMults, asking
+                               TContestBase.HasDomesticMultiplier)
   *)
 unit uContestSession;
 
@@ -117,25 +120,12 @@ type
    TContestSession = class
    private
       FInitialExchange: InitialExchangeType;
-      FDomesticMult: DomesticMultType;
       FExchange: ExchangeType;
-      function GetDoingDomesticMults: boolean;
    public
       (* The initial exchange the call window pre-fills from -- the kind
         LOGEDIT.InitialExchangeEntry asks. A fresh session holds
         NoInitialExchange, the zero the global it replaces started from. *)
       property InitialExchange: InitialExchangeType read FInitialExchange;
-
-      (* The domestic multiplier the session runs. Since M11 S6 part 1
-        (2026-10-14) its readers are DoingDomesticMults (below), the
-        QSO-party mobile rewrite (LOGSUBS2.LogContact), the readiness check,
-        the ADIF import's session record and the matrix's
-        active.domesticmult line: how a domestic QTH reads, the grid-square
-        and grid-field rules, the WYSIWYG DX guard and the RDA grid test are
-        the contest's own answers (TContestBase.DomesticMultiplierFromQTH and
-        its neighbours). A fresh session holds NoDomesticMults, the zero
-        LOGDOM.ActiveDomesticMult started from. *)
-      property DomesticMult: DomesticMultType read FDomesticMult;
 
       (* The received exchange the session parses -- ProcessExchange's shape,
         the call window, the log grid's columns, the exporters, the sheet's
@@ -146,31 +136,14 @@ type
         (uLogRepository's open-without-a-contest note relies on that zero). *)
       property Exchange: ExchangeType read FExchange;
 
-      (* DOES THE SESSION COUNT THIS KIND OF MULTIPLIER AT ALL? -- M11 S2,
-        2026-10-14 (plan F9). Each is its kind compared with the kind's
-        "none", computed on every read and stored nowhere.
-
-        These were LOGDUPE globals -- DoingDomesticMults, DoingZoneMults,
-        DoingPrefixMults and DoingDXMults (the last three are the contest's
-        own answers since M11 S3, S4 and S5, LOGEDIT.DoingPrefixMults,
-        DoingDXMults and DoingZoneMults) -- derived ONCE at start-up
-        (LogCfg) while the kinds above are rewritten by every FoundContest.
-        So a contest changed without a restart -- a multi-op peer's CONTEST
-        line, uSettingsEffects -> FoundContest -- left them describing the
-        previous contest: measured at S0d, CQ WW CW -> ARRL SS CW kept CQ
-        WW's FALSE TRUE FALSE TRUE while the session ran DomesticFile and no
-        DX, prefix or zone multiplier, so the sheet and the totals counted
-        multiplier kinds the running contest does not have. A second store
-        can go stale; an answer computed from the one store cannot.
-
-        The cost is a call and a field compare, the same as the kind
-        properties above; the busiest reader is LOGDUPE.SetMultFlags, one
-        read per QSO. *)
-      property DoingDomesticMults: boolean read GetDoingDomesticMults;
+      (* NO Doing*Mults ANSWER IS LEFT HERE -- M11 S6 part 2, 2026-10-14. They
+        were LOGDUPE globals derived once at start-up (plan F9), then (M11
+        S2) answers computed from the kinds above; each left with its kind,
+        the last, DoingDomesticMults, at M11 S6. All four are the contest's
+        own answers now (LOGEDIT.Doing*Mults), live against the station. *)
 
       (* THE WRITERS -- FCONTEST's set-up path, and tests. See the header. *)
       procedure WriteInitialExchange(aKind: InitialExchangeType);
-      procedure WriteDomesticMult(aKind: DomesticMultType);
       procedure WriteExchange(aKind: ExchangeType);
    end;
 
@@ -183,19 +156,9 @@ implementation
 var
    TheSession: TContestSession = nil;
 
-function TContestSession.GetDoingDomesticMults: boolean;
-begin
-   Result := FDomesticMult <> NoDomesticMults;
-end;
-
 procedure TContestSession.WriteInitialExchange(aKind: InitialExchangeType);
 begin
    FInitialExchange := aKind;
-end;
-
-procedure TContestSession.WriteDomesticMult(aKind: DomesticMultType);
-begin
-   FDomesticMult := aKind;
 end;
 
 procedure TContestSession.WriteExchange(aKind: ExchangeType);

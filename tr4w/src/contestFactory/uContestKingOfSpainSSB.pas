@@ -77,7 +77,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -182,11 +181,6 @@ end;
 function TContestKingOfSpainSSB.GetFriendlyName: string;
 begin
    Result := 'His Maj. King of Spain Contest, SSB';
-end;
-
-function TContestKingOfSpainSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestKingOfSpainSSB.GetInitialExchangeKind: InitialExchangeType;

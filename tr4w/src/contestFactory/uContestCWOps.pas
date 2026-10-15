@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -159,11 +158,6 @@ end;
 function TContestCWOps.GetFriendlyName: string;
 begin
    Result := 'CWops Test (CWT)';
-end;
-
-function TContestCWOps.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestCWOps.GetInitialExchangeKind: InitialExchangeType;

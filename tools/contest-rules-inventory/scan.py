@@ -21,11 +21,12 @@ from model import SENTINEL
 # the point method; ActivePrefixMult (Pxm) left it, and SESSION below, at M11
 # S3 part 2 (2026-10-14), deleted with PrefixMultType; ActiveDXMult (XM) at
 # M11 S4 part 2 (2026-10-14), deleted with DXMultType; ActiveZoneMult (ZnM)
-# at M11 S5 part 2 (2026-10-14), deleted with ZoneMultType.
+# at M11 S5 part 2 (2026-10-14), deleted with ZoneMultType;
+# ActiveDomesticMult (DM) at M11 S6 part 2 (2026-10-14), deleted with
+# DomesticMultType.
 ACTIVE = {
    "ACTIVEEXCHANGE": "AE",
    "ACTIVEINITIALEXCHANGE": "AIE",
-   "ACTIVEDOMESTICMULT": "DM",
 }
 
 # A KIND THAT MOVED INTO THE SESSION OBJECT (M10 S9a-f, uContestSession) is
@@ -38,7 +39,6 @@ ACTIVE = {
 SESSION_OBJECT = "CONTESTSESSION"
 SESSION = {
    "INITIALEXCHANGE": "AIE",
-   "DOMESTICMULT": "DM",
    "EXCHANGE": "AE",
 }
 

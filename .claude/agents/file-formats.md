@@ -160,10 +160,10 @@ multipliers, CTY.DAT, band lookup and CRC32.
   every contest wants (the operator, the received RST off SRX_STRING) and
   `ApplyADIFContestImport` asks `ContestIdentity(exch.ceContest).ApplyADIFImport`
   -- the base's default is the old classless `else`, keyed on a
-  `TADIFImportSession` handed in as DATA (the session's exchange, its
-  domestic-multiplier flag, the open contest's grid-square answer
-  `CountsGridSquares` -- the session's domestic KIND until M11 S6 part 1b --
-  and the operator; the contest reads no global). **Do not read
+  `TADIFImportSession` handed in as DATA (the session's exchange, the open
+  contest's grid-square and domestic-multiplier answers `CountsGridSquares`
+  and `DoingDomesticMults` -- the session's domestic KIND and its "not none"
+  until M11 S6 -- and the operator; the contest reads no global). **Do not read
   `exch.ceContest` inside `ApplyADIFFieldsToExchange`**: ADIF fixes no field
   order, and the `APP_N1MM_EXCHANGE1` arm that did is the order bug this
   replaced (`uTestContestImport.Test_N1MMTagOrderDoesNotMatter`). A new tag

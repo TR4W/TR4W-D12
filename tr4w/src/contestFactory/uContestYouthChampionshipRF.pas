@@ -97,7 +97,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -189,11 +188,6 @@ begin
    (* The row's FriendlyName is blank; this is the enum's
       spelling it resolves to. *)
    Result := 'SRR-JR';
-end;
-
-function TContestYouthChampionshipRF.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestYouthChampionshipRF.GetInitialExchangeKind: InitialExchangeType;

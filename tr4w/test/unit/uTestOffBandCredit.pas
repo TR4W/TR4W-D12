@@ -19,10 +19,10 @@ unit uTestOffBandCredit;
   unset). That is the case that matters, because a multiplier not counted
   per band is exactly the one an off-band QSO could steal.
 
-  THE GLOBALS SET-UP WOULD WRITE ARE SET BY HAND -- the contest, the mult by
-  band/mode flags and the session's four multiplier kinds, whose "none" or
-  not is what ContestSession.Doing*Mults answer (M11 S2) -- and restored
-  afterwards, so no other suite sees them. The domestic multiplier
+  THE GLOBALS SET-UP WOULD WRITE ARE SET BY HAND -- the contest and the
+  mult by band/mode flags -- and restored afterwards, so no other suite sees
+  them. Which multipliers Idaho counts is its class's answer (the four
+  Has*Multiplier, the domestic one since M11 S6 part 2). The domestic multiplier
   is used because its store (a sorted string list) needs no CTY.DAT, where
   the DX store refuses a country number until a country file is loaded.
 
@@ -79,8 +79,6 @@ uses
    uContestRegistry,
    LogDupe,
    LogDom,
-   (* ContestSession -- the DX and domestic kinds (M10 S9d, S9e). *)
-   uContestSession,
    LogEdit,
    LogWind,
    LogStuff,
@@ -225,7 +223,6 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedDomesticMult: DomesticMultType;
    savedDXCCByBand: TAdditionalMultByBand;
    savedDomesticByBand: TAdditionalMultByBand;
    savedActiveBand: BandType;
@@ -249,7 +246,6 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedDomesticMult := ContestSession.DomesticMult;
    savedDXCCByBand := DXCCMultByBand;
    savedDomesticByBand := DomesticMultByBand;
    savedActiveBand := ActiveBand;
@@ -261,7 +257,6 @@ begin
       Contest := IDAHOQSOPARTY;
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
-      ContestSession.WriteDomesticMult(NoDomesticMults);
       (* No zone multiplier: Idaho's class answers HasZoneMultiplier False
          at every station; the session's zone kind this wrote is deleted
          (M11 S5 part 2). *)
@@ -287,11 +282,11 @@ begin
          WYSIWYG arm in GetDomQTH would take 'ADA' without a domestic file.
          How a QTH reads is the contest's rule now
          (TContestBase.DomesticMultiplierFromQTH), and Idaho's is the domestic
-         file -- so the test gives it what that rule reads: its session's
-         kind, DomesticFile, and Ada in the domestic table, the one line of
-         idaho.dom this needs. Taken out again below; nothing else in the
-         table moves. *)
-      ContestSession.WriteDomesticMult(DomesticFile);
+         file -- so the test gives it what that rule reads: Ada in the
+         domestic table, the one line of idaho.dom this needs. Taken out
+         again below; nothing else in the table moves. Whether Idaho has a
+         domestic multiplier is its class's answer (HasDomesticMultiplier,
+         M11 S6 part 2); this wrote the session's kind until then. *)
       DomQTHTable.AddNewPrefixRecord('ADA', 'ADA', 'ADA');
       added := DomQTHTable.LastPrefixRecord[tableIndex];
       ActiveBand := Band20;
@@ -319,7 +314,6 @@ begin
       ActiveBand := savedActiveBand;
       DomesticMultByBand := savedDomesticByBand;
       DXCCMultByBand := savedDXCCByBand;
-      ContestSession.WriteDomesticMult(savedDomesticMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;
@@ -332,7 +326,6 @@ var
    savedContest: ContestType;
    savedByBand: boolean;
    savedByMode: boolean;
-   savedDomesticMult: DomesticMultType;
    savedDomesticByBand: TAdditionalMultByBand;
    savedRestart: RestartInfo;
 
@@ -362,14 +355,15 @@ begin
    savedContest := Contest;
    savedByBand := Settings.Mult.ByBand;
    savedByMode := Settings.Mult.ByMode;
-   savedDomesticMult := ContestSession.DomesticMult;
    savedDomesticByBand := DomesticMultByBand;
    savedRestart := tRestartInfo;
    try
       Contest := IDAHOQSOPARTY;
       Settings.Mult.ByBand := False;
       Settings.Mult.ByMode := True;
-      ContestSession.WriteDomesticMult(DomesticFile);
+      (* Idaho's domestic multiplier is its class's answer
+         (HasDomesticMultiplier); this wrote the session's kind until M11 S6
+         part 2. *)
       DomesticMultByBand := dmbbDefauld;
       mo.ClearAllMults;
 
@@ -396,7 +390,6 @@ begin
       mo.ClearAllMults;
       tRestartInfo := savedRestart;
       DomesticMultByBand := savedDomesticByBand;
-      ContestSession.WriteDomesticMult(savedDomesticMult);
       Settings.Mult.ByMode := savedByMode;
       Settings.Mult.ByBand := savedByBand;
       Contest := savedContest;

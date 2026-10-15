@@ -6,7 +6,6 @@ contest.class = TContestRadioYOC
 == setup
 active.exchange = QSONumberAndPreviousQSONumber
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -360,7 +359,6 @@ contest.class = TContestRadioYOC
 == setup
 active.exchange = QSONumberAndPreviousQSONumber
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -714,7 +712,6 @@ contest.class = TContestRadioYOC
 == setup
 active.exchange = QSONumberAndPreviousQSONumber
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode

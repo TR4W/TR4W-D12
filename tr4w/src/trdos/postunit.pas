@@ -3025,7 +3025,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
              ModeString := ContestIdentity( Contest ).CabrilloModeString(
                               TempRXData.Mode, TempRXData.ExtMode );
 
-             if ContestSession.DoingDomesticMults then
+             (* The contest's answer (M11 S6 part 2), on the object this
+               writer holds for the whole log; it was the session's flag. *)
+             if ContestHasDomesticMultiplier( stationContest ) then
                 begin
                 if LiteralDomesticQTH then
                    begin

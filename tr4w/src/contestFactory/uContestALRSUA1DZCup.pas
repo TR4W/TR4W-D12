@@ -70,7 +70,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -264,11 +263,6 @@ begin
    Result := 'ALRS-UA1DZ-CUP';
 end;
 
-function TContestALRSUA1DZCup.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := WYSIWYGDomestic;
-end;
-
 function TContestALRSUA1DZCup.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
@@ -326,7 +320,6 @@ begin
       DX multiplier, which HasDXMultiplier says (M11 S4 part 2). *)
    if CountsRDADistricts(aStation) then
       begin
-      aSession.DomesticMult := RDADistrict;
       aSession.DomesticFile := '';
       aSession.MultByBand := False;
       end;

@@ -6,7 +6,6 @@ contest.class = TContestTenTen
 == setup
 active.exchange = NameQTHAndPossibleTenTenNumber
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -334,7 +333,6 @@ contest.class = TContestTenTen
 == setup
 active.exchange = NameQTHAndPossibleTenTenNumber
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -662,7 +660,6 @@ contest.class = TContestTenTen
 == setup
 active.exchange = NameQTHAndPossibleTenTenNumber
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

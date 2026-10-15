@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -279,11 +278,6 @@ begin
    (* The row's FriendlyName is blank; it resolves to the enum's
       spelling. *)
    Result := 'PCC';
-end;
-
-function TContestPCC.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestPCC.GetInitialExchangeKind: InitialExchangeType;

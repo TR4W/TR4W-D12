@@ -199,6 +199,9 @@ function DoingPrefixMults: boolean;
 function DoingDXMults: boolean;
 (* Does the active contest have a zone multiplier at this station? M11 S5. *)
 function DoingZoneMults: boolean;
+(* Does the active contest have a domestic multiplier at this station? M11
+  S6. *)
+function DoingDomesticMults: boolean;
 (* Does aContest count any multiplier at all at this station? M11 S4. *)
 function DoingAnyMults(aContest: ContestType): boolean;
 {KK1L: 6.64 Added to keep BM up to date with changes made while logging}
@@ -1078,7 +1081,8 @@ begin
         end;
      end;
 
-  if ContestSession.DoingDomesticMults then
+  (* The contest this hint already holds (M11 S6 part 2). *)
+  if ContestHasDomesticMultiplier(contestRules) then
      begin
 
      TempDomMult := '';
@@ -2048,7 +2052,7 @@ begin
     (TContestBase.ShowsContestStatus, M9b). *)
   if ContestIdentity(Contest).ShowsContestStatus then
      begin
-     if ContestSession.DoingDomesticMults then
+     if DoingDomesticMults then
         begin
         TempString := Call;
         if TempString <> '' then
@@ -2837,7 +2841,7 @@ begin
 
        end;
 
-    if ContestSession.DoingDomesticMults then // Gav 4.44.8    Uncommented this section
+    if DoingDomesticMults then // Gav 4.44.8    Uncommented this section
       if not StringIsAllNumbersOrSpaces(TestString) then
          begin
          TempExchange.QTHString := TestString;
@@ -3058,28 +3062,43 @@ begin
    Result := ContestHasZoneMultiplier(ActiveContest(Contest));
 end;
 
+(* DOES THE ACTIVE CONTEST HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- M11
+  S6 part 2, 2026-10-14 (docs/CONTEST_FACTORY_M11_PLAN.md S6, F23).
+
+  This was ContestSession.DoingDomesticMults, `DomesticMult <>
+  NoDomesticMults` over the kind FoundContest resolved once at set-up. The
+  kind is deleted; the contest answers (TContestBase.HasDomesticMultiplier),
+  against the station ActiveContest hands it on every call -- the station its
+  domestic rules read, so all of them follow the same MY CALL.
+
+  For a reader with no contest object in hand, as DoingZoneMults is. A reader
+  that already holds ActiveContest's object (SetMultFlags, LogContact,
+  GetDomQTH, the Cabrillo writer, the ADIF import) asks
+  ContestHasDomesticMultiplier on it instead of fetching it again. *)
+function DoingDomesticMults: boolean;
+begin
+   Result := ContestHasDomesticMultiplier(ActiveContest(Contest));
+end;
+
 (* DOES aContest COUNT ANY MULTIPLIER AT ALL AT THIS STATION? -- M11 S4 part
-  2, 2026-10-14. The four Doing* answers OR-ed: the session's domestic kind,
-  then the contest's DX, prefix and zone answers (the zone one since M11 S5
-  part 2, when the zone kind was deleted).
+  2, 2026-10-14. The four Doing* answers OR-ed, all four the contest's own
+  since M11 S6 part 2 (the domestic one was the session's kind until then).
 
   ONE STATEMENT FOR TWO READERS that had each spelled it: the final score's
   "counts multipliers" (uScoreTotals.GatherScoreTotals) and the WSJT-X decode
-  gate (uWSJTX). The session's kind is a field read and comes first; the
-  contest is fetched only when it is False, and then ONCE for its three
-  answers -- ActiveContest rebuilds the station on every call. *)
+  gate (uWSJTX). The contest is fetched ONCE for its four answers --
+  ActiveContest rebuilds the station on every call. A domestic contest now
+  pays that fetch here, where the session's field answered before; every DX,
+  prefix and zone contest already did. *)
 function DoingAnyMults(aContest: ContestType): boolean;
 var
    contestRules: TContestBase;
 begin
-   Result := ContestSession.DoingDomesticMults;
-   if not Result then
-      begin
-      contestRules := ActiveContest(aContest);
-      Result := ContestHasDXMultiplier(contestRules) or
-                ContestHasPrefixMultiplier(contestRules) or
-                ContestHasZoneMultiplier(contestRules);
-      end;
+   contestRules := ActiveContest(aContest);
+   Result := ContestHasDomesticMultiplier(contestRules) or
+             ContestHasDXMultiplier(contestRules)       or
+             ContestHasPrefixMultiplier(contestRules)   or
+             ContestHasZoneMultiplier(contestRules);
 end;
 
 end.

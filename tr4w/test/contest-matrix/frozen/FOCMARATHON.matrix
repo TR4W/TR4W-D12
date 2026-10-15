@@ -6,7 +6,6 @@ contest.class = TContestFOCMarathon
 == setup
 active.exchange = RSTPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -360,7 +359,6 @@ contest.class = TContestFOCMarathon
 == setup
 active.exchange = RSTPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -714,7 +712,6 @@ contest.class = TContestFOCMarathon
 == setup
 active.exchange = RSTPowerExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

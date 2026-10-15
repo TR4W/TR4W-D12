@@ -1137,7 +1137,7 @@ begin
    logger.Trace('>>> Entering DupeAndMultSheet.SetMultFlags');
    if logger.IsDebugEnabled then
       begin
-      logger.debug('DoingDomesticMults = ' + BooleanToStr(ContestSession.DoingDomesticMults));
+      logger.debug('DoingDomesticMults = ' + BooleanToStr(ContestHasDomesticMultiplier(ActiveContest(Contest))));
       logger.debug('DoingDXMults       = ' + BooleanToStr(ContestHasDXMultiplier(ActiveContest(Contest))));
       logger.debug('DoingPrefixMults   = ' + BooleanToStr(ContestHasPrefixMultiplier(ActiveContest(Contest))));
       logger.debug('DoingZoneMults     = ' + BooleanToStr(ContestHasZoneMultiplier(ActiveContest(Contest))));
@@ -1181,7 +1181,7 @@ begin
      York and Indiana QSO parties, the PCC's own-country prefix earns none,
      and the Jock White Field Day's own branch and branch 00 earn no zone.
      A false answer leaves the flag false, as each `exit` here did. *)
-  if (RXData.DomMultQTH <> '') and ContestSession.DoingDomesticMults and
+  if (RXData.DomMultQTH <> '') and ContestHasDomesticMultiplier(contestRules) and
      ContestCountsMultiplier(contestRules, RXData, rmDomestic) then
      begin
      (* The sheet's grid-field key -- the contest's answer (M11 S6 part 1),

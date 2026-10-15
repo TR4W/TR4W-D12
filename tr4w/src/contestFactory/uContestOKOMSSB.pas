@@ -72,7 +72,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -198,11 +197,6 @@ end;
 function TContestOKOMSSB.GetFriendlyName: string;
 begin
    Result := 'OK/OM DX Contest, SSB';
-end;
-
-function TContestOKOMSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestOKOMSSB.GetInitialExchangeKind: InitialExchangeType;

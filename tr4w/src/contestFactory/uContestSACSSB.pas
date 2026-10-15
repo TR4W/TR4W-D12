@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -236,11 +235,6 @@ end;
 function TContestSACSSB.GetFriendlyName: string;
 begin
    Result := 'Scandinavian Activity Contest, SSB';
-end;
-
-function TContestSACSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestSACSSB.GetInitialExchangeKind: InitialExchangeType;

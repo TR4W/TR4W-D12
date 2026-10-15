@@ -6,7 +6,6 @@ contest.class = TContestIdahoQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -355,7 +354,6 @@ contest.class = TContestIdahoQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -704,7 +702,6 @@ contest.class = TContestIdahoQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode
@@ -1053,7 +1050,6 @@ contest.class = TContestIdahoQP
 == setup
 active.exchange = RSTDomesticOrDXQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = ITUZoneMode

@@ -6,7 +6,6 @@ contest.class = TContestARRLDigi
 == setup
 active.exchange = Grid2Exchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -333,7 +332,6 @@ contest.class = TContestARRLDigi
 == setup
 active.exchange = Grid2Exchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -660,7 +658,6 @@ contest.class = TContestARRLDigi
 == setup
 active.exchange = Grid2Exchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

@@ -76,7 +76,6 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetFlags: TContestFlags; override;
@@ -246,11 +245,6 @@ end;
 function TContestIARU.GetDomesticFileName: string;
 begin
    Result := 'iaruhq';
-end;
-
-function TContestIARU.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := WYSIWYGDomestic;
 end;
 
 function TContestIARU.GetInitialExchangeKind: InitialExchangeType;

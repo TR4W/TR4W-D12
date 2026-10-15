@@ -72,7 +72,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -177,11 +176,6 @@ end;
 function TContestOceaniaDXCW.GetFriendlyName: string;
 begin
    Result := 'Oceania DX Contest, CW';
-end;
-
-function TContestOceaniaDXCW.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestOceaniaDXCW.GetInitialExchangeKind: InitialExchangeType;

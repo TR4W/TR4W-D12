@@ -92,7 +92,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -161,11 +160,6 @@ end;
 function TContestMinnesotaQP.GetFriendlyName: string;
 begin
    Result := 'Minnesota QSO Party';
-end;
-
-function TContestMinnesotaQP.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestMinnesotaQP.GetInitialExchangeKind: InitialExchangeType;

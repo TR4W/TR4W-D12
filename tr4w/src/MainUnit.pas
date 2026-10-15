@@ -4015,7 +4015,7 @@ begin
      end;
 
   if DomesticCountryCall(CallWindowString) then
-    if ContestSession.DoingDomesticMults then
+    if DoingDomesticMults then
        begin
        TempString := ExchangeWindowString;
        while TempString <> '' do
@@ -8385,7 +8385,7 @@ begin
   if ColumnsArray[logColQTH].Enable then
      begin
      elviCol := ColumnsArray[logColQTH].pos; //Ord(logColQTH);
-     if ContestSession.DoingDomesticMults then
+     if DoingDomesticMults then
         begin
         if Settings.Contest.LiteralDomesticQth then
            begin
@@ -10080,6 +10080,8 @@ var
   fields  : TADIFFieldList;
   temps   : TADIFRecordTemps;
   session : TADIFImportSession;
+  (* The open contest, asked once per record -- see below. *)
+  importContest : TContestBase;
 begin
   logger.debug('[ParseADIFRecord] Parsing %s', [sADIF]);
   Result := ParseADIFFieldsList(sADIF, fields);
@@ -10092,12 +10094,14 @@ begin
     record is the one it NAMES, and never reads a global itself. *)
   session.Operator           := CurrentOperator;
   session.Exchange           := ContestSession.Exchange;
-  (* The open contest's grid-square answer (M11 S6 part 1b) -- the base
-    ApplyADIFImport's one domestic-kind test, `= GridSquares`; this handed
-    it the session's whole domestic kind. One ActiveContest per record:
-    the import holds no contest object. *)
-  session.CountsGridSquares  := ContestHasGridSquareMultiplier(ActiveContest(Contest));
-  session.DoingDomesticMults := ContestSession.DoingDomesticMults;
+  (* The open contest's grid-square and domestic-multiplier answers (M11 S6
+    part 1b and part 2) -- the base ApplyADIFImport's domestic tests; this
+    handed it the session's domestic kind and its "not none". ONE
+    ActiveContest per record, for both: the import holds no contest
+    object. *)
+  importContest := ActiveContest(Contest);
+  session.CountsGridSquares  := ContestHasGridSquareMultiplier(importContest);
+  session.DoingDomesticMults := ContestHasDomesticMultiplier(importContest);
 
   (* EVERY CONTEST INTERPRETS ITS OWN RECORD -- the one named by CONTEST_ID,
     through its class. ApplyClasslessADIFImport stood between these two for

@@ -76,7 +76,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -148,11 +147,6 @@ end;
 function TContestSprintSSB.GetFriendlyName: string;
 begin
    Result := 'North American Sprint, SSB';
-end;
-
-function TContestSprintSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestSprintSSB.GetInitialExchangeKind: InitialExchangeType;

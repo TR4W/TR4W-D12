@@ -67,7 +67,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -165,11 +164,6 @@ end;
 function TContestCQVHF.GetFriendlyName: string;
 begin
    Result := 'CQ Worldwide VHF SSB/CW Contest';
-end;
-
-function TContestCQVHF.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := GridSquares;
 end;
 
 function TContestCQVHF.GetInitialExchangeKind: InitialExchangeType;

@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -115,6 +114,10 @@ type
       (* THE NEED-MULTIPLIER HINT -- see
          TContestBase.DomesticMultiplierHint (M11 S6). *)
       function DomesticMultiplierHint(const aText: Str14): string; override;
+   public
+      (* DOES IT HAVE A DOMESTIC MULTIPLIER AT THIS STATION? -- see
+         TContestBase.HasDomesticMultiplier (M11 S6 part 2). *)
+      function HasDomesticMultiplier: boolean; override;
    end;
 
 implementation
@@ -207,11 +210,6 @@ begin
    Result := 'Worked All Germany Contest';
 end;
 
-function TContestWAG.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
-end;
-
 function TContestWAG.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
@@ -258,10 +256,9 @@ begin
    (* A German station counts countries, everyone else counts DOKs. For the
       WAG, German stations count Germany as a country multiplier by hand after
       the contest. *)
-   if aStation.MyCountry <> 'DL' then
-      begin
-      aSession.DomesticMult := DOKCodes;
-      end;
+   (* The DOKs an entrant outside Germany counts are the class's own rule
+      (DomesticMultiplierFromQTH, HasDomesticMultiplier); the statement here
+      went with the domestic kind, M11 S6 part 2. *)
    aSession.LiteralDomesticQTH := True;
    aSession.AddDomesticCountry('DL');
 end;
@@ -394,6 +391,17 @@ begin
       begin
       Result := inherited DomesticMultiplierHint(aText);
       end;
+end;
+
+
+(* A DOK IS THE DOMESTIC MULTIPLIER FOR AN ENTRANT OUTSIDE GERMANY; a German
+   entrant counts none -- M11 S6 part 2, 2026-10-14. The station test its
+   DescribeSession stated DOKCodes under, which DomesticMultiplierFromQTH and
+   the hint ask too. Its own answer, because a DOK has no shape flag for the
+   base to compose. *)
+function TContestWAG.HasDomesticMultiplier: boolean;
+begin
+   Result := Station.MyCountry <> 'DL';
 end;
 
 initialization

@@ -69,7 +69,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -180,11 +179,6 @@ end;
 function TContestCQ160SSB.GetFriendlyName: string;
 begin
    Result := 'CQ 160-Meter Contest, SSB';
-end;
-
-function TContestCQ160SSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestCQ160SSB.GetInitialExchangeKind: InitialExchangeType;

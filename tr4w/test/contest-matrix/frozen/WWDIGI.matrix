@@ -6,7 +6,6 @@ contest.class = TContestWWDigi
 == setup
 active.exchange = Grid2Exchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = GridFields
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -350,7 +349,6 @@ contest.class = TContestWWDigi
 == setup
 active.exchange = Grid2Exchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = GridFields
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -694,7 +692,6 @@ contest.class = TContestWWDigi
 == setup
 active.exchange = Grid2Exchange
 active.initialexchange = GridInitialExchange
-active.domesticmult = GridFields
 doing.domestic/dx/prefix/zone = TRUE FALSE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

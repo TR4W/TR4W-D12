@@ -61,10 +61,10 @@ uses
    (* ContestIdentity(Contest).TotalsDisplay -- what the contest shows
      differently (M9a). *)
    uContestBase,
-   uContestRegistry,
-   (* ContestSession.Doing*Mults -- which multiplier kinds the session counts
-     (M11 S2; were LOGDUPE globals). *)
-   uContestSession;
+   uContestRegistry;
+   (* uContestSession STOOD HERE for ContestSession.Doing*Mults (M11 S2);
+     all four are the contest's answers since M11 S6 part 2
+     (LOGEDIT.Doing*Mults). *)
 
 var
    // This unit's own reference to the program's log category, rather than
@@ -190,7 +190,7 @@ begin
 
   if Settings.Mult.ByMode then TempMode := ActiveMode else TempMode := Both;
 
-  if (ContestSession.DoingDomesticMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
+  if (DoingDomesticMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
      {
     if Settings.Mult.ByMode then
@@ -308,7 +308,7 @@ begin
      WriteLeftColumnText(TC_QSOS);
      end;
   skip:
-  if ContestSession.DoingDomesticMults then
+  if DoingDomesticMults then
      begin
      if Settings.Mult.ByMode then
         begin

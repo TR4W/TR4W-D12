@@ -81,7 +81,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -230,11 +229,6 @@ begin
    Result := 'JIDX Phone Contest';
 end;
 
-function TContestJIDXSSB.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
-end;
-
 function TContestJIDXSSB.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
@@ -269,7 +263,6 @@ begin
       end
    else
       begin
-      aSession.DomesticMult := DomesticFile;
       aSession.Exchange := RSTPrefectureExchange;
       aSession.DomesticFile := 'JIDX';
       end;

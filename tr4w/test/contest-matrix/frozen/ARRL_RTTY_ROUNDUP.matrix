@@ -6,7 +6,6 @@ contest.class = TContestARRLRTTYRoundup
 == setup
 active.exchange = RSTDomesticQTHOrQSONumberExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = CQZoneMode
@@ -363,7 +362,6 @@ contest.class = TContestARRLRTTYRoundup
 == setup
 active.exchange = RSTDomesticQTHOrQSONumberExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = CQZoneMode
@@ -720,7 +718,6 @@ contest.class = TContestARRLRTTYRoundup
 == setup
 active.exchange = RSTDomesticQTHOrQSONumberExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = ARRLCountryMode
 cty.zonemode = CQZoneMode

@@ -7,10 +7,11 @@ wait (section 4 S2); S3 is DONE -- part 1 (the move) on `42a999c1`, part 2
 (the deletion) on `cbcba524`, both 2026-10-14; S4 is DONE -- part 1 (the
 move) on `3c8ce116`, part 2 (the deletion) on `6b874f1a`, both 2026-10-14;
 S5 is DONE -- part 1 (the move) on `f0c54f4c`, part 2 (the deletion)
-on `a8186905`, both 2026-10-14; S6 part 1a (the move, every shape but the
-domestic file) is DONE on `ef8241fa` and part 1b (the domestic file) on
-`25d2bf25`, uncommitted at its hand-back, both 2026-10-14; S1, S6 part 2,
-and S7 on are not built.** See section 4 S0 for
+on `a8186905`, both 2026-10-14; S6 is DONE -- part 1a (the move, every
+shape but the domestic file) on `ef8241fa`, part 1b (the domestic file) on
+`69a2740a`, part 2 (the deletion) on `a37c3100`, uncommitted at its
+hand-back, all 2026-10-14 -- so ALL FOUR MULTIPLIER KINDS ARE GONE; S1
+and S7 on are not built (see "WHAT S7, S8 AND S9 INHERIT" after S6).** See section 4 S0 for
 what each did and the corrections it made to the figures below. The plan was
 measured READ-ONLY at HEAD `f006acb2` (branch `contestFactory`, 2026-10-14,
 "M10 COMPLETE"). Re-measure before you act on a number. Every count below
@@ -1714,6 +1715,155 @@ behaviour (S1-S2), then the best-pinned kinds, then the worst-pinned.
     read a parameter, which the scan does not count); records SHARED 38 ->
     **37**, PROXY 43, SHAPE 43, UNUSED 10.
 
+- **PART 2 (THE DELETION) DONE 2026-10-14, on `a37c3100` (uncommitted at
+  hand-back).** `DomesticMultType` is gone, and with it the last multiplier
+  kind.
+  - **Deleted.** The enum (VC; 9 members -- `NumericID` ran for no
+    contest). The trait `DomesticMultiplierType` / `GetDomesticMultiplierType`
+    on `TContestBase` and its 178 overrides (ARRL Digi's carried a finding --
+    its row reads `NoDomesticMults {GridFields}` -- kept as a comment where
+    the override stood). `TSessionDefaults.DomesticMult` / `svDomesticMult`.
+    `ContestSession`'s field, `DomesticMult`, `DoingDomesticMults` and
+    `WriteDomesticMult` (two kinds remain in the session: `Exchange`,
+    `InitialExchange`). FCONTEST's two writes. The 13 `DescribeSession`
+    statements (ARRL DX, the ALRS cup, the DARC 10 m, JIDX CW and SSB, OK
+    DX, UBA CW and SSB x2 each, the Ukrainian DX, WAG, YU DX). The matrix's
+    `active.domesticmult` line. Parts 1a and 1b's cross-checks and frozen
+    rules (`LegacyDomesticKeyOfKind`, `LegacyHintOfKind`,
+    `LegacyFlagOfKind`, the four `*AgreesWithItsSessionKind` tests); the
+    literal rows, the per-station sets and counts and the invariants stay.
+    `uTestContestSession`'s OK/OM DX domestic-kind test, and its other
+    kind assertions. Code-only occurrences (HEAD -> now, src and tests,
+    logddx excluded): `DomesticMultType` 391, `NoDomesticMults` 289,
+    `GetDomesticMultiplierType` 180, `WYSIWYGDomestic` 45, `GridSquares`
+    28, `GridFields` 24, `DOKCodes` 11, `svDomesticMult` 10, `RDADistrict`
+    9, `IOTADomestic` 7 -> **0** each. `logddx.pas` is untouched (Q91).
+  - **`DoingDomesticMults` IS THE CONTEST'S ANSWER -- F23 CLOSED.**
+    `TContestBase.HasDomesticMultiplier` (nil-safe
+    `ContestHasDomesticMultiplier`) is COMPOSED ONCE, IN THE BASE, from what
+    each contest already states: `UsesDomesticFile` or
+    `HasGridSquareMultiplier` or `HasGridFieldMultiplier` or
+    `DomesticQTHReplacesDXMultiplier` (WYSIWYG) or `DomesticQTHIsNeverAGrid`
+    (RDA). So the 94 file contests and the 22 with a flagged shape state
+    nothing more. The three whose shape has no flag override it: the RSGB
+    IOTA (True), WAG (`Station.MyCountry <> 'DL'`, the test its key and
+    hint ask) and the DARC 10 m (True: DOKs outside Germany, WYSIWYG for a
+    DL entrant). Read live against `Station`, so a mid-session MY CALL
+    change is followed by the gate and the rules alike.
+  - **Its readers.** With the object in hand, `ContestHasDomesticMultiplier`:
+    `LOGDUPE.SetMultFlags` (`contestRules`), `LOGSUBS2.LogContact` (the
+    object 1b fetched for the mobile rewrite), `EditableLog.GetMultArray`
+    (the hint, per spot), POSTUNIT's Cabrillo writer (`stationContest`,
+    once per log), `MainUnit.ParseADIFRecord` (one fetch per record for
+    both `CountsGridSquares` and `DoingDomesticMults`), and
+    `LOGDOM.GetDomQTH`, which now fetches ONCE at its head for the
+    no-domestic exit and the rule. With no object in hand, the new
+    `LOGEDIT.DoingDomesticMults` (one `ActiveContest`, as `DoingZoneMults`):
+    `LogCfg`, `uTotal` x2, `uEditQSO`, `MainUnit.ExchangeWindowChange` and
+    `BuildLogRow`'s QTH column, `LOGSUBS2`'s remaining-mults cycle and
+    `ShowPartialCallMults`, LOGEDIT's station information and initial
+    exchange, the matrix's `doing` line. `LOGEDIT.DoingAnyMults` fetches
+    once for all four answers. `uContestSession` left the uses of
+    `LogCfg`, `uTotal`, `uEditQSO`, `LOGSUBS2` and `LOGDOM`.
+  - **Hot path, honestly.** Per QSO with the object held -- `SetMultFlags`,
+    `LogContact`, the hint, the Cabrillo line, the import record: no new
+    `ActiveContest`. `GetDomQTH`: a domestic contest makes the one fetch it
+    made since part 1, moved up; **a contest with no domestic multiplier now
+    makes one per domestic-QTH lookup where the session field cost
+    nothing** -- its ~50 callers (the parse shapes) hold no object. The
+    rescore reaches `GetDomQTH` only for a slash call under a QSO-party
+    exchange. `BuildLogRow` asks once per row built (the QTH column), the
+    exchange window once per keystroke. Not timed here.
+  - **Evidence it is identical.** A script
+    (`predict_domestic.py`, scratch) read every class's six answers out of
+    its unit, inherited them along `class(TParent)`, applied the base's
+    composition AS ITS SOURCE STATES IT, evaluated each station test from
+    the variant's MY CALL, and predicted the domestic word of
+    `doing.domestic/dx/prefix/zone` for all **580** frozen variants:
+    **0 mismatches** (374 TRUE). With WAG's station test removed: **1**
+    (WAG at DL). With ARRL DX's `UsesDomesticFile` station test removed:
+    **4** (both runnings at us and ve). OK DX's and JIDX's station tests
+    move nothing there -- the matrix runs no OK or JA station; their side
+    is the unit pin's.
+  - **Pins.** `uTestDomesticMultiplier` gains
+    `Test_EveryContestHasItsPinnedDomesticMultiplier` (every ContestType at
+    11 entrants against the literal set; per-station counts 117 us, 117 ve,
+    118 DL -- the frozen matrix's -- 117 host, 119 UA, 119 UA1, 117 JA, 118
+    OK, 117 ON, 118 UR, 118 YU) and
+    `Test_ADomesticMultiplierIsWhereAQTHIsRead` (for every ContestType at
+    every entrant, `HasDomesticMultiplier` is True exactly where the
+    contest uses its file or decides at least one text itself -- so the
+    composition and the three overrides cannot drift from the shape
+    answers). `uTestContestKindPin` lost its domestic column (583 cells;
+    removed, not regenerated): `varying` 5 -> **3** at us/ve/dx (WAG and
+    DARC10M varied only in the domestic kind; counted from the frozen
+    matrix), 5 in the host state unchanged; its switch test is S0d's literal
+    pair through `LOGEDIT.DoingDomesticMults` with `Contest` switched.
+    Unit tests: **181,504 passed, 0 failed** (242,562 at `a37c3100`; the
+    drop is the cross-checks, the removed column and the session writer
+    loop, less the two new tests).
+  - **Matrix: re-freeze, one line per variant.** Every record loses exactly
+    its `active.domesticmult = ...` line -- one per `### variant`, 580 in
+    all -- and nothing else. Checked by running the whole matrix (186
+    records) into scratch with the final build: 186 of 186 equal their
+    frozen record minus those lines, byte for byte. Not frozen here.
+  - **Narrowing 1263, range 3, unchanged** (scratch `-B`). `tr4wserver`
+    builds (VC touched). `Lint-ContestNameTests` 6, unchanged. Inventory
+    (generated, then the tracked doc restored): rows **61**, shapes
+    **6/0/12/43**, contests outside the factory **44** -- unchanged;
+    shape-4 sites 67 -> **66**; records SHARED 37 -> **36**, PROXY 43,
+    SHAPE 43, UNUSED 10; `DescribeSession` kind statements 35 -> **22**.
+    The inventory's `DM` maps (`scan.ACTIVE`, `scan.SESSION`,
+    `model.FIELD_GETTERS`, `kind-reach.ENUMS`) are gone.
+
+### WHAT S7, S8 AND S9 INHERIT (written at S6's close, 2026-10-14)
+
+All four multiplier kinds are gone (S3-S6). What is left of the session's
+kinds is the EXCHANGE: `ExchangeType` (61 members) and
+`InitialExchangeType` (15), each still a trait (`GetExchangeKind` 186
+overrides, `GetInitialExchangeKind` 177) plus `DescribeSession` statements
+(22 left, all exchange or initial exchange), resolved into
+`ContestSession.Exchange` / `.InitialExchange`. Code reads, measured:
+`ContestSession.Exchange` 50 in 10 files; `ContestSession.InitialExchange`
+2 (LOGEDIT, one of them `... or (Contest = IARU)`) plus the matrix. The
+inventory's 66 shape-4 sites (61 comparisons, 5 `case`s) are all exchange
+kinds now.
+
+- **S7 (exchange RULES out of the compare sites)** inherits unchanged in
+  scope: the compare sites that test an `ExchangeType` to decide a RULE
+  (blank exchange, park display, CQ WW RTTY's sent zone and state, FISTS's
+  `CombineScore`, the rover and multi-QTH tests -- 25 and 21, F4 open for
+  NY4I) become stated class answers for today's sets exactly. It no longer
+  shares a site with a multiplier kind: every such test left with S3-S6.
+  `MainUnit`'s rover/county paths are UI-only -- unit pins plus a bench
+  item.
+- **S8 (the initial exchange) still waits on Q50.** It inherits
+  `InitialExchangeType`'s two LOGEDIT reads (`InitialExchangeEntry`'s
+  `case`, and the zone test that names IARU), the Russian-oblast fallback
+  `Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL]` (F3: one of Q50's three
+  spellings is already dead) and `Lint-ContestNameTests`' `logedit`
+  ceiling (4 -> 0, `$TOTAL_FLOOR` lowered with it -- F14). The zone source
+  for an initial exchange is already the class's
+  (`InitialZoneFromCallHistory`, `ZoneMultiplierZones`, S5).
+- **S9, RE-PLANNED BY Q92 (option 2, NY4I 2026-10-14):** NOT one
+  `ExchangeShape` answer that the engine dispatches on, but the four
+  exchange-shape machines -- `LOGSTUFF.ParseExchangeShape` (the parser),
+  `LOGDUPE.SetUpExchangeInformation` (the field list),
+  `uADIFExchange.FormatADIFExchangeOfKind` and
+  `uCabrilloExchange.FormatCabrilloExchangeOfKind` -- become PLAIN NAMED
+  HELPERS, one per shape, and each class's own overrides
+  (`ParseReceivedExchange`, the field list, `FormatADIFSentExchange` /
+  `FormatCabrilloSentExchange` and their received halves) CALL the helper
+  for its format explicitly -- once on a family base where a family shares
+  one. No enum selects a helper (design 1.3). Then `ExchangeType`, the
+  `GetExchangeKind` trait and `ContestSession.Exchange` can go the way the
+  multiplier kinds went (a part 2), with `ActiveExchangeArray` (F13) and
+  `TREE.LooksLikeAGrid`'s per-row read (S9f) re-answered by the class.
+  S10 is moot. Expect it to be the largest stage: 61 shapes x 4 machines,
+  and 186 classes to point at their helpers -- plan it as a move per
+  machine (field list, ADIF, Cabrillo, parser), each pinned by the matrix's
+  export, import and `parse` sections, then the deletion.
+
 ### S7 -- Exchange RULES out of the compare sites (2.1)
 
 - Covered here: blank exchange, park display, CQ WW RTTY's sent zone and
@@ -1791,7 +1941,7 @@ Q91 deletes it. `Lint-ContestNameTests` is left with `MainUnit:8045` and
 | **F20** | `TContestBase.PrefixMultiplierKey` (UBA, SAC, WAEDC, All Asian, OK DX, CQ MM, SAWW, YB DX) versus `ContestSession.DoingPrefixMults` | (S3) The key now asks `Station`, which `ActiveContest` refreshes on every call; whether `SetPrefix` is called at all still asks the session kind, fixed at set-up. They agree unless the entrant's country or continent changes mid-session without a CONTEST change (FoundContest is not re-run for MY CALL): then e.g. a UBA log started outside Belgium and switched to an ON call keeps `DoingPrefixMults` but gets no key. YB DX already read the live `Settings.My.Country` before S3. The end state (part 2, §3) asks the class for both, so this closes then. Not measured on a bench. **CLOSED at S3 part 2 (2026-10-14):** both now read `Station` -- `DoingPrefixMults` is `TContestBase.HasPrefixMultiplier` through `ActiveContest`, and the station-dependent keys ask it. The mid-session change is still not bench-checked |
 | **F21** | `TContestBase.DXMultiplierKey` / `CountryMode` / `ListsRemainingDXCountry` (ARRL DX, ARRL 160, All Asian, JIDX, SAC, Helvetia, Croatian, WAG, UBA, WAE, PACC, RDA, ALRS, YU DX, the host-state parties) versus `ContestSession.DoingDXMults` | (S4 part 1) F20's shape, for the DX kind: the key and the remaining-mults filter ask `Station`, refreshed on every `ActiveContest` call, while whether `GetDXQTH` runs and whether the window lists DX countries at all still ask the session kind fixed at set-up. They agree unless the entrant's country, continent or host state changes mid-session without a CONTEST change. The country list is asked once, at set-up, so it cannot drift. Part 2 makes "does this contest count DX" a class answer, as S3 part 2 did for prefixes. Not measured on a bench. **CLOSED at S4 part 2 (2026-10-14):** all four read `Station` -- `DoingDXMults` is `TContestBase.HasDXMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), and each station-dependent class's key, country list and answer ask one private predicate. The mid-session change is still not bench-checked |
 | **F22** (**FIXED 2026-10-14**: `BestTwoLetters` zeroes `NumberBytes` on entry; 24 matrix records re-frozen, only `iex JA1ABC` moved, now showing its TRMASTER name/grid/zone) | `trdos/logscp.pas` `CallDatabase.BestTwoLetters` (also in D7, `C:\TR4W` logscp.pas:1196) | (S5 part 1, found by the matrix) **A call-history lookup of any call containing `JA` reads an uninitialised local.** The routine skips the `JA` pair with `Continue` and never assigns its `NumberBytes[CharPos]`, then returns the FIRST pair whose size equals the minimum -- so whatever the stack holds in that slot decides whether it picks the real smallest bucket or the `JA` bucket, which TRMASTER never fills (`trmaster_codec.bucket_pairs` excludes `JA`, as TR's own writer does), giving "not found". The residue is in practice the PREVIOUS lookup's `NumberBytes[1]`. Measured in the matrix fixture: DL1ABC's `DL` bucket is 23 bytes and JA1ABC's smallest real bucket (`A1`) is 23 bytes, so after a DL1ABC lookup JA1ABC is not found and the initial exchange falls through to CTY.DAT. In the frozen matrix JA1ABC's TRMASTER name is offered in ONE record (GRIDLOC, whose path leaves other residue), while DL1ABC's is offered in 22. S5 part 1's first build called `ActiveContest` between two lookups (InitialExchangeEntry's ITU test), which overwrote the slot, and JA1ABC was then FOUND in the Croatian, IRTS and WRTC (`trmaster=" 25"` -> `" 45"`, `" 45"` -> `" 25"`); proven by putting the old session test back beside an `ActiveContest` call, which moved the same lines. So the frozen JA1ABC `trmaster` value is the defect's, not a rule, and it holds only while nothing deep runs between lookups. Live effect: SCP partials (`LOGEDIT` :1812) and every TRMASTER field (name, zones, QTH, section, ...) for a JA-containing call depend on the call looked up before it. **Recommendation:** assign `NumberBytes[CharPos] := 0` before the `Continue` -- the routine's own convention ("we get zero if we had an illegal character"), so the `JA` pair is never chosen -- in its own commit with a deliberate matrix re-freeze (the JA1ABC `trmaster`/`logged`/`custom` columns move wherever TRMASTER contributes). After it, `InitialExchangeEntry` may ask `ActiveContest` like the other zone readers. **Held for S5:** that site asks `ContestIdentity` (shallow; its ITU answer is station-independent for every contest, pinned by `Test_TheITUQuestionDependsOnNoStation`), so S5 moves no output. **Done at S5 part 2:** it asks `ActiveContest`; the matrix moved nowhere. Related to Q95 only in that it surfaced on the zone question |
-| **F23** | `TContestALRSUA1DZCup`, `TContestWAG`, `TContestDARC10M` `DomesticMultiplierFromQTH` / `DomesticMultiplierHint` / `DomesticQTHReplacesDXMultiplier` / `DomesticQTHIsNeverAGrid` versus `ContestSession.DoingDomesticMults` | (S6 part 1a) F20's shape, for the domestic kind: the three station-dependent classes' answers ask `Station`, refreshed on every `ActiveContest` call, while whether GetDomQTH asks at all (`DoingDomesticMults`) still asks the session kind fixed at set-up. They agree unless the entrant's country changes mid-session without a CONTEST change (WAG begun at a DL call and switched away keeps no domestic multiplier; begun elsewhere and switched to DL, it looks a DOK up in a domestic file it has none of, where the kind kept reading DOKs). Part 2 makes "does this contest count a domestic multiplier" a class answer, as S3-S5 part 2 did. Not measured on a bench |
+| **F23** | `TContestALRSUA1DZCup`, `TContestWAG`, `TContestDARC10M` `DomesticMultiplierFromQTH` / `DomesticMultiplierHint` / `DomesticQTHReplacesDXMultiplier` / `DomesticQTHIsNeverAGrid` versus `ContestSession.DoingDomesticMults` | (S6 part 1a) F20's shape, for the domestic kind: the three station-dependent classes' answers ask `Station`, refreshed on every `ActiveContest` call, while whether GetDomQTH asks at all (`DoingDomesticMults`) still asks the session kind fixed at set-up. They agree unless the entrant's country changes mid-session without a CONTEST change (WAG begun at a DL call and switched away keeps no domestic multiplier; begun elsewhere and switched to DL, it looks a DOK up in a domestic file it has none of, where the kind kept reading DOKs). Part 2 makes "does this contest count a domestic multiplier" a class answer, as S3-S5 part 2 did. Not measured on a bench **CLOSED at S6 part 2 (2026-10-14):** `DoingDomesticMults` is `TContestBase.HasDomesticMultiplier` (through `ActiveContest`, or on the object a per-QSO caller holds), composed from the answers these classes already state and overridden by WAG and the DARC 10 m with the same station test, so the gate and the rules read the same `Station`. The mid-session change is still not bench-checked |
 | **F18** | `MainUnit:7976`, `:8031` | (S0d) `LoadinLog` adds the logged initial-exchange history only while `IntitialExLoaded` is False, and latches it True at its end. A second `LoadinLog` in one session -- the matrix's totals reload, and any in-session reload -- adds no history. Whether a live reload path (an import, a rescore) loses history this way was not measured |
 
 Open questions to add to the design (next free number Q92):

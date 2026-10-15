@@ -45,7 +45,7 @@ the deleted `ContestsArray` row is a `TContestBase` getter the class states:
 | `ADIFName` / `CABName` | `GetADIFContestId`, `GetCabrilloName` |
 | `Email` / `DF` | `GetSubmissionEmail`, `GetDomesticFileName` |
 | `WA7BNM` / `QRZRUID` | `GetWA7BNMId`, `GetQRZRUId` |
-| `PxM` `ZnM` `XM` `DM` | `HasPrefixMultiplier` and `PrefixMultiplierKey` (the prefix KIND and `GetPrefixMultiplierType` were deleted at M11 S3), `HasZoneMultiplier` and `ZoneMultiplierCount` (plus `ZoneMultiplierZones` for CQ or ITU zones and `NumbersZonesFromZero`; the zone KIND and `GetZoneMultiplierType` were deleted at M11 S5), `HasDXMultiplier` and `DXMultiplierKey` (plus `CountryMode` for DXCC only; the DX KIND and `GetDXMultiplierType` were deleted at M11 S4), `GetDomesticMultiplierType` |
+| `PxM` `ZnM` `XM` `DM` | `HasPrefixMultiplier` and `PrefixMultiplierKey` (the prefix KIND and `GetPrefixMultiplierType` were deleted at M11 S3), `HasZoneMultiplier` and `ZoneMultiplierCount` (plus `ZoneMultiplierZones` for CQ or ITU zones and `NumbersZonesFromZero`; the zone KIND and `GetZoneMultiplierType` were deleted at M11 S5), `HasDXMultiplier` and `DXMultiplierKey` (plus `CountryMode` for DXCC only; the DX KIND and `GetDXMultiplierType` were deleted at M11 S4), `UsesDomesticFile` for a `.DOM` lookup, or the shape answers (`DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, `HasGridSquareMultiplier`, `HasGridFieldMultiplier`, `DomesticQTHReplacesDXMultiplier`, `DomesticQTHIsNeverAGrid`); `HasDomesticMultiplier` is composed from them in the base (the domestic KIND and `GetDomesticMultiplierType` were deleted at M11 S6) |
 | `AIE` / `AE` | `GetInitialExchangeKind`, `GetExchangeKind` |
 | `P` (the `QSOParties` index) | `GetIsUSQSOParty`, `GetHostState`, `GetInStateDomesticFileName`, `GetQSOPartyArea` |
 | `CountyLineAllowed` | the import's county line is `TContestStateQSOPartyBase.CountyLineAllowed` (S7); the rover split on ADIF export is `GetSplitsRoverCallOnExport` (S8, open question Q90) |
@@ -93,14 +93,26 @@ enum at M10 S4. Score your contest in its class's `CalculateQSOPoints`
 (`ADDING_A_CONTEST.md`); a computation genuinely shared by several contests is
 a helper the class calls (`FixedModePoints`, `LOGGRID.GetDistanceBetweenGrids`).
 
-### Domestic multiplier types (`DomesticMultStringArray`, ~`VC.pas:2989`)
+### Domestic multipliers -- the class states them (M11 S6, 2026-10-14)
 
-- `GridSquares` — 4-char Maidenhead (e.g. FN20)
-- `GridFields` — 2-char Maidenhead (e.g. FN)
-- `DomesticFile` — a `.DOM` file lookup (US states, JA prefectures, etc.)
-- `WYSIWYG` — whatever the operator typed
-- `IOTA` / `DOK` / `RDA` — specialty databases
-- `NoDomesticMults` — none
+There is no domestic-multiplier enum any more (`DomesticMultType` was deleted
+at M11 S6 part 2). The class says what a received domestic QTH means:
+
+- **a `.DOM` file lookup** (US states, JA prefectures, a party's counties ...)
+  -- override `UsesDomesticFile` (or inherit it: every state QSO party does
+  from `TContestStateQSOPartyBase`);
+- **a grid square / grid field** -- override `DomesticMultiplierFromQTH` and
+  `DomesticMultiplierHint` with `uDomesticKey.GridSquareKey` /
+  `GridFieldKey`, and `HasGridSquareMultiplier` / `HasGridFieldMultiplier`;
+- **the text as typed (WYSIWYG)** -- `DomesticMultiplierFromQTH` and
+  `DomesticQTHReplacesDXMultiplier`;
+- **an RDA district / a DOK / an IOTA reference** -- copy RDA's, WAG's or the
+  RSGB IOTA's overrides;
+- **none** -- state nothing.
+
+`HasDomesticMultiplier` is composed from those answers in the base; a shape
+with no flag of its own (DOK, IOTA) overrides it. Pin the answers in
+`uTestDomesticMultiplier`.
 
 ### Initial exchange auto-prefill (`InitialExchangeType`, `VC.pas:561`)
 
@@ -243,7 +255,7 @@ Never invoke `DCC32.EXE` directly. If the link step fails with `Could not create
 Working through a new contest, in dependency order:
 
 - [ ] Identify the contest's exchange shape — find a matching existing `ExchangeType` (`VC.pas:3144+`)
-- [ ] Identify the multiplier type — find a matching `DomesticMultType` / `XMType` / etc.
+- [ ] Identify the multipliers -- each is a class answer now (`Has*Multiplier` and its key; see the table above), not an enum
 - [ ] Write the QSO-points rule in the contest's class (`CalculateQSOPoints`, `ADDING_A_CONTEST.md`) -- there is no point-method enum since M10 S4
   - [ ] If distance-based, sanity-check against rules' published fixture
 - [ ] Add the contest itself to `VC.pas`:

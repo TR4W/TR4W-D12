@@ -71,7 +71,6 @@ type
       procedure Test_M7bBatch2CQExchangeDefaults;
       procedure Test_TheRunningSessionIsOneObjectWithOneWriter;
       procedure Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
-      procedure Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
       procedure Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
    end;
 
@@ -358,7 +357,6 @@ begin
       session := Describe(c, dx);
       try
          CheckTrue(session.Exchange = RSTDomesticQTHExchange, ContestTypeSA[c] + ' DX: a state');
-         CheckTrue(session.DomesticMult = DomesticFile, ContestTypeSA[c] + ' DX: domestic mults');
          CheckEquals('S48P14DC', session.DomesticFile, ContestTypeSA[c] + ' DX: S48P14DC');
       finally
          session.Free;
@@ -619,13 +617,15 @@ begin
 
    session := Describe(YUDX, yu);
    try
-      CheckTrue(session.DomesticMult = NoDomesticMults, 'YU DX, YU: no domestic mults');
+      (* Whether a YU entrant counts a domestic multiplier is the class's
+         answer since M11 S6 part 2 (UsesDomesticFile), pinned in
+         uTestDomesticMultiplier; set-up states only the domestic country. *)
+      CheckEquals(1, session.DomesticCountryCount, 'YU DX, YU: YU is domestic');
    finally
       session.Free;
       end;
    session := Describe(YUDX, dx);
    try
-      CheckTrue(not session.IsStated(svDomesticMult), 'YU DX, DL: domestic mults as the trait');
       CheckEquals(1, session.DomesticCountryCount, 'YU DX: YU is domestic');
    finally
       session.Free;
@@ -761,9 +761,9 @@ begin
    try
       CheckEquals(' TOM KS', session.CQExchangeCW, 'SST: CQ exchange');
       CheckEquals('TOM KS', session.SPExchangeCW, 'SST: S&P exchange');
-      (* The trait states it; set-up restated it until M11 S2 (plan 1.3). *)
-      CheckFalse(session.IsStated(svDomesticMult), 'SST: set-up restates no domestic mult');
-      CheckTrue(ContestIdentity(SST).DomesticMultiplierType = DomesticFile,
+      (* Set-up restated the domestic kind until M11 S2 (plan 1.3); the kind
+         is gone (M11 S6 part 2) and the class answers it. *)
+      CheckTrue(ContestIdentity(SST).UsesDomesticFile,
                 'SST: domestic mults from the file');
       CheckEquals(2, session.DomesticCountryCount, 'SST: K and VE');
       CheckEquals('Slow Speed Test', session.ContestName, 'SST: name');
@@ -825,30 +825,27 @@ end;
 
   A reader may hold ContestSession across a set-up: the object must be the
   same one afterwards, or that reference dangles. A fresh object holds each
-  kind's zero -- NoInitialExchange,
-  NoDomesticMults, UnknownExchange -- the values the globals it replaces
+  kind's zero -- NoInitialExchange and UnknownExchange -- the values the globals it replaces
   started from (ActiveExchange's `= NoExchangeReceived` initializer was
   commented out, so its zero was UnknownExchange). Every member of every kind
   is written and read back through the writer FCONTEST uses, and writing one
-  kind leaves the other two as they were pinned (each is its own field, M10
+  kind leaves the other as it was pinned (each is its own field, M10
   S9b-S9f; the prefix kind, S9b's, was deleted at M11 S3, the DX kind,
-  S9d's, at M11 S4, and the zone kind, S9c's, at M11 S5). The program's own
+  S9d's, at M11 S4, the zone kind, S9c's, at M11 S5, and the domestic kind,
+  S9e's, at M11 S6). The program's own
   values are restored,
   because this is the process-wide session and other suites run after this
   one. *)
 procedure TContestSessionTests.Test_TheRunningSessionIsOneObjectWithOneWriter;
 const
    KIND_INITIAL = 0;
-   KIND_DOMESTIC = 4;
    KIND_EXCHANGE = 5;
 var
    before: TContestSession;
    fresh: TContestSession;
    savedInitial: InitialExchangeType;
-   savedDomestic: DomesticMultType;
    savedExchange: ExchangeType;
    initialKind: InitialExchangeType;
-   domesticKind: DomesticMultType;
    exchangeKind: ExchangeType;
 
    (* Every kind at a value that is not its zero, so a write that leaked
@@ -856,7 +853,6 @@ var
    procedure PinAll;
    begin
       ContestSession.WriteInitialExchange(ZoneInitialExchange);
-      ContestSession.WriteDomesticMult(DOKCodes);
       ContestSession.WriteExchange(RSTPowerExchange);
    end;
 
@@ -867,11 +863,6 @@ var
          begin
          CheckEquals(Ord(ZoneInitialExchange), Ord(ContestSession.InitialExchange),
                      aWhat + ' leaves the initial exchange');
-         end;
-      if aWritten <> KIND_DOMESTIC then
-         begin
-         CheckEquals(Ord(DOKCodes), Ord(ContestSession.DomesticMult),
-                     aWhat + ' leaves the domestic kind');
          end;
       if aWritten <> KIND_EXCHANGE then
          begin
@@ -891,8 +882,6 @@ begin
    try
       CheckEquals(Ord(NoInitialExchange), Ord(fresh.InitialExchange),
                   'a fresh session starts from NoInitialExchange');
-      CheckEquals(Ord(NoDomesticMults), Ord(fresh.DomesticMult),
-                  'a fresh session starts from NoDomesticMults');
       CheckEquals(Ord(UnknownExchange), Ord(fresh.Exchange),
                   'a fresh session starts from UnknownExchange');
    finally
@@ -900,7 +889,6 @@ begin
       end;
 
    savedInitial := ContestSession.InitialExchange;
-   savedDomestic := ContestSession.DomesticMult;
    savedExchange := ContestSession.Exchange;
    try
       PinAll;
@@ -915,17 +903,6 @@ begin
          end;
 
       PinAll;
-      for domesticKind := Low(DomesticMultType) to High(DomesticMultType) do
-         begin
-         ContestSession.WriteDomesticMult(domesticKind);
-         CheckEquals(Ord(domesticKind), Ord(ContestSession.DomesticMult),
-                     'the reader sees what the writer wrote, domestic kind '
-                     + IntToStr(Ord(domesticKind)));
-         CheckOthersPinned(KIND_DOMESTIC,
-                           'domestic kind ' + IntToStr(Ord(domesticKind)));
-         end;
-
-      PinAll;
       for exchangeKind := Low(ExchangeType) to High(ExchangeType) do
          begin
          ContestSession.WriteExchange(exchangeKind);
@@ -937,7 +914,6 @@ begin
          end;
    finally
       ContestSession.WriteInitialExchange(savedInitial);
-      ContestSession.WriteDomesticMult(savedDomestic);
       ContestSession.WriteExchange(savedExchange);
       end;
 end;
@@ -1007,67 +983,10 @@ begin
       end;
 end;
 
-(* THE DOMESTIC KIND IS THE SESSION'S (M10 S9e).
-
-  OK/OM DX's class states the trait NoDomesticMults; its DescribeSession
-  states DomesticFile (the OKOM districts) for a station outside OK/OM, and
-  nothing for an OK or OM station -- the frozen matrix's active.domesticmult
-  line says DomesticFile in all three OKDX variants, none of them OK/OM. So
-  a W station runs a domestic kind the trait does not state, and an OK
-  station runs the trait. *)
-procedure TContestSessionTests.Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
-var
-   ok: TStationContext;
-   stated: TSessionDefaults;
-   trait: DomesticMultType;
-   saved: DomesticMultType;
-begin
-   BeginTest('Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState');
-   trait := ContestIdentity(OKDX).DomesticMultiplierType;
-   CheckEquals(Ord(NoDomesticMults), Ord(trait), 'OKDX: the trait');
-
-   ok := KansasStation;
-   ok.MyCall := 'OK1AAA';
-   ok.MyCountry := 'OK';
-   ok.MyContinent := Europe;
-
-   saved := ContestSession.DomesticMult;
-   try
-      stated := Describe(OKDX, KansasStation);
-      try
-         CheckTrue(stated.IsStated(svDomesticMult),
-                   'OKDX states a domestic multiplier for a W station');
-         ContestSession.WriteDomesticMult(trait);
-         if stated.IsStated(svDomesticMult) then
-            begin
-            ContestSession.WriteDomesticMult(stated.DomesticMult);
-            end;
-         CheckEquals(Ord(DomesticFile), Ord(ContestSession.DomesticMult),
-                     'OKDX W: the session runs what the contest stated');
-         CheckTrue(ContestSession.DomesticMult <> trait,
-                   'OKDX W: the session differs from the identity''s trait');
-      finally
-         stated.Free;
-         end;
-
-      stated := Describe(OKDX, ok);
-      try
-         CheckFalse(stated.IsStated(svDomesticMult),
-                    'OKDX states no domestic multiplier for an OK station');
-         ContestSession.WriteDomesticMult(trait);
-         if stated.IsStated(svDomesticMult) then
-            begin
-            ContestSession.WriteDomesticMult(stated.DomesticMult);
-            end;
-         CheckEquals(Ord(trait), Ord(ContestSession.DomesticMult),
-                     'OKDX OK: the session runs the trait');
-      finally
-         stated.Free;
-         end;
-   finally
-      ContestSession.WriteDomesticMult(saved);
-      end;
-end;
+(* THE DOMESTIC KIND WAS THE SESSION'S (M10 S9e) -- and its test,
+  Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState, went with the kind
+  at M11 S6 part 2. OK/OM DX's answer at an OK station and elsewhere is
+  uTestDomesticMultiplier's (UsesDomesticFile, HasDomesticMultiplier). *)
 
 (* THE EXCHANGE KIND IS THE SESSION'S (M10 S9f).
 
@@ -1149,7 +1068,6 @@ begin
    Test_M7bBatch2CQExchangeDefaults;
    Test_TheRunningSessionIsOneObjectWithOneWriter;
    Test_JIDXRunsAnInitialExchangeItsTraitDoesNotState;
-   Test_OKDXRunsADomesticMultiplierItsTraitDoesNotState;
    Test_ARRLDXRunsAnExchangeItsTraitDoesNotState;
 end;
 

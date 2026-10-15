@@ -43,17 +43,20 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   HOW THE LITERALS WERE MADE. Laid out by a scratch transcription of the
   two old routines, then RUN GREEN AGAINST THE OLD CODE before anything
-  moved: the program's own arms, frozen below (Legacy...OfKind), selected by
-  the session kind uTestContestKindPin.Kinds resolves -- the trait, and
-  DescribeSession over it -- exactly what the engine selected. Then the move, and
-  the same tables green against the classes.
+  moved: the program's own arms, frozen here then (Legacy...OfKind),
+  selected by the session kind uTestContestKindPin.Kinds resolved -- the
+  trait, and DescribeSession over it -- exactly what the engine selected.
+  Then the move, and the same tables green against the classes. Part 1b
+  (the domestic file) was pinned the same way.
 
-  AND A CROSS-CHECK FOR EVERY CONTEST, NOT ONLY THE 25. The *AgreesWith*
-  tests ask every ContestType at every roster station, and compare the
-  class's answer with the frozen legacy rule under the kind the session
-  resolves to. It holds only while the session still carries DomesticMult;
-  S6 part 2 deletes that kind, and these cross-checks and the frozen rules
-  go with it, leaving the literals.
+  THE CROSS-CHECKS ARE GONE, WITH THE KIND -- M11 S6 part 2, 2026-10-14.
+  The *AgreesWith* tests compared every ContestType at every roster station
+  with the frozen legacy rules under the session's kind; DomesticMultType
+  is deleted, and they and the frozen rules went with it. The literals stay,
+  and so do the invariants that tie the answers to each other: a contest
+  that uses its file states no shape, and HasDomesticMultiplier -- whether
+  the engine reads a domestic QTH at all -- is True exactly where one is
+  read.
 
   AN ANSWER IS FOUR THINGS, written on one line so a failure reads whole:
   whether the domestic FILE is consulted next ('file') or the contest has
@@ -65,8 +68,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE DOK HINT FOR A TEXT WITH NO LETTER is pinned on its own, by
   Test_ADOKTextWithNoLetterHintsNothing: DomStringParse returned a local it
   never assigned (plan F6), so the old value was undefined and the
-  cross-check below still skips it; since the F6 fix (2026-10-14) both DOK
-  classes answer an empty hint.
+  cross-check skipped it; since the F6 fix (2026-10-14) both DOK classes
+  answer an empty hint.
 
   NEVER REGENERATE IT TO CLEAR A FAILURE -- the uTestContestKindPin rule. A
   failure means a contest's domestic rule changed. *)
@@ -85,15 +88,13 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_EveryContestGivesItsPinnedDomesticKey;
-      procedure Test_EveryContestDomesticKeyAgreesWithItsSessionKind;
       procedure Test_EveryContestGivesItsPinnedHint;
-      procedure Test_EveryContestHintAgreesWithItsSessionKind;
       procedure Test_EveryContestStatesItsPinnedDomesticAnswers;
-      procedure Test_EveryContestDomesticAnswerAgreesWithItsSessionKind;
       procedure Test_ADOKTextWithNoLetterHintsNothing;
       procedure Test_EveryContestStatesItsPinnedDomesticFileAnswer;
-      procedure Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind;
       procedure Test_ADomesticFileContestStatesNoShape;
+      procedure Test_EveryContestHasItsPinnedDomesticMultiplier;
+      procedure Test_ADomesticMultiplierIsWhereAQTHIsRead;
    end;
 
 implementation
@@ -101,7 +102,6 @@ implementation
 uses
    SysUtils,
    VC,
-   utils_text,
    uContestBase,
    uContestRegistry,
    uTestContestKindPin;
@@ -518,290 +518,6 @@ begin
    Result := Result + ' [' + string(aMultiplier) + '] [' + string(aQTH) + ']';
 end;
 
-(* THE OLD KIND ARMS, FROZEN -- LOGDOM.GetDomQTH as it stood at 45ca8855,
-   verbatim from below its no-domestic exit to the domestic-file lookup,
-   which is the engine's and stays there. An arm that Exits answers
-   "decided" (False); one that falls through answers "the file follows"
-   (True) -- the IOTA arm alone, when its reference is valid or its
-   continent unknown. The caller zeroes the outputs, as GetDomQTH did. It
-   goes when S6 part 2 deletes DomesticMultType. *)
-function LegacyDomesticKeyOfKind(aKind: DomesticMultType;
-                                 InputString: Str20;
-                                 var Multiplier: Str10;
-                                 var QTH: Str10;
-                                 var aFound: boolean): boolean;
-var
-   Index: integer;
-   ContinentString, NumberString: Str20;
-begin
-   Result := False;
-
-   if aKind = RDADistrict then
-      begin
-      if (length(InputString) = 4)        and
-         (InputString[1] in ['A'..'Z']) and
-         (InputString[2] in ['A'..'Z']) and
-         (InputString[3] in ['0'..'9']) and
-         (InputString[4] in ['0'..'9'])  then
-         begin
-         Multiplier := InputString;
-         QTH := InputString;
-         aFound := True;
-         end;
-      Exit;
-      end;
-
-   if aKind = WYSIWYGDomestic then
-      begin
-      Multiplier := InputString;
-      QTH := InputString;
-      aFound := True;
-      Exit;
-      end;
-
-   if aKind = DOKCodes then
-      begin
-      for Index := 1 to length(InputString) do
-         begin
-         if InputString[Index] in ['A'..'Z'] then
-            begin
-            Multiplier := Copy(InputString, Index, 1);
-            Break;
-            end;
-         end;
-
-      QTH := InputString;
-      aFound := Multiplier <> '';
-      Exit;
-      end;
-
-   if aKind = IOTADomestic then
-      begin
-      if (length(InputString) < 3) or (length(InputString) > 5) then
-         begin
-         Exit;
-         end;
-
-      ContinentString := ShortString(UpperCase(Copy(InputString, 1, 2)));
-      if GetContinentFromString(ContinentString) <> UnknownContinent then
-         begin
-         NumberString := Copy(InputString, 3, length(InputString) - 2);
-
-         if not StringIsAllNumbers(NumberString) then
-            begin
-            Exit;
-            end;
-
-         while length(NumberString) < 3 do
-            begin
-            NumberString := '0' + NumberString;
-            end;
-
-         Multiplier := ContinentString + '-' + NumberString;
-         QTH := Multiplier;
-         aFound := True;
-         end;
-      end;
-
-   if aKind = GridSquares then
-      begin
-      if (length(InputString) <> 4) and (length(InputString) <> 6) then
-         begin
-         Exit;
-         end;
-
-      if (InputString[1] < 'A') or (InputString[1] > 'R') or
-        (InputString[2] < 'A') or (InputString[2] > 'R') or
-        (InputString[3] > '9') or (InputString[3] < '0') or
-        (InputString[4] > '9') or (InputString[4] < '0') then
-         begin
-         Exit;
-         end;
-
-      if length(InputString) = 6 then
-         begin
-         if (InputString[5] < 'A') or (InputString[5] > 'Z') or
-            (InputString[6] < 'A') or (InputString[6] > 'Z') then
-            begin
-            Exit;
-            end;
-         end;
-
-      Multiplier := Copy(InputString, 1, 4);
-      QTH := InputString;
-      aFound := True;
-      Exit;
-      end;
-
-   if aKind = GridFields then
-      begin
-      if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] > 'R') or
-        (InputString[2] < 'A') or (InputString[2] > 'R') or
-        (InputString[3] > '9') or (InputString[3] < '0') or
-        (InputString[4] > '9') or (InputString[4] < '0') then
-         begin
-         Exit;
-         end;
-
-      Multiplier := Copy(InputString, 1, 2);
-      QTH := InputString;
-      aFound := True;
-      Exit;
-      end;
-
-   Result := True;
-end;
-
-const
-   (* What the old DOK arm returned for a text with no letter: an
-      unassigned local -- no value. *)
-   UNDEFINED_HINT = '<undefined>';
-
-(* THE OLD HINT, FROZEN -- LOGSTUFF.DomStringParse as it stood at 45ca8855,
-   verbatim but for two things the run cannot reproduce: the IOTA arm's
-   scratch global (LOGWIND.ContinentString, which nothing read) is a local,
-   and the DOK arm's unassigned local answers UNDEFINED_HINT. The caller
-   upper-cases the text, as DomStringParse did first. *)
-function LegacyHintOfKind(aKind: DomesticMultType; InputString: Str14): string;
-var
-   Index: integer;
-   TempMultiplier, NumberString: Str14;
-   ContinentString: Str20;
-begin
-   result := InputString;
-
-   if aKind = RDADistrict then
-      begin
-      result := '';
-      if (length(InputString) = 4)        and
-         (InputString[1] in ['A'..'Z']) and
-         (InputString[2] in ['A'..'Z']) and
-         (InputString[3] in ['0'..'9']) and
-         (InputString[4] in ['0'..'9'])  then
-         begin
-         result := InputString;
-         end;
-      Exit;
-      end;
-
-   if aKind = DOKCodes then
-      begin
-      result := UNDEFINED_HINT;
-      for Index := 1 to length(InputString) do
-         begin
-         if InputString[Index] in ['A'..'Z'] then
-            begin
-            TempMultiplier := Copy(InputString, Index, 1);
-            result := TempMultiplier;
-            Break;
-            end;
-         end;
-      Exit;
-      end;
-
-   if aKind = IOTADomestic then
-      begin
-      result := '';
-      if (length(InputString) < 3) or (length(InputString) > 5) then
-         begin
-         Exit;
-         end;
-
-      ContinentString := ShortString(UpperCase(Copy(InputString, 1, 2)));
-      if GetContinentFromString(ContinentString) <> UnknownContinent then
-         begin
-         NumberString := Copy(InputString, 3, length(InputString) - 2);
-
-         if not StringIsAllNumbers(NumberString) then
-            begin
-            Exit;
-            end;
-
-         while length(NumberString) < 3 do
-            begin
-            NumberString := '0' + NumberString;
-            end;
-
-         TempMultiplier := ContinentString + '-' + NumberString;
-         result := TempMultiplier;
-         end;
-      end;
-
-   if aKind = GridSquares then
-      begin
-      result := '';
-      if (length(InputString) <> 4) and (length(InputString) <> 6) then
-         begin
-         Exit;
-         end;
-
-      if (InputString[1] < 'A') or (InputString[1] > 'R') or
-        (InputString[2] < 'A') or (InputString[2] > 'R') or
-        (InputString[3] > '9') or (InputString[3] < '0') or
-        (InputString[4] > '9') or (InputString[4] < '0') then
-         begin
-         Exit;
-         end;
-
-      if length(InputString) = 6 then
-         begin
-         if (InputString[5] < 'A') or (InputString[5] > 'Z') or
-            (InputString[6] < 'A') or (InputString[6] > 'Z') then
-            begin
-            Exit;
-            end;
-         end;
-
-      TempMultiplier := Copy(InputString, 1, 4);
-      result := TempMultiplier;
-      Exit;
-      end;
-
-   if aKind = GridFields then
-      begin
-      result := '';
-      if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] > 'R') or
-        (InputString[2] < 'A') or (InputString[2] > 'R') or
-        (InputString[3] > '9') or (InputString[3] < '0') or
-        (InputString[4] > '9') or (InputString[4] < '0') then
-         begin
-         Exit;
-         end;
-
-      TempMultiplier := Copy(InputString, 1, 2);
-      result := TempMultiplier;
-      Exit;
-      end;
-end;
-
-(* THE OLD YES/NO TESTS, FROZEN -- each site's session-kind comparison as
-   it stood at 45ca8855: `= GridSquares` (LOGEDIT.CallIsADupe, LOGSUBS2's
-   partial-call mults and LogContact, LOGSTUFF.DisplayGridSquareStatus),
-   `= GridFields` (uMults.IsDmMult, uWSJTX, the sheet's service),
-   `= WYSIWYGDomestic` (LOGDUPE.GetDXQTH) and `<> RDADistrict` inverted
-   (POSTUNIT's GRIDSQUARE). *)
-function LegacyFlagOfKind(aKind: DomesticMultType; aFlag: TPinFlag): boolean;
-begin
-   case aFlag of
-      pfGridSquare:
-         begin
-         Result := aKind = GridSquares;
-         end;
-      pfGridField:
-         begin
-         Result := aKind = GridFields;
-         end;
-      pfReplacesDX:
-         begin
-         Result := aKind = WYSIWYGDomestic;
-         end;
-   else
-      begin
-      Result := aKind = RDADistrict;
-      end;
-   end;
-end;
-
 (* A contest object holding the station, as ActiveContest hands it; nil for
    the classless DUMMYCONTEST. The caller frees it. *)
 function MakeContest(aContest: ContestType; const aStation: TStationContext): TContestBase;
@@ -887,20 +603,6 @@ begin
    finally
       obj.Free;
       end;
-end;
-
-function LegacyKey(aKind: DomesticMultType; const aText: Str20): string;
-var
-   multiplier: Str10;
-   qth: Str10;
-   found: boolean;
-   follows: boolean;
-begin
-   multiplier := '';
-   qth := '';
-   found := False;
-   follows := LegacyDomesticKeyOfKind(aKind, aText, multiplier, qth, found);
-   Result := KeyAnswer(follows, found, multiplier, qth);
 end;
 
 function Who(aContest: ContestType; aStation: TPinStation): string;
@@ -1052,30 +754,6 @@ begin
    CheckEquals(94, total, 'contests using a domestic file at some roster station');
 end;
 
-procedure TDomesticMultiplierTests.Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind;
-var
-   c: ContestType;
-   s: TPinStation;
-   station: TStationContext;
-   checked: integer;
-begin
-   BeginTest('Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind');
-   checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      for s := Low(TPinStation) to High(TPinStation) do
-         begin
-         station := PinStation(s, c);
-         CheckEquals(BoolToStr(Kinds(c, station).DomesticMult = DomesticFile, True),
-                     BoolToStr(ProgramUsesFile(c, station), True),
-                     Who(c, s) + ' uses its domestic file');
-         Inc(checked);
-         end;
-      end;
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
-               'contest x station domestic-file answers compared');
-end;
-
 (* A CONTEST THAT LOOKS ITS QTH UP IN THE FILE STATES NO SHAPE -- the two
    answers are one rule seen twice: DomesticMultiplierFromQTH hands every
    text to the file (the base's answer, writing nothing), and none of the
@@ -1115,18 +793,125 @@ begin
    CheckTrue(checked > 0, 'domestic-file contests checked');
 end;
 
+(* DOES THE CONTEST HAVE A DOMESTIC MULTIPLIER? -- the pinned answer, M11 S6
+   part 2: the domestic-file contests (PinnedUsesFile) and the 25 that state
+   a shape, WAG for an entrant outside Germany only. *)
+function PinnedHasDomestic(aContest: ContestType; aStation: TPinStation): boolean;
+begin
+   Result := PinnedUsesFile(aContest, aStation)                       or
+             (aContest in GRID_SQUARE_CONTESTS)                        or
+             (aContest in GRID_FIELD_CONTESTS)                         or
+             (aContest in WYSIWYG_EVERYWHERE)                          or
+             (aContest in [ALRS_UA1DZ_CUP, DARC10M, IOTA, RDA])        or
+             ((aContest = WAG) and (aStation <> psDX));
+end;
+
+function ProgramHasDomestic(aContest: ContestType; const aStation: TStationContext): boolean;
+var
+   obj: TContestBase;
+begin
+   obj := MakeContest(aContest, aStation);
+   try
+      Result := ContestHasDomesticMultiplier(obj);
+   finally
+      obj.Free;
+      end;
+end;
+
+(* EVERY CONTEST'S DOMESTIC MULTIPLIER, AT EVERY STATION -- M11 S6 part 2.
+   It replaces the session's `kind <> NoDomesticMults`. The counts at us, ve
+   and dx are the frozen matrix's (117, 117, 118 variants whose
+   doing.domestic word is TRUE); a script predicted all 580 frozen variants
+   from the classes' source with 0 mismatches before the kind went. *)
+procedure TDomesticMultiplierTests.Test_EveryContestHasItsPinnedDomesticMultiplier;
+const
+   COUNTS: array[TPinStation] of integer = (
+      117,   (* us -- 92 file, 25 shape *)
+      117,   (* ve *)
+      118,   (* dx (DL) -- 94 file, 24 shape: not WAG *)
+      117,   (* host *)
+      119,   (* UA *)
+      119,   (* UA1 *)
+      117,   (* JA *)
+      118,   (* OK *)
+      117,   (* ON *)
+      118,   (* UR *)
+      118    (* YU *)
+   );
+var
+   c: ContestType;
+   s: TPinStation;
+   answer: boolean;
+   count: integer;
+begin
+   BeginTest('Test_EveryContestHasItsPinnedDomesticMultiplier');
+   for s := Low(TPinStation) to High(TPinStation) do
+      begin
+      count := 0;
+      for c := Low(ContestType) to High(ContestType) do
+         begin
+         answer := ProgramHasDomestic(c, PinStation(s, c));
+         CheckEquals(BoolToStr(PinnedHasDomestic(c, s), True), BoolToStr(answer, True),
+                     Who(c, s) + ' has a domestic multiplier');
+         if answer then
+            begin
+            Inc(count);
+            end;
+         end;
+      CheckEquals(COUNTS[s], count, 'contests with a domestic multiplier at ' + STATIONS[s].Call);
+      end;
+end;
+
+(* A DOMESTIC MULTIPLIER IS WHERE A DOMESTIC QTH IS READ -- the invariant
+   that ties HasDomesticMultiplier to the rules it gates, for every
+   ContestType at every station: True exactly where the contest uses its
+   domestic file or decides at least one text itself (its key differs from
+   the base's "hand it to the file, writing nothing" for some text). So the
+   base's composition and the three overrides (the RSGB IOTA, WAG, the DARC
+   10 m) cannot drift from the shape answers. *)
+procedure TDomesticMultiplierTests.Test_ADomesticMultiplierIsWhereAQTHIsRead;
+var
+   c: ContestType;
+   s: TPinStation;
+   t: TPinText;
+   station: TStationContext;
+   reads: boolean;
+   checked: integer;
+begin
+   BeginTest('Test_ADomesticMultiplierIsWhereAQTHIsRead');
+   checked := 0;
+   for c := Low(ContestType) to High(ContestType) do
+      begin
+      for s := Low(TPinStation) to High(TPinStation) do
+         begin
+         station := PinStation(s, c);
+         reads := ProgramUsesFile(c, station);
+         for t := Low(TPinText) to High(TPinText) do
+            begin
+            if ProgramKey(c, station, Str20(TEXTS[t])) <> 'file F [] []' then
+               begin
+               reads := True;
+               end;
+            end;
+         CheckEquals(BoolToStr(reads, True), BoolToStr(ProgramHasDomestic(c, station), True),
+                     Who(c, s) + ' reads a domestic QTH');
+         Inc(checked);
+         end;
+      end;
+   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1), checked,
+               'contest x station domestic answers compared');
+end;
+
 procedure TDomesticMultiplierTests.RunAllTests;
 begin
    Test_EveryContestGivesItsPinnedDomesticKey;
-   Test_EveryContestDomesticKeyAgreesWithItsSessionKind;
    Test_EveryContestGivesItsPinnedHint;
-   Test_EveryContestHintAgreesWithItsSessionKind;
    Test_EveryContestStatesItsPinnedDomesticAnswers;
-   Test_EveryContestDomesticAnswerAgreesWithItsSessionKind;
    Test_ADOKTextWithNoLetterHintsNothing;
    Test_EveryContestStatesItsPinnedDomesticFileAnswer;
-   Test_EveryContestDomesticFileAnswerAgreesWithItsSessionKind;
    Test_ADomesticFileContestStatesNoShape;
+   Test_EveryContestHasItsPinnedDomesticMultiplier;
+   Test_ADomesticMultiplierIsWhereAQTHIsRead;
 end;
 
 procedure TDomesticMultiplierTests.Test_EveryContestGivesItsPinnedDomesticKey;
@@ -1165,60 +950,6 @@ begin
    CheckEquals(25, count, 'contests with a pinned domestic answer of their own');
 end;
 
-procedure TDomesticMultiplierTests.Test_EveryContestDomesticKeyAgreesWithItsSessionKind;
-var
-   c: ContestType;
-   s: TPinStation;
-   t: TPinText;
-   station: TStationContext;
-   kind: DomesticMultType;
-   answer: string;
-   checked: integer;
-   decided: set of ContestType;
-   count: integer;
-begin
-   BeginTest('Test_EveryContestDomesticKeyAgreesWithItsSessionKind');
-   checked := 0;
-   decided := [];
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      for s := Low(TPinStation) to High(TPinStation) do
-         begin
-         station := PinStation(s, c);
-         kind := Kinds(c, station).DomesticMult;
-         (* GetDomQTH answers before any kind arm when the session counts no
-            domestic multiplier, so nothing is asked there. *)
-         if kind = NoDomesticMults then
-            begin
-            Continue;
-            end;
-         for t := Low(TPinText) to High(TPinText) do
-            begin
-            answer := ProgramKey(c, station, Str20(TEXTS[t]));
-            CheckEquals(LegacyKey(kind, Str20(TEXTS[t])), answer,
-                        Who(c, s) + ' receiving ' + TEXTS[t]);
-            if Copy(answer, 1, 7) = 'decided' then
-               begin
-               Include(decided, c);
-               end;
-            Inc(checked);
-            end;
-         end;
-      end;
-   CheckTrue(checked > 0, 'domestic answers compared');
-
-   (* THE 25, AND NO OTHER, DECIDE ANYWHERE ON THE ROSTER. *)
-   count := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      if c in decided then
-         begin
-         Inc(count);
-         end;
-      end;
-   CheckEquals(25, count, 'contests that decide a domestic QTH at some roster station');
-end;
-
 procedure TDomesticMultiplierTests.Test_EveryContestGivesItsPinnedHint;
 var
    i: integer;
@@ -1233,61 +964,6 @@ begin
                               Str14(TEXTS[pin.Text])),
                   Who(pin.Contest, pin.Station) + ' hinting ' + TEXTS[pin.Text]);
       end;
-end;
-
-procedure TDomesticMultiplierTests.Test_EveryContestHintAgreesWithItsSessionKind;
-var
-   c: ContestType;
-   s: TPinStation;
-   t: TPinText;
-   station: TStationContext;
-   kind: DomesticMultType;
-   legacy: string;
-   hint: string;
-   checked: integer;
-   rewrites: set of ContestType;
-   count: integer;
-begin
-   BeginTest('Test_EveryContestHintAgreesWithItsSessionKind');
-   checked := 0;
-   rewrites := [];
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      for s := Low(TPinStation) to High(TPinStation) do
-         begin
-         station := PinStation(s, c);
-         kind := Kinds(c, station).DomesticMult;
-         for t := Low(TPinText) to High(TPinText) do
-            begin
-            legacy := LegacyHintOfKind(kind, Str14(TEXTS[t]));
-            if legacy = UNDEFINED_HINT then
-               begin
-               Continue;
-               end;
-            hint := ProgramHint(c, station, Str14(TEXTS[t]));
-            CheckEquals(legacy, hint, Who(c, s) + ' hinting ' + TEXTS[t]);
-            if hint <> string(Str14(TEXTS[t])) then
-               begin
-               Include(rewrites, c);
-               end;
-            Inc(checked);
-            end;
-         end;
-      end;
-   CheckTrue(checked > 0, 'hints compared');
-
-   (* SIXTEEN CONTESTS' HINTS ARE NOT THE TEXT ITSELF somewhere on the
-      roster: RDA, the ALRS cup (at UA), WAG, the DARC 10 m, the RSGB IOTA,
-      the six grid-square and the five grid-field contests. *)
-   count := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      if c in rewrites then
-         begin
-         Inc(count);
-         end;
-      end;
-   CheckEquals(16, count, 'contests whose hint rewrites the text at some roster station');
 end;
 
 procedure TDomesticMultiplierTests.Test_EveryContestStatesItsPinnedDomesticAnswers;
@@ -1335,38 +1011,6 @@ begin
                      'contests answering ' + FLAG_NAMES[f] + ' at ' + STATIONS[s].Call);
          end;
       end;
-end;
-
-procedure TDomesticMultiplierTests.Test_EveryContestDomesticAnswerAgreesWithItsSessionKind;
-var
-   c: ContestType;
-   s: TPinStation;
-   f: TPinFlag;
-   station: TStationContext;
-   kind: DomesticMultType;
-   checked: integer;
-begin
-   BeginTest('Test_EveryContestDomesticAnswerAgreesWithItsSessionKind');
-   checked := 0;
-   for c := Low(ContestType) to High(ContestType) do
-      begin
-      for s := Low(TPinStation) to High(TPinStation) do
-         begin
-         station := PinStation(s, c);
-         kind := Kinds(c, station).DomesticMult;
-         for f := Low(TPinFlag) to High(TPinFlag) do
-            begin
-            CheckEquals(BoolToStr(LegacyFlagOfKind(kind, f), True),
-                        BoolToStr(ProgramFlag(c, station, f), True),
-                        Who(c, s) + ' ' + FLAG_NAMES[f]);
-            Inc(checked);
-            end;
-         end;
-      end;
-
-   (* EXACT: every contest, every roster station, every flag. *)
-   CheckEquals((Ord(High(ContestType)) + 1) * (Ord(High(TPinStation)) + 1) *
-               (Ord(High(TPinFlag)) + 1), checked, 'contest x station x flag answers compared');
 end;
 
 (* NO LETTER, NO HINT -- plan F6, fixed 2026-10-14. WAG and DARC 10 m

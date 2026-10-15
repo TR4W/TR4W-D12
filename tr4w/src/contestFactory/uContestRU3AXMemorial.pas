@@ -73,7 +73,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -222,11 +221,6 @@ end;
 function TContestRU3AXMemorial.GetFriendlyName: string;
 begin
    Result := 'Russian 160-Meter DX Contest';
-end;
-
-function TContestRU3AXMemorial.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestRU3AXMemorial.GetInitialExchangeKind: InitialExchangeType;

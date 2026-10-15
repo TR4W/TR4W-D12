@@ -78,7 +78,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -220,11 +219,6 @@ end;
 function TContestARRLVHFSep.GetFriendlyName: string;
 begin
    Result := 'ARRL September VHF Contest';
-end;
-
-function TContestARRLVHFSep.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := GridSquares;
 end;
 
 function TContestARRLVHFSep.GetInitialExchangeKind: InitialExchangeType;

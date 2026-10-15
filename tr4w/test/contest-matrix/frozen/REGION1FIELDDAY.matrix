@@ -6,7 +6,6 @@ contest.class = TContestRegion1FieldDay
 == setup
 active.exchange = RSTQSONUMBEREXCHANGE
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -366,7 +365,6 @@ contest.class = TContestRegion1FieldDay
 == setup
 active.exchange = RSTQSONUMBEREXCHANGE
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -726,7 +724,6 @@ contest.class = TContestRegion1FieldDay
 == setup
 active.exchange = RSTQSONUMBEREXCHANGE
 active.initialexchange = NoInitialExchange
-active.domesticmult = NoDomesticMults
 doing.domestic/dx/prefix/zone = FALSE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

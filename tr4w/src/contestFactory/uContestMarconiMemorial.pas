@@ -75,7 +75,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -150,11 +149,6 @@ end;
 function TContestMarconiMemorial.GetFriendlyName: string;
 begin
    Result := 'Marconi Memorial HF Contest';
-end;
-
-function TContestMarconiMemorial.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestMarconiMemorial.GetInitialExchangeKind: InitialExchangeType;

@@ -6,7 +6,6 @@ contest.class = TContestUkrainianDX
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -368,7 +367,6 @@ contest.class = TContestUkrainianDX
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode
@@ -730,7 +728,6 @@ contest.class = TContestUkrainianDX
 == setup
 active.exchange = RSTAndQSONumberOrDomesticQTHExchange
 active.initialexchange = NoInitialExchange
-active.domesticmult = DomesticFile
 doing.domestic/dx/prefix/zone = TRUE TRUE FALSE FALSE
 cty.countrymode = CQCountryMode
 cty.zonemode = ITUZoneMode

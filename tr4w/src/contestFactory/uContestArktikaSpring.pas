@@ -56,7 +56,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -235,15 +234,6 @@ begin
       NEITHER of them means the empty string. DisplayName above is the
       factory's own readable name and is a separate question. *)
    Result := 'ARKTIKA-SPRING';
-end;
-
-function TContestArktikaSpring.GetDomesticMultiplierType: DomesticMultType;
-begin
-   (* WYSIWYGDomestic -- the exchange's QTH is the multiplier as typed, with no
-      .DOM file to validate it against. This one IS stated in the array (Field
-      Day's DM is commented out and is therefore left reading the array); here
-      there is a chosen value to move. *)
-   Result := WYSIWYGDomestic;
 end;
 
 function TContestArktikaSpring.GetInitialExchangeKind: InitialExchangeType;

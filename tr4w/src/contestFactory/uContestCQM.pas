@@ -74,7 +74,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -204,11 +203,6 @@ end;
 function TContestCQM.GetFriendlyName: string;
 begin
    Result := 'CQ-M International DX Contest';
-end;
-
-function TContestCQM.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := NoDomesticMults;
 end;
 
 function TContestCQM.GetInitialExchangeKind: InitialExchangeType;

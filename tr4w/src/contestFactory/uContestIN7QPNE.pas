@@ -168,7 +168,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -449,11 +448,6 @@ end;
 function TContestIN7QPNE.GetFriendlyName: string;
 begin
    Result := 'Combined Indiana, 7th Call Area, New England and Delaware QSO Party';
-end;
-
-function TContestIN7QPNE.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestIN7QPNE.GetInitialExchangeKind: InitialExchangeType;

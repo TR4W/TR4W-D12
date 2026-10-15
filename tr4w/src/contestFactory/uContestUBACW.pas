@@ -71,7 +71,6 @@ type
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
       function GetFriendlyName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
 
@@ -221,11 +220,6 @@ begin
    Result := 'UBA DX Contest, CW';
 end;
 
-function TContestUBACW.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
-end;
-
 function TContestUBACW.GetInitialExchangeKind: InitialExchangeType;
 begin
    Result := NoInitialExchange;
@@ -256,14 +250,12 @@ procedure TContestUBACW.DescribeSession(const aStation: TStationContext;
                                         aSession: TSessionDefaults);
 begin
    aSession.LiteralDomesticQTH := True;
+   (* THE DOMESTIC FILE IS THE CLASS'S OWN ANSWER (UsesDomesticFile -- no
+      domestic multiplier for an ON entrant); the statement here went with
+      the domestic kind, M11 S6 part 2. *)
    if aStation.MyCountry = 'ON' then
       begin
-      aSession.DomesticMult := NoDomesticMults;
       aSession.Band := Band80;
-      end
-   else
-      begin
-      aSession.DomesticMult := DomesticFile;
       end;
 end;
 

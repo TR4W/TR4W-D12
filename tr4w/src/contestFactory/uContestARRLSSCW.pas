@@ -54,7 +54,6 @@ type
       function GetWA7BNMId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
-      function GetDomesticMultiplierType: DomesticMultType; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
    public
@@ -104,11 +103,6 @@ end;
 function TContestARRLSSCW.GetDomesticFileName: string;
 begin
    Result := 'arrlsect';
-end;
-
-function TContestARRLSSCW.GetDomesticMultiplierType: DomesticMultType;
-begin
-   Result := DomesticFile;
 end;
 
 function TContestARRLSSCW.GetInitialExchangeKind: InitialExchangeType;
