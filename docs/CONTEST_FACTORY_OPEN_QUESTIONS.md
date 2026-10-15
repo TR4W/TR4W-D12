@@ -18,8 +18,6 @@ moves to section 4 in the commit that records it.
 
 ## 1. Sponsor rules
 
-### Field Day
-
 ### QSO parties
 
 - **Q29** "Out-of-state stations work only the host state" is now the default for
