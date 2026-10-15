@@ -33,10 +33,6 @@ moves to section 4 in the commit that records it.
   is the sponsor's?
   **Answer:**
 
-- **Idaho-DC** Idaho's in-state multipliers include the states and provinces but
-  not DC; the sponsor says "each US state". Should DC count?
-  **Answer:**
-
 - **Idaho-cfg** The template `target/dom/Idaho QSO Party.cfg` has never shipped in
   the installer. Ship it, or delete it now that the New Contest dialog creates the
   contest?
@@ -604,8 +600,14 @@ closes it; anything else reopens it.
 | Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | not built |
 | Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | not built |
 | Q29 | Out-of-state works only the host state: true for QSO parties in general | already so |
+| Idaho-DC | DC is not a state, so not an Idaho multiplier | already so |
 
 ### Answered since the table was last updated (full text)
+
+- **Idaho-DC** Idaho's in-state multipliers include the states and provinces but
+  not DC; the sponsor says "each US state". Should DC count?
+  **Answer:** (NY4I, 2026-10-15) *"DC is not a state."* DC does not count as
+  an Idaho multiplier -- what TR4W does today. No change.
 
 - **Q29** "Out-of-state stations work only the host state" is now the default for
   every state party. I could confirm it from the sponsor for NC, CA, WA, BC, AZ,
