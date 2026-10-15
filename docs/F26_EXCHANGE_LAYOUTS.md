@@ -56,7 +56,8 @@ DXLog. Old to new:
   - **JALONGPREFECT:** *"may be answered like dxlog.net"*. **DXLog has no ACAG file**
     (its JARL files are ALLJA, JIDXC, KCJ, KCJ_TOPBAND and JARLWWR; checked
     2026-10-15), so there is no DXLog name to take. The ALL JA pattern gives
-    **`ACAG`** (JARL's own name for the event) -- proposed, for NY4I to confirm.
+    **`ACAG`** (JARL's own name for the event) -- **CONFIRMED by NY4I, 2026-10-15:
+    "ACAG is fine."**
   - **KIDSDAY:** *"Use KIDS-DAY for kids day."* `KIDS-DAY` (and no Cabrillo file
     is produced; see decision 1).
   - **TENTEN:** *"Use TEN-TEN."* `TEN-TEN`. Whether the four events are split
