@@ -513,24 +513,6 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
 
-- **Q46** Ten-Ten scores 2 for every QSO: the "2 with a Ten-Ten number, else 1"
-  test can never be false (a 16-bit field compared with -1). Should a QSO with no
-  Ten-Ten number score 1, as the code was evidently meant to?
-  **Proposed answer:** From the F26 research (`docs/F26_EXCHANGE_LAYOUTS.md`):
-  2 points with a 10-10 number, 1 without, as WA7BNM and DXLog `TENTENQP.txt`
-  state it. It is item C11 of F26's build list.
-  **Answer:**
-
-- **Q56** (decided under the delegation; please confirm) A contest's sent
-  state now stands for the whole session: a MY STATE line after CONTEST in a
-  `.cfg`, or a Preferences edit mid-contest, no longer changes what Canada
-  Day/Winter, the Russian DX contests or the Cup RF send. The alternative
-  would have sent a stale state after reopening a log (design 8.2m).
-  *Recommended: accept.*
-  **Proposed answer:** Decided under the delegation and implemented (design
-  8.2m).
-  **Answer:**
-
 - **Q57** CQ WW RTTY's set-up writes MY ZONE as "zone state" while it builds
   its messages, then puts it back -- and the write marks MY ZONE as yours, so
   it no longer follows MY CALL. Build the messages without touching MY ZONE?
@@ -556,24 +538,6 @@ closes it; anything else reopens it.
   **Proposed answer:** From the sponsor's page (researched 2026-10-14): its
   suggested frequencies include 1860 kHz, so 160 m is in -- what the class
   already does. Light is in too. No change.
-  **Answer:**
-
-- **Q75** What are the Delaware QSO Party's WA7BNM calendar id and log
-  submission address? Both are blank, so its calendar menu item is greyed.
-  **Proposed answer:** From WA7BNM (researched 2026-10-14): calendar id
-  **240**; logs go to the sponsor's Gmail address on its page, to be copied
-  exactly when the class is filled in.
-  **Answer:**
-
-- **Q81** New England county abbreviations: IN7QPNE's file spells them
-  state first (`MEAND`) and uses Connecticut's new planning regions
-  (`CTCAP`); NEQP's own file spells them county first (`ANDME`) with the
-  eight old CT counties. Which does the NEQP sponsor use now? IN7QPNE works
-  out the party from its own file's spelling, so it is right either way;
-  this is about the two files agreeing.
-  **Proposed answer:** From the NEQP sponsor (researched 2026-10-14): state
-  first (`MEAND`) and the Connecticut planning regions. So IN7QPNE's file is
-  current and NEQP's `neqso.dom` is stale, to be brought into line.
   **Answer:**
 
 - **Q85** Does 7QP allow the WARC bands? The 7QP class scores a 30 m CW QSO
@@ -659,8 +623,48 @@ closes it; anything else reopens it.
 | Q93 | Moot under Q92 | -- |
 | Q94 | Answered by Q90 | `bb07fd06` |
 | Q96 | CQ WW CW fills the zone, like SSB and RTTY | `c9caaa08` |
+| Q46 | Ten-Ten: 2 points with a 10-10 number, 1 without | F26 build list C11 (not built) |
+| Q56 | A contest's sent state stands for the whole session | design 8.2m (already built) |
+| Q75 | Delaware: WA7BNM id 240; the log address from the sponsor's page | not built |
+| Q81 | NEQP: state-first abbreviations and CT planning regions; `neqso.dom` to be brought into line | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q46** Ten-Ten scores 2 for every QSO: the "2 with a Ten-Ten number, else 1"
+  test can never be false (a 16-bit field compared with -1). Should a QSO with no
+  Ten-Ten number score 1, as the code was evidently meant to?
+  **Proposed answer:** From the F26 research (`docs/F26_EXCHANGE_LAYOUTS.md`):
+  2 points with a 10-10 number, 1 without, as WA7BNM and DXLog `TENTENQP.txt`
+  state it. It is item C11 of F26's build list.
+  **Answer:** (NY4I, 2026-10-15) *Yes* -- the proposed answer stands.
+
+- **Q56** (decided under the delegation; please confirm) A contest's sent
+  state now stands for the whole session: a MY STATE line after CONTEST in a
+  `.cfg`, or a Preferences edit mid-contest, no longer changes what Canada
+  Day/Winter, the Russian DX contests or the Cup RF send. The alternative
+  would have sent a stale state after reopening a log (design 8.2m).
+  *Recommended: accept.*
+  **Proposed answer:** Decided under the delegation and implemented (design
+  8.2m).
+  **Answer:** (NY4I, 2026-10-15) *Yes* -- the proposed answer stands.
+
+- **Q75** What are the Delaware QSO Party's WA7BNM calendar id and log
+  submission address? Both are blank, so its calendar menu item is greyed.
+  **Proposed answer:** From WA7BNM (researched 2026-10-14): calendar id
+  **240**; logs go to the sponsor's Gmail address on its page, to be copied
+  exactly when the class is filled in.
+  **Answer:** (NY4I, 2026-10-15) *Yes* -- the proposed answer stands.
+
+- **Q81** New England county abbreviations: IN7QPNE's file spells them
+  state first (`MEAND`) and uses Connecticut's new planning regions
+  (`CTCAP`); NEQP's own file spells them county first (`ANDME`) with the
+  eight old CT counties. Which does the NEQP sponsor use now? IN7QPNE works
+  out the party from its own file's spelling, so it is right either way;
+  this is about the two files agreeing.
+  **Proposed answer:** From the NEQP sponsor (researched 2026-10-14): state
+  first (`MEAND`) and the Connecticut planning regions. So IN7QPNE's file is
+  current and NEQP's `neqso.dom` is stale, to be brought into line.
+  **Answer:** (NY4I, 2026-10-15) *Yes* -- the proposed answer stands.
 
 - **Q18** Jock White Field Day (https://www.nzart.org.nz/activities/contests/jwfd):
   are ZL contacts 5 CW / 3 phone and non-ZL 10 still the rule? Digital and FM score
