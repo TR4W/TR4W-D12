@@ -159,8 +159,12 @@ DXLog. Old to new:
     or `.cfg` that already names it still opens, rescores and exports. Deleting the
     enum member would make such a log unreadable, and that is the one cost a
     retirement must not have.
-- **[Q15, part] UA4W's address -- ANSWERED (NY4I, 2026-10-15):** r4w@narod.ru is
-  valid. The schedule question stays open.
+- **[Q15] UA4W -- ANSWERED (NY4I, 2026-10-15):** r4w@narod.ru is valid, and the
+  contest is **one 2-hour window, 1600-1800 UTC, like DXLog** `[DXLog R4W-CHAMP.txt]`:
+  15-minute periods, a station may be worked once per period per band; 80 and 40 m,
+  CW and SSB; serial + code with **no RST**; 3 points for a Udmurtia station, else 1;
+  multipliers Udmurtia RDA districts and grids, each per band. The earlier pass's two
+  tours to 19:59 are wrong.
 - **Q13, split TEN-TEN into its four events -- ANSWERED NO (NY4I, 2026-10-15):**
   *"Ten Ten is also inactive so it seems redundant to break this further."* It stays
   ONE contest, `TEN-TEN` (Q20), unlike ARCI. Its WA7BNM id stays 0, since one class
@@ -192,11 +196,67 @@ DXLog. Old to new:
 in whole or in part, is under [Answered](#answered); an item below carries only
 the part still owed. The `[Qn]` tag is the number the question has been cited by.
 
-**UA4W**
+**Nothing is open.** Every question in this document is answered (2026-10-15); see
+[Answered](#answered). What remains is implementation, listed under
+[What to build](#what-to-build).
 
-- **[Q15] Schedule.** One 2-hour window, 1600-1800 UTC, with 15-minute periods
-  (DXLog), or two tours ending 19:59 (earlier pass)? (The address is answered:
-  r4w@narod.ru is valid.)
+### What to build
+
+Gathered from the answers above (2026-10-15). Each item is its own commit, gated, with a
+deliberate contest-matrix re-freeze where output moves. Export items first, because
+they need no rule research; scoring items each change a contest's score.
+
+**A. Export, and the names (no scoring change)**
+
+1. **"No Cabrillo file" (decision 1):** a `TContestBase` answer, False by default.
+   Eleven contests state it: POTA, Kids Day, Grid Loc, TEN-TEN, JW-FD and the six ARCI
+   events. Asking for their Cabrillo gives a message, not `ERROR EXCHANGE NOT
+   HANDLED` lines.
+2. **Names (Q20, Q9a, Q2):** Cabrillo / ADIF names `MARAC`, `ALL-JA`, `ACAG`,
+   `KIDS-DAY`, `TEN-TEN`, `QCWA`, `FFMA` (Grid Loc), `JW-FD` (unchanged). (All Asian's
+   `AADX-CW` / `AADX-SSB` is done separately, 2026-10-15.)
+3. **Retirement (Q8, Q12, Q16, Q17):** FISTS, QCWA Golden, WWL and XMAS leave the New
+   Contest list. Their enum members, spellings and classes stay, so old logs open.
+4. **Cabrillo layouts for the contests that keep one:**
+   - MARAC: RST + state + county (existing helpers);
+   - ALL JA and ACAG: JARL's e-log layout, power letter joined (`599 10H`);
+   - QCWA: its 2021 exchange, after its re-model (C3).
+
+**B. Station fields (decision 2, Q19)**
+
+5. `MY STATE` is the primary subdivision and `MY COUNTY` the secondary one (ADIF), so
+   the new fields are only:
+   - `MY COUNTY` (MARAC, ACAG, UA4W);
+   - `MY POWER` (ARCI);
+   - `MY ARCI NUMBER`;
+   - `MY TEN TEN NUMBER`;
+   - `MY QCWA CHAPTER` and `MY YEAR LICENSED` (QCWA);
+   - `MY JA POWER CLASS` (ALL JA, ACAG);
+   - `MY NZART BRANCH` (JW-FD; today it is in `MY ZONE`, which is reuse).
+
+**C. Scoring and parsing (each changes a score)**
+
+6. **ARCI split (Q2, Q3):** six classes, each with its own WA7BNM id. Topband is 160 m
+   only, once per mode, multipliers once regardless of mode, and has its own SSB power
+   table.
+7. **JW-FD (Q10):**
+   - points CW 5 / phone 3 everywhere (not 10 for non-ZL), and overseas only in
+     Oceania;
+   - hourly dupe periods;
+   - a serial per band;
+   - the field-station QSO minimum.
+8. **UA4W (Q15):**
+   - no RST;
+   - store the received serial;
+   - 80/40 m only;
+   - 15-minute dupe periods inside 1600-1800 UTC;
+   - 3 points for Udmurtia, else 1;
+   - RDA and grid multipliers per band.
+9. **ACAG:** dupes and multipliers per band (today per mode), and read the power
+   letter.
+10. **QCWA (Q11):** re-model to the 2021 exchange (year + name + chapter, no serial),
+    with CW/digital 2, phone 1, the W2MM bonus, and multipliers once per contest.
+11. **TEN-TEN:** 2 points with a 10-10 number, 1 without (today 2 always).
 
 (Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
 POTA, Kids Day, Grid Loc, TEN-TEN, JW-FD and the six ARCI events all writing none, it is
