@@ -2,7 +2,7 @@
 
 **GENERATED. Do not edit outside the marked hand-maintained blocks.**
 Regenerate with `python tools/contest-rules-inventory/generate.py` (any working
-directory). This copy was generated from commit `67c608e9` (2026-10-14).
+directory). This copy was generated from commit `a8fe10b7` (2026-10-14).
 Owner: `contest-factory`, with `contest-scoring` (the engine side of every row
 below), `file-formats` (ADIF and Cabrillo rows) and `lcl-ui` (the UI rows).
 
@@ -295,19 +295,19 @@ None found.
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `uADIFExchange.pas:294` | ADIFSentRSTQSONumberState | 3 | (none by default) | - | GetADIFSentExchange (existing, M11 S9b; TRC Digital has no ContestType) | `ClippedState(aMy) = 'TRC'` (was `cMyState = 'TRC'` until M11 S9b) |
+| `uADIFExchange.pas:321` | ADIFSentRSTQSONumberState | 3 | (none by default) | - | GetADIFSentExchange (existing, M11 S9b; TRC Digital has no ContestType) | `ClippedState(aMy) = 'TRC'` (was `cMyState = 'TRC'` until M11 S9b) |
 
 ### Cabrillo export (7 rows)
 
 | file:line | routine | shape | contest(s) -- **bold = has a class** | class? | seam | what |
 |---|---|---|---|---|---|---|
-| `trdos/postunit.pas:3042` | tGenerateLogPortionOfCabrilloFile | 3 | **LABRE** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'LABRE'` |
-| `trdos/postunit.pas:3056` | tGenerateLogPortionOfCabrilloFile | 1 | **CUPRFCW**, **CUPRFSSB** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Contest` in |
-| `trdos/postunit.pas:3061` | tGenerateLogPortionOfCabrilloFile | 3 | (none by default) | - | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'EURASIA'` -- see dead code |
-| `uCabrilloExchange.pas:549` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `aMy.MyState = 'TRC'` -- TRC Digital, no ContestType (was `cMyState = 'TRC'` until M11 S9c) |
-| `uCabrilloExchange.pas:553` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
-| `uCabrilloExchange.pas:787` | CabrilloReceivedRSTQSONumberQTH | 3 | (none by default) | - | GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
-| `uCabrilloExchange.pas:791` | CabrilloReceivedRSTQSONumberQTH | 3 | (none by default) | - | GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `aCtx.HisQTH = 'TRC'` (was `csQTHString = 'TRC'` until M11 S9c) |
+| `trdos/postunit.pas:3121` | tGenerateLogPortionOfCabrilloFile | 3 | **LABRE** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'LABRE'` |
+| `trdos/postunit.pas:3135` | tGenerateLogPortionOfCabrilloFile | 1 | **CUPRFCW**, **CUPRFSSB** | all | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Contest` in |
+| `trdos/postunit.pas:3140` | tGenerateLogPortionOfCabrilloFile | 3 | (none by default) | - | FormatCabrilloReceivedExchange / CabrilloQSOLineFormat / CabrilloModeString (existing; CabrilloModeString M9a) | `Settings.Contest.Name = 'EURASIA'` -- see dead code |
+| `uCabrilloExchange.pas:554` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `aMy.MyState = 'TRC'` -- TRC Digital, no ContestType (was `cMyState = 'TRC'` until M11 S9c) |
+| `uCabrilloExchange.pas:558` | CabrilloSentRSTQSONumberState | 3 | (none by default) | - | GetCabrilloSentExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
+| `uCabrilloExchange.pas:792` | CabrilloReceivedRSTQSONumberQTH | 3 | (none by default) | - | GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `ContestTitle = 'PGA'` -- no ContestType; operator-titled |
+| `uCabrilloExchange.pas:796` | CabrilloReceivedRSTQSONumberQTH | 3 | (none by default) | - | GetCabrilloReceivedExchange (existing, M11 S9c; TRC Digital and PGA have no ContestType) | `aCtx.HisQTH = 'TRC'` (was `csQTHString = 'TRC'` until M11 S9c) |
 
 ### Score, summary and totals (1 rows)
 
@@ -406,8 +406,8 @@ Worth reading first, because they are the ones the brief named:
 | CQWWCW | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4480` |
 | CQWWRTTY | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4480` |
 | CQWWSSB | **score-summary** `trdos/postunit.pas:1188`; **ui** `MainUnit.pas:4480` |
-| CUPRFCW | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3056` |
-| CUPRFSSB | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3056` |
+| CUPRFCW | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3135` |
+| CUPRFSSB | **exchange** `trdos/logedit.pas:2739`; **cabrillo-export** `trdos/postunit.pas:3135` |
 | FISTS | **exchange** `trdos/logdupe.pas:1540`, `trdos/logdupe.pas:1676` |
 | IARU | **exchange** `trdos/logedit.pas:2773`; **ui** `MainUnit.pas:4480` |
 | ALLJA | **exchange** `trdos/logdupe.pas:1653` |
@@ -416,7 +416,7 @@ Worth reading first, because they are the ones the brief named:
 | CUPRFDIG | **exchange** `trdos/logedit.pas:2739` |
 | JIDXCW | **exchange** `trdos/logedit.pas:2855` |
 | JIDXSSB | **exchange** `trdos/logedit.pas:2855` |
-| LABRE | **cabrillo-export** `trdos/postunit.pas:3042` |
+| LABRE | **cabrillo-export** `trdos/postunit.pas:3121` |
 | NRAUBALTICCW | **exchange** `trdos/logedit.pas:2744` |
 | NRAUBALTICSSB | **exchange** `trdos/logedit.pas:2744` |
 | OHIOQSOPARTY | **exchange** `trdos/logedit.pas:2744` |
