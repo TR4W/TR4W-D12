@@ -442,31 +442,10 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 ## 2. Design (recommendation given; "accept" is enough)
 
-- **Q7** Apply the NRAU pattern (a base + CW/SSB children) to every two-mode pair?
-  So far only NRAU-Baltic has it; NA Sprint CW/RTTY and the other pairs are
-  siblings or copies. *Recommended: only where the two rows are genuinely one rule
-  today; otherwise copies.*
-  **Answer:**
-
-- **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
-  characters, so a malformed grid's score depends on leftover memory (identical
-  ALRS QSOs scored 43, 42, 42). Tesla and European VHF read short grids the same
-  way. Fixing it changes scores for malformed grids in every grid contest. What should a malformed grid score? *Recommended: fix the
-  read; a grid that is not a grid scores as no distance.*
-  **Answer:**
-
 - **Q8** Events with no `ContestType` that the code still identifies by name:
   `'TRC'`, `'PGA'`, `'EURASIA'`, `'DL-DX-RTTY'`. Give each a type and class, or
   delete the tests? *Recommended: give a type to any that is still run; delete the
   rest.*
-  **Answer:**
-
-- **Q9** Should an operator-edited CQ memory survive re-selecting the contest?
-  *Recommended: yes -- an edited memory is an operator statement.*
-  **Answer:**
-
-- **Q10** May a `ContestType` nobody runs be deleted instead of given a class?
-  *Recommended: yes, with the list shown to you first.*
   **Answer:**
 
 - **Q13** Oregon QSO Party scores by the radio's current mode, not the QSO's, so a
@@ -512,6 +491,26 @@ dead members, prefix/DX/zone/domestic multipliers) do not wait on them.
 
 Each carries a **Proposed answer** with its source. "Yes" (or "yes to all")
 closes it; anything else reopens it.
+
+- **Q10** May a `ContestType` nobody runs be deleted instead of given a class?
+  *Recommended: yes, with the list shown to you first.*
+  **Proposed answer (NY4I asked 2026-10-15: "could we have a hybrid to refer
+  this ContestType question to a generic class?"):** yes, and the registry
+  already does half of it -- ContestIdentity falls back to a plain
+  TContestBase for a ContestType with no class (DUMMYCONTEST today), and never
+  returns nil. The hybrid: a contest nobody runs keeps its enum member and its
+  ContestTypeSA spelling (old logs and .cfg files still open) but its own
+  class is DELETED, and it resolves to one named generic class
+  (TContestRetired) instead of the bare base. That class names itself by the
+  ContestTypeSA spelling, logs and exports ADIF, writes no Cabrillo, is not
+  on the New Contest list, and scores one point per QSO with no multipliers.
+  The cost, stated plainly: the contest's ADIF CONTEST_ID, Cabrillo name and
+  display name lived in its class and go with it (ADIF then omits
+  CONTEST_ID); rescoring an old log gives the generic score, not the
+  sponsor's; its matrix record is re-frozen once; and its rules survive only
+  in git history and the D7 tree. Candidates are listed to you before any
+  class is deleted.
+  **Answer:**
 
 - **Q57** CQ WW RTTY's set-up writes MY ZONE as "zone state" while it builds
   its messages, then puts it back -- and the write marks MY ZONE as yours, so
@@ -627,8 +626,37 @@ closes it; anything else reopens it.
 | Q56 | A contest's sent state stands for the whole session | design 8.2m (already built) |
 | Q75 | Delaware: WA7BNM id 240; the log address from the sponsor's page | not built |
 | Q81 | NEQP: state-first abbreviations and CT planning regions; `neqso.dom` to be brought into line | not built |
+| Q7 | Base + CW/SSB children only where the pair is one rule today | design rule; Q43 lists the pairs |
+| Q9 | An edited CQ memory survives re-selecting the contest | not built |
+| Q37 | A malformed grid is refused at entry (and import); the read made safe | not built |
 
 ### Answered since the table was last updated (full text)
+
+- **Q7** Apply the NRAU pattern (a base + CW/SSB children) to every two-mode pair?
+  So far only NRAU-Baltic has it; NA Sprint CW/RTTY and the other pairs are
+  siblings or copies. *Recommended: only where the two rows are genuinely one rule
+  today; otherwise copies.*
+  **Answer:** (NY4I, 2026-10-15) *Accept.* A base with CW/SSB children only
+  where the two rows are genuinely one rule today; otherwise copies. Q43 asks
+  which pairs qualify.
+
+- **Q9** Should an operator-edited CQ memory survive re-selecting the contest?
+  *Recommended: yes -- an edited memory is an operator statement.*
+  **Answer:** (NY4I, 2026-10-15) *Accept.* An operator-edited CQ memory
+  survives re-selecting the contest. Not built.
+
+- **Q37** `LOGGRID.ConvertGridToLatLon` reads past the end of a grid shorter than 4
+  characters, so a malformed grid's score depends on leftover memory (identical
+  ALRS QSOs scored 43, 42, 42). Tesla and European VHF read short grids the same
+  way. Fixing it changes scores for malformed grids in every grid contest. What should a malformed grid score? *Recommended: fix the
+  read; a grid that is not a grid scores as no distance.*
+  **Answer:** (NY4I, 2026-10-15) *"a malformed grid should never have been
+  logged."* Read as: a grid exchange that is not a grid is REFUSED at entry
+  with an error, the 7.10 rule for an invalid exchange -- and, as my reading,
+  an ADIF import holding one fails like any other bad record (call, band, mode
+  and time named, nothing imported). The read past the end is still made safe,
+  so a log that already holds one scores it as no distance instead of leftover
+  memory. Not built.
 
 - **Q46** Ten-Ten scores 2 for every QSO: the "2 with a Ten-Ten number, else 1"
   test can never be false (a 16-bit field compared with -1). Should a QSO with no
