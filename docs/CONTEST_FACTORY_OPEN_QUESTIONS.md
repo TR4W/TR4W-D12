@@ -132,6 +132,16 @@ moves to section 4 in the commit that records it.
   drop-down show? If the longer ones, the friendly name changes with them,
   and that also changes the summary sheet's `CONTEST:` line and the log
   database's friendly name.
+  *Ruled in part (NY4I, 2026-10-15): "I disagree that the longer display name
+  should have anything to do with the CONTEST: name in Cabrillo. The cab name
+  should just be another definition in the contest class."* **It already is,
+  and the question above was wrong to suggest otherwise:** the Cabrillo file's
+  `CONTEST:` line is `GetCabrilloName` (`postunit.pas:2802`, through
+  `CabrilloContestName`), and the display and friendly names never reach it.
+  What a friendly-name change DOES reach is the printed summary sheet, whose
+  "CONTEST:" line is the session's contest name with the friendly name in
+  brackets (`postunit.pas:993`), and the log database's friendly-name column.
+  Still open: which WORDS the drop-down shows.
   **Answer:**
 
 - **Q53** Forty-seven contests have no friendly name, so their display name is
