@@ -20,13 +20,6 @@ moves to section 4 in the commit that records it.
 
 ### QSO parties
 
-- **Q29** "Out-of-state stations work only the host state" is now the default for
-  every state party. I could confirm it from the sponsor for NC, CA, WA, BC, AZ,
-  FL and ID. Not checked: Michigan, Minnesota, Missouri, Texas, Ohio,
-  Pennsylvania, New York, Virginia, Wisconsin, Tennessee, Colorado, Indiana.
-  Does any of them let out-of-state stations work each other?
-  **Answer:**
-
 - **Q34** Idaho rovers earn the dormant-county bonus per county they activate, but
   no QSO records the county it was sent from. Add a per-QSO "my county" (log
   field, entry, ADIF `MY_CNTY`), or keep scoring a rover as a fixed station in its
@@ -610,8 +603,19 @@ closes it; anything else reopens it.
 | Q31 | `Missing precedence (Q A B U M S)` is acceptable wording | already so |
 | Q38 | Winter FD has no DXCC multiplier (D7 tracked one but never scored it) | not built |
 | Q32 | Missouri peak-hour bonus is real; computed from each QSO's logged time over the whole log, cap 250 | not built |
+| Q29 | Out-of-state works only the host state: true for QSO parties in general | already so |
 
 ### Answered since the table was last updated (full text)
+
+- **Q29** "Out-of-state stations work only the host state" is now the default for
+  every state party. I could confirm it from the sponsor for NC, CA, WA, BC, AZ,
+  FL and ID. Not checked: Michigan, Minnesota, Missouri, Texas, Ohio,
+  Pennsylvania, New York, Virginia, Wisconsin, Tennessee, Colorado, Indiana.
+  Does any of them let out-of-state stations work each other?
+  **Answer:** (NY4I, 2026-10-15) *"That is true for qso parties in general."*
+  The default on the state-QSO-party base stands for every party, the twelve
+  unchecked ones included; a party whose sponsor says otherwise overrides it,
+  as any contest rule does. Already so; no change.
 
 - **Q32** Missouri: a "peak-hour" bonus (+1 per 80/40 m QSO logged 1400-1959 UTC,
   up to 250) is counted in live entry only and lost when the log is reopened.
