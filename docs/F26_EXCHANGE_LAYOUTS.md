@@ -80,6 +80,20 @@ DXLog. Old to new:
   - **Its name is `FFMA`**, a placeholder (the ARRL Fred Fish Memorial Award, for
     working the 488 grids on 6 m, is the grid-tracking use the class serves). Used
     wherever the contest has to name itself, e.g. ADIF CONTEST_ID.
+- **[Q19] Sent QTH fields -- ANSWERED (NY4I, 2026-10-15):** *"STATE is a generic
+  term... it is perfectly [fine] to use state for a province, prefecture, oblast. The
+  ADIF specification calls these primary administration zones."* So it is **not
+  reuse**: each value goes in the field ADIF defines for its level `[ADIF 3.1.6]`.
+  - **Primary administrative subdivision -> `MY STATE`** (ADIF `MY_STATE`, *"e.g. US
+    State, JA Island, VE Province"*): the **JA prefecture number** for ALL JA (ADIF
+    lists Japan's primaries as two-digit codes, e.g. `01` Hokkaido), a Russian oblast.
+  - **Secondary administrative subdivision -> `MY COUNTY`** (ADIF `MY_CNTY`, *"e.g.
+    US county, JA Gun"*), the station field already decided for MARAC: the **ACAG
+    city/gun/ku code** (ADIF's Japanese Cities / Ku / Guns: JCC, WAKU, JCG) and the
+    **Udmurtia RDA district** (ADIF's Russian Districts, written oblast-dash-district,
+    e.g. `UD-05`; the contest sends it without the dash, `UD05`).
+  - So **no `MY JA PREFECTURE`, `MY JA CITY CODE` or `MY RDA`**: the two generic
+    fields cover them. Decision 2's list shrinks accordingly.
 - **[Q1] ALL JA and ACAG log format -- ANSWERED (NY4I, 2026-10-15):** *"JARL I would
   defer to JARL's example being they are the sponsor."* The sponsor's example wins over
   DXLog's: the power letter is **joined to the number** (`599 10H`, not `599 10 H`),
@@ -178,20 +192,11 @@ DXLog. Old to new:
 in whole or in part, is under [Answered](#answered); an item below carries only
 the part still owed. The `[Qn]` tag is the number the question has been cited by.
 
-**ALL JA and ACAG**
-
-- **[Q19] Sent QTH field.** Does sending the JA prefecture number (ALL JA) or the
-  ACAG city/gun/ku code through `MY STATE` count as reuse under the distinct-fields
-  ruling? If it does, they get `MY JA PREFECTURE` and `MY JA CITY CODE`. (Same
-  question for UA4W's RDA, below.)
-
 **UA4W**
 
 - **[Q15] Schedule.** One 2-hour window, 1600-1800 UTC, with 15-minute periods
   (DXLog), or two tours ending 19:59 (earlier pass)? (The address is answered:
   r4w@narod.ru is valid.)
-- **[Q19] Sent QTH field** -- the RDA district: same question as ALL JA/ACAG above
-  (`MY RDA`?). Only Udmurtia stations send one; everyone else sends `MY GRID`.
 
 (Decision 1, a way for a contest to say "no Cabrillo file", is no longer owed: with
 POTA, Kids Day, Grid Loc, TEN-TEN, JW-FD and the six ARCI events all writing none, it is
